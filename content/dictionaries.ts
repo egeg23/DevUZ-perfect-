@@ -118,6 +118,8 @@ const ru = {
     thinking: "печатает…",
     error: "Что-то пошло не так. Попробуйте ещё раз или напишите нам в Telegram.",
     handoff: "Передал ваш запрос живому менеджеру — он свяжется с вами в ближайшее время.",
+    undelivered:
+      "Заявку принял, но уведомление менеджеру сейчас не проходит. Чтобы точно не потерялось — напишите нам напрямую в Telegram.",
     disabled: "Чат временно недоступен. Оставьте контакты в форме ниже — мы ответим.",
     consent: "Продолжая диалог, вы соглашаетесь на обработку персональных данных.",
     restart: "Начать заново",
@@ -278,6 +280,8 @@ const en: Dictionary = {
     thinking: "typing…",
     error: "Something went wrong. Try again, or message us on Telegram.",
     handoff: "I've passed your request to a human manager — they'll be in touch shortly.",
+    undelivered:
+      "I have your request, but the notification to the manager is not going through right now. To be safe, message us directly on Telegram.",
     disabled: "The chat is temporarily unavailable. Leave your contacts in the form below and we'll reply.",
     consent: "By continuing this conversation you agree to the processing of personal data.",
     restart: "Start over",
@@ -432,6 +436,8 @@ const uz: Dictionary = {
     thinking: "yozmoqda…",
     error: "Nimadir noto‘g‘ri ketdi. Qaytadan urinib ko‘ring yoki bizga Telegram’da yozing.",
     handoff: "So‘rovingizni tirik menejerga uzatdim — u yaqin orada siz bilan bog‘lanadi.",
+    undelivered:
+      "Arizani qabul qildim, lekin menejerga bildirishnoma hozir o‘tmayapti. Yo‘qolib qolmasligi uchun bizga to‘g‘ridan-to‘g‘ri Telegramda yozing.",
     disabled: "Chat vaqtincha ishlamayapti. Quyidagi formada kontaktlaringizni qoldiring — javob beramiz.",
     consent: "Suhbatni davom ettirish orqali shaxsiy ma’lumotlarni qayta ishlashga rozilik bildirasiz.",
     restart: "Qaytadan boshlash",
@@ -586,6 +592,8 @@ const zh: Dictionary = {
     thinking: "正在输入…",
     error: "出了点问题。请重试，或通过 Telegram 联系我们。",
     handoff: "已把您的需求转给真人客户经理，他会尽快与您联系。",
+    undelivered:
+      "需求我已记下，但目前发送给客户经理的通知没能送达。为稳妥起见，请通过 Telegram 直接联系我们。",
     disabled: "聊天暂时不可用。请在下方表单留下联系方式，我们会回复您。",
     consent: "继续对话即表示您同意我们处理相关个人信息。",
     restart: "重新开始",

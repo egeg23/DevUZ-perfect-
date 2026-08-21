@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const config: NextConfig = {
+  // Standalone кладёт рядом с приложением только те зависимости, которые
+  // реально нужны в рантайме. Образ выходит десятками мегабайт вместо
+  // сотен, а на VPS это разница во времени каждого деплоя.
+  output: "standalone",
   reactStrictMode: true,
   poweredByHeader: false,
   images: { formats: ["image/avif", "image/webp"] },

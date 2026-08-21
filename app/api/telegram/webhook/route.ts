@@ -1,4 +1,4 @@
-import { answerCallback, markBriefHandled, sendMessage } from "@/lib/qualify/telegram";
+import { answerCallback, esc, markBriefHandled, sendMessage } from "@/lib/qualify/telegram";
 import { updateLeadStatus } from "@/lib/qualify/store";
 
 export const runtime = "nodejs";
@@ -77,7 +77,11 @@ async function handleCommand(message: NonNullable<Update["message"]>) {
     const where =
       chat.type === "private"
         ? "этот личный чат"
-        : `группа «${chat.title ?? "без названия"}»`;
+        // Название группы задают её участники, а сообщение уходит с
+        // parse_mode HTML. Группа с именем «DevUz <Sales>» без экранирования
+        // означала бы, что бот молча не отвечает именно на ту команду,
+        // которой его и настраивают.
+        : `группа «${esc(chat.title ?? "без названия")}»`;
 
     const lines = [
       "<b>DevUz Studio · бот отдела продаж</b>",

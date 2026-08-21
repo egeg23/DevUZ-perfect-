@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 
+import { company } from "@/content/company";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
@@ -13,6 +14,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5";
+
+/** Запасной канал, который ассистент называет, если доставка не удалась. */
+const SUPPORT_TELEGRAM = company.telegram;
 
 /**
  * Потолок на реплику.
@@ -150,13 +154,30 @@ export async function POST(request: Request) {
         } catch (error) {
           console.error("saveLead", error);
         }
+
+        let delivered = false;
         try {
-          await sendLead(lead, history, leadId ?? "unsaved");
+          delivered = await sendLead(lead, history, leadId ?? "unsaved");
         } catch (error) {
           console.error("sendLead", error);
         }
 
-        push({ type: "qualified", grade: lead.grade, priority: lead.priority });
+        // Лид потерян, только если не сработало ни одно из двух: в базе его
+        // найдут даже без уведомления, а уведомление дойдёт даже без базы.
+        const lost = !delivered && !leadId;
+        if (lost) {
+          console.error("lead lost: neither stored nor delivered", {
+            grade: lead.grade,
+            contact: lead.contact_handle,
+          });
+        }
+
+        push({
+          type: "qualified",
+          grade: lead.grade,
+          priority: lead.priority,
+          delivered: !lost,
+        });
 
         // Второй проход: отдаём модели результат инструмента, чтобы она
         // закрыла разговор человеческой фразой, а не оборвала его на вызове.
@@ -171,7 +192,15 @@ export async function POST(request: Request) {
                 {
                   type: "tool_result" as const,
                   tool_use_id: toolUse.id,
-                  content: "Лид сохранён и передан менеджеру отдела продаж.",
+                  // Модели сообщается фактический исход, а не желаемый.
+                  // Сказать «передал менеджеру», когда доставка не удалась,
+                  // значит отпустить клиента в уверенности, что им займутся,
+                  // — и потерять его молча.
+                  content: lost
+                    ? `Заявку не удалось ни сохранить, ни доставить менеджеру. Не утверждай, что она передана. Коротко извинись и попроси написать напрямую в Telegram @${SUPPORT_TELEGRAM} — так запрос точно не потеряется.`
+                    : delivered
+                      ? "Лид сохранён и передан менеджеру отдела продаж."
+                      : `Лид сохранён, но уведомление менеджеру сейчас не ушло. Скажи, что заявку принял, и на всякий случай дай наш Telegram @${SUPPORT_TELEGRAM} для прямой связи.`,
                 },
               ],
             },

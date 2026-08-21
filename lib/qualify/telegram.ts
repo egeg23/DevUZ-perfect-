@@ -4,12 +4,20 @@ import { localeLabel } from "@/lib/i18n";
 
 const API = "https://api.telegram.org/bot";
 
-/** Экранирование под parse_mode: HTML — иначе имя с «<» ломает всё сообщение. */
-function esc(value: string): string {
+/**
+ * Экранирование под parse_mode: HTML.
+ *
+ * Кавычка здесь не для красоты: значение попадает и в текст, и в атрибут
+ * href. Без неё контакт вида `"Иван" <ivan@mail.ru>` — а это ровно то, что
+ * вставляется копированием из почтового клиента — закрывает атрибут раньше
+ * времени, Telegram отклоняет сообщение целиком, и лид не доходит вообще.
+ */
+export function esc(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 /**
@@ -37,6 +45,19 @@ export function detectContactKind(handle: string): ContactKind {
  * открыть поиск, вставить, найти — четыре действия, на каждом из которых
  * лид может подождать ещё пять минут.
  */
+/**
+ * Что считается допустимым значением для ссылки.
+ *
+ * Проверяем по белому списку, а не чистим по чёрному. Контакт пишет
+ * посетитель, то есть это недоверенный ввод, попадающий прямо в атрибут
+ * href: попытка «вырезать опасное» рано или поздно пропустит форму, о
+ * которой мы не подумали. Не прошло проверку — ссылки просто не будет,
+ * контакт покажется текстом, и менеджер скопирует его руками.
+ */
+const TELEGRAM_USERNAME = /^[A-Za-z0-9_]{4,32}$/;
+const PHONE_E164 = /^\+?\d{7,15}$/;
+const EMAIL = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
+
 function contactLink(lead: ScoredLead): { label: string; url: string | null } {
   const raw = lead.contact_handle.trim();
   if (!raw) return { label: "контакт не оставлен", url: null };
@@ -47,15 +68,20 @@ function contactLink(lead: ScoredLead): { label: string; url: string | null } {
 
   if (kind === "telegram") {
     const username = raw.replace(/^https?:\/\/t\.me\//i, "").replace(/^@/, "").trim();
-    return { label: `@${username}`, url: `https://t.me/${encodeURIComponent(username)}` };
+    return TELEGRAM_USERNAME.test(username)
+      ? { label: `@${username}`, url: `https://t.me/${username}` }
+      : { label: raw, url: null };
   }
+
   if (kind === "phone") {
     const digits = raw.replace(/[^\d+]/g, "");
-    return { label: raw, url: `tel:${digits}` };
+    return PHONE_E164.test(digits) ? { label: raw, url: `tel:${digits}` } : { label: raw, url: null };
   }
+
   if (kind === "email") {
-    return { label: raw, url: `mailto:${raw}` };
+    return EMAIL.test(raw) ? { label: raw, url: `mailto:${raw}` } : { label: raw, url: null };
   }
+
   return { label: raw, url: null };
 }
 
@@ -101,8 +127,10 @@ export function formatLeadBrief(lead: ScoredLead): string {
     "",
     `👤 ${who || "имя не названо"}`,
     contact.url
-      ? `💬 <a href="${contact.url}">Написать: ${esc(contact.label)}</a>`
-      : `💬 ${esc(contact.label)}`,
+      // esc() и здесь, поверх проверки по белому списку: два независимых
+      // барьера вместо одного, который однажды окажется дырявым.
+      ? `💬 <a href="${esc(contact.url)}">Написать: ${esc(contact.label)}</a>`
+      : `💬 <code>${esc(contact.label)}</code>`,
     `🌐 Диалог шёл на: ${localeLabel[lead.locale]}`,
     "",
     `<b>ЧТО ХОЧЕТ</b>`,

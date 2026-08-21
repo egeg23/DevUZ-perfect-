@@ -1,0 +1,64 @@
+# DevUz Studio на VPS: два контейнера, наружу торчит только Caddy.
+#
+#   cd /opt/devuz && docker compose up -d --build
+#
+# Caddy сам получает и продлевает сертификат Let's Encrypt. Это не про
+# удобство: вебхук Telegram принимается только по HTTPS с валидным
+# сертификатом, поэтому ручная возня с certbot здесь — лишний способ
+# уронить приём лидов в момент, когда сертификат протухнет.
+
+name: devuz
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"          # HTTP/3
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data       # хранилище сертификатов — не удалять,
+      - caddy_config:/config   # иначе Let's Encrypt упрётся в свой rate limit
+    environment:
+      DOMAIN: ${DOMAIN:?нужен домен, например devuz.maximov-tech.ru}
+    depends_on:
+      web:
+        condition: service_healthy
+    networks: [devuz]
+
+  web:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_YANDEX_METRIKA_ID: ${NEXT_PUBLIC_YANDEX_METRIKA_ID}
+        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID}
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    restart: unless-stopped
+    # Порт наружу не пробрасываем: до приложения можно достучаться только
+    # через Caddy, то есть только по HTTPS.
+    expose:
+      - "3000"
+    environment:
+      # Секреты читаются в рантайме и в образ не попадают.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_SALES_CHAT_ID: ${TELEGRAM_SALES_CHAT_ID}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      INDEXNOW_KEY: ${INDEXNOW_KEY}
+      GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION}
+      YANDEX_VERIFICATION: ${YANDEX_VERIFICATION}
+      GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    networks: [devuz]
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  devuz:

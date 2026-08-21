@@ -35,7 +35,9 @@ export function ChatPanel({
   ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<null | "error" | "disabled" | "qualified">(null);
+  const [status, setStatus] = useState<
+    null | "error" | "disabled" | "qualified" | "undelivered"
+  >(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -126,7 +128,7 @@ export function ChatPanel({
 
         for (const part of parts) {
           if (!part.startsWith("data: ")) continue;
-          let event: { type: string; value?: string };
+          let event: { type: string; value?: string; delivered?: boolean };
           try {
             event = JSON.parse(part.slice(6));
           } catch {
@@ -142,7 +144,9 @@ export function ChatPanel({
               return copy;
             });
           } else if (event.type === "qualified") {
-            setStatus("qualified");
+            // Доставка могла не удаться: в этом случае показываем прямой
+            // канал, иначе человек уйдёт уверенным, что им уже занимаются.
+            setStatus(event.delivered === false ? "undelivered" : "qualified");
           } else if (event.type === "error" || event.type === "refusal") {
             setStatus("error");
           }
@@ -161,9 +165,11 @@ export function ChatPanel({
       ? dict.chat.disabled
       : status === "error"
         ? dict.chat.error
-        : status === "qualified"
-          ? dict.chat.handoff
-          : null;
+        : status === "undelivered"
+          ? dict.chat.undelivered
+          : status === "qualified"
+            ? dict.chat.handoff
+            : null;
 
   return (
     <div

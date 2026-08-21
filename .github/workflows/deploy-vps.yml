@@ -1,0 +1,50 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "supabase/**"
+  workflow_dispatch:
+
+# Две выкатки одновременно на один сервер устроили бы гонку за docker build.
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  build-check:
+    name: Сборка и проверка типов
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      # Собираем до выкатки: поймать сломанный билд в CI дешевле, чем
+      # обнаружить его на сервере, где старый контейнер уже остановлен.
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://example.com
+
+  deploy:
+    name: Выкатка на VPS
+    needs: build-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Запустить деплой по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          script: |
+            export APP_DIR="${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
+            export BRANCH=main
+            bash "$APP_DIR/scripts/vps-deploy.sh"
