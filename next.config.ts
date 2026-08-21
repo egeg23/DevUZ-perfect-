@@ -4,6 +4,11 @@ const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   images: { formats: ["image/avif", "image/webp"] },
+  async rewrites() {
+    const key = process.env.INDEXNOW_KEY;
+    // IndexNow требует, чтобы ключ отдавался по адресу /<ключ>.txt в корне.
+    return key ? [{ source: `/${key}.txt`, destination: "/indexnow" }] : [];
+  },
   async headers() {
     return [
       {

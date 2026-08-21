@@ -3,6 +3,8 @@ import { Inter, JetBrains_Mono, Unbounded } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { ChatWidget } from "@/components/chat/chat-widget";
+import { Analytics } from "@/components/layout/analytics";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { company } from "@/content/company";
@@ -96,6 +98,8 @@ export default async function LocaleLayout({
         <Header locale={locale} dict={dict} />
         <main id="main">{children}</main>
         <Footer locale={locale} dict={dict} />
+        <ChatWidget locale={locale} dict={dict} />
+        <Analytics />
         <script
           type="application/ld+json"
           // Разметка собрана на сервере из наших же данных — внешнего ввода

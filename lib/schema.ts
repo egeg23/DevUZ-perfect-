@@ -26,7 +26,7 @@ export function organizationSchema(locale: Locale): Json {
     legalName: company.legalName,
     url: absoluteUrl(locale),
     logo: absoluteUrl("icon.svg"),
-    image: absoluteUrl("og.png"),
+    image: absoluteUrl(`og-${locale}.png`),
     description: t(company.description, locale),
     email: company.email,
     telephone: company.phoneHref,

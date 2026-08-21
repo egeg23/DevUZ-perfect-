@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { CompileScene } from "@/components/hero/compile-scene";
-import { CasesSection } from "@/components/sections/cases";
 import { ContactSection } from "@/components/sections/contact";
-import { FaqSection } from "@/components/sections/faq";
-import { ProcessSection } from "@/components/sections/process";
 import { ServicesSection } from "@/components/sections/services";
-import { StackSection } from "@/components/sections/stack";
-import { company } from "@/content/company";
+import { Container } from "@/components/ui/container";
 import { getDictionary } from "@/content/dictionaries";
+import { services } from "@/content/services";
 import { isLocale, t, type Locale } from "@/lib/i18n";
-import { faqSchema, jsonLdGraph } from "@/lib/schema";
+import { jsonLdGraph, serviceSchema } from "@/lib/schema";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
@@ -21,15 +17,17 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
+  const dict = getDictionary(locale);
 
   return buildMetadata({
     locale,
-    title: `${company.name} — ${t(company.tagline, locale)}`,
-    description: t(company.description, locale),
+    path: "services",
+    title: dict.services.title,
+    description: dict.services.description,
   });
 }
 
-export default async function HomePage({
+export default async function ServicesPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -41,17 +39,26 @@ export default async function HomePage({
 
   return (
     <>
-      <CompileScene locale={locale} dict={dict} />
+      <Container className="pt-36">
+        <p className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-green">
+          {"// "}{dict.services.kicker}
+        </p>
+        <h1 className="mt-4 max-w-3xl text-[clamp(2.2rem,5vw,3.6rem)] font-extrabold leading-[1.06]">
+          {dict.services.title}
+        </h1>
+        <p className="mt-5 max-w-2xl text-[1.02rem] leading-relaxed text-muted">
+          {dict.services.description}
+        </p>
+      </Container>
+
       <ServicesSection locale={locale} dict={dict} />
-      <CasesSection locale={locale} dict={dict} />
-      <ProcessSection dict={dict} />
-      <StackSection dict={dict} />
-      <FaqSection dict={dict} />
       <ContactSection locale={locale} dict={dict} />
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdGraph(faqSchema(dict.faq.items)) }}
+        dangerouslySetInnerHTML={{
+          __html: jsonLdGraph(...services.map((s) => serviceSchema(s, locale))),
+        }}
       />
     </>
   );

@@ -60,7 +60,10 @@ export function buildMetadata({
   noIndex?: boolean;
 }): Metadata {
   const url = absoluteUrl(path ? `${locale}/${path}` : locale);
-  const image = ogImage ?? absoluteUrl("og.png");
+  // Своя картинка на каждый язык: в мессенджерах превью читают чаще, чем
+  // сам заголовок, и русскоязычная обложка на китайской странице выглядит
+  // как чужая ссылка.
+  const image = ogImage ?? absoluteUrl(`og-${locale}.png`);
 
   return {
     title,
