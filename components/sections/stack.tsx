@@ -5,7 +5,7 @@ import type { Dictionary } from "@/content/dictionaries";
 const STACK = [
   "Next.js", "React", "TypeScript", "Tailwind CSS", "Flutter", "Dart",
   "Node.js", "Python", "FastAPI", "PostgreSQL", "Redis", "Supabase",
-  "Docker", "BullMQ", "Celery", "pgvector", "Claude API", "Telegram Bot API",
+  "Docker", "BullMQ", "Celery", "pgvector", "LLM API", "Telegram Bot API",
 ];
 
 export function StackSection({ dict }: { dict: Dictionary }) {

@@ -144,10 +144,10 @@ export const services: Service[] = [
       zh: "基于你自己数据作答的智能助手",
     },
     description: {
-      ru: "Поиск по внутренним документам с ссылкой на конкретный пункт, автоматизация первой линии продаж и поддержки, агенты, которые сами выполняют рутину. Строим на Claude и открытых моделях, с векторным индексом в вашей же базе.",
-      en: "Search across internal documents with a citation to the exact clause, automation of first-line sales and support, agents that handle routine work on their own. Built on Claude and open models, with the vector index inside your own database.",
-      uz: "Ichki hujjatlar bo‘ylab aniq bandga havola bilan qidiruv, sotuv va qo‘llab-quvvatlashning birinchi liniyasini avtomatlashtirish, rutinani o‘zi bajaradigan agentlar. Claude va ochiq modellar asosida, vektor indeks sizning bazangizda.",
-      zh: "在内部文档中检索并给出确切条款出处，自动化销售与客服的第一道防线，让智能体自主处理日常事务。基于 Claude 与开源模型构建，向量索引就存放在你自己的数据库中。",
+      ru: "Поиск по внутренним документам с ссылкой на конкретный пункт, автоматизация первой линии продаж и поддержки, агенты, которые сами выполняют рутину. Строим на кастомной LLM-сборке и открытых моделях, с векторным индексом в вашей же базе.",
+      en: "Search across internal documents with a citation to the exact clause, automation of first-line sales and support, agents that handle routine work on their own. Built on a custom LLM setup and open models, with the vector index inside your own database.",
+      uz: "Ichki hujjatlar bo‘ylab aniq bandga havola bilan qidiruv, sotuv va qo‘llab-quvvatlashning birinchi liniyasini avtomatlashtirish, rutinani o‘zi bajaradigan agentlar. Maxsus LLM yig‘masi va ochiq modellar asosida, vektor indeks sizning bazangizda.",
+      zh: "在内部文档中检索并给出确切条款出处，自动化销售与客服的第一道防线，让智能体自主处理日常事务。基于定制 LLM 方案与开源模型构建，向量索引就存放在你自己的数据库中。",
     },
     bullets: {
       ru: [
@@ -175,7 +175,7 @@ export const services: Service[] = [
         "数据始终留在你自己的环境内",
       ],
     },
-    tech: ["Claude API", "pgvector", "Python", "FastAPI", "Celery"],
+    tech: ["LLM API", "pgvector", "Python", "FastAPI", "Celery"],
     priceFromUsd: 5000,
     weeksFrom: 4,
     weeksTo: 16,

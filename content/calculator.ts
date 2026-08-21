@@ -237,10 +237,10 @@ export const categories: CalcCategory[] = [
     baseUzs: 26_000_000,
     baseWeeks: 5,
     tech: {
-      ru: ["Диалог на базе Claude", "Промпт под ваш процесс", "Защита от подмены инструкций", "Логи и метрики диалогов"],
-      en: ["Conversation built on Claude", "Prompt tuned to your process", "Protection against prompt injection", "Conversation logs and metrics"],
-      uz: ["Claude asosidagi muloqot", "Jarayoningizga moslangan prompt", "Ko‘rsatmalarni almashtirishdan himoya", "Suhbat loglari va metrikalari"],
-      zh: ["基于 Claude 的对话能力", "贴合你业务流程的提示词", "提示注入防护", "对话日志与指标"],
+      ru: ["Диалог на кастомной LLM", "Промпт под ваш процесс", "Защита от подмены инструкций", "Логи и метрики диалогов"],
+      en: ["Conversation on a custom LLM", "Prompt tuned to your process", "Protection against prompt injection", "Conversation logs and metrics"],
+      uz: ["Maxsus LLM asosidagi muloqot", "Jarayoningizga moslangan prompt", "Ko‘rsatmalarni almashtirishdan himoya", "Suhbat loglari va metrikalari"],
+      zh: ["基于定制 LLM 的对话能力", "贴合你业务流程的提示词", "提示注入防护", "对话日志与指标"],
     },
     work: {
       ru: ["Разбор процесса и сценариев", "Сбор и разметка базы знаний", "Настройка и прогон на реальных диалогах", "Передача и обучение команды"],
