@@ -35,6 +35,9 @@ export function ChatPanel({
   ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  // Диалог, по которому бриф уже отправлен. Сервер по этому флагу не создаст
+  // второй, даже если модель снова вызовет инструмент.
+  const [qualified, setQualified] = useState(false);
   const [status, setStatus] = useState<
     null | "error" | "disabled" | "qualified" | "undelivered"
   >(null);
@@ -95,7 +98,7 @@ export function ChatPanel({
         // Приветствие сгенерировано на клиенте и модели не принадлежит —
         // отправляем историю без него, иначе она увидит свою «реплику»,
         // которой не писала.
-        body: JSON.stringify({ messages: next.slice(1), locale }),
+        body: JSON.stringify({ messages: next.slice(1), locale, qualified }),
       });
 
       if (response.status === 503) {
@@ -144,11 +147,20 @@ export function ChatPanel({
               return copy;
             });
           } else if (event.type === "qualified") {
+            setQualified(true);
             // Доставка могла не удаться: в этом случае показываем прямой
             // канал, иначе человек уйдёт уверенным, что им уже занимаются.
             setStatus(event.delivered === false ? "undelivered" : "qualified");
+          } else if (event.type === "closing_failed") {
+            // Заявка уже у менеджера, не доиграла лишь прощальная фраза.
+            setStatus((prev) => (prev === "undelivered" ? prev : "qualified"));
           } else if (event.type === "error" || event.type === "refusal") {
-            setStatus("error");
+            // Успешную передачу заявки ошибка перебить не может: иначе
+            // человек, чей лид уже лежит у менеджера, видит «всё сломалось»
+            // и уходит, решив, что писать надо заново.
+            setStatus((prev) =>
+              prev === "qualified" || prev === "undelivered" ? prev : "error",
+            );
           }
         }
       }

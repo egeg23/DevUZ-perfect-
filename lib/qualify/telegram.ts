@@ -62,9 +62,15 @@ function contactLink(lead: ScoredLead): { label: string; url: string | null } {
   const raw = lead.contact_handle.trim();
   if (!raw) return { label: "контакт не оставлен", url: null };
 
-  const kind = lead.contact_kind && lead.contact_kind !== "none"
-    ? lead.contact_kind
-    : detectContactKind(raw);
+  // Определяем по самой строке, а не по тому, что назвала модель. Она
+  // ошибается: в живом диалоге ник @bird_dasha был помечен как почта. Разбор
+  // строки детерминирован и опирается на то, что человек реально написал,
+  // поэтому именно он и решает. Значение от модели остаётся запасным — на
+  // случай, когда разбор ничего не распознал.
+  const detected = detectContactKind(raw);
+  const kind = detected !== "none"
+    ? detected
+    : (lead.contact_kind && lead.contact_kind !== "none" ? lead.contact_kind : "none");
 
   if (kind === "telegram") {
     const username = raw.replace(/^https?:\/\/t\.me\//i, "").replace(/^@/, "").trim();
