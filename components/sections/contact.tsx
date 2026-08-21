@@ -1,5 +1,6 @@
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { LeadForm } from "@/components/chat/lead-form";
+import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -10,6 +11,7 @@ import type { Locale } from "@/lib/i18n";
 export function ContactSection({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   return (
     <section id="contact" className="border-t border-line py-24 md:py-32">
+      <CodeBoot code={"await telegram.send(SALES_CHAT, brief(lead))"}>
       <Container>
         <SectionHeading
           kicker={dict.contact.kicker}
@@ -47,6 +49,7 @@ export function ContactSection({ locale, dict }: { locale: Locale; dict: Diction
           </Reveal>
         </div>
       </Container>
+  </CodeBoot>
     </section>
   );
 }

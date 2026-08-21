@@ -1,3 +1,4 @@
+import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -6,6 +7,7 @@ import type { Dictionary } from "@/content/dictionaries";
 export function FaqSection({ dict }: { dict: Dictionary }) {
   return (
     <section id="faq" className="border-t border-line py-24 md:py-32">
+      <CodeBoot code={"faq.map((q) => <Answer key={q.id} />)"}>
       <Container>
         <SectionHeading kicker={dict.faq.kicker} title={dict.faq.title} />
 
@@ -33,6 +35,7 @@ export function FaqSection({ dict }: { dict: Dictionary }) {
           ))}
         </div>
       </Container>
+  </CodeBoot>
     </section>
   );
 }

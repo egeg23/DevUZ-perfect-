@@ -2,7 +2,15 @@ import { priorityBadge } from "@/lib/qualify/scoring";
 import type { ChatMessage, ContactKind, ScoredLead } from "@/lib/qualify/types";
 import { localeLabel } from "@/lib/i18n";
 
-const API = "https://api.telegram.org/bot";
+/**
+ * Адрес Bot API.
+ *
+ * Вынесен в переменную окружения ради проверок: поведение бота — что именно
+ * он отвечает случайному человеку и что показывает только отделу продаж —
+ * иначе не проверить, не написав ему руками. Подменяется на локальный
+ * заглушечный сервер в тестах, в проде остаётся адрес по умолчанию.
+ */
+const API = `${process.env.TELEGRAM_API_BASE ?? "https://api.telegram.org"}/bot`;
 
 /**
  * Экранирование под parse_mode: HTML.
@@ -124,12 +132,16 @@ function clampHtml(text: string, limit = TELEGRAM_LIMIT): string {
  * заготовка сообщения — сразу следом, а формальная квалификация уходит вниз:
  * она нужна руководителю для отчёта, а не продавцу перед первым сообщением.
  */
-export function formatLeadBrief(lead: ScoredLead): string {
+export function formatLeadBrief(lead: ScoredLead, requestNo?: string): string {
   const contact = contactLink(lead);
   const who = [lead.contact_name, lead.company].filter(Boolean).map(esc).join(" · ");
 
   const parts: string[] = [
     `${priorityBadge(lead)}  ·  <b>${lead.grade}</b>  ·  ${lead.score}/100`,
+    // Номер заявки клиент уже услышал в чате. Он же в шапке брифа: когда
+    // человек напишет «я по заявке DZ-0821-K4M7», менеджер должен найти её
+    // поиском по чату, а не листать ленту.
+    ...(requestNo ? [`🧾 Заявка <code>${esc(requestNo)}</code>`] : []),
     "",
     `👤 ${who || "имя не названо"}`,
     contact.url
@@ -223,6 +235,7 @@ export async function sendLead(
   lead: ScoredLead,
   transcript: ChatMessage[],
   leadId: string,
+  requestNo?: string,
 ): Promise<boolean> {
   const chatId = process.env.TELEGRAM_SALES_CHAT_ID;
   if (!chatId) return false;
@@ -233,7 +246,7 @@ export async function sendLead(
 
   const sent = await call("sendMessage", {
     chat_id: chatId,
-    text: formatLeadBrief(lead),
+    text: formatLeadBrief(lead, requestNo),
     parse_mode: "HTML",
     disable_notification: silent,
     link_preview_options: { is_disabled: true },
@@ -264,6 +277,63 @@ export async function sendLead(
   }
 
   return sent;
+}
+
+/**
+ * Ответ ассистента клиенту в Telegram.
+ *
+ * Текст пишет модель, то есть в нём может оказаться что угодно — от угловых
+ * скобок в имени тега до амперсанда в названии компании. При parse_mode HTML
+ * Telegram отклоняет всё сообщение целиком, а не портит разметку: без
+ * экранирования клиент получил бы молчание вместо ответа.
+ *
+ * Длинные ответы режутся по границе абзаца и уходят несколькими сообщениями:
+ * обрезать реплику менеджера на полуслове хуже, чем прислать две.
+ */
+export async function sendPlain(chatId: number | string, text: string): Promise<boolean> {
+  const chunks = splitForTelegram(text.trim());
+  let ok = true;
+  for (const chunk of chunks) {
+    ok = (await sendMessage(chatId, esc(chunk))) && ok;
+  }
+  return ok;
+}
+
+function splitForTelegram(text: string, limit = 3500): string[] {
+  if (text.length <= limit) return [text];
+
+  const chunks: string[] = [];
+  let rest = text;
+  while (rest.length > limit) {
+    const window = rest.slice(0, limit);
+    // Ищем границу по абзацу, затем по предложению, и только потом рвём как
+    // есть: у модели реплики короткие, так что до последнего варианта дело
+    // доходить не должно.
+    const cut =
+      Math.max(window.lastIndexOf("\n\n"), window.lastIndexOf("\n")) > limit * 0.4
+        ? Math.max(window.lastIndexOf("\n\n"), window.lastIndexOf("\n"))
+        : window.lastIndexOf(". ") > limit * 0.4
+          ? window.lastIndexOf(". ") + 1
+          : limit;
+    chunks.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if (rest) chunks.push(rest);
+  return chunks;
+}
+
+/**
+ * «Печатает…» в шапке чата.
+ *
+ * Telegram гасит индикатор через пять секунд, поэтому для долгого ответа его
+ * приходится повторять. Без него пауза в несколько секунд читается как
+ * «бот не работает», и человек пишет второе сообщение поверх первого.
+ */
+export function typingIndicator(chatId: number | string): () => void {
+  const ping = () => void call("sendChatAction", { chat_id: chatId, action: "typing" });
+  ping();
+  const timer = setInterval(ping, 4000);
+  return () => clearInterval(timer);
 }
 
 export async function answerCallback(id: string, text: string): Promise<void> {

@@ -1,3 +1,4 @@
+import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import type { Dictionary } from "@/content/dictionaries";
@@ -11,6 +12,7 @@ const STACK = [
 export function StackSection({ dict }: { dict: Dictionary }) {
   return (
     <section className="border-t border-line py-20">
+      <CodeBoot code={"import { next, postgres, rag } from \"@devuz/stack\""}>
       <Container>
         <Reveal>
           <p className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-green">
@@ -34,6 +36,7 @@ export function StackSection({ dict }: { dict: Dictionary }) {
           ))}
         </div>
       </div>
+  </CodeBoot>
     </section>
   );
 }

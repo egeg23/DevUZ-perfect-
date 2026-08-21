@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -102,6 +103,7 @@ export function CasesSection({ locale, dict }: { locale: Locale; dict: Dictionar
 
   return (
     <section id="cases" className="border-t border-line py-24 md:py-32">
+      <CodeBoot code={"SELECT * FROM cases ORDER BY year DESC"}>
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading
@@ -127,6 +129,7 @@ export function CasesSection({ locale, dict }: { locale: Locale; dict: Dictionar
           ))}
         </div>
       </Container>
+      </CodeBoot>
     </section>
   );
 }

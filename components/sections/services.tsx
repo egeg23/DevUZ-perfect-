@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Icon } from "@/components/ui/icon";
 import { Reveal } from "@/components/ui/reveal";
@@ -11,6 +12,7 @@ import { localeHref, t, type Locale } from "@/lib/i18n";
 export function ServicesSection({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   return (
     <section id="services" className="border-t border-line py-24 md:py-32">
+      <CodeBoot code={"const services = await catalog.list({ locale })"}>
       <Container>
         <SectionHeading
           kicker={dict.services.kicker}
@@ -60,6 +62,7 @@ export function ServicesSection({ locale, dict }: { locale: Locale; dict: Dictio
           ))}
         </div>
       </Container>
+      </CodeBoot>
     </section>
   );
 }

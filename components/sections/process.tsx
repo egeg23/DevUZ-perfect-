@@ -1,3 +1,4 @@
+import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -6,6 +7,7 @@ import type { Dictionary } from "@/content/dictionaries";
 export function ProcessSection({ dict }: { dict: Dictionary }) {
   return (
     <section id="process" className="border-t border-line py-24 md:py-32">
+      <CodeBoot code={"pipeline.run([\"бриф\", \"дизайн\", \"сборка\", \"запуск\"])"}>
       <Container>
         <SectionHeading
           kicker={dict.process.kicker}
@@ -28,6 +30,7 @@ export function ProcessSection({ dict }: { dict: Dictionary }) {
           ))}
         </ol>
       </Container>
+      </CodeBoot>
     </section>
   );
 }

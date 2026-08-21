@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n";
+import { PROMISE_SECONDS } from "@/lib/promise-terms";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -41,6 +42,22 @@ export function ChatPanel({
   const [status, setStatus] = useState<
     null | "error" | "disabled" | "qualified" | "undelivered"
   >(null);
+  /** Номер заявки, назначенный при передаче менеджеру. */
+  const [requestNo, setRequestNo] = useState<string | null>(null);
+  /**
+   * Гарантия не сработала — скидка подтверждена.
+   *
+   * Считаем на клиенте, от момента нажатия «Отправить»: обещаны двадцать
+   * секунд ожидания, которые видит человек, а не двадцать секунд работы
+   * сервера. Медленная сеть — тоже наше ожидание, и прятаться за неё нечестно.
+   */
+  const [discount, setDiscount] = useState(false);
+  /** Момент отправки первой реплики: с него идёт отсчёт. */
+  const [waitStart, setWaitStart] = useState<number | null>(null);
+  const [remaining, setRemaining] = useState(PROMISE_SECONDS);
+  /** Ссылка на продолжение разговора в Telegram. */
+  const [tgUrl, setTgUrl] = useState<string | null>(null);
+  const [tgBusy, setTgBusy] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -66,6 +83,61 @@ export function ChatPanel({
     if (node) node.scrollTop = node.scrollHeight;
   }, [messages, busy]);
 
+  /**
+   * Обратный отсчёт до конца гарантии.
+   *
+   * Тикает только пока ждём самый первый ответ. Дальше обещание считается
+   * выполненным: оно про скорость первого касания, а не про каждую реплику.
+   */
+  useEffect(() => {
+    if (waitStart === null) return;
+
+    const tick = () => {
+      const left = Math.ceil((PROMISE_SECONDS * 1000 - (Date.now() - waitStart)) / 1000);
+      if (left <= 0) {
+        setRemaining(0);
+        setDiscount(true);
+        setWaitStart(null);
+        return;
+      }
+      setRemaining(left);
+    };
+
+    tick();
+    const timer = window.setInterval(tick, 250);
+    return () => window.clearInterval(timer);
+  }, [waitStart]);
+
+  /** Передаёт разговор боту и открывает Telegram на том же месте. */
+  const openTelegram = useCallback(async () => {
+    if (tgBusy) return;
+    setTgBusy(true);
+    try {
+      const response = await fetch("/api/handoff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: messages.slice(1),
+          locale,
+          qualified,
+          requestNo,
+          discount,
+        }),
+      });
+      const data = (await response.json()) as { url?: string };
+      if (data.url) {
+        setTgUrl(data.url);
+        window.open(data.url, "_blank", "noopener,noreferrer");
+      }
+    } catch {
+      // Передача не удалась — оставляем прямую ссылку на бота: разговор
+      // придётся начать заново, но связь с нами человек не потеряет.
+      setTgUrl(null);
+    } finally {
+      setTgBusy(false);
+    }
+  }, [tgBusy, messages, locale, qualified, requestNo, discount]);
+
   useEffect(() => {
     if (!prefill) return;
     // Расчёт из калькулятора не отправляем сразу: человек должен успеть
@@ -84,12 +156,20 @@ export function ChatPanel({
     const text = input.trim();
     if (!text || busy) return;
 
+    // Отсчёт запускается только на первой реплике: гарантия про то, как
+    // быстро студия отзовётся, а не про темп переписки.
+    const firstTurn = !messages.some((m) => m.role === "user");
+
     const next: Message[] = [...messages, { role: "user", content: text }];
     setMessages(next);
     setInput("");
     if (inputRef.current) inputRef.current.style.height = "auto";
     setBusy(true);
     setStatus(null);
+    if (firstTurn && !discount) {
+      setRemaining(PROMISE_SECONDS);
+      setWaitStart(Date.now());
+    }
 
     try {
       const response = await fetch("/api/chat", {
@@ -98,7 +178,7 @@ export function ChatPanel({
         // Приветствие сгенерировано на клиенте и модели не принадлежит —
         // отправляем историю без него, иначе она увидит свою «реплику»,
         // которой не писала.
-        body: JSON.stringify({ messages: next.slice(1), locale, qualified }),
+        body: JSON.stringify({ messages: next.slice(1), locale, qualified, discount }),
       });
 
       if (response.status === 503) {
@@ -131,7 +211,12 @@ export function ChatPanel({
 
         for (const part of parts) {
           if (!part.startsWith("data: ")) continue;
-          let event: { type: string; value?: string; delivered?: boolean };
+          let event: {
+            type: string;
+            value?: string;
+            delivered?: boolean;
+            requestNo?: string;
+          };
           try {
             event = JSON.parse(part.slice(6));
           } catch {
@@ -140,6 +225,10 @@ export function ChatPanel({
 
           if (event.type === "text" && event.value) {
             const chunk = event.value;
+            // Ответ пошёл — гарантия выполнена. Останавливаем отсчёт именно
+            // на первом куске текста, а не на закрытии потока: человек видит
+            // ответ с первой буквы, и с этого момента он уже не ждёт.
+            if (chunk.trim()) setWaitStart(null);
             setMessages((prev) => {
               const copy = [...prev];
               const last = copy[copy.length - 1];
@@ -148,6 +237,7 @@ export function ChatPanel({
             });
           } else if (event.type === "qualified") {
             setQualified(true);
+            if (typeof event.requestNo === "string") setRequestNo(event.requestNo);
             // Доставка могла не удаться: в этом случае показываем прямой
             // канал, иначе человек уйдёт уверенным, что им уже занимаются.
             setStatus(event.delivered === false ? "undelivered" : "qualified");
@@ -168,6 +258,7 @@ export function ChatPanel({
       setStatus("error");
     } finally {
       setBusy(false);
+      setWaitStart(null);
       inputRef.current?.focus();
     }
   }
@@ -198,10 +289,44 @@ export function ChatPanel({
           <p className="truncate text-[0.92rem] font-semibold">{dict.chat.title}</p>
           <p className="truncate text-[0.75rem] text-faint">{dict.chat.subtitle}</p>
         </div>
-        <span className="ml-auto flex items-center gap-1.5 font-mono text-[0.65rem] text-green">
+        <span className="ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap font-mono text-[0.65rem] text-green">
           <span className="h-1.5 w-1.5 rounded-full bg-green" />
           {dict.chat.online}
         </span>
+      </div>
+
+      {/* Полоса гарантии.
+          Пока ждём первый ответ, здесь тикает счётчик: обещание, которое не
+          видно, не работает как обещание — человек должен видеть, что время
+          идёт и что оно чем-то обеспечено. */}
+      <div
+        className={cn(
+          // Переносим по строкам, а не сжимаем: виджет всегда узкий, около
+          // 384 px, и медиазапросы тут не помогают — ширина не зависит от
+          // экрана. Обещание и его цена должны читаться целиком.
+          "flex flex-wrap items-center gap-x-2 gap-y-0.5 border-b px-5 py-2.5 text-[0.7rem]",
+          discount
+            ? "border-gold/30 bg-gold/10 text-gold"
+            : "border-line bg-green/[0.06] text-green",
+        )}
+        aria-live="polite"
+      >
+        {discount ? (
+          <>
+            <span aria-hidden="true">🎁</span>
+            <span className="leading-snug">{dict.chat.discountWon}</span>
+          </>
+        ) : (
+          <>
+            <span aria-hidden="true" className="text-[0.8rem]">⚡️</span>
+            <span className="whitespace-nowrap font-medium">
+              {waitStart !== null
+                ? dict.chat.counting.replace("{n}", String(remaining))
+                : dict.chat.promise}
+            </span>
+            <span className="ml-auto whitespace-nowrap text-faint">{dict.chat.promiseNote}</span>
+          </>
+        )}
       </div>
 
       <div
@@ -236,7 +361,7 @@ export function ChatPanel({
         ) : null}
 
         {notice ? (
-          <p
+          <div
             className={cn(
               "rounded-xl border px-4 py-3 text-[0.83rem] leading-relaxed",
               status === "qualified"
@@ -244,8 +369,42 @@ export function ChatPanel({
                 : "border-gold/30 bg-gold/10 text-gold",
             )}
           >
-            {notice}
-          </p>
+            {requestNo && status === "qualified" ? (
+              // Номер заявки — то, за что человек держится после разговора:
+              // он видит, что запрос стал объектом с именем, а не растворился
+              // в чате. Менеджер найдёт его по тому же номеру.
+              <p className="mb-1.5 font-mono text-[0.78rem] font-semibold tracking-wide">
+                {dict.chat.requestLabel} {requestNo}
+              </p>
+            ) : null}
+            <p>{notice}</p>
+          </div>
+        ) : null}
+
+        {/* Переезд в Telegram. Показываем после первого обмена репликами:
+            до него переносить нечего, а кнопка «уйти отсюда» рядом с пустым
+            чатом читается как предложение закрыть вкладку. */}
+        {messages.some((m) => m.role === "user") && !busy ? (
+          <div className="rounded-xl border border-line bg-surface-2/60 px-4 py-3">
+            <button
+              type="button"
+              onClick={() => void openTelegram()}
+              disabled={tgBusy}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-soft/40 bg-blue/10 px-4 py-2.5 text-[0.83rem] font-medium text-blue-soft transition-colors hover:border-blue-soft hover:bg-blue/20 disabled:opacity-50"
+            >
+              <span aria-hidden="true">✈</span>
+              {dict.chat.toTelegram}
+            </button>
+            <p className="mt-2 text-center text-[0.7rem] leading-snug text-faint">
+              {tgUrl ? (
+                <a href={tgUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                  {dict.chat.toTelegramNote}
+                </a>
+              ) : (
+                dict.chat.toTelegramNote
+              )}
+            </p>
+          </div>
         ) : null}
       </div>
 
