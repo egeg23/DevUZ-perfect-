@@ -20,7 +20,22 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
   const [prefill, setPrefill] = useState<string | undefined>();
 
   useEffect(() => {
-    const onScroll = () => setReady(window.scrollY > window.innerHeight * 0.8);
+    // Появляется только после сцены сборки. Иначе на телефоне кнопка чата
+    // наезжает на терминал ровно в тот момент, когда там дорисовывается
+    // галочка, — то есть перекрывает кульминацию.
+    const onScroll = () => {
+      // Ищем именно сцену героя по атрибуту, а не первый попавшийся <section>:
+      // на внутренних страницах сцены нет, и первым окажется обычный блок —
+      // порог получился бы случайным.
+      const scene = document.querySelector<HTMLElement>("[data-hero-scene]");
+      // Сцена доигрывает ровно тогда, когда её липкий экран упирается в
+      // нижний край: дальше её высоты вычитать нечего, иначе кнопка ждёт
+      // ещё половину следующего блока и посетитель её просто не находит.
+      const after = scene
+        ? scene.offsetHeight - window.innerHeight
+        : window.innerHeight * 0.6;
+      setReady(window.scrollY > after);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);

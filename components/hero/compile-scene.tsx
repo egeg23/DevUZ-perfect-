@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef } from "react";
 
 import { CodeRain } from "@/components/hero/code-rain";
+import { useNarrow } from "@/components/hero/use-narrow";
 import { ease, phase, useScrollProgress } from "@/components/hero/use-scroll-progress";
 import { Container } from "@/components/ui/container";
 import type { Dictionary } from "@/content/dictionaries";
@@ -23,7 +24,20 @@ type Token = { c: string; v: string };
  * и настоящим номером строки даёт вертикальный сдвиг: пока сцена не доиграла,
  * строки физически стоят в чужих слотах, а к концу съезжаются в свои.
  */
-const CODE: Array<{ slot: number; jitter: number; tilt: number; tokens: Token[] }> = [
+const CODE: Array<{
+  slot: number;
+  jitter: number;
+  tilt: number;
+  tokens: Token[];
+  /**
+   * Укороченный вариант для узких экранов.
+   *
+   * На телефоне полная строка не помещается и обрезается посреди слова —
+   * получается не «идёт сборка», а «вёрстка поехала». Смысл кода тот же,
+   * просто без длинных имён и комментариев.
+   */
+  short: Token[];
+}> = [
   {
     slot: 4,
     jitter: -34,
@@ -34,6 +48,11 @@ const CODE: Array<{ slot: number; jitter: number; tilt: number; tokens: Token[] 
       { c: "tok-punc", v: "(" },
       { c: "tok-txt", v: "msg" },
       { c: "tok-punc", v: ") {" },
+    ],
+    short: [
+      { c: "tok-key", v: "function " },
+      { c: "tok-fn", v: "qualifyLead" },
+      { c: "tok-punc", v: "(msg) {" },
     ],
   },
   {
@@ -47,6 +66,12 @@ const CODE: Array<{ slot: number; jitter: number; tilt: number; tokens: Token[] 
       { c: "tok-punc", v: "(msg.niche)" },
       { c: "tok-com", v: "      // Tier 1–3" },
     ],
+    short: [
+      { c: "tok-key", v: "  const " },
+      { c: "tok-txt", v: "icp = " },
+      { c: "tok-fn", v: "scoreIcp" },
+      { c: "tok-punc", v: "(niche)" },
+    ]
   },
   {
     slot: 6,
@@ -59,6 +84,12 @@ const CODE: Array<{ slot: number; jitter: number; tilt: number; tokens: Token[] 
       { c: "tok-punc", v: "(msg.answers)" },
       { c: "tok-com", v: "  // B · A · N · T" },
     ],
+    short: [
+      { c: "tok-key", v: "  const " },
+      { c: "tok-txt", v: "bant = " },
+      { c: "tok-fn", v: "scoreBant" },
+      { c: "tok-punc", v: "(ans)" },
+    ]
   },
   {
     slot: 2,
@@ -70,6 +101,11 @@ const CODE: Array<{ slot: number; jitter: number; tilt: number; tokens: Token[] 
       { c: "tok-fn", v: "total" },
       { c: "tok-punc", v: "() }" },
     ],
+    short: [
+      { c: "tok-key", v: "  const " },
+      { c: "tok-txt", v: "lead = " },
+      { c: "tok-punc", v: "{ ...icp, ...bant }" },
+    ]
   },
   {
     slot: 5,
@@ -84,6 +120,13 @@ const CODE: Array<{ slot: number; jitter: number; tilt: number; tokens: Token[] 
       { c: "tok-fn", v: "card" },
       { c: "tok-punc", v: "(lead))" },
     ],
+    short: [
+      { c: "tok-key", v: "  await " },
+      { c: "tok-fn", v: "telegram.send" },
+      { c: "tok-punc", v: "(" },
+      { c: "tok-fn", v: "card" },
+      { c: "tok-punc", v: "(lead))" },
+    ]
   },
   {
     slot: 1,
@@ -93,12 +136,17 @@ const CODE: Array<{ slot: number; jitter: number; tilt: number; tokens: Token[] 
       { c: "tok-key", v: "  return " },
       { c: "tok-punc", v: "{ tier, bant, score }" },
     ],
+    short: [
+      { c: "tok-key", v: "  return " },
+      { c: "tok-txt", v: "lead" },
+    ]
   },
   {
     slot: 3,
     jitter: -24,
     tilt: 0.9,
     tokens: [{ c: "tok-punc", v: "}" }],
+    short: [{ c: "tok-punc", v: "}" }],
   },
 ];
 
@@ -108,22 +156,42 @@ const LINE_EM = 1.95;
 export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const sceneRef = useRef<HTMLElement>(null);
   const { progress, reduced } = useScrollProgress(sceneRef);
+  const narrow = useNarrow();
 
   // ── Фазы сцены ────────────────────────────────────────────────────────────
-  const cardsIn = phase(progress, 0.1, 0.34);
-  const heroOut = ease(phase(progress, 0.44, 0.62));
-  const order = ease(phase(progress, 0.44, 0.72)); // хаос → порядок
-  const build = phase(progress, 0.72, 0.86); // прогресс сборки и галочка
-  const settle = ease(phase(progress, 0.9, 1)); // терминал сжимается, сцена уходит
+  //
+  // Фазы идут внахлёст, без пауз между ними: раньше между «текст ушёл» и
+  // «загорелась галочка» оставался промежуток, за который ничего не менялось.
+  // На широком экране это просто затянуто, а на телефоне, где код прижат к
+  // низу, полэкрана оставалось пустым — самое заметное место сцены.
+  const cardsIn = phase(progress, 0.08, 0.32);
+  const heroOut = ease(phase(progress, 0.42, 0.6));
+  const order = ease(phase(progress, 0.42, 0.66)); // хаос → порядок
+  const build = phase(progress, 0.64, 0.8); // прогресс сборки и галочка
+  const settle = ease(phase(progress, 0.88, 1)); // терминал сжимается, сцена уходит
 
-  const compiled = build > 0.55;
+  /**
+   * Насколько терминал утоплен за нижний край (1 — целиком, 0 — на месте).
+   *
+   * Только для телефона; на широком экране правило обнуляется медиазапросом
+   * в globals.css. Выезд начинается чуть позже, чем гаснет текст героя, —
+   * иначе на середине перехода терминал и кнопки видны одновременно и
+   * наезжают друг на друга.
+   */
+  const peek = 0.74 * (1 - ease(phase(progress, 0.5, 0.64)));
+
+  // Шапка терминала зеленеет вместе с галочкой, а не позже неё: иначе на
+  // экране уже нарисована галка и надпись «Compiled successfully», а статус
+  // рядом всё ещё показывает «сборка…».
+  const compiled = build > 0.45;
 
   return (
     <section
       ref={sceneRef}
-      // Высота задаёт длину «плёнки». На мобильных сцена короче: листать
-      // три с половиной экрана большим пальцем — испытание, а не эффект.
-      className={reduced ? "relative" : "relative h-[280vh] md:h-[360vh]"}
+      data-hero-scene=""
+      // Высота задаёт длину «плёнки». На телефоне сцена почти вдвое короче:
+      // листать три экрана большим пальцем — испытание, а не эффект.
+      className={reduced ? "relative" : "relative h-[190vh] md:h-[360vh]"}
       aria-label={dict.hero.eyebrow}
     >
       <div className="sticky top-0 flex h-svh min-h-[600px] flex-col overflow-hidden">
@@ -138,7 +206,7 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
           style={{ opacity: 0.14 + build * 0.22 }}
         />
 
-        <CodeRain progress={progress} reduced={reduced} />
+        <CodeRain progress={progress} reduced={reduced} narrow={narrow} />
 
         {/* ── Текст героя ──────────────────────────────────────────────────
             Обычная разметка, а не canvas: заголовок должен попадать в индекс
@@ -148,14 +216,26 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
             этой подложки заголовок читался бы сквозь падающие строки. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 z-[5] w-full lg:w-3/5"
+          className="pointer-events-none absolute inset-y-0 left-0 z-[5] hidden w-full md:block lg:w-3/5"
           style={{
             background:
               "radial-gradient(120% 75% at 8% 45%, rgba(5,7,11,.94) 0%, rgba(5,7,11,.86) 42%, rgba(5,7,11,0) 78%)",
           }}
         />
+        {/* На телефоне текст занимает всю ширину, поэтому пятно из центра не
+            подходит — оно гасит дождь целиком. Здесь подложка идёт сверху
+            вниз: под текстом плотная, а к нижней трети расходится, и именно
+            там, где в первом кадре ещё нет терминала, дождь видно. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[5] md:hidden"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(5,7,11,.93) 0%, rgba(5,7,11,.90) 46%, rgba(5,7,11,.58) 70%, rgba(5,7,11,.18) 88%, rgba(5,7,11,0) 100%)",
+          }}
+        />
 
-        <Container className="relative z-10 flex min-h-0 flex-1 flex-col justify-center pt-[5.5rem]">
+        <Container className="relative z-10 flex min-h-0 flex-1 flex-col justify-center pt-[4.75rem] md:pt-[5.5rem]">
           <div
             style={{
               opacity: 1 - heroOut,
@@ -168,7 +248,7 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
               {dict.hero.eyebrow}
             </p>
 
-            <h1 className="mt-7 text-[clamp(2.1rem,4.9vw,4rem)] font-extrabold leading-[1.03]">
+            <h1 className="mt-5 md:mt-7 text-[clamp(1.75rem,6.4vw,4rem)] font-extrabold leading-[1.05]">
               {dict.hero.titleLead}
               <br />
               <span className="bg-gradient-to-r from-green to-blue-soft bg-clip-text text-transparent">
@@ -176,21 +256,21 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
               </span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-[1.02rem] leading-relaxed text-muted">
+            <p className="mt-4 max-w-xl text-[0.92rem] leading-relaxed text-muted md:mt-6 md:text-[1.02rem]">
               {dict.hero.lead}
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-6 flex flex-wrap items-center gap-2.5 md:mt-8 md:gap-3">
               <Link
                 href={localeHref(locale, "contact")}
-                className="inline-flex items-center gap-2.5 rounded-xl bg-green px-7 py-4 font-semibold text-ink transition-all duration-300 hover:bg-white hover:shadow-[0_0_40px_-8px_var(--color-green)]"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-green px-5 py-3 text-[0.92rem] font-semibold text-ink md:px-7 md:py-4 md:text-base transition-all duration-300 hover:bg-white hover:shadow-[0_0_40px_-8px_var(--color-green)]"
               >
                 {dict.cta.calculate}
                 <span aria-hidden="true">→</span>
               </Link>
               <Link
                 href={localeHref(locale, "cases")}
-                className="rounded-xl border border-line px-6 py-4 font-medium text-text transition-colors hover:border-green hover:text-green"
+                className="rounded-xl border border-line px-5 py-3 text-[0.92rem] font-medium text-text md:px-6 md:py-4 md:text-base transition-colors hover:border-green hover:text-green"
               >
                 {dict.cta.seeCases}
               </Link>
@@ -234,13 +314,13 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
         {/* ── Итог сборки: галочка и надпись ─────────────────────────────── */}
         <div
           aria-hidden={!compiled}
-          className="pointer-events-none absolute inset-x-0 top-[24%] z-20 flex flex-col items-center gap-5"
+          className="pointer-events-none absolute inset-x-0 top-[27%] z-20 flex flex-col items-center gap-3 px-6 text-center md:top-[24%] md:gap-5"
           style={{
             opacity: Math.min(build / 0.55, 1) * (1 - settle),
             transform: `scale(${0.86 + Math.min(build / 0.55, 1) * 0.14})`,
           }}
         >
-          <svg width="92" height="92" viewBox="0 0 100 100" className="check-draw" style={{ ["--check-progress" as string]: build }}>
+          <svg viewBox="0 0 100 100" className="check-draw h-16 w-16 md:h-[92px] md:w-[92px]" style={{ ["--check-progress" as string]: build }}>
             <circle
               cx="50"
               cy="50"
@@ -265,8 +345,15 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
         </div>
 
         {/* ── Терминал: сюда съезжается весь падавший код ─────────────────── */}
+        {/* На телефоне терминал выведен из потока: иначе его высота съедала бы
+            место у текста героя, и заголовок с подзаголовком уезжали под
+            шапку. С md он снова обычный блок в колонке. */}
         <div
-          className="relative z-10 mt-auto shrink-0 px-4 pb-5 sm:px-8 lg:px-12"
+          className="hero-terminal absolute inset-x-0 bottom-0 z-10 md:relative md:mt-auto md:shrink-0"
+          style={{ ["--peek" as string]: peek }}
+        >
+        <div
+          className="relative z-10 px-4 pb-5 sm:px-8 lg:px-12"
           style={{
             transform: `translate3d(0, ${settle * 40}px, 0) scale(${1 - settle * 0.06})`,
             opacity: 1 - settle * 0.85,
@@ -287,49 +374,78 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
               </span>
             </div>
 
-            <div className="relative overflow-hidden px-4 py-3 font-mono text-[0.7rem] leading-[1.95] sm:text-[0.78rem]"
-                 style={{ height: `calc(${CODE.length + 1.6} * ${LINE_EM}em)` }}>
+            <div className="relative overflow-hidden px-3 py-2.5 font-mono text-[0.6rem] leading-[1.95] sm:px-4 sm:py-3 sm:text-[0.78rem]"
+                 // Запас в 2.5 строки, а не в одну: кроме итоговой строки
+                 // «Compiled successfully» высота должна вместить ещё и
+                 // вертикальные отступы самого блока — box-sizing здесь
+                 // border-box, и padding входит в заданную height.
+                 style={{ height: `calc(${CODE.length + 2.5} * ${LINE_EM}em)` }}>
               {CODE.map((line, i) => {
                 const shift = (line.slot - i) * LINE_EM * (1 - order);
+                // Разброс по горизонтали на телефоне вдвое меньше: там ширина
+                // карточки 330 px, и полный сдвиг уносил бы строку за её край —
+                // вместо хаоса получалась бы обрезка.
+                const drift = line.jitter * (1 - order) * (narrow ? 0.45 : 1);
                 return (
                   <div
                     key={i}
-                    className="grid grid-cols-[1.7rem_1fr] gap-3 whitespace-nowrap"
+                    className="grid grid-cols-[1.3rem_1fr] gap-2 whitespace-nowrap sm:grid-cols-[1.7rem_1fr] sm:gap-3"
                     style={{
-                      transform: `translate3d(${line.jitter * (1 - order)}px, ${shift}em, 0) rotate(${line.tilt * (1 - order)}deg)`,
+                      transform: `translate3d(${drift}px, ${shift}em, 0) rotate(${line.tilt * (1 - order)}deg)`,
                       opacity: 0.28 + order * 0.72,
                       filter: `blur(${(1 - order) * 1.6}px)`,
                     }}
                   >
                     <span className="text-right text-[#39424f]">{order > 0.55 ? i + 1 : ""}</span>
-                    <span className="overflow-hidden text-ellipsis">
-                      {line.tokens.map((token, j) => (
-                        // Пока идёт сборка, подсветка ещё не «разобрала» строку —
-                        // цвет проявляется вместе с порядком.
-                        <span key={j} className={order > 0.62 ? token.c : "tok-txt"}>
-                          {token.v}
-                        </span>
-                      ))}
+                    {/* Обе версии строки лежат в разметке, а нужная
+                        показывается стилями: так вариант не меняется при
+                        гидратации и не мигает на первом кадре. Скрытая
+                        версия ничего не стоит — display:none не рисуется. */}
+                    <span className="min-w-0 overflow-hidden text-ellipsis">
+                      <span className="md:hidden">
+                        {line.short.map((token, j) => (
+                          <span key={j} className={order > 0.62 ? token.c : "tok-txt"}>
+                            {token.v}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="hidden md:inline">
+                        {line.tokens.map((token, j) => (
+                          // Пока идёт сборка, подсветка ещё не «разобрала»
+                          // строку — цвет проявляется вместе с порядком.
+                          <span key={j} className={order > 0.62 ? token.c : "tok-txt"}>
+                            {token.v}
+                          </span>
+                        ))}
+                      </span>
                     </span>
                   </div>
                 );
               })}
 
               <div
-                className="grid grid-cols-[1.7rem_1fr] gap-3 pt-2 text-green"
+                className="grid grid-cols-[1.3rem_1fr] gap-2 pt-2 text-green sm:grid-cols-[1.7rem_1fr] sm:gap-3"
                 style={{ opacity: Math.min(build / 0.45, 1) }}
               >
                 <span />
-                <span>✓ {dict.build.success} · {dict.build.errors}</span>
+                {/* На телефоне обе половины в строку не влезают и переносятся
+                    за нижний край карточки. «Compiled successfully» там и так
+                    написано крупно над терминалом, поэтому остаётся только
+                    счётчик ошибок — ради него строка и нужна. */}
+                <span className="whitespace-nowrap">
+                  ✓ <span className="hidden md:inline">{dict.build.success} · </span>
+                  {dict.build.errors}
+                </span>
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         {/* Подсказка «листайте вниз» — исчезает, как только начали листать. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-[24%] left-1/2 -translate-x-1/2 font-mono text-[0.62rem] uppercase tracking-[0.28em] text-faint"
+          className="pointer-events-none absolute bottom-[11%] left-1/2 -translate-x-1/2 font-mono text-[0.62rem] uppercase tracking-[0.28em] text-faint md:bottom-[24%]"
           style={{ opacity: Math.max(0, 1 - progress * 14) }}
         >
           {dict.hero.scroll} ↓
