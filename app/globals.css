@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Дизайн-система DevUz.
+
+   Тёмная тема — основная и единственная: студийный сайт живёт в «ночном»
+   регистре, а зелёный акцент работает как сигнал успешной сборки, который
+   ведёт пользователя от героя к остальным секциям.
+   ─────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-ink: #05070b;
+  --color-surface: #0b0f16;
+  --color-surface-2: #111823;
+  --color-line: #1d2634;
+  --color-line-soft: #161d28;
+
+  --color-green: #22f0a0;
+  --color-green-dim: #10b981;
+  --color-blue: #3b82f6;
+  --color-blue-soft: #5b9bff;
+  --color-gold: #e8b14c;
+  --color-violet: #a78bfa;
+
+  --color-text: #eaf0f7;
+  --color-muted: #8b97a8;
+  --color-faint: #5b6779;
+
+  /* CJK-шрифт сознательно не грузим: Noto Sans SC весит мегабайты и убил бы
+     LCP ради одной локали. Системные иероглифические шрифты есть на любом
+     устройстве, которое вообще умеет читать китайский. */
+  --font-cjk: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
+  --font-display: var(--font-unbounded), "Inter", var(--font-cjk), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", var(--font-cjk), sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Прокрутка к якорю не должна прятать заголовок под липкой шапкой. */
+    scroll-padding-top: 5.5rem;
+    background-color: var(--color-ink);
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Дождь кода уезжает за край экрана — без этого появляется
+       горизонтальная прокрутка на мобильных. */
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-green);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-green);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+  }
+}
+
+@layer components {
+  /* ── Появление при скролле ────────────────────────────────────────────────
+     Управляется одним IntersectionObserver в <Reveal />. Сам переход живёт
+     здесь, чтобы на клиент не уезжала ни одна анимационная библиотека. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+      opacity 0.75s var(--ease-out-soft),
+      transform 0.75s var(--ease-out-soft),
+      filter 0.75s var(--ease-out-soft);
+    transition-delay: var(--reveal-delay, 0ms);
+    filter: blur(6px);
+    will-change: opacity, transform;
+  }
+
+  .reveal-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* ── Мигающий курсор в логотипе и в терминале ─────────────────────────── */
+  .logo-cursor {
+    animation: blink 1.15s steps(2, start) infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.15; }
+  }
+
+  /* ── Подчёркивание ссылок, растущее от левого края ────────────────────── */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition: background-size 0.4s var(--ease-out-soft);
+    padding-bottom: 2px;
+  }
+
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+
+  /* ── Подсветка синтаксиса в дожде кода и терминале ────────────────────── */
+  .tok-key { color: #c792ea; }
+  .tok-fn { color: #82aaff; }
+  .tok-str { color: #c3e88d; }
+  .tok-num { color: #f78c6c; }
+  .tok-com { color: #4c5a6e; }
+  .tok-punc { color: #89ddff; }
+  .tok-txt { color: #d7e2ef; }
+
+  /* ── Бегущая строка стека ─────────────────────────────────────────────── */
+  .marquee-track {
+    animation: marquee 38s linear infinite;
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* Маска по краям, чтобы лента растворялась, а не обрубалась. */
+  .marquee-mask {
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  /* ── Зелёная галочка: обводка прорисовывается штрихом ─────────────────── */
+  .check-draw path {
+    stroke-dasharray: 100;
+    stroke-dashoffset: calc(100 - var(--check-progress, 0) * 100);
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Уважение к prefers-reduced-motion.
+
+   Не просто выключаем переходы: сцена сборки в этом режиме сразу показывает
+   финальное состояние — упорядоченный код и загоревшуюся галочку. Иначе
+   пользователь увидел бы застывший хаос и не понял бы, что происходит.
+   ─────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
+  .logo-cursor,
+  .marquee-track {
+    animation: none;
+  }
+
+  .check-draw path {
+    stroke-dashoffset: 0;
+  }
+}
