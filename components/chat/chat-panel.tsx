@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
@@ -21,11 +21,14 @@ export function ChatPanel({
   dict,
   className,
   compact = false,
+  prefill,
 }: {
   locale: Locale;
   dict: Dictionary;
   className?: string;
   compact?: boolean;
+  /** Готовый текст из калькулятора, подставляемый в поле ввода. */
+  prefill?: string;
 }) {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: dict.chat.greeting },
@@ -37,30 +40,40 @@ export function ChatPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  /**
+   * Поле ввода растёт под текст.
+   *
+   * Расчёт из калькулятора приходит на несколько строк, и в поле высотой в
+   * одну строку человек видит только начало — то есть не может проверить,
+   * что именно уйдёт менеджеру. Высота сбрасывается в auto перед замером,
+   * иначе scrollHeight запомнит предыдущее, большее значение и поле уже
+   * никогда не уменьшится.
+   */
+  const autoGrow = useCallback(() => {
+    const node = inputRef.current;
+    if (!node) return;
+    node.style.height = "auto";
+    node.style.height = `${Math.min(node.scrollHeight, 160)}px`;
+  }, []);
+
   useEffect(() => {
     const node = scrollRef.current;
     if (node) node.scrollTop = node.scrollHeight;
   }, [messages, busy]);
 
   useEffect(() => {
-    // Калькулятор присылает готовый расчёт через событие на window. Связь
-    // через событие, а не через общее состояние: чат ничего не знает о
-    // калькуляторе, а калькулятор о чате.
-    const onPrefill = (event: Event) => {
-      const text = (event as CustomEvent<string>).detail;
-      if (typeof text !== "string") return;
-      setInput(text);
-      // Отправляем не сразу: человек должен успеть дописать детали, ради
-      // которых он и пришёл в чат из калькулятора.
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-        inputRef.current?.setSelectionRange(text.length, text.length);
-      });
-    };
-
-    window.addEventListener("devuz:prefill", onPrefill);
-    return () => window.removeEventListener("devuz:prefill", onPrefill);
-  }, []);
+    if (!prefill) return;
+    // Расчёт из калькулятора не отправляем сразу: человек должен успеть
+    // дописать детали, ради которых он и пришёл в чат.
+    setInput(prefill);
+    requestAnimationFrame(() => {
+      autoGrow();
+      // preventScroll обязателен: без него браузер подтягивает страницу к
+      // полю ввода, и вместо открывшегося виджета человек видит рывок вниз.
+      inputRef.current?.focus({ preventScroll: true });
+      inputRef.current?.setSelectionRange(prefill.length, prefill.length);
+    });
+  }, [prefill, autoGrow]);
 
   async function send() {
     const text = input.trim();
@@ -69,6 +82,7 @@ export function ChatPanel({
     const next: Message[] = [...messages, { role: "user", content: text }];
     setMessages(next);
     setInput("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
     setBusy(true);
     setStatus(null);
 
@@ -222,7 +236,10 @@ export function ChatPanel({
           <textarea
             ref={inputRef}
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) => {
+              setInput(event.target.value);
+              autoGrow();
+            }}
             onKeyDown={(event) => {
               // Enter отправляет, Shift+Enter переносит строку — как в любом
               // мессенджере, из которого сюда приходит человек.
@@ -236,7 +253,7 @@ export function ChatPanel({
             disabled={busy || status === "disabled"}
             placeholder={dict.chat.placeholder}
             aria-label={dict.chat.placeholder}
-            className="max-h-28 flex-1 resize-none bg-transparent py-1.5 text-[0.9rem] text-text outline-none placeholder:text-faint disabled:opacity-50"
+            className="flex-1 resize-none overflow-y-auto bg-transparent py-1.5 text-[0.9rem] text-text outline-none placeholder:text-faint disabled:opacity-50"
           />
           <button
             type="button"

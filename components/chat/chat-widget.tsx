@@ -17,6 +17,7 @@ import type { Locale } from "@/lib/i18n";
 export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [prefill, setPrefill] = useState<string | undefined>();
 
   useEffect(() => {
     const onScroll = () => setReady(window.scrollY > window.innerHeight * 0.8);
@@ -28,7 +29,12 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
   useEffect(() => {
     // Расчёт из калькулятора должен куда-то приземлиться: раскрываем виджет,
     // даже если посетитель ещё не долистал до порога появления.
-    const onPrefill = () => {
+    const onPrefill = (event: Event) => {
+      const text = (event as CustomEvent<string>).detail;
+      // Текст держим в состоянии, а не ловим слушателем внутри панели:
+      // панель монтируется только вместе с открытием виджета, то есть уже
+      // после того, как событие отправлено, и слушатель бы его не застал.
+      if (typeof text === "string") setPrefill(text);
       setReady(true);
       setOpen(true);
     };
@@ -54,7 +60,7 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
     >
       {open ? (
         <div className="w-[min(24rem,calc(100vw-2rem))] shadow-[0_30px_90px_rgba(0,0,0,.7)]">
-          <ChatPanel locale={locale} dict={dict} compact />
+          <ChatPanel locale={locale} dict={dict} compact prefill={prefill} />
         </div>
       ) : null}
 
