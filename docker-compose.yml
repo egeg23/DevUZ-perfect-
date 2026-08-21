@@ -1,49 +1,38 @@
-# DevUz Studio на VPS: два контейнера, наружу торчит только Caddy.
+# DevUz Studio на VPS.
 #
 #   cd /opt/devuz && docker compose up -d --build
 #
-# Caddy сам получает и продлевает сертификат Let's Encrypt. Это не про
-# удобство: вебхук Telegram принимается только по HTTPS с валидным
-# сертификатом, поэтому ручная возня с certbot здесь — лишний способ
-# уронить приём лидов в момент, когда сертификат протухнет.
+# Контейнер слушает только петлевой интерфейс, а TLS и маршрутизацию берёт на
+# себя хостовый nginx — та же схема, что у usta и остальных приложений на этом
+# сервере. Свой reverse proxy здесь поднимать нельзя: он попытался бы занять
+# порты 80 и 443 и уронил бы всё, что уже работает на этом VPS.
 
 name: devuz
 
 services:
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"          # HTTP/3
-    volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data       # хранилище сертификатов — не удалять,
-      - caddy_config:/config   # иначе Let's Encrypt упрётся в свой rate limit
-    environment:
-      DOMAIN: ${DOMAIN:?нужен домен, например devuz.maximov-tech.ru}
-    depends_on:
-      web:
-        condition: service_healthy
-    networks: [devuz]
-
   web:
     build:
       context: .
       args:
+        # Переменные с префиксом NEXT_PUBLIC_ вшиваются в клиентский бандл на
+        # этапе сборки, поэтому передаются аргументами. Секреты сюда попадать
+        # не должны: всё, что видел билд, остаётся в слоях образа.
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_YANDEX_METRIKA_ID: ${NEXT_PUBLIC_YANDEX_METRIKA_ID}
         NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID}
         GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    image: devuz:latest
+    container_name: devuz
     restart: unless-stopped
-    # Порт наружу не пробрасываем: до приложения можно достучаться только
-    # через Caddy, то есть только по HTTPS.
-    expose:
-      - "3000"
+
+    # Наружу порт не выставляем: до приложения можно достучаться только с
+    # самого сервера, то есть только через nginx, то есть только по HTTPS.
+    ports:
+      - "127.0.0.1:${APP_PORT:-3310}:3000"
+
     environment:
-      # Секреты читаются в рантайме и в образ не попадают.
+      # Читается в рантайме, в образ не попадает.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
@@ -54,11 +43,14 @@ services:
       GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION}
       YANDEX_VERIFICATION: ${YANDEX_VERIFICATION}
       GIT_COMMIT: ${GIT_COMMIT:-unknown}
-    networks: [devuz]
 
-volumes:
-  caddy_data:
-  caddy_config:
-
-networks:
-  devuz:
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

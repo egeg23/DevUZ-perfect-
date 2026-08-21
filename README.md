@@ -351,18 +351,18 @@ supabase/migrations/   схема таблицы лидов
 
 ## Деплой
 
-Разворачивается на VPS: Docker Compose, наружу торчит только Caddy с
-автоматическим сертификатом Let's Encrypt.
+Контейнер слушает петлевой интерфейс, спереди — хостовый nginx, тот же, что
+обслуживает остальные приложения студии на этом сервере.
 
 ```bash
 git clone https://github.com/egeg23/DevUZ-perfect-.git /opt/devuz
 cd /opt/devuz && cp .env.example .env && nano .env
-docker compose up -d --build
+docker compose up -d --build          # поднимется на 127.0.0.1:3310
 ```
 
-Дальше пуш в `main` выкатывается сам через GitHub Actions по SSH. Полная
-инструкция, секреты репозитория и разбор частых отказов —
-[`deploy/README.md`](deploy/README.md).
+Затем блок nginx из `deploy/nginx-devuz.conf` и сертификат certbot. Дальше
+пуш в `main` выкатывается сам через GitHub Actions по SSH. Подробности и
+разбор частых отказов — [`deploy/README.md`](deploy/README.md).
 
 Состояние выкатки проверяется одним запросом:
 
