@@ -50,6 +50,7 @@ export async function saveLead(
       contact_name: lead.contact_name || null,
       company: lead.company || null,
       contact_handle: lead.contact_handle || null,
+      contact_kind: lead.contact_kind ?? null,
       niche: lead.niche,
       niche_tier: lead.niche_tier,
       expertise: lead.expertise,
@@ -65,6 +66,9 @@ export async function saveLead(
       breakdown: lead.breakdown,
       summary: lead.summary,
       notes: lead.notes || null,
+      opening_line: lead.opening_line || null,
+      already_told: lead.already_told ?? [],
+      avoid_asking: lead.avoid_asking ?? [],
       transcript,
       status: "new",
     })

@@ -37,11 +37,15 @@ export type LeadSummary = {
   timing: string;
 };
 
+/** Чем именно оставлен контакт — от этого зависит, во что превратить ссылку. */
+export type ContactKind = "telegram" | "phone" | "email" | "none";
+
 /** То, что модель возвращает через инструмент qualify_lead. */
 export type QualifyToolInput = {
   contact_name: string;
   company: string;
   contact_handle: string;
+  contact_kind: ContactKind;
   niche: string;
   niche_tier: NicheTier;
   expertise: Expertise;
@@ -53,6 +57,29 @@ export type QualifyToolInput = {
   intent: Intent;
   summary: LeadSummary;
   notes: string;
+  /**
+   * Готовая первая фраза менеджера на языке клиента.
+   *
+   * Менеджер открывает диалог с холодного старта: он не читал переписку и не
+   * знает, на чём она оборвалась. Заготовка снимает с него необходимость
+   * придумывать заход и убирает главную причину, по которой горячие лиды
+   * остывают, — паузу между «взял в работу» и первым сообщением.
+   */
+  opening_line: string;
+  /**
+   * Что ассистент уже пообещал или озвучил.
+   *
+   * Без этого менеджер рискует назвать другую вилку или забыть про
+   * упомянутый кейс — и клиент видит, что подрядчик не помнит собственных слов.
+   */
+  already_told: string[];
+  /**
+   * Что уже выяснено и переспрашивать нельзя.
+   *
+   * Повторный вопрос про бюджет после того, как клиент его назвал, — самый
+   * быстрый способ показать, что его не слушали.
+   */
+  avoid_asking: string[];
 };
 
 export type Grade = "A" | "B" | "C" | "D";

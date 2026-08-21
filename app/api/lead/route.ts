@@ -1,7 +1,7 @@
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { saveLead } from "@/lib/qualify/store";
-import { sendLead } from "@/lib/qualify/telegram";
+import { detectContactKind, sendLead } from "@/lib/qualify/telegram";
 import { scoreLead } from "@/lib/qualify/scoring";
 import type { QualifyToolInput } from "@/lib/qualify/types";
 
@@ -55,10 +55,26 @@ export async function POST(request: Request) {
 
   const unqualified = "не выяснено — лид пришёл через форму, без диалога";
 
+  /**
+   * Заготовка первого сообщения для лида из формы.
+   *
+   * Диалога не было, поэтому она короткая и без предположений о задаче:
+   * менеджеру нужно с чего-то начать, но выдуманный контекст в первой же
+   * фразе хуже, чем его отсутствие. Текст — на языке, на котором посетитель
+   * смотрел сайт: писать ему на другом значит начать с неудобства.
+   */
+  const openers: Record<Locale, string> = {
+    ru: `Здравствуйте${name ? ", " + name : ""}! Меня зовут [имя], я из студии DevUz — вы оставили заявку у нас на сайте. Расскажите, пожалуйста, чуть подробнее о задаче: чем занимается компания и что нужно сделать?`,
+    en: `Hello${name ? " " + name : ""}! I'm [name] from DevUz Studio — you left a request on our site. Could you tell me a bit more about the project: what does your company do and what needs building?`,
+    uz: `Assalomu alaykum${name ? ", " + name : ""}! Men DevUz studiyasidan [ism] — siz saytimizda ariza qoldirgansiz. Iltimos, vazifa haqida biroz batafsilroq aytib bering: kompaniyangiz nima bilan shug‘ullanadi va nima qilish kerak?`,
+    zh: `您好${name ? "，" + name : ""}！我是 DevUz Studio 的 [姓名]，您在我们网站留了咨询。能否再多说一些项目情况：贵公司主要做什么，需要开发什么？`,
+  };
+
   const input: QualifyToolInput = {
     contact_name: name,
     company: "",
     contact_handle: contact,
+    contact_kind: detectContactKind(contact),
     niche: unqualified,
     niche_tier: 3,
     expertise: "low",
@@ -79,7 +95,10 @@ export async function POST(request: Request) {
       timing: unqualified,
     },
     notes:
-      "Заявка из формы, а не из чата. Квалификации нет — грейды выставлены в худшие по умолчанию. Первый звонок должен начинаться с BANT.",
+      "Заявка из формы, а не из чата. Квалификации нет — грейды выставлены в худшие по умолчанию, а не выяснены. Разговор надо начинать с BANT.",
+    opening_line: openers[locale],
+    already_told: [],
+    avoid_asking: [],
   };
 
   const lead = scoreLead(input, locale);
