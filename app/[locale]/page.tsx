@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CompileScene } from "@/components/hero/compile-scene";
+import { CalculatorSection } from "@/components/sections/calculator";
 import { CasesSection } from "@/components/sections/cases";
 import { ContactSection } from "@/components/sections/contact";
 import { FaqSection } from "@/components/sections/faq";
@@ -43,6 +44,7 @@ export default async function HomePage({
     <>
       <CompileScene locale={locale} dict={dict} />
       <ServicesSection locale={locale} dict={dict} />
+      <CalculatorSection locale={locale} dict={dict} />
       <CasesSection locale={locale} dict={dict} />
       <ProcessSection dict={dict} />
       <StackSection dict={dict} />

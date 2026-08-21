@@ -8,6 +8,7 @@ import type { Locale } from "@/lib/i18n";
 const ru = {
   nav: {
     services: "Услуги",
+    calculator: "Калькулятор",
     cases: "Кейсы",
     process: "Процесс",
     about: "О студии",
@@ -102,6 +103,7 @@ const ru = {
     failed: "Не удалось отправить. Напишите нам в Telegram — так быстрее.",
     consent: "Отправляя форму, вы соглашаетесь на обработку персональных данных",
     consentLink: "политика конфиденциальности",
+    noPhone: "Телефона у студии нет — пишите в Telegram или оставьте контакт в форме, ответим в том же канале.",
   },
   chat: {
     title: "AI-менеджер DevUz",
@@ -145,6 +147,28 @@ const ru = {
     title: "Страница не найдена",
     text: "Кажется, такой страницы у нас нет. Возможно, ссылка устарела.",
   },
+  calculator: {
+    kicker: "калькулятор",
+    title: "Посчитайте проект за минуту",
+    description:
+      "Выберите тип проекта и отметьте, что нужно. Калькулятор покажет вилку «от» и состав работ — тот же расчёт, который делает менеджер, только без ожидания.",
+    chooseType: "Что делаем",
+    configure: "Настройте под себя",
+    result: "Предварительная оценка",
+    from: "от",
+    weeksLabel: "недель работы",
+    techTitle: "Что получите технически",
+    workTitle: "Какие работы входят",
+    reset: "Сбросить",
+    discuss: "Обсудить расчёт",
+    handoff: "Расчёт подставлен в чат. Опишите детали — менеджер получит его вместе с вашим запросом.",
+    disclaimer:
+      "Это ориентир, а не коммерческое предложение. Точную цифру называем после разбора задачи: на реальном проекте всплывают требования, которых нет ни в одном калькуляторе.",
+    none: "не нужно",
+    included: "уже входит",
+    prefill:
+      "Здравствуйте! Посчитал проект в калькуляторе на сайте:",
+  },
   language: "Язык",
   skipToContent: "Перейти к содержимому",
 };
@@ -152,7 +176,7 @@ const ru = {
 export type Dictionary = typeof ru;
 
 const en: Dictionary = {
-  nav: { services: "Services", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts" },
+  nav: { services: "Services", calculator: "Calculator", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts" },
   cta: {
     discuss: "Discuss a project",
     calculate: "Get an estimate",
@@ -239,6 +263,7 @@ const en: Dictionary = {
     failed: "Sending failed. Message us on Telegram — that is faster.",
     consent: "By submitting the form you agree to the processing of personal data",
     consentLink: "privacy policy",
+    noPhone: "The studio has no phone line — write on Telegram or leave a contact in the form, and we reply in the same channel.",
   },
   chat: {
     title: "DevUz AI manager",
@@ -279,12 +304,33 @@ const en: Dictionary = {
     ],
   },
   notFound: { title: "Page not found", text: "We don't seem to have this page. The link may be out of date." },
+  calculator: {
+    kicker: "calculator",
+    title: "Price your project in a minute",
+    description:
+      "Pick a project type and tick what you need. The calculator shows a «from» range and the scope of work — the same estimate a manager would make, without the wait.",
+    chooseType: "What we build",
+    configure: "Tailor it",
+    result: "Preliminary estimate",
+    from: "from",
+    weeksLabel: "weeks of work",
+    techTitle: "What you get technically",
+    workTitle: "What the work covers",
+    reset: "Reset",
+    discuss: "Discuss this estimate",
+    handoff: "The estimate is loaded into the chat. Add the details and the manager will receive it with your request.",
+    disclaimer:
+      "This is a guide, not a quote. We give an exact figure after going through the brief: real projects surface requirements no calculator has.",
+    none: "not needed",
+    included: "already included",
+    prefill: "Hello. I priced a project with the calculator on your site:",
+  },
   language: "Language",
   skipToContent: "Skip to content",
 };
 
 const uz: Dictionary = {
-  nav: { services: "Xizmatlar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa" },
+  nav: { services: "Xizmatlar", calculator: "Kalkulyator", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa" },
   cta: {
     discuss: "Loyihani muhokama qilish",
     calculate: "Loyihani hisoblash",
@@ -371,6 +417,7 @@ const uz: Dictionary = {
     failed: "Yuborib bo‘lmadi. Bizga Telegram’da yozing — bu tezroq.",
     consent: "Formani yuborish orqali shaxsiy ma’lumotlarni qayta ishlashga rozilik bildirasiz",
     consentLink: "maxfiylik siyosati",
+    noPhone: "Studiyaning telefoni yo‘q — Telegramga yozing yoki formada kontakt qoldiring, o‘sha kanalda javob beramiz.",
   },
   chat: {
     title: "DevUz AI-menejeri",
@@ -411,12 +458,33 @@ const uz: Dictionary = {
     ],
   },
   notFound: { title: "Sahifa topilmadi", text: "Bunday sahifa bizda yo‘q shekilli. Havola eskirgan bo‘lishi mumkin." },
+  calculator: {
+    kicker: "kalkulyator",
+    title: "Loyihani bir daqiqada hisoblang",
+    description:
+      "Loyiha turini tanlang va kerakli narsalarni belgilang. Kalkulyator «dan» oralig‘ini va ish tarkibini ko‘rsatadi — menejer qiladigan hisobning aynan o‘zi, faqat kutishsiz.",
+    chooseType: "Nima qilamiz",
+    configure: "O‘zingizga moslang",
+    result: "Dastlabki baholash",
+    from: "dan",
+    weeksLabel: "hafta ish",
+    techTitle: "Texnik jihatdan nima olasiz",
+    workTitle: "Qanday ishlar kiradi",
+    reset: "Tozalash",
+    discuss: "Hisobni muhokama qilish",
+    handoff: "Hisob chatga qo‘yildi. Tafsilotlarni yozing — menejer uni so‘rovingiz bilan birga oladi.",
+    disclaimer:
+      "Bu mo‘ljal, tijorat taklifi emas. Aniq raqamni vazifani tahlil qilgandan keyin aytamiz: haqiqiy loyihada hech bir kalkulyatorda yo‘q talablar chiqadi.",
+    none: "kerak emas",
+    included: "allaqachon kiradi",
+    prefill: "Assalomu alaykum! Saytdagi kalkulyatorda loyihani hisobladim:",
+  },
   language: "Til",
   skipToContent: "Mazmunga o‘tish",
 };
 
 const zh: Dictionary = {
-  nav: { services: "服务", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式" },
+  nav: { services: "服务", calculator: "报价", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式" },
   cta: {
     discuss: "洽谈项目",
     calculate: "获取报价",
@@ -503,6 +571,7 @@ const zh: Dictionary = {
     failed: "提交失败。请通过 Telegram 联系我们，那样更快。",
     consent: "提交表单即表示您同意我们处理相关个人信息",
     consentLink: "隐私政策",
+    noPhone: "工作室不设电话 —— 请通过 Telegram 联系，或在表单中留下联系方式，我们会在同一渠道回复。",
   },
   chat: {
     title: "DevUz AI 客户经理",
@@ -543,6 +612,27 @@ const zh: Dictionary = {
     ],
   },
   notFound: { title: "页面未找到", text: "我们似乎没有这个页面，链接可能已经失效。" },
+  calculator: {
+    kicker: "报价计算器",
+    title: "一分钟估算项目费用",
+    description:
+      "选择项目类型并勾选所需功能。计算器会给出「起价」区间与工作范围 —— 与客户经理所做的估算一致，只是无需等待。",
+    chooseType: "做什么",
+    configure: "按需配置",
+    result: "初步估算",
+    from: "起价",
+    weeksLabel: "周工期",
+    techTitle: "技术上你将获得",
+    workTitle: "工作内容包含",
+    reset: "重置",
+    discuss: "就此估算沟通",
+    handoff: "估算结果已填入聊天。补充细节后，客户经理会连同您的需求一并收到。",
+    disclaimer:
+      "此为参考区间，并非正式报价。我们会在梳理清楚需求后给出准确数字：真实项目总会冒出任何计算器都涵盖不了的要求。",
+    none: "不需要",
+    included: "已包含",
+    prefill: "您好！我用贵司网站的计算器估算了一个项目：",
+  },
   language: "语言",
   skipToContent: "跳到主要内容",
 };

@@ -25,6 +25,7 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
 
   const links = [
     { href: localeHref(locale, "services"), label: dict.nav.services },
+    { href: localeHref(locale, "calculator"), label: dict.nav.calculator },
     { href: localeHref(locale, "cases"), label: dict.nav.cases },
     { href: `${localeHref(locale)}#process`, label: dict.nav.process },
     { href: localeHref(locale, "about"), label: dict.nav.about },

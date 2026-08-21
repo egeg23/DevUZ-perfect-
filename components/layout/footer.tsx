@@ -73,24 +73,19 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
             </h3>
             <ul className="mt-4 space-y-2.5 text-[0.9rem]">
               <li>
-                <a href={`mailto:${company.email}`} className="text-muted transition-colors hover:text-text">
-                  {company.email}
-                </a>
-              </li>
-              <li>
-                <a href={`tel:${company.phoneHref}`} className="text-muted transition-colors hover:text-text">
-                  {company.phone}
-                </a>
-              </li>
-              <li>
                 <a
-                  href={company.social.telegram}
+                  href={company.telegramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted transition-colors hover:text-green"
+                  className="text-green transition-colors hover:text-white"
                 >
-                  @{company.telegram}
+                  Telegram @{company.telegram}
                 </a>
+              </li>
+              <li>
+                <Link href={localeHref(locale, "contact")} className="text-muted transition-colors hover:text-text">
+                  {dict.cta.writeUs}
+                </Link>
               </li>
               <li className="text-faint">{t(company.address.city, locale)}, {t(company.address.countryName, locale)}</li>
             </ul>

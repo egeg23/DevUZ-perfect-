@@ -42,6 +42,26 @@ export function ChatPanel({
     if (node) node.scrollTop = node.scrollHeight;
   }, [messages, busy]);
 
+  useEffect(() => {
+    // Калькулятор присылает готовый расчёт через событие на window. Связь
+    // через событие, а не через общее состояние: чат ничего не знает о
+    // калькуляторе, а калькулятор о чате.
+    const onPrefill = (event: Event) => {
+      const text = (event as CustomEvent<string>).detail;
+      if (typeof text !== "string") return;
+      setInput(text);
+      // Отправляем не сразу: человек должен успеть дописать детали, ради
+      // которых он и пришёл в чат из калькулятора.
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.setSelectionRange(text.length, text.length);
+      });
+    };
+
+    window.addEventListener("devuz:prefill", onPrefill);
+    return () => window.removeEventListener("devuz:prefill", onPrefill);
+  }, []);
+
   async function send() {
     const text = input.trim();
     if (!text || busy) return;

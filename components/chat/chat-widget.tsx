@@ -26,6 +26,17 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
   }, []);
 
   useEffect(() => {
+    // Расчёт из калькулятора должен куда-то приземлиться: раскрываем виджет,
+    // даже если посетитель ещё не долистал до порога появления.
+    const onPrefill = () => {
+      setReady(true);
+      setOpen(true);
+    };
+    window.addEventListener("devuz:prefill", onPrefill);
+    return () => window.removeEventListener("devuz:prefill", onPrefill);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);

@@ -31,25 +31,17 @@ export function ContactSection({ locale, dict }: { locale: Locale; dict: Diction
 
               <div className="mt-7 space-y-2.5 border-t border-line pt-6 text-[0.9rem]">
                 <a
-                  href={`mailto:${company.email}`}
-                  className="block text-muted transition-colors hover:text-text"
-                >
-                  {company.email}
-                </a>
-                <a
-                  href={`tel:${company.phoneHref}`}
-                  className="block text-muted transition-colors hover:text-text"
-                >
-                  {company.phone}
-                </a>
-                <a
-                  href={company.social.telegram}
+                  href={company.telegramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block text-green transition-colors hover:text-white"
+                  className="flex items-center gap-2.5 text-green transition-colors hover:text-white"
                 >
+                  <span aria-hidden="true">✈</span>
                   Telegram @{company.telegram}
                 </a>
+                <p className="text-[0.82rem] leading-relaxed text-faint">
+                  {dict.contact.noPhone}
+                </p>
               </div>
             </div>
           </Reveal>

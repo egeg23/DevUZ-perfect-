@@ -28,8 +28,6 @@ export function organizationSchema(locale: Locale): Json {
     logo: absoluteUrl("icon.svg"),
     image: absoluteUrl(`og-${locale}.png`),
     description: t(company.description, locale),
-    email: company.email,
-    telephone: company.phoneHref,
     foundingDate: String(company.foundedYear),
     address: {
       "@type": "PostalAddress",
@@ -48,6 +46,12 @@ export function organizationSchema(locale: Locale): Json {
     ],
     knowsLanguage: ["ru", "uz", "en", "zh"],
     sameAs: [company.social.telegram, company.social.github],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "sales",
+      url: company.telegramUrl,
+      availableLanguage: ["ru", "uz", "en", "zh"],
+    },
     priceRange: "$$",
   };
 }

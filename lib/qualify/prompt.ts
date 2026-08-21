@@ -41,7 +41,7 @@ export function buildSystemPrompt(locale: Locale): string {
 
 ${studioFacts()}
 
-Контакты студии: ${company.email}, Telegram @${company.telegram}.
+Связаться со студией можно в Telegram: @${company.telegram}. Телефона у студии нет — не выдумывай его и не обещай перезвонить, менеджер пишет в тот контакт, который оставил клиент.
 
 ## Как вести разговор
 
