@@ -2,6 +2,7 @@ import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { saveLead } from "@/lib/qualify/store";
 import { detectContactKind, sendLead } from "@/lib/qualify/telegram";
+import { newRequestNo } from "@/lib/qualify/engine";
 import { scoreLead } from "@/lib/qualify/scoring";
 import type { QualifyToolInput } from "@/lib/qualify/types";
 
@@ -103,14 +104,18 @@ export async function POST(request: Request) {
 
   const lead = scoreLead(input, locale);
 
+  // Номер получает и заявка из формы. Иначе у отдела продаж две породы
+  // лидов: одни адресуются номером, другие — «тот, который вчера вечером».
+  const requestNo = newRequestNo();
+
   let leadId: string | null = null;
   try {
-    leadId = await saveLead(lead, [], "form");
+    leadId = await saveLead(lead, [], "form", { requestNo });
   } catch (error) {
     console.error("saveLead form", error);
   }
 
-  const delivered = await sendLead(lead, [], leadId ?? "unsaved");
+  const delivered = await sendLead(lead, [], leadId ?? "unsaved", requestNo);
 
   // Если и база, и Telegram недоступны — заявка потеряна, и врать об успехе
   // нельзя: человек должен увидеть подсказку написать напрямую.
