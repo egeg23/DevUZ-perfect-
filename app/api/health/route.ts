@@ -36,6 +36,23 @@ export async function GET(request: Request) {
 }
 
 /**
+ * Через что уходят исходящие запросы.
+ *
+ * Пароль из адреса прокси вырезается: проба открыта наружу, и светить в ней
+ * учётные данные — значит поменять одну проблему на другую.
+ */
+function describeEgress(): string {
+  const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+  if (!proxy) return "напрямую";
+  try {
+    const url = new URL(proxy);
+    return `через прокси ${url.hostname}:${url.port || "80"}`;
+  } catch {
+    return "через прокси";
+  }
+}
+
+/**
  * Минимальный запрос к модели: один токен на выходе.
  *
  * Дешевле любой другой проверки и при этом проходит весь путь целиком —
@@ -63,7 +80,7 @@ async function probeModel(): Promise<Record<string, unknown>> {
       signal: AbortSignal.timeout(15_000),
     });
 
-    if (response.ok) return { status: "ok", endpoint: base };
+    if (response.ok) return { status: "ok", endpoint: base, egress: describeEgress() };
 
     const text = await response.text();
 
@@ -73,6 +90,7 @@ async function probeModel(): Promise<Record<string, unknown>> {
       return {
         status: "blocked",
         code: 403,
+        egress: describeEgress(),
         hint:
           "Запрос отвергнут на границе, до API он не дошёл. Обычно это значит, " +
           "что страна сервера не обслуживается. Проверьте: " +

@@ -39,6 +39,13 @@ services:
       TELEGRAM_SALES_CHAT_ID: ${TELEGRAM_SALES_CHAT_ID}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
+      # Прокси для исходящих запросов. Нужен, если сервер стоит в стране,
+      # которую Anthropic не обслуживает: запрос оттуда отвергается на
+      # границе с 403, не доходя до API. Пусто — идём напрямую.
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      NO_PROXY: ${NO_PROXY:-127.0.0.1,localhost}
       INDEXNOW_KEY: ${INDEXNOW_KEY}
       GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION}
       YANDEX_VERIFICATION: ${YANDEX_VERIFICATION}
