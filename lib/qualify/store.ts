@@ -38,6 +38,14 @@ export async function saveLead(
   lead: ScoredLead,
   transcript: ChatMessage[],
   source: string,
+  /**
+   * То, что относится к заявке, а не к самому лиду.
+   *
+   * Номер клиент слышит в чате и называет его, когда пишет снова, — по нему
+   * менеджер и ищет разговор. Скидка здесь же, потому что это факт про
+   * деньги: по ней считается, во сколько обходится гарантия двадцати секунд.
+   */
+  meta: { requestNo?: string; discount?: boolean } = {},
 ): Promise<string | null> {
   const db = client();
   if (!db) return null;
@@ -46,6 +54,8 @@ export async function saveLead(
     .from("leads")
     .insert({
       source,
+      request_no: meta.requestNo ?? null,
+      discount_granted: meta.discount ?? false,
       locale: lead.locale,
       contact_name: lead.contact_name || null,
       company: lead.company || null,

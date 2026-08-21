@@ -283,7 +283,7 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
   // а ошибка уйдёт в логи.
   let leadId: string | null = null;
   try {
-    leadId = await saveLead(lead, history, source);
+    leadId = await saveLead(lead, history, source, { requestNo, discount: options.discount });
   } catch (error) {
     console.error("saveLead", error);
   }

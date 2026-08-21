@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n";
+import { locales, type Locale } from "@/lib/i18n";
 import type { ChatMessage } from "@/lib/qualify/types";
 
 /**
@@ -49,12 +49,23 @@ const byChat = new Map<number, BotSession>();
  */
 const TOKEN_ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-function newToken(): string {
+function newToken(locale: Locale): string {
   const bytes = new Uint8Array(18);
   crypto.getRandomValues(bytes);
   let out = "";
   for (const byte of bytes) out += TOKEN_ALPHABET[byte % TOKEN_ALPHABET.length];
-  return out;
+  // Локаль едет прямо в токене. Сессия живёт в памяти процесса и переживает
+  // ни перезапуск контейнера, ни час ожидания: если человек открыл Telegram
+  // позже или мы как раз выкатили деплой, переписку восстановить нельзя — но
+  // язык, на котором он с нами говорил, знать всё ещё нужно. Иначе бот
+  // здоровается на языке его мессенджера, а не сайта.
+  return `${locale}-${out}`;
+}
+
+/** Локаль из токена: работает даже когда сессия уже не существует. */
+export function localeFromToken(token: string): Locale | null {
+  const prefix = token.split("-")[0];
+  return locales.includes(prefix as Locale) ? (prefix as Locale) : null;
 }
 
 function sweep(): void {
@@ -84,7 +95,7 @@ export function createHandoff(input: {
     if (oldest) pending.delete(oldest[0]);
   }
 
-  const token = newToken();
+  const token = newToken(input.locale);
   pending.set(token, {
     createdAt: Date.now(),
     session: {

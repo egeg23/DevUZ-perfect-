@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
@@ -42,7 +42,17 @@ export default async function ServicePage({
 }) {
   const { locale: raw, slug } = await params;
   const service = serviceBySlug(slug);
-  if (!isLocale(raw) || !service) notFound();
+  // Локаль неизвестна — это действительно «страницы нет».
+  if (!isLocale(raw)) notFound();
+  if (!service) {
+    // А вот несуществующий slug при живой локали — почти всегда
+    // устаревшая ссылка на переименованный или снятый материал.
+    // Ведём человека в раздел на его языке: notFound() здесь
+    // отрисоваться не может — html и body рисует layout внутри
+    // [locale], и Next подставляет вместо страницы собственную
+    // английскую заглушку без языка и без шапки.
+    redirect(localeHref(raw as Locale, "services"));
+  }
   const locale = raw as Locale;
   const dict = getDictionary(locale);
 

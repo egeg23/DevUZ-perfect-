@@ -4,6 +4,7 @@ import { runQualifyTurn } from "@/lib/qualify/engine";
 import {
   claimHandoff,
   forgetSession,
+  localeFromToken,
   saveSession,
   sessionFor,
   startSession,
@@ -129,7 +130,13 @@ function handleOf(from: TelegramUser | undefined, chatId: number): string {
 async function handleClient(message: NonNullable<Update["message"]>) {
   const chat = message.chat;
   const text = (message.text ?? "").trim();
-  const locale = localeOf(message.from);
+
+  // Язык уже начатого разговора сильнее языка интерфейса Telegram. Человек
+  // мог прийти с английской версии сайта, имея русский Telegram: отвечать
+  // ему по-русски только потому, что так подписаны кнопки в его мессенджере,
+  // — значит посреди разговора сменить язык без спроса.
+  const existing = sessionFor(chat.id);
+  const locale = existing?.locale ?? localeOf(message.from);
   const copy = botCopy(locale);
 
   if (text.startsWith("/start")) {
@@ -138,7 +145,7 @@ async function handleClient(message: NonNullable<Update["message"]>) {
       await resumeFromSite(chat.id, payload, message.from, locale);
       return;
     }
-    startSession(chat.id, locale);
+    if (!existing) startSession(chat.id, locale);
     await sendMessage(chat.id, copy.welcome);
     return;
   }
@@ -168,6 +175,8 @@ async function handleClient(message: NonNullable<Update["message"]>) {
   }
 
   if (text.startsWith("/reset")) {
+    // Сбрасывается переписка, а не язык: «начать заново» — про содержание
+    // разговора, а не про то, на каком языке его вести.
     forgetSession(chat.id);
     startSession(chat.id, locale);
     await sendMessage(chat.id, copy.reset);
@@ -202,8 +211,11 @@ async function resumeFromSite(
   if (!session) {
     // Токен одноразовый и живёт час: протух — начинаем как с новым человеком,
     // но без «здравствуйте, чем помочь», а с признанием, что контекст потерян.
-    startSession(chatId, fallbackLocale);
-    await sendMessage(chatId, botCopy(fallbackLocale).resumeLost);
+    // Язык при этом берём из самого токена: переписку восстановить нельзя, а
+    // язык, на котором человек с нами говорил, известен и без неё.
+    const locale = localeFromToken(token) ?? fallbackLocale;
+    startSession(chatId, locale);
+    await sendMessage(chatId, botCopy(locale).resumeLost);
     return;
   }
 
@@ -225,7 +237,7 @@ async function resumeFromSite(
 
   // Реплика, описывающая то, что человек сделал: он не писал текст, он нажал
   // кнопку. В расшифровке для менеджера это читается ровно так же.
-  const marker = "[перешёл из чата на сайте в Telegram и нажал «Старт»]";
+  const marker = copy.resumeMarker;
 
   // Если разговор оборвался на реплике клиента, дописываем пометку к ней, а
   // не отдельным ходом: две подряд реплики от user модель принимает, но в
@@ -346,6 +358,7 @@ function channelNote(from: TelegramUser | undefined, chatId: number, resuming: b
     lines.push(
       "",
       "Клиент только что перешёл сюда из чата на сайте — разговор выше вёл ты. Это не новое знакомство: не здоровайся как с незнакомцем и не начинай сначала.",
+      "Последняя строка в переписке, взятая в квадратные скобки, — служебная пометка о нажатии кнопки, а не слова клиента. Не отвечай на неё и не делай выводов о языке по ней: язык разговора задан выше.",
       "Одной фразой покажи, что помнишь, о чём речь, и сразу задай следующий вопрос — тот, ответа на который ещё нет. Если для передачи менеджеру не хватает одной-двух деталей, спроси именно их и не растягивай.",
     );
   }

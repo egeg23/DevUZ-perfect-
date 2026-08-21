@@ -28,6 +28,16 @@ export type BotCopy = {
   help: string;
   /** Разговор сброшен по просьбе клиента. */
   reset: string;
+  /**
+   * Пометка о переходе с сайта, которая уходит в историю модели.
+   *
+   * Раньше она была русской для всех. Для модели это последняя реплика в
+   * переписке, и правило «пиши на языке собеседника» срабатывало по ней:
+   * китаец, начавший разговор на /zh, получал в Telegram ответ по-русски.
+   * Поэтому пометка на языке разговора, а в системном промпте отдельно
+   * сказано, что это служебная строка, а не слова клиента.
+   */
+  resumeMarker: string;
 };
 
 const ru: BotCopy = {
@@ -63,6 +73,7 @@ const ru: BotCopy = {
     "/reset — начать разговор заново",
   ].join("\n"),
   reset: "Готово, начинаем с чистого листа. Расскажите, что нужно сделать.",
+  resumeMarker: "[перешёл из чата на сайте в Telegram и нажал «Старт»]",
 };
 
 const en: BotCopy = {
@@ -97,6 +108,7 @@ const en: BotCopy = {
     "/reset — start the conversation over",
   ].join("\n"),
   reset: "Done, clean slate. Tell me what you need built.",
+  resumeMarker: "[moved from the website chat to Telegram and pressed Start]",
 };
 
 const uz: BotCopy = {
@@ -131,6 +143,7 @@ const uz: BotCopy = {
     "/reset — suhbatni boshidan boshlash",
   ].join("\n"),
   reset: "Tayyor, toza varaqdan boshlaymiz. Nima kerakligini ayting.",
+  resumeMarker: "[saytdagi chatdan Telegramga o‘tdi va «Start» bosdi]",
 };
 
 const zh: BotCopy = {
@@ -151,6 +164,7 @@ const zh: BotCopy = {
   unknown: "我没有这个命令。直接写下您的需求就好 — 我在。",
   help: ["<b>DevUz Studio</b>", "", "用普通消息描述您的需求 — 我会问一两个补充问题，然后连同申请编号一起转交客户经理。", "", "/reset — 重新开始对话"].join("\n"),
   reset: "好的，重新开始。请说说需要做什么。",
+  resumeMarker: "[从网站聊天转到 Telegram 并按下了「开始」]",
 };
 
 const copy: Record<Locale, BotCopy> = { ru, en, uz, zh };
