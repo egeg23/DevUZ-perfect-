@@ -5,6 +5,7 @@ import { CompileScene } from "@/components/hero/compile-scene";
 import { CalculatorSection } from "@/components/sections/calculator";
 import { CasesSection } from "@/components/sections/cases";
 import { ContactSection } from "@/components/sections/contact";
+import { DevuzShowcase } from "@/components/sections/devuz-showcase";
 import { FaqSection } from "@/components/sections/faq";
 import { ProcessSection } from "@/components/sections/process";
 import { ServicesSection } from "@/components/sections/services";
@@ -47,6 +48,7 @@ export default async function HomePage({
       <CompileScene locale={locale} dict={dict} />
       <ServicesSection locale={locale} dict={dict} />
       <CalculatorSection locale={locale} dict={dict} />
+      <DevuzShowcase locale={locale} dict={dict} />
       <CasesSection locale={locale} dict={dict} />
       <ProcessSection dict={dict} />
       <StackSection dict={dict} />

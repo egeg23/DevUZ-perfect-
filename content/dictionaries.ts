@@ -58,6 +58,29 @@ const ru = {
     tech: "Технологии",
     year: "Год",
   },
+  /**
+   * Блок «этот сайт» на главной. Сайт студии — единственный наш проект,
+   * который посетитель может потрогать прямо сейчас, поэтому на главной он
+   * показан не карточкой в общей сетке, а отдельным блоком с живым
+   * предпросмотром.
+   */
+  devuz: {
+    kicker: "этот сайт",
+    title: "Один наш проект вы уже открыли",
+    description:
+      "Сайт, на котором вы сейчас, мы сделали себе сами — и по нему проще всего проверить, как мы работаем: четыре языка, сцена сборки кода в герое, калькулятор и AI-менеджер, который разбирается в задаче до того, как за неё возьмётся человек.",
+    previewLabel: "живой предпросмотр",
+    previewNote:
+      "Язык в предпросмотре переключается сам. Посетителю он подбирается по браузеру и запоминается до следующего визита.",
+    demoAsk: "Нужен сайт для экспорта сухофруктов. Сколько это будет стоить?",
+    demoReply: "Покажу похожий проект и посчитаю вилку — минуту.",
+    points: [
+      { title: "Четыре языка", text: "ru · en · uz · zh с hreflang и своей обложкой для каждого языка." },
+      { title: "AI-менеджер первой линии", text: "Отвечает за 20 секунд, разбирает задачу по ICP и BANT и передаёт менеджеру готовое резюме." },
+      { title: "Анимация без библиотек", text: "Сцена сборки, дождь кода и появление блоков — CSS и один IntersectionObserver." },
+    ],
+    openCase: "Как устроен этот сайт",
+  },
   process: {
     kicker: "как мы работаем",
     title: "Шесть шагов до релиза",
@@ -279,6 +302,23 @@ const en: Dictionary = {
     tech: "Technology",
     year: "Year",
   },
+  devuz: {
+    kicker: "this site",
+    title: "You already have one of our projects open",
+    description:
+      "The site you are on we built for ourselves — and it is the easiest way to check how we work: four languages, a code-assembly scene in the hero, a calculator, and an AI manager that works out the task before a human picks it up.",
+    previewLabel: "live preview",
+    previewNote:
+      "The language in the preview switches on its own. A visitor gets theirs from the browser, and the choice is remembered until the next visit.",
+    demoAsk: "We need a site for our dried-fruit export. What would it cost?",
+    demoReply: "I'll show a similar project and give you a range — one minute.",
+    points: [
+      { title: "Four languages", text: "ru · en · uz · zh with hreflang and a cover image of its own for each." },
+      { title: "AI manager on the first line", text: "Replies in 20 seconds, scores the task on ICP and BANT and hands the manager a finished summary." },
+      { title: "Animation without libraries", text: "The assembly scene, the code rain and the block reveals — CSS and one IntersectionObserver." },
+    ],
+    openCase: "How this site is built",
+  },
   process: {
     kicker: "how we work",
     title: "Six steps to release",
@@ -479,6 +519,23 @@ const uz: Dictionary = {
     tech: "Texnologiyalar",
     year: "Yil",
   },
+  devuz: {
+    kicker: "shu sayt",
+    title: "Bitta loyihamizni siz allaqachon ochgansiz",
+    description:
+      "Siz turgan saytni biz o‘zimiz uchun qildik — va u qanday ishlashimizni tekshirishning eng oson yo‘li: to‘rt til, hero’dagi kod yig‘ilish sahnasi, kalkulyator va vazifani odam qo‘lga olishidan oldin tushunib oladigan AI menejer.",
+    previewLabel: "jonli ko‘rinish",
+    previewNote:
+      "Ko‘rinishdagi til o‘zi almashadi. Tashrifchiga u brauzer bo‘yicha tanlanadi va keyingi tashrifgacha eslab qolinadi.",
+    demoAsk: "Quritilgan meva eksporti uchun sayt kerak. Bu qancha turadi?",
+    demoReply: "O‘xshash loyihani ko‘rsatib, narx oralig‘ini aytaman — bir daqiqa.",
+    points: [
+      { title: "To‘rt til", text: "ru · en · uz · zh — hreflang bilan va har biriga alohida muqova." },
+      { title: "Birinchi liniyadagi AI menejer", text: "20 soniyada javob beradi, vazifani ICP va BANT bo‘yicha baholaydi va menejerga tayyor xulosani uzatadi." },
+      { title: "Kutubxonasiz animatsiya", text: "Yig‘ilish sahnasi, kod yomg‘iri va bloklarning paydo bo‘lishi — CSS va bitta IntersectionObserver." },
+    ],
+    openCase: "Bu sayt qanday qurilgan",
+  },
   process: {
     kicker: "qanday ishlaymiz",
     title: "Relizgacha olti qadam",
@@ -678,6 +735,23 @@ const zh: Dictionary = {
     challenge: "项目需求",
     tech: "技术方案",
     year: "年份",
+  },
+  devuz: {
+    kicker: "本站",
+    title: "我们的一个项目，您已经打开了",
+    description:
+      "您正在浏览的网站，是我们为自己做的 —— 这也是了解我们做事方式最直接的途径：四种语言、首屏的代码编译场景、报价计算器，以及在真人接手之前就厘清需求的 AI 客户经理。",
+    previewLabel: "实时预览",
+    previewNote:
+      "预览中的语言会自动切换。访客看到的语言按浏览器判定，并会保留到下一次访问。",
+    demoAsk: "我们做干果出口，想要一个网站。大概需要多少钱？",
+    demoReply: "我给您看一个类似项目，并给出价格区间 —— 一分钟。",
+    points: [
+      { title: "四种语言", text: "ru · en · uz · zh，均配有 hreflang 与各自的分享封面。" },
+      { title: "第一线的 AI 客户经理", text: "20 秒内回复，按 ICP 与 BANT 为需求评分，并把整理好的摘要交给客户经理。" },
+      { title: "不依赖库的动效", text: "编译场景、代码雨与区块出场 —— 只用 CSS 与一个 IntersectionObserver。" },
+    ],
+    openCase: "这个网站是怎么做的",
   },
   process: {
     kicker: "合作方式",
