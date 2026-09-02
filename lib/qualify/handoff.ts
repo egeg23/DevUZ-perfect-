@@ -118,6 +118,44 @@ export function createHandoff(input: {
  * Токен одноразовый: он уходит в открытую ссылку, которой человек может
  * поделиться, и второй желающий не должен получить чужую переписку.
  */
+/**
+ * Обновляет переписку у уже выданного токена.
+ *
+ * Ссылка на бота готовится заранее и живёт в разметке как обычная <a>: иначе
+ * её приходилось бы открывать скриптом после запроса к серверу, а такое окно
+ * браузер считает всплывающим и блокирует. Раз ссылка готова заранее, её
+ * содержимое нужно поддерживать в актуальном состоянии — этим и занимается
+ * эта функция, вызываемая после каждой реплики.
+ *
+ * Возвращает false, если токена больше нет: контейнер перезапускали, и
+ * хранилище в памяти обнулилось. Вызывающий в этом случае просто заводит
+ * новый токен.
+ */
+export function updateHandoff(
+  token: string,
+  input: {
+    locale: Locale;
+    transcript: ChatMessage[];
+    qualified: boolean;
+    requestNo?: string;
+    discount: boolean;
+  },
+): boolean {
+  const item = pending.get(token);
+  if (!item) return false;
+
+  item.session = {
+    ...item.session,
+    locale: input.locale,
+    transcript: input.transcript,
+    qualified: input.qualified,
+    requestNo: input.requestNo,
+    discount: input.discount,
+    updatedAt: Date.now(),
+  };
+  return true;
+}
+
 export function claimHandoff(token: string, chatId: number): BotSession | null {
   sweep();
   const item = pending.get(token);

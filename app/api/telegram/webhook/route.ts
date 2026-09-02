@@ -145,6 +145,7 @@ async function handleClient(message: NonNullable<Update["message"]>) {
       await resumeFromSite(chat.id, payload, message.from, locale);
       return;
     }
+    console.log("handoff: /start без токена — холодный старт", { chatId: chat.id });
     if (!existing) startSession(chat.id, locale);
     await sendMessage(chat.id, copy.welcome);
     return;
@@ -207,6 +208,10 @@ async function resumeFromSite(
   fallbackLocale: Locale,
 ) {
   const session = claimHandoff(token, chatId);
+  // По этой строке в логах видно, чем кончилась передача: заявленный токен
+  // подхватился или протух. Без неё «почему-то не продолжается» превращается
+  // в гадание.
+  console.log("handoff:", session ? "подхвачен" : "не найден", { token, chatId });
 
   if (!session) {
     // Токен одноразовый и живёт час: протух — начинаем как с новым человеком,
@@ -373,6 +378,27 @@ function channelNote(from: TelegramUser | undefined, chatId: number, resuming: b
 async function handleSales(message: NonNullable<Update["message"]>) {
   const text = (message.text ?? "").trim().toLowerCase();
   const chat = message.chat;
+
+  // Переход с сайта в чат отдела продаж. Так бывает ровно в одном случае:
+  // владелец проверяет переезд разговора со своего же аккаунта, а его личный
+  // чат и назначен чатом отдела продаж. Клиентский диалог здесь не ведётся
+  // намеренно — иначе брифы и переписка с клиентами смешались бы в одном
+  // окне. Молча показывать служебное сообщение нельзя: выглядит как поломка.
+  if (text.startsWith("/start") && text.slice("/start".length).trim()) {
+    await sendMessage(
+      chat.id,
+      [
+        "<b>Это чат отдела продаж</b>, а не клиентский диалог.",
+        "",
+        "Переход с сайта сюда не подхватывается специально: в этом чате живут брифы, и мешать их с перепиской клиентов нельзя.",
+        "",
+        "Чтобы проверить переезд разговора — откройте ссылку с другого аккаунта Telegram.",
+        "",
+        `Если хотите вести клиентов из личного чата, перенесите брифы в группу: создайте её, добавьте бота, отправьте там <code>/id</code> и впишите новый ID в <code>TELEGRAM_SALES_CHAT_ID</code>.`,
+      ].join("\n"),
+    );
+    return;
+  }
 
   if (text.startsWith("/start") || text.startsWith("/id")) {
     await sendMessage(

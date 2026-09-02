@@ -1,7 +1,7 @@
 import { company } from "@/content/company";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { MAX_MESSAGE_CHARS, MAX_TURNS } from "@/lib/qualify/engine";
-import { createHandoff } from "@/lib/qualify/handoff";
+import { createHandoff, updateHandoff } from "@/lib/qualify/handoff";
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 import type { ChatMessage } from "@/lib/qualify/types";
 
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     qualified?: unknown;
     requestNo?: unknown;
     discount?: unknown;
+    token?: unknown;
   };
   try {
     body = await request.json();
@@ -58,13 +59,23 @@ export async function POST(request: Request) {
       ? body.requestNo
       : undefined;
 
-  const token = createHandoff({
+  const payload = {
     locale,
     transcript,
     qualified: body.qualified === true,
     requestNo,
     discount: body.discount === true,
-  });
+  };
 
-  return Response.json({ url: `https://t.me/${company.telegram}?start=${token}` });
+  // Клиент присылает свой токен, если уже получал его в этом разговоре: тогда
+  // обновляем содержимое, а не плодим по токену на каждую реплику. Ссылка при
+  // этом не меняется — она уже лежит в разметке, и человек мог навести на неё
+  // курсор. Токена нет в памяти (был деплой) — просто заводим новый.
+  const existing = typeof body.token === "string" ? body.token : null;
+  const token =
+    existing && /^[a-z]{2}-[A-Za-z0-9]{18}$/.test(existing) && updateHandoff(existing, payload)
+      ? existing
+      : createHandoff(payload);
+
+  return Response.json({ token, url: `https://t.me/${company.telegram}?start=${token}` });
 }

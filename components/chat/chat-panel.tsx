@@ -55,9 +55,19 @@ export function ChatPanel({
   /** Момент отправки первой реплики: с него идёт отсчёт. */
   const [waitStart, setWaitStart] = useState<number | null>(null);
   const [remaining, setRemaining] = useState(PROMISE_SECONDS);
-  /** Ссылка на продолжение разговора в Telegram. */
+  /**
+   * Готовая ссылка на продолжение разговора в Telegram.
+   *
+   * Готовится заранее, а не по нажатию. Раньше кнопка сначала ходила на
+   * сервер за токеном и только потом вызывала window.open — а окно, открытое
+   * после await, браузер считает всплывающим и блокирует. Человек нажимал,
+   * не происходило ничего, он открывал бота руками, и тот здоровался с ним
+   * как с незнакомцем: токена-то не было. Теперь это обычная ссылка в
+   * разметке, и клик по ней блокировать нечему.
+   */
   const [tgUrl, setTgUrl] = useState<string | null>(null);
-  const [tgBusy, setTgBusy] = useState(false);
+  /** Токен этого разговора: по нему обновляем переписку, а не плодим новые. */
+  const tgToken = useRef<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -108,35 +118,47 @@ export function ChatPanel({
     return () => window.clearInterval(timer);
   }, [waitStart]);
 
-  /** Передаёт разговор боту и открывает Telegram на том же месте. */
-  const openTelegram = useCallback(async () => {
-    if (tgBusy) return;
-    setTgBusy(true);
-    try {
-      const response = await fetch("/api/handoff", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: messages.slice(1),
-          locale,
-          qualified,
-          requestNo,
-          discount,
-        }),
-      });
-      const data = (await response.json()) as { url?: string };
-      if (data.url) {
+  /**
+   * Держим ссылку на бота готовой и свежей.
+   *
+   * Перезапрашиваем после каждой законченной реплики: в токене лежит
+   * переписка, и ссылка, выданная в начале разговора, привела бы человека
+   * в бота с половиной контекста.
+   */
+  useEffect(() => {
+    if (busy) return;
+    if (!messages.some((m) => m.role === "user")) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch("/api/handoff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: messages.slice(1),
+            locale,
+            qualified,
+            requestNo,
+            discount,
+            token: tgToken.current,
+          }),
+        });
+        const data = (await response.json()) as { url?: string; token?: string };
+        if (cancelled || !data.url) return;
+        tgToken.current = data.token ?? null;
         setTgUrl(data.url);
-        window.open(data.url, "_blank", "noopener,noreferrer");
+      } catch {
+        // Не получилось — ссылка останется прежней или её не будет вовсе.
+        // Прямой путь к нам у человека в любом случае есть: контакт студии
+        // указан в подвале и на странице контактов.
       }
-    } catch {
-      // Передача не удалась — оставляем прямую ссылку на бота: разговор
-      // придётся начать заново, но связь с нами человек не потеряет.
-      setTgUrl(null);
-    } finally {
-      setTgBusy(false);
-    }
-  }, [tgBusy, messages, locale, qualified, requestNo, discount]);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, busy, locale, qualified, requestNo, discount]);
 
   useEffect(() => {
     if (!prefill) return;
@@ -383,26 +405,25 @@ export function ChatPanel({
 
         {/* Переезд в Telegram. Показываем после первого обмена репликами:
             до него переносить нечего, а кнопка «уйти отсюда» рядом с пустым
-            чатом читается как предложение закрыть вкладку. */}
-        {messages.some((m) => m.role === "user") && !busy ? (
+            чатом читается как предложение закрыть вкладку.
+
+            Именно ссылка, а не кнопка со скриптом: переход по <a> браузер не
+            блокирует никогда, а окно, открытое из обработчика после запроса к
+            серверу, блокирует почти всегда. Пока адрес не готов, ссылки нет —
+            показывать неработающую хуже, чем не показывать вовсе. */}
+        {tgUrl && messages.some((m) => m.role === "user") && !busy ? (
           <div className="rounded-xl border border-line bg-surface-2/60 px-4 py-3">
-            <button
-              type="button"
-              onClick={() => void openTelegram()}
-              disabled={tgBusy}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-soft/40 bg-blue/10 px-4 py-2.5 text-[0.83rem] font-medium text-blue-soft transition-colors hover:border-blue-soft hover:bg-blue/20 disabled:opacity-50"
+            <a
+              href={tgUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-soft/40 bg-blue/10 px-4 py-2.5 text-[0.83rem] font-medium text-blue-soft transition-colors hover:border-blue-soft hover:bg-blue/20"
             >
               <span aria-hidden="true">✈</span>
               {dict.chat.toTelegram}
-            </button>
+            </a>
             <p className="mt-2 text-center text-[0.7rem] leading-snug text-faint">
-              {tgUrl ? (
-                <a href={tgUrl} target="_blank" rel="noopener noreferrer" className="underline">
-                  {dict.chat.toTelegramNote}
-                </a>
-              ) : (
-                dict.chat.toTelegramNote
-              )}
+              {dict.chat.toTelegramNote}
             </p>
           </div>
         ) : null}
