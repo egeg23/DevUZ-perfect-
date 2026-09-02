@@ -10,7 +10,9 @@ import { localeLabel } from "@/lib/i18n";
  * иначе не проверить, не написав ему руками. Подменяется на локальный
  * заглушечный сервер в тестах, в проде остаётся адрес по умолчанию.
  */
-const API = `${process.env.TELEGRAM_API_BASE ?? "https://api.telegram.org"}/bot`;
+// `||`, а не `??`: docker-compose передаёт незаданную переменную пустой
+// строкой, а пустая строка — не адрес, и `??` её бы пропустил.
+const API = `${process.env.TELEGRAM_API_BASE || "https://api.telegram.org"}/bot`;
 
 /**
  * Экранирование под parse_mode: HTML.
