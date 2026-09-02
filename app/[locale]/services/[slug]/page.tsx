@@ -30,8 +30,8 @@ export async function generateMetadata({
   return buildMetadata({
     locale,
     path: `services/${slug}`,
-    title: t(service.title, locale),
-    description: t(service.tagline, locale),
+    title: t(service.seoTitle, locale),
+    description: t(service.seoDescription, locale),
   });
 }
 

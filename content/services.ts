@@ -2,6 +2,16 @@ import type { LocalizedList, LocalizedText } from "@/lib/i18n";
 
 export type Service = {
   slug: string;
+  /**
+   * Заголовок и описание для поиска.
+   *
+   * Отдельно от title и tagline: на странице «Сайты и порталы» звучит нормально,
+   * а в выдаче должно стоять то, что человек набирает, — «разработка сайтов в
+   * Ташкенте». Формулировки взяты из реальных автодополнений Google по
+   * Узбекистану, а не придуманы.
+   */
+  seoTitle: LocalizedText;
+  seoDescription: LocalizedText;
   /** Ключ иконки — сама отрисовка живёт в components/ui/icon.tsx. */
   icon: string;
   title: LocalizedText;
@@ -26,6 +36,18 @@ export type Service = {
 export const services: Service[] = [
   {
     slug: "web-development",
+    seoTitle: {
+      ru: "Разработка сайтов в Ташкенте: цены и сроки — DevUz",
+      en: "Website Development in Tashkent: Pricing — DevUz",
+      uz: "Toshkentda sayt yaratish xizmati va narxi — DevUz",
+      zh: "塔什干网站开发：价格与周期 — DevUz",
+    },
+    seoDescription: {
+      ru: "Корпоративные сайты, лендинги и каталоги под ключ. Четыре языка, своя админка, техническое SEO. Вилка от $2500, срок 3–8 недель — точную цену считаем по задаче.",
+      en: "Corporate sites, landing pages and catalogues, turnkey. Four languages, a custom admin panel, technical SEO. From $2,500, 3–8 weeks — exact quote after scoping.",
+      uz: "Korporativ saytlar, lendinglar va kataloglar — kalit topshirish sharti bilan. To‘rt til, o‘z admin paneli, texnik SEO. $2500 dan, 3–8 hafta.",
+      zh: "企业官网、落地页与产品目录，交钥匙交付。四种语言、自有后台、技术 SEO。起价 2500 美元，周期 3–8 周。",
+    },
     icon: "globe",
     title: {
       ru: "Сайты и порталы",
@@ -78,6 +100,18 @@ export const services: Service[] = [
   },
   {
     slug: "mobile-apps",
+    seoTitle: {
+      ru: "Разработка мобильных приложений в Ташкенте — DevUz",
+      en: "Mobile App Development in Tashkent — DevUz",
+      uz: "Mobil ilova yaratish narxlari — Toshkent | DevUz",
+      zh: "塔什干移动应用开发 — DevUz Studio",
+    },
+    seoDescription: {
+      ru: "Приложения для iOS и Android на одной кодовой базе: Flutter, пуши, карты, онлайн-оплата. Публикуем в App Store и Google Play. Срок 6–14 недель.",
+      en: "iOS and Android apps from a single codebase: Flutter, push, maps, online payments. We ship to the App Store and Google Play. 6–14 weeks.",
+      uz: "iOS va Android uchun bitta kod bazasidan ilovalar: Flutter, push, xaritalar, onlayn to‘lov. App Store va Google Play’ga chiqaramiz. 6–14 hafta.",
+      zh: "一套代码同时覆盖 iOS 与 Android：Flutter、推送、地图、在线支付。我们负责上架 App Store 与 Google Play，周期 6–14 周。",
+    },
     icon: "phone",
     title: {
       ru: "Мобильные приложения",
@@ -130,6 +164,18 @@ export const services: Service[] = [
   },
   {
     slug: "ai-llm-rag",
+    seoTitle: {
+      ru: "Внедрение ИИ в бизнес под ключ — Ташкент | DevUz",
+      en: "AI for Business: LLM and RAG in Tashkent — DevUz",
+      uz: "Biznesga AI joriy etish — Toshkent | DevUz",
+      zh: "企业 AI 落地：LLM 与 RAG — DevUz",
+    },
+    seoDescription: {
+      ru: "AI-ассистенты, поиск по базе знаний на RAG, квалификация лидов и автоответы. Считаем стоимость и окупаемость до старта, а не после.",
+      en: "AI assistants, RAG search over your knowledge base, lead qualification and auto-replies. We size cost and payback before the start, not after.",
+      uz: "AI-yordamchilar, RAG asosida bilimlar bazasi bo‘yicha qidiruv, lidlarni saralash va avtojavoblar. Narx va qoplanishni boshlashdan oldin hisoblaymiz.",
+      zh: "AI 助手、基于 RAG 的知识库检索、线索甄别与自动回复。成本与回报在启动前算清，而不是事后。",
+    },
     icon: "brain",
     title: {
       ru: "LLM, RAG и AI-агенты",
@@ -182,6 +228,18 @@ export const services: Service[] = [
   },
   {
     slug: "marketplace-delivery",
+    seoTitle: {
+      ru: "Разработка маркетплейса под ключ в Ташкенте — DevUz",
+      en: "Marketplace Development in Tashkent — DevUz",
+      uz: "Marketpleys yaratish — Toshkent | DevUz Studio",
+      zh: "塔什干电商平台开发 — DevUz Studio",
+    },
+    seoDescription: {
+      ru: "Маркетплейсы, интернет-магазины и сервисы доставки: кабинет продавца, приложение курьера, трекинг на карте, интеграция с кассами и платежами.",
+      en: "Marketplaces, online stores and delivery services: a seller dashboard, a courier app, live map tracking, POS and payment integrations.",
+      uz: "Marketpleyslar, internet-do‘konlar va yetkazib berish servislari: sotuvchi kabineti, kuryer ilovasi, xaritada kuzatuv, kassa va to‘lov integratsiyasi.",
+      zh: "电商平台、网店与配送服务：商家后台、骑手 App、地图实时追踪、收银与支付系统对接。",
+    },
     icon: "cart",
     title: {
       ru: "Маркетплейсы и доставка",
@@ -234,6 +292,18 @@ export const services: Service[] = [
   },
   {
     slug: "integrations-automation",
+    seoTitle: {
+      ru: "Автоматизация бизнес-процессов в Ташкенте — DevUz",
+      en: "Business Process Automation in Tashkent — DevUz",
+      uz: "Biznes jarayonlarini avtomatlashtirish — DevUz",
+      zh: "塔什干业务流程自动化 — DevUz",
+    },
+    seoDescription: {
+      ru: "Связываем 1С, CRM, кассы, платёжные шлюзы и Telegram в один рабочий контур. Убираем ручной перенос данных между системами.",
+      en: "We wire 1C, CRM, POS, payment gateways and Telegram into one working loop, removing manual data transfer between systems.",
+      uz: "1C, CRM, kassalar, to‘lov shlyuzlari va Telegram’ni yagona ish konturiga bog‘laymiz. Tizimlar orasida qo‘lda ma’lumot ko‘chirishni yo‘q qilamiz.",
+      zh: "把 1C、CRM、收银、支付网关与 Telegram 接入同一条工作链路，取消系统间的手工搬运数据。",
+    },
     icon: "plug",
     title: {
       ru: "Интеграции и автоматизация",

@@ -66,7 +66,11 @@ export function buildMetadata({
   const image = ogImage ?? absoluteUrl(`og-${locale}.png`);
 
   return {
-    title,
+    // absolute, а не обычный title: шаблон из layout дописывает «— DevUz
+    // Studio» ко всему, что ему отдают, и заголовки, где бренд уже был,
+    // выходили за сотню символов — Google обрезает на шестидесяти. Здесь
+    // строка задаётся целиком и ровно так, как должна выглядеть в выдаче.
+    title: { absolute: title },
     description,
     alternates: buildAlternates(locale, path),
     robots: noIndex ? { index: false, follow: false } : undefined,

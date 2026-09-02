@@ -43,6 +43,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
           entry.path ? `${alt}/${entry.path}` : alt,
         );
       }
+      // x-default стоит и в <head>, но в sitemap его не было — а Google
+      // сверяет оба источника и неполную связку молча игнорирует. Ведёт на
+      // русскую версию: это язык основного потока клиентов из Узбекистана.
+      languages["x-default"] = absoluteUrl(entry.path ? `ru/${entry.path}` : "ru");
 
       return {
         url: absoluteUrl(entry.path ? `${locale}/${entry.path}` : locale),

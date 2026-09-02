@@ -23,10 +23,12 @@ export async function generateMetadata({
   const { locale } = await params;
   if (!isLocale(locale)) return {};
 
+  const dict = getDictionary(locale);
+
   return buildMetadata({
     locale,
-    title: `${company.name} — ${t(company.tagline, locale)}`,
-    description: t(company.description, locale),
+    title: dict.seo.home.title,
+    description: dict.seo.home.description,
   });
 }
 

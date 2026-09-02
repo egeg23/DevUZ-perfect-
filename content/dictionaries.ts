@@ -133,6 +133,50 @@ const ru = {
     toTelegram: "Продолжить в Telegram",
     toTelegramNote: "Разговор продолжится с этого же места — заново рассказывать не придётся.",
   },
+  /**
+   * Заголовки и описания для поиска.
+   *
+   * Держатся отдельно от видимого текста намеренно. На странице заголовок
+   * должен звучать по-человечески — «Пять направлений», «Посчитайте проект за
+   * минуту»; в выдаче он должен совпадать с тем, что человек набрал в строке
+   * поиска. Совмещать эти две работы в одной строке — значит сделать плохо обе.
+   *
+   * Формулировки взяты не из головы: это реальные автодополнения Google по
+   * Узбекистану. Главный коммерческий модификатор там — «цены»/«narxi»,
+   * поэтому он стоит в заголовках услуг и калькулятора, а не в подвале.
+   */
+  seo: {
+    home: {
+      title: "Разработка сайтов и приложений в Ташкенте — DevUz",
+      description:
+        "Студия полного цикла в Ташкенте: сайты, мобильные приложения, маркетплейсы, AI-продукты на LLM и RAG. Считаем стоимость онлайн, отвечаем за 20 секунд.",
+    },
+    services: {
+      title: "Услуги: сайты, приложения, AI — Ташкент | DevUz",
+      description:
+        "Пять направлений: корпоративные сайты, мобильные приложения, AI-продукты, маркетплейсы и доставка, интеграции. Вилка цен и срок по каждому направлению.",
+    },
+    cases: {
+      title: "Портфолио: сайты, приложения, маркетплейсы — DevUz",
+      description:
+        "Проекты в продакшене: сервис доставки, маркетплейс, AI-квалификация лидов, аренда техники. По каждому — задача, стек и результат.",
+    },
+    calculator: {
+      title: "Стоимость разработки сайта в Ташкенте — калькулятор",
+      description:
+        "Посчитайте цену сайта, приложения или маркетплейса за минуту. Отметьте нужные опции — калькулятор покажет вилку «от» в сумах и срок в неделях.",
+    },
+    contact: {
+      title: "Заказать разработку сайта в Ташкенте — DevUz",
+      description:
+        "Напишите в чат — ответим за 20 секунд, круглосуточно. Не успеем — скидка 30% на проект. Обсудим задачу, сроки и стоимость разработки.",
+    },
+    about: {
+      title: "О студии DevUz — разработка в Ташкенте",
+      description:
+        "Кто мы, как работаем и на чём пишем. Команда из Ташкента: сайты, мобильные приложения, маркетплейсы и AI-продукты для бизнеса Узбекистана.",
+    },
+  },
   footer: {
     tagline: "Студия разработки полного цикла в Ташкенте",
     services: "Услуги",
@@ -304,6 +348,38 @@ const en: Dictionary = {
     toTelegram: "Continue on Telegram",
     toTelegramNote: "The conversation picks up right where it left off — no need to explain again.",
   },
+  seo: {
+    home: {
+      title: "Web & Mobile Development in Tashkent — DevUz",
+      description:
+        "Full-cycle development studio in Tashkent, Uzbekistan: websites, mobile apps, marketplaces, AI products on LLM and RAG. Online cost estimate, replies in 20 seconds.",
+    },
+    services: {
+      title: "Services: Websites, Apps, AI — Tashkent | DevUz",
+      description:
+        "Five directions: corporate websites, mobile apps, AI products, marketplaces and delivery, integrations. Price range and timeline for each.",
+    },
+    cases: {
+      title: "Portfolio: Websites, Apps, Marketplaces — DevUz",
+      description:
+        "Projects in production: a delivery service, a marketplace, AI lead qualification, equipment rental. Task, stack and outcome for each.",
+    },
+    calculator: {
+      title: "Development Cost Calculator — Tashkent | DevUz",
+      description:
+        "Estimate the price of a website, app or marketplace in a minute. Pick the options you need and get a starting range and a timeline in weeks.",
+    },
+    contact: {
+      title: "Hire a Development Studio in Tashkent — DevUz",
+      description:
+        "Write in the chat — we reply within 20 seconds, around the clock. If we miss it, you get 30% off. Let's discuss scope, timeline and cost.",
+    },
+    about: {
+      title: "About DevUz — Development Studio in Tashkent",
+      description:
+        "Who we are, how we work and what we build with. A Tashkent team: websites, mobile apps, marketplaces and AI products for business in Uzbekistan.",
+    },
+  },
   footer: {
     tagline: "A full-cycle development studio in Tashkent",
     services: "Services",
@@ -469,6 +545,38 @@ const uz: Dictionary = {
     toTelegram: "Telegramda davom etish",
     toTelegramNote: "Suhbat aynan shu joydan davom etadi — qaytadan tushuntirish shart emas.",
   },
+  seo: {
+    home: {
+      title: "Toshkentda sayt va ilova yaratish — DevUz",
+      description:
+        "Toshkentdagi to‘liq tsiklli studiya: saytlar, mobil ilovalar, marketpleyslar, LLM va RAG asosidagi AI-mahsulotlar. Narxni onlayn hisoblaymiz, 20 soniyada javob beramiz.",
+    },
+    services: {
+      title: "Xizmatlar: sayt, ilova, AI — Toshkent | DevUz",
+      description:
+        "Besh yo‘nalish: korporativ saytlar, mobil ilovalar, AI-mahsulotlar, marketpleys va yetkazib berish, integratsiyalar. Har biri uchun narx va muddat.",
+    },
+    cases: {
+      title: "Portfolio: saytlar va ilovalar — DevUz Studio",
+      description:
+        "Ishlayotgan loyihalar: yetkazib berish servisi, marketpleys, AI-kvalifikatsiya, texnika ijarasi. Har biri bo‘yicha vazifa, stek va natija.",
+    },
+    calculator: {
+      title: "Sayt yaratish narxi — onlayn kalkulyator | DevUz",
+      description:
+        "Sayt, ilova yoki marketpleys narxini bir daqiqada hisoblang. Kerakli variantlarni belgilang — kalkulyator so‘mdagi «dan» narxini va muddatni ko‘rsatadi.",
+    },
+    contact: {
+      title: "Toshkentda saytga buyurtma berish — DevUz",
+      description:
+        "Chatga yozing — 20 soniyada javob beramiz, kunu tun. Ulgurmasak — 30% chegirma. Vazifa, muddat va narxni muhokama qilamiz.",
+    },
+    about: {
+      title: "DevUz studiyasi haqida — Toshkent | DevUz",
+      description:
+        "Biz kimmiz, qanday ishlaymiz va nimada yozamiz. Toshkent jamoasi: saytlar, mobil ilovalar, marketpleyslar va O‘zbekiston biznesi uchun AI-mahsulotlar.",
+    },
+  },
   footer: {
     tagline: "Toshkentdagi to‘liq siklli ishlab chiqish studiyasi",
     services: "Xizmatlar",
@@ -632,6 +740,33 @@ const zh: Dictionary = {
     requestLabel: "申请编号",
     toTelegram: "在 Telegram 继续",
     toTelegramNote: "对话会从这里继续 —— 无需重新说明。",
+  },
+  seo: {
+    home: {
+      title: "塔什干网站与应用开发 — DevUz Studio",
+      description:
+        "位于乌兹别克斯坦塔什干的全流程开发工作室：网站、移动应用、电商平台，以及基于 LLM 与 RAG 的 AI 产品。在线估价，20 秒内回复。",
+    },
+    services: {
+      title: "服务：网站、应用、AI — 塔什干 | DevUz",
+      description: "五大方向：企业网站、移动应用、AI 产品、电商平台与配送、系统集成。每个方向均标注价格区间与周期。",
+    },
+    cases: {
+      title: "案例：网站、应用与电商平台 — DevUz",
+      description: "已上线的项目：配送服务、电商平台、AI 线索甄别、设备租赁。每个项目均含需求、技术栈与结果。",
+    },
+    calculator: {
+      title: "开发报价计算器 — 塔什干 | DevUz",
+      description: "一分钟估算网站、应用或电商平台的价格。勾选所需选项，即可得到起步价区间与以周计的周期。",
+    },
+    contact: {
+      title: "在塔什干委托开发 — DevUz Studio",
+      description: "在聊天中留言 —— 我们 20 秒内回复，全天候。超时未回，项目立减 30%。一起聊聊范围、周期与费用。",
+    },
+    about: {
+      title: "关于 DevUz — 塔什干开发工作室",
+      description: "我们是谁、怎么工作、用什么技术。一支塔什干团队：为乌兹别克斯坦企业打造网站、移动应用、电商平台与 AI 产品。",
+    },
   },
   footer: {
     tagline: "位于塔什干的全流程开发工作室",

@@ -22,8 +22,8 @@ export async function generateMetadata({
   return buildMetadata({
     locale,
     path: "services",
-    title: dict.services.title,
-    description: dict.services.description,
+    title: dict.seo.services.title,
+    description: dict.seo.services.description,
   });
 }
 

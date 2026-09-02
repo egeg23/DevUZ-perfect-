@@ -20,8 +20,8 @@ export async function generateMetadata({
   return buildMetadata({
     locale,
     path: "calculator",
-    title: dict.calculator.title,
-    description: dict.calculator.description,
+    title: dict.seo.calculator.title,
+    description: dict.seo.calculator.description,
   });
 }
 
