@@ -1,0 +1,11 @@
+[Unit]
+Description=Ежедневная резервная копия базы лидов DevUz
+
+[Timer]
+# Ночь по Ташкенту: 03:00 UTC+5 = 22:00 UTC предыдущих суток.
+OnCalendar=*-*-* 22:00:00 UTC
+# Если сервер был выключен в момент срабатывания — сделать копию при старте.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
