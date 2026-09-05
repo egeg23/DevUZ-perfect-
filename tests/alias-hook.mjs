@@ -4,6 +4,12 @@
 // про алиасы сборщика ничего не знает, а исходники импортируют без расширения:
 // «@/lib/promise-terms». ESM без расширения не резолвит, поэтому подбираем его
 // сами — ровно так же, как это делает сборщик.
+// Ограничение режима strip-only, о которое легко споткнуться: node исполняет
+// только тот TypeScript, который стирается без остатка. Синтаксис, порождающий
+// код, — parameter properties (`constructor(readonly x: T)`), `enum`,
+// пространства имён — падает с ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX, хотя tsc и
+// сборка его принимают. Модули, которые импортируются из тестов, должны его
+// избегать.
 import { registerHooks } from "node:module";
 import { existsSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
