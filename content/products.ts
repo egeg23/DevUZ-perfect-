@@ -997,10 +997,10 @@ export const products: Product[] = [
       zh: "成品微服务电商平台 — 源代码",
     },
     seoDescription: {
-      ru: "Исходный код маркетплейса: 36 сервисов на Java и Spring, каталог с поиском, платежи, склад, логистика, ОФД и интеграции для Узбекистана. 30 000 $.",
-      en: "Marketplace source code: 36 services on Java and Spring, catalogue with search, payments, warehouse, logistics, fiscal receipts and Uzbek integrations. $30,000.",
-      uz: "Marketpleys manba kodi: Java va Spring'da 36 servis, qidiruvli katalog, to'lovlar, ombor, logistika, OFD va O'zbekiston integratsiyalari. 30 000 $.",
-      zh: "电商平台源代码：基于 Java 与 Spring 的 36 个服务，含搜索目录、支付、仓储、物流、财政票据及乌兹别克本地集成。30,000 美元。",
+      ru: "Исходный код маркетплейса: 35 компонентов, 21 сервис на Java и Spring, каталог с поиском, платежи, склад, логистика, ОФД и интеграции для Узбекистана. 30 000 $.",
+      en: "Marketplace source code: 35 components, 21 services on Java and Spring, catalogue with search, payments, warehouse, logistics, fiscal receipts and Uzbek integrations. $30,000.",
+      uz: "Marketpleys manba kodi: 35 komponent, Java va Spring'da 21 servis, qidiruvli katalog, to'lovlar, ombor, logistika, OFD va O'zbekiston integratsiyalari. 30 000 $.",
+      zh: "电商平台源代码：共 35 个组件，其中 21 个基于 Java 与 Spring 的服务，含搜索目录、支付、仓储、物流、财政票据及乌兹别克本地集成。30,000 美元。",
     },
     title: {
       ru: "Маркетплейс на микросервисах",
@@ -1009,17 +1009,17 @@ export const products: Product[] = [
       zh: "微服务电商平台",
     },
     tagline: {
-      ru: "36 сервисов, шлюз, шина сообщений, оркестрация процессов",
-      en: "36 services, a gateway, a message bus, process orchestration",
-      uz: "36 servis, shlyuz, xabarlar shinasi, jarayonlar orkestratsiyasi",
-      zh: "36 个服务、网关、消息总线、流程编排",
+      ru: "35 компонентов, шлюз, шина сообщений, оркестрация процессов",
+      en: "35 components, a gateway, a message bus, process orchestration",
+      uz: "35 komponent, shlyuz, xabarlar shinasi, jarayonlar orkestratsiyasi",
+      zh: "35 个组件、网关、消息总线、流程编排",
     },
     priceUsd: 30000,
     description: {
-      ru: "Исходный код полноценного маркетплейса корпоративного масштаба: тридцать шесть сервисов за единым шлюзом, у каждого своя база, между ними — асинхронная шина, а бизнес-процессы описаны и исполняются движком оркестрации, а не расставлены по коду условиями. Это не витрина с корзиной: здесь склад, логистика, биллинг, фискальные чеки, кэшбэк и три отдельных фронтенда — покупателю, продавцу и складу.",
-      en: "The source code of a full enterprise-scale marketplace: thirty-six services behind a single gateway, each with its own database, an asynchronous bus between them, and business processes described and executed by an orchestration engine rather than scattered through the code as conditionals. This is not a storefront with a cart: it has warehousing, logistics, billing, fiscal receipts, cashback and three separate frontends — for the buyer, the seller and the warehouse.",
-      uz: "To'laqonli korporativ miqyosdagi marketpleysning manba kodi: yagona shlyuz ortida o'ttiz oltita servis, har birida o'z bazasi, ular orasida asinxron shina, biznes-jarayonlar esa kodga shartlar bilan sochilgan emas, orkestratsiya dvigateli tomonidan bajariladi. Bu savatli vitrina emas: bu yerda ombor, logistika, billing, fiskal cheklar, keshbek va uchta alohida frontend bor.",
-      zh: "一套企业级电商平台的完整源代码：单一网关之后有三十六个服务，各自独立数据库，服务间通过异步消息总线通信，业务流程由编排引擎描述并执行，而非以条件语句散落在代码中。这不是带购物车的展示页：其中包含仓储、物流、计费、财政票据、返现，以及面向买家、卖家与仓库的三套独立前端。",
+      ru: "Исходный код полноценного маркетплейса корпоративного масштаба: тридцать пять компонентов, из них двадцать один backend-сервис на Java и Spring за единым шлюзом, у каждого своя база, между ними — асинхронная шина, а бизнес-процессы описаны и исполняются движком оркестрации, а не расставлены по коду условиями. Это не витрина с корзиной: здесь склад, логистика, биллинг, фискальные чеки, кэшбэк и три отдельных фронтенда — покупателю, продавцу и складу.",
+      en: "The source code of a full enterprise-scale marketplace: thirty-five components, twenty-one of them Java and Spring backend services behind a single gateway, each with its own database, an asynchronous bus between them, and business processes described and executed by an orchestration engine rather than scattered through the code as conditionals. This is not a storefront with a cart: it has warehousing, logistics, billing, fiscal receipts, cashback and three separate frontends — for the buyer, the seller and the warehouse.",
+      uz: "To'laqonli korporativ miqyosdagi marketpleysning manba kodi: o'ttiz beshta komponent, ulardan yigirma bittasi yagona shlyuz ortidagi Java va Spring backend-servislari, har birida o'z bazasi, ular orasida asinxron shina, biznes-jarayonlar esa kodga shartlar bilan sochilgan emas, orkestratsiya dvigateli tomonidan bajariladi. Bu savatli vitrina emas: bu yerda ombor, logistika, billing, fiskal cheklar, keshbek va uchta alohida frontend bor.",
+      zh: "一套企业级电商平台的完整源代码：共三十五个组件，其中二十一个是单一网关之后的 Java 与 Spring 后端服务，各自独立数据库，服务间通过异步消息总线通信，业务流程由编排引擎描述并执行，而非以条件语句散落在代码中。这不是带购物车的展示页：其中包含仓储、物流、计费、财政票据、返现，以及面向买家、卖家与仓库的三套独立前端。",
     },
     blocks: [
       {
@@ -1226,10 +1226,10 @@ export const products: Product[] = [
       ],
     },
     readiness: {
-      ru: "Код работавшего маркетплейса, а не заготовка: все тридцать шесть сервисов написаны и связаны между собой. Но это корпоративная система, и развернуть её — не «поднять контейнер»: нужен кластер, отдельные базы, брокер сообщений, поисковый кластер и человек, который это обслуживает. Оценивайте не только цену покупки, но и стоимость эксплуатации.",
-      en: "The code of a marketplace that ran, not a skeleton: all thirty-six services are written and wired together. But it is an enterprise system, and deploying it is not «bring up a container»: it needs a cluster, separate databases, a message broker, a search cluster and someone to operate all of it. Budget for running costs, not just the purchase price.",
-      uz: "Bu andoza emas, ishlagan marketpleys kodi: o'ttiz oltita servisning barchasi yozilgan va o'zaro bog'langan. Lekin bu korporativ tizim va uni joylashtirish «konteyner ko'tarish» emas: klaster, alohida bazalar, xabar brokeri, qidiruv klasteri va buni qo'llab-quvvatlaydigan odam kerak. Faqat sotib olish narxini emas, ekspluatatsiya xarajatini ham baholang.",
-      zh: "这是曾实际运行过的电商平台代码，而非骨架：三十六个服务均已实现并相互打通。但它是企业级系统，部署并非「起一个容器」：需要集群、独立数据库、消息代理、搜索集群，以及负责运维的人。请把运行成本也纳入预算，而不仅是购买价格。",
+      ru: "Код работавшего маркетплейса, а не заготовка: все тридцать пять компонентов написаны и связаны между собой. Но это корпоративная система, и развернуть её — не «поднять контейнер»: нужен кластер, отдельные базы, брокер сообщений, поисковый кластер и человек, который это обслуживает. Оценивайте не только цену покупки, но и стоимость эксплуатации.",
+      en: "The code of a marketplace that ran, not a skeleton: all thirty-five components are written and wired together. But it is an enterprise system, and deploying it is not «bring up a container»: it needs a cluster, separate databases, a message broker, a search cluster and someone to operate all of it. Budget for running costs, not just the purchase price.",
+      uz: "Bu andoza emas, ishlagan marketpleys kodi: o'ttiz beshta komponentning barchasi yozilgan va o'zaro bog'langan. Lekin bu korporativ tizim va uni joylashtirish «konteyner ko'tarish» emas: klaster, alohida bazalar, xabar brokeri, qidiruv klasteri va buni qo'llab-quvvatlaydigan odam kerak. Faqat sotib olish narxini emas, ekspluatatsiya xarajatini ham baholang.",
+      zh: "这是曾实际运行过的电商平台代码，而非骨架：三十五个组件均已实现并相互打通。但它是企业级系统，部署并非「起一个容器」：需要集群、独立数据库、消息代理、搜索集群，以及负责运维的人。请把运行成本也纳入预算，而不仅是购买价格。",
     },
     buyerProvides: {
       ru: [
