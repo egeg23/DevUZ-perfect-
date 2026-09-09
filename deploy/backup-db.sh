@@ -32,31 +32,50 @@ fi
 # pg_dump отказывается снимать копию с сервера новее себя — и отказывается
 # правильно: формат дампа между мажорными версиями меняется. Ubuntu 22.04
 # ставит клиент 14, Supabase крутит 17, и «apt install postgresql-client»
-# даёт ровно эту пару. Проверено на живом сервере: копия не делалась ни
-# разу, а таймер при этом отрабатывал каждую ночь.
+# даёт ровно эту пару. Найдено на живом сервере: копия не делалась ни разу.
 #
-# Проверяем до записи файла, чтобы не оставлять после себя .part и не
-# заставлять читать сообщение pg_dump в journalctl. Если версию сервера
-# выяснить не удалось — не мешаем: пусть говорит сам pg_dump.
+# Если версию сервера выяснить не удалось — не мешаем: пусть говорит сам
+# pg_dump.
 SERVER_MAJOR="$(psql "$SUPABASE_DB_URL" -tAc 'show server_version' 2>/dev/null | cut -d. -f1 | tr -dc '0-9')"
 DUMP_MAJOR="$(pg_dump --version 2>/dev/null | grep -oE '[0-9]+' | head -1)"
 
+# Строка подключения не ходит аргументом ни в одном из вариантов: аргументы
+# видны в списке процессов всей машины, переменные окружения — только
+# владельцу процесса. Снаружи в dump() передаются только флаги.
+dump() { pg_dump "$SUPABASE_DB_URL" "$@"; }
+
 if [[ -n "$SERVER_MAJOR" && -n "$DUMP_MAJOR" && "$DUMP_MAJOR" -lt "$SERVER_MAJOR" ]]; then
-  CODENAME="$(. /etc/os-release 2>/dev/null && echo "${VERSION_CODENAME:-jammy}")"
-  cat >&2 <<MSG
-pg_dump версии $DUMP_MAJOR не снимет копию с сервера версии $SERVER_MAJOR.
-Клиент из репозитория Ubuntu отстаёт от Supabase. Поставьте нужную версию:
+  # Клиент старый. Вместо того чтобы требовать возни с чужим apt-репозиторием
+  # и его ключом — берём pg_dump нужной версии из образа. Docker на этом
+  # сервере есть по определению: в нём же крутится само приложение.
+  #
+  # Строка подключения уходит переменной окружения, а не аргументом: аргументы
+  # видны в списке процессов всей машины, переменные — только владельцу.
+  if command -v docker >/dev/null 2>&1; then
+    echo "клиент версии $DUMP_MAJOR старше сервера $SERVER_MAJOR — беру pg_dump из образа postgres:$SERVER_MAJOR" >&2
+    dump() {
+      # Флаги прокидываются внутрь, а не дублируются здесь: иначе правка на
+      # вызывающей стороне молча не доехала бы до контейнерного пути, и
+      # копии стали бы отличаться в зависимости от версии клиента на хосте.
+      docker run --rm -e PGURL="$SUPABASE_DB_URL" "postgres:$SERVER_MAJOR" \
+        sh -c 'exec pg_dump "$PGURL" "$@"' sh "$@"
+    }
+  else
+    CODENAME="$(. /etc/os-release 2>/dev/null && echo "${VERSION_CODENAME:-jammy}")"
+    cat >&2 <<MSG
+pg_dump версии $DUMP_MAJOR не снимет копию с сервера версии $SERVER_MAJOR,
+а docker, которым это можно обойти, на машине не найден.
+
+Поставьте клиент нужной версии:
 
   install -d /usr/share/postgresql-common/pgdg
-  curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
-    https://www.postgresql.org/media/keys/ACCC4CF8.asc
-  echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] \
-https://apt.postgresql.org/pub/repos/apt ${CODENAME}-pgdg main" \
-    > /etc/apt/sources.list.d/pgdg.list
+  curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+  echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${CODENAME}-pgdg main" > /etc/apt/sources.list.d/pgdg.list
   apt update && apt install -y postgresql-client-$SERVER_MAJOR
 
 MSG
-  exit 1
+    exit 1
+  fi
 fi
 
 mkdir -p "$DEST"
@@ -65,7 +84,7 @@ OUT="$DEST/devuz-$STAMP.sql.gz"
 
 # --no-owner и --no-acl: восстанавливать будем в другой проект, где ролей с
 # теми же именами нет, и падение на GRANT сделало бы копию бесполезной.
-pg_dump "$SUPABASE_DB_URL" --no-owner --no-acl --schema=public \
+dump --no-owner --no-acl --schema=public \
   | gzip -9 > "$OUT.part"
 mv "$OUT.part" "$OUT"
 
