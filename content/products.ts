@@ -46,11 +46,20 @@ export type Product = {
   readiness: LocalizedText;
   /** Что покупатель докупает или оформляет сам. */
   buyerProvides: LocalizedList;
+  /**
+   * Сравнение с разработкой с нуля.
+   *
+   * Это оценка студии, а не замер: точная цифра зависит от того, сколько
+   * придётся переделывать под конкретного заказчика. Поэтому в тексте стоит
+   * «в среднем», а вилка широкая — сужать её значило бы обещать точность,
+   * которой нет.
+   */
+  savings: LocalizedText;
 };
 
 export const products: Product[] = [
   {
-    slug: "marketplace",
+    slug: "delivery-service",
     seoTitle: {
       ru: "Готовый маркетплейс доставки под ключ — исходный код",
       en: "Ready-Made Delivery Marketplace — Full Source Code",
@@ -58,10 +67,10 @@ export const products: Product[] = [
       zh: "成品配送市场平台 — 完整源代码",
     },
     seoDescription: {
-      ru: "Исходный код маркетплейса доставки: приложение на Flutter для iOS, Android и веба, бэкенд на Node, три роли и интеграции с POS-системами. 30 000 $.",
-      en: "Source code for a delivery marketplace: Flutter app for iOS, Android and web, Node backend, three user roles and POS integrations. $30,000.",
+      ru: "Исходный код маркетплейса доставки: приложение на Flutter для iOS, Android и веба, бэкенд на Node, три роли и интеграции с POS-системами. 16 000 $.",
+      en: "Source code for a delivery marketplace: Flutter app for iOS, Android and web, Node backend, three user roles and POS integrations. $16,000.",
       uz: "Yetkazib berish marketpleysi manba kodi: iOS, Android va veb uchun Flutter ilova, Node backend, uchta rol va POS integratsiyalari. 30 000 $.",
-      zh: "配送市场平台源代码：适用于 iOS、Android 和网页的 Flutter 应用、Node 后端、三种角色及 POS 集成。30,000 美元。",
+      zh: "配送市场平台源代码：适用于 iOS、Android 和网页的 Flutter 应用、Node 后端、三种角色及 POS 集成。16,000 美元。",
     },
     title: {
       ru: "Маркетплейс доставки",
@@ -75,7 +84,7 @@ export const products: Product[] = [
       uz: "Bitta ilova, uchta rol, tayyor B2B integratsiyalar",
       zh: "一个应用，三种角色，内置 B2B 集成",
     },
-    priceUsd: 30000,
+    priceUsd: 16000,
     description: {
       ru: "Полный исходный код маркетплейса доставки еды и продуктов. Покупатель, курьер и ресторан живут в одном приложении и переключаются ролью, а не отдельными сборками. Вход — через Telegram, без SMS и паролей. Рестораны подключают свою кассовую систему сами через интерфейс, и меню синхронизируется автоматически.",
       en: "The complete source code of a food and grocery delivery marketplace. Buyer, courier and restaurant live in one app and switch by role rather than by separate builds. Sign-in is through Telegram, with no SMS and no passwords. Restaurants connect their own POS through the interface and the menu syncs automatically.",
@@ -297,6 +306,12 @@ export const products: Product[] = [
         "法律文件：公开要约、数据处理、商家合同",
         "生产服务器与域名",
       ],
+    },
+    savings: {
+      ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 22 400–27 200 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
+      en: "Building the same from scratch costs on average 40–70% more — that is $22,400–27,200. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
+      uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 22 400–27 200 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
+      zh: "从零开发同样的产品平均要贵 40–70% —— 约合22,400–27,200 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
     },
   },
   {
@@ -584,6 +599,12 @@ export const products: Product[] = [
         "服务器与域名",
       ],
     },
+    savings: {
+      ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 21 000–25 500 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
+      en: "Building the same from scratch costs on average 40–70% more — that is $21,000–25,500. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
+      uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 21 000–25 500 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
+      zh: "从零开发同样的产品平均要贵 40–70% —— 约合21,000–25,500 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
+    },
   },
   {
     slug: "legal-ai",
@@ -775,6 +796,12 @@ export const products: Product[] = [
         "由所在法域的律师审核文书模板",
       ],
     },
+    savings: {
+      ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 4 900–5 950 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
+      en: "Building the same from scratch costs on average 40–70% more — that is $4,900–5,950. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
+      uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 4 900–5 950 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
+      zh: "从零开发同样的产品平均要贵 40–70% —— 约合4,900–5,950 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
+    },
   },
   {
     slug: "landing",
@@ -953,6 +980,292 @@ export const products: Product[] = [
         "标志与品牌色（若已有）",
         "用于接收线索的 Telegram 群或 CRM 权限",
       ],
+    },
+    savings: {
+      ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 1 120–4 250 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
+      en: "Building the same from scratch costs on average 40–70% more — that is $1,120–4,250. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
+      uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 1 120–4 250 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
+      zh: "从零开发同样的产品平均要贵 40–70% —— 约合1,120–4,250 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
+    },
+  },
+  {
+    slug: "marketplace",
+    seoTitle: {
+      ru: "Готовый маркетплейс на микросервисах — исходный код",
+      en: "Ready-Made Microservice Marketplace — Source Code",
+      uz: "Mikroservislarda tayyor marketpleys — manba kodi",
+      zh: "成品微服务电商平台 — 源代码",
+    },
+    seoDescription: {
+      ru: "Исходный код маркетплейса: 36 сервисов на Java и Spring, каталог с поиском, платежи, склад, логистика, ОФД и интеграции для Узбекистана. 30 000 $.",
+      en: "Marketplace source code: 36 services on Java and Spring, catalogue with search, payments, warehouse, logistics, fiscal receipts and Uzbek integrations. $30,000.",
+      uz: "Marketpleys manba kodi: Java va Spring'da 36 servis, qidiruvli katalog, to'lovlar, ombor, logistika, OFD va O'zbekiston integratsiyalari. 30 000 $.",
+      zh: "电商平台源代码：基于 Java 与 Spring 的 36 个服务，含搜索目录、支付、仓储、物流、财政票据及乌兹别克本地集成。30,000 美元。",
+    },
+    title: {
+      ru: "Маркетплейс на микросервисах",
+      en: "Microservice Marketplace",
+      uz: "Mikroservislarda marketpleys",
+      zh: "微服务电商平台",
+    },
+    tagline: {
+      ru: "36 сервисов, шлюз, шина сообщений, оркестрация процессов",
+      en: "36 services, a gateway, a message bus, process orchestration",
+      uz: "36 servis, shlyuz, xabarlar shinasi, jarayonlar orkestratsiyasi",
+      zh: "36 个服务、网关、消息总线、流程编排",
+    },
+    priceUsd: 30000,
+    description: {
+      ru: "Исходный код полноценного маркетплейса корпоративного масштаба: тридцать шесть сервисов за единым шлюзом, у каждого своя база, между ними — асинхронная шина, а бизнес-процессы описаны и исполняются движком оркестрации, а не расставлены по коду условиями. Это не витрина с корзиной: здесь склад, логистика, биллинг, фискальные чеки, кэшбэк и три отдельных фронтенда — покупателю, продавцу и складу.",
+      en: "The source code of a full enterprise-scale marketplace: thirty-six services behind a single gateway, each with its own database, an asynchronous bus between them, and business processes described and executed by an orchestration engine rather than scattered through the code as conditionals. This is not a storefront with a cart: it has warehousing, logistics, billing, fiscal receipts, cashback and three separate frontends — for the buyer, the seller and the warehouse.",
+      uz: "To'laqonli korporativ miqyosdagi marketpleysning manba kodi: yagona shlyuz ortida o'ttiz oltita servis, har birida o'z bazasi, ular orasida asinxron shina, biznes-jarayonlar esa kodga shartlar bilan sochilgan emas, orkestratsiya dvigateli tomonidan bajariladi. Bu savatli vitrina emas: bu yerda ombor, logistika, billing, fiskal cheklar, keshbek va uchta alohida frontend bor.",
+      zh: "一套企业级电商平台的完整源代码：单一网关之后有三十六个服务，各自独立数据库，服务间通过异步消息总线通信，业务流程由编排引擎描述并执行，而非以条件语句散落在代码中。这不是带购物车的展示页：其中包含仓储、物流、计费、财政票据、返现，以及面向买家、卖家与仓库的三套独立前端。",
+    },
+    blocks: [
+      {
+        title: {
+          ru: "Сервисы: торговля",
+          en: "Services: commerce",
+          uz: "Servislar: savdo",
+          zh: "服务：交易",
+        },
+        items: {
+          ru: [
+            "Каталог: товары, категории, атрибуты, модерация карточек",
+            "Поиск на Elasticsearch: фасеты, синонимы, ранжирование",
+            "Продажи: заказы, отмены, возвраты, статусы",
+            "Оформление заказа отдельным сервисом и фронтендом",
+            "Контент продавцов: отзывы, вопросы, медиа",
+            "CMS: баннеры, подборки, статические страницы",
+          ],
+          en: [
+            "Catalogue: products, categories, attributes, listing moderation",
+            "Search on Elasticsearch: facets, synonyms, ranking",
+            "Sales: orders, cancellations, returns, statuses",
+            "Checkout as a separate service and frontend",
+            "Seller content: reviews, questions, media",
+            "CMS: banners, collections, static pages",
+          ],
+          uz: [
+            "Katalog: tovarlar, kategoriyalar, atributlar, kartochkalar moderatsiyasi",
+            "Elasticsearch'da qidiruv: fasetlar, sinonimlar, reyting",
+            "Sotuvlar: buyurtmalar, bekor qilishlar, qaytarishlar, statuslar",
+            "Buyurtma rasmiylashtirish alohida servis va frontend sifatida",
+            "Sotuvchilar kontenti: sharhlar, savollar, media",
+            "CMS: bannerlar, to'plamlar, statik sahifalar",
+          ],
+          zh: [
+            "目录：商品、类目、属性、商品页审核",
+            "基于 Elasticsearch 的搜索：分面、同义词、排序",
+            "销售：订单、取消、退货、状态流转",
+            "结算作为独立服务与前端",
+            "卖家内容：评价、问答、媒体",
+            "CMS：横幅、专题、静态页",
+          ],
+        },
+      },
+      {
+        title: {
+          ru: "Сервисы: деньги и склад",
+          en: "Services: money and warehouse",
+          uz: "Servislar: pul va ombor",
+          zh: "服务：资金与仓储",
+        },
+        items: {
+          ru: [
+            "Платёжный шлюз: приём оплаты, холдирование, возвраты",
+            "Биллинг: расчёты с продавцами, комиссии, взаиморасчёты",
+            "ОФД: фискальные чеки и передача в налоговую",
+            "Генератор чеков на NestJS с отрисовкой в PDF",
+            "Склад: остатки, приёмка, отгрузка, инвентаризация",
+            "Логистика: доставка, маршруты, статусы отправлений",
+            "Бонусы и кэшбэк отдельным сервисом",
+          ],
+          en: [
+            "Payment gateway: collecting payment, holds, refunds",
+            "Billing: settlements with sellers, commissions, reconciliation",
+            "Fiscal service: receipts and reporting to the tax authority",
+            "A receipt generator on NestJS rendering to PDF",
+            "Warehouse: stock, receiving, shipping, stocktaking",
+            "Logistics: delivery, routes, shipment statuses",
+            "Bonuses and cashback as a separate service",
+          ],
+          uz: [
+            "To'lov shlyuzi: to'lov qabul qilish, ushlab turish, qaytarish",
+            "Billing: sotuvchilar bilan hisob-kitob, komissiyalar",
+            "OFD: fiskal cheklar va soliqqa uzatish",
+            "NestJS'da PDF'ga chizuvchi chek generatori",
+            "Ombor: qoldiqlar, qabul, jo'natish, inventarizatsiya",
+            "Logistika: yetkazib berish, marshrutlar, jo'natma statuslari",
+            "Bonuslar va keshbek alohida servis sifatida",
+          ],
+          zh: [
+            "支付网关：收款、预授权、退款",
+            "计费：与卖家结算、佣金、对账",
+            "财政服务：票据开具与税务上报",
+            "基于 NestJS 的票据生成器，输出 PDF",
+            "仓储：库存、入库、出库、盘点",
+            "物流：配送、路线、运单状态",
+            "积分与返现独立服务",
+          ],
+        },
+      },
+      {
+        title: {
+          ru: "Фронтенды и боты",
+          en: "Frontends and bots",
+          uz: "Frontendlar va botlar",
+          zh: "前端与机器人",
+        },
+        items: {
+          ru: [
+            "Витрина и сайт покупателя на Next.js",
+            "Кабинет продавца и админка платформы на React",
+            "Интерфейс склада (WMS) отдельным приложением",
+            "Собственный UI-кит и набор иконок — общий на все фронтенды",
+            "Бот продавца и бот транспортной службы в Telegram",
+          ],
+          en: [
+            "Buyer storefront and site on Next.js",
+            "Seller cabinet and platform admin on React",
+            "A warehouse interface (WMS) as a separate application",
+            "An in-house UI kit and icon set shared across all frontends",
+            "A seller bot and a transport-service bot in Telegram",
+          ],
+          uz: [
+            "Xaridor vitrinasi va sayti Next.js'da",
+            "Sotuvchi kabineti va platforma admin paneli React'da",
+            "Ombor interfeysi (WMS) alohida ilova sifatida",
+            "Barcha frontendlar uchun umumiy o'z UI-kiti va ikonkalar to'plami",
+            "Telegram'da sotuvchi boti va transport xizmati boti",
+          ],
+          zh: [
+            "基于 Next.js 的买家商城与站点",
+            "基于 React 的卖家后台与平台管理端",
+            "仓库作业界面（WMS）作为独立应用",
+            "自研 UI 组件库与图标集，各前端共用",
+            "Telegram 中的卖家机器人与运输服务机器人",
+          ],
+        },
+      },
+      {
+        title: {
+          ru: "Инфраструктура и интеграции",
+          en: "Infrastructure and integrations",
+          uz: "Infratuzilma va integratsiyalar",
+          zh: "基础设施与集成",
+        },
+        items: {
+          ru: [
+            "Единый шлюз на Spring Cloud Gateway перед всеми сервисами",
+            "Асинхронная шина на RabbitMQ между сервисами",
+            "Бизнес-процессы в движке оркестрации Camunda, а не в коде",
+            "Своя база PostgreSQL на каждый сервис, общий Redis для сессий и прав",
+            "Интеграции под рынок Узбекистана: Click, Uzum, Didox, ОФД, НСИ",
+            "Секреты вынесены в переменные окружения, в коде их нет",
+          ],
+          en: [
+            "A single Spring Cloud Gateway in front of every service",
+            "An asynchronous RabbitMQ bus between services",
+            "Business processes in the Camunda orchestration engine, not in code",
+            "A PostgreSQL database per service, a shared Redis for sessions and permissions",
+            "Integrations for the Uzbek market: Click, Uzum, Didox, fiscal, reference registries",
+            "Secrets moved out into environment variables, none left in the code",
+          ],
+          uz: [
+            "Barcha servislar oldida Spring Cloud Gateway yagona shlyuzi",
+            "Servislar orasida RabbitMQ asinxron shinasi",
+            "Biznes-jarayonlar kodda emas, Camunda orkestratsiya dvigatelida",
+            "Har bir servisga o'z PostgreSQL bazasi, sessiya va huquqlar uchun umumiy Redis",
+            "O'zbekiston bozori uchun integratsiyalar: Click, Uzum, Didox, OFD, NSI",
+            "Maxfiy kalitlar muhit o'zgaruvchilariga chiqarilgan, kodda yo'q",
+          ],
+          zh: [
+            "所有服务前置统一的 Spring Cloud Gateway 网关",
+            "服务间采用 RabbitMQ 异步消息总线",
+            "业务流程置于 Camunda 编排引擎，而非写死在代码里",
+            "每个服务独立 PostgreSQL 数据库，会话与权限共用 Redis",
+            "面向乌兹别克市场的集成：Click、Uzum、Didox、财政系统、参考登记",
+            "机密信息已移至环境变量，代码中不再保留",
+          ],
+        },
+      },
+    ],
+    tech: [
+      "Java 17", "Spring Boot", "Spring Cloud Gateway", "Camunda BPM", "RabbitMQ",
+      "PostgreSQL", "Elasticsearch", "Redis", "React", "Next.js", "NestJS", "Docker",
+    ],
+    monetization: {
+      ru: [
+        "Комиссия с продаж продавцов — основная модель площадки",
+        "Платное продвижение товаров в поиске и подборках",
+        "Абонентская плата за расширенный кабинет продавца",
+        "Складские и логистические услуги площадки за отдельную плату",
+        "Реклама и баннеры на витрине",
+      ],
+      en: [
+        "A commission on seller sales — the platform's primary model",
+        "Paid promotion of products in search and collections",
+        "A subscription for an extended seller cabinet",
+        "Warehousing and logistics services charged separately",
+        "Advertising and banners on the storefront",
+      ],
+      uz: [
+        "Sotuvchilar savdosidan komissiya — maydonchaning asosiy modeli",
+        "Tovarlarni qidiruv va to'plamlarda pullik reklama qilish",
+        "Kengaytirilgan sotuvchi kabineti uchun abonent to'lovi",
+        "Maydonchaning ombor va logistika xizmatlari alohida to'lov evaziga",
+        "Vitrinada reklama va bannerlar",
+      ],
+      zh: [
+        "按卖家销售额抽佣 —— 平台的主要模式",
+        "商品在搜索与专题中的付费推广",
+        "卖家高级后台的订阅费",
+        "平台仓储与物流服务单独收费",
+        "商城内的广告与横幅位",
+      ],
+    },
+    readiness: {
+      ru: "Код работавшего маркетплейса, а не заготовка: все тридцать шесть сервисов написаны и связаны между собой. Но это корпоративная система, и развернуть её — не «поднять контейнер»: нужен кластер, отдельные базы, брокер сообщений, поисковый кластер и человек, который это обслуживает. Оценивайте не только цену покупки, но и стоимость эксплуатации.",
+      en: "The code of a marketplace that ran, not a skeleton: all thirty-six services are written and wired together. But it is an enterprise system, and deploying it is not «bring up a container»: it needs a cluster, separate databases, a message broker, a search cluster and someone to operate all of it. Budget for running costs, not just the purchase price.",
+      uz: "Bu andoza emas, ishlagan marketpleys kodi: o'ttiz oltita servisning barchasi yozilgan va o'zaro bog'langan. Lekin bu korporativ tizim va uni joylashtirish «konteyner ko'tarish» emas: klaster, alohida bazalar, xabar brokeri, qidiruv klasteri va buni qo'llab-quvvatlaydigan odam kerak. Faqat sotib olish narxini emas, ekspluatatsiya xarajatini ham baholang.",
+      zh: "这是曾实际运行过的电商平台代码，而非骨架：三十六个服务均已实现并相互打通。但它是企业级系统，部署并非「起一个容器」：需要集群、独立数据库、消息代理、搜索集群，以及负责运维的人。请把运行成本也纳入预算，而不仅是购买价格。",
+    },
+    buyerProvides: {
+      ru: [
+        "Инфраструктура: кластер, базы, брокер сообщений, поисковый кластер",
+        "Инженер эксплуатации — система микросервисная, сама себя не обслужит",
+        "Договоры с платёжными системами и оператором фискальных данных",
+        "Собственные ключи ко всем внешним интеграциям",
+        "Юридическое оформление площадки и договоры с продавцами",
+      ],
+      en: [
+        "Infrastructure: a cluster, databases, a message broker, a search cluster",
+        "An operations engineer — a microservice system does not run itself",
+        "Contracts with payment systems and a fiscal data operator",
+        "Their own keys for every external integration",
+        "Legal setup of the platform and contracts with sellers",
+      ],
+      uz: [
+        "Infratuzilma: klaster, bazalar, xabar brokeri, qidiruv klasteri",
+        "Ekspluatatsiya muhandisi — mikroservis tizimi o'zini o'zi qo'llab-quvvatlamaydi",
+        "To'lov tizimlari va fiskal ma'lumotlar operatori bilan shartnomalar",
+        "Barcha tashqi integratsiyalar uchun o'z kalitlari",
+        "Maydonchani yuridik rasmiylashtirish va sotuvchilar bilan shartnomalar",
+      ],
+      zh: [
+        "基础设施：集群、数据库、消息代理、搜索集群",
+        "运维工程师 —— 微服务系统无法自我运行",
+        "与支付系统及财政数据运营商的合同",
+        "所有外部集成的自有密钥",
+        "平台的法律设立与卖家合同",
+      ],
+    },
+    savings: {
+      ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 42 000–51 000 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
+      en: "Building the same from scratch costs on average 40–70% more — that is $42,000–51,000. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
+      uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 42 000–51 000 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
+      zh: "从零开发同样的产品平均要贵 40–70% —— 约合 42,000–51,000 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
     },
   },
 ];

@@ -14,7 +14,7 @@ import { products } from "@/content/products";
 import { locales } from "@/lib/i18n";
 
 test("каталог не пуст и slug-и уникальны", () => {
-  assert.ok(products.length >= 4, `продуктов ${products.length}`);
+  assert.ok(products.length >= 5, `продуктов ${products.length}`);
   const slugs = products.map((p) => p.slug);
   assert.equal(new Set(slugs).size, slugs.length, `дубли: ${slugs}`);
   for (const s of slugs) assert.match(s, /^[a-z0-9-]+$/, s);
@@ -22,7 +22,7 @@ test("каталог не пуст и slug-и уникальны", () => {
 
 test("каждый язык заполнен во всех текстовых полях", () => {
   for (const p of products) {
-    for (const field of ["title", "tagline", "description", "seoTitle", "seoDescription", "readiness"] as const) {
+    for (const field of ["title", "tagline", "description", "seoTitle", "seoDescription", "readiness", "savings"] as const) {
       for (const l of locales) {
         const v = p[field][l];
         assert.ok(v && v.trim().length > 0, `${p.slug}.${field}.${l} пусто`);
@@ -75,6 +75,18 @@ test("SEO-заголовок укладывается в то, что показ
     for (const l of locales) {
       const len = p.seoTitle[l].length;
       assert.ok(len <= 70, `${p.slug}.seoTitle.${l}: ${len} символов`);
+    }
+  }
+});
+
+test("сравнение с разработкой с нуля называет вилку и числа", () => {
+  // Утверждение «дешевле» без цифр — реклама. С цифрами — проверяемое
+  // обещание, за которое можно спросить.
+  for (const p of products) {
+    assert.match(p.savings.ru, /40–70%/, `${p.slug}: нет вилки в ru`);
+    assert.match(p.savings.ru, /\d[\d\s]*(–|—)[\d\s]*\d/, `${p.slug}: нет чисел в ru`);
+    for (const l of locales) {
+      assert.match(p.savings[l], /40[–-]70/, `${p.slug}.savings.${l}: нет вилки`);
     }
   }
 });
