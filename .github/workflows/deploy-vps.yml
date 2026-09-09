@@ -6,6 +6,11 @@ on:
     paths-ignore:
       - "**.md"
       - "supabase/**"
+  # Тот же набор проверок на pull request. Без этого PR мержится вслепую:
+  # сборка и тесты прогонялись только после слияния, то есть на боевой ветке,
+  # и сломанный код обнаруживался там, где чинить его дороже всего.
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 # Две выкатки одновременно на один сервер устроили бы гонку за docker build.
@@ -38,6 +43,10 @@ jobs:
   deploy:
     name: Выкатка на VPS
     needs: build-check
+    # Выкатывается только push в main. Без этого условия добавленный выше
+    # триггер pull_request отправлял бы на боевой сервер любую ветку, из
+    # которой кто-нибудь открыл PR, — включая чужую.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Запустить деплой по SSH
