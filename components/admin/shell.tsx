@@ -7,6 +7,7 @@ import type { Staff } from "@/lib/admin/session";
 const NAV = [
   { href: "/admin", label: "Лиды" },
   { href: "/admin/orders", label: "Заявки" },
+  { href: "/admin/scout", label: "Поиск" },
   { href: "/admin/projects", label: "Проекты" },
   { href: "/admin/stats", label: "Статистика" },
 ] as const;

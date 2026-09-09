@@ -23,7 +23,7 @@ import { updateLeadStatus } from "@/lib/qualify/store";
 import { record } from "@/lib/admin/audit";
 import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
-import { signalsByAuthor } from "@/lib/scout/store";
+import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -441,6 +441,11 @@ async function respond(
     if (result.qualified) {
       session.qualified = true;
       session.requestNo = result.requestNo ?? session.requestNo;
+
+      // Перелив закрывается здесь. Без этой отметки скаут неизмерим:
+      // сигналы копятся, лиды приходят, а связи между ними нет — и на
+      // вопрос «сколько сделок принёс холодный поиск» ответить нечем.
+      await linkSignalsToLead(from?.id, result.requestNo);
     }
   } catch (error) {
     console.error("bot turn", error);

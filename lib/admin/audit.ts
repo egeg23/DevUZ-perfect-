@@ -27,6 +27,7 @@ export type AuditAction =
   | "project.updated"
   | "project.stage_changed"
   | "order.status_changed"
+  | "signal.status_changed"
   | "staff.invited"
   | "staff.disabled";
 

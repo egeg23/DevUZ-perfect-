@@ -255,3 +255,49 @@ export async function signalsByAuthor(telegramId: number): Promise<
     created_at: string;
   }[];
 }
+
+/**
+ * Перелив состоялся: человек из публичного чата пришёл к нам сам.
+ *
+ * Без этой отметки скаут неизмерим. Сигналы копятся, лиды приходят, а
+ * связи между ними нет — и на вопрос «сколько сделок принёс холодный
+ * поиск» ответить нечем, то есть непонятно, стоит ли он вообще того.
+ *
+ * Здесь же снимается срок хранения: сигнал, ставший лидом, уборка больше
+ * не трогает — у лида свой срок, и запись о том, откуда он пришёл, часть
+ * истории сделки.
+ *
+ * Связываем по номеру заявки, а не по id лида: engine отдаёт наружу
+ * именно номер, и тянуть id через весь путь только ради этой отметки
+ * значило бы менять сигнатуры на всём протяжении.
+ */
+export async function linkSignalsToLead(
+  telegramId: number | undefined,
+  requestNo: string | undefined,
+): Promise<number> {
+  if (!telegramId || !requestNo) return 0;
+
+  const db = serviceClient();
+  if (!db) return 0;
+
+  const { data: lead } = await db
+    .from("leads")
+    .select("id")
+    .eq("request_no", requestNo)
+    .maybeSingle();
+
+  if (!lead) return 0;
+
+  const { data, error } = await db
+    .from("scout_signals")
+    .update({ lead_id: lead.id as string, status: "converted" })
+    .eq("author_telegram_id", telegramId)
+    .is("lead_id", null)
+    .select("id");
+
+  if (error) {
+    console.error("scout: не связал сигнал с лидом", error.message);
+    return 0;
+  }
+  return (data ?? []).length;
+}
