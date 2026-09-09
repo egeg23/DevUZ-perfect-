@@ -30,6 +30,39 @@ GIT_COMMIT="$(git rev-parse --short HEAD)"
 export GIT_COMMIT
 grep -q '^GIT_COMMIT=' .env && sed -i "s/^GIT_COMMIT=.*/GIT_COMMIT=$GIT_COMMIT/" .env || echo "GIT_COMMIT=$GIT_COMMIT" >> .env
 
+# Системные юниты ставятся отсюда, а не руками: иначе они существуют только на
+# том сервере, где кто-то однажды выполнил cp, и правка таймера в репозитории
+# ни на что не влияет. Шаг идемпотентный — сравнивает и трогает systemd только
+# когда файл реально изменился.
+install_unit() {
+  local src="$APP_DIR/deploy/$1" dst="/etc/systemd/system/$1"
+  [ -f "$src" ] || return 0
+  if ! cmp -s "$src" "$dst"; then
+    cp "$src" "$dst"
+    echo "  · $1 обновлён"
+    UNITS_CHANGED=1
+  fi
+}
+
+UNITS_CHANGED=0
+if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
+  echo "▸ Системные юниты"
+  install_unit devuz-backup.service
+  install_unit devuz-backup.timer
+  if [ "$UNITS_CHANGED" = "1" ]; then
+    systemctl daemon-reload
+    # Таймер включается только если строка подключения к базе задана: без неё
+    # бэкап будет падать каждую ночь и писать в journal, создавая видимость
+    # работающей защиты там, где её нет.
+    if grep -q '^SUPABASE_DB_URL=.\+' "$APP_DIR/.env"; then
+      systemctl enable --now devuz-backup.timer
+      echo "  · таймер бэкапов включён"
+    else
+      echo "  · SUPABASE_DB_URL не задан — таймер бэкапов не включаю" >&2
+    fi
+  fi
+fi
+
 echo "▸ Собираем и перезапускаем ($GIT_COMMIT)"
 docker compose up -d --build --remove-orphans
 
