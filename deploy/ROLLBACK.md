@@ -98,6 +98,22 @@ select tablename from pg_tables where schemaname = 'public' order by tablename;
 `leads`, `login_tokens`, `orders`, `projects`, `scout_signals`, `staff`,
 `staff_sessions`.
 
+### Версия pg_dump
+
+Копия снимается только клиентом не старше сервера. Ubuntu 22.04 ставит
+`postgresql-client` версии 14, Supabase крутит 17 — то есть после обычного
+`apt install postgresql-client` бэкапы не делаются вовсе, а таймер при этом
+отрабатывает каждую ночь и выглядит живым.
+
+`backup-db.sh` проверяет это сам и печатает нужные команды. Проверить руками:
+
+```
+pg_dump --version
+psql "$(grep -m1 '^SUPABASE_DB_URL=' /opt/devuz/.env | cut -d= -f2-)" -tAc 'show server_version'
+```
+
+Первое число у клиента должно быть не меньше, чем у сервера.
+
 ### Если `down` не написан
 
 Восстановление из копии (см. `deploy/backup-db.sh`):
