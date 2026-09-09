@@ -10,7 +10,7 @@ import {
   consumeLoginToken,
   createSession,
 } from "@/lib/admin/session";
-import { ipFromHeaders } from "@/lib/qualify/limiter";
+import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
 
 /**
  * Обмен одноразовой ссылки на сессию.
@@ -25,6 +25,17 @@ import { ipFromHeaders } from "@/lib/qualify/limiter";
 export async function signIn(formData: FormData) {
   const token = String(formData.get("t") ?? "");
   const ip = ipFromHeaders(await headers());
+
+  // Ограничение частоты стоит здесь не против подбора токена: подобрать
+  // 256 бит нельзя, и это не та угроза. Оно против журнала.
+  //
+  // Каждая неудачная попытка пишет строку в audit_events, а эта таблица
+  // append-only по замыслу — удалить из неё не может даже наш сервер. То
+  // есть любой, кто умеет слать POST, наращивал бы её без предела и без
+  // возможности прибрать. Единственное место, где неаутентифицированный
+  // запрос пишет в неудаляемую таблицу, обязано быть ограничено.
+  const limit = rateLimit(`admin-login:${ip}`, { limit: 10, windowMs: 10 * 60 * 1000 });
+  if (!limit.ok) redirect("/admin/login?e=3");
 
   if (!token) redirect("/admin/login?e=1");
 

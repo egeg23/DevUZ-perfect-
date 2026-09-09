@@ -1,3 +1,4 @@
+import { asInet } from "@/lib/net";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -28,13 +29,6 @@ export type AuditAction =
   | "order.status_changed"
   | "staff.invited"
   | "staff.disabled";
-
-/** inet в базе не примет «unknown» — только то, что похоже на адрес. */
-function asInet(value: string | null): string | null {
-  if (!value) return null;
-  const looksLikeIp = /^[0-9.]+$/.test(value) || /^[0-9a-f:]+$/i.test(value);
-  return looksLikeIp ? value : null;
-}
 
 /**
  * Запись в журнал.

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { hashToken, mintToken, sameToken } from "@/lib/admin/session";
+import { hashToken, mintToken } from "@/lib/admin/session";
 import { DETAIL_COLUMNS, LIST_COLUMNS } from "@/lib/admin/leads";
 import { canEdit } from "@/lib/admin/ownership";
 
@@ -31,18 +31,6 @@ test("в базу уходит хеш, а не сам токен", () => {
   // Детерминированность: иначе сессия не находилась бы по своей же куке.
   assert.equal(hashToken(token), hash);
   assert.notEqual(hashToken(mintToken()), hash);
-});
-
-test("сравнение токенов не падает на разной длине", () => {
-  const token = mintToken();
-
-  assert.equal(sameToken(token, token), true);
-  assert.equal(sameToken(token, mintToken()), false);
-
-  // timingSafeEqual бросает исключение, если длины не совпали. Именно здесь
-  // это и случилось бы: сравнивают кукой, а куку присылает кто угодно.
-  assert.equal(sameToken(token, ""), false);
-  assert.equal(sameToken(token, token + "x"), false);
 });
 
 test("панель не читает переписку и контакт лида", () => {

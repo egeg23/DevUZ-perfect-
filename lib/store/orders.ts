@@ -1,3 +1,4 @@
+import { asInet } from "@/lib/net";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { productBySlug } from "@/content/products";
@@ -88,7 +89,7 @@ export async function createOrder(
       contact,
       payment,
       comment: input.comment.trim().slice(0, 2000) || null,
-      ip: /^[0-9.]+$/.test(ip) || /^[0-9a-f:]+$/i.test(ip) ? ip : null,
+      ip: asInet(ip),
     });
 
     if (error) {

@@ -251,6 +251,15 @@ export async function createReminder(
   const db = serviceClient();
   if (!db) return false;
 
+  // Интерфейс показывает блок напоминаний только владельцу лида — значит и
+  // сервер обязан требовать то же. Правило, которое держится тем, что
+  // кнопку не нарисовали, не держится ничем: форму отправляют и без кнопки.
+  //
+  // Автоматическое напоминание ставится изнутри takeLead, когда лид уже
+  // закреплён, поэтому проверка ему не мешает.
+  const lead = await ownerOf(leadId);
+  if (!lead || !canEdit(lead, staff)) return false;
+
   const { error } = await db.from("lead_reminders").insert({
     lead_id: leadId,
     staff_id: staff.id,

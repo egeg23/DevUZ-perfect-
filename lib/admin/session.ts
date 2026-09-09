@@ -1,4 +1,4 @@
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 
 import { serviceClient } from "@/lib/supabase";
 
@@ -53,19 +53,16 @@ export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-/**
- * Сравнение хешей за постоянное время.
- *
- * Обычное === выходит на первом несовпавшем байте, и по времени ответа
- * хеш подбирается побайтово. Здесь это перестраховка — поиск идёт по
- * индексу в базе, — но в коде входа перестраховка дешевле разбирательства.
- */
-export function sameToken(a: string, b: string): boolean {
-  const left = Buffer.from(a, "utf8");
-  const right = Buffer.from(b, "utf8");
-  if (left.length !== right.length) return false;
-  return timingSafeEqual(left, right);
-}
+// Здесь было сравнение хешей за постоянное время. Его убрали, и это
+// сознательное решение, а не упрощение.
+//
+// Функцию не вызывал никто: сессия ищется в базе равенством по
+// проиндексированному хешу, то есть сравнение делает Postgres, а
+// сравнивается хеш, а не секрет. Подобрать по времени ответа нечего.
+//
+// Проверенная тестом функция, которую никто не вызывает, — худший вид
+// защитного кода: модуль выглядит осторожнее, чем он есть, тест зелёный, и
+// заметить подмену некому. Отсутствующая защита честнее мнимой.
 
 function hoursFromNow(hours: number): string {
   return new Date(Date.now() + hours * 3600_000).toISOString();
