@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requestIp, requireStaff } from "@/lib/admin/guard";
+import { MAX_BODY, postMessage } from "@/lib/admin/messages";
 import {
   completeReminder,
   createReminder,
@@ -21,9 +22,9 @@ import {
  * переживает перезагрузку, и человек видит, чем кончилось, даже если
  * закрыл вкладку и открыл заново.
  */
-function backTo(leadId: string, result: OwnershipResult, extra = ""): never {
+function backTo(leadId: string, result: OwnershipResult, hash = ""): never {
   const status = result.ok ? "ok" : result.reason;
-  redirect(`/admin/leads/${leadId}?r=${status}${extra}`);
+  redirect(`/admin/leads/${leadId}?r=${status}${hash}`);
 }
 
 function leadIdFrom(formData: FormData): string {
@@ -116,4 +117,21 @@ export async function finishReminder(formData: FormData) {
   const ok = await completeReminder(reminderId, staff, await requestIp());
   revalidatePath(`/admin/leads/${leadId}`);
   backTo(leadId, ok ? { ok: true } : { ok: false, reason: "forbidden" });
+}
+
+/**
+ * Написать в обсуждение лида.
+ *
+ * Писать может любой сотрудник, а не только владелец: половина смысла
+ * ветки в том, чтобы спросить «возьмёшь или мне забрать?» там, где вопрос
+ * останется видимым, а не в личке.
+ */
+export async function sendMessageToThread(formData: FormData) {
+  const staff = await requireStaff();
+  const leadId = leadIdFrom(formData);
+  const body = String(formData.get("body") ?? "").slice(0, MAX_BODY);
+
+  const ok = await postMessage(leadId, staff, body, await requestIp());
+  revalidatePath(`/admin/leads/${leadId}`);
+  backTo(leadId, ok ? { ok: true } : { ok: false, reason: "failed" }, "#thread");
 }

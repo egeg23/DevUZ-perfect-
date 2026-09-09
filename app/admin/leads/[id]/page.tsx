@@ -11,6 +11,7 @@ import {
   toggleAutoReminder,
 } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
+import { LeadThread } from "@/components/admin/lead-thread";
 import {
   BUDGET_LABEL,
   PRIORITY_LABEL,
@@ -20,6 +21,7 @@ import {
 import { record } from "@/lib/admin/audit";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { STATUSES, leadById } from "@/lib/admin/leads";
+import { messagesFor } from "@/lib/admin/messages";
 import { canEdit, remindersFor, revealContact } from "@/lib/admin/ownership";
 
 export const dynamic = "force-dynamic";
@@ -109,7 +111,10 @@ export default async function LeadPage({
   // Контакт достаётся только по явному действию — и каждое такое
   // получение попадает в журнал отдельной строкой.
   const contact = wantsContact === "1" ? await revealContact(lead.id, staff, ip) : null;
-  const reminders = await remindersFor(lead.id);
+  const [reminders, messages] = await Promise.all([
+    remindersFor(lead.id),
+    messagesFor(lead.id),
+  ]);
   const open = reminders.filter((item) => !item.done_at);
 
   return (
@@ -311,6 +316,8 @@ export default async function LeadPage({
         </section>
       ) : null}
 
+      <LeadThread leadId={lead.id} messages={messages} staff={staff} />
+
       {lead.opening_line ? (
         <p className="mt-6 max-w-3xl rounded-xl border border-line bg-surface px-5 py-4 text-sm leading-relaxed">
           {lead.opening_line}
@@ -375,7 +382,9 @@ export default async function LeadPage({
         Переписка с клиентом в панели не показывается: менеджеру для работы
         достаточно брифа, а полный разговор — самое чувствительное из того, что
         клиент рассказал о своём бизнесе. Открытие этой карточки и каждое
-        получение контакта записаны в журнал.
+        получение контакта записаны в журнал. Обсуждение видно всей команде —
+        контакт клиента в него лучше не вставлять: закрытость контакта на этом
+        и держится.
       </p>
     </AdminShell>
   );

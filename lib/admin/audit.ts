@@ -21,6 +21,7 @@ export type AuditAction =
   | "reminder.created"
   | "reminder.done"
   | "reminder.sent"
+  | "message.posted"
   | "staff.invited"
   | "staff.disabled";
 
