@@ -4,7 +4,7 @@ import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { cases, type Case } from "@/content/cases";
+import { cases, showcaseSlug, type Case } from "@/content/cases";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import { localeHref, t, type Locale } from "@/lib/i18n";
@@ -99,7 +99,11 @@ export function CaseCard({
 }
 
 export function CasesSection({ locale, dict }: { locale: Locale; dict: Dictionary }) {
-  const featured = cases.slice(0, 5);
+  // Сайт студии на главной показан отдельным блоком выше — в сетке он был бы
+  // вторым рассказом об одном и том же. Шесть карточек — ровно два полных
+  // ряда по три на широком экране, седьмая оставила бы дыру. Полный список,
+  // вместе с сайтом студии, живёт на странице /cases.
+  const featured = cases.filter((item) => item.slug !== showcaseSlug).slice(0, 6);
 
   return (
     <section id="cases" className="border-t border-line py-24 md:py-32">
