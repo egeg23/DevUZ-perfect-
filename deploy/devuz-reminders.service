@@ -1,0 +1,9 @@
+[Unit]
+Description=Рассылка напоминаний по лидам DevUz
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/devuz/deploy/reminders-sweep.sh
+StandardOutput=journal
+StandardError=journal

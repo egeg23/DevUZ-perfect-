@@ -49,6 +49,8 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   echo "▸ Системные юниты"
   install_unit devuz-backup.service
   install_unit devuz-backup.timer
+  install_unit devuz-reminders.service
+  install_unit devuz-reminders.timer
   if [ "$UNITS_CHANGED" = "1" ]; then
     systemctl daemon-reload
     # Таймер включается только если строка подключения к базе задана: без неё
@@ -59,6 +61,15 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
       echo "  · таймер бэкапов включён"
     else
       echo "  · SUPABASE_DB_URL не задан — таймер бэкапов не включаю" >&2
+    fi
+
+    # Та же логика: без секрета свип получает 403 каждые пять минут и
+    # засоряет journal, создавая видимость работающей рассылки.
+    if grep -q '^REMINDER_SWEEP_SECRET=.\+' "$APP_DIR/.env"; then
+      systemctl enable --now devuz-reminders.timer
+      echo "  · таймер напоминаний включён"
+    else
+      echo "  · REMINDER_SWEEP_SECRET не задан — таймер напоминаний не включаю" >&2
     fi
   fi
 fi

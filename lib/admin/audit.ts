@@ -13,7 +13,14 @@ export type AuditAction =
   | "login.failed"
   | "logout"
   | "lead.viewed"
+  | "lead.taken"
+  | "lead.released"
   | "lead.status_changed"
+  | "lead.contact_revealed"
+  | "lead.auto_reminder_toggled"
+  | "reminder.created"
+  | "reminder.done"
+  | "reminder.sent"
   | "staff.invited"
   | "staff.disabled";
 

@@ -59,7 +59,12 @@ function Stat({ value, label }: { value: number | string; label: string }) {
 export default async function AdminHome({
   searchParams,
 }: {
-  searchParams: Promise<{ priority?: string; status?: string; page?: string }>;
+  searchParams: Promise<{
+    priority?: string;
+    status?: string;
+    owner?: string;
+    page?: string;
+  }>;
 }) {
   const staff = await requireStaff();
   const params = await searchParams;
@@ -68,10 +73,12 @@ export default async function AdminHome({
   const limit = 50;
 
   const [counts, leads] = await Promise.all([
-    leadCounts(),
+    leadCounts(staff.id),
     listLeads({
       priority: params.priority,
       status: params.status,
+      owner: params.owner,
+      ownerStaffId: staff.id,
       limit,
       offset: (page - 1) * limit,
     }),
@@ -100,11 +107,23 @@ export default async function AdminHome({
 
       <div className="grid grid-cols-3 gap-3 sm:max-w-lg">
         <Stat value={counts.total} label="всего" />
-        <Stat value={counts.fresh} label="новых" />
-        <Stat value={counts.hot} label="горячих" />
+        <Stat value={counts.free} label="свободных" />
+        <Stat value={counts.mine} label="на мне" />
       </div>
 
       <div className="mt-8 flex flex-wrap items-center gap-2">
+        <Chip href={base({ owner: undefined })} active={!params.owner}>
+          все лиды
+        </Chip>
+        <Chip href={base({ owner: "free" })} active={params.owner === "free"}>
+          свободные
+        </Chip>
+        <Chip href={base({ owner: "mine" })} active={params.owner === "mine"}>
+          мои
+        </Chip>
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         <Chip href={base({ priority: undefined })} active={!params.priority}>
           все приоритеты
         </Chip>
@@ -153,10 +172,9 @@ export default async function AdminHome({
       ) : null}
 
       <p className="mt-8 max-w-2xl text-xs leading-relaxed text-faint">
-        Контакты клиентов и переписка в списке не показываются намеренно: пока
-        лид не закреплён за менеджером, выгрузить все контакты может кто
-        угодно из команды. Закрепление и доступ к контакту появятся следующим
-        этапом — вместе со строкой в журнале о том, кто и когда его открыл.
+        Контактов и переписки в списке нет: контакт открывается в карточке и
+        только тому, за кем лид закреплён. Каждое открытие — строка в журнале
+        с именем и временем. Свободного лида сначала нужно взять.
       </p>
     </AdminShell>
   );
