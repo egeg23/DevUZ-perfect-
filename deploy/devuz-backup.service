@@ -1,0 +1,10 @@
+[Unit]
+Description=Резервная копия базы лидов DevUz
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/devuz/deploy/backup-db.sh
+# Провал копии должен быть виден в journalctl, а не потеряться.
+StandardOutput=journal
+StandardError=journal
