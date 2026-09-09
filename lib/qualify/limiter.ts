@@ -52,12 +52,20 @@ export function rateLimit(
  * заставляет наш сервер идти на чужой хост.
  */
 export function clientIp(request: Request): string {
-  const real = request.headers.get("x-real-ip");
+  return ipFromHeaders(request.headers);
+}
+
+/**
+ * То же самое, но от голых заголовков: серверные компоненты и server
+ * actions видят headers(), а Request до них не доезжает.
+ */
+export function ipFromHeaders(headers: Headers): string {
+  const real = headers.get("x-real-ip");
   if (real?.trim()) return real.trim();
 
   // Запасной путь для окружений без нашего nginx. Берём ПОСЛЕДНИЙ элемент:
   // он дописан ближайшим прокси, а не клиентом.
-  const forwarded = request.headers.get("x-forwarded-for");
+  const forwarded = headers.get("x-forwarded-for");
   const parts = (forwarded ?? "").split(",").map((p) => p.trim()).filter(Boolean);
   if (parts.length) return parts[parts.length - 1];
 

@@ -71,6 +71,33 @@ curl -s https://devuz.maximov-tech.ru/api/health
 одновременно, но **никогда не откатывайте схему, оставив новый код работать** —
 он обратится к колонке, которой уже нет.
 
+### Откатывать только с конца
+
+Миграции связаны внешними ключами, и цепочка идёт в одну сторону:
+
+| Миграция | На что опирается |
+|---|---|
+| `0004_staff` | — |
+| `0005_lead_ownership` | `staff`, `leads` |
+| `0006_lead_messages` | `staff`, `leads` |
+| `0007_projects` | `staff`, `leads` |
+| `0008_orders` | `staff` |
+| `0009_scout_signals` | `staff`, `leads` |
+
+Откат `0004` при существующих `0005`–`0009` **не пройдёт**: Postgres не даст
+удалить `staff`, пока на неё ссылаются. Откатывайте с самого большого номера
+вниз до нужного — и ровно до нужного, не дальше.
+
+Проверить, что на самом деле применено:
+
+```
+select tablename from pg_tables where schemaname = 'public' order by tablename;
+```
+
+Ожидаемый полный набор: `audit_events`, `lead_messages`, `lead_reminders`,
+`leads`, `login_tokens`, `orders`, `projects`, `scout_signals`, `staff`,
+`staff_sessions`.
+
 ### Если `down` не написан
 
 Восстановление из копии (см. `deploy/backup-db.sh`):
@@ -91,14 +118,81 @@ gunzip -c /var/backups/devuz/devuz-<дата>.sql.gz | psql "$SUPABASE_DB_URL"
 ```
 curl -s https://devuz.maximov-tech.ru/api/health
 docker compose -f /opt/devuz/docker-compose.yml ps
-systemctl status devuz-backup.timer
+systemctl list-timers devuz-backup.timer devuz-reminders.timer
 ```
 
-Здоровым считается: `ok:true`, контейнер `healthy`, таймер `active (waiting)`.
+Здоровым считается: `ok:true`, контейнер `healthy`, **оба** таймера в списке с
+непустым `NEXT`.
+
+Таймера нет в списке — значит соответствующей переменной нет в `/opt/devuz/.env`,
+и выкатка намеренно его не включила:
+
+```
+grep -c '^SUPABASE_DB_URL=.\+' /opt/devuz/.env       # бэкапы
+grep -c '^REMINDER_SWEEP_SECRET=.\+' /opt/devuz/.env # напоминания
+```
+
+Ноль означает не поломку, а незаданную переменную. Это сделано нарочно: таймер,
+получающий 403 каждые пять минут, создаёт видимость работающей рассылки.
+
+Один инвариант, который стоит проверять после любой правки схемы, — доступ:
+
+```
+select tablename, rowsecurity,
+       (select count(*) from pg_policies p
+        where p.schemaname = t.schemaname and p.tablename = t.tablename) as policies
+from pg_tables t where schemaname = 'public' order by tablename;
+```
+
+У **всех** строк должно быть `rowsecurity = true` и `policies = 0`. Появившаяся
+политика или выключенный RLS означают, что таблица открылась анонимному ключу —
+тому самому, который лежит в браузере у любого посетителя.
 
 ---
 
-## 4. Чего делать нельзя
+## 4. Журнал откатить нельзя
+
+`audit_events` защищена триггером: `update` и `delete` по ней бросают исключение,
+и снять триггер `service_role` не может — таблица принадлежит `postgres`.
+
+Это не поломка и не то, что нужно чинить в три часа ночи. Если строки в журнале
+мешают — значит кто-то пытается убрать след, и правильный ответ здесь «нет».
+Единственный законный способ убрать эти строки — откат `0004_staff.down.sql`,
+то есть удаление журнала целиком вместе с сотрудниками и сессиями.
+
+---
+
+## 5. Никто не может войти в панель
+
+Симптом: `/login` боту отвечает как незнакомцу, в панель не пускает никого.
+
+Причина почти всегда одна: в `staff` нет активной строки с вашим Telegram-id.
+Так бывает после восстановления из копии, сделанной до заведения сотрудников.
+
+Проверить и починить (id берётся из `TELEGRAM_SALES_CHAT_ID`, если бот пишет
+брифы в личку):
+
+```
+select telegram_user_id, display_name, role, is_active from public.staff;
+```
+
+```
+insert into public.staff (telegram_user_id, display_name, role)
+values (<ваш telegram id>, '<имя>', 'admin')
+on conflict (telegram_user_id) do update
+  set role = 'admin', is_active = true;
+```
+
+Забытая деталь: восстановление из копии возвращает и `staff_sessions`. Старые
+куки снова начинают работать. Если копию восстанавливали после утечки — почистите:
+
+```
+delete from public.staff_sessions;
+```
+
+---
+
+## 6. Чего делать нельзя
 
 - **Не править схему в редакторе Supabase «на живую», чтобы починить прод.**
   Изменение, которого нет в `supabase/migrations/`, существует только в базе:

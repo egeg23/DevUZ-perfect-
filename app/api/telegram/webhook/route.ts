@@ -20,11 +20,23 @@ import {
   typingIndicator,
 } from "@/lib/qualify/telegram";
 import { updateLeadStatus } from "@/lib/qualify/store";
+import { record } from "@/lib/admin/audit";
+import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
+import { siteUrl } from "@/lib/seo";
+import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type TelegramUser = { first_name?: string; username?: string; language_code?: string };
+type TelegramUser = {
+  // Числовой id — единственное, что у человека в Telegram не меняется:
+  // username он может освободить и занять заново, имя переписать. Вход в
+  // панель опознаётся по нему.
+  id?: number;
+  first_name?: string;
+  username?: string;
+  language_code?: string;
+};
 type TelegramChat = { id: number; type: string; title?: string; username?: string };
 
 type Update = {
@@ -84,6 +96,15 @@ export async function POST(request: Request) {
     if (update.message) {
       const chat = update.message.chat;
 
+      // Вход в панель проверяется раньше всего остального: команду шлёт
+      // сотрудник из своей лички, а личка сотрудника для остального кода —
+      // либо чат отдела продаж, либо обычный клиент. И в том и в другом
+      // случае /login разобрали бы неправильно.
+      if (chat.type === "private" && (update.message.text ?? "").trim().startsWith("/login")) {
+        await handleStaffLogin(update.message);
+        return new Response("ok");
+      }
+
       if (isSalesChat(chat.id)) {
         await handleSales(update.message);
       } else if (chat.type !== "private") {
@@ -121,6 +142,64 @@ function handleOf(from: TelegramUser | undefined, chatId: number): string {
   // Без username написать первым нельзя — Telegram это запрещает. Менеджер
   // должен знать об этом до того, как попробует.
   return `id ${chatId} (username не задан — ответить можно только в этом чате)`;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Вход в панель
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Команда /login: бот выдаёт одноразовую ссылку в панель.
+ *
+ * Пароля нет и не будет. У команды из нескольких человек пароль
+ * заканчивается одинаково — общим паролем в закреплённом сообщении, который
+ * уходит вместе с первым уволившимся. Telegram уже знает, кто пишет, и
+ * знает это надёжнее любого пароля: чтобы притвориться менеджером, нужен
+ * его аккаунт, а не подсмотренная строка.
+ *
+ * Незнакомцу отвечаем тем же текстом, что и клиенту на неизвестную команду.
+ * Ответ «вас нет в списке сотрудников» превратил бы бота в способ проверять
+ * гипотезы о том, кто в студии работает.
+ */
+async function handleStaffLogin(message: NonNullable<Update["message"]>) {
+  const chat = message.chat;
+  const telegramId = message.from?.id ?? chat.id;
+  const locale = localeOf(message.from);
+
+  const staff = await staffByTelegramId(telegramId);
+  if (!staff) {
+    await sendMessage(chat.id, botCopy(locale).unknown);
+    return;
+  }
+
+  const token = await issueLoginToken(staff.id);
+  if (!token) {
+    await sendMessage(
+      chat.id,
+      "Не смог выдать ссылку — база сейчас недоступна. Попробуйте через минуту.",
+    );
+    return;
+  }
+
+  await record("login.requested", {
+    actorStaffId: staff.id,
+    meta: { via: "telegram" },
+  });
+
+  // Ссылка уходит без превью (sendMessage выключает его для всех сообщений):
+  // строя превью, Telegram сам открыл бы адрес и сжёг одноразовый токен
+  // раньше человека. Второй рубеж — сама страница: обмен токена на сессию
+  // происходит только по нажатию кнопки, то есть POST-ом.
+  await sendMessage(
+    chat.id,
+    [
+      "<b>Вход в панель</b>",
+      "",
+      `${siteUrl}/admin/login?t=${token}`,
+      "",
+      "Ссылка одноразовая и живёт 15 минут.",
+    ].join("\n"),
+  );
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -192,7 +271,45 @@ async function handleClient(message: NonNullable<Update["message"]>) {
   if (!text) return;
 
   const session = sessionFor(chat.id) ?? startSession(chat.id, locale);
-  await respond(chat.id, session, message.from, text);
+
+  // Перелив. Человек мог задать свой вопрос в публичном чате раньше, чем
+  // написал нам, — и тогда первая линия уже знает, о чём речь, и не
+  // начинает с нуля. Ищем только на холодном старте: в продолжающемся
+  // разговоре контекст и так есть, а лишний запрос в базу на каждой
+  // реплике оплачивается задержкой ответа.
+  const scoutNote =
+    session.transcript.length === 0 ? await scoutContext(message.from?.id) : null;
+
+  await respond(chat.id, session, message.from, text, { scoutNote });
+}
+
+/**
+ * Что мы знаем о человеке из публичных чатов.
+ *
+ * Возвращает пометку для системного промпта или null. Формулировка
+ * важнее содержания: модели прямо запрещено показывать, откуда взялось
+ * знание. «Я видел ваше сообщение в чате» — это то, после чего разговор
+ * заканчивается, каким бы точным ни было попадание.
+ */
+async function scoutContext(telegramId: number | undefined): Promise<string | null> {
+  if (!telegramId) return null;
+
+  const signals = await signalsByAuthor(telegramId);
+  if (!signals.length) return null;
+
+  return [
+    "## Что уже известно",
+    "",
+    "Этот человек раньше публично описывал свою задачу. Коротко, его словами:",
+    "",
+    ...signals.map((signal) => `- ${signal.excerpt}`),
+    "",
+    "Как этим пользоваться:",
+    "",
+    "- Не спрашивай то, что здесь уже сказано. Уточняй следующее по списку.",
+    "- Никогда не говори, где ты это узнал, и не намекай на это. Ни «я видел ваше сообщение», ни «вы писали в чате», ни «мне известно, что». Человек не давал нам этих слов и не ждёт, что мы их храним; показать это — значит закончить разговор.",
+    "- Если сказанное здесь расходится с тем, что он пишет сейчас, верь тому, что он пишет сейчас: задача могла измениться, а могла быть и не его.",
+  ].join("\n");
 }
 
 /**
@@ -282,7 +399,7 @@ async function respond(
   session: BotSession,
   from: TelegramUser | undefined,
   text: string,
-  options: { resuming?: boolean } = {},
+  options: { resuming?: boolean; scoutNote?: string | null } = {},
 ) {
   const copy = botCopy(session.locale);
   const history = [...session.transcript, { role: "user" as const, content: text }];
@@ -310,7 +427,9 @@ async function respond(
       source: "telegram",
       alreadyQualified: session.qualified,
       discount: session.discount,
-      channelNote: channelNote(from, chatId, options.resuming === true),
+      channelNote: [channelNote(from, chatId, options.resuming === true), options.scoutNote]
+        .filter(Boolean)
+        .join("\n\n"),
       // Поток здесь не нужен: Telegram показывает сообщение целиком, а
       // редактировать его на каждом токене — это гонка правок и мигающий
       // текст у клиента. Собираем ответ и отправляем один раз.
@@ -322,6 +441,11 @@ async function respond(
     if (result.qualified) {
       session.qualified = true;
       session.requestNo = result.requestNo ?? session.requestNo;
+
+      // Перелив закрывается здесь. Без этой отметки скаут неизмерим:
+      // сигналы копятся, лиды приходят, а связи между ними нет — и на
+      // вопрос «сколько сделок принёс холодный поиск» ответить нечем.
+      await linkSignalsToLead(from?.id, result.requestNo);
     }
   } catch (error) {
     console.error("bot turn", error);

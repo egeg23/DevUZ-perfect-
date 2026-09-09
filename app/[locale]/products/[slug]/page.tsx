@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { ProductInquiry } from "@/components/products/product-inquiry";
 import { ContactSection } from "@/components/sections/contact";
+import { OrderForm } from "@/components/products/order-form";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { getDictionary } from "@/content/dictionaries";
@@ -168,6 +169,8 @@ export default async function ProductPage({
         </div>
 
         <p className="mt-8 max-w-2xl text-sm text-muted">{p.note}</p>
+
+        <OrderForm productSlug={product.slug} locale={locale} />
       </Container>
 
       <ContactSection dict={dict} locale={locale} />

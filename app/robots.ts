@@ -38,13 +38,16 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         // Служебные маршруты индексировать нечего, а вот попасть в выдачу
-        // они теоретически могут — закрываем явно.
-        disallow: ["/api/"],
+        // они теоретически могут — закрываем явно. Панель закрыта и здесь, и
+        // мета-тегом noindex в её layout: robots.txt — просьба, которую
+        // выполняют не все, а ссылка на /admin утекает из чата одним
+        // пересланным сообщением.
+        disallow: ["/api/", "/admin"],
       },
       {
         userAgent: AI_CRAWLERS,
         allow: "/",
-        disallow: ["/api/"],
+        disallow: ["/api/", "/admin"],
       },
     ],
     sitemap: absoluteUrl("sitemap.xml"),

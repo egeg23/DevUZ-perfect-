@@ -90,3 +90,74 @@ test("сравнение с разработкой с нуля называет 
     }
   }
 });
+
+/**
+ * Размер маркетплейса назван цифрой в четырёх языках сразу, и цифра эта
+ * стоит тридцать тысяч долларов. Пока она была «36 сервисов на Java и
+ * Spring», в репозитории лежало тридцать пять компонентов, из которых на
+ * Java написан двадцать один, — покупатель, который считает, нашёл бы
+ * расхождение первым же вечером, и дальше разговор шёл бы уже не о цене.
+ *
+ * Проверка держит одно: во всех языках названо одно и то же число, и это
+ * не прежнее. Настоящий счёт — в репозитории FlyMart; при пересборке
+ * состава числа правятся здесь во всех четырёх строках сразу.
+ */
+test("размер маркетплейса назван одинаково на всех языках", () => {
+  const marketplace = products.find((product) => product.slug === "marketplace");
+  assert.ok(marketplace, "продукт marketplace пропал из каталога");
+
+  const text = JSON.stringify(marketplace);
+
+  assert.doesNotMatch(text, /\b36\b/, "остался прежний счёт сервисов");
+  assert.doesNotMatch(text, /тридцать шесть|thirty-six|o‘ttiz oltita|o'ttiz oltita|三十六/,
+    "остался прежний счёт сервисов прописью");
+
+  for (const locale of locales) {
+    const short = marketplace.seoDescription[locale];
+    assert.match(short, /\b35\b/, `${locale}: не названо число компонентов`);
+    assert.match(short, /\b21\b/, `${locale}: не названо число Java-сервисов`);
+  }
+});
+
+/**
+ * Подписи формы заказа — тот же принцип, что и у каталога: перевод,
+ * забытый в одном языке, показывает китайцу русскую надпись на кнопке
+ * оплаты. Это последний экран перед деньгами, и промах здесь дороже всего.
+ */
+test("форма заказа переведена на все языки", async () => {
+  const { orderCopy } = await import("@/content/order-form");
+
+  for (const [key, value] of Object.entries(orderCopy)) {
+    for (const locale of locales) {
+      const text = (value as Record<string, string>)[locale];
+      assert.ok(text && text.trim(), `${key}.${locale} пусто`);
+      assert.equal(text, text.trim(), `${key}.${locale}: лишние пробелы`);
+    }
+  }
+});
+
+/**
+ * Юридическая оговорка обязана остаться на всех языках.
+ *
+ * ПП-3832 п.6 пп.«в» запрещает принимать криптовалюту как средство
+ * платежа. Пункт, потерянный при правке текста в одном языке, — это уже не
+ * опечатка: покупатель из другой страны прочтёт, что криптой платить можно.
+ */
+test("оговорка про способ оплаты никуда не делась", async () => {
+  const { orderCopy } = await import("@/content/order-form");
+
+  const marker: Record<string, RegExp> = {
+    ru: /криптовалют/i,
+    en: /cryptocurrenc/i,
+    uz: /kriptovalyuta/i,
+    zh: /加密货币/,
+  };
+
+  for (const locale of locales) {
+    assert.match(
+      orderCopy.legal[locale],
+      marker[locale],
+      `${locale}: из оговорки пропала криптовалюта`,
+    );
+  }
+});

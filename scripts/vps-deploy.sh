@@ -49,17 +49,43 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   echo "▸ Системные юниты"
   install_unit devuz-backup.service
   install_unit devuz-backup.timer
-  if [ "$UNITS_CHANGED" = "1" ]; then
-    systemctl daemon-reload
-    # Таймер включается только если строка подключения к базе задана: без неё
-    # бэкап будет падать каждую ночь и писать в journal, создавая видимость
-    # работающей защиты там, где её нет.
-    if grep -q '^SUPABASE_DB_URL=.\+' "$APP_DIR/.env"; then
-      systemctl enable --now devuz-backup.timer
-      echo "  · таймер бэкапов включён"
-    else
-      echo "  · SUPABASE_DB_URL не задан — таймер бэкапов не включаю" >&2
-    fi
+  install_unit devuz-reminders.service
+  install_unit devuz-reminders.timer
+  # daemon-reload нужен только когда файл юнита изменился.
+  [ "$UNITS_CHANGED" = "1" ] && systemctl daemon-reload
+
+  # А вот включение таймеров проверяется на КАЖДОЙ выкатке, а не только
+  # когда изменились файлы юнитов. Раньше оно было вложено в проверку
+  # UNITS_CHANGED, и получалась ловушка ровно на обычном порядке действий:
+  #
+  #   1. выкатка ставит юниты (UNITS_CHANGED=1), но переменной ещё нет —
+  #      таймер не включается, в вывод уходит предупреждение;
+  #   2. владелец дописывает переменную в .env;
+  #   3. следующая выкатка не меняет файлы юнитов (UNITS_CHANGED=0) —
+  #      и блок включения не выполняется вовсе.
+  #
+  # Итог: таймер не включается никогда, притом что переменная задана и
+  # предупреждений больше нет. Бэкапы молча не делаются.
+  #
+  # systemctl enable --now на уже включённом активном таймере — пустая
+  # операция, так что выполнять это каждый раз безопасно.
+
+  # Без строки подключения бэкап падал бы каждую ночь и писал в journal,
+  # создавая видимость работающей защиты там, где её нет.
+  if grep -q '^SUPABASE_DB_URL=.\+' "$APP_DIR/.env"; then
+    systemctl enable --now devuz-backup.timer >/dev/null 2>&1
+    echo "  · таймер бэкапов включён"
+  else
+    echo "  · SUPABASE_DB_URL не задан — таймер бэкапов не включаю" >&2
+  fi
+
+  # Та же логика: без секрета свип получает 403 каждые пять минут и
+  # засоряет journal, создавая видимость работающей рассылки.
+  if grep -q '^REMINDER_SWEEP_SECRET=.\+' "$APP_DIR/.env"; then
+    systemctl enable --now devuz-reminders.timer >/dev/null 2>&1
+    echo "  · таймер напоминаний включён"
+  else
+    echo "  · REMINDER_SWEEP_SECRET не задан — таймер напоминаний не включаю" >&2
   fi
 fi
 
