@@ -13,6 +13,7 @@ import assert from "node:assert/strict";
 import { scoreLead } from "@/lib/qualify/scoring";
 import { esc, formatLeadBrief } from "@/lib/qualify/telegram";
 import { newRequestNo } from "@/lib/qualify/engine";
+import { clientIp } from "@/lib/qualify/limiter";
 import type { QualifyToolInput } from "@/lib/qualify/types";
 
 /** Идеальный лид: все составляющие в максимуме. */
@@ -109,4 +110,24 @@ test("номер заявки: формат DZ-MMDD-XXXX без похожих �
   // 0/O и 1/I исключены намеренно — но только из случайного хвоста: в дате
   // ноль встречается законно (0904), и проверять всю строку было бы неверно.
   assert.doesNotMatch(no.slice(-4), /[01OI]/);
+});
+
+test("адрес клиента берётся из заголовка, который нельзя подделать", () => {
+  const req = (headers: Record<string, string>) =>
+    clientIp(new Request("https://devuz.maximov-tech.ru/api/audit", { headers }));
+
+  // Главный случай: посетитель прислал свой X-Forwarded-For, nginx дописал
+  // настоящий адрес справа и проставил X-Real-IP. Верить можно только ему,
+  // иначе лимит обходится сменой одной строки в запросе.
+  assert.equal(
+    req({ "x-forwarded-for": "1.2.3.4", "x-real-ip": "203.0.113.9" }),
+    "203.0.113.9",
+  );
+
+  // Без X-Real-IP берём последний элемент — он ближе всего к нам.
+  assert.equal(req({ "x-forwarded-for": "1.2.3.4, 203.0.113.9" }), "203.0.113.9");
+
+  // Пустые значения не должны превращаться в ключ, общий для всех.
+  assert.equal(req({ "x-real-ip": "   ", "x-forwarded-for": "203.0.113.9" }), "203.0.113.9");
+  assert.equal(req({}), "unknown");
 });
