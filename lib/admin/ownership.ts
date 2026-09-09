@@ -1,5 +1,6 @@
 import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
+import type { ChatMessage } from "@/lib/qualify/types";
 import { STATUSES } from "@/lib/admin/leads";
 import { serviceClient } from "@/lib/supabase";
 
@@ -12,6 +13,17 @@ import { serviceClient } from "@/lib/supabase";
  * места. Напоминание через сутки приходит вовремя только на бумаге.
  */
 export const AUTO_REMINDER_HOURS = 4;
+
+/**
+ * Откуда пришло действие.
+ *
+ * Кнопка под брифом в Telegram и кнопка в панели делают одно и то же и
+ * ходят через один и тот же код — иначе у лида было бы две несовместимые
+ * истории владения. Но в журнале различать их нужно: «взял из чата, не
+ * открывая карточку» и «взял, посмотрев переписку» — разные поступки, и
+ * при разборе холодного лида это первое, что спрашивают.
+ */
+export type ActionSource = "panel" | "telegram";
 
 export type OwnershipResult =
   | { ok: true }
@@ -50,7 +62,12 @@ function handleOf(staff: Staff): string {
  * Здесь проигравший получает честное «уже взят», а не молчаливую перезапись
  * чужого имени.
  */
-export async function takeLead(leadId: string, staff: Staff, ip: string): Promise<OwnershipResult> {
+export async function takeLead(
+  leadId: string,
+  staff: Staff,
+  ip: string,
+  via: ActionSource = "panel",
+): Promise<OwnershipResult> {
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
 
@@ -79,6 +96,7 @@ export async function takeLead(leadId: string, staff: Staff, ip: string): Promis
     targetType: "lead",
     targetId: leadId,
     ip,
+    meta: { via },
   });
 
   // Автонапоминание ставится сразу, а не когда-нибудь потом: смысл его в
@@ -141,6 +159,7 @@ export async function setStatus(
   status: string,
   staff: Staff,
   ip: string,
+  via: ActionSource = "panel",
 ): Promise<OwnershipResult> {
   if (!(STATUSES as readonly string[]).includes(status)) {
     return { ok: false, reason: "failed" };
@@ -166,7 +185,7 @@ export async function setStatus(
     targetType: "lead",
     targetId: leadId,
     ip,
-    meta: { from: lead.status, to: status },
+    meta: { from: lead.status, to: status, via },
   });
 
   return { ok: true };
@@ -224,6 +243,50 @@ export async function revealContact(
     handle: (data.contact_handle as string | null) ?? null,
     kind: (data.contact_kind as string | null) ?? null,
   };
+}
+
+/**
+ * Показать переписку с клиентом целиком.
+ *
+ * Тем же способом, что и контакт, и по той же причине. Полный разговор —
+ * самое чувствительное, что у нас есть про клиента: там его оборот, его
+ * сроки и то, что он думает о прошлом подрядчике. В выборке карточки
+ * переписки нет намеренно (см. lib/admin/leads.ts), чтобы она не читалась
+ * мимоходом; здесь у каждого чтения есть имя, время и лид.
+ *
+ * Раньше этот вопрос решался иначе: стенограмма уходила вторым сообщением
+ * в общий чат отдела продаж — то есть её читали все и навсегда, а кто
+ * именно прочитал, узнать было нельзя. Отсюда она убрана, и без этой
+ * функции менеджер потерял бы контекст, за которым туда и заглядывал.
+ */
+export async function revealTranscript(
+  leadId: string,
+  staff: Staff,
+  ip: string,
+): Promise<ChatMessage[] | null> {
+  const db = serviceClient();
+  if (!db) return null;
+
+  const lead = await ownerOf(leadId);
+  if (!lead || !canEdit(lead, staff)) return null;
+
+  const { data } = await db
+    .from("leads")
+    .select("transcript")
+    .eq("id", leadId)
+    .maybeSingle();
+
+  if (!data) return null;
+
+  await record("lead.transcript_viewed", {
+    actorStaffId: staff.id,
+    targetType: "lead",
+    targetId: leadId,
+    ip,
+  });
+
+  const transcript = data.transcript;
+  return Array.isArray(transcript) ? (transcript as ChatMessage[]) : [];
 }
 
 // ───────────────────────────────────────────────────────────────────────────

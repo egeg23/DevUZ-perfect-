@@ -7,6 +7,7 @@ import {
   finishReminder,
   release,
   revealContactAction,
+  revealTranscriptAction,
   take,
   toggleAutoReminder,
 } from "./actions";
@@ -22,7 +23,8 @@ import { record } from "@/lib/admin/audit";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { STATUSES, leadById } from "@/lib/admin/leads";
 import { messagesFor } from "@/lib/admin/messages";
-import { canEdit, remindersFor, revealContact } from "@/lib/admin/ownership";
+import { canEdit, remindersFor, revealContact, revealTranscript } from "@/lib/admin/ownership";
+import { CONTACT_LABEL, contactLink } from "@/lib/contact";
 
 export const dynamic = "force-dynamic";
 
@@ -48,13 +50,6 @@ const TIMING_LABEL: Record<string, string> = {
   T1: "сейчас",
   T2: "в этом квартале",
   T3: "когда-нибудь",
-};
-
-const CONTACT_LABEL: Record<string, string> = {
-  telegram: "Telegram",
-  phone: "телефон",
-  email: "почта",
-  none: "не оставлен",
 };
 
 const RESULT_MESSAGE: Record<string, string> = {
@@ -88,11 +83,15 @@ export default async function LeadPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ r?: string; contact?: string }>;
+  searchParams: Promise<{ r?: string; contact?: string; transcript?: string }>;
 }) {
   const staff = await requireStaff();
   const { id } = await params;
-  const { r: result, contact: wantsContact } = await searchParams;
+  const {
+    r: result,
+    contact: wantsContact,
+    transcript: wantsTranscript,
+  } = await searchParams;
 
   const lead = await leadById(id);
   if (!lead) notFound();
@@ -111,6 +110,21 @@ export default async function LeadPage({
   // Контакт достаётся только по явному действию — и каждое такое
   // получение попадает в журнал отдельной строкой.
   const contact = wantsContact === "1" ? await revealContact(lead.id, staff, ip) : null;
+
+  // Ссылка «написать в один тап» живёт здесь, а не в брифе Telegram, куда
+  // она уходила раньше. Смысл её от переезда не изменился: менеджер читает
+  // карточку с телефона, и «скопировать ник, открыть поиск, вставить,
+  // найти» — четыре действия, на каждом из которых лид ждёт ещё пять минут.
+  // Изменилось то, что до неё нужно дойти через раскрытие контакта, а оно
+  // записано в журнал.
+  const contactView = contact
+    ? contactLink({ contact_handle: contact.handle, contact_kind: contact.kind })
+    : null;
+  // Переписка — тем же порядком, что и контакт: только по явному нажатию и
+  // только владельцу, каждое чтение отдельной строкой в журнале.
+  const transcript =
+    wantsTranscript === "1" ? await revealTranscript(lead.id, staff, ip) : null;
+
   const [reminders, messages] = await Promise.all([
     remindersFor(lead.id),
     messagesFor(lead.id),
@@ -210,9 +224,24 @@ export default async function LeadPage({
       <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
         <p className="text-xs uppercase tracking-wider text-faint">Контакт клиента</p>
 
-        {contact ? (
+        {contact && contactView ? (
           <>
-            <p className="mt-2 font-mono text-sm text-green">{contact.handle || "не оставлен"}</p>
+            {contactView.url ? (
+              <a
+                href={contactView.url}
+                // Внешняя вкладка только для веб-адресов: tel: и mailto:
+                // передаются приложению, и пустая вкладка после них — мусор,
+                // который менеджер закрывает руками после каждого лида.
+                {...(contactView.url.startsWith("http")
+                  ? { target: "_blank", rel: "noreferrer noopener" }
+                  : {})}
+                className="mt-2 inline-block font-mono text-sm text-green underline underline-offset-4 hover:text-white"
+              >
+                {contactView.label}
+              </a>
+            ) : (
+              <p className="mt-2 font-mono text-sm text-green">{contactView.label}</p>
+            )}
             <p className="mt-1 text-xs text-faint">
               {contact.kind ? CONTACT_LABEL[contact.kind] ?? contact.kind : "тип не указан"} ·
               просмотр записан в журнал
@@ -236,6 +265,63 @@ export default async function LeadPage({
           <p className="mt-2 text-sm text-muted">
             {free
               ? "Возьмите лида в работу, чтобы увидеть контакт."
+              : "Лид закреплён за другим менеджером."}
+          </p>
+        )}
+      </section>
+
+      {/* ── Переписка с клиентом ────────────────────────────────────── */}
+      <section
+        id="transcript"
+        className="mt-4 rounded-xl border border-line bg-surface px-5 py-4"
+      >
+        <p className="text-xs uppercase tracking-wider text-faint">Переписка с клиентом</p>
+
+        {transcript ? (
+          transcript.length ? (
+            <>
+              <div className="mt-3 flex flex-col gap-3">
+                {transcript.map((line, i) => (
+                  <div
+                    key={i}
+                    className={
+                      line.role === "user"
+                        ? "max-w-[85%] self-start rounded-xl rounded-bl-sm bg-surface-2 px-4 py-2.5"
+                        : "max-w-[85%] self-end rounded-xl rounded-br-sm border border-line px-4 py-2.5"
+                    }
+                  >
+                    <p className="text-[0.7rem] uppercase tracking-wider text-faint">
+                      {line.role === "user" ? "клиент" : "ассистент"}
+                    </p>
+                    {/* whitespace-pre-wrap: человек писал абзацами, и склеенный
+                        в одну строку разговор читается вдвое дольше. */}
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-text">{line.content}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-faint">просмотр записан в журнал</p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm text-muted">
+              Переписки нет — заявка пришла формой, а не из чата.
+            </p>
+          )
+        ) : mine ? (
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <form action={revealTranscriptAction}>
+              <input type="hidden" name="lead" value={lead.id} />
+              <button type="submit" className={BUTTON}>
+                Показать переписку
+              </button>
+            </form>
+            <span className="text-xs text-faint">
+              всё, что клиент рассказал о деньгах и сроках
+            </span>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-muted">
+            {free
+              ? "Возьмите лида в работу, чтобы прочитать переписку."
               : "Лид закреплён за другим менеджером."}
           </p>
         )}

@@ -19,8 +19,8 @@ import {
   sendPlain,
   typingIndicator,
 } from "@/lib/qualify/telegram";
-import { updateLeadStatus } from "@/lib/qualify/store";
 import { record } from "@/lib/admin/audit";
+import { setStatus, takeLead } from "@/lib/admin/ownership";
 import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
@@ -52,11 +52,6 @@ type Update = {
     from?: TelegramUser;
   };
 };
-
-function managerName(from?: TelegramUser): string {
-  if (from?.username) return `@${from.username}`;
-  return from?.first_name || "менеджер";
-}
 
 /** Чат отдела продаж — единственное место, где бот показывает служебное. */
 function isSalesChat(chatId: number): boolean {
@@ -589,6 +584,21 @@ async function handleGroup(message: NonNullable<Update["message"]>) {
 }
 
 /** Кнопки под брифом: закрепить лида за собой или отклонить. */
+/**
+ * Нажатие кнопки под брифом.
+ *
+ * Нажавший опознаётся по его числовому id в Telegram и превращается в
+ * сотрудника из базы — то же самое, что делает вход в панель. Раньше здесь
+ * записывалось имя из профиля: строка, которую человек меняет в настройках
+ * за секунду, и по которой нельзя ни спросить с конкретного менеджера, ни
+ * связать лида с его карточкой. Хуже того, нажать могли и посторонние: в
+ * чат отдела продаж людей добавляют, а вот из брифов их потом не выгоняют.
+ *
+ * Владение считается тем же кодом, что и в панели (takeLead/setStatus), а
+ * не отдельным запросом. Две реализации одного правила разойдутся: гонку
+ * за горячим лидом надёжно решает только условие внутри самого update, и
+ * дублировать его во втором месте — значит однажды отдать лида двоим.
+ */
 async function handleButton(query: NonNullable<Update["callback_query"]>) {
   if (!query.data) return;
 
@@ -601,35 +611,70 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
   }
 
   const [action, leadId] = query.data.split(":");
-  const manager = managerName(query.from);
+
+  if (action === "noop") {
+    // Кнопка-статус под разобранным брифом: нажатие ничего не меняет, но
+    // Telegram ждёт ответа, иначе у нажавшего висит «часики».
+    await answerCallback(query.id, "Этот лид уже разобран");
+    return;
+  }
+
+  if (action !== "take" && action !== "drop") {
+    await answerCallback(query.id, "Неизвестная команда");
+    return;
+  }
+
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (!staff) {
+    // Формулировка нарочно не говорит «вас нет в списке сотрудников»: тем же
+    // текстом бот отвечает и на неизвестную команду, поэтому кнопка не
+    // превращается в способ проверять, кто в студии работает.
+    await answerCallback(query.id, "Недоступно");
+    return;
+  }
+
+  // Адрес нажавшего нам неизвестен: запрос приходит с серверов Telegram, и
+  // записать их адрес значило бы соврать в журнале. Пустая строка станет
+  // в базе NULL, а откуда пришло действие, скажет meta.via.
+  const ip = "";
 
   try {
-    if (action === "take" || action === "drop") {
-      const status = action === "take" ? "taken" : "dropped";
-      await updateLeadStatus(leadId, status, manager);
-      await answerCallback(
-        query.id,
-        action === "take" ? "Лид закреплён за вами" : "Лид отклонён",
-      );
+    const taken = await takeLead(leadId, staff, ip, "telegram");
 
-      if (query.message) {
-        await markBriefHandled(
-          query.message.chat.id,
-          query.message.message_id,
-          action === "take" ? `✅ В работе у ${manager}` : `🗄 Отклонён — ${manager}`,
-        );
+    if (!taken.ok && taken.reason === "taken") {
+      await answerCallback(query.id, "Лида уже взял кто-то другой");
+      return;
+    }
+    if (!taken.ok) {
+      await answerCallback(query.id, "Не удалось — откройте карточку в панели");
+      return;
+    }
+
+    // «Отклонить» — это тоже решение по лиду, и у него должен быть автор.
+    // Поэтому отклонение идёт через взятие: сперва лид закрепляется за
+    // нажавшим, потом закрывается. В журнале остаются обе строки, и на
+    // разборе видно, кто именно решил, что этот клиент нам не нужен.
+    if (action === "drop") {
+      const dropped = await setStatus(leadId, "dropped", staff, ip, "telegram");
+      if (!dropped.ok) {
+        await answerCallback(query.id, "Взял, но не смог отклонить — откройте карточку");
+        return;
       }
-      return;
     }
 
-    if (action === "noop") {
-      // Кнопка-статус под разобранным брифом: нажатие ничего не меняет, но
-      // Telegram ждёт ответа, иначе у нажавшего висит «часики».
-      await answerCallback(query.id, "Этот лид уже разобран");
-      return;
-    }
+    await answerCallback(
+      query.id,
+      action === "take" ? "Лид закреплён за вами" : "Лид отклонён",
+    );
 
-    await answerCallback(query.id, "Неизвестная команда");
+    if (query.message) {
+      const who = staff.username ? `@${staff.username}` : staff.display_name;
+      await markBriefHandled(
+        query.message.chat.id,
+        query.message.message_id,
+        action === "take" ? `✅ В работе у ${who}` : `🗄 Отклонён — ${who}`,
+      );
+    }
   } catch (error) {
     console.error("telegram webhook", error);
     await answerCallback(query.id, "Не удалось обновить статус");

@@ -74,6 +74,13 @@ export async function revealContactAction(formData: FormData) {
   redirect(`/admin/leads/${leadId}?contact=1`);
 }
 
+/** Переписка открывается тем же POST-ом и по той же причине, что и контакт. */
+export async function revealTranscriptAction(formData: FormData) {
+  await requireStaff();
+  const leadId = leadIdFrom(formData);
+  redirect(`/admin/leads/${leadId}?transcript=1#transcript`);
+}
+
 export async function toggleAutoReminder(formData: FormData) {
   const staff = await requireStaff();
   const leadId = leadIdFrom(formData);

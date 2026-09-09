@@ -290,7 +290,7 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
 
   let delivered = false;
   try {
-    delivered = await sendLead(lead, history, leadId ?? "unsaved", requestNo);
+    delivered = await sendLead(lead, leadId ?? "unsaved", requestNo);
   } catch (error) {
     console.error("sendLead", error);
   }

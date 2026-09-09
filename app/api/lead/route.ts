@@ -1,7 +1,8 @@
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { saveLead } from "@/lib/qualify/store";
-import { detectContactKind, sendLead } from "@/lib/qualify/telegram";
+import { detectContactKind } from "@/lib/contact";
+import { sendLead } from "@/lib/qualify/telegram";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { scoreLead } from "@/lib/qualify/scoring";
 import type { QualifyToolInput } from "@/lib/qualify/types";
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
     console.error("saveLead form", error);
   }
 
-  const delivered = await sendLead(lead, [], leadId ?? "unsaved", requestNo);
+  const delivered = await sendLead(lead, leadId ?? "unsaved", requestNo);
 
   // Если и база, и Telegram недоступны — заявка потеряна, и врать об успехе
   // нельзя: человек должен увидеть подсказку написать напрямую.
