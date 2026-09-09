@@ -1,4 +1,5 @@
 import { record } from "@/lib/admin/audit";
+import { purgeExpiredSignals } from "@/lib/scout/store";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
@@ -115,5 +116,11 @@ export async function POST(request: Request) {
     sent += 1;
   }
 
-  return Response.json({ ok: true, sent, skipped, queued: (data ?? []).length });
+  // Уборка просроченных сигналов скаута едет здесь же, а не отдельным
+  // таймером. Своего расписания ей не нужно — она дешёвая и работает по
+  // частичному индексу, — а лишний юнит systemd это лишняя вещь, которую
+  // однажды забудут включить на новом сервере.
+  const purged = await purgeExpiredSignals();
+
+  return Response.json({ ok: true, sent, skipped, purged, queued: (data ?? []).length });
 }
