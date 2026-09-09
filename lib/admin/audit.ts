@@ -22,6 +22,9 @@ export type AuditAction =
   | "reminder.done"
   | "reminder.sent"
   | "message.posted"
+  | "project.created"
+  | "project.updated"
+  | "project.stage_changed"
   | "staff.invited"
   | "staff.disabled";
 
