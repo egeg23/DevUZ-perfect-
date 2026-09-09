@@ -72,6 +72,7 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   install_unit devuz-backup.timer
   install_unit devuz-reminders.service
   install_unit devuz-reminders.timer
+  install_unit devuz-scout.service
   # daemon-reload нужен только когда файл юнита изменился.
   [ "$UNITS_CHANGED" = "1" ] && systemctl daemon-reload
 
@@ -107,6 +108,24 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
     echo "  · таймер напоминаний включён"
   else
     echo "  · REMINDER_SWEEP_SECRET не задан — таймер напоминаний не включаю" >&2
+  fi
+
+  # Скаут — долгоживущий слушатель, а не задача по расписанию. Включается
+  # только когда есть и строка сессии, и список чатов: без любого из двух он
+  # падал бы каждые тридцать секунд и засорял journal.
+  #
+  # Зависимости ставятся здесь же: у скаута свой package.json, чтобы сайту
+  # не достались его пакеты.
+  if grep -q '^SCOUT_SESSION=.\+' "$APP_DIR/.env" && grep -q '^SCOUT_CHATS=.\+' "$APP_DIR/.env"; then
+    if [ -d "$APP_DIR/scout" ]; then
+      ( cd "$APP_DIR/scout" && npm install --omit=dev --no-audit --no-fund >/dev/null 2>&1 ) \
+        || echo "  · зависимости скаута не поставились" >&2
+    fi
+    systemctl enable --now devuz-scout.service >/dev/null 2>&1
+    systemctl restart devuz-scout.service >/dev/null 2>&1
+    echo "  · скаут запущен"
+  else
+    echo "  · SCOUT_SESSION или SCOUT_CHATS не заданы — скаут не запускаю" >&2
   fi
 fi
 
