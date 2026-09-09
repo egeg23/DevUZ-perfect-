@@ -20,11 +20,22 @@ import {
   typingIndicator,
 } from "@/lib/qualify/telegram";
 import { updateLeadStatus } from "@/lib/qualify/store";
+import { record } from "@/lib/admin/audit";
+import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
+import { siteUrl } from "@/lib/seo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type TelegramUser = { first_name?: string; username?: string; language_code?: string };
+type TelegramUser = {
+  // Числовой id — единственное, что у человека в Telegram не меняется:
+  // username он может освободить и занять заново, имя переписать. Вход в
+  // панель опознаётся по нему.
+  id?: number;
+  first_name?: string;
+  username?: string;
+  language_code?: string;
+};
 type TelegramChat = { id: number; type: string; title?: string; username?: string };
 
 type Update = {
@@ -84,6 +95,15 @@ export async function POST(request: Request) {
     if (update.message) {
       const chat = update.message.chat;
 
+      // Вход в панель проверяется раньше всего остального: команду шлёт
+      // сотрудник из своей лички, а личка сотрудника для остального кода —
+      // либо чат отдела продаж, либо обычный клиент. И в том и в другом
+      // случае /login разобрали бы неправильно.
+      if (chat.type === "private" && (update.message.text ?? "").trim().startsWith("/login")) {
+        await handleStaffLogin(update.message);
+        return new Response("ok");
+      }
+
       if (isSalesChat(chat.id)) {
         await handleSales(update.message);
       } else if (chat.type !== "private") {
@@ -121,6 +141,64 @@ function handleOf(from: TelegramUser | undefined, chatId: number): string {
   // Без username написать первым нельзя — Telegram это запрещает. Менеджер
   // должен знать об этом до того, как попробует.
   return `id ${chatId} (username не задан — ответить можно только в этом чате)`;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Вход в панель
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Команда /login: бот выдаёт одноразовую ссылку в панель.
+ *
+ * Пароля нет и не будет. У команды из нескольких человек пароль
+ * заканчивается одинаково — общим паролем в закреплённом сообщении, который
+ * уходит вместе с первым уволившимся. Telegram уже знает, кто пишет, и
+ * знает это надёжнее любого пароля: чтобы притвориться менеджером, нужен
+ * его аккаунт, а не подсмотренная строка.
+ *
+ * Незнакомцу отвечаем тем же текстом, что и клиенту на неизвестную команду.
+ * Ответ «вас нет в списке сотрудников» превратил бы бота в способ проверять
+ * гипотезы о том, кто в студии работает.
+ */
+async function handleStaffLogin(message: NonNullable<Update["message"]>) {
+  const chat = message.chat;
+  const telegramId = message.from?.id ?? chat.id;
+  const locale = localeOf(message.from);
+
+  const staff = await staffByTelegramId(telegramId);
+  if (!staff) {
+    await sendMessage(chat.id, botCopy(locale).unknown);
+    return;
+  }
+
+  const token = await issueLoginToken(staff.id);
+  if (!token) {
+    await sendMessage(
+      chat.id,
+      "Не смог выдать ссылку — база сейчас недоступна. Попробуйте через минуту.",
+    );
+    return;
+  }
+
+  await record("login.requested", {
+    actorStaffId: staff.id,
+    meta: { via: "telegram" },
+  });
+
+  // Ссылка уходит без превью (sendMessage выключает его для всех сообщений):
+  // строя превью, Telegram сам открыл бы адрес и сжёг одноразовый токен
+  // раньше человека. Второй рубеж — сама страница: обмен токена на сессию
+  // происходит только по нажатию кнопки, то есть POST-ом.
+  await sendMessage(
+    chat.id,
+    [
+      "<b>Вход в панель</b>",
+      "",
+      `${siteUrl}/admin/login?t=${token}`,
+      "",
+      "Ссылка одноразовая и живёт 15 минут.",
+    ].join("\n"),
+  );
 }
 
 // ───────────────────────────────────────────────────────────────────────────

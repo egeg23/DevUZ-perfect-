@@ -29,6 +29,14 @@ export const LOCALE_HEADER = "x-devuz-locale";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Панель — единственная часть сайта вне языковых префиксов. Она не
+  // индексируется, не имеет hreflang и работает на одном языке, поэтому
+  // редирект /admin → /ru/admin здесь не помогает, а ломает: страница по
+  // такому адресу не существует.
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return NextResponse.next();
+  }
+
   const hasLocale = locales.some(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   );

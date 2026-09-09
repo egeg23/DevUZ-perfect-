@@ -1,37 +1,19 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ChatMessage, ScoredLead } from "@/lib/qualify/types";
-
-let cached: SupabaseClient | null = null;
+import { isSupabaseConfigured, serviceClient } from "@/lib/supabase";
 
 /**
- * Клиент Supabase на сервисном ключе.
- *
- * Ключ сервисной роли обходит RLS, поэтому он не имеет права оказаться в
- * браузере ни при каких условиях — отсюда и имя без префикса NEXT_PUBLIC_,
- * и обращение к нему только из серверных модулей.
- *
- * Если переменные не заданы, возвращается null и сайт продолжает работать:
- * лид всё равно уйдёт в Telegram, просто без истории в базе. Это осознанный
- * компромисс — потерять лид хуже, чем потерять аналитику.
+ * Клиент Supabase на сервисном ключе — общий для всего сервера, см.
+ * lib/supabase.ts. Здесь остаётся только локальное имя: слишком много мест
+ * ниже читают `client()`, и переименовывать их ради одного импорта незачем.
  */
 function client(): SupabaseClient | null {
-  if (cached) return cached;
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-
-  cached = createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  return cached;
+  return serviceClient();
 }
 
 export function isStoreConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY,
-  );
+  return isSupabaseConfigured();
 }
 
 export async function saveLead(
