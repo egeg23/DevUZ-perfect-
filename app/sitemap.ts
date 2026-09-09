@@ -17,6 +17,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "", priority: 1, changeFrequency: "weekly" as const },
     { path: "services", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "calculator", priority: 0.9, changeFrequency: "monthly" as const },
+    // Аудитор — вход для холодного трафика: по запросам вида «проверить
+    // сайт» приходят те, у кого уже что-то не так, а это готовый разговор.
+    { path: "audit", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "cases", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "about", priority: 0.7, changeFrequency: "monthly" as const },
     { path: "contact", priority: 0.8, changeFrequency: "monthly" as const },

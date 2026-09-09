@@ -9,6 +9,7 @@ const ru = {
   nav: {
     services: "Услуги",
     calculator: "Калькулятор",
+    audit: "Проверить сайт",
     cases: "Кейсы",
     process: "Процесс",
     about: "О студии",
@@ -171,6 +172,29 @@ const ru = {
    * Узбекистану. Главный коммерческий модификатор там — «цены»/«narxi»,
    * поэтому он стоит в заголовках услуг и калькулятора, а не в подвале.
    */
+  audit: {
+    title: "Проверим ваш сайт за 60 секунд",
+    lead: "Введите адрес — покажем, что видит посетитель и что видит поисковик. Без регистрации и без письма на почту: отчёт появится прямо здесь.",
+    placeholder: "mysite.uz",
+    button: "Проверить",
+    checking: "Проверяем…",
+    scoreLabel: "Оценка",
+    noFindings: "Претензий нет. Сайт в порядке по всем нашим проверкам.",
+    factsHttps: "Шифрование",
+    factsSpeed: "Ответ сервера",
+    factsPlatform: "Платформа",
+    factsShop: "Магазин",
+    yes: "есть",
+    no: "нет",
+    unknown: "не определили",
+    discuss: "Обсудить, что с этим делать",
+    again: "Проверить другой",
+    errorBad: "Не похоже на адрес сайта. Попробуйте так: mysite.uz",
+    errorBlocked: "Такой адрес мы не проверяем.",
+    errorMany: "Слишком часто. Подождите минуту.",
+    errorAny: "Не получилось проверить. Попробуйте ещё раз.",
+    note: "Проверка поверхностная и занимает секунды: она видит то, что видит браузер посетителя. Глубокий аудит — это отдельная работа, о ней можно поговорить в чате.",
+  },
   seo: {
     home: {
       title: "Разработка сайтов и приложений в Ташкенте — DevUz",
@@ -191,6 +215,11 @@ const ru = {
       title: "Стоимость разработки сайта в Ташкенте — калькулятор",
       description:
         "Посчитайте цену сайта, приложения или маркетплейса за минуту. Отметьте нужные опции — калькулятор покажет вилку «от» в сумах и срок в неделях.",
+    },
+    audit: {
+      title: "Бесплатная проверка сайта за 60 секунд — DevUz",
+      description:
+        "Введите адрес сайта и получите отчёт: скорость, мобильная вёрстка, сертификат, видимость в поиске. Без регистрации, результат сразу на экране.",
     },
     contact: {
       title: "Заказать разработку сайта в Ташкенте — DevUz",
@@ -257,7 +286,7 @@ const ru = {
 export type Dictionary = typeof ru;
 
 const en: Dictionary = {
-  nav: { services: "Services", calculator: "Calculator", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts" },
+  nav: { services: "Services", calculator: "Calculator", audit: "Site check", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts" },
   cta: {
     discuss: "Discuss a project",
     calculate: "Get an estimate",
@@ -394,6 +423,29 @@ const en: Dictionary = {
     toTelegram: "Continue on Telegram",
     toTelegramNote: "The conversation picks up right where it left off — no need to explain again.",
   },
+  audit: {
+    title: "We will check your site in 60 seconds",
+    lead: "Enter the address — we will show what a visitor sees and what a search engine sees. No sign-up and no email: the report appears right here.",
+    placeholder: "mysite.com",
+    button: "Check",
+    checking: "Checking…",
+    scoreLabel: "Score",
+    noFindings: "Nothing to complain about. The site passes every check we run.",
+    factsHttps: "Encryption",
+    factsSpeed: "Server response",
+    factsPlatform: "Platform",
+    factsShop: "Shop",
+    yes: "yes",
+    no: "no",
+    unknown: "not detected",
+    discuss: "Discuss what to do about it",
+    again: "Check another one",
+    errorBad: "That does not look like a site address. Try: mysite.com",
+    errorBlocked: "We do not check that address.",
+    errorMany: "Too often. Wait a minute.",
+    errorAny: "The check did not go through. Try again.",
+    note: "This check is shallow and takes seconds: it sees what a visitor's browser sees. A deep audit is separate work — we can talk it through in the chat.",
+  },
   seo: {
     home: {
       title: "Web & Mobile Development in Tashkent — DevUz",
@@ -414,6 +466,11 @@ const en: Dictionary = {
       title: "Development Cost Calculator — Tashkent | DevUz",
       description:
         "Estimate the price of a website, app or marketplace in a minute. Pick the options you need and get a starting range and a timeline in weeks.",
+    },
+    audit: {
+      title: "Free Website Check in 60 Seconds — DevUz",
+      description:
+        "Enter your website address and get a report: speed, mobile layout, certificate, search visibility. No sign-up, results right on the screen.",
     },
     contact: {
       title: "Hire a Development Studio in Tashkent — DevUz",
@@ -474,7 +531,7 @@ const en: Dictionary = {
 };
 
 const uz: Dictionary = {
-  nav: { services: "Xizmatlar", calculator: "Kalkulyator", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa" },
+  nav: { services: "Xizmatlar", calculator: "Kalkulyator", audit: "Saytni tekshirish", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa" },
   cta: {
     discuss: "Loyihani muhokama qilish",
     calculate: "Loyihani hisoblash",
@@ -611,6 +668,29 @@ const uz: Dictionary = {
     toTelegram: "Telegramda davom etish",
     toTelegramNote: "Suhbat aynan shu joydan davom etadi — qaytadan tushuntirish shart emas.",
   },
+  audit: {
+    title: "Saytingizni 60 soniyada tekshiramiz",
+    lead: "Manzilni kiriting — tashrifchi nimani ko'rishini va qidiruv tizimi nimani ko'rishini ko'rsatamiz. Ro'yxatdan o'tmasdan va xatsiz: hisobot shu yerda paydo bo'ladi.",
+    placeholder: "mysite.uz",
+    button: "Tekshirish",
+    checking: "Tekshirilmoqda…",
+    scoreLabel: "Baho",
+    noFindings: "E'tirozlar yo'q. Sayt barcha tekshiruvlarimizdan o'tdi.",
+    factsHttps: "Shifrlash",
+    factsSpeed: "Server javobi",
+    factsPlatform: "Platforma",
+    factsShop: "Do'kon",
+    yes: "bor",
+    no: "yo'q",
+    unknown: "aniqlanmadi",
+    discuss: "Bu bilan nima qilishni muhokama qilish",
+    again: "Boshqasini tekshirish",
+    errorBad: "Bu sayt manziliga o'xshamaydi. Masalan: mysite.uz",
+    errorBlocked: "Bunday manzilni tekshirmaymiz.",
+    errorMany: "Juda tez-tez. Bir daqiqa kuting.",
+    errorAny: "Tekshirib bo'lmadi. Yana urinib ko'ring.",
+    note: "Tekshiruv yuzaki va soniyalar oladi: u tashrifchi brauzeri ko'rgan narsani ko'radi. Chuqur audit — alohida ish, bu haqda chatda gaplashish mumkin.",
+  },
   seo: {
     home: {
       title: "Toshkentda sayt va ilova yaratish — DevUz",
@@ -631,6 +711,11 @@ const uz: Dictionary = {
       title: "Sayt yaratish narxi — onlayn kalkulyator | DevUz",
       description:
         "Sayt, ilova yoki marketpleys narxini bir daqiqada hisoblang. Kerakli variantlarni belgilang — kalkulyator so‘mdagi «dan» narxini va muddatni ko‘rsatadi.",
+    },
+    audit: {
+      title: "Saytni 60 soniyada bepul tekshirish — DevUz",
+      description:
+        "Sayt manzilini kiriting va hisobot oling: tezlik, mobil ko'rinish, sertifikat, qidiruvdagi ko'rinish. Ro'yxatdan o'tmasdan, natija darhol ekranda.",
     },
     contact: {
       title: "Toshkentda saytga buyurtma berish — DevUz",
@@ -691,7 +776,7 @@ const uz: Dictionary = {
 };
 
 const zh: Dictionary = {
-  nav: { services: "服务", calculator: "报价", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式" },
+  nav: { services: "服务", calculator: "报价", audit: "网站体检", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式" },
   cta: {
     discuss: "洽谈项目",
     calculate: "获取报价",
@@ -827,6 +912,29 @@ const zh: Dictionary = {
     toTelegram: "在 Telegram 继续",
     toTelegramNote: "对话会从这里继续 —— 无需重新说明。",
   },
+  audit: {
+    title: "60 秒为您检查网站",
+    lead: "输入网址 —— 我们会展示访客看到什么、搜索引擎看到什么。无需注册也无需邮件：报告直接显示在此处。",
+    placeholder: "mysite.com",
+    button: "开始检查",
+    checking: "检查中…",
+    scoreLabel: "评分",
+    noFindings: "没有问题。本站通过了我们的全部检查。",
+    factsHttps: "加密",
+    factsSpeed: "服务器响应",
+    factsPlatform: "平台",
+    factsShop: "商城",
+    yes: "有",
+    no: "无",
+    unknown: "未识别",
+    discuss: "讨论如何处理",
+    again: "检查另一个",
+    errorBad: "这看起来不像网址。请试试：mysite.com",
+    errorBlocked: "该地址我们不做检查。",
+    errorMany: "过于频繁，请稍等一分钟。",
+    errorAny: "检查未能完成，请重试。",
+    note: "这是一次浅层检查，只需数秒：它看到的是访客浏览器所看到的内容。深度审计是另一项工作，可以在聊天中沟通。",
+  },
   seo: {
     home: {
       title: "塔什干网站与应用开发 — DevUz Studio",
@@ -844,6 +952,11 @@ const zh: Dictionary = {
     calculator: {
       title: "开发报价计算器 — 塔什干 | DevUz",
       description: "一分钟估算网站、应用或电商平台的价格。勾选所需选项，即可得到起步价区间与以周计的周期。",
+    },
+    audit: {
+      title: "60 秒免费网站体检 — DevUz",
+      description:
+        "输入网址即可获得报告：速度、移动端排版、证书、搜索可见性。无需注册，结果即刻呈现。",
     },
     contact: {
       title: "在塔什干委托开发 — DevUz Studio",
