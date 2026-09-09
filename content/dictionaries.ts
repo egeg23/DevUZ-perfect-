@@ -10,6 +10,7 @@ const ru = {
     services: "Услуги",
     calculator: "Калькулятор",
     audit: "Проверить сайт",
+    products: "Продукты",
     cases: "Кейсы",
     process: "Процесс",
     about: "О студии",
@@ -172,6 +173,23 @@ const ru = {
    * Узбекистану. Главный коммерческий модификатор там — «цены»/«narxi»,
    * поэтому он стоит в заголовках услуг и калькулятора, а не в подвале.
    */
+  products: {
+    title: "Готовые продукты",
+    lead: "Работающий код, который можно забрать и запустить у себя. Не заготовки и не демо: каждый продукт написан для реального заказчика и работал в проде.",
+    price: "Цена",
+    priceFrom: "от",
+    scratch: "С нуля обошлось бы",
+    included: "Что входит",
+    tech: "Технологии",
+    monetization: "Как зарабатывает",
+    rebuild: "Подо что пересобирается",
+    readiness: "Готовность",
+    buyerProvides: "Что нужно от вас",
+    buy: "Обсудить покупку",
+    all: "Все продукты",
+    back: "К списку продуктов",
+    note: "Цены итоговые, в долларах, без НДС. Оплата по счёту на юридическое лицо.",
+  },
   audit: {
     title: "Проверим ваш сайт за 60 секунд",
     lead: "Введите адрес — покажем, что видит посетитель и что видит поисковик. Без регистрации и без письма на почту: отчёт появится прямо здесь.",
@@ -215,6 +233,11 @@ const ru = {
       title: "Стоимость разработки сайта в Ташкенте — калькулятор",
       description:
         "Посчитайте цену сайта, приложения или маркетплейса за минуту. Отметьте нужные опции — калькулятор покажет вилку «от» в сумах и срок в неделях.",
+    },
+    products: {
+      title: "Купить готовые проекты и сервисы — исходный код | DevUz",
+      description:
+        "Готовые маркетплейс, сервис доставки, ИИ-сервисы и лендинги с исходным кодом. От 800 до 30 000 $. Разработка такого же с нуля дороже на 40–70%.",
     },
     audit: {
       title: "Бесплатная проверка сайта за 60 секунд — DevUz",
@@ -286,7 +309,7 @@ const ru = {
 export type Dictionary = typeof ru;
 
 const en: Dictionary = {
-  nav: { services: "Services", calculator: "Calculator", audit: "Site check", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts" },
+  nav: { services: "Services", calculator: "Calculator", audit: "Site check", products: "Products", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts" },
   cta: {
     discuss: "Discuss a project",
     calculate: "Get an estimate",
@@ -423,6 +446,23 @@ const en: Dictionary = {
     toTelegram: "Continue on Telegram",
     toTelegramNote: "The conversation picks up right where it left off — no need to explain again.",
   },
+  products: {
+    title: "Ready-made products",
+    lead: "Working code you can take and run yourself. Not skeletons and not demos: every product was written for a real client and ran in production.",
+    price: "Price",
+    priceFrom: "from",
+    scratch: "From scratch it would cost",
+    included: "What is included",
+    tech: "Technologies",
+    monetization: "How it earns",
+    rebuild: "What it can be rebuilt into",
+    readiness: "Readiness",
+    buyerProvides: "What we need from you",
+    buy: "Discuss the purchase",
+    all: "All products",
+    back: "Back to products",
+    note: "Prices are final, in US dollars, VAT not applicable. Payment by invoice to a legal entity.",
+  },
   audit: {
     title: "We will check your site in 60 seconds",
     lead: "Enter the address — we will show what a visitor sees and what a search engine sees. No sign-up and no email: the report appears right here.",
@@ -466,6 +506,11 @@ const en: Dictionary = {
       title: "Development Cost Calculator — Tashkent | DevUz",
       description:
         "Estimate the price of a website, app or marketplace in a minute. Pick the options you need and get a starting range and a timeline in weeks.",
+    },
+    products: {
+      title: "Buy Ready-Made Projects and Services — Source Code | DevUz",
+      description:
+        "A ready marketplace, delivery service, AI services and landing pages with source code. From $800 to $30,000. Building the same from scratch costs 40–70% more.",
     },
     audit: {
       title: "Free Website Check in 60 Seconds — DevUz",
@@ -531,7 +576,7 @@ const en: Dictionary = {
 };
 
 const uz: Dictionary = {
-  nav: { services: "Xizmatlar", calculator: "Kalkulyator", audit: "Saytni tekshirish", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa" },
+  nav: { services: "Xizmatlar", calculator: "Kalkulyator", audit: "Saytni tekshirish", products: "Mahsulotlar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa" },
   cta: {
     discuss: "Loyihani muhokama qilish",
     calculate: "Loyihani hisoblash",
@@ -668,6 +713,23 @@ const uz: Dictionary = {
     toTelegram: "Telegramda davom etish",
     toTelegramNote: "Suhbat aynan shu joydan davom etadi — qaytadan tushuntirish shart emas.",
   },
+  products: {
+    title: "Tayyor mahsulotlar",
+    lead: "Olib, o'zingizda ishga tushiradigan ishlaydigan kod. Andoza ham, demo ham emas: har bir mahsulot haqiqiy buyurtmachi uchun yozilgan va prodda ishlagan.",
+    price: "Narx",
+    priceFrom: "dan",
+    scratch: "Noldan qilinsa",
+    included: "Nimalar kiradi",
+    tech: "Texnologiyalar",
+    monetization: "Qanday daromad keltiradi",
+    rebuild: "Nimaga qayta yig'iladi",
+    readiness: "Tayyorlik",
+    buyerProvides: "Sizdan nima kerak",
+    buy: "Xaridni muhokama qilish",
+    all: "Barcha mahsulotlar",
+    back: "Mahsulotlar ro'yxatiga",
+    note: "Narxlar yakuniy, dollarda, QQS solinmaydi. To'lov yuridik shaxsga hisob-faktura bo'yicha.",
+  },
   audit: {
     title: "Saytingizni 60 soniyada tekshiramiz",
     lead: "Manzilni kiriting — tashrifchi nimani ko'rishini va qidiruv tizimi nimani ko'rishini ko'rsatamiz. Ro'yxatdan o'tmasdan va xatsiz: hisobot shu yerda paydo bo'ladi.",
@@ -711,6 +773,11 @@ const uz: Dictionary = {
       title: "Sayt yaratish narxi — onlayn kalkulyator | DevUz",
       description:
         "Sayt, ilova yoki marketpleys narxini bir daqiqada hisoblang. Kerakli variantlarni belgilang — kalkulyator so‘mdagi «dan» narxini va muddatni ko‘rsatadi.",
+    },
+    products: {
+      title: "Tayyor loyiha va xizmatlarni sotib olish — manba kodi | DevUz",
+      description:
+        "Tayyor marketpleys, yetkazib berish xizmati, AI-xizmatlar va landinglar manba kodi bilan. 800 dan 30 000 $ gacha. Noldan ishlab chiqish 40–70% qimmat.",
     },
     audit: {
       title: "Saytni 60 soniyada bepul tekshirish — DevUz",
@@ -776,7 +843,7 @@ const uz: Dictionary = {
 };
 
 const zh: Dictionary = {
-  nav: { services: "服务", calculator: "报价", audit: "网站体检", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式" },
+  nav: { services: "服务", calculator: "报价", audit: "网站体检", products: "产品", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式" },
   cta: {
     discuss: "洽谈项目",
     calculate: "获取报价",
@@ -912,6 +979,23 @@ const zh: Dictionary = {
     toTelegram: "在 Telegram 继续",
     toTelegramNote: "对话会从这里继续 —— 无需重新说明。",
   },
+  products: {
+    title: "成品产品",
+    lead: "可直接取用并自行运行的可用代码。既非骨架也非演示：每个产品都是为真实客户编写并在生产环境运行过的。",
+    price: "价格",
+    priceFrom: "起",
+    scratch: "从零开发需要",
+    included: "包含内容",
+    tech: "技术栈",
+    monetization: "如何盈利",
+    rebuild: "可改造为",
+    readiness: "就绪度",
+    buyerProvides: "需要您提供",
+    buy: "洽谈购买",
+    all: "全部产品",
+    back: "返回产品列表",
+    note: "价格为最终价，以美元计，不含增值税。通过向法人开具发票付款。",
+  },
   audit: {
     title: "60 秒为您检查网站",
     lead: "输入网址 —— 我们会展示访客看到什么、搜索引擎看到什么。无需注册也无需邮件：报告直接显示在此处。",
@@ -952,6 +1036,11 @@ const zh: Dictionary = {
     calculator: {
       title: "开发报价计算器 — 塔什干 | DevUz",
       description: "一分钟估算网站、应用或电商平台的价格。勾选所需选项，即可得到起步价区间与以周计的周期。",
+    },
+    products: {
+      title: "购买成品项目与服务 — 源代码 | DevUz",
+      description:
+        "现成的电商平台、配送服务、AI 服务与落地页，含源代码。800 至 30,000 美元。从零开发要贵 40–70%。",
     },
     audit: {
       title: "60 秒免费网站体检 — DevUz",

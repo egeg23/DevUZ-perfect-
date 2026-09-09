@@ -1269,3 +1269,8 @@ export const products: Product[] = [
     },
   },
 ];
+
+/** Продукт по slug — для страницы карточки и разметки. */
+export function productBySlug(slug: string): Product | undefined {
+  return products.find((p) => p.slug === slug);
+}

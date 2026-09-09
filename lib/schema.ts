@@ -1,5 +1,6 @@
 import { company } from "@/content/company";
 import type { Case } from "@/content/cases";
+import type { Product } from "@/content/products";
 import type { Service } from "@/content/services";
 import { absoluteUrl } from "@/lib/seo";
 import { hreflang, t, type Locale } from "@/lib/i18n";
@@ -85,6 +86,41 @@ export function serviceSchema(service: Service, locale: Locale): Json {
         priceCurrency: "USD",
       },
     },
+  };
+}
+
+/**
+ * Готовый продукт с ценой.
+ *
+ * В отличие от услуги, здесь цена точная, а не «от»: покупатель видит её на
+ * странице, и расхождение между разметкой и страницей поисковик считает
+ * попыткой обмануть выдачу. Поэтому у продуктов с вилкой отдаётся диапазон,
+ * а не нижняя граница, выданная за окончательную цену.
+ */
+export function productSchema(product: Product, locale: Locale): Json {
+  const offer: Json = product.priceToUsd
+    ? {
+        "@type": "AggregateOffer",
+        priceCurrency: "USD",
+        lowPrice: product.priceUsd,
+        highPrice: product.priceToUsd,
+        offerCount: 3,
+      }
+    : {
+        "@type": "Offer",
+        priceCurrency: "USD",
+        price: product.priceUsd,
+        availability: "https://schema.org/InStock",
+      };
+
+  return {
+    "@type": "Product",
+    name: t(product.title, locale),
+    description: t(product.description, locale),
+    brand: { "@id": ORG_ID },
+    category: "SoftwareSourceCode",
+    url: absoluteUrl(`${locale}/products/${product.slug}`),
+    offers: { ...offer, seller: { "@id": ORG_ID }, url: absoluteUrl(`${locale}/products/${product.slug}`) },
   };
 }
 

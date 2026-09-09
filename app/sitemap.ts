@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { cases } from "@/content/cases";
+import { products } from "@/content/products";
 import { services } from "@/content/services";
 import { hreflang, locales } from "@/lib/i18n";
 import { absoluteUrl } from "@/lib/seo";
@@ -20,12 +21,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Аудитор — вход для холодного трафика: по запросам вида «проверить
     // сайт» приходят те, у кого уже что-то не так, а это готовый разговор.
     { path: "audit", priority: 0.9, changeFrequency: "monthly" as const },
+    { path: "products", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "cases", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "about", priority: 0.7, changeFrequency: "monthly" as const },
     { path: "contact", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "privacy", priority: 0.3, changeFrequency: "yearly" as const },
     ...services.map((s) => ({
       path: `services/${s.slug}`,
+      priority: 0.8,
+      changeFrequency: "monthly" as const,
+    })),
+    ...products.map((p) => ({
+      path: `products/${p.slug}`,
       priority: 0.8,
       changeFrequency: "monthly" as const,
     })),
