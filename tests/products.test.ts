@@ -118,3 +118,46 @@ test("размер маркетплейса назван одинаково на
     assert.match(short, /\b21\b/, `${locale}: не названо число Java-сервисов`);
   }
 });
+
+/**
+ * Подписи формы заказа — тот же принцип, что и у каталога: перевод,
+ * забытый в одном языке, показывает китайцу русскую надпись на кнопке
+ * оплаты. Это последний экран перед деньгами, и промах здесь дороже всего.
+ */
+test("форма заказа переведена на все языки", async () => {
+  const { orderCopy } = await import("@/content/order-form");
+
+  for (const [key, value] of Object.entries(orderCopy)) {
+    for (const locale of locales) {
+      const text = (value as Record<string, string>)[locale];
+      assert.ok(text && text.trim(), `${key}.${locale} пусто`);
+      assert.equal(text, text.trim(), `${key}.${locale}: лишние пробелы`);
+    }
+  }
+});
+
+/**
+ * Юридическая оговорка обязана остаться на всех языках.
+ *
+ * ПП-3832 п.6 пп.«в» запрещает принимать криптовалюту как средство
+ * платежа. Пункт, потерянный при правке текста в одном языке, — это уже не
+ * опечатка: покупатель из другой страны прочтёт, что криптой платить можно.
+ */
+test("оговорка про способ оплаты никуда не делась", async () => {
+  const { orderCopy } = await import("@/content/order-form");
+
+  const marker: Record<string, RegExp> = {
+    ru: /криптовалют/i,
+    en: /cryptocurrenc/i,
+    uz: /kriptovalyuta/i,
+    zh: /加密货币/,
+  };
+
+  for (const locale of locales) {
+    assert.match(
+      orderCopy.legal[locale],
+      marker[locale],
+      `${locale}: из оговорки пропала криптовалюта`,
+    );
+  }
+});
