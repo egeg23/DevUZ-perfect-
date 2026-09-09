@@ -1,0 +1,47 @@
+[
+  {
+    "chatId": -1001234567890,
+    "chatTitle": "IT Ташкент",
+    "chatUsername": "ittashkent",
+    "messageId": 101,
+    "authorTelegramId": 555001,
+    "authorUsername": "aziz_k",
+    "text": "Ребят, нужен интернет-магазин для сети аптек, 14 точек. Кто может взяться?"
+  },
+  {
+    "chatId": -1001234567890,
+    "chatTitle": "IT Ташкент",
+    "chatUsername": "ittashkent",
+    "messageId": 102,
+    "authorTelegramId": 555002,
+    "authorUsername": "webmaster_uz",
+    "text": "Делаем сайты под ключ от 500$, портфолио в личке, пишите"
+  },
+  {
+    "chatId": -1001234567890,
+    "chatTitle": "IT Ташкент",
+    "chatUsername": "ittashkent",
+    "messageId": 103,
+    "authorTelegramId": 555003,
+    "authorUsername": null,
+    "text": "спасибо!"
+  },
+  {
+    "chatId": -1001234567890,
+    "chatTitle": "IT Ташкент",
+    "chatUsername": "ittashkent",
+    "messageId": 104,
+    "authorTelegramId": 555004,
+    "authorUsername": "dilnoza",
+    "text": "Kompaniya uchun sayt kerak, qancha turadi va kim qiladi?"
+  },
+  {
+    "chatId": -1001234567890,
+    "chatTitle": "IT Ташкент",
+    "chatUsername": "ittashkent",
+    "messageId": 105,
+    "authorTelegramId": 555005,
+    "authorUsername": "flutter_fan",
+    "text": "Кстати, на Flutter приложения собираются гораздо быстрее, чем на нативе"
+  }
+]

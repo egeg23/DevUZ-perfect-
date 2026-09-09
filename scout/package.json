@@ -1,0 +1,14 @@
+{
+  "name": "devuz-scout",
+  "private": true,
+  "type": "module",
+  "description": "Читатель публичных чатов. Отдельный пакет: сайту его зависимости не нужны.",
+  "scripts": {
+    "login": "node --import ../tests/alias-hook.mjs login.mjs",
+    "start": "node --import ../tests/alias-hook.mjs runner.mjs",
+    "dry-run": "node --import ../tests/alias-hook.mjs runner.mjs --dry-run"
+  },
+  "dependencies": {
+    "teleproto": "^1.0.0"
+  }
+}

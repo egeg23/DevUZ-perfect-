@@ -1,0 +1,22 @@
+[Unit]
+Description=Чтение публичных чатов для холодного поиска лидов
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/devuz/scout
+EnvironmentFile=/opt/devuz/.env
+ExecStart=/usr/bin/npm start
+
+# Долгоживущий слушатель, а не задача по расписанию: перезапускаем при
+# любом падении. Пауза, чтобы при неверной сессии не крутиться в цикле
+# сотни раз в минуту и не выглядеть для Telegram как перебор.
+Restart=always
+RestartSec=30
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
