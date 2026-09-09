@@ -18,6 +18,7 @@ export type AuditAction =
   | "lead.released"
   | "lead.status_changed"
   | "lead.contact_revealed"
+  | "lead.transcript_viewed"
   | "lead.auto_reminder_toggled"
   | "reminder.created"
   | "reminder.done"

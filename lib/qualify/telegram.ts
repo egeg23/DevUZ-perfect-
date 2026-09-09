@@ -1,6 +1,8 @@
+import { channelLabel } from "@/lib/contact";
 import { priorityBadge } from "@/lib/qualify/scoring";
-import type { ChatMessage, ContactKind, ScoredLead } from "@/lib/qualify/types";
+import type { ScoredLead } from "@/lib/qualify/types";
 import { localeLabel } from "@/lib/i18n";
+import { siteUrl } from "@/lib/seo";
 
 /**
  * Адрес Bot API.
@@ -28,77 +30,6 @@ export function esc(value: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-/**
- * Определяет тип контакта по тому, как он записан.
- *
- * Модель присылает свою классификацию, но полагаться только на неё нельзя:
- * ошибка здесь превращает рабочую ссылку в мёртвую, а менеджер в этот момент
- * уже нажал «Взять в работу» и ждёт, что чат откроется.
- */
-export function detectContactKind(handle: string): ContactKind {
-  const value = handle.trim();
-  if (!value) return "none";
-  if (value.includes("@") && value.includes(".") && !value.startsWith("@")) return "email";
-  if (/t\.me\//i.test(value) || value.startsWith("@")) return "telegram";
-  // Телефон: достаточно цифр и нет букв. Скобки, дефисы и пробелы обычны.
-  const digits = value.replace(/\D/g, "");
-  if (digits.length >= 7 && !/[a-zA-Zа-яА-Я]/.test(value)) return "phone";
-  return "telegram";
-}
-
-/**
- * Превращает контакт в ссылку, по которой открывается диалог в один тап.
- *
- * Это не украшение. Менеджер читает карточку с телефона: скопировать ник,
- * открыть поиск, вставить, найти — четыре действия, на каждом из которых
- * лид может подождать ещё пять минут.
- */
-/**
- * Что считается допустимым значением для ссылки.
- *
- * Проверяем по белому списку, а не чистим по чёрному. Контакт пишет
- * посетитель, то есть это недоверенный ввод, попадающий прямо в атрибут
- * href: попытка «вырезать опасное» рано или поздно пропустит форму, о
- * которой мы не подумали. Не прошло проверку — ссылки просто не будет,
- * контакт покажется текстом, и менеджер скопирует его руками.
- */
-const TELEGRAM_USERNAME = /^[A-Za-z0-9_]{4,32}$/;
-const PHONE_E164 = /^\+?\d{7,15}$/;
-const EMAIL = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
-
-function contactLink(lead: ScoredLead): { label: string; url: string | null } {
-  const raw = lead.contact_handle.trim();
-  if (!raw) return { label: "контакт не оставлен", url: null };
-
-  // Определяем по самой строке, а не по тому, что назвала модель. Она
-  // ошибается: в живом диалоге ник @bird_dasha был помечен как почта. Разбор
-  // строки детерминирован и опирается на то, что человек реально написал,
-  // поэтому именно он и решает. Значение от модели остаётся запасным — на
-  // случай, когда разбор ничего не распознал.
-  const detected = detectContactKind(raw);
-  const kind = detected !== "none"
-    ? detected
-    : (lead.contact_kind && lead.contact_kind !== "none" ? lead.contact_kind : "none");
-
-  if (kind === "telegram") {
-    const username = raw.replace(/^https?:\/\/t\.me\//i, "").replace(/^@/, "").trim();
-    return TELEGRAM_USERNAME.test(username)
-      ? { label: `@${username}`, url: `https://t.me/${username}` }
-      : { label: raw, url: null };
-  }
-
-  if (kind === "phone") {
-    const digits = raw.replace(/[^\d+]/g, "");
-    return PHONE_E164.test(digits) ? { label: raw, url: `tel:${digits}` } : { label: raw, url: null };
-  }
-
-  if (kind === "email") {
-    return EMAIL.test(raw) ? { label: raw, url: `mailto:${raw}` } : { label: raw, url: null };
-  }
-
-  return { label: raw, url: null };
 }
 
 function block(title: string, lines: string[]): string | null {
@@ -129,13 +60,20 @@ function clampHtml(text: string, limit = TELEGRAM_LIMIT): string {
  * Бриф по лиду для отдела продаж.
  *
  * Порядок продиктован тем, как его читают: менеджер открывает уведомление на
- * телефоне и должен за несколько секунд понять, кому писать, чего человек
- * хочет и с какой фразы начать. Поэтому контакт и суть запроса идут первыми,
- * заготовка сообщения — сразу следом, а формальная квалификация уходит вниз:
- * она нужна руководителю для отчёта, а не продавцу перед первым сообщением.
+ * телефоне и должен за несколько секунд понять, стоит ли браться, чего человек
+ * хочет и с какой фразы начать. Поэтому канал связи и суть запроса идут
+ * первыми, заготовка сообщения — сразу следом, а формальная квалификация
+ * уходит вниз: она нужна руководителю для отчёта, а не продавцу перед первым
+ * сообщением.
+ *
+ * Самого контакта и переписки в брифе нет — они за ссылкой на карточку,
+ * где их открытие остаётся в журнале. См. комментарий у строки канала.
  */
-export function formatLeadBrief(lead: ScoredLead, requestNo?: string): string {
-  const contact = contactLink(lead);
+export function formatLeadBrief(
+  lead: ScoredLead,
+  requestNo?: string,
+  cardUrl?: string | null,
+): string {
   const who = [lead.contact_name, lead.company].filter(Boolean).map(esc).join(" · ");
 
   const parts: string[] = [
@@ -146,16 +84,21 @@ export function formatLeadBrief(lead: ScoredLead, requestNo?: string): string {
     ...(requestNo ? [`🧾 Заявка <code>${esc(requestNo)}</code>`] : []),
     "",
     `👤 ${who || "имя не названо"}`,
-    contact.url
-      // esc() и здесь, поверх проверки по белому списку: два независимых
-      // барьера вместо одного, который однажды окажется дырявым.
-      ? `💬 <a href="${esc(contact.url)}">Написать: ${esc(contact.label)}</a>`
-      : `💬 <code>${esc(contact.label)}</code>`,
+    // Канал — да, сам контакт — нет. Общий чат отдела продаж читают все, кто
+    // в нём состоит, и читают навсегда: Telegram помнит историю, а вышедший
+    // из компании человек уносит её в своём клиенте. Раскрытие контакта
+    // должно оставлять след с именем и временем, а в чате следа не остаётся.
+    // Поэтому здесь только то, что менеджеру нужно для решения, — писать
+    // или звонить, — а ник и номер лежат в карточке за кнопкой.
+    `💬 ${esc(channelLabel(lead))} · контакт открывается в карточке`,
     // Это язык версии сайта, а не обязательно язык переписки: человек мог
     // открыть русскую страницу и писать по-узбекски. Формулировка честная,
     // чтобы менеджер не начал отвечать не на том языке, решив, что здесь
     // указан язык разговора.
     `🌐 Язык сайта: ${localeLabel[lead.locale]} · отвечайте на языке заготовки ниже`,
+    ...(cardUrl
+      ? ["", `🔗 <a href="${esc(cardUrl)}">Карточка: контакт и переписка</a>`]
+      : []),
     "",
     `<b>ЧТО ХОЧЕТ</b>`,
     esc(lead.summary.request || "не сформулировано"),
@@ -191,14 +134,6 @@ export function formatLeadBrief(lead: ScoredLead, requestNo?: string): string {
   );
 
   return clampHtml(parts.join("\n"));
-}
-
-/** Расшифровка диалога отдельным сообщением — на случай, если нужен контекст. */
-export function formatTranscript(messages: ChatMessage[]): string {
-  const body = messages
-    .map((m) => `${m.role === "user" ? "👤" : "🤖"} ${esc(m.content)}`)
-    .join("\n\n");
-  return `<b>Полная переписка</b>\n\n${body}`;
 }
 
 async function call(method: string, payload: unknown): Promise<boolean> {
@@ -239,12 +174,15 @@ export async function sendMessage(chatId: number | string, text: string): Promis
  */
 export async function sendLead(
   lead: ScoredLead,
-  transcript: ChatMessage[],
   leadId: string,
   requestNo?: string,
 ): Promise<boolean> {
   const chatId = process.env.TELEGRAM_SALES_CHAT_ID;
   if (!chatId) return false;
+
+  // "unsaved" приходит, когда лид не записался в базу: ссылка на карточку
+  // тогда ведёт в никуда, и честнее её не давать вовсе.
+  const cardUrl = leadId && leadId !== "unsaved" ? `${siteUrl}/admin/leads/${leadId}` : null;
 
   // Архивным лидам уведомление приходит беззвучно: горячие теряются в потоке
   // отказов, если каждый отказ тоже звенит.
@@ -252,7 +190,7 @@ export async function sendLead(
 
   const sent = await call("sendMessage", {
     chat_id: chatId,
-    text: formatLeadBrief(lead, requestNo),
+    text: formatLeadBrief(lead, requestNo, cardUrl),
     parse_mode: "HTML",
     disable_notification: silent,
     link_preview_options: { is_disabled: true },
@@ -266,22 +204,12 @@ export async function sendLead(
     },
   });
 
-  if (sent && transcript.length) {
-    // Telegram режет сообщения на 4096 символах. Обрезаем сами и говорим об
-    // этом прямо: молча оборванная переписка выглядит как потерянные данные.
-    const full = formatTranscript(transcript);
-    const text =
-      full.length > 3900 ? `${full.slice(0, 3900)}\n\n<i>…переписка обрезана</i>` : full;
-
-    await call("sendMessage", {
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-      disable_notification: true,
-      link_preview_options: { is_disabled: true },
-    });
-  }
-
+  // Стенограмма вторым сообщением сюда больше не уходит. Она читается в
+  // карточке, где видно, кто её открывал: переписка — это всё, что человек
+  // рассказал о своих деньгах, сроках и недовольстве прошлым подрядчиком,
+  // и место такому тексту не в чате, откуда его нельзя ни отозвать, ни
+  // потом узнать, кто его прочитал. Аргумент «нужен контекст» закрывается
+  // ссылкой на карточку в самом брифе.
   return sent;
 }
 

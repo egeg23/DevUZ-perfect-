@@ -75,19 +75,3 @@ export async function saveLead(
   return data?.id ?? null;
 }
 
-/** Отмечает, кто из менеджеров забрал лида — вызывается из вебхука Telegram. */
-export async function updateLeadStatus(
-  leadId: string,
-  status: "taken" | "dropped",
-  manager: string,
-): Promise<void> {
-  const db = client();
-  if (!db) return;
-
-  const { error } = await db
-    .from("leads")
-    .update({ status, assigned_to: manager, assigned_at: new Date().toISOString() })
-    .eq("id", leadId);
-
-  if (error) console.error("supabase update lead", error.message);
-}
