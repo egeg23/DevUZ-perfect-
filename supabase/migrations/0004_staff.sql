@@ -111,9 +111,15 @@ comment on table public.audit_events is
 -- принадлежат роли postgres, а service_role не может ни удалить триггер, ни
 -- изменить таблицу. Журнал, который можно подчистить, ничего не доказывает —
 -- а подчистка это ровно то, чем воспользовался бы человек, заметающий следы.
+--
+-- search_path закреплён пустым: функция ничего не ищет по имени, но
+-- незакреплённый search_path у той самой функции, которая стоит на защите
+-- журнала, — ровно та деталь, из-за которой потом спорят, была ли защита
+-- настоящей. Линтер Supabase ругается на это отдельным предупреждением.
 create or replace function public.audit_events_append_only()
 returns trigger
 language plpgsql
+set search_path = ''
 as $$
 begin
   raise exception 'audit_events: только добавление (попытка %)', tg_op;
