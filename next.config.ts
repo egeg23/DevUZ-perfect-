@@ -14,6 +14,19 @@ const config: NextConfig = {
     return key ? [{ source: `/${key}.txt`, destination: "/indexnow" }] : [];
   },
   async headers() {
+    // Отдельным списком, чтобы не повторять его для /admin и /admin/:path*.
+    const admin = [
+      // Закрывает индексацию, ничего не рассказывая о панели — в отличие от
+      // строки в robots.txt, которая публична и работает указателем.
+      // Мета-тег noindex в layout делает то же самое, но не действует на
+      // ответы, которые не HTML: server actions, редиректы, 404.
+      { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+      // Панель — это чужие контакты и переписка. no-store запрещает класть
+      // их и в кэш браузера: иначе страница лида остаётся на диске рабочего
+      // ноутбука и достаётся кнопкой «назад» уже после выхода из панели.
+      { key: "Cache-Control", value: "no-store, max-age=0" },
+    ];
+
     return [
       {
         source: "/:path*",
@@ -23,6 +36,11 @@ const config: NextConfig = {
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
         ],
       },
+      // Два правила, а не одно: `/admin/:path*` со звёздочкой в Next
+      // совпадает и с самим `/admin`, но полагаться на это — значит
+      // проверять догадку о матчере каждый раз при обновлении Next.
+      { source: "/admin", headers: admin },
+      { source: "/admin/:path*", headers: admin },
     ];
   },
 };

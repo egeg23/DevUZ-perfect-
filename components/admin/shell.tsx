@@ -13,6 +13,16 @@ const NAV = [
 ] as const;
 
 /**
+ * Разделы админа. Скрыты от менеджера не ради секретности — обе страницы
+ * всё равно начинаются с requireAdmin(), — а чтобы в меню не висели два
+ * пункта, которые у половины команды отвечают редиректом.
+ */
+const ADMIN_NAV = [
+  { href: "/admin/team", label: "Команда" },
+  { href: "/admin/audit", label: "Журнал" },
+] as const;
+
+/**
  * Каркас панели.
  *
  * Роль подписана рядом с именем намеренно: половина ошибок в таких панелях
@@ -33,12 +43,19 @@ export function AdminShell({
             DevUz · панель
           </Link>
 
-          <nav className="flex gap-4 text-sm">
+          <nav className="flex flex-wrap gap-4 text-sm">
             {NAV.map((item) => (
               <Link key={item.href} href={item.href} className="text-muted hover:text-text">
                 {item.label}
               </Link>
             ))}
+            {staff.role === "admin"
+              ? ADMIN_NAV.map((item) => (
+                  <Link key={item.href} href={item.href} className="text-faint hover:text-text">
+                    {item.label}
+                  </Link>
+                ))
+              : null}
           </nav>
 
           <div className="ml-auto flex items-center gap-3 text-sm">

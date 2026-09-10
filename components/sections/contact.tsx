@@ -19,12 +19,20 @@ export function ContactSection({ locale, dict }: { locale: Locale; dict: Diction
           description={dict.contact.description}
         />
 
+        {/* min-w-0 на колонках — не украшение.
+            Элемент грида по умолчанию получает min-width: auto, то есть не
+            даёт себя сжать уже собственного содержимого. Панель чата внутри
+            требует около 375 px, и на телефоне колонка распирала страницу
+            за край экрана: на 360 px документ уезжал вбок на 35 px, на
+            320 px — на 75. Заметно это только реальной прокруткой вбок:
+            body { overflow-x: hidden } тут не спасает, потому что прокрутку
+            в этом случае ведёт html, а не body. */}
         <div className="mt-14 grid gap-8 lg:grid-cols-[1.15fr_1fr]">
-          <Reveal>
+          <Reveal className="min-w-0">
             <ChatPanel locale={locale} dict={dict} />
           </Reveal>
 
-          <Reveal delay={120}>
+          <Reveal delay={120} className="min-w-0">
             <div className="rounded-2xl border border-line bg-surface p-7">
               <h3 className="text-[1.1rem] font-semibold">{dict.contact.formTitle}</h3>
               <div className="mt-5">

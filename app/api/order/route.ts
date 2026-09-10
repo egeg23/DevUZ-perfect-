@@ -55,6 +55,9 @@ export async function POST(request: Request) {
       contact: text(body.contact, 200),
       payment: text(body.payment, 20),
       comment: text(body.comment, 2000),
+      // === true, а не truthy: строка "false" из чужого клиента иначе
+      // прошла бы за согласие.
+      acceptedOffer: body.acceptedOffer === true,
     },
     clientIp(request),
   );

@@ -27,6 +27,25 @@ export type OrderCopy = {
   error: LocalizedText;
   required: LocalizedText;
   legal: LocalizedText;
+  /**
+   * Согласие с офертой — одной фразой с маркерами {offer} и {licence},
+   * на месте которых подставляются ссылки.
+   *
+   * Разбивать фразу на куски («до ссылки», «между», «после») не вышло:
+   * куски пришлось бы хранить с краевыми пробелами, а их запрещает
+   * проверка в tests/products.test.ts — и запрещает правильно, потому что
+   * невидимый пробел в конце строки не отличить от опечатки. К тому же
+   * порядок слов и пробелы вокруг связки в четырёх языках разные: в
+   * китайском между «与» и ссылкой пробел не нужен вовсе.
+   *
+   * Риск подстановки — потерянный при переводе маркер: он оставил бы
+   * покупателя без ссылки на договор, который тот принимает. Поэтому
+   * наличие обоих маркеров в каждом языке держит тест.
+   */
+  consent: LocalizedText;
+  consentOffer: LocalizedText;
+  consentLicence: LocalizedText;
+  consentRequired: LocalizedText;
 };
 
 export const orderCopy: OrderCopy = {
@@ -143,5 +162,29 @@ export const orderCopy: OrderCopy = {
     en: "We accept bank transfers from legal entities. We do not accept cryptocurrency as a means of payment — Uzbek law prohibits it.",
     uz: "Yuridik shaxslardan pul o‘tkazmasini qabul qilamiz. Kriptovalyutani to‘lov vositasi sifatida qabul qilmaymiz — buni O‘zbekiston qonunchiligi taqiqlaydi.",
     zh: "我们接受法人实体的银行转账。不接受加密货币作为支付方式 —— 乌兹别克斯坦法律禁止此类支付。",
+  },
+  consent: {
+    ru: "Я прочитал и принимаю {offer} и {licence}. Договор считается заключённым с момента оплаты счёта.",
+    en: "I have read and accept the {offer} and the {licence}. The contract is concluded when the invoice is paid.",
+    uz: "Men {offer} va {licence} bilan tanishdim va ularni qabul qilaman. Shartnoma hisob to‘langan paytdan tuzilgan hisoblanadi.",
+    zh: "我已阅读并接受{offer}与{licence}。合同自发票付款时成立。",
+  },
+  consentOffer: {
+    ru: "публичную оферту",
+    en: "public offer",
+    uz: "ommaviy oferta",
+    zh: "《公开要约》",
+  },
+  consentLicence: {
+    ru: "лицензию на программный код",
+    en: "source code licence",
+    uz: "dasturiy kod litsenziyasi",
+    zh: "《源代码许可》",
+  },
+  consentRequired: {
+    ru: "Без согласия с офертой заявку принять нельзя.",
+    en: "We cannot accept a request without acceptance of the offer.",
+    uz: "Oferta bilan rozilik bo‘lmasa, arizani qabul qilib bo‘lmaydi.",
+    zh: "未接受要约则无法受理申请。",
   },
 };
