@@ -20,7 +20,12 @@ import {
   typingIndicator,
 } from "@/lib/qualify/telegram";
 import { record } from "@/lib/admin/audit";
-import { setStatus, takeLead } from "@/lib/admin/ownership";
+import {
+  completeReminder,
+  setStatus,
+  snoozeReminder,
+  takeLead,
+} from "@/lib/admin/ownership";
 import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
@@ -598,19 +603,41 @@ async function handleGroup(message: NonNullable<Update["message"]>) {
  * не отдельным запросом. Две реализации одного правила разойдутся: гонку
  * за горячим лидом надёжно решает только условие внутри самого update, и
  * дублировать его во втором месте — значит однажды отдать лида двоим.
+ *
+ * Проверка места нажатия — по действию, а не одна на все кнопки. Раньше
+ * здесь стояло общее «только из чата отдела продаж», и это было верно,
+ * пока кнопки были одни: они висели под брифом. Кнопки напоминаний живут
+ * в личке сотрудника — под общее правило они не попадают ни при каких
+ * условиях, и с ним напоминание отвечало бы «Недоступно» своему же
+ * адресату.
  */
 async function handleButton(query: NonNullable<Update["callback_query"]>) {
   if (!query.data) return;
 
-  // Кнопки живут только под брифом, то есть в чате отдела продаж. Нажатие
-  // из любого другого места — либо ошибка, либо чужая попытка.
   const chatId = query.message?.chat.id;
+  const parts = query.data.split(":");
+
+  // Напоминания: личка сотрудника, и только своя.
+  if (parts[0] === "rem") {
+    if (chatId !== undefined && isSalesChat(chatId)) {
+      // Напоминание в общем чате означало бы, что личное дело менеджера
+      // читают все, — такого сообщения мы не отправляем, значит и нажатие
+      // оттуда пришло не от нас.
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    await handleReminderButton(query, parts[1] ?? "", parts[2] ?? "");
+    return;
+  }
+
+  // Кнопки под брифом живут только в чате отдела продаж. Нажатие из
+  // любого другого места — либо ошибка, либо чужая попытка.
   if (chatId !== undefined && !isSalesChat(chatId)) {
     await answerCallback(query.id, "Недоступно");
     return;
   }
 
-  const [action, leadId] = query.data.split(":");
+  const [action, leadId] = parts;
 
   if (action === "noop") {
     // Кнопка-статус под разобранным брифом: нажатие ничего не меняет, но
@@ -678,5 +705,63 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
   } catch (error) {
     console.error("telegram webhook", error);
     await answerCallback(query.id, "Не удалось обновить статус");
+  }
+}
+
+/** На сколько откладывает кнопка «+2 часа». */
+const SNOOZE_HOURS = 2;
+
+/**
+ * Кнопки под напоминанием: отложить и закрыть.
+ *
+ * Право проверяется не тем, что сообщение пришло в личку этого человека, —
+ * колбэк можно прислать и с чужой полезной нагрузкой. Оно проверяется в
+ * самом update: completeReminder и snoozeReminder дописывают условие по
+ * staff_id, и чужое напоминание просто не находится.
+ */
+async function handleReminderButton(
+  query: NonNullable<Update["callback_query"]>,
+  action: string,
+  reminderId: string,
+) {
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (!staff || !reminderId) {
+    await answerCallback(query.id, "Недоступно");
+    return;
+  }
+
+  // Адрес нажавшего неизвестен: запрос приходит с серверов Telegram.
+  const ip = "";
+
+  try {
+    if (action === "done") {
+      const ok = await completeReminder(reminderId, staff, ip);
+      await answerCallback(query.id, ok ? "Закрыто" : "Уже закрыто или не ваше");
+      if (ok && query.message) {
+        await markBriefHandled(query.message.chat.id, query.message.message_id, "✅ Закрыто");
+      }
+      return;
+    }
+
+    if (action === "snooze") {
+      const ok = await snoozeReminder(reminderId, staff, SNOOZE_HOURS, ip);
+      await answerCallback(
+        query.id,
+        ok ? `Напомню через ${SNOOZE_HOURS} часа` : "Уже закрыто или не ваше",
+      );
+      if (ok && query.message) {
+        await markBriefHandled(
+          query.message.chat.id,
+          query.message.message_id,
+          `🕑 Отложено на ${SNOOZE_HOURS} часа`,
+        );
+      }
+      return;
+    }
+
+    await answerCallback(query.id, "Неизвестная команда");
+  } catch (error) {
+    console.error("telegram webhook", error);
+    await answerCallback(query.id, "Не получилось");
   }
 }

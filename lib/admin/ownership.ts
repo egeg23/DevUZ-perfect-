@@ -302,9 +302,21 @@ export type Reminder = {
   kind: string;
   done_at: string | null;
   sent_at: string | null;
+  /** Сколько раз свип пытался доставить и не смог. */
+  attempts: number;
 };
 
-const REMINDER_COLUMNS = "id, lead_id, staff_id, due_at, note, kind, done_at, sent_at";
+const REMINDER_COLUMNS =
+  "id, lead_id, staff_id, due_at, note, kind, done_at, sent_at, attempts";
+
+/**
+ * После скольких неудач свип перестаёт пробовать.
+ *
+ * Совпадает с MAX_ATTEMPTS в app/api/reminders/sweep — здесь значение
+ * нужно, чтобы карточка показала «не доставлено» ровно тогда, когда свип
+ * действительно сдался, а не раньше.
+ */
+export const DELIVERY_GIVE_UP = 5;
 
 export async function createReminder(
   leadId: string,
@@ -386,6 +398,54 @@ export async function completeReminder(
     targetType: "lead",
     targetId: data.lead_id as string,
     ip,
+  });
+  return true;
+}
+
+/**
+ * Отложить напоминание.
+ *
+ * Отдельная функция, а не «закрыть и создать новое»: у отложенного
+ * напоминания должна остаться та же строка и та же история, иначе в
+ * карточке накапливается лесенка из закрытых напоминаний об одном и том
+ * же, и понять по ней, сколько раз человек откладывал разговор, нельзя.
+ *
+ * Счётчик попыток обнуляется вместе со сроком: прошлые неудачи доставки
+ * относились к прошлому сроку, и тащить их дальше — значит однажды
+ * получить напоминание, которое никогда не отправят.
+ */
+export async function snoozeReminder(
+  reminderId: string,
+  staff: Staff,
+  hours: number,
+  ip: string,
+): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  if (!Number.isFinite(hours) || hours <= 0 || hours > 24 * 30) return false;
+
+  const dueAt = new Date(Date.now() + hours * 3600_000).toISOString();
+
+  // Своё напоминание откладывает менеджер, чужое — только админ. То же
+  // правило, что и в completeReminder, и стоит оно в самом update.
+  let query = db
+    .from("lead_reminders")
+    .update({ due_at: dueAt, sent_at: null, attempts: 0, last_attempt_at: null })
+    .eq("id", reminderId)
+    .is("done_at", null)
+    .is("cancelled_at", null);
+
+  if (staff.role !== "admin") query = query.eq("staff_id", staff.id);
+
+  const { data, error } = await query.select("id, lead_id").maybeSingle();
+  if (error || !data) return false;
+
+  await record("reminder.created", {
+    actorStaffId: staff.id,
+    targetType: "lead",
+    targetId: data.lead_id as string,
+    ip,
+    meta: { snoozed_hours: hours, due_at: dueAt },
   });
   return true;
 }

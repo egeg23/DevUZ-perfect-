@@ -166,6 +166,31 @@ export async function sendMessage(chatId: number | string, text: string): Promis
   });
 }
 
+/** Кнопка под сообщением: либо ссылка, либо действие с полезной нагрузкой. */
+export type Button = { text: string } & ({ url: string } | { callback_data: string });
+
+/**
+ * То же сообщение, но с рядом кнопок.
+ *
+ * Ради напоминаний: разбирать их человек должен там, где он их читает.
+ * Напоминание без кнопок означает «открой панель, найди лид, нажми
+ * готово» — три действия вместо одного, и после третьего раза их
+ * перестают делать вовсе.
+ */
+export async function sendWithButtons(
+  chatId: number | string,
+  text: string,
+  buttons: Button[],
+): Promise<boolean> {
+  return call("sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+    reply_markup: { inline_keyboard: [buttons] },
+  });
+}
+
 /**
  * Отправляет бриф в чат отдела продаж.
  *

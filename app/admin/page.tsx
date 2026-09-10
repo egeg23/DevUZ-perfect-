@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/shell";
+import { SweepBanner } from "@/components/admin/sweep-banner";
 import { LeadTable } from "@/components/admin/lead-table";
 import { requireStaff } from "@/lib/admin/guard";
 import { PRIORITIES, STATUSES, leadCounts, listLeads } from "@/lib/admin/leads";
@@ -98,6 +99,11 @@ export default async function AdminHome({
 
   return (
     <AdminShell staff={staff}>
+      {/* Стоит выше всего остального намеренно: человек, у которого молча
+          перестали приходить напоминания, ничего об этом не знает, а
+          узнаёт по остывшему лиду через неделю. */}
+      <SweepBanner />
+
       {leads.offline ? (
         <p className="mb-6 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
           База недоступна. Это не «лидов нет» — это значит, что панель сейчас
