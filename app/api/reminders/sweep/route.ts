@@ -1,6 +1,8 @@
 import { record } from "@/lib/admin/audit";
+import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
+import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { purgeExpiredSignals } from "@/lib/scout/store";
-import { esc, sendMessage } from "@/lib/qualify/telegram";
+import { esc, sendWithButtons } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -22,6 +24,25 @@ export const dynamic = "force-dynamic";
  */
 const BATCH = 25;
 
+/**
+ * Сколько раз пробовать доставить одно напоминание.
+ *
+ * Пометка «отправлено» ставится только после успеха — иначе первый же сбой
+ * Telegram съедал бы напоминание навсегда. Обратная сторона: напоминание,
+ * которое доставить нельзя в принципе (менеджер заблокировал бота), при
+ * таймере в пять минут пересылалось бы вечно, каждый раз занимая место в
+ * пачке из двадцати пяти и вытесняя те, что дошли бы.
+ *
+ * Пять попыток — это около получаса. Дальше свип перестаёт пробовать, а
+ * панель показывает напоминание как недоставленное: молча уронить его в
+ * тишину хуже, чем показать человеку, что до него не достучались.
+ *
+ * Значение живёт в lib/admin/ownership рядом с типом напоминания: карточка
+ * должна рисовать «не доставлено» ровно тогда, когда свип сдался, и две
+ * несвязанные константы разъехались бы при первой же правке.
+ */
+const MAX_ATTEMPTS = DELIVERY_GIVE_UP;
+
 export async function POST(request: Request) {
   const expected = process.env.REMINDER_SWEEP_SECRET;
   const provided = request.headers.get("x-devuz-sweep");
@@ -31,26 +52,33 @@ export async function POST(request: Request) {
   }
 
   const db = serviceClient();
-  if (!db) return Response.json({ ok: false, error: "no-db" }, { status: 503 });
+  if (!db) {
+    // Здоровье писать некуда — база и есть то, что недоступно. Отвечаем
+    // честно, а таймер придёт через пять минут.
+    return Response.json({ ok: false, error: "no-db" }, { status: 503 });
+  }
 
   const now = new Date().toISOString();
   const { data, error } = await db
     .from("lead_reminders")
-    .select("id, lead_id, staff_id, due_at, note, kind")
+    .select("id, lead_id, staff_id, due_at, note, kind, attempts")
     .lte("due_at", now)
     .is("sent_at", null)
     .is("done_at", null)
     .is("cancelled_at", null)
+    .lt("attempts", MAX_ATTEMPTS)
     .order("due_at", { ascending: true })
     .limit(BATCH);
 
   if (error) {
     console.error("reminders: не прочитал очередь", error.message);
+    await recordFailure(`чтение очереди: ${error.message}`);
     return Response.json({ ok: false, error: "read" }, { status: 500 });
   }
 
   let sent = 0;
   let skipped = 0;
+  let failed = 0;
 
   for (const reminder of data ?? []) {
     const [staff, lead] = await Promise.all([
@@ -83,23 +111,42 @@ export async function POST(request: Request) {
       "без названия";
     const number = (lead.data?.request_no as string | null) ?? String(reminder.lead_id).slice(0, 8);
 
-    const ok = await sendMessage(
+    // Кнопки прямо под напоминанием: разбирать его человек должен там, где
+    // он его читает. «Открой панель, найди лид, отметь готово» — три
+    // действия вместо одного, и после третьего раза их перестают делать.
+    const ok = await sendWithButtons(
       staff.data.telegram_user_id as number,
       [
         "<b>Напоминание по лиду</b>",
         "",
         `<b>${esc(number)}</b> — ${esc(who)}`,
         reminder.note ? esc(String(reminder.note)) : "",
-        "",
-        `${siteUrl}/admin/leads/${reminder.lead_id}`,
       ]
         .filter(Boolean)
         .join("\n"),
+      [
+        // «Открыть» — ссылка, а не действие: карточку всё равно открывает
+        // браузер, и гонять это через колбэк значит ждать ответа сервера
+        // ради перехода, который Telegram сделает сам.
+        { text: "Открыть", url: `${siteUrl}/admin/leads/${reminder.lead_id}` },
+        { text: "+2 часа", callback_data: `rem:snooze:${reminder.id}` },
+        { text: "Готово", callback_data: `rem:done:${reminder.id}` },
+      ],
     );
 
     // Пометка «отправлено» ставится только после успеха. Иначе первый же
     // сбой Telegram молча съедал бы напоминание навсегда.
-    if (!ok) continue;
+    if (!ok) {
+      await db
+        .from("lead_reminders")
+        .update({
+          attempts: ((reminder.attempts as number | null) ?? 0) + 1,
+          last_attempt_at: new Date().toISOString(),
+        })
+        .eq("id", reminder.id as string);
+      failed += 1;
+      continue;
+    }
 
     await db
       .from("lead_reminders")
@@ -122,5 +169,24 @@ export async function POST(request: Request) {
   // однажды забудут включить на новом сервере.
   const purged = await purgeExpiredSignals();
 
-  return Response.json({ ok: true, sent, skipped, purged, queued: (data ?? []).length });
+  // Проход считается неудачным, только если не дошло вообще ничего из
+  // того, что пробовали. Одно недоставленное письмо при двадцати
+  // доставленных — это заблокировавший бота менеджер, а не авария, и
+  // будить владельца из-за него нельзя: разбуженный впустую перестаёт
+  // читать эти сообщения к третьему разу.
+  const attempted = sent + failed;
+  if (attempted > 0 && sent === 0) {
+    await recordFailure(`Telegram не принял ни одного из ${failed} напоминаний`);
+  } else {
+    await recordSuccess();
+  }
+
+  return Response.json({
+    ok: true,
+    sent,
+    skipped,
+    failed,
+    purged,
+    queued: (data ?? []).length,
+  });
 }

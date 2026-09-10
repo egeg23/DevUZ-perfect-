@@ -23,7 +23,13 @@ import { record } from "@/lib/admin/audit";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { STATUSES, leadById } from "@/lib/admin/leads";
 import { messagesFor } from "@/lib/admin/messages";
-import { canEdit, remindersFor, revealContact, revealTranscript } from "@/lib/admin/ownership";
+import {
+  DELIVERY_GIVE_UP,
+  canEdit,
+  remindersFor,
+  revealContact,
+  revealTranscript,
+} from "@/lib/admin/ownership";
 import { CONTACT_LABEL, contactLink } from "@/lib/contact";
 
 export const dynamic = "force-dynamic";
@@ -346,7 +352,13 @@ export default async function LeadPage({
               {open.map((item) => (
                 <li
                   key={item.id}
-                  className="flex flex-wrap items-center gap-3 rounded-lg border border-line-soft bg-surface-2 px-4 py-2.5 text-sm"
+                  className={`flex flex-wrap items-center gap-3 rounded-lg border px-4 py-2.5 text-sm ${
+                    item.attempts >= DELIVERY_GIVE_UP
+                      ? "border-gold/40 bg-gold/10"
+                      : Date.parse(item.due_at) < Date.now() && !item.sent_at
+                        ? "border-blue/40 bg-blue/5"
+                        : "border-line-soft bg-surface-2"
+                  }`}
                 >
                   <span className="font-mono text-xs text-blue-soft">{when(item.due_at)}</span>
                   <span className="text-muted">{item.note || "без пометки"}</span>
@@ -355,8 +367,19 @@ export default async function LeadPage({
                       авто
                     </span>
                   ) : null}
-                  {item.sent_at ? (
+                  {/* Три разных состояния, и их нельзя сливать. «Отправлено»
+                      — дошло. «Просрочено» — время вышло, свип ещё пробует.
+                      «Не доставлено» — свип сдался, и об этом нужно знать:
+                      напоминание, которое молча не дошло, хуже, чем его
+                      отсутствие, потому что человек на него рассчитывал. */}
+                  {item.attempts >= DELIVERY_GIVE_UP ? (
+                    <span className="text-[11px] font-semibold text-gold">
+                      не доставлено ({item.attempts} попыток) — проверьте, не заблокирован ли бот
+                    </span>
+                  ) : item.sent_at ? (
                     <span className="text-[11px] text-faint">отправлено</span>
+                  ) : Date.parse(item.due_at) < Date.now() ? (
+                    <span className="text-[11px] text-blue-soft">просрочено</span>
                   ) : null}
                   <form action={finishReminder} className="ml-auto">
                     <input type="hidden" name="lead" value={lead.id} />
