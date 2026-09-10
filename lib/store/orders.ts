@@ -46,7 +46,7 @@ export type OrderResult =
  * договариваться о ней всё равно человеку, и записанное число создавало бы
  * ложную определённость.
  */
-function priceFor(slug: string): number | null {
+export function priceFor(slug: string): number | null {
   const product = productBySlug(slug);
   if (!product) return null;
 
