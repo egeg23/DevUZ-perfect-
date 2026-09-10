@@ -64,6 +64,20 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
                   {dict.footer.privacy}
                 </Link>
               </li>
+              {/* Оферта и лицензия стоят в подвале, а не только у формы
+                  заказа: договор должен читаться до того, как человек решил
+                  покупать, — иначе «ознакомлен» означает «увидел ссылку в
+                  момент, когда уже нажимал кнопку». */}
+              <li>
+                <Link href={localeHref(locale, "offer")} className="text-[0.9rem] text-muted transition-colors hover:text-text">
+                  {dict.footer.offer}
+                </Link>
+              </li>
+              <li>
+                <Link href={localeHref(locale, "licence")} className="text-[0.9rem] text-muted transition-colors hover:text-text">
+                  {dict.footer.licence}
+                </Link>
+              </li>
             </ul>
           </div>
 

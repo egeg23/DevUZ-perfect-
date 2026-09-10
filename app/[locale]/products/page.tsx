@@ -64,13 +64,17 @@ export default async function ProductsPage({
 
         <div className="mt-14 grid gap-5 md:grid-cols-2">
           {products.map((product, i) => (
-            <Reveal key={product.slug} delay={i * 60}>
+            <Reveal key={product.slug} delay={i * 60} className="min-w-0">
               <Link
                 href={localeHref(locale, `products/${product.slug}`)}
                 className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-7 transition-colors hover:border-green/40"
               >
+                {/* min-w-0 на заголовке: без него он не даёт себя сжать
+                    уже собственного содержимого, а цена рядом стоит
+                    shrink-0 — и на 320 px строка распирала карточку за край
+                    экрана вместе со всей страницей. */}
                 <div className="flex items-start justify-between gap-4">
-                  <h2 className="text-xl font-bold">{t(product.title, locale)}</h2>
+                  <h2 className="min-w-0 text-xl font-bold">{t(product.title, locale)}</h2>
                   <span className="shrink-0 font-mono text-lg font-bold text-green">
                     {priceLabel(product.priceUsd, product.priceToUsd, dict.products.priceFrom)}
                   </span>

@@ -262,6 +262,8 @@ const ru = {
     contacts: "Контакты",
     rights: "Все права защищены",
     privacy: "Политика конфиденциальности",
+    offer: "Публичная оферта",
+    licence: "Лицензия на код",
     madeIn: "Сделано в Ташкенте",
   },
   about: {
@@ -535,6 +537,8 @@ const en: Dictionary = {
     contacts: "Contacts",
     rights: "All rights reserved",
     privacy: "Privacy policy",
+    offer: "Public offer",
+    licence: "Source code licence",
     madeIn: "Made in Tashkent",
   },
   about: {
@@ -802,6 +806,8 @@ const uz: Dictionary = {
     contacts: "Aloqa",
     rights: "Barcha huquqlar himoyalangan",
     privacy: "Maxfiylik siyosati",
+    offer: "Ommaviy oferta",
+    licence: "Kod litsenziyasi",
     madeIn: "Toshkentda yaratilgan",
   },
   about: {
@@ -1063,6 +1069,8 @@ const zh: Dictionary = {
     contacts: "联系方式",
     rights: "保留所有权利",
     privacy: "隐私政策",
+    offer: "公开要约",
+    licence: "源代码许可",
     madeIn: "塔什干出品",
   },
   about: {

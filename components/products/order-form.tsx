@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { orderCopy } from "@/content/order-form";
-import { t, type Locale } from "@/lib/i18n";
+import { localeHref, t, type Locale } from "@/lib/i18n";
 
 const FIELD =
   "mt-1 w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-text placeholder:text-faint focus:border-green/50 focus:outline-none";
@@ -43,6 +43,16 @@ export function OrderForm({
       return;
     }
 
+    // Проверка здесь — для того, чтобы человек увидел причину, а не для
+    // защиты: настоящий шлагбаум стоит на сервере (lib/store/orders.ts),
+    // потому что запрос в /api/order отправляется и мимо этой формы.
+    const accepted = form.get("acceptedOffer") === "on";
+    if (!accepted) {
+      setState("error");
+      setMessage(c("consentRequired"));
+      return;
+    }
+
     setState("sending");
     setMessage(null);
 
@@ -60,6 +70,7 @@ export function OrderForm({
           contact: form.get("contact"),
           payment: form.get("payment"),
           comment: form.get("comment"),
+          acceptedOffer: accepted,
           website: form.get("website"),
         }),
       });
@@ -160,10 +171,45 @@ export function OrderForm({
         </p>
       ) : null}
 
+      {/* Согласие стоит над кнопкой, а не под ней: то, что оказывается
+          ниже действия, читают уже после того, как действие совершено. */}
+      <label className="mt-6 flex max-w-xl cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          name="acceptedOffer"
+          required
+          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-green"
+        />
+        <span className="text-xs leading-relaxed text-muted">
+          {c("consent")
+            .split(/(\{offer\}|\{licence\})/)
+            .map((piece, i) => {
+              const doc =
+                piece === "{offer}" ? "offer" : piece === "{licence}" ? "licence" : null;
+              if (!doc) return <span key={i}>{piece}</span>;
+
+              return (
+                <a
+                  key={i}
+                  href={localeHref(locale, doc)}
+                  // Новая вкладка намеренно: договор читают долго, и
+                  // увести человека со страницы значит потерять
+                  // заполненную форму вместе с покупателем.
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green underline underline-offset-2 hover:text-white"
+                >
+                  {doc === "offer" ? c("consentOffer") : c("consentLicence")}
+                </a>
+              );
+            })}
+        </span>
+      </label>
+
       <button
         type="submit"
         disabled={state === "sending"}
-        className="mt-6 rounded-xl bg-green px-7 py-4 font-semibold text-ink transition-colors hover:bg-white disabled:opacity-60"
+        className="mt-5 block rounded-xl bg-green px-7 py-4 font-semibold text-ink transition-colors hover:bg-white disabled:opacity-60"
       >
         {state === "sending" ? c("sending") : c("submit")}
       </button>

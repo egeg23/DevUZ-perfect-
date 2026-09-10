@@ -1,3 +1,4 @@
+import { OFFER_VERSION } from "@/content/offer";
 import { asInet } from "@/lib/net";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
@@ -25,11 +26,13 @@ export type OrderInput = {
   contact: string;
   payment: string;
   comment: string;
+  /** Покупатель подтвердил, что принимает оферту и лицензию. */
+  acceptedOffer: boolean;
 };
 
 export type OrderResult =
   | { ok: true; requestNo: string }
-  | { ok: false; error: "unknown_product" | "missing_fields" | "storage" };
+  | { ok: false; error: "unknown_product" | "missing_fields" | "storage" | "offer_not_accepted" };
 
 /**
  * Цена берётся из каталога на сервере, а не из формы.
@@ -68,6 +71,15 @@ export async function createOrder(
     return { ok: false, error: "missing_fields" };
   }
 
+  // Проверка на сервере, а не только галочкой в форме.
+  //
+  // Оферта — это шлагбаум: до неё принимать деньги нельзя. Галочка,
+  // проверяемая только браузером, шлагбаумом не является — запрос в
+  // /api/order отправляется чем угодно, и первая же заявка мимо формы
+  // окажется заявкой без договора. Здесь заявка без согласия просто не
+  // создаётся.
+  if (!input.acceptedOffer) return { ok: false, error: "offer_not_accepted" };
+
   const payment = (PAYMENTS as readonly string[]).includes(input.payment)
     ? input.payment
     : "bank";
@@ -89,6 +101,10 @@ export async function createOrder(
       contact,
       payment,
       comment: input.comment.trim().slice(0, 2000) || null,
+      // Версия, а не просто «да»: текст оферты меняется, и через год
+      // «согласился с офертой» без указания редакции не значит ничего.
+      offer_version: OFFER_VERSION,
+      offer_accepted_at: new Date().toISOString(),
       ip: asInet(ip),
     });
 

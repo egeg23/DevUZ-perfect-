@@ -124,7 +124,11 @@ export function DevuzPreview({ snippets }: { snippets: PreviewSnippet[] }) {
           картинка, вставленная в середину страницы. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-green/10 blur-[90px]"
+        // По вертикали свечение выходит за рамку, по горизонтали — нет:
+        // на 320-390 px оно вылезало за край экрана на 4 px и страница
+        // ездила вбок. Вертикального разлёта хватает, чтобы блок читался
+        // как продолжение сцены сборки.
+        className="pointer-events-none absolute -inset-y-6 inset-x-0 -z-10 rounded-[2.5rem] bg-green/10 blur-[90px] sm:-inset-x-6"
       />
 
       <div className="overflow-hidden rounded-2xl border border-line bg-[#090d14]/95 shadow-[0_30px_90px_rgba(0,0,0,.7)]">
