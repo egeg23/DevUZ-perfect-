@@ -21,7 +21,10 @@ fi
 
 # Строка подключения лежит рядом с остальными секретами и в git не попадает.
 # shellcheck disable=SC1090
-SUPABASE_DB_URL="$(grep -E '^SUPABASE_DB_URL=' "$ENV_FILE" | cut -d= -f2-)"
+# `|| true` обязателен: при set -o pipefail конвейер возвращает код grep,
+# и если строки в .env нет, присваивание падает — вместе со всем скриптом,
+# молча и до того, как сработает проверка ниже с человеческим объяснением.
+SUPABASE_DB_URL="$(grep -E '^SUPABASE_DB_URL=' "$ENV_FILE" | cut -d= -f2- || true)"
 if [[ -z "${SUPABASE_DB_URL:-}" ]]; then
   echo "в $ENV_FILE нет SUPABASE_DB_URL — возьмите строку Session pooler из настроек проекта Supabase" >&2
   exit 1

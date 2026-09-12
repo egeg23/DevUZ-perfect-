@@ -14,7 +14,10 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
-SECRET="$(grep -E '^REMINDER_SWEEP_SECRET=' "$ENV_FILE" | cut -d= -f2-)"
+# `|| true` обязателен: при set -o pipefail конвейер возвращает код grep,
+# и если строки в .env нет, присваивание падает — вместе со всем скриптом,
+# молча и до того, как сработает проверка ниже с человеческим объяснением.
+SECRET="$(grep -E '^REMINDER_SWEEP_SECRET=' "$ENV_FILE" | cut -d= -f2- || true)"
 if [[ -z "${SECRET:-}" ]]; then
   echo "в $ENV_FILE нет REMINDER_SWEEP_SECRET — напоминания не рассылаются" >&2
   exit 1
