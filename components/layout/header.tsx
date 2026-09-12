@@ -44,14 +44,8 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
       )}
     >
       <Container className="flex h-[4.5rem] items-center gap-6">
-        {/* Слово «DevUz» прячется ровно там, где разворачивается меню.
-            Строка шире 1224 px не бывает — контейнер упирается в 1320 при
-            полях по 48, — а восемь пунктов, переключатель на четыре языка и
-            кнопка требуют по-русски 1278, по-узбекски 1315. Знак остаётся:
-            он и есть логотип, ссылка подписана для скринридера. Ниже xl
-            меню свёрнуто в бургер, места вдоволь, и слово возвращается. */}
         <Link href={localeHref(locale)} className="shrink-0" aria-label="DevUz Studio">
-          <Logo size={34} animated wordmarkClassName="xl:hidden" />
+          <Logo size={34} animated />
         </Link>
 
         {/* whitespace-nowrap — то, ради чего всё это: без него «Проверить
@@ -75,7 +69,7 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
 
         <div className="ml-auto flex items-center gap-3">
           <div className="hidden sm:block">
-            <LanguageSwitcher current={locale} />
+            <LanguageSwitcher current={locale} compact />
           </div>
           <Link
             href={localeHref(locale, "contact")}
