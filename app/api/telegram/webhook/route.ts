@@ -11,6 +11,7 @@ import {
   type BotSession,
 } from "@/lib/qualify/handoff";
 import { loginCommand } from "@/lib/qualify/commands";
+import { alreadyHandled } from "@/lib/qualify/seen-updates";
 import { shouldMissPromise } from "@/lib/qualify/promise";
 import {
   answerCallback,
@@ -46,6 +47,8 @@ type TelegramUser = {
 type TelegramChat = { id: number; type: string; title?: string; username?: string };
 
 type Update = {
+  /** Номер обновления. У повтора он тот же — по нему повтор и опознаётся. */
+  update_id?: number;
   message?: {
     text?: string;
     chat: TelegramChat;
@@ -91,6 +94,13 @@ export async function POST(request: Request) {
     update = await request.json();
   } catch {
     return new Response("bad request", { status: 400 });
+  }
+
+  // Повтор того же обновления — не работа, а подтверждение. Telegram
+  // присылает его, не дождавшись 200 вовремя, и без этой проверки каждая
+  // такая пересылка выписывала ещё одну одноразовую ссылку входа.
+  if (alreadyHandled(update.update_id)) {
+    return new Response("ok");
   }
 
   try {
