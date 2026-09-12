@@ -12,7 +12,7 @@ import { orderByToken, type OrderView } from "@/lib/store/order-view";
 import { downloadsLeft } from "@/lib/store/delivery";
 import { signDelivery } from "@/lib/store/delivery-token";
 import { currentRelease } from "@/lib/store/releases";
-import { missingBankVars, sellerBank } from "@/lib/store/requisites";
+import { sellerBank } from "@/lib/store/requisites";
 
 // Страница читает базу по токену из адреса — кэшировать здесь нечего и
 // опасно: закэшированный ответ одного покупателя показался бы другому.
@@ -145,15 +145,17 @@ export default async function OrderPage({
         <p>{c("lostLink")}</p>
       </div>
 
-      {/* Менеджеру, а не покупателю: строка видна только когда реквизиты не
-          заданы, и тогда счёт всё равно не выставить. Молчать об этом —
-          значит дать покупателю страницу, где кнопка счёта просто не
-          появляется без объяснения. */}
+      {/* Счёт выставлен, но напечатать его нечем. Молчать нельзя — покупатель
+          иначе видит страницу, где счёта просто нет, без объяснения.
+
+          Имена переменных окружения сюда не попадают намеренно: это чужой
+          человек, а не наш менеджер, и внутреннее устройство сайта его не
+          касается. Чего именно не хватает, написано в панели — там это и
+          нужно. */}
       {!bank && order.invoiceNo ? (
         <p className="mt-6 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-xs text-gold">
-          Счёт {order.invoiceNo} выставлен, но банковские реквизиты поставщика
-          не настроены ({missingBankVars().join(", ")}) — напечатать его нельзя.
-          Напишите нам, пришлём счёт вручную.
+          Счёт {order.invoiceNo} выставлен, но здесь он пока не отображается.
+          Напишите нам в Telegram — пришлём его сразу.
         </p>
       ) : null}
     </Shell>
