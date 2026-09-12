@@ -11,6 +11,7 @@ import {
   markOrderPaid,
   reissueOrderLink,
   reopenOrder,
+  revokeEntitlement,
   setOrderAmount,
 } from "@/lib/admin/orders";
 
@@ -71,6 +72,12 @@ export async function reopenOrderAction(formData: FormData) {
   const staff = await requireStaff();
   const ip = await requestIp();
   await run(() => reopenOrder(orderId(formData), staff, ip));
+}
+
+export async function revokeAccessAction(formData: FormData) {
+  const staff = await requireStaff();
+  const ip = await requestIp();
+  await run(() => revokeEntitlement(orderId(formData), staff, ip));
 }
 
 export async function setAmountAction(formData: FormData) {

@@ -7,6 +7,7 @@ import {
   markPaidAction,
   reissueLinkAction,
   reopenOrderAction,
+  revokeAccessAction,
   setAmountAction,
 } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
@@ -214,6 +215,14 @@ function OrderCard({ order }: { order: Order }) {
             <dd className="mt-0.5 text-xs">{when(order.delivered_at)}</dd>
           </div>
         ) : null}
+        {order.entitlement_version > 1 ? (
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-faint">Доступ</dt>
+            <dd className="mt-0.5 text-xs text-gold">
+              отзывался {order.entitlement_version - 1} раз(а)
+            </dd>
+          </div>
+        ) : null}
       </dl>
 
       {order.comment ? (
@@ -292,6 +301,18 @@ function OrderCard({ order }: { order: Order }) {
                 перевыпустить ссылку
               </button>
             </form>
+
+            {/* Отзыв доступа к файлам виден только там, где доступ есть:
+                у неоплаченной заявки скачивать нечего, и кнопка была бы
+                приглашением нажать не то. */}
+            {order.paid_at ? (
+              <form action={revokeAccessAction}>
+                <input type="hidden" name="order" value={order.id} />
+                <button type="submit" className={BTN_IDLE}>
+                  отозвать доступ к файлам
+                </button>
+              </form>
+            ) : null}
 
             <form action={cancelOrderAction}>
               <input type="hidden" name="order" value={order.id} />

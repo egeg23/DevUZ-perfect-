@@ -39,6 +39,10 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "order.reopened": "вернул заявку в работу",
   "order.amount_set": "проставил сумму сделки",
   "order.link_reissued": "перевыпустил ссылку покупателя",
+  "release.published": "выложил релиз продукта",
+  "download.served": "покупатель скачал файл",
+  "download.refused": "выдача файла отклонена",
+  "entitlement.revoked": "отозвал доступ к файлам",
   "signal.status_changed": "разобрал сигнал поиска",
   "staff.invited": "завёл сотрудника",
   "staff.disabled": "отключил сотрудника",
@@ -53,6 +57,7 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
  * в потоке входов и просмотров.
  */
 export const SENSITIVE: ReadonlySet<string> = new Set([
+  "entitlement.revoked",
   "order.paid",
   "order.link_reissued",
   "lead.contact_revealed",
