@@ -1,4 +1,4 @@
-import { addStaff, changeRole, disable } from "./actions";
+import { addStaff, changeRole, disable, resend } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { requireAdmin } from "@/lib/admin/guard";
@@ -18,6 +18,28 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
   failed: { text: "Не получилось.", tone: "warn" },
 };
 
+/**
+ * Что стало с приглашением.
+ *
+ * Показывается отдельно от результата действия, потому что это отдельная
+ * новость: сотрудник заведён в любом случае, но «он об этом знает» и «он об
+ * этом не знает» требуют от вас разного.
+ *
+ * `blocked` — почти всегда не сбой, а правило Telegram: бот не может
+ * написать первым тому, кто ему ни разу не писал. Обойти нечем, так
+ * задумано.
+ */
+const INVITE: Record<string, { text: string; tone: "ok" | "warn" }> = {
+  sent: { text: "Приглашение отправлено в Telegram — там написано, как войти.", tone: "ok" },
+  blocked: {
+    text:
+      "Приглашение не доставлено: бот не может написать первым тому, кто ему ещё не писал. " +
+      "Попросите человека открыть бота и нажать «Старт», затем нажмите «отправить приглашение» в его строке.",
+    tone: "warn",
+  },
+  no_bot: { text: "Бот не настроен — приглашение отправить нечем.", tone: "warn" },
+};
+
 const INPUT =
   "w-full rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
 const BUTTON =
@@ -26,16 +48,17 @@ const BUTTON =
 export default async function TeamPage({
   searchParams,
 }: {
-  searchParams: Promise<{ r?: string }>;
+  searchParams: Promise<{ r?: string; i?: string }>;
 }) {
   const admin = await requireAdmin();
-  const { r } = await searchParams;
+  const { r, i } = await searchParams;
   const team = await listTeam();
 
   const active = team.filter((m) => m.is_active);
   const gone = team.filter((m) => !m.is_active);
   const admins = active.filter((m) => m.role === "admin").length;
   const notice = r ? RESULT[r] : null;
+  const invite = i ? INVITE[i] : null;
 
   return (
     <AdminShell staff={admin}>
@@ -54,6 +77,18 @@ export default async function TeamPage({
           }`}
         >
           {notice.text}
+        </p>
+      ) : null}
+
+      {invite ? (
+        <p
+          className={`mt-2 rounded-xl border px-4 py-2.5 text-sm leading-relaxed ${
+            invite.tone === "ok"
+              ? "border-green/30 bg-green/10 text-green"
+              : "border-gold/30 bg-gold/10 text-gold"
+          }`}
+        >
+          {invite.text}
         </p>
       ) : null}
 
@@ -109,13 +144,24 @@ export default async function TeamPage({
                 </td>
                 <td className="px-4 py-3 text-xs text-faint">{when(member.created_at)}</td>
                 <td className="px-4 py-3">
-                  {member.id === admin.id ? null : (
-                    <DisableBlock
-                      id={member.id}
-                      name={member.display_name}
-                      handle={member.username}
-                    />
-                  )}
+                  <div className="flex flex-col items-start gap-2">
+                    {/* Доступна всегда, а не только после неудачи: прислать
+                        приглашение заново тому, кто его потерял, дешевле,
+                        чем объяснять по телефону, куда заходить. */}
+                    <form action={resend}>
+                      <input type="hidden" name="staff" value={member.id} />
+                      <button type="submit" className="text-xs text-faint hover:text-green">
+                        отправить приглашение
+                      </button>
+                    </form>
+                    {member.id === admin.id ? null : (
+                      <DisableBlock
+                        id={member.id}
+                        name={member.display_name}
+                        handle={member.username}
+                      />
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
