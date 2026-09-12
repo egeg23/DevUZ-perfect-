@@ -33,10 +33,10 @@ export const company = {
 
   address: {
     street: {
-      ru: "Ташкент",
-      en: "Tashkent",
-      uz: "Toshkent",
-      zh: "塔什干",
+      ru: "улица Шота Руставели, 138",
+      en: "138 Shota Rustaveli Street",
+      uz: "Shota Rustaveli ko‘chasi, 138",
+      zh: "肖塔·鲁斯塔韦利街 138 号",
     } satisfies LocalizedText,
     city: {
       ru: "Ташкент",
@@ -79,6 +79,22 @@ export const company = {
       zh: "个体工商户",
     } satisfies LocalizedText,
     pinfl: "32303946570039",
+
+    /**
+     * Адрес в реквизитах — не то же самое, что город в подвале.
+     *
+     * Оферта это договор, который заключается без подписи, и адрес стороны
+     * в нём обязателен: без него документ оспаривается по формальному
+     * признаку, а спорить придётся уже после того, как деньги пришли.
+     * Поэтому он живёт рядом с ПИНФЛ и попадает на все три юридические
+     * страницы разом — блок реквизитов у них общий.
+     */
+    address: {
+      ru: "Республика Узбекистан, г. Ташкент, улица Шота Руставели, 138",
+      en: "138 Shota Rustaveli Street, Tashkent, Republic of Uzbekistan",
+      uz: "O‘zbekiston Respublikasi, Toshkent shahri, Shota Rustaveli ko‘chasi, 138",
+      zh: "乌兹别克斯坦共和国塔什干市肖塔·鲁斯塔韦利街 138 号",
+    } satisfies LocalizedText,
   },
 } as const;
 

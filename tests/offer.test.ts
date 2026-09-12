@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { company } from "@/content/company";
 import { orderCopy } from "@/content/order-form";
 import { licence } from "@/content/licence";
 import { privacy } from "@/content/legal";
@@ -99,6 +100,26 @@ test("в согласии на каждом языке есть обе ссыл�
       1,
       `{licence} в ${locale} встречается не один раз`,
     );
+  }
+});
+
+/**
+ * Адрес — обязательный реквизит оферты.
+ *
+ * Договор без адреса стороны оспаривается по формальному признаку, и
+ * спорить придётся уже после того, как деньги пришли. Блок реквизитов у
+ * трёх юридических страниц общий, поэтому пропажа поля бьёт по всем разом
+ * и незаметно: на странице просто станет на строчку меньше.
+ */
+test("в реквизитах есть адрес на всех языках", () => {
+  const { legal } = company;
+  assert.ok("address" in legal, "адрес пропал из реквизитов");
+
+  for (const locale of locales) {
+    const value = (legal.address as Record<string, string>)[locale];
+    assert.ok(value?.trim(), `адрес не заполнен для ${locale}`);
+    // Не заглушка вроде одного города: в адресе должен быть дом.
+    assert.match(value, /\d/, `в адресе (${locale}) нет номера дома`);
   }
 });
 
