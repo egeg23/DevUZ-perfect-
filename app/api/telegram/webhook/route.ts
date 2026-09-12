@@ -10,6 +10,7 @@ import {
   startSession,
   type BotSession,
 } from "@/lib/qualify/handoff";
+import { loginCommand } from "@/lib/qualify/commands";
 import { shouldMissPromise } from "@/lib/qualify/promise";
 import {
   answerCallback,
@@ -100,7 +101,13 @@ export async function POST(request: Request) {
       // сотрудник из своей лички, а личка сотрудника для остального кода —
       // либо чат отдела продаж, либо обычный клиент. И в том и в другом
       // случае /login разобрали бы неправильно.
-      if (chat.type === "private" && (update.message.text ?? "").trim().startsWith("/login")) {
+      // toLowerCase обязателен, и это не придирка к стилю. Клавиатура
+      // телефона сама делает первую букву заглавной, человек отправляет
+      // «/Login», и без приведения регистра команда не совпадает ни с чем:
+      // бот молчит, а сотрудник видит, что вход сломался. Остальные команды
+      // приводятся к нижнему регистру с самого начала — эта была
+      // единственной, которая этого не делала.
+      if (chat.type === "private" && loginCommand(update.message.text)) {
         await handleStaffLogin(update.message);
         return new Response("ok");
       }
@@ -503,6 +510,22 @@ async function handleSales(message: NonNullable<Update["message"]>) {
   const text = (message.text ?? "").trim().toLowerCase();
   const chat = message.chat;
 
+  // Вход из общего чата не выдаём никогда: ссылка одноразовая, но она
+  // появилась бы на экране у всех, кто в чате. Зато и молчать нельзя —
+  // молчание в ответ на команду читается как «бот сломался», и человек
+  // идёт не в личку, а к владельцу. Отвечаем только своим: для
+  // постороннего команда остаётся без ответа, как и была.
+  if (loginCommand(message.text)) {
+    const staff = message.from?.id ? await staffByTelegramId(message.from.id) : null;
+    if (staff) {
+      await sendMessage(
+        chat.id,
+        "Вход выдаётся только в личке — ссылка одноразовая, и здесь её увидели бы все. Напишите мне <code>/login</code> личным сообщением.",
+      );
+    }
+    return;
+  }
+
   // Переход с сайта в чат отдела продаж. Так бывает ровно в одном случае:
   // владелец проверяет переезд разговора со своего же аккаунта, а его личный
   // чат и назначен чатом отдела продаж. Клиентский диалог здесь не ведётся
@@ -565,6 +588,20 @@ async function handleSales(message: NonNullable<Update["message"]>) {
  */
 async function handleGroup(message: NonNullable<Update["message"]>) {
   const text = (message.text ?? "").trim().toLowerCase();
+
+  // Та же подсказка, что и в чате продаж, и по той же причине: сотрудник
+  // мог перепутать окно. Постороннему — тишина.
+  if (loginCommand(message.text)) {
+    const staff = message.from?.id ? await staffByTelegramId(message.from.id) : null;
+    if (staff) {
+      await sendMessage(
+        message.chat.id,
+        "Вход выдаётся только в личке. Напишите мне <code>/login</code> личным сообщением.",
+      );
+    }
+    return;
+  }
+
   if (!text.startsWith("/id") && !text.startsWith("/start")) return;
 
   // Если отдел продаж уже настроен, подсказка по настройке никому здесь не
