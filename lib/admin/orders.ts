@@ -3,6 +3,7 @@ import type { Staff } from "@/lib/admin/session";
 import { hashAccessToken, newAccessToken, newBindCode } from "@/lib/store/access";
 import { ORDER_STATUSES, orderUrlFor } from "@/lib/store/orders";
 import { isLocale, type Locale } from "@/lib/i18n";
+import { notifyBuyer } from "@/lib/store/buyer";
 import { serviceClient } from "@/lib/supabase";
 
 export type Order = {
@@ -236,6 +237,11 @@ export async function issueInvoice(
     ip,
     meta: { invoice_no: invoiceNo, amount_usd: before.price_usd },
   });
+
+  // Уведомление после журнала и после ответа базе: оно не должно решать
+  // судьбу операции. Счёт выставлен независимо от того, доехало ли
+  // сообщение, и notifyBuyer это знает — он никогда не бросает.
+  await notifyBuyer(orderId, "invoiced");
   return OK;
 }
 
@@ -282,6 +288,11 @@ export async function markOrderPaid(
     ip,
     meta: { ref: reference, amount_usd: before.price_usd },
   });
+
+  // Самое ценное уведомление во всей цепочке: оно закрывает тишину между
+  // «перевёл деньги» и «получил доступ», ради которой покупатель и пишет
+  // менеджеру среди ночи.
+  await notifyBuyer(orderId, "paid");
   return OK;
 }
 
@@ -315,6 +326,8 @@ export async function markOrderDelivered(
     targetId: orderId,
     ip,
   });
+
+  await notifyBuyer(orderId, "delivered");
   return OK;
 }
 
@@ -342,6 +355,8 @@ export async function cancelOrder(
     ip,
     meta: { from: before.status },
   });
+
+  await notifyBuyer(orderId, "cancelled");
   return OK;
 }
 

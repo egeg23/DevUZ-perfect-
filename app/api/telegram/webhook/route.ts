@@ -1,7 +1,8 @@
 import { after } from "next/server";
 
 import { botCopy } from "@/content/bot";
-import { matchLocale, type Locale } from "@/lib/i18n";
+import { buyerBot } from "@/content/buyer-bot";
+import { matchLocale, t, type Locale } from "@/lib/i18n";
 import { runQualifyTurn } from "@/lib/qualify/engine";
 import {
   claimHandoff,
@@ -13,6 +14,7 @@ import {
   type BotSession,
 } from "@/lib/qualify/handoff";
 import { loginCommand } from "@/lib/qualify/commands";
+import { BIND_PREFIX, bindBuyer, buyerMessage } from "@/lib/store/buyer";
 import { alreadyHandled } from "@/lib/qualify/seen-updates";
 import { shouldMissPromise } from "@/lib/qualify/promise";
 import {
@@ -269,6 +271,25 @@ async function handleClient(message: NonNullable<Update["message"]>) {
 
   if (text.startsWith("/start")) {
     const payload = text.slice("/start".length).trim();
+
+    // Привязка заказа проверяется раньше передачи диалога с сайта: у
+    // payload теперь два вида, и различает их префикс. Без этой развилки
+    // код привязки ушёл бы в resumeFromSite как токен разговора и там
+    // молча не нашёлся бы — покупатель нажал бы кнопку и не получил ничего.
+    if (payload.startsWith(BIND_PREFIX)) {
+      const order = await bindBuyer(payload.slice(BIND_PREFIX.length), chat.id);
+      await sendMessage(
+        chat.id,
+        order
+          ? buyerMessage("bound", order.locale, {
+              requestNo: order.requestNo,
+              productSlug: order.productSlug,
+            })
+          : t(buyerBot.unknownCode, locale),
+      );
+      return;
+    }
+
     if (payload) {
       await resumeFromSite(chat.id, payload, message.from, locale);
       return;

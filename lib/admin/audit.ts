@@ -42,6 +42,7 @@ export const AUDIT_ACTIONS = [
   "download.served",
   "download.refused",
   "entitlement.revoked",
+  "order.nudged",
   "signal.status_changed",
   "staff.invited",
   "staff.disabled",
