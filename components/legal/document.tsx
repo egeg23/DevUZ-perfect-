@@ -17,6 +17,7 @@ const LABEL: Record<string, Record<Locale, string>> = {
   name: { ru: "Наименование", en: "Legal name", uz: "Nomi", zh: "名称" },
   form: { ru: "Правовая форма", en: "Legal form", uz: "Huquqiy shakl", zh: "组织形式" },
   pinfl: { ru: "ПИНФЛ", en: "PINFL", uz: "PINFL", zh: "自然人识别码（PINFL）" },
+  address: { ru: "Адрес", en: "Address", uz: "Manzil", zh: "地址" },
   contact: { ru: "Связь", en: "Contact", uz: "Aloqa", zh: "联系方式" },
 };
 
@@ -38,6 +39,7 @@ export function LegalDocument({ doc, locale }: { doc: LegalDoc; locale: Locale }
         <Requisite label={LABEL.pinfl[locale]} mono>
           {company.legal.pinfl}
         </Requisite>
+        <Requisite label={LABEL.address[locale]}>{t(company.legal.address, locale)}</Requisite>
         <Requisite label={LABEL.contact[locale]}>
           <a
             href={company.telegramUrl}
