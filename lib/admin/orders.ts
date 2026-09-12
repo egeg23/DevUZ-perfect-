@@ -121,7 +121,9 @@ async function currentOrder(orderId: string) {
 
   const { data } = await db
     .from("orders")
-    .select("id, status, price_usd, locale, invoice_no, invoice_issued_at, paid_at, delivered_at")
+    .select(
+      "id, status, price_usd, locale, invoice_no, invoice_issued_at, paid_at, delivered_at, entitlement_version",
+    )
     .eq("id", orderId)
     .maybeSingle();
 
@@ -134,6 +136,7 @@ async function currentOrder(orderId: string) {
     invoice_issued_at: string | null;
     paid_at: string | null;
     delivered_at: string | null;
+    entitlement_version: number;
   } | null;
 }
 
@@ -430,4 +433,47 @@ export async function reissueOrderLink(
   });
 
   return { ok: true, url: orderUrlFor(token, locale) };
+}
+
+/**
+ * Отозвать доступ к файлам.
+ *
+ * Один UPDATE: токен выдачи подписан в том числе версией права, и с её
+ * инкрементом все выданные ссылки перестают проходить проверку. В
+ * хранилище при этом не ходим и файлы не трогаем — отзыв не должен зависеть
+ * от доступности стороннего сервиса.
+ *
+ * Уже выпущенные подписанные ссылки Supabase живут свою минуту и умирают
+ * сами. Отозвать их нельзя (это подтверждает документация хранилища), и
+ * именно поэтому покупателю они никогда не выдаются напрямую.
+ *
+ * Страницу заказа и счёт отзыв не трогает: покупатель, у которого спор по
+ * лицензии, не должен заодно потерять собственные документы.
+ */
+export async function revokeEntitlement(
+  orderId: string,
+  staff: Staff,
+  ip: string,
+): Promise<OpResult> {
+  const db = serviceClient();
+  if (!db) return fail("Нет базы.");
+
+  const before = await currentOrder(orderId);
+  if (!before) return fail("Заявка не найдена.");
+
+  const next = (before.entitlement_version ?? 1) + 1;
+  const { error } = await db
+    .from("orders")
+    .update({ entitlement_version: next, assigned_staff_id: staff.id })
+    .eq("id", orderId);
+  if (error) return fail(error.message);
+
+  await record("entitlement.revoked", {
+    actorStaffId: staff.id,
+    targetType: "order",
+    targetId: orderId,
+    ip,
+    meta: { from: before.entitlement_version, to: next },
+  });
+  return OK;
 }

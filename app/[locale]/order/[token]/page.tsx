@@ -9,6 +9,9 @@ import { orderPage } from "@/content/order-page";
 import { productBySlug } from "@/content/products";
 import { isLocale, localeHref, t, type Locale } from "@/lib/i18n";
 import { orderByToken, type OrderView } from "@/lib/store/order-view";
+import { downloadsLeft } from "@/lib/store/delivery";
+import { signDelivery } from "@/lib/store/delivery-token";
+import { currentRelease } from "@/lib/store/releases";
 import { missingBankVars, sellerBank } from "@/lib/store/requisites";
 
 // Страница читает базу по токену из адреса — кэшировать здесь нечего и
@@ -98,6 +101,8 @@ export default async function OrderPage({
         </div>
       ) : null}
 
+      {!cancelled && order.paidAt ? <Download order={order} locale={locale} /> : null}
+
       {!cancelled && order.bindCode ? (
         <section className="mt-8 rounded-2xl border border-line bg-surface px-5 py-5">
           <h2 className="font-medium">{c("telegram")}</h2>
@@ -153,6 +158,104 @@ export default async function OrderPage({
       ) : null}
     </Shell>
   );
+}
+
+/**
+ * Выдача файла.
+ *
+ * Ссылка ведёт на наш маршрут, а не на хранилище. Подписанная ссылка
+ * Supabase не отзывается ничем, кроме обращения в поддержку, и может
+ * пережить собственный срок годности в кэше CDN — отдать её покупателю
+ * значило бы отдать доступ навсегда. Наш маршрут проверяет права на каждый
+ * клик и выпускает минутную ссылку заново.
+ */
+async function Download({ order, locale }: { order: OrderView; locale: Locale }) {
+  const c = (key: keyof typeof orderPage) => t(orderPage[key], locale);
+
+  const release = await currentRelease(order.productSlug);
+  if (!release) {
+    return (
+      <section className="mt-8 rounded-2xl border border-line bg-surface px-5 py-5">
+        <h2 className="font-medium">{c("download")}</h2>
+        <p className="mt-1 text-sm text-muted">{c("downloadPreparing")}</p>
+      </section>
+    );
+  }
+
+  const token = signDelivery({
+    orderId: order.id,
+    productSlug: order.productSlug,
+    entitlementVersion: order.entitlementVersion,
+  });
+
+  // Секрет подписи не задан — ссылку выдать нечем, и показывать кнопку,
+  // которая ведёт в 503, хуже, чем честно сказать «готовим».
+  if (!token) {
+    return (
+      <section className="mt-8 rounded-2xl border border-line bg-surface px-5 py-5">
+        <h2 className="font-medium">{c("download")}</h2>
+        <p className="mt-1 text-sm text-muted">{c("downloadPreparing")}</p>
+      </section>
+    );
+  }
+
+  const left = await downloadsLeft(order.id);
+
+  return (
+    <section className="mt-8 rounded-2xl border border-green/30 bg-green/5 px-5 py-5">
+      <h2 className="font-medium text-green">{c("download")}</h2>
+      <p className="mt-1 text-sm text-muted">{c("deliveredHint")}</p>
+
+      <dl className="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+        <div>
+          <dt className="text-xs uppercase tracking-wider text-faint">{c("downloadVersion")}</dt>
+          <dd className="mt-0.5 font-mono">{release.version}</dd>
+        </div>
+        {release.bytes !== null ? (
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-faint">{c("downloadSize")}</dt>
+            <dd className="mt-0.5 font-mono">{humanBytes(release.bytes)}</dd>
+          </div>
+        ) : null}
+      </dl>
+
+      <a
+        href={`/api/download/${token}`}
+        className="mt-5 inline-flex rounded-xl bg-green px-5 py-2.5 text-sm font-medium text-ink transition hover:brightness-110"
+      >
+        {c("downloadFile")}
+      </a>
+
+      {left ? (
+        <p className="mt-3 text-xs leading-relaxed text-faint">
+          {c("downloadLeft")
+            .replace("{total}", String(left.total))
+            .replace("{today}", String(left.today))}
+        </p>
+      ) : null}
+
+      {release.sha256 ? (
+        <div className="mt-4 border-t border-green/20 pt-4">
+          <p className="text-xs uppercase tracking-wider text-faint">{c("downloadChecksum")}</p>
+          <p className="mt-1 break-all font-mono text-xs">{release.sha256}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-faint">{c("downloadChecksumHint")}</p>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/** Размер человеку, а не в байтах: «209 715 200» ни о чём не говорит. */
+function humanBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} Б`;
+  const units = ["КБ", "МБ", "ГБ"];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(value < 10 ? 1 : 0)} ${units[unit]}`;
 }
 
 function Shell({ children }: { children: React.ReactNode }) {

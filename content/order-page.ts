@@ -64,6 +64,15 @@ export type OrderPageCopy = {
   telegramHint: LocalizedText;
   keepLink: LocalizedText;
   lostLink: LocalizedText;
+  download: LocalizedText;
+  downloadFile: LocalizedText;
+  downloadVersion: LocalizedText;
+  downloadSize: LocalizedText;
+  downloadChecksum: LocalizedText;
+  downloadChecksumHint: LocalizedText;
+  /** Остаток выдач. {total} и {today} подставляются числами. */
+  downloadLeft: LocalizedText;
+  downloadPreparing: LocalizedText;
   documents: LocalizedText;
   offer: LocalizedText;
   licence: LocalizedText;
@@ -233,6 +242,29 @@ export const orderPage: OrderPageCopy = {
     en: "Lost the link? Message us on Telegram with your order number. A manager reissues it: there is deliberately no automatic lookup by number, otherwise the number could be guessed.",
     uz: "Havolani yo‘qotdingizmi — Telegramda yozing va buyurtma raqamini ayting. Havolani menejer qayta chiqaradi: raqam bo‘yicha avtomatik berish ataylab yo‘q, aks holda raqamni topib olish mumkin bo‘lardi.",
     zh: "链接丢失？请在 Telegram 上联系我们并提供订单号。由客户经理重新签发：我们有意不提供按订单号自动查询，否则订单号可能被猜到。",
+  },
+  download: { ru: "Скачать код", en: "Download the code", uz: "Kodni yuklab olish", zh: "下载代码" },
+  downloadFile: { ru: "Скачать архив", en: "Download archive", uz: "Arxivni yuklash", zh: "下载压缩包" },
+  downloadVersion: { ru: "Версия", en: "Version", uz: "Versiya", zh: "版本" },
+  downloadSize: { ru: "Размер", en: "Size", uz: "Hajmi", zh: "大小" },
+  downloadChecksum: { ru: "Контрольная сумма", en: "Checksum", uz: "Nazorat yig‘indisi", zh: "校验和" },
+  downloadChecksumHint: {
+    ru: "Сверьте её после скачивания: так вы убедитесь, что получили ровно тот архив, который мы отдали.",
+    en: "Check it after downloading: that is how you confirm you got exactly the archive we handed over.",
+    uz: "Yuklab olgandan keyin solishtiring: shunda biz bergan arxivning aynan o‘zini olganingizga ishonch hosil qilasiz.",
+    zh: "下载后请核对：这样即可确认您收到的正是我们交付的压缩包。",
+  },
+  downloadLeft: {
+    ru: "Осталось скачиваний: {total} всего, {today} сегодня. Повторный клик по тому же файлу в течение десяти минут не расходует лимит.",
+    en: "Downloads left: {total} in total, {today} today. Clicking the same file again within ten minutes does not use up the limit.",
+    uz: "Qolgan yuklab olishlar: jami {total}, bugun {today}. O‘sha faylni o‘n daqiqa ichida qayta bosish limitni sarflamaydi.",
+    zh: "剩余下载次数：共 {total} 次，今日 {today} 次。十分钟内重复点击同一文件不消耗次数。",
+  },
+  downloadPreparing: {
+    ru: "Файл готовим. Напишите нам, если ждёте дольше суток.",
+    en: "We are preparing the file. Message us if you have been waiting more than a day.",
+    uz: "Faylni tayyorlayapmiz. Bir kundan ko‘p kutayotgan bo‘lsangiz, bizga yozing.",
+    zh: "文件正在准备中。如果等待超过一天，请联系我们。",
   },
   documents: { ru: "Документы", en: "Documents", uz: "Hujjatlar", zh: "文件" },
   offer: { ru: "Публичная оферта", en: "Public offer", uz: "Ommaviy oferta", zh: "公开要约" },
