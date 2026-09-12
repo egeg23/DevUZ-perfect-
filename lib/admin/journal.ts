@@ -44,6 +44,7 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "download.refused": "выдача файла отклонена",
   "entitlement.revoked": "отозвал доступ к файлам",
   "order.nudged": "свип напомнил о заявке",
+  "prospect.audited": "проверил сайты для холодного касания",
   "signal.status_changed": "разобрал сигнал поиска",
   "staff.invited": "завёл сотрудника",
   "staff.disabled": "отключил сотрудника",
