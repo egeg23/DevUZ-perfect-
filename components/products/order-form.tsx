@@ -28,6 +28,8 @@ export function OrderForm({
 }) {
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [requestNo, setRequestNo] = useState<string | null>(null);
+  const [orderUrl, setOrderUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const c = (key: keyof typeof orderCopy) => t(orderCopy[key], locale);
@@ -75,10 +77,15 @@ export function OrderForm({
         }),
       });
 
-      const data = (await response.json()) as { ok?: boolean; requestNo?: string };
+      const data = (await response.json()) as {
+        ok?: boolean;
+        requestNo?: string;
+        orderUrl?: string | null;
+      };
       if (!response.ok || !data.ok) throw new Error("failed");
 
       setRequestNo(data.requestNo ?? null);
+      setOrderUrl(data.orderUrl ?? null);
       setState("done");
     } catch {
       setState("error");
@@ -94,6 +101,41 @@ export function OrderForm({
           <p className="mt-2 font-mono text-2xl">{requestNo}</p>
         ) : null}
         <p className="mt-2 max-w-xl text-sm text-muted">{c("doneHint")}</p>
+
+        {/* Ссылка есть не всегда: если запись в базу не прошла, заявка всё
+            равно принята и ушла менеджеру, но открывать по ссылке нечего.
+            Показать в этом случае битый адрес было бы хуже, чем не показать
+            ничего. */}
+        {orderUrl ? (
+          <div className="mt-6 border-t border-green/20 pt-5">
+            <p className="text-xs uppercase tracking-wider text-faint">{c("yourPage")}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <a
+                href={orderUrl}
+                className="min-w-0 flex-1 break-all font-mono text-sm text-green hover:underline"
+              >
+                {orderUrl}
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  // Без await и без catch: не скопировалось — ссылка рядом,
+                  // её видно и можно выделить руками. Ронять страницу из-за
+                  // отказа буфера обмена (а он отказывает в http и в части
+                  // мобильных браузеров) незачем.
+                  navigator.clipboard?.writeText(orderUrl).then(
+                    () => setCopied(true),
+                    () => setCopied(false),
+                  );
+                }}
+                className="shrink-0 rounded-lg border border-green/30 px-3 py-1.5 text-xs text-green transition hover:bg-green/10"
+              >
+                {copied ? c("copied") : c("copyLink")}
+              </button>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-faint">{c("savePage")}</p>
+          </div>
+        ) : null}
       </div>
     );
   }

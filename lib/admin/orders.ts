@@ -1,6 +1,8 @@
 import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
-import { ORDER_STATUSES } from "@/lib/store/orders";
+import { hashAccessToken, newAccessToken, newBindCode } from "@/lib/store/access";
+import { ORDER_STATUSES, orderUrlFor } from "@/lib/store/orders";
+import { isLocale, type Locale } from "@/lib/i18n";
 import { serviceClient } from "@/lib/supabase";
 
 export type Order = {
@@ -20,6 +22,13 @@ export type Order = {
   status: string;
   assigned_staff_id: string | null;
   owner_name: string | null;
+  invoice_no: string | null;
+  invoice_issued_at: string | null;
+  paid_at: string | null;
+  paid_ref: string | null;
+  delivered_at: string | null;
+  buyer_chat_id: number | null;
+  entitlement_version: number;
 };
 
 /**
@@ -33,7 +42,7 @@ export type Order = {
  * защищал бы клиента от нас в тот момент, когда он сам к нам пришёл.
  */
 const COLUMNS =
-  "id, created_at, request_no, product_slug, price_usd, locale, company, tax_id, country, contact_name, contact, payment, comment, status, assigned_staff_id, staff(display_name)";
+  "id, created_at, request_no, product_slug, price_usd, locale, company, tax_id, country, contact_name, contact, payment, comment, status, assigned_staff_id, invoice_no, invoice_issued_at, paid_at, paid_ref, delivered_at, buyer_chat_id, entitlement_version, staff(display_name)";
 
 function shape(row: Record<string, unknown>): Order {
   const joined = row.staff as unknown;
@@ -59,6 +68,13 @@ function shape(row: Record<string, unknown>): Order {
     status: row.status as string,
     assigned_staff_id: (row.assigned_staff_id as string | null) ?? null,
     owner_name: owner?.display_name ?? null,
+    invoice_no: (row.invoice_no as string | null) ?? null,
+    invoice_issued_at: (row.invoice_issued_at as string | null) ?? null,
+    paid_at: (row.paid_at as string | null) ?? null,
+    paid_ref: (row.paid_ref as string | null) ?? null,
+    delivered_at: (row.delivered_at as string | null) ?? null,
+    buyer_chat_id: (row.buyer_chat_id as number | null) ?? null,
+    entitlement_version: (row.entitlement_version as number | null) ?? 1,
   };
 }
 
@@ -79,41 +95,339 @@ export async function listOrders(status?: string): Promise<Order[]> {
   return (data ?? []).map((row) => shape(row as Record<string, unknown>));
 }
 
-export async function setOrderStatus(
-  orderId: string,
-  status: string,
-  staff: Staff,
-  ip: string,
-): Promise<boolean> {
-  if (!(ORDER_STATUSES as readonly string[]).includes(status)) return false;
+/**
+ * Заявка двигается именованными действиями, а не выбором статуса из списка.
+ *
+ * Раньше панель показывала пять одинаковых кнопок со статусами, и это было
+ * неверно по существу: «оплачена» — не пометка, а утверждение о деньгах,
+ * которое должно оставлять след (кто, когда, по какой строке выписки).
+ * Кнопка, ставящая статус и больше ничего, такого следа не оставляет, и
+ * через месяц вопрос «откуда мы знаем, что заплатили» остаётся без ответа.
+ *
+ * Отсюда пять функций вместо одной: у каждой свои предусловия, своя отметка
+ * времени и своя запись в журнал. Общий `setOrderStatus` убран намеренно —
+ * пока он существовал, мимо него можно было поставить «оплачена», не
+ * записав ничего.
+ */
 
+type OpResult = { ok: true } | { ok: false; reason: string };
+
+const OK: OpResult = { ok: true };
+const fail = (reason: string): OpResult => ({ ok: false, reason });
+
+async function currentOrder(orderId: string) {
   const db = serviceClient();
-  if (!db) return false;
+  if (!db) return null;
 
-  const { data: before } = await db
+  const { data } = await db
     .from("orders")
-    .select("status")
+    .select("id, status, price_usd, locale, invoice_no, invoice_issued_at, paid_at, delivered_at")
     .eq("id", orderId)
     .maybeSingle();
-  if (!before) return false;
 
+  return data as {
+    id: string;
+    status: string;
+    price_usd: number | null;
+    locale: string;
+    invoice_no: string | null;
+    invoice_issued_at: string | null;
+    paid_at: string | null;
+    delivered_at: string | null;
+  } | null;
+}
+
+/**
+ * Сумма сделки.
+ *
+ * Нужна там, где каталог цену не фиксирует: у товаров с вилкой price_usd
+ * приходит пустым намеренно (lib/store/orders.ts), договариваться о числе
+ * всё равно человеку. Без этой кнопки такие заявки нельзя было бы довести
+ * до счёта вообще.
+ */
+export async function setOrderAmount(
+  orderId: string,
+  usd: number,
+  staff: Staff,
+  ip: string,
+): Promise<OpResult> {
+  if (!Number.isFinite(usd) || usd < 0 || usd > 10_000_000) return fail("Сумма вне разумных границ.");
+
+  const db = serviceClient();
+  if (!db) return fail("Нет базы.");
+
+  const before = await currentOrder(orderId);
+  if (!before) return fail("Заявка не найдена.");
+  // После выставления счёта сумма — часть выданного покупателю документа.
+  // Молча переписать её значит разойтись с бумагой, которая уже у него на
+  // руках.
+  if (before.invoice_issued_at) return fail("Счёт уже выставлен — сумму менять поздно.");
+
+  const amount = Math.round(usd);
   const { error } = await db
     .from("orders")
-    // Менеджер закрепляется за заявкой первым же действием: заявка на счёт
-    // без ответственного — это заявка, о которой каждый думает, что ею
-    // занят кто-то другой.
-    .update({ status, assigned_staff_id: staff.id })
+    .update({ price_usd: amount, assigned_staff_id: staff.id })
     .eq("id", orderId);
+  if (error) return fail(error.message);
 
-  if (error) return false;
-
-  await record("order.status_changed", {
+  await record("order.amount_set", {
     actorStaffId: staff.id,
     targetType: "order",
     targetId: orderId,
     ip,
-    meta: { from: before.status, to: status },
+    meta: { from: before.price_usd, to: amount },
+  });
+  return OK;
+}
+
+/**
+ * Выставить счёт.
+ *
+ * Номер берётся последовательностью в базе, а не max+1 в коде: два
+ * менеджера, нажавших кнопку одновременно, иначе получили бы один номер на
+ * два счёта, и обнаружилось бы это уже в бухгалтерии.
+ *
+ * Повторное нажатие номер не меняет — счёт уже у покупателя, и второй номер
+ * на тот же заказ означал бы два разных документа об одной сделке.
+ */
+export async function issueInvoice(
+  orderId: string,
+  staff: Staff,
+  ip: string,
+): Promise<OpResult> {
+  const db = serviceClient();
+  if (!db) return fail("Нет базы.");
+
+  const before = await currentOrder(orderId);
+  if (!before) return fail("Заявка не найдена.");
+  if (before.status === "cancelled") return fail("Заявка отменена.");
+  if (before.price_usd === null) return fail("Сначала проставьте сумму сделки.");
+
+  let invoiceNo = before.invoice_no;
+  if (!invoiceNo) {
+    const { data, error } = await db.rpc("next_invoice_no");
+    if (error || typeof data !== "string") {
+      return fail(`Не выдался номер счёта: ${error?.message ?? "пустой ответ"}`);
+    }
+    invoiceNo = data;
+  }
+
+  const { error } = await db
+    .from("orders")
+    .update({
+      status: "invoiced",
+      invoice_no: invoiceNo,
+      invoice_issued_at: before.invoice_issued_at ?? new Date().toISOString(),
+      // Менеджер закрепляется за заявкой первым же действием: заявка на счёт
+      // без ответственного — это заявка, о которой каждый думает, что ею
+      // занят кто-то другой.
+      assigned_staff_id: staff.id,
+    })
+    .eq("id", orderId);
+  if (error) return fail(error.message);
+
+  await record("order.invoiced", {
+    actorStaffId: staff.id,
+    targetType: "order",
+    targetId: orderId,
+    ip,
+    meta: { invoice_no: invoiceNo, amount_usd: before.price_usd },
+  });
+  return OK;
+}
+
+/**
+ * Подтвердить оплату.
+ *
+ * Ссылка на строку выписки обязательна. Без неё «оплачено» — чьё-то
+ * утверждение, а не запись: через полгода, когда сойдётся не всё, опереться
+ * будет не на что, а спорить придётся уже после того, как код отдан.
+ */
+export async function markOrderPaid(
+  orderId: string,
+  ref: string,
+  staff: Staff,
+  ip: string,
+): Promise<OpResult> {
+  const reference = ref.trim().slice(0, 200);
+  if (!reference) return fail("Укажите, чем платёж опознаётся в выписке.");
+
+  const db = serviceClient();
+  if (!db) return fail("Нет базы.");
+
+  const before = await currentOrder(orderId);
+  if (!before) return fail("Заявка не найдена.");
+  if (before.status === "cancelled") return fail("Заявка отменена.");
+  if (!before.invoice_issued_at) return fail("Счёт не выставлен — оплачивать нечего.");
+
+  const { error } = await db
+    .from("orders")
+    .update({
+      status: "paid",
+      paid_at: before.paid_at ?? new Date().toISOString(),
+      paid_ref: reference,
+      paid_by: staff.id,
+      assigned_staff_id: staff.id,
+    })
+    .eq("id", orderId);
+  if (error) return fail(error.message);
+
+  await record("order.paid", {
+    actorStaffId: staff.id,
+    targetType: "order",
+    targetId: orderId,
+    ip,
+    meta: { ref: reference, amount_usd: before.price_usd },
+  });
+  return OK;
+}
+
+export async function markOrderDelivered(
+  orderId: string,
+  staff: Staff,
+  ip: string,
+): Promise<OpResult> {
+  const db = serviceClient();
+  if (!db) return fail("Нет базы.");
+
+  const before = await currentOrder(orderId);
+  if (!before) return fail("Заявка не найдена.");
+  // Передача до оплаты — единственный необратимый шаг во всей цепочке: код
+  // нельзя забрать обратно.
+  if (!before.paid_at) return fail("Оплата не подтверждена — передавать код рано.");
+
+  const { error } = await db
+    .from("orders")
+    .update({
+      status: "delivered",
+      delivered_at: before.delivered_at ?? new Date().toISOString(),
+      assigned_staff_id: staff.id,
+    })
+    .eq("id", orderId);
+  if (error) return fail(error.message);
+
+  await record("order.delivered", {
+    actorStaffId: staff.id,
+    targetType: "order",
+    targetId: orderId,
+    ip,
+  });
+  return OK;
+}
+
+export async function cancelOrder(
+  orderId: string,
+  staff: Staff,
+  ip: string,
+): Promise<OpResult> {
+  const db = serviceClient();
+  if (!db) return fail("Нет базы.");
+
+  const before = await currentOrder(orderId);
+  if (!before) return fail("Заявка не найдена.");
+
+  const { error } = await db
+    .from("orders")
+    .update({ status: "cancelled", assigned_staff_id: staff.id })
+    .eq("id", orderId);
+  if (error) return fail(error.message);
+
+  await record("order.cancelled", {
+    actorStaffId: staff.id,
+    targetType: "order",
+    targetId: orderId,
+    ip,
+    meta: { from: before.status },
+  });
+  return OK;
+}
+
+/**
+ * Вернуть отменённую заявку в работу.
+ *
+ * Статус восстанавливается по отметкам времени, а не выбирается руками:
+ * отметки — это факты (счёт выставлен, деньги пришли), а выбранный статус
+ * был бы мнением. Заявку, где оплата подтверждена, нельзя вернуть в «новая»
+ * даже по ошибке.
+ */
+export async function reopenOrder(
+  orderId: string,
+  staff: Staff,
+  ip: string,
+): Promise<OpResult> {
+  const db = serviceClient();
+  if (!db) return fail("Нет базы.");
+
+  const before = await currentOrder(orderId);
+  if (!before) return fail("Заявка не найдена.");
+  if (before.status !== "cancelled") return fail("Заявка и так в работе.");
+
+  const status = before.delivered_at
+    ? "delivered"
+    : before.paid_at
+      ? "paid"
+      : before.invoice_issued_at
+        ? "invoiced"
+        : "new";
+
+  const { error } = await db
+    .from("orders")
+    .update({ status, assigned_staff_id: staff.id })
+    .eq("id", orderId);
+  if (error) return fail(error.message);
+
+  await record("order.reopened", {
+    actorStaffId: staff.id,
+    targetType: "order",
+    targetId: orderId,
+    ip,
+    meta: { to: status },
+  });
+  return OK;
+}
+
+/**
+ * Перевыпустить ссылку покупателя.
+ *
+ * Единственный способ вернуть покупателю доступ: токена в базе нет, есть
+ * только хеш. Старая ссылка при этом умирает — так и задумано, иначе
+ * «перевыпустил, потому что первая утекла» ничего бы не значило.
+ *
+ * Ссылка возвращается вызывающему один раз и в базу не пишется. Показать её
+ * второй раз будет неоткуда — менеджер копирует и отправляет покупателю сам.
+ */
+export async function reissueOrderLink(
+  orderId: string,
+  staff: Staff,
+  ip: string,
+): Promise<{ ok: true; url: string } | { ok: false; reason: string }> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "Нет базы." };
+
+  const before = await currentOrder(orderId);
+  if (!before) return { ok: false, reason: "Заявка не найдена." };
+
+  const token = newAccessToken();
+  const locale: Locale = isLocale(before.locale) ? before.locale : "ru";
+
+  const { error } = await db
+    .from("orders")
+    .update({
+      access_token_hash: hashAccessToken(token),
+      access_issued_at: new Date().toISOString(),
+      // Код привязки выпускается заново вместе со ссылкой: покупатель,
+      // потерявший её, скорее всего и бота не привязал.
+      bind_code: newBindCode(),
+    })
+    .eq("id", orderId);
+  if (error) return { ok: false, reason: error.message };
+
+  await record("order.link_reissued", {
+    actorStaffId: staff.id,
+    targetType: "order",
+    targetId: orderId,
+    ip,
   });
 
-  return true;
+  return { ok: true, url: orderUrlFor(token, locale) };
 }
