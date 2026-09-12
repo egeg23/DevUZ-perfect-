@@ -52,7 +52,9 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
             aria-current={active ? "true" : undefined}
             title={localeLabel[locale]}
             className={cn(
-              "rounded-lg px-2.5 py-1.5 font-mono text-[0.7rem] font-medium transition-colors",
+              // whitespace-nowrap: «中文» — два иероглифа, и в сжатой
+              // строке они разъезжались на две строки, делая всю шапку выше.
+              "whitespace-nowrap rounded-lg px-2.5 py-1.5 font-mono text-[0.7rem] font-medium transition-colors",
               active ? "bg-green text-ink" : "text-faint hover:text-text",
             )}
           >
