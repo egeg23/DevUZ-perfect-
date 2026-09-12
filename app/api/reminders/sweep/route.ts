@@ -1,6 +1,7 @@
 import { record } from "@/lib/admin/audit";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
+import { sweepOrders } from "@/lib/admin/order-sweep-run";
 import { purgeExpiredSignals } from "@/lib/scout/store";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
@@ -169,6 +170,11 @@ export async function POST(request: Request) {
   // однажды забудут включить на новом сервере.
   const purged = await purgeExpiredSignals();
 
+  // Заявки на покупку — по той же причине здесь. Заявка, забытая без
+  // счёта, и оплаченный заказ, которому нечего отдать, — это деньги, и
+  // узнавать о них от самого покупателя значит узнавать слишком поздно.
+  const orders = await sweepOrders();
+
   // Проход считается неудачным, только если не дошло вообще ничего из
   // того, что пробовали. Одно недоставленное письмо при двадцати
   // доставленных — это заблокировавший бота менеджер, а не авария, и
@@ -187,6 +193,7 @@ export async function POST(request: Request) {
     skipped,
     failed,
     purged,
+    orders,
     queued: (data ?? []).length,
   });
 }
