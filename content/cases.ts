@@ -26,12 +26,22 @@ export type Case = {
   metrics: Array<{ value: string; label: LocalizedText }>;
   /** Оттенок карточки — задаёт градиент превью. */
   accent: "green" | "blue" | "gold" | "violet";
+  /**
+   * Монограмма для превью — две-три буквы, которыми проект узнаётся.
+   *
+   * Задаётся руками, а не выводится из названия. Автоматика ошибается там,
+   * где ошибаться нельзя: «USTA» — уже аббревиатура, и резать её до «US»
+   * бессмысленно, а «Harvest in Motion» по первым буквам слов даёт «HiM».
+   * Правило выбирает человек, глядя на конкретное имя.
+   */
+  monogram: string;
 };
 
 export const cases: Case[] = [
   {
     slug: "devuz",
     name: "DevUz Studio",
+    monogram: "DU",
     year: 2026,
     url: "https://devuz.maximov-tech.ru",
     tier: 2,
@@ -65,6 +75,7 @@ export const cases: Case[] = [
   {
     slug: "tezketkaz",
     name: "TezKetKaz",
+    monogram: "TKK",
     year: 2026,
     tier: 1,
     niches: ["доставка еды", "ресторанный бизнес", "HoReCa", "маркетплейс", "логистика", "食品配送", "food delivery"],
@@ -106,6 +117,7 @@ export const cases: Case[] = [
   {
     slug: "harvest-motion",
     name: "Harvest in Motion",
+    monogram: "HM",
     year: 2026,
     tier: 1,
     niches: ["экспорт", "производство", "сельское хозяйство", "промо-сайт", "презентация", "анимация", "прототип", "animation", "prototype", "animatsiya", "动效"],
@@ -138,6 +150,7 @@ export const cases: Case[] = [
   {
     slug: "usta",
     name: "USTA",
+    monogram: "USTA",
     year: 2026,
     url: "https://usta.maximov-tech.ru",
     tier: 2,
@@ -171,6 +184,7 @@ export const cases: Case[] = [
   {
     slug: "seller-ai",
     name: "Seller AI",
+    monogram: "SAI",
     year: 2026,
     tier: 1,
     niches: ["e-commerce", "маркетплейс", "ритейл", "SaaS", "аналитика", "电商", "savdo"],
@@ -203,6 +217,7 @@ export const cases: Case[] = [
   {
     slug: "lbm-rentals",
     name: "LBM Rentals",
+    monogram: "LBM",
     year: 2026,
     tier: 2,
     niches: ["недвижимость", "аренда", "туризм", "гостиничный бизнес", "HoReCa", "real estate", "ko‘chmas mulk"],
@@ -235,6 +250,7 @@ export const cases: Case[] = [
   {
     slug: "global-export",
     name: "Global Export",
+    monogram: "GE",
     year: 2026,
     tier: 1,
     niches: ["экспорт", "производство", "сельское хозяйство", "B2B", "FMCG", "export", "eksport", "出口"],
@@ -266,6 +282,7 @@ export const cases: Case[] = [
   {
     slug: "legal-ai",
     name: "Legal AI",
+    monogram: "LAI",
     year: 2026,
     tier: 1,
     niches: ["юридические услуги", "финансы", "консалтинг", "документооборот", "legal", "yuridik", "法律"],
@@ -297,6 +314,7 @@ export const cases: Case[] = [
   {
     slug: "marketplace-audit",
     name: "Marketplace Audit",
+    monogram: "MA",
     year: 2026,
     tier: 1,
     niches: ["маркетплейс", "e-commerce", "ритейл", "логистика", "финтех", "enterprise"],

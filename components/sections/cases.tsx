@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { LogoMark } from "@/components/brand/logo";
 import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
@@ -9,12 +10,29 @@ import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import { localeHref, t, type Locale } from "@/lib/i18n";
 
-const ACCENTS: Record<Case["accent"], { from: string; ring: string; text: string }> = {
-  green: { from: "from-[#132a20]", ring: "border-green/25", text: "text-green" },
-  blue: { from: "from-[#141f33]", ring: "border-blue/25", text: "text-blue-soft" },
-  gold: { from: "from-[#2a2418]", ring: "border-gold/25", text: "text-gold" },
-  violet: { from: "from-[#221b33]", ring: "border-violet/25", text: "text-violet" },
+const ACCENTS: Record<
+  Case["accent"],
+  { from: string; ring: string; text: string; glow: string; ghost: string }
+> = {
+  green: { from: "from-[#132a20]", ring: "border-green/25", text: "text-green", glow: "bg-green/10", ghost: "text-green/[0.07]" },
+  blue: { from: "from-[#141f33]", ring: "border-blue/25", text: "text-blue-soft", glow: "bg-blue/10", ghost: "text-blue-soft/[0.07]" },
+  gold: { from: "from-[#2a2418]", ring: "border-gold/25", text: "text-gold", glow: "bg-gold/10", ghost: "text-gold/[0.07]" },
+  violet: { from: "from-[#221b33]", ring: "border-violet/25", text: "text-violet", glow: "bg-violet/10", ghost: "text-violet/[0.07]" },
 };
+
+/**
+ * Размер названия под его длину.
+ *
+ * Одного кегля на все девять имён не хватает: «MA» и «Marketplace Audit»
+ * отличаются втрое. Ступеньками, а не clamp по vw: карточка живёт в сетке
+ * и её ширина от ширины экрана почти не зависит — на вьюпорт здесь
+ * опираться нечем.
+ */
+function nameSize(name: string): string {
+  if (name.length <= 8) return "text-[1.6rem]";
+  if (name.length <= 13) return "text-[1.3rem]";
+  return "text-[1.05rem]";
+}
 
 export function CaseCard({
   item,
@@ -33,8 +51,12 @@ export function CaseCard({
     <Link
       href={localeHref(locale, `cases/${item.slug}`)}
       className={cn(
+        // sm:col-span-2 здесь стоял и не работал: элемент сетки — обёртка
+        // Reveal, а класс висел на ссылке внутри неё. Убран, а не перенесён
+        // выше: шесть карточек это ровно два полных ряда по три, и растянутая
+        // первая оставила бы в последнем ряду дыру. featured по-прежнему
+        // значим — он делает превью выше.
         "group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-all duration-500 hover:-translate-y-1 hover:border-green/35",
-        featured && "sm:col-span-2",
       )}
     >
       <div
@@ -44,40 +66,82 @@ export function CaseCard({
           featured ? "h-56" : "h-44",
         )}
       >
-        {/* Абстрактное превью вместо скриншота: реальных скриншотов у нас
-            пока нет, а заглушка-стоковая картинка выглядела бы хуже, чем
-            честная геометрия. */}
-        <div aria-hidden="true" className="flex items-end gap-3">
-          {[0, 1, 2].map((i) => (
+        {/* Превью — типографика, а не скриншот и не чужой логотип.
+            Скриншотов у нас нет, а рисовать клиенту фирменный знак, которого
+            у него не существует, значит выдавать выдумку за его брендинг.
+            Имя проекта — то единственное, что здесь и правда его. */}
+
+        {/* Монограмма во всю карточку, почти прозрачная: даёт каждому кейсу
+            свой силуэт, чтобы шесть карточек в сетке не выглядели одной
+            повторённой шесть раз. Обрезается краями намеренно. */}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute -left-4 top-1/2 -translate-y-1/2 select-none font-display font-extrabold leading-none tracking-tighter",
+            featured ? "text-[11rem]" : "text-[8.5rem]",
+            accent.ghost,
+          )}
+        >
+          {item.monogram}
+        </span>
+
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full blur-3xl",
+            accent.glow,
+          )}
+        />
+
+        <div className="relative flex items-center gap-4 px-6">
+          {/* У собственного кейса студии знак настоящий — выдумывать нечего. */}
+          {item.slug === showcaseSlug ? (
             <span
-              key={i}
-              className={cn("rounded-xl border bg-white/[0.03]", accent.ring)}
-              style={{
-                width: featured ? 74 : 58,
-                height: (featured ? 140 : 108) - i * 22,
-                opacity: 1 - i * 0.28,
-              }}
-            />
-          ))}
+              className={cn(
+                "flex shrink-0 items-center justify-center rounded-2xl border bg-ink/40 backdrop-blur-sm",
+                featured ? "h-16 w-16" : "h-14 w-14",
+                accent.ring,
+              )}
+            >
+              <LogoMark size={featured ? 34 : 30} />
+            </span>
+          ) : (
+            <span
+              className={cn(
+                "flex shrink-0 items-center justify-center rounded-2xl border bg-ink/40 font-display font-extrabold leading-none tracking-tight backdrop-blur-sm",
+                featured ? "h-16 w-16 text-[1.15rem]" : "h-14 w-14 text-[1rem]",
+                accent.ring,
+                accent.text,
+              )}
+            >
+              {item.monogram}
+            </span>
+          )}
+
+          <span className="min-w-0">
+            {/* Название здесь и есть заголовок карточки: повторять его ниже
+                значило бы произнести дважды — и глазу, и скринридеру. */}
+            <h3
+              className={cn(
+                "font-display font-extrabold leading-tight tracking-tight text-text",
+                nameSize(item.name),
+              )}
+            >
+              {item.name}
+            </h3>
+            <span className={cn("mt-1.5 block font-mono text-[0.6rem] uppercase tracking-[0.18em]", accent.text)}>
+              {t(item.category, locale)}
+            </span>
+          </span>
         </div>
+
         <span className="absolute right-4 top-4 font-mono text-[0.62rem] text-faint">
           {item.year}
         </span>
       </div>
 
       <div className="flex flex-1 flex-col p-6">
-        <span
-          className={cn(
-            "self-start rounded-md border px-2 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em]",
-            accent.ring,
-            accent.text,
-          )}
-        >
-          {t(item.category, locale)}
-        </span>
-
-        <h3 className="mt-4 text-[1.3rem] font-semibold">{item.name}</h3>
-        <p className="mt-2.5 flex-1 text-[0.92rem] leading-relaxed text-muted">
+        <p className="flex-1 text-[0.92rem] leading-relaxed text-muted">
           {t(item.summary, locale)}
         </p>
 
