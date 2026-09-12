@@ -83,18 +83,33 @@ export function Logo({
   size = 36,
   className,
   withWordmark = true,
+  /**
+   * Классы на само слово «DevUz» — чтобы прятать его по ширине экрана.
+   *
+   * Отдельным пропом, а не двумя копиями логотипа под разные брейкпоинты:
+   * у знака уникальные id градиента и маски, завязанные на size, и вторая
+   * копия того же размера сломала бы первую — ровно то, о чём предупреждает
+   * комментарий у LogoMark.
+   */
+  wordmarkClassName,
   animated = false,
 }: {
   size?: number;
   className?: string;
   withWordmark?: boolean;
+  wordmarkClassName?: string;
   animated?: boolean;
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <LogoMark size={size} animated={animated} />
       {withWordmark ? (
-        <span className="font-display text-[1.35rem] font-extrabold leading-none tracking-[-0.03em]">
+        <span
+          className={cn(
+            "font-display text-[1.35rem] font-extrabold leading-none tracking-[-0.03em]",
+            wordmarkClassName,
+          )}
+        >
           Dev<span className="text-green">Uz</span>
         </span>
       ) : null}

@@ -43,17 +43,30 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
           : "border-b border-transparent",
       )}
     >
-      <Container className="flex h-[4.5rem] items-center gap-8">
+      <Container className="flex h-[4.5rem] items-center gap-6">
+        {/* Слово «DevUz» прячется ровно там, где разворачивается меню.
+            Строка шире 1224 px не бывает — контейнер упирается в 1320 при
+            полях по 48, — а восемь пунктов, переключатель на четыре языка и
+            кнопка требуют по-русски 1278, по-узбекски 1315. Знак остаётся:
+            он и есть логотип, ссылка подписана для скринридера. Ниже xl
+            меню свёрнуто в бургер, места вдоволь, и слово возвращается. */}
         <Link href={localeHref(locale)} className="shrink-0" aria-label="DevUz Studio">
-          <Logo size={34} animated />
+          <Logo size={34} animated wordmarkClassName="xl:hidden" />
         </Link>
 
-        <nav className="hidden items-center gap-7 lg:flex" aria-label={dict.nav.services}>
+        {/* whitespace-nowrap — то, ради чего всё это: без него «Проверить
+            сайт» и «О студии» ломались пополам. Сжатые зазоры и поздний
+            брейкпоинт нужны, чтобы запрет переносов не превратился в
+            выезд меню за край экрана. */}
+        <nav
+          className="hidden items-center gap-5 xl:flex"
+          aria-label={dict.nav.services}
+        >
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="link-underline text-[0.92rem] text-muted transition-colors hover:text-text"
+              className="link-underline whitespace-nowrap text-[0.92rem] text-muted transition-colors hover:text-text"
             >
               {link.label}
             </Link>
@@ -75,7 +88,7 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label={dict.nav.services}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-line lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-line xl:hidden"
           >
             <span className="relative block h-3 w-4">
               <span
@@ -102,7 +115,7 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
       </Container>
 
       {open ? (
-        <div className="border-t border-line bg-ink/95 backdrop-blur-xl lg:hidden">
+        <div className="border-t border-line bg-ink/95 backdrop-blur-xl xl:hidden">
           <Container className="flex flex-col gap-1 py-5">
             {links.map((link) => (
               <Link
