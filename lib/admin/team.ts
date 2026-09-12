@@ -1,4 +1,9 @@
 import { record } from "@/lib/admin/audit";
+import {
+  notifyInvitedStaff,
+  notifyRoleChange,
+  type InviteOutcome,
+} from "@/lib/admin/staff-notice";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
 
@@ -26,7 +31,18 @@ const COLUMNS =
   "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at";
 
 export type TeamResult =
-  | { ok: true; note?: "reactivated" }
+  | {
+      ok: true;
+      note?: "reactivated";
+      /**
+       * Дошло ли до человека приглашение.
+       *
+       * Отдельно от `ok` намеренно: сотрудник заведён независимо от того,
+       * доехало ли сообщение, но «завели» и «завели, а он об этом не знает»
+       * — разные состояния, и второе требует действия от того, кто заводил.
+       */
+      invite?: InviteOutcome;
+    }
   | {
       ok: false;
       reason: "offline" | "exists" | "gone" | "failed" | "self" | "last_admin" | "invalid";
@@ -122,14 +138,21 @@ export async function inviteStaff(
 
     if (error) return { ok: false, reason: "failed" };
 
+    const invite = await notifyInvitedStaff({
+      telegramId: input.telegramId,
+      role: input.role,
+      invitedBy: admin.display_name,
+      returning: true,
+    });
+
     await record("staff.invited", {
       actorStaffId: admin.id,
       targetType: "staff",
       targetId: existing.id as string,
       ip,
-      meta: { reactivated: true, role: input.role },
+      meta: { reactivated: true, role: input.role, invite },
     });
-    return { ok: true, note: "reactivated" };
+    return { ok: true, note: "reactivated", invite };
   }
 
   const { data, error } = await db
@@ -148,14 +171,23 @@ export async function inviteStaff(
     return { ok: false, reason: "failed" };
   }
 
+  const invite = await notifyInvitedStaff({
+    telegramId: input.telegramId,
+    role: input.role,
+    invitedBy: admin.display_name,
+    returning: false,
+  });
+
   await record("staff.invited", {
     actorStaffId: admin.id,
     targetType: "staff",
     targetId: data.id as string,
     ip,
-    meta: { role: input.role },
+    // Судьба приглашения в журнале: через месяц вопрос «почему Иван так и
+    // не зашёл» иначе не с чем сопоставить.
+    meta: { role: input.role, invite },
   });
-  return { ok: true };
+  return { ok: true, invite };
 }
 
 /**
@@ -183,7 +215,7 @@ export async function disableStaff(
 
   const { data: target } = await db
     .from("staff")
-    .select("id, role, is_active")
+    .select("id, role, is_active, telegram_user_id")
     .eq("id", staffId)
     .maybeSingle();
 
@@ -235,7 +267,7 @@ export async function setStaffRole(
 
   const { data: target } = await db
     .from("staff")
-    .select("id, role, is_active")
+    .select("id, role, is_active, telegram_user_id")
     .eq("id", staffId)
     .maybeSingle();
 
@@ -253,12 +285,72 @@ export async function setStaffRole(
   const { error } = await db.from("staff").update({ role }).eq("id", staffId);
   if (error) return { ok: false, reason: "failed" };
 
+  // Отключённому не пишем: у него нет доступа, и сообщение о новых правах
+  // было бы неправдой.
+  const invite = target.is_active
+    ? await notifyRoleChange({
+        telegramId: target.telegram_user_id as number,
+        role,
+        changedBy: admin.display_name,
+      })
+    : undefined;
+
   await record("staff.role_changed", {
     actorStaffId: admin.id,
     targetType: "staff",
     targetId: staffId,
     ip,
-    meta: { from: target.role, to: role },
+    meta: { from: target.role, to: role, invite },
   });
-  return { ok: true };
+  return { ok: true, invite };
+}
+
+/**
+ * Отправить приглашение ещё раз.
+ *
+ * Нужна ровно из-за одного правила Telegram: бот не может написать первым
+ * тому, кто ему ни разу не писал. Значит первая попытка при заведении
+ * сотрудника часто не доходит — не из-за сбоя, а потому что человек ещё не
+ * открывал бота. Порядок действий получается такой: завели, сказали ему
+ * любым способом «напиши боту», он написал, здесь нажали ещё раз.
+ *
+ * Ничего не меняет в базе — только шлёт. Поэтому доступна и тогда, когда
+ * первая попытка прошла: продублировать приглашение человеку, который его
+ * потерял, дешевле, чем объяснять по телефону, куда заходить.
+ */
+export async function resendInvite(
+  staffId: string,
+  admin: Staff,
+  ip: string,
+): Promise<TeamResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+
+  const { data: target } = await db
+    .from("staff")
+    .select("telegram_user_id, role, is_active")
+    .eq("id", staffId)
+    .maybeSingle();
+
+  if (!target) return { ok: false, reason: "gone" };
+  // Отключённому приглашение не шлём: доступа у него нет, и звать его в
+  // панель значило бы соврать.
+  if (!target.is_active) return { ok: false, reason: "gone" };
+
+  const invite = await notifyInvitedStaff({
+    telegramId: target.telegram_user_id as number,
+    role: target.role as "admin" | "manager",
+    invitedBy: admin.display_name,
+    returning: false,
+  });
+
+  await record("staff.invited", {
+    actorStaffId: admin.id,
+    targetType: "staff",
+    targetId: staffId,
+    ip,
+    meta: { resent: true, invite },
+  });
+
+  return { ok: true, invite };
 }
