@@ -41,6 +41,20 @@ const config: NextConfig = {
       // проверять догадку о матчере каждый раз при обновлении Next.
       { source: "/admin", headers: admin },
       { source: "/admin/:path*", headers: admin },
+      // Страница заказа: чужие реквизиты и счёт по неугадываемой ссылке.
+      // Мета-тег noindex на ней уже стоит, но он не действует на ответы,
+      // которые не HTML, и не защищает от кэша браузера на общем ноутбуке.
+      //
+      // В robots.txt этого пути намеренно нет: Disallow запретил бы краулеру
+      // зайти на страницу — а значит и прочитать noindex. Из трёх мер здесь
+      // работают ровно эти две.
+      {
+        source: "/:locale/order/:path*",
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+          { key: "Cache-Control", value: "no-store, max-age=0" },
+        ],
+      },
     ];
   },
 };

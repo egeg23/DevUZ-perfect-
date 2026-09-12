@@ -46,6 +46,18 @@ export type OrderCopy = {
   consentOffer: LocalizedText;
   consentLicence: LocalizedText;
   consentRequired: LocalizedText;
+  /**
+   * Ссылка на страницу заказа показывается один раз — здесь.
+   *
+   * Второй раз её взять неоткуда: в базе лежит только хеш токена, и
+   * перевыпускает ссылку менеджер кнопкой в панели. Выдача по номеру заявки
+   * была бы оракулом для подбора — удачная попытка одновременно открывала бы
+   * заказ чужому и отбирала доступ у покупателя.
+   */
+  yourPage: LocalizedText;
+  savePage: LocalizedText;
+  copyLink: LocalizedText;
+  copied: LocalizedText;
 };
 
 export const orderCopy: OrderCopy = {
@@ -186,5 +198,29 @@ export const orderCopy: OrderCopy = {
     en: "We cannot accept a request without acceptance of the offer.",
     uz: "Oferta bilan rozilik bo‘lmasa, arizani qabul qilib bo‘lmaydi.",
     zh: "未接受要约则无法受理申请。",
+  },
+  yourPage: {
+    ru: "Страница вашего заказа",
+    en: "Your order page",
+    uz: "Buyurtmangiz sahifasi",
+    zh: "您的订单页面",
+  },
+  savePage: {
+    ru: "Сохраните ссылку: на ней видно статус, счёт и — после оплаты — файлы. Показываем её один раз.",
+    en: "Save this link: it shows the status, the invoice and — once paid — the files. We show it only once.",
+    uz: "Havolani saqlang: unda holat, hisob-faktura va to‘lovdan keyin fayllar ko‘rinadi. Uni bir marta ko‘rsatamiz.",
+    zh: "请保存此链接：可查看订单状态、发票，付款后还可下载文件。此链接仅显示一次。",
+  },
+  copyLink: {
+    ru: "Скопировать",
+    en: "Copy",
+    uz: "Nusxalash",
+    zh: "复制",
+  },
+  copied: {
+    ru: "Скопировано",
+    en: "Copied",
+    uz: "Nusxalandi",
+    zh: "已复制",
   },
 };

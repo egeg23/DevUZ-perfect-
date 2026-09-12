@@ -1,5 +1,6 @@
 import { OFFER_VERSION } from "@/content/offer";
 import { asInet } from "@/lib/net";
+import { hashAccessToken, newAccessToken, newBindCode } from "@/lib/store/access";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { productBySlug } from "@/content/products";
@@ -31,8 +32,25 @@ export type OrderInput = {
 };
 
 export type OrderResult =
-  | { ok: true; requestNo: string }
+  | {
+      ok: true;
+      requestNo: string;
+      /**
+       * Ссылка на страницу заказа — единственный раз, когда токен виден.
+       *
+       * null означает ровно одно: строку в базу записать не удалось, и
+       * открывать по ссылке нечего. Заявка при этом всё равно принята и
+       * ушла менеджеру в Telegram — потерять сделку из-за нашей аварии
+       * хуже, чем оставить покупателя без страницы.
+       */
+      orderUrl: string | null;
+    }
   | { ok: false; error: "unknown_product" | "missing_fields" | "storage" | "offer_not_accepted" };
+
+/** Адрес страницы заказа. Локаль в пути: покупатель пришёл со своей версии сайта. */
+export function orderUrlFor(token: string, locale: Locale): string {
+  return `${siteUrl}/${locale}/order/${token}`;
+}
 
 /**
  * Цена берётся из каталога на сервере, а не из формы.
@@ -87,7 +105,16 @@ export async function createOrder(
   const requestNo = newRequestNo();
   const price = priceFor(input.productSlug);
 
+  // Токен живёт в памяти ровно до конца этого запроса: в базу уходит хеш, в
+  // ответ — ссылка. Второй раз показать его неоткуда, и это осознанно —
+  // перевыпуск делает менеджер, а не форма, иначе номер заявки стал бы
+  // оракулом для подбора.
+  const token = newAccessToken();
+  const bindCode = newBindCode();
+
   const db = serviceClient();
+  let stored = false;
+
   if (db) {
     const { error } = await db.from("orders").insert({
       request_no: requestNo,
@@ -105,6 +132,9 @@ export async function createOrder(
       // «согласился с офертой» без указания редакции не значит ничего.
       offer_version: OFFER_VERSION,
       offer_accepted_at: new Date().toISOString(),
+      access_token_hash: hashAccessToken(token),
+      access_issued_at: new Date().toISOString(),
+      bind_code: bindCode,
       ip: asInet(ip),
     });
 
@@ -112,15 +142,24 @@ export async function createOrder(
       console.error("store: не сохранил заявку", error.message);
       // Не выходим: заявка важнее записи о ней. Уведомление уйдёт в
       // Telegram, и менеджер увидит покупателя, даже если база недоступна.
+    } else {
+      stored = true;
     }
   }
 
-  await notify({ ...input, company, contactName, contact, payment }, requestNo, price);
+  const orderUrl = stored ? orderUrlFor(token, input.locale) : null;
+
+  await notify(
+    { ...input, company, contactName, contact, payment },
+    requestNo,
+    price,
+    stored,
+  );
 
   // Ошибку хранения не показываем покупателю: для него заявка принята —
   // менеджер её увидит. Показать «не получилось» человеку, которого мы уже
   // видим в Telegram, значит потерять сделку из-за нашей же аварии.
-  return { ok: true, requestNo };
+  return { ok: true, requestNo, orderUrl };
 }
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -132,6 +171,7 @@ async function notify(
   input: OrderInput & { company: string; contactName: string; contact: string; payment: string },
   requestNo: string,
   price: number | null,
+  stored: boolean,
 ): Promise<void> {
   const chatId = process.env.TELEGRAM_SALES_CHAT_ID;
   if (!chatId) return;
@@ -155,6 +195,14 @@ async function notify(
       input.comment.trim() ? "" : "",
       input.comment.trim() ? `<b>Комментарий:</b>\n${esc(input.comment.trim().slice(0, 800))}` : "",
       "",
+      // Ссылку покупателя сюда не кладём. Это групповой чат: всё, что в нём
+      // написано, остаётся в истории навсегда и доступно каждому, кого
+      // когда-либо в него добавят. Ссылка на заказ открывает реквизиты
+      // покупателя и его счёт — ровно тот класс данных, который из этого
+      // чата уже убран. Менеджер выпускает ссылку кнопкой в панели.
+      stored
+        ? ""
+        : "⚠️ <b>Заявка не записалась в базу.</b> Страницы заказа у покупателя нет — свяжитесь с ним вручную.",
       `${siteUrl}/admin/orders`,
     ]
       .filter((line) => line !== "")

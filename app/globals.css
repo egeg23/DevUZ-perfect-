@@ -286,3 +286,84 @@
     stroke-dashoffset: 0;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────────
+   Печать счёта.
+
+   Сайт тёмный, а счёт печатают на белой бумаге — без этого блока из
+   принтера выходит чёрный лист с серым текстом, на который уходит
+   картридж и который всё равно нельзя приложить к платёжке.
+
+   Приём с visibility, а не display: скрыть всё через display: none и
+   показать одного потомка нельзя — скрытый родитель уносит с собой всё
+   поддерево. visibility: hidden гасит отрисовку, но оставляет элементы в
+   потоке, поэтому видимость можно вернуть точечно; сам счёт при этом
+   выдёргивается в левый верхний угол, чтобы не печатать пустую первую
+   страницу на месте шапки.
+   ─────────────────────────────────────────────────────────────────────── */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #invoice,
+  #invoice * {
+    visibility: visible;
+  }
+
+  #invoice {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+
+  /* Рамки таблицы должны быть видны на бумаге: серый по тёмному фону
+     превращается в белый по белому. */
+  #invoice table,
+  #invoice th,
+  #invoice td,
+  #invoice .invoice-rule {
+    border-color: #000 !important;
+  }
+
+  #invoice * {
+    color: #000 !important;
+    background: transparent !important;
+  }
+
+  /* Кнопка «распечатать» на бумаге бессмысленна. */
+  .no-print {
+    display: none !important;
+  }
+
+  /* На экране таблица счёта прокручивается вбок на узком телефоне — иначе
+     четыре несжимаемые колонки утаскивают за собой всю страницу. На бумаге
+     прокрутки нет и быть не может: контейнер обрезал бы таблицу ровно по
+     той границе, до которой пользователь не долистал. */
+  #invoice .invoice-scroll {
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+
+  @page {
+    margin: 16mm;
+  }
+}

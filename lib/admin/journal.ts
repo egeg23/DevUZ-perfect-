@@ -32,6 +32,13 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "project.updated": "поправил проект",
   "project.stage_changed": "сменил стадию проекта",
   "order.status_changed": "сменил статус заявки",
+  "order.invoiced": "выставил счёт",
+  "order.paid": "подтвердил оплату",
+  "order.delivered": "отметил передачу кода",
+  "order.cancelled": "отменил заявку",
+  "order.reopened": "вернул заявку в работу",
+  "order.amount_set": "проставил сумму сделки",
+  "order.link_reissued": "перевыпустил ссылку покупателя",
   "signal.status_changed": "разобрал сигнал поиска",
   "staff.invited": "завёл сотрудника",
   "staff.disabled": "отключил сотрудника",
@@ -46,6 +53,8 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
  * в потоке входов и просмотров.
  */
 export const SENSITIVE: ReadonlySet<string> = new Set([
+  "order.paid",
+  "order.link_reissued",
   "lead.contact_revealed",
   "lead.transcript_viewed",
   "login.failed",

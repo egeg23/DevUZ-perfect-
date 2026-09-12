@@ -36,7 +36,9 @@ export async function POST(request: Request) {
 
   // Ловушка для ботов: поле скрыто в разметке, человек его не заполнит.
   if (typeof body.website === "string" && body.website.trim()) {
-    return Response.json({ ok: true, requestNo: null });
+    // Форма ответа та же, что у настоящей заявки: бот не должен различать
+    // «приняли» и «отбросили» по структуре ответа.
+    return Response.json({ ok: true, requestNo: null, orderUrl: null });
   }
 
   const text = (value: unknown, max = 300) =>
@@ -66,5 +68,10 @@ export async function POST(request: Request) {
     return Response.json({ error: result.error }, { status: 400 });
   }
 
-  return Response.json({ ok: true, requestNo: result.requestNo });
+  // Ссылка на страницу заказа отдаётся ровно здесь и больше нигде: в базе
+  // лежит только хеш токена. Кэшировать такой ответ нельзя ни на шаг.
+  return Response.json(
+    { ok: true, requestNo: result.requestNo, orderUrl: result.orderUrl },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
