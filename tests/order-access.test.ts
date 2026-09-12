@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 import { orderPage } from "@/content/order-page";
@@ -142,5 +143,23 @@ test("подписи ссылки на заказ в форме переведе
       assert.ok(text, `orderCopy.${key} без перевода на ${locale}`);
       assert.equal(text, text.trim(), `orderCopy.${key} (${locale}) с краевым пробелом`);
     }
+  }
+});
+
+test("страница покупателя не рассказывает про переменные окружения", async () => {
+  // Покупатель — чужой человек, и внутреннее устройство сайта его не
+  // касается. Имена переменных принадлежат панели, где менеджер по ним
+  // и чинит. Однажды они уже утекли на страницу заказа: строку писали
+  // «для менеджера», а рисовалась она покупателю.
+  const page = await readFile(
+    new URL("../app/[locale]/order/[token]/page.tsx", import.meta.url),
+    "utf8",
+  );
+
+  for (const leak of ["INVOICE_", "SUPABASE_", "DOWNLOAD_SIGNING", "missingBankVars"]) {
+    assert.ok(
+      !page.includes(leak),
+      `на странице заказа встречается «${leak}» — это видно покупателю`,
+    );
   }
 });
