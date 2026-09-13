@@ -57,6 +57,13 @@ export const AUDIT_ACTIONS = [
   "payout.recorded",
   "payout.removed",
   "project.share_set",
+  // Партнёрская программа.
+  "partner.created",
+  "partner.link_created",
+  "partner.updated",
+  "partner.payout_requested",
+  "partner.payout_decided",
+  "project.partner_set",
 ] as const;
 
 /**

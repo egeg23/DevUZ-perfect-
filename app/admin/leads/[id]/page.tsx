@@ -12,6 +12,8 @@ import {
   toggleAutoReminder,
 } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
+import { VOID_TITLE, type VoidReason } from "@/lib/partners/rules";
+import { partnerById } from "@/lib/partners/store";
 import { LeadThread } from "@/components/admin/lead-thread";
 import {
   BUDGET_LABEL,
@@ -101,6 +103,19 @@ export default async function LeadPage({
 
   const lead = await leadById(id);
   if (!lead) notFound();
+
+  // Кто привёл: менеджеру важно знать про обещанный партнёром бонус и про
+  // то, что клиент партнёрский, — на сумму и на тон разговора это влияет.
+  const partner = lead.partner_id ? await partnerById(lead.partner_id) : null;
+  const partnerLabel = partner
+    ? `${partner.name} · ${lead.partner_code ?? partner.code}${
+        lead.partner_void_reason
+          ? ` · не засчитано: ${VOID_TITLE[lead.partner_void_reason as VoidReason] ?? lead.partner_void_reason}`
+          : ""
+      }`
+    : lead.partner_code
+      ? `код ${lead.partner_code} — партнёр не найден`
+      : null;
 
   const ip = await requestIp();
   await record("lead.viewed", {
@@ -436,6 +451,7 @@ export default async function LeadPage({
       <dl className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="Кто" value={lead.contact_name} />
         <Field label="Компания" value={lead.company} />
+        <Field label="Партнёр" value={partnerLabel} />
         <Field label="Ниша" value={lead.niche} />
         <Field
           label="Услуги"

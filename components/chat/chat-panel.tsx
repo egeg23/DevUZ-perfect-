@@ -1,5 +1,6 @@
 "use client";
 
+import { readRef } from "@/lib/partners/client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Dictionary } from "@/content/dictionaries";
@@ -141,6 +142,7 @@ export function ChatPanel({
             qualified,
             requestNo,
             discount,
+            ref: readRef(),
             token: tgToken.current,
           }),
         });
@@ -200,7 +202,7 @@ export function ChatPanel({
         // Приветствие сгенерировано на клиенте и модели не принадлежит —
         // отправляем историю без него, иначе она увидит свою «реплику»,
         // которой не писала.
-        body: JSON.stringify({ messages: next.slice(1), locale, qualified, discount }),
+        body: JSON.stringify({ messages: next.slice(1), locale, qualified, discount, ref: readRef() }),
       });
 
       if (response.status === 503) {

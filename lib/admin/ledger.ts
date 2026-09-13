@@ -6,6 +6,7 @@ import {
   type Purpose,
 } from "@/lib/admin/finance";
 import { projectsOwnedBy, type Project } from "@/lib/admin/projects";
+import { notifyPartner, partnerById, partnersById, summarize, type Partner } from "@/lib/partners/store";
 import type { Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
@@ -65,6 +66,9 @@ export type Ledger = {
   payouts: Payout[];
   people: Person[];
   shares: Share[];
+  /** Партнёры, приведшие клиентов проектов в круге, и кто из них «прокачан». */
+  partners: Map<string, Partner>;
+  partnerProven: Map<string, boolean>;
 };
 
 const PEOPLE_COLUMNS = "id, display_name, role, grade, rate_percent, head_staff_id, is_active";
@@ -204,7 +208,12 @@ export function sharesOf(projectId: string, shares: readonly Share[]): Map<strin
  */
 export async function loadLedger(scope: "all" | readonly string[]): Promise<Ledger> {
   const db = serviceClient();
-  if (!db) return { offline: true, projects: [], payments: [], payouts: [], people: [], shares: [] };
+  if (!db) {
+    return {
+      offline: true, projects: [], payments: [], payouts: [], people: [], shares: [],
+      partners: new Map(), partnerProven: new Map(),
+    };
+  }
 
   const [people, projects, payouts] = await Promise.all([
     loadPeople(),
@@ -212,9 +221,17 @@ export async function loadLedger(scope: "all" | readonly string[]): Promise<Ledg
     payoutsFor(scope),
   ]);
   const ids = projects.map((p) => p.id);
-  const [payments, shares] = await Promise.all([paymentsFor(ids), sharesFor(ids)]);
+  const partnerIds = [...new Set(projects.map((p) => p.partner_id).filter((id): id is string => id !== null))];
+  const [payments, shares, partners] = await Promise.all([
+    paymentsFor(ids),
+    sharesFor(ids),
+    partnersById(partnerIds),
+  ]);
+  // Ступень партнёра считается по всем его проектам, не только по кругу.
+  const partnerProven = new Map<string, boolean>();
+  for (const s of await summarize([...partners.values()])) partnerProven.set(s.partner.id, s.proven);
 
-  return { offline: false, projects, payments, payouts, people, shares };
+  return { offline: false, projects, payments, payouts, people, shares, partners, partnerProven };
 }
 
 /* ── Записи ─────────────────────────────────────────────────────────────── */
@@ -313,7 +330,11 @@ export async function addPayment(
   const db = serviceClient();
   if (!db) return fail("offline");
 
-  const { data: project } = await db.from("projects").select("id").eq("id", projectId).maybeSingle();
+  const { data: project } = await db
+    .from("projects")
+    .select("id, client, amount_usd, partner_id")
+    .eq("id", projectId)
+    .maybeSingle();
   if (!project) return fail("gone");
 
   const row: Record<string, unknown> = {
@@ -335,6 +356,13 @@ export async function addPayment(
     ip,
     meta: { payment_id: data.id, amount_usd: fields.amountUsd, purpose: fields.purpose, paid_on: fields.paidOn },
   });
+
+  // Уведомление партнёру не должно ронять запись платежа.
+  try {
+    await notifyPartnerIfPaid(project as Record<string, unknown>, projectId);
+  } catch (error) {
+    console.error("partners: уведомление об оплате", error);
+  }
   return OK;
 }
 
@@ -511,4 +539,31 @@ export async function setProjectShare(
     meta: { staff_id: staffId, from: previous, to: percent },
   });
   return OK;
+}
+
+/**
+ * Платёж закрыл проект целиком — партнёру, если он есть, пора сказать о
+ * начислении. Считается той же функцией, что и на страницах: сообщение не
+ * должно расходиться с тем, что партнёр увидит в /ref.
+ */
+async function notifyPartnerIfPaid(project: Record<string, unknown>, projectId: string): Promise<void> {
+  const partnerId = (project.partner_id as string | null) ?? null;
+  const amount = (project.amount_usd as number | null) ?? null;
+  if (!partnerId || amount === null || amount <= 0) return;
+
+  const paid = await paidTotal(projectId);
+  if (paid < amount) return;
+
+  const partner = await partnerById(partnerId);
+  if (!partner) return;
+  const [summary] = await summarize([partner]);
+  const line = summary?.accruals.find((a) => a.project_id === projectId);
+  if (!line || line.state !== "earned" || line.amount_usd <= 0) return;
+
+  const client = (project.client as string | null)?.trim();
+  const sum = line.amount_usd.toLocaleString("ru-RU");
+  await notifyPartner(
+    partner,
+    `✅ Проект${client ? ` клиента «${client}»` : ""} оплачен целиком. Вам начислено <b>${sum} $</b> (${line.percent} %). Баланс и вывод: /ref, /payout.`,
+  );
 }

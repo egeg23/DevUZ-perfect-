@@ -60,10 +60,14 @@ export type Project = {
   kind: DealKind;
   tax_percent: number;
   dev_cost_usd: number | null;
+  /** Кто привёл клиента (партнёрская программа), процент ему и почему не засчитано. */
+  partner_id: string | null;
+  partner_percent: number | null;
+  partner_void_reason: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, staff(display_name)";
+  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, staff(display_name)";
 
 function shape(row: Record<string, unknown>): Project {
   // Связанная запись приходит объектом или массивом — PostgREST выводит
@@ -92,6 +96,9 @@ function shape(row: Record<string, unknown>): Project {
     kind: isDealKind(String(row.kind ?? "")) ? (row.kind as DealKind) : "new",
     tax_percent: (row.tax_percent as number | null) ?? DEFAULT_TAX_PERCENT,
     dev_cost_usd: (row.dev_cost_usd as number | null) ?? null,
+    partner_id: (row.partner_id as string | null) ?? null,
+    partner_percent: (row.partner_percent as number | null) ?? null,
+    partner_void_reason: (row.partner_void_reason as string | null) ?? null,
   };
 }
 
@@ -157,12 +164,25 @@ export async function createProject(
   const title = fields.title.trim().slice(0, 200);
   if (!title) return null;
 
+  // Проект из лида наследует партнёра: клиент пришёл по ссылке, и это факт
+  // о клиенте, а не о заявке. Аннулированная привязка не наследуется.
+  let partnerId: string | null = null;
+  if (fields.leadId) {
+    const { data: lead } = await db
+      .from("leads")
+      .select("partner_id, partner_void_reason")
+      .eq("id", fields.leadId)
+      .maybeSingle();
+    if (lead?.partner_id && !lead.partner_void_reason) partnerId = lead.partner_id as string;
+  }
+
   const { data, error } = await db
     .from("projects")
     .insert({
       title,
       client: fields.client?.trim() || null,
       lead_id: fields.leadId || null,
+      partner_id: partnerId,
       owner_staff_id: fields.ownerStaffId || staff.id,
       amount_usd: fields.amountUsd ?? null,
       deadline: fields.deadline || null,

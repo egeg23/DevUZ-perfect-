@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { editProject, moveStage } from "../actions";
-import { confirmPayment, deletePayment, saveMoney, saveShare } from "@/app/admin/finance/actions";
+import { confirmPayment, deletePayment, saveMoney, savePartner, saveShare } from "@/app/admin/finance/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import {
@@ -33,6 +33,8 @@ import {
   stageProgress,
 } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
+import { VOID_TITLE, partnerAccrualOf, type VoidReason } from "@/lib/partners/rules";
+import { listPartners, partnerById, summarize } from "@/lib/partners/store";
 
 export const dynamic = "force-dynamic";
 
@@ -78,12 +80,17 @@ export default async function ProjectPage({
   const notice = r ? (RESULT[r] ?? RESULT.failed) : null;
 
   // Деньги: платежи и люди нужны, чтобы посчитать начисления по проекту.
-  const [payments, people, team, shares] = await Promise.all([
+  const [payments, people, team, shares, partner, partners] = await Promise.all([
     paymentsFor([project.id]),
     loadPeople(),
     staff.role === "head" ? teamOf(staff.id) : Promise.resolve([] as string[]),
     sharesFor([project.id]),
+    project.partner_id ? partnerById(project.partner_id) : Promise.resolve(null),
+    staff.role === "admin" ? listPartners() : Promise.resolve([]),
   ]);
+  // Партнёрская строка: ступень партнёра считается по всем его проектам.
+  const partnerProven = partner ? (await summarize([partner]))[0]?.proven ?? false : false;
+  const partnerLine = partner ? partnerAccrualOf(project, payments, partner, partnerProven) : null;
   const paid = paidOf(project.id, payments);
   const lines = accrualsOf(project, payments, earnersOf(people), sharesOf(project.id, shares));
   const state = accrualState(project, paid);
@@ -333,6 +340,86 @@ export default async function ProjectPage({
               </li>
             ))}
           </ul>
+        ) : null}
+
+        {/* Партнёр: кто привёл клиента */}
+        {(seesMoney && partner) || isAdmin ? (
+          <div className="mt-4 border-t border-line-soft pt-4">
+            <p className="text-xs uppercase tracking-wider text-faint">Партнёр</p>
+            {partner && partnerLine ? (
+              <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <span>{partner.name}</span>
+                <span className="font-mono text-xs text-muted">{partner.code}</span>
+                <span className="text-xs text-faint">
+                  {partnerLine.percent} % {partnerLine.manual ? "· вручную" : partnerProven ? "· прокачанный" : "· база"}
+                </span>
+                <span className="font-mono">{money(partnerLine.amount_usd)}</span>
+                <span
+                  className={`text-xs ${
+                    partnerLine.state === "earned" ? "text-green" : partnerLine.state === "void" ? "text-faint" : "text-gold"
+                  }`}
+                >
+                  {partnerLine.void_reason
+                    ? `не засчитано: ${VOID_TITLE[partnerLine.void_reason as VoidReason] ?? partnerLine.void_reason}`
+                    : ACCRUAL_TITLE[partnerLine.state]}
+                </span>
+              </p>
+            ) : partner ? (
+              <p className="mt-2 text-sm">
+                {partner.name} <span className="font-mono text-xs text-muted">{partner.code}</span>
+                <span className="ml-2 text-xs text-faint">начисление появится, когда будет сумма</span>
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-faint">Клиент пришёл без партнёрской ссылки.</p>
+            )}
+
+            {isAdmin ? (
+              // Владелец правит привязку руками: клиент мог прийти по слову, а не
+              // по ссылке, — или наоборот, привязку надо снять.
+              <form action={savePartner} className="mt-3 grid gap-3 sm:grid-cols-4">
+                <input type="hidden" name="project" value={project.id} />
+                <label className="block">
+                  <span className="text-xs text-faint">Кто привёл</span>
+                  <select name="partner" defaultValue={project.partner_id ?? ""} className={`${FIELD} mt-1`}>
+                    <option value="">без партнёра</option>
+                    {partners.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} · {p.code}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs text-faint">Процент партнёру</span>
+                  <input
+                    name="percent"
+                    inputMode="numeric"
+                    placeholder="по ступени"
+                    defaultValue={project.partner_percent ?? ""}
+                    className={`${FIELD} mt-1`}
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs text-faint">Не засчитывать, причина</span>
+                  <input
+                    name="void_reason"
+                    maxLength={64}
+                    placeholder="пусто — засчитано"
+                    defaultValue={project.partner_void_reason ?? ""}
+                    className={`${FIELD} mt-1`}
+                  />
+                </label>
+                <div className="flex items-end">
+                  <button
+                    type="submit"
+                    className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
+                  >
+                    Сохранить
+                  </button>
+                </div>
+              </form>
+            ) : null}
+          </div>
         ) : null}
 
         {/* Платежи клиента */}

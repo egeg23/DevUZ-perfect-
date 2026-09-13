@@ -14,6 +14,7 @@ import {
   setProjectShare,
   type MoneyResult,
 } from "@/lib/admin/ledger";
+import { setProjectPartner } from "@/lib/partners/store";
 
 /**
  * Права проверяет книга (`ledger.ts`), а не эти обёртки: действие сервера —
@@ -124,4 +125,20 @@ export async function saveShare(formData: FormData) {
   revalidatePath(`/admin/projects/${projectId}`);
   revalidatePath("/admin/finance");
   redirect(`/admin/projects/${projectId}?r=${code(result)}`);
+}
+
+export async function savePartner(formData: FormData) {
+  const staff = await requireStaff();
+  const projectId = String(formData.get("project") ?? "");
+  const partnerId = String(formData.get("partner") ?? "").trim() || null;
+  const percentRaw = String(formData.get("percent") ?? "").trim();
+  const percent = percentRaw ? parsePercent(percentRaw) : null;
+  if (percentRaw && percent === null) redirect(`/admin/projects/${projectId}?r=invalid`);
+  const voidReason = String(formData.get("void_reason") ?? "").trim() || null;
+
+  const result = await setProjectPartner(projectId, { partnerId, percent, voidReason }, staff, await requestIp());
+  revalidatePath(`/admin/projects/${projectId}`);
+  revalidatePath("/admin/finance");
+  revalidatePath("/admin/partners");
+  redirect(`/admin/projects/${projectId}?r=${result.ok ? "ok" : result.reason}`);
 }

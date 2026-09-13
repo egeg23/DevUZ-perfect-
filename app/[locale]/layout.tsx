@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { ChatWidget } from "@/components/chat/chat-widget";
+import { RefCapture } from "@/components/partners/ref-capture";
 import { Analytics } from "@/components/layout/analytics";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
@@ -98,6 +99,7 @@ export default async function LocaleLayout({
         <Header locale={locale} dict={dict} />
         <main id="main">{children}</main>
         <Footer locale={locale} dict={dict} />
+        <RefCapture />
         <ChatWidget locale={locale} dict={dict} />
         <Analytics />
         <script

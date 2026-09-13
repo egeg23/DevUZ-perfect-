@@ -19,6 +19,7 @@ import {
 } from "@/lib/admin/finance";
 import { requireStaff } from "@/lib/admin/guard";
 import { loadLedger, sharesOf } from "@/lib/admin/ledger";
+import { partnerAccrualOf, type PartnerAccrual } from "@/lib/partners/rules";
 import { STAGE_LABEL } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
 
@@ -82,6 +83,16 @@ export default async function FinancePage({
   const byProject = new Map<string, Accrual[]>();
   for (const a of accruals) byProject.set(a.project_id, [...(byProject.get(a.project_id) ?? []), a]);
 
+  // Партнёрская строка: кто привёл клиента, тому — процент от той же прибыли.
+  const partnerLines = new Map<string, PartnerAccrual>();
+  for (const p of ledger.projects) {
+    const partner = p.partner_id ? ledger.partners.get(p.partner_id) : undefined;
+    if (!partner) continue;
+    const line = partnerAccrualOf(p, ledger.payments, partner, ledger.partnerProven.get(partner.id) ?? false);
+    if (line) partnerLines.set(p.id, line);
+  }
+  const partnerTotal = sum([...partnerLines.values()].map((l) => l.amount_usd));
+
   const nameOf = (id: string | null) =>
     ledger.people.find((p) => p.id === id)?.display_name ?? "—";
 
@@ -107,7 +118,7 @@ export default async function FinancePage({
     contracted: sum(live.map((p) => p.amount_usd ?? 0)),
     paid: sum(ledger.payments.map((p) => p.amount_usd)),
     profit: sum(live.map((p) => profitOf(p) ?? 0)),
-    accrued: sum(accruals.map((a) => a.amount_usd)),
+    accrued: sum(accruals.map((a) => a.amount_usd)) + partnerTotal,
     frozen: sum(accruals.filter((a) => a.state === "frozen").map((a) => a.amount_usd)),
     paidOut: sum(ledger.payouts.map((p) => p.amount_usd)),
   };
@@ -154,7 +165,7 @@ export default async function FinancePage({
             note={withoutCost ? `у ${withoutCost} без себестоимости` : "сумма − налог − себестоимость"}
             warn={withoutCost > 0}
           />
-          <Card label="Начислено команде" value={money(totals.accrued)} note={`из них заморожено ${money(totals.frozen)}`} />
+          <Card label="Начислено команде и партнёрам" value={money(totals.accrued)} note={`партнёрам ${money(partnerTotal)} · заморожено ${money(totals.frozen)}`} />
           <Card label="Остаётся владельцу" value={money(totals.profit - totals.accrued)} note={`после налога, себестоимости и всех процентов · выплачено команде ${money(totals.paidOut)}`} />
         </div>
       ) : (
@@ -234,6 +245,7 @@ export default async function FinancePage({
           <tbody>
             {ledger.projects.map((project) => {
               const lines = byProject.get(project.id) ?? [];
+              const partnerLine = partnerLines.get(project.id) ?? null;
               const paid = paidOf(project.id, ledger.payments);
               const state = accrualState(project, paid);
               const profit = profitOf(project);
@@ -262,7 +274,7 @@ export default async function FinancePage({
                   </td>
                   <td className={`${TD} font-mono text-xs ${profit !== null && profit < 0 ? "text-gold" : ""}`}>{money(profit)}</td>
                   <td className={`${TD} text-xs`}>
-                    {lines.length === 0 ? (
+                    {lines.length === 0 && !partnerLine ? (
                       <span className="text-faint">—</span>
                     ) : (
                       lines.map((a) => (
@@ -274,9 +286,23 @@ export default async function FinancePage({
                         </span>
                       ))
                     )}
+                    {partnerLine ? (
+                      <span className="block">
+                        партнёр {ledger.partners.get(partnerLine.partner_id)?.name ?? "—"} {partnerLine.percent} %{partnerLine.manual ? " (вручную)" : ""} —{" "}
+                        <span className="font-mono">{money(partnerLine.amount_usd)}</span>
+                        <span className={`ml-1 ${partnerLine.state === "earned" ? "text-green" : partnerLine.state === "void" ? "text-faint" : "text-gold"}`}>
+                          {partnerLine.void_reason ? "не засчитано" : ACCRUAL_TITLE[partnerLine.state]}
+                        </span>
+                      </span>
+                    ) : null}
                   </td>
                   {isAdmin ? (
-                    <td className={`${TD} font-mono text-xs`}>{money(ownerShare(project, lines))}</td>
+                    <td className={`${TD} font-mono text-xs`}>
+                      {(() => {
+                        const own = ownerShare(project, lines);
+                        return money(own === null ? null : own - (partnerLine?.amount_usd ?? 0));
+                      })()}
+                    </td>
                   ) : null}
                 </tr>
               );
