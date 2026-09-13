@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { auditChunkAction } from "@/app/admin/prospect/actions";
+import type { PitchLocale } from "@/lib/audit/pitch";
 import {
   BATCH_CAP,
   CHUNK,
@@ -39,6 +40,9 @@ export function ProspectRunner() {
   const [done, setDone] = useState(0);
   const [running, setRunning] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  // Язык письма выбирается до прогона: заход строится один раз, на сервере,
+  // вместе с подписью того, кто его отправит.
+  const [locale, setLocale] = useState<PitchLocale>("ru");
 
   const parsed = text.trim() ? parseTargets(text) : [];
   const good = parsed.filter((t) => t.url);
@@ -57,7 +61,7 @@ export function ProspectRunner() {
     for (let i = 0; i < targets.length; i += CHUNK) {
       const chunk = targets.slice(i, i + CHUNK);
       try {
-        const part = await auditChunkAction(chunk);
+        const part = await auditChunkAction(chunk, locale);
         collected.push(...part);
       } catch {
         // Сорвавшаяся пачка не должна ронять весь прогон: остальные сайты
@@ -170,6 +174,19 @@ export function ProspectRunner() {
           {running ? `Проверяю… ${done} из ${queue.length}` : `Проверить ${good.length}`}
         </button>
 
+        <label className="flex items-center gap-2 text-xs text-faint">
+          Язык письма
+          <select
+            value={locale}
+            onChange={(event) => setLocale(event.target.value === "en" ? "en" : "ru")}
+            disabled={running}
+            className="rounded-lg border border-line bg-surface-2 px-2 py-1.5 text-xs text-text"
+          >
+            <option value="ru">русский</option>
+            <option value="en">английский</option>
+          </select>
+        </label>
+
         {rows.length ? (
           <button
             type="button"
@@ -217,7 +234,7 @@ export function ProspectRunner() {
                   {row.findings.map((f) => (
                     <span
                       key={f.code}
-                      title={f.impact}
+                      title={`${f.impact}\n\nЧто делаем: ${f.fix}`}
                       className={`rounded-full border px-2 py-0.5 text-xs ${
                         SEVERITY[f.severity] ?? SEVERITY.minor
                       }`}

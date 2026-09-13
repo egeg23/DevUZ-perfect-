@@ -155,6 +155,9 @@ export function SiteAudit({ dict }: { dict: Dictionary }) {
                     <div>
                       <p className="font-semibold">{f.title}</p>
                       <p className="mt-1 text-sm text-muted">{f.impact}</p>
+                      <p className="mt-2 text-sm">
+                        <span className="text-green">{t.fixLabel}:</span> {f.fix}
+                      </p>
                     </div>
                   </div>
                 </li>

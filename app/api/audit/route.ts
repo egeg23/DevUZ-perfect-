@@ -12,7 +12,7 @@
  */
 import { NextResponse } from "next/server";
 
-import { analyze, type AuditReport } from "@/lib/audit/checks";
+import { analyze, unreachable } from "@/lib/audit/checks";
 import { probe } from "@/lib/audit/fetch";
 import { BlockedAddress, normalizeUrl } from "@/lib/audit/guard";
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
@@ -28,23 +28,6 @@ export const dynamic = "force-dynamic";
  * сканер чужих сайтов от нашего имени.
  */
 const LIMIT = { limit: 5, windowMs: 60_000 };
-
-function unreachable(url: string, why: string): AuditReport {
-  return {
-    url,
-    score: 0,
-    findings: [
-      {
-        code: "unreachable",
-        severity: "critical",
-        title: "Сайт не отвечает",
-        impact:
-          `Мы не смогли открыть страницу (${why}). Для клиента это выглядит ровно так же: он вводит адрес и не попадает никуда. Если сайта пока нет — это и есть точка роста, а не проблема.`,
-      },
-    ],
-    facts: { https: false, ttfbMs: 0, platform: null, isShop: false, certDaysLeft: null },
-  };
-}
 
 export async function POST(request: Request) {
   const gate = rateLimit(`audit:${clientIp(request)}`, LIMIT);

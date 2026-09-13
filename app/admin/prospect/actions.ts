@@ -2,6 +2,7 @@
 
 import { record } from "@/lib/admin/audit";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
+import { pitchLocales, type PitchLocale } from "@/lib/audit/pitch";
 import {
   auditOne,
   CHUNK,
@@ -23,8 +24,15 @@ import {
  * чужие сайты, и десяток одновременных запросов с одного адреса выглядит
  * со стороны ровно как то, чем не является.
  */
-export async function auditChunkAction(targets: BatchTarget[]): Promise<ProspectRow[]> {
+export async function auditChunkAction(
+  targets: BatchTarget[],
+  locale: PitchLocale = "ru",
+): Promise<ProspectRow[]> {
   const staff = await requireStaff();
+
+  // Язык черновика — тоже ввод из браузера: незнакомое значение не должно
+  // стать ключом словаря заходов.
+  const lang: PitchLocale = pitchLocales.includes(locale) ? locale : "ru";
 
   // Потолок на случай, если пачка придёт не с нашей страницы: действие
   // сервера вызывается из браузера, и размер пачки — это ввод, а не
@@ -33,7 +41,7 @@ export async function auditChunkAction(targets: BatchTarget[]): Promise<Prospect
 
   const rows: ProspectRow[] = [];
   for (const target of slice) {
-    rows.push(toProspectRow(await auditOne(target)));
+    rows.push(toProspectRow(await auditOne(target), lang, staff.display_name));
   }
 
   await record("prospect.audited", {
