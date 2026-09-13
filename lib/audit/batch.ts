@@ -1,4 +1,4 @@
-import { analyze, type AuditReport, type Finding } from "@/lib/audit/checks";
+import { analyze, unreachable, type AuditReport, type Finding } from "@/lib/audit/checks";
 import { type PitchLocale, pitch } from "@/lib/audit/pitch";
 import { probe } from "@/lib/audit/fetch";
 // Разбор адреса — из чистого модуля: этот файл импортирует и браузер
@@ -129,22 +129,6 @@ function unreachableWhy(error: unknown): string {
   return "нет соединения";
 }
 
-function unreachableReport(url: string, why: string): AuditReport {
-  return {
-    url,
-    score: 0,
-    findings: [
-      {
-        code: "unreachable",
-        severity: "critical",
-        title: "Сайт не отвечает",
-        impact: `Не открылся: ${why}. Клиент, набравший адрес, видит ровно то же самое.`,
-      },
-    ],
-    facts: { https: false, ttfbMs: 0, platform: null, isShop: false, certDaysLeft: null },
-  };
-}
-
 /**
  * Проверить один адрес.
  *
@@ -163,7 +147,7 @@ export async function auditOne(target: BatchTarget): Promise<BatchRow> {
     if (error instanceof BlockedAddress) {
       return { target, report: null, failure: `адрес отклонён: ${error.reason}` };
     }
-    return { target, report: unreachableReport(target.url, unreachableWhy(error)), failure: null };
+    return { target, report: unreachable(target.url, unreachableWhy(error)), failure: null };
   }
 }
 
@@ -189,10 +173,15 @@ export type ProspectRow = {
 };
 
 /**
- * Локаль по умолчанию русская: панель касаний звала эту функцию без неё, и
- * менять смысл существующего вызова ради нового аргумента нельзя.
+ * Локаль по умолчанию русская, отправитель не назван: панель касаний звала эту
+ * функцию без них, и менять смысл существующего вызова ради новых аргументов
+ * нельзя. Отправитель — имя менеджера, которое встанет в приветствие и подпись.
  */
-export function toProspectRow(row: BatchRow, locale: PitchLocale = "ru"): ProspectRow {
+export function toProspectRow(
+  row: BatchRow,
+  locale: PitchLocale = "ru",
+  sender: string | null = null,
+): ProspectRow {
   const { target, report, failure } = row;
 
   if (!report) {
@@ -207,7 +196,7 @@ export function toProspectRow(row: BatchRow, locale: PitchLocale = "ru"): Prospe
     };
   }
 
-  const draft = pitch(report, target.label, locale);
+  const draft = pitch(report, target.label, locale, sender);
 
   return {
     raw: target.raw,

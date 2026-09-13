@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { analyze, detectPlatform, looksLikeShop } from "@/lib/audit/checks";
+import { analyze, detectPlatform, looksLikeShop, unreachable } from "@/lib/audit/checks";
 import type { PageProbe } from "@/lib/audit/fetch";
 
 function probe(over: Partial<PageProbe> = {}): PageProbe {
@@ -90,4 +90,44 @@ test("магазин отличается от визитки по корзин�
   assert.equal(looksLikeShop("<a>Savat</a><button>Savatga qo'shish</button>"), true);
   // Слово «корзина» в тексте про мусорные корзины магазином не делает.
   assert.equal(looksLikeShop("<p>Продаём корзины плетёные</p>"), false);
+});
+
+/**
+ * У каждой находки три части — что не так, чем оборачивается, что делаем, —
+ * и все три на языке владельца бизнеса. Слова из головы разработчика в
+ * находку не попадают: их адресат не поймёт, а значит, и не исправит.
+ */
+test("у каждой находки есть последствие и «что делаем», без жаргона", () => {
+  const broken = analyze(probe({
+    status: 500, https: false, ttfbMs: 4000, certDaysLeft: null,
+    html: "<html><body>пусто</body></html>",
+  }));
+  const cert = analyze(probe({ certDaysLeft: 5 }));
+  const all = [...broken.findings, ...cert.findings, ...unreachable("https://x.uz/", "домен не найден").findings];
+
+  const codes = new Set(all.map((f) => f.code));
+  for (const expected of ["http_error", "no_https", "no_viewport", "slow", "no_title", "no_description", "no_og", "no_h1", "cert_expiring", "unreachable"]) {
+    assert.ok(codes.has(expected), `не покрыта находка ${expected}`);
+  }
+
+  for (const f of all) {
+    assert.ok(f.title.length > 10, `${f.code}: заголовок пустой`);
+    assert.ok(f.impact.length > 60, `${f.code}: последствие в одну фразу`);
+    assert.ok(f.fix.length > 40, `${f.code}: «что делаем» не написано`);
+
+    const text = `${f.title} ${f.impact} ${f.fix}`.toLowerCase();
+    for (const leak of ["meta", "viewport", "og:", "h1", "ttfb", "ssl", "tls", "http", "dns", "seo"]) {
+      assert.ok(!text.includes(leak), `в находке ${f.code} жаргон «${leak}»`);
+    }
+    for (const promise of ["в топ", "гарантируем", "первое место", "% продаж"]) {
+      assert.ok(!text.includes(promise), `в находке ${f.code} обещание «${promise}»`);
+    }
+  }
+});
+
+test("причина недоступности попадает в находку словами, а не кодом", () => {
+  const [finding] = unreachable("https://x.uz/", "домен не найден").findings;
+  assert.equal(finding.severity, "critical");
+  assert.ok(finding.impact.includes("домен не найден"));
+  assert.ok(!finding.impact.includes("ENOTFOUND"));
 });

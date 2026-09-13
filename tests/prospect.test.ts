@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { BATCH_CAP, parseTargets, toProspectRow } from "@/lib/audit/batch";
-import { leadFinding, pitch } from "@/lib/audit/pitch";
+import { latin, leadFinding, pitch } from "@/lib/audit/pitch";
 import type { AuditReport, Finding } from "@/lib/audit/checks";
 
 /**
@@ -33,12 +33,14 @@ const CRITICAL: Finding = {
   severity: "critical",
   title: "Сайт не приспособлен к телефонам",
   impact: "На телефоне страница открывается в масштабе рабочего стола.",
+  fix: "Что делаем — по этой находке.",
 };
 const MINOR: Finding = {
   code: "no_h1",
   severity: "minor",
   title: "На странице нет главного заголовка",
   impact: "Поисковику не за что зацепиться.",
+  fix: "Что делаем — по этой находке.",
 };
 
 test("список разбирается так, как его реально вставляют", () => {
@@ -135,6 +137,7 @@ test("разные находки дают разные заходы, а не ш
     severity: "major",
     title: "Сервер отвечает за 4.2 сек",
     impact: "Посетитель смотрит на белый экран.",
+    fix: "Что делаем — по этой находке.",
   };
 
   const a = pitch(report([CRITICAL]), null);
@@ -158,6 +161,7 @@ test("недоступный сайт — это находка, а не про�
         severity: "critical",
         title: "Сайт не отвечает",
         impact: "Не открылся: домен не найден.",
+        fix: "Что делаем — по этой находке.",
       },
     ]),
     failure: null,
@@ -232,6 +236,7 @@ test("находка без английского захода не даёт ч
     severity: "major",
     title: "Новая находка, которую не завели в заходы",
     impact: "Последствие, описанное по-русски.",
+    fix: "Что делаем — по этой находке.",
   };
 
   const en = pitch(report([unknown]), "Acme Ltd", "en");
@@ -249,8 +254,75 @@ test("замер попадает и в английский черновик", 
     severity: "major",
     title: "Сервер отвечает за 4.2 сек",
     impact: "Посетитель смотрит на белый экран.",
+    fix: "Что делаем — по этой находке.",
   };
   const result = pitch(report([slow], { ttfbMs: 4200 }), null, "en");
   assert.ok(result.ok);
   assert.ok((result.ok ? result.text : "").includes("4.2"), "замер не попал в черновик");
+});
+
+/**
+ * Письмо стало человечнее: у него есть отправитель, студия и подпись, а
+ * заход говорит не одной фразой. Проверяется не формулировка (она будет
+ * меняться), а то, без чего письмо снова превратится в шаблон.
+ */
+
+test("черновик подписан тем, кто его отправит, и называет студию", () => {
+  const result = pitch(report([CRITICAL]), "ООО «Ромашка»", "ru", "Егор");
+  assert.ok(result.ok);
+  const text = result.ok ? result.text : "";
+
+  assert.ok(text.startsWith("Здравствуйте!"), "письмо не начинается с приветствия");
+  assert.ok(text.includes("Егор"), "имя отправителя не попало в письмо");
+  assert.ok(text.includes("DevUz Studio"), "студия не названа");
+  assert.ok(text.trimEnd().endsWith("Егор"), "письмо не подписано отправителем");
+  assert.ok(!text.includes("{"), "в письме остался незаполненный шаблон");
+});
+
+test("без отправителя письмо подписано студией, а не пустой строкой", () => {
+  const result = pitch(report([CRITICAL]), null);
+  assert.ok(result.ok);
+  const text = result.ok ? result.text : "";
+  assert.ok(text.trimEnd().endsWith("DevUz Studio"));
+  assert.ok(!/\n\s*\n\s*$/.test(text), "письмо заканчивается пустыми строками");
+});
+
+test("в английском письме имя отправителя латиницей", () => {
+  const result = pitch(report([CRITICAL, MINOR]), "Acme Ltd", "en", "Егор");
+  assert.ok(result.ok);
+  const text = result.ok ? result.text : "";
+  assert.ok(!/[а-яё]/i.test(text), `в английское письмо утекла кириллица: ${text}`);
+  assert.ok(text.includes("Egor"), "имя не транслитерировалось");
+});
+
+test("заход говорит тремя фразами: что увидел, чем оборачивается, что делаем", () => {
+  // «Чуть подробнее» — просьба владельца. Одна фраза с находкой читается
+  // как упрёк; три — как предложение. Считаем предложения в заходе.
+  for (const locale of ["ru", "en"] as const) {
+    for (const finding of [CRITICAL, MINOR]) {
+      const result = pitch(report([finding]), null, locale);
+      assert.ok(result.ok);
+      const body = (result.ok ? result.text : "").split("\n\n")[1] ?? "";
+      const sentences = body.split(/[.!?]\s+/).filter(Boolean).length;
+      assert.ok(sentences >= 3, `${locale}/${finding.code}: в заходе ${sentences} предложения`);
+    }
+  }
+});
+
+test("транслитерация не трогает латиницу и держит регистр", () => {
+  assert.equal(latin("Егор"), "Egor");
+  assert.equal(latin("Алексей Щукин"), "Aleksey Shchukin");
+  assert.equal(latin("Ўткир"), "O'tkir");
+  assert.equal(latin("John"), "John");
+});
+
+test("хвост склоняет «места» по числу находок", () => {
+  const more = (n: number): Finding[] =>
+    Array.from({ length: n }, (_, i) => ({ ...MINOR, code: `minor_${i}` }));
+
+  const two = pitch(report([CRITICAL, ...more(2)]), null);
+  const five = pitch(report([CRITICAL, ...more(5)]), null);
+  assert.ok(two.ok && five.ok);
+  assert.ok((two.ok ? two.text : "").includes("ещё 2 места"), "два места");
+  assert.ok((five.ok ? five.text : "").includes("ещё 5 мест"), "пять мест");
 });
