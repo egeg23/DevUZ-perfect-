@@ -54,7 +54,8 @@ export async function editProject(formData: FormData) {
     {
       title: String(formData.get("title") ?? ""),
       client: String(formData.get("client") ?? ""),
-      amountUsd: numberOrNull(formData.get("amount")),
+      // Сумма отсюда больше не правится: у неё свой блок «Деньги» с проверкой,
+      // кому и до какого момента её можно менять.
       deadline: String(formData.get("deadline") ?? "") || null,
       notes: String(formData.get("notes") ?? ""),
     },

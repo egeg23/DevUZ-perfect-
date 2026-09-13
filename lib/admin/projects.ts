@@ -1,4 +1,5 @@
 import { record } from "@/lib/admin/audit";
+import { DEFAULT_TAX_PERCENT, isDealKind, type DealKind } from "@/lib/admin/finance";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
 
@@ -55,10 +56,14 @@ export type Project = {
   deadline: string | null;
   amount_usd: number | null;
   notes: string | null;
+  /** Новый клиент или допродажа — от этого зависит ставка менеджера. */
+  kind: DealKind;
+  tax_percent: number;
+  dev_cost_usd: number | null;
 };
 
 const COLUMNS =
-  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, staff(display_name)";
+  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, staff(display_name)";
 
 function shape(row: Record<string, unknown>): Project {
   // Связанная запись приходит объектом или массивом — PostgREST выводит
@@ -84,6 +89,9 @@ function shape(row: Record<string, unknown>): Project {
     deadline: (row.deadline as string | null) ?? null,
     amount_usd: (row.amount_usd as number | null) ?? null,
     notes: (row.notes as string | null) ?? null,
+    kind: isDealKind(String(row.kind ?? "")) ? (row.kind as DealKind) : "new",
+    tax_percent: (row.tax_percent as number | null) ?? DEFAULT_TAX_PERCENT,
+    dev_cost_usd: (row.dev_cost_usd as number | null) ?? null,
   };
 }
 
@@ -274,4 +282,27 @@ export async function updateProject(
   });
 
   return true;
+}
+
+/**
+ * Проекты по кругу ответственных — для финансов.
+ *
+ * Все стадии, включая закрытые: деньги по закрытому проекту никуда не
+ * деваются, и баланс менеджера без них врёт. Пустой круг — пустой ответ, а
+ * не «все»: руководитель без команды не должен вдруг увидеть всех.
+ */
+export async function projectsOwnedBy(scope: "all" | readonly string[]): Promise<Project[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  if (scope !== "all" && !scope.length) return [];
+
+  let query = db.from("projects").select(COLUMNS).order("created_at", { ascending: false });
+  if (scope !== "all") query = query.in("owner_staff_id", [...scope]);
+
+  const { data, error } = await query.limit(500);
+  if (error) {
+    console.error("admin: не прочитал проекты для финансов", error.message);
+    return [];
+  }
+  return (data ?? []).map((row) => shape(row as Record<string, unknown>));
 }
