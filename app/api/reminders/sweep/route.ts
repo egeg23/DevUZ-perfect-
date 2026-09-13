@@ -2,6 +2,7 @@ import { record } from "@/lib/admin/audit";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { sweepOrders } from "@/lib/admin/order-sweep-run";
+import { sendScoutDigest } from "@/lib/scout/digest";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
@@ -175,6 +176,10 @@ export async function POST(request: Request) {
   // не дают ей превратиться в рассылку.
   const resent = await resendUnnotifiedSignals();
 
+  // Утренняя сводка скаута — тоже здесь, по той же причине: ей не нужен
+  // свой таймер, ей нужен кто-то, кто ходит регулярно и посмотрит на часы.
+  const digest = await sendScoutDigest();
+
   // Заявки на покупку — по той же причине здесь. Заявка, забытая без
   // счёта, и оплаченный заказ, которому нечего отдать, — это деньги, и
   // узнавать о них от самого покупателя значит узнавать слишком поздно.
@@ -199,6 +204,7 @@ export async function POST(request: Request) {
     failed,
     purged,
     resent,
+    digest,
     orders,
     queued: (data ?? []).length,
   });
