@@ -136,25 +136,43 @@ export function formatLeadBrief(
   return clampHtml(parts.join("\n"));
 }
 
+/**
+ * Сколько ждём ответа Bot API на один вызов.
+ *
+ * Без предела зависший вызов держал бы работу после ответа Telegram столько,
+ * сколько живёт TCP-соединение через прокси, — минуты. Ссылка входа,
+ * которую сотрудник ждёт прямо сейчас, столько ждать не может: лучше
+ * оборвать и повторить один раз, чем молчать.
+ */
+const CALL_TIMEOUT_MS = 15_000;
+
 async function call(method: string, payload: unknown): Promise<boolean> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return false;
 
-  try {
-    const response = await fetch(`${API}${token}/${method}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      console.error("telegram", method, response.status, await response.text());
-      return false;
+  // Вторая попытка — только если первая оборвалась, не получив ответа:
+  // сеть, прокси, таймаут. Ответ с ошибкой от Telegram не повторяем — он
+  // будет тем же.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const response = await fetch(`${API}${token}/${method}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
+      });
+      if (!response.ok) {
+        console.error("telegram", method, response.status, await response.text());
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("telegram", method, `попытка ${attempt}`, error);
+      if (attempt === 2) return false;
+      await new Promise((resolve) => setTimeout(resolve, 1_000));
     }
-    return true;
-  } catch (error) {
-    console.error("telegram", method, error);
-    return false;
   }
+  return false;
 }
 
 export async function sendMessage(chatId: number | string, text: string): Promise<boolean> {
