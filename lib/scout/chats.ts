@@ -41,24 +41,23 @@ type Client = {
 };
 
 export async function openChats(client: Client, names: string[]): Promise<ChatRoster> {
-  const opened: OpenedChat[] = [];
-  const failed: { name: string; reason: string }[] = [];
-
-  for (const name of names) {
-    try {
-      const id = await client.getPeerId(await client.getInputEntity(name));
-      opened.push({ name, id: String(id) });
-    } catch (error) {
-      failed.push({
-        name,
-        reason: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  // Сверка с диалогами — диагностика, а не условие работы. Если она не
-  // удалась, скаут всё равно читает: молчать про членство хуже, чем не
-  // запуститься из-за упавшей проверки.
+  /**
+   * Диалоги — первыми, до разбора адресов. Это не только диагностика.
+   *
+   * Список диалогов наполняет кэш сущностей клиента всеми чатами, где
+   * аккаунт состоит. Без него числовой id из SCOUT_CHATS не открывается
+   * вовсе: клиент ищет число только в кэше и на холодном старте бросает
+   * «Could not find the input entity» — при том, что README этот формат
+   * обещает. А адрес по имени без кэша — это сетевой resolveUsername на
+   * каждый чат при каждом перезапуске, и на этот метод у Telegram
+   * отдельный тесный лимит: пять выкаток за день — полторы сотни
+   * запросов с одного аккаунта. После FLOOD_WAIT все адреса после первого
+   * отказавшего «не открываются», и скаут читает три чата из тридцати до
+   * следующего перезапуска.
+   *
+   * Если список не получить — читаем всё равно: молчать про членство
+   * хуже, чем не запуститься из-за упавшей проверки.
+   */
   let roster: Set<string> | null = null;
   try {
     const dialogs = await client.getDialogs({});
@@ -71,11 +70,44 @@ export async function openChats(client: Client, names: string[]): Promise<ChatRo
     roster = null;
   }
 
+  const opened: OpenedChat[] = [];
+  const failed: { name: string; reason: string }[] = [];
+  const notJoined: OpenedChat[] = [];
+
+  for (const name of names) {
+    try {
+      const id = await client.getPeerId(await client.getInputEntity(name));
+      opened.push({ name, id: String(id) });
+    } catch (error) {
+      // Номер, который не открылся, — это не ошибка, а «не состою».
+      //
+      // Номер открывается только из кэша, кэш наполняют диалоги, то есть
+      // чаты, где аккаунт есть. Не нашёлся — значит, ещё не вступили.
+      // Раньше такие уходили в «не открыл» с английской ошибкой из
+      // библиотеки, по строке на чат: двадцать невступленных — двадцать
+      // строк «Could not find the input entity», которые читались как
+      // поломка. Адрес по имени сюда не попадает: публичный адрес
+      // разбирается у кого угодно, и его провал — настоящая ошибка.
+      if (isNumericId(name)) {
+        notJoined.push({ name, id: name });
+        continue;
+      }
+      failed.push({
+        name,
+        reason: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   const known = roster;
   return {
     opened,
     failed,
-    outside: known ? opened.filter((chat) => !known.has(chat.id)) : [],
+    outside: [...(known ? opened.filter((chat) => !known.has(chat.id)) : []), ...notJoined],
     rosterUnknown: known === null,
   };
+}
+
+function isNumericId(name: string): boolean {
+  return /^-?\d+$/.test(name);
 }

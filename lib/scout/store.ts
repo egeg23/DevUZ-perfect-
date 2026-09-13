@@ -119,37 +119,76 @@ export function excerpt(text: string, limit = 600): string {
   return `${clean.slice(0, limit - 1)}…`;
 }
 
-export async function saveSignal(input: SignalInput): Promise<boolean> {
-  const db = serviceClient();
-  if (!db) return false;
+/**
+ * Три исхода, а не «да/нет».
+ *
+ * Раньше проигнорированный дубль возвращал true — и уведомление уходило
+ * второй раз: тот же сигнал, та же ссылка, тот же канал. Дубли приходят
+ * реже, чем кажется, но приходят: два процесса на одной сессии, повтор
+ * обновления при переподключении. «Уже было» — отдельный ответ, и на него
+ * уведомление не шлётся.
+ */
+export type SaveOutcome =
+  | { outcome: "inserted"; id: string }
+  | { outcome: "duplicate" }
+  | { outcome: "failed" };
 
-  const { error } = await db.from("scout_signals").upsert(
-    {
-      chat_id: input.chatId,
-      chat_title: input.chatTitle,
-      message_id: input.messageId,
-      message_link: messageLink(input.chatId, input.messageId, input.chatUsername),
-      author_telegram_id: input.authorTelegramId,
-      author_username: input.authorUsername,
-      excerpt: excerpt(input.text),
-      topics: input.topics,
-      score: input.score,
-      category: input.category,
-      rationale: input.rationale,
-      // Фикстура попадает в базу уже разобранной: цепочка проверена, а
-      // очередь оператора не засорена.
-      status: input.rehearsal ? "ignored" : "new",
-    },
-    // Перезапуск скаута не должен задваивать ленту оператора: пара
-    // «чат + сообщение» уникальна, повтор молча игнорируется.
-    { onConflict: "chat_id,message_id", ignoreDuplicates: true },
-  );
+export async function saveSignal(input: SignalInput): Promise<SaveOutcome> {
+  const db = serviceClient();
+  if (!db) return { outcome: "failed" };
+
+  const { data, error } = await db
+    .from("scout_signals")
+    .upsert(
+      {
+        chat_id: input.chatId,
+        chat_title: input.chatTitle,
+        message_id: input.messageId,
+        message_link: messageLink(input.chatId, input.messageId, input.chatUsername),
+        author_telegram_id: input.authorTelegramId,
+        author_username: input.authorUsername,
+        excerpt: excerpt(input.text),
+        topics: input.topics,
+        score: input.score,
+        category: input.category,
+        rationale: input.rationale,
+        // Фикстура попадает в базу уже разобранной: цепочка проверена, а
+        // очередь оператора не засорена.
+        status: input.rehearsal ? "ignored" : "new",
+      },
+      // Перезапуск скаута не должен задваивать ленту оператора: пара
+      // «чат + сообщение» уникальна, повтор молча игнорируется.
+      { onConflict: "chat_id,message_id", ignoreDuplicates: true },
+    )
+    // При ignoreDuplicates база возвращает только вставленные строки:
+    // пустой ответ и есть «уже было».
+    .select("id");
 
   if (error) {
     console.error("scout: не сохранил сигнал", error.message);
-    return false;
+    return { outcome: "failed" };
   }
-  return true;
+
+  const row = (data ?? [])[0] as { id: string } | undefined;
+  return row ? { outcome: "inserted", id: row.id } : { outcome: "duplicate" };
+}
+
+/** Отметка доставки. Ставится только после успеха — см. resendUnnotifiedSignals. */
+async function markNotified(id: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { error } = await db
+    .from("scout_signals")
+    .update({ notified_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) console.error("scout: не отметил доставку", error.message);
+}
+
+async function markNotifyFailed(id: string, attempts: number): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { error } = await db.from("scout_signals").update({ notify_attempts: attempts }).eq("id", id);
+  if (error) console.error("scout: не записал неудачу доставки", error.message);
 }
 
 /**
@@ -162,17 +201,64 @@ export async function saveSignal(input: SignalInput): Promise<boolean> {
  * Отвечает оператор сам и в том же публичном чате. Сервис в чаты не
  * пишет — ни одной строкой.
  */
-export async function notifyOperator(input: SignalInput): Promise<boolean> {
-  const channel = process.env.TELEGRAM_SCOUT_CHANNEL_ID;
-  if (!channel) return false;
-  if (!shouldNotify(input.score, input.category)) return false;
+/**
+ * То, из чего собирается сообщение оператору.
+ *
+ * Отдельная форма, а не SignalInput: живой путь собирает её из только что
+ * разобранного сообщения, досылка — из строки в базе, где полного текста и
+ * адреса чата уже нет, зато есть готовая ссылка и выдержка.
+ */
+export type SignalNotice = {
+  chatTitle: string | null;
+  link: string | null;
+  authorUsername: string | null;
+  excerpt: string;
+  score: number;
+  category: string;
+  rationale: string;
+  /**
+   * Сигнал из холостого прогона: уведомление должно это показать.
+   *
+   * Необязательное: свип досылки поднимает сигналы из базы, где признака
+   * прогона нет — да и не нужен, свип берёт только `status = 'new'`, а
+   * прогон кладёт сразу `'ignored'`.
+   */
+  rehearsal?: boolean;
+};
 
-  const link = messageLink(input.chatId, input.messageId, input.chatUsername);
+export function noticeFrom(input: SignalInput): SignalNotice {
+  return {
+    chatTitle: input.chatTitle,
+    link: messageLink(input.chatId, input.messageId, input.chatUsername),
+    authorUsername: input.authorUsername,
+    excerpt: input.text,
+    score: input.score,
+    category: input.category,
+    rationale: input.rationale,
+    rehearsal: input.rehearsal ?? false,
+  };
+}
+
+/**
+ * «Пропущено» — не то же, что «не смог».
+ *
+ * Не смог — Telegram не принял, и это надо пробовать снова. Пропущено —
+ * слать было некуда (канал не задан) или незачем (ниже порога), и снова
+ * пробовать не надо. Смешай их — и счётчик неудач начнёт расти на сигналах,
+ * по которым отправки не было вовсе, а свип сдастся раньше, чем канал
+ * появится.
+ */
+export type NotifyOutcome = "sent" | "failed" | "skipped";
+
+export async function notifyOperator(notice: SignalNotice): Promise<NotifyOutcome> {
+  const channel = process.env.TELEGRAM_SCOUT_CHANNEL_ID;
+  if (!channel) return "skipped";
+  if (!shouldNotify(notice.score, notice.category)) return "skipped";
 
   /**
    * Автор — и чем именно до него дотягиваться.
    *
-   * Различие не косметическое, а решает, успеет оператор или нет. С
+   * Различие не косметическое, оно решает, успеет оператор или нет. С
    * username личка открывается в одно касание и переживает удаление поста.
    * Без username единственная дорога — через само сообщение: числового id
    * мало, для личного чата Telegram нужен ещё access_hash, а он есть только
@@ -183,25 +269,27 @@ export async function notifyOperator(input: SignalInput): Promise<boolean> {
    * удалят — и человек станет недостижим совсем. Так и вышло с первым же
    * настоящим сигналом.
    */
-  const author = input.authorUsername
-    ? `Автор: @${esc(input.authorUsername)} — https://t.me/${esc(input.authorUsername)}`
+  const author = notice.authorUsername
+    ? `Автор: @${esc(notice.authorUsername)} — https://t.me/${esc(notice.authorUsername)}`
     : "Автор: без username — дотянуться можно только через сообщение, пока его не удалили.";
 
-  return sendMessage(
+  const delivered = await sendMessage(
     channel,
     [
       // Пометка первой строкой, а не в конце: оператор решает, читать ли
       // дальше, по первой строке уведомления.
-      input.rehearsal ? "🧪 <b>ХОЛОСТОЙ ПРОГОН</b> — это не лид" : "",
-      `🔎 <b>${esc(input.category)}</b> · ${input.score}/100`,
-      input.chatTitle ? `<i>${esc(input.chatTitle)}</i>` : "",
+      notice.rehearsal ? "🧪 <b>ХОЛОСТОЙ ПРОГОН</b> — это не лид" : "",
+      `🔎 <b>${esc(notice.category)}</b> · ${notice.score}/100`,
+      notice.chatTitle ? `<i>${esc(notice.chatTitle)}</i>` : "",
       "",
-      esc(input.rationale),
+      esc(notice.rationale),
       "",
-      `<blockquote>${esc(excerpt(input.text, 400))}</blockquote>`,
+      `<blockquote>${esc(excerpt(notice.excerpt, 400))}</blockquote>`,
       "",
       author,
-      link ? `Сообщение: ${link}` : "Сообщение: ссылка недоступна (закрытый чат без адреса)",
+      notice.link
+        ? `Сообщение: ${notice.link}`
+        : "Сообщение: ссылка недоступна (закрытый чат без адреса)",
       "",
       // Срочность в самом уведомлении, а не в инструкции, которую прочтут
       // один раз и забудут. Первый же настоящий сигнал скаута прожил меньше
@@ -212,6 +300,8 @@ export async function notifyOperator(input: SignalInput): Promise<boolean> {
       .filter((line) => line !== "")
       .join("\n"),
   );
+
+  return delivered ? "sent" : "failed";
 }
 
 /**
@@ -248,12 +338,39 @@ export type ScoutRun = {
   dropped: Record<string, number>;
 };
 
+/**
+ * Ввод-вывод прохода — подменяемый.
+ *
+ * Не ради абстракции: решение «уведомлять только вставленное, отмечать
+ * только доставленное» иначе не проверить без живой базы и живого
+ * Telegram, а именно это решение и ломалось.
+ */
+export type ScoutIo = {
+  save: (input: SignalInput) => Promise<SaveOutcome>;
+  notify: (notice: SignalNotice) => Promise<NotifyOutcome>;
+  markSent: (id: string) => Promise<void>;
+  markFailed: (id: string, attempts: number) => Promise<void>;
+};
+
+const liveIo: ScoutIo = {
+  save: saveSignal,
+  notify: notifyOperator,
+  markSent: markNotified,
+  markFailed: markNotifyFailed,
+};
+
 export async function processBatch(
   messages: ScoutMessage[],
   classify: (
     batch: { key: string; text: string; chatTitle?: string | null }[],
   ) => Promise<{ key: string; score: number; category: string; rationale: string }[]>,
-  { rehearsal = false }: { rehearsal?: boolean } = {},
+  // Оба необязательных параметра одним объектом: io — шов для тестов,
+  // rehearsal — признак холостого прогона. Позиционно они бы начали
+  // путаться местами у вызывающих.
+  {
+    io = liveIo,
+    rehearsal = false,
+  }: { io?: ScoutIo; rehearsal?: boolean } = {},
 ): Promise<ScoutRun> {
   const run: ScoutRun = {
     seen: messages.length,
@@ -309,15 +426,128 @@ export async function processBatch(
       rehearsal,
     };
 
-    if (await saveSignal(signal)) run.saved += 1;
+    const saved = await io.save(signal);
+    // Дубль — не повод писать оператору ещё раз. Его уведомление уже было,
+    // а если не было — досылка (resendUnnotifiedSignals) найдёт его по
+    // пустой отметке доставки.
+    if (saved.outcome !== "inserted") continue;
+    run.saved += 1;
 
     // Считаем отправленное, а не перешагнувшее порог: иначе числа прохода
     // бодро показывают рассылку там, где канал оператора не настроен, — и
     // единственная диагностика скаута начинает врать.
-    if (await notifyOperator(signal)) run.notified += 1;
+    const outcome = await io.notify(noticeFrom(signal));
+    if (outcome === "sent") {
+      run.notified += 1;
+      await io.markSent(saved.id);
+    } else if (outcome === "failed") {
+      await io.markFailed(saved.id, 1);
+    }
   }
 
   return run;
+}
+
+/** За один проход — не больше пачки: лента, в которую разом падает сотня, закрывается навсегда. */
+export const RESEND_BATCH = 10;
+/** Попыток на сигнал; при свипе раз в пять минут — около получаса. */
+export const RESEND_GIVE_UP = 5;
+/** Старше — не досылаем: сигнал суточной давности в холодном чате уже остыл. */
+export const RESEND_WINDOW_HOURS = 24;
+
+type StoredSignal = {
+  id: string;
+  chat_title: string | null;
+  message_link: string | null;
+  author_username: string | null;
+  excerpt: string;
+  score: number | null;
+  category: string | null;
+  rationale: string | null;
+  notify_attempts: number | null;
+};
+
+export type ResendIo = {
+  load: () => Promise<StoredSignal[]>;
+  notify: ScoutIo["notify"];
+  markSent: ScoutIo["markSent"];
+  markFailed: ScoutIo["markFailed"];
+};
+
+async function loadUnnotified(): Promise<StoredSignal[]> {
+  const db = serviceClient();
+  if (!db) return [];
+
+  const since = new Date(Date.now() - RESEND_WINDOW_HOURS * 3_600_000).toISOString();
+  const { data, error } = await db
+    .from("scout_signals")
+    .select(
+      "id, chat_title, message_link, author_username, excerpt, score, category, rationale, notify_attempts",
+    )
+    .is("notified_at", null)
+    .eq("status", "new")
+    // Порог — текущий, а не тот, что был при сохранении: сигнал ниже порога
+    // не «недоставленный», ему просто не место в канале.
+    .gte("score", minScore())
+    .gte("created_at", since)
+    .lt("notify_attempts", RESEND_GIVE_UP)
+    .order("created_at", { ascending: true })
+    .limit(RESEND_BATCH);
+
+  if (error) {
+    console.error("scout: не прочитал неотправленные сигналы", error.message);
+    return [];
+  }
+  return (data ?? []) as StoredSignal[];
+}
+
+const liveResendIo: ResendIo = {
+  load: loadUnnotified,
+  notify: notifyOperator,
+  markSent: markNotified,
+  markFailed: markNotifyFailed,
+};
+
+/**
+ * Досылка того, что не дошло.
+ *
+ * Едет в свипе напоминаний, раз в пять минут. Сигнал, который Telegram не
+ * принял при первой отправке — 429 при всплеске, обрыв прокси, — раньше
+ * оставался в базе навсегда и в канал не попадал: об отправке не было
+ * следа. Теперь след есть, и свип добирает по нему.
+ *
+ * Канал не задан — не делаем ничего и не считаем это неудачей: слать
+ * некуда, и когда канал появится, сутки сигналов дойдут сами.
+ */
+export async function resendUnnotifiedSignals(
+  io: ResendIo = liveResendIo,
+): Promise<{ sent: number; failed: number }> {
+  if (!process.env.TELEGRAM_SCOUT_CHANNEL_ID) return { sent: 0, failed: 0 };
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const row of await io.load()) {
+    const outcome = await io.notify({
+      chatTitle: row.chat_title,
+      link: row.message_link,
+      authorUsername: row.author_username,
+      excerpt: row.excerpt,
+      score: row.score ?? 0,
+      category: row.category ?? "другое",
+      rationale: row.rationale ?? "",
+    });
+
+    if (outcome === "sent") {
+      sent += 1;
+      await io.markSent(row.id);
+    } else if (outcome === "failed") {
+      failed += 1;
+      await io.markFailed(row.id, (row.notify_attempts ?? 0) + 1);
+    }
+  }
+
+  return { sent, failed };
 }
 
 /**

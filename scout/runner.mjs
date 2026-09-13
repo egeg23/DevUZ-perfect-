@@ -16,7 +16,9 @@ import { startProxyBridge } from "./http-proxy-bridge.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
 import { openChats } from "@/lib/scout/chats";
 import { classify } from "@/lib/scout/classify";
+import { shape } from "@/lib/scout/shape";
 import { processBatch } from "@/lib/scout/store";
+import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
@@ -28,6 +30,9 @@ const DRY_RUN = process.argv.includes("--dry-run");
  */
 const FLUSH_MS = Number(process.env.SCOUT_FLUSH_MS || 60_000);
 const MAX_BATCH = Number(process.env.SCOUT_MAX_BATCH || 20);
+
+/** Как часто сторож смотрит на соединение. Два промаха подряд — выход. */
+const WATCHDOG_MS = 5 * 60_000;
 
 function env(name, required = true) {
   const value = (process.env[name] || "").trim();
@@ -59,37 +64,6 @@ function chats() {
     .map((item) => item.trim())
     .filter(Boolean);
 }
-
-/** Сообщение Telegram → то, что понимает наш разбор. */
-function shape(message) {
-  const chat = message.chat ?? {};
-  const sender = message.sender ?? {};
-
-  // У чата id хранится без префикса -100, а ссылки и наши ключи строятся
-  // с ним. Приводим к тому виду, в котором его показывает сам Telegram.
-  const rawId = chat.id?.toString?.() ?? "";
-  const chatId = rawId && !rawId.startsWith("-") ? Number(`-100${rawId}`) : Number(rawId);
-
-  return {
-    chatId,
-    chatTitle: chat.title ?? null,
-    chatUsername: chat.username ?? null,
-    messageId: Number(message.id),
-    authorTelegramId: sender.id ? Number(sender.id.toString()) : null,
-    authorUsername: sender.username ?? null,
-    text: message.message ?? "",
-  };
-}
-
-/** Причины отсева по-русски: журнал читает человек, а не грепалка. */
-const DROP_LABEL = {
-  too_short: "коротко",
-  too_long: "длинно",
-  no_topic: "не по теме",
-  no_demand: "без спроса",
-  supply: "предложение",
-  spam: "спам",
-};
 
 async function flushBatch(batch) {
   const run = await processBatch(batch, classify, { rehearsal: DRY_RUN });
@@ -195,12 +169,53 @@ async function live() {
       `${roster.rosterUnknown ? "" : `, состою в ${reading}`}, окно ${FLUSH_MS / 1000} с`,
   );
 
+  // Соответствия адрес → номер, один раз при старте.
+  //
+  // Адрес по имени — это сетевой resolveUsername при каждом перезапуске, а
+  // на него у Telegram отдельный тесный лимит. Номер открывается из кэша,
+  // без сети. Строка ниже — готовое значение для SCOUT_CHATS: заменил, и
+  // старт больше в сеть за адресами не ходит.
+  const byName = roster.opened.filter((chat) => chat.name !== chat.id);
+  if (byName.length) {
+    console.log(
+      `scout: номера для SCOUT_CHATS (вместо адресов, чтобы не резолвить при каждом старте): ` +
+        byName.map((chat) => `${chat.name}=${chat.id}`).join(" "),
+    );
+  }
+
+  // Сторож. Библиотека переподключается сама, но её цикл обновлений
+  // выходит, когда клиент считает себя отключённым, — и дальше процесс
+  // живёт молча. Два промаха подряд с интервалом в минуты — выходим,
+  // systemd перезапустит. Подробности — в lib/scout/watchdog.ts.
+  let strikes = 0;
+  setInterval(() => {
+    strikes = nextStrikes(strikes, {
+      disconnected: Boolean(client.disconnected),
+      reconnecting: Boolean(client._sender?.isReconnecting),
+    });
+    if (shouldExit(strikes)) {
+      console.error("scout: соединение потеряно и не восстановилось — выхожу, systemd перезапустит");
+      process.exit(1);
+    }
+  }, WATCHDOG_MS);
+
+  let warnedNoChat = false;
   client.addEventHandler((event) => {
     const message = event.message;
     if (!message?.message) return;
     // Свои сообщения не разбираем: оператор отвечает из этого же аккаунта.
     if (message.out) return;
-    buffer.push(shape(message));
+
+    const shaped = shape(message);
+    if (!shaped) {
+      // Один раз, а не на каждое: если такое повторяется, причина одна.
+      if (!warnedNoChat) {
+        warnedNoChat = true;
+        console.error(`scout: сообщение ${message.id} пришло без чата — пропускаю такие`);
+      }
+      return;
+    }
+    buffer.push(shaped);
   }, new NewMessage({ chats: roster.opened.map((chat) => chat.id) }));
 
   const stop = async (signal) => {
