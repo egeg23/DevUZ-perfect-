@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  notifiableFilter,
   noticeFrom,
   processBatch,
   resendUnnotifiedSignals,
@@ -263,4 +264,25 @@ test("noticeFrom переносит признак прогона дальше �
 
   assert.equal(noticeFrom({ ...base, rehearsal: true }).rehearsal, true);
   assert.equal(noticeFrom(base).rehearsal, false, "по умолчанию — живой сигнал");
+});
+
+/**
+ * Досылка и живая отправка обязаны считать «доходит до оператора» одинаково.
+ *
+ * Субподряд идёт в канал мимо порога (shouldNotify), а досылка выбирает из
+ * базы — и если выбирает только по порогу, субподряд с баллом 25, не
+ * доставленный с первого раза, не будет дослан никогда. Правило одно, и
+ * фильтр собирается из того же списка.
+ */
+test("фильтр досылки пропускает категории мимо порога", () => {
+  const before = process.env.SCOUT_MIN_SCORE;
+  try {
+    process.env.SCOUT_MIN_SCORE = "70";
+    const filter = notifiableFilter();
+    assert.match(filter, /score\.gte\.70/, "порог в фильтре должен быть текущим");
+    assert.match(filter, /category\.eq\.субподряд/, "субподряд обязан проходить и в досылке");
+  } finally {
+    if (before === undefined) delete process.env.SCOUT_MIN_SCORE;
+    else process.env.SCOUT_MIN_SCORE = before;
+  }
 });

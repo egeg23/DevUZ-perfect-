@@ -57,6 +57,21 @@ export function shouldNotify(score: number, category: string): boolean {
   return score >= minScore();
 }
 
+/**
+ * То же правило, но для выборки из базы.
+ *
+ * Досылка неотправленного берёт из базы «то, что дошло бы до оператора» —
+ * и обязана понимать «дошло бы» так же, как shouldNotify. Иначе субподряд с
+ * баллом 25, не доставленный с первого раза, никогда не будет дослан: он
+ * проходит мимо порога при живой отправке, а из базы выбирается по порогу.
+ * Два определения одного правила разъезжаются при первой же правке —
+ * поэтому оба собираются из одного списка категорий.
+ */
+export function notifiableFilter(): string {
+  const categories = [...ALWAYS_NOTIFY].map((category) => `category.eq.${category}`);
+  return [`score.gte.${minScore()}`, ...categories].join(",");
+}
+
 export function minScore(): number {
   const raw = Number(process.env.SCOUT_MIN_SCORE);
   // Чужое значение принимается только осмысленное. Пустая строка даёт 0,
@@ -487,8 +502,9 @@ async function loadUnnotified(): Promise<StoredSignal[]> {
     .is("notified_at", null)
     .eq("status", "new")
     // Порог — текущий, а не тот, что был при сохранении: сигнал ниже порога
-    // не «недоставленный», ему просто не место в канале.
-    .gte("score", minScore())
+    // не «недоставленный», ему просто не место в канале. Категории мимо
+    // порога — те же, что у живой отправки (см. notifiableFilter).
+    .or(notifiableFilter())
     .gte("created_at", since)
     .lt("notify_attempts", RESEND_GIVE_UP)
     .order("created_at", { ascending: true })
