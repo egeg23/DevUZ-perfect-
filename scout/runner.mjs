@@ -81,11 +81,32 @@ function shape(message) {
   };
 }
 
+/** Причины отсева по-русски: журнал читает человек, а не грепалка. */
+const DROP_LABEL = {
+  too_short: "коротко",
+  too_long: "длинно",
+  no_topic: "не по теме",
+  no_demand: "без спроса",
+  supply: "предложение",
+  spam: "спам",
+};
+
 async function flushBatch(batch) {
   const run = await processBatch(batch, classify);
+
+  // Разбивка отсева — рядом, в той же строке. Отдельной строкой она
+  // разъезжается с числами прохода при любом просмотре журнала, а смотрят
+  // на них всегда вместе: «до модели дошло 4 из 340» без причины отсева
+  // одинаково похоже на тихий чат и на слишком жёсткое правило.
+  const dropped = Object.entries(run.dropped)
+    .sort((a, b) => b[1] - a[1])
+    .map(([reason, count]) => `${DROP_LABEL[reason] ?? reason} ${count}`)
+    .join(", ");
+
   console.log(
     `scout: увидел ${run.seen}, до модели дошло ${run.passedPrefilter}, ` +
-      `разобрано ${run.classified}, сохранено ${run.saved}, отправлено ${run.notified}`,
+      `разобрано ${run.classified}, сохранено ${run.saved}, отправлено ${run.notified}` +
+      (dropped ? ` · отсев: ${dropped}` : ""),
   );
 }
 
