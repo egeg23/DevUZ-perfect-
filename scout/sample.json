@@ -43,5 +43,68 @@
     "authorTelegramId": 555005,
     "authorUsername": "flutter_fan",
     "text": "Кстати, на Flutter приложения собираются гораздо быстрее, чем на нативе"
+  },
+  {
+    "chatId": -1001234567891,
+    "chatTitle": "Логистика УЗ",
+    "chatUsername": "logistuz",
+    "messageId": 206,
+    "authorTelegramId": 555006,
+    "authorUsername": "logist_akmal",
+    "text": "Нужна система учёта для склада, 4 филиала, чтобы остатки сходились. Бюджет есть, сроки горят."
+  },
+  {
+    "chatId": -1001234567891,
+    "chatTitle": "Предприниматели",
+    "chatUsername": "bizuz",
+    "messageId": 203,
+    "authorTelegramId": 555007,
+    "authorUsername": "kamola",
+    "text": "А сколько вообще стоит сайт сделать, если каталог небольшой?"
+  },
+  {
+    "chatId": -1001234567890,
+    "chatTitle": "IT Ташкент",
+    "chatUsername": "ittashkent",
+    "messageId": 202,
+    "authorTelegramId": 555008,
+    "authorUsername": "anvar_biz",
+    "text": "У нас сайт на Тильде, но заявки перестали приходить с мобильных. Кто может посмотреть, что сломалось?"
+  },
+  {
+    "chatId": -1001234567891,
+    "chatTitle": "Предприниматели",
+    "chatUsername": "bizuz",
+    "messageId": 204,
+    "authorTelegramId": 555009,
+    "authorUsername": "sardor_uz",
+    "text": "Bizga CRM kerak, 30 ta xodim bor, hozir hammasi Excelda. Kim yordam bera oladi?"
+  },
+  {
+    "chatId": -1001234567890,
+    "chatTitle": "IT Ташкент",
+    "chatUsername": "ittashkent",
+    "messageId": 201,
+    "authorTelegramId": 555010,
+    "authorUsername": "hr_gulnora",
+    "text": "Ищем frontend-разработчика в штат, офис в Мирабаде, оклад от 12 млн. Резюме в личку."
+  },
+  {
+    "chatId": -1001234567890,
+    "chatTitle": "IT Ташкент",
+    "chatUsername": "ittashkent",
+    "messageId": 207,
+    "authorTelegramId": 555011,
+    "authorUsername": "studio_next",
+    "text": "Коллеги, ищем субподрядчика на вёрстку, объём большой, оплата по факту"
+  },
+  {
+    "chatId": -1001234567891,
+    "chatTitle": "Предприниматели",
+    "chatUsername": "bizuz",
+    "messageId": 208,
+    "authorTelegramId": 555012,
+    "authorUsername": "nodira_shop",
+    "text": "Девочки, а кто-нибудь знает хорошего таргетолога? Инстаграм совсем не идёт"
   }
 ]
