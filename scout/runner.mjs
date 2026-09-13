@@ -12,6 +12,7 @@ import { readFileSync } from "node:fs";
 // («teleproto/sessions») в ESM не резолвится. Берём всё с верхнего уровня.
 import telegram from "teleproto";
 
+import { startProxyBridge } from "./http-proxy-bridge.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
 import { classify } from "@/lib/scout/classify";
 import { processBatch } from "@/lib/scout/store";
@@ -113,12 +114,21 @@ async function live() {
   const { StringSession } = telegram.sessions;
   const { NewMessage } = telegram.events;
 
+  // Прокси тот же, что у остального приложения.
+  //
+  // На сервере без прямого выхода в интернет соединение с Telegram иначе
+  // просто не встаёт: клиент ходит голым TCP, а HTTP-прокси он не понимает.
+  // Мост переводит одно в другое и живёт в этом же процессе.
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || "";
+  const bridge = proxyUrl ? await startProxyBridge(proxyUrl) : null;
+  if (bridge) console.log(`scout: выхожу через прокси ${new URL(proxyUrl).host}`);
+
   const session = new StringSession(env("SCOUT_SESSION"));
   const client = new TelegramClient(
     session,
     Number(env("SCOUT_API_ID")),
     env("SCOUT_API_HASH"),
-    { connectionRetries: 5 },
+    { connectionRetries: 5, ...(bridge ? { proxy: bridge.socks } : {}) },
   );
 
   await client.connect();
@@ -142,6 +152,7 @@ async function live() {
     console.log(`scout: ${signal}, дочитываю накопленное`);
     await buffer.stop();
     await client.disconnect();
+    if (bridge) await bridge.close();
     process.exit(0);
   };
   process.on("SIGINT", () => void stop("SIGINT"));
