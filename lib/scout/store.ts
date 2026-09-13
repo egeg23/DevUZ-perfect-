@@ -24,6 +24,54 @@ export const SCORE_THRESHOLD = 60;
  * Читается при каждом вызове, а не при загрузке модуля: так значение
  * можно подменить в тесте, не пересобирая импорты.
  */
+/**
+ * Категории, которые доходят до оператора независимо от балла.
+ *
+ * Порог в 60 защищает ленту от шума и в этом прав. Но он предполагает, что
+ * балл отражает ценность лида, а для субподряда это не так: рубрика
+ * оценивает уверенность в том, что перед нами запрос с описанной задачей, а
+ * у субподряда задачи в сообщении нет — есть только готовность платить.
+ * Первый же такой сигнал получил 25 из 100, не прошёл порог, не попал в
+ * уведомление и был потерян, когда через два часа пост удалили.
+ *
+ * Рубрику я поправил, но проверить её живым вызовом модели не смог, а
+ * «модель теперь поставит больше» — это надежда, а не механизм. Исключение
+ * по категории работает независимо от того, насколько хорошо получилась
+ * формулировка.
+ *
+ * Цена ошибки несимметрична: лишняя строка в ленте стоит секунды внимания,
+ * пропущенный субподряд — целой сделки, потому что у такого заказчика
+ * работа и деньги уже есть.
+ */
+const ALWAYS_NOTIFY = new Set(["субподряд"]);
+
+/**
+ * Дошло ли до оператора.
+ *
+ * Отдельной функцией, потому что это единственное место во всей цепочке
+ * уведомления, которое можно проверить тестом: дальше начинаются сеть и
+ * переменные окружения.
+ */
+export function shouldNotify(score: number, category: string): boolean {
+  if (ALWAYS_NOTIFY.has(category)) return true;
+  return score >= minScore();
+}
+
+/**
+ * То же правило, но для выборки из базы.
+ *
+ * Досылка неотправленного берёт из базы «то, что дошло бы до оператора» —
+ * и обязана понимать «дошло бы» так же, как shouldNotify. Иначе субподряд с
+ * баллом 25, не доставленный с первого раза, никогда не будет дослан: он
+ * проходит мимо порога при живой отправке, а из базы выбирается по порогу.
+ * Два определения одного правила разъезжаются при первой же правке —
+ * поэтому оба собираются из одного списка категорий.
+ */
+export function notifiableFilter(): string {
+  const categories = [...ALWAYS_NOTIFY].map((category) => `category.eq.${category}`);
+  return [`score.gte.${minScore()}`, ...categories].join(",");
+}
+
 export function minScore(): number {
   const raw = Number(process.env.SCOUT_MIN_SCORE);
   // Чужое значение принимается только осмысленное. Пустая строка даёт 0,
@@ -45,6 +93,18 @@ export type SignalInput = {
   score: number;
   category: string;
   rationale: string;
+  /**
+   * Сигнал пришёл из холостого прогона, а не из живого чата.
+   *
+   * Прогон намеренно гоняет всю цепочку «отсев → модель → база → канал
+   * оператора»: проверять её по частям бессмысленно. Но заготовленные
+   * сообщения после этого лежат в ленте неотличимо от настоящих лидов, и
+   * кто-нибудь идёт отвечать выдуманному человеку — это уже случилось
+   * 13.09.2026, шесть фикстур пришлось разбирать руками по базе.
+   *
+   * Поэтому цепочка проверяется целиком, а результат сразу помечен.
+   */
+  rehearsal?: boolean;
 };
 
 /**
@@ -107,6 +167,9 @@ export async function saveSignal(input: SignalInput): Promise<SaveOutcome> {
         score: input.score,
         category: input.category,
         rationale: input.rationale,
+        // Фикстура попадает в базу уже разобранной: цепочка проверена, а
+        // очередь оператора не засорена.
+        status: input.rehearsal ? "ignored" : "new",
       },
       // Перезапуск скаута не должен задваивать ленту оператора: пара
       // «чат + сообщение» уникальна, повтор молча игнорируется.
@@ -168,6 +231,14 @@ export type SignalNotice = {
   score: number;
   category: string;
   rationale: string;
+  /**
+   * Сигнал из холостого прогона: уведомление должно это показать.
+   *
+   * Необязательное: свип досылки поднимает сигналы из базы, где признака
+   * прогона нет — да и не нужен, свип берёт только `status = 'new'`, а
+   * прогон кладёт сразу `'ignored'`.
+   */
+  rehearsal?: boolean;
 };
 
 export function noticeFrom(input: SignalInput): SignalNotice {
@@ -179,6 +250,7 @@ export function noticeFrom(input: SignalInput): SignalNotice {
     score: input.score,
     category: input.category,
     rationale: input.rationale,
+    rehearsal: input.rehearsal ?? false,
   };
 }
 
@@ -196,13 +268,32 @@ export type NotifyOutcome = "sent" | "failed" | "skipped";
 export async function notifyOperator(notice: SignalNotice): Promise<NotifyOutcome> {
   const channel = process.env.TELEGRAM_SCOUT_CHANNEL_ID;
   if (!channel) return "skipped";
-  if (notice.score < minScore()) return "skipped";
+  if (!shouldNotify(notice.score, notice.category)) return "skipped";
 
-  const author = notice.authorUsername ? `@${notice.authorUsername}` : "без username";
+  /**
+   * Автор — и чем именно до него дотягиваться.
+   *
+   * Различие не косметическое, оно решает, успеет оператор или нет. С
+   * username личка открывается в одно касание и переживает удаление поста.
+   * Без username единственная дорога — через само сообщение: числового id
+   * мало, для личного чата Telegram нужен ещё access_hash, а он есть только
+   * у сессии, которая сообщение видела. Скаут читает и не пишет намеренно,
+   * так что дороги от него нет.
+   *
+   * Поэтому во втором случае в уведомлении стоит предупреждение: пост
+   * удалят — и человек станет недостижим совсем. Так и вышло с первым же
+   * настоящим сигналом.
+   */
+  const author = notice.authorUsername
+    ? `Автор: @${esc(notice.authorUsername)} — https://t.me/${esc(notice.authorUsername)}`
+    : "Автор: без username — дотянуться можно только через сообщение, пока его не удалили.";
 
   const delivered = await sendMessage(
     channel,
     [
+      // Пометка первой строкой, а не в конце: оператор решает, читать ли
+      // дальше, по первой строке уведомления.
+      notice.rehearsal ? "🧪 <b>ХОЛОСТОЙ ПРОГОН</b> — это не лид" : "",
       `🔎 <b>${esc(notice.category)}</b> · ${notice.score}/100`,
       notice.chatTitle ? `<i>${esc(notice.chatTitle)}</i>` : "",
       "",
@@ -210,12 +301,16 @@ export async function notifyOperator(notice: SignalNotice): Promise<NotifyOutcom
       "",
       `<blockquote>${esc(excerpt(notice.excerpt, 400))}</blockquote>`,
       "",
-      `Автор: ${esc(author)}`,
+      author,
       notice.link
         ? `Сообщение: ${notice.link}`
         : "Сообщение: ссылка недоступна (закрытый чат без адреса)",
       "",
-      "Отвечать — руками и в том же чате.",
+      // Срочность в самом уведомлении, а не в инструкции, которую прочтут
+      // один раз и забудут. Первый же настоящий сигнал скаута прожил меньше
+      // двух часов: модератор снёс пост как оформленный не по правилам, и
+      // отвечать стало некому и некуда. Такой сигнал не ждёт до вечера.
+      "Отвечать — руками, в том же чате и сейчас: такие посты живут часы.",
     ]
       .filter((line) => line !== "")
       .join("\n"),
@@ -284,7 +379,13 @@ export async function processBatch(
   classify: (
     batch: { key: string; text: string; chatTitle?: string | null }[],
   ) => Promise<{ key: string; score: number; category: string; rationale: string }[]>,
-  io: ScoutIo = liveIo,
+  // Оба необязательных параметра одним объектом: io — шов для тестов,
+  // rehearsal — признак холостого прогона. Позиционно они бы начали
+  // путаться местами у вызывающих.
+  {
+    io = liveIo,
+    rehearsal = false,
+  }: { io?: ScoutIo; rehearsal?: boolean } = {},
 ): Promise<ScoutRun> {
   const run: ScoutRun = {
     seen: messages.length,
@@ -337,6 +438,7 @@ export async function processBatch(
       score: verdict.score,
       category: verdict.category,
       rationale: verdict.rationale,
+      rehearsal,
     };
 
     const saved = await io.save(signal);
@@ -400,8 +502,9 @@ async function loadUnnotified(): Promise<StoredSignal[]> {
     .is("notified_at", null)
     .eq("status", "new")
     // Порог — текущий, а не тот, что был при сохранении: сигнал ниже порога
-    // не «недоставленный», ему просто не место в канале.
-    .gte("score", minScore())
+    // не «недоставленный», ему просто не место в канале. Категории мимо
+    // порога — те же, что у живой отправки (см. notifiableFilter).
+    .or(notifiableFilter())
     .gte("created_at", since)
     .lt("notify_attempts", RESEND_GIVE_UP)
     .order("created_at", { ascending: true })

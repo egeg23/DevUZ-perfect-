@@ -16,6 +16,7 @@ import { startProxyBridge } from "./http-proxy-bridge.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
 import { openChats } from "@/lib/scout/chats";
 import { classify } from "@/lib/scout/classify";
+import { EMPTY_PULSE, accumulate, writePulse } from "@/lib/scout/health";
 import { shape } from "@/lib/scout/shape";
 import { processBatch } from "@/lib/scout/store";
 import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
@@ -33,6 +34,16 @@ const MAX_BATCH = Number(process.env.SCOUT_MAX_BATCH || 20);
 
 /** Как часто сторож смотрит на соединение. Два промаха подряд — выход. */
 const WATCHDOG_MS = 5 * 60_000;
+
+/**
+ * Как часто скаут отчитывается о себе в базу.
+ *
+ * По таймеру, а не по сообщениям: в тихом чате проходов нет вовсе, и пульс
+ * по проходам не отличил бы тишину от смерти — ровно ту разницу, ради
+ * которой он и нужен. Пять минут против пятнадцати на протухание: пульс
+ * успеет обновиться дважды, прежде чем кто-то решит, что скаут умер.
+ */
+const PULSE_MS = 5 * 60_000;
 
 function env(name, required = true) {
   const value = (process.env[name] || "").trim();
@@ -65,8 +76,22 @@ function chats() {
     .filter(Boolean);
 }
 
+/**
+ * Накопленное за время жизни процесса.
+ *
+ * Перезапуск обнуляет — и это правильно: пульс отвечает на вопрос «что скаут
+ * видит сейчас», а не «сколько всего видел за историю». Числа, пережившие
+ * перезапуск, скрыли бы как раз перезапуск.
+ */
+let pulse = {
+  ...EMPTY_PULSE,
+  at: new Date().toISOString(),
+  startedAt: new Date().toISOString(),
+};
+
 async function flushBatch(batch) {
-  const run = await processBatch(batch, classify);
+  const run = await processBatch(batch, classify, { rehearsal: DRY_RUN });
+  pulse = accumulate(pulse, run);
 
   // Разбивка отсева — рядом, в той же строке. Отдельной строкой она
   // разъезжается с числами прохода при любом просмотре журнала, а смотрят
@@ -95,6 +120,12 @@ const buffer = createBuffer({
  * живые, но без подключения к Telegram. Нужен, чтобы проверить связку
  * «отсев → модель → база → канал оператора» до того, как в дело пойдёт
  * настоящий аккаунт.
+ *
+ * Цепочка проверяется целиком, включая запись и уведомление, — иначе
+ * проверять нечего. Но результат помечается: `rehearsal` кладёт сигнал в
+ * базу сразу со `status = 'ignored'` и ставит заголовок в уведомлении.
+ * Без этого фикстуры неотличимы от лидов, и оператор идёт отвечать
+ * выдуманному человеку.
  */
 async function dryRun() {
   const file = process.env.SCOUT_SAMPLE || new URL("./sample.json", import.meta.url);
@@ -176,6 +207,17 @@ async function live() {
         byName.map((chat) => `${chat.name}=${chat.id}`).join(" "),
     );
   }
+
+  // Пульс. Числа чатов известны только здесь, после разбора списка.
+  //
+  // Первая запись — сразу, не дожидаясь таймера: иначе первые пять минут
+  // после старта скаут снаружи выглядит мёртвым, а перезапуски случаются
+  // как раз тогда, когда на него смотрят.
+  pulse = { ...pulse, chatsWatched: watched.length, chatsReading: reading };
+  await writePulse({ ...pulse, at: new Date().toISOString() });
+  setInterval(() => {
+    void writePulse({ ...pulse, at: new Date().toISOString() });
+  }, PULSE_MS);
 
   // Сторож. Библиотека переподключается сама, но её цикл обновлений
   // выходит, когда клиент считает себя отключённым, — и дальше процесс

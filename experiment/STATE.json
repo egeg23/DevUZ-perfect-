@@ -1,0 +1,158 @@
+{
+  "experiment": {
+    "goalUsd": 2000,
+    "budgetUsd": 300,
+    "startDate": "2026-09-13",
+    "endDate": "2026-09-26",
+    "bet": "Наполнить работающую воронку DevUz Studio исходящим трафиком. География не ограничена Узбекистаном. Агент ведёт лидогенерацию, владелец выполняет заказ. Цель закрывается предоплатами, а не сданными проектами.",
+    "lastSession": "2026-09-13",
+    "sessionCount": 3,
+    "division": {
+      "agent": "Лидогенерация целиком: каналы, списки, аудит, черновики, слежение за скаутом.",
+      "owner": "Быстрое выполнение заказа. Плюс то, что агент не вправе: отправка от своего имени, оплаты, счета."
+    }
+  },
+  "funnel": {
+    "healthUrl": "https://devuz.maximov-tech.ru/api/health",
+    "lastHealthCheck": "2026-09-13",
+    "lastHealthOk": true,
+    "note": "llm, telegram, database, webhookSecret — всё true на коммите c7eae6a"
+  },
+  "channels": {
+    "prospect": {
+      "status": "ready",
+      "autonomy": "agent",
+      "companiesListed": 0,
+      "auditsRun": 0,
+      "draftsReady": 0,
+      "touchesSent": 0,
+      "replies": 0,
+      "runner": "node --import ./tests/alias-hook.mjs scripts/prospect.mjs <файл> --lang ru|en",
+      "humanInLoop": false,
+      "apiCostUsd": 0,
+      "note": "Раннер проверен на живых сайтах. Аудитор не вызывает LLM.",
+      "languages": [
+        "ru",
+        "en"
+      ]
+    },
+    "scout": {
+      "status": "live",
+      "autonomy": "human_bootstrap_done",
+      "firstSignalAt": "2026-09-13 16:05 UTC",
+      "signalsTotal": 7,
+      "signalsReal": 1,
+      "signalsFixtures": 6,
+      "fixturesNote": "6 сигналов — из scout/sample.json, холостой прогон. Помечены status='ignored' 2026-09-13. Настоящий один: chat_id -1001050008285.",
+      "supabaseProject": "owbkqoyutubqujdazdcc",
+      "table": "scout_signals",
+      "signalsLost": 1,
+      "decayWindowHours": 2,
+      "decayNote": "Первый настоящий сигнал (901296) прожил <2 часов: модератор удалил пост. Уведомление оператору не уходило: порог 60, рубрика дала субподряду 25. Исправлено: субподряд доходит мимо порога (shouldNotify). Username автора отсутствовал, остался числовой id — после удаления поста дотянуться нечем."
+    },
+    "demandBoards": {
+      "status": "not_built",
+      "autonomy": "agent",
+      "what": "Публичные площадки с открытыми API, где люди сами ищут подрядчика. Аккаунтов не требует.",
+      "why": "Активный спрос конвертируется быстрее холодного, а у нас 14 дней."
+    }
+  },
+  "pipeline": [
+    {
+      "company": "JavaScript Jobs — субподряд",
+      "stage": "потерян: пост удалён модератором",
+      "valueUsd": null,
+      "source": "scout",
+      "note": "Опубликован 16:57, к 19:06 удалён. Соседние номера сообщений открываются — значит, ссылку мы построили верно. Не ошибка кода."
+    }
+  ],
+  "revenue": {
+    "committedUsd": 0,
+    "receivedUsd": 0,
+    "deals": []
+  },
+  "budget": {
+    "spentUsd": 0,
+    "remainingUsd": 300
+  },
+  "blockers": [
+    {
+      "id": "scout-notifications",
+      "what": "Уведомления канала оператора должны быть включены и будить владельца.",
+      "why": "Окно ответа у сигналов — часы. Само по себе не было причиной потери первого лида (тот не прошёл порог уведомления), но остаётся необходимым для следующих.",
+      "owner": "human",
+      "priority": "high"
+    },
+    {
+      "id": "pitch-english",
+      "what": "lib/audit/pitch.ts собирает черновик из захардкоженных русских строк, английского варианта нет.",
+      "why": "Без него снятие географической границы не даёт ничего: весь исходящий канал работает только по русскоязычным рынкам.",
+      "owner": "agent",
+      "priority": "critical",
+      "resolved": true,
+      "resolvedOn": "2026-09-13",
+      "how": "lib/audit/pitch.ts локализован ru+en, локаль протянута в toProspectRow и scripts/prospect.mjs (--lang)."
+    },
+    {
+      "id": "domain",
+      "what": "Сайт живёт на devuz.maximov-tech.ru — субдомен чужого хоста.",
+      "why": "Продавать проект за $2500 с такого адреса значит выглядеть тестовой страницей. Прямо бьёт по конверсии.",
+      "owner": "human",
+      "priority": "high"
+    },
+    {
+      "id": "nap",
+      "what": "Адрес офиса — координаты центра Ташкента, реквизиты юрлица не заменены.",
+      "why": "README, раздел «Что нужно заменить перед публикацией». Неверный NAP портит локальное SEO и доверие.",
+      "owner": "human",
+      "priority": "medium"
+    },
+    {
+      "id": "merge-main",
+      "what": "Ветка эксперимента отстала от main на 6 коммитов, среди них правки скаута: lib/scout/chats.ts, store.ts, scout/http-proxy-bridge.mjs, runner.mjs.",
+      "why": "Лидогенерация опирается на этот код. Слияние заблокировал классификатор auto-режима как изменение общего ресурса — нужно разрешение владельца.",
+      "owner": "human",
+      "priority": "high",
+      "resolved": true,
+      "resolvedOn": "2026-09-13",
+      "how": "Влито с разрешения владельца. Наборы файлов не пересекались, конфликтов не было. 190 тестов зелёные, tsc чист."
+    }
+  ],
+  "nextActions": [
+    "Ответить на сигнал субподряда — единственный живой лид (черновик в HUMAN_QUEUE)",
+    "Построить канал публичных досок спроса (открытые API, без аккаунтов)",
+    "Собрать международные списки и прогнать prospect.mjs --lang en"
+  ],
+  "automation": {
+    "triggerId": "trig_01DBADcA4qPVpkNJdE1QXo7g",
+    "name": "Эксперимент 300→2000: ежедневная смена",
+    "cron": "0 4 * * *",
+    "cronNote": "04:00 UTC = 09:00 по Ташкенту, ежедневно",
+    "freshSessionPerFire": true,
+    "branch": "claude/300-to-2000-experiment-xuir3p",
+    "limitation": "У запускаемых смен нет MCP-коннекторов: инструменты mcp__github__*, mcp__Supabase__* и mcp__Claude_Code_Remote__* недоступны. Обычный git и Bash работают.",
+    "stopHow": "delete_trigger с этим id, либо владелец отключает рутину в интерфейсе claude.ai",
+    "deleteWhenDone": "После 2026-09-26 смена обязана удалить рутину, чтобы та не будила пустые сессии."
+  },
+  "payments": {
+    "decidedBy": "agent",
+    "decidedOn": "2026-09-13",
+    "rails": [
+      "escrow-first (Upwork) для новых международных клиентов",
+      "Payoneer — приём USD, работает с Узбекистаном",
+      "SWIFT на юрлицо — крупные корпоративные"
+    ],
+    "rejected": [
+      "Stripe — Узбекистана нет среди поддерживаемых стран",
+      "крипта как основной канал — регуляторная неопределённость для B2B"
+    ],
+    "caveat": "Payoneer, зарегистрированный в Узбекистане, не принимает платежи от плательщиков через PayPal.",
+    "detail": "experiment/PAYMENTS.md"
+  },
+  "repo": {
+    "branch": "claude/300-to-2000-experiment-xuir3p",
+    "behindMain": 0,
+    "checks": "npm install ставится за 20 с. Полный набор: 190 тестов, все зелёные. tsc --noEmit чист.",
+    "knownIssue": "npm run lint не работает: конфига ESLint в репозитории нет вовсе. Проблема давняя, к эксперименту отношения не имеет."
+  }
+}

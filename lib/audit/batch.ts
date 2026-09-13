@@ -1,5 +1,5 @@
 import { analyze, type AuditReport, type Finding } from "@/lib/audit/checks";
-import { pitch } from "@/lib/audit/pitch";
+import { type PitchLocale, pitch } from "@/lib/audit/pitch";
 import { probe } from "@/lib/audit/fetch";
 // Разбор адреса — из чистого модуля: этот файл импортирует и браузер
 // (страница касаний показывает разбор до прогона), а guard тянет node:dns.
@@ -188,7 +188,11 @@ export type ProspectRow = {
   note: string | null;
 };
 
-export function toProspectRow(row: BatchRow): ProspectRow {
+/**
+ * Локаль по умолчанию русская: панель касаний звала эту функцию без неё, и
+ * менять смысл существующего вызова ради нового аргумента нельзя.
+ */
+export function toProspectRow(row: BatchRow, locale: PitchLocale = "ru"): ProspectRow {
   const { target, report, failure } = row;
 
   if (!report) {
@@ -203,7 +207,7 @@ export function toProspectRow(row: BatchRow): ProspectRow {
     };
   }
 
-  const draft = pitch(report, target.label);
+  const draft = pitch(report, target.label, locale);
 
   return {
     raw: target.raw,

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  notifiableFilter,
   noticeFrom,
   processBatch,
   resendUnnotifiedSignals,
@@ -53,7 +54,7 @@ test("вставленный и доставленный сигнал получ
     async () => ({ outcome: "inserted", id: "s1" }),
     async () => "sent",
   );
-  const run = await processBatch([message()], classify, io);
+  const run = await processBatch([message()], classify, { io });
 
   assert.equal(run.saved, 1);
   assert.equal(run.notified, 1);
@@ -73,7 +74,7 @@ test("дубль не пишет оператору второй раз", async 
     async () => ({ outcome: "duplicate" }),
     async () => "sent",
   );
-  const run = await processBatch([message()], classify, io);
+  const run = await processBatch([message()], classify, { io });
 
   assert.equal(run.saved, 0, "дубль — не сохранённое");
   assert.equal(run.notified, 0);
@@ -85,7 +86,7 @@ test("недоставленный сигнал записывает перву�
     async () => ({ outcome: "inserted", id: "s1" }),
     async () => "failed",
   );
-  const run = await processBatch([message()], classify, io);
+  const run = await processBatch([message()], classify, { io });
 
   assert.equal(run.saved, 1);
   assert.equal(run.notified, 0);
@@ -100,7 +101,7 @@ test("пропущенный сигнал не трогает ни отметк�
     async () => ({ outcome: "inserted", id: "s1" }),
     async () => "skipped",
   );
-  await processBatch([message()], classify, io);
+  await processBatch([message()], classify, { io });
   assert.deepEqual(log, ["save", "notify"]);
 });
 
@@ -191,4 +192,97 @@ test("досылка отмечает доставленное и считает
       "failed:b:4",
     ]);
   });
+});
+
+/**
+ * Холостой прогон гоняет всю цепочку — иначе проверять нечего, — но его
+ * результат не должен попадать в очередь оператора как настоящий лид.
+ *
+ * Проверка появилась не сразу. Сама пометка была сделана раньше и держалась
+ * на разборе кода: `saveSignal` без живой базы возвращает неудачу, и
+ * записанный статус наблюдать было неоткуда. Шов `io` сделал это место
+ * проверяемым, и правка перестала быть обещанием.
+ */
+/**
+ * Записываем в массивы, а не в переменную: присваивание идёт внутри
+ * замыкания, и TypeScript, не видя его, сужает `let … = null` до `never`.
+ * Тот же приём, что у `log` выше.
+ */
+function recordingIo() {
+  const savedStatus: string[] = [];
+  const notifiedRehearsal: (boolean | undefined)[] = [];
+
+  const io: ScoutIo = {
+    save: async (input) => {
+      savedStatus.push(input.rehearsal ? "ignored" : "new");
+      return { outcome: "inserted", id: "s1" };
+    },
+    notify: async (notice) => {
+      notifiedRehearsal.push(notice.rehearsal);
+      return "sent";
+    },
+    markSent: async () => {},
+    markFailed: async () => {},
+  };
+
+  return { io, savedStatus, notifiedRehearsal };
+}
+
+test("сигнал холостого прогона помечен и в базе, и в уведомлении", async () => {
+  const { io, savedStatus, notifiedRehearsal } = recordingIo();
+
+  await processBatch([message()], classify, { io, rehearsal: true });
+
+  assert.deepEqual(savedStatus, ["ignored"], "фикстура легла в очередь как новая");
+  assert.deepEqual(notifiedRehearsal, [true], "уведомление не отличает прогон от лида");
+});
+
+test("живой сигнал прогоном не помечается", async () => {
+  const { io, savedStatus, notifiedRehearsal } = recordingIo();
+
+  // Без параметра — то, как зовёт живой раннер.
+  await processBatch([message()], classify, { io });
+
+  assert.deepEqual(savedStatus, ["new"]);
+  assert.ok(!notifiedRehearsal[0], "живой сигнал помечен как прогон");
+});
+
+test("noticeFrom переносит признак прогона дальше в уведомление", () => {
+  const base = {
+    chatId: -1001234567890,
+    chatTitle: null,
+    messageId: 1,
+    chatUsername: null,
+    authorTelegramId: null,
+    authorUsername: null,
+    text: "Нужен сайт",
+    topics: ["сайт"],
+    score: 70,
+    category: "сайт",
+    rationale: "нужен сайт",
+  };
+
+  assert.equal(noticeFrom({ ...base, rehearsal: true }).rehearsal, true);
+  assert.equal(noticeFrom(base).rehearsal, false, "по умолчанию — живой сигнал");
+});
+
+/**
+ * Досылка и живая отправка обязаны считать «доходит до оператора» одинаково.
+ *
+ * Субподряд идёт в канал мимо порога (shouldNotify), а досылка выбирает из
+ * базы — и если выбирает только по порогу, субподряд с баллом 25, не
+ * доставленный с первого раза, не будет дослан никогда. Правило одно, и
+ * фильтр собирается из того же списка.
+ */
+test("фильтр досылки пропускает категории мимо порога", () => {
+  const before = process.env.SCOUT_MIN_SCORE;
+  try {
+    process.env.SCOUT_MIN_SCORE = "70";
+    const filter = notifiableFilter();
+    assert.match(filter, /score\.gte\.70/, "порог в фильтре должен быть текущим");
+    assert.match(filter, /category\.eq\.субподряд/, "субподряд обязан проходить и в досылке");
+  } finally {
+    if (before === undefined) delete process.env.SCOUT_MIN_SCORE;
+    else process.env.SCOUT_MIN_SCORE = before;
+  }
 });
