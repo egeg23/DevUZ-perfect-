@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { requireStaff } from "@/lib/admin/guard";
 import { SIGNAL_STATUSES, listSignals, scoutCounts } from "@/lib/admin/scout";
+import { diagnose, readPulse } from "@/lib/scout/health";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,16 @@ export default async function ScoutPage({
   const staff = await requireStaff();
   const { status, r } = await searchParams;
 
-  const [counts, signals] = await Promise.all([scoutCounts(), listSignals(status)]);
+  const [counts, signals, pulse] = await Promise.all([
+    scoutCounts(),
+    listSignals(status),
+    readPulse(),
+  ]);
+
+  // Пустая лента одинаково выглядит при мёртвом скауте и при тишине в чатах.
+  // Пока это не написано на странице, разбираться идут в systemd — и чаще
+  // всего зря.
+  const health = diagnose(pulse);
   const back = status ? `/admin/scout?status=${status}` : "/admin/scout";
 
   return (
@@ -56,6 +66,16 @@ export default async function ScoutPage({
           {r === "ok" ? "Готово." : "Не получилось."}
         </p>
       ) : null}
+
+      <p
+        className={`mt-4 rounded-xl border px-4 py-2.5 text-sm leading-relaxed ${
+          health.state === "ok" || health.state === "quiet"
+            ? "border-line bg-surface text-muted"
+            : "border-gold/30 bg-gold/10 text-gold"
+        }`}
+      >
+        {health.says}
+      </p>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Tile value={counts.total} label="сигналов" />
