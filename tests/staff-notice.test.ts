@@ -93,6 +93,17 @@ test("администратору перечислено то, чего нет 
   assert.ok(!/\badmin\b/.test(text), "в сообщение утекло внутреннее имя роли");
 });
 
+test("руководителю сказано про чужих лидов и команду, а не про журнал", async () => {
+  allow = true;
+  await notifyInvitedStaff({ telegramId: 1, role: "head", invitedBy: "Егор", returning: false });
+
+  const text = String(last().text);
+  assert.ok(text.includes("руководитель"), "роль не названа по-человечески");
+  assert.ok(text.includes("всех менеджеров"), "не сказано про чужих лидов");
+  assert.ok(!text.includes("журнал"), "руководителю обещан журнал, которого у него нет");
+  assert.ok(!/\bhead\b/.test(text), "в сообщение утекло внутреннее имя роли");
+});
+
 test("вернувшемуся не пишут «вас добавили»", async () => {
   allow = true;
   await notifyInvitedStaff({ telegramId: 1, role: "manager", invitedBy: "Егор", returning: true });

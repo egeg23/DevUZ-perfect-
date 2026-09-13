@@ -1,3 +1,4 @@
+import { seesEveryone } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
 import type { ChatMessage } from "@/lib/qualify/types";
@@ -40,7 +41,7 @@ export function canEdit(
   lead: { assigned_staff_id: string | null },
   staff: Staff,
 ): boolean {
-  if (staff.role === "admin") return true;
+  if (seesEveryone(staff.role)) return true;
   return lead.assigned_staff_id === staff.id;
 }
 
@@ -388,7 +389,7 @@ export async function completeReminder(
     .eq("id", reminderId)
     .is("done_at", null);
 
-  if (staff.role !== "admin") query = query.eq("staff_id", staff.id);
+  if (!seesEveryone(staff.role)) query = query.eq("staff_id", staff.id);
 
   const { data, error } = await query.select("id, lead_id").maybeSingle();
   if (error || !data) return false;
@@ -435,7 +436,7 @@ export async function snoozeReminder(
     .is("done_at", null)
     .is("cancelled_at", null);
 
-  if (staff.role !== "admin") query = query.eq("staff_id", staff.id);
+  if (!seesEveryone(staff.role)) query = query.eq("staff_id", staff.id);
 
   const { data, error } = await query.select("id, lead_id").maybeSingle();
   if (error || !data) return false;

@@ -1,3 +1,4 @@
+import { ROLE_TITLE, type Role } from "@/lib/admin/roles";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
 
@@ -24,12 +25,18 @@ export type InviteOutcome = "sent" | "blocked" | "no_bot";
  *
  * «Роль: admin» не говорит ничего тому, кто видит панель впервые.
  */
-const WHAT_YOU_CAN: Record<"admin" | "manager", string[]> = {
+const WHAT_YOU_CAN: Record<Role, string[]> = {
   manager: [
     "видеть лидов с сайта и брать их в работу",
     "открывать контакт клиента и переписку с ним",
     "вести проекты и ставить напоминания",
     "выставлять счета по заявкам на покупку",
+  ],
+  head: [
+    "всё, что может менеджер",
+    "видеть лидов всех менеджеров, передавать их и разбирать напоминания за них",
+    "смотреть статистику своей команды",
+    "вести холодные касания и тёплых лидов",
   ],
   admin: [
     "всё, что может менеджер",
@@ -39,13 +46,8 @@ const WHAT_YOU_CAN: Record<"admin" | "manager", string[]> = {
   ],
 };
 
-const ROLE_TITLE: Record<"admin" | "manager", string> = {
-  manager: "менеджер",
-  admin: "администратор",
-};
-
 function body(
-  role: "admin" | "manager",
+  role: Role,
   invitedBy: string,
   returning: boolean,
 ): string {
@@ -73,7 +75,7 @@ function body(
  */
 export async function notifyInvitedStaff(input: {
   telegramId: number;
-  role: "admin" | "manager";
+  role: Role;
   invitedBy: string;
   returning: boolean;
 }): Promise<InviteOutcome> {
@@ -104,7 +106,7 @@ export async function notifyInvitedStaff(input: {
  */
 export async function notifyRoleChange(input: {
   telegramId: number;
-  role: "admin" | "manager";
+  role: Role;
   changedBy: string;
 }): Promise<InviteOutcome> {
   if (!process.env.TELEGRAM_BOT_TOKEN) return "no_bot";

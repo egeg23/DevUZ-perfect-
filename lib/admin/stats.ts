@@ -195,12 +195,18 @@ export type StaffStat = {
  * не прозрачность, а публичный рейтинг, и он меняет поведение раньше, чем
  * результат: лиды начинают брать по лёгкости, а не по важности.
  */
-export async function loadStaffStats(): Promise<StaffStat[]> {
+export async function loadStaffStats(onlyStaffIds?: string[]): Promise<StaffStat[]> {
   const db = serviceClient();
   if (!db) return [];
+  // Пустой список — пустой ответ, а не «все»: руководитель без команды
+  // не должен вдруг увидеть всех.
+  if (onlyStaffIds && !onlyStaffIds.length) return [];
+
+  let staffQuery = db.from("staff").select("id, display_name").eq("is_active", true);
+  if (onlyStaffIds) staffQuery = staffQuery.in("id", onlyStaffIds);
 
   const [{ data: staff }, { data: leads }] = await Promise.all([
-    db.from("staff").select("id, display_name").eq("is_active", true),
+    staffQuery,
     db
       .from("leads")
       .select("assigned_staff_id, status")

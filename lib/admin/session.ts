@@ -1,3 +1,4 @@
+import type { Role } from "@/lib/admin/roles";
 import { createHash, randomBytes } from "node:crypto";
 
 import { serviceClient } from "@/lib/supabase";
@@ -30,7 +31,7 @@ export type Staff = {
   telegram_user_id: number;
   username: string | null;
   display_name: string;
-  role: "admin" | "manager";
+  role: Role;
 };
 
 /**

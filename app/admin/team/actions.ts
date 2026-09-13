@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requestIp, requireAdmin } from "@/lib/admin/guard";
+import { isAssignable } from "@/lib/admin/roles";
 import {
   disableStaff,
   inviteStaff,
   resendInvite,
+  setStaffHead,
   setStaffRole,
   type TeamResult,
 } from "@/lib/admin/team";
@@ -36,8 +38,9 @@ export async function addStaff(formData: FormData) {
   const raw = String(formData.get("telegram_id") ?? "").trim();
   const telegramId = /^\d{1,19}$/.test(raw) ? Number(raw) : Number.NaN;
 
+  // Админом через форму не стать: всё, что не head, — менеджер.
   const roleRaw = String(formData.get("role") ?? "manager");
-  const role = roleRaw === "admin" ? "admin" : "manager";
+  const role = isAssignable(roleRaw) ? roleRaw : "manager";
 
   back(
     await inviteStaff(
@@ -65,7 +68,8 @@ export async function disable(formData: FormData) {
 export async function changeRole(formData: FormData) {
   const admin = await requireAdmin();
   const id = String(formData.get("staff") ?? "");
-  const role = String(formData.get("role") ?? "") === "admin" ? "admin" : "manager";
+  const roleRaw = String(formData.get("role") ?? "");
+  const role = isAssignable(roleRaw) ? roleRaw : "manager";
 
   const result = await setStaffRole(id, role, admin, await requestIp());
   revalidatePath("/admin/team");
@@ -77,6 +81,18 @@ export async function resend(formData: FormData) {
   const id = String(formData.get("staff") ?? "");
 
   const result = await resendInvite(id, admin, await requestIp());
+  revalidatePath("/admin/team");
+  back(result);
+}
+
+export async function assignHead(formData: FormData) {
+  const admin = await requireAdmin();
+  const id = String(formData.get("staff") ?? "");
+  // Пустое значение — «без руководителя».
+  const headRaw = String(formData.get("head") ?? "").trim();
+  const headId = headRaw ? headRaw : null;
+
+  const result = await setStaffHead(id, headId, admin, await requestIp());
   revalidatePath("/admin/team");
   back(result);
 }
