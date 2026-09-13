@@ -16,6 +16,7 @@
  *   cat targets.txt | node --import ./tests/alias-hook.mjs scripts/prospect.mjs
  *
  * Флаги:
+ *   --lang ru|en    язык черновиков, по умолчанию русский
  *   --json <путь>   сложить полный результат машинно-читаемым
  *   --only-drafts   печатать только то, что готово к отправке
  *
@@ -28,6 +29,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 import { BATCH_CAP, CHUNK, auditOne, parseTargets, toProspectRow } from "@/lib/audit/batch";
+import { pitchLocales } from "@/lib/audit/pitch";
 
 const argv = process.argv.slice(2);
 const flag = (name) => {
@@ -36,9 +38,16 @@ const flag = (name) => {
 };
 const has = (name) => argv.includes(name);
 
+const lang = flag("--lang") ?? "ru";
+if (!pitchLocales.includes(lang)) {
+  console.error(`Язык «${lang}» не поддержан. Доступны: ${pitchLocales.join(", ")}.`);
+  process.exit(1);
+}
+
 const jsonOut = flag("--json");
 const onlyDrafts = has("--only-drafts");
-const file = argv.find((a) => !a.startsWith("--") && argv[argv.indexOf(a) - 1] !== "--json");
+const VALUED = ["--json", "--lang"];
+const file = argv.find((a, i) => !a.startsWith("--") && !VALUED.includes(argv[i - 1]));
 
 const input = file ? readFileSync(file, "utf8") : readFileSync(0, "utf8");
 const targets = parseTargets(input);
@@ -57,7 +66,7 @@ const rows = [];
 for (let i = 0; i < targets.length; i += CHUNK) {
   const chunk = targets.slice(i, i + CHUNK);
   process.stderr.write(`  аудит ${i + 1}–${i + chunk.length} из ${targets.length}\n`);
-  rows.push(...(await Promise.all(chunk.map(auditOne))).map(toProspectRow));
+  rows.push(...(await Promise.all(chunk.map(auditOne))).map((r) => toProspectRow(r, lang)));
 }
 
 const ready = rows.filter((r) => r.draft);
@@ -80,6 +89,6 @@ if (!onlyDrafts) {
 }
 
 if (jsonOut) {
-  writeFileSync(jsonOut, JSON.stringify({ generatedAt: new Date().toISOString(), rows }, null, 2) + "\n");
+  writeFileSync(jsonOut, JSON.stringify({ generatedAt: new Date().toISOString(), lang, rows }, null, 2) + "\n");
   console.log(`\nПолный результат: ${jsonOut}`);
 }

@@ -20,17 +20,21 @@
   },
   "channels": {
     "prospect": {
-      "status": "tooling_ready",
+      "status": "ready",
       "autonomy": "agent",
       "companiesListed": 0,
       "auditsRun": 0,
       "draftsReady": 0,
       "touchesSent": 0,
       "replies": 0,
-      "runner": "node --import ./tests/alias-hook.mjs scripts/prospect.mjs <файл>",
+      "runner": "node --import ./tests/alias-hook.mjs scripts/prospect.mjs <файл> --lang ru|en",
       "humanInLoop": false,
       "apiCostUsd": 0,
-      "note": "Раннер проверен на живых сайтах. Аудитор не вызывает LLM."
+      "note": "Раннер проверен на живых сайтах. Аудитор не вызывает LLM.",
+      "languages": [
+        "ru",
+        "en"
+      ]
     },
     "scout": {
       "status": "blocked",
@@ -62,7 +66,10 @@
       "what": "lib/audit/pitch.ts собирает черновик из захардкоженных русских строк, английского варианта нет.",
       "why": "Без него снятие географической границы не даёт ничего: весь исходящий канал работает только по русскоязычным рынкам.",
       "owner": "agent",
-      "priority": "critical"
+      "priority": "critical",
+      "resolved": true,
+      "resolvedOn": "2026-09-13",
+      "how": "lib/audit/pitch.ts локализован ru+en, локаль протянута в toProspectRow и scripts/prospect.mjs (--lang)."
     },
     {
       "id": "domain",
@@ -80,9 +87,8 @@
     }
   ],
   "nextActions": [
-    "Локализовать lib/audit/pitch.ts — английский черновик. Без этого глобальный рынок недоступен.",
-    "Построить канал публичных досок спроса (открытые API, без аккаунтов)",
-    "Собрать первые списки и прогнать scripts/prospect.mjs",
+    "Построить канал публичных досок спроса (открытые API, без аккаунтов) — единственный, кто раскрывает снятую границу",
+    "Собрать первые международные списки и прогнать scripts/prospect.mjs --lang en",
     "Следить за потоком скаута, как только владелец войдёт в чаты"
   ],
   "automation": {
