@@ -31,6 +31,18 @@ export type ChatRoster = {
   outside: OpenedChat[];
   /** Список диалогов получить не удалось: про членство ничего не известно. */
   rosterUnknown: boolean;
+  /**
+   * Сколько чатов скаут читает на самом деле: открылись и аккаунт в них
+   * состоит.
+   *
+   * Считается здесь, а не в раннере, потому что раннер однажды посчитал
+   * сам — «открыл минус не состою» — и получил минус пять. Формула была
+   * верна, пока «не состою» было подмножеством «открыл»; с номерами это не
+   * так: невступленный номер не открывается вовсе и в «открыл» не входит.
+   * Число ушло в журнал и в пульс на странице панели, прежде чем его
+   * заметили.
+   */
+  reading: number;
 };
 
 /** Ровно то, что нам нужно от клиента Telegram, — и ничего больше. */
@@ -100,11 +112,16 @@ export async function openChats(client: Client, names: string[]): Promise<ChatRo
   }
 
   const known = roster;
+  const outside = [...(known ? opened.filter((chat) => !known.has(chat.id)) : []), ...notJoined];
+  const outsideIds = new Set(outside.map((chat) => chat.id));
+
   return {
     opened,
     failed,
-    outside: [...(known ? opened.filter((chat) => !known.has(chat.id)) : []), ...notJoined],
+    outside,
     rosterUnknown: known === null,
+    // Пересечение, а не разность длин: см. комментарий к полю.
+    reading: opened.filter((chat) => !outsideIds.has(chat.id)).length,
   };
 }
 
