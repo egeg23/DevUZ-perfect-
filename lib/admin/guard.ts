@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import type { Role } from "@/lib/admin/roles";
 import { ipFromHeaders } from "@/lib/qualify/limiter";
 import { SESSION_COOKIE, staffForSession, type Staff } from "@/lib/admin/session";
 
@@ -34,6 +35,13 @@ export async function requireStaff(): Promise<Staff> {
 export async function requireAdmin(): Promise<Staff> {
   const staff = await requireStaff();
   if (staff.role !== "admin") redirect("/admin");
+  return staff;
+}
+
+/** Любая из перечисленных ролей; остальных уводит на главную панели. */
+export async function requireRole(...roles: Role[]): Promise<Staff> {
+  const staff = await requireStaff();
+  if (!roles.includes(staff.role)) redirect("/admin");
   return staff;
 }
 

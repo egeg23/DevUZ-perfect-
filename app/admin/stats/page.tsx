@@ -1,6 +1,8 @@
 import { AdminShell } from "@/components/admin/shell";
 import { Bars, WeeklyBars } from "@/components/admin/bars";
 import { requireStaff } from "@/lib/admin/guard";
+import { seesEveryone } from "@/lib/admin/roles";
+import { teamOf } from "@/lib/admin/team";
 import { STATS_LIMIT, loadStaffStats, loadStats } from "@/lib/admin/stats";
 
 export const dynamic = "force-dynamic";
@@ -91,7 +93,14 @@ function Panel({
 export default async function StatsPage() {
   const staff = await requireStaff();
   const stats = await loadStats();
-  const perStaff = staff.role === "admin" ? await loadStaffStats() : [];
+  // Админ — всех, руководитель — себя и своих, менеджер — никого: публичный
+  // рейтинг рядом с именем коллеги меняет поведение раньше, чем результат.
+  const perStaff =
+    staff.role === "admin"
+      ? await loadStaffStats()
+      : staff.role === "head"
+        ? await loadStaffStats([staff.id, ...(await teamOf(staff.id))])
+        : [];
 
   return (
     <AdminShell staff={staff}>
@@ -178,11 +187,11 @@ export default async function StatsPage() {
         </Panel>
       </div>
 
-      {staff.role === "admin" ? (
+      {seesEveryone(staff.role) ? (
         <div className="mt-4">
           <Panel
-            title="По менеджерам"
-            note="Виден только админу. Публичный рейтинг рядом с именем коллеги меняет поведение раньше, чем результат: лиды начинают брать по лёгкости, а не по важности."
+            title={staff.role === "head" ? "По моей команде" : "По менеджерам"}
+            note="Виден руководителю и админу. Публичный рейтинг рядом с именем коллеги меняет поведение раньше, чем результат: лиды начинают брать по лёгкости, а не по важности."
           >
             {perStaff.length ? (
               <div className="mt-3 overflow-x-auto">

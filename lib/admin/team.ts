@@ -1,3 +1,4 @@
+import type { AssignableRole, Role } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import {
   notifyInvitedStaff,
@@ -22,13 +23,15 @@ export type TeamMember = {
   telegram_user_id: number;
   username: string | null;
   display_name: string;
-  role: "admin" | "manager";
+  role: Role;
   is_active: boolean;
   disabled_at: string | null;
+  /** Руководитель сотрудника, если назначен. */
+  head_staff_id: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at";
+  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id";
 
 export type TeamResult =
   | {
@@ -45,7 +48,18 @@ export type TeamResult =
     }
   | {
       ok: false;
-      reason: "offline" | "exists" | "gone" | "failed" | "self" | "last_admin" | "invalid";
+      reason:
+        | "offline"
+        | "exists"
+        | "gone"
+        | "failed"
+        | "self"
+        | "last_admin"
+        | "invalid"
+        // Роль владельца через панель не меняется ни в какую сторону.
+        | "owner"
+        // Назначаемый руководитель — не руководитель или отключён.
+        | "not_head";
     };
 
 /**
@@ -100,7 +114,7 @@ async function activeAdmins(): Promise<number> {
  * увидел бы «уже есть» вместо понятного «включён обратно».
  */
 export async function inviteStaff(
-  input: { telegramId: number; displayName: string; username: string; role: "admin" | "manager" },
+  input: { telegramId: number; displayName: string; username: string; role: AssignableRole },
   admin: Staff,
   ip: string,
 ): Promise<TeamResult> {
@@ -258,7 +272,7 @@ export async function disableStaff(
  */
 export async function setStaffRole(
   staffId: string,
-  role: "admin" | "manager",
+  role: AssignableRole,
   admin: Staff,
   ip: string,
 ): Promise<TeamResult> {
@@ -274,12 +288,17 @@ export async function setStaffRole(
   if (!target) return { ok: false, reason: "gone" };
   if (target.role === role) return { ok: true };
 
-  if (
-    role === "manager" &&
-    target.role === "admin" &&
-    (staffId === admin.id || (await activeAdmins()) <= 1)
-  ) {
-    return { ok: false, reason: staffId === admin.id ? "self" : "last_admin" };
+  // Назначить администратора нельзя — тип роли здесь не допускает admin.
+  // Разжаловать — можно, но не себя и не последнего: администратор должен
+  // остаться один, а не ноль. Это и есть путь к правилу «админ только у
+  // владельца»: лишних админов владелец переводит в руководители сам.
+  if (target.role === "admin") {
+    const verdict = demotionVerdict({
+      targetId: staffId,
+      actorId: admin.id,
+      activeAdmins: await activeAdmins(),
+    });
+    if (verdict !== "ok") return { ok: false, reason: verdict };
   }
 
   const { error } = await db.from("staff").update({ role }).eq("id", staffId);
@@ -339,7 +358,7 @@ export async function resendInvite(
 
   const invite = await notifyInvitedStaff({
     telegramId: target.telegram_user_id as number,
-    role: target.role as "admin" | "manager",
+    role: target.role as Role,
     invitedBy: admin.display_name,
     returning: false,
   });
@@ -353,4 +372,83 @@ export async function resendInvite(
   });
 
   return { ok: true, invite };
+}
+
+/**
+ * Назначить сотруднику руководителя.
+ *
+ * Руководителем может быть только активный сотрудник с ролью head: иначе
+ * «руководитель видит своих» указывало бы на человека, у которого нет
+ * доступа к тому, что он якобы видит. Владельцу руководитель не
+ * назначается — над ним никого нет.
+ */
+export async function setStaffHead(
+  staffId: string,
+  headId: string | null,
+  admin: Staff,
+  ip: string,
+): Promise<TeamResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+
+  const { data: target } = await db
+    .from("staff")
+    .select("id, role, head_staff_id")
+    .eq("id", staffId)
+    .maybeSingle();
+
+  if (!target) return { ok: false, reason: "gone" };
+  if (target.role === "admin") return { ok: false, reason: "owner" };
+  if (headId === staffId) return { ok: false, reason: "invalid" };
+
+  if (headId) {
+    const { data: head } = await db
+      .from("staff")
+      .select("id, role, is_active")
+      .eq("id", headId)
+      .maybeSingle();
+    if (!head || head.role !== "head" || !head.is_active) {
+      return { ok: false, reason: "not_head" };
+    }
+  }
+
+  const before = (target.head_staff_id as string | null) ?? null;
+  if (before === headId) return { ok: true };
+
+  const { error } = await db.from("staff").update({ head_staff_id: headId }).eq("id", staffId);
+  if (error) return { ok: false, reason: "failed" };
+
+  await record("staff.head_changed", {
+    actorStaffId: admin.id,
+    targetType: "staff",
+    targetId: staffId,
+    ip,
+    meta: { from: before, to: headId },
+  });
+  return { ok: true };
+}
+
+/** Активные сотрудники, у которых этот человек — руководитель. */
+export async function teamOf(headId: string): Promise<string[]> {
+  const db = serviceClient();
+  if (!db) return [];
+
+  const { data } = await db
+    .from("staff")
+    .select("id")
+    .eq("head_staff_id", headId)
+    .eq("is_active", true);
+
+  return (data ?? []).map((row) => row.id as string);
+}
+
+/** Можно ли снять с человека роль администратора. Чистая часть setStaffRole. */
+export function demotionVerdict(input: {
+  targetId: string;
+  actorId: string;
+  activeAdmins: number;
+}): "ok" | "self" | "last_admin" {
+  if (input.targetId === input.actorId) return "self";
+  if (input.activeAdmins <= 1) return "last_admin";
+  return "ok";
 }

@@ -49,6 +49,7 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "staff.invited": "завёл сотрудника",
   "staff.disabled": "отключил сотрудника",
   "staff.role_changed": "сменил роль сотрудника",
+  "staff.head_changed": "назначил руководителя сотруднику",
 };
 
 /**
@@ -68,6 +69,7 @@ export const SENSITIVE: ReadonlySet<string> = new Set([
   "staff.invited",
   "staff.disabled",
   "staff.role_changed",
+  "staff.head_changed",
 ]);
 
 export type JournalEntry = {

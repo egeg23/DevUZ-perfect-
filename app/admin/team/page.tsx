@@ -1,7 +1,8 @@
-import { addStaff, changeRole, disable, resend } from "./actions";
+import { addStaff, assignHead, changeRole, disable, resend } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { requireAdmin } from "@/lib/admin/guard";
+import { ROLE_BADGE } from "@/lib/admin/roles";
 import { listTeam } from "@/lib/admin/team";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,11 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
   invalid: { text: "Нужны числовой Telegram id и имя.", tone: "warn" },
   self: { text: "Себя отключить или разжаловать нельзя — вернуться в панель будет некому.", tone: "warn" },
   last_admin: { text: "Это последний админ. Сначала назначьте второго.", tone: "warn" },
+  owner: { text: "Это владелец панели: его роль и руководитель через панель не меняются.", tone: "warn" },
+  not_head: {
+    text: "Руководителем можно назначить только активного сотрудника с ролью «руководитель».",
+    tone: "warn",
+  },
   gone: { text: "Такого сотрудника уже нет.", tone: "warn" },
   offline: { text: "База недоступна.", tone: "warn" },
   failed: { text: "Не получилось.", tone: "warn" },
@@ -56,7 +62,7 @@ export default async function TeamPage({
 
   const active = team.filter((m) => m.is_active);
   const gone = team.filter((m) => !m.is_active);
-  const admins = active.filter((m) => m.role === "admin").length;
+  const heads = active.filter((m) => m.role === "head");
   const notice = r ? RESULT[r] : null;
   const invite = i ? INVITE[i] : null;
 
@@ -98,12 +104,13 @@ export default async function TeamPage({
           «Отключить» — то есть с телефона отключить сотрудника было нельзя
           вовсе. Так же устроены остальные таблицы панели. */}
       <section className="mt-6 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full min-w-[760px] text-sm">
+        <table className="w-full min-w-[960px] text-sm">
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
               <th className="px-4 py-3 font-normal">Кто</th>
               <th className="px-4 py-3 font-normal">Telegram</th>
               <th className="px-4 py-3 font-normal">Роль</th>
+              <th className="px-4 py-3 font-normal">Руководитель</th>
               <th className="px-4 py-3 font-normal">С какого дня</th>
               <th className="px-4 py-3 font-normal" />
             </tr>
@@ -122,25 +129,58 @@ export default async function TeamPage({
                   <span className="block text-faint">id {member.telegram_user_id}</span>
                 </td>
                 <td className="px-4 py-3">
-                  <form action={changeRole} className="flex items-center gap-2">
-                    <input type="hidden" name="staff" value={member.id} />
-                    <input
-                      type="hidden"
-                      name="role"
-                      value={member.role === "admin" ? "manager" : "admin"}
-                    />
+                  {member.role === "admin" && member.id === admin.id ? (
+                    // Себя не разжаловать: панель останется без хозяина.
+                    // Назначить второго админа нельзя ни отсюда, ни с
+                    // сервера; лишнего — можно перевести в руководители.
                     <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint">
-                      {member.role === "admin" ? "админ" : "менеджер"}
+                      {ROLE_BADGE.admin}
                     </span>
-                    {/* Себя не разжаловать и последнего админа не снять —
-                        то же правило стоит и на сервере; здесь кнопка просто
-                        не предлагает того, что всё равно откажут. */}
-                    {member.id === admin.id || (member.role === "admin" && admins <= 1) ? null : (
+                  ) : (
+                    <form action={changeRole} className="flex items-center gap-2">
+                      <input type="hidden" name="staff" value={member.id} />
+                      <input
+                        type="hidden"
+                        name="role"
+                        value={member.role === "head" ? "manager" : "head"}
+                      />
+                      <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint">
+                        {ROLE_BADGE[member.role]}
+                      </span>
                       <button type="submit" className="text-xs text-faint hover:text-green">
-                        {member.role === "admin" ? "сделать менеджером" : "сделать админом"}
+                        {member.role === "head" ? "сделать менеджером" : "сделать руководителем"}
                       </button>
-                    )}
-                  </form>
+                    </form>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {member.role === "admin" ? (
+                    <span className="text-xs text-faint">—</span>
+                  ) : (
+                    // Кто чей: от этого зависит, чью статистику и финансы
+                    // видит руководитель. Список — только активные
+                    // руководители; себя назначить нельзя.
+                    <form action={assignHead} className="flex items-center gap-2">
+                      <input type="hidden" name="staff" value={member.id} />
+                      <select
+                        name="head"
+                        defaultValue={member.head_staff_id ?? ""}
+                        className="rounded-lg border border-line bg-ink px-2 py-1 text-xs text-text outline-none focus:border-green/50"
+                      >
+                        <option value="">без руководителя</option>
+                        {heads
+                          .filter((head) => head.id !== member.id)
+                          .map((head) => (
+                            <option key={head.id} value={head.id}>
+                              {head.display_name}
+                            </option>
+                          ))}
+                      </select>
+                      <button type="submit" className="text-xs text-faint hover:text-green">
+                        сохранить
+                      </button>
+                    </form>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-xs text-faint">{when(member.created_at)}</td>
                 <td className="px-4 py-3">
@@ -239,7 +279,7 @@ export default async function TeamPage({
               Роль
               <select name="role" defaultValue="manager" className={`mt-1 ${INPUT}`}>
                 <option value="manager">менеджер</option>
-                <option value="admin">админ</option>
+                <option value="head">руководитель</option>
               </select>
             </label>
           </div>

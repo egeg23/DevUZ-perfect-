@@ -48,6 +48,7 @@ export const AUDIT_ACTIONS = [
   "staff.invited",
   "staff.disabled",
   "staff.role_changed",
+  "staff.head_changed",
 ] as const;
 
 /**
