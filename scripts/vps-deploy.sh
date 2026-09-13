@@ -117,13 +117,38 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   # Зависимости ставятся здесь же: у скаута свой package.json, чтобы сайту
   # не достались его пакеты.
   if grep -q '^SCOUT_SESSION=.\+' "$APP_DIR/.env" && grep -q '^SCOUT_CHATS=.\+' "$APP_DIR/.env"; then
+    SCOUT_READY=1
+
     if [ -d "$APP_DIR/scout" ]; then
       ( cd "$APP_DIR/scout" && npm install --omit=dev --no-audit --no-fund >/dev/null 2>&1 ) \
-        || echo "  · зависимости скаута не поставились" >&2
+        || { echo "  · зависимости скаута не поставились" >&2; SCOUT_READY=0; }
     fi
-    systemctl enable --now devuz-scout.service >/dev/null 2>&1
-    systemctl restart devuz-scout.service >/dev/null 2>&1
-    echo "  · скаут запущен"
+
+    # И зависимости сайта — на хост, а не только в образ.
+    #
+    # Скаут берёт отсев, разбор и запись из lib/, то есть из кода сайта, а тот
+    # импортирует @anthropic-ai/sdk и @supabase/supabase-js. Node ищет пакет
+    # от файла, который его импортирует: для /opt/devuz/lib/… это
+    # /opt/devuz/node_modules — scout/node_modules он не увидит, сколько туда
+    # ни клади. Сайт собирается внутри образа, поэтому на хосте этой папки
+    # не было вовсе, и скаут падал бы на первом же импорте, уходя в
+    # перезапуск каждые тридцать секунд.
+    #
+    # ci, а не install: воспроизводимо и не переписывает package-lock, который
+    # следующая выкатка всё равно снесёт через git reset. Условие — чтобы не
+    # платить полторы минуты за переустановку на каждой выкатке: lock новее
+    # папки бывает только тогда, когда он изменился.
+    if [ ! -d "$APP_DIR/node_modules" ] || [ "$APP_DIR/package-lock.json" -nt "$APP_DIR/node_modules" ]; then
+      echo "  · ставлю зависимости сайта на хост — без них скаут не запускается"
+      ( cd "$APP_DIR" && npm ci --omit=dev --no-audit --no-fund >/dev/null 2>&1 ) \
+        || { echo "  · не поставились — скаут не запускаю" >&2; SCOUT_READY=0; }
+    fi
+
+    if [ "$SCOUT_READY" = "1" ]; then
+      systemctl enable --now devuz-scout.service >/dev/null 2>&1
+      systemctl restart devuz-scout.service >/dev/null 2>&1
+      echo "  · скаут запущен"
+    fi
   else
     echo "  · SCOUT_SESSION или SCOUT_CHATS не заданы — скаут не запускаю" >&2
   fi
