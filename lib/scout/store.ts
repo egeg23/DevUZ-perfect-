@@ -24,6 +24,39 @@ export const SCORE_THRESHOLD = 60;
  * Читается при каждом вызове, а не при загрузке модуля: так значение
  * можно подменить в тесте, не пересобирая импорты.
  */
+/**
+ * Категории, которые доходят до оператора независимо от балла.
+ *
+ * Порог в 60 защищает ленту от шума и в этом прав. Но он предполагает, что
+ * балл отражает ценность лида, а для субподряда это не так: рубрика
+ * оценивает уверенность в том, что перед нами запрос с описанной задачей, а
+ * у субподряда задачи в сообщении нет — есть только готовность платить.
+ * Первый же такой сигнал получил 25 из 100, не прошёл порог, не попал в
+ * уведомление и был потерян, когда через два часа пост удалили.
+ *
+ * Рубрику я поправил, но проверить её живым вызовом модели не смог, а
+ * «модель теперь поставит больше» — это надежда, а не механизм. Исключение
+ * по категории работает независимо от того, насколько хорошо получилась
+ * формулировка.
+ *
+ * Цена ошибки несимметрична: лишняя строка в ленте стоит секунды внимания,
+ * пропущенный субподряд — целой сделки, потому что у такого заказчика
+ * работа и деньги уже есть.
+ */
+const ALWAYS_NOTIFY = new Set(["субподряд"]);
+
+/**
+ * Дошло ли до оператора.
+ *
+ * Отдельной функцией, потому что это единственное место во всей цепочке
+ * уведомления, которое можно проверить тестом: дальше начинаются сеть и
+ * переменные окружения.
+ */
+export function shouldNotify(score: number, category: string): boolean {
+  if (ALWAYS_NOTIFY.has(category)) return true;
+  return score >= minScore();
+}
+
 export function minScore(): number {
   const raw = Number(process.env.SCOUT_MIN_SCORE);
   // Чужое значение принимается только осмысленное. Пустая строка даёт 0,
@@ -132,10 +165,27 @@ export async function saveSignal(input: SignalInput): Promise<boolean> {
 export async function notifyOperator(input: SignalInput): Promise<boolean> {
   const channel = process.env.TELEGRAM_SCOUT_CHANNEL_ID;
   if (!channel) return false;
-  if (input.score < minScore()) return false;
+  if (!shouldNotify(input.score, input.category)) return false;
 
   const link = messageLink(input.chatId, input.messageId, input.chatUsername);
-  const author = input.authorUsername ? `@${input.authorUsername}` : "без username";
+
+  /**
+   * Автор — и чем именно до него дотягиваться.
+   *
+   * Различие не косметическое, а решает, успеет оператор или нет. С
+   * username личка открывается в одно касание и переживает удаление поста.
+   * Без username единственная дорога — через само сообщение: числового id
+   * мало, для личного чата Telegram нужен ещё access_hash, а он есть только
+   * у сессии, которая сообщение видела. Скаут читает и не пишет намеренно,
+   * так что дороги от него нет.
+   *
+   * Поэтому во втором случае в уведомлении стоит предупреждение: пост
+   * удалят — и человек станет недостижим совсем. Так и вышло с первым же
+   * настоящим сигналом.
+   */
+  const author = input.authorUsername
+    ? `Автор: @${esc(input.authorUsername)} — https://t.me/${esc(input.authorUsername)}`
+    : "Автор: без username — дотянуться можно только через сообщение, пока его не удалили.";
 
   return sendMessage(
     channel,
@@ -150,7 +200,7 @@ export async function notifyOperator(input: SignalInput): Promise<boolean> {
       "",
       `<blockquote>${esc(excerpt(input.text, 400))}</blockquote>`,
       "",
-      `Автор: ${esc(author)}`,
+      author,
       link ? `Сообщение: ${link}` : "Сообщение: ссылка недоступна (закрытый чат без адреса)",
       "",
       // Срочность в самом уведомлении, а не в инструкции, которую прочтут

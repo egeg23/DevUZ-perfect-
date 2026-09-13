@@ -7,6 +7,7 @@ import {
   minScore,
   processBatch,
   SCORE_THRESHOLD,
+  shouldNotify,
   type ScoutMessage,
 } from "@/lib/scout/store";
 
@@ -175,5 +176,35 @@ test("порог поднимается из .env, но не опускаетс�
   } finally {
     if (before === undefined) delete process.env.SCOUT_MIN_SCORE;
     else process.env.SCOUT_MIN_SCORE = before;
+  }
+});
+
+/**
+ * Порог уведомления. Единственное место цепочки, которое проверяемо: дальше
+ * начинаются сеть и переменные окружения.
+ */
+test("субподряд доходит до оператора мимо порога", () => {
+  // Балл отражает уверенность в том, что задача описана, а у субподряда её
+  // в сообщении нет — есть готовность платить. Первый такой сигнал получил
+  // 25 из 100, не прошёл порог и был потерян вместе с удалённым постом.
+  assert.equal(shouldNotify(25, "субподряд"), true, "субподряд отсечён порогом");
+  assert.equal(shouldNotify(5, "субподряд"), true);
+
+  // Остальным категориям порог по-прежнему нужен: лента, в которой шум,
+  // перестаёт открываться через неделю.
+  assert.equal(shouldNotify(25, "сайт"), false);
+  assert.equal(shouldNotify(59, "другое"), false);
+  assert.equal(shouldNotify(SCORE_THRESHOLD, "сайт"), true);
+});
+
+test("порог читается из окружения, но исключение сильнее", () => {
+  const было = process.env.SCOUT_MIN_SCORE;
+  process.env.SCOUT_MIN_SCORE = "90";
+  try {
+    assert.equal(shouldNotify(85, "сайт"), false, "поднятый порог не сработал");
+    assert.equal(shouldNotify(85, "субподряд"), true, "исключение должно быть сильнее порога");
+  } finally {
+    if (было === undefined) delete process.env.SCOUT_MIN_SCORE;
+    else process.env.SCOUT_MIN_SCORE = было;
   }
 });
