@@ -14,6 +14,9 @@ import {
   type BotSession,
 } from "@/lib/qualify/handoff";
 import { loginCommand } from "@/lib/qualify/commands";
+import { handlePartnerCommand, partnerCommand } from "@/lib/partners/bot";
+import { codeFromStart } from "@/lib/partners/rules";
+import { touchChat, touchFor, type TelegramIdentity } from "@/lib/partners/store";
 import { BIND_PREFIX, bindBuyer, buyerMessage } from "@/lib/store/buyer";
 import { alreadyHandled } from "@/lib/qualify/seen-updates";
 import { shouldMissPromise } from "@/lib/qualify/promise";
@@ -52,6 +55,7 @@ type TelegramUser = {
   // панель опознаётся по нему.
   id?: number;
   first_name?: string;
+  last_name?: string;
   username?: string;
   language_code?: string;
 };
@@ -158,6 +162,19 @@ async function route(update: Update): Promise<void> {
         return;
       }
 
+      // Партнёрская программа — тоже раньше клиентского разговора: /ref и
+      // /payout шлёт человек из лички, и для остального кода он клиент.
+      const partnerIdentity = identityOf(update.message.from);
+      if (chat.type === "private" && partnerCommand(update.message.text) && partnerIdentity) {
+        await handlePartnerCommand(
+          chat.id,
+          partnerIdentity,
+          update.message.text ?? "",
+          localeOf(update.message.from),
+        );
+        return;
+      }
+
       if (isSalesChat(chat.id)) {
         await handleSales(update.message);
       } else if (chat.type !== "private") {
@@ -180,6 +197,12 @@ async function route(update: Update): Promise<void> {
     // единственный след случившегося.
     console.error("telegram webhook", error);
   }
+}
+
+/** Личность для партнёрской программы: без числового id её нет. */
+function identityOf(from: TelegramUser | undefined): TelegramIdentity | null {
+  if (!from || typeof from.id !== "number") return null;
+  return { id: from.id, username: from.username, first_name: from.first_name, last_name: from.last_name };
 }
 
 /** Язык клиента: из настроек его Telegram, дальше — по умолчанию русский. */
@@ -287,6 +310,24 @@ async function handleClient(message: NonNullable<Update["message"]>) {
             })
           : t(buyerBot.unknownCode, locale),
       );
+      return;
+    }
+
+    // Ссылка партнёра: код запоминается за чатом до первой заявки, а сам
+    // разговор начинается как обычный холодный старт.
+    // Кнопка «Получить ссылку» на странице программы ведёт сюда с payload
+    // «partner»: это тот же /ref, только с сайта.
+    const identity = identityOf(message.from);
+    if (payload === "partner" && identity) {
+      await handlePartnerCommand(chat.id, identity, "/ref", locale);
+      return;
+    }
+
+    const refCode = codeFromStart(payload);
+    if (refCode) {
+      await touchChat(chat.id, refCode);
+      if (!existing) startSession(chat.id, locale);
+      await sendMessage(chat.id, copy.welcome);
       return;
     }
 
@@ -497,6 +538,8 @@ async function respond(
       source: "telegram",
       alreadyQualified: session.qualified,
       discount: session.discount,
+      // По чьей ссылке пришёл клиент в бота — касание снимается после привязки.
+      attribution: { code: await touchFor(chatId), telegramId: from?.id ?? null, chatId },
       channelNote: [channelNote(from, chatId, options.resuming === true), options.scoutNote]
         .filter(Boolean)
         .join("\n\n"),

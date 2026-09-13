@@ -20,7 +20,7 @@ import {
  * читать, кто что открывал, остаётся за владельцем.
  */
 test("разделы владельца скрыты от руководителя и менеджера", () => {
-  for (const href of ["/admin/team", "/admin/releases", "/admin/audit"]) {
+  for (const href of ["/admin/team", "/admin/releases", "/admin/audit", "/admin/partners"]) {
     assert.equal(canSee("admin", href), true, `${href} у админа`);
     assert.equal(canSee("head", href), false, `${href} виден руководителю`);
     assert.equal(canSee("manager", href), false, `${href} виден менеджеру`);

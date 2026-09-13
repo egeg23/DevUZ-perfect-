@@ -43,6 +43,9 @@ export const LIST_COLUMNS = [
   "assigned_to",
   "assigned_staff_id",
   "discount_granted",
+  "partner_id",
+  "partner_code",
+  "partner_void_reason",
 ].join(", ");
 
 export const DETAIL_COLUMNS = [
@@ -81,6 +84,10 @@ export type LeadRow = {
   assigned_to: string | null;
   assigned_staff_id: string | null;
   discount_granted: boolean;
+  /** Партнёрская программа: кто привёл, по какому коду, почему не засчитано. */
+  partner_id: string | null;
+  partner_code: string | null;
+  partner_void_reason: string | null;
 };
 
 export type LeadDetail = LeadRow & {

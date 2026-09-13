@@ -1,3 +1,4 @@
+import { codeFromQuery } from "@/lib/partners/rules";
 import { isLocale, type Locale } from "@/lib/i18n";
 import {
   MAX_MESSAGE_CHARS,
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
     locale?: unknown;
     qualified?: unknown;
     discount?: unknown;
+    ref?: unknown;
   };
   try {
     body = await request.json();
@@ -56,6 +58,9 @@ export async function POST(request: Request) {
   // не дойдёт до менеджера.
   const alreadyQualified = body.qualified === true;
   const discount = body.discount === true;
+  // Код партнёра из адреса, который сайт запомнил: чужой ввод, той же
+  // формы, что и код, иначе — нет кода.
+  const ref = codeFromQuery(body.ref);
 
   if (!Array.isArray(body.messages) || body.messages.length === 0) {
     return badRequest("messages_required");
@@ -102,6 +107,7 @@ export async function POST(request: Request) {
           source: "chat",
           alreadyQualified,
           discount,
+          attribution: { code: ref },
           onText: (value) => push({ type: "text", value }),
           onEvent: (event: TurnEvent) => {
             if (event.type === "qualified") {

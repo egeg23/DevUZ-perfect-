@@ -72,6 +72,8 @@ export const SECTIONS: readonly Section[] = [
   // получит каждый, кто уже заплатил.
   { href: "/admin/releases", label: "Релизы", roles: ADMIN_ONLY },
   { href: "/admin/team", label: "Команда", roles: ADMIN_ONLY },
+  // Партнёры — деньги посторонним людям: только владелец.
+  { href: "/admin/partners", label: "Партнёры", roles: ADMIN_ONLY },
   { href: "/admin/audit", label: "Журнал", roles: ADMIN_ONLY },
 ];
 

@@ -4,6 +4,7 @@ import { company } from "@/content/company";
 import type { Locale } from "@/lib/i18n";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { scoreLead } from "@/lib/qualify/scoring";
+import { attributeAndNotify } from "@/lib/partners/attribute";
 import { saveLead } from "@/lib/qualify/store";
 import { sendLead } from "@/lib/qualify/telegram";
 import { qualifyLeadTool } from "@/lib/qualify/tool";
@@ -159,6 +160,12 @@ export type TurnOptions = {
   discount?: boolean;
   /** Добавка к системному промпту под конкретный канал. */
   channelNote?: string;
+  /**
+   * По чьей ссылке пришёл клиент — код партнёра и, для бота, Telegram id
+   * клиента и чат, чтобы снять касание после привязки. Привязка идёт после
+   * сохранения лида и его не роняет.
+   */
+  attribution?: { code: string | null; telegramId?: number | null; chatId?: number | null };
   onText: (chunk: string) => void;
   onEvent?: (event: TurnEvent) => void;
 };
@@ -286,6 +293,14 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
     leadId = await saveLead(lead, history, source, { requestNo, discount: options.discount });
   } catch (error) {
     console.error("saveLead", error);
+  }
+
+  if (leadId && options.attribution?.code) {
+    try {
+      await attributeAndNotify(leadId, options.attribution, lead);
+    } catch (error) {
+      console.error("partners: привязка лида", error);
+    }
   }
 
   let delivered = false;

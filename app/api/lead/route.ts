@@ -1,4 +1,6 @@
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
+import { attributeAndNotify } from "@/lib/partners/attribute";
+import { codeFromQuery } from "@/lib/partners/rules";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { saveLead } from "@/lib/qualify/store";
 import { detectContactKind } from "@/lib/contact";
@@ -114,6 +116,15 @@ export async function POST(request: Request) {
     leadId = await saveLead(lead, [], "form", { requestNo });
   } catch (error) {
     console.error("saveLead form", error);
+  }
+
+  const ref = codeFromQuery(body.ref);
+  if (leadId && ref) {
+    try {
+      await attributeAndNotify(leadId, { code: ref }, lead);
+    } catch (error) {
+      console.error("partners: привязка лида из формы", error);
+    }
   }
 
   const delivered = await sendLead(lead, leadId ?? "unsaved", requestNo);

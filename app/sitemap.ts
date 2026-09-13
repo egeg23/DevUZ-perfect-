@@ -24,6 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "products", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "cases", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "about", priority: 0.7, changeFrequency: "monthly" as const },
+    { path: "partners", priority: 0.6, changeFrequency: "monthly" as const },
     { path: "contact", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "privacy", priority: 0.3, changeFrequency: "yearly" as const },
     // Оферта и лицензия индексируются намеренно: покупатель ищет их до
