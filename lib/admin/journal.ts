@@ -56,6 +56,7 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "project.payment_removed": "удалил платёж клиента",
   "payout.recorded": "записал выплату сотруднику",
   "payout.removed": "удалил выплату сотруднику",
+  "project.share_set": "задал процент по сделке вручную",
 };
 
 /**
@@ -82,6 +83,7 @@ export const SENSITIVE: ReadonlySet<string> = new Set([
   "project.payment_removed",
   "payout.recorded",
   "payout.removed",
+  "project.share_set",
 ]);
 
 export type JournalEntry = {

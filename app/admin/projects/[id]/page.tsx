@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { editProject, moveStage } from "../actions";
-import { confirmPayment, deletePayment, saveMoney } from "@/app/admin/finance/actions";
+import { confirmPayment, deletePayment, saveMoney, saveShare } from "@/app/admin/finance/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import {
@@ -23,7 +23,7 @@ import {
   taxOf,
 } from "@/lib/admin/finance";
 import { requireStaff } from "@/lib/admin/guard";
-import { loadPeople, paymentsFor } from "@/lib/admin/ledger";
+import { loadPeople, paymentsFor, sharesFor, sharesOf } from "@/lib/admin/ledger";
 import {
   ALL_STAGES,
   STAGES,
@@ -78,13 +78,14 @@ export default async function ProjectPage({
   const notice = r ? (RESULT[r] ?? RESULT.failed) : null;
 
   // Деньги: платежи и люди нужны, чтобы посчитать начисления по проекту.
-  const [payments, people, team] = await Promise.all([
+  const [payments, people, team, shares] = await Promise.all([
     paymentsFor([project.id]),
     loadPeople(),
     staff.role === "head" ? teamOf(staff.id) : Promise.resolve([] as string[]),
+    sharesFor([project.id]),
   ]);
   const paid = paidOf(project.id, payments);
-  const lines = accrualsOf(project, payments, earnersOf(people));
+  const lines = accrualsOf(project, payments, earnersOf(people), sharesOf(project.id, shares));
   const state = accrualState(project, paid);
   const profit = profitOf(project);
   const seesMoney = canSeeMoney(staff, project, team);
@@ -281,7 +282,7 @@ export default async function ProjectPage({
             </div>
             {isAdmin ? (
               <div>
-                <dt className="text-xs text-faint">Остаётся студии</dt>
+                <dt className="text-xs text-faint">Остаётся владельцу</dt>
                 <dd className="font-mono">{money(ownerShare(project, lines))}</dd>
               </div>
             ) : null}
@@ -289,12 +290,13 @@ export default async function ProjectPage({
         ) : null}
 
         {seesMoney && lines.length ? (
-          <ul className="mt-4 border-t border-line-soft pt-4 text-sm">
+          <ul className="mt-4 flex flex-col gap-2 border-t border-line-soft pt-4 text-sm">
             {lines.map((a) => (
-              <li key={`${a.staff_id}-${a.share}`} className="flex flex-wrap items-baseline gap-x-2">
+              <li key={`${a.staff_id}-${a.share}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>{nameOf(a.staff_id)}</span>
                 <span className="text-xs text-faint">
                   {a.share === "head" ? "руководитель" : "ведёт"} · {a.percent} %
+                  {a.manual ? " · вручную" : " · по грейду"}
                 </span>
                 <span className="font-mono">{money(a.amount_usd)}</span>
                 <span
@@ -304,6 +306,30 @@ export default async function ProjectPage({
                 >
                   {ACCRUAL_TITLE[a.state]}
                 </span>
+                {isAdmin ? (
+                  // Процент по этой сделке — только закреплённым: строки здесь и
+                  // есть закреплённые, а постороннего сервер не примет.
+                  <form action={saveShare} className="flex items-center gap-2">
+                    <input type="hidden" name="project" value={project.id} />
+                    <input type="hidden" name="staff" value={a.staff_id} />
+                    <input
+                      name="percent"
+                      inputMode="numeric"
+                      defaultValue={a.percent}
+                      aria-label="Процент по этой сделке"
+                      className="w-16 rounded-lg border border-line bg-surface-2 px-2 py-1 text-xs"
+                    />
+                    <span className="text-xs text-faint">%</span>
+                    <button type="submit" className="text-xs text-faint hover:text-green">
+                      задать
+                    </button>
+                    {a.manual ? (
+                      <button type="submit" name="reset" value="1" className="text-xs text-faint hover:text-gold">
+                        по грейду
+                      </button>
+                    ) : null}
+                  </form>
+                ) : null}
               </li>
             ))}
           </ul>

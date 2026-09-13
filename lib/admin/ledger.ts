@@ -55,12 +55,16 @@ export type Person = {
   is_active: boolean;
 };
 
+/** Процент по конкретной сделке, заданный владельцем вручную. */
+export type Share = { project_id: string; staff_id: string; percent: number };
+
 export type Ledger = {
   offline: boolean;
   projects: Project[];
   payments: Payment[];
   payouts: Payout[];
   people: Person[];
+  shares: Share[];
 };
 
 const PEOPLE_COLUMNS = "id, display_name, role, grade, rate_percent, head_staff_id, is_active";
@@ -70,6 +74,7 @@ const PAYMENT_COLUMNS =
   "id, project_id, amount_usd, paid_on, purpose, note, confirmed_by, confirmer:confirmed_by (display_name)";
 const PAYOUT_COLUMNS =
   "id, staff_id, amount_usd, paid_on, note, created_by, person:staff_id (display_name)";
+const SHARE_COLUMNS = "project_id, staff_id, percent";
 
 function nameOf(joined: unknown): string | null {
   const one = (Array.isArray(joined) ? joined[0] : joined) as
@@ -162,6 +167,33 @@ export async function payoutsFor(scope: "all" | readonly string[]): Promise<Payo
   return (data ?? []).map((row) => shapePayout(row as Record<string, unknown>));
 }
 
+export async function sharesFor(projectIds: readonly string[]): Promise<Share[]> {
+  const db = serviceClient();
+  if (!db || !projectIds.length) return [];
+
+  const { data, error } = await db
+    .from("project_shares")
+    .select(SHARE_COLUMNS)
+    .in("project_id", [...projectIds])
+    .limit(4000);
+  if (error) {
+    console.error("admin: не прочитал проценты по сделкам", error.message);
+    return [];
+  }
+  return (data ?? []).map((row) => ({
+    project_id: row.project_id as string,
+    staff_id: row.staff_id as string,
+    percent: row.percent as number,
+  }));
+}
+
+/** Ручные проценты одного проекта — в форме, которую ждёт `accrualsOf`. */
+export function sharesOf(projectId: string, shares: readonly Share[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const s of shares) if (s.project_id === projectId) out.set(s.staff_id, s.percent);
+  return out;
+}
+
 /**
  * Всё, что нужно странице финансов, в границах круга.
  *
@@ -172,16 +204,17 @@ export async function payoutsFor(scope: "all" | readonly string[]): Promise<Payo
  */
 export async function loadLedger(scope: "all" | readonly string[]): Promise<Ledger> {
   const db = serviceClient();
-  if (!db) return { offline: true, projects: [], payments: [], payouts: [], people: [] };
+  if (!db) return { offline: true, projects: [], payments: [], payouts: [], people: [], shares: [] };
 
   const [people, projects, payouts] = await Promise.all([
     loadPeople(),
     projectsOwnedBy(scope),
     payoutsFor(scope),
   ]);
-  const payments = await paymentsFor(projects.map((p) => p.id));
+  const ids = projects.map((p) => p.id);
+  const [payments, shares] = await Promise.all([paymentsFor(ids), sharesFor(ids)]);
 
-  return { offline: false, projects, payments, payouts, people };
+  return { offline: false, projects, payments, payouts, people, shares };
 }
 
 /* ── Записи ─────────────────────────────────────────────────────────────── */
@@ -397,6 +430,85 @@ export async function removePayout(payoutId: string, staff: Staff, ip: string): 
     targetId: payout.staff_id as string,
     ip,
     meta: { payout_id: payoutId, amount_usd: payout.amount_usd, paid_on: payout.paid_on },
+  });
+  return OK;
+}
+
+/**
+ * Процент по конкретной сделке.
+ *
+ * Только владелец, и только тем, кто к сделке закреплён: ведущему проект и
+ * его руководителю. `null` снимает ручной процент — дальше по грейду.
+ * Постороннему процент не задать даже мимо формы: закреплённых определяет
+ * сама сделка, а не то, что пришло в POST.
+ */
+export async function setProjectShare(
+  projectId: string,
+  staffId: string,
+  percent: number | null,
+  staff: Staff,
+  ip: string,
+): Promise<MoneyResult> {
+  if (staff.role !== "admin") return fail("forbidden");
+  if (percent !== null && (!Number.isInteger(percent) || percent < 0 || percent > 100)) {
+    return fail("invalid");
+  }
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+
+  const { data: project } = await db
+    .from("projects")
+    .select("id, owner_staff_id")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (!project) return fail("gone");
+
+  const ownerId = (project.owner_staff_id as string | null) ?? null;
+  if (!ownerId) return fail("invalid");
+
+  const { data: owner } = await db
+    .from("staff")
+    .select("id, head_staff_id")
+    .eq("id", ownerId)
+    .maybeSingle();
+  const attached = new Set<string>([ownerId]);
+  const headId = (owner?.head_staff_id as string | null) ?? null;
+  if (headId) attached.add(headId);
+  if (!attached.has(staffId)) return fail("invalid");
+
+  const { data: before } = await db
+    .from("project_shares")
+    .select("percent")
+    .eq("project_id", projectId)
+    .eq("staff_id", staffId)
+    .maybeSingle();
+  const previous = (before?.percent as number | undefined) ?? null;
+  if (previous === percent) return OK;
+
+  if (percent === null) {
+    const { error } = await db
+      .from("project_shares")
+      .delete()
+      .eq("project_id", projectId)
+      .eq("staff_id", staffId);
+    if (error) return fail("failed");
+  } else {
+    const { error } = await db
+      .from("project_shares")
+      .upsert(
+        { project_id: projectId, staff_id: staffId, percent, set_by: staff.id, updated_at: new Date().toISOString() },
+        { onConflict: "project_id,staff_id" },
+      );
+    if (error) return fail("failed");
+  }
+
+  await record("project.share_set", {
+    actorStaffId: staff.id,
+    targetType: "project",
+    targetId: projectId,
+    ip,
+    meta: { staff_id: staffId, from: previous, to: percent },
   });
   return OK;
 }

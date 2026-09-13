@@ -56,6 +56,7 @@ export const AUDIT_ACTIONS = [
   "project.payment_removed",
   "payout.recorded",
   "payout.removed",
+  "project.share_set",
 ] as const;
 
 /**

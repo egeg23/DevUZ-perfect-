@@ -11,6 +11,7 @@ import {
   removePayment,
   removePayout,
   setProjectMoney,
+  setProjectShare,
   type MoneyResult,
 } from "@/lib/admin/ledger";
 
@@ -108,4 +109,19 @@ export async function deletePayout(formData: FormData) {
   const result = await removePayout(payoutId, staff, await requestIp());
   revalidatePath("/admin/finance");
   redirect(`/admin/finance?r=${code(result)}`);
+}
+
+export async function saveShare(formData: FormData) {
+  const staff = await requireStaff();
+  const projectId = String(formData.get("project") ?? "");
+  const staffId = String(formData.get("staff") ?? "");
+  const reset = Boolean(formData.get("reset"));
+
+  const percent = reset ? null : parsePercent(formData.get("percent"));
+  if (!reset && percent === null) redirect(`/admin/projects/${projectId}?r=invalid`);
+
+  const result = await setProjectShare(projectId, staffId, percent, staff, await requestIp());
+  revalidatePath(`/admin/projects/${projectId}`);
+  revalidatePath("/admin/finance");
+  redirect(`/admin/projects/${projectId}?r=${code(result)}`);
 }

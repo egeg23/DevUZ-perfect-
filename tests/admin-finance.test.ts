@@ -144,10 +144,10 @@ test("проект без суммы или без ответственного 
 
 test("баланс: заработано минус выплачено, заморозка отдельно, чужое не считается", () => {
   const accruals: Accrual[] = [
-    { project_id: "a", staff_id: MANAGER, share: "owner", percent: 15, amount_usd: 990, state: "earned" },
-    { project_id: "b", staff_id: MANAGER, share: "owner", percent: 15, amount_usd: 300, state: "frozen" },
-    { project_id: "c", staff_id: MANAGER, share: "owner", percent: 15, amount_usd: 100, state: "void" },
-    { project_id: "d", staff_id: JUNIOR, share: "owner", percent: 10, amount_usd: 500, state: "earned" },
+    { project_id: "a", staff_id: MANAGER, share: "owner", percent: 15, manual: false, amount_usd: 990, state: "earned" },
+    { project_id: "b", staff_id: MANAGER, share: "owner", percent: 15, manual: false, amount_usd: 300, state: "frozen" },
+    { project_id: "c", staff_id: MANAGER, share: "owner", percent: 15, manual: false, amount_usd: 100, state: "void" },
+    { project_id: "d", staff_id: JUNIOR, share: "owner", percent: 10, manual: false, amount_usd: 500, state: "earned" },
   ];
   const payouts = [
     { staff_id: MANAGER, amount_usd: 400 },
@@ -211,4 +211,47 @@ test("владелец студии не получает начислений: 
   const own = project({ owner_staff_id: OWNER });
   assert.deepEqual(accrualsOf(own, [], map), []);
   assert.equal(ownerShare(own, []), 6_600);
+});
+
+test("владелец задаёт процент по конкретной сделке — только закреплённым", () => {
+  // «Выставлять каждому % от конкретной сделки, только по закреплённым за
+  // человеком»: ведущему и его руководителю. Посторонний в карте — не строка.
+  const shares = new Map([
+    [MANAGER, 20],
+    [HEAD, 7],
+    ["ghost", 50],
+  ]);
+  const lines = accrualsOf(project(), [], earners, shares);
+  assert.equal(lines.length, 2, "посторонний не должен получить строку");
+
+  const mine = lines.find((a) => a.staff_id === MANAGER)!;
+  assert.equal(mine.percent, 20);
+  assert.equal(mine.manual, true);
+  assert.equal(mine.amount_usd, 1_320);
+
+  const boss = lines.find((a) => a.staff_id === HEAD)!;
+  assert.equal(boss.percent, 7);
+  assert.equal(boss.manual, true);
+  assert.equal(boss.amount_usd, 462);
+
+  // Владельцу — остаток после налога, себестоимости и всех процентов.
+  assert.equal(ownerShare(project(), lines), 6_600 - 1_320 - 462);
+
+  // Без ручного процента строки помечены как «по грейду».
+  assert.ok(accrualsOf(project(), [], earners).every((a) => a.manual === false));
+});
+
+test("процент по сделке важнее персональной ставки и грейда", () => {
+  const custom = new Map(earners);
+  custom.set(MANAGER, { ...earners.get(MANAGER)!, rate_percent: 12 });
+  const byRate = accrualsOf(project(), [], custom).find((a) => a.staff_id === MANAGER)!;
+  assert.equal(byRate.percent, 12);
+
+  const byDeal = accrualsOf(project(), [], custom, new Map([[MANAGER, 25]])).find((a) => a.staff_id === MANAGER)!;
+  assert.equal(byDeal.percent, 25);
+
+  // Ноль — тоже ручной процент: сделка без доли, но со строкой, чтобы это было видно.
+  const zero = accrualsOf(project(), [], earners, new Map([[MANAGER, 0]])).find((a) => a.staff_id === MANAGER)!;
+  assert.equal(zero.percent, 0);
+  assert.equal(zero.manual, true);
 });

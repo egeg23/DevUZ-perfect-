@@ -171,6 +171,8 @@ export type Accrual = {
   /** Чья это доля: владельца клиента или его руководителя. */
   share: "owner" | "head";
   percent: number;
+  /** Процент задан владельцем по этой сделке, а не взят из грейда. */
+  manual: boolean;
   amount_usd: number;
   state: AccrualState;
 };
@@ -178,15 +180,21 @@ export type Accrual = {
 /**
  * Начисления по одному проекту.
  *
- * Доля владельца клиента — всегда. Доля его руководителя — если руководитель
- * назначен (`head_staff_id`) и известен. Проект без суммы или без
- * ответственного не даёт строк. Прибыль ниже нуля даёт нулевые начисления:
- * минус по сделке — забота владельца студии, а не менеджера.
+ * Доля того, кто ведёт проект, — всегда. Доля его руководителя — если
+ * руководитель назначен (`head_staff_id`) и известен. Проект без суммы или
+ * без ответственного не даёт строк. Прибыль ниже нуля даёт нулевые
+ * начисления: минус по сделке — забота владельца студии, а не менеджера.
+ *
+ * `shares` — проценты, заданные владельцем по этой сделке вручную, по
+ * сотруднику. Они важнее и грейда, и персональной ставки, но строк не
+ * добавляют: процент можно задать только тем, кто к сделке закреплён, —
+ * ведущему и его руководителю. Запись для постороннего молча не считается.
  */
 export function accrualsOf(
   project: ProjectMoney,
   payments: PaymentMoney[],
   earners: ReadonlyMap<string, Earner>,
+  shares: ReadonlyMap<string, number> = new Map(),
 ): Accrual[] {
   const owner = project.owner_staff_id ? earners.get(project.owner_staff_id) : undefined;
   const profit = profitOf(project);
@@ -194,18 +202,24 @@ export function accrualsOf(
 
   const base = Math.max(0, profit);
   const state = accrualState(project, paidOf(project.id, payments));
-  const line = (staffId: string, share: Accrual["share"], percent: number): Accrual => ({
-    project_id: project.id,
-    staff_id: staffId,
-    share,
-    percent,
-    amount_usd: state === "void" ? 0 : Math.round((base * percent) / 100),
-    state,
-  });
+  const line = (staffId: string, share: Accrual["share"], byRule: number): Accrual => {
+    const manual = shares.get(staffId);
+    const percent = manual ?? byRule;
+    return {
+      project_id: project.id,
+      staff_id: staffId,
+      share,
+      percent,
+      manual: manual !== undefined,
+      amount_usd: state === "void" ? 0 : Math.round((base * percent) / 100),
+      state,
+    };
+  };
 
   const out = [line(owner.id, "owner", ratePercent(owner, project.kind))];
-  if (HEAD_TEAM_PERCENT > 0 && owner.head_staff_id && earners.has(owner.head_staff_id)) {
-    out.push(line(owner.head_staff_id, "head", HEAD_TEAM_PERCENT));
+  if (owner.head_staff_id && earners.has(owner.head_staff_id)) {
+    const head = owner.head_staff_id;
+    if (HEAD_TEAM_PERCENT > 0 || shares.has(head)) out.push(line(head, "head", HEAD_TEAM_PERCENT));
   }
   return out;
 }

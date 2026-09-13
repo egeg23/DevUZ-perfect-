@@ -18,7 +18,7 @@ import {
   type Accrual,
 } from "@/lib/admin/finance";
 import { requireStaff } from "@/lib/admin/guard";
-import { loadLedger } from "@/lib/admin/ledger";
+import { loadLedger, sharesOf } from "@/lib/admin/ledger";
 import { STAGE_LABEL } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
 
@@ -76,7 +76,9 @@ export default async function FinancePage({
   const isAdmin = staff.role === "admin";
 
   const earners = earnersOf(ledger.people);
-  const accruals = ledger.projects.flatMap((p) => accrualsOf(p, ledger.payments, earners));
+  const accruals = ledger.projects.flatMap((p) =>
+    accrualsOf(p, ledger.payments, earners, sharesOf(p.id, ledger.shares)),
+  );
   const byProject = new Map<string, Accrual[]>();
   for (const a of accruals) byProject.set(a.project_id, [...(byProject.get(a.project_id) ?? []), a]);
 
@@ -153,7 +155,7 @@ export default async function FinancePage({
             warn={withoutCost > 0}
           />
           <Card label="Начислено команде" value={money(totals.accrued)} note={`из них заморожено ${money(totals.frozen)}`} />
-          <Card label="Остаётся студии" value={money(totals.profit - totals.accrued)} note={`выплачено ${money(totals.paidOut)}`} />
+          <Card label="Остаётся владельцу" value={money(totals.profit - totals.accrued)} note={`после налога, себестоимости и всех процентов · выплачено команде ${money(totals.paidOut)}`} />
         </div>
       ) : (
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -226,7 +228,7 @@ export default async function FinancePage({
               <th className={TH}>Себестоимость</th>
               <th className={TH}>Прибыль</th>
               <th className={TH}>Начисления</th>
-              {isAdmin ? <th className={TH}>Студии</th> : null}
+              {isAdmin ? <th className={TH}>Владельцу</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -265,7 +267,7 @@ export default async function FinancePage({
                     ) : (
                       lines.map((a) => (
                         <span key={`${a.staff_id}-${a.share}`} className="block">
-                          {nameOf(a.staff_id)} {a.percent} % — <span className="font-mono">{money(a.amount_usd)}</span>
+                          {nameOf(a.staff_id)} {a.percent} %{a.manual ? " (вручную)" : ""} — <span className="font-mono">{money(a.amount_usd)}</span>
                           <span className={`ml-1 ${a.state === "earned" ? "text-green" : a.state === "void" ? "text-faint" : "text-gold"}`}>
                             {ACCRUAL_TITLE[a.state]}
                           </span>
