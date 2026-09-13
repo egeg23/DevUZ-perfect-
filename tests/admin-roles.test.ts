@@ -68,3 +68,20 @@ test("у каждой роли есть человеческое имя", () => 
     assert.ok(!/[a-z]/.test(ROLE_TITLE[role]), `название ${role} осталось внутренним`);
   }
 });
+
+/**
+ * Путь к правилу «админ только у владельца».
+ *
+ * Роль admin нельзя выдать, но лишнего админа — того, кто им стал до этого
+ * правила, — владелец может перевести в руководители. Себя — нет, и
+ * последнего — нет: администратор должен остаться один, а не ноль. Само
+ * действие ходит в базу, поэтому здесь проверяется его решающая часть —
+ * та же, что стоит в setStaffRole.
+ */
+test("лишнего админа можно разжаловать, себя и последнего — нет", async () => {
+  const { demotionVerdict } = await import("@/lib/admin/team");
+
+  assert.equal(demotionVerdict({ targetId: "a2", actorId: "a1", activeAdmins: 2 }), "ok");
+  assert.equal(demotionVerdict({ targetId: "a1", actorId: "a1", activeAdmins: 2 }), "self");
+  assert.equal(demotionVerdict({ targetId: "a2", actorId: "a1", activeAdmins: 1 }), "last_admin");
+});

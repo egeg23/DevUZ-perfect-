@@ -129,10 +129,10 @@ export default async function TeamPage({
                   <span className="block text-faint">id {member.telegram_user_id}</span>
                 </td>
                 <td className="px-4 py-3">
-                  {member.role === "admin" ? (
-                    // Администратор — владелец, и он один. Ни разжаловать,
-                    // ни назначить второго через панель нельзя; то же
-                    // правило стоит и на сервере.
+                  {member.role === "admin" && member.id === admin.id ? (
+                    // Себя не разжаловать: панель останется без хозяина.
+                    // Назначить второго админа нельзя ни отсюда, ни с
+                    // сервера; лишнего — можно перевести в руководители.
                     <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint">
                       {ROLE_BADGE.admin}
                     </span>

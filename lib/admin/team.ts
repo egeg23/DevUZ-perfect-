@@ -286,13 +286,20 @@ export async function setStaffRole(
     .maybeSingle();
 
   if (!target) return { ok: false, reason: "gone" };
-
-  // Администратор — владелец, и он один. Ни разжаловать его, ни назначить
-  // второго через панель нельзя: тип роли здесь не допускает admin, а
-  // владельца эта функция не трогает вовсе. Защита последнего админа
-  // остаётся в disableStaff.
-  if (target.role === "admin") return { ok: false, reason: "owner" };
   if (target.role === role) return { ok: true };
+
+  // Назначить администратора нельзя — тип роли здесь не допускает admin.
+  // Разжаловать — можно, но не себя и не последнего: администратор должен
+  // остаться один, а не ноль. Это и есть путь к правилу «админ только у
+  // владельца»: лишних админов владелец переводит в руководители сам.
+  if (target.role === "admin") {
+    const verdict = demotionVerdict({
+      targetId: staffId,
+      actorId: admin.id,
+      activeAdmins: await activeAdmins(),
+    });
+    if (verdict !== "ok") return { ok: false, reason: verdict };
+  }
 
   const { error } = await db.from("staff").update({ role }).eq("id", staffId);
   if (error) return { ok: false, reason: "failed" };
@@ -433,4 +440,15 @@ export async function teamOf(headId: string): Promise<string[]> {
     .eq("is_active", true);
 
   return (data ?? []).map((row) => row.id as string);
+}
+
+/** Можно ли снять с человека роль администратора. Чистая часть setStaffRole. */
+export function demotionVerdict(input: {
+  targetId: string;
+  actorId: string;
+  activeAdmins: number;
+}): "ok" | "self" | "last_admin" {
+  if (input.targetId === input.actorId) return "self";
+  if (input.activeAdmins <= 1) return "last_admin";
+  return "ok";
 }
