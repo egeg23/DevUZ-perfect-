@@ -168,8 +168,38 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   fi
 fi
 
-echo "▸ Собираем и перезапускаем ($GIT_COMMIT)"
-docker compose up -d --build --remove-orphans
+echo "▸ Собираем образ ($GIT_COMMIT)"
+
+# Сборка — самое тяжёлое, что здесь происходит: npm ci и next build на пару
+# минут забирают весь процессор, и работающий сайт вместе с ботом отвечает
+# с опозданием. Telegram ждёт от вебхука считаные секунды; не дождавшись,
+# откладывает доставку на минуты — так /login «висел» после каждой выкатки,
+# а в getWebhookInfo стояло «Connection timed out» ровно временем сборки.
+#
+# Поэтому образ собирается с пониженным приоритетом. cpu-shares действуют
+# только при нехватке процессора и отдают его тому, кто уже обслуживает
+# людей (у контейнера по умолчанию 1024). Компоуз такого флага не умеет —
+# собираем сами, а поднимаем уже готовый образ.
+#
+# Аргументы сборки берутся из .env по одному, а не через source: тот же файл
+# несёт HTTPS_PROXY, и docker build передал бы его внутрь сборки как
+# build-arg — npm ci пошёл бы через прокси скаута.
+envval() {
+  grep -m1 "^$1=" "$APP_DIR/.env" | cut -d= -f2- | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"
+}
+docker build \
+  --cpu-shares 128 \
+  --build-arg "NEXT_PUBLIC_SITE_URL=$(envval NEXT_PUBLIC_SITE_URL)" \
+  --build-arg "NEXT_PUBLIC_SUPABASE_URL=$(envval NEXT_PUBLIC_SUPABASE_URL)" \
+  --build-arg "NEXT_PUBLIC_YANDEX_METRIKA_ID=$(envval NEXT_PUBLIC_YANDEX_METRIKA_ID)" \
+  --build-arg "NEXT_PUBLIC_GA_ID=$(envval NEXT_PUBLIC_GA_ID)" \
+  --build-arg "GIT_COMMIT=$GIT_COMMIT" \
+  -t devuz:latest "$APP_DIR"
+
+echo "▸ Перезапускаем ($GIT_COMMIT)"
+# Без --build: образ уже собран выше. Компоуз сравнит его с тем, на котором
+# работает контейнер, и пересоздаст контейнер только если образ новый.
+docker compose up -d --no-build --remove-orphans
 
 echo "▸ Ждём, пока приложение отзовётся"
 for i in $(seq 1 30); do
