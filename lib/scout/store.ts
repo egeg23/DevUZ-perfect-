@@ -45,6 +45,18 @@ export type SignalInput = {
   score: number;
   category: string;
   rationale: string;
+  /**
+   * Сигнал пришёл из холостого прогона, а не из живого чата.
+   *
+   * Прогон намеренно гоняет всю цепочку «отсев → модель → база → канал
+   * оператора»: проверять её по частям бессмысленно. Но заготовленные
+   * сообщения после этого лежат в ленте неотличимо от настоящих лидов, и
+   * кто-нибудь идёт отвечать выдуманному человеку — это уже случилось
+   * 13.09.2026, шесть фикстур пришлось разбирать руками по базе.
+   *
+   * Поэтому цепочка проверяется целиком, а результат сразу помечен.
+   */
+  rehearsal?: boolean;
 };
 
 /**
@@ -91,6 +103,9 @@ export async function saveSignal(input: SignalInput): Promise<boolean> {
       score: input.score,
       category: input.category,
       rationale: input.rationale,
+      // Фикстура попадает в базу уже разобранной: цепочка проверена, а
+      // очередь оператора не засорена.
+      status: input.rehearsal ? "ignored" : "new",
     },
     // Перезапуск скаута не должен задваивать ленту оператора: пара
     // «чат + сообщение» уникальна, повтор молча игнорируется.
@@ -125,6 +140,9 @@ export async function notifyOperator(input: SignalInput): Promise<boolean> {
   return sendMessage(
     channel,
     [
+      // Пометка первой строкой, а не в конце: оператор решает, читать ли
+      // дальше, по первой строке уведомления.
+      input.rehearsal ? "🧪 <b>ХОЛОСТОЙ ПРОГОН</b> — это не лид" : "",
       `🔎 <b>${esc(input.category)}</b> · ${input.score}/100`,
       input.chatTitle ? `<i>${esc(input.chatTitle)}</i>` : "",
       "",
@@ -181,6 +199,7 @@ export async function processBatch(
   classify: (
     batch: { key: string; text: string; chatTitle?: string | null }[],
   ) => Promise<{ key: string; score: number; category: string; rationale: string }[]>,
+  { rehearsal = false }: { rehearsal?: boolean } = {},
 ): Promise<ScoutRun> {
   const run: ScoutRun = {
     seen: messages.length,
@@ -233,6 +252,7 @@ export async function processBatch(
       score: verdict.score,
       category: verdict.category,
       rationale: verdict.rationale,
+      rehearsal,
     };
 
     if (await saveSignal(signal)) run.saved += 1;

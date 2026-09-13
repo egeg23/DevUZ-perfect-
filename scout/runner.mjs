@@ -92,7 +92,7 @@ const DROP_LABEL = {
 };
 
 async function flushBatch(batch) {
-  const run = await processBatch(batch, classify);
+  const run = await processBatch(batch, classify, { rehearsal: DRY_RUN });
 
   // Разбивка отсева — рядом, в той же строке. Отдельной строкой она
   // разъезжается с числами прохода при любом просмотре журнала, а смотрят
@@ -121,6 +121,12 @@ const buffer = createBuffer({
  * живые, но без подключения к Telegram. Нужен, чтобы проверить связку
  * «отсев → модель → база → канал оператора» до того, как в дело пойдёт
  * настоящий аккаунт.
+ *
+ * Цепочка проверяется целиком, включая запись и уведомление, — иначе
+ * проверять нечего. Но результат помечается: `rehearsal` кладёт сигнал в
+ * базу сразу со `status = 'ignored'` и ставит заголовок в уведомлении.
+ * Без этого фикстуры неотличимы от лидов, и оператор идёт отвечать
+ * выдуманному человеку.
  */
 async function dryRun() {
   const file = process.env.SCOUT_SAMPLE || new URL("./sample.json", import.meta.url);
