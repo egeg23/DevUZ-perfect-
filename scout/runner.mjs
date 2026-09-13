@@ -14,6 +14,7 @@ import telegram from "teleproto";
 
 import { startProxyBridge } from "./http-proxy-bridge.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
+import { openChats } from "@/lib/scout/chats";
 import { classify } from "@/lib/scout/classify";
 import { processBatch } from "@/lib/scout/store";
 
@@ -138,7 +139,34 @@ async function live() {
   }
 
   const watched = chats();
-  console.log(`scout: читаю ${watched.length} чатов, окно ${FLUSH_MS / 1000} с`);
+  const roster = await openChats(client, watched);
+
+  for (const chat of roster.failed) {
+    console.error(`scout: не открыл ${chat.name} — пропускаю (${chat.reason})`);
+  }
+
+  if (!roster.opened.length) {
+    console.error("scout: не открылся ни один чат из SCOUT_CHATS — читать нечего");
+    process.exit(1);
+  }
+
+  if (roster.rosterUnknown) {
+    console.error("scout: не свериться со списком диалогов — не знаю, где аккаунт состоит");
+  } else if (roster.outside.length) {
+    // Не ошибка и не повод останавливаться: вступает человек, руками и не
+    // за один день. Номера таких чатов остаются в фильтре — вступит позже,
+    // и сообщения пойдут без перезапуска.
+    console.error(
+      `scout: аккаунт не состоит в ${roster.outside.length} чатах, оттуда ничего не придёт: ` +
+        roster.outside.map((chat) => chat.name).join(", "),
+    );
+  }
+
+  const reading = roster.opened.length - roster.outside.length;
+  console.log(
+    `scout: открыл ${roster.opened.length} из ${watched.length}` +
+      `${roster.rosterUnknown ? "" : `, состою в ${reading}`}, окно ${FLUSH_MS / 1000} с`,
+  );
 
   client.addEventHandler((event) => {
     const message = event.message;
@@ -146,7 +174,7 @@ async function live() {
     // Свои сообщения не разбираем: оператор отвечает из этого же аккаунта.
     if (message.out) return;
     buffer.push(shape(message));
-  }, new NewMessage({ chats: watched }));
+  }, new NewMessage({ chats: roster.opened.map((chat) => chat.id) }));
 
   const stop = async (signal) => {
     console.log(`scout: ${signal}, дочитываю накопленное`);
