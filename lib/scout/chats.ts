@@ -72,12 +72,26 @@ export async function openChats(client: Client, names: string[]): Promise<ChatRo
 
   const opened: OpenedChat[] = [];
   const failed: { name: string; reason: string }[] = [];
+  const notJoined: OpenedChat[] = [];
 
   for (const name of names) {
     try {
       const id = await client.getPeerId(await client.getInputEntity(name));
       opened.push({ name, id: String(id) });
     } catch (error) {
+      // Номер, который не открылся, — это не ошибка, а «не состою».
+      //
+      // Номер открывается только из кэша, кэш наполняют диалоги, то есть
+      // чаты, где аккаунт есть. Не нашёлся — значит, ещё не вступили.
+      // Раньше такие уходили в «не открыл» с английской ошибкой из
+      // библиотеки, по строке на чат: двадцать невступленных — двадцать
+      // строк «Could not find the input entity», которые читались как
+      // поломка. Адрес по имени сюда не попадает: публичный адрес
+      // разбирается у кого угодно, и его провал — настоящая ошибка.
+      if (isNumericId(name)) {
+        notJoined.push({ name, id: name });
+        continue;
+      }
       failed.push({
         name,
         reason: error instanceof Error ? error.message : String(error),
@@ -89,7 +103,11 @@ export async function openChats(client: Client, names: string[]): Promise<ChatRo
   return {
     opened,
     failed,
-    outside: known ? opened.filter((chat) => !known.has(chat.id)) : [],
+    outside: [...(known ? opened.filter((chat) => !known.has(chat.id)) : []), ...notJoined],
     rosterUnknown: known === null,
   };
+}
+
+function isNumericId(name: string): boolean {
+  return /^-?\d+$/.test(name);
 }
