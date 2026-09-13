@@ -2,7 +2,7 @@ import { record } from "@/lib/admin/audit";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { sweepOrders } from "@/lib/admin/order-sweep-run";
-import { purgeExpiredSignals } from "@/lib/scout/store";
+import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
@@ -170,6 +170,11 @@ export async function POST(request: Request) {
   // однажды забудут включить на новом сервере.
   const purged = await purgeExpiredSignals();
 
+  // Досылка сигналов, которые Telegram не принял с первого раза. Тоже
+  // здесь: своего расписания ей не нужно, а окно в сутки и предел попыток
+  // не дают ей превратиться в рассылку.
+  const resent = await resendUnnotifiedSignals();
+
   // Заявки на покупку — по той же причине здесь. Заявка, забытая без
   // счёта, и оплаченный заказ, которому нечего отдать, — это деньги, и
   // узнавать о них от самого покупателя значит узнавать слишком поздно.
@@ -193,6 +198,7 @@ export async function POST(request: Request) {
     skipped,
     failed,
     purged,
+    resent,
     orders,
     queued: (data ?? []).length,
   });
