@@ -188,7 +188,7 @@ async function live() {
     );
   }
 
-  const reading = roster.opened.length - roster.outside.length;
+  const reading = roster.reading;
   console.log(
     `scout: открыл ${roster.opened.length} из ${watched.length}` +
       `${roster.rosterUnknown ? "" : `, состою в ${reading}`}, окно ${FLUSH_MS / 1000} с`,
