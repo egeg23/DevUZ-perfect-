@@ -5,6 +5,7 @@ import {
   notifyRoleChange,
   type InviteOutcome,
 } from "@/lib/admin/staff-notice";
+import { isGrade, type Grade } from "@/lib/admin/finance";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
 
@@ -28,10 +29,13 @@ export type TeamMember = {
   disabled_at: string | null;
   /** Руководитель сотрудника, если назначен. */
   head_staff_id: string | null;
+  /** Грейд для ставки и персональная ставка, если договорились отдельно. */
+  grade: Grade;
+  rate_percent: number | null;
 };
 
 const COLUMNS =
-  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id";
+  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent";
 
 export type TeamResult =
   | {
@@ -301,7 +305,12 @@ export async function setStaffRole(
     if (verdict !== "ok") return { ok: false, reason: verdict };
   }
 
-  const { error } = await db.from("staff").update({ role }).eq("id", staffId);
+  // Грейд идёт за ролью: руководитель получает 30 % на своём клиенте и 5 % с
+  // команды, бывший руководитель — снова ставку менеджера.
+  const { error } = await db
+    .from("staff")
+    .update({ role, grade: role === "head" ? "head" : "manager" })
+    .eq("id", staffId);
   if (error) return { ok: false, reason: "failed" };
 
   // Отключённому не пишем: у него нет доступа, и сообщение о новых правах
@@ -451,4 +460,55 @@ export function demotionVerdict(input: {
   if (input.targetId === input.actorId) return "self";
   if (input.activeAdmins <= 1) return "last_admin";
   return "ok";
+}
+
+/**
+ * Грейд и персональная ставка.
+ *
+ * Грейд задаёт процент от прибыли (младший 10, менеджер 15, руководитель
+ * 30 на своём клиенте); персональная ставка, если договорились отдельно,
+ * заменяет грейдовую на новых клиентах. Владельцу ни то ни другое не
+ * нужно: ему остаётся то, что остаётся, и грейд у него не меняется.
+ */
+export async function setStaffGrade(
+  staffId: string,
+  grade: Grade,
+  ratePercent: number | null,
+  admin: Staff,
+  ip: string,
+): Promise<TeamResult> {
+  if (!isGrade(grade)) return { ok: false, reason: "invalid" };
+  if (ratePercent !== null && (ratePercent < 0 || ratePercent > 100)) {
+    return { ok: false, reason: "invalid" };
+  }
+
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+
+  const { data: target } = await db
+    .from("staff")
+    .select("id, role, grade, rate_percent")
+    .eq("id", staffId)
+    .maybeSingle();
+
+  if (!target) return { ok: false, reason: "gone" };
+  if (target.role === "admin") return { ok: false, reason: "owner" };
+
+  const before = { grade: target.grade as Grade, rate_percent: (target.rate_percent as number | null) ?? null };
+  if (before.grade === grade && before.rate_percent === ratePercent) return { ok: true };
+
+  const { error } = await db
+    .from("staff")
+    .update({ grade, rate_percent: ratePercent })
+    .eq("id", staffId);
+  if (error) return { ok: false, reason: "failed" };
+
+  await record("staff.grade_changed", {
+    actorStaffId: admin.id,
+    targetType: "staff",
+    targetId: staffId,
+    ip,
+    meta: { from: before, to: { grade, rate_percent: ratePercent } },
+  });
+  return { ok: true };
 }

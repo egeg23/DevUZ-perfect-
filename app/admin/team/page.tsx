@@ -1,7 +1,8 @@
-import { addStaff, assignHead, changeRole, disable, resend } from "./actions";
+import { addStaff, assignHead, changeRole, disable, resend, setGrade } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { requireAdmin } from "@/lib/admin/guard";
+import { GRADES, GRADE_TITLE } from "@/lib/admin/finance";
 import { ROLE_BADGE } from "@/lib/admin/roles";
 import { listTeam } from "@/lib/admin/team";
 
@@ -104,13 +105,14 @@ export default async function TeamPage({
           «Отключить» — то есть с телефона отключить сотрудника было нельзя
           вовсе. Так же устроены остальные таблицы панели. */}
       <section className="mt-6 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full min-w-[960px] text-sm">
+        <table className="w-full min-w-[1180px] text-sm">
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
               <th className="px-4 py-3 font-normal">Кто</th>
               <th className="px-4 py-3 font-normal">Telegram</th>
               <th className="px-4 py-3 font-normal">Роль</th>
               <th className="px-4 py-3 font-normal">Руководитель</th>
+              <th className="px-4 py-3 font-normal">Грейд и ставка</th>
               <th className="px-4 py-3 font-normal">С какого дня</th>
               <th className="px-4 py-3 font-normal" />
             </tr>
@@ -182,6 +184,40 @@ export default async function TeamPage({
                     </form>
                   )}
                 </td>
+                <td className="px-4 py-3">
+                  {member.role === "admin" ? (
+                    <span className="text-xs text-faint">—</span>
+                  ) : (
+                    // Грейд задаёт процент от прибыли; персональная ставка, если
+                    // договорились отдельно, заменяет грейдовую на новых клиентах.
+                    <form action={setGrade} className="flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="staff" value={member.id} />
+                      <select
+                        name="grade"
+                        defaultValue={member.grade}
+                        className="rounded-lg border border-line bg-ink px-2 py-1 text-xs text-text outline-none focus:border-green/50"
+                      >
+                        {GRADES.map((grade) => (
+                          <option key={grade} value={grade}>
+                            {GRADE_TITLE[grade]}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        name="rate"
+                        inputMode="numeric"
+                        placeholder="по грейду"
+                        defaultValue={member.rate_percent ?? ""}
+                        aria-label="Персональная ставка, %"
+                        className="w-24 rounded-lg border border-line bg-ink px-2 py-1 text-xs text-text outline-none focus:border-green/50"
+                      />
+                      <span className="text-xs text-faint">%</span>
+                      <button type="submit" className="text-xs text-faint hover:text-green">
+                        сохранить
+                      </button>
+                    </form>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-xs text-faint">{when(member.created_at)}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-col items-start gap-2">
@@ -207,7 +243,7 @@ export default async function TeamPage({
             ))}
             {active.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-sm text-muted">
+                <td colSpan={7} className="px-4 py-6 text-sm text-muted">
                   Пусто — а значит, и эту страницу открыть было некому. База недоступна?
                 </td>
               </tr>

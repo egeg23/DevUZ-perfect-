@@ -25,7 +25,7 @@ test("разделы владельца скрыты от руководител
     assert.equal(canSee("head", href), false, `${href} виден руководителю`);
     assert.equal(canSee("manager", href), false, `${href} виден менеджеру`);
   }
-  for (const href of ["/admin", "/admin/scout", "/admin/prospect", "/admin/stats"]) {
+  for (const href of ["/admin", "/admin/scout", "/admin/prospect", "/admin/stats", "/admin/finance"]) {
     for (const role of ROLES) assert.equal(canSee(role, href), true, `${href} скрыт от ${role}`);
   }
   assert.ok(navFor("admin").length > navFor("head").length, "у админа разделов больше");

@@ -4,11 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requestIp, requireAdmin } from "@/lib/admin/guard";
+import { isGrade, parsePercent } from "@/lib/admin/finance";
 import { isAssignable } from "@/lib/admin/roles";
 import {
   disableStaff,
   inviteStaff,
   resendInvite,
+  setStaffGrade,
   setStaffHead,
   setStaffRole,
   type TeamResult,
@@ -93,6 +95,21 @@ export async function assignHead(formData: FormData) {
   const headId = headRaw ? headRaw : null;
 
   const result = await setStaffHead(id, headId, admin, await requestIp());
+  revalidatePath("/admin/team");
+  back(result);
+}
+
+export async function setGrade(formData: FormData) {
+  const admin = await requireAdmin();
+  const id = String(formData.get("staff") ?? "");
+  const gradeRaw = String(formData.get("grade") ?? "");
+  const grade = isGrade(gradeRaw) ? gradeRaw : "manager";
+  // Пустое поле — «по грейду»; всё остальное должно быть целым процентом.
+  const rateRaw = String(formData.get("rate") ?? "").trim();
+  const rate = rateRaw ? parsePercent(rateRaw) : null;
+  if (rateRaw && rate === null) back({ ok: false, reason: "invalid" });
+
+  const result = await setStaffGrade(id, grade, rate, admin, await requestIp());
   revalidatePath("/admin/team");
   back(result);
 }
