@@ -12,6 +12,8 @@ import { stdin, stdout } from "node:process";
 
 import telegram from "teleproto";
 
+import { startProxyBridge } from "./http-proxy-bridge.mjs";
+
 const { TelegramClient } = telegram;
 const { StringSession } = telegram.sessions;
 
@@ -28,11 +30,22 @@ function env(name) {
 
 const rl = createInterface({ input: stdin, output: stdout });
 
+// Прокси, если он задан для всего приложения.
+//
+// На сервере, у которого нет прямого выхода в интернет, без этого вход
+// упирается в таймаут к серверам Telegram — причём не сразу, а после пяти
+// попыток по десять секунд, и выглядит это как «всё сломалось», а не как
+// «нет доступа». Переменная та же, что у остального приложения: держать для
+// скаута отдельную настройку значит однажды поменять одну и забыть вторую.
+const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || "";
+const bridge = proxyUrl ? await startProxyBridge(proxyUrl) : null;
+if (bridge) console.log(`Выхожу через прокси ${new URL(proxyUrl).host}`);
+
 const client = new TelegramClient(
   new StringSession(""),
   Number(env("SCOUT_API_ID")),
   env("SCOUT_API_HASH"),
-  { connectionRetries: 5 },
+  { connectionRetries: 5, ...(bridge ? { proxy: bridge.socks } : {}) },
 );
 
 await client.start({
@@ -49,4 +62,5 @@ console.log(client.session.save());
 console.log("\nНикому её не пересылайте: она равносильна доступу к аккаунту.\n");
 
 await client.disconnect();
+if (bridge) await bridge.close();
 rl.close();
