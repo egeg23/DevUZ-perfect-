@@ -11,6 +11,28 @@ import { siteUrl } from "@/lib/seo";
  */
 export const SCORE_THRESHOLD = 60;
 
+/**
+ * Порог, который можно поднять, не трогая код.
+ *
+ * Настраивается не из любви к настройкам. Чаты бывают разной чистоты:
+ * в клубе предпринимателей 60 — разумная граница, а на доске объявлений
+ * на двадцать пять тысяч человек той же шестидесяткой в ленту попадает
+ * шум, и через неделю её перестают открывать. Единственный способ узнать
+ * свою границу — посмотреть на живую ленту, а для этого правка должна
+ * стоить строчку в .env и перезапуск, а не выкатку.
+ *
+ * Читается при каждом вызове, а не при загрузке модуля: так значение
+ * можно подменить в тесте, не пересобирая импорты.
+ */
+export function minScore(): number {
+  const raw = Number(process.env.SCOUT_MIN_SCORE);
+  // Чужое значение принимается только осмысленное. Пустая строка даёт 0,
+  // а 0 означал бы «слать всё подряд» — худшее, что может случиться с
+  // лентой из-за опечатки в .env.
+  if (!Number.isFinite(raw) || raw < 1 || raw > 100) return SCORE_THRESHOLD;
+  return raw;
+}
+
 export type SignalInput = {
   chatId: number;
   chatTitle: string | null;
@@ -95,7 +117,7 @@ export async function saveSignal(input: SignalInput): Promise<boolean> {
 export async function notifyOperator(input: SignalInput): Promise<boolean> {
   const channel = process.env.TELEGRAM_SCOUT_CHANNEL_ID;
   if (!channel) return false;
-  if (input.score < SCORE_THRESHOLD) return false;
+  if (input.score < minScore()) return false;
 
   const link = messageLink(input.chatId, input.messageId, input.chatUsername);
   const author = input.authorUsername ? `@${input.authorUsername}` : "без username";
@@ -143,6 +165,15 @@ export type ScoutRun = {
   classified: number;
   saved: number;
   notified: number;
+  /**
+   * Чем именно отсев отбросил остальное.
+   *
+   * Без этой разбивки «увидел 340, до модели дошло 4» не говорит ничего:
+   * непонятно, чат тихий, темы не те или отсев режет живое. А с ней видно
+   * сразу — триста «не по теме» это здоровая доска объявлений, а триста
+   * «предложение» это чат исполнителей, где нам делать нечего.
+   */
+  dropped: Record<string, number>;
 };
 
 export async function processBatch(
@@ -157,11 +188,17 @@ export async function processBatch(
     classified: 0,
     saved: 0,
     notified: 0,
+    dropped: {},
   };
 
-  const candidates = messages
-    .map((message) => ({ message, verdict: prefilter(message.text) }))
-    .filter((item) => item.verdict.pass);
+  const judged = messages.map((message) => ({ message, verdict: prefilter(message.text) }));
+
+  for (const item of judged) {
+    if (item.verdict.pass) continue;
+    run.dropped[item.verdict.reason] = (run.dropped[item.verdict.reason] ?? 0) + 1;
+  }
+
+  const candidates = judged.filter((item) => item.verdict.pass);
 
   run.passedPrefilter = candidates.length;
   if (!candidates.length) return run;

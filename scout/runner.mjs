@@ -12,7 +12,9 @@ import { readFileSync } from "node:fs";
 // («teleproto/sessions») в ESM не резолвится. Берём всё с верхнего уровня.
 import telegram from "teleproto";
 
+import { startProxyBridge } from "./http-proxy-bridge.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
+import { openChats } from "@/lib/scout/chats";
 import { classify } from "@/lib/scout/classify";
 import { processBatch } from "@/lib/scout/store";
 
@@ -79,11 +81,32 @@ function shape(message) {
   };
 }
 
+/** Причины отсева по-русски: журнал читает человек, а не грепалка. */
+const DROP_LABEL = {
+  too_short: "коротко",
+  too_long: "длинно",
+  no_topic: "не по теме",
+  no_demand: "без спроса",
+  supply: "предложение",
+  spam: "спам",
+};
+
 async function flushBatch(batch) {
   const run = await processBatch(batch, classify);
+
+  // Разбивка отсева — рядом, в той же строке. Отдельной строкой она
+  // разъезжается с числами прохода при любом просмотре журнала, а смотрят
+  // на них всегда вместе: «до модели дошло 4 из 340» без причины отсева
+  // одинаково похоже на тихий чат и на слишком жёсткое правило.
+  const dropped = Object.entries(run.dropped)
+    .sort((a, b) => b[1] - a[1])
+    .map(([reason, count]) => `${DROP_LABEL[reason] ?? reason} ${count}`)
+    .join(", ");
+
   console.log(
     `scout: увидел ${run.seen}, до модели дошло ${run.passedPrefilter}, ` +
-      `разобрано ${run.classified}, сохранено ${run.saved}, отправлено ${run.notified}`,
+      `разобрано ${run.classified}, сохранено ${run.saved}, отправлено ${run.notified}` +
+      (dropped ? ` · отсев: ${dropped}` : ""),
   );
 }
 
@@ -113,12 +136,21 @@ async function live() {
   const { StringSession } = telegram.sessions;
   const { NewMessage } = telegram.events;
 
+  // Прокси тот же, что у остального приложения.
+  //
+  // На сервере без прямого выхода в интернет соединение с Telegram иначе
+  // просто не встаёт: клиент ходит голым TCP, а HTTP-прокси он не понимает.
+  // Мост переводит одно в другое и живёт в этом же процессе.
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || "";
+  const bridge = proxyUrl ? await startProxyBridge(proxyUrl) : null;
+  if (bridge) console.log(`scout: выхожу через прокси ${new URL(proxyUrl).host}`);
+
   const session = new StringSession(env("SCOUT_SESSION"));
   const client = new TelegramClient(
     session,
     Number(env("SCOUT_API_ID")),
     env("SCOUT_API_HASH"),
-    { connectionRetries: 5 },
+    { connectionRetries: 5, ...(bridge ? { proxy: bridge.socks } : {}) },
   );
 
   await client.connect();
@@ -128,7 +160,34 @@ async function live() {
   }
 
   const watched = chats();
-  console.log(`scout: читаю ${watched.length} чатов, окно ${FLUSH_MS / 1000} с`);
+  const roster = await openChats(client, watched);
+
+  for (const chat of roster.failed) {
+    console.error(`scout: не открыл ${chat.name} — пропускаю (${chat.reason})`);
+  }
+
+  if (!roster.opened.length) {
+    console.error("scout: не открылся ни один чат из SCOUT_CHATS — читать нечего");
+    process.exit(1);
+  }
+
+  if (roster.rosterUnknown) {
+    console.error("scout: не свериться со списком диалогов — не знаю, где аккаунт состоит");
+  } else if (roster.outside.length) {
+    // Не ошибка и не повод останавливаться: вступает человек, руками и не
+    // за один день. Номера таких чатов остаются в фильтре — вступит позже,
+    // и сообщения пойдут без перезапуска.
+    console.error(
+      `scout: аккаунт не состоит в ${roster.outside.length} чатах, оттуда ничего не придёт: ` +
+        roster.outside.map((chat) => chat.name).join(", "),
+    );
+  }
+
+  const reading = roster.opened.length - roster.outside.length;
+  console.log(
+    `scout: открыл ${roster.opened.length} из ${watched.length}` +
+      `${roster.rosterUnknown ? "" : `, состою в ${reading}`}, окно ${FLUSH_MS / 1000} с`,
+  );
 
   client.addEventHandler((event) => {
     const message = event.message;
@@ -136,12 +195,13 @@ async function live() {
     // Свои сообщения не разбираем: оператор отвечает из этого же аккаунта.
     if (message.out) return;
     buffer.push(shape(message));
-  }, new NewMessage({ chats: watched }));
+  }, new NewMessage({ chats: roster.opened.map((chat) => chat.id) }));
 
   const stop = async (signal) => {
     console.log(`scout: ${signal}, дочитываю накопленное`);
     await buffer.stop();
     await client.disconnect();
+    if (bridge) await bridge.close();
     process.exit(0);
   };
   process.on("SIGINT", () => void stop("SIGINT"));
