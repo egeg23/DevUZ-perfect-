@@ -30,7 +30,9 @@ export async function messagesFor(leadId: string): Promise<LeadMessage[]> {
 
   const { data, error } = await db
     .from("lead_messages")
-    .select("id, created_at, body, edited_at, author_staff_id, staff(display_name, role)")
+    .select(
+      "id, created_at, body, edited_at, author_staff_id, staff!lead_messages_author_staff_id_fkey(display_name, role)",
+    )
     .eq("lead_id", leadId)
     .order("created_at", { ascending: true })
     .limit(200);

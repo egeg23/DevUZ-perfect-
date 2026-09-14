@@ -43,7 +43,7 @@ export type Order = {
  * защищал бы клиента от нас в тот момент, когда он сам к нам пришёл.
  */
 const COLUMNS =
-  "id, created_at, request_no, product_slug, price_usd, locale, company, tax_id, country, contact_name, contact, payment, comment, status, assigned_staff_id, invoice_no, invoice_issued_at, paid_at, paid_ref, delivered_at, buyer_chat_id, entitlement_version, staff(display_name)";
+  "id, created_at, request_no, product_slug, price_usd, locale, company, tax_id, country, contact_name, contact, payment, comment, status, assigned_staff_id, invoice_no, invoice_issued_at, paid_at, paid_ref, delivered_at, buyer_chat_id, entitlement_version, staff!orders_assigned_staff_id_fkey(display_name)";
 
 function shape(row: Record<string, unknown>): Order {
   const joined = row.staff as unknown;
