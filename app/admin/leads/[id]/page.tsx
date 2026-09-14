@@ -6,6 +6,8 @@ import {
   changeStatus,
   finishReminder,
   release,
+  askTransfer,
+  decideTransferAction,
   revealContactAction,
   revealTranscriptAction,
   take,
@@ -28,11 +30,14 @@ import { messagesFor } from "@/lib/admin/messages";
 import {
   DELIVERY_GIVE_UP,
   canEdit,
+  canSeeLead,
   remindersFor,
   revealContact,
   revealTranscript,
 } from "@/lib/admin/ownership";
 import { CONTACT_LABEL, contactLink } from "@/lib/contact";
+import { activeStaff } from "@/lib/admin/team";
+import { TRANSFER_TITLE, approves, openTransferFor } from "@/lib/admin/transfers";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +72,13 @@ const RESULT_MESSAGE: Record<string, string> = {
   gone: "Лид не найден.",
   offline: "База недоступна.",
   failed: "Не получилось. Попробуйте ещё раз.",
+  asked: "Просьба отправлена. Лид остаётся у вас, пока её не подтвердят.",
+  approved: "Передача подтверждена — лид у нового ответственного.",
+  declined: "Передачу отклонили. Лид остаётся у прежнего ответственного.",
+  not_mine: "Передать может тот, у кого лид, либо руководитель или владелец.",
+  free: "Лид свободен — его берут кнопкой «Взять себе», а не передают.",
+  self: "Это тот же сотрудник.",
+  pending: "По этому лиду уже ждёт решения другая просьба.",
 };
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
@@ -125,8 +137,20 @@ export default async function LeadPage({
     ip,
   });
 
+  // Чужой взятый лид менеджеру не показывается — ни списком, ни по прямой
+  // ссылке: адрес лида легко переслать, и без этой проверки правило
+  // держалось бы только на том, что ссылку никто не сохранил.
+  if (!canSeeLead(lead, staff)) notFound();
+
   const mine = canEdit(lead, staff);
   const free = !lead.assigned_staff_id;
+  const decides = approves(staff.role);
+
+  const [transfer, colleagues] = await Promise.all([
+    openTransferFor(lead.id),
+    mine || decides ? activeStaff() : Promise.resolve([]),
+  ]);
+  const canHandOver = (mine && !free) || (decides && !free);
 
   // Контакт достаётся только по явному действию — и каждое такое
   // получение попадает в журнал отдельной строкой.
@@ -216,6 +240,93 @@ export default async function LeadPage({
             ) : null}
           </div>
         </div>
+
+        {/* ── Передача ────────────────────────────────────────────────
+            Менеджер просит, руководитель и владелец решают. Лид не двигается,
+            пока решения нет: иначе отказ пришлось бы откатывать, а лид всё
+            это время висел бы между двумя людьми. */}
+        {transfer ? (
+          <div className="mt-4 border-t border-line-soft pt-4">
+            <p className="text-xs uppercase tracking-wider text-gold">
+              Передача · {TRANSFER_TITLE[transfer.status]}
+            </p>
+            <p className="mt-1 text-sm">
+              {transfer.from_name ?? "—"} → {transfer.to_name ?? "—"}
+            </p>
+            {transfer.note ? (
+              <p className="mt-1 text-xs text-muted">{transfer.note}</p>
+            ) : null}
+            <p className="mt-1 text-xs text-faint">
+              попросил {transfer.requested_name ?? "—"} · {when(transfer.created_at)}
+            </p>
+
+            {decides ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <form action={decideTransferAction}>
+                  <input type="hidden" name="lead" value={lead.id} />
+                  <input type="hidden" name="transfer" value={transfer.id} />
+                  <input type="hidden" name="decision" value="approved" />
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-green px-4 py-1.5 text-xs font-semibold text-ink transition hover:bg-green-dim"
+                  >
+                    Подтвердить
+                  </button>
+                </form>
+                <form action={decideTransferAction}>
+                  <input type="hidden" name="lead" value={lead.id} />
+                  <input type="hidden" name="transfer" value={transfer.id} />
+                  <input type="hidden" name="decision" value="declined" />
+                  <button type="submit" className={BUTTON}>
+                    Отклонить
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-faint">
+                Ждём решения руководителя или владельца. Пока лид остаётся у прежнего
+                ответственного.
+              </p>
+            )}
+          </div>
+        ) : canHandOver ? (
+          <form
+            action={askTransfer}
+            className="mt-4 flex flex-wrap items-center gap-2 border-t border-line-soft pt-4"
+          >
+            <input type="hidden" name="lead" value={lead.id} />
+            <span className="text-xs uppercase tracking-wider text-faint">Передать</span>
+            <select
+              name="to"
+              required
+              defaultValue=""
+              className="rounded-lg border border-line bg-ink px-2 py-1.5 text-xs text-text outline-none focus:border-green/50"
+            >
+              <option value="" disabled>
+                кому
+              </option>
+              {colleagues
+                .filter((person) => person.id !== lead.assigned_staff_id)
+                .map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.display_name}
+                  </option>
+                ))}
+            </select>
+            <input
+              name="note"
+              maxLength={500}
+              placeholder="почему передаёте"
+              className="w-48 rounded-lg border border-line bg-ink px-2 py-1.5 text-xs text-text outline-none focus:border-green/50"
+            />
+            <button type="submit" className={BUTTON}>
+              {decides ? "Передать" : "Попросить передать"}
+            </button>
+            {decides ? null : (
+              <span className="text-xs text-faint">подтверждает руководитель или владелец</span>
+            )}
+          </form>
+        ) : null}
 
         {mine ? (
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line-soft pt-4">

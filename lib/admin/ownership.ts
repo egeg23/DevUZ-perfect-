@@ -45,7 +45,20 @@ export function canEdit(
   return lead.assigned_staff_id === staff.id;
 }
 
-function handleOf(staff: Staff): string {
+/**
+ * Видит ли сотрудник этого лида вообще.
+ *
+ * Менеджеру чужой взятый лид не показывается: у него своя очередь, и
+ * читать чужую переписку ему незачем. Свободный виден всем — его затем и
+ * держат в общей очереди.
+ */
+export function canSeeLead(lead: { assigned_staff_id: string | null }, staff: Staff): boolean {
+  if (seesEveryone(staff.role)) return true;
+  return lead.assigned_staff_id === null || lead.assigned_staff_id === staff.id;
+}
+
+/** Ник для колонки «ведёт»: по нему менеджера узнают в списке. */
+export function handleOf(staff: Staff): string {
   return staff.username ? `@${staff.username}` : staff.display_name;
 }
 

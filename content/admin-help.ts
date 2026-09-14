@@ -60,6 +60,8 @@ export type HelpCopy = {
 };
 
 const BOT_URL = "https://t.me/Devuz_studio_bot";
+/** Канал закрытый, публичного имени у него нет — только ссылка-приглашение. */
+const SCOUT_URL = "https://t.me/+puC_Ns-kCbQ5NzJi";
 
 const ru: HelpCopy = {
   title: "Инструкции",
@@ -69,11 +71,12 @@ const ru: HelpCopy = {
   ownerOnly: "Видит только владелец",
   sections: {
     "/admin": {
-      what: "Сюда приходят все обращения с сайта и из бота. Видно, кто написал, что ему нужно, какой бюджет и насколько срочно.",
+      what: "Сюда приходят все обращения с сайта и из бота. Видно, кто написал, что ему нужно, какой бюджет и насколько срочно. Менеджер видит свободные и свои: взятый коллегой лид ему не показывается. Руководитель и владелец видят все.",
       how: [
         "Свободное обращение возьмите кнопкой «Взять». После этого оно ваше, и напоминания приходят вам.",
         "Контакт человека открывается отдельной кнопкой. Открывайте, когда собираетесь писать: это попадает в журнал.",
         "Поговорили — поменяйте статус: в работе, выиграли или потеряли. По статусам считается статистика.",
+        "Не тянете лид — нажмите «Попросить передать», выберите коллегу и напишите причину. Лид остаётся у вас, пока руководитель или владелец не подтвердит.",
       ],
     },
     "/admin/orders": {
@@ -166,10 +169,10 @@ const ru: HelpCopy = {
     },
     {
       name: "Канал «Devuz Scout»",
-      url: null,
+      url: SCOUT_URL,
       what: "Сюда робот присылает людей, которые прямо сейчас ищут разработчика в открытых чатах. Каждое утро приходит короткий отчёт: работает ли робот и что нашёл за сутки.",
       how: [
-        "Попросите владельца добавить вас в канал.",
+        "Откройте ссылку и вступите в канал.",
         "Включите звук. Такие обращения живут час-два: кто написал первым, тот и говорит с клиентом.",
       ],
     },
@@ -187,7 +190,7 @@ const ru: HelpCopy = {
   rulesTitle: "Три правила",
   rules: [
     "Клиенту пишет человек, а не бот. Бот только собирает и подсказывает.",
-    "Взяли лид — ведите его. Не можете — верните, чтобы взял другой.",
+    "Взяли лид — ведите его. Не можете — верните в очередь или попросите передать коллеге.",
     "Что-то не работает или выглядит странно — скажите владельцу сразу, не ждите.",
   ],
 
@@ -203,11 +206,12 @@ const uz: HelpCopy = {
   ownerOnly: "Faqat egasi ko‘radi",
   sections: {
     "/admin": {
-      what: "Saytdan va botdan kelgan barcha murojaatlar shu yerga tushadi. Kim yozgani, unga nima kerakligi, byudjeti va qanchalik shoshilinchligi ko‘rinadi.",
+      what: "Saytdan va botdan kelgan barcha murojaatlar shu yerga tushadi. Kim yozgani, unga nima kerakligi, byudjeti va qanchalik shoshilinchligi ko‘rinadi. Menejer bo‘sh va o‘zinikini ko‘radi: hamkasb olgan lid unga ko‘rinmaydi. Rahbar va ega hammasini ko‘radi.",
       how: [
         "Bo‘sh murojaatni «Взять» tugmasi bilan o‘zingizga oling. Shundan keyin u sizniki, eslatmalar sizga keladi.",
         "Mijozning aloqa ma’lumoti alohida tugma bilan ochiladi. Yozmoqchi bo‘lganingizda oching: bu jurnalga yoziladi.",
         "Gaplashdingiz — holatini o‘zgartiring: ishdami, yutdingizmi yoki yo‘qotdingizmi. Statistika shu holatlar bo‘yicha hisoblanadi.",
+        "Lidni uddalay olmasangiz — «Попросить передать» tugmasini bosing, hamkasbni tanlang va sababini yozing. Rahbar yoki ega tasdiqlamaguncha lid sizda qoladi.",
       ],
     },
     "/admin/orders": {
@@ -300,10 +304,10 @@ const uz: HelpCopy = {
     },
     {
       name: "«Devuz Scout» kanali",
-      url: null,
+      url: SCOUT_URL,
       what: "Robot ochiq chatlarda hozir dasturchi qidirayotgan odamlarni shu yerga yuboradi. Har kuni ertalab qisqa hisobot keladi: robot ishlayaptimi va sutkada nima topdi.",
       how: [
-        "Egasidan sizni kanalga qo‘shishni so‘rang.",
+        "Havolani oching va kanalga qo‘shiling.",
         "Ovozni yoqing. Bunday murojaatlar bir-ikki soat yashaydi: kim birinchi yozsa, mijoz bilan o‘sha gaplashadi.",
       ],
     },
@@ -321,7 +325,7 @@ const uz: HelpCopy = {
   rulesTitle: "Uchta qoida",
   rules: [
     "Mijozga bot emas, odam yozadi. Bot faqat yig‘adi va maslahat beradi.",
-    "Lidni oldingizmi — olib boring. Uddalay olmasangiz, boshqa olsin deb qaytaring.",
+    "Lidni oldingizmi — olib boring. Uddalay olmasangiz, navbatga qaytaring yoki hamkasbga berishni so‘rang.",
     "Biror narsa ishlamasa yoki g‘alati ko‘rinsa — kutmasdan egasiga ayting.",
   ],
 

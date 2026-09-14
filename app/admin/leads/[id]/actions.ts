@@ -14,6 +14,7 @@ import {
   takeLead,
   type OwnershipResult,
 } from "@/lib/admin/ownership";
+import { decideTransfer, requestTransfer } from "@/lib/admin/transfers";
 
 /**
  * Результат действия едет обратно параметром в адресе, а не всплывающим
@@ -141,4 +142,42 @@ export async function sendMessageToThread(formData: FormData) {
   const ok = await postMessage(leadId, staff, body, await requestIp());
   revalidatePath(`/admin/leads/${leadId}`);
   backTo(leadId, ok ? { ok: true } : { ok: false, reason: "failed" }, "#thread");
+}
+
+/**
+ * Передать лида коллеге.
+ *
+ * Менеджер этим действием просит, руководитель и владелец — передают сразу.
+ * Различает не форма, а книга передач: форму можно отправить и мимо кнопки.
+ */
+export async function askTransfer(formData: FormData) {
+  const staff = await requireStaff();
+  const leadId = leadIdFrom(formData);
+  const targetId = String(formData.get("to") ?? "");
+  const note = String(formData.get("note") ?? "");
+
+  const result = await requestTransfer(leadId, targetId, note, staff, await requestIp());
+  revalidatePath(`/admin/leads/${leadId}`);
+  revalidatePath("/admin");
+
+  if (!result.ok) redirect(`/admin/leads/${leadId}?r=${result.reason}`);
+  // Передал сам — лид уже не его, и смотреть на него больше незачем.
+  redirect(result.moved ? "/admin?r=moved" : `/admin/leads/${leadId}?r=asked`);
+}
+
+/** Решение руководителя или владельца по просьбе. */
+export async function decideTransferAction(formData: FormData) {
+  const staff = await requireStaff();
+  const leadId = leadIdFrom(formData);
+  const transferId = String(formData.get("transfer") ?? "");
+  const decision = String(formData.get("decision") ?? "") === "approved" ? "approved" : "declined";
+
+  const result = await decideTransfer(transferId, decision, staff, await requestIp());
+  revalidatePath(`/admin/leads/${leadId}`);
+  revalidatePath("/admin");
+  redirect(
+    result.ok
+      ? `/admin/leads/${leadId}?r=${decision === "approved" ? "approved" : "declined"}`
+      : `/admin/leads/${leadId}?r=${result.reason}`,
+  );
 }

@@ -64,6 +64,10 @@ export const AUDIT_ACTIONS = [
   "partner.payout_requested",
   "partner.payout_decided",
   "project.partner_set",
+  // Передача лида: просьба, решение и сама смена хозяина.
+  "lead.transfer_requested",
+  "lead.transfer_decided",
+  "lead.transferred",
 ] as const;
 
 /**
