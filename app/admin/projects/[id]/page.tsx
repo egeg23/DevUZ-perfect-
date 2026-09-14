@@ -21,6 +21,7 @@ import {
   paidOf,
   profitOf,
   taxOf,
+  visibleStaff,
 } from "@/lib/admin/finance";
 import { requireStaff } from "@/lib/admin/guard";
 import { loadPeople, paymentsFor, sharesFor, sharesOf } from "@/lib/admin/ledger";
@@ -96,6 +97,10 @@ export default async function ProjectPage({
   const state = accrualState(project, paid);
   const profit = profitOf(project);
   const seesMoney = canSeeMoney(staff, project, team);
+  // Не владелец видит только строки людей из своего круга; налог,
+  // себестоимость, прибыль и партнёр — владельцу: по ним считается его доля.
+  const scope = visibleStaff(staff, team);
+  const shownLines = lines.filter((a) => isAdmin || (scope !== "all" && scope.includes(a.staff_id)));
   const editsMoney = canEditMoney(staff, project, paid);
   const nameOf = (staffId: string | null) => people.find((p) => p.id === staffId)?.display_name ?? "—";
 
@@ -231,9 +236,7 @@ export default async function ProjectPage({
             </>
           ) : (
             <p className="text-xs text-faint sm:col-span-2 sm:self-end">
-              Налог {project.tax_percent} % · себестоимость{" "}
-              {project.dev_cost_usd === null ? "ещё не вписана" : money(project.dev_cost_usd)} — вписывает владелец
-              после подписания договора.
+              Налог и себестоимость вписывает владелец после подписания договора.
             </p>
           )}
 
@@ -257,10 +260,13 @@ export default async function ProjectPage({
 
         {project.amount_usd !== null ? (
           <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-line-soft pt-4 text-sm sm:grid-cols-4">
-            <div>
-              <dt className="text-xs text-faint">Налог</dt>
-              <dd className="font-mono">{money(taxOf(project))}</dd>
-            </div>
+            {isAdmin ? (
+              <div>
+                <dt className="text-xs text-faint">Налог</dt>
+                <dd className="font-mono">{money(taxOf(project))}</dd>
+              </div>
+            ) : null}
+            {isAdmin ? (
             <div>
               <dt className="text-xs text-faint">Чистая прибыль</dt>
               <dd className={`font-mono ${profit !== null && profit < 0 ? "text-gold" : ""}`}>
@@ -270,6 +276,7 @@ export default async function ProjectPage({
                 ) : null}
               </dd>
             </div>
+            ) : null}
             <div>
               <dt className="text-xs text-faint">Оплачено</dt>
               <dd className="font-mono">
@@ -296,9 +303,9 @@ export default async function ProjectPage({
           </dl>
         ) : null}
 
-        {seesMoney && lines.length ? (
+        {seesMoney && shownLines.length ? (
           <ul className="mt-4 flex flex-col gap-2 border-t border-line-soft pt-4 text-sm">
-            {lines.map((a) => (
+            {shownLines.map((a) => (
               <li key={`${a.staff_id}-${a.share}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>{nameOf(a.staff_id)}</span>
                 <span className="text-xs text-faint">
@@ -343,7 +350,7 @@ export default async function ProjectPage({
         ) : null}
 
         {/* Партнёр: кто привёл клиента */}
-        {(seesMoney && partner) || isAdmin ? (
+        {isAdmin ? (
           <div className="mt-4 border-t border-line-soft pt-4">
             <p className="text-xs uppercase tracking-wider text-faint">Партнёр</p>
             {partner && partnerLine ? (

@@ -1,4 +1,4 @@
-import { addStaff, assignHead, changeRole, disable, resend, setGrade } from "./actions";
+import { addStaff, assignHead, changeRole, disable, refreshMenu, resend, setGrade } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { requireAdmin } from "@/lib/admin/guard";
@@ -10,6 +10,8 @@ export const dynamic = "force-dynamic";
 
 const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
   ok: { text: "Готово.", tone: "ok" },
+  menu_ok: { text: "Меню команд бота обновлено: клиенты видят /ref и /payout, сотрудники — ещё и /login.", tone: "ok" },
+  menu_failed: { text: "Меню бота не обновилось — Telegram не ответил. Попробуйте ещё раз.", tone: "warn" },
   reactivated: { text: "Сотрудник включён обратно — это его прежняя запись со всей историей.", tone: "ok" },
   exists: { text: "Такой Telegram id уже заведён и работает.", tone: "warn" },
   invalid: { text: "Нужны числовой Telegram id и имя.", tone: "warn" },
@@ -98,6 +100,12 @@ export default async function TeamPage({
           {invite.text}
         </p>
       ) : null}
+
+      <form action={refreshMenu} className="mt-4">
+        <button type="submit" className="text-xs text-faint hover:text-green">
+          обновить меню команд бота
+        </button>
+      </form>
 
       {/* ── Кто работает ────────────────────────────────────────────────── */}
       {/* overflow-x-auto, а не overflow-hidden: на телефоне пять колонок не

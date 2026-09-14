@@ -205,6 +205,21 @@ echo "▸ Ждём, пока приложение отзовётся"
 for i in $(seq 1 30); do
   if docker compose exec -T web node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" 2>/dev/null; then
     echo "✓ Готово: $GIT_COMMIT"
+
+    # Меню команд бота — при каждой выкатке, тем же секретом, что и свип:
+    # без меню человек не узнает ни про /ref, ни про /payout.
+    SWEEP_SECRET="$(envval REMINDER_SWEEP_SECRET)"
+    APP_PORT_VALUE="$(envval APP_PORT)"
+    if [ -n "$SWEEP_SECRET" ]; then
+      if curl --silent --show-error --max-time 60 -X POST \
+        "http://127.0.0.1:${APP_PORT_VALUE:-3310}/api/telegram/menu" \
+        -H "x-devuz-sweep: ${SWEEP_SECRET}" >/dev/null; then
+        echo "  · меню бота обновлено"
+      else
+        echo "  · меню бота не обновилось — проверьте TELEGRAM_BOT_TOKEN" >&2
+      fi
+    fi
+
     docker image prune -f >/dev/null 2>&1 || true
     exit 0
   fi
