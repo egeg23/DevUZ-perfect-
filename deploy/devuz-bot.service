@@ -1,0 +1,29 @@
+[Unit]
+Description=Бот студии: забор обновлений у Telegram вместо вебхука
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/devuz
+EnvironmentFile=/opt/devuz/.env
+
+# Тот же флаг, что у скаута: без него fetch до api.telegram.org идёт мимо
+# прокси и с этого сервера не отвечает. Строка после EnvironmentFile
+# намеренно — systemd применяет их сверху вниз.
+Environment=NODE_OPTIONS=--use-env-proxy
+# А в приложение на этом же сервере — напрямую, минуя прокси.
+Environment=NO_PROXY=127.0.0.1,localhost
+
+ExecStart=/usr/bin/node /opt/devuz/bot/poller.mjs
+
+# Долгоживущий цикл: перезапускаем при любом падении, с короткой паузой —
+# внутри поллера свои паузы на ошибки сети, крутиться он не будет.
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

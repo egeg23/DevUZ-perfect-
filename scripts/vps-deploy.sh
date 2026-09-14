@@ -87,6 +87,7 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   install_unit devuz-reminders.service
   install_unit devuz-reminders.timer
   install_unit devuz-scout.service
+  install_unit devuz-bot.service
   # daemon-reload нужен только когда файл юнита изменился.
   [ "$UNITS_CHANGED" = "1" ] && systemctl daemon-reload
 
@@ -165,6 +166,18 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
     fi
   else
     echo "  · SCOUT_SESSION или SCOUT_CHATS не заданы — скаут не запускаю" >&2
+  fi
+
+  # Бот забирает обновления у Telegram сам, через тот же прокси, что и скаут:
+  # входящие соединения от Telegram к этому серверу рвутся, и вебхук
+  # доставлял /login с опозданием в минуты. Нужны токен и общий с
+  # приложением секрет. Перезапуск на каждой выкатке — как у скаута.
+  if grep -q '^TELEGRAM_BOT_TOKEN=.\+' "$APP_DIR/.env" && grep -q '^TELEGRAM_WEBHOOK_SECRET=.\+' "$APP_DIR/.env"; then
+    systemctl enable --now devuz-bot.service >/dev/null 2>&1
+    systemctl restart devuz-bot.service >/dev/null 2>&1
+    echo "  · бот забирает обновления сам"
+  else
+    echo "  · TELEGRAM_BOT_TOKEN или TELEGRAM_WEBHOOK_SECRET не заданы — бот не запускаю" >&2
   fi
 fi
 
