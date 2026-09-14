@@ -175,6 +175,24 @@ async function call(method: string, payload: unknown): Promise<boolean> {
   return false;
 }
 
+/** Команда для меню бота: имя без слэша и короткое описание. */
+export type BotCommand = { command: string; description: string };
+
+/**
+ * Меню команд. Без scope — для всех личек, с scope { type: "chat", chat_id }
+ * — только для одного чата: так сотрудники видят /login, а клиенты нет.
+ */
+export async function setMyCommands(
+  commands: BotCommand[],
+  options: { scope?: { type: "chat"; chat_id: number }; language_code?: string } = {},
+): Promise<boolean> {
+  return call("setMyCommands", { commands, ...options });
+}
+
+export async function deleteMyCommands(scope: { type: "chat"; chat_id: number }): Promise<boolean> {
+  return call("deleteMyCommands", { scope });
+}
+
 export async function sendMessage(chatId: number | string, text: string): Promise<boolean> {
   return call("sendMessage", {
     chat_id: chatId,

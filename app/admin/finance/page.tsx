@@ -227,7 +227,7 @@ export default async function FinancePage({
       {/* ── Проекты ───────────────────────────────────────────────────── */}
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">По проектам</h2>
       <section className="mt-2 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className={`w-full ${isAdmin ? "min-w-[1240px]" : "min-w-[1040px]"} text-sm`}>
+        <table className={`w-full ${isAdmin ? "min-w-[1240px]" : "min-w-[880px]"} text-sm`}>
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
               <th className={TH}>Проект</th>
@@ -235,17 +235,27 @@ export default async function FinancePage({
               <th className={TH}>Вид</th>
               <th className={TH}>Сумма</th>
               <th className={TH}>Оплачено</th>
-              <th className={TH}>Налог</th>
-              <th className={TH}>Себестоимость</th>
-              <th className={TH}>Прибыль</th>
+              {/* Налог, себестоимость и прибыль — только владельцу: по ним считается его
+                  доля, а это его информация, не команды. */}
+              {isAdmin ? (
+                <>
+                  <th className={TH}>Налог</th>
+                  <th className={TH}>Себестоимость</th>
+                  <th className={TH}>Прибыль</th>
+                </>
+              ) : null}
               <th className={TH}>Начисления</th>
               {isAdmin ? <th className={TH}>Владельцу</th> : null}
             </tr>
           </thead>
           <tbody>
             {ledger.projects.map((project) => {
-              const lines = byProject.get(project.id) ?? [];
-              const partnerLine = partnerLines.get(project.id) ?? null;
+              // Не владелец видит только строки людей из своего круга: менеджер —
+              // свою, руководитель — свои и команды. Партнёрская строка — владельцу.
+              const lines = (byProject.get(project.id) ?? []).filter(
+                (a) => isAdmin || (scope !== "all" && scope.includes(a.staff_id)),
+              );
+              const partnerLine = isAdmin ? (partnerLines.get(project.id) ?? null) : null;
               const paid = paidOf(project.id, ledger.payments);
               const state = accrualState(project, paid);
               const profit = profitOf(project);
@@ -268,11 +278,15 @@ export default async function FinancePage({
                       {project.stage === "cancelled" ? "отменён" : state === "earned" ? "целиком" : "не целиком"}
                     </span>
                   </td>
-                  <td className={`${TD} font-mono text-xs text-muted`}>{project.tax_percent} %</td>
-                  <td className={`${TD} font-mono text-xs ${project.dev_cost_usd === null && project.amount_usd !== null ? "text-gold" : "text-muted"}`}>
-                    {project.dev_cost_usd === null ? "не вписана" : money(project.dev_cost_usd)}
-                  </td>
-                  <td className={`${TD} font-mono text-xs ${profit !== null && profit < 0 ? "text-gold" : ""}`}>{money(profit)}</td>
+                  {isAdmin ? (
+                    <>
+                      <td className={`${TD} font-mono text-xs text-muted`}>{project.tax_percent} %</td>
+                      <td className={`${TD} font-mono text-xs ${project.dev_cost_usd === null && project.amount_usd !== null ? "text-gold" : "text-muted"}`}>
+                        {project.dev_cost_usd === null ? "не вписана" : money(project.dev_cost_usd)}
+                      </td>
+                      <td className={`${TD} font-mono text-xs ${profit !== null && profit < 0 ? "text-gold" : ""}`}>{money(profit)}</td>
+                    </>
+                  ) : null}
                   <td className={`${TD} text-xs`}>
                     {lines.length === 0 && !partnerLine ? (
                       <span className="text-faint">—</span>
@@ -309,7 +323,7 @@ export default async function FinancePage({
             })}
             {ledger.projects.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 10 : 9} className="px-4 py-6 text-sm text-muted">
+                <td colSpan={isAdmin ? 10 : 6} className="px-4 py-6 text-sm text-muted">
                   Проектов в вашем круге пока нет.
                 </td>
               </tr>

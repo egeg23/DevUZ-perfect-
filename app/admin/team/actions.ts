@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requestIp, requireAdmin } from "@/lib/admin/guard";
 import { isGrade, parsePercent } from "@/lib/admin/finance";
 import { isAssignable } from "@/lib/admin/roles";
+import { syncBotMenu } from "@/lib/qualify/menu";
 import {
   disableStaff,
   inviteStaff,
@@ -44,18 +45,20 @@ export async function addStaff(formData: FormData) {
   const roleRaw = String(formData.get("role") ?? "manager");
   const role = isAssignable(roleRaw) ? roleRaw : "manager";
 
-  back(
-    await inviteStaff(
-      {
-        telegramId,
-        displayName: String(formData.get("display_name") ?? ""),
-        username: String(formData.get("username") ?? ""),
-        role,
-      },
-      admin,
-      await requestIp(),
-    ),
+  const result = await inviteStaff(
+    {
+      telegramId,
+      displayName: String(formData.get("display_name") ?? ""),
+      username: String(formData.get("username") ?? ""),
+      role,
+    },
+    admin,
+    await requestIp(),
   );
+  // Новому сотруднику /login должен появиться в меню сразу, а не после
+  // следующей выкатки. Меню — не повод ронять заведение.
+  if (result.ok) await syncBotMenu().catch(() => undefined);
+  back(result);
 }
 
 export async function disable(formData: FormData) {
@@ -63,6 +66,8 @@ export async function disable(formData: FormData) {
   const id = String(formData.get("staff") ?? "");
 
   const result = await disableStaff(id, admin, await requestIp());
+  // Отключённому /login в меню больше не нужен.
+  if (result.ok) await syncBotMenu().catch(() => undefined);
   revalidatePath("/admin/team");
   back(result);
 }
@@ -112,4 +117,15 @@ export async function setGrade(formData: FormData) {
   const result = await setStaffGrade(id, grade, rate, admin, await requestIp());
   revalidatePath("/admin/team");
   back(result);
+}
+
+/**
+ * Обновить меню команд бота руками. Обычно оно обновляется само — при
+ * выкатке и при заведении или отключении сотрудника, — но если Telegram в
+ * тот момент не ответил, кнопка дешевле, чем ждать следующей выкатки.
+ */
+export async function refreshMenu() {
+  await requireAdmin();
+  const result = await syncBotMenu();
+  back({ ok: true, note: result.ok ? "menu_ok" : "menu_failed" });
 }

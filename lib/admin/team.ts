@@ -40,7 +40,7 @@ const COLUMNS =
 export type TeamResult =
   | {
       ok: true;
-      note?: "reactivated";
+      note?: "reactivated" | "menu_ok" | "menu_failed";
       /**
        * Дошло ли до человека приглашение.
        *
