@@ -78,7 +78,7 @@ export function WeeklyBars({ rows }: { rows: Bucket[] }) {
   // лидов: страница вбок не едет, а подписи остаются читаемыми.
   return (
     <div className="mt-4 overflow-x-auto">
-      <div className="min-w-[520px]">
+      <div className="min-w-[320px] sm:min-w-[520px]">
       <div className="flex gap-[2px]">
         {rows.map((row) => (
           <span

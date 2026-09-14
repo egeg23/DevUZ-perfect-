@@ -98,7 +98,7 @@ export default async function PartnersPage({
       {/* ── Заявки на выплату ─────────────────────────────────────────── */}
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">Заявки на выплату</h2>
       <section className="mt-2 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full min-w-[820px] text-sm">
+        <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[820px]">
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
               <th className={TH}>Когда</th>
@@ -111,14 +111,14 @@ export default async function PartnersPage({
           <tbody>
             {requests.map((p) => (
               <tr key={p.id} className="border-b border-line-soft last:border-0 align-top">
-                <td className={`${TD} text-xs text-muted`}>{when(p.created_at)}</td>
-                <td className={TD}>
+                <td data-label="Когда" className={`${TD} text-xs text-muted`}>{when(p.created_at)}</td>
+                <td data-label="Кто" className={TD}>
                   {p.partner.name}
                   {p.partner.username ? <span className="ml-2 text-xs text-faint">@{p.partner.username}</span> : null}
                 </td>
-                <td className={`${TD} font-mono`}>{money(p.amount_usd)}</td>
-                <td className={`${TD} break-all font-mono text-xs text-muted`}>{p.requisites}</td>
-                <td className={TD}>
+                <td data-label="Сумма" className={`${TD} font-mono`}>{money(p.amount_usd)}</td>
+                <td data-label="Куда" className={`${TD} break-all font-mono text-xs text-muted`}>{p.requisites}</td>
+                <td data-label="Решение" className={TD}>
                   {/* Деньги уходят руками — кошелёк или карта, — и только потом
                       «Выплачено». Отклонение возвращает сумму в доступное. */}
                   <form action={decide} className="flex flex-wrap items-center gap-2">
@@ -148,7 +148,7 @@ export default async function PartnersPage({
       {/* ── Партнёры ──────────────────────────────────────────────────── */}
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">Все партнёры</h2>
       <section className="mt-2 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full min-w-[1280px] text-sm">
+        <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[1280px]">
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
               <th className={TH}>Кто</th>
@@ -166,7 +166,7 @@ export default async function PartnersPage({
           <tbody>
             {summaries.map(({ partner, links, balance, leads, projects, paidProjects, proven }) => (
               <tr key={partner.id} className="border-b border-line-soft last:border-0 align-top">
-                <td className={TD}>
+                <td data-label="Кто" className={TD}>
                   {partner.name}
                   {partner.status === "blocked" ? <span className="ml-2 text-xs text-gold">заблокирован</span> : null}
                   <span className="block text-xs text-faint">
@@ -175,7 +175,7 @@ export default async function PartnersPage({
                   </span>
                   {partner.note ? <span className="block text-xs text-muted">{partner.note}</span> : null}
                 </td>
-                <td className={`${TD} text-xs`}>
+                <td data-label="Ссылки" className={`${TD} text-xs`}>
                   {links.map((l) => (
                     <span key={l.id} className="block">
                       <a href={linkUrl(siteUrl, l.code)} className="font-mono hover:text-green" target="_blank" rel="noreferrer noopener">
@@ -187,25 +187,25 @@ export default async function PartnersPage({
                     </span>
                   ))}
                 </td>
-                <td className={`${TD} text-xs text-muted`}>
+                <td data-label="Ставка" className={`${TD} text-xs text-muted`}>
                   {partnerPercent({ projectPercent: null, partnerOverride: partner.percent_override, proven })} %
                   <span className="block text-faint">
                     {partner.percent_override !== null ? "персональная" : proven ? "прокачанный" : "база"}
                   </span>
                 </td>
-                <td className={`${TD} font-mono text-xs`}>{leads}</td>
-                <td className={`${TD} font-mono text-xs`}>
+                <td data-label="Клиентов" className={`${TD} font-mono text-xs`}>{leads}</td>
+                <td data-label="Проектов" className={`${TD} font-mono text-xs`}>
                   {paidProjects} / {projects.length}
                   <span className="block font-sans text-faint">оплачено / всего</span>
                 </td>
-                <td className={`${TD} font-mono text-xs text-muted`}>{money(balance.frozen)}</td>
-                <td className={`${TD} font-mono text-xs`}>{money(balance.earned)}</td>
-                <td className={`${TD} font-mono text-xs text-muted`}>{money(balance.paid)}</td>
-                <td className={`${TD} font-mono text-xs ${balance.available > 0 ? "text-green" : ""}`}>
+                <td data-label="Заморожено" className={`${TD} font-mono text-xs text-muted`}>{money(balance.frozen)}</td>
+                <td data-label="Заработано" className={`${TD} font-mono text-xs`}>{money(balance.earned)}</td>
+                <td data-label="Выплачено" className={`${TD} font-mono text-xs text-muted`}>{money(balance.paid)}</td>
+                <td data-label="Доступно" className={`${TD} font-mono text-xs ${balance.available > 0 ? "text-green" : ""}`}>
                   {money(balance.available)}
                   {balance.requested ? <span className="block font-sans text-faint">в заявке {money(balance.requested)}</span> : null}
                 </td>
-                <td className={TD}>
+                <td data-label="Правки" className={TD}>
                   <form action={editPartner} className="flex flex-col gap-2">
                     <input type="hidden" name="partner" value={partner.id} />
                     <div className="flex items-center gap-2">

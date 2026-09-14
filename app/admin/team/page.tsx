@@ -113,7 +113,7 @@ export default async function TeamPage({
           «Отключить» — то есть с телефона отключить сотрудника было нельзя
           вовсе. Так же устроены остальные таблицы панели. */}
       <section className="mt-6 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full min-w-[1180px] text-sm">
+        <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[1180px]">
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
               <th className="px-4 py-3 font-normal">Кто</th>
@@ -128,17 +128,17 @@ export default async function TeamPage({
           <tbody>
             {active.map((member) => (
               <tr key={member.id} className="border-b border-line-soft last:border-0 align-top">
-                <td className="px-4 py-3">
+                <td data-label="Кто" className="px-4 py-3">
                   {member.display_name}
                   {member.id === admin.id ? (
                     <span className="ml-2 text-xs text-faint">это вы</span>
                   ) : null}
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-muted">
+                <td data-label="Telegram" className="px-4 py-3 font-mono text-xs text-muted">
                   {member.username ? `@${member.username}` : "—"}
                   <span className="block text-faint">id {member.telegram_user_id}</span>
                 </td>
-                <td className="px-4 py-3">
+                <td data-label="Роль" className="px-4 py-3">
                   {member.role === "admin" && member.id === admin.id ? (
                     // Себя не разжаловать: панель останется без хозяина.
                     // Назначить второго админа нельзя ни отсюда, ни с
@@ -163,7 +163,7 @@ export default async function TeamPage({
                     </form>
                   )}
                 </td>
-                <td className="px-4 py-3">
+                <td data-label="Руководитель" className="px-4 py-3">
                   {member.role === "admin" ? (
                     <span className="text-xs text-faint">—</span>
                   ) : (
@@ -192,7 +192,7 @@ export default async function TeamPage({
                     </form>
                   )}
                 </td>
-                <td className="px-4 py-3">
+                <td data-label="Грейд и ставка" className="px-4 py-3">
                   {member.role === "admin" ? (
                     <span className="text-xs text-faint">—</span>
                   ) : (
@@ -226,8 +226,8 @@ export default async function TeamPage({
                     </form>
                   )}
                 </td>
-                <td className="px-4 py-3 text-xs text-faint">{when(member.created_at)}</td>
-                <td className="px-4 py-3">
+                <td data-label="С какого дня" className="px-4 py-3 text-xs text-faint">{when(member.created_at)}</td>
+                <td data-label="" className="px-4 py-3">
                   <div className="flex flex-col items-start gap-2">
                     {/* Доступна всегда, а не только после неудачи: прислать
                         приглашение заново тому, кто его потерял, дешевле,
