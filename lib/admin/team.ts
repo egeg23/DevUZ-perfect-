@@ -512,3 +512,20 @@ export async function setStaffGrade(
   });
   return { ok: true };
 }
+
+/** Активные сотрудники — для выпадающего списка «кому передать». */
+export async function activeStaff(): Promise<{ id: string; display_name: string }[]> {
+  const db = serviceClient();
+  if (!db) return [];
+
+  const { data } = await db
+    .from("staff")
+    .select("id, display_name")
+    .eq("is_active", true)
+    .order("display_name");
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    display_name: row.display_name as string,
+  }));
+}

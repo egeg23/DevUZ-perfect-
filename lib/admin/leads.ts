@@ -1,3 +1,4 @@
+import { seesEveryone, type Role } from "@/lib/admin/roles";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -109,6 +110,32 @@ export type LeadDetail = LeadRow & {
 export const PRIORITIES = ["hot", "warm", "nurture", "archive"] as const;
 export const STATUSES = ["new", "taken", "dropped", "won", "lost"] as const;
 
+/**
+ * Чьи лиды видны.
+ *
+ * Владелец: «менеджерам не надо видеть чужих лидов после взятия в работу».
+ * Значит, менеджеру — свободные и свои, а руководителю и владельцу — все:
+ * их работа и есть чужие лиды. Круг задаётся здесь, а не на странице,
+ * потому что забыть его на странице легче, чем в запросе.
+ */
+export type LeadScope = "all" | { staffId: string };
+
+export function scopeFor(staff: { id: string; role: Role }): LeadScope {
+  return seesEveryone(staff.role) ? "all" : { staffId: staff.id };
+}
+
+/**
+ * Круг как условие запроса: «ничей или мой».
+ *
+ * Отдельной функцией, а не строкой внутри запроса, ровно затем, чтобы её
+ * можно было проверить тестом: это граница приватности, и её молчаливое
+ * исчезновение должно ронять сборку, а не обнаруживаться клиентом, чей
+ * контакт увидел посторонний.
+ */
+export function scopeFilter(scope: LeadScope): string | null {
+  return scope === "all" ? null : `assigned_staff_id.is.null,assigned_staff_id.eq.${scope.staffId}`;
+}
+
 export type LeadFilter = {
   priority?: string;
   status?: string;
@@ -126,7 +153,10 @@ export type LeadPage = {
   offline: boolean;
 };
 
-export async function listLeads(filter: LeadFilter = {}): Promise<LeadPage> {
+export async function listLeads(
+  filter: LeadFilter = {},
+  scope: LeadScope = "all",
+): Promise<LeadPage> {
   const db = serviceClient();
   if (!db) return { rows: [], total: 0, offline: true };
 
@@ -147,6 +177,11 @@ export async function listLeads(filter: LeadFilter = {}): Promise<LeadPage> {
   if (filter.status && (STATUSES as readonly string[]).includes(filter.status)) {
     query = query.eq("status", filter.status);
   }
+  // Круг — первым делом: он не фильтр, который человек выбрал, а граница,
+  // за которую ему нельзя, и снять её переключателем в адресе нельзя тоже.
+  const inScope = scopeFilter(scope);
+  if (inScope) query = query.or(inScope);
+
   if (filter.owner === "free") {
     query = query.is("assigned_staff_id", null);
   } else if (filter.owner === "mine" && filter.ownerStaffId) {
@@ -181,7 +216,10 @@ export async function leadById(id: string): Promise<LeadDetail | null> {
 }
 
 /** Сводка для верхней панели: сколько чего лежит прямо сейчас. */
-export async function leadCounts(staffId?: string): Promise<{
+export async function leadCounts(
+  staffId?: string,
+  scope: LeadScope = "all",
+): Promise<{
   total: number;
   free: number;
   mine: number;
@@ -199,10 +237,16 @@ export async function leadCounts(staffId?: string): Promise<{
       : Promise.resolve({ count: 0, error: null }),
   ]);
 
+  const freeCount = free.count ?? 0;
+  const mineCount = mine.count ?? 0;
+
   return {
-    total: all.count ?? 0,
-    free: free.count ?? 0,
-    mine: mine.count ?? 0,
+    // В своём круге «всего» — это ровно то, что человек может открыть:
+    // свободные и свои. Показать ему общее число значило бы сказать «есть
+    // ещё сорок, но они не для вас» — вопрос, а не ответ.
+    total: scope === "all" ? all.count ?? 0 : freeCount + mineCount,
+    free: freeCount,
+    mine: mineCount,
     offline: Boolean(all.error),
   };
 }

@@ -4,7 +4,8 @@ import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
 import { LeadTable } from "@/components/admin/lead-table";
 import { requireStaff } from "@/lib/admin/guard";
-import { PRIORITIES, STATUSES, leadCounts, listLeads } from "@/lib/admin/leads";
+import { PRIORITIES, STATUSES, leadCounts, listLeads, scopeFor } from "@/lib/admin/leads";
+import { approves, pendingTransfers } from "@/lib/admin/transfers";
 
 // Панель показывает состояние базы прямо сейчас. Любое кэширование здесь
 // означает менеджера, который звонит по лиду, взятому полчаса назад другим.
@@ -73,16 +74,22 @@ export default async function AdminHome({
   const page = Math.max(Number.parseInt(params.page ?? "1", 10) || 1, 1);
   const limit = 50;
 
-  const [counts, leads] = await Promise.all([
-    leadCounts(staff.id),
-    listLeads({
-      priority: params.priority,
-      status: params.status,
-      owner: params.owner,
-      ownerStaffId: staff.id,
-      limit,
-      offset: (page - 1) * limit,
-    }),
+  // Менеджер видит свободных и своих, руководитель и владелец — всех.
+  const scope = scopeFor(staff);
+  const [counts, leads, pending] = await Promise.all([
+    leadCounts(staff.id, scope),
+    listLeads(
+      {
+        priority: params.priority,
+        status: params.status,
+        owner: params.owner,
+        ownerStaffId: staff.id,
+        limit,
+        offset: (page - 1) * limit,
+      },
+      scope,
+    ),
+    approves(staff.role) ? pendingTransfers() : Promise.resolve([]),
   ]);
 
   const base = (patch: Record<string, string | undefined>) => {
@@ -103,6 +110,29 @@ export default async function AdminHome({
           перестали приходить напоминания, ничего об этом не знает, а
           узнаёт по остывшему лиду через неделю. */}
       <SweepBanner />
+
+      {/* Просьбы передать лида: решать их должен тот, кто их видит, а не тот,
+          кто вспомнил. Поэтому очередь стоит первой, а не спрятана в лиде. */}
+      {pending.length ? (
+        <section className="mb-6 rounded-xl border border-gold/30 bg-gold/5 px-5 py-4">
+          <p className="text-xs uppercase tracking-wider text-gold">
+            Ждут вашего решения: {pending.length}
+          </p>
+          <ul className="mt-3 flex flex-col gap-2 text-sm">
+            {pending.map((item) => (
+              <li key={item.id} className="flex flex-wrap items-baseline gap-x-2">
+                <Link href={`/admin/leads/${item.lead_id}`} className="font-mono hover:text-green">
+                  {item.request_no ?? item.company ?? item.lead_id.slice(0, 8)}
+                </Link>
+                <span className="text-muted">
+                  {item.from_name ?? "—"} → {item.to_name ?? "—"}
+                </span>
+                {item.note ? <span className="text-xs text-faint">{item.note}</span> : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {leads.offline ? (
         <p className="mb-6 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
