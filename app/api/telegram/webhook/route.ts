@@ -66,6 +66,8 @@ type Update = {
   update_id?: number;
   message?: {
     text?: string;
+    /** Когда человек отправил, по часам Telegram — по нему видно, сколько шло обновление. */
+    date?: number;
     chat: TelegramChat;
     from?: TelegramUser;
   };
@@ -255,9 +257,12 @@ async function handleStaffLogin(message: NonNullable<Update["message"]>) {
     return;
   }
 
+  // Сколько шло обновление от Telegram до нас: по этой цифре в журнале видно,
+  // где тормозит — доставка или мы.
+  const lagS = message.date ? Math.max(0, Math.round(Date.now() / 1000 - message.date)) : null;
   await record("login.requested", {
     actorStaffId: staff.id,
-    meta: { via: "telegram" },
+    meta: { via: "telegram", lag_s: lagS },
   });
 
   // Ссылка уходит без превью (sendMessage выключает его для всех сообщений):
