@@ -67,7 +67,7 @@ export type Project = {
 };
 
 const COLUMNS =
-  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, staff(display_name)";
+  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, staff!projects_owner_staff_id_fkey(display_name)";
 
 function shape(row: Record<string, unknown>): Project {
   // Связанная запись приходит объектом или массивом — PostgREST выводит
