@@ -180,7 +180,7 @@ export default async function FinancePage({
       {/* ── По людям ──────────────────────────────────────────────────── */}
       {staff.role !== "manager" ? (
         <section className="mt-6 overflow-x-auto rounded-xl border border-line bg-surface">
-          <table className="w-full min-w-[820px] text-sm">
+          <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[820px]">
             <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
               <tr>
                 <th className={TH}>Кто</th>
@@ -195,19 +195,19 @@ export default async function FinancePage({
             <tbody>
               {rows.map(({ person, balance, projects }) => (
                 <tr key={person.id} className="border-b border-line-soft last:border-0">
-                  <td className={TD}>
+                  <td data-label="Кто" className={TD}>
                     {person.display_name}
                     {person.is_active ? null : <span className="ml-2 text-xs text-faint">отключён</span>}
                   </td>
-                  <td className={`${TD} text-xs text-muted`}>
+                  <td data-label="Грейд" className={`${TD} text-xs text-muted`}>
                     {GRADE_TITLE[person.grade]}
                     {person.rate_percent !== null ? ` · ${person.rate_percent} %` : ""}
                   </td>
-                  <td className={`${TD} font-mono text-xs`}>{projects}</td>
-                  <td className={`${TD} font-mono text-xs text-muted`}>{money(balance.frozen)}</td>
-                  <td className={`${TD} font-mono text-xs`}>{money(balance.earned)}</td>
-                  <td className={`${TD} font-mono text-xs text-muted`}>{money(balance.paid_out)}</td>
-                  <td className={`${TD} font-mono text-xs ${balance.due > 0 ? "text-green" : balance.due < 0 ? "text-gold" : ""}`}>
+                  <td data-label="Проектов" className={`${TD} font-mono text-xs`}>{projects}</td>
+                  <td data-label="Заморожено" className={`${TD} font-mono text-xs text-muted`}>{money(balance.frozen)}</td>
+                  <td data-label="Заработано" className={`${TD} font-mono text-xs`}>{money(balance.earned)}</td>
+                  <td data-label="Выплачено" className={`${TD} font-mono text-xs text-muted`}>{money(balance.paid_out)}</td>
+                  <td data-label="К выплате" className={`${TD} font-mono text-xs ${balance.due > 0 ? "text-green" : balance.due < 0 ? "text-gold" : ""}`}>
                     {money(balance.due)}
                   </td>
                 </tr>
@@ -227,7 +227,7 @@ export default async function FinancePage({
       {/* ── Проекты ───────────────────────────────────────────────────── */}
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">По проектам</h2>
       <section className="mt-2 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className={`w-full ${isAdmin ? "min-w-[1240px]" : "min-w-[880px]"} text-sm`}>
+        <table className={`cards-on-phone w-full min-w-0 text-sm ${isAdmin ? "sm:min-w-[1240px]" : "sm:min-w-[880px]"}`}>
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
               <th className={TH}>Проект</th>
@@ -261,7 +261,7 @@ export default async function FinancePage({
               const profit = profitOf(project);
               return (
                 <tr key={project.id} className="border-b border-line-soft last:border-0 align-top">
-                  <td className={TD}>
+                  <td data-label="Проект" className={TD}>
                     <Link href={`/admin/projects/${project.id}`} className="hover:text-green">
                       {project.title}
                     </Link>
@@ -269,10 +269,10 @@ export default async function FinancePage({
                       {project.client || "клиент не указан"} · {STAGE_LABEL[project.stage] ?? project.stage}
                     </span>
                   </td>
-                  <td className={`${TD} text-xs text-muted`}>{nameOf(project.owner_staff_id)}</td>
-                  <td className={`${TD} text-xs text-muted`}>{KIND_TITLE[project.kind]}</td>
-                  <td className={`${TD} font-mono text-xs`}>{money(project.amount_usd)}</td>
-                  <td className={`${TD} font-mono text-xs`}>
+                  <td data-label="Ведёт" className={`${TD} text-xs text-muted`}>{nameOf(project.owner_staff_id)}</td>
+                  <td data-label="Вид" className={`${TD} text-xs text-muted`}>{KIND_TITLE[project.kind]}</td>
+                  <td data-label="Сумма" className={`${TD} font-mono text-xs`}>{money(project.amount_usd)}</td>
+                  <td data-label="Оплачено" className={`${TD} font-mono text-xs`}>
                     {money(paid)}
                     <span className={`block font-sans ${state === "earned" ? "text-green" : state === "void" ? "text-faint" : "text-gold"}`}>
                       {project.stage === "cancelled" ? "отменён" : state === "earned" ? "целиком" : "не целиком"}
@@ -280,14 +280,14 @@ export default async function FinancePage({
                   </td>
                   {isAdmin ? (
                     <>
-                      <td className={`${TD} font-mono text-xs text-muted`}>{project.tax_percent} %</td>
-                      <td className={`${TD} font-mono text-xs ${project.dev_cost_usd === null && project.amount_usd !== null ? "text-gold" : "text-muted"}`}>
+                      <td data-label="Налог" className={`${TD} font-mono text-xs text-muted`}>{project.tax_percent} %</td>
+                      <td data-label="Себестоимость" className={`${TD} font-mono text-xs ${project.dev_cost_usd === null && project.amount_usd !== null ? "text-gold" : "text-muted"}`}>
                         {project.dev_cost_usd === null ? "не вписана" : money(project.dev_cost_usd)}
                       </td>
-                      <td className={`${TD} font-mono text-xs ${profit !== null && profit < 0 ? "text-gold" : ""}`}>{money(profit)}</td>
+                      <td data-label="Прибыль" className={`${TD} font-mono text-xs ${profit !== null && profit < 0 ? "text-gold" : ""}`}>{money(profit)}</td>
                     </>
                   ) : null}
-                  <td className={`${TD} text-xs`}>
+                  <td data-label="Начисления" className={`${TD} text-xs`}>
                     {lines.length === 0 && !partnerLine ? (
                       <span className="text-faint">—</span>
                     ) : (
@@ -311,7 +311,7 @@ export default async function FinancePage({
                     ) : null}
                   </td>
                   {isAdmin ? (
-                    <td className={`${TD} font-mono text-xs`}>
+                    <td data-label="Владельцу" className={`${TD} font-mono text-xs`}>
                       {(() => {
                         const own = ownerShare(project, lines);
                         return money(own === null ? null : own - (partnerLine?.amount_usd ?? 0));
@@ -372,7 +372,7 @@ export default async function FinancePage({
       ) : null}
 
       <section className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[640px]">
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
               <th className={TH}>Когда</th>
@@ -385,12 +385,12 @@ export default async function FinancePage({
           <tbody>
             {ledger.payouts.map((payout) => (
               <tr key={payout.id} className="border-b border-line-soft last:border-0">
-                <td className={`${TD} text-xs text-muted`}>{day(payout.paid_on)}</td>
-                <td className={TD}>{payout.staff_name ?? nameOf(payout.staff_id)}</td>
-                <td className={`${TD} font-mono text-xs`}>{money(payout.amount_usd)}</td>
-                <td className={`${TD} text-xs text-muted`}>{payout.note ?? ""}</td>
+                <td data-label="Когда" className={`${TD} text-xs text-muted`}>{day(payout.paid_on)}</td>
+                <td data-label="Кому" className={TD}>{payout.staff_name ?? nameOf(payout.staff_id)}</td>
+                <td data-label="Сумма" className={`${TD} font-mono text-xs`}>{money(payout.amount_usd)}</td>
+                <td data-label="Заметка" className={`${TD} text-xs text-muted`}>{payout.note ?? ""}</td>
                 {isAdmin ? (
-                  <td className={TD}>
+                  <td data-label="" className={TD}>
                     <form action={deletePayout}>
                       <input type="hidden" name="payout" value={payout.id} />
                       <button type="submit" className="text-xs text-faint hover:text-gold">

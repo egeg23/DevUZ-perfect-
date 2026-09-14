@@ -195,7 +195,7 @@ export default async function StatsPage() {
           >
             {perStaff.length ? (
               <div className="mt-3 overflow-x-auto">
-                <table className="w-full min-w-[420px] border-collapse text-sm">
+                <table className="w-full min-w-0 border-collapse text-sm sm:min-w-[420px]">
                   <thead>
                     <tr className="text-left text-xs uppercase tracking-wider text-faint">
                       <th className="py-2 font-medium">Кто</th>

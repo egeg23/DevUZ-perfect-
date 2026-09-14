@@ -59,7 +59,7 @@ export function LeadTable({ rows }: { rows: LeadRow[] }) {
 
   return (
     <div className="overflow-x-auto rounded-xl border border-line">
-      <table className="w-full min-w-[880px] border-collapse text-sm">
+      <table className="cards-on-phone w-full min-w-0 border-collapse text-sm sm:min-w-[880px]">
         <thead>
           <tr className="bg-surface text-left text-xs uppercase tracking-wider text-faint">
             <th className="px-4 py-3 font-medium">Когда</th>
@@ -78,10 +78,10 @@ export function LeadTable({ rows }: { rows: LeadRow[] }) {
               key={lead.id}
               className="border-t border-line-soft bg-surface/40 transition hover:bg-surface"
             >
-              <td className="whitespace-nowrap px-4 py-3 text-muted">
+              <td data-label="Когда" className="whitespace-nowrap px-4 py-3 text-muted">
                 {when(lead.created_at)}
               </td>
-              <td className="px-4 py-3">
+              <td data-label="Заявка" className="px-4 py-3">
                 <Link
                   href={`/admin/leads/${lead.id}`}
                   className="font-mono text-xs text-blue-soft hover:underline"
@@ -89,17 +89,17 @@ export function LeadTable({ rows }: { rows: LeadRow[] }) {
                   {lead.request_no ?? lead.id.slice(0, 8)}
                 </Link>
               </td>
-              <td className="px-4 py-3">
+              <td data-label="Кто" className="px-4 py-3">
                 <span className="block">{lead.contact_name || "—"}</span>
                 {lead.company ? (
                   <span className="block text-xs text-faint">{lead.company}</span>
                 ) : null}
               </td>
-              <td className="px-4 py-3 text-muted">{lead.niche || "—"}</td>
-              <td className="whitespace-nowrap px-4 py-3 text-muted">
+              <td data-label="Ниша" className="px-4 py-3 text-muted">{lead.niche || "—"}</td>
+              <td data-label="Бюджет" className="whitespace-nowrap px-4 py-3 text-muted">
                 {lead.budget ? BUDGET_LABEL[lead.budget] ?? lead.budget : "—"}
               </td>
-              <td className="whitespace-nowrap px-4 py-3">
+              <td data-label="Балл" className="whitespace-nowrap px-4 py-3">
                 <span
                   className={`rounded px-1.5 py-0.5 font-mono text-xs ${
                     GRADE_TONE[lead.grade] ?? GRADE_TONE.D
@@ -108,10 +108,10 @@ export function LeadTable({ rows }: { rows: LeadRow[] }) {
                   {lead.grade} · {lead.score}
                 </span>
               </td>
-              <td className="px-4 py-3 text-muted">
+              <td data-label="Приоритет" className="px-4 py-3 text-muted">
                 {PRIORITY_LABEL[lead.priority] ?? lead.priority}
               </td>
-              <td className="px-4 py-3 text-muted">
+              <td data-label="Статус" className="px-4 py-3 text-muted">
                 {STATUS_LABEL[lead.status] ?? lead.status}
                 {lead.assigned_to ? (
                   <span className="block text-xs text-faint">{lead.assigned_to}</span>
