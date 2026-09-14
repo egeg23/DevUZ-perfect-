@@ -75,6 +75,9 @@ export const SECTIONS: readonly Section[] = [
   // Партнёры — деньги посторонним людям: только владелец.
   { href: "/admin/partners", label: "Партнёры", roles: ADMIN_ONLY },
   { href: "/admin/audit", label: "Журнал", roles: ADMIN_ONLY },
+  // Инструкции — последними: это справка, а не ежедневная работа. Видят все,
+  // и каждый читает только про свои вкладки.
+  { href: "/admin/help", label: "Инструкции", roles: EVERYONE },
 ];
 
 export function navFor(role: Role): Section[] {
