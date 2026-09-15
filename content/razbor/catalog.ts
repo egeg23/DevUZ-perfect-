@@ -35,6 +35,25 @@ export type Niche = {
   /** Узбекский корень для запроса: «stomatologiya». */
   uz: string;
   uzLabel: string;
+  /**
+   * Нейтральное имя для макета «как сделали бы мы».
+   *
+   * Чужой логотип и название в макет не попадают: разбор анонимный, и
+   * рисовать чужой товарный знак нашими руками — отдельный риск. Вместо
+   * имени — род занятий: «Стоматология», «Автосервис».
+   */
+  ruMock: string;
+  uzMock: string;
+  /**
+   * Что такой бизнес обычно продаёт. Для блока услуг в макете.
+   *
+   * Это факты категории, а не утверждения о разобранной компании: у любой
+   * стоматологии есть лечение кариеса. Цифр здесь нет и быть не должно —
+   * выдуманное «5000 довольных клиентов» в макете превращает разбор в
+   * рекламу с придуманными данными.
+   */
+  ruServices: readonly string[];
+  uzServices: readonly string[];
 };
 
 /**
@@ -65,20 +84,20 @@ export const CITIES: readonly City[] = [
  * них сайт чаще всего либо старый, либо один экран без формы записи.
  */
 export const NICHES: readonly Niche[] = [
-  { key: "stomatologiya", ruGen: "стоматологии", ruLabel: "стоматологическая клиника", uz: "stomatologiya", uzLabel: "stomatologiya klinikasi" },
-  { key: "medcentr", ruGen: "медицинского центра", ruLabel: "медицинский центр", uz: "tibbiyot markazi", uzLabel: "tibbiyot markazi" },
-  { key: "internet-magazin", ruGen: "интернет-магазина", ruLabel: "интернет-магазин", uz: "internet do'kon", uzLabel: "internet do'kon" },
-  { key: "restoran", ruGen: "ресторана", ruLabel: "ресторан", uz: "restoran", uzLabel: "restoran" },
-  { key: "dostavka-edy", ruGen: "доставки еды", ruLabel: "служба доставки еды", uz: "ovqat yetkazib berish", uzLabel: "ovqat yetkazib berish xizmati" },
-  { key: "avtoservis", ruGen: "автосервиса", ruLabel: "автосервис", uz: "avtoservis", uzLabel: "avtoservis" },
-  { key: "stroitelnaya-kompaniya", ruGen: "строительной компании", ruLabel: "строительная компания", uz: "qurilish kompaniyasi", uzLabel: "qurilish kompaniyasi" },
-  { key: "mebel", ruGen: "мебельного салона", ruLabel: "мебельный салон", uz: "mebel saloni", uzLabel: "mebel saloni" },
-  { key: "uchebnyy-centr", ruGen: "учебного центра", ruLabel: "учебный центр", uz: "o'quv markazi", uzLabel: "o'quv markazi" },
-  { key: "turagentstvo", ruGen: "турагентства", ruLabel: "турагентство", uz: "turizm agentligi", uzLabel: "turizm agentligi" },
-  { key: "yurfirma", ruGen: "юридической фирмы", ruLabel: "юридическая фирма", uz: "yuridik firma", uzLabel: "yuridik firma" },
-  { key: "salon-krasoty", ruGen: "салона красоты", ruLabel: "салон красоты", uz: "go'zallik saloni", uzLabel: "go'zallik saloni" },
-  { key: "logistika", ruGen: "логистической компании", ruLabel: "логистическая компания", uz: "logistika kompaniyasi", uzLabel: "logistika kompaniyasi" },
-  { key: "fitnes", ruGen: "фитнес-клуба", ruLabel: "фитнес-клуб", uz: "fitnes klubi", uzLabel: "fitnes klubi" },
+  { key: "stomatologiya", ruGen: "стоматологии", ruLabel: "стоматологическая клиника", uz: "stomatologiya", uzLabel: "stomatologiya klinikasi", ruMock: "Стоматология", uzMock: "Stomatologiya", ruServices: ["Лечение кариеса", "Имплантация", "Протезирование", "Гигиена и отбеливание"], uzServices: ["Karies davolash", "Implantatsiya", "Protezlash", "Gigiyena va oqartirish"] },
+  { key: "medcentr", ruGen: "медицинского центра", ruLabel: "медицинский центр", uz: "tibbiyot markazi", uzLabel: "tibbiyot markazi", ruMock: "Медцентр", uzMock: "Tibbiyot markazi", ruServices: ["Приём специалистов", "Анализы", "УЗИ и диагностика", "Вызов врача на дом"], uzServices: ["Mutaxassislar qabuli", "Tahlillar", "UZI va diagnostika", "Shifokorni uyga chaqirish"] },
+  { key: "internet-magazin", ruGen: "интернет-магазина", ruLabel: "интернет-магазин", uz: "internet do'kon", uzLabel: "internet do'kon", ruMock: "Магазин", uzMock: "Do‘kon", ruServices: ["Каталог с фильтрами", "Доставка по городу", "Оплата картой", "Возврат за 14 дней"], uzServices: ["Filtrli katalog", "Shahar bo‘ylab yetkazish", "Karta bilan to‘lov", "14 kunda qaytarish"] },
+  { key: "restoran", ruGen: "ресторана", ruLabel: "ресторан", uz: "restoran", uzLabel: "restoran", ruMock: "Ресторан", uzMock: "Restoran", ruServices: ["Меню с ценами", "Бронь столика", "Банкеты", "Доставка"], uzServices: ["Narxli menyu", "Stol band qilish", "Banketlar", "Yetkazib berish"] },
+  { key: "dostavka-edy", ruGen: "доставки еды", ruLabel: "служба доставки еды", uz: "ovqat yetkazib berish", uzLabel: "ovqat yetkazib berish xizmati", ruMock: "Доставка", uzMock: "Yetkazish", ruServices: ["Меню на день", "Заказ за минуту", "Доставка 30 минут", "Оплата при получении"], uzServices: ["Kunlik menyu", "Bir daqiqada buyurtma", "30 daqiqada yetkazish", "Olganda to‘lash"] },
+  { key: "avtoservis", ruGen: "автосервиса", ruLabel: "автосервис", uz: "avtoservis", uzLabel: "avtoservis", ruMock: "Автосервис", uzMock: "Avtoservis", ruServices: ["Диагностика", "Ремонт двигателя", "Шиномонтаж", "Кузовные работы"], uzServices: ["Diagnostika", "Dvigatel ta’miri", "Shinamontaj", "Kuzov ishlari"] },
+  { key: "stroitelnaya-kompaniya", ruGen: "строительной компании", ruLabel: "строительная компания", uz: "qurilish kompaniyasi", uzLabel: "qurilish kompaniyasi", ruMock: "Строительство", uzMock: "Qurilish", ruServices: ["Проектирование", "Строительство под ключ", "Ремонт", "Смета за день"], uzServices: ["Loyihalash", "Kalit topshirish qurilishi", "Ta’mirlash", "Bir kunda smeta"] },
+  { key: "mebel", ruGen: "мебельного салона", ruLabel: "мебельный салон", uz: "mebel saloni", uzLabel: "mebel saloni", ruMock: "Мебель", uzMock: "Mebel", ruServices: ["Кухни на заказ", "Шкафы-купе", "Мягкая мебель", "Замер бесплатно"], uzServices: ["Buyurtma oshxonalar", "Kupe shkaflar", "Yumshoq mebel", "Bepul o‘lchov"] },
+  { key: "uchebnyy-centr", ruGen: "учебного центра", ruLabel: "учебный центр", uz: "o'quv markazi", uzLabel: "o'quv markazi", ruMock: "Учебный центр", uzMock: "O‘quv markazi", ruServices: ["Английский", "Программирование", "Подготовка к экзаменам", "Пробный урок"], uzServices: ["Ingliz tili", "Dasturlash", "Imtihonga tayyorgarlik", "Sinov darsi"] },
+  { key: "turagentstvo", ruGen: "турагентства", ruLabel: "турагентство", uz: "turizm agentligi", uzLabel: "turizm agentligi", ruMock: "Турагентство", uzMock: "Turagentlik", ruServices: ["Туры и цены", "Визы", "Авиабилеты", "Подбор за день"], uzServices: ["Turlar va narxlar", "Vizalar", "Aviachiptalar", "Bir kunda tanlov"] },
+  { key: "yurfirma", ruGen: "юридической фирмы", ruLabel: "юридическая фирма", uz: "yuridik firma", uzLabel: "yuridik firma", ruMock: "Юрфирма", uzMock: "Yuridik firma", ruServices: ["Регистрация бизнеса", "Договоры", "Суды", "Консультация"], uzServices: ["Biznes ro‘yxati", "Shartnomalar", "Sudlar", "Maslahat"] },
+  { key: "salon-krasoty", ruGen: "салона красоты", ruLabel: "салон красоты", uz: "go'zallik saloni", uzLabel: "go'zallik saloni", ruMock: "Салон красоты", uzMock: "Go‘zallik saloni", ruServices: ["Стрижка и укладка", "Маникюр", "Косметология", "Запись онлайн"], uzServices: ["Soch olish va turmak", "Manikyur", "Kosmetologiya", "Onlayn yozilish"] },
+  { key: "logistika", ruGen: "логистической компании", ruLabel: "логистическая компания", uz: "logistika kompaniyasi", uzLabel: "logistika kompaniyasi", ruMock: "Логистика", uzMock: "Logistika", ruServices: ["Перевозки по стране", "Международные", "Склад", "Расчёт за час"], uzServices: ["Mamlakat bo‘ylab tashish", "Xalqaro", "Ombor", "Bir soatda hisob"] },
+  { key: "fitnes", ruGen: "фитнес-клуба", ruLabel: "фитнес-клуб", uz: "fitnes klubi", uzLabel: "fitnes klubi", ruMock: "Фитнес", uzMock: "Fitnes", ruServices: ["Абонементы", "Групповые занятия", "Тренажёрный зал", "Первое занятие"], uzServices: ["Abonementlar", "Guruh mashg‘ulotlari", "Trenajyor zali", "Birinchi mashg‘ulot"] },
 ];
 
 export function cityByKey(key: string): City | null {
