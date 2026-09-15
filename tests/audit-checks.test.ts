@@ -16,12 +16,21 @@ function probe(over: Partial<PageProbe> = {}): PageProbe {
     finalUrl: "https://mysite.uz/",
     status: 200,
     redirects: [],
+    // Здоровый сайт — не «страница без ошибок разметки», а такой, с которого
+    // клиент может позвонить, написать и узнать цену. Поэтому в образце есть
+    // всё это: иначе половина проверок молча ругалась бы на эталон.
     html: `<!doctype html><html lang="ru"><head>
       <title>Мебель на заказ в Ташкенте</title>
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta name="description" content="Изготовление мебели">
       <meta property="og:image" content="/og.png">
-    </head><body><h1>Мебель на заказ</h1></body></html>`,
+      <link rel="alternate" hreflang="uz" href="https://mysite.uz/uz/">
+      <script type="application/ld+json">{"@type":"LocalBusiness"}</script>
+    </head><body><h1>Мебель на заказ</h1>
+      <a href="tel:+998901234567">+998 90 123-45-67</a>
+      <a href="https://t.me/mysite">Telegram</a>
+      <p>Кухня на заказ — от 12 000 000 сум</p>
+    </body></html>`,
     truncated: false,
     headers: {},
     ttfbMs: 300,
@@ -130,4 +139,118 @@ test("причина недоступности попадает в находк
   assert.equal(finding.severity, "critical");
   assert.ok(finding.impact.includes("домен не найден"));
   assert.ok(!finding.impact.includes("ENOTFOUND"));
+});
+
+/* ── Путь клиента ───────────────────────────────────────────────────────────
+ *
+ * Эти проверки появились после того, как двадцать пять живых сайтов подряд
+ * получили вердикт «разбирать нечего». HTTPS, мобильная вёрстка и заголовок
+ * сегодня есть у всех — а дозвониться, написать и узнать цену можно далеко
+ * не везде. Аудит, который этого не видит, хвалит сайт, теряющий клиентов.
+ */
+
+/** Страница без единого способа связаться и без цен. */
+const mute = `<!doctype html><html lang="ru"><head>
+  <title>Мебель</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="description" content="Мебель">
+  <meta property="og:image" content="/og.png">
+  <link rel="alternate" hreflang="uz" href="/uz/">
+  <script type="application/ld+json">{"@type":"LocalBusiness"}</script>
+</head><body><h1>Мебель</h1></body></html>`;
+
+test("сайт, с которого нельзя позвонить, — это критическая находка", () => {
+  const codes = analyze(probe({ html: mute })).findings.map((f) => f.code);
+  assert.ok(codes.includes("no_phone"));
+  assert.equal(
+    analyze(probe({ html: mute })).findings.find((f) => f.code === "no_phone")?.severity,
+    "critical",
+  );
+});
+
+test("номер текстом — это отдельная находка, а не отсутствие номера", () => {
+  // Номер есть, нажать нельзя. Претензия должна смениться, а не исчезнуть.
+  const withText = mute.replace("<h1>Мебель</h1>", "<h1>Мебель</h1><p>+998 90 123-45-67</p>");
+  const codes = analyze(probe({ html: withText })).findings.map((f) => f.code);
+  assert.ok(!codes.includes("no_phone"), "номер не увиден");
+  assert.ok(codes.includes("phone_not_clickable"));
+});
+
+test("отсутствие мессенджера и цен замечается по отдельности", () => {
+  const codes = analyze(probe({ html: mute })).findings.map((f) => f.code);
+  assert.ok(codes.includes("no_messenger"));
+  assert.ok(codes.includes("no_prices"));
+
+  const priced = mute.replace("<h1>Мебель</h1>", "<h1>Мебель</h1><p>Кухня от 9 500 000 сум</p>");
+  assert.ok(!analyze(probe({ html: priced })).findings.some((f) => f.code === "no_prices"));
+
+  // Узбекская запись цены и доллары читаются так же.
+  for (const price of ["12 000 000 so'm", "$450", "3 200 000 сўм"]) {
+    const html = mute.replace("<h1>Мебель</h1>", `<h1>Мебель</h1><p>${price}</p>`);
+    assert.ok(
+      !analyze(probe({ html })).findings.some((f) => f.code === "no_prices"),
+      `цена «${price}» не распознана`,
+    );
+  }
+});
+
+test("на обрезанной странице про цены не судим", () => {
+  // До цены мы могли просто не дочитать: 512 КБ кончились раньше.
+  const codes = analyze(probe({ html: mute, truncated: true })).findings.map((f) => f.code);
+  assert.ok(!codes.includes("no_prices"), "претензия по обрезанному HTML");
+  assert.ok(codes.includes("no_phone"), "остальные проверки должны работать");
+});
+
+test("ссылка наружу по незащищённому адресу — не смешанный контент", () => {
+  // Регрессия. Первая версия проверки ловила <a href="http://t.me/…"> и
+  // выдавала салону красоты претензию на ровном месте: браузер такую ссылку
+  // не загружает, он по ней переходит.
+  const link = mute.replace("<h1>Мебель</h1>", '<h1>Мебель</h1><a href="http://t.me/shop">Telegram</a>');
+  assert.ok(!analyze(probe({ html: link })).findings.some((f) => f.code === "mixed_content"));
+
+  // А вот картинка по незащищённому адресу — именно он.
+  const img = mute.replace("<h1>Мебель</h1>", '<h1>Мебель</h1><img src="http://cdn.uz/a.jpg" alt="а">');
+  assert.ok(analyze(probe({ html: img })).findings.some((f) => f.code === "mixed_content"));
+});
+
+test("картинки без подписей считаются, а не угадываются", () => {
+  const imgs = (n: number, withAlt: number) =>
+    Array.from({ length: n }, (_, i) =>
+      i < withAlt ? `<img src="/${i}.jpg" alt="кухня ${i}">` : `<img src="/${i}.jpg">`,
+    ).join("");
+
+  // Четыре картинки — ещё не система, претензии нет даже без подписей.
+  assert.ok(!analyze(probe({ html: mute.replace("</body>", imgs(4, 0) + "</body>") }))
+    .findings.some((f) => f.code === "img_no_alt"));
+
+  // Десять, из них подписаны шесть — большинство в порядке, молчим.
+  assert.ok(!analyze(probe({ html: mute.replace("</body>", imgs(10, 6) + "</body>") }))
+    .findings.some((f) => f.code === "img_no_alt"));
+
+  const bad = analyze(probe({ html: mute.replace("</body>", imgs(10, 2) + "</body>") }))
+    .findings.find((f) => f.code === "img_no_alt");
+  assert.ok(bad, "восемь неподписанных из десяти прошли молча");
+  assert.match(bad.title, /8 картинок из 10/);
+});
+
+test("новые находки говорят на языке владельца, а не разработчика", () => {
+  // `mute` несёт разметку организации и связку языков, поэтому эти две
+  // находки берём с голой страницы — иначе они бы молчали, и тест
+  // проверял бы три текста вместо пяти, ничего об этом не сообщая.
+  const bare = mute
+    .replace(/<link rel="alternate"[^>]*>/, "")
+    .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, "");
+  const fresh = analyze(probe({ html: bare })).findings.filter((f) =>
+    ["no_phone", "no_messenger", "no_prices", "no_schema", "one_language"].includes(f.code),
+  );
+  assert.equal(fresh.length, 5, "часть новых находок не сработала");
+
+  for (const f of fresh) {
+    assert.ok(f.impact.length > 60, `${f.code}: последствие в одну фразу`);
+    assert.ok(f.fix.length > 40, `${f.code}: «что делаем» не написано`);
+    const text = `${f.title} ${f.impact} ${f.fix}`.toLowerCase();
+    for (const leak of ["schema", "alt", "hreflang", "ld+json", "meta", "seo", "http"]) {
+      assert.ok(!text.includes(leak), `в находке ${f.code} жаргон «${leak}»`);
+    }
+  }
 });

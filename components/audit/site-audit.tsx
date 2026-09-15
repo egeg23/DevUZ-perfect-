@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import { forecast, lostBesides } from "@/lib/razbor/forecast";
 import type { AuditReport, Severity } from "@/lib/audit/checks";
 import type { Dictionary } from "@/content/dictionaries";
 
@@ -53,6 +54,10 @@ export function SiteAudit({
   const t = dict.audit;
   const [url, setUrl] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
+  // Обращения в месяц вводит сам человек. Число живёт только здесь: на
+  // сервер не уходит, в лид не пишется. Спрашивать «сколько у вас заявок»
+  // и молча это сохранять — быстрый способ, чтобы больше не вводили.
+  const [enquiries, setEnquiries] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function check(event: React.FormEvent) {
@@ -98,6 +103,7 @@ export function SiteAudit({
 
   const report = state.kind === "done" ? state.report : null;
   const near = (report?.facts.niche && razbors[report.facts.niche]) || [];
+  const loss = report ? forecast(report.findings) : null;
   const findings = report
     ? [...report.findings].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])
     : [];
@@ -176,6 +182,53 @@ export function SiteAudit({
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Во что это обходится — сразу после списка находок.
+              Числа считаются на сто посетителей, а не в месяц: посещаемости
+              этого сайта мы не знаем, и подставить туда «обычно столько-то»
+              значило бы выдумать ровно ту цифру, за которую мы ругаем в
+              разборах. Рядом стоит объяснение, что это допущение, — оно не
+              ослабляет аргумент, а делает его проверяемым. */}
+          {loss && loss.counted.length > 0 && loss.lostPer100[1] > 0 && (
+            <section className="mt-8 rounded-xl border border-amber-500/40 bg-amber-500/5 px-5 py-4">
+              <p className="font-semibold">{t.lossTitle}</p>
+              <p className="mt-1 text-lg">
+                {t.lossBody
+                  .replace("{lo}", String(loss.lostPer100[0]))
+                  .replace("{hi}", String(loss.lostPer100[1]))}
+              </p>
+              <p className="mt-2 text-sm text-faint">{t.lossHow}</p>
+
+              <label className="mt-4 block text-sm">
+                <span className="text-muted">{t.lossAsk}</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  value={enquiries}
+                  onChange={(e) => setEnquiries(e.target.value)}
+                  className="mt-1 w-32 rounded-lg border border-line bg-surface px-3 py-1.5 text-text"
+                  placeholder="10"
+                />
+              </label>
+              <p className="mt-1 text-xs text-faint">{t.lossAskHint}</p>
+
+              {(() => {
+                const n = Number(enquiries);
+                if (!Number.isFinite(n) || n <= 0) return null;
+                const [lo, hi] = lostBesides(loss, n);
+                if (hi <= 0) return null;
+                return (
+                  <p className="mt-3 text-lg font-semibold">
+                    {t.lossResult
+                      .replace("{n}", String(Math.round(n)))
+                      .replace("{lo}", String(lo))
+                      .replace("{hi}", String(hi))}
+                  </p>
+                );
+              })()}
+            </section>
           )}
 
           {/* Разборы своей ниши — сразу под находками.

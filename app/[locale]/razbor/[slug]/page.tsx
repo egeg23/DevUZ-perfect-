@@ -9,6 +9,7 @@ import { razborBySlug, razbors, siblings } from "@/content/razbor/items";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 import { isRazborLocale, localeHref } from "@/lib/razbor/routing";
+import { serviceFor } from "@/lib/razbor/service-link";
 
 export const dynamicParams = false;
 
@@ -52,6 +53,7 @@ export default async function RazborPage({
 
   const copy = razborCopy[locale];
   const near = siblings(item);
+  const service = serviceFor(item.niche);
 
   return (
     <Container className="pb-24 pt-36">
@@ -124,11 +126,43 @@ export default async function RazborPage({
         </div>
       </section>
 
+      {/* Во что это обходится — между находками и ценой.
+          Порядок не случайный: сначала человек видит, что не так, потом
+          сколько это стоит ему, и только потом сколько стоит починить. В
+          обратном порядке цена читается как запрос денег ни за что.
+
+          Числа — на сто посетителей. Посещаемость чужого сайта мы не
+          знаем, и подставить туда «обычно столько-то» значило бы выдумать
+          ровно ту цифру, за которую разбор и ругает. */}
+      {item.lostPer100 && item.lostPer100[1] > 0 ? (
+        <section className="mt-10 max-w-3xl rounded-2xl border border-amber-500/40 bg-amber-500/5 px-6 py-5">
+          <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
+            {copy.lossTitle}
+          </h2>
+          <p className="mt-2 text-lg leading-relaxed">
+            {copy.lossBody
+              .replace("{lo}", String(item.lostPer100[0]))
+              .replace("{hi}", String(item.lostPer100[1]))}
+          </p>
+          <p className="mt-3 text-xs leading-relaxed text-faint">{copy.lossHow}</p>
+        </section>
+      ) : null}
+
       <section className="mt-10 max-w-3xl rounded-2xl border border-line bg-surface px-6 py-5">
         <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
           {copy.price}
         </h2>
         <p className="mt-2 text-lg leading-relaxed">{item.price}</p>
+        {/* Ссылка на профильную услугу — единственная продающая ссылка
+            внутри статьи. Стоит у цены, а не в конце: человек, дочитавший
+            до суммы, уже прикидывает бюджет, и именно здесь ему нужен
+            переход, а не ещё один призыв проверить свой сайт. */}
+        <Link
+          href={`/${locale}/services/${service}`}
+          className="mt-4 inline-block text-sm text-green underline underline-offset-4 transition-colors hover:text-white"
+        >
+          {copy.serviceLink}
+        </Link>
       </section>
 
       <p className="mt-8 max-w-3xl text-xs leading-relaxed text-faint">{copy.anonymous}</p>
@@ -162,6 +196,33 @@ export default async function RazborPage({
           </ul>
         </section>
       ) : null}
+
+      {/* Хлебные крошки отдельным блоком, а не полем внутри Article:
+          Google читает BreadcrumbList как самостоятельную сущность и
+          показывает путь вместо голого адреса в строке результата. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: copy.title,
+                item: `${siteUrl}${localeHref(locale)}`,
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: item.title,
+                item: `${siteUrl}${localeHref(locale, item.slug)}`,
+              },
+            ],
+          }),
+        }}
+      />
 
       <script
         type="application/ld+json"

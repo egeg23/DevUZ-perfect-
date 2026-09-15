@@ -23,6 +23,14 @@ type Copy = {
   price: string;
   more: string;
   anonymous: string;
+  /** Единственная продающая ссылка внутри статьи — на профильную услугу. */
+  /** Заголовок блока про потерянные обращения. */
+  lossTitle: string;
+  /** Тело с местами под {lo} и {hi}. */
+  lossBody: string;
+  /** Оговорка о том, что это допущение, а не замер. */
+  lossHow: string;
+  serviceLink: string;
   cta: string;
   ctaButton: string;
 };
@@ -46,6 +54,10 @@ export const razborCopy: Record<RazborLocale, Copy> = {
     more: "Ещё разборы этой ниши",
     anonymous:
       "Компанию не называем и ссылку не даём. Речь о типовых ошибках, а не о конкретных людях; на снимке имя и логотип закрыты.",
+    lossTitle: "Во что это обходится",
+    lossBody: "Из каждых ста человек, дошедших до сайта и готовых обратиться, на этих местах теряются примерно {lo}–{hi}.",
+    lossHow: "Это расчёт по нашим допущениям, а не замер чужой статистики: посещаемости этого сайта мы не знаем и не подставляем. Считаем на сто посетителей — доли по каждому пункту открыты и лежат в коде.",
+    serviceLink: "Заказать сайт для такого бизнеса →",
     cta: "Хотите такой же разбор своего сайта?",
     ctaButton: "Проверить сайт",
   },
@@ -67,6 +79,10 @@ export const razborCopy: Record<RazborLocale, Copy> = {
     more: "Shu yo‘nalishdagi boshqa tahlillar",
     anonymous:
       "Kompaniyani nomlamaymiz va havola bermaymiz. Gap odatiy xatolar haqida, aniq odamlar haqida emas; suratda nom va logotip yopilgan.",
+    lossTitle: "Bu nimaga tushadi",
+    lossBody: "Saytga kirgan va murojaat qilishga tayyor har yuz kishidan bu joylarda taxminan {lo}–{hi} tasi yo‘qoladi.",
+    lossHow: "Bu — ochiq aytilgan taxminlarimiz asosidagi hisob, begona statistikaning o‘lchovi emas: bu saytning tashriflarini bilmaymiz va o‘ylab topmaymiz. Hisob yuz tashrifga, har bir band ulushi kodda ochiq turadi.",
+    serviceLink: "Shunday biznes uchun sayt buyurtma qilish →",
     cta: "O‘z saytingizga ham shunday tahlil kerakmi?",
     ctaButton: "Saytni tekshirish",
   },
