@@ -93,8 +93,15 @@ ln -sfn "$DST" "$LINK"
 # Старое имя файла снимаем с публикации: два блока на один server_name
 # означают, что nginx возьмёт первый попавшийся и редирект на новый домен
 # молча не сработает. Сам файл остаётся в sites-available как запасной.
+#
+# Снимаем ДО проверки, а не после: nginx -t должен проверить ровно тот набор
+# файлов, который потом и перечитает. Поэтому же откат ниже возвращает
+# ссылку на место — иначе неудачная проверка оставляла бы сервер с меньшим
+# набором сайтов, чем было до запуска скрипта.
+LEGACY_UNLINKED=0
 if [ -L "$LEGACY_LINK" ] && [ "$LEGACY_LINK" != "$LINK" ]; then
   rm -f "$LEGACY_LINK"
+  LEGACY_UNLINKED=1
   echo "Старая ссылка снята: $LEGACY_LINK (файл остался в sites-available)"
 fi
 
@@ -109,6 +116,10 @@ if nginx -t; then
 else
   echo
   red "nginx -t не прошёл — ничего не перезагружаю."
+  if [ "$LEGACY_UNLINKED" = "1" ] && [ -f "$LEGACY_DST" ]; then
+    ln -sfn "$LEGACY_DST" "$LEGACY_LINK"
+    red "Старая ссылка возвращена: $LEGACY_LINK"
+  fi
   if [ -f "$BACKUP" ]; then
     cp "$BACKUP" "$DST"
     red "Старый конфиг возвращён на место, сайт работает как работал."
@@ -117,5 +128,9 @@ else
   echo "Если ошибка была «limit_req_zone directive is not allowed here» —"
   echo "перенесите четыре строки limit_*_zone из начала файла"
   echo "в /etc/nginx/nginx.conf внутрь блока http { }."
+  echo
+  echo "Если «unknown directive \"http2\"» — конфиг новее nginx на сервере."
+  echo "Версия: $(nginx -v 2>&1). Отдельная директива http2 появилась в 1.25.1;"
+  echo "в конфиге репозитория используется форма listen ... http2, понятная обеим."
   exit 1
 fi
