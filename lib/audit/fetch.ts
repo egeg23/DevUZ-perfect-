@@ -79,7 +79,7 @@ function once(url: URL, ip: string): Promise<{
           Host: url.host,
           // Представляемся честно: владелец сайта должен понимать по логам,
           // кто к нему пришёл, а не гадать.
-          "User-Agent": "DevUzAudit/1.0 (+https://devuz.maximov-tech.ru)",
+          "User-Agent": "DevUzAudit/1.0 (+https://devuz.studio)",
           Accept: "text/html,application/xhtml+xml",
           "Accept-Encoding": "identity",
         },

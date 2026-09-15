@@ -139,7 +139,7 @@ export function DevuzPreview({ snippets }: { snippets: PreviewSnippet[] }) {
           <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#28C840]" />
 
           <span className="ml-2 min-w-0 flex-1 truncate rounded-md border border-line bg-ink px-3 py-1.5 font-mono text-[0.64rem] text-faint">
-            devuz.maximov-tech.ru/
+            devuz.studio/
             <span className="text-green">{snippet.locale}</span>
           </span>
 

@@ -43,7 +43,7 @@ export const cases: Case[] = [
     name: "DevUz Studio",
     monogram: "DU",
     year: 2026,
-    url: "https://devuz.maximov-tech.ru",
+    url: "https://devuz.studio",
     tier: 2,
     niches: ["сайт компании", "корпоративный сайт", "лендинг", "мультиязычный сайт", "AI-менеджер", "чат-бот на сайт", "услуги", "corporate website", "veb-sayt", "企业官网"],
     accent: "green",

@@ -69,7 +69,7 @@ docker compose up -d --build
 Проверка:
 
 ```
-curl -s https://devuz.maximov-tech.ru/api/health
+curl -s https://devuz.studio/api/health
 ```
 
 Ждём `{"ok":true,...}`. Поле `commit` показывает, какой код реально запущен.
@@ -159,7 +159,7 @@ gunzip -c /var/backups/devuz/devuz-<дата>.sql.gz | psql "$SUPABASE_DB_URL"
 ## 3. Проверка перед тем, как уйти спать
 
 ```
-curl -s https://devuz.maximov-tech.ru/api/health
+curl -s https://devuz.studio/api/health
 docker compose -f /opt/devuz/docker-compose.yml ps
 systemctl list-timers devuz-backup.timer devuz-reminders.timer
 ```
