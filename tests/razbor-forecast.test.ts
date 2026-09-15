@@ -199,3 +199,33 @@ test("ежедневная задача обязана читать мастер
     assert.ok(master.includes(must), `в мастер-промпте нет «${must}»`);
   }
 });
+
+test("число обращений не уезжает на сервер", () => {
+  // Спросить «сколько у вас заявок» и молча это сохранить — быстрый способ
+  // добиться, чтобы больше не вводили. Считаем в браузере.
+  const audit = read("components/audit/site-audit.tsx");
+  assert.match(audit, /lostBesides\(loss, n\)/);
+
+  const at = audit.indexOf("setEnquiries");
+  const tail = audit.slice(at);
+  assert.ok(!/fetch\([^)]*enquir/i.test(tail), "число уходит запросом");
+  assert.ok(!/body:[^}]*enquiries/i.test(audit), "число попало в тело запроса");
+});
+
+test("без введённого числа блок молчит, а не показывает ноль", () => {
+  const audit = read("components/audit/site-audit.tsx");
+  assert.match(audit, /if \(!Number\.isFinite\(n\) \|\| n <= 0\) return null;/);
+  assert.match(audit, /if \(hi <= 0\) return null;/);
+});
+
+test("вопрос и ответ заведены во всех четырёх языках", () => {
+  const dict = read("content/dictionaries.ts");
+  for (const key of ["lossAsk", "lossAskHint", "lossResult"]) {
+    assert.equal(dict.split(`${key}:`).length - 1, 4, `${key}: не во всех словарях`);
+  }
+  // В ответе должны быть все три подстановки, иначе фраза развалится.
+  const line = dict.split("lossResult:")[1].split("\n")[0];
+  for (const slot of ["{n}", "{lo}", "{hi}"]) {
+    assert.ok(line.includes(slot), `в lossResult нет ${slot}`);
+  }
+});
