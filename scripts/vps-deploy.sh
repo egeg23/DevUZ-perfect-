@@ -242,10 +242,20 @@ for i in $(seq 1 30); do
       #
       # Пинг не влияет на успех выкатки: сайт уже работает, и падать из-за
       # недоступного чужого сервиса ему незачем.
-      if curl --silent --show-error --max-time 90 -X POST \
+      #
+      # Ответ печатается целиком, а не сводится к «уведомлены». Без ключа
+      # маршрут отвечает успехом и ничего не отправляет — и строка про
+      # уведомлённых Bing и Яндекс была бы враньём, которое некому заметить.
+      # Ключа в ответе нет, печатать его безопасно.
+      if INDEXNOW_OUT="$(curl --silent --show-error --max-time 90 -X POST \
         "http://127.0.0.1:${APP_PORT_VALUE:-3310}/api/indexnow" \
-        -H "x-devuz-sweep: ${SWEEP_SECRET}" >/dev/null; then
-        echo "  · IndexNow: Bing и Яндекс уведомлены"
+        -H "x-devuz-sweep: ${SWEEP_SECRET}")"; then
+        case "$INDEXNOW_OUT" in
+          *'"skipped"'*)
+            echo "  · INDEXNOW_KEY не задан — Bing и Яндекс не уведомлены" >&2 ;;
+          *)
+            echo "  · IndexNow: $INDEXNOW_OUT" ;;
+        esac
       else
         echo "  · IndexNow не ответил — страницы дойдут плановым обходом" >&2
       fi

@@ -206,3 +206,12 @@ test("выкатка зовёт пинг с сервера", () => {
   assert.match(deploy, /api\/indexnow/);
   assert.match(deploy, /x-devuz-sweep/);
 });
+
+test("выкатка отличает отправленный пинг от пропущенного", () => {
+  // Без ключа маршрут отвечает успехом и ничего не отправляет. Если лог
+  // выкатки не разбирает ответ, строка «уведомлены» появляется и тогда —
+  // и заметить это некому.
+  const deploy = readFileSync(new URL("../scripts/vps-deploy.sh", import.meta.url), "utf8");
+  assert.match(deploy, /skipped/, "ответ маршрута не разбирается");
+  assert.match(deploy, /INDEXNOW_KEY не задан/);
+});
