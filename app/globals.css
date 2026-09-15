@@ -459,3 +459,65 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Пункт меню «Разборы» ──────────────────────────────────────────────────
+ *
+ * Единственный пункт с фоном: раздел новый и пополняется каждый день, и
+ * владелец просил выделить его «анимированным фоном из кода».
+ *
+ * Фон рисуется CSS, а не компонентом: на сайте уже есть тяжёлая графика
+ * первого экрана, и тащить её в шапку — значит грузить её на каждой
+ * странице ради одной ссылки. Здесь два градиента и одна анимация
+ * трансформации, то есть работа композитора, а не перерисовка макета.
+ *
+ * Вне слоёв намеренно, как и мобильные правила панели: незаслоённый CSS
+ * сильнее утилит Tailwind, и класс из разметки его не перебьёт.
+ */
+.nav-live {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--color-green) 28%, transparent);
+  background: color-mix(in oklab, var(--color-green) 7%, transparent);
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.nav-live:hover {
+  border-color: color-mix(in oklab, var(--color-green) 55%, transparent);
+  background: color-mix(in oklab, var(--color-green) 12%, transparent);
+}
+
+/* Полосы «кода»: тонкие штрихи разной длины, уезжающие вверх. Ширина вдвое
+   больше пункта, чтобы шов при повторе не попадал в видимую часть. */
+.nav-live::before {
+  content: "";
+  position: absolute;
+  inset: -100% 0;
+  z-index: -1;
+  background-image: repeating-linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--color-green) 22%, transparent) 0 3px,
+      transparent 3px 7px,
+      color-mix(in oklab, var(--color-blue-soft) 18%, transparent) 7px 9px,
+      transparent 9px 16px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 6px,
+      color-mix(in oklab, var(--color-ink) 90%, transparent) 6px 12px
+    );
+  animation: nav-live-rain 7s linear infinite;
+  /* Штрихи гаснут к краям: иначе видно, что это плитка, а не код. */
+  mask-image: radial-gradient(120% 90% at 50% 50%, #000 35%, transparent 100%);
+}
+
+@keyframes nav-live-rain {
+  from { transform: translateY(0); }
+  to { transform: translateY(12px); }
+}
+
+/* Движение в шапке на каждой странице — то, от чего у части людей
+   начинается головная боль. Остаётся подсветка, уходит анимация. */
+@media (prefers-reduced-motion: reduce) {
+  .nav-live::before { animation: none; }
+}

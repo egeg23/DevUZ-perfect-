@@ -28,6 +28,12 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
     { href: localeHref(locale, "calculator"), label: dict.nav.calculator },
     { href: localeHref(locale, "audit"), label: dict.nav.audit },
     { href: localeHref(locale, "products"), label: dict.nav.products },
+    // Разборы пишутся только по-русски и по-узбекски: это разные запросы,
+    // а не перевод одного. Показывать англичанину пункт, за которым пусто,
+    // незачем.
+    ...(locale === "ru" || locale === "uz"
+      ? [{ href: localeHref(locale, "razbor"), label: dict.nav.razbor, live: true }]
+      : []),
     { href: localeHref(locale, "cases"), label: dict.nav.cases },
     { href: `${localeHref(locale)}#process`, label: dict.nav.process },
     { href: localeHref(locale, "about"), label: dict.nav.about },
@@ -60,7 +66,14 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
             <Link
               key={link.href}
               href={link.href}
-              className="link-underline whitespace-nowrap text-[0.92rem] text-muted transition-colors hover:text-text"
+              className={
+                "live" in link && link.live
+                  ? // Единственный пункт с фоном: раздел новый, и он
+                    // обновляется каждый день. Анимация — на CSS и гаснет
+                    // при prefers-reduced-motion, см. globals.css.
+                    "nav-live whitespace-nowrap rounded-lg px-2.5 py-1 text-[0.92rem] text-text"
+                  : "link-underline whitespace-nowrap text-[0.92rem] text-muted transition-colors hover:text-text"
+              }
             >
               {link.label}
             </Link>

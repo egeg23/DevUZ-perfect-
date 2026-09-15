@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 
 import { cases } from "@/content/cases";
+import { razbors } from "@/content/razbor/items";
+import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
 import { products } from "@/content/products";
 import { services } from "@/content/services";
 import { hreflang, locales } from "@/lib/i18n";
@@ -50,7 +52,49 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const lastModified = new Date();
 
-  return paths.flatMap((entry) =>
+  /**
+   * Разборы идут отдельным списком, а не через общий цикл по языкам.
+   *
+   * Они существуют только на русском и узбекском: это разные запросы, а не
+   * перевод одного. Пустить их через общий цикл значит пообещать Google
+   * английскую и китайскую версии, которых нет, — и получить четыре
+   * страницы 404 на каждый разбор.
+   */
+  const razborEntries: MetadataRoute.Sitemap = [
+    // Сам раздел — на двух языках.
+    ...RAZBOR_LOCALES.map((locale) => ({
+      url: absoluteUrl(`${locale}/razbor`),
+      lastModified,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+      alternates: { languages: razborLanguages() },
+    })),
+    ...razbors.map((item) => ({
+      url: absoluteUrl(`${item.locale}/razbor/${item.slug}`),
+      // Разбор описывает состояние сайта на дату снимка и потом не
+      // меняется: звать робота перечитывать его каждый день незачем.
+      lastModified: new Date(item.publishedAt),
+      changeFrequency: "yearly" as const,
+      priority: 0.8,
+      alternates: {
+        languages: item.alt
+          ? {
+              [hreflang[item.locale]]: absoluteUrl(`${item.locale}/razbor/${item.slug}`),
+              [hreflang[item.alt.locale]]: absoluteUrl(
+                `${item.alt.locale}/razbor/${item.alt.slug}`,
+              ),
+              "x-default": absoluteUrl(
+                item.locale === "ru"
+                  ? `ru/razbor/${item.slug}`
+                  : `ru/razbor/${item.alt.slug}`,
+              ),
+            }
+          : undefined,
+      },
+    })),
+  ];
+
+  return [...razborEntries, ...paths.flatMap((entry) =>
     locales.map((locale) => {
       const languages: Record<string, string> = {};
       for (const alt of locales) {
@@ -71,5 +115,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
         alternates: { languages },
       };
     }),
-  );
+  )];
+}
+
+/** Языковые альтернативы самого раздела: только те, где он есть. */
+function razborLanguages(): Record<string, string> {
+  const languages: Record<string, string> = {};
+  for (const locale of RAZBOR_LOCALES) {
+    languages[hreflang[locale]] = absoluteUrl(`${locale}/razbor`);
+  }
+  languages["x-default"] = absoluteUrl("ru/razbor");
+  return languages;
 }

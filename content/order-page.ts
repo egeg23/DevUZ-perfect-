@@ -40,6 +40,8 @@ export type OrderPageCopy = {
   buyer: LocalizedText;
   seller: LocalizedText;
   taxId: LocalizedText;
+  /** Подпись идентификатора поставщика-нерезидента. */
+  taxIdPinfl: LocalizedText;
   address: LocalizedText;
   bank: LocalizedText;
   account: LocalizedText;
@@ -175,6 +177,15 @@ export const orderPage: OrderPageCopy = {
   buyer: { ru: "Покупатель", en: "Buyer", uz: "Xaridor", zh: "买方" },
   seller: { ru: "Поставщик", en: "Supplier", uz: "Yetkazib beruvchi", zh: "供方" },
   taxId: { ru: "ИНН", en: "Tax ID", uz: "STIR", zh: "税号" },
+  /**
+   * Подпись идентификатора поставщика.
+   *
+   * У покупателя это почти всегда ИНН узбекского юрлица. У поставщика —
+   * как повезёт: у резидента ИНН (СТИР), у нерезидента, работающего как
+   * ИП в Узбекистане, — ПИНФЛ. Подписать ПИНФЛ словом «ИНН» значит отдать
+   * счёт, который бухгалтерия покупателя вернёт.
+   */
+  taxIdPinfl: { ru: "ПИНФЛ", en: "Personal ID (PINFL)", uz: "JSHSHIR", zh: "个人识别号 (PINFL)" },
   address: { ru: "Адрес", en: "Address", uz: "Manzil", zh: "地址" },
   bank: { ru: "Банк", en: "Bank", uz: "Bank", zh: "开户银行" },
   account: { ru: "Расчётный счёт", en: "Account", uz: "Hisob raqami", zh: "账号" },
