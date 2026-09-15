@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { company } from "@/content/company";
@@ -129,4 +130,39 @@ test("оферта ссылается на лицензию и на полити
   assert.match(ru, /Политик/, "оферта не упоминает политику конфиденциальности");
   // Политика существует — ссылаться есть на что.
   assert.ok(privacy.ru.title.trim());
+});
+
+/**
+ * Идентификатор поставщика в счёте.
+ *
+ * Владелец не резидент Узбекистана: у него не ИНН, а ПИНФЛ. Подписать его
+ * словом «ИНН» значит отдать счёт, который бухгалтерия покупателя вернёт —
+ * и вернётся он поставщику, а не нам.
+ */
+test("счёт подписывает ПИНФЛ как ПИНФЛ, а не как ИНН", async () => {
+  const { orderPage } = await import("@/content/order-page");
+  const invoice = readFileSync(new URL("../components/store/invoice.tsx", import.meta.url), "utf8");
+
+  // Подпись выбирается по виду номера, а не захардкожена.
+  assert.match(invoice, /bank\.taxIdKind === "pinfl" \? "taxIdPinfl" : "taxId"/);
+
+  for (const locale of ["ru", "en", "uz", "zh"] as const) {
+    const label = orderPage.taxIdPinfl[locale];
+    assert.ok(label && label.length > 1, `подписи ПИНФЛ нет на ${locale}`);
+    assert.notEqual(label, orderPage.taxId[locale], `на ${locale} ПИНФЛ подписан как ИНН`);
+  }
+});
+
+test("вид номера по умолчанию — ИНН", async () => {
+  const { isTaxIdKind } = await import("@/lib/store/requisites");
+  assert.equal(isTaxIdKind("inn"), true);
+  assert.equal(isTaxIdKind("pinfl"), true);
+  // Мусор в переменной не должен превращаться в третий вид номера.
+  assert.equal(isTaxIdKind("stir"), false);
+  assert.equal(isTaxIdKind(""), false);
+
+  const { taxIdKind } = await import("@/lib/store/requisites");
+  // Переменной в окружении тестов нет — значит проверяется именно запасной
+  // вариант, а не то, что кто-то выставил.
+  assert.equal(taxIdKind(), "inn");
 });

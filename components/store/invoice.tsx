@@ -63,7 +63,7 @@ export function Invoice({
           heading={c("seller")}
           name={company.legal.name}
           lines={[
-            `${c("taxId")}: ${bank.taxId}`,
+            `${c(bank.taxIdKind === "pinfl" ? "taxIdPinfl" : "taxId")}: ${bank.taxId}`,
             `${c("address")}: ${t(company.legal.address, locale)}`,
             `${c("bank")}: ${bank.bankName}`,
             `${c("account")}: ${bank.account}`,
