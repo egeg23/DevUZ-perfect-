@@ -24,6 +24,7 @@ import {
   visibleStaff,
 } from "@/lib/admin/finance";
 import { requireStaff } from "@/lib/admin/guard";
+import { seesOwnerMoney } from "@/lib/admin/roles";
 import { loadPeople, paymentsFor, sharesFor, sharesOf } from "@/lib/admin/ledger";
 import {
   ALL_STAGES,
@@ -78,6 +79,9 @@ export default async function ProjectPage({
   const progress = stageProgress(project.stage);
   const days = daysOnStage(project.stage_since);
   const isAdmin = staff.role === "admin";
+  // См. комментарий в «Финансах»: доля студии — не то же самое, что права
+  // администратора, и держится отдельной функцией.
+  const ownerMoney = seesOwnerMoney(staff.role);
   const notice = r ? (RESULT[r] ?? RESULT.failed) : null;
 
   // Деньги: платежи и люди нужны, чтобы посчитать начисления по проекту.
@@ -294,7 +298,7 @@ export default async function ProjectPage({
                 </span>
               </dd>
             </div>
-            {isAdmin ? (
+            {ownerMoney ? (
               <div>
                 <dt className="text-xs text-faint">Остаётся владельцу</dt>
                 <dd className="font-mono">{money(ownerShare(project, lines))}</dd>

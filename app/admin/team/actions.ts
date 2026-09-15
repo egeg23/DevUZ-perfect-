@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requestIp, requireAdmin } from "@/lib/admin/guard";
+import { requestIp, requireAdmin, requireRole } from "@/lib/admin/guard";
 import { isGrade, parsePercent } from "@/lib/admin/finance";
-import { isAssignable } from "@/lib/admin/roles";
+import { hiredRoles, isAssignable } from "@/lib/admin/roles";
 import { syncBotMenu } from "@/lib/qualify/menu";
 import {
   disableStaff,
@@ -33,7 +33,8 @@ function back(result: TeamResult): never {
 }
 
 export async function addStaff(formData: FormData) {
-  const admin = await requireAdmin();
+  // Заводить людей вправе и руководитель проектов — но только менеджеров.
+  const actor = await requireRole("admin", "head");
 
   // Telegram присылает id числом, но из формы приходит строка, которую
   // печатал человек. Number() на "12 345" молча даёт NaN, а на "1e9" —
@@ -41,9 +42,15 @@ export async function addStaff(formData: FormData) {
   const raw = String(formData.get("telegram_id") ?? "").trim();
   const telegramId = /^\d{1,19}$/.test(raw) ? Number(raw) : Number.NaN;
 
-  // Админом через форму не стать: всё, что не head, — менеджер.
+  // Админом через форму не стать: всё, что не head, — менеджер. А
+  // руководителю и head недоступен: разрешённый список приносит hiredRoles,
+  // и проверяется он здесь, а не только в разметке формы — форму отправляют
+  // и мимо страницы.
   const roleRaw = String(formData.get("role") ?? "manager");
-  const role = isAssignable(roleRaw) ? roleRaw : "manager";
+  const wanted = isAssignable(roleRaw) ? roleRaw : "manager";
+  const allowed = hiredRoles(actor.role);
+  if (!allowed.includes(wanted)) back({ ok: false, reason: "forbidden" });
+  const role = wanted;
 
   const result = await inviteStaff(
     {
@@ -52,7 +59,7 @@ export async function addStaff(formData: FormData) {
       username: String(formData.get("username") ?? ""),
       role,
     },
-    admin,
+    actor,
     await requestIp(),
   );
   // Новому сотруднику /login должен появиться в меню сразу, а не после
@@ -84,10 +91,12 @@ export async function changeRole(formData: FormData) {
 }
 
 export async function resend(formData: FormData) {
-  const admin = await requireAdmin();
+  // Переслать приглашение — то же право, что и завести: руководитель
+  // проектов набирает менеджеров, значит и ссылку им перевыдаёт сам.
+  const actor = await requireRole("admin", "head");
   const id = String(formData.get("staff") ?? "");
 
-  const result = await resendInvite(id, admin, await requestIp());
+  const result = await resendInvite(id, actor, await requestIp());
   revalidatePath("/admin/team");
   back(result);
 }

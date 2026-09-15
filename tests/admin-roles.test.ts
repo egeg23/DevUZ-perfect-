@@ -15,16 +15,24 @@ import {
 /**
  * Три роли, и разница между ними — не в лидах, а в разделах.
  *
- * Руководитель работает с чужими лидами наравне с администратором, но
- * команду, релизы и журнал не видит: заводить людей, выкладывать файлы и
- * читать, кто что открывал, остаётся за владельцем.
+ * Руководитель проектов работает с чужими лидами наравне с администратором
+ * и набирает себе менеджеров, поэтому команду он видит. Релизы, журнал и
+ * партнёры остаются за владельцем: выложить файл, прочитать, кто что
+ * открывал, и отправить деньги постороннему человеку — не его решения.
+ *
+ * Что именно он может внутри «Команды» — в tests/team-roles.test.ts: список
+ * состава ему открыт целиком, а правка ролей, грейдов и отключение нет.
  */
 test("разделы владельца скрыты от руководителя и менеджера", () => {
-  for (const href of ["/admin/team", "/admin/releases", "/admin/audit", "/admin/partners"]) {
+  for (const href of ["/admin/releases", "/admin/audit", "/admin/partners"]) {
     assert.equal(canSee("admin", href), true, `${href} у админа`);
     assert.equal(canSee("head", href), false, `${href} виден руководителю`);
     assert.equal(canSee("manager", href), false, `${href} виден менеджеру`);
   }
+  // Команда — общая у владельца и руководителя, но не у менеджера.
+  assert.equal(canSee("admin", "/admin/team"), true);
+  assert.equal(canSee("head", "/admin/team"), true);
+  assert.equal(canSee("manager", "/admin/team"), false, "/admin/team виден менеджеру");
   for (const href of ["/admin", "/admin/scout", "/admin/prospect", "/admin/stats", "/admin/finance"]) {
     for (const role of ROLES) assert.equal(canSee(role, href), true, `${href} скрыт от ${role}`);
   }

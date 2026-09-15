@@ -134,6 +134,7 @@ const ru: HelpCopy = {
       how: [
         "Нового заводят по числовому id в Telegram. Username не годится: его меняют за секунду.",
         "Грейд задаёт процент от прибыли по сделке.",
+        "Руководитель проектов заводит менеджеров и высылает им приглашения. Роли, грейды, ставки и отключение остаются за владельцем — он их видит, но не правит.",
       ],
     },
     "/admin/releases": {
@@ -269,6 +270,7 @@ const uz: HelpCopy = {
       how: [
         "Yangi odam Telegramdagi raqamli id bo‘yicha kiritiladi. Username yaramaydi: uni bir soniyada almashtirish mumkin.",
         "Daraja bitim foydasidan tushadigan foizni belgilaydi.",
+        "Loyihalar rahbari menejerlarni kiritadi va ularga taklifnoma yuboradi. Rollar, darajalar, stavkalar va o‘chirish egasida qoladi — u ularni ko‘radi, lekin o‘zgartirmaydi.",
       ],
     },
     "/admin/releases": {
