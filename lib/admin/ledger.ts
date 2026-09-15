@@ -1,7 +1,10 @@
 import { record } from "@/lib/admin/audit";
 import {
   canEditMoney,
+  isExpenseCategory,
   type DealKind,
+  type Expense,
+  type ExpenseCategory,
   type Grade,
   type Purpose,
 } from "@/lib/admin/finance";
@@ -53,6 +56,8 @@ export type Person = {
   grade: Grade;
   rate_percent: number | null;
   head_staff_id: string | null;
+  /** Доля в чистой прибыли студии, %. Заполнена — соучредитель. */
+  founder_percent: number | null;
   is_active: boolean;
 };
 
@@ -71,7 +76,8 @@ export type Ledger = {
   partnerProven: Map<string, boolean>;
 };
 
-const PEOPLE_COLUMNS = "id, display_name, role, grade, rate_percent, head_staff_id, is_active";
+const PEOPLE_COLUMNS =
+  "id, display_name, role, grade, rate_percent, head_staff_id, founder_percent, is_active";
 // Связь через колонку, а не через таблицу: у выплат две ссылки на staff, и
 // PostgREST должен знать, по какой из них разворачивать имя.
 const PAYMENT_COLUMNS =
@@ -121,6 +127,7 @@ function shapePerson(row: Record<string, unknown>): Person {
     grade: row.grade as Grade,
     rate_percent: (row.rate_percent as number | null) ?? null,
     head_staff_id: (row.head_staff_id as string | null) ?? null,
+    founder_percent: (row.founder_percent as number | null) ?? null,
     is_active: Boolean(row.is_active),
   };
 }
@@ -432,6 +439,115 @@ export async function recordPayout(
     targetId: staffId,
     ip,
     meta: { payout_id: data.id, amount_usd: fields.amountUsd, paid_on: fields.paidOn },
+  });
+  return OK;
+}
+
+/* ── Расходы студии ─────────────────────────────────────────────────────── */
+
+/**
+ * Общие расходы за период.
+ *
+ * Период — не «с начала времён»: доля соучредителя считается от того, что
+ * пришло и что потрачено в одном и том же промежутке, иначе реклама
+ * прошлого года режет прибыль этого. Пусто — всё, что есть.
+ */
+export async function loadExpenses(since?: string): Promise<Expense[]> {
+  const db = serviceClient();
+  if (!db) return [];
+
+  let query = db
+    .from("expenses")
+    .select("id, spent_on, amount_usd, category, note")
+    .order("spent_on", { ascending: false });
+  if (since && DATE.test(since)) query = query.gte("spent_on", since);
+
+  const { data } = await query;
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    spent_on: row.spent_on as string,
+    amount_usd: (row.amount_usd as number) ?? 0,
+    category: isExpenseCategory(String(row.category)) ? (row.category as ExpenseCategory) : "other",
+    note: (row.note as string | null) ?? null,
+  }));
+}
+
+/**
+ * Записать расход. Только владелец.
+ *
+ * Не «руководитель тоже, он же в курсе трат»: каждый расход уменьшает долю
+ * второго соучредителя, то есть это прямая правка чужих денег. Право здесь
+ * то же, что у платежей и себестоимости, и по той же причине.
+ */
+export async function addExpense(
+  fields: {
+    amountUsd: number | null;
+    spentOn: string | null;
+    category: string;
+    note: string | null;
+  },
+  staff: Staff,
+  ip: string,
+): Promise<MoneyResult> {
+  if (staff.role !== "admin") return fail("forbidden");
+  if (fields.amountUsd === null || !Number.isInteger(fields.amountUsd) || fields.amountUsd <= 0) {
+    return fail("invalid");
+  }
+  if (fields.spentOn !== null && !DATE.test(fields.spentOn)) return fail("invalid");
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+
+  const row: Record<string, unknown> = {
+    amount_usd: fields.amountUsd,
+    category: isExpenseCategory(fields.category) ? fields.category : "other",
+    note: fields.note?.trim().slice(0, 500) || null,
+    created_by: staff.id,
+  };
+  // Дата траты обязательна в схеме; пустое поле в форме значит «сегодня».
+  row.spent_on = fields.spentOn ?? new Date().toISOString().slice(0, 10);
+
+  const { data, error } = await db.from("expenses").insert(row).select("id").maybeSingle();
+  if (error || !data) return fail("failed");
+
+  await record("expense.added", {
+    actorStaffId: staff.id,
+    targetType: "expense",
+    targetId: data.id as string,
+    ip,
+    meta: { amount_usd: fields.amountUsd, category: row.category, spent_on: row.spent_on },
+  });
+  return OK;
+}
+
+export async function removeExpense(expenseId: string, staff: Staff, ip: string): Promise<MoneyResult> {
+  if (staff.role !== "admin") return fail("forbidden");
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+
+  // Читаем до удаления: после него в журнал писать уже нечего, а сумма и
+  // категория — единственное, по чему потом восстановить, что убрали.
+  const { data: before } = await db
+    .from("expenses")
+    .select("amount_usd, category, spent_on")
+    .eq("id", expenseId)
+    .maybeSingle();
+  if (!before) return fail("gone");
+
+  const { error } = await db.from("expenses").delete().eq("id", expenseId);
+  if (error) return fail("failed");
+
+  await record("expense.removed", {
+    actorStaffId: staff.id,
+    targetType: "expense",
+    targetId: expenseId,
+    ip,
+    meta: {
+      amount_usd: before.amount_usd,
+      category: before.category,
+      spent_on: before.spent_on,
+    },
   });
   return OK;
 }

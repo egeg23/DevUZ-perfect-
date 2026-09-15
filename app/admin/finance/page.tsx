@@ -1,15 +1,20 @@
 import Link from "next/link";
 
-import { deletePayout, savePayout } from "./actions";
+import { deleteExpense, deletePayout, saveExpense, savePayout } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import {
   ACCRUAL_TITLE,
+  EXPENSE_CATEGORIES,
+  EXPENSE_TITLE,
   GRADE_TITLE,
   KIND_TITLE,
   accrualState,
   accrualsOf,
   balanceOf,
   earnersOf,
+  founderShares,
+  foundersPool,
+  isFounder,
   money,
   ownerShare,
   paidOf,
@@ -19,7 +24,7 @@ import {
 } from "@/lib/admin/finance";
 import { requireStaff } from "@/lib/admin/guard";
 import { seesOwnerMoney } from "@/lib/admin/roles";
-import { loadLedger, sharesOf } from "@/lib/admin/ledger";
+import { loadExpenses, loadLedger, sharesOf } from "@/lib/admin/ledger";
 import { partnerAccrualOf, type PartnerAccrual } from "@/lib/partners/rules";
 import { STAGE_LABEL } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
@@ -97,6 +102,18 @@ export default async function FinancePage({
     if (line) partnerLines.set(p.id, line);
   }
   const partnerTotal = sum([...partnerLines.values()].map((l) => l.amount_usd));
+
+  // Расходы и котёл соучредителей — только владельцу. Доля соучредителя это
+  // тот же котёл в другой пропорции, поэтому показать её здесь значило бы
+  // показать и доход владельца. Кто сколько получил — владелец говорит сам.
+  const expenses = ownerMoney ? await loadExpenses() : [];
+  const founders = ownerMoney
+    ? ledger.people.filter((p) => p.is_active && isFounder(p))
+    : [];
+  const pool = ownerMoney
+    ? foundersPool(ledger.projects, ledger.payments, accruals, expenses)
+    : null;
+  const shares = pool ? founderShares(pool.pool, founders) : [];
 
   const nameOf = (id: string | null) =>
     ledger.people.find((p) => p.id === id)?.display_name ?? "—";
@@ -417,12 +434,149 @@ export default async function FinancePage({
         </table>
       </section>
 
+      {/* ── Котёл соучредителей ─────────────────────────────────────────── */}
+      {pool && shares.length ? (
+        <section className="mt-8">
+          <h2 className="text-sm uppercase tracking-wider text-faint">Доли соучредителей</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
+            Делится то, что уже пришло, за вычетом расходов. Незакрытые сделки показаны
+            отдельно и в делёж не идут: выплатить долю по сделке, которая ещё сорвётся,
+            дороже, чем подождать.
+          </p>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card label="Пришло студии" value={money(pool.earned)} note="после начислений команде" />
+            <Card
+              label="Ещё не оплачено"
+              value={money(pool.frozen)}
+              note="клиент не заплатил целиком"
+              warn={pool.frozen > 0}
+            />
+            <Card label="Расходы" value={money(pool.expenses)} note="реклама, сервисы, подрядчики" />
+            <Card
+              label="К делению"
+              value={money(pool.pool)}
+              note="пришло минус расходы"
+              warn={pool.pool < 0}
+            />
+          </div>
+
+          <ul className="mt-4 flex flex-col gap-2 rounded-xl border border-line bg-surface px-5 py-4 text-sm">
+            {shares.map((share) => (
+              <li key={share.staff_id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span>{nameOf(share.staff_id)}</span>
+                <span className="text-xs text-faint">{share.percent} %</span>
+                <span className={`font-mono ${share.amount_usd < 0 ? "text-gold" : ""}`}>
+                  {money(share.amount_usd)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* ── Расходы студии ──────────────────────────────────────────────── */}
+      {ownerMoney ? (
+        <section className="mt-8">
+          <h2 className="text-sm uppercase tracking-wider text-faint">Расходы студии</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
+            Только общие: реклама, сервисы, подрядчики. Себестоимость конкретного проекта
+            вписывается в сам проект — здесь она вычлась бы второй раз.
+          </p>
+
+          <form
+            action={saveExpense}
+            className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-line bg-surface px-5 py-4"
+          >
+            <label className="text-xs text-faint">
+              Сумма, $
+              <input
+                name="amount"
+                inputMode="numeric"
+                required
+                placeholder="250"
+                className={`mt-1 block w-28 ${INPUT}`}
+              />
+            </label>
+            <label className="text-xs text-faint">
+              Дата
+              <input name="spent_on" type="date" className={`mt-1 block w-40 ${INPUT}`} />
+            </label>
+            <label className="text-xs text-faint">
+              На что
+              <select name="category" defaultValue="ads" className={`mt-1 block w-48 ${INPUT}`}>
+                {EXPENSE_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {EXPENSE_TITLE[category]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="min-w-[12rem] flex-1 text-xs text-faint">
+              Комментарий
+              <input
+                name="note"
+                placeholder="Instagram, кампания по стоматологиям"
+                className={`mt-1 block w-full ${INPUT}`}
+              />
+            </label>
+            <button type="submit" className={BUTTON}>
+              Записать
+            </button>
+          </form>
+
+          <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">
+            <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[720px]">
+              <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
+                <tr>
+                  <th className={TH}>Когда</th>
+                  <th className={TH}>На что</th>
+                  <th className={TH}>Сколько</th>
+                  <th className={TH}>Комментарий</th>
+                  <th className={TH} />
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.map((expense) => (
+                  <tr key={expense.id} className="border-b border-line-soft last:border-0">
+                    <td data-label="Когда" className={`${TD} text-xs text-faint`}>{day(expense.spent_on)}</td>
+                    <td data-label="На что" className={TD}>{EXPENSE_TITLE[expense.category]}</td>
+                    <td data-label="Сколько" className={`${TD} font-mono`}>{money(expense.amount_usd)}</td>
+                    <td data-label="Комментарий" className={`${TD} text-xs text-muted`}>
+                      {expense.note ?? "—"}
+                    </td>
+                    <td data-label="" className={TD}>
+                      <form action={deleteExpense}>
+                        <input type="hidden" name="expense" value={expense.id} />
+                        <button type="submit" className="text-xs text-faint hover:text-gold">
+                          удалить
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+                {expenses.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-6 text-sm text-muted">
+                      Расходов пока не записано. Пока их нет, доля соучредителя считается от
+                      валовой прибыли и выходит завышенной.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
       <div className="mt-8 max-w-2xl space-y-3 text-xs leading-relaxed text-faint">
         <p>
           <span className="text-muted">Ставки.</span> Менеджер — 15 % с нового клиента и 5 % с
           допродажи; начинающий — 10 %, допродажи не начисляются; руководитель — 30 % со своего
           клиента и 5 % с каждой сделки своих менеджеров. Считается от чистой прибыли: сумма по
-          договору минус налог минус себестоимость разработки.
+          договору минус налог минус себестоимость разработки. Соучредителю 5 % с команды не
+          идут: он получает долю от всего, что осталось после расходов, и процент со сделки
+          сверх этого был бы теми же деньгами дважды.
         </p>
         <p>
           <span className="text-muted">Заморозка.</span> Пока клиент не заплатил целиком,

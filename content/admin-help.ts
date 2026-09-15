@@ -120,6 +120,7 @@ const ru: HelpCopy = {
         "Начисление появляется, когда у проекта есть сумма и ответственный.",
         "Пока клиент не заплатил всю сумму, начисление стоит в заморозке — его видно, но оно не к выплате.",
         "Проценты и себестоимость ставит владелец.",
+        "Расходы студии — реклама, сервисы, подрядчики — записывает владелец отдельным блоком. Себестоимость конкретного проекта туда не идёт: она уже вычтена в самом проекте.",
       ],
     },
     "/admin/partners": {
@@ -256,6 +257,7 @@ const uz: HelpCopy = {
         "Hisoblash loyihada summa va mas’ul bo‘lganda paydo bo‘ladi.",
         "Mijoz to‘liq to‘lamaguncha hisoblash muzlatilgan turadi — ko‘rinadi, lekin to‘lovga ketmaydi.",
         "Foizlarni va tannarxni egasi qo‘yadi.",
+        "Studiyaning umumiy xarajatlarini — reklama, xizmatlar, pudratchilar — egasi alohida blokda yozadi. Aniq loyihaning tannarxi u yerga kirmaydi: u loyihaning o‘zida allaqachon ayirilgan.",
       ],
     },
     "/admin/partners": {
