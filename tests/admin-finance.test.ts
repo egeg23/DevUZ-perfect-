@@ -29,10 +29,13 @@ const HEAD = "alex";
 const MANAGER = "dilnoza";
 const JUNIOR = "timur";
 
+// Руководитель здесь наёмный, без доли в студии: правила про ставку с
+// команды проверяются именно на нём. Соучредитель — отдельная история, ему
+// свой файл проверок (tests/admin-founders.test.ts).
 const earners = new Map<string, Earner>([
-  [HEAD, { id: HEAD, grade: "head", rate_percent: null, head_staff_id: null }],
-  [MANAGER, { id: MANAGER, grade: "manager", rate_percent: null, head_staff_id: HEAD }],
-  [JUNIOR, { id: JUNIOR, grade: "junior", rate_percent: null, head_staff_id: HEAD }],
+  [HEAD, { id: HEAD, grade: "head", rate_percent: null, head_staff_id: null, founder_percent: null }],
+  [MANAGER, { id: MANAGER, grade: "manager", rate_percent: null, head_staff_id: HEAD, founder_percent: null }],
+  [JUNIOR, { id: JUNIOR, grade: "junior", rate_percent: null, head_staff_id: HEAD, founder_percent: null }],
 ]);
 
 function project(over: Partial<ProjectMoney> = {}): ProjectMoney {
@@ -203,8 +206,8 @@ test("деньги печатаются по-русски, прочерк вме
 test("владелец студии не получает начислений: его проект — целиком студии", async () => {
   const { earnersOf } = await import("@/lib/admin/finance");
   const map = earnersOf([
-    { id: OWNER, role: "admin", grade: "manager", rate_percent: null, head_staff_id: null },
-    { id: MANAGER, role: "manager", grade: "manager", rate_percent: null, head_staff_id: null },
+    { id: OWNER, role: "admin", grade: "manager", rate_percent: null, head_staff_id: null, founder_percent: 70 },
+    { id: MANAGER, role: "manager", grade: "manager", rate_percent: null, head_staff_id: null, founder_percent: null },
   ]);
   assert.equal(map.has(OWNER), false);
   assert.equal(map.has(MANAGER), true);

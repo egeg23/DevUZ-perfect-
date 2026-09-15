@@ -95,7 +95,19 @@ export type Earner = {
   /** Персональная ставка вместо грейдовой, в процентах. */
   rate_percent: number | null;
   head_staff_id: string | null;
+  /**
+   * Доля в чистой прибыли студии, %. Заполнена — человек соучредитель.
+   *
+   * Она же отменяет для него ставку руководителя с команды: соучредитель
+   * получает свою долю от всего, что осталось после расходов, и брать
+   * сверху процент с каждой сделки менеджера означало бы взять дважды.
+   */
+  founder_percent: number | null;
 };
+
+export function isFounder(earner: Pick<Earner, "founder_percent">): boolean {
+  return earner.founder_percent !== null && earner.founder_percent > 0;
+}
 
 /** Денежная сторона проекта — ровно те поля, от которых зависит расчёт. */
 export type ProjectMoney = {
@@ -217,9 +229,17 @@ export function accrualsOf(
   };
 
   const out = [line(owner.id, "owner", ratePercent(owner, project.kind))];
-  if (owner.head_staff_id && earners.has(owner.head_staff_id)) {
-    const head = owner.head_staff_id;
-    if (HEAD_TEAM_PERCENT > 0 || shares.has(head)) out.push(line(head, "head", HEAD_TEAM_PERCENT));
+  const headId = owner.head_staff_id;
+  const head = headId ? earners.get(headId) : undefined;
+  if (headId && head) {
+    // Соучредителю ставка с команды не идёт: он берёт долю от всего, что
+    // осталось после расходов, и процент с каждой сделки менеджера сверх
+    // этого был бы тем же рублём, посчитанным дважды.
+    const byRule = isFounder(head) ? 0 : HEAD_TEAM_PERCENT;
+    // Процент, выставленный владельцем по этой сделке руками, сильнее
+    // правила — в том числе и для соучредителя: владелец вправе доплатить
+    // за конкретную работу, и отменять это правилом нельзя.
+    if (byRule > 0 || shares.has(headId)) out.push(line(headId, "head", byRule));
   }
   return out;
 }
@@ -232,6 +252,125 @@ export function ownerShare(project: ProjectMoney, accruals: Accrual[]): number |
     .filter((a) => a.project_id === project.id)
     .reduce((sum, a) => sum + a.amount_usd, 0);
   return profit - mine;
+}
+
+/* ── Расходы студии и котёл соучредителей ─────────────────────────────── */
+
+export const EXPENSE_CATEGORIES = ["ads", "tools", "contractors", "office", "other"] as const;
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
+export function isExpenseCategory(value: string): value is ExpenseCategory {
+  return (EXPENSE_CATEGORIES as readonly string[]).includes(value);
+}
+
+export const EXPENSE_TITLE: Record<ExpenseCategory, string> = {
+  ads: "реклама",
+  tools: "сервисы и подписки",
+  contractors: "подрядчики",
+  office: "офис и связь",
+  other: "прочее",
+};
+
+/**
+ * Общий расход студии.
+ *
+ * Только общий: реклама, сервисы, подрядчики. Себестоимость конкретного
+ * проекта живёт в `dev_cost_usd` и сюда не попадает — иначе она вычлась бы
+ * дважды, из прибыли проекта и из котла.
+ */
+export type Expense = {
+  id: string;
+  /** Дата траты, а не записи: период считается по ней. */
+  spent_on: string;
+  amount_usd: number;
+  category: ExpenseCategory;
+  note: string | null;
+};
+
+export type FoundersPool = {
+  /** Осталось студии по проектам, деньги за которые уже пришли. */
+  earned: number;
+  /** То же по проектам, которые ещё не оплачены целиком. */
+  frozen: number;
+  /** Общие расходы за тот же период. */
+  expenses: number;
+  /** Что делится: пришедшее минус потраченное. Может быть отрицательным. */
+  pool: number;
+};
+
+/**
+ * Котёл, который делится между соучредителями.
+ *
+ * Считается от денег, которые уже пришли, а не от выставленных сумм:
+ * делить незаработанное значит однажды выплатить долю по сделке, которая
+ * сорвётся. Незакрытое видно отдельной строкой — как «заморожено» у
+ * менеджеров.
+ *
+ * Отменённые проекты не участвуют вовсе: там нет ни прибыли, ни начислений.
+ *
+ * Расходы вычитаются ДО деления — и именно поэтому реклама ложится на
+ * соучредителей ровно в их пропорции сама, без отдельного правила.
+ */
+export function foundersPool(
+  projects: readonly ProjectMoney[],
+  payments: PaymentMoney[],
+  accruals: readonly Accrual[],
+  expenses: readonly Expense[],
+): FoundersPool {
+  let earned = 0;
+  let frozen = 0;
+
+  for (const project of projects) {
+    const state = accrualState(project, paidOf(project.id, payments));
+    if (state === "void") continue;
+
+    const remainder = ownerShare(project, [...accruals]);
+    if (remainder === null) continue;
+
+    if (state === "earned") earned += remainder;
+    else frozen += remainder;
+  }
+
+  const spent = expenses.reduce((sum, e) => sum + e.amount_usd, 0);
+  return { earned, frozen, expenses: spent, pool: earned - spent };
+}
+
+export type FounderShare = {
+  staff_id: string;
+  percent: number;
+  amount_usd: number;
+};
+
+/**
+ * Доли соучредителей от котла.
+ *
+ * Последняя доля считается вычитанием, а не процентом. Иначе 70 % и 30 % от
+ * нечётной суммы дают в сумме на доллар меньше или больше котла — и
+ * расхождение всплывает при первой же сверке, где его будут искать в
+ * расходах, а не в округлении.
+ *
+ * Минус делится так же, как плюс: владелец сказал «70 % доли прибыли и
+ * расходов мои», и убыток — та же пропорция.
+ */
+export function founderShares(
+  pool: number,
+  founders: readonly Pick<Earner, "id" | "founder_percent">[],
+): FounderShare[] {
+  const real = founders.filter(isFounder);
+  if (real.length === 0) return [];
+
+  const out: FounderShare[] = [];
+  let given = 0;
+
+  real.forEach((founder, i) => {
+    const percent = founder.founder_percent ?? 0;
+    const last = i === real.length - 1;
+    const amount = last ? pool - given : Math.round((pool * percent) / 100);
+    given += amount;
+    out.push({ staff_id: founder.id, percent, amount_usd: amount });
+  });
+
+  return out;
 }
 
 export type Balance = {
@@ -339,7 +478,13 @@ export function earnersOf(people: readonly (Earner & { role: Role })[]): Map<str
   const out = new Map<string, Earner>();
   for (const p of people) {
     if (p.role === "admin") continue;
-    out.set(p.id, { id: p.id, grade: p.grade, rate_percent: p.rate_percent, head_staff_id: p.head_staff_id });
+    out.set(p.id, {
+      id: p.id,
+      grade: p.grade,
+      rate_percent: p.rate_percent,
+      head_staff_id: p.head_staff_id,
+      founder_percent: p.founder_percent,
+    });
   }
   return out;
 }

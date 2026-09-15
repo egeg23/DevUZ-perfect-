@@ -6,8 +6,10 @@ import { redirect } from "next/navigation";
 import { isDealKind, isPurpose, parsePercent, parseUsd } from "@/lib/admin/finance";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import {
+  addExpense,
   addPayment,
   recordPayout,
+  removeExpense,
   removePayment,
   removePayout,
   setProjectMoney,
@@ -141,4 +143,30 @@ export async function savePartner(formData: FormData) {
   revalidatePath("/admin/finance");
   revalidatePath("/admin/partners");
   redirect(`/admin/projects/${projectId}?r=${result.ok ? "ok" : result.reason}`);
+}
+
+export async function saveExpense(formData: FormData) {
+  const staff = await requireStaff();
+
+  const result = await addExpense(
+    {
+      amountUsd: parseUsd(formData.get("amount")),
+      spentOn: dateOrNull(formData.get("spent_on")),
+      category: String(formData.get("category") ?? "other"),
+      note: String(formData.get("note") ?? "") || null,
+    },
+    staff,
+    await requestIp(),
+  );
+  revalidatePath("/admin/finance");
+  redirect(`/admin/finance?r=${code(result)}`);
+}
+
+export async function deleteExpense(formData: FormData) {
+  const staff = await requireStaff();
+  const expenseId = String(formData.get("expense") ?? "");
+
+  const result = await removeExpense(expenseId, staff, await requestIp());
+  revalidatePath("/admin/finance");
+  redirect(`/admin/finance?r=${code(result)}`);
 }
