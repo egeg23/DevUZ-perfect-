@@ -11,6 +11,7 @@ const ru = {
     calculator: "Калькулятор",
     audit: "Проверить сайт",
     products: "Продукты",
+    razbor: "Разборы",
     cases: "Кейсы",
     process: "Процесс",
     about: "О студии",
@@ -331,7 +332,7 @@ const ru = {
 export type Dictionary = typeof ru;
 
 const en: Dictionary = {
-  nav: { services: "Services", calculator: "Calculator", audit: "Site check", products: "Products", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts" },
+  nav: { services: "Services", calculator: "Calculator", audit: "Site check", products: "Products", razbor: "Teardowns", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts" },
   cta: {
     discuss: "Discuss a project",
     calculate: "Get an estimate",
@@ -620,7 +621,7 @@ const en: Dictionary = {
 };
 
 const uz: Dictionary = {
-  nav: { services: "Xizmatlar", calculator: "Kalkulyator", audit: "Saytni tekshirish", products: "Mahsulotlar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa" },
+  nav: { services: "Xizmatlar", calculator: "Kalkulyator", audit: "Saytni tekshirish", products: "Mahsulotlar", razbor: "Tahlillar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa" },
   cta: {
     discuss: "Loyihani muhokama qilish",
     calculate: "Loyihani hisoblash",
@@ -909,7 +910,7 @@ const uz: Dictionary = {
 };
 
 const zh: Dictionary = {
-  nav: { services: "服务", calculator: "报价", audit: "网站体检", products: "产品", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式" },
+  nav: { services: "服务", calculator: "报价", audit: "网站体检", products: "产品", razbor: "网站点评", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式" },
   cta: {
     discuss: "洽谈项目",
     calculate: "获取报价",
