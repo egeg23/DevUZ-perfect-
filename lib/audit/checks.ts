@@ -18,6 +18,7 @@
  * поэтому её целиком закрывают тесты.
  */
 import type { PageProbe } from "@/lib/audit/fetch";
+import { classify } from "@/lib/razbor/classify";
 
 export type Severity = "critical" | "major" | "minor";
 
@@ -42,6 +43,15 @@ export type AuditReport = {
     platform: string | null;
     isShop: boolean;
     certDaysLeft: number | null;
+    /**
+     * Ниша по приметам в разметке, или null.
+     *
+     * Нужна ровно для одного: показать человеку разборы его ниши сразу
+     * после находок. Ошибиться лучше в сторону null — подставленные наугад
+     * разборы автосервисов владельцу стоматологии роняют доверие ко всему
+     * отчёту.
+     */
+    niche: string | null;
   };
 };
 
@@ -106,7 +116,7 @@ export function unreachable(url: string, why: string): AuditReport {
         fix: "Если сайт есть и просто упал — разбираемся с хостингом или доменом и поднимаем его, обычно за час-два. Если сайта ещё нет — соберём: для сайта-визитки это неделя-две.",
       },
     ],
-    facts: { https: false, ttfbMs: 0, platform: null, isShop: false, certDaysLeft: null },
+    facts: { https: false, ttfbMs: 0, platform: null, isShop: false, certDaysLeft: null, niche: null },
   };
 }
 
@@ -236,6 +246,9 @@ export function analyze(probe: PageProbe): AuditReport {
       platform: detectPlatform(html, probe.headers),
       isShop: looksLikeShop(html),
       certDaysLeft: probe.certDaysLeft,
+      // Ниша определяется по тем же словам, что уже прочитаны: отдельного
+      // запроса не делаем, отчёт остаётся мгновенным.
+      niche: classify({ url: probe.finalUrl, html, title: textBetween(html, "title") })?.niche ?? null,
     },
   };
 }

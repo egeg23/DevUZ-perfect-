@@ -42,6 +42,7 @@ const report = (findings: Finding[], facts?: Partial<AuditReport["facts"]>): Aud
     platform: null,
     isShop: false,
     certDaysLeft: 90,
+    niche: null,
     ...facts,
   },
 });

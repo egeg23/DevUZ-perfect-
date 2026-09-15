@@ -37,7 +37,19 @@ type State =
   | { kind: "done"; report: AuditReport }
   | { kind: "error"; message: string };
 
-export function SiteAudit({ dict }: { dict: Dictionary }) {
+export function SiteAudit({
+  dict,
+  razbors = {},
+}: {
+  dict: Dictionary;
+  /**
+   * Разборы по нишам — готовой картой с сервера.
+   *
+   * Пусто на английской и китайской версиях: разборы пишутся только под
+   * русские и узбекские запросы, и блок там просто не появляется.
+   */
+  razbors?: Record<string, { slug: string; title: string; href: string }[]>;
+}) {
   const t = dict.audit;
   const [url, setUrl] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -85,6 +97,7 @@ export function SiteAudit({ dict }: { dict: Dictionary }) {
   }
 
   const report = state.kind === "done" ? state.report : null;
+  const near = (report?.facts.niche && razbors[report.facts.niche]) || [];
   const findings = report
     ? [...report.findings].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])
     : [];
@@ -163,6 +176,30 @@ export function SiteAudit({ dict }: { dict: Dictionary }) {
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Разборы своей ниши — сразу под находками.
+              Момент выбран не случайно: человек только что увидел, что у
+              него не так, и здесь разбор чужого сайта с теми же ошибками
+              работает доказательством, а не рекламой. Если ниша не
+              определилась или разборов по ней ещё нет, блока нет вовсе —
+              подставлять чужую нишу хуже, чем не показать ничего. */}
+          {near.length > 0 && (
+            <section className="mt-8 rounded-xl border border-line bg-white/[0.02] px-5 py-4">
+              <p className="text-sm text-muted">{t.sameNiche}</p>
+              <ul className="mt-3 flex flex-col gap-2">
+                {near.map((item) => (
+                  <li key={item.slug}>
+                    <a
+                      href={item.href}
+                      className="text-sm underline decoration-line underline-offset-4 transition-colors hover:text-green"
+                    >
+                      {item.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
 
           <div className="mt-8 flex flex-wrap gap-3">

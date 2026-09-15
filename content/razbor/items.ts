@@ -89,3 +89,27 @@ export function siblings(item: RazborItem, limit = 3): RazborItem[] {
     .filter((other) => other.slug !== item.slug && other.niche === item.niche)
     .slice(0, limit);
 }
+
+/** Короткая карточка разбора для списков и подсказок. */
+export type RazborLink = { slug: string; title: string; href: string };
+
+/**
+ * Разборы по нишам — для блока «в вашей нише» под отчётом аудитора.
+ *
+ * Отдаётся готовой картой, а не всем списком: виджет аудитора живёт в
+ * браузере, и класть туда тексты всех разборов значило бы грузить каждому
+ * посетителю килобайты статей, которые он не откроет. Здесь только адрес и
+ * заголовок, и не больше трёх на нишу.
+ */
+export function razborsByNiche(
+  locale: RazborLocale,
+  perNiche = 3,
+): Record<string, RazborLink[]> {
+  const out: Record<string, RazborLink[]> = {};
+  for (const item of razborsFor(locale)) {
+    const list = (out[item.niche] ??= []);
+    if (list.length >= perNiche) continue;
+    list.push({ slug: item.slug, title: item.title, href: `/${locale}/razbor/${item.slug}` });
+  }
+  return out;
+}

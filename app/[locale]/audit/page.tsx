@@ -5,7 +5,9 @@ import { SiteAudit } from "@/components/audit/site-audit";
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { getDictionary } from "@/content/dictionaries";
+import { razborsByNiche, type RazborLink } from "@/content/razbor/items";
 import { isLocale, type Locale } from "@/lib/i18n";
+import { isRazborLocale } from "@/lib/razbor/routing";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
@@ -44,11 +46,21 @@ export default async function AuditPage({
         <p className="mt-6 max-w-2xl text-lg text-muted">{dict.audit.lead}</p>
 
         <div className="mt-12">
-          <SiteAudit dict={dict} />
+          {/* Разборы своей ниши показываются сразу под находками — в тот
+              момент, когда человек только что увидел, что у него не так.
+              Карта считается на сервере: класть в браузер тексты всех
+              разборов значило бы грузить килобайты статей, которые он не
+              откроет. */}
+          <SiteAudit dict={dict} razbors={razborsForNiche(locale)} />
         </div>
       </Container>
 
       <ContactSection dict={dict} locale={locale} />
     </>
   );
+}
+
+/** Разборы есть только на двух языках; на остальных блока просто нет. */
+function razborsForNiche(locale: Locale): Record<string, RazborLink[]> {
+  return isRazborLocale(locale) ? razborsByNiche(locale) : {};
 }
