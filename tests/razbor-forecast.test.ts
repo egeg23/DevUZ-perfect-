@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 
 import { razborCopy } from "@/content/razbor/page-copy";
-import { forecast, lossFor, scaleTo } from "@/lib/razbor/forecast";
+import { forecast, lossFor, lostBesides } from "@/lib/razbor/forecast";
 import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
 
 /**
@@ -71,16 +71,48 @@ test("границы разведены: это оценка, а не замер
   }
 });
 
-test("пересчёт на месяц берёт число владельца, а не выдумывает своё", () => {
-  const r = forecast(f("no_phone", "no_prices"));
-  const [lo, hi] = scaleTo(r, 400);
-  assert.equal(lo, Math.round(r.lostPer100[0] * 4));
-  assert.equal(hi, Math.round(r.lostPer100[1] * 4));
+test("считаем от обращений владельца, а не от посещаемости", () => {
+  // Доля посчитана от ГОТОВЫХ обратиться, а посещаемость считает всех
+  // подряд. Умножать одно на другое — завышать число, которое любой
+  // владелец с доступом к статистике оспорит за минуту.
+  const r = forecast(f("no_prices"));
+  const [lo, hi] = r.lostPer100;
 
-  // Без числа — ноль, а не догадка.
-  assert.deepEqual(scaleTo(r, 0), [0, 0]);
-  assert.deepEqual(scaleTo(r, -100), [0, 0]);
-  assert.deepEqual(scaleTo(r, Number.NaN), [0, 0]);
+  // Получая десять обращений при потере p из ста, теряем 10·p/(100−p).
+  const ten = lostBesides(r, 10);
+  assert.equal(ten[0], Math.round((10 * lo) / (100 - lo)));
+  assert.equal(ten[1], Math.round((10 * hi) / (100 - hi)));
+
+  // Потери меньше половины — теряем меньше, чем получаем.
+  assert.ok(ten[1] < 10, `теряем ${ten[1]} при десяти полученных`);
+
+  // Вдвое больше обращений — вдвое больше потерь, с точностью до
+  // округления: 4,29 округляется вниз, а 8,57 — вверх, и строгое равенство
+  // после округления было бы неправдой о самой функции.
+  const twenty = lostBesides(r, 20);
+  assert.ok(
+    Math.abs(twenty[1] - ten[1] * 2) <= 1,
+    `удвоение дало ${twenty[1]} против ${ten[1] * 2}`,
+  );
+  // На больших числах округление перестаёт мешать, и линейность видна.
+  const big = lostBesides(r, 1000)[1];
+  assert.equal(big, Math.round((1000 * hi) / (100 - hi)));
+  assert.ok(Math.abs(big / 10 - lostBesides(r, 100)[1]) <= 1, `${big} против десятикратного`);
+});
+
+test("без числа обращений не гадаем, а отвечаем нулём", () => {
+  const r = forecast(f("no_phone"));
+  assert.deepEqual(lostBesides(r, 0), [0, 0]);
+  assert.deepEqual(lostBesides(r, -5), [0, 0]);
+  assert.deepEqual(lostBesides(r, Number.NaN), [0, 0]);
+});
+
+test("на сайте, теряющем всё, деление не взрывается", () => {
+  // Сайт не открывается — обращений нет вовсе, делить не на что.
+  const dead = forecast(f("unreachable"));
+  const out = lostBesides(dead, 10);
+  assert.ok(Number.isFinite(out[0]) && Number.isFinite(out[1]), `получили ${out}`);
+  assert.equal(out[1], 0, "верхняя граница должна честно молчать, а не врать");
 });
 
 test("у каждой проверки аудита есть доля, кроме намеренно пропущенных", () => {
