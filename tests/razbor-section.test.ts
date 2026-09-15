@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { razborCopy } from "@/content/razbor/page-copy";
 import { razborBySlug, razborsFor, siblings, type RazborItem } from "@/content/razbor/items";
 import { RAZBOR_LOCALES, isRazborLocale, localeHref } from "@/lib/razbor/routing";
+import { serviceFor } from "@/lib/razbor/service-link";
 
 /**
  * Раздел разборов на сайте.
@@ -121,4 +122,43 @@ test("стили пункта стоят вне слоёв", () => {
     }
   }
   assert.equal(depth, 0, ".nav-live оказался внутри @layer — фон перебьют утилиты");
+});
+
+/* ── Перелинковка и разметка ────────────────────────────────────────────── */
+
+test("разбор продаёт услугу, а не только предлагает проверить сайт", () => {
+  // Правило SEO-инструкции: одна ссылка изнутри статьи на профильную
+  // услугу. Её не было вовсе — разбор заканчивался призывом к аудиту, то
+  // есть отправлял человека, уже прикинувшего бюджет, в начало воронки.
+  const page = read("app/[locale]/razbor/[slug]/page.tsx");
+  assert.match(page, /serviceFor\(item\.niche\)/);
+  assert.match(page, /\/services\/\$\{service\}/);
+});
+
+test("ниша выбирает услугу, а не одна на всех", () => {
+  assert.equal(serviceFor("stomatologiya"), "web-development");
+  assert.equal(serviceFor("avtoservis"), "web-development");
+  // Магазину и доставке нужен не сайт-визитка, а торговля.
+  assert.equal(serviceFor("internet-magazin"), "marketplace-delivery");
+  assert.equal(serviceFor("dostavka-edy"), "marketplace-delivery");
+  assert.equal(serviceFor("logistika"), "integrations-automation");
+  // Незнакомая ниша не роняет страницу.
+  assert.equal(serviceFor("чего-нет"), "web-development");
+});
+
+test("подпись ссылки есть на обоих языках и не одинаковая", () => {
+  assert.ok(razborCopy.ru.serviceLink.length > 10);
+  assert.ok(razborCopy.uz.serviceLink.length > 10);
+  assert.notEqual(razborCopy.uz.serviceLink, razborCopy.ru.serviceLink);
+});
+
+test("хлебные крошки размечены отдельной сущностью", () => {
+  // Внутри Article Google их не читает: BreadcrumbList должен быть
+  // самостоятельным блоком, иначе в выдаче остаётся голый адрес.
+  const page = read("app/[locale]/razbor/[slug]/page.tsx");
+  assert.match(page, /"@type": "BreadcrumbList"/);
+  assert.match(page, /itemListElement/);
+  const at = page.indexOf('"BreadcrumbList"');
+  const article = page.indexOf('"@type": "Article"');
+  assert.ok(at < article, "крошки оказались внутри Article");
 });

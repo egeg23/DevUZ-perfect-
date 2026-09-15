@@ -9,6 +9,7 @@ import { razborBySlug, razbors, siblings } from "@/content/razbor/items";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 import { isRazborLocale, localeHref } from "@/lib/razbor/routing";
+import { serviceFor } from "@/lib/razbor/service-link";
 
 export const dynamicParams = false;
 
@@ -52,6 +53,7 @@ export default async function RazborPage({
 
   const copy = razborCopy[locale];
   const near = siblings(item);
+  const service = serviceFor(item.niche);
 
   return (
     <Container className="pb-24 pt-36">
@@ -129,6 +131,16 @@ export default async function RazborPage({
           {copy.price}
         </h2>
         <p className="mt-2 text-lg leading-relaxed">{item.price}</p>
+        {/* Ссылка на профильную услугу — единственная продающая ссылка
+            внутри статьи. Стоит у цены, а не в конце: человек, дочитавший
+            до суммы, уже прикидывает бюджет, и именно здесь ему нужен
+            переход, а не ещё один призыв проверить свой сайт. */}
+        <Link
+          href={`/${locale}/services/${service}`}
+          className="mt-4 inline-block text-sm text-green underline underline-offset-4 transition-colors hover:text-white"
+        >
+          {copy.serviceLink}
+        </Link>
       </section>
 
       <p className="mt-8 max-w-3xl text-xs leading-relaxed text-faint">{copy.anonymous}</p>
@@ -162,6 +174,33 @@ export default async function RazborPage({
           </ul>
         </section>
       ) : null}
+
+      {/* Хлебные крошки отдельным блоком, а не полем внутри Article:
+          Google читает BreadcrumbList как самостоятельную сущность и
+          показывает путь вместо голого адреса в строке результата. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: copy.title,
+                item: `${siteUrl}${localeHref(locale)}`,
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: item.title,
+                item: `${siteUrl}${localeHref(locale, item.slug)}`,
+              },
+            ],
+          }),
+        }}
+      />
 
       <script
         type="application/ld+json"

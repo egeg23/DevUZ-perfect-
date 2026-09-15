@@ -23,6 +23,8 @@ type Copy = {
   price: string;
   more: string;
   anonymous: string;
+  /** Единственная продающая ссылка внутри статьи — на профильную услугу. */
+  serviceLink: string;
   cta: string;
   ctaButton: string;
 };
@@ -46,6 +48,7 @@ export const razborCopy: Record<RazborLocale, Copy> = {
     more: "Ещё разборы этой ниши",
     anonymous:
       "Компанию не называем и ссылку не даём. Речь о типовых ошибках, а не о конкретных людях; на снимке имя и логотип закрыты.",
+    serviceLink: "Заказать сайт для такого бизнеса →",
     cta: "Хотите такой же разбор своего сайта?",
     ctaButton: "Проверить сайт",
   },
@@ -67,6 +70,7 @@ export const razborCopy: Record<RazborLocale, Copy> = {
     more: "Shu yo‘nalishdagi boshqa tahlillar",
     anonymous:
       "Kompaniyani nomlamaymiz va havola bermaymiz. Gap odatiy xatolar haqida, aniq odamlar haqida emas; suratda nom va logotip yopilgan.",
+    serviceLink: "Shunday biznes uchun sayt buyurtma qilish →",
     cta: "O‘z saytingizga ham shunday tahlil kerakmi?",
     ctaButton: "Saytni tekshirish",
   },
