@@ -99,6 +99,9 @@ export function buildPayload(input: {
   };
 }
 
+/** Ровно то от разбора, что нужно для адреса. */
+export type RazborRef = { locale: string; slug: string; publishedAt: string };
+
 export type PingVerdict = {
   /** Пинг принят: повторять не нужно. */
   ok: boolean;
@@ -131,4 +134,77 @@ export function verdictFor(status: number): PingVerdict {
   if (status === 429) return { ok: false, retry: true, text: "429: слишком часто" };
   if (status >= 500) return { ok: false, retry: true, text: `${status}: сбой на стороне приёмника` };
   return { ok: false, retry: false, text: `неожиданный ответ ${status}` };
+}
+
+/**
+ * Что пингуем после выкатки: разделы плюс свежие разборы.
+ *
+ * Список разборов приходит аргументом, а не импортом. Модуль зовут и из
+ * приложения, и из `node --experimental-strip-types`, а псевдоним `@/`
+ * работает только в первом случае: любой импорт контента отсюда ломал бы
+ * скрипт. Заодно функция остаётся чистой.
+ *
+ * Разделы идут в список всегда. Робот, узнавший про новую статью, но не про
+ * обновившийся список, придёт на статью и не увидит, откуда на неё
+ * ссылаются, — а внутренняя ссылка здесь единственная.
+ *
+ * Свежих берём немного: пинг ускоряет обход, а не заменяет его, и слать один
+ * и тот же список целиком каждый день значит упереться в 429.
+ */
+export function freshRazborUrls(
+  siteUrl: string,
+  input: { locales: readonly string[]; items: readonly RazborRef[] },
+  limit = 6,
+): string[] {
+  const base = siteUrl.replace(/\/+$/, "");
+  const fresh = [...input.items]
+    .sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
+    .slice(0, Math.max(0, limit))
+    .map((item) => `${base}/${item.locale}/razbor/${item.slug}`);
+  return [...input.locales.map((l) => `${base}/${l}/razbor`), ...fresh];
+}
+
+export type PingReport = PingVerdict & { status: number | null; urls: number };
+
+/**
+ * Отправляет пинг с повторами там, где повтор имеет смысл.
+ *
+ * Сеть, 429 и пятисотки повторяются; 400, 403 и 422 — нет: это ошибка в
+ * запросе, и второй такой же получит тот же ответ.
+ */
+export async function sendPing(
+  payload: IndexNowPayload,
+  options: { attempts?: number; sleep?: (ms: number) => Promise<void> } = {},
+): Promise<PingReport> {
+  const attempts = options.attempts ?? 3;
+  const sleep =
+    options.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+
+  let last: PingReport = {
+    ok: false,
+    retry: true,
+    text: "ни одной попытки",
+    status: null,
+    urls: payload.urlList.length,
+  };
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const response = await fetch(INDEXNOW_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(20_000),
+      });
+      last = { ...verdictFor(response.status), status: response.status, urls: payload.urlList.length };
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      last = { ok: false, retry: true, text: `сеть: ${text}`, status: null, urls: payload.urlList.length };
+    }
+
+    if (last.ok || !last.retry || attempt === attempts) return last;
+    await sleep(2000 * 2 ** (attempt - 1));
+  }
+
+  return last;
 }

@@ -2,7 +2,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { MAX_URLS, buildPayload, isValidKey, verdictFor } from "@/lib/indexnow";
+import {
+  MAX_URLS,
+  buildPayload,
+  freshRazborUrls,
+  isValidKey,
+  sendPing,
+  verdictFor,
+} from "@/lib/indexnow";
 
 /**
  * Пинг IndexNow.
@@ -113,4 +120,89 @@ test("скрипт не печатает ключ в лог", () => {
   const source = readFileSync(new URL("../scripts/indexnow-ping.mjs", import.meta.url), "utf8");
   assert.ok(!/console\.log\([^)]*\bkey\b/.test(source), "ключ уходит в stdout");
   assert.ok(!/console\.error\([^)]*payload\.key/.test(source), "ключ уходит в stderr");
+});
+
+/* ── Список адресов ─────────────────────────────────────────────────────── */
+
+const ITEMS = [
+  { locale: "ru", slug: "staraya", publishedAt: "2026-09-01" },
+  { locale: "uz", slug: "yangi", publishedAt: "2026-09-10" },
+  { locale: "ru", slug: "srednyaya", publishedAt: "2026-09-05" },
+];
+
+test("разделы в списке всегда, даже когда разборов нет", () => {
+  // Без раздела робот узнаёт про статью, но не про список, который на неё
+  // ссылается, — а другой внутренней ссылки на разбор нет.
+  assert.deepEqual(freshRazborUrls(SITE, { locales: ["ru", "uz"], items: [] }), [
+    `${SITE}/ru/razbor`,
+    `${SITE}/uz/razbor`,
+  ]);
+});
+
+test("свежие идут первыми и обрезаются по лимиту", () => {
+  const urls = freshRazborUrls(SITE, { locales: ["ru"], items: ITEMS }, 2);
+  assert.deepEqual(urls, [
+    `${SITE}/ru/razbor`,
+    `${SITE}/uz/razbor/yangi`, // 10 сентября
+    `${SITE}/ru/razbor/srednyaya`, // 5 сентября
+  ]);
+});
+
+test("нулевой лимит оставляет только разделы, хвост слэша не удваивается", () => {
+  assert.deepEqual(freshRazborUrls(`${SITE}//`, { locales: ["ru"], items: ITEMS }, 0), [
+    `${SITE}/ru/razbor`,
+  ]);
+});
+
+/* ── Отправка ───────────────────────────────────────────────────────────── */
+
+const PAYLOAD = buildPayload({ key: "a1b2c3d4e5", siteUrl: SITE, urls: [`${SITE}/ru`] });
+
+/** Подменяет fetch заданной очередью ответов и считает вызовы. */
+function withFetch(statuses: number[], run: (calls: () => number) => Promise<void>) {
+  const original = globalThis.fetch;
+  let called = 0;
+  globalThis.fetch = (async () => {
+    const status = statuses[Math.min(called, statuses.length - 1)];
+    called++;
+    return new Response("", { status });
+  }) as typeof fetch;
+  return run(() => called).finally(() => {
+    globalThis.fetch = original;
+  });
+}
+
+const nap = async () => {};
+
+test("429 повторяется и успевает пройти", async () => {
+  await withFetch([429, 200], async (calls) => {
+    const report = await sendPing(PAYLOAD, { sleep: nap });
+    assert.equal(report.ok, true);
+    assert.equal(calls(), 2);
+  });
+});
+
+test("403 не повторяется: второй такой же запрос получит тот же ответ", async () => {
+  await withFetch([403], async (calls) => {
+    const report = await sendPing(PAYLOAD, { sleep: nap });
+    assert.equal(report.ok, false);
+    assert.equal(report.status, 403);
+    assert.equal(calls(), 1, "запрос ушёл повторно");
+  });
+});
+
+test("повторы кончаются, а не идут бесконечно", async () => {
+  await withFetch([500], async (calls) => {
+    const report = await sendPing(PAYLOAD, { attempts: 3, sleep: nap });
+    assert.equal(report.ok, false);
+    assert.equal(calls(), 3);
+  });
+});
+
+test("выкатка зовёт пинг с сервера", () => {
+  // Ключ живёт в окружении контейнера. Если строка из скрипта выкатки
+  // пропадёт, пинг просто перестанет уходить — и никто не заметит.
+  const deploy = readFileSync(new URL("../scripts/vps-deploy.sh", import.meta.url), "utf8");
+  assert.match(deploy, /api\/indexnow/);
+  assert.match(deploy, /x-devuz-sweep/);
 });
