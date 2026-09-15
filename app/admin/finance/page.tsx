@@ -18,6 +18,7 @@ import {
   type Accrual,
 } from "@/lib/admin/finance";
 import { requireStaff } from "@/lib/admin/guard";
+import { seesOwnerMoney } from "@/lib/admin/roles";
 import { loadLedger, sharesOf } from "@/lib/admin/ledger";
 import { partnerAccrualOf, type PartnerAccrual } from "@/lib/partners/rules";
 import { STAGE_LABEL } from "@/lib/admin/projects";
@@ -75,6 +76,10 @@ export default async function FinancePage({
   const scope = visibleStaff(staff, team);
   const ledger = await loadLedger(scope);
   const isAdmin = staff.role === "admin";
+  // Доля студии — отдельное право, не «он же админ». Руководитель проектов
+  // видит свои начисления и начисления команды, но не то, что остаётся
+  // владельцу: эта цифра ему в работе не нужна.
+  const ownerMoney = seesOwnerMoney(staff.role);
 
   const earners = earnersOf(ledger.people);
   const accruals = ledger.projects.flatMap((p) =>
@@ -245,7 +250,7 @@ export default async function FinancePage({
                 </>
               ) : null}
               <th className={TH}>Начисления</th>
-              {isAdmin ? <th className={TH}>Владельцу</th> : null}
+              {ownerMoney ? <th className={TH}>Владельцу</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -310,7 +315,7 @@ export default async function FinancePage({
                       </span>
                     ) : null}
                   </td>
-                  {isAdmin ? (
+                  {ownerMoney ? (
                     <td data-label="Владельцу" className={`${TD} font-mono text-xs`}>
                       {(() => {
                         const own = ownerShare(project, lines);
@@ -323,7 +328,7 @@ export default async function FinancePage({
             })}
             {ledger.projects.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 10 : 6} className="px-4 py-6 text-sm text-muted">
+                <td colSpan={ownerMoney ? 10 : 6} className="px-4 py-6 text-sm text-muted">
                   Проектов в вашем круге пока нет.
                 </td>
               </tr>

@@ -31,14 +31,14 @@ export function isAssignable(value: string): value is AssignableRole {
 /** Как роль называется человеку — в сообщениях и на странице команды. */
 export const ROLE_TITLE: Record<Role, string> = {
   admin: "администратор",
-  head: "руководитель",
+  head: "руководитель проектов",
   manager: "менеджер",
 };
 
 /** Короткая подпись рядом с именем в шапке панели. */
 export const ROLE_BADGE: Record<Role, string> = {
   admin: "админ",
-  head: "руководитель",
+  head: "рук. проектов",
   manager: "менеджер",
 };
 
@@ -50,6 +50,7 @@ export type Section = {
 
 const EVERYONE: readonly Role[] = ROLES;
 const ADMIN_ONLY: readonly Role[] = ["admin"];
+const WITH_HEAD: readonly Role[] = ["admin", "head"];
 
 /**
  * Разделы панели и кому они показываются.
@@ -71,7 +72,10 @@ export const SECTIONS: readonly Section[] = [
   // Релизы — только у админа: выложить файл значит решить, что именно
   // получит каждый, кто уже заплатил.
   { href: "/admin/releases", label: "Релизы", roles: ADMIN_ONLY },
-  { href: "/admin/team", label: "Команда", roles: ADMIN_ONLY },
+  // Команда — владельцу и руководителю проектов. Но видят они разное:
+  // руководитель заводит менеджеров и смотрит состав, а роли, грейды и
+  // отключение остаются за владельцем — см. hiresStaff и managesStaff.
+  { href: "/admin/team", label: "Команда", roles: WITH_HEAD },
   // Партнёры — деньги посторонним людям: только владелец.
   { href: "/admin/partners", label: "Партнёры", roles: ADMIN_ONLY },
   { href: "/admin/audit", label: "Журнал", roles: ADMIN_ONLY },
@@ -97,4 +101,48 @@ export function canSee(role: Role, href: string): boolean {
  */
 export function seesEveryone(role: Role): boolean {
   return role === "admin" || role === "head";
+}
+
+/**
+ * Кто заводит сотрудников и шлёт приглашения.
+ *
+ * Руководитель проектов набирает себе менеджеров сам — это его работа, и
+ * ждать владельца ради одного Telegram id незачем. Кого именно он вправе
+ * завести, решает `hiredRoles`: не «любую роль, кроме админа», а список.
+ */
+export function hiresStaff(role: Role): boolean {
+  return role === "admin" || role === "head";
+}
+
+/**
+ * Кого этот человек вправе завести.
+ *
+ * Руководитель — только менеджеров. Иначе он завёл бы второго руководителя,
+ * а через него — доступ к чужим лидам в обход владельца.
+ */
+export function hiredRoles(role: Role): readonly AssignableRole[] {
+  return role === "admin" ? ASSIGNABLE_ROLES : ["manager"];
+}
+
+/**
+ * Кто правит чужие записи в команде: роль, грейд, руководителя, отключение.
+ *
+ * Только владелец. Это не про доверие, а про то, что каждое из этих
+ * действий меняет деньги или доступ к чужим клиентам, и человек, который
+ * ими распоряжается, не должен иметь возможности переписать сам себя.
+ */
+export function managesStaff(role: Role): boolean {
+  return role === "admin";
+}
+
+/**
+ * Кто видит, сколько остаётся владельцу.
+ *
+ * Отдельная функция, а не `role === "admin"` по месту: строка «остаётся
+ * владельцу» показывается в двух разных экранах, и правило должно быть
+ * одно. Руководитель проектов видит свои начисления и начисления команды,
+ * но не долю студии — это не та цифра, которая помогает ему работать.
+ */
+export function seesOwnerMoney(role: Role): boolean {
+  return role === "admin";
 }

@@ -1,9 +1,9 @@
 import { addStaff, assignHead, changeRole, disable, refreshMenu, resend, setGrade } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireRole } from "@/lib/admin/guard";
 import { GRADES, GRADE_TITLE } from "@/lib/admin/finance";
-import { ROLE_BADGE } from "@/lib/admin/roles";
+import { ROLE_BADGE, ROLE_TITLE, hiredRoles, managesStaff } from "@/lib/admin/roles";
 import { listTeam } from "@/lib/admin/team";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,10 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
   owner: { text: "Это владелец панели: его роль и руководитель через панель не меняются.", tone: "warn" },
   not_head: {
     text: "Руководителем можно назначить только активного сотрудника с ролью «руководитель».",
+    tone: "warn",
+  },
+  forbidden: {
+    text: "Руководитель проектов заводит только менеджеров. Вторым руководителем назначает владелец.",
     tone: "warn",
   },
   gone: { text: "Такого сотрудника уже нет.", tone: "warn" },
@@ -59,10 +63,16 @@ export default async function TeamPage({
 }: {
   searchParams: Promise<{ r?: string; i?: string }>;
 }) {
-  const admin = await requireAdmin();
+  // Страницу открывают двое: владелец и руководитель проектов. Видят они
+  // один и тот же состав, но правит его только владелец — `manages` ниже
+  // решает, что показать формой, а что просто текстом.
+  const viewer = await requireRole("admin", "head");
+  const manages = managesStaff(viewer.role);
+  const canHire = hiredRoles(viewer.role);
   const { r, i } = await searchParams;
   const team = await listTeam();
 
+  const nameById = new Map(team.map((m) => [m.id, m.display_name]));
   const active = team.filter((m) => m.is_active);
   const gone = team.filter((m) => !m.is_active);
   const heads = active.filter((m) => m.role === "head");
@@ -70,12 +80,18 @@ export default async function TeamPage({
   const invite = i ? INVITE[i] : null;
 
   return (
-    <AdminShell staff={admin}>
+    <AdminShell staff={viewer}>
       <h1 className="text-lg font-semibold">Команда</h1>
       <p className="mt-1 text-sm text-muted">
         Вход в панель — по числовому id в Telegram. Пароля нет: username человек меняет за
         секунду, id — никогда.
       </p>
+      {manages ? null : (
+        <p className="mt-2 text-sm text-muted">
+          Вы заводите менеджеров и высылаете им приглашения. Роль, грейд, ставку и
+          отключение меняет владелец — эти поля здесь показаны, но не редактируются.
+        </p>
+      )}
 
       {notice ? (
         <p
@@ -101,11 +117,13 @@ export default async function TeamPage({
         </p>
       ) : null}
 
-      <form action={refreshMenu} className="mt-4">
-        <button type="submit" className="text-xs text-faint hover:text-green">
-          обновить меню команд бота
-        </button>
-      </form>
+      {manages ? (
+        <form action={refreshMenu} className="mt-4">
+          <button type="submit" className="text-xs text-faint hover:text-green">
+            обновить меню команд бота
+          </button>
+        </form>
+      ) : null}
 
       {/* ── Кто работает ────────────────────────────────────────────────── */}
       {/* overflow-x-auto, а не overflow-hidden: на телефоне пять колонок не
@@ -130,7 +148,7 @@ export default async function TeamPage({
               <tr key={member.id} className="border-b border-line-soft last:border-0 align-top">
                 <td data-label="Кто" className="px-4 py-3">
                   {member.display_name}
-                  {member.id === admin.id ? (
+                  {member.id === viewer.id ? (
                     <span className="ml-2 text-xs text-faint">это вы</span>
                   ) : null}
                 </td>
@@ -139,12 +157,13 @@ export default async function TeamPage({
                   <span className="block text-faint">id {member.telegram_user_id}</span>
                 </td>
                 <td data-label="Роль" className="px-4 py-3">
-                  {member.role === "admin" && member.id === admin.id ? (
+                  {!manages || (member.role === "admin" && member.id === viewer.id) ? (
                     // Себя не разжаловать: панель останется без хозяина.
                     // Назначить второго админа нельзя ни отсюда, ни с
                     // сервера; лишнего — можно перевести в руководители.
+                    // Руководителю проектов роли показываются без кнопки.
                     <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint">
-                      {ROLE_BADGE.admin}
+                      {ROLE_BADGE[member.role]}
                     </span>
                   ) : (
                     <form action={changeRole} className="flex items-center gap-2">
@@ -166,6 +185,12 @@ export default async function TeamPage({
                 <td data-label="Руководитель" className="px-4 py-3">
                   {member.role === "admin" ? (
                     <span className="text-xs text-faint">—</span>
+                  ) : !manages ? (
+                    <span className="text-xs text-muted">
+                      {member.head_staff_id
+                        ? (nameById.get(member.head_staff_id) ?? "—")
+                        : "без руководителя"}
+                    </span>
                   ) : (
                     // Кто чей: от этого зависит, чью статистику и финансы
                     // видит руководитель. Список — только активные
@@ -195,6 +220,13 @@ export default async function TeamPage({
                 <td data-label="Грейд и ставка" className="px-4 py-3">
                   {member.role === "admin" ? (
                     <span className="text-xs text-faint">—</span>
+                  ) : !manages ? (
+                    <span className="text-xs text-muted">
+                      {GRADE_TITLE[member.grade]}
+                      {member.rate_percent === null ? null : (
+                        <span className="ml-1 font-mono text-faint">{member.rate_percent} %</span>
+                      )}
+                    </span>
                   ) : (
                     // Грейд задаёт процент от прибыли; персональная ставка, если
                     // договорились отдельно, заменяет грейдовую на новых клиентах.
@@ -238,7 +270,7 @@ export default async function TeamPage({
                         отправить приглашение
                       </button>
                     </form>
-                    {member.id === admin.id ? null : (
+                    {!manages || member.id === viewer.id ? null : (
                       <DisableBlock
                         id={member.id}
                         name={member.display_name}
@@ -321,10 +353,25 @@ export default async function TeamPage({
             </label>
             <label className="text-xs text-faint">
               Роль
-              <select name="role" defaultValue="manager" className={`mt-1 ${INPUT}`}>
-                <option value="manager">менеджер</option>
-                <option value="head">руководитель</option>
-              </select>
+              {canHire.length > 1 ? (
+                <select name="role" defaultValue="manager" className={`mt-1 ${INPUT}`}>
+                  {canHire.map((role) => (
+                    <option key={role} value={role}>
+                      {ROLE_TITLE[role]}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                // Выбора нет — и поля выбора тоже: раскрывающийся список с
+                // единственным пунктом выглядит как поломка. Значение уходит
+                // скрытым полем, но решает всё равно сервер.
+                <>
+                  <input type="hidden" name="role" value={canHire[0]} />
+                  <p className="mt-1 rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-muted">
+                    {ROLE_TITLE[canHire[0]]}
+                  </p>
+                </>
+              )}
             </label>
           </div>
           <button type="submit" className={`self-start ${BUTTON}`}>
