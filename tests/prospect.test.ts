@@ -23,6 +23,7 @@ function report(findings: Finding[], facts: Partial<AuditReport["facts"]> = {}):
       platform: null,
       isShop: false,
       certDaysLeft: null,
+      niche: null,
       ...facts,
     },
   };

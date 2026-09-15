@@ -1,0 +1,116 @@
+/**
+ * Ниша сайта по его же разметке.
+ *
+ * Нужна для одного: человек проверил свой сайт в аудиторе, и сразу после
+ * находок мы показываем разборы его ниши. Это момент максимального
+ * интереса — он только что увидел, что у него не так, — и доказательство
+ * того, что мы это чиним не впервые.
+ *
+ * Определяем словами, а не моделью. Причины три: ответ нужен мгновенно, в
+ * той же секунде, что и отчёт; правила видно и можно поправить, когда
+ * ошибётся; и звать модель на каждую проверку чужого сайта — деньги за то,
+ * что решается таблицей.
+ *
+ * Ошибиться лучше в сторону «не знаю». Показать владельцу стоматологии
+ * разборы автосервисов хуже, чем не показать ничего: первое выглядит как
+ * подстановка наугад и роняет доверие ко всему отчёту.
+ */
+import { NICHES } from "@/content/razbor/catalog";
+
+/**
+ * Слова-приметы. Русские, узбекские и английские вперемешку: сайты в
+ * Ташкенте бывают на всех трёх, и часто на нескольких сразу.
+ *
+ * Слова подобраны так, чтобы не срабатывать на соседней нише. «Клиника»
+ * подходит и стоматологии, и медцентру, поэтому её здесь нет ни у кого —
+ * различают «зуб» и «анализы».
+ */
+const WORDS: Record<string, readonly string[]> = {
+  stomatologiya: ["стоматолог", "зубн", "имплант", "кариес", "прикус", "брекет", "винир", "tish shifokor", "stomatolog", "dental clinic", "orthodont"],
+  medcentr: ["медцентр", "медицинский центр", "анализы", "узи", "терапевт", "педиатр", "поликлиник", "tibbiyot markaz", "tahlil"],
+  "internet-magazin": ["интернет-магазин", "интернет магазин", "добавить в корзину", "каталог товаров", "оформить заказ", "internet do'kon", "onlayn do'kon", "savatga", "add to cart", "online store"],
+  restoran: ["ресторан", "бронь стол", "забронировать стол", "банкетный зал", "наше меню", "restoran", "menyu"],
+  "dostavka-edy": ["доставка еды", "доставка блюд", "заказать еду", "доставка пиццы", "ovqat yetkaz", "food delivery"],
+  avtoservis: ["автосервис", "шиномонтаж", "развал-схождение", "то автомобил", "автомойк", "avtoservis", "shinamontaj"],
+  "stroitelnaya-kompaniya": ["строительная компания", "строительств", "ремонт под ключ", "отделочн", "составим смету", "прораб", "qurilish kompaniya", "ta'mirlash"],
+  mebel: ["мебель", "кухни на заказ", "шкаф-купе", "мягкая мебель", "mebel", "oshxona mebel"],
+  "uchebnyy-centr": ["учебный центр", "языковые курсы", "курсы английского", "набор в группы", "пробный урок", "o'quv markaz", "kurslar"],
+  turagentstvo: ["турагент", "туристическое агентство", "горящие туры", "путёвк", "путевк", "авиабилет", "turizm agentlig", "aviachipta"],
+  yurfirma: ["юридическая компания", "юридические услуги", "адвокат", "регистрация ооо", "арбитраж", "yuridik xizmat", "advokat"],
+  "salon-krasoty": ["салон красоты", "маникюр", "педикюр", "парикмахер", "косметолог", "go'zallik salon", "manikyur"],
+  logistika: ["грузоперевоз", "логистическая компания", "ответственное хранение", "растаможк", "logistika kompaniya", "yuk tashish"],
+  fitnes: ["фитнес-клуб", "фитнес клуб", "тренажёрный зал", "тренажерный зал", "абонемент", "персональные тренировки", "fitnes klub", "sport zali"],
+};
+
+/** Ниже этого суммарного веса — считаем, что не определили. */
+const MIN_SCORE = 3;
+/** Насколько лидер должен опережать второго, чтобы ему верить. */
+const MIN_MARGIN = 2;
+/**
+ * Сколько совпадений одного слова считаем. Дальше — не смысл, а меню.
+ *
+ * Слово в подвале, в меню и в каждой карточке товара набирает сотню
+ * совпадений, ничего не говоря о нише. Без потолка страница определялась бы
+ * по самому частому слову.
+ */
+const PER_WORD_CAP = 3;
+
+/**
+ * Сколько стоит слово в адресе или заголовке.
+ *
+ * Отдельная константа, а не тот же потолок: это разные мысли. В подвале
+ * «доставка» встречается у половины сайтов, в заголовке — у тех, кто ею
+ * занимается. Сидели на одном числе — и правка потолка молча меняла вес
+ * заголовка.
+ */
+const STRONG_BONUS = 3;
+
+export type Classified = { niche: string; score: number } | null;
+
+export function classify(input: { url: string; html: string; title?: string | null }): Classified {
+  // Заголовок и адрес весомее тела: в подвале «доставка» встречается у
+  // половины сайтов, а в заголовке — у тех, кто ею занимается.
+  const body = input.html.toLowerCase();
+  const strong = `${input.url} ${input.title ?? ""}`.toLowerCase();
+
+  const scores: { niche: string; score: number }[] = [];
+
+  for (const [niche, words] of Object.entries(WORDS)) {
+    let score = 0;
+    for (const word of words) {
+      score += Math.min(count(body, word), PER_WORD_CAP);
+      if (strong.includes(word)) score += STRONG_BONUS;
+    }
+    if (score > 0) scores.push({ niche, score });
+  }
+
+  if (scores.length === 0) return null;
+  scores.sort((a, b) => b.score - a.score);
+
+  const top = scores[0];
+  if (!top || top.score < MIN_SCORE) return null;
+
+  // Два близких лидера — это сайт, который делает и то и другое, либо
+  // каталог. Угадывать не станем.
+  const runner = scores[1];
+  if (runner && top.score - runner.score < MIN_MARGIN) return null;
+
+  return top;
+}
+
+function count(haystack: string, needle: string): number {
+  let found = 0;
+  let at = 0;
+  for (;;) {
+    const next = haystack.indexOf(needle, at);
+    if (next < 0) return found;
+    found++;
+    if (found >= PER_WORD_CAP) return found;
+    at = next + needle.length;
+  }
+}
+
+/** Ниша известна каталогу — иначе подставлять её в ссылки нельзя. */
+export function isKnownNiche(key: string): boolean {
+  return NICHES.some((niche) => niche.key === key);
+}
