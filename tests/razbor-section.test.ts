@@ -69,6 +69,7 @@ test("выборка и соседи работают на пустом спис
     findings: [],
     outcome: [],
     price: "",
+    lostPer100: null,
   };
   assert.deepEqual(siblings(fake), []);
 });

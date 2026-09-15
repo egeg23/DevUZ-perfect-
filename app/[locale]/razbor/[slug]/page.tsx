@@ -126,6 +126,28 @@ export default async function RazborPage({
         </div>
       </section>
 
+      {/* Во что это обходится — между находками и ценой.
+          Порядок не случайный: сначала человек видит, что не так, потом
+          сколько это стоит ему, и только потом сколько стоит починить. В
+          обратном порядке цена читается как запрос денег ни за что.
+
+          Числа — на сто посетителей. Посещаемость чужого сайта мы не
+          знаем, и подставить туда «обычно столько-то» значило бы выдумать
+          ровно ту цифру, за которую разбор и ругает. */}
+      {item.lostPer100 && item.lostPer100[1] > 0 ? (
+        <section className="mt-10 max-w-3xl rounded-2xl border border-amber-500/40 bg-amber-500/5 px-6 py-5">
+          <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
+            {copy.lossTitle}
+          </h2>
+          <p className="mt-2 text-lg leading-relaxed">
+            {copy.lossBody
+              .replace("{lo}", String(item.lostPer100[0]))
+              .replace("{hi}", String(item.lostPer100[1]))}
+          </p>
+          <p className="mt-3 text-xs leading-relaxed text-faint">{copy.lossHow}</p>
+        </section>
+      ) : null}
+
       <section className="mt-10 max-w-3xl rounded-2xl border border-line bg-surface px-6 py-5">
         <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
           {copy.price}
