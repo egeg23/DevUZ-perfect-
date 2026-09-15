@@ -401,7 +401,7 @@ curl -s https://ВАШ-ДОМЕН/api/health
 того, как дойдёт до API — ключ при этом совершенно исправен. Снаружи это
 выглядит как «чат молчит», и причину начинают искать в коде.
 
-Проверяется одной командой: `curl -s "https://devuz.maximov-tech.ru/api/health?deep=1"`.
+Проверяется одной командой: `curl -s "https://devuz.studio/api/health?deep=1"`.
 Поле `reachable.status` покажет `ok`, `blocked`, `bad_key` или `unreachable`,
 а `reachable.egress` — ушёл запрос напрямую или через прокси. Обычная проба
 без `?deep=1` модель не трогает: иначе недоступность внешнего сервиса

@@ -49,7 +49,7 @@
 ## Проверка
 
 ```bash
-curl -s https://devuz.maximov-tech.ru/api/health
+curl -s https://devuz.studio/api/health
 ```
 
 Отдаёт хеш выкаченного коммита и флаги настроенности — без значений самих

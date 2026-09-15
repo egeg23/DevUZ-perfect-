@@ -9,7 +9,7 @@ import { hreflang, locales, type Locale } from "@/lib/i18n";
  * должен стоить одну строку в .env, а не правку в двадцати файлах.
  */
 export const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://devuz.maximov-tech.ru"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://devuz.studio"
 ).replace(/\/+$/, "");
 
 export function absoluteUrl(path = ""): string {

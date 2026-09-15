@@ -1,23 +1,39 @@
 #!/usr/bin/env bash
 #
-# Ставит конфиг nginx для devuz.maximov-tech.ru и перезагружает его.
+# Ставит конфиг nginx для devuz.studio и перезагружает его.
 #
-# Смысл скрипта не в экономии символов, а в двух вещах, которые руками легко
+# Смысл скрипта не в экономии символов, а в трёх вещах, которые руками легко
 # сделать неправильно:
 #
 # 1. Сертификат. certbot дописывает ssl_certificate прямо в рабочий файл, а в
 #    репозитории на этом месте комментарий. Простой `cp` затирает пути к
 #    сертификату — nginx не стартует, сайт ложится. Скрипт вынимает эти строки
 #    из действующего конфига и переносит в новый.
-# 2. Откат. Если nginx -t не проходит, старый файл возвращается на место, и
+#    Теперь блоков с сертификатом два — канонический и редирект неканонических
+#    имён, — и строки переносятся в оба. Блок `listen 443 ssl` без
+#    ssl_certificate не проходит nginx -t вовсе, так что вариант «перенесу в
+#    первый, второй подождёт certbot» не работает: сайт не поднимется.
+# 2. Старое имя файла. До переезда конфиг лежал под именем старого домена.
+#    Оставить его включённым значит получить два server-блока, спорящих за
+#    devuz.maximov-tech.ru: nginx возьмёт первый попавшийся, и редирект на
+#    новый домен молча не сработает. Скрипт снимает старую ссылку.
+# 3. Откат. Если nginx -t не проходит, старый файл возвращается на место, и
 #    ничего не перезагружается. Сломать работающий сайт этим скриптом нельзя.
 
 set -euo pipefail
 
-DOMAIN="devuz.maximov-tech.ru"
+DOMAIN="devuz.studio"
+# Имя, под которым конфиг лежал до переезда. Нужно, чтобы забрать из него
+# сертификат и снять его с публикации.
+LEGACY="devuz.maximov-tech.ru"
+# Все имена сайта — для подсказки про certbot. Канонический первым: certbot
+# делает первым -d основным именем сертификата.
+NAMES=(devuz.studio www.devuz.studio devuz.work www.devuz.work devuz.maximov-tech.ru)
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/nginx-devuz.conf"
 DST="/etc/nginx/sites-available/${DOMAIN}"
 LINK="/etc/nginx/sites-enabled/${DOMAIN}"
+LEGACY_DST="/etc/nginx/sites-available/${LEGACY}"
+LEGACY_LINK="/etc/nginx/sites-enabled/${LEGACY}"
 BACKUP="${DST}.bak.$(date +%Y%m%d-%H%M%S)"
 
 red()  { printf '\033[31m%s\033[0m\n' "$*"; }
@@ -30,11 +46,17 @@ TMP="$(mktemp)"
 cp "$SRC" "$TMP"
 
 # ── Переносим строки сертификата из действующего конфига ────────────────────
-if [ -f "$DST" ]; then
-  cp "$DST" "$BACKUP"
+# После переезда файл сменил имя, поэтому источником может быть и старый: на
+# первом запуске нового скрипта $DST ещё не существует, а сертификат уже есть.
+CERT_SRC=""
+[ -f "$LEGACY_DST" ] && CERT_SRC="$LEGACY_DST"
+[ -f "$DST" ] && CERT_SRC="$DST"
+
+if [ -n "$CERT_SRC" ]; then
+  cp "$CERT_SRC" "$BACKUP"
   echo "Старый конфиг сохранён: $BACKUP"
 
-  CERTS="$(grep -E '^\s*(ssl_certificate|ssl_certificate_key|ssl_trusted_certificate|include .*options-ssl-nginx|ssl_dhparam)' "$DST" || true)"
+  CERTS="$(grep -E '^\s*(ssl_certificate|ssl_certificate_key|ssl_trusted_certificate|include .*options-ssl-nginx|ssl_dhparam)' "$CERT_SRC" | sort -u || true)"
   if [ -n "$CERTS" ]; then
     # Подставляем на место комментария-заглушки. Строки передаём переменной
     # окружения, а не подстановкой в текст скрипта: путь с кавычкой или
@@ -45,16 +67,19 @@ p = sys.argv[1]
 s = io.open(p, encoding="utf-8").read()
 anchor = "    # ssl_certificate и ssl_certificate_key сюда допишет certbot."
 certs = os.environ["CERTS"].rstrip()
-if anchor in s:
+# replace без счётчика заменяет ВСЕ вхождения, и это здесь обязательно:
+# блоков с ssl два, и блок без сертификата не проходит nginx -t.
+found = s.count(anchor)
+if found:
     io.open(p, "w", encoding="utf-8").write(s.replace(anchor, certs))
-    print("Строки сертификата перенесены из действующего конфига.")
+    print(f"Строки сертификата перенесены в {found} блок(а).")
 else:
     print("ВНИМАНИЕ: не нашёл место для сертификата, проверьте файл руками.")
 PY
   else
     red "В действующем конфиге нет строк ssl_certificate."
     red "Если сертификат уже выпущен — после установки запустите:"
-    red "  certbot --nginx -d ${DOMAIN}"
+    red "  certbot --nginx ${NAMES[*]/#/-d }"
   fi
 else
   echo "Действующего конфига нет — ставим впервые."
@@ -65,11 +90,22 @@ install -m 0644 "$TMP" "$DST"
 rm -f "$TMP"
 ln -sfn "$DST" "$LINK"
 
+# Старое имя файла снимаем с публикации: два блока на один server_name
+# означают, что nginx возьмёт первый попавшийся и редирект на новый домен
+# молча не сработает. Сам файл остаётся в sites-available как запасной.
+if [ -L "$LEGACY_LINK" ] && [ "$LEGACY_LINK" != "$LINK" ]; then
+  rm -f "$LEGACY_LINK"
+  echo "Старая ссылка снята: $LEGACY_LINK (файл остался в sites-available)"
+fi
+
 echo
 echo "Проверяю конфигурацию…"
 if nginx -t; then
   systemctl reload nginx
   green "Готово: конфиг применён, nginx перезагружен."
+  echo
+  echo "Дальше — сертификат на все имена (старый покрывает только одно):"
+  echo "  certbot --nginx ${NAMES[*]/#/-d }"
 else
   echo
   red "nginx -t не прошёл — ничего не перезагружаю."
