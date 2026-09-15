@@ -5,7 +5,8 @@ import type { Locale } from "@/lib/i18n";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { scoreLead } from "@/lib/qualify/scoring";
 import { attributeAndNotify } from "@/lib/partners/attribute";
-import { saveLead } from "@/lib/qualify/store";
+import { briefHeading, briefRecipients, briefSummary, type Brief } from "@/lib/qualify/brief";
+import { saveLead, updateLead } from "@/lib/qualify/store";
 import { sendLead } from "@/lib/qualify/telegram";
 import { qualifyLeadTool } from "@/lib/qualify/tool";
 import type { ChatMessage, QualifyToolInput, ScoredLead } from "@/lib/qualify/types";
@@ -166,6 +167,15 @@ export type TurnOptions = {
    * сохранения лида и его не роняет.
    */
   attribution?: { code: string | null; telegramId?: number | null; chatId?: number | null };
+  /**
+   * Бриф с витрины, по которому идёт разговор.
+   *
+   * Меняет три вещи: ассистент знает состав и цену заказа и не спрашивает
+   * их заново; квалификация дописывается в лид с тем же номером заявки, а
+   * не заводит второй; и уходит она тем же адресатам, что и бриф, — заказ
+   * дороже порога владелец получает один, без общего чата.
+   */
+  brief?: Brief;
   onText: (chunk: string) => void;
   onEvent?: (event: TurnEvent) => void;
 };
@@ -207,7 +217,12 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
     };
   };
 
-  const systemText = [buildSystemPrompt(locale), options.channelNote, discountNote(options.discount)]
+  const systemText = [
+    buildSystemPrompt(locale),
+    options.channelNote,
+    discountNote(options.discount),
+    briefNote(options.brief),
+  ]
     .filter(Boolean)
     .join("\n\n");
 
@@ -279,9 +294,15 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
   const truncated = firstMessage.stop_reason === "max_tokens";
   if (truncated) console.error("qualify_lead обрезан по max_tokens", { locale, source });
 
-  const requestNo = newRequestNo();
+  // Номер заявки у брифа с витрины уже есть — клиент его видел, менеджер
+  // его получил. Второй номер на того же человека только запутает обоих.
+  const brief = options.brief;
+  const requestNo = brief?.requestNo ?? newRequestNo();
   const lead = scoreLead(
-    withDiscount(sanitizeToolInput(toolUse.input as QualifyToolInput, truncated), options.discount),
+    withBrief(
+      withDiscount(sanitizeToolInput(toolUse.input as QualifyToolInput, truncated), options.discount),
+      brief,
+    ),
     locale,
   );
 
@@ -290,7 +311,12 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
   // а ошибка уйдёт в логи.
   let leadId: string | null = null;
   try {
-    leadId = await saveLead(lead, history, source, { requestNo, discount: options.discount });
+    // Лид от брифа уже в базе — дописываем в него. Не нашёлся (база лежала,
+    // когда бриф приходил) — заводим под тем же номером.
+    if (brief?.requestNo) leadId = await updateLead(brief.requestNo, lead, history);
+    if (!leadId) {
+      leadId = await saveLead(lead, history, source, { requestNo, discount: options.discount });
+    }
   } catch (error) {
     console.error("saveLead", error);
   }
@@ -305,7 +331,15 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
 
   let delivered = false;
   try {
-    delivered = await sendLead(lead, leadId ?? "unsaved", requestNo);
+    if (brief) {
+      const route = await briefRecipients(brief.totalUsd);
+      delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
+        to: route.chatIds,
+        heading: briefHeading(brief, route, "qualified"),
+      });
+    } else {
+      delivered = await sendLead(lead, leadId ?? "unsaved", requestNo);
+    }
   } catch (error) {
     console.error("sendLead", error);
   }
@@ -407,6 +441,48 @@ function withDiscount(input: QualifyToolInput, discount?: boolean): QualifyToolI
       .filter(Boolean)
       .join(" "),
   };
+}
+
+/** Состав заказа — в заметки менеджеру: он и в брифе, но квалификация читается отдельно. */
+function withBrief(input: QualifyToolInput, brief?: Brief): QualifyToolInput {
+  if (!brief) return input;
+  const contact = [brief.name, brief.contact].filter(Boolean).join(", ");
+  return {
+    ...input,
+    notes: [
+      `🧩 Заказ с витрины: ${briefSummary(brief)}`,
+      contact ? `Контакт из формы витрины: ${contact}.` : "",
+      input.notes,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
+/**
+ * Контекст для ассистента, когда разговор идёт по брифу с витрины.
+ *
+ * Главное здесь — что ассистент не знакомится и не продаёт: сайт уже
+ * выбран и посчитан, бриф уже у менеджера. Его дело — первичка: снять
+ * то, чего в конфигураторе нет (сроки, контент, домен, кто решает), и
+ * передать менеджеру человека, с которым уже можно говорить о договоре.
+ */
+function briefNote(brief?: Brief): string | null {
+  if (!brief) return null;
+  const paid = brief.addons.filter((addon) => !addon.included && addon.priceUsd > 0);
+  const no = brief.requestNo ? ` под номером ${brief.requestNo}` : "";
+
+  return `## Контекст: клиент пришёл с витрины, бриф уже отправлен
+
+Клиент только что собрал на нашей витрине сайт. ${briefSummary(brief)}
+Бриф с этим составом уже ушёл менеджеру${no}. Не отправляй его заново, не проси описать задачу с нуля и не предлагай другие услуги: задача известна.
+
+Что делать — первичка, чтобы менеджер вошёл в разговор подготовленным:
+- Первой репликой поздоровайся по имени (${brief.name ? `клиент представился как ${brief.name}` : "если оно есть в профиле"}), подтверди, что заявка${no} получена, и в одну строку назови состав: пакет «${brief.tier.label}»${paid.length ? ` и ${paid.map((addon) => `«${addon.label}»`).join(", ")}` : ""}, итого $${brief.totalUsd}. Спроси, всё ли верно.
+- Дальше по одному вопросу за раз выясни то, чего в брифе нет: когда хотят стартовать и есть ли дедлайн; есть ли готовые тексты, фотографии и логотип; есть ли домен и хостинг; кто принимает решение по договору; нужны ли ещё языки.
+- Бюджет уже известен — $${brief.totalUsd} по конфигуратору. Не спрашивай его заново; в avoid_asking напиши «бюджет — $${brief.totalUsd}, собран в конфигураторе». Если клиент хочет дешевле — предложи убрать допники или взять пакет ниже, но новую цену не считай и скидок не обещай: это сделает менеджер.
+- Цены с витрины уже названы — их можно повторять. Других цен не называй.
+- Вызови qualify_lead, когда узнал сроки, контент и кто решает, или если клиент просит менеджера, или после четырёх-пяти своих реплик. В summary.request перепиши состав заказа и итог, в already_told — пакет, допники и сумму, в services — что заказывают.`;
 }
 
 function discountNote(discount?: boolean): string | null {
