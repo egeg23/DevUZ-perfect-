@@ -125,6 +125,28 @@ test("у каждого блока с ssl есть место под серти�
   assert.ok(script.includes(anchor), "скрипт ищет другой якорь, чем стоит в конфиге");
 });
 
+test("http2 задан формой, понятной nginx на сервере", () => {
+  // Отдельная директива `http2 on` появилась в nginx 1.25.1, а на сервере
+  // Ubuntu-шный 1.18: он не проходит nginx -t вовсе, с «unknown directive
+  // "http2"», и сайт не поднимается. Проверка стоит здесь, потому что
+  // выстрелило это ровно один раз и ровно так — на боевом сервере, в
+  // середине переезда.
+  assert.ok(
+    !/^\s*http2\s+(on|off)\s*;/m.test(nginx),
+    "директива http2 не понята nginx 1.18 — сайт не поднимется",
+  );
+
+  const secure = blocks.filter((b) => /listen\s+443\s+ssl/.test(b));
+  assert.ok(secure.length >= 2);
+  for (const block of secure) {
+    assert.match(
+      block,
+      /listen\s+443\s+ssl\s+http2;/,
+      "блок 443 без http2 — теряем мультиплексирование на ровном месте",
+    );
+  }
+});
+
 test("порт 80 принимает все имена — иначе certbot не подтвердит их", () => {
   const plain = blocks.find((b) => /listen\s+80;/.test(b));
   assert.ok(plain, "нет блока на 80 порту");
