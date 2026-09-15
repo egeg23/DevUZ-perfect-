@@ -6,6 +6,7 @@ import { razborCopy } from "@/content/razbor/page-copy";
 import { razborBySlug, razborsFor, siblings, type RazborItem } from "@/content/razbor/items";
 import { RAZBOR_LOCALES, isRazborLocale, localeHref } from "@/lib/razbor/routing";
 import { serviceFor } from "@/lib/razbor/service-link";
+import { templatedAcross } from "@/lib/razbor/sameness";
 
 /**
  * Раздел разборов на сайте.
@@ -161,4 +162,54 @@ test("хлебные крошки размечены отдельной сущн
   const at = page.indexOf('"BreadcrumbList"');
   const article = page.indexOf('"@type": "Article"');
   assert.ok(at < article, "крошки оказались внутри Article");
+});
+
+/* ── Шаблонность ────────────────────────────────────────────────────────── */
+
+/**
+ * Смоук-тест двух моделей на одном сайте кончился тем, что одна из них
+ * собрала весь раздел «что мешает продавать» из готовых строк аудита —
+ * все пятнадцать, дословно. Формально придраться не к чему: текст
+ * человеческий, цифры верные, жаргона нет. Но эти же пятнадцать строк
+ * ушли бы в каждый из 336 запланированных разборов, и раздел получил бы
+ * 336 страниц с одинаковыми подзаголовками.
+ *
+ * Поймать это глазами нельзя: пока разбор один, он выглядит отлично.
+ * Видно только на втором — поэтому проверка машинная.
+ */
+test("разборы не собираются из одинаковых кусков", () => {
+  for (const locale of RAZBOR_LOCALES) {
+    const pieces = razborsFor(locale).map((item) => ({
+      slug: item.slug,
+      strings: [
+        ...item.intro,
+        ...item.findings.flatMap((f) => [f.title, f.impact, f.fix]),
+        ...item.outcome,
+        item.price,
+      ],
+    }));
+
+    const repeated = templatedAcross(pieces);
+    assert.deepEqual(
+      repeated,
+      [],
+      repeated.length
+        ? `шаблон в ${locale}: «${repeated[0].text.slice(0, 60)}…» повторён в ${repeated[0].slugs.join(", ")}`
+        : "",
+    );
+  }
+});
+
+test("совпадение ищется дословное, а короткие строки не в счёт", () => {
+  const a = { slug: "a", strings: ["Ташкент", "Сколько стоит диагностика — по сайту не узнать"] };
+  const b = { slug: "b", strings: ["Ташкент", "Сколько стоит диагностика — по сайту не узнать"] };
+  const c = { slug: "c", strings: ["Сколько стоит диагностика — узнать по сайту нельзя"] };
+
+  const found = templatedAcross([a, b, c]);
+  assert.equal(found.length, 1, "поймано не то количество");
+  assert.match(found[0].text, /Сколько стоит диагностика — по сайту не узнать/);
+  assert.deepEqual(found[0].slugs, ["a", "b"]);
+
+  // Один разбор сам с собой не спорит.
+  assert.deepEqual(templatedAcross([a]), []);
 });
