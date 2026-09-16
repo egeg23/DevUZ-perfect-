@@ -1,6 +1,6 @@
 import { analyze, unreachable, type AuditReport, type Finding } from "@/lib/audit/checks";
 import { type PitchLocale, pitch } from "@/lib/audit/pitch";
-import { probe } from "@/lib/audit/fetch";
+import { enrich, probe } from "@/lib/audit/fetch";
 // Разбор адреса — из чистого модуля: этот файл импортирует и браузер
 // (страница касаний показывает разбор до прогона), а guard тянет node:dns.
 import { BlockedAddress, normalizeUrl } from "@/lib/audit/url";
@@ -140,7 +140,7 @@ export async function auditOne(target: BatchTarget): Promise<BatchRow> {
   if (!target.url) return { target, report: null, failure: target.problem ?? "адрес не разобран" };
 
   try {
-    return { target, report: analyze(await probe(target.url)), failure: null };
+    return { target, report: analyze(await enrich(await probe(target.url))), failure: null };
   } catch (error) {
     // Адрес, уводящий во внутреннюю сеть, — это не находка о клиенте, а
     // попытка использовать нас сканером. Отчёта не будет.

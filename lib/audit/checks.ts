@@ -17,6 +17,7 @@
  * Функция чистая: на входе HTML и замеры, на выходе список. Никаких запросов,
  * поэтому её целиком закрывают тесты.
  */
+import { designChecks, type DesignFacts } from "@/lib/audit/design";
 import type { PageProbe } from "@/lib/audit/fetch";
 import { classify } from "@/lib/razbor/classify";
 
@@ -52,6 +53,11 @@ export type AuditReport = {
      * отчёту.
      */
     niche: string | null;
+    /**
+     * Вёрстка: эпоха, правила под телефон, таблицы как каркас.
+     * Необязательное: отчёты, сохранённые до появления проверки, его не несут.
+     */
+    design?: DesignFacts;
   };
 };
 
@@ -124,11 +130,19 @@ export function unreachable(url: string, why: string): AuditReport {
         fix: "Если сайт есть и просто упал — разбираемся с хостингом или доменом и поднимаем его, обычно за час-два. Если сайта ещё нет — соберём: для сайта-визитки это неделя-две.",
       },
     ],
-    facts: { https: false, ttfbMs: 0, platform: null, isShop: false, certDaysLeft: null, niche: null },
+    facts: {
+      https: false,
+      ttfbMs: 0,
+      platform: null,
+      isShop: false,
+      certDaysLeft: null,
+      niche: null,
+      design: { era: "unknown", mediaQueries: 0, flexOrGrid: false, tablesLayout: false, cssRead: false },
+    },
   };
 }
 
-export function analyze(probe: PageProbe): AuditReport {
+export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
   const html = probe.html;
   const findings: Finding[] = [];
   const add = (f: Finding) => findings.push(f);
@@ -356,6 +370,11 @@ export function analyze(probe: PageProbe): AuditReport {
     });
   }
 
+  // Вёрстка и следы раннего интернета — после всего остального: их
+  // находки идут в общий список и в общий балл на тех же правах.
+  const design = designChecks(probe, now);
+  for (const f of design.findings) add(f);
+
   const score = Math.max(
     0,
     100 -
@@ -379,6 +398,7 @@ export function analyze(probe: PageProbe): AuditReport {
       // Ниша определяется по тем же словам, что уже прочитаны: отдельного
       // запроса не делаем, отчёт остаётся мгновенным.
       niche: classify({ url: probe.finalUrl, html, title: textBetween(html, "title") })?.niche ?? null,
+      design: design.facts,
     },
   };
 }

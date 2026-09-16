@@ -13,7 +13,7 @@
 import { NextResponse } from "next/server";
 
 import { analyze, unreachable } from "@/lib/audit/checks";
-import { probe } from "@/lib/audit/fetch";
+import { enrich, probe } from "@/lib/audit/fetch";
 import { BlockedAddress, normalizeUrl } from "@/lib/audit/guard";
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const page = await probe(target);
+    const page = await enrich(await probe(target));
     return NextResponse.json(analyze(page));
   } catch (error) {
     // Адрес, уводящий во внутреннюю сеть, — это попытка, а не опечатка.
