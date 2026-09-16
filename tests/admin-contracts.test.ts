@@ -16,6 +16,7 @@ import {
   signedFileName,
   toContractInput,
 } from "@/lib/admin/contracts";
+import { MAX_SIGNATURE_BYTES } from "@/lib/admin/upload-limits";
 import {
   ACCEPTANCE_WORKDAYS,
   ARBITRATION,
@@ -255,7 +256,10 @@ test("подпись принимается только как настоящи
   // Расширение переименует кто угодно, восемь байт заголовка — нет.
   const mod = read("lib/admin/signature.ts");
   assert.match(mod, /0x89, 0x50, 0x4e, 0x47/);
-  assert.match(mod, /2 \* 1024 \* 1024/);
+  assert.match(mod, /bytes\.byteLength > MAX_SIGNATURE_BYTES/);
+  // Само число живёт рядом с лимитами nginx и server action, иначе оно
+  // оказывается недостижимым: tests/upload-limits.test.ts сверяет три слоя.
+  assert.equal(MAX_SIGNATURE_BYTES, 2 * 1024 * 1024);
   assert.match(mod, /BUCKET = "private"/, "подпись лежит в публичном бакете");
 });
 

@@ -1,4 +1,5 @@
 import { serviceClient } from "@/lib/supabase";
+import { MAX_SIGNATURE_BYTES } from "@/lib/admin/upload-limits";
 
 /**
  * Подпись владельца.
@@ -51,9 +52,7 @@ export async function saveSignature(bytes: ArrayBuffer): Promise<{ ok: boolean; 
   if (head.length < 8 || PNG_MAGIC.some((b, i) => head[i] !== b)) {
     return { ok: false, why: "Нужен файл PNG" };
   }
-  // Подпись — это несколько десятков килобайт. Мегабайтный файл означает,
-  // что загрузили фотографию целиком, вместе с фоном стола.
-  if (bytes.byteLength > 2 * 1024 * 1024) return { ok: false, why: "Файл больше 2 МБ" };
+  if (bytes.byteLength > MAX_SIGNATURE_BYTES) return { ok: false, why: "Файл больше 2 МБ" };
 
   const db = serviceClient();
   if (!db) return { ok: false, why: "Хранилище недоступно" };
