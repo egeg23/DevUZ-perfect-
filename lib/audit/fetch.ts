@@ -44,6 +44,21 @@ export type PageProbe = {
   https: boolean;
   /** Дней до истечения сертификата; null — если соединение не по TLS. */
   certDaysLeft: number | null;
+  /** Стили, картинки, ссылки, значок — то, что дотянуто после страницы. */
+  assets?: PageAssets;
+};
+
+export type PageAssets = {
+  /** Собственные стили сайта одним текстом — по ним видно, как он свёрстан. */
+  css: string;
+  cssCount: number;
+  cssTruncated: boolean;
+  /** Есть ли значок вкладки; null — проверить не удалось. */
+  favicon: boolean | null;
+  checkedImages: number;
+  brokenImages: string[];
+  checkedLinks: number;
+  brokenLinks: string[];
 };
 
 function headerValue(raw: string | string[] | undefined): string {
@@ -51,7 +66,11 @@ function headerValue(raw: string | string[] | undefined): string {
 }
 
 /** Один запрос по проверенному адресу, без следования редиректам. */
-function once(url: URL, ip: string): Promise<{
+function once(
+  url: URL,
+  ip: string,
+  opts: { maxBytes?: number; accept?: string } = {},
+): Promise<{
   status: number;
   headers: Record<string, string>;
   body: string;
@@ -80,7 +99,7 @@ function once(url: URL, ip: string): Promise<{
           // Представляемся честно: владелец сайта должен понимать по логам,
           // кто к нему пришёл, а не гадать.
           "User-Agent": "DevUzAudit/1.0 (+https://devuz.studio)",
-          Accept: "text/html,application/xhtml+xml",
+          Accept: opts.accept ?? "text/html,application/xhtml+xml",
           "Accept-Encoding": "identity",
         },
       },
@@ -102,7 +121,7 @@ function once(url: URL, ip: string): Promise<{
 
         response.on("data", (chunk: Buffer) => {
           size += chunk.length;
-          if (size > MAX_BYTES) {
+          if (size > (opts.maxBytes ?? MAX_BYTES)) {
             truncated = true;
             response.destroy();
             return;
@@ -175,4 +194,180 @@ export async function probe(raw: string): Promise<PageProbe> {
   }
 
   throw new BlockedAddress("shape", "слишком много перенаправлений");
+}
+
+/* ── Дотягивание: стили, картинки, ссылки, значок ──────────────────────── */
+
+// Не больше этого — страница уже прочитана, дальше только уточнение.
+const MAX_CSS = 2;
+const MAX_IMAGES = 6;
+const MAX_LINKS = 6;
+const CSS_MAX_BYTES = 200 * 1024;
+// Для картинок и ссылок нужен только статус: тело обрываем сразу.
+const PEEK_MAX_BYTES = 4 * 1024;
+
+/**
+ * Сущности разметки в значении — обратно в символы. В адресе картинки
+ * `&amp;` стоит по правилам, а в запрос должно уйти `&`: иначе сервер
+ * отвечает 400, и современный сайт получает ложные «битые картинки».
+ */
+export function decodeEntities(value: string): string {
+  return value
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
+}
+
+function attr(tag: string, name: string): string | null {
+  const m = tag.match(new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i"));
+  return m ? decodeEntities((m[1] ?? m[2] ?? m[3] ?? "").trim()) : null;
+}
+
+/** Абсолютный адрес того же хоста — или null: чужие хосты не трогаем. */
+function sameOrigin(raw: string, base: URL): URL | null {
+  if (!raw || /^(data|javascript|mailto|tel|blob):/i.test(raw)) return null;
+  try {
+    const url = new URL(raw, base);
+    if (url.host !== base.host || !/^https?:$/.test(url.protocol)) return null;
+    url.hash = "";
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+function unique(urls: URL[], limit: number, skip?: string): URL[] {
+  const seen = new Set<string>();
+  const out: URL[] = [];
+  for (const url of urls) {
+    if (url.href === skip || seen.has(url.href)) continue;
+    seen.add(url.href);
+    out.push(url);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+export function stylesheetUrls(html: string, base: URL): URL[] {
+  const tags = html.match(/<link\b[^>]*>/gi) ?? [];
+  const urls: URL[] = [];
+  for (const tag of tags) {
+    if (!/\brel\s*=\s*["']?[^"'>]*stylesheet/i.test(tag)) continue;
+    const href = attr(tag, "href");
+    const url = href ? sameOrigin(href, base) : null;
+    if (url) urls.push(url);
+  }
+  return unique(urls, MAX_CSS);
+}
+
+export function imageUrls(html: string, base: URL): URL[] {
+  const tags = html.match(/<img\b[^>]*>/gi) ?? [];
+  const urls: URL[] = [];
+  for (const tag of tags) {
+    const src = attr(tag, "src");
+    const url = src ? sameOrigin(src, base) : null;
+    if (url) urls.push(url);
+  }
+  return unique(urls, MAX_IMAGES);
+}
+
+export function internalLinks(html: string, base: URL): URL[] {
+  const tags = html.match(/<a\b[^>]*>/gi) ?? [];
+  const urls: URL[] = [];
+  for (const tag of tags) {
+    const href = attr(tag, "href");
+    if (!href || href.startsWith("#")) continue;
+    const url = sameOrigin(href, base);
+    // Файлы не проверяем: их отдают долго и весят они много.
+    if (url && !/\.(pdf|zip|rar|docx?|xlsx?|pptx?|mp4|mp3|apk|exe)$/i.test(url.pathname)) urls.push(url);
+  }
+  return unique(urls, MAX_LINKS, base.href);
+}
+
+/**
+ * Битый — это «файла нет» или «сервер сломался». 401 и 403 — не битый:
+ * так сайты отвечают роботам и запросам без нужных заголовков, а
+ * посетитель в браузере картинку видит. Жаловаться владельцу на то, чего
+ * посетитель не видит, нельзя.
+ */
+export function broken(status: number | null | undefined): boolean {
+  return typeof status === "number" && (status === 404 || status === 410 || status >= 500);
+}
+
+async function status(url: URL, ip: string): Promise<number | null> {
+  try {
+    return (await once(url, ip, { maxBytes: PEEK_MAX_BYTES, accept: "*/*" })).status;
+  } catch {
+    // Таймаут и обрыв — не 404. Считать их битыми значит жаловаться
+    // владельцу на то, чего посетитель, возможно, не видит.
+    return null;
+  }
+}
+
+/**
+ * Дотянуть к странице то, без чего о вёрстке и битых файлах судить нельзя.
+ *
+ * Стили — чтобы отличить сайт, свёрстанный таблицами, от современного;
+ * первые картинки и ссылки — чтобы найти битые; значок — чтобы заметить
+ * вкладку без него. Всё с того же хоста и в жёстких пределах: это
+ * уточнение, а не обход сайта.
+ *
+ * Никогда не бросает: не удалось дотянуть — отчёт строится по странице,
+ * как строился до этого.
+ */
+export async function enrich(probe: PageProbe): Promise<PageProbe> {
+  // Страница ошибки — не сайт: её картинки, ссылки и значок ничего не
+  // говорят о сайте, а находка «нет значка» на 503-й — ложь владельцу.
+  if (probe.status >= 400) return probe;
+
+  let base: URL;
+  let ip: string;
+  try {
+    base = new URL(probe.finalUrl);
+    ip = await resolveSafely(base);
+  } catch {
+    return probe;
+  }
+
+  const html = probe.html;
+  const cssUrls = stylesheetUrls(html, base);
+  const images = imageUrls(html, base);
+  const links = internalLinks(html, base);
+
+  const [sheets, imageStatuses, linkStatuses, faviconStatus] = await Promise.all([
+    Promise.all(
+      cssUrls.map(async (url) => {
+        try {
+          const r = await once(url, ip, { maxBytes: CSS_MAX_BYTES, accept: "text/css,*/*" });
+          return r.status < 400 ? { body: r.body, truncated: r.truncated } : null;
+        } catch {
+          return null;
+        }
+      }),
+    ),
+    Promise.all(images.map((url) => status(url, ip))),
+    Promise.all(links.map((url) => status(url, ip))),
+    /<link\b[^>]*\brel\s*=\s*["']?[^"'>]*icon/i.test(html)
+      ? Promise.resolve(200)
+      : status(new URL("/favicon.ico", base), ip),
+  ]);
+
+  const fetched = sheets.filter((s): s is { body: string; truncated: boolean } => s !== null);
+  const assets: PageAssets = {
+    css: fetched.map((s) => s.body).join("\n"),
+    cssCount: fetched.length,
+    cssTruncated: fetched.some((s) => s.truncated),
+    favicon: faviconStatus === null ? null : !broken(faviconStatus),
+    checkedImages: imageStatuses.filter((s) => s !== null).length,
+    brokenImages: images.filter((_, i) => broken(imageStatuses[i])).map((u) => u.href),
+    checkedLinks: linkStatuses.filter((s) => s !== null).length,
+    brokenLinks: links.filter((_, i) => broken(linkStatuses[i])).map((u) => u.href),
+  };
+
+  return { ...probe, assets };
 }

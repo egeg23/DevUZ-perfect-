@@ -69,6 +69,28 @@ const LOSS: Record<string, Band> = {
   no_schema: [0.02, 0.05],
   no_description: [0.02, 0.05],
   no_h1: [0.02, 0.05],
+
+  // Вёрстка и следы раннего интернета. Битые файлы и заглушки бьют по
+  // доверию сразу; устаревшая вёрстка — по первому впечатлению, но
+  // человек ещё может дочитать.
+  under_construction: [0.5, 0.8],
+  broken_links: [0.15, 0.35],
+  broken_images: [0.1, 0.25],
+  placeholder_text: [0.1, 0.25],
+  frames: [0.15, 0.3],
+  flash: [0.1, 0.25],
+  ancient_layout: [0.15, 0.3],
+  no_responsive_css: [0.15, 0.3],
+  dated_layout: [0.05, 0.15],
+  autoplay_sound: [0.05, 0.15],
+  popup_onload: [0.03, 0.1],
+  zoom_locked: [0.02, 0.06],
+  stale_copyright: [0.03, 0.08],
+  marquee: [0.02, 0.06],
+  visitor_counter: [0.01, 0.04],
+  ie_only: [0.02, 0.05],
+  ancient_scripts: [0.02, 0.06],
+  no_favicon: [0.01, 0.03],
 };
 
 /** Находка, для которой доли нет, в расчёт не идёт — молча и намеренно. */
