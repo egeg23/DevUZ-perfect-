@@ -1,4 +1,7 @@
 import Link from "next/link";
+
+import { prepareContract } from "@/app/admin/contracts/actions";
+import { contractsForProject } from "@/lib/admin/contract-store";
 import { notFound } from "next/navigation";
 
 import { editProject, moveStage } from "../actions";
@@ -77,6 +80,9 @@ export default async function ProjectPage({
   if (!project) notFound();
 
   const progress = stageProgress(project.stage);
+  const contracts = await contractsForProject(project.id);
+  const draft = contracts.find((c) => c.status === "draft");
+  const approved = contracts.find((c) => c.status === "approved");
   const days = daysOnStage(project.stage_since);
   const isAdmin = staff.role === "admin";
   // См. комментарий в «Финансах»: доля студии — не то же самое, что права
@@ -538,6 +544,134 @@ export default async function ProjectPage({
             </button>
           </div>
         </form>
+      </section>
+
+      {/* Договор — здесь, а не отдельным разделом.
+          Он готовится, когда сделка переходит в стадию «договор», и все
+          данные для него лежат в этой же карточке: заказчик, сумма, сроки.
+          Уводить за этим на другую страницу значит заставить переписывать
+          цифры руками, а переписанная руками сумма однажды разойдётся с
+          проектом. */}
+      <section className="mt-8 rounded-2xl border border-line bg-surface px-6 py-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
+            Договор
+          </h2>
+          <Link href="/admin/contracts" className="text-xs text-muted hover:text-green">
+            Как это устроено →
+          </Link>
+        </div>
+
+        {approved ? (
+          <p className="mt-3 text-sm">
+            <Link href={`/admin/contracts/${approved.id}`} className="text-green hover:underline">
+              № {approved.number} — подтверждён владельцем
+            </Link>
+          </p>
+        ) : draft ? (
+          <p className="mt-3 text-sm">
+            <Link href={`/admin/contracts/${draft.id}`} className="text-green hover:underline">
+              № {draft.number} — черновик, ждёт подтверждения владельца
+            </Link>
+          </p>
+        ) : (
+          <form action={prepareContract} className="mt-4 grid gap-3 sm:grid-cols-2">
+            <input type="hidden" name="project_id" value={project.id} />
+            <label className="text-xs text-muted">
+              Дата договора
+              <input
+                type="date"
+                name="signed_date"
+                required
+                defaultValue={new Date().toISOString().slice(0, 10)}
+                className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+              />
+            </label>
+            <label className="text-xs text-muted">
+              Сумма, $
+              <input
+                type="number"
+                name="amount"
+                min={1}
+                step="0.01"
+                required
+                defaultValue={project.amount_usd ?? undefined}
+                className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+              />
+            </label>
+            <label className="text-xs text-muted sm:col-span-2">
+              Заказчик — полное название
+              <input
+                type="text"
+                name="client_name"
+                required
+                defaultValue={project.client ?? ""}
+                className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+              />
+            </label>
+            <label className="text-xs text-muted sm:col-span-2">
+              Реквизиты заказчика: адрес, идентификатор, почта
+              <input
+                type="text"
+                name="client_details"
+                required
+                placeholder="г. Ташкент, ул. …, ИНН/ПИНФЛ …, почта@…"
+                className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+              />
+            </label>
+            <label className="text-xs text-muted sm:col-span-2">
+              Предмет договора — что именно делаем
+              <input
+                type="text"
+                name="subject"
+                required
+                defaultValue={project.title}
+                className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+              />
+            </label>
+
+            <fieldset className="sm:col-span-2">
+              <legend className="text-xs text-muted">
+                Этапы — доли обязаны давать 100%
+              </legend>
+              {[
+                { title: "Дизайн", percent: 30, days: 10 },
+                { title: "Разработка", percent: 50, days: 20 },
+                { title: "Запуск", percent: 20, days: 5 },
+              ].map((row, i) => (
+                <div key={i} className="mt-2 grid grid-cols-[1fr_5rem_5rem] gap-2">
+                  <input
+                    name="stage_title"
+                    defaultValue={row.title}
+                    className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+                  />
+                  <input
+                    name="stage_percent"
+                    type="number"
+                    step="0.1"
+                    defaultValue={row.percent}
+                    className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+                  />
+                  <input
+                    name="stage_days"
+                    type="number"
+                    defaultValue={row.days}
+                    className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+                  />
+                </div>
+              ))}
+            </fieldset>
+
+            <div className="sm:col-span-2">
+              <button
+                type="submit"
+                className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
+              >
+                Подготовить договор
+              </button>
+            </div>
+          </form>
+        )}
       </section>
 
       {project.lead_id ? (

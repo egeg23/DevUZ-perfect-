@@ -68,6 +68,7 @@ export const SECTIONS: readonly Section[] = [
   { href: "/admin/stats", label: "Статистика", roles: EVERYONE },
   // Финансы — всем, но каждому своё: менеджер видит свои проекты и баланс,
   // руководитель — команду, владелец — всё. Границу держит страница.
+  { href: "/admin/contracts", label: "Договоры", roles: EVERYONE },
   { href: "/admin/finance", label: "Финансы", roles: EVERYONE },
   // Релизы — только у админа: выложить файл значит решить, что именно
   // получит каждый, кто уже заплатил.
