@@ -38,6 +38,8 @@ export type BotCopy = {
    * сказано, что это служебная строка, а не слова клиента.
    */
   resumeMarker: string;
+  /** То же для клиента, который пришёл с витрины, отправив бриф. */
+  briefMarker: string;
 };
 
 const ru: BotCopy = {
@@ -75,6 +77,7 @@ const ru: BotCopy = {
   ].join("\n"),
   reset: "Готово, начинаем с чистого листа. Расскажите, что нужно сделать.",
   resumeMarker: "[перешёл из чата на сайте в Telegram и нажал «Старт»]",
+  briefMarker: "[отправил бриф с витрины и открыл бота по ссылке]",
 };
 
 const en: BotCopy = {
@@ -111,6 +114,7 @@ const en: BotCopy = {
   ].join("\n"),
   reset: "Done, clean slate. Tell me what you need built.",
   resumeMarker: "[moved from the website chat to Telegram and pressed Start]",
+  briefMarker: "[sent a brief from the showcase and opened the bot via the link]",
 };
 
 const uz: BotCopy = {
@@ -147,6 +151,7 @@ const uz: BotCopy = {
   ].join("\n"),
   reset: "Tayyor, toza varaqdan boshlaymiz. Nima kerakligini ayting.",
   resumeMarker: "[saytdagi chatdan Telegramga o‘tdi va «Start» bosdi]",
+  briefMarker: "[vitrinadan brif yubordi va havola orqali botni ochdi]",
 };
 
 const zh: BotCopy = {
@@ -168,6 +173,7 @@ const zh: BotCopy = {
   help: ["<b>DevUz Studio</b>", "", "用普通消息描述您的需求 — 我会问一两个补充问题，然后连同申请编号一起转交客户经理。", "", "/ref — 合作伙伴计划：链接与余额", "/reset — 重新开始对话"].join("\n"),
   reset: "好的，重新开始。请说说需要做什么。",
   resumeMarker: "[从网站聊天转到 Telegram 并按下了「开始」]",
+  briefMarker: "[在展示页提交了需求单并通过链接打开了机器人]",
 };
 
 const copy: Record<Locale, BotCopy> = { ru, en, uz, zh };

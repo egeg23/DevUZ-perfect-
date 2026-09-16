@@ -1,4 +1,5 @@
 import { locales, type Locale } from "@/lib/i18n";
+import type { Brief } from "@/lib/qualify/brief";
 import type { ChatMessage } from "@/lib/qualify/types";
 
 /**
@@ -27,6 +28,12 @@ export type BotSession = {
   fromSite: boolean;
   /** Приветствие-продолжение уже отправлено. */
   resumed: boolean;
+  /**
+   * Клиент пришёл с витрины, где собрал сайт и отправил бриф. Бриф уже у
+   * менеджера; ассистент в боте закрывает первичку по нему, а не знакомится
+   * заново. Номер заявки лежит внутри — квалификация допишется в ту же.
+   */
+  brief?: Brief;
   updatedAt: number;
 };
 
@@ -85,6 +92,7 @@ export function createHandoff(input: {
   qualified: boolean;
   requestNo?: string;
   discount: boolean;
+  brief?: Brief;
 }): string {
   sweep();
 
@@ -106,6 +114,7 @@ export function createHandoff(input: {
       discount: input.discount,
       fromSite: true,
       resumed: false,
+      brief: input.brief,
       updatedAt: Date.now(),
     },
   });

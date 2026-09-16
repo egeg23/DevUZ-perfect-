@@ -468,6 +468,14 @@ async function resumeFromSite(
     return;
   }
 
+  if (session.brief && !session.transcript.length) {
+    // Разговора на сайте не было — был бриф. Приветствие не общее, а по
+    // заказу: ассистент знает состав и сумму и с них начинает. Пометка в
+    // истории — что человек сделал, а не что сказал.
+    await respond(chatId, session, from, copy.briefMarker, { brief: true });
+    return;
+  }
+
   if (!session.transcript.length) {
     await sendMessage(chatId, copy.welcome);
     return;
@@ -515,7 +523,7 @@ async function respond(
   session: BotSession,
   from: TelegramUser | undefined,
   text: string,
-  options: { resuming?: boolean; scoutNote?: string | null } = {},
+  options: { resuming?: boolean; brief?: boolean; scoutNote?: string | null } = {},
 ) {
   const copy = botCopy(session.locale);
   const history = [...session.transcript, { role: "user" as const, content: text }];
@@ -545,7 +553,14 @@ async function respond(
       discount: session.discount,
       // По чьей ссылке пришёл клиент в бота — касание снимается после привязки.
       attribution: { code: await touchFor(chatId), telegramId: from?.id ?? null, chatId },
-      channelNote: [channelNote(from, chatId, options.resuming === true), options.scoutNote]
+      // Бриф с витрины едет в каждую реплику разговора, а не только в
+      // первую: модель без него не знает ни состава заказа, ни того, что
+      // квалификацию надо дописать в ту же заявку.
+      brief: session.brief,
+      channelNote: [
+        channelNote(from, chatId, options.resuming === true, options.brief === true),
+        options.scoutNote,
+      ]
         .filter(Boolean)
         .join("\n\n"),
       // Поток здесь не нужен: Telegram показывает сообщение целиком, а
@@ -586,7 +601,12 @@ async function respond(
   saveSession(chatId, session);
 }
 
-function channelNote(from: TelegramUser | undefined, chatId: number, resuming: boolean): string {
+function channelNote(
+  from: TelegramUser | undefined,
+  chatId: number,
+  resuming: boolean,
+  brief = false,
+): string {
   const contact = handleOf(from, chatId);
   const name = from?.first_name?.trim();
 
@@ -600,6 +620,14 @@ function channelNote(from: TelegramUser | undefined, chatId: number, resuming: b
     "- Пиши обычным текстом. Никакой разметки: звёздочки, решётки и подчёркивания здесь показываются как есть и выглядят как мусор.",
     "- Одно сообщение — одна мысль, три-четыре предложения. Длинную простыню в мессенджере не читают.",
   ];
+
+  if (brief) {
+    lines.push(
+      "",
+      "Клиент только что открыл бота по ссылке с витрины, где отправил бриф (состав заказа — в разделе про бриф ниже). Переписки до этого не было.",
+      "Единственная строка в истории, взятая в квадратные скобки, — служебная пометка о переходе, а не слова клиента. Не отвечай на неё и не делай выводов о языке по ней: язык разговора задан выше.",
+    );
+  }
 
   if (resuming) {
     lines.push(

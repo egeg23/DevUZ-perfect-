@@ -38,6 +38,12 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_SALES_CHAT_ID: ${TELEGRAM_SALES_CHAT_ID}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+
+      # Бриф с витрины: секрет, которым витрина подписывает запрос, чат
+      # владельца для крупных заказов и порог. Пусто — см. .env.example.
+      SHOWCASE_BRIEF_SECRET: ${SHOWCASE_BRIEF_SECRET:-}
+      TELEGRAM_OWNER_CHAT_ID: ${TELEGRAM_OWNER_CHAT_ID:-}
+      BRIEF_OWNER_ONLY_FROM_USD: ${BRIEF_OWNER_ONLY_FROM_USD:-10000}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
 
       # Общий секрет для /api/reminders/sweep — его дёргает таймер systemd

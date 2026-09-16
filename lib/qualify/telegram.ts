@@ -73,10 +73,13 @@ export function formatLeadBrief(
   lead: ScoredLead,
   requestNo?: string,
   cardUrl?: string | null,
+  /** Готовый HTML над брифом: сумма заказа с витрины и кому он адресован. */
+  heading?: string,
 ): string {
   const who = [lead.contact_name, lead.company].filter(Boolean).map(esc).join(" · ");
 
   const parts: string[] = [
+    ...(heading ? [heading, ""] : []),
     `${priorityBadge(lead)}  ·  <b>${lead.grade}</b>  ·  ${lead.score}/100`,
     // Номер заявки клиент уже услышал в чате. Он же в шапке брифа: когда
     // человек напишет «я по заявке DZ-0821-K4M7», менеджер должен найти её
@@ -232,14 +235,21 @@ export async function sendWithButtons(
  *
  * Возвращает false, а не бросает: если Telegram недоступен, посетитель не
  * должен увидеть ошибку — лид уже сохранён в базе, и менеджер его не потеряет.
+ *
+ * `to` переопределяет адресатов: бриф с витрины дороже порога уходит только
+ * владельцу, а не в общий чат (см. lib/qualify/brief.ts). Несколько чатов —
+ * несколько сообщений; доставлено, если дошло хотя бы одно.
  */
 export async function sendLead(
   lead: ScoredLead,
   leadId: string,
   requestNo?: string,
+  options: { to?: Array<string | number>; heading?: string } = {},
 ): Promise<boolean> {
-  const chatId = process.env.TELEGRAM_SALES_CHAT_ID;
-  if (!chatId) return false;
+  const targets = options.to?.length
+    ? options.to.map(String)
+    : [process.env.TELEGRAM_SALES_CHAT_ID].filter((value): value is string => Boolean(value));
+  if (!targets.length) return false;
 
   // "unsaved" приходит, когда лид не записался в базу: ссылка на карточку
   // тогда ведёт в никуда, и честнее её не давать вовсе.
@@ -249,21 +259,26 @@ export async function sendLead(
   // отказов, если каждый отказ тоже звенит.
   const silent = lead.priority === "nurture" || lead.priority === "archive";
 
-  const sent = await call("sendMessage", {
-    chat_id: chatId,
-    text: formatLeadBrief(lead, requestNo, cardUrl),
-    parse_mode: "HTML",
-    disable_notification: silent,
-    link_preview_options: { is_disabled: true },
-    reply_markup: {
-      inline_keyboard: [
-        [
-          { text: "✅ Взять в работу", callback_data: `take:${leadId}` },
-          { text: "🗄 Отклонить", callback_data: `drop:${leadId}` },
+  const text = formatLeadBrief(lead, requestNo, cardUrl, options.heading);
+  let sent = false;
+  for (const chatId of targets) {
+    const ok = await call("sendMessage", {
+      chat_id: chatId,
+      text,
+      parse_mode: "HTML",
+      disable_notification: silent,
+      link_preview_options: { is_disabled: true },
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "✅ Взять в работу", callback_data: `take:${leadId}` },
+            { text: "🗄 Отклонить", callback_data: `drop:${leadId}` },
+          ],
         ],
-      ],
-    },
-  });
+      },
+    });
+    sent = sent || ok;
+  }
 
   // Стенограмма вторым сообщением сюда больше не уходит. Она читается в
   // карточке, где видно, кто её открывал: переписка — это всё, что человек
