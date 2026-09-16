@@ -231,19 +231,29 @@ test("расходы и котёл показываются только вла�
   assert.match(page, /\{ownerMoney \? \(\s*<section/);
 });
 
-test("расходы вносит и удаляет только владелец", () => {
+test("расход вносят оба соучредителя, удаляет только владелец", () => {
+  // Правило поменял владелец: «Мы можем добавлять разные статьи расходов».
+  // Асимметрия при этом осталась, и она не случайна: выдуманный расход
+  // уменьшает долю самого добавившего — соврать себе в плюс нельзя, поэтому
+  // добавление безопасно отдать обоим. Удаление устроено наоборот: им можно
+  // убрать чужую трату из картины, и оно осталось за владельцем.
   const ledger = read("lib/admin/ledger.ts");
 
-  for (const fn of ["addExpense", "removeExpense"]) {
-    const at = ledger.indexOf(`export async function ${fn}(`);
-    assert.ok(at > 0, `${fn} пропала`);
-    const body = ledger.slice(at, at + 600);
-    assert.match(
-      body,
-      /if \(staff\.role !== "admin"\) return fail\("forbidden"\);/,
-      `${fn} не проверяет права`,
-    );
-  }
+  const add = ledger.indexOf("export async function addExpense(");
+  assert.ok(add > 0, "addExpense пропала");
+  assert.match(
+    ledger.slice(add, add + 600),
+    /if \(!keepsExpenses\(staff\.role\)\) return fail\("forbidden"\);/,
+    "addExpense не проверяет права",
+  );
+
+  const drop = ledger.indexOf("export async function removeExpense(");
+  assert.ok(drop > 0, "removeExpense пропала");
+  assert.match(
+    ledger.slice(drop, drop + 600),
+    /if \(staff\.role !== "admin"\) return fail\("forbidden"\);/,
+    "удаление расхода досталось не только владельцу",
+  );
 
   // Удаление читает запись до удаления: иначе в журнал писать уже нечего.
   const at = ledger.indexOf("export async function removeExpense(");
