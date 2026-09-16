@@ -21,6 +21,12 @@ export type BriefAddon = {
   priceUsd: number;
   /** Входит в пакет — за это денег не берём, но менеджеру видеть надо. */
   included: boolean;
+  /** Подписка: цена в месяц, в разовый итог не входит. */
+  monthly?: boolean;
+  /** Цена «от»: точную назовёт менеджер. */
+  from?: boolean;
+  /** По запросу: в цену не входит, клиент только отметил интерес. */
+  onRequest?: boolean;
 };
 
 export type Brief = {
@@ -30,7 +36,12 @@ export type Brief = {
   projectLabel: string;
   tier: { id: string; label: string; priceUsd: number };
   addons: BriefAddon[];
+  /** Разовый итог — по нему решается «только владельцу». */
   totalUsd: number;
+  /** Подписки в месяц, отдельно от разового. */
+  monthlyUsd?: number;
+  /** В наборе есть цена «от» — итог тоже «от». */
+  fromPrice?: boolean;
   /** Страница, с которой отправили, и ссылка с набором — менеджер откроет ровно то, что видел клиент. */
   pageUrl?: string;
   shareUrl?: string;
@@ -117,18 +128,41 @@ export async function ownerChatIds(): Promise<string[]> {
     .map(String);
 }
 
+/** Допники по видам: разовые, подписка, по запросу, бесплатные из пакета. */
+function split(brief: Brief) {
+  const extra = brief.addons.filter((addon) => !addon.included && !addon.onRequest && addon.priceUsd > 0);
+  return {
+    paid: extra.filter((addon) => !addon.monthly),
+    monthly: extra.filter((addon) => addon.monthly),
+    onRequest: brief.addons.filter((addon) => addon.onRequest),
+    free: brief.addons.filter((addon) => addon.included || (addon.priceUsd === 0 && !addon.onRequest)),
+  };
+}
+
+/**
+ * Итог одной строкой: «$11 000», «от $34 900», «от $34 900 + $550/мес».
+ * Одна формула на шапку, резюме, промпт и заготовку менеджера.
+ */
+export function briefTotal(brief: Brief): string {
+  const once = `${brief.fromPrice ? "от " : ""}$${fmt(brief.totalUsd)}`;
+  return brief.monthlyUsd ? `${once} + $${fmt(brief.monthlyUsd)}/мес` : once;
+}
+
 /** Состав заказа одной строкой — для резюме лида и для промпта ассистента. */
 export function briefSummary(brief: Brief): string {
-  const paid = brief.addons.filter((addon) => !addon.included && addon.priceUsd > 0);
-  const free = brief.addons.filter((addon) => addon.included || addon.priceUsd === 0);
+  const { paid, monthly, onRequest, free } = split(brief);
 
   const lines = [
     `${brief.projectLabel}: пакет «${brief.tier.label}» — $${fmt(brief.tier.priceUsd)}.`,
     paid.length
-      ? `Допники: ${paid.map((addon) => `${addon.label} (+$${fmt(addon.priceUsd)})`).join(", ")}.`
+      ? `Допники: ${paid.map((addon) => `${addon.label} (${addon.from ? "от" : "+"}$${fmt(addon.priceUsd)})`).join(", ")}.`
       : "Допников сверх пакета нет.",
+    monthly.length
+      ? `Подписка: ${monthly.map((addon) => `${addon.label} ($${fmt(addon.priceUsd)}/мес)`).join(", ")}.`
+      : "",
+    onRequest.length ? `По запросу: ${onRequest.map((addon) => addon.label).join(", ")}.` : "",
     free.length ? `В пакете: ${free.map((addon) => addon.label).join(", ")}.` : "",
-    `Итого $${fmt(brief.totalUsd)}.`,
+    `Итого ${briefTotal(brief)}.`,
   ];
   return lines.filter(Boolean).join(" ");
 }
@@ -146,8 +180,8 @@ export function briefHeading(
 ): string {
   const title =
     stage === "brief"
-      ? `🧩 <b>БРИФ С ВИТРИНЫ</b> · ${esc(brief.projectLabel)} · <b>$${fmt(brief.totalUsd)}</b>`
-      : `🤖 <b>ПЕРВИЧКА ЗАКРЫТА</b> · ${esc(brief.projectLabel)} · <b>$${fmt(brief.totalUsd)}</b>`;
+      ? `🧩 <b>БРИФ С ВИТРИНЫ</b> · ${esc(brief.projectLabel)} · <b>${briefTotal(brief)}</b>`
+      : `🤖 <b>ПЕРВИЧКА ЗАКРЫТА</b> · ${esc(brief.projectLabel)} · <b>${briefTotal(brief)}</b>`;
 
   const lines = [title];
   if (route.ownerOnly && !route.fallback) {
@@ -159,11 +193,13 @@ export function briefHeading(
     );
   }
 
-  const paid = brief.addons.filter((addon) => !addon.included && addon.priceUsd > 0);
+  const { paid, monthly, onRequest } = split(brief);
   lines.push(
     "",
     `📦 Пакет «${esc(brief.tier.label)}» — $${fmt(brief.tier.priceUsd)}`,
-    ...paid.map((addon) => `➕ ${esc(addon.label)} — +$${fmt(addon.priceUsd)}`),
+    ...paid.map((addon) => `➕ ${esc(addon.label)} — ${addon.from ? "от" : "+"}$${fmt(addon.priceUsd)}`),
+    ...monthly.map((addon) => `🔁 ${esc(addon.label)} — $${fmt(addon.priceUsd)}/мес`),
+    ...onRequest.map((addon) => `❓ ${esc(addon.label)} — по запросу`),
   );
   if (brief.shareUrl) lines.push(`🔗 <a href="${esc(brief.shareUrl)}">Открыть набор на витрине</a>`);
 

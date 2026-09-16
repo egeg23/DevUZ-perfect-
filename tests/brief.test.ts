@@ -40,7 +40,7 @@ process.env.SHOWCASE_BRIEF_SECRET = "shared-secret";
 process.env.NEXT_PUBLIC_SITE_URL = "https://devuz.example";
 delete process.env.BRIEF_OWNER_ONLY_FROM_USD;
 
-const { briefHeading, briefRecipients, briefSummary, ownerOnly, ownerThresholdUsd } =
+const { briefHeading, briefRecipients, briefSummary, briefTotal, ownerOnly, ownerThresholdUsd } =
   await import("@/lib/qualify/brief");
 const { claimHandoff } = await import("@/lib/qualify/handoff");
 const { POST } = await import("@/app/api/brief/route");
@@ -136,6 +136,54 @@ test("шапка и резюме называют состав и сумму", (
   assert.match(summary, /пакет «Люкс» — \$8 900/);
   assert.match(summary, /В пакете: Три языка/);
   assert.match(summary, /Итого \$11 000/);
+});
+
+test("подписка, «от» и «по запросу» не смешиваются с разовой суммой", async () => {
+  const b = {
+    ...brief(34_900),
+    addons: [
+      ...brief(0).addons,
+      { id: "ai-rag", label: "Свои ИИ-агенты на RAG-базе", priceUsd: 26_000, included: false, from: true },
+      { id: "seo-20", label: "SEO-статьи · 20 в месяц", priceUsd: 550, included: false, monthly: true },
+      { id: "social", label: "Соцсети: автопостинг", priceUsd: 0, included: false, onRequest: true },
+    ],
+    monthlyUsd: 550,
+    fromPrice: true,
+  };
+  assert.equal(briefTotal(b), "от $34 900 + $550/мес");
+
+  const heading = briefHeading(b, { ownerOnly: true, fallback: false }, "brief");
+  assert.match(heading, /<b>от \$34 900 \+ \$550\/мес<\/b>/);
+  assert.match(heading, /➕ Свои ИИ-агенты на RAG-базе — от\$26 000/);
+  assert.match(heading, /🔁 SEO-статьи · 20 в месяц — \$550\/мес/);
+  assert.match(heading, /❓ Соцсети: автопостинг — по запросу/);
+
+  const summary = briefSummary(b);
+  assert.match(summary, /Подписка: SEO-статьи · 20 в месяц \(\$550\/мес\)/);
+  assert.match(summary, /По запросу: Соцсети: автопостинг/);
+  assert.doesNotMatch(summary, /Соцсети: автопостинг \(/, "«по запросу» не выглядит как допник с ценой");
+  assert.match(summary, /Итого от \$34 900 \+ \$550\/мес\./);
+
+  // Через маршрут: сумма для порога — разовая, подписка едет отдельным полем до бота.
+  calls.length = 0;
+  const response = await post({ ...b, name: "Азиз", contact: "@aziz" });
+  assert.equal(response.status, 200);
+  const json = (await response.json()) as { ownerOnly: boolean; botUrl: string };
+  assert.equal(json.ownerOnly, true, "«от $26 000» входит в разовую сумму целиком");
+  const text = String(calls.find((call) => call.method === "sendMessage")?.body.text);
+  assert.match(text, /от \$34 900 \+ \$550\/мес/);
+  assert.match(text, /подписка/);
+  assert.match(text, /по запросу, цену назовёт менеджер/);
+  const session = claimHandoff(new URL(json.botUrl).searchParams.get("start") ?? "", 43);
+  assert.equal(session?.brief?.monthlyUsd, 550);
+  assert.equal(session?.brief?.fromPrice, true);
+
+  // Старая витрина без новых полей принимается как раньше.
+  assert.equal((await post({ ...brief(11_000), contact: "@aziz" })).status, 200);
+  // Битая подписка — отказ, как и битая цена.
+  assert.equal((await post({ ...brief(11_000), contact: "@aziz", monthlyUsd: "много" })).status, 422);
+  // Следующие тесты считают вызовы с нуля.
+  calls.length = 0;
 });
 
 test("без секрета или с чужим — отказ ещё до разбора тела", async () => {
