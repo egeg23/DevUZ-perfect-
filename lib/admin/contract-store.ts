@@ -1,15 +1,20 @@
 import { serviceClient } from "@/lib/supabase";
 import type { Staff } from "@/lib/admin/session";
 import {
+  acceptsScan,
   approvesContract,
   contractNumber,
   editable,
   preparesContract,
   problemsBeforeApproval,
+  returnable,
+  sendable,
   type Contract,
   type ContractStatus,
 } from "@/lib/admin/contracts";
 import type { ContractStage } from "@/content/contract";
+import { estimateTotal, parseEstimate, type EstimateItem } from "@/lib/admin/estimate";
+import { sendMessage } from "@/lib/qualify/telegram";
 
 /**
  * Хранение договоров.
@@ -28,7 +33,7 @@ const fail = (why: Exclude<Result, { ok: true }>["why"], problems?: string[]): R
 });
 
 const COLUMNS =
-  "id, created_at, project_id, number, signed_date, client_name, client_details, subject, amount_usd, stages, status, prepared_by, prepared_at, approved_by, approved_at, void_reason";
+  "id, created_at, project_id, number, signed_date, client_name, client_details, subject, amount_usd, stages, status, prepared_by, prepared_at, approved_by, approved_at, void_reason, estimate_path, estimate_name, estimate_items, deadline_text, sent_at, sent_by, notified_at, signed_path, signed_at, signed_by";
 
 function shape(row: Record<string, unknown>): Contract {
   return {
@@ -48,6 +53,16 @@ function shape(row: Record<string, unknown>): Contract {
     approved_by: (row.approved_by as string | null) ?? null,
     approved_at: (row.approved_at as string | null) ?? null,
     void_reason: (row.void_reason as string | null) ?? null,
+    estimate_path: (row.estimate_path as string | null) ?? null,
+    estimate_name: (row.estimate_name as string | null) ?? null,
+    estimate_items: Array.isArray(row.estimate_items) ? (row.estimate_items as EstimateItem[]) : [],
+    deadline_text: (row.deadline_text as string | null) ?? null,
+    sent_at: (row.sent_at as string | null) ?? null,
+    sent_by: (row.sent_by as string | null) ?? null,
+    notified_at: (row.notified_at as string | null) ?? null,
+    signed_path: (row.signed_path as string | null) ?? null,
+    signed_at: (row.signed_at as string | null) ?? null,
+    signed_by: (row.signed_by as string | null) ?? null,
   };
 }
 
@@ -177,9 +192,16 @@ export async function approveContract(id: string, staff: Staff): Promise<Result>
 
   const current = await contractById(id);
   if (!current) return fail("notfound");
-  if (current.status !== "draft") return fail("locked");
+  // Подтверждается то, что прислали на подпись, а не черновик со стола
+  // менеджера: иначе владелец подписывает документ, который никто не
+  // объявлял готовым.
+  if (current.status !== "pending") return fail("locked");
 
-  const problems = problemsBeforeApproval(current);
+  const problems = problemsBeforeApproval({
+    ...current,
+    estimateItems: current.estimate_items,
+    deadlineText: current.deadline_text,
+  });
   if (problems.length > 0) return fail("invalid", problems.map((p) => p.text));
 
   const db = serviceClient();
@@ -191,7 +213,7 @@ export async function approveContract(id: string, staff: Staff): Promise<Result>
     .eq("id", id)
     // Повторное подтверждение отсекается и на уровне запроса: между чтением
     // и записью мог успеть пройти чужой клик.
-    .eq("status", "draft");
+    .eq("status", "pending");
 
   return error ? fail("invalid") : { ok: true, id };
 }
@@ -207,4 +229,233 @@ export async function voidContract(id: string, reason: string, staff: Staff): Pr
     .update({ status: "void", void_reason: reason.trim().slice(0, 500) })
     .eq("id", id);
   return error ? fail("invalid") : { ok: true, id };
+}
+
+/* ── Смета, отправка на подпись, скан ───────────────────────────────────── */
+
+
+const BUCKET = "private";
+
+/** Куда кладём файлы договора. Папка по id: договоров будет много. */
+const filePath = (contractId: string, kind: "estimate" | "signed", name: string) =>
+  `contracts/${contractId}/${kind}-${name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-60)}`;
+
+/**
+ * Прикрепить смету.
+ *
+ * Файл кладётся всегда, строки разбираются когда умеем. Отказ разбора — не
+ * ошибка: подсказка возвращается наверх, менеджер вносит строки руками, а
+ * файл всё равно становится приложением к договору.
+ */
+export async function attachEstimate(
+  id: string,
+  file: { name: string; bytes: ArrayBuffer },
+  staff: Staff,
+): Promise<Result & { hint?: string; items?: EstimateItem[] }> {
+  if (!preparesContract(staff.role)) return fail("forbidden");
+  const current = await contractById(id);
+  if (!current) return fail("notfound");
+  if (!editable(current)) return fail("locked");
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+
+  const path = filePath(id, "estimate", file.name);
+  const up = await db.storage.from(BUCKET).upload(path, file.bytes, { upsert: true });
+  if (up.error) return fail("invalid");
+
+  const text = new TextDecoder("utf-8").decode(file.bytes);
+  const parsed = parseEstimate(text, file.name);
+  const items = parsed.ok ? parsed.items : [];
+
+  const patch: Record<string, unknown> = {
+    estimate_path: path,
+    estimate_name: file.name,
+  };
+  // Сумма договора берётся из сметы: два числа, которые обязаны совпадать,
+  // не должны вводиться дважды.
+  if (parsed.ok) {
+    patch.estimate_items = items;
+    patch.amount_usd = estimateTotal(items);
+  }
+
+  const { error } = await db.from("contracts").update(patch).eq("id", id);
+  if (error) return fail("invalid");
+
+  return parsed.ok
+    ? { ok: true, id, items }
+    : { ok: true, id, hint: parsed.hint };
+}
+
+/** Строки сметы, внесённые руками, когда файл разобрать не удалось. */
+export async function setEstimateItems(
+  id: string,
+  items: EstimateItem[],
+  staff: Staff,
+): Promise<Result> {
+  if (!preparesContract(staff.role)) return fail("forbidden");
+  const current = await contractById(id);
+  if (!current) return fail("notfound");
+  if (!editable(current)) return fail("locked");
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+  const { error } = await db
+    .from("contracts")
+    .update({ estimate_items: items, amount_usd: estimateTotal(items) })
+    .eq("id", id);
+  return error ? fail("invalid") : { ok: true, id };
+}
+
+export async function setDeadline(id: string, text: string, staff: Staff): Promise<Result> {
+  if (!preparesContract(staff.role)) return fail("forbidden");
+  const db = serviceClient();
+  if (!db) return fail("offline");
+  const { error } = await db
+    .from("contracts")
+    .update({ deadline_text: text.trim().slice(0, 300) })
+    .eq("id", id)
+    .eq("status", "draft");
+  return error ? fail("invalid") : { ok: true, id };
+}
+
+/** Личный чат владельца. Берётся из базы, а не из переменной окружения. */
+async function ownerChatId(): Promise<number | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data } = await db
+    .from("staff")
+    .select("telegram_user_id")
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  const id = Number(data?.telegram_user_id);
+  return Number.isFinite(id) && id !== 0 ? id : null;
+}
+
+/**
+ * Отправить на подпись.
+ *
+ * Владелец: «После нажатия кнопки „отправить на подпись" мне уже должен
+ * придти полный вариант договора со сметой и сроками, уведомление в
+ * телеграмм от бота обязательно!»
+ *
+ * Статус меняется ДО отправки уведомления, и порядок здесь важен. Если
+ * сначала слать, а потом писать в базу, то упавшая запись оставит владельца
+ * с уведомлением на договор, который остался черновиком и продолжает
+ * меняться под ним. Обратный порядок в худшем случае даёт договор,
+ * ожидающий подписи, без уведомления — это видно в панели и чинится
+ * повторной отправкой.
+ */
+export async function sendForSignature(
+  id: string,
+  siteUrl: string,
+  staff: Staff,
+): Promise<Result & { notified?: boolean }> {
+  if (!preparesContract(staff.role)) return fail("forbidden");
+
+  const current = await contractById(id);
+  if (!current) return fail("notfound");
+  if (!sendable({ ...current, estimateItems: current.estimate_items, deadlineText: current.deadline_text })) {
+    const problems = problemsBeforeApproval({
+      ...current,
+      estimateItems: current.estimate_items,
+      deadlineText: current.deadline_text,
+    });
+    return fail(problems.length ? "invalid" : "locked", problems.map((p) => p.text));
+  }
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+
+  const { error } = await db
+    .from("contracts")
+    .update({ status: "pending", sent_at: new Date().toISOString(), sent_by: staff.id })
+    .eq("id", id)
+    .eq("status", "draft");
+  if (error) return fail("invalid");
+
+  const chat = await ownerChatId();
+  if (!chat) return { ok: true, id, notified: false };
+
+  const total = estimateTotal(current.estimate_items);
+  const lines = [
+    `Договор № ${current.number} — на подпись`,
+    ``,
+    `Заказчик: ${current.client_name}`,
+    `Предмет: ${current.subject}`,
+    `Сумма: $${total.toLocaleString("ru-RU")}`,
+    `Срок: ${current.deadline_text ?? "не указан"}`,
+    `Смета: ${current.estimate_items.length} позиций${current.estimate_name ? ` (${current.estimate_name})` : ""}`,
+    ``,
+    `Подготовил: ${staff.display_name}`,
+    `${siteUrl}/admin/contracts/${id}`,
+  ];
+
+  const sent = await sendMessage(chat, lines.join("\n"));
+  if (sent) await db.from("contracts").update({ notified_at: new Date().toISOString() }).eq("id", id);
+  return { ok: true, id, notified: sent };
+}
+
+/** Вернуть на доработку. Нормальная часть работы, а не ошибка. */
+export async function returnForRevision(id: string, staff: Staff): Promise<Result> {
+  if (!approvesContract(staff.role)) return fail("forbidden");
+  const current = await contractById(id);
+  if (!current) return fail("notfound");
+  if (!returnable(current)) return fail("locked");
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+  const { error } = await db
+    .from("contracts")
+    .update({ status: "draft" })
+    .eq("id", id)
+    .eq("status", "pending");
+  return error ? fail("invalid") : { ok: true, id };
+}
+
+/**
+ * Скан с подписями обеих сторон.
+ *
+ * Владелец: «После подписания необходимо загрузить менеджеру договор
+ * обратно, уже с подписями клиента и моей. Договор останется у нас в базе.»
+ */
+export async function attachSignedScan(
+  id: string,
+  file: { name: string; bytes: ArrayBuffer },
+  staff: Staff,
+): Promise<Result> {
+  if (!preparesContract(staff.role)) return fail("forbidden");
+  const current = await contractById(id);
+  if (!current) return fail("notfound");
+  if (!acceptsScan(current)) return fail("locked");
+
+  const db = serviceClient();
+  if (!db) return fail("offline");
+
+  const path = filePath(id, "signed", file.name);
+  const up = await db.storage.from(BUCKET).upload(path, file.bytes, { upsert: true });
+  if (up.error) return fail("invalid");
+
+  const { error } = await db
+    .from("contracts")
+    .update({
+      status: "signed",
+      signed_path: path,
+      signed_at: new Date().toISOString(),
+      signed_by: staff.id,
+    })
+    .eq("id", id)
+    .eq("status", "approved");
+  return error ? fail("invalid") : { ok: true, id };
+}
+
+/** Байты приложенного файла — для скачивания через защищённый маршрут. */
+export async function contractFile(path: string): Promise<ArrayBuffer | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data, error } = await db.storage.from(BUCKET).download(path);
+  if (error || !data) return null;
+  return await data.arrayBuffer();
 }
