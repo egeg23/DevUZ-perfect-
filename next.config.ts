@@ -8,6 +8,17 @@ const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   images: { formats: ["image/avif", "image/webp"] },
+
+  experimental: {
+    serverActions: {
+      // Скан договора с подписями — это фотографии страниц, до двадцати
+      // мегабайт. По умолчанию server action отвергает тело больше мегабайта,
+      // то есть лимиты в коде (2 МБ на подпись, 20 на скан) были недостижимы:
+      // отказ приходил раньше и не от них. Запас сверх двадцати — на границы
+      // и заголовки multipart, они добавляют к телу свои килобайты.
+      bodySizeLimit: "22mb",
+    },
+  },
   async rewrites() {
     const key = process.env.INDEXNOW_KEY;
     // IndexNow требует, чтобы ключ отдавался по адресу /<ключ>.txt в корне.

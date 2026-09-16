@@ -19,6 +19,7 @@ import {
   setDeadline,
 } from "@/lib/admin/contract-store";
 import { saveSignature } from "@/lib/admin/signature";
+import { MAX_ESTIMATE_BYTES, MAX_SIGNED_SCAN_BYTES } from "@/lib/admin/upload-limits";
 import { siteUrl } from "@/lib/seo";
 
 /**
@@ -142,10 +143,9 @@ export async function uploadSignature(formData: FormData) {
 async function fileFrom(formData: FormData, field: string) {
   const file = formData.get(field);
   if (!(file instanceof File) || file.size === 0) return null;
-  // Два мегабайта на смету и двадцать на скан: скан это фотографии страниц,
-  // и они тяжелее. Больше — почти всегда снято без сжатия, и такое проще
-  // переснять, чем хранить.
-  const limit = field === "signed" ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
+  // Скан это фотографии страниц, и они тяжелее сметы. Больше — почти всегда
+  // снято без сжатия, и такое проще переснять, чем хранить.
+  const limit = field === "signed" ? MAX_SIGNED_SCAN_BYTES : MAX_ESTIMATE_BYTES;
   if (file.size > limit) return null;
   return { name: file.name, bytes: await file.arrayBuffer() };
 }
