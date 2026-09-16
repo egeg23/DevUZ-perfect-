@@ -1,5 +1,6 @@
 import { record } from "@/lib/admin/audit";
 import { DEFAULT_TAX_PERCENT, isDealKind, type DealKind } from "@/lib/admin/finance";
+import { parseQuote, type QuoteInput } from "@/lib/admin/quote";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
 
@@ -64,10 +65,12 @@ export type Project = {
   partner_id: string | null;
   partner_percent: number | null;
   partner_void_reason: string | null;
+  /** Смета менеджера: категория, допы, обещанный срок. Вилка считается из неё. */
+  quote: QuoteInput | null;
 };
 
 const COLUMNS =
-  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, staff!projects_owner_staff_id_fkey(display_name)";
+  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, quote, staff!projects_owner_staff_id_fkey(display_name)";
 
 function shape(row: Record<string, unknown>): Project {
   // Связанная запись приходит объектом или массивом — PostgREST выводит
@@ -99,6 +102,7 @@ function shape(row: Record<string, unknown>): Project {
     partner_id: (row.partner_id as string | null) ?? null,
     partner_percent: (row.partner_percent as number | null) ?? null,
     partner_void_reason: (row.partner_void_reason as string | null) ?? null,
+    quote: parseQuote(row.quote),
   };
 }
 
@@ -325,4 +329,38 @@ export async function projectsOwnedBy(scope: "all" | readonly string[]): Promise
     return [];
   }
   return (data ?? []).map((row) => shape(row as Record<string, unknown>));
+}
+
+/**
+ * Смета в карточке проекта. Правит тот, кто ведёт проект, и владелец;
+ * руководитель чужое видит, но не правит — как и деньги.
+ */
+export async function setProjectQuote(
+  projectId: string,
+  quote: QuoteInput | null,
+  staff: Staff,
+  ip: string,
+): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+
+  const { data: project } = await db
+    .from("projects")
+    .select("id, owner_staff_id, quote")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (!project) return false;
+  if (staff.role !== "admin" && project.owner_staff_id !== staff.id) return false;
+
+  const { error } = await db.from("projects").update({ quote }).eq("id", projectId);
+  if (error) return false;
+
+  await record("project.quote_set", {
+    actorStaffId: staff.id,
+    targetType: "project",
+    targetId: projectId,
+    ip,
+    meta: { from: project.quote ?? null, to: quote },
+  });
+  return true;
 }

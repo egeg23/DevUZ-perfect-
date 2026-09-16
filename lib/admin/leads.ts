@@ -1,3 +1,4 @@
+import type { Brief } from "@/lib/qualify/brief";
 import { seesEveryone, type Role } from "@/lib/admin/roles";
 import { serviceClient } from "@/lib/supabase";
 
@@ -64,6 +65,7 @@ export const DETAIL_COLUMNS = [
   "auto_reminder",
   "contact_revealed_at",
   "contact_revealed_by",
+  "brief",
 ].join(", ");
 
 export type LeadRow = {
@@ -105,6 +107,8 @@ export type LeadDetail = LeadRow & {
   auto_reminder: boolean;
   contact_revealed_at: string | null;
   contact_revealed_by: string | null;
+  /** Бриф с витрины структурой — есть только у лидов с витрины. */
+  brief: Brief | null;
 };
 
 export const PRIORITIES = ["hot", "warm", "nurture", "archive"] as const;

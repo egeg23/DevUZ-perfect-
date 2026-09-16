@@ -13,6 +13,7 @@ import {
   take,
   toggleAutoReminder,
 } from "./actions";
+import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
 import { VOID_TITLE, type VoidReason } from "@/lib/partners/rules";
 import { partnerById } from "@/lib/partners/store";
@@ -25,6 +26,7 @@ import {
 } from "@/components/admin/lead-table";
 import { record } from "@/lib/admin/audit";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
+import { quoteForLead } from "@/lib/admin/quote";
 import { STATUSES, leadById } from "@/lib/admin/leads";
 import { messagesFor } from "@/lib/admin/messages";
 import {
@@ -115,6 +117,8 @@ export default async function LeadPage({
 
   const lead = await leadById(id);
   if (!lead) notFound();
+
+  const quote = quoteForLead(lead);
 
   // Кто привёл: менеджеру важно знать про обещанный партнёром бонус и про
   // то, что клиент партнёрский, — на сумму и на тон разговора это влияет.
@@ -604,6 +608,15 @@ export default async function LeadPage({
               </div>
             ))}
           </dl>
+        </section>
+      ) : null}
+
+      {/* Смета считается из брифа сразу, без участия менеджера: новый
+          сотрудник видит порог и потолок раньше, чем поднимет трубку. */}
+      {quote ? (
+        <section className="mt-10 max-w-3xl">
+          <h2 className="text-xs uppercase tracking-wider text-faint">Смета</h2>
+          <QuoteCard quote={quote} />
         </section>
       ) : null}
 
