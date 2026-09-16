@@ -252,3 +252,33 @@ test("хранилище договоров проверяет права сам
   // Подтверждённый договор не правится.
   assert.match(store, /if \(!editable\(current\)\) return fail\("locked"\)/);
 });
+
+/* ── Фирменный бланк ────────────────────────────────────────────────────── */
+
+test("документы студии идут на одном бланке", () => {
+  // Два разных бланка у одной студии читаются как два разных отправителя,
+  // и первым это замечает бухгалтер заказчика.
+  const sheet = read("components/docs/letterhead.tsx");
+  assert.match(sheet, /LogoMark/, "нет знака студии");
+  assert.match(sheet, /DevUz Studio/);
+  assert.match(sheet, /legal\.pinfl/, "нет ПИНФЛ в подвале");
+  assert.match(sheet, /bank\.account/, "нет расчётного счёта");
+
+  const contract = read("app/admin/contracts/[id]/page.tsx");
+  assert.match(contract, /<Letterhead/, "договор не на бланке");
+});
+
+test("бланк напечатается на белом, а не чёрным прямоугольником", () => {
+  // На сайте тёмная тема. Документ, унаследовавший её, уходит в принтер
+  // залитым чёрным — и это обнаруживают возле принтера, а не в коде.
+  const sheet = read("components/docs/letterhead.tsx");
+  assert.match(sheet, /bg-white/);
+  assert.match(sheet, /text-black/);
+  assert.match(sheet, /max-w-\[210mm\]/, "ширина не под A4");
+});
+
+test("бланк без банковских реквизитов говорит об этом, а не молчит", () => {
+  // Документ без счёта выглядит законченным, а оплатить по нему нельзя.
+  const sheet = read("components/docs/letterhead.tsx");
+  assert.match(sheet, /Банковские реквизиты не заданы/);
+});
