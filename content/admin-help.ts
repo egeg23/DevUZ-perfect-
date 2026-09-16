@@ -114,6 +114,16 @@ const ru: HelpCopy = {
       what: "Сколько обращений пришло, сколько выиграли и потеряли. Менеджер видит свои цифры, руководитель — свои и своей команды.",
       how: ["Смотрите раз в неделю: по какой услуге приходят чаще и где теряете."],
     },
+    "/admin/contracts": {
+      what: "Договор от нашего ИП в сторону заказчика: подготовка, подтверждение владельцем и его подпись.",
+      how: [
+        "Договор готовится в карточке проекта, когда сделка переходит в стадию «договор».",
+        "Подготовить и проверить может любой из команды. Подтвердить — только владелец: подтверждение и есть момент, когда под документом появляется его подпись.",
+        "У черновика подписи нет в документе физически, а не спрятана стилями. Распечатать черновик и выдать за подписанный не получится.",
+        "Подтверждённый договор не правится. Нужна правка — готовится новый.",
+        "Подпись владелец загружает один раз на этой странице: PNG с прозрачным фоном.",
+      ],
+    },
     "/admin/finance": {
       what: "Ваши деньги: сколько начислено, сколько ещё ждёт оплаты клиентом и сколько уже выплачено.",
       how: [
@@ -250,6 +260,16 @@ const uz: HelpCopy = {
     "/admin/stats": {
       what: "Qancha murojaat kelgani, qanchasini yutgan va yo‘qotganingiz. Menejer o‘z raqamlarini, rahbar o‘zi va jamoasining raqamlarini ko‘radi.",
       how: ["Haftada bir marta qarang: qaysi xizmat bo‘yicha ko‘proq kelishadi va qayerda yo‘qotyapsiz."],
+    },
+    "/admin/contracts": {
+      what: "Bizning YaTT nomidan buyurtmachi tomonga shartnoma: tayyorlash, ega tomonidan tasdiqlash va uning imzosi.",
+      how: [
+        "Shartnoma loyiha kartochkasida, bitim «shartnoma» bosqichiga o‘tganda tayyorlanadi.",
+        "Tayyorlash va tekshirishni jamoadagi har kim qila oladi. Tasdiqlashni — faqat ega: tasdiqlash aynan hujjat ostida uning imzosi paydo bo‘ladigan payt.",
+        "Qoralamada imzo hujjatda jismonan yo‘q, uslublar bilan yashirilgan emas. Qoralamani chop etib, imzolangan deb ko‘rsatib bo‘lmaydi.",
+        "Tasdiqlangan shartnoma tahrirlanmaydi. Tuzatish kerak bo‘lsa — yangisi tayyorlanadi.",
+        "Imzoni ega shu sahifada bir marta yuklaydi: shaffof fonli PNG.",
+      ],
     },
     "/admin/finance": {
       what: "Sizning pulingiz: qancha hisoblangani, qanchasi hali mijoz to‘lovini kutayotgani va qanchasi to‘lab bo‘lingani.",

@@ -5,6 +5,8 @@ import { company } from "@/content/company";
 import { contractClauses } from "@/content/contract";
 import { signatureVisible, toContractInput } from "@/lib/admin/contracts";
 import { contractById } from "@/lib/admin/contract-store";
+import { approvesContract } from "@/lib/admin/contracts";
+import { cancelContract, confirmContract } from "@/app/admin/contracts/actions";
 import { requireStaff } from "@/lib/admin/guard";
 import { signatureExists } from "@/lib/admin/signature";
 
@@ -25,10 +27,12 @@ export const dynamic = "force-dynamic";
  */
 export default async function ContractPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string; detail?: string }>;
 }) {
-  await requireStaff();
+  const staff = await requireStaff();
   const { id } = await params;
   const contract = await contractById(id);
   if (!contract) notFound();
@@ -37,6 +41,8 @@ export default async function ContractPage({
   const signed = signatureVisible(contract);
   const hasSignatureFile = signed ? await signatureExists() : false;
   const legal = company.legal;
+  const { error, detail } = await searchParams;
+  const canApprove = approvesContract(staff.role);
 
   return (
     <div className="mx-auto max-w-[210mm] bg-white px-10 py-10 text-[11pt] leading-relaxed text-black print:px-0 print:py-0">
@@ -52,7 +58,51 @@ export default async function ContractPage({
             Договор подтверждён, но файл подписи не загружен — подпись не появится
           </span>
         ) : null}
+
+        {/* Подтверждение — единственное действие владельца на этой странице,
+            и оно необратимо: подтверждённый договор не правится. Поэтому
+            кнопка стоит рядом с документом, а не в списке: нажимают её,
+            прочитав текст, а не выбрав строку в таблице. */}
+        {canApprove && contract.status === "draft" ? (
+          <form action={confirmContract}>
+            <input type="hidden" name="id" value={contract.id} />
+            <button
+              type="submit"
+              className="rounded-xl bg-green px-4 py-2 text-sm font-semibold text-ink transition hover:bg-white"
+            >
+              Подтвердить и подписать
+            </button>
+          </form>
+        ) : null}
+
+        {canApprove && contract.status === "approved" ? (
+          <form action={cancelContract} className="flex items-center gap-2">
+            <input type="hidden" name="id" value={contract.id} />
+            <input
+              type="text"
+              name="reason"
+              required
+              placeholder="Причина отмены"
+              className="rounded-lg border border-black/20 px-2 py-1 text-sm"
+            />
+            <button type="submit" className="text-sm text-red-700 hover:underline">
+              Отменить
+            </button>
+          </form>
+        ) : null}
       </div>
+
+      {error ? (
+        <p className="no-print mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900">
+          {error === "invalid" && detail
+            ? `Не хватает: ${decodeURIComponent(detail)}`
+            : error === "forbidden"
+              ? "Подтвердить договор может только владелец."
+              : error === "locked"
+                ? "Договор уже подтверждён или отменён."
+                : "Не получилось. Попробуйте ещё раз."}
+        </p>
+      ) : null}
 
       <h1 className="text-center text-[14pt] font-bold">
         Договор № {contract.number}
