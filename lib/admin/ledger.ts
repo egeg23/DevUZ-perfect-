@@ -11,6 +11,7 @@ import {
 import { projectsOwnedBy, type Project } from "@/lib/admin/projects";
 import { notifyPartner, partnerById, partnersById, summarize, type Partner } from "@/lib/partners/store";
 import { keepsExpenses, type Role } from "@/lib/admin/roles";
+import { belowFloor, parseQuote, quoteFor } from "@/lib/admin/quote";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
 
@@ -245,7 +246,7 @@ export async function loadLedger(scope: "all" | readonly string[]): Promise<Ledg
 
 export type MoneyResult =
   | { ok: true }
-  | { ok: false; reason: "offline" | "forbidden" | "gone" | "invalid" | "failed" };
+  | { ok: false; reason: "offline" | "forbidden" | "gone" | "invalid" | "failed" | "below_floor" };
 
 const OK: MoneyResult = { ok: true };
 const fail = (reason: Exclude<MoneyResult, { ok: true }>["reason"]): MoneyResult => ({ ok: false, reason });
@@ -283,7 +284,7 @@ export async function setProjectMoney(
 
   const { data: project } = await db
     .from("projects")
-    .select("id, owner_staff_id, stage, kind, amount_usd, tax_percent, dev_cost_usd")
+    .select("id, owner_staff_id, stage, kind, amount_usd, tax_percent, dev_cost_usd, quote")
     .eq("id", projectId)
     .maybeSingle();
   if (!project) return fail("gone");
@@ -294,6 +295,14 @@ export async function setProjectMoney(
     stage: project.stage as string,
   };
   if (!canEditMoney(staff, view, paid)) return fail("forbidden");
+
+  // Ниже порога сметы менеджер сумму не ставит. Владелец — может: скидка
+  // ниже порога — его решение и его деньги, но никак не менеджера.
+  if (staff.role !== "admin" && fields.amountUsd !== undefined) {
+    const stored = parseQuote(project.quote);
+    const quote = stored ? quoteFor(stored) : null;
+    if (belowFloor(fields.amountUsd, quote)) return fail("below_floor");
+  }
 
   const patch: Record<string, unknown> = {};
   if (fields.kind !== undefined) patch.kind = fields.kind;

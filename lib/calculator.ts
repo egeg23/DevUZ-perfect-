@@ -13,6 +13,12 @@ import { t, type Locale } from "@/lib/i18n";
 export type Selection = Record<string, string | number | boolean>;
 
 export type Estimate = {
+  /**
+   * Сумма до округления и до вилки. Наружу идут округлённые lowUzs/highUzs
+   * — на сайте они честнее выглядят, — но порог менеджера считается от
+   * этой: округление вниз до полумиллиона уводило бы его ниже базы.
+   */
+  exactUzs: number;
   lowUzs: number;
   highUzs: number;
   weeksLow: number;
@@ -122,6 +128,7 @@ export function estimate(
   const total = (category.baseUzs + adds) * mul;
 
   return {
+    exactUzs: Math.round(total),
     lowUzs: roundUzs(total),
     highUzs: roundUzs(total * RANGE_FACTOR),
     weeksLow: Math.max(1, Math.round(weeks)),

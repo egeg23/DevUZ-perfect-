@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requestIp, requireAdmin, requireStaff } from "@/lib/admin/guard";
-import { createProject, setStage, updateProject } from "@/lib/admin/projects";
+import { categoryBySlug } from "@/content/calculator";
+import { createProject, setProjectQuote, setStage, updateProject } from "@/lib/admin/projects";
+import { selectionFromForm, weeksFromForm } from "@/lib/admin/quote";
 
 function numberOrNull(value: FormDataEntryValue | null): number | null {
   const text = String(value ?? "").trim();
@@ -65,4 +67,39 @@ export async function editProject(formData: FormData) {
 
   revalidatePath(`/admin/projects/${projectId}`);
   redirect(`/admin/projects/${projectId}?r=${ok ? "ok" : "failed"}`);
+}
+
+/**
+ * Смета в карточке проекта: категория, допы, обещанный срок.
+ *
+ * Допы читаются по опциям выбранной категории. При смене категории поля
+ * прежней в форме остаются, но разбираются уже по новой — совпадающие
+ * (страницы, SEO, сроки) переезжают, остальные берутся по умолчанию.
+ */
+export async function saveQuote(formData: FormData) {
+  const staff = await requireStaff();
+  const projectId = String(formData.get("project") ?? "");
+  const ip = await requestIp();
+
+  if (formData.get("clear") === "1") {
+    const ok = await setProjectQuote(projectId, null, staff, ip);
+    revalidatePath(`/admin/projects/${projectId}`);
+    redirect(`/admin/projects/${projectId}?r=${ok ? "ok" : "forbidden"}`);
+  }
+
+  const category = String(formData.get("category") ?? "");
+  if (!categoryBySlug(category)) redirect(`/admin/projects/${projectId}?r=invalid`);
+
+  const get = (name: string) => {
+    const value = formData.get(name);
+    return value === null ? null : String(value);
+  };
+  const ok = await setProjectQuote(
+    projectId,
+    { category, selection: selectionFromForm(category, get), weeks: weeksFromForm(get("weeks")) },
+    staff,
+    ip,
+  );
+  revalidatePath(`/admin/projects/${projectId}`);
+  redirect(`/admin/projects/${projectId}?r=${ok ? "ok" : "forbidden"}`);
 }

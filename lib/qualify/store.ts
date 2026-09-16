@@ -1,3 +1,4 @@
+import type { Brief } from "@/lib/qualify/brief";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ChatMessage, ScoredLead } from "@/lib/qualify/types";
@@ -27,7 +28,7 @@ export async function saveLead(
    * менеджер и ищет разговор. Скидка здесь же, потому что это факт про
    * деньги: по ней считается, во сколько обходится гарантия двадцати секунд.
    */
-  meta: { requestNo?: string; discount?: boolean } = {},
+  meta: { requestNo?: string; discount?: boolean; brief?: Brief } = {},
 ): Promise<string | null> {
   const db = client();
   if (!db) return null;
@@ -38,6 +39,8 @@ export async function saveLead(
       source,
       request_no: meta.requestNo ?? null,
       discount_granted: meta.discount ?? false,
+      // Бриф с витрины — как есть: по нему считается смета менеджеру.
+      brief: meta.brief ?? null,
       locale: lead.locale,
       contact_name: lead.contact_name || null,
       company: lead.company || null,

@@ -4,8 +4,9 @@ import { prepareContract } from "@/app/admin/contracts/actions";
 import { contractsForProject } from "@/lib/admin/contract-store";
 import { notFound } from "next/navigation";
 
-import { editProject, moveStage } from "../actions";
+import { editProject, moveStage, saveQuote } from "../actions";
 import { confirmPayment, deletePayment, saveMoney, savePartner, saveShare } from "@/app/admin/finance/actions";
+import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import {
@@ -26,7 +27,10 @@ import {
   taxOf,
   visibleStaff,
 } from "@/lib/admin/finance";
+import { optionsFor } from "@/content/calculator";
 import { requireStaff } from "@/lib/admin/guard";
+import { CATEGORY_CHOICES, quoteFor } from "@/lib/admin/quote";
+import { t } from "@/lib/i18n";
 import { seesOwnerMoney } from "@/lib/admin/roles";
 import { loadPeople, paymentsFor, sharesFor, sharesOf } from "@/lib/admin/ledger";
 import {
@@ -54,6 +58,10 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
     tone: "warn",
   },
   invalid: { text: "Сумма, процент или дата не разобрались: целые доллары, целые проценты, дата как в календаре.", tone: "warn" },
+  below_floor: {
+    text: "Сумма ниже порога сметы. Порог — это то, под чем проект не окупается; опуститься ниже может только владелец.",
+    tone: "warn",
+  },
   gone: { text: "Такой записи уже нет.", tone: "warn" },
   failed: { text: "Не получилось.", tone: "warn" },
   offline: { text: "База недоступна.", tone: "warn" },
@@ -112,6 +120,10 @@ export default async function ProjectPage({
   const scope = visibleStaff(staff, team);
   const shownLines = lines.filter((a) => isAdmin || (scope !== "all" && scope.includes(a.staff_id)));
   const editsMoney = canEditMoney(staff, project, paid);
+  const quoteInput = project.quote;
+  const quote = quoteInput ? quoteFor(quoteInput) : null;
+  // Как и деньги: свой проект и владелец. Руководитель смотрит, не правит.
+  const editsQuote = staff.role === "admin" || project.owner_staff_id === staff.id;
   const nameOf = (staffId: string | null) => people.find((p) => p.id === staffId)?.display_name ?? "—";
 
   return (
@@ -195,6 +207,119 @@ export default async function ProjectPage({
             Стадию двигает админ. Она — обещание клиенту, а не отметка о
             самочувствии исполнителя.
           </p>
+        )}
+      </section>
+
+      {/* ── Смета ───────────────────────────────────────────────────── */}
+      {/* Стоит перед деньгами намеренно: сумму по договору ставят после
+          того, как посчитали порог, а не до. */}
+      <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
+        <h2 className="text-xs uppercase tracking-wider text-faint">Смета</h2>
+
+        {quote ? (
+          <QuoteCard quote={quote} />
+        ) : (
+          <p className="mt-2 text-sm text-muted">
+            Сметы пока нет. Выберите категорию и сохраните — порог, потолок и срок посчитаются сами.
+          </p>
+        )}
+
+        {editsQuote ? (
+          <form action={saveQuote} className="mt-4 grid gap-3 sm:grid-cols-3">
+            <input type="hidden" name="project" value={project.id} />
+
+            <label className="block sm:col-span-2">
+              <span className="text-xs text-faint">Категория</span>
+              <select name="category" defaultValue={quoteInput?.category ?? ""} className={`${FIELD} mt-1`}>
+                <option value="" disabled>
+                  — выберите —
+                </option>
+                {CATEGORY_CHOICES.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+              {quoteInput ? null : (
+                <span className="mt-1 block text-xs text-faint">
+                  После сохранения появятся допы этой категории.
+                </span>
+              )}
+            </label>
+
+            <label className="block">
+              <span className="text-xs text-faint">Обещанный срок, недель</span>
+              <input
+                name="weeks"
+                inputMode="numeric"
+                defaultValue={quoteInput?.weeks ?? ""}
+                placeholder={quote?.weeksLow ? `расчётный ${quote.weeksLow}–${quote.weeksHigh}` : ""}
+                className={`${FIELD} mt-1`}
+              />
+            </label>
+
+            {quoteInput
+              ? optionsFor(quoteInput.category).map((option) => {
+                  const value = quoteInput.selection[option.id];
+                  const label = t(option.label, "ru");
+                  if (option.kind === "toggle") {
+                    return (
+                      <label key={option.id} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" name={`opt_${option.id}`} defaultChecked={value === true} />
+                        {label}
+                      </label>
+                    );
+                  }
+                  if (option.kind === "choice") {
+                    return (
+                      <label key={option.id} className="block">
+                        <span className="text-xs text-faint">{label}</span>
+                        <select
+                          name={`opt_${option.id}`}
+                          defaultValue={typeof value === "string" ? value : option.choices[0].id}
+                          className={`${FIELD} mt-1`}
+                        >
+                          {option.choices.map((choice) => (
+                            <option key={choice.id} value={choice.id}>
+                              {t(choice.label, "ru")}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    );
+                  }
+                  return (
+                    <label key={option.id} className="block">
+                      <span className="text-xs text-faint">
+                        {label} — {t(option.unitLabel, "ru")}, до {option.max}
+                      </span>
+                      <input
+                        name={`opt_${option.id}`}
+                        inputMode="numeric"
+                        defaultValue={typeof value === "number" ? value : 0}
+                        className={`${FIELD} mt-1`}
+                      />
+                    </label>
+                  );
+                })
+              : null}
+
+            <div className="flex items-center gap-3 sm:col-span-3">
+              <button
+                type="submit"
+                className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
+              >
+                Сохранить смету
+              </button>
+              {quoteInput ? (
+                <button type="submit" name="clear" value="1" className="text-xs text-faint hover:text-gold">
+                  убрать смету
+                </button>
+              ) : null}
+            </div>
+          </form>
+        ) : (
+          <p className="mt-3 text-xs text-faint">Смету правит тот, кто ведёт проект, и владелец.</p>
         )}
       </section>
 

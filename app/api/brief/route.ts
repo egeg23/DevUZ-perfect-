@@ -217,7 +217,7 @@ export async function POST(request: Request) {
 
   let leadId: string | null = null;
   try {
-    leadId = await saveLead(lead, [], "showcase", { requestNo });
+    leadId = await saveLead(lead, [], "showcase", { requestNo, brief });
   } catch (error) {
     console.error("saveLead brief", error);
   }

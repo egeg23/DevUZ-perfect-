@@ -1,3 +1,4 @@
+import { belowFloor, parseQuote, quoteFor } from "@/lib/admin/quote";
 import { serviceClient } from "@/lib/supabase";
 import type { Staff } from "@/lib/admin/session";
 import {
@@ -119,6 +120,22 @@ export async function createContract(
   if (!preparesContract(staff.role)) return fail("forbidden");
   const db = serviceClient();
   if (!db) return fail("offline");
+
+  // Договор на сумму ниже порога сметы менеджер не готовит: порог — это
+  // то, под чем проект не окупается, и договор — последнее место, где это
+  // ещё можно остановить. Владельцу можно: его решение.
+  if (staff.role !== "admin") {
+    const { data: project } = await db
+      .from("projects")
+      .select("quote")
+      .eq("id", fields.projectId)
+      .maybeSingle();
+    const stored = parseQuote(project?.quote);
+    const quote = stored ? quoteFor(stored) : null;
+    if (belowFloor(fields.amountUsd, quote)) {
+      return fail("invalid", [`сумма ниже порога сметы — $${quote!.floorUsd.toLocaleString("en-US")}`]);
+    }
+  }
 
   const number = await nextNumber(Number(fields.signedDate.slice(0, 4)) || new Date().getFullYear());
 
