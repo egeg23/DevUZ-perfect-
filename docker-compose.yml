@@ -60,7 +60,7 @@ services:
       TELEGRAM_SCOUT_CHANNEL_ID: ${TELEGRAM_SCOUT_CHANNEL_ID}
 
       # Модель для разбора сообщений скаута. Пусто — берётся общая.
-      SCOUT_MODEL: ${SCOUT_MODEL}
+      SCOUT_MODEL: ${SCOUT_MODEL:-}
 
       # Порог, ниже которого сигнал скаута не показывают оператору.
       # Пусто — берётся значение по умолчанию из кода.
