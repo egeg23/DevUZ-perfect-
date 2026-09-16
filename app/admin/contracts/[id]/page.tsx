@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { Letterhead } from "@/components/docs/letterhead";
 import { PrintButton } from "@/components/store/print-button";
 import { company } from "@/content/company";
 import { contractClauses } from "@/content/contract";
@@ -45,8 +46,8 @@ export default async function ContractPage({
   const canApprove = approvesContract(staff.role);
 
   return (
-    <div className="mx-auto max-w-[210mm] bg-white px-10 py-10 text-[11pt] leading-relaxed text-black print:px-0 print:py-0">
-      <div className="no-print mb-6 flex flex-wrap items-center gap-3 border-b border-black/10 pb-4">
+    <>
+      <div className="no-print mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center gap-3 px-[20mm]">
         <PrintButton label="Печать" />
         <span className="text-sm text-black/60">
           {contract.status === "draft" && "Черновик — подписи нет"}
@@ -104,18 +105,13 @@ export default async function ContractPage({
         </p>
       ) : null}
 
-      <h1 className="text-center text-[14pt] font-bold">
-        Договор № {contract.number}
-      </h1>
-      <p className="mt-1 text-center text-[10pt]">
-        на выполнение работ по разработке
-      </p>
-      <div className="mt-4 flex justify-between text-[10pt]">
-        <span>г. Ташкент</span>
-        <span>{contract.signed_date}</span>
-      </div>
-
-      <p className="mt-6">
+      <Letterhead
+        title={`Договор № ${contract.number}`}
+        subtitle="на выполнение работ по разработке"
+        place="г. Ташкент"
+        date={contract.signed_date}
+      >
+      <p>
         <b>{legal.name}</b>, {legal.form.ru}, {legal.address.ru}, ПИНФЛ {legal.pinfl},
         именуемый в дальнейшем «Исполнитель», с одной стороны, и{" "}
         <b>{contract.client_name}</b>, {contract.client_details}, именуемый в
@@ -178,6 +174,7 @@ export default async function ContractPage({
         Приложение № 1 «Техническое задание» подписывается Сторонами
         одновременно с настоящим Договором и является его неотъемлемой частью.
       </p>
-    </div>
+      </Letterhead>
+    </>
   );
 }

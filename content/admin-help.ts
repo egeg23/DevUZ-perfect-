@@ -114,6 +114,16 @@ const ru: HelpCopy = {
       what: "Сколько обращений пришло, сколько выиграли и потеряли. Менеджер видит свои цифры, руководитель — свои и своей команды.",
       how: ["Смотрите раз в неделю: по какой услуге приходят чаще и где теряете."],
     },
+    "/admin/expenses": {
+      what: "Общие траты студии и то, сколько из каждой пришлось на каждого соучредителя. Плюс налоговые сроки.",
+      how: [
+        "Записывать расходы могут оба соучредителя: выдуманный расход уменьшает долю самого записавшего, соврать себе в плюс нельзя.",
+        "Удаляет только владелец — удалением можно убрать чужую трату из картины.",
+        "Расход делится в той же пропорции, что и прибыль. Реклама на 100 долларов при делении 70/30 — это 70 владельцу и 30 руководителю.",
+        "Себестоимость конкретного проекта сюда не идёт: она уже вычтена в самом проекте, и здесь вычлась бы второй раз.",
+        "Налоговые сроки вверху — заготовка под разговор с бухгалтером. Пока дата не подтверждена, рядом с ней стоит об этом пометка.",
+      ],
+    },
     "/admin/contracts": {
       what: "Договор от нашего ИП в сторону заказчика: подготовка, подтверждение владельцем и его подпись.",
       how: [
@@ -260,6 +270,16 @@ const uz: HelpCopy = {
     "/admin/stats": {
       what: "Qancha murojaat kelgani, qanchasini yutgan va yo‘qotganingiz. Menejer o‘z raqamlarini, rahbar o‘zi va jamoasining raqamlarini ko‘radi.",
       how: ["Haftada bir marta qarang: qaysi xizmat bo‘yicha ko‘proq kelishadi va qayerda yo‘qotyapsiz."],
+    },
+    "/admin/expenses": {
+      what: "Studiyaning umumiy xarajatlari va har biridan har bir muassisga qanchasi to‘g‘ri kelgani. Ustiga soliq muddatlari.",
+      how: [
+        "Xarajatni ikkala muassis ham yozishi mumkin: o‘ylab topilgan xarajat yozganning o‘z ulushini kamaytiradi, o‘ziga foydali yolg‘on gapirib bo‘lmaydi.",
+        "O‘chirishni faqat ega qiladi — o‘chirish orqali birovning xarajatini manzaradan olib tashlash mumkin.",
+        "Xarajat foyda bilan bir xil nisbatda bo‘linadi. 70/30 da 100 dollarlik reklama — egaga 70, rahbarga 30.",
+        "Aniq loyihaning tannarxi bu yerga kirmaydi: u loyihaning o‘zida ayirilgan va bu yerda ikkinchi marta ayirilardi.",
+        "Yuqoridagi soliq muddatlari — buxgalter bilan suhbat uchun qoralama. Sana tasdiqlanmagan bo‘lsa, yonida shu haqda belgi turadi.",
+      ],
     },
     "/admin/contracts": {
       what: "Bizning YaTT nomidan buyurtmachi tomonga shartnoma: tayyorlash, ega tomonidan tasdiqlash va uning imzosi.",

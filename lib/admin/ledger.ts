@@ -10,7 +10,7 @@ import {
 } from "@/lib/admin/finance";
 import { projectsOwnedBy, type Project } from "@/lib/admin/projects";
 import { notifyPartner, partnerById, partnersById, summarize, type Partner } from "@/lib/partners/store";
-import type { Role } from "@/lib/admin/roles";
+import { keepsExpenses, type Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
 
@@ -328,7 +328,7 @@ export async function addPayment(
   staff: Staff,
   ip: string,
 ): Promise<MoneyResult> {
-  if (staff.role !== "admin") return fail("forbidden");
+  if (!keepsExpenses(staff.role)) return fail("forbidden");
   if (fields.amountUsd === null || !Number.isInteger(fields.amountUsd) || fields.amountUsd <= 0) {
     return fail("invalid");
   }
@@ -409,7 +409,7 @@ export async function recordPayout(
   staff: Staff,
   ip: string,
 ): Promise<MoneyResult> {
-  if (staff.role !== "admin") return fail("forbidden");
+  if (!keepsExpenses(staff.role)) return fail("forbidden");
   if (fields.amountUsd === null || !Number.isInteger(fields.amountUsd) || fields.amountUsd <= 0) {
     return fail("invalid");
   }
@@ -473,11 +473,14 @@ export async function loadExpenses(since?: string): Promise<Expense[]> {
 }
 
 /**
- * Записать расход. Только владелец.
+ * Записать расход. Оба соучредителя.
  *
- * Не «руководитель тоже, он же в курсе трат»: каждый расход уменьшает долю
- * второго соучредителя, то есть это прямая правка чужих денег. Право здесь
- * то же, что у платежей и себестоимости, и по той же причине.
+ * Раньше было «только владелец», и рассуждение стояло такое: расход
+ * уменьшает долю второго соучредителя, то есть это правка чужих денег.
+ * Владелец решил иначе: «Мы можем добавлять разные статьи расходов». И он
+ * прав — расход уменьшает долю КАЖДОГО, включая того, кто его вносит, а
+ * значит соврать себе в плюс здесь нельзя. Менеджеры по-прежнему не имеют
+ * к этому отношения.
  */
 export async function addExpense(
   fields: {
@@ -489,7 +492,7 @@ export async function addExpense(
   staff: Staff,
   ip: string,
 ): Promise<MoneyResult> {
-  if (staff.role !== "admin") return fail("forbidden");
+  if (!keepsExpenses(staff.role)) return fail("forbidden");
   if (fields.amountUsd === null || !Number.isInteger(fields.amountUsd) || fields.amountUsd <= 0) {
     return fail("invalid");
   }
@@ -520,6 +523,14 @@ export async function addExpense(
   return OK;
 }
 
+/**
+ * Удалить расход. Только владелец — и асимметрия с добавлением намеренная.
+ *
+ * Добавить расход может любой соучредитель: выдуманный расход уменьшает
+ * долю самого добавившего, соврать себе в плюс нельзя. Удаление устроено
+ * наоборот — им можно убрать чужую трату из картины. Поэтому право разное,
+ * и уравнивать их не надо.
+ */
 export async function removeExpense(expenseId: string, staff: Staff, ip: string): Promise<MoneyResult> {
   if (staff.role !== "admin") return fail("forbidden");
 
