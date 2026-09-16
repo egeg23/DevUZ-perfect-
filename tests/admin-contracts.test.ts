@@ -13,6 +13,7 @@ import {
   returnable,
   sendable,
   signatureVisible,
+  signedFileName,
   toContractInput,
 } from "@/lib/admin/contracts";
 import {
@@ -413,4 +414,22 @@ test("смета и срок правятся только у черновика
   assert.ok(at > 0, "формы сметы нет");
   const before = page.slice(Math.max(0, at - 400), at);
   assert.match(before, /contract\.status === "draft" \? \(/, "форма сметы не закрыта статусом");
+});
+
+test("имя скана не теряет букву, когда расширения нет", () => {
+  assert.equal(
+    signedFileName("1", "contracts/abc/signed-skan.pdf"),
+    "dogovor-1-podpisan.pdf",
+  );
+  // Скан с телефона приходит и без расширения. Поиск точки по всему
+  // пути отдавал тогда «dogovor-1-podpisann»: последнюю букву имени.
+  assert.equal(
+    signedFileName("1", "contracts/abc/signed-skan"),
+    "dogovor-1-podpisan",
+  );
+  // Точка в папке, а не в имени, расширением не является.
+  assert.equal(
+    signedFileName("1", "contracts/a.b/signed-skan"),
+    "dogovor-1-podpisan",
+  );
 });

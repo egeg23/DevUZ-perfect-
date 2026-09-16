@@ -1,5 +1,6 @@
 import { currentStaff } from "@/lib/admin/guard";
 import { contractById, contractFile } from "@/lib/admin/contract-store";
+import { signedFileName } from "@/lib/admin/contracts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export async function GET(
   if (!bytes) return new Response(null, { status: 404 });
 
   const name = kind === "signed"
-    ? `dogovor-${contract.number}-podpisan${path.slice(path.lastIndexOf("."))}`
+    ? signedFileName(contract.number, path)
     : (contract.estimate_name ?? "smeta");
 
   return new Response(bytes, {

@@ -229,3 +229,18 @@ export function toContractInput(contract: Contract): ContractInput {
     deadline: contract.deadline_text ?? "",
   };
 }
+
+/**
+ * Имя файла для скачивания скана с подписями.
+ *
+ * Расширение берётся из сохранённого пути, но только из имени файла:
+ * скан с телефона легко приезжает без расширения вовсе, и поиск точки по
+ * всему пути откусит тогда последнюю букву имени — заказчик получит
+ * файл «dogovor-1-podpisann».
+ */
+export function signedFileName(number: string, path: string): string {
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 ? name.slice(dot) : "";
+  return `dogovor-${number}-podpisan${ext}`;
+}
