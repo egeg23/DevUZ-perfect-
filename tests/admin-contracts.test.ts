@@ -3,13 +3,17 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import {
+  acceptsScan,
   approvesContract,
   contractNumber,
   editable,
   preparesContract,
   problemsBeforeApproval,
   readyForApproval,
+  returnable,
+  sendable,
   signatureVisible,
+  signedFileName,
   toContractInput,
 } from "@/lib/admin/contracts";
 import {
@@ -41,6 +45,11 @@ const ok = {
     { title: "Разработка", percent: 50, workdays: 20 },
     { title: "Запуск", percent: 20, workdays: 5 },
   ],
+  estimateItems: [
+    { title: "Дизайн главной и внутренних", unit: "стр", qty: 5, price: 200, total: 1000 },
+    { title: "Разработка и админка", unit: "", qty: 1, price: 1500, total: 1500 },
+  ],
+  deadlineText: "60 рабочих дней с даты поступления аванса",
 };
 
 /** Текст договора ровно так, как его собирает страница печати. */
@@ -49,7 +58,15 @@ const clauseText = () =>
     toContractInput({
       id: "c1", created_at: "", project_id: "p1", status: "draft",
       prepared_by: null, prepared_at: null, approved_by: null,
-      approved_at: null, void_reason: null, ...ok,
+      approved_at: null, void_reason: null,
+      estimate_path: null, estimate_name: null,
+      // snake_case, потому что toContractInput читает поле базы. camelCase
+      // из фикстуры `ok` сюда не долетает — первая версия теста на этом и
+      // споткнулась: текст собирался с пустой сметой.
+      estimate_items: ok.estimateItems,
+      deadline_text: ok.deadlineText,
+      sent_at: null, sent_by: null, notified_at: null,
+      signed_path: null, signed_at: null, signed_by: null, ...ok,
     }),
   )
     .flatMap((c) => c.items)
@@ -281,4 +298,138 @@ test("бланк без банковских реквизитов говорит
   // Документ без счёта выглядит законченным, а оплатить по нему нельзя.
   const sheet = read("components/docs/letterhead.tsx");
   assert.match(sheet, /Банковские реквизиты не заданы/);
+});
+
+/* ── Маршрут договора целиком ───────────────────────────────────────────── */
+
+test("подписывается то, что прислали, а не черновик со стола менеджера", () => {
+  // Иначе владелец подтверждает документ, который никто не объявлял готовым
+  // и который продолжает меняться.
+  const store = read("lib/admin/contract-store.ts");
+  const at = store.indexOf("export async function approveContract(");
+  const end = store.indexOf("export async function", at + 10);
+  const body = store.slice(at, end > 0 ? end : undefined);
+  assert.match(body, /current\.status !== "pending"/);
+  assert.match(body, /\.eq\("status", "pending"\)/, "гонка на уровне запроса не закрыта");
+});
+
+test("отправленный на подпись заморожен", () => {
+  // Владельцу ушло уведомление со ссылкой. Документ, изменившийся между
+  // уведомлением и нажатием кнопки, — это подпись под тем, чего он не читал.
+  assert.equal(editable({ status: "pending" }), false);
+  assert.equal(editable({ status: "draft" }), true);
+  assert.equal(sendable({ ...ok, status: "draft" }), true);
+  assert.equal(sendable({ ...ok, status: "pending" }), false);
+});
+
+test("без сметы и срока на подпись не уходит", () => {
+  // Владелец просил полный вариант «со сметой и сроками» — неполный до него
+  // доходить не должен.
+  const noEstimate = problemsBeforeApproval({ ...ok, estimateItems: [] });
+  assert.ok(noEstimate.some((p) => p.field === "estimate"), "смета не проверяется");
+
+  const noDeadline = problemsBeforeApproval({ ...ok, deadlineText: "" });
+  assert.ok(noDeadline.some((p) => p.field === "deadline"), "срок не проверяется");
+
+  assert.equal(sendable({ ...ok, status: "draft", estimateItems: [] }), false);
+});
+
+test("статус меняется до уведомления, а не после", () => {
+  // Обратный порядок оставил бы владельца с уведомлением на договор,
+  // который остался черновиком и продолжает меняться под ним.
+  const store = read("lib/admin/contract-store.ts");
+  const at = store.indexOf("export async function sendForSignature(");
+  const body = store.slice(at, at + 2600);
+  const update = body.indexOf('status: "pending"');
+  const notify = body.indexOf("sendMessage(");
+  assert.ok(update > 0 && notify > 0, "не нашёл обе операции");
+  assert.ok(update < notify, "уведомление уходит раньше записи статуса");
+});
+
+test("чат владельца берётся из базы, а не из переменной окружения", () => {
+  // Переменная разъезжается с составом команды молча.
+  const store = read("lib/admin/contract-store.ts");
+  assert.match(store, /\.eq\("role", "admin"\)/);
+  assert.ok(!store.includes("TELEGRAM_OWNER_CHAT_ID"), "чат владельца зашит в окружение");
+});
+
+test("скан грузится только к подтверждённому, и статус закрывает маршрут", () => {
+  assert.equal(acceptsScan({ status: "approved" }), true);
+  assert.equal(acceptsScan({ status: "draft" }), false);
+  assert.equal(acceptsScan({ status: "pending" }), false);
+  assert.equal(acceptsScan({ status: "signed" }), false);
+
+  const store = read("lib/admin/contract-store.ts");
+  const at = store.indexOf("export async function attachSignedScan(");
+  assert.match(store.slice(at, at + 1400), /\.eq\("status", "approved"\)/);
+});
+
+test("вернуть на доработку может только владелец и только присланное", () => {
+  assert.equal(returnable({ status: "pending" }), true);
+  assert.equal(returnable({ status: "draft" }), false);
+  assert.equal(returnable({ status: "approved" }), false);
+
+  const store = read("lib/admin/contract-store.ts");
+  const at = store.indexOf("export async function returnForRevision(");
+  assert.match(store.slice(at, at + 600), /approvesContract\(staff\.role\)/);
+});
+
+test("сумма договора берётся из сметы, а не вводится вторым числом", () => {
+  // Два числа, которые обязаны совпадать, не должны вводиться дважды.
+  const store = read("lib/admin/contract-store.ts");
+  assert.match(store, /patch\.amount_usd = estimateTotal\(items\)/);
+});
+
+test("смета и срок печатаются в самом договоре", () => {
+  // Ссылаться на вложение, которого читатель не видит, значит получить спор
+  // о его содержании — а о смете спорят чаще, чем о сроках.
+  const text = clauseText();
+  assert.match(text, /Дизайн главной и внутренних/, "позиции сметы не в тексте");
+  assert.match(text, /60 рабочих дней/, "срок не в тексте");
+  assert.match(text, /Приложение № 2/, "смета не названа приложением");
+});
+
+test("путь к файлу берётся из записи, а не из адреса", () => {
+  // Пустить путь параметром значило бы отдать всё приватное хранилище любому
+  // сотруднику: подставил ../signature/owner.png — и забрал подпись владельца.
+  const route = read("app/admin/contracts/[id]/file/route.ts");
+  assert.match(route, /contract\.signed_path : contract\.estimate_path/);
+  assert.ok(!/searchParams\.get\("path"\)/.test(route), "путь приходит из адреса");
+});
+
+test("неушедшее уведомление не выдаётся за отправленное", () => {
+  // Иначе менеджер думает, что отправил, а владелец не знает о договоре.
+  const actions = read("app/admin/contracts/actions.ts");
+  assert.match(actions, /sent=\$\{result\.notified \? "1" : "silent"\}/);
+  const page = read("app/admin/contracts/[id]/page.tsx");
+  assert.match(page, /уведомление в Telegram не ушло/);
+});
+
+test("смета и срок правятся только у черновика", () => {
+  const page = read("app/admin/contracts/[id]/page.tsx");
+  // Ищем защиту непосредственно перед формой, а не где-нибудь выше по файлу:
+  // на странице есть другие проверки статуса, и lastIndexOf находил их —
+  // тест проходил даже со снятой защитой.
+  const at = page.indexOf("action={uploadEstimate}");
+  assert.ok(at > 0, "формы сметы нет");
+  const before = page.slice(Math.max(0, at - 400), at);
+  assert.match(before, /contract\.status === "draft" \? \(/, "форма сметы не закрыта статусом");
+});
+
+test("имя скана не теряет букву, когда расширения нет", () => {
+  assert.equal(
+    signedFileName("1", "contracts/abc/signed-skan.pdf"),
+    "dogovor-1-podpisan.pdf",
+  );
+  // Скан с телефона приходит и без расширения. Поиск точки по всему
+  // пути отдавал тогда «dogovor-1-podpisann»: последнюю букву имени.
+  assert.equal(
+    signedFileName("1", "contracts/abc/signed-skan"),
+    "dogovor-1-podpisan",
+  );
+  // Точка в папке, а не в имени, расширением не является.
+  assert.equal(
+    signedFileName("1", "contracts/a.b/signed-skan"),
+    "dogovor-1-podpisan",
+  );
 });

@@ -62,6 +62,10 @@ services:
       # Модель для разбора сообщений скаута. Пусто — берётся общая.
       SCOUT_MODEL: ${SCOUT_MODEL}
 
+      # Порог, ниже которого сигнал скаута не показывают оператору.
+      # Пусто — берётся значение по умолчанию из кода.
+      SCOUT_MIN_SCORE: ${SCOUT_MIN_SCORE:-}
+
       # Каждый N-й разговор получает ответ на 22-й секунде и скидку. Это
       # решение про деньги, а не про код, поэтому переменная и заведена —
       # но без строки здесь она не доезжает до контейнера и значение в
@@ -83,6 +87,23 @@ services:
       GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION}
       YANDEX_VERIFICATION: ${YANDEX_VERIFICATION}
       GIT_COMMIT: ${GIT_COMMIT:-unknown}
+
+      # Реквизиты поставщика для счёта и договора. В git их нет намеренно:
+      # репозиторий когда-нибудь отдадут подрядчику, а расчётный счёт в
+      # открытом коде не лежит. Без строк здесь значения из .env молча
+      # не доезжают до контейнера, и счёт печатается без реквизитов —
+      # именно так это и сломалось в первый раз.
+      INVOICE_TAX_ID: ${INVOICE_TAX_ID:-}
+      INVOICE_TAX_ID_KIND: ${INVOICE_TAX_ID_KIND:-}
+      INVOICE_BANK_NAME: ${INVOICE_BANK_NAME:-}
+      INVOICE_BANK_ACCOUNT: ${INVOICE_BANK_ACCOUNT:-}
+      INVOICE_BANK_MFO: ${INVOICE_BANK_MFO:-}
+      INVOICE_BANK_SWIFT: ${INVOICE_BANK_SWIFT:-}
+      INVOICE_BANK_ADDRESS: ${INVOICE_BANK_ADDRESS:-}
+      INVOICE_PAYMENT_DAYS: ${INVOICE_PAYMENT_DAYS:-}
+
+      # Ключ подписи ссылок на файлы заказа. Пусто — ссылки не выдаются.
+      DOWNLOAD_SIGNING_SECRET: ${DOWNLOAD_SIGNING_SECRET:-}
 
     healthcheck:
       test:

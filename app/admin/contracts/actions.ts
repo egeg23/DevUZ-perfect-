@@ -11,7 +11,15 @@ import {
   updateDraft,
   voidContract,
 } from "@/lib/admin/contract-store";
+import {
+  attachEstimate,
+  attachSignedScan,
+  returnForRevision,
+  sendForSignature,
+  setDeadline,
+} from "@/lib/admin/contract-store";
 import { saveSignature } from "@/lib/admin/signature";
+import { siteUrl } from "@/lib/seo";
 
 /**
  * Этапы приходят из формы тремя параллельными списками полей.
@@ -126,4 +134,77 @@ export async function uploadSignature(formData: FormData) {
   const result = await saveSignature(await file.arrayBuffer());
   revalidatePath("/admin/contracts");
   redirect(result.ok ? "/admin/contracts?saved=1" : `/admin/contracts?error=${encodeURIComponent(result.why ?? "")}`);
+}
+
+/* ── Смета, срок, отправка на подпись, скан ─────────────────────────────── */
+
+
+async function fileFrom(formData: FormData, field: string) {
+  const file = formData.get(field);
+  if (!(file instanceof File) || file.size === 0) return null;
+  // Два мегабайта на смету и двадцать на скан: скан это фотографии страниц,
+  // и они тяжелее. Больше — почти всегда снято без сжатия, и такое проще
+  // переснять, чем хранить.
+  const limit = field === "signed" ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
+  if (file.size > limit) return null;
+  return { name: file.name, bytes: await file.arrayBuffer() };
+}
+
+export async function uploadEstimate(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  const file = await fileFrom(formData, "estimate");
+  if (!file) redirect(`/admin/contracts/${id}?error=nofile`);
+
+  const result = await attachEstimate(id, file, staff);
+  revalidatePath(`/admin/contracts/${id}`);
+  // Подсказка разбора уезжает в адрес: менеджер должен увидеть, почему
+  // строки не подтянулись, а не гадать, почему смета «пустая».
+  const hint = "hint" in result && result.hint ? `?hint=${encodeURIComponent(result.hint)}` : "";
+  redirect(result.ok ? `/admin/contracts/${id}${hint}` : `/admin/contracts/${id}?error=${result.why}`);
+}
+
+export async function saveDeadline(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  const result = await setDeadline(id, String(formData.get("deadline") ?? ""), staff);
+  revalidatePath(`/admin/contracts/${id}`);
+  redirect(result.ok ? `/admin/contracts/${id}` : `/admin/contracts/${id}?error=${result.why}`);
+}
+
+/** Отправить владельцу на подпись — с уведомлением в Telegram. */
+export async function sendToOwner(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  const result = await sendForSignature(id, siteUrl, staff);
+
+  revalidatePath(`/admin/contracts/${id}`);
+  if (!result.ok) {
+    const detail = result.problems?.length
+      ? `&detail=${encodeURIComponent(result.problems.join(" · "))}`
+      : "";
+    redirect(`/admin/contracts/${id}?error=${result.why}${detail}`);
+  }
+  // Неушедшее уведомление — не повод молчать: владелец не узнает о договоре,
+  // а менеджер будет думать, что отправил.
+  redirect(`/admin/contracts/${id}?sent=${result.notified ? "1" : "silent"}`);
+}
+
+export async function returnContract(formData: FormData) {
+  const staff = await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const result = await returnForRevision(id, staff);
+  revalidatePath(`/admin/contracts/${id}`);
+  redirect(result.ok ? `/admin/contracts/${id}` : `/admin/contracts/${id}?error=${result.why}`);
+}
+
+export async function uploadSignedScan(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  const file = await fileFrom(formData, "signed");
+  if (!file) redirect(`/admin/contracts/${id}?error=nofile`);
+
+  const result = await attachSignedScan(id, file, staff);
+  revalidatePath(`/admin/contracts/${id}`);
+  redirect(result.ok ? `/admin/contracts/${id}?signed=1` : `/admin/contracts/${id}?error=${result.why}`);
 }

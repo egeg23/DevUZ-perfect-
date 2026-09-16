@@ -1,5 +1,6 @@
 import type { Role } from "@/lib/admin/roles";
 import type { ContractInput, ContractStage } from "@/content/contract";
+import type { EstimateItem } from "@/lib/admin/estimate";
 
 /**
  * Права и правила вокруг договора.
@@ -13,7 +14,16 @@ import type { ContractInput, ContractStage } from "@/content/contract";
  * отдаётся: скрытая стилями картинка достаётся любым «сохранить как».
  */
 
-export type ContractStatus = "draft" | "approved" | "void";
+/**
+ * Состояния договора.
+ *
+ * `pending` — отправлен владельцу на подпись. Заморожен: владельцу пришло
+ * уведомление, и то, что он открыл, не должно измениться под ним между
+ * уведомлением и нажатием кнопки.
+ *
+ * `signed` — вернулся скан с подписями обеих сторон. Конец маршрута.
+ */
+export type ContractStatus = "draft" | "pending" | "approved" | "signed" | "void";
 
 export type Contract = {
   id: string;
@@ -32,6 +42,21 @@ export type Contract = {
   approved_by: string | null;
   approved_at: string | null;
   void_reason: string | null;
+
+  /** Смета: файл-приложение и разобранные строки. */
+  estimate_path: string | null;
+  estimate_name: string | null;
+  estimate_items: EstimateItem[];
+  /** Общий срок словами сотрудника: «60 рабочих дней с даты аванса». */
+  deadline_text: string | null;
+
+  sent_at: string | null;
+  sent_by: string | null;
+  notified_at: string | null;
+
+  signed_path: string | null;
+  signed_at: string | null;
+  signed_by: string | null;
 };
 
 /** Готовить и править черновик может вся команда: это работа менеджера. */
@@ -60,9 +85,32 @@ export function signatureVisible(contract: Pick<Contract, "status">): boolean {
   return contract.status === "approved";
 }
 
-/** Подтверждённый договор не правится: правка — это новый договор. */
+/**
+ * Правится только черновик.
+ *
+ * Отправленный на подпись заморожен намеренно: владельцу ушло уведомление
+ * со ссылкой, и документ, изменившийся между уведомлением и нажатием
+ * кнопки, — это подпись под тем, чего он не читал.
+ */
 export function editable(contract: Pick<Contract, "status">): boolean {
   return contract.status === "draft";
+}
+
+/** Отправить на подпись можно заполненный черновик. */
+export function sendable(
+  contract: Pick<Contract, "status"> & Parameters<typeof problemsBeforeApproval>[0],
+): boolean {
+  return contract.status === "draft" && problemsBeforeApproval(contract).length === 0;
+}
+
+/** Вернуть на доработку может владелец, и только то, что ему прислали. */
+export function returnable(contract: Pick<Contract, "status">): boolean {
+  return contract.status === "pending";
+}
+
+/** Скан с подписями грузится к подтверждённому договору. */
+export function acceptsScan(contract: Pick<Contract, "status">): boolean {
+  return contract.status === "approved";
 }
 
 /* ── Проверки перед подтверждением ──────────────────────────────────────── */
@@ -80,7 +128,10 @@ export type Problem = { field: string; text: string };
  * несходящиеся этапы.
  */
 export function problemsBeforeApproval(
-  contract: Pick<Contract, "client_name" | "client_details" | "subject" | "amount_usd" | "stages" | "number" | "signed_date">,
+  contract: Pick<Contract, "client_name" | "client_details" | "subject" | "amount_usd" | "stages" | "number" | "signed_date"> & {
+    estimateItems?: readonly EstimateItem[];
+    deadlineText?: string | null;
+  },
 ): Problem[] {
   const out: Problem[] = [];
 
@@ -105,6 +156,13 @@ export function problemsBeforeApproval(
   }
 
   if (!(contract.amount_usd > 0)) out.push({ field: "amount_usd", text: "Сумма не указана" });
+
+  if (!contract.estimateItems || contract.estimateItems.length === 0) {
+    out.push({ field: "estimate", text: "Нет сметы: без неё в договоре не из чего собрать перечень работ" });
+  }
+  if (!contract.deadlineText || contract.deadlineText.trim().length < 5) {
+    out.push({ field: "deadline", text: "Не указан согласованный срок выполнения" });
+  }
 
   if (contract.stages.length === 0) {
     out.push({ field: "stages", text: "Нет ни одного этапа" });
@@ -167,5 +225,22 @@ export function toContractInput(contract: Contract): ContractInput {
     subject: contract.subject,
     amountUsd: contract.amount_usd,
     stages: contract.stages,
+    estimate: contract.estimate_items,
+    deadline: contract.deadline_text ?? "",
   };
+}
+
+/**
+ * Имя файла для скачивания скана с подписями.
+ *
+ * Расширение берётся из сохранённого пути, но только из имени файла:
+ * скан с телефона легко приезжает без расширения вовсе, и поиск точки по
+ * всему пути откусит тогда последнюю букву имени — заказчик получит
+ * файл «dogovor-1-podpisann».
+ */
+export function signedFileName(number: string, path: string): string {
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 ? name.slice(dot) : "";
+  return `dogovor-${number}-podpisan${ext}`;
 }

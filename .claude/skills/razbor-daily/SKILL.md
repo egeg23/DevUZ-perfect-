@@ -146,14 +146,21 @@ npx tsc --noEmit && npm test && npm run build
 машинный, и он обязателен.
 
 ```
-git checkout claude/devuz-studio-website-ydhj10
-git pull origin claude/devuz-studio-website-ydhj10
-git merge --no-edit origin/main
+git fetch origin main
+git checkout -B claude/razbor-daily origin/main
 # коммит со всеми тремя разборами и снимками
-git push -u origin claude/devuz-studio-website-ydhj10
+git push -u origin claude/razbor-daily --force-with-lease
 ```
 
-Дальше **один PR на все три разбора** (`mcp__github__create_pull_request`).
+**Ветка своя, и это не мелочь.** Раньше смена шла в общей ветке студии, и
+первый же раз, когда там оказалась чужая незаконченная работа, смена
+остановилась: её PR утащил бы чужие коммиты, а мержить чужое нельзя. Она
+поступила правильно и выпустила ноль. Своя ветка, начинаемая заново от
+main каждую смену, эту развилку убирает совсем.
+
+Дальше **один PR из `claude/razbor-daily` в main на все три разбора**
+(`mcp__github__create_pull_request`). Мержишь только свой PR — чужие
+открытые не трогаешь.
 В описании по каждому: ниша, город, запрос, сколько находок и одной строкой —
 почему этот сайт. Три PR вместо одного означают три круга CI ради одной и
 той же работы.
