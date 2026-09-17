@@ -94,16 +94,33 @@ test("после ташкентской полуночи сторож ждёт �
 });
 
 test("смены сторожатся по отдельности, у каждой свой срок", () => {
-  // Разборы отчитались, эксперимент — нет.
+  // Расписание задаётся аргументом: так проверяется сама развилка, а не
+  // текущий состав смен, который меняется вместе с тем, что мы запускаем.
+  const schedule = [
+    { shift: "razbor", firesAt: "08:03", graceMinutes: 180 },
+    { shift: "experiment", firesAt: "09:05", graceMinutes: 180 },
+  ];
   const rows = [{ shift: "razbor", created_at: "2026-09-17T03:35:00Z" }];
-  const late = silentShifts({ now: new Date("2026-09-17T07:10:00Z"), rows });
+
+  // Разборы отчитались, эксперимент — нет.
+  const late = silentShifts({ now: new Date("2026-09-17T07:10:00Z"), rows, schedule });
   assert.deepEqual(late.map((s) => s.shift), ["experiment" + SILENT_SUFFIX]);
 
   // Но в 06:05 UTC срок эксперимента (09:05 + 3 ч = 12:05 по Ташкенту,
   // 07:05 UTC) ещё не вышел — тревожить рано.
-  assert.deepEqual(silentShifts({ now: afterDeadline, rows }), []);
-  assert.equal(SHIFT_SCHEDULE.length, 2, "расписание сторожа знает обе смены");
+  assert.deepEqual(silentShifts({ now: afterDeadline, rows, schedule }), []);
   assert.ok(RAZBOR);
+});
+
+test("сторож молчит о смене, которую выключили", () => {
+  // Тревога о смене, которую владелец сам остановил, приходит каждое утро и
+  // перестаёт читаться к третьему разу — а вместе с ней перестают читаться
+  // и настоящие. Выключили смену — убрали её из расписания.
+  assert.deepEqual(
+    SHIFT_SCHEDULE.map((e) => e.shift),
+    ["razbor"],
+    "в расписании сторожа смена, которая не запускается",
+  );
 });
 
 test("тревога отличается от отчёта первым же словом", () => {
