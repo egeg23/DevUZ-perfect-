@@ -1,3 +1,4 @@
+import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { analyze, unreachable, type AuditReport, type Finding } from "@/lib/audit/checks";
 import { type PitchLocale, pitch } from "@/lib/audit/pitch";
 import { enrich, probe } from "@/lib/audit/fetch";
@@ -170,6 +171,8 @@ export type ProspectRow = {
   /** Черновик письма либо null, если писать не о чем. */
   draft: string | null;
   note: string | null;
+  /** Куда написать: то, что компания опубликовала у себя на сайте. */
+  contacts: Contacts;
 };
 
 /**
@@ -193,6 +196,7 @@ export function toProspectRow(
       findings: [],
       draft: null,
       note: failure,
+      contacts: EMPTY_CONTACTS,
     };
   }
 
@@ -206,5 +210,6 @@ export function toProspectRow(
     findings: report.findings,
     draft: draft.ok ? draft.text : null,
     note: draft.ok ? null : draft.why,
+    contacts: report.facts.contacts ?? EMPTY_CONTACTS,
   };
 }

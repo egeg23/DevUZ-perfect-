@@ -1,5 +1,6 @@
 import type { AuditReport, Finding, Severity } from "@/lib/audit/checks";
 import { company as studio } from "@/content/company";
+import { siteUrl } from "@/lib/seo";
 
 /**
  * Черновик первого касания.
@@ -296,6 +297,46 @@ const OPENER: Record<string, Record<PitchLocale, Opener>> = {
       "I looked at what your website runs on: the menu, galleries and forms use components that are about ten years old and no longer maintained. With every phone and browser update something stops working — usually silently: a button doesn't respond, a form doesn't submit, and nobody tells the owner. Replacing the outdated components and testing every button and form on real phones takes a day or two.",
   },
 
+  tiny_text: {
+    ru: (f) => {
+      const px = f.title.match(/(\d+) пиксел/)?.[1];
+      return `Посмотрел ваш сайт и обратил внимание на размер текста: основным набрано ${px ? `${px} пикселей` : "заметно мельче привычного"}. На телефоне такое читается с прищуром, а после сорока не читается вовсе — и человек не станет увеличивать страницу пальцами ради описания услуги, он откроет следующую, где написано крупнее. Поднять основной текст до привычных шестнадцати и выровнять по нему заголовки — несколько часов.`;
+    },
+    en: (f) => {
+      const px = f.title.match(/(\d+) пиксел/)?.[1];
+      return `I had a look at your website and noticed the text size: the body copy is set at ${px ? `${px} pixels` : "noticeably smaller than usual"}. On a phone that means squinting, and past forty it means not reading at all — nobody pinches to zoom just to read a service description, they open the next site where it's bigger. Raising the body text to the usual sixteen and rebalancing the headings takes a few hours.`;
+    },
+  },
+
+  font_zoo: {
+    ru: (f) => {
+      const n = f.title.match(/(\d+) разных/)?.[1];
+      return `Открыл ваш сайт — на страницах ${n ? `${n} разных шрифта` : "несколько разных шрифтов"}. Каждый новый шрифт читается как кусок с другого сайта: страница выглядит собранной из частей, а не сделанной. Посетитель не назовёт причину, но аккуратной компанию не сочтёт, а по этому ощущению и выбирают, кому доверить деньги. Оставить два шрифта — заголовочный и текстовый — и привести к ним все страницы: день работы.`;
+    },
+    en: (f) => {
+      const n = f.title.match(/(\d+) разных/)?.[1];
+      return `I opened your website and counted ${n ? `${n} different typefaces` : "several different typefaces"} across the pages. Every extra font reads like a fragment from another site: the page looks assembled rather than designed. Visitors won't name the reason, but they won't read the company as careful either — and that feeling is exactly what people use to decide who gets their money. Settling on two fonts and applying them across the site takes a day.`;
+    },
+  },
+
+  horizontal_scroll: {
+    ru: (f) => {
+      const px = f.title.match(/(\d+) точек/)?.[1];
+      return `Открыл ваш сайт с телефона — страницу возит вбок: макет не уже ${px ?? "тысячи"} точек, а экран телефона вдвое уже. Появляется горизонтальная прокрутка, часть текста и кнопок уезжает за край, и добраться до них можно только двигая страницу пальцем — половина посетителей до этого не додумается. Это можно проверить прямо сейчас, открыв сайт на своём телефоне. Снять жёсткую ширину и переверстать блоки под экран — несколько дней для небольшого сайта.`;
+    },
+    en: (f) => {
+      const px = f.title.match(/(\d+) точек/)?.[1];
+      return `I opened your website on a phone and the page slides sideways: the layout won't go narrower than ${px ?? "a thousand"} pixels, and a phone screen is half that. You get a horizontal scrollbar, part of the text and buttons drift off the edge, and the only way to reach them is dragging the page — half your visitors won't think to try. You can check this right now on your own phone. Removing the fixed width and re-laying the blocks takes a few days for a small site.`;
+    },
+  },
+
+  wall_of_text: {
+    ru: () =>
+      "Прочитал страницы вашего сайта: текст идёт сплошной стеной, без подзаголовков. Страницы не читают подряд — их просматривают по диагонали, цепляясь за заголовки; когда цепляться не за что, человек не находит нужный ему абзац и уходит, хотя ответ на его вопрос там был. Разбить текст на разделы с понятными подзаголовками и вынести главное в начало каждого — день работы.",
+    en: () =>
+      "I read through your pages: the text runs as one solid wall with no subheadings. People don't read pages top to bottom — they skim, catching on headings; with nothing to catch on, a visitor never finds the paragraph they needed and leaves, even though the answer was there. Breaking the text into sections with clear subheadings and leading each with the point takes a day.",
+  },
+
   no_favicon: {
     ru: () =>
       "Мелочь, которую заметил сразу: у вкладки вашего сайта нет значка. Среди десяти открытых вкладок ваша — единственная с пустым квадратиком, и её первой закрывают, потому что не помнят, чья она; в закладках и на экране телефона сайт тоже выглядит безымянным. Сделать значок из логотипа во всех нужных размерах — час.",
@@ -408,19 +449,55 @@ export function latin(name: string): string {
  * Имя отправителя — того менеджера, который нажмёт «скопировать»; студия —
  * из единого источника реквизитов, чтобы название нигде не разъехалось.
  */
-const HELLO: Record<PitchLocale, (site: string | null, sender: string | null) => string> = {
-  ru: (site, who) => {
-    if (who && site) return `Здравствуйте! Меня зовут ${who}, я из ${studio.name}. Пишу по сайту ${site}.`;
-    if (who) return `Здравствуйте! Меня зовут ${who}, я из ${studio.name}.`;
-    if (site) return `Здравствуйте! Пишу из ${studio.name} по сайту ${site}.`;
-    return `Здравствуйте! Пишу из ${studio.name}.`;
+/**
+ * Домен разбираемого сайта — без схемы, www и хвоста.
+ *
+ * Владелец: «в приветственном сообщении указывай наш сайт и
+ * „проанализировали ваш сайт *******.uz"». Домен в первой строке — это то,
+ * что адресат узнаёт мгновенно: он видит, что письмо не рассылка по базе,
+ * а про конкретно его сайт.
+ */
+export function hostOf(url: string): string | null {
+  try {
+    return new URL(url).host.replace(/^www\./i, "") || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Наш адрес без схемы: в письме он читается как подпись, а не как ссылка. */
+const OUR_SITE = siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+const HELLO: Record<
+  PitchLocale,
+  (company: string | null, host: string | null, sender: string | null) => string
+> = {
+  ru: (company, host, who) => {
+    const me = who
+      ? `Меня зовут ${who}, я из ${studio.name} — ${OUR_SITE}.`
+      : `Пишу из ${studio.name} — ${OUR_SITE}.`;
+    const what = host
+      ? company
+        ? `Мы проанализировали сайт ${company} — ${host}.`
+        : `Мы проанализировали ваш сайт ${host}.`
+      : company
+        ? `Мы проанализировали сайт ${company}.`
+        : "Мы проанализировали ваш сайт.";
+    return `Здравствуйте! ${me} ${what}`;
   },
-  en: (site, who) => {
+  en: (company, host, who) => {
     const name = who ? latin(who) : null;
-    if (name && site) return `Hello! My name is ${name}, I'm with ${studio.name}. I'm writing about the ${site} website.`;
-    if (name) return `Hello! My name is ${name}, I'm with ${studio.name}.`;
-    if (site) return `Hello! I'm writing from ${studio.name} about the ${site} website.`;
-    return `Hello! I'm writing from ${studio.name}.`;
+    const me = name
+      ? `My name is ${name}, I'm with ${studio.name} — ${OUR_SITE}.`
+      : `I'm writing from ${studio.name} — ${OUR_SITE}.`;
+    const what = host
+      ? company
+        ? `We've analysed the ${company} website — ${host}.`
+        : `We've analysed your website, ${host}.`
+      : company
+        ? `We've analysed the ${company} website.`
+        : "We've analysed your website.";
+    return `Hello! ${me} ${what}`;
   },
 };
 
@@ -474,7 +551,7 @@ export function pitch(
     ok: true,
     finding,
     text: [
-      HELLO[locale](company, who),
+      HELLO[locale](company, hostOf(report.url), who),
       "",
       body,
       "",

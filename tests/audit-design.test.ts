@@ -9,7 +9,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { analyze } from "@/lib/audit/checks";
-import { copyrightYear, designEra, tablesLayout } from "@/lib/audit/design";
+import {
+  baseFontPx,
+  copyrightYear,
+  designEra,
+  fontFamilies,
+  forcedWidthPx,
+  tablesLayout,
+} from "@/lib/audit/design";
 import {
   broken,
   decodeEntities,
@@ -84,6 +91,8 @@ const assets = (over: Partial<PageAssets> = {}): PageAssets => ({
   brokenImages: [],
   checkedLinks: 0,
   brokenLinks: [],
+  contactsHtml: null,
+  contactsUrl: null,
   ...over,
 });
 
@@ -91,6 +100,7 @@ const DESIGN_CODES = [
   "ancient_layout", "dated_layout", "no_responsive_css", "zoom_locked", "frames", "flash", "marquee",
   "visitor_counter", "under_construction", "placeholder_text", "stale_copyright", "broken_images",
   "broken_links", "ie_only", "autoplay_sound", "popup_onload", "ancient_scripts", "no_favicon",
+  "tiny_text", "font_zoo", "horizontal_scroll", "wall_of_text",
 ];
 
 const designFindings = (report: ReturnType<typeof analyze>) =>
@@ -216,7 +226,8 @@ test("у каждой новой находки есть заход на обо�
     probe({ html: MODERN.replace(/<style>[\s\S]*?<\/style>/, ""), assets: assets({ css: ".a{float:left}.b{float:left}.c{float:left}" }) }),
     NOW,
   );
-  const all = [...designFindings(report), ...designFindings(dated)];
+  const ugly = analyze(probe({ html: UGLY, assets: assets({ css: UGLY_CSS }) }), NOW);
+  const all = [...designFindings(report), ...designFindings(dated), ...designFindings(ugly)];
   const seen = new Set(all.map((f) => f.code));
   for (const code of DESIGN_CODES) assert.ok(seen.has(code), `находка ${code} не воспроизведена`);
 
@@ -276,4 +287,56 @@ test("битый — это 404, 410 и падение сервера; 403 ро�
   assert.equal(broken(401), false);
   assert.equal(broken(200), false);
   assert.equal(broken(null), false);
+});
+
+/* ── Глазами дизайнера ─────────────────────────────────────────────────── */
+
+// Мелкий текст, зоопарк шрифтов, жёсткая ширина и стена текста — всё то,
+// что видно глазами, а не инструментами.
+const UGLY_CSS = `
+  html{font-size:16px}
+  body{font-size:11px;font-family:"PT Sans",sans-serif;min-width:1200px}
+  h1{font-family:Georgia,serif}
+  .promo{font-family:"Comic Sans MS",cursive}
+  .note{font-family:Tahoma,sans-serif}
+  .icon{font-family:FontAwesome}
+  .grid{display:grid}
+  @media (max-width:600px){.grid{display:block}}
+`;
+
+const UGLY = MODERN.replace(
+  "<p>Кухня на заказ — от 12 000 000 сум</p>",
+  `<p>${"Мы работаем на рынке мебели много лет и делаем кухни, шкафы, гардеробные и мебель для гостиных под заказ по вашим размерам. ".repeat(20)}</p>`,
+).replace(/<style>[\s\S]*?<\/style>/, "");
+
+test("глазами дизайнера: мелкий текст, зоопарк шрифтов, ширина под монитор, стена текста", () => {
+  const codes = designFindings(analyze(probe({ html: UGLY, assets: assets({ css: UGLY_CSS }) }), NOW)).map((f) => f.code);
+  for (const expected of ["tiny_text", "font_zoo", "horizontal_scroll", "wall_of_text"]) {
+    assert.ok(codes.includes(expected), `не найдено: ${expected} (есть: ${codes.join(", ")})`);
+  }
+  // Современный образец ничего из этого не получает.
+  assert.deepEqual(
+    designFindings(analyze(probe({ assets: assets() }), NOW)).map((f) => f.code),
+    [],
+  );
+});
+
+test("размер текста берётся из правила для body, иконочные шрифты за шрифты не считаются", () => {
+  assert.equal(baseFontPx("html{font-size:16px}body{font-size:12px}"), 12);
+  assert.equal(baseFontPx("body,html{font-size:13px}"), 13);
+  assert.equal(baseFontPx(".intro{font-size:11px}"), null, "правило не для body");
+  assert.equal(baseFontPx("body{font-size:90%}"), null, "проценты не переводим в пиксели");
+  // Последнее правило побеждает — как в браузере.
+  assert.equal(baseFontPx("body{font-size:11px}body{font-size:16px}"), 16);
+
+  assert.deepEqual(fontFamilies('a{font-family:"PT Sans",sans-serif}b{font-family:Georgia}'), ["pt sans", "georgia"]);
+  assert.deepEqual(fontFamilies("i{font-family:FontAwesome}s{font-family:inherit}p{font-family:serif}"), []);
+});
+
+test("жёсткая ширина: под монитор — находка, защита от узких экранов — нет", () => {
+  assert.equal(forcedWidthPx("", "body{min-width:1200px}"), 1200);
+  assert.equal(forcedWidthPx("", ".container{min-width:980px}"), 980);
+  assert.equal(forcedWidthPx("", "body{min-width:320px}"), null, "320 — это не макет под монитор");
+  assert.equal(forcedWidthPx("", ".badge{min-width:1000px}"), null, "случайный блок — не макет");
+  assert.equal(forcedWidthPx('<body style="min-width:1024px">', ""), 1024);
 });

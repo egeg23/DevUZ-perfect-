@@ -102,6 +102,80 @@ function plural(n: number, one: string, few: string, many: string): string {
   return many;
 }
 
+
+/* ── Взгляд дизайнера ──────────────────────────────────────────────────── */
+
+/**
+ * Базовый размер текста в пикселях — то, чем набрано тело страницы.
+ *
+ * Меряется по правилу для `body` или `html`: именно от него наследуется
+ * весь остальной текст. Значения в процентах и em не берём — от них до
+ * пикселей на экране путь неоднозначный, а ошибиться тут значит сказать
+ * владельцу «у вас мелкий шрифт» про нормальный сайт.
+ */
+export function baseFontPx(styles: string): number | null {
+  let found: number | null = null;
+  for (const [selector, body] of rules(styles)) {
+    if (!/(^|,)\s*(html|body)\s*(,|$)/.test(selector)) continue;
+    const size = body.match(/(?:^|[;{\s])font-size\s*:\s*(\d+(?:\.\d+)?)px/i);
+    // Последнее правило побеждает — как и в браузере.
+    if (size) found = Number(size[1]);
+  }
+  return found;
+}
+
+/**
+ * Правила стилей парами «селектор — тело».
+ *
+ * Разбор идёт без опоры на разделитель перед селектором: `}` предыдущего
+ * правила съедается его же совпадением, и правило, стоящее сразу за ним
+ * без переноса строки, иначе не находится вовсе. Минифицированные стили
+ * выглядят ровно так.
+ */
+function rules(styles: string): Array<[selector: string, body: string]> {
+  const out: Array<[string, string]> = [];
+  for (const m of styles.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
+    out.push([m[1].trim().toLowerCase(), m[2]]);
+  }
+  return out;
+}
+
+const GENERIC_FONT = /^(inherit|initial|unset|revert|serif|sans-serif|monospace|cursive|fantasy|system-ui|-apple-system|blinkmacsystemfont|ui-\w+|var\(|attr\()/i;
+const ICON_FONT = /(font ?awesome|glyphicon|material icons|icomoon|fontello|feather|bootstrap-icons|iconfont)/i;
+
+/** Разные семейства шрифтов на странице — без иконочных и общих. */
+export function fontFamilies(styles: string): string[] {
+  const families = new Set<string>();
+  for (const m of styles.matchAll(/font-family\s*:\s*([^;}]+)/gi)) {
+    const first = m[1].split(",")[0].trim().replace(/^["']|["']$/g, "").toLowerCase();
+    if (!first || GENERIC_FONT.test(first) || ICON_FONT.test(first)) continue;
+    families.add(first);
+  }
+  return [...families];
+}
+
+/**
+ * Жёсткая минимальная ширина макета: страница не помещается в телефон и
+ * едет вбок. Пороги ниже 900 — это нормальная защита от совсем узких
+ * экранов, а не макет под монитор.
+ */
+export function forcedWidthPx(html: string, styles: string): number | null {
+  let widest: number | null = null;
+  const wider = (px: number) => {
+    if (px >= 900 && (widest === null || px > widest)) widest = px;
+  };
+
+  for (const [selector, body] of rules(styles)) {
+    if (!/(html|body|\.container|\.wrapper|\.page|#container|#wrapper|#page)/.test(selector)) continue;
+    const px = body.match(/min-width\s*:\s*(\d{3,4})px/i);
+    if (px) wider(Number(px[1]));
+  }
+  for (const m of html.matchAll(/<body[^>]*style="[^"]*min-width\s*:\s*(\d{3,4})px/gi)) {
+    wider(Number(m[1]));
+  }
+  return widest;
+}
+
 /**
  * Проверки вёрстки и «раннего интернета». `now` передаётся аргументом:
  * иначе проверка подвала зависела бы от дня запуска и однажды сменила бы
@@ -312,6 +386,59 @@ export function designChecks(probe: PageProbe, now: Date): { findings: Finding[]
       impact:
         "Меню, галереи и формы работают на библиотеках, которые не обновляют много лет. С каждым обновлением телефонов и браузеров что-то из этого перестаёт работать — обычно молча: кнопка не нажимается, форма не отправляется, и никто об этом не сообщает.",
       fix: "Заменяем устаревшие компоненты современными и проверяем каждую кнопку и форму на реальных телефонах. День-два.",
+    });
+  }
+
+  // ── Глазами дизайнера ──────────────────────────────────────────────
+  // Всё, что ниже, видно без инструментов: открыть сайт и посмотреть.
+
+  const styles = `${inlineStyles(html)}\n${assets?.css ?? ""}`;
+  const base = facts.cssRead || inlineStyles(html).trim() ? baseFontPx(styles) : null;
+  if (base !== null && base < 14) {
+    add({
+      code: "tiny_text",
+      severity: "minor",
+      title: `Основной текст набран размером ${base} пикселей — это мелко`,
+      impact:
+        "На телефоне такой текст читается с прищуром, а после сорока — не читается вовсе. Человек не станет увеличивать страницу пальцами ради описания услуги: он закроет её и откроет следующую, где написано крупнее.",
+      fix: "Поднимаем основной текст до привычных шестнадцати пунктов и выравниваем по нему заголовки и подписи, чтобы страница осталась соразмерной. Несколько часов.",
+    });
+  }
+
+  const families = fontFamilies(styles);
+  if (families.length >= 4) {
+    add({
+      code: "font_zoo",
+      severity: "minor",
+      title: `На страницах ${families.length} разных шрифта`,
+      impact:
+        "Каждый новый шрифт читается как кусок с другого сайта: страница выглядит собранной из частей, а не сделанной. Посетитель не назовёт причину, но аккуратной компанию не сочтёт — а именно по этому ощущению и выбирают, кому доверить деньги.",
+      fix: "Оставляем два шрифта — заголовочный и текстовый — и приводим к ним все страницы. День работы, и сайт начинает выглядеть цельным.",
+    });
+  }
+
+  const forced = forcedWidthPx(html, styles);
+  if (forced !== null) {
+    add({
+      code: "horizontal_scroll",
+      severity: "major",
+      title: `Страница не уже ${forced} точек — на телефоне её возит вбок`,
+      impact:
+        "Экран телефона вдвое уже, поэтому страница не помещается: появляется горизонтальная прокрутка, часть текста и кнопок уезжает за край, и добраться до них можно только двигая страницу пальцем. Половина посетителей до этого не додумается.",
+      fix: "Снимаем жёсткую ширину и переверстываем блоки так, чтобы они сами подстраивались под экран. Несколько дней для небольшого сайта.",
+    });
+  }
+
+  const body = text.trim();
+  const subheadings = (html.match(/<h[23]\b/gi) ?? []).length;
+  if (!probe.truncated && body.length > 2500 && subheadings < 2) {
+    add({
+      code: "wall_of_text",
+      severity: "minor",
+      title: "Текст идёт сплошной стеной, без подзаголовков",
+      impact:
+        "Страницу не читают подряд — её просматривают по диагонали, цепляясь за заголовки. Когда цепляться не за что, посетитель не находит нужный ему абзац и уходит, хотя ответ на его вопрос на странице был.",
+      fix: "Разбиваем текст на разделы с понятными подзаголовками и выносим главное в начало каждого. День работы.",
     });
   }
 

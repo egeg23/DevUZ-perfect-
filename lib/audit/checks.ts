@@ -17,6 +17,12 @@
  * Функция чистая: на входе HTML и замеры, на выходе список. Никаких запросов,
  * поэтому её целиком закрывают тесты.
  */
+import {
+  EMPTY_CONTACTS,
+  extractContacts,
+  mergeContacts,
+  type Contacts,
+} from "@/lib/audit/contacts";
 import { designChecks, type DesignFacts } from "@/lib/audit/design";
 import type { PageProbe } from "@/lib/audit/fetch";
 import { classify } from "@/lib/razbor/classify";
@@ -58,6 +64,8 @@ export type AuditReport = {
      * Необязательное: отчёты, сохранённые до появления проверки, его не несут.
      */
     design?: DesignFacts;
+    /** Куда писать: телефоны, почта, мессенджеры — с сайта компании. */
+    contacts?: Contacts;
   };
 };
 
@@ -138,6 +146,7 @@ export function unreachable(url: string, why: string): AuditReport {
       certDaysLeft: null,
       niche: null,
       design: { era: "unknown", mediaQueries: 0, flexOrGrid: false, tablesLayout: false, cssRead: false },
+      contacts: EMPTY_CONTACTS,
     },
   };
 }
@@ -399,6 +408,12 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
       // запроса не делаем, отчёт остаётся мгновенным.
       niche: classify({ url: probe.finalUrl, html, title: textBetween(html, "title") })?.niche ?? null,
       design: design.facts,
+      // Контакты — с главной и со страницы контактов, если она нашлась.
+      contacts: mergeContacts(
+        extractContacts(html),
+        probe.assets?.contactsHtml ? extractContacts(probe.assets.contactsHtml) : EMPTY_CONTACTS,
+        probe.assets?.contactsUrl ?? null,
+      ),
     },
   };
 }
