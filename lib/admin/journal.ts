@@ -53,6 +53,8 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "staff.grade_changed": "сменил грейд или ставку сотруднику",
   "project.money_set": "проставил деньги по проекту",
   "project.quote_set": "смета проекта изменена",
+  "plan.set": "поставил план",
+  "plan.removed": "снял план",
   "project.payment_added": "подтвердил платёж клиента",
   "project.payment_removed": "удалил платёж клиента",
   "payout.recorded": "записал выплату сотруднику",
