@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { Container } from "@/components/ui/container";
 import { razborCopy } from "@/content/razbor/page-copy";
-import { razborsFor } from "@/content/razbor/items";
+import { listRazbors } from "@/lib/razbor/store";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 import { isRazborLocale, localeHref } from "@/lib/razbor/routing";
@@ -38,7 +38,7 @@ export default async function RazborIndex({
   if (!isLocale(raw) || !isRazborLocale(raw)) notFound();
   const locale = raw;
   const copy = razborCopy[locale];
-  const items = razborsFor(locale);
+  const items = await listRazbors(locale);
 
   return (
     <Container className="pb-24 pt-36">

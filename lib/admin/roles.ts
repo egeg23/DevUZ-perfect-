@@ -82,6 +82,9 @@ export const SECTIONS: readonly Section[] = [
   { href: "/admin/team", label: "Команда", roles: WITH_HEAD },
   // Партнёры — деньги посторонним людям: только владелец.
   { href: "/admin/partners", label: "Партнёры", roles: ADMIN_ONLY },
+  // Разборы — только владельцу: опубликованный разбор называет чужой сайт
+  // плохим под именем студии, и отозвать это нельзя.
+  { href: "/admin/razbor", label: "Разборы", roles: ADMIN_ONLY },
   { href: "/admin/audit", label: "Журнал", roles: ADMIN_ONLY },
   // Инструкции — последними: это справка, а не ежедневная работа. Видят все,
   // и каждый читает только про свои вкладки.

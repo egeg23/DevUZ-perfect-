@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { todayInTashkent } from "@/lib/admin/pulse";
+import { SHIFT_AT } from "@/lib/razbor/shift";
 import {
   renderShiftReport,
   SHIFT_SCHEDULE,
@@ -118,46 +119,29 @@ test("свип поднимает тревогу до отправки, чтоб
   assert.ok(warn > 0 && send > warn, "сторож вызывается раньше отправки");
 });
 
-// Промпты плановых смен лежат в репозитории копией: саму рутину из кода не
-// видно, её нельзя сравнить с прошлой версией и нельзя восстановить. Копия
-// без обязательных кусков бесполезна — вот их и стережём.
-for (const [file, shift] of [
-  [".claude/routines/razbor-daily.md", "razbor"],
-  [".claude/routines/experiment-300-2000.md", "experiment"],
-] as const) {
-  test(`промпт смены ${shift}: сама достаёт репозиторий и отчитывается при любом исходе`, () => {
-    const prompt = read(file);
+// Разборы больше не рутина: плановая сессия стартует без единого внешнего
+// инструмента, и тремя ночами подряд это доказано. Смена переехала в свип,
+// а от рутин остался эксперимент — в том же положении и с тем же диагнозом.
+test("в репозитории не осталось инструкций для механизма, от которого отказались", () => {
+  const readme = read(".claude/routines/README.md");
+  assert.match(readme, /without connector/, "README не называет причину словами инструмента");
+  assert.match(readme, /lib\/razbor\/shift-run\.ts/, "не сказано, где смена живёт теперь");
 
-    // Смена стартует в пустой папке. Без этих трёх шагов первая же команда
-    // падает, и смена кончается ничем — как 16 и 17 сентября.
-    assert.match(prompt, /add_repo/, "нечем достать репозиторий");
-    assert.match(prompt, /register_repo_root/, "клон без регистрации не даёт навыков");
-    assert.match(prompt, /git clone https:\/\/github\.com\/egeg23\/DevUZ-perfect-\.git/, "нет запасного пути");
+  // Файла разборной рутины быть не должно: он описывал шаги через add_repo,
+  // которого в плановой сессии нет. Инструкция, которую нельзя выполнить,
+  // хуже отсутствующей — по ней будут чинить не то.
+  assert.throws(() => read(".claude/routines/razbor-daily.md"));
+});
 
-    // Провал должен быть слышен. Строка про недоступный репозиторий — это
-    // разница между «смена упала» и «два дня тишины».
-    assert.match(
-      prompt,
-      new RegExp(`insert into shift_reports \\(shift, body\\) values \\('${shift}', 'Смена не началась`),
-      "провал бутстрапа уходит молча",
-    );
-    assert.ok(
-      prompt.includes(`insert into shift_reports (shift, body) values ('${shift}',`),
-      "смена не знает, куда писать отчёт",
-    );
-
-    // Ночью никто не ответит на вопрос: смена, которая ждёт отмашки, висит
-    // до самого конца контейнера.
-    assert.match(prompt, /НИКТО НЕ СМОТРИТ/, "смена может уйти спрашивать разрешения");
-
-    // Ключ сторожа и ключ смены — одна строка: разъедутся, и сторож будет
-    // звонить о смене, которая исправно отчитывается.
-    assert.ok(
-      SHIFT_SCHEDULE.some((e) => e.shift === shift),
-      "смена не в расписании сторожа",
-    );
-  });
-}
+test("смена разборов отчитывается тем же ключом, который сторожит сторож", () => {
+  // Ключ смены и ключ расписания — одна строка. Разъедутся, и сторож будет
+  // звонить о смене, которая исправно отчиталась.
+  assert.ok(SHIFT_SCHEDULE.some((e) => e.shift === "razbor"));
+  assert.match(read("lib/razbor/shift-run.ts"), /shift: "razbor"/);
+  // Час смены и час, с которого сторож начинает ждать, — тоже одно число.
+  const razbor = SHIFT_SCHEDULE.find((e) => e.shift === "razbor");
+  assert.equal(razbor?.firesAt, SHIFT_AT);
+});
 
 // Голос смены, которому не нужны инструменты. Плановая сессия стартует с
 // bash и ничем больше: ни execute_sql, ни GitHub, ни add_repo. Правило

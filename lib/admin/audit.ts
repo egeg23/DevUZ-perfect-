@@ -57,6 +57,8 @@ export const AUDIT_ACTIONS = [
   "plan.removed",
   "prospect.queued",
   "prospect.taken_over",
+  "razbor.published",
+  "razbor.rejected",
   "project.payment_added",
   "project.payment_removed",
   "payout.recorded",

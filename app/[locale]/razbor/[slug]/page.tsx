@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 
 import { Container } from "@/components/ui/container";
 import { razborCopy } from "@/content/razbor/page-copy";
-import { razborBySlug, razbors, siblings } from "@/content/razbor/items";
+import { razbors } from "@/content/razbor/items";
+import { razborBySlug, siblings } from "@/lib/razbor/store";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 import { isRazborLocale, localeHref } from "@/lib/razbor/routing";
@@ -24,7 +25,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isLocale(locale) || !isRazborLocale(locale)) return {};
-  const item = razborBySlug(locale, slug);
+  const item = await razborBySlug(locale, slug);
   if (!item) return {};
 
   return buildMetadata({
@@ -48,11 +49,11 @@ export default async function RazborPage({
   const { locale: raw, slug } = await params;
   if (!isLocale(raw) || !isRazborLocale(raw)) notFound();
   const locale = raw;
-  const item = razborBySlug(locale, slug);
+  const item = await razborBySlug(locale, slug);
   if (!item) notFound();
 
   const copy = razborCopy[locale];
-  const near = siblings(item);
+  const near = await siblings(item);
   const service = serviceFor(item.niche);
 
   return (

@@ -4,6 +4,7 @@ import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { runCoach } from "@/lib/admin/coach-store";
 import { sweepOrders } from "@/lib/admin/order-sweep-run";
 import { runTalks } from "@/lib/admin/outreach-talk-run";
+import { runRazborShift } from "@/lib/razbor/shift-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
@@ -199,6 +200,13 @@ export async function POST(request: Request) {
   const talks = await runTalks();
   if (talks.errors.length) console.error("касания:", talks.errors.join("; "));
 
+  // Ночная смена разборов. Переехала сюда с плановой сессии: у той не было
+  // ни базы, ни репозитория, ни ключа модели, и три ночи подряд она
+  // отрабатывала по полчаса, не оставляя следа. Сама решает, пора ли —
+  // раз в сутки, в восемь утра по Ташкенту.
+  const razbor = await runRazborShift(new Date());
+  if (razbor.errors.length) console.error("разборы:", razbor.errors.join("; "));
+
   // Отчёты плановых смен — владельцу. У смены нет токена бота, у свипа есть.
   // Сторож молчания идёт ПЕРЕД отправкой: тревога, поднятая сейчас, уходит
   // этим же проходом, а не через пять минут следующим.
@@ -222,6 +230,7 @@ export async function POST(request: Request) {
     shifts,
     silent,
     talks,
+    razbor,
     ok: true,
     sent,
     skipped,

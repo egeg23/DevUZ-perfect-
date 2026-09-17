@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { cases } from "@/content/cases";
-import { razbors } from "@/content/razbor/items";
+import { listRazbors } from "@/lib/razbor/store";
 import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
 import { products } from "@/content/products";
 import { services } from "@/content/services";
@@ -15,7 +15,15 @@ import { absoluteUrl } from "@/lib/seo";
  * дублировать hreflang и в sitemap, а не только в <head>: так связка языковых
  * версий доходит до индекса даже если робот не дошёл до самой страницы.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Разборы теперь живут в базе: ночная смена публикует их без выкатки, и
+  // sitemap, собранный из файла, не узнал бы о них до следующего деплоя —
+  // то есть ровно та страница, ради которой раздел и существует, осталась
+  // бы невидимой для поиска.
+  const razbors = (
+    await Promise.all(RAZBOR_LOCALES.map((locale) => listRazbors(locale)))
+  ).flat();
+
   const paths = [
     { path: "", priority: 1, changeFrequency: "weekly" as const },
     { path: "services", priority: 0.9, changeFrequency: "monthly" as const },

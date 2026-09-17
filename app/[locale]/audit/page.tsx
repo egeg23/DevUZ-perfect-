@@ -5,7 +5,7 @@ import { SiteAudit } from "@/components/audit/site-audit";
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { getDictionary } from "@/content/dictionaries";
-import { razborsByNiche, type RazborLink } from "@/content/razbor/items";
+import { razborsByNiche, type RazborLink } from "@/lib/razbor/store";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { isRazborLocale } from "@/lib/razbor/routing";
 import { buildMetadata } from "@/lib/seo";
@@ -51,7 +51,7 @@ export default async function AuditPage({
               Карта считается на сервере: класть в браузер тексты всех
               разборов значило бы грузить килобайты статей, которые он не
               откроет. */}
-          <SiteAudit dict={dict} razbors={razborsForNiche(locale)} />
+          <SiteAudit dict={dict} razbors={await razborsForNiche(locale)} />
         </div>
       </Container>
 
@@ -61,6 +61,6 @@ export default async function AuditPage({
 }
 
 /** Разборы есть только на двух языках; на остальных блока просто нет. */
-function razborsForNiche(locale: Locale): Record<string, RazborLink[]> {
+async function razborsForNiche(locale: Locale): Promise<Record<string, RazborLink[]>> {
   return isRazborLocale(locale) ? razborsByNiche(locale) : {};
 }

@@ -162,6 +162,15 @@ const ru: HelpCopy = {
       what: "Файлы готовых продуктов, которые получают покупатели после оплаты.",
       how: ["Выкладывайте новую версию, когда продукт обновился."],
     },
+    "/admin/razbor": {
+      what: "Разборы чужих сайтов, которые ночная смена написала и оставила на проверку. Опубликованный разбор уходит на сайт и в поиск сразу, без выкатки, и отозвать его оттуда нельзя.",
+      how: [
+        "Прочитайте обе статьи целиком — русскую и узбекскую. Они не перевод друг друга: это разные страницы под разные запросы.",
+        "Проверьте, что компания нигде не названа: ни именем, ни адресом, ни на картинке.",
+        "Сверьте числа с находками. Числа, которого нет в разборе, в тексте быть не должно.",
+        "Не публикуем — впишите причину. Без неё смена вернётся к этому сайту снова.",
+      ],
+    },
     "/admin/audit": {
       what: "Кто что сделал в панели: взял лид, открыл контакт, подтвердил оплату. Записи нельзя изменить или удалить.",
       how: ["Сюда смотрят, когда надо разобраться, что произошло и когда."],
@@ -318,6 +327,15 @@ const uz: HelpCopy = {
     "/admin/releases": {
       what: "Xaridorlar to‘lovdan keyin oladigan tayyor mahsulot fayllari.",
       how: ["Mahsulot yangilangach, yangi versiyani joylang."],
+    },
+    "/admin/razbor": {
+      what: "Tungi smena yozib, tekshiruvga qoldirgan begona saytlar tahlili. Chop etilgan tahlil darhol saytga va qidiruvga chiqadi, uni ortga qaytarib bo‘lmaydi.",
+      how: [
+        "Ikkala maqolani ham to‘liq o‘qing — ruschasini ham, o‘zbekchasini ham. Ular bir-birining tarjimasi emas: bular turli so‘rovlar uchun turli sahifalar.",
+        "Kompaniya hech qayerda nomlanmaganiga ishonch hosil qiling: na nomi, na manzili, na rasmda.",
+        "Raqamlarni tahlil bilan solishtiring. Tahlilda yo‘q raqam matnda ham bo‘lmasligi kerak.",
+        "Chop etmasangiz — sababini yozing. Usiz smena bu saytga yana qaytadi.",
+      ],
     },
     "/admin/audit": {
       what: "Panelda kim nima qilgani: lidni oldi, aloqa ma’lumotini ochdi, to‘lovni tasdiqladi. Yozuvlarni o‘zgartirib ham, o‘chirib ham bo‘lmaydi.",
