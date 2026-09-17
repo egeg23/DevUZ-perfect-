@@ -55,6 +55,7 @@ export const AUDIT_ACTIONS = [
   "project.quote_set",
   "plan.set",
   "plan.removed",
+  "prospect.queued",
   "project.payment_added",
   "project.payment_removed",
   "payout.recorded",
