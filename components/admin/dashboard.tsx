@@ -434,3 +434,117 @@ export function TaxesSoon({ rows }: { rows: Upcoming[] }) {
     </section>
   );
 }
+
+/* ── Рекомендации ──────────────────────────────────────────────────────── */
+
+import { refreshReviews } from "@/app/admin/plans/actions";
+import type { Review } from "@/lib/admin/coach-store";
+
+function dayLabel(iso: string): string {
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  return `${d}.${m}.${y.slice(2)}`;
+}
+
+export function ReviewCard({ review, title, canRefresh }: { review: Review | null; title: string; canRefresh?: boolean }) {
+  return (
+    <section className={CARD}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className={H2}>
+          {title}
+          {review ? <span className="ml-2 normal-case tracking-normal text-faint">от {dayLabel(review.period_start)}</span> : null}
+        </p>
+        {canRefresh ? (
+          <form action={refreshReviews}>
+            <button type="submit" className="text-xs text-faint hover:text-green">
+              собрать заново
+            </button>
+          </form>
+        ) : null}
+      </div>
+      {review ? (
+        <div className="mt-2 space-y-3 text-sm leading-relaxed">
+          <p className="font-medium">{review.body.headline}</p>
+          {review.body.last_period ? (
+            <p className="text-muted">
+              <span className="text-faint">Прошлый период: </span>
+              {review.body.last_period}
+            </p>
+          ) : null}
+          {review.body.attention.length ? (
+            <div>
+              <p className="text-xs uppercase tracking-wider text-gold">На что смотреть</p>
+              <ul className="mt-1 list-disc space-y-1 pl-5">
+                {review.body.attention.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {review.body.actions.length ? (
+            <div>
+              <p className="text-xs uppercase tracking-wider text-green">Что делать</p>
+              <ul className="mt-1 list-disc space-y-1 pl-5">
+                {review.body.actions.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {review.body.learn.length ? (
+            <div>
+              <p className="text-xs uppercase tracking-wider text-faint">Чему научиться</p>
+              <ul className="mt-1 list-disc space-y-1 pl-5">
+                {review.body.learn.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {review.body.wins.length ? (
+            <p className="text-muted">
+              <span className="text-faint">Что хорошо: </span>
+              {review.body.wins.join(" · ")}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <p className="mt-2 text-sm text-muted">
+          {title.startsWith("На сегодня")
+            ? "Собирается каждое утро с семи по Ташкенту."
+            : "Собирается по понедельникам с шести утра по Ташкенту. Через неделю — замер и новый план."}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** Недельные рекомендации команды — заголовок и действия, без развёртки. */
+export function TeamReviews({ rows }: { rows: { name: string; review: Review | null }[] }) {
+  if (!rows.length) return null;
+  return (
+    <section className={CARD}>
+      <p className={H2}>Рекомендации команде на неделю</p>
+      <ul className="mt-3 space-y-3 text-sm">
+        {rows.map((r) => (
+          <li key={r.name}>
+            <p>
+              <span className="font-medium">{r.name}</span>
+              {r.review ? (
+                <span className="text-muted"> — {r.review.body.headline}</span>
+              ) : (
+                <span className="text-faint"> — рекомендации ещё нет</span>
+              )}
+            </p>
+            {r.review?.body.actions.length ? (
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-muted">
+                {r.review.body.actions.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

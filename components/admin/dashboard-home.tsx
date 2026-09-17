@@ -4,7 +4,9 @@ import {
   ContractsToSign,
   ExpectedPayments,
   PlanFactBlock,
+  ReviewCard,
   StuckLeads,
+  TeamReviews,
   TaxesSoon,
   TeamTable,
   Tiles,
@@ -27,6 +29,7 @@ import {
   type PlanFact,
   type StaffPulse,
 } from "@/lib/admin/pulse";
+import { latestReviews } from "@/lib/admin/coach-store";
 import { loadPlans, loadPulseRows, pendingContracts } from "@/lib/admin/pulse-store";
 import type { Staff } from "@/lib/admin/session";
 import { DEFAULT_DEADLINES, upcoming } from "@/lib/admin/tax-calendar";
@@ -48,6 +51,8 @@ const PLAN_NOTICE: Record<string, string> = {
   invalid: "Цель не разобралась: целое число, без знаков.",
   offline: "База недоступна.",
   failed: "Не получилось.",
+  coach_ok: "Рекомендации собраны.",
+  coach_failed: "Рекомендации не собрались: модель не ответила или ответила числами, которых нет в данных. Подробности в логе сервера.",
 };
 
 export async function DashboardHome({ staff, planNotice }: { staff: Staff; planNotice?: string }) {
@@ -107,6 +112,14 @@ export async function DashboardHome({ staff, planNotice }: { staff: Staff; planN
 
   const notice = planNotice ? PLAN_NOTICE[planNotice] : null;
 
+  // Рекомендации: недельные — всем, кроме владельца; дневные — владельцу и
+  // руководителям. Читаются одним запросом на вид.
+  const [weekly, daily] = await Promise.all([
+    latestReviews([...peopleIds, staff.id], "weekly"),
+    staff.role === "manager" ? Promise.resolve(new Map()) : latestReviews([staff.id], "daily"),
+  ]);
+  const teamReviews = teamRows.map((r) => ({ name: r.name, review: weekly.get(r.id) ?? null }));
+
   /* ── Менеджер ─────────────────────────────────────────────────────── */
   if (staff.role === "manager") {
     const mine = pulse(staff.id, week);
@@ -124,6 +137,7 @@ export async function DashboardHome({ staff, planNotice }: { staff: Staff; planN
           ]}
         />
         <StuckLeads rows={mine.stuck} />
+        <ReviewCard review={weekly.get(staff.id) ?? null} title="Рекомендации на неделю" />
         <PlanFactBlock plans={planRows} canAdd={false} canEdit={false} staffOptions={[]} />
       </div>
     );
@@ -151,8 +165,11 @@ export async function DashboardHome({ staff, planNotice }: { staff: Staff; planN
             { value: money(teamRows.reduce((s, r) => s + r.week.revenue, 0) + mine.revenue), label: "поступлений за неделю" },
           ]}
         />
+        <ReviewCard review={daily.get(staff.id) ?? null} title="На сегодня" />
         <StuckLeads rows={[...mine.stuck, ...teamStuck]} names={names} />
         <TeamTable rows={teamRows} showMoney={false} />
+        <TeamReviews rows={teamReviews} />
+        <ReviewCard review={weekly.get(staff.id) ?? null} title="Рекомендации на неделю" />
         <BestOfWeek rows={teamRows} />
         <PlanFactBlock plans={planRows} canAdd={options.length > 0} canEdit={false} staffOptions={options} />
       </div>
@@ -180,12 +197,14 @@ export async function DashboardHome({ staff, planNotice }: { staff: Staff; planN
           { value: money(dueAll), label: "к выплате команде", tone: dueAll > 0 ? "gold" : "plain" },
         ]}
       />
+      <ReviewCard review={daily.get(staff.id) ?? null} title="На сегодня" canRefresh />
       <TaxesSoon rows={taxes} />
       <StuckLeads rows={allStuck} names={names} />
       <CashChart rows={cash} />
       <ExpectedPayments rows={expected} names={names} />
       <TeamTable rows={teamRows} showMoney />
       <BestOfWeek rows={teamRows} />
+      <TeamReviews rows={teamReviews} />
       <PlanFactBlock plans={planRows} canAdd={options.length > 0} canEdit staffOptions={options} />
     </div>
   );

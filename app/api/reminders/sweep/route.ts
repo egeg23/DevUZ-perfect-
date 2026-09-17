@@ -1,6 +1,7 @@
 import { record } from "@/lib/admin/audit";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
+import { runCoach } from "@/lib/admin/coach-store";
 import { sweepOrders } from "@/lib/admin/order-sweep-run";
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
@@ -185,6 +186,11 @@ export async function POST(request: Request) {
   // узнавать о них от самого покупателя значит узнавать слишком поздно.
   const orders = await sweepOrders();
 
+  // Рекомендации — здесь же: в понедельник утром недельные, каждое утро
+  // дневные. Сам решает, пора ли; в остальные проходы возвращается сразу.
+  const coach = await runCoach(new Date());
+  if (coach.errors.length) console.error("coach:", coach.errors.join("; "));
+
   // Проход считается неудачным, только если не дошло вообще ничего из
   // того, что пробовали. Одно недоставленное письмо при двадцати
   // доставленных — это заблокировавший бота менеджер, а не авария, и
@@ -198,6 +204,7 @@ export async function POST(request: Request) {
   }
 
   return Response.json({
+    coach,
     ok: true,
     sent,
     skipped,
