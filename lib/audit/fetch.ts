@@ -19,6 +19,7 @@ import http from "node:http";
 import https from "node:https";
 import type { TLSSocket } from "node:tls";
 
+import { contactsPagePath } from "@/lib/audit/contacts";
 import { BlockedAddress, normalizeUrl, resolveSafely } from "@/lib/audit/guard";
 
 const TIMEOUT_MS = 8000;
@@ -59,6 +60,9 @@ export type PageAssets = {
   brokenImages: string[];
   checkedLinks: number;
   brokenLinks: string[];
+  /** Разметка страницы контактов — там лежит почта и второй номер. */
+  contactsHtml: string | null;
+  contactsUrl: string | null;
 };
 
 function headerValue(raw: string | string[] | undefined): string {
@@ -205,6 +209,7 @@ const MAX_LINKS = 6;
 const CSS_MAX_BYTES = 200 * 1024;
 // Для картинок и ссылок нужен только статус: тело обрываем сразу.
 const PEEK_MAX_BYTES = 4 * 1024;
+const CONTACTS_MAX_BYTES = 256 * 1024;
 
 /**
  * Сущности разметки в значении — обратно в символы. В адресе картинки
@@ -339,7 +344,12 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
   const images = imageUrls(html, base);
   const links = internalLinks(html, base);
 
-  const [sheets, imageStatuses, linkStatuses, faviconStatus] = await Promise.all([
+  // Страница контактов: там почта и второй номер, которых нет в шапке.
+  // Одна ссылка своего же хоста — это уточнение, а не обход сайта.
+  const contactsHref = contactsPagePath(html);
+  const contactsTarget = contactsHref ? sameOrigin(contactsHref, base) : null;
+
+  const [sheets, imageStatuses, linkStatuses, faviconStatus, contactsPage] = await Promise.all([
     Promise.all(
       cssUrls.map(async (url) => {
         try {
@@ -355,6 +365,11 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
     /<link\b[^>]*\brel\s*=\s*["']?[^"'>]*icon/i.test(html)
       ? Promise.resolve(200)
       : status(new URL("/favicon.ico", base), ip),
+    contactsTarget && contactsTarget.href !== base.href
+      ? once(contactsTarget, ip, { maxBytes: CONTACTS_MAX_BYTES })
+          .then((r) => (r.status < 400 ? r.body : null))
+          .catch(() => null)
+      : Promise.resolve(null),
   ]);
 
   const fetched = sheets.filter((s): s is { body: string; truncated: boolean } => s !== null);
@@ -367,6 +382,8 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
     brokenImages: images.filter((_, i) => broken(imageStatuses[i])).map((u) => u.href),
     checkedLinks: linkStatuses.filter((s) => s !== null).length,
     brokenLinks: links.filter((_, i) => broken(linkStatuses[i])).map((u) => u.href),
+    contactsHtml: contactsPage,
+    contactsUrl: contactsPage ? (contactsTarget?.href ?? null) : null,
   };
 
   return { ...probe, assets };

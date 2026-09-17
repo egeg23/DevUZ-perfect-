@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { auditChunkAction } from "@/app/admin/prospect/actions";
+import { EMPTY_CONTACTS, hasAnyContact } from "@/lib/audit/contacts";
 import type { PitchLocale } from "@/lib/audit/pitch";
 import {
   BATCH_CAP,
@@ -75,6 +76,7 @@ export function ProspectRunner() {
             findings: [],
             draft: null,
             note: "проверка сорвалась — попробуйте эти адреса ещё раз",
+            contacts: EMPTY_CONTACTS,
           })),
         );
       }
@@ -97,13 +99,17 @@ export function ProspectRunner() {
     // Точка с запятой, а не запятая: Excel в русской локали разбирает по ней,
     // а с запятой кладёт всю строку в первую ячейку.
     const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
-    const head = ["Строка", "Адрес", "Компания", "Балл", "Находки", "Черновик", "Примечание"];
+    const head = ["Строка", "Адрес", "Компания", "Балл", "Телефоны", "Telegram", "Почта", "Instagram", "Находки", "Черновик", "Примечание"];
     const body = rows.map((r) =>
       [
         r.raw,
         r.url ?? "",
         r.label ?? "",
         r.score === null ? "" : String(r.score),
+        [...r.contacts.phones, ...r.contacts.whatsapp.filter((w) => !r.contacts.phones.includes(w))].join(" "),
+        r.contacts.telegram.join(" "),
+        r.contacts.emails.join(" "),
+        r.contacts.instagram.join(" "),
         r.findings.map((f) => f.title).join(" · "),
         r.draft ?? "",
         r.note ?? "",
@@ -243,6 +249,72 @@ export function ProspectRunner() {
                     </span>
                   ))}
                 </div>
+              ) : null}
+
+              {hasAnyContact(row.contacts) ? (
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <span className="text-xs uppercase tracking-wider text-faint">Куда написать</span>
+                  {row.contacts.phones.map((phone) => (
+                    <a key={phone} href={`tel:${phone}`} className="font-mono text-blue-soft hover:underline">
+                      {phone}
+                    </a>
+                  ))}
+                  {row.contacts.telegram.map((handle) => (
+                    <a
+                      key={handle}
+                      href={`https://t.me/${handle.replace(/^@/, "")}`}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="text-blue-soft hover:underline"
+                    >
+                      {handle}
+                    </a>
+                  ))}
+                  {row.contacts.whatsapp
+                    .filter((w) => !row.contacts.phones.includes(w))
+                    .map((phone) => (
+                      <a
+                        key={`wa-${phone}`}
+                        href={`https://wa.me/${phone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="font-mono text-blue-soft hover:underline"
+                      >
+                        {phone} <span className="text-faint">WhatsApp</span>
+                      </a>
+                    ))}
+                  {row.contacts.emails.map((mail) => (
+                    <a key={mail} href={`mailto:${mail}`} className="text-blue-soft hover:underline">
+                      {mail}
+                    </a>
+                  ))}
+                  {row.contacts.instagram.map((handle) => (
+                    <a
+                      key={handle}
+                      href={`https://instagram.com/${handle.replace(/^@/, "")}`}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="text-muted hover:underline"
+                    >
+                      {handle}
+                    </a>
+                  ))}
+                  {row.contacts.contactsUrl ? (
+                    <a
+                      href={row.contacts.contactsUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="text-xs text-faint hover:text-muted"
+                    >
+                      страница контактов
+                    </a>
+                  ) : null}
+                </div>
+              ) : row.url ? (
+                <p className="mt-2 text-xs text-faint">
+                  Контактов на сайте не нашлось — ни телефона, ни почты, ни мессенджера. Для владельца
+                  это отдельная беда, а для нас — повод написать через форму на сайте.
+                </p>
               ) : null}
 
               {row.draft ? (
