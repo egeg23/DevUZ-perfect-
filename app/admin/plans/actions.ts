@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requestIp, requireStaff } from "@/lib/admin/guard";
+import { requestIp, requireAdmin, requireStaff } from "@/lib/admin/guard";
+import { runCoach } from "@/lib/admin/coach-store";
 import { periodStart, type Period } from "@/lib/admin/pulse";
 import { removePlan, setPlan } from "@/lib/admin/pulse-store";
 import { teamOf } from "@/lib/admin/team";
@@ -42,4 +43,15 @@ export async function deletePlan(formData: FormData) {
   const result = await removePlan(String(formData.get("plan") ?? ""), staff, await requestIp());
   revalidatePath("/admin");
   redirect(`/admin?p=${result.ok ? "ok" : result.reason}`);
+}
+
+/**
+ * Собрать рекомендации сейчас, не дожидаясь понедельника. Только владелец:
+ * каждый запуск — вызовы модели за деньги, и решает о них тот, кто платит.
+ */
+export async function refreshReviews() {
+  await requireAdmin();
+  const run = await runCoach(new Date(), { force: true });
+  revalidatePath("/admin");
+  redirect(`/admin?p=${run.errors.length && !run.weekly && !run.daily ? "coach_failed" : "coach_ok"}`);
 }
