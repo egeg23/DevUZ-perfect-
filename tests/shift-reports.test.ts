@@ -158,3 +158,34 @@ for (const [file, shift] of [
     );
   });
 }
+
+// Голос смены, которому не нужны инструменты. Плановая сессия стартует с
+// bash и ничем больше: ни execute_sql, ни GitHub, ни add_repo. Правило
+// «напиши строку через execute_sql» выполнить было нечем — отсюда curl.
+test("отчёт смены принимается по curl, и адрес закрыт секретом", () => {
+  const route = read("app/api/shift/report/route.ts");
+
+  // Нет секрета в окружении — отказ всем, включая своих. Обратный порядок
+  // открывает адрес наружу в тот день, когда переменная не доедет.
+  assert.match(route, /if \(!expected \|\| provided !== expected\) \{\s*\n\s+return new Response\("forbidden", \{ status: 403 \}\)/);
+  assert.match(route, /request\.headers\.get\("x-devuz-shift"\)/);
+
+  // Вид смены — из словаря сторожа, а не любой присланный: опечатка в
+  // промпте завела бы смену, о которой сторож не знает, и тревога
+  // прозвенела бы поверх пришедшего отчёта.
+  assert.match(route, /if \(!SHIFT_TITLE\[shift\]\)/);
+  assert.ok(SHIFT_TITLE.razbor && SHIFT_TITLE.experiment);
+
+  // Переменная доезжает до контейнера: compose передаёт только то, что
+  // перечислено у него, остальное из .env молча теряется.
+  assert.match(read("docker-compose.yml"), /SHIFT_REPORT_SECRET: \$\{SHIFT_REPORT_SECRET\}/);
+  assert.match(read(".env.example"), /^SHIFT_REPORT_SECRET=/m);
+});
+
+test("смена читает ответ endpoint-а и по нему понимает, отчиталась ли", () => {
+  // Пустой 200 смена не отличит от «секрет не тот»: она увидит успех там,
+  // где его нет, и снова промолчит.
+  const route = read("app/api/shift/report/route.ts");
+  assert.match(route, /return Response\.json\(\{ ok: true, shift, chars: body\.length \}\)/);
+  assert.match(route, /ok: false, why:/);
+});
