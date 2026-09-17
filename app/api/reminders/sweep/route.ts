@@ -3,6 +3,7 @@ import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { runCoach } from "@/lib/admin/coach-store";
 import { sweepOrders } from "@/lib/admin/order-sweep-run";
+import { sendShiftReports } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
@@ -191,6 +192,9 @@ export async function POST(request: Request) {
   const coach = await runCoach(new Date());
   if (coach.errors.length) console.error("coach:", coach.errors.join("; "));
 
+  // Отчёты плановых смен — владельцу. У смены нет токена бота, у свипа есть.
+  const shifts = await sendShiftReports();
+
   // Проход считается неудачным, только если не дошло вообще ничего из
   // того, что пробовали. Одно недоставленное письмо при двадцати
   // доставленных — это заблокировавший бота менеджер, а не авария, и
@@ -205,6 +209,7 @@ export async function POST(request: Request) {
 
   return Response.json({
     coach,
+    shifts,
     ok: true,
     sent,
     skipped,
