@@ -57,6 +57,8 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "plan.removed": "снял план",
   "prospect.queued": "отправил первое сообщение по сайту",
   "prospect.taken_over": "забрал переписку у ИИ",
+  "razbor.published": "опубликовал разбор",
+  "razbor.rejected": "отклонил разбор",
   "project.payment_added": "подтвердил платёж клиента",
   "project.payment_removed": "удалил платёж клиента",
   "payout.recorded": "записал выплату сотруднику",

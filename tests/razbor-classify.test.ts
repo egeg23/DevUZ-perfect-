@@ -156,7 +156,9 @@ test("разборы ниши показываются под отчётом, а
     new URL("../app/[locale]/audit/page.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(page, /razbors=\{razborsForNiche\(locale\)\}/);
+  // Ожидание здесь не украшение: карта собирается из базы, куда её кладёт
+  // ночная смена, а не из файла, который меняется только выкаткой.
+  assert.match(page, /razbors=\{await razborsForNiche\(locale\)\}/);
   assert.match(page, /isRazborLocale\(locale\) \? razborsByNiche\(locale\) : \{\}/);
 });
 

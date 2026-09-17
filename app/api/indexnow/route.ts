@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { razbors } from "@/content/razbor/items";
+import { listRazbors } from "@/lib/razbor/store";
 import { buildPayload, freshRazborUrls, sendPing } from "@/lib/indexnow";
 import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
 import { siteUrl } from "@/lib/seo";
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
 
   let payload;
   try {
+    const razbors = (await Promise.all(RAZBOR_LOCALES.map((locale) => listRazbors(locale)))).flat();
     const urls = freshRazborUrls(siteUrl, { locales: RAZBOR_LOCALES, items: razbors });
     payload = buildPayload({ key, siteUrl, urls });
   } catch (error) {
