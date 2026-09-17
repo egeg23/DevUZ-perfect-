@@ -75,6 +75,30 @@ test("страница контактов ищется по адресу и по
   assert.equal(contactsPagePath('<a href="/aloqa">Bog‘lanish</a>'), "/aloqa");
   assert.equal(contactsPagePath('<a href="#contact">Наверх</a>'), null, "якорь — не страница");
   assert.equal(contactsPagePath('<a href="/catalog">Каталог</a>'), null);
+
+  // Живой случай: заголовок новости содержал «связей», и страницей
+  // контактов становилась статья. Подпись сверяется целиком, не куском.
+  assert.equal(
+    contactsPagePath('<a href="/uzbekistan-i-daniia-obsudili-razvitie-biznes-sviazei/">Узбекистан и Дания обсудили развитие бизнес-связей</a>'),
+    null,
+  );
+  assert.equal(contactsPagePath('<a href="/news/1">Контакты поставщиков за рубежом</a>'), null, "подпись длиннее ссылки на контакты");
+
+  // Живой случай номер два: в адресе новости «kulturnogo-naslediia»
+  // пряталось «o-nas». Маркер ищется с начала сегмента пути.
+  assert.equal(
+    contactsPagePath('<a href="https://www.uzdaily.uz/ru/kadyrov-i-agentstvo-kulturnogo-naslediia-posporili-o-dome-na-babura/">Читать</a>'),
+    null,
+  );
+  assert.equal(contactsPagePath('<a href="/uz/contact">Aloqa</a>'), "/uz/contact");
+  assert.equal(contactsPagePath('<a href="/ru/o-nas/">Подробнее</a>'), "/ru/o-nas/");
+  assert.equal(contactsPagePath('<a href="/kontakty-i-adresa">Где мы</a>'), "/kontakty-i-adresa");
+
+  // Адрес надёжнее подписи: если есть и то и другое — берём адрес.
+  assert.equal(
+    contactsPagePath('<a href="/news/9">Контакты</a><a href="/kontakty">Свяжитесь с нами</a>'),
+    "/kontakty",
+  );
 });
 
 test("контакты главной и страницы контактов сливаются, главная первой", () => {

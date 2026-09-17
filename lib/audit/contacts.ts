@@ -183,17 +183,51 @@ export function contactsLine(c: Contacts): string {
  * почта и второй номер лежат уже там. Берём первую подходящую своего же
  * хоста: ходить по всем ссылкам ради контактов — это уже обход сайта.
  */
-const CONTACTS_HINT = /kontakt|contact|aloqa|bogla|svyaz|about|o-nas|about-us|haqida/i;
+/**
+ * Маркер контактов в адресе — с начала сегмента пути, а не подстрокой.
+ *
+ * Подстрока ловила новости: в `kulturnogo-naslediia` прячется `o-nas`, и
+ * страницей контактов становилась статья. Сегмент пути — это то, что
+ * человек видит в адресной строке как раздел сайта.
+ */
+const CONTACTS_SEGMENT =
+  /(^|\/)(kontakt|contact|aloqa|bogla|bog['’ʻ]?lanish|o-nas|about|haqida|manzil)[^/]*(\/|$)/i;
+
+function looksLikeContactsPath(href: string): boolean {
+  try {
+    return CONTACTS_SEGMENT.test(new URL(href, "https://site.invalid/").pathname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Подпись ссылки на контакты — целиком, а не куском.
+ *
+ * Поиск по куску слова ловил заголовки новостей: «Узбекистан и Дания
+ * обсудили развитие бизнес-связей» — это не страница контактов, а статья,
+ * и менеджер, нажав «страница контактов», попадал бы на неё. Ссылка на
+ * контакты подписана коротко и предсказуемо, поэтому подпись сверяется
+ * целиком.
+ */
+const CONTACTS_LABEL =
+  /^(наши\s+)?(контакт[ыаов]?|связаться(\s+с\s+нами)?|как\s+нас\s+найти|о\s+компании|о\s+нас|contacts?|contact\s+us|get\s+in\s+touch|about\s+us|aloqa|bog['’ʻ]?lanish|biz\s+bilan\s+bog['’ʻ]?lanish|manzil|kompaniya\s+haqida|biz\s+haqimizda)$/i;
 
 export function contactsPagePath(html: string): string | null {
+  let byLabel: string | null = null;
+
   for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]{0,200}?)<\/a>/gi)) {
-    const attrs = m[1];
-    const label = m[2].replace(/<[^>]+>/g, " ");
-    const href = (attrs.match(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i) ?? [])
+    const href = (m[1].match(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i) ?? [])
       .slice(1)
       .find(Boolean);
     if (!href || /^(#|mailto:|tel:|javascript:)/i.test(href)) continue;
-    if (CONTACTS_HINT.test(href) || /контакт|contact|aloqa|боглан|связ/i.test(label)) return href;
+
+    // Адрес надёжнее подписи: /kontakty — это контакты на любом языке.
+    if (looksLikeContactsPath(href)) return href;
+
+    const label = m[2].replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").trim().replace(/\s+/g, " ");
+    if (byLabel === null && label.length <= 40 && CONTACTS_LABEL.test(label)) byLabel = href;
   }
-  return null;
+
+  return byLabel;
 }
