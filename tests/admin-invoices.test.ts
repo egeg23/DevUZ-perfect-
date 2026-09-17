@@ -121,10 +121,66 @@ test("ссылка заказчика хранится хешем, а не са�
 
 test("счёт собран на том же бланке, что и договор", () => {
   // Два разных бланка у одной студии читаются как два разных отправителя.
-  const invoice = read("app/admin/contracts/[id]/invoice/[invoice]/page.tsx");
+  const invoice = read("components/docs/invoice-document.tsx");
   assert.match(invoice, /<Letterhead/);
   // Оплата в сумах по курсу дня — то же правило, что и в счёте магазина.
   assert.match(invoice, /по курсу ЦБ РУз на дату платежа/);
-  // Счёт чужого договора по этому адресу не открывается.
-  assert.match(invoice, /invoice\.contract_id !== contract\.id/);
+  // Счёт чужого договора не открывается ни по одному из двух адресов: ни в
+  // панели, ни по ссылке заказчика. Номер счёта в адресе — это ввод, а не
+  // доказательство принадлежности.
+  for (const page of [
+    "app/admin/contracts/[id]/invoice/[invoice]/page.tsx",
+    "app/[locale]/contract/[token]/invoice/[invoice]/page.tsx",
+  ]) {
+    assert.match(read(page), /invoice\.contract_id !== contract\.id/, page);
+  }
+});
+
+// Ссылка заказчика. Доступ — неугадываемая ссылка; всё, что за ней видно,
+// должно быть тем же, что видит менеджер, и ничем сверх того.
+
+test("по ссылке заказчика открывается только подписанный договор", () => {
+  // Черновик и отменённый — это то, что ещё обсуждают внутри студии.
+  for (const page of [
+    "app/[locale]/contract/[token]/page.tsx",
+    "app/[locale]/contract/[token]/invoice/[invoice]/page.tsx",
+  ]) {
+    const code = read(page);
+    assert.match(code, /contract\.status !== "approved" && contract\.status !== "signed"/, page);
+    assert.match(code, /looksLikeAccessToken\(token\)/, `${page}: мусор из адреса идёт в базу`);
+    // Страница с реквизитами сторон и суммами в поиске не нужна.
+    assert.match(code, /robots: \{ index: false/, `${page}: страница индексируется`);
+  }
+});
+
+test("подпись заказчику отдаётся по токену и только у подтверждённого договора", () => {
+  const route = read("app/api/contract/[token]/signature/route.ts");
+  // Порядок тот же, что в маршруте панели: сначала «кто спрашивает», потом
+  // «есть ли что показывать». Оба отказа — 404, а не 403: 403 сообщает, что
+  // файл существует, и это уже подсказка.
+  assert.match(route, /!contract \|\| !signatureVisible\(contract\)/);
+  assert.match(route, /status: 404/);
+  assert.doesNotMatch(route, /status: 403/);
+  assert.match(route, /"Cache-Control": "no-store/);
+});
+
+test("текст договора один на панель и на ссылку заказчика", () => {
+  // Две вёрстки одного документа расходятся на первой же правке, и
+  // расхождение обнаруживает та сторона, которой оно выгодно.
+  for (const page of [
+    "app/admin/contracts/[id]/page.tsx",
+    "app/[locale]/contract/[token]/page.tsx",
+  ]) {
+    assert.match(read(page), /<ContractDocument/, page);
+  }
+  for (const page of [
+    "app/admin/contracts/[id]/invoice/[invoice]/page.tsx",
+    "app/[locale]/contract/[token]/invoice/[invoice]/page.tsx",
+  ]) {
+    assert.match(read(page), /<InvoiceDocument/, page);
+  }
+  // Сам документ про доступ ничего не знает: адрес подписи приходит ему
+  // параметром. Знай он про роли — проверка доступа оказалась бы в вёрстке.
+  const doc = read("components/docs/contract-document.tsx");
+  assert.doesNotMatch(doc, /requireStaff|currentStaff|access_hash/);
 });

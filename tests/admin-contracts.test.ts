@@ -264,8 +264,11 @@ test("подпись не отдаётся, пока договор не под�
 });
 
 test("страница печати не рисует подпись у черновика", () => {
+  // Текст договора живёт одним компонентом на панель и на ссылку заказчика:
+  // две вёрстки одного документа расходятся на первой же правке.
+  const doc = read("components/docs/contract-document.tsx");
+  assert.match(doc, /signed && hasSignatureFile \?/);
   const page = read("app/admin/contracts/[id]/page.tsx");
-  assert.match(page, /signed && hasSignatureFile \?/);
   // И честно говорит, если подтвердили, а файла нет: иначе владелец узнает
   // об этом от заказчика, получившего договор без подписи.
   assert.match(page, /файл подписи не загружен/);
@@ -304,8 +307,9 @@ test("документы студии идут на одном бланке", ()
   assert.match(sheet, /legal\.pinfl/, "нет ПИНФЛ в подвале");
   assert.match(sheet, /bank\.account/, "нет расчётного счёта");
 
-  const contract = read("app/admin/contracts/[id]/page.tsx");
-  assert.match(contract, /<Letterhead/, "договор не на бланке");
+  for (const file of ["components/docs/contract-document.tsx", "components/docs/invoice-document.tsx"]) {
+    assert.match(read(file), /<Letterhead/, `не на бланке: ${file}`);
+  }
 });
 
 test("бланк напечатается на белом, а не чёрным прямоугольником", () => {
@@ -509,7 +513,7 @@ test("реквизиты студии приходят аргументом, а 
 
 test("счёт студии в договоре и в счёте — из одного места", () => {
   // Две копии разъезжаются, и разъехавшись, отправляют платёж не туда.
-  const page = readFileSync(new URL("../app/admin/contracts/[id]/page.tsx", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../components/docs/contract-document.tsx", import.meta.url), "utf8");
   assert.match(page, /sellerBank\(\)/);
   assert.match(page, /р\/с \{seller\.account\}/);
   assert.match(page, /МФО \{seller\.mfo\}/);
@@ -519,7 +523,7 @@ test("счёт студии в договоре и в счёте — из одн
 });
 
 test("обе стороны печатаются с банком", () => {
-  const page = readFileSync(new URL("../app/admin/contracts/[id]/page.tsx", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../components/docs/contract-document.tsx", import.meta.url), "utf8");
   assert.match(page, /contract\.client_account/);
   assert.match(page, /contract\.client_mfo/);
   assert.match(page, /contract\.client_bank_name/);
