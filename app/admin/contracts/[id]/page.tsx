@@ -6,11 +6,17 @@ import { company } from "@/content/company";
 import { contractClauses } from "@/content/contract";
 import { signatureVisible, toContractInput } from "@/lib/admin/contracts";
 import { sellerBank, taxIdKind } from "@/lib/store/requisites";
+import { invoicesFor } from "@/lib/admin/invoice-store";
+import { BLOCK_TEXT, canIssue, stageAmountUsd } from "@/lib/admin/invoices";
+import { siteUrl } from "@/lib/seo";
 import { contractById } from "@/lib/admin/contract-store";
 import { approvesContract } from "@/lib/admin/contracts";
 import {
   cancelContract,
   confirmContract,
+  issueInvoiceAction,
+  issueLinkAction,
+  markInvoicePaidAction,
   returnContract,
   saveDeadline,
   sendToOwner,
@@ -40,7 +46,7 @@ export default async function ContractPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; detail?: string; hint?: string; sent?: string; signed?: string }>;
+  searchParams: Promise<{ error?: string; detail?: string; hint?: string; sent?: string; signed?: string; link?: string }>;
 }) {
   const staff = await requireStaff();
   const { id } = await params;
@@ -56,8 +62,10 @@ export default async function ContractPage({
   // а разъехавшиеся счёт в договоре и счёт в счёте — это платёж, ушедший
   // не туда, и спор о том, кто виноват.
   const seller = sellerBank();
+  const invoices = await invoicesFor(contract.id);
+  const issuedStages = invoices.map((invoice) => invoice.stage_index);
   const sellerTaxLabel = taxIdKind() === "pinfl" ? "ПИНФЛ" : "ИНН";
-  const { error, detail, hint, sent, signed: justSigned } = await searchParams;
+  const { error, detail, hint, sent, signed: justSigned, link } = await searchParams;
   const canApprove = approvesContract(staff.role);
 
   return (
@@ -151,6 +159,104 @@ export default async function ContractPage({
           </form>
         ) : null}
       </div>
+
+      {/* ── Счета на оплату ──────────────────────────────────────────── */}
+      {contract.status === "approved" || contract.status === "signed" ? (
+        <div className="no-print mx-auto mb-6 max-w-[210mm] px-[20mm]">
+          <div className="rounded-xl border border-black/15 px-4 py-3">
+            <p className="text-sm font-bold">Счета на оплату</p>
+            <p className="mt-1 text-xs text-black/60">
+              По договору каждый этап оплачивается авансом в 100% его стоимости, поэтому
+              счёт выставляется на этап, а не на всю сумму. Счёт на первый этап выставлен
+              вместе с подтверждением.
+            </p>
+
+            <ul className="mt-3 space-y-2">
+              {contract.stages.map((stage, index) => {
+                const invoice = invoices.find((item) => item.stage_index === index);
+                const amount = stageAmountUsd(contract.amount_usd, contract.stages, index);
+                const block = canIssue({
+                  status: contract.status,
+                  stages: contract.stages,
+                  stageIndex: index,
+                  issuedStages,
+                  hasBank: Boolean(seller),
+                });
+
+                return (
+                  <li key={index} className="flex flex-wrap items-center gap-3 border-t border-black/10 pt-2 text-sm">
+                    <span className="min-w-[14rem]">
+                      Этап {index + 1}. {stage.title}
+                    </span>
+                    <span className="font-mono">${amount.toLocaleString("ru-RU")}</span>
+
+                    {invoice ? (
+                      <>
+                        <a
+                          href={`/admin/contracts/${contract.id}/invoice/${invoice.id}`}
+                          className="rounded-lg border border-black/30 px-3 py-1 text-xs hover:bg-black/5"
+                        >
+                          Счёт № {invoice.number}
+                        </a>
+                        {invoice.paid_at ? (
+                          <span className="text-xs text-green-700">оплачен</span>
+                        ) : (
+                          <>
+                            <span className="text-xs text-black/50">до {invoice.due_at}</span>
+                            <form action={markInvoicePaidAction}>
+                              <input type="hidden" name="id" value={contract.id} />
+                              <input type="hidden" name="invoice" value={invoice.id} />
+                              <button type="submit" className="rounded-lg border border-black/30 px-3 py-1 text-xs hover:bg-black/5">
+                                Оплачен
+                              </button>
+                            </form>
+                          </>
+                        )}
+                      </>
+                    ) : block === "ok" ? (
+                      <form action={issueInvoiceAction}>
+                        <input type="hidden" name="id" value={contract.id} />
+                        <input type="hidden" name="stage" value={index} />
+                        <button type="submit" className="rounded-lg border border-black/30 px-3 py-1 text-xs hover:bg-black/5">
+                          Выставить счёт
+                        </button>
+                      </form>
+                    ) : (
+                      <span className="text-xs text-black/50">{BLOCK_TEXT[block]}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Ссылка для заказчика: одна на договор. В базе только хеш,
+                поэтому показать её второй раз нельзя — можно выпустить
+                новую, и старая тут же перестанет работать. */}
+            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-black/10 pt-3">
+              <form action={issueLinkAction}>
+                <input type="hidden" name="id" value={contract.id} />
+                <button type="submit" className="rounded-lg border border-black/30 px-3 py-1.5 text-sm hover:bg-black/5">
+                  {contract.access_hash ? "Выпустить новую ссылку" : "Ссылка для заказчика"}
+                </button>
+              </form>
+              <span className="text-xs text-black/50">
+                {contract.access_hash
+                  ? "ссылка уже выпущена; новая отменит прежнюю"
+                  : "по ней заказчик откроет договор и счета, без пароля"}
+              </span>
+            </div>
+
+            {link ? (
+              <p className="mt-2 break-all rounded-lg border border-green-600/40 bg-green-50 px-3 py-2 font-mono text-xs">
+                {siteUrl}/ru/contract/{link}
+                <span className="block font-sans text-black/60">
+                  Скопируйте сейчас — второй раз эта ссылка не покажется.
+                </span>
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       {/* Смета и срок — только у черновика: дальше документ заморожен. */}
       {contract.status === "draft" ? (

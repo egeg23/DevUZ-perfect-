@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import type { ContractStage } from "@/content/contract";
 import { requireAdmin, requireStaff } from "@/lib/admin/guard";
+import { issueAccessLink, issueInvoice, markPaid } from "@/lib/admin/invoice-store";
 import {
   approveContract,
   createContract,
@@ -118,6 +119,12 @@ export async function confirmContract(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const result = await approveContract(id, staff);
 
+  // Счёт рождается вместе с подписью, а не отдельной кнопкой «а теперь
+  // выставьте счёт»: этот шаг и есть тот, который забывают, а потом
+  // выясняют, почему заказчик не платит. Счёт на первый этап — по договору
+  // каждый этап оплачивается авансом в 100%.
+  if (result.ok) await issueInvoice(id, 0, staff);
+
   revalidatePath(`/admin/contracts/${id}`);
   if (result.ok) redirect(`/admin/contracts/${id}`);
   // Список незаполненного уезжает в адрес, чтобы владелец увидел всё сразу,
@@ -215,4 +222,40 @@ export async function uploadSignedScan(formData: FormData) {
   const result = await attachSignedScan(id, file, staff);
   revalidatePath(`/admin/contracts/${id}`);
   redirect(result.ok ? `/admin/contracts/${id}?signed=1` : `/admin/contracts/${id}?error=${result.why}`);
+}
+
+/** Счёт на следующий этап: первый выставляется сам, остальные — по кнопке. */
+export async function issueInvoiceAction(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  const stage = Number(formData.get("stage") ?? -1);
+
+  const result = await issueInvoice(id, stage, staff);
+  revalidatePath(`/admin/contracts/${id}`);
+  redirect(result.ok ? `/admin/contracts/${id}` : `/admin/contracts/${id}?error=${encodeURIComponent(result.why)}`);
+}
+
+/** Оплату отмечает тот, кто её увидел в банке. */
+export async function markInvoicePaidAction(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  await markPaid(String(formData.get("invoice") ?? ""), staff);
+  revalidatePath(`/admin/contracts/${id}`);
+  redirect(`/admin/contracts/${id}`);
+}
+
+/**
+ * Ссылка для заказчика.
+ *
+ * Показывается один раз, сразу после выпуска: в базе лежит только хеш.
+ * Выпустить новую можно всегда — старая при этом перестаёт работать, и это
+ * ровно то, что нужно, когда ссылка ушла не туда.
+ */
+export async function issueLinkAction(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+
+  const token = await issueAccessLink(id, staff);
+  revalidatePath(`/admin/contracts/${id}`);
+  redirect(token ? `/admin/contracts/${id}?link=${token}` : `/admin/contracts/${id}?error=link`);
 }

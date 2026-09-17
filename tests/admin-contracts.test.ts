@@ -70,7 +70,7 @@ const ok = {
 const clauseText = () =>
   contractClauses(
     toContractInput({
-      id: "c1", created_at: "", project_id: "p1", status: "draft",
+      id: "c1", created_at: "", project_id: "p1", status: "draft", access_hash: null,
       prepared_by: null, prepared_at: null, approved_by: null,
       approved_at: null, void_reason: null,
       estimate_path: null, estimate_name: null,

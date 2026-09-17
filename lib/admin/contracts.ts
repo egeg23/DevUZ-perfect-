@@ -62,6 +62,9 @@ export type Contract = {
   client_account: string | null;
   client_mfo: string | null;
 
+  /** Хеш ссылки для заказчика. Самого токена в базе нет и быть не должно. */
+  access_hash: string | null;
+
   sent_at: string | null;
   sent_by: string | null;
   notified_at: string | null;

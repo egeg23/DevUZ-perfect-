@@ -35,7 +35,7 @@ const fail = (why: Exclude<Result, { ok: true }>["why"], problems?: string[]): R
 });
 
 const COLUMNS =
-  "id, created_at, project_id, number, signed_date, client_name, client_details, subject, amount_usd, stages, status, prepared_by, prepared_at, approved_by, approved_at, void_reason, estimate_path, estimate_name, estimate_items, deadline_text, client_tax_id, client_bank_name, client_account, client_mfo, sent_at, sent_by, notified_at, signed_path, signed_at, signed_by";
+  "id, created_at, project_id, number, signed_date, client_name, client_details, subject, amount_usd, stages, status, prepared_by, prepared_at, approved_by, approved_at, void_reason, estimate_path, estimate_name, estimate_items, deadline_text, client_tax_id, client_bank_name, client_account, client_mfo, access_hash, sent_at, sent_by, notified_at, signed_path, signed_at, signed_by";
 
 function shape(row: Record<string, unknown>): Contract {
   return {
@@ -50,6 +50,7 @@ function shape(row: Record<string, unknown>): Contract {
     client_bank_name: (row.client_bank_name as string | null) ?? null,
     client_account: (row.client_account as string | null) ?? null,
     client_mfo: (row.client_mfo as string | null) ?? null,
+    access_hash: (row.access_hash as string | null) ?? null,
     subject: String(row.subject),
     amount_usd: Number(row.amount_usd),
     stages: Array.isArray(row.stages) ? (row.stages as ContractStage[]) : [],
