@@ -34,6 +34,14 @@ import {
  * договор вообще писался.
  */
 
+/** Реквизиты студии. В бою приходят из окружения, здесь — фикстурой. */
+const SELLER = {
+  taxId: "654321987",
+  bankName: 'АКБ "Капиталбанк", Ташкент, единый филиал',
+  account: "20218000707485858001",
+  mfo: "00974",
+};
+
 const ok = {
   number: "DU-2026-01",
   signed_date: "2026-09-16",
@@ -51,6 +59,11 @@ const ok = {
     { title: "Разработка и админка", unit: "", qty: 1, price: 1500, total: 1500 },
   ],
   deadlineText: "60 рабочих дней с даты поступления аванса",
+  client_tax_id: "123456789",
+  client_bank_name: 'АКБ "Капиталбанк", Ташкент',
+  client_account: "20208000123456789012",
+  client_mfo: "00450",
+  seller: SELLER,
 };
 
 /** Текст договора ровно так, как его собирает страница печати. */
@@ -148,12 +161,18 @@ test("все проблемы возвращаются разом, а не по 
   // Иначе владелец выясняет их в пять заходов и перестаёт читать.
   const problems = problemsBeforeApproval({
     number: "", signed_date: "", client_name: "", client_details: "",
-    subject: "", amount_usd: 0, stages: [],
+    subject: "", amount_usd: 0, stages: [], seller: null,
   });
   assert.ok(problems.length >= 6, `вернулось ${problems.length}`);
+  // Среди них — обе стороны банка: и незаполненные реквизиты студии, и
+  // отсутствующий счёт заказчика.
+  const fields = problems.map((p) => p.field);
+  for (const field of ["seller", "client_tax_id", "client_bank_name", "client_account", "client_mfo"]) {
+    assert.ok(fields.includes(field), `нет претензии по полю ${field}`);
+  }
   assert.equal(readyForApproval({
     number: "", signed_date: "", client_name: "", client_details: "",
-    subject: "", amount_usd: 0, stages: [],
+    subject: "", amount_usd: 0, stages: [], seller: null,
   }), false);
 });
 
@@ -436,4 +455,75 @@ test("имя скана не теряет букву, когда расшире�
     signedFileName("1", "contracts/a.b/signed-skan"),
     "dogovor-1-podpisan",
   );
+});
+
+// Банковские реквизиты обеих сторон. Владелец: «в договоре нет расчётного
+// счёта, банка и его кода; обычно это пишется и с одной, и с другой стороны».
+
+test("договор без счёта заказчика не подписывается", () => {
+  const codes = (patch: Record<string, unknown>) =>
+    problemsBeforeApproval({ ...ok, ...patch }).map((p) => p.field);
+
+  assert.deepEqual(problemsBeforeApproval(ok), [], "полный договор не должен иметь претензий");
+
+  assert.ok(codes({ client_tax_id: "  " }).includes("client_tax_id"));
+  assert.ok(codes({ client_bank_name: null }).includes("client_bank_name"));
+  assert.ok(codes({ client_account: null }).includes("client_account"));
+  assert.ok(codes({ client_mfo: null }).includes("client_mfo"));
+});
+
+test("счёт и МФО проверяются по длине, а не только на непустоту", () => {
+  const codes = (patch: Record<string, unknown>) =>
+    problemsBeforeApproval({ ...ok, ...patch }).map((p) => p.field);
+
+  // Ошибка в одной цифре счёта — это деньги, ушедшие не туда, и заметят её
+  // в день платежа, а не в день подписания.
+  assert.ok(codes({ client_account: "2020800012345678901" }).includes("client_account"), "19 цифр прошли");
+  assert.ok(codes({ client_account: "202080001234567890123" }).includes("client_account"), "21 цифра прошла");
+  assert.ok(codes({ client_account: "2020800012345678901X" }).includes("client_account"), "буква прошла");
+  assert.ok(codes({ client_mfo: "0045" }).includes("client_mfo"), "4 цифры МФО прошли");
+  assert.ok(codes({ client_mfo: "004501" }).includes("client_mfo"), "6 цифр МФО прошли");
+
+  // Пробелы группами по четыре ставят при наборе — это не ошибка.
+  assert.deepEqual(codes({ client_account: "2020 8000 1234 5678 9012" }), []);
+  assert.deepEqual(codes({ client_mfo: "00 450" }), []);
+});
+
+test("договор без реквизитов студии тоже не подписывается", () => {
+  // Счёт исполнителя — то, по чему платят нам. Договор без него не документ.
+  const problems = problemsBeforeApproval({ ...ok, seller: null });
+  assert.deepEqual(problems.map((p) => p.field), ["seller"]);
+  assert.match(problems[0].text, /реквизиты студии/i);
+});
+
+test("реквизиты студии приходят аргументом, а не читаются из окружения", () => {
+  // Функция, лезущая в process.env, перестаёт быть проверяемой: тесту
+  // выше нечем было бы подсунуть «счёт не заполнен».
+  // Комментарии вычёркиваем: они об этом правиле и говорят, и проверка,
+  // спотыкающаяся о собственное объяснение, ничего не стережёт.
+  const code = readFileSync(new URL("../lib/admin/contracts.ts", import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "");
+  assert.doesNotMatch(code, /process\.env/);
+});
+
+test("счёт студии в договоре и в счёте — из одного места", () => {
+  // Две копии разъезжаются, и разъехавшись, отправляют платёж не туда.
+  const page = readFileSync(new URL("../app/admin/contracts/[id]/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /sellerBank\(\)/);
+  assert.match(page, /р\/с \{seller\.account\}/);
+  assert.match(page, /МФО \{seller\.mfo\}/);
+  // И обратное: счёта в content/ нет, он не должен попасть в git.
+  const company = readFileSync(new URL("../content/company.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(company, /\d{20}/, "в content/company.ts появился двадцатизначный счёт");
+});
+
+test("обе стороны печатаются с банком", () => {
+  const page = readFileSync(new URL("../app/admin/contracts/[id]/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /contract\.client_account/);
+  assert.match(page, /contract\.client_mfo/);
+  assert.match(page, /contract\.client_bank_name/);
+  // Незаполненные реквизиты исполнителя видно прямо в документе: отправку
+  // такой договор не пройдёт, но причина должна быть на глазах.
+  assert.match(page, /Банковские реквизиты студии не заполнены/);
 });

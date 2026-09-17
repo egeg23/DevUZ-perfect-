@@ -50,6 +50,18 @@ export type Contract = {
   /** Общий срок словами сотрудника: «60 рабочих дней с даты аванса». */
   deadline_text: string | null;
 
+  /**
+   * Банковские реквизиты заказчика — отдельными полями, а не строкой.
+   *
+   * Номер счёта, набранный внутри предложения с адресом и почтой, нельзя
+   * ни проверить, ни перенести в платёжку, не перечитывая фразу целиком.
+   * Ошибка в одной цифре — это деньги, ушедшие не туда.
+   */
+  client_tax_id: string | null;
+  client_bank_name: string | null;
+  client_account: string | null;
+  client_mfo: string | null;
+
   sent_at: string | null;
   sent_by: string | null;
   notified_at: string | null;
@@ -127,10 +139,30 @@ export type Problem = { field: string; text: string };
  * формальному признаку: неназванная сторона, неопределённый предмет,
  * несходящиеся этапы.
  */
+/**
+ * Реквизиты исполнителя приходят аргументом, а не читаются здесь.
+ *
+ * Они живут в переменных окружения, и функция, лезущая в `process.env`,
+ * перестаёт быть проверяемой: тест не может подсунуть ей «счёт не заполнен».
+ * Поле обязательное, не опциональное, — иначе вызывающий, забывший его
+ * передать, получит договор без банковских реквизитов и не узнает об этом.
+ */
+export type SellerRequisites = {
+  taxId: string;
+  bankName: string;
+  account: string;
+  mfo: string;
+} | null;
+
 export function problemsBeforeApproval(
   contract: Pick<Contract, "client_name" | "client_details" | "subject" | "amount_usd" | "stages" | "number" | "signed_date"> & {
     estimateItems?: readonly EstimateItem[];
     deadlineText?: string | null;
+    client_tax_id?: string | null;
+    client_bank_name?: string | null;
+    client_account?: string | null;
+    client_mfo?: string | null;
+    seller: SellerRequisites;
   },
 ): Problem[] {
   const out: Problem[] = [];
@@ -162,6 +194,37 @@ export function problemsBeforeApproval(
   }
   if (!contract.deadlineText || contract.deadlineText.trim().length < 5) {
     out.push({ field: "deadline", text: "Не указан согласованный срок выполнения" });
+  }
+
+  // Банк обеих сторон. Договор без счёта — это договор, по которому нельзя
+  // заплатить и нельзя доказать, кому платили.
+  if (!contract.seller) {
+    out.push({
+      field: "seller",
+      text: "Не заполнены банковские реквизиты студии — договор без счёта исполнителя не подписывают",
+    });
+  }
+  if (!(contract.client_tax_id ?? "").trim()) {
+    out.push({ field: "client_tax_id", text: "Нет ИНН или ПИНФЛ заказчика" });
+  }
+  if (!(contract.client_bank_name ?? "").trim()) {
+    out.push({ field: "client_bank_name", text: "Не указан банк заказчика" });
+  }
+  // Расчётный счёт в Узбекистане — двадцать цифр. Проверяем длину и то, что
+  // это цифры: счёт с лишним пробелом или буквой не примет ни один банк, а
+  // заметят это в день платежа, а не в день подписания.
+  const account = (contract.client_account ?? "").replace(/\s/g, "");
+  if (!account) {
+    out.push({ field: "client_account", text: "Не указан расчётный счёт заказчика" });
+  } else if (!/^\d{20}$/.test(account)) {
+    out.push({ field: "client_account", text: "Расчётный счёт заказчика — двадцать цифр, сейчас там другое" });
+  }
+  // МФО — пять цифр. Это код банка, по нему платёж и находит отделение.
+  const mfo = (contract.client_mfo ?? "").replace(/\s/g, "");
+  if (!mfo) {
+    out.push({ field: "client_mfo", text: "Не указан МФО — код банка заказчика" });
+  } else if (!/^\d{5}$/.test(mfo)) {
+    out.push({ field: "client_mfo", text: "МФО — пять цифр, сейчас там другое" });
   }
 
   if (contract.stages.length === 0) {

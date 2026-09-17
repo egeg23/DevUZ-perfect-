@@ -16,6 +16,7 @@ import {
 import type { ContractStage } from "@/content/contract";
 import { estimateTotal, parseEstimate, type EstimateItem } from "@/lib/admin/estimate";
 import { sendMessage } from "@/lib/qualify/telegram";
+import { sellerBank } from "@/lib/store/requisites";
 
 /**
  * Хранение договоров.
@@ -34,7 +35,7 @@ const fail = (why: Exclude<Result, { ok: true }>["why"], problems?: string[]): R
 });
 
 const COLUMNS =
-  "id, created_at, project_id, number, signed_date, client_name, client_details, subject, amount_usd, stages, status, prepared_by, prepared_at, approved_by, approved_at, void_reason, estimate_path, estimate_name, estimate_items, deadline_text, sent_at, sent_by, notified_at, signed_path, signed_at, signed_by";
+  "id, created_at, project_id, number, signed_date, client_name, client_details, subject, amount_usd, stages, status, prepared_by, prepared_at, approved_by, approved_at, void_reason, estimate_path, estimate_name, estimate_items, deadline_text, client_tax_id, client_bank_name, client_account, client_mfo, sent_at, sent_by, notified_at, signed_path, signed_at, signed_by";
 
 function shape(row: Record<string, unknown>): Contract {
   return {
@@ -45,6 +46,10 @@ function shape(row: Record<string, unknown>): Contract {
     signed_date: String(row.signed_date),
     client_name: String(row.client_name),
     client_details: String(row.client_details ?? ""),
+    client_tax_id: (row.client_tax_id as string | null) ?? null,
+    client_bank_name: (row.client_bank_name as string | null) ?? null,
+    client_account: (row.client_account as string | null) ?? null,
+    client_mfo: (row.client_mfo as string | null) ?? null,
     subject: String(row.subject),
     amount_usd: Number(row.amount_usd),
     stages: Array.isArray(row.stages) ? (row.stages as ContractStage[]) : [],
@@ -111,6 +116,10 @@ export async function createContract(
     signedDate: string;
     clientName: string;
     clientDetails: string;
+    clientTaxId: string;
+    clientBankName: string;
+    clientAccount: string;
+    clientMfo: string;
     subject: string;
     amountUsd: number;
     stages: ContractStage[];
@@ -147,6 +156,12 @@ export async function createContract(
       signed_date: fields.signedDate,
       client_name: fields.clientName.trim(),
       client_details: fields.clientDetails.trim(),
+      client_tax_id: fields.clientTaxId.trim() || null,
+      client_bank_name: fields.clientBankName.trim() || null,
+      // Пробелы из счёта и МФО убираем сразу: их ставят при наборе
+      // группами по четыре, а в платёжку уходит сплошная строка.
+      client_account: fields.clientAccount.replace(/\s/g, "") || null,
+      client_mfo: fields.clientMfo.replace(/\s/g, "") || null,
       subject: fields.subject.trim(),
       amount_usd: fields.amountUsd,
       stages: fields.stages,
@@ -167,6 +182,10 @@ export async function updateDraft(
     signedDate: string;
     clientName: string;
     clientDetails: string;
+    clientTaxId: string;
+    clientBankName: string;
+    clientAccount: string;
+    clientMfo: string;
     subject: string;
     amountUsd: number;
     stages: ContractStage[];
@@ -187,6 +206,10 @@ export async function updateDraft(
   if (fields.signedDate) patch.signed_date = fields.signedDate;
   if (fields.clientName !== undefined) patch.client_name = fields.clientName.trim();
   if (fields.clientDetails !== undefined) patch.client_details = fields.clientDetails.trim();
+  if (fields.clientTaxId !== undefined) patch.client_tax_id = fields.clientTaxId.trim() || null;
+  if (fields.clientBankName !== undefined) patch.client_bank_name = fields.clientBankName.trim() || null;
+  if (fields.clientAccount !== undefined) patch.client_account = fields.clientAccount.replace(/\s/g, "") || null;
+  if (fields.clientMfo !== undefined) patch.client_mfo = fields.clientMfo.replace(/\s/g, "") || null;
   if (fields.subject !== undefined) patch.subject = fields.subject.trim();
   if (fields.amountUsd !== undefined) patch.amount_usd = fields.amountUsd;
   if (fields.stages !== undefined) patch.stages = fields.stages;
@@ -218,6 +241,7 @@ export async function approveContract(id: string, staff: Staff): Promise<Result>
     ...current,
     estimateItems: current.estimate_items,
     deadlineText: current.deadline_text,
+    seller: sellerBank(),
   });
   if (problems.length > 0) return fail("invalid", problems.map((p) => p.text));
 
@@ -374,11 +398,13 @@ export async function sendForSignature(
 
   const current = await contractById(id);
   if (!current) return fail("notfound");
-  if (!sendable({ ...current, estimateItems: current.estimate_items, deadlineText: current.deadline_text })) {
+  const seller = sellerBank();
+  if (!sendable({ ...current, estimateItems: current.estimate_items, deadlineText: current.deadline_text, seller })) {
     const problems = problemsBeforeApproval({
       ...current,
       estimateItems: current.estimate_items,
       deadlineText: current.deadline_text,
+      seller,
     });
     return fail(problems.length ? "invalid" : "locked", problems.map((p) => p.text));
   }

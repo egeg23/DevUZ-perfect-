@@ -5,6 +5,7 @@ import { PrintButton } from "@/components/store/print-button";
 import { company } from "@/content/company";
 import { contractClauses } from "@/content/contract";
 import { signatureVisible, toContractInput } from "@/lib/admin/contracts";
+import { sellerBank, taxIdKind } from "@/lib/store/requisites";
 import { contractById } from "@/lib/admin/contract-store";
 import { approvesContract } from "@/lib/admin/contracts";
 import {
@@ -50,6 +51,12 @@ export default async function ContractPage({
   const signed = signatureVisible(contract);
   const hasSignatureFile = signed ? await signatureExists() : false;
   const legal = company.legal;
+  // Реквизиты студии — из окружения, оттуда же, откуда их берёт счёт.
+  // Второй копии в content/ нет намеренно: расчётный счёт в git не кладём,
+  // а разъехавшиеся счёт в договоре и счёт в счёте — это платёж, ушедший
+  // не туда, и спор о том, кто виноват.
+  const seller = sellerBank();
+  const sellerTaxLabel = taxIdKind() === "pinfl" ? "ПИНФЛ" : "ИНН";
   const { error, detail, hint, sent, signed: justSigned } = await searchParams;
   const canApprove = approvesContract(staff.role);
 
@@ -248,6 +255,24 @@ export default async function ContractPage({
             <p className="mt-1">{legal.name}</p>
             <p>{legal.address.ru}</p>
             <p>ПИНФЛ {legal.pinfl}</p>
+            {seller ? (
+              <>
+                <p className="mt-1">
+                  {sellerTaxLabel} {seller.taxId}
+                </p>
+                <p>{seller.bankName}</p>
+                <p>р/с {seller.account}</p>
+                <p>МФО {seller.mfo}</p>
+                {seller.swift ? <p>SWIFT {seller.swift}</p> : null}
+              </>
+            ) : (
+              // Печатать договор без счёта исполнителя нельзя: по нему
+              // нечем заплатить. Отправку такой договор всё равно не
+              // пройдёт, но увидеть причину надо здесь, а не в отказе.
+              <p className="mt-1 font-bold text-red-700">
+                Банковские реквизиты студии не заполнены в окружении
+              </p>
+            )}
             <p className="mt-4">_______________________</p>
             {/* Подпись накладывается поверх линии, а не вместо неё: линия
                 остаётся на месте и в подписанном экземпляре — так документ
@@ -267,6 +292,10 @@ export default async function ContractPage({
             <p className="font-bold">Заказчик</p>
             <p className="mt-1">{contract.client_name}</p>
             <p>{contract.client_details}</p>
+            {contract.client_tax_id ? <p className="mt-1">ИНН / ПИНФЛ {contract.client_tax_id}</p> : null}
+            {contract.client_bank_name ? <p>{contract.client_bank_name}</p> : null}
+            {contract.client_account ? <p>р/с {contract.client_account}</p> : null}
+            {contract.client_mfo ? <p>МФО {contract.client_mfo}</p> : null}
             <p className="mt-4">_______________________</p>
             <div className="h-16" />
           </div>
