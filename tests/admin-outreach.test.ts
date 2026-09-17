@@ -153,11 +153,11 @@ test("лид заводится при отправке и закрепляет�
   // Владелец: «тот сотрудник, который нажал отправить, — лид автоматически
   // закрепляется за ним». Значит, статус и владелец ставятся сразу.
   assert.match(store, /status: "taken",\n\s+assigned_staff_id: staff\.id,/);
-  assert.match(store, /const leadId = await createOutreachLead\(prospect, staff, text\);/);
+  assert.match(store, /const leadId = await createOutreachLead\(prospect, staff, text, requestNo\);/);
   // Лид заводится до постановки в очередь: отказ Telegram не должен
   // оставить касание без следа.
   assert.ok(
-    store.indexOf("createOutreachLead(prospect, staff, text)") < store.indexOf('status: "sending"'),
+    store.indexOf("createOutreachLead(prospect, staff, text, requestNo)") < store.indexOf('status: "sending"'),
     "лид заводится после очереди",
   );
   // Грейды не выдумываются: разговора ещё не было.
@@ -185,9 +185,18 @@ test("скаут отправляет только из очереди и ост
   assert.match(runner, /if \(outreachStopped\) return;/);
   assert.match(runner, /outreachStopped = stopped;/);
   // README обещал «ничего не отправляет» — обещание переписано, а не забыто.
+  // Теперь оно сузилось до правды: первым скаут не пишет никогда, а всё
+  // остальное — ответы в переписке, которую начал человек.
   const readme = readFileSync(new URL("../scout/README.md", import.meta.url), "utf8");
-  assert.match(readme, /В личку пишет только то, что отправил сотрудник/);
+  assert.match(readme, /Первым в личку не пишет никогда по своей инициативе/);
   assert.ok(!/\*\*Ничего не отправляет\.\*\*/.test(readme), "README обещает то, чего больше нет");
+  assert.ok(
+    !/В личку пишет только то, что отправил сотрудник/.test(readme),
+    "README обещает, что в личку уходит только написанное человеком, — а модель отвечает сама",
+  );
+  // Предел в README и предел в коде — одно число.
+  assert.match(readme, new RegExp(`двух первых касаний в час`));
+  assert.ok(!/двадцати пяти сообщений в сутки/.test(readme), "в README остался прежний суточный предел");
 });
 
 test("очередь — не тупик: менеджеру предложено написать самому", () => {

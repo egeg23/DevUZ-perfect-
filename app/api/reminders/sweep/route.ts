@@ -3,6 +3,7 @@ import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { runCoach } from "@/lib/admin/coach-store";
 import { sweepOrders } from "@/lib/admin/order-sweep-run";
+import { runTalks } from "@/lib/admin/outreach-talk-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
@@ -192,6 +193,12 @@ export async function POST(request: Request) {
   const coach = await runCoach(new Date());
   if (coach.errors.length) console.error("coach:", coach.errors.join("; "));
 
+  // Первичка по касаниям: клиент ответил на наше письмо — отвечает модель.
+  // Здесь же, а не отдельным таймером: разговор не срочный, пять минут
+  // задержки ему только на пользу, а лишний процесс на сервере — нет.
+  const talks = await runTalks();
+  if (talks.errors.length) console.error("касания:", talks.errors.join("; "));
+
   // Отчёты плановых смен — владельцу. У смены нет токена бота, у свипа есть.
   // Сторож молчания идёт ПЕРЕД отправкой: тревога, поднятая сейчас, уходит
   // этим же проходом, а не через пять минут следующим.
@@ -214,6 +221,7 @@ export async function POST(request: Request) {
     coach,
     shifts,
     silent,
+    talks,
     ok: true,
     sent,
     skipped,

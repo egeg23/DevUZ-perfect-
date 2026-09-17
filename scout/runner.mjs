@@ -21,6 +21,7 @@ import { shape } from "@/lib/scout/shape";
 import { processBatch } from "@/lib/scout/store";
 import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
 import { markFailed, markSent, nextQueued } from "@/lib/admin/outreach-queue";
+import { markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
@@ -34,6 +35,11 @@ const FLUSH_MS = Number(process.env.SCOUT_FLUSH_MS || 60_000);
 // Как часто заглядывать в очередь касаний. Сама пауза между отправками
 // живёт в lib/admin/outreach-queue.ts: предел общий для аккаунта.
 const OUTREACH_MS = Number(process.env.SCOUT_OUTREACH_MS || 45_000);
+// Как часто отдавать ответы модели по уже начатым разговорам. Чаще, чем
+// касания: это ответ человеку, который сам нам написал, и он ждёт. Предел
+// на рассылку сюда не относится — ограничивают за первые письма незнакомым,
+// а не за ответы в своей же переписке.
+const REPLY_MS = Number(process.env.SCOUT_REPLY_MS || 30_000);
 const MAX_BATCH = Number(process.env.SCOUT_MAX_BATCH || 20);
 
 /** Как часто сторож смотрит на соединение. Два промаха подряд — выход. */
@@ -271,6 +277,66 @@ async function live() {
       console.error(`касания: не ушло ${job.target} — ${why}${stopped ? " (очередь остановлена)" : ""}`);
     }
   }, OUTREACH_MS);
+
+  // ── Переписка по касаниям ─────────────────────────────────────────────
+  //
+  // Ответы модели тем, кто ответил на наше письмо. Очередь отдельная от
+  // касаний и без часового предела: он про первые письма незнакомым людям,
+  // а молчать в ответ на вопрос клиента — не осторожность, а потеря лида.
+  setInterval(async () => {
+    let reply;
+    try {
+      reply = await nextReply();
+    } catch (error) {
+      console.error("переписка: очередь не прочиталась —", error?.message ?? error);
+      return;
+    }
+    if (!reply) return;
+
+    try {
+      await client.sendMessage(reply.target, { message: reply.body });
+      await markReplySent(reply.id);
+      console.log(`переписка: ответил ${reply.target} по сайту ${reply.host}`);
+    } catch (error) {
+      const why = error?.errorMessage ?? error?.message ?? String(error);
+      await markReplyFailed(reply.id, why);
+      console.error(`переписка: ответ не ушёл ${reply.target} — ${why}`);
+    }
+  }, REPLY_MS);
+
+  // Входящее из лички: это может быть ответ на наше касание.
+  //
+  // Отдельный обработчик, а не расширение чатового: тот отбирает сообщения
+  // по списку открытых чатов, а личка в этот список не входит и входить не
+  // должна — в ленту оператора чужая переписка попадать не может.
+  //
+  // Кто именно написал, решает база: адрес ищется среди тех, кому мы уже
+  // писали. Не нашёлся — значит человек пишет по своему делу, и это не
+  // наше: аккаунт рабочий, в него пишут и помимо касаний.
+  client.addEventHandler(async (event) => {
+    const message = event.message;
+    if (!message?.message || message.out) return;
+    if (!message.isPrivate) return;
+
+    let handle = "";
+    try {
+      const sender = await message.getSender();
+      handle = sender?.username ? String(sender.username) : "";
+    } catch (error) {
+      console.error("переписка: не узнал отправителя —", error?.message ?? error);
+      return;
+    }
+    if (!handle) return;
+
+    try {
+      const hit = await recordInbound({ handle, body: String(message.message) });
+      if (hit.matched) {
+        console.log(`переписка: ответ от @${handle} по сайту ${hit.host} (${hit.verdict})`);
+      }
+    } catch (error) {
+      console.error("переписка: входящее не записалось —", error?.message ?? error);
+    }
+  }, new NewMessage({ incoming: true }));
 
   let warnedNoChat = false;
   client.addEventHandler((event) => {

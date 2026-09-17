@@ -10,6 +10,7 @@ import {
   decideTransferAction,
   revealContactAction,
   revealTranscriptAction,
+  takeOverTalkAction,
   take,
   toggleAutoReminder,
 } from "./actions";
@@ -29,6 +30,7 @@ import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { quoteForLead } from "@/lib/admin/quote";
 import { STATUSES, leadById } from "@/lib/admin/leads";
 import { messagesFor } from "@/lib/admin/messages";
+import { talkForLead } from "@/lib/admin/outreach-talk-store";
 import {
   DELIVERY_GIVE_UP,
   canEdit,
@@ -174,9 +176,12 @@ export default async function LeadPage({
   const transcript =
     wantsTranscript === "1" ? await revealTranscript(lead.id, staff, ip) : null;
 
-  const [reminders, messages] = await Promise.all([
+  const [reminders, messages, talk] = await Promise.all([
     remindersFor(lead.id),
     messagesFor(lead.id),
+    // Первичка по касанию: есть только у лидов, которые мы завели сами,
+    // написав владельцу сайта первыми.
+    talkForLead(lead.id),
   ]);
   const open = reminders.filter((item) => !item.done_at);
 
@@ -405,6 +410,79 @@ export default async function LeadPage({
           </p>
         )}
       </section>
+
+      {/* ── Первичка по касанию ─────────────────────────────────────── */}
+      {talk && mine ? (
+        <section id="talk" className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <p className="text-xs uppercase tracking-wider text-faint">Первичка по касанию</p>
+            <span className="font-mono text-xs text-blue-soft">{talk.host}</span>
+            <span
+              className={`ml-auto rounded-full border px-2 py-0.5 text-xs ${
+                talk.aiHandling ? "border-green/40 bg-green/10 text-green" : "border-gold/40 bg-gold/10 text-gold"
+              }`}
+            >
+              {talk.aiHandling ? "отвечает ИИ" : `отвечаете вы${talk.handoverReason ? ` — ${talk.handoverReason}` : ""}`}
+            </span>
+          </div>
+
+          {talk.lines.length ? (
+            <div className="mt-3 flex flex-col gap-3">
+              {talk.lines.map((line, i) => (
+                <div
+                  key={i}
+                  className={
+                    line.direction === "in"
+                      ? "max-w-[85%] self-start rounded-xl rounded-bl-sm bg-surface-2 px-4 py-2.5"
+                      : "max-w-[85%] self-end rounded-xl rounded-br-sm border border-line px-4 py-2.5"
+                  }
+                >
+                  <p className="text-[0.7rem] uppercase tracking-wider text-faint">
+                    {line.direction === "in" ? "клиент" : line.author === "ai" ? "ИИ от нашего имени" : "вы"}
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-text">{line.body}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-muted">
+              Письмо ушло, ответа пока нет. Как ответит — первичку подхватит ИИ, а вы увидите разговор здесь.
+            </p>
+          )}
+
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {talk.aiHandling ? (
+              <>
+                <form action={takeOverTalkAction}>
+                  <input type="hidden" name="lead" value={lead.id} />
+                  <input type="hidden" name="prospect" value={talk.prospectId} />
+                  <button type="submit" className={BUTTON}>
+                    Отвечать самому
+                  </button>
+                </form>
+                <span className="text-xs text-faint">
+                  ИИ ведёт первичку от имени студии и остановится сам, когда выяснит задачу, бюджет и сроки.
+                  Лид ваш в любом случае — он не переназначается.
+                </span>
+              </>
+            ) : talk.target ? (
+              <>
+                <a
+                  href={`https://t.me/${talk.target.replace(/^@/, "")}`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className={BUTTON}
+                >
+                  Открыть переписку в Telegram
+                </a>
+                <span className="text-xs text-faint">
+                  писать нужно с рабочего аккаунта студии — с него ушло письмо, и для клиента это один собеседник
+                </span>
+              </>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {/* ── Переписка с клиентом ────────────────────────────────────── */}
       <section

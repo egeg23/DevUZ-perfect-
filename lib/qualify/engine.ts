@@ -176,6 +176,19 @@ export type TurnOptions = {
    * дороже порога владелец получает один, без общего чата.
    */
   brief?: Brief;
+  /**
+   * Разговор идёт по лиду, который уже заведён и уже за кем-то закреплён.
+   *
+   * Так приходит первичка по холодному касанию: лид создан в тот момент,
+   * когда менеджер нажал «Отправить», и с тех пор принадлежит ему.
+   * Квалификация дописывается в этот лид по номеру заявки — завести второй
+   * значило бы отвязать разговор от человека, за которым он закреплён, и
+   * ровно это владелец запретил: «лид фиксируется за тем, кто нажал кнопку».
+   *
+   * Уведомление тоже уходит не в общий чат отдела, а тем, кто здесь назван:
+   * объявлять команде о чужом разговоре незачем.
+   */
+  existing?: { requestNo: string; notify: Array<string | number>; heading?: string };
   onText: (chunk: string) => void;
   onEvent?: (event: TurnEvent) => void;
 };
@@ -297,7 +310,7 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
   // Номер заявки у брифа с витрины уже есть — клиент его видел, менеджер
   // его получил. Второй номер на того же человека только запутает обоих.
   const brief = options.brief;
-  const requestNo = brief?.requestNo ?? newRequestNo();
+  const requestNo = options.existing?.requestNo ?? brief?.requestNo ?? newRequestNo();
   const lead = scoreLead(
     withBrief(
       withDiscount(sanitizeToolInput(toolUse.input as QualifyToolInput, truncated), options.discount),
@@ -314,7 +327,13 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
     // Лид от брифа уже в базе — дописываем в него. Не нашёлся (база лежала,
     // когда бриф приходил) — заводим под тем же номером.
     if (brief?.requestNo) leadId = await updateLead(brief.requestNo, lead, history);
-    if (!leadId) {
+    if (options.existing) {
+      // Лид касания дописывается всегда и никогда не заводится заново.
+      // Не нашёлся — значит его удалили руками, пока шёл разговор; новый
+      // на его месте оказался бы ничей, а это хуже пропавшей квалификации.
+      leadId = await updateLead(options.existing.requestNo, lead, history);
+      if (!leadId) console.error("касания: лид по заявке не нашёлся", options.existing.requestNo);
+    } else if (!leadId) {
       leadId = await saveLead(lead, history, source, { requestNo, discount: options.discount });
     }
   } catch (error) {
@@ -331,7 +350,12 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
 
   let delivered = false;
   try {
-    if (brief) {
+    if (options.existing) {
+      delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
+        to: options.existing.notify,
+        heading: options.existing.heading,
+      });
+    } else if (brief) {
       const route = await briefRecipients(brief.totalUsd);
       delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
         to: route.chatIds,

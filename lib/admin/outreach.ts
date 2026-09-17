@@ -227,6 +227,18 @@ const BANNED = [
   /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u,
 ];
 
+/**
+ * Есть ли в тексте оборот, которого у нас не бывает.
+ *
+ * Отдельной функцией, потому что запреты одинаковы для первого сообщения и
+ * для любой реплики дальше: «выведем в топ» одинаково врёт и в первом
+ * касании, и в десятом ответе. Список один — разъехавшись, он разрешил бы
+ * в переписке ровно то, что запрещено в письме.
+ */
+export function bannedPhrase(text: string): boolean {
+  return BANNED.some((re) => re.test(text));
+}
+
 export type MessageProblem = { code: string; text: string };
 
 /** Что не даёт отправить сообщение как есть. Пусто — можно отправлять. */
@@ -243,11 +255,8 @@ export function messageProblems(message: string, prompt: string, host: string): 
   if (invented.length) {
     problems.push({ code: "invented", text: `Числа, которых нет в анализе: ${invented.join(", ")}. Проверьте или уберите.` });
   }
-  for (const re of BANNED) {
-    if (re.test(message)) {
-      problems.push({ code: "banned", text: "В сообщении есть обещание или знак, которых в первом касании быть не должно: «в топ», «гарантируем», любые проценты, «комплексный подход», эмодзи." });
-      break;
-    }
+  if (bannedPhrase(message)) {
+    problems.push({ code: "banned", text: "В сообщении есть обещание или знак, которых в первом касании быть не должно: «в топ», «гарантируем», любые проценты, «комплексный подход», эмодзи." });
   }
   return problems;
 }
