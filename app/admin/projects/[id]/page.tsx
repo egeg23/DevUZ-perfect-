@@ -735,13 +735,59 @@ export default async function ProjectPage({
               />
             </label>
             <label className="text-xs text-muted sm:col-span-2">
-              Реквизиты заказчика: адрес, идентификатор, почта
+              Адрес и контакт заказчика
               <input
                 type="text"
                 name="client_details"
                 required
-                placeholder="г. Ташкент, ул. …, ИНН/ПИНФЛ …, почта@…"
+                placeholder="г. Ташкент, ул. …, директор …, почта@…"
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+              />
+            </label>
+            {/* Банк заказчика — отдельными полями, а не внутри адреса.
+                Номер счёта, набранный в предложении, нельзя ни проверить,
+                ни перенести в платёжку, не перечитывая фразу целиком. */}
+            <label className="text-xs text-muted">
+              ИНН или ПИНФЛ заказчика
+              <input
+                type="text"
+                name="client_tax_id"
+                required
+                inputMode="numeric"
+                placeholder="123456789"
+                className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+              />
+            </label>
+            <label className="text-xs text-muted">
+              Банк заказчика
+              <input
+                type="text"
+                name="client_bank_name"
+                required
+                placeholder="АКБ «Капиталбанк», Ташкент"
+                className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
+              />
+            </label>
+            <label className="text-xs text-muted">
+              Расчётный счёт — 20 цифр
+              <input
+                type="text"
+                name="client_account"
+                required
+                inputMode="numeric"
+                placeholder="20208000123456789012"
+                className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-sm text-text"
+              />
+            </label>
+            <label className="text-xs text-muted">
+              МФО — код банка, 5 цифр
+              <input
+                type="text"
+                name="client_mfo"
+                required
+                inputMode="numeric"
+                placeholder="00450"
+                className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-sm text-text"
               />
             </label>
             <label className="text-xs text-muted sm:col-span-2">
