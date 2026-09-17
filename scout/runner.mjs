@@ -20,6 +20,7 @@ import { EMPTY_PULSE, accumulate, writePulse } from "@/lib/scout/health";
 import { shape } from "@/lib/scout/shape";
 import { processBatch } from "@/lib/scout/store";
 import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
+import { markFailed, markSent, nextQueued } from "@/lib/admin/outreach-queue";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
@@ -30,6 +31,9 @@ const DRY_RUN = process.argv.includes("--dry-run");
  * сразу, а в тихом сообщение не лежит до вечера.
  */
 const FLUSH_MS = Number(process.env.SCOUT_FLUSH_MS || 60_000);
+// Как часто заглядывать в очередь касаний. Сама пауза между отправками
+// живёт в lib/admin/outreach-queue.ts: предел общий для аккаунта.
+const OUTREACH_MS = Number(process.env.SCOUT_OUTREACH_MS || 45_000);
 const MAX_BATCH = Number(process.env.SCOUT_MAX_BATCH || 20);
 
 /** Как часто сторож смотрит на соединение. Два промаха подряд — выход. */
@@ -234,6 +238,39 @@ async function live() {
       process.exit(1);
     }
   }, WATCHDOG_MS);
+
+  // ── Касания ───────────────────────────────────────────────────────────
+  //
+  // Раньше здесь было написано «ничего не отправляет». Теперь отправляет —
+  // но только то, что человек прочитал, поправил и отправил сам, по одному
+  // сообщению и с паузами. Аккаунт один на чтение и на письмо: если его
+  // ограничат за рассылку, студия потеряет и ленту чатов.
+  //
+  // Первая же ошибка про аккаунт — PEER_FLOOD, FLOOD_WAIT — снимает всю
+  // очередь; продолжать после неё значит менять аккаунт на десяток писем.
+  let outreachStopped = false;
+  setInterval(async () => {
+    if (outreachStopped) return;
+    let job;
+    try {
+      job = await nextQueued();
+    } catch (error) {
+      console.error("касания: очередь не прочиталась —", error?.message ?? error);
+      return;
+    }
+    if (!job) return;
+
+    try {
+      await client.sendMessage(job.target, { message: job.message });
+      await markSent(job.id);
+      console.log(`касания: отправлено ${job.target} по сайту ${job.host}`);
+    } catch (error) {
+      const why = error?.errorMessage ?? error?.message ?? String(error);
+      const { stopped } = await markFailed(job.id, why);
+      outreachStopped = stopped;
+      console.error(`касания: не ушло ${job.target} — ${why}${stopped ? " (очередь остановлена)" : ""}`);
+    }
+  }, OUTREACH_MS);
 
   let warnedNoChat = false;
   client.addEventHandler((event) => {

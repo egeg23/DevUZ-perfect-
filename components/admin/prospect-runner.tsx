@@ -1,8 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { auditChunkAction } from "@/app/admin/prospect/actions";
+import { auditChunkAction, saveRunAction } from "@/app/admin/prospect/actions";
 import { EMPTY_CONTACTS, hasAnyContact } from "@/lib/audit/contacts";
 import type { PitchLocale } from "@/lib/audit/pitch";
 import {
@@ -39,6 +40,8 @@ export function ProspectRunner() {
   const [rows, setRows] = useState<ProspectRow[]>([]);
   const [queue, setQueue] = useState<BatchTarget[]>([]);
   const [done, setDone] = useState(0);
+  const router = useRouter();
+  const [saveFailed, setSaveFailed] = useState(false);
   const [running, setRunning] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   // Язык письма выбирается до прогона: заход строится один раз, на сервере,
@@ -82,6 +85,15 @@ export function ProspectRunner() {
       }
       setRows([...collected]);
       setDone(Math.min(i + CHUNK, targets.length));
+    }
+
+    // Сохраняем сразу: до этого прогон жил в состоянии вкладки, и
+    // обновление страницы стирало полсотни проверенных сайтов.
+    try {
+      await saveRunAction(collected);
+      router.refresh();
+    } catch {
+      setSaveFailed(true);
     }
 
     setRunning(false);
@@ -203,6 +215,11 @@ export function ProspectRunner() {
           </button>
         ) : null}
 
+        {saveFailed ? (
+          <span className="text-xs text-gold">
+            Результаты не сохранились — выгрузите их в файл, иначе они пропадут при обновлении.
+          </span>
+        ) : null}
         {rows.length && !running ? (
           <span className="text-xs text-faint">
             есть о чём написать: <span className="text-green">{worth}</span> из {rows.length}
