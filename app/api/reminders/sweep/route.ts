@@ -3,7 +3,7 @@ import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { runCoach } from "@/lib/admin/coach-store";
 import { sweepOrders } from "@/lib/admin/order-sweep-run";
-import { sendShiftReports } from "@/lib/admin/shift-reports";
+import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
@@ -193,6 +193,9 @@ export async function POST(request: Request) {
   if (coach.errors.length) console.error("coach:", coach.errors.join("; "));
 
   // Отчёты плановых смен — владельцу. У смены нет токена бота, у свипа есть.
+  // Сторож молчания идёт ПЕРЕД отправкой: тревога, поднятая сейчас, уходит
+  // этим же проходом, а не через пять минут следующим.
+  const silent = await warnAboutSilentShifts(new Date());
   const shifts = await sendShiftReports();
 
   // Проход считается неудачным, только если не дошло вообще ничего из
@@ -210,6 +213,7 @@ export async function POST(request: Request) {
   return Response.json({
     coach,
     shifts,
+    silent,
     ok: true,
     sent,
     skipped,

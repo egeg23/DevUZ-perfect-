@@ -1,3 +1,4 @@
+import { tashkentMidnight, todayInTashkent } from "@/lib/admin/pulse";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -23,8 +24,20 @@ export const SHIFT_TITLE: Record<string, string> = {
 };
 
 export function renderShiftReport(report: ShiftReport): string {
-  const title = SHIFT_TITLE[report.shift] ?? report.shift;
-  return `<b>${esc(title)}</b>\n${esc(report.body)}`;
+  return `<b>${esc(shiftTitle(report.shift))}</b>\n${esc(report.body)}`;
+}
+
+/**
+ * Заголовок строки. Тревога сторожа приходит тем же каналом, что и отчёт, и
+ * должна отличаться от него первым же словом: «Смена разборов — молчит» и
+ * «Смена разборов» в ленте Telegram стоят рядом.
+ */
+export function shiftTitle(shift: string): string {
+  if (shift.endsWith(SILENT_SUFFIX)) {
+    const base = shift.slice(0, -SILENT_SUFFIX.length);
+    return `${SHIFT_TITLE[base] ?? base} — молчит`;
+  }
+  return SHIFT_TITLE[shift] ?? shift;
 }
 
 async function ownerChatId(): Promise<number | null> {
@@ -63,4 +76,113 @@ export async function sendShiftReports(): Promise<{ sent: number; failed: number
     sent += 1;
   }
   return { sent, failed };
+}
+
+/**
+ * Сторож молчания.
+ *
+ * Отчёт смены — это то, что смена написала САМА, дойдя до последнего шага.
+ * Смена, упавшая на первом, не напишет ничего, и её провал выглядит ровно
+ * как тишина: владелец узнал, что разборов нет, только когда зашёл и
+ * посмотрел, — на третий день.
+ *
+ * Поэтому молчание тоже должно звонить. Если к сроку строки от смены нет,
+ * сторож кладёт в ту же таблицу строку о том, что её нет, и она уходит
+ * владельцу тем же путём. Отдельного канала у сторожа нет намеренно: канал,
+ * которым никто не пользуется, ломается незаметно.
+ *
+ * Тревога поднимается один раз в сутки на смену: сама строка тревоги и
+ * служит отметкой «уже били». Пустая смена, честно написавшая «не нашлось
+ * годных сайтов», сторожа не будит — она отчиталась.
+ *
+ * Расписание живёт здесь константой. Если смену выключают совсем, строку
+ * надо убрать отсюда, иначе сторож будет звонить о смене, которой нет.
+ */
+export const SILENT_SUFFIX = ":silent";
+
+export type ShiftExpectation = {
+  shift: string;
+  /** Во сколько по Ташкенту запускается смена, ЧЧ:ММ. */
+  firesAt: string;
+  /** Сколько ждём отчёта после запуска. */
+  graceMinutes: number;
+};
+
+/**
+ * Разборы стартуют в 03:03 UTC, эксперимент в 04:05 UTC — это 08:03 и 09:05
+ * по Ташкенту. Три часа на смену с запасом: самая длинная из наблюдавшихся
+ * шла тридцать одну минуту.
+ */
+export const SHIFT_SCHEDULE: readonly ShiftExpectation[] = [
+  { shift: "razbor", firesAt: "08:03", graceMinutes: 3 * 60 },
+  { shift: "experiment", firesAt: "09:05", graceMinutes: 3 * 60 },
+];
+
+const MINUTE_MS = 60_000;
+
+function minutesOf(hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function hhmm(minutes: number): string {
+  const wrapped = ((minutes % 1440) + 1440) % 1440;
+  return `${String(Math.floor(wrapped / 60)).padStart(2, "0")}:${String(wrapped % 60).padStart(2, "0")}`;
+}
+
+export type SilentShift = { shift: string; body: string };
+
+/**
+ * Какие смены сегодня промолчали.
+ *
+ * Чистая функция: «сейчас» и уже написанные строки приходят аргументами,
+ * иначе проверка зависела бы от часов машины, а день наступал бы по UTC —
+ * то есть на пять часов позже, чем у владельца.
+ */
+export function silentShifts(input: {
+  now: Date;
+  rows: readonly { shift: string; created_at: string }[];
+  schedule?: readonly ShiftExpectation[];
+}): SilentShift[] {
+  const day = todayInTashkent(input.now);
+  const midnight = tashkentMidnight(day).getTime();
+  const sameDay = (row: { created_at: string }) => todayInTashkent(new Date(row.created_at)) === day;
+
+  const out: SilentShift[] = [];
+  for (const e of input.schedule ?? SHIFT_SCHEDULE) {
+    const fired = minutesOf(e.firesAt);
+    const deadline = midnight + (fired + e.graceMinutes) * MINUTE_MS;
+    if (input.now.getTime() < deadline) continue;
+
+    const today = input.rows.filter(sameDay);
+    if (today.some((r) => r.shift === e.shift)) continue;
+    if (today.some((r) => r.shift === e.shift + SILENT_SUFFIX)) continue;
+
+    // Какая именно смена — уже сказано заголовком строки; здесь только суть.
+    out.push({
+      shift: e.shift + SILENT_SUFFIX,
+      body:
+        `Запуск был в ${e.firesAt}, к ${hhmm(fired + e.graceMinutes)} по Ташкенту отчёта нет. ` +
+        `Это не «нечего публиковать»: о пустой смене приходит своя строка. Значит, смена не дошла до последнего шага — ` +
+        `откройте её сессию в claude.ai/code и посмотрите, на чём она встала.`,
+    });
+  }
+  return out;
+}
+
+/** Складывает тревоги в ту же таблицу: доставит их обычный проход свипа. */
+export async function warnAboutSilentShifts(now = new Date()): Promise<number> {
+  const db = serviceClient();
+  if (!db) return 0;
+
+  // Двух суток хватает: сторож смотрит только на сегодняшний день по
+  // Ташкенту, а запас закрывает разницу часовых поясов на границе суток.
+  const since = new Date(now.getTime() - 2 * 24 * 60 * MINUTE_MS).toISOString();
+  const { data } = await db.from("shift_reports").select("shift, created_at").gte("created_at", since);
+
+  const silent = silentShifts({ now, rows: (data ?? []) as { shift: string; created_at: string }[] });
+  if (!silent.length) return 0;
+
+  await db.from("shift_reports").insert(silent.map((s) => ({ shift: s.shift, body: s.body })));
+  return silent.length;
 }
