@@ -95,7 +95,29 @@ function pseudoRandom(seed: number): number {
 export async function markSent(id: string): Promise<void> {
   const db = serviceClient();
   if (!db) return;
-  await db.from("prospects").update({ status: "sent", sent_at: new Date().toISOString(), failure: null }).eq("id", id);
+
+  const { data } = await db
+    .from("prospects")
+    .update({ status: "sent", sent_at: new Date().toISOString(), failure: null })
+    .eq("id", id)
+    .select("message, lead_id")
+    .maybeSingle();
+
+  // Лента переписки начинается здесь, в момент доставки, а не в момент
+  // постановки в очередь. Записать письмо заранее значило бы показать
+  // менеджеру отправленным то, что отдать не удалось, — а модель, читая
+  // такую ленту, стала бы ссылаться на несказанное.
+  if (data?.message) {
+    await db.from("outreach_messages").insert({
+      prospect_id: id,
+      lead_id: data.lead_id ?? null,
+      direction: "out",
+      author: "staff",
+      body: String(data.message).slice(0, 4000),
+      status: "sent",
+      sent_at: new Date().toISOString(),
+    });
+  }
 }
 
 /**

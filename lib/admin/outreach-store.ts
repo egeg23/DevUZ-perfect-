@@ -16,6 +16,7 @@ import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
 import type { ProspectRow } from "@/lib/audit/batch";
+import { newRequestNo } from "@/lib/qualify/engine";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -237,7 +238,11 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
   );
   if (problems.length) return { ok: false, why: problems.map((p) => p.text).join(" ") };
 
-  const leadId = await createOutreachLead(prospect, staff, text);
+  // Номер заявки рождается здесь, а не в конце разговора: по нему модель
+  // допишет первичку в этот самый лид, когда клиент ответит. Без номера
+  // квалификация завела бы второй лид — уже ни за кем не закреплённый.
+  const requestNo = newRequestNo();
+  const leadId = await createOutreachLead(prospect, staff, text, requestNo);
 
   const { error } = await db
     .from("prospects")
@@ -248,6 +253,9 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
       claimed_by: staff.id,
       claimed_at: new Date().toISOString(),
       lead_id: leadId,
+      request_no: requestNo,
+      ai_handling: true,
+      handover_reason: null,
       failure: null,
     })
     .eq("id", id)
@@ -272,7 +280,12 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
  * человек, которому написали. Выдуманные грейды в такой строке были бы
  * враньём, поэтому все неизвестные поля стоят в худшее.
  */
-async function createOutreachLead(prospect: Prospect, staff: Staff, message: string): Promise<string | null> {
+async function createOutreachLead(
+  prospect: Prospect,
+  staff: Staff,
+  message: string,
+  requestNo: string,
+): Promise<string | null> {
   const db = serviceClient();
   if (!db) return null;
 
@@ -281,6 +294,7 @@ async function createOutreachLead(prospect: Prospect, staff: Staff, message: str
     .from("leads")
     .insert({
       source: "outreach",
+      request_no: requestNo,
       locale: "ru",
       contact_name: prospect.label ?? prospect.host,
       company: prospect.label,
@@ -313,6 +327,7 @@ async function createOutreachLead(prospect: Prospect, staff: Staff, message: str
       opening_line: message,
       already_told: [`Разобрали сайт ${prospect.host}`, ...prospect.findings.slice(0, 3).map((f) => f.title)],
       avoid_asking: [],
+      transcript: [{ role: "assistant", content: message }],
       status: "taken",
       assigned_staff_id: staff.id,
       assigned_to: staff.username ? `@${staff.username}` : staff.display_name,

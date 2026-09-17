@@ -14,6 +14,10 @@ import {
   takeLead,
   type OwnershipResult,
 } from "@/lib/admin/ownership";
+import { leadById } from "@/lib/admin/leads";
+import { canEdit } from "@/lib/admin/ownership";
+import { takeOverTalk } from "@/lib/admin/outreach-talk-store";
+import { record } from "@/lib/admin/audit";
 import { decideTransfer, requestTransfer } from "@/lib/admin/transfers";
 
 /**
@@ -80,6 +84,34 @@ export async function revealTranscriptAction(formData: FormData) {
   await requireStaff();
   const leadId = leadIdFrom(formData);
   redirect(`/admin/leads/${leadId}?transcript=1#transcript`);
+}
+
+/**
+ * «Отвечать самому»: менеджер забирает у модели первичку по касанию.
+ *
+ * Право проверяется по лиду, а не по проспекту: разговор принадлежит тому,
+ * за кем закреплён лид, и забрать его у модели может только он. Форма на
+ * странице этого не решает — её видно только своим, но видимость правом не
+ * является.
+ */
+export async function takeOverTalkAction(formData: FormData) {
+  const staff = await requireStaff();
+  const leadId = leadIdFrom(formData);
+  const prospectId = String(formData.get("prospect") ?? "");
+
+  const lead = await leadById(leadId);
+  if (!lead || !canEdit(lead, staff) || !prospectId) redirect(`/admin/leads/${leadId}`);
+
+  await takeOverTalk(prospectId);
+  await record("prospect.taken_over", {
+    actorStaffId: staff.id,
+    targetType: "prospect",
+    targetId: prospectId,
+    ip: await requestIp(),
+    meta: { lead: leadId },
+  });
+  revalidatePath(`/admin/leads/${leadId}`);
+  redirect(`/admin/leads/${leadId}#talk`);
 }
 
 export async function toggleAutoReminder(formData: FormData) {
