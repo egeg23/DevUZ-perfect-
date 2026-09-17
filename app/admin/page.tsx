@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { DashboardHome } from "@/components/admin/dashboard-home";
 import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
 import { LeadTable } from "@/components/admin/lead-table";
@@ -66,6 +67,7 @@ export default async function AdminHome({
     status?: string;
     owner?: string;
     page?: string;
+    p?: string;
   }>;
 }) {
   const staff = await requireStaff();
@@ -94,7 +96,7 @@ export default async function AdminHome({
 
   const base = (patch: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    const merged = { ...params, ...patch, page: undefined };
+    const merged = { ...params, ...patch, page: undefined, p: undefined };
     for (const [key, value] of Object.entries(merged)) {
       if (value) next.set(key, value);
     }
@@ -140,6 +142,10 @@ export default async function AdminHome({
           ничего не видит; проверьте переменные Supabase на сервере.
         </p>
       ) : null}
+
+      {/* Личный дашборд: у каждой роли свой. Стоит выше общего списка —
+          сначала то, что требует действия сегодня, потом всё остальное. */}
+      <DashboardHome staff={staff} planNotice={params.p} />
 
       <div className="grid grid-cols-3 gap-3 sm:max-w-lg">
         <Stat value={counts.total} label="всего" />
