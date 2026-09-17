@@ -18,12 +18,25 @@ import type { Contacts } from "@/lib/audit/contacts";
 
 /* ── Предохранители ────────────────────────────────────────────────────── */
 
-/** Сколько сообщений в сутки со всего аккаунта. */
-export const DAILY_CAP = 25;
+/**
+ * Сколько контактов в час со всего аккаунта.
+ *
+ * Владелец: «выстави лимит написаний 2 контакта в час; остальные ставь в
+ * очередь или предложи менеджеру не ждать очередь, а написать с личного
+ * аккаунта». Предел — не отказ: сообщение всё равно принимается и уходит,
+ * когда подойдёт его черёд.
+ */
+export const HOURLY_CAP = 2;
 
-/** Пауза между отправками, миллисекунды: минута с разбросом до трёх. */
-export const MIN_GAP_MS = 60_000;
-export const MAX_GAP_MS = 180_000;
+/** Час, в котором считается предел. */
+export const HOUR_MS = 3600_000;
+
+/**
+ * Пауза между отправками внутри часа: два сообщения подряд в одну секунду
+ * — это подпись рассылки, даже когда их всего два.
+ */
+export const MIN_GAP_MS = 8 * 60_000;
+export const MAX_GAP_MS = 20 * 60_000;
 
 /** Ошибки Telegram, после которых отправлять нельзя до конца суток. */
 export const STOP_ERRORS = ["PEER_FLOOD", "USER_PRIVACY_RESTRICTED", "FLOOD_WAIT", "USER_BANNED_IN_CHANNEL"];
@@ -46,27 +59,73 @@ export function targetFor(contacts: Contacts): string | null {
   return contacts.telegram[0] ?? null;
 }
 
-export type Reason = "no_telegram" | "nothing_to_say" | "already" | "cap" | "ok";
+export type Reason = "no_telegram" | "nothing_to_say" | "already" | "ok";
 
 export const REASON_TEXT: Record<Reason, string> = {
   no_telegram: "На сайте нет телеграма — писать некуда. Остаётся почта или звонок руками.",
   nothing_to_say: "К сайту нет претензий: писать не о чем, и придумывать повод не надо.",
   already: "Этому сайту уже писали. Второе касание — это рассылка.",
-  cap: `Дневной предел исчерпан: ${DAILY_CAP} сообщений с аккаунта в сутки. Остальные уйдут завтра.`,
   ok: "",
 };
 
+/**
+ * Можно ли писать этому сайту.
+ *
+ * Предела здесь нет намеренно: он про очередь, а не про сайт. Исчерпанный
+ * час не делает касание неуместным — он только отодвигает отправку, и
+ * менеджер об этом узнаёт словами, а не запертой кнопкой.
+ */
 export function canContact(input: {
   contacts: Contacts;
   findings: readonly Finding[];
   status: string;
-  sentToday: number;
 }): Reason {
   if (input.status !== "new" && input.status !== "contacting") return "already";
   if (!input.findings.length) return "nothing_to_say";
   if (!targetFor(input.contacts)) return "no_telegram";
-  if (input.sentToday >= DAILY_CAP) return "cap";
   return "ok";
+}
+
+/* ── Очередь ───────────────────────────────────────────────────────────── */
+
+export type QueueView = {
+  /** Сколько заданий стоит перед этим, считая с нуля. */
+  ahead: number;
+  /** Когда примерно уйдёт — миллисекунды от «сейчас». */
+  waitMs: number;
+};
+
+/**
+ * Через сколько дойдёт очередь.
+ *
+ * Считается по двум числам: сколько уже ушло за последний час и сколько
+ * заданий стоит впереди. Оценка грубая и намеренно не приукрашенная —
+ * менеджеру нужно решить «ждать или написать самому», а для этого хватает
+ * порядка величины.
+ */
+export function queueView(input: {
+  ahead: number;
+  sentLastHour: number;
+  /** Сколько миллисекунд назад ушло самое старое из отправленных за час. */
+  oldestSentAgoMs: number | null;
+}): QueueView {
+  const slotsNow = Math.max(0, HOURLY_CAP - input.sentLastHour);
+  if (input.ahead < slotsNow) return { ahead: input.ahead, waitMs: input.ahead * MIN_GAP_MS };
+
+  // Место освобождается, когда самое старое сообщение часа выпадает из окна.
+  const freesIn = input.oldestSentAgoMs === null ? 0 : Math.max(0, HOUR_MS - input.oldestSentAgoMs);
+  const extraHours = Math.floor((input.ahead - slotsNow) / HOURLY_CAP);
+  return { ahead: input.ahead, waitMs: freesIn + extraHours * HOUR_MS };
+}
+
+/** «через 40 минут», «через 2 часа» — так, как это скажет человек. */
+export function waitText(ms: number): string {
+  const minutes = Math.round(ms / 60_000);
+  if (minutes <= 1) return "вот-вот";
+  if (minutes < 60) return `примерно через ${minutes} мин.`;
+  const hours = Math.round(minutes / 60);
+  const word = hours === 1 ? "час" : hours >= 2 && hours <= 4 ? "часа" : "часов";
+  return `примерно через ${hours} ${word}`;
 }
 
 /* ── Что видит модель ──────────────────────────────────────────────────── */

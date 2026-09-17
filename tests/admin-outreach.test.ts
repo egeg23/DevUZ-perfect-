@@ -12,8 +12,11 @@ import { test } from "node:test";
 import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import {
-  DAILY_CAP,
+  HOURLY_CAP,
+  HOUR_MS,
   canContact,
+  queueView,
+  waitText,
   inventedNumbers,
   isStopError,
   messageProblems,
@@ -39,17 +42,35 @@ test("пишем только тем, кто сам опубликовал те�
   assert.equal(targetFor(EMPTY_CONTACTS), null);
 });
 
-test("касание разрешено, только когда есть кому, о чём и в пределах суток", () => {
-  const base = { contacts: contacts(), findings: [finding()], status: "new", sentToday: 0 };
+test("касание разрешено, когда есть кому и о чём; предел сюда не лезет", () => {
+  const base = { contacts: contacts(), findings: [finding()], status: "new" };
   assert.equal(canContact(base), "ok");
   assert.equal(canContact({ ...base, contacts: EMPTY_CONTACTS }), "no_telegram");
   assert.equal(canContact({ ...base, findings: [] }), "nothing_to_say");
   assert.equal(canContact({ ...base, status: "sent" }), "already", "второе касание — это рассылка");
   assert.equal(canContact({ ...base, status: "sending" }), "already");
-  assert.equal(canContact({ ...base, sentToday: DAILY_CAP }), "cap");
-  assert.equal(canContact({ ...base, sentToday: DAILY_CAP - 1 }), "ok");
-  // «Уже писали» сильнее предела: исчерпанный день не делает повтор уместным.
-  assert.equal(canContact({ ...base, status: "sent", sentToday: DAILY_CAP }), "already");
+});
+
+test("предел — два контакта в час, и он отодвигает отправку, а не отменяет её", () => {
+  assert.equal(HOURLY_CAP, 2);
+
+  // Час свободен: первое уходит сразу, второе — после паузы.
+  assert.equal(queueView({ ahead: 0, sentLastHour: 0, oldestSentAgoMs: null }).waitMs, 0);
+  assert.ok(queueView({ ahead: 1, sentLastHour: 0, oldestSentAgoMs: null }).waitMs > 0);
+
+  // Час выбран: ждём, пока самое старое выпадет из окна.
+  const full = queueView({ ahead: 0, sentLastHour: 2, oldestSentAgoMs: 40 * 60_000 });
+  assert.equal(full.waitMs, 20 * 60_000, "место освободится через двадцать минут");
+
+  // Пятый в очереди при выбранном часе ждёт ещё два часа сверх того.
+  const deep = queueView({ ahead: 4, sentLastHour: 2, oldestSentAgoMs: 40 * 60_000 });
+  assert.equal(deep.waitMs, 20 * 60_000 + 2 * HOUR_MS);
+
+  assert.equal(waitText(0), "вот-вот");
+  assert.equal(waitText(20 * 60_000), "примерно через 20 мин.");
+  assert.equal(waitText(HOUR_MS), "примерно через 1 час");
+  assert.equal(waitText(2 * HOUR_MS), "примерно через 2 часа");
+  assert.equal(waitText(6 * HOUR_MS), "примерно через 6 часов");
 });
 
 test("ошибки, после которых отправлять нельзя", () => {
@@ -121,8 +142,8 @@ test("правила касания записаны там, где их про�
   assert.match(lib, /должен уметь проверить сам/);
   assert.match(lib, /Никаких обещаний про позиции в поиске/);
   // Пределы — не декорация: их видно и в коде, и в тексте для человека.
-  assert.match(lib, /DAILY_CAP = 25/);
-  assert.match(lib, /MIN_GAP_MS = 60_000/);
+  assert.match(lib, /HOURLY_CAP = 2/);
+  assert.match(lib, /MIN_GAP_MS = 8 \* 60_000/);
 });
 
 /* ── Очередь, лид и остановка ──────────────────────────────────────────── */
@@ -146,7 +167,10 @@ test("лид заводится при отправке и закрепляет�
 
 test("очередь держит пределы аккаунта, а не надеется на отправителя", () => {
   const queue = readFileSync(new URL("../lib/admin/outreach-queue.ts", import.meta.url), "utf8");
-  assert.match(queue, /if \(\(await sentToday\(\)\) >= DAILY_CAP\) return null;/);
+  assert.match(queue, /if \(\(await sentLastHour\(now\)\)\.count >= HOURLY_CAP\) return null;/);
+  // База недоступна — час считается занятым: лучше задержать, чем
+  // отправить мимо предела.
+  assert.match(queue, /if \(!db\) return \{ count: HOURLY_CAP, oldestAgoMs: null \};/);
   assert.match(queue, /if \(lastAt && now - lastAt < gap\) return null;/, "пауза между отправками не проверяется");
   assert.match(queue, /\.limit\(1\)/, "очередь отдаёт больше одного задания за раз");
   // Ошибка про аккаунт снимает всю очередь, а не только своё задание.
@@ -164,4 +188,14 @@ test("скаут отправляет только из очереди и ост
   const readme = readFileSync(new URL("../scout/README.md", import.meta.url), "utf8");
   assert.match(readme, /В личку пишет только то, что отправил сотрудник/);
   assert.ok(!/\*\*Ничего не отправляет\.\*\*/.test(readme), "README обещает то, чего больше нет");
+});
+
+test("очередь — не тупик: менеджеру предложено написать самому", () => {
+  const list = readFileSync(new URL("../components/admin/outreach-list.tsx", import.meta.url), "utf8");
+  assert.match(list, /В очереди на отправку с рабочего аккаунта — \{waitText\(wait\.waitMs\)\}/);
+  assert.match(list, /Ждать не обязательно/);
+  assert.match(list, /https:\/\/t\.me\/\$\{row\.target\.replace/, "нет ссылки на переписку со своего аккаунта");
+  assert.match(list, /<CopyMessage text=\{row\.message\} \/>/, "текст нельзя скопировать");
+  // Предел не запирает кнопку «Связаться»: он про очередь, а не про сайт.
+  assert.ok(!/sentToday/.test(list), "предел всё ещё решает, показывать ли кнопку");
 });

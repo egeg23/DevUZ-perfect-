@@ -2,9 +2,6 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import { record } from "@/lib/admin/audit";
 import {
-  DAILY_CAP,
-  MAX_GAP_MS,
-  MIN_GAP_MS,
   OUTREACH_SYSTEM,
   OUTREACH_TOOL,
   canContact,
@@ -14,7 +11,6 @@ import {
   targetFor,
   type Reason,
 } from "@/lib/admin/outreach";
-import { sentToday } from "@/lib/admin/outreach-queue";
 import type { Staff } from "@/lib/admin/session";
 import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
@@ -155,7 +151,6 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     contacts: prospect.contacts,
     findings: prospect.findings,
     status: prospect.status,
-    sentToday: await sentToday(),
   });
   if (reason !== "ok") return { ok: false, why: "", reason };
 
@@ -221,7 +216,6 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
     contacts: prospect.contacts,
     findings: prospect.findings,
     status: prospect.status,
-    sentToday: await sentToday(),
   });
   if (reason !== "ok") return { ok: false, why: reason };
 

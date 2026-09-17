@@ -1,7 +1,16 @@
 import Link from "next/link";
 
 import { prepareOutreachAction, sendOutreachAction, skipProspectAction } from "@/app/admin/prospect/actions";
-import { DAILY_CAP, REASON_TEXT, canContact, targetFor, type Reason } from "@/lib/admin/outreach";
+import { CopyMessage } from "@/components/admin/copy-message";
+import {
+  HOURLY_CAP,
+  REASON_TEXT,
+  canContact,
+  queueView,
+  targetFor,
+  waitText,
+  type Reason,
+} from "@/lib/admin/outreach";
 import type { Prospect } from "@/lib/admin/outreach-store";
 import { contactsLine, hasAnyContact } from "@/lib/audit/contacts";
 
@@ -48,35 +57,40 @@ function when(iso: string | null): string {
 
 export function OutreachList({
   rows,
-  sentToday,
+  hour,
   open,
   error,
   sent,
 }: {
   rows: Prospect[];
-  sentToday: number;
+  /** Что ушло за последний час: предел считается по факту отправки. */
+  hour: { count: number; oldestAgoMs: number | null };
   open?: string;
   error?: string;
   sent?: boolean;
 }) {
   if (!rows.length) return null;
 
-  const left = Math.max(0, DAILY_CAP - sentToday);
+  const queue = rows.filter((r) => r.status === "sending");
+  const left = Math.max(0, HOURLY_CAP - hour.count);
 
   return (
     <section className="mt-10">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold">Разобранные сайты</h2>
         <p className="text-xs text-faint">
-          Отправлено за сутки: {sentToday} из {DAILY_CAP}
-          {left === 0 ? " — на сегодня всё, остальные уйдут завтра" : ""}
+          За последний час ушло {hour.count} из {HOURLY_CAP}
+          {queue.length ? ` · в очереди ${queue.length}` : ""}
+          {left === 0 && queue.length ? " — ждут своей очереди" : ""}
         </p>
       </div>
 
       <p className="mt-2 max-w-2xl text-xs leading-relaxed text-faint">
-        Пишет рабочий аккаунт студии, а не бот. Поэтому предел на сутки, пауза между
-        сообщениями и одно касание на сайт — этим же аккаунтом скаут читает чаты, и
-        ограничение за рассылку выключило бы оба канала сразу.
+        Пишет рабочий аккаунт студии, а не бот: два контакта в час, пауза между
+        сообщениями и одно касание на сайт. Этим же аккаунтом скаут читает чаты, и
+        ограничение за рассылку выключило бы оба канала сразу. Ждать очередь не
+        обязательно — сообщение можно отправить со своего аккаунта, тогда и ответ
+        придёт вам лично.
       </p>
 
       {sent ? (
@@ -96,10 +110,17 @@ export function OutreachList({
             contacts: row.contacts,
             findings: row.findings,
             status: row.status,
-            sentToday,
           });
           const target = targetFor(row.contacts);
           const expanded = open === row.id || row.status === "contacting";
+          const wait =
+            row.status === "sending"
+              ? queueView({
+                  ahead: queue.filter((q) => q.created_at < row.created_at).length,
+                  sentLastHour: hour.count,
+                  oldestSentAgoMs: hour.oldestAgoMs,
+                })
+              : null;
 
           return (
             <li key={row.id} className={CARD}>
@@ -155,6 +176,32 @@ export function OutreachList({
               ) : null}
 
               {row.failure ? <p className="mt-2 text-xs text-red-300">{row.failure}</p> : null}
+
+              {/* В очереди — не тупик: можно подождать, а можно написать
+                  самому. Второе быстрее, и ответ придёт прямо менеджеру. */}
+              {wait && row.target && row.message ? (
+                <div className="mt-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
+                  <p className="text-sm text-gold">
+                    В очереди на отправку с рабочего аккаунта — {waitText(wait.waitMs)}
+                    {wait.ahead ? `, перед ним ${wait.ahead}` : ""}.
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed text-muted">
+                    Ждать не обязательно: откройте переписку со своего аккаунта и отправьте
+                    этот же текст — ответ придёт вам лично, и лид уже ваш.
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <a
+                      href={`https://t.me/${row.target.replace(/^@/, "")}`}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
+                    >
+                      Открыть {row.target} в Telegram
+                    </a>
+                    <CopyMessage text={row.message} />
+                  </div>
+                </div>
+              ) : null}
 
               {/* Кнопка появляется, только когда писать и можно, и есть куда. */}
               {reason === "ok" && !expanded ? (

@@ -2,7 +2,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { OutreachList } from "@/components/admin/outreach-list";
 import { ProspectRunner } from "@/components/admin/prospect-runner";
 import { requireStaff } from "@/lib/admin/guard";
-import { sentToday } from "@/lib/admin/outreach-queue";
+import { sentLastHour } from "@/lib/admin/outreach-queue";
 import { listProspects } from "@/lib/admin/outreach-store";
 import { BATCH_CAP } from "@/lib/audit/batch";
 
@@ -15,7 +15,7 @@ export default async function ProspectPage({
 }) {
   const staff = await requireStaff();
   const { open, e, sent } = await searchParams;
-  const [rows, today] = await Promise.all([listProspects(), sentToday()]);
+  const [rows, hour] = await Promise.all([listProspects(), sentLastHour()]);
 
   return (
     <AdminShell staff={staff}>
@@ -28,7 +28,7 @@ export default async function ProspectPage({
 
       <ProspectRunner />
 
-      <OutreachList rows={rows} sentToday={today} open={open} error={e} sent={sent === "1"} />
+      <OutreachList rows={rows} hour={hour} open={open} error={e} sent={sent === "1"} />
 
       <div className="mt-10 max-w-2xl space-y-3 border-t border-line pt-6 text-xs leading-relaxed text-faint">
         <p>

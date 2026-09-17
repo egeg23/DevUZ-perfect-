@@ -1,4 +1,4 @@
-import { DAILY_CAP, MAX_GAP_MS, MIN_GAP_MS, isStopError } from "@/lib/admin/outreach";
+import { HOURLY_CAP, HOUR_MS, MAX_GAP_MS, MIN_GAP_MS, isStopError } from "@/lib/admin/outreach";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -9,16 +9,40 @@ import { serviceClient } from "@/lib/supabase";
  * запросов к базе незачем. Здесь только база и пределы.
  */
 
-/** Сколько ушло за сутки — предел считается по факту отправки, не по очереди. */
-export async function sentToday(): Promise<number> {
+/**
+ * Что ушло за последний час: сколько и когда самое старое.
+ *
+ * Предел считается по факту отправки, а не по очереди: задание, стоящее в
+ * очереди, ещё никого не побеспокоило. Отметка самого старого нужна, чтобы
+ * сказать менеджеру, когда освободится место, — а не просто «занято».
+ */
+export async function sentLastHour(now = Date.now()): Promise<{ count: number; oldestAgoMs: number | null }> {
   const db = serviceClient();
-  if (!db) return DAILY_CAP;
-  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+  // База недоступна — считаем час занятым: лучше задержать, чем отправить
+  // мимо предела.
+  if (!db) return { count: HOURLY_CAP, oldestAgoMs: null };
+
+  const { data } = await db
+    .from("prospects")
+    .select("sent_at")
+    .eq("status", "sent")
+    .gte("sent_at", new Date(now - HOUR_MS).toISOString())
+    .order("sent_at", { ascending: true });
+
+  const rows = data ?? [];
+  const oldest = rows[0]?.sent_at ? Date.parse(String(rows[0].sent_at)) : null;
+  return { count: rows.length, oldestAgoMs: oldest === null ? null : now - oldest };
+}
+
+/** Сколько заданий стоит в очереди перед этим. */
+export async function aheadInQueue(claimedAt: string | null): Promise<number> {
+  const db = serviceClient();
+  if (!db || !claimedAt) return 0;
   const { count } = await db
     .from("prospects")
     .select("id", { count: "exact", head: true })
-    .eq("status", "sent")
-    .gte("sent_at", since);
+    .eq("status", "sending")
+    .lt("claimed_at", claimedAt);
   return count ?? 0;
 }
 
@@ -34,7 +58,7 @@ export async function nextQueued(now = Date.now()): Promise<Queued | null> {
   const db = serviceClient();
   if (!db) return null;
 
-  if ((await sentToday()) >= DAILY_CAP) return null;
+  if ((await sentLastHour(now)).count >= HOURLY_CAP) return null;
 
   const { data: last } = await db
     .from("prospects")
