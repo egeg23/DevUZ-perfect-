@@ -7,6 +7,10 @@ import type { LocalizedText } from "@/lib/i18n";
  * это база, по которой AI-менеджер оценивает нашу экспертность в нише клиента
  * при ICP-скоринге. Поэтому у каждого кейса есть `niches` — список ниш, к
  * которым он относится, в терминах, которыми говорит клиент.
+ *
+ * Порядок в массиве — редакторский, не по году: все проекты 2026-го, сортировать
+ * нечем. Первым идёт то, чем студия представляется сейчас, и этот же порядок
+ * определяет шесть карточек на главной — она берёт начало списка.
  */
 export type Case = {
   slug: string;
@@ -70,6 +74,105 @@ export const cases: Case[] = [
       { value: "4", label: { ru: "языка с hreflang-разметкой", en: "languages with hreflang markup", uz: "hreflang belgilangan til", zh: "带 hreflang 标注的语言" } },
       { value: "20s", label: { ru: "гарантия первого ответа в чате", en: "guaranteed first reply in chat", uz: "chatdagi birinchi javob kafolati", zh: "在线沟通首次回复承诺" } },
       { value: "0", label: { ru: "КБ анимационных библиотек", en: "KB of animation libraries", uz: "KB animatsiya kutubxonasi", zh: "动画库体积（KB）" } },
+    ],
+  },
+  {
+    slug: "mavera",
+    name: "MAVERA",
+    monogram: "MV",
+    year: 2026,
+    tier: 1,
+    niches: ["застройщик", "недвижимость", "жилой комплекс", "продажа квартир", "подбор квартиры", "ипотечный калькулятор", "real estate", "property developer", "ko‘chmas mulk", "quruvchi kompaniya", "房地产", "开发商"],
+    accent: "blue",
+    category: {
+      ru: "Три сайта застройщика + конструктор допников",
+      en: "Three developer sites + add-on configurator",
+      uz: "Quruvchi uchun uchta sayt + qo‘shimchalar konstruktori",
+      zh: "三套开发商网站 + 增值功能配置器",
+    },
+    summary: {
+      ru: "Три рабочих сайта для застройщика — строгий каталог, журнальный разворот и кинематографичный премиум — с карточкой ЖК, подбором квартиры, ипотечным калькулятором и конструктором, где допники включаются тумблером и сразу меняют страницу и цену.",
+      en: "Three working sites for a property developer — a strict catalogue, a magazine spread and a cinematic premium — with project pages, a flat picker, a mortgage calculator and a configurator where add-ons switch on with a toggle and change the page and the price at once.",
+      uz: "Quruvchi kompaniya uchun uchta ishlaydigan sayt — qat’iy katalog, jurnal sahifasi va kinematografik premium — turar-joy majmuasi kartochkasi, kvartira tanlash, ipoteka kalkulyatori va qo‘shimchalar tumbler bilan yoqilib, sahifa va narxni darhol o‘zgartiradigan konstruktor bilan.",
+      zh: "为房地产开发商打造的三套可运行网站 —— 严谨目录版、杂志跨页版与电影感高端版 —— 含楼盘页、选房器、房贷计算器，以及一个配置器：拨动开关即可启用增值功能，页面与报价同时变化。",
+    },
+    description: {
+      ru: "Бриф с вилкой бюджета и три референса превратились в три полных сайта, различающихся не палитрой, а школой оформления: швейцарская сетка, журнальный разворот с буквицей и параллаксом, тёмный кинозал со сценами во весь экран, генпланом и шахматкой. В каждом можно провалиться в жилой комплекс, отфильтровать квартиры, увидеть одну из семи планировок под метраж и посчитать платёж по условиям банков-партнёров. Отдельно — панель управления: ЖК, корпуса, квартиры, заявки, роли, Метрика. Главная механика показа — конструктор: двадцать допников с ценой включаются тумблером, блок появляется на странице без перезагрузки, страница подъезжает к нему, у свежего блока есть «было / стало», а итог пересчитывается в долларах, сумах и рублях. Квартиры и чертежи считаются на сервере, в браузер уходит только интерфейс. Витрина закрыта кодом доступа и скрыта из поиска: её видит только заказчик.",
+      en: "A brief with a budget range and three references became three complete sites that differ not in palette but in design school: a Swiss grid, a magazine spread with a drop cap and parallax, and a dark cinema with full-screen scenes, a master plan and a floor chessboard. Each lets you open a residential project, filter flats, see one of seven floor plans matched to the area and calculate a payment on partner banks' terms. Alongside them, an admin panel: projects, buildings, flats, leads, roles, analytics. The centrepiece of the pitch is the configurator: twenty priced add-ons switch on with a toggle, the block appears on the page without a reload, the page scrolls to it, a fresh block gets a «before / after» switch, and the total is recalculated in dollars, soums and roubles. Flats and drawings are computed on the server; only the interface ships to the browser. The showcase is behind an access code and hidden from search: only the client sees it.",
+      uz: "Byudjet oralig‘i va uchta referensli brif palitra bilan emas, dizayn maktabi bilan farq qiladigan uchta to‘liq saytga aylandi: shveytsariya to‘ri, harfboshi va parallaksli jurnal sahifasi, butun ekranli sahnalar, bosh reja va shaxmat taxtali qorong‘i kinozal. Har birida turar-joy majmuasiga kirish, kvartiralarni filtrlash, maydonga mos yettita rejadan birini ko‘rish va hamkor banklar shartlari bo‘yicha to‘lovni hisoblash mumkin. Alohida — boshqaruv paneli: majmualar, korpuslar, kvartiralar, so‘rovlar, rollar, analitika. Ko‘rsatuvning asosiy mexanikasi — konstruktor: narxli yigirmata qo‘shimcha tumbler bilan yoqiladi, blok sahifada qayta yuklashsiz paydo bo‘ladi, sahifa unga yaqinlashadi, yangi blokda «avval / keyin» tugmasi bor, yakun esa dollar, so‘m va rublda qayta hisoblanadi. Kvartiralar va chizmalar serverda hisoblanadi, brauzerga faqat interfeys boradi. Vitrina kirish kodi bilan yopilgan va qidiruvdan yashirilgan: uni faqat buyurtmachi ko‘radi.",
+      zh: "一份带预算区间的需求书和三个参考案例，变成了三套完整网站 —— 差别不在配色，而在设计流派：瑞士网格、带首字下沉与视差的杂志跨页、以及带全屏场景、总平面图和楼层棋盘的深色影院风格。每套都可以进入楼盘、筛选房源、查看按面积匹配的七种户型之一，并按合作银行条件计算月供。另配管理后台：楼盘、楼栋、房源、询单、角色、统计。展示的核心机制是配置器：二十项带价格的增值功能通过开关启用，区块无需刷新即出现在页面上，页面自动滚动到位，新启用的区块带有「之前 / 之后」对比，总价则以美元、苏姆和卢布实时重算。房源与户型图在服务端计算，浏览器只接收界面。展示站受访问码保护并对搜索引擎隐藏：只有客户能看到。",
+    },
+    tech: ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4", "Playwright"],
+    metrics: [
+      { value: "3", label: { ru: "сайта в разных школах оформления", en: "sites in different design schools", uz: "turli dizayn maktabidagi sayt", zh: "不同设计流派的网站" } },
+      { value: "20", label: { ru: "допников с ценой в конструкторе", en: "priced add-ons in the configurator", uz: "konstruktordagi narxli qo‘shimcha", zh: "配置器中的带价增值功能" } },
+      { value: "7", label: { ru: "планировок под метраж", en: "floor plans matched to area", uz: "maydonga mos reja", zh: "按面积匹配的户型" } },
+    ],
+  },
+  {
+    slug: "global-export",
+    name: "Global Export",
+    monogram: "GE",
+    year: 2026,
+    tier: 1,
+    niches: ["экспорт", "производство", "сельское хозяйство", "B2B", "FMCG", "export", "eksport", "出口"],
+    accent: "gold",
+    category: {
+      ru: "Корпоративный сайт",
+      en: "Corporate website",
+      uz: "Korporativ sayt",
+      zh: "企业官网",
+    },
+    summary: {
+      ru: "Мультиязычный сайт экспортёра сухофруктов и бобовых с собственной админкой.",
+      en: "A multilingual site for an exporter of dried fruit and pulses, with a custom admin panel.",
+      uz: "Quritilgan mevalar va dukkaklilar eksportchisi uchun o‘z admin paneliga ega ko‘p tilli sayt.",
+      zh: "为干果与豆类出口商打造的多语言网站，配备自有后台。",
+    },
+    description: {
+      ru: "Сайт для выхода на международных закупщиков: каталог продукции, новости с выставок, сертификаты и аудиты, география поставок. Весь контент правится менеджером через собственную админку на Supabase — от карточек товара до новостей и переводов. Никаких анимационных библиотек на клиенте: появление блоков сделано на IntersectionObserver и CSS, поэтому страницы остаются лёгкими даже на медленных соединениях.",
+      en: "A site built to reach international buyers: a product catalogue, trade-show news, certificates and audits, delivery geography. All content is edited by a manager through a custom Supabase-backed admin panel — from product cards to news and translations. No animation libraries ship to the client: block reveals run on IntersectionObserver and CSS, so pages stay light even on slow connections.",
+      uz: "Xalqaro xaridorlarga chiqish uchun sayt: mahsulot katalogi, ko‘rgazmalardan yangiliklar, sertifikatlar va auditlar, yetkazib berish geografiyasi. Butun kontentni menejer Supabase asosidagi o‘z admin paneli orqali tahrirlaydi. Mijozga hech qanday animatsiya kutubxonasi yuborilmaydi: bloklarning paydo bo‘lishi IntersectionObserver va CSS’da ishlaydi.",
+      zh: "面向国际采购商的网站：产品目录、展会资讯、认证与审核记录、供货区域覆盖。全部内容由运营人员通过基于 Supabase 的自有后台维护 —— 从产品卡片到新闻与翻译。客户端不加载任何动画库：区块的出场效果基于 IntersectionObserver 与 CSS 实现，因此即使在慢速网络下页面依然轻量。",
+    },
+    tech: ["Next.js", "React", "Tailwind CSS", "Supabase", "TypeScript"],
+    metrics: [
+      { value: "4", label: { ru: "языка с hreflang-разметкой", en: "languages with hreflang markup", uz: "hreflang belgilangan til", zh: "带 hreflang 标注的语言" } },
+      { value: "0", label: { ru: "КБ анимационных библиотек", en: "KB of animation libraries", uz: "KB animatsiya kutubxonasi", zh: "动画库体积（KB）" } },
+    ],
+  },
+  {
+    slug: "adar",
+    name: "ADAR",
+    monogram: "AD",
+    year: 2026,
+    url: "https://globalex.maximov-tech.ru/adar",
+    tier: 2,
+    niches: ["подарочные наборы", "корпоративные подарки", "новогодние подарки", "кондитерские изделия", "интернет-магазин", "каталог", "e-commerce", "gift sets", "corporate gifts", "sovg‘a to‘plamlari", "礼品套装", "企业礼品"],
+    accent: "gold",
+    category: {
+      ru: "Три концепции сайта со сметой",
+      en: "Three site concepts with estimates",
+      uz: "Smeta bilan uchta sayt konsepsiyasi",
+      zh: "三套网站方案与报价",
+    },
+    summary: {
+      ru: "Поставщик подарочных наборов с 2011 года: три рабочих варианта новой главной — витрина, каталог с поиском по составу и премиум с барабаном архива — и смета по каждому.",
+      en: "A gift-set supplier since 2011: three working versions of the new home page — a showcase, a catalogue searchable by contents and a premium edition with an archive drum — each with its own estimate.",
+      uz: "2011-yildan beri sovg‘a to‘plamlari yetkazib beruvchi kompaniya: yangi bosh sahifaning uchta ishlaydigan varianti — vitrina, tarkib bo‘yicha qidiruvli katalog va arxiv barabanli premium — har biriga alohida smeta bilan.",
+      zh: "自 2011 年起经营礼品套装的供应商：三个可运行的新首页版本 —— 展示型、可按成分搜索的目录型、带档案转盘的高端型 —— 每个版本均附报价。",
+    },
+    description: {
+      ru: "Заказчик пришёл с сайтом-визиткой и сотней детских новогодних наборов. Вместо макетов собрали три полноценных варианта главной на одной витрине с переключателем. «Витрина» — быстрый сайт, где заявку оставляют с телефона за пятнадцать секунд. «Каталог» — восемьдесят наборов с поиском по составу, весу и цене. «Премиум» — тёмная кинематографичная версия с барабаном архива за девятнадцать сезонов, знаками восточного календаря на обложках, корзиной и формой заказа. У каждого варианта смета по строкам: суммы сходятся с итогом и проверяются тестом, а формулировки написаны на языке результата, а не исполнителя. От заказчика после осмотра нужно одно решение — выбрать направление.",
+      en: "The client arrived with a one-page site and a hundred children's New Year gift sets. Instead of mockups we built three complete versions of the home page on one showcase with a switcher. «Showcase» — a fast site where an enquiry takes fifteen seconds from a phone. «Catalogue» — eighty sets searchable by contents, weight and price. «Premium» — a dark, cinematic edition with an archive drum spanning nineteen seasons, Eastern-calendar signs on the covers, a cart and an order form. Each version carries a line-by-line estimate: the lines add up to the total and a test checks it, and every line is phrased in terms of the outcome, not the contractor's vocabulary. After the walkthrough the client owes exactly one decision — which direction to take.",
+      uz: "Buyurtmachi bir sahifali sayt va yuzga yaqin bolalar yangi yil sovg‘a to‘plamlari bilan keldi. Maketlar o‘rniga bitta vitrinada, almashtirgich bilan, bosh sahifaning uchta to‘liq variantini yig‘dik. «Vitrina» — telefondan o‘n besh soniyada buyurtma qoldiriladigan tez sayt. «Katalog» — tarkibi, og‘irligi va narxi bo‘yicha qidiriladigan sakson to‘plam. «Premium» — o‘n to‘qqiz mavsumlik arxiv barabani, muqovalarda sharq taqvimi belgilari, savat va buyurtma shakli bilan qorong‘i kinematografik versiya. Har bir variantda satrma-satr smeta: summalar yakun bilan mos keladi va test bilan tekshiriladi. Ko‘rib chiqqandan keyin buyurtmachidan bitta qaror kutiladi — yo‘nalishni tanlash.",
+      zh: "客户带着一个名片式网站和上百款儿童新年礼品套装找到我们。我们没有画设计稿，而是在同一个展示页上做出三个完整可切换的首页版本。「展示型」—— 快速网站，用手机十五秒即可提交询单；「目录型」—— 八十款套装，可按成分、重量和价格搜索；「高端型」—— 深色电影感版本，配有跨越十九个季度的档案转盘、封面上的东方历法生肖标记、购物车与订单表单。每个版本都附逐行报价：各行之和与总价一致并由测试校验，措辞面向成果而非施工方术语。客户看完只需做一个决定 —— 选择方向。",
+    },
+    tech: ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4"],
+    metrics: [
+      { value: "3", label: { ru: "варианта главной со сметой", en: "home-page versions with estimates", uz: "smetali bosh sahifa varianti", zh: "附报价的首页版本" } },
+      { value: "80", label: { ru: "наборов с поиском по составу", en: "sets searchable by contents", uz: "tarkib bo‘yicha qidiriladigan to‘plam", zh: "可按成分搜索的套装" } },
+      { value: "19", label: { ru: "сезонов в барабане архива", en: "seasons in the archive drum", uz: "arxiv baranidagi mavsum", zh: "档案转盘中的季度" } },
     ],
   },
   {
@@ -245,105 +348,6 @@ export const cases: Case[] = [
       { value: "24/7", label: { ru: "заселение без хозяина", en: "check-in without the owner", uz: "egasisiz joylashish", zh: "无需房东的入住" } },
       { value: "2", label: { ru: "платёжных шлюза", en: "payment gateways", uz: "to‘lov shlyuzi", zh: "接入的支付网关" } },
       { value: "E-mehmon", label: { ru: "отчётность закрыта автоматически", en: "reporting handled automatically", uz: "hisobot avtomatik yopiladi", zh: "申报流程自动完成" } },
-    ],
-  },
-  {
-    slug: "global-export",
-    name: "Global Export",
-    monogram: "GE",
-    year: 2026,
-    tier: 1,
-    niches: ["экспорт", "производство", "сельское хозяйство", "B2B", "FMCG", "export", "eksport", "出口"],
-    accent: "gold",
-    category: {
-      ru: "Корпоративный сайт",
-      en: "Corporate website",
-      uz: "Korporativ sayt",
-      zh: "企业官网",
-    },
-    summary: {
-      ru: "Мультиязычный сайт экспортёра сухофруктов и бобовых с собственной админкой.",
-      en: "A multilingual site for an exporter of dried fruit and pulses, with a custom admin panel.",
-      uz: "Quritilgan mevalar va dukkaklilar eksportchisi uchun o‘z admin paneliga ega ko‘p tilli sayt.",
-      zh: "为干果与豆类出口商打造的多语言网站，配备自有后台。",
-    },
-    description: {
-      ru: "Сайт для выхода на международных закупщиков: каталог продукции, новости с выставок, сертификаты и аудиты, география поставок. Весь контент правится менеджером через собственную админку на Supabase — от карточек товара до новостей и переводов. Никаких анимационных библиотек на клиенте: появление блоков сделано на IntersectionObserver и CSS, поэтому страницы остаются лёгкими даже на медленных соединениях.",
-      en: "A site built to reach international buyers: a product catalogue, trade-show news, certificates and audits, delivery geography. All content is edited by a manager through a custom Supabase-backed admin panel — from product cards to news and translations. No animation libraries ship to the client: block reveals run on IntersectionObserver and CSS, so pages stay light even on slow connections.",
-      uz: "Xalqaro xaridorlarga chiqish uchun sayt: mahsulot katalogi, ko‘rgazmalardan yangiliklar, sertifikatlar va auditlar, yetkazib berish geografiyasi. Butun kontentni menejer Supabase asosidagi o‘z admin paneli orqali tahrirlaydi. Mijozga hech qanday animatsiya kutubxonasi yuborilmaydi: bloklarning paydo bo‘lishi IntersectionObserver va CSS’da ishlaydi.",
-      zh: "面向国际采购商的网站：产品目录、展会资讯、认证与审核记录、供货区域覆盖。全部内容由运营人员通过基于 Supabase 的自有后台维护 —— 从产品卡片到新闻与翻译。客户端不加载任何动画库：区块的出场效果基于 IntersectionObserver 与 CSS 实现，因此即使在慢速网络下页面依然轻量。",
-    },
-    tech: ["Next.js", "React", "Tailwind CSS", "Supabase", "TypeScript"],
-    metrics: [
-      { value: "4", label: { ru: "языка с hreflang-разметкой", en: "languages with hreflang markup", uz: "hreflang belgilangan til", zh: "带 hreflang 标注的语言" } },
-      { value: "0", label: { ru: "КБ анимационных библиотек", en: "KB of animation libraries", uz: "KB animatsiya kutubxonasi", zh: "动画库体积（KB）" } },
-    ],
-  },
-  {
-    slug: "adar",
-    name: "ADAR",
-    monogram: "AD",
-    year: 2026,
-    url: "https://globalex.maximov-tech.ru/adar",
-    tier: 2,
-    niches: ["подарочные наборы", "корпоративные подарки", "новогодние подарки", "кондитерские изделия", "интернет-магазин", "каталог", "e-commerce", "gift sets", "corporate gifts", "sovg‘a to‘plamlari", "礼品套装", "企业礼品"],
-    accent: "gold",
-    category: {
-      ru: "Три концепции сайта со сметой",
-      en: "Three site concepts with estimates",
-      uz: "Smeta bilan uchta sayt konsepsiyasi",
-      zh: "三套网站方案与报价",
-    },
-    summary: {
-      ru: "Поставщик подарочных наборов с 2011 года: три рабочих варианта новой главной — витрина, каталог с поиском по составу и премиум с барабаном архива — и смета по каждому.",
-      en: "A gift-set supplier since 2011: three working versions of the new home page — a showcase, a catalogue searchable by contents and a premium edition with an archive drum — each with its own estimate.",
-      uz: "2011-yildan beri sovg‘a to‘plamlari yetkazib beruvchi kompaniya: yangi bosh sahifaning uchta ishlaydigan varianti — vitrina, tarkib bo‘yicha qidiruvli katalog va arxiv barabanli premium — har biriga alohida smeta bilan.",
-      zh: "自 2011 年起经营礼品套装的供应商：三个可运行的新首页版本 —— 展示型、可按成分搜索的目录型、带档案转盘的高端型 —— 每个版本均附报价。",
-    },
-    description: {
-      ru: "Заказчик пришёл с сайтом-визиткой и сотней детских новогодних наборов. Вместо макетов собрали три полноценных варианта главной на одной витрине с переключателем. «Витрина» — быстрый сайт, где заявку оставляют с телефона за пятнадцать секунд. «Каталог» — восемьдесят наборов с поиском по составу, весу и цене. «Премиум» — тёмная кинематографичная версия с барабаном архива за девятнадцать сезонов, знаками восточного календаря на обложках, корзиной и формой заказа. У каждого варианта смета по строкам: суммы сходятся с итогом и проверяются тестом, а формулировки написаны на языке результата, а не исполнителя. От заказчика после осмотра нужно одно решение — выбрать направление.",
-      en: "The client arrived with a one-page site and a hundred children's New Year gift sets. Instead of mockups we built three complete versions of the home page on one showcase with a switcher. «Showcase» — a fast site where an enquiry takes fifteen seconds from a phone. «Catalogue» — eighty sets searchable by contents, weight and price. «Premium» — a dark, cinematic edition with an archive drum spanning nineteen seasons, Eastern-calendar signs on the covers, a cart and an order form. Each version carries a line-by-line estimate: the lines add up to the total and a test checks it, and every line is phrased in terms of the outcome, not the contractor's vocabulary. After the walkthrough the client owes exactly one decision — which direction to take.",
-      uz: "Buyurtmachi bir sahifali sayt va yuzga yaqin bolalar yangi yil sovg‘a to‘plamlari bilan keldi. Maketlar o‘rniga bitta vitrinada, almashtirgich bilan, bosh sahifaning uchta to‘liq variantini yig‘dik. «Vitrina» — telefondan o‘n besh soniyada buyurtma qoldiriladigan tez sayt. «Katalog» — tarkibi, og‘irligi va narxi bo‘yicha qidiriladigan sakson to‘plam. «Premium» — o‘n to‘qqiz mavsumlik arxiv barabani, muqovalarda sharq taqvimi belgilari, savat va buyurtma shakli bilan qorong‘i kinematografik versiya. Har bir variantda satrma-satr smeta: summalar yakun bilan mos keladi va test bilan tekshiriladi. Ko‘rib chiqqandan keyin buyurtmachidan bitta qaror kutiladi — yo‘nalishni tanlash.",
-      zh: "客户带着一个名片式网站和上百款儿童新年礼品套装找到我们。我们没有画设计稿，而是在同一个展示页上做出三个完整可切换的首页版本。「展示型」—— 快速网站，用手机十五秒即可提交询单；「目录型」—— 八十款套装，可按成分、重量和价格搜索；「高端型」—— 深色电影感版本，配有跨越十九个季度的档案转盘、封面上的东方历法生肖标记、购物车与订单表单。每个版本都附逐行报价：各行之和与总价一致并由测试校验，措辞面向成果而非施工方术语。客户看完只需做一个决定 —— 选择方向。",
-    },
-    tech: ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4"],
-    metrics: [
-      { value: "3", label: { ru: "варианта главной со сметой", en: "home-page versions with estimates", uz: "smetali bosh sahifa varianti", zh: "附报价的首页版本" } },
-      { value: "80", label: { ru: "наборов с поиском по составу", en: "sets searchable by contents", uz: "tarkib bo‘yicha qidiriladigan to‘plam", zh: "可按成分搜索的套装" } },
-      { value: "19", label: { ru: "сезонов в барабане архива", en: "seasons in the archive drum", uz: "arxiv baranidagi mavsum", zh: "档案转盘中的季度" } },
-    ],
-  },
-  {
-    slug: "mavera",
-    name: "MAVERA",
-    monogram: "MV",
-    year: 2026,
-    tier: 1,
-    niches: ["застройщик", "недвижимость", "жилой комплекс", "продажа квартир", "подбор квартиры", "ипотечный калькулятор", "real estate", "property developer", "ko‘chmas mulk", "quruvchi kompaniya", "房地产", "开发商"],
-    accent: "blue",
-    category: {
-      ru: "Три сайта застройщика + конструктор допников",
-      en: "Three developer sites + add-on configurator",
-      uz: "Quruvchi uchun uchta sayt + qo‘shimchalar konstruktori",
-      zh: "三套开发商网站 + 增值功能配置器",
-    },
-    summary: {
-      ru: "Три рабочих сайта для застройщика — строгий каталог, журнальный разворот и кинематографичный премиум — с карточкой ЖК, подбором квартиры, ипотечным калькулятором и конструктором, где допники включаются тумблером и сразу меняют страницу и цену.",
-      en: "Three working sites for a property developer — a strict catalogue, a magazine spread and a cinematic premium — with project pages, a flat picker, a mortgage calculator and a configurator where add-ons switch on with a toggle and change the page and the price at once.",
-      uz: "Quruvchi kompaniya uchun uchta ishlaydigan sayt — qat’iy katalog, jurnal sahifasi va kinematografik premium — turar-joy majmuasi kartochkasi, kvartira tanlash, ipoteka kalkulyatori va qo‘shimchalar tumbler bilan yoqilib, sahifa va narxni darhol o‘zgartiradigan konstruktor bilan.",
-      zh: "为房地产开发商打造的三套可运行网站 —— 严谨目录版、杂志跨页版与电影感高端版 —— 含楼盘页、选房器、房贷计算器，以及一个配置器：拨动开关即可启用增值功能，页面与报价同时变化。",
-    },
-    description: {
-      ru: "Бриф с вилкой бюджета и три референса превратились в три полных сайта, различающихся не палитрой, а школой оформления: швейцарская сетка, журнальный разворот с буквицей и параллаксом, тёмный кинозал со сценами во весь экран, генпланом и шахматкой. В каждом можно провалиться в жилой комплекс, отфильтровать квартиры, увидеть одну из семи планировок под метраж и посчитать платёж по условиям банков-партнёров. Отдельно — панель управления: ЖК, корпуса, квартиры, заявки, роли, Метрика. Главная механика показа — конструктор: двадцать допников с ценой включаются тумблером, блок появляется на странице без перезагрузки, страница подъезжает к нему, у свежего блока есть «было / стало», а итог пересчитывается в долларах, сумах и рублях. Квартиры и чертежи считаются на сервере, в браузер уходит только интерфейс. Витрина закрыта кодом доступа и скрыта из поиска: её видит только заказчик.",
-      en: "A brief with a budget range and three references became three complete sites that differ not in palette but in design school: a Swiss grid, a magazine spread with a drop cap and parallax, and a dark cinema with full-screen scenes, a master plan and a floor chessboard. Each lets you open a residential project, filter flats, see one of seven floor plans matched to the area and calculate a payment on partner banks' terms. Alongside them, an admin panel: projects, buildings, flats, leads, roles, analytics. The centrepiece of the pitch is the configurator: twenty priced add-ons switch on with a toggle, the block appears on the page without a reload, the page scrolls to it, a fresh block gets a «before / after» switch, and the total is recalculated in dollars, soums and roubles. Flats and drawings are computed on the server; only the interface ships to the browser. The showcase is behind an access code and hidden from search: only the client sees it.",
-      uz: "Byudjet oralig‘i va uchta referensli brif palitra bilan emas, dizayn maktabi bilan farq qiladigan uchta to‘liq saytga aylandi: shveytsariya to‘ri, harfboshi va parallaksli jurnal sahifasi, butun ekranli sahnalar, bosh reja va shaxmat taxtali qorong‘i kinozal. Har birida turar-joy majmuasiga kirish, kvartiralarni filtrlash, maydonga mos yettita rejadan birini ko‘rish va hamkor banklar shartlari bo‘yicha to‘lovni hisoblash mumkin. Alohida — boshqaruv paneli: majmualar, korpuslar, kvartiralar, so‘rovlar, rollar, analitika. Ko‘rsatuvning asosiy mexanikasi — konstruktor: narxli yigirmata qo‘shimcha tumbler bilan yoqiladi, blok sahifada qayta yuklashsiz paydo bo‘ladi, sahifa unga yaqinlashadi, yangi blokda «avval / keyin» tugmasi bor, yakun esa dollar, so‘m va rublda qayta hisoblanadi. Kvartiralar va chizmalar serverda hisoblanadi, brauzerga faqat interfeys boradi. Vitrina kirish kodi bilan yopilgan va qidiruvdan yashirilgan: uni faqat buyurtmachi ko‘radi.",
-      zh: "一份带预算区间的需求书和三个参考案例，变成了三套完整网站 —— 差别不在配色，而在设计流派：瑞士网格、带首字下沉与视差的杂志跨页、以及带全屏场景、总平面图和楼层棋盘的深色影院风格。每套都可以进入楼盘、筛选房源、查看按面积匹配的七种户型之一，并按合作银行条件计算月供。另配管理后台：楼盘、楼栋、房源、询单、角色、统计。展示的核心机制是配置器：二十项带价格的增值功能通过开关启用，区块无需刷新即出现在页面上，页面自动滚动到位，新启用的区块带有「之前 / 之后」对比，总价则以美元、苏姆和卢布实时重算。房源与户型图在服务端计算，浏览器只接收界面。展示站受访问码保护并对搜索引擎隐藏：只有客户能看到。",
-    },
-    tech: ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4", "Playwright"],
-    metrics: [
-      { value: "3", label: { ru: "сайта в разных школах оформления", en: "sites in different design schools", uz: "turli dizayn maktabidagi sayt", zh: "不同设计流派的网站" } },
-      { value: "20", label: { ru: "допников с ценой в конструкторе", en: "priced add-ons in the configurator", uz: "konstruktordagi narxli qo‘shimcha", zh: "配置器中的带价增值功能" } },
-      { value: "7", label: { ru: "планировок под метраж", en: "floor plans matched to area", uz: "maydonga mos reja", zh: "按面积匹配的户型" } },
     ],
   },
   {
