@@ -5,6 +5,7 @@ import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { casesTitle } from "@/content/company";
 import { cases, showcaseSlug, type Case } from "@/content/cases";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
@@ -177,7 +178,7 @@ export function CasesSection({ locale, dict }: { locale: Locale; dict: Dictionar
         <div className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading
             kicker={dict.cases.kicker}
-            title={dict.cases.title}
+            title={casesTitle(dict.cases.title)}
             description={dict.cases.description}
           />
           <Reveal>

@@ -53,9 +53,9 @@ const ru = {
   },
   cases: {
     kicker: "кейсы",
-    title: "Проекты в продакшене",
+    title: "{n}+ завершённых проектов",
     description:
-      "Это не рендеры и не концепты. Каждый проект ниже — работающий код, который мы писали и поддерживаем.",
+      "Среди них — эти. Не рендеры и не концепты: работающий код, который мы писали и поддерживаем.",
     liveSite: "Открыть сайт",
     challenge: "Задача",
     tech: "Технологии",
@@ -386,9 +386,9 @@ const en: Dictionary = {
   },
   cases: {
     kicker: "work",
-    title: "Projects in production",
+    title: "{n}+ completed projects",
     description:
-      "Not renders, not concepts. Every project below is working code we wrote and still maintain.",
+      "A few of them are below. Not renders, not concepts: working code we wrote and still maintain.",
     liveSite: "Open the site",
     challenge: "The brief",
     tech: "Technology",
@@ -692,9 +692,9 @@ const uz: Dictionary = {
   },
   cases: {
     kicker: "loyihalar",
-    title: "Ishlab turgan loyihalar",
+    title: "{n}+ yakunlangan loyiha",
     description:
-      "Bu render ham, konsept ham emas. Quyidagi har bir loyiha — biz yozgan va qo‘llab-quvvatlayotgan ishlaydigan kod.",
+      "Ulardan bir nechtasi quyida. Bu render ham, konsept ham emas: biz yozgan va qo‘llab-quvvatlayotgan ishlaydigan kod.",
     liveSite: "Saytni ochish",
     challenge: "Vazifa",
     tech: "Texnologiyalar",
@@ -998,9 +998,9 @@ const zh: Dictionary = {
   },
   cases: {
     kicker: "案例",
-    title: "已上线的项目",
+    title: "{n}+ 个已完成项目",
     description:
-      "不是效果图，也不是概念稿。以下每个项目都是我们亲手编写并持续维护的真实代码。",
+      "以下是其中几个。不是效果图，也不是概念稿：都是我们亲手编写并持续维护的真实代码。",
     liveSite: "访问网站",
     challenge: "项目需求",
     tech: "技术方案",
