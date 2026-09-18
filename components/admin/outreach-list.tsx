@@ -141,7 +141,6 @@ export function OutreachList({
           const route = routeFor(row.contacts);
           const seo = seoReport({ findings: row.findings });
           const hooks = outreachHooks(row.findings);
-          const expanded = open === row.id || row.status === "contacting";
           const wait =
             row.status === "sending"
               ? queueView({
@@ -151,8 +150,15 @@ export function OutreachList({
                 })
               : null;
 
+          // Карточка, на которую мы только что вернулись, обведена: на
+          // экране их полсотни, и «вот эта» должна читаться без поиска
+          // глазами.
           return (
-            <li key={row.id} id={`p-${row.id}`} className={`${CARD} scroll-mt-24`}>
+            <li
+              key={row.id}
+              id={`p-${row.id}`}
+              className={`${CARD} scroll-mt-24 ${open === row.id ? "border-green/50" : ""}`}
+            >
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 {row.label ? <span className="font-medium">{row.label}</span> : null}
                 <a
@@ -358,8 +364,14 @@ export function OutreachList({
                 </div>
               ) : null}
 
-              {/* Кнопка появляется, только когда писать и можно, и есть куда. */}
-              {reason === "ok" && !expanded ? (
+              {/* Кнопка появляется, только когда писать и можно, и есть куда.
+                  Условие по состоянию строки, а не по «открыта ли карточка»:
+                  теперь после действия мы возвращаемся на неё же якорем, и
+                  прежнее !expanded показало бы форму отправки на строке,
+                  которая уже ушла, — то есть предложило бы отправить второй
+                  раз. Второе касание тому же человеку — это ровно то, за что
+                  блокируют аккаунт. */}
+              {reason === "ok" && (row.status === "new" || !row.message) ? (
                 <form action={prepareOutreachAction} className="mt-3 flex flex-wrap items-center gap-3">
                   <input type="hidden" name="prospect" value={row.id} />
                   <SubmitButton
@@ -376,7 +388,7 @@ export function OutreachList({
                 <p className="mt-2 text-xs text-faint">{REASON_TEXT[reason]}</p>
               ) : null}
 
-              {expanded && row.message ? (
+              {row.status === "contacting" && row.message ? (
                 <form action={sendOutreachAction} className="mt-3">
                   <input type="hidden" name="prospect" value={row.id} />
                   <label className="block text-xs uppercase tracking-wider text-faint">
@@ -400,6 +412,45 @@ export function OutreachList({
                     </span>
                   </div>
                 </form>
+              ) : null}
+
+              {/* На месте кнопки — то, чем нажатие кончилось.
+                  Владелец: «чтобы при нажатии кнопка меняла название —
+                  отправлено или отправлено в очередь». Заголовок карточки
+                  это и раньше писал, но он вверху и мелким: человек смотрит
+                  туда, куда нажал. */}
+              {row.target_kind !== "manual" && (row.status === "sending" || row.status === "sent") ? (
+                <div className="mt-3">
+                  <span
+                    className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${
+                      row.status === "sending"
+                        ? "border-gold/40 text-gold"
+                        : row.delivered_at
+                          ? "border-green/40 text-green"
+                          : "border-line text-muted"
+                    }`}
+                  >
+                    {row.status === "sending"
+                      ? "Отправлено в очередь"
+                      : row.delivered_at
+                        ? "Отправлено · проверено в переписке"
+                        : "Отправлено"}
+                  </span>
+
+                  {/* Проверка доставки, а не пересказ ответа Telegram.
+                      Тот отвечает «принято» и тогда, когда сообщение потом
+                      снимает антиспам или когда нас заблокировали, — поэтому
+                      скаут перечитывает переписку и ищет в ней своё
+                      сообщение по номеру. */}
+                  {row.status === "sent" ? (
+                    <p className={`mt-2 text-xs ${row.delivered_at ? "text-muted" : "text-gold"}`}>
+                      {row.delivered_at
+                        ? `Сообщение нашлось в переписке с нашего аккаунта — ${when(row.delivered_at)}.`
+                        : (row.delivery_note ??
+                          "Доставку ещё не подтверждали: скаут перечитывает переписку сразу после отправки.")}
+                    </p>
+                  ) : null}
+                </div>
               ) : null}
 
               {row.status === "new" || row.status === "contacting" || row.status === "manual" ? (

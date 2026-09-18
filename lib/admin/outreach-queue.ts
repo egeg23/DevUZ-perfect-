@@ -109,7 +109,11 @@ function pseudoRandom(seed: number): number {
  * вовсе (по номеру такие и находятся), и связать его с проспектом больше
  * нечем.
  */
-export async function markSent(id: string, userId?: string | null): Promise<void> {
+export async function markSent(
+  id: string,
+  userId?: string | null,
+  messageId?: string | number | null,
+): Promise<void> {
   const db = serviceClient();
   if (!db) return;
 
@@ -120,6 +124,10 @@ export async function markSent(id: string, userId?: string | null): Promise<void
       sent_at: new Date().toISOString(),
       failure: null,
       ...(userId ? { target_user_id: userId } : {}),
+      // Номер сообщения — то, по чему потом ищем его в переписке. Без него
+      // проверка свелась бы к «там что-то есть», а нужна «там есть именно
+      // это».
+      ...(messageId ? { sent_message_id: String(messageId), delivered_at: null, delivery_note: null } : {}),
     })
     .eq("id", id)
     .select("message, lead_id")
@@ -140,6 +148,36 @@ export async function markSent(id: string, userId?: string | null): Promise<void
       sent_at: new Date().toISOString(),
     });
   }
+}
+
+/**
+ * Перечитали переписку и нашли своё сообщение.
+ *
+ * Владелец: «после того как отправилось — делай проверку, что с нашего
+ * аккаунта реально ушло сообщение».
+ *
+ * Ответ Telegram на отправку означает только, что сервер запрос принял. Это
+ * не то же самое, что «письмо лежит у адресата»: антиспам снимает сообщение
+ * уже после приёма, а у того, кто нас заблокировал, оно исчезает молча — и
+ * в обоих случаях ошибки нам никто не покажет. Разница видна одним
+ * способом: перечитать переписку и найти в ней своё сообщение по номеру.
+ *
+ * Не подтвердилось — статус не трогаем. Отправка была, и делать вид, что её
+ * не было, значило бы разрешить второе касание тому же человеку; а это
+ * ровно то, за что аккаунты и блокируют. Менеджер видит в карточке, что
+ * подтверждения нет, и решает сам.
+ */
+export async function markDelivered(id: string, ok: boolean, note?: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  await db
+    .from("prospects")
+    .update(
+      ok
+        ? { delivered_at: new Date().toISOString(), delivery_note: null }
+        : { delivered_at: null, delivery_note: (note ?? "подтвердить не удалось").slice(0, 300) },
+    )
+    .eq("id", id);
 }
 
 /**

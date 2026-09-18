@@ -121,7 +121,13 @@ export async function sendOutreachAction(formData: FormData) {
   const result = await queueOutreach(id, message, staff, await requestIp());
   revalidatePath("/admin/prospect");
   revalidatePath("/admin");
-  redirect(result.ok ? "/admin/prospect?sent=1" : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}`);
+  // Возврат на ту же карточку: результат нажатия стоит там, где была кнопка,
+  // и увидеть его надо не прокруткой, а сразу.
+  redirect(
+    result.ok
+      ? `/admin/prospect?sent=1&open=${id}#p-${id}`
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}#p-${id}`,
+  );
 }
 
 /**

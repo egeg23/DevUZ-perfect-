@@ -20,7 +20,7 @@ import { EMPTY_PULSE, accumulate, writePulse } from "@/lib/scout/health";
 import { shape } from "@/lib/scout/shape";
 import { processBatch } from "@/lib/scout/store";
 import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
-import { markFailed, markSent, markUnreachable, nextQueued } from "@/lib/admin/outreach-queue";
+import { markDelivered, markFailed, markSent, markUnreachable, nextQueued } from "@/lib/admin/outreach-queue";
 import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/outreach-peer";
 import { markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
 
@@ -355,9 +355,40 @@ async function live() {
     try {
       // Пишем найденному пользователю, а не строке с сайта: по номеру у
       // человека @адреса может не быть вовсе.
-      await client.sendMessage(userId, { message: job.message });
-      await markSent(job.id, userId);
+      const sent = await client.sendMessage(userId, { message: job.message });
+      const messageId = sent?.id === undefined || sent?.id === null ? null : Number(sent.id);
+      await markSent(job.id, userId, messageId);
       console.log(`касания: отправлено ${job.target} по сайту ${job.host}`);
+
+      // И сразу перечитываем переписку.
+      //
+      // Ответ на отправку означает только, что сервер запрос принял. Что
+      // сообщение лежит у адресата — это другое утверждение: антиспам
+      // снимает его уже после приёма, а у заблокировавшего нас оно исчезает
+      // молча, и ошибки нам в обоих случаях никто не покажет. Ищем по
+      // номеру: не «в переписке что-то есть», а «в переписке есть именно
+      // это».
+      if (messageId === null) {
+        await markDelivered(job.id, false, "Telegram не вернул номер сообщения");
+      } else {
+        try {
+          const back = await client.getMessages(userId, { ids: [messageId] });
+          const found = (back ?? []).find((m) => m && Number(m.id) === messageId && !m.empty);
+          if (found) {
+            await markDelivered(job.id, true);
+            console.log(`касания: подтверждено — сообщение ${messageId} лежит в переписке с ${job.target}`);
+          } else {
+            await markDelivered(job.id, false, "Отправка прошла, но сообщения в переписке нет — проверьте вручную");
+            console.error(`касания: ${job.target} — сообщения ${messageId} в переписке нет`);
+          }
+        } catch (error) {
+          // Не нашли из-за сбоя связи — это не «не дошло». Так и пишем:
+          // непроверенное и неотправленное — разные новости, и путать их
+          // значит либо пугать менеджера зря, либо успокаивать зря.
+          const why = error?.errorMessage ?? error?.message ?? String(error);
+          await markDelivered(job.id, false, `Проверить доставку не вышло: ${why}`);
+        }
+      }
     } catch (error) {
       const why = error?.errorMessage ?? error?.message ?? String(error);
       const { stopped } = await markFailed(job.id, why);
