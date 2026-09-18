@@ -102,6 +102,14 @@ const ru: HelpCopy = {
         "Прочитайте черновик, поправьте под человека и отправьте сами. Бот за вас не пишет.",
       ],
     },
+    "/admin/talks": {
+      what: "Разбор переписок с клиентами. Каждый затихший разговор читает вторая модель — не та, что его вела, — и говорит, что зацепило, на чём сорвалось и какой отсюда урок.",
+      how: [
+        "Разбор появляется сам, через час после последнего сообщения в переписке.",
+        "Урок пишется только там, где клиент ответил хотя бы дважды: из одной реплики вывод сделать нельзя.",
+        "Уроки пока копятся и в письма не подмешиваются — это включим отдельно, когда наберётся объём.",
+      ],
+    },
     "/admin/projects": {
       what: "Работа, о которой уже договорились: на какой стадии, до какого срока, на какую сумму.",
       how: [
@@ -277,6 +285,14 @@ const uz: HelpCopy = {
         "Saytlar ro‘yxatini joylang, har biri alohida qatorda. Yoniga kompaniya nomini yozsa ham bo‘ladi.",
         "Xat tilini tanlang va «Проверить» tugmasini bosing.",
         "Qoralamani o‘qing, odamga moslab to‘g‘rilang va o‘zingiz yuboring. Bot siz uchun yozmaydi.",
+      ],
+    },
+    "/admin/talks": {
+      what: "Mijozlar bilan yozishmalarning tahlili. Har bir tinchigan suhbatni ikkinchi model — uni olib borgani emas — o‘qiydi va nima ta’sir qilgani, nimada uzilgani va bundan qanday saboq borligini aytadi.",
+      how: [
+        "Tahlil o‘zi paydo bo‘ladi — yozishmadagi oxirgi xabardan bir soat o‘tgach.",
+        "Saboq faqat mijoz kamida ikki marta javob bergan joyda yoziladi: bitta javobdan xulosa chiqarib bo‘lmaydi.",
+        "Hozircha saboqlar faqat to‘planadi va xatlarga qo‘shilmaydi — buni keyinroq, hajm yig‘ilgach yoqamiz.",
       ],
     },
     "/admin/projects": {
