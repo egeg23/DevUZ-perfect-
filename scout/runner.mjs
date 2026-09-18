@@ -373,7 +373,21 @@ async function live() {
       } else {
         try {
           const back = await client.getMessages(userId, { ids: [messageId] });
-          const found = (back ?? []).find((m) => m && Number(m.id) === messageId && !m.empty);
+          /**
+           * Удалённое сообщение приходит не пустым списком, а объектом
+           * MessageEmpty с тем же номером: «место было, содержимого нет».
+           * Проверка `!m.empty` этого не ловила — такого поля у объекта
+           * нет вовсе, и она всегда была истинной, то есть подтверждала бы
+           * доставку ровно в том случае, ради которого затевалась. Смотрим
+           * на класс.
+           *
+           * `out` проверяем только когда он явно false: если библиотека его
+           * не проставит, «не подтвердилось» посыпалось бы на каждой
+           * отправке, а ложная тревога тут не лучше ложного спокойствия.
+           */
+          const found = (back ?? []).find(
+            (m) => m && m.className === "Message" && Number(m.id) === messageId && m.out !== false,
+          );
           if (found) {
             await markDelivered(job.id, true);
             console.log(`касания: подтверждено — сообщение ${messageId} лежит в переписке с ${job.target}`);
