@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import { forecast, lostBesides } from "@/lib/razbor/forecast";
+import { isSeoCode, seoReport, type SeoGrade } from "@/lib/audit/seo";
 import type { AuditReport, Severity } from "@/lib/audit/checks";
 import type { Dictionary } from "@/content/dictionaries";
 
@@ -30,6 +31,14 @@ const SEVERITY_DOT: Record<Severity, string> = {
   critical: "bg-red-400",
   major: "bg-amber-400",
   minor: "bg-muted",
+};
+
+/** Цвет балла видимости: число должно читаться раньше, чем подпись под ним. */
+const GRADE_TONE: Record<SeoGrade, string> = {
+  good: "text-green",
+  fixable: "text-gold",
+  poor: "text-red-300",
+  blocked: "text-red-400",
 };
 
 type State =
@@ -104,8 +113,14 @@ export function SiteAudit({
   const report = state.kind === "done" ? state.report : null;
   const near = (report?.facts.niche && razbors[report.facts.niche]) || [];
   const loss = report ? forecast(report.findings) : null;
+  const seo = report ? seoReport(report) : null;
+  // Находки про поиск уходят в свой блок и показываются там без «что
+  // делаем». Оставить их заодно и здесь, где «что делаем» стоит рядом,
+  // значило бы закрыть дверь и тут же открыть окно.
   const findings = report
-    ? [...report.findings].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])
+    ? [...report.findings]
+        .filter((f) => !isSeoCode(f.code))
+        .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])
     : [];
 
   return (
@@ -154,6 +169,74 @@ export function SiteAudit({
             <Fact label={t.factsPlatform} value={report.facts.platform ?? t.unknown} />
             <Fact label={t.factsShop} value={report.facts.isShop ? t.yes : t.no} />
           </dl>
+
+          {/* Видимость в поиске — отдельным счётом и отдельным блоком.
+              Общий балл мешает две разные беды: «нет кнопки в телеграм»
+              теряет клиента, который уже пришёл, а «страница закрыта от
+              индексации» означает, что он не придёт никогда. Владельцу,
+              который спрашивает «почему меня нет в Google», нужен ответ на
+              второй вопрос.
+
+              Показываем балл и одну-две причины — что не так и чем
+              оборачивается. «Что делаем» здесь нет намеренно: проблему и её
+              цену человек должен увидеть сам, иначе не поверит, а порядок
+              работ — это уже разговор с менеджером. */}
+          {seo && (
+            <section className="mt-8 rounded-xl border border-line bg-surface px-5 py-4">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="text-xs uppercase tracking-wider text-faint">{t.seoTitle}</span>
+                {seo.measured ? (
+                  <>
+                    <span className={`font-mono text-3xl font-bold leading-none ${GRADE_TONE[seo.grade]}`}>
+                      {seo.score}
+                    </span>
+                    <span className={`text-sm ${GRADE_TONE[seo.grade]}`}>
+                      {seo.grade === "good"
+                        ? t.seoGoodGrade
+                        : seo.grade === "fixable"
+                          ? t.seoFixableGrade
+                          : seo.grade === "poor"
+                            ? t.seoPoorGrade
+                            : t.seoBlockedGrade}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-sm text-muted">{t.seoUnmeasured}</span>
+                )}
+              </div>
+
+              {seo.measured && (
+                <>
+                  <p className="mt-2 text-xs leading-relaxed text-faint">{t.seoNote}</p>
+
+                  {seo.shown.length === 0 ? (
+                    <p className="mt-3 text-sm text-muted">{t.seoNone}</p>
+                  ) : (
+                    <ul className="mt-3 flex flex-col gap-2">
+                      {seo.shown.map((f) => (
+                        <li key={f.code} className="flex items-start gap-3">
+                          <span
+                            aria-hidden
+                            className={`mt-2 size-2 shrink-0 rounded-full ${SEVERITY_DOT[f.severity]}`}
+                          />
+                          <div>
+                            <p className="font-semibold">{f.title}</p>
+                            <p className="mt-1 text-sm text-muted">{f.impact}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {seo.hidden > 0 && (
+                    <p className="mt-3 border-t border-line pt-3 text-sm text-muted">
+                      {t.seoRest.replace("{n}", String(seo.hidden))}
+                    </p>
+                  )}
+                </>
+              )}
+            </section>
+          )}
 
           {findings.length === 0 ? (
             <p className="mt-8 rounded-xl border border-green/30 bg-green/5 px-5 py-4">

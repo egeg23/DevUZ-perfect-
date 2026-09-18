@@ -21,7 +21,9 @@ import {
   isStopError,
   messageProblems,
   outreachPrompt,
-  targetFor,
+  isBotHandle,
+  isMobile,
+  routeFor,
 } from "@/lib/admin/outreach";
 
 const finding = (over: Partial<Finding> = {}): Finding => ({
@@ -35,17 +37,48 @@ const finding = (over: Partial<Finding> = {}): Finding => ({
 
 const contacts = (over: Partial<Contacts> = {}): Contacts => ({ ...EMPTY_CONTACTS, telegram: ["@mebel"], ...over });
 
-test("пишем только тем, кто сам опубликовал телеграм", () => {
-  assert.equal(targetFor(contacts()), "@mebel");
-  // Телефон приглашения писать не даёт: по нему звонят.
-  assert.equal(targetFor({ ...EMPTY_CONTACTS, phones: ["+998901234567"], whatsapp: ["+998901234567"] }), null);
-  assert.equal(targetFor(EMPTY_CONTACTS), null);
+test("боты и каналы отсеиваются до очереди, а не по ошибке телеграма", () => {
+  // Имя бота телеграм требует кончать на bot — этого хватает, чтобы не
+  // потратить на автоответчик место в часовом пределе.
+  assert.equal(isBotHandle("@gpuzbot"), true);
+  assert.equal(isBotHandle("nrgbi_official_bot"), true);
+  assert.equal(isBotHandle("@mebel"), false);
+
+  // Первые касания ушли трём ботам из пяти: адрес с сайта компании — это её
+  // бот или её канал, потому что именно их компания и публикует.
+  assert.deepEqual(routeFor({ ...EMPTY_CONTACTS, telegram: ["@gpuzbot", "@mebel"] }), {
+    kind: "handle",
+    target: "@mebel",
+  });
+  // Один только бот — всё равно что ничего: писать некуда.
+  assert.equal(routeFor({ ...EMPTY_CONTACTS, telegram: ["@gpuzbot"] }), null);
+});
+
+test("нет телеграма — идём по номеру, и только мобильный ведёт в телеграм", () => {
+  // Городской номер телеграм не найдёт никогда: аккаунты заводят на мобильные.
+  assert.equal(isMobile("+998901234567"), true);
+  assert.equal(isMobile("+998711234567"), false, "71 — Ташкент, городской");
+
+  // Номер с кнопки WhatsApp идёт раньше номера из подвала: на первом
+  // заведомо читают сообщения.
+  assert.deepEqual(
+    routeFor({ ...EMPTY_CONTACTS, phones: ["+998711234567", "+998935550011"], whatsapp: ["+998901234567"] }),
+    { kind: "phone", target: "+998901234567" },
+  );
+
+  // Остался только городской — писать некуда, но позвонить можно.
+  assert.deepEqual(routeFor({ ...EMPTY_CONTACTS, phones: ["+998711234567"] }), {
+    kind: "manual",
+    target: "+998711234567",
+  });
+
+  assert.equal(routeFor(EMPTY_CONTACTS), null);
 });
 
 test("касание разрешено, когда есть кому и о чём; предел сюда не лезет", () => {
   const base = { contacts: contacts(), findings: [finding()], status: "new" };
   assert.equal(canContact(base), "ok");
-  assert.equal(canContact({ ...base, contacts: EMPTY_CONTACTS }), "no_telegram");
+  assert.equal(canContact({ ...base, contacts: EMPTY_CONTACTS }), "no_way");
   assert.equal(canContact({ ...base, findings: [] }), "nothing_to_say");
   assert.equal(canContact({ ...base, status: "sent" }), "already", "второе касание — это рассылка");
   assert.equal(canContact({ ...base, status: "sending" }), "already");
@@ -153,13 +186,18 @@ test("лид заводится при отправке и закрепляет�
   // Владелец: «тот сотрудник, который нажал отправить, — лид автоматически
   // закрепляется за ним». Значит, статус и владелец ставятся сразу.
   assert.match(store, /status: "taken",\n\s+assigned_staff_id: staff\.id,/);
-  assert.match(store, /const leadId = await createOutreachLead\(prospect, staff, text, requestNo\);/);
+  assert.match(store, /const leadId = await createOutreachLead\(prospect, staff, text, requestNo, route\);/);
   // Лид заводится до постановки в очередь: отказ Telegram не должен
   // оставить касание без следа.
   assert.ok(
-    store.indexOf("createOutreachLead(prospect, staff, text, requestNo)") < store.indexOf('status: "sending"'),
+    store.indexOf("createOutreachLead(prospect, staff, text, requestNo, route)") <
+      store.indexOf('status: route.kind === "manual" ? "manual" : "sending"'),
     "лид заводится после очереди",
   );
+  // Лид знает, чем мы на самом деле собирались дотянуться. Раньше здесь
+  // стоял «telegram» независимо от маршрута, и менеджер шёл искать адресата
+  // в телеграме, которого там не было.
+  assert.match(store, /contact_kind: route\.kind === "handle" \? "telegram" : "phone"/);
   // Грейды не выдумываются: разговора ещё не было.
   assert.match(store, /budget: "B3"/);
   assert.match(store, /не выяснено — пишем первыми/);

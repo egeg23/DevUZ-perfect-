@@ -62,6 +62,8 @@ export const AUDIT_ACTIONS = [
   "contract.link_issued",
   "razbor.published",
   "razbor.rejected",
+  "proto.build",
+  "proto.sent",
   "project.payment_added",
   "project.payment_removed",
   "payout.recorded",

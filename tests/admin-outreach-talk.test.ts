@@ -137,7 +137,7 @@ test("номер заявки рождается при отправке пер�
   const store = read("lib/admin/outreach-store.ts");
   assert.match(store, /const requestNo = newRequestNo\(\);/);
   assert.match(store, /request_no: requestNo/);
-  assert.match(store, /createOutreachLead\(prospect, staff, text, requestNo\)/);
+  assert.match(store, /createOutreachLead\(prospect, staff, text, requestNo, route\)/);
 });
 
 test("лид касания не переназначается нигде, кроме момента создания", () => {

@@ -24,6 +24,7 @@ function probe(over: Partial<PageProbe> = {}): PageProbe {
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta name="description" content="Изготовление мебели">
       <meta property="og:image" content="/og.png">
+      <link rel="canonical" href="https://mysite.uz/">
       <link rel="alternate" hreflang="uz" href="https://mysite.uz/uz/">
       <script type="application/ld+json">{"@type":"LocalBusiness"}</script>
     </head><body><h1>Мебель на заказ</h1>
@@ -107,12 +108,29 @@ test("магазин отличается от визитки по корзин�
  * находку не попадают: их адресат не поймёт, а значит, и не исправит.
  */
 test("у каждой находки есть последствие и «что делаем», без жаргона", () => {
-  const broken = analyze(probe({
+  // Упавший сайт и голая разметка — разные образцы, и это не придирка.
+  // Страница ошибки ничего не говорит о сайте: раньше аудит разбирал
+  // заглушку хостинга как главную и слал владельцу apex.uz претензии к
+  // ненаписанному заголовку, когда сайт просто лежал.
+  const down = analyze(probe({
     status: 500, https: false, ttfbMs: 4000, certDaysLeft: null,
-    html: "<html><body>пусто</body></html>",
+    html: "<html><body>сервис недоступен</body></html>",
   }));
+  const bare = analyze(probe({ html: "<html><body>пусто</body></html>" }));
   const cert = analyze(probe({ certDaysLeft: 5 }));
-  const all = [...broken.findings, ...cert.findings, ...unreachable("https://x.uz/", "домен не найден").findings];
+  const all = [
+    ...down.findings,
+    ...bare.findings,
+    ...cert.findings,
+    ...unreachable("https://x.uz/", "домен не найден").findings,
+  ];
+
+  // На упавшем сайте — только то, что видно снаружи страницы.
+  assert.deepEqual(
+    down.findings.map((f) => f.code).filter((c) => c.startsWith("no_") && c !== "no_https"),
+    [],
+    "разбор страницы ошибки не должен превращаться в претензии к сайту",
+  );
 
   const codes = new Set(all.map((f) => f.code));
   for (const expected of ["http_error", "no_https", "no_viewport", "slow", "no_title", "no_description", "no_og", "no_h1", "cert_expiring", "unreachable"]) {

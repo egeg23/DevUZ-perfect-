@@ -162,6 +162,17 @@ const ru: HelpCopy = {
       what: "Файлы готовых продуктов, которые получают покупатели после оплаты.",
       how: ["Выкладывайте новую версию, когда продукт обновился."],
     },
+    "/admin/proto": {
+      what: "Прототип его будущего сайта: страница, которую вы отправляете ссылкой сразу после первички, пока разговор свежий. Он открывает её с телефона и видит свой бизнес, а не рассказ о том, как это могло бы выглядеть.",
+      how: [
+        "Вбейте адрес его сайта и выберите нишу. Название, описание, телефон, мессенджеры и логотип снимутся сами.",
+        "Услуги впишите руками — по одной в строке, его словами. На сайте под заголовками обычно поисковый мусор, а в разговоре услуги названы верно.",
+        "Цену ставьте только ту, что он назвал сам: после тире. Не назвал — оставьте строку без цены.",
+        "Проверка не пройдена — прототип остаётся черновиком, и по ссылке будет 404. Почините то, что она написала, и соберите заново.",
+        "Кнопка «Записаться» на прототипе открывает его телеграм или ватсап. Обращение падает ему — так он и убеждается, что это работает.",
+        "После отправки смотрите, открыл ли он ссылку. Открыл и вернулся второй раз — звоните сегодня.",
+      ],
+    },
     "/admin/razbor": {
       what: "Разборы чужих сайтов, которые ночная смена написала и оставила на проверку. Опубликованный разбор уходит на сайт и в поиск сразу, без выкатки, и отозвать его оттуда нельзя.",
       how: [
@@ -327,6 +338,17 @@ const uz: HelpCopy = {
     "/admin/releases": {
       what: "Xaridorlar to‘lovdan keyin oladigan tayyor mahsulot fayllari.",
       how: ["Mahsulot yangilangach, yangi versiyani joylang."],
+    },
+    "/admin/proto": {
+      what: "Uning bo‘lajak saytining prototipi: birlamchi suhbatdan keyin darrov havola qilib yuboradigan sahifa. U telefonidan ochadi va o‘z biznesini ko‘radi, «qanday bo‘lishi mumkinligi» haqidagi gapni emas.",
+      how: [
+        "Uning sayt manzilini kiriting va nishani tanlang. Nomi, tavsifi, telefoni, messenjerlari va logotipi o‘zi olinadi.",
+        "Xizmatlarni qo‘lda yozing — har qatorga bittadan, uning so‘zlari bilan. Saytdagi sarlavhalarda odatda qidiruv uchun yozilgan chiqindi bo‘ladi, suhbatda esa xizmatlar to‘g‘ri aytilgan.",
+        "Narxni faqat u aytganini qo‘ying: tiredan keyin. Aytmagan bo‘lsa — qatorni narxsiz qoldiring.",
+        "Tekshiruvdan o‘tmasa, prototip qoralama bo‘lib qoladi va havola 404 beradi. Yozilganini tuzating va qaytadan yig‘ing.",
+        "Prototipdagi «Yozilish» tugmasi uning telegrami yoki vatsapini ochadi. Murojaat unga tushadi — shunda u buning ishlashiga ishonadi.",
+        "Yuborgandan keyin havolani ochgan-ochmaganini kuzating. Ochib, ikkinchi marta qaytgan bo‘lsa — bugun qo‘ng‘iroq qiling.",
+      ],
     },
     "/admin/razbor": {
       what: "Tungi smena yozib, tekshiruvga qoldirgan begona saytlar tahlili. Chop etilgan tahlil darhol saytga va qidiruvga chiqadi, uni ortga qaytarib bo‘lmaydi.",

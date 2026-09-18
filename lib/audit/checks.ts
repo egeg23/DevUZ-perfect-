@@ -25,6 +25,7 @@ import {
 } from "@/lib/audit/contacts";
 import { designChecks, type DesignFacts } from "@/lib/audit/design";
 import type { PageProbe } from "@/lib/audit/fetch";
+import { visibleText, whatWeSee, type Seen } from "@/lib/audit/visible";
 import { classify } from "@/lib/razbor/classify";
 
 export type Severity = "critical" | "major" | "minor";
@@ -66,10 +67,26 @@ export type AuditReport = {
     design?: DesignFacts;
     /** Куда писать: телефоны, почта, мессенджеры — с сайта компании. */
     contacts?: Contacts;
+    /**
+     * Что мы вообще увидели в том, что отдал сервер.
+     *
+     * Необязательное: разборы, снятые до появления проверки, его не несут.
+     */
+    seen?: Seen;
   };
 };
 
 const has = (html: string, re: RegExp) => re.test(html);
+
+/** «9 слов», «22 слова», «1 слово» — находка с числом должна читаться вслух. */
+function wordsWord(n: number): string {
+  const ten = n % 100;
+  if (ten >= 11 && ten <= 14) return "слов";
+  const one = n % 10;
+  if (one === 1) return "слово";
+  if (one >= 2 && one <= 4) return "слова";
+  return "слов";
+}
 
 /** Определяет движок по следам в разметке — нужно, чтобы говорить предметно. */
 export function detectPlatform(html: string, headers: Record<string, string>): string | null {
@@ -85,6 +102,35 @@ export function detectPlatform(html: string, headers: Record<string, string>): s
   return null;
 }
 
+/**
+ * Запрещает ли robots.txt обход всего сайта.
+ *
+ * Смотрим только группу `User-agent: *`: правило, написанное отдельно для
+ * какого-нибудь SemrushBot, к индексации в Google отношения не имеет, а
+ * находка «сайт закрыт от поиска» из-за такой строки была бы ложной
+ * тревогой — и самой обидной, потому что владелец пойдёт её проверять.
+ */
+export function robotsBlocksAll(robots: string): boolean {
+  let inStar = false;
+  let blocked = false;
+  for (const raw of robots.split(/\r?\n/)) {
+    const line = raw.replace(/#.*$/, "").trim();
+    const agent = line.match(/^user-agent\s*:\s*(.+)$/i);
+    if (agent) {
+      inStar = agent[1].trim() === "*";
+      continue;
+    }
+    if (!inStar) continue;
+    const disallow = line.match(/^disallow\s*:\s*(.*)$/i);
+    if (disallow && disallow[1].trim() === "/") blocked = true;
+    // Отдельное «можно всё» после запрета снимает его: так пишут, когда
+    // закрывают сайт на время и забывают убрать строку целиком.
+    const allow = line.match(/^allow\s*:\s*(.*)$/i);
+    if (allow && allow[1].trim() === "/") blocked = false;
+  }
+  return blocked;
+}
+
 /** Признаки того, что это магазин, а не визитка. */
 export function looksLikeShop(html: string): boolean {
   const h = html.toLowerCase();
@@ -97,14 +143,6 @@ export function looksLikeShop(html: string): boolean {
 function textBetween(html: string, tag: string): string | null {
   const m = html.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i"));
   return m ? m[1].replace(/<[^>]+>/g, "").trim() : null;
-}
-
-/** Текст без тегов, скриптов и стилей — то, что реально видит посетитель. */
-function visibleText(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ");
 }
 
 function metaContent(html: string, name: string): string | null {
@@ -156,6 +194,41 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
   const findings: Finding[] = [];
   const add = (f: Finding) => findings.push(f);
 
+  /**
+   * Контакты считаются здесь, а не в конце, потому что на них теперь
+   * опираются находки. Раньше проверка «есть ли телефон» искала его сама, в
+   * видимом тексте, и не видела номера в разметке для поисковика: аудит
+   * написал владельцу akbar-rich.uz «на сайте не видно телефона», когда тот
+   * стоял у него в шапке. Источник истины должен быть один, и это разбор
+   * контактов — он знает про все места, где номер бывает.
+   */
+  const contacts = mergeContacts(
+    extractContacts(html),
+    probe.assets?.contactsHtml ? extractContacts(probe.assets.contactsHtml) : EMPTY_CONTACTS,
+    probe.assets?.contactsUrl ?? null,
+  );
+
+  const seen = whatWeSee(html);
+
+  /**
+   * Страница ошибки — не сайт.
+   *
+   * На apex.uz сервер отдавал 503, и аудит разбирал страницу «сервис
+   * недоступен» как главную: тринадцать претензий, из них двенадцать — к
+   * заглушке хостинга. Владельцу уходило письмо про отсутствующий телефон и
+   * ненаписанный заголовок, когда единственная его беда была в том, что сайт
+   * лежит.
+   */
+  const pageLoaded = probe.status < 400;
+
+  /**
+   * Что до нас доехало. Если страницу собирает браузер, содержимого в
+   * ответе сервера нет, и ни одну находку про содержимое утверждать нельзя:
+   * «на сайте нет цен» превращается в ложь, которую адресат опровергает за
+   * секунду, просто открыв свой сайт.
+   */
+  const sawContent = pageLoaded && !seen.clientRendered;
+
   if (probe.status >= 400) {
     add({
       code: "http_error",
@@ -190,7 +263,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
     });
   }
 
-  if (!has(html, /<meta[^>]+name=["']viewport["']/i)) {
+  if (pageLoaded && !has(html, /<meta[^>]+name=["']viewport["']/i)) {
     add({
       code: "no_viewport",
       severity: "critical",
@@ -213,7 +286,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
   }
 
   const title = textBetween(html, "title");
-  if (!title) {
+  if (pageLoaded && !title) {
     add({
       code: "no_title",
       severity: "major",
@@ -224,7 +297,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
     });
   }
 
-  if (!metaContent(html, "description")) {
+  if (pageLoaded && !metaContent(html, "description")) {
     add({
       code: "no_description",
       severity: "minor",
@@ -235,7 +308,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
     });
   }
 
-  if (!metaContent(html, "og:image")) {
+  if (pageLoaded && !metaContent(html, "og:image")) {
     add({
       code: "no_og",
       severity: "major",
@@ -246,7 +319,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
     });
   }
 
-  if (!textBetween(html, "h1")) {
+  if (sawContent && !textBetween(html, "h1")) {
     add({
       code: "no_h1",
       severity: "minor",
@@ -267,10 +340,8 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
 
   const text = visibleText(html);
   const hasTelLink = has(html, /href=["']tel:/i);
-  // +998 — узбекский код; остальное берём широко, чтобы не спорить о формате.
-  const hasPhoneText = has(text, /(\+998|\b8[\s(-]?\d{2}[\s)-]?\d{3})/);
 
-  if (!hasTelLink && !hasPhoneText) {
+  if (sawContent && !hasTelLink && !contacts.phones.length) {
     add({
       code: "no_phone",
       severity: "critical",
@@ -279,7 +350,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
         "Человек, который уже решил обратиться, ищет номер — и не находит. Дальше он не пишет письмо и не заполняет форму, а возвращается в поиск и звонит следующему. Для услуг, которые заказывают голосом, это самая дорогая из возможных потерь.",
       fix: "Ставим номер в шапку на каждой странице и делаем его нажимаемым, чтобы с телефона звонок начинался одним касанием. Час.",
     });
-  } else if (!hasTelLink) {
+  } else if (sawContent && !hasTelLink) {
     add({
       code: "phone_not_clickable",
       severity: "major",
@@ -290,7 +361,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
     });
   }
 
-  if (!has(html, /(t\.me\/|telegram\.me\/|wa\.me\/|api\.whatsapp\.com|whatsapp:\/\/)/i)) {
+  if (sawContent && !contacts.telegram.length && !contacts.whatsapp.length) {
     add({
       code: "no_messenger",
       severity: "major",
@@ -309,7 +380,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
     has(text, /\d[\d\s\u00a0.,]*\s*(сум|so['\u2018\u02bb]?m|сўм|UZS|у\.\s?е\.)/i) ||
     has(text, /\$\s?\d/) ||
     has(text, /\d[\d\s\u00a0.,]*\s*(долл|USD)/i);
-  if (!probe.truncated && !hasPrice) {
+  if (sawContent && !probe.truncated && !hasPrice) {
     add({
       code: "no_prices",
       severity: "major",
@@ -322,10 +393,93 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
 
   /* ── Что видит поисковик ─────────────────────────────────────────────── */
 
+  /**
+   * Самая дорогая находка и самая проверяемая.
+   *
+   * Сервер отдаёт заготовку, текст дорисовывает браузер. Посетитель разницы
+   * не замечает — поисковый робот на первом проходе получает ровно то, что
+   * получили мы. Отрисовку он делает отдельным, более поздним заходом, и до
+   * неё страница живёт в индексе почти пустой.
+   *
+   * Это и есть «низкая индексация», про которую спрашивает владелец: не
+   * загадочная немилость Google, а число слов, которые ему отдали.
+   */
+  if (seen.clientRendered) {
+    add({
+      code: "client_rendered",
+      severity: "critical",
+      title: `Поисковик видит на главной ${seen.words} ${wordsWord(seen.words)} вместо страницы`,
+      impact:
+        "Сервер отдаёт почти пустую заготовку, а текст, телефон и меню дорисовывает браузер уже у посетителя. Человек этого не замечает, а поисковый робот на первом проходе получает ровно то же, что и мы. Отрисовку он делает отдельным, более поздним заходом — и до неё страница стоит в индексе почти пустой: по словам, которые на ней написаны, её не находят. Проверить просто: откройте сайт и нажмите «просмотр кода страницы» — там будет то же, что видит Google.",
+      fix: seen.framework
+        ? `Включаем сборку страниц на сервере — ${seen.framework}, на котором сайт уже работает, это умеет, и переделывать его не придётся. Несколько дней вместе с проверкой, что в коде страницы появился весь текст.`
+        : "Переносим сборку страницы на сервер, чтобы в ответе сразу приходил готовый текст. Обычно это настройка того же движка, на котором сайт уже работает, а не переделка: несколько дней.",
+    });
+  }
+
+  /* ── Индексация: почему сайт не ищется ───────────────────────────────── */
+
+  const robotsMeta = metaContent(html, "robots") ?? "";
+  const xRobots = probe.headers["x-robots-tag"] ?? "";
+  if (/noindex/i.test(robotsMeta) || /noindex/i.test(xRobots)) {
+    add({
+      code: "noindex",
+      severity: "critical",
+      title: "Страница закрыта от поисковиков прямым запретом",
+      impact:
+        "В коде страницы стоит указание не показывать её в поиске. Такое обычно ставят на время разработки и забывают снять — а пока оно стоит, сайта в Google нет вовсе, сколько бы за него ни платили и сколько бы текстов ни написали.",
+      fix: "Снимаем запрет и отправляем страницы на переобход в Search Console. Полчаса; в выдаче сайт появляется в течение нескольких дней.",
+    });
+  }
+
+  const robots = probe.assets?.robots;
+  if (robots === null) {
+    add({
+      code: "no_robots",
+      severity: "minor",
+      title: "У сайта нет robots.txt",
+      impact:
+        "Это первый файл, который поисковик спрашивает у сайта. Без него ничего не ломается, но и указать, где лежит карта сайта и какие служебные разделы обходить не надо, негде — робот ходит вслепую и тратит обход на страницы вроде корзины и поиска.",
+      fix: "Пишем robots.txt со ссылкой на карту сайта и закрываем служебные адреса. Полчаса.",
+    });
+  } else if (robots && robotsBlocksAll(robots)) {
+    add({
+      code: "robots_blocked",
+      severity: "critical",
+      title: "robots.txt запрещает поисковикам весь сайт",
+      impact:
+        "В файле стоит строка, запрещающая обход всех страниц. Так закрывают сайт на время переделки — и забывают открыть обратно. Пока она там, новые страницы в индекс не попадают, а старые постепенно выпадают: сайт исчезает из поиска сам собой.",
+      fix: "Убираем запрет, оставляем закрытыми только служебные разделы, и отправляем сайт на переобход. Час.",
+    });
+  }
+
+  if (probe.assets?.sitemap === false) {
+    add({
+      code: "no_sitemap",
+      severity: "major",
+      title: "У сайта нет карты для поисковика",
+      impact:
+        "Карта сайта — список всех страниц, который поисковик читает вместо того, чтобы искать их по ссылкам. Без неё до страниц, на которые нет прямых ссылок с главной, робот добирается месяцами или не добирается совсем. Чем больше на сайте разделов, тем дороже обходится её отсутствие.",
+      fix: "Настраиваем карту, которая обновляется сама при добавлении страниц, прописываем её в robots.txt и отдаём в Search Console. Несколько часов.",
+    });
+  }
+
+  if (pageLoaded && !has(html, /<link\b[^>]+rel=["']canonical["']/i)) {
+    add({
+      code: "no_canonical",
+      severity: "minor",
+      title: "Не указано, какой адрес страницы главный",
+      impact:
+        "Одна и та же страница обычно доступна по нескольким адресам — со слэшем и без, с www и без, с метками рекламных кампаний. Без указания основного поисковик считает их разными страницами с одинаковым текстом и делит между ними вес: вместо одной сильной страницы получается несколько слабых.",
+      fix: "Проставляем канонический адрес на всех страницах. Несколько часов.",
+    });
+  }
+
+
   const images = html.match(/<img\b[^>]*>/gi) ?? [];
   const withoutAlt = images.filter((tag) => !/\balt=["'][^"']+["']/i.test(tag));
   // Пять картинок — порог, ниже которого это ещё не система, а случайность.
-  if (images.length >= 5 && withoutAlt.length > images.length / 2) {
+  if (sawContent && images.length >= 5 && withoutAlt.length > images.length / 2) {
     add({
       code: "img_no_alt",
       severity: "minor",
@@ -336,7 +490,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
     });
   }
 
-  if (!has(html, /application\/ld\+json/i) && !has(html, /itemtype=["'][^"']*schema\.org/i)) {
+  if (pageLoaded && !has(html, /application\/ld\+json/i) && !has(html, /itemtype=["'][^"']*schema\.org/i)) {
     add({
       code: "no_schema",
       severity: "minor",
@@ -347,7 +501,7 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
     });
   }
 
-  if (!has(html, /hreflang=/i)) {
+  if (pageLoaded && !has(html, /hreflang=/i)) {
     add({
       code: "one_language",
       severity: "minor",
@@ -384,15 +538,26 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
   const design = designChecks(probe, now);
   for (const f of design.findings) add(f);
 
-  const score = Math.max(
-    0,
-    100 -
-      findings.reduce(
-        (sum, f) =>
-          sum + (f.severity === "critical" ? 25 : f.severity === "major" ? 12 : 5),
+  /**
+   * Балл считается по находкам — но только если страницу удалось прочитать.
+   *
+   * Упавший сайт даёт ровно одну находку, «отвечает ошибкой», и по общей
+   * формуле получал бы 75 из 100: на экране это выглядит как «почти всё в
+   * порядке» напротив сайта, который не открывается вовсе. Ноль здесь не
+   * наказание, а отсутствие оценки: мы его не видели. Столько же ставит
+   * `unreachable` сайту, который не отозвался.
+   */
+  const score = pageLoaded
+    ? Math.max(
         0,
-      ),
-  );
+        100 -
+          findings.reduce(
+            (sum, f) =>
+              sum + (f.severity === "critical" ? 25 : f.severity === "major" ? 12 : 5),
+            0,
+          ),
+      )
+    : 0;
 
   return {
     url: probe.finalUrl,
@@ -409,11 +574,8 @@ export function analyze(probe: PageProbe, now: Date = new Date()): AuditReport {
       niche: classify({ url: probe.finalUrl, html, title: textBetween(html, "title") })?.niche ?? null,
       design: design.facts,
       // Контакты — с главной и со страницы контактов, если она нашлась.
-      contacts: mergeContacts(
-        extractContacts(html),
-        probe.assets?.contactsHtml ? extractContacts(probe.assets.contactsHtml) : EMPTY_CONTACTS,
-        probe.assets?.contactsUrl ?? null,
-      ),
+      contacts,
+      seen,
     },
   };
 }
