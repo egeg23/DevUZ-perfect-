@@ -8,7 +8,7 @@ import {
   skipProspectAction,
 } from "@/app/admin/prospect/actions";
 import { CopyMessage } from "@/components/admin/copy-message";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { DoneButton, SubmitButton } from "@/components/admin/submit-button";
 import {
   HOURLY_CAP,
   REASON_TEXT,
@@ -278,7 +278,8 @@ export function OutreachList({
                     />
                     <SubmitButton
                       pendingLabel="Отмечаем…"
-                      className="rounded-lg border border-blue-soft/40 px-3 py-1.5 text-xs text-blue-soft transition hover:bg-blue-soft/10"
+                      base="rounded-lg px-3 py-1.5 text-xs"
+                      tone="quiet"
                     >
                       Написал руками
                     </SubmitButton>
@@ -292,9 +293,14 @@ export function OutreachList({
                   появляется здесь же, отправляет снова человек. */}
               {row.status === "sent" && row.target_kind === "manual" ? (
                 <div className="mt-3 rounded-lg border border-line bg-surface-2/40 px-4 py-3">
-                  <p className="text-xs uppercase tracking-wider text-faint">
-                    Написано руками{row.manual_note ? ` · ${row.manual_note}` : ""}
+                  <p className="text-sm text-green">
+                    Связались руками{row.target ? ` — ${row.target}` : ""}
+                    {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
+                    {row.claimed_name ? ` · ${row.claimed_name}` : ""}
                   </p>
+                  {row.manual_note ? (
+                    <p className="mt-1 text-xs text-muted">{row.manual_note}</p>
+                  ) : null}
 
                   {replies?.[row.id] ? (
                     <div className="mt-2 rounded-lg border border-green/25 bg-green/5 px-3 py-2">
@@ -330,7 +336,8 @@ export function OutreachList({
                     </label>
                     <SubmitButton
                       pendingLabel="Записываем…"
-                      className="mt-2 rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
+                      base="mt-2 rounded-lg px-3 py-1.5 text-xs"
+                      tone="quiet"
                     >
                       Записать ответ
                     </SubmitButton>
@@ -376,7 +383,7 @@ export function OutreachList({
                   <input type="hidden" name="prospect" value={row.id} />
                   <SubmitButton
                     pendingLabel="Читаем сайт — это до минуты…"
-                    className="rounded-xl bg-green/90 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-green"
+                    base="rounded-xl px-4 py-2 text-sm font-semibold"
                   >
                     Связаться
                   </SubmitButton>
@@ -402,8 +409,8 @@ export function OutreachList({
                   </label>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <SubmitButton
-                      pendingLabel="Ставим в очередь…"
-                      className="rounded-xl bg-green/90 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-green"
+                      pendingLabel="Отправляем…"
+                      base="rounded-xl px-4 py-2 text-sm font-semibold"
                     >
                       {route?.kind === "manual" ? "Взять в работу" : `Отправить в ${route?.target ?? ""}`}
                     </SubmitButton>
@@ -421,35 +428,53 @@ export function OutreachList({
                   туда, куда нажал. */}
               {row.target_kind !== "manual" && (row.status === "sending" || row.status === "sent") ? (
                 <div className="mt-3">
-                  <span
-                    className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${
-                      row.status === "sending"
-                        ? "border-gold/40 text-gold"
-                        : row.delivered_at
-                          ? "border-green/40 text-green"
-                          : "border-line text-muted"
-                    }`}
-                  >
-                    {row.status === "sending"
-                      ? "Отправлено в очередь"
-                      : row.delivered_at
-                        ? "Отправлено · проверено в переписке"
-                        : "Отправлено"}
-                  </span>
+                  {/* Та же кнопка на том же месте — серая и неактивная.
+                      Владелец: «кнопка после нажатия становится не активной,
+                      отправлено». Менеджер смотрит туда, куда нажал, и ответ
+                      должен быть там, а не в другом углу карточки. */}
+                  <DoneButton base="rounded-xl px-4 py-2 text-sm font-semibold">
+                    {row.status === "sending" ? "Отправлено в очередь" : "Отправлено"}
+                  </DoneButton>
 
-                  {/* Проверка доставки, а не пересказ ответа Telegram.
-                      Тот отвечает «принято» и тогда, когда сообщение потом
-                      снимает антиспам или когда нас заблокировали, — поэтому
-                      скаут перечитывает переписку и ищет в ней своё
-                      сообщение по номеру. */}
+                  {/* Подтверждение для себя: с кем, когда, кто и чем.
+                      Владелец: «обязательно подтверждение для себя делаем,
+                      что с этим контактом мы связались». Без него карточка
+                      отвечает только «что-то произошло», а менеджеру нужно
+                      «с этим человеком мы связались, вот когда».
+
+                      Цвет блока целиком идёт за доставкой: зелёная рамка с
+                      золотым предупреждением внутри — два разных ответа на
+                      один вопрос, и глаз верит рамке. */}
                   {row.status === "sent" ? (
-                    <p className={`mt-2 text-xs ${row.delivered_at ? "text-muted" : "text-gold"}`}>
-                      {row.delivered_at
-                        ? `Сообщение нашлось в переписке с нашего аккаунта — ${when(row.delivered_at)}.`
-                        : (row.delivery_note ??
-                          "Доставку ещё не подтверждали: скаут перечитывает переписку сразу после отправки.")}
+                    <div
+                      className={`mt-2 rounded-lg border px-4 py-3 ${
+                        row.delivered_at ? "border-green/25 bg-green/5" : "border-gold/30 bg-gold/5"
+                      }`}
+                    >
+                      <p className={`text-sm ${row.delivered_at ? "text-green" : "text-gold"}`}>
+                        Связались{row.target ? ` — ${row.target}` : ""}
+                        {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
+                        {row.claimed_name ? ` · ${row.claimed_name}` : ""}
+                      </p>
+
+                      {/* Проверка доставки, а не пересказ ответа Telegram.
+                          Тот отвечает «принято» и тогда, когда сообщение
+                          потом снимает антиспам или когда нас
+                          заблокировали, — поэтому скаут перечитывает
+                          переписку и ищет в ней своё сообщение по номеру. */}
+                      <p className="mt-1 text-xs text-muted">
+                        {row.delivered_at
+                          ? `Сообщение нашлось в переписке с нашего аккаунта — ${when(row.delivered_at)}.`
+                          : (row.delivery_note ??
+                            "Доставку ещё не подтверждали: скаут перечитывает переписку сразу после отправки.")}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-gold">
+                      Сообщение поставлено в очередь на отправку с рабочего аккаунта. Как только уйдёт,
+                      здесь появится подтверждение с временем.
                     </p>
-                  ) : null}
+                  )}
                 </div>
               ) : null}
 
