@@ -40,6 +40,14 @@ import {
   revealTranscript,
 } from "@/lib/admin/ownership";
 import { CONTACT_LABEL, contactLink } from "@/lib/contact";
+import {
+  atTashkent,
+  channelName,
+  placeOf,
+  refOf,
+  usernameOf,
+  type LeadOrigin,
+} from "@/lib/qualify/origin";
 import { activeStaff } from "@/lib/admin/team";
 import { TRANSFER_TITLE, approves, openTransferFor } from "@/lib/admin/transfers";
 
@@ -101,6 +109,21 @@ function summaryLines(summary: Record<string, unknown>): [string, string][] {
 }
 
 const BUTTON = "rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-xs transition hover:border-green/40 hover:text-green";
+
+/** Происхождение лида в том виде, в каком его читают общие помощники. */
+function lead2origin(lead: {
+  source: string;
+  tg_username: string | null;
+  entry_path: string | null;
+  entry_ref: string | null;
+}): LeadOrigin {
+  return {
+    source: lead.source,
+    tgUsername: lead.tg_username,
+    entryPath: lead.entry_path,
+    entryRef: lead.entry_ref,
+  };
+}
 
 export default async function LeadPage({
   params,
@@ -672,7 +695,18 @@ export default async function LeadPage({
         />
         <Field label="Приоритет" value={PRIORITY_LABEL[lead.priority] ?? lead.priority} />
         <Field label="Статус" value={STATUS_LABEL[lead.status] ?? lead.status} />
-        <Field label="Источник" value={`${lead.source} · ${lead.locale}`} />
+        {/*
+          «Откуда писал, во сколько, где» — теми же словами, что и в
+          уведомлении: менеджер читает бриф в чате, а карточку открывает
+          следом, и два разных описания одного и того же места сбивают.
+        */}
+        <Field label="Откуда писал" value={`${channelName(lead.source)} · ${lead.locale}`} />
+        <Field label="Когда" value={atTashkent(lead.created_at)} />
+        <Field
+          label="Где"
+          value={[placeOf(lead2origin(lead)), refOf(lead2origin(lead))].filter(Boolean).join(" · ") || null}
+        />
+        <Field label="Ник в Telegram" value={usernameOf(lead2origin(lead))} />
       </dl>
 
       {summaryLines(lead.summary).length ? (

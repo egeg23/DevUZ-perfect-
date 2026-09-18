@@ -1,7 +1,6 @@
 import { record } from "@/lib/admin/audit";
 import { orderNudge, type SweepOrder } from "@/lib/admin/order-sweep";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
-import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -79,7 +78,7 @@ export async function sweepOrders(now = new Date()): Promise<OrderSweepResult> {
     const ok = await sendWithButtons(
       chatId,
       [`<b>${esc(nudge.headline)}</b>`, "", esc(nudge.detail)].join("\n"),
-      [{ text: "Открыть заявки", url: `${siteUrl}/admin/orders` }],
+      [{ text: "Открыть заявки", panel: "/admin/orders" }],
     );
 
     // Метка ставится только после успеха. Иначе сбой Telegram навсегда

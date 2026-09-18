@@ -1,6 +1,5 @@
 import { ROLE_TITLE, type Role } from "@/lib/admin/roles";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
-import { siteUrl } from "@/lib/seo";
 
 /**
  * Сообщение сотруднику о том, что он заведён в панели.
@@ -85,10 +84,11 @@ export async function notifyInvitedStaff(input: {
     const ok = await sendWithButtons(
       input.telegramId,
       body(input.role, input.invitedBy, input.returning),
-      // Ссылка, а не действие: панель всё равно откроет браузер, и гонять
-      // это через колбэк значит ждать ответа сервера ради перехода, который
-      // Telegram сделает сам.
-      [{ text: "Открыть панель", url: `${siteUrl}/admin` }],
+      // Вход, а не просто ссылка: у того, кто читает это с телефона,
+      // браузер внутри Telegram держит свои куки отдельно, и обычная
+      // ссылка привела бы нового сотрудника на страницу входа — в первую
+      // же минуту, когда он ещё ничего про неё не знает.
+      [{ text: "Открыть панель", panel: "/admin" }],
     );
     return ok ? "sent" : "blocked";
   } catch (error) {
@@ -122,7 +122,7 @@ export async function notifyRoleChange(input: {
         "Что вам доступно:",
         ...WHAT_YOU_CAN[input.role].map((line) => `• ${line}`),
       ].join("\n"),
-      [{ text: "Открыть панель", url: `${siteUrl}/admin` }],
+      [{ text: "Открыть панель", panel: "/admin" }],
     );
     return ok ? "sent" : "blocked";
   } catch (error) {

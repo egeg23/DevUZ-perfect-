@@ -1,4 +1,5 @@
 import { signIn } from "./actions";
+import { company } from "@/content/company";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,9 @@ export default async function LoginPage({
             ? "Слишком много попыток. Подождите десять минут."
             : error === "2"
               ? "База недоступна — войти сейчас нельзя. Попробуйте через минуту."
-              : "Ссылка не сработала: она одноразовая и живёт 15 минут. Запросите новую."}
+              : error === "4"
+                ? "Этим переходом уже входили или он просрочен. Нажмите кнопку в Telegram ещё раз — она выдаёт новый."
+                : "Ссылка не сработала: она одноразовая и живёт 15 минут. Запросите новую."}
         </p>
       ) : null}
 
@@ -46,17 +49,25 @@ export default async function LoginPage({
           </p>
         </form>
       ) : (
-        <ol className="mt-8 space-y-3 text-sm text-muted">
-          <li>1. Откройте чат с ботом студии.</li>
-          <li>
-            2. Отправьте{" "}
-            <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-text">
-              /login
-            </code>
-            .
-          </li>
-          <li>3. Нажмите на ссылку из ответа — она живёт 15 минут.</li>
-        </ol>
+        <>
+          {/*
+            Кнопка ведёт в бота с командой входа уже внутри: Telegram
+            открывает чат и сам отправляет /start login, а бот отвечает
+            ссылкой. Раньше здесь была инструкция из трёх пунктов, и два
+            из них человек выполнял руками — найти чат и набрать команду.
+          */}
+          <a
+            href={`https://t.me/${company.telegram}?start=login`}
+            className="mt-8 block w-full rounded-xl bg-green px-5 py-3 text-center text-sm font-semibold text-ink transition hover:bg-green-dim"
+          >
+            Получить ссылку в Telegram
+          </a>
+          <p className="mt-3 text-xs text-faint">
+            Откроется чат с ботом — он пришлёт ссылку, она живёт 15 минут. Если чат уже открыт,
+            отправьте{" "}
+            <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-text">/login</code>.
+          </p>
+        </>
       )}
     </main>
   );

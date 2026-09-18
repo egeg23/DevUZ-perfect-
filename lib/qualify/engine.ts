@@ -6,6 +6,7 @@ import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { scoreLead } from "@/lib/qualify/scoring";
 import { attributeAndNotify } from "@/lib/partners/attribute";
 import { briefHeading, briefRecipients, briefSummary, briefTotal, type Brief } from "@/lib/qualify/brief";
+import type { LeadOrigin } from "@/lib/qualify/origin";
 import { saveLead, updateLead } from "@/lib/qualify/store";
 import { sendLead } from "@/lib/qualify/telegram";
 import { qualifyLeadTool } from "@/lib/qualify/tool";
@@ -189,6 +190,16 @@ export type TurnOptions = {
    * объявлять команде о чужом разговоре незачем.
    */
   existing?: { requestNo: string; notify: Array<string | number>; heading?: string };
+  /**
+   * Факты о том, откуда человек пишет: ник от Telegram, страница сайта,
+   * первый переход.
+   *
+   * Заполняет канал, а не модель. Раньше ник добирался до лида только
+   * через просьбу в системном промпте («подставь в contact_handle ровно
+   * это значение») — то есть в девяти случаях из десяти. Десятый — лид, по
+   * которому менеджеру некуда написать, хотя бот всё это время знал ник.
+   */
+  origin?: LeadOrigin;
   onText: (chunk: string) => void;
   onEvent?: (event: TurnEvent) => void;
 };
@@ -326,15 +337,19 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
   try {
     // Лид от брифа уже в базе — дописываем в него. Не нашёлся (база лежала,
     // когда бриф приходил) — заводим под тем же номером.
-    if (brief?.requestNo) leadId = await updateLead(brief.requestNo, lead, history);
+    if (brief?.requestNo) leadId = await updateLead(brief.requestNo, lead, history, options.origin);
     if (options.existing) {
       // Лид касания дописывается всегда и никогда не заводится заново.
       // Не нашёлся — значит его удалили руками, пока шёл разговор; новый
       // на его месте оказался бы ничей, а это хуже пропавшей квалификации.
-      leadId = await updateLead(options.existing.requestNo, lead, history);
+      leadId = await updateLead(options.existing.requestNo, lead, history, options.origin);
       if (!leadId) console.error("касания: лид по заявке не нашёлся", options.existing.requestNo);
     } else if (!leadId) {
-      leadId = await saveLead(lead, history, source, { requestNo, discount: options.discount });
+      leadId = await saveLead(lead, history, source, {
+        requestNo,
+        discount: options.discount,
+        origin: options.origin,
+      });
     }
   } catch (error) {
     console.error("saveLead", error);
@@ -354,15 +369,19 @@ export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> 
       delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
         to: options.existing.notify,
         heading: options.existing.heading,
+        origin: { ...options.origin, source },
       });
     } else if (brief) {
       const route = await briefRecipients(brief.totalUsd);
       delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
         to: route.chatIds,
         heading: briefHeading(brief, route, "qualified"),
+        origin: { ...options.origin, source },
       });
     } else {
-      delivered = await sendLead(lead, leadId ?? "unsaved", requestNo);
+      delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
+        origin: { ...options.origin, source },
+      });
     }
   } catch (error) {
     console.error("sendLead", error);

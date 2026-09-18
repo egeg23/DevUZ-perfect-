@@ -226,6 +226,7 @@ export async function POST(request: Request) {
   const delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
     to: route.chatIds,
     heading: briefHeading(brief, route, "brief"),
+    origin: { source: "showcase" },
   }).catch((error) => {
     console.error("sendLead brief", error);
     return false;

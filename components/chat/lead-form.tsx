@@ -1,6 +1,7 @@
 "use client";
 
 import { readRef } from "@/lib/partners/client";
+import { currentPage, readVisit } from "@/lib/visit/client";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -38,6 +39,8 @@ export function LeadForm({ locale, dict }: { locale: Locale; dict: Dictionary })
           website: data.get("website"),
           locale,
           ref: readRef(),
+          page: currentPage(),
+          from: readVisit(),
         }),
       });
       if (!response.ok) throw new Error("failed");
