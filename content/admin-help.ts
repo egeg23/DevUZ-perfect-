@@ -102,6 +102,14 @@ const ru: HelpCopy = {
         "Прочитайте черновик, поправьте под человека и отправьте сами. Бот за вас не пишет.",
       ],
     },
+    "/admin/candidates": {
+      what: "Разбор резюме перед собеседованием. Загружаете PDF и пишете, на какую работу смотрим, — панель показывает вердикт, сильные стороны, стопы и вопросы, которые стоит задать.",
+      how: [
+        "Нужен PDF, из которого копируется текст. Скан страниц не прочитается — панель об этом скажет.",
+        "Файл нигде не сохраняется: остаётся только разбор, и его можно убрать одной кнопкой.",
+        "Возраст, пол и семейное положение в оценке не участвуют. Решение всё равно ваше: разбор — это подготовка к разговору, а не приговор.",
+      ],
+    },
     "/admin/talks": {
       what: "Разбор переписок с клиентами. Каждый затихший разговор читает вторая модель — не та, что его вела, — и говорит, что зацепило, на чём сорвалось и какой отсюда урок.",
       how: [
@@ -285,6 +293,14 @@ const uz: HelpCopy = {
         "Saytlar ro‘yxatini joylang, har biri alohida qatorda. Yoniga kompaniya nomini yozsa ham bo‘ladi.",
         "Xat tilini tanlang va «Проверить» tugmasini bosing.",
         "Qoralamani o‘qing, odamga moslab to‘g‘rilang va o‘zingiz yuboring. Bot siz uchun yozmaydi.",
+      ],
+    },
+    "/admin/candidates": {
+      what: "Suhbatdan oldin rezyumeni tahlil qilish. PDF yuklaysiz va qaysi ish uchun qarayotganingizni yozasiz — panel xulosa, kuchli tomonlar, to‘xtatuvchi belgilar va beriladigan savollarni ko‘rsatadi.",
+      how: [
+        "Matni nusxalanadigan PDF kerak. Sahifa skani o‘qilmaydi — panel buni aytadi.",
+        "Fayl hech qayerda saqlanmaydi: faqat tahlil qoladi, uni bitta tugma bilan o‘chirsa bo‘ladi.",
+        "Yosh, jins va oilaviy holat bahoda qatnashmaydi. Qaror baribir sizniki: tahlil — suhbatga tayyorgarlik, hukm emas.",
       ],
     },
     "/admin/talks": {
