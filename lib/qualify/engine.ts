@@ -7,6 +7,7 @@ import { scoreLead } from "@/lib/qualify/scoring";
 import { attributeAndNotify } from "@/lib/partners/attribute";
 import { briefHeading, briefRecipients, briefSummary, briefTotal, type Brief } from "@/lib/qualify/brief";
 import type { LeadOrigin } from "@/lib/qualify/origin";
+import { ReplyGuard } from "@/lib/qualify/self-talk";
 import { saveLead, updateLead } from "@/lib/qualify/store";
 import { sendLead } from "@/lib/qualify/telegram";
 import { qualifyLeadTool } from "@/lib/qualify/tool";
@@ -213,6 +214,27 @@ export type TurnOptions = {
  * двухпроходного разговора с инструментом.
  */
 export async function runQualifyTurn(options: TurnOptions): Promise<TurnResult> {
+  /**
+   * Всё, что модель говорит клиенту, проходит через фильтр.
+   *
+   * Правило «не обсуждай, на чём ты работаешь» стоит в промпте, и обычно
+   * его хватает. Но промпт — это просьба, а просьба исполняется не всегда;
+   * не исполнилась она ровно один раз, и этот раз уехал клиенту. Машина
+   * ошибается реже: см. lib/qualify/self-talk.ts.
+   *
+   * Фильтр один на всю реплику, включая её продолжение после инструмента,
+   * и обязательно закрывается — иначе придержанный хвост ответа не дойдёт
+   * до человека. Отсюда try/finally вокруг всего хода.
+   */
+  const guard = new ReplyGuard(options.locale, options.onText);
+  try {
+    return await qualifyTurn({ ...options, onText: (chunk) => guard.push(chunk) });
+  } finally {
+    guard.end();
+  }
+}
+
+async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
   const { history, locale, source, alreadyQualified, onText, onEvent } = options;
   const emit = (event: TurnEvent) => onEvent?.(event);
 
