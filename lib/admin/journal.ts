@@ -61,6 +61,8 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "invoice.paid": "отметил счёт оплаченным",
   "contract.link_issued": "выпустил ссылку на договор для заказчика",
   "razbor.published": "опубликовал разбор",
+  "proto.build": "собрал прототип",
+  "proto.sent": "отправил прототип клиенту",
   "razbor.rejected": "отклонил разбор",
   "project.payment_added": "подтвердил платёж клиента",
   "project.payment_removed": "удалил платёж клиента",

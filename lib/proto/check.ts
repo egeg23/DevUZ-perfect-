@@ -1,0 +1,182 @@
+/**
+ * Проверка прототипа машиной, а не совестью.
+ *
+ * На разборах ровно такая проверка поймала две модели, которые уложились во
+ * все правила из инструкции и всё равно сдали брак: одна перезамерила время
+ * ответа, другая собрала весь текст дословными строками отчёта. Человек,
+ * читая их статьи, ничего бы не заметил.
+ *
+ * Здесь то же самое, только ставки выше: разбор анонимен, а прототип уходит
+ * с именем живой компании. Выдуманная цифра в нём — это утверждение о
+ * конкретном бизнесе, сделанное от его лица.
+ *
+ * Проверка идёт по готовому HTML, а не по данным до сборки. Так она ловит и
+ * то, что просочилось через шаблон, и то, что кто-нибудь однажды впишет в
+ * шаблон руками.
+ */
+import type { ProtoNiche } from "@/content/proto/models";
+import type { ProtoFacts } from "@/lib/proto/facts";
+import { factPool, mainAction } from "@/lib/proto/facts";
+import { unsupportedNumbers } from "@/lib/razbor/shift";
+
+export type ProtoProblem = { code: string; text: string };
+
+/**
+ * Видимый текст страницы.
+ *
+ * Из него выброшены стили, скрипты и рисунки: в `<svg>` числа — это
+ * координаты, и проверять их на «выдуманность» бессмысленно. Выброшены и
+ * порядковые номера карточек — «01», «02». Это нумерация списка, а не
+ * утверждение о компании, и вырезаются они по узкому образцу
+ * `<span class="n">NN</span>`, чтобы через эту щель не пролезло ничего
+ * длиннее двух цифр.
+ */
+export function visibleText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+    .replace(/<span class="n">\d{1,2}<\/span>/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function styles(html: string): string {
+  return [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]).join("\n");
+}
+
+function scripts(html: string): string {
+  return [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]).join("\n");
+}
+
+/**
+ * Свойства внутри `@keyframes`.
+ *
+ * Анимировать `top`, `width`, `height` — значит заставлять браузер
+ * пересчитывать вёрстку на каждом кадре. На флагмане это незаметно, на
+ * среднем Android за три тысячи получается пятнадцать кадров в секунду, а
+ * именно он у большинства в этом рынке.
+ */
+export function keyframeProperties(css: string): string[] {
+  const out = new Set<string>();
+  for (const block of css.matchAll(/@keyframes\s+[\w-]+\s*\{([\s\S]*?)\n\}/g)) {
+    for (const declaration of block[1].matchAll(/([a-z-]+)\s*:/gi)) out.add(declaration[1].toLowerCase());
+  }
+  return [...out];
+}
+
+const ALLOWED_IN_KEYFRAMES = new Set(["transform", "opacity"]);
+
+/** Слова, которых компания о себе не говорила, но которые тянет дописать. */
+const BRAGS = [
+  "гарант",
+  "kafolat",
+  "лучш",
+  "eng yaxshi",
+  "дешевле",
+  "официальный дилер",
+  "сертифицированн",
+  "№1",
+  "N1",
+];
+
+export function protoProblems(input: {
+  html: string;
+  facts: ProtoFacts;
+  niche: ProtoNiche;
+}): ProtoProblem[] {
+  const { html, facts, niche } = input;
+  const out: ProtoProblem[] = [];
+  const text = visibleText(html);
+  const css = styles(html);
+  const js = scripts(html);
+  const pool = factPool(facts);
+  const lower = text.toLowerCase();
+  const poolLower = pool.toLowerCase();
+
+  // 1. Числа только те, что мы знаем.
+  const invented = unsupportedNumbers(text, pool);
+  if (invented.length) {
+    out.push({ code: "invented", text: `Числа, которых нет в фактах: ${invented.join(", ")}.` });
+  }
+
+  // Процент прироста — это ссылка на замер, которого мы не делали.
+  if (/\d+\s*%/.test(text)) {
+    out.push({ code: "percent", text: "В тексте есть процент. Прототип процентов не называет." });
+  }
+
+  // 2. Похвалы, которых компания о себе не говорила.
+  const brags = BRAGS.filter((word) => lower.includes(word.toLowerCase()) && !poolLower.includes(word.toLowerCase()));
+  if (brags.length) {
+    out.push({ code: "brag", text: `Обещания, которых компания не давала: ${brags.join(", ")}.` });
+  }
+
+  // 3. Выключатель анимации.
+  if (!/prefers-reduced-motion/.test(css)) {
+    out.push({ code: "motion", text: "Нет правила prefers-reduced-motion: анимацию нечем выключить." });
+  }
+
+  // 4. Скролл не перехватывается.
+  if (/scroll-behavior\s*:\s*smooth/.test(css)) {
+    out.push({ code: "hijack", text: "scroll-behavior: smooth — страница листается не так, как двинули палец." });
+  }
+  if (/scroll-snap-type/.test(css)) {
+    out.push({ code: "hijack", text: "scroll-snap-type притягивает страницу сам. На длинной странице это перехват." });
+  }
+  if (/addEventListener\s*\(\s*["'](?:scroll|wheel|touchmove)/.test(js) || /scrollTo\s*\(|scrollIntoView\s*\(/.test(js)) {
+    out.push({ code: "hijack", text: "Скрипт слушает прокрутку или двигает её сам." });
+  }
+
+  // 5. Анимация не трогает вёрстку.
+  const heavy = keyframeProperties(css).filter((property) => !ALLOWED_IN_KEYFRAMES.has(property));
+  if (heavy.length) {
+    out.push({ code: "repaint", text: `В @keyframes не только transform и opacity: ${heavy.join(", ")}.` });
+  }
+
+  // 6. Вбок ничего не уезжает. Проверка дешёвая и не заменяет телефон:
+  // окончательно это видно только на снимке в 360 px, который снимает
+  // scripts/proto-shot.mjs.
+  if (/\b100vw\b/.test(css)) {
+    out.push({ code: "overflow", text: "Ширина 100vw шире страницы на величину полосы прокрутки." });
+  }
+  if (!/overflow-x\s*:\s*clip/.test(css)) {
+    out.push({ code: "overflow", text: "Нет overflow-x: clip — уехавший вбок блок даст горизонтальную прокрутку." });
+  }
+
+  // 7. Главная кнопка работает.
+  const action = mainAction(facts);
+  if (action.kind === "none") {
+    out.push({ code: "action", text: "Нечего поставить на кнопку: нет ни телеграма, ни ватсапа, ни телефона." });
+  } else if (!html.includes(action.href)) {
+    out.push({ code: "action", text: "Кнопка на странице ведёт не туда, куда должна." });
+  }
+  if (/href="#"/.test(html)) {
+    out.push({ code: "action", text: "На странице есть ссылка в никуда." });
+  }
+
+  // 8. Страница не индексируется.
+  if (!/<meta\s+name="robots"[^>]*noindex/i.test(html)) {
+    out.push({ code: "index", text: "Нет noindex. Чужой бизнес в выдаче Google — чужой бизнес, продвигаемый без спроса." });
+  }
+
+  // 9. Имя клиента на месте: без него он не узнает свой бизнес.
+  if (!text.includes(facts.name)) {
+    out.push({ code: "nameless", text: "На странице нет названия компании." });
+  }
+
+  // 10. Подсказки для первички в текст не просачиваются.
+  const known = facts.services.map((service) => service.name.toLowerCase());
+  const leaked = niche.ask.filter(
+    (hint) => lower.includes(hint.toLowerCase()) && !known.some((name) => name.includes(hint.toLowerCase())),
+  );
+  if (leaked.length) {
+    out.push({
+      code: "guessed",
+      text: `Услуги, о которых компания не говорила: ${leaked.join(", ")}. Это вопросы для первички, а не текст страницы.`,
+    });
+  }
+
+  return out;
+}
