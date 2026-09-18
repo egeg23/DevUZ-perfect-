@@ -81,12 +81,29 @@ export async function saveRunAction(rows: ProspectRow[]): Promise<number> {
 export async function prepareOutreachAction(formData: FormData) {
   const staff = await requireStaff();
   const id = String(formData.get("prospect") ?? "");
-  const result = await prepareOutreach(id, staff);
+  /**
+   * Отказ вместо исключения.
+   *
+   * Серверное действие, выбросившее наружу, в проде не показывает ничего:
+   * форма молча остаётся как была, и менеджер видит нерабочую кнопку.
+   * Обход сайта и модель — два места, где что угодно может пойти не так, и
+   * любое «не так» должно доезжать до экрана словами.
+   */
+  let result: Awaited<ReturnType<typeof prepareOutreach>>;
+  try {
+    result = await prepareOutreach(id, staff);
+  } catch (error) {
+    result = { ok: false, why: error instanceof Error ? error.message : String(error) };
+  }
+
   revalidatePath("/admin/prospect");
+  // Якорь на карточку: список бывает в полсотни строк, и без него страница
+  // возвращается наверх — результат нажатия остаётся за три экрана ниже, и
+  // выглядит это как будто ничего не произошло.
   redirect(
     result.ok
-      ? `/admin/prospect?open=${id}`
-      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.reason ?? result.why)}`,
+      ? `/admin/prospect?open=${id}#p-${id}`
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.reason ?? result.why)}#p-${id}`,
   );
 }
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { prepareOutreachAction, sendOutreachAction, skipProspectAction } from "@/app/admin/prospect/actions";
 import { CopyMessage } from "@/components/admin/copy-message";
+import { SubmitButton } from "@/components/admin/submit-button";
 import {
   HOURLY_CAP,
   REASON_TEXT,
@@ -142,7 +143,7 @@ export function OutreachList({
               : null;
 
           return (
-            <li key={row.id} className={CARD}>
+            <li key={row.id} id={`p-${row.id}`} className={`${CARD} scroll-mt-24`}>
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 {row.label ? <span className="font-medium">{row.label}</span> : null}
                 <a
@@ -279,12 +280,12 @@ export function OutreachList({
               {reason === "ok" && !expanded ? (
                 <form action={prepareOutreachAction} className="mt-3 flex flex-wrap items-center gap-3">
                   <input type="hidden" name="prospect" value={row.id} />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingLabel="Читаем сайт — это до минуты…"
                     className="rounded-xl bg-green/90 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-green"
                   >
                     Связаться
-                  </button>
+                  </SubmitButton>
                   <span className="text-xs text-faint">{route ? ROUTE_TEXT[route.kind] : ""}</span>
                 </form>
               ) : null}
@@ -306,12 +307,12 @@ export function OutreachList({
                     />
                   </label>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingLabel="Ставим в очередь…"
                       className="rounded-xl bg-green/90 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-green"
                     >
                       {route?.kind === "manual" ? "Взять в работу" : `Отправить в ${route?.target ?? ""}`}
-                    </button>
+                    </SubmitButton>
                     <span className="text-xs text-faint">
                       Лид закрепится за вами, как только нажмёте.
                     </span>
