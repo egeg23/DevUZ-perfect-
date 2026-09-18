@@ -8,6 +8,7 @@ import { ContactSection } from "@/components/sections/contact";
 import { DevuzShowcase } from "@/components/sections/devuz-showcase";
 import { FaqSection } from "@/components/sections/faq";
 import { ProcessSection } from "@/components/sections/process";
+import { ScaleSection } from "@/components/sections/scale";
 import { ServicesSection } from "@/components/sections/services";
 import { StackSection } from "@/components/sections/stack";
 import { company } from "@/content/company";
@@ -46,6 +47,7 @@ export default async function HomePage({
   return (
     <>
       <CompileScene locale={locale} dict={dict} />
+      <ScaleSection locale={locale} />
       <ServicesSection locale={locale} dict={dict} />
       <CalculatorSection locale={locale} dict={dict} />
       <DevuzShowcase locale={locale} dict={dict} />

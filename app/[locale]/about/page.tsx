@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ContactSection } from "@/components/sections/contact";
+import { HeadlineStats } from "@/components/sections/scale";
 import { StackSection } from "@/components/sections/stack";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
@@ -50,7 +51,9 @@ export default async function AboutPage({
           {dict.about.lead}
         </p>
 
-        <dl className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <HeadlineStats locale={locale} className="mt-14" />
+
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {stats.map((stat, i) => (
             <Reveal key={t(stat.label, locale)} delay={i * 60}>
               <div className="rounded-2xl border border-line bg-surface px-6 py-6">
