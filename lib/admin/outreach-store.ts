@@ -8,6 +8,7 @@ import {
   isStopError,
   messageProblems,
   outreachPrompt,
+  outreachHooks,
   routeFor,
   type Reason,
   type Route,
@@ -172,21 +173,47 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     sender: staff.display_name,
   });
 
-  let message: string;
-  try {
+  const hooks = outreachHooks(prospect.findings);
+
+  /**
+   * Один ход модели.
+   *
+   * `notes` — её же промахи с прошлой попытки. Возвращать их обратно дешевле,
+   * чем отдавать менеджеру письмо, которое проверка потом не пропустит: он
+   * нажал «связаться», а получил отказ и пустое поле.
+   */
+  const write = async (notes: string | null): Promise<string | null> => {
     const response = await new Anthropic().beta.messages.create({
       model: MODEL,
       max_tokens: 1024,
       system: [{ type: "text" as const, text: OUTREACH_SYSTEM, cache_control: { type: "ephemeral" as const } }],
-      messages: [{ role: "user" as const, content: prompt }],
+      messages: [
+        {
+          role: "user" as const,
+          content: notes ? `${prompt}\n\nПредыдущая попытка не прошла проверку: ${notes}\nНапиши заново, исправив это.` : prompt,
+        },
+      ],
       tools: [OUTREACH_TOOL as unknown as Anthropic.Beta.BetaToolUnion],
       tool_choice: { type: "tool", name: OUTREACH_TOOL.name },
       output_config: { effort: "medium" as const },
     });
     const block = response.content.find((b) => b.type === "tool_use");
     const raw = block && block.type === "tool_use" ? (block.input as { message?: unknown }).message : null;
-    if (typeof raw !== "string" || !raw.trim()) return { ok: false, why: "Модель не вернула сообщение." };
-    message = raw.trim();
+    return typeof raw === "string" && raw.trim() ? raw.trim() : null;
+  };
+
+  let message: string;
+  try {
+    const first = await write(null);
+    if (!first) return { ok: false, why: "Модель не вернула сообщение." };
+
+    // Вторая попытка на любой промах, а не только на потерянные крючки.
+    // Живой прогон по aparto.uz показал почему: модель написала «созвонимся
+    // на 20 минут», проверка отбила число, которого нет в анализе, — и
+    // менеджер, нажав «Связаться», получил бы отказ вместо письма. Промах
+    // здесь дешевле исправить, чем показать.
+    const missed = messageProblems(first, prompt, prospect.host, hooks);
+    message = (missed.length ? await write(missed.map((p) => p.text).join(" ")) : null) ?? first;
   } catch (error) {
     return { ok: false, why: error instanceof Error ? error.message : String(error) };
   }
@@ -241,6 +268,7 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
       sender: staff.display_name,
     }),
     prospect.host,
+    outreachHooks(prospect.findings),
   );
   if (problems.length) return { ok: false, why: problems.map((p) => p.text).join(" ") };
 

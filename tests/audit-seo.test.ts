@@ -115,3 +115,48 @@ test("что считается поисковой находкой, знают 
   assert.equal(isSeoCode("no_phone"), false);
   assert.equal(isSeoCode("no_prices"), false);
 });
+
+/* ── Крючки в первом касании ──────────────────────────────────────────── */
+
+test("в письме обязаны прозвучать балл и потери — это проверяет машина", async () => {
+  const { messageProblems, outreachHooks, outreachPrompt } = await import("@/lib/admin/outreach");
+
+  const findings = [f("client_rendered", "critical"), f("no_canonical", "minor"), f("no_prices")];
+  const hooks = outreachHooks(findings);
+  assert.equal(typeof hooks.seo, "number");
+  assert.ok(hooks.lost, "потери должны считаться");
+
+  const prompt = outreachPrompt({ host: "doors.uz", label: null, niche: null, findings, draft: null, sender: "Александр" });
+  // Числа крючков обязаны быть в промпте: иначе проверка на выдуманные числа
+  // отбила бы собственный балл.
+  assert.ok(prompt.includes(String(hooks.seo)));
+  assert.ok(prompt.includes(String(hooks.lost?.[0])));
+
+  const without =
+    "Здравствуйте. Меня зовут Александр, студия DevUz Studio — devuz.studio. Посмотрели ваш сайт doors.uz и увидели, " +
+    "что поисковик получает с главной почти пустую страницу: текст дорисовывает браузер уже у посетителя. " +
+    "Проверяется за минуту через просмотр кода страницы. Готов созвониться и показать, что и в каком порядке чинить. " +
+    "Бесплатно и ни к чему не обязывает.";
+  const codes = messageProblems(without, prompt, "doors.uz", hooks).map((p) => p.code);
+  assert.ok(codes.includes("no_seo_score"), "письмо без балла отправлять нельзя");
+  assert.ok(codes.includes("no_loss"), "письмо без потерь отправлять нельзя");
+
+  // То же письмо с числами проверку проходит.
+  const withHooks = `${without} Видимость в поиске ${hooks.seo} из 100, теряется примерно ${hooks.lost?.[0]}–${hooks.lost?.[1]} из каждых ста.`;
+  const left = messageProblems(withHooks, prompt, "doors.uz", hooks).map((p) => p.code);
+  assert.ok(!left.includes("no_seo_score"));
+  assert.ok(!left.includes("no_loss"));
+});
+
+test("балл не засчитывается как часть другого числа", async () => {
+  const { messageProblems } = await import("@/lib/admin/outreach");
+  const hooks = { seo: 58, lost: [5, 15] as const };
+  const prompt = "Видимость в поиске: 58 из 100. Потери: 5–15. devuz.studio doors.uz";
+  const sneaky =
+    "Здравствуйте, это DevUz Studio — devuz.studio. По сайту doors.uz: мы обошли 158 страниц и нашли 515 картинок, " +
+    "которые стоит подписать, а также несколько мест, где посетитель теряется по дороге к обращению. " +
+    "Готов созвониться и показать всё на вашем сайте, бесплатно и ни к чему не обязывает, когда вам будет удобно.";
+  const codes = messageProblems(sneaky, prompt, "doors.uz", hooks).map((p) => p.code);
+  assert.ok(codes.includes("no_seo_score"), "«158» — это не балл 58");
+  assert.ok(codes.includes("no_loss"), "«515» — это не 5 и не 15");
+});

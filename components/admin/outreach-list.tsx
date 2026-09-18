@@ -13,6 +13,7 @@ import {
   whatsappLink,
   type Reason,
 } from "@/lib/admin/outreach";
+import { outreachHooks } from "@/lib/admin/outreach";
 import { GRADE_TEXT, seoReport, type SeoGrade } from "@/lib/audit/seo";
 import type { Prospect } from "@/lib/admin/outreach-store";
 import { contactsLine, hasAnyContact } from "@/lib/audit/contacts";
@@ -129,6 +130,7 @@ export function OutreachList({
           });
           const route = routeFor(row.contacts);
           const seo = seoReport({ findings: row.findings });
+          const hooks = outreachHooks(row.findings);
           const expanded = open === row.id || row.status === "contacting";
           const wait =
             row.status === "sending"
@@ -164,6 +166,15 @@ export function OutreachList({
                   {seo.measured && seo.total > 0 ? (
                     <span className={`font-mono text-sm ${SEO_TONE[seo.grade]}`} title={GRADE_TEXT[seo.grade]}>
                       поиск {seo.score}
+                    </span>
+                  ) : null}
+                  {/* То, ради чего письмо открывают. Менеджер должен видеть
+                      это, не разворачивая карточку: с сайта, где теряется
+                      половина обращений, разговор начинается с одной фразы,
+                      а с сайта, где теряется пять, — с другой. */}
+                  {hooks.lost ? (
+                    <span className="font-mono text-sm text-red-300" title="Теряется обращений из каждых ста">
+                      −{hooks.lost[0]}…{hooks.lost[1]}
                     </span>
                   ) : null}
                   {row.score !== null ? (
