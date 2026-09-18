@@ -164,6 +164,16 @@ export type Walked = {
   quote: string | null;
   sitemapUrls: number | null;
   sitemapFresh: string | null;
+  /**
+   * Заголовки пройденных страниц.
+   *
+   * По ним подбирается наш проект из ниши адресата. Классификатор знает
+   * четырнадцать ниш и недвижимость среди них не числит, а в заголовке
+   * страницы стоит «жилой комплекс» открытым текстом. Живой прогон по
+   * nirvanaresidence.uz это и показал: ниша не определилась, и самая сильная
+   * строка письма — пример из его же ниши — в письмо не попала.
+   */
+  hints: string[];
 };
 
 /**
@@ -181,11 +191,16 @@ export type Walked = {
  * главной, и второй раз это считать незачем.
  */
 export async function auditDeep(target: BatchTarget): Promise<{ row: BatchRow; walked: Walked | null }> {
-  const row = await auditOne(target);
-  if (!row.report || !target.url) return { row, walked: null };
+  if (!target.url) return { row: await auditOne(target), walked: null };
 
   try {
+    // Один прогон, а не два. Первая версия звала auditOne, а потом делала
+    // probe и enrich заново — то есть загружала сайт, стили, картинки и
+    // карту дважды. На живом прогоне это стоило семидесяти четырёх секунд
+    // вместо обещанных шестидесяти, и никакой бюджет времени внутри обхода
+    // этого не лечил: лишняя половина тратилась до него.
     const page = await enrich(await probe(target.url));
+    const report = analyze(page);
     const crawled = await crawl(page, (links) => pagesToVisit(links));
     const pages = [{ url: page.finalUrl, status: page.status, html: page.html }, ...crawled.pages];
     const snaps = pages.map((p) => snap(p.url, p.status, p.html));
@@ -207,18 +222,21 @@ export async function auditDeep(target: BatchTarget): Promise<{ row: BatchRow; w
       quote: (snaps[0]?.h1?.length ?? 0) >= 12 ? (snaps[0].h1?.slice(0, 90) ?? null) : null,
       sitemapUrls: crawled.sitemapUrls,
       sitemapFresh: crawled.sitemapFresh,
+      hints: snaps.flatMap((p) => [p.title ?? "", p.h1 ?? ""]).filter(Boolean),
     };
 
-    return {
-      row: extra.length
-        ? { ...row, report: { ...row.report, findings: [...row.report.findings, ...extra] } }
-        : row,
-      walked,
-    };
+    // Находки обхода дописываются к отчёту главной, а не к строке пачки:
+    // report здесь — настоящий AuditReport, а row.report по типу допускает
+    // null, и спред от него терял бы обязательные поля.
+    const full: AuditReport = extra.length
+      ? { ...report, findings: [...report.findings, ...extra] }
+      : report;
+
+    return { row: { target, report: full, failure: null }, walked };
   } catch {
-    // Обход — уточнение, а не условие. Не вышел — отдаём то, что есть:
+    // Обход — уточнение, а не условие. Не вышел — отдаём обычный разбор:
     // письмо по одной главной лучше, чем отсутствие письма.
-    return { row, walked: null };
+    return { row: await auditOne(target), walked: null };
   }
 }
 

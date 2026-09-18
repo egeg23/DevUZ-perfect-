@@ -150,7 +150,7 @@ test("в письме обязаны прозвучать балл и потер
 
 test("балл не засчитывается как часть другого числа", async () => {
   const { messageProblems } = await import("@/lib/admin/outreach");
-  const hooks = { seo: 58, lost: [5, 15] as const };
+  const hooks = { seo: 58, lost: [5, 15] as const, reference: null };
   const prompt = "Видимость в поиске: 58 из 100. Потери: 5–15. devuz.studio doors.uz";
   const sneaky =
     "Здравствуйте, это DevUz Studio — devuz.studio. По сайту doors.uz: мы обошли 158 страниц и нашли 515 картинок, " +

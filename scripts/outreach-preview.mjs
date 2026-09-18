@@ -14,7 +14,7 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { auditDeep, toProspectRow } from "@/lib/audit/batch";
-import { OUTREACH_SYSTEM, OUTREACH_TOOL, messageProblems, outreachHooks, outreachPrompt } from "@/lib/admin/outreach";
+import { OUTREACH_SYSTEM, OUTREACH_TOOL, messageProblems, outreachHooks, outreachProof, outreachPrompt } from "@/lib/admin/outreach";
 import { seoReport } from "@/lib/audit/seo";
 
 const url = process.argv[2];
@@ -25,9 +25,11 @@ const row = toProspectRow(deep.row);
 const seconds = ((Date.now() - t0) / 1000).toFixed(1);
 const host = new URL(url).hostname.replace(/^www\./, "");
 const seo = seoReport({ findings: row.findings });
-const hooks = outreachHooks(row.findings);
+const niche = deep.row.report?.facts.niche ?? null;
+const reference = outreachProof({ niche, label: row.label, host, hints: deep.walked?.hints ?? [] }).reference;
+const hooks = outreachHooks(row.findings, reference?.name ?? null);
 
-const prompt = outreachPrompt({ host, label: row.label, niche: null, findings: row.findings, draft: null, sender, walked: deep.walked });
+const prompt = outreachPrompt({ host, label: row.label, niche, findings: row.findings, draft: null, sender, walked: deep.walked });
 
 const write = async (notes) => {
   const r = await new Anthropic().beta.messages.create({
@@ -61,6 +63,7 @@ console.log(`обход: ${deep.walked ? deep.walked.paths.join(", ") : "не в
 const DEEP = new Set(["no_price_anywhere","same_title","no_description_pages","thin_pages","no_trust","dead_end_pages","stale_sitemap","heavy_home"]);
 const found = row.findings.filter((f) => DEEP.has(f.code));
 console.log(`находки обхода: ${found.length ? found.map((f) => f.title).join(" | ") : "нет"}`);
+console.log(`ниша: ${niche ?? "—"}   пример из ниши: ${reference ? `${reference.name} (${reference.niche})` : "нет — и в письме его не будет"}`);
 console.log("═".repeat(72));
 console.log(msg);
 console.log("─".repeat(72));
