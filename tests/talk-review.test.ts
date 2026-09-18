@@ -153,3 +153,20 @@ test("урок про этого клиента — не урок, а задач
   assert.match(real.lesson, /корпоративный аккаунт/);
   assert.equal(real.confidence, "high");
 });
+
+test("отказ базы поднимается наружу, а не превращается в «разбирать нечего»", async () => {
+  const { readFileSync } = await import("node:fs");
+  const store = readFileSync(new URL("../lib/talk/review-store.ts", import.meta.url), "utf8");
+
+  // Первая версия просила у таблицы колонку `facts`, которой там нет.
+  // PostgREST отвечал отказом, data приходил пустым — и надзиратель молча не
+  // видел ни одной переписки. Снаружи это выглядело как «разбирать нечего», и
+  // отличить одно от другого было нельзя.
+  assert.ok(!/select\("[^"]*facts/.test(store), "в запросе снова колонка, которой нет в таблице");
+  assert.match(store, /if \(error\) throw new Error/, "отказ базы по-прежнему глотается");
+  assert.match(store, /разбор не сохранился/, "несохранённый разбор проходит молча");
+
+  // Свип обязан показать такую ошибку, а не считать проход удачным.
+  const run = readFileSync(new URL("../lib/talk/review-run.ts", import.meta.url), "utf8");
+  assert.match(run, /run\.errors\.push\(`очередь разборов/);
+});
