@@ -52,6 +52,18 @@ export const LIST_COLUMNS = [
 
 export const DETAIL_COLUMNS = [
   LIST_COLUMNS,
+  // Откуда пришёл: ник от Telegram, страница сайта, источник перехода.
+  //
+  // Ник — в подробной карточке, но не в списке. Это не полумера: в общий
+  // чат отдела он теперь уходит вместе с брифом («указывай юзернейм, если
+  // он есть»), то есть у менеджера он и так перед глазами, и прятать его
+  // в карточке было бы театром. А вот в списке свободных лидов его быть
+  // не должно: оттуда человека уводят, не взяв заявку и не оставив следа.
+  // Телефон и почта по-прежнему открываются отдельным действием с записью
+  // в журнал — их в чате нет.
+  "tg_username",
+  "entry_path",
+  "entry_ref",
   "niche_tier",
   "expertise",
   "authority",
@@ -94,6 +106,9 @@ export type LeadRow = {
 };
 
 export type LeadDetail = LeadRow & {
+  tg_username: string | null;
+  entry_path: string | null;
+  entry_ref: string | null;
   niche_tier: number | null;
   expertise: string | null;
   authority: string | null;

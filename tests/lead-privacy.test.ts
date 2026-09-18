@@ -87,15 +87,30 @@ const TRANSCRIPT: ChatMessage[] = [
   { role: "assistant", content: "расскажите про сроки" },
 ];
 
-test("в брифе нет самого контакта — только канал связи", () => {
+test("в брифе есть ник, но нет телефона и почты", () => {
+  // Граница сдвинута сознательно, по прямому указанию владельца:
+  // «указывай юзернейм, если он есть». Ник в Telegram человек показывает
+  // каждому, кому пишет; номер телефона — нет. Поэтому ник в чате, а всё
+  // остальное по-прежнему открывается в карточке, где остаётся след.
   const brief = formatLeadBrief(lead(), "DZ-0904-K4M7", "https://devuz.example/admin/leads/abc");
-
-  assert.ok(!brief.includes(HANDLE), "ник клиента попал в бриф");
-  assert.ok(!brief.includes("azizk_direct"), "ник клиента попал в бриф в другом виде");
-  // Канал остаётся: менеджеру нужно знать, писать или звонить, и это
-  // единственная часть контакта, по которой человека нельзя найти.
+  assert.ok(brief.includes(HANDLE), "ник не попал в бриф, хотя он есть");
   assert.match(brief, /Telegram/);
   assert.match(brief, /контакт открывается в карточке/);
+
+  const byPhone = lead();
+  byPhone.contact_handle = "+998 90 123-45-67";
+  byPhone.contact_kind = "phone";
+  const phoneBrief = formatLeadBrief(byPhone, "DZ-0904-K4M7", null);
+  assert.ok(!phoneBrief.includes("123-45-67"), "телефон клиента ушёл в общий чат");
+  assert.ok(!phoneBrief.includes("998901234567"), "телефон клиента ушёл в общий чат");
+
+  const byMail = lead();
+  byMail.contact_handle = "aziz@magnat.uz";
+  byMail.contact_kind = "email";
+  assert.ok(
+    !formatLeadBrief(byMail, "DZ-0904-K4M7", null).includes("aziz@magnat.uz"),
+    "почта клиента ушла в общий чат",
+  );
 });
 
 test("бриф ведёт в карточку, а без карточки — не врёт ссылкой", () => {
@@ -117,7 +132,6 @@ test("в чат уходит одно сообщение, и стенограм�
   assert.equal(messages.length, 1, `сообщений отправлено ${messages.length}`);
 
   const text = String(messages[0].body.text);
-  assert.ok(!text.includes(HANDLE), "контакт ушёл в общий чат");
   for (const line of TRANSCRIPT) {
     assert.ok(!text.includes(line.content), "кусок переписки ушёл в общий чат");
   }

@@ -7,6 +7,7 @@ import {
   type TurnEvent,
 } from "@/lib/qualify/engine";
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
+import { pathFromClient, refFromClient } from "@/lib/qualify/origin";
 import { shouldMissPromise } from "@/lib/qualify/promise";
 import type { ChatMessage } from "@/lib/qualify/types";
 
@@ -44,6 +45,8 @@ export async function POST(request: Request) {
     qualified?: unknown;
     discount?: unknown;
     ref?: unknown;
+    page?: unknown;
+    from?: unknown;
   };
   try {
     body = await request.json();
@@ -61,6 +64,11 @@ export async function POST(request: Request) {
   // Код партнёра из адреса, который сайт запомнил: чужой ввод, той же
   // формы, что и код, иначе — нет кода.
   const ref = codeFromQuery(body.ref);
+  // Где человек был и откуда пришёл. Чужой ввод, как и всё остальное в
+  // теле запроса: подделать можно, но выигрыша это не даёт — испортить
+  // получится только собственную заявку.
+  const page = pathFromClient(body.page);
+  const came = refFromClient(body.from);
 
   if (!Array.isArray(body.messages) || body.messages.length === 0) {
     return badRequest("messages_required");
@@ -105,6 +113,7 @@ export async function POST(request: Request) {
           history,
           locale,
           source: "chat",
+          origin: { entryPath: page, entryRef: came },
           alreadyQualified,
           discount,
           attribution: { code: ref },

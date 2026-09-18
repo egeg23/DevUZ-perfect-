@@ -10,7 +10,6 @@ import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-repor
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
-import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -132,10 +131,10 @@ export async function POST(request: Request) {
         .filter(Boolean)
         .join("\n"),
       [
-        // «Открыть» — ссылка, а не действие: карточку всё равно открывает
-        // браузер, и гонять это через колбэк значит ждать ответа сервера
-        // ради перехода, который Telegram сделает сам.
-        { text: "Открыть", url: `${siteUrl}/admin/leads/${reminder.lead_id}` },
+        // «Открыть» — вход в карточку, а не просто ссылка: напоминание
+        // читают с телефона, а браузер внутри Telegram держит свои куки
+        // отдельно, и обычная ссылка каждый раз приводила на вход.
+        { text: "Открыть", panel: `/admin/leads/${reminder.lead_id}` },
         { text: "+2 часа", callback_data: `rem:snooze:${reminder.id}` },
         { text: "Готово", callback_data: `rem:done:${reminder.id}` },
       ],

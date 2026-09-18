@@ -26,6 +26,7 @@ import {
   markBriefHandled,
   sendMessage,
   sendPlain,
+  sendWithButtons,
   typingIndicator,
 } from "@/lib/qualify/telegram";
 import { record } from "@/lib/admin/audit";
@@ -269,15 +270,22 @@ async function handleStaffLogin(message: NonNullable<Update["message"]>) {
   // строя превью, Telegram сам открыл бы адрес и сжёг одноразовый токен
   // раньше человека. Второй рубеж — сама страница: обмен токена на сессию
   // происходит только по нажатию кнопки, то есть POST-ом.
-  await sendMessage(
+  // Кнопка и ссылка рядом, и это не дублирование.
+  //
+  // Кнопка — вход в одно нажатие: Telegram сам подтверждает, кто её нажал
+  // (см. app/admin/enter). Ссылка под ней — тот же вход для случая, когда
+  // кнопка не работает: домен бота ещё не привязан в BotFather или клиент
+  // Telegram слишком старый. Отнимать рабочий путь ради нового нельзя.
+  await sendWithButtons(
     chat.id,
     [
       "<b>Вход в панель</b>",
       "",
-      `${siteUrl}/admin/login?t=${token}`,
+      "Нажмите кнопку — Telegram подтвердит, что это вы, и панель откроется сразу.",
       "",
-      "Ссылка одноразовая и живёт 15 минут.",
+      `Не сработало — вот обычная ссылка, одноразовая и на 15 минут:\n${siteUrl}/admin/login?t=${token}`,
     ].join("\n"),
+    [{ text: "🔓 Открыть панель", panel: "/admin" }],
   );
 }
 
@@ -325,6 +333,15 @@ async function handleClient(message: NonNullable<Update["message"]>) {
     const identity = identityOf(message.from);
     if (payload === "partner" && identity) {
       await handlePartnerCommand(chat.id, identity, "/ref", locale);
+      return;
+    }
+
+    // Кнопка «Получить ссылку в Telegram» со страницы входа ведёт сюда.
+    // Сотруднику остаётся нажать, а не искать чат и набирать команду;
+    // постороннему ответ такой же, как на любую неизвестную команду, —
+    // проверять по боту, кто работает в студии, нельзя.
+    if (payload === "login") {
+      await handleStaffLogin(message);
       return;
     }
 
@@ -553,6 +570,11 @@ async function respond(
       discount: session.discount,
       // По чьей ссылке пришёл клиент в бота — касание снимается после привязки.
       attribution: { code: await touchFor(chatId), telegramId: from?.id ?? null, chatId },
+      // Ник — от Telegram, а не от модели. Просьба в системном промпте
+      // «подставь contact_handle ровно это значение» исполняется почти
+      // всегда, и это «почти» и есть лид, по которому менеджеру некуда
+      // написать.
+      origin: { tgUsername: from?.username ?? null },
       // Бриф с витрины едет в каждую реплику разговора, а не только в
       // первую: модель без него не знает ни состава заказа, ни того, что
       // квалификацию надо дописать в ту же заявку.

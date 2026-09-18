@@ -1,4 +1,5 @@
-import { channelLabel } from "@/lib/contact";
+import { channelLabel, contactLink } from "@/lib/contact";
+import { originLines, usernameOf, type LeadOrigin } from "@/lib/qualify/origin";
 import { priorityBadge } from "@/lib/qualify/scoring";
 import type { ScoredLead } from "@/lib/qualify/types";
 import { localeLabel } from "@/lib/i18n";
@@ -30,6 +31,15 @@ export function esc(value: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** Ник в Telegram из оставленного контакта — или null, если контакт другой. */
+function tgFromContact(lead: {
+  contact_handle?: string | null;
+  contact_kind?: string | null;
+}): string | null {
+  const view = contactLink({ contact_handle: lead.contact_handle, contact_kind: lead.contact_kind });
+  return view.label.startsWith("@") ? view.label.slice(1) : null;
 }
 
 function block(title: string, lines: string[]): string | null {
@@ -75,8 +85,22 @@ export function formatLeadBrief(
   cardUrl?: string | null,
   /** Готовый HTML над брифом: сумма заказа с витрины и кому он адресован. */
   heading?: string,
+  /**
+   * Откуда, когда и с какой страницы писал человек.
+   *
+   * Отдельным аргументом, а не полем лида: это факты канала, а не выводы
+   * модели. Ник, страницу и время знает тот, кто принял разговор, — и
+   * ошибиться в них невозможно, в отличие от всего, что заполняет модель.
+   */
+  origin?: LeadOrigin & { at?: string | number | Date },
 ): string {
   const who = [lead.contact_name, lead.company].filter(Boolean).map(esc).join(" · ");
+
+  // Ник берётся сначала от канала (его прислал Telegram), потом — из
+  // контакта, если человек назвал его сам. Разбор строки, а не поле от
+  // модели: см. contactLink.
+  const place: LeadOrigin = { ...origin, tgUsername: origin?.tgUsername ?? tgFromContact(lead) };
+  const handle = usernameOf(place);
 
   const parts: string[] = [
     ...(heading ? [heading, ""] : []),
@@ -93,7 +117,16 @@ export function formatLeadBrief(
     // должно оставлять след с именем и временем, а в чате следа не остаётся.
     // Поэтому здесь только то, что менеджеру нужно для решения, — писать
     // или звонить, — а ник и номер лежат в карточке за кнопкой.
-    `💬 ${esc(channelLabel(lead))} · контакт открывается в карточке`,
+    // Ник — да, телефон и почта — по-прежнему нет.
+    //
+    // Владелец: «указывай юзернейм, если он есть». Это осознанное
+    // послабление к правилу «контакт только в карточке», а не отмена
+    // правила: ник в Telegram человек и так показывает каждому, кому
+    // пишет, а номер телефона — нет. Всё остальное открывается в
+    // карточке, где остаётся след, кто и когда его посмотрел.
+    `💬 ${esc(channelLabel(lead))}${handle ? ` · ${esc(handle)}` : ""} · контакт открывается в карточке`,
+    // Когда, откуда и где — три вопроса владельца одной строкой каждый.
+    ...originLines(place, origin?.at ?? Date.now()).map((line, i) => `${i === 0 ? "🕒" : "📍"} ${esc(line)}`),
     // Это язык версии сайта, а не обязательно язык переписки: человек мог
     // открыть русскую страницу и писать по-узбекски. Формулировка честная,
     // чтобы менеджер не начал отвечать не на том языке, решив, что здесь
@@ -149,9 +182,20 @@ export function formatLeadBrief(
  */
 const CALL_TIMEOUT_MS = 15_000;
 
-async function call(method: string, payload: unknown): Promise<boolean> {
+/**
+ * Ответ Bot API так, как он нужен вызывающему: дошло или нет, и если нет —
+ * что именно сказал Telegram.
+ *
+ * Описание нужно ровно одному месту — кнопке входа в панель: отличить
+ * «домен бота не привязан» от «сеть моргнула» можно только по тексту
+ * ошибки, а не по факту неудачи. `description` пуст, когда ответа не было
+ * вовсе (таймаут, прокси, оборванное соединение).
+ */
+type CallResult = { ok: boolean; description: string | null };
+
+async function callRaw(method: string, payload: unknown): Promise<CallResult> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) return false;
+  if (!token) return { ok: false, description: null };
 
   // Вторая попытка — только если первая оборвалась, не получив ответа:
   // сеть, прокси, таймаут. Ответ с ошибкой от Telegram не повторяем — он
@@ -165,17 +209,22 @@ async function call(method: string, payload: unknown): Promise<boolean> {
         signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
       });
       if (!response.ok) {
-        console.error("telegram", method, response.status, await response.text());
-        return false;
+        const body = await response.text();
+        console.error("telegram", method, response.status, body);
+        return { ok: false, description: body };
       }
-      return true;
+      return { ok: true, description: null };
     } catch (error) {
       console.error("telegram", method, `попытка ${attempt}`, error);
-      if (attempt === 2) return false;
+      if (attempt === 2) return { ok: false, description: null };
       await new Promise((resolve) => setTimeout(resolve, 1_000));
     }
   }
-  return false;
+  return { ok: false, description: null };
+}
+
+async function call(method: string, payload: unknown): Promise<boolean> {
+  return (await callRaw(method, payload)).ok;
 }
 
 /** Команда для меню бота: имя без слэша и короткое описание. */
@@ -205,8 +254,104 @@ export async function sendMessage(chatId: number | string, text: string): Promis
   });
 }
 
-/** Кнопка под сообщением: либо ссылка, либо действие с полезной нагрузкой. */
-export type Button = { text: string } & ({ url: string } | { callback_data: string });
+/**
+ * Кнопка под сообщением: ссылка, действие с полезной нагрузкой — или вход
+ * в панель.
+ *
+ * `panel` — это путь внутри панели, а не готовый адрес: во что он
+ * превратится, решается в момент отправки. Подробности — у `panelRow`.
+ */
+export type Button = { text: string } & (
+  | { url: string }
+  | { callback_data: string }
+  | { panel: string }
+);
+
+/**
+ * Работает ли кнопка входа: null — ещё не пробовали, false — Telegram её
+ * не принимает.
+ *
+ * Кнопку login_url Bot API принимает только у бота, которому в BotFather
+ * привязан домен (/setdomain). Пока это не сделано, сообщение с такой
+ * кнопкой отклоняется **целиком** — то есть бриф по лиду не дошёл бы
+ * вовсе. Ради удобства входа терять лиды нельзя, поэтому отказ
+ * обрабатывается: кнопка превращается в обычную ссылку, сообщение уходит
+ * повторно, а сюда записывается «больше не пробовать».
+ *
+ * Память живёт до перезапуска процесса. Так и задумано: домен привяжут —
+ * ближайшая выкатка включит кнопки обратно сама, без переменных окружения
+ * и без похода в код.
+ */
+let loginButtonWorks: boolean | null = null;
+
+/** Адрес, по которому Telegram подпишет вход и приведёт человека. */
+export function enterUrl(path: string): string {
+  const clean = path.replace(/^\/admin\/?/, "").replace(/^\/+/, "");
+  return clean ? `${siteUrl}/admin/enter/${clean}` : `${siteUrl}/admin/enter`;
+}
+
+/**
+ * Превратить кнопки в то, что понимает Bot API.
+ *
+ * `login_url` — если домен привязан: Telegram спросит подтверждение один
+ * раз на домен и дальше будет открывать панель сразу, дописав к адресу
+ * подписанное «кто нажал». Иначе — обычная ссылка на ту же страницу: она
+ * приведёт на вход, как и раньше, но ничего не сломает.
+ */
+function forTelegram(rows: Button[][]): unknown[][] {
+  const login = loginButtonWorks !== false;
+  return rows.map((row) =>
+    row.map((button) =>
+      "panel" in button
+        ? login
+          ? { text: button.text, login_url: { url: enterUrl(button.panel) } }
+          : { text: button.text, url: `${siteUrl}${button.panel}` }
+        : button,
+    ),
+  );
+}
+
+/** Есть ли в раскладке кнопка входа — значит, есть чем деградировать. */
+function hasPanel(rows: Button[][]): boolean {
+  return rows.some((row) => row.some((button) => "panel" in button));
+}
+
+/**
+ * Отправить сообщение с кнопками, переживая непривязанный домен.
+ *
+ * Повтор без кнопки делается только тогда, когда Telegram **ответил**
+ * ошибкой. Оборванное соединение оставляет `loginButtonWorks` как есть:
+ * иначе одна моргнувшая сеть выключала бы вход по кнопке до следующей
+ * выкатки.
+ */
+async function sendWithRows(
+  chatId: number | string,
+  text: string,
+  rows: Button[][],
+  extra: Record<string, unknown> = {},
+): Promise<boolean> {
+  const payload = () => ({
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+    reply_markup: { inline_keyboard: forTelegram(rows) },
+    ...extra,
+  });
+
+  const first = await callRaw("sendMessage", payload());
+  if (first.ok) {
+    if (loginButtonWorks === null && hasPanel(rows)) loginButtonWorks = true;
+    return true;
+  }
+  if (loginButtonWorks === false || !hasPanel(rows) || !first.description) return false;
+
+  loginButtonWorks = false;
+  console.error(
+    "telegram: кнопку входа не приняли — привяжите домен боту (BotFather → /setdomain → devuz.studio). Отправляю обычной ссылкой.",
+  );
+  return (await callRaw("sendMessage", payload())).ok;
+}
 
 /**
  * То же сообщение, но с рядом кнопок.
@@ -221,13 +366,7 @@ export async function sendWithButtons(
   text: string,
   buttons: Button[],
 ): Promise<boolean> {
-  return call("sendMessage", {
-    chat_id: chatId,
-    text,
-    parse_mode: "HTML",
-    link_preview_options: { is_disabled: true },
-    reply_markup: { inline_keyboard: [buttons] },
-  });
+  return sendWithRows(chatId, text, [buttons]);
 }
 
 /**
@@ -244,7 +383,11 @@ export async function sendLead(
   lead: ScoredLead,
   leadId: string,
   requestNo?: string,
-  options: { to?: Array<string | number>; heading?: string } = {},
+  options: {
+    to?: Array<string | number>;
+    heading?: string;
+    origin?: LeadOrigin & { at?: string | number | Date };
+  } = {},
 ): Promise<boolean> {
   const targets = options.to?.length
     ? options.to.map(String)
@@ -259,24 +402,26 @@ export async function sendLead(
   // отказов, если каждый отказ тоже звенит.
   const silent = lead.priority === "nurture" || lead.priority === "archive";
 
-  const text = formatLeadBrief(lead, requestNo, cardUrl, options.heading);
+  const text = formatLeadBrief(lead, requestNo, cardUrl, options.heading, options.origin);
+
+  // Первый ряд — вход в карточку одним нажатием.
+  //
+  // Ссылка на карточку в тексте остаётся: у того, кто уже сидит в панели,
+  // она открывается сразу. А у того, кто читает уведомление с телефона,
+  // браузер внутри Telegram держит свои куки отдельно, и обычная ссылка
+  // всегда приводила его на страницу входа. Эта кнопка — тот же вход, но
+  // Telegram подтверждает, кто нажал, сам: см. app/admin/enter.
+  const rows: Button[][] = [
+    ...(cardUrl ? [[{ text: "🔓 Открыть карточку", panel: `/admin/leads/${leadId}` }]] : []),
+    [
+      { text: "✅ Взять в работу", callback_data: `take:${leadId}` },
+      { text: "🗄 Отклонить", callback_data: `drop:${leadId}` },
+    ],
+  ];
+
   let sent = false;
   for (const chatId of targets) {
-    const ok = await call("sendMessage", {
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-      disable_notification: silent,
-      link_preview_options: { is_disabled: true },
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: "✅ Взять в работу", callback_data: `take:${leadId}` },
-            { text: "🗄 Отклонить", callback_data: `drop:${leadId}` },
-          ],
-        ],
-      },
-    });
+    const ok = await sendWithRows(chatId, text, rows, { disable_notification: silent });
     sent = sent || ok;
   }
 

@@ -11,6 +11,7 @@ import {
   createSession,
 } from "@/lib/admin/session";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
+import { NEXT_COOKIE, returnTo } from "@/lib/admin/return-to";
 
 /**
  * Обмен одноразовой ссылки на сессию.
@@ -67,11 +68,19 @@ export async function signIn(formData: FormData) {
     maxAge: ABSOLUTE_DAYS * 24 * 3600,
   });
 
+  // Куда он шёл до того, как его развернуло сюда.
+  //
+  // Без этого вход всегда заканчивался на главной панели, и человека,
+  // пришедшего по ссылке на конкретный лид, ждал ещё один поиск — уже
+  // руками, по списку. Ссылку он к этому моменту закрыл.
+  const wanted = jar.get(NEXT_COOKIE)?.value ?? null;
+  jar.delete({ name: NEXT_COOKIE, path: "/admin" });
+
   await record("login.succeeded", {
     actorStaffId: staff.id,
     ip,
-    meta: { role: staff.role },
+    meta: { role: staff.role, to: wanted ?? "/admin" },
   });
 
-  redirect("/admin");
+  redirect(returnTo(wanted));
 }

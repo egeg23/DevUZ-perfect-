@@ -4,12 +4,13 @@ import { createHash, randomBytes } from "node:crypto";
 import { serviceClient } from "@/lib/supabase";
 
 /**
- * Имя куки. Путь у неё — /admin, а не корень: на публичных страницах она
- * не нужна ни разу, а всё, что не отправляется, невозможно и перехватить.
- * Отсюда же требование к самой панели: любой её endpoint живёт под /admin,
- * включая server actions (они постятся на адрес текущей страницы).
+ * Имя куки живёт в lib/admin/return-to.ts и берётся отсюда же и middleware,
+ * которому этот модуль недоступен: в его окружении нет ни node:crypto, ни
+ * клиента базы. Отсюда требование к самой панели: любой её endpoint живёт
+ * под /admin, включая server actions (они постятся на адрес текущей
+ * страницы).
  */
-export const SESSION_COOKIE = "devuz_admin";
+export { SESSION_COOKIE } from "@/lib/admin/return-to";
 
 /**
  * Скользящий срок: продлевается при каждом запросе, чтобы человека,

@@ -2,6 +2,7 @@ import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 import { attributeAndNotify } from "@/lib/partners/attribute";
 import { codeFromQuery } from "@/lib/partners/rules";
 import { isLocale, type Locale } from "@/lib/i18n";
+import { pathFromClient, refFromClient } from "@/lib/qualify/origin";
 import { saveLead } from "@/lib/qualify/store";
 import { detectContactKind } from "@/lib/contact";
 import { sendLead } from "@/lib/qualify/telegram";
@@ -107,13 +108,19 @@ export async function POST(request: Request) {
 
   const lead = scoreLead(input, locale);
 
+  // С какой страницы отправлена форма и откуда человек пришёл на сайт.
+  const origin = {
+    entryPath: pathFromClient((body as { page?: unknown }).page),
+    entryRef: refFromClient((body as { from?: unknown }).from),
+  };
+
   // Номер получает и заявка из формы. Иначе у отдела продаж две породы
   // лидов: одни адресуются номером, другие — «тот, который вчера вечером».
   const requestNo = newRequestNo();
 
   let leadId: string | null = null;
   try {
-    leadId = await saveLead(lead, [], "form", { requestNo });
+    leadId = await saveLead(lead, [], "form", { requestNo, origin });
   } catch (error) {
     console.error("saveLead form", error);
   }
@@ -127,7 +134,9 @@ export async function POST(request: Request) {
     }
   }
 
-  const delivered = await sendLead(lead, leadId ?? "unsaved", requestNo);
+  const delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
+    origin: { ...origin, source: "form" },
+  });
 
   // Если и база, и Telegram недоступны — заявка потеряна, и врать об успехе
   // нельзя: человек должен увидеть подсказку написать напрямую.
