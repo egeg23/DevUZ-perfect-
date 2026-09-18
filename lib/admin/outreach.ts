@@ -109,13 +109,34 @@ export function routeFor(contacts: Contacts): Route | null {
   const handle = contacts.telegram.find((h) => !isBotHandle(h));
   if (handle) return { kind: "handle", target: handle };
 
-  const mobile = [...contacts.whatsapp, ...contacts.phones].find(isMobile);
-  if (mobile) return { kind: "phone", target: mobile };
+  const hand = handTargetFrom(contacts);
+  if (!hand) return null;
+  // Мобильный скаут ещё попробует найти в телеграме; городской — нет, по
+  // нему только звонят.
+  return { kind: isMobile(hand) ? "phone" : "manual", target: hand };
+}
 
-  const landline = contacts.phones[0];
-  if (landline) return { kind: "manual", target: landline };
-
-  return null;
+/**
+ * Чем дотянуться, когда телеграм отпал.
+ *
+ * Нужно там, где маршрут «телеграм» рухнул уже на отправке: адрес оказался
+ * каналом, номер не нашёлся. Карточка после этого уходит человеку — и в ней
+ * обязан стоять номер, а не @адрес. Иначе выходит то, что и вышло: карточка
+ * с маршрутом «дальше руками» предлагала позвонить по `tel:@muradbuildings`
+ * и открыть WhatsApp по ссылке, собранной из букв.
+ *
+ * Порядок тот же, что и в маршрутах: номер с кнопки WhatsApp идёт раньше
+ * номера из подвала — на первом заведомо читают сообщения. Городской
+ * последний: писать туда некуда, но позвонить можно, и это тоже касание.
+ *
+ * Принимает не весь `Contacts`, а только то, что читает: этой же функцией
+ * пользуется очередь касаний, куда тащить весь разбор контактов незачем.
+ */
+export function handTargetFrom(contacts: {
+  whatsapp: readonly string[];
+  phones: readonly string[];
+}): string | null {
+  return [...contacts.whatsapp, ...contacts.phones].find(isMobile) ?? contacts.phones[0] ?? null;
 }
 
 /** Что маршрут значит для менеджера — словами, а не кодом. */

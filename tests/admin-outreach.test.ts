@@ -433,3 +433,42 @@ test("доставка подтверждается перечитыванием
     "неподтверждённая доставка откатывает отправку",
   );
 });
+
+test("маршрут упал в ручной — цель обязана стать номером, а не остаться @адресом", async () => {
+  const { handTargetFrom, routeFor } = await import("@/lib/admin/outreach");
+
+  // Карточка ручного маршрута строит из цели ссылку «позвонить» и ссылку в
+  // WhatsApp. Оставив там @адрес канала, мы предлагали менеджеру
+  // `tel:@muradbuildings` и адрес WhatsApp, собранный из букв.
+  assert.equal(
+    handTargetFrom({ whatsapp: [], phones: ["+998781228822", "+998900640880"] }),
+    "+998900640880",
+    "мобильный должен обгонять городской, даже если стоит вторым",
+  );
+  assert.equal(
+    handTargetFrom({ whatsapp: ["+998979503838"], phones: ["+998781503838"] }),
+    "+998979503838",
+    "номер с кнопки WhatsApp идёт первым: там заведомо читают",
+  );
+  // Мобильного нет — берём первый городской: писать некуда, но позвонить можно.
+  assert.equal(handTargetFrom({ whatsapp: [], phones: ["+998712104444"] }), "+998712104444");
+  // Нет ничего — значит нечего и показывать.
+  assert.equal(handTargetFrom({ whatsapp: [], phones: [] }), null);
+
+  const store = readFileSync(new URL("../lib/admin/outreach-queue.ts", import.meta.url), "utf8");
+  assert.match(store, /target: hand/, "цель не переписывается вместе с маршрутом");
+
+  // И развилка маршрутов считается тем же правилом, чтобы они не разъехались.
+  const lib = readFileSync(new URL("../lib/admin/outreach.ts", import.meta.url), "utf8");
+  assert.match(lib, /const hand = handTargetFrom\(contacts\);/, "routeFor считает по своему правилу");
+
+  // Старое поведение сохранено: мобильный — маршрут скаута, городской — руки.
+  assert.deepEqual(
+    routeFor({ phones: ["+998900640880"], emails: [], telegram: [], whatsapp: [], instagram: [], contactsUrl: null }),
+    { kind: "phone", target: "+998900640880" },
+  );
+  assert.deepEqual(
+    routeFor({ phones: ["+998712104444"], emails: [], telegram: [], whatsapp: [], instagram: [], contactsUrl: null }),
+    { kind: "manual", target: "+998712104444" },
+  );
+});
