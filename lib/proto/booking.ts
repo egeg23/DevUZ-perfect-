@@ -28,6 +28,7 @@ import type { ProtoNiche } from "@/content/proto/models";
 import { trickFor } from "@/content/proto/models";
 import type { ProtoFacts } from "@/lib/proto/facts";
 import { mainAction, wordmark } from "@/lib/proto/facts";
+import { flingVars, motionCss, motionsFor } from "@/lib/proto/motion";
 import { trick } from "@/lib/proto/tricks";
 
 /** Сколько услуг выкидывает трюк. Дальше — списком, без театра. */
@@ -41,18 +42,35 @@ const COPY = {
     stage: "Что делаем",
     all: "Все услуги",
     how: "Как записаться",
-    steps: [
-      { title: "Выбираете услугу", text: "Список выше — с ценами там, где они есть." },
-      { title: "Пишете в один клик", text: "Кнопка открывает переписку с готовым текстом." },
-      { title: "Приезжаете к назначенному времени", text: "Время подтверждают в ответном сообщении." },
-    ],
+    /*
+     * Два набора шагов, потому что главная кнопка бывает двух видов.
+     *
+     * «Пишете в один клик» рядом с кнопкой, которая набирает номер, — это
+     * ошибка, которую заметит первый же посетитель, и заметит он её ровно в
+     * тот момент, когда собрался записаться.
+     */
+    steps: {
+      chat: [
+        { title: "Выбираете услугу", text: "Список выше — с ценами там, где они есть." },
+        { title: "Пишете в один клик", text: "Кнопка открывает переписку с готовым текстом." },
+        { title: "Приезжаете к назначенному времени", text: "Время подтверждают в ответном сообщении." },
+      ],
+      call: [
+        { title: "Выбираете услугу", text: "Список выше — с ценами там, где они есть." },
+        { title: "Звоните в один клик", text: "Кнопка набирает номер прямо с этой страницы." },
+        { title: "Приезжаете к назначенному времени", text: "Время подтверждают по телефону." },
+      ],
+    },
     where: "Где и когда",
     address: "Адрес",
     hours: "Часы работы",
     phone: "Телефон",
     map: "Открыть на карте",
     photos: "Как у нас",
-    heroSub: "Запись через переписку — без звонков и ожидания на линии",
+    heroSub: {
+      chat: "Запись через переписку — без звонков и ожидания на линии",
+      call: "Запись по телефону — назовите удобное время",
+    },
     scroll: "Листайте",
     viaTelegram: "Запись в Telegram",
     viaWhatsapp: "Запись в WhatsApp",
@@ -65,18 +83,28 @@ const COPY = {
     stage: "Nima qilamiz",
     all: "Barcha xizmatlar",
     how: "Qanday yozilish kerak",
-    steps: [
-      { title: "Xizmatni tanlaysiz", text: "Yuqoridagi ro‘yxat — narxlari bor joyda narxi bilan." },
-      { title: "Bir bosishda yozasiz", text: "Tugma tayyor matn bilan yozishmani ochadi." },
-      { title: "Belgilangan vaqtda kelasiz", text: "Vaqt javob xabarida tasdiqlanadi." },
-    ],
+    steps: {
+      chat: [
+        { title: "Xizmatni tanlaysiz", text: "Yuqoridagi ro‘yxat — narxlari bor joyda narxi bilan." },
+        { title: "Bir bosishda yozasiz", text: "Tugma tayyor matn bilan yozishmani ochadi." },
+        { title: "Belgilangan vaqtda kelasiz", text: "Vaqt javob xabarida tasdiqlanadi." },
+      ],
+      call: [
+        { title: "Xizmatni tanlaysiz", text: "Yuqoridagi ro‘yxat — narxlari bor joyda narxi bilan." },
+        { title: "Bir bosishda qo‘ng‘iroq qilasiz", text: "Tugma shu sahifadan raqamni teradi." },
+        { title: "Belgilangan vaqtda kelasiz", text: "Vaqt telefonda tasdiqlanadi." },
+      ],
+    },
     where: "Qayerda va qachon",
     address: "Manzil",
     hours: "Ish vaqti",
     phone: "Telefon",
     map: "Xaritada ochish",
     photos: "Bizda shunday",
-    heroSub: "Yozishma orqali yozilish — qo‘ng‘iroqsiz va navbatsiz",
+    heroSub: {
+      chat: "Yozishma orqali yozilish — qo‘ng‘iroqsiz va navbatsiz",
+      call: "Telefon orqali yozilish — qulay vaqtni ayting",
+    },
     scroll: "Pastga",
     viaTelegram: "Telegram orqali yozilish",
     viaWhatsapp: "WhatsApp orqali yozilish",
@@ -136,7 +164,7 @@ function cardRanges(count: number): string {
   }).join("");
 }
 
-function stylesheet(niche: ProtoNiche, cards: number, spinDeg: number): string {
+function stylesheet(niche: ProtoNiche, cards: number, spinDeg: number, motions: readonly string[]): string {
   const p = niche.palette;
   return `
 :root{
@@ -180,12 +208,27 @@ p{margin:0}
 
 /* Первый экран */
 .hero{position:relative;min-height:calc(100svh - 64px);display:grid;align-content:center;padding-block:clamp(40px,7vw,90px);overflow:clip}
-.glow{position:absolute;inset:-30% -10% auto auto;width:min(70vw,620px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,var(--accent),transparent 62%);opacity:.16;pointer-events:none;will-change:transform}
+/*
+ * Параллакс: несколько слоёв, каждый едет со своей скоростью и в свою
+ * сторону. Глубина задаётся переменными --a и --b прямо на слое — так один
+ * механизм закрывает и подсветку на первом экране, и полосу за блоками, и
+ * ореол за колесом, вместо трёх почти одинаковых правил.
+ *
+ * Слои не кликаются и лежат под содержимым: параллакс, перехватывающий
+ * нажатие на кнопку, — это не украшение, а поломка.
+ */
+.par{position:absolute;inset:0;overflow:clip;pointer-events:none;z-index:0}
+.par i{position:absolute;display:block;pointer-events:none;will-change:transform}
+.hero .wrap,section .wrap,.stage-in{position:relative;z-index:1}
+.glow{inset:-26% -14% auto auto;width:min(72vw,640px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,var(--accent),transparent 62%);opacity:.16}
+.mesh{inset:auto -20% -30% -20%;height:min(60vh,520px);background:radial-gradient(60% 100% at 30% 100%,var(--accent),transparent 70%);opacity:.07}
+.band{inset:12% -30% auto -30%;height:clamp(180px,34vw,360px);background:linear-gradient(100deg,transparent,var(--accent),transparent);opacity:.05;transform:rotate(-4deg)}
+.halo{inset:50% auto auto 50%;width:min(112vw,760px);aspect-ratio:1;margin:-0.5px 0 0 -0.5px;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,var(--accent),transparent 58%);opacity:.1}
 .hero .sub{margin-top:18px;max-width:34ch;font-size:clamp(17px,2.1vw,21px);color:var(--muted)}
 .row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
 .chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px;padding:0;list-style:none}
 .chips li{padding:8px 15px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:15px}
-.hint{margin-top:34px;display:inline-flex;align-items:center;gap:9px;color:var(--muted);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.hint{margin-top:30px;display:inline-flex;align-items:center;gap:9px;color:var(--muted);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
 .hint i{width:1px;height:26px;background:linear-gradient(var(--muted),transparent);display:block}
 
 /* Сцена с трюком */
@@ -193,20 +236,24 @@ p{margin:0}
 .stage{position:sticky;top:0;height:100svh;display:grid;align-content:center;overflow:clip}
 .stage-in{display:grid;gap:clamp(18px,4vw,34px);justify-items:center;align-content:center}
 .art{width:min(78vw,520px);aspect-ratio:1;position:relative}
-.art svg{width:100%;height:100%;display:block}
-.spin{transform-box:view-box;transform-origin:50% 50%;will-change:transform}
+.art svg,.art .shot{width:100%;height:100%;display:block}
+.art .shot{object-fit:contain}
+.spin{transform-origin:50% 50%;will-change:transform}
+/* view-box — только для рисунка: у SVG проценты считаются от viewBox, а не
+   от рамки элемента. На <img> это свойство не значит ничего. */
+svg .spin{transform-box:view-box}
 .bar{width:min(260px,62vw);height:3px;border-radius:2px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);transform-origin:left center;transform:scaleX(0)}
 .side{display:grid;gap:16px;width:100%;max-width:520px;min-width:0}
 .cards{position:relative;display:grid;width:100%;min-height:170px;align-content:center}
 .cards>*{grid-area:1/1}
-.fly{--fx:0px;--fy:-30px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:22px 24px;will-change:transform,opacity}
+.fly{--fx:0px;--fy:-30px;--fs:.93;--fr:0deg;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:22px 24px;will-change:transform,opacity}
 .fly .n{font-size:12px;letter-spacing:.1em;color:var(--accent);font-weight:700}
 .fly h3{margin-top:10px;font-size:clamp(23px,3.4vw,33px);font-weight:750;line-height:1.12}
 .fly .price{margin-top:10px;color:var(--muted);font-size:17px}
 
 /* Блоки */
-section{padding-block:clamp(44px,7vw,92px)}
+section{position:relative;padding-block:clamp(44px,7vw,92px);overflow:clip}
 .head{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px 18px;margin-bottom:clamp(22px,3vw,38px)}
 .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))}
 .tile{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:22px;min-width:0}
@@ -232,7 +279,6 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:10px 22px}
   .dock{display:none}
   .stage-in{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;justify-items:start;gap:44px}
   .art{justify-self:center}
-  .fly{--fx:-90px;--fy:0px}
 }
 @media (width < 56rem){
   .top .tel{display:none}
@@ -241,23 +287,30 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:10px 22px}
 }
 
 /* Появление блоков. База — всё видно; анимация только там, где браузер её умеет. */
-@keyframes rise{from{opacity:0;transform:translate3d(0,26px,0)}to{opacity:1;transform:none}}
 @keyframes spin{to{transform:rotate(${spinDeg}deg)}}
+@keyframes par{from{transform:translate3d(0,var(--a,-36px),0)}to{transform:translate3d(0,var(--b,36px),0)}}
 @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-@keyframes drift{to{transform:translate3d(0,90px,0) scale(1.14)}}
+/*
+ * Кадры одни на все шесть карточек, а направление вылета — переменные на
+ * самой карточке. Шесть почти одинаковых наборов кадров весили бы килобайт
+ * и разошлись бы при первой же правке.
+ */
 @keyframes fling{
-  0%,100%{opacity:0;transform:translate3d(var(--fx),var(--fy),0) scale(.93)}
-  17%,83%{opacity:1;transform:translate3d(0,0,0) scale(1)}
+  0%,100%{opacity:0;transform:translate3d(var(--fx),var(--fy),0) scale(var(--fs)) rotate(var(--fr))}
+  17%,83%{opacity:1;transform:translate3d(0,0,0) scale(1) rotate(0deg)}
 }
 @supports (animation-timeline:view()){
   .track{view-timeline-name:--track;view-timeline-axis:block}
-  .reveal{animation:rise linear both;animation-timeline:view();animation-range:entry 12% cover 36%}
+  .par i{animation:par linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+  /* Ореол за колесом живёт по прокрутке самой сцены: сцена прилипшая, и её
+     собственное продвижение по экрану во время показа почти не меняется. */
+  .halo{animation-timeline:--track;animation-range:contain 0% contain 100%}
   .spin{animation:spin linear both;animation-timeline:--track;animation-range:contain 0% contain 100%}
   .bar i{animation:grow linear both;animation-timeline:--track;animation-range:contain 0% contain 100%}
   .fly{opacity:0;animation:fling linear both;animation-timeline:--track}
   ${cardRanges(cards)}
-  .glow{animation:drift linear both;animation-timeline:scroll(root);animation-range:0 70svh}
 }
+${motionCss(motions)}
 
 /* Браузер без scroll-driven animations: те же блоки, просто без театра. */
 .no-sdt .track{height:auto}
@@ -267,6 +320,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:10px 22px}
 .no-sdt .fly{opacity:1;transform:none;animation:none}
 .no-sdt .bar{display:none}
 .no-sdt .spin{animation:spin 26s linear infinite}
+.no-sdt .par{display:none}
 
 /* Кого укачивает от параллакса — тому страница стоит на месте и остаётся целой. */
 @media (prefers-reduced-motion:reduce){
@@ -277,20 +331,35 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:10px 22px}
   .cards>*{grid-area:auto}
   .fly{opacity:1;transform:none}
   .bar{display:none}
-  .glow{display:none}
+  .par{display:none}
 }`;
 }
 
 export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): string {
   const { facts, niche } = input;
   const c = COPY[facts.locale];
-  const art = trick(trickFor(niche), niche.palette);
+  const art = trick(trickFor(niche), niche.palette, facts.wheel);
   const action = mainAction(facts);
+  // Кнопка либо открывает переписку, либо набирает номер. От этого зависят
+  // и подзаголовок первого экрана, и шаги записи.
+  const voice = action.kind === "phone" ? "call" : "chat";
+  const steps = c.steps[voice];
   const stage = facts.services.slice(0, STAGE_MAX);
   const rest = facts.services.slice(STAGE_MAX);
+  /*
+   * Своё движение каждому блоку — просьба владельца дословно. Услуги
+   * получают его по смыслу названия: «кузовные работы» встают панелью,
+   * «замена фильтров» въезжает вставкой, «ТО» щёлкает на место. Шаги записи
+   * идут своим набором, чтобы три соседние карточки не появились одинаково.
+   */
+  const stageMotions = motionsFor(stage.map((service) => service.name));
+  const restMotions = motionsFor(rest.map((service) => service.name));
+  const stepMotions = motionsFor(steps.map((step) => step.title));
+  const motions = ["rise", ...restMotions, ...stepMotions];
+  const band = `<section><span class="par" aria-hidden="true"><i class="band" style="--a:-54px;--b:58px"></i></span>`;
   const where = inCity(facts.city, facts.locale);
   const title = `${facts.name} — ${niche.ru}${where}`;
-  const description = facts.about ?? `${niche.ru}${where}. ${c.heroSub}.`;
+  const description = facts.about ?? `${niche.ru}${where}. ${c.heroSub[voice]}.`;
 
   const logo = facts.logo
     ? wordmark(facts.logo)
@@ -304,7 +373,7 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
   const flyCards = stage
     .map(
       (service, index) => `
-        <article class="fly c${index + 1}">
+        <article class="fly c${index + 1}" style="${flingVars(stageMotions[index])}">
           <span class="n">${String(index + 1).padStart(2, "0")}</span>
           <h3>${esc(service.name)}</h3>
           ${price(service.price)}
@@ -314,18 +383,18 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
 
   const restTiles = rest
     .map(
-      (service) => `
-        <article class="tile">
+      (service, index) => `
+        <article class="tile mo m-${restMotions[index]}">
           <h3>${esc(service.name)}</h3>
           ${price(service.price)}
         </article>`,
     )
     .join("");
 
-  const steps = c.steps
+  const stepTiles = steps
     .map(
       (step, index) => `
-        <article class="tile">
+        <article class="tile mo m-${stepMotions[index]}">
           <span class="n">${String(index + 1).padStart(2, "0")}</span>
           <h3>${esc(step.title)}</h3>
           <p>${esc(step.text)}</p>
@@ -375,7 +444,7 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="theme-color" content="${niche.palette.ink}">
-<style>${stylesheet(niche, stage.length, art.spinDeg)}</style>
+<style>${stylesheet(niche, stage.length, art.spinDeg, motions)}</style>
 <script>if(!(window.CSS&&CSS.supports&&CSS.supports("animation-timeline:view()")))document.documentElement.className="no-sdt"</script>
 </head>
 <body>
@@ -389,11 +458,14 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
 
 <main>
   <div class="hero">
-    <span class="glow"></span>
+    <span class="par" aria-hidden="true">
+      <i class="glow" style="--a:-70px;--b:80px"></i>
+      <i class="mesh" style="--a:34px;--b:-46px"></i>
+    </span>
     <div class="wrap">
       <p class="eyebrow">${esc(niche.ru)}${esc(where)}</p>
       <h1>${esc(facts.name)}</h1>
-      <p class="sub">${esc(facts.about ?? c.heroSub)}</p>
+      <p class="sub">${esc(facts.about ?? c.heroSub[voice])}</p>
       <div class="row">${cta}${ctaGhost}</div>
       ${chips}
       <p class="hint"><i></i>${esc(c.scroll)}</p>
@@ -402,8 +474,9 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
 
   <div class="track">
     <div class="stage">
+      <span class="par" aria-hidden="true"><i class="halo" style="--a:60px;--b:-60px"></i></span>
       <div class="wrap stage-in">
-        <div class="art">${art.svg}</div>
+        <div class="art">${art.html}</div>
         <div class="side">
           <p class="eyebrow">${esc(c.stage)}</p>
           <div class="cards">${flyCards}</div>
@@ -415,34 +488,42 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
 
   ${
     restTiles
-      ? `<section class="wrap reveal">
-    <div class="head"><h2>${esc(c.all)}</h2></div>
-    <div class="grid">${restTiles}</div>
+      ? `${band}
+    <div class="wrap">
+      <div class="head mo m-rise"><h2>${esc(c.all)}</h2></div>
+      <div class="grid">${restTiles}</div>
+    </div>
   </section>`
       : ""
   }
 
   ${
     shots
-      ? `<section class="wrap reveal">
-    <div class="head"><h2>${esc(c.photos)}</h2></div>
-    <div class="shots">${shots}</div>
+      ? `${band}
+    <div class="wrap">
+      <div class="head mo m-rise"><h2>${esc(c.photos)}</h2></div>
+      <div class="shots">${shots}</div>
+    </div>
   </section>`
       : ""
   }
 
-  <section class="wrap reveal">
-    <div class="head"><h2>${esc(c.how)}</h2></div>
-    <div class="grid">${steps}</div>
-    <div class="row">${cta}${ctaGhost}</div>
+  ${band}
+    <div class="wrap">
+      <div class="head mo m-rise"><h2>${esc(c.how)}</h2></div>
+      <div class="grid">${stepTiles}</div>
+      <div class="row mo m-rise">${cta}${ctaGhost}</div>
+    </div>
   </section>
 
   ${
     contacts
-      ? `<section class="wrap reveal">
-    <div class="head"><h2>${esc(c.where)}</h2></div>
-    <div class="facts">${contacts}</div>
-    ${facts.address ? `<div class="row"><a class="btn ghost" href="${esc(mapLink(facts.address))}">${esc(c.map)}</a></div>` : ""}
+      ? `${band}
+    <div class="wrap">
+      <div class="head mo m-rise"><h2>${esc(c.where)}</h2></div>
+      <div class="facts mo m-rise">${contacts}</div>
+      ${facts.address ? `<div class="row"><a class="btn ghost" href="${esc(mapLink(facts.address))}">${esc(c.map)}</a></div>` : ""}
+    </div>
   </section>`
       : ""
   }

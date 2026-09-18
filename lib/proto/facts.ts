@@ -19,19 +19,46 @@ import type { ProtoLocale } from "@/content/proto/models";
 export type ProtoService = { name: string; price?: string | null };
 
 /**
- * Логотип с размерами.
+ * Картинка с размерами.
  *
- * Размеры здесь не для вёрстки, а для решения: у малого бизнеса логотип
- * почти всегда широкий — надпись, а не значок. Надпись 1300×330, втиснутая
- * в квадрат 34×34, читается как грязное пятно, а рядом с ней ещё и название
- * текстом — то есть имя компании дважды. Поэтому широкий логотип ставится
- * надписью и название текстом не дублируется.
+ * Размеры нужны не для вёрстки, а для решений. Логотип: у малого бизнеса он
+ * почти всегда широкий — надпись, а не значок; надпись 1300×330, втиснутая в
+ * квадрат 34×34, читается как грязное пятно, а рядом с ней ещё и название
+ * текстом, то есть имя компании дважды. Снимок для трюка: не квадратный и
+ * не крупный будет крутиться эллипсом и мылом.
  */
-export type ProtoLogo = { url: string; width: number; height: number };
+export type ProtoImage = { url: string; width: number; height: number };
 
 /** Широкий логотип — это надпись с названием внутри. */
-export function wordmark(logo: ProtoLogo | null): boolean {
+export function wordmark(logo: ProtoImage | null): boolean {
   return Boolean(logo && logo.height > 0 && logo.width / logo.height >= 2);
+}
+
+/**
+ * Годится ли снимок на вращающийся трюк.
+ *
+ * Владелец: «шину бы с диском я взял реальную, просто анимирую её. Не
+ * нарисованную». Отсюда требования, и они не придирки:
+ *
+ * Квадрат — потому что картинка крутится вокруг своего центра. У снимка
+ * 1600×900 центр кадра не совпадает с центром колеса, и оно пойдёт по
+ * орбите, как несбалансированное. Допуск ±4%: кадрируют руками.
+ *
+ * Не мельче 1200 px — на телефоне с тройной плотностью колесо занимает
+ * около 900 физических пикселей, и снимок 600×600 растянется вдвое.
+ *
+ * PNG или WebP — у JPEG нет прозрачности, и вокруг колеса поедет белый
+ * квадрат по тёмному фону. Проверить прозрачность по заголовку нельзя,
+ * поэтому проверяем формат: это ближайшее, что машина может сказать честно.
+ */
+export function wheelProblems(image: ProtoImage | null): string[] {
+  if (!image) return [];
+  const out: string[] = [];
+  const ratio = image.height > 0 ? image.width / image.height : 0;
+  if (ratio < 0.96 || ratio > 1.04) out.push(`снимок не квадратный (${image.width}×${image.height}) — будет крутиться эллипсом`);
+  if (image.width < WHEEL_MIN_WIDTH) out.push(`снимок мельче ${WHEEL_MIN_WIDTH} px (${image.width}) — на телефоне будет мылом`);
+  if (!/\.(png|webp)($|\?)/i.test(image.url)) out.push("нужен PNG или WebP с прозрачным фоном: у JPEG вокруг колеса поедет квадрат");
+  return out;
 }
 
 export type ProtoFacts = {
@@ -53,7 +80,15 @@ export type ProtoFacts = {
   /** Часы работы дословно с его сайта: «Пн–Сб 9:00–19:00». */
   hours: string | null;
   /** Логотип с его сайта. Размеры — чтобы понять, значок это или надпись. */
-  logo: ProtoLogo | null;
+  logo: ProtoImage | null;
+  /**
+   * Снимок для фирменного трюка: настоящее колесо вместо нарисованного.
+   *
+   * Не найден на сайте и не подставляется сам — ставится руками, потому что
+   * это единственное поле, где право на картинку решает человек. Пусто —
+   * крутится рисунок, собранный кодом.
+   */
+  wheel: ProtoImage | null;
   /** Его собственные фотографии. Мелкие сюда не попадают, см. `PHOTO_MIN_WIDTH`. */
   photos: readonly string[];
   /** Откуда всё взято. Печатается в подвале прототипа. */
@@ -65,6 +100,9 @@ export type ProtoFacts = {
  * сильнее, чем его отсутствие. Порог из `proto-master`.
  */
 export const PHOTO_MIN_WIDTH = 1200;
+
+/** Снимок для трюка крутится во весь экран — ему нужен тот же порог. */
+export const WHEEL_MIN_WIDTH = 1200;
 
 export function emptyFacts(name: string, niche: string, source: string): ProtoFacts {
   return {
@@ -81,6 +119,7 @@ export function emptyFacts(name: string, niche: string, source: string): ProtoFa
     address: null,
     hours: null,
     logo: null,
+    wheel: null,
     photos: [],
     source,
   };

@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 
 import { protoNicheByKey } from "@/content/proto/models";
 import { requireStaff } from "@/lib/admin/guard";
-import { collectFacts } from "@/lib/proto/collect";
+import { collectFacts, measureImage } from "@/lib/proto/collect";
+import { wheelProblems } from "@/lib/proto/facts";
 import { parseServices } from "@/lib/proto/form";
 import { markSent, saveProto } from "@/lib/proto/store";
 
@@ -65,6 +66,21 @@ export async function buildAction(formData: FormData) {
     telegram: field(formData, "telegram") ?? collected.facts.telegram,
     whatsapp: field(formData, "whatsapp") ?? collected.facts.whatsapp,
   };
+
+  /*
+   * Снимок для трюка ставят руками: это единственное поле, где право на
+   * картинку решает человек, а не аудитор. Размеры машина снимает сама и
+   * сразу говорит, если снимок не годится, — иначе кривое колесо выяснится
+   * на открытой клиентом странице.
+   */
+  const wheelUrl = field(formData, "wheel");
+  if (wheelUrl) {
+    const measured = await measureImage(wheelUrl);
+    if (!measured) back("Снимок для трюка не открылся или это не картинка");
+    const bad = wheelProblems(measured);
+    if (bad.length) back(`Снимок для трюка: ${bad.join("; ")}`);
+    facts.wheel = measured;
+  }
 
   const saved = await saveProto({ facts, by: staff, prospectId: field(formData, "prospect") });
   if (!saved.ok) back(saved.why);

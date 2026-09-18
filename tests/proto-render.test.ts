@@ -4,8 +4,9 @@ import { test } from "node:test";
 import { PROTO_NICHES, protoNicheByKey, trickFor } from "@/content/proto/models";
 import { bookingHtml, inCity } from "@/lib/proto/booking";
 import { keyframeProperties, protoProblems, visibleText } from "@/lib/proto/check";
-import { enoughToBuild, mainAction, wordmark, type ProtoFacts } from "@/lib/proto/facts";
+import { enoughToBuild, mainAction, wheelProblems, wordmark, type ProtoFacts } from "@/lib/proto/facts";
 import { parseServices } from "@/lib/proto/form";
+import { MOTIONS, MOTION_KEYS, flingVars, motionCss, motionsFor } from "@/lib/proto/motion";
 import { buildProto, sendable } from "@/lib/proto/render";
 import { TRICK_KEYS, trick } from "@/lib/proto/tricks";
 
@@ -33,6 +34,7 @@ const base: ProtoFacts = {
   address: null,
   hours: null,
   logo: null,
+  wheel: null,
   photos: [],
   source: "shinaplus.uz",
 };
@@ -175,7 +177,7 @@ test("сцена берёт шесть услуг, остальные уходя
   // Числа в названиях услуг — из фактов, поэтому проверку они не ломают.
   const result = build({ services: many });
   assert.equal((result.html.match(/class="fly c\d"/g) ?? []).length, 6, "в сцене не шесть карточек");
-  assert.equal((result.html.match(/class="tile"/g) ?? []).length, 3 + 3, "остаток и шаги записи разошлись");
+  assert.equal((result.html.match(/class="tile mo m-/g) ?? []).length, 3 + 3, "остаток и шаги записи разошлись");
   assert.deepEqual(result.problems, []);
 });
 
@@ -194,11 +196,12 @@ test("рисунок трюка крутится и не тащит за соб�
   for (const key of TRICK_KEYS) {
     const art = trick(key, PROTO_NICHES[0].palette);
     assert.equal(art.key, key);
-    assert.ok(art.svg.includes('class="spin"'), `${key}: нечему крутиться`);
+    assert.equal(art.photo, false);
+    assert.ok(art.html.includes('class="spin"'), `${key}: нечему крутиться`);
     assert.ok(art.spinDeg >= 360, `${key}: за всю сцену меньше оборота`);
     // Всё нарисовано кодом: ни одной внешней ссылки, ни одного мегабайта.
-    assert.equal(/<image|https?:/.test(art.svg), false, `${key}: в рисунке чужая картинка`);
-    assert.ok(art.svg.length < 12000, `${key}: рисунок тяжелее двенадцати килобайт`);
+    assert.equal(/<image|https?:/.test(art.html), false, `${key}: в рисунке чужая картинка`);
+    assert.ok(art.html.length < 12000, `${key}: рисунок тяжелее двенадцати килобайт`);
   }
   // Шиномонтаж перебивает трюк модели — это и есть уровень «ниша».
   assert.equal(trickFor(protoNicheByKey("shinomontazh")!), "wheel");
@@ -281,5 +284,154 @@ test("услуги из формы: цена после тире, дефис в 
 test("услуги из формы доезжают до страницы как есть", () => {
   const result = build({ services: parseServices("Замена шин — от 40 000 сум\nБалансировка\nРемонт прокола") });
   assert.ok(result.html.includes("от 40 000 сум"), "цена не доехала до карточки");
+  assert.deepEqual(result.problems, []);
+});
+
+
+test("у каждого блока своё движение, у соседей — разные", () => {
+  // Владелец: «для каждого блока сделать свою анимацию появления».
+  // Одинаковое всплытие у восьми карточек подряд читается как шаблон.
+  const names = ["Кузовной ремонт", "Замена фильтров", "Регулярное ТО", "Замена масла", "Балансировка"];
+  const picked = motionsFor(names);
+  assert.deepEqual(picked, ["panel", "slide", "snap", "unfold", "zoom"], "смысл названия не подобрал движение");
+
+  // Два одинаковых названия подряд не дают двух одинаковых движений.
+  const same = motionsFor(["Кузовной ремонт", "Кузовные работы", "Кузов после ДТП"]);
+  assert.equal(same[0], "panel");
+  assert.notEqual(same[1], same[0]);
+  assert.notEqual(same[2], same[1]);
+
+  // Незнакомое название всё равно получает движение — страница без анимации
+  // у половины блоков выглядит недоделанной, а не сдержанной.
+  for (const key of motionsFor(["Что-то своё", "И ещё", "И третье"])) {
+    assert.ok(MOTION_KEYS.includes(key), `${key}: такого движения нет`);
+  }
+});
+
+test("в стили попадают только использованные движения", () => {
+  const css = motionCss(["rise", "panel", "rise"]);
+  assert.ok(css.includes("@keyframes rise"));
+  assert.ok(css.includes("@keyframes panel"));
+  assert.equal(css.includes("@keyframes tilt"), false, "в страницу попали неиспользованные кадры");
+  assert.equal(motionCss([]), "");
+  assert.equal(motionCss(["такого-нет"]), "");
+});
+
+test("каждое движение трогает только transform и opacity", () => {
+  // Это и есть та проверка, ради которой движения лежат в одном месте:
+  // новое, добавленное в Claude design, пройдёт здесь до первого клиента.
+  for (const key of MOTION_KEYS) {
+    const properties = keyframeProperties(MOTIONS[key].css).sort();
+    assert.ok(properties.length, `${key}: в движении нет ни одного кадра`);
+    assert.deepEqual(
+      properties.filter((property) => property !== "transform" && property !== "opacity"),
+      [],
+      `${key}: движение пересчитывает вёрстку`,
+    );
+    assert.ok(MOTIONS[key].css.includes(`@keyframes ${key}`), `${key}: кадры названы не как ключ`);
+    assert.ok(MOTIONS[key].note.length > 20, `${key}: не сказано, зачем она`);
+  }
+});
+
+test("проверка ловит движение, которого нет", () => {
+  const broken = protoProblems({
+    html: build().html.replace('class="tile mo m-', 'class="tile mo m-risee m-'),
+    facts: facts(),
+    niche: protoNicheByKey("shinomontazh")!,
+  });
+  assert.ok(broken.some((problem) => problem.code === "motion"), "опечатка в имени анимации прошла");
+});
+
+test("слои параллакса не ловят нажатия и не читаются вслух", () => {
+  const html = build().html;
+  // Параллакс поверх кнопки — не украшение, а поломка: на телефоне это
+  // выглядит как «сайт не работает».
+  assert.ok(html.includes('class="par" aria-hidden="true"'), "слой параллакса читается вслух");
+  assert.ok(/\.par\{[^}]*pointer-events:none/.test(html), "слой параллакса ловит нажатия");
+  // Слои едут с разной скоростью и в разные стороны — иначе это не параллакс,
+  // а один сдвинутый фон.
+  const depths = [...html.matchAll(/--a:(-?\d+)px;--b:(-?\d+)px/g)].map((m) => [Number(m[1]), Number(m[2])]);
+  assert.ok(depths.length >= 3, "слоёв меньше трёх");
+  assert.ok(new Set(depths.map(String)).size >= 3, "все слои едут одинаково");
+  assert.ok(depths.some(([a]) => a > 0) && depths.some(([a]) => a < 0), "слои едут в одну сторону");
+
+  const broken = protoProblems({
+    html: html.replace("pointer-events:none;z-index:0", "z-index:0"),
+    facts: facts(),
+    niche: protoNicheByKey("shinomontazh")!,
+  });
+  assert.ok(broken.some((problem) => problem.code === "motion"));
+});
+
+test("настоящий снимок вместо рисунка — и требования к нему", () => {
+  // Владелец: «шину бы с диском я взял реальную, просто анимирую её».
+  const ok = { url: "https://devuz.studio/wheels/alpina.png", width: 1600, height: 1600 };
+  assert.deepEqual(wheelProblems(ok), []);
+  assert.deepEqual(wheelProblems(null), []);
+
+  const result = build({ wheel: ok });
+  assert.ok(result.html.includes('class="spin shot"'), "снимок не крутится тем же классом");
+  assert.ok(result.html.includes(ok.url));
+  assert.equal(result.html.includes("<svg"), false, "рисунок остался рядом со снимком");
+  assert.deepEqual(result.problems, []);
+
+  // Не квадратный пойдёт по орбите, как несбалансированное колесо.
+  assert.ok(wheelProblems({ ...ok, width: 1600, height: 900 })[0].includes("эллипс"));
+  // Мелкий на телефоне с тройной плотностью растянется вдвое.
+  assert.ok(wheelProblems({ ...ok, width: 600, height: 600 })[0].includes("1200"));
+  // У JPEG нет прозрачности: вокруг колеса поедет белый квадрат.
+  assert.ok(wheelProblems({ ...ok, url: "https://devuz.studio/w.jpg" })[0].includes("PNG"));
+  // Кривой снимок виден в панели, а не выясняется на клиенте.
+  assert.ok(build({ wheel: { ...ok, url: "https://devuz.studio/w.jpg" } }).problems.some((p) => p.code === "wheel"));
+});
+
+test("без снимка крутится рисунок — запасной путь не пропал", () => {
+  const html = build().html;
+  assert.ok(html.includes("<svg"), "нечего крутить без снимка");
+  assert.ok(html.includes('class="spin"'));
+  assert.equal(html.includes('class="spin shot"'), false);
+});
+
+test("текст страницы совпадает с тем, что делает кнопка", () => {
+  // Кнопка, которая набирает номер, рядом с подписью «пишете в один клик» —
+  // это ошибка, которую посетитель заметит ровно в момент записи.
+  const chat = build().html;
+  assert.ok(chat.includes("Пишете в один клик"));
+  assert.ok(chat.includes("Время подтверждают в ответном сообщении"));
+
+  const call = build({ telegram: null, whatsapp: null }).html;
+  assert.equal(mainAction(facts({ telegram: null, whatsapp: null })).kind, "phone");
+  assert.ok(call.includes("Звоните в один клик"), "шаги остались про переписку");
+  assert.equal(call.includes("Пишете в один клик"), false);
+  assert.equal(call.includes("Запись в Telegram"), false, "плашка обещает телеграм, которого нет");
+
+  // Подзаголовок первого экрана — оттуда же, но только когда своих слов у
+  // компании нет: её собственный текст мы не переписываем.
+  const bare = build({ telegram: null, whatsapp: null, about: null }).html;
+  assert.ok(bare.includes("Запись по телефону"), "подзаголовок обещает переписку");
+  assert.ok(build({ about: null }).html.includes("Запись через переписку"));
+});
+
+test("карточки в сцене вылетают по-разному, а не все одинаково", () => {
+  // В сцене как раз те шесть услуг, ради которых человек и листает: своё
+  // движение нужно им не меньше, чем списку внизу страницы.
+  const result = build({
+    services: [
+      { name: "Кузовные работы", price: null },
+      { name: "Замена фильтров", price: null },
+      { name: "Регулярное ТО", price: null },
+      { name: "Замена масла", price: null },
+    ],
+  });
+  const flown = [...result.html.matchAll(/class="fly c\d" style="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(flown.length, 4);
+  assert.equal(new Set(flown).size, 4, "две карточки вылетают одинаково");
+  // Кузовная панель приезжает сбоку с наклоном, масло льётся сверху.
+  assert.deepEqual(flown[0], flingVars("panel"));
+  assert.ok(flown[0].includes("--fr:2deg"));
+  assert.ok(flingVars("unfold").includes("--fy:-38px"));
+  assert.deepEqual(flown[3], flingVars("unfold"));
+  // Незнакомое имя движения не роняет карточку в пустоту.
+  assert.equal(flingVars("такого-нет"), flingVars("rise"));
   assert.deepEqual(result.problems, []);
 });

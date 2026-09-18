@@ -16,7 +16,7 @@ import { extractContacts, contactsPagePath, mergeContacts } from "@/lib/audit/co
 import { decodeEntities, enrich, probe } from "@/lib/audit/fetch";
 import { resolveSafely } from "@/lib/audit/guard";
 import type { ProtoLocale } from "@/content/proto/models";
-import { PHOTO_MIN_WIDTH, emptyFacts, type ProtoFacts, type ProtoLogo } from "@/lib/proto/facts";
+import { PHOTO_MIN_WIDTH, emptyFacts, type ProtoFacts, type ProtoImage } from "@/lib/proto/facts";
 import { imageSize } from "@/lib/proto/photo";
 
 export type Collected = {
@@ -41,8 +41,13 @@ const attr = (html: string, re: RegExp): string | null => {
 /** Широкая картинка — это надпись или баннер, а не снимок: у снимка 4:3 или 16:9. */
 const WIDE = 2.5;
 
-/** Первые килобайты файла: заголовка хватает, чтобы узнать размер. */
-async function measure(url: string): Promise<ProtoLogo | null> {
+/**
+ * Первые килобайты файла: заголовка хватает, чтобы узнать размер.
+ *
+ * Отдельно вынесено наружу потому, что снимок для трюка ставят руками, а
+ * решение «годится ли он» принимает машина по тем же размерам.
+ */
+export async function measureImage(url: string): Promise<ProtoImage | null> {
   try {
     const parsed = new URL(url);
     await resolveSafely(parsed);
@@ -103,10 +108,10 @@ export async function collectFacts(input: {
 
   const photos: string[] = [];
   const small: string[] = [];
-  const wide: ProtoLogo[] = [];
+  const wide: ProtoImage[] = [];
   for (const src of sources) {
     if (photos.length >= 4) break;
-    const size = await measure(src);
+    const size = await measureImage(src);
     if (!size) continue;
     if (size.height > 0 && size.width / size.height >= WIDE) wide.push(size);
     else if (size.width >= PHOTO_MIN_WIDTH) photos.push(src);
@@ -119,7 +124,7 @@ export async function collectFacts(input: {
     attr(html, /<img[^>]+(?:class|id)\s*=\s*["'][^"']*logo[^"']*["'][^>]*src\s*=\s*["']([^"']+)["']/i) ??
     attr(html, /<img[^>]+src\s*=\s*["']([^"']*logo[^"']*)["']/i);
   const namedUrl = named ? absolute(named) : null;
-  const logo = namedUrl ? (wide.find((item) => item.url === namedUrl) ?? (await measure(namedUrl))) : (wide[0] ?? null);
+  const logo = namedUrl ? (wide.find((item) => item.url === namedUrl) ?? (await measureImage(namedUrl))) : (wide[0] ?? null);
 
   const title = tag(html, "title");
   const facts: ProtoFacts = {

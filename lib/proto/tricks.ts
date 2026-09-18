@@ -16,13 +16,16 @@
  * деления — это ровно они. Поэтому деления без подписей: так и современнее.
  */
 import type { ProtoPalette } from "@/content/proto/models";
+import type { ProtoImage } from "@/lib/proto/facts";
 
 export type Trick = {
   key: string;
-  /** Рисунок. `spin` — класс на том, что должно вращаться. */
-  svg: string;
+  /** Разметка трюка. `spin` — класс на том, что должно вращаться. */
+  html: string;
   /** На сколько провернётся за проход сцены. */
   spinDeg: number;
+  /** Настоящий снимок вместо рисунка. Проверке нужно знать, что он есть. */
+  photo: boolean;
 };
 
 const ring = (count: number, draw: (index: number, angle: number) => string): string =>
@@ -123,9 +126,32 @@ const BUILDERS: Record<string, { build: (palette: ProtoPalette) => string; spinD
   clock: { build: clock, spinDeg: 720 },
 };
 
-export function trick(key: string, palette: ProtoPalette): Trick {
+const esc = (text: string) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+/**
+ * Настоящий снимок вместо рисунка.
+ *
+ * Владелец: «шину бы с диском я взял реальную, просто анимирую её. Не
+ * нарисованную». Снимок крутится тем же способом, что и рисунок, — тем же
+ * классом, по той же прокрутке, — поэтому подмена не трогает ни сцену, ни
+ * карточки, ни запасной путь для старых браузеров.
+ *
+ * `alt` пустой намеренно: колесо здесь — украшение, а не сведения. Читалка
+ * экрана, объявляющая «колесо», перебивает человеку заголовок, ради
+ * которого он и пришёл.
+ *
+ * Требования к файлу живут в `wheelProblems` и проверяются до сборки:
+ * квадрат, не мельче 1200 px, PNG или WebP. Кривой снимок пойдёт по орбите
+ * как несбалансированное колесо, и выглядеть это будет дёшево.
+ */
+function photoWheel(image: ProtoImage): string {
+  return `<img class="spin shot" src="${esc(image.url)}" alt="" width="${image.width}" height="${image.height}" fetchpriority="high" decoding="async">`;
+}
+
+export function trick(key: string, palette: ProtoPalette, image?: ProtoImage | null): Trick {
+  if (image) return { key: "photo", html: photoWheel(image), spinDeg: BUILDERS[key]?.spinDeg ?? 540, photo: true };
   const found = BUILDERS[key] ?? BUILDERS.clock;
-  return { key: BUILDERS[key] ? key : "clock", svg: found.build(palette), spinDeg: found.spinDeg };
+  return { key: BUILDERS[key] ? key : "clock", html: found.build(palette), spinDeg: found.spinDeg, photo: false };
 }
 
 export const TRICK_KEYS = Object.keys(BUILDERS);

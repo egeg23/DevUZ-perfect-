@@ -16,7 +16,8 @@
  */
 import type { ProtoNiche } from "@/content/proto/models";
 import type { ProtoFacts } from "@/lib/proto/facts";
-import { factPool, mainAction } from "@/lib/proto/facts";
+import { factPool, mainAction, wheelProblems } from "@/lib/proto/facts";
+import { MOTIONS } from "@/lib/proto/motion";
 import { unsupportedNumbers } from "@/lib/razbor/shift";
 
 export type ProtoProblem = { code: string; text: string };
@@ -61,11 +62,32 @@ function scripts(html: string): string {
  */
 export function keyframeProperties(css: string): string[] {
   const out = new Set<string>();
-  for (const block of css.matchAll(/@keyframes\s+[\w-]+\s*\{([\s\S]*?)\n\}/g)) {
-    for (const declaration of block[1].matchAll(/([a-z-]+)\s*:/gi)) out.add(declaration[1].toLowerCase());
+  const heads = /@keyframes\s+[\w-]+\s*\{/g;
+  let head: RegExpExecArray | null;
+  /*
+   * Скобки считаются, а не ищется закрывающая по образцу.
+   *
+   * Первая версия искала «перевод строки и скобку» и молча захватывала всё
+   * до конца следующего правила, если кадры записаны в одну строку. Проверка
+   * при этом не падала — она находила лишние свойства и заворачивала
+   * страницу, которая была в порядке. Ошибка нашлась ровно так: честная
+   * страница перестала проходить собственную проверку.
+   */
+  while ((head = heads.exec(css))) {
+    let depth = 1;
+    let at = heads.lastIndex;
+    while (at < css.length && depth > 0) {
+      if (css[at] === "{") depth += 1;
+      else if (css[at] === "}") depth -= 1;
+      at += 1;
+    }
+    const body = css.slice(heads.lastIndex, at - 1);
+    for (const declaration of body.matchAll(/([a-z-]+)\s*:/gi)) out.add(declaration[1].toLowerCase());
+    heads.lastIndex = at;
   }
   return [...out];
 }
+
 
 const ALLOWED_IN_KEYFRAMES = new Set(["transform", "opacity"]);
 
@@ -129,13 +151,33 @@ export function protoProblems(input: {
     out.push({ code: "hijack", text: "Скрипт слушает прокрутку или двигает её сам." });
   }
 
-  // 5. Анимация не трогает вёрстку.
+  // 5. Движения, названные блокам, существуют.
+  //
+  // Опечатка в имени не ломает страницу заметно: блок просто остаётся без
+  // анимации, и заметить это можно, только пролистав до него на том
+  // браузере, где анимация вообще работает.
+  const named = new Set<string>();
+  for (const attribute of html.matchAll(/\bclass="([^"]*)"/g)) {
+    for (const token of attribute[1].split(/\s+/)) if (token.startsWith("m-")) named.add(token.slice(2));
+  }
+  const unknown = [...named].filter((key) => !MOTIONS[key]);
+  if (unknown.length) {
+    out.push({ code: "motion", text: `Блокам назначены несуществующие анимации: ${unknown.join(", ")}.` });
+  }
+
+  // Слои параллакса не перехватывают нажатия. Слой поверх кнопки — это не
+  // украшение, а поломка, и на телефоне она выглядит как «сайт не работает».
+  if (/class="par"/.test(html) && !/\.par\{[^}]*pointer-events:none/.test(css)) {
+    out.push({ code: "motion", text: "Слой параллакса ловит нажатия: кнопка под ним перестанет работать." });
+  }
+
+  // 6. Анимация не трогает вёрстку.
   const heavy = keyframeProperties(css).filter((property) => !ALLOWED_IN_KEYFRAMES.has(property));
   if (heavy.length) {
     out.push({ code: "repaint", text: `В @keyframes не только transform и opacity: ${heavy.join(", ")}.` });
   }
 
-  // 6. Вбок ничего не уезжает. Проверка дешёвая и не заменяет телефон:
+  // 7. Вбок ничего не уезжает. Проверка дешёвая и не заменяет телефон:
   // окончательно это видно только на снимке в 360 px, который снимает
   // scripts/proto-shot.mjs.
   if (/\b100vw\b/.test(css)) {
@@ -145,7 +187,7 @@ export function protoProblems(input: {
     out.push({ code: "overflow", text: "Нет overflow-x: clip — уехавший вбок блок даст горизонтальную прокрутку." });
   }
 
-  // 7. Главная кнопка работает.
+  // 8. Главная кнопка работает.
   const action = mainAction(facts);
   if (action.kind === "none") {
     out.push({ code: "action", text: "Нечего поставить на кнопку: нет ни телеграма, ни ватсапа, ни телефона." });
@@ -156,17 +198,22 @@ export function protoProblems(input: {
     out.push({ code: "action", text: "На странице есть ссылка в никуда." });
   }
 
-  // 8. Страница не индексируется.
+  // 9. Страница не индексируется.
   if (!/<meta\s+name="robots"[^>]*noindex/i.test(html)) {
     out.push({ code: "index", text: "Нет noindex. Чужой бизнес в выдаче Google — чужой бизнес, продвигаемый без спроса." });
   }
 
-  // 9. Имя клиента на месте: без него он не узнает свой бизнес.
+  // 10. Имя клиента на месте: без него он не узнает свой бизнес.
   if (!text.includes(facts.name)) {
     out.push({ code: "nameless", text: "На странице нет названия компании." });
   }
 
-  // 10. Подсказки для первички в текст не просачиваются.
+  // 11. Снимок для трюка годится к вращению.
+  for (const problem of wheelProblems(facts.wheel)) {
+    out.push({ code: "wheel", text: `Снимок для трюка: ${problem}.` });
+  }
+
+  // 12. Подсказки для первички в текст не просачиваются.
   const known = facts.services.map((service) => service.name.toLowerCase());
   const leaked = niche.ask.filter(
     (hint) => lower.includes(hint.toLowerCase()) && !known.some((name) => name.includes(hint.toLowerCase())),
