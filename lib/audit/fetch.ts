@@ -437,3 +437,125 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
 
   return { ...probe, assets };
 }
+
+/* ── Обход: несколько страниц вместо одной главной ─────────────────────── */
+
+/**
+ * Разбор нескольких страниц вместо одной.
+ *
+ * Отдельной функцией от `enrich`, а не внутри него, потому что цена разная.
+ * `enrich` стоит секунду и нужен всем, включая публичную проверку, где
+ * человек смотрит на крутящийся кружок. Обход стоит полминуты и нужен там,
+ * где из разбора родится письмо, — а письмо готовится в фоне, и полминуты
+ * там не стоят ничего.
+ *
+ * Зачем вообще: с одной главной честно звучит только «на главной не нашли
+ * цен», и адресат пожимает плечами — цены у него на отдельной странице. С
+ * шести страниц звучит «цен нет ни на одной, включая „Услуги" и „Прайс"»,
+ * и возразить нечего. Разница между разбором и шаблоном — в том, что можно
+ * утверждать.
+ */
+export type CrawlPage = { url: string; status: number; html: string };
+
+export type CrawlResult = {
+  pages: CrawlPage[];
+  /** Сколько адресов в карте сайта; null — карты нет или не разобрали. */
+  sitemapUrls: number | null;
+  /** Самая свежая дата в карте сайта, YYYY-MM-DD. */
+  sitemapFresh: string | null;
+  /** Вес главной со всем, что она тянет. */
+  homeBytes: number | null;
+  imageBytes: number | null;
+};
+
+const CRAWL_PAGES = 5;
+const CRAWL_MAX_BYTES = 512 * 1024;
+const WEIGHED_IMAGES = 12;
+
+const EMPTY_CRAWL: CrawlResult = {
+  pages: [],
+  sitemapUrls: null,
+  sitemapFresh: null,
+  homeBytes: null,
+  imageBytes: null,
+};
+
+/**
+ * Даты и адреса из карты сайта.
+ *
+ * Возраст сайта больше неоткуда взять: `lastmod` ставит сам движок, и он
+ * показывает, когда на сайте последний раз что-то менялось. Для владельца
+ * это самая неожиданная строка в разборе — он обычно думает, что «сайт же
+ * есть», а по карте видно, что последняя правка была год назад.
+ */
+export function readSitemap(xml: string): { urls: number; fresh: string | null } {
+  const urls = (xml.match(/<loc>/gi) ?? []).length;
+  const dates = [...xml.matchAll(/<lastmod>\s*(\d{4}-\d{2}-\d{2})/gi)].map((m) => m[1]).sort();
+  return { urls, fresh: dates.length ? dates[dates.length - 1] : null };
+}
+
+export async function crawl(probe: PageProbe, pick: (links: string[]) => string[]): Promise<CrawlResult> {
+  if (probe.status >= 400) return EMPTY_CRAWL;
+
+  let base: URL;
+  let ip: string;
+  try {
+    base = new URL(probe.finalUrl);
+    ip = await resolveSafely(base);
+  } catch {
+    return EMPTY_CRAWL;
+  }
+
+  const links = internalLinks(probe.html, base).map((u) => u.href);
+  const wanted = pick(links).slice(0, CRAWL_PAGES);
+
+  // Последовательно, а не пачкой. Это чужой сайт, и полдюжины одновременных
+  // запросов с одного адреса выглядят со стороны ровно как то, чем не
+  // являются. Полминуты у нас есть.
+  const pages: CrawlPage[] = [];
+  for (const href of wanted) {
+    try {
+      const url = new URL(href);
+      const r = await once(url, ip, { maxBytes: CRAWL_MAX_BYTES });
+      pages.push({ url: href, status: r.status, html: r.body });
+    } catch {
+      // Страница не отдалась — это не находка о сайте: мало ли что по дороге.
+    }
+  }
+
+  const sitemap = await once(new URL("/sitemap.xml", base), ip, {
+    maxBytes: CRAWL_MAX_BYTES,
+    accept: "application/xml,text/xml,*/*",
+  })
+    .then((r) => (r.status < 400 && /<(?:urlset|sitemapindex)\b/i.test(r.body) ? readSitemap(r.body) : null))
+    .catch(() => null);
+
+  // Вес: считаем по Content-Length, а не по скачанному. Качать четыре
+  // мегабайта картинок ради числа, которое сервер и так называет в
+  // заголовке, — это перекладывать свой аудит на чужой канал.
+  let imageBytes = 0;
+  let weighed = 0;
+  for (const url of imageUrls(probe.html, base).slice(0, WEIGHED_IMAGES)) {
+    try {
+      const r = await once(url, ip, { maxBytes: 1, accept: "image/*,*/*" });
+      const size = Number(r.headers["content-length"]);
+      if (Number.isFinite(size) && size > 0) {
+        imageBytes += size;
+        weighed += 1;
+      }
+    } catch {
+      /* картинка не отдалась — в вес не идёт */
+    }
+  }
+
+  const htmlBytes = Buffer.byteLength(probe.html, "utf8");
+  const cssBytes = probe.assets?.css ? Buffer.byteLength(probe.assets.css, "utf8") : 0;
+
+  return {
+    pages,
+    sitemapUrls: sitemap?.urls ?? null,
+    sitemapFresh: sitemap?.fresh ?? null,
+    homeBytes: htmlBytes + cssBytes + imageBytes,
+    imageBytes: weighed ? imageBytes : null,
+  };
+}

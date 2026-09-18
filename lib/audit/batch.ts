@@ -1,7 +1,8 @@
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { analyze, unreachable, type AuditReport, type Finding } from "@/lib/audit/checks";
 import { type PitchLocale, pitch } from "@/lib/audit/pitch";
-import { enrich, probe } from "@/lib/audit/fetch";
+import { crawl, enrich, probe } from "@/lib/audit/fetch";
+import { deepFindings, pagesToVisit, snap, trustFrom } from "@/lib/audit/deep";
 // Разбор адреса — из чистого модуля: этот файл импортирует и браузер
 // (страница касаний показывает разбор до прогона), а guard тянет node:dns.
 import { BlockedAddress, normalizeUrl } from "@/lib/audit/url";
@@ -137,6 +138,90 @@ function unreachableWhy(error: unknown): string {
  * разом: страница панели идёт короткими пачками, чтобы человек видел
  * движение, а не ждал пять минут в тишине.
  */
+/**
+ * Углублённый разбор: главная плюс несколько ключевых страниц.
+ *
+ * Стоит тридцать-шестьдесят секунд и потому запускается не в пачке, а в
+ * одном месте — когда менеджер нажал «Связаться» и из разбора сейчас родится
+ * письмо. Пятьдесят сайтов по минуте — это час, за который никто не сядет;
+ * один сайт за минуту — это ровно та минута, которую в агентстве тратит
+ * человек, прежде чем написать.
+ *
+ * Находки обхода дописываются к обычным, а не заменяют их: «цен нет ни на
+ * одной из шести страниц» сильнее, чем «на главной нет цен», но всё
+ * остальное — сертификат, скорость, разметка — по-прежнему смотрится на
+ * главной, и второй раз это считать незачем.
+ */
+/**
+ * Что именно мы обошли — то, чем письмо доказывает, что сайт открывали.
+ *
+ * Пути страниц и дословная строка с главной. Цитата важнее всего: адресат,
+ * читающий свой собственный заголовок в чужом письме, понимает за секунду,
+ * что это не рассылка.
+ */
+export type Walked = {
+  paths: string[];
+  quote: string | null;
+  sitemapUrls: number | null;
+  sitemapFresh: string | null;
+};
+
+/**
+ * Углублённый разбор: главная плюс несколько ключевых страниц.
+ *
+ * Стоит тридцать-шестьдесят секунд и потому запускается не в пачке, а в
+ * одном месте — когда менеджер нажал «Связаться» и из разбора сейчас родится
+ * письмо. Пятьдесят сайтов по минуте — это час, за который никто не сядет;
+ * один сайт за минуту — это ровно та минута, которую в агентстве тратит
+ * человек, прежде чем написать.
+ *
+ * Находки обхода дописываются к обычным, а не заменяют их: «цен нет ни на
+ * одной из шести страниц» сильнее, чем «на главной нет цен», но всё
+ * остальное — сертификат, скорость, разметка — по-прежнему смотрится на
+ * главной, и второй раз это считать незачем.
+ */
+export async function auditDeep(target: BatchTarget): Promise<{ row: BatchRow; walked: Walked | null }> {
+  const row = await auditOne(target);
+  if (!row.report || !target.url) return { row, walked: null };
+
+  try {
+    const page = await enrich(await probe(target.url));
+    const crawled = await crawl(page, (links) => pagesToVisit(links));
+    const pages = [{ url: page.finalUrl, status: page.status, html: page.html }, ...crawled.pages];
+    const snaps = pages.map((p) => snap(p.url, p.status, p.html));
+
+    const extra = deepFindings({
+      pages: snaps,
+      sitemapUrls: crawled.sitemapUrls,
+      sitemapFresh: crawled.sitemapFresh,
+      homeBytes: crawled.homeBytes,
+      imageBytes: crawled.imageBytes,
+      trust: trustFrom(pages),
+    });
+
+    const walked: Walked = {
+      paths: snaps.filter((p) => p.status < 400).map((p) => p.path),
+      // Цитата берётся с главной и только если она осмысленной длины:
+      // «Главная» или «Home» в письме доказывает не внимательность, а
+      // обратное.
+      quote: (snaps[0]?.h1?.length ?? 0) >= 12 ? (snaps[0].h1?.slice(0, 90) ?? null) : null,
+      sitemapUrls: crawled.sitemapUrls,
+      sitemapFresh: crawled.sitemapFresh,
+    };
+
+    return {
+      row: extra.length
+        ? { ...row, report: { ...row.report, findings: [...row.report.findings, ...extra] } }
+        : row,
+      walked,
+    };
+  } catch {
+    // Обход — уточнение, а не условие. Не вышел — отдаём то, что есть:
+    // письмо по одной главной лучше, чем отсутствие письма.
+    return { row, walked: null };
+  }
+}
+
 export async function auditOne(target: BatchTarget): Promise<BatchRow> {
   if (!target.url) return { target, report: null, failure: target.problem ?? "адрес не разобран" };
 
