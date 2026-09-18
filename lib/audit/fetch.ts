@@ -469,6 +469,18 @@ export type CrawlResult = {
 };
 
 const CRAWL_PAGES = 5;
+/**
+ * Сколько всего времени отпущено обходу.
+ *
+ * Владелец согласился на «30-60 секунд». Первый живой прогон занял 74: пять
+ * страниц по восемь секунд плюс дюжина картинок, и каждая из них имеет право
+ * подвиснуть. Предел здесь, а не в таймауте одного запроса, потому что
+ * подвисает именно сумма — по отдельности все укладываются.
+ *
+ * Кончился бюджет — отдаём то, что успели. Обход неполный лучше, чем
+ * менеджер, который минуту смотрит на крутящийся кружок и уходит.
+ */
+const CRAWL_BUDGET_MS = 45_000;
 const CRAWL_MAX_BYTES = 512 * 1024;
 const WEIGHED_IMAGES = 12;
 
@@ -512,8 +524,10 @@ export async function crawl(probe: PageProbe, pick: (links: string[]) => string[
   // Последовательно, а не пачкой. Это чужой сайт, и полдюжины одновременных
   // запросов с одного адреса выглядят со стороны ровно как то, чем не
   // являются. Полминуты у нас есть.
+  const deadline = Date.now() + CRAWL_BUDGET_MS;
   const pages: CrawlPage[] = [];
   for (const href of wanted) {
+    if (Date.now() > deadline) break;
     try {
       const url = new URL(href);
       const r = await once(url, ip, { maxBytes: CRAWL_MAX_BYTES });
@@ -536,6 +550,7 @@ export async function crawl(probe: PageProbe, pick: (links: string[]) => string[
   let imageBytes = 0;
   let weighed = 0;
   for (const url of imageUrls(probe.html, base).slice(0, WEIGHED_IMAGES)) {
+    if (Date.now() > deadline) break;
     try {
       const r = await once(url, ip, { maxBytes: 1, accept: "image/*,*/*" });
       const size = Number(r.headers["content-length"]);

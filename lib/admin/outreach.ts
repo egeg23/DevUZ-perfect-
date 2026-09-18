@@ -1,6 +1,7 @@
 import type { Finding } from "@/lib/audit/checks";
 import type { Contacts } from "@/lib/audit/contacts";
 import { seoReport } from "@/lib/audit/seo";
+import { proofFor, proofLines, type Proof } from "@/lib/audit/proof";
 import { forecast } from "@/lib/razbor/forecast";
 
 /**
@@ -225,6 +226,17 @@ export type OutreachInput = {
   } | null;
 };
 
+/** Числа студии, которые письмо вправе называть. */
+export function outreachProof(input: {
+  niche: string | null;
+  label: string | null;
+  host: string;
+  /** Заголовки пройденных страниц: в них ниша названа прямым текстом. */
+  hints?: readonly string[];
+}): Proof {
+  return proofFor(input.niche, [input.label ?? "", input.host, ...(input.hints ?? [])]);
+}
+
 /**
  * Что модель видит, когда пишет первое сообщение.
  *
@@ -256,12 +268,20 @@ export type Hooks = {
   seo: number | null;
   /** Сколько обращений из ста теряется на найденных местах. */
   lost: readonly [number, number] | null;
+  /**
+   * Название проекта из ниши адресата, если он нашёлся.
+   *
+   * Проверяется так же машинно, как балл и потери: пример из его ниши —
+   * самая сильная строка письма, и уронить её обиднее всего.
+   */
+  reference: string | null;
 };
 
-export function outreachHooks(findings: readonly Finding[]): Hooks {
+export function outreachHooks(findings: readonly Finding[], reference: string | null = null): Hooks {
   const seo = seoReport({ findings });
   const loss = forecast(findings);
   return {
+    reference,
     seo: seo.measured && seo.total > 0 ? seo.score : null,
     // Ноль потерь — это не крючок, а строка «у вас всё хорошо»: такую в
     // письмо ставить незачем.
@@ -290,6 +310,7 @@ export function outreachPrompt(input: OutreachInput): string {
       ? ""
       : `Видимость в поиске: ${hooks.seo} из 100 — это число обязано прозвучать в письме.${seo.hidden > 0 ? ` Ещё ${seo.hidden} замечаний по этой части оставлены для разбора с менеджером — их не перечисляй.` : ""}`;
 
+  const proof = outreachProof({ niche: input.niche, label: input.label, host: input.host });
   const walked = input.walked;
   const walkedLines =
     walked && walked.paths.length >= 3
@@ -312,6 +333,7 @@ export function outreachPrompt(input: OutreachInput): string {
     input.label ? `Компания: ${input.label}` : "Название компании неизвестно.",
     input.niche ? `Ниша: ${input.niche}` : "",
     `Отправитель: ${input.sender}.`,
+    proofLines(proof),
     walkedLines,
     search,
     losing,
@@ -343,6 +365,9 @@ export const OUTREACH_SYSTEM = `Ты пишешь первое сообщени�
 — **Не пиши, как это чинить, и не называй сроки починки.** Не «добавляем карту сайта за несколько часов», а «поправимо, разберём на созвоне». Порядок работ — это и есть то, ради чего человек отвечает; отдав его в первом письме, ты не оставляешь повода для ответа.
 — То, что ты называешь, адресат должен уметь проверить сам за минуту. «Откройте сайт с телефона» — это проверяемо; «у вас низкая конверсия» — нет.
 — Никаких обещаний про позиции в поиске, рост продаж на проценты и «выведем в топ». Первое такое обещание переводит сообщение в спам в глазах того, кто читал уже двадцать похожих.
+— **Масштаб студии и средний рост назвать можно и нужно** — но именно как наше среднее по нишам, а не как обещание ему. «В среднем по нашим проектам выходит в два-четыре раза больше обращений» — можно. «Вы вырастете в три раза» — нельзя: этого никто не знает, и первый же клиент, у которого вышло меньше, окажется прав.
+— Проект из его ниши называй только тот, который передан, и вместе со ссылкой. Не передан — ни названия, ни ссылки: «делали вашим конкурентам» без имени адресат читает как пустую угрозу и пролистывает.
+— Рост предлагай проверить, а не принять на веру: до работ и после снимаем статистику и показываем рядом. Это сильнее любого числа в письме.
 — Заканчивай предложением разобрать остальное вместе — показать на его сайте, что и в каком порядке чинить. Бесплатно и ни к чему не обязывает, но это разговор с человеком, а не файл на почту.
 — Тон деловой и дружелюбный, на «вы». Без восклицательных знаков, без эмодзи, без слов «оптимизация», «конверсия», «комплексный подход».
 — Длина: от 60 до 140 слов. Абзацы по две-три строки — на телефоне стена текста не читается.
@@ -441,7 +466,7 @@ export function messageProblems(
   message: string,
   prompt: string,
   host: string,
-  hooks: Hooks = { seo: null, lost: null },
+  hooks: Hooks = { seo: null, lost: null, reference: null },
 ): MessageProblem[] {
   const problems: MessageProblem[] = [];
   const words = message.trim().split(/\s+/).filter(Boolean).length;
@@ -473,6 +498,12 @@ export function messageProblems(
     problems.push({
       code: "no_loss",
       text: `В сообщении не сказано, сколько обращений это стоит (${hooks.lost[0]}–${hooks.lost[1]} из ста). Без этого письмо читается как список придирок.`,
+    });
+  }
+  if (hooks.reference && !message.includes(hooks.reference)) {
+    problems.push({
+      code: "no_reference",
+      text: `В сообщении не назван «${hooks.reference}» — наш проект в его же нише. Это самая сильная строка письма: её адресат проверяет за десять секунд, и после неё разговор идёт иначе.`,
     });
   }
   return problems;

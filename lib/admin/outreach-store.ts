@@ -9,6 +9,7 @@ import {
   messageProblems,
   outreachPrompt,
   outreachHooks,
+  outreachProof,
   routeFor,
   type Reason,
   type Route,
@@ -178,18 +179,27 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
    */
   const deep = await auditDeep({ raw: prospect.url, url: prospect.url, label: prospect.label, problem: null });
   const findings = deep.row.report?.findings.length ? deep.row.report.findings : prospect.findings;
+  // Ниша нужна, чтобы подобрать наш проект из его же ниши. Раньше сюда
+  // передавался null, и подбирать было не по чему.
+  const niche = deep.row.report?.facts.niche ?? null;
+  const reference = outreachProof({
+    niche,
+    label: prospect.label,
+    host: prospect.host,
+    hints: deep.walked?.hints ?? [],
+  }).reference;
 
   const prompt = outreachPrompt({
     host: prospect.host,
     label: prospect.label,
-    niche: null,
+    niche,
     findings,
     draft: prospect.draft,
     sender: staff.display_name,
     walked: deep.walked,
   });
 
-  const hooks = outreachHooks(findings);
+  const hooks = outreachHooks(findings, reference?.name ?? null);
 
   /**
    * Один ход модели.
@@ -293,7 +303,10 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
       sender: staff.display_name,
     }),
     prospect.host,
-    outreachHooks(prospect.findings),
+    outreachHooks(
+      prospect.findings,
+      outreachProof({ niche: null, label: prospect.label, host: prospect.host }).reference?.name ?? null,
+    ),
   );
   if (problems.length) return { ok: false, why: problems.map((p) => p.text).join(" ") };
 
