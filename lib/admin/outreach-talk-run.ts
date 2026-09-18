@@ -14,6 +14,7 @@ import {
 } from "@/lib/admin/outreach-talk-store";
 import { runQualifyTurn } from "@/lib/qualify/engine";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
+import { talkLang } from "@/lib/talk/language";
 
 /**
  * Ход модели по холодному касанию.
@@ -84,7 +85,20 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
     repliesSoFar: inbound.repliesSoFar,
   });
 
-  const history = asTranscript(await threadFor(inbound.prospectId));
+  const thread = await threadFor(inbound.prospectId);
+
+  /**
+   * На каком языке отвечаем.
+   *
+   * Раньше здесь стояло "ru" жёстко, и системный промпт открывался словами
+   * «посетитель открыл сайт на русском». Модели там же сказано переходить на
+   * язык собеседника, но начинать с неверного — значит просить её исправлять
+   * то, чего можно было не ломать. Рынок узбекский, и отвечать на узбекский
+   * вопрос по-русски — это то же самое, что не услышать.
+   */
+  const locale = talkLang(thread);
+
+  const history = asTranscript(thread);
   if (!history.length) {
     // Входящее без ленты — значит первое сообщение не записалось. Ответить
     // вслепую нельзя: модель не знает, что мы уже сказали.
@@ -97,7 +111,7 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
   // промпта, находки по сайту, приписка канала и весь разговор. Число,
   // которого нет ни в одном из этих мест, — выдумка.
   const facts = [
-    buildSystemPrompt("ru"),
+    buildSystemPrompt(locale),
     note,
     history.map((m) => m.content).join("\n"),
   ].join("\n");
@@ -107,7 +121,7 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
 
   await runQualifyTurn({
     history,
-    locale: "ru",
+    locale,
     source: "outreach",
     alreadyQualified: false,
     channelNote: note,
