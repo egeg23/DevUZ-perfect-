@@ -15,6 +15,7 @@ import {
   type Route,
   type RouteKind,
 } from "@/lib/admin/outreach";
+import { recordManualInbound } from "@/lib/admin/outreach-talk-store";
 import type { Staff } from "@/lib/admin/session";
 import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
@@ -346,6 +347,146 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
     meta: { host: prospect.host, target: route.target, kind: route.kind },
   });
   return { ok: true, leadId };
+}
+
+/* ── Ручной маршрут ────────────────────────────────────────────────────── */
+
+/**
+ * Ответы модели, которые по ручному маршруту отправляет человек.
+ *
+ * Скаут их не забирает — в телеграм по этому маршруту писать нечего, — и без
+ * этого запроса они лежали бы в очереди невидимыми. Читается одним запросом
+ * на всю страницу: карточек бывает полсотни, и запрос на каждую превратил бы
+ * список в минуту ожидания.
+ */
+export async function manualReplies(): Promise<Record<string, string>> {
+  const db = serviceClient();
+  if (!db) return {};
+
+  const { data: manual } = await db
+    .from("prospects")
+    .select("id")
+    .eq("target_kind", "manual")
+    .eq("status", "sent")
+    .limit(200);
+  const ids = (manual ?? []).map((row) => String(row.id));
+  if (!ids.length) return {};
+
+  const { data } = await db
+    .from("outreach_messages")
+    .select("prospect_id, body, created_at")
+    .eq("direction", "out")
+    .eq("status", "queued")
+    .in("prospect_id", ids)
+    .order("created_at", { ascending: true })
+    .limit(200);
+
+  const out: Record<string, string> = {};
+  // Первый по времени, а не последний: отвечать надо по порядку, иначе
+  // клиент получит ответ на свой второй вопрос раньше, чем на первый.
+  for (const row of data ?? []) {
+    const key = String(row.prospect_id);
+    if (!out[key]) out[key] = String(row.body);
+  }
+  return out;
+}
+
+/**
+ * «Написал руками» — отметка о касании, которое сделал человек.
+ *
+ * Владелец: «там где нет телеграм — пусть связываются через телефон /
+ * вотсапп по номеру… И тут же подхватывает ИИ после написанного сообщения
+ * пользователю до выяснения BANT».
+ *
+ * Отметка не украшение и не отчётность. С этой минуты разговор существует:
+ * первое письмо ложится в ленту, модель считается ведущей, и ответ клиента,
+ * который менеджер сюда перенесёт, ей будет с чем связать. Без отметки
+ * карточка так и осталась бы «дальше руками» — и второй менеджер написал бы
+ * тому же человеку второй раз.
+ */
+export async function markManualSent(
+  id: string,
+  staff: Staff,
+  note: string,
+  ip: string,
+): Promise<{ ok: true } | { ok: false; why: string }> {
+  const db = serviceClient();
+  if (!db) return { ok: false, why: "База недоступна." };
+
+  const prospect = await prospectById(id);
+  if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет." };
+  if (prospect.status !== "manual") return { ok: false, why: "Эта карточка не на ручном маршруте." };
+
+  const when = new Date().toISOString();
+  const { error } = await db
+    .from("prospects")
+    .update({
+      status: "sent",
+      sent_at: when,
+      // Маршрут остаётся ручным: по нему и дальше писать человеку. Скаут
+      // читает его именно так и ответы модели по нему не забирает.
+      manual_note: note.trim().slice(0, 500) || "Написал сам",
+      claimed_by: prospect.claimed_by ?? staff.id,
+      ai_handling: true,
+      handover_reason: null,
+      failure: null,
+    })
+    .eq("id", id)
+    .eq("status", "manual");
+  if (error) return { ok: false, why: "Не получилось отметить." };
+
+  // Лента начинается с того, что человек отправил на самом деле. Без этой
+  // записи модель, отвечая клиенту, ссылалась бы на несказанное.
+  if (prospect.message) {
+    await db.from("outreach_messages").insert({
+      prospect_id: id,
+      lead_id: prospect.lead_id,
+      direction: "out",
+      author: "staff",
+      body: prospect.message.slice(0, 4000),
+      status: "sent",
+      sent_at: when,
+    });
+  }
+
+  await record("prospect.manual_sent", {
+    actorStaffId: staff.id,
+    targetType: "prospect",
+    targetId: id,
+    ip,
+    meta: { host: prospect.host, target: prospect.target, note: note.slice(0, 120) },
+  });
+  return { ok: true };
+}
+
+/**
+ * «Что ответили» — ответ клиента, перенесённый руками.
+ *
+ * По ручному маршруту ответ приходит менеджеру на телефон и к нам не
+ * попадает ничем. Перенёс — и дальше всё как в телеграме: свип увидит
+ * неотвеченное входящее, модель напишет ответ, ответ ляжет в карточку.
+ * Отправит его снова человек.
+ */
+export async function recordManualAnswer(
+  id: string,
+  body: string,
+  staff: Staff,
+  ip: string,
+): Promise<{ ok: true } | { ok: false; why: string }> {
+  const text = body.trim();
+  if (!text) return { ok: false, why: "Пустой ответ записывать нечего." };
+
+  const hit = await recordManualInbound(id, text);
+  if (!hit.matched) return { ok: false, why: "Такого сайта в списке уже нет." };
+
+  await record("prospect.manual_reply", {
+    actorStaffId: staff.id,
+    targetType: "prospect",
+    targetId: id,
+    ip,
+    meta: { host: hit.host, verdict: hit.verdict },
+  });
+  return { ok: true };
 }
 
 /**

@@ -219,7 +219,9 @@ test("очередь держит пределы аккаунта, а не на�
 test("скаут отправляет только из очереди и останавливается на первой же ошибке аккаунта", () => {
   const runner = readFileSync(new URL("../scout/runner.mjs", import.meta.url), "utf8");
   assert.match(runner, /const job = await nextQueued\(\);|job = await nextQueued\(\);/);
-  assert.match(runner, /await client\.sendMessage\(job\.target, \{ message: job\.message \}\)/);
+  // Пишем не строке с сайта, а тому, кого телеграм назвал в ответ на вопрос
+  // «кто это». У человека, найденного по номеру, @адреса может не быть вовсе.
+  assert.match(runner, /await client\.sendMessage\(userId, \{ message: job\.message \}\)/);
   assert.match(runner, /if \(outreachStopped\) return;/);
   assert.match(runner, /outreachStopped = stopped;/);
   // README обещал «ничего не отправляет» — обещание переписано, а не забыто.
@@ -288,4 +290,90 @@ test("результат нажатия возвращается на ту же 
     /try\s*\{[\s\S]*prepareOutreach\(id, staff\)[\s\S]*catch/.test(actions),
     "исключение из подготовки остаётся без объяснения на экране",
   );
+});
+
+/* ── Маршруты касаний: телеграм только там, где дотягиваемся ───────────── */
+
+test("скаут спрашивает, кому пишет, до отправки — и по адресу, и по номеру", () => {
+  const runner = readFileSync(new URL("../scout/runner.mjs", import.meta.url), "utf8");
+
+  // Первые полсотни касаний ушли в каналы и ботов: @muradbuildings и @ivan
+  // по виду не отличаются, а разница в том, что первому написать физически
+  // нельзя. Знает об этом только телеграм, и спросить надо до отправки.
+  assert.match(runner, /Api\.contacts\.ResolveUsername/, "адрес не проверяется до отправки");
+  assert.match(runner, /Api\.contacts\.ImportContacts/, "номер не импортируется — телеграм по нему ничего не скажет");
+  assert.match(runner, /verdictForHandle|verdictForPhone/, "приговор не разбирается");
+
+  // Не дотянулись — это не провал: ничего не сломалось, просто автономно
+  // сюда нельзя. Карточка уходит человеку, место в часовом пределе цело.
+  assert.match(runner, /markUnreachable\(job\.id/, "плохой приговор не снимает карточку с очереди");
+
+  // Импортированный номер убирается сразу: телефонная книга рабочего
+  // аккаунта, распухшая от проспектов, — подпись рассылки, а телеграм ещё и
+  // рассылает «ваш контакт присоединился».
+  assert.match(runner, /Api\.contacts\.DeleteByPhones/, "импортированный номер остаётся в контактах");
+});
+
+test("отказ про адресата и отказ про аккаунт разведены", () => {
+  const runner = readFileSync(new URL("../scout/runner.mjs", import.meta.url), "utf8");
+  const about = runner.match(/const ABOUT_TARGET = (\/.*\/[a-z]*);/);
+  assert.ok(about, "нет разделения отказов");
+  const re = new RegExp(about[1].slice(1, about[1].lastIndexOf("/")), "i");
+
+  // «Такого адреса нет» — обычное дело и повод отдать карточку человеку.
+  assert.ok(re.test("USERNAME_NOT_OCCUPIED"));
+  assert.ok(re.test('Cannot find any entity corresponding to "+998973442417"'));
+  // А это — про нас, и после такого очередь обязана встать целиком.
+  assert.ok(!re.test("PEER_FLOOD"));
+  assert.ok(!re.test("FLOOD_WAIT_86400"));
+});
+
+test("ответ находится по id отправителя, а не только по адресу", async () => {
+  const store = readFileSync(new URL("../lib/admin/outreach-talk-store.ts", import.meta.url), "utf8");
+
+  // У человека, найденного по номеру, @адреса может не быть вовсе — а
+  // именно так мы находим тех, у кого на сайте нет телеграма. Пока
+  // сверялись только по адресу, их ответы уходили в никуда, и снаружи это
+  // выглядело как «клиент не отвечает».
+  assert.match(store, /target_user_id/, "id адресата не участвует в поиске разговора");
+  const byId = store.indexOf("String(row.target_user_id ?? \"\") === userId");
+  const byHandle = store.indexOf("normalizeHandle(row.target as string | null) === handle");
+  assert.ok(byId > 0 && byHandle > 0, "нет обоих способов");
+  assert.ok(byId < byHandle, "адрес человек меняет, id — нет: сверять надо сперва по id");
+
+  const runner = readFileSync(new URL("../scout/runner.mjs", import.meta.url), "utf8");
+  assert.match(runner, /recordInbound\(\{ handle, userId, body/, "скаут не передаёт id отправителя");
+});
+
+test("ручной маршрут не запирает очередь ответов и не отдаётся скауту", () => {
+  const store = readFileSync(new URL("../lib/admin/outreach-talk-store.ts", import.meta.url), "utf8");
+
+  // Взять одно верхнее и вернуть null, увидев ручное, значило бы намертво
+  // запереть очередь: за ним стоят живые люди, которые сами нам написали.
+  assert.match(store, /if \(p\.target_kind === "manual"\) continue;/, "ручное останавливает очередь вместо того, чтобы пропускаться");
+  assert.ok(
+    !/if \(p\.target_kind === "manual"\) return null;/.test(store),
+    "ручное сообщение запирает всё, что стоит за ним",
+  );
+});
+
+test("ручной маршрут доходит до BANT: отметка, ответ клиента, ответ модели", () => {
+  const store = readFileSync(new URL("../lib/admin/outreach-store.ts", import.meta.url), "utf8");
+  const list = readFileSync(new URL("../components/admin/outreach-list.tsx", import.meta.url), "utf8");
+
+  // Владелец: «И тут же подхватывает ИИ после написанного сообщение
+  // пользователю до выяснения BANT». Подхватить модель может только то, что
+  // ей показали: по этому маршруту ответ клиента приходит менеджеру на
+  // телефон и к нам не попадает ничем.
+  assert.match(store, /export async function markManualSent/);
+  assert.match(store, /export async function recordManualAnswer/);
+  assert.match(store, /ai_handling: true/, "после ручного касания модель не считается ведущей");
+
+  // Первое письмо обязано лечь в ленту: без него модель, отвечая клиенту,
+  // ссылалась бы на несказанное.
+  assert.match(store, /direction: "out",\s*\n\s*author: "staff",/);
+
+  assert.match(list, /markManualSentAction/, "нечем отметить, что написал руками");
+  assert.match(list, /recordManualAnswerAction/, "некуда перенести ответ клиента");
+  assert.match(list, /Скопировать ответ/, "ответ модели нельзя забрать");
 });

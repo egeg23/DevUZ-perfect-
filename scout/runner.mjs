@@ -20,7 +20,8 @@ import { EMPTY_PULSE, accumulate, writePulse } from "@/lib/scout/health";
 import { shape } from "@/lib/scout/shape";
 import { processBatch } from "@/lib/scout/store";
 import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
-import { markFailed, markSent, nextQueued } from "@/lib/admin/outreach-queue";
+import { markFailed, markSent, markUnreachable, nextQueued } from "@/lib/admin/outreach-queue";
+import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/outreach-peer";
 import { markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
 
 const DRY_RUN = process.argv.includes("--dry-run");
@@ -147,7 +148,7 @@ async function dryRun() {
 }
 
 async function live() {
-  const { TelegramClient } = telegram;
+  const { Api, TelegramClient } = telegram;
   const { StringSession } = telegram.sessions;
   const { NewMessage } = telegram.events;
 
@@ -255,6 +256,64 @@ async function live() {
   // Первая же ошибка про аккаунт — PEER_FLOOD, FLOOD_WAIT — снимает всю
   // очередь; продолжать после неё значит менять аккаунт на десяток писем.
   let outreachStopped = false;
+
+  /**
+   * Счётчик для импортируемых номеров.
+   *
+   * Телеграм требует у каждого контакта в одной пачке свой clientId и
+   * возвращает его обратно, чтобы было понятно, какой номер к какому
+   * пользователю. Пачка здесь всегда из одного, но поле обязательное.
+   */
+  let contactSeq = 0;
+
+  /**
+   * Кому мы на самом деле пишем — спрашиваем до отправки, а не узнаём из
+   * ошибки.
+   *
+   * Первые полсотни касаний ушли в каналы и ботов: @muradbuildings и @ivan
+   * по виду не отличаются, а разница в том, что первому написать физически
+   * нельзя. Знает об этом только телеграм.
+   *
+   * Разбор ответа — в lib/admin/outreach-peer.ts и без единого обращения к
+   * сети: иначе эту ветку нельзя было бы прогнать тестом, не поднимая
+   * телеграм.
+   */
+  const reachFor = async (job) => {
+    if (job.kind === "phone") {
+      // Номер сперва попадает в контакты аккаунта: без этого телеграм по
+      // нему ничего не скажет. Имя — домен сайта: список контактов рабочего
+      // аккаунта должен читаться, а не выглядеть свалкой номеров.
+      contactSeq += 1;
+      const imported = await client.invoke(
+        new Api.contacts.ImportContacts({
+          contacts: [
+            new Api.InputPhoneContact({
+              clientId: contactSeq,
+              phone: job.target,
+              firstName: job.host,
+              lastName: "",
+            }),
+          ],
+        }),
+      );
+      return { verdict: verdictForPhone(imported), imported: true };
+    }
+
+    const resolved = await client.invoke(
+      new Api.contacts.ResolveUsername({ username: String(job.target).replace(/^@/, "") }),
+    );
+    return { verdict: verdictForHandle(resolved), imported: false };
+  };
+
+  /**
+   * Отказы, которые говорят про адресата, а не про нас.
+   *
+   * Их нельзя путать: «такого адреса нет» — обычное дело и повод отдать
+   * карточку человеку, а FLOOD_WAIT или PEER_FLOOD — повод немедленно
+   * остановить очередь целиком.
+   */
+  const ABOUT_TARGET = /USERNAME_NOT_OCCUPIED|USERNAME_INVALID|PHONE_NOT_OCCUPIED|No user has|Cannot find any entity/i;
+
   setInterval(async () => {
     if (outreachStopped) return;
     let job;
@@ -266,15 +325,59 @@ async function live() {
     }
     if (!job) return;
 
+    let reach;
     try {
-      await client.sendMessage(job.target, { message: job.message });
-      await markSent(job.id);
+      reach = await reachFor(job);
+    } catch (error) {
+      const why = error?.errorMessage ?? error?.message ?? String(error);
+      if (ABOUT_TARGET.test(why)) {
+        const note = unreachableText("not_found", job.kind);
+        await markUnreachable(job.id, note);
+        console.log(`касания: ${job.target} — ${note}`);
+      } else {
+        const { stopped } = await markFailed(job.id, why);
+        outreachStopped = stopped;
+        console.error(`касания: адресат не опознан ${job.target} — ${why}${stopped ? " (очередь остановлена)" : ""}`);
+      }
+      return;
+    }
+
+    if (!reach.verdict.ok) {
+      // Не провал: ничего не сломалось, просто автономно сюда не дотянуться.
+      // Место в часовом пределе при этом не тратится — до отправки не дошло.
+      const note = unreachableText(reach.verdict.why, job.kind);
+      await markUnreachable(job.id, note);
+      console.log(`касания: ${job.target} — ${note}`);
+      return;
+    }
+
+    const userId = reach.verdict.userId;
+    try {
+      // Пишем найденному пользователю, а не строке с сайта: по номеру у
+      // человека @адреса может не быть вовсе.
+      await client.sendMessage(userId, { message: job.message });
+      await markSent(job.id, userId);
       console.log(`касания: отправлено ${job.target} по сайту ${job.host}`);
     } catch (error) {
       const why = error?.errorMessage ?? error?.message ?? String(error);
       const { stopped } = await markFailed(job.id, why);
       outreachStopped = stopped;
       console.error(`касания: не ушло ${job.target} — ${why}${stopped ? " (очередь остановлена)" : ""}`);
+    } finally {
+      // Импортированный номер убираем из контактов сразу.
+      //
+      // Две причины. Телефонная книга рабочего аккаунта, распухшая от
+      // проспектов, — это подпись рассылки, видная любому, кто её посмотрит.
+      // И обратная сторона: телеграм показывает людям «ваш контакт
+      // присоединился», и оставленный номер превращает наше касание в
+      // уведомление у половины его знакомых.
+      if (reach.imported) {
+        try {
+          await client.invoke(new Api.contacts.DeleteByPhones({ phones: [job.target] }));
+        } catch (error) {
+          console.error(`касания: номер ${job.target} остался в контактах —`, error?.errorMessage ?? error?.message ?? error);
+        }
+      }
     }
   }, OUTREACH_MS);
 
@@ -318,20 +421,28 @@ async function live() {
     if (!message?.message || message.out) return;
     if (!message.isPrivate) return;
 
+    // Кто написал — по id в первую очередь.
+    //
+    // Адреса может не быть вовсе: по номеру находятся как раз такие люди, а
+    // маршрут «телефон» для нас основной там, где телеграма на сайте нет.
+    // Пока сверялись только по @адресу, их ответы не находили своего
+    // разговора и молча уходили в никуда.
     let handle = "";
+    let userId = "";
     try {
       const sender = await message.getSender();
       handle = sender?.username ? String(sender.username) : "";
+      userId = sender?.id === undefined || sender?.id === null ? "" : String(sender.id);
     } catch (error) {
       console.error("переписка: не узнал отправителя —", error?.message ?? error);
       return;
     }
-    if (!handle) return;
+    if (!handle && !userId) return;
 
     try {
-      const hit = await recordInbound({ handle, body: String(message.message) });
+      const hit = await recordInbound({ handle, userId, body: String(message.message) });
       if (hit.matched) {
-        console.log(`переписка: ответ от @${handle} по сайту ${hit.host} (${hit.verdict})`);
+        console.log(`переписка: ответ от ${handle ? `@${handle}` : `id ${userId}`} по сайту ${hit.host} (${hit.verdict})`);
       }
     } catch (error) {
       console.error("переписка: входящее не записалось —", error?.message ?? error);

@@ -56,6 +56,10 @@ export const AUDIT_ACTIONS = [
   "plan.set",
   "plan.removed",
   "prospect.queued",
+  // Касание, сделанное руками: по ручному маршруту его не видно ниоткуда
+  // больше, а знать, кто и когда написал, нужно так же, как и по телеграму.
+  "prospect.manual_sent",
+  "prospect.manual_reply",
   "prospect.taken_over",
   "invoice.issued",
   "invoice.paid",
