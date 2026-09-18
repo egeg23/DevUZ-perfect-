@@ -26,8 +26,10 @@
 import { CITIES } from "@/content/razbor/catalog";
 import type { ProtoNiche } from "@/content/proto/models";
 import { trickFor } from "@/content/proto/models";
+import { RADIUS, SHADOW, SPACE, TYPE, WEIGHT, fluid, fontsFor, skinFor } from "@/lib/proto/design";
 import type { ProtoFacts } from "@/lib/proto/facts";
 import { mainAction, wordmark } from "@/lib/proto/facts";
+import { icon, iconFor } from "@/lib/proto/icons";
 import { flingVars, motionCss, motionsFor } from "@/lib/proto/motion";
 import { trick } from "@/lib/proto/tricks";
 
@@ -164,78 +166,123 @@ function cardRanges(count: number): string {
   }).join("");
 }
 
-function stylesheet(niche: ProtoNiche, cards: number, spinDeg: number, motions: readonly string[]): string {
-  const p = niche.palette;
+function stylesheet(input: {
+  niche: ProtoNiche;
+  cards: number;
+  spinDeg: number;
+  motions: readonly string[];
+}): string {
+  const { niche, cards, spinDeg, motions } = input;
+  const s = skinFor(niche.tone, niche.accent);
+  const f = fontsFor(niche.key);
   return `
 :root{
-  --ink:${p.ink}; --surface:${p.surface}; --line:${p.line};
-  --text:${p.text}; --muted:${p.muted}; --accent:${p.accent}; --accent-ink:${p.accentInk};
-  --r:18px;
+  --ink:${s.ink}; --surface:${s.surface}; --surface-2:${s.surface2};
+  --line:${s.line}; --line-strong:${s.lineStrong};
+  --text:${s.text}; --muted:${s.muted}; --faint:${s.faint};
+  --accent:${s.accent}; --accent-soft:${s.accentSoft}; --accent-ink:${s.accentInk};
+  --r:${RADIUS}px;
+  --display:"${f.display}",${niche.tone === "light" ? "Georgia,serif" : "system-ui,sans-serif"};
+  --text-face:"${f.text}",system-ui,-apple-system,sans-serif;
+  /* Отступы секций — две соседние ступени шкалы, между ними плавно. */
+  --gap-section:clamp(${SPACE[7]}px,9vw,${SPACE[8]}px);
+  --gap-block:${SPACE[5]}px;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{overflow-x:clip}
 body{
   margin:0; background:var(--ink); color:var(--text);
-  font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font:${WEIGHT.text} ${TYPE[2]}px/1.6 var(--text-face);
   -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-  overflow-x:clip; padding-bottom:84px;
+  overflow-x:clip; padding-bottom:${SPACE[8]}px;
 }
 img{max-width:100%;height:auto;display:block}
 a{color:inherit}
-.wrap{width:100%;max-width:1160px;margin:0 auto;padding-inline:20px}
-h1,h2,h3{margin:0;letter-spacing:-.025em;line-height:1.08}
-h1{font-size:clamp(34px,8.4vw,74px);font-weight:800}
-h2{font-size:clamp(26px,4.6vw,44px);font-weight:750}
-h3{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding-inline:${SPACE[4]}px}
+
+/*
+ * Два веса на всю страницу, и оба здесь. Шесть весов, которые были раньше,
+ * это не богатство, а отсутствие решения; ослаблять надо цветом.
+ */
+h1,h2,h3,.display{
+  margin:0; font-family:var(--display); font-weight:${f.displayWeight};
+  line-height:1.05; letter-spacing:${f.tracking};
+  ${f.caps ? "text-transform:uppercase;" : ""}
+}
+h1{font-size:${fluid(TYPE[6], TYPE[9])}}
+h2{font-size:${fluid(TYPE[5], TYPE[8])}}
+h3{font-size:${TYPE[3]}px;line-height:1.2}
 p{margin:0}
-.eyebrow{font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.eyebrow{
+  font-family:var(--text-face); font-size:${TYPE[1]}px; font-weight:${WEIGHT.strong};
+  letter-spacing:.18em; text-transform:uppercase; color:var(--accent);
+}
 
 /* Шапка */
-.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ink) 86%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;align-items:center;gap:14px;min-height:64px}
-.brand{display:flex;align-items:center;gap:11px;font-weight:750;letter-spacing:-.015em;min-width:0}
+.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ink) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:${SPACE[3]}px;min-height:${SPACE[6]}px}
+.brand{display:flex;align-items:center;gap:${SPACE[2]}px;font-family:var(--display);font-weight:${f.displayWeight};font-size:${TYPE[2]}px;letter-spacing:${f.tracking};min-width:0${f.caps ? ";text-transform:uppercase" : ""}}
 .brand span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mark{width:34px;height:34px;flex:none;border-radius:11px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:13px;font-weight:800;letter-spacing:.02em}
-.mark img{width:100%;height:100%;object-fit:contain;border-radius:11px}
-.word{height:32px;width:auto;max-width:min(58vw,190px);object-fit:contain;object-position:left center}
-.top .tel{margin-left:auto;text-decoration:none;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mark{width:${SPACE[4] + SPACE[3]}px;height:${SPACE[4] + SPACE[3]}px;flex:none;border-radius:${RADIUS - 4}px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:${TYPE[0]}px;font-weight:${WEIGHT.strong}}
+.mark img{width:100%;height:100%;object-fit:contain;border-radius:${RADIUS - 4}px}
+.word{height:${SPACE[4] + SPACE[2]}px;width:auto;max-width:min(58vw,190px);object-fit:contain;object-position:left center}
+.top .tel{margin-left:auto;text-decoration:none;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:${TYPE[1]}px}
 .top .btn{margin-left:auto}
 .top .tel + .btn{margin-left:0}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none;border:none;font-size:16px;white-space:nowrap;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:${SPACE[1]}px;
+  padding:${SPACE[2]}px ${SPACE[4]}px;border-radius:${RADIUS}px;
+  background:var(--accent);color:var(--accent-ink);
+  font-family:var(--text-face);font-weight:${WEIGHT.strong};font-size:${TYPE[2]}px;
+  text-decoration:none;border:none;white-space:nowrap;cursor:pointer;
+  box-shadow:${SHADOW.raised};
+}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line-strong);box-shadow:none}
 .btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.btn:active{box-shadow:none}
 
-/* Первый экран */
-.hero{position:relative;min-height:calc(100svh - 64px);display:grid;align-content:center;padding-block:clamp(40px,7vw,90px);overflow:clip}
+/* Первый экран: текст слева, плоскость цвета справа. */
+.hero{position:relative;overflow:clip;border-bottom:1px solid var(--line)}
+.hero .wrap{display:grid;gap:${SPACE[6]}px;align-items:center;min-height:calc(100svh - ${SPACE[6]}px);padding-block:${SPACE[6]}px}
+.hero .sub{margin-top:${SPACE[3]}px;max-width:32ch;font-size:${TYPE[3]}px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:${SPACE[2]}px;margin-top:${SPACE[5]}px}
+.chips{display:flex;flex-wrap:wrap;gap:${SPACE[1]}px;margin-top:${SPACE[4]}px;padding:0;list-style:none}
+.chips li{padding:${SPACE[1]}px ${SPACE[3]}px;border:1px solid var(--line);border-radius:${RADIUS}px;color:var(--muted);font-size:${TYPE[1]}px}
+.hint{margin-top:${SPACE[5]}px;display:inline-flex;align-items:center;gap:${SPACE[2]}px;color:var(--faint);font-size:${TYPE[0]}px;letter-spacing:.16em;text-transform:uppercase}
+.hint i{width:1px;height:${SPACE[4]}px;background:linear-gradient(var(--faint),transparent);display:block}
+
 /*
- * Параллакс: несколько слоёв, каждый едет со своей скоростью и в свою
- * сторону. Глубина задаётся переменными --a и --b прямо на слое — так один
- * механизм закрывает и подсветку на первом экране, и полосу за блоками, и
- * ореол за колесом, вместо трёх почти одинаковых правил.
+ * Плоскость с названием ниши вместо мягкого свечения.
  *
- * Слои не кликаются и лежат под содержимым: параллакс, перехватывающий
- * нажатие на кнопку, — это не украшение, а поломка.
+ * Свечение — приём из шаблонов, и именно оно делало первый экран пустым. У
+ * всех разобранных сайтов на его месте либо фотография, либо поле плотного
+ * цвета с крупным словом поперёк. Фотография у клиента есть не всегда, а
+ * поле — всегда.
  */
-.par{position:absolute;inset:0;overflow:clip;pointer-events:none;z-index:0}
-.par i{position:absolute;display:block;pointer-events:none;will-change:transform}
-.hero .wrap,section .wrap,.stage-in{position:relative;z-index:1}
-.glow{inset:-26% -14% auto auto;width:min(72vw,640px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,var(--accent),transparent 62%);opacity:.16}
-.mesh{inset:auto -20% -30% -20%;height:min(60vh,520px);background:radial-gradient(60% 100% at 30% 100%,var(--accent),transparent 70%);opacity:.07}
-.band{inset:12% -30% auto -30%;height:clamp(180px,34vw,360px);background:linear-gradient(100deg,transparent,var(--accent),transparent);opacity:.05;transform:rotate(-4deg)}
-.halo{inset:50% auto auto 50%;width:min(112vw,760px);aspect-ratio:1;margin:-0.5px 0 0 -0.5px;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,var(--accent),transparent 58%);opacity:.1}
-.hero .sub{margin-top:18px;max-width:34ch;font-size:clamp(17px,2.1vw,21px);color:var(--muted)}
-.row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
-.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px;padding:0;list-style:none}
-.chips li{padding:8px 15px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:15px}
-.hint{margin-top:30px;display:inline-flex;align-items:center;gap:9px;color:var(--muted);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
-.hint i{width:1px;height:26px;background:linear-gradient(var(--muted),transparent);display:block}
+.plate{position:relative;container-type:inline-size;align-self:stretch;min-height:${SPACE[9]}px;border-radius:var(--r);background:var(--accent);color:var(--accent-ink);overflow:clip;display:grid;place-items:center;box-shadow:${SHADOW.card}}
+/*
+ * Слово подгоняется под ширину поля точно, а не переносится.
+ *
+ * Перенос рубит его посреди слога — «ШИН/ОМО/НТА/Ж», — и поле из плаката
+ * превращается в ошибку вёрстки. Считать размер в процентах от ширины поля
+ * тоже не выходит: ширина буквы у каждой гарнитуры своя, и множитель,
+ * подобранный под Unbounded, вылезает за край на Oswald.
+ *
+ * Поэтому слово — текст внутри SVG с textLength: браузер сам подгоняет его
+ * ровно под заданную ширину, какой бы ни была гарнитура. Заодно короткое
+ * слово растягивается во всю плоскость, а это и есть приём с плаката.
+ */
+.plate .display{width:100%;height:auto;display:block;padding:${SPACE[3]}px}
+.plate .display text{fill:currentColor;font-family:var(--display);font-weight:${f.displayWeight};font-size:${TYPE[10]}px}
+.plate img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.plate.shot .display{display:none}
 
 /* Сцена с трюком */
 .track{position:relative;height:340svh}
 .stage{position:sticky;top:0;height:100svh;display:grid;align-content:center;overflow:clip}
-.stage-in{display:grid;gap:clamp(18px,4vw,34px);justify-items:center;align-content:center}
-.art{width:min(78vw,520px);aspect-ratio:1;position:relative}
+.stage-in{display:grid;gap:${SPACE[5]}px;justify-items:center;align-content:center}
+.art{width:min(76vw,${SPACE[11] * 2}px);aspect-ratio:1;position:relative}
 .art svg,.art .shot{width:100%;height:100%;display:block}
 .art .shot{object-fit:contain}
 .spin{transform-origin:50% 50%;will-change:transform}
@@ -244,52 +291,56 @@ p{margin:0}
 svg .spin{transform-box:view-box}
 .bar{width:min(260px,62vw);height:3px;border-radius:2px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);transform-origin:left center;transform:scaleX(0)}
-.side{display:grid;gap:16px;width:100%;max-width:520px;min-width:0}
-.cards{position:relative;display:grid;width:100%;min-height:170px;align-content:center}
+.side{display:grid;gap:${SPACE[3]}px;width:100%;max-width:520px;min-width:0}
+.cards{position:relative;display:grid;width:100%;min-height:${SPACE[9] + SPACE[4]}px;align-content:center}
 .cards>*{grid-area:1/1}
-.fly{--fx:0px;--fy:-30px;--fs:.93;--fr:0deg;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:22px 24px;will-change:transform,opacity}
-.fly .n{font-size:12px;letter-spacing:.1em;color:var(--accent);font-weight:700}
-.fly h3{margin-top:10px;font-size:clamp(23px,3.4vw,33px);font-weight:750;line-height:1.12}
-.fly .price{margin-top:10px;color:var(--muted);font-size:17px}
+.fly{--fx:0px;--fy:-30px;--fs:.93;--fr:0deg;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:${SPACE[4]}px;box-shadow:${SHADOW.lifted};will-change:transform,opacity}
+.fly .top-row,.tile .top-row{display:flex;align-items:center;gap:${SPACE[2]}px;margin-bottom:${SPACE[3]}px}
+.fly .n{font-size:${TYPE[0]}px;letter-spacing:.12em;color:var(--accent);font-weight:${WEIGHT.strong}}
+.fly h3{margin-top:0;font-size:${fluid(TYPE[5], TYPE[7])}}
+.fly .price{margin-top:${SPACE[2]}px;color:var(--muted);font-size:${TYPE[2]}px}
+.fly .ico{width:${SPACE[5]}px;height:${SPACE[5]}px;flex:none;color:var(--accent)}
 
 /* Блоки */
-section{position:relative;padding-block:clamp(44px,7vw,92px);overflow:clip}
-.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px 18px;margin-bottom:clamp(22px,3vw,38px)}
-.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))}
-.tile{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:22px;min-width:0}
-.tile .price{margin-top:10px;color:var(--muted);font-size:15px}
-.tile .n{font-size:12px;letter-spacing:.1em;color:var(--accent);font-weight:700;display:block;margin-bottom:10px}
-.tile p{margin-top:9px;color:var(--muted);font-size:15px}
-.shots{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+section{position:relative;padding-block:var(--gap-section);overflow:clip}
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:${SPACE[2]}px ${SPACE[4]}px;margin-bottom:var(--gap-block)}
+.grid{display:grid;gap:${SPACE[3]}px;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))}
+.tile{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:${SPACE[4]}px;min-width:0;box-shadow:${SHADOW.card}}
+.tile .ico{flex:none;color:var(--accent)}
+.tile .price{margin-top:${SPACE[2]}px;color:var(--muted);font-size:${TYPE[1]}px}
+.tile .n{font-size:${TYPE[0]}px;letter-spacing:.12em;color:var(--accent);font-weight:${WEIGHT.strong}}
+.tile p{margin-top:${SPACE[1]}px;color:var(--muted);font-size:${TYPE[1]}px}
+.shots{display:grid;gap:${SPACE[3]}px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
 .shots img{border-radius:var(--r);border:1px solid var(--line);width:100%;aspect-ratio:4/3;object-fit:cover}
-.facts{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
-.fact{border-top:1px solid var(--line);padding-top:16px;min-width:0}
-.fact b{display:block;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.fact span{display:block;margin-top:9px;font-size:19px;font-weight:650;overflow-wrap:anywhere}
+.facts{display:grid;gap:${SPACE[3]}px;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+.fact{border-top:2px solid var(--accent);padding-top:${SPACE[3]}px;min-width:0}
+.fact b{display:block;font-size:${TYPE[0]}px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:${WEIGHT.strong}}
+.fact span{display:block;margin-top:${SPACE[2]}px;font-size:${TYPE[3]}px;font-weight:${WEIGHT.strong};overflow-wrap:anywhere}
 .fact a{color:inherit}
 
 /* Подвал и нижняя кнопка */
-footer{border-top:1px solid var(--line);padding-block:30px 40px;color:var(--muted);font-size:14px}
-footer .wrap{display:flex;flex-wrap:wrap;gap:10px 22px}
-.dock{position:fixed;inset:auto 0 0 0;z-index:40;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--ink) 88%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
-.dock .btn{width:100%;padding-block:15px}
+footer{border-top:1px solid var(--line);padding-block:${SPACE[5]}px ${SPACE[6]}px;color:var(--faint);font-size:${TYPE[1]}px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:${SPACE[2]}px ${SPACE[4]}px}
+.dock{position:fixed;inset:auto 0 0 0;z-index:40;padding:${SPACE[2]}px ${SPACE[3]}px calc(${SPACE[2]}px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--ink) 90%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.dock .btn{width:100%;padding-block:${SPACE[3]}px}
 
 @media (width >= 56rem){
   body{padding-bottom:0}
   .dock{display:none}
-  .stage-in{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;justify-items:start;gap:44px}
+  .hero .wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}
+  .stage-in{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;justify-items:start;gap:${SPACE[6]}px}
   .art{justify-self:center}
 }
 @media (width < 56rem){
   .top .tel{display:none}
   .top .btn{display:none}
-  .fly{padding:20px 22px}
+  .plate{min-height:${SPACE[8]}px;order:2}
 }
 
 /* Появление блоков. База — всё видно; анимация только там, где браузер её умеет. */
 @keyframes spin{to{transform:rotate(${spinDeg}deg)}}
-@keyframes par{from{transform:translate3d(0,var(--a,-36px),0)}to{transform:translate3d(0,var(--b,36px),0)}}
 @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes par{from{transform:translate3d(0,var(--a,-36px),0)}to{transform:translate3d(0,var(--b,36px),0)}}
 /*
  * Кадры одни на все шесть карточек, а направление вылета — переменные на
  * самой карточке. Шесть почти одинаковых наборов кадров весили бы килобайт
@@ -299,6 +350,14 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:10px 22px}
   0%,100%{opacity:0;transform:translate3d(var(--fx),var(--fy),0) scale(var(--fs)) rotate(var(--fr))}
   17%,83%{opacity:1;transform:translate3d(0,0,0) scale(1) rotate(0deg)}
 }
+.par{position:absolute;inset:0;overflow:clip;pointer-events:none;z-index:0}
+.par i{position:absolute;display:block;pointer-events:none;will-change:transform}
+/* Пятно внутри плоскости: глубина без градиента. Свечение разведка
+   назвала приёмом из шаблонов, и правильно. */
+.blot{inset:-20% auto auto -10%;width:70cqw;aspect-ratio:1;border-radius:50%;background:var(--accent-ink);opacity:.08}
+.band{inset:12% -30% auto -30%;height:clamp(${SPACE[7]}px,34vw,${SPACE[9]}px);background:linear-gradient(100deg,transparent,var(--accent),transparent);opacity:.07;transform:rotate(-4deg)}
+.halo{inset:50% auto auto 50%;width:min(112vw,760px);aspect-ratio:1;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,var(--accent),transparent 58%);opacity:.1}
+.hero .wrap,section .wrap,.stage-in{position:relative;z-index:1}
 @supports (animation-timeline:view()){
   .track{view-timeline-name:--track;view-timeline-axis:block}
   .par i{animation:par linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
@@ -314,8 +373,8 @@ ${motionCss(motions)}
 
 /* Браузер без scroll-driven animations: те же блоки, просто без театра. */
 .no-sdt .track{height:auto}
-.no-sdt .stage{position:static;height:auto;padding-block:clamp(44px,7vw,92px)}
-.no-sdt .cards{display:grid;gap:12px;min-height:0}
+.no-sdt .stage{position:static;height:auto;padding-block:var(--gap-section)}
+.no-sdt .cards{display:grid;gap:${SPACE[2]}px;min-height:0}
 .no-sdt .cards>*{grid-area:auto}
 .no-sdt .fly{opacity:1;transform:none;animation:none}
 .no-sdt .bar{display:none}
@@ -326,8 +385,8 @@ ${motionCss(motions)}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   .track{height:auto}
-  .stage{position:static;height:auto;padding-block:clamp(44px,7vw,92px)}
-  .cards{display:grid;gap:12px;min-height:0}
+  .stage{position:static;height:auto;padding-block:var(--gap-section)}
+  .cards{display:grid;gap:${SPACE[2]}px;min-height:0}
   .cards>*{grid-area:auto}
   .fly{opacity:1;transform:none}
   .bar{display:none}
@@ -338,7 +397,9 @@ ${motionCss(motions)}
 export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): string {
   const { facts, niche } = input;
   const c = COPY[facts.locale];
-  const art = trick(trickFor(niche), niche.palette, facts.wheel);
+  const skin = skinFor(niche.tone, niche.accent);
+  const fonts = fontsFor(niche.key);
+  const art = trick(trickFor(niche), skin, facts.wheel);
   const action = mainAction(facts);
   // Кнопка либо открывает переписку, либо набирает номер. От этого зависят
   // и подзаголовок первого экрана, и шаги записи.
@@ -374,7 +435,7 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
     .map(
       (service, index) => `
         <article class="fly c${index + 1}" style="${flingVars(stageMotions[index])}">
-          <span class="n">${String(index + 1).padStart(2, "0")}</span>
+          <div class="top-row">${icon(iconFor(service.name))}<span class="n">${String(index + 1).padStart(2, "0")}</span></div>
           <h3>${esc(service.name)}</h3>
           ${price(service.price)}
         </article>`,
@@ -385,6 +446,7 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
     .map(
       (service, index) => `
         <article class="tile mo m-${restMotions[index]}">
+          <div class="top-row">${icon(iconFor(service.name))}</div>
           <h3>${esc(service.name)}</h3>
           ${price(service.price)}
         </article>`,
@@ -395,7 +457,7 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
     .map(
       (step, index) => `
         <article class="tile mo m-${stepMotions[index]}">
-          <span class="n">${String(index + 1).padStart(2, "0")}</span>
+          <div class="top-row"><span class="n">${String(index + 1).padStart(2, "0")}</span></div>
           <h3>${esc(step.title)}</h3>
           <p>${esc(step.text)}</p>
         </article>`,
@@ -403,6 +465,7 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
     .join("");
 
   const shots = facts.photos
+    .slice(1)
     .map((photo) => `<img src="${esc(photo)}" alt="${esc(facts.name)}" loading="lazy">`)
     .join("");
 
@@ -429,6 +492,30 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
     ? `<ul class="chips">${chipText.map((value) => `<li>${esc(value)}</li>`).join("")}</ul>`
     : "";
 
+  /*
+   * Плоскость на первом экране: либо его собственная фотография, либо поле
+   * акцента с названием ниши поперёк.
+   *
+   * До разведки на этом месте было мягкое свечение, и именно оно делало
+   * первый экран пустым: ни одного живого пикселя, тёмный фон и текст. У
+   * всех десяти разобранных сайтов на первом экране либо снимок, либо
+   * плотный цвет с крупным словом. Фотография у клиента есть не всегда —
+   * поле есть всегда.
+   *
+   * Слово в поле — род занятий, а не название: название уже стоит
+   * заголовком, и повторять его на одном экране незачем.
+   */
+  const plate = facts.photos[0]
+    ? `<div class="plate shot"><img src="${esc(facts.photos[0])}" alt="${esc(facts.name)}"></div>`
+    : `<div class="plate">
+        <span class="par" aria-hidden="true"><i class="blot" style="--a:74px;--b:-66px"></i></span>
+        <svg class="display" viewBox="0 0 1000 96" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+          <text x="500" y="76" text-anchor="middle" textLength="960" lengthAdjust="spacingAndGlyphs">${esc(
+            niche.ru.toUpperCase(),
+          )}</text>
+        </svg>
+      </div>`;
+
   const cta = action.kind === "none" ? "" : `<a class="btn" href="${esc(action.href)}">${esc(c.book)}</a>`;
   const ctaGhost =
     facts.phone && action.kind !== "phone"
@@ -443,8 +530,11 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
-<meta name="theme-color" content="${niche.palette.ink}">
-<style>${stylesheet(niche, stage.length, art.spinDeg, motions)}</style>
+<meta name="theme-color" content="${skin.ink}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="${esc(fonts.href)}">
+<style>${stylesheet({ niche, cards: stage.length, spinDeg: art.spinDeg, motions })}</style>
 <script>if(!(window.CSS&&CSS.supports&&CSS.supports("animation-timeline:view()")))document.documentElement.className="no-sdt"</script>
 </head>
 <body>
@@ -458,17 +548,17 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
 
 <main>
   <div class="hero">
-    <span class="par" aria-hidden="true">
-      <i class="glow" style="--a:-70px;--b:80px"></i>
-      <i class="mesh" style="--a:34px;--b:-46px"></i>
-    </span>
+    <span class="par" aria-hidden="true"><i class="band" style="--a:-40px;--b:44px"></i></span>
     <div class="wrap">
-      <p class="eyebrow">${esc(niche.ru)}${esc(where)}</p>
-      <h1>${esc(facts.name)}</h1>
-      <p class="sub">${esc(facts.about ?? c.heroSub[voice])}</p>
-      <div class="row">${cta}${ctaGhost}</div>
-      ${chips}
-      <p class="hint"><i></i>${esc(c.scroll)}</p>
+      <div>
+        <p class="eyebrow">${esc(niche.ru)}${esc(where)}</p>
+        <h1>${esc(facts.name)}</h1>
+        <p class="sub">${esc(facts.about ?? c.heroSub[voice])}</p>
+        <div class="row">${cta}${ctaGhost}</div>
+        ${chips}
+        <p class="hint"><i></i>${esc(c.scroll)}</p>
+      </div>
+      ${plate}
     </div>
   </div>
 

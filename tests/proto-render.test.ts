@@ -6,6 +6,7 @@ import { bookingHtml, inCity } from "@/lib/proto/booking";
 import { keyframeProperties, protoProblems, visibleText } from "@/lib/proto/check";
 import { enoughToBuild, mainAction, wheelProblems, wordmark, type ProtoFacts } from "@/lib/proto/facts";
 import { parseServices } from "@/lib/proto/form";
+import { TYPE, fluid, fontsFor, skinFor } from "@/lib/proto/design";
 import { MOTIONS, MOTION_KEYS, flingVars, motionCss, motionsFor } from "@/lib/proto/motion";
 import { buildProto, sendable } from "@/lib/proto/render";
 import { TRICK_KEYS, trick } from "@/lib/proto/tricks";
@@ -194,7 +195,7 @@ test("каждая ниша собирается и проходит прове�
 
 test("рисунок трюка крутится и не тащит за собой стороннюю картинку", () => {
   for (const key of TRICK_KEYS) {
-    const art = trick(key, PROTO_NICHES[0].palette);
+    const art = trick(key, skinFor(PROTO_NICHES[0].tone, PROTO_NICHES[0].accent));
     assert.equal(art.key, key);
     assert.equal(art.photo, false);
     assert.ok(art.html.includes('class="spin"'), `${key}: нечему крутиться`);
@@ -372,7 +373,9 @@ test("настоящий снимок вместо рисунка — и тре�
   const result = build({ wheel: ok });
   assert.ok(result.html.includes('class="spin shot"'), "снимок не крутится тем же классом");
   assert.ok(result.html.includes(ok.url));
-  assert.equal(result.html.includes("<svg"), false, "рисунок остался рядом со снимком");
+  // Рисованное колесо узнаётся по своему полю: иконки услуг и слово на
+  // плоскости — тоже SVG, и по одному тегу их не различить.
+  assert.equal(result.html.includes('viewBox="0 0 240 240"'), false, "рисунок остался рядом со снимком");
   assert.deepEqual(result.problems, []);
 
   // Не квадратный пойдёт по орбите, как несбалансированное колесо.
@@ -434,4 +437,69 @@ test("карточки в сцене вылетают по-разному, а н
   // Незнакомое имя движения не роняет карточку в пустоту.
   assert.equal(flingVars("такого-нет"), flingVars("rise"));
   assert.deepEqual(result.problems, []);
+});
+
+test("страница набрана своей гарнитурой и размерами из шкалы", () => {
+  // Два числа, которые разведка назвала главными: чужой шрифт и шкала
+  // вместо глазомера. Проверка стережёт оба, потому что вернуть системный
+  // шрифт или дописать «ну тут на два больше» проще всего незаметно.
+  const html = build().html;
+  assert.ok(html.includes("fonts.googleapis.com"), "своей гарнитуры нет");
+  assert.ok(html.includes(fontsFor("shinomontazh").display), "гарнитура ниши не подключилась");
+
+  const css = html.slice(html.indexOf("<style>"), html.indexOf("</style>"));
+  for (const declaration of css.matchAll(/font-size\s*:\s*([^;}]+)/g)) {
+    const value = declaration[1];
+    const clamped = value.match(/clamp\(\s*([\d.]+)px[^,]*,[^,]+,\s*([\d.]+)px/);
+    const found = clamped ? [Number(clamped[1]), Number(clamped[2])] : [...value.matchAll(/(?:^|[\s(])([\d.]+)px/g)].map((m) => Number(m[1]));
+    for (const size of found) {
+      assert.ok((TYPE as readonly number[]).includes(size), `размер ${size} не из шкалы: ${value}`);
+    }
+  }
+
+  // Плавный размер берётся только между двумя соседями шкалы.
+  assert.throws(() => fluid(17, 70), /из TYPE/);
+  assert.throws(() => fluid(48, 30), /min меньше max/);
+  assert.ok(fluid(30, 60).startsWith("clamp(30px,"));
+  assert.ok(fluid(30, 60).endsWith("60px)"));
+
+  const bare = protoProblems({
+    html: html.replace(/<link rel="stylesheet" href="https:\/\/fonts[^>]*>/, ""),
+    facts: facts(),
+    niche: protoNicheByKey("shinomontazh")!,
+  });
+  assert.ok(bare.some((problem) => problem.code === "font"), "системный шрифт прошёл проверку");
+
+  const offScale = protoProblems({
+    html: html.replace("font-size:16px", "font-size:17px"),
+    facts: facts(),
+    niche: protoNicheByKey("shinomontazh")!,
+  });
+  assert.ok(offScale.some((problem) => problem.code === "scale"), "размер вне шкалы прошёл проверку");
+});
+
+test("у каждой ниши своя гарнитура, и у всех есть кириллица", () => {
+  // Скилл ui-ux-pro-max на автосервис предлагает Syncopate, Space Mono,
+  // Barlow Condensed, Archivo Black — и ни у одной нет кириллицы. Прототип
+  // на русском с такой парой ломается посреди заголовка.
+  const cyrillic = new Set([
+    "Unbounded",
+    "Oswald",
+    "Russo One",
+    "Playfair Display",
+    "Cormorant",
+    "Inter",
+    "Manrope",
+    "Montserrat",
+  ]);
+  for (const niche of PROTO_NICHES) {
+    const pair = fontsFor(niche.key);
+    assert.ok(cyrillic.has(pair.display), `${niche.key}: у ${pair.display} нет кириллицы`);
+    assert.ok(cyrillic.has(pair.text), `${niche.key}: у ${pair.text} нет кириллицы`);
+    assert.ok(pair.href.includes(pair.display.replace(/ /g, "+")), `${niche.key}: гарнитура не грузится`);
+    assert.ok(pair.href.includes("display=swap"), `${niche.key}: текст ждёт шрифт вместо того, чтобы показаться`);
+  }
+  // Шрифты — не одни на все ниши: у шиномонтажа и салона красоты общей быть
+  // не может.
+  assert.notEqual(fontsFor("shinomontazh").display, fontsFor("salon-krasoty").display);
 });

@@ -16,6 +16,8 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright-core";
 
+import { localizeHtml } from "./site-mirror.mjs";
+
 import { buildProto } from "../lib/proto/render.ts";
 
 const PHONE = { width: 390, height: 844, scale: 3 };
@@ -63,27 +65,18 @@ await mkdir(outDir, { recursive: true });
 const pagePath = path.join(outDir, "index.html");
 
 /*
- * `--localize` складывает картинки клиента рядом со страницей и переписывает
- * на них ссылки — только в этой, просмотровой копии. Нужно там, где браузер
- * не ходит наружу напрямую: иначе снимок получается без логотипа, и решение
- * «годится или нет» принимается по странице, которой не существует.
+ * `--localize` складывает рядом со страницей всё, за чем она ходит наружу:
+ * картинки клиента и шрифты с Google Fonts. Нужно там, где браузер не ходит
+ * в сеть напрямую, — иначе снимок выходит без логотипа и набранный системным
+ * шрифтом, то есть ровно тем, от чего мы уходили. Решение «годится или нет»
+ * принималось бы по странице, которой не существует.
+ *
+ * Переписывается только эта, просмотровая копия. То, что уходит клиенту,
+ * ссылается на его сайт и на Google Fonts как есть.
  */
 let html = build.html;
 if (args.includes("--localize")) {
-  await mkdir(path.join(outDir, "img"), { recursive: true });
-  const remote = [...new Set([...html.matchAll(/src="(https?:\/\/[^"]+)"/g)].map((match) => match[1]))];
-  for (const [index, url] of remote.entries()) {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) continue;
-      const name = `${index}-${path.basename(new URL(url).pathname) || "image"}`;
-      await writeFile(path.join(outDir, "img", name), Buffer.from(await response.arrayBuffer()));
-      html = html.split(url).join(`img/${name}`);
-    } catch {
-      // Недоступную картинку оставляем как есть: пусть её отсутствие будет
-      // видно на снимке, а не спрятано.
-    }
-  }
+  html = await localizeHtml(html, "https://devuz.studio/proto/preview", outDir);
 }
 
 await writeFile(pagePath, html, "utf8");

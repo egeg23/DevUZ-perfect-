@@ -36,13 +36,32 @@ function localName(url, fallback) {
   return `${createHash("sha1").update(url).digest("hex").slice(0, 8)}-${tail}`;
 }
 
-export async function mirrorSite(url, dir) {
-  await mkdir(path.join(dir, "a"), { recursive: true });
+/**
+ * Переписать ссылки готовой разметки на локальные файлы.
+ *
+ * Отдельно от `mirrorSite`, потому что нужно и своей странице: в песочнице
+ * браузер не может сходить за шрифтами на Google Fonts (тот же корневой
+ * сертификат), и снимок выходил набранным системным шрифтом — то есть ровно
+ * тем, от чего мы уходили. Снимок, на котором шрифт не тот, хуже отсутствия
+ * снимка: по нему принимают решение о странице, которой не существует.
+ */
+export async function localizeHtml(html, baseUrl, dir) {
+  return rewrite(html, new URL(baseUrl), dir, { stripScripts: false });
+}
 
+export async function mirrorSite(url, dir) {
   const page = await grab(url);
   const base = new URL(page.url);
-  let html = await page.text();
+  const html = await rewrite(await page.text(), base, dir, { stripScripts: true });
 
+  const file = path.join(dir, "index.html");
+  await writeFile(file, html, "utf8");
+  return { file, finalUrl: page.url };
+}
+
+async function rewrite(source, base, dir, { stripScripts }) {
+  await mkdir(path.join(dir, "a"), { recursive: true });
+  let html = source;
   const done = new Map();
   const save = async (raw, from) => {
     let absolute;
@@ -66,8 +85,10 @@ export async function mirrorSite(url, dir) {
   };
 
   // Скрипты снимаются первыми: иначе их адреса попадут в список ссылок и
-  // будут скачаны зря.
-  html = html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
+  // будут скачаны зря. Своей странице скрипты нужны — там снимать нечего.
+  if (stripScripts) {
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
+  }
 
   for (const tag of [...html.matchAll(/<link[^>]+rel=["']?stylesheet["']?[^>]*>/gi)].map((m) => m[0])) {
     const href = tag.match(/href\s*=\s*["']([^"']+)["']/i)?.[1];
@@ -103,7 +124,5 @@ export async function mirrorSite(url, dir) {
     if (local) html = html.split(`"${src}"`).join(`"${local}"`);
   }
 
-  const file = path.join(dir, "index.html");
-  await writeFile(file, html, "utf8");
-  return { file, finalUrl: page.url, assets: [...done.values()].filter(Boolean).length };
+  return html;
 }

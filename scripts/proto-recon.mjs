@@ -85,7 +85,10 @@ const MEASURE = () => {
   const paddings = seen(sections, (node) => px(getComputedStyle(node).paddingTop)).filter(([value]) => value > 0);
 
   const viewport = window.innerHeight;
-  const heroImages = [...document.querySelectorAll("img, video")].filter((node) => {
+  // Крупная графика на первом экране: фотография, видео или рисунок. SVG
+  // считается наравне — у половины разобранных сайтов герой нарисован, а не
+  // снят, и прибор, который этого не видит, врёт про них так же, как про нас.
+  const heroImages = [...document.querySelectorAll("img, video, svg")].filter((node) => {
     const box = node.getBoundingClientRect();
     return box.top < viewport && box.width > 200 && box.height > 150;
   }).length;

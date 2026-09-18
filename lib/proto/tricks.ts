@@ -15,7 +15,7 @@
  * прототип проверяется машиной на числа, которых нет в фактах, и часовые
  * деления — это ровно они. Поэтому деления без подписей: так и современнее.
  */
-import type { ProtoPalette } from "@/content/proto/models";
+import type { Skin } from "@/lib/proto/design";
 import type { ProtoImage } from "@/lib/proto/facts";
 
 export type Trick = {
@@ -37,7 +37,7 @@ const ring = (count: number, draw: (index: number, angle: number) => string): st
  * Владелец: «рядовая замена шин — листаешь вниз — начинает крутиться колесо
  * выкидывая информацию». Это оно.
  */
-function wheel(palette: ProtoPalette): string {
+function wheel(palette: Skin): string {
   const tread = ring(
     44,
     (_, angle) =>
@@ -95,7 +95,7 @@ function wheel(palette: ProtoPalette): string {
  * салону. Стрелка идёт по кругу, деления подсвечиваются. Чисел на
  * циферблате нет намеренно — см. заголовок файла.
  */
-function clock(palette: ProtoPalette): string {
+function clock(palette: Skin): string {
   const ticks = ring(60, (index, angle) => {
     const big = index % 5 === 0;
     return `<rect x="${big ? 118.6 : 119.3}" y="${big ? 16 : 18}" width="${big ? 2.8 : 1.4}" height="${
@@ -121,7 +121,7 @@ function clock(palette: ProtoPalette): string {
 </svg>`;
 }
 
-const BUILDERS: Record<string, { build: (palette: ProtoPalette) => string; spinDeg: number }> = {
+const BUILDERS: Record<string, { build: (palette: Skin) => string; spinDeg: number }> = {
   wheel: { build: wheel, spinDeg: 540 },
   clock: { build: clock, spinDeg: 720 },
 };
@@ -148,7 +148,7 @@ function photoWheel(image: ProtoImage): string {
   return `<img class="spin shot" src="${esc(image.url)}" alt="" width="${image.width}" height="${image.height}" fetchpriority="high" decoding="async">`;
 }
 
-export function trick(key: string, palette: ProtoPalette, image?: ProtoImage | null): Trick {
+export function trick(key: string, palette: Skin, image?: ProtoImage | null): Trick {
   if (image) return { key: "photo", html: photoWheel(image), spinDeg: BUILDERS[key]?.spinDeg ?? 540, photo: true };
   const found = BUILDERS[key] ?? BUILDERS.clock;
   return { key: BUILDERS[key] ? key : "clock", html: found.build(palette), spinDeg: found.spinDeg, photo: false };

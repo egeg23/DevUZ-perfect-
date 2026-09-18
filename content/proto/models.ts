@@ -32,16 +32,19 @@ export type ProtoLocale = "ru" | "uz";
 
 export type ProtoTone = "dark" | "light";
 
-export type ProtoPalette = {
-  ink: string;
-  surface: string;
-  line: string;
-  text: string;
-  muted: string;
-  accent: string;
-  /** Цвет текста на акцентной кнопке: на жёлтой кнопке белые буквы не видно. */
-  accentInk: string;
-};
+/**
+ * Акцент ниши.
+ *
+ * Серый ряд один на все ниши и живёт в `lib/proto/design.ts`: серым занята
+ * почти вся страница, и различать ниши им незачем. Отличаются они акцентом и
+ * гарнитурой — ровно так это устроено у всех десяти разобранных чужих
+ * сайтов.
+ *
+ * У тёмных ниш акцент яркий, а буквы на нём тёмные: белые на жёлтом не
+ * читаются. У светлых наоборот — акцент глубокий, буквы белые.
+ */
+import type { Accent } from "@/lib/proto/design";
+export type { Accent };
 
 export type ProtoNiche = {
   key: string;
@@ -55,7 +58,7 @@ export type ProtoNiche = {
   /** Трюк ниши. `null` — берётся трюк модели. */
   trick: string | null;
   tone: ProtoTone;
-  palette: ProtoPalette;
+  accent: Accent;
   /**
    * Вопросы для первички, а не текст страницы.
    *
@@ -68,45 +71,13 @@ export type ProtoNiche = {
   ask: readonly string[];
 };
 
-const DARK: ProtoPalette = {
-  ink: "#07080b",
-  surface: "#0e1117",
-  line: "#1d222c",
-  text: "#f2f5f9",
-  muted: "#98a1b0",
-  accent: "#ffb020",
-  accentInk: "#0a0b0e",
-};
-
-const NIGHT_BLUE: ProtoPalette = {
-  ink: "#070a12",
-  surface: "#0d121d",
-  line: "#1c2434",
-  text: "#eef3fa",
-  muted: "#8e9bb0",
-  accent: "#4f8cff",
-  accentInk: "#060911",
-};
-
-const WARM_LIGHT: ProtoPalette = {
-  ink: "#fbf8f4",
-  surface: "#ffffff",
-  line: "#e7ded2",
-  text: "#1b1713",
-  muted: "#6f6559",
-  accent: "#b4553a",
-  accentInk: "#ffffff",
-};
-
-const COOL_LIGHT: ProtoPalette = {
-  ink: "#f7f7fa",
-  surface: "#ffffff",
-  line: "#e3e3ea",
-  text: "#14161c",
-  muted: "#666c78",
-  accent: "#7a4bd6",
-  accentInk: "#ffffff",
-};
+const AMBER = { base: "hsl(38 96% 56%)", soft: "hsl(38 84% 46%)", ink: "hsl(38 70% 8%)" };
+const BLUE = { base: "hsl(214 94% 62%)", soft: "hsl(214 76% 48%)", ink: "hsl(214 70% 8%)" };
+const CYAN = { base: "hsl(190 92% 55%)", soft: "hsl(190 74% 42%)", ink: "hsl(190 70% 7%)" };
+const EMBER = { base: "hsl(14 90% 58%)", soft: "hsl(14 72% 46%)", ink: "hsl(14 70% 8%)" };
+const MINT = { base: "hsl(158 74% 50%)", soft: "hsl(158 60% 38%)", ink: "hsl(158 70% 7%)" };
+const TERRACOTTA = { base: "hsl(14 62% 44%)", soft: "hsl(14 46% 92%)", ink: "hsl(0 0% 100%)" };
+const PLUM = { base: "hsl(282 46% 44%)", soft: "hsl(282 40% 94%)", ink: "hsl(0 0% 100%)" };
 
 /**
  * Ниши модели «запись на время».
@@ -125,7 +96,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     uzTo: "shinamontajga",
     trick: "wheel",
     tone: "dark",
-    palette: DARK,
+    accent: AMBER,
     ask: ["Сезонное хранение шин", "Правка дисков", "Балансировка", "Ремонт проколов", "Выезд к клиенту"],
   },
   {
@@ -137,7 +108,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     uzTo: "avtoservisga",
     trick: null,
     tone: "dark",
-    palette: NIGHT_BLUE,
+    accent: BLUE,
     ask: [
       "Регулярное ТО",
       "Замена фильтров",
@@ -157,7 +128,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     uzTo: "avtomoykaga",
     trick: null,
     tone: "dark",
-    palette: NIGHT_BLUE,
+    accent: CYAN,
     ask: ["Мойка кузова", "Химчистка салона", "Полировка", "Мойка двигателя"],
   },
   {
@@ -169,7 +140,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     uzTo: "barbershopga",
     trick: null,
     tone: "dark",
-    palette: DARK,
+    accent: EMBER,
     ask: ["Стрижка", "Борода", "Бритьё опасной бритвой", "Детская стрижка"],
   },
   {
@@ -181,7 +152,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     uzTo: "go‘zallik saloniga",
     trick: null,
     tone: "light",
-    palette: WARM_LIGHT,
+    accent: TERRACOTTA,
     ask: ["Стрижка и укладка", "Окрашивание", "Уход за волосами", "Макияж", "Брови и ресницы"],
   },
   {
@@ -193,7 +164,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     uzTo: "tirnoq studiyasiga",
     trick: null,
     tone: "light",
-    palette: COOL_LIGHT,
+    accent: PLUM,
     ask: ["Маникюр", "Педикюр", "Покрытие", "Наращивание", "Дизайн"],
   },
   {
@@ -205,7 +176,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     uzTo: "detailingga",
     trick: null,
     tone: "dark",
-    palette: DARK,
+    accent: MINT,
     ask: ["Полировка кузова", "Защитное покрытие", "Химчистка", "Оклейка плёнкой"],
   },
 ];

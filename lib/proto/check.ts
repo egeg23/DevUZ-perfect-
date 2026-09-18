@@ -17,6 +17,7 @@
 import type { ProtoNiche } from "@/content/proto/models";
 import type { ProtoFacts } from "@/lib/proto/facts";
 import { factPool, mainAction, wheelProblems } from "@/lib/proto/facts";
+import { TYPE } from "@/lib/proto/design";
 import { MOTIONS } from "@/lib/proto/motion";
 import { unsupportedNumbers } from "@/lib/razbor/shift";
 
@@ -151,7 +152,46 @@ export function protoProblems(input: {
     out.push({ code: "hijack", text: "Скрипт слушает прокрутку или двигает её сам." });
   }
 
-  // 5. Движения, названные блокам, существуют.
+  /*
+   * 5. Своя гарнитура, а не системная.
+   *
+   * Самый громкий признак самодельной страницы из всех, что назвала
+   * разведка: девять из десяти чужих сайтов поставили собственный шрифт, у
+   * нас стоял системный. Системный шрифт в заголовке читается как «страницу
+   * не делали, её собрали»: он стоит по умолчанию везде, от настроек
+   * телефона до панели управления хостингом.
+   */
+  // Именно таблица стилей, а не preconnect: preconnect только открывает
+  // соединение и ни одного шрифта не приносит.
+  const webFont = /<link[^>]+rel="stylesheet"[^>]+fonts\.googleapis\.com/.test(html) || /@font-face/.test(css);
+  if (!webFont) {
+    out.push({ code: "font", text: "Страница набрана системным шрифтом: своей гарнитуры нет." });
+  }
+
+  /*
+   * 6. Размеры шрифта — из шкалы.
+   *
+   * Главная причина самодельного вида, названная разведкой: значения
+   * выбирались на глаз. 74, 44, 33, 23, 19, 17, 15, 13 — восемь чисел, ни
+   * одно из которых ни из чего не следует. Шкала решает это один раз, а
+   * проверка стережёт, чтобы в неё не дописали «ну тут на два больше».
+   *
+   * У clamp() проверяются края: середина — это наклон, посчитанный из тех же
+   * краёв, и в шкале ей взяться неоткуда.
+   */
+  const sizes: number[] = [];
+  for (const declaration of css.matchAll(/font-size\s*:\s*([^;}]+)/g)) {
+    const value = declaration[1];
+    const clamped = value.match(/clamp\(\s*([\d.]+)px[^,]*,[^,]+,\s*([\d.]+)px/);
+    if (clamped) sizes.push(Number(clamped[1]), Number(clamped[2]));
+    else for (const plain of value.matchAll(/(?:^|[\s(])([\d.]+)px/g)) sizes.push(Number(plain[1]));
+  }
+  const offScale = [...new Set(sizes)].filter((size) => !(TYPE as readonly number[]).includes(size));
+  if (offScale.length) {
+    out.push({ code: "scale", text: `Размеры шрифта не из шкалы: ${offScale.join(", ")}.` });
+  }
+
+  // 7. Движения, названные блокам, существуют.
   //
   // Опечатка в имени не ломает страницу заметно: блок просто остаётся без
   // анимации, и заметить это можно, только пролистав до него на том
@@ -171,13 +211,13 @@ export function protoProblems(input: {
     out.push({ code: "motion", text: "Слой параллакса ловит нажатия: кнопка под ним перестанет работать." });
   }
 
-  // 6. Анимация не трогает вёрстку.
+  // 8. Анимация не трогает вёрстку.
   const heavy = keyframeProperties(css).filter((property) => !ALLOWED_IN_KEYFRAMES.has(property));
   if (heavy.length) {
     out.push({ code: "repaint", text: `В @keyframes не только transform и opacity: ${heavy.join(", ")}.` });
   }
 
-  // 7. Вбок ничего не уезжает. Проверка дешёвая и не заменяет телефон:
+  // 9. Вбок ничего не уезжает. Проверка дешёвая и не заменяет телефон:
   // окончательно это видно только на снимке в 360 px, который снимает
   // scripts/proto-shot.mjs.
   if (/\b100vw\b/.test(css)) {
@@ -187,7 +227,7 @@ export function protoProblems(input: {
     out.push({ code: "overflow", text: "Нет overflow-x: clip — уехавший вбок блок даст горизонтальную прокрутку." });
   }
 
-  // 8. Главная кнопка работает.
+  // 10. Главная кнопка работает.
   const action = mainAction(facts);
   if (action.kind === "none") {
     out.push({ code: "action", text: "Нечего поставить на кнопку: нет ни телеграма, ни ватсапа, ни телефона." });
@@ -198,22 +238,22 @@ export function protoProblems(input: {
     out.push({ code: "action", text: "На странице есть ссылка в никуда." });
   }
 
-  // 9. Страница не индексируется.
+  // 11. Страница не индексируется.
   if (!/<meta\s+name="robots"[^>]*noindex/i.test(html)) {
     out.push({ code: "index", text: "Нет noindex. Чужой бизнес в выдаче Google — чужой бизнес, продвигаемый без спроса." });
   }
 
-  // 10. Имя клиента на месте: без него он не узнает свой бизнес.
+  // 12. Имя клиента на месте: без него он не узнает свой бизнес.
   if (!text.includes(facts.name)) {
     out.push({ code: "nameless", text: "На странице нет названия компании." });
   }
 
-  // 11. Снимок для трюка годится к вращению.
+  // 13. Снимок для трюка годится к вращению.
   for (const problem of wheelProblems(facts.wheel)) {
     out.push({ code: "wheel", text: `Снимок для трюка: ${problem}.` });
   }
 
-  // 12. Подсказки для первички в текст не просачиваются.
+  // 14. Подсказки для первички в текст не просачиваются.
   const known = facts.services.map((service) => service.name.toLowerCase());
   const leaked = niche.ask.filter(
     (hint) => lower.includes(hint.toLowerCase()) && !known.some((name) => name.includes(hint.toLowerCase())),
