@@ -63,6 +63,16 @@ export type PageAssets = {
   /** Разметка страницы контактов — там лежит почта и второй номер. */
   contactsHtml: string | null;
   contactsUrl: string | null;
+  /**
+   * robots.txt целиком; null — не отдался, undefined — не спрашивали.
+   *
+   * Необязательные, как и `design` в отчёте: разборы, снятые до появления
+   * проверки, их не несут, и находка «карты сайта нет» на таком отчёте была
+   * бы выдумкой о сайте, которого мы в этой части не смотрели.
+   */
+  robots?: string | null;
+  /** Нашлась ли карта сайта: по ссылке из robots.txt или по /sitemap.xml. */
+  sitemap?: boolean | null;
 };
 
 function headerValue(raw: string | string[] | undefined): string {
@@ -210,6 +220,16 @@ const CSS_MAX_BYTES = 200 * 1024;
 // Для картинок и ссылок нужен только статус: тело обрываем сразу.
 const PEEK_MAX_BYTES = 4 * 1024;
 const CONTACTS_MAX_BYTES = 256 * 1024;
+/**
+ * robots.txt и карта сайта — по четверти мегабайта хватит с запасом.
+ *
+ * Читаем их, потому что владелец спросил про индексацию, а сказать о ней
+ * что-то честное можно только по фактам. Сколько страниц у него в индексе
+ * Google, мы отсюда не узнаем и врать не будем — зато причины, по которым
+ * их мало, лежат ровно в этих двух файлах и в разметке страницы.
+ */
+const ROBOTS_MAX_BYTES = 64 * 1024;
+const SITEMAP_MAX_BYTES = 256 * 1024;
 
 /**
  * Сущности разметки в значении — обратно в символы. В адресе картинки
@@ -325,6 +345,21 @@ async function status(url: URL, ip: string): Promise<number | null> {
  * Никогда не бросает: не удалось дотянуть — отчёт строится по странице,
  * как строился до этого.
  */
+/** Адрес карты сайта, если robots.txt на неё показывает. */
+function sitemapFromRobots(robots: string | null, base: URL): URL | null {
+  if (!robots) return null;
+  const line = robots.match(/^\s*sitemap\s*:\s*(\S+)/im);
+  if (!line) return null;
+  try {
+    const url = new URL(line[1], base);
+    // Чужой хост не проверяем: запрос по адресу из чужого файла — это уже
+    // не разбор сайта, а поход туда, куда нас послали.
+    return url.hostname === base.hostname ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function enrich(probe: PageProbe): Promise<PageProbe> {
   // Страница ошибки — не сайт: её картинки, ссылки и значок ничего не
   // говорят о сайте, а находка «нет значка» на 503-й — ложь владельцу.
@@ -349,7 +384,7 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
   const contactsHref = contactsPagePath(html);
   const contactsTarget = contactsHref ? sameOrigin(contactsHref, base) : null;
 
-  const [sheets, imageStatuses, linkStatuses, faviconStatus, contactsPage] = await Promise.all([
+  const [sheets, imageStatuses, linkStatuses, faviconStatus, contactsPage, robotsBody] = await Promise.all([
     Promise.all(
       cssUrls.map(async (url) => {
         try {
@@ -370,7 +405,19 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
           .then((r) => (r.status < 400 ? r.body : null))
           .catch(() => null)
       : Promise.resolve(null),
+    once(new URL("/robots.txt", base), ip, { maxBytes: ROBOTS_MAX_BYTES, accept: "text/plain,*/*" })
+      .then((r) => (r.status < 400 ? r.body : null))
+      .catch(() => null),
   ]);
+
+  // Карта сайта: сначала там, куда показывает robots.txt, потом по обычному
+  // адресу. Проверяем содержимое, а не только код ответа: хостинги любят
+  // отдавать на несуществующий путь 200 и страницу «не найдено», и по коду
+  // карта тогда «есть» у каждого второго.
+  const sitemapUrl = sitemapFromRobots(robotsBody, base) ?? new URL("/sitemap.xml", base);
+  const sitemap = await once(sitemapUrl, ip, { maxBytes: SITEMAP_MAX_BYTES, accept: "application/xml,text/xml,*/*" })
+    .then((r) => (r.status < 400 && /<(?:urlset|sitemapindex)\b/i.test(r.body) ? true : false))
+    .catch(() => null);
 
   const fetched = sheets.filter((s): s is { body: string; truncated: boolean } => s !== null);
   const assets: PageAssets = {
@@ -384,6 +431,8 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
     brokenLinks: links.filter((_, i) => broken(linkStatuses[i])).map((u) => u.href),
     contactsHtml: contactsPage,
     contactsUrl: contactsPage ? (contactsTarget?.href ?? null) : null,
+    robots: robotsBody,
+    sitemap,
   };
 
   return { ...probe, assets };

@@ -83,6 +83,56 @@ function visibleText(html: string): string {
     .replace(/&nbsp;|&#160;/g, " ");
 }
 
+/**
+ * Строки из структурированных данных страницы.
+ *
+ * На akbar-rich.uz телефон стоял в шапке, и аудит его не нашёл: сервер
+ * отдаёт почти пустую оболочку, а номер лежит в разметке для поисковика —
+ * `application/ld+json`, — которую разбор выбрасывал вместе со всеми
+ * скриптами. Формально верно: это не видимый текст. По сути — мы выкинули
+ * самый надёжный источник контактов на современном сайте, потому что
+ * компания кладёт туда номер намеренно и в чистом виде.
+ *
+ * Берём только строковые значения. Числа и идентификаторы не трогаем: в
+ * них телефон не отличить от порядкового номера, а выдуманный контакт хуже
+ * ненайденного — по нему менеджер пойдёт писать.
+ */
+function structuredText(html: string): string {
+  const out: string[] = [];
+  const blocks = html.matchAll(
+    /<script\b[^>]*\btype\s*=\s*["'](?:application\/ld\+json|application\/json)["'][^>]*>([\s\S]*?)<\/script>/gi,
+  );
+
+  const walk = (node: unknown, depth: number): void => {
+    if (depth > 12 || out.length > 4000) return;
+    if (typeof node === "string") {
+      out.push(node);
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const item of node) walk(item, depth + 1);
+      return;
+    }
+    if (node && typeof node === "object") {
+      for (const value of Object.values(node)) walk(value, depth + 1);
+    }
+  };
+
+  for (const block of blocks) {
+    const body = block[1].trim();
+    // Полмегабайта json в разметке — обычное дело у SPA, и разбирать его
+    // целиком незачем: контакты лежат в начале, рядом с описанием сайта.
+    if (!body || body.length > 500_000) continue;
+    try {
+      walk(JSON.parse(body), 0);
+    } catch {
+      // Невалидный json внутри страницы — не наша забота: пропускаем блок.
+    }
+  }
+
+  return out.join("\n");
+}
+
 /** Контакты с одной страницы. Порядок сохраняется: первым — то, что выше. */
 export function extractContacts(html: string): Contacts {
   const phones: string[] = [];
@@ -126,7 +176,9 @@ export function extractContacts(html: string): Contacts {
     if (ig && HANDLE.test(ig[1]) && !BAD_INSTAGRAM.test(ig[1])) instagram.push(`@${ig[1]}`);
   }
 
-  const text = visibleText(html);
+  // Видимый текст и структурированные данные — один поток: и то и другое
+  // компания написала о себе сама, разница только в том, кому адресовано.
+  const text = `${visibleText(html)}\n${structuredText(html)}`;
   for (const m of text.matchAll(PHONE_IN_TEXT)) {
     const phone = normalizePhone(m[0]);
     if (phone) phones.push(phone);
@@ -137,6 +189,22 @@ export function extractContacts(html: string): Contacts {
   }
   for (const m of text.matchAll(/(?:^|[\s(])@([a-zA-Z][\w]{3,31})\b/g)) {
     if (!BAD_TELEGRAM.test(m[1])) telegram.push(`@${m[1]}`);
+  }
+
+  // Мессенджеры, записанные ссылкой, а не кнопкой. В структурированных
+  // данных для этого есть штатное поле `sameAs`, и компания складывает туда
+  // свои Telegram и Instagram ровно для того, чтобы их прочитали машиной.
+  // Разбор по href их не видел: в json нет атрибута href.
+  for (const m of text.matchAll(/(?:t\.me|telegram\.me)\/([\w.+]+)/gi)) {
+    const handle = m[1].replace(/^\+/, "");
+    if (HANDLE.test(handle) && !BAD_TELEGRAM.test(handle)) telegram.push(`@${handle}`);
+  }
+  for (const m of text.matchAll(/(?:wa\.me\/|api\.whatsapp\.com\/send\?[^\s"']*phone=)(\+?\d{8,15})/gi)) {
+    const phone = normalizePhone(m[1]);
+    if (phone) whatsapp.push(phone);
+  }
+  for (const m of text.matchAll(/instagram\.com\/([\w.]+)/gi)) {
+    if (HANDLE.test(m[1]) && !BAD_INSTAGRAM.test(m[1])) instagram.push(`@${m[1]}`);
   }
 
   return {
