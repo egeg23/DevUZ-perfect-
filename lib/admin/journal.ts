@@ -55,6 +55,8 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "project.quote_set": "смета проекта изменена",
   "plan.set": "поставил план",
   "plan.removed": "снял план",
+  "candidate.reviewed": "разобрал резюме кандидата",
+  "candidate.dropped": "убрал разбор кандидата",
   "prospect.queued": "отправил первое сообщение по сайту",
   "prospect.manual_sent": "написал по сайту сам — телефоном или в WhatsApp",
   "prospect.manual_reply": "перенёс ответ клиента из своей переписки",
