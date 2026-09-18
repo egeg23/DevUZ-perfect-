@@ -46,23 +46,93 @@ export function isStopError(message: string): boolean {
   return STOP_ERRORS.some((code) => upper.includes(code));
 }
 
+/* ── Маршрут: чем именно мы дотянемся ──────────────────────────────────── */
+
 /**
- * Кому вообще можно написать.
+ * Первые полсотни касаний показали, что писать в телеграм по адресу с сайта
+ * почти некому. Из четырнадцати адресатов девять оказались каналами (все
+ * отбились с CHAT_WRITE_FORBIDDEN — в канал нельзя написать в личку), три
+ * ботами (все три «дошли» в автоответчик), и только два были обычными
+ * аккаунтами. Живой человек не ответил ни разу.
  *
- * Только тем, кто сам опубликовал телеграм на своём сайте: публикуя
- * @username рядом с «напишите нам», компания приглашает писать. Номер
- * телефона такого приглашения не даёт — по нему звонят, а сообщение в
- * Telegram на номер, которого нет в контактах, читается как спам и им же
- * и является.
+ * Дело не в текстах: ссылка t.me на сайте компании — это её канал или её
+ * бот, потому что именно их компания и публикует. Личный аккаунт, в который
+ * можно постучаться, на сайте не печатают.
+ *
+ * Отсюда три маршрута вместо одного.
  */
-export function targetFor(contacts: Contacts): string | null {
-  return contacts.telegram[0] ?? null;
+export type RouteKind = "handle" | "phone" | "manual";
+
+export type Route = { kind: RouteKind; target: string };
+
+/**
+ * Бот ли это по имени.
+ *
+ * Телеграм требует, чтобы имя бота кончалось на «bot», — но обратное неверно,
+ * и живой человек может назваться @talbot. Ошибка здесь стоит одного
+ * упущенного адресата, а пропущенный бот стоит места в очереди и письма в
+ * пустоту, поэтому отсеиваем по имени. Настоящую проверку всё равно делает
+ * скаут: у телеграма есть флаг, и он не ошибается.
+ */
+export function isBotHandle(handle: string): boolean {
+  return /bot$/i.test(handle.replace(/^@/, ""));
 }
 
-export type Reason = "no_telegram" | "nothing_to_say" | "already" | "ok";
+/**
+ * Коды мобильных операторов Узбекистана.
+ *
+ * Городской номер телеграм по определению не найдёт: аккаунты заводят на
+ * мобильные. Незнакомый код уводит карточку в ручной маршрут — и это верная
+ * сторона ошибки: там на неё посмотрит человек, а не сгорит место в очереди.
+ */
+const UZ_MOBILE = new Set(["20", "33", "50", "55", "77", "88", "90", "91", "93", "94", "95", "97", "98", "99"]);
+
+export function isMobile(phone: string): boolean {
+  const uz = phone.match(/^\+998(\d{2})/);
+  // Чужая страна — кодов не знаем и решать за телеграм не беремся.
+  return uz ? UZ_MOBILE.has(uz[1]) : /^\+\d{10,15}$/.test(phone);
+}
+
+/**
+ * Каким путём идти к этой компании.
+ *
+ * Порядок не случайный. @адрес — единственный путь, где мы заведомо пишем
+ * туда, куда собирались. Номер с кнопки WhatsApp идёт раньше номера из
+ * подвала: на первом заведомо читают сообщения, второй может оказаться
+ * стойкой администратора. Городской номер — последний: аккаунта в телеграме
+ * на нём не будет никогда, но по нему звонят, и это тоже касание.
+ */
+export function routeFor(contacts: Contacts): Route | null {
+  const handle = contacts.telegram.find((h) => !isBotHandle(h));
+  if (handle) return { kind: "handle", target: handle };
+
+  const mobile = [...contacts.whatsapp, ...contacts.phones].find(isMobile);
+  if (mobile) return { kind: "phone", target: mobile };
+
+  const landline = contacts.phones[0];
+  if (landline) return { kind: "manual", target: landline };
+
+  return null;
+}
+
+/** Что маршрут значит для менеджера — словами, а не кодом. */
+export const ROUTE_TEXT: Record<RouteKind, string> = {
+  handle: "Пишем в телеграм по адресу с сайта.",
+  phone:
+    "Телеграма на сайте нет. Скаут добавит номер в контакты — телеграм часто находит по нему аккаунт — и напишет туда. Не найдёт: карточка вернётся к вам, писать придётся руками.",
+  manual:
+    "Автономно писать некуда: телеграма нет. Позвоните или напишите в WhatsApp, а потом отметьте это здесь — дальше переписку подхватит модель.",
+};
+
+/** Ссылка на переписку в WhatsApp с готовым текстом. */
+export function whatsappLink(phone: string, text: string): string {
+  return `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+}
+
+export type Reason = "no_way" | "nothing_to_say" | "already" | "ok";
 
 export const REASON_TEXT: Record<Reason, string> = {
-  no_telegram: "На сайте нет телеграма — писать некуда. Остаётся почта или звонок руками.",
+  no_way: "Ни телеграма, ни телефона — связаться нечем. Остаётся почта, и её мы отсюда не шлём.",
   nothing_to_say: "К сайту нет претензий: писать не о чем, и придумывать повод не надо.",
   already: "Этому сайту уже писали. Второе касание — это рассылка.",
   ok: "",
@@ -82,7 +152,7 @@ export function canContact(input: {
 }): Reason {
   if (input.status !== "new" && input.status !== "contacting") return "already";
   if (!input.findings.length) return "nothing_to_say";
-  if (!targetFor(input.contacts)) return "no_telegram";
+  if (!routeFor(input.contacts)) return "no_way";
   return "ok";
 }
 

@@ -1,4 +1,4 @@
-import { HOURLY_CAP, HOUR_MS, MAX_GAP_MS, MIN_GAP_MS, isStopError } from "@/lib/admin/outreach";
+import { HOURLY_CAP, HOUR_MS, MAX_GAP_MS, MIN_GAP_MS, isStopError, type RouteKind } from "@/lib/admin/outreach";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -46,7 +46,7 @@ export async function aheadInQueue(claimedAt: string | null): Promise<number> {
   return count ?? 0;
 }
 
-export type Queued = { id: string; target: string; message: string; host: string };
+export type Queued = { id: string; target: string; kind: RouteKind; message: string; host: string };
 
 /**
  * Следующее задание — одно за раз и не раньше паузы после предыдущего.
@@ -73,13 +73,22 @@ export async function nextQueued(now = Date.now()): Promise<Queued | null> {
 
   const { data } = await db
     .from("prospects")
-    .select("id, target, message, host")
+    .select("id, target, target_kind, message, host")
     .eq("status", "sending")
     .order("claimed_at", { ascending: true })
     .limit(1)
     .maybeSingle();
   if (!data?.target || !data?.message) return null;
-  return { id: String(data.id), target: String(data.target), message: String(data.message), host: String(data.host) };
+  return {
+    id: String(data.id),
+    target: String(data.target),
+    // Маршрут решает, о чём спрашивать телеграм: @адрес резолвится, номер
+    // импортируется в контакты. Старые строки заведены до маршрутов, и у
+    // них он один возможный.
+    kind: (data.target_kind as RouteKind | null) ?? "handle",
+    message: String(data.message),
+    host: String(data.host),
+  };
 }
 
 /**
@@ -92,13 +101,26 @@ function pseudoRandom(seed: number): number {
   return x - Math.floor(x);
 }
 
-export async function markSent(id: string): Promise<void> {
+/**
+ * Ушло.
+ *
+ * `userId` — кого телеграм нам в итоге вернул. Записывается сюда, а не
+ * забывается: ответ приходит от человека, у которого @адреса может не быть
+ * вовсе (по номеру такие и находятся), и связать его с проспектом больше
+ * нечем.
+ */
+export async function markSent(id: string, userId?: string | null): Promise<void> {
   const db = serviceClient();
   if (!db) return;
 
   const { data } = await db
     .from("prospects")
-    .update({ status: "sent", sent_at: new Date().toISOString(), failure: null })
+    .update({
+      status: "sent",
+      sent_at: new Date().toISOString(),
+      failure: null,
+      ...(userId ? { target_user_id: userId } : {}),
+    })
     .eq("id", id)
     .select("message, lead_id")
     .maybeSingle();
@@ -118,6 +140,22 @@ export async function markSent(id: string): Promise<void> {
       sent_at: new Date().toISOString(),
     });
   }
+}
+
+/**
+ * Автономно не дотянулись: адресат оказался каналом, ботом или его нет вовсе.
+ *
+ * Не `failed`: ничего не сломалось. Задание снимается с очереди и уходит
+ * человеку — в WhatsApp или звонком, — и место в часовом пределе при этом не
+ * тратится: до телеграма дело так и не дошло.
+ */
+export async function markUnreachable(id: string, note: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  await db
+    .from("prospects")
+    .update({ status: "manual", target_kind: "manual", failure: note.slice(0, 500) })
+    .eq("id", id);
 }
 
 /**

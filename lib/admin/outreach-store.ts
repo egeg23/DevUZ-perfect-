@@ -8,8 +8,10 @@ import {
   isStopError,
   messageProblems,
   outreachPrompt,
-  targetFor,
+  routeFor,
   type Reason,
+  type Route,
+  type RouteKind,
 } from "@/lib/admin/outreach";
 import type { Staff } from "@/lib/admin/session";
 import type { Finding } from "@/lib/audit/checks";
@@ -29,7 +31,7 @@ import { serviceClient } from "@/lib/supabase";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5";
 
-export type ProspectStatus = "new" | "contacting" | "sending" | "sent" | "failed" | "skipped";
+export type ProspectStatus = "new" | "contacting" | "sending" | "sent" | "failed" | "skipped" | "manual";
 
 export type Prospect = {
   id: string;
@@ -44,6 +46,8 @@ export type Prospect = {
   message: string | null;
   status: ProspectStatus;
   target: string | null;
+  target_kind: RouteKind | null;
+  manual_note: string | null;
   claimed_by: string | null;
   claimed_name: string | null;
   sent_at: string | null;
@@ -52,7 +56,7 @@ export type Prospect = {
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, status, target, claimed_by, sent_at, failure, lead_id, staff:claimed_by (display_name)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, status, target, target_kind, manual_note, claimed_by, sent_at, failure, lead_id, staff:claimed_by (display_name)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -70,6 +74,8 @@ function shape(row: Record<string, unknown>): Prospect {
     message: (row.message as string | null) ?? null,
     status: (row.status as ProspectStatus) ?? "new",
     target: (row.target as string | null) ?? null,
+    target_kind: (row.target_kind as RouteKind | null) ?? null,
+    manual_note: (row.manual_note as string | null) ?? null,
     claimed_by: (row.claimed_by as string | null) ?? null,
     claimed_name: person?.display_name ?? null,
     sent_at: (row.sent_at as string | null) ?? null,
@@ -220,8 +226,8 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
   });
   if (reason !== "ok") return { ok: false, why: reason };
 
-  const target = targetFor(prospect.contacts);
-  if (!target) return { ok: false, why: "no_telegram" };
+  const route = routeFor(prospect.contacts);
+  if (!route) return { ok: false, why: "no_way" };
 
   const text = message.trim();
   const problems = messageProblems(
@@ -242,14 +248,18 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
   // допишет первичку в этот самый лид, когда клиент ответит. Без номера
   // квалификация завела бы второй лид — уже ни за кем не закреплённый.
   const requestNo = newRequestNo();
-  const leadId = await createOutreachLead(prospect, staff, text, requestNo);
+  const leadId = await createOutreachLead(prospect, staff, text, requestNo, route);
 
   const { error } = await db
     .from("prospects")
     .update({
       message: text,
-      target,
-      status: "sending",
+      target: route.target,
+      target_kind: route.kind,
+      // Городской номер в очередь не ставим: скаут по нему никого не найдёт,
+      // а место в часовом пределе потратит. Такая карточка сразу уходит
+      // человеку — звонить.
+      status: route.kind === "manual" ? "manual" : "sending",
       claimed_by: staff.id,
       claimed_at: new Date().toISOString(),
       lead_id: leadId,
@@ -267,7 +277,7 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
     targetType: "prospect",
     targetId: id,
     ip,
-    meta: { host: prospect.host, target },
+    meta: { host: prospect.host, target: route.target, kind: route.kind },
   });
   return { ok: true, leadId };
 }
@@ -285,6 +295,7 @@ async function createOutreachLead(
   staff: Staff,
   message: string,
   requestNo: string,
+  route: Route,
 ): Promise<string | null> {
   const db = serviceClient();
   if (!db) return null;
@@ -298,8 +309,11 @@ async function createOutreachLead(
       locale: "ru",
       contact_name: prospect.label ?? prospect.host,
       company: prospect.label,
-      contact_handle: prospect.target ?? targetFor(prospect.contacts),
-      contact_kind: "telegram",
+      contact_handle: route.target,
+      // Раньше здесь стояло «telegram» независимо от того, куда мы на самом
+      // деле собирались писать. Менеджер, открыв такой лид, шёл искать
+      // адресата в телеграме, которого там не было.
+      contact_kind: route.kind === "handle" ? "telegram" : "phone",
       niche: prospect.label ?? prospect.host,
       niche_tier: 3,
       expertise: "medium",

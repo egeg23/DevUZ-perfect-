@@ -5,10 +5,12 @@ import { CopyMessage } from "@/components/admin/copy-message";
 import {
   HOURLY_CAP,
   REASON_TEXT,
+  ROUTE_TEXT,
   canContact,
   queueView,
-  targetFor,
+  routeFor,
   waitText,
+  whatsappLink,
   type Reason,
 } from "@/lib/admin/outreach";
 import type { Prospect } from "@/lib/admin/outreach-store";
@@ -38,6 +40,7 @@ const STATUS_LABEL: Record<Prospect["status"], string> = {
   sent: "отправлено",
   failed: "не ушло",
   skipped: "пропущен",
+  manual: "писать руками",
 };
 
 const STATUS_TONE: Record<Prospect["status"], string> = {
@@ -47,6 +50,10 @@ const STATUS_TONE: Record<Prospect["status"], string> = {
   sent: "text-green",
   failed: "text-red-300",
   skipped: "text-faint",
+  // Не красный: ничего не сломалось, просто дальше нужны руки. Красным
+  // помечено то, что надо чинить, и ручное касание в этом списке потерялось
+  // бы среди провалов.
+  manual: "text-blue-soft",
 };
 
 function when(iso: string | null): string {
@@ -111,7 +118,7 @@ export function OutreachList({
             findings: row.findings,
             status: row.status,
           });
-          const target = targetFor(row.contacts);
+          const route = routeFor(row.contacts);
           const expanded = open === row.id || row.status === "contacting";
           const wait =
             row.status === "sending"
@@ -175,7 +182,40 @@ export function OutreachList({
                 </p>
               ) : null}
 
-              {row.failure ? <p className="mt-2 text-xs text-red-300">{row.failure}</p> : null}
+              {row.failure ? (
+                <p className={`mt-2 text-xs ${row.status === "manual" ? "text-muted" : "text-red-300"}`}>
+                  {row.failure}
+                </p>
+              ) : null}
+
+              {/* Автономно писать некуда — но это не тупик: номер есть, и
+                  человек дотянется тем, чем скаут не может. Готовый текст
+                  рядом, чтобы касание не выродилось в «здравствуйте, я из
+                  студии»: он построен вокруг находки, которую собеседник
+                  может пойти и проверить. */}
+              {row.status === "manual" && row.target ? (
+                <div className="mt-3 rounded-lg border border-blue-soft/30 bg-blue-soft/5 px-4 py-3">
+                  <p className="text-sm text-blue-soft">Дальше руками: {row.target}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-muted">{ROUTE_TEXT.manual}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <a
+                      href={whatsappLink(row.target, row.message ?? "")}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
+                    >
+                      Открыть WhatsApp с готовым текстом
+                    </a>
+                    <a
+                      href={`tel:${row.target}`}
+                      className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
+                    >
+                      Позвонить
+                    </a>
+                    {row.message ? <CopyMessage text={row.message} /> : null}
+                  </div>
+                </div>
+              ) : null}
 
               {/* В очереди — не тупик: можно подождать, а можно написать
                   самому. Второе быстрее, и ответ придёт прямо менеджеру. */}
@@ -213,7 +253,7 @@ export function OutreachList({
                   >
                     Связаться
                   </button>
-                  <span className="text-xs text-faint">напишем в {target}</span>
+                  <span className="text-xs text-faint">{route ? ROUTE_TEXT[route.kind] : ""}</span>
                 </form>
               ) : null}
 
@@ -238,7 +278,7 @@ export function OutreachList({
                       type="submit"
                       className="rounded-xl bg-green/90 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-green"
                     >
-                      Отправить в {target}
+                      {route?.kind === "manual" ? "Взять в работу" : `Отправить в ${route?.target ?? ""}`}
                     </button>
                     <span className="text-xs text-faint">
                       Лид закрепится за вами, как только нажмёте.
@@ -247,7 +287,7 @@ export function OutreachList({
                 </form>
               ) : null}
 
-              {row.status === "new" || row.status === "contacting" ? (
+              {row.status === "new" || row.status === "contacting" || row.status === "manual" ? (
                 <form action={skipProspectAction} className="mt-2 flex flex-wrap items-center gap-2">
                   <input type="hidden" name="prospect" value={row.id} />
                   <input
