@@ -54,12 +54,16 @@ export type Prospect = {
   claimed_by: string | null;
   claimed_name: string | null;
   sent_at: string | null;
+  /** Когда перечитали переписку и нашли там своё сообщение. */
+  delivered_at: string | null;
+  /** Почему подтвердить не вышло. Пусто — значит подтвердилось. */
+  delivery_note: string | null;
   failure: string | null;
   lead_id: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, status, target, target_kind, manual_note, claimed_by, sent_at, failure, lead_id, staff:claimed_by (display_name)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, status, target, target_kind, manual_note, claimed_by, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -82,6 +86,8 @@ function shape(row: Record<string, unknown>): Prospect {
     claimed_by: (row.claimed_by as string | null) ?? null,
     claimed_name: person?.display_name ?? null,
     sent_at: (row.sent_at as string | null) ?? null,
+    delivered_at: (row.delivered_at as string | null) ?? null,
+    delivery_note: (row.delivery_note as string | null) ?? null,
     failure: (row.failure as string | null) ?? null,
     lead_id: (row.lead_id as string | null) ?? null,
   };

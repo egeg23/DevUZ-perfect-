@@ -377,3 +377,51 @@ test("ручной маршрут доходит до BANT: отметка, от
   assert.match(list, /recordManualAnswerAction/, "некуда перенести ответ клиента");
   assert.match(list, /Скопировать ответ/, "ответ модели нельзя забрать");
 });
+
+test("нажал отправить — на месте кнопки написано, чем это кончилось", () => {
+  const list = readFileSync(new URL("../components/admin/outreach-list.tsx", import.meta.url), "utf8");
+  const actions = readFileSync(new URL("../app/admin/prospect/actions.ts", import.meta.url), "utf8");
+
+  // Владелец: «чтобы при нажатии кнопка меняла название — отправлено или
+  // отправлено в очередь». Заголовок карточки писал это и раньше, но он
+  // вверху и мелким, а человек смотрит туда, куда нажал.
+  assert.match(list, /Отправлено в очередь/);
+  assert.match(list, /Отправлено · проверено в переписке/);
+
+  // И возврат — на ту же карточку, иначе результат остаётся ниже экрана.
+  assert.match(actions, /sent=1&open=\$\{id\}#p-\$\{id\}/);
+
+  // Форма отправки теперь привязана к состоянию строки, а не к «открыта ли
+  // карточка»: с якорем ?open= прежнее условие показало бы её на уже
+  // ушедшей строке, то есть предложило бы отправить второй раз.
+  assert.match(list, /row\.status === "contacting" && row\.message \?/);
+  assert.ok(!/expanded && row\.message/.test(list), "форма отправки снова зависит от параметра адреса");
+
+  // И наоборот: карточка не должна остаться без единого действия. Строка
+  // без сообщения обязана получить кнопку обратно, иначе это тупик.
+  assert.match(list, /row\.status === "new" \|\| !row\.message/);
+});
+
+test("доставка подтверждается перечитыванием переписки, а не ответом на отправку", () => {
+  const runner = readFileSync(new URL("../scout/runner.mjs", import.meta.url), "utf8");
+  const queue = readFileSync(new URL("../lib/admin/outreach-queue.ts", import.meta.url), "utf8");
+
+  // Владелец: «после того как отправилось — делай проверку, что с нашего
+  // аккаунта реально ушло сообщение». Ответ Telegram означает только, что
+  // сервер принял запрос: антиспам снимает сообщение уже после приёма, а у
+  // заблокировавшего нас оно исчезает молча — ошибки в обоих случаях нет.
+  assert.match(runner, /client\.getMessages\(userId, \{ ids: \[messageId\] \}\)/, "переписка не перечитывается");
+  assert.match(runner, /markDelivered\(job\.id, true\)/, "подтверждение никуда не записывается");
+  assert.match(runner, /markDelivered\(job\.id, false/, "неподтверждённое не отличается от подтверждённого");
+
+  // Ищем именно своё сообщение по номеру, а не «в переписке что-то есть».
+  assert.match(runner, /Number\(m\.id\) === messageId/);
+  assert.match(queue, /sent_message_id/);
+
+  // Не подтвердилось — статус не трогаем: отправка была, и повторное
+  // касание тому же человеку — ровно то, за что блокируют аккаунт.
+  assert.ok(
+    !/markDelivered[\s\S]{0,400}status: "failed"/.test(queue),
+    "неподтверждённая доставка откатывает отправку",
+  );
+});
