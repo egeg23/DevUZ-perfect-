@@ -3,6 +3,8 @@ import { analyze, unreachable, type AuditReport, type Finding } from "@/lib/audi
 import { type PitchLocale, pitch } from "@/lib/audit/pitch";
 import { crawl, enrich, probe } from "@/lib/audit/fetch";
 import { deepFindings, pagesToVisit, snap, trustFrom } from "@/lib/audit/deep";
+import { detectLang } from "@/lib/talk/language";
+import { visibleText } from "@/lib/audit/visible";
 // Разбор адреса — из чистого модуля: этот файл импортирует и браузер
 // (страница касаний показывает разбор до прогона), а guard тянет node:dns.
 import { BlockedAddress, normalizeUrl } from "@/lib/audit/url";
@@ -174,6 +176,14 @@ export type Walked = {
    * строка письма — пример из его же ниши — в письмо не попала.
    */
   hints: string[];
+  /**
+   * На каком языке написан сайт.
+   *
+   * Берётся с самих страниц, а не из домена и не из заголовка `lang`:
+   * половина узбекских сайтов стоит с `lang="ru"` по недосмотру верстальщика,
+   * а домен .uz не говорит ничего. Текст говорит.
+   */
+  lang: "ru" | "uz" | "en";
 };
 
 /**
@@ -223,6 +233,10 @@ export async function auditDeep(target: BatchTarget): Promise<{ row: BatchRow; w
       sitemapUrls: crawled.sitemapUrls,
       sitemapFresh: crawled.sitemapFresh,
       hints: snaps.flatMap((p) => [p.title ?? "", p.h1 ?? ""]).filter(Boolean),
+      // По видимому тексту главной, а не по заголовкам: заголовок часто
+      // остаётся английским («Home», названием компании), а тело страницы
+      // написано на языке, на котором с клиентом и говорят.
+      lang: detectLang(visibleText(page.html).slice(0, 4000)),
     };
 
     // Находки обхода дописываются к отчёту главной, а не к строке пачки:

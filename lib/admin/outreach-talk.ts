@@ -63,11 +63,15 @@ export function asTranscript(rows: readonly TalkRow[]): ChatMessage[] {
  * человека модель тоже не перехватывает: «сейчас позову менеджера» и
  * продолжение расспросов — самый быстрый способ потерять доверие.
  */
-export type InboundVerdict = "stop" | "human" | "talk";
+export type InboundVerdict = "stop" | "human" | "unclear" | "talk";
 
 const STOP_WORDS = [
   /не\s+пиш/i,
   /не\s+писать/i,
+  /не\s+интересует/i,
+  /не\s+интересно/i,
+  /не\s*на[дт]о/i,
+  /не\s+нужн/i,
   /отстань/i,
   /отвали/i,
   /спам/i,
@@ -76,6 +80,23 @@ const STOP_WORDS = [
   /отпиш/i,
   /unsubscribe/i,
   /stop\s+writing/i,
+  /not\s+interested/i,
+  /**
+   * Узбекский отказ.
+   *
+   * Всё это писали бы нам вместо «не нужно»: kerak emas / kerakmas —
+   * «не нужно», qiziqmaymiz — «не интересует», yozmang — «не пишите».
+   * Апостроф в yo‘q пишут четырьмя разными знаками, поэтому он в скобках, а
+   * не буквой.
+   */
+  /kerak\s*emas/i,
+  /kerakmas/i,
+  /qiziq(?:mayman|maymiz|miz\s*emas)/i,
+  /yozman?g/i,
+  /bezovta\s*qilmang/i,
+  /(?:^|[^a-z])yo['ʻ‘`]?q\s*rahmat/i,
+  /(?:^|[^а-яё])керак\s*эмас/i,
+  /(?:^|[^а-яё])кераксиз/i,
 ];
 
 const HUMAN_WORDS = [
@@ -89,17 +110,47 @@ const HUMAN_WORDS = [
   /с\s+человеком/i,
   /живо[йг]о?\s+человек/i,
   /встрет/i,
+  // Узбекский: «позвоните», «поговорим», «с менеджером», «встретимся».
+  /qo['ʻ‘`]?ng['ʻ‘`]?iroq/i,
+  /telefon\s*qil/i,
+  /gaplash(?:amiz|sak|aylik)/i,
+  /menejer\s*bilan/i,
+  /uchrash/i,
+  /(?:^|[^а-яё])қўнғироқ/i,
 ];
+
+/**
+ * Сколько слов делают ответ понятным.
+ *
+ * Меньше — и мы не знаем, что нам сказали. «Kerskmas» с сайта
+ * alfraganus.uz — одно слово с опечаткой, и ни одно правило его не ловит:
+ * «kerakmas» тут написано через «с». Разобрали как «продолжай разговор», и
+ * модель написала ответ человеку, который отказал.
+ *
+ * Отсюда правило: короткий ответ без вопроса моделью не обрабатывается.
+ * В холодной переписке два слова без вопросительного знака — это почти
+ * всегда отговорка, а не начало разговора, и цена ошибки несимметрична:
+ * промолчать и отдать человеку стоит минуты его времени, а написать в ответ
+ * на отказ стоит аккаунта.
+ */
+const SHORT_WORDS = 3;
 
 export function readInbound(text: string): InboundVerdict {
   const body = text.trim();
   if (STOP_WORDS.some((re) => re.test(body))) return "stop";
   if (HUMAN_WORDS.some((re) => re.test(body))) return "human";
-  return "talk";
+
+  // Вопрос — это начало разговора на любом языке и любой длины: «Qancha
+  // turadi?» короче трёх слов, но отвечать на него надо.
+  if (body.includes("?") || body.includes("؟")) return "talk";
+
+  const words = body.split(/\s+/).filter(Boolean).length;
+  return words <= SHORT_WORDS ? "unclear" : "talk";
 }
 
 export const HANDOVER_TEXT: Record<string, string> = {
   stop: "просил больше не писать",
+  unclear: "ответил коротко и непонятно — разберитесь сами",
   human: "просит человека — звонок или менеджера",
   qualified: "первичка закрыта, дальше человек",
   turns: "разговор идёт долго и не сходится",

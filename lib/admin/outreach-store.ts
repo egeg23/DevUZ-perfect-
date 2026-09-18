@@ -204,6 +204,9 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     draft: prospect.draft,
     sender: staff.display_name,
     walked: deep.walked,
+    // Язык сайта снят при обходе. Не вышло обойти — пишем по-русски: это
+    // не «мы решили», а «мы не знаем», и угадывать тут дороже.
+    lang: deep.walked?.lang ?? "ru",
   });
 
   const hooks = outreachHooks(findings, reference?.name ?? null);

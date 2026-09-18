@@ -29,7 +29,7 @@ const niche = deep.row.report?.facts.niche ?? null;
 const reference = outreachProof({ niche, label: row.label, host, hints: deep.walked?.hints ?? [] }).reference;
 const hooks = outreachHooks(row.findings, reference?.name ?? null);
 
-const prompt = outreachPrompt({ host, label: row.label, niche, findings: row.findings, draft: null, sender, walked: deep.walked });
+const prompt = outreachPrompt({ host, label: row.label, niche, findings: row.findings, draft: null, sender, walked: deep.walked, lang: deep.walked?.lang ?? "ru" });
 
 const write = async (notes) => {
   const r = await new Anthropic().beta.messages.create({
@@ -63,6 +63,7 @@ console.log(`обход: ${deep.walked ? deep.walked.paths.join(", ") : "не в
 const DEEP = new Set(["no_price_anywhere","same_title","no_description_pages","thin_pages","no_trust","dead_end_pages","stale_sitemap","heavy_home"]);
 const found = row.findings.filter((f) => DEEP.has(f.code));
 console.log(`находки обхода: ${found.length ? found.map((f) => f.title).join(" | ") : "нет"}`);
+console.log(`язык сайта: ${deep.walked?.lang ?? "не определён"}`);
 console.log(`ниша: ${niche ?? "—"}   пример из ниши: ${reference ? `${reference.name} (${reference.niche})` : "нет — и в письме его не будет"}`);
 console.log("═".repeat(72));
 console.log(msg);
