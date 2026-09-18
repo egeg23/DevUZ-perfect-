@@ -13,6 +13,7 @@ import {
   whatsappLink,
   type Reason,
 } from "@/lib/admin/outreach";
+import { GRADE_TEXT, seoReport, type SeoGrade } from "@/lib/audit/seo";
 import type { Prospect } from "@/lib/admin/outreach-store";
 import { contactsLine, hasAnyContact } from "@/lib/audit/contacts";
 
@@ -26,6 +27,14 @@ import { contactsLine, hasAnyContact } from "@/lib/audit/contacts";
  */
 
 const CARD = "rounded-xl border border-line bg-surface px-5 py-4";
+
+/** Балл видимости в поиске: цвет несёт смысл, а подпись его называет. */
+const SEO_TONE: Record<SeoGrade, string> = {
+  good: "text-green",
+  fixable: "text-gold",
+  poor: "text-red-300",
+  blocked: "text-red-400",
+};
 
 const SEVERITY: Record<string, string> = {
   critical: "border-red-500/40 text-red-300",
@@ -119,6 +128,7 @@ export function OutreachList({
             status: row.status,
           });
           const route = routeFor(row.contacts);
+          const seo = seoReport({ findings: row.findings });
           const expanded = open === row.id || row.status === "contacting";
           const wait =
             row.status === "sending"
@@ -146,11 +156,22 @@ export function OutreachList({
                   {row.claimed_name ? ` · ${row.claimed_name}` : ""}
                   {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
                 </span>
-                {row.score !== null ? (
-                  <span className={`ml-auto font-mono text-sm ${row.score < 60 ? "text-gold" : "text-muted"}`}>
-                    {row.score}
-                  </span>
-                ) : null}
+                <span className="ml-auto flex items-baseline gap-3">
+                  {/* Два балла, а не один. Общий говорит, обратится ли
+                      человек, который уже открыл сайт; этот — дойдёт ли он
+                      до сайта из поиска. Менеджеру нужны оба: разговор с
+                      владельцем, которого не находят, начинается иначе. */}
+                  {seo.measured && seo.total > 0 ? (
+                    <span className={`font-mono text-sm ${SEO_TONE[seo.grade]}`} title={GRADE_TEXT[seo.grade]}>
+                      поиск {seo.score}
+                    </span>
+                  ) : null}
+                  {row.score !== null ? (
+                    <span className={`font-mono text-sm ${row.score < 60 ? "text-gold" : "text-muted"}`} title="Общая оценка">
+                      {row.score}
+                    </span>
+                  ) : null}
+                </span>
               </div>
 
               {row.findings.length ? (
