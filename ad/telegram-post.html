@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Inter:wght@400;700&display=swap">
+<style>
+/*
+ * Реклама студии для телеграма. Смотреть будут с телефона.
+ *
+ * Отсюда единственное решение, из которого следует всё остальное: размеры
+ * заданы в vw, то есть в долях ширины холста, а не в пикселях. В ленте
+ * картинка ужимается с 1080 до примерно 390 px — втрое, — и текст, набранный
+ * «нормальными» 25 px, превращается в девять. В vw макет можно снять и на
+ * 1080, и на 390, и второй снимок покажет ровно то, что увидит человек.
+ *
+ * Нижняя граница: 4vw. На 390 px это 15,6 px — то, что ещё читается с
+ * вытянутой руки. Всё, что не помещается в этот размер, из картинки убрано и
+ * живёт в тексте поста: ссылка, список услуг, условия.
+ *
+ * Число держит плоскость цвета во всю ширину, а не подложка со знаком.
+ * Полупрозрачный знак за заголовком рассекал буквы тёмной перекладиной — на
+ * снимке это читалось как брак печати. Плоскость цвета — то же, что делают
+ * все десять сайтов из разведки (.claude/skills/proto-master/recon.md),
+ * и она же снимает проблему наложения.
+ *
+ * Цвета и шрифт — с devuz.studio (app/globals.css). Реклама, набранная другой
+ * гарнитурой, читается как чужая.
+ */
+:root{
+  --ink:#05070b; --surface:#0b0f16; --line:#1d2634;
+  --text:#eaf0f7; --muted:#8b97a8;
+  --green:#22f0a0;
+  --display:"Unbounded",system-ui,sans-serif;
+  --face:"Inter",system-ui,sans-serif;
+  --pad:6vw;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--ink); color:var(--text);
+  font-family:var(--face); -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:var(--pad);
+}
+
+.head{display:flex;align-items:center;gap:2.6vw}
+.head svg{width:8.6vw;height:8.6vw;display:block;flex:none}
+.head b{font:800 5.6vw/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.head b i{font-style:normal;color:var(--green)}
+
+h1{
+  margin:5.5vw 0 0;
+  font:800 8vw/1.06 var(--display); letter-spacing:-.02em; text-transform:uppercase;
+}
+
+/* Плоскость во всю ширину: поля тела обходятся отрицательным margin, чтобы
+   цвет доходил до края кадра, а число внутри стояло по той же левой линии,
+   что и заголовок. */
+.band{
+  margin:5.5vw calc(var(--pad) * -1) 0;
+  padding:4.6vw var(--pad) 5.2vw;
+  background:var(--green); color:var(--ink);
+  display:flex; align-items:baseline; gap:2.6vw;
+  font-family:var(--display); font-weight:800; text-transform:uppercase;
+}
+.band .n{font-size:24vw;line-height:.8;letter-spacing:-.045em}
+.band .w{font-size:10vw;letter-spacing:-.015em}
+
+.sub{
+  margin:5.5vw 0 0; max-width:30ch;
+  font:400 5vw/1.36 var(--face); color:var(--muted);
+}
+.sub b{color:var(--text);font-weight:700}
+
+.cta{
+  align-self:flex-start; margin-top:5.5vw;
+  font:700 5.4vw/1 var(--face); padding:4vw 6vw; border-radius:3.2vw;
+  background:var(--text); color:var(--ink); white-space:nowrap;
+}
+</style>
+</head>
+<body>
+  <div class="head">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-108 -108 216 216" aria-hidden="true">
+      <defs><linearGradient id="gs" x1="0" y1="-1" x2="1" y2="1">
+        <stop offset="0" stop-color="#5B9BFF"/><stop offset="55%" stop-color="#3B82F6"/><stop offset="100%" stop-color="#22F0A0"/>
+      </linearGradient></defs>
+      <path d="M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z" fill="url(#gs)"/>
+      <rect x="-10" y="-32" width="20" height="64" rx="9" fill="#05070B"/>
+    </svg>
+    <b>DevUz<i>.</i>Studio</b>
+  </div>
+
+  <h1>Бесплатный<br>прототип<br>сайта</h1>
+
+  <p class="band"><span class="n">22</span><span class="w">часа</span></p>
+
+  <p class="sub">Живая страница по ссылке, а не <b>картинка в фигме</b></p>
+
+  <span class="cta">@DevUz_Studio</span>
+</body>
+</html>
