@@ -6,6 +6,7 @@ import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { cases } from "@/content/cases";
+import { casesTitle } from "@/content/company";
 import { getDictionary } from "@/content/dictionaries";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { buildMetadata } from "@/lib/seo";
@@ -44,7 +45,7 @@ export default async function CasesPage({
           {"// "}{dict.cases.kicker}
         </p>
         <h1 className="mt-4 max-w-3xl text-[clamp(2.2rem,5vw,3.6rem)] font-extrabold leading-[1.06]">
-          {dict.cases.title}
+          {casesTitle(dict.cases.title)}
         </h1>
         <p className="mt-5 max-w-2xl text-[1.02rem] leading-relaxed text-muted">
           {dict.cases.description}

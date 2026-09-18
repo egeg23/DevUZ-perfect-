@@ -97,3 +97,31 @@ test("ссылка на пример ведёт на существующий р
   const slug = ref.url.split("/").pop();
   assert.ok(cases.some((c) => c.slug === slug), `кейса ${slug} нет в списке`);
 });
+
+/* ── Сайт и письмо говорят одно число ──────────────────────────────────── */
+
+test("число проектов на сайте — то же, что в письме", async () => {
+  const { stats } = await import("@/content/company");
+
+  // Стояло «12+ проектов в продакшене», а письмо говорило «550+
+  // завершённых». Формально разные величины, но адресат, перешедший по
+  // ссылке, разницы не разбирает: он видит два числа, расходящихся в сорок
+  // раз, и дальше не верит ни баллу видимости, ни расчёту потерь, ни всему
+  // остальному, что мы честно измерили.
+  const tile = stats.find((s) => s.value === String(proof.projects));
+  assert.ok(tile, `на сайте нет плитки с числом ${proof.projects}`);
+  assert.equal(tile.suffix, "+", "«550» без плюса читается как ровно 550");
+});
+
+test("число в заголовке кейсов подставляется на всех языках", async () => {
+  const { casesTitle } = await import("@/content/company");
+  const { getDictionary } = await import("@/content/dictionaries");
+  const { locales } = await import("@/lib/i18n");
+
+  for (const locale of locales) {
+    const title = casesTitle(getDictionary(locale).cases.title);
+    assert.ok(title.includes(String(proof.projects)), `${locale}: числа нет в заголовке`);
+    // Незамещённая скобка на витрине — то же, что ценник с «{price}».
+    assert.ok(!title.includes("{n}"), `${locale}: «{n}» осталось в заголовке`);
+  }
+});
