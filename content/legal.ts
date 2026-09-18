@@ -16,6 +16,15 @@ export type LegalDoc = { title: string; updated: string; intro: string; sections
  * маркетинга, а не права: клиент покупает работающий подбор, а не марку
  * чужой нейросети, и в остальных текстах студии она не упоминается.
  *
+ * Формулировка при этом правовая, а не оценочная. Раньше здесь стояло
+ * «ассистент на базе внешней языковой модели» — это рассказ о том, из чего
+ * мы сделаны, и закон его не требует: он требует сказать, кому уходят
+ * данные. Студия делает AI-продукты на заказ — ассистентов на данных
+ * клиента, поиск по его базе, дообучение под задачу, — и собственная
+ * политика конфиденциальности не то место, где стоит объяснять клиенту,
+ * что мы чего-то не умеем. Получатель назван, обязанность закрыта,
+ * характеристика нашей технологии отсюда убрана.
+ *
  * Раздел про доступ сотрудников появился вместе с панелью. Пока заявки
  * жили только в Telegram, писать было не о чем; теперь у них есть внутреннее
  * хранилище с именным входом — и клиент вправе знать, что именно происходит
@@ -50,7 +59,7 @@ const ru: LegalDoc = {
     {
       heading: "AI-ассистент в чате",
       body: [
-        "Первую линию общения ведёт ассистент на базе внешней языковой модели. Текст вашего сообщения передаётся её поставщику — компании Anthropic (США) — для формирования ответа.",
+        "Первую линию общения ведёт AI-ассистент студии. Чтобы сформировать ответ, текст вашего сообщения обрабатывается на инфраструктуре нашего технологического поставщика — компании Anthropic (США).",
         "Не отправляйте в чат пароли, реквизиты карт, доступы к системам и другие сведения, которые не должны покидать вашу компанию. Ассистент никогда не запрашивает их сам.",
         "Итог разговора и его расшифровка передаются менеджеру отдела продаж в Telegram, чтобы он продолжил разговор с того места, где вы остановились.",
       ],
@@ -132,7 +141,7 @@ const en: LegalDoc = {
     {
       heading: "The AI assistant in the chat",
       body: [
-        "The first line of contact is an assistant built on an external language model. The text of your message is sent to its provider, Anthropic (USA), in order to produce a reply.",
+        "The first line of contact is the studio's own AI assistant. To produce a reply, the text of your message is processed on the infrastructure of our technology provider, Anthropic (USA).",
         "Do not send passwords, card details, system credentials or anything else that must not leave your company. The assistant never asks for them.",
         "The outcome of the conversation and its transcript are passed to a sales manager over Telegram so they can continue from where you stopped.",
       ],
@@ -214,7 +223,7 @@ const uz: LegalDoc = {
     {
       heading: "Chatdagi AI-yordamchi",
       body: [
-        "Muloqotning birinchi liniyasini tashqi til modeli asosidagi yordamchi olib boradi. Xabaringiz matni javob shakllantirish uchun uning yetkazib beruvchisiga — Anthropic (AQSh) kompaniyasiga uzatiladi.",
+        "Muloqotning birinchi liniyasini studiyaning AI-yordamchisi olib boradi. Javobni shakllantirish uchun xabaringiz matni texnologik yetkazib beruvchimiz — Anthropic (AQSh) kompaniyasining infratuzilmasida qayta ishlanadi.",
         "Chatga parollar, karta rekvizitlari, tizimlarga kirish ma’lumotlari va kompaniyangizdan chiqmasligi kerak bo‘lgan boshqa ma’lumotlarni yubormang. Yordamchi ularni hech qachon o‘zi so‘ramaydi.",
         "Suhbat natijasi va uning matni menejerga Telegram orqali uzatiladi.",
       ],
@@ -296,7 +305,7 @@ const zh: LegalDoc = {
     {
       heading: "聊天中的 AI 助手",
       body: [
-        "第一线接待由基于外部语言模型的助手完成。您的消息文本会发送至其提供方 Anthropic（美国）以生成回复。",
+        "第一线接待由工作室自有的 AI 助手完成。为生成回复，您的消息文本会在我们的技术供应商 Anthropic（美国）的基础设施上处理。",
         "请勿在聊天中发送密码、银行卡信息、系统凭据，或其他不应离开贵公司的资料。助手绝不会主动索取这些内容。",
         "对话结论及记录会通过 Telegram 转交销售经理，以便其从您停下的地方继续。",
       ],

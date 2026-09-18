@@ -32,6 +32,13 @@ import type { Locale } from "@/lib/i18n";
 const NAMES =
   /(?<!\p{L})(anthropic|claude|open\s?ai|chat\s?gpt|gpt[\s-]?\d?|gemini|llama|mistral|deep\s?seek|qwen|grok|yandex\s?gpt|gigachat|антропик|клод|опенэйай|чат\s?гпт|джипити|джемини)\p{L}{0,3}(?!\p{L})/iu;
 
+/** Что студия делает с моделями — глаголами, какими об этом говорят. */
+const CAN = "(?:делаем|разрабатываем|обуча\\p{L}*|создаём|создаем|пишем|умеем|можем|занимаемся)";
+
+/** Модель, которая наша. Не «модель продаж» и не «модель подписки». */
+const OURS =
+  "(?:нейросет\\p{L}*|\\bllm\\b|\\brag\\b|(?:сво\\p{L}*|собственн\\p{L}*|ии|ai|язык\\p{L}*)[\\s-]+модел\\p{L}*|модел\\p{L}*\\s+(?:под\\s+)?(?:клиент\\p{L}*|задач\\p{L}*|ваш\\p{L}*))";
+
 /**
  * Оправдания за «чужую» начинку — то, что и вызвало этот модуль.
  *
@@ -44,12 +51,23 @@ const EXCUSES: RegExp[] = [
   /на\s+(?:базе|основе)\s+(?:внешн|чуж|сторонн)\p{L}*/iu,
   /(?:внешн|чуж|сторонн)\p{L}*\s+(?:языков\p{L}*\s+)?модел/iu,
   /(?:внешн|чуж|сторонн)\p{L}*\s+(?:llm|нейросет\p{L}*)/iu,
-  /не\s+обучал\p{L}*[^.!?]{0,40}модел/iu,
-  /модел\p{L}*[^.!?]{0,40}не\s+обучал/iu,
   /(?:своей|собственной)\s+модели[^.!?]{0,24}нет(?!\p{L})/iu,
   /нет[^.!?]{0,24}(?:своей|собственной)\s+модели/iu,
   /\bwe\s+(?:did\s*n[o']t|do\s*n[o']t|have\s*n[o']t)\s+train/iu,
   /\b(?:third[\s-]?party|external)\s+(?:llm|language\s+model|model\s+api)/iu,
+  // Принижение студии. Владелец: «мы же студия, которая может делать свои
+  // модели, свои RAG. Категорически нельзя говорить этого». Ассистент,
+  // рассказывающий, чего мы не умеем, закрывает продажу той самой услуги,
+  // ради которой разговор и идёт.
+  //
+  // Слово «модель» само по себе сюда не годится: в деловом разговоре это
+  // чаще модель продаж, подписки или монетизации, и правило на голое
+  // «модель» обрывало бы обычную реплику про бизнес клиента. Поэтому
+  // ловим только ту модель, которая наша: своя, языковая, нейросеть, RAG
+  // или «под клиента».
+  new RegExp(`не\\s+${CAN}[^.!?]{0,30}${OURS}`, "iu"),
+  new RegExp(`${OURS}[^.!?]{0,40}не\\s+${CAN}`, "iu"),
+  /(?:просто|всего\s+лишь|лишь)\s+(?:обёртк|обертк|надстройк|прослойк|оболочк)/iu,
 ];
 
 /**
@@ -96,15 +114,17 @@ export function selfTalkHit(text: string): string | null {
 /**
  * Чем ответ продолжается вместо запрещённого.
  *
- * Не «я не могу об этом говорить»: отказ без содержания читается как
- * уход от неудобного. Здесь сказано то, что правда и что стоит сказать, —
- * ассистента собрала студия, — и разговор возвращается к делу клиента.
+ * Не «я не могу об этом говорить»: отказ без содержания читается как уход
+ * от неудобного. И не рассказ про начинку — её тут и вырезали. Вместо
+ * этого одна фраза о том, что студия умеет делать клиенту: ассистенты на
+ * его данных и поиск по его базе — это наша услуга, а не чужая заслуга.
+ * Вопрос «что у тебя под капотом» так превращается в разговор о заказе.
  */
 const REDIRECT: Record<Locale, string> = {
-  ru: "Ассистента собрала студия: сценарий разговора, знание наших проектов и вилок, связка с панелью менеджеров — наша работа. Технический стек мы не раскрываем. Вернёмся к делу: чем занимается ваша компания?",
-  en: "The assistant was built by the studio: the conversation design, the knowledge of our projects and price ranges, the link to the managers' panel — that's our work. We don't disclose the technical stack. Back to business: what does your company do?",
-  uz: "Assistentni studiya yig'gan: suhbat ssenariysi, loyihalarimiz va narx oralig'imiz haqidagi bilim, menejerlar paneli bilan bog'lanish — bularning bari bizning ishimiz. Texnik stekni oshkor qilmaymiz. Ishga qaytaylik: kompaniyangiz nima bilan shug'ullanadi?",
-  zh: "这个助手由工作室搭建：对话设计、我们项目与报价区间的知识、与经理面板的对接，都是我们自己的成果。技术栈我们不对外透露。回到正事：贵公司是做什么的？",
+  ru: "Ассистент — наша разработка, технический стек мы не раскрываем. Такие решения мы делаем и на заказ: ассистент на ваших данных, поиск по вашей базе, дообучение под задачу. Вернёмся к делу: чем занимается ваша компания?",
+  en: "The assistant is our own build; we don't disclose the technical stack. We build these to order as well: an assistant on your data, search across your knowledge base, tuning for your task. Back to business: what does your company do?",
+  uz: "Assistent — bizning ishlanmamiz, texnik stekni oshkor qilmaymiz. Bunday yechimlarni buyurtmaga ham qilamiz: sizning ma'lumotlaringiz asosidagi assistent, bazangiz bo'ylab qidiruv, vazifangizga moslash. Ishga qaytaylik: kompaniyangiz nima bilan shug'ullanadi?",
+  zh: "这个助手是我们自己的成果，技术栈我们不对外透露。这类方案我们也承接定制：基于贵方数据的助手、面向贵方知识库的检索、针对具体任务的调优。回到正事：贵公司是做什么的？",
 };
 
 export function redirectLine(locale: Locale): string {
