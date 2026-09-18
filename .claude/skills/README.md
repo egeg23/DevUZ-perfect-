@@ -16,6 +16,18 @@
 | `ui-ux-pro-max` | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | поиск по 79 стилям, 192 палитрам, 74 парам шрифтов; `scripts/search.py "<запрос>" --design-system` |
 | `refactoring-ui` | [s0xDk/refactoring-ui-skill](https://github.com/s0xDk/refactoring-ui-skill) | шкалы размеров, отступов, цвета и теней; иерархия весом и цветом, а не кеглем |
 | `superdesign` | [superdesigndev/superdesign-skill](https://github.com/superdesigndev/superdesign-skill) | когда нужен вариант целиком, а не правка |
+| `marketing-cro` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | взгляд маркетингового агентства: ценностное предложение, путь к действию, доверие |
+| `seo-audit` | [AgriciDaniel/claude-seo](https://github.com/AgriciDaniel/claude-seo) | взгляд айтишного агентства: техническое SEO, что и в каком порядке смотрят |
+
+Последние два взяты под задачу «сделай первое касание таким, как у топовых
+студий». Из них взята **рамка** — что вообще смотрят и в каком порядке, — а
+пороги и формулировки написаны заново в `lib/audit/deep.ts`. Чужие пороги на
+узбекский рынок не переносятся, а чужие формулировки написаны для отчёта,
+который читает маркетолог, а не владелец мебельного цеха.
+
+Скопированы целиком только две ветки: `cro` из первого и `seo-audit` с
+`seo-technical` из второго. Тянуть репозиторий на сотню навыков ради двух
+значило бы принести в дерево код, который никто здесь не читал.
 
 Владелец: «используй всегда» — про `ui-ux-pro-max`. Тесты этого навыка из
 копии убраны: они проверяют его собственные данные, а не наш код, и в нашем

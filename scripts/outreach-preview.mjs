@@ -13,18 +13,21 @@
  * имитируется — при `--dry` модель не зовётся, и видно только промпт.
  */
 import Anthropic from "@anthropic-ai/sdk";
-import { auditOne, toProspectRow } from "@/lib/audit/batch";
+import { auditDeep, toProspectRow } from "@/lib/audit/batch";
 import { OUTREACH_SYSTEM, OUTREACH_TOOL, messageProblems, outreachHooks, outreachPrompt } from "@/lib/admin/outreach";
 import { seoReport } from "@/lib/audit/seo";
 
 const url = process.argv[2];
 const sender = process.argv[3] ?? "Александр";
-const row = toProspectRow(await auditOne({ raw: url, url, label: null, problem: null }));
+const t0 = Date.now();
+const deep = await auditDeep({ raw: url, url, label: null, problem: null });
+const row = toProspectRow(deep.row);
+const seconds = ((Date.now() - t0) / 1000).toFixed(1);
 const host = new URL(url).hostname.replace(/^www\./, "");
 const seo = seoReport({ findings: row.findings });
 const hooks = outreachHooks(row.findings);
 
-const prompt = outreachPrompt({ host, label: row.label, niche: null, findings: row.findings, draft: null, sender });
+const prompt = outreachPrompt({ host, label: row.label, niche: null, findings: row.findings, draft: null, sender, walked: deep.walked });
 
 const write = async (notes) => {
   const r = await new Anthropic().beta.messages.create({
@@ -54,6 +57,10 @@ problems = messageProblems(msg, prompt, host, hooks);
 console.log("═".repeat(72));
 console.log(`${host}   поиск ${seo.measured ? seo.score : "—"}/100   теряется ${hooks.lost ? `${hooks.lost[0]}–${hooks.lost[1]}` : "—"} из 100`);
 console.log(`показываем: ${seo.shown.map((p) => p.title).join(" · ") || "—"}${seo.hidden ? `   (+${seo.hidden} на разбор)` : ""}`);
+console.log(`обход: ${deep.walked ? deep.walked.paths.join(", ") : "не вышел"}   за ${seconds} с`);
+const DEEP = new Set(["no_price_anywhere","same_title","no_description_pages","thin_pages","no_trust","dead_end_pages","stale_sitemap","heavy_home"]);
+const found = row.findings.filter((f) => DEEP.has(f.code));
+console.log(`находки обхода: ${found.length ? found.map((f) => f.title).join(" | ") : "нет"}`);
 console.log("═".repeat(72));
 console.log(msg);
 console.log("─".repeat(72));

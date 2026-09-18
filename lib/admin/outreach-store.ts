@@ -18,7 +18,7 @@ import type { Staff } from "@/lib/admin/session";
 import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
-import type { ProspectRow } from "@/lib/audit/batch";
+import { auditDeep, type ProspectRow } from "@/lib/audit/batch";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { serviceClient } from "@/lib/supabase";
 
@@ -164,16 +164,32 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
 
   if (!process.env.ANTHROPIC_API_KEY) return { ok: false, why: "Нет ключа модели — сообщение некому написать." };
 
+  /**
+   * Углублённый разбор — здесь, а не в пачке.
+   *
+   * Владелец: «можно чтобы на это уходило 30-60 секунд… главное, чтобы он был
+   * прям как у топовых студий». Минута на один сайт, из которого сейчас
+   * родится письмо, — это ровно та минута, которую в агентстве тратит живой
+   * человек, прежде чем написать. Минута на каждый из пятидесяти сайтов в
+   * пачке — это час, за который никто не сядет.
+   *
+   * Обход не обязателен: не вышел — пишем по тому, что было. Письмо по одной
+   * главной лучше, чем отказ.
+   */
+  const deep = await auditDeep({ raw: prospect.url, url: prospect.url, label: prospect.label, problem: null });
+  const findings = deep.row.report?.findings.length ? deep.row.report.findings : prospect.findings;
+
   const prompt = outreachPrompt({
     host: prospect.host,
     label: prospect.label,
     niche: null,
-    findings: prospect.findings,
+    findings,
     draft: prospect.draft,
     sender: staff.display_name,
+    walked: deep.walked,
   });
 
-  const hooks = outreachHooks(prospect.findings);
+  const hooks = outreachHooks(findings);
 
   /**
    * Один ход модели.
@@ -219,9 +235,18 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
   }
 
   // Что не так — покажем сотруднику рядом с текстом: правит он, а не мы.
+  // Находки обхода сохраняются вместе с сообщением: на них сослалось письмо,
+  // и менеджер, открыв карточку, должен видеть то же, что читает адресат.
   await db
     .from("prospects")
-    .update({ message, status: "contacting", claimed_by: staff.id, claimed_at: new Date().toISOString() })
+    .update({
+      message,
+      findings,
+      score: deep.row.report?.score ?? prospect.score,
+      status: "contacting",
+      claimed_by: staff.id,
+      claimed_at: new Date().toISOString(),
+    })
     .eq("id", id);
 
   return { ok: true, message };

@@ -160,3 +160,74 @@ test("балл не засчитывается как часть другого 
   assert.ok(codes.includes("no_seo_score"), "«158» — это не балл 58");
   assert.ok(codes.includes("no_loss"), "«515» — это не 5 и не 15");
 });
+
+/* ── Обход: то, что видно только с нескольких страниц ──────────────────── */
+
+test("находки обхода не выписываются по одной-двум страницам", async () => {
+  const { deepFindings } = await import("@/lib/audit/deep");
+  const page = (path: string) => ({
+    url: `https://x.uz${path}`,
+    path,
+    status: 200,
+    title: "Одно и то же",
+    description: null,
+    h1: null,
+    words: 500,
+    hasPrice: false,
+    hasTel: true,
+    hasForm: true,
+    seen: { words: 500, bytes: 40_000, scriptShare: 0.1, clientRendered: false, framework: null },
+  });
+
+  // Две страницы — это ещё не обход. Утверждать «ни на одной странице» по
+  // двум значило бы завышать цену собственной работы.
+  assert.deepEqual(deepFindings({
+    pages: [page("/"), page("/uslugi")],
+    sitemapUrls: null, sitemapFresh: null, homeBytes: null, imageBytes: null,
+    trust: { reviews: true, cases: true, guarantee: true },
+  }), []);
+
+  const codes = deepFindings({
+    pages: [page("/"), page("/uslugi"), page("/price"), page("/contacts")],
+    sitemapUrls: null, sitemapFresh: null, homeBytes: null, imageBytes: null,
+    trust: { reviews: true, cases: true, guarantee: true },
+  }).map((f) => f.code);
+  assert.ok(codes.includes("no_price_anywhere"));
+  assert.ok(codes.includes("same_title"));
+});
+
+test("число в находке стоит в том падеже, в каком его читают", async () => {
+  const { deepFindings } = await import("@/lib/audit/deep");
+  const page = (path: string) => ({
+    url: `https://x.uz${path}`, path, status: 200,
+    title: `Заголовок ${path}`, description: "есть", h1: null, words: 500,
+    hasPrice: false, hasTel: true, hasForm: true,
+    seen: { words: 500, bytes: 40_000, scriptShare: 0.1, clientRendered: false, framework: null },
+  });
+  const title = (n: number) =>
+    deepFindings({
+      pages: Array.from({ length: n }, (_, i) => page(`/p${i}`)),
+      sitemapUrls: null, sitemapFresh: null, homeBytes: null, imageBytes: null,
+      trust: { reviews: true, cases: true, guarantee: true },
+    }).find((f) => f.code === "no_price_anywhere")?.title ?? "";
+
+  // Живой прогон выдал «ни на одной из 6 страницах» — по такой строке
+  // адресат понимает, что письмо машинное, и дальше не читает.
+  assert.match(title(6), /из 6 страниц$/);
+  assert.match(title(21), /из 21 страницы$/);
+  assert.match(title(3), /из 3 страниц$/);
+});
+
+test("длительность созвона не считается выдуманным замером", async () => {
+  const { inventedNumbers } = await import("@/lib/admin/outreach");
+  const prompt = "Видимость в поиске: 56 из 100. Потери: 46–79.";
+
+  // Дважды на живых прогонах это отбивало годное письмо: менеджер нажал
+  // «Связаться» и получил бы отказ вместо текста.
+  assert.deepEqual(inventedNumbers("Готов созвониться на 20–30 минут, видимость 56 из 100, теряется 46–79.", prompt), []);
+  assert.deepEqual(inventedNumbers("Созвонимся на 15 минут.", prompt), []);
+
+  // А выдуманный замер о сайте по-прежнему не проходит: так его не пишут.
+  assert.deepEqual(inventedNumbers("Ваш сайт отвечает за 4.2 секунды.", prompt), ["4.2"]);
+  assert.deepEqual(inventedNumbers("Мы обошли 340 страниц.", prompt), ["340"]);
+});
