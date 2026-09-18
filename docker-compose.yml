@@ -35,6 +35,9 @@ services:
       # Читается в рантайме, в образ не попадает.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
+      # Разбор переписки моделью попроще: он не пишет клиенту, а вычитывает
+      # факты из уже законченной ленты — переплачивать тут не за что.
+      ANTHROPIC_REVIEW_MODEL: ${ANTHROPIC_REVIEW_MODEL:-claude-haiku-4-5-20251001}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_SALES_CHAT_ID: ${TELEGRAM_SALES_CHAT_ID}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}

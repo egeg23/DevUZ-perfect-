@@ -4,6 +4,7 @@ import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { runCoach } from "@/lib/admin/coach-store";
 import { sweepOrders } from "@/lib/admin/order-sweep-run";
 import { runTalks } from "@/lib/admin/outreach-talk-run";
+import { runReviews } from "@/lib/talk/review-run";
 import { runRazborShift } from "@/lib/razbor/shift-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
@@ -200,6 +201,12 @@ export async function POST(request: Request) {
   const talks = await runTalks();
   if (talks.errors.length) console.error("касания:", talks.errors.join("; "));
 
+  // Надзиратель: разбор переписок, которые успокоились час назад и дольше.
+  // После ответов, а не до: разговор, которому свип только что написал,
+  // разбирать рано — он ещё идёт.
+  const reviews = await runReviews();
+  if (reviews.errors.length) console.error("разборы переписок:", reviews.errors.join("; "));
+
   // Ночная смена разборов. Переехала сюда с плановой сессии: у той не было
   // ни базы, ни репозитория, ни ключа модели, и три ночи подряд она
   // отрабатывала по полчаса, не оставляя следа. Сама решает, пора ли —
@@ -230,6 +237,7 @@ export async function POST(request: Request) {
     shifts,
     silent,
     talks,
+    reviews,
     razbor,
     ok: true,
     sent,

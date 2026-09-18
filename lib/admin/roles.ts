@@ -64,6 +64,9 @@ export const SECTIONS: readonly Section[] = [
   { href: "/admin/orders", label: "Заявки", roles: EVERYONE },
   { href: "/admin/scout", label: "Поиск", roles: EVERYONE },
   { href: "/admin/prospect", label: "Касания", roles: EVERYONE },
+  // Надзор — рядом с касаниями: это разбор тех же разговоров. Всем, а не
+  // только владельцу: урок нужен тому, кто пишет следующее письмо.
+  { href: "/admin/talks", label: "Надзор", roles: EVERYONE },
   { href: "/admin/projects", label: "Проекты", roles: EVERYONE },
   { href: "/admin/stats", label: "Статистика", roles: EVERYONE },
   // Финансы — всем, но каждому своё: менеджер видит свои проекты и баланс,
