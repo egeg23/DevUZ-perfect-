@@ -306,7 +306,7 @@ const ru = {
   },
   about: {
     kicker: "о студии",
-    title: "Небольшая команда, крупные проекты",
+    title: "Команда под крупные проекты",
     lead: "DevUz Studio — студия полного цикла из Ташкента. Мы делаем продукты, а не макеты: от первого разговора до работающего сервиса с пользователями, платежами и поддержкой.",
     principlesTitle: "Как мы работаем",
     principles: [
@@ -618,7 +618,7 @@ const en: Dictionary = {
   },
   about: {
     kicker: "the studio",
-    title: "A small team, large projects",
+    title: "A team built for large projects",
     lead: "DevUz Studio is a full-cycle studio based in Tashkent. We build products, not mockups: from the first conversation to a running service with real users, payments and support.",
     principlesTitle: "How we work",
     principles: [
@@ -924,7 +924,7 @@ const uz: Dictionary = {
   },
   about: {
     kicker: "studiya haqida",
-    title: "Kichik jamoa, yirik loyihalar",
+    title: "Yirik loyihalar uchun jamoa",
     lead: "DevUz Studio — Toshkentdagi to‘liq siklli studiya. Biz maket emas, mahsulot yaratamiz: birinchi suhbatdan foydalanuvchilari, to‘lovlari va qo‘llab-quvvatlashi bor ishlaydigan xizmatgacha.",
     principlesTitle: "Qanday ishlaymiz",
     principles: [
@@ -1224,7 +1224,7 @@ const zh: Dictionary = {
   },
   about: {
     kicker: "关于工作室",
-    title: "小团队，大项目",
+    title: "为大型项目而生的团队",
     lead: "DevUz Studio 是一家位于塔什干的全流程开发工作室。我们交付的是产品而非设计稿：从第一次沟通，一直做到拥有真实用户、支付与运维支持的线上服务。",
     principlesTitle: "我们的做事方式",
     principles: [

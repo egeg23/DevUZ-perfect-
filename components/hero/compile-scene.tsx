@@ -8,7 +8,7 @@ import { useNarrow } from "@/components/hero/use-narrow";
 import { ease, phase, useScrollProgress } from "@/components/hero/use-scroll-progress";
 import { Container } from "@/components/ui/container";
 import type { Dictionary } from "@/content/dictionaries";
-import { stats } from "@/content/company";
+import { headline, stats } from "@/content/company";
 import { localeHref, t, type Locale } from "@/lib/i18n";
 
 type Token = { c: string; v: string };
@@ -280,7 +280,14 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
 
         {/* ── Карточки, прилетающие параллельно дождю ─────────────────────── */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 hidden lg:block">
-          {stats.slice(0, 3).map((stat, i) => {
+          {/*
+            Первыми — штат и число проектов: их называет первое письмо, и тот,
+            кого они зацепили, приходит по ссылке именно сюда. Раньше здесь
+            летели «12+ проектов», «4 языка» и «35 микросервисов» — то есть
+            число, которое письму противоречило, и два, на которые пришедший
+            проверять не смотрит.
+          */}
+          {[...headline, ...stats].slice(0, 3).map((stat, i) => {
             const local = Math.min(1, Math.max(0, (cardsIn - i * 0.16) / 0.52));
             const eased = ease(local);
             const positions = [
