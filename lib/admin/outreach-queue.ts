@@ -1,4 +1,12 @@
-import { HOURLY_CAP, HOUR_MS, MAX_GAP_MS, MIN_GAP_MS, isStopError, type RouteKind } from "@/lib/admin/outreach";
+import {
+  HOURLY_CAP,
+  HOUR_MS,
+  MAX_GAP_MS,
+  MIN_GAP_MS,
+  handTargetFrom,
+  isStopError,
+  type RouteKind,
+} from "@/lib/admin/outreach";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -190,9 +198,26 @@ export async function markDelivered(id: string, ok: boolean, note?: string): Pro
 export async function markUnreachable(id: string, note: string): Promise<void> {
   const db = serviceClient();
   if (!db) return;
+
+  /**
+   * Вместе с маршрутом меняется и адресат.
+   *
+   * Первая версия правила этого не делала — и карточка с пометкой «дальше
+   * руками» оставалась с @адресом в поле цели. А карточка ручного маршрута
+   * строит из этого поля ссылку «позвонить» и ссылку в WhatsApp: выходило
+   * `tel:@muradbuildings` и адрес WhatsApp, собранный из букв. Менеджер
+   * нажимал и попадал в никуда.
+   *
+   * Номера нет вовсе — стираем цель совсем: пустая карточка с объяснением
+   * честнее, чем две кнопки, которые никуда не ведут.
+   */
+  const { data } = await db.from("prospects").select("contacts").eq("id", id).maybeSingle();
+  const contacts = (data?.contacts ?? {}) as { whatsapp?: string[]; phones?: string[] };
+  const hand = handTargetFrom({ whatsapp: contacts.whatsapp ?? [], phones: contacts.phones ?? [] });
+
   await db
     .from("prospects")
-    .update({ status: "manual", target_kind: "manual", failure: note.slice(0, 500) })
+    .update({ status: "manual", target_kind: "manual", target: hand, failure: note.slice(0, 500) })
     .eq("id", id);
 }
 
