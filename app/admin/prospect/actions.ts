@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 
 import { record } from "@/lib/admin/audit";
 import {
+  markManualSent,
   prepareOutreach,
   queueOutreach,
+  recordManualAnswer,
   saveProspects,
   skipProspect,
 } from "@/lib/admin/outreach-store";
@@ -120,6 +122,45 @@ export async function sendOutreachAction(formData: FormData) {
   revalidatePath("/admin/prospect");
   revalidatePath("/admin");
   redirect(result.ok ? "/admin/prospect?sent=1" : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}`);
+}
+
+/**
+ * «Написал руками»: по ручному маршруту касание делает человек.
+ *
+ * С этой минуты разговор существует: первое письмо ложится в ленту, модель
+ * считается ведущей. Без отметки карточка так и висела бы «дальше руками», и
+ * второй менеджер написал бы тому же человеку второй раз.
+ */
+export async function markManualSentAction(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("prospect") ?? "");
+  const result = await markManualSent(id, staff, String(formData.get("note") ?? ""), await requestIp());
+  revalidatePath("/admin/prospect");
+  revalidatePath("/admin");
+  redirect(
+    result.ok
+      ? `/admin/prospect?open=${id}#p-${id}`
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}#p-${id}`,
+  );
+}
+
+/**
+ * «Что ответили»: ответ клиента переносит человек.
+ *
+ * По ручному маршруту он приходит менеджеру на телефон и к нам не попадает
+ * ничем. Перенёс — дальше всё как в телеграме: модель пишет ответ, ответ
+ * появляется в карточке, отправляет снова человек.
+ */
+export async function recordManualAnswerAction(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("prospect") ?? "");
+  const result = await recordManualAnswer(id, String(formData.get("body") ?? ""), staff, await requestIp());
+  revalidatePath("/admin/prospect");
+  redirect(
+    result.ok
+      ? `/admin/prospect?open=${id}#p-${id}`
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}#p-${id}`,
+  );
 }
 
 /** «Не пишем»: сайт убирается из очереди руками, с причиной. */

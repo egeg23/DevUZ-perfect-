@@ -1,6 +1,12 @@
 import Link from "next/link";
 
-import { prepareOutreachAction, sendOutreachAction, skipProspectAction } from "@/app/admin/prospect/actions";
+import {
+  markManualSentAction,
+  prepareOutreachAction,
+  recordManualAnswerAction,
+  sendOutreachAction,
+  skipProspectAction,
+} from "@/app/admin/prospect/actions";
 import { CopyMessage } from "@/components/admin/copy-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import {
@@ -79,6 +85,7 @@ export function OutreachList({
   open,
   error,
   sent,
+  replies,
 }: {
   rows: Prospect[];
   /** Что ушло за последний час: предел считается по факту отправки. */
@@ -86,6 +93,8 @@ export function OutreachList({
   open?: string;
   error?: string;
   sent?: boolean;
+  /** Ответы модели по ручному маршруту: их отправляет человек. */
+  replies?: Record<string, string>;
 }) {
   if (!rows.length) return null;
 
@@ -247,6 +256,79 @@ export function OutreachList({
                     </a>
                     {row.message ? <CopyMessage text={row.message} /> : null}
                   </div>
+
+                  {/* Отметка не отчётность: с неё начинается разговор.
+                      Первое письмо ложится в ленту, модель считается
+                      ведущей, и ответ клиента, который менеджер сюда
+                      перенесёт, ей будет с чем связать. Без отметки карточка
+                      висела бы «дальше руками», и второй менеджер написал бы
+                      тому же человеку второй раз. */}
+                  <form action={markManualSentAction} className="mt-3 flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="prospect" value={row.id} />
+                    <input
+                      name="note"
+                      placeholder="чем написали — WhatsApp, звонок"
+                      className="rounded-lg border border-line bg-surface-2 px-2 py-1 text-xs"
+                    />
+                    <SubmitButton
+                      pendingLabel="Отмечаем…"
+                      className="rounded-lg border border-blue-soft/40 px-3 py-1.5 text-xs text-blue-soft transition hover:bg-blue-soft/10"
+                    >
+                      Написал руками
+                    </SubmitButton>
+                  </form>
+                </div>
+              ) : null}
+
+              {/* Ручной маршрут после отметки: ответ клиента приходит
+                  менеджеру на телефон и к нам не попадает ничем. Перенёс —
+                  дальше всё как в телеграме: модель пишет ответ, он
+                  появляется здесь же, отправляет снова человек. */}
+              {row.status === "sent" && row.target_kind === "manual" ? (
+                <div className="mt-3 rounded-lg border border-line bg-surface-2/40 px-4 py-3">
+                  <p className="text-xs uppercase tracking-wider text-faint">
+                    Написано руками{row.manual_note ? ` · ${row.manual_note}` : ""}
+                  </p>
+
+                  {replies?.[row.id] ? (
+                    <div className="mt-2 rounded-lg border border-green/25 bg-green/5 px-3 py-2">
+                      <p className="text-xs text-green">Модель написала ответ — отправьте его тем же путём.</p>
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text">
+                        {replies[row.id]}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <CopyMessage text={replies[row.id]} label="Скопировать ответ" />
+                        {row.target ? (
+                          <a
+                            href={whatsappLink(row.target, replies[row.id])}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
+                          >
+                            Открыть WhatsApp с ответом
+                          </a>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <form action={recordManualAnswerAction} className="mt-3">
+                    <input type="hidden" name="prospect" value={row.id} />
+                    <label className="block text-xs uppercase tracking-wider text-faint">
+                      Что ответил клиент — перенесите сюда, дальше ведёт модель
+                      <textarea
+                        name="body"
+                        rows={3}
+                        className="mt-1 block w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm leading-relaxed text-text"
+                      />
+                    </label>
+                    <SubmitButton
+                      pendingLabel="Записываем…"
+                      className="mt-2 rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
+                    >
+                      Записать ответ
+                    </SubmitButton>
+                  </form>
                 </div>
               ) : null}
 

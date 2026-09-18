@@ -16,6 +16,15 @@ import { serviceClient } from "@/lib/supabase";
  * кладёт ответ в очередь. Ни один из них не ждёт другого.
  */
 
+/**
+ * Сколько очередных ответов просматривать за раз.
+ *
+ * Ровно столько, чтобы ручные сообщения не запирали очередь. Больше не
+ * нужно: отдаём всё равно по одному, а каждая строка — отдельный запрос за
+ * проспектом.
+ */
+const REPLY_SCAN = 20;
+
 export type Inbound = {
   messageId: string;
   prospectId: string;
@@ -41,26 +50,83 @@ export type Inbound = {
  */
 export async function recordInbound(input: {
   handle: string;
+  /** Кого вернул телеграм при отправке. Главный ключ: он есть всегда. */
+  userId?: string;
   body: string;
 }): Promise<{ matched: boolean; host?: string; verdict?: string }> {
   const db = serviceClient();
   if (!db) return { matched: false };
 
   const handle = normalizeHandle(input.handle);
-  if (!handle) return { matched: false };
+  const userId = (input.userId ?? "").trim();
+  if (!handle && !userId) return { matched: false };
 
   // Сравниваем в общем виде: в проспекте адрес мог остаться ссылкой.
   const { data: rows } = await db
     .from("prospects")
-    .select("id, host, target, lead_id, ai_handling")
+    .select("id, host, target, target_user_id, lead_id, ai_handling")
     .eq("status", "sent")
     .order("sent_at", { ascending: false })
     .limit(500);
 
-  const prospect = (rows ?? []).find((row) => normalizeHandle(row.target as string | null) === handle);
+  /**
+   * Сначала по id, и только потом по адресу.
+   *
+   * У человека, найденного по номеру, @адреса может не быть вовсе — а
+   * именно так мы и находим тех, у кого на сайте нет телеграма. Пока
+   * сверялись только по адресу, их ответы не находили своего разговора и
+   * уходили в никуда: снаружи это выглядело как «клиент не отвечает».
+   *
+   * Обратный порядок был бы хуже и по другой причине: адрес человек меняет,
+   * id — нет.
+   */
+  const prospect =
+    (userId ? (rows ?? []).find((row) => String(row.target_user_id ?? "") === userId) : undefined) ??
+    (handle ? (rows ?? []).find((row) => normalizeHandle(row.target as string | null) === handle) : undefined);
   if (!prospect) return { matched: false };
 
-  const body = input.body.trim().slice(0, 4000);
+  return saveInbound(prospect, input.body);
+}
+
+/**
+ * Ответ клиента, принесённый руками.
+ *
+ * По ручному маршруту переписка идёт в WhatsApp или голосом: клиент отвечает
+ * менеджеру на телефон, и к нам это не приходит ничем. Владелец: «и тут же
+ * подхватывает ИИ после написанного сообщения пользователю до выяснения
+ * BANT» — подхватить модель может только то, что ей показали, поэтому ответ
+ * переносит человек.
+ *
+ * Дальше всё то же самое, что и с телеграмом: свип видит неотвеченное
+ * входящее, модель пишет ответ, ответ ложится в очередь. Отправит его снова
+ * человек — скауту по этому маршруту отправлять некуда.
+ */
+export async function recordManualInbound(
+  prospectId: string,
+  body: string,
+): Promise<{ matched: boolean; host?: string; verdict?: string }> {
+  const db = serviceClient();
+  if (!db) return { matched: false };
+
+  const { data: prospect } = await db
+    .from("prospects")
+    .select("id, host, target, target_user_id, lead_id, ai_handling")
+    .eq("id", prospectId)
+    .maybeSingle();
+  if (!prospect) return { matched: false };
+
+  return saveInbound(prospect, body);
+}
+
+/** Общий хвост обоих путей: записать, оценить, при нужде отпустить модель. */
+async function saveInbound(
+  prospect: { id: unknown; host: unknown; lead_id: unknown; ai_handling: unknown },
+  raw: string,
+): Promise<{ matched: boolean; host?: string; verdict?: string }> {
+  const db = serviceClient();
+  if (!db) return { matched: false };
+
+  const body = raw.trim().slice(0, 4000);
   if (!body) return { matched: false };
 
   await db.from("outreach_messages").insert({
@@ -240,24 +306,46 @@ export async function nextReply(): Promise<{ id: string; target: string; body: s
   const db = serviceClient();
   if (!db) return null;
 
-  const { data } = await db
+  /**
+   * Берём пачку, а не одно.
+   *
+   * Ручной маршрут скауту не отдаётся — по нему переписка идёт в WhatsApp
+   * или голосом, и отправить в телеграм нечего. Но взять одно верхнее и
+   * вернуть null, увидев ручное, значило бы намертво запереть очередь: одно
+   * такое сообщение не даёт уйти всем, кто стоит за ним, а ждут там живые
+   * люди, которые сами нам написали. Поэтому ручное пропускается, а не
+   * останавливает.
+   */
+  const { data: queued } = await db
     .from("outreach_messages")
     .select("id, body, prospect_id")
     .eq("direction", "out")
     .eq("status", "queued")
     .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!data) return null;
+    .limit(REPLY_SCAN);
+  if (!queued?.length) return null;
 
-  const { data: p } = await db
-    .from("prospects")
-    .select("target, host")
-    .eq("id", data.prospect_id)
-    .maybeSingle();
-  if (!p?.target) return null;
+  for (const row of queued) {
+    const { data: p } = await db
+      .from("prospects")
+      .select("target, host, target_kind, target_user_id")
+      .eq("id", row.prospect_id)
+      .maybeSingle();
+    if (!p?.target) continue;
 
-  return { id: String(data.id), target: String(p.target), body: String(data.body), host: String(p.host) };
+    // Ответ модели по ручному маршруту никуда не девается: он остаётся в
+    // очереди и показывается менеджеру в карточке, чтобы тот отправил его
+    // своей рукой. Скаут же, попытавшись, получил бы отказ и передал бы
+    // разговор человеку с пометкой «не удалось» — то есть испортил бы ровно
+    // то, что здесь работает.
+    if (p.target_kind === "manual") continue;
+
+    // Пишем тому, кого телеграм вернул при отправке: у найденного по номеру
+    // @адреса может не быть.
+    const to = String(p.target_user_id ?? "") || String(p.target);
+    return { id: String(row.id), target: to, body: String(row.body), host: String(p.host) };
+  }
+  return null;
 }
 
 export async function markReplySent(id: string): Promise<void> {
