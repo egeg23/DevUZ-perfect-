@@ -5,6 +5,7 @@ import { PROTO_NICHES, protoNicheByKey, trickFor } from "@/content/proto/models"
 import { bookingHtml, inCity } from "@/lib/proto/booking";
 import { keyframeProperties, protoProblems, visibleText } from "@/lib/proto/check";
 import { enoughToBuild, mainAction, wordmark, type ProtoFacts } from "@/lib/proto/facts";
+import { parseServices } from "@/lib/proto/form";
 import { buildProto, sendable } from "@/lib/proto/render";
 import { TRICK_KEYS, trick } from "@/lib/proto/tricks";
 
@@ -252,4 +253,33 @@ test("bookingHtml не падает на пустых необязательны
   assert.ok(html.includes("Шина Плюс"));
   assert.equal(html.includes("undefined"), false, "в страницу попало undefined");
   assert.equal(html.includes("null"), false, "в страницу попало null");
+});
+
+test("услуги из формы: цена после тире, дефис в названии не трогаем", () => {
+  const parsed = parseServices(
+    [
+      "Замена шин — от 40 000 сум",
+      "Балансировка колеса | 25 000",
+      "Ремонт прокола - 15 000 сум",
+      "Шиномонтаж R16-R18",
+      "   ",
+      "Сезонное хранение",
+    ].join("\n"),
+  );
+  assert.deepEqual(parsed, [
+    { name: "Замена шин", price: "от 40 000 сум" },
+    { name: "Балансировка колеса", price: "25 000" },
+    { name: "Ремонт прокола", price: "15 000 сум" },
+    // Дефис без пробелов — часть названия: «R16-R18» это размер, а не цена.
+    { name: "Шиномонтаж R16-R18", price: null },
+    { name: "Сезонное хранение", price: null },
+  ]);
+  assert.deepEqual(parseServices(""), []);
+  assert.equal(parseServices(Array.from({ length: 30 }, (_, i) => `Услуга ${i}`).join("\n")).length, 12);
+});
+
+test("услуги из формы доезжают до страницы как есть", () => {
+  const result = build({ services: parseServices("Замена шин — от 40 000 сум\nБалансировка\nРемонт прокола") });
+  assert.ok(result.html.includes("от 40 000 сум"), "цена не доехала до карточки");
+  assert.deepEqual(result.problems, []);
 });
