@@ -14,6 +14,18 @@ const BUTTON =
   "rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-xs transition hover:border-green/40 hover:text-green";
 const LABEL = "block text-xs text-faint";
 
+/** Поля, которыми перебивают то, что нашёл аудитор. */
+const OVERRIDES: readonly (readonly [string, string])[] = [
+  ["name", "Название компании"],
+  ["city", "Город — именительный: Ташкент"],
+  ["hours", "Часы работы — как у него на сайте"],
+  ["address", "Адрес"],
+  ["phone", "Телефон"],
+  ["telegram", "Телеграм — без собаки"],
+  ["whatsapp", "Ватсап — номер"],
+  ["prospect", "ID касания, если прототип по лиду"],
+];
+
 const STATUS: Record<string, string> = {
   draft: "черновик",
   ready: "готов",
@@ -49,11 +61,22 @@ function when(iso: string): string {
 export default async function ProtoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ r?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const staff = await requireStaff();
-  const { r } = await searchParams;
+  const query = await searchParams;
+  const { r } = query;
   const rows = await protosList();
+
+  /*
+   * Поля можно заполнить ссылкой: /admin/proto?url=tirex.uz&services=...
+   *
+   * Нужно там, где данные уже собраны в другом месте, — например, первичка
+   * закончилась, и менеджеру остаётся нажать одну кнопку вместо того, чтобы
+   * перепечатывать в форму то, что он только что услышал. Ничего не
+   * сохраняется и никуда не уходит: это ровно значения по умолчанию.
+   */
+  const prefill = (name: string): string | undefined => query[name] || undefined;
 
   return (
     <AdminShell staff={staff}>
@@ -84,12 +107,18 @@ export default async function ProtoPage({
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="sm:col-span-2">
             <span className={LABEL}>Сайт клиента</span>
-            <input name="url" required placeholder="tirex.uz" className={`${INPUT} mt-1`} />
+            <input
+              name="url"
+              required
+              placeholder="tirex.uz"
+              defaultValue={prefill("url")}
+              className={`${INPUT} mt-1`}
+            />
           </label>
 
           <label>
             <span className={LABEL}>Ниша</span>
-            <select name="niche" className={`${INPUT} mt-1`} defaultValue={PROTO_NICHES[0].key}>
+            <select name="niche" className={`${INPUT} mt-1`} defaultValue={prefill("niche") ?? PROTO_NICHES[0].key}>
               {PROTO_NICHES.map((niche) => (
                 <option key={niche.key} value={niche.key}>
                   {niche.ru}
@@ -100,7 +129,7 @@ export default async function ProtoPage({
 
           <label>
             <span className={LABEL}>Язык страницы</span>
-            <select name="locale" className={`${INPUT} mt-1`} defaultValue="ru">
+            <select name="locale" className={`${INPUT} mt-1`} defaultValue={prefill("locale") ?? "ru"}>
               <option value="ru">Русский</option>
               <option value="uz">O‘zbekcha</option>
             </select>
@@ -114,35 +143,29 @@ export default async function ProtoPage({
               name="services"
               required
               rows={6}
+              defaultValue={prefill("services")}
               placeholder={"Замена шин — от 40 000 сум\nБалансировка колеса\nРемонт прокола"}
               className={`${INPUT} mt-1 font-mono text-xs leading-relaxed`}
             />
           </label>
         </div>
 
-        <details className="mt-4">
+        {/* Раскрыт, если перебивки пришли ссылкой: иначе человек нажмёт
+            «Собрать», не увидев подставленного за него. */}
+        <details className="mt-4" open={OVERRIDES.some(([name]) => prefill(name))}>
           <summary className="cursor-pointer text-xs text-faint">
             Перебить то, что нашлось на сайте
           </summary>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {[
-              ["name", "Название компании"],
-              ["city", "Город — именительный: Ташкент"],
-              ["hours", "Часы работы — как у него на сайте"],
-              ["address", "Адрес"],
-              ["phone", "Телефон"],
-              ["telegram", "Телеграм — без собаки"],
-              ["whatsapp", "Ватсап — номер"],
-              ["prospect", "ID касания, если прототип по лиду"],
-            ].map(([name, label]) => (
+            {OVERRIDES.map(([name, label]) => (
               <label key={name}>
                 <span className={LABEL}>{label}</span>
-                <input name={name} className={`${INPUT} mt-1`} />
+                <input name={name} defaultValue={prefill(name)} className={`${INPUT} mt-1`} />
               </label>
             ))}
             <label className="sm:col-span-2">
               <span className={LABEL}>Строка о себе — его словами, не нашими</span>
-              <input name="about" className={`${INPUT} mt-1`} />
+              <input name="about" defaultValue={prefill("about")} className={`${INPUT} mt-1`} />
             </label>
           </div>
         </details>
