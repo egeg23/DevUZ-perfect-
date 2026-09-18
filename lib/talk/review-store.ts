@@ -44,21 +44,32 @@ export async function toReview(limit = 5, now = Date.now()): Promise<ToReview[]>
 
   const quietBefore = new Date(now - QUIET_MS).toISOString();
 
-  // Кандидаты — те, кому отвечали. Прочих в копилке быть не должно.
-  const { data: answered } = await db
+  /**
+   * Кандидаты — те, кому отвечали. Прочих в копилке быть не должно.
+   *
+   * Ошибка запроса поднимается наружу, а не глотается. Первая версия просила
+   * у таблицы колонку `facts`, которой там нет; PostgREST отвечал отказом,
+   * `data` приходил пустым — и надзиратель молча не видел ни одной переписки.
+   * Снаружи это выглядело как «разбирать нечего», и отличить одно от другого
+   * было нельзя. Молчаливый отказ хуже громкого: он не чинится, потому что
+   * его не видно.
+   */
+  const { data: answered, error } = await db
     .from("prospects")
-    .select("id, host, lead_id, ai_handling, handover_reason, replied_at, facts")
+    .select("id, host, lead_id, ai_handling, handover_reason, replied_at")
     .not("replied_at", "is", null)
     .lt("replied_at", quietBefore)
     .order("replied_at", { ascending: false })
     .limit(100);
+  if (error) throw new Error(`переписки не прочитались: ${error.message}`);
   if (!answered?.length) return [];
 
   const ids = answered.map((row) => String(row.id));
-  const { data: reviews } = await db
+  const { data: reviews, error: seenError } = await db
     .from("talk_reviews")
     .select("prospect_id, created_at")
     .in("prospect_id", ids);
+  if (seenError) throw new Error(`копилка не прочиталась: ${seenError.message}`);
   const reviewed = new Map((reviews ?? []).map((r) => [String(r.prospect_id), String(r.created_at)]));
 
   const out: ToReview[] = [];
@@ -106,7 +117,7 @@ export async function saveReview(input: {
   const db = serviceClient();
   if (!db) return;
 
-  await db.from("talk_reviews").upsert(
+  const { error } = await db.from("talk_reviews").upsert(
     {
       prospect_id: input.prospectId,
       lead_id: input.leadId,
@@ -123,6 +134,9 @@ export async function saveReview(input: {
     },
     { onConflict: "prospect_id" },
   );
+  // Разбор, который не сохранился, — это потраченный вызов модели и пустая
+  // страница у владельца. Пусть падает громко.
+  if (error) throw new Error(`разбор не сохранился: ${error.message}`);
 }
 
 export type ReviewRow = {
