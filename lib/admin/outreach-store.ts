@@ -47,6 +47,8 @@ export type Prospect = {
   contacts: Contacts;
   draft: string | null;
   message: string | null;
+  /** Ниша по классификатору — по ней подбирался наш пример в письме. */
+  niche: string | null;
   status: ProspectStatus;
   target: string | null;
   target_kind: RouteKind | null;
@@ -63,7 +65,7 @@ export type Prospect = {
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, status, target, target_kind, manual_note, claimed_by, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, status, target, target_kind, manual_note, claimed_by, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -79,6 +81,7 @@ function shape(row: Record<string, unknown>): Prospect {
     contacts: { ...EMPTY_CONTACTS, ...((row.contacts as Partial<Contacts>) ?? {}) },
     draft: (row.draft as string | null) ?? null,
     message: (row.message as string | null) ?? null,
+    niche: (row.niche as string | null) ?? null,
     status: (row.status as ProspectStatus) ?? "new",
     target: (row.target as string | null) ?? null,
     target_kind: (row.target_kind as RouteKind | null) ?? null,
@@ -262,6 +265,9 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     .update({
       message,
       findings,
+      // Ниша сохраняется вместе с письмом: по ней подобран наш пример, и
+      // по ней же проверка перед отправкой поймёт, тот ли проект назван.
+      niche,
       score: deep.row.report?.score ?? prospect.score,
       status: "contacting",
       claimed_by: staff.id,
@@ -307,7 +313,7 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
     outreachPrompt({
       host: prospect.host,
       label: prospect.label,
-      niche: null,
+      niche: prospect.niche,
       findings: prospect.findings,
       draft: prospect.draft,
       sender: staff.display_name,
@@ -315,7 +321,7 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
     prospect.host,
     outreachHooks(
       prospect.findings,
-      outreachProof({ niche: null, label: prospect.label, host: prospect.host }).reference?.name ?? null,
+      outreachProof({ niche: prospect.niche, label: prospect.label, host: prospect.host }).reference?.name ?? null,
     ),
   );
   if (problems.length) return { ok: false, why: problems.map((p) => p.text).join(" ") };

@@ -1,4 +1,5 @@
-import { cases } from "@/content/cases";
+import { NICHES } from "@/content/razbor/catalog";
+import { cases, type Case } from "@/content/cases";
 import { proof } from "@/content/company";
 import { nicheWords } from "@/lib/razbor/classify";
 
@@ -42,12 +43,50 @@ export type Proof = {
 
 const SITE = "https://devuz.studio";
 
+/**
+ * Слова, которые есть у всех и не говорят ни о какой нише.
+ *
+ * Владелец: «MAVERA идёт в пример логистики, странно. Это же застройщик».
+ * Так и было: у MAVERA в нишах «quruvchi kompaniya», у логистики в приметах
+ * «logistika kompaniya», общее слово — «kompaniya». Длина от четырёх букв
+ * его не отсеивала, и застройщик уезжал в письмо логистической компании как
+ * пример её ниши.
+ *
+ * Тем же путём «юридические услуги» сходились с «бытовыми услугами» из
+ * USTA. Общее слово — это не общая ниша, и таких слов немного: они
+ * называют форму организации, а не занятие.
+ */
+const EMPTY = new Set([
+  "компания",
+  "компании",
+  "компанией",
+  "kompaniya",
+  "kompaniyasi",
+  "фирма",
+  "бизнес",
+  "biznes",
+  "услуги",
+  "услуг",
+  "сервис",
+  "xizmat",
+  "xizmatlar",
+  "центр",
+  "markaz",
+  "сайт",
+  "sayt",
+  "онлайн",
+  "onlayn",
+  "company",
+  "services",
+  "business",
+]);
+
 /** Слова, по которым ниша адресата сходится с нишей кейса. */
 function words(value: string): string[] {
   return value
     .toLowerCase()
     .split(/[^a-zа-яё0-9]+/i)
-    .filter((w) => w.length >= 4);
+    .filter((w) => w.length >= 4 && !EMPTY.has(w));
 }
 
 /**
@@ -64,6 +103,26 @@ function words(value: string): string[] {
  * та самая ложь, которую адресат ловит за десять секунд.
  */
 export function referenceFor(niche: string | null, hints: readonly string[] = []): Reference | null {
+  // Сначала — прямое попадание по нише классификатора.
+  //
+  // Совпадение словами оставлено ниже только для случая, когда ниша не
+  // определилась вовсе и работать приходится по заголовку страницы. Когда
+  // ниша известна, гадать по словам незачем: списки у кейсов проставлены
+  // руками, и ответ «в этой нише у нас примера нет» — законный.
+  const slug = (niche ?? "").trim().toLowerCase();
+  if (slug) {
+    const exact = cases.find((item) => item.forNiches.includes(slug));
+    if (exact) return { name: exact.name, url: `${SITE}/cases/${exact.slug}`, niche: nicheLabel(slug, exact) };
+    // Ниша известна и ни одному кейсу не подходит — на этом и останавливаемся.
+    // Подбор по словам здесь дал бы ровно ту подстановку наугад, из-за
+    // которой застройщик оказывался примером для логистики.
+    //
+    // «Известна» — по словарю самого классификатора, а не по каталогу
+    // разборов: у классификатора ниш больше, и недвижимости в каталоге нет
+    // вовсе, хотя определяет он её уверенно.
+    if (nicheWords(slug).length > 0) return null;
+  }
+
   // Слаг ниши разворачивается в её же слова: «nedvizhimost» само по себе не
   // сойдётся с «недвижимость» из кейса ни одной буквой.
   const needles = new Set([
@@ -82,6 +141,54 @@ export function referenceFor(niche: string | null, hints: readonly string[] = []
     if (hit) return { name: item.name, url: `${SITE}/cases/${item.slug}`, niche: hit };
   }
   return null;
+}
+
+/**
+ * Как называется ниша по-русски: «логистическая компания», а не «logistika».
+ *
+ * Каталог разборов знает не все ниши классификатора — недвижимости в нём
+ * нет, хотя определяется она уверенно. Для таких берём слово из самого
+ * кейса: у MAVERA это «застройщик», и оно точнее любого слага.
+ */
+function nicheLabel(slug: string, item: Case): string {
+  const fromCatalog = NICHES.find((n) => n.key === slug)?.ruLabel;
+  if (fromCatalog) return fromCatalog;
+  const needles = new Set(nicheWords(slug).flatMap(words));
+  return item.niches.find((n) => words(n).some((w) => needles.has(w))) ?? item.niches[0] ?? slug;
+}
+
+/**
+ * Чем этот бизнес занимается и за чем к нему приходят на сайт.
+ *
+ * Владелец: «адаптируй обращение в зависимости от ниши того, чем занимается
+ * потенциальный клиент». Письмо, написанное про «заявки с сайта» вообще,
+ * читается как рассылка — потому что рассылка и есть. Письмо, где сказано
+ * «расчёт стоимости перевозки» и «отслеживание груза», читается как
+ * обращение к этому человеку.
+ *
+ * Строки берутся из каталога разборов, а не придумываются: это факты
+ * категории — у любой логистической компании есть склад и расчёт, — и
+ * второй их копии в коде быть не должно.
+ */
+export function nicheBrief(niche: string | null, reference: Reference | null = null): string {
+  const found = NICHES.find((n) => n.key === (niche ?? "").trim().toLowerCase());
+
+  // Каталог разборов знает не все ниши классификатора: недвижимости в нём
+  // нет, а определяется она уверенно и приносит студии больше всех. Для
+  // таких ниш имя берём у кейса, по которому сошлись, — «застройщик», — и
+  // список услуг не выдумываем.
+  const who = found ? found.ruLabel : reference?.niche;
+  if (!who) return niche ? `Ниша: ${niche}.` : "";
+
+  return [
+    `Адресат — ${who}.`,
+    found?.ruServices.length
+      ? `На сайт к нему приходят за этим: ${found.ruServices.join(", ").toLowerCase()}.`
+      : "",
+    "Пиши про его работу этими словами, а не про «заявки с сайта» вообще: одна фраза, показывающая, что мы поняли его дело, стоит дороже абзаца про сайт. Выдумывать сверх этого — цифры, филиалы, машины — нельзя: всё, чего нет в находках, адресат знает лучше нас.",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function proofFor(niche: string | null, hints: readonly string[] = []): Proof {

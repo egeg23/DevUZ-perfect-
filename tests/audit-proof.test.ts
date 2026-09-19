@@ -17,9 +17,62 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import { NICHES } from "@/content/razbor/catalog";
 import { cases } from "@/content/cases";
 import { proof } from "@/content/company";
-import { proofFor, proofLines, referenceFor } from "@/lib/audit/proof";
+import { nicheBrief, proofFor, proofLines, referenceFor } from "@/lib/audit/proof";
+
+test("застройщик не уезжает в письмо логистической компании", () => {
+  // Владелец: «MAVERA идёт в пример логистики, странно. Это же застройщик,
+  // так же как и Golden House».
+  //
+  // Так и было: подбор шёл по общим словам, у MAVERA в нишах стоит
+  // «quruvchi kompaniya», у логистики в приметах — «logistika kompaniya»,
+  // и слова «kompaniya» хватало. Адресат видит такую подстановку первым же
+  // переходом по ссылке: ему прислали застройщика как пример его ниши.
+  const logistics = referenceFor("logistika");
+  assert.notEqual(logistics?.name, "MAVERA", "застройщик снова в примерах логистики");
+  assert.equal(logistics?.name, "TezKetKaz");
+
+  // Та же ошибка через слово «услуги»: юрфирме показывали маркетплейс
+  // бытовых услуг.
+  assert.equal(referenceFor("yurfirma")?.name, "Legal AI");
+});
+
+test("каждая ниша получает либо свой кейс, либо честное ничего", () => {
+  // Ни одна ниша не должна получить кейс, у которого её нет в списке.
+  // Список проставлен руками — это и есть то место, где решается, что
+  // «в вашей нише» не ложь.
+  for (const niche of NICHES) {
+    const ref = referenceFor(niche.key);
+    if (!ref) continue;
+    const item = cases.find((c) => c.name === ref.name);
+    assert.ok(item, `кейс ${ref.name} не нашёлся в списке`);
+    assert.ok(
+      item.forNiches.includes(niche.key),
+      `${niche.key}: подставлен ${ref.name}, у которого этой ниши нет`,
+    );
+  }
+});
+
+test("письмо говорит словами ниши адресата, а не про «сайт вообще»", () => {
+  // Владелец: «адаптируй обращение в зависимости от ниши того, чем
+  // занимается потенциальный клиент».
+  const brief = nicheBrief("logistika");
+  assert.match(brief, /логистическая компания/);
+  assert.match(brief, /перевозки по стране/);
+  assert.match(brief, /склад/);
+  // Ничего про стоматологию в письме логисту быть не может.
+  assert.ok(!/кариес/i.test(brief));
+
+  // Ниша, которой нет в каталоге разборов, но которую классификатор знает:
+  // имя берём у кейса, услуги не выдумываем.
+  const developer = nicheBrief("nedvizhimost", referenceFor("nedvizhimost"));
+  assert.match(developer, /Адресат — застройщик/);
+
+  // Ниша неизвестна — никакого описания бизнеса из головы.
+  assert.equal(nicheBrief(null), "");
+});
 
 test("латинский слаг ниши доходит до русских кейсов", () => {
   // Классификатор отдаёт «nedvizhimost», кейс описан как «недвижимость» —
@@ -28,8 +81,8 @@ test("латинский слаг ниши доходит до русских к
   // сильная строка письма в него не попала.
   const ref = referenceFor("nedvizhimost");
   assert.ok(ref, "слаг ниши обязан доходить до кейса");
-  assert.equal(ref.url, `https://devuz.studio/cases/${ref.name === "MAVERA" ? "mavera" : "lbm-rentals"}`);
-  assert.ok(ref.niche.length > 0);
+  assert.equal(ref.url, "https://devuz.studio/cases/mavera");
+  assert.equal(ref.niche, "застройщик");
 });
 
 test("заголовки страниц работают там, где ниша не определилась", () => {

@@ -23,6 +23,19 @@ export type Case = {
   tier: 1 | 2 | 3;
   /** Ниши для сопоставления с запросом клиента при ICP-скоринге. */
   niches: string[];
+  /**
+   * Ниши классификатора, для которых этот проект — честный пример.
+   *
+   * Список ключей из content/razbor/catalog.ts, проставленный руками. Без
+   * него подбор шёл по общим словам из `niches` — и ловил не то: у MAVERA
+   * в нишах стоит «quruvchi kompaniya», у логистики в приметах —
+   * «logistika kompaniya», общее слово «kompaniya», и застройщик уезжал в
+   * письмо логистической компании как пример её ниши. Такую ошибку
+   * адресат видит первым же переходом по ссылке.
+   *
+   * Пусто — значит этот проект не показываем как пример ниши вовсе.
+   */
+  forNiches: readonly string[];
   category: LocalizedText;
   summary: LocalizedText;
   description: LocalizedText;
@@ -50,6 +63,7 @@ export const cases: Case[] = [
     url: "https://devuz.studio",
     tier: 2,
     niches: ["сайт компании", "корпоративный сайт", "лендинг", "мультиязычный сайт", "AI-менеджер", "чат-бот на сайт", "услуги", "corporate website", "veb-sayt", "企业官网"],
+    forNiches: [],
     accent: "green",
     category: {
       ru: "Сайт студии + AI-менеджер",
@@ -83,6 +97,7 @@ export const cases: Case[] = [
     year: 2026,
     tier: 1,
     niches: ["застройщик", "недвижимость", "жилой комплекс", "продажа квартир", "подбор квартиры", "ипотечный калькулятор", "real estate", "property developer", "ko‘chmas mulk", "quruvchi kompaniya", "房地产", "开发商"],
+    forNiches: ["nedvizhimost", "stroitelnaya-kompaniya"],
     accent: "blue",
     category: {
       ru: "Три сайта застройщика + конструктор допников",
@@ -116,6 +131,7 @@ export const cases: Case[] = [
     year: 2026,
     tier: 1,
     niches: ["экспорт", "производство", "сельское хозяйство", "B2B", "FMCG", "export", "eksport", "出口"],
+    forNiches: [],
     accent: "gold",
     category: {
       ru: "Корпоративный сайт",
@@ -149,6 +165,7 @@ export const cases: Case[] = [
     url: "https://globalex.maximov-tech.ru/adar",
     tier: 2,
     niches: ["подарочные наборы", "корпоративные подарки", "новогодние подарки", "кондитерские изделия", "интернет-магазин", "каталог", "e-commerce", "gift sets", "corporate gifts", "sovg‘a to‘plamlari", "礼品套装", "企业礼品"],
+    forNiches: ["internet-magazin"],
     accent: "gold",
     category: {
       ru: "Три концепции сайта со сметой",
@@ -182,6 +199,7 @@ export const cases: Case[] = [
     year: 2026,
     tier: 1,
     niches: ["доставка еды", "ресторанный бизнес", "HoReCa", "маркетплейс", "логистика", "食品配送", "food delivery"],
+    forNiches: ["dostavka-edy", "restoran", "logistika"],
     accent: "green",
     category: {
       ru: "Маркетплейс доставки",
@@ -224,6 +242,7 @@ export const cases: Case[] = [
     year: 2026,
     tier: 1,
     niches: ["экспорт", "производство", "сельское хозяйство", "промо-сайт", "презентация", "анимация", "прототип", "animation", "prototype", "animatsiya", "动效"],
+    forNiches: [],
     accent: "gold",
     category: {
       ru: "Анимационный прототип",
@@ -258,6 +277,7 @@ export const cases: Case[] = [
     url: "https://usta.maximov-tech.ru",
     tier: 2,
     niches: ["сфера услуг", "маркетплейс услуг", "ремонт", "бытовые услуги", "services", "xizmatlar"],
+    forNiches: ["stroitelnaya-kompaniya", "mebel"],
     accent: "blue",
     category: {
       ru: "Маркетплейс мастеров",
@@ -291,6 +311,7 @@ export const cases: Case[] = [
     year: 2026,
     tier: 1,
     niches: ["e-commerce", "маркетплейс", "ритейл", "SaaS", "аналитика", "电商", "savdo"],
+    forNiches: ["internet-magazin"],
     accent: "violet",
     category: {
       ru: "AI-продукт · SaaS",
@@ -324,6 +345,7 @@ export const cases: Case[] = [
     year: 2026,
     tier: 2,
     niches: ["недвижимость", "аренда", "туризм", "гостиничный бизнес", "HoReCa", "real estate", "ko‘chmas mulk"],
+    forNiches: ["nedvizhimost", "turagentstvo"],
     accent: "gold",
     category: {
       ru: "Автоматизация аренды",
@@ -357,6 +379,7 @@ export const cases: Case[] = [
     year: 2026,
     tier: 1,
     niches: ["юридические услуги", "финансы", "консалтинг", "документооборот", "legal", "yuridik", "法律"],
+    forNiches: ["yurfirma"],
     accent: "blue",
     category: {
       ru: "LLM + RAG",
@@ -389,6 +412,7 @@ export const cases: Case[] = [
     year: 2026,
     tier: 1,
     niches: ["маркетплейс", "e-commerce", "ритейл", "логистика", "финтех", "enterprise"],
+    forNiches: ["internet-magazin"],
     accent: "violet",
     category: {
       ru: "Аудит и доработка",
