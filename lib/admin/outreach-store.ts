@@ -7,6 +7,7 @@ import {
   canContact,
   isStopError,
   messageProblems,
+  type MessageProblem,
   outreachPrompt,
   outreachHooks,
   outreachProof,
@@ -20,7 +21,7 @@ import type { Staff } from "@/lib/admin/session";
 import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
-import { auditDeep, type ProspectRow } from "@/lib/audit/batch";
+import { auditDeep, type ProspectRow, type Walked } from "@/lib/audit/batch";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { serviceClient } from "@/lib/supabase";
 
@@ -49,6 +50,14 @@ export type Prospect = {
   message: string | null;
   /** Ниша по классификатору — по ней подбирался наш пример в письме. */
   niche: string | null;
+  /**
+   * Обход сайта, по которому написано письмо.
+   *
+   * Хранится ради проверки перед отправкой: она пересобирает тот же промпт,
+   * и без этих строк отбивала письмо за числа, которые сама же и велела
+   * назвать — например, за номер в адресе страницы.
+   */
+  walked: Walked | null;
   status: ProspectStatus;
   target: string | null;
   target_kind: RouteKind | null;
@@ -65,7 +74,7 @@ export type Prospect = {
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, status, target, target_kind, manual_note, claimed_by, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -82,6 +91,7 @@ function shape(row: Record<string, unknown>): Prospect {
     draft: (row.draft as string | null) ?? null,
     message: (row.message as string | null) ?? null,
     niche: (row.niche as string | null) ?? null,
+    walked: (row.walked as Walked | null) ?? null,
     status: (row.status as ProspectStatus) ?? "new",
     target: (row.target as string | null) ?? null,
     target_kind: (row.target_kind as RouteKind | null) ?? null,
@@ -252,7 +262,17 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     // менеджер, нажав «Связаться», получил бы отказ вместо письма. Промах
     // здесь дешевле исправить, чем показать.
     const missed = messageProblems(first, prompt, prospect.host, hooks);
-    message = (missed.length ? await write(missed.map((p) => p.text).join(" ")) : null) ?? first;
+    // Из двух попыток берём ту, к которой у проверки меньше претензий.
+    //
+    // Раньше вторая побеждала просто потому, что была второй. Так у
+    // менеджера оказывалось письмо, которое отправка не пропустит никогда:
+    // он жал «Отправить», получал отказ и говорил, что кнопка не работает.
+    // Совсем без письма оставлять тоже нельзя — он нажал «Связаться» и
+    // должен что-то получить, — поэтому письмо сохраняется, а претензии
+    // видны на карточке до нажатия.
+    const second = missed.length ? await write(missed.map((p) => p.text).join(" ")) : null;
+    const secondMissed = second ? messageProblems(second, prompt, prospect.host, hooks) : null;
+    message = second && secondMissed && secondMissed.length <= missed.length ? second : first;
   } catch (error) {
     return { ok: false, why: error instanceof Error ? error.message : String(error) };
   }
@@ -268,6 +288,9 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
       // Ниша сохраняется вместе с письмом: по ней подобран наш пример, и
       // по ней же проверка перед отправкой поймёт, тот ли проект назван.
       niche,
+      // Обход — туда же и по той же причине: проверка перед отправкой
+      // пересобирает промпт, и он обязан быть тем же самым.
+      walked: deep.walked ?? null,
       score: deep.row.report?.score ?? prospect.score,
       status: "contacting",
       claimed_by: staff.id,
@@ -290,6 +313,48 @@ export type QueueResult = { ok: true; leadId: string | null } | { ok: false; why
  * лид останется с пометкой о провале — это честнее, чем лид, появившийся
  * у кого-то другого через сутки.
  */
+/**
+ * На чём споткнётся отправка этого письма.
+ *
+ * Одна функция на два места: её же зовёт кнопка «Отправить» и она же
+ * рисует предупреждение под текстом. Разъехавшиеся проверка и показ — это
+ * ровно то, на что жаловались менеджеры: «кнопка не работает». Она
+ * работала и отказывала, но узнать об этом было неоткуда.
+ *
+ * Имя отправителя на проверку не влияет — в нём нет чисел, — поэтому
+ * карточка может звать её и не зная, кто сейчас смотрит.
+ */
+export function sendProblems(
+  prospect: Pick<Prospect, "host" | "label" | "niche" | "findings" | "draft" | "walked" | "message">,
+  sender = "менеджер",
+): MessageProblem[] {
+  const text = (prospect.message ?? "").trim();
+  if (!text) return [];
+
+  return messageProblems(
+    text,
+    // Тот же промпт, каким письмо писалось: с нишей, обходом и языком.
+    // Пересобранный «почти такой же» промпт — это проверка на другом
+    // основании, и именно она отбивала письма за адрес страницы, который
+    // сама же и просила назвать.
+    outreachPrompt({
+      host: prospect.host,
+      label: prospect.label,
+      niche: prospect.niche,
+      findings: prospect.findings,
+      draft: prospect.draft,
+      sender,
+      walked: prospect.walked,
+      lang: prospect.walked?.lang ?? "ru",
+    }),
+    prospect.host,
+    outreachHooks(
+      prospect.findings,
+      outreachProof({ niche: prospect.niche, label: prospect.label, host: prospect.host }).reference?.name ?? null,
+    ),
+  );
+}
+
 export async function queueOutreach(id: string, message: string, staff: Staff, ip: string): Promise<QueueResult> {
   const db = serviceClient();
   if (!db) return { ok: false, why: "База недоступна." };
@@ -308,22 +373,7 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
   if (!route) return { ok: false, why: "no_way" };
 
   const text = message.trim();
-  const problems = messageProblems(
-    text,
-    outreachPrompt({
-      host: prospect.host,
-      label: prospect.label,
-      niche: prospect.niche,
-      findings: prospect.findings,
-      draft: prospect.draft,
-      sender: staff.display_name,
-    }),
-    prospect.host,
-    outreachHooks(
-      prospect.findings,
-      outreachProof({ niche: prospect.niche, label: prospect.label, host: prospect.host }).reference?.name ?? null,
-    ),
-  );
+  const problems = sendProblems({ ...prospect, message: text }, staff.display_name);
   if (problems.length) return { ok: false, why: problems.map((p) => p.text).join(" ") };
 
   // Номер заявки рождается здесь, а не в конце разговора: по нему модель

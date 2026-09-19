@@ -118,7 +118,22 @@ export async function sendOutreachAction(formData: FormData) {
   const id = String(formData.get("prospect") ?? "");
   const message = String(formData.get("message") ?? "");
 
-  const result = await queueOutreach(id, message, staff, await requestIp());
+  /**
+   * Отказ вместо исключения — по той же причине, что и у «Связаться».
+   *
+   * Серверное действие, выбросившее наружу, в проде не показывает ничего:
+   * страница перерисовывается той же, и менеджер видит кнопку, которая
+   * «не работает». Здесь этого ремня не было, хотя внутри и база, и
+   * создание лида, и запись в журнал.
+   */
+  let result: Awaited<ReturnType<typeof queueOutreach>>;
+  try {
+    result = await queueOutreach(id, message, staff, await requestIp());
+  } catch (error) {
+    console.error("касания: отправка упала", error);
+    result = { ok: false, why: error instanceof Error ? error.message : String(error) };
+  }
+
   revalidatePath("/admin/prospect");
   revalidatePath("/admin");
   // Возврат на ту же карточку: результат нажатия стоит там, где была кнопка,

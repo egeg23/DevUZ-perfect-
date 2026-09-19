@@ -9,6 +9,7 @@ import {
 } from "@/app/admin/prospect/actions";
 import { CopyMessage } from "@/components/admin/copy-message";
 import { DoneButton, SubmitButton } from "@/components/admin/submit-button";
+import { sendProblems } from "@/lib/admin/outreach-store";
 import {
   HOURLY_CAP,
   REASON_TEXT,
@@ -125,7 +126,17 @@ export function OutreachList({
           Сообщение в очереди. Уйдёт с рабочего аккаунта в ближайшие минуты, лид уже закреплён за вами.
         </p>
       ) : null}
-      {error ? (
+      {/*
+        Отказ показывается у кнопки, на которую нажали, а не здесь.
+        Наверху он остаётся только для случая, когда карточки на странице
+        нет вовсе — её отфильтровали или список пуст.
+
+        Менеджеры: «кнопка „отправить“ не работает». Она работала и честно
+        отказывала, но отказ печатался вверху страницы, а адрес возврата
+        уводил к карточке — на полсотни строк ниже. С точки зрения
+        человека нажатие не делало ничего.
+      */}
+      {error && !rows.some((row) => row.id === open) ? (
         <p className="mt-3 rounded-xl border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-amber-200">
           {REASON_TEXT[error as Reason] ?? decodeURIComponent(error)}
         </p>
@@ -139,6 +150,10 @@ export function OutreachList({
             status: row.status,
           });
           const route = routeFor(row.contacts);
+          // На чём споткнётся отправка — тем же кодом, что и сама отправка.
+          // Показываем до нажатия: узнать о проверке в момент отказа — это и
+          // есть «кнопка не работает».
+          const willRefuse = row.status === "contacting" ? sendProblems(row) : [];
           const seo = seoReport({ findings: row.findings });
           const hooks = outreachHooks(row.findings);
           const wait =
@@ -388,6 +403,11 @@ export function OutreachList({
                     Связаться
                   </SubmitButton>
                   <span className="text-xs text-faint">{route ? ROUTE_TEXT[route.kind] : ""}</span>
+                  {error && open === row.id ? (
+                    <p className="w-full rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-amber-200">
+                      {REASON_TEXT[error as Reason] ?? decodeURIComponent(error)}
+                    </p>
+                  ) : null}
                 </form>
               ) : null}
 
@@ -418,6 +438,26 @@ export function OutreachList({
                       Лид закрепится за вами, как только нажмёте.
                     </span>
                   </div>
+                  {error && open === row.id ? (
+                    <p className="mt-3 rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-amber-200">
+                      Не отправлено: {REASON_TEXT[error as Reason] ?? decodeURIComponent(error)}
+                      <span className="mt-1 block text-xs text-faint">
+                        Поправьте текст выше и нажмите ещё раз.
+                      </span>
+                    </p>
+                  ) : willRefuse.length ? (
+                    <div className="mt-3 rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-amber-200">
+                      <p className="font-medium">Это письмо отправка не пропустит:</p>
+                      <ul className="mt-1 space-y-1 text-[0.86rem]">
+                        {willRefuse.map((p) => (
+                          <li key={p.code}>— {p.text}</li>
+                        ))}
+                      </ul>
+                      <p className="mt-2 text-xs text-faint">
+                        Поправьте текст выше — проверка пересчитается после отправки.
+                      </p>
+                    </div>
+                  ) : null}
                 </form>
               ) : null}
 
