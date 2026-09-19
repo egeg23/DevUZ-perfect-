@@ -1,7 +1,8 @@
 import type { Finding } from "@/lib/audit/checks";
 import type { Contacts } from "@/lib/audit/contacts";
 import { seoReport } from "@/lib/audit/seo";
-import { proofFor, proofLines, type Proof } from "@/lib/audit/proof";
+import { cases } from "@/content/cases";
+import { nicheBrief, proofFor, proofLines, type Proof } from "@/lib/audit/proof";
 import { forecast } from "@/lib/razbor/forecast";
 
 /**
@@ -376,7 +377,7 @@ export function outreachPrompt(input: OutreachInput): string {
     language,
     `Сайт: ${input.host}`,
     input.label ? `Компания: ${input.label}` : "Название компании неизвестно.",
-    input.niche ? `Ниша: ${input.niche}` : "",
+    nicheBrief(input.niche, proof.reference),
     `Отправитель: ${input.sender}.`,
     proofLines(proof),
     walkedLines,
@@ -522,6 +523,16 @@ export type MessageProblem = { code: string; text: string };
  * промпте «назови балл» выполняется в девяти письмах из десяти, и именно
  * десятое уходит без того единственного, ради чего письмо открывают.
  */
+/**
+ * Имена наших проектов — те, которые нельзя называть не в своей нише.
+ *
+ * Собственное имя студии сюда не попадает: «devuz.studio» в письме стоять
+ * обязано, это подпись, а не пример работы.
+ */
+function caseNames(): string[] {
+  return cases.filter((c) => c.slug !== "devuz").map((c) => c.name);
+}
+
 export function messageProblems(
   message: string,
   prompt: string,
@@ -560,6 +571,26 @@ export function messageProblems(
       text: `В сообщении не сказано, сколько обращений это стоит (${hooks.lost[0]}–${hooks.lost[1]} из ста). Без этого письмо читается как список придирок.`,
     });
   }
+  /**
+   * Чужой проект в письме — хуже, чем никакого.
+   *
+   * Правило «называй только проект из его ниши» стоит в промпте, и обычно
+   * его хватает. Владелец поймал десятый случай: логистическим компаниям
+   * ушли письма с MAVERA — нашим застройщиком. Подбор тогда ошибся сам, но
+   * ошибиться может и модель: имена наших проектов лежат в том же промпте,
+   * и взять оттуда не то — один неверный токен.
+   *
+   * Сравнение чувствительно к регистру намеренно: «USTA» — имя проекта, а
+   * «usta» по-узбекски значит «мастер» и встречается в обычном тексте.
+   */
+  const foreign = caseNames().filter((n) => n !== hooks.reference && message.includes(n));
+  if (foreign.length) {
+    problems.push({
+      code: "foreign_reference",
+      text: `В сообщении назван наш проект не из его ниши: ${foreign.join(", ")}. «Делали в вашей нише» про чужую нишу адресат проверяет одним переходом по ссылке — и на этом письмо заканчивается.`,
+    });
+  }
+
   if (hooks.reference && !message.includes(hooks.reference)) {
     problems.push({
       code: "no_reference",

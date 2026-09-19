@@ -357,6 +357,26 @@ test("ручной маршрут не запирает очередь отве�
   );
 });
 
+test("чужой проект в письме не проходит проверку", () => {
+  // Владелец: «MAVERA идёт в пример логистики, странно. Это же застройщик».
+  // Подбор ошибся сам, но ошибиться может и модель: имена наших проектов
+  // лежат в том же промпте, и взять оттуда не то — один неверный токен.
+  const hooks = { seo: null, lost: null, reference: "TezKetKaz" } as const;
+  const right = `${GOOD} В вашей нише мы делали TezKetKaz — посмотрите devuz.studio/cases/tezketkaz.`;
+  const wrong = right.replace("TezKetKaz", "MAVERA").replace("tezketkaz", "mavera");
+
+  assert.deepEqual(messageProblems(right, PROMPT, "mebel.uz", hooks), []);
+  const codes = messageProblems(wrong, PROMPT, "mebel.uz", hooks).map((p) => p.code);
+  assert.ok(codes.includes("foreign_reference"), `не поймали чужой проект: ${codes.join(", ")}`);
+
+  // Имя студии в подписи чужим проектом не считается — иначе не прошло бы
+  // ни одно письмо.
+  assert.deepEqual(
+    messageProblems(GOOD, PROMPT, "mebel.uz", { seo: null, lost: null, reference: null }),
+    [],
+  );
+});
+
 test("ручной маршрут доходит до BANT: отметка, ответ клиента, ответ модели", () => {
   const store = readFileSync(new URL("../lib/admin/outreach-store.ts", import.meta.url), "utf8");
   const list = readFileSync(new URL("../components/admin/outreach-list.tsx", import.meta.url), "utf8");
