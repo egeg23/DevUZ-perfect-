@@ -24,6 +24,36 @@ export async function pdfText(bytes: ArrayBuffer): Promise<PdfText> {
   }
 
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+
+  /**
+   * Разбор страниц идёт в отдельном «воркере», и его надо отдать библиотеке
+   * руками. Иначе она ищет его сама — и не находит.
+   *
+   * В Node pdf.js подставляет себе путь `./pdf.worker.mjs` и загружает его
+   * динамическим импортом, помеченным `webpackIgnore`. Сборщик такой импорт
+   * не трогает: он не кладёт файл в сборку и не переписывает путь. В итоге
+   * на сервере относительный путь считается от папки собранного куска —
+   * `.next/server/chunks/ssr/` — где никакого воркера нет и быть не может:
+   *
+   *   Setting up fake worker failed: "Cannot find module
+   *   /app/.next/server/chunks/ssr/pdf.worker.mjs"
+   *
+   * Локально это не воспроизводится вовсе: в `next dev` модуль грузится из
+   * node_modules, и относительный путь совпадает с настоящим. Ошибка живёт
+   * только в собранном приложении — то есть ровно там, куда её и выкатили.
+   *
+   * Поэтому воркер импортируется обычным импортом с постоянным путём: такой
+   * сборщик видит и кладёт в сборку. А pdf.js перед запуском заглядывает в
+   * `globalThis.pdfjsWorker` и, найдя там готовый обработчик, ничего искать
+   * не идёт (PDFWorker.#mainThreadWorkerMessageHandler в pdf.mjs).
+   *
+   * Присваивание обязано случиться до первого getDocument: результат поиска
+   * воркера кэшируется на весь процесс, включая неудачу. Один упавший
+   * разбор — и все следующие в этом контейнере падали бы так же.
+   */
+  const globals = globalThis as { pdfjsWorker?: unknown };
+  globals.pdfjsWorker ??= await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
+
   const doc = await getDocument({
     data: new Uint8Array(bytes),
     // Ничего внешнего не грузим: у резюме бывает разметка со ссылками на
