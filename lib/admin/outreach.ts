@@ -510,6 +510,25 @@ const BANNED = [
  * касании, и в десятом ответе. Список один — разъехавшись, он разрешил бы
  * в переписке ровно то, что запрещено в письме.
  */
+/**
+ * Иероглиф посреди русской фразы.
+ *
+ * Живой случай: «Видимость в поиске у вас高 — 92 из 100». Модель уронила
+ * в текст знак чужого письма, и письмо ушло бы адресату с ним: ни одна
+ * проверка на это не смотрела, а человек, вычитывая своё сообщение в
+ * двадцатый раз за день, такой знак не видит.
+ *
+ * Письма мы пишем по-русски, по-узбекски (латиница) и по-английски —
+ * см. язык в промпте. Ни в одном из трёх этих знаков не бывает, поэтому
+ * правило простое: нашлось — значит сбой.
+ */
+const ALIEN =
+  /[\u0590-\u05ff\u0600-\u06ff\u0900-\u097f\u0e00-\u0e7f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/gu;
+
+export function foreignScript(text: string): string[] {
+  return [...new Set(text.match(ALIEN) ?? [])];
+}
+
 export function bannedPhrase(text: string): boolean {
   return BANNED.some((re) => re.test(text));
 }
@@ -550,6 +569,13 @@ export function messageProblems(
   const invented = inventedNumbers(message, prompt);
   if (invented.length) {
     problems.push({ code: "invented", text: `Числа, которых нет в анализе: ${invented.join(", ")}. Проверьте или уберите.` });
+  }
+  const alien = foreignScript(message);
+  if (alien.length) {
+    problems.push({
+      code: "foreign_script",
+      text: `В сообщении есть знаки чужого письма: ${alien.join(" ")}. Уберите их — это сбой модели, а не текст.`,
+    });
   }
   if (bannedPhrase(message)) {
     problems.push({ code: "banned", text: "В сообщении есть обещание или знак, которых в первом касании быть не должно: «в топ», «гарантируем», любые проценты, «комплексный подход», эмодзи." });

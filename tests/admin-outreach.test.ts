@@ -19,6 +19,7 @@ import {
   waitText,
   inventedNumbers,
   isStopError,
+  foreignScript,
   messageProblems,
   outreachPrompt,
   isBotHandle,
@@ -546,4 +547,23 @@ test("письмо проверяется тем же промптом, каки
   assert.deepEqual(both(walked), [], "письмо не проходит проверку с тем же промптом");
   // Так выглядела проверка при отправке: тот же текст, промпт беднее.
   assert.ok(both(undefined).includes("invented"), "проверка без обхода обязана была спотыкаться");
+});
+
+test("иероглиф посреди русской фразы не уходит клиенту", () => {
+  // Живой случай: «Видимость в поиске у вас高 — 92 из 100». Модель уронила
+  // в текст знак чужого письма. Человек, вычитывая своё сообщение в
+  // двадцатый раз за день, такой знак не видит — машина видит всегда.
+  assert.deepEqual(foreignScript("Видимость в поиске у вас高 — 92 из 100"), ["高"]);
+  assert.ok(
+    messageProblems(`${GOOD} Видимость у вас高 хорошая.`, PROMPT, "mebel.uz").some(
+      (p) => p.code === "foreign_script",
+    ),
+  );
+
+  // Письма мы пишем по-русски, по-узбекски и по-английски — ни одно из
+  // них проверка задевать не должна.
+  assert.deepEqual(foreignScript(GOOD), []);
+  assert.deepEqual(foreignScript("Assalomu alaykum, saytingizni ko‘rib chiqdik — 92 dan 100."), []);
+  assert.deepEqual(foreignScript("Hello — we looked at your site, 92 of 100."), []);
+  assert.deepEqual(messageProblems(GOOD, PROMPT, "mebel.uz"), []);
 });
