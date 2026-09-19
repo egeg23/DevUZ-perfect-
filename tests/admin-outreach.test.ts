@@ -19,6 +19,7 @@ import {
   waitText,
   inventedNumbers,
   isStopError,
+  HIGH_SEO,
   foreignScript,
   messageProblems,
   outreachPrompt,
@@ -26,6 +27,7 @@ import {
   isMobile,
   routeFor,
 } from "@/lib/admin/outreach";
+import { seoReport } from "@/lib/audit/seo";
 
 const finding = (over: Partial<Finding> = {}): Finding => ({
   code: "no_viewport",
@@ -566,4 +568,56 @@ test("иероглиф посреди русской фразы не уходи�
   assert.deepEqual(foreignScript("Assalomu alaykum, saytingizni ko‘rib chiqdik — 92 dan 100."), []);
   assert.deepEqual(foreignScript("Hello — we looked at your site, 92 of 100."), []);
   assert.deepEqual(messageProblems(GOOD, PROMPT, "mebel.uz"), []);
+});
+
+test("высокий балл поиска и большие потери не читаются как противоречие", () => {
+  // Владелец, глядя на живое письмо: «как при оценке СЕО 98/100 может
+  // теряться такой процент посетителей из ста? Теряется 2, или я путаю?».
+  //
+  // Не путает. Числа считаются по разным находкам: балл — про то, дойдёт
+  // ли человек до сайта из поиска, потери — про того, кто уже дошёл. У
+  // btslogistics.uz все находки были конверсионные: поиску они не мешают,
+  // человеку на сайте — мешают все.
+  //
+  // Ломалось не в расчёте, а в письме: два числа стояли отдельными
+  // строками, и модель связала их словами «из-за этих недочётов».
+  const findings = [
+    { code: "no_prices", severity: "major", title: "Нигде не сказано, сколько это стоит", impact: "x", fix: "y" },
+    { code: "broken_images", severity: "major", title: "Часть картинок не грузится", impact: "x", fix: "y" },
+  ] as never;
+
+  const prompt = outreachPrompt({
+    host: "btslogistics.uz",
+    label: null,
+    niche: null,
+    findings,
+    draft: null,
+    sender: "Александр",
+  });
+
+  const seo = seoReport({ findings });
+  assert.ok(seo.score >= 90, `находки конверсионные, поиску они не мешают: балл ${seo.score}`);
+
+  assert.match(prompt, /дойдёт ли человек до сайта из поиска/);
+  assert.match(prompt, /Это про тех, кто уже открыл сайт/);
+  assert.match(prompt, /связаны одной мыслью/);
+  // Ровно та формулировка, которая ушла клиенту, — запрещена прямо.
+  assert.match(prompt, /из-за этих недочётов/);
+
+  // Высокий балл подаётся как комплимент, а не как находка.
+  assert.match(prompt, /это не находка, а комплимент/);
+});
+
+test("низкий балл поиска комплиментом не подаётся", () => {
+  const findings = [
+    { code: "no_title", severity: "major", title: "Нет заголовка", impact: "x", fix: "y" },
+    { code: "no_sitemap", severity: "major", title: "Нет карты сайта", impact: "x", fix: "y" },
+    { code: "no_description", severity: "minor", title: "Нет описания", impact: "x", fix: "y" },
+    { code: "one_language", severity: "minor", title: "Одна языковая версия", impact: "x", fix: "y" },
+  ] as never;
+  const prompt = outreachPrompt({
+    host: "mebel.uz", label: null, niche: null, findings, draft: null, sender: "Данил",
+  });
+  assert.ok(seoReport({ findings }).score < HIGH_SEO);
+  assert.ok(!/это не находка, а комплимент/.test(prompt), "низкий балл назван комплиментом");
 });
