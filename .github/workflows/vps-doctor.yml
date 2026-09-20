@@ -1,0 +1,141 @@
+# Осмотр связи «GitHub → сервер → GitHub», по кнопке.
+#
+# Заводится после 20 сентября, когда на вопрос «у нас отвалился коннект с
+# гитхаб» не нашлось ни одного места, где ответ был бы виден. Выкатка
+# показывает только последний запуск, health — только выкаченный коммит, а
+# всё остальное (чем сервер ходит за кодом, жив ли ключ, не отстал ли
+# рабочий каталог) можно было узнать единственным способом: зайти руками.
+#
+# Осмотр ничего не чинит и ничего не меняет: только смотрит и рассказывает.
+# Запускается со вкладки Actions → «Осмотр связи с сервером» → Run workflow.
+name: Осмотр связи с сервером
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  doctor:
+    name: Осмотр сервера
+    runs-on: ubuntu-latest
+    steps:
+      - name: Осмотреть сервер по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          # Намеренно без set -e: осмотр обязан дойти до конца и показать
+          # все находки сразу. Провал одной проверки — не повод скрыть
+          # остальные девять, ради которых сюда и пришли.
+          script: |
+            set -uo pipefail
+
+            APP_DIR="${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
+            BRANCH=main
+            TROUBLE=0
+
+            # Те же две строки, что и в выкатке, и по той же причине: без
+            # них git с мёртвым доступом ждёт логин, которого никто не
+            # введёт, и осмотр висит до таймаута вместо ответа.
+            export GIT_TERMINAL_PROMPT=0
+            export GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=10"
+            unset HTTPS_PROXY HTTP_PROXY ALL_PROXY https_proxy http_proxy all_proxy
+
+            echo "════ Каталог приложения ════"
+            if [ -d "$APP_DIR/.git" ]; then
+              echo "✓ $APP_DIR на месте"
+              cd "$APP_DIR"
+            else
+              echo "✗ $APP_DIR не репозиторий — выкатке некуда забирать код"
+              exit 1
+            fi
+
+            echo
+            echo "════ Чем сервер ходит за кодом ════"
+            ORIGIN_URL="$(git config --get remote.origin.url 2>/dev/null || true)"
+            echo "origin: ${ORIGIN_URL:-(не задан)}"
+            case "$ORIGIN_URL" in
+              https://*) echo "  · по HTTPS: ключ не нужен, протухать нечему" ;;
+              git@*|ssh://*) echo "  · по SSH: нужен живой ключ на сервере — именно он и кончается по сроку" ;;
+              *) echo "  · адрес незнакомого вида" ;;
+            esac
+
+            echo
+            echo "════ Чтение из GitHub ════"
+            if git ls-remote --heads origin "$BRANCH" >/dev/null 2>&1; then
+              echo "✓ origin отвечает — выкатка заберёт код обычным путём"
+            else
+              echo "✗ origin не отвечает: доступ сервера к GitHub закончился"
+              TROUBLE=1
+            fi
+
+            case "$ORIGIN_URL" in
+              git@github.com:*)       FALLBACK="https://github.com/${ORIGIN_URL#git@github.com:}" ;;
+              ssh://git@github.com/*) FALLBACK="https://github.com/${ORIGIN_URL#ssh://git@github.com/}" ;;
+              https://*)              FALLBACK="$ORIGIN_URL" ;;
+              *)                      FALLBACK="" ;;
+            esac
+            if [ -n "$FALLBACK" ] && git ls-remote --heads "$FALLBACK" "$BRANCH" >/dev/null 2>&1; then
+              echo "✓ запасной путь по HTTPS открыт — выкатка доедет, даже если ключ умрёт"
+            else
+              echo "✗ запасной путь по HTTPS закрыт: ${FALLBACK:-адрес не вывести}"
+              TROUBLE=1
+            fi
+
+            echo
+            echo "════ Запись в GitHub (пробный push, ничего не создаёт) ════"
+            if git push --dry-run origin "HEAD:refs/heads/deploy-doctor-probe" >/dev/null 2>&1; then
+              echo "✓ право записи есть"
+            else
+              echo "· права записи нет. Для выкатки оно и не нужно — нужно, только если с сервера кто-то пушит"
+            fi
+
+            echo
+            echo "════ Отставание от GitHub ════"
+            LOCAL="$(git rev-parse --short HEAD 2>/dev/null || echo '?')"
+            REMOTE="$(git ls-remote origin "refs/heads/$BRANCH" 2>/dev/null | cut -c1-7)"
+            [ -n "$REMOTE" ] || REMOTE="$(git ls-remote "$FALLBACK" "refs/heads/$BRANCH" 2>/dev/null | cut -c1-7)"
+            echo "на сервере: $LOCAL, в GitHub: ${REMOTE:-неизвестно}"
+            if [ -n "$REMOTE" ] && [ "$LOCAL" != "$REMOTE" ]; then
+              echo "✗ сервер отстал — последняя выкатка не доехала"
+              TROUBLE=1
+            elif [ -n "$REMOTE" ]; then
+              echo "✓ сервер стоит на том же коммите, что и $BRANCH"
+            fi
+
+            echo
+            echo "════ Приложение ════"
+            docker compose ps --format '{{.Name}}: {{.State}} ({{.Status}})' 2>/dev/null || docker compose ps 2>/dev/null || echo "· docker compose не ответил"
+            APP_PORT="$(grep -m1 '^APP_PORT=' .env 2>/dev/null | cut -d= -f2- || true)"
+            HEALTH="$(curl -sS --max-time 20 "http://127.0.0.1:${APP_PORT:-3310}/api/health" 2>/dev/null || true)"
+            if [ -n "$HEALTH" ]; then
+              echo "health: $HEALTH"
+            else
+              echo "✗ приложение не отвечает на петлевом интерфейсе"
+              TROUBLE=1
+            fi
+
+            echo
+            echo "════ Фоновые службы ════"
+            for unit in devuz-bot.service devuz-scout.service devuz-backup.timer devuz-reminders.timer; do
+              echo "$unit: $(systemctl is-active "$unit" 2>/dev/null || echo 'нет')"
+            done
+
+            echo
+            echo "════ Место на диске ════"
+            # Кончившееся место выглядит как что угодно, только не как
+            # кончившееся место: docker build падает на середине, а причина
+            # уезжает в середину лога.
+            df -h "$APP_DIR" | tail -1
+
+            echo
+            if [ "$TROUBLE" = "0" ]; then
+              echo "✓ Связь цела: код доезжает, сайт отвечает."
+            else
+              echo "✗ Осмотр нашёл поломки — они помечены выше знаком ✗."
+              exit 1
+            fi

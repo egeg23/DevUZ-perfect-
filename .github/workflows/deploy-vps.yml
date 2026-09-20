@@ -48,16 +48,80 @@ jobs:
     # которой кто-нибудь открыл PR, — включая чужую.
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Токен уезжает на сервер запасным ключом к выкачке, поэтому пусть умеет
+    # только читать. По умолчанию у него есть и запись — отдавать наружу
+    # больше прав, чем нужно для git fetch, незачем.
+    permissions:
+      contents: read
     steps:
       - name: Запустить деплой по SSH
         uses: appleboy/ssh-action@v1
+        env:
+          # Ключ на один запуск: истекает вместе с задачей и на сервере не
+          # остаётся. Нужен он тому дню, когда репозиторий закроют; пока он
+          # открыт, запасная выкачка обходится и без токена.
+          DEPLOY_TOKEN: ${{ github.token }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
-          script_stop: true
+          envs: DEPLOY_TOKEN
+          # Здесь стоял script_stop: true, и он ничего не делал. Действие
+          # такого входа не знает и молча его игнорирует — предупреждение
+          # «Unexpected input(s) 'script_stop'» лежало в каждом логе выкатки.
+          # Остановку на первой же ошибке даёт set в самом скрипте, а не вход
+          # действия, поэтому она написана здесь явно.
           script: |
+            set -euo pipefail
             export APP_DIR="${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
             export BRANCH=main
             bash "$APP_DIR/scripts/vps-deploy.sh"
+
+  # Упавшая выкатка обязана будить владельца, а не ждать, пока он откроет
+  # вкладку Actions.
+  #
+  # Цена молчания уже заплачена: работа от 19 сентября простояла в ветке
+  # сутки, сайт всё это время показывал позавчерашний коммит, и со стороны
+  # это выглядело как «отвалился коннект с гитхаб». Красный значок на
+  # странице, куда никто не заходит, — это не уведомление.
+  #
+  # Канал тот же, которым отчитываются ночные смены: строка в shift_reports
+  # через маршрут сайта, дальше свип доносит её в Telegram за пять минут.
+  # Отдельного бота заводить незачем — этот уже работает и проверен.
+  alarm:
+    name: Сказать владельцу, что выкатка не доехала
+    needs: [build-check, deploy]
+    # failure() здесь про любую из двух задач: не собралось — на сервер тоже
+    # ничего не уехало. На pull request не тревожим: красный PR видит тот,
+    # кто его открыл, и будить владельца ночью незачем.
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Строка владельцу
+        env:
+          SHIFT_REPORT_SECRET: ${{ secrets.SHIFT_REPORT_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL || 'https://devuz.studio' }}
+        run: |
+          set -uo pipefail
+
+          # Через :- потому что set -u: секрета нет — переменной может не
+          # оказаться вовсе, и шаг упал бы на проверке того, что его нет.
+          if [ -z "${SHIFT_REPORT_SECRET:-}" ]; then
+            echo "SHIFT_REPORT_SECRET не задан в секретах репозитория — владелец о падении не узнает." >&2
+            echo "Заведите секрет с тем же значением, что и в .env на сервере: Settings → Secrets → Actions." >&2
+            exit 0
+          fi
+
+          RUN="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          BODY="Выкатка ${GITHUB_SHA:0:7} не доехала до сервера: сайт остался на прошлом коммите. Лог: $RUN"
+
+          # Тревога не имеет права ронять задачу: её дело — сказать. Не
+          # сказалось (сайт лежит, секрет разошёлся) — это видно в логе, а
+          # выкатка и без того красная.
+          curl -sS --max-time 30 -X POST "$SITE_URL/api/shift/report" \
+            -H "x-devuz-shift: $SHIFT_REPORT_SECRET" \
+            -H "content-type: application/json" \
+            --data "$(jq -n --arg body "$BODY" '{shift: "deploy", body: $body}')" \
+            || echo "строка не ушла — сайт не ответил" >&2

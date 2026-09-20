@@ -46,8 +46,71 @@ unset HTTPS_PROXY HTTP_PROXY ALL_PROXY https_proxy http_proxy all_proxy
 # не даёт зациклиться.
 if [ -z "${DEVUZ_DEPLOY_REEXEC:-}" ]; then
   echo "▸ Забираем $BRANCH"
-  git fetch --depth 1 origin "$BRANCH"
-  git reset --hard "origin/$BRANCH"
+
+  # Ни одного вопроса в пустоту.
+  #
+  # git, которому отказали в доступе, спрашивает логин, а ssh — парольную
+  # фразу ключа. Спросить в Action не у кого: выкатка встаёт и висит до
+  # command_timeout — десять минут вместо десяти секунд, и всё это время в
+  # логе ни строчки о причине. Мёртвый доступ обязан падать сразу и словами.
+  export GIT_TERMINAL_PROMPT=0
+  export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o BatchMode=yes -o ConnectTimeout=10}"
+
+  if git fetch --depth 1 origin "$BRANCH"; then
+    git reset --hard "origin/$BRANCH"
+  else
+    # Запасной путь — тот же репозиторий по HTTPS без ключа.
+    #
+    # Сюда приходим, когда у сервера не стало доступа к GitHub: ключ убрали
+    # из репозитория, он истёк по сроку, сменился адрес. Раньше выкатка на
+    # этом заканчивалась — Action краснел, а сайт молча оставался на
+    # позавчерашнем коммите, и понять это можно было только глазами.
+    #
+    # Репозиторий публичный: на чтение не нужно ни ключа, ни токена, и
+    # протухнуть тут нечему в принципе. Поэтому запасной путь — не костыль,
+    # а тот единственный, который не может однажды закончиться по сроку.
+    ORIGIN_URL="$(git remote get-url origin 2>/dev/null || true)"
+    case "$ORIGIN_URL" in
+      git@github.com:*)       FALLBACK="https://github.com/${ORIGIN_URL#git@github.com:}" ;;
+      ssh://git@github.com/*) FALLBACK="https://github.com/${ORIGIN_URL#ssh://git@github.com/}" ;;
+      https://*)              FALLBACK="$ORIGIN_URL" ;;
+      *)                      FALLBACK="" ;;
+    esac
+
+    if [ -z "$FALLBACK" ]; then
+      echo "✗ origin ($ORIGIN_URL) не ответил, и запасного адреса из него не вывести." >&2
+      exit 1
+    fi
+
+    echo "  · origin не ответил — забираю по HTTPS: $FALLBACK" >&2
+
+    # origin при этом НЕ переписывается, и это не мелочь: у него может быть
+    # ключ с правом записи. Починить выкатку, отняв у сервера право push, —
+    # обмен не в нашу пользу, а заметить пропажу было бы некому.
+    #
+    # Токен, если его дал Action, живёт один запуск и на сервере не остаётся;
+    # нужен он только тому дню, когда репозиторий станет закрытым. Передаётся
+    # окружением, а не в адресе: адрес виден всем в выводе ps, окружение
+    # чужому процессу — нет.
+    if [ -n "${DEPLOY_TOKEN:-}" ] && git \
+      -c credential.helper= \
+      -c credential.helper='!f() { echo username=x-access-token; echo "password=$DEPLOY_TOKEN"; }; f' \
+      fetch --depth 1 "$FALLBACK" "$BRANCH"; then
+      :
+    elif git fetch --depth 1 "$FALLBACK" "$BRANCH"; then
+      :
+    else
+      echo "✗ Код не забрался ни через origin, ни по HTTPS." >&2
+      echo "  Сайт остался на $(git rev-parse --short HEAD). Осмотр связи: вкладка Actions, «Проверка связи с сервером»." >&2
+      exit 1
+    fi
+
+    git reset --hard FETCH_HEAD
+
+    # Метка origin/$BRANCH иначе осталась бы на позавчерашнем коммите, и
+    # пришедший руками человек увидел бы в git log отставание, которого нет.
+    git update-ref "refs/remotes/origin/$BRANCH" FETCH_HEAD
+  fi
 
   export DEVUZ_DEPLOY_REEXEC=1
   exec bash "$APP_DIR/scripts/vps-deploy.sh"
