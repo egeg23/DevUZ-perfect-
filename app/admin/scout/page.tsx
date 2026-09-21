@@ -5,7 +5,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { requireStaff } from "@/lib/admin/guard";
 import { SIGNAL_STATUSES, listSignals, scoutCounts } from "@/lib/admin/scout";
-import { diagnose, readPulse } from "@/lib/scout/health";
+import { diagnose, readPulse, unreadChats } from "@/lib/scout/health";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +49,7 @@ export default async function ScoutPage({
   // Пока это не написано на странице, разбираться идут в systemd — и чаще
   // всего зря.
   const health = diagnose(pulse);
+  const unread = unreadChats(pulse);
   const back = status ? `/admin/scout?status=${status}` : "/admin/scout";
 
   return (
@@ -76,6 +77,19 @@ export default async function ScoutPage({
       >
         {health.says}
       </p>
+
+      {/*
+        Недочитанные чаты — отдельной строкой и всегда, даже когда остальное
+        в порядке. Скаут, читающий половину списка, отчитывается бодро: он и
+        правда работает — просто в половине мест его нет, и узнать об этом
+        можно было только сверив два числа в пульсе руками.
+      */}
+      {unread > 0 && pulse ? (
+        <p className="mt-2 rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm leading-relaxed text-gold">
+          Аккаунт читает {pulse.chatsReading} чат(ов) из {pulse.chatsWatched} заданных: в {unread} он
+          не состоит или адрес не открылся. Вступать нужно руками — из панели это не делается.
+        </p>
+      ) : null}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Tile value={counts.total} label="сигналов" />

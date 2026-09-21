@@ -23,6 +23,7 @@ import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
 import { auditDeep, type ProspectRow, type Walked } from "@/lib/audit/batch";
 import { newRequestNo } from "@/lib/qualify/engine";
+import { modelTroubleSays } from "@/lib/model-trouble";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -274,7 +275,9 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     const secondMissed = second ? messageProblems(second, prompt, prospect.host, hooks) : null;
     message = second && secondMissed && secondMissed.length <= missed.length ? second : first;
   } catch (error) {
-    return { ok: false, why: error instanceof Error ? error.message : String(error) };
+    // Отказ модели — не «что-то пошло не так»: менеджеру нужна фраза, по
+    // которой понятно, идти к владельцу или нажать ещё раз через минуту.
+    return { ok: false, why: modelTroubleSays(error) };
   }
 
   // Что не так — покажем сотруднику рядом с текстом: правит он, а не мы.

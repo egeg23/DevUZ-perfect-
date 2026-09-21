@@ -115,7 +115,8 @@ export function diagnose(pulse: ScoutPulse | null, now = Date.now()): ScoutVerdi
       state: "model_down",
       says:
         `Отсев пропустил ${pulse.passedPrefilter}, а разобрано 0. Модель недоступна: ` +
-        "нет ключа либо скаут запущен без NODE_OPTIONS=--use-env-proxy.",
+        "кончились деньги на ключе, ключа нет вовсе либо скаут запущен без " +
+        "NODE_OPTIONS=--use-env-proxy.",
     };
   }
 
@@ -141,6 +142,19 @@ export function diagnose(pulse: ScoutPulse | null, now = Date.now()): ScoutVerdi
       `Увидел ${pulse.seen}, до модели дошло ${pulse.passedPrefilter}, ` +
       `сохранено ${pulse.saved}, отправлено ${pulse.notified}.`,
   };
+}
+
+/**
+ * Сколько заданных чатов аккаунт не читает.
+ *
+ * Тревога поднималась только на полном нуле, а 21 сентября в пульсе стояло
+ * «читает 13 из 29»: шестнадцать чатов не читались больше суток, и панель
+ * при этом писала «механизм цел». Наполовину работающий скаут выглядит как
+ * работающий — этим он и опасен.
+ */
+export function unreadChats(pulse: ScoutPulse | null): number {
+  if (!pulse) return 0;
+  return Math.max(0, pulse.chatsWatched - pulse.chatsReading);
 }
 
 /** Прибавить итоги одного прохода к накопленному пульсу. */
