@@ -55,11 +55,19 @@ jobs:
             set -a; . ./.env; set +a
             export NODE_OPTIONS=--use-env-proxy
 
+            # Сервер ставит зависимости без dev-раздела, и первый прогон
+            # упал именно на этом: playwright-core числился dev-зависимостью,
+            # и его на сервере не было вовсе. Он переехал в рабочие, но
+            # node_modules мог остаться от прежней выкатки.
+            if ! node -e "require.resolve('playwright-core')" >/dev/null 2>&1; then
+              npm ci --omit=dev --no-audit --no-fund
+            fi
+
             # Браузер ставится один раз и живёт в кэше пользователя. Сначала
             # с системными библиотеками — если sudo без пароля нет, ставим
             # без них: на сервере с докером нужные библиотеки обычно уже
             # стоят, и попытка того стоит.
-            if [ -z "$(ls -d "$HOME"/.cache/ms-playwright/chromium* 2>/dev/null)" ]; then
+            if [ -z "$(ls -d "$HOME"/.cache/ms-playwright/chromium-* 2>/dev/null)" ]; then
               npx --yes playwright@1.63.0 install --with-deps chromium \
                 || npx --yes playwright@1.63.0 install chromium
             fi

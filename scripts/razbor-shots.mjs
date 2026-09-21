@@ -95,8 +95,15 @@ async function chromiumPath() {
     const dirs = (await readdir(root, { withFileTypes: true }))
       .filter((d) => d.isDirectory() && d.name.startsWith("chromium"))
       .map((d) => d.name)
-      .sort()
-      .reverse();
+      // Полная сборка вперёд лёгкой оболочки. Рядом с `chromium-1243`
+      // playwright кладёт `chromium_headless_shell-1243`, и простая
+      // сортировка ставит оболочку первой: подчёркивание больше дефиса.
+      // Снимать она умеет, но это урезанный браузер, и разбор на нём
+      // отличался бы от того, что видит посетитель.
+      .sort((a, b) => {
+        const full = (name) => (name.startsWith("chromium-") ? 0 : 1);
+        return full(a) - full(b) || b.localeCompare(a);
+      });
     for (const dir of dirs) {
       for (const tail of [["chrome-linux", "chrome"], ["chrome-linux", "headless_shell"]]) {
         const candidate = path.join(root, dir, ...tail);

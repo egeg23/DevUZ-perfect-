@@ -62,7 +62,14 @@ test("медицину не разбираем, и это не забывает�
   assert.equal(nicheByKey(null), null);
 
   const run = read("lib/razbor/shift-run.ts");
-  assert.match(run, /if \(OFF_LIMITS\.has\(niche\.key\)\) return "нишу не разбираем";/);
+  // Проверка идёт и по ключу, и по словам. Ключ придуманной ниши может
+  // выглядеть безобидно — `finansy`, — а подпись быть «микрокредитная
+  // организация»; до появления придуманных ниш хватало одного списка
+  // ключей, потому что банк или аптеку классификатор просто не узнавал.
+  assert.match(
+    run,
+    /if \(OFF_LIMITS\.has\(niche\.key\) \|\| forbiddenNiche\(niche\)\) return "нишу не разбираем";/,
+  );
 });
 
 const REPORT = {
