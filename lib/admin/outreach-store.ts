@@ -23,6 +23,7 @@ import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
 import { auditDeep, type ProspectRow, type Walked } from "@/lib/audit/batch";
 import { newRequestNo } from "@/lib/qualify/engine";
+import { effortFor } from "@/lib/model-limits";
 import { modelTroubleSays } from "@/lib/model-trouble";
 import { serviceClient } from "@/lib/supabase";
 
@@ -245,7 +246,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
       ],
       tools: [OUTREACH_TOOL as unknown as Anthropic.Beta.BetaToolUnion],
       tool_choice: { type: "tool", name: OUTREACH_TOOL.name },
-      output_config: { effort: "medium" as const },
+      ...effortFor(MODEL, "medium"),
     });
     const block = response.content.find((b) => b.type === "tool_use");
     const raw = block && block.type === "tool_use" ? (block.input as { message?: unknown }).message : null;

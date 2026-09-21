@@ -96,3 +96,27 @@ test("«разобрано 0» называет и пустой баланс т�
   assert.equal(verdict.state, "model_down");
   assert.match(verdict.says, /деньги/i, "диагноз отправит искать ключ, когда дело в деньгах");
 });
+
+/**
+ * Выбор модели через .env не должен падать на первом же запросе.
+ *
+ * При замере переключение скаута на Хайку упало с «400 This model does not
+ * support the effort parameter»: параметр стоял в коде жёстко, и узнать об
+ * этом можно было только попробовав. То есть переключить узел на модель
+ * подешевле было нельзя вовсе.
+ */
+test("усилие не уезжает модели, которая про него не знает", async () => {
+  const { effortFor, supportsEffort } = await import("@/lib/model-limits");
+
+  assert.equal(supportsEffort("claude-opus-5"), true);
+  assert.equal(supportsEffort("claude-haiku-4-5"), false);
+  assert.deepEqual(effortFor("claude-sonnet-5", "low"), { output_config: { effort: "low" } });
+  assert.deepEqual(effortFor("claude-haiku-4-5", "low"), {});
+
+  const scout = read("lib/scout/classify.ts");
+  const letters = read("lib/admin/outreach-store.ts");
+  for (const [name, source] of [["скаут", scout], ["письма", letters]] as const) {
+    assert.doesNotMatch(source, /output_config: \{ effort/, `${name}: усилие снова зашито в вызов`);
+    assert.match(source, /effortFor\(MODEL/, `${name}: усилие не выбирается по модели`);
+  }
+});
