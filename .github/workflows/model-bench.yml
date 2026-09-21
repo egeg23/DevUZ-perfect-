@@ -1,0 +1,58 @@
+# Замер моделей на наших же задачах — по кнопке.
+#
+# Заводится после вопроса владельца «где можно съехать с Опуса на модель
+# подешевле без потери качества». Ответ на него нельзя дать из головы:
+# качество здесь измеряется не ощущением, а теми же проверками, которыми
+# панель уже пользуется в бою — поймал ли скаут настоящие заявки и прошло
+# ли письмо проверку перед отправкой.
+#
+# Стоит денег: каждый запуск честно платит за все вызовы и печатает, сколько
+# потратил. Поэтому только по кнопке и с малыми наборами по умолчанию.
+name: Замер моделей
+
+on:
+  workflow_dispatch:
+    inputs:
+      models:
+        description: Модели через запятую
+        default: claude-opus-5,claude-sonnet-5,claude-haiku-4-5
+      samples:
+        description: Сколько настоящих сигналов взять для скаута
+        default: "20"
+      letters:
+        description: Сколько писем написать на каждой модели
+        default: "3"
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    name: Замер на сервере
+    runs-on: ubuntu-latest
+    steps:
+      - name: Прогнать замер по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 20m
+          script: |
+            set -uo pipefail
+            cd "${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
+
+            # Окружение берётся целиком: замеру нужны и ключ модели, и
+            # прокси, и доступ к базе — ровно то же, что у скаута.
+            set -a; . ./.env; set +a
+            export NODE_OPTIONS=--use-env-proxy
+            export BENCH_SAMPLES="${{ inputs.samples }}"
+            export BENCH_LETTERS="${{ inputs.letters }}"
+
+            for MODEL in $(echo "${{ inputs.models }}" | tr ',' ' '); do
+              echo "════ $MODEL ════"
+              SCOUT_MODEL="$MODEL" ANTHROPIC_MODEL="$MODEL" \
+                node --import ./tests/alias-hook.mjs scripts/model-bench.mjs \
+                || echo "✗ замер на $MODEL не прошёл"
+            done
