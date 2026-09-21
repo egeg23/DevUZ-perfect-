@@ -146,3 +146,39 @@ test("снимок, объявленный поисковику, показан 
   assert.match(read("app/[locale]/products/[slug]/page.tsx"), /product\.shots\?\.length \? \(/);
   assert.match(read("app/[locale]/products/page.tsx"), /product\.shots\?\.\[0\] \? \(/);
 });
+
+/* ── Подтверждение прав на сайт файлом в корне ───────────────────────────── */
+
+test("файл подтверждения Яндекса лежит в корне и не пуст", () => {
+  const file = read("public/yandex_c0ff92419282bda3.html");
+  assert.match(file, /Verification: c0ff92419282bda3/);
+});
+
+test("файл подтверждения не уезжает в языковой редирект", () => {
+  // Каждая страница сайта живёт под префиксом локали, и middleware уводит
+  // туда всё, чего нет в списке исключений. Файл подтверждения прав —
+  // `yandex_<код>.html` у Яндекса, `google<код>.html` у Google — обязан
+  // отдаваться ровно из корня: робот идёт по точному адресу и редирект
+  // считает отсутствием файла.
+  const source = read("middleware.ts");
+  const quoted = source.match(/matcher: \[\s*("(?:[^"\\]|\\.)*")/);
+  assert.ok(quoted, "не нашёл матчер — проверка бессмысленна");
+
+  const matcher = new RegExp(`^${JSON.parse(quoted[1]) as string}$`);
+  const caught = (path: string) => matcher.test(path);
+
+  // Эти адреса middleware пропускает мимо себя.
+  for (const path of [
+    "/yandex_c0ff92419282bda3.html",
+    "/google1234567890abcdef.html",
+    "/robots.txt",
+    "/sitemap.xml",
+  ]) {
+    assert.equal(caught(path), false, `${path}: уедет в языковой редирект`);
+  }
+
+  // А эти обязан перехватывать — иначе сломается сам сайт.
+  for (const path of ["/", "/about", "/ru", "/ru/products"]) {
+    assert.equal(caught(path), true, `${path}: перестал получать локаль`);
+  }
+});
