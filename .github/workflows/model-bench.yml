@@ -22,6 +22,9 @@ on:
       letters:
         description: Сколько писем написать на каждой модели
         default: "3"
+      task:
+        description: Что мерить — all (скаут и письма) или razbor (статья ночной смены)
+        default: all
 
 permissions:
   contents: read
@@ -50,6 +53,7 @@ jobs:
             export BENCH_SAMPLES="${{ inputs.samples }}"
             export BENCH_LETTERS="${{ inputs.letters }}"
             export BENCH_DEBUG=1
+            export BENCH_TASK="${{ inputs.task }}"
 
             for MODEL in $(echo "${{ inputs.models }}" | tr ',' ' '); do
               echo "════ $MODEL ════"

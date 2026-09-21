@@ -24,6 +24,10 @@ import {
   outreachPrompt,
 } from "@/lib/admin/outreach";
 import { effortFor } from "@/lib/model-limits";
+import { auditDeep } from "@/lib/audit/batch";
+import { nicheByKey, articleProblems } from "@/lib/razbor/shift";
+import { cityFrom } from "@/lib/razbor/shift";
+import { titleOf, writeArticle } from "@/lib/razbor/shift-run";
 import { serviceClient } from "@/lib/supabase";
 
 const MODEL = process.env.SCOUT_MODEL || process.env.ANTHROPIC_MODEL || "claude-opus-5";
@@ -242,6 +246,71 @@ async function letterTask() {
   };
 }
 
+
+/**
+ * Ночная смена — самая тяжёлая задача из всех: две статьи на сайт, по
+ * четыре тысячи токенов на каждую. Меряется тем же, чем проверяется ночью:
+ * articleProblems, та самая машина, из-за которой три ночи подряд не
+ * выходило ни одного разбора.
+ *
+ * Обход сайта модель не трогает и денег не стоит — он здесь ради того,
+ * чтобы статья писалась по настоящим находкам, а не по выдуманным.
+ */
+async function razborTask() {
+  const db = serviceClient();
+  if (!db) throw new Error("нет доступа к базе");
+
+  const { data } = await db
+    .from("prospects")
+    .select("url, host, label")
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  const before = snapshot();
+  const started = Date.now();
+  let written = 0;
+  let clean = 0;
+  let problems = 0;
+  let site = null;
+
+  for (const row of data ?? []) {
+    const deep = await auditDeep({ raw: row.url, url: row.url, label: row.label, problem: null });
+    const report = deep.row.report;
+    const page = deep.home;
+    if (!report || !page) continue;
+
+    const niche = nicheByKey(report.facts.niche);
+    const city = cityFrom(page.html);
+    if (!niche || !city) continue;
+
+    site = row.host;
+    const title = titleOf(page.html);
+    for (const locale of ["ru", "uz"]) {
+      const article = await writeArticle({ report, niche, city, locale, title });
+      written += 1;
+      if (typeof article === "string") {
+        problems += 1;
+      } else {
+        const found = articleProblems({ article, report, title });
+        problems += found.length;
+        if (!found.length) clean += 1;
+      }
+    }
+    break;
+  }
+
+  const took = Date.now() - started;
+  return {
+    задача: "разборы: статья ночной смены",
+    модель: MODEL,
+    сайт: site ?? "подходящего не нашлось",
+    статей: written,
+    "без претензий проверки": clean,
+    "претензий всего": problems,
+    ...money(since(before), took),
+  };
+}
+
 function money(part, took) {
   return {
     вызовов: part.calls,
@@ -257,6 +326,7 @@ const task = process.env.BENCH_TASK || "all";
 const out = [];
 if (task === "all" || task === "scout") out.push(await scoutTask());
 if (task === "all" || task === "letter") out.push(await letterTask());
+if (task === "razbor") out.push(await razborTask());
 
 for (const row of out) console.log(JSON.stringify(row));
 console.log(JSON.stringify({ итог: MODEL, "всего вызовов": usage.calls, "всего, $": Number(cost().toFixed(4)) }));

@@ -1,8 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { services } from "@/content/services";
-import { analyze } from "@/lib/audit/checks";
-import { enrich, probe } from "@/lib/audit/fetch";
+import { auditDeep } from "@/lib/audit/batch";
 import { forecast } from "@/lib/razbor/forecast";
 import { labelFor, pickFindings, queryFor, slugFor, worthWriting } from "@/lib/razbor/model";
 import { serviceFor } from "@/lib/razbor/service-link";
@@ -119,10 +118,16 @@ export async function runRazborShift(now = new Date(), force = false): Promise<S
 
 /** `true` — черновик лёг; строка — почему сайт не взяли. */
 async function draftOne(url: string): Promise<true | string> {
-  // Тот же путь, что у публичной страницы, но разобранный на части: нам
-  // нужна не только сводка, а ещё html — по нему определяется город.
-  const page = await enrich(await probe(url));
-  const report = analyze(page);
+  // Тот же обход, что у касания, а не быстрый разбор одной главной.
+  //
+  // Даёт три вещи разом и за один проход: находки внутренних страниц (с
+  // ними реже срабатывает «мало находок»), нишу по заголовкам каталога —
+  // из-за неё смена теряла половину сайтов, — и саму главную, из которой
+  // берутся город и заголовок.
+  const deep = await auditDeep({ raw: url, url, label: null, problem: null });
+  const report = deep.row.report;
+  const page = deep.home;
+  if (!report || !page) return "сайт не открылся";
 
   const verdict = worthWriting(report);
   if (!verdict.ok) return verdict.why === "too_good" ? "сайт в порядке" : verdict.why === "thin" ? "мало находок" : "сайт не открылся";
@@ -159,7 +164,7 @@ async function draftOne(url: string): Promise<true | string> {
   return id ? true : "не записался (скорее всего, такой запрос уже занят)";
 }
 
-function titleOf(html: string): string | null {
+export function titleOf(html: string): string | null {
   const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   return match ? match[1].trim().slice(0, 200) : null;
 }
@@ -209,12 +214,12 @@ async function writeChecked(input: {
   locale: "ru" | "uz";
   title: string | null;
 }): Promise<RazborArticle | string> {
-  const first = await write(input);
+  const first = await writeArticle(input);
   if (typeof first !== "string" || !first.startsWith(CHECK_FAILED)) return first;
-  return write(input, first);
+  return writeArticle(input, first);
 }
 
-async function write(
+export async function writeArticle(
   input: {
     report: AuditReport;
     niche: Niche;
