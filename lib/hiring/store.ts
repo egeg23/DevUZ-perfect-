@@ -23,7 +23,8 @@ import { serviceClient } from "@/lib/supabase";
  * потом показываем человеку.
  */
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5";
+/** Разбор резюме — Соннет: задача та же, что у письма, и цена вчетверо ниже. */
+const MODEL = process.env.HIRING_MODEL || "claude-sonnet-5";
 
 export type ReviewResult = { ok: true; id: string } | { ok: false; why: string };
 
