@@ -1,5 +1,6 @@
 import { codeFromQuery } from "@/lib/partners/rules";
 import { isLocale, type Locale } from "@/lib/i18n";
+import { modelTrouble } from "@/lib/model-trouble";
 import {
   MAX_MESSAGE_CHARS,
   MAX_TURNS,
@@ -136,8 +137,21 @@ export async function POST(request: Request) {
         push({ type: "done", qualified: result.qualified });
         controller.close();
       } catch (error) {
-        console.error("chat", error);
-        push({ type: "error" });
+        // Модель без денег, без ключа или перегружена — это не поломка
+        // сайта, и посетителю о ней знать нечего. Ему нужен запасной путь:
+        // тот же, что при выключенном чате, — форма внизу страницы.
+        //
+        // Цена различия известна: 21 сентября ключ остался без денег, чат
+        // отвечал `{"type":"error"}`, и за сутки не пришло ни одного лида.
+        // Посетитель уходил с мыслью «у них сайт не работает».
+        const trouble = modelTrouble(error);
+        if (trouble) {
+          console.error("chat: модель недоступна —", trouble.says);
+          push({ type: "unavailable" });
+        } else {
+          console.error("chat", error);
+          push({ type: "error" });
+        }
         controller.close();
       }
     },

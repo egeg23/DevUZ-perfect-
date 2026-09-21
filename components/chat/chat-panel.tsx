@@ -279,6 +279,13 @@ export function ChatPanel({
           } else if (event.type === "closing_failed") {
             // Заявка уже у менеджера, не доиграла лишь прощальная фраза.
             setStatus((prev) => (prev === "undelivered" ? prev : "qualified"));
+          } else if (event.type === "unavailable") {
+            // Модель недоступна: чат ведёт себя как выключенный, а не как
+            // сломанный. Текст про форму внизу у нас уже есть на всех
+            // четырёх языках — второй фразы заводить незачем.
+            setStatus((prev) =>
+              prev === "qualified" || prev === "undelivered" ? prev : "disabled",
+            );
           } else if (event.type === "error" || event.type === "refusal") {
             // Успешную передачу заявки ошибка перебить не может: иначе
             // человек, чей лид уже лежит у менеджера, видит «всё сломалось»

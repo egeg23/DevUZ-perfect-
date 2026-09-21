@@ -1,3 +1,4 @@
+import { modelTroubleSays } from "@/lib/model-trouble";
 import Anthropic from "@anthropic-ai/sdk";
 
 /**
@@ -172,7 +173,10 @@ export async function classify(batch: ScoutCandidate[]): Promise<ScoutVerdict[]>
     }
     return verdicts;
   } catch (error) {
-    console.error("scout: разбор не удался", error);
+    // «Разбор не удался» в журнале выглядит одинаково и при поломке кода, и
+    // при пустом балансе ключа. Второе чинится за минуту, но только если
+    // прочитать, а не угадывать по молчащей ленте.
+    console.error("scout: разбор не удался —", modelTroubleSays(error));
     return [];
   }
 }
