@@ -21,6 +21,13 @@ export type ShiftReport = { id: string; shift: string; body: string; created_at:
 export const SHIFT_TITLE: Record<string, string> = {
   razbor: "Смена разборов",
   experiment: "Эксперимент 300→2000",
+
+  // Выкатка — не смена, а поломка, о которой иначе некому сказать. Красный
+  // Action видит тот, кто открыл вкладку Actions; 19 сентября работа
+  // простояла в ветке сутки ровно потому, что смотреть в неё было некому.
+  // Канал у тревоги тот же, что у смен, а расписания у неё нет и не будет:
+  // день без выкаток — обычный день, и сторож молчания о ней не спрашивает.
+  deploy: "Выкатка",
 };
 
 export function renderShiftReport(report: ShiftReport): string {
