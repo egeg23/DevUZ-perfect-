@@ -19,7 +19,8 @@ import { METRIC_TITLE, TASHKENT_OFFSET_MS, tashkentDate, type PlanFact, type Sta
  * подрывает доверие ко всем остальным.
  */
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5";
+/** Подсказки менеджеру — Соннет: их читает свой, а не клиент. */
+const MODEL = process.env.COACH_MODEL || "claude-sonnet-5";
 
 export type ReviewKind = "weekly" | "daily";
 

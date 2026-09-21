@@ -174,7 +174,9 @@ test("смена отчитывается при любом исходе, вкл
 test("статья, не прошедшая проверку, не становится черновиком", () => {
   const run = read("lib/razbor/shift-run.ts");
   const check = run.indexOf("const problems = articleProblems(");
-  const ret = run.indexOf("статья не прошла проверку");
+  // Строка отказа живёт в константе CHECK_FAILED — по ней же вторая
+  // попытка отличает провал проверки от «модель не собрала статью».
+  const ret = run.indexOf("if (problems.length) return");
   const save = run.indexOf("await saveDraft(");
   assert.ok(check > 0 && ret > check, "проверка ни на что не влияет");
   assert.ok(save < check || run.indexOf("if (typeof ru === \"string\") return ru;") < save, "черновик ложится до проверки");

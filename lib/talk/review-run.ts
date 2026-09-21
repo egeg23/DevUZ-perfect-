@@ -23,7 +23,8 @@ import { saveReview, toReview } from "@/lib/talk/review-store";
  * осторожность, ему нужно вычитать факты из ленты. За это переплачивать
  * незачем.
  */
-const MODEL = process.env.ANTHROPIC_REVIEW_MODEL || "claude-haiku-4-5-20251001";
+/** Разборы переписок — Хайку и дальше: в копилку уроков, не клиенту. */
+const MODEL = process.env.ANTHROPIC_REVIEW_MODEL || "claude-haiku-4-5";
 
 export type ReviewRun = { looked: number; saved: number; errors: string[] };
 

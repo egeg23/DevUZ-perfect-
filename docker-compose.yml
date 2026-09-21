@@ -37,7 +37,14 @@ services:
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
       # Разбор переписки моделью попроще: он не пишет клиенту, а вычитывает
       # факты из уже законченной ленты — переплачивать тут не за что.
-      ANTHROPIC_REVIEW_MODEL: ${ANTHROPIC_REVIEW_MODEL:-claude-haiku-4-5-20251001}
+      ANTHROPIC_REVIEW_MODEL: ${ANTHROPIC_REVIEW_MODEL:-claude-haiku-4-5}
+
+      # Модели по узлам. Пусто — берётся выбранная в коде по замеру
+      # 21 сентября: письма, разбор резюме и подсказки менеджеру на
+      # Соннете (то же качество по нашим проверкам, вчетверо дешевле).
+      OUTREACH_MODEL: ${OUTREACH_MODEL:-}
+      HIRING_MODEL: ${HIRING_MODEL:-}
+      COACH_MODEL: ${COACH_MODEL:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_SALES_CHAT_ID: ${TELEGRAM_SALES_CHAT_ID}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}

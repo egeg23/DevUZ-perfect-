@@ -1,0 +1,36 @@
+# Ночная смена разборов — по кнопке, не дожидаясь восьми утра.
+#
+# Заводится после трёх ночей подряд с отчётом «ни одного разбора»: правку
+# смены иначе нельзя проверить раньше следующего утра, а раздел всё это
+# время стоит пустым.
+#
+# Смена только складывает черновики во вкладку «Разборы» — наружу сам по
+# себе не уходит ни один, публикует их владелец руками. Стоит денег:
+# двенадцать сайтов за проход.
+name: Разборы — смена сейчас
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shift:
+    name: Прогнать смену на сервере
+    runs-on: ubuntu-latest
+    steps:
+      - name: Запустить смену по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 30m
+          script: |
+            set -uo pipefail
+            cd "${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
+            set -a; . ./.env; set +a
+            export NODE_OPTIONS=--use-env-proxy
+            node --import ./tests/alias-hook.mjs scripts/razbor-shift.mjs

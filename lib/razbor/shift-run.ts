@@ -58,10 +58,18 @@ async function lastShiftAt(): Promise<string | null> {
   return data?.created_at ? String(data.created_at) : null;
 }
 
-export async function runRazborShift(now = new Date()): Promise<ShiftRun> {
+/**
+ * `force` — запуск руками, в обход расписания и отметки «сегодня уже была».
+ *
+ * Нужен ровно за тем, чтобы правку смены можно было проверить в тот же
+ * день, а не ждать восьми утра по Ташкенту. Автоматика этот флаг не
+ * ставит никогда: смена и так ходит раз в сутки, и второй проход за день
+ * означал бы двойной счёт за модель.
+ */
+export async function runRazborShift(now = new Date(), force = false): Promise<ShiftRun> {
   const db = serviceClient();
   if (!db) return EMPTY;
-  if (!shiftDue(now, await lastShiftAt())) return EMPTY;
+  if (!force && !shiftDue(now, await lastShiftAt())) return EMPTY;
 
   const run: ShiftRun = { ran: true, looked: 0, drafted: 0, skipped: {}, errors: [] };
   const skip = (why: string) => {
@@ -129,9 +137,9 @@ async function draftOne(url: string): Promise<true | string> {
   const title = titleOf(page.html);
   const loss = forecast(pickFindings(report));
 
-  const ru = await write({ report, niche, city, locale: "ru", title });
+  const ru = await writeChecked({ report, niche, city, locale: "ru", title });
   if (typeof ru === "string") return ru;
-  const uz = await write({ report, niche, city, locale: "uz", title });
+  const uz = await writeChecked({ report, niche, city, locale: "uz", title });
   if (typeof uz === "string") return uz;
 
   const id = await saveDraft({
@@ -179,13 +187,43 @@ const TOOL = {
   },
 } as const;
 
-async function write(input: {
+/**
+ * Две попытки на статью, а не одна.
+ *
+ * Три ночи подряд в отчёте смены стояло «статья не прошла проверку: Числа,
+ * которых нет в аудите» — и раздел не получил ни одного разбора. Одно
+ * выдуманное число хоронило сайт целиком, хотя переписать текст стоит
+ * одного лишнего вызова.
+ *
+ * Ремень не новый: у письма касания он появился в сентябре и работает там
+ * ровно так же — промахи возвращаются модели её же словами. Повторяем
+ * только провал проверки: «модель не собрала статью» вторым заходом не
+ * лечится, а стоит столько же.
+ */
+const CHECK_FAILED = "статья не прошла проверку";
+
+async function writeChecked(input: {
   report: AuditReport;
   niche: Niche;
   city: City;
   locale: "ru" | "uz";
   title: string | null;
 }): Promise<RazborArticle | string> {
+  const first = await write(input);
+  if (typeof first !== "string" || !first.startsWith(CHECK_FAILED)) return first;
+  return write(input, first);
+}
+
+async function write(
+  input: {
+    report: AuditReport;
+    niche: Niche;
+    city: City;
+    locale: "ru" | "uz";
+    title: string | null;
+  },
+  notes: string | null = null,
+): Promise<RazborArticle | string> {
   const { report, niche, city, locale } = input;
   const picked = pickFindings(report);
   const label = labelFor(niche, city, report.facts, locale);
@@ -214,6 +252,13 @@ async function write(input: {
     "",
     `Факты о сайте: время до первого байта ${report.facts.ttfbMs} мс, общий балл ${report.score}.`,
     `Цена студии, дословно: «${price}».`,
+    ...(notes
+      ? [
+          "",
+          `Предыдущая попытка не прошла проверку: ${notes}`,
+          "Напиши заново, исправив это. Числа бери только из находок и фактов выше — других у тебя нет.",
+        ]
+      : []),
   ].join("\n");
 
   const client = new Anthropic();
@@ -251,7 +296,7 @@ async function write(input: {
   // формальные рамки, всё равно способна перезамерить время ответа или
   // скопировать находки дословно.
   const problems = articleProblems({ article, report, title: input.title });
-  if (problems.length) return `статья не прошла проверку: ${problems.map((p) => p.text).join(" ")}`;
+  if (problems.length) return `${CHECK_FAILED}: ${problems.map((p) => p.text).join(" ")}`;
 
   return article;
 }

@@ -120,3 +120,54 @@ test("усилие не уезжает модели, которая про не�
     assert.match(source, /effortFor\(MODEL/, `${name}: усилие не выбирается по модели`);
   }
 });
+
+/**
+ * Модели по узлам, а не одна на всех.
+ *
+ * Замер 21 сентября: на письмах Соннет дал те же 6/6 по нашей же проверке,
+ * что и Опус, вчетверо дешевле; Хайку провалил два письма из шести. На
+ * отборе скаута все три поймали 10 заявок из 10, но Хайку на пачке из
+ * тридцати вернул двенадцать вердиктов — остальные восемнадцать сообщений
+ * пропали молча.
+ *
+ * Проверка сторожит две вещи: что выбор действительно разъехался по узлам
+ * (иначе смена модели письма заодно меняет чат на сайте) и что чат остался
+ * на Опусе — там продажа, а не внутренняя задача.
+ */
+test("модель выбирается на каждый узел отдельно", () => {
+  const nodes = {
+    "письма касаний": ["lib/admin/outreach-store.ts", "OUTREACH_MODEL", "claude-sonnet-5"],
+    "отбор скаута": ["lib/scout/classify.ts", "SCOUT_MODEL", "claude-sonnet-5"],
+    "разбор резюме": ["lib/hiring/store.ts", "HIRING_MODEL", "claude-sonnet-5"],
+    "подсказки менеджеру": ["lib/admin/coach.ts", "COACH_MODEL", "claude-sonnet-5"],
+  } as const;
+
+  for (const [name, [file, variable, model]] of Object.entries(nodes)) {
+    const source = read(file);
+    assert.match(source, new RegExp(`process[.]env[.]${variable}`), `${name}: нет своей переменной`);
+    assert.match(source, new RegExp(`"${model}"`), `${name}: модель не ${model}`);
+    // Общая переменная в запасном пути означала бы, что узел меняется
+    // заодно с чатом на сайте — ровно то, от чего уходили.
+    assert.doesNotMatch(
+      source.split("const MODEL")[1]?.split("\n")[0] ?? "",
+      /ANTHROPIC_MODEL/,
+      `${name}: модель всё ещё наследуется от чата`,
+    );
+  }
+
+  const chat = read("lib/qualify/engine.ts");
+  assert.match(chat, /ANTHROPIC_MODEL \|\| "claude-opus-5"/, "чат на сайте съехал с Опуса — там продажа");
+});
+
+/**
+ * Одно выдуманное число не должно хоронить весь разбор.
+ *
+ * Три ночи подряд смена отчитывалась «ни одного разбора», и в причинах
+ * стояло «статья не прошла проверку: Числа, которых нет в аудите».
+ */
+test("у статьи разбора есть вторая попытка", () => {
+  const shift = read("lib/razbor/shift-run.ts");
+  assert.match(shift, /writeChecked/, "статья пишется одной попыткой");
+  assert.match(shift, /Предыдущая попытка не прошла проверку/, "промахи не возвращаются модели");
+  assert.match(shift, /runRazborShift\(now = new Date\(\), force = false\)/, "смену нельзя прогнать руками");
+});
