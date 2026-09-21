@@ -61,34 +61,60 @@ test("имя из домена находится, даже если загол�
 
 const ROOT = new URL("../", import.meta.url);
 const shot = readFileSync(new URL("scripts/razbor-shot.mjs", ROOT), "utf8");
+// Сам код затирания уехал в общий модуль: его выполняют оба прохода —
+// одиночный razbor-shot и пакетный razbor-shots. Проверяем его там, где он
+// теперь один; иначе две копии анонимности разойдутся, и заметно это станет
+// на опубликованной странице.
+const inPage = readFileSync(new URL("lib/razbor/in-page.ts", ROOT), "utf8");
+const shots = readFileSync(new URL("scripts/razbor-shots.mjs", ROOT), "utf8");
 
 test("плашка не подчиняется стилям чужой страницы", () => {
   // Выстрелило ровно так: на example.com для div задано opacity: .8, плашка
   // вставала на место и становилась полупрозрачной. Имя читалось сквозь неё.
-  assert.match(shot, /setProperty\("all", "initial", "important"\)/);
-  assert.match(shot, /setProperty\(name, value, "important"\)/);
+  assert.match(inPage, /setProperty\("all", "initial", "important"\)/);
+  assert.match(inPage, /setProperty\(name, rules\[name\], "important"\)/);
   for (const prop of ["opacity", "filter", "mix-blend-mode", "transform", "visibility"]) {
-    assert.ok(shot.includes(`"${prop}"`) || shot.includes(`${prop}:`), `${prop} не сброшен`);
+    assert.ok(inPage.includes(`"${prop}"`) || inPage.includes(`${prop}:`), `${prop} не сброшен`);
   }
 });
 
 test("плашки кладутся в body и только после всех замеров", () => {
   // В <html> они рисуются ниже содержимого body при любом z-index.
-  assert.match(shot, /document\.body\.appendChild\(box\)/);
+  assert.match(inPage, /document\.body\.appendChild\(box\)/);
   assert.ok(
-    !/document\.documentElement\.appendChild\(box\)/.test(shot),
+    !/document\.documentElement\.appendChild\(box\)/.test(inPage),
     "плашка снова уходит в documentElement — будет рисоваться под текстом",
   );
 
   // Правка DOM во время обхода сдвигает раскладку, и следующий замер
   // приходит уже по сдвинутой странице.
-  const measure = shot.indexOf("const targets = []");
-  const draw = shot.indexOf("for (const { rect, color } of targets)");
+  const measure = inPage.indexOf("const targets: { rect: DOMRect; color: string }[] = []");
+  const draw = inPage.indexOf("for (const { rect, color } of targets)");
   assert.ok(measure > 0 && draw > measure, "рисование перемешано с замерами");
 });
 
 test("цвет плашки берётся только непрозрачный", () => {
-  assert.match(shot, /alpha >= 0\.99/);
+  assert.match(inPage, /alpha >= 0\.99/);
+});
+
+test("затирание не размножено по скриптам", () => {
+  // Две копии одной анонимности однажды разойдутся, и разойдутся тихо:
+  // один проход перестанет закрывать имя, а увидят это уже на сайте.
+  for (const [name, source] of [["razbor-shot", shot], ["razbor-shots", shots]] as const) {
+    assert.ok(
+      !/function redactInPage\(/.test(source),
+      `${name}: своя копия затирания вместо общего модуля`,
+    );
+    assert.match(source, /redactInPage/, `${name}: затирание не вызывается вовсе`);
+  }
+});
+
+test("оба прохода снимают с одним и тем же доверием к сертификату", () => {
+  assert.match(shots, /--ignore-certificate-errors-spki-list=/);
+  assert.ok(
+    !/--ignore-certificate-errors(?!-spki-list)/.test(shots),
+    "пакетный проход отключает проверку сертификатов целиком",
+  );
 });
 
 test("проверка сертификата не отключается целиком", () => {

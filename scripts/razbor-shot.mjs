@@ -25,6 +25,10 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 
 import { redactions } from "../lib/razbor/anonymize.ts";
+// Затирание живёт в общем модуле: его же выполняет пакетный проход
+// scripts/razbor-shots.mjs, и две копии одной анонимности однажды
+// разойдутся — причём заметно это станет на опубликованной странице.
+import { redactInPage } from "../lib/razbor/in-page.ts";
 
 /**
  * Где лежит Chromium.
@@ -79,139 +83,6 @@ function usage() {
 const [target, outDir, ...flags] = process.argv.slice(2);
 if (!target || !outDir) usage();
 const keepName = flags.includes("--keep-name");
-
-/**
- * Закрывает имя компании и логотип.
- *
- * Выполняется в странице: только там известно, где что лежит после вёрстки.
- * Возвращает, сколько плашек поставило, — ноль означает, что имя на первом
- * экране не нашлось, и это повод посмотреть снимок глазами.
- */
-function redactInPage(words) {
-  const COVER = "__devuz_cover";
-
-  /**
-   * Сначала все замеры, потом все плашки.
-   *
-   * Смешивать нельзя: каждая добавленная плашка — узел в body, после
-   * которого браузер пересчитывает раскладку, и следующий замер приходит уже
-   * по сдвинутой странице. Первая версия так и делала, и плашки ложились
-   * рядом с текстом, а не на него.
-   */
-  const targets = [];
-
-  /**
-   * Непрозрачный фон ближайшего предка.
-   *
-   * Важно именно «непрозрачный». Первая версия брала первый попавшийся цвет
-   * и получала что-нибудь вроде rgba(240,240,242,.55) — плашка выходила
-   * полупрозрачной, и имя компании читалось сквозь неё. На снимке это
-   * выглядело как выцветший текст, а не как затирание, то есть анонимности
-   * не было вовсе.
-   */
-  const bg = (el) => {
-    let node = el;
-    for (let i = 0; i < 8 && node; i++) {
-      const color = getComputedStyle(node).backgroundColor;
-      const m = color && color.match(/^rgba?\(([^)]+)\)$/);
-      if (m) {
-        const parts = m[1].split(",").map((v) => parseFloat(v.trim()));
-        const alpha = parts.length > 3 ? parts[3] : 1;
-        if (alpha >= 0.99) return `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`;
-      }
-      node = node.parentElement;
-    }
-    // Ни у кого до корня нет сплошного фона — значит страница на белом.
-    return "#ffffff";
-  };
-
-  // 1. Логотип: картинка или svg в шапке либо в ссылке на главную.
-  const header = document.querySelector("header, .header, #header, [role=banner]");
-  const logos = new Set();
-  for (const root of [header, document.querySelector('a[href="/"], a[href="./"]')]) {
-    if (!root) continue;
-    for (const el of root.querySelectorAll("img, svg, picture")) logos.add(el);
-    if (root.tagName === "IMG" || root.tagName === "SVG") logos.add(root);
-  }
-  for (const el of logos) {
-    const rect = el.getBoundingClientRect();
-    // Широкая картинка в шапке — баннер, а не логотип: закрыть её значит
-    // закрыть первый экран целиком.
-    if (rect.width > window.innerWidth * 0.5) continue;
-    targets.push({ rect, color: bg(el) });
-  }
-
-  // 2. Имя текстом. По узлам, а не заменой в разметке: замена в innerHTML
-  // ломает страницу там, где слово стоит в атрибуте.
-  if (words.length) {
-    const re = new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "i");
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    const hits = [];
-    while (walker.nextNode()) {
-      const node = walker.currentNode;
-      if (!node.nodeValue || !re.test(node.nodeValue)) continue;
-      hits.push(node);
-    }
-    for (const node of hits.slice(0, 40)) {
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      const color = bg(node.parentElement ?? document.body);
-      for (const rect of range.getClientRects()) targets.push({ rect, color });
-    }
-  }
-
-  // 3. И только теперь рисуем. Координаты — документа, а не окна: плашка
-  // должна остаться на месте, даже если снимок когда-нибудь станет
-  // полностраничным.
-  let placed = 0;
-  for (const { rect, color } of targets) {
-    if (rect.width < 4 || rect.height < 4) continue;
-    const box = document.createElement("div");
-    box.className = COVER;
-
-    /**
-     * Стили задаются с !important поверх полного сброса.
-     *
-     * Потому что страница стилизует и нашу плашку тоже. На example.com для
-     * div задано opacity: .8 — плашка вставала точно на место, но
-     * становилась полупрозрачной, и имя читалось сквозь неё. Выглядело это
-     * как выцветший текст, то есть как будто затирание сработало наполовину.
-     * На чужом сайте таких правил может быть сколько угодно: filter,
-     * mix-blend-mode, transform, visibility.
-     *
-     * `all: initial` сбрасывает всё унаследованное, дальше — только наше и
-     * только с !important, чтобы правило страницы с !important не победило.
-     */
-    box.style.setProperty("all", "initial", "important");
-    const rules = {
-      position: "absolute",
-      left: `${rect.left + window.scrollX}px`,
-      top: `${rect.top + window.scrollY}px`,
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
-      "background-color": color,
-      "z-index": "2147483647",
-      opacity: "1",
-      filter: "none",
-      "mix-blend-mode": "normal",
-      transform: "none",
-      display: "block",
-      visibility: "visible",
-      "pointer-events": "none",
-    };
-    for (const [name, value] of Object.entries(rules)) {
-      box.style.setProperty(name, value, "important");
-    }
-
-    // В body, а не в documentElement. Плашка, добавленная в <html> рядом с
-    // <body>, рисуется НИЖЕ его содержимого при любом z-index — на снимке
-    // это выглядит как подсветка текста, а не как затирание.
-    document.body.appendChild(box);
-    placed++;
-  }
-
-  return placed;
-}
 
 const executablePath = await chromiumPath();
 if (!executablePath) {

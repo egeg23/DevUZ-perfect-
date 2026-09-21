@@ -70,6 +70,12 @@ export const AUDIT_ACTIONS = [
   "contract.link_issued",
   "razbor.published",
   "razbor.rejected",
+  // Снятие с публикации, правка и удаление — то же решение, что и
+  // публикация, только обратное: страница под именем студии появляется или
+  // исчезает из поиска. След о нём нужен ровно так же.
+  "razbor.unpublished",
+  "razbor.edited",
+  "razbor.deleted",
   "proto.build",
   "proto.sent",
   "project.payment_added",

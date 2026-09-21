@@ -9,6 +9,15 @@ import { isLocale } from "@/lib/i18n";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 import { isRazborLocale, localeHref } from "@/lib/razbor/routing";
 
+/**
+ * Список приходит из базы, и кэш у него короткий.
+ *
+ * Разбор публикуется кнопкой в панели, а не выкаткой: страница, живущая до
+ * следующей сборки, показывала бы вчерашний список. Сброс из панели приходит
+ * сразу, `revalidate` — страховка на случай, когда он не дошёл.
+ */
+export const revalidate = 60;
+
 export async function generateMetadata({
   params,
 }: {
