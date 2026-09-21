@@ -115,19 +115,32 @@ const NEGATIVES = [
   "Ищу партнёра по маркетингу, у нас агентство наружной рекламы",
 ];
 
+/**
+ * Настоящие заявки — набором, а не из базы.
+ *
+ * Первый прогон брал сигналы, сохранённые скаутом в бою, и все три модели
+ * оценили их в ноль. Это не поломка замера: те сигналы пришли из чата про
+ * релокацию, и нынешний промпт отбивает их правильно — до нас из них не
+ * дошёл никто. Мерить отбор по набору, который сам себя заявкой не
+ * признаёт, нельзя, поэтому ниже десять сообщений, ради которых скаут и
+ * работает: человек называет задачу и ищет, кому её отдать.
+ */
+const POSITIVES = [
+  "Нужен сайт для стоматологии в Ташкенте с онлайн-записью. Кто делает, напишите цену и сроки",
+  "Ищу разработчика на интернет-магазин на узбекском: оплата Payme, доставка по городу",
+  "Кому заказать мобильное приложение для доставки еды? Бюджет до 8000$",
+  "Нужен бот в телеграме для приёма заказов, чтобы заявки падали в таблицу. Кто возьмётся?",
+  "Посоветуйте студию, которая сделает сайт-каталог стройматериалов с ценами",
+  "У нас агентство, перегруз по заказам — ищем субподрядчика на вёрстку и бэкенд, работы много",
+  "Kompaniyamiz uchun sayt kerak, kim qiladi? Narxi va muddati qancha?",
+  "Нужна автоматизация склада, в таблицах уже путаемся. Ищем, кто сделает",
+  "Ищем команду на доработку CRM, ТЗ и бюджет есть, начать хотим в октябре",
+  "Сколько стоит лендинг с интеграцией с телеграмом и онлайн-оплатой?",
+];
+
 async function scoutTask() {
-  const db = serviceClient();
-  if (!db) throw new Error("нет доступа к базе");
-
-  const { data } = await db
-    .from("scout_signals")
-    .select("id, excerpt, chat_title, score")
-    .order("created_at", { ascending: false })
-    .limit(SAMPLES);
-
-  const positives = (data ?? []).filter((row) => row.excerpt);
   const batch = [
-    ...positives.map((row) => ({ key: `p${row.id.slice(0, 8)}`, text: row.excerpt, chatTitle: row.chat_title })),
+    ...POSITIVES.map((text, i) => ({ key: `p${i}`, text, chatTitle: "IT Ташкент" })),
     ...NEGATIVES.map((text, i) => ({ key: `n${i}`, text, chatTitle: "Бизнес Узбекистан" })),
   ];
 
@@ -143,21 +156,21 @@ async function scoutTask() {
   const said = new Map(verdicts.map((v) => [v.key, v.score]));
   const kept = (key) => (said.get(key) ?? 0) >= MIN;
 
-  const foundPositives = positives.filter((row) => kept(`p${row.id.slice(0, 8)}`)).length;
   if (process.env.BENCH_DEBUG === "1") {
-    console.error(`вердиктов вернулось: ${verdicts.length} из ${batch.length}`);
-    for (const v of verdicts.slice(0, 5)) console.error(`  ${v.key} → ${v.score} (${v.category})`);
-    console.error(`  ключи пачки: ${batch.slice(0, 3).map((b) => b.key).join(", ")}`);
+    console.error(`вердиктов вернулось: ${verdicts.length} из ${batch.length}, порог ${MIN}`);
+    for (const v of verdicts.slice(0, 4)) console.error(`  ${v.key} → ${v.score} (${v.category})`);
   }
-  const falsePositives = NEGATIVES.filter((_, i) => kept(`n${i}`)).length;
 
   return {
     задача: "скаут: отбор сигналов",
     модель: MODEL,
-    "настоящих заявок": positives.length,
-    "из них поймал": foundPositives,
+    "заявок в наборе": POSITIVES.length,
+    "из них поймал": POSITIVES.filter((_, i) => kept(`p${i}`)).length,
     "не заявок в наборе": NEGATIVES.length,
-    "из них принял за заявку": falsePositives,
+    "из них принял за заявку": NEGATIVES.filter((_, i) => kept(`n${i}`)).length,
+    // Ответ, потерявший часть пачки, — это молча потерянные сообщения:
+    // буфер их уже отдал и обратно не вернёт.
+    "вердиктов вернулось": `${verdicts.length} из ${batch.length}`,
     ...money(since(before), took),
   };
 }
