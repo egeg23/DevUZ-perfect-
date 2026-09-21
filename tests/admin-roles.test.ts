@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { canEdit } from "@/lib/admin/ownership";
@@ -92,4 +93,27 @@ test("лишнего админа можно разжаловать, себя и
   assert.equal(demotionVerdict({ targetId: "a2", actorId: "a1", activeAdmins: 2 }), "ok");
   assert.equal(demotionVerdict({ targetId: "a1", actorId: "a1", activeAdmins: 2 }), "self");
   assert.equal(demotionVerdict({ targetId: "a2", actorId: "a1", activeAdmins: 1 }), "last_admin");
+});
+
+/**
+ * Прототипы — временно только владельцу, и это решение про деньги.
+ *
+ * Сборка прототипа — самый дорогой вызов модели из всех: на выходе целая
+ * страница, и платится она за каждый черновик, включая те, что никто не
+ * отправит. Владелец закрыл вкладку до пересмотра способа.
+ *
+ * Проверка сторожит не меню, а права: скрытый пункт — украшение, адрес
+ * набирается руками, а серверное действие зовётся и без страницы.
+ */
+test("прототипы закрыты не только в меню", () => {
+  assert.equal(canSee("manager", "/admin/proto"), false);
+  assert.equal(canSee("head", "/admin/proto"), false);
+  assert.equal(canSee("admin", "/admin/proto"), true);
+
+  const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  for (const file of ["app/admin/proto/page.tsx", "app/admin/proto/actions.ts"]) {
+    const source = read(file);
+    assert.doesNotMatch(source, /requireStaff\(\)/, `${file}: страницу откроет любой, кто наберёт адрес`);
+    assert.match(source, /requireAdmin\(\)/, `${file}: права не проверяются вовсе`);
+  }
 });

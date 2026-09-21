@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { protoNicheByKey } from "@/content/proto/models";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireAdmin } from "@/lib/admin/guard";
 import { collectFacts, measureImage } from "@/lib/proto/collect";
 import { wheelProblems } from "@/lib/proto/facts";
 import { parseServices } from "@/lib/proto/form";
@@ -34,7 +34,7 @@ function field(form: FormData, name: string): string | null {
 }
 
 export async function buildAction(formData: FormData) {
-  const staff = await requireStaff();
+  const staff = await requireAdmin();
 
   const url = field(formData, "url");
   const niche = String(formData.get("niche") ?? "");
@@ -94,7 +94,7 @@ export async function buildAction(formData: FormData) {
 
 /** Прототип ушёл клиенту. Отмечает тот, кто отправил, — по нему и считаем. */
 export async function sentAction(formData: FormData) {
-  const staff = await requireStaff();
+  const staff = await requireAdmin();
   const id = String(formData.get("proto") ?? "");
 
   const token = await markSent(id, staff);

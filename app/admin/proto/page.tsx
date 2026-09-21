@@ -2,7 +2,7 @@ import { buildAction, sentAction } from "@/app/admin/proto/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { CopyMessage } from "@/components/admin/copy-message";
 import { PROTO_NICHES, protoNicheByKey } from "@/content/proto/models";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireAdmin } from "@/lib/admin/guard";
 import { protosList } from "@/lib/proto/store";
 import { absoluteUrl } from "@/lib/seo";
 
@@ -64,7 +64,7 @@ export default async function ProtoPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireAdmin();
   const query = await searchParams;
   const { r } = query;
   const rows = await protosList();
