@@ -32,6 +32,9 @@ export async function generateMetadata({
     path: "razbor",
     title: `${copy.title} — DevUz Studio`,
     description: copy.lead,
+    // Только русский и узбекский: на остальных языках раздела нет, и общее
+    // правило обещало бы Google две несуществующие страницы.
+    alternates: { ru: "razbor", uz: "razbor" },
   });
 }
 
