@@ -78,17 +78,41 @@ const db = createClient(url, key, { auth: { persistSession: false, autoRefreshTo
 /**
  * Где лежит Chromium.
  *
- * Путь с версией в имени меняется при каждом обновлении окружения, поэтому
- * не зашит константой. Явный CHROMIUM_PATH перебивает поиск.
+ * Сначала спрашиваем сам playwright — он один знает, какую сборку ждёт
+ * установленная версия и как она разложена. Догадка о раскладке уже стоила
+ * одного прогона: скрипт искал `chrome-linux/chrome`, а playwright 1.63
+ * кладёт Chrome for Testing в `chrome-linux64/chrome`. Не найдя ничего, он
+ * доходил до системного `/usr/bin/chromium-browser`, а на Ubuntu это
+ * заглушка snap-пакета: она запускается и тут же просит установить
+ * chromium.
+ *
+ * Перебор каталогов остаётся на случай, когда рядом лежит браузер другой
+ * версии — так в песочнице разработки, где стоит сборка постарше. Явный
+ * CHROMIUM_PATH перебивает всё.
  */
 async function chromiumPath() {
   if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
+
+  try {
+    const known = chromium.executablePath();
+    if (known && existsSync(known)) return known;
+  } catch {
+    // playwright не смог назвать путь — идём перебором.
+  }
 
   const roots = [
     process.env.PLAYWRIGHT_BROWSERS_PATH,
     "/opt/pw-browsers",
     path.join(process.env.HOME || "/root", ".cache/ms-playwright"),
   ].filter(Boolean);
+
+  // Раскладок две: `chrome-linux` у сборок Chromium и `chrome-linux64` у
+  // Chrome for Testing, на который playwright перешёл.
+  const LAYOUTS = [
+    ["chrome-linux64", "chrome"],
+    ["chrome-linux", "chrome"],
+    ["chrome-linux", "headless_shell"],
+  ];
 
   for (const root of roots) {
     if (!existsSync(root)) continue;
@@ -105,18 +129,13 @@ async function chromiumPath() {
         return full(a) - full(b) || b.localeCompare(a);
       });
     for (const dir of dirs) {
-      for (const tail of [["chrome-linux", "chrome"], ["chrome-linux", "headless_shell"]]) {
+      for (const tail of LAYOUTS) {
         const candidate = path.join(root, dir, ...tail);
         if (existsSync(candidate)) return candidate;
       }
     }
   }
 
-  // Системный браузер — последняя попытка. На сервере, где playwright
-  // ничего не скачивал, он вполне может оказаться единственным.
-  for (const candidate of ["/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome"]) {
-    if (existsSync(candidate)) return candidate;
-  }
   return null;
 }
 
@@ -329,6 +348,10 @@ async function shootMockup(browser, row) {
 
 const executablePath = await chromiumPath();
 if (!executablePath) {
+  // Системный браузер сюда не подставляется намеренно. На Ubuntu
+  // `/usr/bin/chromium-browser` — заглушка snap-пакета: она запускается и
+  // тут же просит его установить, а в отчёте это выглядит как «браузер
+  // нашёлся, но съёмка сломалась».
   console.error(
     "Chromium не найден. Поставьте его (npx playwright install chromium) или укажите CHROMIUM_PATH.",
   );

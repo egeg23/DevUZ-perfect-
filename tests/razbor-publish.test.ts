@@ -237,6 +237,24 @@ test("браузер для съёмки доступен там, где съё�
   assert.match(workflow, /require\.resolve\('playwright-core'\)/);
 });
 
+test("путь к браузеру спрашивается у playwright, а не угадывается", () => {
+  const shots = read("scripts/razbor-shots.mjs");
+
+  // Догадка о раскладке стоила одного прогона: скрипт искал
+  // `chrome-linux/chrome`, а playwright 1.63 кладёт Chrome for Testing в
+  // `chrome-linux64/chrome`.
+  assert.match(shots, /chromium\.executablePath\(\)/);
+  assert.match(shots, /\["chrome-linux64", "chrome"\]/);
+
+  // Системный браузер не подставляется вовсе: на Ubuntu
+  // `/usr/bin/chromium-browser` — заглушка snap-пакета, которая
+  // запускается и тут же просит его установить. В отчёте это выглядело как
+  // «браузер нашёлся, но съёмка сломалась».
+  // Строкой в коде, а не упоминанием в комментарии: почему так сделано,
+  // объяснено рядом, и объяснение проверку ронять не должно.
+  assert.ok(!/"\/usr\/bin\/chromium-browser"/.test(shots), "системная заглушка снова в списке путей");
+});
+
 test("съёмка берёт полный браузер, а не лёгкую оболочку", () => {
   // Рядом с `chromium-1243` playwright кладёт
   // `chromium_headless_shell-1243`, и простая сортировка ставит оболочку
