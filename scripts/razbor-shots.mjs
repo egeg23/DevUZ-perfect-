@@ -358,7 +358,21 @@ async function shootSite(browser, row, wanted) {
       const rect = await page.evaluate(huntInPage, rule.hunt).catch(() => null);
       if (!rect) continue;
 
-      const clip = band(rect, screen);
+      // Поиск подводит найденное к середине окна. После прокрутки страница
+      // ещё доигрывает своё — подгружает картинки, показывает то, что
+      // появляется при прокрутке, — поэтому замер повторяется по самой
+      // рамке: где она, там и место, о котором находка.
+      await page.waitForTimeout(400);
+      const settled = await page
+        .evaluate(() => {
+          const mark = document.querySelector(".__devuz_mark");
+          if (!mark) return null;
+          const box = mark.getBoundingClientRect();
+          return { x: box.left, y: box.top, width: box.width, height: box.height };
+        })
+        .catch(() => null);
+
+      const clip = band(settled ?? rect, screen);
       const cut = await page.screenshot({ clip });
       findings[code] = {
         path: await upload(row.id, `f-${code}.png`, cut),

@@ -56,19 +56,59 @@ export function redactInPage(words: string[]): number {
         const alpha = parts.length > 3 ? parts[3] : 1;
         if (alpha >= 0.99) return `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`;
       }
+      // Фон может быть не цветом, а градиентом — тогда сплошного
+      // background-color нет ни у кого до самого корня. Белая плашка на
+      // тёмном экране выглядит не затиранием, а вырезанным куском, и
+      // разбор начинает походить на утёкший документ. Берём первый цвет
+      // градиента: он ближе к тому, что под плашкой, чем белый.
+      const image = getComputedStyle(node).backgroundImage;
+      const stop = image && image !== "none" ? image.match(/rgba?\([^)]+\)|#[0-9a-f]{3,8}\b/i) : null;
+      if (stop) {
+        const solid = stop[0].match(/^rgba\(([^)]+)\)$/i);
+        if (!solid) return stop[0];
+        const parts = solid[1].split(",").map((v) => parseFloat(v.trim()));
+        if ((parts[3] ?? 1) >= 0.99) return `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`;
+      }
+
       node = node.parentElement;
     }
-    // Ни у кого до корня нет сплошного фона — значит страница на белом.
+
+    // Ни у кого до корня нет сплошного фона. Последняя попытка — корень
+    // документа: браузер рисует страницу на нём, каким бы он ни был.
+    for (const root of [document.body, document.documentElement]) {
+      if (!root) continue;
+      const color = getComputedStyle(root).backgroundColor;
+      const m = color && color.match(/^rgba?\(([^)]+)\)$/);
+      if (!m) continue;
+      const parts = m[1].split(",").map((v) => parseFloat(v.trim()));
+      if ((parts.length > 3 ? parts[3] : 1) >= 0.99) return `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`;
+    }
     return "#ffffff";
   };
 
-  // 1. Логотип: картинка или svg в шапке либо в ссылке на главную.
-  const header = document.querySelector("header, .header, #header, [role=banner]");
+  // 1. Логотип. Ищется по всей странице, а не только в шапке.
+  //
+  // Первая версия смотрела в шапку и в ссылку на главную — и этого хватало,
+  // пока снимался только первый экран. Снимок находки может быть где
+  // угодно, и первый же такой снимок вышел с подвалом, где логотип с именем
+  // компании стоял целым. Разбор у нас анонимный, и цена промаха здесь не
+  // «некрасиво», а названная публично компания.
   const logos = new Set<Element>();
-  for (const root of [header, document.querySelector('a[href="/"], a[href="./"]')]) {
+  const roots: (Element | null)[] = [
+    document.querySelector("header, .header, #header, [role=banner]"),
+    document.querySelector("footer, .footer, #footer, [role=contentinfo]"),
+    document.querySelector('a[href="/"], a[href="./"]'),
+  ];
+  for (const root of roots) {
     if (!root) continue;
     for (const el of root.querySelectorAll("img, svg, picture")) logos.add(el);
     if (root.tagName === "IMG" || root.tagName === "SVG") logos.add(root);
+  }
+  // И всё, что само называет себя логотипом, где бы оно ни стояло.
+  for (const el of document.querySelectorAll(
+    '[class*="logo" i], [id*="logo" i], img[src*="logo" i], img[alt*="logo" i], [aria-label*="logo" i]',
+  )) {
+    logos.add(el);
   }
   for (const el of logos) {
     const rect = el.getBoundingClientRect();
@@ -166,15 +206,34 @@ export function redactInPage(words: string[]): number {
 export function huntInPage(kind: string): PageRect | null {
   const MARK = "__devuz_mark";
 
+  /**
+   * Годится ли элемент в доказательство.
+   *
+   * Прокрутка допускается: снимок находки — не снимок первого экрана. Год
+   * в подвале и стена текста живут ниже сгиба, и требовать от них быть
+   * наверху значит не показать их никогда.
+   *
+   * А вот элемент размером с экран не годится: обводка по краям окна
+   * говорит «смотрите сюда» про всё сразу, то есть ни про что. Так
+   * находилась подложка-картинка вместо картинки без подписи.
+   */
   const visible = (el: Element): boolean => {
     const rect = el.getBoundingClientRect();
     if (rect.width < 24 || rect.height < 12) return false;
+    if (rect.width > window.innerWidth * 0.95 && rect.height > window.innerHeight * 0.7) return false;
+
     const style = getComputedStyle(el);
     if (style.visibility === "hidden" || style.display === "none" || Number(style.opacity) < 0.1) return false;
-    // Ниже первого экрана снимать нечего: мы снимаем то, что видит
-    // посетитель в первые секунды, и прокрутка сюда не входит.
-    return rect.top < window.innerHeight && rect.bottom > 0;
+    return true;
   };
+
+  /** Собственный текст узла, без текста потомков. */
+  const own = (el: Element): string =>
+    Array.from(el.childNodes)
+      .filter((node) => node.nodeType === 3)
+      .map((node) => node.nodeValue || "")
+      .join(" ")
+      .trim();
 
   const all = (selector: string): Element[] => Array.from(document.querySelectorAll(selector)).filter(visible);
 
@@ -227,23 +286,24 @@ export function huntInPage(kind: string): PageRect | null {
       Array.from(document.images).filter((img) => img.complete && img.naturalWidth === 0 && visible(img)),
     );
   } else if (kind === "img-no-alt") {
+    // Картинка, а не подложка: `visible` уже отсекает элементы размером с
+    // экран, иначе находка про подписи показывала бы фон первого экрана.
     found = biggest(Array.from(document.images).filter((img) => !img.getAttribute("alt") && visible(img)));
   } else if (kind === "body-text") {
     // Обычный абзац, а не заголовок: находка про мелкий текст — про то, что
     // человек читает, а не про то, что он видит крупно.
-    found = biggest(all("p, li").filter((el) => (el.textContent || "").trim().length > 80));
+    //
+    // Считаем собственный текст, а не весь вложенный: у пункта меню с
+    // выпадающим списком «текста» набирается на абзац, хотя на экране это
+    // одно слово. Первая версия так и нашла кнопку в шапке вместо текста.
+    found = biggest(all("p, li").filter((el) => own(el).length > 80));
   } else if (kind === "longest-text") {
     let longest: Element | null = null;
     let length = 0;
     for (const el of all("p, div, section, article")) {
-      // Только собственный текст: у обёртки текста «много» всегда.
-      const own = Array.from(el.childNodes)
-        .filter((node) => node.nodeType === 3)
-        .map((node) => node.nodeValue || "")
-        .join(" ")
-        .trim();
-      if (own.length > length) {
-        length = own.length;
+      const text = own(el);
+      if (text.length > length) {
+        length = text.length;
         longest = el;
       }
     }
@@ -279,6 +339,10 @@ export function huntInPage(kind: string): PageRect | null {
 
   if (!found) return null;
 
+  // Подводим найденное к середине окна: снимок режется по окну, а не по
+  // документу, и элемент из подвала иначе в кадр не попадёт.
+  found.scrollIntoView({ block: "center", inline: "nearest" });
+
   const rect = found.getBoundingClientRect();
   if (rect.width < 24 || rect.height < 12) return null;
 
@@ -306,10 +370,7 @@ export function huntInPage(kind: string): PageRect | null {
   for (const name of Object.keys(rules)) mark.style.setProperty(name, rules[name], "important");
   document.body.appendChild(mark);
 
-  return {
-    x: rect.left + window.scrollX,
-    y: rect.top + window.scrollY,
-    width: rect.width,
-    height: rect.height,
-  };
+  // Координаты окна, а не документа: playwright режет кадр от левого
+  // верхнего угла окна — это проверено опытом, а не взято из документации.
+  return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
 }
