@@ -56,14 +56,14 @@ export default async function AboutPage({
         <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {stats.map((stat, i) => (
             <Reveal key={t(stat.label, locale)} delay={i * 60}>
-              <div className="rounded-2xl border border-line bg-surface px-6 py-6">
+              {/* Термин перед определением — как и в HeadlineStats.
+                  Показ переворачивается стилем, разметка остаётся правильной. */}
+              <div className="flex flex-col-reverse gap-3 rounded-2xl border border-line bg-surface px-6 py-6">
+                <dt className="text-[0.82rem] leading-snug text-muted">{t(stat.label, locale)}</dt>
                 <dd className="font-display text-3xl font-extrabold leading-none text-green">
                   {stat.value}
                   <span className="text-lg text-gold">{stat.suffix}</span>
                 </dd>
-                <dt className="mt-3 text-[0.82rem] leading-snug text-muted">
-                  {t(stat.label, locale)}
-                </dt>
               </div>
             </Reveal>
           ))}
