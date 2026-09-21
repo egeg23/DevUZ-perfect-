@@ -16,6 +16,28 @@ export type ProductBlock = {
   items: LocalizedList;
 };
 
+/**
+ * Снимок работающего экземпляра.
+ *
+ * Google требует у товара изображение, «ясно показывающее товар». Для
+ * исходного кода это снимок запущенного продукта, а не обложка с названием:
+ * обложку покупатель отличает от продукта с первого взгляда, и она не
+ * отвечает на единственный вопрос, ради которого её открыли, — как это
+ * выглядит.
+ *
+ * Размеры хранятся рядом с путём: без них страница дёргается при загрузке, а
+ * это Google меряет отдельной метрикой. Проставляет их `scripts/product-shots.mjs`
+ * из самого файла, чтобы они не разошлись с картинкой.
+ */
+export type ProductShot = {
+  /** Путь внутри public. */
+  src: string;
+  width: number;
+  height: number;
+  /** Что на снимке. Идёт и подписью под картинкой, и в alt для поиска. */
+  caption: LocalizedText;
+};
+
 export type Product = {
   slug: string;
   seoTitle: LocalizedText;
@@ -31,6 +53,14 @@ export type Product = {
   blocks: ProductBlock[];
   /** Языки и технологии — не переводятся, это имена собственные. */
   tech: string[];
+  /**
+   * Снимки работающего экземпляра. Пусто — товар выходит без картинок.
+   *
+   * Пусто это не «забыли»: снимать нечего, пока у продукта нет живого
+   * экземпляра. Показать вместо него обложку значило бы поставить в
+   * разметку изображение, которого на странице нет.
+   */
+  shots?: readonly ProductShot[];
   /** Как продукт зарабатывает. Есть не у всех: лендинг ничего не зарабатывает сам. */
   monetization?: LocalizedList;
   /** Подо что переделывается без переписывания ядра. */
@@ -949,6 +979,48 @@ export const products: Product[] = [
       },
     ],
     tech: ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4", "Supabase"],
+    /**
+     * Три концепции ADAR — живой экземпляр этого самого продукта.
+     *
+     * Снято `scripts/product-shots.mjs` с работающего сайта; полоса выбора
+     * варианта и значок цены убраны при съёмке: это витрина демонстрации, а
+     * не часть продукта.
+     */
+    shots: [
+      {
+        src: "/products/landing/vitrina.webp",
+        width: 1920,
+        height: 1200,
+        caption: {
+          ru: "Концепция «Витрина»: первый экран с крупным фото товара и двумя действиями — каталог и расчёт партии",
+          en: "The “Showcase” concept: a hero screen with one large product photo and two actions — catalogue and bulk quote",
+          uz: "«Vitrina» konsepsiyasi: yirik mahsulot surati va ikkita amal — katalog hamda partiya hisobi",
+          zh: "「展示」方案：首屏为大幅商品照片，配两个操作——目录与批量报价",
+        },
+      },
+      {
+        src: "/products/landing/katalog.webp",
+        width: 1920,
+        height: 1200,
+        caption: {
+          ru: "Концепция «Каталог»: поиск по составу набора вынесен на первый экран",
+          en: "The “Catalogue” concept: search by what is inside the set, right on the first screen",
+          uz: "«Katalog» konsepsiyasi: to‘plam tarkibi bo‘yicha qidiruv birinchi ekranda",
+          zh: "「目录」方案：按礼盒内容搜索，直接放在首屏",
+        },
+      },
+      {
+        src: "/products/landing/premium.webp",
+        width: 1920,
+        height: 1200,
+        caption: {
+          ru: "Концепция «Премиум»: тёмный первый экран с барабаном архива работ",
+          en: "The “Premium” concept: a dark hero screen with a rotating archive of past work",
+          uz: "«Premium» konsepsiyasi: ishlar arxivi aylanadigan to‘q rangli birinchi ekran",
+          zh: "「高端」方案：深色首屏，带可旋转的作品档案",
+        },
+      },
+    ],
     readiness: {
       ru: "Обе концепции дизайна написаны и работают, их можно посмотреть до заказа. Срок от согласования до запуска — от недели для базового варианта.",
       en: "Both design concepts are written and working; you can see them before ordering. From sign-off to launch: a week and up for the basic option.",

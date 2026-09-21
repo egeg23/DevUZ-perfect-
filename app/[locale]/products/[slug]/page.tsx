@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -102,6 +103,38 @@ export default async function ProductPage({
             {t(product.savings, locale)}
           </p>
         </Reveal>
+
+        {/* Снимки идут сразу после довода о цене и выше подробностей:
+            «как это выглядит» — первый вопрос к исходному коду за
+            пятнадцать тысяч, и ответ на него не должен лежать под тремя
+            экранами списков.
+
+            Они же стоят в разметке товара. Картинка, объявленная
+            поисковику, но не показанная человеку, — это разметка,
+            разошедшаяся со страницей. */}
+        {product.shots?.length ? (
+          <Section title={p.looks}>
+            <div className="flex flex-col gap-8">
+              {product.shots.map((shot) => (
+                <Reveal key={shot.src}>
+                  <figure>
+                    <Image
+                      src={shot.src}
+                      alt={t(shot.caption, locale)}
+                      width={shot.width}
+                      height={shot.height}
+                      className="w-full rounded-2xl border border-white/10"
+                      sizes="(min-width: 1024px) 60rem, 100vw"
+                    />
+                    <figcaption className="mt-3 text-sm text-muted">
+                      {t(shot.caption, locale)}
+                    </figcaption>
+                  </figure>
+                </Reveal>
+              ))}
+            </div>
+          </Section>
+        ) : null}
 
         <Section title={p.included}>
           <div className="grid gap-6 md:grid-cols-2">
