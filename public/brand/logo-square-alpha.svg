@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-120 -120 240 240" width="1024" height="1024">
+  <!-- Сгенерировано scripts/brand-logo.mjs. Правки — там. -->
+  <defs>
+    <linearGradient id="mark" x1="0" y1="-1" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B9BFF"/>
+      <stop offset="55%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#22F0A0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="44%" r="60%">
+      <stop offset="0" stop-color="#13304E" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#05070B" stop-opacity="0"/>
+    </radialGradient>
+    <mask id="cut">
+      <rect x="-120" y="-120" width="240" height="240" fill="#fff"/>
+      <path d="M-22 -34 L-58 0 L-22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M22 -34 L58 0 L22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+
+  <path d="M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z" fill="url(#mark)" mask="url(#cut)"/>
+  <rect x="-5" y="-27" width="10" height="54" rx="5" fill="#E8B14C"/>
+</svg>
