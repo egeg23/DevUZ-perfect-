@@ -54,6 +54,27 @@ export function organizationSchema(locale: Locale): Json {
       availableLanguage: ["ru", "uz", "en", "zh"],
     },
     priceRange: "$$",
+    /**
+     * Условия возврата — здесь, а не в каждом оффере.
+     *
+     * Так советует сам Google: общую политику магазина он ждёт у
+     * организации, а у товара — только если у конкретного товара условия
+     * свои. У нас они общие и записаны в оферте, разделе 6.
+     *
+     * Категория именно «возврат не предусмотрен», и это не жадность: после
+     * передачи ссылки на исходный код вернуть его так, чтобы он перестал
+     * быть у покупателя, невозможно. Оферта ссылается на статью 21 закона
+     * «О защите прав потребителей» и ровно поэтому даёт посмотреть продукт
+     * до покупки. Если мы сами не можем передать оплаченное — деньги
+     * возвращаются полностью, но это не возврат товара, а несостоявшаяся
+     * продажа.
+     */
+    hasMerchantReturnPolicy: {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: ["UZ", "KZ", "RU"],
+      returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+      merchantReturnLink: absoluteUrl(`${locale}/offer`),
+    },
   };
 }
 
@@ -117,7 +138,11 @@ export function productSchema(product: Product, locale: Locale): Json {
     "@type": "Product",
     name: t(product.title, locale),
     description: t(product.description, locale),
-    brand: { "@id": ORG_ID },
+    // Бренд — объект с именем, а не ссылка на узел организации. Ссылка
+    // синтаксически верна и человеком читается, но проверка Google отвечала
+    // на неё «недопустимый тип объекта в поле brand»: она ждёт тип Brand с
+    // текстовым name и по `@id` в соседний блок разметки не ходит.
+    brand: { "@type": "Brand", name: company.name },
     category: "SoftwareSourceCode",
     url: absoluteUrl(`${locale}/products/${product.slug}`),
     offers: { ...offer, seller: { "@id": ORG_ID }, url: absoluteUrl(`${locale}/products/${product.slug}`) },
