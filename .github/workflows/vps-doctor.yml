@@ -129,7 +129,10 @@ jobs:
             # Ключ подставляется заголовком и в вывод не попадает ни при
             # каком исходе: печатаются только код ответа и вид ошибки.
             KEY="$(grep -m1 '^ANTHROPIC_API_KEY=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'"'"'"' )"
-            MODEL="$(grep -m1 '^ANTHROPIC_MODEL=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'"'"'"' )"
+            # Модель берём ту же, какой пользуется скаут: у него своя
+            # переменная, и проверка чужой модели ничего бы не доказала.
+            MODEL="$(grep -m1 '^SCOUT_MODEL=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'"'"'"' )"
+            [ -n "$MODEL" ] || MODEL="$(grep -m1 '^ANTHROPIC_MODEL=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'"'"'"' )"
             PROXY="$(grep -m1 '^HTTPS_PROXY=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'"'"'"' )"
             if [ -z "$KEY" ]; then
               echo "✗ ANTHROPIC_API_KEY в .env не найден — модель не позовёт никто"
