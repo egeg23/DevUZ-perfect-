@@ -1,7 +1,8 @@
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { analyze, unreachable, type AuditReport, type Finding } from "@/lib/audit/checks";
 import { type PitchLocale, pitch } from "@/lib/audit/pitch";
-import { crawl, enrich, probe } from "@/lib/audit/fetch";
+import { crawl, enrich, probe, type PageProbe } from "@/lib/audit/fetch";
+import { classify } from "@/lib/razbor/classify";
 import { deepFindings, pagesToVisit, snap, trustFrom } from "@/lib/audit/deep";
 import { detectLang } from "@/lib/talk/language";
 import { visibleText } from "@/lib/audit/visible";
@@ -200,8 +201,10 @@ export type Walked = {
  * остальное — сертификат, скорость, разметка — по-прежнему смотрится на
  * главной, и второй раз это считать незачем.
  */
-export async function auditDeep(target: BatchTarget): Promise<{ row: BatchRow; walked: Walked | null }> {
-  if (!target.url) return { row: await auditOne(target), walked: null };
+export async function auditDeep(
+  target: BatchTarget,
+): Promise<{ row: BatchRow; walked: Walked | null; home: PageProbe | null }> {
+  if (!target.url) return { row: await auditOne(target), walked: null, home: null };
 
   try {
     // Один прогон, а не два. Первая версия звала auditOne, а потом делала
@@ -246,11 +249,22 @@ export async function auditDeep(target: BatchTarget): Promise<{ row: BatchRow; w
       ? { ...report, findings: [...report.findings, ...extra] }
       : report;
 
-    return { row: { target, report: full, failure: null }, walked };
+    // Ниша по обходу — только если по главной её не нашли. Порядок важен:
+    // главная весомее, а обход добавляет шанс там, где иначе был бы ноль.
+    const deepNiche =
+      full.facts.niche ??
+      classify({ url: page.finalUrl, html: page.html, title: snaps[0]?.title, hints: walked.hints })?.niche ??
+      null;
+    const withNiche: AuditReport =
+      deepNiche === full.facts.niche ? full : { ...full, facts: { ...full.facts, niche: deepNiche } };
+
+    // Главная отдаётся наружу: разбору она нужна целиком — из неё берутся
+    // город и заголовок, — а второй проход по сайту стоил бы ещё минуты.
+    return { row: { target, report: withNiche, failure: null }, walked, home: page };
   } catch {
     // Обход — уточнение, а не условие. Не вышел — отдаём обычный разбор:
     // письмо по одной главной лучше, чем отсутствие письма.
-    return { row: await auditOne(target), walked: null };
+    return { row: await auditOne(target), walked: null, home: null };
   }
 }
 

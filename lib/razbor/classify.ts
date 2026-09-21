@@ -99,11 +99,27 @@ export function nicheWords(niche: string | null): readonly string[] {
   return niche ? (WORDS[niche] ?? []) : [];
 }
 
-export function classify(input: { url: string; html: string; title?: string | null }): Classified {
+export function classify(input: {
+  url: string;
+  html: string;
+  title?: string | null;
+  /**
+   * Заголовки пройденных страниц, если сайт обходили.
+   *
+   * Ниша живёт не на главной. У mcbro.uz главная называется «Магазин Apple
+   * в Ташкенте», а слово «интернет-магазин» стоит в заголовках каталога —
+   * и ниша не определялась, хотя она есть в каталоге разборов. По базе
+   * таких сайтов две трети: из пятнадцати касаний ниша нашлась у четырёх.
+   *
+   * Заголовки идут в ту же сильную часть, что и заголовок главной: это
+   * тоже заголовки, и вес у них тот же.
+   */
+  hints?: readonly string[];
+}): Classified {
   // Заголовок и адрес весомее тела: в подвале «доставка» встречается у
   // половины сайтов, а в заголовке — у тех, кто ею занимается.
   const body = input.html.toLowerCase();
-  const strong = `${input.url} ${input.title ?? ""}`.toLowerCase();
+  const strong = `${input.url} ${input.title ?? ""} ${(input.hints ?? []).join(" ")}`.toLowerCase();
 
   const scores: { niche: string; score: number }[] = [];
 
