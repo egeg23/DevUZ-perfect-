@@ -1,0 +1,74 @@
+# Съёмка разборов: первый экран сайта, места под находки и наш макет.
+#
+# Отдельным проходом, а не внутри ночной смены. Смена живёт в приложении, а
+# приложению браузер не нужен больше ни для чего: положить его в боевой
+# образ значит утроить образ ради того, что случается раз в сутки.
+#
+# Идёт по SSH на тот же сервер, что и смена: там лежат ключи к базе. Chromium
+# ставится один раз и остаётся в кэше — повторные запуски его не качают.
+#
+# По расписанию — через полчаса после смены (смена ходит в 8 утра по
+# Ташкенту, это 03:00 UTC). Разбор без снимков не пропадает: панель говорит
+# проверяющему, что снимков нет, а следующий проход их доснимет — и уже
+# опубликованному разбору тоже.
+name: Разборы — снимки
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: Сколько разборов снять за проход
+        required: false
+        default: "3"
+      id:
+        description: Снять один разбор по его id (необязательно)
+        required: false
+        default: ""
+      force:
+        description: Переснять, даже если снимки уже есть
+        type: boolean
+        required: false
+        default: false
+  schedule:
+    - cron: "30 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  shots:
+    name: Снять на сервере
+    runs-on: ubuntu-latest
+    steps:
+      - name: Снять по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 30m
+          envs: SHOT_LIMIT,SHOT_ID,SHOT_FORCE
+          script: |
+            set -uo pipefail
+            cd "${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
+            set -a; . ./.env; set +a
+            export NODE_OPTIONS=--use-env-proxy
+
+            # Браузер ставится один раз и живёт в кэше пользователя. Сначала
+            # с системными библиотеками — если sudo без пароля нет, ставим
+            # без них: на сервере с докером нужные библиотеки обычно уже
+            # стоят, и попытка того стоит.
+            if [ -z "$(ls -d "$HOME"/.cache/ms-playwright/chromium* 2>/dev/null)" ]; then
+              npx --yes playwright@1.63.0 install --with-deps chromium \
+                || npx --yes playwright@1.63.0 install chromium
+            fi
+
+            node --import ./tests/alias-hook.mjs scripts/razbor-shots.mjs \
+              --limit "${SHOT_LIMIT:-3}" \
+              ${SHOT_ID:+--id "$SHOT_ID"} \
+              ${SHOT_FORCE:+--force}
+        env:
+          SHOT_LIMIT: ${{ inputs.limit || '3' }}
+          SHOT_ID: ${{ inputs.id }}
+          SHOT_FORCE: ${{ inputs.force && 'yes' || '' }}

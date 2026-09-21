@@ -1,5 +1,25 @@
 import type { NextConfig } from "next";
 
+/**
+ * Откуда приходят снимки разборов.
+ *
+ * Они лежат в публичном бакете Supabase, а не в репозитории: их снимает
+ * отдельный проход с браузером, и класть по четыре картинки на разбор в git
+ * значило бы растить образ на каждую ночную смену. next/image чужие хосты
+ * без спроса не оптимизирует — иначе любой желающий гонял бы через наш
+ * сервер свои картинки, — поэтому хост перечислен явно.
+ */
+function shotHost(): NonNullable<NextConfig["images"]>["remotePatterns"] {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!url) return [];
+  try {
+    const { hostname } = new URL(url);
+    return [{ protocol: "https", hostname, pathname: "/storage/v1/object/public/**" }];
+  } catch {
+    return [];
+  }
+}
+
 const config: NextConfig = {
   // Standalone кладёт рядом с приложением только те зависимости, которые
   // реально нужны в рантайме. Образ выходит десятками мегабайт вместо
@@ -7,7 +27,7 @@ const config: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   poweredByHeader: false,
-  images: { formats: ["image/avif", "image/webp"] },
+  images: { formats: ["image/avif", "image/webp"], remotePatterns: shotHost() },
 
   experimental: {
     serverActions: {

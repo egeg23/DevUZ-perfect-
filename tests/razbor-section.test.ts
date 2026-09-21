@@ -64,7 +64,7 @@ test("выборка и соседи работают на пустом спис
     description: "d",
     label: "l",
     query: "q",
-    shots: { beforeDesktop: "", beforeMobile: "", afterDesktop: "", afterMobile: "" },
+    shots: { beforeDesktop: "", beforeMobile: "", afterDesktop: "", afterMobile: "", findings: {} },
     intro: [],
     findings: [],
     outcome: [],

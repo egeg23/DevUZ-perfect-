@@ -182,8 +182,16 @@ const TOOL = {
         type: "array",
         items: {
           type: "object",
-          properties: { title: { type: "string" }, impact: { type: "string" }, fix: { type: "string" } },
-          required: ["title", "impact", "fix"],
+          properties: {
+            // Код находки из списка — дословно. По нему к находке
+            // подставляется снимок того места на сайте, о котором она
+            // говорит; без кода находка выйдет без картинки.
+            code: { type: "string" },
+            title: { type: "string" },
+            impact: { type: "string" },
+            fix: { type: "string" },
+          },
+          required: ["code", "title", "impact", "fix"],
         },
       },
       outcome: { type: "array", items: { type: "string" } },
@@ -231,6 +239,7 @@ export async function writeArticle(
 ): Promise<RazborArticle | string> {
   const { report, niche, city, locale } = input;
   const picked = pickFindings(report);
+  const codes = new Set(picked.map((f) => f.code));
   const label = labelFor(niche, city, report.facts, locale);
   const query = queryFor(niche, city, locale);
 
@@ -252,8 +261,9 @@ export async function writeArticle(
     `Запрос, под который пишем: «${query}». Он должен звучать в заголовке естественно, а не быть вставлен куском.`,
     `Как называем разобранный бизнес: «${label}». Имени компании у тебя нет и не будет.`,
     "",
-    "Находки аудита — единственные факты о сайте, которые у тебя есть:",
-    ...picked.map((f) => `- [${f.severity}] ${f.title} | ${f.impact} | ${f.fix}`),
+    "Находки аудита — единственные факты о сайте, которые у тебя есть.",
+    "В квадратных скобках — код находки; перенеси его в поле code как есть.",
+    ...picked.map((f) => `- [${f.code}] [${f.severity}] ${f.title} | ${f.impact} | ${f.fix}`),
     "",
     `Факты о сайте: время до первого байта ${report.facts.ttfbMs} мс, общий балл ${report.score}.`,
     `Цена студии, дословно: «${price}».`,
@@ -289,6 +299,11 @@ export async function writeArticle(
     query,
     intro: (raw.intro ?? []).map(String).filter(Boolean),
     findings: (raw.findings ?? []).map((f) => ({
+      // Код принимается только из списка, который модели и давали. Своё
+      // придуманное имя привязало бы к находке чужой снимок или никакой, и
+      // заметить это было бы нечем: подпись под картинкой пришла бы из
+      // правил, а картинка — с другого места страницы.
+      ...(f.code && codes.has(String(f.code)) ? { code: String(f.code) } : {}),
       title: String(f.title ?? ""),
       impact: String(f.impact ?? ""),
       fix: String(f.fix ?? ""),
@@ -323,7 +338,7 @@ const SYSTEM = `Ты пишешь разбор чужого сайта для р
 - title — заголовок страницы с запросом внутри, по-человечески.
 - description — одно предложение для выдачи.
 - intro — два-три абзаца: какой бизнес, что у него за сайт, почему смотрим именно это.
-- findings — от трёх до восьми: title (что видит посетитель, следствием а не причиной), impact (чем оборачивается для клиентов и денег), fix (что делаем и сколько это обычно занимает).
+- findings — от трёх до восьми: code (код находки из списка, дословно — по нему к ней подставляется снимок того места на сайте), title (что видит посетитель, следствием а не причиной), impact (чем оборачивается для клиентов и денег), fix (что делаем и сколько это обычно занимает).
 - outcome — три-четыре строки о том, что даёт переделка. В клиентах, а не в пикселях.
 
 Цену не выдумывай: тебе её дали строкой, вставь её как есть.`;

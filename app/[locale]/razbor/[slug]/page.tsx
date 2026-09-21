@@ -5,17 +5,39 @@ import { notFound } from "next/navigation";
 
 import { Container } from "@/components/ui/container";
 import { razborCopy } from "@/content/razbor/page-copy";
-import { razbors } from "@/content/razbor/items";
-import { razborBySlug, siblings } from "@/lib/razbor/store";
+import type { RazborFinding, RazborShot } from "@/content/razbor/items";
+import { evidenceFor } from "@/lib/razbor/evidence";
+import { listRazbors, razborBySlug, siblings } from "@/lib/razbor/store";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata, siteUrl } from "@/lib/seo";
-import { isRazborLocale, localeHref } from "@/lib/razbor/routing";
+import { RAZBOR_LOCALES, isRazborLocale, localeHref } from "@/lib/razbor/routing";
+import type { RazborLocale } from "@/lib/razbor/model";
 import { serviceFor } from "@/lib/razbor/service-link";
 
-export const dynamicParams = false;
+/**
+ * Разборы приходят из базы, а не только из репозитория.
+ *
+ * Раньше здесь стояло `dynamicParams = false`, а список адресов строился из
+ * `content/razbor/items.ts` — файла, который пуст с самого начала. Это и был
+ * ответ на «нажал опубликовать, а на странице ничего не появилось»: кнопка
+ * честно писала в базу, а маршрут знал ровно те адреса, что были известны на
+ * сборке, и всем остальным отвечал 404. Опубликовать что-либо без выкатки
+ * было нельзя в принципе.
+ *
+ * Теперь известные на сборке адреса по-прежнему собираются заранее — ради
+ * скорости, — а новый открывается по первому запросу. Плюс `revalidate`:
+ * даже если сброс кэша из панели не дойдёт, страница обновится сама в
+ * пределах минуты, а не будет ждать следующей выкатки.
+ */
+export const revalidate = 60;
 
-export function generateStaticParams() {
-  return razbors.map((item) => ({ locale: item.locale, slug: item.slug }));
+export async function generateStaticParams() {
+  const lists = await Promise.all(
+    RAZBOR_LOCALES.map(async (locale) =>
+      (await listRazbors(locale)).map((item) => ({ locale: locale as string, slug: item.slug })),
+    ),
+  );
+  return lists.flat();
 }
 
 export async function generateMetadata({
@@ -55,6 +77,9 @@ export default async function RazborPage({
   const copy = razborCopy[locale];
   const near = await siblings(item);
   const service = serviceFor(item.niche);
+  const images = [item.shots.beforeDesktop, item.shots.afterDesktop]
+    .filter(Boolean)
+    .map((src) => (src.startsWith("/") ? `${siteUrl}${src}` : src));
 
   return (
     <Container className="pb-24 pt-36">
@@ -72,19 +97,21 @@ export default async function RazborPage({
       </div>
 
       {/* ── Как есть ─────────────────────────────────────────────────── */}
-      <section className="mt-14">
-        <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
-          {copy.before}
-        </h2>
-        <Shot
-          desktop={item.shots.beforeDesktop}
-          mobile={item.shots.beforeMobile}
-          alt={`${copy.before}: ${item.label}`}
-        />
-        <p className="mt-3 text-xs text-faint">
-          {copy.shotOn} {day(item.shotTakenAt)}
-        </p>
-      </section>
+      {item.shots.beforeDesktop || item.shots.beforeMobile ? (
+        <section className="mt-14">
+          <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
+            {copy.before}
+          </h2>
+          <Shot
+            desktop={item.shots.beforeDesktop}
+            mobile={item.shots.beforeMobile}
+            alt={`${copy.before}: ${item.label}`}
+          />
+          <p className="mt-3 text-xs text-faint">
+            {copy.shotOn} {day(item.shotTakenAt)}
+          </p>
+        </section>
+      ) : null}
 
       {/* ── Находки ──────────────────────────────────────────────────── */}
       <section className="mt-14">
@@ -101,22 +128,25 @@ export default async function RazborPage({
                 <span className="text-green">{copy.howWeFix}. </span>
                 {finding.fix}
               </p>
+              <Evidence finding={finding} shots={item.shots.findings} locale={locale} />
             </article>
           ))}
         </div>
       </section>
 
       {/* ── Как сделали бы мы ────────────────────────────────────────── */}
-      <section className="mt-14">
-        <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-green">
-          {copy.after}
-        </h2>
-        <Shot
-          desktop={item.shots.afterDesktop}
-          mobile={item.shots.afterMobile}
-          alt={`${copy.after}: ${item.label}`}
-        />
-      </section>
+      {item.shots.afterDesktop || item.shots.afterMobile ? (
+        <section className="mt-14">
+          <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-green">
+            {copy.after}
+          </h2>
+          <Shot
+            desktop={item.shots.afterDesktop}
+            mobile={item.shots.afterMobile}
+            alt={`${copy.after}: ${item.label}`}
+          />
+        </section>
+      ) : null}
 
       <section className="mt-14 max-w-3xl">
         <h2 className="text-2xl font-semibold tracking-tight">{copy.outcome}</h2>
@@ -237,7 +267,10 @@ export default async function RazborPage({
             inLanguage: locale,
             author: { "@type": "Organization", name: "DevUz Studio", url: siteUrl },
             publisher: { "@type": "Organization", name: "DevUz Studio", url: siteUrl },
-            image: [`${siteUrl}${item.shots.beforeDesktop}`, `${siteUrl}${item.shots.afterDesktop}`],
+            // Только те снимки, которые есть. Ссылка на несуществующую
+            // картинку в разметке — это ошибка в панели вебмастера и повод
+            // для Google не доверять остальной разметке страницы.
+            ...(images.length ? { image: images } : {}),
             mainEntityOfPage: `${siteUrl}${localeHref(locale, item.slug)}`,
           }),
         }}
@@ -253,24 +286,77 @@ export default async function RazborPage({
  * это видит Google в метрике сдвига макета. Телефонный снимок не
  * декоративный: почти в каждом разборе есть находка про телефон, и без
  * него сравнение «было — стало» её не показывает.
+ *
+ * Отсутствующий снимок не рисуется вовсе. Пустая строка в `src` у next/image
+ * — это исключение при отрисовке, то есть пятисотая на странице, которая
+ * пришла из поиска; а рамка-заглушка на её месте означала бы, что студия,
+ * разбирающая чужие сайты, показывает битую картинку на своём.
  */
 function Shot({ desktop, mobile, alt }: { desktop: string; mobile: string; alt: string }) {
+  if (!desktop && !mobile) return null;
+
   return (
-    <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_auto]">
-      <Image
-        src={desktop}
-        alt={alt}
-        width={1440}
-        height={900}
-        className="w-full rounded-xl border border-line"
-      />
-      <Image
-        src={mobile}
-        alt={`${alt} — ${"390"}px`}
-        width={390}
-        height={844}
-        className="mx-auto w-40 rounded-xl border border-line sm:w-32"
-      />
+    <div className={`mt-5 grid gap-4 ${desktop && mobile ? "sm:grid-cols-[1fr_auto]" : ""}`}>
+      {desktop ? (
+        <Image
+          src={desktop}
+          alt={alt}
+          width={1440}
+          height={900}
+          className="w-full rounded-xl border border-line"
+        />
+      ) : null}
+      {mobile ? (
+        <Image
+          src={mobile}
+          alt={`${alt} — ${"390"}px`}
+          width={390}
+          height={844}
+          className="mx-auto w-40 rounded-xl border border-line sm:w-32"
+        />
+      ) : null}
     </div>
+  );
+}
+
+/**
+ * Снимок того места, о котором находка.
+ *
+ * Это и есть разница между разбором и списком придирок. «Телефон на сайте
+ * нельзя нажать с телефона» — утверждение; тот же текст со снимком шапки, на
+ * котором номер обведён и видно, что он не ссылка, — доказательство. Читатель
+ * приходит из поиска к незнакомой студии, и верить ей на слово у него причин
+ * нет.
+ *
+ * Снимка может не быть по двум честным причинам: находка не про то, что
+ * видно глазами (карта сайта, время ответа сервера), или съёмка ещё не
+ * дошла до этого разбора. В обоих случаях блок просто не рисуется.
+ */
+function Evidence({
+  finding,
+  shots,
+  locale,
+}: {
+  finding: RazborFinding;
+  shots: Readonly<Record<string, RazborShot>>;
+  locale: RazborLocale;
+}) {
+  const shot = finding.code ? shots[finding.code] : undefined;
+  const rule = evidenceFor(finding.code);
+  if (!shot || !rule) return null;
+
+  return (
+    <figure className="mt-4">
+      <Image
+        src={shot.src}
+        alt={`${rule.caption[locale]}: ${finding.title}`}
+        width={shot.width}
+        height={shot.height}
+        // Телефонный снимок не растягиваем на всю ширину карточки: в
+        // натуральную величину видно ровно то, что видит посетитель.
+        className={`rounded-xl border border-line ${rule.screen === "mobile" ? "w-48" : "w-full"}`}
+      />
+      <figcaption className="mt-2 text-xs text-faint">{rule.caption[locale]}</figcaption>
+    </figure>
   );
 }

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { RazborFinding, RazborItem } from "@/content/razbor/items";
+import type { RazborFinding, RazborItem, RazborShot } from "@/content/razbor/items";
 import { razborBySlug as staticBySlug, razborsFor as staticFor } from "@/content/razbor/items";
 import type { RazborLocale } from "@/lib/razbor/model";
 import { serviceClient } from "@/lib/supabase";
@@ -44,10 +44,68 @@ const strings = (value: unknown): string[] =>
 const findings = (value: unknown): RazborFinding[] =>
   Array.isArray(value)
     ? value
-        .map((f) => f as { title?: unknown; impact?: unknown; fix?: unknown })
-        .map((f) => ({ title: String(f.title ?? ""), impact: String(f.impact ?? ""), fix: String(f.fix ?? "") }))
+        .map((f) => f as { code?: unknown; title?: unknown; impact?: unknown; fix?: unknown })
+        .map((f) => ({
+          // Код нужен, чтобы подставить снимок того места, о котором
+          // находка. Его может не быть: статьи, написанные до появления
+          // снимков, кода не несут — и это не повод их прятать.
+          ...(f.code ? { code: String(f.code) } : {}),
+          title: String(f.title ?? ""),
+          impact: String(f.impact ?? ""),
+          fix: String(f.fix ?? ""),
+        }))
         .filter((f) => f.title)
     : [];
+
+/**
+ * Бакет со снимками разборов — публичный, и это не упущение.
+ *
+ * Снимок «как есть» на нём уже анонимный: имя и логотип затёрты плашками
+ * при съёмке. Он же и есть половина ценности страницы — Google Картинки
+ * приводят на разборы отдельный трафик, а картинка за подписанной ссылкой
+ * в поиск не попадает вовсе.
+ */
+export const SHOT_BUCKET = "razbor";
+
+/**
+ * Путь в бакете → адрес картинки.
+ *
+ * Строка, уже похожая на адрес (`/razbor/...` из репозитория или полный
+ * `https://`), возвращается как есть: снимки старых разборов лежат в
+ * `public/`, и переносить их только ради единообразия значило бы ломать
+ * страницы, которые уже в поиске.
+ */
+export function shotUrl(value: unknown): string {
+  const path = String(value ?? "").trim();
+  if (!path) return "";
+  if (path.startsWith("/") || /^https?:\/\//i.test(path)) return path;
+
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return base ? `${base.replace(/\/+$/, "")}/storage/v1/object/public/${SHOT_BUCKET}/${path}` : "";
+}
+
+/**
+ * Снимки находок: код → картинка с размерами.
+ *
+ * Испорченная запись отбрасывается молча. Снимок без размеров рисовать
+ * нечем: высота выреза у каждого своя, и подставленные наугад числа
+ * растянули бы картинку — на странице, где картинка и есть доказательство.
+ */
+function findingShots(value: unknown): Record<string, RazborShot> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  const out: Record<string, RazborShot> = {};
+  for (const [code, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (!raw || typeof raw !== "object") continue;
+    const shot = raw as { path?: unknown; width?: unknown; height?: unknown };
+    const src = shotUrl(shot.path);
+    const width = Number(shot.width);
+    const height = Number(shot.height);
+    if (!src || !Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) continue;
+    out[code] = { src, width, height };
+  }
+  return out;
+}
 
 /**
  * Полоса потерь из базы.
@@ -83,10 +141,11 @@ export function toItem(row: Record<string, unknown>, locale: RazborLocale): Razb
     label: String(article.label ?? row[`label_${locale}`] ?? ""),
     query: String(article.query ?? row[`query_${locale}`] ?? ""),
     shots: {
-      beforeDesktop: String(row.shot_before ?? ""),
-      beforeMobile: String(row.shot_before_mobile ?? ""),
-      afterDesktop: String(row.shot_after ?? ""),
-      afterMobile: String(row.shot_after_mobile ?? ""),
+      beforeDesktop: shotUrl(row.shot_before),
+      beforeMobile: shotUrl(row.shot_before_mobile),
+      afterDesktop: shotUrl(row.shot_after),
+      afterMobile: shotUrl(row.shot_after_mobile),
+      findings: findingShots(row.shot_findings),
     },
     intro: strings(article.intro),
     findings: findings(article.findings),
@@ -98,7 +157,7 @@ export function toItem(row: Record<string, unknown>, locale: RazborLocale): Razb
 
 const COLUMNS =
   "category, city, country, published_at, created_at, shot_taken_at, shot_before, shot_before_mobile, " +
-  "shot_after, shot_after_mobile, slug_ru, slug_uz, title_ru, title_uz, description_ru, description_uz, " +
+  "shot_after, shot_after_mobile, shot_findings, slug_ru, slug_uz, title_ru, title_uz, description_ru, description_uz, " +
   "label_ru, label_uz, query_ru, query_uz, article_ru, article_uz, lost_per_100";
 
 /**
@@ -264,6 +323,7 @@ export async function saveDraft(draft: RazborDraft): Promise<string | null> {
 export type ReviewRow = {
   id: string;
   created_at: string;
+  publishedAt: string | null;
   status: string;
   category: string;
   city: string;
@@ -274,25 +334,47 @@ export type ReviewRow = {
   uz: RazborArticle | null;
   lostPer100: readonly [number, number] | null;
   notes: string | null;
+  /**
+   * Сколько снимков у разбора: общих и по находкам.
+   *
+   * Проверяющему это первое, на что смотреть. Разбор без снимков — это
+   * список претензий без доказательств, и выпускать такой под именем студии
+   * нельзя; панель говорит об этом прямо, а не оставляет заметить самому.
+   */
+  shots: { before: boolean; after: boolean; findings: number };
+  /**
+   * Коды находок, которые аудит действительно вынес по этому сайту.
+   *
+   * Заполняется только при чтении одной строки — для страницы правки.
+   * Списку на сто разборов отчёты аудита не нужны, а весят они больше всего
+   * остального вместе взятого.
+   *
+   * Нужны затем, чтобы привязать снимок к находке, переписанной руками. И
+   * выбирать можно только из них: разрешить любой код значило бы разрешить
+   * поставить под находкой снимок места, о котором аудит ничего не говорил.
+   */
+  auditCodes: string[];
 };
 
-/** Что ждёт человека: сначала непроверенное, потом остальное. */
-export async function forReview(limit = 30): Promise<ReviewRow[]> {
-  const db = serviceClient();
-  if (!db) return [];
+const ROW_COLUMNS =
+  "id, created_at, published_at, status, category, city, source_url, slug_ru, slug_uz, " +
+  "article_ru, article_uz, lost_per_100, notes, shot_before, shot_after, shot_findings";
 
-  const { data } = await db
-    .from("razbors")
-    .select(
-      "id, created_at, status, category, city, source_url, slug_ru, slug_uz, article_ru, article_uz, lost_per_100, notes",
-    )
-    .in("status", ["draft", "review"])
-    .order("created_at", { ascending: false })
-    .limit(limit);
+function auditCodes(report: unknown): string[] {
+  const findings = (report as { findings?: unknown } | null)?.findings;
+  if (!Array.isArray(findings)) return [];
+  return Array.from(
+    new Set(findings.map((f) => String((f as { code?: unknown })?.code ?? "")).filter(Boolean)),
+  );
+}
 
-  return (data ?? []).map((row) => ({
+function toRow(row: Record<string, unknown>): ReviewRow {
+  const shots = row.shot_findings;
+  return {
+    auditCodes: auditCodes(row.report),
     id: String(row.id),
     created_at: String(row.created_at),
+    publishedAt: row.published_at ? String(row.published_at) : null,
     status: String(row.status),
     category: String(row.category),
     city: String(row.city),
@@ -303,10 +385,87 @@ export async function forReview(limit = 30): Promise<ReviewRow[]> {
     uz: (row.article_uz as RazborArticle | null) ?? null,
     lostPer100: lostBand(row.lost_per_100),
     notes: (row.notes as string | null) ?? null,
-  }));
+    shots: {
+      before: Boolean(row.shot_before),
+      after: Boolean(row.shot_after),
+      findings: shots && typeof shots === "object" && !Array.isArray(shots) ? Object.keys(shots).length : 0,
+    },
+  };
 }
 
-export type PublishResult = { ok: true } | { ok: false; why: string };
+/** Что ждёт человека: сначала непроверенное, потом остальное. */
+export async function forReview(limit = 30): Promise<ReviewRow[]> {
+  const db = serviceClient();
+  if (!db) return [];
+
+  const { data } = await db
+    .from("razbors")
+    .select(ROW_COLUMNS)
+    .in("status", ["draft", "review"])
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return (data ?? []).map((row) => toRow(row as unknown as Record<string, unknown>));
+}
+
+/**
+ * История: что уже вышло и что забраковали.
+ *
+ * Без неё панель отвечала только на вопрос «что мне сейчас проверить», а на
+ * вопрос «что вообще стоит на сайте» — нет; и чтобы снять с публикации
+ * вчерашний разбор, приходилось идти в базу руками.
+ *
+ * Опубликованные сортируются по дате публикации, отклонённые — по дате
+ * создания: у них даты публикации нет, и общий `order` поставил бы их
+ * вперемешку в непредсказуемом порядке.
+ */
+export async function history(limit = 100): Promise<ReviewRow[]> {
+  const db = serviceClient();
+  if (!db) return [];
+
+  const { data } = await db
+    .from("razbors")
+    .select(ROW_COLUMNS)
+    .in("status", ["published", "rejected"])
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  const rows = (data ?? []).map((row) => toRow(row as unknown as Record<string, unknown>));
+  const key = (row: ReviewRow) => row.publishedAt ?? row.created_at;
+  return rows.sort((a, b) => {
+    if (a.status !== b.status) return a.status === "published" ? -1 : 1;
+    return key(b).localeCompare(key(a));
+  });
+}
+
+/** Один разбор целиком — для страницы правки. Здесь и отчёт аудита. */
+export async function razborById(id: string): Promise<ReviewRow | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data } = await db
+    .from("razbors")
+    .select(`${ROW_COLUMNS}, report`)
+    .eq("id", id)
+    .maybeSingle();
+  return data ? toRow(data as unknown as Record<string, unknown>) : null;
+}
+
+/**
+ * Адреса разбора на обоих языках.
+ *
+ * Возвращаются из каждого действия, которое меняет содержание: страницы
+ * раздела кэшируются, и без точных адресов их нечем сбросить. Кнопка,
+ * которая записала строку в базу, но не сбросила кэш, для человека
+ * выглядит ровно как кнопка, которая ничего не сделала, — так и было.
+ */
+export type RazborPaths = { ru: string; uz: string };
+
+export type PublishResult = { ok: true; paths: RazborPaths } | { ok: false; why: string };
+
+const pathsOf = (row: { slug_ru?: unknown; slug_uz?: unknown }): RazborPaths => ({
+  ru: `/ru/razbor/${String(row.slug_ru ?? "")}`,
+  uz: `/uz/razbor/${String(row.slug_uz ?? "")}`,
+});
 
 /**
  * Публикация — только с обеими статьями.
@@ -314,6 +473,12 @@ export type PublishResult = { ok: true } | { ok: false; why: string };
  * Разбор на одном языке — это половина страницы под hreflang, ведущая на
  * несуществующую вторую. Пустить такое в поиск хуже, чем не публиковать:
  * Google запомнит битую пару, а исправлять её придётся дольше, чем ждать.
+ *
+ * Снимков публикация не требует. Требовала бы — и кнопка молча отказывала
+ * бы ровно тем разборам, которые ночная смена приносит первыми: съёмка идёт
+ * отдельным проходом и может отстать на несколько часов. Вместо запрета
+ * панель говорит проверяющему, что снимков нет, а страница показывает
+ * статью без них и подберёт их, как только они появятся.
  */
 export async function publish(id: string): Promise<PublishResult> {
   const db = serviceClient();
@@ -333,15 +498,99 @@ export async function publish(id: string): Promise<PublishResult> {
     .from("razbors")
     .update({ status: "published", published_at: new Date().toISOString() })
     .eq("id", id);
-  return error ? { ok: false, why: "Не записалось." } : { ok: true };
+  return error ? { ok: false, why: "Не записалось." } : { ok: true, paths: pathsOf(data) };
+}
+
+/**
+ * Снять с публикации — не то же самое, что удалить.
+ *
+ * Страница уходит с сайта, строка остаётся: отпечаток адреса продолжает
+ * держать сайт разобранным, и ночная смена не напишет про него второй раз.
+ * Статус — `review`, а не `draft`: текст никуда не делся, он снова ждёт
+ * решения.
+ */
+export async function unpublish(id: string): Promise<RazborPaths | null> {
+  const db = serviceClient();
+  if (!db) return null;
+
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz").eq("id", id).maybeSingle();
+  if (!data) return null;
+
+  await db.from("razbors").update({ status: "review", published_at: null }).eq("id", id);
+  return pathsOf(data);
+}
+
+/**
+ * Удаление — насовсем, вместе с отпечатком адреса.
+ *
+ * Значит, ночная смена однажды принесёт этот сайт снова. Это осознанно:
+ * удаляют разбор тогда, когда он неверен, а неверный разбор — повод
+ * написать заново, а не повод занести сайт в чёрный список навсегда. Кому
+ * нужно «больше никогда» — тому нужен отказ с причиной, не удаление.
+ */
+export async function remove(id: string): Promise<RazborPaths | null> {
+  const db = serviceClient();
+  if (!db) return null;
+
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz").eq("id", id).maybeSingle();
+  if (!data) return null;
+
+  await db.from("razbors").delete().eq("id", id);
+  return pathsOf(data);
+}
+
+export type SaveResult = { ok: true; paths: RazborPaths } | { ok: false; why: string };
+
+/**
+ * Правка статьи руками.
+ *
+ * Меняется только текст — ни адрес, ни ниша, ни город. Адрес
+ * опубликованного разбора уже стоит в поиске и в карте сайта; переименовать
+ * его тихо значит потерять позицию и получить битую ссылку у всех, кто
+ * успел сослаться.
+ *
+ * Код находки — то, что привязывает к ней снимок места на сайте, — приходит
+ * из формы списком и уже сверен со списком известных. Находка без кода
+ * остаётся без снимка: это честнее, чем подставить ей чужой.
+ */
+export async function saveArticles(
+  id: string,
+  next: { ru: RazborArticle; uz: RazborArticle },
+): Promise<SaveResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, why: "База недоступна." };
+
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz").eq("id", id).maybeSingle();
+  if (!data) return { ok: false, why: "Разбора уже нет." };
+
+  const { error } = await db
+    .from("razbors")
+    .update({
+      article_ru: next.ru,
+      article_uz: next.uz,
+      title_ru: next.ru.title,
+      title_uz: next.uz.title,
+      description_ru: next.ru.description,
+      description_uz: next.uz.description,
+      label_ru: next.ru.label,
+      label_uz: next.uz.label,
+    })
+    .eq("id", id);
+
+  return error ? { ok: false, why: `Не записалось: ${error.message}` } : { ok: true, paths: pathsOf(data) };
 }
 
 /** Отказ хранится с причиной: иначе смена вернётся к этому сайту снова. */
-export async function reject(id: string, reason: string): Promise<void> {
+export async function reject(id: string, reason: string): Promise<RazborPaths | null> {
   const db = serviceClient();
-  if (!db) return;
+  if (!db) return null;
+
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz").eq("id", id).maybeSingle();
+  if (!data) return null;
+
   await db
     .from("razbors")
     .update({ status: "rejected", notes: reason.slice(0, 2000) || "без причины" })
     .eq("id", id);
+  return pathsOf(data);
 }

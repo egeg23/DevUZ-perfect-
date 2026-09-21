@@ -1,16 +1,32 @@
-import { publishAction, rejectAction } from "@/app/admin/razbor/actions";
-import { AdminShell } from "@/components/admin/shell";
-import { requireStaff } from "@/lib/admin/guard";
-import { forReview } from "@/lib/razbor/store";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+
+import {
+  deleteAction,
+  publishAction,
+  rejectAction,
+  unpublishAction,
+} from "@/app/admin/razbor/actions";
+import { AdminShell } from "@/components/admin/shell";
+import { ShotState } from "@/components/admin/razbor-shots";
+import { requireStaff } from "@/lib/admin/guard";
+import { forReview, history, type ReviewRow } from "@/lib/razbor/store";
 
 export const dynamic = "force-dynamic";
 
 const BUTTON =
   "rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-xs transition hover:border-green/40 hover:text-green";
 
+const INPUT =
+  "rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-xs text-text placeholder:text-faint";
+
+function day(iso: string): string {
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  return `${d}.${m}.${y}`;
+}
+
 /**
- * Проверка разборов перед публикацией.
+ * Проверка разборов перед публикацией и история того, что уже вышло.
  *
  * Разбор пишет ночная смена, а под именем студии он выходит навсегда: чужой
  * сайт назван плохим публично, и отозвать это нельзя. Поэтому между «смена
@@ -20,6 +36,11 @@ const BUTTON =
  * Показываются обе статьи целиком, а не заголовки со ссылкой «открыть».
  * Проверка, ради которой нужно кликать, превращается в проверку, которую
  * пролистывают.
+ *
+ * Ниже — история. Без неё страница отвечала только на вопрос «что проверить
+ * сейчас»; на вопрос «что вообще стоит у нас на сайте» ответа не было, а
+ * снять вчерашний разбор или поправить в нём опечатку можно было только
+ * руками в базе.
  */
 export default async function RazborReviewPage({
   searchParams,
@@ -30,11 +51,13 @@ export default async function RazborReviewPage({
   if (staff.role !== "admin") notFound();
 
   const { r } = await searchParams;
-  const rows = await forReview();
+  const [rows, past] = await Promise.all([forReview(), history()]);
+  const published = past.filter((row) => row.status === "published");
+  const rejected = past.filter((row) => row.status === "rejected");
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Разборы на проверке</h1>
+      <h1 className="text-lg font-semibold">Разборы</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
         Ночная смена разбирает сайты из касаний, до которых не дошли руки, и
         кладёт статьи сюда. Опубликованное уходит в раздел на сайте и в карту
@@ -51,25 +74,20 @@ export default async function RazborReviewPage({
         </p>
       ) : null}
 
+      {/* ── На проверке ──────────────────────────────────────────────── */}
+      <h2 className="mt-10 text-sm font-semibold uppercase tracking-wider text-faint">
+        На проверке · {rows.length}
+      </h2>
+
       {rows.length === 0 ? (
-        <p className="mt-8 rounded-xl border border-line bg-surface px-5 py-4 text-sm text-muted">
+        <p className="mt-4 rounded-xl border border-line bg-surface px-5 py-4 text-sm text-muted">
           Пусто. Смена ещё не приносила разборов — или все уже разобраны.
         </p>
       ) : (
-        <ul className="mt-8 space-y-6">
+        <ul className="mt-4 space-y-6">
           {rows.map((row) => (
             <li key={row.id} className="rounded-xl border border-line bg-surface px-5 py-4">
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="font-medium">{row.ru?.title ?? "без заголовка"}</span>
-                <span className="text-xs text-faint">
-                  {row.category} · {row.city}
-                </span>
-                {row.lostPer100 ? (
-                  <span className="ml-auto font-mono text-xs text-gold">
-                    теряет {row.lostPer100[0]}–{row.lostPer100[1]} из 100
-                  </span>
-                ) : null}
-              </div>
+              <Head row={row} />
 
               {/* Адрес разобранного сайта — служебный: наружу он не уходит
                   никогда, но проверяющему без него не перепроверить разбор. */}
@@ -129,13 +147,12 @@ export default async function RazborReviewPage({
                     Опубликовать
                   </button>
                 </form>
+                <Link href={`/admin/razbor/${row.id}`} className={BUTTON}>
+                  Править
+                </Link>
                 <form action={rejectAction} className="flex flex-wrap items-center gap-2">
                   <input type="hidden" name="razbor" value={row.id} />
-                  <input
-                    name="reason"
-                    placeholder="почему не публикуем"
-                    className="rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-xs text-text placeholder:text-faint"
-                  />
+                  <input name="reason" placeholder="почему не публикуем" className={INPUT} />
                   <button type="submit" className={BUTTON}>
                     Не публикуем
                   </button>
@@ -145,6 +162,124 @@ export default async function RazborReviewPage({
           ))}
         </ul>
       )}
+
+      {/* ── Опубликованные ───────────────────────────────────────────── */}
+      <h2 className="mt-12 text-sm font-semibold uppercase tracking-wider text-faint">
+        Опубликованы · {published.length}
+      </h2>
+
+      {published.length === 0 ? (
+        <p className="mt-4 rounded-xl border border-line bg-surface px-5 py-4 text-sm text-muted">
+          На сайте пока ни одного разбора.
+        </p>
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {published.map((row) => (
+            <li key={row.id} className="rounded-xl border border-line bg-surface px-5 py-4">
+              <Head row={row} />
+              <p className="mt-1 text-xs text-faint">
+                {row.publishedAt ? `вышел ${day(row.publishedAt)}` : "дата публикации не записана"}
+              </p>
+
+              {/* Ссылки на живые страницы, а не на предпросмотр: проверять
+                  надо то, что видит читатель, вместе с картинками и
+                  разметкой. */}
+              <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[0.7rem]">
+                <a
+                  href={`/ru/razbor/${row.slugRu}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-green underline underline-offset-4"
+                >
+                  /ru/razbor/{row.slugRu}
+                </a>
+                <a
+                  href={`/uz/razbor/${row.slugUz}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-green underline underline-offset-4"
+                >
+                  /uz/razbor/{row.slugUz}
+                </a>
+              </p>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
+                <Link href={`/admin/razbor/${row.id}`} className={BUTTON}>
+                  Править
+                </Link>
+                <form action={unpublishAction}>
+                  <input type="hidden" name="razbor" value={row.id} />
+                  <button type="submit" className={BUTTON}>
+                    Снять с публикации
+                  </button>
+                </form>
+                <Remove id={row.id} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* ── Отклонённые ──────────────────────────────────────────────── */}
+      {rejected.length ? (
+        <>
+          <h2 className="mt-12 text-sm font-semibold uppercase tracking-wider text-faint">
+            Не публикуем · {rejected.length}
+          </h2>
+          <p className="mt-2 max-w-2xl text-xs leading-relaxed text-faint">
+            Строки остаются здесь нарочно: пока сайт числится разобранным,
+            ночная смена к нему не вернётся. Удалить — значит вернуть его в
+            очередь.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {rejected.map((row) => (
+              <li
+                key={row.id}
+                className="flex flex-wrap items-baseline gap-x-3 gap-y-2 rounded-xl border border-line bg-surface px-5 py-3"
+              >
+                <span className="text-sm">{row.ru?.title ?? row.sourceUrl}</span>
+                <span className="text-xs text-faint">
+                  {row.category} · {row.city} · {day(row.created_at)}
+                </span>
+                {row.notes ? <span className="text-xs text-gold">{row.notes}</span> : null}
+                <span className="ml-auto">
+                  <Remove id={row.id} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
     </AdminShell>
+  );
+}
+
+function Head({ row }: { row: ReviewRow }) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <span className="font-medium">{row.ru?.title ?? "без заголовка"}</span>
+      <span className="text-xs text-faint">
+        {row.category} · {row.city}
+      </span>
+      <ShotState shots={row.shots} />
+      {row.lostPer100 ? (
+        <span className="ml-auto font-mono text-xs text-gold">
+          теряет {row.lostPer100[0]}–{row.lostPer100[1]} из 100
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+/** Удаление сносит и отпечаток адреса — отсюда слово в поле, а не одна кнопка. */
+function Remove({ id }: { id: string }) {
+  return (
+    <form action={deleteAction} className="flex flex-wrap items-center gap-2">
+      <input type="hidden" name="razbor" value={id} />
+      <input name="confirm" placeholder="удалить" className={`${INPUT} w-24`} />
+      <button type="submit" className={BUTTON}>
+        Удалить
+      </button>
+    </form>
   );
 }
