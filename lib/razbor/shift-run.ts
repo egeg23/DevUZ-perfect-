@@ -14,7 +14,9 @@ import {
   nicheByKey,
   shiftDue,
 } from "@/lib/razbor/shift";
-import { coveredHashes, saveDraft, sourceHash, type RazborArticle } from "@/lib/razbor/store";
+import { inventNiche } from "@/lib/razbor/niche-ask";
+import { forbiddenNiche } from "@/lib/razbor/niche-words";
+import { coveredHashes, saveDraft, sourceHash, storedNiche, type RazborArticle } from "@/lib/razbor/store";
 import { serviceClient } from "@/lib/supabase";
 import type { AuditReport } from "@/lib/audit/checks";
 import type { City, Niche } from "@/content/razbor/catalog";
@@ -132,9 +134,21 @@ async function draftOne(url: string): Promise<true | string> {
   const verdict = worthWriting(report);
   if (!verdict.ok) return verdict.why === "too_good" ? "сайт в порядке" : verdict.why === "thin" ? "мало находок" : "сайт не открылся";
 
-  const niche = nicheByKey(report.facts.niche);
-  if (!niche) return "ниша не определилась";
-  if (OFF_LIMITS.has(niche.key)) return "нишу не разбираем";
+  const found = await nicheFor(report.facts.niche, {
+    url,
+    title: titleOf(page.html),
+    // Обход мог не состояться: тогда у нас только главная, и ниша будет
+    // угадываться по её заголовку — или не будет вовсе.
+    hints: deep.walked?.hints ?? [],
+  });
+  if (!found) return "ниша не определилась";
+  const { niche, invented } = found;
+
+  // Запрет проверяется и по ключу из каталога, и по словам: ключ придуманной
+  // ниши может выглядеть безобидно (`finansy`), а подпись — «микрокредитная
+  // организация». До появления придуманных ниш хватало списка ключей, потому
+  // что банк или аптеку классификатор просто не узнавал.
+  if (OFF_LIMITS.has(niche.key) || forbiddenNiche(niche)) return "нишу не разбираем";
 
   const city = cityFrom(page.html);
   if (!city) return "город не определился";
@@ -149,6 +163,9 @@ async function draftOne(url: string): Promise<true | string> {
 
   const id = await saveDraft({
     category: niche.key,
+    // Формы слова хранятся только у ниш вне каталога: каталожные лежат в
+    // репозитории, и вторая копия в базе однажды с ними разойдётся.
+    nicheWords: nicheByKey(niche.key) ? null : niche,
     city: city.key,
     country: city.country,
     sourceUrl: url,
@@ -158,10 +175,45 @@ async function draftOne(url: string): Promise<true | string> {
     uz,
     report: report as unknown,
     lostPer100: loss.lostPer100,
-    notes: `Сайт взят из касаний. Находок: ${report.findings.length}, в статью вошло ${pickFindings(report).length}.`,
+    notes:
+      `Сайт взят из касаний. Находок: ${report.findings.length}, в статью вошло ${pickFindings(report).length}.` +
+      // Проверяющему это первое, на что смотреть: формы слова попадают в
+      // заголовок и в адрес страницы, а адрес потом не переименовать.
+      (invented ? ` Ниша «${niche.ruLabel}» новая — смена назвала её сама, проверьте запрос и адрес.` : ""),
   });
 
   return id ? true : "не записался (скорее всего, такой запрос уже занят)";
+}
+
+/**
+ * Ниша сайта: из каталога, из прежнего разбора или у модели.
+ *
+ * Порядок не случаен. Каталог бесплатен и выверен руками. Прежний разбор
+ * той же ниши держит формы слова одинаковыми — иначе у нас появятся две
+ * страницы под «сайт для автошколы» и «сайт для автошкол», то есть две
+ * наши страницы под один запрос, между которыми Google не выберет.
+ * Модель — последняя, и стоит она одного дешёвого вызова на сайт.
+ */
+async function nicheFor(
+  key: string | null,
+  site: { url: string; title: string | null; hints: readonly string[] },
+): Promise<{ niche: Niche; invented: boolean } | null> {
+  const fromCatalog = nicheByKey(key);
+  if (fromCatalog) return { niche: fromCatalog, invented: false };
+
+  // Классификатор мог назвать ключ, которого в каталоге нет: так было с
+  // застройщиками — `nedvizhimost` он узнавал, а каталога под него не
+  // существовало, и каждый такой сайт уходил в «ниша не определилась».
+  if (key) {
+    const known = await storedNiche(key);
+    if (known) return { niche: known, invented: false };
+  }
+
+  const made = await inventNiche(site);
+  if (!made) return null;
+
+  const same = await storedNiche(made.key);
+  return same ? { niche: same, invented: false } : { niche: made, invented: true };
 }
 
 export function titleOf(html: string): string | null {

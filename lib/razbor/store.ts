@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 
 import type { RazborFinding, RazborItem, RazborShot } from "@/content/razbor/items";
 import { razborBySlug as staticBySlug, razborsFor as staticFor } from "@/content/razbor/items";
+import type { Niche } from "@/content/razbor/catalog";
 import type { RazborLocale } from "@/lib/razbor/model";
+import { parseNiche } from "@/lib/razbor/niche-words";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -245,8 +247,36 @@ export function sourceHash(url: string): string {
   return createHash("sha256").update(clean).digest("hex");
 }
 
+/**
+ * Формы слова ниши, которой нет в каталоге.
+ *
+ * Лежат в строке своего разбора, а не в общем каталоге: каталог — это
+ * решение студии о том, какие ниши она ведёт, и пополнять его должна рука,
+ * а не ночная задача. Строке же они нужны, чтобы второй сайт в той же нише
+ * взял те же слова: две наши страницы под «сайт для автошколы» и «сайт для
+ * автошкол» — это случай, когда Google не может выбрать и не показывает ни
+ * одну.
+ */
+export async function storedNiche(key: string): Promise<Niche | null> {
+  const db = serviceClient();
+  if (!db || !key) return null;
+
+  const { data } = await db
+    .from("razbors")
+    .select("niche_words")
+    .eq("category", key)
+    .not("niche_words", "is", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  return data?.niche_words ? parseNiche(data.niche_words) : null;
+}
+
 export type RazborDraft = {
   category: string;
+  /** Формы слова ниши — только для ниш вне каталога. */
+  nicheWords: Niche | null;
   city: string;
   country: "UZ" | "KZ" | "KG";
   sourceUrl: string;
@@ -299,6 +329,7 @@ export async function saveDraft(draft: RazborDraft): Promise<string | null> {
       slug_ru: draft.slugRu,
       slug_uz: draft.slugUz,
       report: draft.report,
+      niche_words: draft.nicheWords,
       title_ru: draft.ru.title,
       title_uz: draft.uz.title,
       description_ru: draft.ru.description,

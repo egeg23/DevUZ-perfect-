@@ -97,6 +97,19 @@ export const NICHES: readonly Niche[] = [
   { key: "yurfirma", ruGen: "юридической фирмы", ruLabel: "юридическая фирма", uz: "yuridik firma", uzLabel: "yuridik firma", ruMock: "Юрфирма", uzMock: "Yuridik firma", ruServices: ["Регистрация бизнеса", "Договоры", "Суды", "Консультация"], uzServices: ["Biznes ro‘yxati", "Shartnomalar", "Sudlar", "Maslahat"] },
   { key: "salon-krasoty", ruGen: "салона красоты", ruLabel: "салон красоты", uz: "go'zallik saloni", uzLabel: "go'zallik saloni", ruMock: "Салон красоты", uzMock: "Go‘zallik saloni", ruServices: ["Стрижка и укладка", "Маникюр", "Косметология", "Запись онлайн"], uzServices: ["Soch olish va turmak", "Manikyur", "Kosmetologiya", "Onlayn yozilish"] },
   { key: "logistika", ruGen: "логистической компании", ruLabel: "логистическая компания", uz: "logistika kompaniyasi", uzLabel: "logistika kompaniyasi", ruMock: "Логистика", uzMock: "Logistika", ruServices: ["Перевозки по стране", "Международные", "Склад", "Расчёт за час"], uzServices: ["Mamlakat bo‘ylab tashish", "Xalqaro", "Ombor", "Bir soatda hisob"] },
+  // Недвижимость: классификатор узнавал её с самого начала, а каталога под
+  // ключ не было — и каждый сайт застройщика уходил в «ниша не
+  // определилась», хотя это одна из главных ниш студии и её собственный
+  // кейс.
+  //
+  // Запрос и подпись здесь расходятся, и это не описка. Ищут «сайт для
+  // жилого комплекса» — так говорят о предмете. А письмо и подпись под
+  // разбором обращены к тому, кто его строит: адресат — застройщик, а не
+  // жилой комплекс. Узбекский корень запроса тоже про дом, а не про
+  // компанию: «qurilish kompaniyasi» уже занято строительной компанией, и
+  // две наши страницы под один узбекский запрос — это когда Google не
+  // выбирает ни одну.
+  { key: "nedvizhimost", ruGen: "жилого комплекса", ruLabel: "застройщик", uz: "turar-joy majmuasi", uzLabel: "quruvchi kompaniya", ruMock: "Жилой комплекс", uzMock: "Turar-joy majmuasi", ruServices: ["Квартиры и планировки", "Цены за квадрат", "Ипотека и рассрочка", "Запись на показ"], uzServices: ["Kvartiralar va planirovkalar", "Kvadrat narxi", "Ipoteka va bo‘lib to‘lash", "Ko‘rikka yozilish"] },
   { key: "fitnes", ruGen: "фитнес-клуба", ruLabel: "фитнес-клуб", uz: "fitnes klubi", uzLabel: "fitnes klubi", ruMock: "Фитнес", uzMock: "Fitnes", ruServices: ["Абонементы", "Групповые занятия", "Тренажёрный зал", "Первое занятие"], uzServices: ["Abonementlar", "Guruh mashg‘ulotlari", "Trenajyor zali", "Birinchi mashg‘ulot"] },
 ];
 
