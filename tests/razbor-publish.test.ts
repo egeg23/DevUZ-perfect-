@@ -167,8 +167,11 @@ test("страница переживает разбор без единого �
   // Пустая строка в src у next/image — исключение при отрисовке, то есть
   // пятисотая на странице, которая пришла из поиска.
   assert.match(page, /if \(!desktop && !mobile\) return null;/);
-  assert.match(page, /item\.shots\.beforeDesktop \|\| item\.shots\.beforeMobile/);
-  assert.match(page, /item\.shots\.afterDesktop \|\| item\.shots\.afterMobile/);
+  assert.match(page, /const hasBefore = Boolean\(item\.shots\.beforeDesktop \|\| item\.shots\.beforeMobile\)/);
+  // Макет без снимка живого сайта — картинка нашей работы под заголовком
+  // «как сделали бы мы» и без того, с чем её сравнивать: реклама на месте
+  // доказательства.
+  assert.match(page, /hasBefore && \(item\.shots\.afterDesktop \|\| item\.shots\.afterMobile\)/);
   assert.ok(!/image: \[`\$\{siteUrl\}/.test(page), "разметка обещает картинки, которых может не быть");
 });
 
@@ -261,4 +264,35 @@ test("съёмка берёт полный браузер, а не лёгкую 
   // первой: подчёркивание больше дефиса.
   const shots = read("scripts/razbor-shots.mjs");
   assert.match(shots, /name\.startsWith\("chromium-"\)/);
+});
+
+test("белый экран не уезжает в базу как снимок «как есть»", () => {
+  const shots = read("scripts/razbor-shots.mjs");
+
+  // Первый живой прогон положил два белых прямоугольника: загрузка
+  // падала, а скрипт снимал что есть — «пустой экран и есть ответ на
+  // вопрос, что видит посетитель». Для лежащего сайта это верно, но
+  // отличить лежащий сайт от браузера без сети так нельзя.
+  assert.match(shots, /async function opened\(page, target\)/);
+  assert.match(shots, /document\.body\?\.innerText\?\.trim\(\)\.length/);
+  assert.ok(!/await page\.goto\(target[\s\S]{0,200}\} catch \{\s*\/\//.test(shots), "сбой загрузки снова проглатывается");
+
+  // Пустая очередь и ни одного снимка — это не «сайты не открылись», а
+  // почти наверняка браузер без сети. Action обязан покраснеть.
+  assert.match(shots, /process\.exit\(4\)/);
+});
+
+test("сайты снимаются напрямую, прокси — только если иначе никак", () => {
+  const shots = read("scripts/razbor-shots.mjs");
+
+  // Прокси на сервере стоит ради Anthropic: страна не обслуживается. Гнать
+  // через него чужие сайты нельзя по существу — сайт в Ташкенте отдаст
+  // запросу из другой страны другую страницу, и снимок перестанет быть
+  // доказательством.
+  assert.match(shots, /"--no-proxy-server"/);
+  assert.match(shots, /function envProxy\(\)/);
+  // Логин с паролем Chromium из переменной окружения не берёт: он получает
+  // 407 и, без окна для ввода, просто не открывает страницу.
+  assert.match(shots, /username: decodeURIComponent\(url\.username\)/);
+  assert.match(shots, /fallbackTried/);
 });

@@ -77,7 +77,8 @@ export default async function RazborPage({
   const copy = razborCopy[locale];
   const near = await siblings(item);
   const service = serviceFor(item.niche);
-  const images = [item.shots.beforeDesktop, item.shots.afterDesktop]
+  const hasBefore = Boolean(item.shots.beforeDesktop || item.shots.beforeMobile);
+  const images = [item.shots.beforeDesktop, hasBefore ? item.shots.afterDesktop : ""]
     .filter(Boolean)
     .map((src) => (src.startsWith("/") ? `${siteUrl}${src}` : src));
 
@@ -97,7 +98,7 @@ export default async function RazborPage({
       </div>
 
       {/* ── Как есть ─────────────────────────────────────────────────── */}
-      {item.shots.beforeDesktop || item.shots.beforeMobile ? (
+      {hasBefore ? (
         <section className="mt-14">
           <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
             {copy.before}
@@ -134,8 +135,12 @@ export default async function RazborPage({
         </div>
       </section>
 
-      {/* ── Как сделали бы мы ────────────────────────────────────────── */}
-      {item.shots.afterDesktop || item.shots.afterMobile ? (
+      {/* ── Как сделали бы мы ────────────────────────────────────────────
+          Только вместе с «как есть». Макет без снимка живого сайта — это
+          картинка нашей работы под заголовком «как сделали бы мы» и без
+          того, с чем её сравнивать: реклама на месте доказательства. Из
+          двух снимков первый обязателен, второй к нему прилагается. */}
+      {hasBefore && (item.shots.afterDesktop || item.shots.afterMobile) ? (
         <section className="mt-14">
           <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-green">
             {copy.after}
