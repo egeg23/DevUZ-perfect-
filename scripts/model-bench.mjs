@@ -23,6 +23,7 @@ import {
   outreachHooks,
   outreachPrompt,
 } from "@/lib/admin/outreach";
+import { effortFor } from "@/lib/model-limits";
 import { serviceClient } from "@/lib/supabase";
 
 const MODEL = process.env.SCOUT_MODEL || process.env.ANTHROPIC_MODEL || "claude-opus-5";
@@ -143,6 +144,11 @@ async function scoutTask() {
   const kept = (key) => (said.get(key) ?? 0) >= MIN;
 
   const foundPositives = positives.filter((row) => kept(`p${row.id.slice(0, 8)}`)).length;
+  if (process.env.BENCH_DEBUG === "1") {
+    console.error(`вердиктов вернулось: ${verdicts.length} из ${batch.length}`);
+    for (const v of verdicts.slice(0, 5)) console.error(`  ${v.key} → ${v.score} (${v.category})`);
+    console.error(`  ключи пачки: ${batch.slice(0, 3).map((b) => b.key).join(", ")}`);
+  }
   const falsePositives = NEGATIVES.filter((_, i) => kept(`n${i}`)).length;
 
   return {
@@ -197,7 +203,7 @@ async function letterTask() {
       messages: [{ role: "user", content: prompt }],
       tools: [OUTREACH_TOOL],
       tool_choice: { type: "tool", name: OUTREACH_TOOL.name },
-      output_config: { effort: "medium" },
+      ...effortFor(MODEL, "medium"),
     });
     const block = response.content.find((b) => b.type === "tool_use");
     const text = block?.input?.message ?? "";

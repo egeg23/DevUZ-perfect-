@@ -49,6 +49,7 @@ jobs:
             export NODE_OPTIONS=--use-env-proxy
             export BENCH_SAMPLES="${{ inputs.samples }}"
             export BENCH_LETTERS="${{ inputs.letters }}"
+            export BENCH_DEBUG=1
 
             for MODEL in $(echo "${{ inputs.models }}" | tr ',' ' '); do
               echo "════ $MODEL ════"

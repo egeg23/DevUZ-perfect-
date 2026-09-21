@@ -1,3 +1,4 @@
+import { effortFor } from "@/lib/model-limits";
 import { modelTroubleSays } from "@/lib/model-trouble";
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -162,7 +163,7 @@ export async function classify(batch: ScoutCandidate[]): Promise<ScoutVerdict[]>
       tool_choice: { type: "tool", name: TOOL.name },
       // Отбор — не рассуждение: решение принимается по самому тексту, а
       // задержка здесь копится на каждой пачке.
-      output_config: { effort: "low" as const },
+      ...effortFor(MODEL, "low"),
     });
 
     const { verdicts, truncated } = verdictsFrom(response, batch);
