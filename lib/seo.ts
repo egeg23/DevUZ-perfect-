@@ -18,7 +18,20 @@ export function absoluteUrl(path = ""): string {
 }
 
 /**
- * Строит canonical и полный набор hreflang-альтернатив для страницы.
+ * Языковые версии, когда их набор или адреса не совпадают с общими.
+ *
+ * Ключ — язык, значение — путь без префикса локали. Языка нет в карте —
+ * значит страницы на нём не существует, и обещать её нельзя.
+ *
+ * Нужна ровно там, где страница живёт не на всех четырёх языках или живёт
+ * под разными адресами. Такой раздел у нас один — разборы: они пишутся
+ * только по-русски и по-узбекски, и это не перевод одного текста, а два
+ * запроса с разными адресами.
+ */
+export type AltPaths = Partial<Record<Locale, string>>;
+
+/**
+ * Строит canonical и набор hreflang-альтернатив для страницы.
  *
  * `path` — путь без префикса локали: "cases/tezketkaz" или "" для главной.
  * Каждая языковая версия ссылается на все остальные, включая себя — этого
@@ -26,18 +39,39 @@ export function absoluteUrl(path = ""): string {
  *
  * x-default ведёт на русскую версию: это язык, на котором к нам приходит
  * основной поток клиентов из Узбекистана.
+ *
+ * `only` перекрывает общее правило «страница есть на всех языках по тому же
+ * адресу». Без него разбор обещал поисковику английскую и китайскую версии,
+ * которых нет, и узбекскую — по русскому адресу: пять ссылок, все пять
+ * четырёхсотые. В sitemap разборы были выделены отдельно именно поэтому, а
+ * до `<head>` та же правка не дошла.
  */
-export function buildAlternates(locale: Locale, path = ""): Metadata["alternates"] {
-  const clean = path.replace(/^\/+|\/+$/g, "");
-  const href = (l: Locale) => absoluteUrl(clean ? `${l}/${clean}` : l);
+export function buildAlternates(locale: Locale, path = "", only?: AltPaths): Metadata["alternates"] {
+  const href = (l: Locale, p: string) => {
+    const clean = p.replace(/^\/+|\/+$/g, "");
+    return absoluteUrl(clean ? `${l}/${clean}` : l);
+  };
 
   const languages: Record<string, string> = {};
-  for (const l of locales) {
-    languages[hreflang[l]] = href(l);
-  }
-  languages["x-default"] = href("ru");
 
-  return { canonical: href(locale), languages };
+  if (only) {
+    for (const l of locales) {
+      const where = only[l];
+      if (where === undefined) continue;
+      languages[hreflang[l]] = href(l, where);
+    }
+    // x-default ведёт на русскую версию, если она есть. Если нет — на саму
+    // страницу: обещать язык, которого нет, нельзя и здесь.
+    languages["x-default"] = only.ru !== undefined ? href("ru", only.ru) : href(locale, only[locale] ?? path);
+    return { canonical: href(locale, only[locale] ?? path), languages };
+  }
+
+  for (const l of locales) {
+    languages[hreflang[l]] = href(l, path);
+  }
+  languages["x-default"] = href("ru", path);
+
+  return { canonical: href(locale, path), languages };
 }
 
 /**
@@ -51,6 +85,7 @@ export function buildMetadata({
   description,
   ogImage,
   noIndex = false,
+  alternates,
 }: {
   locale: Locale;
   path?: string;
@@ -58,6 +93,8 @@ export function buildMetadata({
   description: string;
   ogImage?: string;
   noIndex?: boolean;
+  /** Языковые версии, если они не совпадают с общим правилом. */
+  alternates?: AltPaths;
 }): Metadata {
   const url = absoluteUrl(path ? `${locale}/${path}` : locale);
   // Своя картинка на каждый язык: в мессенджерах превью читают чаще, чем
@@ -72,7 +109,7 @@ export function buildMetadata({
     // строка задаётся целиком и ровно так, как должна выглядеть в выдаче.
     title: { absolute: title },
     description,
-    alternates: buildAlternates(locale, path),
+    alternates: buildAlternates(locale, path, alternates),
     robots: noIndex ? { index: false, follow: false } : undefined,
     openGraph: {
       type: "website",

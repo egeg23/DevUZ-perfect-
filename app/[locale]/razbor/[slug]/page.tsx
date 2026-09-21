@@ -9,7 +9,7 @@ import type { RazborFinding, RazborShot } from "@/content/razbor/items";
 import { evidenceFor } from "@/lib/razbor/evidence";
 import { listRazbors, razborBySlug, siblings } from "@/lib/razbor/store";
 import { isLocale } from "@/lib/i18n";
-import { buildMetadata, siteUrl } from "@/lib/seo";
+import { buildMetadata, siteUrl, type AltPaths } from "@/lib/seo";
 import { RAZBOR_LOCALES, isRazborLocale, localeHref } from "@/lib/razbor/routing";
 import type { RazborLocale } from "@/lib/razbor/model";
 import { serviceFor } from "@/lib/razbor/service-link";
@@ -50,11 +50,19 @@ export async function generateMetadata({
   const item = await razborBySlug(locale, slug);
   if (!item) return {};
 
+  // Узбекская версия живёт по своему адресу: «сайт для логистической
+  // компании» и «logistika kompaniyasi uchun sayt» — это разные запросы, а
+  // не перевод одного. Общее правило подставляло сюда русский адрес под
+  // узбекским флагом, то есть обещало страницу, которой нет.
+  const pages: AltPaths = { [locale]: `razbor/${item.slug}` };
+  if (item.alt) pages[item.alt.locale] = `razbor/${item.alt.slug}`;
+
   return buildMetadata({
     locale,
     path: `razbor/${slug}`,
     title: item.title,
     description: item.description,
+    alternates: pages,
   });
 }
 

@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { razborCopy } from "@/content/razbor/page-copy";
 import { razborBySlug, razborsFor, siblings, type RazborItem } from "@/content/razbor/items";
 import { RAZBOR_LOCALES, isRazborLocale, localeHref } from "@/lib/razbor/routing";
+import { buildAlternates } from "@/lib/seo";
 import { serviceFor } from "@/lib/razbor/service-link";
 import { templatedAcross } from "@/lib/razbor/sameness";
 
@@ -213,4 +214,59 @@ test("совпадение ищется дословное, а короткие 
 
   // Один разбор сам с собой не спорит.
   assert.deepEqual(templatedAcross([a]), []);
+});
+
+/* ── hreflang: обещаем только то, что есть ──────────────────────────────── */
+
+test("раздел разборов не обещает языков, которых у него нет", () => {
+  const alt = buildAlternates("ru", "razbor", { ru: "razbor", uz: "razbor" });
+  const languages = (alt as { languages: Record<string, string> }).languages;
+
+  assert.deepEqual(Object.keys(languages).sort(), ["ru", "uz-UZ", "x-default"].sort());
+  assert.equal(languages.ru, "https://devuz.studio/ru/razbor");
+  assert.equal(languages["uz-UZ"], "https://devuz.studio/uz/razbor");
+  assert.equal(languages["x-default"], "https://devuz.studio/ru/razbor");
+});
+
+test("узбекский разбор стоит по своему адресу, а не по русскому", () => {
+  // «сайт для логистической компании» и «logistika kompaniyasi uchun sayt» —
+  // это разные запросы, а не перевод одного. Общее правило подставляло под
+  // узбекский флаг русский адрес, и ссылка вела в 404.
+  const alt = buildAlternates("ru", "razbor/sayt-dlya-logistiki", {
+    ru: "razbor/sayt-dlya-logistiki",
+    uz: "razbor/logistika-uchun-sayt",
+  });
+  const { canonical, languages } = alt as { canonical: string; languages: Record<string, string> };
+
+  assert.equal(canonical, "https://devuz.studio/ru/razbor/sayt-dlya-logistiki");
+  assert.equal(languages["uz-UZ"], "https://devuz.studio/uz/razbor/logistika-uchun-sayt");
+  assert.ok(!("en" in languages), "английская версия разбора обещана, а её нет");
+  assert.ok(!("zh-Hans" in languages), "китайская версия разбора обещана, а её нет");
+});
+
+test("разбор без пары не ссылается на несуществующую вторую", () => {
+  const alt = buildAlternates("uz", "razbor/logistika-uchun-sayt", {
+    uz: "razbor/logistika-uchun-sayt",
+  });
+  const languages = (alt as { languages: Record<string, string> }).languages;
+
+  assert.deepEqual(Object.keys(languages).sort(), ["uz-UZ", "x-default"].sort());
+  // x-default не уводит на русскую версию, которой нет.
+  assert.equal(languages["x-default"], "https://devuz.studio/uz/razbor/logistika-uchun-sayt");
+});
+
+test("обычные страницы по-прежнему собирают все четыре языка", () => {
+  const languages = (buildAlternates("ru", "cases/tezketkaz") as {
+    languages: Record<string, string>;
+  }).languages;
+  assert.deepEqual(Object.keys(languages).sort(), ["ru", "en", "uz-UZ", "zh-Hans", "x-default"].sort());
+});
+
+test("страницы разборов объявляют языки явно, а не общим правилом", () => {
+  assert.match(read("app/[locale]/razbor/page.tsx"), /alternates: \{ ru: "razbor", uz: "razbor" \}/);
+
+  const page = read("app/[locale]/razbor/[slug]/page.tsx");
+  assert.match(page, /const pages: AltPaths = \{ \[locale\]: `razbor\/\$\{item\.slug\}` \}/);
+  assert.match(page, /if \(item\.alt\) pages\[item\.alt\.locale\] = `razbor\/\$\{item\.alt\.slug\}`/);
+  assert.match(page, /alternates: pages/);
 });
