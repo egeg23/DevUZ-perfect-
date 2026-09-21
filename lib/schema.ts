@@ -134,10 +134,18 @@ export function productSchema(product: Product, locale: Locale): Json {
         availability: "https://schema.org/InStock",
       };
 
+  // Изображение Google считает обязательным для карточки товара, и это не
+  // формальность: строка выдачи с картинкой и без — разные строки. Но
+  // картинка должна показывать товар, поэтому у продукта без живого
+  // экземпляра поля просто нет. Общая обложка студии на его месте была бы
+  // разметкой, разошедшейся со страницей.
+  const images = (product.shots ?? []).map((shot) => absoluteUrl(shot.src.replace(/^\//, "")));
+
   return {
     "@type": "Product",
     name: t(product.title, locale),
     description: t(product.description, locale),
+    ...(images.length ? { image: images } : {}),
     // Бренд — объект с именем, а не ссылка на узел организации. Ссылка
     // синтаксически верна и человеком читается, но проверка Google отвечала
     // на неё «недопустимый тип объекта в поле brand»: она ждёт тип Brand с

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -80,6 +81,21 @@ export default async function ProductsPage({
                   </span>
                 </div>
                 <p className="mt-3 text-muted">{t(product.tagline, locale)}</p>
+
+                {/* Первый снимок на карточке. Разметка этой страницы
+                    описывает все пять товаров и ссылается на их картинки —
+                    показать хотя бы одну здесь же честнее, чем обещать
+                    поисковику то, чего на странице нет. */}
+                {product.shots?.[0] ? (
+                  <Image
+                    src={product.shots[0].src}
+                    alt={t(product.shots[0].caption, locale)}
+                    width={product.shots[0].width}
+                    height={product.shots[0].height}
+                    className="mt-5 w-full rounded-xl border border-white/10"
+                    sizes="(min-width: 768px) 32rem, 100vw"
+                  />
+                ) : null}
                 <ul className="mt-5 flex flex-wrap gap-2">
                   {product.tech.slice(0, 5).map((tech) => (
                     <li

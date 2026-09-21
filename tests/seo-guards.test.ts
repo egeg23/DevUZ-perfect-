@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { test } from "node:test";
 
 import robots from "@/app/robots";
@@ -101,4 +101,48 @@ test("у оффера товара остаётся цена, валюта и н
   >;
   assert.equal(offers.priceCurrency, "USD");
   assert.ok(offers.price !== undefined || offers.lowPrice !== undefined);
+});
+
+test("картинка товара объявляется, только когда она есть", () => {
+  // Google считает image обязательным для карточки товара — но картинка
+  // обязана показывать товар. У продукта без живого экземпляра снимать
+  // нечего, и общая обложка студии на его месте была бы разметкой,
+  // разошедшейся со страницей.
+  for (const product of products) {
+    const schema = productSchema(product, "ru") as Record<string, unknown>;
+    if (!product.shots?.length) {
+      assert.ok(!("image" in schema), `${product.slug}: обещает картинку, которой нет`);
+      continue;
+    }
+
+    const images = schema.image as string[];
+    assert.equal(images.length, product.shots.length);
+    for (const url of images) {
+      assert.match(url, /^https:\/\/devuz\.studio\/products\//, `странный адрес картинки: ${url}`);
+    }
+  }
+});
+
+test("снимки товара лежат на диске и с теми же размерами", () => {
+  // Размеры проставляет скрипт съёмки из самого файла. Разойдутся — страница
+  // будет дёргаться при загрузке, а это Google меряет отдельной метрикой.
+  for (const product of products) {
+    for (const shot of product.shots ?? []) {
+      const file = new URL(`public${shot.src}`, ROOT);
+      assert.ok(statSync(file).isFile(), `${shot.src}: файла нет`);
+      assert.ok(shot.width > 0 && shot.height > 0, `${shot.src}: размеры не проставлены`);
+      // Файлы лежат в репозитории — мегабайтные снимки сюда класть нельзя.
+      assert.ok(statSync(file).size < 700_000, `${shot.src}: тяжелее 700 КБ`);
+      for (const locale of ["ru", "en", "uz", "zh"] as const) {
+        assert.ok(shot.caption[locale]?.trim().length > 10, `${shot.src}: нет подписи на «${locale}»`);
+      }
+    }
+  }
+});
+
+test("снимок, объявленный поисковику, показан и человеку", () => {
+  // Картинка в разметке, которой нет на странице, — это расхождение
+  // разметки со страницей, и ловит его не тест, а ручная проверка Google.
+  assert.match(read("app/[locale]/products/[slug]/page.tsx"), /product\.shots\?\.length \? \(/);
+  assert.match(read("app/[locale]/products/page.tsx"), /product\.shots\?\.\[0\] \? \(/);
 });
