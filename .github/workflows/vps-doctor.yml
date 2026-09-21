@@ -120,6 +120,41 @@ jobs:
             fi
 
             echo
+            echo "════ Модель с хоста — тем же путём, что у скаута ════"
+            # Сайт ходит к модели из контейнера, скаут — с хоста и через
+            # прокси из .env. Это два разных пути, и 21 сентября разница
+            # стоила дня: чат на сайте отвечал, а «разобрано 0» у скаута
+            # выглядело так же, как кончившиеся деньги.
+            #
+            # Ключ подставляется заголовком и в вывод не попадает ни при
+            # каком исходе: печатаются только код ответа и вид ошибки.
+            KEY="$(grep -m1 '^ANTHROPIC_API_KEY=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'"'"'"' )"
+            MODEL="$(grep -m1 '^ANTHROPIC_MODEL=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'"'"'"' )"
+            PROXY="$(grep -m1 '^HTTPS_PROXY=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'"'"'"' )"
+            if [ -z "$KEY" ]; then
+              echo "✗ ANTHROPIC_API_KEY в .env не найден — модель не позовёт никто"
+              TROUBLE=1
+            else
+              PROBE=/tmp/devuz-model-probe.json
+              CODE="$(HTTPS_PROXY="$PROXY" https_proxy="$PROXY" curl -sS -o "$PROBE" -w '%{http_code}' --max-time 40 \
+                https://api.anthropic.com/v1/messages \
+                -H "x-api-key: $KEY" \
+                -H "anthropic-version: 2023-06-01" \
+                -H "content-type: application/json" \
+                -d "{\"model\":\"${MODEL:-claude-opus-5}\",\"max_tokens\":1,\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" 2>/dev/null || echo 000)"
+              KIND="$(grep -o '\"type\":\"[a-z_]*\"' "$PROBE" 2>/dev/null | head -2 | tail -1)"
+              rm -f "$PROBE"
+              case "$CODE" in
+                200) echo "✓ модель отвечает: ключ, деньги и прокси на месте" ;;
+                400) echo "✗ модель отказала ($KIND). Чаще всего это кончившиеся деньги на ключе"; TROUBLE=1 ;;
+                401|403) echo "✗ ключ не принят ($CODE) — проверьте ANTHROPIC_API_KEY"; TROUBLE=1 ;;
+                429) echo "· модель ограничивает частоту (429) — это не поломка" ;;
+                000) echo "✗ до api.anthropic.com не достучались с хоста: прокси или сеть. Скаут в этом состоянии читает чаты, но ничего не разбирает"; TROUBLE=1 ;;
+                *) echo "✗ модель ответила $CODE $KIND"; TROUBLE=1 ;;
+              esac
+            fi
+
+            echo
             echo "════ Фоновые службы ════"
             for unit in devuz-bot.service devuz-scout.service devuz-backup.timer devuz-reminders.timer; do
               echo "$unit: $(systemctl is-active "$unit" 2>/dev/null || echo 'нет')"
