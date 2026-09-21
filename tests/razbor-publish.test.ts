@@ -189,7 +189,7 @@ test("съёмка идёт отдельным проходом и не тащи
   const workflow = read(".github/workflows/razbor-shots.yml");
   // Браузер ставится один раз и живёт в кэше: скачивать сто семьдесят
   // мегабайт каждую ночь — это оплаченный трафик за ту же самую работу.
-  assert.match(workflow, /ls -d "\$HOME"\/\.cache\/ms-playwright\/chromium\*/);
+  assert.match(workflow, /ls -d "\$HOME"\/\.cache\/ms-playwright\/chromium-\*/);
   assert.match(workflow, /scripts\/razbor-shots\.mjs/);
 
   const dockerfile = read("Dockerfile");
@@ -222,4 +222,25 @@ test("отчёт аудита не тащится в списки", () => {
   assert.ok(columns.includes("article_ru"), "не нашёл набор колонок — проверка бессмысленна");
   assert.ok(!columns.includes("report"), "отчёт попал в общий набор колонок");
   assert.match(store, /\$\{ROW_COLUMNS\}, report/);
+});
+
+test("браузер для съёмки доступен там, где съёмка идёт", () => {
+  // Первый живой прогон упал здесь: playwright-core числился
+  // dev-зависимостью, а сервер ставит `npm ci --omit=dev`. Образу это не
+  // вредит — в рантайм уезжает только .next/standalone, куда попадает
+  // лишь то, что приложение действительно импортирует.
+  const pkg = JSON.parse(read("package.json"));
+  assert.ok(pkg.dependencies["playwright-core"], "playwright-core снова вне рабочих зависимостей");
+  assert.ok(!(pkg.devDependencies ?? {})["playwright-core"]);
+
+  const workflow = read(".github/workflows/razbor-shots.yml");
+  assert.match(workflow, /require\.resolve\('playwright-core'\)/);
+});
+
+test("съёмка берёт полный браузер, а не лёгкую оболочку", () => {
+  // Рядом с `chromium-1243` playwright кладёт
+  // `chromium_headless_shell-1243`, и простая сортировка ставит оболочку
+  // первой: подчёркивание больше дефиса.
+  const shots = read("scripts/razbor-shots.mjs");
+  assert.match(shots, /name\.startsWith\("chromium-"\)/);
 });
