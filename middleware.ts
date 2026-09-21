@@ -94,7 +94,14 @@ export function middleware(request: NextRequest) {
 export const config = {
   // Пропускаем статику, API и файлы, которые должны отдаваться из корня:
   // robots.txt, sitemap.xml и ключ IndexNow не имеют языковой версии.
+  //
+  // html здесь тоже не случайно. Поисковики подтверждают права на сайт
+  // файлом в корне — `yandex_<код>.html`, а Google при отказе от DNS
+  // предлагает `google<код>.html`. Без этого исключения такой файл уезжает
+  // в языковой редирект на /ru/yandex_<код>.html, где его нет, и робот
+  // видит 404 вместо подтверждения. Проверяется это уже после того, как
+  // код вставлен в панель вебмастера, — то есть в самый неудобный момент.
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|webmanifest)).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|html|webmanifest)).*)",
   ],
 };
