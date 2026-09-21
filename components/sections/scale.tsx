@@ -24,14 +24,18 @@ export function HeadlineStats({ locale, className }: { locale: Locale; className
     <dl className={cn("grid gap-4 sm:grid-cols-2", className)}>
       {headline.map((item, i) => (
         <Reveal key={t(item.label, locale)} delay={i * 80}>
-          <div className="rounded-2xl border border-line bg-surface px-7 py-7">
+          {/* Подпись идёт в разметке первой, а показывается второй.
+              В списке определений термин обязан стоять перед определением —
+              иначе это не пара, а два случайных узла, и читалка с ИИ-агентом
+              прочитают «65» неизвестно к чему. Глазами порядок нужен
+              обратный: сначала число, под ним подпись. Разводится
+              flex-col-reverse — переворачивается показ, а не разметка. */}
+          <div className="flex flex-col-reverse gap-3 rounded-2xl border border-line bg-surface px-7 py-7">
+            <dt className="text-[0.95rem] leading-snug text-muted">{t(item.label, locale)}</dt>
             <dd className="font-display text-[clamp(2.4rem,6vw,3.1rem)] font-extrabold leading-none text-green">
               {item.value}
               <span className="text-[0.55em] text-gold">{item.suffix}</span>
             </dd>
-            <dt className="mt-3 text-[0.95rem] leading-snug text-muted">
-              {t(item.label, locale)}
-            </dt>
           </div>
         </Reveal>
       ))}
