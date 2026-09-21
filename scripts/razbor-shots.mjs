@@ -145,13 +145,11 @@ async function chromiumPath() {
  * В песочнице весь HTTPS идёт через прокси, который переподписывает
  * соединения своим центром сертификации. Вместо отключения проверки
  * закрепляем ровно один открытый ключ — тот самый, что лежит в файле
- * центра. На боевом сервере ни переменной, ни файла нет, и ветка не
- * выполняется.
+ * центра. На боевом сервере этого файла нет, и ветка не выполняется.
  */
-function devProxyArgs() {
-  const proxyServer = process.env.HTTPS_PROXY || process.env.https_proxy;
+function devSpki() {
   const ca = "/root/.ccr/agent-proxy-ca.crt";
-  if (!proxyServer || !existsSync(ca)) return null;
+  if (!existsSync(ca)) return null;
   try {
     const spki = execFileSync("bash", [
       "-c",
@@ -159,10 +157,52 @@ function devProxyArgs() {
     ])
       .toString()
       .trim();
-    return spki ? { server: proxyServer, spki } : null;
+    return spki || null;
   } catch {
     return null;
   }
+}
+
+/**
+ * Прокси из окружения — запасной путь, а не основной.
+ *
+ * На боевом сервере он стоит ради одного: страна сервера не обслуживается
+ * Anthropic, и запрос к модели отвергается на границе. Снимать через него
+ * чужие сайты нельзя по существу — разбор обязан показывать то, что видит
+ * посетитель рядом с этой компанией, а не то, что сайт отдаёт запросу из
+ * другой страны. Поэтому по умолчанию браузер ходит напрямую
+ * (`--no-proxy-server`: иначе Chromium подхватит эти же переменные сам), а
+ * прокси включается, только если напрямую сайт не открылся.
+ *
+ * Логин с паролем разбираются отдельно: Chromium не берёт их из переменной
+ * окружения — он получает 407 и, без окна для ввода, просто не открывает
+ * страницу. Ровно так и вышел первый живой прогон: белый экран вместо сайта.
+ */
+function envProxy() {
+  const raw = process.env.HTTPS_PROXY || process.env.https_proxy || process.env.HTTP_PROXY || process.env.http_proxy;
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    return {
+      server: `${url.protocol}//${url.host}`,
+      ...(url.username ? { username: decodeURIComponent(url.username) } : {}),
+      ...(url.password ? { password: decodeURIComponent(url.password) } : {}),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function launch(proxy) {
+  const spki = devSpki();
+  return chromium.launch({
+    executablePath,
+    args: [
+      ...(proxy ? [] : ["--no-proxy-server"]),
+      ...(spki ? [`--ignore-certificate-errors-spki-list=${spki}`] : []),
+    ],
+    ...(proxy ? { proxy } : {}),
+  });
 }
 
 /* ── Работа ─────────────────────────────────────────────────────────────── */
@@ -236,10 +276,40 @@ function band(rect, screen) {
   return { x: 0, y, width: screen.width, height };
 }
 
+/**
+ * Открылся ли сайт на самом деле.
+ *
+ * Раньше сбой загрузки проглатывался молча: «пустой экран и есть ответ на
+ * вопрос, что видит посетитель». Для сайта, который действительно лежит,
+ * это верно — но отличить лежащий сайт от браузера без сети так нельзя, и
+ * первый живой прогон положил в базу два белых прямоугольника как снимки
+ * «как есть». Белый прямоугольник под заголовком «как есть» — это не
+ * разбор, это опечатка на виду у читателя из поиска.
+ *
+ * Поэтому снимок берётся только у страницы, которая что-то показала:
+ * ответ сервера в порядке и на первом экране есть видимый текст.
+ */
+async function opened(page, target) {
+  let status = null;
+  try {
+    const response = await page.goto(target, { waitUntil: "load", timeout: LOAD_TIMEOUT_MS });
+    status = response?.status() ?? null;
+  } catch (error) {
+    return { ok: false, why: `не открылся: ${String(error?.message ?? error).split("\n")[0]}` };
+  }
+  await page.waitForTimeout(SETTLE_MS);
+
+  const text = await page.evaluate(() => document.body?.innerText?.trim().length ?? 0).catch(() => 0);
+  if (!text) return { ok: false, why: `пустая страница (ответ ${status ?? "без кода"})` };
+
+  return { ok: true, status };
+}
+
 async function shootSite(browser, row, wanted) {
   const shots = {};
   const findings = {};
   const target = String(row.source_url);
+  let failure = null;
 
   for (const name of ["desktop", "mobile"]) {
     const screen = SCREENS[name];
@@ -258,13 +328,12 @@ async function shootSite(browser, row, wanted) {
     });
     const page = await context.newPage();
 
-    try {
-      await page.goto(target, { waitUntil: "load", timeout: LOAD_TIMEOUT_MS });
-    } catch {
-      // Не открылось за отведённое время — снимаем что успело отрисоваться.
-      // Пустой экран здесь и есть ответ на вопрос «что видит посетитель».
+    const open = await opened(page, target);
+    if (!open.ok) {
+      failure = open.why;
+      await context.close();
+      break;
     }
-    await page.waitForTimeout(SETTLE_MS);
 
     const title = await page.title().catch(() => null);
     const covered = await page.evaluate(redactInPage, redactions(target, title)).catch(() => 0);
@@ -301,7 +370,7 @@ async function shootSite(browser, row, wanted) {
     await context.close();
   }
 
-  return { shots, findings };
+  return { shots, findings, failure };
 }
 
 /**
@@ -364,50 +433,79 @@ if (!rows.length) {
   process.exit(0);
 }
 
-const dev = devProxyArgs();
-const browser = await chromium.launch({
-  executablePath,
-  ...(dev ? { proxy: { server: dev.server }, args: [`--ignore-certificate-errors-spki-list=${dev.spki}`] } : {}),
-});
+/**
+ * Сеть у браузера: сначала напрямую, потом через прокси.
+ *
+ * Напрямую — потому что разбор показывает то, что видит посетитель рядом с
+ * этой компанией. Через прокси сайт в Ташкенте может отдать другую
+ * страницу, другой язык или вовсе отказать, и снимок перестанет быть
+ * доказательством.
+ *
+ * Прокси остаётся запасным путём: на сервере он стоит ради Anthropic, но
+ * если прямого выхода наружу нет вовсе, лучше снять через него, чем не
+ * снять ничего. Решается один раз на прогон — по первому сайту, который не
+ * открылся.
+ */
+let proxy = null;
+let fallbackTried = false;
+let browser = await launch(proxy);
+
+async function shootRow(row) {
+  const article = row.article_ru;
+  const { shots, findings, failure } = await shootSite(browser, row, plan(article));
+  if (failure) return { failure };
+
+  const after = await shootMockup(browser, row);
+  const { error } = await db
+    .from("razbors")
+    .update({
+      shot_before: shots.desktop?.path ?? null,
+      shot_before_mobile: shots.mobile?.path ?? null,
+      shot_after: after.desktop ?? null,
+      shot_after_mobile: after.mobile ?? null,
+      shot_findings: findings,
+      shot_taken_at: new Date().toISOString(),
+    })
+    .eq("id", row.id);
+  if (error) throw new Error(`не записал пути: ${error.message}`);
+
+  return {
+    // Ноль плашек — повод посмотреть снимок глазами: имя компании на первом
+    // экране не нашлось, а оно там почти всегда есть.
+    плашек: (shots.desktop?.covered ?? 0) + (shots.mobile?.covered ?? 0),
+    находокСоСнимком: Object.keys(findings).length,
+    находокВсего: (article?.findings ?? []).length,
+  };
+}
 
 const done = [];
 try {
   for (const row of rows) {
-    const article = row.article_ru;
-    const wanted = plan(article);
+    const head = { id: row.id, сайт: row.source_url, статус: row.status };
     try {
-      const { shots, findings } = await shootSite(browser, row, wanted);
-      const after = await shootMockup(browser, row);
+      let out = await shootRow(row);
 
-      const { error } = await db
-        .from("razbors")
-        .update({
-          shot_before: shots.desktop?.path ?? null,
-          shot_before_mobile: shots.mobile?.path ?? null,
-          shot_after: after.desktop ?? null,
-          shot_after_mobile: after.mobile ?? null,
-          shot_findings: findings,
-          shot_taken_at: new Date().toISOString(),
-        })
-        .eq("id", row.id);
-      if (error) throw new Error(`не записал пути: ${error.message}`);
+      if (out.failure && !fallbackTried && envProxy()) {
+        fallbackTried = true;
+        proxy = envProxy();
+        await browser.close();
+        browser = await launch(proxy);
+        out = await shootRow(row);
+        if (!out.failure) out.через = "прокси";
+      }
 
-      done.push({
-        id: row.id,
-        сайт: row.source_url,
-        статус: row.status,
-        плашек: (shots.desktop?.covered ?? 0) + (shots.mobile?.covered ?? 0),
-        находокСоСнимком: Object.keys(findings).length,
-        находокВсего: (article?.findings ?? []).length,
-      });
+      done.push(out.failure ? { ...head, пропущен: out.failure } : { ...head, ...out });
     } catch (error) {
-      done.push({ id: row.id, сайт: row.source_url, сбой: String(error?.message ?? error) });
+      done.push({ ...head, сбой: String(error?.message ?? error) });
     }
   }
 } finally {
   await browser.close();
 }
 
-// Ноль плашек — повод посмотреть снимок глазами: имя компании на первом
-// экране не нашлось, а оно там почти всегда есть.
-console.log(JSON.stringify({ снято: done.length, разборы: done }, null, 2));
+console.log(JSON.stringify({ снято: done.filter((d) => !d.пропущен && !d.сбой).length, разборы: done }, null, 2));
+
+// Ни одного снимка при непустой очереди — это не «сайты не открылись», это
+// почти наверняка браузер без сети. Ненулевой код, чтобы Action покраснел,
+// а не отчитался об успехе с пустыми руками.
+if (done.length && done.every((d) => d.пропущен || d.сбой)) process.exit(4);
