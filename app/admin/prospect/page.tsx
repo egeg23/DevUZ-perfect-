@@ -10,6 +10,7 @@ import { outcomeOf } from "@/lib/admin/portion";
 import { portionOf } from "@/lib/admin/portion-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { MapsCampaigns } from "@/components/admin/maps-campaigns";
+import { TouchLegend } from "@/components/admin/touch-legend";
 import { dailyCap, placesConfigured } from "@/lib/maps/places";
 import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
 import { sentLastHour } from "@/lib/admin/outreach-queue";
@@ -96,6 +97,8 @@ export default async function ProspectPage({
           notice={maps}
         />
       ) : null}
+
+      <TouchLegend />
 
       <OutreachList rows={rows} hour={hour} open={open} error={e} sent={sent === "1"} replies={replies} />
 
