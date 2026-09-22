@@ -130,7 +130,12 @@ function unreachableWhy(error: unknown): string {
   if (code === "ENOTFOUND") return "домен не найден";
   if (code === "ECONNREFUSED") return "сервер отклонил соединение";
   if (code === "ETIMEDOUT" || /timeout/i.test(String(error))) return "не дождались ответа";
-  if (/certificate|CERT_/i.test(String(error))) return "проблема с сертификатом";
+  // Неполную цепочку сюда не заносим: её probe дочитывает сам (см. fetch.ts).
+  // Остальное — то, что и браузер покажет предупреждением на весь экран.
+  if (code === "ERR_TLS_CERT_ALTNAME_INVALID") return "сертификат выписан на другой адрес — браузер покажет предупреждение";
+  if (code === "CERT_HAS_EXPIRED") return "сертификат просрочен — браузер покажет предупреждение";
+  if (/SELF_SIGNED/.test(code)) return "самодельный сертификат — браузер покажет предупреждение";
+  if (/certificate|CERT_/i.test(String(error))) return "ошибка сертификата — браузер покажет предупреждение";
   return "нет соединения";
 }
 

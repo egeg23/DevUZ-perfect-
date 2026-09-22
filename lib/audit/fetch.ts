@@ -30,6 +30,36 @@ const MAX_REDIRECTS = 3;
 const httpAgent = new http.Agent({ keepAlive: false });
 const httpsAgent = new https.Agent({ keepAlive: false });
 
+/**
+ * Неполная цепочка сертификата — не «сайт не открывается».
+ *
+ * У многих узбекских сайтов сервер не отдаёт промежуточный сертификат.
+ * Браузер достраивает цепочку сам и сайт открывает, а Node — нет, и раньше
+ * такой сайт попадал в отчёт как «Сайт не отвечает — для клиента это
+ * выглядит ровно так же». Это неправда, и в первом же письме владельцу она
+ * стоила бы нам разговора: он откроет свой сайт и увидит, что всё работает.
+ *
+ * Поэтому на этих двух ошибках — и только на них — страницу перечитываем
+ * без проверки цепочки и честно пишем находку «сертификат установлен не
+ * полностью». Чужой, просроченный или самодельный сертификат браузер тоже
+ * не пропустит — там остаётся ошибка. Хост запоминается, чтобы стили,
+ * картинки и ссылки того же сайта читались так же, а не давали ложные
+ * «битые картинки». Защита от внутренних адресов (resolveSafely) при этом
+ * та же: меняется только проверка цепочки, не адрес.
+ */
+const lenientAgent = new https.Agent({ keepAlive: false, rejectUnauthorized: false });
+const CHAIN_CODES = new Set(["UNABLE_TO_VERIFY_LEAF_SIGNATURE", "UNABLE_TO_GET_ISSUER_CERT_LOCALLY"]);
+const chainHosts = new Set<string>();
+
+export function incompleteChain(error: unknown): boolean {
+  return CHAIN_CODES.has((error as NodeJS.ErrnoException)?.code ?? "");
+}
+
+function rememberChain(host: string): void {
+  if (chainHosts.size > 2000) chainHosts.clear();
+  chainHosts.add(host);
+}
+
 export type Hop = { url: string; status: number };
 
 export type PageProbe = {
@@ -45,6 +75,8 @@ export type PageProbe = {
   https: boolean;
   /** Дней до истечения сертификата; null — если соединение не по TLS. */
   certDaysLeft: number | null;
+  /** Сертификат без промежуточного звена: браузер откроет, часть телефонов и ботов — нет. */
+  tlsIssue?: "chain" | null;
   /** Стили, картинки, ссылки, значок — то, что дотянуто после страницы. */
   assets?: PageAssets;
 };
@@ -106,7 +138,7 @@ function once(
         port: url.port || (secure ? 443 : 80),
         path: `${url.pathname}${url.search}`,
         method: "GET",
-        agent: secure ? httpsAgent : httpAgent,
+        agent: secure ? (chainHosts.has(url.hostname) ? lenientAgent : httpsAgent) : httpAgent,
         timeout: TIMEOUT_MS,
         headers: {
           Host: url.host,
@@ -176,10 +208,20 @@ export async function probe(raw: string): Promise<PageProbe> {
   // сертификат заново не присылается — `getPeerCertificate()` отдаёт пустоту.
   // Без этого у любого сайта с редиректом срок сертификата молча терялся бы.
   let certDaysLeft: number | null = null;
+  let tlsIssue: "chain" | null = null;
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const ip = await resolveSafely(url);
-    const result = await once(url, ip);
+    let result;
+    try {
+      result = await once(url, ip);
+    } catch (error) {
+      if (url.protocol !== "https:" || !incompleteChain(error) || chainHosts.has(url.hostname)) throw error;
+      rememberChain(url.hostname);
+      tlsIssue = "chain";
+      result = await once(url, ip);
+    }
+    if (chainHosts.has(url.hostname)) tlsIssue = "chain";
     if (result.certDaysLeft !== null) certDaysLeft = result.certDaysLeft;
 
     const location = result.headers.location;
@@ -204,6 +246,7 @@ export async function probe(raw: string): Promise<PageProbe> {
       totalMs: Date.now() - started,
       https: url.protocol === "https:",
       certDaysLeft,
+      tlsIssue,
     };
   }
 
