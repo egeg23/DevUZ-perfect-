@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { record } from "@/lib/admin/audit";
 import { preparePortionsInBackground, runPortions } from "@/lib/admin/portion-store";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
+import { runFollowups } from "@/lib/admin/outreach-followup";
 import { advanceQueues } from "@/lib/admin/lead-queue-store";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
@@ -194,6 +195,10 @@ export async function POST(request: Request) {
   const maps = await runDailySearches(new Date());
   const portions = await runPortions(new Date());
   after(async () => {
+    // Дожим касаний — первым: он ограничен рабочими часами и тремя
+    // сообщениями за проход, и ждать его за проверкой сайтов незачем.
+    const followups = await runFollowups(new Date()).catch((error) => ({ queued: 0, errors: [String(error)] }));
+    if (followups.errors.length) console.error("дожим:", followups.errors.join("; "));
     await processPlaces(new Date()).catch((error) => console.error("карты:", error));
     await preparePortionsInBackground(new Date()).catch((error) => console.error("порция:", error));
   });

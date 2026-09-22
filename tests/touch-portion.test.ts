@@ -102,7 +102,7 @@ test("раздача — раз в день и без двойной разда�
 
 test("письма готовятся после ответа свипу и без повторов", () => {
   const sweep = read("app/api/reminders/sweep/route.ts");
-  assert.match(sweep, /after\(async \(\) => \{[\s\S]{0,200}await preparePortionsInBackground\(/);
+  assert.match(sweep, /after\(async \(\) => \{[\s\S]{0,800}await preparePortionsInBackground\(/);
   assert.match(sweep, /await runPortions\(new Date\(\)\)/);
   const store = read("lib/admin/portion-store.ts");
   const prep = store.slice(store.indexOf("export async function prepareNextPortion("), store.indexOf("function ready("));
