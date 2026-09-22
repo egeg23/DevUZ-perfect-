@@ -1,4 +1,5 @@
 import { record } from "@/lib/admin/audit";
+import { advanceQueues } from "@/lib/admin/lead-queue-store";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { runCoach } from "@/lib/admin/coach-store";
@@ -169,6 +170,12 @@ export async function POST(request: Request) {
     sent += 1;
   }
 
+  // Очередь на тёплые лиды — раньше всего тяжёлого ниже. Полчаса на лид —
+  // это обещание, и если проход застрянет на смене разборов, лид простоит у
+  // того, чьё время вышло, лишние минуты.
+  const queue = await advanceQueues(new Date());
+  if (queue.errors.length) console.error("очередь лидов:", queue.errors.join("; "));
+
   // Уборка просроченных сигналов скаута едет здесь же, а не отдельным
   // таймером. Своего расписания ей не нужно — она дешёвая и работает по
   // частичному индексу, — а лишний юнит systemd это лишняя вещь, которую
@@ -232,6 +239,7 @@ export async function POST(request: Request) {
   }
 
   return Response.json({
+    queue,
     coach,
     shifts,
     silent,

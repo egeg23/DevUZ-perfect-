@@ -1,5 +1,7 @@
 import { seesEveryone } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
+import { mayTake } from "@/lib/admin/lead-queue";
+import { closeOfferAfterTake, openQueue, queueState } from "@/lib/admin/lead-queue-store";
 import type { Staff } from "@/lib/admin/session";
 import type { ChatMessage } from "@/lib/qualify/types";
 import { STATUSES } from "@/lib/admin/leads";
@@ -28,7 +30,7 @@ export type ActionSource = "panel" | "telegram";
 
 export type OwnershipResult =
   | { ok: true }
-  | { ok: false; reason: "offline" | "taken" | "forbidden" | "gone" | "failed" };
+  | { ok: false; reason: "offline" | "taken" | "forbidden" | "gone" | "failed" | "queued" };
 
 /**
  * Право менять лид: владелец или админ.
@@ -85,6 +87,19 @@ export async function takeLead(
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
 
+  // Очередь: лид, предложенный другому, в его полчаса не берёт никто, кроме
+  // владельца. Проверка здесь, а не в кнопке: взять лида можно и из бота, и
+  // из панели, и запрет, живущий в одном из них, обходился бы другим.
+  const queue = await queueState(leadId);
+  const verdict = mayTake({
+    role: staff.role,
+    staffId: staff.id,
+    offers: queue.offers,
+    openedAt: queue.openedAt,
+    now: new Date(),
+  });
+  if (!verdict.ok) return { ok: false, reason: "queued" };
+
   const now = new Date().toISOString();
   const { data, error } = await db
     .from("leads")
@@ -112,6 +127,10 @@ export async function takeLead(
     ip,
     meta: { via },
   });
+
+  // Предложение по лиду закрывается: взял тот, кому предложено, или владелец
+  // вне очереди. Иначе свип через полчаса «передал бы дальше» уже взятый лид.
+  await closeOfferAfterTake(leadId, staff.id);
 
   // Автонапоминание ставится сразу, а не когда-нибудь потом: смысл его в
   // том, чтобы взятый и забытый лид всплыл сам.
@@ -157,6 +176,10 @@ export async function releaseLead(
   // напоминания вовсе.
   await cancelAutoReminders(leadId);
 
+  // Отпущенный лид открыт всем. Без этого он остался бы в очереди, где
+  // действующего предложения нет, — то есть его не смог бы взять никто.
+  await openQueue(leadId);
+
   await record("lead.released", {
     actorStaffId: staff.id,
     targetType: "lead",
@@ -193,6 +216,10 @@ export async function setStatus(
   if (status === "won" || status === "lost" || status === "dropped") {
     await cancelAutoReminders(leadId);
   }
+
+  // Возврат в новые — тот же случай, что и «отпустить»: лид открыт всем, а
+  // не заперт в очереди без действующего предложения.
+  if (status === "new") await openQueue(leadId);
 
   await record("lead.status_changed", {
     actorStaffId: staff.id,

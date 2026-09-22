@@ -5,6 +5,7 @@ import type { Locale } from "@/lib/i18n";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { scoreLead } from "@/lib/qualify/scoring";
 import { attributeAndNotify } from "@/lib/partners/attribute";
+import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import {
   briefHeading,
   briefRecipients,
@@ -402,18 +403,33 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
       });
     } else if (brief) {
       const route = await briefRecipients(brief.totalUsd);
-      delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
-        to: route.chatIds,
-        heading: briefHeading(brief, route, "qualified"),
-        origin: { ...options.origin, source },
-      });
+      const heading = briefHeading(brief, route, "qualified");
+      // Крупный заказ — только владельцу, мимо очереди: его и раньше видел
+      // он один. Остальные — через очередь, как любой тёплый лид.
+      delivered = route.ownerOnly
+        ? await sendLead(lead, leadId ?? "unsaved", requestNo, {
+            to: route.chatIds,
+            heading,
+            origin: { ...options.origin, source },
+          })
+        : await routeNewLead({
+            leadId: leadId ?? "unsaved",
+            lead,
+            requestNo,
+            heading,
+            origin: { ...options.origin, source },
+            fallback: route.chatIds,
+          });
     } else {
-      // Всей команде, а не в один чат: менеджер, узнающий о лиде пересказом,
-      // берёт его на час позже — и это тот самый час, за который клиент
-      // успевает написать второй студии.
-      delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
-        to: await salesRecipients(),
+      // Через очередь: лид предлагается тому, у кого за месяц меньше всех, и
+      // только он может взять его в ближайшие полчаса. Очереди вести некому —
+      // всей команде, как раньше.
+      delivered = await routeNewLead({
+        leadId: leadId ?? "unsaved",
+        lead,
+        requestNo,
         origin: { ...options.origin, source },
+        fallback: await salesRecipients(),
       });
     }
   } catch (error) {

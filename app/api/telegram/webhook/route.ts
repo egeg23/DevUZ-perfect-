@@ -872,6 +872,13 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
       await answerCallback(query.id, "Лида уже взял кто-то другой");
       return;
     }
+    // Очередь: лид сейчас предложен другому, и в его полчаса взять нельзя.
+    // Кто именно — не говорим: кнопка не должна становиться способом
+    // узнавать, кому достаются лиды, и начинать с этим спор в чате.
+    if (!taken.ok && taken.reason === "queued") {
+      await answerCallback(query.id, "Не ваша очередь — лид сейчас предложен другому");
+      return;
+    }
     if (!taken.ok) {
       await answerCallback(query.id, "Не удалось — откройте карточку в панели");
       return;
