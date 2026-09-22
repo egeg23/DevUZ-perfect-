@@ -9,6 +9,7 @@ import { runReviews } from "@/lib/talk/review-run";
 import { runRazborShift } from "@/lib/razbor/shift-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
+import { promoteStrongSignals } from "@/lib/scout/promote";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
@@ -176,6 +177,11 @@ export async function POST(request: Request) {
   const queue = await advanceQueues(new Date());
   if (queue.errors.length) console.error("очередь лидов:", queue.errors.join("; "));
 
+  // Сильные сигналы скаута — в ту же очередь, сразу за ней: пост в чате
+  // живёт часы, и ждать ему дольше пяти минут незачем.
+  const scout = await promoteStrongSignals(new Date());
+  if (scout.errors.length) console.error("сигналы скаута:", scout.errors.join("; "));
+
   // Уборка просроченных сигналов скаута едет здесь же, а не отдельным
   // таймером. Своего расписания ей не нужно — она дешёвая и работает по
   // частичному индексу, — а лишний юнит systemd это лишняя вещь, которую
@@ -240,6 +246,7 @@ export async function POST(request: Request) {
 
   return Response.json({
     queue,
+    scout,
     coach,
     shifts,
     silent,

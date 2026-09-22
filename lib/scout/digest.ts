@@ -64,7 +64,8 @@ export type DailyStats = {
 };
 
 /** Причины отсева по-русски — те же слова, что в журнале скаута. */
-const DROP_LABEL: Record<string, string> = {
+export const DROP_LABEL: Record<string, string> = {
+  noisy_chat: "шумный чат",
   too_short: "коротко",
   too_long: "длинно",
   no_topic: "не по теме",

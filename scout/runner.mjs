@@ -16,6 +16,7 @@ import { startProxyBridge } from "./http-proxy-bridge.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
 import { openChats } from "@/lib/scout/chats";
 import { classify } from "@/lib/scout/classify";
+import { DROP_LABEL } from "@/lib/scout/digest";
 import { EMPTY_PULSE, accumulate, writePulse } from "@/lib/scout/health";
 import { shape } from "@/lib/scout/shape";
 import { processBatch } from "@/lib/scout/store";
