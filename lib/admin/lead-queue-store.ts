@@ -1,7 +1,9 @@
 import {
+  NIGHT_HEADING,
   OFFER_MINUTES,
   OPEN_HEADING,
   QUEUE_ROLES,
+  isWorkingHours,
   missedNotice,
   monthStartOf,
   offerHeading,
@@ -9,6 +11,7 @@ import {
   watchHeading,
   type Candidate,
   type Offer,
+  type Share,
 } from "@/lib/admin/lead-queue";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { noticesOf } from "@/lib/qualify/notices";
@@ -122,14 +125,57 @@ export async function offersOf(leadId: string): Promise<OfferRow[]> {
 }
 
 /** Состояние очереди по лиду — то, по чему решается, можно ли его взять. */
-export async function queueState(leadId: string): Promise<{ offers: OfferRow[]; openedAt: string | null }> {
+export async function queueState(
+  leadId: string,
+): Promise<{ offers: OfferRow[]; openedAt: string | null; fairShare: boolean }> {
   const db = serviceClient();
-  if (!db) return { offers: [], openedAt: null };
+  if (!db) return { offers: [], openedAt: null, fairShare: false };
   const [offers, { data: lead }] = await Promise.all([
     offersOf(leadId),
-    db.from("leads").select("queue_opened_at").eq("id", leadId).maybeSingle(),
+    db.from("leads").select("queue_opened_at, fair_share").eq("id", leadId).maybeSingle(),
   ]);
-  return { offers, openedAt: (lead?.queue_opened_at as string | null) ?? null };
+  return {
+    offers,
+    openedAt: (lead?.queue_opened_at as string | null) ?? null,
+    fairShare: lead?.fair_share === true,
+  };
+}
+
+/**
+ * Сколько взято за месяц — для потолка равной доли у ночного лида.
+ *
+ * Считают те же люди, что стоят в очереди: делить поровну между теми, кому
+ * лид вообще может достаться, а не между всеми, кто есть в «Сотрудниках».
+ */
+export async function shareOf(staffId: string, now: Date = new Date()): Promise<Share> {
+  const { candidates } = await queueCandidates(now);
+  return {
+    mine: candidates.find((c) => c.id === staffId)?.taken ?? 0,
+    total: candidates.reduce((sum, c) => sum + c.taken, 0),
+    people: candidates.length,
+  };
+}
+
+/**
+ * Открыть лид по равной доле: он пришёл или его полчаса вышли в нерабочее
+ * время.
+ *
+ * Карточка уходит сразу всем в очереди. Флаг остаётся у лида и утром: лид,
+ * пришедший в 23:00 и не взятый до девяти, очередь не проходил, и начинать её
+ * задним числом значило бы снова держать его полчаса у каждого.
+ */
+async function openNight(card: Card, now: Date): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  await db
+    .from("leads")
+    .update({ fair_share: true, queue_opened_at: now.toISOString() })
+    .eq("id", card.leadId);
+  await sendLead(card.lead, card.leadId, card.requestNo, {
+    to: await salesRecipients(),
+    heading: withExtra(NIGHT_HEADING, card.heading),
+    origin: card.origin,
+  });
 }
 
 /** Смотрящие со стороны: чат продаж и владелец. Им карточка идёт всегда. */
@@ -219,6 +265,13 @@ type Card = {
  */
 export async function startQueue(card: Card, now: Date = new Date()): Promise<boolean> {
   if (!card.leadId || card.leadId === "unsaved") return false;
+
+  // Ночью — сразу всем, с потолком равной доли. Предлагать по очереди
+  // некому: полчаса у каждого спящего — это часы, за которые клиент уйдёт.
+  if (!isWorkingHours(now)) {
+    await openNight(card, now);
+    return true;
+  }
 
   const { people, candidates } = await queueCandidates(now);
   const first = pickNext(candidates, new Set());
@@ -327,6 +380,14 @@ export async function advanceQueues(now: Date = new Date()): Promise<AdvanceRepo
         await sendMessage(missedBy.chat, missedNotice(card.label));
         const mine = (await noticesOf(offer.lead_id)).filter((n) => n.chatId === missedBy.chat);
         await editLeadCards(mine, offer.lead_id, "⌛ Время вышло — лид у следующего");
+      }
+
+      // Полчаса вышли уже вечером — следующему не передаём: он, скорее всего,
+      // тоже не у телефона. Лид открывается всем по равной доле.
+      if (!isWorkingHours(now)) {
+        await openNight(card, now);
+        report.opened += 1;
+        continue;
       }
 
       const tried = new Set((await offersOf(offer.lead_id)).map((o) => o.staffId));

@@ -6,12 +6,14 @@ import {
   OFFER_MINUTES,
   QUEUE_ROLES,
   clock,
+  isWorkingHours,
   mayTake,
   missedNotice,
   monthStartOf,
   offerHeading,
   pickNext,
   watchHeading,
+  withinShare,
   type Candidate,
 } from "@/lib/admin/lead-queue";
 
@@ -140,7 +142,7 @@ test("взять вне очереди нельзя ни из бота, ни и�
   const check = take.indexOf("mayTake(");
   const write = take.indexOf(".update({");
   assert.ok(check > 0 && check < write, "лид берут до проверки очереди");
-  assert.match(take, /if \(!verdict\.ok\) return \{ ok: false, reason: "queued" \}/);
+  assert.match(take, /if \(!verdict\.ok\) return \{ ok: false, reason: verdict\.reason \}/);
   // Взятый лид свип не должен «передать дальше» через полчаса.
   assert.match(take, /await closeOfferAfterTake\(leadId, staff\.id\)/);
 
@@ -187,11 +189,89 @@ test("ник клиента не виден тому, чья очередь не
   // увидел ник — написал клиенту сам.
   const page = read("app/admin/leads/[id]/page.tsx");
   assert.match(page, /const hideHandle = free && !turn\.ok;/);
-  assert.match(page, /hideHandle \? "скрыт — лид в очереди у другого" : usernameOf\(/);
+  assert.match(page, /hideHandle \? "скрыт — лид сейчас не ваш" : usernameOf\(/);
 
   // Контакт целиком и раньше открывался только тому, за кем лид, и
   // владельцу — очередь это правило не ослабляет.
   const ownership = read("lib/admin/ownership.ts");
   const reveal = ownership.slice(ownership.indexOf("export async function revealContact"));
   assert.match(reveal.slice(0, 600), /if \(!lead \|\| !canEdit\(lead, staff\)\) return null;/);
+});
+
+/* ── Нерабочее время: равная доля вместо получаса ───────────────────────── */
+
+test("рабочие часы — с 08:00 до 18:00 по Ташкенту", () => {
+  // Ташкент — UTC+5 без перевода часов.
+  assert.equal(isWorkingHours(new Date("2026-09-22T02:59:00Z")), false, "07:59");
+  assert.equal(isWorkingHours(new Date("2026-09-22T03:00:00Z")), true, "08:00");
+  assert.equal(isWorkingHours(new Date("2026-09-22T12:59:00Z")), true, "17:59");
+  assert.equal(isWorkingHours(new Date("2026-09-22T13:00:00Z")), false, "18:00");
+  assert.equal(isWorkingHours(new Date("2026-09-22T18:00:00Z")), false, "23:00");
+});
+
+test("ночью никто не берёт больше, чем при равном распределении", () => {
+  // Семеро, у всех по нулю: первый лид может взять любой.
+  assert.equal(withinShare({ mine: 0, total: 0, people: 7 }), true);
+
+  // Азиз взял один. Второй ему уже не положен, пока у остальных по нулю, —
+  // а любому из них положен.
+  assert.equal(withinShare({ mine: 1, total: 1, people: 7 }), false);
+  assert.equal(withinShare({ mine: 0, total: 1, people: 7 }), true);
+
+  // У всех по одному — можно брать второй.
+  assert.equal(withinShare({ mine: 1, total: 7, people: 7 }), true);
+
+  // Дневные лиды тоже в счёте: взявший днём пять при единицах у остальных
+  // ночью не возьмёт, пока другие не догонят.
+  assert.equal(withinShare({ mine: 5, total: 11, people: 7 }), false);
+  assert.equal(withinShare({ mine: 1, total: 11, people: 7 }), true);
+
+  // Очереди нет — делить не на кого, потолка нет.
+  assert.equal(withinShare({ mine: 3, total: 3, people: 0 }), true);
+});
+
+test("ночной лид: потолок доли, а не чужая очередь", () => {
+  const night = { offers: [], openedAt: "2026-09-22T14:00:00Z", now: NOW };
+
+  const over = mayTake({ ...night, role: "manager", staffId: "ушлый", share: { mine: 4, total: 6, people: 7 } });
+  assert.deepEqual(over, { ok: false, reason: "share", holder: null, until: null });
+
+  assert.deepEqual(
+    mayTake({ ...night, role: "manager", staffId: "азиз", share: { mine: 0, total: 6, people: 7 } }),
+    { ok: true },
+  );
+  // Владелец вне очереди — и вне потолка.
+  assert.deepEqual(
+    mayTake({ ...night, role: "admin", staffId: "владелец", share: { mine: 40, total: 40, people: 7 } }),
+    { ok: true },
+  );
+
+  // Дневной отказ отличается от ночного: у каждого своя причина и свои слова.
+  const offers = [{ staffId: "азиз", expiresAt: LIVE, outcome: null }];
+  const day = mayTake({ role: "manager", staffId: "ушлый", offers, openedAt: null, now: NOW });
+  assert.equal(day.ok === false && day.reason, "queued");
+});
+
+test("ночью очередь не начинается и дальше не передаёт", () => {
+  const store = read("lib/admin/lead-queue-store.ts");
+
+  // Новый лид ночью — сразу всем, до выбора, кому предлагать.
+  const start = store.slice(store.indexOf("export async function startQueue"));
+  const night = start.indexOf("if (!isWorkingHours(now))");
+  assert.ok(night > 0 && night < start.indexOf("pickNext("), "ночной лид всё равно ушёл в очередь");
+
+  // Полчаса вышли уже вечером — не следующему, а всем по равной доле.
+  const advance = store.slice(store.indexOf("export async function advanceQueues"));
+  const evening = advance.indexOf("if (!isWorkingHours(now))");
+  assert.ok(evening > 0 && evening < advance.indexOf("pickNext("), "вечером лид ушёл к следующему спящему");
+
+  // Флаг у лида, а не проверка часов при нажатии: ночной лид остаётся
+  // ночным и утром.
+  assert.match(store, /update\(\{ fair_share: true, queue_opened_at: now\.toISOString\(\) \}\)/);
+
+  const ownership = read("lib/admin/ownership.ts");
+  assert.match(ownership, /queue\.fairShare && staff\.role !== "admin" \? await shareOf\(staff\.id\) : null/);
+  assert.match(read("app/api/telegram/webhook/route.ts"), /taken\.reason === "share"/);
+  assert.match(read("app/admin/leads/[id]/page.tsx"), /share: "Вы уже взяли свою равную долю/);
+  assert.match(read("supabase/migrations/0046_lead_fair_share.sql"), /add column if not exists fair_share boolean not null default false/);
 });
