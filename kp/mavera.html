@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Коммерческое предложение — MAVERA · DevUz Studio</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     Палитра взята с ADAR — её заказчик и отметил: кремовая бумага, глубокий
+     зелёный, золото, антиква в заголовках. Не наша зелёно-синяя: КП должно
+     выглядеть как будущий сайт MAVERA, а не как сайт студии.
+
+     Документ свёрстан листами A4, а не потоком: так экранная версия и PDF
+     ломаются по страницам одинаково, и смета не уезжает на разворот.
+     ───────────────────────────────────────────────────────────────────── */
+  :root {
+    --cream:  #FBF7EE;
+    --sheet:  #FFFDF7;
+    --ink:    #10291C;
+    --ink-2:  #17382a;
+    --body:   #3A4741;
+    --muted:  #6E7A72;
+    --gold:   #A8822A;
+    --gold-b: #C9A24A;
+    --line:   #E6DDC8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: var(--ink); }
+
+  body {
+    margin: 0;
+    padding: 12mm 0;
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 10.2pt;
+    line-height: 1.62;
+    color: var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    position: relative;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto 10mm;
+    padding: 15mm 18mm 18mm;
+    background: var(--sheet);
+    box-shadow: 0 2mm 8mm rgba(0,0,0,.35);
+    overflow: hidden;
+  }
+
+  /* Тёмные листы — обложка и закрывающая страница. Тот же приём, что в
+     премиум-версии ADAR: документ открывается и закрывается зелёным, а
+     работает на кремовой бумаге, которую не жалко печатать. */
+  .sheet--dark {
+    background: var(--ink);
+    color: #D6DCD4;
+  }
+  .sheet--dark h2, .sheet--dark h3 { color: #F4EFDF; }
+  .sheet--dark .bounds strong, .sheet--dark .contacts .v { color: #F4EFDF; }
+  .sheet--dark .items p, .sheet--dark .lead { color: #C3CCC2; }
+  .sheet--dark .eyebrow, .sheet--dark .num, .sheet--dark .k { color: var(--gold-b); }
+  .sheet--dark .rule--gold { background: var(--gold-b); }
+  .sheet--dark .items > li,
+  .sheet--dark .contacts div { border-color: rgba(255,255,255,.14); }
+  .sheet--dark .items > li:last-child { border-bottom-color: rgba(255,255,255,.14); }
+  .sheet--dark .muted { color: #93A093; }
+  .sheet--dark .foot { color: #7E8B7F; border-top-color: rgba(255,255,255,.14); }
+
+  .sheet--cover {
+    background: var(--ink);
+    color: #EFEAD9;
+    display: flex;
+    flex-direction: column;
+    padding: 22mm 18mm 18mm;
+  }
+
+  h1, h2, h3, .num, .amount {
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 500;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .eyebrow {
+    font-size: 7.6pt;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0;
+  }
+  .sheet--cover .eyebrow { color: var(--gold-b); }
+
+  .rule { height: 1px; background: var(--line); border: 0; margin: 5mm 0; }
+  .rule--gold { background: var(--gold-b); opacity: .55; }
+
+  /* ── Обложка ───────────────────────────────────────────────────────── */
+  .cover-top { flex: 0 0 auto; }
+  .cover-mid { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+  .cover-bot { flex: 0 0 auto; }
+
+  h1 {
+    font-size: 34pt;
+    line-height: 1.08;
+    color: #F4EFDF;
+    letter-spacing: -.01em;
+  }
+  h1 em { font-style: normal; color: var(--gold-b); }
+
+  .cover-lead {
+    max-width: 118mm;
+    margin: 6mm 0 0;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #BFC9BF;
+  }
+
+  .amount-box {
+    margin-top: 12mm;
+    padding-top: 6mm;
+    border-top: 1px solid rgba(201,162,74,.4);
+    display: flex;
+    align-items: baseline;
+    gap: 6mm;
+  }
+  .amount { font-size: 30pt; color: var(--gold-b); line-height: 1; }
+  .amount-note { font-size: 9pt; color: #9FAC9F; max-width: 80mm; line-height: 1.55; }
+
+  .cover-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 8.6pt;
+    color: #8E9A8E;
+    border-top: 1px solid rgba(255,255,255,.12);
+    padding-top: 5mm;
+  }
+  .cover-meta strong { color: #D8D2BF; font-weight: 500; }
+
+  /* ── Внутренние листы ──────────────────────────────────────────────── */
+  h2 {
+    font-size: 16pt;
+    line-height: 1.2;
+    margin: 0 0 3mm;
+  }
+  h2 + .lead { margin-top: -2mm; }
+
+  h3 {
+    font-size: 10.2pt;
+    font-family: Inter, sans-serif;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 1.5mm;
+  }
+
+  .lead {
+    font-size: 10pt;
+    line-height: 1.62;
+    color: var(--body);
+    max-width: 150mm;
+    margin: 0 0 4.5mm;
+  }
+
+  p { margin: 0 0 3.5mm; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.8pt; line-height: 1.55; }
+
+  section + section { margin-top: 6.5mm; }
+
+  /* Нумерованный состав работ */
+  .items { list-style: none; margin: 0; padding: 0; }
+  .items > li {
+    display: grid;
+    grid-template-columns: 12mm 1fr;
+    gap: 0 3mm;
+    padding: 2.6mm 0;
+    border-top: 1px solid var(--line);
+  }
+  .items > li:last-child { border-bottom: 1px solid var(--line); }
+  .num {
+    font-size: 13pt;
+    color: var(--gold);
+    line-height: 1.2;
+  }
+  .items p { margin: 0; font-size: 9.2pt; line-height: 1.52; color: var(--body); }
+
+  /* Список границ / «не входит» */
+  .bounds { list-style: none; margin: 0; padding: 0; }
+  .bounds li {
+    position: relative;
+    padding: 0 0 2.6mm 6mm;
+    font-size: 9.3pt;
+    line-height: 1.55;
+  }
+  .bounds li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--gold);
+  }
+  .bounds strong { color: var(--ink); font-weight: 600; }
+
+  /* Этапы */
+  .stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 0; padding: 0; list-style: none; }
+  .stages li { border-top: 2px solid var(--gold-b); padding-top: 2.5mm; }
+  .stages b { display: block; font-family: "Playfair Display", serif; font-weight: 500; font-size: 12pt; color: var(--ink); }
+  .stages span { font-size: 8.6pt; line-height: 1.5; color: var(--muted); display: block; margin-top: 1mm; }
+
+  /* Смета */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 7.6pt;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+    padding: 0 0 2.5mm;
+    border-bottom: 1px solid var(--gold-b);
+  }
+  th:last-child, td:last-child { text-align: right; }
+  td {
+    padding: 4mm 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    font-size: 9.5pt;
+    line-height: 1.58;
+  }
+  td:first-child { padding-right: 6mm; }
+  td:last-child { padding-left: 5mm; white-space: nowrap; }
+  .price {
+    font-family: "Playfair Display", serif;
+    font-size: 14pt;
+    color: var(--ink);
+  }
+  .row-title { font-weight: 600; color: var(--ink); display: block; margin-bottom: 1mm; font-size: 10pt; }
+
+  /* Итоговая плашка */
+  .total {
+    margin-top: 6mm;
+    background: var(--ink);
+    color: #EFEAD9;
+    padding: 5mm 7mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6mm;
+  }
+  .total .label { font-size: 9.4pt; color: #A9B5A9; max-width: 95mm; line-height: 1.55; }
+  .total .value { font-family: "Playfair Display", serif; font-size: 22pt; color: var(--gold-b); white-space: nowrap; }
+
+  .callout {
+    background: var(--cream);
+    border-left: 2px solid var(--gold-b);
+    padding: 4.5mm 6mm;
+    font-size: 9.4pt;
+    line-height: 1.62;
+  }
+  .callout strong { color: var(--ink); }
+
+  /* Подвал листа */
+  .foot {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    bottom: 10mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.6pt;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #9AA49C;
+    border-top: 1px solid var(--line);
+    padding-top: 3mm;
+  }
+
+  .contacts { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm 10mm; }
+  .contacts div { border-top: 1px solid var(--line); padding-top: 3mm; }
+  .contacts dt, .contacts .k {
+    font-size: 7.6pt; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 1.5mm;
+  }
+  .contacts .v { font-size: 10pt; color: var(--ink); }
+
+  .mark { display: block; width: 14mm; height: 14mm; margin-bottom: 5mm; }
+
+  /* Подпись студии — лист иначе заканчивается пустотой в треть страницы. */
+  .sign {
+    margin-top: 16mm;
+    display: flex;
+    align-items: center;
+    gap: 5mm;
+  }
+  .sign svg { width: 12mm; height: 12mm; flex: 0 0 auto; }
+  .sign span {
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 12pt;
+    line-height: 1.35;
+    color: var(--gold-b);
+  }
+
+  @media print {
+    html, body { background: #fff; }
+    body { padding: 0; }
+    .sheet { margin: 0; box-shadow: none; break-after: page; }
+    .sheet:last-child { break-after: auto; }
+  }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- ─── 1. Обложка ──────────────────────────────────────────────────────── -->
+<section class="sheet sheet--cover">
+  <div class="cover-top">
+    <svg class="mark" viewBox="-112 -112 224 224" aria-hidden="true">
+      <mask id="cut">
+        <rect x="-112" y="-112" width="224" height="224" fill="#fff"/>
+        <path d="M-22 -34 L-58 0 L-22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M22 -34 L58 0 L22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </mask>
+      <path d="M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z" fill="#C9A24A" mask="url(#cut)"/>
+      <rect x="-5" y="-27" width="10" height="54" rx="5" fill="#EFEAD9"/>
+    </svg>
+    <p class="eyebrow">Коммерческое предложение · 22 сентября 2026</p>
+  </div>
+
+  <div class="cover-mid">
+    <h1>Сайт застройщика<br>MAVERA.<br><em>Первый блок работ</em></h1>
+    <p class="cover-lead">
+      Главная, отдельная страница на каждый жилой комплекс, контакты и форма
+      заявки. Оформление — в том регистре, который вы отметили: кремовая
+      бумага, глубокий зелёный, золото и антиква в заголовках.
+    </p>
+
+    <div class="amount-box">
+      <span class="amount">2 000 $</span>
+      <span class="amount-note">
+        Фиксированная стоимость первого блока. Админ-панель, заявки в Telegram
+        и SEO вынесены в отдельные блоки — их можно взять сразу или позже.
+      </span>
+    </div>
+  </div>
+
+  <div class="cover-bot">
+    <div class="cover-meta">
+      <span>Для: <strong>MAVERA</strong>, жилые комплексы</span>
+      <span>От: <strong>DevUz Studio</strong> · devuz.studio · @DevUz_Studio</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 2. Что делаем ───────────────────────────────────────────────────── -->
+<section class="sheet">
+  <p class="eyebrow">Первый блок · состав работ</p>
+  <hr class="rule rule--gold">
+
+  <section>
+    <h2>Что должен делать сайт</h2>
+    <p class="lead">
+      Человек ищет квартиру, попадает на сайт и за минуту понимает, какие
+      проекты у MAVERA идут сейчас. Проваливается в нужный, смотрит фотографии,
+      срок сдачи и расположение — и оставляет номер. Всё остальное в первой
+      очереди лишнее.
+    </p>
+  </section>
+
+  <section>
+    <h2>Состав</h2>
+    <ol class="items">
+      <li>
+        <span class="num">01</span>
+        <div>
+          <h3>Главная</h3>
+          <p>Первый экран с одним действием, блок о компании, лента текущих проектов и контакты. Структура собирается под MAVERA, а не берётся готовой.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">02</span>
+        <div>
+          <h3>Страница жилого комплекса — отдельная на каждый проект</h3>
+          <p>Описание, фотогалерея, характеристики (класс, этажность, количество квартир, срок сдачи), расположение на карте, текущий статус строительства. В первый блок входит до пяти проектов; каждый следующий — по той же вёрстке.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">03</span>
+        <div>
+          <h3>Переход в проект с любого места</h3>
+          <p>Из ленты на главной, из меню и по прямой ссылке — чтобы страницу конкретного ЖК можно было отправить клиенту в мессенджер.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">04</span>
+        <div>
+          <h3>Контакты и заявка</h3>
+          <p>Телефоны, адрес отдела продаж, карта, мессенджеры и форма: имя, телефон, интересующий ЖК. Заявка приходит на почту; доставка в Telegram — отдельным блоком.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">05</span>
+        <div>
+          <h3>Две анимации</h3>
+          <p>Появление блоков при прокрутке и плавный переход в карточку ЖК. Сделаны на CSS, без библиотек: страница от них не тяжелеет и на слабом интернете не дёргается.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">06</span>
+        <div>
+          <h3>Телефон</h3>
+          <p>Отдельная вёрстка под мобильные, а не сжатая настольная: кнопка звонка под большим пальцем, галерея листается свайпом.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">07</span>
+        <div>
+          <h3>Публикация</h3>
+          <p>Ваш домен, сертификат, заголовки страниц и корректное превью ссылки в Telegram и WhatsApp. Исходный код передаём вам.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <div class="total">
+    <span class="label">Первый блок целиком, фиксированной суммой. Количество правок на этапе согласования не ограничиваем.</span>
+    <span class="value">2 000 $</span>
+  </div>
+
+  <div class="foot"><span>MAVERA · Первый блок работ</span><span>DevUz Studio · 2 / 5</span></div>
+</section>
+
+<!-- ─── 3. Границы, сроки, оплата ──────────────────────────────────────── -->
+<section class="sheet">
+  <p class="eyebrow">Границы · сроки · оплата</p>
+  <hr class="rule rule--gold">
+
+  <section>
+    <h2>Что в первый блок не входит</h2>
+    <p class="lead">Пишем прямо, чтобы это не всплыло в середине работы.</p>
+    <ul class="bounds">
+      <li><strong>Админ-панель.</strong> Контент первой версии заполняем мы. Первый месяц после запуска правки — новый ЖК, фотографии, текст — делаем бесплатно в течение рабочего дня. Дальше нужна панель: она отдельным блоком.</li>
+      <li><strong>Поквартирный подбор, шахматка, планировки и ипотечный калькулятор.</strong> Это следующий уровень: он оправдан, когда на сайте есть что выбирать поквартирно. Сейчас он увёл бы бюджет от задачи первой очереди.</li>
+      <li><strong>Второй язык.</strong> Сайт делаем на одном. Узбекская версия — по запросу, оценим отдельно: это не перевод строк, а вторая редактура.</li>
+      <li><strong>Тексты и фотографии по объектам.</strong> Материалы от вас. Обработка, кадрирование, редактура и вёрстка — на нас.</li>
+      <li><strong>Доставка заявок в Telegram и SEO.</strong> Вынесены в блоки на следующей странице — они недорогие и берутся отдельно.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Сроки</h2>
+    <p class="lead">
+      14 рабочих дней. Отсчёт идёт от того, что случится позже: поступление
+      оплаты или получение материалов по проектам.
+    </p>
+    <ol class="stages">
+      <li><b>1–2</b><span>Структура, сбор материалов по ЖК</span></li>
+      <li><b>3–6</b><span>Оформление главной и страницы ЖК, согласование</span></li>
+      <li><b>7–11</b><span>Сборка, мобильная вёрстка, анимации</span></li>
+      <li><b>12–14</b><span>Наполнение, публикация, проверки</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Оплата</h2>
+    <ul class="bounds">
+      <li>Работаем по публичной оферте на <strong>devuz.studio/ru/offer</strong>. Отдельный договор подписывать не нужно: он считается заключённым с момента оплаты счёта.</li>
+      <li>Исполнитель — <strong>ИП MAKSIMOV EGOR ANDREEVICH (DevUz Studio)</strong>, Республика Узбекистан, город Ташкент.</li>
+      <li>Счёт выставляется в сумах по курсу ЦБ РУз на день выставления. Оплата — банковским переводом; наличные и криптовалюту не принимаем.</li>
+      <li>Разбивка: <strong>50 % запускают работу и отсчёт срока, 50 % — перед публикацией на вашем домене.</strong> Фиксируется в счёте.</li>
+      <li>Исключительные права на сайт переходят к MAVERA после полной оплаты.</li>
+    </ul>
+  </section>
+
+  <div class="foot"><span>MAVERA · Первый блок работ</span><span>DevUz Studio · 3 / 5</span></div>
+</section>
+
+<!-- ─── 4. Допы ─────────────────────────────────────────────────────────── -->
+<section class="sheet">
+  <p class="eyebrow">Что можно добавить</p>
+  <hr class="rule rule--gold">
+
+  <h2>Следующие блоки</h2>
+  <p class="lead">
+    Сайт с самого начала собирается так, чтобы эти блоки включались, а не
+    переписывались. Взять их можно сразу вместе с первым блоком или через
+    полгода — цена от этого не меняется.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Блок</th><th>Стоимость</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <span class="row-title">Админ-панель, базовая</span>
+          Вы сами добавляете жилой комплекс, загружаете фотографии и правите описание. Вход по логину, работает с телефона. Больше не нужно писать нам, чтобы поменять срок сдачи.
+        </td>
+        <td class="price">1 800 $</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="row-title">Админ-панель, полная</span>
+          Всё из базовой, плюс: сотрудники с ролями и правами доступа — менеджер видит заявки, но не трогает цены; заявки с сайта внутри панели со статусами и историей; интеграция с вашей CRM; выгрузки.
+        </td>
+        <td class="price">2 900 $</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="row-title">Заявки с сайта в Telegram</span>
+          Разово. Каждая заявка падает в чат отдела продаж за секунды: имя, телефон, какой ЖК смотрел человек и откуда пришёл. Ночная заявка не ждёт до утра в почте.
+        </td>
+        <td class="price">280 $</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="row-title">SEO-оптимизация всего сайта и карта сайта</span>
+          Заголовки и описания по каждой странице, разметка организации и жилых комплексов для поиска, sitemap.xml и robots.txt, подключение к Google Search Console и Яндекс.Вебмастеру.
+        </td>
+        <td class="price">180 $</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="small muted" style="margin-top:4mm">
+    Админ-панель берётся одна из двух, не обе. Базовую позже можно расширить до
+    полной — доплатой разницы, а не заново.
+  </p>
+
+  <div class="total">
+    <span class="label">Первый блок с базовой админ-панелью, заявками в Telegram и SEO — если брать всё сразу</span>
+    <span class="value">4 260 $</span>
+  </div>
+
+  <div class="foot"><span>MAVERA · Первый блок работ</span><span>DevUz Studio · 4 / 5</span></div>
+</section>
+
+<!-- ─── 5. Почему мы и контакты ────────────────────────────────────────── -->
+<section class="sheet sheet--dark">
+  <p class="eyebrow">DevUz Studio · Ташкент</p>
+  <hr class="rule rule--gold">
+
+  <section>
+    <h2>Почему это мы</h2>
+    <ul class="bounds">
+      <li><strong>Для MAVERA мы уже собрали три полных варианта сайта.</strong> Не макеты в редакторе, а рабочие страницы, которые открываются по ссылке с телефона.</li>
+      <li><strong>Оформление — то, которое вы отметили.</strong> Кремовая бумага, глубокий зелёный, золотой акцент, антиква в заголовках. Если у MAVERA есть брендбук, подстроим под него: на стоимость это не влияет.</li>
+      <li><strong>Тот же движок, что и у нашего сайта.</strong> Страницы собираются заранее и отдаются статикой — открываются мгновенно и без проблем индексируются поиском.</li>
+      <li><strong>Код остаётся у вас.</strong> После полной оплаты исходники ваши: сайт не привязан к студии и его может продолжить любой разработчик.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Чтобы начать</h2>
+    <ol class="items">
+      <li><span class="num">01</span><div><p>Подтвердить состав первого блока — или сказать, что убрать и что добавить.</p></div></li>
+      <li><span class="num">02</span><div><p>Прислать список текущих жилых комплексов и материалы по ним: фотографии, описания, сроки сдачи.</p></div></li>
+      <li><span class="num">03</span><div><p>Оплатить счёт. С этого дня идёт отсчёт четырнадцати рабочих дней.</p></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Контакты</h2>
+    <div class="contacts">
+      <div><p class="k">Telegram</p><p class="v">@DevUz_Studio</p></div>
+      <div><p class="k">Сайт</p><p class="v">devuz.studio</p></div>
+      <div><p class="k">Исполнитель</p><p class="v">ИП MAKSIMOV EGOR ANDREEVICH<br><span class="small muted">DevUz Studio</span></p></div>
+      <div><p class="k">Адрес</p><p class="v">Ташкент, ул. Шота Руставели, 138</p></div>
+    </div>
+    <p class="small muted" style="margin-top:6mm">
+      Предложение действует 14 календарных дней с даты, указанной на обложке.
+      Стоимость зафиксирована в долларах США; счёт выставляется в сумах по
+      курсу ЦБ РУз на день выставления.
+    </p>
+  </section>
+
+  <p class="sign">
+    <svg viewBox="-112 -112 224 224" aria-hidden="true">
+      <mask id="cut2">
+        <rect x="-112" y="-112" width="224" height="224" fill="#fff"/>
+        <path d="M-22 -34 L-58 0 L-22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M22 -34 L58 0 L22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </mask>
+      <path d="M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z" fill="#C9A24A" mask="url(#cut2)"/>
+      <rect x="-5" y="-27" width="10" height="54" rx="5" fill="#EFEAD9"/>
+    </svg>
+    <span>Мы пишем код,<br>который приносит деньги</span>
+  </p>
+
+  <div class="foot"><span>MAVERA · Первый блок работ</span><span>DevUz Studio · 5 / 5</span></div>
+</section>
+
+</body>
+</html>
