@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 
 import { record } from "@/lib/admin/audit";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
+import { announceRazbors } from "@/lib/razbor/announce";
 import { shootableCodes } from "@/lib/razbor/evidence";
 import {
   publish,
@@ -51,6 +53,37 @@ function refresh(paths: RazborPaths | null): void {
   revalidatePath("/sitemap.xml");
 }
 
+/**
+ * Позвать поисковиков к новой странице.
+ *
+ * Карту сайта сбрасывает `refresh`, и этого хватает Google: он ходит по
+ * ней сам. Bing и Яндекс ждут пинга, а пинг до сих пор уходил только на
+ * выкатке — то есть новый разбор доходил до них не в день публикации, а в
+ * день следующего деплоя.
+ *
+ * Через `after`, потому что ответ действия — редирект в панель, и держать
+ * его ради трёх попыток с повторами незачем. `after` отрабатывает и после
+ * `redirect`, это его описанное поведение, а не совпадение.
+ *
+ * Сбой пинга не роняет публикацию: страница уже на сайте и уже в карте.
+ * Молча он при этом не пропадает — иначе «почему Яндекс не видит разбор»
+ * пришлось бы выяснять с нуля.
+ */
+function announce(): void {
+  after(async () => {
+    try {
+      const done = await announceRazbors();
+      if (done.state === "bad-input") {
+        console.error(`IndexNow: ${done.why}`);
+      } else if (done.state === "sent" && !done.report.ok) {
+        console.error(`IndexNow: ${done.report.status ?? "нет ответа"} — ${done.report.text}`);
+      }
+    } catch (error) {
+      console.error(`IndexNow: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  });
+}
+
 export async function publishAction(formData: FormData) {
   const staff = await owner();
   const id = String(formData.get("razbor") ?? "");
@@ -65,6 +98,7 @@ export async function publishAction(formData: FormData) {
   });
 
   refresh(result.ok ? result.paths : null);
+  if (result.ok) announce();
   redirect(result.ok ? "/admin/razbor?r=ok" : `/admin/razbor?r=${encodeURIComponent(result.why)}`);
 }
 

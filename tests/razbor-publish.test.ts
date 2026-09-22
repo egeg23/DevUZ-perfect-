@@ -52,6 +52,32 @@ test("каждое действие над разбором сбрасывает
     }
 });
 
+test("публикация зовёт поисковиков, а не ждёт следующей выкатки", () => {
+  const actions = read("app/admin/razbor/actions.ts");
+
+  // Карту сайта сбрасывает `refresh` — Google дальше приходит сам. Bing и
+  // Яндекс ждут пинга, и пинг уходил только на выкатке: разбор,
+  // опубликованный кнопкой, доходил до них через неделю, а не в тот же день.
+  assert.match(actions, /announceRazbors/, "публикация больше не пингует IndexNow");
+  assert.match(
+    actions,
+    /after\(async \(\) => \{/,
+    "пинг перестал быть фоновым — редирект в панель ждёт три попытки с повторами",
+  );
+  assert.ok(
+    /if \(result\.ok\) announce\(\);/.test(actions),
+    "пинг уходит и когда публикация не прошла — поисковик позовут к странице, которой нет",
+  );
+
+  // Один список адресов на выкатку и на кнопку. Разойдясь, они стали бы
+  // пинговать разные наборы, и «дошло или нет» выяснять было бы нечем.
+  const route = read("app/api/indexnow/route.ts");
+  assert.match(route, /announceRazbors/, "выкатка собирает пинг сама");
+  for (const gone of ["buildPayload", "freshRazborUrls", "sendPing"]) {
+    assert.ok(!route.includes(gone), `сборка пинга вернулась в маршрут: ${gone}`);
+  }
+});
+
 test("правка не трогает адрес, запрос и цену", () => {
   const actions = read("app/admin/razbor/actions.ts");
 

@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { listRazbors } from "@/lib/razbor/store";
-import { buildPayload, freshRazborUrls, sendPing } from "@/lib/indexnow";
-import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
-import { siteUrl } from "@/lib/seo";
+import { announceRazbors } from "@/lib/razbor/announce";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +15,9 @@ export const dynamic = "force-dynamic";
  *
  * Bing и Яндекс. Google протокол не поддерживает — туда страницы попадают
  * через sitemap.xml и обычный обход, и отдельного пинка не требуют.
+ *
+ * Сам пинг собирается в `lib/razbor/announce.ts`: тот же набор адресов
+ * уходит из кнопки «Опубликовать», и выкатка здесь — не единственный повод.
  */
 export async function POST(request: Request) {
   const expected = process.env.REMINDER_SWEEP_SECRET;
@@ -26,22 +26,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const key = (process.env.INDEXNOW_KEY || "").trim();
-  // Не ошибка выкатки: без ключа пинговать нечем, и падать из-за этого
-  // деплою незачем.
-  if (!key) return NextResponse.json({ skipped: "no key" });
+  const done = await announceRazbors();
+  if (done.state === "no-key") return NextResponse.json({ skipped: "no key" });
+  if (done.state === "bad-input") return NextResponse.json({ error: done.why }, { status: 400 });
 
-  let payload;
-  try {
-    const razbors = (await Promise.all(RAZBOR_LOCALES.map((locale) => listRazbors(locale)))).flat();
-    const urls = freshRazborUrls(siteUrl, { locales: RAZBOR_LOCALES, items: razbors });
-    payload = buildPayload({ key, siteUrl, urls });
-  } catch (error) {
-    const text = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: text }, { status: 400 });
-  }
-
-  const report = await sendPing(payload);
+  const { report } = done;
   // Ключ в ответе не повторяем: его читает лог выкатки.
   return NextResponse.json(
     { ok: report.ok, status: report.status, urls: report.urls, text: report.text },
