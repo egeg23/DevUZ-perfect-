@@ -187,8 +187,16 @@ jobs:
               | sed -E 's/^[^|]*\| //' | cut -c1-220 | sort | uniq -c | sort -rn | head -25 || true
             echo
             echo "════ Свип за сутки ════"
-            journalctl -u devuz-reminders.service --since "-24h" --no-pager 2>/dev/null \
-              | grep -ciE "fail|ошибк|forbidden|curl: \(" | xargs -I{} echo "строк с ошибками: {}" || true
+            # Не «fail» вообще: в каждом отчёте свипа есть "failed":0, и такой
+            # фильтр насчитал бы сбой в каждом из 288 проходов. Считаем то,
+            # что пишет systemd и curl, когда проход действительно упал.
+            SWEEP_FAILS="$(journalctl -u devuz-reminders.service --since "-24h" --no-pager 2>/dev/null \
+              | grep -cE "Failed with result|curl: \(" || true)"
+            echo "упавших проходов: ${SWEEP_FAILS:-0}"
+            echo
+            echo "════ Бот ════"
+            # Изнутри контейнера: там токен и адрес API, а в вывод токен не попадает.
+            docker compose exec -T web node -e "const b=(process.env.TELEGRAM_API_BASE||'https://api.telegram.org').replace(/\/+$/,'');fetch(b+'/bot'+process.env.TELEGRAM_BOT_TOKEN+'/getWebhookInfo').then(r=>r.json()).then(j=>{const r=j.result||{};console.log('вебхук:',r.url?new URL(r.url).host:'не задан','· ждут доставки:',r.pending_update_count,'· последняя ошибка:',r.last_error_message||'нет',r.last_error_date?new Date(r.last_error_date*1000).toISOString():'')}).catch(e=>console.log('· Telegram не ответил:',e.message))" 2>/dev/null || echo "· проверить бота не вышло"
             echo
             echo "════ Место на диске ════"
             # Кончившееся место выглядит как что угодно, только не как
