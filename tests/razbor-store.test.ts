@@ -130,5 +130,7 @@ test("карта сайта и IndexNow видят то, что опублико
   // узнала бы о новой странице до следующего деплоя — то есть страница,
   // ради которой раздел и написан, осталась бы невидимой для поиска.
   assert.match(read("app/sitemap.ts"), /listRazbors\(locale\)/);
-  assert.match(read("app/api/indexnow/route.ts"), /listRazbors\(locale\)/);
+  // Пинг переехал из маршрута выкатки в общую функцию: его зовёт и кнопка
+  // «Опубликовать». Список адресов по-прежнему берётся из базы.
+  assert.match(read("lib/razbor/announce.ts"), /listRazbors\(locale\)/);
 });
