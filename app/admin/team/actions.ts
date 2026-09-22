@@ -14,8 +14,10 @@ import {
   setStaffGrade,
   setStaffHead,
   setStaffRole,
+  setTouchPlan,
   type TeamResult,
 } from "@/lib/admin/team";
+import { parseTouchPlan } from "@/lib/admin/touch-plan";
 
 /**
  * Каждое действие само проверяет права.
@@ -125,6 +127,26 @@ export async function setGrade(formData: FormData) {
 
   const result = await setStaffGrade(id, grade, rate, admin, await requestIp());
   revalidatePath("/admin/team");
+  back(result);
+}
+
+/**
+ * Недельный план касаний.
+ *
+ * `requireRole`, а не `requireAdmin`: план своим людям ставит и руководитель.
+ * Кому именно можно — решает `setTouchPlan`: страница закрывает кнопку, а
+ * действие закрывает само себя.
+ */
+export async function setPlan(formData: FormData) {
+  const actor = await requireRole("admin", "head");
+  const id = String(formData.get("staff") ?? "");
+  const parsed = parseTouchPlan(String(formData.get("plan") ?? ""));
+  if (!parsed.ok) back({ ok: false, reason: "invalid" });
+
+  const result = await setTouchPlan(id, parsed.plan, actor, await requestIp());
+  revalidatePath("/admin/team");
+  revalidatePath("/admin/prospect");
+  revalidatePath("/admin");
   back(result);
 }
 

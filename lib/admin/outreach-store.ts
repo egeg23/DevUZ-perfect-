@@ -78,6 +78,15 @@ export type Prospect = {
   manual_note: string | null;
   claimed_by: string | null;
   claimed_name: string | null;
+  /**
+   * Кто на самом деле написал и когда.
+   *
+   * Отдельно от `claimed_by`: та ставится на подготовке письма и остаётся,
+   * даже если письмо так и не ушло. По ней считать касания нельзя — она
+   * отвечает на «кто взял», а не на «кто написал».
+   */
+  touched_by: string | null;
+  touched_at: string | null;
   sent_at: string | null;
   /** Когда перечитали переписку и нашли там своё сообщение. */
   delivered_at: string | null;
@@ -88,7 +97,7 @@ export type Prospect = {
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -112,6 +121,8 @@ function shape(row: Record<string, unknown>): Prospect {
     manual_note: (row.manual_note as string | null) ?? null,
     claimed_by: (row.claimed_by as string | null) ?? null,
     claimed_name: person?.display_name ?? null,
+    touched_by: (row.touched_by as string | null) ?? null,
+    touched_at: (row.touched_at as string | null) ?? null,
     sent_at: (row.sent_at as string | null) ?? null,
     delivered_at: (row.delivered_at as string | null) ?? null,
     delivery_note: (row.delivery_note as string | null) ?? null,
@@ -410,6 +421,11 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
       status: route.kind === "manual" ? "manual" : "sending",
       claimed_by: staff.id,
       claimed_at: new Date().toISOString(),
+      // Касание засчитывается здесь, а не когда сработает очередь: работу
+      // сделал человек в эту минуту, а скаут только донесёт. Если донести
+      // не выйдет, карточка станет failed — такие в недельный счёт не идут.
+      touched_by: staff.id,
+      touched_at: new Date().toISOString(),
       lead_id: leadId,
       request_no: requestNo,
       ai_handling: true,
@@ -472,20 +488,27 @@ export async function manualReplies(): Promise<Record<string, string>> {
   return out;
 }
 
+/** Из каких состояний человек может отметить, что связался сам. */
+const SELF_CONTACT_FROM = ["new", "contacting", "manual"] as const;
+
 /**
- * «Написал руками» — отметка о касании, которое сделал человек.
+ * «Связался сам» — касание, которое человек сделал в обход скаута.
  *
- * Владелец: «там где нет телеграм — пусть связываются через телефон /
- * вотсапп по номеру… И тут же подхватывает ИИ после написанного сообщения
- * пользователю до выяснения BANT».
+ * Подключить всех менеджеров к одной сессии Telegram физически нельзя, и
+ * пишут они со своих аккаунтов. Для панели это значит, что отправки она не
+ * видит вовсе: письмо ушло, а карточка так и висит «новой». Второй менеджер
+ * пишет тому же человеку второй раз, а недельный план не считается ни у
+ * кого — потому что считать нечего.
  *
- * Отметка не украшение и не отчётность. С этой минуты разговор существует:
- * первое письмо ложится в ленту, модель считается ведущей, и ответ клиента,
- * который менеджер сюда перенесёт, ей будет с чем связать. Без отметки
- * карточка так и осталась бы «дальше руками» — и второй менеджер написал бы
- * тому же человеку второй раз.
+ * Отсюда отметка. Она доступна из трёх состояний, а не только с ручного
+ * маршрута: связаться можно и до того, как модель написала письмо. Наличие
+ * контактов при этом не проверяется — человек уже написал, и спорить с
+ * фактом, потому что аудитор не нашёл на сайте телефон, панели не по чину.
+ *
+ * С этой минуты разговор существует: лид заводится, первое сообщение ложится
+ * в ленту, касание записывается на того, кто нажал.
  */
-export async function markManualSent(
+export async function markSelfContacted(
   id: string,
   staff: Staff,
   note: string,
@@ -496,35 +519,59 @@ export async function markManualSent(
 
   const prospect = await prospectById(id);
   if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет." };
-  if (prospect.status !== "manual") return { ok: false, why: "Эта карточка не на ручном маршруте." };
+  if (!(SELF_CONTACT_FROM as readonly string[]).includes(prospect.status)) {
+    return { ok: false, why: "По этой карточке касание уже отмечено." };
+  }
 
   const when = new Date().toISOString();
+  const comment = note.trim().slice(0, 500);
+  // Что легло в ленту: письмо, если модель его написала, иначе строка
+  // менеджера. Пустая лента — это разговор, начала которого никто не знает,
+  // и модель, отвечая клиенту, сослалась бы на несказанное.
+  const body = (prospect.message ?? "").trim() || comment;
+
+  // Лид заводим, если его ещё нет: с ручного маршрута он приходит уже
+  // созданным в `queueOutreach`, а из «нового» и «готов текст» — нет.
+  let leadId = prospect.lead_id;
+  let requestNo: string | null = null;
+  if (!leadId) {
+    requestNo = newRequestNo();
+    const route = routeFor(prospect.contacts) ?? {
+      kind: "manual" as const,
+      target: prospect.target ?? "",
+    };
+    leadId = await createOutreachLead(prospect, staff, body, requestNo, route);
+  }
+
   const { error } = await db
     .from("prospects")
     .update({
       status: "sent",
       sent_at: when,
-      // Маршрут остаётся ручным: по нему и дальше писать человеку. Скаут
-      // читает его именно так и ответы модели по нему не забирает.
-      manual_note: note.trim().slice(0, 500) || "Написал сам",
+      touched_by: staff.id,
+      touched_at: when,
+      // Маршрут становится ручным: отвечать по нему тоже будет человек, и
+      // скаут не должен забирать эту переписку себе.
+      target_kind: "manual",
+      manual_note: comment || "Связался сам",
       claimed_by: prospect.claimed_by ?? staff.id,
+      lead_id: leadId,
+      ...(requestNo ? { request_no: requestNo } : {}),
       ai_handling: true,
       handover_reason: null,
       failure: null,
     })
     .eq("id", id)
-    .eq("status", "manual");
+    .in("status", [...SELF_CONTACT_FROM]);
   if (error) return { ok: false, why: "Не получилось отметить." };
 
-  // Лента начинается с того, что человек отправил на самом деле. Без этой
-  // записи модель, отвечая клиенту, ссылалась бы на несказанное.
-  if (prospect.message) {
+  if (body) {
     await db.from("outreach_messages").insert({
       prospect_id: id,
-      lead_id: prospect.lead_id,
+      lead_id: leadId,
       direction: "out",
       author: "staff",
-      body: prospect.message.slice(0, 4000),
+      body: body.slice(0, 4000),
       status: "sent",
       sent_at: when,
     });
@@ -535,7 +582,7 @@ export async function markManualSent(
     targetType: "prospect",
     targetId: id,
     ip,
-    meta: { host: prospect.host, target: prospect.target, note: note.slice(0, 120) },
+    meta: { host: prospect.host, target: prospect.target, note: comment.slice(0, 120) },
   });
   return { ok: true };
 }

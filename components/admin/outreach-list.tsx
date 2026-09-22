@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import {
-  markManualSentAction,
+  markSelfContactedAction,
   prepareOutreachAction,
   recordManualAnswerAction,
   sendOutreachAction,
@@ -284,7 +284,7 @@ export function OutreachList({
                       перенесёт, ей будет с чем связать. Без отметки карточка
                       висела бы «дальше руками», и второй менеджер написал бы
                       тому же человеку второй раз. */}
-                  <form action={markManualSentAction} className="mt-3 flex flex-wrap items-center gap-2">
+                  <form action={markSelfContactedAction} className="mt-3 flex flex-wrap items-center gap-2">
                     <input type="hidden" name="prospect" value={row.id} />
                     <input
                       name="note"
@@ -296,7 +296,7 @@ export function OutreachList({
                       base="rounded-lg px-3 py-1.5 text-xs"
                       tone="quiet"
                     >
-                      Написал руками
+                      Связался сам
                     </SubmitButton>
                   </form>
                 </div>
@@ -458,6 +458,40 @@ export function OutreachList({
                       </p>
                     </div>
                   ) : null}
+                </form>
+              ) : null}
+
+              {/* «Связался сам» — там, где скаут ещё ничего не отправлял.
+                  Менеджеры пишут со своих аккаунтов: рабочая сессия Telegram
+                  одна, подключить к ней всех нельзя. Без этой отметки панель
+                  отправки не видит вовсе — карточка висит новой, второй
+                  менеджер пишет тому же человеку второй раз, а недельный план
+                  не считается ни у кого.
+
+                  Контакты здесь не проверяются: человек уже написал, и
+                  спорить с этим, потому что аудитор не нашёл на сайте
+                  телефон, панели не по чину. */}
+              {row.status === "new" || row.status === "contacting" ? (
+                <form
+                  action={markSelfContactedAction}
+                  className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3"
+                >
+                  <input type="hidden" name="prospect" value={row.id} />
+                  <input
+                    name="note"
+                    placeholder={row.message ? "чем написали — свой Telegram, звонок" : "что написали"}
+                    className="min-w-[16rem] flex-1 rounded-lg border border-line bg-surface-2 px-2 py-1 text-xs"
+                  />
+                  <SubmitButton
+                    pendingLabel="Отмечаем…"
+                    base="rounded-lg px-3 py-1.5 text-xs"
+                    tone="quiet"
+                  >
+                    Связался сам
+                  </SubmitButton>
+                  <span className="text-xs text-faint">
+                    Если писали со своего аккаунта — отметьте, иначе касание не засчитается.
+                  </span>
                 </form>
               ) : null}
 

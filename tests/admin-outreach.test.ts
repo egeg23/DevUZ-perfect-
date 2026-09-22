@@ -388,7 +388,7 @@ test("ручной маршрут доходит до BANT: отметка, от
   // пользователю до выяснения BANT». Подхватить модель может только то, что
   // ей показали: по этому маршруту ответ клиента приходит менеджеру на
   // телефон и к нам не попадает ничем.
-  assert.match(store, /export async function markManualSent/);
+  assert.match(store, /export async function markSelfContacted/);
   assert.match(store, /export async function recordManualAnswer/);
   assert.match(store, /ai_handling: true/, "после ручного касания модель не считается ведущей");
 
@@ -396,7 +396,7 @@ test("ручной маршрут доходит до BANT: отметка, от
   // ссылалась бы на несказанное.
   assert.match(store, /direction: "out",\s*\n\s*author: "staff",/);
 
-  assert.match(list, /markManualSentAction/, "нечем отметить, что написал руками");
+  assert.match(list, /markSelfContactedAction/, "нечем отметить, что связался сам");
   assert.match(list, /recordManualAnswerAction/, "некуда перенести ответ клиента");
   assert.match(list, /Скопировать ответ/, "ответ модели нельзя забрать");
 });
