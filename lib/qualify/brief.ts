@@ -92,13 +92,58 @@ export async function briefRecipients(totalUsd: number): Promise<{
   const sales = (process.env.TELEGRAM_SALES_CHAT_ID ?? "").trim();
   const toSales = sales ? [sales] : [];
 
-  if (!ownerOnly(totalUsd)) return { chatIds: toSales, ownerOnly: false, fallback: false };
+  if (!ownerOnly(totalUsd)) {
+    return { chatIds: await salesRecipients(), ownerOnly: false, fallback: false };
+  }
 
   const owners = await ownerChatIds();
   if (owners.length) return { chatIds: owners, ownerOnly: true, fallback: false };
 
   console.error("brief: заказ дороже порога, а чат владельца не настроен — ушёл в чат продаж");
   return { chatIds: toSales, ownerOnly: true, fallback: true };
+}
+
+/**
+ * Кому уходит карточка нового лида.
+ *
+ * Чат отдела продаж — и личные чаты всех, кто с лидами работает: менеджеров,
+ * руководителей и владельца. До этого адрес был один, из
+ * `TELEGRAM_SALES_CHAT_ID`, и у студии без общей группы это означало личный
+ * чат владельца: он про лид знал, остальные — нет, и «возьми в работу»
+ * доходило до менеджера пересказом.
+ *
+ * Границу это не двигает. В карточке и так нет ни телефона, ни почты, ни
+ * переписки — только ник, если он есть, и ссылка в панель, где контакт
+ * открывается отдельным действием и с записью в журнал. То есть уходит ровно
+ * то, что и задумывалось для общего чата отдела продаж, — просто чата у
+ * студии нет, и роль его играют личные.
+ *
+ * Кто боту ни разу не писал, тот и не получит: Bot API не даёт написать
+ * первым, и обойти это нечем. Остальным доставка от этого не ломается.
+ */
+export async function salesRecipients(): Promise<string[]> {
+  const sales = (process.env.TELEGRAM_SALES_CHAT_ID ?? "").trim();
+  const out = new Set<string>(sales ? [sales] : []);
+
+  const db = serviceClient();
+  if (!db) return [...out];
+
+  const { data, error } = await db
+    .from("staff")
+    .select("telegram_user_id")
+    .eq("is_active", true)
+    .in("role", ["admin", "head", "manager"]);
+
+  if (error) {
+    // База отпала — уведомление всё равно уходит туда, куда уходило всегда.
+    console.error("brief: не прочитал команду для рассылки лида", error.message);
+    return [...out];
+  }
+
+  for (const row of (data as { telegram_user_id: number | null }[] | null) ?? []) {
+    if (typeof row.telegram_user_id === "number") out.add(String(row.telegram_user_id));
+  }
+  return [...out];
 }
 
 export async function ownerChatIds(): Promise<string[]> {

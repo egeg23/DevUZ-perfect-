@@ -324,6 +324,13 @@ function hasPanel(rows: Button[][]): boolean {
  * иначе одна моргнувшая сеть выключала бы вход по кнопке до следующей
  * выкатки.
  */
+/** Отказ Telegram про сам чат, а не про содержимое сообщения. */
+function chatUnreachable(description: string): boolean {
+  return /can't initiate conversation|chat not found|bot was blocked|user is deactivated|bot can't send messages|have no rights/i.test(
+    description,
+  );
+}
+
 async function sendWithRows(
   chatId: number | string,
   text: string,
@@ -345,6 +352,17 @@ async function sendWithRows(
     return true;
   }
   if (loginButtonWorks === false || !hasPanel(rows) || !first.description) return false;
+
+  /**
+   * Недоступный чат — это не сломанная кнопка.
+   *
+   * Стало важным, когда карточка лида поехала не в один чат, а всей команде:
+   * тому, кто боту ни разу не писал, Bot API отказывает всегда, и без этой
+   * проверки первый же такой сотрудник навсегда переводил кнопку входа в
+   * запасной режим — для всех и до перезапуска, — а в лог ложилась неправда
+   * про непривязанный домен.
+   */
+  if (chatUnreachable(first.description)) return false;
 
   loginButtonWorks = false;
   console.error(

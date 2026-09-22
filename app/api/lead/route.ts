@@ -5,6 +5,7 @@ import { isLocale, type Locale } from "@/lib/i18n";
 import { pathFromClient, refFromClient } from "@/lib/qualify/origin";
 import { saveLead } from "@/lib/qualify/store";
 import { detectContactKind } from "@/lib/contact";
+import { salesRecipients } from "@/lib/qualify/brief";
 import { sendLead } from "@/lib/qualify/telegram";
 import { newRequestNo } from "@/lib/qualify/engine";
 import { scoreLead } from "@/lib/qualify/scoring";
@@ -134,7 +135,10 @@ export async function POST(request: Request) {
     }
   }
 
+  // Заявка с формы — всей команде, как и заявка из разговора с ботом: адрес
+  // назначения не должен зависеть от того, каким входом пришёл клиент.
   const delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
+    to: await salesRecipients(),
     origin: { ...origin, source: "form" },
   });
 
