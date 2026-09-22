@@ -11,6 +11,7 @@ import {
   recordManualAnswer,
   saveProspects,
   skipProspect,
+  saveNoSite,
 } from "@/lib/admin/outreach-store";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { pitchLocales, type PitchLocale } from "@/lib/audit/pitch";
@@ -80,6 +81,22 @@ export async function saveRunAction(rows: ProspectRow[]): Promise<number> {
 }
 
 /** Кнопка «Связаться»: модель пишет первое сообщение по находкам. */
+/**
+ * Компании без сайта — списком, одной нишей на всех.
+ *
+ * Прогона здесь нет: разбирать нечего. Строки ложатся в базу сразу, а письмо
+ * по каждой пишется потом — от ниши, а не от находок.
+ */
+export async function saveNoSiteAction(
+  names: string[],
+  niche: string,
+): Promise<{ added: number; skipped: number }> {
+  await requireStaff();
+  const result = await saveNoSite(names, niche);
+  revalidatePath("/admin/prospect");
+  return result;
+}
+
 export async function prepareOutreachAction(formData: FormData) {
   const staff = await requireStaff();
   const id = String(formData.get("prospect") ?? "");

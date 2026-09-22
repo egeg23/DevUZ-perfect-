@@ -183,8 +183,23 @@ export function canContact(input: {
   contacts: Contacts;
   findings: readonly Finding[];
   status: string;
+  /**
+   * Компания без сайта.
+   *
+   * Обе проверки ниже смотрят на то, что дал разбор сайта: находки и
+   * контакты, опубликованные на нём. У компании без сайта нет ни того, ни
+   * другого — и никогда не будет. Прогнав её через те же условия, панель
+   * закрыла бы кнопку всем таким карточкам разом, хотя написать им как раз
+   * есть о чём: их не находят в поиске, и это повод честнее половины
+   * находок.
+   *
+   * Отправку это не открывает: писать всё равно некуда, и карточка живёт
+   * отметкой «связался сам».
+   */
+  noSite?: boolean;
 }): Reason {
   if (input.status !== "new" && input.status !== "contacting") return "already";
+  if (input.noSite) return "ok";
   if (!input.findings.length) return "nothing_to_say";
   if (!routeFor(input.contacts)) return "no_way";
   return "ok";

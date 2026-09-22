@@ -144,10 +144,12 @@ export function OutreachList({
 
       <ul className="mt-4 space-y-3">
         {rows.map((row) => {
+          const noSite = !row.host;
           const reason = canContact({
             contacts: row.contacts,
             findings: row.findings,
             status: row.status,
+            noSite,
           });
           const route = routeFor(row.contacts);
           // На чём споткнётся отправка — тем же кодом, что и сама отправка.
@@ -176,14 +178,23 @@ export function OutreachList({
             >
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 {row.label ? <span className="font-medium">{row.label}</span> : null}
-                <a
-                  href={row.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="font-mono text-xs text-blue-soft hover:underline"
-                >
-                  {row.host}
-                </a>
+                {/* У компании без сайта ссылки нет — вместо неё ниша, от
+                    которой написано письмо. Пустая ссылка на этом месте
+                    читалась бы как «адрес не загрузился». */}
+                {row.url && row.host ? (
+                  <a
+                    href={row.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="font-mono text-xs text-blue-soft hover:underline"
+                  >
+                    {row.host}
+                  </a>
+                ) : (
+                  <span className="rounded-md border border-gold/30 bg-gold/5 px-2 py-0.5 font-mono text-xs text-gold">
+                    без сайта{row.niche ? ` · ${row.niche}` : ""}
+                  </span>
+                )}
                 <span className={`text-xs ${STATUS_TONE[row.status]}`}>
                   {STATUS_LABEL[row.status]}
                   {row.claimed_name ? ` · ${row.claimed_name}` : ""}
