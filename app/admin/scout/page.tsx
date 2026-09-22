@@ -88,6 +88,9 @@ export default async function ScoutPage({
         <p className="mt-2 rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm leading-relaxed text-gold">
           Аккаунт читает {pulse.chatsReading} чат(ов) из {pulse.chatsWatched} заданных: в {unread} он
           не состоит или адрес не открылся. Вступать нужно руками — из панели это не делается.
+          {pulse.unread?.length ? (
+            <span className="mt-1 block font-mono text-xs">Не читаются: {pulse.unread.join(", ")}</span>
+          ) : null}
         </p>
       ) : null}
 

@@ -768,6 +768,17 @@ export async function markSelfContacted(
  * неотвеченное входящее, модель напишет ответ, ответ ляжет в карточку.
  * Отправит его снова человек.
  */
+/** Похоже ли вставленное на наше собственное письмо: целиком или его начало. */
+export function isOwnMessage(pasted: string, ours: string): boolean {
+  const norm = (t: string) => t.replace(/\s+/g, " ").trim().toLowerCase();
+  const a = norm(pasted);
+  const b = norm(ours);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const head = b.slice(0, 80);
+  return head.length >= 40 && a.includes(head);
+}
+
 export async function recordManualAnswer(
   id: string,
   body: string,
@@ -776,6 +787,14 @@ export async function recordManualAnswer(
 ): Promise<{ ok: true } | { ok: false; why: string }> {
   const text = body.trim();
   if (!text) return { ok: false, why: "Пустой ответ записывать нечего." };
+
+  // Наше же письмо в поле «что ответил клиент» — так уже было с mcbro.uz:
+  // скопировали из WhatsApp своё сообщение, и модель начала бы отвечать
+  // самой себе, а в статистике появился ответ, которого не было.
+  const prospect = await prospectById(id);
+  if (prospect?.message && isOwnMessage(text, prospect.message)) {
+    return { ok: false, why: "Это наше же сообщение. Вставьте то, что ответил клиент." };
+  }
 
   const hit = await recordManualInbound(id, text);
   if (!hit.matched) return { ok: false, why: "Такого сайта в списке уже нет." };

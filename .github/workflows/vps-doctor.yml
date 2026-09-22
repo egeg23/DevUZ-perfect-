@@ -164,6 +164,32 @@ jobs:
             done
 
             echo
+            echo "════ Скаут: что читает ════"
+            # Последний старт: сколько чатов открыл и в каких не состоит.
+            journalctl -u devuz-scout.service --since "-7d" --no-pager 2>/dev/null \
+              | grep -E "scout: (открыл|аккаунт не состоит|не открыл)" | tail -4 || echo "· журнал скаута пуст"
+            echo
+            echo "════ Бэкап базы ════"
+            LAST_BACKUP="$(ls -1t /var/backups/devuz 2>/dev/null | head -1)"
+            if [ -n "$LAST_BACKUP" ]; then
+              echo "последний: $LAST_BACKUP ($(stat -c %y "/var/backups/devuz/$LAST_BACKUP" 2>/dev/null | cut -d. -f1))"
+            else
+              echo "✗ бэкапов в /var/backups/devuz нет"
+              TROUBLE=1
+            fi
+            systemctl list-timers devuz-backup.timer --no-pager 2>/dev/null | sed -n 2p || true
+            echo
+            echo "════ Ошибки приложения за сутки ════"
+            # Только то, что код сам пишет как неудачу: «не сохранил», «не
+            # записал», «не отправил», ошибки базы и модели.
+            docker compose logs --since 24h --no-color 2>/dev/null \
+              | grep -E "не (сохранил|записал|прочитал|отправил|подготовил|завёл)|violates|ERROR|Error:|разбор не удался|не ответил" \
+              | sed -E 's/^[^|]*\| //' | cut -c1-220 | sort | uniq -c | sort -rn | head -25 || true
+            echo
+            echo "════ Свип за сутки ════"
+            journalctl -u devuz-reminders.service --since "-24h" --no-pager 2>/dev/null \
+              | grep -ciE "fail|ошибк|forbidden|curl: \(" | xargs -I{} echo "строк с ошибками: {}" || true
+            echo
             echo "════ Место на диске ════"
             # Кончившееся место выглядит как что угодно, только не как
             # кончившееся место: docker build падает на середине, а причина

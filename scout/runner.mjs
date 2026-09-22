@@ -225,7 +225,13 @@ async function live() {
   // Первая запись — сразу, не дожидаясь таймера: иначе первые пять минут
   // после старта скаут снаружи выглядит мёртвым, а перезапуски случаются
   // как раз тогда, когда на него смотрят.
-  pulse = { ...pulse, chatsWatched: watched.length, chatsReading: reading };
+  pulse = {
+    ...pulse,
+    chatsWatched: watched.length,
+    chatsReading: reading,
+    // Названия — в пульс, чтобы панель показала, куда вступать.
+    unread: [...roster.outside.map((chat) => chat.name), ...roster.failed.map((chat) => chat.name)],
+  };
   await writePulse({ ...pulse, at: new Date().toISOString() });
   setInterval(() => {
     void writePulse({ ...pulse, at: new Date().toISOString() });
