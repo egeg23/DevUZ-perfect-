@@ -154,7 +154,7 @@ export async function runFollowups(now: Date = new Date()): Promise<FollowupRun>
   const { data } = await db
     .from("prospects")
     .select(
-      "id, host, label, message, findings, status, replied_at, ai_handling, sent_at, followups, last_followup_at, target_kind, lead_id, walked, claimed_by",
+      "id, host, label, message, findings, status, replied_at, ai_handling, sent_at, followups, last_followup_at, target, target_kind, lead_id, walked, claimed_by",
     )
     .eq("status", "sent")
     .is("replied_at", null)
@@ -178,7 +178,9 @@ export async function runFollowups(now: Date = new Date()): Promise<FollowupRun>
       },
       now,
     );
-    if (!n || !p.host || !p.message) continue;
+    // Без адреса бот не знает, куда писать: сообщение легло бы в очередь и
+    // висело там, не пуская следующие.
+    if (!n || !p.host || !p.message || !p.target) continue;
 
     // Уже что-то стоит в очереди — не наслаиваем второе сообщение на первое.
     const { count } = await db

@@ -130,6 +130,7 @@ test("дожим ставится в очередь бота один раз и 
   const code = read("lib/admin/outreach-followup.ts");
   assert.match(code, /update\(\{ followups: n, last_followup_at: now\.toISOString\(\) \}\)[\s\S]{0,60}\.eq\("followups", n - 1\)/);
   assert.match(code, /status: "queued"/);
+  assert.match(code, /!p\.target\) continue;/, "дожим без адреса повиснет в очереди");
   assert.match(read("app/api/reminders/sweep/route.ts"), /await runFollowups\(new Date\(\)\)/);
   assert.match(read("supabase/migrations/0052_outreach_followups.sql"), /add column if not exists followups smallint not null default 0/);
 });
