@@ -22,6 +22,8 @@ import { alreadyHandled } from "@/lib/qualify/seen-updates";
 import { shouldMissPromise } from "@/lib/qualify/promise";
 import {
   answerCallback,
+  handledLabel,
+  markLeadCards,
   esc,
   markBriefHandled,
   sendMessage,
@@ -892,14 +894,17 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
       action === "take" ? "Лид закреплён за вами" : "Лид отклонён",
     );
 
+    const label = handledLabel(action === "take" ? "take" : "drop", staff);
     if (query.message) {
-      const who = staff.username ? `@${staff.username}` : staff.display_name;
-      await markBriefHandled(
-        query.message.chat.id,
-        query.message.message_id,
-        action === "take" ? `✅ В работе у ${who}` : `🗄 Отклонён — ${who}`,
-      );
+      await markBriefHandled(query.message.chat.id, query.message.message_id, label);
     }
+    // Остальные копии — у всей команды. Без этого надпись менялась только у
+    // нажавшего, а семеро других видели живые кнопки у занятого лида.
+    await markLeadCards(
+      leadId,
+      label,
+      query.message ? { chatId: query.message.chat.id, messageId: query.message.message_id } : undefined,
+    );
   } catch (error) {
     console.error("telegram webhook", error);
     await answerCallback(query.id, "Не удалось обновить статус");

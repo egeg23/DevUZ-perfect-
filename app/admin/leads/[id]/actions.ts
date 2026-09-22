@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { MAX_BODY, postMessage } from "@/lib/admin/messages";
@@ -19,6 +20,27 @@ import { canEdit } from "@/lib/admin/ownership";
 import { takeOverTalk } from "@/lib/admin/outreach-talk-store";
 import { record } from "@/lib/admin/audit";
 import { decideTransfer, requestTransfer } from "@/lib/admin/transfers";
+import { handledLabel, markLeadCards } from "@/lib/qualify/telegram";
+
+/**
+ * Переписать карточки лида в Telegram у всей команды.
+ *
+ * Лида берут не только кнопкой в боте, но и здесь, в панели. Без этого
+ * вызова карточки у всех восьми оставались с живыми кнопками, хотя лид уже
+ * в работе, — ровно то, что чинилось в боте.
+ *
+ * Через `after`: ответ действия — редирект, и ждать ради него девять правок
+ * в Telegram незачем. `after` отрабатывает и после `redirect`.
+ */
+function syncCards(leadId: string, status: string | null): void {
+  after(async () => {
+    try {
+      await markLeadCards(leadId, status);
+    } catch (error) {
+      console.error("карточки лида в Telegram не переписались", error);
+    }
+  });
+}
 
 /**
  * Результат действия едет обратно параметром в адресе, а не всплывающим
@@ -43,6 +65,7 @@ export async function take(formData: FormData) {
   const leadId = leadIdFrom(formData);
 
   const result = await takeLead(leadId, staff, await requestIp());
+  if (result.ok) syncCards(leadId, handledLabel("take", staff));
   revalidatePath(`/admin/leads/${leadId}`);
   backTo(leadId, result);
 }
@@ -52,6 +75,9 @@ export async function release(formData: FormData) {
   const leadId = leadIdFrom(formData);
 
   const result = await releaseLead(leadId, staff, await requestIp());
+  // Лид снова свободен — кнопки возвращаются: иначе карточки у команды
+  // говорили бы «в работе» про лида, которого никто не ведёт.
+  if (result.ok) syncCards(leadId, null);
   revalidatePath(`/admin/leads/${leadId}`);
   backTo(leadId, result);
 }
@@ -62,6 +88,11 @@ export async function changeStatus(formData: FormData) {
   const status = String(formData.get("status") ?? "");
 
   const result = await setStatus(leadId, status, staff, await requestIp());
+  // Карточку трогают только два перехода: отказ и возврат в новые. Остальные
+  // случаются с лидом, который уже в работе, — его карточка и так говорит,
+  // у кого он.
+  if (result.ok && status === "dropped") syncCards(leadId, handledLabel("drop", staff));
+  if (result.ok && status === "new") syncCards(leadId, null);
   revalidatePath(`/admin/leads/${leadId}`);
   backTo(leadId, result);
 }

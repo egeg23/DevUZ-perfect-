@@ -3,6 +3,7 @@ import { originLines, usernameOf, type LeadOrigin } from "@/lib/qualify/origin";
 import { priorityBadge } from "@/lib/qualify/scoring";
 import type { ScoredLead } from "@/lib/qualify/types";
 import { localeLabel } from "@/lib/i18n";
+import { noticesOf, rememberNotices, type Notice } from "@/lib/qualify/notices";
 import { siteUrl } from "@/lib/seo";
 
 /**
@@ -191,11 +192,21 @@ const CALL_TIMEOUT_MS = 15_000;
  * ошибки, а не по факту неудачи. `description` пуст, когда ответа не было
  * вовсе (таймаут, прокси, оборванное соединение).
  */
-type CallResult = { ok: boolean; description: string | null };
+type CallResult = {
+  ok: boolean;
+  description: string | null;
+  /**
+   * Номер отправленного сообщения, если это была отправка.
+   *
+   * Нужен карточке лида: она уходит всей команде, и чтобы после взятия
+   * переписать кнопки у всех, надо знать, где лежит каждая копия.
+   */
+  messageId: number | null;
+};
 
 async function callRaw(method: string, payload: unknown): Promise<CallResult> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) return { ok: false, description: null };
+  if (!token) return { ok: false, description: null, messageId: null };
 
   // Вторая попытка — только если первая оборвалась, не получив ответа:
   // сеть, прокси, таймаут. Ответ с ошибкой от Telegram не повторяем — он
@@ -211,16 +222,20 @@ async function callRaw(method: string, payload: unknown): Promise<CallResult> {
       if (!response.ok) {
         const body = await response.text();
         console.error("telegram", method, response.status, body);
-        return { ok: false, description: body };
+        return { ok: false, description: body, messageId: null };
       }
-      return { ok: true, description: null };
+      // Тело читаем только ради номера сообщения: не разобралось — отправка
+      // от этого не перестала быть удачной.
+      const data = (await response.json().catch(() => null)) as { result?: { message_id?: unknown } } | null;
+      const id = data?.result?.message_id;
+      return { ok: true, description: null, messageId: typeof id === "number" ? id : null };
     } catch (error) {
       console.error("telegram", method, `попытка ${attempt}`, error);
-      if (attempt === 2) return { ok: false, description: null };
+      if (attempt === 2) return { ok: false, description: null, messageId: null };
       await new Promise((resolve) => setTimeout(resolve, 1_000));
     }
   }
-  return { ok: false, description: null };
+  return { ok: false, description: null, messageId: null };
 }
 
 async function call(method: string, payload: unknown): Promise<boolean> {
@@ -316,14 +331,6 @@ function hasPanel(rows: Button[][]): boolean {
   return rows.some((row) => row.some((button) => "panel" in button));
 }
 
-/**
- * Отправить сообщение с кнопками, переживая непривязанный домен.
- *
- * Повтор без кнопки делается только тогда, когда Telegram **ответил**
- * ошибкой. Оборванное соединение оставляет `loginButtonWorks` как есть:
- * иначе одна моргнувшая сеть выключала бы вход по кнопке до следующей
- * выкатки.
- */
 /** Отказ Telegram про сам чат, а не про содержимое сообщения. */
 function chatUnreachable(description: string): boolean {
   return /can't initiate conversation|chat not found|bot was blocked|user is deactivated|bot can't send messages|have no rights/i.test(
@@ -331,12 +338,24 @@ function chatUnreachable(description: string): boolean {
   );
 }
 
-async function sendWithRows(
+/**
+ * Отправить сообщение с кнопками, переживая непривязанный домен.
+ *
+ * Повтор без кнопки делается только тогда, когда Telegram **ответил**
+ * ошибкой. Оборванное соединение оставляет `loginButtonWorks` как есть:
+ * иначе одна моргнувшая сеть выключала бы вход по кнопке до следующей
+ * выкатки.
+ *
+ * Возвращает номер сообщения: `null` — не дошло, `0` — дошло, но Telegram
+ * номер не назвал. Отличать эти два случая нужно карточке лида: дошедшая
+ * копия без номера — это всё ещё доставленный лид.
+ */
+async function postRows(
   chatId: number | string,
   text: string,
   rows: Button[][],
   extra: Record<string, unknown> = {},
-): Promise<boolean> {
+): Promise<number | null> {
   const payload = () => ({
     chat_id: chatId,
     text,
@@ -349,9 +368,9 @@ async function sendWithRows(
   const first = await callRaw("sendMessage", payload());
   if (first.ok) {
     if (loginButtonWorks === null && hasPanel(rows)) loginButtonWorks = true;
-    return true;
+    return first.messageId ?? 0;
   }
-  if (loginButtonWorks === false || !hasPanel(rows) || !first.description) return false;
+  if (loginButtonWorks === false || !hasPanel(rows) || !first.description) return null;
 
   /**
    * Недоступный чат — это не сломанная кнопка.
@@ -362,13 +381,23 @@ async function sendWithRows(
    * запасной режим — для всех и до перезапуска, — а в лог ложилась неправда
    * про непривязанный домен.
    */
-  if (chatUnreachable(first.description)) return false;
+  if (chatUnreachable(first.description)) return null;
 
   loginButtonWorks = false;
   console.error(
     "telegram: кнопку входа не приняли — привяжите домен боту (BotFather → /setdomain → devuz.studio). Отправляю обычной ссылкой.",
   );
-  return (await callRaw("sendMessage", payload())).ok;
+  const second = await callRaw("sendMessage", payload());
+  return second.ok ? (second.messageId ?? 0) : null;
+}
+
+async function sendWithRows(
+  chatId: number | string,
+  text: string,
+  rows: Button[][],
+  extra: Record<string, unknown> = {},
+): Promise<boolean> {
+  return (await postRows(chatId, text, rows, extra)) !== null;
 }
 
 /**
@@ -422,20 +451,7 @@ export async function sendLead(
 
   const text = formatLeadBrief(lead, requestNo, cardUrl, options.heading, options.origin);
 
-  // Первый ряд — вход в карточку одним нажатием.
-  //
-  // Ссылка на карточку в тексте остаётся: у того, кто уже сидит в панели,
-  // она открывается сразу. А у того, кто читает уведомление с телефона,
-  // браузер внутри Telegram держит свои куки отдельно, и обычная ссылка
-  // всегда приводила его на страницу входа. Эта кнопка — тот же вход, но
-  // Telegram подтверждает, кто нажал, сам: см. app/admin/enter.
-  const rows: Button[][] = [
-    ...(cardUrl ? [[{ text: "🔓 Открыть карточку", panel: `/admin/leads/${leadId}` }]] : []),
-    [
-      { text: "✅ Взять в работу", callback_data: `take:${leadId}` },
-      { text: "🗄 Отклонить", callback_data: `drop:${leadId}` },
-    ],
-  ];
+  const rows = leadRows(leadId, Boolean(cardUrl));
 
   /**
    * Всем сразу, а не по очереди.
@@ -450,9 +466,22 @@ export async function sendLead(
    * кнопки сама повторяется в запасном виде.
    */
   const results = await Promise.all(
-    targets.map((chatId) => sendWithRows(chatId, text, rows, { disable_notification: silent })),
+    targets.map((chatId) => postRows(chatId, text, rows, { disable_notification: silent })),
   );
-  const sent = results.some(Boolean);
+  const sent = results.some((id) => id !== null);
+
+  // Где легли копии — чтобы потом, когда лид возьмут, погасить кнопки у
+  // всех, а не только у нажавшего. Копии без номера запомнить нечем: это
+  // доставленный лид, но его кнопки погаснут только у того, кто нажмёт.
+  if (cardUrl) {
+    await rememberNotices(
+      leadId,
+      targets.flatMap((chatId, i) => {
+        const id = results[i];
+        return id ? [{ chatId: String(chatId), messageId: id }] : [];
+      }),
+    );
+  }
 
   // Стенограмма вторым сообщением сюда больше не уходит. Она читается в
   // карточке, где видно, кто её открывал: переписка — это всё, что человек
@@ -522,6 +551,95 @@ export function typingIndicator(chatId: number | string): () => void {
 
 export async function answerCallback(id: string, text: string): Promise<void> {
   await call("answerCallbackQuery", { callback_query_id: id, text });
+}
+
+/**
+ * Кнопки под карточкой лида.
+ *
+ * Первый ряд — вход в карточку одним нажатием. Ссылка на карточку в тексте
+ * остаётся: у того, кто уже сидит в панели, она открывается сразу. А у того,
+ * кто читает уведомление с телефона, браузер внутри Telegram держит свои
+ * куки отдельно, и обычная ссылка всегда приводила его на страницу входа.
+ * Эта кнопка — тот же вход, но Telegram подтверждает, кто нажал, сам: см.
+ * app/admin/enter.
+ *
+ * Отдельной функцией, потому что собирают её двое: отправка карточки и
+ * возврат кнопок, когда лида отпустили обратно.
+ */
+function leadRows(leadId: string, withCard: boolean): Button[][] {
+  return [
+    ...(withCard ? [[{ text: "🔓 Открыть карточку", panel: `/admin/leads/${leadId}` }]] : []),
+    [
+      { text: "✅ Взять в работу", callback_data: `take:${leadId}` },
+      { text: "🗄 Отклонить", callback_data: `drop:${leadId}` },
+    ],
+  ];
+}
+
+/**
+ * Надпись вместо кнопок, когда лид разобран.
+ *
+ * Одна на Telegram и на панель: лида берут и там и там, и две разные
+ * формулировки одного и того же события на соседних копиях карточки читались
+ * бы как два разных события.
+ */
+export function handledLabel(
+  action: "take" | "drop",
+  staff: { username: string | null; display_name: string },
+): string {
+  const who = staff.username ? `@${staff.username}` : staff.display_name;
+  return action === "take" ? `✅ В работе у ${who}` : `🗄 Отклонён — ${who}`;
+}
+
+/**
+ * Переписать кнопки у всех копий карточки лида.
+ *
+ * Карточка уходит всей команде, каждому в личку. Раньше надпись «В работе у
+ * …» появлялась только у того, кто нажал: остальные видели живые кнопки у
+ * уже занятого лида и узнавали, что он занят, только нажав — а иногда уже
+ * начав писать клиенту.
+ *
+ * `status` — что написать вместо кнопок; `null` — вернуть кнопки обратно:
+ * лида отпустили, и он снова свободен.
+ *
+ * `except` — копия, которую уже переписал сам колбэк нажатия. Править её
+ * второй раз тем же текстом Telegram не даёт: отвечает «сообщение не
+ * изменилось», и в лог ложилась бы ошибка на каждое взятие.
+ *
+ * Правки идут разом, как и отправка, и ни одна не роняет остальные: копию
+ * могли удалить, чат — закрыть, и это не повод оставлять живые кнопки у
+ * всех прочих.
+ */
+export async function markLeadCards(
+  leadId: string,
+  status: string | null,
+  except?: { chatId: number | string; messageId: number },
+): Promise<void> {
+  await editLeadCards(await noticesOf(leadId), leadId, status, except);
+}
+
+/** То же, но по уже известным копиям — без похода в базу. */
+export async function editLeadCards(
+  notices: readonly Notice[],
+  leadId: string,
+  status: string | null,
+  except?: { chatId: number | string; messageId: number },
+): Promise<void> {
+  const keyboard = status
+    ? [[{ text: status, callback_data: "noop" }]]
+    : forTelegram(leadRows(leadId, true));
+
+  await Promise.all(
+    notices
+      .filter((n) => !(except && n.chatId === String(except.chatId) && n.messageId === except.messageId))
+      .map((n) =>
+        call("editMessageReplyMarkup", {
+          chat_id: n.chatId,
+          message_id: n.messageId,
+          reply_markup: { inline_keyboard: keyboard },
+        }),
+      ),
+  );
 }
 
 /**
