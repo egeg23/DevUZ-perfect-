@@ -9,6 +9,9 @@ import { touchProgressOf } from "@/lib/admin/touch-store";
 import { outcomeOf } from "@/lib/admin/portion";
 import { portionOf } from "@/lib/admin/portion-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
+import { MapsCampaigns } from "@/components/admin/maps-campaigns";
+import { dailyCap, placesConfigured } from "@/lib/maps/places";
+import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
 import { sentLastHour } from "@/lib/admin/outreach-queue";
 import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
 import { BATCH_CAP } from "@/lib/audit/batch";
@@ -18,10 +21,15 @@ export const dynamic = "force-dynamic";
 export default async function ProspectPage({
   searchParams,
 }: {
-  searchParams: Promise<{ open?: string; e?: string; sent?: string }>;
+  searchParams: Promise<{ open?: string; e?: string; sent?: string; maps?: string }>;
 }) {
   const staff = await requireStaff();
-  const { open, e, sent } = await searchParams;
+  const { open, e, sent, maps } = await searchParams;
+  // Автопоиск ведут владелец и руководитель; менеджеру он приходит порцией.
+  const seesMaps = staff.role === "admin" || staff.role === "head";
+  const [campaigns, mapsUsage, mapsPending] = seesMaps
+    ? await Promise.all([listCampaigns(), usageToday(), pendingPlaces()])
+    : [[], 0, 0];
   const [rows, hour, replies, plan, portion] = await Promise.all([
     listProspects(),
     sentLastHour(),
@@ -76,6 +84,18 @@ export default async function ProspectPage({
       ) : null}
 
       <ProspectRunner />
+
+      {seesMaps ? (
+        <MapsCampaigns
+          campaigns={campaigns}
+          configured={placesConfigured()}
+          usage={mapsUsage}
+          cap={dailyCap()}
+          pending={mapsPending}
+          canEdit
+          notice={maps}
+        />
+      ) : null}
 
       <OutreachList rows={rows} hour={hour} open={open} error={e} sent={sent === "1"} replies={replies} />
 

@@ -2,6 +2,7 @@ import { after } from "next/server";
 
 import { record } from "@/lib/admin/audit";
 import { preparePortionsInBackground, runPortions } from "@/lib/admin/portion-store";
+import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { advanceQueues } from "@/lib/admin/lead-queue-store";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
@@ -188,8 +189,14 @@ export async function POST(request: Request) {
   // Порция дня касаний: раздача в 07:00, в личку с 09:00, отчёт в 18:00.
   // Письма к ней готовятся после ответа таймеру: обход сайта и модель — до
   // минуты на компанию, а таймер ждёт ответа шестьдесят секунд.
+  // Автопоиск по картам: поиск раз в день с 06:00 — до раздачи порций, —
+  // проверка найденных сайтов понемногу, после ответа таймеру.
+  const maps = await runDailySearches(new Date());
   const portions = await runPortions(new Date());
-  after(() => preparePortionsInBackground(new Date()).catch((error) => console.error("порция:", error)));
+  after(async () => {
+    await processPlaces(new Date()).catch((error) => console.error("карты:", error));
+    await preparePortionsInBackground(new Date()).catch((error) => console.error("порция:", error));
+  });
 
   // Уборка просроченных сигналов скаута едет здесь же, а не отдельным
   // таймером. Своего расписания ей не нужно — она дешёвая и работает по
@@ -256,6 +263,7 @@ export async function POST(request: Request) {
   return Response.json({
     queue,
     scout,
+    maps,
     portions,
     coach,
     shifts,

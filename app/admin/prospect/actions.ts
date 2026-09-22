@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 
 import { record } from "@/lib/admin/audit";
 import {
@@ -13,7 +14,8 @@ import {
   skipProspect,
   saveNoSite,
 } from "@/lib/admin/outreach-store";
-import { requestIp, requireStaff } from "@/lib/admin/guard";
+import { requestIp, requireRole, requireStaff } from "@/lib/admin/guard";
+import { createCampaign, listCampaigns, processPlaces, runSearch, setCampaignActive } from "@/lib/maps/store";
 import { pitchLocales, type PitchLocale } from "@/lib/audit/pitch";
 import {
   auditOne,
@@ -209,4 +211,52 @@ export async function skipProspectAction(formData: FormData) {
   await skipProspect(id, String(formData.get("reason") ?? ""));
   revalidatePath("/admin/prospect");
   redirect("/admin/prospect");
+}
+
+/* ── Автопоиск по картам ────────────────────────────────────────────── */
+
+/**
+ * Кампании автопоиска заводят владелец и руководитель: каждая — это
+ * запросы к платному API и сотни компаний в пуле, а решать, какие ниши
+ * студии нужны, — их работа, не менеджера.
+ */
+export async function createMapsCampaignAction(formData: FormData) {
+  const staff = await requireRole("admin", "head");
+  const created = await createCampaign(
+    String(formData.get("niche") ?? ""),
+    String(formData.get("city") ?? ""),
+    staff,
+  );
+  if (created.ok) {
+    // Первый проход — сразу, а не завтра в шесть: человек только что завёл
+    // кампанию и хочет видеть, что она ищет.
+    const campaign = (await listCampaigns()).find((c) => c.id === created.id);
+    if (campaign) {
+      await runSearch(campaign);
+      after(() => processPlaces(new Date()).catch((error) => console.error("карты:", error)));
+    }
+  }
+  revalidatePath("/admin/prospect");
+  redirect(`/admin/prospect?maps=${created.ok ? "created" : "invalid"}#maps`);
+}
+
+export async function toggleMapsCampaignAction(formData: FormData) {
+  await requireRole("admin", "head");
+  await setCampaignActive(String(formData.get("campaign") ?? ""), formData.get("active") === "1");
+  revalidatePath("/admin/prospect");
+  redirect("/admin/prospect#maps");
+}
+
+export async function runMapsCampaignAction(formData: FormData) {
+  await requireRole("admin", "head");
+  const id = String(formData.get("campaign") ?? "");
+  const campaign = (await listCampaigns()).find((c) => c.id === id);
+  let code = "gone";
+  if (campaign) {
+    const run = await runSearch(campaign);
+    code = run.error ? "failed" : run.requests === 0 ? "cap" : "ran";
+    after(() => processPlaces(new Date()).catch((error) => console.error("карты:", error)));
+  }
+  revalidatePath("/admin/prospect");
+  redirect(`/admin/prospect?maps=${code}#maps`);
 }
