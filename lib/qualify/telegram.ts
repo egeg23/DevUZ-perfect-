@@ -324,6 +324,13 @@ function hasPanel(rows: Button[][]): boolean {
  * иначе одна моргнувшая сеть выключала бы вход по кнопке до следующей
  * выкатки.
  */
+/** Отказ Telegram про сам чат, а не про содержимое сообщения. */
+function chatUnreachable(description: string): boolean {
+  return /can't initiate conversation|chat not found|bot was blocked|user is deactivated|bot can't send messages|have no rights/i.test(
+    description,
+  );
+}
+
 async function sendWithRows(
   chatId: number | string,
   text: string,
@@ -345,6 +352,17 @@ async function sendWithRows(
     return true;
   }
   if (loginButtonWorks === false || !hasPanel(rows) || !first.description) return false;
+
+  /**
+   * Недоступный чат — это не сломанная кнопка.
+   *
+   * Стало важным, когда карточка лида поехала не в один чат, а всей команде:
+   * тому, кто боту ни разу не писал, Bot API отказывает всегда, и без этой
+   * проверки первый же такой сотрудник навсегда переводил кнопку входа в
+   * запасной режим — для всех и до перезапуска, — а в лог ложилась неправда
+   * про непривязанный домен.
+   */
+  if (chatUnreachable(first.description)) return false;
 
   loginButtonWorks = false;
   console.error(
@@ -419,11 +437,22 @@ export async function sendLead(
     ],
   ];
 
-  let sent = false;
-  for (const chatId of targets) {
-    const ok = await sendWithRows(chatId, text, rows, { disable_notification: silent });
-    sent = sent || ok;
-  }
+  /**
+   * Всем сразу, а не по очереди.
+   *
+   * Пока адресат был один, разницы не было. Теперь их по числу команды — и
+   * разговор с клиентом ждёт доставки, прежде чем бот скажет «передал
+   * менеджеру». По очереди это секунда-три в обычный день и минуты, если
+   * Telegram подвис: каждый вызов ждёт до пятнадцати секунд и повторяется.
+   *
+   * Общее у отправок одно — флаг кнопки входа, — и гонка за ним безвредна:
+   * он решает только, как собрать кнопку, а каждая отправка при отказе
+   * кнопки сама повторяется в запасном виде.
+   */
+  const results = await Promise.all(
+    targets.map((chatId) => sendWithRows(chatId, text, rows, { disable_notification: silent })),
+  );
+  const sent = results.some(Boolean);
 
   // Стенограмма вторым сообщением сюда больше не уходит. Она читается в
   // карточке, где видно, кто её открывал: переписка — это всё, что человек

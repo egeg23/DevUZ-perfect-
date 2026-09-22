@@ -5,7 +5,14 @@ import type { Locale } from "@/lib/i18n";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { scoreLead } from "@/lib/qualify/scoring";
 import { attributeAndNotify } from "@/lib/partners/attribute";
-import { briefHeading, briefRecipients, briefSummary, briefTotal, type Brief } from "@/lib/qualify/brief";
+import {
+  briefHeading,
+  briefRecipients,
+  briefSummary,
+  briefTotal,
+  salesRecipients,
+  type Brief,
+} from "@/lib/qualify/brief";
 import type { LeadOrigin } from "@/lib/qualify/origin";
 import { ReplyGuard } from "@/lib/qualify/self-talk";
 import { saveLead, updateLead } from "@/lib/qualify/store";
@@ -401,7 +408,11 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
         origin: { ...options.origin, source },
       });
     } else {
+      // Всей команде, а не в один чат: менеджер, узнающий о лиде пересказом,
+      // берёт его на час позже — и это тот самый час, за который клиент
+      // успевает написать второй студии.
       delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
+        to: await salesRecipients(),
         origin: { ...options.origin, source },
       });
     }
