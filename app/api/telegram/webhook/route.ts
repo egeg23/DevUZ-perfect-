@@ -879,6 +879,12 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
       await answerCallback(query.id, "Не ваша очередь — лид сейчас предложен другому");
       return;
     }
+    // Ночной лид: свою равную долю за месяц человек уже взял, и этот — для
+    // тех, у кого меньше.
+    if (!taken.ok && taken.reason === "share") {
+      await answerCallback(query.id, "Вы уже взяли свою равную долю за месяц — этот лид для тех, у кого меньше");
+      return;
+    }
     if (!taken.ok) {
       await answerCallback(query.id, "Не удалось — откройте карточку в панели");
       return;

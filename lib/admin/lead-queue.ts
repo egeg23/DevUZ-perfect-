@@ -1,4 +1,4 @@
-import { periodStart, tashkentMidnight } from "@/lib/admin/pulse";
+import { TASHKENT_OFFSET_MS, periodStart, tashkentMidnight } from "@/lib/admin/pulse";
 import type { Role } from "@/lib/admin/roles";
 
 /**
@@ -28,6 +28,46 @@ export const QUEUE_ROLES = ["manager", "head"] as const satisfies readonly Role[
 
 export function inQueue(role: Role): boolean {
   return (QUEUE_ROLES as readonly Role[]).includes(role);
+}
+
+/**
+ * Рабочие часы по Ташкенту: с 08:00 до 18:00.
+ *
+ * Владелец: «вне рабочих часов, с 18:00 до 08:00, правило получаса не
+ * действует». Ночью предлагать лид по очереди некому: полчаса у каждого
+ * спящего — это три с половиной часа, за которые клиент напишет в другую
+ * студию. Ночной лид открыт всем в очереди, а от того, чтобы его забрал один
+ * неспящий, держит потолок равной доли — см. `withinShare`.
+ */
+export const WORK_FROM_HOUR = 8;
+export const WORK_TO_HOUR = 18;
+
+export function isWorkingHours(now: Date): boolean {
+  // Ташкент живёт по UTC+5 круглый год, без перевода часов, — сдвига
+  // достаточно, и часовой пояс из системы машины сюда не просачивается.
+  const hour = new Date(now.getTime() + TASHKENT_OFFSET_MS).getUTCHours();
+  return hour >= WORK_FROM_HOUR && hour < WORK_TO_HOUR;
+}
+
+/** Сколько взято за месяц: у этого человека, у всех вместе и сколько всех. */
+export type Share = { mine: number; total: number; people: number };
+
+/**
+ * Не больше, чем при равном распределении между всеми.
+ *
+ * С этим лидом за месяц будет взято `total + 1`. Поровну на всех — это
+ * `ceil((total + 1) / people)` на человека, и тот, у кого с этим лидом
+ * выйдет больше, его не берёт: он для тех, у кого меньше.
+ *
+ * Считается «взял», а не «взял + пропустил», как в дневной очереди: потолок
+ * держит от того, чтобы один забрал себе всё, а пропущенный днём лид ничего
+ * себе не забирал. Иначе тот, кто днём был занят холодными касаниями и
+ * пропустил предложение, ночью не мог бы взять ни одного — то есть очередь
+ * наказывала бы ровно ту работу, ради которой строилась.
+ */
+export function withinShare(s: Share): boolean {
+  if (s.people <= 0) return true;
+  return s.mine + 1 <= Math.ceil((s.total + 1) / s.people);
 }
 
 /** Начало текущего месяца по Ташкенту — с него считается, у кого сколько. */
@@ -84,6 +124,8 @@ export type TakeVerdict =
   | { ok: true }
   | {
       ok: false;
+      /** queued — лид сейчас у другого; share — своя равная доля уже взята. */
+      reason: "queued" | "share";
       /** Кому лид сейчас предложен; null — предложение истекло, свип ещё не передал. */
       holder: string | null;
       /** До какого времени. */
@@ -108,15 +150,23 @@ export function mayTake(input: {
   offers: readonly Offer[];
   openedAt: string | null;
   now: Date;
+  /**
+   * Ночной лид — пришёл или открылся с 18:00 до 08:00. Для него передаётся
+   * счёт за месяц: взять его может любой, но не больше равной доли.
+   */
+  share?: Share | null;
 }): TakeVerdict {
   if (input.role === "admin") return { ok: true };
+  if (input.share) {
+    return withinShare(input.share) ? { ok: true } : { ok: false, reason: "share", holder: null, until: null };
+  }
   if (!input.offers.length || input.openedAt) return { ok: true };
 
   const open = input.offers.find((o) => o.outcome === null) ?? null;
   const live = open && Date.parse(open.expiresAt) > input.now.getTime();
   if (open && live && open.staffId === input.staffId) return { ok: true };
 
-  return { ok: false, holder: live ? open.staffId : null, until: live ? open.expiresAt : null };
+  return { ok: false, reason: "queued", holder: live ? open.staffId : null, until: live ? open.expiresAt : null };
 }
 
 /**
@@ -152,6 +202,9 @@ export function offerHeading(until: string): string {
 export function watchHeading(holder: string, until: string): string {
   return `👁 В очереди у <b>${html(holder)}</b> до ${clock(until)}. Вы вне очереди — можете взять сами.`;
 }
+
+export const NIGHT_HEADING =
+  "🌙 <b>Нерабочее время — лид открыт всем в очереди.</b> Взять можно, но не больше равной доли за месяц.";
 
 export const OPEN_HEADING = "🔓 <b>Никто из очереди не взял — лид открыт всем.</b> Берёт первый, кто нажмёт.";
 

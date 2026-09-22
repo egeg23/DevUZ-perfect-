@@ -172,6 +172,7 @@ const ru: HelpCopy = {
         "Нового заводят по числовому id в Telegram. Username не годится: его меняют за секунду.",
         "Грейд задаёт процент от прибыли по сделке.",
         "Руководитель проектов заводит менеджеров и высылает им приглашения. Роли, грейды, ставки и отключение остаются за владельцем — он их видит, но не правит.",
+        "Заведённый руководителем менеджер сразу его. Ничьего менеджера руководитель берёт к себе кнопкой «взять к себе» — и дальше отвечает за его показатели и план/факт, ставит ему план касаний. Открепить менеджера или передать другому руководителю может только владелец.",
       ],
     },
     "/admin/releases": {
@@ -365,6 +366,7 @@ const uz: HelpCopy = {
         "Yangi odam Telegramdagi raqamli id bo‘yicha kiritiladi. Username yaramaydi: uni bir soniyada almashtirish mumkin.",
         "Daraja bitim foydasidan tushadigan foizni belgilaydi.",
         "Loyihalar rahbari menejerlarni kiritadi va ularga taklifnoma yuboradi. Rollar, darajalar, stavkalar va o‘chirish egasida qoladi — u ularni ko‘radi, lekin o‘zgartirmaydi.",
+        "Rahbar kiritgan menejer darhol unga biriktiriladi. Hech kimga biriktirilmagan menejerni rahbar «o‘zimga olish» tugmasi bilan oladi — shundan keyin uning ko‘rsatkichlari va reja/faktiga javob beradi, unga haftalik xatlar rejasini qo‘yadi. Menejerni ajratish yoki boshqa rahbarga o‘tkazishni faqat ega qila oladi.",
       ],
     },
     "/admin/releases": {

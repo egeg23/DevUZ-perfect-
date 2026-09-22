@@ -1,7 +1,7 @@
 import { seesEveryone } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import { mayTake } from "@/lib/admin/lead-queue";
-import { closeOfferAfterTake, openQueue, queueState } from "@/lib/admin/lead-queue-store";
+import { closeOfferAfterTake, openQueue, queueState, shareOf } from "@/lib/admin/lead-queue-store";
 import type { Staff } from "@/lib/admin/session";
 import type { ChatMessage } from "@/lib/qualify/types";
 import { STATUSES } from "@/lib/admin/leads";
@@ -30,7 +30,7 @@ export type ActionSource = "panel" | "telegram";
 
 export type OwnershipResult =
   | { ok: true }
-  | { ok: false; reason: "offline" | "taken" | "forbidden" | "gone" | "failed" | "queued" };
+  | { ok: false; reason: "offline" | "taken" | "forbidden" | "gone" | "failed" | "queued" | "share" };
 
 /**
  * Право менять лид: владелец или админ.
@@ -91,14 +91,18 @@ export async function takeLead(
   // владельца. Проверка здесь, а не в кнопке: взять лида можно и из бота, и
   // из панели, и запрет, живущий в одном из них, обходился бы другим.
   const queue = await queueState(leadId);
+  // Ночной лид — по равной доле: счёт за месяц нужен только ему, и только
+  // тем, кто в очереди. Владелец вне её, и считать ему нечего.
+  const share = queue.fairShare && staff.role !== "admin" ? await shareOf(staff.id) : null;
   const verdict = mayTake({
     role: staff.role,
     staffId: staff.id,
     offers: queue.offers,
     openedAt: queue.openedAt,
     now: new Date(),
+    share,
   });
-  if (!verdict.ok) return { ok: false, reason: "queued" };
+  if (!verdict.ok) return { ok: false, reason: verdict.reason };
 
   const now = new Date().toISOString();
   const { data, error } = await db

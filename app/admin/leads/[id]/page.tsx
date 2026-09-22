@@ -27,7 +27,7 @@ import {
 } from "@/components/admin/lead-table";
 import { record } from "@/lib/admin/audit";
 import { clock, mayTake } from "@/lib/admin/lead-queue";
-import { queueState } from "@/lib/admin/lead-queue-store";
+import { queueState, shareOf } from "@/lib/admin/lead-queue-store";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { quoteForLead } from "@/lib/admin/quote";
 import { STATUSES, leadById } from "@/lib/admin/leads";
@@ -83,6 +83,7 @@ const RESULT_MESSAGE: Record<string, string> = {
   ok: "Готово.",
   taken: "Лида уже взял кто-то другой — обновите страницу.",
   queued: "Не ваша очередь: лид сейчас предложен другому на 30 минут. Не возьмёт — лид уйдёт следующему, и очередь может дойти до вас.",
+  share: "Вы уже взяли свою равную долю лидов за месяц. Этот лид пришёл в нерабочее время и достаётся тем, у кого меньше.",
   forbidden: "Лид закреплён не за вами.",
   gone: "Лид не найден.",
   offline: "База недоступна.",
@@ -181,8 +182,11 @@ export default async function LeadPage({
   const [transfer, colleagues, queue] = await Promise.all([
     openTransferFor(lead.id),
     mine || decides ? activeStaff() : Promise.resolve([]),
-    free ? queueState(lead.id) : Promise.resolve({ offers: [], openedAt: null }),
+    free ? queueState(lead.id) : Promise.resolve({ offers: [], openedAt: null, fairShare: false }),
   ]);
+  // Ночной лид — с потолком равной доли: тот, кто свою долю уже взял, не
+  // должен видеть ник и писать клиенту в обход кнопки.
+  const share = free && queue.fairShare && staff.role !== "admin" ? await shareOf(staff.id) : null;
 
   /**
    * Очередь по свободному лиду — с точки зрения того, кто смотрит.
@@ -198,6 +202,7 @@ export default async function LeadPage({
     offers: queue.offers,
     openedAt: queue.openedAt,
     now: new Date(),
+    share,
   });
   const offer = queue.offers.find((o) => o.outcome === null && Date.parse(o.expiresAt) > Date.now()) ?? null;
   const hideHandle = free && !turn.ok;
@@ -258,6 +263,10 @@ export default async function LeadPage({
       ) : free && offer && staff.role === "admin" ? (
         <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
           👁 В очереди у {holderName ?? "сотрудника"} до {clock(offer.expiresAt)}. Вы вне очереди — можете взять сами.
+        </p>
+      ) : hideHandle && !turn.ok && turn.reason === "share" ? (
+        <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
+          🌙 Лид пришёл в нерабочее время и делится поровну. Свою долю за месяц вы уже взяли — он для тех, у кого меньше.
         </p>
       ) : hideHandle ? (
         <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
@@ -747,7 +756,7 @@ export default async function LeadPage({
         />
         <Field
           label="Ник в Telegram"
-          value={hideHandle ? "скрыт — лид в очереди у другого" : usernameOf(lead2origin(lead))}
+          value={hideHandle ? "скрыт — лид сейчас не ваш" : usernameOf(lead2origin(lead))}
         />
       </dl>
 

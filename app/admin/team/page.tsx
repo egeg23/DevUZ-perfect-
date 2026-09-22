@@ -1,4 +1,4 @@
-import { addStaff, assignHead, changeRole, disable, refreshMenu, resend, setGrade, setPlan } from "./actions";
+import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, setGrade, setPlan } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { requireRole } from "@/lib/admin/guard";
@@ -13,6 +13,14 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
   menu_ok: { text: "Меню команд бота обновлено: клиенты видят /ref и /payout, сотрудники — ещё и /login.", tone: "ok" },
   menu_failed: { text: "Меню бота не обновилось — Telegram не ответил. Попробуйте ещё раз.", tone: "warn" },
   reactivated: { text: "Сотрудник включён обратно — это его прежняя запись со всей историей.", tone: "ok" },
+  claimed: {
+    text: "Менеджер закреплён за вами: его статистика и план/факт теперь в вашей команде, план касаний ставите вы.",
+    tone: "ok",
+  },
+  has_head: {
+    text: "У этого менеджера уже есть руководитель. Переназначить или открепить может только владелец.",
+    tone: "warn",
+  },
   exists: { text: "Такой Telegram id уже заведён и работает.", tone: "warn" },
   invalid: { text: "Нужны числовой Telegram id и имя.", tone: "warn" },
   self: { text: "Себя отключить или разжаловать нельзя — вернуться в панель будет некому.", tone: "warn" },
@@ -88,8 +96,10 @@ export default async function TeamPage({
       </p>
       {manages ? null : (
         <p className="mt-2 text-sm text-muted">
-          Вы заводите менеджеров и высылаете им приглашения. Роль, грейд, ставку и
-          отключение меняет владелец — эти поля здесь показаны, но не редактируются.
+          Вы заводите менеджеров и высылаете им приглашения. Заведённый вами менеджер сразу
+          ваш, а ничьего можно взять к себе кнопкой в колонке «Руководитель» — после этого
+          вы отвечаете за его показатели и план/факт и ставите ему план касаний. Открепить
+          менеджера, а также менять роль, грейд, ставку и отключать может только владелец.
         </p>
       )}
 
@@ -187,11 +197,29 @@ export default async function TeamPage({
                   {member.role === "admin" ? (
                     <span className="text-xs text-faint">—</span>
                   ) : !manages ? (
-                    <span className="text-xs text-muted">
-                      {member.head_staff_id
-                        ? (nameById.get(member.head_staff_id) ?? "—")
-                        : "без руководителя"}
-                    </span>
+                    // Руководитель берёт к себе только ничьего менеджера.
+                    // Своего — не отпускает: кнопки «открепить» у него нет,
+                    // это решение владельца.
+                    member.head_staff_id === viewer.id ? (
+                      <span className="text-xs text-green">
+                        вы
+                        <span className="block text-faint">открепляет владелец</span>
+                      </span>
+                    ) : member.head_staff_id ? (
+                      <span className="text-xs text-muted">
+                        {nameById.get(member.head_staff_id) ?? "—"}
+                      </span>
+                    ) : member.role === "manager" && viewer.role === "head" ? (
+                      <form action={claim} className="flex items-center gap-2">
+                        <input type="hidden" name="staff" value={member.id} />
+                        <span className="text-xs text-muted">без руководителя</span>
+                        <button type="submit" className="text-xs text-faint hover:text-green">
+                          взять к себе
+                        </button>
+                      </form>
+                    ) : (
+                      <span className="text-xs text-muted">без руководителя</span>
+                    )
                   ) : (
                     // Кто чей: от этого зависит, чью статистику и финансы
                     // видит руководитель. Список — только активные
@@ -358,6 +386,7 @@ export default async function TeamPage({
         <p className="mt-1 text-xs text-faint">
           Числовой id человек узнаёт у любого бота вроде @userinfobot и присылает вам. По
           username завести нельзя: освободившийся ник займёт кто угодно.
+          {viewer.role === "head" ? " Заведённый вами менеджер сразу закрепляется за вами." : null}
         </p>
 
         <form action={addStaff} className="mt-4 flex flex-col gap-3">

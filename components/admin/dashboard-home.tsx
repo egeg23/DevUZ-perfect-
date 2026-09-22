@@ -34,6 +34,7 @@ import { loadPlans, loadPulseRows, pendingContracts } from "@/lib/admin/pulse-st
 import type { Staff } from "@/lib/admin/session";
 import { DEFAULT_DEADLINES, upcoming } from "@/lib/admin/tax-calendar";
 import { teamOf } from "@/lib/admin/team";
+import { touchProgressFor } from "@/lib/admin/touch-store";
 
 /**
  * Личный дашборд на главной панели — у каждой роли свой.
@@ -87,12 +88,15 @@ export async function DashboardHome({ staff, planNotice }: { staff: Staff; planN
         : [];
 
   const pulse = (id: string, w: typeof week): StaffPulse => pulseOf(id, rows, w, now);
+  // План/факт холодных касаний — за него руководитель отвечает по своим.
+  const touches = await touchProgressFor(peopleIds, now);
   const teamRows: TeamRow[] = peopleIds.map((id) => ({
     id,
     name: names.get(id) ?? "—",
     week: pulse(id, week),
     prev: pulse(id, prevWeek),
     due: balance(id).due,
+    touch: touches.get(id),
   }));
 
   const planStaffIds = staff.role === "manager" ? [staff.id] : [...peopleIds, staff.id];
