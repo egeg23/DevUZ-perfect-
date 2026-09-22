@@ -391,7 +391,8 @@ async function postRows(
   return second.ok ? (second.messageId ?? 0) : null;
 }
 
-async function sendWithRows(
+/** Сообщение с несколькими рядами кнопок — например, позиция порции дня. */
+export async function sendWithRows(
   chatId: number | string,
   text: string,
   rows: Button[][],

@@ -173,6 +173,15 @@ export async function offboardStaff(staffId: string, actor: Staff, ip: string): 
     await sendMessage(heir.chat, lines.join("\n"));
   }
 
+  // 5б. Порция дня: несделанное сегодня закрывается. Компании при этом уже
+  //     вернулись в пул выше (contacting → new), а в вечернем отчёте
+  //     отключённого не будет.
+  await db
+    .from("touch_portions")
+    .update({ outcome: "expired", closed_at: now })
+    .eq("staff_id", staffId)
+    .is("outcome", null);
+
   // 6. Команда руководителя — открепляется: менеджеры становятся ничьими, их
   //    берёт другой руководитель или закрепляет владелец.
   if (target.role === "head") out.team = await detachTeam(staffId);

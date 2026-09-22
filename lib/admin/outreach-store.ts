@@ -240,6 +240,15 @@ export async function listProspects(limit = 200): Promise<Prospect[]> {
   return (data ?? []).map((row) => shape(row as Record<string, unknown>));
 }
 
+/** Несколько карточек разом — для порции дня: одним запросом, а не по одной. */
+export async function prospectsByIds(ids: readonly string[]): Promise<Prospect[]> {
+  if (!ids.length) return [];
+  const db = serviceClient();
+  if (!db) return [];
+  const { data } = await db.from("prospects").select(COLUMNS).in("id", [...ids]);
+  return (data ?? []).map((row) => shape(row as Record<string, unknown>));
+}
+
 export async function prospectById(id: string): Promise<Prospect | null> {
   const db = serviceClient();
   if (!db) return null;

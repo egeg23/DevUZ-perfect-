@@ -41,6 +41,8 @@ import {
 import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
+import { inPortion } from "@/lib/admin/portion-store";
+import { markSelfContacted, prospectById, queueOutreach, skipProspect } from "@/lib/admin/outreach-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -830,6 +832,16 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     return;
   }
 
+  // Порция дня: тоже личка сотрудника, и тоже только своя.
+  if (parts[0] === "tp") {
+    if (chatId !== undefined && isSalesChat(chatId)) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    await handlePortionButton(query, parts[1] ?? "", parts[2] ?? "");
+    return;
+  }
+
   // Кнопки под брифом живут только в чате отдела продаж. Нажатие из
   // любого другого места — либо ошибка, либо чужая попытка.
   if (chatId !== undefined && !isSalesChat(chatId)) {
@@ -978,6 +990,69 @@ async function handleReminderButton(
     await answerCallback(query.id, "Неизвестная команда");
   } catch (error) {
     console.error("telegram webhook", error);
+    await answerCallback(query.id, "Не получилось");
+  }
+}
+
+/**
+ * Кнопки под позицией порции дня: отправить через бота, «написал сам»,
+ * «не подходит».
+ *
+ * Только свою порцию и только сегодня: кнопка из вчерашнего сообщения или
+ * пересланного чужого ничего не делает. Действия — те же, что в панели, со
+ * всеми их проверками: письмо с выдуманной цифрой бот так же не отправит.
+ */
+async function handlePortionButton(
+  query: NonNullable<Update["callback_query"]>,
+  action: string,
+  prospectId: string,
+) {
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (!staff || !prospectId || !(await inPortion(staff.id, prospectId))) {
+    await answerCallback(query.id, "Это не ваша порция на сегодня");
+    return;
+  }
+  const ip = "";
+  const done = async (label: string) => {
+    await answerCallback(query.id, label);
+    if (query.message) await markBriefHandled(query.message.chat.id, query.message.message_id, label);
+  };
+
+  try {
+    if (action === "send") {
+      const prospect = await prospectById(prospectId);
+      const message = prospect?.message?.trim();
+      if (!message) {
+        await answerCallback(query.id, "Текст ещё не готов — откройте карточку в панели");
+        return;
+      }
+      const result = await queueOutreach(prospectId, message, staff, ip);
+      if (!result.ok) {
+        // Причина — словами: «кнопка не работает» менеджеры говорят ровно
+        // тогда, когда отказ молчаливый.
+        await answerCallback(query.id, result.why === "no_way" ? "Писать некуда — нет контакта" : `Не отправлено: ${result.why}`.slice(0, 190));
+        return;
+      }
+      await done("📤 В очереди бота");
+      return;
+    }
+    if (action === "self") {
+      const result = await markSelfContacted(prospectId, staff, "Порция дня: написал сам", ip);
+      if (!result.ok) {
+        await answerCallback(query.id, result.why.slice(0, 190));
+        return;
+      }
+      await done("✋ Отмечено: написал сам");
+      return;
+    }
+    if (action === "skip") {
+      await skipProspect(prospectId, "Порция дня: не подошла");
+      await done("✖ Не подошла");
+      return;
+    }
+    await answerCallback(query.id, "Неизвестная команда");
+  } catch (error) {
+    console.error("telegram webhook: порция", error);
     await answerCallback(query.id, "Не получилось");
   }
 }
