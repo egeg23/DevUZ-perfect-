@@ -1,11 +1,13 @@
 import type { AssignableRole, Role } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import {
+  notifyHeadChange,
   notifyInvitedStaff,
+  notifyOwnersOfClaim,
   notifyRoleChange,
   type InviteOutcome,
 } from "@/lib/admin/staff-notice";
-import { isGrade, type Grade } from "@/lib/admin/finance";
+import { HEAD_TEAM_PERCENT, isGrade, type Grade } from "@/lib/admin/finance";
 import { TOUCH_PLAN_MAX } from "@/lib/admin/touch-plan";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
@@ -43,7 +45,7 @@ const COLUMNS =
 export type TeamResult =
   | {
       ok: true;
-      note?: "reactivated" | "menu_ok" | "menu_failed";
+      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed";
       /**
        * Дошло ли до человека приглашение.
        *
@@ -67,6 +69,9 @@ export type TeamResult =
         | "owner"
         // Назначаемый руководитель — не руководитель или отключён.
         | "not_head"
+        // У менеджера уже есть руководитель: забрать его к себе значило бы
+        // открепить от того, а открепляет только владелец.
+        | "has_head"
         // Роль, которую этот человек заводить не вправе: руководитель
         // проектов набирает менеджеров, но не вторых руководителей.
         | "forbidden";
@@ -140,15 +145,22 @@ export async function inviteStaff(
     return { ok: false, reason: "invalid" };
   }
 
+  // Руководитель заводит менеджера себе: набрал — значит и отвечает за него.
+  // Владелец заводит без руководителя и закрепляет сам, когда решит, чей.
+  const ownHead = admin.role === "head" && input.role === "manager" ? admin.id : null;
+
   const { data: existing } = await db
     .from("staff")
-    .select("id, is_active")
+    .select("id, is_active, head_staff_id")
     .eq("telegram_user_id", input.telegramId)
     .maybeSingle();
 
   if (existing) {
     if (existing.is_active) return { ok: false, reason: "exists" };
 
+    // Вернувшегося — к тому, кто вернул, только если он ничей. Прежний
+    // руководитель у него остаётся: снять его — решение владельца.
+    const claimed = ownHead && !existing.head_staff_id ? ownHead : null;
     const { error } = await db
       .from("staff")
       .update({
@@ -157,6 +169,7 @@ export async function inviteStaff(
         display_name: displayName,
         username,
         role: input.role,
+        ...(claimed ? { head_staff_id: claimed } : {}),
       })
       .eq("id", existing.id as string);
 
@@ -174,8 +187,9 @@ export async function inviteStaff(
       targetType: "staff",
       targetId: existing.id as string,
       ip,
-      meta: { reactivated: true, role: input.role, invite },
+      meta: { reactivated: true, role: input.role, invite, head: claimed },
     });
+    if (claimed) await tellOwnersOfClaim(admin, displayName);
     return { ok: true, note: "reactivated", invite };
   }
 
@@ -186,6 +200,7 @@ export async function inviteStaff(
       display_name: displayName,
       username,
       role: input.role,
+      head_staff_id: ownHead,
     })
     .select("id")
     .single();
@@ -209,8 +224,9 @@ export async function inviteStaff(
     ip,
     // Судьба приглашения в журнале: через месяц вопрос «почему Иван так и
     // не зашёл» иначе не с чем сопоставить.
-    meta: { role: input.role, invite },
+    meta: { role: input.role, invite, head: ownHead },
   });
+  if (ownHead) await tellOwnersOfClaim(admin, displayName);
   return { ok: true, invite };
 }
 
@@ -408,7 +424,7 @@ export async function setStaffHead(
 
   const { data: target } = await db
     .from("staff")
-    .select("id, role, head_staff_id")
+    .select("id, role, head_staff_id, is_active, telegram_user_id")
     .eq("id", staffId)
     .maybeSingle();
 
@@ -416,15 +432,17 @@ export async function setStaffHead(
   if (target.role === "admin") return { ok: false, reason: "owner" };
   if (headId === staffId) return { ok: false, reason: "invalid" };
 
+  let headName: string | null = null;
   if (headId) {
     const { data: head } = await db
       .from("staff")
-      .select("id, role, is_active")
+      .select("id, role, is_active, display_name")
       .eq("id", headId)
       .maybeSingle();
     if (!head || head.role !== "head" || !head.is_active) {
       return { ok: false, reason: "not_head" };
     }
+    headName = head.display_name as string;
   }
 
   const before = (target.head_staff_id as string | null) ?? null;
@@ -440,7 +458,120 @@ export async function setStaffHead(
     ip,
     meta: { from: before, to: headId },
   });
+
+  if (target.is_active) {
+    await notifyHeadChange({
+      telegramId: target.telegram_user_id as number,
+      headName,
+      changedBy: admin.display_name,
+    });
+  }
   return { ok: true };
+}
+
+/**
+ * Можно ли руководителю взять сотрудника к себе. Чистая часть claimManager.
+ *
+ * Только свободного менеджера. У кого руководитель уже есть — тот чужой, и
+ * забрать его значило бы открепить от прежнего; открепляет только владелец.
+ * Руководителя руководитель к себе не берёт: над руководителем — владелец.
+ */
+export function claimVerdict(input: {
+  actorId: string;
+  actorRole: Role;
+  target: { id: string; role: Role; is_active: boolean; head_staff_id: string | null };
+}): "ok" | "already" | "has_head" | "forbidden" | "gone" {
+  if (input.actorRole !== "head") return "forbidden";
+  if (!input.target.is_active) return "gone";
+  if (input.target.id === input.actorId || input.target.role !== "manager") return "forbidden";
+  if (input.target.head_staff_id === input.actorId) return "already";
+  if (input.target.head_staff_id) return "has_head";
+  return "ok";
+}
+
+/**
+ * Руководитель берёт менеджера к себе.
+ *
+ * Дальше он отвечает за его показатели: видит его статистику и план/факт на
+ * главной, ставит ему недельный план касаний. Обратного действия у
+ * руководителя нет — отказаться от менеджера может только владелец, через
+ * `setStaffHead`. Иначе «взял, пока цифры хорошие, и отдал, когда просели».
+ */
+export async function claimManager(staffId: string, actor: Staff, ip: string): Promise<TeamResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+
+  const { data: target } = await db
+    .from("staff")
+    .select("id, role, is_active, head_staff_id, telegram_user_id, display_name")
+    .eq("id", staffId)
+    .maybeSingle();
+  if (!target) return { ok: false, reason: "gone" };
+
+  const verdict = claimVerdict({
+    actorId: actor.id,
+    actorRole: actor.role,
+    target: {
+      id: target.id as string,
+      role: target.role as Role,
+      is_active: target.is_active === true,
+      head_staff_id: (target.head_staff_id as string | null) ?? null,
+    },
+  });
+  if (verdict === "already") return { ok: true, note: "claimed" };
+  if (verdict !== "ok") return { ok: false, reason: verdict };
+
+  // Условие «ничей» — в самом запросе, а не только в проверке выше: два
+  // руководителя, нажавшие одновременно, оба увидели бы «свободен», и второй
+  // молча переписал бы первого — то есть открепил бы чужого менеджера.
+  const { data: updated, error } = await db
+    .from("staff")
+    .update({ head_staff_id: actor.id })
+    .eq("id", staffId)
+    .eq("role", "manager")
+    .is("head_staff_id", null)
+    .select("id");
+  if (error) return { ok: false, reason: "failed" };
+  if (!updated?.length) return { ok: false, reason: "has_head" };
+
+  await record("staff.head_changed", {
+    actorStaffId: actor.id,
+    targetType: "staff",
+    targetId: staffId,
+    ip,
+    meta: { from: null, to: actor.id, claimed: true },
+  });
+
+  await Promise.all([
+    notifyHeadChange({
+      telegramId: target.telegram_user_id as number,
+      headName: actor.display_name,
+      changedBy: actor.display_name,
+    }),
+    tellOwnersOfClaim(actor, target.display_name as string),
+  ]);
+  return { ok: true, note: "claimed" };
+}
+
+/**
+ * Владельцу — что руководитель закрепил менеджера за собой: кнопкой или тем,
+ * что сам его завёл. Открепляет только владелец, и узнавать об этом он
+ * должен сразу, а не при следующем заходе в «Команду».
+ */
+async function tellOwnersOfClaim(head: Staff, managerName: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const [{ data: owners }, { data: me }] = await Promise.all([
+    db.from("staff").select("telegram_user_id").eq("role", "admin").eq("is_active", true),
+    db.from("staff").select("founder_percent").eq("id", head.id).maybeSingle(),
+  ]);
+  await notifyOwnersOfClaim({
+    ownerIds: (owners ?? []).map((o) => o.telegram_user_id as number),
+    headName: head.display_name,
+    managerName,
+    // Соучредителю ставка с команды не идёт — см. accrualsOf.
+    teamPercent: me?.founder_percent ? 0 : HEAD_TEAM_PERCENT,
+  });
 }
 
 /** Активные сотрудники, у которых этот человек — руководитель. */

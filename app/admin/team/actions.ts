@@ -8,6 +8,7 @@ import { isGrade, parsePercent } from "@/lib/admin/finance";
 import { hiredRoles, isAssignable } from "@/lib/admin/roles";
 import { syncBotMenu } from "@/lib/qualify/menu";
 import {
+  claimManager,
   disableStaff,
   inviteStaff,
   resendInvite,
@@ -112,6 +113,24 @@ export async function assignHead(formData: FormData) {
 
   const result = await setStaffHead(id, headId, admin, await requestIp());
   revalidatePath("/admin/team");
+  back(result);
+}
+
+/**
+ * Руководитель берёт менеджера к себе.
+ *
+ * Только руководитель: владелец закрепляет через `assignHead`, где можно и
+ * открепить. Здесь открепить нельзя ничем — кого можно взять, решает
+ * `claimManager`: только ничьего менеджера и только себе.
+ */
+export async function claim(formData: FormData) {
+  const head = await requireRole("head");
+  const id = String(formData.get("staff") ?? "");
+
+  const result = await claimManager(id, head, await requestIp());
+  revalidatePath("/admin/team");
+  revalidatePath("/admin");
+  revalidatePath("/admin/stats");
   back(result);
 }
 

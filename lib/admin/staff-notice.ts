@@ -130,3 +130,67 @@ export async function notifyRoleChange(input: {
     return "blocked";
   }
 }
+
+/**
+ * Сообщение менеджеру о том, чей он теперь.
+ *
+ * От руководителя зависит, кто видит его цифры и ставит ему план. Узнавать
+ * об этом по новому числу в «Касаниях» — значит узнавать последним.
+ */
+export async function notifyHeadChange(input: {
+  telegramId: number;
+  headName: string | null;
+  changedBy: string;
+}): Promise<void> {
+  if (!process.env.TELEGRAM_BOT_TOKEN) return;
+
+  const text = input.headName
+    ? [
+        `<b>Ваш руководитель теперь — ${esc(input.headName)}</b>`,
+        "",
+        "Он видит вашу статистику и план/факт, ставит недельный план касаний и отвечает за ваши показатели.",
+        `Изменил: ${esc(input.changedBy)}.`,
+      ].join("\n")
+    : ["<b>Руководитель с вас снят</b>", "", `Изменил: ${esc(input.changedBy)}.`].join("\n");
+
+  try {
+    await sendWithButtons(input.telegramId, text, [{ text: "Открыть панель", panel: "/admin" }]);
+  } catch (error) {
+    console.error("admin: не отправил сообщение о руководителе", error);
+  }
+}
+
+/**
+ * Владельцу — когда руководитель взял менеджера к себе сам.
+ *
+ * Открепить менеджера может только владелец, а значит и знать о том, что
+ * закрепили, он должен сразу, а не при следующем заходе в «Команду».
+ */
+export async function notifyOwnersOfClaim(input: {
+  ownerIds: readonly number[];
+  headName: string;
+  managerName: string;
+  /** Процент с его сделок, который пойдёт руководителю; 0 — не идёт. */
+  teamPercent: number;
+}): Promise<void> {
+  if (!process.env.TELEGRAM_BOT_TOKEN || !input.ownerIds.length) return;
+
+  const text = [
+    `<b>${esc(input.headName)} взял к себе менеджера ${esc(input.managerName)}</b>`,
+    "",
+    "Теперь он отвечает за его показатели и план/факт.",
+    input.teamPercent > 0 ? `С его сделок руководителю начисляется ${input.teamPercent} %.` : "",
+    "Открепить менеджера можете только вы — в разделе «Команда».",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  await Promise.all(
+    input.ownerIds.map((id) =>
+      sendWithButtons(id, text, [{ text: "Команда", panel: "/admin/team" }]).catch((error) => {
+        console.error("admin: не отправил владельцу о закреплении", error);
+        return false;
+      }),
+    ),
+  );
+}

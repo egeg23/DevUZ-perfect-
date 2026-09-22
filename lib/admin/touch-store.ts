@@ -51,14 +51,31 @@ export async function touchProgressOf(
   staffId: string,
   now: Date = new Date(),
 ): Promise<TouchProgress> {
-  const db = serviceClient();
-  if (!db) return touchProgress(null, 0);
+  return (await touchProgressFor([staffId], now)).get(staffId) ?? touchProgress(null, 0);
+}
 
-  const [{ data: person }, counts] = await Promise.all([
-    db.from("staff").select("touch_plan").eq("id", staffId).maybeSingle(),
-    touchesThisWeek([staffId], now),
+/**
+ * План и выполнение сразу нескольких — для таблицы команды у руководителя и
+ * владельца. Два запроса на всех, а не два на каждого.
+ */
+export async function touchProgressFor(
+  staffIds: readonly string[],
+  now: Date = new Date(),
+): Promise<Map<string, TouchProgress>> {
+  const out = new Map<string, TouchProgress>();
+  if (!staffIds.length) return out;
+
+  const db = serviceClient();
+  if (!db) return out;
+
+  const [{ data: people }, counts] = await Promise.all([
+    db.from("staff").select("id, touch_plan").in("id", [...staffIds]),
+    touchesThisWeek(staffIds, now),
   ]);
 
-  const plan = (person?.touch_plan as number | null) ?? null;
-  return touchProgress(plan, counts.get(staffId) ?? 0);
+  for (const row of people ?? []) {
+    const id = row.id as string;
+    out.set(id, touchProgress((row.touch_plan as number | null) ?? null, counts.get(id) ?? 0));
+  }
+  return out;
 }

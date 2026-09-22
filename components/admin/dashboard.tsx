@@ -4,6 +4,7 @@ import { deletePlan, savePlan } from "@/app/admin/plans/actions";
 import { METRICS, METRIC_TITLE, monthLabel, type Expected, type MonthCash, type PlanFact, type StaffPulse, type StuckLead } from "@/lib/admin/pulse";
 import type { PendingContract } from "@/lib/admin/pulse-store";
 import type { Upcoming } from "@/lib/admin/tax-calendar";
+import type { TouchProgress } from "@/lib/admin/touch-plan";
 
 /**
  * Куски личного дашборда. Серверные, без скриптов: цифры считаются на
@@ -193,7 +194,15 @@ export function PlanFactBlock({
 
 /* ── Команда ───────────────────────────────────────────────────────────── */
 
-export type TeamRow = { id: string; name: string; week: StaffPulse; prev: StaffPulse; due: number };
+export type TeamRow = {
+  id: string;
+  name: string;
+  week: StaffPulse;
+  prev: StaffPulse;
+  due: number;
+  /** Холодные касания с понедельника против недельного плана. */
+  touch?: TouchProgress;
+};
 
 const delta = (now: number, before: number) =>
   now === before ? "" : now > before ? ` ↑${now - before}` : ` ↓${before - now}`;
@@ -215,6 +224,7 @@ export function TeamTable({ rows, showMoney }: { rows: TeamRow[]; showMoney: boo
               <th className="py-2 pr-4 font-normal">Контактов</th>
               <th className="py-2 pr-4 font-normal">Выиграно</th>
               <th className="py-2 pr-4 font-normal">Поступления</th>
+              <th className="py-2 pr-4 font-normal">План касаний</th>
               {showMoney ? <th className="py-2 pr-4 font-normal">К выплате</th> : null}
             </tr>
           </thead>
@@ -237,6 +247,9 @@ export function TeamTable({ rows, showMoney }: { rows: TeamRow[]; showMoney: boo
                   <span className="text-xs text-muted">{delta(r.week.won, r.prev.won)}</span>
                 </td>
                 <td className="py-2 pr-4 font-mono">{money(r.week.revenue)}</td>
+                <td className="py-2 pr-4 font-mono">
+                  <TouchCell touch={r.touch} />
+                </td>
                 {showMoney ? <td className="py-2 pr-4 font-mono">{money(r.due)}</td> : null}
               </tr>
             ))}
@@ -244,6 +257,24 @@ export function TeamTable({ rows, showMoney }: { rows: TeamRow[]; showMoney: boo
         </table>
       </div>
     </section>
+  );
+}
+
+/**
+ * План/факт холодных касаний в строке команды.
+ *
+ * Это не столбец «Касаний» левее: там работа по лидам, здесь — холодные
+ * касания из раздела «Касания», по которым руководитель ставит недельный
+ * план. Без плана — прочерк, а не «0 из 0».
+ */
+function TouchCell({ touch }: { touch?: TouchProgress }) {
+  if (!touch || touch.plan === null) return <span className="text-faint">—</span>;
+  const closed = touch.left === 0;
+  return (
+    <span className={closed ? "text-green" : ""}>
+      {touch.done} / {touch.plan}
+      {closed ? null : <span className="block text-xs text-muted">осталось {touch.left}</span>}
+    </span>
   );
 }
 
