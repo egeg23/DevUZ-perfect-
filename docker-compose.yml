@@ -64,6 +64,14 @@ services:
       REMINDER_SWEEP_SECRET: ${REMINDER_SWEEP_SECRET}
       SHIFT_REPORT_SECRET: ${SHIFT_REPORT_SECRET}
 
+      # Трафик сайта на дашборде владельца — чтение статистики обратно из
+      # Метрики и Google Analytics. Пусто — вкладка «Трафик» показывает, что
+      # сделать, чтобы подключить. Только сервер: в браузер не уходят.
+      YANDEX_METRIKA_TOKEN: ${YANDEX_METRIKA_TOKEN:-}
+      YANDEX_METRIKA_ID: ${YANDEX_METRIKA_ID:-}
+      GA4_PROPERTY_ID: ${GA4_PROPERTY_ID:-}
+      GA_SERVICE_ACCOUNT: ${GA_SERVICE_ACCOUNT:-}
+
       # Канал оператора холодного поиска. Отдельный от чата отдела продаж
       # намеренно: там лежат брифы настоящих лидов, и смешивать их с
       # холодной лентой значит утопить первые во вторых. Пусто — скаут

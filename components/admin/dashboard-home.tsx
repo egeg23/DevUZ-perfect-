@@ -56,7 +56,26 @@ const PLAN_NOTICE: Record<string, string> = {
   coach_failed: "Рекомендации не собрались: модель не ответила или ответила числами, которых нет в данных. Подробности в логе сервера.",
 };
 
-export async function DashboardHome({ staff, planNotice }: { staff: Staff; planNotice?: string }) {
+/**
+ * Вкладки дашборда владельца.
+ *
+ * Владелец: «бесконечный скролл вниз — можно уютно скомпоновать или
+ * разделить по логическим блокам». Тринадцать блоков одной лентой читались
+ * как отчёт, который пролистывают, а не как экран, с которого начинают день.
+ * Поэтому у владельца главная — вкладки: что сделать сегодня, деньги,
+ * команда. У менеджера и руководителя экран короче, и там всё по-прежнему.
+ */
+export type OwnerSection = "today" | "money" | "team";
+
+export async function DashboardHome({
+  staff,
+  planNotice,
+  section = "today",
+}: {
+  staff: Staff;
+  planNotice?: string;
+  section?: OwnerSection;
+}) {
   const now = new Date();
   const today = todayInTashkent(now);
   const weekStart = periodStart("week", now);
@@ -189,26 +208,61 @@ export async function DashboardHome({ staff, planNotice }: { staff: Staff; planN
   const dueAll = teamRows.reduce((s, r) => s + r.due, 0);
   const options = teamRows.map((r) => ({ id: r.id, name: r.name }));
 
+  const moneyTiles = (
+    <Tiles
+      items={[
+        { value: money(thisMonth?.revenue ?? 0), label: "поступления за месяц", tone: "green" },
+        { value: money(thisMonth?.expenses ?? 0), label: "расходы за месяц" },
+        { value: money(expected.reduce((s, r) => s + r.remaining, 0)), label: "ожидаем от клиентов" },
+        { value: money(dueAll), label: "к выплате команде", tone: dueAll > 0 ? "gold" : "plain" },
+      ]}
+    />
+  );
+  const planNote = notice ? (
+    <p className="rounded-xl border border-line bg-surface px-4 py-2 text-sm text-muted">{notice}</p>
+  ) : null;
+
+  // Сегодня — то, что требует действия: подписать, позвонить, заплатить.
+  // Две колонки на широком экране: блоки короткие, и в ленту по одному они
+  // растягивали экран вдвое.
+  if (section === "today") {
+    return (
+      <div className="mb-8 space-y-4">
+        {planNote}
+        <ContractsToSign rows={contracts} />
+        {moneyTiles}
+        <div className="grid items-start gap-4 lg:grid-cols-2">
+          <ReviewCard review={daily.get(staff.id) ?? null} title="На сегодня" canRefresh />
+          <div className="space-y-4">
+            <StuckLeads rows={allStuck} names={names} />
+            <TaxesSoon rows={taxes} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (section === "money") {
+    return (
+      <div className="mb-8 space-y-4">
+        {moneyTiles}
+        <CashChart rows={cash} />
+        <div className="grid items-start gap-4 lg:grid-cols-2">
+          <ExpectedPayments rows={expected} names={names} />
+          <TaxesSoon rows={taxes} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-8 space-y-4">
-      {notice ? <p className="rounded-xl border border-line bg-surface px-4 py-2 text-sm text-muted">{notice}</p> : null}
-      <ContractsToSign rows={contracts} />
-      <Tiles
-        items={[
-          { value: money(thisMonth?.revenue ?? 0), label: "поступления за месяц", tone: "green" },
-          { value: money(thisMonth?.expenses ?? 0), label: "расходы за месяц" },
-          { value: money(expected.reduce((s, r) => s + r.remaining, 0)), label: "ожидаем от клиентов" },
-          { value: money(dueAll), label: "к выплате команде", tone: dueAll > 0 ? "gold" : "plain" },
-        ]}
-      />
-      <ReviewCard review={daily.get(staff.id) ?? null} title="На сегодня" canRefresh />
-      <TaxesSoon rows={taxes} />
-      <StuckLeads rows={allStuck} names={names} />
-      <CashChart rows={cash} />
-      <ExpectedPayments rows={expected} names={names} />
+      {planNote}
       <TeamTable rows={teamRows} showMoney />
-      <BestOfWeek rows={teamRows} />
-      <TeamReviews rows={teamReviews} />
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <BestOfWeek rows={teamRows} />
+        <TeamReviews rows={teamReviews} />
+      </div>
       <PlanFactBlock plans={planRows} canAdd={options.length > 0} canEdit staffOptions={options} />
     </div>
   );

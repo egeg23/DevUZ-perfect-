@@ -35,14 +35,14 @@ export async function savePlan(formData: FormData) {
   );
 
   revalidatePath("/admin");
-  redirect(`/admin?p=${result.ok ? "ok" : result.reason}`);
+  redirect(`/admin?p=${result.ok ? "ok" : result.reason}&tab=team`);
 }
 
 export async function deletePlan(formData: FormData) {
   const staff = await requireStaff();
   const result = await removePlan(String(formData.get("plan") ?? ""), staff, await requestIp());
   revalidatePath("/admin");
-  redirect(`/admin?p=${result.ok ? "ok" : result.reason}`);
+  redirect(`/admin?p=${result.ok ? "ok" : result.reason}&tab=team`);
 }
 
 /**

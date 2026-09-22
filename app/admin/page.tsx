@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { DashboardHome } from "@/components/admin/dashboard-home";
+import { TrafficPanel, trafficPeriodOf } from "@/components/admin/traffic-panel";
 import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
 import { LeadTable } from "@/components/admin/lead-table";
@@ -52,6 +53,24 @@ function Chip({
   );
 }
 
+/**
+ * Вкладки главной у владельца. У остальных ролей экран короче, и вкладок
+ * нет: менеджер открывает панель ради своих лидов, и прятать их за кликом
+ * значило бы добавить шаг к каждому рабочему дню.
+ */
+const OWNER_TABS = [
+  { key: "today", label: "Сегодня" },
+  { key: "leads", label: "Лиды" },
+  { key: "money", label: "Деньги" },
+  { key: "team", label: "Команда" },
+  { key: "traffic", label: "Трафик" },
+] as const;
+type OwnerTab = (typeof OWNER_TABS)[number]["key"];
+
+function ownerTabOf(raw: string | undefined): OwnerTab {
+  return OWNER_TABS.some((t) => t.key === raw) ? (raw as OwnerTab) : "today";
+}
+
 function Stat({ value, label }: { value: number | string; label: string }) {
   return (
     <div className="rounded-xl border border-line bg-surface px-5 py-4">
@@ -70,10 +89,13 @@ export default async function AdminHome({
     owner?: string;
     page?: string;
     p?: string;
+    tab?: string;
+    d?: string;
   }>;
 }) {
   const staff = await requireStaff();
   const params = await searchParams;
+  const ownerTab = staff.role === "admin" ? ownerTabOf(params.tab) : null;
 
   const page = Math.max(Number.parseInt(params.page ?? "1", 10) || 1, 1);
   const limit = 50;
@@ -99,7 +121,7 @@ export default async function AdminHome({
 
   const base = (patch: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    const merged = { ...params, ...patch, page: undefined, p: undefined };
+    const merged = { ...params, ...patch, page: undefined, p: undefined, d: undefined };
     for (const [key, value] of Object.entries(merged)) {
       if (value) next.set(key, value);
     }
@@ -109,18 +131,8 @@ export default async function AdminHome({
 
   const pages = Math.max(Math.ceil(leads.total / limit), 1);
 
-  return (
-    <AdminShell staff={staff}>
-      {/* Стоит выше всего остального намеренно: человек, у которого молча
-          перестали приходить напоминания, ничего об этом не знает, а
-          узнаёт по остывшему лиду через неделю. */}
-      <SweepBanner />
-
-      {/* План касаний на неделю — здесь, а не только в самих касаниях.
-          Открывают панель с главной, и число, ради которого человек пойдёт
-          в касания, должно встретить его до того, как он туда свернёт. */}
-      <TouchPlanLine progress={plan} />
-
+  const pendingBlock = (
+    <>
       {/* Просьбы передать лида: решать их должен тот, кто их видит, а не тот,
           кто вспомнил. Поэтому очередь стоит первой, а не спрятана в лиде. */}
       {pending.length ? (
@@ -143,18 +155,11 @@ export default async function AdminHome({
           </ul>
         </section>
       ) : null}
+    </>
+  );
 
-      {leads.offline ? (
-        <p className="mb-6 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
-          База недоступна. Это не «лидов нет» — это значит, что панель сейчас
-          ничего не видит; проверьте переменные Supabase на сервере.
-        </p>
-      ) : null}
-
-      {/* Личный дашборд: у каждой роли свой. Стоит выше общего списка —
-          сначала то, что требует действия сегодня, потом всё остальное. */}
-      <DashboardHome staff={staff} planNotice={params.p} />
-
+  const leadsBlock = (
+    <>
       <div className="grid grid-cols-3 gap-3 sm:max-w-lg">
         <Stat value={counts.total} label="всего" />
         <Stat value={counts.free} label="свободных" />
@@ -226,6 +231,75 @@ export default async function AdminHome({
         только тому, за кем лид закреплён. Каждое открытие — строка в журнале
         с именем и временем. Свободного лида сначала нужно взять.
       </p>
+    </>
+  );
+
+  return (
+    <AdminShell staff={staff}>
+      {/* Стоит выше всего остального намеренно: человек, у которого молча
+          перестали приходить напоминания, ничего об этом не знает, а
+          узнаёт по остывшему лиду через неделю. */}
+      <SweepBanner />
+
+      {/* План касаний на неделю — здесь, а не только в самих касаниях.
+          Открывают панель с главной, и число, ради которого человек пойдёт
+          в касания, должно встретить его до того, как он туда свернёт. */}
+      <TouchPlanLine progress={plan} />
+
+      {leads.offline ? (
+        <p className="mb-6 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
+          База недоступна. Это не «лидов нет» — это значит, что панель сейчас
+          ничего не видит; проверьте переменные Supabase на сервере.
+        </p>
+      ) : null}
+
+      {ownerTab ? (
+        <>
+          {/* Вкладки — ссылками, а не скриптом: страница серверная, вкладка
+              живёт в адресе, и «Деньги» можно открыть закладкой. */}
+          <nav className="no-scrollbar -mx-1 mb-5 flex gap-1 overflow-x-auto border-b border-line px-1">
+            {OWNER_TABS.map((t) => {
+              const badge = t.key === "today" ? pending.length : t.key === "leads" ? counts.free : 0;
+              return (
+                <Link
+                  key={t.key}
+                  href={t.key === "today" ? "/admin" : `/admin?tab=${t.key}`}
+                  className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm transition ${
+                    ownerTab === t.key
+                      ? "border-green text-green"
+                      : "border-transparent text-muted hover:text-text"
+                  }`}
+                >
+                  {t.label}
+                  {badge ? (
+                    <span className="ml-1.5 rounded-full bg-gold/15 px-1.5 py-0.5 font-mono text-[10px] text-gold">
+                      {badge}
+                    </span>
+                  ) : null}
+                </Link>
+              );
+            })}
+          </nav>
+          {ownerTab === "today" ? (
+            <>
+              {pendingBlock}
+              <DashboardHome staff={staff} planNotice={params.p} section="today" />
+            </>
+          ) : null}
+          {ownerTab === "money" ? <DashboardHome staff={staff} planNotice={params.p} section="money" /> : null}
+          {ownerTab === "team" ? <DashboardHome staff={staff} planNotice={params.p} section="team" /> : null}
+          {ownerTab === "traffic" ? <TrafficPanel days={trafficPeriodOf(params.d)} /> : null}
+          {ownerTab === "leads" ? leadsBlock : null}
+        </>
+      ) : (
+        <>
+          {pendingBlock}
+          {/* Личный дашборд: у каждой роли свой. Стоит выше общего списка —
+              сначала то, что требует действия сегодня, потом всё остальное. */}
+          <DashboardHome staff={staff} planNotice={params.p} />
+          {leadsBlock}
+        </>
+      )}
     </AdminShell>
   );
 }

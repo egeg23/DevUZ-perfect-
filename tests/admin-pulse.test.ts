@@ -189,12 +189,17 @@ test("план ставится и снимается через проверк�
 test("главная панели показывает дашборд роли выше общего списка", () => {
   const page = read("app/admin/page.tsx");
   assert.match(page, /<DashboardHome staff=\{staff\} planNotice=\{params\.p\} \/>/);
-  assert.ok(page.indexOf("<DashboardHome") < page.indexOf("<LeadTable"), "дашборд ниже списка лидов");
+  // Без вкладок (менеджер, руководитель) — дашборд выше списка лидов.
+  const plain = page.slice(page.indexOf("{pendingBlock}", page.indexOf(") : (")));
+  assert.ok(plain.indexOf("<DashboardHome") < plain.indexOf("{leadsBlock}"), "дашборд ниже списка лидов");
 
   const home = read("components/admin/dashboard-home.tsx");
   // Владелец: договоры на подпись — первыми, до денег и команды.
   const owner = home.slice(home.indexOf("── Владелец"));
-  assert.ok(owner.indexOf("<ContractsToSign") < owner.indexOf("<Tiles"), "договоры не первые");
+  // У владельца вкладки: на «Сегодня» договоры стоят раньше денег.
+  const today = owner.slice(owner.indexOf('section === "today"'));
+  assert.ok(today.indexOf("<ContractsToSign") >= 0, "договоров нет на «Сегодня»");
+  assert.ok(today.indexOf("<ContractsToSign") < today.indexOf("{moneyTiles}"), "договоры не первые");
   assert.ok(owner.indexOf("<Tiles") < owner.indexOf("<CashChart"));
   // Менеджеру план не ставить, руководителю — ставить, владельцу — и менять.
   assert.match(home, /canAdd=\{false\} canEdit=\{false\}/);
