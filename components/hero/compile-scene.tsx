@@ -195,15 +195,29 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
       aria-label={dict.hero.eyebrow}
     >
       <div className="sticky top-0 flex h-svh min-h-[600px] flex-col overflow-hidden">
-        {/* Подсветка фона */}
+        {/* Подсветка фона.
+
+            Радиальным градиентом, а не кругом под `blur-[130px]`. Размытие
+            на 130 px просят посчитать для пятна в семьсот с лишним
+            пикселей — дважды, и на каждом кадре, где меняется прозрачность
+            второго пятна. Градиент даёт ту же мягкую подсветку одной
+            заливкой, без фильтра и без отдельного слоя под него. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-40 -top-56 h-[46rem] w-[46rem] rounded-full bg-blue opacity-25 blur-[130px]"
+          className="pointer-events-none absolute -left-40 -top-56 h-[46rem] w-[46rem]"
+          style={{
+            background:
+              "radial-gradient(closest-side, rgba(59,130,246,.34), rgba(59,130,246,.17) 45%, rgba(59,130,246,.05) 75%, rgba(59,130,246,0) 100%)",
+          }}
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-32 top-24 h-[38rem] w-[38rem] rounded-full bg-green opacity-[0.14] blur-[130px]"
-          style={{ opacity: 0.14 + build * 0.22 }}
+          className="pointer-events-none absolute -right-32 top-24 h-[38rem] w-[38rem]"
+          style={{
+            background:
+              "radial-gradient(closest-side, rgba(34,240,160,.22), rgba(34,240,160,.10) 45%, rgba(34,240,160,.03) 75%, rgba(34,240,160,0) 100%)",
+            opacity: 0.8 + build * 1.25,
+          }}
         />
 
         <CodeRain progress={progress} reduced={reduced} narrow={narrow} />
@@ -287,6 +301,19 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
             число, которое письму противоречило, и два, на которые пришедший
             проверять не смотрит.
           */}
+          {/*
+            Фон и тень — классом, а не в style. Здесь каждый кадр прокрутки
+            переписывает style целиком, и тень с радиусом 60 px переезжала
+            бы вместе с ним: браузеру нечем понять, что она не менялась.
+            Покадрово остаются только opacity и transform — их композитор
+            умеет крутить, не перерисовывая карточку.
+
+            `backdrop-blur-xl` отсюда убран. Размытие подложки пересчитывает
+            то, что под карточкой, на каждом кадре — а под ней идёт дождь из
+            кода, то есть меняется всё и всегда. Три таких карточки на
+            слабом устройстве и давали фризы. Стекло собрано градиентом:
+            выглядит так же, стоит ноль.
+          */}
           {[...headline, ...stats].slice(0, 3).map((stat, i) => {
             const local = Math.min(1, Math.max(0, (cardsIn - i * 0.16) / 0.52));
             const eased = ease(local);
@@ -298,12 +325,11 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
             return (
               <div
                 key={stat.label.ru}
-                className="absolute w-56 rounded-2xl border border-line bg-surface-2/85 p-5 backdrop-blur-xl"
+                className="hero-card absolute w-56 rounded-2xl border border-line p-5"
                 style={{
                   ...positions[i],
                   opacity: eased * (1 - heroOut),
                   transform: `translate3d(${(1 - eased) * 70}px, ${-heroOut * 40}px, 0) scale(${0.94 + eased * 0.06})`,
-                  boxShadow: "0 24px 60px rgba(0,0,0,.55)",
                 }}
               >
                 <p className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-faint">
@@ -366,7 +392,11 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
             opacity: 1 - settle * 0.85,
           }}
         >
-          <div className="overflow-hidden rounded-2xl border border-line bg-[#090d14]/95 shadow-[0_30px_90px_rgba(0,0,0,.7)] backdrop-blur-xl"
+          {/* Фон терминала непрозрачен на 95 %, и `backdrop-blur-xl` поверх
+              него не давал глазу ничего: размывать нечего, всё закрыто. При
+              этом терминал едет вместе со сценой — то есть браузер честно
+              пересчитывал размытие подложки на каждом кадре прокрутки. */}
+          <div className="overflow-hidden rounded-2xl border border-line bg-[#090d14] shadow-[0_30px_90px_rgba(0,0,0,.7)]"
                style={{ borderColor: compiled ? "rgba(34,240,160,.35)" : undefined }}>
             <div className="flex items-center gap-2.5 border-b border-line bg-white/[0.02] px-4 py-3">
               <span className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
