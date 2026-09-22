@@ -190,9 +190,16 @@ jobs:
             # Не «fail» вообще: в каждом отчёте свипа есть "failed":0, и такой
             # фильтр насчитал бы сбой в каждом из 288 проходов. Считаем то,
             # что пишет systemd и curl, когда проход действительно упал.
-            SWEEP_FAILS="$(journalctl -u devuz-reminders.service --since "-24h" --no-pager 2>/dev/null \
-              | grep -cE "Failed with result|curl: \(" || true)"
+            # Упавший проход systemd помечает одной строкой «Failed with
+            # result», а curl рядом пишет причину — её и показываем со
+            # временем: проходы, упавшие в минуту выкатки, — это
+            # перезапуск контейнера, а не поломка.
+            SWEEP_LOG="$(journalctl -u devuz-reminders.service --since "-24h" --no-pager 2>/dev/null || true)"
+            SWEEP_FAILS="$(printf '%s\n' "$SWEEP_LOG" | grep -c "Failed with result" || true)"
             echo "упавших проходов: ${SWEEP_FAILS:-0}"
+            printf '%s\n' "$SWEEP_LOG" | grep -E "curl: \(" | cut -c1-200 | tail -6 || true
+            echo "выкатки за сутки:"
+            git log --since="24 hours ago" --format='  %cd %h %s' --date=format:'%b %d %H:%M' 2>/dev/null | cut -c1-110 | head -8 || true
             echo
             echo "════ Бот ════"
             # Изнутри контейнера: там токен и адрес API, а в вывод токен не попадает.
