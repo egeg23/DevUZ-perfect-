@@ -8,6 +8,7 @@ import {
   type InviteOutcome,
 } from "@/lib/admin/staff-notice";
 import { HEAD_TEAM_PERCENT, isGrade, type Grade } from "@/lib/admin/finance";
+import { detachTeam, offboardStaff, type Offboarding } from "@/lib/admin/offboarding";
 import { TOUCH_PLAN_MAX } from "@/lib/admin/touch-plan";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
@@ -54,6 +55,10 @@ export type TeamResult =
        * — разные состояния, и второе требует действия от того, кто заводил.
        */
       invite?: InviteOutcome;
+      /** Что отключение разорвало — для строки итога на странице. */
+      offboarding?: Offboarding;
+      /** Сколько менеджеров открепилось, когда руководителя сняли с должности. */
+      detached?: number;
     }
   | {
       ok: false;
@@ -280,13 +285,18 @@ export async function disableStaff(
   // после отключения.
   await db.from("login_tokens").delete().eq("staff_id", staffId).is("used_at", null);
 
+  // Доступ закрыт — теперь всё, что за него держится: лиды в работе,
+  // переписки, очередь, напоминания, команда, карточки в его личке.
+  const offboarding = await offboardStaff(staffId, admin, ip);
+
   await record("staff.disabled", {
     actorStaffId: admin.id,
     targetType: "staff",
     targetId: staffId,
     ip,
+    meta: { offboarding },
   });
-  return { ok: true };
+  return { ok: true, offboarding };
 }
 
 /**
@@ -335,6 +345,11 @@ export async function setStaffRole(
     .eq("id", staffId);
   if (error) return { ok: false, reason: "failed" };
 
+  // Снятый с должности руководитель команду не ведёт: менеджеры становятся
+  // ничьими. Иначе они числились бы за менеджером — и 5 % с их сделок шли бы
+  // ему дальше, а план им ставить было бы некому.
+  const detached = target.role === "head" && role !== "head" ? await detachTeam(staffId) : 0;
+
   // Отключённому не пишем: у него нет доступа, и сообщение о новых правах
   // было бы неправдой.
   const invite = target.is_active
@@ -350,9 +365,9 @@ export async function setStaffRole(
     targetType: "staff",
     targetId: staffId,
     ip,
-    meta: { from: target.role, to: role, invite },
+    meta: { from: target.role, to: role, invite, detached },
   });
-  return { ok: true, invite };
+  return { ok: true, invite, detached };
 }
 
 /**

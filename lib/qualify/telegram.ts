@@ -643,6 +643,36 @@ export async function editLeadCards(
 }
 
 /**
+ * Забрать карточки лидов из лички отключённого сотрудника.
+ *
+ * Удалить бот может только своё сообщение не старше 48 часов — так устроен
+ * Telegram. У более старых снимаются кнопки: текст остаётся, но ни взять, ни
+ * открыть по нему ничего уже нельзя. Возвращает, сколько удалено совсем.
+ *
+ * Пачками по двадцать: у уволенного могут лежать сотни карточек, и разом они
+ * упёрлись бы в ограничение Telegram на частоту запросов.
+ */
+export async function withdrawCards(notices: readonly Notice[]): Promise<number> {
+  let deleted = 0;
+  for (let i = 0; i < notices.length; i += 20) {
+    const batch = notices.slice(i, i + 20);
+    const results = await Promise.all(
+      batch.map(async (n) => {
+        if (await call("deleteMessage", { chat_id: n.chatId, message_id: n.messageId })) return true;
+        await call("editMessageReplyMarkup", {
+          chat_id: n.chatId,
+          message_id: n.messageId,
+          reply_markup: { inline_keyboard: [] },
+        });
+        return false;
+      }),
+    );
+    deleted += results.filter(Boolean).length;
+  }
+  return deleted;
+}
+
+/**
  * Отмечает бриф как разобранный, переписывая только кнопки под ним.
  *
  * Соблазн был дописать статус в текст через editMessageText, но Telegram

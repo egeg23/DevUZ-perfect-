@@ -32,7 +32,13 @@ import { parseTouchPlan } from "@/lib/admin/touch-plan";
 function back(result: TeamResult): never {
   const code = result.ok ? (result.note ?? "ok") : result.reason;
   const invite = result.ok && result.invite ? `&i=${result.invite}` : "";
-  redirect(`/admin/team?r=${code}${invite}`);
+  // Итог отключения — числами в адресе: страница соберёт из них строку.
+  const o = result.ok && result.offboarding;
+  const offboarded = o
+    ? `&o=${[o.leads, o.talks, o.pool, o.team, o.reminders, o.transfers, o.cards].join("-")}`
+    : "";
+  const detached = result.ok && result.detached ? `&t=${result.detached}` : "";
+  redirect(`/admin/team?r=${code}${invite}${offboarded}${detached}`);
 }
 
 export async function addStaff(formData: FormData) {
