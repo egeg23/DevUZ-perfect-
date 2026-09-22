@@ -1,9 +1,17 @@
+import Link from "next/link";
+
 import { AdminShell } from "@/components/admin/shell";
 import { OutreachList } from "@/components/admin/outreach-list";
 import { ProspectRunner } from "@/components/admin/prospect-runner";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
 import { requireStaff } from "@/lib/admin/guard";
 import { touchProgressOf } from "@/lib/admin/touch-store";
+import { outcomeOf } from "@/lib/admin/portion";
+import { portionOf } from "@/lib/admin/portion-store";
+import { todayInTashkent } from "@/lib/admin/pulse";
+import { MapsCampaigns } from "@/components/admin/maps-campaigns";
+import { dailyCap, placesConfigured } from "@/lib/maps/places";
+import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
 import { sentLastHour } from "@/lib/admin/outreach-queue";
 import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
 import { BATCH_CAP } from "@/lib/audit/batch";
@@ -13,16 +21,24 @@ export const dynamic = "force-dynamic";
 export default async function ProspectPage({
   searchParams,
 }: {
-  searchParams: Promise<{ open?: string; e?: string; sent?: string }>;
+  searchParams: Promise<{ open?: string; e?: string; sent?: string; maps?: string }>;
 }) {
   const staff = await requireStaff();
-  const { open, e, sent } = await searchParams;
-  const [rows, hour, replies, plan] = await Promise.all([
+  const { open, e, sent, maps } = await searchParams;
+  // Автопоиск ведут владелец и руководитель; менеджеру он приходит порцией.
+  const seesMaps = staff.role === "admin" || staff.role === "head";
+  const [campaigns, mapsUsage, mapsPending] = seesMaps
+    ? await Promise.all([listCampaigns(), usageToday(), pendingPlaces()])
+    : [[], 0, 0];
+  const [rows, hour, replies, plan, portion] = await Promise.all([
     listProspects(),
     sentLastHour(),
     manualReplies(),
     touchProgressOf(staff.id),
+    portionOf(staff.id),
   ]);
+  const today = todayInTashkent(new Date());
+  const portionDone = portion.filter((p) => outcomeOf(p, staff.id, today) !== null).length;
 
   return (
     <AdminShell staff={staff}>
@@ -35,7 +51,51 @@ export default async function ProspectPage({
 
       <TouchPlanLine progress={plan} />
 
+      {/* Порция дня — выше всего остального: это то, с чего сегодня
+          начинать. Те же компании пришли утром в Telegram с кнопками. */}
+      {portion.length ? (
+        <section className="mb-6 rounded-xl border border-green/30 bg-green/5 px-5 py-4">
+          <p className="text-xs uppercase tracking-wider text-green">
+            Ваша порция на сегодня: сделано {portionDone} из {portion.length}
+          </p>
+          <ul className="mt-3 flex flex-col gap-1.5 text-sm">
+            {portion.map((p) => {
+              const outcome = outcomeOf(p, staff.id, today);
+              const state =
+                outcome === "skipped"
+                  ? "не подошла"
+                  : outcome
+                    ? "сделано"
+                    : p.message
+                      ? "текст готов"
+                      : "текст готовится";
+              return (
+                <li key={p.id} className="flex flex-wrap items-baseline gap-x-2">
+                  <Link href={`/admin/prospect?open=${p.id}#p-${p.id}`} className="hover:text-green">
+                    {p.label || p.host || "Компания без сайта"}
+                  </Link>
+                  <span className={`text-xs ${outcome ? "text-faint" : "text-muted"}`}>{state}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-3 text-xs text-faint">Что не сделано до 18:00, вернётся в общий пул.</p>
+        </section>
+      ) : null}
+
       <ProspectRunner />
+
+      {seesMaps ? (
+        <MapsCampaigns
+          campaigns={campaigns}
+          configured={placesConfigured()}
+          usage={mapsUsage}
+          cap={dailyCap()}
+          pending={mapsPending}
+          canEdit
+          notice={maps}
+        />
+      ) : null}
 
       <OutreachList rows={rows} hour={hour} open={open} error={e} sent={sent === "1"} replies={replies} />
 

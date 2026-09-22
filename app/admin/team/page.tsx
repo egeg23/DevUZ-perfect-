@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/admin/guard";
 import { GRADES, GRADE_TITLE } from "@/lib/admin/finance";
 import { ROLE_BADGE, ROLE_TITLE, hiredRoles, managesStaff } from "@/lib/admin/roles";
 import { listTeam } from "@/lib/admin/team";
+import { offboardingSummary } from "@/lib/admin/offboarding";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,7 @@ const BUTTON =
 export default async function TeamPage({
   searchParams,
 }: {
-  searchParams: Promise<{ r?: string; i?: string }>;
+  searchParams: Promise<{ r?: string; i?: string; o?: string; t?: string }>;
 }) {
   // Страницу открывают двое: владелец и руководитель проектов. Видят они
   // один и тот же состав, но правит его только владелец — `manages` ниже
@@ -77,7 +78,7 @@ export default async function TeamPage({
   const viewer = await requireRole("admin", "head");
   const manages = managesStaff(viewer.role);
   const canHire = hiredRoles(viewer.role);
-  const { r, i } = await searchParams;
+  const { r, i, o, t } = await searchParams;
   const team = await listTeam();
 
   const nameById = new Map(team.map((m) => [m.id, m.display_name]));
@@ -86,6 +87,20 @@ export default async function TeamPage({
   const heads = active.filter((m) => m.role === "head");
   const notice = r ? RESULT[r] : null;
   const invite = i ? INVITE[i] : null;
+  // Итог отключения: семь чисел через дефис — см. back() в actions.
+  const counts = o && /^\d+(-\d+){6}$/.test(o) ? o.split("-").map(Number) : null;
+  const offboarded = counts
+    ? offboardingSummary({
+        leads: counts[0],
+        talks: counts[1],
+        pool: counts[2],
+        team: counts[3],
+        reminders: counts[4],
+        transfers: counts[5],
+        cards: counts[6],
+      })
+    : null;
+  const detached = t && /^\d+$/.test(t) ? Number(t) : 0;
 
   return (
     <AdminShell staff={viewer}>
@@ -112,6 +127,19 @@ export default async function TeamPage({
           }`}
         >
           {notice.text}
+        </p>
+      ) : null}
+
+      {offboarded ? (
+        <p className="mt-2 rounded-xl border border-green/30 bg-green/10 px-4 py-2.5 text-sm leading-relaxed text-green">
+          Доступ закрыт, сессии оборваны. {offboarded}
+        </p>
+      ) : null}
+
+      {detached ? (
+        <p className="mt-2 rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm leading-relaxed text-gold">
+          Бывший руководитель больше не ведёт команду: откреплено менеджеров — {detached}. Закрепите
+          их за другим руководителем.
         </p>
       ) : null}
 
@@ -468,12 +496,25 @@ function DisableBlock({
       <div className="mt-2 w-72 rounded-lg border border-gold/30 bg-gold/5 px-3 py-3">
         <p className="text-xs text-gold">Что произойдёт с «{name}»:</p>
         <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-4 text-xs text-muted">
-          <li>Его сессии оборвутся сразу — не через двенадцать часов.</li>
-          <li>Выданные ссылки входа перестанут работать, новых бот не даст.</li>
-          <li>Лиды, сообщения и журнал останутся за ним: авторство не стирается.</li>
+          <li>Сессии оборвутся сразу, ссылки входа перестанут работать, кнопки бота — тоже.</li>
+          <li>Новые лиды ему больше не придут — ни в очередь, ни рассылкой.</li>
           <li>
-            Взятые им лиды <b>останутся закреплены за ним</b> — переназначьте их, иначе
-            трогать эти карточки сможет только админ.
+            Лиды в работе <b>вернутся в очередь</b> и уйдут другим по обычным правилам. Его
+            очередь на лид передастся следующему сразу.
+          </li>
+          <li>
+            Идущие переписки из касаний перейдут его руководителю, а если его нет — вам.
+            Неотправленные касания вернутся в общий пул.
+          </li>
+          <li>Напоминания и просьбы о передаче лидов закроются.</li>
+          <li>Если он руководитель — его менеджеры станут ничьими.</li>
+          <li>
+            Карточки лидов из его Telegram удалятся (за последние 48 часов — так позволяет
+            Telegram), у более старых пропадут кнопки.
+          </li>
+          <li>
+            История остаётся: закрытые лиды, проекты, начисления и журнал — за ним, авторство
+            не стирается.
           </li>
         </ul>
         {/* Единственный пункт, который система выполнить не может, — и
@@ -481,9 +522,10 @@ function DisableBlock({
             видеть каждого нового клиента. Поэтому он отдельно и последним:
             последнее читают. */}
         <p className="mt-3 rounded border border-gold/40 bg-gold/10 px-2 py-2 text-xs text-gold">
-          Этого система сделать не может: удалите{" "}
-          <b>{handle ? `@${handle}` : name}</b> из чата отдела продаж в Telegram руками.
-          Иначе он продолжит получать брифы по всем новым лидам.
+          Этого система сделать не может: удалите <b>{handle ? `@${handle}` : name}</b> руками из
+          общих мест в Telegram — канала сигналов «Поиска» и общего чата отдела продаж, если он
+          есть. Бот не может выгнать человека из канала, а оттуда он продолжит видеть сигналы и
+          лиды.
         </p>
 
         <form action={disable} className="mt-3">

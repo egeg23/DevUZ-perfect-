@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { signOut } from "@/app/admin/actions";
 import { ROLE_BADGE, navFor } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
+import { UsageBeacon } from "@/components/admin/usage-beacon";
 
 /**
  * Разделы приходят из матрицы ролей — одной на панель, уведомления и
@@ -25,6 +26,9 @@ export function AdminShell({
 }) {
   return (
     <div className="admin-panel min-h-screen">
+      {/* Учёт просмотров для отчёта «Использование». Владельца не считаем —
+          и маячок ему не ставим: лишний запрос на каждый переход ни к чему. */}
+      {staff.role === "admin" ? null : <UsageBeacon />}
       {/* Шапка липкая: на телефоне список лидов длинный, и уходить наверх
           ради перехода в другой раздел — лишняя прокрутка в обе стороны. */}
       <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">

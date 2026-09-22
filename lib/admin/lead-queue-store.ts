@@ -281,6 +281,41 @@ export async function startQueue(card: Card, now: Date = new Date()): Promise<bo
   return offerTo(person, card, now, true);
 }
 
+/**
+ * Пустить лид по очереди заново — у него пропал ведущий.
+ *
+ * Для лидов отключённого сотрудника. По тем же правилам, что новый лид:
+ * днём — тому, у кого меньше, на полчаса; ночью — всем с потолком равной
+ * доли. Иначе «лиды уволенного» стали бы тем самым входом, через который
+ * ушлый менеджер забирает себе всё, — их разбирали бы, кто первый нажал.
+ *
+ * Прежние предложения закрываются, отметка «открыт всем» снимается: без
+ * этого проверка взятия видела бы старое «открыт» и пускала бы любого.
+ */
+export async function requeueLead(leadId: string, heading: string, now: Date = new Date()): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+
+  await db
+    .from("lead_offers")
+    .update({ outcome: "cancelled", closed_at: now.toISOString() })
+    .eq("lead_id", leadId)
+    .is("outcome", null);
+  await db.from("leads").update({ queue_opened_at: null, fair_share: false }).eq("id", leadId);
+
+  const card = await cardOf(leadId);
+  if (!card) return false;
+  if (await startQueue({ ...card, heading }, now)) return true;
+
+  // Очередь вести некому — всем, как лид без очереди.
+  await db.from("leads").update({ queue_opened_at: now.toISOString() }).eq("id", leadId);
+  return sendLead(card.lead, card.leadId, card.requestNo, {
+    to: await salesRecipients(),
+    heading,
+    origin: card.origin,
+  });
+}
+
 /** Карточка лида, собранная из базы — для того, кому очередь дошла позже. */
 async function cardOf(leadId: string): Promise<(Card & { label: string; free: boolean }) | null> {
   const db = serviceClient();

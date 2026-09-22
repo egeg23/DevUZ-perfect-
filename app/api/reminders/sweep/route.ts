@@ -1,4 +1,9 @@
+import { after } from "next/server";
+
 import { record } from "@/lib/admin/audit";
+import { preparePortionsInBackground, runPortions } from "@/lib/admin/portion-store";
+import { processPlaces, runDailySearches } from "@/lib/maps/store";
+import { runFollowups } from "@/lib/admin/outreach-followup";
 import { advanceQueues } from "@/lib/admin/lead-queue-store";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
@@ -9,6 +14,7 @@ import { runReviews } from "@/lib/talk/review-run";
 import { runRazborShift } from "@/lib/razbor/shift-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
+import { promoteStrongSignals } from "@/lib/scout/promote";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
 import { esc, sendWithButtons } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
@@ -176,6 +182,27 @@ export async function POST(request: Request) {
   const queue = await advanceQueues(new Date());
   if (queue.errors.length) console.error("очередь лидов:", queue.errors.join("; "));
 
+  // Сильные сигналы скаута — в ту же очередь, сразу за ней: пост в чате
+  // живёт часы, и ждать ему дольше пяти минут незачем.
+  const scout = await promoteStrongSignals(new Date());
+  if (scout.errors.length) console.error("сигналы скаута:", scout.errors.join("; "));
+
+  // Порция дня касаний: раздача в 07:00, в личку с 09:00, отчёт в 18:00.
+  // Письма к ней готовятся после ответа таймеру: обход сайта и модель — до
+  // минуты на компанию, а таймер ждёт ответа шестьдесят секунд.
+  // Автопоиск по картам: поиск раз в день с 06:00 — до раздачи порций, —
+  // проверка найденных сайтов понемногу, после ответа таймеру.
+  const maps = await runDailySearches(new Date());
+  const portions = await runPortions(new Date());
+  after(async () => {
+    // Дожим касаний — первым: он ограничен рабочими часами и тремя
+    // сообщениями за проход, и ждать его за проверкой сайтов незачем.
+    const followups = await runFollowups(new Date()).catch((error) => ({ queued: 0, errors: [String(error)] }));
+    if (followups.errors.length) console.error("дожим:", followups.errors.join("; "));
+    await processPlaces(new Date()).catch((error) => console.error("карты:", error));
+    await preparePortionsInBackground(new Date()).catch((error) => console.error("порция:", error));
+  });
+
   // Уборка просроченных сигналов скаута едет здесь же, а не отдельным
   // таймером. Своего расписания ей не нужно — она дешёвая и работает по
   // частичному индексу, — а лишний юнит systemd это лишняя вещь, которую
@@ -240,6 +267,9 @@ export async function POST(request: Request) {
 
   return Response.json({
     queue,
+    scout,
+    maps,
+    portions,
     coach,
     shifts,
     silent,

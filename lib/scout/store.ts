@@ -72,6 +72,82 @@ export function notifiableFilter(): string {
   return [`score.gte.${minScore()}`, ...categories].join(",");
 }
 
+/**
+ * Ниже этой оценки сигнал — шум: сохраняется сразу разобранным.
+ *
+ * Раньше в базу «новыми» ложилось всё, что модель разобрала, и порог стоял
+ * только на уведомлении. Лента в панели при этом копила мусор: 159 из 197
+ * сигналов — нули из одного чата про релокацию. Сохраняем их по-прежнему
+ * (по ним видно, какой чат шумит), но не «новыми».
+ */
+export const NOISE_FLOOR = 20;
+
+/**
+ * С этой оценки сигнал — сильный: свип сам делает из него лид и пускает по
+ * очереди (lib/scout/promote.ts). Здесь, а не там: уведомление оператору
+ * должно говорить о том же пороге, а скаут не должен тянуть за собой
+ * очередь лидов ради одной константы.
+ */
+export const STRONG_SCORE = 70;
+
+export function isNoise(score: number, category: string): boolean {
+  return score < NOISE_FLOOR && !ALWAYS_NOTIFY.has(category);
+}
+
+/**
+ * Шумный чат: за две недели много разобранных сообщений, и ни одного
+ * хоть сколько-то похожего на запрос.
+ *
+ * Такой чат не просто засоряет ленту — каждое его сообщение, пережившее
+ * дешёвый отсев, оплачивается вызовом модели. Скаут его глушит сам: без
+ * правки SCOUT_CHATS на сервере и без выкатки. Окно скользящее, так что
+ * через две недели тишины чат снова получает шанс.
+ */
+export const MUTE_WINDOW_DAYS = 14;
+export const MUTE_MIN_SIGNALS = 25;
+export const MUTE_MAX_SCORE = 30;
+
+export function noisyChats(rows: readonly { chat_id: number; score: number; status: string }[]): Set<number> {
+  const byChat = new Map<number, { count: number; max: number; useful: boolean }>();
+  for (const row of rows) {
+    const chat = byChat.get(row.chat_id) ?? { count: 0, max: 0, useful: false };
+    chat.count += 1;
+    chat.max = Math.max(chat.max, row.score);
+    // Хоть один ответ или лид из чата — чат полезный, даже если шумный.
+    if (row.status === "answered" || row.status === "converted") chat.useful = true;
+    byChat.set(row.chat_id, chat);
+  }
+  const out = new Set<number>();
+  for (const [id, chat] of byChat) {
+    if (chat.count >= MUTE_MIN_SIGNALS && chat.max < MUTE_MAX_SCORE && !chat.useful) out.add(id);
+  }
+  return out;
+}
+
+let mutedCache: { at: number; chats: Set<number> } | null = null;
+
+/** Заглушённые чаты — с кэшем на полчаса: скаут живёт долго, а запрос не бесплатный. */
+export async function loadMutedChats(now: Date = new Date()): Promise<Set<number>> {
+  if (mutedCache && now.getTime() - mutedCache.at < 30 * 60_000) return mutedCache.chats;
+  const db = serviceClient();
+  if (!db) return new Set();
+  const since = new Date(now.getTime() - MUTE_WINDOW_DAYS * 24 * 3600_000).toISOString();
+  const { data, error } = await db
+    .from("scout_signals")
+    .select("chat_id, score, status")
+    .gte("created_at", since)
+    .limit(10000);
+  if (error) {
+    console.error("scout: не прочитал шумные чаты", error.message);
+    return mutedCache?.chats ?? new Set();
+  }
+  const chats = noisyChats(
+    (data ?? []).map((r) => ({ chat_id: Number(r.chat_id), score: Number(r.score), status: String(r.status) })),
+  );
+  mutedCache = { at: now.getTime(), chats };
+  return chats;
+}
+
 export function minScore(): number {
   const raw = Number(process.env.SCOUT_MIN_SCORE);
   // Чужое значение принимается только осмысленное. Пустая строка даёт 0,
@@ -169,7 +245,7 @@ export async function saveSignal(input: SignalInput): Promise<SaveOutcome> {
         rationale: input.rationale,
         // Фикстура попадает в базу уже разобранной: цепочка проверена, а
         // очередь оператора не засорена.
-        status: input.rehearsal ? "ignored" : "new",
+        status: input.rehearsal || isNoise(input.score, input.category) ? "ignored" : "new",
       },
       // Перезапуск скаута не должен задваивать ленту оператора: пара
       // «чат + сообщение» уникальна, повтор молча игнорируется.
@@ -310,7 +386,9 @@ export async function notifyOperator(notice: SignalNotice): Promise<NotifyOutcom
       // один раз и забудут. Первый же настоящий сигнал скаута прожил меньше
       // двух часов: модератор снёс пост как оформленный не по правилам, и
       // отвечать стало некому и некуда. Такой сигнал не ждёт до вечера.
-      "Отвечать — руками, в том же чате и сейчас: такие посты живут часы.",
+      notice.score >= STRONG_SCORE && !notice.rehearsal
+        ? "Сильный сигнал: через пару минут он уйдёт менеджерам очередью лидов с готовым ответом — сами не пишите, чтобы не написать человеку дважды."
+        : "Отвечать — руками, в том же чате и сейчас: такие посты живут часы.",
     ]
       .filter((line) => line !== "")
       .join("\n"),
@@ -365,6 +443,8 @@ export type ScoutIo = {
   notify: (notice: SignalNotice) => Promise<NotifyOutcome>;
   markSent: (id: string) => Promise<void>;
   markFailed: (id: string, attempts: number) => Promise<void>;
+  /** Заглушённые чаты — их сообщения до модели не доходят. */
+  muted?: () => Promise<Set<number>>;
 };
 
 const liveIo: ScoutIo = {
@@ -372,6 +452,7 @@ const liveIo: ScoutIo = {
   notify: notifyOperator,
   markSent: markNotified,
   markFailed: markNotifyFailed,
+  muted: () => loadMutedChats(),
 };
 
 export async function processBatch(
@@ -396,7 +477,15 @@ export async function processBatch(
     dropped: {},
   };
 
-  const judged = messages.map((message) => ({ message, verdict: prefilter(message.text) }));
+  // Шумные чаты — раньше отсева и тем более модели: платить за разбор
+  // сообщений, из которых две недели не вышло ни одного запроса, незачем.
+  const muted = (await io.muted?.().catch(() => new Set<number>())) ?? new Set<number>();
+  const judged = messages.map((message) => ({
+    message,
+    verdict: muted.has(message.chatId)
+      ? { pass: false, reason: "noisy_chat" as const, topics: [] as string[] }
+      : prefilter(message.text),
+  }));
 
   for (const item of judged) {
     if (item.verdict.pass) continue;

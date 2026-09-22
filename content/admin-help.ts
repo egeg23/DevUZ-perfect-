@@ -203,6 +203,13 @@ const ru: HelpCopy = {
       what: "Кто что сделал в панели: взял лид, открыл контакт, подтвердил оплату. Записи нельзя изменить или удалить.",
       how: ["Сюда смотрят, когда надо разобраться, что произошло и когда."],
     },
+    "/admin/usage": {
+      what: "Чем команда пользуется в панели: какие разделы открывают, какие функции нажимают, кто чем живёт. Видите только вы.",
+      how: [
+        "«Ядро» — пользуется хотя бы половина тех, кому это доступно. «Никто — шум?» — повод спросить, не нужна функция или о ней не знают.",
+        "Просмотры разделов считаются с момента появления отчёта, действия — из журнала.",
+      ],
+    },
     "/admin/help": {
       what: "Эта страница. Здесь коротко написано, что делает каждая вкладка, на что подписаться в Telegram и по каким правилам работаем.",
       how: [
@@ -396,6 +403,13 @@ const uz: HelpCopy = {
     "/admin/audit": {
       what: "Panelda kim nima qilgani: lidni oldi, aloqa ma’lumotini ochdi, to‘lovni tasdiqladi. Yozuvlarni o‘zgartirib ham, o‘chirib ham bo‘lmaydi.",
       how: ["Nima va qachon bo‘lganini aniqlash kerak bo‘lganda shu yerga qaraladi."],
+    },
+    "/admin/usage": {
+      what: "Jamoa panelda nimadan foydalanadi: qaysi bo‘limlarni ochadi, qaysi funksiyalarni bosadi, kim nima bilan band. Buni faqat siz ko‘rasiz.",
+      how: [
+        "«Ядро» — foydalanish huquqi borlarning kamida yarmi ishlatadi. «Никто — шум?» — funksiya keraksizmi yoki u haqda bilishmaydimi, deb so‘rashga sabab.",
+        "Bo‘limlarni ko‘rishlar hisobot paydo bo‘lgan paytdan, harakatlar esa jurnaldan hisoblanadi.",
+      ],
     },
     "/admin/help": {
       what: "Shu sahifa. Bu yerda har bir bo‘lim nima qilishi, Telegramda nimaga obuna bo‘lish kerakligi va qanday qoidalar bilan ishlashimiz qisqacha yozilgan.",

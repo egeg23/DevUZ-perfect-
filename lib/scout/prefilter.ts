@@ -43,7 +43,7 @@ export type PrefilterVerdict = {
   /** Стоит ли тратить на сообщение вызов модели. */
   pass: boolean;
   /** Почему решили так — попадает в журнал скаута. */
-  reason: "too_short" | "too_long" | "no_topic" | "no_demand" | "supply" | "spam" | "candidate";
+  reason: "too_short" | "too_long" | "no_topic" | "no_demand" | "supply" | "spam" | "candidate" | "noisy_chat";
   /** Совпавшие темы: сайт, магазин, приложение, автоматизация. */
   topics: string[];
 };

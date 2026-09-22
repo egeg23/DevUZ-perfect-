@@ -186,7 +186,14 @@ export async function pendingTalks(limit = 5): Promise<Inbound[]> {
     if (!p.ai_handling) continue;
 
     const { data: staff } = p.claimed_by
-      ? await db.from("staff").select("display_name, telegram_user_id").eq("id", p.claimed_by).maybeSingle()
+      ? // Только работающий: отключённому не пишем о клиенте и его именем
+        // не подписываемся.
+        await db
+          .from("staff")
+          .select("display_name, telegram_user_id")
+          .eq("id", p.claimed_by)
+          .eq("is_active", true)
+          .maybeSingle()
       : { data: null };
 
     const { count } = await db
@@ -293,6 +300,7 @@ export async function tellManager(prospectId: string, text: string): Promise<boo
     .from("staff")
     .select("telegram_user_id")
     .eq("id", p.claimed_by)
+    .eq("is_active", true)
     .maybeSingle();
   const chat = Number(staff?.telegram_user_id);
   if (!Number.isFinite(chat) || chat === 0) return false;
