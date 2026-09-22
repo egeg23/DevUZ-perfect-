@@ -6,6 +6,7 @@ import {
   type InviteOutcome,
 } from "@/lib/admin/staff-notice";
 import { isGrade, type Grade } from "@/lib/admin/finance";
+import { TOUCH_PLAN_MAX } from "@/lib/admin/touch-plan";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
 
@@ -32,10 +33,12 @@ export type TeamMember = {
   /** Грейд для ставки и персональная ставка, если договорились отдельно. */
   grade: Grade;
   rate_percent: number | null;
+  /** Сколько касаний в неделю ожидается. null — план не ставили. */
+  touch_plan: number | null;
 };
 
 const COLUMNS =
-  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent";
+  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent, touch_plan";
 
 export type TeamResult =
   | {
@@ -512,6 +515,57 @@ export async function setStaffGrade(
     targetId: staffId,
     ip,
     meta: { from: before, to: { grade, rate_percent: ratePercent } },
+  });
+  return { ok: true };
+}
+
+/**
+ * Недельный план касаний.
+ *
+ * Ставит владелец — любому, руководитель — своим. Третий вариант, «каждый
+ * себе», не заводим: план, который человек ставит сам, это не план.
+ *
+ * Пусто — плана нет, и панель ничего не требует. Ноль и «не задан» разные
+ * вещи: «осталось 0 из 0» тому, кому план не ставили, это неправда.
+ */
+export async function setTouchPlan(
+  staffId: string,
+  plan: number | null,
+  actor: Staff,
+  ip: string,
+): Promise<TeamResult> {
+  if (plan !== null && (!Number.isInteger(plan) || plan < 0 || plan > TOUCH_PLAN_MAX)) {
+    return { ok: false, reason: "invalid" };
+  }
+
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+
+  const { data: target } = await db
+    .from("staff")
+    .select("id, head_staff_id, touch_plan")
+    .eq("id", staffId)
+    .maybeSingle();
+  if (!target) return { ok: false, reason: "gone" };
+
+  // Руководитель — только своим. Без этой проверки план ставился бы любому,
+  // и «руководитель» превратился бы во второго владельца.
+  if (actor.role !== "admin" && target.head_staff_id !== actor.id) {
+    return { ok: false, reason: "invalid" };
+  }
+
+  const before = (target.touch_plan as number | null) ?? null;
+  if (before === plan) return { ok: true };
+
+  const { error } = await db.from("staff").update({ touch_plan: plan }).eq("id", staffId);
+  if (error) return { ok: false, reason: "failed" };
+
+  await record("staff.touch_plan_set", {
+    actorStaffId: actor.id,
+    targetType: "staff",
+    targetId: staffId,
+    ip,
+    meta: { from: before, to: plan },
   });
   return { ok: true };
 }

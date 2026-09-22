@@ -4,7 +4,9 @@ import { DashboardHome } from "@/components/admin/dashboard-home";
 import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
 import { LeadTable } from "@/components/admin/lead-table";
+import { TouchPlanLine } from "@/components/admin/touch-plan-line";
 import { requireStaff } from "@/lib/admin/guard";
+import { touchProgressOf } from "@/lib/admin/touch-store";
 import { PRIORITIES, STATUSES, leadCounts, listLeads, scopeFor } from "@/lib/admin/leads";
 import { approves, pendingTransfers } from "@/lib/admin/transfers";
 
@@ -78,7 +80,7 @@ export default async function AdminHome({
 
   // Менеджер видит свободных и своих, руководитель и владелец — всех.
   const scope = scopeFor(staff);
-  const [counts, leads, pending] = await Promise.all([
+  const [counts, leads, pending, plan] = await Promise.all([
     leadCounts(staff.id, scope),
     listLeads(
       {
@@ -92,6 +94,7 @@ export default async function AdminHome({
       scope,
     ),
     approves(staff.role) ? pendingTransfers() : Promise.resolve([]),
+    touchProgressOf(staff.id),
   ]);
 
   const base = (patch: Record<string, string | undefined>) => {
@@ -112,6 +115,11 @@ export default async function AdminHome({
           перестали приходить напоминания, ничего об этом не знает, а
           узнаёт по остывшему лиду через неделю. */}
       <SweepBanner />
+
+      {/* План касаний на неделю — здесь, а не только в самих касаниях.
+          Открывают панель с главной, и число, ради которого человек пойдёт
+          в касания, должно встретить его до того, как он туда свернёт. */}
+      <TouchPlanLine progress={plan} />
 
       {/* Просьбы передать лида: решать их должен тот, кто их видит, а не тот,
           кто вспомнил. Поэтому очередь стоит первой, а не спрятана в лиде. */}

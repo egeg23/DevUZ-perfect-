@@ -5,12 +5,13 @@ import { redirect } from "next/navigation";
 
 import { record } from "@/lib/admin/audit";
 import {
-  markManualSent,
+  markSelfContacted,
   prepareOutreach,
   queueOutreach,
   recordManualAnswer,
   saveProspects,
   skipProspect,
+  saveNoSite,
 } from "@/lib/admin/outreach-store";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { pitchLocales, type PitchLocale } from "@/lib/audit/pitch";
@@ -80,6 +81,22 @@ export async function saveRunAction(rows: ProspectRow[]): Promise<number> {
 }
 
 /** Кнопка «Связаться»: модель пишет первое сообщение по находкам. */
+/**
+ * Компании без сайта — списком, одной нишей на всех.
+ *
+ * Прогона здесь нет: разбирать нечего. Строки ложатся в базу сразу, а письмо
+ * по каждой пишется потом — от ниши, а не от находок.
+ */
+export async function saveNoSiteAction(
+  names: string[],
+  niche: string,
+): Promise<{ added: number; skipped: number }> {
+  await requireStaff();
+  const result = await saveNoSite(names, niche);
+  revalidatePath("/admin/prospect");
+  return result;
+}
+
 export async function prepareOutreachAction(formData: FormData) {
   const staff = await requireStaff();
   const id = String(formData.get("prospect") ?? "");
@@ -146,16 +163,17 @@ export async function sendOutreachAction(formData: FormData) {
 }
 
 /**
- * «Написал руками»: по ручному маршруту касание делает человек.
+ * «Связался сам»: касание, которое человек сделал в обход скаута.
  *
- * С этой минуты разговор существует: первое письмо ложится в ленту, модель
- * считается ведущей. Без отметки карточка так и висела бы «дальше руками», и
- * второй менеджер написал бы тому же человеку второй раз.
+ * Менеджеры пишут со своих аккаунтов — рабочая сессия Telegram одна, и
+ * подключить к ней всех нельзя. Без этой отметки панель не видит отправки
+ * вовсе: письмо ушло, а карточка висит новой, второй менеджер пишет тому же
+ * человеку второй раз, и недельный план не считается ни у кого.
  */
-export async function markManualSentAction(formData: FormData) {
+export async function markSelfContactedAction(formData: FormData) {
   const staff = await requireStaff();
   const id = String(formData.get("prospect") ?? "");
-  const result = await markManualSent(id, staff, String(formData.get("note") ?? ""), await requestIp());
+  const result = await markSelfContacted(id, staff, String(formData.get("note") ?? ""), await requestIp());
   revalidatePath("/admin/prospect");
   revalidatePath("/admin");
   redirect(

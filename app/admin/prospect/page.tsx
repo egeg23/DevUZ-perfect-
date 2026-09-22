@@ -1,7 +1,9 @@
 import { AdminShell } from "@/components/admin/shell";
 import { OutreachList } from "@/components/admin/outreach-list";
 import { ProspectRunner } from "@/components/admin/prospect-runner";
+import { TouchPlanLine } from "@/components/admin/touch-plan-line";
 import { requireStaff } from "@/lib/admin/guard";
+import { touchProgressOf } from "@/lib/admin/touch-store";
 import { sentLastHour } from "@/lib/admin/outreach-queue";
 import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
 import { BATCH_CAP } from "@/lib/audit/batch";
@@ -15,7 +17,12 @@ export default async function ProspectPage({
 }) {
   const staff = await requireStaff();
   const { open, e, sent } = await searchParams;
-  const [rows, hour, replies] = await Promise.all([listProspects(), sentLastHour(), manualReplies()]);
+  const [rows, hour, replies, plan] = await Promise.all([
+    listProspects(),
+    sentLastHour(),
+    manualReplies(),
+    touchProgressOf(staff.id),
+  ]);
 
   return (
     <AdminShell staff={staff}>
@@ -25,6 +32,8 @@ export default async function ProspectPage({
         баллы, а черновик первого сообщения по каждому сайту — построенный
         вокруг одной находки, которую адресат может пойти и проверить сам.
       </p>
+
+      <TouchPlanLine progress={plan} />
 
       <ProspectRunner />
 

@@ -21,8 +21,14 @@ import type { Staff } from "@/lib/admin/session";
 import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
-import { auditDeep, type ProspectRow, type Walked } from "@/lib/audit/batch";
+import { BATCH_CAP, auditDeep, type ProspectRow, type Walked } from "@/lib/audit/batch";
 import { newRequestNo } from "@/lib/qualify/engine";
+import {
+  NOSITE_SYSTEM,
+  NOSITE_TOOL,
+  nositeProblems,
+  nositePrompt,
+} from "@/lib/admin/outreach-nosite";
 import { effortFor } from "@/lib/model-limits";
 import { modelTroubleSays } from "@/lib/model-trouble";
 import { serviceClient } from "@/lib/supabase";
@@ -54,8 +60,15 @@ export type ProspectStatus = "new" | "contacting" | "sending" | "sent" | "failed
 export type Prospect = {
   id: string;
   created_at: string;
-  url: string;
-  host: string;
+  /**
+   * Адрес и домен — только у тех, у кого сайт есть.
+   *
+   * Половина малого бизнеса в Ташкенте живёт в инстаграме, и именно ему наш
+   * разговор нужнее всего. Разбирать у такой компании нечего, но написать
+   * есть о чём — от ниши.
+   */
+  url: string | null;
+  host: string | null;
   label: string | null;
   score: number | null;
   findings: Finding[];
@@ -78,6 +91,15 @@ export type Prospect = {
   manual_note: string | null;
   claimed_by: string | null;
   claimed_name: string | null;
+  /**
+   * Кто на самом деле написал и когда.
+   *
+   * Отдельно от `claimed_by`: та ставится на подготовке письма и остаётся,
+   * даже если письмо так и не ушло. По ней считать касания нельзя — она
+   * отвечает на «кто взял», а не на «кто написал».
+   */
+  touched_by: string | null;
+  touched_at: string | null;
   sent_at: string | null;
   /** Когда перечитали переписку и нашли там своё сообщение. */
   delivered_at: string | null;
@@ -88,7 +110,7 @@ export type Prospect = {
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -96,8 +118,8 @@ function shape(row: Record<string, unknown>): Prospect {
   return {
     id: String(row.id),
     created_at: String(row.created_at),
-    url: String(row.url),
-    host: String(row.host),
+    url: (row.url as string | null) ?? null,
+    host: (row.host as string | null) ?? null,
     label: (row.label as string | null) ?? null,
     score: (row.score as number | null) ?? null,
     findings: Array.isArray(row.findings) ? (row.findings as Finding[]) : [],
@@ -112,6 +134,8 @@ function shape(row: Record<string, unknown>): Prospect {
     manual_note: (row.manual_note as string | null) ?? null,
     claimed_by: (row.claimed_by as string | null) ?? null,
     claimed_name: person?.display_name ?? null,
+    touched_by: (row.touched_by as string | null) ?? null,
+    touched_at: (row.touched_at as string | null) ?? null,
     sent_at: (row.sent_at as string | null) ?? null,
     delivered_at: (row.delivered_at as string | null) ?? null,
     delivery_note: (row.delivery_note as string | null) ?? null,
@@ -156,6 +180,59 @@ export async function saveProspects(rows: readonly ProspectRow[]): Promise<numbe
   return (data ?? []).length;
 }
 
+/**
+ * Компании без сайта — списком названий и одной нишей на всех.
+ *
+ * Разбирать здесь нечего, поэтому и прогона нет: строки ложатся в базу
+ * сразу, а письмо по каждой пишется потом, от ниши.
+ *
+ * Ниша одна на весь список намеренно. Менеджер добавляет их пачкой, найдя
+ * десяток салонов в инстаграме, — и десять раз вписывать «барбершоп» он не
+ * станет, а вписав однажды, не ошибётся в девяти оставшихся.
+ */
+export async function saveNoSite(
+  names: readonly string[],
+  niche: string,
+): Promise<{ added: number; skipped: number }> {
+  const db = serviceClient();
+  if (!db) return { added: 0, skipped: 0 };
+
+  const clean = [...new Set(names.map((n) => n.trim()).filter(Boolean))].slice(0, BATCH_CAP);
+  const trade = niche.trim().slice(0, 120);
+  if (!clean.length || !trade) return { added: 0, skipped: 0 };
+
+  /**
+   * Повтор не заводит вторую карточку.
+   *
+   * У сайта для этого есть домен и уникальный индекс по нему. У компании без
+   * сайта уникального нет ничего: единственное, чем её узнать, — название в
+   * той же нише. Сравниваем по нему, без учёта регистра и лишних пробелов, —
+   * второе касание того же салона это рассылка ровно так же, как и у сайта.
+   */
+  const { data: seen } = await db
+    .from("prospects")
+    .select("label")
+    .is("host", null)
+    .eq("niche", trade)
+    .limit(1000);
+  const taken = new Set(
+    (seen ?? []).map((r) => String(r.label ?? "").trim().replace(/\s+/g, " ").toLowerCase()),
+  );
+
+  const fresh = clean.filter((n) => !taken.has(n.replace(/\s+/g, " ").toLowerCase()));
+  if (!fresh.length) return { added: 0, skipped: clean.length };
+
+  const { data, error } = await db
+    .from("prospects")
+    .insert(fresh.map((label) => ({ url: null, host: null, label: label.slice(0, 200), niche: trade })))
+    .select("id");
+  if (error) {
+    console.error("касания: не сохранил компании без сайта", error.message);
+    return { added: 0, skipped: clean.length };
+  }
+  return { added: (data ?? []).length, skipped: clean.length - (data ?? []).length };
+}
+
 export async function listProspects(limit = 200): Promise<Prospect[]> {
   const db = serviceClient();
   if (!db) return [];
@@ -172,6 +249,79 @@ export async function prospectById(id: string): Promise<Prospect | null> {
 
 
 /* ── Подготовка сообщения ──────────────────────────────────────────────── */
+
+/**
+ * Письмо компании, у которой сайта нет.
+ *
+ * Отдельной функцией, а не ветками внутри общей: общая держится на разборе
+ * сайта — обход, находки, балл видимости, проверка чисел по анализу. Здесь
+ * нет ничего из этого, и попытка провести такую карточку тем же путём
+ * кончилась бы письмом про находки, которых никто не находил.
+ *
+ * Зацепка одна и она проверяемая: человек ищет нишу в Google и попадает к
+ * конкурентам. Адресат проверяет это со своего телефона за минуту — то же
+ * правило, что и в обычном касании.
+ */
+async function prepareNoSite(prospect: Prospect, staff: Staff): Promise<PrepareResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, why: "База недоступна." };
+
+  const niche = (prospect.niche ?? "").trim();
+  // Ниша — единственное, от чего здесь можно писать. Без неё письмо вышло бы
+  // про «ваш бизнес», то есть про никого.
+  if (!niche) return { ok: false, why: "Не записана ниша — писать не от чего." };
+
+  const prompt = nositePrompt({ label: prospect.label, niche, sender: staff.display_name });
+
+  const write = async (notes: string | null): Promise<string | null> => {
+    const response = await new Anthropic().beta.messages.create({
+      model: MODEL,
+      max_tokens: 1024,
+      system: [{ type: "text" as const, text: NOSITE_SYSTEM, cache_control: { type: "ephemeral" as const } }],
+      messages: [
+        {
+          role: "user" as const,
+          content: notes
+            ? `${prompt}\n\nПредыдущая попытка не прошла проверку: ${notes}\nНапиши заново, исправив это.`
+            : prompt,
+        },
+      ],
+      tools: [NOSITE_TOOL as unknown as Anthropic.Beta.BetaToolUnion],
+      tool_choice: { type: "tool", name: NOSITE_TOOL.name },
+      ...effortFor(MODEL, "medium"),
+    });
+    const block = response.content.find((b) => b.type === "tool_use");
+    const raw = block && block.type === "tool_use" ? (block.input as { message?: unknown }).message : null;
+    return typeof raw === "string" && raw.trim() ? raw.trim() : null;
+  };
+
+  let message: string;
+  try {
+    const first = await write(null);
+    if (!first) return { ok: false, why: "Модель не вернула сообщение." };
+    // Вторая попытка и выбор лучшей — как в обычном касании: менеджер нажал
+    // и должен получить письмо, а не отказ проверки на пустом поле.
+    const missed = nositeProblems(first, prompt);
+    const second = missed.length ? await write(missed.map((p) => p.text).join(" ")) : null;
+    const secondMissed = second ? nositeProblems(second, prompt) : null;
+    message = second && secondMissed && secondMissed.length <= missed.length ? second : first;
+  } catch (error) {
+    return { ok: false, why: modelTroubleSays(error) };
+  }
+
+  await db
+    .from("prospects")
+    .update({
+      message,
+      niche,
+      status: "contacting",
+      claimed_by: prospect.claimed_by ?? staff.id,
+      claimed_at: new Date().toISOString(),
+    })
+    .eq("id", prospect.id);
+
+  return { ok: true, message };
+}
 
 export type PrepareResult =
   | { ok: true; message: string }
@@ -190,6 +340,17 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
   const prospect = await prospectById(id);
   if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет." };
 
+  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, why: "Нет ключа модели — сообщение некому написать." };
+
+  /**
+   * Компания без сайта: разбирать нечего, пишем от ниши.
+   *
+   * Ветка стоит до `canContact`: та проверяет находки и контакты с сайта,
+   * которых здесь не будет никогда, и отказала бы всем таким карточкам
+   * разом.
+   */
+  if (!prospect.host || !prospect.url) return prepareNoSite(prospect, staff);
+
   const reason = canContact({
     contacts: prospect.contacts,
     findings: prospect.findings,
@@ -197,7 +358,8 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
   });
   if (reason !== "ok") return { ok: false, why: "", reason };
 
-  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, why: "Нет ключа модели — сообщение некому написать." };
+  const url = prospect.url;
+  const host = prospect.host;
 
   /**
    * Углублённый разбор — здесь, а не в пачке.
@@ -211,7 +373,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
    * Обход не обязателен: не вышел — пишем по тому, что было. Письмо по одной
    * главной лучше, чем отказ.
    */
-  const deep = await auditDeep({ raw: prospect.url, url: prospect.url, label: prospect.label, problem: null });
+  const deep = await auditDeep({ raw: url, url, label: prospect.label, problem: null });
   const findings = deep.row.report?.findings.length ? deep.row.report.findings : prospect.findings;
   // Ниша нужна, чтобы подобрать наш проект из его же ниши. Раньше сюда
   // передавался null, и подбирать было не по чему.
@@ -219,12 +381,12 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
   const reference = outreachProof({
     niche,
     label: prospect.label,
-    host: prospect.host,
+    host,
     hints: deep.walked?.hints ?? [],
   }).reference;
 
   const prompt = outreachPrompt({
-    host: prospect.host,
+    host,
     label: prospect.label,
     niche,
     findings,
@@ -275,7 +437,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     // на 20 минут», проверка отбила число, которого нет в анализе, — и
     // менеджер, нажав «Связаться», получил бы отказ вместо письма. Промах
     // здесь дешевле исправить, чем показать.
-    const missed = messageProblems(first, prompt, prospect.host, hooks);
+    const missed = messageProblems(first, prompt, host, hooks);
     // Из двух попыток берём ту, к которой у проверки меньше претензий.
     //
     // Раньше вторая побеждала просто потому, что была второй. Так у
@@ -285,7 +447,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     // должен что-то получить, — поэтому письмо сохраняется, а претензии
     // видны на карточке до нажатия.
     const second = missed.length ? await write(missed.map((p) => p.text).join(" ")) : null;
-    const secondMissed = second ? messageProblems(second, prompt, prospect.host, hooks) : null;
+    const secondMissed = second ? messageProblems(second, prompt, host, hooks) : null;
     message = second && secondMissed && secondMissed.length <= missed.length ? second : first;
   } catch (error) {
     // Отказ модели — не «что-то пошло не так»: менеджеру нужна фраза, по
@@ -347,6 +509,16 @@ export function sendProblems(
   const text = (prospect.message ?? "").trim();
   if (!text) return [];
 
+  // Компания без сайта: письмо писалось от ниши, и проверка у него своя —
+  // без домена, которого нет, и без баллов, которых не было.
+  if (!prospect.host) {
+    return nositeProblems(
+      text,
+      nositePrompt({ label: prospect.label, niche: prospect.niche ?? "", sender }),
+    );
+  }
+  const host = prospect.host;
+
   return messageProblems(
     text,
     // Тот же промпт, каким письмо писалось: с нишей, обходом и языком.
@@ -354,7 +526,7 @@ export function sendProblems(
     // основании, и именно она отбивала письма за адрес страницы, который
     // сама же и просила назвать.
     outreachPrompt({
-      host: prospect.host,
+      host,
       label: prospect.label,
       niche: prospect.niche,
       findings: prospect.findings,
@@ -363,10 +535,10 @@ export function sendProblems(
       walked: prospect.walked,
       lang: prospect.walked?.lang ?? "ru",
     }),
-    prospect.host,
+    host,
     outreachHooks(
       prospect.findings,
-      outreachProof({ niche: prospect.niche, label: prospect.label, host: prospect.host }).reference?.name ?? null,
+      outreachProof({ niche: prospect.niche, label: prospect.label, host }).reference?.name ?? null,
     ),
   );
 }
@@ -382,9 +554,12 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
     contacts: prospect.contacts,
     findings: prospect.findings,
     status: prospect.status,
+    noSite: !prospect.host,
   });
   if (reason !== "ok") return { ok: false, why: reason };
 
+  // Компании без сайта отправлять некуда: контактов у нас нет, и скаут не
+  // найдёт их сам. Такая карточка живёт отметкой «связался сам».
   const route = routeFor(prospect.contacts);
   if (!route) return { ok: false, why: "no_way" };
 
@@ -410,6 +585,11 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
       status: route.kind === "manual" ? "manual" : "sending",
       claimed_by: staff.id,
       claimed_at: new Date().toISOString(),
+      // Касание засчитывается здесь, а не когда сработает очередь: работу
+      // сделал человек в эту минуту, а скаут только донесёт. Если донести
+      // не выйдет, карточка станет failed — такие в недельный счёт не идут.
+      touched_by: staff.id,
+      touched_at: new Date().toISOString(),
       lead_id: leadId,
       request_no: requestNo,
       ai_handling: true,
@@ -472,20 +652,27 @@ export async function manualReplies(): Promise<Record<string, string>> {
   return out;
 }
 
+/** Из каких состояний человек может отметить, что связался сам. */
+const SELF_CONTACT_FROM = ["new", "contacting", "manual"] as const;
+
 /**
- * «Написал руками» — отметка о касании, которое сделал человек.
+ * «Связался сам» — касание, которое человек сделал в обход скаута.
  *
- * Владелец: «там где нет телеграм — пусть связываются через телефон /
- * вотсапп по номеру… И тут же подхватывает ИИ после написанного сообщения
- * пользователю до выяснения BANT».
+ * Подключить всех менеджеров к одной сессии Telegram физически нельзя, и
+ * пишут они со своих аккаунтов. Для панели это значит, что отправки она не
+ * видит вовсе: письмо ушло, а карточка так и висит «новой». Второй менеджер
+ * пишет тому же человеку второй раз, а недельный план не считается ни у
+ * кого — потому что считать нечего.
  *
- * Отметка не украшение и не отчётность. С этой минуты разговор существует:
- * первое письмо ложится в ленту, модель считается ведущей, и ответ клиента,
- * который менеджер сюда перенесёт, ей будет с чем связать. Без отметки
- * карточка так и осталась бы «дальше руками» — и второй менеджер написал бы
- * тому же человеку второй раз.
+ * Отсюда отметка. Она доступна из трёх состояний, а не только с ручного
+ * маршрута: связаться можно и до того, как модель написала письмо. Наличие
+ * контактов при этом не проверяется — человек уже написал, и спорить с
+ * фактом, потому что аудитор не нашёл на сайте телефон, панели не по чину.
+ *
+ * С этой минуты разговор существует: лид заводится, первое сообщение ложится
+ * в ленту, касание записывается на того, кто нажал.
  */
-export async function markManualSent(
+export async function markSelfContacted(
   id: string,
   staff: Staff,
   note: string,
@@ -496,35 +683,59 @@ export async function markManualSent(
 
   const prospect = await prospectById(id);
   if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет." };
-  if (prospect.status !== "manual") return { ok: false, why: "Эта карточка не на ручном маршруте." };
+  if (!(SELF_CONTACT_FROM as readonly string[]).includes(prospect.status)) {
+    return { ok: false, why: "По этой карточке касание уже отмечено." };
+  }
 
   const when = new Date().toISOString();
+  const comment = note.trim().slice(0, 500);
+  // Что легло в ленту: письмо, если модель его написала, иначе строка
+  // менеджера. Пустая лента — это разговор, начала которого никто не знает,
+  // и модель, отвечая клиенту, сослалась бы на несказанное.
+  const body = (prospect.message ?? "").trim() || comment;
+
+  // Лид заводим, если его ещё нет: с ручного маршрута он приходит уже
+  // созданным в `queueOutreach`, а из «нового» и «готов текст» — нет.
+  let leadId = prospect.lead_id;
+  let requestNo: string | null = null;
+  if (!leadId) {
+    requestNo = newRequestNo();
+    const route = routeFor(prospect.contacts) ?? {
+      kind: "manual" as const,
+      target: prospect.target ?? "",
+    };
+    leadId = await createOutreachLead(prospect, staff, body, requestNo, route);
+  }
+
   const { error } = await db
     .from("prospects")
     .update({
       status: "sent",
       sent_at: when,
-      // Маршрут остаётся ручным: по нему и дальше писать человеку. Скаут
-      // читает его именно так и ответы модели по нему не забирает.
-      manual_note: note.trim().slice(0, 500) || "Написал сам",
+      touched_by: staff.id,
+      touched_at: when,
+      // Маршрут становится ручным: отвечать по нему тоже будет человек, и
+      // скаут не должен забирать эту переписку себе.
+      target_kind: "manual",
+      manual_note: comment || "Связался сам",
       claimed_by: prospect.claimed_by ?? staff.id,
+      lead_id: leadId,
+      ...(requestNo ? { request_no: requestNo } : {}),
       ai_handling: true,
       handover_reason: null,
       failure: null,
     })
     .eq("id", id)
-    .eq("status", "manual");
+    .in("status", [...SELF_CONTACT_FROM]);
   if (error) return { ok: false, why: "Не получилось отметить." };
 
-  // Лента начинается с того, что человек отправил на самом деле. Без этой
-  // записи модель, отвечая клиенту, ссылалась бы на несказанное.
-  if (prospect.message) {
+  if (body) {
     await db.from("outreach_messages").insert({
       prospect_id: id,
-      lead_id: prospect.lead_id,
+      lead_id: leadId,
       direction: "out",
       author: "staff",
-      body: prospect.message.slice(0, 4000),
+      body: body.slice(0, 4000),
       status: "sent",
       sent_at: when,
     });
@@ -535,7 +746,7 @@ export async function markManualSent(
     targetType: "prospect",
     targetId: id,
     ip,
-    meta: { host: prospect.host, target: prospect.target, note: note.slice(0, 120) },
+    meta: { host: prospect.host, target: prospect.target, note: comment.slice(0, 120) },
   });
   return { ok: true };
 }

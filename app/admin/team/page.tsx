@@ -1,4 +1,4 @@
-import { addStaff, assignHead, changeRole, disable, refreshMenu, resend, setGrade } from "./actions";
+import { addStaff, assignHead, changeRole, disable, refreshMenu, resend, setGrade, setPlan } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { requireRole } from "@/lib/admin/guard";
@@ -139,6 +139,7 @@ export default async function TeamPage({
               <th className="px-4 py-3 font-normal">Роль</th>
               <th className="px-4 py-3 font-normal">Руководитель</th>
               <th className="px-4 py-3 font-normal">Грейд и ставка</th>
+              <th className="px-4 py-3 font-normal">План касаний</th>
               <th className="px-4 py-3 font-normal">С какого дня</th>
               <th className="px-4 py-3 font-normal" />
             </tr>
@@ -256,6 +257,35 @@ export default async function TeamPage({
                         сохранить
                       </button>
                     </form>
+                  )}
+                </td>
+                {/* План на неделю. Ставит владелец — любому, руководитель —
+                    своим: план, который человек ставит сам, это не план.
+                    Пустое поле снимает план, и это не то же самое, что ноль:
+                    «осталось 0 из 0» тому, кому план не ставили, — неправда. */}
+                <td data-label="План касаний" className="px-4 py-3">
+                  {member.role === "admin" ? (
+                    <span className="text-xs text-faint">—</span>
+                  ) : viewer.role === "admin" || member.head_staff_id === viewer.id ? (
+                    <form action={setPlan} className="flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="staff" value={member.id} />
+                      <input
+                        name="plan"
+                        inputMode="numeric"
+                        placeholder="без плана"
+                        defaultValue={member.touch_plan ?? ""}
+                        aria-label="Касаний в неделю"
+                        className="w-24 rounded-lg border border-line bg-ink px-2 py-1 text-xs text-text outline-none focus:border-green/50"
+                      />
+                      <span className="text-xs text-faint">в неделю</span>
+                      <button type="submit" className="text-xs text-faint hover:text-green">
+                        сохранить
+                      </button>
+                    </form>
+                  ) : (
+                    <span className="text-xs text-muted">
+                      {member.touch_plan === null ? "без плана" : `${member.touch_plan} в неделю`}
+                    </span>
                   )}
                 </td>
                 <td data-label="С какого дня" className="px-4 py-3 text-xs text-faint">{when(member.created_at)}</td>

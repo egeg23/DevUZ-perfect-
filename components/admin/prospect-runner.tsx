@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { auditChunkAction, saveRunAction } from "@/app/admin/prospect/actions";
+import { auditChunkAction, saveNoSiteAction, saveRunAction } from "@/app/admin/prospect/actions";
 import { EMPTY_CONTACTS, hasAnyContact } from "@/lib/audit/contacts";
 import type { PitchLocale } from "@/lib/audit/pitch";
 import {
@@ -47,6 +47,39 @@ export function ProspectRunner() {
   // Язык письма выбирается до прогона: заход строится один раз, на сервере,
   // вместе с подписью того, кто его отправит.
   const [locale, setLocale] = useState<PitchLocale>("ru");
+
+  /**
+   * Компания без сайта — половина малого бизнеса в Ташкенте.
+   *
+   * Разбирать у неё нечего, и прогон здесь не нужен вовсе: строки ложатся в
+   * базу сразу, а письмо по каждой пишется потом — от ниши. Ниша одна на весь
+   * список: менеджер добавляет их пачкой, найдя десяток салонов в инстаграме,
+   * и десять раз вписывать «барбершоп» он не станет.
+   */
+  const [noSite, setNoSite] = useState(false);
+  const [niche, setNiche] = useState("");
+  const [added, setAdded] = useState<{ added: number; skipped: number } | null>(null);
+
+  // Строки как есть: в этом режиме в них названия компаний, а не адреса, и
+  // разбирать их на домен и подпись нечем и незачем.
+  const names = noSite
+    ? [...new Set(text.split(/[\r\n]+/).map((line) => line.trim()).filter(Boolean))].slice(0, BATCH_CAP)
+    : [];
+
+  async function addNoSite() {
+    if (!names.length || !niche.trim()) return;
+    setRunning(true);
+    setAdded(null);
+    try {
+      setAdded(await saveNoSiteAction(names, niche.trim()));
+      setText("");
+      router.refresh();
+    } catch {
+      setSaveFailed(true);
+    } finally {
+      setRunning(false);
+    }
+  }
 
   const parsed = text.trim() ? parseTargets(text) : [];
   const good = parsed.filter((t) => t.url);
@@ -146,9 +179,45 @@ export function ProspectRunner() {
 
   return (
     <div className="mt-6">
+      {/* Галочка стоит над полем, а не под кнопкой: она меняет смысл того,
+          что в поле вводят, и узнать об этом после ввода поздно. */}
+      <label className="mb-3 flex items-center gap-2 text-sm text-muted">
+        <input
+          type="checkbox"
+          checked={noSite}
+          onChange={(event) => {
+            setNoSite(event.target.checked);
+            setRows([]);
+            setAdded(null);
+          }}
+          className="h-4 w-4 accent-green"
+        />
+        У компании нет сайта
+      </label>
+
+      {noSite ? (
+        <label className="mb-3 block">
+          <span className="text-xs uppercase tracking-wider text-faint">
+            Ниша — от неё будет написано письмо
+          </span>
+          <input
+            value={niche}
+            onChange={(event) => setNiche(event.target.value)}
+            placeholder="барбершоп, доставка еды, стоматология"
+            className={`${FIELD} mt-1 font-sans text-sm`}
+          />
+          <span className="mt-1 block text-xs text-faint">
+            Одна на весь список. Разбирать нечего — письмо строится на том, что
+            человек ищет «{niche.trim() || "ниша"} Ташкент» и находит конкурентов.
+          </span>
+        </label>
+      ) : null}
+
       <label className="block">
         <span className="text-xs uppercase tracking-wider text-faint">
-          Список сайтов — по одному в строке. Можно с названием компании рядом.
+          {noSite
+            ? "Названия компаний — по одному в строке."
+            : "Список сайтов — по одному в строке. Можно с названием компании рядом."}
         </span>
         <textarea
           id="prospect-list"
@@ -156,12 +225,31 @@ export function ProspectRunner() {
           onChange={(event) => setText(event.target.value)}
           rows={8}
           spellCheck={false}
-          placeholder={"mebel-tashkent.uz\nООО «Ромашка» — romashka.uz\nhttps://example.uz/, Пример"}
+          placeholder={
+            noSite
+              ? "Barber House\nСалон «Ромашка»\nStudio 5"
+              : "mebel-tashkent.uz\nООО «Ромашка» — romashka.uz\nhttps://example.uz/, Пример"
+          }
           className={`${FIELD} mt-1`}
         />
       </label>
 
-      {parsed.length ? (
+      {noSite && names.length ? (
+        <p className="mt-2 text-xs text-faint">
+          Компаний в списке: <span className="text-text">{names.length}</span>
+        </p>
+      ) : null}
+
+      {added ? (
+        <p className="mt-2 text-xs text-green">
+          Добавлено: {added.added}
+          {added.skipped ? (
+            <span className="text-faint"> · пропущено как уже заведённые: {added.skipped}</span>
+          ) : null}
+        </p>
+      ) : null}
+
+      {!noSite && parsed.length ? (
         <p className="mt-2 text-xs text-faint">
           Распознано адресов: <span className="text-text">{good.length}</span>
           {bad.length ? <span className="text-gold"> · не разобрано строк: {bad.length}</span> : null}
@@ -171,7 +259,7 @@ export function ProspectRunner() {
         </p>
       ) : null}
 
-      {bad.length ? (
+      {!noSite && bad.length ? (
         <ul className="mt-2 space-y-0.5 text-xs text-gold">
           {bad.slice(0, 5).map((t) => (
             <li key={t.raw} className="font-mono">
@@ -183,27 +271,43 @@ export function ProspectRunner() {
       ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={run}
-          disabled={running || !good.length}
-          className="rounded-lg border border-green/40 bg-green/10 px-4 py-2 text-sm text-green transition hover:bg-green/20 disabled:opacity-40"
-        >
-          {running ? `Проверяю… ${done} из ${queue.length}` : `Проверить ${good.length}`}
-        </button>
-
-        <label className="flex items-center gap-2 text-xs text-faint">
-          Язык письма
-          <select
-            value={locale}
-            onChange={(event) => setLocale(event.target.value === "en" ? "en" : "ru")}
-            disabled={running}
-            className="rounded-lg border border-line bg-surface-2 px-2 py-1.5 text-xs text-text"
+        {noSite ? (
+          <button
+            type="button"
+            onClick={addNoSite}
+            disabled={running || !names.length || !niche.trim()}
+            className="rounded-lg border border-green/40 bg-green/10 px-4 py-2 text-sm text-green transition hover:bg-green/20 disabled:opacity-40"
           >
-            <option value="ru">русский</option>
-            <option value="en">английский</option>
-          </select>
-        </label>
+            {running ? "Добавляю…" : `Добавить ${names.length}`}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={run}
+            disabled={running || !good.length}
+            className="rounded-lg border border-green/40 bg-green/10 px-4 py-2 text-sm text-green transition hover:bg-green/20 disabled:opacity-40"
+          >
+            {running ? `Проверяю… ${done} из ${queue.length}` : `Проверить ${good.length}`}
+          </button>
+        )}
+
+        {/* Выбора языка у компании без сайта нет: письмо там пишется от
+            ниши, которую менеджер вписал по-русски, и английский вариант
+            означал бы перевод ниши, а не письма. */}
+        {noSite ? null : (
+          <label className="flex items-center gap-2 text-xs text-faint">
+            Язык письма
+            <select
+              value={locale}
+              onChange={(event) => setLocale(event.target.value === "en" ? "en" : "ru")}
+              disabled={running}
+              className="rounded-lg border border-line bg-surface-2 px-2 py-1.5 text-xs text-text"
+            >
+              <option value="ru">русский</option>
+              <option value="en">английский</option>
+            </select>
+          </label>
+        )}
 
         {rows.length ? (
           <button

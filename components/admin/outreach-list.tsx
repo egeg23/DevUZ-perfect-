@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import {
-  markManualSentAction,
+  markSelfContactedAction,
   prepareOutreachAction,
   recordManualAnswerAction,
   sendOutreachAction,
@@ -144,10 +144,12 @@ export function OutreachList({
 
       <ul className="mt-4 space-y-3">
         {rows.map((row) => {
+          const noSite = !row.host;
           const reason = canContact({
             contacts: row.contacts,
             findings: row.findings,
             status: row.status,
+            noSite,
           });
           const route = routeFor(row.contacts);
           // На чём споткнётся отправка — тем же кодом, что и сама отправка.
@@ -176,14 +178,23 @@ export function OutreachList({
             >
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 {row.label ? <span className="font-medium">{row.label}</span> : null}
-                <a
-                  href={row.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="font-mono text-xs text-blue-soft hover:underline"
-                >
-                  {row.host}
-                </a>
+                {/* У компании без сайта ссылки нет — вместо неё ниша, от
+                    которой написано письмо. Пустая ссылка на этом месте
+                    читалась бы как «адрес не загрузился». */}
+                {row.url && row.host ? (
+                  <a
+                    href={row.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="font-mono text-xs text-blue-soft hover:underline"
+                  >
+                    {row.host}
+                  </a>
+                ) : (
+                  <span className="rounded-md border border-gold/30 bg-gold/5 px-2 py-0.5 font-mono text-xs text-gold">
+                    без сайта{row.niche ? ` · ${row.niche}` : ""}
+                  </span>
+                )}
                 <span className={`text-xs ${STATUS_TONE[row.status]}`}>
                   {STATUS_LABEL[row.status]}
                   {row.claimed_name ? ` · ${row.claimed_name}` : ""}
@@ -284,7 +295,7 @@ export function OutreachList({
                       перенесёт, ей будет с чем связать. Без отметки карточка
                       висела бы «дальше руками», и второй менеджер написал бы
                       тому же человеку второй раз. */}
-                  <form action={markManualSentAction} className="mt-3 flex flex-wrap items-center gap-2">
+                  <form action={markSelfContactedAction} className="mt-3 flex flex-wrap items-center gap-2">
                     <input type="hidden" name="prospect" value={row.id} />
                     <input
                       name="note"
@@ -296,7 +307,7 @@ export function OutreachList({
                       base="rounded-lg px-3 py-1.5 text-xs"
                       tone="quiet"
                     >
-                      Написал руками
+                      Связался сам
                     </SubmitButton>
                   </form>
                 </div>
@@ -458,6 +469,40 @@ export function OutreachList({
                       </p>
                     </div>
                   ) : null}
+                </form>
+              ) : null}
+
+              {/* «Связался сам» — там, где скаут ещё ничего не отправлял.
+                  Менеджеры пишут со своих аккаунтов: рабочая сессия Telegram
+                  одна, подключить к ней всех нельзя. Без этой отметки панель
+                  отправки не видит вовсе — карточка висит новой, второй
+                  менеджер пишет тому же человеку второй раз, а недельный план
+                  не считается ни у кого.
+
+                  Контакты здесь не проверяются: человек уже написал, и
+                  спорить с этим, потому что аудитор не нашёл на сайте
+                  телефон, панели не по чину. */}
+              {row.status === "new" || row.status === "contacting" ? (
+                <form
+                  action={markSelfContactedAction}
+                  className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3"
+                >
+                  <input type="hidden" name="prospect" value={row.id} />
+                  <input
+                    name="note"
+                    placeholder={row.message ? "чем написали — свой Telegram, звонок" : "что написали"}
+                    className="min-w-[16rem] flex-1 rounded-lg border border-line bg-surface-2 px-2 py-1 text-xs"
+                  />
+                  <SubmitButton
+                    pendingLabel="Отмечаем…"
+                    base="rounded-lg px-3 py-1.5 text-xs"
+                    tone="quiet"
+                  >
+                    Связался сам
+                  </SubmitButton>
+                  <span className="text-xs text-faint">
+                    Если писали со своего аккаунта — отметьте, иначе касание не засчитается.
+                  </span>
                 </form>
               ) : null}
 
