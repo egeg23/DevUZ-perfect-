@@ -26,6 +26,8 @@ import {
   when,
 } from "@/components/admin/lead-table";
 import { record } from "@/lib/admin/audit";
+import { clock, mayTake } from "@/lib/admin/lead-queue";
+import { queueState } from "@/lib/admin/lead-queue-store";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { quoteForLead } from "@/lib/admin/quote";
 import { STATUSES, leadById } from "@/lib/admin/leads";
@@ -80,6 +82,7 @@ const TIMING_LABEL: Record<string, string> = {
 const RESULT_MESSAGE: Record<string, string> = {
   ok: "Готово.",
   taken: "Лида уже взял кто-то другой — обновите страницу.",
+  queued: "Не ваша очередь: лид сейчас предложен другому на 30 минут. Не возьмёт — лид уйдёт следующему, и очередь может дойти до вас.",
   forbidden: "Лид закреплён не за вами.",
   gone: "Лид не найден.",
   offline: "База недоступна.",
@@ -175,10 +178,30 @@ export default async function LeadPage({
   const free = !lead.assigned_staff_id;
   const decides = approves(staff.role);
 
-  const [transfer, colleagues] = await Promise.all([
+  const [transfer, colleagues, queue] = await Promise.all([
     openTransferFor(lead.id),
     mine || decides ? activeStaff() : Promise.resolve([]),
+    free ? queueState(lead.id) : Promise.resolve({ offers: [], openedAt: null }),
   ]);
+
+  /**
+   * Очередь по свободному лиду — с точки зрения того, кто смотрит.
+   *
+   * Ник клиента в Telegram на этой странице виден всем, кто видит лид. Пока
+   * лид в очереди у другого, это лазейка ровно в обход очереди: увидел ник —
+   * написал клиенту сам, не нажимая «Взять». Поэтому ник скрыт от всех, кроме
+   * того, чья сейчас очередь, и владельца.
+   */
+  const turn = mayTake({
+    role: staff.role,
+    staffId: staff.id,
+    offers: queue.offers,
+    openedAt: queue.openedAt,
+    now: new Date(),
+  });
+  const offer = queue.offers.find((o) => o.outcome === null && Date.parse(o.expiresAt) > Date.now()) ?? null;
+  const hideHandle = free && !turn.ok;
+  const holderName = offer ? (colleagues.find((c) => c.id === offer.staffId)?.display_name ?? null) : null;
   const canHandOver = (mine && !free) || (decides && !free);
 
   // Контакт достаётся только по явному действию — и каждое такое
@@ -223,6 +246,22 @@ export default async function LeadPage({
           }`}
         >
           {RESULT_MESSAGE[result] ?? RESULT_MESSAGE.failed}
+        </p>
+      ) : null}
+
+      {/* Очередь — там, где решают, брать ли лид. Кому лид предложен,
+          видит только владелец: остальным имя ни к чему, кроме спора. */}
+      {free && offer && offer.staffId === staff.id ? (
+        <p className="mt-4 rounded-lg border border-green/30 bg-green/5 px-4 py-3 text-sm text-green">
+          ⏳ Лид ваш до {clock(offer.expiresAt)}. Не возьмёте — он уйдёт следующему по очереди.
+        </p>
+      ) : free && offer && staff.role === "admin" ? (
+        <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
+          👁 В очереди у {holderName ?? "сотрудника"} до {clock(offer.expiresAt)}. Вы вне очереди — можете взять сами.
+        </p>
+      ) : hideHandle ? (
+        <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
+          Лид сейчас в очереди у другого сотрудника. Ник клиента скрыт, пока очередь не дойдёт до вас.
         </p>
       ) : null}
 
@@ -706,7 +745,10 @@ export default async function LeadPage({
           label="Где"
           value={[placeOf(lead2origin(lead)), refOf(lead2origin(lead))].filter(Boolean).join(" · ") || null}
         />
-        <Field label="Ник в Telegram" value={usernameOf(lead2origin(lead))} />
+        <Field
+          label="Ник в Telegram"
+          value={hideHandle ? "скрыт — лид в очереди у другого" : usernameOf(lead2origin(lead))}
+        />
       </dl>
 
       {summaryLines(lead.summary).length ? (

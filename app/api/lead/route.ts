@@ -5,6 +5,7 @@ import { isLocale, type Locale } from "@/lib/i18n";
 import { pathFromClient, refFromClient } from "@/lib/qualify/origin";
 import { saveLead } from "@/lib/qualify/store";
 import { detectContactKind } from "@/lib/contact";
+import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { sendLead } from "@/lib/qualify/telegram";
 import { newRequestNo } from "@/lib/qualify/engine";
@@ -135,11 +136,14 @@ export async function POST(request: Request) {
     }
   }
 
-  // Заявка с формы — всей команде, как и заявка из разговора с ботом: адрес
-  // назначения не должен зависеть от того, каким входом пришёл клиент.
-  const delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
-    to: await salesRecipients(),
+  // Заявка с формы — через ту же очередь, что и заявка из разговора с ботом:
+  // путь лида не должен зависеть от того, каким входом пришёл клиент.
+  const delivered = await routeNewLead({
+    leadId: leadId ?? "unsaved",
+    lead,
+    requestNo,
     origin: { ...origin, source: "form" },
+    fallback: await salesRecipients(),
   });
 
   // Если и база, и Telegram недоступны — заявка потеряна, и врать об успехе

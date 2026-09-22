@@ -43,7 +43,9 @@ const server = createServer((req, res) => {
       return;
     }
     res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify({ ok: true, result: {} }));
+    // Номер сообщения — как у настоящего Bot API. Без него нечем было бы
+    // потом найти копию карточки и погасить под ней кнопки.
+    res.end(JSON.stringify({ ok: true, result: body.chat_id ? { message_id: 100 + calls.length } : true }));
   });
 });
 
@@ -55,7 +57,7 @@ process.env.TELEGRAM_BOT_TOKEN = "stub-token";
 process.env.TELEGRAM_SALES_CHAT_ID = "-1001234567890";
 process.env.NEXT_PUBLIC_SITE_URL = "https://devuz.example";
 
-const { sendLead } = await import("@/lib/qualify/telegram");
+const { editLeadCards, handledLabel, sendLead } = await import("@/lib/qualify/telegram");
 const { salesRecipients } = await import("@/lib/qualify/brief");
 
 function lead() {
@@ -141,6 +143,87 @@ test("крупный заказ по-прежнему только владел�
   const owner = route.indexOf("ownerChatIds()");
   assert.ok(wide > 0 && owner > wide, "рассылка команде попала в ветку крупных заказов");
   assert.match(route, /if \(owners\.length\) return \{ chatIds: owners/);
+});
+
+test("взяли лида — кнопки гаснут у всей команды, кроме уже погашенной", async () => {
+  calls.length = 0;
+  unreachable = null;
+
+  // Владелец: «надпись меняется только у того, кто нажал». Остальные видели
+  // живые кнопки у занятого лида и узнавали об этом, только нажав.
+  const cards = [
+    { chatId: "111", messageId: 7 },
+    { chatId: "222", messageId: 8 },
+    { chatId: "333", messageId: 9 },
+  ];
+  const label = handledLabel("take", { username: "egor", display_name: "Егор" });
+  await editLeadCards(cards, "lead-1", label, { chatId: 222, messageId: 8 });
+
+  const edits = calls.filter((c) => c.method === "editMessageReplyMarkup");
+  // Копию нажавшего переписал сам колбэк. Второй раз тем же текстом Telegram
+  // ответит «сообщение не изменилось», и в лог падала бы ошибка на каждое
+  // взятие.
+  assert.deepEqual(
+    edits.map((c) => `${c.body.chat_id}:${c.body.message_id}`).sort(),
+    ["111:7", "333:9"],
+  );
+  for (const edit of edits) {
+    const keyboard = (edit.body.reply_markup as { inline_keyboard: { text: string }[][] }).inline_keyboard;
+    assert.deepEqual(keyboard, [[{ text: "✅ В работе у @egor", callback_data: "noop" }]]);
+  }
+});
+
+test("отпустили лида — кнопки возвращаются всем", async () => {
+  calls.length = 0;
+  await editLeadCards([{ chatId: "111", messageId: 7 }], "lead-1", null);
+
+  const [edit] = calls.filter((c) => c.method === "editMessageReplyMarkup");
+  const keyboard = JSON.stringify(edit.body.reply_markup);
+  // Лид снова свободен: карточка, говорящая «в работе», врала бы команде.
+  assert.match(keyboard, /take:lead-1/);
+  assert.match(keyboard, /drop:lead-1/);
+});
+
+test("одна недоставленная правка не оставляет живые кнопки у остальных", async () => {
+  calls.length = 0;
+  // Копию могли удалить, чат — закрыть. Это не повод бросать остальных.
+  unreachable = "111";
+  await editLeadCards(
+    [
+      { chatId: "111", messageId: 7 },
+      { chatId: "222", messageId: 8 },
+    ],
+    "lead-1",
+    handledLabel("drop", { username: null, display_name: "Егор" }),
+  );
+  unreachable = null;
+
+  const edits = calls.filter((c) => c.method === "editMessageReplyMarkup");
+  assert.deepEqual(edits.map((c) => String(c.body.chat_id)).sort(), ["111", "222"]);
+});
+
+test("копии запоминаются, и лида гасят с обеих сторон", async () => {
+  const { readFileSync } = await import("node:fs");
+  const read = (f: string) => readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
+
+  // Запоминаем только у сохранённого лида: у «unsaved» карточки в панели нет,
+  // и гасить потом нечего.
+  const telegram = read("lib/qualify/telegram.ts");
+  assert.match(telegram, /if \(cardUrl\) \{\s*\n\s*await rememberNotices\(/);
+
+  // Бот: нажавший — сам, остальные — из таблицы копий.
+  const webhook = read("app/api/telegram/webhook/route.ts");
+  assert.match(webhook, /await markLeadCards\(\s*\n\s*leadId,\s*\n\s*label,/);
+
+  // Панель: лида берут и отпускают и там.
+  const panel = read("app/admin/leads/[id]/actions.ts");
+  assert.match(panel, /if \(result\.ok\) syncCards\(leadId, handledLabel\("take", staff\)\)/);
+  assert.match(panel, /if \(result\.ok\) syncCards\(leadId, null\)/);
+  assert.match(panel, /status === "dropped"\) syncCards/);
+
+  const migration = read("supabase/migrations/0044_lead_notices.sql");
+  assert.match(migration, /primary key \(lead_id, chat_id, message_id\)/);
+  assert.match(migration, /enable row level security/);
 });
 
 test.after(() => server.close());

@@ -1,3 +1,4 @@
+import { routeNewLead } from "@/lib/admin/lead-queue-store";
 import { createHash, timingSafeEqual } from "node:crypto";
 
 import { company } from "@/content/company";
@@ -223,11 +224,21 @@ export async function POST(request: Request) {
   }
 
   const route = await briefRecipients(totalUsd);
-  const delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
-    to: route.chatIds,
-    heading: briefHeading(brief, route, "brief"),
-    origin: { source: "showcase" },
-  }).catch((error) => {
+  const heading = briefHeading(brief, route, "brief");
+  // Крупный заказ — только владельцу, мимо очереди. Остальные идут через
+  // очередь, как любой тёплый лид: витрина не должна быть входом, где лид
+  // достаётся тому, кто быстрее нажал.
+  const delivered = await (route.ownerOnly
+    ? sendLead(lead, leadId ?? "unsaved", requestNo, { to: route.chatIds, heading, origin: { source: "showcase" } })
+    : routeNewLead({
+        leadId: leadId ?? "unsaved",
+        lead,
+        requestNo,
+        heading,
+        origin: { source: "showcase" },
+        fallback: route.chatIds,
+      })
+  ).catch((error) => {
     console.error("sendLead brief", error);
     return false;
   });
