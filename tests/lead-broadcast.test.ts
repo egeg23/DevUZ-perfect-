@@ -98,10 +98,12 @@ test("карточка уходит каждому адресату по раз�
   const team = ["-1001234567890", "111", "222"];
   assert.equal(await sendLead(lead(), "abc", "DZ-1", { to: team }), true);
 
+  // Порядок не проверяем: отправки идут разом, и кто ответит первым,
+  // решает сеть. Проверяем состав — каждому ровно по разу.
   const sent = calls.filter((c) => c.method === "sendMessage");
   assert.deepEqual(
-    sent.map((c) => String(c.body.chat_id)),
-    team,
+    sent.map((c) => String(c.body.chat_id)).sort(),
+    [...team].sort(),
     "кого-то пропустили или написали дважды",
   );
 });
@@ -119,7 +121,7 @@ test("сотрудник, не писавший боту, не ломает до
   // кнопкой — иначе первый же такой сотрудник переводил бы кнопку входа в
   // запасной режим для всех и до перезапуска.
   assert.equal(sent.length, 2, `вызовов ${sent.length}, а адресата два`);
-  assert.deepEqual(sent.map((c) => String(c.body.chat_id)), ["111", "222"]);
+  assert.deepEqual(sent.map((c) => String(c.body.chat_id)).sort(), ["111", "222"]);
 });
 
 test("без базы адрес остаётся тем же, что и был", async () => {
