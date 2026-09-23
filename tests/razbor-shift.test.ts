@@ -191,7 +191,8 @@ test("статья, не прошедшая проверку, не станов�
 
 test("свип зовёт смену, а смена сама решает, пора ли", () => {
   const route = read("app/api/reminders/sweep/route.ts");
-  assert.match(route, /const razbor = await runRazborShift\(new Date\(\)\);/);
+  // После ответа таймеру: смена идёт минут пятнадцать, таймер ждёт минуту.
+  assert.match(route, /after\(async \(\) => \{\s*const razbor = await runRazborShift\(new Date\(\)\)/);
   // Расписание живёт в смене, а не в свипе: свип ходит каждые пять минут и
   // про Ташкент ничего не знает.
   assert.doesNotMatch(route, /SHIFT_AT|08:03/);
@@ -227,4 +228,27 @@ test("смена ходит тем же обходом, что и касание
   // живёт на внутренних страницах, а находок с главной хватает не всегда.
   assert.match(shift, /auditDeep\(/, "смена снова смотрит только главную");
   assert.doesNotMatch(shift, /await enrich\(await probe\(/, "остался второй проход по сайту");
+});
+
+/**
+ * Смена берёт день до работы, а не отчётом после.
+ *
+ * 22 сентября в базе два отчёта смены — 08:17 и 08:24: отчёт пишется в
+ * конце, смена идёт минут пятнадцать, и проход свипа через пять минут
+ * запускал вторую. Второй черновик не записался — первый уже занял запрос,
+ * — а модель посчитала обе.
+ */
+test("вторая смена за день не начинается, пока идёт первая", () => {
+  const run = read("lib/razbor/shift-run.ts");
+  const body = run.slice(run.indexOf("export async function runRazborShift"));
+  const claim = body.indexOf("await claimDay(now)");
+  assert.ok(claim > 0, "смена не отмечает, что день взят");
+  assert.ok(claim < body.indexOf("await coveredHashes()"), "день берётся после начала работы");
+  assert.match(run, /onConflict: "job,day", ignoreDuplicates: true/);
+  // Ручной прогон — для проверки правки в тот же день — отметку не трогает.
+  assert.match(body, /if \(!force\) \{\s*const claim = await claimDay\(now\)/);
+
+  const migration = read("supabase/migrations/0054_daily_claims.sql");
+  assert.match(migration, /primary key \(job, day\)/);
+  assert.match(migration, /enable row level security/);
 });

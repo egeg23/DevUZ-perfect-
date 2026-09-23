@@ -244,8 +244,15 @@ export async function POST(request: Request) {
   // ни базы, ни репозитория, ни ключа модели, и три ночи подряд она
   // отрабатывала по полчаса, не оставляя следа. Сама решает, пора ли —
   // раз в сутки, в восемь утра по Ташкенту.
-  const razbor = await runRazborShift(new Date());
-  if (razbor.errors.length) console.error("разборы:", razbor.errors.join("; "));
+  //
+  // После ответа таймеру: двенадцать сайтов с обходом и две статьи моделью —
+  // это десять-пятнадцать минут, а таймер ждёт шестьдесят секунд. 22
+  // сентября проходы в 08:05, 08:10 и 08:15 упали по таймауту, и отчёты
+  // плановых смен ниже в эти минуты не уходили.
+  after(async () => {
+    const razbor = await runRazborShift(new Date()).catch((error) => ({ errors: [String(error)] }));
+    if (razbor.errors.length) console.error("разборы:", razbor.errors.join("; "));
+  });
 
   // Отчёты плановых смен — владельцу. У смены нет токена бота, у свипа есть.
   // Сторож молчания идёт ПЕРЕД отправкой: тревога, поднятая сейчас, уходит
@@ -275,7 +282,6 @@ export async function POST(request: Request) {
     silent,
     talks,
     reviews,
-    razbor,
     ok: true,
     sent,
     skipped,

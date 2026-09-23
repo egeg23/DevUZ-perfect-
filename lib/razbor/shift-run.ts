@@ -14,6 +14,7 @@ import {
   nicheByKey,
   shiftDue,
 } from "@/lib/razbor/shift";
+import { todayInTashkent } from "@/lib/admin/pulse";
 import { inventNiche } from "@/lib/razbor/niche-ask";
 import { forbiddenNiche } from "@/lib/razbor/niche-words";
 import { coveredHashes, saveDraft, sourceHash, storedNiche, type RazborArticle } from "@/lib/razbor/store";
@@ -60,6 +61,22 @@ async function lastShiftAt(): Promise<string | null> {
 }
 
 /**
+ * Забрать сегодняшнюю смену. Отчёт пишется в конце, а смена идёт минут
+ * пятнадцать: без отметки в начале следующий проход свипа не видит, что
+ * смена уже идёт, и запускает вторую.
+ */
+async function claimDay(now: Date): Promise<"ok" | "taken" | string> {
+  const db = serviceClient();
+  if (!db) return "база недоступна";
+  const { data, error } = await db
+    .from("daily_claims")
+    .upsert({ job: "razbor", day: todayInTashkent(now) }, { onConflict: "job,day", ignoreDuplicates: true })
+    .select("job");
+  if (error) return `смена не взяла день: ${error.message}`;
+  return data?.length ? "ok" : "taken";
+}
+
+/**
  * `force` — запуск руками, в обход расписания и отметки «сегодня уже была».
  *
  * Нужен ровно за тем, чтобы правку смены можно было проверить в тот же
@@ -71,6 +88,11 @@ export async function runRazborShift(now = new Date(), force = false): Promise<S
   const db = serviceClient();
   if (!db) return EMPTY;
   if (!force && !shiftDue(now, await lastShiftAt())) return EMPTY;
+  if (!force) {
+    const claim = await claimDay(now);
+    if (claim === "taken") return EMPTY;
+    if (claim !== "ok") return { ...EMPTY, errors: [claim] };
+  }
 
   const run: ShiftRun = { ran: true, looked: 0, drafted: 0, skipped: {}, errors: [] };
   const skip = (why: string) => {
