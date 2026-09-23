@@ -63,12 +63,20 @@ export async function createCampaign(
   niche: string,
   city: string,
   staff: Staff,
-): Promise<{ ok: true; id: string } | { ok: false; why: string }> {
+): Promise<{ ok: true; id: string; existed?: boolean } | { ok: false; why: string }> {
   const n = niche.trim().replace(/\s+/g, " ").slice(0, 120);
   const c = city.trim().replace(/\s+/g, " ").slice(0, 80);
   if (n.length < 2 || c.length < 2) return { ok: false, why: "Нужны ниша и город." };
   const db = serviceClient();
   if (!db) return { ok: false, why: "База недоступна." };
+
+  // Та же ниша в том же городе — та же кампания. 23 сентября «Стамотология ·
+  // Ташкент» завелась дважды за полторы секунды: двойное нажатие, и каждая
+  // тратила бы свои запросы к платному API на одну и ту же выдачу.
+  const same = (await listCampaigns()).find(
+    (x) => x.niche.toLowerCase() === n.toLowerCase() && x.city.toLowerCase() === c.toLowerCase(),
+  );
+  if (same) return { ok: true, id: same.id, existed: true };
   const { data, error } = await db
     .from("maps_campaigns")
     .insert({ niche: n, city: c, created_by: staff.id })
