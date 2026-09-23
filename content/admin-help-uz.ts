@@ -521,7 +521,7 @@ export const uz: HelpCopy = {
             admin: [
               "Kampaniya — **nisha va shahar** → «Искать». Har kuni soat 06:00 da (dam olish kunlari ham) tizim Google Maps orqali kompaniyalarni qidiradi: har kampaniyaga uch sahifagacha, Toshkent uchun — butun shahardan keyin 12 ta tuman bo‘yicha. Topilganlar fonda tekshiriladi, bir o‘tishda beshta saytdan; zaxiraga yozadigan narsasi bor saytlar va saytsiz kompaniyalar — xaritadagi telefoni bilan tushadi.",
               "Chegara — kuniga 25 ta so‘rov (`MAPS_DAILY_REQUESTS`), bu oyiga taxminan 750 ta — Google’ning bepul mingtaligi ichida. Bitta so‘rov — 20 tagacha kompaniya.",
-              "Bir marta ulash: Google Cloud → «Places API (New)» ni yoqing va to‘lov kartasini bog‘lang → «Credentials» → faqat Places API (New) bilan cheklangan «API key» → `/opt/devuz/.env` fayliga `GOOGLE_PLACES_API_KEY=kalit` yozing va `docker compose up -d` (yoki keyingi yangilanish chiqishini kuting).",
+              "Bir marta ulash: Google Cloud → «Places API (New)» ni yoqing va to‘lov kartasini bog‘lang → «Credentials» → faqat Places API (New) bilan cheklangan «API key» → `/opt/devuz/.env` fayliga `GOOGLE_PLACES_API_KEY=kalit` yozing va `docker compose up -d` (yoki keyingi yangilanish chiqishini kuting). Hozir kalit Supabase maxfiy ma’lumotlar omborida turibdi (Vault, nomi `app.GOOGLE_PLACES_API_KEY`): `.env`da kalit bo‘lmasa, panel uni o‘sha yerdan oladi.",
             ],
           },
         },

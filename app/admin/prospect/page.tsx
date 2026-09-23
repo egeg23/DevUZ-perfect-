@@ -30,9 +30,9 @@ export default async function ProspectPage({
   const { open, e, sent, maps } = await searchParams;
   // Автопоиск ведут владелец и руководитель; менеджеру он приходит порцией.
   const seesMaps = staff.role === "admin" || staff.role === "head";
-  const [campaigns, mapsUsage, mapsPending] = seesMaps
-    ? await Promise.all([listCampaigns(), usageToday(), pendingPlaces()])
-    : [[], 0, 0];
+  const [campaigns, mapsUsage, mapsPending, mapsReady] = seesMaps
+    ? await Promise.all([listCampaigns(), usageToday(), pendingPlaces(), placesConfigured()])
+    : [[], 0, 0, false];
   const [rows, hour, replies, plan, portion] = await Promise.all([
     listProspects(),
     sentLastHour(),
@@ -92,7 +92,7 @@ export default async function ProspectPage({
       {seesMaps ? (
         <MapsCampaigns
           campaigns={campaigns}
-          configured={placesConfigured()}
+          configured={mapsReady}
           usage={mapsUsage}
           cap={dailyCap()}
           pending={mapsPending}

@@ -137,3 +137,31 @@ test("уникальность домена — без условия: инач�
   assert.ok(!/create unique index[^;]*where/.test(sql), "индекс снова частичный");
   assert.match(read("lib/admin/outreach-store.ts"), /onConflict: "host"/);
 });
+
+/**
+ * Ключ Places — из .env, а без него — из хранилища секретов Supabase.
+ *
+ * 23 сентября владелец прислал ключ и попросил подключить самому, а доступа
+ * к серверу у сессии, которая ведёт код, нет. Ключ лёг в Vault; .env при
+ * этом важнее — поменять ключ на сервере можно, не трогая базу.
+ */
+test("ключ Places: .env важнее хранилища, без обоих — не подключено", async () => {
+  const { appSecret, forgetSecrets } = await import("@/lib/secrets");
+  const { placesConfigured } = await import("@/lib/maps/places");
+  forgetSecrets();
+  process.env.GOOGLE_PLACES_API_KEY = "from-env";
+  assert.equal(await appSecret("GOOGLE_PLACES_API_KEY"), "from-env");
+  assert.equal(await placesConfigured(), true);
+  delete process.env.GOOGLE_PLACES_API_KEY;
+  forgetSecrets();
+  // В тестах базы нет — значит и ключа нет, и автопоиск честно «не подключён».
+  assert.equal(await placesConfigured(), false);
+
+  const migration = read("supabase/migrations/0055_app_secrets.sql");
+  assert.match(migration, /security definer/);
+  assert.match(migration, /set search_path = ''/);
+  assert.match(migration, /p_name like 'app\.%'/, "функция отдаёт любые секреты Vault");
+  assert.match(migration, /revoke all on function public\.app_secret\(text\) from public, anon, authenticated;/);
+  assert.match(migration, /grant execute on function public\.app_secret\(text\) to service_role;/);
+  assert.doesNotMatch(migration, /AIza/, "ключ попал в миграцию");
+});
