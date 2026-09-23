@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { Container } from "@/components/ui/container";
+import { company } from "@/content/company";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
+import { telUrl } from "@/lib/phone-links";
 import { localeHref, type Locale } from "@/lib/i18n";
 
 export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
@@ -90,6 +92,21 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
           >
             {dict.cta.discuss}
           </Link>
+          {/* На телефоне «Обсудить проект» не помещается, а позвонить с
+              телефона — самое естественное действие. Первый номер — основной. */}
+          <a
+            href={telUrl(company.phones[0])}
+            aria-label={`${dict.contact.call}: ${company.phones[0].display}`}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-green transition-colors hover:border-green/50 md:hidden"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 5.5A2.5 2.5 0 0 1 5.5 3h1.2c.5 0 .9.3 1 .8l1 3.8a1 1 0 0 1-.3 1l-1.6 1.4a14 14 0 0 0 6.2 6.2l1.4-1.6a1 1 0 0 1 1-.3l3.8 1c.5.1.8.5.8 1v1.2a2.5 2.5 0 0 1-2.5 2.5h-1C9.6 21 3 14.4 3 6.5v-1Z"
+              />
+            </svg>
+          </a>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}

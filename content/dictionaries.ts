@@ -133,7 +133,9 @@ const ru = {
     failed: "Не удалось отправить. Напишите нам в Telegram — так быстрее.",
     consent: "Отправляя форму, вы соглашаетесь на обработку персональных данных",
     consentLink: "политика конфиденциальности",
-    noPhone: "Телефона у студии нет — пишите в Telegram или оставьте контакт в форме, ответим в том же канале.",
+    phonesTitle: "Позвонить или написать в WhatsApp",
+    call: "Позвонить",
+    whatsappText: "Здравствуйте! Пишу с сайта DevUz Studio.",
   },
   chat: {
     title: "Менеджер DevUz",
@@ -458,7 +460,9 @@ const en: Dictionary = {
     failed: "Sending failed. Message us on Telegram — that is faster.",
     consent: "By submitting the form you agree to the processing of personal data",
     consentLink: "privacy policy",
-    noPhone: "The studio has no phone line — write on Telegram or leave a contact in the form, and we reply in the same channel.",
+    phonesTitle: "Call or message us on WhatsApp",
+    call: "Call",
+    whatsappText: "Hello! I'm writing from the DevUz Studio website.",
   },
   chat: {
     title: "DevUz manager",
@@ -765,7 +769,9 @@ const uz: Dictionary = {
     failed: "Yuborib bo‘lmadi. Bizga Telegram’da yozing — bu tezroq.",
     consent: "Formani yuborish orqali shaxsiy ma’lumotlarni qayta ishlashga rozilik bildirasiz",
     consentLink: "maxfiylik siyosati",
-    noPhone: "Studiyaning telefoni yo‘q — Telegramga yozing yoki formada kontakt qoldiring, o‘sha kanalda javob beramiz.",
+    phonesTitle: "Qo‘ng‘iroq qiling yoki WhatsAppga yozing",
+    call: "Qo‘ng‘iroq qilish",
+    whatsappText: "Assalomu alaykum! DevUz Studio saytidan yozyapman.",
   },
   chat: {
     title: "DevUz menejeri",
@@ -1072,7 +1078,9 @@ const zh: Dictionary = {
     failed: "提交失败。请通过 Telegram 联系我们，那样更快。",
     consent: "提交表单即表示您同意我们处理相关个人信息",
     consentLink: "隐私政策",
-    noPhone: "工作室不设电话 —— 请通过 Telegram 联系，或在表单中留下联系方式，我们会在同一渠道回复。",
+    phonesTitle: "致电或通过 WhatsApp 联系我们",
+    call: "拨打电话",
+    whatsappText: "您好！我从 DevUz Studio 网站联系您。",
   },
   chat: {
     title: "DevUz 客户经理",

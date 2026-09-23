@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
 import { Container } from "@/components/ui/container";
+import { PhoneLinesCompact } from "@/components/ui/phone-links";
 import { company } from "@/content/company";
 import type { Dictionary } from "@/content/dictionaries";
 import { services } from "@/content/services";
@@ -96,6 +97,7 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
                   Telegram @{company.telegram}
                 </a>
               </li>
+              <PhoneLinesCompact dict={dict} />
               <li>
                 <Link href={localeHref(locale, "contact")} className="text-muted transition-colors hover:text-text">
                   {dict.cta.writeUs}
