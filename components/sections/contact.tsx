@@ -9,11 +9,31 @@ import { company } from "@/content/company";
 import type { Dictionary } from "@/content/dictionaries";
 import type { Locale } from "@/lib/i18n";
 
-export function ContactSection({ locale, dict }: { locale: Locale; dict: Dictionary }) {
+export function ContactSection({
+  locale,
+  dict,
+  standalone = false,
+}: {
+  locale: Locale;
+  dict: Dictionary;
+  /** Своя страница «Контакты»: номера сразу под шапкой, без отступа главной. */
+  standalone?: boolean;
+}) {
   return (
-    <section id="contact" className="border-t border-line py-24 md:py-32">
+    <section
+      id="contact"
+      className={standalone ? "pb-24 pt-6 md:pb-32 md:pt-10" : "border-t border-line py-24 md:py-32"}
+    >
       <CodeBoot code={"await telegram.send(SALES_CHAT, brief(lead))"}>
       <Container>
+        {/* Живые номера — первыми, до заголовка про чат. Владелец: «чтобы при
+            переходе туда не возникало ощущения, что тебя снова ждёт только
+            наш ИИ-бот». Чат и форма остаются ниже — для тех, кому удобнее
+            написать. */}
+        <Reveal className="mb-14">
+          <PhoneList locale={locale} dict={dict} />
+        </Reveal>
+
         <SectionHeading
           kicker={dict.contact.kicker}
           title={dict.contact.title}
@@ -50,12 +70,6 @@ export function ContactSection({ locale, dict }: { locale: Locale; dict: Diction
                   <span aria-hidden="true">✈</span>
                   Telegram @{company.telegram}
                 </a>
-              </div>
-
-              {/* Телефоны — отдельным блоком под Telegram: позвонить одним
-                  нажатием или открыть WhatsApp с уже набранным приветствием. */}
-              <div className="mt-6 border-t border-line pt-6">
-                <PhoneList locale={locale} dict={dict} />
               </div>
             </div>
           </Reveal>

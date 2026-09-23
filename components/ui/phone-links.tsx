@@ -28,47 +28,68 @@ const PHONE_ICON = (
   </svg>
 );
 
-/** Полный список: у каждого номера — «Позвонить» и «WhatsApp». Для блока «Связаться». */
+/**
+ * Телефоны плитками — наверху раздела «Контакты», до чата.
+ *
+ * Владелец: «чтобы при переходе туда не возникало ощущения, что тебя снова
+ * ждёт только наш ИИ-бот». Поэтому первым на странице стоят живые номера с
+ * подписью «ответит человек из команды», а чат с ассистентом — под ними.
+ */
 export function PhoneList({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   return (
-    <div>
-      <p className="text-[0.82rem] text-faint">{dict.contact.phonesTitle}</p>
-      <ul className="mt-3 space-y-3">
+    <div id="phones" className="scroll-mt-28 rounded-2xl border border-green/25 bg-surface p-6 sm:p-7">
+      <p className="text-[1.05rem] font-semibold">{dict.contact.directTitle}</p>
+      <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {company.phones.map((phone) => (
-          <li key={phone.e164} className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <a
-              href={telUrl(phone)}
-              className="min-w-0 font-mono text-[0.95rem] text-text transition-colors hover:text-green"
-            >
-              <span aria-hidden="true" className="mr-1.5">
-                {phone.flag}
-              </span>
-              {phone.display}
-              <span className="sr-only"> — {t(phone.country, locale)}</span>
-            </a>
-            <span className="ml-auto flex gap-2">
+          <li key={phone.e164} className="flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-ink/40 p-4">
+            <div className="min-w-0">
+              <p className="text-[0.75rem] text-faint">
+                <span aria-hidden="true" className="mr-1.5">
+                  {phone.flag}
+                </span>
+                {t(phone.country, locale)}
+              </p>
               <a
                 href={telUrl(phone)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[0.8rem] text-muted transition-colors hover:border-green/50 hover:text-green"
+                className="mt-1 block font-mono text-[1.02rem] text-text transition-colors hover:text-green"
+              >
+                {phone.display}
+              </a>
+            </div>
+            <div className="mt-auto flex flex-wrap gap-2">
+              <a
+                href={telUrl(phone)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-green px-3 py-1.5 text-[0.8rem] font-semibold text-ink transition-colors hover:bg-white"
                 aria-label={`${dict.contact.call}: ${phone.display}`}
               >
                 {PHONE_ICON}
                 {dict.contact.call}
               </a>
-              <a
-                href={whatsappUrl(phone, dict.contact.whatsappText)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[0.8rem] text-muted transition-colors hover:border-[#25D366]/60 hover:text-[#25D366]"
-                aria-label={`WhatsApp: ${phone.display}`}
-              >
-                {WHATSAPP_ICON}
-                WhatsApp
-              </a>
-            </span>
+              {phone.whatsapp ? (
+                <a
+                  href={whatsappUrl(phone, dict.contact.whatsappText)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[0.8rem] text-muted transition-colors hover:border-[#25D366]/60 hover:text-[#25D366]"
+                  aria-label={`WhatsApp: ${phone.display}`}
+                >
+                  {WHATSAPP_ICON}
+                  WhatsApp
+                </a>
+              ) : null}
+            </div>
           </li>
         ))}
       </ul>
+      <a
+        href={company.telegramUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 inline-flex items-center gap-2 text-[0.9rem] text-green transition-colors hover:text-white"
+      >
+        <span aria-hidden="true">✈</span>
+        Telegram @{company.telegram}
+      </a>
     </div>
   );
 }
@@ -85,16 +106,18 @@ export function PhoneLinesCompact({ dict }: { dict: Dictionary }) {
             </span>
             {phone.display}
           </a>
-          <a
-            href={whatsappUrl(phone, dict.contact.whatsappText)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-faint transition-colors hover:text-[#25D366]"
-            aria-label={`WhatsApp: ${phone.display}`}
-            title="WhatsApp"
-          >
-            {WHATSAPP_ICON}
-          </a>
+          {phone.whatsapp ? (
+            <a
+              href={whatsappUrl(phone, dict.contact.whatsappText)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-faint transition-colors hover:text-[#25D366]"
+              aria-label={`WhatsApp: ${phone.display}`}
+              title="WhatsApp"
+            >
+              {WHATSAPP_ICON}
+            </a>
+          ) : null}
         </li>
       ))}
     </>

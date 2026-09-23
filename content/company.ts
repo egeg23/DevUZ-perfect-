@@ -39,8 +39,9 @@ export const company = {
    * переходы в WhatsApp Метрика считает сама (автоцели «Клик по номеру
    * телефона» и «Переход в мессенджер»).
    *
-   * `e164` — для ссылок tel: и wa.me, `display` — для глаз. Порядок — порядок
-   * на сайте.
+   * `e164` — для ссылок tel: и wa.me, `display` — для глаз, `whatsapp` —
+   * есть ли на номере WhatsApp (нет — только кнопка звонка). Порядок —
+   * порядок на сайте.
    */
   phones: [
     {
@@ -48,18 +49,31 @@ export const company = {
       display: "+998 90 912-37-72",
       country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦" } satisfies LocalizedText,
       flag: "🇺🇿",
+      whatsapp: true,
     },
     {
       e164: "+998909120578",
       display: "+998 90 912-05-78",
       country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦" } satisfies LocalizedText,
       flag: "🇺🇿",
+      whatsapp: true,
     },
     {
       e164: "+79232330037",
       display: "+7 923 233-00-37",
       country: { ru: "Россия", en: "Russia", uz: "Rossiya", zh: "俄罗斯" } satisfies LocalizedText,
       flag: "🇷🇺",
+      whatsapp: true,
+    },
+    {
+      // Владелец, 23.09: WhatsApp на этом номере нет — только звонок. Номер
+      // записан ровно так, как его дал владелец («добавить как есть»): код
+      // региона 151 в США не выдаётся, и дозвон стоит проверить.
+      e164: "+11517095555",
+      display: "+1 151 709-5555",
+      country: { ru: "США", en: "USA", uz: "AQSH", zh: "美国" } satisfies LocalizedText,
+      flag: "🇺🇸",
+      whatsapp: false,
     },
   ],
 
