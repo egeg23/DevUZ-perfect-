@@ -25,11 +25,43 @@ export const company = {
   } satisfies LocalizedText,
 
   // ─── Контакты ──────────────────────────────────────────────────────────────
-  // Телефон не публикуем сознательно: единственные точки входа — Telegram и
-  // форма на сайте. Так каждое обращение попадает в одну воронку и проходит
-  // через квалификацию, а не теряется в чьих-то входящих звонках.
   telegram: "Devuz_studio_bot",
   telegramUrl: "https://t.me/Devuz_studio_bot",
+
+  /**
+   * Телефоны: позвонить с сайта одним нажатием или написать в WhatsApp.
+   *
+   * Раньше телефона на сайте не было сознательно — всё шло через Telegram и
+   * форму, в одну воронку с квалификацией. 23 сентября владелец решил
+   * иначе: часть клиентов в Узбекистане и России звонит, а не пишет, и без
+   * номера такой клиент уходит к тому, у кого номер есть. Цена — звонок и
+   * WhatsApp мимо панели: лид из них заводится руками. Клики по номеру и
+   * переходы в WhatsApp Метрика считает сама (автоцели «Клик по номеру
+   * телефона» и «Переход в мессенджер»).
+   *
+   * `e164` — для ссылок tel: и wa.me, `display` — для глаз. Порядок — порядок
+   * на сайте.
+   */
+  phones: [
+    {
+      e164: "+998909123772",
+      display: "+998 90 912-37-72",
+      country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦" } satisfies LocalizedText,
+      flag: "🇺🇿",
+    },
+    {
+      e164: "+998909120578",
+      display: "+998 90 912-05-78",
+      country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦" } satisfies LocalizedText,
+      flag: "🇺🇿",
+    },
+    {
+      e164: "+79232330037",
+      display: "+7 923 233-00-37",
+      country: { ru: "Россия", en: "Russia", uz: "Rossiya", zh: "俄罗斯" } satisfies LocalizedText,
+      flag: "🇷🇺",
+    },
+  ],
 
   address: {
     street: {
@@ -134,6 +166,8 @@ export const proof = {
   projects: 550,
   /** Средний рост лидогенерации по нишам после аудита и работ, разы. */
   lift: [2, 4] as const,
+  /** В скольких странах работаем. Владелец, 23 сентября: «укажи, что работаем в 53 странах». */
+  countries: 53,
 };
 
 /**
@@ -183,6 +217,16 @@ export const headline = [
       en: "completed projects",
       uz: "yakunlangan loyiha",
       zh: "个已完成项目",
+    } satisfies LocalizedText,
+  },
+  {
+    value: String(proof.countries),
+    suffix: "",
+    label: {
+      ru: "стран, в которых работаем",
+      en: "countries we work in",
+      uz: "ishlayotgan mamlakatlarimiz",
+      zh: "个国家有我们的客户",
     } satisfies LocalizedText,
   },
 ] as const;

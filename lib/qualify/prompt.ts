@@ -1,5 +1,5 @@
 import { cases } from "@/content/cases";
-import { company } from "@/content/company";
+import { company, proof } from "@/content/company";
 import { services } from "@/content/services";
 import { localeLabel, t, type Locale } from "@/lib/i18n";
 
@@ -45,7 +45,7 @@ export function buildSystemPrompt(locale: Locale): string {
 
 ${studioFacts(locale)}
 
-Связаться со студией можно в Telegram: @${company.telegram}. Телефона у студии нет — не выдумывай его и не обещай перезвонить, менеджер пишет в тот контакт, который оставил клиент.
+Студия из Ташкента, работаем с клиентами в ${proof.countries} странах. Связаться со студией можно в Telegram: @${company.telegram}, а позвонить или написать в WhatsApp — по номерам ${company.phones.map((p) => `${p.display} (${p.country.ru})`).join(", ")}. Номера давай, только если клиент сам хочет позвонить или спрашивает телефон; других номеров не выдумывай и не обещай перезвонить сам — менеджер пишет в тот контакт, который оставил клиент.
 
 ## Как вести разговор
 

@@ -47,12 +47,24 @@ export function organizationSchema(locale: Locale): Json {
     ],
     knowsLanguage: ["ru", "uz", "en", "zh"],
     sameAs: [company.social.telegram, company.social.github],
-    contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "sales",
-      url: company.telegramUrl,
-      availableLanguage: ["ru", "uz", "en", "zh"],
-    },
+    telephone: company.phones[0].e164,
+    // Каждый номер — своей точкой контакта: поисковику так видно, какой
+    // номер для какой страны, и в карточке организации он покажет нужный.
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "sales",
+        url: company.telegramUrl,
+        availableLanguage: ["ru", "uz", "en", "zh"],
+      },
+      ...company.phones.map((phone) => ({
+        "@type": "ContactPoint",
+        contactType: "sales",
+        telephone: phone.e164,
+        areaServed: phone.e164.startsWith("+998") ? "UZ" : phone.e164.startsWith("+7") ? "RU" : "US",
+        availableLanguage: ["ru", "uz", "en"],
+      })),
+    ],
     priceRange: "$$",
     /**
      * Условия возврата — здесь, а не в каждом оффере.

@@ -2,6 +2,7 @@ import { ChatPanel } from "@/components/chat/chat-panel";
 import { LeadForm } from "@/components/chat/lead-form";
 import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
+import { PhoneList } from "@/components/ui/phone-links";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { company } from "@/content/company";
@@ -49,9 +50,12 @@ export function ContactSection({ locale, dict }: { locale: Locale; dict: Diction
                   <span aria-hidden="true">✈</span>
                   Telegram @{company.telegram}
                 </a>
-                <p className="text-[0.82rem] leading-relaxed text-faint">
-                  {dict.contact.noPhone}
-                </p>
+              </div>
+
+              {/* Телефоны — отдельным блоком под Telegram: позвонить одним
+                  нажатием или открыть WhatsApp с уже набранным приветствием. */}
+              <div className="mt-6 border-t border-line pt-6">
+                <PhoneList locale={locale} dict={dict} />
               </div>
             </div>
           </Reveal>

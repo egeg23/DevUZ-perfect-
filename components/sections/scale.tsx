@@ -21,7 +21,7 @@ import { t, type Locale } from "@/lib/i18n";
  */
 export function HeadlineStats({ locale, className }: { locale: Locale; className?: string }) {
   return (
-    <dl className={cn("grid gap-4 sm:grid-cols-2", className)}>
+    <dl className={cn("grid gap-4 sm:grid-cols-3", className)}>
       {headline.map((item, i) => (
         <Reveal key={t(item.label, locale)} delay={i * 80}>
           {/* Подпись идёт в разметке первой, а показывается второй.
@@ -54,7 +54,7 @@ export function ScaleSection({ locale }: { locale: Locale }) {
   return (
     <section className="border-t border-line py-14 md:py-16">
       <Container>
-        <HeadlineStats locale={locale} className="max-w-3xl" />
+        <HeadlineStats locale={locale} className="max-w-4xl" />
       </Container>
     </section>
   );
