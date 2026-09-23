@@ -71,6 +71,10 @@ services:
       YANDEX_METRIKA_ID: ${YANDEX_METRIKA_ID:-}
       GA4_PROPERTY_ID: ${GA4_PROPERTY_ID:-}
       GA_SERVICE_ACCOUNT: ${GA_SERVICE_ACCOUNT:-}
+      # Или вход через Google вместо ключа: клиент OAuth из Google Cloud.
+      # Можно не задавать — владелец вставляет его во вкладке «Трафик».
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
 
       # Автопоиск компаний по картам (Places API New). Пусто — блок в
       # «Касаниях» показывает, как подключить. Потолок запросов в день —

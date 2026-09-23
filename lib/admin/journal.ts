@@ -88,6 +88,9 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "lead.transfer_requested": "попросил передать лид",
   "lead.transfer_decided": "решил по передаче лида",
   "lead.transferred": "передал лид другому сотруднику",
+  "google.client_saved": "сохранил Client ID Google для статистики",
+  "google.connected": "подключил Google Analytics входом через Google",
+  "google.property_set": "вписал номер ресурса Google Analytics",
 };
 
 /**
@@ -123,6 +126,7 @@ export const SENSITIVE: ReadonlySet<string> = new Set([
   "lead.transfer_requested",
   "lead.transfer_decided",
   "lead.transferred",
+  "google.connected",
 ]);
 
 export type JournalEntry = {

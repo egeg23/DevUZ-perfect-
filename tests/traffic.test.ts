@@ -150,7 +150,7 @@ test("ключи доходят до контейнера и не уходят �
   // Трафик — только во вкладке владельца.
   const page = read("app/admin/page.tsx");
   assert.match(page, /const ownerTab = staff\.role === "admin" \? ownerTabOf\(params\.tab\) : null/);
-  assert.match(page, /ownerTab === "traffic" \? <TrafficPanel/);
+  assert.match(page, /ownerTab === "traffic" \? \(?\s*<TrafficPanel/);
 });
 
 test("ключи трафика — из .env или из хранилища секретов, как ключ карт", async () => {
@@ -158,7 +158,8 @@ test("ключи трафика — из .env или из хранилища с�
   const src = readFileSync(new URL("../lib/analytics/traffic.ts", import.meta.url), "utf8");
   // Токен Метрики и ключи Analytics можно подключить без доступа к серверу.
   assert.match(src, /appSecret\("YANDEX_METRIKA_TOKEN"\)/);
-  assert.match(src, /appSecret\("GA4_PROPERTY_ID"\)/);
+  assert.match(src, /appSecret\(GOOGLE_SECRETS\.property\)/);
   assert.match(src, /appSecret\("GA_SERVICE_ACCOUNT"\)/);
+  assert.match(src, /appSecret\(GOOGLE_SECRETS\.refresh\)/);
   assert.doesNotMatch(src, /process\.env\.YANDEX_METRIKA_TOKEN/, "токен читается мимо хранилища");
 });
