@@ -1,8 +1,8 @@
 import type { HelpEntry } from "@/lib/admin/help";
 import { SECTIONS, type Role } from "@/lib/admin/roles";
 
-import { ru } from "./admin-help-ru";
-import { uz } from "./admin-help-uz";
+import { ru } from "@/content/admin-help-ru";
+import { uz } from "@/content/admin-help-uz";
 
 /**
  * Инструкции к панели.

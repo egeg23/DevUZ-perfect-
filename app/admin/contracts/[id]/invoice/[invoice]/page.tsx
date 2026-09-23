@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 
 import { InvoiceDocument } from "@/components/docs/invoice-document";
+import { HelpHint } from "@/components/admin/help-link";
 import { PrintButton } from "@/components/store/print-button";
 import { contractById } from "@/lib/admin/contract-store";
 import { requireStaff } from "@/lib/admin/guard";
+import { helpAnchor } from "@/lib/admin/help";
 import { invoiceById } from "@/lib/admin/invoice-store";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +28,9 @@ export default async function InvoicePage({
     <div className="min-h-screen bg-white py-8">
       <div className="no-print mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center gap-3 px-[20mm]">
         <PrintButton label="Печать" />
+        <span className="inline-flex items-center gap-1.5 text-sm text-black/60">
+          Как пользоваться <HelpHint topic={helpAnchor("/admin/contracts", "invoices")} label="Как работают счета" />
+        </span>
         <a href={`/admin/contracts/${contract.id}`} className="text-sm text-gray-600 hover:underline">
           ← к договору
         </a>

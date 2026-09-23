@@ -217,7 +217,8 @@ test("с каждой страницы панели есть путь в инс�
   walk(new URL("../app/admin", import.meta.url).pathname);
   assert.ok(pages.length > 15, `страниц нашлось ${pages.length}`);
   for (const page of pages) {
-    if (page.includes("/admin/login/")) continue;
+    // Вход — до панели, инструкция — сама инструкция (её разметка в help-view).
+    if (page.includes("/admin/login/") || page.includes("/admin/help/")) continue;
     const text = readFileSync(page, "utf8");
     assert.ok(
       /<AdminShell\b|<SectionHelpLink\b|<HelpHint\b/.test(text),
