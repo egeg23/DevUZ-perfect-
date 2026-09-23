@@ -18,7 +18,9 @@ import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
 import { VOID_TITLE, type VoidReason } from "@/lib/partners/rules";
 import { partnerById } from "@/lib/partners/store";
+import { HelpHint } from "@/components/admin/help-link";
 import { LeadThread } from "@/components/admin/lead-thread";
+import { helpAnchor } from "@/lib/admin/help";
 import {
   BUDGET_LABEL,
   PRIORITY_LABEL,
@@ -36,6 +38,7 @@ import { talkForLead } from "@/lib/admin/outreach-talk-store";
 import {
   DELIVERY_GIVE_UP,
   canEdit,
+  canReveal,
   canSeeLead,
   remindersFor,
   revealContact,
@@ -176,6 +179,9 @@ export default async function LeadPage({
   if (!canSeeLead(lead, staff)) notFound();
 
   const mine = canEdit(lead, staff);
+  // Контакт и переписка свободного лида — только после «Взять себе», и
+  // руководителю тоже: он в очереди наравне со всеми. Владелец — вне её.
+  const reveals = canReveal(lead, staff);
   const free = !lead.assigned_staff_id;
   const decides = approves(staff.role);
 
@@ -258,7 +264,8 @@ export default async function LeadPage({
           видит только владелец: остальным имя ни к чему, кроме спора. */}
       {free && offer && offer.staffId === staff.id ? (
         <p className="mt-4 rounded-lg border border-green/30 bg-green/5 px-4 py-3 text-sm text-green">
-          ⏳ Лид ваш до {clock(offer.expiresAt)}. Не возьмёте — он уйдёт следующему по очереди.
+          ⏳ Лид ваш до {clock(offer.expiresAt)}. Не возьмёте — он уйдёт следующему по очереди.{" "}
+          <HelpHint topic={helpAnchor("/admin", "queue")} label="Как работает очередь" />
         </p>
       ) : free && offer && staff.role === "admin" ? (
         <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
@@ -270,7 +277,8 @@ export default async function LeadPage({
         </p>
       ) : hideHandle ? (
         <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
-          Лид сейчас в очереди у другого сотрудника. Ник клиента скрыт, пока очередь не дойдёт до вас.
+          Лид сейчас в очереди у другого сотрудника. Ник клиента скрыт, пока очередь не дойдёт до вас.{" "}
+          <HelpHint topic={helpAnchor("/admin", "queue")} label="Как работает очередь" />
         </p>
       ) : null}
 
@@ -291,7 +299,10 @@ export default async function LeadPage({
       <section className="mt-6 rounded-xl border border-line bg-surface px-5 py-4">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
           <div>
-            <p className="text-xs uppercase tracking-wider text-faint">Ведёт</p>
+            <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+              Ведёт
+              <HelpHint topic={helpAnchor("/admin", "take")} label="Взять, вернуть, отказаться" />
+            </p>
             <p className="mt-1 text-sm">
               {lead.assigned_to ?? "никто — лид свободен"}
               {lead.assigned_at ? (
@@ -375,7 +386,10 @@ export default async function LeadPage({
             className="mt-4 flex flex-wrap items-center gap-2 border-t border-line-soft pt-4"
           >
             <input type="hidden" name="lead" value={lead.id} />
-            <span className="text-xs uppercase tracking-wider text-faint">Передать</span>
+            <span className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+              Передать
+              <HelpHint topic={helpAnchor("/admin", "transfer")} label="Как передать лид" />
+            </span>
             <select
               name="to"
               required
@@ -434,7 +448,10 @@ export default async function LeadPage({
 
       {/* ── Контакт ─────────────────────────────────────────────────── */}
       <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
-        <p className="text-xs uppercase tracking-wider text-faint">Контакт клиента</p>
+        <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+          Контакт клиента
+          <HelpHint topic={helpAnchor("/admin", "card")} label="Контакт, переписка, обсуждение" />
+        </p>
 
         {contact && contactView ? (
           <>
@@ -459,7 +476,7 @@ export default async function LeadPage({
               просмотр записан в журнал
             </p>
           </>
-        ) : mine ? (
+        ) : reveals ? (
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <form action={revealContactAction}>
               <input type="hidden" name="lead" value={lead.id} />
@@ -486,7 +503,10 @@ export default async function LeadPage({
       {talk && mine ? (
         <section id="talk" className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <p className="text-xs uppercase tracking-wider text-faint">Первичка по касанию</p>
+            <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+              Первичка по касанию
+              <HelpHint topic={helpAnchor("/admin/prospect", "replies")} label="Кто отвечает клиенту" />
+            </p>
             <span className="font-mono text-xs text-blue-soft">{talk.host}</span>
             <span
               className={`ml-auto rounded-full border px-2 py-0.5 text-xs ${
@@ -591,7 +611,7 @@ export default async function LeadPage({
               Переписки нет — заявка пришла формой, а не из чата.
             </p>
           )
-        ) : mine ? (
+        ) : reveals ? (
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <form action={revealTranscriptAction}>
               <input type="hidden" name="lead" value={lead.id} />
@@ -616,7 +636,10 @@ export default async function LeadPage({
       {mine ? (
         <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
           <div className="flex flex-wrap items-center gap-4">
-            <p className="text-xs uppercase tracking-wider text-faint">Напоминания</p>
+            <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+              Напоминания
+              <HelpHint topic={helpAnchor("/admin", "reminders")} label="Как работают напоминания" />
+            </p>
             <form action={toggleAutoReminder} className="ml-auto">
               <input type="hidden" name="lead" value={lead.id} />
               <input type="hidden" name="enabled" value={lead.auto_reminder ? "0" : "1"} />
@@ -791,12 +814,12 @@ export default async function LeadPage({
       ) : null}
 
       <p className="mt-10 max-w-2xl text-xs leading-relaxed text-faint">
-        Переписка с клиентом в панели не показывается: менеджеру для работы
-        достаточно брифа, а полный разговор — самое чувствительное из того, что
-        клиент рассказал о своём бизнесе. Открытие этой карточки и каждое
-        получение контакта записаны в журнал. Обсуждение видно всей команде —
-        контакт клиента в него лучше не вставлять: закрытость контакта на этом
-        и держится.
+        Контакт и переписка открываются кнопкой, а не сразу: полный разговор —
+        самое чувствительное из того, что клиент рассказал о своём бизнесе.
+        Открытие этой карточки, каждое получение контакта и каждое чтение
+        переписки записаны в журнал. Обсуждение видно всей команде — контакт
+        клиента в него лучше не вставлять: закрытость контакта на этом и
+        держится.
       </p>
     </AdminShell>
   );

@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { changeSignalStatus } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { when } from "@/components/admin/lead-table";
 import { requireStaff } from "@/lib/admin/guard";
 import { SIGNAL_STATUSES, listSignals, scoutCounts } from "@/lib/admin/scout";
@@ -75,7 +77,8 @@ export default async function ScoutPage({
             : "border-gold/30 bg-gold/10 text-gold"
         }`}
       >
-        {health.says}
+        {health.says}{" "}
+        <HelpHint topic={helpAnchor("/admin/scout", "health")} label="Что значит это состояние" />
       </p>
 
       {/*
@@ -94,7 +97,15 @@ export default async function ScoutPage({
         </p>
       ) : null}
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-faint">
+        <span className="inline-flex items-center gap-1.5">
+          Как работает скаут <HelpHint topic={helpAnchor("/admin/scout", "how")} label="Как работает скаут" />
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          Что делать с сигналом <HelpHint topic={helpAnchor("/admin/scout", "signals")} label="Что делать с сигналом" />
+        </span>
+      </p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Tile value={counts.total} label="сигналов" />
         <Tile value={counts.fresh} label="не открывали" />
         <Tile value={counts.converted} label="пришли сами" />

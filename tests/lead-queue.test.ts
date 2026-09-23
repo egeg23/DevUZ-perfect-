@@ -191,11 +191,16 @@ test("ник клиента не виден тому, чья очередь не
   assert.match(page, /const hideHandle = free && !turn\.ok;/);
   assert.match(page, /hideHandle \? "скрыт — лид сейчас не ваш" : usernameOf\(/);
 
-  // Контакт целиком и раньше открывался только тому, за кем лид, и
-  // владельцу — очередь это правило не ослабляет.
+  // Контакт и переписка свободного лида — только владельцу: руководитель
+  // стоит в очереди наравне со всеми, и кнопка «Показать контакт» была
+  // вторым входом в обход неё (ник скрывали, контакт — нет).
   const ownership = read("lib/admin/ownership.ts");
-  const reveal = ownership.slice(ownership.indexOf("export async function revealContact"));
-  assert.match(reveal.slice(0, 600), /if \(!lead \|\| !canEdit\(lead, staff\)\) return null;/);
+  for (const fn of ["export async function revealContact", "export async function revealTranscript"]) {
+    const body = ownership.slice(ownership.indexOf(fn));
+    assert.match(body.slice(0, 600), /if \(!lead \|\| !canReveal\(lead, staff\)\) return null;/, fn);
+  }
+  assert.match(page, /\) : reveals \? \(\s*<div[^>]*>\s*<form action=\{revealContactAction\}>/);
+  assert.match(page, /\) : reveals \? \(\s*<div[^>]*>\s*<form action=\{revealTranscriptAction\}>/);
 });
 
 /* ── Нерабочее время: равная доля вместо получаса ───────────────────────── */
@@ -274,4 +279,19 @@ test("ночью очередь не начинается и дальше не �
   assert.match(read("app/api/telegram/webhook/route.ts"), /taken\.reason === "share"/);
   assert.match(read("app/admin/leads/[id]/page.tsx"), /share: "Вы уже взяли свою равную долю/);
   assert.match(read("supabase/migrations/0046_lead_fair_share.sql"), /add column if not exists fair_share boolean not null default false/);
+});
+
+test("контакт свободного лида открывает только владелец, взятого — тот, за кем лид, и руководитель", async () => {
+  const { canReveal } = await import("@/lib/admin/ownership");
+  const who = (role: "admin" | "head" | "manager", id: string = role) =>
+    ({ id, role, display_name: id, username: null, telegram_user_id: 1, is_active: true }) as never;
+  const free = { assigned_staff_id: null };
+  assert.equal(canReveal(free, who("admin")), true, "владелец вне очереди");
+  assert.equal(canReveal(free, who("head")), false, "руководитель в обход очереди");
+  assert.equal(canReveal(free, who("manager")), false);
+
+  const managers = { assigned_staff_id: "m1" };
+  assert.equal(canReveal(managers, who("manager", "m1")), true, "свой лид");
+  assert.equal(canReveal(managers, who("manager", "m2")), false, "чужой лид");
+  assert.equal(canReveal(managers, who("head")), true, "руководитель по взятому лиду");
 });

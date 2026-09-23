@@ -337,7 +337,11 @@ export async function addPayment(
   staff: Staff,
   ip: string,
 ): Promise<MoneyResult> {
-  if (!keepsExpenses(staff.role)) return fail("forbidden");
+  // Только владелец. 16 сентября эту проверку по ошибке заменили на
+  // keepsExpenses вместе с проверкой расходов: руководитель — соучредитель
+  // и вправе записывать общие траты, но подтверждённый платёж размораживает
+  // начисления, а выплата закрывает долг, — это деньги, которые решает один.
+  if (staff.role !== "admin") return fail("forbidden");
   if (fields.amountUsd === null || !Number.isInteger(fields.amountUsd) || fields.amountUsd <= 0) {
     return fail("invalid");
   }
@@ -418,7 +422,11 @@ export async function recordPayout(
   staff: Staff,
   ip: string,
 ): Promise<MoneyResult> {
-  if (!keepsExpenses(staff.role)) return fail("forbidden");
+  // Только владелец. 16 сентября эту проверку по ошибке заменили на
+  // keepsExpenses вместе с проверкой расходов: руководитель — соучредитель
+  // и вправе записывать общие траты, но подтверждённый платёж размораживает
+  // начисления, а выплата закрывает долг, — это деньги, которые решает один.
+  if (staff.role !== "admin") return fail("forbidden");
   if (fields.amountUsd === null || !Number.isInteger(fields.amountUsd) || fields.amountUsd <= 0) {
     return fail("invalid");
   }

@@ -4,6 +4,8 @@ import {
   toggleMapsCampaignAction,
 } from "@/app/admin/prospect/actions";
 import type { Campaign } from "@/lib/maps/store";
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 
 const CARD = "rounded-xl border border-line bg-surface px-5 py-4";
 const INPUT =
@@ -45,7 +47,10 @@ export function MapsCampaigns({
   return (
     <section id="maps" className={`mt-6 scroll-mt-24 ${CARD}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-xs uppercase tracking-wider text-faint">Автопоиск компаний по картам</p>
+        <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+          Автопоиск компаний по картам
+          <HelpHint topic={helpAnchor("/admin/prospect", "maps")} label="Как работает автопоиск" />
+        </p>
         {configured ? (
           <p className="text-xs text-faint">
             запросов сегодня: {usage} из {cap}

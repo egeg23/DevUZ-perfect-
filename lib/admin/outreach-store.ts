@@ -662,7 +662,11 @@ export async function manualReplies(): Promise<Record<string, string>> {
 }
 
 /** Из каких состояний человек может отметить, что связался сам. */
-const SELF_CONTACT_FROM = ["new", "contacting", "manual"] as const;
+// «sending» — тоже: письмо стоит в очереди бота, а панель тут же советует
+// не ждать и написать со своего аккаунта. Без отметки бот через четверть
+// часа отправил бы ту же копию, и клиент получил бы два одинаковых письма.
+// Отметка переводит карточку в «отправлено», и очередь её больше не берёт.
+const SELF_CONTACT_FROM = ["new", "contacting", "manual", "sending"] as const;
 
 /**
  * «Связался сам» — касание, которое человек сделал в обход скаута.
@@ -716,7 +720,7 @@ export async function markSelfContacted(
     leadId = await createOutreachLead(prospect, staff, body, requestNo, route);
   }
 
-  const { error } = await db
+  const { data: updated, error } = await db
     .from("prospects")
     .update({
       status: "sent",
@@ -735,8 +739,11 @@ export async function markSelfContacted(
       failure: null,
     })
     .eq("id", id)
-    .in("status", [...SELF_CONTACT_FROM]);
+    .in("status", [...SELF_CONTACT_FROM])
+    .select("id");
   if (error) return { ok: false, why: "Не получилось отметить." };
+  // Пока человек писал, бот успел отправить своё: второе письмо в ленту не кладём.
+  if (!updated?.length) return { ok: false, why: "Бот уже отправил это письмо — отмечать не нужно." };
 
   if (body) {
     await db.from("outreach_messages").insert({
@@ -892,5 +899,7 @@ export async function skipProspect(id: string, reason: string): Promise<void> {
     .from("prospects")
     .update({ status: "skipped", skip_reason: reason.trim().slice(0, 300) || null })
     .eq("id", id)
-    .in("status", ["new", "contacting"]);
+    // «Писать руками» — тоже: кнопка «не пишем» там есть, и раньше она молча
+    // ничего не делала — карточка без телеграма так и висела в работе.
+    .in("status", ["new", "contacting", "manual"]);
 }

@@ -48,6 +48,22 @@ export function canEdit(
 }
 
 /**
+ * Открыть контакт и переписку: тот, за кем лид, руководитель и владелец, —
+ * но свободного лида только владелец.
+ *
+ * Руководитель тоже стоит в очереди. Пока лид свободен, контакт без
+ * «Взять себе» — это обход очереди: открыл, написал клиенту, и лид достался
+ * не тому, чья очередь. Ник в карточке от него уже скрывали, а кнопка
+ * «Показать контакт» оставалась — правило держалось на одном поле из двух.
+ * Владелец вне очереди и видит всё.
+ */
+export function canReveal(lead: { assigned_staff_id: string | null }, staff: Staff): boolean {
+  if (staff.role === "admin") return true;
+  if (!lead.assigned_staff_id) return false;
+  return canEdit(lead, staff);
+}
+
+/**
  * Видит ли сотрудник этого лида вообще.
  *
  * Менеджеру чужой взятый лид не показывается: у него своя очередь, и
@@ -262,7 +278,7 @@ export async function revealContact(
   if (!db) return null;
 
   const lead = await ownerOf(leadId);
-  if (!lead || !canEdit(lead, staff)) return null;
+  if (!lead || !canReveal(lead, staff)) return null;
 
   const { data } = await db
     .from("leads")
@@ -313,7 +329,7 @@ export async function revealTranscript(
   if (!db) return null;
 
   const lead = await ownerOf(leadId);
-  if (!lead || !canEdit(lead, staff)) return null;
+  if (!lead || !canReveal(lead, staff)) return null;
 
   const { data } = await db
     .from("leads")

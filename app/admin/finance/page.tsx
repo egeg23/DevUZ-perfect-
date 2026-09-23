@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { deleteExpense, deletePayout, saveExpense, savePayout } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import {
   ACCRUAL_TITLE,
   EXPENSE_CATEGORIES,
@@ -155,7 +157,9 @@ export default async function FinancePage({
           ? "По всей студии. Начисления считаются от чистой прибыли проекта и лежат в заморозке, пока клиент не заплатил целиком."
           : staff.role === "head"
             ? "Вы и ваша команда. Начисления считаются от чистой прибыли проекта и лежат в заморозке, пока клиент не заплатил целиком."
-            : "Ваши проекты и ваш баланс. Начисление считается от чистой прибыли проекта и лежит в заморозке, пока клиент не заплатил целиком."}
+            : "Ваши проекты и ваш баланс. Начисление считается от чистой прибыли проекта и лежит в заморозке, пока клиент не заплатил целиком."}{" "}
+        <HelpHint topic={helpAnchor("/admin/finance", "how")} label="Как считается процент" />{" "}
+        <HelpHint topic={helpAnchor("/admin/finance", "freeze")} label="Почему заморожено" />
       </p>
 
       {notice ? (
@@ -355,7 +359,10 @@ export default async function FinancePage({
       </section>
 
       {/* ── Выплаты ───────────────────────────────────────────────────── */}
-      <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">Выплаты</h2>
+      <h2 className="mt-8 flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+        Выплаты
+        <HelpHint topic={helpAnchor("/admin/finance", "payouts")} label="Кто записывает выплаты" />
+      </h2>
       {isAdmin ? (
         <form action={savePayout} className="mt-2 grid gap-3 rounded-xl border border-line bg-surface px-5 py-4 sm:grid-cols-5">
           <label className="block text-xs text-faint">

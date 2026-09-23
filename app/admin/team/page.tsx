@@ -1,7 +1,9 @@
 import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, setGrade, setPlan } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
+import { HelpHint } from "@/components/admin/help-link";
 import { when } from "@/components/admin/lead-table";
 import { requireRole } from "@/lib/admin/guard";
+import { helpAnchor } from "@/lib/admin/help";
 import { GRADES, GRADE_TITLE } from "@/lib/admin/finance";
 import { ROLE_BADGE, ROLE_TITLE, hiredRoles, managesStaff } from "@/lib/admin/roles";
 import { listTeam } from "@/lib/admin/team";
@@ -175,9 +177,24 @@ export default async function TeamPage({
               <th className="px-4 py-3 font-normal">Кто</th>
               <th className="px-4 py-3 font-normal">Telegram</th>
               <th className="px-4 py-3 font-normal">Роль</th>
-              <th className="px-4 py-3 font-normal">Руководитель</th>
-              <th className="px-4 py-3 font-normal">Грейд и ставка</th>
-              <th className="px-4 py-3 font-normal">План касаний</th>
+              <th className="px-4 py-3 font-normal">
+                <span className="inline-flex items-center gap-1.5">
+                  Руководитель
+                  <HelpHint topic={helpAnchor("/admin/team", "claim")} label="Руководитель и команда" />
+                </span>
+              </th>
+              <th className="px-4 py-3 font-normal">
+                <span className="inline-flex items-center gap-1.5">
+                  Грейд и ставка
+                  <HelpHint topic={helpAnchor("/admin/team", "grade")} label="Что меняет грейд" />
+                </span>
+              </th>
+              <th className="px-4 py-3 font-normal">
+                <span className="inline-flex items-center gap-1.5">
+                  План касаний
+                  <HelpHint topic={helpAnchor("/admin/team", "plan")} label="Как работает план касаний" />
+                </span>
+              </th>
               <th className="px-4 py-3 font-normal">С какого дня</th>
               <th className="px-4 py-3 font-normal" />
             </tr>
@@ -410,7 +427,10 @@ export default async function TeamPage({
 
       {/* ── Завести ─────────────────────────────────────────────────────── */}
       <section className="mt-6 max-w-2xl rounded-xl border border-line bg-surface px-5 py-4">
-        <p className="text-xs uppercase tracking-wider text-faint">Завести сотрудника</p>
+        <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+          Завести сотрудника
+          <HelpHint topic={helpAnchor("/admin/team", "invite")} label="Как завести сотрудника" />
+        </p>
         <p className="mt-1 text-xs text-faint">
           Числовой id человек узнаёт у любого бота вроде @userinfobot и присылает вам. По
           username завести нельзя: освободившийся ник займёт кто угодно.
@@ -494,7 +514,10 @@ function DisableBlock({
         Отключить
       </summary>
       <div className="mt-2 w-72 rounded-lg border border-gold/30 bg-gold/5 px-3 py-3">
-        <p className="text-xs text-gold">Что произойдёт с «{name}»:</p>
+        <p className="flex items-center gap-2 text-xs text-gold">
+          Что произойдёт с «{name}»:
+          <HelpHint topic={helpAnchor("/admin/team", "disable")} label="Подробно об отключении" />
+        </p>
         <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-4 text-xs text-muted">
           <li>Сессии оборвутся сразу, ссылки входа перестанут работать, кнопки бота — тоже.</li>
           <li>Новые лиды ему больше не придут — ни в очередь, ни рассылкой.</li>

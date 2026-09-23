@@ -8,6 +8,8 @@ import { editProject, moveStage, saveQuote } from "../actions";
 import { confirmPayment, deletePayment, saveMoney, savePartner, saveShare } from "@/app/admin/finance/actions";
 import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { when } from "@/components/admin/lead-table";
 import {
   ACCRUAL_TITLE,
@@ -153,7 +155,10 @@ export default async function ProjectPage({
       {/* ── Стадия ──────────────────────────────────────────────────── */}
       <section className="mt-6 rounded-xl border border-line bg-surface px-5 py-4">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <span className="text-xs uppercase tracking-wider text-faint">Стадия</span>
+          <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-faint">
+            Стадия
+            <HelpHint topic={helpAnchor("/admin/projects", "stages")} label="Кто и зачем двигает стадию" />
+          </span>
           <span className="text-sm">{STAGE_LABEL[project.stage] ?? project.stage}</span>
           <span className="text-xs text-faint">
             {days === 0 ? "с сегодняшнего дня" : `${days} дн.`} · с {when(project.stage_since)}
@@ -325,7 +330,10 @@ export default async function ProjectPage({
 
       {/* ── Деньги ──────────────────────────────────────────────────── */}
       <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
-        <h2 className="text-xs uppercase tracking-wider text-faint">Деньги</h2>
+        <h2 className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+          Деньги
+          <HelpHint topic={helpAnchor("/admin/projects", "card")} label="Смета, сумма, платежи" />
+        </h2>
 
         <form action={saveMoney} className="mt-3 grid gap-3 sm:grid-cols-4">
           <input type="hidden" name="project" value={project.id} />
@@ -636,7 +644,10 @@ export default async function ProjectPage({
 
       {/* ── Правки ──────────────────────────────────────────────────── */}
       <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
-        <h2 className="text-xs uppercase tracking-wider text-faint">Данные проекта</h2>
+        <h2 className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+          Данные проекта
+          <HelpHint topic={helpAnchor("/admin/projects", "data")} label="Кто может править" />
+        </h2>
         <form action={editProject} className="mt-3 grid gap-3 sm:grid-cols-2">
           <input type="hidden" name="project" value={project.id} />
 

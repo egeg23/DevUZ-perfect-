@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SectionHelpLink } from "@/components/admin/help-link";
 import { requireStaff } from "@/lib/admin/guard";
 import { approvesContract } from "@/lib/admin/contracts";
 import { signatureExists } from "@/lib/admin/signature";
@@ -27,12 +28,16 @@ export default async function ContractsPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold">Договоры</h1>
+        {/* Своей шапки у договоров нет — это страницы-документы, — поэтому
+            кнопка инструкции стоит здесь, а не в общем каркасе. */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold">Договоры</h1>
+          <SectionHelpLink />
+        </div>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Договор готовится в карточке проекта, когда сделка переходит в стадию
-          «договор». Подготовить и проверить может любой из команды. Подтвердить
-          может только владелец — подтверждение и есть момент, когда под
-          документом появляется подпись.
+          Договор готовится в карточке проекта — блок «Договор». Подготовить и
+          проверить может любой из команды. Подтвердить может только владелец —
+          подтверждение и есть момент, когда под документом появляется подпись.
         </p>
       </div>
 

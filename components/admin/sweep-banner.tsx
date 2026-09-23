@@ -1,3 +1,5 @@
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { readHealth } from "@/lib/admin/sweep-health";
 
 /**
@@ -42,7 +44,8 @@ export async function SweepBanner() {
       <span className="text-faint">
         Проверьте на сервере: systemctl status devuz-reminders.timer и переменную
         REMINDER_SWEEP_SECRET.
-      </span>
+      </span>{" "}
+      <HelpHint topic={helpAnchor("/admin", "banner")} label="Что это значит" />
     </p>
   );
 }

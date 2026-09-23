@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { signOut } from "@/app/admin/actions";
 import { ROLE_BADGE, navFor } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
+import { SectionHelpLink } from "@/components/admin/help-link";
 import { UsageBeacon } from "@/components/admin/usage-beacon";
 
 /**
@@ -38,6 +39,9 @@ export function AdminShell({
           </Link>
 
           <div className="ml-auto flex items-center gap-3 text-sm">
+            {/* В шапке, а не на каждой странице: новый раздел получает
+                кнопку сам, и ведёт она в его пункт инструкции. */}
+            <SectionHelpLink />
             <span className="flex items-center gap-2 text-muted">
               <span className="max-w-[7rem] truncate sm:max-w-none">{staff.display_name}</span>
               <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint">

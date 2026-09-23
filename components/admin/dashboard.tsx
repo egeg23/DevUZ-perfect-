@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { deletePlan, savePlan } from "@/app/admin/plans/actions";
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { METRICS, METRIC_TITLE, monthLabel, type Expected, type MonthCash, type PlanFact, type StaffPulse, type StuckLead } from "@/lib/admin/pulse";
 import type { PendingContract } from "@/lib/admin/pulse-store";
 import type { Upcoming } from "@/lib/admin/tax-calendar";
@@ -59,8 +61,9 @@ export function Tiles({ items }: { items: Tile[] }) {
 export function StuckLeads({ rows, names, title = "Срочно связаться" }: { rows: StuckLead[]; names?: Map<string, string>; title?: string }) {
   return (
     <section className={`${CARD} ${rows.length ? "border-gold/40" : ""}`}>
-      <p className={`${H2} ${rows.length ? "text-gold" : ""}`}>
+      <p className={`${H2} ${rows.length ? "text-gold" : ""} flex items-center gap-2`}>
         {title}: {rows.length}
+        <HelpHint topic={helpAnchor("/admin", "urgent")} label="Когда лид считается срочным" />
       </p>
       {rows.length ? (
         <ul className="mt-3 space-y-2 text-sm">
@@ -101,7 +104,10 @@ export function PlanFactBlock({
 }) {
   return (
     <section className={CARD}>
-      <p className={H2}>План и факт</p>
+      <p className={`${H2} flex items-center gap-2`}>
+        План и факт
+        <HelpHint topic={helpAnchor("/admin", "plan-fact")} label="Кто ставит план и что считается" />
+      </p>
       {plans.length ? (
         <ul className="mt-3 space-y-3">
           {plans.map((p) => (
@@ -211,7 +217,10 @@ export function TeamTable({ rows, showMoney }: { rows: TeamRow[]; showMoney: boo
   if (!rows.length) return null;
   return (
     <section className={CARD}>
-      <p className={H2}>Команда за эту неделю</p>
+      <p className={`${H2} flex items-center gap-2`}>
+        Команда за эту неделю
+        <HelpHint topic={helpAnchor("/admin", "team-week")} label="Что значат столбцы" />
+      </p>
       <p className="mt-1 text-xs text-muted">Стрелка — против прошлой недели.</p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full text-left text-sm">
@@ -480,9 +489,10 @@ export function ReviewCard({ review, title, canRefresh }: { review: Review | nul
   return (
     <section className={CARD}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className={H2}>
+        <p className={`${H2} flex flex-wrap items-center gap-2`}>
           {title}
-          {review ? <span className="ml-2 normal-case tracking-normal text-faint">от {dayLabel(review.period_start)}</span> : null}
+          {review ? <span className="normal-case tracking-normal text-faint">от {dayLabel(review.period_start)}</span> : null}
+          <HelpHint topic={helpAnchor("/admin", "coach")} label="Откуда рекомендации" />
         </p>
         {canRefresh ? (
           <form action={refreshReviews}>
