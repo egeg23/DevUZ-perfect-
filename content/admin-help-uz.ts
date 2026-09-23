@@ -257,7 +257,7 @@ export const uz: HelpCopy = {
           body: [
             "«Трафик» varag‘i: 7, 30 yoki 90 kun uchun tashriflar, tashrifchilar, ko‘rishlar, rad etishlar va tashrifning o‘rtacha vaqti, strelkalar — undan oldingi xuddi shunday davrga nisbatan. Rad etishlarda o‘sish — qizil rangda.",
             "Metrika va Analytics yonma-yon turadi va qo‘shilmaydi: ular tashriflarni har xil hisoblaydi, yig‘indisi esa na u yerda, na bu yerda yo‘q raqam bo‘lardi. Har 10 daqiqada yangilanadi.",
-            "Ulanmagan bo‘lsa — kartochkada bir marta nima qilish kerakligi yozilgan: Metrika uchun — `YANDEX_METRIKA_TOKEN` va `YANDEX_METRIKA_ID`, Analytics uchun — `GA4_PROPERTY_ID` va `GA_SERVICE_ACCOUNT`, serverdagi `/opt/devuz/.env` faylida.",
+            "Ulanmagan bo‘lsa — kartochkada bir marta nima qilish kerakligi yozilgan: Metrika uchun — `YANDEX_METRIKA_TOKEN` (hisoblagich raqamini panel o‘zi biladi), Analytics uchun — `GA4_PROPERTY_ID` va `GA_SERVICE_ACCOUNT`, serverdagi `/opt/devuz/.env` faylida. Yoki Supabase maxfiy ma’lumotlar omborida (Vault) `app.` old qo‘shimchasi bilan — masalan, `app.YANDEX_METRIKA_TOKEN`: `.env`da kalit bo‘lmasa, panel uni o‘sha yerdan oladi.",
           ],
         },
         {

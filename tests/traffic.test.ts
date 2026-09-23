@@ -152,3 +152,13 @@ test("ключи доходят до контейнера и не уходят �
   assert.match(page, /const ownerTab = staff\.role === "admin" \? ownerTabOf\(params\.tab\) : null/);
   assert.match(page, /ownerTab === "traffic" \? <TrafficPanel/);
 });
+
+test("ключи трафика — из .env или из хранилища секретов, как ключ карт", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(new URL("../lib/analytics/traffic.ts", import.meta.url), "utf8");
+  // Токен Метрики и ключи Analytics можно подключить без доступа к серверу.
+  assert.match(src, /appSecret\("YANDEX_METRIKA_TOKEN"\)/);
+  assert.match(src, /appSecret\("GA4_PROPERTY_ID"\)/);
+  assert.match(src, /appSecret\("GA_SERVICE_ACCOUNT"\)/);
+  assert.doesNotMatch(src, /process\.env\.YANDEX_METRIKA_TOKEN/, "токен читается мимо хранилища");
+});
