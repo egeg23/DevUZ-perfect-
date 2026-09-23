@@ -3,6 +3,7 @@ import Link from "next/link";
 import { addProject } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { requireStaff } from "@/lib/admin/guard";
+import { loadPeople } from "@/lib/admin/ledger";
 import {
   STAGE_LABEL,
   daysOnStage,
@@ -36,7 +37,13 @@ export default async function ProjectsPage({
   const { all, r } = await searchParams;
 
   const includeClosed = all === "1";
-  const projects = await listProjects(includeClosed);
+  const isAdmin = staff.role === "admin";
+  const [projects, people] = await Promise.all([
+    listProjects(includeClosed),
+    // Ведущего при создании выбирает только владелец.
+    isAdmin ? loadPeople() : Promise.resolve([]),
+  ]);
+  const leaders = people.filter((p) => p.is_active);
   const today = new Date().toISOString().slice(0, 10);
 
   return (
@@ -128,6 +135,29 @@ export default async function ProjectsPage({
       <section className="mt-8 rounded-xl border border-line bg-surface px-5 py-4">
         <h2 className="text-xs uppercase tracking-wider text-faint">Новый проект</h2>
         <form action={addProject} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Проект, который владелец заводит на себя, никому не даёт
+              начислений: владелец в них не участвует. Поэтому у него выбор
+              ведущего обязателен и стоит первым. */}
+          {isAdmin ? (
+            <select
+              name="owner"
+              required
+              defaultValue=""
+              aria-label="Ведёт"
+              className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm sm:col-span-2 lg:col-span-4"
+            >
+              <option value="" disabled>
+                Кто ведёт — ему идёт начисление
+              </option>
+              {leaders.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.display_name}
+                  {person.id === staff.id ? " (я)" : ""}
+                  {person.role === "admin" ? " — без начислений команде" : ""}
+                </option>
+              ))}
+            </select>
+          ) : null}
           <input
             name="title"
             required
@@ -164,7 +194,9 @@ export default async function ProjectsPage({
           </div>
         </form>
         <p className="mt-3 text-xs text-faint">
-          Проект заводит любой сотрудник, стадию двигает админ.
+          {isAdmin
+            ? "Проект заводит любой сотрудник и ведёт его сам; вы выбираете, кто ведёт. Стадию двигаете вы."
+            : "Проект заводит любой сотрудник — и ведёт его сам. Стадию двигает владелец."}
         </p>
       </section>
     </AdminShell>

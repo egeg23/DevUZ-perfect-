@@ -2,6 +2,7 @@ import { record } from "@/lib/admin/audit";
 import { DEFAULT_TAX_PERCENT, isDealKind, type DealKind } from "@/lib/admin/finance";
 import { parseQuote, type QuoteInput } from "@/lib/admin/quote";
 import type { Staff } from "@/lib/admin/session";
+import { teamOf } from "@/lib/admin/team";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -150,6 +151,31 @@ export async function projectById(id: string): Promise<Project | null> {
   return shape(data as Record<string, unknown>);
 }
 
+/**
+ * Кто правит «Данные проекта»: название, клиента, срок, заметки.
+ *
+ * Ведущий проекта, его руководитель и владелец. Раньше — любой сотрудник в
+ * любом проекте: заметки чужого проекта мог переписать человек, который к
+ * нему отношения не имеет, и узнать об этом можно было только по журналу.
+ */
+export function canEditProjectData(
+  staff: { id: string; role: string },
+  ownerStaffId: string | null,
+  team: readonly string[],
+): boolean {
+  if (staff.role === "admin") return true;
+  if (ownerStaffId && ownerStaffId === staff.id) return true;
+  return staff.role === "head" && Boolean(ownerStaffId) && team.includes(ownerStaffId!);
+}
+
+/** Может ли человек вести проект: действующий сотрудник. */
+async function activeStaff(id: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { data } = await db.from("staff").select("id").eq("id", id).eq("is_active", true).maybeSingle();
+  return Boolean(data);
+}
+
 export async function createProject(
   staff: Staff,
   fields: {
@@ -167,6 +193,15 @@ export async function createProject(
 
   const title = fields.title.trim().slice(0, 200);
   if (!title) return null;
+
+  // Ведущего выбирает только владелец: ведущий получает начисление, и
+  // сотрудник не должен записывать проект на другого. Сам владелец
+  // начислений не получает — поэтому при создании он выбирает, кто ведёт.
+  let owner = staff.id;
+  if (fields.ownerStaffId && fields.ownerStaffId !== staff.id) {
+    if (staff.role !== "admin" || !(await activeStaff(fields.ownerStaffId))) return null;
+    owner = fields.ownerStaffId;
+  }
 
   // Проект из лида наследует партнёра: клиент пришёл по ссылке, и это факт
   // о клиенте, а не о заявке. Аннулированная привязка не наследуется.
@@ -187,7 +222,7 @@ export async function createProject(
       client: fields.client?.trim() || null,
       lead_id: fields.leadId || null,
       partner_id: partnerId,
-      owner_staff_id: fields.ownerStaffId || staff.id,
+      owner_staff_id: owner,
       amount_usd: fields.amountUsd ?? null,
       deadline: fields.deadline || null,
       started_at: new Date().toISOString().slice(0, 10),
@@ -276,36 +311,50 @@ export async function updateProject(
   },
   staff: Staff,
   ip: string,
-): Promise<boolean> {
+): Promise<"ok" | "forbidden" | "failed"> {
   const db = serviceClient();
-  if (!db) return false;
+  if (!db) return "failed";
+
+  const { data: current } = await db.from("projects").select("owner_staff_id").eq("id", projectId).maybeSingle();
+  if (!current) return "failed";
+  const ownerId = (current.owner_staff_id as string | null) ?? null;
+  const team = staff.role === "head" ? await teamOf(staff.id) : [];
+  if (!canEditProjectData(staff, ownerId, team)) return "forbidden";
 
   const patch: Record<string, unknown> = {};
   if (fields.title !== undefined) {
     const title = fields.title.trim().slice(0, 200);
-    if (!title) return false;
+    if (!title) return "failed";
     patch.title = title;
   }
   if (fields.client !== undefined) patch.client = fields.client?.trim() || null;
-  if (fields.ownerStaffId !== undefined) patch.owner_staff_id = fields.ownerStaffId || null;
+  // Сменить ведущего — только владелец: от ведущего зависят начисления.
+  if (fields.ownerStaffId !== undefined && fields.ownerStaffId !== ownerId) {
+    if (staff.role !== "admin") return "forbidden";
+    if (!fields.ownerStaffId || !(await activeStaff(fields.ownerStaffId))) return "failed";
+    patch.owner_staff_id = fields.ownerStaffId;
+  }
   if (fields.amountUsd !== undefined) patch.amount_usd = fields.amountUsd;
   if (fields.deadline !== undefined) patch.deadline = fields.deadline || null;
   if (fields.notes !== undefined) patch.notes = fields.notes?.slice(0, 4000) || null;
 
-  if (!Object.keys(patch).length) return true;
+  if (!Object.keys(patch).length) return "ok";
 
   const { error } = await db.from("projects").update(patch).eq("id", projectId);
-  if (error) return false;
+  if (error) return "failed";
 
   await record("project.updated", {
     actorStaffId: staff.id,
     targetType: "project",
     targetId: projectId,
     ip,
-    meta: { fields: Object.keys(patch) },
+    meta: {
+      fields: Object.keys(patch),
+      ...(patch.owner_staff_id ? { owner: { from: ownerId, to: patch.owner_staff_id } } : {}),
+    },
   });
 
-  return true;
+  return "ok";
 }
 
 /**

@@ -612,15 +612,15 @@ export const uz: HelpCopy = {
           body: {
             manager: [
               "Mijoz ishlashga rozi bo‘ldi — loyiha oching: «Новый проект» bloki, nomi, mijoz, summa, muddat va «Создать».",
-              "**Kim ochsa, o‘sha mas’ul bo‘ladi.** Panelda mas’ulni almashtirib bo‘lmaydi, hisoblanmalar esa mas’ulga yoziladi — shuning uchun o‘z loyihangizni o‘zingiz oching, hamkasbdan so‘ramang.",
+              "**Kim ochsa, o‘sha mas’ul bo‘ladi.** Hisoblanmalar mas’ulga yoziladi, uni esa faqat egasi almashtira oladi — shuning uchun o‘z loyihangizni o‘zingiz oching, hamkasbdan so‘ramang.",
               "Ro‘yxat: «N дн. на этой стадии», «ведёт …», «срок …» va muddat o‘tgan bo‘lsa «просрочен». «показать закрытые» — tugallangan va bekor qilinganlar.",
             ],
             head: [
-              "Loyihani istalgan odam ochadi — va kim ochsa, o‘sha mas’ul bo‘ladi. Panelda mas’ulni almashtirib bo‘lmaydi, hisoblanmalar esa mas’ulga yoziladi (sizga esa jamoangiz loyihalaridan 5%). Menejerlar o‘z loyihalarini o‘zlari ochishini kuzating.",
+              "Loyihani istalgan odam ochadi — va kim ochsa, o‘sha mas’ul bo‘ladi. Hisoblanmalar mas’ulga yoziladi (sizga esa jamoangiz loyihalaridan 5%), mas’ulni esa faqat egasi almashtira oladi. Menejerlar o‘z loyihalarini o‘zlari ochishini kuzating.",
               "Ro‘yxat hamma uchun umumiy: bosqich, undagi kunlar, mas’ul, muddat va «просрочен».",
             ],
             admin: [
-              "Istalgan odam ochadi, ochgan odam mas’ul bo‘ladi va panelda bu o‘zgarmaydi. **Loyihani siz ochsangiz — u sizga yoziladi va u bo‘yicha jamoaga hisoblanma bo‘lmaydi**: egasi foiz emas, qoldiqni oladi. Mijozni olib borayotgan odam ochsin.",
+              "Loyihani ochgan xodim o‘zi mas’ul bo‘ladi. Siz ochganingizda birinchi maydonda **kim olib borishini** tanlang: hisoblanmalar unga yoziladi. O‘zingizni tanlasangiz — loyiha bo‘yicha jamoaga hisoblanma bo‘lmaydi, egasi foiz emas, qoldiqni oladi. Mas’ulni istalgan paytda almashtirish mumkin: [«Данные проекта»](#projects-data) → «Ведёт»; siz olib borayotgan loyiha kartochkasida sariq eslatma turadi.",
               "Ro‘yxatda loyiha bosqichda necha kun turgani va muddati o‘tgan-o‘tmagani ko‘rinadi.",
             ],
           },
@@ -643,7 +643,7 @@ export const uz: HelpCopy = {
               "**«Смета»** — toifani va muddatni haftalarda tanlang, panel «не ниже» (chegara), «до» va muddatni hisoblaydi. Chegara — bundan past summada loyiha o‘zini oqlamaydi; undan pastga faqat egasi tusha oladi.",
               "**«Деньги»**: «Вид сделки» — «новый клиент» yoki «допродажа» (foizingiz shunga bog‘liq, [«Финансы»](/admin/finance) bo‘limiga qarang) va «Сумма по договору». Butun dollarda yozing, «$» va sentlarsiz, aks holda maydon tozalanadi. Loyiha bo‘yicha birorta to‘lov bo‘lmaguncha summani siz tahrirlaysiz; keyin — faqat egasi.",
               "Soliq va tannarxni shartnomadan keyin egasi yozadi. Mijoz to‘lovlarini ham egasi yozadi — va faqat shundan keyin hisoblanmalaringiz muzdan chiqadi. Shartnoma hisobi bo‘yicha to‘lov egasi uni tasdiqlaganda bu yerga o‘zi tushadi; ungacha «Платежи клиента» blokida sariq qator turadi: «платёж ещё не подтверждён».",
-              "**«Данные проекта»** — nomi, mijoz, muddat, izohlar. **«Договор»** — [shartnomalar](/admin/contracts) bandi.",
+              "**«Данные проекта»** — nomi, mijoz, muddat, izohlar; ularni siz mas’ul sifatida tahrirlaysiz. **«Договор»** — loyiha shartnomasiga havola va u hozir qayerda: qoralama, egasida imzoda, tasdiqlangan, imzolangan. Shartnoma yo‘q ekan — uni tayyorlash formasi; tayyorlanmasa, forma ustida nimani tuzatish kerakligi yoziladi. Batafsil — [shartnomalar](/admin/contracts).",
             ],
             head: [
               "Bloklar: «Стадия», «Смета», «Деньги», «Данные проекта», «Договор». Siz istalgan loyiha kartochkasini ko‘rasiz; pulni — o‘z loyihalaringiz va jamoa loyihalari bo‘yicha.",
@@ -661,7 +661,7 @@ export const uz: HelpCopy = {
           id: "data",
           title: "«Данные проекта»",
           body: [
-            "Nomi, mijoz, muddat va izohlar. Ularni istalgan xodim istalgan loyihada tuzata oladi — shuning uchun faqat o‘zingiznikini tuzating va izohda nimani o‘zgartirganingizni yozing.",
+            "Nomi, mijoz, muddat va izohlarni loyiha mas’uli, uning rahbari va egasi tahrirlaydi; qolganlar ularni formasiz ko‘radi. Mas’ulni faqat egasi almashtiradi — «Ведёт» maydoni: hisoblanmalar mas’ulga bog‘liq va xodim loyihani boshqa odamga yozib qo‘ya olmaydi.",
             "Summa endi bu yerda tahrirlanmaydi — u «Деньги» blokida.",
           ],
         },

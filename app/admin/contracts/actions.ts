@@ -86,7 +86,9 @@ export async function prepareContract(formData: FormData) {
 
   revalidatePath(`/admin/projects/${projectId}`);
   if (result.ok) redirect(`/admin/contracts/${result.id}`);
-  redirect(`/admin/projects/${projectId}?contract=${result.why}`);
+  // Причину — в адрес: карточка проекта её покажет над формой.
+  const detail = result.problems?.length ? `&detail=${encodeURIComponent(result.problems.join("; "))}` : "";
+  redirect(`/admin/projects/${projectId}?contract=${result.why}${detail}#contract`);
 }
 
 export async function editContract(formData: FormData) {
