@@ -7,6 +7,7 @@ import {
   markPaidAction,
   reissueLinkAction,
   reopenOrderAction,
+  restoreAccessAction,
   revokeAccessAction,
   setAmountAction,
 } from "./actions";
@@ -215,11 +216,16 @@ function OrderCard({ order }: { order: Order }) {
             <dd className="mt-0.5 text-xs">{when(order.delivered_at)}</dd>
           </div>
         ) : null}
-        {order.entitlement_version > 1 ? (
+        {order.access_closed_at ? (
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-faint">Доступ</dt>
+            <dd className="mt-0.5 text-xs text-gold">закрыт с {when(order.access_closed_at)}</dd>
+          </div>
+        ) : order.entitlement_version > 1 ? (
           <div>
             <dt className="text-xs uppercase tracking-wider text-faint">Доступ</dt>
             <dd className="mt-0.5 text-xs text-gold">
-              отзывался {order.entitlement_version - 1} раз(а)
+              отзывался {order.entitlement_version - 1} раз(а), сейчас открыт
             </dd>
           </div>
         ) : null}
@@ -305,7 +311,14 @@ function OrderCard({ order }: { order: Order }) {
             {/* Отзыв доступа к файлам виден только там, где доступ есть:
                 у неоплаченной заявки скачивать нечего, и кнопка была бы
                 приглашением нажать не то. */}
-            {order.paid_at ? (
+            {order.paid_at && order.access_closed_at ? (
+              <form action={restoreAccessAction}>
+                <input type="hidden" name="order" value={order.id} />
+                <button type="submit" className={BTN_IDLE}>
+                  вернуть доступ к файлам
+                </button>
+              </form>
+            ) : order.paid_at ? (
               <form action={revokeAccessAction}>
                 <input type="hidden" name="order" value={order.id} />
                 <button type="submit" className={BTN_IDLE}>

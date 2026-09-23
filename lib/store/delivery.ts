@@ -95,7 +95,7 @@ export async function resolveDownload(
 
   const { data: order } = await db
     .from("orders")
-    .select("id, status, product_slug, paid_at, entitlement_version")
+    .select("id, status, product_slug, paid_at, entitlement_version, access_closed_at")
     .eq("id", claim.orderId)
     .maybeSingle();
 
@@ -121,6 +121,8 @@ export async function resolveDownload(
   // Токен подписан на конкретную версию права. Отзыв — инкремент версии в
   // заказе: подпись остаётся нашей, но заявленная версия перестаёт совпадать.
   if (order.entitlement_version !== claim.entitlementVersion) return refuse("revoked");
+  // Доступ закрыт кнопкой «отозвать доступ» — даже по ссылке с верной версией.
+  if (order.access_closed_at) return refuse("revoked");
 
   // Продукт в токене должен совпадать с купленным: иначе токен одного
   // заказа открывал бы чужой каталог.

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { orderPage } from "@/content/order-page";
@@ -140,6 +141,7 @@ test("подписи выдачи переведены на все языки", 
     "downloadChecksumHint",
     "downloadLeft",
     "downloadPreparing",
+    "downloadClosed",
   ] as const) {
     for (const locale of locales) {
       const text = orderPage[key][locale];
@@ -155,4 +157,26 @@ test("подписи выдачи переведены на все языки", 
     assert.ok(text.includes("{total}"), `downloadLeft (${locale}) потерял {total}`);
     assert.ok(text.includes("{today}"), `downloadLeft (${locale}) потерял {today}`);
   }
+});
+
+test("«отозвать доступ» закрывает скачивание совсем, а не только гасит ссылки", () => {
+  const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
+  // Раньше отзыв только поднимал версию права, а страница заказа тут же
+  // выпускала новую ссылку уже с новой версией — отозванный качал дальше.
+  const orders = read("lib/admin/orders.ts");
+  assert.match(orders, /entitlement_version: next, access_closed_at: new Date\(\)\.toISOString\(\)/);
+  // «Вернуть» не опускает версию: утёкшие ссылки остаются мёртвыми.
+  const restore = orders.slice(orders.indexOf("export async function restoreEntitlement"));
+  assert.match(restore, /\.update\(\{ access_closed_at: null/);
+  assert.doesNotMatch(restore.slice(0, restore.indexOf("record(")), /entitlement_version/);
+
+  // Страница заказа ссылку не выпускает, выдача отказывает.
+  const page = read("app/[locale]/order/[token]/page.tsx");
+  const download = page.slice(page.indexOf("async function Download"));
+  assert.ok(
+    download.indexOf("if (order.accessClosed)") < download.indexOf("signDelivery("),
+    "проверка закрытого доступа должна стоять до выпуска ссылки",
+  );
+  assert.match(read("lib/store/delivery.ts"), /if \(order\.access_closed_at\) return refuse\("revoked"\);/);
+  assert.match(read("supabase/migrations/0059_order_access_closed.sql"), /add column if not exists access_closed_at timestamptz/);
 });

@@ -317,7 +317,7 @@ export const uz: HelpCopy = {
           title: "Havolalar, kirish va bekor qilish",
           body: [
             "**«перевыпустить ссылку»** — buyurtma sahifasiga yangi havola, eskisi ishlamay qoladi. Yangisi bir marta ko‘rsatiladi — uni darhol xaridorga yuboring.",
-            "**«отозвать доступ к файлам»** berilgan yuklab olish havolalarini o‘chiradi. Lekin xaridor buyurtma sahifasidan yangisini oladi. Kirishni butunlay yopish uchun havolani ham qayta chiqaring yoki buyurtmani bekor qiling.",
+            "**«отозвать доступ к файлам»** yuklab olishni butunlay yopadi: berilgan havolalar ishlamay qoladi, buyurtma sahifasida esa tugma o‘rniga xaridor «Доступ к файлам закрыт» deb ko‘radi. Sahifa va hisob saqlanadi — u o‘z hujjatlarini yo‘qotmaydi. Buyurtmada «Доступ: закрыт с …» paydo bo‘ladi. **«вернуть доступ к файлам»** yuklab olishni qayta ochadi, lekin eski havolalar o‘lik qoladi — shuning uchun havola sizib chiqqan bo‘lsa, «отозвать», keyin «вернуть» tugmasini bosing: sizib chiqqani o‘chadi, xaridor esa o‘z sahifasidan yangisini yuklab oladi.",
             "**«отменить»** — xaridorga bildirishnoma boradi. **«вернуть в работу»** holatni tanlab emas, sanalar bo‘yicha tiklaydi: hisob chiqarilgan bo‘lsa — «счёт выставлен» qaytadi.",
           ],
         },

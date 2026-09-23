@@ -43,6 +43,7 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "download.served": "покупатель скачал файл",
   "download.refused": "выдача файла отклонена",
   "entitlement.revoked": "отозвал доступ к файлам",
+  "entitlement.restored": "вернул покупателю доступ к файлам",
   "order.nudged": "свип напомнил о заявке",
   "staff.touch_plan_set": "изменил недельный план касаний",
   "prospect.audited": "проверил сайты для холодного касания",
@@ -104,6 +105,7 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
  */
 export const SENSITIVE: ReadonlySet<string> = new Set([
   "entitlement.revoked",
+  "entitlement.restored",
   "order.paid",
   "order.link_reissued",
   "lead.contact_revealed",
