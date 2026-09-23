@@ -133,7 +133,7 @@ export async function takeOverTalkAction(formData: FormData) {
   const lead = await leadById(leadId);
   if (!lead || !canEdit(lead, staff) || !prospectId) redirect(`/admin/leads/${leadId}`);
 
-  await takeOverTalk(prospectId);
+  await takeOverTalk(prospectId, staff.id);
   await record("prospect.taken_over", {
     actorStaffId: staff.id,
     targetType: "prospect",
