@@ -49,3 +49,13 @@ test("оттенок карточки — из известного набора
     assert.ok(known.has(item.accent), `${item.slug}: неизвестный оттенок ${item.accent}`);
   }
 });
+
+test("цифры в метриках одного кейса не повторяются", () => {
+  // Страница кейса ключует плитки метрик по значению: две «2» в одном
+  // кейсе дают React одинаковые ключи, и вторая плитка может потеряться
+  // при перерисовке. Видно только в консоли, поэтому ловим здесь.
+  for (const item of cases) {
+    const values = item.metrics.map((metric) => metric.value);
+    assert.equal(new Set(values).size, values.length, `${item.slug}: повторяется значение метрики`);
+  }
+});
