@@ -1,6 +1,13 @@
 import { createSign } from "node:crypto";
 
 import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
+import {
+  GOOGLE_SECRETS,
+  GoogleSignInExpired,
+  googleClient,
+  refreshAccess,
+  type GoogleClient,
+} from "@/lib/analytics/google-oauth";
 import { appSecret } from "@/lib/secrets";
 
 /**
@@ -10,11 +17,14 @@ import { appSecret } from "@/lib/secrets";
  * статистика читается обратно через API, чтобы владелец видел трафик рядом с
  * лидами и деньгами, а не в двух чужих кабинетах.
  *
- * Ключи — только на сервере, в .env:
+ * Ключи — только на сервере, в .env или в хранилище секретов (lib/secrets.ts):
  *   YANDEX_METRIKA_TOKEN   OAuth-токен с правом «чтение статистики»;
  *   YANDEX_METRIKA_ID      номер счётчика (по умолчанию — из тега на сайте);
  *   GA4_PROPERTY_ID        числовой идентификатор ресурса GA4 (не G-…);
- *   GA_SERVICE_ACCOUNT     JSON-ключ сервисного аккаунта, как есть или в base64.
+ * и для GA — одно из двух:
+ *   GA_SERVICE_ACCOUNT     JSON-ключ сервисного аккаунта, как есть или в base64;
+ *   вход через Google      кнопка во вкладке «Трафик» (lib/analytics/google-oauth.ts):
+ *                          GOOGLE_OAUTH_CLIENT_ID/_SECRET и GA_OAUTH_REFRESH_TOKEN.
  * Нет ключа — источник показывается как «не подключён», а не как ошибка.
  */
 
@@ -36,9 +46,13 @@ export type TrafficReport = {
   pages: { name: string; visits: number }[];
 };
 
+/**
+ * `reauth` — только у GA со входом через Google: Google больше не пускает
+ * по сохранённому входу, и помочь может только новый вход.
+ */
 export type TrafficResult =
   | { ok: true; report: TrafficReport }
-  | { ok: false; reason: "not_configured" | "failed"; detail?: string };
+  | { ok: false; reason: "not_configured" | "failed" | "reauth"; detail?: string };
 
 const TIMEOUT_MS = 8_000;
 const CACHE_MS = 10 * 60_000;
@@ -184,18 +198,62 @@ export function parseServiceAccount(raw: string | undefined): ServiceAccount | n
   return null;
 }
 
+/**
+ * Чем панель входит в GA. Ключ сервисного аккаунта, если он есть, — первым:
+ * он не истекает и не зависит от того, чей аккаунт Google нажал кнопку.
+ * Иначе — сохранённый вход владельца через Google.
+ */
+type GaAuth = { kind: "service"; account: ServiceAccount } | { kind: "google"; client: GoogleClient; refresh: string };
+
+async function gaAuth(): Promise<GaAuth | null> {
+  const account = parseServiceAccount((await appSecret("GA_SERVICE_ACCOUNT")) ?? undefined);
+  if (account) return { kind: "service", account };
+  const [client, refresh] = await Promise.all([googleClient(), appSecret(GOOGLE_SECRETS.refresh)]);
+  return client && refresh ? { kind: "google", client, refresh } : null;
+}
+
 export async function gaConfigured(): Promise<boolean> {
-  const [property, account] = await Promise.all([appSecret("GA4_PROPERTY_ID"), appSecret("GA_SERVICE_ACCOUNT")]);
-  return Boolean(property && parseServiceAccount(account ?? undefined));
+  const [property, auth] = await Promise.all([appSecret(GOOGLE_SECRETS.property), gaAuth()]);
+  return Boolean(property && auth);
+}
+
+/** Что уже есть для GA — от этого зависит, что показывает карточка во вкладке «Трафик». */
+export type GaConnection = {
+  via: "service" | "google" | null;
+  /** Client ID и секрет для входа через Google сохранены. */
+  client: boolean;
+  property: string | null;
+  /** Чьим входом Google читается статистика. */
+  email: string | null;
+};
+
+export async function gaConnection(): Promise<GaConnection> {
+  const [auth, client, property, email] = await Promise.all([
+    gaAuth(),
+    googleClient(),
+    appSecret(GOOGLE_SECRETS.property),
+    appSecret(GOOGLE_SECRETS.email),
+  ]);
+  return { via: auth?.kind ?? null, client: Boolean(client), property, email: auth?.kind === "google" ? email : null };
 }
 
 const b64url = (input: string | Buffer) => Buffer.from(input).toString("base64url");
 
-let gaToken: { value: string; until: number } | null = null;
+/** Часовые токены Google — по тому, чем входили: сменили вход — старый токен не подходит. */
+const gaTokens = new Map<string, { value: string; until: number }>();
+
+async function gaAccess(auth: GaAuth): Promise<string> {
+  const key = auth.kind === "service" ? `sa:${auth.account.client_email}` : `oauth:${auth.client.id}:${auth.refresh}`;
+  const hit = gaTokens.get(key);
+  if (hit && hit.until > Date.now() + 60_000) return hit.value;
+  if (auth.kind === "service") return googleToken(auth.account, key);
+  const { access, expiresIn } = await refreshAccess(auth.client, auth.refresh);
+  gaTokens.set(key, { value: access, until: Date.now() + expiresIn * 1000 });
+  return access;
+}
 
 /** Токен доступа Google по ключу сервисного аккаунта: подписанный JWT → OAuth. */
-async function googleToken(account: ServiceAccount): Promise<string> {
-  if (gaToken && gaToken.until > Date.now() + 60_000) return gaToken.value;
+async function googleToken(account: ServiceAccount, key: string): Promise<string> {
 
   const iat = Math.floor(Date.now() / 1000);
   const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
@@ -223,8 +281,8 @@ async function googleToken(account: ServiceAccount): Promise<string> {
   if (!response.ok || !body.access_token) {
     throw new Error(`Google не выдал доступ: ${body.error_description ?? response.status}`);
   }
-  gaToken = { value: body.access_token, until: Date.now() + (body.expires_in ?? 3600) * 1000 };
-  return gaToken.value;
+  gaTokens.set(key, { value: body.access_token, until: Date.now() + (body.expires_in ?? 3600) * 1000 });
+  return body.access_token;
 }
 
 type GaRow = { dimensionValues?: { value: string }[]; metricValues?: { value: string }[] };
@@ -238,14 +296,13 @@ function gaDate(value: string): string {
 }
 
 export async function loadGa(days: number, now: Date = new Date()): Promise<TrafficResult> {
-  const [property, raw] = await Promise.all([appSecret("GA4_PROPERTY_ID"), appSecret("GA_SERVICE_ACCOUNT")]);
-  const account = parseServiceAccount(raw ?? undefined);
-  if (!property || !account) return { ok: false, reason: "not_configured" };
+  const [property, auth] = await Promise.all([appSecret(GOOGLE_SECRETS.property), gaAuth()]);
+  if (!property || !auth) return { ok: false, reason: "not_configured" };
   const d = periodDates(days, now);
 
   return cached(`ga:${property}:${d.from}:${d.to}`, async () => {
     try {
-      const token = await googleToken(account);
+      const token = await gaAccess(auth);
       const range = { startDate: d.from, endDate: d.to };
       const totals = [
         { name: "sessions" },
@@ -326,6 +383,9 @@ export async function loadGa(days: number, now: Date = new Date()): Promise<Traf
         },
       };
     } catch (error) {
+      if (error instanceof GoogleSignInExpired) {
+        return { ok: false, reason: "reauth", detail: error.message };
+      }
       console.error("traffic: Google Analytics не ответил", error);
       return { ok: false, reason: "failed", detail: error instanceof Error ? error.message : String(error) };
     }

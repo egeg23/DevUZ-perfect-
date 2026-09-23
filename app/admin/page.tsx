@@ -91,6 +91,10 @@ export default async function AdminHome({
     p?: string;
     tab?: string;
     d?: string;
+    /** Что вернул вход через Google для статистики (app/admin/google). */
+    ga?: string;
+    gd?: string;
+    gp?: string;
   }>;
 }) {
   const staff = await requireStaff();
@@ -288,7 +292,12 @@ export default async function AdminHome({
           ) : null}
           {ownerTab === "money" ? <DashboardHome staff={staff} planNotice={params.p} section="money" /> : null}
           {ownerTab === "team" ? <DashboardHome staff={staff} planNotice={params.p} section="team" /> : null}
-          {ownerTab === "traffic" ? <TrafficPanel days={trafficPeriodOf(params.d)} /> : null}
+          {ownerTab === "traffic" ? (
+            <TrafficPanel
+              days={trafficPeriodOf(params.d)}
+              notice={{ code: params.ga, detail: params.gd, property: params.gp }}
+            />
+          ) : null}
           {ownerTab === "leads" ? leadsBlock : null}
         </>
       ) : (
