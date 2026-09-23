@@ -95,11 +95,13 @@ const ru: HelpCopy = {
       ],
     },
     "/admin/prospect": {
-      what: "Проверка чужих сайтов списком. Панель открывает каждый сайт, находит, что на нём не так, и пишет черновик первого сообщения.",
+      what: "Холодные касания: панель проверяет чужие сайты, находит, что на них не так, и пишет первое сообщение. Каждое утро в 09:00 бот присылает вам порцию дня — компании с готовыми текстами.",
       how: [
-        "Вставьте список сайтов, по одному в строке. Можно с названием компании рядом.",
-        "Выберите язык письма и нажмите «Проверить».",
-        "Прочитайте черновик, поправьте под человека и отправьте сами. Бот за вас не пишет.",
+        "Начинайте с порции дня: она вверху страницы и у вас в Telegram. Нажмите на текст — он скопируется, или «Отправить через бота».",
+        "Свои сайты: вставьте список, по одному в строке, и нажмите «Проверить». Потом у карточки — «Связаться»: модель напишет письмо.",
+        "Бот пишет с рабочего аккаунта студии, не больше двух новых компаний в час. Написали со своего аккаунта — нажмите «Написал сам», иначе касание не засчитается.",
+        "Цифры у карточки: «поиск 84» — насколько сайт находят в Google (80+ хорошо, ниже 50 плохо); «−24…48» — сколько обращений из ста теряется на сайте, это наша оценка; последнее число — общая оценка сайта, ниже 60 жёлтым. Подробно — в блоке «Как читать цифры».",
+        "Промолчавшим бот сам напомнит о себе через 3 и 7 дней. Ответ клиента ведёт модель; просьбы позвонить или прислать что-то приходят вам.",
       ],
     },
     "/admin/candidates": {
@@ -296,11 +298,13 @@ const uz: HelpCopy = {
       ],
     },
     "/admin/prospect": {
-      what: "Begona saytlarni ro‘yxat bilan tekshirish. Panel har bir saytni ochadi, undagi kamchilikni topadi va birinchi xat qoralamasini yozib beradi.",
+      what: "Sovuq murojaatlar: panel begona saytlarni tekshiradi, undagi kamchilikni topadi va birinchi xatni yozadi. Har kuni soat 09:00 da bot sizga kunlik ulushni yuboradi — tayyor matnli kompaniyalar.",
       how: [
-        "Saytlar ro‘yxatini joylang, har biri alohida qatorda. Yoniga kompaniya nomini yozsa ham bo‘ladi.",
-        "Xat tilini tanlang va «Проверить» tugmasini bosing.",
-        "Qoralamani o‘qing, odamga moslab to‘g‘rilang va o‘zingiz yuboring. Bot siz uchun yozmaydi.",
+        "Kunlik ulushdan boshlang: u sahifa tepasida va Telegramingizda. Matnni bosing — u nusxalanadi, yoki «Отправить через бота» tugmasini bosing.",
+        "O‘z saytlaringiz: ro‘yxatni joylang, har biri alohida qatorda, va «Проверить» ni bosing. Keyin kartochkada «Связаться» — model xat yozadi.",
+        "Bot studiyaning ishchi akkauntidan soatiga ikkitadan ko‘p bo‘lmagan yangi kompaniyaga yozadi. O‘z akkauntingizdan yozgan bo‘lsangiz — «Написал сам» ni bosing, aks holda murojaat hisoblanmaydi.",
+        "Kartochkadagi raqamlar: «поиск 84» — saytni Googleda qanchalik topishadi (80+ yaxshi, 50 dan past yomon); «−24…48» — saytda yuztadan nechta murojaat yo‘qoladi, bu bizning bahoimiz; oxirgi raqam — saytning umumiy bahosi, 60 dan past bo‘lsa sariq. Batafsil — «Как читать цифры» blokida.",
+        "Javob bermaganlarga bot 3 va 7 kundan keyin o‘zi eslatadi. Mijoz javobini model olib boradi; qo‘ng‘iroq qilish yoki biror narsa yuborish so‘rovlari sizga keladi.",
       ],
     },
     "/admin/candidates": {

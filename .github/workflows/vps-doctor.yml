@@ -164,6 +164,47 @@ jobs:
             done
 
             echo
+            echo "════ Скаут: что читает ════"
+            # Последний старт: сколько чатов открыл и в каких не состоит.
+            journalctl -u devuz-scout.service --since "-7d" --no-pager 2>/dev/null \
+              | grep -E "scout: (открыл|аккаунт не состоит|не открыл)" | tail -4 || echo "· журнал скаута пуст"
+            echo
+            echo "════ Бэкап базы ════"
+            LAST_BACKUP="$(ls -1t /var/backups/devuz 2>/dev/null | head -1)"
+            if [ -n "$LAST_BACKUP" ]; then
+              echo "последний: $LAST_BACKUP ($(stat -c %y "/var/backups/devuz/$LAST_BACKUP" 2>/dev/null | cut -d. -f1))"
+            else
+              echo "✗ бэкапов в /var/backups/devuz нет"
+              TROUBLE=1
+            fi
+            systemctl list-timers devuz-backup.timer --no-pager 2>/dev/null | sed -n 2p || true
+            echo
+            echo "════ Ошибки приложения за сутки ════"
+            # Только то, что код сам пишет как неудачу: «не сохранил», «не
+            # записал», «не отправил», ошибки базы и модели.
+            docker compose logs --since 24h --no-color 2>/dev/null \
+              | grep -E "не (сохранил|записал|прочитал|отправил|подготовил|завёл)|violates|ERROR|Error:|разбор не удался|не ответил" \
+              | sed -E 's/^[^|]*\| //' | cut -c1-220 | sort | uniq -c | sort -rn | head -25 || true
+            echo
+            echo "════ Свип за сутки ════"
+            # Не «fail» вообще: в каждом отчёте свипа есть "failed":0, и такой
+            # фильтр насчитал бы сбой в каждом из 288 проходов. Считаем то,
+            # что пишет systemd и curl, когда проход действительно упал.
+            # Упавший проход systemd помечает одной строкой «Failed with
+            # result», а curl рядом пишет причину — её и показываем со
+            # временем: проходы, упавшие в минуту выкатки, — это
+            # перезапуск контейнера, а не поломка.
+            SWEEP_LOG="$(journalctl -u devuz-reminders.service --since "-24h" --no-pager 2>/dev/null || true)"
+            SWEEP_FAILS="$(printf '%s\n' "$SWEEP_LOG" | grep -c "Failed with result" || true)"
+            echo "упавших проходов: ${SWEEP_FAILS:-0}"
+            printf '%s\n' "$SWEEP_LOG" | grep -E "curl: \(" | cut -c1-200 | tail -6 || true
+            echo "выкатки за сутки:"
+            git log --since="24 hours ago" --format='  %cd %h %s' --date=format:'%b %d %H:%M' 2>/dev/null | cut -c1-110 | head -8 || true
+            echo
+            echo "════ Бот ════"
+            # Изнутри контейнера: там токен и адрес API, а в вывод токен не попадает.
+            docker compose exec -T web node -e "const b=(process.env.TELEGRAM_API_BASE||'https://api.telegram.org').replace(/\/+$/,'');fetch(b+'/bot'+process.env.TELEGRAM_BOT_TOKEN+'/getWebhookInfo').then(r=>r.json()).then(j=>{const r=j.result||{};console.log('вебхук:',r.url?new URL(r.url).host:'не задан','· ждут доставки:',r.pending_update_count,'· последняя ошибка:',r.last_error_message||'нет',r.last_error_date?new Date(r.last_error_date*1000).toISOString():'')}).catch(e=>console.log('· Telegram не ответил:',e.message))" 2>/dev/null || echo "· проверить бота не вышло"
+            echo
             echo "════ Место на диске ════"
             # Кончившееся место выглядит как что угодно, только не как
             # кончившееся место: docker build падает на середине, а причина
