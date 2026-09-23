@@ -95,7 +95,42 @@ export type Invoice = {
   issued_at: string;
   due_at: string;
   paid_at: string | null;
+  /** Кто отметил оплату. */
+  paid_by: string | null;
+  /** Платёж в проекте, которым владелец подтвердил оплату. */
+  payment_id: string | null;
 };
+
+/**
+ * Где счёт в пути от «выставлен» до денег в проекте.
+ *
+ * `awaiting` — оплату отметили, а платёж в проекте ещё не подтверждён:
+ * начисления команде по нему пока заморожены. Отметку ставит тот, кто увидел
+ * деньги в банке, а платёж, который размораживает начисления, подтверждает
+ * владелец — так же, как «Записать платёж» в карточке проекта.
+ */
+export type InvoiceState = "unpaid" | "awaiting" | "confirmed";
+
+export function invoiceState(invoice: Pick<Invoice, "paid_at" | "payment_id">): InvoiceState {
+  if (!invoice.paid_at) return "unpaid";
+  return invoice.payment_id ? "confirmed" : "awaiting";
+}
+
+/**
+ * Назначение платежа по этапу: первый — аванс, последний — остаток,
+ * средние — «другое». Договор из одного этапа — это аванс: по договору этап
+ * оплачивается вперёд.
+ */
+export function invoicePurpose(stageIndex: number, stageCount: number): "advance" | "rest" | "other" {
+  if (stageIndex <= 0) return "advance";
+  if (stageIndex >= stageCount - 1) return "rest";
+  return "other";
+}
+
+/** Заметка к платежу: по ней в карточке проекта видно, какой это счёт. */
+export function invoicePaymentNote(invoiceNumber: string, contractNumber: string): string {
+  return `Счёт № ${invoiceNumber} по договору № ${contractNumber}`;
+}
 
 /** Просрочен ли счёт. Сравнение по датам, без часов: у счёта их нет. */
 export function overdue(invoice: Pick<Invoice, "due_at" | "paid_at">, today: string): boolean {

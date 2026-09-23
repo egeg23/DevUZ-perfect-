@@ -245,7 +245,8 @@ export async function loadLedger(scope: "all" | readonly string[]): Promise<Ledg
 /* ── Записи ─────────────────────────────────────────────────────────────── */
 
 export type MoneyResult =
-  | { ok: true }
+  /** paymentId — у записанного платежа: к нему привязывается оплаченный счёт. */
+  | { ok: true; paymentId?: string }
   | { ok: false; reason: "offline" | "forbidden" | "gone" | "invalid" | "failed" | "below_floor" };
 
 const OK: MoneyResult = { ok: true };
@@ -383,7 +384,7 @@ export async function addPayment(
   } catch (error) {
     console.error("partners: уведомление об оплате", error);
   }
-  return OK;
+  return { ok: true, paymentId: String(data.id) };
 }
 
 export async function removePayment(paymentId: string, staff: Staff, ip: string): Promise<MoneyResult> {

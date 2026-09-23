@@ -68,6 +68,9 @@ export const AUDIT_ACTIONS = [
   "prospect.taken_over",
   "invoice.issued",
   "invoice.paid",
+  // Оплата счёта стала платежом в проекте — или отметку сняли как ошибочную.
+  "invoice.payment_confirmed",
+  "invoice.unpaid",
   "contract.link_issued",
   "razbor.published",
   "razbor.rejected",

@@ -642,7 +642,7 @@ export const uz: HelpCopy = {
               "Tepadan pastga: «Стадия», «Смета», «Деньги», «Данные проекта», «Договор».",
               "**«Смета»** — toifani va muddatni haftalarda tanlang, panel «не ниже» (chegara), «до» va muddatni hisoblaydi. Chegara — bundan past summada loyiha o‘zini oqlamaydi; undan pastga faqat egasi tusha oladi.",
               "**«Деньги»**: «Вид сделки» — «новый клиент» yoki «допродажа» (foizingiz shunga bog‘liq, [«Финансы»](/admin/finance) bo‘limiga qarang) va «Сумма по договору». Butun dollarda yozing, «$» va sentlarsiz, aks holda maydon tozalanadi. Loyiha bo‘yicha birorta to‘lov bo‘lmaguncha summani siz tahrirlaysiz; keyin — faqat egasi.",
-              "Soliq va tannarxni shartnomadan keyin egasi yozadi. Mijoz to‘lovlarini ham egasi yozadi — va faqat shundan keyin hisoblanmalaringiz muzdan chiqadi.",
+              "Soliq va tannarxni shartnomadan keyin egasi yozadi. Mijoz to‘lovlarini ham egasi yozadi — va faqat shundan keyin hisoblanmalaringiz muzdan chiqadi. Shartnoma hisobi bo‘yicha to‘lov egasi uni tasdiqlaganda bu yerga o‘zi tushadi; ungacha «Платежи клиента» blokida sariq qator turadi: «платёж ещё не подтверждён».",
               "**«Данные проекта»** — nomi, mijoz, muddat, izohlar. **«Договор»** — [shartnomalar](/admin/contracts) bandi.",
             ],
             head: [
@@ -653,7 +653,7 @@ export const uz: HelpCopy = {
             admin: [
               "Siz hammasini tahrirlaysiz: bosqich (10 ta tugma), smeta, summa va bitim turini istalgan paytda, **«Налог, %»** (odatiy 4) va **«Себестоимость разработки, $»** — faqat siz, hech kim tannarxni kamaytirib, o‘z hisoblanmasini oshirmasligi uchun.",
               "Hisoblanma qatorlarida — shu bitim uchun foiz: «задать» yoki «по грейду» ga qaytarish. **«Партнёр»** bloki: kim olib kelgan, hamkorga foiz («по ступени» — 20%, uchta to‘langan loyihadan keyin 25%) va «Не засчитывать, причина».",
-              "**«Платежи клиента»** → «Записать платёж»: summa, sana, maqsad. Hammasi to‘langanda hisoblanmalar «заработано» bo‘ladi, hamkorga esa xabar ketadi. Kartochkadagi «Остаётся владельцу» — hamkor ulushi ayirilmagan; aniq raqam — [«Финансы»](/admin/finance) bo‘limida.",
+              "**«Платежи клиента»** → «Записать платёж»: summa, sana, maqsad. Hammasi to‘langanda hisoblanmalar «заработано» bo‘ladi, hamkorga esa xabar ketadi. Shartnoma hisoblari bo‘yicha to‘lovlar bu yerga o‘zi yoziladi — sizning «Оплачен» belgingizdan yoki shartnomadagi «Подтвердить платёж» tugmasidan; to‘lov sizni kutayotgan paytda bu yerda shartnomaga havolali sariq qator turadi. Kartochkadagi «Остаётся владельцу» — hamkor ulushi ayirilmagan; aniq raqam — [«Финансы»](/admin/finance) bo‘limida.",
             ],
           },
         },
@@ -757,11 +757,23 @@ export const uz: HelpCopy = {
         {
           id: "invoices",
           title: "Bosqichlar bo‘yicha hisoblar va buyurtmachi uchun havola",
-          body: [
-            "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Выставить счёт»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«Оплачен»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
-            "⚠️ Bu yerdagi «Оплачен» to‘lovni loyihaga yozmaydi. Hisoblanmalar muzdan chiqishi uchun egasi to‘lovni loyiha kartochkasiga ham yozishi kerak («Записать платёж»).",
-            "**«Ссылка для заказчика»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Выпустить новую ссылку» eskisini o‘chiradi.",
-          ],
+          body: {
+            manager: [
+              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Выставить счёт»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«Оплачен»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
+              "Belgingizdan keyin egasiga Telegram’da xabar keladi. U «Подтвердить платёж» tugmasini bosadi — va to‘lov [loyihada](/admin/projects) to‘lov bo‘lib yoziladi: pulga tushadi va shu bo‘yicha hisoblanmalaringiz muzdan chiqadi. U tasdiqlamaguncha hisob yonida «ждёт подтверждения владельца» deb yozilgan, loyiha kartochkasida esa sariq qator turadi. Xato belgilagan bo‘lsangiz — egasiga ayting, belgini u olib tashlaydi.",
+              "**«Ссылка для заказчика»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Выпустить новую ссылку» eskisini o‘chiradi.",
+            ],
+            head: [
+              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Выставить счёт»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«Оплачен»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
+              "Belgidan keyin egasiga Telegram’da xabar keladi. U «Подтвердить платёж» tugmasini bosadi — va to‘lov [loyihada](/admin/projects) to‘lov bo‘lib yoziladi: pulga tushadi va shu bo‘yicha hisoblanmalar — sizniki ham, jamoaniki ham — muzdan chiqadi. U tasdiqlamaguncha hisob yonida «ждёт подтверждения владельца» deb yozilgan, loyiha kartochkasida esa sariq qator turadi. Xato belgilangan bo‘lsa — egasiga ayting, belgini u olib tashlaydi.",
+              "**«Ссылка для заказчика»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Выпустить новую ссылку» eskisini o‘chiradi.",
+            ],
+            admin: [
+              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Выставить счёт»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«Оплачен»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
+              "Sizning «Оплачен» belgingiz to‘lovni darhol loyihaga yozadi — loyiha kartochkasida uni ikkinchi marta yozish shart emas: hisob summasi, sana — bugun, maqsad — birinchi bosqichda avans, oxirgisida qoldiq, izohda «Счёт № … по договору № …». Agar to‘lovni xodim belgilagan bo‘lsa, sizga Telegram’da xabar keladi, hisob yonida esa — **«Подтвердить платёж»** va **«Оплаты не было»** (xato belgini olib tashlaydi). Tasdiqlangan to‘lov oddiy to‘lov kabi loyiha kartochkasida o‘chiriladi; shundan keyin hisob yana tasdiqni kutadi.",
+              "**«Ссылка для заказчика»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Выпустить новую ссылку» eskisini o‘chiradi.",
+            ],
+          },
         },
         {
           id: "signature",
