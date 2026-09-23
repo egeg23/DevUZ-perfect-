@@ -36,6 +36,7 @@ import { talkForLead } from "@/lib/admin/outreach-talk-store";
 import {
   DELIVERY_GIVE_UP,
   canEdit,
+  canReveal,
   canSeeLead,
   remindersFor,
   revealContact,
@@ -176,6 +177,9 @@ export default async function LeadPage({
   if (!canSeeLead(lead, staff)) notFound();
 
   const mine = canEdit(lead, staff);
+  // Контакт и переписка свободного лида — только после «Взять себе», и
+  // руководителю тоже: он в очереди наравне со всеми. Владелец — вне её.
+  const reveals = canReveal(lead, staff);
   const free = !lead.assigned_staff_id;
   const decides = approves(staff.role);
 
@@ -459,7 +463,7 @@ export default async function LeadPage({
               просмотр записан в журнал
             </p>
           </>
-        ) : mine ? (
+        ) : reveals ? (
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <form action={revealContactAction}>
               <input type="hidden" name="lead" value={lead.id} />
@@ -591,7 +595,7 @@ export default async function LeadPage({
               Переписки нет — заявка пришла формой, а не из чата.
             </p>
           )
-        ) : mine ? (
+        ) : reveals ? (
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <form action={revealTranscriptAction}>
               <input type="hidden" name="lead" value={lead.id} />
@@ -791,12 +795,12 @@ export default async function LeadPage({
       ) : null}
 
       <p className="mt-10 max-w-2xl text-xs leading-relaxed text-faint">
-        Переписка с клиентом в панели не показывается: менеджеру для работы
-        достаточно брифа, а полный разговор — самое чувствительное из того, что
-        клиент рассказал о своём бизнесе. Открытие этой карточки и каждое
-        получение контакта записаны в журнал. Обсуждение видно всей команде —
-        контакт клиента в него лучше не вставлять: закрытость контакта на этом
-        и держится.
+        Контакт и переписка открываются кнопкой, а не сразу: полный разговор —
+        самое чувствительное из того, что клиент рассказал о своём бизнесе.
+        Открытие этой карточки, каждое получение контакта и каждое чтение
+        переписки записаны в журнал. Обсуждение видно всей команде — контакт
+        клиента в него лучше не вставлять: закрытость контакта на этом и
+        держится.
       </p>
     </AdminShell>
   );

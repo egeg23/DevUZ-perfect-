@@ -380,8 +380,9 @@ export function OutreachList({
                     {wait.ahead ? `, перед ним ${wait.ahead}` : ""}.
                   </p>
                   <p className="mt-2 text-xs leading-relaxed text-muted">
-                    Ждать не обязательно: откройте переписку со своего аккаунта и отправьте
-                    этот же текст — ответ придёт вам лично, и лид уже ваш.
+                    Ждать не обязательно: откройте переписку со своего аккаунта, отправьте
+                    этот же текст и нажмите «Связался сам» ниже — бот тогда свою копию не
+                    отправит. Ответ придёт вам лично, и лид уже ваш.
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <a
@@ -482,7 +483,7 @@ export function OutreachList({
                   Контакты здесь не проверяются: человек уже написал, и
                   спорить с этим, потому что аудитор не нашёл на сайте
                   телефон, панели не по чину. */}
-              {row.status === "new" || row.status === "contacting" ? (
+              {row.status === "new" || row.status === "contacting" || row.status === "sending" ? (
                 <form
                   action={markSelfContactedAction}
                   className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3"

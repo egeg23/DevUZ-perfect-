@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 
 import {
   accrualState,
@@ -257,4 +258,24 @@ test("процент по сделке важнее персональной с�
   const zero = accrualsOf(project(), [], earners, new Map([[MANAGER, 0]])).find((a) => a.staff_id === MANAGER)!;
   assert.equal(zero.percent, 0);
   assert.equal(zero.manual, true);
+});
+
+/**
+ * Платёж клиента и выплату сотруднику записывает только владелец.
+ *
+ * 16 сентября вместе с проверкой расходов (их ведут оба соучредителя) по
+ * ошибке ослабили и эти две: интерфейс рисовал формы только владельцу, а
+ * сервер пускал и руководителя. Подтверждённый платёж размораживает
+ * начисления, выплата гасит долг — такие записи делает один человек.
+ */
+test("платёж и выплату сервер принимает только от владельца", () => {
+  const ledger = readFileSync(new URL("../lib/admin/ledger.ts", import.meta.url), "utf8");
+  for (const fn of ["export async function addPayment(", "export async function recordPayout("]) {
+    const body = ledger.slice(ledger.indexOf(fn), ledger.indexOf(fn) + 1200);
+    assert.match(body, /if \(staff\.role !== "admin"\) return fail\("forbidden"\);/, fn);
+    assert.doesNotMatch(body, /if \(!keepsExpenses\(staff\.role\)\)/, `${fn}: снова пускает руководителя`);
+  }
+  // А расход — по-прежнему оба соучредителя.
+  const expense = ledger.slice(ledger.indexOf("export async function addExpense"));
+  assert.match(expense.slice(0, 1200), /if \(!keepsExpenses\(staff\.role\)\) return fail\("forbidden"\);/);
 });

@@ -18,6 +18,15 @@ import { serviceClient } from "@/lib/supabase";
  */
 
 /**
+ * Ушло с рабочего аккаунта — а не руками. «Связался сам» и ручной маршрут
+ * тоже ставят «отправлено», но пишет там человек со своего телефона, и
+ * рабочий аккаунт этих сообщений не видел: считать их в его «два в час» —
+ * значит держать очередь бота из-за чужих звонков. Пустой маршрут — старые
+ * строки, заведённые до маршрутов: они уходили ботом.
+ */
+const SENT_BY_ACCOUNT = "target_kind.is.null,target_kind.neq.manual";
+
+/**
  * Что ушло за последний час: сколько и когда самое старое.
  *
  * Предел считается по факту отправки, а не по очереди: задание, стоящее в
@@ -34,6 +43,7 @@ export async function sentLastHour(now = Date.now()): Promise<{ count: number; o
     .from("prospects")
     .select("sent_at")
     .eq("status", "sent")
+    .or(SENT_BY_ACCOUNT)
     .gte("sent_at", new Date(now - HOUR_MS).toISOString())
     .order("sent_at", { ascending: true });
 
@@ -72,6 +82,7 @@ export async function nextQueued(now = Date.now()): Promise<Queued | null> {
     .from("prospects")
     .select("sent_at")
     .eq("status", "sent")
+    .or(SENT_BY_ACCOUNT)
     .order("sent_at", { ascending: false })
     .limit(1)
     .maybeSingle();
