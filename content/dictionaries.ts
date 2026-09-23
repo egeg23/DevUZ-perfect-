@@ -56,7 +56,7 @@ const ru = {
     title: "{n}+ завершённых проектов",
     description:
       "Среди них — эти. Не рендеры и не концепты: работающий код, который мы писали и поддерживаем.",
-    liveSite: "Открыть сайт",
+    liveSite: "Посмотреть проект",
     challenge: "Задача",
     tech: "Технологии",
     year: "Год",
@@ -394,7 +394,7 @@ const en: Dictionary = {
     title: "{n}+ completed projects",
     description:
       "A few of them are below. Not renders, not concepts: working code we wrote and still maintain.",
-    liveSite: "Open the site",
+    liveSite: "View the project",
     challenge: "The brief",
     tech: "Technology",
     year: "Year",
@@ -705,7 +705,7 @@ const uz: Dictionary = {
     title: "{n}+ yakunlangan loyiha",
     description:
       "Ulardan bir nechtasi quyida. Bu render ham, konsept ham emas: biz yozgan va qo‘llab-quvvatlayotgan ishlaydigan kod.",
-    liveSite: "Saytni ochish",
+    liveSite: "Loyihani ko‘rish",
     challenge: "Vazifa",
     tech: "Texnologiyalar",
     year: "Yil",
@@ -1016,7 +1016,7 @@ const zh: Dictionary = {
     title: "{n}+ 个已完成项目",
     description:
       "以下是其中几个。不是效果图，也不是概念稿：都是我们亲手编写并持续维护的真实代码。",
-    liveSite: "访问网站",
+    liveSite: "查看项目",
     challenge: "项目需求",
     tech: "技术方案",
     year: "年份",
