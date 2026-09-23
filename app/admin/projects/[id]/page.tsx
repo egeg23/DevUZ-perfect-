@@ -40,6 +40,7 @@ import {
   ALL_STAGES,
   STAGES,
   STAGE_LABEL,
+  canEditProjectData,
   daysOnStage,
   projectById,
   stageProgress,
@@ -65,10 +66,33 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
     text: "Сумма ниже порога сметы. Порог — это то, под чем проект не окупается; опуститься ниже может только владелец.",
     tone: "warn",
   },
+  data_forbidden: {
+    text: "«Данные проекта» правит ведущий проекта, его руководитель и владелец. Ведущего меняет только владелец.",
+    tone: "warn",
+  },
   gone: { text: "Такой записи уже нет.", tone: "warn" },
   failed: { text: "Не получилось.", tone: "warn" },
   offline: { text: "База недоступна.", tone: "warn" },
 };
+
+/** Где договор сейчас — словами, как в карточке договора. */
+const CONTRACT_STATUS: Record<string, string> = {
+  draft: "черновик: готовится, владельцу ещё не отправлен",
+  pending: "отправлен владельцу на подпись",
+  approved: "подтверждён владельцем, ждёт подписи заказчика",
+  signed: "подписан обеими сторонами",
+};
+
+/**
+ * Почему договор не подготовился. Раньше форма молча возвращала на карточку:
+ * человек видел ту же пустую форму и не понимал, что не так.
+ */
+function contractErrorText(code: string, detail: string | undefined): string {
+  if (code === "forbidden") return "Готовить договор этой роли нельзя.";
+  if (code === "offline") return "База недоступна — попробуйте через минуту.";
+  if (code === "invalid" && detail) return `Договор не подготовлен: ${detail}.`;
+  return "Договор не подготовлен. Проверьте: дата, сумма больше нуля, заказчик и его реквизиты, предмет договора, этапы с долями, которые вместе дают 100%.";
+}
 
 /** «13.09.26» из даты платежа — она хранится днём, без часов и пояса. */
 function day(iso: string): string {
@@ -81,19 +105,21 @@ export default async function ProjectPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ r?: string }>;
+  searchParams: Promise<{ r?: string; contract?: string; detail?: string }>;
 }) {
   const staff = await requireStaff();
   const { id } = await params;
-  const { r } = await searchParams;
+  const { r, contract: contractError, detail: contractDetail } = await searchParams;
 
   const project = await projectById(id);
   if (!project) notFound();
 
   const progress = stageProgress(project.stage);
   const contracts = await contractsForProject(project.id);
-  const draft = contracts.find((c) => c.status === "draft");
-  const approved = contracts.find((c) => c.status === "approved");
+  // Действующий договор — любой, кроме отменённого: пока он есть, второй
+  // не готовится, а в карточке — ссылка на него, в каком бы статусе он ни был.
+  const activeContracts = contracts.filter((c) => c.status !== "void");
+  const voidContracts = contracts.filter((c) => c.status === "void");
   const days = daysOnStage(project.stage_since);
   const isAdmin = staff.role === "admin";
   // См. комментарий в «Финансах»: доля студии — не то же самое, что права
@@ -111,6 +137,14 @@ export default async function ProjectPage({
     staff.role === "admin" ? listPartners() : Promise.resolve([]),
     awaitingInvoicesFor(project.id),
   ]);
+  const canEditData = canEditProjectData(staff, project.owner_staff_id, team);
+  // Проект ведёт владелец — начислений по нему нет никому: владелец в
+  // начислениях не участвует. Так бывало с проектами, которые он заводил сам.
+  const ownerLeads = people.find((p) => p.id === project.owner_staff_id)?.role === "admin";
+  // Нынешний ведущий — в списке, даже если его уже отключили: иначе форма
+  // молча подставила бы первого по алфавиту и сменила ведущего при сохранении.
+  const leaders = people.filter((p) => p.is_active || p.id === project.owner_staff_id);
+
   // Партнёрская строка: ступень партнёра считается по всем его проектам.
   const partnerProven = partner ? (await summarize([partner]))[0]?.proven ?? false : false;
   const partnerLine = partner ? partnerAccrualOf(project, payments, partner, partnerProven) : null;
@@ -669,8 +703,59 @@ export default async function ProjectPage({
           Данные проекта
           <HelpHint topic={helpAnchor("/admin/projects", "data")} label="Кто может править" />
         </h2>
+        {isAdmin && ownerLeads ? (
+          <p className="mt-3 rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-xs text-gold">
+            Проект ведёте вы — начислений команде по нему нет. Если ведёт сотрудник, выберите его в поле «Ведёт» и
+            сохраните.
+          </p>
+        ) : null}
+
+        {!canEditData ? (
+          <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-faint">Ведёт</dt>
+              <dd>{project.owner_name ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-faint">Клиент</dt>
+              <dd>{project.client ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-faint">Срок</dt>
+              <dd>{project.deadline ?? "—"}</dd>
+            </div>
+            {project.notes ? (
+              <div className="sm:col-span-2">
+                <dt className="text-xs text-faint">Заметки</dt>
+                <dd className="whitespace-pre-line">{project.notes}</dd>
+              </div>
+            ) : null}
+            <p className="text-xs text-faint sm:col-span-2">
+              Правит ведущий проекта, его руководитель и владелец.
+            </p>
+          </dl>
+        ) : (
         <form action={editProject} className="mt-3 grid gap-3 sm:grid-cols-2">
           <input type="hidden" name="project" value={project.id} />
+
+          {isAdmin ? (
+            <label className="block sm:col-span-2">
+              <span className="text-xs text-faint">Ведёт — ему идёт начисление по проекту</span>
+              <select name="owner" defaultValue={project.owner_staff_id ?? ""} required className={`${FIELD} mt-1`}>
+                {project.owner_staff_id ? null : (
+                  <option value="" disabled>
+                    — выберите —
+                  </option>
+                )}
+                {leaders.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.display_name}
+                    {person.role === "admin" ? " — без начислений команде" : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
 
           <label className="block">
             <span className="text-xs text-faint">Название</span>
@@ -701,6 +786,7 @@ export default async function ProjectPage({
             </button>
           </div>
         </form>
+        )}
       </section>
 
       {/* Договор — здесь, а не отдельным разделом.
@@ -709,7 +795,7 @@ export default async function ProjectPage({
           Уводить за этим на другую страницу значит заставить переписывать
           цифры руками, а переписанная руками сумма однажды разойдётся с
           проектом. */}
-      <section className="mt-8 rounded-2xl border border-line bg-surface px-6 py-5">
+      <section id="contract" className="mt-8 scroll-mt-24 rounded-2xl border border-line bg-surface px-6 py-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
             Договор
@@ -719,18 +805,36 @@ export default async function ProjectPage({
           </Link>
         </div>
 
-        {approved ? (
-          <p className="mt-3 text-sm">
-            <Link href={`/admin/contracts/${approved.id}`} className="text-green hover:underline">
-              № {approved.number} — подтверждён владельцем
-            </Link>
+        {contractError ? (
+          <p className="mt-3 rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-sm text-gold">
+            {contractErrorText(contractError, contractDetail)}
           </p>
-        ) : draft ? (
-          <p className="mt-3 text-sm">
-            <Link href={`/admin/contracts/${draft.id}`} className="text-green hover:underline">
-              № {draft.number} — черновик, ждёт подтверждения владельца
-            </Link>
+        ) : null}
+
+        {voidContracts.length ? (
+          <p className="mt-3 text-xs text-faint">
+            Отменены:{" "}
+            {voidContracts.map((c, i) => (
+              <span key={c.id}>
+                {i ? ", " : ""}
+                <Link href={`/admin/contracts/${c.id}`} className="hover:text-text hover:underline">
+                  № {c.number}
+                </Link>
+              </span>
+            ))}
           </p>
+        ) : null}
+
+        {activeContracts.length ? (
+          <ul className="mt-3 flex flex-col gap-1 text-sm">
+            {activeContracts.map((c) => (
+              <li key={c.id}>
+                <Link href={`/admin/contracts/${c.id}`} className="text-green hover:underline">
+                  № {c.number} — {CONTRACT_STATUS[c.status] ?? c.status}
+                </Link>
+              </li>
+            ))}
+          </ul>
         ) : (
           <form action={prepareContract} className="mt-4 grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="project_id" value={project.id} />

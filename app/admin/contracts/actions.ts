@@ -22,6 +22,7 @@ import {
 import {
   attachEstimate,
   attachSignedScan,
+  setEstimateFromText,
   returnForRevision,
   sendForSignature,
   setDeadline,
@@ -85,7 +86,9 @@ export async function prepareContract(formData: FormData) {
 
   revalidatePath(`/admin/projects/${projectId}`);
   if (result.ok) redirect(`/admin/contracts/${result.id}`);
-  redirect(`/admin/projects/${projectId}?contract=${result.why}`);
+  // Причину — в адрес: карточка проекта её покажет над формой.
+  const detail = result.problems?.length ? `&detail=${encodeURIComponent(result.problems.join("; "))}` : "";
+  redirect(`/admin/projects/${projectId}?contract=${result.why}${detail}#contract`);
 }
 
 export async function editContract(formData: FormData) {
@@ -184,6 +187,17 @@ export async function uploadEstimate(formData: FormData) {
   // строки не подтянулись, а не гадать, почему смета «пустая».
   const hint = "hint" in result && result.hint ? `?hint=${encodeURIComponent(result.hint)}` : "";
   redirect(result.ok ? `/admin/contracts/${id}${hint}` : `/admin/contracts/${id}?error=${result.why}`);
+}
+
+/** Строки сметы текстом — когда файл не разобрался или сметы файлом нет. */
+export async function pasteEstimate(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  const result = await setEstimateFromText(id, String(formData.get("rows") ?? ""), staff);
+  revalidatePath(`/admin/contracts/${id}`);
+  if (result.ok) redirect(`/admin/contracts/${id}`);
+  const hint = "hint" in result && result.hint ? result.hint : null;
+  redirect(hint ? `/admin/contracts/${id}?hint=${encodeURIComponent(hint)}` : `/admin/contracts/${id}?error=${result.why}`);
 }
 
 export async function saveDeadline(formData: FormData) {

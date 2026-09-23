@@ -24,6 +24,8 @@ export async function addProject(formData: FormData) {
     staff,
     {
       title: String(formData.get("title") ?? ""),
+      // Ведущего выбирает владелец; у остальных поля нет, и ведут они сами.
+      ownerStaffId: String(formData.get("owner") ?? "") || null,
       client: String(formData.get("client") ?? ""),
       amountUsd: numberOrNull(formData.get("amount")),
       deadline: String(formData.get("deadline") ?? "") || null,
@@ -51,11 +53,14 @@ export async function editProject(formData: FormData) {
   const staff = await requireStaff();
   const projectId = String(formData.get("project") ?? "");
 
-  const ok = await updateProject(
+  const owner = formData.get("owner");
+  const result = await updateProject(
     projectId,
     {
       title: String(formData.get("title") ?? ""),
       client: String(formData.get("client") ?? ""),
+      // Поле «Ведёт» есть только у владельца: без него ведущий не меняется.
+      ...(owner !== null ? { ownerStaffId: String(owner) } : {}),
       // Сумма отсюда больше не правится: у неё свой блок «Деньги» с проверкой,
       // кому и до какого момента её можно менять.
       deadline: String(formData.get("deadline") ?? "") || null,
@@ -66,7 +71,7 @@ export async function editProject(formData: FormData) {
   );
 
   revalidatePath(`/admin/projects/${projectId}`);
-  redirect(`/admin/projects/${projectId}?r=${ok ? "ok" : "failed"}`);
+  redirect(`/admin/projects/${projectId}?r=${result === "forbidden" ? "data_forbidden" : result}`);
 }
 
 /**

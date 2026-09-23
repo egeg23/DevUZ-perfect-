@@ -17,6 +17,7 @@ import {
   issueInvoiceAction,
   issueLinkAction,
   markInvoicePaidAction,
+  pasteEstimate,
   confirmInvoicePaymentAction,
   unmarkInvoicePaidAction,
   returnContract,
@@ -315,9 +316,32 @@ export default async function ContractPage({
               Загрузить смету
             </button>
             <span className="text-xs text-black/50">
-              CSV и TSV разбираются построчно, остальное прикладывается файлом
+              Excel, CSV и PDF с текстом разбираются построчно; скан прикладывается файлом
             </span>
           </form>
+
+          {/* Строки текстом: скан, Word или смета, которой нет файлом.
+              Из Excel строки копируются как есть — там они через табуляцию. */}
+          <details open={Boolean(hint)} className="text-sm">
+            <summary className="cursor-pointer text-black/70">Вставить строки сметы руками</summary>
+            <form action={pasteEstimate} className="mt-2 space-y-2">
+              <input type="hidden" name="id" value={contract.id} />
+              <textarea
+                name="rows"
+                required
+                rows={6}
+                placeholder={"Дизайн главной и внутренних\t1\t900\nВёрстка страниц; 6; 150\nИнтеграция оплаты; 1; 400"}
+                className="w-full rounded-lg border border-black/20 px-2 py-1 font-mono text-xs"
+              />
+              <p className="text-xs text-black/50">
+                Скопируйте строки из Excel или впишите по строке на позицию: название, количество, цена — через
+                табуляцию или «;». Строка «Итого» не нужна: сумму посчитаем сами.
+              </p>
+              <button type="submit" className="rounded-lg border border-black/30 px-3 py-1.5 text-sm">
+                Сохранить строки
+              </button>
+            </form>
+          </details>
 
           <form action={saveDeadline} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="id" value={contract.id} />

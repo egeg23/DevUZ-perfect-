@@ -21,7 +21,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
-import { pdfText, tooThin } from "@/lib/hiring/pdf";
+import { pdfRows, pdfText, tooThin } from "@/lib/hiring/pdf";
 
 /**
  * Самый маленький PDF, из которого копируется текст.
@@ -30,9 +30,10 @@ import { pdfText, tooThin } from "@/lib/hiring/pdf";
  * нельзя, а выдуманное всё равно пришлось бы чем-то рисовать.
  */
 function pdfWith(lines: string[]): ArrayBuffer {
-  const text = lines
-    .map((line, i) => `BT /F1 12 Tf 40 ${760 - i * 18} Td (${line}) Tj ET`)
-    .join("\n");
+  return pdfFrom(lines.map((line, i) => `BT /F1 12 Tf 40 ${760 - i * 18} Td (${line}) Tj ET`).join("\n"));
+}
+
+function pdfFrom(text: string): ArrayBuffer {
 
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
@@ -70,6 +71,34 @@ test("текст из PDF достаётся — по строкам, а не о
     "Kabirova Gulmira",
     "Sales manager, 14 years",
     "Tashkent, Uzbekistan",
+  ]);
+});
+
+/** PDF с таблицей: каждая ячейка — свой кусок текста со своей координатой x. */
+function pdfTable(rows: string[][], xs: number[]): ArrayBuffer {
+  const text = rows
+    .flatMap((row, r) => row.map((cell, c) => `BT /F1 11 Tf ${xs[c]} ${760 - r * 20} Td (${cell}) Tj ET`))
+    .join("\n");
+  return pdfFrom(text);
+}
+
+test("таблица из PDF — строки по высоте, ячейки по просветам", async () => {
+  // Смета в PDF: названия длинные, числа справа. Без ячеек «Design 2 500»
+  // слиплось бы в одно название без цены.
+  const rows = await pdfRows(
+    pdfTable(
+      [
+        ["Item", "Qty", "Price"],
+        ["Landing page design", "2", "500"],
+        ["Payment integration", "1", "400"],
+      ],
+      [40, 330, 420],
+    ),
+  );
+  assert.deepEqual(rows, [
+    ["Item", "Qty", "Price"],
+    ["Landing page design", "2", "500"],
+    ["Payment integration", "1", "400"],
   ]);
 });
 
