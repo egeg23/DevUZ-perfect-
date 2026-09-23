@@ -110,7 +110,7 @@ export type SearchRun = { campaign: string; requests: number; found: number; err
 export async function runSearch(campaign: Campaign, now: Date = new Date()): Promise<SearchRun> {
   const run: SearchRun = { campaign: campaign.id, requests: 0, found: 0 };
   const db = serviceClient();
-  if (!db || !placesConfigured() || campaign.exhausted) return run;
+  if (!db || campaign.exhausted || !(await placesConfigured())) return run;
 
   const queries = queriesFor(campaign.niche, campaign.city);
   const { data: state } = await db.from("maps_campaigns").select("variant, page_token").eq("id", campaign.id).maybeSingle();
@@ -179,7 +179,7 @@ async function savePlaces(campaignId: string, places: readonly FoundPlace[]): Pr
 
 /** Раз в день с 06:00 — каждой активной кампании свой проход, пока хватает лимита. */
 export async function runDailySearches(now: Date = new Date()): Promise<SearchRun[]> {
-  if (!placesConfigured() || tashkentHour(now) < SEARCH_HOUR) return [];
+  if (tashkentHour(now) < SEARCH_HOUR || !(await placesConfigured())) return [];
   const today = todayInTashkent(now);
   const due = (await listCampaigns()).filter(
     (c) => c.active && !c.exhausted && (!c.last_run_at || todayInTashkent(new Date(c.last_run_at)) < today),

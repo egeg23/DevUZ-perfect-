@@ -1,4 +1,5 @@
 import { normalizePhone } from "@/lib/audit/contacts";
+import { appSecret } from "@/lib/secrets";
 
 /**
  * Поиск компаний на Google Maps — Places API (New), Text Search.
@@ -119,12 +120,17 @@ export function siteOf(uri: string | undefined): string | null {
 
 export type SearchPage = { places: FoundPlace[]; nextPageToken: string | null };
 
-export function placesConfigured(): boolean {
-  return Boolean(process.env.GOOGLE_PLACES_API_KEY?.trim());
+/** Ключ Places: из .env, а если его там нет — из хранилища секретов Supabase. */
+export async function placesKey(): Promise<string | null> {
+  return appSecret("GOOGLE_PLACES_API_KEY");
+}
+
+export async function placesConfigured(): Promise<boolean> {
+  return Boolean(await placesKey());
 }
 
 export async function searchPlaces(query: string, pageToken: string | null): Promise<SearchPage> {
-  const key = process.env.GOOGLE_PLACES_API_KEY?.trim();
+  const key = await placesKey();
   if (!key) throw new Error("GOOGLE_PLACES_API_KEY не задан");
 
   const response = await fetch(ENDPOINT, {
