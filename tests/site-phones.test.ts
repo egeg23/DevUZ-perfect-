@@ -26,7 +26,12 @@ test("номера — в международном формате и наби�
   }
   assert.deepEqual(
     company.phones.map((p) => p.e164),
-    ["+998909123772", "+998909120578", "+79232330037"],
+    ["+998909123772", "+998909120578", "+79232330037", "+11517095555"],
+  );
+  // На американском номере WhatsApp нет — владелец, 23.09.
+  assert.deepEqual(
+    company.phones.filter((p) => !p.whatsapp).map((p) => p.e164),
+    ["+11517095555"],
   );
 });
 
@@ -42,6 +47,10 @@ test("WhatsApp открывается с уже набранным привет�
 test("номера есть в «Связаться», в подвале, в шапке на телефоне и в разметке для поиска", () => {
   assert.match(read("components/sections/contact.tsx"), /<PhoneList locale=\{locale\} dict=\{dict\} \/>/);
   assert.match(read("components/layout/footer.tsx"), /<PhoneLinesCompact dict=\{dict\} \/>/);
+  // Кнопка WhatsApp — только у номеров, где он есть: иначе клиент нажмёт и
+  // увидит «номер не зарегистрирован в WhatsApp».
+  const links = read("components/ui/phone-links.tsx");
+  assert.equal(links.match(/\{phone\.whatsapp \? \(/g)?.length, 2, "WhatsApp рисуется и у номеров без него");
   assert.match(read("components/layout/header.tsx"), /href=\{telUrl\(company\.phones\[0\]\)\}/);
   const schema = read("lib/schema.ts");
   assert.match(schema, /telephone: company\.phones\[0\]\.e164/);

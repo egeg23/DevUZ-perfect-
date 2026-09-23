@@ -28,7 +28,7 @@ const PHONE_ICON = (
   </svg>
 );
 
-/** Полный список: у каждого номера — «Позвонить» и «WhatsApp». Для блока «Связаться». */
+/** Полный список: у каждого номера — «Позвонить» и, если он есть, «WhatsApp». Для блока «Связаться». */
 export function PhoneList({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   return (
     <div>
@@ -55,16 +55,18 @@ export function PhoneList({ locale, dict }: { locale: Locale; dict: Dictionary }
                 {PHONE_ICON}
                 {dict.contact.call}
               </a>
-              <a
-                href={whatsappUrl(phone, dict.contact.whatsappText)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[0.8rem] text-muted transition-colors hover:border-[#25D366]/60 hover:text-[#25D366]"
-                aria-label={`WhatsApp: ${phone.display}`}
-              >
-                {WHATSAPP_ICON}
-                WhatsApp
-              </a>
+              {phone.whatsapp ? (
+                <a
+                  href={whatsappUrl(phone, dict.contact.whatsappText)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[0.8rem] text-muted transition-colors hover:border-[#25D366]/60 hover:text-[#25D366]"
+                  aria-label={`WhatsApp: ${phone.display}`}
+                >
+                  {WHATSAPP_ICON}
+                  WhatsApp
+                </a>
+              ) : null}
             </span>
           </li>
         ))}
@@ -85,16 +87,18 @@ export function PhoneLinesCompact({ dict }: { dict: Dictionary }) {
             </span>
             {phone.display}
           </a>
-          <a
-            href={whatsappUrl(phone, dict.contact.whatsappText)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-faint transition-colors hover:text-[#25D366]"
-            aria-label={`WhatsApp: ${phone.display}`}
-            title="WhatsApp"
-          >
-            {WHATSAPP_ICON}
-          </a>
+          {phone.whatsapp ? (
+            <a
+              href={whatsappUrl(phone, dict.contact.whatsappText)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-faint transition-colors hover:text-[#25D366]"
+              aria-label={`WhatsApp: ${phone.display}`}
+              title="WhatsApp"
+            >
+              {WHATSAPP_ICON}
+            </a>
+          ) : null}
         </li>
       ))}
     </>
