@@ -306,6 +306,7 @@ const ru = {
     offer: "Публичная оферта",
     licence: "Лицензия на код",
     madeIn: "Сделано в Ташкенте",
+    countries: "работаем в {n} странах",
   },
   about: {
     kicker: "о студии",
@@ -621,6 +622,7 @@ const en: Dictionary = {
     offer: "Public offer",
     licence: "Source code licence",
     madeIn: "Made in Tashkent",
+    countries: "working in {n} countries",
   },
   about: {
     kicker: "the studio",
@@ -930,6 +932,7 @@ const uz: Dictionary = {
     offer: "Ommaviy oferta",
     licence: "Kod litsenziyasi",
     madeIn: "Toshkentda yaratilgan",
+    countries: "{n} ta mamlakatda ishlaymiz",
   },
   about: {
     kicker: "studiya haqida",
@@ -1233,6 +1236,7 @@ const zh: Dictionary = {
     offer: "公开要约",
     licence: "源代码许可",
     madeIn: "塔什干出品",
+    countries: "业务覆盖 {n} 个国家",
   },
   about: {
     kicker: "关于工作室",

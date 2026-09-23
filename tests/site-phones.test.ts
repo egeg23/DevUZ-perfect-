@@ -56,3 +56,14 @@ test("ИИ-менеджер знает номера и не говорит, чт
     assert.equal("noPhone" in getDictionary(locale).contact, false, `${locale}: осталось «телефона нет»`);
   }
 });
+
+test("«работаем в 53 странах» — одним числом на главной, в подвале и у ИИ-менеджера", async () => {
+  const { headline, proof } = await import("@/content/company");
+  assert.equal(proof.countries, 53);
+  assert.ok(headline.some((h) => h.value === "53"), "числа нет среди главных");
+  for (const locale of LOCALES) {
+    assert.match(getDictionary(locale).footer.countries, /\{n\}/, `${locale}: число вписано в текст, а не подставляется`);
+  }
+  assert.match(read("components/layout/footer.tsx"), /footer\.countries\.replace\("\{n\}", String\(proof\.countries\)\)/);
+  assert.match(read("lib/qualify/prompt.ts"), /\$\{proof\.countries\} странах/);
+});

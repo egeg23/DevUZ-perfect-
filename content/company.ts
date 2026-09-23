@@ -166,6 +166,8 @@ export const proof = {
   projects: 550,
   /** Средний рост лидогенерации по нишам после аудита и работ, разы. */
   lift: [2, 4] as const,
+  /** В скольких странах работаем. Владелец, 23 сентября: «укажи, что работаем в 53 странах». */
+  countries: 53,
 };
 
 /**
@@ -215,6 +217,16 @@ export const headline = [
       en: "completed projects",
       uz: "yakunlangan loyiha",
       zh: "个已完成项目",
+    } satisfies LocalizedText,
+  },
+  {
+    value: String(proof.countries),
+    suffix: "",
+    label: {
+      ru: "стран, в которых работаем",
+      en: "countries we work in",
+      uz: "ishlayotgan mamlakatlarimiz",
+      zh: "个国家有我们的客户",
     } satisfies LocalizedText,
   },
 ] as const;

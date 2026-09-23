@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import { Container } from "@/components/ui/container";
 import { PhoneLinesCompact } from "@/components/ui/phone-links";
-import { company } from "@/content/company";
+import { company, proof } from "@/content/company";
 import type { Dictionary } from "@/content/dictionaries";
 import { services } from "@/content/services";
 import { localeHref, t, type Locale } from "@/lib/i18n";
@@ -112,7 +112,9 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
           <p>
             © {year} {company.name}. {dict.footer.rights}.
           </p>
-          <p className="font-mono">{dict.footer.madeIn} 🇺🇿</p>
+          <p className="font-mono">
+            {dict.footer.madeIn} 🇺🇿 · {dict.footer.countries.replace("{n}", String(proof.countries))}
+          </p>
         </div>
       </Container>
     </footer>
