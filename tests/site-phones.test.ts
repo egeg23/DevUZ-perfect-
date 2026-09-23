@@ -45,7 +45,12 @@ test("WhatsApp открывается с уже набранным привет�
 });
 
 test("номера есть в «Связаться», в подвале, в шапке на телефоне и в разметке для поиска", () => {
-  assert.match(read("components/sections/contact.tsx"), /<PhoneList locale=\{locale\} dict=\{dict\} \/>/);
+  const contact = read("components/sections/contact.tsx");
+  assert.match(contact, /<PhoneList locale=\{locale\} dict=\{dict\} \/>/);
+  // Номера — первыми, до заголовка про чат с ассистентом: «чтобы не
+  // возникало ощущения, что тебя снова ждёт только наш ИИ-бот».
+  assert.ok(contact.indexOf("<PhoneList") < contact.indexOf("<SectionHeading"), "номера ниже чата");
+  assert.ok(contact.indexOf("<PhoneList") < contact.indexOf("<ChatPanel"), "номера ниже чата");
   assert.match(read("components/layout/footer.tsx"), /<PhoneLinesCompact dict=\{dict\} \/>/);
   // Кнопка WhatsApp — только у номеров, где он есть: иначе клиент нажмёт и
   // увидит «номер не зарегистрирован в WhatsApp».

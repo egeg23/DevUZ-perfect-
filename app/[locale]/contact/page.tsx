@@ -37,7 +37,7 @@ export default async function ContactPage({
   // отступ под шапку — дублировать h1 на странице нельзя.
   return (
     <div className="pt-20">
-      <ContactSection locale={locale} dict={dict} />
+      <ContactSection locale={locale} dict={dict} standalone />
     </div>
   );
 }
