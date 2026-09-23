@@ -153,6 +153,11 @@ async function saveInbound(
 
   if (verdict !== "talk") {
     await tellManager(String(prospect.id), `Ответ по ${prospect.host}: ${HANDOVER_TEXT[verdict] ?? verdict}.\n\n${body.slice(0, 500)}`);
+  } else if (!prospect.ai_handling) {
+    // Модель разговор не ведёт — её отпустили или его забрал человек. Тогда
+    // кроме человека ответить некому, и молчать о сообщении нельзя: раньше
+    // оно ложилось в переписку, и клиент ждал, пока кто-то откроет карточку.
+    await tellManager(String(prospect.id), `Клиент написал — отвечаете вы:\n\n${body.slice(0, 500)}`);
   }
 
   return { matched: true, host: String(prospect.host), verdict };
@@ -280,10 +285,12 @@ export async function handOver(prospectId: string, reason: string, note: string)
 }
 
 /**
- * Строка тому, за кем закреплён лид, — и только ему.
+ * Строка тому, кто ведёт разговор, — и только ему.
  *
  * Не в общий чат: лид касания уже принадлежит человеку, и объявлять о нём
- * всей команде значит звать остальных на чужой разговор.
+ * всей команде значит звать остальных на чужой разговор. Ведёт тот, кто
+ * нажал «Отвечать самому» (handled_by), — это может быть руководитель или
+ * владелец, а не менеджер касания; иначе — тот, за кем касание.
  */
 export async function tellManager(prospectId: string, text: string): Promise<boolean> {
   const db = serviceClient();
@@ -291,15 +298,16 @@ export async function tellManager(prospectId: string, text: string): Promise<boo
 
   const { data: p } = await db
     .from("prospects")
-    .select("claimed_by, lead_id, host")
+    .select("claimed_by, handled_by, lead_id, host")
     .eq("id", prospectId)
     .maybeSingle();
-  if (!p?.claimed_by) return false;
+  const to = p?.handled_by ?? p?.claimed_by;
+  if (!p || !to) return false;
 
   const { data: staff } = await db
     .from("staff")
     .select("telegram_user_id")
-    .eq("id", p.claimed_by)
+    .eq("id", to)
     .eq("is_active", true)
     .maybeSingle();
   const chat = Number(staff?.telegram_user_id);
@@ -445,12 +453,14 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
  *
  * Без уведомления и без причины из словаря: это не передача от модели по
  * нужде, а решение человека, и объяснять его некому — он же его и принял.
+ * Зато запоминается, кто это: дальше каждое сообщение клиента уходит ему
+ * (tellManager), потому что модель больше не ответит.
  */
-export async function takeOverTalk(prospectId: string): Promise<void> {
+export async function takeOverTalk(prospectId: string, staffId: string): Promise<void> {
   const db = serviceClient();
   if (!db) return;
   await db
     .from("prospects")
-    .update({ ai_handling: false, handover_reason: "менеджер отвечает сам" })
+    .update({ ai_handling: false, handover_reason: "менеджер отвечает сам", handled_by: staffId })
     .eq("id", prospectId);
 }

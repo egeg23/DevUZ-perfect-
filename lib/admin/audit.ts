@@ -42,6 +42,7 @@ export const AUDIT_ACTIONS = [
   "download.served",
   "download.refused",
   "entitlement.revoked",
+  "entitlement.restored",
   "order.nudged",
   "prospect.audited",
   "signal.status_changed",
@@ -68,6 +69,9 @@ export const AUDIT_ACTIONS = [
   "prospect.taken_over",
   "invoice.issued",
   "invoice.paid",
+  // Оплата счёта стала платежом в проекте — или отметку сняли как ошибочную.
+  "invoice.payment_confirmed",
+  "invoice.unpaid",
   "contract.link_issued",
   "razbor.published",
   "razbor.rejected",

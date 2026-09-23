@@ -174,6 +174,17 @@ export default async function OrderPage({
 async function Download({ order, locale }: { order: OrderView; locale: Locale }) {
   const c = (key: keyof typeof orderPage) => t(orderPage[key], locale);
 
+  // Доступ закрыт в панели: ссылку не выпускаем вовсе. Раньше страница
+  // выпускала её заново с новой версией права, и отзыв не отрезал никого.
+  if (order.accessClosed) {
+    return (
+      <section className="mt-8 rounded-2xl border border-line bg-surface px-5 py-5">
+        <h2 className="font-medium">{c("download")}</h2>
+        <p className="mt-1 text-sm text-muted">{c("downloadClosed")}</p>
+      </section>
+    );
+  }
+
   const release = await currentRelease(order.productSlug);
   if (!release) {
     return (

@@ -603,6 +603,7 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
       request_no: requestNo,
       ai_handling: true,
       handover_reason: null,
+      handled_by: null,
       failure: null,
     })
     .eq("id", id)
@@ -736,6 +737,7 @@ export async function markSelfContacted(
       ...(requestNo ? { request_no: requestNo } : {}),
       ai_handling: true,
       handover_reason: null,
+      handled_by: null,
       failure: null,
     })
     .eq("id", id)

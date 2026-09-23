@@ -179,6 +179,22 @@ test("вердикт по входящему не остаётся в чисто
   assert.match(store, /if \(verdict !== "talk"\) \{\s*\n\s+await tellManager\(/);
 });
 
+test("после «Отвечать самому» каждое сообщение клиента уходит тому, кто перехватил", () => {
+  // Модель в таком разговоре молчит. Раньше обычный ответ клиента ложился в
+  // переписку, и никто о нём не знал, пока не открывал карточку.
+  const store = read("lib/admin/outreach-talk-store.ts");
+  assert.match(store, /\} else if \(!prospect\.ai_handling\) \{[\s\S]{0,400}?await tellManager\(/);
+  // Перехватить может руководитель или владелец — писать надо ему, а не
+  // менеджеру касания.
+  assert.match(store, /handover_reason: "менеджер отвечает сам", handled_by: staffId/);
+  assert.match(store, /const to = p\?\.handled_by \?\? p\?\.claimed_by;/);
+  assert.match(read("app/admin/leads/[id]/actions.ts"), /await takeOverTalk\(prospectId, staff\.id\);/);
+  // Новое касание начинается с модели и без прежнего «отвечает сам».
+  const outreach = read("lib/admin/outreach-store.ts");
+  assert.equal((outreach.match(/ai_handling: true,\s*handover_reason: null,\s*handled_by: null,/g) ?? []).length, 2);
+  assert.match(read("supabase/migrations/0058_prospect_handled_by.sql"), /add column if not exists handled_by uuid references public\.staff\(id\) on delete set null/);
+});
+
 test("свип думает, скаут носит: разделение обязанностей не размыто", () => {
   // На сайте — модель. У скаута пять зависимостей, и SDK модели среди них
   // быть не должно: он умеет только принять входящее и отдать исходящее.

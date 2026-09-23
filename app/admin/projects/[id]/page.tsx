@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { prepareContract } from "@/app/admin/contracts/actions";
 import { contractsForProject } from "@/lib/admin/contract-store";
+import { awaitingInvoicesFor } from "@/lib/admin/invoice-store";
 import { notFound } from "next/navigation";
 
 import { editProject, moveStage, saveQuote } from "../actions";
@@ -101,13 +102,14 @@ export default async function ProjectPage({
   const notice = r ? (RESULT[r] ?? RESULT.failed) : null;
 
   // Деньги: платежи и люди нужны, чтобы посчитать начисления по проекту.
-  const [payments, people, team, shares, partner, partners] = await Promise.all([
+  const [payments, people, team, shares, partner, partners, awaiting] = await Promise.all([
     paymentsFor([project.id]),
     loadPeople(),
     staff.role === "head" ? teamOf(staff.id) : Promise.resolve([] as string[]),
     sharesFor([project.id]),
     project.partner_id ? partnerById(project.partner_id) : Promise.resolve(null),
     staff.role === "admin" ? listPartners() : Promise.resolve([]),
+    awaitingInvoicesFor(project.id),
   ]);
   // Партнёрская строка: ступень партнёра считается по всем его проектам.
   const partnerProven = partner ? (await summarize([partner]))[0]?.proven ?? false : false;
@@ -601,6 +603,25 @@ export default async function ProjectPage({
           ) : (
             <p className="mt-2 text-xs text-faint">Платежей пока нет.</p>
           )}
+
+          {/* Оплату по счёту отметили, а платёж ещё не подтверждён: пока он
+              здесь, начисления по нему заморожены. */}
+          {awaiting.length ? (
+            <ul className="mt-3 flex flex-col gap-1.5">
+              {awaiting.map((invoice) => (
+                <li
+                  key={invoice.id}
+                  className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-xs text-gold"
+                >
+                  Счёт № {invoice.number} на {money(Math.round(invoice.amount_usd))} отмечен оплаченным
+                  {invoice.paid_by_name ? ` (${invoice.paid_by_name})` : ""} — платёж ещё не подтверждён.{" "}
+                  <Link href={`/admin/contracts/${invoice.contract_id}`} className="underline hover:text-text">
+                    {isAdmin ? "Подтвердить в договоре" : "Открыть договор"}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
           {isAdmin ? (
             <form action={confirmPayment} className="mt-3 grid gap-3 sm:grid-cols-5">

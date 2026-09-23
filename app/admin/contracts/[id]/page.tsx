@@ -7,7 +7,7 @@ import { helpAnchor } from "@/lib/admin/help";
 import { signatureVisible } from "@/lib/admin/contracts";
 import { sellerBank } from "@/lib/store/requisites";
 import { invoicesFor } from "@/lib/admin/invoice-store";
-import { BLOCK_TEXT, canIssue, stageAmountUsd } from "@/lib/admin/invoices";
+import { BLOCK_TEXT, canIssue, invoiceState, stageAmountUsd } from "@/lib/admin/invoices";
 import { siteUrl } from "@/lib/seo";
 import { contractById } from "@/lib/admin/contract-store";
 import { approvesContract } from "@/lib/admin/contracts";
@@ -17,6 +17,8 @@ import {
   issueInvoiceAction,
   issueLinkAction,
   markInvoicePaidAction,
+  confirmInvoicePaymentAction,
+  unmarkInvoicePaidAction,
   returnContract,
   saveDeadline,
   sendToOwner,
@@ -41,12 +43,27 @@ export const dynamic = "force-dynamic";
  * линия, и это видно на просвет: черновик нельзя выдать за подписанный,
  * просто распечатав.
  */
+/** Что сказать после «Оплачен» — у владельца и у сотрудника исход разный. */
+const PAID_TEXT: Record<string, string> = {
+  confirmed: "Оплата записана платежом в проект — она в «Деньгах», начисления команде по ней открыты.",
+  awaiting: "Оплата отмечена. Владельцу ушло сообщение: платёж попадёт в проект, когда он его подтвердит.",
+  unmarked: "Отметка об оплате снята.",
+};
+
 export default async function ContractPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; detail?: string; hint?: string; sent?: string; signed?: string; link?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    detail?: string;
+    hint?: string;
+    sent?: string;
+    signed?: string;
+    link?: string;
+    paid?: string;
+  }>;
 }) {
   const staff = await requireStaff();
   const { id } = await params;
@@ -62,7 +79,7 @@ export default async function ContractPage({
   const seller = sellerBank();
   const invoices = await invoicesFor(contract.id);
   const issuedStages = invoices.map((invoice) => invoice.stage_index);
-  const { error, detail, hint, sent, signed: justSigned, link } = await searchParams;
+  const { error, detail, hint, sent, signed: justSigned, link, paid } = await searchParams;
   const canApprove = approvesContract(staff.role);
 
   return (
@@ -201,8 +218,35 @@ export default async function ContractPage({
                         >
                           Счёт № {invoice.number}
                         </a>
-                        {invoice.paid_at ? (
-                          <span className="text-xs text-green-700">оплачен</span>
+                        {invoiceState(invoice) === "confirmed" ? (
+                          <span className="text-xs text-green-700">оплачен · платёж в проекте</span>
+                        ) : invoiceState(invoice) === "awaiting" ? (
+                          <>
+                            <span className="text-xs text-amber-800">
+                              оплачен · ждёт подтверждения владельца
+                            </span>
+                            {staff.role === "admin" ? (
+                              <>
+                                <form action={confirmInvoicePaymentAction}>
+                                  <input type="hidden" name="id" value={contract.id} />
+                                  <input type="hidden" name="invoice" value={invoice.id} />
+                                  <button
+                                    type="submit"
+                                    className="rounded-lg bg-black px-3 py-1 text-xs font-semibold text-white"
+                                  >
+                                    Подтвердить платёж
+                                  </button>
+                                </form>
+                                <form action={unmarkInvoicePaidAction}>
+                                  <input type="hidden" name="id" value={contract.id} />
+                                  <input type="hidden" name="invoice" value={invoice.id} />
+                                  <button type="submit" className="text-xs text-black/60 underline">
+                                    Оплаты не было
+                                  </button>
+                                </form>
+                              </>
+                            ) : null}
+                          </>
                         ) : (
                           <>
                             <span className="text-xs text-black/50">до {invoice.due_at}</span>
@@ -312,6 +356,10 @@ export default async function ContractPage({
         </p>
       ) : null}
 
+      {paid && PAID_TEXT[paid] ? (
+        <p className="no-print mx-auto mb-4 max-w-[210mm] text-sm text-green-800">{PAID_TEXT[paid]}</p>
+      ) : null}
+
       {error ? (
         <p className="no-print mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900">
           {error === "invalid" && detail
@@ -320,7 +368,9 @@ export default async function ContractPage({
               ? "Подтвердить договор может только владелец."
               : error === "locked"
                 ? "Договор уже подтверждён или отменён."
-                : "Не получилось. Попробуйте ещё раз."}
+                : /^[a-z_]+$/.test(error)
+                  ? "Не получилось. Попробуйте ещё раз."
+                  : error}
         </p>
       ) : null}
 

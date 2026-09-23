@@ -4,8 +4,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import type { ContractStage } from "@/content/contract";
-import { requireAdmin, requireStaff } from "@/lib/admin/guard";
-import { issueAccessLink, issueInvoice, markPaid } from "@/lib/admin/invoice-store";
+import { requestIp, requireAdmin, requireStaff } from "@/lib/admin/guard";
+import {
+  confirmInvoicePayment,
+  issueAccessLink,
+  issueInvoice,
+  markPaid,
+  unmarkPaid,
+  type PaidResult,
+} from "@/lib/admin/invoice-store";
 import {
   approveContract,
   createContract,
@@ -235,13 +242,41 @@ export async function issueInvoiceAction(formData: FormData) {
   redirect(result.ok ? `/admin/contracts/${id}` : `/admin/contracts/${id}?error=${encodeURIComponent(result.why)}`);
 }
 
-/** Оплату отмечает тот, кто её увидел в банке. */
+function afterPaid(contractId: string, result: PaidResult, done: string): never {
+  revalidatePath(`/admin/contracts/${contractId}`);
+  redirect(
+    result.ok
+      ? `/admin/contracts/${contractId}?paid=${done}`
+      : `/admin/contracts/${contractId}?error=${encodeURIComponent(result.why)}`,
+  );
+}
+
+/**
+ * Оплату отмечает тот, кто её увидел в банке. У владельца отметка сразу
+ * становится платежом в проекте, у сотрудника — ждёт подтверждения
+ * владельца (lib/admin/invoice-store.ts, markPaid).
+ */
 export async function markInvoicePaidAction(formData: FormData) {
   const staff = await requireStaff();
   const id = String(formData.get("id") ?? "");
-  await markPaid(String(formData.get("invoice") ?? ""), staff);
-  revalidatePath(`/admin/contracts/${id}`);
-  redirect(`/admin/contracts/${id}`);
+  const result = await markPaid(String(formData.get("invoice") ?? ""), staff, await requestIp());
+  afterPaid(id, result, result.ok && result.confirmed ? "confirmed" : "awaiting");
+}
+
+/** «Подтвердить платёж» — оплату отметил сотрудник, владелец записывает её в проект. */
+export async function confirmInvoicePaymentAction(formData: FormData) {
+  const staff = await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const result = await confirmInvoicePayment(String(formData.get("invoice") ?? ""), staff, await requestIp());
+  afterPaid(id, result, "confirmed");
+}
+
+/** «Оплаты не было» — снять ошибочную отметку, пока платёж не подтверждён. */
+export async function unmarkInvoicePaidAction(formData: FormData) {
+  const staff = await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const result = await unmarkPaid(String(formData.get("invoice") ?? ""), staff, await requestIp());
+  afterPaid(id, result, "unmarked");
 }
 
 /**

@@ -75,6 +75,8 @@ export type OrderPageCopy = {
   /** Остаток выдач. {total} и {today} подставляются числами. */
   downloadLeft: LocalizedText;
   downloadPreparing: LocalizedText;
+  /** Доступ к файлам закрыт в панели — вместо кнопки. */
+  downloadClosed: LocalizedText;
   documents: LocalizedText;
   offer: LocalizedText;
   licence: LocalizedText;
@@ -276,6 +278,12 @@ export const orderPage: OrderPageCopy = {
     en: "We are preparing the file. Message us if you have been waiting more than a day.",
     uz: "Faylni tayyorlayapmiz. Bir kundan ko‘p kutayotgan bo‘lsangiz, bizga yozing.",
     zh: "文件正在准备中。如果等待超过一天，请联系我们。",
+  },
+  downloadClosed: {
+    ru: "Доступ к файлам закрыт. Если это ошибка — напишите нам.",
+    en: "Access to the files has been closed. If this is a mistake, message us.",
+    uz: "Fayllarga kirish yopildi. Agar bu xato bo‘lsa, bizga yozing.",
+    zh: "文件访问已关闭。如有误，请联系我们。",
   },
   documents: { ru: "Документы", en: "Documents", uz: "Hujjatlar", zh: "文件" },
   offer: { ru: "Публичная оферта", en: "Public offer", uz: "Ommaviy oferta", zh: "公开要约" },

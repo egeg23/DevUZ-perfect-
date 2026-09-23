@@ -7,6 +7,9 @@ import {
   canIssue,
   dueDate,
   invoiceNumber,
+  invoicePaymentNote,
+  invoicePurpose,
+  invoiceState,
   overdue,
   stageAmountUsd,
 } from "@/lib/admin/invoices";
@@ -183,4 +186,50 @@ test("текст договора один на панель и на ссылк�
   // параметром. Знай он про роли — проверка доступа оказалась бы в вёрстке.
   const doc = read("components/docs/contract-document.tsx");
   assert.doesNotMatch(doc, /requireStaff|currentStaff|access_hash/);
+});
+
+test("оплата счёта: отмечена → ждёт владельца → платёж в проекте", () => {
+  assert.equal(invoiceState({ paid_at: null, payment_id: null }), "unpaid");
+  assert.equal(invoiceState({ paid_at: "2026-09-23T10:00:00Z", payment_id: null }), "awaiting");
+  assert.equal(invoiceState({ paid_at: "2026-09-23T10:00:00Z", payment_id: "p1" }), "confirmed");
+});
+
+test("назначение платежа по этапу: аванс, середина, остаток", () => {
+  assert.equal(invoicePurpose(0, 3), "advance");
+  assert.equal(invoicePurpose(1, 3), "other");
+  assert.equal(invoicePurpose(2, 3), "rest");
+  assert.equal(invoicePurpose(1, 2), "rest");
+  // Договор из одного этапа: этап оплачивается вперёд — это аванс.
+  assert.equal(invoicePurpose(0, 1), "advance");
+  assert.equal(invoicePaymentNote("DZ-7-2", "DZ-7"), "Счёт № DZ-7-2 по договору № DZ-7");
+});
+
+test("«Оплачен» у владельца — сразу платёж, у сотрудника — ждёт владельца", () => {
+  const store = read("lib/admin/invoice-store.ts");
+  const mark = store.slice(store.indexOf("export async function markPaid"), store.indexOf("async function tellOwnerAboutPayment"));
+  // Отметку ставит любой, кто увидел деньги; платёж подтверждает владелец.
+  assert.match(mark, /if \(staff\.role === "admin"\) \{\s*const confirmed = await confirmInvoicePayment/);
+  assert.match(mark, /tellOwnerAboutPayment/);
+  assert.match(mark, /\.is\("paid_at", null\)/);
+
+  const confirm = store.slice(store.indexOf("export async function confirmInvoicePayment"), store.indexOf("export async function unmarkPaid"));
+  assert.match(confirm, /if \(staff\.role !== "admin"\) return/);
+  // Ссылка на платёж ставится только туда, где её нет; лишний платёж удаляется.
+  assert.match(confirm, /\.is\("payment_id", null\)/);
+  assert.match(confirm, /removePayment\(payment\.paymentId/);
+
+  const unmark = store.slice(store.indexOf("export async function unmarkPaid"));
+  assert.match(unmark, /if \(staff\.role !== "admin"\) return/);
+  assert.match(unmark, /\.is\("payment_id", null\)/);
+
+  const actions = read("app/admin/contracts/actions.ts");
+  for (const name of ["confirmInvoicePaymentAction", "unmarkInvoicePaidAction"]) {
+    const body = actions.slice(actions.indexOf(`export async function ${name}`));
+    assert.match(body, /^[^]*?\{\s*const staff = await requireAdmin\(\);/, `${name} без проверки владельца`);
+  }
+
+  const sql = read("supabase/migrations/0057_invoice_payment.sql");
+  assert.match(sql, /payment_id uuid references public\.project_payments\(id\) on delete set null/);
+  assert.match(sql, /paid_by uuid references public\.staff\(id\) on delete set null/);
+  assert.match(sql, /unique index if not exists contract_invoices_payment_key/);
 });

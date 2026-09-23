@@ -30,6 +30,8 @@ export type Order = {
   delivered_at: string | null;
   buyer_chat_id: number | null;
   entitlement_version: number;
+  /** Доступ к файлам закрыт кнопкой «отозвать доступ». */
+  access_closed_at: string | null;
 };
 
 /**
@@ -43,7 +45,7 @@ export type Order = {
  * защищал бы клиента от нас в тот момент, когда он сам к нам пришёл.
  */
 const COLUMNS =
-  "id, created_at, request_no, product_slug, price_usd, locale, company, tax_id, country, contact_name, contact, payment, comment, status, assigned_staff_id, invoice_no, invoice_issued_at, paid_at, paid_ref, delivered_at, buyer_chat_id, entitlement_version, staff!orders_assigned_staff_id_fkey(display_name)";
+  "id, created_at, request_no, product_slug, price_usd, locale, company, tax_id, country, contact_name, contact, payment, comment, status, assigned_staff_id, invoice_no, invoice_issued_at, paid_at, paid_ref, delivered_at, buyer_chat_id, entitlement_version, access_closed_at, staff!orders_assigned_staff_id_fkey(display_name)";
 
 function shape(row: Record<string, unknown>): Order {
   const joined = row.staff as unknown;
@@ -76,6 +78,7 @@ function shape(row: Record<string, unknown>): Order {
     delivered_at: (row.delivered_at as string | null) ?? null,
     buyer_chat_id: (row.buyer_chat_id as number | null) ?? null,
     entitlement_version: (row.entitlement_version as number | null) ?? 1,
+    access_closed_at: (row.access_closed_at as string | null) ?? null,
   };
 }
 
@@ -458,6 +461,12 @@ export async function reissueOrderLink(
  * хранилище при этом не ходим и файлы не трогаем — отзыв не должен зависеть
  * от доступности стороннего сервиса.
  *
+ * Одной версии мало: страница заказа выпускает ссылку заново при каждом
+ * открытии, уже с новой версией, и отозванный покупатель качал бы дальше.
+ * Поэтому отзыв ещё и закрывает доступ (access_closed_at): страница вместо
+ * кнопки говорит «доступ закрыт», выдача отказывает. Вернуть —
+ * restoreEntitlement.
+ *
  * Уже выпущенные подписанные ссылки Supabase живут свою минуту и умирают
  * сами. Отозвать их нельзя (это подтверждает документация хранилища), и
  * именно поэтому покупателю они никогда не выдаются напрямую.
@@ -479,7 +488,7 @@ export async function revokeEntitlement(
   const next = (before.entitlement_version ?? 1) + 1;
   const { error } = await db
     .from("orders")
-    .update({ entitlement_version: next, assigned_staff_id: staff.id })
+    .update({ entitlement_version: next, access_closed_at: new Date().toISOString(), assigned_staff_id: staff.id })
     .eq("id", orderId);
   if (error) return fail(error.message);
 
@@ -490,5 +499,30 @@ export async function revokeEntitlement(
     ip,
     meta: { from: before.entitlement_version, to: next },
   });
+  return OK;
+}
+
+/**
+ * Вернуть доступ к файлам.
+ *
+ * Версия права остаётся поднятой: ссылки, выданные до отзыва (в том числе
+ * утёкшие — ради них отзыв часто и нажимают), так и остаются мёртвыми, а
+ * покупатель получает новую со своей страницы заказа.
+ */
+export async function restoreEntitlement(orderId: string, staff: Staff, ip: string): Promise<OpResult> {
+  const db = serviceClient();
+  if (!db) return fail("Нет базы.");
+
+  const { data, error } = await db
+    .from("orders")
+    .update({ access_closed_at: null, assigned_staff_id: staff.id })
+    .eq("id", orderId)
+    .not("access_closed_at", "is", null)
+    .select("id")
+    .maybeSingle();
+  if (error) return fail(error.message);
+  if (!data) return fail("Доступ и так открыт.");
+
+  await record("entitlement.restored", { actorStaffId: staff.id, targetType: "order", targetId: orderId, ip });
   return OK;
 }

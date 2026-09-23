@@ -38,13 +38,15 @@ export type OrderView = {
   /** Одноразовый код диплинка. null — уже привязан или заказ старше этой функции. */
   bindCode: string | null;
   entitlementVersion: number;
+  /** Доступ к файлам закрыт кнопкой «отозвать доступ» в панели. */
+  accessClosed: boolean;
 };
 
 // Одной строкой без склейки: Supabase выводит форму результата из литерала
 // селекта, и конкатенация превращает его в обычный string — вместе с типом
 // ответа.
 const COLUMNS =
-  "id, created_at, request_no, product_slug, price_usd, locale, company, tax_id, country, contact_name, contact, payment, comment, status, offer_version, offer_accepted_at, invoice_no, invoice_issued_at, paid_at, delivered_at, buyer_chat_id, bind_code, entitlement_version";
+  "id, created_at, request_no, product_slug, price_usd, locale, company, tax_id, country, contact_name, contact, payment, comment, status, offer_version, offer_accepted_at, invoice_no, invoice_issued_at, paid_at, delivered_at, buyer_chat_id, bind_code, entitlement_version, access_closed_at";
 
 function shape(row: Record<string, unknown>): OrderView {
   return {
@@ -73,6 +75,7 @@ function shape(row: Record<string, unknown>): OrderView {
     // Колонка not null default 1, но строки, прочитанные до применения
     // миграции на реплике, могут прийти без неё.
     entitlementVersion: (row.entitlement_version as number | null) ?? 1,
+    accessClosed: Boolean(row.access_closed_at),
   };
 }
 

@@ -362,7 +362,7 @@ export async function setDeadline(id: string, text: string, staff: Staff): Promi
 }
 
 /** Личный чат владельца. Берётся из базы, а не из переменной окружения. */
-async function ownerChatId(): Promise<number | null> {
+export async function ownerChatId(): Promise<number | null> {
   const db = serviceClient();
   if (!db) return null;
   const { data } = await db
