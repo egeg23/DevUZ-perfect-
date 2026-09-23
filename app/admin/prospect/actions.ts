@@ -227,6 +227,10 @@ export async function createMapsCampaignAction(formData: FormData) {
     String(formData.get("city") ?? ""),
     staff,
   );
+  if (created.ok && created.existed) {
+    revalidatePath("/admin/prospect");
+    redirect("/admin/prospect?maps=exists#maps");
+  }
   if (created.ok) {
     // Первый проход — сразу, а не завтра в шесть: человек только что завёл
     // кампанию и хочет видеть, что она ищет.

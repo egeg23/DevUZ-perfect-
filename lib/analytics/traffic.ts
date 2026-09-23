@@ -1,6 +1,7 @@
 import { createSign } from "node:crypto";
 
 import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
+import { appSecret } from "@/lib/secrets";
 
 /**
  * Трафик сайта из Яндекс Метрики и Google Analytics — на дашборд владельца.
@@ -95,12 +96,14 @@ function metrikaTotals(t: number[] | undefined): TrafficTotals {
   return { visits: t[0] ?? 0, users: t[1] ?? 0, pageviews: t[2] ?? 0, bounce: t[3] ?? 0, duration: t[4] ?? 0 };
 }
 
-export function metrikaConfigured(): boolean {
-  return Boolean(process.env.YANDEX_METRIKA_TOKEN?.trim());
+// Ключи — из .env, а если их там нет — из хранилища секретов Supabase
+// (lib/secrets.ts): так их можно подключить без доступа к серверу.
+export async function metrikaConfigured(): Promise<boolean> {
+  return Boolean(await appSecret("YANDEX_METRIKA_TOKEN"));
 }
 
 export async function loadMetrika(days: number, now: Date = new Date()): Promise<TrafficResult> {
-  const token = process.env.YANDEX_METRIKA_TOKEN?.trim();
+  const token = await appSecret("YANDEX_METRIKA_TOKEN");
   if (!token) return { ok: false, reason: "not_configured" };
   const id = (process.env.YANDEX_METRIKA_ID || process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID || DEFAULT_COUNTER).trim();
   const d = periodDates(days, now);
@@ -181,8 +184,9 @@ export function parseServiceAccount(raw: string | undefined): ServiceAccount | n
   return null;
 }
 
-export function gaConfigured(): boolean {
-  return Boolean(process.env.GA4_PROPERTY_ID?.trim() && parseServiceAccount(process.env.GA_SERVICE_ACCOUNT));
+export async function gaConfigured(): Promise<boolean> {
+  const [property, account] = await Promise.all([appSecret("GA4_PROPERTY_ID"), appSecret("GA_SERVICE_ACCOUNT")]);
+  return Boolean(property && parseServiceAccount(account ?? undefined));
 }
 
 const b64url = (input: string | Buffer) => Buffer.from(input).toString("base64url");
@@ -234,8 +238,8 @@ function gaDate(value: string): string {
 }
 
 export async function loadGa(days: number, now: Date = new Date()): Promise<TrafficResult> {
-  const property = process.env.GA4_PROPERTY_ID?.trim();
-  const account = parseServiceAccount(process.env.GA_SERVICE_ACCOUNT);
+  const [property, raw] = await Promise.all([appSecret("GA4_PROPERTY_ID"), appSecret("GA_SERVICE_ACCOUNT")]);
+  const account = parseServiceAccount(raw ?? undefined);
   if (!property || !account) return { ok: false, reason: "not_configured" };
   const d = periodDates(days, now);
 

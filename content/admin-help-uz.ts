@@ -257,7 +257,7 @@ export const uz: HelpCopy = {
           body: [
             "«Трафик» varag‘i: 7, 30 yoki 90 kun uchun tashriflar, tashrifchilar, ko‘rishlar, rad etishlar va tashrifning o‘rtacha vaqti, strelkalar — undan oldingi xuddi shunday davrga nisbatan. Rad etishlarda o‘sish — qizil rangda.",
             "Metrika va Analytics yonma-yon turadi va qo‘shilmaydi: ular tashriflarni har xil hisoblaydi, yig‘indisi esa na u yerda, na bu yerda yo‘q raqam bo‘lardi. Har 10 daqiqada yangilanadi.",
-            "Ulanmagan bo‘lsa — kartochkada bir marta nima qilish kerakligi yozilgan: Metrika uchun — `YANDEX_METRIKA_TOKEN` va `YANDEX_METRIKA_ID`, Analytics uchun — `GA4_PROPERTY_ID` va `GA_SERVICE_ACCOUNT`, serverdagi `/opt/devuz/.env` faylida.",
+            "Ulanmagan bo‘lsa — kartochkada bir marta nima qilish kerakligi yozilgan: Metrika uchun — `YANDEX_METRIKA_TOKEN` (hisoblagich raqamini panel o‘zi biladi), Analytics uchun — `GA4_PROPERTY_ID` va `GA_SERVICE_ACCOUNT`, serverdagi `/opt/devuz/.env` faylida. Yoki Supabase maxfiy ma’lumotlar omborida (Vault) `app.` old qo‘shimchasi bilan — masalan, `app.YANDEX_METRIKA_TOKEN`: `.env`da kalit bo‘lmasa, panel uni o‘sha yerdan oladi.",
           ],
         },
         {
@@ -513,13 +513,13 @@ export const uz: HelpCopy = {
           roles: ["head", "admin"],
           body: {
             head: [
-              "Kampaniyalarni siz va egasi ochasiz: **nisha va shahar** (masalan, «stomatologiya», «Toshkent») → «Искать». Studiyaga qaysi nishalar kerakligini hal qilish — sizning ishingiz: har bir kampaniya — pullik API’ga so‘rovlar va zaxirada yuzlab kompaniyalar.",
+              "Kampaniyalarni siz va egasi ochasiz: **nisha va shahar** (masalan, «stomatologiya», «Toshkent») → «Искать». Studiyaga qaysi nishalar kerakligini hal qilish — sizning ishingiz: har bir kampaniya — pullik API’ga so‘rovlar va zaxirada yuzlab kompaniyalar. Bir shahardagi bir xil nisha ikkinchi marta ochilmaydi — panel allaqachon ochilganini ko‘rsatadi.",
               "Har kuni soat 06:00 da tizim Google Maps’da kompaniyalarni qidiradi — har kampaniyaga natijalarning uch sahifasigacha, Toshkent uchun yana tumanlar bo‘yicha ham. Topilganlar fonda bir o‘tishda beshta saytdan tekshiriladi: saytli kompaniya zaxiraga faqat saytda yozadigan narsa bo‘lsa tushadi; saytsiz — xaritadagi telefoni bilan. Yopilgan kompaniyalar va sayt o‘rniga ijtimoiy tarmoq ko‘rsatilganlar o‘tkazib yuboriladi.",
               "Kampaniya qatorida: «найдено N · в пуле M». «выдача исчерпана» — yangi nisha ochish vaqti keldi. «искать сейчас» — ertalabni kutmaslik; «пауза» / «возобновить».",
               "Chegara — kuniga 25 ta so‘rov, har birida 20 tadan kompaniya. Avtoqidiruvni egasi ulaydi: blokda «Не подключено» yozilgan bo‘lsa, unga ayting.",
             ],
             admin: [
-              "Kampaniya — **nisha va shahar** → «Искать». Har kuni soat 06:00 da (dam olish kunlari ham) tizim Google Maps orqali kompaniyalarni qidiradi: har kampaniyaga uch sahifagacha, Toshkent uchun — butun shahardan keyin 12 ta tuman bo‘yicha. Topilganlar fonda tekshiriladi, bir o‘tishda beshta saytdan; zaxiraga yozadigan narsasi bor saytlar va saytsiz kompaniyalar — xaritadagi telefoni bilan tushadi.",
+              "Kampaniya — **nisha va shahar** → «Искать». Har kuni soat 06:00 da (dam olish kunlari ham) tizim Google Maps orqali kompaniyalarni qidiradi: har kampaniyaga uch sahifagacha, Toshkent uchun — butun shahardan keyin 12 ta tuman bo‘yicha. Topilganlar fonda tekshiriladi, bir o‘tishda beshta saytdan; zaxiraga yozadigan narsasi bor saytlar va saytsiz kompaniyalar — xaritadagi telefoni bilan tushadi. Bir shahardagi bir xil nisha ikkinchi marta ochilmaydi.",
               "Chegara — kuniga 25 ta so‘rov (`MAPS_DAILY_REQUESTS`), bu oyiga taxminan 750 ta — Google’ning bepul mingtaligi ichida. Bitta so‘rov — 20 tagacha kompaniya.",
               "Bir marta ulash: Google Cloud → «Places API (New)» ni yoqing va to‘lov kartasini bog‘lang → «Credentials» → faqat Places API (New) bilan cheklangan «API key» → `/opt/devuz/.env` fayliga `GOOGLE_PLACES_API_KEY=kalit` yozing va `docker compose up -d` (yoki keyingi yangilanish chiqishini kuting). Hozir kalit Supabase maxfiy ma’lumotlar omborida turibdi (Vault, nomi `app.GOOGLE_PLACES_API_KEY`): `.env`da kalit bo‘lmasa, panel uni o‘sha yerdan oladi.",
             ],

@@ -4,6 +4,7 @@ import {
   toggleMapsCampaignAction,
 } from "@/app/admin/prospect/actions";
 import type { Campaign } from "@/lib/maps/store";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
 
@@ -18,6 +19,7 @@ const NOTICE: Record<string, { text: string; tone: "ok" | "warn" }> = {
   failed: { text: "Google Maps не ответил. Проверьте ключ в .env или попробуйте позже.", tone: "warn" },
   invalid: { text: "Нужны ниша и город.", tone: "warn" },
   gone: { text: "Такой кампании уже нет.", tone: "warn" },
+  exists: { text: "Такая кампания уже заведена — она в списке ниже. Если на паузе, нажмите «возобновить».", tone: "warn" },
 };
 
 /**
@@ -140,12 +142,11 @@ export function MapsCampaigns({
         <form action={createMapsCampaignAction} className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
           <input name="niche" required placeholder="Ниша: стоматология" className={INPUT} aria-label="Ниша" />
           <input name="city" required defaultValue="Ташкент" className={INPUT} aria-label="Город" />
-          <button
-            type="submit"
-            className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-xs transition hover:border-green/40 hover:text-green"
-          >
+          {/* Пока идёт первый поиск, кнопка неактивна: иначе второе нажатие
+              заводило вторую такую же кампанию. */}
+          <SubmitButton pendingLabel="Ищем…" base="rounded-lg px-3 py-2 text-xs" tone="quiet">
             Искать
-          </button>
+          </SubmitButton>
         </form>
       ) : null}
     </section>

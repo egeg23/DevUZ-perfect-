@@ -165,3 +165,13 @@ test("ключ Places: .env важнее хранилища, без обоих �
   assert.match(migration, /grant execute on function public\.app_secret\(text\) to service_role;/);
   assert.doesNotMatch(migration, /AIza/, "ключ попал в миграцию");
 });
+
+test("та же ниша в том же городе второй раз не заводится", () => {
+  // 23 сентября «Стамотология · Ташкент» завелась дважды за полторы секунды —
+  // двойное нажатие «Искать».
+  const store = read("lib/maps/store.ts");
+  const create = store.slice(store.indexOf("export async function createCampaign"));
+  assert.ok(create.indexOf("existed: true") > 0 && create.indexOf("existed: true") < create.indexOf(".insert("));
+  assert.match(read("app/admin/prospect/actions.ts"), /created\.existed[\s\S]{0,120}maps=exists/);
+  assert.match(read("components/admin/maps-campaigns.tsx"), /<SubmitButton pendingLabel="Ищем…"/);
+});
