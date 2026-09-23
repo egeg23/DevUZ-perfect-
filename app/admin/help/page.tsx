@@ -67,6 +67,13 @@ export default async function HelpPage({
       {parseInline(para).map((part, i) => {
         if (part.kind === "text") return <span key={i}>{part.text}</span>;
         if (part.kind === "bold") return <b key={i} className="font-medium text-text">{part.text}</b>;
+        if (part.kind === "code") {
+          return (
+            <code key={i} className="break-all rounded bg-surface-2 px-1 py-0.5 font-mono text-[0.8em] text-text">
+              {part.text}
+            </code>
+          );
+        }
         if (part.href.startsWith("#")) {
           return (
             <a key={i} href={part.href} className="text-green underline-offset-2 hover:underline">

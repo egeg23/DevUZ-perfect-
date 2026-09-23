@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 
 import { ContractDocument } from "@/components/docs/contract-document";
 import { PrintButton } from "@/components/store/print-button";
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { signatureVisible } from "@/lib/admin/contracts";
 import { sellerBank } from "@/lib/store/requisites";
 import { invoicesFor } from "@/lib/admin/invoice-store";
@@ -67,6 +69,9 @@ export default async function ContractPage({
     <>
       <div className="no-print mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center gap-3 px-[20mm]">
         <PrintButton label="Печать" />
+        <span className="inline-flex items-center gap-1.5 text-sm text-black/60">
+          Как пользоваться <HelpHint topic={helpAnchor("/admin/contracts", "review")} label="Как пользоваться разделом" />
+        </span>
         <span className="text-sm text-black/60">
           {contract.status === "draft" && "Черновик — подписи нет"}
           {contract.status === "pending" && "Отправлен владельцу на подпись"}
@@ -159,7 +164,10 @@ export default async function ContractPage({
       {contract.status === "approved" || contract.status === "signed" ? (
         <div className="no-print mx-auto mb-6 max-w-[210mm] px-[20mm]">
           <div className="rounded-xl border border-black/15 px-4 py-3">
-            <p className="text-sm font-bold">Счета на оплату</p>
+            <p className="flex items-center gap-2 text-sm font-bold">
+              Счета на оплату
+              <HelpHint topic={helpAnchor("/admin/contracts", "invoices")} label="Как работают счета" />
+            </p>
             <p className="mt-1 text-xs text-black/60">
               По договору каждый этап оплачивается авансом в 100% его стоимости, поэтому
               счёт выставляется на этап, а не на всю сумму. Счёт на первый этап выставлен

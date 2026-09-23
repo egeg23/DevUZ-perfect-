@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { loadGa, loadMetrika, type TrafficReport, type TrafficResult, type TrafficTotals } from "@/lib/analytics/traffic";
 
 const CARD = "rounded-xl border border-line bg-surface px-5 py-4";
@@ -201,7 +203,8 @@ export function TrafficView({ days, ym, ga }: { days: TrafficPeriod; ym: Traffic
     <div className="mb-8 space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-sm text-muted">
-          Последние {days} дней, стрелки — против {days} дней до них. Обновляется раз в 10 минут.
+          Последние {days} дней, стрелки — против {days} дней до них. Обновляется раз в 10 минут.{" "}
+          <HelpHint topic={helpAnchor("/admin", "traffic")} label="Откуда цифры и как подключить" />
         </p>
         <nav className="flex gap-3 text-sm">
           {TRAFFIC_PERIODS.map((p) => (

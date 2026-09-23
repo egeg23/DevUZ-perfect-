@@ -203,6 +203,29 @@ test("кнопка «Как пользоваться разделом» есть
   assert.equal(helpTopicFor("/admin/prospect?tab=1"), "/admin/help#prospect");
 });
 
+test("с каждой страницы панели есть путь в инструкцию", () => {
+  // Кнопка раздела живёт в общем каркасе. Страницы без каркаса — договоры,
+  // они же документы для печати, — ставят её сами.
+  const pages: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const path = join(dir, name);
+      if (statSync(path).isDirectory()) walk(path);
+      else if (name === "page.tsx") pages.push(path);
+    }
+  };
+  walk(new URL("../app/admin", import.meta.url).pathname);
+  assert.ok(pages.length > 15, `страниц нашлось ${pages.length}`);
+  for (const page of pages) {
+    if (page.includes("/admin/login/")) continue;
+    const text = readFileSync(page, "utf8");
+    assert.ok(
+      /<AdminShell\b|<SectionHelpLink\b|<HelpHint\b/.test(text),
+      `${page}: ни каркаса с кнопкой инструкции, ни своей кнопки`,
+    );
+  }
+});
+
 test("«?» у блоков ведут в существующие пункты", () => {
   // Якорь пишется только через helpAnchor(): так его можно найти и сверить.
   const files: string[] = [];
@@ -276,6 +299,11 @@ test("разметка абзаца: ссылки и выделение, ост�
     { kind: "text", text: "." },
   ]);
   assert.deepEqual(parseInline("без разметки"), [{ kind: "text", text: "без разметки" }]);
+  assert.deepEqual(parseInline("впишите `KEY=1` в .env"), [
+    { kind: "text", text: "впишите " },
+    { kind: "code", text: "KEY=1" },
+    { kind: "text", text: " в .env" },
+  ]);
   assert.equal(sectionOfHref("/admin/leads/42"), "/admin");
   assert.equal(sectionOfHref("/admin/help#leads"), "/admin/help");
   assert.equal(sectionOfHref("/admin/nope"), null);

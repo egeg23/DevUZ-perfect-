@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
+
 import { auditChunkAction, saveNoSiteAction, saveRunAction } from "@/app/admin/prospect/actions";
 import { EMPTY_CONTACTS, hasAnyContact } from "@/lib/audit/contacts";
 import type { PitchLocale } from "@/lib/audit/pitch";
@@ -181,7 +184,8 @@ export function ProspectRunner() {
     <div className="mt-6">
       {/* Галочка стоит над полем, а не под кнопкой: она меняет смысл того,
           что в поле вводят, и узнать об этом после ввода поздно. */}
-      <label className="mb-3 flex items-center gap-2 text-sm text-muted">
+      <div className="mb-3 flex items-center gap-3">
+      <label className="flex items-center gap-2 text-sm text-muted">
         <input
           type="checkbox"
           checked={noSite}
@@ -194,6 +198,8 @@ export function ProspectRunner() {
         />
         У компании нет сайта
       </label>
+      <HelpHint topic={helpAnchor("/admin/prospect", "own-list")} label="Как проверить свой список" />
+      </div>
 
       {noSite ? (
         <label className="mb-3 block">

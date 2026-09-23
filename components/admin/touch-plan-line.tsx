@@ -1,3 +1,5 @@
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { planLine, type TouchProgress } from "@/lib/admin/touch-plan";
 
 /**
@@ -26,6 +28,7 @@ export function TouchPlanLine({ progress }: { progress: TouchProgress }) {
         {done ? "✓" : "→"}
       </span>
       {line}
+      <HelpHint topic={helpAnchor("/admin/prospect", "plan")} label="Что считается касанием" />
     </p>
   );
 }

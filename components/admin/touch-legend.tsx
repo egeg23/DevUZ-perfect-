@@ -1,3 +1,5 @@
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { HOURLY_CAP } from "@/lib/admin/outreach";
 
 /**
@@ -73,7 +75,8 @@ export function TouchLegend() {
         написано, не отправлено; <b>в очереди на отправку</b> — ждёт своей минуты у бота;{" "}
         <b>отправлено</b> — ушло, ждём ответа, через 3 и 7 дней молчания бот сам напомнит о себе;{" "}
         <b>писать руками</b> — в Telegram не найти, звоните или пишите в WhatsApp; <b>не ушло</b> —
-        бот не смог доставить, откройте карточку; <b>пропущен</b> — решили не писать.
+        бот не смог доставить, откройте карточку; <b>пропущен</b> — решили не писать.{" "}
+        <HelpHint topic={helpAnchor("/admin/prospect", "numbers")} label="Подробнее в инструкции" />
       </p>
     </details>
   );

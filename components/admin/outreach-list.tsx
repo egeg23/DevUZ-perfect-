@@ -8,6 +8,8 @@ import {
   skipProspectAction,
 } from "@/app/admin/prospect/actions";
 import { CopyMessage } from "@/components/admin/copy-message";
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { DoneButton, SubmitButton } from "@/components/admin/submit-button";
 import { sendProblems } from "@/lib/admin/outreach-store";
 import {
@@ -105,8 +107,12 @@ export function OutreachList({
   return (
     <section className="mt-10">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold">Разобранные сайты</h2>
-        <p className="text-xs text-faint">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          Разобранные сайты
+          <HelpHint topic={helpAnchor("/admin/prospect", "send")} label="Как написать компании" />
+        </h2>
+        <p className="flex items-center gap-2 text-xs text-faint">
+          <HelpHint topic={helpAnchor("/admin/prospect", "queue")} label="Почему два в час" />
           За последний час ушло {hour.count} из {HOURLY_CAP}
           {queue.length ? ` · в очереди ${queue.length}` : ""}
           {left === 0 && queue.length ? " — ждут своей очереди" : ""}

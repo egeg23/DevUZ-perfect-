@@ -14,7 +14,10 @@ import { SECTIONS, type Role } from "@/lib/admin/roles";
  * читающего.
  */
 
-/** Абзац. Внутри — `[текст](/admin/раздел#пункт)` для ссылок и `**так**` для выделения. */
+/**
+ * Абзац. Внутри — `[текст](/admin/раздел#пункт)` для ссылок, `**так**` для
+ * выделения и обратные кавычки для имён переменных и команд.
+ */
 export type Para = string;
 
 /** Текст пункта для каждой роли отдельно. Роли без текста этот пункт не видят. */
@@ -73,11 +76,12 @@ export function bodyFor(item: HelpItem, role: Role, sectionRoles: readonly Role[
 export type Inline =
   | { kind: "text"; text: string }
   | { kind: "bold"; text: string }
+  | { kind: "code"; text: string }
   | { kind: "link"; text: string; href: string };
 
-const INLINE = /\[([^\]]+)\]\(([^)\s]+)\)|\*\*([^*]+)\*\*/g;
+const INLINE = /\[([^\]]+)\]\(([^)\s]+)\)|\*\*([^*]+)\*\*|`([^`]+)`/g;
 
-/** Разбор абзаца на текст, ссылки и выделение. Больше ничего: инструкция — не документ Word. */
+/** Разбор абзаца на текст, ссылки, выделение и код. Больше ничего: инструкция — не документ Word. */
 export function parseInline(text: string): Inline[] {
   const out: Inline[] = [];
   let last = 0;
@@ -85,7 +89,8 @@ export function parseInline(text: string): Inline[] {
     const at = match.index ?? 0;
     if (at > last) out.push({ kind: "text", text: text.slice(last, at) });
     if (match[1] !== undefined) out.push({ kind: "link", text: match[1], href: match[2] });
-    else out.push({ kind: "bold", text: match[3] });
+    else if (match[3] !== undefined) out.push({ kind: "bold", text: match[3] });
+    else out.push({ kind: "code", text: match[4] });
     last = at + match[0].length;
   }
   if (last < text.length) out.push({ kind: "text", text: text.slice(last) });

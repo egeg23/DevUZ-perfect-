@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/shell";
+import { HelpHint } from "@/components/admin/help-link";
+import { helpAnchor } from "@/lib/admin/help";
 import { OutreachList } from "@/components/admin/outreach-list";
 import { ProspectRunner } from "@/components/admin/prospect-runner";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
@@ -56,8 +58,9 @@ export default async function ProspectPage({
           начинать. Те же компании пришли утром в Telegram с кнопками. */}
       {portion.length ? (
         <section className="mb-6 rounded-xl border border-green/30 bg-green/5 px-5 py-4">
-          <p className="text-xs uppercase tracking-wider text-green">
+          <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-green">
             Ваша порция на сегодня: сделано {portionDone} из {portion.length}
+            <HelpHint topic={helpAnchor("/admin/prospect", "portion")} label="Как работает порция дня" />
           </p>
           <ul className="mt-3 flex flex-col gap-1.5 text-sm">
             {portion.map((p) => {
