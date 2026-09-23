@@ -739,13 +739,13 @@ export const uz: HelpCopy = {
           title: "Shartnoma sahifasi: smeta va imzoga yuborish",
           body: {
             manager: [
-              "Shartnoma qoralama ekan: **«Загрузить смету»** va **«Срок»** («60 рабочих дней с даты аванса»). Smetani CSV yoki TSV da yuklang (nomi, soni, narxi): bunday fayllar qatorma-qator o‘qiladi va ularning yig‘indisi shartnoma summasiga aylanadi. Excel va PDF faqat fayl sifatida biriktiriladi — ular bilan imzoga yuborib bo‘lmaydi.",
+              "Shartnoma qoralama ekan: **«Загрузить смету»** va **«Срок»** («60 рабочих дней с даты аванса»). Smeta Excel (xlsx), CSV, TSV va matnli PDF dan qatorma-qator o‘qiladi: panel ustunlarni sarlavha bo‘yicha topadi («Наименование», «Кол-во», «Цена», «Сумма»), «Итого» qatorini o‘tkazib yuboradi, qatorlar yig‘indisi esa shartnoma summasiga aylanadi. PDF skan yoki Word’ni o‘qib bo‘lmaydi — unda **«Вставить строки сметы руками»**: qatorlarni Excel’dan nusxalang yoki har bir pozitsiyaga bitta qator yozing — nomi, soni, narxi «;» orqali. Smeta qatorlarisiz shartnomani imzoga yuborib bo‘lmaydi.",
               "**«Отправить на подпись»** — panel hammasi joyidami tekshiradi, bo‘lmasa «Не хватает: …» deb yozadi. Yubordingiz — egasiga Telegramda xabar bordi, shartnoma «Отправлен владельцу на подпись» holatida va boshqa tahrirlanmaydi.",
               "Egasi tasdiqlasa — «Подтверждён владельцем», yoki qayta ishlashga qaytaradi. Tasdiqlangandan keyin mijoz o‘z qismini imzolaydi, siz esa **«Загрузить подписанный»** tugmasini bosasiz (PDF yoki rasm) — shartnoma «Подписан обеими сторонами» bo‘ladi.",
               "Telegram bildirishnomani yetkazmasa, panel shuni aytadi — egasiga og‘zaki ayting.",
             ],
             head: [
-              "Siz ham menejer qiladigan ishni qilasiz: smeta (CSV yoki TSV — aks holda yuborib bo‘lmaydi), «Срок», «Отправить на подпись», «Загрузить подписанный», hisoblar va buyurtmachi uchun havola. Shartnomani faqat egasi tasdiqlaydi, qaytaradi va bekor qiladi — tasdiqlash uning imzosining o‘zi.",
+              "Siz ham menejer qiladigan ishni qilasiz: smeta (Excel, CSV, matnli PDF yoki qo‘lda qatorlar — qatorlarsiz yuborib bo‘lmaydi), «Срок», «Отправить на подпись», «Загрузить подписанный», hisoblar va buyurtmachi uchun havola. Shartnomani faqat egasi tasdiqlaydi, qaytaradi va bekor qiladi — tasdiqlash uning imzosining o‘zi.",
             ],
             admin: [
               "Imzoga shartnoma sizga Telegramda keladi va «Сегодня» varag‘ida — «Договоры на подпись» blokida ko‘rinadi. Tugmalar: **«Подтвердить и подписать»** yoki **«Вернуть на доработку»**. Qaytarish — ishning oddiy qismi, xato emas.",

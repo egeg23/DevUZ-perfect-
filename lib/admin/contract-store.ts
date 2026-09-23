@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin/contracts";
 import type { ContractStage } from "@/content/contract";
 import { estimateTotal, parseEstimate, type EstimateItem } from "@/lib/admin/estimate";
+import { estimateText } from "@/lib/admin/estimate-file";
 import { sendMessage } from "@/lib/qualify/telegram";
 import { sellerBank } from "@/lib/store/requisites";
 
@@ -306,8 +307,13 @@ export async function attachEstimate(
   const up = await db.storage.from(BUCKET).upload(path, file.bytes, { upsert: true });
   if (up.error) return fail("invalid");
 
-  const text = new TextDecoder("utf-8").decode(file.bytes);
-  const parsed = parseEstimate(text, file.name);
+  // Excel и PDF — в строки, остальное — как текст (lib/admin/estimate-file.ts).
+  const read = await estimateText(file.bytes, file.name);
+  const parsed = !read
+    ? { ok: false as const, hint: "Файл не прочитался. Вставьте строки сметы руками ниже — файл всё равно приложен к договору." }
+    : read.scan
+      ? { ok: false as const, hint: "В PDF нет текста — похоже, это скан. Вставьте строки сметы руками ниже — файл всё равно приложен к договору." }
+      : parseEstimate(read.text, read.name);
   const items = parsed.ok ? parsed.items : [];
 
   const patch: Record<string, unknown> = {
@@ -327,6 +333,21 @@ export async function attachEstimate(
   return parsed.ok
     ? { ok: true, id, items }
     : { ok: true, id, hint: parsed.hint };
+}
+
+/**
+ * Строки сметы, вставленные текстом: из Excel копированием (там они через
+ * табуляцию) или руками — «название; количество; цена». Разбираются тем же
+ * разбором, что и файл, чтобы правила были одни.
+ */
+export async function setEstimateFromText(
+  id: string,
+  text: string,
+  staff: Staff,
+): Promise<Result & { hint?: string }> {
+  const parsed = parseEstimate(text.slice(0, 50_000), "rows.tsv");
+  if (!parsed.ok) return { ok: false, why: "invalid", hint: parsed.hint };
+  return setEstimateItems(id, parsed.items, staff);
 }
 
 /** Строки сметы, внесённые руками, когда файл разобрать не удалось. */

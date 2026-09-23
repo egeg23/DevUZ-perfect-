@@ -4,11 +4,12 @@
  * Владелец: «по загруженной смете которую мы согласовали — сотрудник на этом
  * этапе загружает ее и данные по смете вытягиваются в договор».
  *
- * Разбираются CSV и TSV — то, во что Excel и Google Sheets сохраняют в один
- * клик. XLSX это zip с XML, и без внешней библиотеки читается ненадёжно;
- * такой файл прикрепляется к договору как есть, а строки менеджер вносит
- * руками. Молча вернуть пустой список для xlsx нельзя: менеджер решит, что
- * смета пустая, и отправит договор без неё.
+ * Разбираются CSV, TSV, Excel (xlsx) и PDF с текстовым слоем: xlsx и PDF
+ * сначала превращаются в те же строки с табуляцией (lib/admin/estimate-file.ts),
+ * а дальше путь общий. Что не разобралось — например, скан, — менеджер
+ * вставляет строками руками, файл всё равно прикладывается к договору.
+ * Молча вернуть пустой список нельзя: менеджер решит, что смета пустая, и
+ * отправит договор без неё.
  */
 
 export type EstimateItem = {
@@ -27,8 +28,17 @@ export type ParseResult =
   | { ok: true; items: EstimateItem[] }
   | { ok: false; why: "unsupported" | "empty" | "shape"; hint: string };
 
-/** Расширения, которые мы умеем разбирать. */
+/** Текст, который разбирается напрямую. */
 export const PARSABLE = [".csv", ".tsv", ".txt"] as const;
+
+/** Файлы, которые сначала превращаются в строки (lib/admin/estimate-file.ts). */
+export const CONVERTIBLE = [".xlsx", ".pdf"] as const;
+
+/** Что можно загрузить сметой и получить строки. */
+export function isReadable(filename: string): boolean {
+  const lower = filename.toLowerCase();
+  return [...PARSABLE, ...CONVERTIBLE].some((ext) => lower.endsWith(ext));
+}
 
 export function isParsable(filename: string): boolean {
   const lower = filename.toLowerCase();
@@ -89,29 +99,37 @@ export function parseEstimate(text: string, filename: string): ParseResult {
     return {
       ok: false,
       why: "unsupported",
-      hint: "Разбираем CSV и TSV. Сохраните смету как CSV — или внесите строки руками, файл всё равно приложится к договору.",
+      hint: "Разбираем Excel (xlsx), CSV, TSV и PDF с текстом. Сохраните смету в одном из них — или вставьте строки руками ниже, файл всё равно приложится к договору.",
     };
   }
 
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length === 0) return { ok: false, why: "empty", hint: "Файл пустой." };
 
-  // Разделитель определяем по первой строке: точка с запятой у русского
-  // Excel, запятая у Google Sheets, табуляция у копипаста из таблицы.
-  const first = lines[0];
-  const sep = first.includes("\t") ? "\t" : (first.split(";").length > first.split(",").length ? ";" : ",");
+  // Разделитель — по каждой строке: точка с запятой у русского Excel,
+  // запятая у Google Sheets, табуляция у копипаста из таблицы. По строке, а
+  // не по первой на весь файл: вставленные руками строки бывают вперемешку —
+  // пара скопирована из Excel, остальные дописаны через «;».
+  const sepOf = (line: string) =>
+    line.includes("\t") ? "\t" : line.split(";").length > line.split(",").length ? ";" : ",";
+  const rows = lines.map((line) => cells(line, sepOf(line)));
+  const header = headerOf(rows);
+  if (header) {
+    const items = byHeader(rows.slice(header.row + 1), header);
+    if (items.length) return { ok: true, items };
+  }
 
   const items: EstimateItem[] = [];
-  for (const line of lines) {
-    const row = cells(line, sep);
+  for (const row of rows) {
     // Заголовок таблицы отдельной проверки не требует: у него в последней
     // колонке слово («Цена», «Сумма»), а не число, поэтому он отсеивается
     // там же, где строки без цены. Отдельная проверка здесь стояла и была
     // мёртвой — это тоже показала мутация.
     if (row.length < 2) continue;
 
-    const title = row[0];
-    if (!title) continue;
+    // Первая колонка — «№»: название тогда первая колонка с буквами.
+    const title = /^\d+[.)]?$/.test(row[0]) ? (row.find((cell) => /\p{L}/u.test(cell)) ?? "") : row[0];
+    if (!title || TOTAL_ROW.test(title)) continue;
 
     // Числовые ячейки с конца: цена последняя, количество перед ней.
     const numeric = row.slice(1).map(num);
@@ -137,6 +155,64 @@ export function parseEstimate(text: string, filename: string): ParseResult {
     };
   }
   return { ok: true, items };
+}
+
+/** «Итого», «Всего», «Total» — строка суммы, а не позиция. */
+// \b в JS знает только латиницу: после «Итого» он границы не видит.
+const TOTAL_ROW = /^(итого|всего|total|jami)(?!\p{L})/iu;
+
+type Header = { row: number; title: number; unit: number; qty: number; price: number; total: number };
+
+const find = (row: string[], pattern: RegExp, skip: number[] = []) =>
+  row.findIndex((cell, i) => !skip.includes(i) && pattern.test(cell));
+
+/**
+ * Шапка таблицы, если она есть.
+ *
+ * С шапкой колонки берутся по названиям, а не по месту. Иначе смета с
+ * колонкой «Сумма» в конце — а так выглядит почти любая смета из Excel —
+ * читалась бы как «количество = цена, цена = сумма», и итог договора
+ * вырастал бы в разы.
+ */
+function headerOf(rows: string[][]): Header | null {
+  for (let r = 0; r < Math.min(rows.length, 15); r++) {
+    const row = rows[r];
+    let price = find(row, /цена|price|narx/i);
+    const total = find(row, /сумма|итого|всего|total|amount|jami|стоимость/i, price >= 0 ? [price] : []);
+    if (price < 0) price = find(row, /стоимость|тариф|rate/i, total >= 0 ? [total] : []);
+    if (price < 0 && total < 0) continue;
+    const used = [price, total].filter((i) => i >= 0);
+    const qty = find(row, /кол|qty|quant|miqdor|soni|часы|часов|hours/i, used);
+    const unit = find(row, /^ед|единиц|unit|o‘lchov/i, [...used, qty]);
+    let title = find(row, /наимен|назван|работ|услуг|позици|описан|title|name|item|nomi|xizmat/i, [...used, qty, unit]);
+    if (title < 0) title = row.findIndex((cell, i) => ![...used, qty, unit].includes(i) && !/^№|^#|^n$/i.test(cell) && cell !== "");
+    if (title < 0) continue;
+    return { row: r, title, unit, qty, price, total };
+  }
+  return null;
+}
+
+function byHeader(rows: string[][], h: Header): EstimateItem[] {
+  const items: EstimateItem[] = [];
+  for (const row of rows) {
+    const title = (row[h.title] ?? "").trim();
+    if (!title || TOTAL_ROW.test(title)) continue;
+    const qtyRaw = h.qty >= 0 ? num(row[h.qty] ?? "") : 0;
+    const qty = qtyRaw > 0 ? qtyRaw : 1;
+    let price = h.price >= 0 ? num(row[h.price] ?? "") : 0;
+    // Цены нет, а сумма есть — цена за единицу выводится из неё.
+    if (price <= 0 && h.total >= 0) price = num(row[h.total] ?? "") / qty;
+    if (!(price > 0)) continue;
+    price = Math.round(price * 100) / 100;
+    items.push({
+      title,
+      unit: h.unit >= 0 ? (row[h.unit] ?? "").trim() : "",
+      qty,
+      price,
+      total: Math.round(qty * price * 100) / 100,
+    });
+  }
+  return items;
 }
 
 /** Сумма сметы — она же сумма договора. */
