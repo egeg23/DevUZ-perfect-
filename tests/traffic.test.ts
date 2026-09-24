@@ -11,6 +11,7 @@ import { createVerify, generateKeyPairSync } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
+import { canSee } from "@/lib/admin/roles";
 import { loadGa, loadMetrika, parseServiceAccount, periodDates } from "@/lib/analytics/traffic";
 
 const ROOT = new URL("../", import.meta.url);
@@ -147,10 +148,49 @@ test("ключи доходят до контейнера и не уходят �
     assert.match(compose, new RegExp(`${name}: \\$\\{${name}:-\\}`), `${name} не доедет до контейнера`);
     assert.ok(!name.startsWith("NEXT_PUBLIC_"), `${name} ушёл бы в браузер`);
   }
-  // Трафик — только во вкладке владельца.
-  const page = read("app/admin/page.tsx");
-  assert.match(page, /const ownerTab = staff\.role === "admin" \? ownerTabOf\(params\.tab\) : null/);
-  assert.match(page, /ownerTab === "traffic" \? \(?\s*<TrafficPanel/);
+});
+
+/**
+ * Трафик — свой раздел для владельца и руководителей.
+ *
+ * Владелец попросил открыть его Александру и руководителям. Смотреть — да,
+ * подключать — нет: вход в Google делается аккаунтом владельца.
+ */
+test("трафик видят владелец и руководители, подключает только владелец", () => {
+  assert.equal(canSee("admin", "/admin/traffic"), true);
+  assert.equal(canSee("head", "/admin/traffic"), true, "руководитель не видит трафик");
+  assert.equal(canSee("manager", "/admin/traffic"), false, "менеджер видит трафик");
+
+  const page = read("app/admin/traffic/page.tsx");
+  assert.match(page, /requireRole\("admin", "head"\)/);
+  assert.match(page, /canConnect=\{owner\}/);
+  assert.match(page, /const owner = staff\.role === "admin"/);
+  // Пометки входа через Google — только владельцу.
+  assert.match(page, /notice=\{owner \? \{/);
+
+  // Шаги подключения, кнопки входа и почта аккаунта — за canConnect.
+  const panel = read("components/admin/traffic-panel.tsx");
+  assert.match(panel, /canConnect \? \(\s*<Setup steps=\{setup\} \/>\s*\) : \(\s*<OwnerConnects \/>/);
+  assert.match(panel, /if \(!canConnect\) return <p[^>]*>Ресурс Google Analytics \{link\.property\}<\/p>/);
+  assert.match(panel, /\} else if \(!canConnect\) \{/);
+  assert.match(panel, /\{canConnect \? <Notice /);
+  // Ветка руководителя стоит раньше всех веток с кнопками.
+  const headBranch = panel.indexOf("} else if (!canConnect) {");
+  for (const button of ["<SignInButton", "<ClientForm", "<PropertyForm"]) {
+    const first = panel.indexOf(button, panel.indexOf("function GaSource"));
+    assert.ok(first > headBranch, `${button} доступна руководителю`);
+  }
+  // Подключение проверяет владельца на сервере, а не только прячет кнопку.
+  const actions = read("app/admin/google/actions.ts");
+  assert.equal((actions.match(/await requireAdmin\(\)/g) ?? []).length, 2);
+
+  // Вкладки на главной больше нет, старые адреса ведут в раздел.
+  const home = read("app/admin/page.tsx");
+  assert.doesNotMatch(home, /key: "traffic"/);
+  assert.doesNotMatch(home, /<TrafficPanel/);
+  assert.match(home, /params\.tab === "traffic" && canSee\(staff\.role, "\/admin\/traffic"\)/);
+  assert.match(actions, /const TRAFFIC = "\/admin\/traffic"/);
+  assert.match(read("app/admin/google/callback/route.ts"), /\/admin\/traffic\?\$\{new URLSearchParams\(\{ ga,/);
 });
 
 test("ключи трафика — из .env или из хранилища секретов, как ключ карт", async () => {

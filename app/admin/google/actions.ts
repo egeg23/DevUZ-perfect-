@@ -27,8 +27,8 @@ import { saveAppSecret } from "@/lib/secrets";
  * пересылки ключей в чат и без захода на сервер.
  */
 
-const TRAFFIC = "/admin?tab=traffic";
-const back = (code: string): never => redirect(`${TRAFFIC}&ga=${code}`);
+const TRAFFIC = "/admin/traffic";
+const back = (code: string): never => redirect(`${TRAFFIC}?ga=${code}`);
 
 export async function startGoogleSignIn(formData: FormData) {
   const staff = await requireAdmin();

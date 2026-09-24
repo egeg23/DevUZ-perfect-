@@ -119,6 +119,16 @@ function Ranked({ title, rows }: { title: string; rows: { name: string; visits: 
   );
 }
 
+/**
+ * Что видит руководитель вместо шагов подключения.
+ *
+ * Шаги — это вход в аккаунт Google владельца и ключ на сервере: ни то ни
+ * другое руководитель сделать не может, и инструкция ему была бы шумом.
+ */
+function OwnerConnects() {
+  return <p className="mt-3 text-sm text-muted">Не подключено. Подключает владелец — если цифры нужны, скажите ему.</p>;
+}
+
 function Setup({ steps }: { steps: React.ReactNode[] }) {
   return (
     <div className="mt-3 text-sm text-muted">
@@ -172,18 +182,32 @@ function Report({ report }: { report: TrafficReport }) {
 const WARN = "mt-3 rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-sm text-gold [overflow-wrap:anywhere]";
 const OK = "mt-3 rounded-lg border border-green/30 bg-green/10 px-3 py-2 text-sm text-green [overflow-wrap:anywhere]";
 
-function Source({ title, result, setup }: { title: string; result: TrafficResult; setup: React.ReactNode[] }) {
+function Source({
+  title,
+  result,
+  setup,
+  canConnect,
+}: {
+  title: string;
+  result: TrafficResult;
+  setup: React.ReactNode[];
+  canConnect: boolean;
+}) {
   return (
     <section className={CARD}>
       <p className={H2}>{title}</p>
       {result.ok ? (
         <Report report={result.report} />
       ) : result.reason === "not_configured" ? (
-        <Setup steps={setup} />
+        canConnect ? (
+          <Setup steps={setup} />
+        ) : (
+          <OwnerConnects />
+        )
       ) : (
         <p className={WARN}>
           Не ответил: {result.detail ?? "без описания"}. Попробуйте обновить страницу через минуту; если
-          повторяется — проверьте ключ в .env.
+          повторяется — {canConnect ? "проверьте ключ в .env." : "скажите владельцу."}
         </p>
       )}
     </section>
@@ -388,8 +412,14 @@ function Notice({ notice, redirect }: { notice: GaNotice; redirect: string }) {
   return <p className={entry.ok ? OK : WARN}>{entry.body}</p>;
 }
 
-/** Откуда сейчас идёт статистика GA — строкой под цифрами. */
-function ConnectedVia({ link }: { link: GaConnection }) {
+/**
+ * Откуда сейчас идёт статистика GA — строкой под цифрами.
+ *
+ * Руководителю — без почты и без «войти заново»: почта — аккаунт владельца,
+ * а сменить вход может только он.
+ */
+function ConnectedVia({ link, canConnect }: { link: GaConnection; canConnect: boolean }) {
+  if (!canConnect) return <p className="mt-4 text-xs text-faint">Ресурс Google Analytics {link.property}</p>;
   if (link.via === "service") {
     return <p className="mt-4 text-xs text-faint">Через ключ сервисного аккаунта · ресурс {link.property}</p>;
   }
@@ -407,7 +437,17 @@ function ConnectedVia({ link }: { link: GaConnection }) {
   );
 }
 
-function GaSource({ result, link, notice }: { result: TrafficResult; link: GaConnection; notice: GaNotice }) {
+function GaSource({
+  result,
+  link,
+  notice,
+  canConnect,
+}: {
+  result: TrafficResult;
+  link: GaConnection;
+  notice: GaNotice;
+  canConnect: boolean;
+}) {
   const redirect = googleRedirectUri();
   let body: React.ReactNode;
 
@@ -415,9 +455,26 @@ function GaSource({ result, link, notice }: { result: TrafficResult; link: GaCon
     body = (
       <>
         <Report report={result.report} />
-        <ConnectedVia link={link} />
+        <ConnectedVia link={link} canConnect={canConnect} />
       </>
     );
+  } else if (!canConnect) {
+    // Руководителю — что случилось и к кому идти, без кнопок: все они про
+    // аккаунт Google владельца.
+    body =
+      result.reason === "reauth" ? (
+        <p className={WARN}>
+          Google перестал пускать по входу владельца, поэтому цифр нет. Скажите владельцу — ему нужно войти заново,
+          это минута.
+        </p>
+      ) : result.reason === "failed" ? (
+        <p className={WARN}>
+          Не ответил: {result.detail ?? "без описания"}. Попробуйте обновить страницу через минуту; если
+          повторяется — скажите владельцу.
+        </p>
+      ) : (
+        <OwnerConnects />
+      );
   } else if (result.reason === "reauth") {
     body = (
       <>
@@ -493,22 +550,33 @@ function GaSource({ result, link, notice }: { result: TrafficResult; link: GaCon
   return (
     <section className={CARD}>
       <p className={H2}>Google Analytics</p>
-      <Notice notice={notice} redirect={redirect} />
+      {canConnect ? <Notice notice={notice} redirect={redirect} /> : null}
       {body}
     </section>
   );
 }
 
 /**
- * Трафик сайта на дашборде владельца: Метрика и Google Analytics рядом.
+ * Трафик сайта: Метрика и Google Analytics рядом.
  *
  * Два источника не сводятся в одно число намеренно: они по-разному считают
  * визит и по-разному отсекают роботов, и «сумма» не значила бы ничего.
  * Рядом они видны как есть — и расхождение между ними тоже сведения.
+ *
+ * `canConnect` — владелец: у него шаги подключения и кнопки входа в Google.
+ * Руководитель видит те же цифры, а вместо кнопок — «подключает владелец».
  */
-export async function TrafficPanel({ days, notice = {} }: { days: TrafficPeriod; notice?: GaNotice }) {
+export async function TrafficPanel({
+  days,
+  canConnect,
+  notice = {},
+}: {
+  days: TrafficPeriod;
+  canConnect: boolean;
+  notice?: GaNotice;
+}) {
   const [ym, ga, link] = await Promise.all([loadMetrika(days), loadGa(days), gaConnection()]);
-  return <TrafficView days={days} ym={ym} ga={ga} link={link} notice={notice} />;
+  return <TrafficView days={days} ym={ym} ga={ga} link={link} notice={notice} canConnect={canConnect} />;
 }
 
 /** Разметка отдельно от загрузки — чтобы её можно было проверить без API. */
@@ -518,25 +586,30 @@ export function TrafficView({
   ga,
   link,
   notice,
+  canConnect,
 }: {
   days: TrafficPeriod;
   ym: TrafficResult;
   ga: TrafficResult;
   link: GaConnection;
   notice: GaNotice;
+  canConnect: boolean;
 }) {
   return (
     <div className="mb-8 space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-sm text-muted">
           Последние {days} дней, стрелки — против {days} дней до них. Обновляется раз в 10 минут.{" "}
-          <HelpHint topic={helpAnchor("/admin", "traffic")} label="Откуда цифры и как подключить" />
+          <HelpHint
+            topic={helpAnchor("/admin/traffic", "numbers")}
+            label={canConnect ? "Откуда цифры и как подключить" : "Откуда цифры"}
+          />
         </p>
         <nav className="flex gap-3 text-sm">
           {TRAFFIC_PERIODS.map((p) => (
             <Link
               key={p}
-              href={`/admin?tab=traffic&d=${p}`}
+              href={`/admin/traffic?d=${p}`}
               className={p === days ? "text-green" : "text-faint hover:text-text"}
             >
               {p} дней
@@ -545,8 +618,8 @@ export function TrafficView({
         </nav>
       </div>
       <div className="grid items-start gap-4 xl:grid-cols-2">
-        <Source title="Яндекс Метрика" result={ym} setup={METRIKA_SETUP} />
-        <GaSource result={ga} link={link} notice={notice} />
+        <Source title="Яндекс Метрика" result={ym} setup={METRIKA_SETUP} canConnect={canConnect} />
+        <GaSource result={ga} link={link} notice={notice} canConnect={canConnect} />
       </div>
     </div>
   );

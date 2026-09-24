@@ -74,6 +74,11 @@ export const SECTIONS: readonly Section[] = [
   { href: "/admin/candidates", label: "Кандидаты", roles: ["admin", "head"] },
   { href: "/admin/projects", label: "Проекты", roles: EVERYONE },
   { href: "/admin/stats", label: "Статистика", roles: EVERYONE },
+  // Трафик сайта — владельцу и руководителям. Владелец: «чтобы Александр и
+  // руководители имели доступ». Реклама — их работа, и без посещаемости её
+  // не оценить. Смотреть — да; подключать Метрику и Google остаётся
+  // владельцу: вход в Google — его аккаунт, и кнопки у руководителя нет.
+  { href: "/admin/traffic", label: "Трафик", roles: WITH_HEAD },
   // Финансы — всем, но каждому своё: менеджер видит свои проекты и баланс,
   // руководитель — команду, владелец — всё. Границу держит страница.
   { href: "/admin/contracts", label: "Договоры", roles: EVERYONE },
