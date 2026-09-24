@@ -15,6 +15,12 @@ import { useEffect } from "react";
  * sendBeacon — чтобы запрос не держал переход и не терялся, если вкладку
  * закрыли сразу после.
  */
+/**
+ * Под /admin — там живёт кука сессии. На прежний адрес под /api она не
+ * приходила, и сервер не мог понять, чей это просмотр.
+ */
+const BEACON = "/admin/beacon";
+
 export function UsageBeacon() {
   const pathname = usePathname();
 
@@ -22,11 +28,11 @@ export function UsageBeacon() {
     if (!pathname) return;
     const body = JSON.stringify({ path: pathname });
     try {
-      if (navigator.sendBeacon?.("/api/usage", new Blob([body], { type: "application/json" }))) return;
+      if (navigator.sendBeacon?.(BEACON, new Blob([body], { type: "application/json" }))) return;
     } catch {
       // Ниже — запасной путь.
     }
-    fetch("/api/usage", {
+    fetch(BEACON, {
       method: "POST",
       body,
       headers: { "content-type": "application/json" },
