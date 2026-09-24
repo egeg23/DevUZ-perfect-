@@ -172,17 +172,17 @@ export const uz: HelpCopy = {
           body: {
             manager: [
               "Lidni uddalay olmayapsiz yoki mijoz hamkasbingizga ko‘proq mos — kartochkadagi «Передать» ro‘yxatida kimga ekanini tanlang, sababini yozing, keyin **«Попросить передать»** tugmasini bosing.",
-              "Rahbaringiz yoki egasi so‘rovni tasdiqlamaguncha lid sizda qoladi: ularga Telegramda xabar boradi. Qaror kutilayotganda lid ikki odam o‘rtasida osilib qolmaydi.",
+              "Rahbaringiz yoki egasi so‘rovni tasdiqlamaguncha lid sizda qoladi: ularga Telegramda «Подтвердить» va «Отклонить» tugmalari bilan xabar boradi — ular panelsiz, shu yerning o‘zida hal qilishadi. Qaror kutilayotganda lid ikki odam o‘rtasida osilib qolmaydi.",
               "Tasdiqlashdi — lid hamkasbda, unga xabar va 4 soatdan keyin yangi eslatma keladi. Rad etishdi — sizga «Передачу не подтвердили. Лид остаётся у вас» keladi.",
               "Bo‘sh lid berilmaydi — uni «Взять себе» tugmasi bilan olishadi.",
             ],
             head: [
               "Sizning tugmangiz — **«Передать»**: lid tanlangan odamga darhol o‘tadi, unga «…передал вам лид. Он уже ваш» xabari keladi.",
-              "Menejerlarning so‘rovlari («Попросить передать») sizga Telegramda keladi va bosh sahifada «Ждут вашего решения» blokida ko‘rinadi. Lid kartochkasida — «Подтвердить» yoki «Отклонить». Studiyadagi istalgan so‘rovni hal qila olasiz, faqat o‘z jamoangiznikini emas.",
+              "Jamoangiz menejerlarining so‘rovlari («Попросить передать») sizga Telegramda **«✅ Подтвердить»** va **«✖ Отклонить»** tugmalari bilan keladi — xabarning o‘zida hal qiling; avval ko‘rmoqchi bo‘lsangiz, «Открыть лид» kartochkaga olib boradi. Xuddi shu so‘rovlar bosh sahifadagi «Ждут вашего решения» blokida va lid kartochkasida ham bor. Kimdir bittasi hal qilsa — qolganlarda tugmalar «Подтвердил …» yoki «Отклонил …» ga almashadi. Studiyadagi istalgan so‘rovni hal qila olasiz, faqat o‘z jamoangiznikini emas.",
               "Tasdiqlangan lidga 4 soatdan keyin yangi eslatma qo‘yiladi. Oldingi mas’ulning eski eslatmalari o‘zi yopilmaydi — kerak bo‘lsa, ularni yoping.",
             ],
             admin: [
-              "Sizning tugmangiz — **«Передать»**: lid darhol o‘tadi. Menejerlarning so‘rovlari sizga Telegramda va «Сегодня» varag‘idagi «Ждут вашего решения» blokiga keladi; kartochkada hal qilasiz — «Подтвердить» yoki «Отклонить». Ularni istalgan rahbar ham hal qila oladi.",
+              "Sizning tugmangiz — **«Передать»**: lid darhol o‘tadi. Menejerlarning so‘rovlari sizga Telegramda **«✅ Подтвердить»** va **«✖ Отклонить»** tugmalari bilan keladi — xabarning o‘zida hal qilasiz, — shuningdek «Сегодня» varag‘idagi «Ждут вашего решения» blokiga va lid kartochkasiga. Ularni rahbar ham hal qila oladi: u o‘z jamoasining so‘rovlarini xuddi shu tugmalar bilan oladi. Kim birinchi hal qilsa — qolganlarda tugmalar natijaga almashadi va hal qilingan so‘rovni qayta bosib bo‘lmaydi.",
               "Bu sizning qoidangiz bo‘yicha shunday qilingan: lid rahbar yoki sizning tasdig‘ingiz bilan beriladi va qaror chiqquncha oldingi mas’ulda qoladi.",
             ],
           },

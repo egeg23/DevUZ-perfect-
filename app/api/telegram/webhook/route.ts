@@ -42,6 +42,7 @@ import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
 import { inPortion } from "@/lib/admin/portion-store";
+import { approves, decideTransfer } from "@/lib/admin/transfers";
 import { markSelfContacted, prospectById, queueOutreach, skipProspect } from "@/lib/admin/outreach-store";
 
 export const runtime = "nodejs";
@@ -832,6 +833,16 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     return;
   }
 
+  // Просьба передать лид: решают руководитель и владелец, у себя в личке.
+  if (parts[0] === "tr") {
+    if (chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    await handleTransferButton(query, parts[1] ?? "", parts[2] ?? "");
+    return;
+  }
+
   // Порция дня: тоже личка сотрудника, и тоже только своя.
   if (parts[0] === "tp") {
     if (chatId !== undefined && isSalesChat(chatId)) {
@@ -939,6 +950,45 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
   } catch (error) {
     console.error("telegram webhook", error);
     await answerCallback(query.id, "Не удалось обновить статус");
+  }
+}
+
+/**
+ * «Подтвердить» / «Отклонить» под просьбой о передаче лида.
+ *
+ * Право — не то, что сообщение пришло в эту личку: колбэк можно прислать и
+ * с чужой полезной нагрузкой. Решает decideTransfer — он сам проверяет роль
+ * и пишет решение только поверх открытой просьбы, так что второе нажатие
+ * (или нажатие у второго руководителя) решения не удвоит.
+ */
+async function handleTransferButton(
+  query: NonNullable<Update["callback_query"]>,
+  action: string,
+  transferId: string,
+) {
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (!staff || !approves(staff.role) || !transferId || (action !== "ok" && action !== "no")) {
+    await answerCallback(query.id, "Недоступно");
+    return;
+  }
+
+  try {
+    const decision = action === "ok" ? "approved" : "declined";
+    // Адрес нажавшего неизвестен: запрос приходит с серверов Telegram.
+    const result = await decideTransfer(transferId, decision, staff, "");
+    if (result.ok) {
+      await answerCallback(query.id, decision === "approved" ? "Подтверждено — лид передан" : "Отклонено — лид остаётся у прежнего");
+      return;
+    }
+    if (result.reason === "pending") {
+      await answerCallback(query.id, "Эту просьбу уже решили");
+      if (query.message) await markBriefHandled(query.message.chat.id, query.message.message_id, "Уже решено");
+      return;
+    }
+    await answerCallback(query.id, "Не получилось — откройте лид в панели");
+  } catch (error) {
+    console.error("telegram webhook: передача лида", error);
+    await answerCallback(query.id, "Не получилось — откройте лид в панели");
   }
 }
 

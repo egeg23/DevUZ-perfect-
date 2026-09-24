@@ -2,7 +2,7 @@ import { record } from "@/lib/admin/audit";
 import { AUTO_REMINDER_HOURS, createReminder, handleOf } from "@/lib/admin/ownership";
 import type { Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
-import { sendMessage } from "@/lib/qualify/telegram";
+import { esc, markBriefHandled, sendMessage, sendRowsForId } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -207,6 +207,39 @@ async function tell(telegramId: number | null | undefined, text: string): Promis
   }
 }
 
+/** Кнопки решения под просьбой: prefix `tr`, обрабатывает вебхук Telegram. */
+export function transferButtons(transferId: string, leadId: string) {
+  return [
+    [
+      { text: "✅ Подтвердить", callback_data: `tr:ok:${transferId}` },
+      { text: "✖ Отклонить", callback_data: `tr:no:${transferId}` },
+    ],
+    [{ text: "Открыть лид", panel: `/admin/leads/${leadId}` }],
+  ];
+}
+
+type SentNotice = { chatId: number; messageId: number };
+
+function noticesFrom(raw: unknown): SentNotice[] {
+  return (Array.isArray(raw) ? raw : []).filter(
+    (n): n is SentNotice => typeof n?.chatId === "number" && typeof n?.messageId === "number" && n.messageId > 0,
+  );
+}
+
+/**
+ * Кнопки у всех, кому пришла просьба, — на итог. Иначе второй адресат
+ * увидел бы живые «Подтвердить» у уже решённой просьбы и нажал бы по ней.
+ */
+async function closeNotices(raw: unknown, status: string): Promise<void> {
+  for (const n of noticesFrom(raw)) {
+    try {
+      await markBriefHandled(n.chatId, n.messageId, status);
+    } catch (error) {
+      console.error("admin: не обновил кнопки просьбы о передаче", error);
+    }
+  }
+}
+
 /** Как лид называется в сообщении: номером заявки, иначе компанией. */
 function leadTitle(lead: { request_no: string | null; company: string | null }, leadId: string): string {
   return lead.request_no ?? lead.company ?? leadId.slice(0, 8);
@@ -295,7 +328,9 @@ export async function requestTransfer(
 
   // Решать будут руководитель просящего и владельцы. Пишем всем, кто может:
   // ждать ответа от одного человека, который сегодня не в сети, — это день
-  // простоя по живому лиду.
+  // простоя по живому лиду. Решение — кнопкой прямо под сообщением: раньше
+  // там было «подтвердите на странице лида», без ссылки, и руководитель
+  // искал лид в панели руками.
   const me = await staffRow(staff.id);
   const { data: approvers } = await db
     .from("staff")
@@ -303,23 +338,31 @@ export async function requestTransfer(
     .eq("is_active", true)
     .in("role", ["admin", "head"]);
 
+  const text = [
+    `🔁 <b>${esc(staff.display_name)}</b> просит передать лид <b>${esc(title)}</b>`,
+    `Кому: ${esc(target?.display_name ?? "—")}`,
+    note?.trim() ? `Причина: ${esc(note.trim().slice(0, 300))}` : "",
+    "",
+    "Решите кнопкой ниже. Пока не решено, лид остаётся у прежнего ответственного.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const notices: SentNotice[] = [];
   for (const row of approvers ?? []) {
     const id = row.id as string;
     const isHeadOfRequester = me?.head_staff_id === id;
     if (row.role !== "admin" && !isHeadOfRequester) continue;
-    await tell(
-      row.telegram_user_id as number,
-      [
-        `🔁 <b>${staff.display_name}</b> просит передать лид <b>${title}</b>`,
-        `Кому: ${target?.display_name ?? "—"}`,
-        note?.trim() ? `Причина: ${note.trim().slice(0, 300)}` : "",
-        "",
-        "Подтвердить или отклонить — на странице лида в панели.",
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    );
+    const chat = Number(row.telegram_user_id);
+    if (!Number.isFinite(chat) || chat === 0) continue;
+    try {
+      const messageId = await sendRowsForId(chat, text, transferButtons(String(created.id), leadId));
+      if (messageId) notices.push({ chatId: chat, messageId });
+    } catch (error) {
+      console.error("admin: не отправил просьбу о передаче", error);
+    }
   }
+  if (notices.length) await db.from("lead_transfers").update({ notices }).eq("id", created.id);
 
   return { ok: true, moved: false };
 }
@@ -398,7 +441,7 @@ export async function decideTransfer(
     .update({ status: decision, decided_by: staff.id, decided_at: new Date().toISOString() })
     .eq("id", transferId)
     .eq("status", "requested")
-    .select("id, lead_id, to_staff_id, requested_by")
+    .select("id, lead_id, to_staff_id, requested_by, notices")
     .maybeSingle();
 
   if (error) return { ok: false, reason: "failed" };
@@ -434,6 +477,7 @@ export async function decideTransfer(
       asker?.telegram_user_id,
       `Передачу лида <b>${title}</b> не подтвердили. Лид остаётся у вас.`,
     );
+    await closeNotices(data.notices, `✖ Отклонил ${staff.display_name}`);
     return { ok: true, moved: false };
   }
 
@@ -448,6 +492,7 @@ export async function decideTransfer(
     meta: { transfer_id: transferId, decision, to: toId },
   });
 
+  await closeNotices(data.notices, `✅ Подтвердил ${staff.display_name} — лид у ${target?.display_name ?? "коллеги"}`);
   await tell(target?.telegram_user_id, `Вам передали лид <b>${title}</b>. Он уже ваш — откройте панель.`);
   if (asker && asker.id !== toId) {
     await tell(asker.telegram_user_id, `Передачу лида <b>${title}</b> подтвердили. Теперь он у ${target?.display_name ?? "коллеги"}.`);

@@ -4,7 +4,7 @@ import { test } from "node:test";
 
 import { canSeeLead } from "@/lib/admin/ownership";
 import type { Staff } from "@/lib/admin/session";
-import { approves, needsApproval, transferVerdict } from "@/lib/admin/transfers";
+import { approves, needsApproval, transferButtons, transferVerdict } from "@/lib/admin/transfers";
 
 /**
  * Правила владельца: «менеджерам не надо видеть чужих лидов после взятия в
@@ -124,4 +124,31 @@ test("запрос лидов действительно сужается эти
 
   assert.match(body, /scopeFilter\(scope\)/, "listLeads больше не применяет круг");
   assert.match(body, /query\s*=\s*query\.or\(/, "условие круга не попадает в запрос");
+});
+
+test("руководитель решает просьбу кнопкой в Telegram, а не ищет лид в панели", () => {
+  const id = "7993193e-a0ad-4b3e-80d5-677939a8324b";
+  const rows = transferButtons(id, "lead-1");
+  const [ok, no] = rows[0] as { text: string; callback_data: string }[];
+  assert.equal(ok.callback_data, `tr:ok:${id}`);
+  assert.equal(no.callback_data, `tr:no:${id}`);
+  // Telegram обрезает callback_data длиннее 64 байт — кнопка молча ломается.
+  for (const b of [ok, no]) assert.ok(Buffer.byteLength(b.callback_data) <= 64, b.callback_data);
+  assert.deepEqual(rows[1], [{ text: "Открыть лид", panel: "/admin/leads/lead-1" }]);
+
+  const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
+  const store = read("lib/admin/transfers.ts");
+  // Просьба уходит с кнопками, и запоминается, куда ушла.
+  assert.match(store, /sendRowsForId\(chat, text, transferButtons\(String\(created\.id\), leadId\)\)/);
+  assert.match(store, /update\(\{ notices \}\)/);
+  // После решения — и из панели, и из Telegram — кнопки у всех меняются на итог.
+  assert.match(store, /closeNotices\(data\.notices, `✖ Отклонил/);
+  assert.match(store, /closeNotices\(data\.notices, `✅ Подтвердил/);
+
+  const hook = read("app/api/telegram/webhook/route.ts");
+  // Только в личке нажавшего и только тем, кто решает.
+  assert.match(hook, /if \(parts\[0\] === "tr"\) \{\s*if \(chatId === undefined \|\| chatId !== query\.from\?\.id\)/);
+  assert.match(hook, /if \(!staff \|\| !approves\(staff\.role\)/);
+  assert.match(hook, /await decideTransfer\(transferId, decision, staff, ""\)/);
+  assert.match(read("supabase/migrations/0060_transfer_notices.sql"), /add column if not exists notices jsonb/);
 });

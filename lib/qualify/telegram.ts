@@ -391,6 +391,19 @@ async function postRows(
   return second.ok ? (second.messageId ?? 0) : null;
 }
 
+/**
+ * То же, но с номером сообщения: `null` — не дошло. Нужен там, где кнопки
+ * потом меняются у всех адресатов разом — например, у просьбы о передаче
+ * лида после того, как её решили.
+ */
+export async function sendRowsForId(
+  chatId: number | string,
+  text: string,
+  rows: Button[][],
+): Promise<number | null> {
+  return postRows(chatId, text, rows);
+}
+
 /** Сообщение с несколькими рядами кнопок — например, позиция порции дня. */
 export async function sendWithRows(
   chatId: number | string,
