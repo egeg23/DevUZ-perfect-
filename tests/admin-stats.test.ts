@@ -16,6 +16,7 @@ function lead(patch: Partial<StatsRow> = {}): StatsRow {
     assigned_at: null,
     services: [],
     discount_granted: false,
+    discount_reason: null,
     ...patch,
   };
 }
@@ -121,4 +122,15 @@ test("недели считаются от понедельника и идут 
 test("обрезанная выборка помечена как обрезанная", () => {
   assert.equal(summarize([lead()]).truncated, false);
   assert.equal(summarize([lead()], true).truncated, true);
+});
+
+test("скидка 30% считается и по причинам: первая минута отдельно", () => {
+  const stats = summarize([
+    lead({ discount_granted: true, discount_reason: "promise" }),
+    lead({ discount_granted: true, discount_reason: "minute" }),
+    lead({ discount_granted: true, discount_reason: "minute" }),
+    lead(),
+  ]);
+  assert.equal(stats.discounts, 3);
+  assert.equal(stats.discountsMinute, 2);
 });

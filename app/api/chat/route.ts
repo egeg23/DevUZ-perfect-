@@ -9,7 +9,9 @@ import {
 } from "@/lib/qualify/engine";
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 import { pathFromClient, refFromClient } from "@/lib/qualify/origin";
+import { SITE_GRACE_MS, checkClaim, claimMinute } from "@/lib/qualify/minute";
 import { shouldMissPromise } from "@/lib/qualify/promise";
+import type { DiscountReason } from "@/lib/promise-terms";
 import type { ChatMessage } from "@/lib/qualify/types";
 
 export const runtime = "nodejs";
@@ -45,6 +47,10 @@ export async function POST(request: Request) {
     locale?: unknown;
     qualified?: unknown;
     discount?: unknown;
+    /** Окно первой минуты (`mn_…`), если таймер ещё идёт. */
+    minute?: unknown;
+    /** Закрепление скидки за первую минуту (`mc_…`), выданное раньше. */
+    claim?: unknown;
     ref?: unknown;
     page?: unknown;
     from?: unknown;
@@ -61,7 +67,13 @@ export async function POST(request: Request) {
   // но выигрыша это не даёт: единственное последствие — собственная заявка
   // не дойдёт до менеджера.
   const alreadyQualified = body.qualified === true;
-  const discount = body.discount === true;
+  // Минута на скидку: закрепление, выданное раньше, или окно, принесённое
+  // сейчас. Её проверяет сервер по подписи и времени — слову браузера здесь
+  // не верим, в отличие от флага двадцати секунд ниже.
+  const heldClaim = await checkClaim(body.claim);
+  const newClaim = heldClaim ? null : await claimMinute(body.minute, SITE_GRACE_MS);
+  const discount: DiscountReason | null =
+    heldClaim || newClaim ? "minute" : body.discount === true ? "promise" : null;
   // Код партнёра из адреса, который сайт запомнил: чужой ввод, той же
   // формы, что и код, иначе — нет кода.
   const ref = codeFromQuery(body.ref);
@@ -101,6 +113,10 @@ export async function POST(request: Request) {
       const push = (event: unknown) => controller.enqueue(encoder.encode(sse(event)));
 
       try {
+        // Скидка закреплена этим сообщением — браузер узнаёт об этом первым
+        // же событием и хранит закрепление для следующих разговоров.
+        if (newClaim) push({ type: "discount", reason: "minute", claim: newClaim });
+
         if (hold > 0) {
           // Поток открыт, но пуст: клиент в это время ведёт свой отсчёт от
           // момента отправки и сам покажет, что гарантия не сработала.

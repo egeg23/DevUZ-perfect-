@@ -20,6 +20,14 @@ export type BotCopy = {
   alreadySent: (requestNo: string) => string;
   /** Гарантия не сработала — скидка подтверждена. */
   discount: string;
+  /**
+   * Первое сообщение тому, кто пришёл по ссылке с сайта, пока шёл таймер
+   * первой минуты: скидка 30% закреплена. Вместо обычного приветствия — в
+   * нём обещание двадцати секунд, а скидка у человека уже есть.
+   */
+  minuteWon: string;
+  /** Пришёл по такой ссылке, но минута уже вышла: действует гарантия двадцати секунд. */
+  minuteLate: string;
   /** Ответ не получился. */
   error: string;
   /** Непонятная команда в личке. */
@@ -64,6 +72,20 @@ const ru: BotCopy = {
       "Если хотите что-то добавить или уточнить, пишите прямо здесь: всё дойдёт вместе с заявкой.",
     ].join("\n"),
   discount: "Извините, в 20 секунд мы не уложились — скидка <b>30%</b> за вами. Менеджер её учтёт.",
+  minuteWon: [
+    "👋 <b>DevUz Studio</b> — разработка полного цикла в Ташкенте.",
+    "",
+    "🎁 Вы успели в первую минуту — скидка <b>30%</b> на проект закреплена за вами. Менеджер учтёт её в расчёте.",
+    "",
+    "Расскажите своими словами, что нужно сделать.",
+  ].join("\n"),
+  minuteLate: [
+    "👋 <b>DevUz Studio</b> — разработка полного цикла в Ташкенте.",
+    "",
+    "⏱ Минута на скидку уже вышла, но гарантия в силе: отвечаем за 20 секунд, круглосуточно. Не уложимся — скидка 30% на проект.",
+    "",
+    "Расскажите своими словами, что нужно сделать.",
+  ].join("\n"),
   error:
     "Что-то пошло не так на нашей стороне. Напишите сообщение ещё раз — обычно со второго всё проходит.",
   unknown: "Такой команды у меня нет. Просто напишите, что нужно сделать, — я на связи.",
@@ -102,6 +124,20 @@ const en: BotCopy = {
       "If you'd like to add or clarify anything, just write here: it'll reach them with your request.",
     ].join("\n"),
   discount: "Sorry, we missed the 20 seconds — the <b>30%</b> discount is yours. The manager will apply it.",
+  minuteWon: [
+    "👋 <b>DevUz Studio</b> — full-cycle development studio in Tashkent.",
+    "",
+    "🎁 You made it within the first minute — <b>30%</b> off your project is locked in for you. The manager will apply it to the quote.",
+    "",
+    "Tell us in your own words what you need built.",
+  ].join("\n"),
+  minuteLate: [
+    "👋 <b>DevUz Studio</b> — full-cycle development studio in Tashkent.",
+    "",
+    "⏱ The discount minute is over, but the guarantee still stands: we reply within 20 seconds, around the clock. If we miss it — 30% off your project.",
+    "",
+    "Tell us in your own words what you need built.",
+  ].join("\n"),
   error: "Something broke on our side. Send the message again — it usually goes through the second time.",
   unknown: "I don't have that command. Just write what you need — I'm here.",
   help: [
@@ -139,6 +175,20 @@ const uz: BotCopy = {
       "Biror narsa qo‘shmoqchi yoki aniqlashtirmoqchi bo‘lsangiz, shu yerga yozing: hammasi ariza bilan birga yetib boradi.",
     ].join("\n"),
   discount: "Uzr, 20 soniyaga ulgurmadik — <b>30%</b> chegirma sizniki. Menejer buni hisobga oladi.",
+  minuteWon: [
+    "👋 <b>DevUz Studio</b> — Toshkentdagi to‘liq tsiklli ishlab chiqish studiyasi.",
+    "",
+    "🎁 Birinchi daqiqada ulgurdingiz — loyihaga <b>30%</b> chegirma siz uchun band qilindi. Menejer uni hisob-kitobda inobatga oladi.",
+    "",
+    "O‘z so‘zlaringiz bilan nima kerakligini ayting.",
+  ].join("\n"),
+  minuteLate: [
+    "👋 <b>DevUz Studio</b> — Toshkentdagi to‘liq tsiklli ishlab chiqish studiyasi.",
+    "",
+    "⏱ Chegirma daqiqasi tugadi, lekin kafolat kuchda: 20 soniyada javob beramiz, kunu tun. Ulgurmasak — loyihaga 30% chegirma.",
+    "",
+    "O‘z so‘zlaringiz bilan nima kerakligini ayting.",
+  ].join("\n"),
   error: "Bizning tomonda nimadir ishlamadi. Xabarni yana yuboring — odatda ikkinchi marta o‘tib ketadi.",
   unknown: "Bunday buyruq yo‘q. Shunchaki nima kerakligini yozing — men shu yerdaman.",
   help: [
@@ -168,6 +218,20 @@ const zh: BotCopy = {
   alreadySent: (requestNo) =>
     [`您的申请 <b>${requestNo}</b> 已交给客户经理，他会在这里联系您。`, "", "如果还想补充或说明什么，直接写在这里即可，会一并转达。"].join("\n"),
   discount: "抱歉，我们没能在 20 秒内回复 — <b>30%</b> 的折扣归您，客户经理会为您计入。",
+  minuteWon: [
+    "👋 <b>DevUz Studio</b> — 塔什干的全流程开发工作室。",
+    "",
+    "🎁 您在第一分钟内联系了我们 — 项目 <b>30%</b> 的折扣已为您锁定，客户经理会在报价中计入。",
+    "",
+    "请用您自己的话说说需要做什么。",
+  ].join("\n"),
+  minuteLate: [
+    "👋 <b>DevUz Studio</b> — 塔什干的全流程开发工作室。",
+    "",
+    "⏱ 折扣的一分钟已经结束，但保证依然有效：20 秒内回复，全天候。超时未回 — 项目立减 30%。",
+    "",
+    "请用您自己的话说说需要做什么。",
+  ].join("\n"),
   error: "我们这边出了点问题。请再发一次消息 — 通常第二次就能成功。",
   unknown: "我没有这个命令。直接写下您的需求就好 — 我在。",
   help: ["<b>DevUz Studio</b>", "", "用普通消息描述您的需求 — 我会问一两个补充问题，然后连同申请编号一起转交客户经理。", "", "/ref — 合作伙伴计划：链接与余额", "/reset — 重新开始对话"].join("\n"),

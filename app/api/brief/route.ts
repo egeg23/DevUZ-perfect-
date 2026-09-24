@@ -249,7 +249,7 @@ export async function POST(request: Request) {
 
   // Ссылка на бота: по ней ассистент поднимает бриф и ведёт первичку, а не
   // знакомится заново. Токен одноразовый и живёт час — как у чата с сайта.
-  const token = createHandoff({ locale, transcript: [], qualified: false, requestNo, discount: false, brief });
+  const token = createHandoff({ locale, transcript: [], qualified: false, requestNo, discount: null, brief });
 
   return Response.json({
     ok: true,

@@ -105,6 +105,13 @@ services:
       # .env молча игнорируется.
       PROMISE_MISS_EVERY: ${PROMISE_MISS_EVERY:-3}
 
+      # Минута на скидку: сколько секунд у нового посетителя, чтобы написать
+      # ассистенту и закрепить скидку 30%. 0 — выключено. Ключ подписи
+      # (DISCOUNT_SIGNING_SECRET) обычно лежит в хранилище секретов Supabase;
+      # строка здесь — чтобы его можно было задать и в .env.
+      FIRST_MINUTE_SECONDS: ${FIRST_MINUTE_SECONDS:-60}
+      DISCOUNT_SIGNING_SECRET: ${DISCOUNT_SIGNING_SECRET:-}
+
       # Запасные адреса API на случай, если прямой хост станет недоступен.
       # Пусто — работаем по адресам по умолчанию.
       ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-}

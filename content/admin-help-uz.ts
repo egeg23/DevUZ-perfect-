@@ -126,6 +126,7 @@ export const uz: HelpCopy = {
               "**«Контакт клиента»** → «Показать контакт». Faqat olingan lid bo‘yicha ochiladi: avval «Взять себе». Har bir ochilish jurnalga tushadi, shuning uchun yozmoqchi bo‘lganingizda oching.",
               "**«Переписка с клиентом»** → «Показать переписку»: mijoz saytdagi yoki botdagi assistentga vazifa, pul va muddatlar haqida aytgan hamma narsa. Bu ham faqat olgandan keyin ochiladi va bu ham yoziladi. Formadan kelgan murojaatlarda yozishma yo‘q.",
               "**«Обсуждение»** — mijoz haqida butun jamoa uchun izohlar; lidni olib borayotgan odamga Telegramda xabar keladi. Mijoz kontaktini u yerga yozmang. Pastroqda — brif, saytdan kelgan smeta va izohlar. Aloqalardan kelgan lidlar haqida — [aloqa bo‘yicha birlamchi suhbat](#prospect-replies) bandi.",
+              "Ariza raqami yonidagi sariq belgi — mijozda 30% chegirma bor va nima uchun ekani yozilgan: **«написал в первую минуту»** — u saytda birinchi daqiqa taymeri ishlayotganda yordamchiga saytda yoki Telegramda yozgan; **«не уложились в 20 секунд»** — javob kafolati ishlagan. Chegirma mijozga allaqachon ko‘rsatilgan, u muhokama qilinmaydi — uni hisob-kitobda inobatga oling. Kutish uchun uzr so‘rash faqat ikkinchi holatda kerak.",
             ],
             head: [
               "Siz istalgan kartochkani ochasiz. Har bir ochilish yozib qo‘yiladi.",
@@ -133,12 +134,14 @@ export const uz: HelpCopy = {
               "**«Статус»** istalgan lidda o‘zgartiriladi: «новый», «в работе», «отложен», «выиграли», «проиграли». «Выиграли», «проиграли» va «отложен» avtoeslatmalarni bekor qiladi. «Новый» — faqat bo‘sh lidda; biriktirilgan lidda u yo‘q, lidni «Вернуть в очередь» bo‘shatadi.",
               "**«Показать контакт»** va **«Показать переписку»** olingan har qanday lid bo‘yicha ishlaydi. Bo‘sh lid bo‘yicha — faqat «Взять себе» bosilgandan keyin: siz navbatda hamma bilan teng turasiz. Har bir ochilish jurnalga tushadi.",
               "**«Обсуждение»** — butun jamoa uchun izohlar, lidni olib borayotgan odamga ular Telegramda keladi. Pastroqda — brif, smeta va izohlar.",
+              "Ariza raqami yonidagi sariq belgi — mijozda 30% chegirma bor va nima uchun ekani yozilgan: **«написал в первую минуту»** — u saytda birinchi daqiqa taymeri ishlayotganda yordamchiga saytda yoki Telegramda yozgan; **«не уложились в 20 секунд»** — javob kafolati ishlagan. Chegirma mijozga allaqachon ko‘rsatilgan, u muhokama qilinmaydi — uni hisob-kitobda inobatga oling. Kutish uchun uzr so‘rash faqat ikkinchi holatda kerak.",
             ],
             admin: [
               "Siz istalgan kartochkani ochasiz va hamma narsani qila olasiz: olish, navbatga qaytarish, berish, holatni o‘zgartirish, kontakt va yozishmani ochish — bo‘sh lidda ham, olmasdan oldin. Har bir harakat jurnalga ismingiz bilan tushadi.",
               "Bo‘sh lidda tepada u hozir kimning navbatida turgani ko‘rinadi: «👁 В очереди у … до 14:30». Boshqalarga bu ism ko‘rsatilmaydi.",
               "**«Статус»**: «выиграли», «проиграли» va «отложен» avtoeslatmalarni bekor qiladi; «новый» faqat bo‘sh lidda bor, biriktirilganda yo‘q — lidni «Вернуть в очередь» bo‘shatadi.",
               "**«Обсуждение»** butun jamoaga ko‘rinadi, lidni olib borayotgan odamga Telegramda keladi. Pastroqda — brif, smeta va assistent izohlari.",
+              "Ariza raqami yonidagi sariq belgi — mijozda 30% chegirma bor va nima uchun ekani yozilgan: **«написал в первую минуту»** — u saytda birinchi daqiqa taymeri ishlayotganda yordamchiga saytda yoki Telegramda yozgan; **«не уложились в 20 секунд»** — javob kafolati ishlagan. Chegirma mijozga allaqachon ko‘rsatilgan, u muhokama qilinmaydi — uni hisob-kitobda inobatga oling. Kutish uchun uzr so‘rash faqat ikkinchi holatda kerak. Bunday chegirmalar soni va sababi — [statistikada](/admin/stats), daqiqa uzunligi — serverdagi `FIRST_MINUTE_SECONDS` (odatda 60, 0 o‘chiradi).",
             ],
           },
         },
@@ -673,7 +676,7 @@ export const uz: HelpCopy = {
           id: "panels",
           title: "Pastdagi panellar",
           body: [
-            "«Приходит по неделям» — 12 hafta, hafta dushanbadan. «Качество лидов» — A–D harflari bo‘yicha. «Статусы». «Откуда приходят» — chat, forma, bot, vitrina, skaut, aloqalar. «Язык обращения». «Что спрашивают» — bitta lid bir necha qatorda bo‘lishi mumkin. «Скидка за несработавшую гарантию» — har bir shunday chegirma — chekning 30%.",
+            "«Приходит по неделям» — 12 hafta, hafta dushanbadan. «Качество лидов» — A–D harflari bo‘yicha. «Статусы». «Откуда приходят» — chat, forma, bot, vitrina, skaut, aloqalar. «Язык обращения». «Что спрашивают» — bitta lid bir necha qatorda bo‘lishi mumkin. «Скидка 30%» — nechta murojaat chegirma olgani va nima uchun: «первая минута» — saytda birinchi daqiqa taymeri ishlayotganda mijoz yordamchiga yozgan; «гарантия 20 секунд» — javobga ulgurmaganmiz. Har bir shunday chegirma — chekning 30%.",
           ],
         },
         {

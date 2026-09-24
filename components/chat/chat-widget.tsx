@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 
 import { ChatPanel } from "@/components/chat/chat-panel";
+import { MinuteBubble, useMinute, useMinuteLeft, useTelegramMinuteLinks } from "@/components/chat/minute-offer";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n";
+import { clock, startMinute } from "@/lib/minute-client";
 
 /**
  * Плавающая кнопка чата.
@@ -13,11 +15,24 @@ import type { Locale } from "@/lib/i18n";
  * Появляется не сразу, а после того, как посетитель прокрутил первый экран:
  * всплывающее окно поверх ещё не прочитанного заголовка раздражает и его
  * закрывают не глядя, вместе с шансом на разговор.
+ *
+ * Исключение — минута на скидку. Пока идёт таймер первой минуты, кнопка и
+ * плашка с таймером видны сразу, поверх первого экрана: минута, которую
+ * человек не видит, прошла бы, пока он читает заголовок. Кончилась —
+ * кнопка снова ждёт прокрутки.
  */
 export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [prefill, setPrefill] = useState<string | undefined>();
+  /** Плашку минуты закрыли крестиком — таймер остаётся на кнопке. */
+  const [bubbleHidden, setBubbleHidden] = useState(false);
+  const minute = useMinute();
+  const left = useMinuteLeft(minute);
+  const running = minute.phase === "running";
+
+  useEffect(() => startMinute(), []);
+  useTelegramMinuteLinks(locale);
 
   useEffect(() => {
     // Появляется только после сцены сборки. Иначе на телефоне кнопка чата
@@ -70,9 +85,20 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
     <div
       className={cn(
         "fixed bottom-5 right-4 z-50 flex flex-col items-end gap-3 transition-all duration-500 sm:right-6",
-        ready ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
+        ready || running ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
       )}
     >
+      {running && !open && !bubbleHidden ? (
+        <MinuteBubble
+          locale={locale}
+          dict={dict}
+          state={minute}
+          left={left}
+          onChat={() => setOpen(true)}
+          onHide={() => setBubbleHidden(true)}
+        />
+      ) : null}
+
       {open ? (
         <div className="w-[min(24rem,calc(100vw-2rem))] shadow-[0_30px_90px_rgba(0,0,0,.7)]">
           <ChatPanel locale={locale} dict={dict} compact prefill={prefill} />
@@ -94,6 +120,11 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
           <>
             <span aria-hidden="true">💬</span>
             {dict.chat.open}
+            {running ? (
+              <span className="rounded-md bg-ink/15 px-1.5 py-0.5 font-mono text-[0.8rem] tabular-nums">
+                {clock(left)}
+              </span>
+            ) : null}
           </>
         )}
       </button>

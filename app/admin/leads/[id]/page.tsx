@@ -59,6 +59,12 @@ import { TRANSFER_TITLE, approves, openTransferFor } from "@/lib/admin/transfers
 
 export const dynamic = "force-dynamic";
 
+/** За что клиенту скидка — менеджеру важно: извиняться за ожидание или нет. */
+const DISCOUNT_CHIP: Record<"promise" | "minute", string> = {
+  promise: "скидка 30% — не уложились в 20 секунд",
+  minute: "скидка 30% — написал в первую минуту",
+};
+
 const EXPERTISE_LABEL: Record<string, string> = {
   high: "разбирается",
   medium: "средне",
@@ -291,7 +297,7 @@ export default async function LeadPage({
         </span>
         {lead.discount_granted ? (
           <span className="rounded bg-gold/15 px-2 py-0.5 text-xs text-gold">
-            выдана скидка 30%
+            {DISCOUNT_CHIP[lead.discount_reason ?? "promise"]}
           </span>
         ) : null}
       </div>
