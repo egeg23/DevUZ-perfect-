@@ -339,8 +339,8 @@ async function live() {
       const why = error?.errorMessage ?? error?.message ?? String(error);
       if (ABOUT_TARGET.test(why)) {
         const note = unreachableText("not_found", job.kind);
-        await markUnreachable(job.id, note);
-        console.log(`касания: ${job.target} — ${note}`);
+        const next = await markUnreachable(job.id, note, job.kind);
+        console.log(`касания: ${job.target} — ${note}${next === "phone" ? " Пробую по номеру." : ""}`);
       } else {
         const { stopped } = await markFailed(job.id, why);
         outreachStopped = stopped;
@@ -353,8 +353,10 @@ async function live() {
       // Не провал: ничего не сломалось, просто автономно сюда не дотянуться.
       // Место в часовом пределе при этом не тратится — до отправки не дошло.
       const note = unreachableText(reach.verdict.why, job.kind);
-      await markUnreachable(job.id, note);
-      console.log(`касания: ${job.target} — ${note}`);
+      // Адрес оказался каналом или ботом — следующим тиком тот же проспект
+      // пойдёт по номеру с сайта, если он мобильный (см. markUnreachable).
+      const next = await markUnreachable(job.id, note, job.kind);
+      console.log(`касания: ${job.target} — ${note}${next === "phone" ? " Пробую по номеру." : ""}`);
       return;
     }
 
