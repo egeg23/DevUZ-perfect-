@@ -61,8 +61,39 @@ export type Case = {
    * он подписан под шторкой; `taken` — когда снято, ГГГГ-ММ: старый сайт
    * живёт своей жизнью, и снимок честно говорит, от какого он числа.
    */
-  compare?: { site: string; taken: string };
+  compare?: { site: string; taken: string; parts: readonly ComparePart[] };
 };
+
+/**
+ * Разделы, которые сравниваются шторками «было / стало». Ключ — часть имени
+ * снимка (`<part>-before-desktop.webp`), подпись — в словаре, `cases.compareParts`.
+ * Раздел берётся, только если он есть на обоих сайтах: сравнение «в тех же
+ * пунктах», а не «наш лучший блок против их худшего».
+ */
+export const COMPARE_PARTS = [
+  "hero",
+  "calculator",
+  "picker",
+  "showcase",
+  "catalog",
+  "product",
+  "themes",
+  "projects",
+  "works",
+  "commerce",
+  "mortgage",
+  "quality",
+  "production",
+  "steps",
+  "materials",
+  "clients",
+  "about",
+  "team",
+  "news",
+  "faq",
+  "contacts",
+] as const;
+export type ComparePart = (typeof COMPARE_PARTS)[number];
 
 export const cases: Case[] = [
   {
@@ -139,7 +170,11 @@ export const cases: Case[] = [
     slug: "global-export",
     name: "Global Export",
     monogram: "GE",
-    compare: { site: "globalex.uz", taken: "2026-09" },
+    compare: {
+      site: "globalex.uz",
+      taken: "2026-09",
+      parts: ["hero", "about", "catalog", "product", "production", "news", "team", "contacts"],
+    },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/ru",
     tier: 1,
@@ -174,7 +209,11 @@ export const cases: Case[] = [
     slug: "adar",
     name: "ADAR",
     monogram: "AD",
-    compare: { site: "adar.uz", taken: "2026-09" },
+    compare: {
+      site: "adar.uz",
+      taken: "2026-09",
+      parts: ["hero", "showcase", "catalog", "product", "themes", "clients", "about", "contacts"],
+    },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/adar",
     tier: 2,
@@ -288,7 +327,11 @@ export const cases: Case[] = [
     slug: "golden-house",
     name: "Golden House",
     monogram: "GH",
-    compare: { site: "gh.uz", taken: "2026-09" },
+    compare: {
+      site: "gh.uz",
+      taken: "2026-09",
+      parts: ["hero", "picker", "projects", "commerce", "mortgage", "news", "contacts"],
+    },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/gh",
     tier: 1,
@@ -326,7 +369,11 @@ export const cases: Case[] = [
     slug: "namuna",
     name: "Namuna",
     monogram: "NM",
-    compare: { site: "namuna.uz", taken: "2026-09" },
+    compare: {
+      site: "namuna.uz",
+      taken: "2026-09",
+      parts: ["hero", "calculator", "works", "production", "steps", "materials", "faq", "contacts"],
+    },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/namuna",
     tier: 2,
@@ -362,7 +409,11 @@ export const cases: Case[] = [
     slug: "foodmaxx",
     name: "FOODMAXX",
     monogram: "FM",
-    compare: { site: "foodmaxx.uz", taken: "2026-09" },
+    compare: {
+      site: "foodmaxx.uz",
+      taken: "2026-09",
+      parts: ["hero", "quality", "catalog", "production", "clients", "about", "contacts"],
+    },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/foodmaxx",
     tier: 2,
