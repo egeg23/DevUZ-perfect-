@@ -52,6 +52,16 @@ export type Case = {
    * Правило выбирает человек, глядя на конкретное имя.
    */
   monogram: string;
+  /**
+   * Сайт заказчика до нас — для шторки «было / стало» на странице кейса.
+   *
+   * Снимки первого экрана лежат в public/cases/<slug>/: before-desktop,
+   * before-mobile, after-desktop, after-mobile (.webp; компьютер 1440×900,
+   * телефон 390×844 в двойной плотности). `site` — адрес старого сайта, как
+   * он подписан под шторкой; `taken` — когда снято, ГГГГ-ММ: старый сайт
+   * живёт своей жизнью, и снимок честно говорит, от какого он числа.
+   */
+  compare?: { site: string; taken: string };
 };
 
 export const cases: Case[] = [
@@ -129,6 +139,7 @@ export const cases: Case[] = [
     slug: "global-export",
     name: "Global Export",
     monogram: "GE",
+    compare: { site: "globalex.uz", taken: "2026-09" },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/ru",
     tier: 1,
@@ -163,6 +174,7 @@ export const cases: Case[] = [
     slug: "adar",
     name: "ADAR",
     monogram: "AD",
+    compare: { site: "adar.uz", taken: "2026-09" },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/adar",
     tier: 2,
@@ -276,6 +288,7 @@ export const cases: Case[] = [
     slug: "golden-house",
     name: "Golden House",
     monogram: "GH",
+    compare: { site: "gh.uz", taken: "2026-09" },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/gh",
     tier: 1,
@@ -313,6 +326,7 @@ export const cases: Case[] = [
     slug: "namuna",
     name: "Namuna",
     monogram: "NM",
+    compare: { site: "namuna.uz", taken: "2026-09" },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/namuna",
     tier: 2,
@@ -348,6 +362,7 @@ export const cases: Case[] = [
     slug: "foodmaxx",
     name: "FOODMAXX",
     monogram: "FM",
+    compare: { site: "foodmaxx.uz", taken: "2026-09" },
     year: 2026,
     url: "https://globalex.maximov-tech.ru/foodmaxx",
     tier: 2,

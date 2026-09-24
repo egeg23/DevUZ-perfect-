@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { BeforeAfter } from "@/components/cases/before-after";
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
@@ -104,6 +105,34 @@ export default async function CasePage({
           ))}
         </div>
 
+        {/* Было и стало — сразу под цифрами: это самый короткий ответ на
+            вопрос «что вы сделали», и читать описание ради него не нужно. */}
+        {item.compare ? (
+          <section className="mt-14">
+            <h2 className="text-2xl font-bold">{dict.cases.compareTitle}</h2>
+            <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-muted">{dict.cases.compareHint}</p>
+            <div className="mt-6">
+              <BeforeAfter
+                slug={item.slug}
+                labels={{
+                  before: dict.cases.compareBefore,
+                  after: dict.cases.compareAfter,
+                  desktop: dict.cases.compareDesktop,
+                  mobile: dict.cases.compareMobile,
+                  slider: dict.cases.compareSlider,
+                  altBefore: dict.cases.compareAltBefore.replace("{name}", item.name),
+                  altAfter: dict.cases.compareAltAfter.replace("{name}", item.name),
+                }}
+              />
+            </div>
+            <p className="mt-4 text-[0.8rem] leading-relaxed text-faint">
+              {dict.cases.compareNote
+                .replace("{date}", monthOf(item.compare.taken, locale))
+                .replace("{site}", item.compare.site)}
+            </p>
+          </section>
+        ) : null}
+
         <div className="mt-14 grid gap-10 lg:grid-cols-[1.7fr_1fr]">
           <div>
             <h2 className="text-2xl font-bold">{dict.cases.challenge}</h2>
@@ -165,4 +194,18 @@ export default async function CasePage({
       />
     </>
   );
+}
+
+const MONTH_LOCALE: Record<Locale, string> = { ru: "ru-RU", en: "en-GB", uz: "uz-Latn-UZ", zh: "zh-CN" };
+
+/**
+ * «2026-09» → «сентябрь 2026» на языке страницы. Русское «г.» срезается:
+ * за датой в подписи идёт точка, и вышло бы «2026 г..».
+ */
+function monthOf(taken: string, locale: Locale): string {
+  const [year, month] = taken.split("-").map(Number);
+  const date = new Date(Date.UTC(year, (month || 1) - 1, 15));
+  return new Intl.DateTimeFormat(MONTH_LOCALE[locale], { month: "long", year: "numeric", timeZone: "UTC" })
+    .format(date)
+    .replace(/\s*г\.$/, "");
 }

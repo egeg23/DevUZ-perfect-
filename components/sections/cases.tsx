@@ -139,6 +139,14 @@ export function CaseCard({
         <span className="absolute right-4 top-4 font-mono text-[0.62rem] text-faint">
           {item.year}
         </span>
+
+        {/* У кейса есть шторка «было / стало» — сказать это на карточке:
+            сравнить со старым сайтом хотят раньше, чем читать описание. */}
+        {item.compare ? (
+          <span className="absolute left-4 top-4 rounded-md border border-line bg-ink/50 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-text backdrop-blur-sm">
+            ↔ {dict.cases.compareTitle}
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col p-6">
