@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { DashboardHome } from "@/components/admin/dashboard-home";
-import { TrafficPanel, trafficPeriodOf } from "@/components/admin/traffic-panel";
 import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
 import { LeadTable } from "@/components/admin/lead-table";
@@ -9,6 +9,7 @@ import { TouchPlanLine } from "@/components/admin/touch-plan-line";
 import { requireStaff } from "@/lib/admin/guard";
 import { touchProgressOf } from "@/lib/admin/touch-store";
 import { PRIORITIES, STATUSES, leadCounts, listLeads, scopeFor } from "@/lib/admin/leads";
+import { canSee } from "@/lib/admin/roles";
 import { approves, pendingTransfers } from "@/lib/admin/transfers";
 
 // Панель показывает состояние базы прямо сейчас. Любое кэширование здесь
@@ -63,7 +64,6 @@ const OWNER_TABS = [
   { key: "leads", label: "Лиды" },
   { key: "money", label: "Деньги" },
   { key: "team", label: "Команда" },
-  { key: "traffic", label: "Трафик" },
 ] as const;
 type OwnerTab = (typeof OWNER_TABS)[number]["key"];
 
@@ -91,7 +91,6 @@ export default async function AdminHome({
     p?: string;
     tab?: string;
     d?: string;
-    /** Что вернул вход через Google для статистики (app/admin/google). */
     ga?: string;
     gd?: string;
     gp?: string;
@@ -99,6 +98,19 @@ export default async function AdminHome({
 }) {
   const staff = await requireStaff();
   const params = await searchParams;
+
+  // Трафик был вкладкой владельца, теперь это раздел для владельца и
+  // руководителей. Старые закладки и адреса возврата из Google ведут сюда —
+  // переводим их туда же, с периодом и пометкой входа.
+  if (params.tab === "traffic" && canSee(staff.role, "/admin/traffic")) {
+    const keep = new URLSearchParams();
+    for (const key of ["d", "ga", "gd", "gp"] as const) {
+      const value = params[key];
+      if (value) keep.set(key, value);
+    }
+    const query = keep.toString();
+    redirect(query ? `/admin/traffic?${query}` : "/admin/traffic");
+  }
   const ownerTab = staff.role === "admin" ? ownerTabOf(params.tab) : null;
 
   const page = Math.max(Number.parseInt(params.page ?? "1", 10) || 1, 1);
@@ -292,12 +304,6 @@ export default async function AdminHome({
           ) : null}
           {ownerTab === "money" ? <DashboardHome staff={staff} planNotice={params.p} section="money" /> : null}
           {ownerTab === "team" ? <DashboardHome staff={staff} planNotice={params.p} section="team" /> : null}
-          {ownerTab === "traffic" ? (
-            <TrafficPanel
-              days={trafficPeriodOf(params.d)}
-              notice={{ code: params.ga, detail: params.gd, property: params.gp }}
-            />
-          ) : null}
           {ownerTab === "leads" ? leadsBlock : null}
         </>
       ) : (

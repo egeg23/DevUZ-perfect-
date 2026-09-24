@@ -49,7 +49,7 @@ export const uz: HelpCopy = {
               "**«Лиды»** — barcha filtrlari bilan [lidlar ro‘yxati](#leads-list). Varaqdagi tilla rangli raqam — hozir nechta lid bo‘shligi.",
               "**«Деньги»** — «Касса по месяцам» (yarim yillik tushum va xarajatlar, har oy ostida — farqi) va «Ожидаем оплат»: faol loyihalar bo‘yicha yana qancha to‘lanishi kerak.",
               "**«Команда»** — [haftalik jadval](#leads-team-week), eng yaxshilar, har biriga tavsiyalar va [«План и факт»](#leads-plan-fact) — u yerda maqsadlarni qo‘yasiz va o‘zgartirasiz.",
-              "**«Трафик»** — Metrika va Google Analytics bo‘yicha saytga tashriflar, batafsil [trafik](#leads-traffic) bandida.",
+              "Metrika va Google Analytics bo‘yicha saytga tashriflar — varaq emas, alohida [Trafik](/admin/traffic) bo‘limi: uni siz va rahbarlar ko‘rasiz. Varaqqa eski xatcho‘plar ham o‘sha yerga olib boradi.",
             ],
           },
         },
@@ -249,18 +249,6 @@ export const uz: HelpCopy = {
               "**«Касаний»** — odamning hafta davomida lidlar bilan barcha harakatlari (ochdi, kontakt, eslatma, holat, muhokama), sovuq aloqalar emas; sovuq aloqalar — **«План касаний»** ustunida. **«Контактов»** — «Показать контакт» bosilishlari. **«К выплате»** ustunini faqat siz ko‘rasiz.",
             ],
           },
-        },
-        {
-          id: "traffic",
-          title: "Trafik: Metrika va Google Analytics",
-          roles: ["admin"],
-          body: [
-            "«Трафик» varag‘i: 7, 30 yoki 90 kun uchun tashriflar, tashrifchilar, ko‘rishlar, rad etishlar va tashrifning o‘rtacha vaqti, strelkalar — undan oldingi xuddi shunday davrga nisbatan. Rad etishlarda o‘sish — qizil rangda.",
-            "Metrika va Analytics yonma-yon turadi va qo‘shilmaydi: ular tashriflarni har xil hisoblaydi, yig‘indisi esa na u yerda, na bu yerda yo‘q raqam bo‘lardi. Har 10 daqiqada yangilanadi.",
-            "**Metrika** `YANDEX_METRIKA_TOKEN` tokeni bilan ulanadi (hisoblagich raqamini panel o‘zi biladi) — serverdagi `/opt/devuz/.env` faylida yoki Supabase maxfiy ma’lumotlar omborida (Vault) `app.YANDEX_METRIKA_TOKEN` nomi bilan: `.env`da kalit bo‘lmasa, panel uni o‘sha yerdan oladi.",
-            "**Google Analytics** Google orqali kirish bilan ulanadi — kalitlarsiz va serverga kirmasdan. Google Cloud’da bir marta «mijoz» (client) yaratiladi — Google panelimizni taniydigan ruxsatnoma; qadamlari «Google Analytics» kartochkasining o‘zida yozilgan. Uning Client ID va Client secret qatorlari kartochkaga qo‘yiladi, keyin — **«Сохранить и войти через Google»**. Saytning Analytics’iga kirish huquqi bor Google akkaunti bilan kirish kerak va «See and download your Google Analytics data» belgisini olib tashlamaslik kerak. Resurs raqamini panel o‘zi topadi — sayt hisoblagichi `G-L52MCVNS0W` bo‘yicha. Olingan hamma narsa Supabase’ning shifrlangan maxfiy ma’lumotlar omborida saqlanadi, panelda esa faqat o‘qish huquqi bor: Analytics’da biror narsani o‘zgartira olmaydi. Har bir kirish [jurnalda](/admin/audit) ko‘rinadi.",
-            "Agar Google kiritmay qo‘ysa — kartochkada «Google больше не пускает по сохранённому входу» deb yoziladi va bu **«Войти через Google»** tugmasi bilan hal bo‘ladi. Ko‘pincha sabab bitta: Google Cloud’dagi ilova e’lon qilinmagan — «Testing» rejimida Google kirishni 7 kundan keyin o‘chiradi, shuning uchun u yerda bir marta «Publish app» bosish kerak. Agar panel resurs raqamini o‘zi topa olmasa («Google Analytics Admin API» yoqilmagan yoki resurs boshqa akkauntda), uni yozishni so‘raydi: Google Analytics → «Администратор» → «Сведения о ресурсе», faqat raqamlar. Raqamlar ostidagi **«войти заново»** havolasi — Google akkauntini almashtirish uchun.",
-          ],
         },
         {
           id: "banner",
@@ -715,6 +703,49 @@ export const uz: HelpCopy = {
             ],
             admin: [
               "Bu yerda rejalar yo‘q. «План и факт» — [bosh sahifaning](/admin) «Команда» varag‘ida, aloqalar rejasi — [«Команда»](/admin/team) bo‘limida.",
+            ],
+          },
+        },
+      ],
+    },
+
+    /* ── Трафик ───────────────────────────────────────────────────────── */
+    "/admin/traffic": {
+      what: "devuz.studio saytiga qancha odam kiradi, ular qayerdan keladi va qaysi sahifadan boshlaydi — Yandex Metrika va Google Analytics bo‘yicha. Reklama va e’lonlar ishlayaptimi, shuni ko‘rish uchun kerak: lidlar saytdan keladi, saytga kirish kamaysa, bir-ikki haftadan keyin lidlar ham kamayadi. Egasi va rahbarlar ko‘radi, menejerlar — yo‘q.",
+      items: [
+        {
+          id: "numbers",
+          title: "Raqamlar nimani bildiradi",
+          body: [
+            "O‘ng tepada — davr: **«7 дней»**, **«30 дней»** yoki **«90 дней»**. Har bir raqam yonidagi strelka — u oldingi xuddi shuncha kunga nisbatan qancha o‘sgani yoki tushgani: «30 дней»da — oldingi 30 kunga nisbatan. Yashil strelka — yaxshi, sariq — yomon, «новое» — oldin nol edi.",
+            "**«визитов»** — saytga necha marta kirilgan: bitta odam ertalab va kechqurun — ikki tashrif. **«посетителей»** — nechta turli odam, aniqrog‘i turli brauzer: bitta odam telefondan va noutbukdan ikki marta hisoblanadi. **«просмотров»** — jami nechta sahifa ochilgan.",
+            "**«отказов»** — odam bitta sahifani ochib, deyarli darhol chiqib ketgan tashriflar ulushi. Bu yerda teskari: rad etishlar o‘sishi — sariq strelka, bu yomon. **«ср. визит»** — tashrif o‘rtacha qancha davom etadi, daqiqa:soniya.",
+            "Ustunlar — kunlar bo‘yicha tashriflar, ustunga sichqonchani olib borsangiz sana va son ko‘rinadi. **«Откуда приходят»** — qidiruvdan, ijtimoiy tarmoqlardan, reklamadan yoki to‘g‘ridan-to‘g‘ri havola orqali. Metrikada nomlar ruscha, Google’da inglizcha: «Organic Search» — qidiruv, «Direct» — to‘g‘ridan-to‘g‘ri kirish, «Referral» — boshqa saytlardan o‘tish, «Organic Social» va «Paid Social» — ijtimoiy tarmoqlar, «Paid Search» — qidiruvdagi reklama. **«Страницы входа»** — odam tashrifni qaysi sahifadan boshlagan.",
+            "Raqamlar har 10 daqiqada yangilanadi: panel har ochilganda Metrika va Google’dan so‘ramaydi, shuning uchun hozirgina ishga tushirilgan reklama bu yerda darhol ko‘rinmaydi.",
+          ],
+        },
+        {
+          id: "two-sources",
+          title: "Nega Metrika va Google har xil ko‘rsatadi",
+          body: [
+            "Metrika va Google Analytics yonma-yon turadi va qo‘shilmaydi. Har biri tashrifni o‘zicha hisoblaydi va robotlarni o‘zicha ajratadi, ba’zi odamlarning brauzerida esa ulardan biri bloklangan, ikkinchisi yo‘q. Shuning uchun raqamlar farq qiladi va bu normal: yig‘indi na u yerda, na bu yerda yo‘q raqam bo‘lardi.",
+            "Aniq songa emas, yo‘nalishga qarang. Reklama ishga tushgandan keyin ikkalasi ham o‘sishni ko‘rsatsa — reklama odam olib kelyapti. Faqat bittasi o‘ssa — ehtimol gap odamlarda emas, hisoblashda.",
+            "Saytga kirish — hali mijoz emas. Nechta odam yozgani [statistikada](/admin/stats), «Откуда приходят» blokida ko‘rinadi: u yerda murojaatlar, bu yerda tashriflar. Tashriflar ko‘paysa-yu, murojaatlar ko‘paymasa — odamlar keladi, lekin nima uchun kelganini topmaydi.",
+          ],
+        },
+        {
+          id: "connect",
+          title: "Qanday ulanadi",
+          body: {
+            head: [
+              "Egasi ulaydi: Metrika uchun serverda kalit, Google uchun — uning Google akkaunti bilan kirish kerak. Sizda ulash tugmalari yo‘q, faqat raqamlar — bu yerdan ulanishni buzib ham, almashtirib ham bo‘lmaydi.",
+              "Kartochkada «Не подключено» yoki «Google перестал пускать по входу владельца» deb yozilgan bo‘lsa — egasiga ayting, unga bu bir daqiqalik ish. «Не ответил» — odatda vaqtinchalik: sahifani bir daqiqadan keyin yangilang, takrorlansa — yana egasiga.",
+            ],
+            admin: [
+              "**Metrika** `YANDEX_METRIKA_TOKEN` tokeni bilan ulanadi (hisoblagich raqamini panel o‘zi biladi) — serverdagi `/opt/devuz/.env` faylida yoki Supabase maxfiy ma’lumotlar omborida (Vault) `app.YANDEX_METRIKA_TOKEN` nomi bilan: `.env`da kalit bo‘lmasa, panel uni o‘sha yerdan oladi.",
+              "**Google Analytics** Google orqali kirish bilan ulanadi — kalitlarsiz va serverga kirmasdan. Google Cloud’da bir marta «mijoz» (client) yaratiladi — Google panelimizni taniydigan ruxsatnoma; qadamlari «Google Analytics» kartochkasining o‘zida yozilgan. Uning Client ID va Client secret qatorlari kartochkaga qo‘yiladi, keyin — **«Сохранить и войти через Google»**. Saytning Analytics’iga kirish huquqi bor Google akkaunti bilan kirish kerak va «See and download your Google Analytics data» belgisini olib tashlamaslik kerak. Resurs raqamini panel o‘zi topadi — sayt hisoblagichi `G-L52MCVNS0W` bo‘yicha. Olingan hamma narsa Supabase’ning shifrlangan maxfiy ma’lumotlar omborida saqlanadi, panelda esa faqat o‘qish huquqi bor: Analytics’da biror narsani o‘zgartira olmaydi. Har bir kirish [jurnalda](/admin/audit) ko‘rinadi.",
+              "Agar Google kiritmay qo‘ysa — kartochkada «Google больше не пускает по сохранённому входу» deb yoziladi va bu **«Войти через Google»** tugmasi bilan hal bo‘ladi. Ko‘pincha sabab bitta: Google Cloud’dagi ilova e’lon qilinmagan — «Testing» rejimida Google kirishni 7 kundan keyin o‘chiradi, shuning uchun u yerda bir marta «Publish app» bosish kerak. Agar panel resurs raqamini o‘zi topa olmasa («Google Analytics Admin API» yoqilmagan yoki resurs boshqa akkauntda), uni yozishni so‘raydi: Google Analytics → «Администратор» → «Сведения о ресурсе», faqat raqamlar. Raqamlar ostidagi **«войти заново»** havolasi — Google akkauntini almashtirish uchun.",
+              "Rahbarlar bu bo‘limni ko‘radi, lekin ulash qadamlarisiz, kirish tugmalarisiz va Google akkauntingiz pochtasisiz — ularning o‘rniga «Подключает владелец» deb yozilgan. Menejerlarga bo‘lim ko‘rinmaydi. Oldin «Трафик» bosh sahifadagi varaq edi — eski xatcho‘plar shu yerga olib keladi.",
             ],
           },
         },

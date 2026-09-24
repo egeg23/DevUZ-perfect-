@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
  *
  * Здесь код из адреса меняется на постоянный доступ к статистике, доступ
  * кладётся в хранилище секретов, и по счётчику сайта ищется номер ресурса
- * GA4. Что бы ни случилось — владелец возвращается во вкладку «Трафик» с
+ * GA4. Что бы ни случилось — владелец возвращается в раздел «Трафик» с
  * пометкой `ga=…`, и карточка объясняет, что произошло и что делать.
  *
  * Адрес — под /admin: кука сессии панели живёт только там, и без неё не
@@ -33,7 +33,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const back = (ga: string, extra: Record<string, string> = {}) => {
     const response = NextResponse.redirect(
-      new URL(`/admin?${new URLSearchParams({ tab: "traffic", ga, ...extra })}`, siteUrl),
+      new URL(`/admin/traffic?${new URLSearchParams({ ga, ...extra })}`, siteUrl),
       303,
     );
     response.cookies.set(STATE_COOKIE, "", { path: STATE_PATH, maxAge: 0 });
