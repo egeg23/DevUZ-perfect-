@@ -18,6 +18,7 @@ import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
 import { VOID_TITLE, type VoidReason } from "@/lib/partners/rules";
 import { partnerById } from "@/lib/partners/store";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { HelpHint } from "@/components/admin/help-link";
 import { LeadThread } from "@/components/admin/lead-thread";
 import { helpAnchor } from "@/lib/admin/help";
@@ -425,7 +426,9 @@ export default async function LeadPage({
         {mine ? (
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line-soft pt-4">
             <span className="text-xs uppercase tracking-wider text-faint">Статус</span>
-            {STATUSES.map((value) => (
+            {/* «Новый» — только у свободного лида: у закреплённого он
+                значил бы «новый, но чей-то». Отпустить — «Вернуть в очередь». */}
+            {STATUSES.filter((value) => value !== "new" || !lead.assigned_staff_id).map((value) => (
               <form key={value} action={changeStatus}>
                 <input type="hidden" name="lead" value={lead.id} />
                 <input type="hidden" name="status" value={value} />
@@ -720,9 +723,11 @@ export default async function LeadPage({
               placeholder="о чём напомнить"
               className="min-w-[12rem] flex-1 rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-sm"
             />
-            <button type="submit" className={BUTTON}>
+            {/* Серая и неактивная, пока напоминание записывается: без этого
+                нетерпеливое нажатие ставило одно и то же десятки раз. */}
+            <SubmitButton pendingLabel="Ставим…" base="rounded-lg px-3 py-1.5 text-xs" tone="quiet">
               Поставить
-            </button>
+            </SubmitButton>
           </form>
         </section>
       ) : null}

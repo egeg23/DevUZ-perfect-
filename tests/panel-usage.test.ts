@@ -162,7 +162,7 @@ test("отчёт видит только владелец", () => {
 });
 
 test("владелец не пишется ни маячком, ни сервером", () => {
-  const route = read("app/api/usage/route.ts");
+  const route = read("app/admin/beacon/route.ts");
   // Кто смотрит — из сессии, а не из тела запроса.
   assert.match(route, /await currentStaff\(\)/);
   assert.match(route, /staff\.role === "admin"\) return done/);
@@ -177,6 +177,15 @@ test("владелец не пишется ни маячком, ни серве�
   assert.match(beacon, /^"use client";/);
   assert.match(beacon, /\[pathname\]/);
   assert.match(beacon, /sendBeacon/);
+});
+
+test("маячок стучится туда, куда приходит кука сессии", () => {
+  // Кука панели живёт только на /admin. Маячок на /api/usage до 24.09
+  // приходил без неё, и ни один просмотр не записался.
+  assert.match(read("app/admin/login/actions.ts"), /path: "\/admin"/);
+  const beacon = read("components/admin/usage-beacon.tsx");
+  assert.match(beacon, /const BEACON = "\/admin\/beacon";/);
+  assert.doesNotMatch(beacon, /\/api\/usage/);
 });
 
 test("счётчик в базе закрыт от всех, кроме сервера", () => {

@@ -48,6 +48,9 @@ export function wantedPath(pathname: string): string | null {
   if (pathname === "/admin" || pathname === "/admin/") return null;
   // Иначе вход после входа вёл бы на вход.
   if (pathname.startsWith("/admin/login") || pathname.startsWith("/admin/enter")) return null;
+  // Служебные адреса — не страницы: маячок просмотров и возврат из Google.
+  // Истёкшая сессия не должна после входа приводить человека туда.
+  if (pathname.startsWith("/admin/beacon") || pathname.startsWith("/admin/google")) return null;
   return pathname;
 }
 

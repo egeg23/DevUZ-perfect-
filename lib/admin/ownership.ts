@@ -229,6 +229,12 @@ export async function setStatus(
   if (!lead) return { ok: false, reason: "gone" };
   if (!canEdit(lead, staff)) return { ok: false, reason: "forbidden" };
 
+  // «Новый» у закреплённого лида — противоречие: лид «новый», но чей-то, в
+  // свободных его нет, и взять его никто не может. Так 23 сентября и вышло:
+  // менеджер нажала «новый», продолжая работать с лидом. Отпустить лид —
+  // это «Вернуть в очередь» (releaseLead), а не смена статуса.
+  if (status === "new" && lead.assigned_staff_id) return { ok: false, reason: "failed" };
+
   const { error } = await db.from("leads").update({ status }).eq("id", leadId);
   if (error) return { ok: false, reason: "failed" };
 
@@ -396,6 +402,12 @@ export async function createReminder(
   const lead = await ownerOf(leadId);
   if (!lead || !canEdit(lead, staff)) return false;
 
+  // Повтор того же напоминания в пределах пары минут — это не второе
+  // напоминание, а второе нажатие. 23 сентября кнопка «Поставить» за
+  // тридцать секунд записала одно и то же 23 раза, и назавтра человеку
+  // пришли бы 23 одинаковых сообщения разом.
+  if (await sameReminderJustMade(leadId, staff.id, options.note ?? null)) return true;
+
   const { error } = await db.from("lead_reminders").insert({
     lead_id: leadId,
     staff_id: staff.id,
@@ -417,6 +429,26 @@ export async function createReminder(
     meta: { due_at: options.dueAt, kind: options.kind ?? "manual" },
   });
   return true;
+}
+
+/** Окно, в котором одинаковое напоминание считается повторным нажатием. */
+export const DUPLICATE_WINDOW_MS = 2 * 60_000;
+
+async function sameReminderJustMade(leadId: string, staffId: string, note: string | null): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  let query = db
+    .from("lead_reminders")
+    .select("id")
+    .eq("lead_id", leadId)
+    .eq("staff_id", staffId)
+    .is("done_at", null)
+    .is("cancelled_at", null)
+    .gte("created_at", new Date(Date.now() - DUPLICATE_WINDOW_MS).toISOString())
+    .limit(1);
+  query = note === null ? query.is("note", null) : query.eq("note", note);
+  const { data } = await query;
+  return Boolean(data?.length);
 }
 
 /** Живые напоминания по лиду — то, что видно в карточке. */

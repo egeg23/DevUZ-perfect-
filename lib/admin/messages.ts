@@ -76,6 +76,19 @@ export async function postMessage(
   const db = serviceClient();
   if (!db) return false;
 
+  // Тот же текст от того же человека пару минут назад — это повторное
+  // нажатие «Отправить», а не новое сообщение: 23 сентября одно и то же
+  // легло в обсуждение 12 раз, и владельцу лида ушло бы столько же.
+  const { data: same } = await db
+    .from("lead_messages")
+    .select("id")
+    .eq("lead_id", leadId)
+    .eq("author_staff_id", staff.id)
+    .eq("body", text)
+    .gte("created_at", new Date(Date.now() - 2 * 60_000).toISOString())
+    .limit(1);
+  if (same?.length) return true;
+
   const { error } = await db.from("lead_messages").insert({
     lead_id: leadId,
     author_staff_id: staff.id,

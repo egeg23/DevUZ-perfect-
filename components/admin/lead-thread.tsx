@@ -1,4 +1,5 @@
 import { sendMessageToThread } from "@/app/admin/leads/[id]/actions";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { when } from "@/components/admin/lead-table";
 import { MAX_BODY, type LeadMessage } from "@/lib/admin/messages";
 import type { Staff } from "@/lib/admin/session";
@@ -69,12 +70,11 @@ export function LeadThread({
           className="w-full resize-y rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm leading-relaxed"
         />
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
-          >
+          {/* Пока сообщение уходит, кнопка серая и не нажимается: без этого
+              нетерпеливое нажатие записывало одно и то же десяток раз. */}
+          <SubmitButton pendingLabel="Отправляем…" base="rounded-lg px-4 py-1.5 text-xs" tone="quiet">
             Отправить
-          </button>
+          </SubmitButton>
           <span className="text-xs text-faint">
             Видно всей команде. Владельцу лида придёт в Telegram.
           </span>
