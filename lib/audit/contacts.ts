@@ -67,6 +67,19 @@ const BAD_INSTAGRAM = /^(p|reel|reels|explore|stories|tv|accounts|about|develope
 
 const HANDLE = /^[a-zA-Z][\w.]{2,31}$/;
 
+/**
+ * «@слово» в тексте страницы, которое не адрес, а код.
+ *
+ * 24 сентября у svoydom.kz в контактах оказались @click, @mousedown и
+ * @dblclick — обработчики событий из разметки Vue и Alpine (`@click="…"`),
+ * просочившиеся в видимый текст. Адрес с сайта уходит скауту как «пиши сюда»:
+ * первый из них был каналом, а следующим в очереди стоял бы чужой человек
+ * с ником @click. Сюда же правила CSS (`@media`, `@import`) — они попадают
+ * в текст из встроенных стилей.
+ */
+const CODE_WORD =
+  /^(click|dblclick|mouse\w*|pointer\w*|touch\w*|key(?:up|down|press)|submit|change|input|focus\w*|blur|scroll\w*|resize|load\w*|error|wheel|contextmenu|select|reset|drag\w*|drop|transition\w*|animation\w*|media|import|keyframes|font|supports|charset|layer|container|page|namespace|apply|tailwind|screen|vite|babel)$/i;
+
 function hrefs(html: string): string[] {
   const out: string[] = [];
   for (const m of html.matchAll(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)) {
@@ -188,7 +201,7 @@ export function extractContacts(html: string): Contacts {
     if (!BAD_EMAIL.test(mail)) emails.push(mail);
   }
   for (const m of text.matchAll(/(?:^|[\s(])@([a-zA-Z][\w]{3,31})\b/g)) {
-    if (!BAD_TELEGRAM.test(m[1])) telegram.push(`@${m[1]}`);
+    if (!BAD_TELEGRAM.test(m[1]) && !CODE_WORD.test(m[1])) telegram.push(`@${m[1]}`);
   }
 
   // Мессенджеры, записанные ссылкой, а не кнопкой. В структурированных

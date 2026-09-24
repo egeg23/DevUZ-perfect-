@@ -4,6 +4,7 @@ import {
   MAX_GAP_MS,
   MIN_GAP_MS,
   handTargetFrom,
+  isMobile,
   isStopError,
   type RouteKind,
 } from "@/lib/admin/outreach";
@@ -67,36 +68,22 @@ export async function aheadInQueue(claimedAt: string | null): Promise<number> {
 export type Queued = { id: string; target: string; kind: RouteKind; message: string; host: string };
 
 /**
- * Следующее задание — одно за раз и не раньше паузы после предыдущего.
+ * Касания владельца уходят вне очереди.
  *
- * Пауза здесь, а не в отправителе: предел общий для аккаунта, а
- * отправителей теоретически может стать больше одного.
+ * Владелец, 24 сентября: «Мои сообщения и контакты уходят вне очереди!» Его
+ * письмо не ждёт ни чужих заданий, ни часового предела «два в час», ни
+ * паузы 8–20 минут. Остаётся одна минута после любой предыдущей отправки:
+ * два письма с одного аккаунта в одну секунду — подпись рассылки, и за неё
+ * ограничивают аккаунт, которым скаут ещё и читает чаты.
+ *
+ * В «два в час» письмо владельца при этом считается: предел про аккаунт, а
+ * не про очередь, и остальным после него придётся подождать.
  */
-export async function nextQueued(now = Date.now()): Promise<Queued | null> {
-  const db = serviceClient();
-  if (!db) return null;
+export const OWNER_FLOOR_MS = 60_000;
 
-  if ((await sentLastHour(now)).count >= HOURLY_CAP) return null;
+const QUEUED_COLUMNS = "id, target, target_kind, message, host";
 
-  const { data: last } = await db
-    .from("prospects")
-    .select("sent_at")
-    .eq("status", "sent")
-    .or(SENT_BY_ACCOUNT)
-    .order("sent_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const lastAt = last?.sent_at ? Date.parse(String(last.sent_at)) : 0;
-  const gap = MIN_GAP_MS + Math.floor((MAX_GAP_MS - MIN_GAP_MS) * pseudoRandom(lastAt));
-  if (lastAt && now - lastAt < gap) return null;
-
-  const { data } = await db
-    .from("prospects")
-    .select("id, target, target_kind, message, host")
-    .eq("status", "sending")
-    .order("claimed_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+function toQueued(data: Record<string, unknown> | null): Queued | null {
   if (!data?.target || !data?.message) return null;
   return {
     id: String(data.id),
@@ -108,6 +95,68 @@ export async function nextQueued(now = Date.now()): Promise<Queued | null> {
     message: String(data.message),
     host: String(data.host),
   };
+}
+
+/** Кто владелец: вне очереди уходит то, что отправил он. */
+async function ownerIds(db: NonNullable<ReturnType<typeof serviceClient>>): Promise<string[]> {
+  const { data } = await db.from("staff").select("id").eq("role", "admin").eq("is_active", true);
+  return (data ?? []).map((row) => String(row.id));
+}
+
+/** То же для панели: карточке владельца очередь показывается как «вне очереди». */
+export async function queueOwners(): Promise<string[]> {
+  const db = serviceClient();
+  return db ? ownerIds(db) : [];
+}
+
+/**
+ * Следующее задание — одно за раз и не раньше паузы после предыдущего.
+ *
+ * Пауза здесь, а не в отправителе: предел общий для аккаунта, а
+ * отправителей теоретически может стать больше одного.
+ */
+export async function nextQueued(now = Date.now()): Promise<Queued | null> {
+  const db = serviceClient();
+  if (!db) return null;
+
+  const { data: last } = await db
+    .from("prospects")
+    .select("sent_at")
+    .eq("status", "sent")
+    .or(SENT_BY_ACCOUNT)
+    .order("sent_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const lastAt = last?.sent_at ? Date.parse(String(last.sent_at)) : 0;
+
+  // Сначала — владелец, мимо предела и паузы (см. OWNER_FLOOR_MS).
+  const owners = await ownerIds(db);
+  if (owners.length && (!lastAt || now - lastAt >= OWNER_FLOOR_MS)) {
+    const { data: mine } = await db
+      .from("prospects")
+      .select(QUEUED_COLUMNS)
+      .eq("status", "sending")
+      .in("claimed_by", owners)
+      .order("claimed_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const job = toQueued(mine);
+    if (job) return job;
+  }
+
+  if ((await sentLastHour(now)).count >= HOURLY_CAP) return null;
+
+  const gap = MIN_GAP_MS + Math.floor((MAX_GAP_MS - MIN_GAP_MS) * pseudoRandom(lastAt));
+  if (lastAt && now - lastAt < gap) return null;
+
+  const { data } = await db
+    .from("prospects")
+    .select(QUEUED_COLUMNS)
+    .eq("status", "sending")
+    .order("claimed_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return toQueued(data);
 }
 
 /**
@@ -206,9 +255,13 @@ export async function markDelivered(id: string, ok: boolean, note?: string): Pro
  * человеку — в WhatsApp или звонком, — и место в часовом пределе при этом не
  * тратится: до телеграма дело так и не дошло.
  */
-export async function markUnreachable(id: string, note: string): Promise<void> {
+export async function markUnreachable(
+  id: string,
+  note: string,
+  kind: RouteKind = "handle",
+): Promise<"phone" | "manual" | null> {
   const db = serviceClient();
-  if (!db) return;
+  if (!db) return null;
 
   /**
    * Вместе с маршрутом меняется и адресат.
@@ -226,10 +279,34 @@ export async function markUnreachable(id: string, note: string): Promise<void> {
   const contacts = (data?.contacts ?? {}) as { whatsapp?: string[]; phones?: string[] };
   const hand = handTargetFrom({ whatsapp: contacts.whatsapp ?? [], phones: contacts.phones ?? [] });
 
+  /**
+   * Адрес не подошёл — пробуем номер, а не сдаёмся.
+   *
+   * 24 сентября касание владельца svoydom.kz ушло «руками», так и не
+   * попробовав телеграм: ссылка на сайте вела в канал компании, а мобильный
+   * номер с того же сайта рабочий аккаунт даже не проверил — хотя по номеру
+   * телеграм находит людей чаще, чем по адресу. Карточка остаётся в очереди
+   * тем же местом, меняется только маршрут; до отправки дело не дошло, и
+   * место в часовом пределе цело.
+   */
+  if (kind !== "phone" && hand && isMobile(hand)) {
+    await db
+      .from("prospects")
+      .update({
+        target_kind: "phone",
+        target: hand,
+        failure: `${note} Пробуем найти в Telegram по номеру ${hand}.`.slice(0, 500),
+      })
+      .eq("id", id)
+      .eq("status", "sending");
+    return "phone";
+  }
+
   await db
     .from("prospects")
     .update({ status: "manual", target_kind: "manual", target: hand, failure: note.slice(0, 500) })
     .eq("id", id);
+  return "manual";
 }
 
 /**

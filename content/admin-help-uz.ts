@@ -430,6 +430,7 @@ export const uz: HelpCopy = {
             "Yangi kompaniyaga birinchi xatni ishchi akkaunt soatiga ikkitadan ko‘p emas va 8–20 daqiqa tanaffus bilan yuboradi. Aks holda Telegram bizni ommaviy tarqatma deb hisoblab, akkauntni cheklaydi — skaut esa chatlarni aynan shu akkaunt bilan o‘qiydi, va biz ikkala kanalni birdan yo‘qotardik.",
             "Ro‘yxat ustida: «За последний час ушло 1 из 2 · в очереди 3». Navbatdagi kartochkada — taxminan necha daqiqadan keyin ketishi.",
             "Kutish shart emas: yozishmani o‘z akkauntingizdan oching, o‘sha matnni yuboring va **«Связался сам»** tugmasini bosing — bot o‘z nusxasini endi yubormaydi, mijoz javobi esa shaxsan sizga keladi.",
+            "**Egasining xatlari navbatsiz ketadi**: boshqalarning xatlarini ham, «soatiga ikki»ni ham, 8–20 daqiqa tanaffusni ham kutmaydi — oldingi har qanday yuborishdan bir daqiqa o‘tib ketadi. «Soatiga ikki»ga ular baribir kiradi: cheklov akkaunt haqida, va bunday xatdan keyin qolganlar kutishiga to‘g‘ri keladi. Bunday kartochkada «Письмо владельца — вне очереди» deb yozilgan.",
           ],
         },
         {
@@ -445,7 +446,7 @@ export const uz: HelpCopy = {
           id: "manual",
           title: "«Писать руками»: Telegramsiz telefon",
           body: [
-            "Kompaniyada statsionar raqam bo‘lsa yoki skaut uni Telegramda topmagan bo‘lsa, kartochka «писать руками» bo‘ladi, Telegramga esa «Кому: … — только звонок или WhatsApp» keladi.",
+            "Saytdagi Telegram havolasi kanalga yoki botga olib borsa, ishchi akkaunt avval o‘sha saytdagi mobil raqam bo‘yicha odamni qidiradi — Telegram odamlarni manzildan ko‘ra raqam bo‘yicha ko‘proq topadi. Topmasa yoki raqam statsionar bo‘lsa, kartochka «писать руками» bo‘ladi, Telegramga esa «Кому: … — только звонок или WhatsApp» keladi.",
             "Tugmalar: **«Открыть WhatsApp с готовым текстом»**, **«Позвонить»**, **«Скопировать текст»**. Yozdingiz yoki qo‘ng‘iroq qildingiz — **«Связался сам»** deb belgilang.",
             "Mijoz WhatsApp’da javob berdi — uning javobini «Что ответил клиент» maydoniga qo‘ying va **«Записать ответ»** tugmasini bosing. Model keyingi javobni yozadi, u kartochkada «Скопировать ответ» va «Открыть WhatsApp с ответом» tugmalari bilan chiqadi. O‘zimizning xatimizni u yerga qo‘yib bo‘lmaydi — panel buni sezadi.",
             "Yozmaydigan bo‘lsangiz — sababi bilan «не пишем».",

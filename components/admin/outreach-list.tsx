@@ -89,10 +89,13 @@ export function OutreachList({
   error,
   sent,
   replies,
+  owners = [],
 }: {
   rows: Prospect[];
   /** Что ушло за последний час: предел считается по факту отправки. */
   hour: { count: number; oldestAgoMs: number | null };
+  /** Кто владелец: его письма уходят вне очереди (lib/admin/outreach-queue.ts). */
+  owners?: readonly string[];
   open?: string;
   error?: string;
   sent?: boolean;
@@ -164,13 +167,19 @@ export function OutreachList({
           const willRefuse = row.status === "contacting" ? sendProblems(row) : [];
           const seo = seoReport({ findings: row.findings });
           const hooks = outreachHooks(row.findings);
+          // Письмо владельца уходит вне очереди — через минуту после любой
+          // предыдущей отправки; все остальные ждут и его тоже.
+          const isOwner = (q: Prospect) => q.claimed_by !== null && owners.includes(q.claimed_by);
+          const vip = isOwner(row);
           const wait =
             row.status === "sending"
-              ? queueView({
-                  ahead: queue.filter((q) => q.created_at < row.created_at).length,
-                  sentLastHour: hour.count,
-                  oldestSentAgoMs: hour.oldestAgoMs,
-                })
+              ? vip
+                ? { ahead: queue.filter((q) => isOwner(q) && q.created_at < row.created_at).length, waitMs: 60_000 }
+                : queueView({
+                    ahead: queue.filter((q) => isOwner(q) || q.created_at < row.created_at).length,
+                    sentLastHour: hour.count,
+                    oldestSentAgoMs: hour.oldestAgoMs,
+                  })
               : null;
 
           // Карточка, на которую мы только что вернулись, обведена: на
@@ -382,7 +391,11 @@ export function OutreachList({
               {wait && row.target && row.message ? (
                 <div className="mt-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
                   <p className="text-sm text-gold">
-                    В очереди на отправку с рабочего аккаунта — {waitText(wait.waitMs)}
+                    {vip ? (
+                      <>Письмо владельца — вне очереди, с рабочего аккаунта — {waitText(wait.waitMs)}</>
+                    ) : (
+                      <>В очереди на отправку с рабочего аккаунта — {waitText(wait.waitMs)}</>
+                    )}
                     {wait.ahead ? `, перед ним ${wait.ahead}` : ""}.
                   </p>
                   <p className="mt-2 text-xs leading-relaxed text-muted">

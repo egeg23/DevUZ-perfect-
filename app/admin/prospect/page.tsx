@@ -15,7 +15,7 @@ import { MapsCampaigns } from "@/components/admin/maps-campaigns";
 import { TouchLegend } from "@/components/admin/touch-legend";
 import { dailyCap, placesConfigured } from "@/lib/maps/places";
 import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
-import { sentLastHour } from "@/lib/admin/outreach-queue";
+import { queueOwners, sentLastHour } from "@/lib/admin/outreach-queue";
 import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
 import { BATCH_CAP } from "@/lib/audit/batch";
 
@@ -33,12 +33,13 @@ export default async function ProspectPage({
   const [campaigns, mapsUsage, mapsPending, mapsReady] = seesMaps
     ? await Promise.all([listCampaigns(), usageToday(), pendingPlaces(), placesConfigured()])
     : [[], 0, 0, false];
-  const [rows, hour, replies, plan, portion] = await Promise.all([
+  const [rows, hour, replies, plan, portion, owners] = await Promise.all([
     listProspects(),
     sentLastHour(),
     manualReplies(),
     touchProgressOf(staff.id),
     portionOf(staff.id),
+    queueOwners(),
   ]);
   const today = todayInTashkent(new Date());
   const portionDone = portion.filter((p) => outcomeOf(p, staff.id, today) !== null).length;
@@ -103,7 +104,15 @@ export default async function ProspectPage({
 
       <TouchLegend />
 
-      <OutreachList rows={rows} hour={hour} open={open} error={e} sent={sent === "1"} replies={replies} />
+      <OutreachList
+        rows={rows}
+        hour={hour}
+        owners={owners}
+        open={open}
+        error={e}
+        sent={sent === "1"}
+        replies={replies}
+      />
 
       <div className="mt-10 max-w-2xl space-y-3 border-t border-line pt-6 text-xs leading-relaxed text-faint">
         <p>
