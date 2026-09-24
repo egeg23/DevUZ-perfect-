@@ -3,6 +3,7 @@ import { isLocale, type Locale } from "@/lib/i18n";
 import { MAX_MESSAGE_CHARS, MAX_TURNS } from "@/lib/qualify/engine";
 import { createHandoff, updateHandoff } from "@/lib/qualify/handoff";
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
+import { checkClaim } from "@/lib/qualify/minute";
 import type { ChatMessage } from "@/lib/qualify/types";
 
 export const runtime = "nodejs";
@@ -34,6 +35,8 @@ export async function POST(request: Request) {
     qualified?: unknown;
     requestNo?: unknown;
     discount?: unknown;
+    /** Закрепление скидки за первую минуту — едет в бота вместе с разговором. */
+    claim?: unknown;
     token?: unknown;
   };
   try {
@@ -64,7 +67,7 @@ export async function POST(request: Request) {
     transcript,
     qualified: body.qualified === true,
     requestNo,
-    discount: body.discount === true,
+    discount: (await checkClaim(body.claim)) ? ("minute" as const) : body.discount === true ? ("promise" as const) : null,
   };
 
   // Клиент присылает свой токен, если уже получал его в этом разговоре: тогда

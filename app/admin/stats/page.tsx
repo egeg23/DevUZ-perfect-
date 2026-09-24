@@ -175,7 +175,7 @@ export default async function StatsPage() {
         </Panel>
 
         <Panel
-          title="Скидка за несработавшую гарантию"
+          title="Скидка 30%"
           note="Каждая такая скидка — тридцать процентов от чека. Это про маржу, а не про статистику."
         >
           <p className="mt-3 font-mono text-2xl">{stats.discounts}</p>
@@ -184,6 +184,11 @@ export default async function StatsPage() {
               ? `${Math.round((stats.discounts / stats.total) * 100)}% от всех обращений`
               : "пока не с чем сравнивать"}
           </p>
+          {stats.discounts ? (
+            <p className="mt-2 text-xs text-muted">
+              первая минута — {stats.discountsMinute}, гарантия 20 секунд — {stats.discounts - stats.discountsMinute}
+            </p>
+          ) : null}
         </Panel>
       </div>
 

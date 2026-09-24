@@ -4,9 +4,11 @@ import { readRef } from "@/lib/partners/client";
 import { currentPage, readVisit } from "@/lib/visit/client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useMinute, useMinuteLeft } from "@/components/chat/minute-offer";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n";
+import { clock, keepClaim, minuteFields } from "@/lib/minute-client";
 import { PROMISE_SECONDS } from "@/lib/promise-terms";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -54,6 +56,15 @@ export function ChatPanel({
    * сервера. Медленная сеть — тоже наше ожидание, и прятаться за неё нечестно.
    */
   const [discount, setDiscount] = useState(false);
+  /**
+   * Минута на скидку: идёт таймер, скидка закреплена или ни то ни другое.
+   * Закрепление приходит от сервера и хранится в браузере — поэтому скидка
+   * видна и в разговоре, начатом через неделю.
+   */
+  const minute = useMinute();
+  const minuteLeft = useMinuteLeft(minute);
+  /** Первое сообщение ушло, пока шёл таймер, — ждём, что сервер закрепит скидку. */
+  const [claiming, setClaiming] = useState(false);
   /** Момент отправки первой реплики: с него идёт отсчёт. */
   const [waitStart, setWaitStart] = useState<number | null>(null);
   const [remaining, setRemaining] = useState(PROMISE_SECONDS);
@@ -143,6 +154,8 @@ export function ChatPanel({
             qualified,
             requestNo,
             discount,
+            // Закрепление едет в бота вместе с разговором: скидка остаётся и там.
+            claim: minute.phase === "claimed" ? minute.claim : undefined,
             ref: readRef(),
             token: tgToken.current,
           }),
@@ -161,7 +174,7 @@ export function ChatPanel({
     return () => {
       cancelled = true;
     };
-  }, [messages, busy, locale, qualified, requestNo, discount]);
+  }, [messages, busy, locale, qualified, requestNo, discount, minute]);
 
   useEffect(() => {
     if (!prefill) return;
@@ -191,10 +204,12 @@ export function ChatPanel({
     if (inputRef.current) inputRef.current.style.height = "auto";
     setBusy(true);
     setStatus(null);
-    if (firstTurn && !discount) {
+    // Скидка за первую минуту уже есть — двадцати секундам ставить нечего.
+    if (firstTurn && !discount && minute.phase !== "claimed") {
       setRemaining(PROMISE_SECONDS);
       setWaitStart(Date.now());
     }
+    if (minute.phase === "running") setClaiming(true);
 
     try {
       const response = await fetch("/api/chat", {
@@ -208,6 +223,8 @@ export function ChatPanel({
           locale,
           qualified,
           discount,
+          // Окно первой минуты или закрепление — решает сервер, по подписи.
+          ...minuteFields(minute),
           ref: readRef(),
           // Откуда и с какой страницы пишет человек — чтобы менеджер видел
           // это в уведомлении, а не догадывался.
@@ -251,6 +268,8 @@ export function ChatPanel({
             value?: string;
             delivered?: boolean;
             requestNo?: string;
+            reason?: string;
+            claim?: string;
           };
           try {
             event = JSON.parse(part.slice(6));
@@ -258,7 +277,13 @@ export function ChatPanel({
             continue;
           }
 
-          if (event.type === "text" && event.value) {
+          if (event.type === "discount" && event.reason === "minute" && typeof event.claim === "string") {
+            // Успел в первую минуту: скидка закреплена, отсчёт двадцати
+            // секунд больше ни к чему.
+            keepClaim(event.claim);
+            setClaiming(false);
+            setWaitStart(null);
+          } else if (event.type === "text" && event.value) {
             const chunk = event.value;
             // Ответ пошёл — гарантия выполнена. Останавливаем отсчёт именно
             // на первом куске текста, а не на закрытии потока: человек видит
@@ -300,10 +325,23 @@ export function ChatPanel({
       setStatus("error");
     } finally {
       setBusy(false);
+      setClaiming(false);
       setWaitStart(null);
       inputRef.current?.focus();
     }
   }
+
+  // Что сказать в полосе гарантии про скидку; null — обычное обещание двадцати секунд.
+  const gift =
+    minute.phase === "claimed"
+      ? dict.chat.minuteWon
+      : discount
+        ? dict.chat.discountWon
+        : claiming
+          ? dict.chat.minuteClaiming
+          : minute.phase === "running" && waitStart === null
+            ? dict.chat.minuteCounting.replace("{t}", clock(minuteLeft))
+            : null;
 
   const notice =
     status === "disabled"
@@ -340,23 +378,27 @@ export function ChatPanel({
       {/* Полоса гарантии.
           Пока ждём первый ответ, здесь тикает счётчик: обещание, которое не
           видно, не работает как обещание — человек должен видеть, что время
-          идёт и что оно чем-то обеспечено. */}
+          идёт и что оно чем-то обеспечено.
+
+          Пока идёт минута на скидку, полоса про неё: таймер тот же, что у
+          кнопки чата. Успел — «скидка закреплена», и так в каждом следующем
+          разговоре с этого браузера. Минута вышла — снова двадцать секунд. */}
       <div
         className={cn(
           // Переносим по строкам, а не сжимаем: виджет всегда узкий, около
           // 384 px, и медиазапросы тут не помогают — ширина не зависит от
           // экрана. Обещание и его цена должны читаться целиком.
           "flex flex-wrap items-center gap-x-2 gap-y-0.5 border-b px-5 py-2.5 text-[0.7rem]",
-          discount
+          gift
             ? "border-gold/30 bg-gold/10 text-gold"
             : "border-line bg-green/[0.06] text-green",
         )}
         aria-live="polite"
       >
-        {discount ? (
+        {gift ? (
           <>
             <span aria-hidden="true">🎁</span>
-            <span className="leading-snug">{dict.chat.discountWon}</span>
+            <span className="min-w-0 flex-1 leading-snug">{gift}</span>
           </>
         ) : (
           <>

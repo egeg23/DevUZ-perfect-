@@ -18,10 +18,11 @@ export type StatsRow = {
   assigned_at: string | null;
   services: string[] | null;
   discount_granted: boolean;
+  discount_reason: string | null;
 };
 
 const STATS_COLUMNS =
-  "created_at, source, locale, grade, score, priority, status, assigned_staff_id, assigned_at, services, discount_granted";
+  "created_at, source, locale, grade, score, priority, status, assigned_staff_id, assigned_at, services, discount_granted, discount_reason";
 
 /**
  * Сколько строк берём в расчёт.
@@ -74,6 +75,8 @@ export type Stats = {
   slowTakes: number;
 
   discounts: number;
+  /** Из них — за первую минуту на сайте; остальные — гарантия двадцати секунд. */
+  discountsMinute: number;
   weekly: Bucket[];
 };
 
@@ -149,6 +152,7 @@ export function summarize(rows: StatsRow[], truncated = false): Stats {
     slowTakes: minutesToTake.filter((minutes) => minutes > 60).length,
 
     discounts: rows.filter((row) => row.discount_granted).length,
+    discountsMinute: rows.filter((row) => row.discount_granted && row.discount_reason === "minute").length,
     weekly: tally(rows.map((row) => weekKey(row.created_at)))
       .sort((a, b) => a.key.localeCompare(b.key))
       .slice(-12),

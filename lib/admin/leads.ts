@@ -45,6 +45,7 @@ export const LIST_COLUMNS = [
   "assigned_to",
   "assigned_staff_id",
   "discount_granted",
+  "discount_reason",
   "partner_id",
   "partner_code",
   "partner_void_reason",
@@ -99,6 +100,8 @@ export type LeadRow = {
   assigned_to: string | null;
   assigned_staff_id: string | null;
   discount_granted: boolean;
+  /** За что скидка: `promise` — не уложились в 20 секунд, `minute` — написал в первую минуту. */
+  discount_reason: "promise" | "minute" | null;
   /** Партнёрская программа: кто привёл, по какому коду, почему не засчитано. */
   partner_id: string | null;
   partner_code: string | null;

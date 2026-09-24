@@ -1,6 +1,7 @@
 import { locales, type Locale } from "@/lib/i18n";
 import type { Brief } from "@/lib/qualify/brief";
 import type { ChatMessage } from "@/lib/qualify/types";
+import type { DiscountReason } from "@/lib/promise-terms";
 
 /**
  * Разговор, живущий сразу в двух местах.
@@ -22,8 +23,11 @@ export type BotSession = {
   /** Бриф по этому разговору уже ушёл менеджеру. */
   qualified: boolean;
   requestNo?: string;
-  /** Сработала гарантия двадцати секунд — скидка уже подтверждена. */
-  discount: boolean;
+  /**
+   * Скидка 30% уже за клиентом, и за что: не уложились в двадцать секунд
+   * (`promise`) или он написал в первую минуту (`minute`). null — скидки нет.
+   */
+  discount: DiscountReason | null;
   /** Разговор пришёл с сайта, а не начался в боте. */
   fromSite: boolean;
   /** Приветствие-продолжение уже отправлено. */
@@ -91,7 +95,7 @@ export function createHandoff(input: {
   transcript: ChatMessage[];
   qualified: boolean;
   requestNo?: string;
-  discount: boolean;
+  discount: DiscountReason | null;
   brief?: Brief;
 }): string {
   sweep();
@@ -147,7 +151,7 @@ export function updateHandoff(
     transcript: ChatMessage[];
     qualified: boolean;
     requestNo?: string;
-    discount: boolean;
+    discount: DiscountReason | null;
   },
 ): boolean {
   const item = pending.get(token);
@@ -193,7 +197,7 @@ export function startSession(chatId: number, locale: Locale): BotSession {
     locale,
     transcript: [],
     qualified: false,
-    discount: false,
+    discount: null,
     fromSite: false,
     resumed: true,
     updatedAt: Date.now(),

@@ -19,6 +19,13 @@ import { codeFromStart } from "@/lib/partners/rules";
 import { touchChat, touchFor, type TelegramIdentity } from "@/lib/partners/store";
 import { BIND_PREFIX, bindBuyer, buyerMessage } from "@/lib/store/buyer";
 import { alreadyHandled } from "@/lib/qualify/seen-updates";
+import {
+  TELEGRAM_GRACE_MS,
+  claimMinute,
+  minuteClaimed,
+  parseTelegramPayload,
+  rememberMinuteClaim,
+} from "@/lib/qualify/minute";
 import { shouldMissPromise } from "@/lib/qualify/promise";
 import {
   answerCallback,
@@ -350,6 +357,15 @@ async function handleClient(message: NonNullable<Update["message"]>) {
       return;
     }
 
+    // Ссылка с сайта, пока шёл таймер первой минуты. Окно проверяется здесь,
+    // по подписи и времени, а закрепление ложится в базу за чатом: сессия
+    // бота живёт в памяти и выкатку не переживает, а скидка должна.
+    const minute = parseTelegramPayload(payload);
+    if (minute) {
+      await startFromMinute(chat.id, minute, existing, locale);
+      return;
+    }
+
     const refCode = codeFromStart(payload);
     if (refCode) {
       await touchChat(chat.id, refCode);
@@ -409,6 +425,13 @@ async function handleClient(message: NonNullable<Update["message"]>) {
   if (!text) return;
 
   const session = sessionFor(chat.id) ?? startSession(chat.id, locale);
+
+  // Скидка за первую минуту лежит в базе за чатом. Сессия в памяти могла
+  // потеряться при выкатке — тогда разговор начинается заново, и скидку
+  // нужно поднять оттуда, иначе заявка уйдёт менеджеру без неё.
+  if (!session.discount && session.transcript.length === 0 && (await minuteClaimed(chat.id))) {
+    session.discount = "minute";
+  }
 
   // Перелив. Человек мог задать свой вопрос в публичном чате раньше, чем
   // написал нам, — и тогда первая линия уже знает, о чём речь, и не
@@ -481,6 +504,9 @@ async function resumeFromSite(
 
   const copy = botCopy(session.locale);
 
+  // Скидку за первую минуту закрепили на сайте — теперь она и за чатом.
+  if (session.discount === "minute") await rememberMinuteClaim(chatId);
+
   if (session.qualified && session.requestNo) {
     // Разговор на сайте дошёл до конца: бриф уже у менеджера. Второй раз его
     // отправлять нельзя, а человеку нужен номер, за который можно держаться.
@@ -524,6 +550,41 @@ async function resumeFromSite(
 }
 
 /**
+ * Пришёл по ссылке с сайта, пока шёл таймер первой минуты.
+ *
+ * Нажатие «Старт» и есть его первое сообщение нам: Telegram так его и
+ * отправляет. Успел — скидка закреплена за чатом, и первое сообщение бота
+ * говорит об этом вместо обычного приветствия с обещанием двадцати секунд.
+ * Не успел — обычное приветствие с честной строкой, что минута вышла.
+ */
+async function startFromMinute(
+  chatId: number,
+  minute: { token: string; locale: Locale | null },
+  existing: BotSession | null,
+  fallbackLocale: Locale,
+) {
+  const locale = existing?.locale ?? minute.locale ?? fallbackLocale;
+  const copy = botCopy(locale);
+  const claimed = (await claimMinute(minute.token, TELEGRAM_GRACE_MS)) !== null;
+  console.log("минута:", claimed ? "скидка закреплена в боте" : "окно вышло или не наше", { chatId });
+
+  const session = existing ?? startSession(chatId, locale);
+  if (claimed) {
+    await rememberMinuteClaim(chatId);
+    // Скидка одна: если её уже дала гарантия двадцати секунд, причина остаётся та.
+    if (!session.discount) session.discount = "minute";
+    saveSession(chatId, session);
+  }
+
+  // Посреди разговора приветствие лишнее — хватит строки про скидку.
+  if (existing?.transcript.length) {
+    if (claimed) await sendMessage(chatId, copy.minuteWon.split("\n\n")[1]);
+    return;
+  }
+  await sendMessage(chatId, claimed ? copy.minuteWon : copy.minuteLate);
+}
+
+/**
  * Ответ на реплику, которая уже лежит в истории.
  *
  * Нужен, когда добавлять новый ход нельзя: последним в переписке и так стоит
@@ -563,7 +624,7 @@ async function respond(
   try {
     if (hold > 0) {
       await new Promise((resolve) => setTimeout(resolve, hold));
-      session.discount = true;
+      session.discount = "promise";
       await sendMessage(chatId, copy.discount);
     }
 

@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import { company } from "@/content/company";
 import type { Locale } from "@/lib/i18n";
+import type { DiscountReason } from "@/lib/promise-terms";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { scoreLead } from "@/lib/qualify/scoring";
 import { attributeAndNotify } from "@/lib/partners/attribute";
@@ -162,13 +163,14 @@ export type TurnOptions = {
   /** Бриф по этому диалогу уже ушёл: второй отправлять нельзя. */
   alreadyQualified: boolean;
   /**
-   * Гарантия двадцати секунд не сработала, скидка уже у клиента.
+   * Скидка 30% уже у клиента: гарантия двадцати секунд не сработала
+   * (`promise`) или он написал в первую минуту (`minute`).
    *
    * Это меняет поведение модели: обычно ей запрещено обсуждать скидки, но
    * здесь скидка — уже свершившийся факт, и делать вид, что её нет, значит
    * заставить клиента доказывать своё право на неё.
    */
-  discount?: boolean;
+  discount?: DiscountReason | null;
   /** Добавка к системному промпту под конкретный канал. */
   channelNote?: string;
   /**
@@ -521,13 +523,20 @@ async function secondPass({
   }
 }
 
-/** Сработавшая гарантия — факт для менеджера, а не пометка в переписке. */
-function withDiscount(input: QualifyToolInput, discount?: boolean): QualifyToolInput {
+/** Скидка у клиента — факт для менеджера, а не пометка в переписке. */
+const DISCOUNT_FOR_MANAGER: Record<DiscountReason, string> = {
+  promise:
+    "🎁 Сработала гарантия 20 секунд: клиенту уже подтверждена скидка 30%. Она не обсуждается — просто учтите её в расчёте.",
+  minute:
+    "🎁 Клиент написал в первую минуту на сайте: за ним закреплена скидка 30%. Она не обсуждается — просто учтите её в расчёте.",
+};
+
+function withDiscount(input: QualifyToolInput, discount?: DiscountReason | null): QualifyToolInput {
   if (!discount) return input;
   return {
     ...input,
     notes: [
-      "🎁 Сработала гарантия 20 секунд: клиенту уже подтверждена скидка 30%. Она не обсуждается — просто учтите её в расчёте.",
+      DISCOUNT_FOR_MANAGER[discount],
       input.notes,
     ]
       .filter(Boolean)
@@ -577,8 +586,15 @@ function briefNote(brief?: Brief): string | null {
 - Вызови qualify_lead, когда узнал сроки, контент и кто решает, или если клиент просит менеджера, или после четырёх-пяти своих реплик. В summary.request перепиши состав заказа и итог, в already_told — пакет, допники и сумму, в services — что заказывают.`;
 }
 
-function discountNote(discount?: boolean): string | null {
+function discountNote(discount?: DiscountReason | null): string | null {
   if (!discount) return null;
+  if (discount === "minute") {
+    return `## Скидка уже закреплена
+
+Клиент написал нам в первую минуту на сайте, пока шёл таймер, и сайт уже показал, что скидка 30% на проект закреплена за ним. Это свершившийся факт, а не предмет обсуждения: пункт 2 жёстких ограничений в этой части не действует.
+
+Если клиент спросит о скидке или о таймере — подтверди коротко: «скидка 30% за вами, менеджер учтёт её в расчёте». Сам можешь упомянуть её один раз, к слову, — без извинений: ожидания не было. Не торгуйся, не увеличивай и не уменьшай её, не ставь условий. В summary и notes ничего про скидку писать не нужно, менеджер увидит её отдельной строкой.`;
+  }
   return `## Скидка уже подтверждена
 
 Мы не уложились в обещанные двадцать секунд, и сайт уже показал клиенту, что скидка 30% за ним. Это свершившийся факт, а не предмет обсуждения: пункт 2 жёстких ограничений в этой части не действует.
