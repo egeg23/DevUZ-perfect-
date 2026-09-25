@@ -31,7 +31,9 @@ test("обработчики событий и правила CSS — не Teleg
 test("адрес оказался каналом — пробуем номер с сайта, а не сдаёмся", () => {
   const queue = read("lib/admin/outreach-queue.ts");
   const fn = queue.slice(queue.indexOf("export async function markUnreachable"));
-  assert.match(fn, /kind !== "phone" && hand && isMobile\(hand\)/);
+  // Все мобильные с сайта по очереди, а не только первый.
+  assert.match(fn, /const mobiles = \[\.\.\.new Set\(/);
+  assert.match(fn, /mobiles\[mobiles\.indexOf\(tried \?\? ""\) \+ 1\]/);
   assert.match(fn, /target_kind: "phone"/);
   // Карточка остаётся в очереди — меняется только маршрут.
   assert.match(fn, /\.eq\("status", "sending"\)/);
@@ -39,7 +41,11 @@ test("адрес оказался каналом — пробуем номер �
   assert.match(fn, /status: "manual", target_kind: "manual"/);
 
   const runner = read("scout/runner.mjs");
-  assert.equal((runner.match(/markUnreachable\(job\.id, note, job\.kind\)/g) ?? []).length, 2, "скаут не передаёт маршрут");
+  assert.equal(
+    (runner.match(/markUnreachable\(job\.id, note, job\.kind, job\.target\)/g) ?? []).length,
+    2,
+    "скаут не передаёт маршрут и адресата",
+  );
 });
 
 test("письма владельца уходят вне очереди, но не пачкой", () => {

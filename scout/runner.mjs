@@ -339,7 +339,7 @@ async function live() {
       const why = error?.errorMessage ?? error?.message ?? String(error);
       if (ABOUT_TARGET.test(why)) {
         const note = unreachableText("not_found", job.kind);
-        const next = await markUnreachable(job.id, note, job.kind);
+        const next = await markUnreachable(job.id, note, job.kind, job.target);
         console.log(`касания: ${job.target} — ${note}${next === "phone" ? " Пробую по номеру." : ""}`);
       } else {
         const { stopped } = await markFailed(job.id, why);
@@ -355,7 +355,7 @@ async function live() {
       const note = unreachableText(reach.verdict.why, job.kind);
       // Адрес оказался каналом или ботом — следующим тиком тот же проспект
       // пойдёт по номеру с сайта, если он мобильный (см. markUnreachable).
-      const next = await markUnreachable(job.id, note, job.kind);
+      const next = await markUnreachable(job.id, note, job.kind, job.target);
       console.log(`касания: ${job.target} — ${note}${next === "phone" ? " Пробую по номеру." : ""}`);
       return;
     }
