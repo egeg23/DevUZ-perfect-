@@ -1,4 +1,4 @@
-import { Inter, JetBrains_Mono, Unbounded } from "next/font/google";
+import { display, sans, mono } from "@/app/fonts";
 import { headers } from "next/headers";
 import Link from "next/link";
 
@@ -6,22 +6,6 @@ import { getDictionary } from "@/content/dictionaries";
 import { defaultLocale, hreflang, isLocale, localeHref, matchLocale, type Locale } from "@/lib/i18n";
 
 import "./globals.css";
-
-const display = Unbounded({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "600", "800"],
-  variable: "--font-unbounded",
-  display: "swap",
-});
-
-const sans = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-inter", display: "swap" });
-
-const mono = JetBrains_Mono({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "700"],
-  variable: "--font-jetbrains",
-  display: "swap",
-});
 
 export const metadata = { title: "404", robots: { index: false, follow: false } };
 
