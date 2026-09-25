@@ -1,21 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { sans, mono } from "@/app/fonts";
 import type { ReactNode } from "react";
 
 import "../globals.css";
-
-const sans = Inter({
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "700"],
-  variable: "--font-jetbrains",
-  display: "swap",
-});
 
 /**
  * Панель закрыта от индексации на уровне метаданных, а не только robots.txt:

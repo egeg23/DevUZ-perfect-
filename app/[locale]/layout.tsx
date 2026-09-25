@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Unbounded } from "next/font/google";
+import { display, sans, mono } from "@/app/fonts";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -15,27 +15,8 @@ import { hreflang, isLocale, locales, t, type Locale } from "@/lib/i18n";
 import { jsonLdGraph, organizationSchema, websiteSchema } from "@/lib/schema";
 import { siteUrl } from "@/lib/seo";
 
-// Шрифты самохостятся Next'ом: ни одного обращения к fonts.googleapis.com
-// в рантайме, поэтому нет ни лишнего DNS-резолва, ни риска CLS от подмены.
-const display = Unbounded({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "600", "800"],
-  variable: "--font-unbounded",
-  display: "swap",
-});
-
-const sans = Inter({
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "700"],
-  variable: "--font-jetbrains",
-  display: "swap",
-});
+// Шрифты лежат в репозитории (app/fonts.ts): ни обращения к Google ни при
+// сборке, ни в браузере — нет ни лишнего DNS-резолва, ни риска CLS от подмены.
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
