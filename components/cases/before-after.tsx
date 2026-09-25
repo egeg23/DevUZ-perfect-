@@ -19,7 +19,9 @@ export type BeforeAfterLabels = {
 };
 
 /**
- * Шторка «было / стало»: старый сайт заказчика и тот, что сделали мы.
+ * Шторки «было / стало»: старый сайт заказчика и тот, что сделали мы —
+ * раздел за разделом, ровно в тех же пунктах: первый экран против первого
+ * экрана, каталог против каталога, контакты против контактов.
  *
  * Как у Namuna — два кадра друг на друге, верхний обрезан по ползунку. Но
  * тянуть здесь можно за любое место кадра, а не только за ручку: на iPhone
@@ -31,12 +33,20 @@ export type BeforeAfterLabels = {
  * `touch-action: pan-y` — чтобы вертикальный свайп по высокому телефонному
  * кадру листал страницу, а не застревал в шторке.
  *
- * Компьютер и телефон — два набора снимков. Пока человек не выбрал сам,
- * показывается тот, что подходит его экрану (переключение по ширине в CSS —
- * без мигания после загрузки).
+ * Компьютер и телефон — два набора снимков, переключатель один на все
+ * шторки. Пока человек не выбрал сам, показывается тот, что подходит его
+ * экрану (переключение по ширине в CSS — без мигания после загрузки).
  */
-export function BeforeAfter({ slug, labels }: { slug: string; labels: BeforeAfterLabels }) {
-  const [split, setSplit] = useState(50);
+export function BeforeAfter({
+  slug,
+  parts,
+  labels,
+}: {
+  slug: string;
+  /** Разделы по порядку: ключ — часть имени файла, label — подпись на языке страницы. */
+  parts: readonly { key: string; label: string }[];
+  labels: BeforeAfterLabels;
+}) {
   const [view, setView] = useState<View | null>(null);
 
   const tab = (value: View) => {
@@ -61,42 +71,75 @@ export function BeforeAfter({ slug, labels }: { slug: string; labels: BeforeAfte
     );
   };
 
+  // Компьютерные кадры — по два в ряд, первый экран во всю ширину.
+  // Телефонные — узкие, поэтому по четыре.
+  const phones = view === "mobile";
+
   return (
     <div>
-      <div className="mb-4 inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
+      <div className="mb-6 inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
         {tab("desktop")}
         {tab("mobile")}
       </div>
 
-      <Frame
-        slug={slug}
-        view="desktop"
-        split={split}
-        onSplit={setSplit}
-        labels={labels}
-        className={view === null ? "hidden sm:block" : view === "desktop" ? "" : "hidden"}
-      />
-      <Frame
-        slug={slug}
-        view="mobile"
-        split={split}
-        onSplit={setSplit}
-        labels={labels}
-        className={view === null ? "sm:hidden" : view === "mobile" ? "" : "hidden"}
-      />
+      <ol className={cn("grid gap-x-6 gap-y-10", phones ? "sm:grid-cols-2 lg:grid-cols-4" : "lg:grid-cols-2")}>
+        {parts.map((part, index) => (
+          <Part
+            key={part.key}
+            slug={slug}
+            part={part.key}
+            title={`${String(index + 1).padStart(2, "0")} · ${part.label}`}
+            wide={index === 0 && !phones}
+            view={view}
+            labels={labels}
+          />
+        ))}
+      </ol>
     </div>
+  );
+}
+
+/** Один раздел: подпись и шторка — своя у каждого, ползунки независимы. */
+function Part({
+  slug,
+  part,
+  title,
+  wide,
+  view,
+  labels,
+}: {
+  slug: string;
+  part: string;
+  title: string;
+  wide: boolean;
+  view: View | null;
+  labels: BeforeAfterLabels;
+}) {
+  const [split, setSplit] = useState(50);
+  const frame = { slug, part, split, onSplit: setSplit, labels, wide };
+
+  return (
+    <li className={cn("min-w-0", wide && "lg:col-span-2")}>
+      <h3 className="mb-3 font-mono text-[0.72rem] uppercase tracking-[0.16em] text-muted">{title}</h3>
+      <Frame {...frame} view="desktop" className={view === null ? "hidden sm:block" : view === "desktop" ? "" : "hidden"} />
+      <Frame {...frame} view="mobile" className={view === null ? "sm:hidden" : view === "mobile" ? "" : "hidden"} />
+    </li>
   );
 }
 
 function Frame({
   slug,
+  part,
   view,
   split,
   onSplit,
   labels,
+  wide,
   className,
 }: {
   slug: string;
+  part: string;
+  wide: boolean;
   view: View;
   split: number;
   onSplit: (value: number) => void;
@@ -105,7 +148,12 @@ function Frame({
 }) {
   const dragging = useRef(false);
   const viewName = view === "desktop" ? labels.desktop : labels.mobile;
-  const sizes = view === "desktop" ? "(max-width: 1280px) 100vw, 1200px" : "(max-width: 640px) 90vw, 320px";
+  const sizes =
+    view === "mobile"
+      ? "(max-width: 640px) 90vw, 320px"
+      : wide
+        ? "(max-width: 1280px) 100vw, 1200px"
+        : "(max-width: 1024px) 100vw, 600px";
 
   const moveTo = (event: PointerEvent<HTMLDivElement>) => {
     const box = event.currentTarget.getBoundingClientRect();
@@ -137,7 +185,7 @@ function Frame({
         }}
       >
         <Image
-          src={`/cases/${slug}/before-${view}.webp`}
+          src={`/cases/${slug}/${part}-before-${view}.webp`}
           alt={labels.altBefore.replace("{view}", viewName)}
           fill
           sizes={sizes}
@@ -146,7 +194,7 @@ function Frame({
         />
         <div className="pointer-events-none absolute inset-0" style={{ clipPath: `inset(0 0 0 ${split}%)` }}>
           <Image
-            src={`/cases/${slug}/after-${view}.webp`}
+            src={`/cases/${slug}/${part}-after-${view}.webp`}
             alt={labels.altAfter.replace("{view}", viewName)}
             fill
             sizes={sizes}

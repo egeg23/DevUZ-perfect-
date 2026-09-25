@@ -259,6 +259,8 @@ export async function markUnreachable(
   id: string,
   note: string,
   kind: RouteKind = "handle",
+  /** Кому пробовали сейчас: по номеру — чтобы взять следующий, а не тот же. */
+  tried: string | null = null,
 ): Promise<"phone" | "manual" | null> {
   const db = serviceClient();
   if (!db) return null;
@@ -289,13 +291,18 @@ export async function markUnreachable(
    * тем же местом, меняется только маршрут; до отправки дело не дошло, и
    * место в часовом пределе цело.
    */
-  if (kind !== "phone" && hand && isMobile(hand)) {
+  // Мобильных на сайте бывает несколько — у svoydom.kz на первом телеграма
+  // не оказалось, а второй никто не попробовал. Идём по списку дальше того,
+  // что пробовали сейчас; по адресу — с первого.
+  const mobiles = [...new Set([...(contacts.whatsapp ?? []), ...(contacts.phones ?? [])].filter(isMobile))];
+  const next = kind === "phone" ? mobiles[mobiles.indexOf(tried ?? "") + 1] : mobiles[0];
+  if (next && (kind !== "phone" || mobiles.includes(tried ?? ""))) {
     await db
       .from("prospects")
       .update({
         target_kind: "phone",
-        target: hand,
-        failure: `${note} Пробуем найти в Telegram по номеру ${hand}.`.slice(0, 500),
+        target: next,
+        failure: `${note} Пробуем найти в Telegram по номеру ${next}.`.slice(0, 500),
       })
       .eq("id", id)
       .eq("status", "sending");

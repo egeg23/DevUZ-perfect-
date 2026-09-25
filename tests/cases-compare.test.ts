@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { cases } from "@/content/cases";
+import { COMPARE_PARTS, cases } from "@/content/cases";
 import { getDictionary } from "@/content/dictionaries";
 import { locales } from "@/lib/i18n";
 
@@ -15,21 +15,43 @@ import { locales } from "@/lib/i18n";
 
 const root = new URL("../", import.meta.url);
 
-test("у каждого сравнения есть все четыре снимка", () => {
+test("у каждого раздела сравнения есть все четыре снимка", () => {
   const withCompare = cases.filter((item) => item.compare);
   assert.ok(withCompare.length >= 5, "сравнений меньше, чем снято");
   for (const item of withCompare) {
-    for (const side of ["before", "after"]) {
-      for (const view of ["desktop", "mobile"]) {
-        const file = new URL(`public/cases/${item.slug}/${side}-${view}.webp`, root);
-        assert.ok(existsSync(file), `${item.slug}: нет ${side}-${view}.webp`);
-        // WebP: RIFF....WEBP в заголовке — не переименованный PNG.
-        const head = readFileSync(file).subarray(0, 12).toString("latin1");
-        assert.match(head, /^RIFF.{4}WEBP$/s, `${item.slug}: ${side}-${view} не webp`);
+    const parts = item.compare!.parts;
+    // Владелец: «6–10 слайдеров … ровно в тех же пунктах». Меньше шести —
+    // значит, у старого сайта не нашлось пары, и так и надо сказать, а не
+    // добивать сравнение разделами, которых у них нет.
+    assert.ok(parts.length >= 6 && parts.length <= 10, `${item.slug}: разделов ${parts.length}`);
+    assert.equal(parts[0], "hero", `${item.slug}: первым — первый экран`);
+    assert.equal(new Set(parts).size, parts.length, `${item.slug}: раздел повторяется`);
+    for (const part of parts) {
+      assert.ok((COMPARE_PARTS as readonly string[]).includes(part), `${item.slug}: неизвестный раздел ${part}`);
+      for (const side of ["before", "after"]) {
+        for (const view of ["desktop", "mobile"]) {
+          const file = new URL(`public/cases/${item.slug}/${part}-${side}-${view}.webp`, root);
+          assert.ok(existsSync(file), `${item.slug}: нет ${part}-${side}-${view}.webp`);
+          // WebP: RIFF....WEBP в заголовке — не переименованный PNG.
+          const head = readFileSync(file).subarray(0, 12).toString("latin1");
+          assert.match(head, /^RIFF.{4}WEBP$/s, `${item.slug}: ${part}-${side}-${view} не webp`);
+        }
       }
     }
     assert.match(item.compare!.site, /^[a-z0-9.-]+\.[a-z]{2,}$/, `${item.slug}: адрес старого сайта`);
     assert.match(item.compare!.taken, /^\d{4}-(0[1-9]|1[0-2])$/, `${item.slug}: дата снимка`);
+  }
+});
+
+test("в папках кейсов нет снимков, на которые никто не ссылается", () => {
+  for (const item of cases.filter((c) => c.compare)) {
+    const dir = new URL(`public/cases/${item.slug}/`, root);
+    const wanted = new Set(
+      item.compare!.parts.flatMap((part) =>
+        ["before", "after"].flatMap((side) => ["desktop", "mobile"].map((view) => `${part}-${side}-${view}.webp`)),
+      ),
+    );
+    for (const file of readdirSync(dir)) assert.ok(wanted.has(file), `${item.slug}: лишний ${file}`);
   }
 });
 
@@ -53,6 +75,7 @@ test("подписи шторки есть на всех языках", () => {
     assert.ok(dict.compareAltBefore.includes("{name}") && dict.compareAltBefore.includes("{view}"), locale);
     assert.ok(dict.compareAltAfter.includes("{name}") && dict.compareAltAfter.includes("{view}"), locale);
     assert.ok(dict.compareNote.includes("{date}") && dict.compareNote.includes("{site}"), locale);
+    for (const part of COMPARE_PARTS) assert.ok(dict.compareParts[part].trim(), `${locale}: нет подписи раздела ${part}`);
   }
 });
 

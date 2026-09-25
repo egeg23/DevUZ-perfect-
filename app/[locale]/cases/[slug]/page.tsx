@@ -114,6 +114,7 @@ export default async function CasePage({
             <div className="mt-6">
               <BeforeAfter
                 slug={item.slug}
+                parts={item.compare.parts.map((key) => ({ key, label: dict.cases.compareParts[key] }))}
                 labels={{
                   before: dict.cases.compareBefore,
                   after: dict.cases.compareAfter,
