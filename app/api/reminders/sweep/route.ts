@@ -4,7 +4,7 @@ import { record } from "@/lib/admin/audit";
 import { preparePortionsInBackground, runPortions } from "@/lib/admin/portion-store";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
-import { advanceQueues } from "@/lib/admin/lead-queue-store";
+import { advanceQueues, redeliverLostCards } from "@/lib/admin/lead-queue-store";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { runCoach } from "@/lib/admin/coach-store";
@@ -16,7 +16,7 @@ import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-repor
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { promoteStrongSignals } from "@/lib/scout/promote";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
-import { esc, sendWithButtons } from "@/lib/qualify/telegram";
+import { esc, sendWithButtons, telegramReachable } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -150,6 +150,14 @@ export async function POST(request: Request) {
     // Пометка «отправлено» ставится только после успеха. Иначе первый же
     // сбой Telegram молча съедал бы напоминание навсегда.
     if (!ok) {
+      // До Telegram нет дороги вообще — напоминание не виновато, и попытку
+      // ему не засчитываем: 26 сентября так были брошены два напоминания
+      // после пяти проходов, пока сервер сутки не видел Telegram. Остальным
+      // в этом проходе не дойти тем более.
+      if (!(await telegramReachable())) {
+        failed += 1;
+        break;
+      }
       await db
         .from("lead_reminders")
         .update({
@@ -181,6 +189,12 @@ export async function POST(request: Request) {
   // того, чьё время вышло, лишние минуты.
   const queue = await advanceQueues(new Date());
   if (queue.errors.length) console.error("очередь лидов:", queue.errors.join("; "));
+
+  // Карточки, которые не дошли ни до кого, — досылаются, когда Telegram
+  // снова отвечает. 25 сентября горячий лид с формы сутки пролежал ничьим:
+  // карточка ушла в сбой связи, а повторять её было некому.
+  const lost = await redeliverLostCards(new Date());
+  if (lost.errors.length) console.error("досылка карточек:", lost.errors.join("; "));
 
   // Сильные сигналы скаута — в ту же очередь, сразу за ней: пост в чате
   // живёт часы, и ждать ему дольше пяти минут незачем.
@@ -274,6 +288,7 @@ export async function POST(request: Request) {
 
   return Response.json({
     queue,
+    lost,
     scout,
     maps,
     portions,

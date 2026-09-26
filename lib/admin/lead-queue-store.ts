@@ -3,7 +3,10 @@ import {
   OFFER_MINUTES,
   OPEN_HEADING,
   QUEUE_ROLES,
+  LOST_WINDOW_HOURS,
+  isLostCard,
   isWorkingHours,
+  lostHeading,
   missedNotice,
   monthStartOf,
   offerHeading,
@@ -16,7 +19,7 @@ import {
 import { salesRecipients } from "@/lib/qualify/brief";
 import { noticesOf } from "@/lib/qualify/notices";
 import type { LeadOrigin } from "@/lib/qualify/origin";
-import { editLeadCards, sendLead, sendMessage } from "@/lib/qualify/telegram";
+import { editLeadCards, sendLead, sendMessage, telegramReachable } from "@/lib/qualify/telegram";
 import type { ScoredLead } from "@/lib/qualify/types";
 import { serviceClient } from "@/lib/supabase";
 
@@ -284,7 +287,8 @@ export async function startQueue(card: Card, now: Date = new Date()): Promise<bo
 /**
  * Пустить лид по очереди заново — у него пропал ведущий.
  *
- * Для лидов отключённого сотрудника. По тем же правилам, что новый лид:
+ * Для лидов отключённого сотрудника и для карточек, которые не дошли ни до
+ * кого (redeliverLostCards). По тем же правилам, что новый лид:
  * днём — тому, у кого меньше, на полчаса; ночью — всем с потолком равной
  * доли. Иначе «лиды уволенного» стали бы тем самым входом, через который
  * ушлый менеджер забирает себе всё, — их разбирали бы, кто первый нажал.
@@ -314,6 +318,74 @@ export async function requeueLead(leadId: string, heading: string, now: Date = n
     heading,
     origin: card.origin,
   });
+}
+
+/**
+ * Дослать карточки, которые не дошли ни до кого (см. isLostCard).
+ *
+ * Лид пускается по очереди заново — по правилам текущего часа: днём тому,
+ * у кого меньше, ночью всем с равной долей. Шапка говорит, что это досылка
+ * и когда лид пришёл.
+ *
+ * Только когда Telegram отвечает: пока его нет, досылка не дойдёт так же,
+ * как не дошла карточка, а днём каждая попытка выдавала бы новое
+ * предложение в очереди.
+ */
+export async function redeliverLostCards(
+  now: Date = new Date(),
+): Promise<{ resent: string[]; errors: string[] }> {
+  const report = { resent: [] as string[], errors: [] as string[] };
+  const db = serviceClient();
+  if (!db) return report;
+
+  const since = new Date(now.getTime() - LOST_WINDOW_HOURS * 3_600_000).toISOString();
+  const { data: leads, error } = await db
+    .from("leads")
+    .select("id, request_no, status, assigned_staff_id, queue_opened_at, created_at")
+    .eq("status", "new")
+    .is("assigned_staff_id", null)
+    .not("queue_opened_at", "is", null)
+    .gte("created_at", since);
+  if (error) {
+    report.errors.push(`не прочитал лиды: ${error.message}`);
+    return report;
+  }
+  if (!leads?.length) return report;
+
+  const { data: notices } = await db
+    .from("lead_notices")
+    .select("lead_id")
+    .in(
+      "lead_id",
+      leads.map((lead) => lead.id as string),
+    );
+  const delivered = new Set(((notices as { lead_id: string }[] | null) ?? []).map((row) => row.lead_id));
+
+  const lost = leads.filter((lead) =>
+    isLostCard(
+      {
+        status: lead.status as string | null,
+        assignedStaffId: lead.assigned_staff_id as string | null,
+        queueOpenedAt: lead.queue_opened_at as string | null,
+        createdAt: lead.created_at as string,
+        notices: delivered.has(lead.id as string) ? 1 : 0,
+      },
+      now,
+    ),
+  );
+  if (!lost.length || !(await telegramReachable())) return report;
+
+  for (const lead of lost) {
+    try {
+      if (await requeueLead(lead.id as string, lostHeading(lead.created_at as string), now)) {
+        report.resent.push((lead.request_no as string | null) ?? (lead.id as string));
+        console.log(`очередь: дослал карточку ${lead.request_no ?? lead.id} — она не дошла ни до кого`);
+      }
+    } catch (err) {
+      report.errors.push(`${lead.request_no ?? lead.id}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  return report;
 }
 
 /** Карточка лида, собранная из базы — для того, кому очередь дошла позже. */
