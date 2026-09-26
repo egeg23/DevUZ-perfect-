@@ -8,6 +8,7 @@ import {
   refreshAccess,
   type GoogleClient,
 } from "@/lib/analytics/google-oauth";
+import { roadFetch } from "@/lib/egress.mjs";
 import { appSecret } from "@/lib/secrets";
 
 /**
@@ -93,7 +94,8 @@ type MetrikaResponse = { data?: MetrikaRow[]; totals?: number[]; message?: strin
 
 async function metrika(token: string, params: Record<string, string>): Promise<MetrikaResponse> {
   const url = `${METRIKA_API}?${new URLSearchParams({ accuracy: "full", ...params })}`;
-  const response = await fetch(url, {
+  // Яндекс отвечает и напрямую: умер прокси — Метрика не должна умирать с ним.
+  const response = await roadFetch(url, {
     headers: { Authorization: `OAuth ${token}` },
     signal: AbortSignal.timeout(TIMEOUT_MS),
     cache: "no-store",

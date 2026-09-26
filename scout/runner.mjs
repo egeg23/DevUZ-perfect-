@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 // («teleproto/sessions») в ESM не резолвится. Берём всё с верхнего уровня.
 import telegram from "teleproto";
 
-import { startProxyBridge } from "./http-proxy-bridge.mjs";
+import { probeTunnel, startProxyBridge } from "./http-proxy-bridge.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
 import { openChats } from "@/lib/scout/chats";
 import { classify } from "@/lib/scout/classify";
@@ -46,6 +46,9 @@ const MAX_BATCH = Number(process.env.SCOUT_MAX_BATCH || 20);
 
 /** Как часто сторож смотрит на соединение. Два промаха подряд — выход. */
 const WATCHDOG_MS = 5 * 60_000;
+
+/** Дата-центр 2 — если в сессии адреса нет. У аккаунта скаута он и есть. */
+const TELEGRAM_DC_FALLBACK = "149.154.167.51";
 
 /**
  * Как часто скаут отчитывается о себе в базу.
@@ -153,16 +156,24 @@ async function live() {
   const { StringSession } = telegram.sessions;
   const { NewMessage } = telegram.events;
 
+  const session = new StringSession(env("SCOUT_SESSION"));
+
   // Прокси тот же, что у остального приложения.
   //
-  // На сервере без прямого выхода в интернет соединение с Telegram иначе
-  // просто не встаёт: клиент ходит голым TCP, а HTTP-прокси он не понимает.
-  // Мост переводит одно в другое и живёт в этом же процессе.
+  // Напрямую до Telegram с этого сервера дорога то есть, то нет, поэтому
+  // основная — через прокси. Клиент ходит голым TCP, а HTTP-прокси он не
+  // понимает; мост переводит одно в другое и живёт в этом же процессе.
+  //
+  // Но прокси тоже умирает — 25–26 сентября он молчал сутки, и скаут всё это
+  // время перезапускался по кругу. Поэтому перед подключением проверяем,
+  // пускает ли прокси до дата-центра из сессии; не пускает — идём напрямую.
   const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || "";
-  const bridge = proxyUrl ? await startProxyBridge(proxyUrl) : null;
+  const dc = { host: session.serverAddress || TELEGRAM_DC_FALLBACK, port: session.port || 443 };
+  const refused = proxyUrl ? await probeTunnel(proxyUrl, dc.host, dc.port) : null;
+  const bridge = proxyUrl && !refused ? await startProxyBridge(proxyUrl) : null;
   if (bridge) console.log(`scout: выхожу через прокси ${new URL(proxyUrl).host}`);
+  else if (refused) console.error(`scout: прокси ${new URL(proxyUrl).host} не пускает к Telegram (${refused}) — подключаюсь напрямую`);
 
-  const session = new StringSession(env("SCOUT_SESSION"));
   const client = new TelegramClient(
     session,
     Number(env("SCOUT_API_ID")),

@@ -7,13 +7,15 @@
 // сбоя. Исходящие соединения через прокси при этом работают — так ходит
 // скаут и так приложение шлёт сообщения.
 //
-// Поэтому обновления забираем сами: getUpdates через тот же прокси, а
-// каждое обновление отдаём приложению на localhost тем же запросом, что
-// прислал бы Telegram, — с тем же секретом в заголовке. Код обработки не
-// меняется вовсе.
+// Поэтому обновления забираем сами: getUpdates через прокси (или в обход
+// него, если он умер), а каждое обновление отдаём приложению на localhost
+// тем же запросом, что прислал бы Telegram, — с тем же секретом в
+// заголовке. Код обработки не меняется вовсе.
 //
 // Живёт на хосте под systemd, как скаут: долгоживущий цикл, а не задача по
-// расписанию. Зависимостей нет — только fetch.
+// расписанию. Зависимостей нет — только fetch и lib/egress.mjs из того же
+// репозитория.
+import { roadFetch } from "../lib/egress.mjs";
 import { ackOffset, backoffMs, classifyError } from "./logic.mjs";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -39,8 +41,11 @@ class ApiError extends Error {
   }
 }
 
+// Дорога — через прокси или напрямую — та, что сработала последней
+// (lib/egress.mjs). 25–26 сентября умер прокси, и поллер сутки не видел ни
+// одной команды — хотя напрямую api.telegram.org отвечал.
 async function tg(method, payload, timeoutMs) {
-  const response = await fetch(`${API}/${method}`, {
+  const response = await roadFetch(`${API}/${method}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),

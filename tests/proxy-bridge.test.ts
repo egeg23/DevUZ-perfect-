@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { createServer, connect, type Server } from "node:net";
 import { test } from "node:test";
 
-import { parseProxyUrl, startProxyBridge } from "../scout/http-proxy-bridge.mjs";
+import { parseProxyUrl, probeTunnel, startProxyBridge } from "../scout/http-proxy-bridge.mjs";
 
 /** Куда мост в итоге должен доставить байты. */
 function echoServer(): Promise<{ server: Server; port: number }> {
@@ -304,5 +304,32 @@ test("закрытие не ждёт живое соединение", async () 
     held.destroy();
     echo.server.close();
     proxy.server.close();
+  }
+});
+
+test("проверка перед подключением: живой прокси пускает, мёртвый и отказавший — нет", async () => {
+  // 25–26 сентября прокси умер: порт принимал соединение и молчал, а скаут
+  // сутки перезапускался по кругу. Проверка решает, идти ли через прокси
+  // или напрямую, и не должна висеть дольше своего срока.
+  const echo = await echoServer();
+  const alive = await httpProxy();
+  const refusing = await httpProxy({ refuse: true });
+  const silent = createServer(() => undefined);
+  await new Promise<void>((resolve) => silent.listen(0, "127.0.0.1", () => resolve()));
+  const silentPort = (silent.address() as { port: number }).port;
+
+  try {
+    assert.equal(await probeTunnel(`http://127.0.0.1:${alive.port}`, "127.0.0.1", echo.port, 1000), null);
+    assert.match(String(await probeTunnel(`http://127.0.0.1:${refusing.port}`, "127.0.0.1", echo.port, 1000)), /403/);
+
+    const started = Date.now();
+    const reason = await probeTunnel(`http://127.0.0.1:${silentPort}`, "127.0.0.1", echo.port, 300);
+    assert.match(String(reason), /не ответил/);
+    assert.ok(Date.now() - started < 2000, "проверка ждала дольше своего срока");
+  } finally {
+    echo.server.close();
+    alive.server.close();
+    refusing.server.close();
+    silent.close();
   }
 });

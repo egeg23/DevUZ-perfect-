@@ -231,9 +231,9 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
     echo "  · SCOUT_SESSION или SCOUT_CHATS не заданы — скаут не запускаю" >&2
   fi
 
-  # Бот забирает обновления у Telegram сам, через тот же прокси, что и скаут:
-  # входящие соединения от Telegram к этому серверу рвутся, и вебхук
-  # доставлял /login с опозданием в минуты. Нужны токен и общий с
+  # Бот забирает обновления у Telegram сам — через прокси, а умер прокси —
+  # напрямую (lib/egress.mjs): входящие соединения от Telegram к этому
+  # серверу рвутся, и вебхук доставлял /login с опозданием в минуты. Нужны токен и общий с
   # приложением секрет. Перезапуск на каждой выкатке — как у скаута.
   if grep -q '^TELEGRAM_BOT_TOKEN=.\+' "$APP_DIR/.env" && grep -q '^TELEGRAM_WEBHOOK_SECRET=.\+' "$APP_DIR/.env"; then
     systemctl enable --now devuz-bot.service >/dev/null 2>&1

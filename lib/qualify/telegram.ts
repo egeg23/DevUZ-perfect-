@@ -5,6 +5,7 @@ import type { ScoredLead } from "@/lib/qualify/types";
 import { localeLabel } from "@/lib/i18n";
 import { noticesOf, rememberNotices, type Notice } from "@/lib/qualify/notices";
 import { siteUrl } from "@/lib/seo";
+import { roadFetch } from "@/lib/egress.mjs";
 
 /**
  * Адрес Bot API.
@@ -210,10 +211,11 @@ async function callRaw(method: string, payload: unknown): Promise<CallResult> {
 
   // Вторая попытка — только если первая оборвалась, не получив ответа:
   // сеть, прокси, таймаут. Ответ с ошибкой от Telegram не повторяем — он
-  // будет тем же.
+  // будет тем же. Дорогу — через прокси или напрямую — выбирает roadFetch
+  // (lib/egress.mjs): умер прокси — сообщения идут в обход него.
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const response = await fetch(`${API}${token}/${method}`, {
+      const response = await roadFetch(`${API}${token}/${method}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
