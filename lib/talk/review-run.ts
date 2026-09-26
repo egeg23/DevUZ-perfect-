@@ -10,6 +10,7 @@ import {
   type Review,
 } from "@/lib/talk/review";
 import { saveReview, toReview } from "@/lib/talk/review-store";
+import { anthropic } from "@/lib/model-road";
 
 /**
  * Надзиратель: проход по успокоившимся перепискам.
@@ -79,7 +80,7 @@ export async function runReviews(limit = 5): Promise<ReviewRun> {
 }
 
 async function ask(input: Parameters<typeof reviewPrompt>[0]): Promise<Partial<Review> | null> {
-  const response = await new Anthropic().beta.messages.create({
+  const response = await anthropic().beta.messages.create({
     model: MODEL,
     max_tokens: 700,
     system: [{ type: "text" as const, text: REVIEW_SYSTEM, cache_control: { type: "ephemeral" as const } }],

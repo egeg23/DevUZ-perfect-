@@ -12,6 +12,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { Niche } from "@/content/razbor/catalog";
 import { effortFor } from "@/lib/model-limits";
 import { parseNiche } from "@/lib/razbor/niche-words";
+import { anthropic } from "@/lib/model-road";
 
 /**
  * Определить род занятий по заголовкам — не та работа, за которую стоит
@@ -68,7 +69,7 @@ export async function inventNiche(input: {
   if (!hints.length && !input.title) return null;
 
   try {
-    const client = new Anthropic();
+    const client = anthropic();
     const message = await client.messages.create({
       model: MODEL,
       max_tokens: 700,

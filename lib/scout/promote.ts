@@ -11,6 +11,7 @@ import { esc } from "@/lib/qualify/telegram";
 import type { QualifyToolInput } from "@/lib/qualify/types";
 import { STRONG_SCORE } from "@/lib/scout/store";
 import { serviceClient } from "@/lib/supabase";
+import { anthropic } from "@/lib/model-road";
 
 /**
  * Сильный сигнал скаута — сразу в очередь тёплых лидов.
@@ -85,7 +86,7 @@ const REPLY_SYSTEM = `Ты менеджер веб-студии DevUz из Та�
 export async function draftReply(signal: SignalRow): Promise<string> {
   if (!process.env.ANTHROPIC_API_KEY) return fallbackReply(signal);
   try {
-    const client = new Anthropic();
+    const client = anthropic();
     const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 700,

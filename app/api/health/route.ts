@@ -1,4 +1,5 @@
 import { currentRoads } from "@/lib/egress.mjs";
+import { currentModelRoad, modelFetch } from "@/lib/model-road";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,9 @@ export async function GET(request: Request) {
   // идут напрямую: бот работает, но прокси пора чинить — через него ходит
   // модель.
   body.roads = currentRoads();
+  // Дорога к модели: «proxy» — как задумано, «proxyapi» — прокси не
+  // отвечал, и модель идёт через ProxyAPI до следующей пробы прокси.
+  body.model = currentModelRoad().road;
 
   if (deep) body.reachable = await probeModel();
 
@@ -74,7 +78,9 @@ async function probeModel(): Promise<Record<string, unknown>> {
   const base = (process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com").replace(/\/+$/, "");
 
   try {
-    const response = await fetch(`${base}/v1/messages`, {
+    // Через ту же дорогу, что и настоящие запросы: умер прокси — проба,
+    // как и чат, уйдёт через ProxyAPI и скажет, по какой дороге дошла.
+    const response = await modelFetch(`${base}/v1/messages`, {
       method: "POST",
       headers: {
         "x-api-key": key,
@@ -89,7 +95,7 @@ async function probeModel(): Promise<Record<string, unknown>> {
       signal: AbortSignal.timeout(15_000),
     });
 
-    if (response.ok) return { status: "ok", endpoint: base, egress: describeEgress() };
+    if (response.ok) return { status: "ok", endpoint: base, egress: describeEgress(), road: currentModelRoad().road };
 
     const text = await response.text();
 
@@ -112,7 +118,7 @@ async function probeModel(): Promise<Record<string, unknown>> {
       return { status: "bad_key", code: 401, hint: "Ключ отклонён — проверьте ANTHROPIC_API_KEY" };
     }
 
-    return { status: "error", code: response.status, body: text.slice(0, 200) };
+    return { status: "error", code: response.status, road: currentModelRoad().road, body: text.slice(0, 200) };
   } catch (error) {
     return {
       status: "unreachable",

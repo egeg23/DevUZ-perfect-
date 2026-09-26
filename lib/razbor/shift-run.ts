@@ -21,6 +21,7 @@ import { coveredHashes, saveDraft, sourceHash, storedNiche, type RazborArticle }
 import { serviceClient } from "@/lib/supabase";
 import type { AuditReport } from "@/lib/audit/checks";
 import type { City, Niche } from "@/content/razbor/catalog";
+import { anthropic } from "@/lib/model-road";
 
 const MODEL = process.env.RAZBOR_MODEL || process.env.ANTHROPIC_MODEL || "claude-opus-5";
 
@@ -350,7 +351,7 @@ export async function writeArticle(
       : []),
   ].join("\n");
 
-  const client = new Anthropic();
+  const client = anthropic();
   const message = await client.beta.messages.create({
     model: MODEL,
     max_tokens: 4096,
