@@ -175,6 +175,28 @@ jobs:
             journalctl -u devuz-scout.service -n 60 --no-pager -o cat 2>/dev/null \
               | grep -iE "error|ошиб|fail|timed out|ECONN|ETIMEDOUT|EHOSTUNREACH|прокси|недействительна|не откры" \
               | sed -E 's#//[^/@ ]*@#//***@#g' | cut -c1-200 | tail -5 || true
+            # По какой дороге скаут пошёл на последнем старте: через прокси
+            # или напрямую (scout/runner.mjs проверяет прокси перед входом).
+            echo "дорога на последних стартах:"
+            journalctl -u devuz-scout.service --since "-1h" --no-pager -o cat 2>/dev/null \
+              | grep -E "^scout: (выхожу через прокси|прокси .* не пускает)" \
+              | sed -E 's#//[^/@ ]*@#//***@#g' | cut -c1-200 | tail -2 || true
+            # Скаут ходит не в Bot API, а в дата-центр Telegram своим
+            # протоколом. Bot API отвечать может, а дата-центр — нет: в
+            # России режут именно его. Голый TCP — то, чем ходит скаут
+            # сейчас; WebSocket по 443 — запасной путь, который выглядит
+            # как обычный HTTPS.
+            echo "дата-центр Telegram напрямую:"
+            if timeout 8 bash -c "exec 3<>/dev/tcp/149.154.167.51/443" 2>/dev/null; then
+              echo "  ✓ TCP 149.154.167.51:443 (DC2) открывается"
+            else
+              echo "  ✗ TCP 149.154.167.51:443 (DC2) не открывается"
+            fi
+            WS_CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 --noproxy '*' https://venus.web.telegram.org/apiws 2>/dev/null || true)"
+            case "$WS_CODE" in
+              000|"") echo "  ✗ wss venus.web.telegram.org (DC2): не отвечает" ;;
+              *) echo "  ✓ wss venus.web.telegram.org (DC2): ответ $WS_CODE" ;;
+            esac
             echo
             echo "════ Бэкап базы ════"
             LAST_BACKUP="$(ls -1t /var/backups/devuz 2>/dev/null | head -1)"
