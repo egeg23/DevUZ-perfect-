@@ -244,6 +244,20 @@ async function call(method: string, payload: unknown): Promise<boolean> {
   return (await callRaw(method, payload)).ok;
 }
 
+/**
+ * Отвечает ли Telegram вообще — getMe, самый дешёвый вызов.
+ *
+ * Нужен, чтобы отличить «этот человек заблокировал бота» от «до Telegram
+ * нет дороги». 25–26 сентября сервер сутки не мог достучаться до Telegram,
+ * и свип засчитывал каждую неудачу напоминанию: пять попыток — и оно
+ * брошено, хотя вина была не его. Любой ответ Telegram, даже ошибка, —
+ * это дорога, которая есть.
+ */
+export async function telegramReachable(): Promise<boolean> {
+  const result = await callRaw("getMe", {});
+  return result.ok || result.description !== null;
+}
+
 /** Команда для меню бота: имя без слэша и короткое описание. */
 export type BotCommand = { command: string; description: string };
 

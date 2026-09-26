@@ -208,6 +208,56 @@ export const NIGHT_HEADING =
 
 export const OPEN_HEADING = "🔓 <b>Никто из очереди не взял — лид открыт всем.</b> Берёт первый, кто нажмёт.";
 
+/**
+ * Потерянная карточка: лид открыт, но его карточка не дошла ни до кого.
+ *
+ * 25 сентября в 23:55 пришёл горячий лид с формы, а Telegram с сервера
+ * был недоступен (умер прокси). Лид открылся всем по ночному правилу, но
+ * карточку не получил никто — и он сутки пролежал ничьим. Свип теперь
+ * досылает такие карточки, когда связь возвращается.
+ *
+ * Потерянной считаем карточку лида, который:
+ * - не взят и не назначен;
+ * - уже выпущен в очередь (иначе это не наш случай);
+ * - выпущен больше LOST_GRACE_MINUTES назад — свежая карточка может быть
+ *   ещё в пути;
+ * - пришёл не раньше LOST_WINDOW_HOURS назад — старше этого досылать поздно,
+ *   а записи о доставке у самых старых лидов могло и не быть;
+ * - ни одной доставленной копии (lead_notices пуст).
+ */
+export const LOST_WINDOW_HOURS = 72;
+export const LOST_GRACE_MINUTES = 15;
+
+export function isLostCard(
+  lead: {
+    status: string | null;
+    assignedStaffId: string | null;
+    queueOpenedAt: string | null;
+    createdAt: string;
+    notices: number;
+  },
+  now: Date,
+): boolean {
+  if (lead.status !== "new" || lead.assignedStaffId) return false;
+  if (!lead.queueOpenedAt || lead.notices > 0) return false;
+  const opened = new Date(lead.queueOpenedAt).getTime();
+  const created = new Date(lead.createdAt).getTime();
+  if (now.getTime() - opened < LOST_GRACE_MINUTES * 60_000) return false;
+  return now.getTime() - created <= LOST_WINDOW_HOURS * 3_600_000;
+}
+
+/** Шапка досланной карточки: откуда она через столько часов. */
+export function lostHeading(createdAt: string): string {
+  const when = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Asia/Tashkent",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(createdAt));
+  return `⚠️ <b>Досылка: карточка не дошла из-за сбоя связи.</b> Лид пришёл ${when} и до сих пор ничей.`;
+}
+
 export function missedNotice(label: string): string {
   return `⌛ ${OFFER_MINUTES} минут на лид «${html(label)}» вышли — он передан следующему по очереди.`;
 }
