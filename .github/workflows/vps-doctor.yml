@@ -12,11 +12,48 @@ name: Осмотр связи с сервером
 
 on:
   workflow_dispatch:
+    inputs:
+      proxy:
+        description: "Прокси для проверки снаружи России, host:port (без логина и пароля)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
 
 jobs:
+  # 26 сентября прокси перестал отвечать серверу, хотя был оплачен ещё на
+  # 24 дня. С сервера не отличить «прокси лежит» от «Россия режет до него
+  # дорогу». Раннер GitHub стоит в США: если отсюда прокси отвечает, а с
+  # сервера нет — дорогу режут, и продление не поможет, нужен другой адрес.
+  #
+  # Логин и пароль не нужны и сюда не передаются: живой прокси на запрос без
+  # них отвечает 407 — «назовитесь», мёртвый молчит.
+  proxy-outside:
+    name: Прокси снаружи России
+    if: ${{ inputs.proxy != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Достучаться до прокси из США
+        env:
+          PROXY_ADDR: ${{ inputs.proxy }}
+        run: |
+          set -uo pipefail
+          HOST="${PROXY_ADDR%:*}"; PORT="${PROXY_ADDR##*:}"
+          echo "прокси: $HOST:$PORT"
+          if timeout 10 bash -c "exec 3<>/dev/tcp/$HOST/$PORT" 2>/dev/null; then
+            echo "✓ порт открыт из США"
+          else
+            echo "✗ порт не открывается и из США — прокси лежит у самого продавца"
+          fi
+          CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 --proxy "http://$HOST:$PORT" https://ipinfo.io/json 2>/tmp/err || true)"
+          case "$CODE" in
+            407) echo "✓ прокси жив: ответил 407 — просит логин и пароль, как и должен" ;;
+            200) echo "✓ прокси жив и пускает без пароля" ;;
+            000|"") echo "✗ прокси не ответил: $(head -1 /tmp/err | cut -c1-160)" ;;
+            *) echo "· прокси ответил $CODE: $(head -1 /tmp/err | cut -c1-160)" ;;
+          esac
+
   doctor:
     name: Осмотр сервера
     runs-on: ubuntu-latest
