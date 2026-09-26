@@ -13,6 +13,7 @@ import { readFileSync } from "node:fs";
 import telegram from "teleproto";
 
 import { probeTunnel, startProxyBridge } from "./http-proxy-bridge.mjs";
+import { directWebSocket } from "@/lib/egress.mjs";
 import { createBuffer } from "@/lib/scout/buffer";
 import { openChats } from "@/lib/scout/chats";
 import { classify } from "@/lib/scout/classify";
@@ -155,6 +156,7 @@ async function live() {
   const { Api, TelegramClient } = telegram;
   const { StringSession } = telegram.sessions;
   const { NewMessage } = telegram.events;
+  const { PromisedWebSockets } = telegram.extensions;
 
   const session = new StringSession(env("SCOUT_SESSION"));
 
@@ -167,18 +169,33 @@ async function live() {
   // Но прокси тоже умирает — 25–26 сентября он молчал сутки, и скаут всё это
   // время перезапускался по кругу. Поэтому перед подключением проверяем,
   // пускает ли прокси до дата-центра из сессии; не пускает — идём напрямую.
+  //
+  // Напрямую — не голым TCP, а через WebSocket по 443, как Telegram Web:
+  // голый TCP до дата-центра из России закрыт (26 сентября «Connection to
+  // 149.154.167.51:443 timed out» при живом api.telegram.org), а
+  // venus.web.telegram.org отвечает. Адрес дата-центра библиотека сама
+  // переводит в веб-адрес, когда транспорт — WebSocket.
   const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || "";
   const dc = { host: session.serverAddress || TELEGRAM_DC_FALLBACK, port: session.port || 443 };
   const refused = proxyUrl ? await probeTunnel(proxyUrl, dc.host, dc.port) : null;
   const bridge = proxyUrl && !refused ? await startProxyBridge(proxyUrl) : null;
-  if (bridge) console.log(`scout: выхожу через прокси ${new URL(proxyUrl).host}`);
-  else if (refused) console.error(`scout: прокси ${new URL(proxyUrl).host} не пускает к Telegram (${refused}) — подключаюсь напрямую`);
+  if (bridge) {
+    console.log(`scout: выхожу через прокси ${new URL(proxyUrl).host}`);
+  } else {
+    // Встроенный WebSocket ходит через прокси из .env — подставляем прямой.
+    PromisedWebSockets.webSocketImpl = directWebSocket();
+    if (refused) {
+      console.error(`scout: прокси ${new URL(proxyUrl).host} не пускает к Telegram (${refused}) — подключаюсь напрямую через WebSocket`);
+    } else {
+      console.log("scout: прокси не задан — подключаюсь напрямую через WebSocket");
+    }
+  }
 
   const client = new TelegramClient(
     session,
     Number(env("SCOUT_API_ID")),
     env("SCOUT_API_HASH"),
-    { connectionRetries: 5, ...(bridge ? { proxy: bridge.socks } : {}) },
+    { connectionRetries: 5, ...(bridge ? { proxy: bridge.socks } : { networkSocket: PromisedWebSockets }) },
   );
 
   await client.connect();
