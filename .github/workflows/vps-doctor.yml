@@ -144,7 +144,8 @@ jobs:
                 -H "x-api-key: $KEY" \
                 -H "anthropic-version: 2023-06-01" \
                 -H "content-type: application/json" \
-                -d "{\"model\":\"${MODEL:-claude-opus-5}\",\"max_tokens\":1,\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" 2>/dev/null || echo 000)"
+                -d "{\"model\":\"${MODEL:-claude-opus-5}\",\"max_tokens\":1,\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" 2>/dev/null || true)"
+              [ -n "$CODE" ] || CODE=000
               KIND="$(grep -o '\"type\":\"[a-z_]*\"' "$PROBE" 2>/dev/null | head -2 | tail -1)"
               rm -f "$PROBE"
               case "$CODE" in
@@ -168,6 +169,12 @@ jobs:
             # Последний старт: сколько чатов открыл и в каких не состоит.
             journalctl -u devuz-scout.service --since "-7d" --no-pager 2>/dev/null \
               | grep -E "scout: (открыл|аккаунт не состоит|не открыл)" | tail -4 || echo "· журнал скаута пуст"
+            # Служба в «activating» — это перезапуск по кругу: причина в
+            # последних строках, а не в тех, что выше.
+            echo "перезапусков за сутки: $(journalctl -u devuz-scout.service --since "-24h" --no-pager 2>/dev/null | grep -c 'Scheduled restart job' || true)"
+            journalctl -u devuz-scout.service -n 60 --no-pager -o cat 2>/dev/null \
+              | grep -iE "error|ошиб|fail|timed out|ECONN|ETIMEDOUT|EHOSTUNREACH|прокси|недействительна|не откры" \
+              | sed -E 's#//[^/@ ]*@#//***@#g' | cut -c1-200 | tail -5 || true
             echo
             echo "════ Бэкап базы ════"
             LAST_BACKUP="$(ls -1t /var/backups/devuz 2>/dev/null | head -1)"
@@ -200,6 +207,62 @@ jobs:
             printf '%s\n' "$SWEEP_LOG" | grep -E "curl: \(" | cut -c1-200 | tail -6 || true
             echo "выкатки за сутки:"
             git log --since="24 hours ago" --format='  %cd %h %s' --date=format:'%b %d %H:%M' 2>/dev/null | cut -c1-110 | head -8 || true
+            echo
+            echo "════ Выход наружу: прокси и напрямую ════"
+            # 26 сентября бот сутки молчал: ни ссылок на вход, ни лидов, ни
+            # ответов ассистента на сайте. Контейнер ходит наружу только
+            # через прокси из .env (NODE_OPTIONS=--use-env-proxy), и когда
+            # прокси умирает, падает всё сразу — а в логе видно лишь
+            # «fetch failed». Здесь — что именно умерло: сам прокси, его
+            # пароль или путь от него дальше, и есть ли дорога в обход.
+            #
+            # Логин и пароль прокси в вывод не попадают: печатается только
+            # хост и порт, а из сообщений curl вырезается всё вида //…@.
+            scrub() { sed -E 's#//[^/@ ]*@#//***@#g' | cut -c1-200; }
+            probe() {
+              # probe <подпись> <url> [прокси] — код ответа или причина отказа.
+              # Причину curl пишет в stderr — отдельно от кода, чтобы они не
+              # перемешались в одну строку.
+              local label="$1" url="$2" via="${3:-}" err=/tmp/devuz-egress.err code
+              if [ -n "$via" ]; then
+                code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 --proxy "$via" "$url" 2>"$err" || true)"
+              else
+                code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 --noproxy '*' "$url" 2>"$err" || true)"
+              fi
+              if [ -z "$code" ] || [ "$code" = "000" ]; then
+                echo "  ✗ $label: $(head -1 "$err" | scrub)"
+              else
+                echo "  ✓ $label: ответ $code"
+              fi
+              rm -f "$err"
+            }
+            if [ -z "$PROXY" ]; then
+              echo "· прокси в .env не задан — контейнер ходит напрямую"
+            else
+              PROXY_HOST="$(printf '%s' "$PROXY" | sed -E 's#^[a-z]+://##; s#^[^@]*@##; s#/.*$##')"
+              echo "прокси: $PROXY_HOST"
+              PH="${PROXY_HOST%:*}"; PP="${PROXY_HOST##*:}"
+              if timeout 8 bash -c "exec 3<>/dev/tcp/$PH/$PP" 2>/dev/null; then
+                echo "  ✓ порт прокси открыт"
+              else
+                echo "  ✗ порт прокси не отвечает: прокси выключен, переехал или закрыл нас по IP"
+                TROUBLE=1
+              fi
+              echo "через прокси (407 — прокси не принял логин или пароль):"
+              probe "api.telegram.org" "https://api.telegram.org" "$PROXY"
+              probe "api.anthropic.com" "https://api.anthropic.com/v1/models" "$PROXY"
+              probe "mc.yandex.ru" "https://mc.yandex.ru" "$PROXY"
+              EXIT_CC="$(curl -sS --max-time 15 --proxy "$PROXY" https://ipinfo.io/country 2>/dev/null | tr -d '\n' || true)"
+              echo "  страна выхода через прокси: ${EXIT_CC:-не узнать}"
+            fi
+            echo "напрямую, мимо прокси:"
+            probe "api.telegram.org" "https://api.telegram.org"
+            probe "api.anthropic.com" "https://api.anthropic.com/v1/models"
+            probe "mc.yandex.ru" "https://mc.yandex.ru"
+            probe "github.com" "https://github.com"
+            HOST_CC="$(curl -sS --max-time 15 --noproxy '*' https://ipinfo.io/country 2>/dev/null | tr -d '\n' || true)"
+            echo "  страна сервера: ${HOST_CC:-не узнать}"
+
             echo
             echo "════ Бот ════"
             # Изнутри контейнера: там токен и адрес API, а в вывод токен не попадает.
