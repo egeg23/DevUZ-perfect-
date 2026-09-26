@@ -57,7 +57,7 @@ export function parseProxyUrl(raw) {
  * Их нужно не проглотить, а вернуть вызывающему, иначе первые байты ответа
  * сервера потеряются и рукопожатие зависнет.
  */
-function openTunnel(proxy, host, port) {
+function openTunnel(proxy, host, port, timeoutMs = 0) {
   return new Promise((resolve, reject) => {
     const socket = connect(proxy.port, proxy.host);
     let buffer = Buffer.alloc(0);
@@ -69,6 +69,11 @@ function openTunnel(proxy, host, port) {
 
     socket.setNoDelay(true);
     socket.once("error", fail);
+    // Мёртвый прокси не отказывает, а молчит: без срока соединение ждало бы
+    // системного таймаута TCP — пару минут.
+    if (timeoutMs > 0) {
+      socket.setTimeout(timeoutMs, () => fail(new Error(`прокси не ответил за ${Math.round(timeoutMs / 1000)} с`)));
+    }
 
     socket.on("connect", () => {
       const lines = [
@@ -92,6 +97,7 @@ function openTunnel(proxy, host, port) {
 
       socket.off("data", onData);
       socket.off("error", fail);
+      socket.setTimeout(0);
 
       const head = buffer.subarray(0, end).toString("latin1");
       const status = Number(head.split(/\r?\n/, 1)[0].split(" ")[1]);
@@ -220,6 +226,27 @@ async function serveClient(client, proxy, live) {
 
   client.pipe(tunnel.socket);
   tunnel.socket.pipe(client);
+}
+
+/**
+ * Пускает ли прокси до Telegram прямо сейчас.
+ *
+ * 25–26 сентября прокси умер целиком, и скаут сутки перезапускался по кругу:
+ * мост честно ждал прокси, а Telegram при этом напрямую отвечал. Проверка
+ * перед подключением решает, по какой дороге идти: туннель открылся — через
+ * прокси, как раньше; нет — напрямую. Не вышло и так — скаут упадёт,
+ * systemd поднимет его через 30 секунд, и выбор будет сделан заново.
+ *
+ * Возвращает null, если туннель открылся, иначе — причину отказа.
+ */
+export async function probeTunnel(proxyUrl, host, port, timeoutMs = 8_000) {
+  try {
+    const { socket } = await openTunnel(parseProxyUrl(proxyUrl), host, port, timeoutMs);
+    socket.destroy();
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
 }
 
 /**

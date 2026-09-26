@@ -1,3 +1,5 @@
+import { currentRoads } from "@/lib/egress.mjs";
+
 export const dynamic = "force-dynamic";
 
 /**
@@ -29,6 +31,13 @@ export async function GET(request: Request) {
       database: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
     },
   };
+
+  // Куда сейчас ходят Telegram и Метрика: через прокси или в обход него
+  // (lib/egress.mjs). Пусто — ещё не было ни одного запроса, или всё идёт
+  // через прокси, как задумано. «direct» — прокси не отвечал, и сообщения
+  // идут напрямую: бот работает, но прокси пора чинить — через него ходит
+  // модель.
+  body.roads = currentRoads();
 
   if (deep) body.reachable = await probeModel();
 

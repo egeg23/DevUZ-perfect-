@@ -265,8 +265,37 @@ jobs:
 
             echo
             echo "════ Бот ════"
-            # Изнутри контейнера: там токен и адрес API, а в вывод токен не попадает.
-            docker compose exec -T web node -e "const b=(process.env.TELEGRAM_API_BASE||'https://api.telegram.org').replace(/\/+$/,'');fetch(b+'/bot'+process.env.TELEGRAM_BOT_TOKEN+'/getWebhookInfo').then(r=>r.json()).then(j=>{const r=j.result||{};console.log('вебхук:',r.url?new URL(r.url).host:'не задан','· ждут доставки:',r.pending_update_count,'· последняя ошибка:',r.last_error_message||'нет',r.last_error_date?new Date(r.last_error_date*1000).toISOString():'')}).catch(e=>console.log('· Telegram не ответил:',e.message))" 2>/dev/null || echo "· проверить бота не вышло"
+            # Обеими дорогами, как ходит сам бот (lib/egress.mjs). Токен идёт
+            # в curl через stdin, а не аргументом — в выводе и в списке
+            # процессов его нет.
+            TG_TOKEN="$(grep -m1 '^TELEGRAM_BOT_TOKEN=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'"'"'"' )"
+            if [ -z "$TG_TOKEN" ]; then
+              echo "✗ TELEGRAM_BOT_TOKEN в .env не найден"
+              TROUBLE=1
+            else
+              TG_OK=0
+              for ROAD in proxy direct; do
+                if [ "$ROAD" = proxy ]; then
+                  [ -n "$PROXY" ] || continue
+                  VIA=(--proxy "$PROXY")
+                else
+                  VIA=(--noproxy '*')
+                fi
+                INFO="$(printf 'url = "https://api.telegram.org/bot%s/getWebhookInfo"\n' "$TG_TOKEN" \
+                  | curl -sS --max-time 15 "${VIA[@]}" -K - 2>/dev/null || true)"
+                if [ -z "$INFO" ]; then
+                  echo "  ✗ $ROAD: Telegram не ответил"
+                  continue
+                fi
+                TG_OK=1
+                printf '%s' "$INFO" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{const r=(JSON.parse(s).result)||{};console.log("  ✓ '"$ROAD"': вебхук",r.url?new URL(r.url).host:"снят (обновления забирает поллер)","· ждут доставки:",r.pending_update_count,"· последняя ошибка:",r.last_error_message||"нет")})' 2>/dev/null \
+                  || echo "  ✓ $ROAD: Telegram ответил"
+              done
+              [ "$TG_OK" = 1 ] || TROUBLE=1
+            fi
+            echo "поллер (devuz-bot), последние строки:"
+            journalctl -u devuz-bot.service -n 40 --no-pager -o cat 2>/dev/null \
+              | grep -E "^(bot|egress):" | cut -c1-200 | tail -5 || true
             echo
             echo "════ Место на диске ════"
             # Кончившееся место выглядит как что угодно, только не как
