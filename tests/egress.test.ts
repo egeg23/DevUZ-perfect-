@@ -142,6 +142,52 @@ test("настоящий Node с --use-env-proxy и мёртвым прокси 
   }
 });
 
+test("WebSocket скаута при мёртвом прокси идёт напрямую, а встроенный — застревает", async () => {
+  // Скаут без прокси ходит в дата-центр Telegram через WebSocket по 443:
+  // голый TCP из России закрыт. Но встроенный WebSocket в Node идёт через
+  // прокси из .env так же, как fetch, — и с мёртвым прокси не доходит.
+  const server = createServer();
+  const reached: string[] = [];
+  server.on("upgrade", (req, socket) => {
+    reached.push(String(req.headers["sec-websocket-protocol"]));
+    socket.destroy();
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.2", () => resolve()));
+  const port = (server.address() as { port: number }).port;
+  const egress = fileURLToPath(new URL("../lib/egress.mjs", import.meta.url));
+  const script = `
+    const { directWebSocket } = await import(${JSON.stringify(egress)});
+    const attempt = (Impl) => new Promise((resolve) => {
+      const ws = new Impl("ws://127.0.0.2:${port}/apiws", "binary");
+      ws.onerror = ws.onclose = () => resolve();
+      setTimeout(resolve, 3000);
+    });
+    await attempt(WebSocket);
+    console.log("встроенный");
+    await attempt(directWebSocket());
+    console.log("прямой");
+  `;
+  try {
+    const env = { NODE_ENV: "test" as const, PATH: process.env.PATH, HTTP_PROXY: "http://127.0.0.1:1", HTTPS_PROXY: "http://127.0.0.1:1", NO_PROXY: "localhost" };
+    const out = await new Promise<string>((resolve, reject) => {
+      const child = spawn(process.execPath, ["--use-env-proxy", "--no-warnings", "--input-type=module", "-e", script], {
+        env,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (c: Buffer) => (stdout += c));
+      child.stderr.on("data", (c: Buffer) => (stderr += c));
+      child.on("close", (code: number | null) => (code === 0 ? resolve(stdout) : reject(new Error(`код ${code}: ${stderr}`))));
+    });
+    assert.match(out, /встроенный\s+прямой/);
+    // Дошёл ровно один — прямой, и с тем же подпротоколом, что просит библиотека.
+    assert.deepEqual(reached, ["binary"]);
+  } finally {
+    server.close();
+  }
+});
+
 test("Telegram, поллер, Метрика и скаут ходят двумя дорогами, модель — только через прокси", () => {
   assert.match(read("lib/qualify/telegram.ts"), /await roadFetch\(`\$\{API\}\$\{token\}\/\$\{method\}`/);
   assert.match(read("bot/poller.mjs"), /await roadFetch\(`\$\{API\}\/\$\{method\}`/);
@@ -149,6 +195,9 @@ test("Telegram, поллер, Метрика и скаут ходят двумя
   const scout = read("scout/runner.mjs");
   assert.match(scout, /await probeTunnel\(proxyUrl, dc\.host, dc\.port\)/);
   assert.match(scout, /proxyUrl && !refused \? await startProxyBridge/);
+  // Без прокси — WebSocket по 443 мимо прокси, а не голый TCP.
+  assert.match(scout, /PromisedWebSockets\.webSocketImpl = directWebSocket\(\)/);
+  assert.match(scout, /bridge \? \{ proxy: bridge\.socks \} : \{ networkSocket: PromisedWebSockets \}/);
   // Anthropic напрямую отвечает 403 — «рабочая дорога» для roadFetch, на
   // которой модели нет. Модели сюда нельзя.
   for (const file of ["app/api/health/route.ts", "lib/qualify/engine.ts"]) {
