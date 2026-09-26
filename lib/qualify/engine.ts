@@ -21,6 +21,7 @@ import { saveLead, updateLead } from "@/lib/qualify/store";
 import { sendLead } from "@/lib/qualify/telegram";
 import { qualifyLeadTool } from "@/lib/qualify/tool";
 import type { ChatMessage, QualifyToolInput, ScoredLead } from "@/lib/qualify/types";
+import { anthropic } from "@/lib/model-road";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5";
 
@@ -248,7 +249,7 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
   const { history, locale, source, alreadyQualified, onText, onEvent } = options;
   const emit = (event: TurnEvent) => onEvent?.(event);
 
-  const client = new Anthropic();
+  const client = anthropic();
 
   // Ответ модели может складываться из двух запросов подряд. Между ними
   // нужен разрыв абзаца, иначе фразы склеиваются без пробела и выглядят

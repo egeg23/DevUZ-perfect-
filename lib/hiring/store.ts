@@ -14,6 +14,7 @@ import {
   type Verdict,
 } from "@/lib/hiring/resume";
 import { serviceClient } from "@/lib/supabase";
+import { anthropic } from "@/lib/model-road";
 
 /**
  * Разбор резюме: файл, модель, база.
@@ -66,7 +67,7 @@ export async function reviewResume(input: {
    * ради них, а не ради вступления.
    */
   const ask = async (notes: string | null): Promise<ResumeReport | null> => {
-    const response = await new Anthropic().beta.messages.create({
+    const response = await anthropic().beta.messages.create({
       model: MODEL,
       max_tokens: 8000,
       system: [{ type: "text" as const, text: resumeSystem(), cache_control: { type: "ephemeral" as const } }],

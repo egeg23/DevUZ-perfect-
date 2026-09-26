@@ -6,6 +6,7 @@ import type { Finding } from "@/lib/audit/checks";
 import { effortFor } from "@/lib/model-limits";
 import { modelTroubleSays } from "@/lib/model-trouble";
 import { serviceClient } from "@/lib/supabase";
+import { anthropic } from "@/lib/model-road";
 
 /**
  * Дожим касаний: человек не ответил на первое сообщение — второе через три
@@ -124,7 +125,7 @@ export function fallbackFollowup(n: 1 | 2, host: string, sender: string): string
 async function writeFollowup(prompt: string): Promise<string | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   try {
-    const response = await new Anthropic().beta.messages.create({
+    const response = await anthropic().beta.messages.create({
       model: MODEL,
       max_tokens: 600,
       system: FOLLOWUP_SYSTEM,

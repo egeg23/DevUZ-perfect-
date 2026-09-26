@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { METRIC_TITLE, TASHKENT_OFFSET_MS, tashkentDate, type PlanFact, type StaffPulse } from "@/lib/admin/pulse";
+import { anthropic } from "@/lib/model-road";
 
 /**
  * Рекомендации сотрудникам и владельцу — модель поверх пульса.
@@ -224,7 +225,7 @@ export type CoachResult = { ok: true; review: ReviewBody } | { ok: false; why: s
 
 export async function askCoach(kind: ReviewKind, prompt: string): Promise<CoachResult> {
   if (!process.env.ANTHROPIC_API_KEY) return { ok: false, why: "нет ключа модели" };
-  const client = new Anthropic();
+  const client = anthropic();
 
   try {
     const response = await client.beta.messages.create({

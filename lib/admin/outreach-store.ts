@@ -32,6 +32,7 @@ import {
 import { effortFor } from "@/lib/model-limits";
 import { modelTroubleSays } from "@/lib/model-trouble";
 import { serviceClient } from "@/lib/supabase";
+import { anthropic } from "@/lib/model-road";
 
 /**
  * Проспекты: хранение, подготовка сообщения и очередь отправки.
@@ -283,7 +284,7 @@ async function prepareNoSite(prospect: Prospect, staff: Staff): Promise<PrepareR
   const prompt = nositePrompt({ label: prospect.label, niche, sender: staff.display_name });
 
   const write = async (notes: string | null): Promise<string | null> => {
-    const response = await new Anthropic().beta.messages.create({
+    const response = await anthropic().beta.messages.create({
       model: MODEL,
       max_tokens: 1024,
       system: [{ type: "text" as const, text: NOSITE_SYSTEM, cache_control: { type: "ephemeral" as const } }],
@@ -417,7 +418,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
    * нажал «связаться», а получил отказ и пустое поле.
    */
   const write = async (notes: string | null): Promise<string | null> => {
-    const response = await new Anthropic().beta.messages.create({
+    const response = await anthropic().beta.messages.create({
       model: MODEL,
       max_tokens: 1024,
       system: [{ type: "text" as const, text: OUTREACH_SYSTEM, cache_control: { type: "ephemeral" as const } }],

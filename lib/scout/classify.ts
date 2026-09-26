@@ -1,6 +1,7 @@
 import { effortFor } from "@/lib/model-limits";
 import { modelTroubleSays } from "@/lib/model-trouble";
 import Anthropic from "@anthropic-ai/sdk";
+import { anthropic } from "@/lib/model-road";
 
 /**
  * Разбор сообщений, переживших дешёвый отсев.
@@ -132,7 +133,7 @@ export async function classify(batch: ScoutCandidate[]): Promise<ScoutVerdict[]>
     return [];
   }
 
-  const client = new Anthropic();
+  const client = anthropic();
 
   const payload = batch
     .slice(0, BATCH_SIZE)
