@@ -72,6 +72,14 @@ const EMPTY = new Set([
   "xizmatlar",
   "центр",
   "markaz",
+  // «Фабрика межкомнатных дверей» сходилась с «мебельной фабрикой» Namuna
+  // одним словом «фабрика» — а это форма, а не занятие, как и «компания».
+  "фабрика",
+  "фабрики",
+  "fabrika",
+  "fabrikasi",
+  "завод",
+  "zavod",
   "сайт",
   "sayt",
   "онлайн",
@@ -132,15 +140,24 @@ export function referenceFor(niche: string | null, hints: readonly string[] = []
   ]);
   if (!needles.size) return null;
 
+  // Берём кейс, с которым общих слов больше всего, а не первый попавшийся.
+  // «Зарубежная недвижимость» делит слово «недвижимость» и с MAVERA, и с
+  // Tranio, но про зарубежную — только Tranio; первый по списку отдал бы
+  // застройщика. При равенстве побеждает тот, кто выше в списке: порядок
+  // кейсов редакторский.
+  let best: { item: Case; hit: string; score: number } | null = null;
   for (const item of cases) {
     // Свой сайт в качестве примера не показываем: «мы сделали сайт себе» на
     // вопрос «а вы кому-то делали» — это ответ «нет».
     if (item.slug === "devuz") continue;
 
+    const own = new Set(item.niches.flatMap(words));
+    const score = [...needles].filter((w) => own.has(w)).length;
+    if (!score || (best && score <= best.score)) continue;
     const hit = item.niches.find((n) => words(n).some((w) => needles.has(w)));
-    if (hit) return { name: item.name, url: `${SITE}/cases/${item.slug}`, niche: hit };
+    if (hit) best = { item, hit, score };
   }
-  return null;
+  return best ? { name: best.item.name, url: `${SITE}/cases/${best.item.slug}`, niche: best.hit } : null;
 }
 
 /**

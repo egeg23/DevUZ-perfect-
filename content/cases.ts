@@ -378,7 +378,11 @@ export const cases: Case[] = [
     url: "https://globalex.maximov-tech.ru/namuna",
     tier: 2,
     niches: ["мебель", "мебель на заказ", "кухни на заказ", "мебельная фабрика", "калькулятор", "редизайн", "furniture", "mebel", "家具"],
-    forNiches: [],
+    // Пример для мебельщиков в письмах. Раньше макеты под конкретную
+    // компанию в письма не ставились; владелец, 28.09: «пусть ссылается на
+    // релевантные проекты» — мебельной компании показываем мебель, а не
+    // маркетплейс мастеров.
+    forNiches: ["mebel"],
     accent: "green",
     category: {
       ru: "Макет главной для мебельной фабрики",
@@ -403,6 +407,119 @@ export const cases: Case[] = [
       { value: "8", label: { ru: "типов мебели в калькуляторе", en: "furniture types in the calculator", uz: "kalkulyatordagi mebel turi", zh: "计算器覆盖的家具类别" } },
       { value: "0", label: { ru: "форм заявки было на старой главной", en: "enquiry forms on the old home page", uz: "eski bosh sahifadagi buyurtma shakli", zh: "旧首页上的询单表单数" } },
       { value: "2", label: { ru: "тёмные главы: производство и финал", en: "dark chapters: production and the finale", uz: "qorong‘i bob: ishlab chiqarish va yakun", zh: "深色章节：生产与结尾" } },
+    ],
+  },
+  {
+    slug: "akbar-rich",
+    name: "Akbar Rich",
+    monogram: "AR",
+    year: 2026,
+    url: "https://globalex.maximov-tech.ru/akbar",
+    tier: 2,
+    niches: ["двери", "межкомнатные двери", "межкомнатных дверей", "двери на заказ", "фабрика дверей", "стеновые панели", "погонаж", "конструктор двери", "interior doors", "doors", "eshiklar", "eshik", "门"],
+    // Классификатор отдельной ниши для дверей не знает: пример находится по
+    // словам — «межкомнатные двери» в заголовке сайта или в нише кампании.
+    forNiches: [],
+    accent: "gold",
+    category: {
+      ru: "Макет главной для фабрики дверей",
+      en: "Home-page mock-up for a door factory",
+      uz: "Eshik fabrikasi uchun bosh sahifa maketi",
+      zh: "门厂首页样稿",
+    },
+    summary: {
+      ru: "Фабрика межкомнатных дверей в Ташкенте с 2008 года: 275 моделей, свой завод на четырёх гектарах, полотна высотой до трёх метров. Макет главной с конструктором двери — модель, покрытие, цвет и высота — и заявкой на расчёт прямо из него.",
+      en: "An interior-door factory in Tashkent since 2008: 275 models, its own four-hectare plant, door leaves up to three metres tall. A home-page mock-up with a door configurator — model, finish, colour and height — and a request for a quote sent straight from it.",
+      uz: "2008-yildan beri Toshkentda ishlayotgan ichki eshiklar fabrikasi: 275 ta model, to‘rt gektarlik o‘z zavodi, balandligi uch metrgacha bo‘lgan eshiklar. Eshik konstruktori — model, qoplama, rang va balandlik — hamda to‘g‘ridan-to‘g‘ri undan hisob-kitobga ariza yuboriladigan bosh sahifa maketi.",
+      zh: "一家自 2008 年起扎根塔什干的室内门工厂：275 款型号、占地四公顷的自有工厂、门扇高度可达三米。一版首页样稿，配有门的配置器 —— 型号、饰面、颜色与高度 —— 并可直接从中提交报价申请。",
+    },
+    description: {
+      ru: "Каталог в 275 моделей тяжело листать списком, поэтому на главной он разложен на девять разделов — от эконома до трёхметровых и скрытых полотен, у каждого своя обложка. В центре — конструктор: покупатель собирает дверь только из тех сочетаний модели, покрытия, цвета и высоты, которые фабрика действительно делает, и отправляет набор менеджеру на расчёт — первый звонок начинается уже с конкретной двери. Отдельные блоки рассказывают о дверях под высокие потолки, о скрытых полотнах вровень со стеной и об интерьере у одного производителя: стеновые панели, проёмы, погонаж. Для оптовиков — раздел дилерам и корпоративным заказам, для остальных — шоурум с адресом и часами работы.",
+      en: "A catalogue of 275 models is hard to scroll as a list, so on the home page it is split into nine sections — from budget lines to three-metre and flush-mounted leaves, each with a cover of its own. At the centre is a configurator: the buyer assembles a door only from the combinations of model, finish, colour and height the factory really makes, and sends the set to a manager for a quote — so the first call starts with a specific door. Separate blocks cover doors for high ceilings, hidden leaves flush with the wall and a whole interior from one maker: wall panels, openings, mouldings. Wholesale buyers get a section for dealers and corporate orders; everyone else gets the showroom with its address and opening hours.",
+      uz: "275 ta modeldan iborat katalogni ro‘yxat sifatida varaqlash qiyin, shuning uchun bosh sahifada u to‘qqiz bo‘limga ajratilgan — ekonom modellardan uch metrli va yashirin eshiklargacha, har birining o‘z muqovasi bor. Markazda — konstruktor: xaridor eshikni faqat fabrika haqiqatan ishlab chiqaradigan model, qoplama, rang va balandlik birikmalaridan yig‘adi va to‘plamni hisob-kitob uchun menejerga yuboradi — birinchi qo‘ng‘iroq aniq eshikdan boshlanadi. Alohida bloklar baland shiftlar uchun eshiklar, devor bilan bir tekis yashirin eshiklar va bitta ishlab chiqaruvchidan butun interyer haqida: devor panellari, o‘tish joylari, pogonaj. Ulgurji xaridorlar uchun — dilerlar va korporativ buyurtmalar bo‘limi, qolganlar uchun — manzili va ish vaqti ko‘rsatilgan shourum.",
+      zh: "275 款型号的目录很难按列表翻看，因此首页将其分为九个系列 —— 从经济款到三米高门和隐形门，每个系列都有自己的封面。核心是配置器：买家只能用工厂真正生产的型号、饰面、颜色与高度组合来搭配一扇门，并把方案发给经理报价 —— 第一通电话便从一扇具体的门开始。另有版块介绍适合高层高的门、与墙面齐平的隐形门，以及由同一家厂商完成的整体室内：墙板、门洞、线条。批发客户有经销商与企业订单专区，其他访客则可查看展厅地址与营业时间。",
+    },
+    tech: ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4"],
+    metrics: [
+      { value: "275", label: { ru: "моделей в каталоге", en: "models in the catalogue", uz: "katalogdagi model", zh: "目录中的型号" } },
+      { value: "9", label: { ru: "разделов каталога со своими обложками", en: "catalogue sections, each with its own cover", uz: "o‘z muqovasiga ega katalog bo‘limi", zh: "各有封面的目录系列" } },
+      { value: "3", label: { ru: "метра — самая высокая дверь в конструкторе", en: "metres — the tallest door in the configurator", uz: "metr — konstruktordagi eng baland eshik", zh: "米 —— 配置器中最高的门" } },
+    ],
+  },
+  {
+    slug: "transtelecom",
+    name: "Transtelecom",
+    monogram: "TTC",
+    year: 2026,
+    url: "https://globalex.maximov-tech.ru/ttc",
+    tier: 2,
+    niches: ["интернет-провайдер", "провайдер", "оператор связи", "телеком", "связь", "телефония", "дата-центр", "облако", "системный интегратор", "internet provider", "telecom", "provayder", "aloqa operatori", "电信"],
+    // Пример для провайдеров и операторов связи в письмах. Владелец, 28.09:
+    // «мы делали и для провайдера TTC — пусть ссылается на релевантные
+    // проекты».
+    forNiches: ["svyaz"],
+    accent: "blue",
+    category: {
+      ru: "Макет главной для оператора связи",
+      en: "Home-page mock-up for a telecom operator",
+      uz: "Aloqa operatori uchun bosh sahifa maketi",
+      zh: "电信运营商首页样稿",
+    },
+    summary: {
+      ru: "Один из крупнейших операторов связи Казахстана: около 15 000 км оптоволокна вдоль железной дороги, дата-центры уровня Tier 3, филиалы по всей стране. Макет главной на русском и казахском с конструктором подключения: услуги собираются тумблерами, ориентир по сумме и сроку пересчитывается сразу.",
+      en: "One of Kazakhstan's largest telecom operators: about 15,000 km of fibre along the railway, Tier 3 data centres, branches across the country. A home-page mock-up in Russian and Kazakh with a connection builder: services are switched on with toggles, and the monthly figure and lead time update at once.",
+      uz: "Qozog‘istonning eng yirik aloqa operatorlaridan biri: temir yo‘l bo‘ylab qariyb 15 000 km optik tolali tarmoq, Tier 3 darajasidagi data-markazlar, butun mamlakat bo‘ylab filiallar. Rus va qozoq tillaridagi bosh sahifa maketi, ulanish konstruktori bilan: xizmatlar tumblerlar bilan yig‘iladi, oylik summa va muddat darhol qayta hisoblanadi.",
+      zh: "哈萨克斯坦最大的电信运营商之一：沿铁路铺设约 15,000 公里光纤、Tier 3 级数据中心、分支机构遍布全国。一版俄语与哈萨克语首页样稿，配有接入配置器：用开关组合所需服务，月度金额与工期即时重算。",
+    },
+    description: {
+      ru: "Корпоративный клиент приходит не за «IP VPN», а с задачей: открыть офис, перенести серверы, связать филиалы. Поэтому в центре главной — конструктор из восемнадцати услуг, от канала связи и телефонии до облака и кибербезопасности: сумма в месяц, разовое подключение и срок пересчитываются на каждом нажатии, а пять готовых сценариев сами отмечают нужное. Сеть показана картой — четырнадцать филиалов на настоящих координатах и магистрали между ними с настоящими расстояниями. «Tier 3» разобран по узлам — два ввода питания, дизель-генератор, резерв охлаждения и каналов, — потому что платят именно за это, а не за строчку в описании. Ниже — проекты компании: автоматизация железной дороги, мониторинг магистрали, центр кибербезопасности. Заявка из конструктора уходит вместе с выбранными услугами, рядом — панель заявок.",
+      en: "A corporate client comes not for «IP VPN» but with a task: open an office, move servers, connect branches. So the centre of the home page is a builder of eighteen services, from data links and telephony to cloud and cybersecurity: the monthly amount, one-off connection and lead time are recalculated on every tap, and five ready-made scenarios tick what is needed on their own. The network is shown as a map — fourteen branches at their real coordinates and the trunk lines between them at their real distances. «Tier 3» is broken down node by node — two power feeds, a diesel generator, cooling and link redundancy — because that is what customers pay for, not a line in a brochure. Below are the company's projects: railway automation, trunk-line monitoring, a cybersecurity centre. A request from the builder goes out together with the chosen services, with a requests panel alongside.",
+      uz: "Korporativ mijoz «IP VPN» uchun emas, vazifa bilan keladi: ofis ochish, serverlarni ko‘chirish, filiallarni bog‘lash. Shuning uchun bosh sahifa markazida — o‘n sakkiz xizmatdan iborat konstruktor, aloqa kanali va telefoniyadan bulut va kiberxavfsizlikkacha: oylik summa, bir martalik ulanish va muddat har bosishda qayta hisoblanadi, beshta tayyor ssenariy esa keraklisini o‘zi belgilaydi. Tarmoq xaritada ko‘rsatilgan — haqiqiy koordinatalardagi o‘n to‘rtta filial va ular orasidagi haqiqiy masofadagi magistrallar. «Tier 3» tugunma-tugun ochib berilgan — ikki mustaqil elektr kiritmasi, dizel-generator, sovutish va kanallar zaxirasi, — chunki pul aynan shu uchun to‘lanadi, tavsifdagi bir satr uchun emas. Pastda — kompaniya loyihalari: temir yo‘lni avtomatlashtirish, magistral monitoringi, kiberxavfsizlik markazi. Konstruktordan ariza tanlangan xizmatlar bilan birga yuboriladi, yonida — arizalar paneli.",
+      zh: "企业客户来找的不是「IP VPN」，而是一个任务：开新办公室、迁移服务器、连通各分支。因此首页的核心是一个涵盖十八项服务的配置器，从专线和电话到云与网络安全：每点一下，月费、一次性接入费和工期都会重算，五个现成场景还会自动勾选所需服务。网络以地图呈现 —— 十四个分支位于真实坐标，其间干线标注真实距离。「Tier 3」按节点逐一拆解 —— 双路供电、柴油发电机、制冷与链路冗余 —— 因为客户付费买的正是这些，而不是简介里的一行字。下方是公司项目：铁路自动化、干线监控、网络安全中心。配置器提交的申请会连同所选服务一起发出，旁边配有申请管理面板。",
+    },
+    tech: ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4"],
+    metrics: [
+      { value: "18", label: { ru: "услуг в конструкторе подключения", en: "services in the connection builder", uz: "ulanish konstruktoridagi xizmat", zh: "接入配置器中的服务" } },
+      { value: "14", label: { ru: "филиалов на карте сети", en: "branches on the network map", uz: "tarmoq xaritasidagi filial", zh: "网络地图上的分支" } },
+      { value: "2", label: { ru: "языка целиком: русский и казахский", en: "languages in full: Russian and Kazakh", uz: "to‘liq til: rus va qozoq", zh: "种完整语言：俄语与哈萨克语" } },
+    ],
+  },
+  {
+    slug: "tranio",
+    name: "Tranio",
+    monogram: "TR",
+    year: 2026,
+    url: "https://globalex.maximov-tech.ru/tranio",
+    tier: 1,
+    niches: ["зарубежная недвижимость", "недвижимость за рубежом", "агентство недвижимости", "инвестиции в недвижимость", "ВНЖ за инвестиции", "риелтор", "overseas property", "real estate agency", "property investment", "xorijda ko‘chmas mulk", "ko‘chmas mulk agentligi", "海外房产"],
+    // Пример для агентств недвижимости в письмах. Застройщикам по-прежнему
+    // показываем MAVERA: у них другая работа — продают свои метры, а не
+    // подбирают чужие.
+    forNiches: ["agentstvo-nedvizhimosti"],
+    accent: "violet",
+    category: {
+      ru: "Макет главной для агентства зарубежной недвижимости",
+      en: "Home-page mock-up for an overseas property agency",
+      uz: "Xorijiy ko‘chmas mulk agentligi uchun bosh sahifa maketi",
+      zh: "海外房产中介首页样稿",
+    },
+    summary: {
+      ru: "Агентство зарубежной недвижимости и инвестиций: двадцать одно направление, десять офисов в восьми странах, собственные инвестиционные стратегии. Макет главной, где цель и бюджет сразу оставляют только подходящие страны, стратегии считаются по капиталу и горизонту, а программы ВНЖ сортируются по сроку оформления.",
+      en: "An overseas property and investment agency: twenty-one destinations, ten offices in eight countries, in-house investment strategies. A home-page mock-up where the goal and budget instantly leave only the countries that fit, strategies are calculated by capital and horizon, and residence programmes are sorted by processing time.",
+      uz: "Xorijiy ko‘chmas mulk va investitsiyalar agentligi: yigirma bitta yo‘nalish, sakkiz mamlakatda o‘nta ofis, o‘z investitsiya strategiyalari. Bosh sahifa maketi: maqsad va byudjet darhol faqat mos mamlakatlarni qoldiradi, strategiyalar kapital va muddat bo‘yicha hisoblanadi, yashash ruxsatnomasi dasturlari esa rasmiylashtirish muddati bo‘yicha saralanadi.",
+      zh: "一家海外房产与投资机构：二十一个目的地、八个国家的十个办公室、自有投资策略。一版首页样稿：选定目的与预算后只留下合适的国家，投资策略按本金与期限测算，居留项目按办理时长排序。",
+    },
+    description: {
+      ru: "Покупатель зарубежной недвижимости сначала спрашивает не «что у вас есть», а «куда смотреть с моими деньгами». Поэтому главная начинается с подбора: цель — жить, сдавать, строить или получить ВНЖ, — тип объекта и бюджет, и из двадцати одного направления остаются только те, где на эти деньги что-то действительно покупают. Дальше — калькулятор четырёх стратегий компании: строительство в Европе и в Дубае, реновация, аренда; капитал и горизонт дают вилку по деньгам и срокам, с оговоркой, что это прогноз, а не обещание. Карта с десятью офисами на настоящих координатах, десять программ ВНЖ и гражданства по сроку оформления, текущая подборка объектов с доходностью и база знаний по странам. Заявка уходит вместе с составом подбора — первый звонок начинается не с «расскажите, что вы хотите». Оформление — в нескольких палитрах на выбор.",
+      en: "An overseas property buyer's first question is not «what do you have» but «where should I look with my money». So the home page opens with a picker: the goal — to live, to rent out, to build or to obtain residence — the property type and the budget, and of twenty-one destinations only those remain where that money really buys something. Next comes a calculator of the company's four strategies — construction in Europe and in Dubai, renovation, rental — where capital and horizon give a range in money and time, with the caveat that this is a forecast, not a promise. Then a map with ten offices at their real coordinates, ten residence and citizenship programmes sorted by processing time, the current selection of properties with their yields, and a knowledge base by country. A request goes out together with the picker's choices, so the first call does not begin with «tell us what you want». The design comes in several palettes to choose from.",
+      uz: "Xorijdan ko‘chmas mulk oluvchining birinchi savoli «sizda nima bor» emas, «mening pulim bilan qayerga qarash kerak». Shuning uchun bosh sahifa tanlovdan boshlanadi: maqsad — yashash, ijaraga berish, qurish yoki yashash ruxsatnomasi olish, — obyekt turi va byudjet, va yigirma bitta yo‘nalishdan faqat shu pulga haqiqatan nimadir sotib olinadiganlari qoladi. So‘ng kompaniyaning to‘rt strategiyasi kalkulyatori: Yevropada va Dubayda qurilish, renovatsiya, ijara; kapital va muddat pul va vaqt bo‘yicha oraliqni beradi, bu va’da emas, prognoz ekani eslatiladi. Haqiqiy koordinatalardagi o‘nta ofis tushirilgan xarita, rasmiylashtirish muddati bo‘yicha saralangan o‘nta yashash ruxsatnomasi va fuqarolik dasturi, daromadliligi ko‘rsatilgan joriy obyektlar tanlovi va mamlakatlar bo‘yicha bilimlar bazasi. Ariza tanlov tarkibi bilan birga yuboriladi — birinchi qo‘ng‘iroq «nima xohlayotganingizni aytib bering» bilan boshlanmaydi. Bezak bir nechta palitrada, tanlash mumkin.",
+      zh: "海外购房者的第一个问题不是「你们有什么」，而是「我这笔钱该往哪儿看」。因此首页从筛选开始：目的 —— 自住、出租、开发或获取居留 —— 物业类型与预算，二十一个目的地中只留下这笔钱真正买得到东西的地方。接着是公司四种策略的计算器 —— 欧洲建设、迪拜建设、翻新、租赁 —— 按本金与期限给出金额与时间区间，并注明这是预测而非承诺。再往下是十个办公室位于真实坐标的地图、按办理时长排序的十个居留与入籍项目、当前精选物业及其收益率，以及分国家的知识库。申请会连同筛选条件一起发出，第一通电话不必从「说说您想要什么」开始。设计提供多套配色可选。",
+    },
+    tech: ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4"],
+    metrics: [
+      { value: "21", label: { ru: "направление в подборе по цели и бюджету", en: "destinations in the goal-and-budget picker", uz: "maqsad va byudjet bo‘yicha tanlovdagi yo‘nalish", zh: "按目的与预算筛选的目的地" } },
+      { value: "4", label: { ru: "инвестиционные стратегии в калькуляторе", en: "investment strategies in the calculator", uz: "kalkulyatordagi investitsiya strategiyasi", zh: "计算器中的投资策略" } },
+      { value: "10", label: { ru: "программ ВНЖ и гражданства по сроку оформления", en: "residence and citizenship programmes sorted by processing time", uz: "muddat bo‘yicha saralangan yashash va fuqarolik dasturi", zh: "按办理时长排序的居留与入籍项目" } },
     ],
   },
   {
@@ -453,7 +570,10 @@ export const cases: Case[] = [
     url: "https://usta.maximov-tech.ru",
     tier: 2,
     niches: ["сфера услуг", "маркетплейс услуг", "ремонт", "бытовые услуги", "services", "xizmatlar"],
-    forNiches: ["stroitelnaya-kompaniya", "mebel"],
+    // Мебели здесь больше нет. Владелец, 28.09: «скаут в мебельной нише
+    // почему-то ссылается на usta — это ж не то». Маркетплейс мастеров
+    // мебельщику не пример: для мебели есть Namuna.
+    forNiches: ["stroitelnaya-kompaniya"],
     accent: "blue",
     category: {
       ru: "Маркетплейс мастеров",

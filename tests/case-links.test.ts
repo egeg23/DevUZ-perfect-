@@ -21,6 +21,9 @@ test("у каждого проекта витрины есть ссылка «П
     "golden-house": `${SHOWCASE}/gh`,
     namuna: `${SHOWCASE}/namuna`,
     foodmaxx: `${SHOWCASE}/foodmaxx`,
+    "akbar-rich": `${SHOWCASE}/akbar`,
+    transtelecom: `${SHOWCASE}/ttc`,
+    tranio: `${SHOWCASE}/tranio`,
   };
   for (const [slug, url] of Object.entries(expected)) {
     const item = cases.find((c) => c.slug === slug);
@@ -41,9 +44,14 @@ test("в кейсах витрины нет наших цен", () => {
   }
 });
 
-test("макеты для конкретных компаний не подставляются в письма их конкурентам", () => {
-  // forNiches пуст — значит проект не показывается как пример ниши в касаниях.
-  for (const slug of ["golden-house", "namuna", "foodmaxx"]) {
-    assert.deepEqual(cases.find((c) => c.slug === slug)?.forNiches, [], slug);
-  }
+test("в письма идёт проект из ниши адресата, даже если это макет", () => {
+  // Владелец, 28.09: «скаут в мебельной нише почему-то ссылается на usta —
+  // это ж не то. Добавь новые кейсы и ссылайся на них… пусть ссылается на
+  // релевантные проекты». Раньше макеты под конкретную компанию в письма не
+  // ставились вовсе — и мебельщикам уезжал маркетплейс мастеров.
+  const forNiche = (niche: string) => cases.filter((c) => c.forNiches.includes(niche)).map((c) => c.slug);
+  assert.deepEqual(forNiche("mebel"), ["namuna"]);
+  assert.deepEqual(forNiche("svyaz"), ["transtelecom"]);
+  assert.deepEqual(forNiche("agentstvo-nedvizhimosti"), ["tranio"]);
+  assert.ok(!cases.find((c) => c.slug === "usta")?.forNiches.includes("mebel"), "USTA снова пример для мебели");
 });
