@@ -72,9 +72,8 @@ export type Ledger = {
   payouts: Payout[];
   people: Person[];
   shares: Share[];
-  /** Партнёры, приведшие клиентов проектов в круге, и кто из них «прокачан». */
+  /** Партнёры, приведшие клиентов проектов в круге. */
   partners: Map<string, Partner>;
-  partnerProven: Map<string, boolean>;
 };
 
 const PEOPLE_COLUMNS =
@@ -219,7 +218,7 @@ export async function loadLedger(scope: "all" | readonly string[]): Promise<Ledg
   if (!db) {
     return {
       offline: true, projects: [], payments: [], payouts: [], people: [], shares: [],
-      partners: new Map(), partnerProven: new Map(),
+      partners: new Map(),
     };
   }
 
@@ -235,11 +234,7 @@ export async function loadLedger(scope: "all" | readonly string[]): Promise<Ledg
     sharesFor(ids),
     partnersById(partnerIds),
   ]);
-  // Ступень партнёра считается по всем его проектам, не только по кругу.
-  const partnerProven = new Map<string, boolean>();
-  for (const s of await summarize([...partners.values()])) partnerProven.set(s.partner.id, s.proven);
-
-  return { offline: false, projects, payments, payouts, people, shares, partners, partnerProven };
+  return { offline: false, projects, payments, payouts, people, shares, partners };
 }
 
 /* ── Записи ─────────────────────────────────────────────────────────────── */

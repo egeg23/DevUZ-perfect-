@@ -3,20 +3,19 @@ import { test } from "node:test";
 
 import {
   MIN_PAYOUT_USD,
-  PARTNER_PERCENT,
-  PROVEN_PERCENT,
+  PARTNER_TIERS,
   canWithdrawNow,
   codeFromQuery,
   codeFromStart,
   firstBusinessDay,
   generateCode,
-  isProven,
   isTrc20,
   normalizeCode,
   partnerAccrualOf,
   partnerBalanceOf,
   partnerPercent,
   perkPercent,
+  tierPercent,
   validCode,
   validRequisites,
   voidReason,
@@ -47,53 +46,67 @@ function project(over: Partial<PartnerProject> = {}): PartnerProject {
   };
 }
 
-test("ставка: 20 % база, 25 % прокачанному, персональная и по проекту — важнее", () => {
-  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: null, proven: false }), PARTNER_PERCENT);
-  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: null, proven: true }), PROVEN_PERCENT);
-  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: 30, proven: true }), 30);
-  assert.equal(partnerPercent({ projectPercent: 10, partnerOverride: 30, proven: true }), 10);
-  // Прокачка — за оплаченные проекты, не за регистрации.
-  assert.equal(isProven(2), false);
-  assert.equal(isProven(3), true);
+test("ставка — по сумме проекта: 10 / 15 / 20 / 25 / 30 %, границы включительно", () => {
+  // Владелец, 28.09: «от 0 до 2500 $ = 10 %, от 2501 до 5000 $ = 15 %, от
+  // 5001 до 10000 $ = 20 %, от 10001 до 30000 $ = 25 %, от 30001 $ = 30 %».
+  const cases: [number, number][] = [
+    [0, 10], [1, 10], [2_500, 10],
+    [2_501, 15], [5_000, 15],
+    [5_001, 20], [10_000, 20],
+    [10_001, 25], [30_000, 25],
+    [30_001, 30], [250_000, 30],
+  ];
+  for (const [amount, percent] of cases) assert.equal(tierPercent(amount), percent, `${amount} $`);
+  assert.deepEqual(PARTNER_TIERS.map((t) => t.percent), [10, 15, 20, 25, 30]);
+
+  // Персональная и по проекту — важнее ступени.
+  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: null, amountUsd: 7_000 }), 20);
+  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: 12, amountUsd: 7_000 }), 12);
+  assert.equal(partnerPercent({ projectPercent: 5, partnerOverride: 12, amountUsd: 7_000 }), 5);
+  // Суммы ещё нет — первая ступень, а не ноль.
+  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: null, amountUsd: null }), 10);
 });
 
-test("начисление — процент от чистой прибыли, заморожено до полной оплаты", () => {
-  // 10 000 − 4 % − 3 000 = 6 600; 20 % = 1 320
-  const frozen = partnerAccrualOf(project(), [], PARTNER, false);
+test("начисление — процент от суммы проекта, заморожено до полной оплаты", () => {
+  // Проект на 10 000 $ — ступень 20 %: 2 000 $. Налог и себестоимость на
+  // долю партнёра больше не влияют.
+  const frozen = partnerAccrualOf(project(), [], PARTNER);
   assert.ok(frozen);
-  assert.equal(frozen.amount_usd, 1_320);
+  assert.equal(frozen.percent, 20);
+  assert.equal(frozen.amount_usd, 2_000);
   assert.equal(frozen.state, "frozen");
   assert.equal(frozen.manual, false);
 
-  const earned = partnerAccrualOf(project(), [{ project_id: "pr1", amount_usd: 10_000 }], PARTNER, true);
-  assert.equal(earned?.amount_usd, 1_650);
+  const earned = partnerAccrualOf(project(), [{ project_id: "pr1", amount_usd: 10_000 }], PARTNER);
+  assert.equal(earned?.amount_usd, 2_000);
   assert.equal(earned?.state, "earned");
+
+  // Крупный проект — 30 %.
+  assert.equal(partnerAccrualOf(project({ amount_usd: 40_000 }), [], PARTNER)?.amount_usd, 12_000);
+  // Небольшой — 10 %.
+  assert.equal(partnerAccrualOf(project({ amount_usd: 2_000 }), [], PARTNER)?.amount_usd, 200);
 });
 
 test("процент по проекту, заданный владельцем, помечен как ручной", () => {
-  const line = partnerAccrualOf(project({ partner_percent: 15 }), [], PARTNER, false);
+  const line = partnerAccrualOf(project({ partner_percent: 15 }), [], PARTNER);
   assert.equal(line?.percent, 15);
   assert.equal(line?.manual, true);
-  assert.equal(line?.amount_usd, 990);
+  assert.equal(line?.amount_usd, 1_500);
 });
 
 test("чужой проект, проект без суммы и аннулированный не дают денег", () => {
-  assert.equal(partnerAccrualOf(project({ partner_id: "other" }), [], PARTNER, false), null);
-  assert.equal(partnerAccrualOf(project({ partner_id: null }), [], PARTNER, false), null);
-  assert.equal(partnerAccrualOf(project({ amount_usd: null }), [], PARTNER, false), null);
+  assert.equal(partnerAccrualOf(project({ partner_id: "other" }), [], PARTNER), null);
+  assert.equal(partnerAccrualOf(project({ partner_id: null }), [], PARTNER), null);
+  assert.equal(partnerAccrualOf(project({ amount_usd: null }), [], PARTNER), null);
 
   const voided = partnerAccrualOf(
     project({ partner_void_reason: "self" }),
     [{ project_id: "pr1", amount_usd: 10_000 }],
     PARTNER,
-    false,
   );
   assert.equal(voided?.state, "void");
   assert.equal(voided?.amount_usd, 0);
   assert.equal(voided?.void_reason, "self");
-
-  // Минус по проекту — забота студии, не партнёра.
-  assert.equal(partnerAccrualOf(project({ dev_cost_usd: 12_000 }), [], PARTNER, false)?.amount_usd, 0);
 });
 
 test("баланс: доступно = заработано − выплачено − в заявках; отклонённые не считаются", () => {

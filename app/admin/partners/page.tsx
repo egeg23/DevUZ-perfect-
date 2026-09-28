@@ -5,15 +5,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { money } from "@/lib/admin/finance";
 import { requireAdmin } from "@/lib/admin/guard";
-import {
-  MIN_PAYOUT_USD,
-  PARTNER_PERCENT,
-  PERK_TITLE,
-  PROVEN_MIN_PAID_PROJECTS,
-  PROVEN_PERCENT,
-  linkUrl,
-  partnerPercent,
-} from "@/lib/partners/rules";
+import { MIN_PAYOUT_USD, PARTNER_TIERS, PERK_TITLE, linkUrl, shortUrl } from "@/lib/partners/rules";
 import { listPartners, summarize } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
@@ -73,9 +65,10 @@ export default async function PartnersPage({
     <AdminShell staff={admin}>
       <h1 className="text-lg font-semibold">Партнёры</h1>
       <p className="mt-1 max-w-2xl text-sm text-muted">
-        Приводят клиентов — получают {PARTNER_PERCENT} % чистой прибыли их проектов, после{" "}
-        {PROVEN_MIN_PAID_PROJECTS} оплаченных проектов — {PROVEN_PERCENT} %. Начисление ждёт полной оплаты
-        проекта, как у сотрудников. Заявку на выплату партнёр подаёт в боте (/payout), решаете вы здесь.
+        Приводят клиентов — получают процент от суммы проекта, и он растёт с суммой:{" "}
+        {tiersLine()}. Клиент засчитывается партнёру, если оставил заявку в течение 30 дней после
+        перехода по его ссылке. Начисление ждёт полной оплаты проекта, как у сотрудников. Заявку на
+        выплату партнёр подаёт в кабинете на сайте или в боте (/payout), решаете вы здесь.
       </p>
 
       {notice ? (
@@ -89,7 +82,11 @@ export default async function PartnersPage({
       ) : null}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Card label="Партнёров" value={String(summaries.length)} note={`${summaries.filter((s) => s.proven).length} прокачанных`} />
+        <Card
+          label="Партнёров"
+          value={String(summaries.length)}
+          note={`${summaries.filter((s) => s.paidProjects > 0).length} с оплаченными проектами`}
+        />
         <Card label="Заморожено" value={money(totals.frozen)} note="ждёт полной оплаты проектов" />
         <Card label="Заработано" value={money(totals.earned)} note={`выплачено ${money(totals.paid)}`} />
         <Card label="К выплате" value={money(totals.due)} note={`в заявках ${money(requests.reduce((s, p) => s + p.amount_usd, 0))}`} warn={requests.length > 0} />
@@ -164,7 +161,7 @@ export default async function PartnersPage({
             </tr>
           </thead>
           <tbody>
-            {summaries.map(({ partner, links, balance, leads, projects, paidProjects, proven }) => (
+            {summaries.map(({ partner, links, balance, leads, projects, paidProjects }) => (
               <tr key={partner.id} className="border-b border-line-soft last:border-0 align-top">
                 <td data-label="Кто" className={TD}>
                   {partner.name}
@@ -178,7 +175,13 @@ export default async function PartnersPage({
                 <td data-label="Ссылки" className={`${TD} text-xs`}>
                   {links.map((l) => (
                     <span key={l.id} className="block">
-                      <a href={linkUrl(siteUrl, l.code)} className="font-mono hover:text-green" target="_blank" rel="noreferrer noopener">
+                      <a
+                        href={l.slug ? shortUrl(siteUrl, l.slug) : linkUrl(siteUrl, l.code)}
+                        className="font-mono hover:text-green"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        title={l.slug ? `devuz.studio/r/${l.slug}` : undefined}
+                      >
                         {l.code}
                       </a>
                       {l.label && !l.is_default ? <span className="text-faint"> — {l.label}</span> : null}
@@ -188,9 +191,9 @@ export default async function PartnersPage({
                   ))}
                 </td>
                 <td data-label="Ставка" className={`${TD} text-xs text-muted`}>
-                  {partnerPercent({ projectPercent: null, partnerOverride: partner.percent_override, proven })} %
+                  {partner.percent_override !== null ? `${partner.percent_override} %` : "по сумме"}
                   <span className="block text-faint">
-                    {partner.percent_override !== null ? "персональная" : proven ? "прокачанный" : "база"}
+                    {partner.percent_override !== null ? "персональная" : `${PARTNER_TIERS[0].percent}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].percent} %`}
                   </span>
                 </td>
                 <td data-label="Клиентов" className={`${TD} font-mono text-xs`}>{leads}</td>
@@ -305,4 +308,13 @@ function Card({ label, value, note, warn = false }: { label: string; value: stri
       {note ? <p className={`mt-1 text-xs ${warn ? "text-gold" : "text-faint"}`}>{note}</p> : null}
     </div>
   );
+}
+
+/** «10 % до 2 500 $, 15 % до 5 000 $, … 30 % дороже» — из той же таблицы, что считает. */
+function tiersLine(): string {
+  return PARTNER_TIERS.map((t, i) =>
+    t.upTo === null
+      ? `${t.percent} % дороже ${money(PARTNER_TIERS[i - 1]?.upTo ?? 0)}`
+      : `${t.percent} % до ${money(t.upTo)}`,
+  ).join(", ");
 }

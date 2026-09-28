@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { NEXT_COOKIE, NEXT_TTL_SECONDS, SESSION_COOKIE, wantedPath } from "@/lib/admin/return-to";
 import { defaultLocale, isLocale, locales, matchLocale } from "@/lib/i18n";
+import { REF_COOKIE, REF_COOKIE_OPTIONS, formatRef, parseRef } from "@/lib/partners/ref-cookie";
 
 const COOKIE = "NEXT_LOCALE";
 
@@ -53,6 +54,25 @@ function admin(request: NextRequest, pathname: string) {
  * в сам переключатель языка. Нет куки — значит человек ничего не выбирал, и
  * язык определяется по браузеру, каждый раз заново.
  */
+/**
+ * Пришёл по ссылке партнёра (`?ref=КОД` на любой странице) — кука на 30
+ * дней. Владелец: «когда клиент заходит по реф-ссылке, мы записываем куки и
+ * подкидываем куки к этому клиенту». Первый побеждает: живая кука другого
+ * партнёра не перезаписывается. Короткая ссылка /r/… ставит ту же куку сама.
+ */
+function rememberRef(request: NextRequest, response: NextResponse): NextResponse {
+  const raw = request.nextUrl.searchParams.get("ref");
+  if (!raw) return response;
+  const code = raw.trim().toUpperCase();
+  if (!/^[A-Z0-9_-]{3,24}$/.test(code)) return response;
+  if (parseRef(request.cookies.get(REF_COOKIE)?.value)) return response;
+  response.cookies.set(REF_COOKIE, formatRef(code), {
+    ...REF_COOKIE_OPTIONS,
+    secure: process.env.NODE_ENV === "production",
+  });
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -63,6 +83,11 @@ export function middleware(request: NextRequest) {
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return admin(request, pathname);
   }
+
+  // Короткие ссылки партнёров — маршрут вне языков (app/r/[slug]). Язык
+  // решится на странице, куда ссылка ведёт: редирект оттуда снова пройдёт
+  // через middleware.
+  if (pathname.startsWith("/r/")) return NextResponse.next();
 
   const hasLocale = locales.some(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
@@ -75,7 +100,7 @@ export function middleware(request: NextRequest) {
     // Без этого китаец, попавший на битую ссылку, получал русскую страницу.
     const headers = new Headers(request.headers);
     headers.set(LOCALE_HEADER, pathname.split("/")[1]);
-    return NextResponse.next({ request: { headers } });
+    return rememberRef(request, NextResponse.next({ request: { headers } }));
   }
 
   const saved = request.cookies.get(COOKIE)?.value;

@@ -18,6 +18,7 @@ const PUBLIC_RU: BotCommand[] = [
   { command: "start", description: "Начать разговор" },
   { command: "ref", description: "Партнёрская программа: ссылка и баланс" },
   { command: "payout", description: "Заявка на выплату партнёру" },
+  { command: "cabinet", description: "Кабинет партнёра на сайте" },
   { command: "help", description: "Что умеет бот" },
   { command: "reset", description: "Начать разговор заново" },
 ];
@@ -26,6 +27,7 @@ const PUBLIC_EN: BotCommand[] = [
   { command: "start", description: "Start a conversation" },
   { command: "ref", description: "Partner program: your link and balance" },
   { command: "payout", description: "Partner payout request" },
+  { command: "cabinet", description: "Partner dashboard on the website" },
   { command: "help", description: "What the bot can do" },
   { command: "reset", description: "Start over" },
 ];

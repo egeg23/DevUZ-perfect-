@@ -179,7 +179,8 @@ export type TurnOptions = {
    * клиента и чат, чтобы снять касание после привязки. Привязка идёт после
    * сохранения лида и его не роняет.
    */
-  attribution?: { code: string | null; telegramId?: number | null; chatId?: number | null };
+  /** at — когда человек пришёл по ссылке (секунды, из куки), если известно. */
+  attribution?: { code: string | null; at?: number | null; telegramId?: number | null; chatId?: number | null };
   /**
    * Бриф с витрины, по которому идёт разговор.
    *

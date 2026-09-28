@@ -647,7 +647,7 @@ export const uz: HelpCopy = {
             ],
             admin: [
               "Siz hammasini tahrirlaysiz: bosqich (10 ta tugma), smeta, summa va bitim turini istalgan paytda, **«Налог, %»** (odatiy 4) va **«Себестоимость разработки, $»** — faqat siz, hech kim tannarxni kamaytirib, o‘z hisoblanmasini oshirmasligi uchun.",
-              "Hisoblanma qatorlarida — shu bitim uchun foiz: «задать» yoki «по грейду» ga qaytarish. **«Партнёр»** bloki: kim olib kelgan, hamkorga foiz («по ступени» — 20%, uchta to‘langan loyihadan keyin 25%) va «Не засчитывать, причина».",
+              "Hisoblanma qatorlarida — shu bitim uchun foiz: «задать» yoki «по грейду» ga qaytarish. **«Партнёр»** bloki: kim olib kelgan, hamkorga foiz («по ступени» — loyiha summasiga qarab: $2 500 gacha — 10%, $5 000 gacha — 15%, $10 000 gacha — 20%, $30 000 gacha — 25%, undan yuqori — 30%) va «Не засчитывать, причина».",
               "**«Платежи клиента»** → «Записать платёж»: summa, sana, maqsad. Hammasi to‘langanda hisoblanmalar «заработано» bo‘ladi, hamkorga esa xabar ketadi. Shartnoma hisoblari bo‘yicha to‘lovlar bu yerga o‘zi yoziladi — sizning «Оплачен» belgingizdan yoki shartnomadagi «Подтвердить платёж» tugmasidan; to‘lov sizni kutayotgan paytda bu yerda shartnomaga havolali sariq qator turadi. Kartochkadagi «Остаётся владельцу» — hamkor ulushi ayirilmagan; aniq raqam — [«Финансы»](/admin/finance) bo‘limida.",
             ],
           },
@@ -1085,17 +1085,18 @@ export const uz: HelpCopy = {
           id: "join",
           title: "Hamkor qanday paydo bo‘ladi",
           body: [
-            "O‘zi: botga /ref deb yozadi (yoki saytda «Получить ссылку» tugmasini bosadi) — va kod hamda «Основная ссылка» ni oladi. Har kim bo‘la oladi, jumladan xodim ham.",
-            "Yoki siz: «Завести партнёра руками» — ism, kod (bo‘sh — o‘zimiz o‘ylab topamiz), Telegram id ixtiyoriy, izoh. Telegram id bo‘lmasa, bunday hamkor keyin bot orqali kelgan odam bilan birlashmaydi.",
-            "Havolalar: saytga — `?ref=KOD`, botga — `start=ref_KOD`. Qo‘shimchalari — `/ref KOD belgi`, 20 tagacha. Sayt birinchi kodni 90 kun eslab qoladi.",
+            "O‘zi: saytda «Зарабатывай с нами» menyusida «Стать партнёром» yoki «Войти в кабинет» ni bosadi — bot uni ro‘yxatga oladi va hamkor kabinetiga bir martalik kirish tugmasini yuboradi. Botdagi /ref va /cabinet buyruqlari ham shunday. Har kim bo‘la oladi, jumladan xodim ham.",
+            "Yoki siz: «Завести партнёра руками» — ism, kod (bo‘sh — o‘zimiz o‘ylab topamiz), Telegram id ixtiyoriy, izoh. Telegram id bo‘lmasa, bunday hamkor keyin bot orqali kelgan odam bilan birlashmaydi va kabinetga kira olmaydi.",
+            "Havolalar: qisqa `devuz.studio/r/…` — hamkor aynan shuni e’lon qiladi, har bir kanal uchun alohida (kabinetda yoki `/ref KOD belgi`), 20 tagacha. Kabinetda hamkor havola qayerga olib borishini (bosh sahifa, xizmatlar, keyslar, bot) va auditoriya uchun bonusni — birinchi loyihaga 5/10/15% chegirmani tanlaydi. Eski `?ref=KOD` va `start=ref_KOD` avvalgidek ishlaydi. Havola orqali o‘tishni sayt brauzer cookie’sida 30 kun eslab qoladi (birinchi hamkor yutadi): shu vaqt ichidagi so‘rov — hamkorning mijozi, hatto odam keyin havolasiz qaytgan bo‘lsa ham. Lid kartochkasida «Партнёр» yonida o‘tish so‘rovdan necha kun oldin bo‘lgani ko‘rinadi. Botda ham xuddi shu 30 kun.",
+            "O‘tishlar odamlar bo‘yicha hisoblanadi: messenjerdagi oldindan ko‘rish roboti va o‘sha kuni o‘sha odamning qayta ochishi hisoblanmaydi. Quyidagi jadvalda havolada — «o‘tishlar / so‘rovlar»; kod ustiga kursorni olib borsangiz — qisqa manzilni ko‘rasiz.",
           ],
         },
         {
           id: "count",
           title: "Mijoz qachon hisobga olinadi",
           body: [
-            "Havola orqali kelgan lid hamkorga hisoblanadi, agar bu uning o‘zi bo‘lmasa, mijoz oldin bizda bo‘lmagan bo‘lsa va hamkor bloklanmagan bo‘lsa. Hisoblandi — hamkorga «🤝 По вашей ссылке пришёл…» keladi.",
-            "Bunday liddan ochilgan loyiha hamkorni meros oladi. Loyiha kartochkasida, «Партнёр» blokida kim olib kelganini, foizni va «Не засчитывать, причина» ni o‘zgartirish mumkin.",
+            "Havola orqali kelgan lid hamkorga hisoblanadi, agar bu uning o‘zi bo‘lmasa, mijoz oldin bizda bo‘lmagan bo‘lsa va hamkor bloklanmagan bo‘lsa. Hisoblandi — hamkorga «🤝 По вашей ссылке пришёл…» keladi. Mijoz saytga havola orqali kelib, keyin sayt chatidan botga yozsa ham, hamkor unga biriktirilgan bo‘lib qoladi.",
+            "Bunday liddan ochilgan loyiha hamkorni meros oladi. Loyiha kartochkasida, «Партнёр» blokida kim olib kelganini, foizni va «Не засчитывать, причина» ni o‘zgartirish mumkin. Loyiha bo‘yicha imzolangan shartnoma skanini yuklashganda, hamkorga darhol «📝 С клиентом … подписан договор» keladi — summa va taxminiy ulush bilan.",
             "Bloklash faqat yangi hisoblashlarni to‘xtatadi: eski hisoblanmalar va to‘lovlar qoladi.",
           ],
         },
@@ -1103,7 +1104,7 @@ export const uz: HelpCopy = {
           id: "percent",
           title: "Foiz",
           body: [
-            "Loyiha sof foydasining 20% (summa − soliq − tannarx), to‘liq to‘langan uchta loyihadan keyin — 25% («прокачанный»). Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiysi — pog‘onadan.",
+            "Foiz — loyiha summasidan va unga bog‘liq (egasi, 28.09): $2 500 gacha — 10%, $2 501–5 000 — 15%, $5 001–10 000 — 20%, $10 001–30 000 — 25%, $30 001 dan — 30%. Har bir loyihaning pog‘onasi o‘z summasiga qarab. Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiysi — pog‘onadan.",
             "Mijoz loyihani to‘liq to‘lamaguncha hisoblanma muzlatilgan — xodimlardagi kabi.",
           ],
         },
@@ -1111,7 +1112,7 @@ export const uz: HelpCopy = {
           id: "payout",
           title: "Hamkorga to‘lov",
           body: [
-            "Hamkor botga /payout va rekvizitlarini yozadi (USDT TRC-20 yoki matn). Oyning birinchi ish kunidan boshlab, $50 dan, bitta ochiq so‘rov, doim butun mavjud summaga. Sizga «💸 Заявка на выплату» keladi.",
+            "Hamkor kabinetda «Запросить выплату» ni bosadi yoki botga /payout va rekvizitlarini yozadi (USDT TRC-20 yoki matn). Oyning birinchi ish kunidan boshlab, $50 dan, bitta ochiq so‘rov, doim butun mavjud summaga. Sizga «💸 Заявка на выплату» keladi.",
             "Avval pulni o‘zingiz o‘tkazing, keyin «Заявки на выплату» blokida **«Выплачено»** tugmasini bosing (izoh bilan ham bo‘ladi). Yoki «отклонить» — summa mavjud pulga qaytadi, hamkor sababini ko‘radi.",
           ],
         },

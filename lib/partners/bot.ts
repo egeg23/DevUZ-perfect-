@@ -1,7 +1,8 @@
 import { company } from "@/content/company";
 import { partnerCopy, type PartnerStats } from "@/content/partner-bot";
 import type { Locale } from "@/lib/i18n";
-import { botLink, linkUrl, partnerPercent, withdrawOpens } from "@/lib/partners/rules";
+import { botLink, linkUrl, shortUrl, withdrawOpens } from "@/lib/partners/rules";
+import { LOGIN_TOKEN_MINUTES, loginLink } from "@/lib/partners/session";
 import {
   createLink,
   ensurePartner,
@@ -9,10 +10,11 @@ import {
   requestPayout,
   summarize,
   type Partner,
+  type PartnerPayout,
   type PartnerSummary,
   type TelegramIdentity,
 } from "@/lib/partners/store";
-import { sendMessage } from "@/lib/qualify/telegram";
+import { esc, sendMessage, sendWithButtons } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -24,12 +26,13 @@ import { serviceClient } from "@/lib/supabase";
  * своя ссылка и свой баланс.
  */
 
-export type PartnerCommand = "ref" | "payout";
+export type PartnerCommand = "ref" | "payout" | "cabinet";
 
 export function partnerCommand(text: string | undefined | null): PartnerCommand | null {
   const first = (text ?? "").trim().toLowerCase().split(/\s+/)[0]?.split("@")[0] ?? "";
   if (first === "/ref" || first === "/partner" || first === "/partners") return "ref";
   if (first === "/payout") return "payout";
+  if (first === "/cabinet" || first === "/kabinet") return "cabinet";
   return null;
 }
 
@@ -42,18 +45,15 @@ function statsOf(summary: PartnerSummary): PartnerStats {
     available: balance.available,
     leads: summary.leads,
     paidProjects: summary.paidProjects,
-    proven: summary.proven,
-    percent: partnerPercent({
-      projectPercent: null,
-      partnerOverride: partner.percent_override,
-      proven: summary.proven,
-    }),
+    override: partner.percent_override,
     links: links.map((l) => ({
       code: l.code,
       label: l.is_default ? null : l.label,
       clicks: l.clicks,
       leads: l.leads,
-      url: linkUrl(siteUrl, l.code),
+      // Короткая — её и публиковать: без «?ref=» в адресе антиспам чатов
+      // её не режет. Старые длинные ссылки продолжают работать.
+      url: l.slug ? shortUrl(siteUrl, l.slug) : linkUrl(siteUrl, l.code),
     })),
   };
 }
@@ -91,6 +91,15 @@ export async function handlePartnerCommand(
     await handleRef(chatId, partner, existed !== null, text, copy);
     return;
   }
+  if (command === "cabinet") {
+    const link = await loginLink(partner, locale);
+    if (!link) {
+      await sendMessage(chatId, copy.unavailable);
+      return;
+    }
+    await sendWithButtons(chatId, copy.cabinet(LOGIN_TOKEN_MINUTES), [{ text: copy.cabinetButton, url: link }]);
+    return;
+  }
   await handlePayout(chatId, partner, text, copy);
 }
 
@@ -107,15 +116,19 @@ async function handleRef(
     const result = await createLink(partner, args[0], args.slice(1).join(" ") || null, "none");
     await sendMessage(
       chatId,
-      result.ok ? copy.linkCreated(result.link.code, linkUrl(siteUrl, result.link.code)) : copy.linkFailed(result.reason),
+      result.ok ? copy.linkCreated(result.link.code, shortUrl(siteUrl, result.link.slug)) : copy.linkFailed(result.reason),
     );
     return;
   }
 
-  if (!existed) {
-    await sendMessage(chatId, copy.intro(linkUrl(siteUrl, partner.code), botLink(company.telegram, partner.code)));
-  }
   const [summary] = await summarize([partner]);
+  if (!existed) {
+    const main = summary.links.find((l) => l.is_default);
+    await sendMessage(
+      chatId,
+      copy.intro(main?.slug ? shortUrl(siteUrl, main.slug) : linkUrl(siteUrl, partner.code), botLink(company.telegram, partner.code)),
+    );
+  }
   await sendMessage(chatId, copy.stats(statsOf(summary)));
 }
 
@@ -137,12 +150,19 @@ async function handlePayout(
   }
 
   await sendMessage(chatId, copy.payoutRequested(result.payout.amount_usd));
+  await alertPayoutRequest(partner, result.payout);
+}
 
+/**
+ * Сказать владельцу о заявке на выплату — из бота и из кабинета на сайте
+ * одинаково: откуда бы партнёр ни попросил, решать владельцу в панели.
+ */
+export async function alertPayoutRequest(partner: Partner, payout: PartnerPayout): Promise<void> {
   const alert = [
     "💸 <b>Заявка на выплату партнёру</b>",
-    `Партнёр: ${partner.name}${partner.username ? ` (@${partner.username})` : ""}`,
-    `Сумма: ${result.payout.amount_usd.toLocaleString("ru-RU")} $`,
-    `Куда: ${result.payout.requisites}`,
+    `Партнёр: ${esc(partner.name)}${partner.username ? ` (@${esc(partner.username)})` : ""}`,
+    `Сумма: ${payout.amount_usd.toLocaleString("ru-RU")} $`,
+    `Куда: ${esc(payout.requisites)}`,
     "",
     `Решить: ${siteUrl}/admin/partners`,
   ].join("\n");

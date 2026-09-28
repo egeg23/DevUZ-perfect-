@@ -48,6 +48,7 @@ export const LIST_COLUMNS = [
   "discount_reason",
   "partner_id",
   "partner_code",
+  "partner_ref_at",
   "partner_void_reason",
 ].join(", ");
 
@@ -105,6 +106,8 @@ export type LeadRow = {
   /** Партнёрская программа: кто привёл, по какому коду, почему не засчитано. */
   partner_id: string | null;
   partner_code: string | null;
+  /** Когда клиент перешёл по ссылке партнёра — из куки, если заявка с сайта. */
+  partner_ref_at: string | null;
   partner_void_reason: string | null;
 };
 

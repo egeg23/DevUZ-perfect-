@@ -1,5 +1,6 @@
 import { clientIp, rateLimit } from "@/lib/qualify/limiter";
 import { attributeAndNotify } from "@/lib/partners/attribute";
+import { refFromHeader } from "@/lib/partners/ref-cookie";
 import { codeFromQuery } from "@/lib/partners/rules";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { pathFromClient, refFromClient } from "@/lib/qualify/origin";
@@ -127,10 +128,14 @@ export async function POST(request: Request) {
     console.error("saveLead form", error);
   }
 
-  const ref = codeFromQuery(body.ref);
+  // Код партнёра: сначала кука — её ставит сервер при переходе по ссылке, и
+  // в ней время перехода (30-дневное окно проверено при чтении), — потом
+  // память браузера, которую прислала форма.
+  const mark = refFromHeader(request.headers.get("cookie"));
+  const ref = mark?.code ?? codeFromQuery(body.ref);
   if (leadId && ref) {
     try {
-      await attributeAndNotify(leadId, { code: ref }, lead);
+      await attributeAndNotify(leadId, { code: ref, at: mark?.code === ref ? mark.at : null }, lead);
     } catch (error) {
       console.error("partners: привязка лида из формы", error);
     }

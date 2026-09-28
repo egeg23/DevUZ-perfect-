@@ -162,8 +162,15 @@ export default async function LeadPage({
   // Кто привёл: менеджеру важно знать про обещанный партнёром бонус и про
   // то, что клиент партнёрский, — на сумму и на тон разговора это влияет.
   const partner = lead.partner_id ? await partnerById(lead.partner_id) : null;
+  // Сколько дней прошло от перехода по ссылке до заявки: засчитывается,
+  // если не больше 30 (кука живёт столько же).
+  const refDays = lead.partner_ref_at
+    ? Math.max(0, Math.floor((Date.parse(lead.created_at) - Date.parse(lead.partner_ref_at)) / 86_400_000))
+    : null;
   const partnerLabel = partner
     ? `${partner.name} · ${lead.partner_code ?? partner.code}${
+        refDays !== null ? ` · по ссылке за ${refDays} дн. до заявки` : ""
+      }${
         lead.partner_void_reason
           ? ` · не засчитано: ${VOID_TITLE[lead.partner_void_reason as VoidReason] ?? lead.partner_void_reason}`
           : ""

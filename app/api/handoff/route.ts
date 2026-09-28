@@ -1,3 +1,4 @@
+import { codeFromQuery, refFromCookieHeader } from "@/lib/partners/rules";
 import { company } from "@/content/company";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { MAX_MESSAGE_CHARS, MAX_TURNS } from "@/lib/qualify/engine";
@@ -38,6 +39,8 @@ export async function POST(request: Request) {
     /** Закрепление скидки за первую минуту — едет в бота вместе с разговором. */
     claim?: unknown;
     token?: unknown;
+    /** Код партнёра, который сайт запомнил. */
+    ref?: unknown;
   };
   try {
     body = await request.json();
@@ -68,6 +71,8 @@ export async function POST(request: Request) {
     qualified: body.qualified === true,
     requestNo,
     discount: (await checkClaim(body.claim)) ? ("minute" as const) : body.discount === true ? ("promise" as const) : null,
+    // Партнёр едет в бота вместе с разговором: заявка родится там.
+    ref: refFromCookieHeader(request.headers.get("cookie")) ?? codeFromQuery(body.ref) ?? undefined,
   };
 
   // Клиент присылает свой токен, если уже получал его в этом разговоре: тогда

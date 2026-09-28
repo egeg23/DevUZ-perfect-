@@ -47,7 +47,7 @@ import {
 } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
 import { VOID_TITLE, partnerAccrualOf, type VoidReason } from "@/lib/partners/rules";
-import { listPartners, partnerById, summarize } from "@/lib/partners/store";
+import { listPartners, partnerById } from "@/lib/partners/store";
 
 export const dynamic = "force-dynamic";
 
@@ -145,9 +145,8 @@ export default async function ProjectPage({
   // молча подставила бы первого по алфавиту и сменила ведущего при сохранении.
   const leaders = people.filter((p) => p.is_active || p.id === project.owner_staff_id);
 
-  // Партнёрская строка: ступень партнёра считается по всем его проектам.
-  const partnerProven = partner ? (await summarize([partner]))[0]?.proven ?? false : false;
-  const partnerLine = partner ? partnerAccrualOf(project, payments, partner, partnerProven) : null;
+  // Партнёрская строка: ставка — по сумме проекта (rules.ts, PARTNER_TIERS).
+  const partnerLine = partner ? partnerAccrualOf(project, payments, partner) : null;
   const paid = paidOf(project.id, payments);
   const lines = accrualsOf(project, payments, earnersOf(people), sharesOf(project.id, shares));
   const state = accrualState(project, paid);
@@ -537,7 +536,7 @@ export default async function ProjectPage({
                 <span>{partner.name}</span>
                 <span className="font-mono text-xs text-muted">{partner.code}</span>
                 <span className="text-xs text-faint">
-                  {partnerLine.percent} % {partnerLine.manual ? "· вручную" : partnerProven ? "· прокачанный" : "· база"}
+                  {partnerLine.percent} % {partnerLine.manual ? "· вручную" : "· по сумме проекта"}
                 </span>
                 <span className="font-mono">{money(partnerLine.amount_usd)}</span>
                 <span
