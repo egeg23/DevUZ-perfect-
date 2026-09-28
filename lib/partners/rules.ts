@@ -503,6 +503,43 @@ export function companyKey(raw: string | null | undefined): string {
 }
 
 /**
+ * Сколько месяцев заказы подключённого агентства засчитываются партнёру.
+ *
+ * Владелец, 28.09: «ставь 12 месяцев». Бессрочно — щедрее рынка: через
+ * пару лет агентство работает с нами само, а доля всё ещё уходит партнёру.
+ * Срок считается от подтверждения; повторное «Подтвердить» в панели
+ * начинает новые 12 месяцев — так владелец продлевает, если хочет.
+ * Заказы, пришедшие внутри срока, остаются партнёру и после него.
+ */
+export const AGENCY_TERM_MONTHS = 12;
+
+/** До какого момента заказы агентства засчитываются. `null` — не подтверждено. */
+export function agencyUntil(decidedAt: string | null): Date | null {
+  if (!decidedAt) return null;
+  const from = new Date(decidedAt);
+  if (Number.isNaN(from.getTime())) return null;
+  const until = new Date(from);
+  until.setUTCMonth(until.getUTCMonth() + AGENCY_TERM_MONTHS);
+  return until;
+}
+
+/** «28.09.2027» — до какого дня засчитываются заказы агентства; пусто, если не подтверждено. */
+export function agencyUntilDay(decidedAt: string | null): string {
+  const until = agencyUntil(decidedAt);
+  return until ? until.toISOString().slice(0, 10).split("-").reverse().join(".") : "";
+}
+
+/** Засчитывается ли сейчас заказ этого агентства партнёру. */
+export function agencyCounts(
+  agency: { status: string; decided_at: string | null },
+  now: Date = new Date(),
+): boolean {
+  if (agency.status !== "active") return false;
+  const until = agencyUntil(agency.decided_at);
+  return until !== null && now.getTime() < until.getTime();
+}
+
+/**
  * Этот лид — заказ агентства? Сходится контакт или название компании.
  * Короткое название (меньше четырёх знаков) не считается: «Art» совпало бы
  * с половиной города.

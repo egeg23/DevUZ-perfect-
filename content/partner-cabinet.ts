@@ -46,6 +46,9 @@ export type CabinetCopy = {
   agencyAdd: string;
   agenciesEmpty: string;
   agencyStatus: Record<"pending" | "active" | "rejected", string>;
+  /** Срок агентства: 12 месяцев с подтверждения (AGENCY_TERM_MONTHS). */
+  agencyUntil: (date: string) => string;
+  agencyExpired: (date: string) => string;
   agencyResult: Record<"ok" | "offline" | "invalid" | "limit" | "duplicate" | "failed", string>;
   viaAgency: (name: string) => string;
 
@@ -173,7 +176,7 @@ const ru: CabinetCopy = {
 
   agenciesTitle: "Агентства и компании",
   agenciesLead:
-    "Подключите агентство или компанию, откуда регулярно идут заказы на разработку: IT-компанию, веб-студию, маркетинговое или дизайн-агентство, интегратора, генподрядчика IT-тендеров. Она отдаёт нам заказы на субподряд, и после нашего подтверждения все её заказы — ваши, без ограничения в 30 дней: и первый, и каждый следующий. Ссылка ей не нужна — мы узнаём её заказы по контакту и названию.",
+    "Подключите агентство или компанию, откуда регулярно идут заказы на разработку: IT-компанию, веб-студию, маркетинговое или дизайн-агентство, интегратора, генподрядчика IT-тендеров. Она отдаёт нам заказы на субподряд, и после нашего подтверждения все её заказы — ваши в течение 12 месяцев, без ограничения в 30 дней: и первый, и каждый следующий. Ссылка ей не нужна — мы узнаём её заказы по контакту и названию.",
   agencyName: "Название компании",
   agencyContact: "Контакт компании",
   agencyContactHint: "@telegram, телефон или почта — откуда оно будет нам писать",
@@ -182,6 +185,8 @@ const ru: CabinetCopy = {
   agencyAdd: "Подключить компанию",
   agenciesEmpty: "Агентств пока нет. Презентация программы для агентств — ниже, её можно отправить им ссылкой.",
   agencyStatus: { pending: "ждёт подтверждения", active: "подключено — заказы ваши", rejected: "не подключено" },
+  agencyUntil: (date) => `до ${date}`,
+  agencyExpired: (date) => `срок вышел ${date} — новые заказы не засчитываются`,
   agencyResult: {
     ok: "Агентство отправлено на подтверждение. Как только подтвердим — бот напишет вам.",
     offline: "Сервис сейчас недоступен. Попробуйте через минуту.",
@@ -383,7 +388,7 @@ const en: CabinetCopy = {
 
   agenciesTitle: "Agencies & companies",
   agenciesLead:
-    "Connect an agency or company that regularly has development orders: an IT company, web studio, marketing or design agency, integrator, or a prime contractor in IT tenders. It passes orders to us on a subcontract basis, and once we confirm it, all its orders are yours, with no 30-day limit: the first one and every next one. It doesn't need a link — we recognise its orders by contact and name.",
+    "Connect an agency or company that regularly has development orders: an IT company, web studio, marketing or design agency, integrator, or a prime contractor in IT tenders. It passes orders to us on a subcontract basis, and once we confirm it, all its orders are yours for 12 months, with no 30-day limit: the first one and every next one. It doesn't need a link — we recognise its orders by contact and name.",
   agencyName: "Company name",
   agencyContact: "Company contact",
   agencyContactHint: "@telegram, phone or email — where it will write to us from",
@@ -392,6 +397,8 @@ const en: CabinetCopy = {
   agencyAdd: "Connect company",
   agenciesEmpty: "No agencies yet. The program deck for agencies is below — you can send it to them as a link.",
   agencyStatus: { pending: "awaiting confirmation", active: "connected — orders are yours", rejected: "not connected" },
+  agencyUntil: (date) => `until ${date}`,
+  agencyExpired: (date) => `term ended ${date} — new orders no longer count`,
   agencyResult: {
     ok: "The agency has been sent for confirmation. Once we confirm it, the bot will message you.",
     offline: "The service is unavailable right now. Try again in a minute.",
@@ -593,7 +600,7 @@ const uz: CabinetCopy = {
 
   agenciesTitle: "Agentliklar va kompaniyalar",
   agenciesLead:
-    "Ishlab chiqish bo'yicha buyurtmalari muntazam bo'ladigan agentlik yoki kompaniyani ulang: IT-kompaniya, veb-studiya, marketing yoki dizayn agentligi, integrator, IT-tenderlardagi bosh pudratchi. U bizga buyurtmalarni subpudratga beradi va biz tasdiqlaganimizdan keyin uning barcha buyurtmalari sizniki, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. Unga havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
+    "Ishlab chiqish bo'yicha buyurtmalari muntazam bo'ladigan agentlik yoki kompaniyani ulang: IT-kompaniya, veb-studiya, marketing yoki dizayn agentligi, integrator, IT-tenderlardagi bosh pudratchi. U bizga buyurtmalarni subpudratga beradi va biz tasdiqlaganimizdan keyin 12 oy davomida uning barcha buyurtmalari sizniki, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. Unga havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
   agencyName: "Kompaniya nomi",
   agencyContact: "Kompaniya kontakti",
   agencyContactHint: "@telegram, telefon yoki pochta — bizga qayerdan yozadi",
@@ -602,6 +609,8 @@ const uz: CabinetCopy = {
   agencyAdd: "Kompaniyani ulash",
   agenciesEmpty: "Hozircha agentliklar yo'q. Agentliklar uchun dastur taqdimoti quyida — uni havola bilan yuborish mumkin.",
   agencyStatus: { pending: "tasdiq kutmoqda", active: "ulangan — buyurtmalar sizniki", rejected: "ulanmagan" },
+  agencyUntil: (date) => `${date} gacha`,
+  agencyExpired: (date) => `muddat ${date} da tugadi — yangi buyurtmalar hisoblanmaydi`,
   agencyResult: {
     ok: "Agentlik tasdiqlashga yuborildi. Tasdiqlashimiz bilan bot sizga yozadi.",
     offline: "Xizmat hozir ishlamayapti. Bir daqiqadan keyin urinib ko'ring.",
@@ -802,7 +811,7 @@ const zh: CabinetCopy = {
 
   agenciesTitle: "代理机构与公司",
   agenciesLead:
-    "添加经常有开发订单的代理机构或公司：IT 公司、网站工作室、营销或设计代理机构、系统集成商、IT 招标的总包方。它把订单以分包形式交给我们，经我们确认后，它的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。它不需要链接——我们通过联系方式和名称识别其订单。",
+    "添加经常有开发订单的代理机构或公司：IT 公司、网站工作室、营销或设计代理机构、系统集成商、IT 招标的总包方。它把订单以分包形式交给我们，经我们确认后 12 个月内，它的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。它不需要链接——我们通过联系方式和名称识别其订单。",
   agencyName: "公司名称",
   agencyContact: "公司联系方式",
   agencyContactHint: "@telegram、电话或邮箱——它将通过这里联系我们",
@@ -811,6 +820,8 @@ const zh: CabinetCopy = {
   agencyAdd: "添加公司",
   agenciesEmpty: "暂无代理机构。下方有面向代理机构的计划介绍，可以链接形式发送给他们。",
   agencyStatus: { pending: "等待确认", active: "已接入——订单归您", rejected: "未接入" },
+  agencyUntil: (date) => `至 ${date}`,
+  agencyExpired: (date) => `期限已于 ${date} 结束——新订单不再计入`,
   agencyResult: {
     ok: "代理机构已提交确认。确认后机器人会通知您。",
     offline: "服务暂时不可用，请一分钟后再试。",

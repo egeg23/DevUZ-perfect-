@@ -271,7 +271,7 @@ test("модель закрепляется за клиентом в день з
 
 /* ── Агентства на субподряде ────────────────────────────────────────────── */
 
-test("заказ агентства — партнёру всегда, раньше кода и без окна в 30 дней", () => {
+test("заказ агентства — партнёру 12 месяцев с подтверждения, раньше кода и без окна в 30 дней", () => {
   const attribute = read("lib/partners/attribute.ts");
   const agency = attribute.indexOf("await attributeAgencyLead(leadId");
   const noCode = attribute.indexOf("if (!attribution.code) return null;");
@@ -283,7 +283,7 @@ test("заказ агентства — партнёру всегда, рань�
   const store = read("lib/partners/store.ts");
   const at = store.indexOf("export async function attributeAgencyLead(");
   const body = store.slice(at, store.indexOf("export async function", at + 10));
-  assert.match(body, /\.filter\(\(a\) => a\.status === "active"\)/, "засчитывается агентство без подтверждения");
+  assert.match(body, /\.filter\(\(a\) => agencyCounts\(a, now\)\)/, "засчитывается агентство без подтверждения или после срока");
   assert.match(body, /partner_agency_id: agency\.id,/);
 });
 

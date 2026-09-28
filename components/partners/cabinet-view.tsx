@@ -8,6 +8,8 @@ import {
   PERKS,
   PARTNER_TIERS,
   PAYOUT_MODELS,
+  agencyCounts,
+  agencyUntilDay,
   canSwitchModel,
   nextModelSwitch,
   TARGETS,
@@ -396,14 +398,19 @@ export function CabinetView({
                 <li key={a.id} className={`${CARD} py-4`}>
                   <p className="font-medium">{a.name}</p>
                   <p className="mt-0.5 font-mono text-xs text-muted">{a.contact}</p>
-                  <p
-                    className={`mt-2 text-xs ${
-                      a.status === "active" ? "text-green" : a.status === "rejected" ? "text-faint" : "text-gold"
-                    }`}
-                  >
-                    {t.agencyStatus[a.status]}
-                    {a.status === "rejected" && a.decision_note ? ` · ${a.decision_note}` : ""}
-                  </p>
+                  {a.status === "active" && !agencyCounts(a, now) ? (
+                    <p className="mt-2 text-xs text-faint">{t.agencyExpired(agencyUntilDay(a.decided_at))}</p>
+                  ) : (
+                    <p
+                      className={`mt-2 text-xs ${
+                        a.status === "active" ? "text-green" : a.status === "rejected" ? "text-faint" : "text-gold"
+                      }`}
+                    >
+                      {t.agencyStatus[a.status]}
+                      {a.status === "active" ? ` · ${t.agencyUntil(agencyUntilDay(a.decided_at))}` : ""}
+                      {a.status === "rejected" && a.decision_note ? ` · ${a.decision_note}` : ""}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
