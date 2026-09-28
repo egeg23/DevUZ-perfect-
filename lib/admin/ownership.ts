@@ -3,6 +3,7 @@ import { record } from "@/lib/admin/audit";
 import { mayTake } from "@/lib/admin/lead-queue";
 import { closeOfferAfterTake, openQueue, queueState, shareOf } from "@/lib/admin/lead-queue-store";
 import type { Staff } from "@/lib/admin/session";
+import { talkFollowsLead } from "@/lib/admin/talk-follows-lead";
 import type { ChatMessage } from "@/lib/qualify/types";
 import { STATUSES } from "@/lib/admin/leads";
 import { serviceClient } from "@/lib/supabase";
@@ -140,12 +141,16 @@ export async function takeLead(
   }
   if (!data) return { ok: false, reason: "taken" };
 
+  // Лид из касания берут вместе с разговором: иначе ответы клиента и дожим
+  // остались бы у того, кто вёл его раньше.
+  const talk = await talkFollowsLead(leadId, staff.id);
+
   await record("lead.taken", {
     actorStaffId: staff.id,
     targetType: "lead",
     targetId: leadId,
     ip,
-    meta: { via },
+    meta: talk ? { via, talk } : { via },
   });
 
   // Предложение по лиду закрывается: взял тот, кому предложено, или владелец

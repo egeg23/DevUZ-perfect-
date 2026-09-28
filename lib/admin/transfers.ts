@@ -2,6 +2,7 @@ import { record } from "@/lib/admin/audit";
 import { AUTO_REMINDER_HOURS, createReminder, handleOf } from "@/lib/admin/ownership";
 import type { Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
+import { talkFollowsLead } from "@/lib/admin/talk-follows-lead";
 import { esc, markBriefHandled, sendMessage, sendRowsForId } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -397,6 +398,10 @@ async function move(leadId: string, toStaffId: string, actor: Staff, ip: string)
     return false;
   }
 
+  // Разговор по касанию уходит вместе с лидом: у кого лид, тому и ответы
+  // клиента, и дожим, и подпись модели.
+  const talk = await talkFollowsLead(leadId, toStaffId);
+
   // Новому владельцу — своё напоминание: у прежнего оно осталось на его
   // имени и ему же и придёт, а лид теперь не его.
   if (data.auto_reminder !== false) {
@@ -417,7 +422,7 @@ async function move(leadId: string, toStaffId: string, actor: Staff, ip: string)
     targetType: "lead",
     targetId: leadId,
     ip,
-    meta: { to: toStaffId },
+    meta: talk ? { to: toStaffId, talk } : { to: toStaffId },
   });
   return true;
 }

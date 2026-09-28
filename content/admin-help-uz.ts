@@ -179,17 +179,17 @@ export const uz: HelpCopy = {
             manager: [
               "Lidni uddalay olmayapsiz yoki mijoz hamkasbingizga ko‘proq mos — kartochkadagi «Передать» ro‘yxatida kimga ekanini tanlang, sababini yozing, keyin **«Попросить передать»** tugmasini bosing.",
               "Rahbaringiz yoki egasi so‘rovni tasdiqlamaguncha lid sizda qoladi: ularga Telegramda «Подтвердить» va «Отклонить» tugmalari bilan xabar boradi — ular panelsiz, shu yerning o‘zida hal qilishadi. Qaror kutilayotganda lid ikki odam o‘rtasida osilib qolmaydi.",
-              "Tasdiqlashdi — lid hamkasbda, unga xabar va 4 soatdan keyin yangi eslatma keladi. Rad etishdi — sizga «Передачу не подтвердили. Лид остаётся у вас» keladi.",
+              "Tasdiqlashdi — lid hamkasbda, unga xabar va 4 soatdan keyin yangi eslatma keladi. Aloqadan kelgan lid yozishma bilan birga o‘tadi: mijoz javoblari, qayta yozish va model imzosi endi hamkasbda. Rad etishdi — sizga «Передачу не подтвердили. Лид остаётся у вас» keladi.",
               "Bo‘sh lid berilmaydi — uni «Взять себе» tugmasi bilan olishadi.",
             ],
             head: [
               "Sizning tugmangiz — **«Передать»**: lid tanlangan odamga darhol o‘tadi, unga «…передал вам лид. Он уже ваш» xabari keladi.",
               "Jamoangiz menejerlarining so‘rovlari («Попросить передать») sizga Telegramda **«✅ Подтвердить»** va **«✖ Отклонить»** tugmalari bilan keladi — xabarning o‘zida hal qiling; avval ko‘rmoqchi bo‘lsangiz, «Открыть лид» kartochkaga olib boradi. Xuddi shu so‘rovlar bosh sahifadagi «Ждут вашего решения» blokida va lid kartochkasida ham bor. Kimdir bittasi hal qilsa — qolganlarda tugmalar «Подтвердил …» yoki «Отклонил …» ga almashadi. Studiyadagi istalgan so‘rovni hal qila olasiz, faqat o‘z jamoangiznikini emas.",
-              "Tasdiqlangan lidga 4 soatdan keyin yangi eslatma qo‘yiladi. Oldingi mas’ulning eski eslatmalari o‘zi yopilmaydi — kerak bo‘lsa, ularni yoping.",
+              "Tasdiqlangan lidga 4 soatdan keyin yangi eslatma qo‘yiladi. Aloqadan kelgan lid yozishma bilan birga o‘tadi: mijoz xabarlari, qayta yozish va model imzosi — yangi mas’ulga. Oldingi mas’ulning eski eslatmalari o‘zi yopilmaydi — kerak bo‘lsa, ularni yoping.",
             ],
             admin: [
               "Sizning tugmangiz — **«Передать»**: lid darhol o‘tadi. Menejerlarning so‘rovlari sizga Telegramda **«✅ Подтвердить»** va **«✖ Отклонить»** tugmalari bilan keladi — xabarning o‘zida hal qilasiz, — shuningdek «Сегодня» varag‘idagi «Ждут вашего решения» blokiga va lid kartochkasiga. Ularni rahbar ham hal qila oladi: u o‘z jamoasining so‘rovlarini xuddi shu tugmalar bilan oladi. Kim birinchi hal qilsa — qolganlarda tugmalar natijaga almashadi va hal qilingan so‘rovni qayta bosib bo‘lmaydi.",
-              "Bu sizning qoidangiz bo‘yicha shunday qilingan: lid rahbar yoki sizning tasdig‘ingiz bilan beriladi va qaror chiqquncha oldingi mas’ulda qoladi.",
+              "Bu sizning qoidangiz bo‘yicha shunday qilingan: lid rahbar yoki sizning tasdig‘ingiz bilan beriladi va qaror chiqquncha oldingi mas’ulda qoladi. Aloqadan kelgan lid yozishma bilan birga o‘tadi — lid kimda bo‘lsa, mijoz bilan suhbat ham o‘shanda.",
             ],
           },
         },
@@ -461,7 +461,7 @@ export const uz: HelpCopy = {
           body: [
             "Ishchi akkaunt xatlariga model javob beradi — bir necha daqiqadan keyin, darhol emas (darhol javob robotga o‘xshaydi), studiya nomidan, «biz» deb. Uning har bir javobi bitta aniq qadam bilan tugaydi; biror narsa yuborishni va’da qilish unga taqiqlangan.",
             "Model **sizni chaqiradi**, agar mijoz: rad etsa («yozmang», «qiziq emas»); odam yoki qo‘ng‘iroq so‘rasa; **tahlil, tijoriy taklif, smeta yoki fayl yuborishni so‘rasa** — unda o‘sha kuniyoq o‘zingiz yuboring; qisqa va tushunarsiz javob bersa. Yana — suhbat 12 replikadan beri davom etib, kelishuvga kelmasa yoki uning javobi tekshiruvdan o‘tmasa.",
-            "Chaqirdi — sizga Telegramda sabab, mijoz so‘zlari va lid havolasi bilan «Касание · сайт» keladi. Lid kartochkasida «Первичка по касанию» bloki: «отвечает ИИ» yoki «отвечаете вы — причина». **«Отвечать самому»** tugmasi suhbatni istalgan paytda modeldan olib qo‘yadi: keyin model jim turadi, mijozning har bir yangi xabari esa sizga Telegramda keladi — «Клиент написал — отвечаете вы», lid havolasi bilan. Tugmani bosgan odamga keladi, hatto u rahbar yoki ega bo‘lsa ham. Lid har holda sizniki.",
+            "Chaqirdi — sizga Telegramda sabab, mijoz so‘zlari va lid havolasi bilan «Касание · сайт» keladi. Lid kartochkasida «Первичка по касанию» bloki: «отвечает ИИ» yoki «отвечаете вы — причина». **«Отвечать самому»** tugmasi suhbatni istalgan paytda modeldan olib qo‘yadi: keyin model jim turadi, mijozning har bir yangi xabari esa sizga Telegramda keladi — «Клиент написал — отвечаете вы», lid havolasi bilan. Tugmani bosgan odamga keladi, hatto u rahbar yoki ega bo‘lsa ham. Lid har holda sizniki. Lidni berishdi yoki uni navbatdan boshqa odam oldi — suhbat u bilan birga o‘tadi: mijoz xabarlari, qayta yozish va model imzosi endi lidning yangi egasida, oldingi egasining «Отвечать самому» belgisi esa olib tashlanadi.",
             "Model vazifa, byudjet va muddatlarni aniqlab olgach, xayrlashadi, sizga esa «Первичка по касанию · сайт» brifi keladi. Keyingi suhbat sizniki.",
             "⚠️ O‘zingiz javob berayotgan bo‘lsangiz, mijozning yangi oddiy xabarlari Telegramda sizga kelmaydi — yozishmaga o‘zingiz qarab turing.",
           ],
@@ -1042,7 +1042,7 @@ export const uz: HelpCopy = {
           roles: ["admin"],
           body: [
             "«Отключить» → nima bo‘lishini o‘qing → **«Понятно, отключить»**. Darhol: kirish yopiladi, barcha sessiyalar uziladi, kirish havolalari bekor bo‘ladi.",
-            "Keyin tizim o‘zi: uning ishdagi lidlari navbatga qaytadi («↩️ Лид вернулся в очередь…»), navbatdagi yarim soatlari tugaydi, eslatmalar va berish so‘rovlari yopiladi, yuborilmagan aloqalar zaxiraga ketadi, davom etayotgan yozishmalar esa — uning rahbariga yoki sizga. Uning jamoasi (agar u rahbar bo‘lsa) ajraladi, Telegramidagi lid kartochkalari o‘chiriladi.",
+            "Keyin tizim o‘zi: uning ishdagi lidlari navbatga qaytadi («↩️ Лид вернулся в очередь…»), navbatdagi yarim soatlari tugaydi, eslatmalar va berish so‘rovlari yopiladi, yuborilmagan aloqalar zaxiraga ketadi, davom etayotgan yozishmalar esa — uning rahbariga yoki sizga. Bunday yozishmadagi lidni navbatdan kimdir olsa, yozishma olgan odamga o‘tadi. Uning jamoasi (agar u rahbar bo‘lsa) ajraladi, Telegramidagi lid kartochkalari o‘chiriladi.",
             "Tizim bitta narsani qila olmaydi: **odamni qo‘lda chiqarib yuboring** — «Devuz Scout» kanalidan va sotuv chatidan.",
             "O‘chirilganlar butunlay yo‘q qilinmaydi — ular «Отключённые» ro‘yxatida. Qaytarish — o‘sha id bilan qaytadan qo‘shish.",
           ],
