@@ -1,6 +1,7 @@
 import { record } from "@/lib/admin/audit";
 import { advanceQueues, requeueLead } from "@/lib/admin/lead-queue-store";
 import type { Staff } from "@/lib/admin/session";
+import { LIVE_TALK } from "@/lib/admin/talk-follows-lead";
 import { esc, sendMessage, withdrawCards } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -161,7 +162,7 @@ export async function offboardStaff(staffId: string, actor: Staff, ip: string): 
     .from("prospects")
     .update({ claimed_by: heir.id })
     .eq("claimed_by", staffId)
-    .in("status", ["sending", "sent", "manual"])
+    .in("status", [...LIVE_TALK])
     .select("host");
   out.talks = talks?.length ?? 0;
   if (out.talks && heir.chat) {
