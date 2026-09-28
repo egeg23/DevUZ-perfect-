@@ -16,6 +16,7 @@ import {
   type Offer,
   type Share,
 } from "@/lib/admin/lead-queue";
+import { wants } from "@/lib/admin/notify-prefs";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { noticesOf } from "@/lib/qualify/notices";
 import type { LeadOrigin } from "@/lib/qualify/origin";
@@ -30,7 +31,14 @@ import { serviceClient } from "@/lib/supabase";
  * кому предложить, кому что написать, что закрыть.
  */
 
-type Person = { id: string; name: string; chat: string | null; role: string };
+type Person = {
+  id: string;
+  name: string;
+  chat: string | null;
+  role: string;
+  /** Галочка «Новые заявки по очереди» (lib/admin/notify-prefs.ts). Снята — из очереди выходит. */
+  queue: boolean;
+};
 
 /** Кто стоит в очереди — с тем, сколько у кого за месяц. */
 async function queueCandidates(now: Date): Promise<{ people: Person[]; candidates: Candidate[] }> {
@@ -39,7 +47,7 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
 
   const { data: staff } = await db
     .from("staff")
-    .select("id, display_name, username, telegram_user_id, role")
+    .select("id, display_name, username, telegram_user_id, role, notify_off")
     .eq("is_active", true)
     .in("role", [...QUEUE_ROLES]);
 
@@ -48,6 +56,7 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
     name: String(row.username ? `@${row.username}` : row.display_name ?? "—"),
     chat: typeof row.telegram_user_id === "number" ? String(row.telegram_user_id) : null,
     role: String(row.role),
+    queue: wants(row.notify_off as string[] | null, "queue"),
   }));
   if (!people.length) return { people, candidates: [] };
 
@@ -98,8 +107,10 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
     people,
     candidates: people
       // Без Telegram человеку не сообщить, что лид его, — и полчаса лид
-      // простоял бы у того, кто о нём не знает.
-      .filter((p) => p.chat)
+      // простоял бы у того, кто о нём не знает. Снятая галочка «Новые
+      // заявки по очереди» — то же самое по доброй воле: предлагать лид
+      // тому, кому о нём не напишут, значит держать его полчаса впустую.
+      .filter((p) => p.chat && p.queue)
       .map((p) => ({
         id: p.id,
         taken: takenBy.get(p.id) ?? 0,
@@ -188,9 +199,16 @@ async function watchers(): Promise<string[]> {
   const sales = (process.env.TELEGRAM_SALES_CHAT_ID ?? "").trim();
   if (sales) out.add(sales);
   if (!db) return [...out];
-  const { data } = await db.from("staff").select("telegram_user_id").eq("is_active", true).eq("role", "admin");
-  for (const row of (data as { telegram_user_id: number | null }[] | null) ?? []) {
-    if (typeof row.telegram_user_id === "number") out.add(String(row.telegram_user_id));
+  const { data } = await db
+    .from("staff")
+    .select("telegram_user_id, notify_off")
+    .eq("is_active", true)
+    .eq("role", "admin");
+  for (const row of (data as { telegram_user_id: number | null; notify_off: string[] | null }[] | null) ?? []) {
+    // Копии — для контроля, и владелец вправе от них отказаться.
+    if (typeof row.telegram_user_id === "number" && wants(row.notify_off, "watch")) {
+      out.add(String(row.telegram_user_id));
+    }
   }
   return [...out];
 }

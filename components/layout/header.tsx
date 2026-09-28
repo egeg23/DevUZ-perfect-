@@ -37,9 +37,17 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
       ? [{ href: localeHref(locale, "razbor"), label: dict.nav.razbor, live: true }]
       : []),
     { href: localeHref(locale, "cases"), label: dict.nav.cases },
-    { href: `${localeHref(locale)}#process`, label: dict.nav.process },
-    { href: localeHref(locale, "about"), label: dict.nav.about },
+    // «Процесс» (якорь на главной) и «О студии» — только в мобильном меню и
+    // в подвале: их место в строке шапки занял «Зарабатывай с нами»
+    // (владелец, 28.09). Замерено на сборке при 1280 px — самой узкой
+    // ширине, где меню разворачивается: с ними «Обсудить проект» ломался в
+    // две-три строки. Без них и с зазором 16 px вместо 20 остаётся 12 px
+    // по-русски; по-узбекски пункт называется «Hamkorlik» — длинное «Biz
+    // bilan daromad» не помещалось и так.
+    { href: `${localeHref(locale)}#process`, label: dict.nav.process, mobileOnly: true },
+    { href: localeHref(locale, "about"), label: dict.nav.about, mobileOnly: true },
     { href: localeHref(locale, "contact"), label: dict.nav.contacts },
+    { href: localeHref(locale, "partners"), label: dict.nav.partners },
   ];
 
   return (
@@ -61,10 +69,10 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
             брейкпоинт нужны, чтобы запрет переносов не превратился в
             выезд меню за край экрана. */}
         <nav
-          className="hidden items-center gap-5 xl:flex"
+          className="hidden items-center gap-4 xl:flex"
           aria-label={dict.nav.services}
         >
-          {links.map((link) => (
+          {links.filter((link) => !("mobileOnly" in link && link.mobileOnly)).map((link) => (
             <Link
               key={link.href}
               href={link.href}

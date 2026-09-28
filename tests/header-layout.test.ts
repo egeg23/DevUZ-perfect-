@@ -55,3 +55,17 @@ test("переключатель языка в шапке свёрнут", () =>
 
   assert.match(code, /aria-label="DevUz Studio"/, "ссылка на главную осталась без доступного имени");
 });
+
+test("«Зарабатывай с нами» в строке шапки, «Процесс» и «О студии» — в мобильном меню", () => {
+  // Владелец, 28.09: «Сделай новым пунктом меню — зарабатывай с нами».
+  // Длинный пункт помещается в строку 1280 px только вместо двух: замерено
+  // на сборке, с ними «Обсудить проект» ломался в две-три строки.
+  assert.match(code, /\{ href: localeHref\(locale, "partners"\), label: dict\.nav\.partners \}/);
+  assert.match(code, /label: dict\.nav\.process, mobileOnly: true/);
+  assert.match(code, /label: dict\.nav\.about, mobileOnly: true/);
+  const nav = code.slice(code.indexOf("<nav"), code.indexOf("</nav>"));
+  assert.match(nav, /links\.filter\(\(link\) => !\("mobileOnly" in link && link\.mobileOnly\)\)/);
+  // А в мобильном меню — все пункты, без фильтра.
+  const burger = code.slice(code.indexOf("{open ?"));
+  assert.match(burger, /\{links\.map\(\(link\) => \(/);
+});

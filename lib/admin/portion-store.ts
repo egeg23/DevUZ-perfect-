@@ -1,3 +1,4 @@
+import { wants } from "@/lib/admin/notify-prefs";
 import { QUEUE_ROLES } from "@/lib/admin/lead-queue";
 import { canContact, routeFor, whatsappLink } from "@/lib/admin/outreach";
 import { prepareOutreach, prospectsByIds, type Prospect } from "@/lib/admin/outreach-store";
@@ -32,14 +33,14 @@ import { serviceClient } from "@/lib/supabase";
  *          именем того, кому было выдано.
  */
 
-type Person = { id: string; name: string; chat: number | null; head: string | null; role: string };
+type Person = { id: string; name: string; chat: number | null; head: string | null; role: string; off: string[] };
 
 async function team(): Promise<Person[]> {
   const db = serviceClient();
   if (!db) return [];
   const { data } = await db
     .from("staff")
-    .select("id, display_name, telegram_user_id, head_staff_id, role")
+    .select("id, display_name, telegram_user_id, head_staff_id, role, notify_off")
     .eq("is_active", true)
     .in("role", [...QUEUE_ROLES]);
   return (data ?? []).map((r) => ({
@@ -48,6 +49,7 @@ async function team(): Promise<Person[]> {
     chat: Number(r.telegram_user_id) || null,
     head: (r.head_staff_id as string | null) ?? null,
     role: r.role as string,
+    off: (r.notify_off as string[] | null) ?? [],
   }));
 }
 
@@ -259,6 +261,19 @@ export async function deliverPortions(now: Date = new Date()): Promise<number> {
   for (const [staffId, rows] of byStaff) {
     const person = people.get(staffId);
     if (!person?.chat) continue;
+    // Галочка «Порция касаний на день» снята: порция остаётся в «Касаниях»,
+    // а в Telegram не идёт. Отмечаем выданной, чтобы не пытаться снова
+    // каждые пять минут до вечера.
+    if (!wants(person.off, "portion")) {
+      await db
+        .from("touch_portions")
+        .update({ delivered_at: now.toISOString() })
+        .in(
+          "id",
+          rows.map((r) => r.id as string),
+        );
+      continue;
+    }
     const allReady = rows.every((r) => ready(byId.get(r.prospect_id as string)));
     if (!allReady && hour < DELIVER_LATEST_HOUR) continue;
 
@@ -356,14 +371,19 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
   const footer = "Несделанное вернулось в общий пул.";
 
   // Руководителю — его люди и он сам; владельцу — все.
-  for (const head of people.filter((p) => p.role === "head" && p.chat)) {
+  for (const head of people.filter((p) => p.role === "head" && p.chat && wants(p.off, "reports"))) {
     const ids = [head.id, ...people.filter((p) => p.head === head.id).map((p) => p.id)];
     const text = lines(ids);
     if (text.length) await sendMessage(head.chat!, [header, "", ...text, "", footer].join("\n"));
   }
-  const { data: owners } = await db.from("staff").select("telegram_user_id").eq("role", "admin").eq("is_active", true);
+  const { data: owners } = await db
+    .from("staff")
+    .select("telegram_user_id, notify_off")
+    .eq("role", "admin")
+    .eq("is_active", true);
   const all = lines([...reports.keys()]);
   for (const owner of owners ?? []) {
+    if (!wants(owner.notify_off as string[] | null, "reports")) continue;
     const chat = Number(owner.telegram_user_id);
     if (chat && all.length) await sendMessage(chat, [header, "", ...all, "", footer].join("\n"));
   }

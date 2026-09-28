@@ -3,20 +3,25 @@ import { test } from "node:test";
 
 import {
   MIN_PAYOUT_USD,
-  PARTNER_PERCENT,
-  PROVEN_PERCENT,
+  PARTNER_TIERS,
   canWithdrawNow,
   codeFromQuery,
   codeFromStart,
   firstBusinessDay,
   generateCode,
-  isProven,
   isTrc20,
   normalizeCode,
   partnerAccrualOf,
   partnerBalanceOf,
   partnerPercent,
   perkPercent,
+  tierPercent,
+  agencyMatches,
+  canSwitchModel,
+  companyKey,
+  contactKey,
+  nextModelSwitch,
+  MODEL_SWITCH_DAYS,
   validCode,
   validRequisites,
   voidReason,
@@ -47,58 +52,108 @@ function project(over: Partial<PartnerProject> = {}): PartnerProject {
   };
 }
 
-test("ставка: 20 % база, 25 % прокачанному, персональная и по проекту — важнее", () => {
-  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: null, proven: false }), PARTNER_PERCENT);
-  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: null, proven: true }), PROVEN_PERCENT);
-  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: 30, proven: true }), 30);
-  assert.equal(partnerPercent({ projectPercent: 10, partnerOverride: 30, proven: true }), 10);
-  // Прокачка — за оплаченные проекты, не за регистрации.
-  assert.equal(isProven(2), false);
-  assert.equal(isProven(3), true);
+test("две модели: от прибыли 10–30 %, с оборота 6–20 %, пороги одни и те же", () => {
+  // Владелец, 28.09: «первая, где 30 %, — от чистой прибыли… на оборотном
+  // другой %: 6, 10, 14, 17, 20».
+  const cases: [number, number, number][] = [
+    [0, 10, 6], [2_500, 10, 6],
+    [2_501, 15, 10], [5_000, 15, 10],
+    [5_001, 20, 14], [10_000, 20, 14],
+    [10_001, 25, 17], [30_000, 25, 17],
+    [30_001, 30, 20], [250_000, 30, 20],
+  ];
+  for (const [amount, profit, turnover] of cases) {
+    assert.equal(tierPercent(amount, "profit"), profit, `${amount} $ от прибыли`);
+    assert.equal(tierPercent(amount, "turnover"), turnover, `${amount} $ с оборота`);
+  }
+  assert.deepEqual(PARTNER_TIERS.map((t) => t.profit), [10, 15, 20, 25, 30]);
+  assert.deepEqual(PARTNER_TIERS.map((t) => t.turnover), [6, 10, 14, 17, 20]);
+
+  // Персональная и по проекту — важнее ступени любой модели.
+  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: null, amountUsd: 7_000, model: "turnover" }), 14);
+  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: 12, amountUsd: 7_000, model: "turnover" }), 12);
+  assert.equal(partnerPercent({ projectPercent: 5, partnerOverride: 12, amountUsd: 7_000 }), 5);
+  // Модель не выбрана — «от прибыли»; суммы нет — первая ступень.
+  assert.equal(partnerPercent({ projectPercent: null, partnerOverride: null, amountUsd: null }), 10);
 });
 
-test("начисление — процент от чистой прибыли, заморожено до полной оплаты", () => {
-  // 10 000 − 4 % − 3 000 = 6 600; 20 % = 1 320
-  const frozen = partnerAccrualOf(project(), [], PARTNER, false);
-  assert.ok(frozen);
-  assert.equal(frozen.amount_usd, 1_320);
-  assert.equal(frozen.state, "frozen");
-  assert.equal(frozen.manual, false);
+test("от прибыли — процент от чистой прибыли, с оборота — от суммы; заморожено до полной оплаты", () => {
+  // 10 000 − 4 % налога − 3 000 себестоимости = 6 600; ступень 20 % → 1 320.
+  const profit = partnerAccrualOf(project(), [], PARTNER);
+  assert.ok(profit);
+  assert.equal(profit.model, "profit");
+  assert.equal(profit.percent, 20);
+  assert.equal(profit.amount_usd, 1_320);
+  assert.equal(profit.state, "frozen");
 
-  const earned = partnerAccrualOf(project(), [{ project_id: "pr1", amount_usd: 10_000 }], PARTNER, true);
-  assert.equal(earned?.amount_usd, 1_650);
+  // Та же сумма с оборота: ступень 14 % от 10 000 → 1 400.
+  const turnover = partnerAccrualOf(project({ partner_model: "turnover" }), [], PARTNER);
+  assert.equal(turnover?.model, "turnover");
+  assert.equal(turnover?.percent, 14);
+  assert.equal(turnover?.amount_usd, 1_400);
+
+  const earned = partnerAccrualOf(project(), [{ project_id: "pr1", amount_usd: 10_000 }], PARTNER);
   assert.equal(earned?.state, "earned");
+
+  // Крупный проект: 40 000 − 4 % − 3 000 = 35 400 × 30 % = 10 620; с оборота 20 % = 8 000.
+  assert.equal(partnerAccrualOf(project({ amount_usd: 40_000 }), [], PARTNER)?.amount_usd, 10_620);
+  assert.equal(partnerAccrualOf(project({ amount_usd: 40_000, partner_model: "turnover" }), [], PARTNER)?.amount_usd, 8_000);
+  // Минус по проекту — забота студии, партнёру ноль, а не долг.
+  assert.equal(partnerAccrualOf(project({ dev_cost_usd: 12_000 }), [], PARTNER)?.amount_usd, 0);
+});
+
+test("модель меняется не чаще раза в неделю", () => {
+  const changed = new Date("2026-09-20T10:00:00Z");
+  assert.equal(canSwitchModel(null), true, "ни разу не меняли — можно");
+  assert.equal(canSwitchModel(changed, new Date("2026-09-27T09:59:00Z")), false);
+  assert.equal(canSwitchModel(changed, new Date("2026-09-27T10:00:00Z")), true);
+  assert.equal(nextModelSwitch(changed, new Date("2026-09-22T00:00:00Z"))?.toISOString(), "2026-09-27T10:00:00.000Z");
+  assert.equal(nextModelSwitch(null), null);
+  assert.equal(MODEL_SWITCH_DAYS, 7);
 });
 
 test("процент по проекту, заданный владельцем, помечен как ручной", () => {
-  const line = partnerAccrualOf(project({ partner_percent: 15 }), [], PARTNER, false);
+  const line = partnerAccrualOf(project({ partner_percent: 15 }), [], PARTNER);
   assert.equal(line?.percent, 15);
   assert.equal(line?.manual, true);
   assert.equal(line?.amount_usd, 990);
 });
 
 test("чужой проект, проект без суммы и аннулированный не дают денег", () => {
-  assert.equal(partnerAccrualOf(project({ partner_id: "other" }), [], PARTNER, false), null);
-  assert.equal(partnerAccrualOf(project({ partner_id: null }), [], PARTNER, false), null);
-  assert.equal(partnerAccrualOf(project({ amount_usd: null }), [], PARTNER, false), null);
+  assert.equal(partnerAccrualOf(project({ partner_id: "other" }), [], PARTNER), null);
+  assert.equal(partnerAccrualOf(project({ partner_id: null }), [], PARTNER), null);
+  assert.equal(partnerAccrualOf(project({ amount_usd: null }), [], PARTNER), null);
 
   const voided = partnerAccrualOf(
     project({ partner_void_reason: "self" }),
     [{ project_id: "pr1", amount_usd: 10_000 }],
     PARTNER,
-    false,
   );
   assert.equal(voided?.state, "void");
   assert.equal(voided?.amount_usd, 0);
   assert.equal(voided?.void_reason, "self");
+});
 
-  // Минус по проекту — забота студии, не партнёра.
-  assert.equal(partnerAccrualOf(project({ dev_cost_usd: 12_000 }), [], PARTNER, false)?.amount_usd, 0);
+test("заказ агентства узнаётся по контакту или названию, короткое имя не считается", () => {
+  const agency = { contact: "@Reklama_Pro", name: "Reklama Pro Agency" };
+  assert.equal(agencyMatches(agency, { contactHandle: "https://t.me/reklama_pro", company: null }), true);
+  assert.equal(agencyMatches(agency, { contactHandle: "reklama_pro", company: null }), true);
+  assert.equal(agencyMatches(agency, { contactHandle: null, company: "«Reklama Pro»" }), true);
+  assert.equal(agencyMatches(agency, { contactHandle: "@other", company: "Other LLC" }), false);
+  // Телефон — по последним девяти цифрам, как бы ни был записан.
+  assert.equal(
+    agencyMatches({ contact: "+998 90 123-45-67", name: "X" }, { contactHandle: "90 123 45 67", company: null }),
+    true,
+  );
+  // Короткое название совпало бы с половиной города.
+  assert.equal(agencyMatches({ contact: null, name: "Art" }, { contactHandle: null, company: "Art" }), false);
+  assert.equal(contactKey("MAIL@Agency.uz"), "mail@agency.uz");
+  assert.equal(companyKey("ООО «Media Hub»"), "media hub");
 });
 
 test("баланс: доступно = заработано − выплачено − в заявках; отклонённые не считаются", () => {
   const line = (id: string, amount: number, state: PartnerAccrual["state"]): PartnerAccrual => ({
-    project_id: id, partner_id: "p1", percent: 20, manual: false, amount_usd: amount, state, void_reason: null,
+    project_id: id, partner_id: "p1", model: "profit", percent: 20, manual: false, amount_usd: amount, state, void_reason: null,
   });
   const balance = partnerBalanceOf(
     [line("a", 1_000, "earned"), line("b", 500, "earned"), line("c", 300, "frozen"), line("d", 200, "void")],

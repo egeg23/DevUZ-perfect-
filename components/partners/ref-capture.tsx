@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { rememberRef } from "@/lib/partners/client";
+import { cookieRef, rememberRef } from "@/lib/partners/client";
 
 /**
  * Ловит `?ref=КОД` в адресе и запоминает его.
@@ -16,7 +16,12 @@ export function RefCapture() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const raw = params.get("ref");
-    if (!raw) return;
+    if (!raw) {
+      // Пришёл по короткой ссылке: переход она уже записала сама, код лежит
+      // в куке. Переносим в ту же память, что и у ?ref=, — без второго клика.
+      rememberRef(cookieRef());
+      return;
+    }
 
     const code = rememberRef(raw);
     if (!code) return;
@@ -32,7 +37,7 @@ export function RefCapture() {
     void fetch("/api/partners/click", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, from: document.referrer }),
       keepalive: true,
     }).catch(() => undefined);
   }, []);

@@ -1,3 +1,4 @@
+import { wants } from "@/lib/admin/notify-prefs";
 import { after } from "next/server";
 
 import { record } from "@/lib/admin/audit";
@@ -12,6 +13,7 @@ import { sweepOrders } from "@/lib/admin/order-sweep-run";
 import { runTalks } from "@/lib/admin/outreach-talk-run";
 import { runReviews } from "@/lib/talk/review-run";
 import { runRazborShift } from "@/lib/razbor/shift-run";
+import { runTenderShift } from "@/lib/razbor/tender-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { promoteStrongSignals } from "@/lib/scout/promote";
@@ -97,7 +99,7 @@ export async function POST(request: Request) {
     const [staff, lead] = await Promise.all([
       db
         .from("staff")
-        .select("telegram_user_id, is_active")
+        .select("telegram_user_id, is_active, notify_off")
         .eq("id", reminder.staff_id as string)
         .maybeSingle(),
       db
@@ -113,6 +115,18 @@ export async function POST(request: Request) {
       await db
         .from("lead_reminders")
         .update({ cancelled_at: now })
+        .eq("id", reminder.id as string);
+      skipped += 1;
+      continue;
+    }
+
+    // Галочка «Напоминания по лидам» снята: напоминание считаем отданным —
+    // оно видно в карточке лида, — но в личку не шлём. Не копим: иначе
+    // включённая обратно галочка обрушила бы на человека всё накопленное.
+    if (!wants(staff.data.notify_off as string[] | null, "reminders")) {
+      await db
+        .from("lead_reminders")
+        .update({ sent_at: new Date().toISOString() })
         .eq("id", reminder.id as string);
       skipped += 1;
       continue;
@@ -266,6 +280,14 @@ export async function POST(request: Request) {
   after(async () => {
     const razbor = await runRazborShift(new Date()).catch((error) => ({ errors: [String(error)] }));
     if (razbor.errors.length) console.error("разборы:", razbor.errors.join("; "));
+  });
+
+  // Тендерный разбор недели: одна статья про ТЗ IT-закупки раз в неделю, в
+  // тот же пул «Разборов» и тоже на проверку. Сама решает, пора ли; свои
+  // отметки, чтобы не спутать её отчёт с ежедневной сменой.
+  after(async () => {
+    const tender = await runTenderShift(new Date()).catch((error) => ({ errors: [String(error)] }));
+    if (tender.errors.length) console.error("тендерный разбор:", tender.errors.join("; "));
   });
 
   // Отчёты плановых смен — владельцу. У смены нет токена бота, у свипа есть.

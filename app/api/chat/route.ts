@@ -1,3 +1,4 @@
+import { refFromHeader } from "@/lib/partners/ref-cookie";
 import { codeFromQuery } from "@/lib/partners/rules";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { modelTrouble } from "@/lib/model-trouble";
@@ -76,7 +77,11 @@ export async function POST(request: Request) {
     heldClaim || newClaim ? "minute" : body.discount === true ? "promise" : null;
   // Код партнёра из адреса, который сайт запомнил: чужой ввод, той же
   // формы, что и код, иначе — нет кода.
-  const ref = codeFromQuery(body.ref);
+  // Сначала кука перехода по ссылке (сервер, 30 дней, со временем), потом
+  // память браузера.
+  const mark = refFromHeader(request.headers.get("cookie"));
+  const ref = mark?.code ?? codeFromQuery(body.ref);
+  const refAt = mark?.code === ref ? mark.at : null;
   // Где человек был и откуда пришёл. Чужой ввод, как и всё остальное в
   // теле запроса: подделать можно, но выигрыша это не даёт — испортить
   // получится только собственную заявку.
@@ -133,7 +138,7 @@ export async function POST(request: Request) {
           origin: { entryPath: page, entryRef: came },
           alreadyQualified,
           discount,
-          attribution: { code: ref },
+          attribution: { code: ref, at: refAt },
           onText: (value) => push({ type: "text", value }),
           onEvent: (event: TurnEvent) => {
             if (event.type === "qualified") {

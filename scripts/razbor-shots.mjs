@@ -208,19 +208,28 @@ function launch(proxy) {
 /* ── Работа ─────────────────────────────────────────────────────────────── */
 
 /** Какие разборы снимать: сначала те, что ждут проверки. */
+/**
+ * Тендерный разбор недели (lib/razbor/tender.ts, TENDER_NICHE) — про ТЗ, а
+ * не про сайт: снимать нечего, а его служебный адрес ведёт на нашу же
+ * страницу услуги. Без этой проверки съёмка сфотографировала бы её как
+ * «сайт как есть».
+ */
+const TENDER_NICHE = "it-tendery";
+
 async function pick() {
   const columns =
     "id, status, category, city, source_url, article_ru, shot_before, shot_after, shot_findings";
 
   if (only) {
     const { data } = await db.from("razbors").select(columns).eq("id", only).maybeSingle();
-    return data ? [data] : [];
+    return data && data.category !== TENDER_NICHE ? [data] : [];
   }
 
   const { data, error } = await db
     .from("razbors")
     .select(columns)
     .in("status", ["review", "draft", "published"])
+    .neq("category", TENDER_NICHE)
     .order("created_at", { ascending: false })
     .limit(60);
   if (error) throw new Error(`не прочитал разборы: ${error.message}`);

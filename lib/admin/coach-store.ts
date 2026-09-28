@@ -1,3 +1,4 @@
+import { wants, type NoticeKind } from "@/lib/admin/notify-prefs";
 import {
   askCoach,
   dailyDue,
@@ -123,7 +124,10 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
   // семи утра «пора» верно весь день; тянуть лиды, платежи и журнал ради
   // того, чтобы обнаружить, что всё уже собрано, — это сотни лишних
   // запросов в сутки.
-  const { data: staffRows } = await db.from("staff").select("id, role, display_name, telegram_user_id").eq("is_active", true);
+  const { data: staffRows } = await db
+    .from("staff")
+    .select("id, role, display_name, telegram_user_id, notify_off")
+    .eq("is_active", true);
   const active = (staffRows ?? []).filter((r) => !opts.only || opts.only.includes(String(r.id)));
   const weeklyIds = active.filter((r) => r.role !== "admin").map((r) => String(r.id));
   const dailyIds = active.filter((r) => r.role === "admin" || r.role === "head").map((r) => String(r.id));
@@ -176,9 +180,14 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
     active.map((r) => [String(r.id), (r.telegram_user_id as number | null) ?? null]),
   );
 
-  const notify = async (staffId: string, text: string) => {
+  const muted = new Map<string, string[]>(
+    active.map((r) => [String(r.id), (r.notify_off as string[] | null) ?? []]),
+  );
+  // Разбор сохраняется в любом случае — он на главной панели. Галочка
+  // решает только, звать ли человека в Telegram.
+  const notify = async (staffId: string, kind: NoticeKind, text: string) => {
     const chat = staffTelegram.get(staffId);
-    if (chat) await sendMessage(chat, text);
+    if (chat && wants(muted.get(staffId), kind)) await sendMessage(chat, text);
   };
 
   /* ── Недельные: менеджерам и руководителям ─────────────────────────── */
@@ -200,6 +209,7 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
         run.weekly += 1;
         await notify(
           person.staffId,
+          "coach",
           `<b>Рекомендации на неделю</b>\n${esc(result.review.headline)}\n\nПолностью — на главной панели: ${siteUrl}/admin`,
         );
       }
@@ -232,7 +242,7 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
       }
       if (await saveReview(reader.id, "daily", today, result.review, { company, team: team.map((t) => t.staffId) })) {
         run.daily += 1;
-        await notify(reader.id, `<b>На сегодня</b>\n${esc(result.review.headline)}\n\nПодробно — на главной панели: ${siteUrl}/admin`);
+        await notify(reader.id, "reports", `<b>На сегодня</b>\n${esc(result.review.headline)}\n\nПодробно — на главной панели: ${siteUrl}/admin`);
       }
     }
   }

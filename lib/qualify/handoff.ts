@@ -38,6 +38,12 @@ export type BotSession = {
    * заново. Номер заявки лежит внутри — квалификация допишется в ту же.
    */
   brief?: Brief;
+  /**
+   * Код партнёра, по чьей ссылке человек пришёл на сайт. Без него переход
+   * «из чата на сайте в Telegram» терял партнёра: заявка рождалась уже в
+   * боте, а бот о ссылке ничего не знал.
+   */
+  ref?: string;
   updatedAt: number;
 };
 
@@ -97,6 +103,7 @@ export function createHandoff(input: {
   requestNo?: string;
   discount: DiscountReason | null;
   brief?: Brief;
+  ref?: string;
 }): string {
   sweep();
 
@@ -119,6 +126,7 @@ export function createHandoff(input: {
       fromSite: true,
       resumed: false,
       brief: input.brief,
+      ref: input.ref,
       updatedAt: Date.now(),
     },
   });
@@ -152,6 +160,7 @@ export function updateHandoff(
     qualified: boolean;
     requestNo?: string;
     discount: DiscountReason | null;
+    ref?: string;
   },
 ): boolean {
   const item = pending.get(token);
@@ -164,6 +173,7 @@ export function updateHandoff(
     qualified: input.qualified,
     requestNo: input.requestNo,
     discount: input.discount,
+    ref: item.session.ref ?? input.ref,
     updatedAt: Date.now(),
   };
   return true;

@@ -6,6 +6,9 @@ import {
   type PaymentMoney,
   type ProjectMoney,
 } from "@/lib/admin/finance";
+import { REF_COOKIE, REF_TTL_DAYS, refFromHeader } from "@/lib/partners/ref-cookie";
+
+export { REF_COOKIE, REF_TTL_DAYS };
 
 /**
  * Партнёрская программа: правила.
@@ -16,49 +19,105 @@ import {
  * выплату раз в месяц, антифрод. Здесь то же самое в терминах студии:
  * партнёр — человек в боте, клиент — лид, оплата — платёж по проекту.
  *
- * Одно отличие названо сразу: у seller ai процент считался от суммы
- * оплаты, здесь — от чистой прибыли проекта (сумма − налог − себестоимость),
- * как у сотрудников. Проект — это не подписка, у него есть себестоимость,
- * и 20 % от выручки при марже в 30 % оставили бы студию в минусе. Если
- * владелец захочет от выручки — база меняется в `partnerAccrualOf`, одна
- * строка.
+ * Две модели дохода на выбор партнёра (владелец, 28.09): от чистой прибыли
+ * проекта — 10 / 15 / 20 / 25 / 30 %, или с оборота (суммы проекта) —
+ * 6 / 10 / 14 / 17 / 20 %. Ступень у обеих — по сумме проекта: до 2 500 $,
+ * до 5 000, до 10 000, до 30 000 и дороже. «С оборота» — меньший процент, но
+ * от числа, которое стоит в договоре и видно партнёру сразу; «от прибыли» —
+ * больший процент, но база известна только когда студия внесла
+ * себестоимость.
+ *
+ * Модель партнёр меняет не чаще раза в неделю, и она фиксируется на клиенте
+ * в момент заявки: смена действует на новых клиентов, а не переписывает
+ * задним числом деньги по уже идущим проектам. Иначе модель выбирали бы
+ * после того, как стала известна себестоимость, — под самый выгодный ответ.
  *
  * Здесь только арифметика и правила; чтения и записи — в `store.ts`.
- * Начисления не хранятся, а считаются: ставка × прибыль по текущим полям
- * проекта, заморозка до полной оплаты — та же, что у сотрудников.
+ * Начисления не хранятся, а считаются по текущим полям проекта, заморозка
+ * до полной оплаты — та же, что у сотрудников.
  */
 
 /* ── Ставки ─────────────────────────────────────────────────────────────── */
 
-/** Базовая ставка партнёра, процент от чистой прибыли проекта. */
-export const PARTNER_PERCENT = 20;
-/** Ставка «прокачанного» — за результат, не за регистрации. */
-export const PROVEN_PERCENT = 25;
-/** Сколько оплаченных целиком проектов по приведённым клиентам открывает 25 %. */
-export const PROVEN_MIN_PAID_PROJECTS = 3;
+export const PAYOUT_MODELS = ["profit", "turnover"] as const;
+export type PayoutModel = (typeof PAYOUT_MODELS)[number];
+
+export function isPayoutModel(value: unknown): value is PayoutModel {
+  return typeof value === "string" && (PAYOUT_MODELS as readonly string[]).includes(value);
+}
+
+/** Модель, которой не выбирали, — «от прибыли»: так считалось до выбора. */
+export const DEFAULT_MODEL: PayoutModel = "profit";
+
+/**
+ * Ставки по сумме проекта: две колонки, одни пороги. `upTo` — включительно:
+ * проект ровно на 2 500 $ — ещё первая ступень, на 2 501 $ — уже вторая.
+ * Последняя ступень без верхней границы. Сумма — целыми долларами, как в
+ * договоре.
+ */
+export const PARTNER_TIERS: readonly { upTo: number | null; profit: number; turnover: number }[] = [
+  { upTo: 2_500, profit: 10, turnover: 6 },
+  { upTo: 5_000, profit: 15, turnover: 10 },
+  { upTo: 10_000, profit: 20, turnover: 14 },
+  { upTo: 30_000, profit: 25, turnover: 17 },
+  { upTo: null, profit: 30, turnover: 20 },
+];
+
+/** Сколько дней должно пройти между сменами модели. */
+export const MODEL_SWITCH_DAYS = 7;
+
+/** Можно ли сменить модель сейчас: не менял ни разу или прошла неделя. */
+export function canSwitchModel(changedAt: string | Date | null, now: Date = new Date()): boolean {
+  if (!changedAt) return true;
+  return now.getTime() - new Date(changedAt).getTime() >= MODEL_SWITCH_DAYS * 86_400_000;
+}
+
+/** Когда станет можно сменить модель снова. null — можно уже сейчас. */
+export function nextModelSwitch(changedAt: string | Date | null, now: Date = new Date()): Date | null {
+  if (canSwitchModel(changedAt, now) || !changedAt) return null;
+  return new Date(new Date(changedAt).getTime() + MODEL_SWITCH_DAYS * 86_400_000);
+}
+
 /** Меньше не выплачиваем — пыль. */
 export const MIN_PAYOUT_USD = 50;
-/** Сколько дней сайт помнит, по чьей ссылке пришёл человек. */
-export const REF_TTL_DAYS = 90;
 /** Сколько ссылок может завести один партнёр. */
 export const MAX_LINKS = 20;
 
-export function isProven(paidProjects: number): boolean {
-  return paidProjects >= PROVEN_MIN_PAID_PROJECTS;
+/** Ставка по сумме проекта и модели — по таблице выше. */
+export function tierPercent(amountUsd: number, model: PayoutModel = DEFAULT_MODEL): number {
+  for (const tier of PARTNER_TIERS) {
+    if (tier.upTo === null || amountUsd <= tier.upTo) return tier[model];
+  }
+  return PARTNER_TIERS[PARTNER_TIERS.length - 1][model];
 }
 
 /**
  * Ставка по конкретному проекту. Порядок: процент по проекту (владелец задал
- * руками) → персональная ставка партнёра → ступень (20 / 25).
+ * руками) → персональная ставка партнёра → по сумме проекта и модели. Суммы
+ * ещё нет — ставка первой ступени: так показываем «от 10 %», а не ничего.
  */
 export function partnerPercent(input: {
   projectPercent: number | null;
   partnerOverride: number | null;
-  proven: boolean;
+  amountUsd: number | null;
+  model?: PayoutModel | null;
 }): number {
   if (input.projectPercent !== null) return input.projectPercent;
   if (input.partnerOverride !== null) return input.partnerOverride;
-  return input.proven ? PROVEN_PERCENT : PARTNER_PERCENT;
+  return tierPercent(Math.max(0, input.amountUsd ?? 0), input.model ?? DEFAULT_MODEL);
+}
+
+/**
+ * С чего считается процент: с оборота — вся сумма проекта, от прибыли —
+ * сумма минус налог и себестоимость. Себестоимость ещё не внесена — прибыль
+ * пока равна сумме за вычетом налога: так считают и начисления сотрудников.
+ * Минус по проекту — забота студии, партнёру ноль, а не долг.
+ */
+export function partnerBase(project: ProjectMoney, model: PayoutModel): number | null {
+  if (project.amount_usd === null) return null;
+  if (model === "turnover") return Math.max(0, project.amount_usd);
+  const profit = profitOf(project);
+  return profit === null ? null : Math.max(0, profit);
 }
 
 /* ── Бонус новому клиенту ───────────────────────────────────────────────── */
@@ -137,11 +196,89 @@ export function botLink(botUsername: string, code: string): string {
   return `https://t.me/${botUsername}?start=${START_PREFIX}${code}`;
 }
 
+/* ── Короткие ссылки ────────────────────────────────────────────────────── */
+
+/**
+ * devuz.studio/r/<slug> — ссылка, которую партнёр публикует.
+ *
+ * Владелец: «генерация уникальных ссылок через сокращение, чтобы не попасть
+ * под спам». Антиспам чатов и соцсетей режет не домен, а приметы рассылки:
+ * `?ref=` в адресе и одну и ту же ссылку в десятке мест. Поэтому slug
+ * случайный и свой у каждого канала, а адрес — обычная ссылка на наш сайт:
+ * внешний сокращатель прятал бы домен, и человек не видел бы, куда идёт.
+ *
+ * Строчные буквы без похожих друг на друга: ссылку переписывают с экрана и
+ * диктуют голосом.
+ */
+export const SLUG_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
+export const SLUG_RE = /^[a-z0-9]{5,16}$/;
+export const SHORT_PREFIX = "/r/";
+
+export function generateSlug(random: () => number = Math.random, length = 7): string {
+  let out = "";
+  for (let i = 0; i < length; i++) {
+    out += SLUG_ALPHABET[Math.floor(random() * SLUG_ALPHABET.length) % SLUG_ALPHABET.length];
+  }
+  return out;
+}
+
+export function shortUrl(siteUrl: string, slug: string): string {
+  return `${siteUrl.replace(/\/$/, "")}${SHORT_PREFIX}${slug}`;
+}
+
+/**
+ * Куда ведёт ссылка. Страница сайта — путь без языка: язык решит сайт по
+ * браузеру человека, иначе партнёр из Ташкента присылал бы узбеку русскую
+ * страницу. «bot» — сразу в Telegram-бота с кодом партнёра.
+ */
+// Разборов здесь нет: они только на русском и узбекском, а язык решает
+// браузер человека — англичанин по такой ссылке получил бы 404.
+export const TARGETS = ["/", "/services", "/calculator", "/audit", "/cases", "/products", "/partners", "bot"] as const;
+export type Target = (typeof TARGETS)[number];
+
+export function isTarget(value: string): value is Target {
+  return (TARGETS as readonly string[]).includes(value);
+}
+
+/** Куда отправить человека, открывшего короткую ссылку. */
+export function targetUrl(target: string, code: string, botUsername: string): string {
+  if (target === "bot") return botLink(botUsername, code);
+  return isTarget(target) ? target : "/";
+}
+
+/**
+ * Превью ссылок и поисковые роботы — не переходы.
+ *
+ * Ссылку в Telegram, WhatsApp или Instagram первым открывает не человек, а
+ * робот мессенджера — за картинкой для превью. Без этого фильтра каждый пост
+ * партнёра сразу давал бы «переход», которого не было.
+ */
+const BOT_UA =
+  /bot|crawl|spider|preview|slurp|facebookexternalhit|whatsapp|telegram|vkshare|skype|discord|slack|headless|curl|wget|python|axios|node-fetch|go-http/i;
+
+export function isBotAgent(userAgent: string | null | undefined): boolean {
+  const ua = (userAgent ?? "").trim();
+  return !ua || BOT_UA.test(ua);
+}
+
+/** Сырые данные для хеша посетителя: один человек в один день — один переход. */
+export function visitorSeed(ip: string, userAgent: string, day: string): string {
+  return `${ip}|${userAgent.slice(0, 200)}|${day}`;
+}
+
 /** Код из payload команды /start или null, если это не партнёрская ссылка. */
 export function codeFromStart(payload: string): string | null {
   if (!payload.startsWith(START_PREFIX)) return null;
   const code = normalizeCode(payload.slice(START_PREFIX.length));
   return CODE_RE.test(code) ? code : null;
+}
+
+/**
+ * Код партнёра из куки запроса или null. Кука старше 30 дней — как не было:
+ * окно держим и здесь, а не только сроком жизни куки в браузере.
+ */
+export function refFromCookieHeader(header: string | null | undefined, now: Date = new Date()): string | null {
+  return refFromHeader(header, now)?.code ?? null;
 }
 
 /** Код из адреса сайта (?ref=…) — той же формы, иначе не код. */
@@ -157,11 +294,14 @@ export type PartnerProject = ProjectMoney & {
   partner_id: string | null;
   partner_percent: number | null;
   partner_void_reason: string | null;
+  /** Модель, зафиксированная на клиенте при заявке. null — «от прибыли». */
+  partner_model?: string | null;
 };
 
 export type PartnerAccrual = {
   project_id: string;
   partner_id: string;
+  model: PayoutModel;
   percent: number;
   /** Процент задан владельцем по этому проекту, а не ступенью. */
   manual: boolean;
@@ -179,24 +319,27 @@ export function partnerAccrualOf(
   project: PartnerProject,
   payments: PaymentMoney[],
   partner: { id: string; percent_override: number | null },
-  proven: boolean,
 ): PartnerAccrual | null {
   if (project.partner_id !== partner.id) return null;
-  const profit = profitOf(project);
-  if (profit === null) return null;
+  const model = isPayoutModel(project.partner_model) ? project.partner_model : DEFAULT_MODEL;
+  const base = partnerBase(project, model);
+  if (base === null || project.amount_usd === null) return null;
 
+  // Ступень — по сумме проекта в обеих моделях, а процент берётся с базы
+  // своей модели.
   const percent = partnerPercent({
     projectPercent: project.partner_percent,
     partnerOverride: partner.percent_override,
-    proven,
+    amountUsd: project.amount_usd,
+    model,
   });
   const voided = project.partner_void_reason !== null;
   const state: AccrualState = voided ? "void" : accrualState(project, paidOf(project.id, payments));
-  const base = Math.max(0, profit);
 
   return {
     project_id: project.id,
     partner_id: partner.id,
+    model,
     percent,
     manual: project.partner_percent !== null,
     amount_usd: state === "void" ? 0 : Math.round((base * percent) / 100),
@@ -322,4 +465,56 @@ export function validRequisites(value: string): boolean {
   const text = value.trim();
   if (isTrc20(text)) return true;
   return text.length >= 8 && text.length <= 200;
+}
+
+/* ── Агентства ──────────────────────────────────────────────────────────── */
+
+/**
+ * Контакт в сравнимом виде: @ник, ссылка t.me, телефон или почта — к одной
+ * форме. «@Agency_UZ», «t.me/agency_uz» и «https://t.me/agency_uz» — один
+ * контакт; телефон — только цифры, почта — строчными.
+ */
+export function contactKey(raw: string | null | undefined): string {
+  const text = (raw ?? "").trim();
+  if (!text) return "";
+  if (text.includes("@") && /\S+@\S+\.\S+/.test(text)) return text.toLowerCase();
+  const digits = text.replace(/[^\d]/g, "");
+  if (/^\+?[\d\s()-]{7,}$/.test(text) && digits.length >= 7) return digits.slice(-9);
+  const path = text.replace(/^(?:https?:\/\/)?(?:www\.)?t(?:elegram)?\.me\//i, "");
+  return path.replace(/^@/, "").split(/[/?#\s]/)[0].toLowerCase();
+}
+
+/** Формы собственности и «агентство» — в сравнении названий не участвуют. */
+const LEGAL_FORMS = new Set(["ооо", "оао", "зао", "ип", "mchj", "llc", "ltd", "inc", "agency", "агентство"]);
+
+/**
+ * Название компании в сравнимом виде: без кавычек, формы собственности и
+ * регистра. Слова отбрасываются по списку, а не через `\b` — в JS граница
+ * слова кириллицу не видит.
+ */
+export function companyKey(raw: string | null | undefined): string {
+  return (raw ?? "")
+    .toLowerCase()
+    .replace(/[«»"'`“”]/g, "")
+    .replace(/[^a-zа-яё0-9ʻ‘'-]+/gi, " ")
+    .split(" ")
+    .filter((word) => word && !LEGAL_FORMS.has(word))
+    .join(" ");
+}
+
+/**
+ * Этот лид — заказ агентства? Сходится контакт или название компании.
+ * Короткое название (меньше четырёх знаков) не считается: «Art» совпало бы
+ * с половиной города.
+ */
+export function agencyMatches(
+  agency: { contact: string | null; name: string },
+  lead: { contactHandle: string | null; company: string | null },
+): boolean {
+  const a = contactKey(agency.contact);
+  const l = contactKey(lead.contactHandle);
+  if (a && l && a === l) return true;
+  const an = companyKey(agency.name);
+  const ln = companyKey(lead.company);
+  return an.length >= 4 && an === ln;
 }

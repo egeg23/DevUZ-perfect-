@@ -47,7 +47,7 @@ import {
 } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
 import { VOID_TITLE, partnerAccrualOf, type VoidReason } from "@/lib/partners/rules";
-import { listPartners, partnerById, summarize } from "@/lib/partners/store";
+import { agenciesOf, listPartners, partnerById } from "@/lib/partners/store";
 
 export const dynamic = "force-dynamic";
 
@@ -145,9 +145,11 @@ export default async function ProjectPage({
   // молча подставила бы первого по алфавиту и сменила ведущего при сохранении.
   const leaders = people.filter((p) => p.is_active || p.id === project.owner_staff_id);
 
-  // Партнёрская строка: ступень партнёра считается по всем его проектам.
-  const partnerProven = partner ? (await summarize([partner]))[0]?.proven ?? false : false;
-  const partnerLine = partner ? partnerAccrualOf(project, payments, partner, partnerProven) : null;
+  // Партнёрская строка: ставка — по сумме проекта (rules.ts, PARTNER_TIERS).
+  const partnerLine = partner ? partnerAccrualOf(project, payments, partner) : null;
+  // Подключённые агентства — для выбора «Заказ агентства» в блоке «Партнёр».
+  const partnerAgencies = isAdmin ? (await agenciesOf("all")).filter((a) => a.status === "active") : [];
+  const projectAgency = partnerAgencies.find((a) => a.id === project.partner_agency_id) ?? null;
   const paid = paidOf(project.id, payments);
   const lines = accrualsOf(project, payments, earnersOf(people), sharesOf(project.id, shares));
   const state = accrualState(project, paid);
@@ -537,7 +539,9 @@ export default async function ProjectPage({
                 <span>{partner.name}</span>
                 <span className="font-mono text-xs text-muted">{partner.code}</span>
                 <span className="text-xs text-faint">
-                  {partnerLine.percent} % {partnerLine.manual ? "· вручную" : partnerProven ? "· прокачанный" : "· база"}
+                  {partnerLine.percent} % {partnerLine.model === "turnover" ? "с оборота" : "от прибыли"}
+                  {partnerLine.manual ? " · вручную" : " · по сумме проекта"}
+                  {projectAgency ? ` · агентство «${projectAgency.name}»` : ""}
                 </span>
                 <span className="font-mono">{money(partnerLine.amount_usd)}</span>
                 <span
@@ -585,6 +589,19 @@ export default async function ProjectPage({
                     className={`${FIELD} mt-1`}
                   />
                 </label>
+                {partnerAgencies.length ? (
+                  <label className="block">
+                    <span className="text-xs text-faint">Заказ агентства</span>
+                    <select name="agency" defaultValue={project.partner_agency_id ?? ""} className={`${FIELD} mt-1`}>
+                      <option value="">не агентство</option>
+                      {partnerAgencies.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} · {partners.find((p) => p.id === a.partner_id)?.name ?? "—"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
                 <label className="block">
                   <span className="text-xs text-faint">Не засчитывать, причина</span>
                   <input

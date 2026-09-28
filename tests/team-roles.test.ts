@@ -5,10 +5,12 @@ import { test } from "node:test";
 import {
   ROLE_TITLE,
   canSee,
+  disables,
   hiredRoles,
   managesStaff,
   seesEveryone,
   seesOwnerMoney,
+  tunesNotices,
 } from "@/lib/admin/roles";
 
 /**
@@ -45,10 +47,35 @@ test("руководитель проектов заводит только ме
   assert.ok(hiredRoles("manager").length > 0);
 });
 
-test("роли, грейды и отключение остаются за владельцем", () => {
+test("роли и грейды остаются за владельцем", () => {
   assert.equal(managesStaff("admin"), true);
   assert.equal(managesStaff("head"), false);
   assert.equal(managesStaff("manager"), false);
+});
+
+test("руководитель отключает менеджеров, но не руководителей и не владельца", () => {
+  // Владелец, 28.09: «сделай Александру возможность удалять сотрудников».
+  // Менеджеров — тех, кого он и заводит. Второго руководителя с командой
+  // убирает только владелец.
+  assert.equal(disables("head", "manager"), true);
+  assert.equal(disables("head", "head"), false);
+  assert.equal(disables("head", "admin"), false);
+  assert.equal(disables("admin", "head"), true);
+  assert.equal(disables("admin", "manager"), true);
+  assert.equal(disables("manager", "manager"), false);
+});
+
+test("галочки уведомлений: владелец — всем, руководитель — менеджерам и себе", () => {
+  assert.equal(tunesNotices("admin", "manager", false), true);
+  assert.equal(tunesNotices("admin", "head", false), true);
+  assert.equal(tunesNotices("admin", "admin", true), true);
+  assert.equal(tunesNotices("head", "manager", false), true);
+  assert.equal(tunesNotices("head", "head", true), true);
+  assert.equal(tunesNotices("head", "head", false), false, "руководитель правит чужому руководителю");
+  assert.equal(tunesNotices("head", "admin", false), false);
+  // Менеджер себе не выключает очередь: иначе выйти из неё можно было бы
+  // одним щелчком, никого не спросив.
+  assert.equal(tunesNotices("manager", "manager", true), false);
 });
 
 test("команду видят владелец и руководитель, менеджер — нет", () => {
@@ -96,9 +123,11 @@ test("колонка «Владельцу» стоит за seesOwnerMoney, а �
 test("каждое действие в команде проверяет права само", () => {
   const actions = read("app/admin/team/actions.ts");
 
-  // Заводить и перевыдавать приглашение вправе оба; остальное — владелец.
-  const shared = ["addStaff", "resend"];
-  const ownerOnly = ["disable", "changeRole", "assignHead", "setGrade"];
+  // Заводить, перевыдавать приглашение, отключать менеджеров и менять
+  // галочки вправе оба; остальное — владелец. Кого именно руководитель
+  // вправе отключить — проверяет disableStaff по роли цели (ниже).
+  const shared = ["addStaff", "resend", "disable", "saveNotices"];
+  const ownerOnly = ["changeRole", "assignHead", "setGrade"];
 
   for (const name of [...shared, ...ownerOnly]) {
     const at = actions.indexOf(`export async function ${name}(`);
@@ -113,4 +142,15 @@ test("каждое действие в команде проверяет пра�
   // Роль из формы сверяется со списком, а не «всё, что не head, — менеджер».
   assert.match(actions, /const allowed = hiredRoles\(actor\.role\)/);
   assert.match(actions, /if \(!allowed\.includes\(wanted\)\)/);
+
+  // Галочки — по роли цели, а не по разметке страницы.
+  assert.match(actions, /if \(!tunesNotices\(actor\.role, target\.role, target\.id === actor\.id\)\)/);
+
+  // Отключение: роль цели проверяется в самом disableStaff, до записи.
+  const team = read("lib/admin/team.ts");
+  const at = team.indexOf("export async function disableStaff(");
+  const body = team.slice(at, team.indexOf("export async function", at + 10));
+  const check = body.indexOf("if (!disables(admin.role, target.role as Role))");
+  assert.ok(check > 0, "disableStaff не сверяет, кого отключают");
+  assert.ok(check < body.indexOf("is_active: false"), "роль цели проверяется после отключения");
 });

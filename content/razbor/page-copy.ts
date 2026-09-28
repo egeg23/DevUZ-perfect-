@@ -39,7 +39,7 @@ export const razborCopy: Record<RazborLocale, Copy> = {
   ru: {
     kicker: "разборы",
     title: "Разборы сайтов",
-    lead: "Каждый день берём один живой сайт, смотрим на него глазами клиента и показываем, что мешает ему продавать. Компанию не называем: разговор про ошибки, а не про людей.",
+    lead: "Каждый день берём один живой сайт, смотрим на него глазами клиента и показываем, что мешает ему продавать. Компанию не называем: разговор про ошибки, а не про людей. Раз в неделю — тендерный разбор: что обычно упускают в техническом задании IT-закупки.",
     empty: "Первый разбор выйдет завтра",
     emptyNote:
       "Раздел только открылся. Придумывать примеры мы не стали: студия, которая разбирает чужие сайты, не может показывать поддельный разбор.",
@@ -64,7 +64,7 @@ export const razborCopy: Record<RazborLocale, Copy> = {
   uz: {
     kicker: "tahlillar",
     title: "Saytlar tahlili",
-    lead: "Har kuni bitta tirik saytni olamiz, unga mijoz ko‘zi bilan qaraymiz va nima sotuvga xalaqit berayotganini ko‘rsatamiz. Kompaniyani nomlamaymiz: gap xatolar haqida, odamlar haqida emas.",
+    lead: "Har kuni bitta tirik saytni olamiz, unga mijoz ko‘zi bilan qaraymiz va nima sotuvga xalaqit berayotganini ko‘rsatamiz. Kompaniyani nomlamaymiz: gap xatolar haqida, odamlar haqida emas. Haftada bir marta — tender tahlili: IT-xarid texnik topshirig‘ida odatda nima e’tibordan chetda qoladi.",
     empty: "Birinchi tahlil ertaga chiqadi",
     emptyNote:
       "Bo‘lim endi ochildi. Namuna o‘ylab topmadik: boshqalarning saytini tahlil qiladigan studiya soxta tahlil ko‘rsata olmaydi.",
@@ -85,5 +85,37 @@ export const razborCopy: Record<RazborLocale, Copy> = {
     serviceLink: "Shunday biznes uchun sayt buyurtma qilish →",
     cta: "O‘z saytingizga ham shunday tahlil kerakmi?",
     ctaButton: "Saytni tekshirish",
+  },
+};
+
+/**
+ * Подписи тендерного разбора недели (lib/razbor/tender.ts) — поверх общих.
+ *
+ * Статья та же по устройству, но разбирает не сайт, а типовое ТЗ: «что
+ * мешает продавать» и «проверить сайт» к ней не подходят, а вместо снимков —
+ * оговорка, что закупку мы не называем.
+ */
+export const tenderCopy: Record<RazborLocale, Partial<Copy>> = {
+  ru: {
+    whatBreaks: "Что обычно упускают в ТЗ",
+    whatItCosts: "Чем оборачивается",
+    howWeFix: "Как написать правильно",
+    outcome: "Что даёт хорошее ТЗ",
+    more: "Ещё тендерные разборы",
+    anonymous: "Заказчиков и закупки не называем: разбираем типовое ТЗ, а не чей-то тендер.",
+    serviceLink: "ТЗ для тендера или субподряд — подробнее →",
+    cta: "Готовите закупку или уже выиграли тендер?",
+    ctaButton: "Обсудить тендер",
+  },
+  uz: {
+    whatBreaks: "Texnik topshiriqda odatda nima e’tibordan chetda qoladi",
+    whatItCosts: "Oqibati",
+    howWeFix: "Qanday to‘g‘ri yozish kerak",
+    outcome: "Yaxshi texnik topshiriq nima beradi",
+    more: "Boshqa tender tahlillari",
+    anonymous: "Buyurtmachilar va xaridlarni nomlamaymiz: kimningdir tenderini emas, odatiy texnik topshiriqni tahlil qilamiz.",
+    serviceLink: "Tender uchun texnik topshiriq yoki subpudrat — batafsil →",
+    cta: "Xaridga tayyorlanyapsizmi yoki tenderni allaqachon yutdingizmi?",
+    ctaButton: "Tenderni muhokama qilish",
   },
 };

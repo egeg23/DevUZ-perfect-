@@ -16,6 +16,7 @@ import {
 import type { ContractStage } from "@/content/contract";
 import { estimateTotal, parseEstimate, type EstimateItem } from "@/lib/admin/estimate";
 import { estimateText } from "@/lib/admin/estimate-file";
+import { tellPartnerContractSigned } from "@/lib/partners/attribute";
 import { sendMessage } from "@/lib/qualify/telegram";
 import { sellerBank } from "@/lib/store/requisites";
 
@@ -513,7 +514,14 @@ export async function attachSignedScan(
     })
     .eq("id", id)
     .eq("status", "approved");
-  return error ? fail("invalid") : { ok: true, id };
+  if (error) return fail("invalid");
+
+  // Клиент пришёл от партнёра — партнёр узнаёт о подписи сразу. Сбой здесь
+  // не отменяет загрузку скана: договор подписан в любом случае.
+  await tellPartnerContractSigned(current.project_id, current.amount_usd).catch((e) =>
+    console.error("partners: не сказал партнёру о подписи", e),
+  );
+  return { ok: true, id };
 }
 
 /** Байты приложенного файла — для скачивания через защищённый маршрут. */

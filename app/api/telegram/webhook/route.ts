@@ -16,7 +16,7 @@ import {
 import { loginCommand } from "@/lib/qualify/commands";
 import { handlePartnerCommand, partnerCommand } from "@/lib/partners/bot";
 import { codeFromStart } from "@/lib/partners/rules";
-import { touchChat, touchFor, type TelegramIdentity } from "@/lib/partners/store";
+import { countClick, touchChat, touchFor, type TelegramIdentity } from "@/lib/partners/store";
 import { BIND_PREFIX, bindBuyer, buyerMessage } from "@/lib/store/buyer";
 import { alreadyHandled } from "@/lib/qualify/seen-updates";
 import {
@@ -348,6 +348,13 @@ async function handleClient(message: NonNullable<Update["message"]>) {
       return;
     }
 
+    // «Войти через Telegram» в кабинете партнёра на сайте ведёт сюда: бот
+    // заводит партнёра, если его ещё нет, и присылает одноразовую ссылку.
+    if (payload === "cabinet" && identity) {
+      await handlePartnerCommand(chat.id, identity, "/cabinet", locale);
+      return;
+    }
+
     // Кнопка «Получить ссылку в Telegram» со страницы входа ведёт сюда.
     // Сотруднику остаётся нажать, а не искать чат и набирать команду;
     // постороннему ответ такой же, как на любую неизвестную команду, —
@@ -369,6 +376,11 @@ async function handleClient(message: NonNullable<Update["message"]>) {
     const refCode = codeFromStart(payload);
     if (refCode) {
       await touchChat(chat.id, refCode);
+      // Переход в бота — такой же переход, как на сайт: партнёр видит его в
+      // кабинете. Один человек — один раз в день, как и везде.
+      await countClick(refCode, "bot", `tg:${chat.id}|${new Date().toISOString().slice(0, 10)}`).catch(
+        () => false,
+      );
       if (!existing) startSession(chat.id, locale);
       await sendMessage(chat.id, copy.welcome);
       return;
@@ -503,6 +515,10 @@ async function resumeFromSite(
   }
 
   const copy = botCopy(session.locale);
+
+  // Человек пришёл на сайт по ссылке партнёра — партнёр переезжает в бота
+  // вместе с разговором. Уже запомненный код не перебиваем: первый побеждает.
+  if (session.ref && !(await touchFor(chatId))) await touchChat(chatId, session.ref);
 
   // Скидку за первую минуту закрепили на сайте — теперь она и за чатом.
   if (session.discount === "minute") await rememberMinuteClaim(chatId);

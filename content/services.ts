@@ -31,6 +31,12 @@ export type Service = {
   priceFromUsd: number;
   weeksFrom: number;
   weeksTo: number;
+  /**
+   * Коротко, что входит, — на карточке главной вместо стека. Для услуг, где
+   * стек ничего не говорит: у тендеров «ГОСТ 34» на карточке объяснил бы
+   * меньше, чем «составим ТЗ и требования к подрядчикам».
+   */
+  highlights?: LocalizedList;
 };
 
 export const services: Service[] = [
@@ -353,6 +359,106 @@ export const services: Service[] = [
     priceFromUsd: 1500,
     weeksFrom: 1,
     weeksTo: 6,
+  },
+  {
+    slug: "it-tenders",
+    seoTitle: {
+      ru: "IT-тендеры и госзакупки: ТЗ и субподряд — DevUz",
+      en: "IT Tenders & Public Procurement: Specs and Subcontracting — DevUz",
+      uz: "IT-tenderlar va davlat xaridlari: texnik topshiriq va subpudrat — DevUz",
+      zh: "IT 招标与政府采购：技术规格书与分包 — DevUz",
+    },
+    seoDescription: {
+      ru: "Составим техническое задание и требования к подрядчикам для IT-тендера, проверим ТЗ перед подачей заявки, выполним разработку на субподряде. Госзакупки и корпоративные тендеры в Узбекистане.",
+      en: "We write technical specifications and contractor requirements for IT tenders, review specs before you bid, and deliver development as a subcontractor. Public procurement and corporate tenders in Uzbekistan.",
+      uz: "IT-tender uchun texnik topshiriq va pudratchilarga talablarni tuzamiz, ariza topshirishdan oldin texnik topshiriqni tekshiramiz, ishlab chiqishni subpudratda bajaramiz. O‘zbekistonda davlat xaridlari va korporativ tenderlar.",
+      zh: "为 IT 招标编写技术规格书和承包商要求，投标前审查规格书，并以分包形式完成开发。覆盖乌兹别克斯坦的政府采购与企业招标。",
+    },
+    icon: "clipboard",
+    title: {
+      ru: "Тендеры и госконтракты",
+      en: "Tenders & public contracts",
+      uz: "Tenderlar va davlat shartnomalari",
+      zh: "招标与政府合同",
+    },
+    tagline: {
+      ru: "ТЗ и требования к подрядчикам, субподряд на IT-тендерах",
+      en: "Specs and contractor requirements, subcontracting on IT tenders",
+      uz: "Texnik topshiriq va pudratchilarga talablar, IT-tenderlarda subpudrat",
+      zh: "技术规格书与承包商要求，IT 招标分包",
+    },
+    description: {
+      ru: "Работаем с тендерами с двух сторон. Заказчику — госоргану или крупной компании — составляем техническое задание и требования к подрядчикам, считаем реальную стоимость и помогаем принять работу. Генподрядчику, который выиграл IT-тендер, становимся технической командой на субподряде: от разбора ТЗ до сдачи по этапам контракта.",
+      en: "We work with tenders from both sides. For the client — a public body or a large company — we write the technical specification and contractor requirements, estimate the real cost and help accept the work. For a prime contractor that has won an IT tender, we become the technical team on a subcontract: from reviewing the spec to delivery by contract stages.",
+      uz: "Tenderlar bilan ikki tomondan ishlaymiz. Buyurtmachiga — davlat tashkiloti yoki yirik kompaniyaga — texnik topshiriq va pudratchilarga talablarni tuzamiz, haqiqiy qiymatni hisoblaymiz va ishni qabul qilishga yordam beramiz. IT-tenderni yutgan bosh pudratchiga esa subpudratdagi texnik jamoa bo‘lamiz: texnik topshiriqni tahlil qilishdan shartnoma bosqichlari bo‘yicha topshirishgacha.",
+      zh: "我们从两端参与招标。对招标方——政府机构或大型企业——我们编写技术规格书和承包商要求，测算真实成本并协助验收。对中标 IT 项目的总包方，我们作为分包技术团队，从分析规格书到按合同阶段交付。",
+    },
+    bullets: {
+      ru: [
+        "Техническое задание по ГОСТ 34 или по форме заказчика и требования к подрядчикам — без размытых формулировок, о которых потом спорят на приёмке",
+        "Оценка стоимости и сроков для начальной цены контракта — на реальных трудозатратах, а не на глаз",
+        "Экспертиза чужого ТЗ до подачи заявки: риски, дыры, то, что не уложится в срок",
+        "Субподряд для генподрядчика: сайты, порталы, приложения и интеграции по ТЗ",
+        "Документация к сдаче: руководства пользователя и администратора, программа и методика испытаний",
+        "Технадзор и приёмка работ подрядчика по этапам — на стороне заказчика",
+      ],
+      en: [
+        "Technical specification to GOST 34 or the client's template, plus contractor requirements — no vague wording to argue over at acceptance",
+        "Cost and timeline estimate for the contract's starting price — based on real effort, not guesswork",
+        "Review of someone else's spec before the bid: risks, gaps, what won't fit the deadline",
+        "Subcontracting for the prime contractor: websites, portals, apps and integrations built to spec",
+        "Handover documentation: user and admin guides, test programme and methodology",
+        "Supervision and stage-by-stage acceptance of the contractor's work — on the client's side",
+      ],
+      uz: [
+        "GOST 34 yoki buyurtmachi shakli bo‘yicha texnik topshiriq va pudratchilarga talablar — qabulda bahsga sabab bo‘ladigan noaniq so‘zlarsiz",
+        "Shartnoma boshlang‘ich narxi uchun qiymat va muddat bahosi — taxminan emas, haqiqiy mehnat sarfi asosida",
+        "Ariza topshirishdan oldin boshqa birovning texnik topshirig‘i ekspertizasi: xavflar, bo‘shliqlar, muddatga sig‘maydigan narsalar",
+        "Bosh pudratchi uchun subpudrat: texnik topshiriq bo‘yicha saytlar, portallar, ilovalar va integratsiyalar",
+        "Topshirish uchun hujjatlar: foydalanuvchi va administrator qo‘llanmalari, sinov dasturi va metodikasi",
+        "Buyurtmachi tomonida pudratchi ishini bosqichma-bosqich texnik nazorat qilish va qabul qilish",
+      ],
+      zh: [
+        "按 GOST 34 或招标方模板编写技术规格书和承包商要求——避免验收时引发争议的模糊表述",
+        "为合同起始价估算成本和工期——基于真实工作量，而非拍脑袋",
+        "投标前审查他人的技术规格书：风险、漏洞、无法按期完成的部分",
+        "为总包方做分包：按规格书开发网站、门户、应用和系统对接",
+        "交付文档：用户和管理员手册、测试大纲与方法",
+        "代表招标方对承包商的工作进行技术监督和分阶段验收",
+      ],
+    },
+    highlights: {
+      ru: [
+        "Составление ТЗ и требований к подрядчикам",
+        "Экспертиза ТЗ и оценка до подачи заявки",
+        "Субподряд на IT-тендерах",
+        "Приёмка и технадзор за подрядчиком",
+      ],
+      en: [
+        "Technical specs and contractor requirements",
+        "Spec review and estimate before the bid",
+        "Subcontracting on IT tenders",
+        "Acceptance and supervision of contractors",
+      ],
+      uz: [
+        "Texnik topshiriq va pudratchilarga talablar",
+        "Ariza oldidan ekspertiza va baho",
+        "IT-tenderlarda subpudrat",
+        "Pudratchi ishini qabul qilish va nazorat",
+      ],
+      zh: [
+        "技术规格书与承包商要求",
+        "投标前规格书审查与估算",
+        "IT 招标分包",
+        "承包商工作验收与监督",
+      ],
+    },
+    tech: ["ГОСТ 34", "BPMN 2.0", "UML", "OpenAPI"],
+    // TODO(владелец): нижняя граница — составление ТЗ; субподряд считается
+    // по объёму тендера, как обычный проект.
+    priceFromUsd: 1000,
+    weeksFrom: 1,
+    weeksTo: 4,
   },
 ];
 

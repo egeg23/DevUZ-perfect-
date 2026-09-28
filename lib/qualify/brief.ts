@@ -1,3 +1,4 @@
+import { wants } from "@/lib/admin/notify-prefs";
 import { serviceClient } from "@/lib/supabase";
 import { esc } from "@/lib/qualify/telegram";
 
@@ -130,7 +131,7 @@ export async function salesRecipients(): Promise<string[]> {
 
   const { data, error } = await db
     .from("staff")
-    .select("telegram_user_id")
+    .select("telegram_user_id, notify_off")
     .eq("is_active", true)
     .in("role", ["admin", "head", "manager"]);
 
@@ -140,8 +141,12 @@ export async function salesRecipients(): Promise<string[]> {
     return [...out];
   }
 
-  for (const row of (data as { telegram_user_id: number | null }[] | null) ?? []) {
-    if (typeof row.telegram_user_id === "number") out.add(String(row.telegram_user_id));
+  for (const row of (data as { telegram_user_id: number | null; notify_off: string[] | null }[] | null) ?? []) {
+    // Галочка «Заявки для всех» снята — человек видит такие лиды в панели,
+    // а в личку они ему не идут (lib/admin/notify-prefs.ts).
+    if (typeof row.telegram_user_id === "number" && wants(row.notify_off, "open")) {
+      out.add(String(row.telegram_user_id));
+    }
   }
   return [...out];
 }

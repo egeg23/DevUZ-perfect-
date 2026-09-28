@@ -5,12 +5,14 @@ import { redirect } from "next/navigation";
 
 import { requestIp, requireAdmin, requireRole } from "@/lib/admin/guard";
 import { isGrade, parsePercent } from "@/lib/admin/finance";
-import { hiredRoles, isAssignable } from "@/lib/admin/roles";
+import { hiredRoles, isAssignable, tunesNotices } from "@/lib/admin/roles";
+import { offFromForm, setNotices } from "@/lib/admin/notify-prefs";
 import { syncBotMenu } from "@/lib/qualify/menu";
 import {
   claimManager,
   disableStaff,
   inviteStaff,
+  listTeam,
   resendInvite,
   setStaffGrade,
   setStaffHead,
@@ -78,10 +80,12 @@ export async function addStaff(formData: FormData) {
 }
 
 export async function disable(formData: FormData) {
-  const admin = await requireAdmin();
+  // Отключает владелец и руководитель проектов — последний только
+  // менеджеров: это проверяет disableStaff по роли того, кого отключают.
+  const actor = await requireRole("admin", "head");
   const id = String(formData.get("staff") ?? "");
 
-  const result = await disableStaff(id, admin, await requestIp());
+  const result = await disableStaff(id, actor, await requestIp());
   // Отключённому /login в меню больше не нужен.
   if (result.ok) await syncBotMenu().catch(() => undefined);
   revalidatePath("/admin/team");
@@ -184,4 +188,20 @@ export async function refreshMenu() {
   await requireAdmin();
   const result = await syncBotMenu();
   back({ ok: true, note: result.ok ? "menu_ok" : "menu_failed" });
+}
+
+export async function saveNotices(formData: FormData) {
+  const actor = await requireRole("admin", "head");
+  const id = String(formData.get("staff") ?? "");
+
+  const target = (await listTeam()).find((m) => m.id === id && m.is_active);
+  if (!target) back({ ok: false, reason: "gone" });
+  // Кому руководитель вправе менять галочки, решает роль цели, а не
+  // разметка: форму можно отправить и мимо страницы.
+  if (!tunesNotices(actor.role, target.role, target.id === actor.id)) back({ ok: false, reason: "forbidden" });
+
+  const checked = formData.getAll("on").map(String);
+  const result = await setNotices(id, offFromForm(checked, target.role), actor, await requestIp());
+  revalidatePath("/admin/team");
+  back(result.ok ? { ok: true, note: "notices" } : { ok: false, reason: result.reason });
 }

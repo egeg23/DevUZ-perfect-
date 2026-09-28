@@ -20,6 +20,9 @@ export type ShiftReport = { id: string; shift: string; body: string; created_at:
 
 export const SHIFT_TITLE: Record<string, string> = {
   razbor: "Смена разборов",
+  // Раз в неделю, в расписании сторожа молчания её нет: неделя без отчёта
+  // видна в панели, а будить владельца ради неё незачем.
+  "razbor-tender": "Тендерный разбор недели",
   experiment: "Эксперимент 300→2000",
 
   // Выкатка — не смена, а поломка, о которой иначе некому сказать. Красный

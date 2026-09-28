@@ -100,7 +100,7 @@ export default async function FinancePage({
   for (const p of ledger.projects) {
     const partner = p.partner_id ? ledger.partners.get(p.partner_id) : undefined;
     if (!partner) continue;
-    const line = partnerAccrualOf(p, ledger.payments, partner, ledger.partnerProven.get(partner.id) ?? false);
+    const line = partnerAccrualOf(p, ledger.payments, partner);
     if (line) partnerLines.set(p.id, line);
   }
   const partnerTotal = sum([...partnerLines.values()].map((l) => l.amount_usd));

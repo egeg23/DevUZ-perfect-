@@ -179,7 +179,8 @@ export type TurnOptions = {
    * клиента и чат, чтобы снять касание после привязки. Привязка идёт после
    * сохранения лида и его не роняет.
    */
-  attribution?: { code: string | null; telegramId?: number | null; chatId?: number | null };
+  /** at — когда человек пришёл по ссылке (секунды, из куки), если известно. */
+  attribution?: { code: string | null; at?: number | null; telegramId?: number | null; chatId?: number | null };
   /**
    * Бриф с витрины, по которому идёт разговор.
    *
@@ -388,9 +389,11 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
     console.error("saveLead", error);
   }
 
-  if (leadId && options.attribution?.code) {
+  // Без кода тоже: заказ может прийти от агентства партнёра — его узнают по
+  // контакту и компании, а не по ссылке.
+  if (leadId) {
     try {
-      await attributeAndNotify(leadId, options.attribution, lead);
+      await attributeAndNotify(leadId, options.attribution ?? { code: null }, lead);
     } catch (error) {
       console.error("partners: привязка лида", error);
     }

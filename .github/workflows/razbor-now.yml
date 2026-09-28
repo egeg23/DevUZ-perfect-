@@ -11,6 +11,12 @@ name: Разборы — смена сейчас
 
 on:
   workflow_dispatch:
+    inputs:
+      kind:
+        description: "Что прогнать: разборы сайтов или тендерный разбор недели"
+        type: choice
+        options: [sites, tender]
+        default: sites
 
 permissions:
   contents: read
@@ -33,4 +39,4 @@ jobs:
             cd "${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
             set -a; . ./.env; set +a
             export NODE_OPTIONS=--use-env-proxy
-            node --import ./tests/alias-hook.mjs scripts/razbor-shift.mjs
+            node --import ./tests/alias-hook.mjs scripts/razbor-shift.mjs ${{ inputs.kind == 'tender' && '--tender' || '' }}

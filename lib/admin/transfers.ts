@@ -1,3 +1,4 @@
+import { allowsChat } from "@/lib/admin/notify-prefs";
 import { record } from "@/lib/admin/audit";
 import { AUTO_REMINDER_HOURS, createReminder, handleOf } from "@/lib/admin/ownership";
 import type { Role } from "@/lib/admin/roles";
@@ -201,6 +202,10 @@ async function staffRow(id: string) {
 
 async function tell(telegramId: number | null | undefined, text: string): Promise<void> {
   if (!telegramId) return;
+  // «Вам передали лид» и ответ на просьбу — по галочке «Передачи лидов».
+  // Просьба подтвердить передачу идёт не отсюда и приходит всегда: без неё
+  // передача так и повиснет.
+  if (!(await allowsChat("transfers", telegramId))) return;
   try {
     await sendMessage(telegramId, text);
   } catch (error) {

@@ -1,20 +1,12 @@
 import Link from "next/link";
 
-import { addPartner, decide, editPartner } from "./actions";
+import { addPartner, decide, decideAgencyAction, editPartner } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { money } from "@/lib/admin/finance";
 import { requireAdmin } from "@/lib/admin/guard";
-import {
-  MIN_PAYOUT_USD,
-  PARTNER_PERCENT,
-  PERK_TITLE,
-  PROVEN_MIN_PAID_PROJECTS,
-  PROVEN_PERCENT,
-  linkUrl,
-  partnerPercent,
-} from "@/lib/partners/rules";
-import { listPartners, summarize } from "@/lib/partners/store";
+import { MIN_PAYOUT_USD, PARTNER_TIERS, PERK_TITLE, linkUrl, shortUrl } from "@/lib/partners/rules";
+import { agenciesOf, listPartners, summarize } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +29,8 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
   gone: { text: "Такой записи уже нет — возможно, заявку уже решили.", tone: "warn" },
   forbidden: { text: "Это может только владелец.", tone: "warn" },
   failed: { text: "Не получилось. Попробуйте ещё раз.", tone: "warn" },
+  agency_active: { text: "Агентство подключено: его заказы засчитываются партнёру. Партнёру ушло сообщение.", tone: "ok" },
+  agency_rejected: { text: "Агентство отклонено. Партнёру ушло сообщение с причиной.", tone: "ok" },
   offline: { text: "База недоступна.", tone: "warn" },
 };
 
@@ -59,6 +53,9 @@ export default async function PartnersPage({
   const notice = r ? RESULT[r] : null;
 
   const summaries = await summarize(await listPartners());
+  const agencies = await agenciesOf("all");
+  const pendingAgencies = agencies.filter((a) => a.status === "pending");
+  const partnerName = new Map(summaries.map((s) => [s.partner.id, s.partner.name]));
   const requests = summaries
     .flatMap((s) => s.payouts.filter((p) => p.status === "requested").map((p) => ({ ...p, partner: s.partner })))
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
@@ -73,9 +70,12 @@ export default async function PartnersPage({
     <AdminShell staff={admin}>
       <h1 className="text-lg font-semibold">Партнёры</h1>
       <p className="mt-1 max-w-2xl text-sm text-muted">
-        Приводят клиентов — получают {PARTNER_PERCENT} % чистой прибыли их проектов, после{" "}
-        {PROVEN_MIN_PAID_PROJECTS} оплаченных проектов — {PROVEN_PERCENT} %. Начисление ждёт полной оплаты
-        проекта, как у сотрудников. Заявку на выплату партнёр подаёт в боте (/payout), решаете вы здесь.
+        Приводят клиентов — получают процент по модели, которую выбрали сами: от чистой прибыли
+        проекта или с оборота. Ступень — по сумме проекта: {tiersLine()}. Модель меняется не чаще
+        раза в неделю и закрепляется за клиентом в день заявки. Клиент засчитывается партнёру, если
+        оставил заявку в течение 30 дней после перехода по ссылке; заказы подключённого агентства —
+        всегда. Начисление ждёт полной оплаты проекта. Заявку на выплату партнёр подаёт в кабинете
+        или в боте (/payout), решаете вы здесь.
       </p>
 
       {notice ? (
@@ -89,7 +89,11 @@ export default async function PartnersPage({
       ) : null}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Card label="Партнёров" value={String(summaries.length)} note={`${summaries.filter((s) => s.proven).length} прокачанных`} />
+        <Card
+          label="Партнёров"
+          value={String(summaries.length)}
+          note={`${summaries.filter((s) => s.paidProjects > 0).length} с оплаченными проектами`}
+        />
         <Card label="Заморожено" value={money(totals.frozen)} note="ждёт полной оплаты проектов" />
         <Card label="Заработано" value={money(totals.earned)} note={`выплачено ${money(totals.paid)}`} />
         <Card label="К выплате" value={money(totals.due)} note={`в заявках ${money(requests.reduce((s, p) => s + p.amount_usd, 0))}`} warn={requests.length > 0} />
@@ -145,6 +149,79 @@ export default async function PartnersPage({
         </table>
       </section>
 
+      {/* ── Агентства ─────────────────────────────────────────────────── */}
+      <h2 className="mt-8 flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+        Агентства партнёров
+        {pendingAgencies.length ? <span className="text-gold">· ждут решения: {pendingAgencies.length}</span> : null}
+      </h2>
+      <p className="mt-1 max-w-2xl text-xs text-faint">
+        Партнёр подключает агентство или компанию, откуда регулярно идут заказы на разработку: IT-компанию,
+        веб-студию, маркетинговое агентство, интегратора, генподрядчика тендеров. Подтвердите — и все её
+        заказы засчитываются партнёру без ограничения в 30 дней: заявки узнаются по контакту и названию
+        компании, а проект, заведённый руками, привязывается в карточке проекта, блок «Партнёр».
+        Отклоняйте, если компания уже работает с нами.
+      </p>
+      <section className="mt-2 overflow-x-auto rounded-xl border border-line bg-surface">
+        <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[900px]">
+          <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
+            <tr>
+              <th className={TH}>Агентство</th>
+              <th className={TH}>Контакт</th>
+              <th className={TH}>Партнёр</th>
+              <th className={TH}>Статус</th>
+              <th className={TH}>Решение</th>
+            </tr>
+          </thead>
+          <tbody>
+            {agencies.map((a) => (
+              <tr key={a.id} className="border-b border-line-soft last:border-0 align-top">
+                <td data-label="Агентство" className={TD}>
+                  {a.name}
+                  {a.website ? <span className="block text-xs text-faint">{a.website}</span> : null}
+                  {a.note ? <span className="block text-xs text-muted">{a.note}</span> : null}
+                </td>
+                <td data-label="Контакт" className={`${TD} font-mono text-xs`}>{a.contact ?? "—"}</td>
+                <td data-label="Партнёр" className={TD}>{partnerName.get(a.partner_id) ?? "—"}</td>
+                <td data-label="Статус" className={`${TD} text-xs`}>
+                  {a.status === "active" ? (
+                    <span className="text-green">подключено {a.decided_at ? when(a.decided_at) : ""}</span>
+                  ) : a.status === "rejected" ? (
+                    <span className="text-faint">отклонено{a.decision_note ? `: ${a.decision_note}` : ""}</span>
+                  ) : (
+                    <span className="text-gold">ждёт решения · {when(a.created_at)}</span>
+                  )}
+                </td>
+                <td data-label="Решение" className={TD}>
+                  <form action={decideAgencyAction} className="flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="agency" value={a.id} />
+                    {a.status !== "active" ? (
+                      <button type="submit" name="decision" value="active" className={BUTTON}>
+                        Подтвердить
+                      </button>
+                    ) : null}
+                    {a.status !== "rejected" ? (
+                      <>
+                        <input name="note" maxLength={300} placeholder="причина — партнёру" className={`${SMALL} w-44`} />
+                        <button type="submit" name="decision" value="rejected" className="text-xs text-faint hover:text-gold">
+                          {a.status === "active" ? "отключить" : "отклонить"}
+                        </button>
+                      </>
+                    ) : null}
+                  </form>
+                </td>
+              </tr>
+            ))}
+            {agencies.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-sm text-muted">
+                  Агентств пока нет. Партнёр подключает их в кабинете на сайте.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </section>
+
       {/* ── Партнёры ──────────────────────────────────────────────────── */}
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">Все партнёры</h2>
       <section className="mt-2 overflow-x-auto rounded-xl border border-line bg-surface">
@@ -164,7 +241,7 @@ export default async function PartnersPage({
             </tr>
           </thead>
           <tbody>
-            {summaries.map(({ partner, links, balance, leads, projects, paidProjects, proven }) => (
+            {summaries.map(({ partner, links, balance, leads, projects, paidProjects }) => (
               <tr key={partner.id} className="border-b border-line-soft last:border-0 align-top">
                 <td data-label="Кто" className={TD}>
                   {partner.name}
@@ -178,7 +255,13 @@ export default async function PartnersPage({
                 <td data-label="Ссылки" className={`${TD} text-xs`}>
                   {links.map((l) => (
                     <span key={l.id} className="block">
-                      <a href={linkUrl(siteUrl, l.code)} className="font-mono hover:text-green" target="_blank" rel="noreferrer noopener">
+                      <a
+                        href={l.slug ? shortUrl(siteUrl, l.slug) : linkUrl(siteUrl, l.code)}
+                        className="font-mono hover:text-green"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        title={l.slug ? `devuz.studio/r/${l.slug}` : undefined}
+                      >
                         {l.code}
                       </a>
                       {l.label && !l.is_default ? <span className="text-faint"> — {l.label}</span> : null}
@@ -188,9 +271,18 @@ export default async function PartnersPage({
                   ))}
                 </td>
                 <td data-label="Ставка" className={`${TD} text-xs text-muted`}>
-                  {partnerPercent({ projectPercent: null, partnerOverride: partner.percent_override, proven })} %
+                  {partner.percent_override !== null
+                    ? `${partner.percent_override} %`
+                    : partner.payout_model === "turnover"
+                      ? "с оборота"
+                      : "от прибыли"}
                   <span className="block text-faint">
-                    {partner.percent_override !== null ? "персональная" : proven ? "прокачанный" : "база"}
+                    {partner.percent_override !== null
+                      ? "персональная"
+                      : partner.payout_model === "turnover"
+                        ? `${PARTNER_TIERS[0].turnover}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].turnover} %`
+                        : `${PARTNER_TIERS[0].profit}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].profit} %`}
+                    {partner.model_changed_at ? ` · сменил ${when(partner.model_changed_at)}` : ""}
                   </span>
                 </td>
                 <td data-label="Клиентов" className={`${TD} font-mono text-xs`}>{leads}</td>
@@ -305,4 +397,13 @@ function Card({ label, value, note, warn = false }: { label: string; value: stri
       {note ? <p className={`mt-1 text-xs ${warn ? "text-gold" : "text-faint"}`}>{note}</p> : null}
     </div>
   );
+}
+
+/** «до 2 500 $ — 10 / 6 %, … дороже 30 000 $ — 30 / 20 %» — из той же таблицы, что считает. */
+function tiersLine(): string {
+  return PARTNER_TIERS.map((t, i) =>
+    t.upTo === null
+      ? `дороже ${money(PARTNER_TIERS[i - 1]?.upTo ?? 0)} — ${t.profit} / ${t.turnover} %`
+      : `до ${money(t.upTo)} — ${t.profit} / ${t.turnover} %`,
+  ).join(", ");
 }

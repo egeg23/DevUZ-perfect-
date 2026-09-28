@@ -8,8 +8,10 @@
  * приватное окно или отключённое хранилище не должны ломать чат и форму.
  */
 
+import { REF_TTL_DAYS, parseRef } from "@/lib/partners/ref-cookie";
+
 const KEY = "devuz_ref";
-const TTL_MS = 90 * 24 * 60 * 60 * 1000;
+const TTL_MS = REF_TTL_DAYS * 24 * 60 * 60 * 1000;
 const CODE_RE = /^[A-Z0-9_-]{3,24}$/;
 
 type Stored = { code: string; at: number };
@@ -28,9 +30,22 @@ function read(): Stored | null {
   }
 }
 
+/**
+ * Код из куки, которую ставит короткая ссылка (/r/…). Сервер пишет её сам,
+ * до того как страница загрузится, — отсюда код переезжает в localStorage.
+ */
+export function cookieRef(): string | null {
+  try {
+    const match = document.cookie.match(/(?:^|;\s*)devuz_ref=([^;]+)/);
+    return parseRef(match?.[1])?.code ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Код партнёра для заявки или null. */
 export function readRef(): string | null {
-  return read()?.code ?? null;
+  return read()?.code ?? cookieRef();
 }
 
 /** Запомнить код из адреса, если ещё не помним другого. Возвращает, что запомнили. */

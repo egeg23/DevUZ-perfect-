@@ -1,0 +1,10 @@
+alter table public.projects drop column if exists partner_agency_id;
+alter table public.leads drop column if exists partner_agency_id;
+drop table if exists public.partner_agencies;
+alter table public.projects drop constraint if exists projects_partner_model_check;
+alter table public.leads drop constraint if exists leads_partner_model_check;
+alter table public.projects drop column if exists partner_model;
+alter table public.leads drop column if exists partner_model;
+drop table if exists public.partner_model_changes;
+alter table public.partners drop constraint if exists partners_payout_model_check;
+alter table public.partners drop column if exists model_changed_at, drop column if exists payout_model;
