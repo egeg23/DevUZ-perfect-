@@ -37,6 +37,12 @@ export type Service = {
    * меньше, чем «составим ТЗ и требования к подрядчикам».
    */
   highlights?: LocalizedList;
+  /**
+   * От чего зависит цена — на странице услуги под вилкой «от». Для услуг, где
+   * «от» одной цифрой вводит в заблуждение: ТЗ на сайт госоргана и на систему
+   * документооборота с десятком интеграций стоят по-разному.
+   */
+  priceFactors?: LocalizedList;
 };
 
 export const services: Service[] = [
@@ -454,11 +460,54 @@ export const services: Service[] = [
       ],
     },
     tech: ["ГОСТ 34", "BPMN 2.0", "UML", "OpenAPI"],
-    // TODO(владелец): нижняя граница — составление ТЗ; субподряд считается
-    // по объёму тендера, как обычный проект.
-    priceFromUsd: 1000,
+    // Владелец, 28.09: «составление ТЗ от 400 $, в зависимости от сложности
+    // проекта, архитектуры, языков программирования и т. д.». Субподряд
+    // считается по объёму тендера, как обычный проект.
+    priceFromUsd: 400,
     weeksFrom: 1,
     weeksTo: 4,
+    priceFactors: {
+      ru: [
+        "Сложность и объём системы: сколько ролей, экранов и бизнес-процессов нужно описать",
+        "Архитектура: одно приложение или несколько сервисов, облако или сервер заказчика, требования к нагрузке и отказоустойчивости",
+        "Языки программирования и стек — если заказчик их задаёт или система должна жить рядом с тем, что уже работает",
+        "Интеграции с внешними системами: госсервисы, 1С, банки, платёжные шлюзы — сколько их и насколько они описаны",
+        "Требования к безопасности и персональным данным",
+        "Языки интерфейса и документации: узбекский, русский, английский",
+        "Оформление и состав документов: ГОСТ 34 или форма заказчика, нужны ли программа и методика испытаний, руководства",
+        "Срок: срочное ТЗ стоит дороже",
+      ],
+      en: [
+        "Complexity and scope of the system: how many roles, screens and business processes need describing",
+        "Architecture: one application or several services, cloud or the client's server, load and fault-tolerance requirements",
+        "Programming languages and stack — if the client sets them or the system must live alongside what already runs",
+        "Integrations with external systems: government services, 1C, banks, payment gateways — how many and how well documented",
+        "Security and personal data requirements",
+        "Interface and documentation languages: Uzbek, Russian, English",
+        "Format and set of documents: GOST 34 or the client's template, whether a test programme and guides are needed",
+        "Deadline: an urgent spec costs more",
+      ],
+      uz: [
+        "Tizimning murakkabligi va hajmi: nechta rol, ekran va biznes-jarayonni tavsiflash kerak",
+        "Arxitektura: bitta ilova yoki bir nechta servis, bulut yoki buyurtmachi serveri, yuklama va barqarorlik talablari",
+        "Dasturlash tillari va stek — agar buyurtmachi ularni belgilasa yoki tizim allaqachon ishlayotgan narsalar bilan birga ishlashi kerak bo‘lsa",
+        "Tashqi tizimlar bilan integratsiyalar: davlat xizmatlari, 1C, banklar, to‘lov shlyuzlari — nechta va qanchalik tavsiflangan",
+        "Xavfsizlik va shaxsiy ma’lumotlar bo‘yicha talablar",
+        "Interfeys va hujjatlar tillari: o‘zbek, rus, ingliz",
+        "Rasmiylashtirish va hujjatlar tarkibi: GOST 34 yoki buyurtmachi shakli, sinov dasturi va qo‘llanmalar kerakmi",
+        "Muddat: shoshilinch texnik topshiriq qimmatroq",
+      ],
+      zh: [
+        "系统的复杂度和规模：需要描述多少角色、页面和业务流程",
+        "架构：单一应用还是多个服务，云端还是招标方服务器，负载与容错要求",
+        "编程语言和技术栈——如果招标方指定，或系统需要与现有系统并行运行",
+        "与外部系统的对接：政府服务、1C、银行、支付网关——数量多少、文档是否完善",
+        "安全与个人数据方面的要求",
+        "界面和文档语言：乌兹别克语、俄语、英语",
+        "格式与文档组成：GOST 34 或招标方模板，是否需要测试大纲和使用手册",
+        "工期：加急的技术规格书价格更高",
+      ],
+    },
   },
 ];
 

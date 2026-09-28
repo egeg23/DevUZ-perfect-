@@ -52,6 +52,15 @@ test("услуга «Тендеры и госконтракты»: четыре 
   assert.match(ru, /Субподряд/);
 
   assert.match(read("components/sections/services.tsx"), /service\.highlights \?/);
+  // Владелец: «составление ТЗ от 400 $… добавь, что влияет на стоимость».
+  assert.equal(service.priceFromUsd, 400);
+  for (const locale of locales) {
+    assert.equal(service.priceFactors?.[locale].length, service.priceFactors!.ru.length, `${locale}: факторов цены меньше`);
+    assert.ok(getDictionary(locale).services.priceFactors, `${locale}: нет подписи «От чего зависит цена»`);
+  }
+  assert.match(service.priceFactors!.ru.join(" "), /Архитектура/);
+  assert.match(service.priceFactors!.ru.join(" "), /Языки программирования/);
+  assert.match(read("app/[locale]/services/[slug]/page.tsx"), /service\.priceFactors \?/);
   assert.equal(getDictionary("ru").services.title, "Шесть направлений");
   // Страница услуги и sitemap собираются из того же списка.
   assert.match(read("app/sitemap.ts"), /\.\.\.services\.map\(\(s\) => \(\{\s*path: `services\/\$\{s\.slug\}`/);

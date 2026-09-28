@@ -119,6 +119,24 @@ export default async function ServicePage({
           </div>
         </div>
 
+        {service.priceFactors ? (
+          <section className="mt-6 rounded-2xl border border-line bg-surface px-7 py-6">
+            <h2 className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-faint">
+              {dict.services.priceFactors}
+            </h2>
+            <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
+              {tList(service.priceFactors, locale).map((factor) => (
+                <li key={factor} className="flex gap-3 text-[0.9rem] leading-relaxed text-muted">
+                  <span aria-hidden="true" className="text-green">
+                    ·
+                  </span>
+                  <span>{factor}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         <h2 className="mt-16 text-2xl font-bold">{dict.services.included}</h2>
         <ul className="mt-6 grid gap-3 sm:grid-cols-2">
           {tList(service.bullets, locale).map((bullet, i) => (
