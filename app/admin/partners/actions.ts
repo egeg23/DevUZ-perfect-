@@ -14,6 +14,7 @@ import {
   partnerById,
   updatePartner,
 } from "@/lib/partners/store";
+import { agencyUntilDay } from "@/lib/partners/rules";
 import { esc } from "@/lib/qualify/telegram";
 
 /**
@@ -110,7 +111,7 @@ export async function decideAgencyAction(formData: FormData) {
     await notifyPartner(
       partner,
       decision === "active"
-        ? `🏢 Агентство «${esc(result.agency.name)}» подключено. Все его заказы засчитываются вам — без ограничения в 30 дней. Этапы — в кабинете: /cabinet.`
+        ? `🏢 Агентство «${esc(result.agency.name)}» подключено. Его заказы засчитываются вам 12 месяцев — до ${agencyUntilDay(result.agency.decided_at)}, без ограничения в 30 дней. Этапы — в кабинете: /cabinet.`
         : `Агентство «${esc(result.agency.name)}» не подключено.${note ? ` Причина: ${esc(note)}.` : ""} Вопросы — напишите нам в этот бот.`,
     );
   }

@@ -328,11 +328,11 @@ const ru = {
       },
       {
         q: "Я подключу агентство или компанию, которая будет отдавать вам заказы. Как считается?",
-        a: "Подключите её в кабинете — подойдёт любая компания, откуда регулярно идут заказы на разработку: IT-компания, веб-студия, маркетинговое агентство, интегратор. После нашего подтверждения все её заказы засчитываются вам, без ограничения в 30 дней: и первый, и каждый следующий. Она пишет нам напрямую, ссылка ей не нужна — мы узнаём её заказы по контакту и названию.",
+        a: "Подключите её в кабинете — подойдёт любая компания, откуда регулярно идут заказы на разработку: IT-компания, веб-студия, маркетинговое агентство, интегратор. После нашего подтверждения все её заказы засчитываются вам 12 месяцев, без ограничения в 30 дней: и первый, и каждый следующий. Она пишет нам напрямую, ссылка ей не нужна — мы узнаём её заказы по контакту и названию.",
       },
       {
         q: "Вы берёте субподряд на IT-тендерах?",
-        a: "Да. Если генподрядчик выиграл IT-тендер — госзакупку или конкурс крупной компании — и ему нужна команда разработки, мы делаем техническую часть на субподряде: разбор ТЗ и оценку до подачи заявки, разработку, документацию и сдачу по этапам. Такую компанию подключают в кабинете как агентство — все её заказы засчитываются вам.",
+        a: "Да. Если генподрядчик выиграл IT-тендер — госзакупку или конкурс крупной компании — и ему нужна команда разработки, мы делаем техническую часть на субподряде: разбор ТЗ и оценку до подачи заявки, разработку, документацию и сдачу по этапам. Такую компанию подключают в кабинете как агентство — 12 месяцев все её заказы засчитываются вам.",
       },
       {
         q: "Нужно ли что-то подписывать?",
@@ -730,11 +730,11 @@ const en: Dictionary = {
       },
       {
         q: "I'll connect an agency or company that will pass orders to you. How is that counted?",
-        a: "Connect it in your dashboard — any company that regularly has development orders will do: an IT company, web studio, marketing agency, integrator. Once we confirm it, all its orders count as yours, with no 30-day limit: the first one and every next one. It writes to us directly and doesn't need a link — we recognise its orders by contact and name.",
+        a: "Connect it in your dashboard — any company that regularly has development orders will do: an IT company, web studio, marketing agency, integrator. Once we confirm it, all its orders count as yours for 12 months, with no 30-day limit: the first one and every next one. It writes to us directly and doesn't need a link — we recognise its orders by contact and name.",
       },
       {
         q: "Do you subcontract on IT tenders?",
-        a: "Yes. If a prime contractor has won an IT tender — public procurement or a large company's competition — and needs a development team, we do the technical part as a subcontractor: reviewing the specification and estimating before the bid, development, documentation and delivery by stages. Connect such a company in your dashboard as an agency — all its orders count as yours.",
+        a: "Yes. If a prime contractor has won an IT tender — public procurement or a large company's competition — and needs a development team, we do the technical part as a subcontractor: reviewing the specification and estimating before the bid, development, documentation and delivery by stages. Connect such a company in your dashboard as an agency — for 12 months all its orders count as yours.",
       },
       {
         q: "Do I need to sign anything?",
@@ -1126,11 +1126,11 @@ const uz: Dictionary = {
       },
       {
         q: "Sizga buyurtma beradigan agentlik yoki kompaniyani ulayman. Qanday hisoblanadi?",
-        a: "Uni kabinetda ulang — ishlab chiqish bo'yicha buyurtmalari muntazam bo'ladigan har qanday kompaniya mos keladi: IT-kompaniya, veb-studiya, marketing agentligi, integrator. Biz tasdiqlaganimizdan keyin uning barcha buyurtmalari sizga hisoblanadi, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. U bizga to'g'ridan-to'g'ri yozadi, unga havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
+        a: "Uni kabinetda ulang — ishlab chiqish bo'yicha buyurtmalari muntazam bo'ladigan har qanday kompaniya mos keladi: IT-kompaniya, veb-studiya, marketing agentligi, integrator. Biz tasdiqlaganimizdan keyin 12 oy davomida uning barcha buyurtmalari sizga hisoblanadi, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. U bizga to'g'ridan-to'g'ri yozadi, unga havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
       },
       {
         q: "IT-tenderlarda subpudratga ishlaysizmi?",
-        a: "Ha. Agar bosh pudratchi IT-tenderni — davlat xaridi yoki yirik kompaniya tanlovini — yutgan bo'lsa va unga ishlab chiqish jamoasi kerak bo'lsa, texnik qismini subpudratda bajaramiz: ariza topshirishdan oldin texnik topshiriqni tahlil qilish va baholash, ishlab chiqish, hujjatlar va bosqichma-bosqich topshirish. Bunday kompaniyani kabinetda agentlik sifatida ulang — uning barcha buyurtmalari sizga hisoblanadi.",
+        a: "Ha. Agar bosh pudratchi IT-tenderni — davlat xaridi yoki yirik kompaniya tanlovini — yutgan bo'lsa va unga ishlab chiqish jamoasi kerak bo'lsa, texnik qismini subpudratda bajaramiz: ariza topshirishdan oldin texnik topshiriqni tahlil qilish va baholash, ishlab chiqish, hujjatlar va bosqichma-bosqich topshirish. Bunday kompaniyani kabinetda agentlik sifatida ulang — 12 oy davomida uning barcha buyurtmalari sizga hisoblanadi.",
       },
       {
         q: "Biror narsa imzolash kerakmi?",
@@ -1521,11 +1521,11 @@ const zh: Dictionary = {
       },
       {
         q: "我会介绍一家向你们下单的代理机构或公司，怎么计算？",
-        a: "在后台添加它——任何经常有开发订单的公司都可以：IT 公司、网站工作室、营销代理机构、系统集成商。经我们确认后，它的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。它直接联系我们，不需要链接——我们通过联系方式和名称识别其订单。",
+        a: "在后台添加它——任何经常有开发订单的公司都可以：IT 公司、网站工作室、营销代理机构、系统集成商。经我们确认后 12 个月内，它的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。它直接联系我们，不需要链接——我们通过联系方式和名称识别其订单。",
       },
       {
         q: "你们承接 IT 招标的分包吗？",
-        a: "承接。如果总包方中标了 IT 招标——政府采购或大公司的竞标——并需要开发团队，我们以分包形式完成技术部分：投标前分析技术规格书并估算，开发、编写文档并按阶段交付。在后台把这样的公司作为代理机构添加——它的所有订单都算您的。",
+        a: "承接。如果总包方中标了 IT 招标——政府采购或大公司的竞标——并需要开发团队，我们以分包形式完成技术部分：投标前分析技术规格书并估算，开发、编写文档并按阶段交付。在后台把这样的公司作为代理机构添加——12 个月内它的所有订单都算您的。",
       },
       {
         q: "需要签署什么吗？",

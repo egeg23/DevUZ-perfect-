@@ -11,6 +11,7 @@ import {
   canWithdrawNow,
   generateCode,
   generateSlug,
+  agencyCounts,
   agencyMatches,
   companyKey,
   contactKey,
@@ -1115,10 +1116,16 @@ export async function setProjectPartner(
   if (patch.partner_agency_id) {
     const { data: agency } = await db
       .from("partner_agencies")
-      .select("partner_id")
+      .select("partner_id, status, decided_at")
       .eq("id", patch.partner_agency_id)
       .maybeSingle();
     if (!agency || agency.partner_id !== fields.partnerId) return { ok: false, reason: "invalid" };
+    // Новая привязка — только к агентству в сроке. Уже привязанный проект
+    // остаётся за агентством и после срока: заказ пришёл, пока срок шёл.
+    const kept = patch.partner_agency_id === ((before.partner_agency_id as string | null) ?? null);
+    if (!kept && !agencyCounts({ status: String(agency.status), decided_at: (agency.decided_at as string | null) ?? null })) {
+      return { ok: false, reason: "invalid" };
+    }
   }
   const { error } = await db.from("projects").update(patch).eq("id", projectId);
   if (error) return { ok: false, reason: "failed" };
@@ -1346,7 +1353,9 @@ export async function decideAgency(
 /**
  * Лид — заказ подключённого агентства? Тогда он партнёра, без окна в 30 дней
  * и без проверки «клиент уже был у студии»: у агентства повторные заказы —
- * это и есть смысл. Записывается на лид с агентством и моделью партнёра.
+ * это и есть смысл. Но не бессрочно: AGENCY_TERM_MONTHS с подтверждения
+ * (lib/partners/rules.ts). Записывается на лид с агентством и моделью
+ * партнёра.
  */
 export async function attributeAgencyLead(
   leadId: string,
@@ -1356,7 +1365,8 @@ export async function attributeAgencyLead(
   if (!db) return null;
   if (!lead.contactHandle && !lead.company) return null;
 
-  const active = (await agenciesOf("all")).filter((a) => a.status === "active");
+  const now = new Date();
+  const active = (await agenciesOf("all")).filter((a) => agencyCounts(a, now));
   const agency = active.find((a) => agencyMatches(a, lead));
   if (!agency) return null;
   const partner = await partnerById(agency.partner_id);

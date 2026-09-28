@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { defaultLocale, isLocale } from "@/lib/i18n";
 import { PARTNER_COOKIE, closeSession } from "@/lib/partners/session";
+import { absoluteUrl } from "@/lib/seo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +14,8 @@ export async function POST(request: NextRequest) {
   const locale = isLocale(raw) ? raw : defaultLocale;
 
   await closeSession(request.cookies.get(PARTNER_COOKIE)?.value);
-  const response = NextResponse.redirect(new URL(`/${locale}/partners`, request.url), 303);
+  // От адреса сайта, не от `request.url` — см. app/api/partners/enter.
+  const response = NextResponse.redirect(absoluteUrl(`${locale}/partners`), 303);
   response.cookies.delete(PARTNER_COOKIE);
   return response;
 }

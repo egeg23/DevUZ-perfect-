@@ -1,5 +1,5 @@
 import { partnerCopy } from "@/content/partner-bot";
-import { DEFAULT_MODEL, PERK_TITLE, isPayoutModel, partnerPercent } from "@/lib/partners/rules";
+import { DEFAULT_MODEL, PERK_TITLE, agencyUntilDay, isPayoutModel, partnerPercent } from "@/lib/partners/rules";
 import {
   attributeAgencyLead,
   attributeLead,
@@ -25,7 +25,8 @@ export async function attributeAndNotify(
   lead: { contact_handle?: string | null; company?: string | null },
 ): Promise<Attribution | null> {
   // Сначала — агентство партнёра на субподряде. Его заказы — партнёра
-  // всегда, без окна в 30 дней и без ссылки: агентство пишет нам напрямую.
+  // 12 месяцев с подтверждения, без окна в 30 дней и без ссылки: агентство
+  // пишет нам напрямую.
   // Оно важнее куки: заказ пришёл от агентства, кто бы ни дал ссылку.
   const fromAgency = await attributeAgencyLead(leadId, {
     contactHandle: lead.contact_handle ?? null,
@@ -34,7 +35,7 @@ export async function attributeAndNotify(
   if (fromAgency) {
     await notifyPartner(
       fromAgency.partner,
-      `🏢 Новый заказ от агентства «${esc(fromAgency.agency.name)}». Он ваш — как и все заказы этого агентства. Этапы — в кабинете: /cabinet.`,
+      `🏢 Новый заказ от агентства «${esc(fromAgency.agency.name)}». Он ваш — как и все заказы этого агентства до ${agencyUntilDay(fromAgency.agency.decided_at)}. Этапы — в кабинете: /cabinet.`,
     );
     return { partner: fromAgency.partner, link: null, reason: null };
   }

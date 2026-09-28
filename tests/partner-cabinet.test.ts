@@ -271,7 +271,7 @@ test("модель закрепляется за клиентом в день з
 
 /* ── Агентства на субподряде ────────────────────────────────────────────── */
 
-test("заказ агентства — партнёру всегда, раньше кода и без окна в 30 дней", () => {
+test("заказ агентства — партнёру 12 месяцев с подтверждения, раньше кода и без окна в 30 дней", () => {
   const attribute = read("lib/partners/attribute.ts");
   const agency = attribute.indexOf("await attributeAgencyLead(leadId");
   const noCode = attribute.indexOf("if (!attribution.code) return null;");
@@ -283,7 +283,7 @@ test("заказ агентства — партнёру всегда, рань�
   const store = read("lib/partners/store.ts");
   const at = store.indexOf("export async function attributeAgencyLead(");
   const body = store.slice(at, store.indexOf("export async function", at + 10));
-  assert.match(body, /\.filter\(\(a\) => a\.status === "active"\)/, "засчитывается агентство без подтверждения");
+  assert.match(body, /\.filter\(\(a\) => agencyCounts\(a, now\)\)/, "засчитывается агентство без подтверждения или после срока");
   assert.match(body, /partner_agency_id: agency\.id,/);
 });
 
@@ -350,4 +350,26 @@ test("агентство — любая компания с регулярным
     );
   }
   assert.match(read("app/[locale]/partners/deck/program/page.tsx"), /t\.tenderPoints\.map\(/);
+});
+
+test("редиректы маршрутов — от адреса сайта, а не от request.url (за nginx это 0.0.0.0:3000)", async () => {
+  // 28.09: ссылка входа из бота и короткие ссылки /r/… уводили на
+  // https://0.0.0.0:3000/… — Safari: «использование запрещённого сетевого
+  // порта». Next за nginx видит свой адрес, а не devuz.studio.
+  const { readdirSync, statSync } = await import("node:fs");
+  const routes: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(new URL(`../${dir}`, import.meta.url))) {
+      const path = `${dir}/${name}`;
+      if (statSync(new URL(`../${path}`, import.meta.url)).isDirectory()) walk(path);
+      else if (name === "route.ts") routes.push(path);
+    }
+  };
+  walk("app");
+  assert.ok(routes.length > 5, "маршруты не нашлись");
+  for (const path of routes) {
+    assert.doesNotMatch(read(path), /new URL\([^()]*,\s*request\.url\)/, `${path}: адрес собран от request.url`);
+  }
+  assert.match(read("app/api/partners/enter/route.ts"), /new URL\(absoluteUrl\(`\$\{locale\}\/partners\/cabinet`\)\)/);
+  assert.match(read("app/r/[slug]/route.ts"), /const home = absoluteUrl\(\);/);
 });

@@ -124,12 +124,12 @@ const ru: DeckCopy = {
     ways: [
       { title: "Короткая ссылка", text: "devuz.studio/r/… — своя под каждый канал. Человек перешёл и в течение 30 дней оставил заявку — он ваш, даже если вернулся уже без ссылки." },
       { title: "Ссылка в Telegram-бота", text: "Для тех, кому удобнее написать, чем заполнять форму: переход в бота с вашим кодом засчитывается так же." },
-      { title: "Подключить агентство или компанию", text: "IT-компания, веб-студия, маркетинговое или дизайн-агентство, интегратор — любая компания, у которой регулярно бывают заказы на разработку, отдаёт их нам на субподряд. Все её заказы ваши, без ограничения по времени." },
+      { title: "Подключить агентство или компанию", text: "IT-компания, веб-студия, маркетинговое или дизайн-агентство, интегратор — любая компания, у которой регулярно бывают заказы на разработку, отдаёт их нам на субподряд. Все её заказы ваши 12 месяцев с подтверждения." },
     ],
     agencyTitle: "Пример: вы подключили агентство",
-    agencyText: "Агентствам и IT-компаниям разработка нужна постоянно: маркетинговому агентству — сайты и лендинги под рекламу клиентов, интегратору — боты и интеграции, веб-студии — команда, когда своей не хватает. Вы знакомите компанию с нами и подключаете её в кабинете; мы подтверждаем — и с этого дня каждый заказ, который она передаёт нам, засчитывается вам. Ссылка ей не нужна: она пишет нам напрямую, а мы узнаём её заказы по контакту и названию.",
+    agencyText: "Агентствам и IT-компаниям разработка нужна постоянно: маркетинговому агентству — сайты и лендинги под рекламу клиентов, интегратору — боты и интеграции, веб-студии — команда, когда своей не хватает. Вы знакомите компанию с нами и подключаете её в кабинете; мы подтверждаем — и 12 месяцев с этого дня каждый заказ, который она передаёт нам, засчитывается вам. Ссылка ей не нужна: она пишет нам напрямую, а мы узнаём её заказы по контакту и названию.",
     tenderTitle: "Тендеры и госзаказы: мы — субподрядчик",
-    tenderText: "IT-тендеры — госзакупки и конкурсы крупных компаний — часто выигрывает генподрядчик, у которого нет своей команды разработки нужного профиля. Мы работаем у такого генподрядчика техническим субподрядчиком. Знаете компанию, которая участвует в тендерах, — подключите её так же, как агентство: все её заказы засчитаются вам.",
+    tenderText: "IT-тендеры — госзакупки и конкурсы крупных компаний — часто выигрывает генподрядчик, у которого нет своей команды разработки нужного профиля. Мы работаем у такого генподрядчика техническим субподрядчиком. Знаете компанию, которая участвует в тендерах, — подключите её так же, как агентство: 12 месяцев все её заказы засчитываются вам.",
     tenderPoints: [
       "До подачи заявки: разбираем ТЗ, оцениваем сроки и себестоимость, готовим техническую часть заявки.",
       "После победы: разработка по ТЗ, документация, сдача по этапам контракта и гарантийный срок.",
@@ -153,7 +153,7 @@ const ru: DeckCopy = {
     rules: [
       "Доля начисляется, когда клиент оплатил проект целиком.",
       "Не засчитываются заявки от вас самих и клиенты, которые работали с нами до вашей ссылки.",
-      "Агентство или компания засчитывается после нашего подтверждения; одна компания — один партнёр, кто подключил первым.",
+      "Агентство или компания засчитывается после нашего подтверждения, на 12 месяцев; одна компания — один партнёр, кто подключил первым.",
     ],
     ctaTitle: "Начните сегодня",
     ctaJoin: "Стать партнёром",
@@ -213,12 +213,12 @@ const en: DeckCopy = {
     ways: [
       { title: "Short link", text: "devuz.studio/r/… — one per channel. If a person follows it and leaves a request within 30 days, they're yours — even if they come back without the link." },
       { title: "Telegram bot link", text: "For people who'd rather write than fill a form: opening the bot with your code counts the same way." },
-      { title: "Connect an agency or company", text: "An IT company, web studio, marketing or design agency, integrator — any company that regularly has development orders passes them to us on a subcontract basis. All its orders are yours, with no time limit." },
+      { title: "Connect an agency or company", text: "An IT company, web studio, marketing or design agency, integrator — any company that regularly has development orders passes them to us on a subcontract basis. All its orders are yours for 12 months after confirmation." },
     ],
     agencyTitle: "Example: you connect an agency",
-    agencyText: "Agencies and IT companies need development all the time: a marketing agency needs sites and landing pages for its clients' ads, an integrator needs bots and integrations, a web studio needs a team when its own is not enough. You introduce the company to us and connect it in your dashboard; we confirm — and from that day every order it passes to us counts as yours. It doesn't need a link: it writes to us directly, and we recognise its orders by contact and name.",
+    agencyText: "Agencies and IT companies need development all the time: a marketing agency needs sites and landing pages for its clients' ads, an integrator needs bots and integrations, a web studio needs a team when its own is not enough. You introduce the company to us and connect it in your dashboard; we confirm — and for 12 months from that day every order it passes to us counts as yours. It doesn't need a link: it writes to us directly, and we recognise its orders by contact and name.",
     tenderTitle: "Tenders and public contracts: we subcontract",
-    tenderText: "IT tenders — public procurement and large companies' competitions — are often won by a prime contractor without its own development team of the right profile. We work for such a prime contractor as the technical subcontractor. If you know a company that bids in tenders, connect it just like an agency: all its orders will count as yours.",
+    tenderText: "IT tenders — public procurement and large companies' competitions — are often won by a prime contractor without its own development team of the right profile. We work for such a prime contractor as the technical subcontractor. If you know a company that bids in tenders, connect it just like an agency: for 12 months all its orders count as yours.",
     tenderPoints: [
       "Before the bid: we review the technical specification, estimate timing and cost, and prepare the technical part of the bid.",
       "After winning: development to spec, documentation, delivery by contract stages and the warranty period.",
@@ -242,7 +242,7 @@ const en: DeckCopy = {
     rules: [
       "Your share is credited once the client has paid the project in full.",
       "Requests from yourself and clients who worked with us before your link don't count.",
-      "An agency or company counts after our confirmation; one company — one partner, whoever connected it first.",
+      "An agency or company counts after our confirmation, for 12 months; one company — one partner, whoever connected it first.",
     ],
     ctaTitle: "Start today",
     ctaJoin: "Become a partner",
@@ -302,12 +302,12 @@ const uz: DeckCopy = {
     ways: [
       { title: "Qisqa havola", text: "devuz.studio/r/… — har bir kanal uchun alohida. Odam o'tib, 30 kun ichida so'rov qoldirsa — u sizniki, hatto keyin havolasiz qaytgan bo'lsa ham." },
       { title: "Telegram-botga havola", text: "Forma to'ldirishdan ko'ra yozishni afzal ko'radiganlar uchun: kodingiz bilan botga o'tish ham xuddi shunday hisoblanadi." },
-      { title: "Agentlik yoki kompaniyani ulash", text: "IT-kompaniya, veb-studiya, marketing yoki dizayn agentligi, integrator — ishlab chiqish bo'yicha buyurtmalari muntazam bo'ladigan har qanday kompaniya ularni bizga subpudratga beradi. Uning barcha buyurtmalari sizniki, muddat cheklovisiz." },
+      { title: "Agentlik yoki kompaniyani ulash", text: "IT-kompaniya, veb-studiya, marketing yoki dizayn agentligi, integrator — ishlab chiqish bo'yicha buyurtmalari muntazam bo'ladigan har qanday kompaniya ularni bizga subpudratga beradi. Tasdiqlangandan keyin 12 oy davomida uning barcha buyurtmalari sizniki." },
     ],
     agencyTitle: "Misol: siz agentlikni uladingiz",
-    agencyText: "Agentliklar va IT-kompaniyalarga ishlab chiqish doim kerak: marketing agentligiga — mijozlari reklamasi uchun saytlar va lendinglar, integratorga — botlar va integratsiyalar, veb-studiyaga — o'z jamoasi yetmaganda qo'shimcha jamoa. Siz kompaniyani biz bilan tanishtirasiz va kabinetda ulaysiz; biz tasdiqlaymiz — va shu kundan boshlab u bizga beradigan har bir buyurtma sizga hisoblanadi. Unga havola kerak emas: u bizga to'g'ridan-to'g'ri yozadi, biz esa buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
+    agencyText: "Agentliklar va IT-kompaniyalarga ishlab chiqish doim kerak: marketing agentligiga — mijozlari reklamasi uchun saytlar va lendinglar, integratorga — botlar va integratsiyalar, veb-studiyaga — o'z jamoasi yetmaganda qo'shimcha jamoa. Siz kompaniyani biz bilan tanishtirasiz va kabinetda ulaysiz; biz tasdiqlaymiz — va shu kundan boshlab 12 oy davomida u bizga beradigan har bir buyurtma sizga hisoblanadi. Unga havola kerak emas: u bizga to'g'ridan-to'g'ri yozadi, biz esa buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
     tenderTitle: "Tenderlar va davlat buyurtmalari: biz — subpudratchi",
-    tenderText: "IT-tenderlarni — davlat xaridlari va yirik kompaniyalar tanlovlarini — ko'pincha kerakli yo'nalishdagi o'z ishlab chiqish jamoasi bo'lmagan bosh pudratchi yutadi. Biz shunday bosh pudratchida texnik subpudratchi sifatida ishlaymiz. Tenderlarda qatnashadigan kompaniyani bilsangiz, uni agentlik kabi ulang: uning barcha buyurtmalari sizga hisoblanadi.",
+    tenderText: "IT-tenderlarni — davlat xaridlari va yirik kompaniyalar tanlovlarini — ko'pincha kerakli yo'nalishdagi o'z ishlab chiqish jamoasi bo'lmagan bosh pudratchi yutadi. Biz shunday bosh pudratchida texnik subpudratchi sifatida ishlaymiz. Tenderlarda qatnashadigan kompaniyani bilsangiz, uni agentlik kabi ulang: 12 oy davomida uning barcha buyurtmalari sizga hisoblanadi.",
     tenderPoints: [
       "Ariza topshirishdan oldin: texnik topshiriqni tahlil qilamiz, muddat va tannarxni baholaymiz, arizaning texnik qismini tayyorlaymiz.",
       "G'alabadan keyin: texnik topshiriq bo'yicha ishlab chiqish, hujjatlar, shartnoma bosqichlari bo'yicha topshirish va kafolat muddati.",
@@ -331,7 +331,7 @@ const uz: DeckCopy = {
     rules: [
       "Ulush mijoz loyihani to'liq to'lagach hisoblanadi.",
       "O'zingizdan kelgan so'rovlar va havolangizdan oldin biz bilan ishlagan mijozlar hisobga olinmaydi.",
-      "Agentlik yoki kompaniya biz tasdiqlaganimizdan keyin hisoblanadi; bitta kompaniya — bitta hamkor, kim birinchi ulagan bo'lsa.",
+      "Agentlik yoki kompaniya biz tasdiqlaganimizdan keyin 12 oyga hisoblanadi; bitta kompaniya — bitta hamkor, kim birinchi ulagan bo'lsa.",
     ],
     ctaTitle: "Bugun boshlang",
     ctaJoin: "Hamkor bo'lish",
@@ -391,12 +391,12 @@ const zh: DeckCopy = {
     ways: [
       { title: "短链接", text: "devuz.studio/r/……——每个渠道一个。对方点击后 30 天内提交申请即归您，即使之后不通过链接再来。" },
       { title: "Telegram 机器人链接", text: "适合更愿意发消息而非填表的人：带您代码进入机器人同样计入。" },
-      { title: "接入代理机构或公司", text: "IT 公司、网站工作室、营销或设计代理机构、系统集成商——任何经常有开发订单的公司，都可以把订单以分包形式交给我们。它的所有订单都归您，没有时间限制。" },
+      { title: "接入代理机构或公司", text: "IT 公司、网站工作室、营销或设计代理机构、系统集成商——任何经常有开发订单的公司，都可以把订单以分包形式交给我们。确认后 12 个月内，它的所有订单都归您。" },
     ],
     agencyTitle: "示例：您接入了一家代理机构",
-    agencyText: "代理机构和 IT 公司一直需要开发：营销代理机构需要为客户广告做网站和落地页，集成商需要机器人和系统对接，网站工作室在人手不够时需要团队。您把公司介绍给我们并在后台添加；我们确认后，从那天起它交给我们的每个订单都算您的。它不需要链接：它直接联系我们，我们通过联系方式和名称识别其订单。",
+    agencyText: "代理机构和 IT 公司一直需要开发：营销代理机构需要为客户广告做网站和落地页，集成商需要机器人和系统对接，网站工作室在人手不够时需要团队。您把公司介绍给我们并在后台添加；我们确认后，从那天起 12 个月内它交给我们的每个订单都算您的。它不需要链接：它直接联系我们，我们通过联系方式和名称识别其订单。",
     tenderTitle: "招标与政府合同：我们做分包",
-    tenderText: "IT 招标——政府采购和大公司的竞标——常由总包方中标，而总包方往往没有对口的自有开发团队。我们为这样的总包方担任技术分包。如果您认识参与投标的公司，就像代理机构一样把它接入：它的所有订单都算您的。",
+    tenderText: "IT 招标——政府采购和大公司的竞标——常由总包方中标，而总包方往往没有对口的自有开发团队。我们为这样的总包方担任技术分包。如果您认识参与投标的公司，就像代理机构一样把它接入：12 个月内它的所有订单都算您的。",
     tenderPoints: [
       "投标前：分析技术规格书，评估工期和成本，准备投标文件的技术部分。",
       "中标后：按技术规格书开发、编写文档、按合同阶段交付并提供质保期服务。",
@@ -420,7 +420,7 @@ const zh: DeckCopy = {
     rules: [
       "客户全额支付项目后才计入您的分成。",
       "您本人的申请以及在您的链接之前已与我们合作的客户不计入。",
-      "代理机构或公司经我们确认后计入；一家公司只归一位合作伙伴，以先接入者为准。",
+      "代理机构或公司经我们确认后计入，为期 12 个月；一家公司只归一位合作伙伴，以先接入者为准。",
     ],
     ctaTitle: "今天就开始",
     ctaJoin: "成为合作伙伴",

@@ -5,7 +5,15 @@ import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { money } from "@/lib/admin/finance";
 import { requireAdmin } from "@/lib/admin/guard";
-import { MIN_PAYOUT_USD, PARTNER_TIERS, PERK_TITLE, linkUrl, shortUrl } from "@/lib/partners/rules";
+import {
+  MIN_PAYOUT_USD,
+  PARTNER_TIERS,
+  PERK_TITLE,
+  agencyCounts,
+  agencyUntilDay,
+  linkUrl,
+  shortUrl,
+} from "@/lib/partners/rules";
 import { agenciesOf, listPartners, summarize } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
@@ -156,10 +164,11 @@ export default async function PartnersPage({
       </h2>
       <p className="mt-1 max-w-2xl text-xs text-faint">
         Партнёр подключает агентство или компанию, откуда регулярно идут заказы на разработку: IT-компанию,
-        веб-студию, маркетинговое агентство, интегратора, генподрядчика тендеров. Подтвердите — и все её
-        заказы засчитываются партнёру без ограничения в 30 дней: заявки узнаются по контакту и названию
+        веб-студию, маркетинговое агентство, интегратора, генподрядчика тендеров. Подтвердите — и 12 месяцев
+        все её заказы засчитываются партнёру, без ограничения в 30 дней: заявки узнаются по контакту и названию
         компании, а проект, заведённый руками, привязывается в карточке проекта, блок «Партнёр».
-        Отклоняйте, если компания уже работает с нами.
+        Отклоняйте, если компания уже работает с нами. Срок вышел — новые заказы идут как обычные;
+        «Продлить на 12 месяцев» начинает новый срок с сегодняшнего дня.
       </p>
       <section className="mt-2 overflow-x-auto rounded-xl border border-line bg-surface">
         <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[900px]">
@@ -183,8 +192,13 @@ export default async function PartnersPage({
                 <td data-label="Контакт" className={`${TD} font-mono text-xs`}>{a.contact ?? "—"}</td>
                 <td data-label="Партнёр" className={TD}>{partnerName.get(a.partner_id) ?? "—"}</td>
                 <td data-label="Статус" className={`${TD} text-xs`}>
-                  {a.status === "active" ? (
-                    <span className="text-green">подключено {a.decided_at ? when(a.decided_at) : ""}</span>
+                  {a.status === "active" && agencyCounts(a) ? (
+                    <span className="text-green">
+                      подключено {a.decided_at ? when(a.decided_at) : ""} · заказы партнёру до{" "}
+                      {agencyUntilDay(a.decided_at)}
+                    </span>
+                  ) : a.status === "active" ? (
+                    <span className="text-gold">срок вышел {agencyUntilDay(a.decided_at)} — новые заказы не засчитываются</span>
                   ) : a.status === "rejected" ? (
                     <span className="text-faint">отклонено{a.decision_note ? `: ${a.decision_note}` : ""}</span>
                   ) : (
@@ -197,6 +211,10 @@ export default async function PartnersPage({
                     {a.status !== "active" ? (
                       <button type="submit" name="decision" value="active" className={BUTTON}>
                         Подтвердить
+                      </button>
+                    ) : !agencyCounts(a) ? (
+                      <button type="submit" name="decision" value="active" className={BUTTON}>
+                        Продлить на 12 месяцев
                       </button>
                     ) : null}
                     {a.status !== "rejected" ? (

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import {
@@ -16,7 +17,10 @@ import {
   partnerPercent,
   perkPercent,
   tierPercent,
+  AGENCY_TERM_MONTHS,
+  agencyCounts,
   agencyMatches,
+  agencyUntilDay,
   canSwitchModel,
   companyKey,
   contactKey,
@@ -233,4 +237,25 @@ test("реквизиты: TRC-20 или хотя бы восемь символ�
   assert.equal(validRequisites("карта"), false);
   assert.equal(perkPercent("disc_10"), 10);
   assert.equal(perkPercent("none"), 0);
+});
+
+test("агентство засчитывается 12 месяцев с подтверждения, привязанное остаётся", () => {
+  // Владелец, 28.09: «ставь 12 месяцев».
+  assert.equal(AGENCY_TERM_MONTHS, 12);
+  const agency = { status: "active", decided_at: "2026-09-28T12:00:00Z" };
+  assert.equal(agencyUntilDay(agency.decided_at), "28.09.2027");
+  assert.equal(agencyCounts(agency, new Date("2027-09-28T11:59:00Z")), true, "последний день срока");
+  assert.equal(agencyCounts(agency, new Date("2027-09-28T12:00:00Z")), false, "срок вышел");
+  assert.equal(agencyCounts({ status: "pending", decided_at: null }), false);
+  assert.equal(agencyCounts({ status: "rejected", decided_at: agency.decided_at }, new Date("2026-10-01")), false);
+  assert.equal(agencyUntilDay(null), "");
+
+  const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const store = read("lib/partners/store.ts");
+  // Новые заявки — только к агентству в сроке.
+  assert.match(store, /\(await agenciesOf\("all"\)\)\.filter\(\(a\) => agencyCounts\(a, now\)\)/);
+  // Руками в карточке проекта — тоже, но уже привязанное не отвязывается.
+  assert.match(store, /if \(!kept && !agencyCounts\(/);
+  // Продлить — то же «Подтвердить»: новый срок с сегодняшнего дня.
+  assert.match(read("app/admin/partners/page.tsx"), /Продлить на 12 месяцев/);
 });

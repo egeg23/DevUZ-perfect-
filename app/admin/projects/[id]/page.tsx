@@ -46,7 +46,7 @@ import {
   stageProgress,
 } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
-import { VOID_TITLE, partnerAccrualOf, type VoidReason } from "@/lib/partners/rules";
+import { VOID_TITLE, agencyCounts, partnerAccrualOf, type VoidReason } from "@/lib/partners/rules";
 import { agenciesOf, listPartners, partnerById } from "@/lib/partners/store";
 
 export const dynamic = "force-dynamic";
@@ -148,7 +148,11 @@ export default async function ProjectPage({
   // Партнёрская строка: ставка — по сумме проекта (rules.ts, PARTNER_TIERS).
   const partnerLine = partner ? partnerAccrualOf(project, payments, partner) : null;
   // Подключённые агентства — для выбора «Заказ агентства» в блоке «Партнёр».
-  const partnerAgencies = isAdmin ? (await agenciesOf("all")).filter((a) => a.status === "active") : [];
+  // В списке — агентства в сроке (12 месяцев с подтверждения) и то, что уже
+  // стоит на проекте: проект, привязанный внутри срока, за агентством и остаётся.
+  const partnerAgencies = isAdmin
+    ? (await agenciesOf("all")).filter((a) => agencyCounts(a) || a.id === project.partner_agency_id)
+    : [];
   const projectAgency = partnerAgencies.find((a) => a.id === project.partner_agency_id) ?? null;
   const paid = paidOf(project.id, payments);
   const lines = accrualsOf(project, payments, earnersOf(people), sharesOf(project.id, shares));
