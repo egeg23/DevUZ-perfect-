@@ -84,8 +84,8 @@ export function tenderPrice(locale: RazborLocale): string {
   if (!service) return "";
   const { priceFromUsd: p, weeksFrom: a, weeksTo: b } = service;
   return locale === "ru"
-    ? `Техническое задание — от $${p}, ${a}–${b} недели. Разработка на субподряде — по объёму контракта, оценка до подачи заявки.`
-    : `Texnik topshiriq — $${p} dan, ${a}–${b} hafta. Subpudratda ishlab chiqish — shartnoma hajmiga qarab, baho ariza topshirishdan oldin.`;
+    ? `Техническое задание — от $${p}, ${a}–${b} недели: цена зависит от сложности системы, архитектуры, стека и интеграций. Разработка на субподряде — по объёму контракта, оценка до подачи заявки.`
+    : `Texnik topshiriq — $${p} dan, ${a}–${b} hafta: narx tizim murakkabligi, arxitektura, stek va integratsiyalarga bog‘liq. Subpudratda ishlab chiqish — shartnoma hajmiga qarab, baho ariza topshirishdan oldin.`;
 }
 
 /**

@@ -51,6 +51,7 @@ const ru = {
     weeks: "недель",
     stack: "Стек",
     included: "Что входит",
+    priceFactors: "От чего зависит цена",
   },
   cases: {
     kicker: "кейсы",
@@ -474,6 +475,7 @@ const en: Dictionary = {
     weeks: "weeks",
     stack: "Stack",
     included: "What's included",
+    priceFactors: "What affects the price",
   },
   cases: {
     kicker: "work",
@@ -870,6 +872,7 @@ const uz: Dictionary = {
     weeks: "hafta",
     stack: "Stek",
     included: "Nimalar kiradi",
+    priceFactors: "Narx nimaga bog‘liq",
   },
   cases: {
     kicker: "loyihalar",
@@ -1266,6 +1269,7 @@ const zh: Dictionary = {
     weeks: "周",
     stack: "技术栈",
     included: "服务内容",
+    priceFactors: "价格取决于什么",
   },
   cases: {
     kicker: "案例",

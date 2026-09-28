@@ -117,6 +117,9 @@ test("округлять можно, врать при округлении — 
   assert.deepEqual(unsupportedNumbers("примерно 1 секунду", "1261"), []);
   assert.deepEqual(unsupportedNumbers("примерно 1,2 секунды", "1261"), ["1,2"]);
   assert.deepEqual(unsupportedNumbers("около 0,4 секунды", "1261"), ["0,4"]);
+  // Цены — только дословно: «$400» за ТЗ не разрешает «0,4 секунды».
+  assert.deepEqual(unsupportedNumbers("около 0,4 секунды", "1261", "400 1 4"), ["0,4"]);
+  assert.deepEqual(unsupportedNumbers("ТЗ от $400, 1–4 недели", "1261", "400 1 4"), []);
 
   assert.ok(derivable(1.3, [1261]));
   assert.ok(!derivable(1.2, [1261]));

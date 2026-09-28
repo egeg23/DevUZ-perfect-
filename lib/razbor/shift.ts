@@ -87,10 +87,24 @@ export const OFF_LIMITS = new Set(["stomatologiya", "medcentr"]);
  * статья разойдётся с отчётом, который лежит в той же строке базы.
  */
 export function factPool(report: AuditReport): string {
+  return `${auditPool(report)} ${pricePool()}`;
+}
+
+/** Числа аудита: их можно округлять и переводить из миллисекунд в секунды. */
+export function auditPool(report: AuditReport): string {
   const findings = report.findings.map((f) => `${f.title} ${f.impact} ${f.fix}`).join(" ");
-  const facts = `ttfb ${report.facts.ttfbMs} балл ${report.score} сертификат ${report.facts.certDaysLeft ?? ""}`;
-  const price = services.map((s) => `${s.priceFromUsd} ${s.weeksFrom} ${s.weeksTo}`).join(" ");
-  return `${findings} ${facts} ${price}`;
+  return `${findings} ttfb ${report.facts.ttfbMs} балл ${report.score} сертификат ${report.facts.certDaysLeft ?? ""}`;
+}
+
+/**
+ * Цены и сроки студии: их называют только как есть.
+ *
+ * Отдельно от аудита после 28.09: у ТЗ появилась цена «от $400», и перевод
+ * «миллисекунды в секунды», разрешённый для чисел аудита, сделал из неё
+ * законные «0,4 секунды» — выдуманное время ответа проходило проверку.
+ */
+export function pricePool(): string {
+  return services.map((s) => `${s.priceFromUsd} ${s.weeksFrom} ${s.weeksTo}`).join(" ");
 }
 
 /** Числа из текста, в том виде, в каком их читает человек. */
@@ -128,10 +142,19 @@ export function derivable(value: number, pool: readonly number[]): boolean {
   });
 }
 
-/** Числа, которых модель не могла узнать: ни из аудита, ни из прайса. */
-export function unsupportedNumbers(text: string, pool: string): string[] {
+/**
+ * Числа, которых модель не могла узнать: ни из аудита, ни из прайса.
+ *
+ * `pool` — числа, которые можно округлять и переводить (замеры); `exact` —
+ * те, что называются только дословно (цены и сроки).
+ */
+export function unsupportedNumbers(text: string, pool: string, exact = ""): string[] {
   const allowed = numbersIn(pool).map(asNumber);
-  return numbersIn(text).filter((raw) => !derivable(asNumber(raw), allowed));
+  const literal = new Set(numbersIn(exact).map(asNumber));
+  return numbersIn(text).filter((raw) => {
+    const value = asNumber(raw);
+    return !literal.has(value) && !derivable(value, allowed);
+  });
 }
 
 export type ArticleProblem = { code: string; text: string };
@@ -165,7 +188,7 @@ export function articleProblems(input: {
     out.push({ code: "thin", text: "Меньше трёх находок — это заметка, а не разбор." });
   }
 
-  const invented = unsupportedNumbers(text, factPool(input.report));
+  const invented = unsupportedNumbers(text, auditPool(input.report), pricePool());
   if (invented.length) {
     out.push({ code: "invented", text: `Числа, которых нет в аудите: ${invented.join(", ")}.` });
   }
