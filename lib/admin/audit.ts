@@ -53,6 +53,9 @@ export const AUDIT_ACTIONS = [
   "staff.grade_changed",
   "staff.touch_plan_set",
   "staff.notices",
+  "partner.model_changed",
+  "partner.agency_requested",
+  "partner.agency_decided",
   // Деньги: сумма и вид проекта, платежи клиента, выплаты сотрудникам.
   "project.money_set",
   "project.quote_set",

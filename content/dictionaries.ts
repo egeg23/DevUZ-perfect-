@@ -282,7 +282,7 @@ const ru = {
   partners: {
     title: "Партнёрская программа",
     heading: "Зарабатывайте с нами",
-    lead: "Приводите клиентов — получайте от 10 до 30 % от суммы каждого их проекта: чем крупнее проект, тем выше процент. Без ограничений по числу клиентов, с выплатой раз в месяц.",
+    lead: "Приводите клиентов — получайте до 30 % от чистой прибыли или до 20 % с оборота каждого их проекта: модель выбираете сами, и чем крупнее проект, тем выше процент. Без ограничений по числу клиентов, с выплатой раз в месяц.",
     howTitle: "Как это работает",
     step1: "Войдите в кабинет партнёра через Telegram — там сразу ваша короткая ссылка. Под каждый канал можно завести свою: Telegram-канал, Instagram, рассылку.",
     step2: "Человек открывает ссылку — сайт запоминает вас на 30 дней. Оставит за это время заявку на сайте или напишет боту — клиент ваш, даже если вернулся уже без ссылки.",
@@ -290,7 +290,10 @@ const ru = {
     ratesTitle: "Сколько",
     tierUpTo: "до {amount}",
     tierOver: "дороже {amount}",
-    rateNote: "Процент — от суммы проекта по договору, по ступени этого проекта. Считается с каждого проекта клиента, включая следующие.",
+    colRange: "Сумма проекта",
+    colProfit: "От прибыли",
+    colTurnover: "С оборота",
+    rateNote: "«От прибыли» — процент от чистой прибыли проекта: сумма договора минус налог и себестоимость. «С оборота» — процент от всей суммы договора: меньше, зато известен сразу. Модель выбирается в кабинете и меняется не чаще раза в неделю; за клиентом закрепляется та, что действовала в день его заявки. Считается с каждого проекта клиента, включая следующие.",
     perkTitle: "Бонус вашей аудитории",
     perk: "В кабинете к ссылке можно прикрепить скидку 5, 10 или 15 % на первый проект — это ваш оффер аудитории. Ваш процент идёт сверху.",
     payoutTitle: "Выплаты",
@@ -320,7 +323,11 @@ const ru = {
       },
       {
         q: "С чего считается процент?",
-        a: "С суммы проекта по договору. Ставка зависит от суммы: до 2 500 $ — 10 %, до 5 000 $ — 15 %, до 10 000 $ — 20 %, до 30 000 $ — 25 %, дороже — 30 %. С каждого проекта этого клиента — и с первого, и со следующих.",
+        a: "На выбор: от чистой прибыли проекта (сумма договора минус налог и себестоимость) — 10, 15, 20, 25 или 30 %, или с оборота (всей суммы договора) — 6, 10, 14, 17 или 20 %. Ступень — по сумме проекта: до 2 500 $, до 5 000 $, до 10 000 $, до 30 000 $ и дороже. С каждого проекта этого клиента — и с первого, и со следующих.",
+      },
+      {
+        q: "Я подключу агентство, которое будет отдавать вам заказы. Как считается?",
+        a: "Подключите агентство в кабинете — после нашего подтверждения все его заказы засчитываются вам, без ограничения в 30 дней: и первый, и каждый следующий. Агентство пишет нам напрямую, ссылка ему не нужна — мы узнаём его заказы по контакту и названию.",
       },
       {
         q: "Нужно ли что-то подписывать?",
@@ -672,7 +679,7 @@ const en: Dictionary = {
   partners: {
     title: "Partner program",
     heading: "Earn with us",
-    lead: "Bring clients and earn 10–30% of every project they order: the bigger the project, the higher the rate. No limit on the number of clients, payouts once a month.",
+    lead: "Bring clients and earn up to 30% of net profit or up to 20% of turnover on every project they order: you choose the model, and the bigger the project, the higher the rate. No limit on the number of clients, payouts once a month.",
     howTitle: "How it works",
     step1: "Sign in to the partner dashboard with Telegram — your short link is already there. You can create a separate one per channel: a Telegram channel, Instagram, a newsletter.",
     step2: "A person opens your link — the site remembers you for 30 days. If they leave a request on the site or write to the bot within that time, the client is yours, even if they came back without the link.",
@@ -680,7 +687,10 @@ const en: Dictionary = {
     ratesTitle: "How much",
     tierUpTo: "up to {amount}",
     tierOver: "over {amount}",
-    rateNote: "The percentage is of the contract amount, at that project's tier. It applies to every project of the client, including the next ones.",
+    colRange: "Project amount",
+    colProfit: "Of profit",
+    colTurnover: "Of turnover",
+    rateNote: "“Of profit” is a percentage of the project's net profit: the contract amount minus tax and costs. “Of turnover” is a percentage of the whole contract amount: lower, but known right away. You choose the model in your dashboard and can change it once a week; a client keeps the model that was active on the day of their request. It applies to every project of the client, including the next ones.",
     perkTitle: "A bonus for your audience",
     perk: "In the dashboard you can attach a 5, 10 or 15% discount on the first project to your link — that's your offer to your audience. Your percentage comes on top.",
     payoutTitle: "Payouts",
@@ -710,7 +720,11 @@ const en: Dictionary = {
       },
       {
         q: "What is the percentage calculated from?",
-        a: "From the contract amount. The rate depends on the amount: up to $2,500 — 10%, up to $5,000 — 15%, up to $10,000 — 20%, up to $30,000 — 25%, above that — 30%. From every project of that client — the first and the following ones.",
+        a: "Your choice: of the project's net profit (contract amount minus tax and costs) — 10, 15, 20, 25 or 30%, or of turnover (the whole contract amount) — 6, 10, 14, 17 or 20%. The tier depends on the project amount: up to $2,500, up to $5,000, up to $10,000, up to $30,000 and above. From every project of that client — the first and the following ones.",
+      },
+      {
+        q: "I'll connect an agency that will pass orders to you. How is that counted?",
+        a: "Connect the agency in your dashboard — once we confirm it, all its orders count as yours, with no 30-day limit: the first one and every next one. The agency writes to us directly and doesn't need a link — we recognise its orders by contact and name.",
       },
       {
         q: "Do I need to sign anything?",
@@ -1056,7 +1070,7 @@ const uz: Dictionary = {
   partners: {
     title: "Hamkorlik dasturi",
     heading: "Biz bilan daromad qiling",
-    lead: "Mijozlarni olib keling — ularning har bir loyihasi summasidan 10 dan 30 % gacha oling: loyiha qanchalik yirik bo'lsa, foiz shunchalik yuqori. Mijozlar soni cheklanmagan, to'lov oyiga bir marta.",
+    lead: "Mijozlarni olib keling — ularning har bir loyihasidan sof foydaning 30 % gacha yoki aylanmaning 20 % gacha oling: modelni o'zingiz tanlaysiz, loyiha qanchalik yirik bo'lsa, foiz shunchalik yuqori. Mijozlar soni cheklanmagan, to'lov oyiga bir marta.",
     howTitle: "Bu qanday ishlaydi",
     step1: "Hamkor kabinetiga Telegram orqali kiring — u yerda qisqa havolangiz tayyor. Har bir kanal uchun alohida havola ochish mumkin: Telegram-kanal, Instagram, xabarnoma.",
     step2: "Odam havolani ochadi — sayt sizni 30 kun eslab qoladi. Shu vaqt ichida u saytda so'rov qoldirsa yoki botga yozsa — mijoz sizniki, hatto keyin havolasiz qaytib kelgan bo'lsa ham.",
@@ -1064,7 +1078,10 @@ const uz: Dictionary = {
     ratesTitle: "Qancha",
     tierUpTo: "{amount} gacha",
     tierOver: "{amount} dan yuqori",
-    rateNote: "Foiz — shartnoma bo'yicha loyiha summasidan, shu loyiha pog'onasi bo'yicha. Mijozning har bir loyihasidan, keyingilarini ham qo'shib hisoblanadi.",
+    colRange: "Loyiha summasi",
+    colProfit: "Foydadan",
+    colTurnover: "Aylanmadan",
+    rateNote: "«Foydadan» — loyiha sof foydasidan foiz: shartnoma summasidan soliq va tannarx ayirilgani. «Aylanmadan» — butun shartnoma summasidan foiz: kamroq, lekin darhol ma'lum. Model kabinetda tanlanadi va haftasiga bir martadan ko'p o'zgartirilmaydi; mijozga uning so'rovi kunidagi model biriktiriladi. Mijozning har bir loyihasidan, keyingilarini ham qo'shib hisoblanadi.",
     perkTitle: "Auditoriyangiz uchun bonus",
     perk: "Kabinetda havolaga birinchi loyihaga 5, 10 yoki 15 % chegirma biriktirish mumkin — bu sizning auditoriyangizga taklifingiz. Sizning foizingiz ustidan boradi.",
     payoutTitle: "To'lovlar",
@@ -1094,7 +1111,11 @@ const uz: Dictionary = {
       },
       {
         q: "Foiz nimadan hisoblanadi?",
-        a: "Shartnoma bo'yicha loyiha summasidan. Stavka summaga bog'liq: 2 500 $ gacha — 10 %, 5 000 $ gacha — 15 %, 10 000 $ gacha — 20 %, 30 000 $ gacha — 25 %, undan yuqori — 30 %. Bu mijozning har bir loyihasidan — birinchisidan ham, keyingilaridan ham.",
+        a: "Tanlovingizga ko'ra: loyiha sof foydasidan (shartnoma summasi minus soliq va tannarx) — 10, 15, 20, 25 yoki 30 %, yoki aylanmadan (butun shartnoma summasi) — 6, 10, 14, 17 yoki 20 %. Pog'ona loyiha summasiga qarab: 2 500 $ gacha, 5 000 $ gacha, 10 000 $ gacha, 30 000 $ gacha va undan yuqori. Bu mijozning har bir loyihasidan — birinchisidan ham, keyingilaridan ham.",
+      },
+      {
+        q: "Sizga buyurtma beradigan agentlikni ulayman. Qanday hisoblanadi?",
+        a: "Agentlikni kabinetda ulang — biz tasdiqlaganimizdan keyin uning barcha buyurtmalari sizga hisoblanadi, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. Agentlik bizga to'g'ridan-to'g'ri yozadi, unga havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
       },
       {
         q: "Biror narsa imzolash kerakmi?",
@@ -1439,7 +1460,7 @@ const zh: Dictionary = {
   partners: {
     title: "合作伙伴计划",
     heading: "与我们一起赚钱",
-    lead: "介绍客户，即可获得其每个项目金额的 10%–30%：项目越大，比例越高。客户数量不限，每月结算一次。",
+    lead: "介绍客户，每个项目可获得最高 30% 的净利润分成或最高 20% 的营业额分成：模式由您选择，项目越大，比例越高。客户数量不限，每月结算一次。",
     howTitle: "如何运作",
     step1: "通过 Telegram 登录合作伙伴后台——您的短链接已经准备好。可以为每个渠道单独创建：Telegram 频道、Instagram、邮件列表。",
     step2: "对方打开您的链接——网站会记住您 30 天。在此期间他在网站上留下需求或给机器人写信，客户就是您的，即使他之后没通过链接再次访问。",
@@ -1447,7 +1468,10 @@ const zh: Dictionary = {
     ratesTitle: "金额",
     tierUpTo: "{amount} 以内",
     tierOver: "超过 {amount}",
-    rateNote: "比例按合同金额计算，取该项目所在的档位。适用于该客户的每一个项目，包括后续项目。",
+    colRange: "项目金额",
+    colProfit: "按利润",
+    colTurnover: "按营业额",
+    rateNote: "“按利润”——项目净利润的比例：合同金额减去税费和成本。“按营业额”——整个合同金额的比例：比例较低，但立即可知。模式在后台选择，每周最多更改一次；客户按其提交申请当天生效的模式计算。适用于该客户的每一个项目，包括后续项目。",
     perkTitle: "给您受众的福利",
     perk: "在后台可以为链接附加首个项目 5%、10% 或 15% 的折扣 —— 这是您给受众的优惠。您的比例在此之上计算。",
     payoutTitle: "结算",
@@ -1477,7 +1501,11 @@ const zh: Dictionary = {
       },
       {
         q: "提成按什么计算？",
-        a: "按合同金额计算。比例取决于金额：2,500 美元以内 10%，5,000 美元以内 15%，10,000 美元以内 20%，30,000 美元以内 25%，更高 30%。该客户的每个项目都算——第一个和之后的都算。",
+        a: "由您选择：按项目净利润（合同金额减去税费和成本）——10%、15%、20%、25% 或 30%；或按营业额（整个合同金额）——6%、10%、14%、17% 或 20%。档位按项目金额划分：2,500 美元以内、5,000 美元以内、10,000 美元以内、30,000 美元以内以及更高。该客户的每个项目都算——第一个和之后的都算。",
+      },
+      {
+        q: "我会介绍一家向你们下单的代理机构，怎么计算？",
+        a: "在后台添加该代理机构——经我们确认后，它的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。代理机构直接联系我们，不需要链接——我们通过联系方式和名称识别其订单。",
       },
       {
         q: "需要签署什么吗？",

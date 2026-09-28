@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { cabinetCopy } from "@/content/partner-cabinet";
+import { deckCopy } from "@/content/partner-decks";
 import { getDictionary } from "@/content/dictionaries";
 import { locales } from "@/lib/i18n";
 import { REF_COOKIE_OPTIONS, REF_TTL_DAYS, formatRef, parseRef } from "@/lib/partners/ref-cookie";
@@ -12,6 +13,7 @@ import {
   SLUG_RE,
   TARGETS,
   generateSlug,
+  isPayoutModel,
   isBotAgent,
   refFromCookieHeader,
   shortUrl,
@@ -186,7 +188,13 @@ test("вход: одноразовая ссылка, хеши в базе, ку�
   assert.match(enter, /httpOnly: true/);
 
   const actions = read("app/[locale]/partners/cabinet/actions.ts");
-  for (const name of ["createLinkAction", "saveRequisitesAction", "requestPayoutAction"]) {
+  for (const name of [
+    "createLinkAction",
+    "saveRequisitesAction",
+    "requestPayoutAction",
+    "switchModelAction",
+    "requestAgencyAction",
+  ]) {
     const at = actions.indexOf(`export async function ${name}(`);
     assert.ok(at > 0, `${name} пропало`);
     assert.match(actions.slice(at, at + 300), /const partner = await currentPartner\(\);\s*if \(!partner\) redirect/, `${name} не проверяет вход`);
@@ -228,4 +236,98 @@ test("пункт меню «Зарабатывай с нами» и страни
   assert.equal(getDictionary("ru").nav.partners, "Зарабатывай с нами");
   assert.match(read("components/layout/footer.tsx"), /localeHref\(locale, "partners"\)/);
   assert.match(read("app/[locale]/partners/page.tsx"), /\?start=cabinet/);
+});
+
+/* ── Две модели дохода ──────────────────────────────────────────────────── */
+
+test("модель меняется раз в неделю — проверка в самом запросе, смена в журнале", () => {
+  // Владелец: «выбор модели доступен к смене раз в неделю, мы должны это
+  // учитывать». Проверка только в коде пропустила бы две смены подряд из
+  // двух вкладок — условие стоит в самом UPDATE.
+  const store = read("lib/partners/store.ts");
+  const at = store.indexOf("export async function setPayoutModel(");
+  const body = store.slice(at, store.indexOf("export async function", at + 10));
+  assert.match(body, /if \(!canSwitchModel\(partner\.model_changed_at, now\)\) return \{ ok: false, reason: "too_soon" \};/);
+  assert.match(body, /\.or\(`model_changed_at\.is\.null,model_changed_at\.lte\."\$\{cutoff\}"`\)/);
+  assert.match(body, /if \(!data\) return \{ ok: false, reason: "too_soon" \};/);
+  assert.match(body, /from\("partner_model_changes"\)\.insert\(/);
+  assert.equal(isPayoutModel("profit") && isPayoutModel("turnover"), true);
+  assert.equal(isPayoutModel("cash"), false);
+
+  const sql = read("supabase/migrations/0065_partner_models_agencies.sql");
+  assert.match(sql, /add column if not exists payout_model text not null default 'profit'/, "у старых партнёров сменилась бы модель");
+  assert.match(sql, /create table if not exists public\.partner_model_changes/);
+});
+
+test("модель закрепляется за клиентом в день заявки и едет в проект", () => {
+  // Смена модели не переписывает деньги по уже идущим проектам.
+  const store = read("lib/partners/store.ts");
+  const at = store.indexOf("export async function attributeLead(");
+  assert.match(store.slice(at, store.indexOf("export async function", at + 10)), /partner_model: partner\.payout_model,/);
+  const projects = read("lib/admin/projects.ts");
+  assert.match(projects, /partnerModel = \(lead\.partner_model as string \| null\) \?\? null;/);
+  assert.match(projects, /partner_model: partnerModel,/);
+});
+
+/* ── Агентства на субподряде ────────────────────────────────────────────── */
+
+test("заказ агентства — партнёру всегда, раньше кода и без окна в 30 дней", () => {
+  const attribute = read("lib/partners/attribute.ts");
+  const agency = attribute.indexOf("await attributeAgencyLead(leadId");
+  const noCode = attribute.indexOf("if (!attribution.code) return null;");
+  assert.ok(agency > 0 && noCode > agency, "без кода в заявке заказ агентства не проверяется");
+  // Заявка без кода тоже доходит до проверки агентства — во всех каналах.
+  assert.match(read("lib/qualify/engine.ts"), /await attributeAndNotify\(leadId, options\.attribution \?\? \{ code: null \}, lead\);/);
+  assert.doesNotMatch(read("app/api/lead/route.ts"), /if \(ref\)[^\n]*attributeAndNotify/);
+
+  const store = read("lib/partners/store.ts");
+  const at = store.indexOf("export async function attributeAgencyLead(");
+  const body = store.slice(at, store.indexOf("export async function", at + 10));
+  assert.match(body, /\.filter\(\(a\) => a\.status === "active"\)/, "засчитывается агентство без подтверждения");
+  assert.match(body, /partner_agency_id: agency\.id,/);
+});
+
+test("агентство подтверждает только владелец", () => {
+  const actions = read("app/admin/partners/actions.ts");
+  const at = actions.indexOf("export async function decideAgencyAction(");
+  assert.ok(at > 0);
+  assert.match(actions.slice(at, at + 120), /const admin = await requireAdmin\(\);/);
+  const sql = read("supabase/migrations/0065_partner_models_agencies.sql");
+  assert.match(sql, /status text not null default 'pending'/, "новое агентство сразу засчитывается");
+  assert.match(sql, /alter table public\.partner_agencies enable row level security;/);
+});
+
+/* ── Презентации ────────────────────────────────────────────────────────── */
+
+test("презентации: четыре языка, те же пункты, ссылка из кабинета с кодом", () => {
+  const ru = deckCopy("ru");
+  for (const locale of locales) {
+    const d = deckCopy(locale);
+    for (const part of ["studio", "program"] as const) {
+      assert.deepEqual(Object.keys(d[part]).sort(), Object.keys(ru[part]).sort(), `${locale}/${part}: ключи разошлись`);
+    }
+    assert.equal(d.studio.languages.length, ru.studio.languages.length, `${locale}: языки`);
+    assert.equal(d.studio.how.length, ru.studio.how.length, `${locale}: как работаем`);
+    assert.equal(d.program.ways.length, ru.program.ways.length, `${locale}: способы`);
+    assert.equal(d.program.exampleOrders.length, 3, `${locale}: пример агентства`);
+    assert.equal(d.program.cabinet.length, ru.program.cabinet.length, `${locale}: кабинет`);
+    assert.equal(d.program.rules.length, ru.program.rules.length, `${locale}: правила`);
+    // Выплаты — как в правилах, а не «на глаз».
+    assert.ok(d.program.cabinet.some((line) => line.includes("50")), `${locale}: минимум выплаты`);
+  }
+
+  for (const deck of ["studio", "program"]) {
+    const page = read(`app/[locale]/partners/deck/${deck}/page.tsx`);
+    assert.match(page, /noIndex: true/, `${deck}: презентация попадёт в поиск`);
+  }
+  // Пример в презентации считается по той же таблице, что и деньги.
+  assert.match(read("app/[locale]/partners/deck/program/page.tsx"), /tierPercent\(amount, "turnover"\)/);
+  assert.match(read("app/[locale]/partners/deck/program/page.tsx"), /PARTNER_TIERS\.map\(/);
+
+  const view = read("components/partners/cabinet-view.tsx");
+  assert.match(view, /partners\/deck\/\$\{deck\}\?ref=\$\{partner\.code\}/, "клиент по презентации не засчитается партнёру");
+  // Печать: по листу на слайд, кнопка PDF в лист не попадает.
+  assert.match(read("components/partners/deck.tsx"), /@page \{ size: A4 landscape; margin: 0; \}/);
+  assert.doesNotMatch(read("app/globals.css"), /size: A4 landscape/, "альбомный лист достанется счёту");
+  assert.match(read("app/globals.css"), /#deck \.deck-noprint/);
 });

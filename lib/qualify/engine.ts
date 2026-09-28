@@ -389,9 +389,11 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
     console.error("saveLead", error);
   }
 
-  if (leadId && options.attribution?.code) {
+  // Без кода тоже: заказ может прийти от агентства партнёра — его узнают по
+  // контакту и компании, а не по ссылке.
+  if (leadId) {
     try {
-      await attributeAndNotify(leadId, options.attribution, lead);
+      await attributeAndNotify(leadId, options.attribution ?? { code: null }, lead);
     } catch (error) {
       console.error("partners: привязка лида", error);
     }

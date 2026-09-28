@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/i18n";
-import { MIN_PAYOUT_USD, PARTNER_TIERS, REF_TTL_DAYS } from "@/lib/partners/rules";
+import { MIN_PAYOUT_USD, MODEL_SWITCH_DAYS, PARTNER_TIERS, REF_TTL_DAYS, type PayoutModel } from "@/lib/partners/rules";
 import type { LinkFailure, PayoutFailure } from "@/lib/partners/store";
 
 /**
@@ -19,6 +19,8 @@ export type PartnerStats = {
   paidProjects: number;
   /** Персональная ставка, если владелец назначил. Иначе — по сумме проекта. */
   override: number | null;
+  /** Модель дохода партнёра сейчас: от прибыли или с оборота. */
+  model: PayoutModel;
   links: { code: string; label: string | null; clicks: number; leads: number; url: string }[];
 };
 
@@ -36,18 +38,26 @@ export type PartnerCopy = {
   cabinet: (minutes: number) => string;
   cabinetButton: string;
   /** Договор с приведённым клиентом подписан. */
-  contractSigned: (who: string, amountUsd: number | null, shareUsd: number | null, percent: number) => string;
+  contractSigned: (
+    who: string,
+    amountUsd: number | null,
+    shareUsd: number | null,
+    percent: number,
+    model: PayoutModel,
+  ) => string;
 };
 
 const usd = (n: number) => `${n.toLocaleString("ru-RU")} $`;
 
-/** Таблица ставок строками — из той же таблицы, по которой считаются деньги. */
-function tiers(upTo: (n: string) => string, over: (n: string) => string): string[] {
-  return PARTNER_TIERS.map((t, i) =>
-    t.upTo === null
-      ? `• ${over(usd(PARTNER_TIERS[i - 1]?.upTo ?? 0))} — <b>${t.percent} %</b>`
-      : `• ${upTo(usd(t.upTo))} — <b>${t.percent} %</b>`,
-  );
+/**
+ * Таблица ставок строками — из той же таблицы, по которой считаются деньги:
+ * «до 2 500 $ — 10 % прибыли / 6 % оборота».
+ */
+function tiers(upTo: (n: string) => string, over: (n: string) => string, profit: string, turnover: string): string[] {
+  return PARTNER_TIERS.map((t, i) => {
+    const range = t.upTo === null ? over(usd(PARTNER_TIERS[i - 1]?.upTo ?? 0)) : upTo(usd(t.upTo));
+    return `• ${range} — <b>${t.profit} %</b> ${profit} / <b>${t.turnover} %</b> ${turnover}`;
+  });
 }
 
 const ru: PartnerCopy = {
@@ -55,8 +65,9 @@ const ru: PartnerCopy = {
     [
       "🤝 <b>Партнёрская программа DevUz Studio</b>",
       "",
-      "Приводите клиентов — получаете процент от суммы каждого их проекта, без ограничений по числу клиентов. Чем крупнее проект, тем выше процент:",
-      ...tiers((n) => `до ${n}`, (n) => `дороже ${n}`),
+      "Приводите клиентов — получаете процент с каждого их проекта, без ограничений по числу клиентов. Две модели на выбор: от чистой прибыли проекта или с оборота (суммы договора). Чем крупнее проект, тем выше процент:",
+      ...tiers((n) => `до ${n}`, (n) => `дороже ${n}`, "прибыли", "оборота"),
+      `Модель выбирается в кабинете и меняется не чаще раза в ${MODEL_SWITCH_DAYS} дней; за клиентом закрепляется та, что действовала в день его заявки.`,
       "",
       "<b>Ваша ссылка на сайт:</b>",
       link,
@@ -78,7 +89,11 @@ const ru: PartnerCopy = {
       `Доступно к выводу: <b>${usd(s.available)}</b>`,
       "",
       `Клиентов по вашим ссылкам: ${s.leads} · оплаченных проектов: ${s.paidProjects} · ставка: ` +
-        (s.override !== null ? `${s.override} % (персональная)` : `от ${PARTNER_TIERS[0].percent} до ${PARTNER_TIERS[PARTNER_TIERS.length - 1].percent} % — по сумме проекта`),
+        (s.override !== null
+          ? `${s.override} % (персональная)`
+          : s.model === "turnover"
+            ? `с оборота, ${PARTNER_TIERS[0].turnover}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].turnover} % по сумме проекта`
+            : `от чистой прибыли, ${PARTNER_TIERS[0].profit}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].profit} % по сумме проекта`),
       "",
       "<b>Ссылки</b>",
       ...s.links.map(
@@ -132,12 +147,12 @@ const ru: PartnerCopy = {
 
   cabinetButton: "Открыть кабинет",
 
-  contractSigned: (who, amount, share, percent) =>
+  contractSigned: (who, amount, share, percent, model) =>
     [
       `📝 С клиентом ${who} подписан договор${amount ? ` на <b>${usd(amount)}</b>` : ""}.`,
       share
-        ? `Ваша доля — <b>${usd(share)}</b> (${percent} % от суммы проекта). Она начислится, когда клиент оплатит проект целиком.`
-        : `Ваша доля — ${percent} % от суммы проекта; она начислится после полной оплаты.`,
+        ? `Ваша доля — <b>${usd(share)}</b> (${percent} % ${model === "turnover" ? "с оборота" : "от чистой прибыли"}). Она начислится, когда клиент оплатит проект целиком.`
+        : `Ваша доля — ${percent} % от чистой прибыли проекта: сумма появится в кабинете, когда студия внесёт себестоимость, и начислится после полной оплаты.`,
       "Этапы и сумма — в кабинете: /cabinet.",
     ].join("\n"),
 };
@@ -147,8 +162,9 @@ const en: PartnerCopy = {
     [
       "🤝 <b>DevUz Studio partner program</b>",
       "",
-      "Bring clients and earn a percentage of every project they order, with no limit on the number of clients. The bigger the project, the higher the rate:",
-      ...tiers((n) => `up to ${n}`, (n) => `over ${n}`),
+      "Bring clients and earn a percentage of every project they order, with no limit on the number of clients. Two models to choose from: of the project's net profit or of turnover (the contract amount). The bigger the project, the higher the rate:",
+      ...tiers((n) => `up to ${n}`, (n) => `over ${n}`, "of profit", "of turnover"),
+      `You choose the model in your dashboard and can change it once every ${MODEL_SWITCH_DAYS} days; a client keeps the model that was active on the day of their request.`,
       "",
       "<b>Your website link:</b>",
       link,
@@ -170,7 +186,11 @@ const en: PartnerCopy = {
       `Available: <b>${usd(s.available)}</b>`,
       "",
       `Clients via your links: ${s.leads} · paid projects: ${s.paidProjects} · rate: ` +
-        (s.override !== null ? `${s.override}% (personal)` : `${PARTNER_TIERS[0].percent}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].percent}% depending on the project amount`),
+        (s.override !== null
+          ? `${s.override}% (personal)`
+          : s.model === "turnover"
+            ? `of turnover, ${PARTNER_TIERS[0].turnover}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].turnover}% by project amount`
+            : `of net profit, ${PARTNER_TIERS[0].profit}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].profit}% by project amount`),
       "",
       "<b>Links</b>",
       ...s.links.map(
@@ -224,12 +244,12 @@ const en: PartnerCopy = {
 
   cabinetButton: "Open dashboard",
 
-  contractSigned: (who, amount, share, percent) =>
+  contractSigned: (who, amount, share, percent, model) =>
     [
       `📝 The contract with your client ${who} is signed${amount ? ` for <b>${usd(amount)}</b>` : ""}.`,
       share
-        ? `Your share is <b>${usd(share)}</b> (${percent}% of the project amount). It is credited once the client pays the project in full.`
-        : `Your share is ${percent}% of the project amount; it is credited after full payment.`,
+        ? `Your share is <b>${usd(share)}</b> (${percent}% of ${model === "turnover" ? "turnover" : "net profit"}). It is credited once the client pays the project in full.`
+        : `Your share is ${percent}% of the project's net profit: the amount appears in your dashboard once the studio enters its costs, and is credited after full payment.`,
       "Stages and amounts are in your dashboard: /cabinet.",
     ].join("\n"),
 };

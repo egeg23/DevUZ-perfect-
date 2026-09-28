@@ -133,9 +133,10 @@ export async function POST(request: Request) {
   // память браузера, которую прислала форма.
   const mark = refFromHeader(request.headers.get("cookie"));
   const ref = mark?.code ?? codeFromQuery(body.ref);
-  if (leadId && ref) {
+  // Без кода тоже: заказ от агентства партнёра узнаётся по контакту.
+  if (leadId) {
     try {
-      await attributeAndNotify(leadId, { code: ref, at: mark?.code === ref ? mark.at : null }, lead);
+      await attributeAndNotify(leadId, { code: ref, at: ref && mark?.code === ref ? mark.at : null }, lead);
     } catch (error) {
       console.error("partners: привязка лида из формы", error);
     }

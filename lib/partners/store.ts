@@ -6,10 +6,17 @@ import type { Staff } from "@/lib/admin/session";
 import {
   MAX_LINKS,
   MIN_PAYOUT_USD,
+  MODEL_SWITCH_DAYS,
   REF_TTL_DAYS,
   canWithdrawNow,
   generateCode,
   generateSlug,
+  agencyMatches,
+  companyKey,
+  contactKey,
+  DEFAULT_MODEL,
+  canSwitchModel,
+  isPayoutModel,
   isPerk,
   isTarget,
   isReserved,
@@ -21,6 +28,7 @@ import {
   voidReason,
   SLUG_RE,
   type PartnerAccrual,
+  type PayoutModel,
   type PartnerBalance,
   type PartnerProject,
   type Perk,
@@ -51,6 +59,9 @@ export type Partner = {
   status: PartnerStatus;
   percent_override: number | null;
   note: string | null;
+  /** Модель дохода: от прибыли или с оборота. Меняется раз в неделю. */
+  payout_model: PayoutModel;
+  model_changed_at: string | null;
 };
 
 export type PartnerLink = {
@@ -84,12 +95,12 @@ export type PartnerPayout = {
 };
 
 const PARTNER_COLUMNS =
-  "id, created_at, telegram_user_id, username, name, code, requisites, status, percent_override, note";
+  "id, created_at, telegram_user_id, username, name, code, requisites, status, percent_override, note, payout_model, model_changed_at";
 const LINK_COLUMNS = "id, created_at, partner_id, code, slug, target, label, perk, clicks, leads, is_default";
 const PAYOUT_COLUMNS =
   "id, created_at, partner_id, amount_usd, requisites, status, note, paid_at, decided_by";
 const PROJECT_COLUMNS =
-  "id, title, client, owner_staff_id, kind, amount_usd, tax_percent, dev_cost_usd, stage, partner_id, partner_percent, partner_void_reason";
+  "id, title, client, owner_staff_id, kind, amount_usd, tax_percent, dev_cost_usd, stage, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id";
 
 function shapePartner(row: Record<string, unknown>): Partner {
   return {
@@ -103,6 +114,8 @@ function shapePartner(row: Record<string, unknown>): Partner {
     status: row.status === "blocked" ? "blocked" : "active",
     percent_override: (row.percent_override as number | null) ?? null,
     note: (row.note as string | null) ?? null,
+    payout_model: isPayoutModel(row.payout_model) ? row.payout_model : DEFAULT_MODEL,
+    model_changed_at: (row.model_changed_at as string | null) ?? null,
   };
 }
 
@@ -141,6 +154,7 @@ function shapePayout(row: Record<string, unknown>): PartnerPayout {
 export type ProjectWithPartner = PartnerProject & {
   title: string;
   client: string | null;
+  partner_agency_id: string | null;
 };
 
 function shapeProject(row: Record<string, unknown>): ProjectWithPartner {
@@ -157,6 +171,8 @@ function shapeProject(row: Record<string, unknown>): ProjectWithPartner {
     partner_id: (row.partner_id as string | null) ?? null,
     partner_percent: (row.partner_percent as number | null) ?? null,
     partner_void_reason: (row.partner_void_reason as string | null) ?? null,
+    partner_model: (row.partner_model as string | null) ?? null,
+    partner_agency_id: (row.partner_agency_id as string | null) ?? null,
   };
 }
 
@@ -655,6 +671,8 @@ export type Referral = {
   /** Компания или «клиент»: контактов партнёру не показываем. */
   who: string | null;
   linkLabel: string | null;
+  /** Заказ агентства партнёра — его название. */
+  agencyName: string | null;
   stage: ReferralStage;
   voidReason: string | null;
   /** Начисление по проекту, если он есть. */
@@ -673,7 +691,7 @@ export async function referralsOf(summary: PartnerSummary): Promise<Referral[]> 
   if (!db) return [];
   const { data: leads } = await db
     .from("leads")
-    .select("id, created_at, company, status, partner_link_id, partner_void_reason")
+    .select("id, created_at, company, status, partner_link_id, partner_void_reason, partner_agency_id")
     .eq("partner_id", summary.partner.id)
     .order("created_at", { ascending: false })
     .limit(300);
@@ -701,6 +719,7 @@ export async function referralsOf(summary: PartnerSummary): Promise<Referral[]> 
   }
 
   const accrualByProject = new Map(summary.accruals.map((a) => [a.project_id, a]));
+  const agencyName = new Map((await agenciesOf([summary.partner.id])).map((a) => [a.id, a.name]));
   const labelByLink = new Map(summary.links.map((l) => [l.id, l.is_default ? null : l.label]));
 
   return rows.map((r) => {
@@ -718,6 +737,7 @@ export async function referralsOf(summary: PartnerSummary): Promise<Referral[]> 
       createdAt: String(r.created_at),
       who: (r.company as string | null)?.trim() || null,
       linkLabel: r.partner_link_id ? (labelByLink.get(String(r.partner_link_id)) ?? null) : null,
+      agencyName: r.partner_agency_id ? (agencyName.get(String(r.partner_agency_id)) ?? null) : null,
       stage,
       voidReason: (r.partner_void_reason as string | null) ?? null,
       accrual,
@@ -895,6 +915,9 @@ export async function attributeLead(
       partner_link_id: link?.id ?? null,
       partner_code: link?.code ?? partner.code,
       partner_void_reason: reason,
+      // Модель фиксируется на клиенте сейчас: смена позже действует на
+      // новых клиентов, а не на этого.
+      partner_model: partner.payout_model,
       ...(ctx.refAt ? { partner_ref_at: ctx.refAt.toISOString() } : {}),
     })
     .eq("id", leadId);
@@ -1039,7 +1062,13 @@ export async function updatePartner(
  */
 export async function setProjectPartner(
   projectId: string,
-  fields: { partnerId: string | null; percent: number | null; voidReason: string | null },
+  fields: {
+    partnerId: string | null;
+    percent: number | null;
+    voidReason: string | null;
+    /** Заказ агентства этого партнёра. undefined — не трогать. */
+    agencyId?: string | null;
+  },
   admin: Staff,
   ip: string,
 ): Promise<{ ok: true } | { ok: false; reason: "offline" | "forbidden" | "gone" | "invalid" | "failed" }> {
@@ -1057,16 +1086,40 @@ export async function setProjectPartner(
 
   const { data: before } = await db
     .from("projects")
-    .select("id, partner_id, partner_percent, partner_void_reason")
+    .select("id, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id")
     .eq("id", projectId)
     .maybeSingle();
   if (!before) return { ok: false, reason: "gone" };
 
+  // Партнёр тот же — модель и агентство остаются, какими были зафиксированы
+  // при заявке. Партнёр другой — его текущая модель: проект для него новый.
+  const same = before.partner_id === fields.partnerId;
+  const newPartner = fields.partnerId && !same ? await partnerById(fields.partnerId) : null;
   const patch = {
     partner_id: fields.partnerId,
     partner_percent: fields.partnerId ? fields.percent : null,
     partner_void_reason: fields.partnerId ? fields.voidReason?.trim().slice(0, 64) || null : null,
+    partner_model: fields.partnerId
+      ? same
+        ? ((before.partner_model as string | null) ?? null)
+        : (newPartner?.payout_model ?? null)
+      : null,
+    partner_agency_id: fields.partnerId
+      ? fields.agencyId !== undefined
+        ? fields.agencyId
+        : same
+          ? ((before.partner_agency_id as string | null) ?? null)
+          : null
+      : null,
   };
+  if (patch.partner_agency_id) {
+    const { data: agency } = await db
+      .from("partner_agencies")
+      .select("partner_id")
+      .eq("id", patch.partner_agency_id)
+      .maybeSingle();
+    if (!agency || agency.partner_id !== fields.partnerId) return { ok: false, reason: "invalid" };
+  }
   const { error } = await db.from("projects").update(patch).eq("id", projectId);
   if (error) return { ok: false, reason: "failed" };
 
@@ -1090,4 +1143,239 @@ export async function notifyPartner(partner: Partner, text: string): Promise<voi
   } catch (error) {
     console.error("partners: не уведомил партнёра", error);
   }
+}
+
+/* ── Модель дохода ──────────────────────────────────────────────────────── */
+
+export type ModelResult = { ok: true } | { ok: false; reason: "offline" | "invalid" | "same" | "too_soon" | "failed" };
+
+/**
+ * Сменить модель дохода: не чаще раза в неделю, со строкой в журнале.
+ *
+ * Окно проверяется условной записью «где смена была больше недели назад или
+ * не было вовсе»: две вкладки одновременно не сменят модель дважды.
+ */
+export async function setPayoutModel(partner: Partner, model: string, now: Date = new Date()): Promise<ModelResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  if (!isPayoutModel(model)) return { ok: false, reason: "invalid" };
+  if (model === partner.payout_model) return { ok: false, reason: "same" };
+  if (!canSwitchModel(partner.model_changed_at, now)) return { ok: false, reason: "too_soon" };
+
+  const cutoff = new Date(now.getTime() - MODEL_SWITCH_DAYS * 86_400_000).toISOString();
+  const { data, error } = await db
+    .from("partners")
+    .update({ payout_model: model, model_changed_at: now.toISOString() })
+    .eq("id", partner.id)
+    .eq("payout_model", partner.payout_model)
+    // Время — в кавычках: точки и двоеточия в значении PostgREST иначе читает как разметку.
+    .or(`model_changed_at.is.null,model_changed_at.lte."${cutoff}"`)
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false, reason: "failed" };
+  if (!data) return { ok: false, reason: "too_soon" };
+
+  await db.from("partner_model_changes").insert({
+    partner_id: partner.id,
+    from_model: partner.payout_model,
+    to_model: model,
+    changed_at: now.toISOString(),
+  });
+  await record("partner.model_changed", {
+    targetType: "partner",
+    targetId: partner.id,
+    meta: { from: partner.payout_model, to: model },
+  });
+  return { ok: true };
+}
+
+export type ModelChange = { from_model: PayoutModel; to_model: PayoutModel; changed_at: string };
+
+export async function modelChangesOf(partnerId: string): Promise<ModelChange[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  const { data } = await db
+    .from("partner_model_changes")
+    .select("from_model, to_model, changed_at")
+    .eq("partner_id", partnerId)
+    .order("changed_at", { ascending: false })
+    .limit(20);
+  return (data ?? []) as ModelChange[];
+}
+
+/* ── Агентства на субподряде ────────────────────────────────────────────── */
+
+export type AgencyStatus = "pending" | "active" | "rejected";
+
+export type PartnerAgency = {
+  id: string;
+  created_at: string;
+  partner_id: string;
+  name: string;
+  contact: string | null;
+  website: string | null;
+  note: string | null;
+  status: AgencyStatus;
+  decided_at: string | null;
+  decision_note: string | null;
+};
+
+const AGENCY_COLUMNS = "id, created_at, partner_id, name, contact, website, note, status, decided_at, decision_note";
+
+function shapeAgency(row: Record<string, unknown>): PartnerAgency {
+  const status = String(row.status);
+  return {
+    id: String(row.id),
+    created_at: String(row.created_at),
+    partner_id: String(row.partner_id),
+    name: String(row.name),
+    contact: (row.contact as string | null) ?? null,
+    website: (row.website as string | null) ?? null,
+    note: (row.note as string | null) ?? null,
+    status: status === "active" ? "active" : status === "rejected" ? "rejected" : "pending",
+    decided_at: (row.decided_at as string | null) ?? null,
+    decision_note: (row.decision_note as string | null) ?? null,
+  };
+}
+
+export async function agenciesOf(partnerIds: readonly string[] | "all"): Promise<PartnerAgency[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  if (partnerIds !== "all" && !partnerIds.length) return [];
+  let query = db.from("partner_agencies").select(AGENCY_COLUMNS).order("created_at", { ascending: false });
+  if (partnerIds !== "all") query = query.in("partner_id", [...partnerIds]);
+  const { data } = await query.limit(500);
+  return (data ?? []).map((row) => shapeAgency(row as Record<string, unknown>));
+}
+
+export type AgencyFailure = "offline" | "invalid" | "limit" | "duplicate" | "failed";
+
+/** Сколько агентств один партнёр может держать на проверке и в работе. */
+export const MAX_AGENCIES = 20;
+
+/**
+ * Партнёр подключает агентство — оно ждёт подтверждения владельца. Пока не
+ * подтверждено, заказы агентства партнёру не засчитываются: иначе можно было
+ * бы «подключить» агентство, которое уже работает со студией.
+ */
+export async function requestAgency(
+  partner: Partner,
+  fields: { name: string; contact: string; website: string; note: string },
+): Promise<{ ok: true; agency: PartnerAgency } | { ok: false; reason: AgencyFailure }> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const name = fields.name.trim().slice(0, 120);
+  const contact = fields.contact.trim().slice(0, 120) || null;
+  if (name.length < 2 || !contact) return { ok: false, reason: "invalid" };
+
+  const mine = await agenciesOf([partner.id]);
+  if (mine.filter((a) => a.status !== "rejected").length >= MAX_AGENCIES) return { ok: false, reason: "limit" };
+
+  // Одно агентство — одному партнёру: кто подключил первым, того и заказы.
+  const all = await agenciesOf("all");
+  const key = contactKey(contact);
+  const nameKey = companyKey(name);
+  if (
+    all.some(
+      (a) =>
+        a.status !== "rejected" &&
+        ((key && contactKey(a.contact) === key) || (nameKey.length >= 4 && companyKey(a.name) === nameKey)),
+    )
+  ) {
+    return { ok: false, reason: "duplicate" };
+  }
+
+  const { data, error } = await db
+    .from("partner_agencies")
+    .insert({
+      partner_id: partner.id,
+      name,
+      contact,
+      website: fields.website.trim().slice(0, 200) || null,
+      note: fields.note.trim().slice(0, 500) || null,
+    })
+    .select(AGENCY_COLUMNS)
+    .maybeSingle();
+  if (error || !data) return { ok: false, reason: "failed" };
+  const agency = shapeAgency(data as Record<string, unknown>);
+
+  await record("partner.agency_requested", {
+    targetType: "partner",
+    targetId: partner.id,
+    meta: { agency_id: agency.id, name, contact },
+  });
+  return { ok: true, agency };
+}
+
+/** Владелец решил: подключено или нет. Партнёру — сообщение. */
+export async function decideAgency(
+  agencyId: string,
+  decision: "active" | "rejected",
+  note: string | null,
+  admin: Staff,
+  ip: string,
+): Promise<{ ok: true; agency: PartnerAgency } | { ok: false; reason: "offline" | "forbidden" | "gone" | "failed" }> {
+  if (admin.role !== "admin") return { ok: false, reason: "forbidden" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const { data, error } = await db
+    .from("partner_agencies")
+    .update({
+      status: decision,
+      decided_at: new Date().toISOString(),
+      decided_by: admin.id,
+      decision_note: note?.trim().slice(0, 300) || null,
+    })
+    .eq("id", agencyId)
+    .select(AGENCY_COLUMNS)
+    .maybeSingle();
+  if (error) return { ok: false, reason: "failed" };
+  if (!data) return { ok: false, reason: "gone" };
+  const agency = shapeAgency(data as Record<string, unknown>);
+
+  await record("partner.agency_decided", {
+    actorStaffId: admin.id,
+    targetType: "partner",
+    targetId: agency.partner_id,
+    ip,
+    meta: { agency_id: agency.id, decision, note: agency.decision_note },
+  });
+  return { ok: true, agency };
+}
+
+/**
+ * Лид — заказ подключённого агентства? Тогда он партнёра, без окна в 30 дней
+ * и без проверки «клиент уже был у студии»: у агентства повторные заказы —
+ * это и есть смысл. Записывается на лид с агентством и моделью партнёра.
+ */
+export async function attributeAgencyLead(
+  leadId: string,
+  lead: { contactHandle: string | null; company: string | null },
+): Promise<{ partner: Partner; agency: PartnerAgency } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  if (!lead.contactHandle && !lead.company) return null;
+
+  const active = (await agenciesOf("all")).filter((a) => a.status === "active");
+  const agency = active.find((a) => agencyMatches(a, lead));
+  if (!agency) return null;
+  const partner = await partnerById(agency.partner_id);
+  if (!partner || partner.status !== "active") return null;
+
+  const { error } = await db
+    .from("leads")
+    .update({
+      partner_id: partner.id,
+      partner_link_id: null,
+      partner_code: partner.code,
+      partner_void_reason: null,
+      partner_model: partner.payout_model,
+      partner_agency_id: agency.id,
+    })
+    .eq("id", leadId);
+  if (error) {
+    console.error("partners: не привязал заказ агентства", error.message);
+    return null;
+  }
+  return { partner, agency };
 }

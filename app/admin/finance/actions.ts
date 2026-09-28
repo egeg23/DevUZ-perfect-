@@ -137,8 +137,15 @@ export async function savePartner(formData: FormData) {
   const percent = percentRaw ? parsePercent(percentRaw) : null;
   if (percentRaw && percent === null) redirect(`/admin/projects/${projectId}?r=invalid`);
   const voidReason = String(formData.get("void_reason") ?? "").trim() || null;
+  // Поля агентства нет в форме — не трогаем; есть и пусто — снимаем.
+  const agencyId = formData.has("agency") ? String(formData.get("agency") ?? "").trim() || null : undefined;
 
-  const result = await setProjectPartner(projectId, { partnerId, percent, voidReason }, staff, await requestIp());
+  const result = await setProjectPartner(
+    projectId,
+    { partnerId, percent, voidReason, agencyId },
+    staff,
+    await requestIp(),
+  );
   revalidatePath(`/admin/projects/${projectId}`);
   revalidatePath("/admin/finance");
   revalidatePath("/admin/partners");

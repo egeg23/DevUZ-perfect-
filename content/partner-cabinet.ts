@@ -20,12 +20,40 @@ export type CabinetCopy = {
   hello: (name: string) => string;
   logout: string;
   /** Ставка без персональной: «от 10 до 30 % от суммы проекта». */
-  rate: (from: number, to: number) => string;
+  /** Ставка без персональной: модель и вилка процентов. */
+  rate: (model: "profit" | "turnover", from: number, to: number) => string;
   personalRate: (percent: number) => string;
   tiersTitle: string;
   tierUpTo: (amount: string) => string;
   tierOver: (amount: string) => string;
   tiersNote: string;
+  colRange: string;
+  modelNames: Record<"profit" | "turnover", string>;
+  modelHints: Record<"profit" | "turnover", string>;
+  modelCurrent: string;
+  modelChoose: (name: string) => string;
+  modelNext: (date: string) => string;
+  modelFixed: string;
+  modelResult: Record<"ok" | "same" | "too_soon" | "invalid" | "offline" | "failed", string>;
+
+  agenciesTitle: string;
+  agenciesLead: string;
+  agencyName: string;
+  agencyContact: string;
+  agencyContactHint: string;
+  agencyWebsite: string;
+  agencyNote: string;
+  agencyAdd: string;
+  agenciesEmpty: string;
+  agencyStatus: Record<"pending" | "active" | "rejected", string>;
+  agencyResult: Record<"ok" | "offline" | "invalid" | "limit" | "duplicate" | "failed", string>;
+  viaAgency: (name: string) => string;
+
+  decksTitle: string;
+  decksLead: string;
+  decks: Record<"studio" | "program", { title: string; text: string }>;
+  deckOpen: string;
+  deckCopy: string;
 
   statClicks: string;
   statLeads: string;
@@ -115,12 +143,63 @@ const ru: CabinetCopy = {
   },
   hello: (name) => `Здравствуйте, ${name}`,
   logout: "Выйти",
-  rate: (from, to) => `Ваша ставка — от ${from} до ${to} % от суммы проекта клиента: чем крупнее проект, тем выше процент`,
-  personalRate: (percent) => `Ваша персональная ставка — ${percent} % от суммы каждого проекта клиента`,
-  tiersTitle: "Ставки",
+  rate: (model, from, to) =>
+    model === "turnover"
+      ? `Ваша модель — с оборота: от ${from} до ${to} % от суммы договора, чем крупнее проект, тем выше процент`
+      : `Ваша модель — от чистой прибыли: от ${from} до ${to} % от прибыли проекта, чем крупнее проект, тем выше процент`,
+  personalRate: (percent) => `Ваша персональная ставка — ${percent} % с каждого проекта клиента`,
+  tiersTitle: "Модель дохода",
   tierUpTo: (amount) => `до ${amount}`,
   tierOver: (amount) => `дороже ${amount}`,
-  tiersNote: "Ставка — по сумме каждого проекта отдельно, с каждого проекта клиента, включая следующие.",
+  tiersNote: "Ступень — по сумме каждого проекта отдельно. Процент — с каждого проекта клиента, включая следующие.",
+  colRange: "Сумма проекта",
+  modelNames: { profit: "От чистой прибыли", turnover: "С оборота" },
+  modelHints: {
+    profit: "Процент выше, но считается от прибыли: сумма договора минус налог и себестоимость. Точная сумма доли появится, когда студия внесёт себестоимость.",
+    turnover: "Процент ниже, но от всей суммы договора: доля известна сразу, как только подписан договор.",
+  },
+  modelCurrent: "сейчас",
+  modelChoose: (name) => `Перейти на «${name}»`,
+  modelNext: (date) => `Сменить модель снова можно с ${date}.`,
+  modelFixed: "Менять модель можно раз в неделю. За клиентом закрепляется модель, которая действовала в день его заявки: смена действует на новых клиентов, а уже пришедших не пересчитывает.",
+  modelResult: {
+    ok: "Модель сменена. Она действует на клиентов, которые придут с этого момента.",
+    same: "Эта модель у вас уже выбрана.",
+    too_soon: "Модель можно менять раз в неделю — дата следующей смены указана ниже.",
+    invalid: "Такой модели нет.",
+    offline: "Сервис сейчас недоступен. Попробуйте через минуту.",
+    failed: "Не получилось сменить модель. Попробуйте ещё раз.",
+  },
+
+  agenciesTitle: "Мои агентства",
+  agenciesLead:
+    "Подключите маркетинговое агентство, которое будет отдавать нам заказы своих клиентов на субподряд. После нашего подтверждения все заказы агентства — ваши, без ограничения в 30 дней: и первый, и каждый следующий. Агентству ссылка не нужна — мы узнаём его заказы по контакту и названию.",
+  agencyName: "Название агентства",
+  agencyContact: "Контакт агентства",
+  agencyContactHint: "@telegram, телефон или почта — откуда оно будет нам писать",
+  agencyWebsite: "Сайт",
+  agencyNote: "Комментарий",
+  agencyAdd: "Подключить агентство",
+  agenciesEmpty: "Агентств пока нет. Презентация программы для агентств — ниже, её можно отправить им ссылкой.",
+  agencyStatus: { pending: "ждёт подтверждения", active: "подключено — заказы ваши", rejected: "не подключено" },
+  agencyResult: {
+    ok: "Агентство отправлено на подтверждение. Как только подтвердим — бот напишет вам.",
+    offline: "Сервис сейчас недоступен. Попробуйте через минуту.",
+    invalid: "Нужны название и контакт агентства.",
+    limit: "Агентств уже максимум. Напишите нам — обсудим.",
+    duplicate: "Это агентство уже подключено — вами или другим партнёром.",
+    failed: "Не получилось подключить агентство. Попробуйте ещё раз.",
+  },
+  viaAgency: (name) => `агентство «${name}»`,
+
+  decksTitle: "Презентации",
+  decksLead: "Отправьте ссылкой или сохраните в PDF (кнопка на странице). В ссылке уже ваш код: кто откроет её и оставит заявку в течение 30 дней, будет вашим клиентом.",
+  decks: {
+    studio: { title: "DevUz Studio", text: "Кто мы, что делаем, штат, языки, сроки, цены «от» и проекты — для клиента, которому вы нас рекомендуете." },
+    program: { title: "Программа для агентств", text: "Как агентству отдавать нам заказы на субподряд и как это считается — для маркетинговых агентств." },
+  },
+  deckOpen: "Открыть",
+  deckCopy: "Скопировать ссылку",
 
   statClicks: "Переходов за 30 дней",
   statLeads: "Заявок всего",
@@ -274,12 +353,63 @@ const en: CabinetCopy = {
   },
   hello: (name) => `Hello, ${name}`,
   logout: "Sign out",
-  rate: (from, to) => `Your rate is ${from}–${to}% of the client's project amount: the bigger the project, the higher the rate`,
+  rate: (model, from, to) =>
+    model === "turnover"
+      ? `Your model is turnover: ${from}–${to}% of the contract amount, the bigger the project, the higher the rate`
+      : `Your model is net profit: ${from}–${to}% of the project's profit, the bigger the project, the higher the rate`,
   personalRate: (percent) => `Your personal rate is ${percent}% of every client project`,
-  tiersTitle: "Rates",
+  tiersTitle: "Income model",
   tierUpTo: (amount) => `up to ${amount}`,
   tierOver: (amount) => `over ${amount}`,
-  tiersNote: "The rate depends on the amount of each project separately, for every project of the client, including the next ones.",
+  tiersNote: "The tier depends on each project's amount separately. The percentage applies to every project of the client, including the next ones.",
+  colRange: "Project amount",
+  modelNames: { profit: "Of net profit", turnover: "Of turnover" },
+  modelHints: {
+    profit: "A higher percentage, but of profit: the contract amount minus tax and costs. The exact share appears once the studio enters its costs.",
+    turnover: "A lower percentage, but of the whole contract amount: your share is known as soon as the contract is signed.",
+  },
+  modelCurrent: "current",
+  modelChoose: (name) => `Switch to “${name}”`,
+  modelNext: (date) => `You can change the model again from ${date}.`,
+  modelFixed: "You can change the model once a week. A client keeps the model that was active on the day of their request: a change applies to new clients and doesn't recalculate existing ones.",
+  modelResult: {
+    ok: "Model changed. It applies to clients who come from now on.",
+    same: "This model is already selected.",
+    too_soon: "The model can be changed once a week — the next date is shown below.",
+    invalid: "No such model.",
+    offline: "The service is unavailable right now. Try again in a minute.",
+    failed: "Couldn't change the model. Try again.",
+  },
+
+  agenciesTitle: "My agencies",
+  agenciesLead:
+    "Connect a marketing agency that will pass its clients' orders to us on a subcontract basis. Once we confirm it, all the agency's orders are yours, with no 30-day limit: the first one and every next one. The agency doesn't need a link — we recognise its orders by contact and name.",
+  agencyName: "Agency name",
+  agencyContact: "Agency contact",
+  agencyContactHint: "@telegram, phone or email — where it will write to us from",
+  agencyWebsite: "Website",
+  agencyNote: "Comment",
+  agencyAdd: "Connect agency",
+  agenciesEmpty: "No agencies yet. The program deck for agencies is below — you can send it to them as a link.",
+  agencyStatus: { pending: "awaiting confirmation", active: "connected — orders are yours", rejected: "not connected" },
+  agencyResult: {
+    ok: "The agency has been sent for confirmation. Once we confirm it, the bot will message you.",
+    offline: "The service is unavailable right now. Try again in a minute.",
+    invalid: "The agency's name and contact are required.",
+    limit: "You've reached the agency limit. Write to us to discuss.",
+    duplicate: "This agency is already connected — by you or another partner.",
+    failed: "Couldn't connect the agency. Try again.",
+  },
+  viaAgency: (name) => `agency “${name}”`,
+
+  decksTitle: "Presentations",
+  decksLead: "Send as a link or save as PDF (button on the page). Your code is already in the link: whoever opens it and leaves a request within 30 days becomes your client.",
+  decks: {
+    studio: { title: "DevUz Studio", text: "Who we are, what we do, team, languages, timelines, starting prices and projects — for a client you recommend us to." },
+    program: { title: "Program for agencies", text: "How an agency passes orders to us on a subcontract basis and how it's counted — for marketing agencies." },
+  },
+  deckOpen: "Open",
+  deckCopy: "Copy link",
 
   statClicks: "Clicks, 30 days",
   statLeads: "Requests in total",
@@ -433,12 +563,63 @@ const uz: CabinetCopy = {
   },
   hello: (name) => `Assalomu alaykum, ${name}`,
   logout: "Chiqish",
-  rate: (from, to) => `Sizning stavkangiz — mijoz loyihasi summasining ${from} dan ${to} % gacha: loyiha qanchalik yirik bo'lsa, foiz shunchalik yuqori`,
-  personalRate: (percent) => `Sizning shaxsiy stavkangiz — mijozning har bir loyihasi summasining ${percent} %`,
-  tiersTitle: "Stavkalar",
+  rate: (model, from, to) =>
+    model === "turnover"
+      ? `Sizning modelingiz — aylanmadan: shartnoma summasining ${from} dan ${to} % gacha, loyiha qanchalik yirik bo'lsa, foiz shunchalik yuqori`
+      : `Sizning modelingiz — sof foydadan: loyiha foydasining ${from} dan ${to} % gacha, loyiha qanchalik yirik bo'lsa, foiz shunchalik yuqori`,
+  personalRate: (percent) => `Sizning shaxsiy stavkangiz — mijozning har bir loyihasidan ${percent} %`,
+  tiersTitle: "Daromad modeli",
   tierUpTo: (amount) => `${amount} gacha`,
   tierOver: (amount) => `${amount} dan yuqori`,
-  tiersNote: "Stavka har bir loyihaning summasiga qarab alohida, mijozning har bir loyihasidan, keyingilarini ham qo'shib.",
+  tiersNote: "Pog'ona har bir loyiha summasiga qarab alohida. Foiz mijozning har bir loyihasidan, keyingilarini ham qo'shib.",
+  colRange: "Loyiha summasi",
+  modelNames: { profit: "Sof foydadan", turnover: "Aylanmadan" },
+  modelHints: {
+    profit: "Foiz yuqoriroq, lekin foydadan hisoblanadi: shartnoma summasi minus soliq va tannarx. Aniq ulush studiya tannarxni kiritganda paydo bo'ladi.",
+    turnover: "Foiz pastroq, lekin butun shartnoma summasidan: ulush shartnoma imzolanishi bilanoq ma'lum.",
+  },
+  modelCurrent: "hozir",
+  modelChoose: (name) => `«${name}» ga o'tish`,
+  modelNext: (date) => `Modelni yana ${date} dan o'zgartirish mumkin.`,
+  modelFixed: "Modelni haftasiga bir marta o'zgartirish mumkin. Mijozga uning so'rovi kunidagi model biriktiriladi: o'zgartirish yangi mijozlarga ta'sir qiladi, kelganlarini qayta hisoblamaydi.",
+  modelResult: {
+    ok: "Model o'zgartirildi. U shu paytdan keladigan mijozlarga ta'sir qiladi.",
+    same: "Bu model allaqachon tanlangan.",
+    too_soon: "Modelni haftasiga bir marta o'zgartirish mumkin — keyingi sana quyida.",
+    invalid: "Bunday model yo'q.",
+    offline: "Xizmat hozir ishlamayapti. Bir daqiqadan keyin urinib ko'ring.",
+    failed: "Modelni o'zgartirib bo'lmadi. Yana urinib ko'ring.",
+  },
+
+  agenciesTitle: "Mening agentliklarim",
+  agenciesLead:
+    "Bizga o'z mijozlarining buyurtmalarini subpudratga beradigan marketing agentligini ulang. Biz tasdiqlaganimizdan keyin agentlikning barcha buyurtmalari sizniki, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. Agentlikka havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
+  agencyName: "Agentlik nomi",
+  agencyContact: "Agentlik kontakti",
+  agencyContactHint: "@telegram, telefon yoki pochta — bizga qayerdan yozadi",
+  agencyWebsite: "Sayt",
+  agencyNote: "Izoh",
+  agencyAdd: "Agentlikni ulash",
+  agenciesEmpty: "Hozircha agentliklar yo'q. Agentliklar uchun dastur taqdimoti quyida — uni havola bilan yuborish mumkin.",
+  agencyStatus: { pending: "tasdiq kutmoqda", active: "ulangan — buyurtmalar sizniki", rejected: "ulanmagan" },
+  agencyResult: {
+    ok: "Agentlik tasdiqlashga yuborildi. Tasdiqlashimiz bilan bot sizga yozadi.",
+    offline: "Xizmat hozir ishlamayapti. Bir daqiqadan keyin urinib ko'ring.",
+    invalid: "Agentlik nomi va kontakti kerak.",
+    limit: "Agentliklar soni maksimal. Bizga yozing — muhokama qilamiz.",
+    duplicate: "Bu agentlik allaqachon ulangan — siz yoki boshqa hamkor tomonidan.",
+    failed: "Agentlikni ulab bo'lmadi. Yana urinib ko'ring.",
+  },
+  viaAgency: (name) => `«${name}» agentligi`,
+
+  decksTitle: "Taqdimotlar",
+  decksLead: "Havola bilan yuboring yoki PDF ga saqlang (sahifadagi tugma). Havolada kodingiz bor: uni ochib, 30 kun ichida so'rov qoldirgan kishi sizning mijozingiz bo'ladi.",
+  decks: {
+    studio: { title: "DevUz Studio", text: "Biz kimmiz, nima qilamiz, jamoa, tillar, muddatlar, boshlang'ich narxlar va loyihalar — bizni tavsiya qilgan mijozingiz uchun." },
+    program: { title: "Agentliklar uchun dastur", text: "Agentlik bizga buyurtmalarni subpudratga qanday beradi va bu qanday hisoblanadi — marketing agentliklari uchun." },
+  },
+  deckOpen: "Ochish",
+  deckCopy: "Havoladan nusxa olish",
 
   statClicks: "30 kunda o'tishlar",
   statLeads: "Jami so'rovlar",
@@ -591,12 +772,62 @@ const zh: CabinetCopy = {
   },
   hello: (name) => `您好，${name}`,
   logout: "退出",
-  rate: (from, to) => `您的提成：客户项目金额的 ${from}–${to}%——项目越大，比例越高`,
-  personalRate: (percent) => `您的专属提成：每个客户项目金额的 ${percent}%`,
-  tiersTitle: "提成比例",
+  rate: (model, from, to) =>
+    model === "turnover"
+      ? `您的模式：按营业额——合同金额的 ${from}–${to}%，项目越大，比例越高`
+      : `您的模式：按净利润——项目利润的 ${from}–${to}%，项目越大，比例越高`,
+  personalRate: (percent) => `您的专属提成：每个客户项目的 ${percent}%`,
+  tiersTitle: "收益模式",
   tierUpTo: (amount) => `${amount} 以内`,
   tierOver: (amount) => `超过 ${amount}`,
-  tiersNote: "按每个项目的金额分别计算，客户的每个项目都算，包括后续项目。",
+  tiersNote: "档位按每个项目的金额分别确定。客户的每个项目都计算，包括后续项目。",
+  colRange: "项目金额",
+  modelNames: { profit: "按净利润", turnover: "按营业额" },
+  modelHints: {
+    profit: "比例更高，但按利润计算：合同金额减去税费和成本。工作室录入成本后才会显示确切金额。",
+    turnover: "比例较低，但按整个合同金额计算：合同一签署，分成即可知。",
+  },
+  modelCurrent: "当前",
+  modelChoose: (name) => `切换为“${name}”`,
+  modelNext: (date) => `可于 ${date} 起再次更改模式。`,
+  modelFixed: "模式每周可更改一次。客户按其提交申请当天生效的模式计算：更改只影响新客户，不会重新计算已有客户。",
+  modelResult: {
+    ok: "模式已更改，对此后到来的客户生效。",
+    same: "您已选择该模式。",
+    too_soon: "模式每周只能更改一次——下次日期见下方。",
+    invalid: "没有这种模式。",
+    offline: "服务暂时不可用，请一分钟后再试。",
+    failed: "无法更改模式，请重试。",
+  },
+
+  agenciesTitle: "我的代理机构",
+  agenciesLead: "添加一家把其客户订单以分包形式交给我们的营销代理机构。经我们确认后，该机构的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。代理机构不需要链接——我们通过联系方式和名称识别其订单。",
+  agencyName: "代理机构名称",
+  agencyContact: "代理机构联系方式",
+  agencyContactHint: "@telegram、电话或邮箱——它将通过这里联系我们",
+  agencyWebsite: "网站",
+  agencyNote: "备注",
+  agencyAdd: "添加代理机构",
+  agenciesEmpty: "暂无代理机构。下方有面向代理机构的计划介绍，可以链接形式发送给他们。",
+  agencyStatus: { pending: "等待确认", active: "已接入——订单归您", rejected: "未接入" },
+  agencyResult: {
+    ok: "代理机构已提交确认。确认后机器人会通知您。",
+    offline: "服务暂时不可用，请一分钟后再试。",
+    invalid: "需要填写代理机构名称和联系方式。",
+    limit: "代理机构数量已达上限。请联系我们商议。",
+    duplicate: "该代理机构已被接入——由您或其他合作伙伴。",
+    failed: "无法添加代理机构，请重试。",
+  },
+  viaAgency: (name) => `代理机构“${name}”`,
+
+  decksTitle: "演示资料",
+  decksLead: "以链接发送或保存为 PDF（页面上的按钮）。链接中已包含您的代码：打开链接并在 30 天内提交申请的人将成为您的客户。",
+  decks: {
+    studio: { title: "DevUz Studio", text: "我们是谁、做什么、团队、语言、周期、起步价格和项目——给您推荐我们的客户。" },
+    program: { title: "代理机构合作计划", text: "代理机构如何以分包形式把订单交给我们，以及如何计算——面向营销代理机构。" },
+  },
+  deckOpen: "打开",
+  deckCopy: "复制链接",
 
   statClicks: "30 天点击",
   statLeads: "申请总数",

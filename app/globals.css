@@ -359,6 +359,41 @@
     visibility: visible;
   }
 
+  /* Презентации партнёра (/partners/deck/…): каждый слайд — отдельный
+     лист, тёмный, как на экране. Размер листа (А4 альбомом) задаёт сам
+     компонент презентации — components/partners/deck.tsx: правило @page
+     есть только на странице презентации и не достаётся счёту. */
+  #deck,
+  #deck * {
+    visibility: visible;
+  }
+
+  #deck {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    /* На экране колонка ограничена по ширине, на листе — во всю ширину. */
+    max-width: none !important;
+    gap: 0 !important;
+    /* Заголовки наследуют цвет от body, а body в печати чёрный — для счёта. */
+    color: var(--color-text);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #deck .deck-slide {
+    break-after: page;
+    break-inside: avoid;
+    min-height: 100vh;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  #deck .deck-noprint {
+    display: none !important;
+  }
+
   #invoice {
     position: absolute;
     inset: 0 auto auto 0;

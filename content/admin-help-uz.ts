@@ -647,7 +647,7 @@ export const uz: HelpCopy = {
             ],
             admin: [
               "Siz hammasini tahrirlaysiz: bosqich (10 ta tugma), smeta, summa va bitim turini istalgan paytda, **«Налог, %»** (odatiy 4) va **«Себестоимость разработки, $»** — faqat siz, hech kim tannarxni kamaytirib, o‘z hisoblanmasini oshirmasligi uchun.",
-              "Hisoblanma qatorlarida — shu bitim uchun foiz: «задать» yoki «по грейду» ga qaytarish. **«Партнёр»** bloki: kim olib kelgan, hamkorga foiz («по ступени» — loyiha summasiga qarab: $2 500 gacha — 10%, $5 000 gacha — 15%, $10 000 gacha — 20%, $30 000 gacha — 25%, undan yuqori — 30%) va «Не засчитывать, причина».",
+              "Hisoblanma qatorlarida — shu bitim uchun foiz: «задать» yoki «по грейду» ga qaytarish. **«Партнёр»** bloki: kim olib kelgan, hamkorga foiz («по ступени» — loyiha summasi va hamkor modeliga qarab: foydadan 10–30% yoki aylanmadan 6–20%), «Заказ агентства» — agar loyiha hamkor agentligidan bo‘lsa — va «Не засчитывать, причина».",
               "**«Платежи клиента»** → «Записать платёж»: summa, sana, maqsad. Hammasi to‘langanda hisoblanmalar «заработано» bo‘ladi, hamkorga esa xabar ketadi. Shartnoma hisoblari bo‘yicha to‘lovlar bu yerga o‘zi yoziladi — sizning «Оплачен» belgingizdan yoki shartnomadagi «Подтвердить платёж» tugmasidan; to‘lov sizni kutayotgan paytda bu yerda shartnomaga havolali sariq qator turadi. Kartochkadagi «Остаётся владельцу» — hamkor ulushi ayirilmagan; aniq raqam — [«Финансы»](/admin/finance) bo‘limida.",
             ],
           },
@@ -1104,8 +1104,19 @@ export const uz: HelpCopy = {
           id: "percent",
           title: "Foiz",
           body: [
-            "Foiz — loyiha summasidan va unga bog‘liq (egasi, 28.09): $2 500 gacha — 10%, $2 501–5 000 — 15%, $5 001–10 000 — 20%, $10 001–30 000 — 25%, $30 001 dan — 30%. Har bir loyihaning pog‘onasi o‘z summasiga qarab. Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiysi — pog‘onadan.",
+            "Ikki model, hamkor o‘zi kabinetda tanlaydi. «От чистой прибыли» (summa − soliq − tannarx): $2 500 gacha — 10%, $2 501–5 000 — 15%, $5 001–10 000 — 20%, $10 001–30 000 — 25%, $30 001 dan — 30%. «С оборота» (butun shartnoma summasi) xuddi shu chegaralarda: 6, 10, 14, 17, 20%. Har bir loyihaning pog‘onasi o‘z summasiga qarab. «Все партнёры» jadvalida, «Ставка» ustunida model va qachon o‘zgartirilgani ko‘rinadi.",
+            "Model haftasiga bir martadan ko‘p o‘zgarmaydi, mijozga esa uning so‘rovi kunidagi model biriktiriladi: o‘zgartirish ketayotgan loyihalarni qayta hisoblamaydi. Loyiha kartochkasida «Партнёр» yonida — «20 % от прибыли» yoki «14 % с оборота». Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiysi — pog‘onadan. «От прибыли» modeli uchun loyiha tannarxini kiriting — usiz ulush soliq ayirilgan summadan hisoblanadi.",
             "Mijoz loyihani to‘liq to‘lamaguncha hisoblanma muzlatilgan — xodimlardagi kabi.",
+          ],
+        },
+        {
+          id: "agencies",
+          title: "Hamkorlarning agentliklari",
+          body: [
+            "Hamkor kabinetda bizga o‘z mijozlarining buyurtmalarini subpudratga beradigan marketing agentligini ulashi mumkin. Sizga «🏢 Партнёр подключает агентство» keladi, bu sahifada esa «Агентства партнёров» blokida — «ждёт решения» qatori. **«Подтвердить»** — agar agentlik biz bilan hali ishlamagan bo‘lsa; sabab bilan **«отклонить»** — agar ishlagan bo‘lsa yoki bu agentlik bo‘lmasa. Ikkala holatda ham bot hamkorga yozadi.",
+            "Tasdiqlangan agentlik — uning barcha buyurtmalari hamkorga, 30 kunlik oynasiz va «mijoz studiyada avval bo‘lgan» tekshiruvisiz: agentlikning takroriy buyurtmalari — asosiy maqsad. Sayt va botdan kelgan so‘rovlar o‘zi taniladi — agentlik kontakti (@nik, telefon, pochta) yoki kompaniya nomi bo‘yicha. Qo‘ng‘iroq yoki menejer shaxsiy xabari orqali kelgan buyurtmani loyiha kartochkasida bog‘lang: «Партнёр» bloki → «Заказ агентства».",
+            "Bitta agentlik — bitta hamkorga: xuddi shu agentlikni ikkinchi marta ulab bo‘lmaydi. Ulanganida «отключить» — agentlikning yangi buyurtmalari endi hamkorga bormaydi, bog‘langanlari qoladi.",
+            "Hamkor kabinetida yuborish uchun ikkita taqdimot bor — «DevUz Studio» (jamoa, loyihalar, tillar, xizmatlar, boshlang‘ich narxlar, keyslar) va «Программа для агентств» (modellar, agentlik misoli). Havola hamkor kodini olib yuradi, shuning uchun taqdimotdan kelgan mijoz unga hisoblanadi.",
           ],
         },
         {

@@ -89,19 +89,29 @@ export default async function PartnersPage({
             <h2 className="font-display text-xl font-semibold">{t.ratesTitle}</h2>
             {/* Ступени — из той же таблицы, по которой считаются деньги
                 (lib/partners/rules.ts): обещание и расчёт не разъедутся. */}
-            <ul className="mt-4 flex flex-col divide-y divide-white/10 text-sm">
-              {PARTNER_TIERS.map((tier, i) => (
-                <li key={tier.percent} className="flex items-baseline justify-between gap-4 py-2">
-                  <span className="text-muted">
-                    {(tier.upTo === null ? t.tierOver : t.tierUpTo).replace(
-                      "{amount}",
-                      usd(locale, tier.upTo ?? PARTNER_TIERS[i - 1]?.upTo ?? 0),
-                    )}
-                  </span>
-                  <span className="font-display text-lg font-semibold text-green">{tier.percent} %</span>
-                </li>
-              ))}
-            </ul>
+            <table className="mt-4 w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wider text-faint">
+                <tr>
+                  <th className="py-2 font-normal">{t.colRange}</th>
+                  <th className="py-2 text-right font-normal">{t.colProfit}</th>
+                  <th className="py-2 text-right font-normal">{t.colTurnover}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {PARTNER_TIERS.map((tier, i) => (
+                  <tr key={tier.profit}>
+                    <td className="py-2 text-muted">
+                      {(tier.upTo === null ? t.tierOver : t.tierUpTo).replace(
+                        "{amount}",
+                        usd(locale, tier.upTo ?? PARTNER_TIERS[i - 1]?.upTo ?? 0),
+                      )}
+                    </td>
+                    <td className="py-2 text-right font-display text-lg font-semibold text-green">{tier.profit} %</td>
+                    <td className="py-2 text-right font-display text-lg font-semibold text-text">{tier.turnover} %</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <p className="mt-3 text-sm leading-relaxed text-muted">{t.rateNote}</p>
           </div>
           <div className="flex flex-col gap-4">

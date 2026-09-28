@@ -46,6 +46,7 @@ function statsOf(summary: PartnerSummary): PartnerStats {
     leads: summary.leads,
     paidProjects: summary.paidProjects,
     override: partner.percent_override,
+    model: partner.payout_model,
     links: links.map((l) => ({
       code: l.code,
       label: l.is_default ? null : l.label,
@@ -168,5 +169,12 @@ export async function alertPayoutRequest(partner: Partner, payout: PartnerPayout
   ].join("\n");
   for (const id of await adminChatIds()) {
     await sendMessage(id, alert);
+  }
+}
+
+/** Сказать владельцам — о новом агентстве партнёра и других решениях за ними. */
+export async function alertOwners(text: string): Promise<void> {
+  for (const id of await adminChatIds()) {
+    await sendMessage(id, text);
   }
 }

@@ -1,6 +1,7 @@
 import {
   accrualState,
   paidOf,
+  profitOf,
   type AccrualState,
   type PaymentMoney,
   type ProjectMoney,
@@ -18,58 +19,105 @@ export { REF_COOKIE, REF_TTL_DAYS };
  * выплату раз в месяц, антифрод. Здесь то же самое в терминах студии:
  * партнёр — человек в боте, клиент — лид, оплата — платёж по проекту.
  *
- * Ставка — от суммы проекта и растёт с ней (владелец, 28.09): до 2 500 $ —
- * 10 %, до 5 000 — 15 %, до 10 000 — 20 %, до 30 000 — 25 %, дороже —
- * 30 %. До этого было 20 % от чистой прибыли и 25 % после трёх оплаченных
- * проектов; процент от прибыли партнёр не мог ни проверить, ни посчитать
- * заранее — себестоимость ему не видна. Сумма проекта стоит в договоре.
+ * Две модели дохода на выбор партнёра (владелец, 28.09): от чистой прибыли
+ * проекта — 10 / 15 / 20 / 25 / 30 %, или с оборота (суммы проекта) —
+ * 6 / 10 / 14 / 17 / 20 %. Ступень у обеих — по сумме проекта: до 2 500 $,
+ * до 5 000, до 10 000, до 30 000 и дороже. «С оборота» — меньший процент, но
+ * от числа, которое стоит в договоре и видно партнёру сразу; «от прибыли» —
+ * больший процент, но база известна только когда студия внесла
+ * себестоимость.
+ *
+ * Модель партнёр меняет не чаще раза в неделю, и она фиксируется на клиенте
+ * в момент заявки: смена действует на новых клиентов, а не переписывает
+ * задним числом деньги по уже идущим проектам. Иначе модель выбирали бы
+ * после того, как стала известна себестоимость, — под самый выгодный ответ.
  *
  * Здесь только арифметика и правила; чтения и записи — в `store.ts`.
- * Начисления не хранятся, а считаются: ставка × сумма по текущим полям
- * проекта, заморозка до полной оплаты — та же, что у сотрудников.
+ * Начисления не хранятся, а считаются по текущим полям проекта, заморозка
+ * до полной оплаты — та же, что у сотрудников.
  */
 
 /* ── Ставки ─────────────────────────────────────────────────────────────── */
 
+export const PAYOUT_MODELS = ["profit", "turnover"] as const;
+export type PayoutModel = (typeof PAYOUT_MODELS)[number];
+
+export function isPayoutModel(value: unknown): value is PayoutModel {
+  return typeof value === "string" && (PAYOUT_MODELS as readonly string[]).includes(value);
+}
+
+/** Модель, которой не выбирали, — «от прибыли»: так считалось до выбора. */
+export const DEFAULT_MODEL: PayoutModel = "profit";
+
 /**
- * Ставки по сумме проекта. `upTo` — включительно: проект ровно на 2 500 $ —
- * ещё 10 %, на 2 501 $ — уже 15 %. Последняя ступень без верхней границы.
- * Сумма — целыми долларами, как в договоре.
+ * Ставки по сумме проекта: две колонки, одни пороги. `upTo` — включительно:
+ * проект ровно на 2 500 $ — ещё первая ступень, на 2 501 $ — уже вторая.
+ * Последняя ступень без верхней границы. Сумма — целыми долларами, как в
+ * договоре.
  */
-export const PARTNER_TIERS: readonly { upTo: number | null; percent: number }[] = [
-  { upTo: 2_500, percent: 10 },
-  { upTo: 5_000, percent: 15 },
-  { upTo: 10_000, percent: 20 },
-  { upTo: 30_000, percent: 25 },
-  { upTo: null, percent: 30 },
+export const PARTNER_TIERS: readonly { upTo: number | null; profit: number; turnover: number }[] = [
+  { upTo: 2_500, profit: 10, turnover: 6 },
+  { upTo: 5_000, profit: 15, turnover: 10 },
+  { upTo: 10_000, profit: 20, turnover: 14 },
+  { upTo: 30_000, profit: 25, turnover: 17 },
+  { upTo: null, profit: 30, turnover: 20 },
 ];
+
+/** Сколько дней должно пройти между сменами модели. */
+export const MODEL_SWITCH_DAYS = 7;
+
+/** Можно ли сменить модель сейчас: не менял ни разу или прошла неделя. */
+export function canSwitchModel(changedAt: string | Date | null, now: Date = new Date()): boolean {
+  if (!changedAt) return true;
+  return now.getTime() - new Date(changedAt).getTime() >= MODEL_SWITCH_DAYS * 86_400_000;
+}
+
+/** Когда станет можно сменить модель снова. null — можно уже сейчас. */
+export function nextModelSwitch(changedAt: string | Date | null, now: Date = new Date()): Date | null {
+  if (canSwitchModel(changedAt, now) || !changedAt) return null;
+  return new Date(new Date(changedAt).getTime() + MODEL_SWITCH_DAYS * 86_400_000);
+}
 
 /** Меньше не выплачиваем — пыль. */
 export const MIN_PAYOUT_USD = 50;
 /** Сколько ссылок может завести один партнёр. */
 export const MAX_LINKS = 20;
 
-/** Ставка по сумме проекта — по таблице выше. */
-export function tierPercent(amountUsd: number): number {
+/** Ставка по сумме проекта и модели — по таблице выше. */
+export function tierPercent(amountUsd: number, model: PayoutModel = DEFAULT_MODEL): number {
   for (const tier of PARTNER_TIERS) {
-    if (tier.upTo === null || amountUsd <= tier.upTo) return tier.percent;
+    if (tier.upTo === null || amountUsd <= tier.upTo) return tier[model];
   }
-  return PARTNER_TIERS[PARTNER_TIERS.length - 1].percent;
+  return PARTNER_TIERS[PARTNER_TIERS.length - 1][model];
 }
 
 /**
  * Ставка по конкретному проекту. Порядок: процент по проекту (владелец задал
- * руками) → персональная ставка партнёра → по сумме проекта. Суммы ещё нет —
- * ставка первой ступени: так показываем «от 10 %», а не ничего.
+ * руками) → персональная ставка партнёра → по сумме проекта и модели. Суммы
+ * ещё нет — ставка первой ступени: так показываем «от 10 %», а не ничего.
  */
 export function partnerPercent(input: {
   projectPercent: number | null;
   partnerOverride: number | null;
   amountUsd: number | null;
+  model?: PayoutModel | null;
 }): number {
   if (input.projectPercent !== null) return input.projectPercent;
   if (input.partnerOverride !== null) return input.partnerOverride;
-  return tierPercent(Math.max(0, input.amountUsd ?? 0));
+  return tierPercent(Math.max(0, input.amountUsd ?? 0), input.model ?? DEFAULT_MODEL);
+}
+
+/**
+ * С чего считается процент: с оборота — вся сумма проекта, от прибыли —
+ * сумма минус налог и себестоимость. Себестоимость ещё не внесена — прибыль
+ * пока равна сумме за вычетом налога: так считают и начисления сотрудников.
+ * Минус по проекту — забота студии, партнёру ноль, а не долг.
+ */
+export function partnerBase(project: ProjectMoney, model: PayoutModel): number | null {
+  if (project.amount_usd === null) return null;
+  if (model === "turnover") return Math.max(0, project.amount_usd);
+  const profit = profitOf(project);
+  return profit === null ? null : Math.max(0, profit);
 }
 
 /* ── Бонус новому клиенту ───────────────────────────────────────────────── */
@@ -246,11 +294,14 @@ export type PartnerProject = ProjectMoney & {
   partner_id: string | null;
   partner_percent: number | null;
   partner_void_reason: string | null;
+  /** Модель, зафиксированная на клиенте при заявке. null — «от прибыли». */
+  partner_model?: string | null;
 };
 
 export type PartnerAccrual = {
   project_id: string;
   partner_id: string;
+  model: PayoutModel;
   percent: number;
   /** Процент задан владельцем по этому проекту, а не ступенью. */
   manual: boolean;
@@ -270,13 +321,17 @@ export function partnerAccrualOf(
   partner: { id: string; percent_override: number | null },
 ): PartnerAccrual | null {
   if (project.partner_id !== partner.id) return null;
-  if (project.amount_usd === null) return null;
+  const model = isPayoutModel(project.partner_model) ? project.partner_model : DEFAULT_MODEL;
+  const base = partnerBase(project, model);
+  if (base === null || project.amount_usd === null) return null;
 
-  const base = Math.max(0, project.amount_usd);
+  // Ступень — по сумме проекта в обеих моделях, а процент берётся с базы
+  // своей модели.
   const percent = partnerPercent({
     projectPercent: project.partner_percent,
     partnerOverride: partner.percent_override,
-    amountUsd: base,
+    amountUsd: project.amount_usd,
+    model,
   });
   const voided = project.partner_void_reason !== null;
   const state: AccrualState = voided ? "void" : accrualState(project, paidOf(project.id, payments));
@@ -284,6 +339,7 @@ export function partnerAccrualOf(
   return {
     project_id: project.id,
     partner_id: partner.id,
+    model,
     percent,
     manual: project.partner_percent !== null,
     amount_usd: state === "void" ? 0 : Math.round((base * percent) / 100),
@@ -409,4 +465,56 @@ export function validRequisites(value: string): boolean {
   const text = value.trim();
   if (isTrc20(text)) return true;
   return text.length >= 8 && text.length <= 200;
+}
+
+/* ── Агентства ──────────────────────────────────────────────────────────── */
+
+/**
+ * Контакт в сравнимом виде: @ник, ссылка t.me, телефон или почта — к одной
+ * форме. «@Agency_UZ», «t.me/agency_uz» и «https://t.me/agency_uz» — один
+ * контакт; телефон — только цифры, почта — строчными.
+ */
+export function contactKey(raw: string | null | undefined): string {
+  const text = (raw ?? "").trim();
+  if (!text) return "";
+  if (text.includes("@") && /\S+@\S+\.\S+/.test(text)) return text.toLowerCase();
+  const digits = text.replace(/[^\d]/g, "");
+  if (/^\+?[\d\s()-]{7,}$/.test(text) && digits.length >= 7) return digits.slice(-9);
+  const path = text.replace(/^(?:https?:\/\/)?(?:www\.)?t(?:elegram)?\.me\//i, "");
+  return path.replace(/^@/, "").split(/[/?#\s]/)[0].toLowerCase();
+}
+
+/** Формы собственности и «агентство» — в сравнении названий не участвуют. */
+const LEGAL_FORMS = new Set(["ооо", "оао", "зао", "ип", "mchj", "llc", "ltd", "inc", "agency", "агентство"]);
+
+/**
+ * Название компании в сравнимом виде: без кавычек, формы собственности и
+ * регистра. Слова отбрасываются по списку, а не через `\b` — в JS граница
+ * слова кириллицу не видит.
+ */
+export function companyKey(raw: string | null | undefined): string {
+  return (raw ?? "")
+    .toLowerCase()
+    .replace(/[«»"'`“”]/g, "")
+    .replace(/[^a-zа-яё0-9ʻ‘'-]+/gi, " ")
+    .split(" ")
+    .filter((word) => word && !LEGAL_FORMS.has(word))
+    .join(" ");
+}
+
+/**
+ * Этот лид — заказ агентства? Сходится контакт или название компании.
+ * Короткое название (меньше четырёх знаков) не считается: «Art» совпало бы
+ * с половиной города.
+ */
+export function agencyMatches(
+  agency: { contact: string | null; name: string },
+  lead: { contactHandle: string | null; company: string | null },
+): boolean {
+  const a = contactKey(agency.contact);
+  const l = contactKey(lead.contactHandle);
+  if (a && l && a === l) return true;
+  const an = companyKey(agency.name);
+  const ln = companyKey(lead.company);
+  return an.length >= 4 && an === ln;
 }

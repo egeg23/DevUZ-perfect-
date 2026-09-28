@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { createLinkAction, requestPayoutAction, saveRequisitesAction } from "./actions";
+import {
+  createLinkAction,
+  requestAgencyAction,
+  requestPayoutAction,
+  saveRequisitesAction,
+  switchModelAction,
+} from "./actions";
 import { CabinetView, resultText } from "@/components/partners/cabinet-view";
 import { Container } from "@/components/ui/container";
 import { company } from "@/content/company";
 import { cabinetCopy, type CabinetCopy } from "@/content/partner-cabinet";
 import { isLocale } from "@/lib/i18n";
 import { currentPartner } from "@/lib/partners/session";
-import { dailyActivity, referralsOf, summarize } from "@/lib/partners/store";
+import { agenciesOf, dailyActivity, referralsOf, summarize } from "@/lib/partners/store";
 import { buildMetadata } from "@/lib/seo";
 
 /**
@@ -57,7 +63,11 @@ export default async function CabinetPage({
   if (!partner) return <SignedOut t={t} error={e === "expired" || e === "offline" ? t.errors[e] : null} />;
 
   const [summary] = await summarize([partner]);
-  const [referrals, activity] = await Promise.all([referralsOf(summary), dailyActivity(partner.id, 30)]);
+  const [referrals, activity, agencies] = await Promise.all([
+    referralsOf(summary),
+    dailyActivity(partner.id, 30),
+    agenciesOf([partner.id]),
+  ]);
 
   return (
     <CabinetView
@@ -66,10 +76,17 @@ export default async function CabinetPage({
       partner={partner}
       summary={summary}
       referrals={referrals}
+      agencies={agencies}
       activity={activity}
       result={r ? resultText(t, r) : null}
       now={new Date()}
-      actions={{ createLink: createLinkAction, saveRequisites: saveRequisitesAction, requestPayout: requestPayoutAction }}
+      actions={{
+        createLink: createLinkAction,
+        saveRequisites: saveRequisitesAction,
+        requestPayout: requestPayoutAction,
+        switchModel: switchModelAction,
+        requestAgency: requestAgencyAction,
+      }}
     />
   );
 }

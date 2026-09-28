@@ -7,13 +7,16 @@ import {
   MIN_PAYOUT_USD,
   PERKS,
   PARTNER_TIERS,
+  PAYOUT_MODELS,
+  canSwitchModel,
+  nextModelSwitch,
   TARGETS,
   botLink,
   canWithdrawNow,
   shortUrl,
   withdrawOpens,
 } from "@/lib/partners/rules";
-import type { Partner, PartnerSummary, Referral } from "@/lib/partners/store";
+import type { Partner, PartnerAgency, PartnerSummary, Referral } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
 /**
@@ -29,6 +32,8 @@ export type CabinetActions = {
   createLink: (formData: FormData) => Promise<void>;
   saveRequisites: (formData: FormData) => Promise<void>;
   requestPayout: (formData: FormData) => Promise<void>;
+  switchModel: (formData: FormData) => Promise<void>;
+  requestAgency: (formData: FormData) => Promise<void>;
 };
 
 const CARD = "rounded-xl border border-white/12 bg-white/[0.03] px-5 py-5";
@@ -55,6 +60,7 @@ export function CabinetView({
   partner,
   summary,
   referrals,
+  agencies,
   activity,
   result,
   now,
@@ -65,6 +71,7 @@ export function CabinetView({
   partner: Partner;
   summary: PartnerSummary;
   referrals: Referral[];
+  agencies: PartnerAgency[];
   activity: { day: string; clicks: number; leads: number }[];
   result: { ok: boolean; text: string } | null;
   now: Date;
@@ -78,6 +85,8 @@ export function CabinetView({
   const pending = summary.payouts.some((p) => p.status === "requested");
   const open = canWithdrawNow(now);
   const canRequest = open && !pending && summary.balance.available >= MIN_PAYOUT_USD && Boolean(partner.requisites);
+  const switchable = canSwitchModel(partner.model_changed_at, now);
+  const nextSwitch = nextModelSwitch(partner.model_changed_at, now);
 
 
   return (
@@ -91,7 +100,11 @@ export function CabinetView({
             <p className="mt-3 text-sm text-muted">
               {partner.percent_override !== null
                 ? t.personalRate(partner.percent_override)
-                : t.rate(PARTNER_TIERS[0].percent, PARTNER_TIERS[PARTNER_TIERS.length - 1].percent)}
+                : t.rate(
+                    partner.payout_model,
+                    PARTNER_TIERS[0][partner.payout_model],
+                    PARTNER_TIERS[PARTNER_TIERS.length - 1][partner.payout_model],
+                  )}
             </p>
           </div>
           <form action="/api/partners/logout" method="post">
@@ -124,23 +137,63 @@ export function CabinetView({
           <Stat label={t.statPaid} value={String(summary.paidProjects)} />
         </section>
 
-        {/* ── Ставки ─────────────────────────────────────────────── */}
+        {/* ── Модель дохода ──────────────────────────────────────── */}
         {partner.percent_override === null ? (
-          <section className={`mt-6 ${CARD}`}>
+          <section id="model" className={`mt-6 scroll-mt-28 ${CARD}`}>
             <h2 className="font-display text-lg font-semibold">{t.tiersTitle}</h2>
-            <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
-              {PARTNER_TIERS.map((tier, i) => (
-                <li key={tier.percent} className="rounded-lg border border-white/12 px-3 py-3">
-                  <p className="text-xs text-muted">
-                    {tier.upTo === null
-                      ? t.tierOver(money(locale, PARTNER_TIERS[i - 1]?.upTo ?? 0))
-                      : t.tierUpTo(money(locale, tier.upTo))}
-                  </p>
-                  <p className="mt-1 font-display text-xl font-semibold text-green">{tier.percent} %</p>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs text-faint">{t.tiersNote}</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {PAYOUT_MODELS.map((model) => {
+                const current = partner.payout_model === model;
+                return (
+                  <div
+                    key={model}
+                    className={`rounded-xl border px-4 py-4 ${current ? "border-green/50 bg-green/[0.06]" : "border-white/12"}`}
+                  >
+                    <p className="flex items-center justify-between gap-3">
+                      <span className="font-display text-base font-semibold">{t.modelNames[model]}</span>
+                      {current ? (
+                        <span className="rounded-full bg-green/15 px-2.5 py-0.5 text-xs text-green">{t.modelCurrent}</span>
+                      ) : null}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted">{t.modelHints[model]}</p>
+                    <table className="mt-3 w-full text-sm">
+                      <thead className="sr-only">
+                        <tr>
+                          <th>{t.colRange}</th>
+                          <th>{t.modelNames[model]}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/[0.06]">
+                        {PARTNER_TIERS.map((tier, i) => (
+                          <tr key={tier.profit}>
+                            <td className="py-1.5 text-muted">
+                              {tier.upTo === null
+                                ? t.tierOver(money(locale, PARTNER_TIERS[i - 1]?.upTo ?? 0))
+                                : t.tierUpTo(money(locale, tier.upTo))}
+                            </td>
+                            <td className={`py-1.5 text-right font-display font-semibold ${current ? "text-green" : "text-text"}`}>
+                              {tier[model]} %
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {!current && switchable ? (
+                      <form action={actions.switchModel} className="mt-3">
+                        <input type="hidden" name="l" value={locale} />
+                        <input type="hidden" name="model" value={model} />
+                        <button type="submit" className="text-sm text-green hover:underline">
+                          {t.modelChoose(t.modelNames[model])}
+                        </button>
+                      </form>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-faint">
+              {t.modelFixed} {nextSwitch ? t.modelNext(day(nextSwitch.toISOString())) : null} {t.tiersNote}
+            </p>
           </section>
         ) : null}
 
@@ -333,6 +386,82 @@ export function CabinetView({
           </div>
         </section>
 
+        {/* ── Агентства ──────────────────────────────────────────── */}
+        <section id="agencies" className="mt-12 scroll-mt-28">
+          <h2 className="font-display text-2xl font-semibold">{t.agenciesTitle}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.agenciesLead}</p>
+          {agencies.length ? (
+            <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+              {agencies.map((a) => (
+                <li key={a.id} className={`${CARD} py-4`}>
+                  <p className="font-medium">{a.name}</p>
+                  <p className="mt-0.5 font-mono text-xs text-muted">{a.contact}</p>
+                  <p
+                    className={`mt-2 text-xs ${
+                      a.status === "active" ? "text-green" : a.status === "rejected" ? "text-faint" : "text-gold"
+                    }`}
+                  >
+                    {t.agencyStatus[a.status]}
+                    {a.status === "rejected" && a.decision_note ? ` · ${a.decision_note}` : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-faint">{t.agenciesEmpty}</p>
+          )}
+          <form action={actions.requestAgency} className={`mt-4 grid gap-4 sm:grid-cols-2 ${CARD}`}>
+            <input type="hidden" name="l" value={locale} />
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.agencyName}
+              <input name="name" required maxLength={120} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.agencyContact}
+              <input name="contact" required maxLength={120} placeholder={t.agencyContactHint} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.agencyWebsite}
+              <input name="website" maxLength={200} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.agencyNote}
+              <input name="note" maxLength={500} className={INPUT} />
+            </label>
+            <div className="sm:col-span-2">
+              <button type="submit" className={BUTTON}>
+                {t.agencyAdd}
+              </button>
+            </div>
+          </form>
+        </section>
+
+        {/* ── Презентации ────────────────────────────────────────── */}
+        <section id="decks" className="mt-12 scroll-mt-28">
+          <h2 className="font-display text-2xl font-semibold">{t.decksTitle}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.decksLead}</p>
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            {(["studio", "program"] as const).map((deck) => {
+              const url = `${siteUrl}/${locale}/partners/deck/${deck}?ref=${partner.code}`;
+              return (
+                <div key={deck} className={`flex flex-col ${CARD}`}>
+                  <p className="font-display text-lg font-semibold">{t.decks[deck].title}</p>
+                  <p className="mt-1 flex-1 text-sm leading-relaxed text-muted">{t.decks[deck].text}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <a href={`/${locale}/partners/deck/${deck}?ref=${partner.code}`} className={BUTTON}>
+                      {t.deckOpen}
+                    </a>
+                    <span id={`deck-${deck}`} className="sr-only">
+                      {url}
+                    </span>
+                    <CopyButton text={url} label={t.deckCopy} done={t.copied} targetId={`deck-${deck}`} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* ── Готовые тексты ─────────────────────────────────────── */}
         <section className="mt-12">
           <h2 className="font-display text-2xl font-semibold">{t.promoTitle}</h2>
@@ -387,6 +516,14 @@ export function resultText(t: CabinetCopy, code: string): { ok: boolean; text: s
     const key = code.slice(4) as keyof CabinetCopy["payoutResult"];
     return t.payoutResult[key] ? { ok: key === "ok" || key === "saved", text: t.payoutResult[key] } : null;
   }
+  if (code.startsWith("model_")) {
+    const key = code.slice(6) as keyof CabinetCopy["modelResult"];
+    return t.modelResult[key] ? { ok: key === "ok", text: t.modelResult[key] } : null;
+  }
+  if (code.startsWith("agency_")) {
+    const key = code.slice(7) as keyof CabinetCopy["agencyResult"];
+    return t.agencyResult[key] ? { ok: key === "ok", text: t.agencyResult[key] } : null;
+  }
   return null;
 }
 
@@ -418,7 +555,7 @@ function ReferralRow({ x, t, locale, mainLabel }: { x: Referral; t: CabinetCopy;
         {x.who ?? t.unnamed}
       </td>
       <td data-label={t.colFrom} className="px-4 py-3 text-muted">
-        {x.linkLabel ?? mainLabel}
+        {x.agencyName ? t.viaAgency(x.agencyName) : (x.linkLabel ?? mainLabel)}
       </td>
       <td data-label={t.colStage} className={`px-4 py-3 ${stageTone}`}>
         {t.stages[x.stage]}

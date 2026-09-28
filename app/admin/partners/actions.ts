@@ -8,11 +8,13 @@ import { parsePercent } from "@/lib/admin/finance";
 import { requestIp, requireAdmin } from "@/lib/admin/guard";
 import {
   createPartner,
+  decideAgency,
   decidePayout,
   notifyPartner,
   partnerById,
   updatePartner,
 } from "@/lib/partners/store";
+import { esc } from "@/lib/qualify/telegram";
 
 /**
  * Партнёры — деньги посторонним людям, поэтому каждое действие начинается
@@ -90,4 +92,28 @@ export async function decide(formData: FormData) {
   }
   revalidatePath("/admin/partners");
   back(result.ok ? (status === "paid" ? "paid" : "rejected") : result.reason);
+}
+
+/**
+ * Решение по агентству партнёра. Партнёру — сообщение: подключили — все
+ * заказы агентства его; отклонили — с причиной, чтобы не гадал.
+ */
+export async function decideAgencyAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const decision = String(formData.get("decision") ?? "") === "active" ? "active" : "rejected";
+  const note = String(formData.get("note") ?? "").trim() || null;
+  const result = await decideAgency(String(formData.get("agency") ?? ""), decision, note, admin, await requestIp());
+  if (!result.ok) back(result.reason);
+
+  const partner = await partnerById(result.agency.partner_id);
+  if (partner) {
+    await notifyPartner(
+      partner,
+      decision === "active"
+        ? `🏢 Агентство «${esc(result.agency.name)}» подключено. Все его заказы засчитываются вам — без ограничения в 30 дней. Этапы — в кабинете: /cabinet.`
+        : `Агентство «${esc(result.agency.name)}» не подключено.${note ? ` Причина: ${esc(note)}.` : ""} Вопросы — напишите нам в этот бот.`,
+    );
+  }
+  revalidatePath("/admin/partners");
+  back(decision === "active" ? "agency_active" : "agency_rejected");
 }
