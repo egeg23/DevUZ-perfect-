@@ -89,11 +89,15 @@ export async function currentRelease(productSlug: string): Promise<Release | nul
  * HEAD в клиенте Supabase не предусмотрен, поэтому спрашиваем список по
  * префиксу с точным именем. Это дороже HEAD ровно на ничего: список по
  * одному имени возвращает одну строку.
+ *
+ * Ей же проверяются промо-материалы партнёров (lib/partners/promo.ts): там
+ * файл грузится из браузера прямо в хранилище, и сервер узнаёт о нём только
+ * со слов формы.
  */
-async function probeObject(
+export async function probeObject(
   bucket: string,
   path: string,
-): Promise<{ ok: true; bytes: number | null } | { ok: false; reason: string }> {
+): Promise<{ ok: true; bytes: number | null; mime: string | null } | { ok: false; reason: string }> {
   const db = serviceClient();
   if (!db) return { ok: false, reason: "Нет базы." };
 
@@ -109,8 +113,12 @@ async function probeObject(
   const found = (data ?? []).find((item) => item.name === name);
   if (!found) return { ok: false, reason: `В бакете «${bucket}» нет объекта «${path}».` };
 
-  const size = (found.metadata as { size?: number } | null)?.size;
-  return { ok: true, bytes: typeof size === "number" ? size : null };
+  const meta = found.metadata as { size?: number; mimetype?: string } | null;
+  return {
+    ok: true,
+    bytes: typeof meta?.size === "number" ? meta.size : null,
+    mime: typeof meta?.mimetype === "string" ? meta.mimetype : null,
+  };
 }
 
 export async function registerRelease(

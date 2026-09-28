@@ -119,6 +119,7 @@ export const PAGE_TOPICS: readonly { prefix: string; section: string; item: stri
   { prefix: "/admin/projects/", section: "/admin/projects", item: "card" },
   { prefix: "/admin/contracts/", section: "/admin/contracts", item: "review" },
   { prefix: "/admin/razbor/", section: "/admin/razbor", item: "review" },
+  { prefix: "/admin/partners/", section: "/admin/partners", item: "promo" },
 ];
 
 /** Куда ведёт «Как пользоваться разделом» с этой страницы. null — страница без инструкции. */

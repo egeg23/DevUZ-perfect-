@@ -14,6 +14,7 @@ import {
   linkUrl,
   shortUrl,
 } from "@/lib/partners/rules";
+import { listPromo } from "@/lib/partners/promo";
 import { agenciesOf, listPartners, summarize } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
@@ -61,7 +62,7 @@ export default async function PartnersPage({
   const notice = r ? RESULT[r] : null;
 
   const summaries = await summarize(await listPartners());
-  const agencies = await agenciesOf("all");
+  const [agencies, promo] = await Promise.all([agenciesOf("all"), listPromo({ withHidden: false })]);
   const pendingAgencies = agencies.filter((a) => a.status === "pending");
   const partnerName = new Map(summaries.map((s) => [s.partner.id, s.partner.name]));
   const requests = summaries
@@ -106,6 +107,22 @@ export default async function PartnersPage({
         <Card label="Заработано" value={money(totals.earned)} note={`выплачено ${money(totals.paid)}`} />
         <Card label="К выплате" value={money(totals.due)} note={`в заявках ${money(requests.reduce((s, p) => s + p.amount_usd, 0))}`} warn={requests.length > 0} />
       </div>
+
+      {/* ── Промо-материалы ───────────────────────────────────────────── */}
+      <Link
+        href="/admin/partners/promo"
+        className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-5 py-3 text-sm transition hover:border-green/40"
+      >
+        <span>
+          <span className="font-semibold">Промо-материалы</span>
+          <span className="ml-2 text-muted">
+            {promo.length
+              ? `в кабинете партнёров: ${promo.length} — ролики и картинки, которые они выкладывают со своей ссылкой`
+              : "пока пусто — загрузите ролики и картинки, которые партнёры будут выкладывать со своей ссылкой"}
+          </span>
+        </span>
+        <span className="text-green">открыть →</span>
+      </Link>
 
       {/* ── Заявки на выплату ─────────────────────────────────────────── */}
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">Заявки на выплату</h2>

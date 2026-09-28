@@ -312,6 +312,7 @@ const ru = {
       "Каждый клиент по этапам: заявка → в работе → договор подписан → оплачен, и ваша доля по нему.",
       "Баланс, реквизиты и заявка на выплату — в одном месте. Уведомления о заявках, договорах и выплатах — в Telegram.",
       "Готовые тексты для поста, личного сообщения и сторис — ссылка уже внутри.",
+      "Промо-ролики и картинки студии для Reels, Shorts, TikTok и сторис — скачать в одно нажатие, подпись с вашей ссылкой готова.",
     ],
     faqTitle: "Частые вопросы",
     faq: [
@@ -715,6 +716,7 @@ const en: Dictionary = {
       "Every client by stage: request → in progress → contract signed → paid, with your share for each.",
       "Balance, payment details and payout requests in one place. Notifications about requests, contracts and payouts arrive in Telegram.",
       "Ready-made texts for a post, a personal message and stories — the link is already inside.",
+      "Studio promo videos and images for Reels, Shorts, TikTok and stories — one-tap download, a caption with your link is ready.",
     ],
     faqTitle: "FAQ",
     faq: [
@@ -1112,6 +1114,7 @@ const uz: Dictionary = {
       "Har bir mijoz bosqichlar bo'yicha: so'rov → ishda → shartnoma imzolandi → to'landi, va u bo'yicha sizning ulushingiz.",
       "Balans, rekvizitlar va to'lov so'rovi — bir joyda. So'rovlar, shartnomalar va to'lovlar haqidagi xabarlar — Telegramda.",
       "Post, shaxsiy xabar va storis uchun tayyor matnlar — havola ichida.",
+      "Reels, Shorts, TikTok va storis uchun studiya promo roliklari va rasmlari — bir bosishda yuklab olinadi, havolangiz bilan izoh tayyor.",
     ],
     faqTitle: "Ko'p beriladigan savollar",
     faq: [
@@ -1508,6 +1511,7 @@ const zh: Dictionary = {
       "每位客户的阶段：申请 → 进行中 → 合同已签 → 已付款，以及您在其中的分成。",
       "余额、收款信息和提现申请集中在一处。申请、合同和提现的通知会发送到 Telegram。",
       "帖子、私信和快拍的现成文案——链接已包含在内。",
+      "适用于 Reels、Shorts、TikTok 和快拍的工作室推广视频和图片——一键下载，含您链接的配文已备好。",
     ],
     faqTitle: "常见问题",
     faq: [
