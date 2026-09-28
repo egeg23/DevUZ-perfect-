@@ -1,4 +1,4 @@
-import type { AssignableRole, Role } from "@/lib/admin/roles";
+import { disables, type AssignableRole, type Role } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import {
   notifyHeadChange,
@@ -38,15 +38,17 @@ export type TeamMember = {
   rate_percent: number | null;
   /** Сколько касаний в неделю ожидается. null — план не ставили. */
   touch_plan: number | null;
+  /** Какие сообщения бота выключены. Пусто — приходит всё (lib/admin/notify-prefs.ts). */
+  notify_off: string[] | null;
 };
 
 const COLUMNS =
-  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent, touch_plan";
+  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent, touch_plan, notify_off";
 
 export type TeamResult =
   | {
       ok: true;
-      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed";
+      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed" | "notices";
       /**
        * Дошло ли до человека приглашение.
        *
@@ -251,6 +253,9 @@ export async function disableStaff(
   admin: Staff,
   ip: string,
 ): Promise<TeamResult> {
+  // `admin` — тот, кто отключает: владелец или руководитель проектов. Кого
+  // именно он вправе убрать, решает `disables` по роли цели — проверка
+  // здесь, а не только в разметке: форму отправляют и мимо кнопки.
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
 
@@ -265,6 +270,7 @@ export async function disableStaff(
     .maybeSingle();
 
   if (!target) return { ok: false, reason: "gone" };
+  if (!disables(admin.role, target.role as Role)) return { ok: false, reason: "forbidden" };
   if (!target.is_active) return { ok: true };
 
   // Последнего админа отключить нельзя: панель осталась бы без того, кто

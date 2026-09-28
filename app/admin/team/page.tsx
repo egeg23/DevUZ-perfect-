@@ -1,12 +1,13 @@
-import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, setGrade, setPlan } from "./actions";
+import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveNotices, setGrade, setPlan } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { HelpHint } from "@/components/admin/help-link";
 import { when } from "@/components/admin/lead-table";
 import { requireRole } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { GRADES, GRADE_TITLE } from "@/lib/admin/finance";
-import { ROLE_BADGE, ROLE_TITLE, hiredRoles, managesStaff } from "@/lib/admin/roles";
-import { listTeam } from "@/lib/admin/team";
+import { NOTICES, kindsFor, offSummary, wants } from "@/lib/admin/notify-prefs";
+import { ROLE_BADGE, ROLE_TITLE, disables, hiredRoles, managesStaff, tunesNotices } from "@/lib/admin/roles";
+import { listTeam, type TeamMember } from "@/lib/admin/team";
 import { offboardingSummary } from "@/lib/admin/offboarding";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
   menu_ok: { text: "Меню команд бота обновлено: клиенты видят /ref и /payout, сотрудники — ещё и /login.", tone: "ok" },
   menu_failed: { text: "Меню бота не обновилось — Telegram не ответил. Попробуйте ещё раз.", tone: "warn" },
   reactivated: { text: "Сотрудник включён обратно — это его прежняя запись со всей историей.", tone: "ok" },
+  notices: { text: "Сохранено: бот будет присылать только то, что отмечено галочками.", tone: "ok" },
   claimed: {
     text: "Менеджер закреплён за вами: его статистика и план/факт теперь в вашей команде, план касаний ставите вы.",
     tone: "ok",
@@ -34,7 +36,8 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
     tone: "warn",
   },
   forbidden: {
-    text: "Руководитель проектов заводит только менеджеров. Вторым руководителем назначает владелец.",
+    text:
+      "Это вам недоступно. Руководитель проектов заводит и отключает только менеджеров и выбирает уведомления только им и себе. Остальное — владелец.",
     tone: "warn",
   },
   gone: { text: "Такого сотрудника уже нет.", tone: "warn" },
@@ -115,8 +118,9 @@ export default async function TeamPage({
         <p className="mt-2 text-sm text-muted">
           Вы заводите менеджеров и высылаете им приглашения. Заведённый вами менеджер сразу
           ваш, а ничьего можно взять к себе кнопкой в колонке «Руководитель» — после этого
-          вы отвечаете за его показатели и план/факт и ставите ему план касаний. Открепить
-          менеджера, а также менять роль, грейд, ставку и отключать может только владелец.
+          вы отвечаете за его показатели и план/факт и ставите ему план касаний. Менеджеров
+          вы можете отключить и выбрать, какие сообщения бота им приходят (себе — тоже).
+          Открепить менеджера, менять роль, грейд и ставку может только владелец.
         </p>
       )}
 
@@ -373,7 +377,10 @@ export default async function TeamPage({
                         отправить приглашение
                       </button>
                     </form>
-                    {!manages || member.id === viewer.id ? null : (
+                    {tunesNotices(viewer.role, member.role, member.id === viewer.id) ? (
+                      <NoticesBlock member={member} />
+                    ) : null}
+                    {member.id === viewer.id || !disables(viewer.role, member.role) ? null : (
                       <DisableBlock
                         id={member.id}
                         name={member.display_name}
@@ -487,6 +494,57 @@ export default async function TeamPage({
         </form>
       </section>
     </AdminShell>
+  );
+}
+
+/**
+ * Какие сообщения бота приходят этому человеку.
+ *
+ * Галочка стоит — приходит. По умолчанию стоят все: новому сотруднику
+ * приходит всё, пока владелец или руководитель не снимет лишнее. Под каждой
+ * галочкой — что будет без неё, потому что «Новые заявки по очереди»
+ * снимают, не думая, что человек тем самым выходит из очереди.
+ */
+function NoticesBlock({ member }: { member: TeamMember }) {
+  return (
+    <details className="group">
+      <summary className="cursor-pointer list-none text-xs text-faint transition hover:text-green">
+        Уведомления · {offSummary(member.notify_off, member.role)}
+      </summary>
+      <form action={saveNotices} className="mt-2 w-80 rounded-lg border border-line bg-surface-2 px-3 py-3">
+        <input type="hidden" name="staff" value={member.id} />
+        <p className="flex items-center gap-2 text-xs text-muted">
+          Что бот присылает «{member.display_name}»:
+          <HelpHint topic={helpAnchor("/admin/team", "notices")} label="Как работают уведомления" />
+        </p>
+        <ul className="mt-2 flex flex-col gap-2">
+          {kindsFor(member.role).map((kind) => (
+            <li key={kind}>
+              <label className="flex cursor-pointer items-start gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  name="on"
+                  value={kind}
+                  defaultChecked={wants(member.notify_off, kind)}
+                  className="mt-0.5 accent-green"
+                />
+                <span>
+                  <span className="text-text">{NOTICES[kind].title}</span>
+                  <span className="block leading-snug text-faint">Без галочки: {NOTICES[kind].off}.</span>
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs leading-snug text-faint">
+          Приглашение, смена роли и руководителя, просьба подтвердить передачу приходят всегда —
+          без них действие не состоится.
+        </p>
+        <button type="submit" className={`${BUTTON} mt-3`}>
+          Сохранить
+        </button>
+      </form>
+    </details>
   );
 }
 

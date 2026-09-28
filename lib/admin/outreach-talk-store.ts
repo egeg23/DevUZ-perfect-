@@ -1,3 +1,4 @@
+import { wants } from "@/lib/admin/notify-prefs";
 import { HANDOVER_TEXT, normalizeHandle, readInbound, type TalkRow } from "@/lib/admin/outreach-talk";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
@@ -306,12 +307,14 @@ export async function tellManager(prospectId: string, text: string): Promise<boo
 
   const { data: staff } = await db
     .from("staff")
-    .select("telegram_user_id")
+    .select("telegram_user_id, notify_off")
     .eq("id", to)
     .eq("is_active", true)
     .maybeSingle();
   const chat = Number(staff?.telegram_user_id);
   if (!Number.isFinite(chat) || chat === 0) return false;
+  // Галочка «Ответы клиентов на касания» снята — ответ ждёт в «Касаниях».
+  if (!wants(staff?.notify_off as string[] | null, "talks")) return false;
 
   const link = p.lead_id ? `\n\n${siteUrl}/admin/leads/${p.lead_id}` : "";
   return sendMessage(chat, `<b>Касание · ${esc(String(p.host))}</b>\n${esc(text)}${link}`);

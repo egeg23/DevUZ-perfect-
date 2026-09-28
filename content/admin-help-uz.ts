@@ -966,7 +966,7 @@ export const uz: HelpCopy = {
 
     /* ── Команда ──────────────────────────────────────────────────────── */
     "/admin/team": {
-      what: "Xodimlar: rollar, darajalar, kim kimning rahbari va aloqalar rejasi. Yangi odam shu yerda qo‘shiladi, ketgani o‘chiriladi. Panelga kirish — Telegramdagi raqamli id bo‘yicha: parol yo‘q, username’ni odam bir soniyada almashtiradi, id esa — hech qachon.",
+      what: "Xodimlar: rollar, darajalar, kim kimning rahbari, aloqalar rejasi va botning qaysi xabarlari kimga keladi. Yangi odam shu yerda qo‘shiladi, ketgani o‘chiriladi. Panelga kirish — Telegramdagi raqamli id bo‘yicha: parol yo‘q, username’ni odam bir soniyada almashtiradi, id esa — hech qachon.",
       items: [
         {
           id: "invite",
@@ -1037,15 +1037,42 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "notices",
+          title: "Botning qaysi xabarlari keladi",
+          roles: ["admin", "head"],
+          body: {
+            head: [
+              "Oxirgi ustunda har bir menejeringizda va o‘zingizda **«Уведомления»** qatori bor — yonida «приходит всё» yoki «выключено: 2 из 8» deb yozilgan. Uni bosing: belgilar ochiladi. Belgi turgan bo‘lsa — bot buni yuboradi, olib tashlansa — yo‘q. Keraklisini belgilab, **«Сохранить»** ni bosing. Yangi xodimlarda sukut bo‘yicha barcha belgilar turadi.",
+              "Har bir belgi ostida usiz nima bo‘lishi yozilgan — olib tashlashdan oldin o‘qing. Asosiysi: **«Новые заявки по очереди»**. Usiz odam [navbatdan](#leads-queue) chiqadi — lidlar unga taklif qilinmaydi va darhol keyingisiga ketadi. Bu ta’til yoki kasallik vaqtida qulay: kirish qoladi, arizalar esa yarim soatdan turib qolmaydi.",
+              "Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi — ishning o‘zi panelda qoladi: eslatma lid kartochkasida ko‘rinadi, kunlik to‘plam — [«Касания»](/admin/prospect) da, mijozning aloqaga javobi — o‘sha yerda. «Ответы клиентов на касания» ni olib tashlasangiz, menejer o‘zi «Касания» ga kirmaguncha mijoz javob kutib qolishi mumkin — faqat javoblarni boshqa odam olib borsa, olib tashlang.",
+              "O‘chirilmaydi: panelga taklif, rol va rahbar almashishi, lidni berishni tasdiqlash so‘rovi — bu xabarlarsiz amal bajarilmaydi. Menejerlarga belgilarni siz va egasi o‘zgartirasiz; menejerlarning o‘zi ularni ko‘rmaydi. Kim va qachon o‘zgartirgani — jurnalda.",
+            ],
+            admin: [
+              "Oxirgi ustunda har bir xodimda (va sizda) **«Уведомления»** qatori bor — yonida «приходит всё» yoki «выключено: 2 из 8». Bosing: belgilar ochiladi, turgan bo‘lsa — bot yuboradi, olib tashlansa — yo‘q. **«Сохранить»**. Sukut bo‘yicha hammada hammasi turadi. Loyihalar rahbari ham belgilarni o‘zgartiradi — o‘z menejerlariga va o‘ziga, lekin boshqa rahbarga va sizga emas.",
+              "Har bir rolning o‘z to‘plami bor. Menejerda — navbat bo‘yicha va hamma uchun arizalar, eslatmalar, lid chatidagi xabarlar, berishlar, aloqalarga javoblar, kunlik to‘plam, haftalik tavsiyalar. Rahbarda yana hisobotlar. Sizda — «Копии предложений очереди» (navbat lidni kimga va qachon taklif qilgani) va hisobotlar, navbat va to‘plamsiz: siz navbatda turmaysiz.",
+              "Asosiy belgi — **«Новые заявки по очереди»**: usiz odam [navbatdan](#leads-queue) chiqadi, lidlar keyingisiga ketadi. Qolganlari faqat Telegramdagi xabarni olib tashlaydi, ish panelda qoladi. Agar hammada «Заявки для всех» olib tashlansa, tungi arizalarni Telegramda hech kim ko‘rmaydi — faqat panelda va sotuv chatida, agar u bo‘lsa.",
+              "O‘chirilmaydi: taklif, rol va rahbar almashishi, berishni tasdiqlash so‘rovi, sizga pul va shartnomalar haqidagi xabarlar. Belgilarni kim va qachon o‘zgartirgani — [jurnalda](/admin/audit).",
+            ],
+          },
+        },
+        {
           id: "disable",
           title: "Xodimni o‘chirish",
-          roles: ["admin"],
-          body: [
-            "«Отключить» → nima bo‘lishini o‘qing → **«Понятно, отключить»**. Darhol: kirish yopiladi, barcha sessiyalar uziladi, kirish havolalari bekor bo‘ladi.",
-            "Keyin tizim o‘zi: uning ishdagi lidlari navbatga qaytadi («↩️ Лид вернулся в очередь…»), navbatdagi yarim soatlari tugaydi, eslatmalar va berish so‘rovlari yopiladi, yuborilmagan aloqalar zaxiraga ketadi, davom etayotgan yozishmalar esa — uning rahbariga yoki sizga. Bunday yozishmadagi lidni navbatdan kimdir olsa, yozishma olgan odamga o‘tadi. Uning jamoasi (agar u rahbar bo‘lsa) ajraladi, Telegramidagi lid kartochkalari o‘chiriladi.",
-            "Tizim bitta narsani qila olmaydi: **odamni qo‘lda chiqarib yuboring** — «Devuz Scout» kanalidan va sotuv chatidan.",
-            "O‘chirilganlar butunlay yo‘q qilinmaydi — ular «Отключённые» ro‘yxatida. Qaytarish — o‘sha id bilan qaytadan qo‘shish.",
-          ],
+          roles: ["admin", "head"],
+          body: {
+            head: [
+              "O‘zingizning va boshqalarning **menejerlarini** o‘zingiz o‘chira olasiz: oxirgi ustunda «Отключить» → nima bo‘lishini o‘qing → **«Понятно, отключить»**. Rahbarni va egasini faqat egasi o‘chiradi, o‘zini — hech kim.",
+              "Darhol: kirish yopiladi, barcha sessiyalar uziladi, kirish havolalari bekor bo‘ladi. Keyin tizim o‘zi: ishdagi lidlar navbatga qaytadi, eslatmalar va berish so‘rovlari yopiladi, yuborilmagan aloqalar zaxiraga ketadi, davom etayotgan yozishmalar esa — o‘chirilganning rahbariga (agar u sizniki bo‘lsa — sizga) yoki egasiga.",
+              "Tizim bitta narsani qila olmaydi: **odamni qo‘lda chiqarib yuboring** — «Devuz Scout» kanalidan va sotuv chatidan: bot kanaldan chiqarib yubora olmaydi.",
+              "O‘chirilganlar butunlay yo‘q qilinmaydi — ular sanasi bilan «Отключённые» ro‘yxatida: ularda yopilgan lidlar, hisoblanmalar va jurnal qoladi. Qaytarish — o‘sha Telegram id bilan qaytadan qo‘shish, avvalgi yozuv yoqiladi.",
+            ],
+            admin: [
+              "«Отключить» → nima bo‘lishini o‘qing → **«Понятно, отключить»**. Darhol: kirish yopiladi, barcha sessiyalar uziladi, kirish havolalari bekor bo‘ladi. Menejerlarni loyihalar rahbari ham o‘chira oladi; rahbarni — faqat siz.",
+              "Keyin tizim o‘zi: uning ishdagi lidlari navbatga qaytadi («↩️ Лид вернулся в очередь…»), navbatdagi yarim soatlari tugaydi, eslatmalar va berish so‘rovlari yopiladi, yuborilmagan aloqalar zaxiraga ketadi, davom etayotgan yozishmalar esa — uning rahbariga yoki sizga. Bunday yozishmadagi lidni navbatdan kimdir olsa, yozishma olgan odamga o‘tadi. Uning jamoasi (agar u rahbar bo‘lsa) ajraladi, Telegramidagi lid kartochkalari o‘chiriladi.",
+              "Tizim bitta narsani qila olmaydi: **odamni qo‘lda chiqarib yuboring** — «Devuz Scout» kanalidan va sotuv chatidan.",
+              "O‘chirilganlar butunlay yo‘q qilinmaydi — ular «Отключённые» ro‘yxatida. Qaytarish — o‘sha id bilan qaytadan qo‘shish.",
+            ],
+          },
         },
       ],
     },
@@ -1244,6 +1271,7 @@ export const uz: HelpCopy = {
         "Botni oching va «Старт» tugmasini bosing — aks holda bot sizga birinchi bo‘lib yoza olmaydi.",
         "/login deb yozing — «🔓 Открыть панель» tugmasi va 15 daqiqalik bir martalik havola keladi. Xabarlar ostidagi «Открыть» tugmalari ham panelga o‘zi kiritadi.",
         "Ovozni o‘chirmang: navbat taklifi 30 daqiqa yashaydi, bildirishnoma jim tursa, lid keyingi odamga ketadi.",
+        "Bot qaysi xabarlarni yuborishini egasi va loyihalar rahbari «Команда» sahifasidagi belgilar bilan tanlaydi. Nimadir kelmasa — ulardan so‘rang: ehtimol, o‘sha belgi olib tashlangan.",
         "Mijoz olib kelib foiz olmoqchi bo‘lsangiz, /ref deb yozing.",
       ],
     },

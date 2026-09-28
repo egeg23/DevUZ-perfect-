@@ -46,6 +46,7 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "entitlement.restored": "вернул покупателю доступ к файлам",
   "order.nudged": "свип напомнил о заявке",
   "staff.touch_plan_set": "изменил недельный план касаний",
+  "staff.notices": "изменил, какие сообщения бота приходят сотруднику",
   "prospect.audited": "проверил сайты для холодного касания",
   "signal.status_changed": "разобрал сигнал поиска",
   "staff.invited": "завёл сотрудника",

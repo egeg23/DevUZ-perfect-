@@ -1,3 +1,4 @@
+import { wants } from "@/lib/admin/notify-prefs";
 import { after } from "next/server";
 
 import { record } from "@/lib/admin/audit";
@@ -97,7 +98,7 @@ export async function POST(request: Request) {
     const [staff, lead] = await Promise.all([
       db
         .from("staff")
-        .select("telegram_user_id, is_active")
+        .select("telegram_user_id, is_active, notify_off")
         .eq("id", reminder.staff_id as string)
         .maybeSingle(),
       db
@@ -113,6 +114,18 @@ export async function POST(request: Request) {
       await db
         .from("lead_reminders")
         .update({ cancelled_at: now })
+        .eq("id", reminder.id as string);
+      skipped += 1;
+      continue;
+    }
+
+    // Галочка «Напоминания по лидам» снята: напоминание считаем отданным —
+    // оно видно в карточке лида, — но в личку не шлём. Не копим: иначе
+    // включённая обратно галочка обрушила бы на человека всё накопленное.
+    if (!wants(staff.data.notify_off as string[] | null, "reminders")) {
+      await db
+        .from("lead_reminders")
+        .update({ sent_at: new Date().toISOString() })
         .eq("id", reminder.id as string);
       skipped += 1;
       continue;

@@ -1,3 +1,4 @@
+import { wants } from "@/lib/admin/notify-prefs";
 import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
@@ -133,11 +134,13 @@ async function notifyOwner(leadId: string, author: Staff, text: string): Promise
 
   const { data: owner } = await db
     .from("staff")
-    .select("telegram_user_id, is_active")
+    .select("telegram_user_id, is_active, notify_off")
     .eq("id", ownerId)
     .maybeSingle();
 
   if (!owner?.is_active) return;
+  // Галочка «Сообщения в чате лида» снята — сообщение ждёт его в карточке.
+  if (!wants(owner.notify_off as string[] | null, "messages")) return;
 
   const number =
     (lead?.request_no as string | null) ??
