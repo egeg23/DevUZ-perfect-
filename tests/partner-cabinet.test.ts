@@ -351,3 +351,25 @@ test("агентство — любая компания с регулярным
   }
   assert.match(read("app/[locale]/partners/deck/program/page.tsx"), /t\.tenderPoints\.map\(/);
 });
+
+test("редиректы маршрутов — от адреса сайта, а не от request.url (за nginx это 0.0.0.0:3000)", async () => {
+  // 28.09: ссылка входа из бота и короткие ссылки /r/… уводили на
+  // https://0.0.0.0:3000/… — Safari: «использование запрещённого сетевого
+  // порта». Next за nginx видит свой адрес, а не devuz.studio.
+  const { readdirSync, statSync } = await import("node:fs");
+  const routes: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(new URL(`../${dir}`, import.meta.url))) {
+      const path = `${dir}/${name}`;
+      if (statSync(new URL(`../${path}`, import.meta.url)).isDirectory()) walk(path);
+      else if (name === "route.ts") routes.push(path);
+    }
+  };
+  walk("app");
+  assert.ok(routes.length > 5, "маршруты не нашлись");
+  for (const path of routes) {
+    assert.doesNotMatch(read(path), /new URL\([^()]*,\s*request\.url\)/, `${path}: адрес собран от request.url`);
+  }
+  assert.match(read("app/api/partners/enter/route.ts"), /new URL\(absoluteUrl\(`\$\{locale\}\/partners\/cabinet`\)\)/);
+  assert.match(read("app/r/[slug]/route.ts"), /const home = absoluteUrl\(\);/);
+});

@@ -5,6 +5,7 @@ import { REF_COOKIE, REF_COOKIE_OPTIONS, formatRef, parseRef } from "@/lib/partn
 import { isBotAgent, targetUrl, visitorSeed } from "@/lib/partners/rules";
 import { linkBySlug, recordClick } from "@/lib/partners/store";
 import { clientIp } from "@/lib/qualify/limiter";
+import { absoluteUrl } from "@/lib/seo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +28,9 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const found = await linkBySlug(slug);
-  const home = new URL("/", request.url);
+  // Адреса — от адреса сайта, а не от `request.url`: за nginx это
+  // http://0.0.0.0:3000/…, и короткая ссылка уводила человека туда.
+  const home = absoluteUrl();
 
   if (!found || found.partner.status !== "active") {
     return NextResponse.redirect(home, 302);
@@ -48,7 +51,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const destination = targetUrl(link.target, link.code, company.telegram);
   const response = NextResponse.redirect(
-    destination.startsWith("http") ? destination : new URL(destination, request.url),
+    destination.startsWith("http") ? destination : absoluteUrl(destination),
     302,
   );
 

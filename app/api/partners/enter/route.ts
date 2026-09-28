@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { defaultLocale, isLocale } from "@/lib/i18n";
 import { PARTNER_COOKIE, consumeLoginToken, openSession } from "@/lib/partners/session";
+import { absoluteUrl } from "@/lib/seo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +18,11 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const raw = url.searchParams.get("l") ?? "";
   const locale = isLocale(raw) ? raw : defaultLocale;
-  const cabinet = new URL(`/${locale}/partners/cabinet`, request.url);
+  // Адрес — от адреса сайта, а не от `request.url`: за nginx это
+  // http://0.0.0.0:3000/…, и 28.09 ссылка из бота увела Александра туда —
+  // Safari: «использование запрещённого сетевого порта». Так же сделан вход
+  // в панель (app/admin/enter).
+  const cabinet = new URL(absoluteUrl(`${locale}/partners/cabinet`));
 
   const partnerId = await consumeLoginToken(url.searchParams.get("t") ?? "");
   if (!partnerId) {
