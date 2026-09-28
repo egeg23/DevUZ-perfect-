@@ -25,6 +25,7 @@ import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
 import { markDelivered, markFailed, markSent, markUnreachable, nextQueued } from "@/lib/admin/outreach-queue";
 import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/outreach-peer";
 import { markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
+import { TOO_LATE, editOutcome, markEditFailed, markEdited, nextEdit, sentCheck } from "@/lib/admin/outreach-edit";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
@@ -43,6 +44,9 @@ const OUTREACH_MS = Number(process.env.SCOUT_OUTREACH_MS || 45_000);
 // на рассылку сюда не относится — ограничивают за первые письма незнакомым,
 // а не за ответы в своей же переписке.
 const REPLY_MS = Number(process.env.SCOUT_REPLY_MS || 30_000);
+// Как часто смотреть в очередь правок отправленных писем. Правка — дело
+// ручное и редкое, но окно на неё у Telegram 48 часов, так что не медлим.
+const EDIT_MS = Number(process.env.SCOUT_EDIT_MS || 20_000);
 const MAX_BATCH = Number(process.env.SCOUT_MAX_BATCH || 20);
 
 /** Как часто сторож смотрит на соединение. Два промаха подряд — выход. */
@@ -488,6 +492,50 @@ async function live() {
       console.error(`переписка: ответ не ушёл ${reply.target} — ${why}`);
     }
   }, REPLY_MS);
+
+  // ── Правка отправленных касаний ───────────────────────────────────────
+  //
+  // Уже ушедшее письмо поправить может только тот, кто его отправил, — этот
+  // аккаунт, и только 48 часов. Строку в очередь кладёт человек (см.
+  // lib/admin/outreach-edit.ts), скаут правит.
+  setInterval(async () => {
+    let job;
+    try {
+      job = await nextEdit();
+    } catch (error) {
+      console.error("правка: очередь не прочиталась —", error?.message ?? error);
+      return;
+    }
+    if (!job) return;
+
+    try {
+      // Сначала читаем само письмо. В личке номера сообщений общие на весь
+      // аккаунт, так что хватает номера, а ответ заодно приносит адресата с
+      // ключом доступа.
+      const found = await client.invoke(
+        new Api.messages.GetMessages({ id: [new Api.InputMessageID({ id: job.messageId })] }),
+      );
+      const check = sentCheck(found, job);
+      if (!check.ok) {
+        await markEditFailed(job.id, check.why);
+        console.error(`правка: ${job.host} — ${check.why}`);
+        return;
+      }
+      await client.editMessage(check.user, { message: job.messageId, text: job.body });
+      await markEdited(job);
+      console.log(`правка: письмо ${job.messageId} по сайту ${job.host} исправлено`);
+    } catch (error) {
+      const why = error?.errorMessage ?? error?.message ?? String(error);
+      const outcome = editOutcome(why);
+      if (outcome === "done") {
+        await markEdited(job);
+        console.log(`правка: письмо по сайту ${job.host} уже в нужном виде`);
+      } else {
+        await markEditFailed(job.id, outcome === "expired" ? TOO_LATE : why);
+        console.error(`правка: не вышло по сайту ${job.host} — ${why}`);
+      }
+    }
+  }, EDIT_MS);
 
   // Входящее из лички: это может быть ответ на наше касание.
   //
