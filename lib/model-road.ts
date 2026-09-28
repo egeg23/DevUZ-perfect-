@@ -30,6 +30,13 @@ import { serviceClient } from "@/lib/supabase";
  * Ответ с ошибкой (400, 429, 529) — это рабочая дорога: повтор через шлюз
  * его не исправит, а деньги спишет дважды. Переключает только обрыв сети.
  *
+ * Кроме одного случая: ProxyAPI отказал сам — закончился баланс (402) или
+ * не принят ключ (401, 403). 28 сентября баланс кончился, пока прокси ещё
+ * лежал, и модель замолчала совсем; владелец узнал об этом из отчёта смены
+ * разборов, а прокси до конца трёх часов даже не пробовали. Теперь отказ
+ * шлюза — повод тут же попробовать прокси, пробовать его первым в каждом
+ * следующем запросе, пока шлюз не заработает, и сразу написать владельцу.
+ *
  * Всё это — в fetch, который получает SDK: вызывающему коду менять нечего,
  * ни в стриминге чата, ни в беттах, ни в повторах самого SDK.
  */
@@ -52,6 +59,14 @@ export function planRoads(state: RoadState, now: number, hasKey: boolean): Model
   if (!hasKey) return ["proxy"];
   if (state.road === "proxyapi" && now < state.retryAt) return ["proxyapi"];
   return ["proxy", "proxyapi"];
+}
+
+/**
+ * ProxyAPI отказал сам: 402 — кончился баланс, 401 и 403 — ключ не принят.
+ * Это не ответ модели, а закрытая дверь шлюза: по нему не идут дальше.
+ */
+export function gatewayRefused(status: number): boolean {
+  return status === 401 || status === 402 || status === 403;
 }
 
 /** Тот же запрос — к ProxyAPI: другой адрес, ключ шлюза вместо ключа Anthropic, мимо прокси. */
@@ -79,7 +94,13 @@ type Deps = {
   direct?: () => unknown;
   now?: () => number;
   onSwitch?: (to: ModelRoad) => void | Promise<void>;
+  onGateway?: (event: GatewayEvent) => void | Promise<void>;
 };
+
+/** Что случилось со шлюзом: отказал (и с каким ответом) или снова отвечает. */
+export type GatewayEvent =
+  | { state: "refused"; status: number; detail: string; proxyAlive: boolean }
+  | { state: "ok" };
 
 export function createModelFetch(deps: Deps = {}) {
   const fetchImpl = deps.fetchImpl ?? ((url, init) => fetch(url, init));
@@ -87,7 +108,10 @@ export function createModelFetch(deps: Deps = {}) {
   const direct = deps.direct ?? directDispatcher;
   const now = deps.now ?? Date.now;
   const onSwitch = deps.onSwitch ?? announceSwitch;
+  const onGateway = deps.onGateway ?? announceGateway;
   const state: RoadState = { road: "proxy", retryAt: 0 };
+  /** Шлюз отказал и с тех пор ни разу не ответил по-настоящему. */
+  let refused = false;
 
   function arrive(road: ModelRoad) {
     const changed = state.road !== road;
@@ -99,13 +123,18 @@ export function createModelFetch(deps: Deps = {}) {
     }
   }
 
+  function tell(event: GatewayEvent) {
+    Promise.resolve(onGateway(event)).catch((error) => console.error("model-road:", error));
+  }
+
   async function modelFetch(input: string | URL | Request, init: RequestInit = {}): Promise<Response> {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     const gatewayKey = await key().catch(() => null);
     const order = planRoads(state, now(), Boolean(gatewayKey));
 
     let lastError: unknown;
-    for (const road of order) {
+    for (let i = 0; i < order.length; i++) {
+      const road = order[i];
       try {
         if (road === "proxy") {
           const response = await fetchImpl(url, init);
@@ -114,7 +143,39 @@ export function createModelFetch(deps: Deps = {}) {
         }
         const request = toProxyApi(url, init, gatewayKey!, direct());
         const response = await fetchImpl(request.url, request.init);
-        arrive("proxyapi");
+        if (!gatewayRefused(response.status)) {
+          if (refused) {
+            refused = false;
+            tell({ state: "ok" });
+          }
+          arrive("proxyapi");
+          return response;
+        }
+
+        // Шлюз закрыт. Следующие запросы сначала идут в прокси — вдруг
+        // ожил, — а если в этом прокси ещё не пробовали, пробуем сейчас.
+        state.retryAt = 0;
+        let viaProxy: Response | null = null;
+        let proxyError: unknown = null;
+        if (!order.slice(0, i).includes("proxy")) {
+          try {
+            viaProxy = await fetchImpl(url, init);
+          } catch (error) {
+            if (init.signal?.aborted || !(error instanceof TypeError)) proxyError = error;
+          }
+        }
+        if (!refused) {
+          refused = true;
+          const detail = (await response.clone().text().catch(() => "")).slice(0, 200);
+          console.error(`model-road: ProxyAPI отказал — ${response.status} ${detail}`);
+          tell({ state: "refused", status: response.status, detail, proxyAlive: viaProxy !== null });
+        }
+        if (proxyError) throw proxyError;
+        if (viaProxy) {
+          arrive("proxy");
+          return viaProxy;
+        }
+        // Прокси тоже лежит — вызывающему честный ответ шлюза.
         return response;
       } catch (error) {
         lastError = error;
@@ -167,6 +228,54 @@ async function announceSwitch(to: ModelRoad): Promise<void> {
 }
 
 const ANNOUNCED = "model_road";
+
+/** Об отказе шлюза напоминаем не чаще раза в сутки: сайт и скаут узнают о нём каждый сам. */
+const GATEWAY_ANNOUNCED = "model_gateway";
+const GATEWAY_REMIND_MS = 24 * 60 * 60_000;
+
+/**
+ * Сказать владельцу, что ProxyAPI отказал или снова отвечает. Сайт и скаут
+ * видят отказ каждый сам, а сообщение нужно одно: что уже сказано, помнит база.
+ */
+async function announceGateway(event: GatewayEvent): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { data } = await db.from("stats_snapshots").select("payload, computed_at").eq("key", GATEWAY_ANNOUNCED).maybeSingle();
+  const before = (data?.payload as { state?: GatewayEvent["state"] } | null)?.state ?? "ok";
+  const saidAt = data?.computed_at ? Date.parse(data.computed_at as string) : 0;
+  if (event.state === "ok" && before === "ok") return;
+  if (event.state === "refused" && before === "refused" && Date.now() - saidAt < GATEWAY_REMIND_MS) return;
+  await db
+    .from("stats_snapshots")
+    .upsert(
+      { key: GATEWAY_ANNOUNCED, payload: { state: event.state }, computed_at: new Date().toISOString() },
+      { onConflict: "key" },
+    );
+
+  const [{ sendMessage }, { ownerChatIds }] = await Promise.all([
+    import("@/lib/qualify/telegram"),
+    import("@/lib/qualify/brief"),
+  ]);
+  const why =
+    event.state === "refused"
+      ? event.status === 402
+        ? "закончился баланс"
+        : "не принят ключ"
+      : "";
+  const text =
+    event.state === "refused"
+      ? `<b>ProxyAPI отказал: ${why} (${event.status}).</b>\n` +
+        (event.proxyAlive
+          ? "Сейчас модель работает через прокси, но запаса нет: ляжет прокси — модель замолчит.\n"
+          : "Прокси тоже не отвечает, поэтому модель сейчас не работает: ассистент на сайте, " +
+            "скаут, касания и разборы стоят.\n") +
+        (event.status === 402
+          ? "Пополните баланс в кабинете ProxyAPI → «Биллинг». "
+          : "Проверьте ключ в кабинете ProxyAPI → «Ключи API». ") +
+        "Дальше сервер сам: с каждым запросом он пробует и прокси, и ProxyAPI."
+      : "<b>ProxyAPI снова отвечает — модель работает.</b>";
+  for (const chat of await ownerChatIds()) await sendMessage(chat, text);
+}
 
 const shared = createModelFetch();
 

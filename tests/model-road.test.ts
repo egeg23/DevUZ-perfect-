@@ -12,7 +12,15 @@ import { test } from "node:test";
 
 import Anthropic from "@anthropic-ai/sdk";
 
-import { PROXYAPI_BASE, RETRY_PROXY_MS, createModelFetch, planRoads, type ModelRoad } from "@/lib/model-road";
+import {
+  PROXYAPI_BASE,
+  RETRY_PROXY_MS,
+  createModelFetch,
+  gatewayRefused,
+  planRoads,
+  type GatewayEvent,
+  type ModelRoad,
+} from "@/lib/model-road";
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages?beta=true";
 const DIRECT = { direct: true };
@@ -20,10 +28,13 @@ const HOUR = 60 * 60_000;
 
 type Seen = { url: string; road: ModelRoad; headers: Headers; dispatcher: unknown; body: unknown };
 
-function rig(behaviour: { proxy: "ok" | "dead" | number; proxyapi?: "ok" | "dead" | number }, key: string | null = "pa-key") {
+type Behaviour = { proxy: "ok" | "dead" | number; proxyapi?: "ok" | "dead" | number };
+
+function rig(behaviour: Behaviour, key: string | null = "pa-key") {
   let clock = 1_000_000;
   const seen: Seen[] = [];
   const switches: ModelRoad[] = [];
+  const gateway: GatewayEvent[] = [];
   const fetchImpl = async (url: string, init: RequestInit & { dispatcher?: unknown } = {}) => {
     const road: ModelRoad = url.startsWith(PROXYAPI_BASE) ? "proxyapi" : "proxy";
     seen.push({ url, road, headers: new Headers(init.headers), dispatcher: init.dispatcher, body: init.body });
@@ -39,6 +50,9 @@ function rig(behaviour: { proxy: "ok" | "dead" | number; proxyapi?: "ok" | "dead
     onSwitch: (to) => {
       switches.push(to);
     },
+    onGateway: (event) => {
+      gateway.push(event);
+    },
   });
   const call = () =>
     road.modelFetch(ANTHROPIC_URL, {
@@ -46,7 +60,7 @@ function rig(behaviour: { proxy: "ok" | "dead" | number; proxyapi?: "ok" | "dead
       headers: { "x-api-key": "sk-ant-secret", "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({ model: "claude-sonnet-5", max_tokens: 1 }),
     });
-  return { road, call, seen, switches, advance: (ms: number) => (clock += ms) };
+  return { road, call, seen, switches, gateway, advance: (ms: number) => (clock += ms) };
 }
 
 test("порядок дорог: без ключа — только прокси; на ProxyAPI до срока — только шлюз", () => {
@@ -120,6 +134,77 @@ test("ответ с ошибкой — дорога рабочая: через �
     assert.equal(response.status, status);
     assert.deepEqual(r.seen.map((s) => s.road), ["proxy"]);
     assert.deepEqual(r.switches, []);
+  }
+});
+
+test("отказ шлюза — это 402, 401 и 403, а не любая ошибка", () => {
+  for (const status of [401, 402, 403]) assert.equal(gatewayRefused(status), true);
+  for (const status of [200, 400, 404, 429, 500, 529]) assert.equal(gatewayRefused(status), false);
+});
+
+test("28.09: у ProxyAPI кончился баланс, прокси лежит — владелец узнаёт сразу, один раз", async () => {
+  const behaviour: Behaviour = { proxy: "dead", proxyapi: "ok" };
+  const r = rig(behaviour);
+  await r.call(); // прокси умер — ушли на шлюз
+  behaviour.proxyapi = 402;
+  r.seen.length = 0;
+
+  const response = await r.call();
+  assert.equal(response.status, 402, "вызывающий должен увидеть честный ответ шлюза");
+  // Шлюз отказал — тут же пробуем прокси: вдруг ожил.
+  assert.deepEqual(r.seen.map((s) => s.road), ["proxyapi", "proxy"]);
+  assert.equal(r.gateway.length, 1);
+  assert.deepEqual(r.gateway[0], { state: "refused", status: 402, detail: '{"ok":true}', proxyAlive: false });
+
+  // Следующий запрос — сначала прокси, не ждём трёх часов; сообщение не повторяется.
+  r.seen.length = 0;
+  await r.call();
+  assert.deepEqual(r.seen.map((s) => s.road), ["proxy", "proxyapi"]);
+  assert.equal(r.gateway.length, 1);
+});
+
+test("баланс кончился, а прокси как раз ожил — запрос уходит через прокси, модель работает", async () => {
+  const behaviour: Behaviour = { proxy: "dead", proxyapi: "ok" };
+  const r = rig(behaviour);
+  await r.call();
+  behaviour.proxy = "ok";
+  behaviour.proxyapi = 402;
+  r.seen.length = 0;
+
+  const response = await r.call();
+  assert.equal(response.status, 200);
+  assert.deepEqual(r.seen.map((s) => s.road), ["proxyapi", "proxy"]);
+  assert.equal(r.road.state().road, "proxy");
+  assert.deepEqual(r.switches, ["proxyapi", "proxy"]);
+  assert.equal(r.gateway[0].state === "refused" && r.gateway[0].proxyAlive, true);
+});
+
+test("баланс пополнили — шлюз снова отвечает, владелец узнаёт и об этом", async () => {
+  const behaviour: Behaviour = { proxy: "dead", proxyapi: 402 };
+  const r = rig(behaviour);
+  await r.call();
+  behaviour.proxyapi = "ok";
+  const response = await r.call();
+  assert.equal(response.status, 200);
+  assert.equal(r.road.state().road, "proxyapi");
+  assert.deepEqual(r.gateway.map((g) => g.state), ["refused", "ok"]);
+  // Дальше снова три часа через шлюз, без проб мёртвого прокси.
+  r.seen.length = 0;
+  await r.call();
+  assert.deepEqual(r.seen.map((s) => s.road), ["proxyapi"]);
+});
+
+test("ответ модели с ошибкой через шлюз (429, 529) — не отказ шлюза: без проб прокси и без сообщений", async () => {
+  for (const status of [429, 529]) {
+    const behaviour: Behaviour = { proxy: "dead", proxyapi: "ok" };
+    const r = rig(behaviour);
+    await r.call();
+    behaviour.proxyapi = status;
+    r.seen.length = 0;
+    const response = await r.call();
+    assert.equal(response.status, status);
+    assert.deepEqual(r.seen.map((s) => s.road), ["proxyapi"]);
+    assert.deepEqual(r.gateway, []);
   }
 });
 
