@@ -124,6 +124,19 @@ export type CabinetCopy = {
   historyTitle: string;
   payoutStatus: Record<"requested" | "paid" | "rejected", string>;
 
+  mediaTitle: string;
+  mediaLead: string;
+  mediaDownload: string;
+  mediaCopyCaption: string;
+  mediaCaptionTitle: string;
+  /** Подпись к посту, если владелец не написал свою. */
+  mediaCaption: (link: string) => string;
+  mediaShape: Record<"vertical" | "square" | "horizontal", string>;
+  mediaLang: Record<"all" | "ru" | "uz" | "en" | "zh", string>;
+  mediaSeconds: string;
+  mediaMb: string;
+  mediaGone: string;
+
   promoTitle: string;
   promoLead: string;
   promo: { title: string; text: (link: string) => string }[];
@@ -314,6 +327,20 @@ const ru: CabinetCopy = {
   },
   historyTitle: "История выплат",
   payoutStatus: { requested: "На рассмотрении", paid: "Выплачено", rejected: "Отклонено" },
+
+  mediaTitle: "Промо-материалы",
+  mediaLead:
+    "Ролики и картинки студии для ваших соцсетей. Скачайте, выложите в Reels, Shorts, TikTok, сторис или канал и вставьте подпись — ваша короткая ссылка в ней уже стоит. Клиенты, пришедшие по ней, засчитываются вам, как по любой вашей ссылке.",
+  mediaDownload: "Скачать",
+  mediaCopyCaption: "Скопировать подпись",
+  mediaCaptionTitle: "Подпись к посту",
+  mediaCaption: (link) =>
+    `DevUz Studio делает сайты, интернет-магазины и Telegram-ботов, которые приносят заявки. Бесплатно разберут ваш сайт и покажут, что исправить: ${link}`,
+  mediaShape: { vertical: "вертикальное 9:16", square: "квадрат", horizontal: "горизонтальное 16:9" },
+  mediaLang: { all: "без слов", ru: "на русском", uz: "на узбекском", en: "на английском", zh: "на китайском" },
+  mediaSeconds: "с",
+  mediaMb: "МБ",
+  mediaGone: "Этот материал убрали из кабинета — возьмите другой.",
 
   promoTitle: "Готовые тексты",
   promoLead:
@@ -527,6 +554,20 @@ const en: CabinetCopy = {
   historyTitle: "Payout history",
   payoutStatus: { requested: "Under review", paid: "Paid", rejected: "Declined" },
 
+  mediaTitle: "Promo materials",
+  mediaLead:
+    "Studio videos and images for your social media. Download, post to Reels, Shorts, TikTok, stories or your channel and paste the caption — your short link is already in it. Clients who come through it count as yours, like with any of your links.",
+  mediaDownload: "Download",
+  mediaCopyCaption: "Copy caption",
+  mediaCaptionTitle: "Post caption",
+  mediaCaption: (link) =>
+    `DevUz Studio builds websites, online stores and Telegram bots that bring in requests. They'll review your website for free and show what to fix: ${link}`,
+  mediaShape: { vertical: "vertical 9:16", square: "square", horizontal: "horizontal 16:9" },
+  mediaLang: { all: "no words", ru: "in Russian", uz: "in Uzbek", en: "in English", zh: "in Chinese" },
+  mediaSeconds: "s",
+  mediaMb: "MB",
+  mediaGone: "This material was removed from the cabinet — take another one.",
+
   promoTitle: "Ready-made texts",
   promoLead:
     "Copy and paste — the link is already inside. Personal works best: add one sentence about why you trust us.",
@@ -739,6 +780,20 @@ const uz: CabinetCopy = {
   historyTitle: "To'lovlar tarixi",
   payoutStatus: { requested: "Ko'rib chiqilmoqda", paid: "To'landi", rejected: "Rad etildi" },
 
+  mediaTitle: "Promo materiallar",
+  mediaLead:
+    "Ijtimoiy tarmoqlaringiz uchun studiya roliklari va rasmlari. Yuklab oling, Reels, Shorts, TikTok, stories yoki kanalga joylang va izohni qo'ying — qisqa havolangiz unda allaqachon bor. U orqali kelgan mijozlar, har qanday havolangizdagi kabi, sizga yoziladi.",
+  mediaDownload: "Yuklab olish",
+  mediaCopyCaption: "Izohni nusxalash",
+  mediaCaptionTitle: "Post izohi",
+  mediaCaption: (link) =>
+    `DevUz Studio so'rov olib keladigan saytlar, internet-do'konlar va Telegram-botlar yaratadi. Saytingizni bepul tahlil qilib, nimani tuzatish kerakligini ko'rsatishadi: ${link}`,
+  mediaShape: { vertical: "vertikal 9:16", square: "kvadrat", horizontal: "gorizontal 16:9" },
+  mediaLang: { all: "so'zsiz", ru: "rus tilida", uz: "o'zbek tilida", en: "ingliz tilida", zh: "xitoy tilida" },
+  mediaSeconds: "s",
+  mediaMb: "MB",
+  mediaGone: "Bu material kabinetdan olib tashlangan — boshqasini oling.",
+
   promoTitle: "Tayyor matnlar",
   promoLead:
     "Nusxa olib, joylashtiring — havola ichida. Eng yaxshisi shaxsiy tavsiya: nega bizga ishonishingiz haqida bitta gap qo'shing.",
@@ -946,6 +1001,20 @@ const zh: CabinetCopy = {
   },
   historyTitle: "提现记录",
   payoutStatus: { requested: "审核中", paid: "已支付", rejected: "已拒绝" },
+
+  mediaTitle: "推广素材",
+  mediaLead:
+    "用于您社交媒体的工作室视频和图片。下载后发布到 Reels、Shorts、TikTok、快拍或频道，并粘贴配文——您的短链接已经在里面。通过它来的客户算作您的，与您的任何链接一样。",
+  mediaDownload: "下载",
+  mediaCopyCaption: "复制配文",
+  mediaCaptionTitle: "帖子配文",
+  mediaCaption: (link) =>
+    `DevUz Studio 开发能带来询盘的网站、网店和 Telegram 机器人。免费分析您的网站并指出需要改进的地方：${link}`,
+  mediaShape: { vertical: "竖版 9:16", square: "方形", horizontal: "横版 16:9" },
+  mediaLang: { all: "无文字", ru: "俄语", uz: "乌兹别克语", en: "英语", zh: "中文" },
+  mediaSeconds: "秒",
+  mediaMb: "MB",
+  mediaGone: "该素材已从后台移除——请选择其他素材。",
 
   promoTitle: "现成文案",
   promoLead: "复制粘贴即可——链接已包含在内。个人推荐效果最好：加一句您为什么信任我们。",

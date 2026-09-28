@@ -13,6 +13,8 @@ import { Container } from "@/components/ui/container";
 import { company } from "@/content/company";
 import { cabinetCopy, type CabinetCopy } from "@/content/partner-cabinet";
 import { isLocale } from "@/lib/i18n";
+import { listPromo, promoPreviews } from "@/lib/partners/promo";
+import { promoForLocale } from "@/lib/partners/promo-rules";
 import { currentPartner } from "@/lib/partners/session";
 import { agenciesOf, dailyActivity, referralsOf, summarize } from "@/lib/partners/store";
 import { buildMetadata } from "@/lib/seo";
@@ -25,8 +27,9 @@ import { buildMetadata } from "@/lib/seo";
  * что ещё можно там сделать». Отсюда: ставка и прогресс до повышенной;
  * деньги по состояниям; график переходов; короткие ссылки под каждый канал
  * с направлением и бонусом аудитории; клиенты по этапам — от заявки до
- * оплаты, с долей по каждому; реквизиты и заявка на выплату; готовые тексты
- * для постов со ссылкой внутри.
+ * оплаты, с долей по каждому; реквизиты и заявка на выплату; промо-ролики
+ * и картинки с подписью, где уже стоит ссылка партнёра; готовые тексты для
+ * постов со ссылкой внутри.
  *
  * Здесь — вход и сбор данных; разметка — components/partners/cabinet-view.
  * Страница не индексируется: это личное, а не витрина.
@@ -63,11 +66,14 @@ export default async function CabinetPage({
   if (!partner) return <SignedOut t={t} error={e === "expired" || e === "offline" ? t.errors[e] : null} />;
 
   const [summary] = await summarize([partner]);
-  const [referrals, activity, agencies] = await Promise.all([
+  const [referrals, activity, agencies, promo] = await Promise.all([
     referralsOf(summary),
     dailyActivity(partner.id, 30),
     agenciesOf([partner.id]),
+    listPromo({ withHidden: false }),
   ]);
+  const materials = promoForLocale(promo, locale);
+  const previews = await promoPreviews(materials);
 
   return (
     <CabinetView
@@ -77,6 +83,7 @@ export default async function CabinetPage({
       summary={summary}
       referrals={referrals}
       agencies={agencies}
+      media={materials.map((material) => ({ material, preview: previews.get(material.id) ?? null }))}
       activity={activity}
       result={r ? resultText(t, r) : null}
       now={new Date()}

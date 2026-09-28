@@ -18,6 +18,8 @@ import {
   shortUrl,
   withdrawOpens,
 } from "@/lib/partners/rules";
+import type { PromoMaterial } from "@/lib/partners/promo";
+import { promoCaption, promoKind, promoShape, promoSize } from "@/lib/partners/promo-rules";
 import type { Partner, PartnerAgency, PartnerSummary, Referral } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
@@ -63,6 +65,7 @@ export function CabinetView({
   summary,
   referrals,
   agencies,
+  media = [],
   activity,
   result,
   now,
@@ -74,6 +77,8 @@ export function CabinetView({
   summary: PartnerSummary;
   referrals: Referral[];
   agencies: PartnerAgency[];
+  /** Промо-материалы с подписанной ссылкой на превью; своя — у каждого. */
+  media?: { material: PromoMaterial; preview: string | null }[];
   activity: { day: string; clicks: number; leads: number }[];
   result: { ok: boolean; text: string } | null;
   now: Date;
@@ -469,6 +474,66 @@ export function CabinetView({
           </div>
         </section>
 
+        {/* ── Промо-материалы ────────────────────────────────────── */}
+        {media.length ? (
+          <section id="media" className="mt-12 scroll-mt-28">
+            <h2 className="font-display text-2xl font-semibold">{t.mediaTitle}</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.mediaLead}</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {media.map(({ material, preview }) => {
+                const caption = promoCaption(material.caption, t.mediaCaption, mainUrl);
+                const shape = promoShape(material.width, material.height);
+                const facts = [
+                  shape ? t.mediaShape[shape] : null,
+                  material.duration_s ? `${Math.round(material.duration_s)} ${t.mediaSeconds}` : null,
+                  promoSize(material.bytes, t.mediaMb, locale === "ru" || locale === "uz") || null,
+                  t.mediaLang[material.locale],
+                ].filter(Boolean);
+                return (
+                  <div key={material.id} className={`flex flex-col ${CARD}`}>
+                    {preview ? (
+                      <div className="flex h-80 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black">
+                        {promoKind(material.mime) === "video" ? (
+                          // #t=0.1 — чтобы Safari на iPhone показал кадр, а не чёрный прямоугольник до нажатия.
+                          <video
+                            src={`${preview}#t=0.1`}
+                            controls
+                            playsInline
+                            preload="metadata"
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          // Подписанная ссылка на время: next/image её не оптимизирует и кэшировать не должен.
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={preview} alt={material.title} loading="lazy" className="h-full w-full object-contain" />
+                        )}
+                      </div>
+                    ) : null}
+                    <p className="mt-4 font-display text-lg font-semibold">{material.title}</p>
+                    <p className="mt-1 text-xs text-faint">{facts.join(" · ")}</p>
+                    <p className="mt-4 text-xs uppercase tracking-wider text-faint">{t.mediaCaptionTitle}</p>
+                    <p id={`media-${material.id}`} className="mt-1 flex-1 whitespace-pre-line text-sm leading-relaxed">
+                      {caption}
+                    </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {/* Обычная ссылка, не Link: скачивание — ответ сервера, а не страница, и предзагружать его нельзя. */}
+                      <a href={`/api/partners/promo/${material.id}?l=${locale}`} className={BUTTON}>
+                        {t.mediaDownload}
+                      </a>
+                      <CopyButton
+                        text={caption}
+                        label={t.mediaCopyCaption}
+                        done={t.copied}
+                        targetId={`media-${material.id}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
         {/* ── Готовые тексты ─────────────────────────────────────── */}
         <section className="mt-12">
           <h2 className="font-display text-2xl font-semibold">{t.promoTitle}</h2>
@@ -527,6 +592,7 @@ export function resultText(t: CabinetCopy, code: string): { ok: boolean; text: s
     const key = code.slice(6) as keyof CabinetCopy["modelResult"];
     return t.modelResult[key] ? { ok: key === "ok", text: t.modelResult[key] } : null;
   }
+  if (code === "media_gone") return { ok: false, text: t.mediaGone };
   if (code.startsWith("agency_")) {
     const key = code.slice(7) as keyof CabinetCopy["agencyResult"];
     return t.agencyResult[key] ? { ok: key === "ok", text: t.agencyResult[key] } : null;

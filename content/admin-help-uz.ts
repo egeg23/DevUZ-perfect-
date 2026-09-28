@@ -1079,7 +1079,7 @@ export const uz: HelpCopy = {
 
     /* ── Партнёры ─────────────────────────────────────────────────────── */
     "/admin/partners": {
-      what: "O‘z havolasi bilan mijoz olib keladigan va loyiha foydasidan foiz oladigan odamlar. Bu yerda ularning havolalari, mijozlari, hisoblanmalari va to‘lov so‘rovlari. Bo‘lim faqat egasida: bu begona odamlarga beriladigan pul.",
+      what: "O‘z havolasi bilan mijoz olib keladigan va loyiha foydasidan foiz oladigan odamlar. Bu yerda ularning havolalari, mijozlari, hisoblanmalari, to‘lov so‘rovlari va o‘zlarida joylaydigan promo materiallar. Bo‘lim faqat egasida: bu begona odamlarga beriladigan pul.",
       items: [
         {
           id: "join",
@@ -1117,6 +1117,16 @@ export const uz: HelpCopy = {
             "Tasdiqlangan agentlik — tasdiqlangandan keyin 12 oy davomida uning barcha buyurtmalari hamkorga, 30 kunlik oynasiz va «mijoz studiyada avval bo‘lgan» tekshiruvisiz: agentlikning takroriy buyurtmalari — asosiy maqsad. Muddat agentlik qatorida ko‘rinadi: «заказы партнёру до …». U tugagach, agentlikning yangi buyurtmalari oddiy tartibda o‘tadi, bog‘langanlari esa hamkorda qoladi; **«Продлить на 12 месяцев»** tugmasi bugundan boshlab yangi muddatni boshlaydi. O‘chirilgan agentlikda qayta «Подтвердить» ham muddatni yangidan boshlaydi. Sayt va botdan kelgan so‘rovlar o‘zi taniladi — agentlik kontakti (@nik, telefon, pochta) yoki kompaniya nomi bo‘yicha. Qo‘ng‘iroq yoki menejer shaxsiy xabari orqali kelgan buyurtmani loyiha kartochkasida bog‘lang: «Партнёр» bloki → «Заказ агентства».",
             "Bitta agentlik — bitta hamkorga: xuddi shu agentlikni ikkinchi marta ulab bo‘lmaydi. Ulanganida «отключить» — agentlikning yangi buyurtmalari endi hamkorga bormaydi, bog‘langanlari qoladi. Loyiha kartochkasida «Заказ агентства» faqat muddati tugamagan agentliklarni taklif qiladi.",
             "Hamkor kabinetida yuborish uchun ikkita taqdimot bor — «DevUz Studio» (jamoa, loyihalar, tillar, xizmatlar, boshlang‘ich narxlar, keyslar) va «Программа для агентств и компаний» (modellar, agentlik misoli, tender subpudrati). Havola hamkor kodini olib yuradi, shuning uchun taqdimotdan kelgan mijoz unga hisoblanadi.",
+          ],
+        },
+        {
+          id: "promo",
+          title: "Promo materiallar",
+          body: [
+            "Hamkorlar o‘zlarida joylaydigan studiya roliklari va rasmlari ombori: Reels, Shorts, TikTok, stories, kanallar. Bu sahifa tepasidagi «Промо-материалы» havolasi orqali ochiladi — yoki to‘g‘ridan-to‘g‘ri: [«Промо-материалы»](/admin/partners/promo). Hamkor ularni saytdagi kabinetida, «Промо-материалы» blokida ko‘radi: prevyu, «Скачать» va «Подпись к посту», yonida «Скопировать подпись» tugmasi. Izohda aynan shu hamkorning qisqa havolasi allaqachon turadi, shuning uchun uning postidan kelgan mijoz unga hisoblanadi — uning har qanday havolasidagi kabi. Materiallar bo‘lmaguncha hamkor bu blokni umuman ko‘rmaydi.",
+            "Yuklash: faylni tanlang — MP4, MOV, WebM rolik yoki PNG, JPG, WebP, GIF rasm, 50 MB gacha. Kattasini omborning o‘zi qabul qilmaydi; bir daqiqalik vertikal 1080×1920 rolik bu hajmga sig‘adi. Nomni hamkorlar ko‘radi. «Язык слов в ролике» tartibni hal qiladi: hamkorga avval uning tilidagi va «без слов» materiallar, keyin qolganlari ko‘rsatiladi — boshqa tillarni yashirish shart emas, Toshkentdagi hamkor rus va o‘zbek rolikni ham joylaydi. **«Загрузить»** ni bosing: fayl brauzeringizdan to‘g‘ridan-to‘g‘ri omborga, sayt serveridan chetlab ketadi, chiziq qancha ketganini ko‘rsatadi. «Готово» chiqmaguncha sahifani yopmang.",
+            "Post izohi: matndagi `{link}` har bir hamkorning qisqa havolasiga aylanadi; `{link}` ni unutsangiz — havola oxirgi qatorga qo‘yiladi, havolasiz post hamkorga hech narsa bermaydi. Maydonni bo‘sh qoldirsangiz — hamkor o‘z tilidagi standart izohni oladi (u bo‘sh maydonda kulrang ko‘rinadi). «Сообщить партнёрам в Telegram» belgisi — bot barcha faol hamkorlarga yangi material paydo bo‘lganini yozadi. Bir nechta faylni ketma-ket yuklasangiz — belgini faqat oxirgisida qoldiring, aks holda hamkor ketma-ket bir nechta xabar oladi.",
+            "Har bir materialda necha marta yuklab olingani va nechta turli hamkor olgani ko‘rinadi: shundan ularga nima kerakligi, nima bekor yotgani tushunarli. Nom, til va izoh shu yerning o‘zida tahrirlanadi — «сохранить». **«Скрыть от партнёров»** materialni kabinetdan olib tashlaydi va yuklab olishni darhol yopadi, lekin fayl qoladi — «Показать партнёрам» tugmasi bilan qaytariladi. «удалить» → **«Удалить насовсем»** faylni ham o‘chiradi; hamkorlar allaqachon yuklab olgan nusxalar ularda qoladi.",
           ],
         },
         {
