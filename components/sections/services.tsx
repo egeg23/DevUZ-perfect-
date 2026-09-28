@@ -7,7 +7,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { Dictionary } from "@/content/dictionaries";
 import { services } from "@/content/services";
-import { localeHref, t, type Locale } from "@/lib/i18n";
+import { localeHref, t, tList, type Locale } from "@/lib/i18n";
 
 export function ServicesSection({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   return (
@@ -38,16 +38,31 @@ export function ServicesSection({ locale, dict }: { locale: Locale; dict: Dictio
                   {t(service.tagline, locale)}
                 </p>
 
-                <div className="mt-6 flex flex-wrap gap-1.5">
-                  {service.tech.slice(0, 3).map((tech) => (
-                    <span
-                      key={tech}
-                      className="rounded-md border border-line px-2 py-1 font-mono text-[0.63rem] text-faint"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
+                {service.highlights ? (
+                  // Тендеры: стек на карточке ничего не объясняет — вместо
+                  // него то, что входит в услугу.
+                  <ul className="mt-5 flex flex-col gap-1.5">
+                    {tList(service.highlights, locale).map((line) => (
+                      <li key={line} className="flex gap-2 text-[0.8rem] leading-snug text-muted">
+                        <span aria-hidden="true" className="text-green">
+                          ✓
+                        </span>
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="mt-6 flex flex-wrap gap-1.5">
+                    {service.tech.slice(0, 3).map((tech) => (
+                      <span
+                        key={tech}
+                        className="rounded-md border border-line px-2 py-1 font-mono text-[0.63rem] text-faint"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 <p className="mt-5 border-t border-line pt-4 font-mono text-[0.72rem] text-faint">
                   {dict.services.from} ${service.priceFromUsd.toLocaleString("en-US")}

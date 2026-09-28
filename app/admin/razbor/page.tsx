@@ -9,6 +9,7 @@ import {
 } from "@/app/admin/razbor/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { ShotState } from "@/components/admin/razbor-shots";
+import { isTender } from "@/lib/razbor/tender";
 import { requireStaff } from "@/lib/admin/guard";
 import { forReview, history, type ReviewRow } from "@/lib/razbor/store";
 
@@ -90,9 +91,12 @@ export default async function RazborReviewPage({
               <Head row={row} />
 
               {/* Адрес разобранного сайта — служебный: наружу он не уходит
-                  никогда, но проверяющему без него не перепроверить разбор. */}
+                  никогда, но проверяющему без него не перепроверить разбор.
+                  У тендерного разбора сайта нет — вместо адреса тема. */}
               <p className="mt-1 font-mono text-[0.7rem] text-faint">
-                {row.sourceUrl} · только для проверки, на сайте адреса нет
+                {isTender(row.category)
+                  ? "тендерный разбор недели: типовое ТЗ, а не чей-то сайт — снимков у него нет"
+                  : `${row.sourceUrl} · только для проверки, на сайте адреса нет`}
               </p>
 
               {(["ru", "uz"] as const).map((locale) => {
@@ -259,9 +263,9 @@ function Head({ row }: { row: ReviewRow }) {
     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
       <span className="font-medium">{row.ru?.title ?? "без заголовка"}</span>
       <span className="text-xs text-faint">
-        {row.category} · {row.city}
+        {isTender(row.category) ? "тендеры и госконтракты" : `${row.category} · ${row.city}`}
       </span>
-      <ShotState shots={row.shots} />
+      {isTender(row.category) ? null : <ShotState shots={row.shots} />}
       {row.lostPer100 ? (
         <span className="ml-auto font-mono text-xs text-gold">
           теряет {row.lostPer100[0]}–{row.lostPer100[1]} из 100

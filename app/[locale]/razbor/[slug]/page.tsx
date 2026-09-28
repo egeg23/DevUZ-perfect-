@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/ui/container";
-import { razborCopy } from "@/content/razbor/page-copy";
+import { razborCopy, tenderCopy } from "@/content/razbor/page-copy";
 import type { RazborFinding, RazborShot } from "@/content/razbor/items";
 import { evidenceFor } from "@/lib/razbor/evidence";
 import { listRazbors, razborBySlug, siblings } from "@/lib/razbor/store";
@@ -13,6 +13,7 @@ import { buildMetadata, siteUrl, type AltPaths } from "@/lib/seo";
 import { RAZBOR_LOCALES, isRazborLocale, localeHref } from "@/lib/razbor/routing";
 import type { RazborLocale } from "@/lib/razbor/model";
 import { serviceFor } from "@/lib/razbor/service-link";
+import { isTender } from "@/lib/razbor/tender";
 
 /**
  * Разборы приходят из базы, а не только из репозитория.
@@ -82,7 +83,9 @@ export default async function RazborPage({
   const item = await razborBySlug(locale, slug);
   if (!item) notFound();
 
-  const copy = razborCopy[locale];
+  // Тендерный разбор недели: те же блоки, другие подписи и другой призыв.
+  const tender = isTender(item.niche);
+  const copy = tender ? { ...razborCopy[locale], ...tenderCopy[locale] } : razborCopy[locale];
   const near = await siblings(item);
   const service = serviceFor(item.niche);
   const hasBefore = Boolean(item.shots.beforeDesktop || item.shots.beforeMobile);
@@ -214,7 +217,7 @@ export default async function RazborPage({
       <section className="mt-12 flex flex-wrap items-center gap-4 rounded-2xl border border-green/30 bg-green/5 px-6 py-5">
         <p className="flex-1 text-lg font-semibold">{copy.cta}</p>
         <Link
-          href={`/${locale}/audit`}
+          href={tender ? `/${locale}/contact` : `/${locale}/audit`}
           className="rounded-xl bg-green px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-white"
         >
           {copy.ctaButton}

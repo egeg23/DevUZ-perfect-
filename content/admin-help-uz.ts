@@ -1113,10 +1113,10 @@ export const uz: HelpCopy = {
           id: "agencies",
           title: "Hamkorlarning agentliklari",
           body: [
-            "Hamkor kabinetda bizga o‘z mijozlarining buyurtmalarini subpudratga beradigan marketing agentligini ulashi mumkin. Sizga «🏢 Партнёр подключает агентство» keladi, bu sahifada esa «Агентства партнёров» blokida — «ждёт решения» qatori. **«Подтвердить»** — agar agentlik biz bilan hali ishlamagan bo‘lsa; sabab bilan **«отклонить»** — agar ishlagan bo‘lsa yoki bu agentlik bo‘lmasa. Ikkala holatda ham bot hamkorga yozadi.",
+            "Hamkor kabinetda ishlab chiqish bo‘yicha buyurtmalari muntazam bo‘ladigan har qanday agentlik yoki kompaniyani ulashi mumkin: IT-kompaniya, veb-studiya, marketing agentligi, integrator, IT-tenderlardagi bosh pudratchi (biz unda — subpudratchi). U bizga o‘z mijozlarining buyurtmalarini subpudratga beradi. Sizga «🏢 Партнёр подключает агентство» keladi, bu sahifada esa «Агентства партнёров» blokida — «ждёт решения» qatori. **«Подтвердить»** — agar agentlik biz bilan hali ishlamagan bo‘lsa; sabab bilan **«отклонить»** — agar ishlagan bo‘lsa yoki bu agentlik bo‘lmasa. Ikkala holatda ham bot hamkorga yozadi.",
             "Tasdiqlangan agentlik — uning barcha buyurtmalari hamkorga, 30 kunlik oynasiz va «mijoz studiyada avval bo‘lgan» tekshiruvisiz: agentlikning takroriy buyurtmalari — asosiy maqsad. Sayt va botdan kelgan so‘rovlar o‘zi taniladi — agentlik kontakti (@nik, telefon, pochta) yoki kompaniya nomi bo‘yicha. Qo‘ng‘iroq yoki menejer shaxsiy xabari orqali kelgan buyurtmani loyiha kartochkasida bog‘lang: «Партнёр» bloki → «Заказ агентства».",
             "Bitta agentlik — bitta hamkorga: xuddi shu agentlikni ikkinchi marta ulab bo‘lmaydi. Ulanganida «отключить» — agentlikning yangi buyurtmalari endi hamkorga bormaydi, bog‘langanlari qoladi.",
-            "Hamkor kabinetida yuborish uchun ikkita taqdimot bor — «DevUz Studio» (jamoa, loyihalar, tillar, xizmatlar, boshlang‘ich narxlar, keyslar) va «Программа для агентств» (modellar, agentlik misoli). Havola hamkor kodini olib yuradi, shuning uchun taqdimotdan kelgan mijoz unga hisoblanadi.",
+            "Hamkor kabinetida yuborish uchun ikkita taqdimot bor — «DevUz Studio» (jamoa, loyihalar, tillar, xizmatlar, boshlang‘ich narxlar, keyslar) va «Программа для агентств и компаний» (modellar, agentlik misoli, tender subpudrati). Havola hamkor kodini olib yuradi, shuning uchun taqdimotdan kelgan mijoz unga hisoblanadi.",
           ],
         },
         {
@@ -1171,6 +1171,14 @@ export const uz: HelpCopy = {
           body: [
             "Har kuni Toshkent vaqti bilan 08:03 da smena «Касания» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi va qolganlari nega olinmadi.",
             "Rad etish sabablari: sayt ochilmadi, sayt joyida yoki topilmalar kam, nisha yoki shahar aniqlanmadi, nishani tahlil qilmaymiz (tibbiyot), maqola tekshiruvdan o‘tmadi. 11:03 gacha hisobot bo‘lmasa — «Смена разборов — молчит» keladi.",
+          ],
+        },
+        {
+          id: "tender",
+          title: "Haftaning tender tahlili",
+          body: [
+            "Haftada bir marta, haftaning birinchi kuni Toshkent vaqti bilan 08:33 dan keyin, alohida smena tender tahlilini yozadi: begona saytni emas, IT-xaridning odatiy texnik topshirig‘ini — davlat tashkiloti sayti, CRM, elektron hujjat aylanishi, chat-bot va hokazo. Bunday texnik topshiriqda odatda nima e’tibordan chetda qoladi, qabulda bu nimaga olib keladi va qanday to‘g‘ri yozish kerak. Mavzu `content/razbor/tenders.ts` dagi ro‘yxatdan navbatdagisi olinadi; maqola buyurtmachilar, xaridlar va shartnoma summalarini nomlamaydi. Agar dushanba kuni server ishlamagan bo‘lsa, maqola u ko‘tarilgan kuni chiqadi.",
+            "Maqola shu yerga, «На проверке» ga «тендеры и госконтракты» belgisi bilan tushadi — uning suratlari yo‘q va bo‘lmaydi, shunday rejalashtirilgan. Sayt tahlili kabi tekshirasiz va nashr qilasiz; saytda u «Тендеры и госконтракты» xizmatiga va «Контакты» ga olib boradi. Hisobot Telegramga alohida «Тендерный разбор недели» qatori bilan keladi. Rad etilgan mavzu ikkinchi marta yozilmaydi; mavzular tugaganda hisobot shuni aytadi — ro‘yxat kodda to‘ldiriladi.",
           ],
         },
         {

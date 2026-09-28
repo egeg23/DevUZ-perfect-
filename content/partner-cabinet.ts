@@ -171,15 +171,15 @@ const ru: CabinetCopy = {
     failed: "Не получилось сменить модель. Попробуйте ещё раз.",
   },
 
-  agenciesTitle: "Мои агентства",
+  agenciesTitle: "Агентства и компании",
   agenciesLead:
-    "Подключите маркетинговое агентство, которое будет отдавать нам заказы своих клиентов на субподряд. После нашего подтверждения все заказы агентства — ваши, без ограничения в 30 дней: и первый, и каждый следующий. Агентству ссылка не нужна — мы узнаём его заказы по контакту и названию.",
-  agencyName: "Название агентства",
-  agencyContact: "Контакт агентства",
+    "Подключите агентство или компанию, откуда регулярно идут заказы на разработку: IT-компанию, веб-студию, маркетинговое или дизайн-агентство, интегратора, генподрядчика IT-тендеров. Она отдаёт нам заказы на субподряд, и после нашего подтверждения все её заказы — ваши, без ограничения в 30 дней: и первый, и каждый следующий. Ссылка ей не нужна — мы узнаём её заказы по контакту и названию.",
+  agencyName: "Название компании",
+  agencyContact: "Контакт компании",
   agencyContactHint: "@telegram, телефон или почта — откуда оно будет нам писать",
   agencyWebsite: "Сайт",
   agencyNote: "Комментарий",
-  agencyAdd: "Подключить агентство",
+  agencyAdd: "Подключить компанию",
   agenciesEmpty: "Агентств пока нет. Презентация программы для агентств — ниже, её можно отправить им ссылкой.",
   agencyStatus: { pending: "ждёт подтверждения", active: "подключено — заказы ваши", rejected: "не подключено" },
   agencyResult: {
@@ -196,7 +196,7 @@ const ru: CabinetCopy = {
   decksLead: "Отправьте ссылкой или сохраните в PDF (кнопка на странице). В ссылке уже ваш код: кто откроет её и оставит заявку в течение 30 дней, будет вашим клиентом.",
   decks: {
     studio: { title: "DevUz Studio", text: "Кто мы, что делаем, штат, языки, сроки, цены «от» и проекты — для клиента, которому вы нас рекомендуете." },
-    program: { title: "Программа для агентств", text: "Как агентству отдавать нам заказы на субподряд и как это считается — для маркетинговых агентств." },
+    program: { title: "Программа для агентств и компаний", text: "Как агентству, IT-компании или генподрядчику тендеров отдавать нам заказы на субподряд и как это считается." },
   },
   deckOpen: "Открыть",
   deckCopy: "Скопировать ссылку",
@@ -381,15 +381,15 @@ const en: CabinetCopy = {
     failed: "Couldn't change the model. Try again.",
   },
 
-  agenciesTitle: "My agencies",
+  agenciesTitle: "Agencies & companies",
   agenciesLead:
-    "Connect a marketing agency that will pass its clients' orders to us on a subcontract basis. Once we confirm it, all the agency's orders are yours, with no 30-day limit: the first one and every next one. The agency doesn't need a link — we recognise its orders by contact and name.",
-  agencyName: "Agency name",
-  agencyContact: "Agency contact",
+    "Connect an agency or company that regularly has development orders: an IT company, web studio, marketing or design agency, integrator, or a prime contractor in IT tenders. It passes orders to us on a subcontract basis, and once we confirm it, all its orders are yours, with no 30-day limit: the first one and every next one. It doesn't need a link — we recognise its orders by contact and name.",
+  agencyName: "Company name",
+  agencyContact: "Company contact",
   agencyContactHint: "@telegram, phone or email — where it will write to us from",
   agencyWebsite: "Website",
   agencyNote: "Comment",
-  agencyAdd: "Connect agency",
+  agencyAdd: "Connect company",
   agenciesEmpty: "No agencies yet. The program deck for agencies is below — you can send it to them as a link.",
   agencyStatus: { pending: "awaiting confirmation", active: "connected — orders are yours", rejected: "not connected" },
   agencyResult: {
@@ -406,7 +406,7 @@ const en: CabinetCopy = {
   decksLead: "Send as a link or save as PDF (button on the page). Your code is already in the link: whoever opens it and leaves a request within 30 days becomes your client.",
   decks: {
     studio: { title: "DevUz Studio", text: "Who we are, what we do, team, languages, timelines, starting prices and projects — for a client you recommend us to." },
-    program: { title: "Program for agencies", text: "How an agency passes orders to us on a subcontract basis and how it's counted — for marketing agencies." },
+    program: { title: "Program for agencies & companies", text: "How an agency, IT company or tender prime contractor passes orders to us on a subcontract basis and how it's counted." },
   },
   deckOpen: "Open",
   deckCopy: "Copy link",
@@ -591,15 +591,15 @@ const uz: CabinetCopy = {
     failed: "Modelni o'zgartirib bo'lmadi. Yana urinib ko'ring.",
   },
 
-  agenciesTitle: "Mening agentliklarim",
+  agenciesTitle: "Agentliklar va kompaniyalar",
   agenciesLead:
-    "Bizga o'z mijozlarining buyurtmalarini subpudratga beradigan marketing agentligini ulang. Biz tasdiqlaganimizdan keyin agentlikning barcha buyurtmalari sizniki, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. Agentlikka havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
-  agencyName: "Agentlik nomi",
-  agencyContact: "Agentlik kontakti",
+    "Ishlab chiqish bo'yicha buyurtmalari muntazam bo'ladigan agentlik yoki kompaniyani ulang: IT-kompaniya, veb-studiya, marketing yoki dizayn agentligi, integrator, IT-tenderlardagi bosh pudratchi. U bizga buyurtmalarni subpudratga beradi va biz tasdiqlaganimizdan keyin uning barcha buyurtmalari sizniki, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. Unga havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
+  agencyName: "Kompaniya nomi",
+  agencyContact: "Kompaniya kontakti",
   agencyContactHint: "@telegram, telefon yoki pochta — bizga qayerdan yozadi",
   agencyWebsite: "Sayt",
   agencyNote: "Izoh",
-  agencyAdd: "Agentlikni ulash",
+  agencyAdd: "Kompaniyani ulash",
   agenciesEmpty: "Hozircha agentliklar yo'q. Agentliklar uchun dastur taqdimoti quyida — uni havola bilan yuborish mumkin.",
   agencyStatus: { pending: "tasdiq kutmoqda", active: "ulangan — buyurtmalar sizniki", rejected: "ulanmagan" },
   agencyResult: {
@@ -616,7 +616,7 @@ const uz: CabinetCopy = {
   decksLead: "Havola bilan yuboring yoki PDF ga saqlang (sahifadagi tugma). Havolada kodingiz bor: uni ochib, 30 kun ichida so'rov qoldirgan kishi sizning mijozingiz bo'ladi.",
   decks: {
     studio: { title: "DevUz Studio", text: "Biz kimmiz, nima qilamiz, jamoa, tillar, muddatlar, boshlang'ich narxlar va loyihalar — bizni tavsiya qilgan mijozingiz uchun." },
-    program: { title: "Agentliklar uchun dastur", text: "Agentlik bizga buyurtmalarni subpudratga qanday beradi va bu qanday hisoblanadi — marketing agentliklari uchun." },
+    program: { title: "Agentliklar va kompaniyalar uchun dastur", text: "Agentlik, IT-kompaniya yoki tender bosh pudratchisi bizga buyurtmalarni subpudratga qanday beradi va bu qanday hisoblanadi." },
   },
   deckOpen: "Ochish",
   deckCopy: "Havoladan nusxa olish",
@@ -800,14 +800,15 @@ const zh: CabinetCopy = {
     failed: "无法更改模式，请重试。",
   },
 
-  agenciesTitle: "我的代理机构",
-  agenciesLead: "添加一家把其客户订单以分包形式交给我们的营销代理机构。经我们确认后，该机构的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。代理机构不需要链接——我们通过联系方式和名称识别其订单。",
-  agencyName: "代理机构名称",
-  agencyContact: "代理机构联系方式",
+  agenciesTitle: "代理机构与公司",
+  agenciesLead:
+    "添加经常有开发订单的代理机构或公司：IT 公司、网站工作室、营销或设计代理机构、系统集成商、IT 招标的总包方。它把订单以分包形式交给我们，经我们确认后，它的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。它不需要链接——我们通过联系方式和名称识别其订单。",
+  agencyName: "公司名称",
+  agencyContact: "公司联系方式",
   agencyContactHint: "@telegram、电话或邮箱——它将通过这里联系我们",
   agencyWebsite: "网站",
   agencyNote: "备注",
-  agencyAdd: "添加代理机构",
+  agencyAdd: "添加公司",
   agenciesEmpty: "暂无代理机构。下方有面向代理机构的计划介绍，可以链接形式发送给他们。",
   agencyStatus: { pending: "等待确认", active: "已接入——订单归您", rejected: "未接入" },
   agencyResult: {
@@ -824,7 +825,7 @@ const zh: CabinetCopy = {
   decksLead: "以链接发送或保存为 PDF（页面上的按钮）。链接中已包含您的代码：打开链接并在 30 天内提交申请的人将成为您的客户。",
   decks: {
     studio: { title: "DevUz Studio", text: "我们是谁、做什么、团队、语言、周期、起步价格和项目——给您推荐我们的客户。" },
-    program: { title: "代理机构合作计划", text: "代理机构如何以分包形式把订单交给我们，以及如何计算——面向营销代理机构。" },
+    program: { title: "代理机构与公司合作计划", text: "代理机构、IT 公司或招标总包方如何以分包形式把订单交给我们，以及如何计算。" },
   },
   deckOpen: "打开",
   deckCopy: "复制链接",

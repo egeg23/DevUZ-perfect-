@@ -331,3 +331,23 @@ test("презентации: четыре языка, те же пункты, �
   assert.doesNotMatch(read("app/globals.css"), /size: A4 landscape/, "альбомный лист достанется счёту");
   assert.match(read("app/globals.css"), /#deck \.deck-noprint/);
 });
+
+test("агентство — любая компания с регулярными заказами, и тендерный субподряд в программе", () => {
+  // Владелец: «может быть не только маркетинговое агентство, а любое
+  // (IT, маркетинг и т. д.)… укажи, что мы можем работать субподрядчиком
+  // на тендерных заказах в сфере IT».
+  const ru = deckCopy("ru").program;
+  assert.match(ru.ways[2].text, /IT-компания/);
+  assert.match(ru.agencyText, /IT-компаниям/);
+  assert.match(cabinetCopy("ru").agenciesLead, /IT-компанию.*генподрядчика IT-тендеров/);
+  for (const locale of locales) {
+    const program = deckCopy(locale).program;
+    assert.ok(program.tenderTitle && program.tenderText, `${locale}: нет слайда про тендеры`);
+    assert.equal(program.tenderPoints.length, ru.tenderPoints.length, `${locale}: пунктов про тендеры меньше`);
+    assert.ok(
+      getDictionary(locale).partners.faq.some((item) => /тендер|tender|招标/i.test(item.q)),
+      `${locale}: в FAQ программы нет вопроса про тендеры`,
+    );
+  }
+  assert.match(read("app/[locale]/partners/deck/program/page.tsx"), /t\.tenderPoints\.map\(/);
+});

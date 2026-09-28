@@ -53,7 +53,7 @@ export const qualifyLeadTool = {
         type: "array",
         items: { type: "string" },
         description:
-          "Слаги интересующих услуг: web-development, mobile-apps, ai-llm-rag, marketplace-delivery, integrations-automation.",
+          "Слаги интересующих услуг: web-development, mobile-apps, ai-llm-rag, marketplace-delivery, integrations-automation, it-tenders (ТЗ для тендера, субподряд на IT-тендере).",
       },
       budget: { type: "string", enum: ["B1", "B2", "B3"] },
       authority: { type: "string", enum: ["A1", "A2", "A3"] },

@@ -130,6 +130,19 @@ export default async function ProgramDeck({
       </Slide>
 
       <Slide>
+        <SlideTitle>{t.tenderTitle}</SlideTitle>
+        <p className="mt-6 max-w-3xl text-base leading-relaxed text-muted">{t.tenderText}</p>
+        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+          {t.tenderPoints.map((line) => (
+            <li key={line} className="flex gap-3 rounded-xl border border-white/12 px-5 py-4 text-sm leading-relaxed">
+              <span className="mt-2 size-1.5 shrink-0 rounded-full bg-green" aria-hidden />
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      </Slide>
+
+      <Slide>
         <div className="grid gap-10 lg:grid-cols-2">
           <div>
             <SlideTitle>{t.cabinetTitle}</SlideTitle>

@@ -15,7 +15,8 @@
 export type ServiceSlug =
   | "web-development"
   | "marketplace-delivery"
-  | "integrations-automation";
+  | "integrations-automation"
+  | "it-tenders";
 
 /**
  * Ниши, которым нужен не сайт-визитка, а торговля: каталог, корзина,
@@ -33,6 +34,16 @@ const AUTOMATION: Record<string, ServiceSlug> = {
   logistika: "integrations-automation",
 };
 
+/**
+ * Тендерные разборы (раз в неделю, lib/razbor/tender-run.ts) продают не
+ * сайт, а ТЗ и субподряд. Ключ повторяет TENDER_NICHE из lib/razbor/tender.ts
+ * строкой: тот модуль тянет за собой базу, а это сопоставление читает
+ * публичная страница.
+ */
+const TENDERS: Record<string, ServiceSlug> = {
+  "it-tendery": "it-tenders",
+};
+
 export function serviceFor(niche: string): ServiceSlug {
-  return COMMERCE[niche] ?? AUTOMATION[niche] ?? "web-development";
+  return COMMERCE[niche] ?? AUTOMATION[niche] ?? TENDERS[niche] ?? "web-development";
 }

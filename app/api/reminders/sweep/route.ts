@@ -13,6 +13,7 @@ import { sweepOrders } from "@/lib/admin/order-sweep-run";
 import { runTalks } from "@/lib/admin/outreach-talk-run";
 import { runReviews } from "@/lib/talk/review-run";
 import { runRazborShift } from "@/lib/razbor/shift-run";
+import { runTenderShift } from "@/lib/razbor/tender-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { promoteStrongSignals } from "@/lib/scout/promote";
@@ -279,6 +280,14 @@ export async function POST(request: Request) {
   after(async () => {
     const razbor = await runRazborShift(new Date()).catch((error) => ({ errors: [String(error)] }));
     if (razbor.errors.length) console.error("разборы:", razbor.errors.join("; "));
+  });
+
+  // Тендерный разбор недели: одна статья про ТЗ IT-закупки раз в неделю, в
+  // тот же пул «Разборов» и тоже на проверку. Сама решает, пора ли; свои
+  // отметки, чтобы не спутать её отчёт с ежедневной сменой.
+  after(async () => {
+    const tender = await runTenderShift(new Date()).catch((error) => ({ errors: [String(error)] }));
+    if (tender.errors.length) console.error("тендерный разбор:", tender.errors.join("; "));
   });
 
   // Отчёты плановых смен — владельцу. У смены нет токена бота, у свипа есть.

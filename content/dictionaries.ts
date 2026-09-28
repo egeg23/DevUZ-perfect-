@@ -44,9 +44,9 @@ const ru = {
   },
   services: {
     kicker: "что мы делаем",
-    title: "Пять направлений",
+    title: "Шесть направлений",
     description:
-      "От сайта, который собирается за три недели, до маркетплейса с интеграциями в кассовые системы и трекингом курьеров на карте.",
+      "От сайта, который собирается за три недели, до маркетплейса с интеграциями в кассовые системы и трекингом курьеров на карте. И отдельно — тендеры: ТЗ для заказчиков и субподряд для генподрядчиков.",
     from: "от",
     weeks: "недель",
     stack: "Стек",
@@ -151,6 +151,7 @@ const ru = {
       { q: "Как работает гарантия ответа за 20 секунд?", a: "Первый ответ в чате на сайте DevUz Studio приходит за 20 секунд, в любое время суток. Если ответа за это время нет, чат сам показывает, что скидка 30% на проект уже за вами — просить и доказывать ничего не нужно, счётчик виден прямо в окне чата. Скидка действует на первый проект и учитывается менеджером при расчёте сметы. Отсчёт идёт с момента, когда вы нажали «Отправить», то есть меряется то ожидание, которое видите вы, а не время работы сервера. Смысл гарантии простой: в разработке принято отвечать на заявку через день, и мы считаем это главной причиной, по которой клиенты уходят к тем, кто ответил первым." },
       { q: "Что за минута на скидку 30%?", a: "Когда вы впервые открываете сайт DevUz Studio, рядом с кнопкой чата запускается таймер на одну минуту. Если за эту минуту написать нашему ассистенту — в чат на сайте или в Telegram по кнопке рядом с таймером, — скидка 30% на первый проект закрепляется за вами: чат сразу это показывает, а менеджер видит скидку в заявке и учитывает её в расчёте. Скидка сохраняется, если вы вернётесь к разговору позже с того же браузера или продолжите его в Telegram. Таймер один на человека и не перезапускается, если обновить страницу. Когда минута вышла, действует обычная гарантия: первый ответ за 20 секунд, не уложимся — те же 30%. Скидки не складываются." },
       { q: "Можно ли доработать проект, который писали не вы?", a: "Да, это отдельная услуга DevUz Studio. Начинаем всегда с аудита: разбираем архитектуру, читаем код, оцениваем качество и риски, проверяем безопасность и составляем план работ с оценкой каждого пункта. Аудит стоит от 500 $ и занимает 3–7 дней — по его итогам становится понятно, что дешевле: доработать существующее или переписать заново. Иногда честный ответ именно второй, и мы его говорим. Самый крупный аудит в нашей практике охватывал 35 микросервисов. Берём проекты на любом стеке, но за поддержку кода без документации и тестов беремся только после аудита: чинить вслепую то, что писали другие, — способ потратить бюджет заказчика впустую." },
+      { q: "Работаете ли вы с IT-тендерами и госзакупками?", a: "Да, с двух сторон. Заказчику — госоргану или крупной компании — составляем техническое задание и требования к подрядчикам, оцениваем стоимость для начальной цены контракта и принимаем работу по этапам. Генподрядчику, который выиграл IT-тендер, делаем техническую часть на субподряде: разбор ТЗ до подачи заявки, разработку, документацию и сдачу. Подробности — на странице «Тендеры и госконтракты»." },
     ],
   },
   contact: {
@@ -326,8 +327,12 @@ const ru = {
         a: "На выбор: от чистой прибыли проекта (сумма договора минус налог и себестоимость) — 10, 15, 20, 25 или 30 %, или с оборота (всей суммы договора) — 6, 10, 14, 17 или 20 %. Ступень — по сумме проекта: до 2 500 $, до 5 000 $, до 10 000 $, до 30 000 $ и дороже. С каждого проекта этого клиента — и с первого, и со следующих.",
       },
       {
-        q: "Я подключу агентство, которое будет отдавать вам заказы. Как считается?",
-        a: "Подключите агентство в кабинете — после нашего подтверждения все его заказы засчитываются вам, без ограничения в 30 дней: и первый, и каждый следующий. Агентство пишет нам напрямую, ссылка ему не нужна — мы узнаём его заказы по контакту и названию.",
+        q: "Я подключу агентство или компанию, которая будет отдавать вам заказы. Как считается?",
+        a: "Подключите её в кабинете — подойдёт любая компания, откуда регулярно идут заказы на разработку: IT-компания, веб-студия, маркетинговое агентство, интегратор. После нашего подтверждения все её заказы засчитываются вам, без ограничения в 30 дней: и первый, и каждый следующий. Она пишет нам напрямую, ссылка ей не нужна — мы узнаём её заказы по контакту и названию.",
+      },
+      {
+        q: "Вы берёте субподряд на IT-тендерах?",
+        a: "Да. Если генподрядчик выиграл IT-тендер — госзакупку или конкурс крупной компании — и ему нужна команда разработки, мы делаем техническую часть на субподряде: разбор ТЗ и оценку до подачи заявки, разработку, документацию и сдачу по этапам. Такую компанию подключают в кабинете как агентство — все её заказы засчитываются вам.",
       },
       {
         q: "Нужно ли что-то подписывать?",
@@ -462,9 +467,9 @@ const en: Dictionary = {
   },
   services: {
     kicker: "what we do",
-    title: "Five directions",
+    title: "Six directions",
     description:
-      "From a site that ships in three weeks to a marketplace with POS integrations and couriers tracked on a live map.",
+      "From a site that ships in three weeks to a marketplace with POS integrations and couriers tracked on a live map. And separately — tenders: specs for clients and subcontracting for prime contractors.",
     from: "from",
     weeks: "weeks",
     stack: "Stack",
@@ -560,6 +565,7 @@ const en: Dictionary = {
       { q: "How does the 20-second reply guarantee work?", a: "The first reply in the DevUz Studio chat arrives within 20 seconds, at any hour. If it does not, the chat itself shows that a 30% discount on your project is already yours — nothing to ask for or prove, and the countdown is visible right in the chat window. The discount applies to your first project and the manager factors it into the quote. The clock starts when you press Send, so what is measured is the wait you actually experience, not server time. The reasoning is simple: in this industry a reply the next day is normal, and we think that is the main reason clients go to whoever answered first." },
       { q: "What is the one-minute 30% discount?", a: "When you first open the DevUz Studio website, a one-minute timer starts next to the chat button. If you message our assistant within that minute — in the website chat or on Telegram via the button next to the timer — 30% off your first project is locked in for you: the chat shows it right away, and the manager sees the discount on your request and applies it to the quote. The discount stays with you if you come back to the conversation later from the same browser or continue it on Telegram. There is one timer per person, and reloading the page does not restart it. Once the minute is over, the usual guarantee applies: the first reply within 20 seconds, and if we miss it — the same 30%. The discounts do not stack." },
       { q: "Can you take over a project someone else built?", a: "Yes, that is a separate DevUz Studio service. We always start with an audit: we go through the architecture, read the code, assess quality and risk, check security and produce a work plan with an estimate for each item. The audit costs from $500 and takes 3–7 days; by the end it is clear which is cheaper — extending what exists or rewriting it. Sometimes the honest answer is the second one, and we say so. The largest audit we have run covered 35 microservices. We take projects on any stack, but we only support undocumented, untested code after an audit: fixing someone else's work blind is a way to spend a client's budget for nothing." },
+      { q: "Do you work with IT tenders and public procurement?", a: "Yes, from both sides. For the client — a public body or a large company — we write the technical specification and contractor requirements, estimate the cost for the contract's starting price and accept the work stage by stage. For a prime contractor that has won an IT tender, we do the technical part as a subcontractor: reviewing the spec before the bid, development, documentation and delivery. Details are on the “Tenders & public contracts” page." },
     ],
   },
   contact: {
@@ -723,8 +729,12 @@ const en: Dictionary = {
         a: "Your choice: of the project's net profit (contract amount minus tax and costs) — 10, 15, 20, 25 or 30%, or of turnover (the whole contract amount) — 6, 10, 14, 17 or 20%. The tier depends on the project amount: up to $2,500, up to $5,000, up to $10,000, up to $30,000 and above. From every project of that client — the first and the following ones.",
       },
       {
-        q: "I'll connect an agency that will pass orders to you. How is that counted?",
-        a: "Connect the agency in your dashboard — once we confirm it, all its orders count as yours, with no 30-day limit: the first one and every next one. The agency writes to us directly and doesn't need a link — we recognise its orders by contact and name.",
+        q: "I'll connect an agency or company that will pass orders to you. How is that counted?",
+        a: "Connect it in your dashboard — any company that regularly has development orders will do: an IT company, web studio, marketing agency, integrator. Once we confirm it, all its orders count as yours, with no 30-day limit: the first one and every next one. It writes to us directly and doesn't need a link — we recognise its orders by contact and name.",
+      },
+      {
+        q: "Do you subcontract on IT tenders?",
+        a: "Yes. If a prime contractor has won an IT tender — public procurement or a large company's competition — and needs a development team, we do the technical part as a subcontractor: reviewing the specification and estimating before the bid, development, documentation and delivery by stages. Connect such a company in your dashboard as an agency — all its orders count as yours.",
       },
       {
         q: "Do I need to sign anything?",
@@ -853,9 +863,9 @@ const uz: Dictionary = {
   },
   services: {
     kicker: "biz nima qilamiz",
-    title: "Beshta yo‘nalish",
+    title: "Oltita yo‘nalish",
     description:
-      "Uch haftada yig‘iladigan saytdan tortib, kassa tizimlariga integratsiya va xaritada kuryer kuzatuvi bilan marketpleysgacha.",
+      "Uch haftada yig‘iladigan saytdan tortib, kassa tizimlariga integratsiya va xaritada kuryer kuzatuvi bilan marketpleysgacha. Alohida — tenderlar: buyurtmachilar uchun texnik topshiriq va bosh pudratchilar uchun subpudrat.",
     from: "dan",
     weeks: "hafta",
     stack: "Stek",
@@ -951,6 +961,7 @@ const uz: Dictionary = {
       { q: "20 soniya kafolati qanday ishlaydi?", a: "DevUz Studio saytidagi chatda birinchi javob 20 soniyada keladi, kunning istalgan vaqtida. Agar javob bo‘lmasa, chatning o‘zi loyihaga 30% chegirma sizniki ekanini ko‘rsatadi — so‘rash va isbotlash shart emas, sanoq chat oynasida ko‘rinib turadi. Chegirma birinchi loyihaga amal qiladi va menejer uni smetada hisobga oladi. Sanoq siz «Yuborish» tugmasini bosgan paytdan boshlanadi, ya’ni server vaqti emas, siz ko‘rgan kutish o‘lchanadi. Kafolatning ma’nosi oddiy: bu sohada arizaga ertasi kuni javob berish odat, va biz mijozlar birinchi javob berganga ketishining asosiy sababi shu deb hisoblaymiz." },
       { q: "30% chegirma uchun bir daqiqa nima?", a: "DevUz Studio saytini birinchi marta ochganingizda chat tugmasi yonida bir daqiqalik taymer ishga tushadi. Shu daqiqa ichida yordamchimizga yozsangiz — saytdagi chatga yoki taymer yonidagi tugma orqali Telegramga — birinchi loyihaga 30% chegirma siz uchun band qilinadi: chat buni darhol ko‘rsatadi, menejer esa chegirmani arizada ko‘radi va hisob-kitobda inobatga oladi. Suhbatga keyinroq o‘sha brauzerdan qaytsangiz yoki uni Telegramda davom ettirsangiz ham chegirma saqlanadi. Taymer har bir odam uchun bitta va sahifani yangilaganda qaytadan boshlanmaydi. Daqiqa tugagach, odatiy kafolat amal qiladi: birinchi javob 20 soniyada, ulgurmasak — xuddi shu 30%. Chegirmalar qo‘shilmaydi." },
       { q: "Boshqalar yozgan loyihani takomillashtirsa bo‘ladimi?", a: "Ha, bu DevUz Studio’ning alohida xizmati. Har doim auditdan boshlaymiz: arxitekturani tahlil qilamiz, kodni o‘qiymiz, sifat va risklarni baholaymiz, xavfsizlikni tekshiramiz va har bir band bo‘yicha baho bilan ish rejasini tuzamiz. Audit 500 $ dan turadi va 3–7 kun oladi — natijasida nima arzonroq ekani ayon bo‘ladi: mavjudini takomillashtirishmi yoki qaytadan yozishmi. Ba’zan halol javob ikkinchisi bo‘ladi va biz buni aytamiz. Amaliyotimizdagi eng yirik audit 35 ta mikroservisni qamragan. Istalgan stekdagi loyihalarni olamiz, lekin hujjatsiz va testsiz kodni faqat auditdan keyin qo‘llab-quvvatlaymiz." },
+      { q: "IT-tenderlar va davlat xaridlari bilan ishlaysizmi?", a: "Ha, ikki tomondan. Buyurtmachiga — davlat tashkiloti yoki yirik kompaniyaga — texnik topshiriq va pudratchilarga talablarni tuzamiz, shartnoma boshlang‘ich narxi uchun qiymatni baholaymiz va ishni bosqichma-bosqich qabul qilamiz. IT-tenderni yutgan bosh pudratchiga texnik qismini subpudratda bajaramiz: ariza oldidan texnik topshiriqni tahlil qilish, ishlab chiqish, hujjatlar va topshirish. Batafsil — «Tenderlar va davlat shartnomalari» sahifasida." },
     ],
   },
   contact: {
@@ -1114,8 +1125,12 @@ const uz: Dictionary = {
         a: "Tanlovingizga ko'ra: loyiha sof foydasidan (shartnoma summasi minus soliq va tannarx) — 10, 15, 20, 25 yoki 30 %, yoki aylanmadan (butun shartnoma summasi) — 6, 10, 14, 17 yoki 20 %. Pog'ona loyiha summasiga qarab: 2 500 $ gacha, 5 000 $ gacha, 10 000 $ gacha, 30 000 $ gacha va undan yuqori. Bu mijozning har bir loyihasidan — birinchisidan ham, keyingilaridan ham.",
       },
       {
-        q: "Sizga buyurtma beradigan agentlikni ulayman. Qanday hisoblanadi?",
-        a: "Agentlikni kabinetda ulang — biz tasdiqlaganimizdan keyin uning barcha buyurtmalari sizga hisoblanadi, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. Agentlik bizga to'g'ridan-to'g'ri yozadi, unga havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
+        q: "Sizga buyurtma beradigan agentlik yoki kompaniyani ulayman. Qanday hisoblanadi?",
+        a: "Uni kabinetda ulang — ishlab chiqish bo'yicha buyurtmalari muntazam bo'ladigan har qanday kompaniya mos keladi: IT-kompaniya, veb-studiya, marketing agentligi, integrator. Biz tasdiqlaganimizdan keyin uning barcha buyurtmalari sizga hisoblanadi, 30 kunlik cheklovsiz: birinchisi ham, har bir keyingisi ham. U bizga to'g'ridan-to'g'ri yozadi, unga havola kerak emas — buyurtmalarini kontakt va nomi bo'yicha taniymiz.",
+      },
+      {
+        q: "IT-tenderlarda subpudratga ishlaysizmi?",
+        a: "Ha. Agar bosh pudratchi IT-tenderni — davlat xaridi yoki yirik kompaniya tanlovini — yutgan bo'lsa va unga ishlab chiqish jamoasi kerak bo'lsa, texnik qismini subpudratda bajaramiz: ariza topshirishdan oldin texnik topshiriqni tahlil qilish va baholash, ishlab chiqish, hujjatlar va bosqichma-bosqich topshirish. Bunday kompaniyani kabinetda agentlik sifatida ulang — uning barcha buyurtmalari sizga hisoblanadi.",
       },
       {
         q: "Biror narsa imzolash kerakmi?",
@@ -1244,9 +1259,9 @@ const zh: Dictionary = {
   },
   services: {
     kicker: "我们做什么",
-    title: "五大方向",
+    title: "六大方向",
     description:
-      "小到三周即可上线的网站，大到对接收银系统、在地图上实时追踪骑手的电商配送平台。",
+      "小到三周即可上线的网站，大到对接收银系统、在地图上实时追踪骑手的电商配送平台。另有招标业务：为招标方编写技术规格书，为总包方做分包。",
     from: "起价",
     weeks: "周",
     stack: "技术栈",
@@ -1342,6 +1357,7 @@ const zh: Dictionary = {
       { q: "20 秒回复保证是怎么运作的？", a: "DevUz Studio 网站聊天的第一条回复会在 20 秒内到达，任何时段都是如此。若超时未回，聊天本身会显示项目 30% 的折扣已经归你——无需索取，也无需证明，倒计时就显示在聊天窗口里。折扣适用于首个项目，客户经理会在报价中计入。计时从你按下「发送」那一刻开始，也就是说，衡量的是你实际经历的等待，而不是服务器耗时。这项保证的逻辑很简单：在这个行业里，隔天回复咨询被视为常态，而我们认为这正是客户转向先回复者的首要原因。" },
       { q: "什么是「一分钟锁定 30% 折扣」？", a: "您第一次打开 DevUz Studio 网站时，聊天按钮旁会开始一分钟倒计时。只要在这一分钟内给我们的助手发消息——在网站聊天中，或通过倒计时旁的按钮在 Telegram 中——首个项目 30% 的折扣即为您锁定：聊天会立即显示，客户经理也会在申请中看到这一折扣并在报价中计入。之后您用同一浏览器回到对话，或在 Telegram 中继续，折扣依然保留。每人只有一次倒计时，刷新页面不会重新开始。一分钟结束后，适用常规保证：20 秒内首次回复，超时未回——同样 30%。折扣不叠加。" },
       { q: "你们能接手别人开发的项目吗？", a: "可以，这是 DevUz Studio 的一项独立服务。我们总是从审计开始：梳理架构、通读代码、评估质量与风险、检查安全性，并给出逐项估算的工作计划。审计起价 500 美元，历时 3–7 天；结束时就能看清哪种更划算——在现有基础上继续，还是推倒重写。有时诚实的答案是后者，我们会直说。我们做过的最大一次审计覆盖了 35 个微服务。任何技术栈的项目我们都接，但对于没有文档和测试的代码，只有在审计之后才承接维护：盲修别人写的东西，是把客户预算白白花掉的方式。" },
+      { q: "你们承接 IT 招标和政府采购吗？", a: "承接，而且从两端参与。对招标方——政府机构或大型企业——我们编写技术规格书和承包商要求，为合同起始价估算成本，并分阶段验收。对中标 IT 项目的总包方，我们以分包形式完成技术部分：投标前分析规格书、开发、编写文档和交付。详情见“招标与政府合同”页面。" },
     ],
   },
   contact: {
@@ -1504,8 +1520,12 @@ const zh: Dictionary = {
         a: "由您选择：按项目净利润（合同金额减去税费和成本）——10%、15%、20%、25% 或 30%；或按营业额（整个合同金额）——6%、10%、14%、17% 或 20%。档位按项目金额划分：2,500 美元以内、5,000 美元以内、10,000 美元以内、30,000 美元以内以及更高。该客户的每个项目都算——第一个和之后的都算。",
       },
       {
-        q: "我会介绍一家向你们下单的代理机构，怎么计算？",
-        a: "在后台添加该代理机构——经我们确认后，它的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。代理机构直接联系我们，不需要链接——我们通过联系方式和名称识别其订单。",
+        q: "我会介绍一家向你们下单的代理机构或公司，怎么计算？",
+        a: "在后台添加它——任何经常有开发订单的公司都可以：IT 公司、网站工作室、营销代理机构、系统集成商。经我们确认后，它的所有订单都算您的，不受 30 天限制：第一个和之后的每一个都算。它直接联系我们，不需要链接——我们通过联系方式和名称识别其订单。",
+      },
+      {
+        q: "你们承接 IT 招标的分包吗？",
+        a: "承接。如果总包方中标了 IT 招标——政府采购或大公司的竞标——并需要开发团队，我们以分包形式完成技术部分：投标前分析技术规格书并估算，开发、编写文档并按阶段交付。在后台把这样的公司作为代理机构添加——它的所有订单都算您的。",
       },
       {
         q: "需要签署什么吗？",
