@@ -110,6 +110,13 @@ export const NICHES: readonly Niche[] = [
   // две наши страницы под один узбекский запрос — это когда Google не
   // выбирает ни одну.
   { key: "nedvizhimost", ruGen: "жилого комплекса", ruLabel: "застройщик", uz: "turar-joy majmuasi", uzLabel: "quruvchi kompaniya", ruMock: "Жилой комплекс", uzMock: "Turar-joy majmuasi", ruServices: ["Квартиры и планировки", "Цены за квадрат", "Ипотека и рассрочка", "Запись на показ"], uzServices: ["Kvartiralar va planirovkalar", "Kvadrat narxi", "Ipoteka va bo‘lib to‘lash", "Ko‘rikka yozilish"] },
+  // Провайдер и агентство недвижимости заведены 28.09 ради примеров в
+  // касаниях: владелец попросил, чтобы провайдеру показывали Transtelecom, а
+  // агентству — Tranio. Классификатор без ниши этого сделать не мог, а ниша
+  // классификатора обязана быть и здесь — иначе смена разборов теряет такие
+  // сайты в «ниша не определилась», как было с застройщиками.
+  { key: "svyaz", ruGen: "интернет-провайдера", ruLabel: "интернет-провайдер", uz: "internet provayder", uzLabel: "internet provayder", ruMock: "Провайдер", uzMock: "Provayder", ruServices: ["Тарифы на интернет", "Подключение по адресу", "Интернет для бизнеса", "Техподдержка круглосуточно"], uzServices: ["Internet tariflari", "Manzil bo‘yicha ulanish", "Biznes uchun internet", "Kechayu kunduz texnik yordam"] },
+  { key: "agentstvo-nedvizhimosti", ruGen: "агентства недвижимости", ruLabel: "агентство недвижимости", uz: "ko'chmas mulk agentligi", uzLabel: "ko'chmas mulk agentligi", ruMock: "Агентство недвижимости", uzMock: "Ko‘chmas mulk agentligi", ruServices: ["Подбор объекта", "Продажа и аренда", "Проверка документов", "Сопровождение сделки"], uzServices: ["Obyekt tanlash", "Sotish va ijara", "Hujjatlarni tekshirish", "Bitimni kuzatib borish"] },
   { key: "fitnes", ruGen: "фитнес-клуба", ruLabel: "фитнес-клуб", uz: "fitnes klubi", uzLabel: "fitnes klubi", ruMock: "Фитнес", uzMock: "Fitnes", ruServices: ["Абонементы", "Групповые занятия", "Тренажёрный зал", "Первое занятие"], uzServices: ["Abonementlar", "Guruh mashg‘ulotlari", "Trenajyor zali", "Birinchi mashg‘ulot"] },
 ];
 

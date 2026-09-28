@@ -199,3 +199,33 @@ test("число в заголовке кейсов подставляется �
     assert.ok(!title.includes("{n}"), `${locale}: «{n}» осталось в заголовке`);
   }
 });
+
+test("мебельщику — мебель, провайдеру — связь, агентству — агентство", () => {
+  // Владелец, 28.09: «скаут в мебельной нише почему-то ссылается на usta —
+  // это ж не то… мы делали и для провайдера TTC, и для Tranio. Пусть
+  // ссылается на релевантные проекты».
+  //
+  // Письмо по сайту: ниша пришла из классификатора.
+  assert.equal(referenceFor("mebel")?.name, "Namuna");
+  assert.equal(referenceFor("svyaz")?.name, "Transtelecom");
+  assert.equal(referenceFor("agentstvo-nedvizhimosti")?.name, "Tranio");
+  // Застройщикам — по-прежнему застройщик.
+  assert.equal(referenceFor("nedvizhimost")?.name, "MAVERA");
+
+  // Письмо компании без сайта: ниша — словами кампании автопоиска.
+  assert.equal(referenceFor("мебель")?.name, "Namuna");
+  assert.equal(referenceFor("интернет-провайдер")?.name, "Transtelecom");
+  assert.equal(referenceFor("агентство недвижимости")?.name, "Tranio");
+  assert.equal(referenceFor("межкомнатные двери")?.name, "Akbar Rich");
+});
+
+test("совпадение по словам выбирает кейс с большим числом общих слов", () => {
+  // «Недвижимость» есть и у MAVERA, и у Tranio. Зарубежная — только у
+  // Tranio; первый по списку отдал бы застройщика.
+  assert.equal(referenceFor(null, ["Недвижимость за рубежом — купить квартиру в Дубае"])?.name, "Tranio");
+  // А просто жилой комплекс — по-прежнему MAVERA.
+  assert.equal(referenceFor(null, ["Nirvana Residence — жилой комплекс в Ташкенте"])?.name, "MAVERA");
+  // «Фабрика» — форма, а не занятие: фабрика дверей не сходится с мебельной
+  // фабрикой по одному этому слову.
+  assert.equal(referenceFor(null, ["Фабрика межкомнатных дверей в Ташкенте"])?.name, "Akbar Rich");
+});
