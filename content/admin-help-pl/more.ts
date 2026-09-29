@@ -261,14 +261,14 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Przetargowa analiza tygodnia",
         body: [
           "Raz w tygodniu, w pierwszy dzień tygodnia po 08:33 czasu taszkenckiego, osobna zmiana pisze analizę przetargową: nie cudzą stronę, tylko typową specyfikację techniczną zamówienia IT — strona urzędu, CRM, system obiegu dokumentów, chatbot i tak dalej. Co w takiej specyfikacji zwykle się pomija, czym to się kończy przy odbiorze i jak napisać ją dobrze. Temat to kolejny z listy w `content/razbor/tenders.ts`; artykuł nie wymienia zamawiających, przetargów ani kwot kontraktów. Jeśli w poniedziałek serwer nie działał, artykuł wyjdzie w ten dzień tygodnia, w którym serwer wróci.",
-          "Artykuł trafia tutaj, do «Do sprawdzenia», z oznaczeniem «przetargi i zamówienia publiczne» — nie ma zrzutów i nie będzie miał, tak ma być. Sprawdzasz i publikujesz go tak samo jak analizę strony; na stronie prowadzi do usługi «Тендеры и госконтракты» i do «Контакты». Raport przychodzi w Telegramie osobną linijką «Тендерный разбор недели». Odrzucony temat nie jest pisany drugi raz; gdy tematy się skończą, raport to powie — listę uzupełnia się w kodzie.",
+          "Artykuł trafia tutaj, na listę «Do sprawdzenia», z oznaczeniem «przetargi i zamówienia publiczne» — nie ma zrzutów i nie będzie miał, tak ma być. Sprawdzasz i publikujesz go tak samo jak analizę strony; na stronie prowadzi do usługi «Тендеры и госконтракты» i do strony «Контакты». Raport przychodzi w Telegramie osobną linijką «Тендерный разбор недели». Odrzucony temat nie jest pisany drugi raz; gdy tematy się skończą, raport to powie — listę uzupełnia się w kodzie.",
         ],
       },
       {
         id: "review",
         title: "Sprawdź analizę",
         body: [
-          "W «Do sprawdzenia» są oba artykuły w całości. Przeczytaj oba: to nie są wzajemne tłumaczenia, tylko różne strony pod różne zapytania. Adres strony źródłowej widzisz tylko Ty — na stronie go nie ma.",
+          "Na liście «Do sprawdzenia» są oba artykuły w całości. Przeczytaj oba: to nie są wzajemne tłumaczenia, tylko różne strony pod różne zapytania. Adres strony źródłowej widzisz tylko Ty — na stronie go nie ma.",
           "Sprawdź, że firma nie jest nigdzie wymieniona — ani nazwą, ani adresem, ani na grafice — i że każda liczba jest w ustaleniach. «Edytuj» zmienia tylko tekst: tytuł, opis, wstęp, ustalenia i podsumowanie; adres i zapytanie się nie zmieniają.",
         ],
       },
@@ -276,7 +276,7 @@ export const moreSections: Record<string, HelpEntry> = {
         id: "publish",
         title: "Opublikuj, zdejmij, odrzuć",
         body: [
-          "**«Opublikuj»** — potrzebne są oba artykuły. Strona od razu otwiera się na witrynie, mapa strony się aktualizuje, Bing i Yandex dostają sygnał. **«Zdejmij z publikacji»** przywraca analizę do «Do sprawdzenia».",
+          "**«Opublikuj»** — potrzebne są oba artykuły. Strona od razu otwiera się na witrynie, mapa strony się aktualizuje, Bing i Yandex dostają sygnał. **«Zdejmij z publikacji»** przywraca analizę na listę «Do sprawdzenia».",
           "**«Nie publikujemy»** — z powodem albo bez. Zmiana nie wróci już do tej strony. Przywrócić stronę do kolejki zmiany można tylko przez **«Usuń»** (wpisz «usuń»).",
         ],
       },

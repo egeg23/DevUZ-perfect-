@@ -67,7 +67,7 @@ export const prospectSections: Record<string, HelpEntry> = {
       },
       {
         id: "strong",
-        title: "Mocny sygnał (70+) — nie pisz sam",
+        title: "Mocny sygnał (70+) — nie pisz samodzielnie",
         body: [
           "Na kanale ostatni wiersz takiego sygnału brzmi: «Сильный сигнал: через пару минут он уйдёт менеджерам очередью лидов с готовым ответом — сами не пишите» (za parę minut trafi do menedżerów kolejką leadów z gotową odpowiedzią — nie piszcie sami). To ważne: jeśli do człowieka napiszą dwie osoby, wyglądamy jak spam.",
           "Lead trafi do tego, czyja jest kolej. W jego notatkach jest już napisane, co robić: takie posty żyją kilka godzin, więc pisać w prywatnej wiadomości trzeba teraz. Jeśli autor nie ma username — odpowiedzieć można tylko na samym czacie.",
@@ -156,7 +156,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         body: {
           manager: [
             "Plan ustawia Twój kierownik albo właściciel — nikt nie ustawia planu sam sobie. Widać go w wierszu na górze działu i na stronie głównej: «Do planu zostało 12 — w tym tygodniu 18 z 30».",
-            "Liczą się firmy, do których napisałeś od poniedziałku (00:00 czasu taszkenckiego): kliknąłeś «Wyślij do …» w panelu albo «📤 Отправить через бота» w Telegramie, albo oznaczyłeś «Skontaktowano samodzielnie» (w Telegramie — «✋ Написал сам»). Jedna firma — jeden kontakt. Jeśli wiadomość bota nie wyszła («nie wysłano»), kontakt się nie liczy.",
+            "Liczą się firmy, do których piszesz od poniedziałku (00:00 czasu taszkenckiego): kliknięcie «Wyślij do …» w panelu albo «📤 Отправить через бота» w Telegramie, albo oznaczenie «Skontaktowano samodzielnie» (w Telegramie — «✋ Написал сам»). Jedna firma — jeden kontakt. Jeśli wiadomość bota nie wyszła («nie wysłano»), kontakt się nie liczy.",
             "«Skontaktuj się» to jeszcze nie kontakt: to tylko przygotowanie wiadomości.",
           ],
           head: [
@@ -184,7 +184,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         id: "list",
         title: "Co widać na liście «Przeanalizowane strony»",
         body: [
-          "Od razu widać nie wszystkie przeanalizowane strony, tylko te, nad którymi się pracuje: z gotowym tekstem («tekst gotowy»), w kolejce do wysłania, «napisz ręcznie», wysłane w ostatnich 7 dniach (poza zamkniętymi jako «klient odmówił» i «ignoruje»), Twoja [porcja dnia](#prospect-portion) i karta, do której właśnie wróciłeś. Z pozostałych — nieruszonych, pominiętych i wysłanych ponad tydzień temu — pierwsze 20, najnowsze na górze.",
+          "Od razu widać nie wszystkie przeanalizowane strony, tylko te, nad którymi się pracuje: z gotowym tekstem («tekst gotowy»), w kolejce do wysłania, «napisz ręcznie», wysłane w ostatnich 7 dniach (poza zamkniętymi jako «klient odmówił» i «ignoruje»), Twoja [porcja dnia](#prospect-portion) i karta, do której właśnie wracasz. Z pozostałych — nieruszonych, pominiętych i wysłanych ponad tydzień temu — pierwsze 20, najnowsze na górze.",
           "Pod listą jest **«Pokaż jeszcze 20»**: strona otworzy się od razu na pierwszej z dodanych kart; klikaj tyle razy, ile trzeba. Dlaczego tak: wcześniej strona rysowała wszystkie 200 kart naraz — około 2 MB — i na słabszych komputerach zamierała na kilka sekund przy każdym otwarciu i po każdym «Skontaktuj się»; przeglądarka pokazywała wtedy komunikat, że strona nie odpowiada, a kopiowanie tekstu nie działało.",
         ],
       },
@@ -202,8 +202,8 @@ export const prospectSections: Record<string, HelpEntry> = {
         id: "self",
         title: "«Skontaktowano samodzielnie» (w Telegramie — «✋ Написал сам»)",
         body: [
-          "Klikaj, gdy napisałeś albo zadzwoniłeś sam — ze swojego konta, na WhatsAppie, przez telefon. W polu krótko: czym i jak („własny Telegram”, „telefon”).",
-          "Co się dzieje: kontakt liczy się Tobie, lead zakłada się na Ciebie, karta dostaje status «wysłano», a drugi kolega nie napisze już do tego samego człowieka. Bez tego oznaczenia nic z tego się nie dzieje: dla panelu do nikogo nie pisałeś.",
+          "Klikaj, gdy piszesz albo dzwonisz samodzielnie — ze swojego konta, na WhatsAppie, przez telefon. W polu krótko: czym i jak („własny Telegram”, „telefon”).",
+          "Co się dzieje: kontakt liczy się Tobie, lead zakłada się na Ciebie, karta dostaje status «wysłano», a drugi kolega nie napisze już do tego samego człowieka. Bez tego oznaczenia nic z tego się nie dzieje: dla panelu nikt do nikogo nie napisał.",
           "Po «Skontaktowano samodzielnie» korespondencja idzie przez Ciebie: bot nie wysyła follow-upów i nie widzi odpowiedzi. Odpowiedź klienta możesz przenieść do karty — patrz punkt [napisz ręcznie](#prospect-manual).",
         ],
       },
@@ -222,10 +222,10 @@ export const prospectSections: Record<string, HelpEntry> = {
         title: "Klient odpisał: kto odpowiada",
         body: [
           "Na wiadomości konta firmowego odpowiada AI — po kilku minutach, nie od razu (natychmiastowa odpowiedź wygląda jak robot), w imieniu studia, w formie „my”. Każda jego odpowiedź kończy się jednym konkretnym krokiem; obiecywać, że coś prześle, ma zakazane.",
-          "AI **woła Ciebie**, jeśli klient: odmówił („nie piszcie”, „nie jestem zainteresowany”); prosi o człowieka albo telefon; **prosi o przesłanie analizy, oferty, kosztorysu albo pliku** — wtedy wyślij to sam jeszcze tego samego dnia; odpowiedział krótko i niezrozumiale. A także — jeśli rozmowa trwa 12 wypowiedzi i się nie klei albo jego odpowiedź nie przeszła kontroli.",
+          "AI **woła Ciebie**, jeśli klient: odmówił („nie piszcie”, „nie jestem zainteresowany”); prosi o człowieka albo telefon; **prosi o przesłanie analizy, oferty, kosztorysu albo pliku** — wtedy wyślij to samodzielnie jeszcze tego samego dnia; odpowiedział krótko i niezrozumiale. A także — jeśli rozmowa trwa 12 wypowiedzi i się nie klei albo jego odpowiedź nie przeszła kontroli.",
           "Gdy zawoła, dostaniesz na Telegramie «Касание · сайт» z powodem, słowami klienta i linkiem do leada, a pod spodem przycisk «🙅 Клиент отказался»: klient powiedział „nie jestem zainteresowany” — kliknij, a kontakt się [zamknie](#prospect-close). Na karcie leada jest blok «Pierwsza rozmowa po kontakcie»: «odpowiada AI» albo «odpowiadasz Ty — powód». Przycisk **«Odpowiadam osobiście»** w każdej chwili zabiera rozmowę AI: od tej pory AI milczy, a każda nowa wiadomość klienta przychodzi do Ciebie na Telegram — «Клиент написал — отвечаете вы» (klient napisał — odpowiadasz Ty) z linkiem do leada. Przychodzi do tego, kto kliknął przycisk, nawet jeśli to kierownik albo właściciel. Lead i tak jest Twój. Jeśli lead przekazano albo wziął go ktoś inny z kolejki — rozmowa idzie razem z nim: wiadomości klienta, follow-upy i podpis AI należą teraz do nowego właściciela leada, a «Odpowiadam osobiście» poprzedniego zostaje zdjęte.",
           "Gdy AI ustali zadanie, budżet i terminy, żegna się, a Ty dostajesz brief «Первичка по касанию · сайт». Dalej rozmowa jest Twoja.",
-          "⚠️ Jeśli odpowiadasz sam, nowe zwykłe wiadomości klienta nie przychodzą do Ciebie na Telegram — zaglądaj do korespondencji sam.",
+          "⚠️ Jeśli odpowiadasz osobiście, nowe zwykłe wiadomości klienta nie przychodzą do Ciebie na Telegram — zaglądaj do korespondencji samodzielnie.",
         ],
       },
       {
@@ -234,7 +234,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         body: [
           "Gdy jest jasne, że rozmowy nie będzie, zamknij kontakt. **«🙅 Klient odmówił»** (w Telegramie — «🙅 Клиент отказался») — odpowiedział „nie jestem zainteresowany”, „nie piszcie”, odmówił przez telefon. **«🔇 Ignoruje»** (w Telegramie — «🔇 Игнорирует») — przeczytał i milczy, nie odbiera telefonu. Przyciski są na karcie wysłanych stron w «Przeanalizowane strony» oraz w Telegramie — pod kartą firmy z porcji albo strumienia po «📤 Отправить через бота» i «✋ Написал сам». Pod wiadomością bota «Касание · сайт» o odpowiedzi klienta jest tylko «🙅 Клиент отказался». W panelu przyciski widzi ten, kto prowadzi kontakt, kierownik i właściciel.",
           "Co się dzieje po kliknięciu: bot nie wysyła już klientowi kolejnych wiadomości ([follow-up](#prospect-followups)), a wiadomość już wstawiona do kolejki nie wychodzi; AI przestaje odpowiadać; lead dla tej strony zamyka się ze statusem «przegrany», a przypomnienia do niego są zdejmowane. Na liście karta znika z tych w toku i jest oznaczona «klient odmówił» albo «ignoruje». Kto i kiedy zamknął — widać na karcie.",
-          "Kontakt przy tym zostaje zrobiony — w [porcji dnia](#prospect-portion), w planie tygodnia i w limicie dwóch na godzinę: do klienta naprawdę napisano. Zamknąć można tylko po kontakcie: jeśli wiadomość jest jeszcze «w kolejce do wysłania», bot odpowie, żeby oznaczyć to, gdy wiadomość wyjdzie; jeśli dzwoniłeś albo pisałeś sam — najpierw «Skontaktowano samodzielnie».",
+          "Kontakt przy tym zostaje zrobiony — w [porcji dnia](#prospect-portion), w planie tygodnia i w limicie dwóch na godzinę: do klienta naprawdę napisano. Zamknąć można tylko po kontakcie: jeśli wiadomość jest jeszcze «w kolejce do wysłania», bot odpowie, żeby oznaczyć to, gdy wiadomość wyjdzie; jeśli był telefon albo wiadomość z własnego konta — najpierw «Skontaktowano samodzielnie».",
           "Zamknięcia nie da się cofnąć przyciskiem i nie trzeba: jeśli klient potem sam napisze, bot zawoła tego, kto prowadził kontakt — «Клиент, которого отметили …, написал снова» (klient, którego oznaczono …, napisał ponownie). Otwórz lead z linku i jeśli rozmowa ruszyła, przywróć mu status «w toku».",
         ],
       },
@@ -244,7 +244,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         body: [
           "Jeśli na wiadomość konta firmowego nikt nie odpowiedział, bot sam napisze drugą wiadomość po 3 dniach (inne znalezisko i pytanie, czy temat jest aktualny) i trzecią, ostatnią, po 7 dniach — grzecznie zamknie rozmowę. Dalej już nie piszemy.",
           "Tylko w dni robocze od 10:00 do 17:00 czasu taszkenckiego: wiadomość od nieznanego studia o 23:00 to powód do skargi. Do kontaktów starszych niż miesiąc follow-upy nie idą.",
-          "Follow-up działa tylko dla wiadomości wysłanych przez bota. Po «Skontaktowano samodzielnie» i przy kontakcie ręcznym przypominanie się to Twoje zadanie. Jeśli zamknąłeś kontakt przyciskiem «🙅 Klient odmówił» albo «🔇 Ignoruje» — follow-up już do niego nie wyjdzie, nawet ten wstawiony do kolejki.",
+          "Follow-up działa tylko dla wiadomości wysłanych przez bota. Po «Skontaktowano samodzielnie» i przy kontakcie ręcznym przypominanie się to Twoje zadanie. Jeśli kontakt zamknięto przyciskiem «🙅 Klient odmówił» albo «🔇 Ignoruje» — follow-up już do niego nie wyjdzie, nawet ten wstawiony do kolejki.",
         ],
       },
       {
