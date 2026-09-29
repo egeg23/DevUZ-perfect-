@@ -61,6 +61,60 @@ const SCHEMA = `
     used_at integer
   );
 
+  -- Дневник. О ребёнке — только имя: фамилия, дата рождения и школа для
+  -- занятий не нужны, а каждый лишний столбец — данные несовершеннолетнего.
+  create table if not exists groups (
+    id integer primary key autoincrement,
+    title text not null,
+    language text not null,
+    age text not null,
+    schedule text not null default '',
+    created_at text not null
+  );
+
+  create table if not exists students (
+    id integer primary key autoincrement,
+    name text not null,
+    language text not null,
+    age text not null,
+    group_id integer references groups(id) on delete set null,
+    level text not null default '',
+    parent_telegram_id integer,
+    invite_code text not null unique,
+    active integer not null default 1,
+    created_at text not null
+  );
+  create index if not exists students_parent on students(parent_telegram_id);
+
+  -- Задание — группе (student_id пусто) или одному ученику.
+  create table if not exists homework (
+    id integer primary key autoincrement,
+    group_id integer references groups(id) on delete cascade,
+    student_id integer references students(id) on delete cascade,
+    text text not null,
+    due text not null default '',
+    created_at text not null
+  );
+
+  create table if not exists remarks (
+    id integer primary key autoincrement,
+    student_id integer not null references students(id) on delete cascade,
+    kind text not null default 'remark',
+    text text not null,
+    created_at text not null
+  );
+
+  create table if not exists payments (
+    id integer primary key autoincrement,
+    student_id integer not null references students(id) on delete cascade,
+    title text not null,
+    amount text not null default '',
+    due text not null default '',
+    status text not null default 'due',
+    created_at text not null,
+    reminded_at text
+  );
+
   create table if not exists sessions (
     id_hash text primary key,
     telegram_id integer not null,
@@ -79,8 +133,17 @@ export function open(path?: string): DatabaseSync {
   if (file !== ":memory:") conn.exec("pragma journal_mode = wal");
   conn.exec("pragma foreign_keys = on");
   conn.exec(SCHEMA);
+  // Поля, добавленные после первой выкатки: у старой базы их нет, а
+  // create table if not exists существующую таблицу не меняет.
+  addColumn(conn, "login_tokens", "invite text");
   if (!path) db = conn;
   return conn;
+}
+
+function addColumn(conn: DatabaseSync, table: string, column: string) {
+  const name = column.split(" ")[0];
+  const exists = conn.prepare(`select 1 from pragma_table_info('${table}') where name = ?`).get(name);
+  if (!exists) conn.exec(`alter table ${table} add column ${column}`);
 }
 
 /** Для тестов: подставить свою базу (обычно :memory:). */

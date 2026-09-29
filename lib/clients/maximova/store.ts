@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { AGES, SCHOOL } from "@/content/clients/maximova/facts";
 
 import { open } from "@/lib/clients/maximova/db";
+import { bindInvite } from "@/lib/clients/maximova/school";
 
 /**
  * Заявки, пользователи и вход — всё, что сайт Дарьи хранит о людях.
@@ -160,16 +161,17 @@ export type Viewer = {
  * забрать сессию — только браузер, начавший вход: чужая пересланная ссылка
  * не пустит в кабинет того, кто её переслал.
  */
-export function startLogin(consent: boolean, now = Date.now()) {
+export function startLogin(consent: boolean, now = Date.now(), invite = "") {
   const db = open();
   db.prepare("delete from login_tokens where created_at < ?").run(now - LOGIN_TTL_MS * 6);
   const loginToken = token(16);
   const nonce = token(24);
-  db.prepare("insert into login_tokens (token, nonce_hash, consent, created_at) values (?, ?, ?, ?)").run(
+  db.prepare("insert into login_tokens (token, nonce_hash, consent, created_at, invite) values (?, ?, ?, ?, ?)").run(
     loginToken,
     hash(nonce),
     consent ? 1 : 0,
     now,
+    /^[A-Za-z0-9_-]{8,20}$/.test(invite) ? invite : null,
   );
   return { loginToken, nonce };
 }
@@ -212,6 +214,8 @@ export function confirmLogin(
     ).run(user.id, user.first_name ?? "", user.last_name ?? "", user.username ?? "", role, iso, iso, iso);
   }
   db.prepare("update login_tokens set telegram_id = ?, confirmed_at = ? where token = ?").run(user.id, now, loginToken);
+  // Пришёл по приглашению Дарьи — ребёнок привязывается к этому родителю.
+  if (row.invite) bindInvite(String(row.invite), user.id);
   return "ok";
 }
 

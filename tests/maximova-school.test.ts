@@ -128,3 +128,83 @@ test("бот не настроен — вход честно выключен", 
   });
   assert.deepEqual(cfg, { token: "t", username: "school_bot", secret: "s", admins: [42, 43] });
 });
+
+// ─── Дневник ──────────────────────────────────────────────────────────────
+
+import {
+  addGroup,
+  addHomework,
+  addPayment,
+  addRemark,
+  addStudent,
+  bindInvite,
+  homeworkFor,
+  openPayments,
+  parentsOf,
+  paymentMessage,
+  remarksOf,
+  setPaymentStatus,
+  studentsOfParent,
+  updateStudent,
+} from "@/lib/clients/maximova/school";
+
+test("дневник: группа, ученик, приглашение родителю — чужой ребёнок не перепривязывается", () => {
+  const group = addGroup({ title: "English 5–8", language: "Английский", age: "5–8 лет", schedule: "Вт, чт 17:00" });
+  const kid = addStudent({ name: "Миша", language: "Английский", age: "5–8 лет", groupId: group.id });
+  assert.equal(kid.groupTitle, "English 5–8");
+  assert.equal(kid.parentTelegramId, null);
+
+  assert.equal(bindInvite(kid.inviteCode, 7), "ok");
+  assert.equal(bindInvite(kid.inviteCode, 8), "taken");
+  assert.equal(bindInvite("нет-такого", 7), "unknown");
+  assert.deepEqual(studentsOfParent(7).map((s) => s.name), ["Миша"]);
+  assert.equal(studentsOfParent(8).length, 0);
+});
+
+test("дневник: вход по приглашению сразу привязывает ребёнка", () => {
+  const kid = addStudent({ name: "Аня", language: "Французский", age: "8–17 лет" });
+  const { loginToken, nonce } = startLogin(true, 0, kid.inviteCode);
+  confirmLogin(loginToken, { id: 9, first_name: "Ольга" }, [], 10);
+  assert.equal(pollLogin(loginToken, nonce, 20).status, "ok");
+  assert.deepEqual(studentsOfParent(9).map((s) => s.name), ["Аня"]);
+});
+
+test("дневник: задание группе видно всем её ученикам и уходит их родителям", () => {
+  const group = addGroup({ title: "Группа", language: "Английский", age: "5–8 лет" });
+  const a = addStudent({ name: "А", language: "Английский", age: "5–8 лет", groupId: group.id });
+  const b = addStudent({ name: "Б", language: "Английский", age: "5–8 лет", groupId: group.id });
+  const c = addStudent({ name: "В", language: "Английский", age: "5–8 лет" });
+  bindInvite(a.inviteCode, 1);
+  bindInvite(c.inviteCode, 3);
+
+  const hw = addHomework({ groupId: group.id, text: "Выучить цвета", due: "к четвергу" });
+  assert.equal(homeworkFor(a)[0].id, hw.id);
+  assert.equal(homeworkFor(b)[0].id, hw.id);
+  assert.equal(homeworkFor(c).length, 0);
+  // Б ещё без родителя — сообщение уйдёт только родителю А.
+  assert.deepEqual(parentsOf({ groupId: group.id }), [{ chatId: 1, name: "А" }]);
+
+  const personal = addHomework({ studentId: c.id, text: "Прочитать сказку" });
+  assert.deepEqual(homeworkFor(c).map((h) => h.id), [personal.id]);
+  assert.deepEqual(parentsOf({ studentId: c.id }), [{ chatId: 3, name: "В" }]);
+});
+
+test("дневник: замечания, уровень, оплата и её статус", () => {
+  const kid = addStudent({ name: "Петя", language: "Английский", age: "8–17 лет" });
+  addRemark({ studentId: kid.id, kind: "praise", text: "Отлично читал" });
+  assert.equal(remarksOf(kid.id)[0].kind, "praise");
+
+  assert.equal(updateStudent({ id: kid.id, level: "A2" }).level, "A2");
+
+  const pay = addPayment({ studentId: kid.id, title: "Абонемент на 3 месяца", amount: "2 465 ₽ × 24", due: "5 октября" });
+  assert.match(paymentMessage(pay, "Петя"), /Оплатить до: 5 октября/);
+  assert.equal(openPayments().length, 1);
+  setPaymentStatus(pay.id, "paid");
+  assert.equal(openPayments().length, 0);
+});
+
+test("дневник: пустые поля и чужой язык не принимаются", () => {
+  assert.throws(() => addStudent({ name: "", language: "Английский", age: "5–8 лет" }), /Как зовут/);
+  assert.throws(() => addGroup({ title: "X", language: "Немецкий", age: "5–8 лет" }), /язык/);
+  assert.throws(() => addHomework({ groupId: "", text: "x" }), /Не найдено/);
+});
