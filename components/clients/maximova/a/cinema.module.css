@@ -18,6 +18,7 @@
   --text: hsl(36 36% 90%);
   --gold: hsl(38 62% 62%);
   --gold-ink: hsl(30 40% 12%);
+  --screen: hsl(34 28% 78%);
   --radius: 4px;
   --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
 
@@ -92,73 +93,48 @@
 
 .hero {
   position: relative;
-  min-height: 100svh;
   display: grid;
-  align-items: end;
   isolation: isolate;
 }
 
-.heroPhoto {
+/* Сцена первого экрана: светлый «экран» и Дарья перед ним — вырезанная из
+   снимка, без двора и машин за спиной. Экран — самая крупная плоскость на
+   странице; на нём держится иерархия, а не на кегле заголовка. */
+/* Пропорция сцены — пропорция вырезки: руки на снимке обрезаны рамкой
+   кадра, и эти прямые края должны совпасть с краями экрана, а не висеть
+   посреди него. */
+.heroStage {
+  position: relative;
+  height: 44svh;
+  min-height: 320px;
+  aspect-ratio: 1200 / 1441;
+  justify-self: center;
+  margin: 16px 16px 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+.screen {
   position: absolute;
   inset: 0;
-  z-index: -1;
-  animation: heroSettle 2400ms var(--ease) both;
+  background: var(--screen);
+  transform-origin: 50% 0;
+  animation: curtain 1200ms 100ms var(--ease) both;
 }
 
-.heroPhoto img {
-  object-position: 50% 30%;
-}
-
-/* На телефоне снимок занимает верх экрана, текст — низ: лицо не под буквами. */
-@media (max-width: 899px) {
-  .heroPhoto {
-    bottom: 34%;
-  }
-
-  .heroPhoto img {
-    object-position: 50% 20%;
-  }
-
-  .heroPhoto::after {
-    background: linear-gradient(to top, var(--ink) 0%, hsla(24, 14%, 6%, 0.6) 22%, hsla(24, 14%, 6%, 0) 50%);
-  }
-}
-
-/* Затемнение снизу — ровная линейная тень под текст, а не свечение. */
-.heroPhoto::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, var(--ink) 8%, hsla(24, 14%, 6%, 0.72) 42%, hsla(24, 14%, 6%, 0.1) 72%);
-}
-
-.letterTop,
-.letterBottom {
+.heroCut {
   position: absolute;
   left: 0;
-  right: 0;
-  height: 12svh;
-  background: var(--ink);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.letterTop {
-  top: 0;
-  transform-origin: 50% 0;
-  animation: letterOpen 1400ms 200ms var(--ease) both;
-}
-
-.letterBottom {
   bottom: 0;
-  transform-origin: 50% 100%;
-  animation: letterOpen 1400ms 200ms var(--ease) both;
+  width: 100%;
+  height: auto;
+  animation: stepIn 1400ms 600ms var(--ease) both;
 }
 
 .heroText {
   position: relative;
   z-index: 2;
-  padding: 96px 24px 128px;
+  padding: 32px 24px 48px;
   max-width: 720px;
 }
 
@@ -242,6 +218,7 @@
 }
 
 .cta:focus-visible,
+.ghost:focus-visible,
 .bookOption:focus-visible,
 .faqItem summary:focus-visible {
   outline: 2px solid var(--gold);
@@ -252,18 +229,18 @@
   .hero {
     grid-template-columns: 1fr 1fr;
     align-items: center;
+    min-height: 100svh;
   }
 
-  .heroPhoto {
-    left: 45%;
-  }
-
-  .heroPhoto::after {
-    background: linear-gradient(to right, var(--ink) 0%, hsla(24, 14%, 6%, 0.2) 40%, hsla(24, 14%, 6%, 0) 70%);
+  .heroStage {
+    order: 2;
+    height: calc(100svh - 64px);
+    max-height: 860px;
+    margin: 32px 32px 32px 0;
   }
 
   .heroText {
-    padding: 128px 48px;
+    padding: 96px 48px;
     margin-left: max(0px, calc((100vw - 1200px) / 2));
   }
 
@@ -349,14 +326,29 @@
 }
 
 /* Сцена 01 — шторка: чёрная панель съезжает с кадра, кадр оседает. */
-.shutter {
+.shutter,
+.split {
   position: relative;
-  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   overflow: hidden;
   border-radius: var(--radius);
+  background: var(--screen);
+}
+
+/* Вырезка во всю ширину: обрезанные рамкой снимка края совпадают с краями
+   плоскости. Сверху — запас пустого фона над головой. */
+.shutter img,
+.split img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 48px;
 }
 
 .shutter img {
+  transform-origin: 50% 100%;
   transition: transform 1800ms var(--ease);
 }
 
@@ -460,53 +452,220 @@
   color: var(--gold);
 }
 
-/* Сцена 04 — счётчик плёнки: цифры прокручиваются до своего значения. */
-.counters {
+/* Сцена 04 — кадры плёнки: шаги занятия въезжают лентой, один за другим. */
+.steps {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin: 32px 0;
+  gap: 8px;
+  margin: 32px 0 24px;
+  padding: 0;
+  list-style: none;
 }
 
-.counter p {
-  margin: 8px 0 0;
-  color: var(--muted);
+@media (min-width: 900px) {
+  .steps {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
-.reel {
-  display: block;
-  height: 96px;
-  overflow: hidden;
-  font-family: var(--mx-cormorant), Georgia, serif;
-  font-weight: 700;
-  font-size: 72px;
-  line-height: 96px;
-  color: var(--text);
+.step {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 24px 16px;
+  background: var(--ink-2);
+  border-top: 4px dashed var(--ink-3);
+  border-bottom: 4px dashed var(--ink-3);
+  transition:
+    opacity 600ms calc(var(--i) * 120ms) var(--ease),
+    transform 700ms calc(var(--i) * 120ms) var(--ease);
 }
 
-.reel span {
-  display: block;
-  transform: translateY(-200%);
-  transition: transform 1400ms var(--ease);
+:global(.mx-js) .step:not([data-shown]) {
+  opacity: 0;
+  transform: translateX(48px);
 }
 
-:global(.mx-js) .counter:not([data-shown]) .reel span {
-  transform: translateY(0);
-}
-
-.why {
-  margin: 0;
-  font-size: 20px;
+.stepNo {
+  font-size: 12px;
+  letter-spacing: 0.24em;
   color: var(--gold);
 }
 
-/* Сцена 05 — раздвижка кадра: две половины расходятся в стороны. */
-.split {
-  position: relative;
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  border-radius: var(--radius);
+.stepTitle {
+  font-family: var(--mx-cormorant), Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
 }
+
+.stepNote {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.stepsPlan {
+  color: var(--gold);
+}
+
+/* Сцена 05 — афиша: карточки цен переворачиваются сверху, как табло. */
+.prices {
+  display: grid;
+  gap: 16px;
+  margin: 32px 0 0;
+  padding: 0;
+  list-style: none;
+  perspective: 1200px;
+}
+
+@media (min-width: 720px) {
+  .prices {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .prices {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.price {
+  display: grid;
+  gap: 8px;
+  padding: 32px 24px;
+  background: var(--ink-2);
+  border: 1px solid var(--ink-3);
+  border-radius: var(--radius);
+  transform-origin: 50% 0;
+  transition:
+    opacity 500ms calc(var(--i) * 150ms) var(--ease),
+    transform 900ms calc(var(--i) * 150ms) var(--ease);
+}
+
+:global(.mx-js) .price:not([data-shown]) {
+  opacity: 0;
+  transform: rotateX(-80deg);
+}
+
+.priceTitle {
+  color: var(--muted);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.priceValue {
+  font-family: var(--mx-cormorant), Georgia, serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.priceUnit {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Сцена 06 — билет на пробное: надрывается и выезжает вперёд. */
+.ticket {
+  position: relative;
+  max-width: 720px;
+  padding: 48px 32px;
+  background: var(--ink-2);
+  border: 1px dashed var(--gold);
+  border-radius: var(--radius);
+  transition:
+    opacity 700ms var(--ease),
+    transform 900ms var(--ease);
+}
+
+:global(.mx-js) .ticket:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(32px) rotate(-2deg);
+}
+
+.trialList {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 32px;
+  padding: 0;
+  list-style: none;
+}
+
+.trialItem {
+  padding-left: 24px;
+  border-left: 2px solid var(--gold);
+  transition: opacity 600ms calc(var(--i) * 200ms + 400ms) var(--ease);
+}
+
+:global(.mx-js) .ticket:not([data-shown]) .trialItem {
+  opacity: 0;
+}
+
+.momsFacts {
+  color: var(--gold);
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin-top: 24px;
+  padding: 0 24px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  color: var(--gold) !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Где и как связаться. */
+.where {
+  display: grid;
+  gap: 8px;
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--ink-3);
+}
+
+.whereMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.metro {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.whereNote {
+  color: var(--muted);
+}
+
+.later {
+  display: grid;
+  gap: 12px;
+  margin-top: 48px;
+}
+
+@media (min-width: 720px) {
+  .later {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Сцена 07 — раздвижка кадра: две половины расходятся в стороны. */
 
 .splitLeft,
 .splitRight {
@@ -613,26 +772,6 @@
   font-size: 14px;
 }
 
-.missing span {
-  display: block;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-
-.missingRow {
-  display: grid;
-  gap: 12px;
-  margin-top: 48px;
-}
-
-@media (min-width: 720px) {
-  .missingRow {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 .book {
   padding-bottom: 128px;
 }
@@ -680,32 +819,22 @@
   color: var(--gold);
 }
 
-.bookNote {
-  padding: 24px;
-  background: var(--ink-2);
-  border: 1px solid var(--ink-3);
-  border-radius: var(--radius);
-  color: var(--muted);
-  animation: fadeUp 500ms var(--ease) both;
-}
-
-.bookNote p {
-  margin: 0 0 12px;
-}
-
-.bookNote button {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--gold);
-  font: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 .bookMessage {
+  padding: 16px 24px;
+  border-left: 2px solid var(--gold);
+  background: var(--ink-2);
   color: var(--text);
   font-style: italic;
+}
+
+.bookNote {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.bookNote a,
+.whereNote a {
+  color: var(--gold);
 }
 
 .footer {
@@ -765,23 +894,23 @@
 
 /* ── Кадры ────────────────────────────────────────────────────────────── */
 
-@keyframes letterOpen {
+@keyframes curtain {
   from {
-    transform: scaleY(1);
+    transform: scaleY(0);
   }
   to {
-    transform: scaleY(0);
+    transform: scaleY(1);
   }
 }
 
-@keyframes heroSettle {
+@keyframes stepIn {
   from {
     opacity: 0;
-    transform: scale(1.08);
+    transform: translateY(48px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -814,11 +943,6 @@
   }
 
   .progress {
-    display: none;
-  }
-
-  .letterTop,
-  .letterBottom {
     display: none;
   }
 }

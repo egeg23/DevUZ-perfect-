@@ -1,3 +1,5 @@
+import type React from "react";
+
 /**
  * Лондон слева, Париж справа — нарисованы кодом, а не взяты со стока.
  *
@@ -5,7 +7,16 @@
  * едут чуть быстрее, набережная — ближе всех. Слои не ловят нажатия и не
  * читаются вслух: это декорация, а не содержание.
  */
-export function Skyline({ className, layer }: { className: string; layer: { sky: string; city: string; front: string } }) {
+export function Skyline({
+  className,
+  layer,
+  children,
+}: {
+  className: string;
+  layer: { sky: string; city: string; front: string };
+  /** Что стоит между городами и набережной — у нас Дарья. */
+  children?: React.ReactNode;
+}) {
   return (
     <div className={className} aria-hidden="true">
       <svg className={layer.sky} data-speed="-0.12" viewBox="0 0 1440 600" preserveAspectRatio="xMidYMax slice">
@@ -52,9 +63,10 @@ export function Skyline({ className, layer }: { className: string; layer: { sky:
         <path d="M1078 440 Q1104 400 1130 440" fill="hsl(40 45% 95%)" />
       </svg>
 
+      {children}
+
       <svg className={layer.front} data-speed="0.04" viewBox="0 0 1440 600" preserveAspectRatio="xMidYMax slice">
         <path d="M0 520 Q360 490 720 520 T1440 520 L1440 600 L0 600 Z" fill="hsl(200 40% 70%)" />
-        <path d="M560 530 Q720 440 880 530" fill="none" stroke="hsl(222 34% 24%)" strokeWidth="10" />
         <rect x="0" y="560" width="1440" height="40" fill="hsl(36 30% 84%)" />
       </svg>
     </div>

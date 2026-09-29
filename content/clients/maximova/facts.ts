@@ -62,56 +62,132 @@ export const MOMS_COURSE = {
   line: "Как воспитать билингва в русскоязычной семье с нуля, сохраняя культуру и культурный код.",
 } as const;
 
-/**
- * Чего пока нет. Прототипы показывают на этих местах пометку «уточняется»,
- * а отчёт владельцу — список вопросов к Дарье.
- */
-export const MISSING = {
-  prices: "Стоимость занятий",
-  format: "Онлайн или очно",
-  address: "Адрес, если занятия очные",
-  reviews: "Отзывы родителей",
-  contact: "Куда писать для записи",
+/** Как устроены занятия — её ответы от 29.09.2026. */
+export const FORMAT = {
+  where: "Очно у метро Китай-город",
+  metro: "Китай-город",
+  online: "Можно подключаться онлайн",
+  groups: "Занятия в группах",
+  individual: "Индивидуальные занятия — тоже можно",
+} as const;
+
+/** Занятие по шагам — её порядок, дословно по смыслу. */
+export const LESSON = {
+  steps: [
+    { title: "Фонетическая разминка", note: "Настраиваем произношение и слух." },
+    { title: "Новый материал", note: "Новая тема, слова и конструкции." },
+    {
+      title: "Практика или игра",
+      note: "Применяем новое на практике или в игровой форме — зависит от группы.",
+    },
+    { title: "Аудирование", note: "Слушаем живую речь и понимаем её." },
+    { title: "Отработка изученного", note: "Закрепляем то, что прошли." },
+  ],
+  plan: "Для каждой группы план составляется исходя из знаний учеников.",
 } as const;
 
 /**
- * Куда уходит запись.
- *
- * Пока Дарья не назвала мессенджер, кнопка не притворяется, что отправляет:
- * она собирает готовое сообщение и честно говорит, что контакт ещё не
- * подключён. Как только появится ник — `{ kind: "telegram", handle: "…" }`,
- * и нажатие откроет её Telegram с этим текстом.
+ * Цены — её, от 29.09.2026. Производные числа (абонемент за занятие,
+ * пробное) считаются из её процентов, а не придумываются.
  */
-export type Contact = { kind: "telegram"; handle: string } | { kind: "whatsapp"; phone: string } | null;
-export const CONTACT: Contact = null;
+const GROUP_PRICE = 2900;
+const INDIVIDUAL_PRICE = 4000;
+const SEASON_DISCOUNT = 15;
+const TRIAL_DISCOUNT = 30;
 
-export function contactUrl(contact: Contact, text: string): string | null {
-  if (!contact) return null;
-  const encoded = encodeURIComponent(text);
-  if (contact.kind === "telegram") return `https://t.me/${contact.handle}?text=${encoded}`;
-  return `https://wa.me/${contact.phone.replace(/\D/g, "")}?text=${encoded}`;
+/** 2900 → «2 900 ₽» с неразрывным пробелом; одинаково на сервере и в браузере. */
+const rub = (n: number) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0")}\u00a0₽`;
+const off = (price: number, percent: number) => Math.round((price * (100 - percent)) / 100);
+
+export const PRICES = {
+  group: { title: "Групповое занятие", price: rub(GROUP_PRICE), unit: "за 45 минут" },
+  season: {
+    title: "Абонемент на 3 месяца",
+    price: `−${SEASON_DISCOUNT}%`,
+    unit: `${rub(off(GROUP_PRICE, SEASON_DISCOUNT))} за групповое занятие вместо ${rub(GROUP_PRICE)}`,
+  },
+  individual: { title: "Индивидуальное занятие", price: rub(INDIVIDUAL_PRICE), unit: "за 45 минут" },
+  trial: {
+    title: "Пробное занятие",
+    price: `−${TRIAL_DISCOUNT}%`,
+    unit: `${rub(off(GROUP_PRICE, TRIAL_DISCOUNT))} вместо ${rub(GROUP_PRICE)} в группе`,
+  },
+} as const;
+
+/** Что происходит на пробном — её три пункта. */
+export const TRIAL = {
+  title: "Пробное занятие со скидкой 30%",
+  points: [
+    "Знакомимся — с ребёнком и с вами.",
+    "Заинтересовать ребёнка и создать связь «ученик — преподаватель».",
+    "Понять, как ребёнок расположен к занятиям, — и в какую группу ему идти.",
+  ],
+} as const;
+
+export const MOMS_DETAILS = {
+  format: "Очно, 2 раза в неделю",
+  lessons: 12,
+  price: rub(5500),
+  line: `12 занятий, ${rub(5500)} за занятие`,
+} as const;
+
+/**
+ * Контакты — её, от 29.09.2026. Telegram, WhatsApp и Max — один номер.
+ * Главное действие одно: Telegram с готовым текстом. Остальные — рядом,
+ * для тех, у кого Telegram нет.
+ */
+export const CONTACTS = {
+  telegram: "bird_dasha",
+  phone: "+79994313196",
+  phoneLabel: "+7 999 431-31-96",
+} as const;
+
+export const telegramUrl = (text: string) => `https://t.me/${CONTACTS.telegram}?text=${encodeURIComponent(text)}`;
+export const whatsappUrl = (text: string) => `https://wa.me/${CONTACTS.phone.slice(1)}?text=${encodeURIComponent(text)}`;
+export const phoneUrl = `tel:${CONTACTS.phone}`;
+
+export function bookingText(language: string, age: string, format: string): string {
+  return `Здравствуйте, Дарья! Хочу записать ребёнка на пробное занятие: ${language.toLowerCase()} язык, ${format.toLowerCase()}, возраст ${age}. Когда можно прийти?`;
 }
 
-export function bookingText(language: string, age: string): string {
-  return `Здравствуйте, Дарья! Хочу записать ребёнка на ${language.toLowerCase()} язык. Возраст: ${age}. Расскажите, пожалуйста, как проходит знакомство и сколько стоят занятия.`;
-}
+export const MOMS_TEXT = "Здравствуйте, Дарья! Хочу записаться на курс для мам. Когда ближайший набор?";
 
-/** Фотографии — её, присланы владельцем; метаданные стёрты. Все 1932×2576. */
+/** Чего пока нет: оставлено на конец страницы, как просила Дарья. */
+export const MISSING = {
+  diplomas: "Дипломы и сертификаты — Дарья пришлёт",
+  reviews: "Отзывы родителей — появятся с разрешения авторов",
+} as const;
+
+/** Фотографии — её, присланы владельцем; метаданные стёрты. Оригиналы 1932×2576. */
 export const PHOTOS = {
   urban: {
     src: "/clients/maximova/photos/daria-urban.jpg",
+    cut: "/clients/maximova/photos/cut/daria-urban.webp",
     alt: "Дарья Максимова в солнечных очках во дворе",
   },
   bench: {
     src: "/clients/maximova/photos/daria-sunglasses-bench.jpg",
+    cut: "/clients/maximova/photos/cut/daria-sunglasses-bench.webp",
     alt: "Дарья Максимова на скамейке в парке",
   },
   kangol: {
     src: "/clients/maximova/photos/daria-kangol.jpg",
+    cut: "/clients/maximova/photos/cut/daria-kangol.webp",
     alt: "Дарья Максимова в кепке",
   },
   width: 1932,
   height: 2576,
+} as const;
+
+/**
+ * Вырезки без фона: 1200 px по ширине, WebP с прозрачностью. Фон снят
+ * нейросетью (rembg, BiRefNet-portrait), мелкие обрывки дочищены. Размеры
+ * у каждой свои — после обрезки пустого верха.
+ */
+export const CUTS = {
+  urban: { width: 1200, height: 1441 },
+  kangol: { width: 1200, height: 1428 },
+  bench: { width: 1200, height: 1462 },
 } as const;
 
 /** Вопросы родителей — ответы только из её слов. */
@@ -134,6 +210,6 @@ export const FAQ = [
   },
   {
     q: "Сколько стоит и где проходят занятия?",
-    a: null,
+    a: `Групповое занятие — ${PRICES.group.price} за 45 минут, индивидуальное — ${PRICES.individual.price}. ${FORMAT.where}, ${FORMAT.online.toLowerCase()}.`,
   },
 ] as const;
