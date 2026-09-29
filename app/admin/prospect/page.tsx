@@ -17,6 +17,7 @@ import { dailyCap, placesConfigured } from "@/lib/maps/places";
 import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
 import { queueOwners, sentLastHour } from "@/lib/admin/outreach-queue";
 import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
+import { parseMore, REST_PAGE, visibleProspects } from "@/lib/admin/outreach-view";
 import { BATCH_CAP } from "@/lib/audit/batch";
 
 export const dynamic = "force-dynamic";
@@ -24,10 +25,10 @@ export const dynamic = "force-dynamic";
 export default async function ProspectPage({
   searchParams,
 }: {
-  searchParams: Promise<{ open?: string; e?: string; sent?: string; maps?: string }>;
+  searchParams: Promise<{ open?: string; e?: string; sent?: string; maps?: string; more?: string }>;
 }) {
   const staff = await requireStaff();
-  const { open, e, sent, maps } = await searchParams;
+  const { open, e, sent, maps, more: moreRaw } = await searchParams;
   // Автопоиск ведут владелец и руководитель; менеджеру он приходит порцией.
   const seesMaps = staff.role === "admin" || staff.role === "head";
   const [campaigns, mapsUsage, mapsPending, mapsReady] = seesMaps
@@ -43,6 +44,14 @@ export default async function ProspectPage({
   ]);
   const today = todayInTashkent(new Date());
   const portionDone = portion.filter((p) => outcomeOf(p, staff.id, today) !== null).length;
+  // Сразу — только карточки в работе, порция и открытая; остальные по
+  // двадцать. Все 200 сразу весили 2 МБ и вешали слабые компьютеры.
+  const more = parseMore(moreRaw);
+  const view = visibleProspects(rows, {
+    keep: new Set([...portion.map((p) => p.id), ...(open ? [open] : [])]),
+    more,
+    now: new Date(),
+  });
 
   return (
     <AdminShell staff={staff}>
@@ -105,7 +114,11 @@ export default async function ProspectPage({
       <TouchLegend />
 
       <OutreachList
-        rows={rows}
+        rows={view.shown}
+        more={{
+          hidden: view.hidden,
+          href: `/admin/prospect?more=${more + REST_PAGE}${view.nextId ? `#p-${view.nextId}` : ""}`,
+        }}
         hour={hour}
         owners={owners}
         open={open}

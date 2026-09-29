@@ -56,6 +56,26 @@ export const BATCH_CAP = 200;
  * есть у всех, а в адресах их не бывает. Поэтому ищем в строке то, что
  * похоже на домен, а остальное считаем названием.
  */
+/**
+ * Срезать разделители по краям: пробелы, запятые, «|», тире.
+ *
+ * Руками, а не `/[…]+$/`: такое выражение перебирает каждую серию
+ * разделителей в середине строки заново от каждого её символа, и вставка
+ * строки с длинной цепочкой пробелов или тире вешала поле ввода на секунды
+ * (двадцать тысяч пробелов — полсекунды, тире — больше секунды) —
+ * на каждое нажатие клавиши.
+ */
+const SEPARATORS = new Set([",", ";", "|", "—", "–", "-"]);
+const isSeparator = (ch: string) => SEPARATORS.has(ch) || /\s/.test(ch);
+
+export function trimSeparators(text: string): string {
+  let start = 0;
+  let end = text.length;
+  while (start < end && isSeparator(text[start])) start++;
+  while (end > start && isSeparator(text[end - 1])) end--;
+  return text.slice(start, end);
+}
+
 export function parseTargets(text: string): BatchTarget[] {
   const seen = new Set<string>();
   const out: BatchTarget[] = [];
@@ -69,11 +89,7 @@ export function parseTargets(text: string): BatchTarget[] {
     const token =
       raw.split(/[\s,;|]+/).find((part) => /\./.test(part) && !/^[.,;|]+$/.test(part)) ?? "";
 
-    const label = raw
-      .replace(token, "")
-      .replace(/[\s,;|—–-]+$/g, "")
-      .replace(/^[\s,;|—–-]+/g, "")
-      .trim();
+    const label = trimSeparators(raw.replace(token, ""));
 
     if (!token) {
       out.push({ raw, url: null, label: label || null, problem: "не нашёл адреса в строке" });
