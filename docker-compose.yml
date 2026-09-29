@@ -31,6 +31,12 @@ services:
     ports:
       - "127.0.0.1:${APP_PORT:-3310}:3000"
 
+    # Промо-материалы партнёров — ролики и картинки — на диске сервера, а не
+    # в образе: образ пересобирается на каждой выкатке, и файлы в нём не
+    # живут. Папку создаёт и отдаёт контейнеру scripts/vps-deploy.sh.
+    volumes:
+      - ${MEDIA_HOST_DIR:-/var/lib/devuz/media}:/app/media
+
     environment:
       # Читается в рантайме, в образ не попадает.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
@@ -150,6 +156,9 @@ services:
 
       # Ключ подписи ссылок на файлы заказа. Пусто — ссылки не выдаются.
       DOWNLOAD_SIGNING_SECRET: ${DOWNLOAD_SIGNING_SECRET:-}
+
+      # Куда внутри контейнера смонтирована папка промо-материалов (см. volumes).
+      MEDIA_DIR: /app/media
 
     healthcheck:
       test:

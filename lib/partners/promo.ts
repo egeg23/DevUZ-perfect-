@@ -3,29 +3,32 @@ import { randomUUID } from "node:crypto";
 import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
 import {
-  PROMO_BUCKET,
+  appendChunk,
+  discardUpload,
+  finishUpload,
+  removePromoFile,
+  startUpload,
+} from "@/lib/partners/promo-files";
+import {
   PROMO_MAX_BYTES,
   PROMO_MIME,
   isPromoLocale,
-  isPromoPath,
-  promoFileName,
   promoPath,
   type PromoLocale,
 } from "@/lib/partners/promo-rules";
 import { listPartners, notifyPartner, type Partner } from "@/lib/partners/store";
 import { esc } from "@/lib/qualify/telegram";
-import { probeObject } from "@/lib/store/releases";
 import { serviceClient } from "@/lib/supabase";
 
 /**
  * Промо-материалы партнёров: ролики и картинки, которые партнёр берёт из
  * кабинета и публикует у себя со своей ссылкой.
  *
- * Файл идёт из браузера владельца прямо в хранилище, мимо нашего сервера:
- * nginx пропускает в панель до 25 МБ, server action — до 22, а ролик для
- * соцсетей бывает и больше. Сервер выдаёт одноразовую ссылку на загрузку
- * по пути, который придумал сам, и потом проверяет, что файл по этому
- * пути действительно лёг, — так же, как с релизами продуктов.
+ * Файлы лежат на диске нашего сервера (lib/partners/promo-files.ts), в
+ * базе — только строка о них: название, подпись, кто скачал. Владелец,
+ * 29.09: «зачем Supabase? Мы не можем просто разместить на сервере… там же
+ * лимит 50 МБ, а платную версию пока покупать не хочу». У бесплатного
+ * Supabase и скачивания ограничены 5 ГБ в месяц, а у сервера их нет.
  */
 
 export type PromoMaterial = {
@@ -104,67 +107,35 @@ export async function promoStats(): Promise<Map<string, PromoStats>> {
   return out;
 }
 
-/**
- * Подписанные ссылки на превью — одним запросом на все материалы.
- *
- * Шесть часов: партнёр открывает кабинет, смотрит ролик, отвлекается — и
- * через час превью всё ещё играет. Для скачивания ссылка своя, короткая,
- * и выдаётся в момент нажатия.
- */
-export async function promoPreviews(items: readonly PromoMaterial[]): Promise<Map<string, string>> {
-  const out = new Map<string, string>();
-  const db = serviceClient();
-  if (!db || !items.length) return out;
-  const { data, error } = await db.storage
-    .from(PROMO_BUCKET)
-    .createSignedUrls(
-      items.map((item) => item.storage_path),
-      6 * 60 * 60,
-    );
-  if (error) {
-    console.error("promo: не подписал превью", error.message);
-    return out;
-  }
-  const byPath = new Map(items.map((item) => [item.storage_path, item.id]));
-  for (const row of data ?? []) {
-    const id = row.path ? byPath.get(row.path) : undefined;
-    if (id && row.signedUrl) out.set(id, row.signedUrl);
-  }
-  return out;
-}
-
-export type TicketResult = { ok: true; path: string; url: string } | { ok: false; reason: string };
+export type StartResult = { ok: true; uploadId: string } | { ok: false; reason: string };
 
 /**
- * Одноразовая ссылка на загрузку файла в бакет.
- *
- * Путь придумывает сервер, тип и размер проверяются до загрузки: ролик на
- * 80 МБ хранилище отвергнет всё равно, но только после того, как владелец
- * прождёт его загрузку.
+ * Завести загрузку. Путь файла придумывает сервер, тип и размер проверяются
+ * до первого байта: ролик на гигабайт сервер отвергнет всё равно, но лучше
+ * сразу, чем после десяти минут ожидания.
  */
-export async function promoTicket(input: { mime: string; bytes: number }): Promise<TicketResult> {
+export async function promoStart(input: { mime: string; bytes: number }): Promise<StartResult> {
   if (!PROMO_MIME[input.mime]) {
     return { ok: false, reason: "Такой файл не примем: нужен ролик MP4, MOV или WebM или картинка PNG, JPG, WebP, GIF." };
   }
-  if (!Number.isFinite(input.bytes) || input.bytes <= 0) return { ok: false, reason: "Файл пустой." };
+  if (!Number.isInteger(input.bytes) || input.bytes <= 0) return { ok: false, reason: "Файл пустой." };
   if (input.bytes > PROMO_MAX_BYTES) {
-    return {
-      ok: false,
-      reason: `Файл больше 50 МБ — хранилище его не примет. Сожмите ролик (1080×1920, H.264, 8–10 Мбит/с — минута укладывается в 50 МБ).`,
-    };
+    return { ok: false, reason: "Файл больше 500 МБ. Сожмите ролик: 1080×1920, H.264, 8–10 Мбит/с — минута займёт около 70 МБ." };
   }
+  const uploadId = randomUUID();
   const path = promoPath(input.mime, randomUUID());
   if (!path) return { ok: false, reason: "Не получилось придумать путь файла." };
+  const started = await startUpload({ uploadId, path, mime: input.mime, bytes: input.bytes });
+  return started.ok ? { ok: true, uploadId } : started;
+}
 
-  const db = serviceClient();
-  if (!db) return { ok: false, reason: "Нет базы." };
-  const { data, error } = await db.storage.from(PROMO_BUCKET).createSignedUploadUrl(path);
-  if (error || !data) return { ok: false, reason: `Хранилище ответило: ${error?.message ?? "без ссылки"}` };
-  return { ok: true, path, url: data.signedUrl };
+/** Очередной кусок файла. */
+export async function promoChunk(uploadId: string, offset: number, data: Uint8Array) {
+  return appendChunk(uploadId, offset, data);
 }
 
 export type PromoInput = {
-  path: string;
+  uploadId: string;
   title: string;
   locale: string;
   caption: string;
@@ -176,27 +147,21 @@ export type PromoInput = {
 const clampInt = (value: number | null, max: number) =>
   value !== null && Number.isFinite(value) && value >= 1 && value <= max ? Math.round(value) : null;
 
-/** Записать загруженный файл как материал — после проверки, что он лёг в бакет. */
+/** Записать загруженный файл как материал — после того, как он дошёл целиком и оказался тем, чем назван. */
 export async function registerPromo(
   input: PromoInput,
   staff: Staff,
   ip: string,
 ): Promise<{ ok: true; material: PromoMaterial } | { ok: false; reason: string }> {
-  if (!isPromoPath(input.path)) return { ok: false, reason: "Путь файла не наш — загрузите файл заново." };
   const title = input.title.trim().replace(/\s+/g, " ").slice(0, 120);
   if (title.length < 2) return { ok: false, reason: "Назовите материал — хотя бы два знака." };
   const locale = isPromoLocale(input.locale) ? input.locale : "all";
   const caption = input.caption.trim().slice(0, 1000) || null;
 
-  const probe = await probeObject(PROMO_BUCKET, input.path);
-  if (!probe.ok) return { ok: false, reason: `Файл не дошёл до хранилища. ${probe.reason}` };
-  const ext = input.path.slice(input.path.lastIndexOf(".") + 1);
-  const mime = Object.entries(PROMO_MIME).find(([, e]) => e === ext)?.[0];
-  if (!mime) return { ok: false, reason: "Не разобрал тип файла." };
-  if (probe.bytes !== null && probe.bytes > PROMO_MAX_BYTES) return { ok: false, reason: "Файл больше 50 МБ." };
-
   const db = serviceClient();
   if (!db) return { ok: false, reason: "Нет базы." };
+  const file = await finishUpload(input.uploadId);
+  if (!file.ok) return file;
   const duration =
     input.duration !== null && Number.isFinite(input.duration) && input.duration > 0 && input.duration <= 3600
       ? Math.round(input.duration * 10) / 10
@@ -208,16 +173,20 @@ export async function registerPromo(
       title,
       locale,
       caption,
-      storage_path: input.path,
-      mime,
-      bytes: probe.bytes,
+      storage_path: file.path,
+      mime: file.mime,
+      bytes: file.bytes,
       width: clampInt(input.width, 10000),
       height: clampInt(input.height, 10000),
       duration_s: duration,
     })
     .select(COLUMNS)
     .single();
-  if (error || !data) return { ok: false, reason: error?.message ?? "Не записал материал." };
+  if (error || !data) {
+    // Файл без строки в базе никто не увидит и не удалит из панели.
+    await removePromoFile(file.path);
+    return { ok: false, reason: error?.message ?? "Не записал материал." };
+  }
 
   const material = shape(data as Record<string, unknown>);
   await record("partner.promo_added", {
@@ -225,7 +194,7 @@ export async function registerPromo(
     targetType: "partner_promo",
     targetId: material.id,
     ip,
-    meta: { title, path: input.path, bytes: probe.bytes },
+    meta: { title, path: file.path, bytes: file.bytes },
   });
   return { ok: true, material };
 }
@@ -277,8 +246,7 @@ export async function deletePromo(
   // который уже не скачивается.
   const { error } = await db.from("partner_promo").delete().eq("id", id);
   if (error) return { ok: false, reason: "failed" };
-  const { error: storageError } = await db.storage.from(PROMO_BUCKET).remove([String(data.storage_path)]);
-  if (storageError) console.error("promo: строку удалил, файл — нет", storageError.message);
+  await removePromoFile(String(data.storage_path)).catch((e: Error) => console.error("promo: строку удалил, файл — нет", e.message));
 
   await record("partner.promo_deleted", {
     actorStaffId: staff.id,
@@ -290,35 +258,23 @@ export async function deletePromo(
   return { ok: true };
 }
 
-/**
- * Скачать: строка в журнале скачиваний и короткая подписанная ссылка с
- * именем файла. null — материала нет или он скрыт.
- *
- * Две минуты хватает, чтобы браузер начал загрузку; дальше ссылка не нужна.
- */
-export async function promoDownload(id: string, partner: Partner): Promise<string | null> {
+/** Материал для раздачи по id; скрытый — только владельцу. */
+export async function promoById(id: string): Promise<PromoMaterial | null> {
   const db = serviceClient();
   if (!db || !/^[0-9a-f-]{36}$/.test(id)) return null;
-  const { data } = await db
-    .from("partner_promo")
-    .select("id, title, storage_path, mime, hidden")
-    .eq("id", id)
-    .maybeSingle();
-  if (!data || data.hidden) return null;
-
-  const { data: signed, error } = await db.storage
-    .from(PROMO_BUCKET)
-    .createSignedUrl(String(data.storage_path), 120, {
-      download: promoFileName(String(data.title), String(data.id), String(data.mime)),
-    });
-  if (error || !signed) {
-    console.error("promo: не подписал скачивание", error?.message);
-    return null;
-  }
-  const { error: logError } = await db.from("partner_promo_downloads").insert({ promo_id: id, partner_id: partner.id });
-  if (logError) console.error("promo: не записал скачивание", logError.message);
-  return signed.signedUrl;
+  const { data } = await db.from("partner_promo").select(COLUMNS).eq("id", id).maybeSingle();
+  return data ? shape(data as Record<string, unknown>) : null;
 }
+
+/** Строка в журнале скачиваний: по ней владелец видит, что партнёрам нужно. */
+export async function logPromoDownload(id: string, partner: Partner): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { error } = await db.from("partner_promo_downloads").insert({ promo_id: id, partner_id: partner.id });
+  if (error) console.error("promo: не записал скачивание", error.message);
+}
+
+export { discardUpload as promoDiscard };
 
 /**
  * Сообщить партнёрам в Telegram, что появился новый материал.

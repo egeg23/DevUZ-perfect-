@@ -1,9 +1,11 @@
 import Link from "next/link";
 
 import {
+  promoChunkAction,
   promoDeleteAction,
+  promoDiscardAction,
   promoRegisterAction,
-  promoTicketAction,
+  promoStartAction,
   promoUpdateAction,
   promoVisibilityAction,
 } from "./actions";
@@ -14,10 +16,11 @@ import { AdminShell } from "@/components/admin/shell";
 import { cabinetCopy } from "@/content/partner-cabinet";
 import { helpAnchor } from "@/lib/admin/help";
 import { requireAdmin } from "@/lib/admin/guard";
-import { listPromo, promoPreviews, promoStats } from "@/lib/partners/promo";
+import { listPromo, promoStats } from "@/lib/partners/promo";
 import {
   PROMO_LOCALES,
   PROMO_LOCALE_TITLE,
+  promoAdminFileUrl,
   promoKind,
   promoShape,
   promoSize,
@@ -57,7 +60,6 @@ export default async function PromoPage({ searchParams }: { searchParams: Promis
   const notice = r ? RESULT[r] : null;
 
   const [materials, stats] = await Promise.all([listPromo({ withHidden: true }), promoStats()]);
-  const previews = await promoPreviews(materials);
   const example = cabinetCopy("ru").mediaCaption("devuz.studio/r/…");
 
   return (
@@ -72,7 +74,7 @@ export default async function PromoPage({ searchParams }: { searchParams: Promis
         Ролики и картинки студии, которые партнёры берут в кабинете и выкладывают у себя: в Reels,
         Shorts, TikTok, сторис, каналы. Под каждым материалом у партнёра — «Скачать» и подпись к посту,
         в которую уже вставлена его короткая ссылка. Клиенты, пришедшие по ней, засчитываются
-        партнёру, как по любой его ссылке.
+        партнёру, как по любой его ссылке. Файлы лежат на нашем сервере, до 500 МБ каждый.
       </p>
 
       {notice ? (
@@ -89,7 +91,13 @@ export default async function PromoPage({ searchParams }: { searchParams: Promis
         Загрузить
         <HelpHint topic={helpAnchor("/admin/partners", "promo")} />
       </h2>
-      <PromoUpload ticket={promoTicketAction} register={promoRegisterAction} captionHint={example} />
+      <PromoUpload
+        start={promoStartAction}
+        chunk={promoChunkAction}
+        discard={promoDiscardAction}
+        register={promoRegisterAction}
+        captionHint={example}
+      />
 
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">
         В кабинете партнёров · {materials.filter((m) => !m.hidden).length}
@@ -98,7 +106,7 @@ export default async function PromoPage({ searchParams }: { searchParams: Promis
       {materials.length ? (
         <div className="mt-2 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {materials.map((m) => {
-            const preview = previews.get(m.id);
+            const preview = promoAdminFileUrl(m.id);
             const shape = promoShape(m.width, m.height);
             const stat = stats.get(m.id);
             return (
@@ -106,20 +114,14 @@ export default async function PromoPage({ searchParams }: { searchParams: Promis
                 key={m.id}
                 className={`flex flex-col rounded-xl border bg-surface px-4 py-4 ${m.hidden ? "border-line opacity-60" : "border-line"}`}
               >
-                {preview ? (
-                  <div className="flex h-64 items-center justify-center overflow-hidden rounded-lg border border-line bg-black">
-                    {promoKind(m.mime) === "video" ? (
-                      <video src={`${preview}#t=0.1`} controls playsInline preload="metadata" className="h-full w-full object-contain" />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={preview} alt={m.title} loading="lazy" className="h-full w-full object-contain" />
-                    )}
-                  </div>
-                ) : (
-                  <p className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-xs text-gold">
-                    Превью не открылось — файл в хранилище недоступен.
-                  </p>
-                )}
+                <div className="flex h-64 items-center justify-center overflow-hidden rounded-lg border border-line bg-black">
+                  {promoKind(m.mime) === "video" ? (
+                    <video src={`${preview}#t=0.1`} controls playsInline preload="metadata" className="h-full w-full object-contain" />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={preview} alt={m.title} loading="lazy" className="h-full w-full object-contain" />
+                  )}
+                </div>
                 <p className="mt-3 text-xs text-faint">
                   {[
                     shape ? SHAPE[shape] : null,

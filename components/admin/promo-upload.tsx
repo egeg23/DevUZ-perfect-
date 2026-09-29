@@ -4,21 +4,24 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import {
+  PROMO_CHUNK_BYTES,
   PROMO_LOCALES,
   PROMO_LOCALE_TITLE,
   PROMO_MAX_BYTES,
   PROMO_MIME,
   promoKind,
 } from "@/lib/partners/promo-rules";
-import type { TicketResult } from "@/lib/partners/promo";
+import type { StartResult } from "@/lib/partners/promo";
 
 /**
- * Загрузка промо-материала: файл идёт из браузера прямо в хранилище.
+ * Загрузка промо-материала на наш сервер — кусками.
  *
- * Три шага: сервер выдаёт одноразовую ссылку на загрузку, браузер кладёт по
- * ней файл, сервер проверяет, что файл лёг, и записывает материал. Полоса
- * прогресса — потому что ролик на 40 МБ с телефона грузится минуту, и без
- * неё это минута на пустом экране с вопросом «оно вообще идёт?».
+ * Сервер заводит загрузку, браузер шлёт файл по 4 МБ (каждый кусок проходит
+ * лимиты nginx и server action), сервер проверяет, что файл дошёл целиком и
+ * внутри то, что в названии, и записывает материал. Кусок, на котором
+ * оборвалась связь, досылается сам — до трёх раз. Полоса прогресса —
+ * потому что ролик на 200 МБ с телефона грузится минуты, и без неё это
+ * минуты на пустом экране с вопросом «оно вообще идёт?».
  */
 
 type Meta = { width: number | null; height: number | null; duration: number | null };
@@ -76,40 +79,47 @@ function readMeta(file: File): Promise<Meta> {
   });
 }
 
-/** PUT по подписанной ссылке — через XHR, потому что у fetch нет прогресса отправки. */
-function put(url: string, file: File, onProgress: (share: number) => void): Promise<string | null> {
-  return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", url);
-    xhr.setRequestHeader("content-type", file.type);
-    xhr.setRequestHeader("x-upsert", "false");
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress(event.loaded / event.total);
-    };
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) return resolve(null);
-      let reason = `хранилище ответило ${xhr.status}`;
-      try {
-        const body = JSON.parse(xhr.responseText) as { message?: string; error?: string };
-        reason = body.message || body.error || reason;
-      } catch {
-        // Ответ не JSON — хватит кода.
-      }
-      resolve(reason);
-    };
-    xhr.onerror = () => resolve("связь оборвалась");
-    xhr.send(file);
-  });
+type ChunkResult = { ok: true; received: number } | { ok: false; reason: string };
+
+/** Файл кусками, по порядку; оборвавшийся кусок — ещё раз, с паузой. */
+async function sendChunks(
+  file: File,
+  uploadId: string,
+  send: (formData: FormData) => Promise<ChunkResult>,
+  onProgress: (share: number) => void,
+): Promise<string | null> {
+  let offset = 0;
+  while (offset < file.size) {
+    const piece = file.slice(offset, Math.min(offset + PROMO_CHUNK_BYTES, file.size));
+    let result: ChunkResult | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const form = new FormData();
+      form.set("upload", uploadId);
+      form.set("offset", String(offset));
+      form.set("chunk", piece);
+      result = await send(form).catch((error: Error) => ({ ok: false as const, reason: error.message || "связь оборвалась" }));
+      if (result.ok) break;
+      await new Promise((resolve) => window.setTimeout(resolve, 1500 * (attempt + 1)));
+    }
+    if (!result || !result.ok) return result?.reason ?? "связь оборвалась";
+    offset = result.received;
+    onProgress(offset / file.size);
+  }
+  return null;
 }
 
 export function PromoUpload({
-  ticket,
+  start,
+  chunk,
+  discard,
   register,
   captionHint,
 }: {
-  ticket: (input: { mime: string; bytes: number }) => Promise<TicketResult>;
+  start: (input: { mime: string; bytes: number }) => Promise<StartResult>;
+  chunk: (formData: FormData) => Promise<ChunkResult>;
+  discard: (uploadId: string) => Promise<void>;
   register: (input: {
-    path: string;
+    uploadId: string;
     title: string;
     locale: string;
     caption: string;
@@ -135,26 +145,29 @@ export function PromoUpload({
       return setPhase({ kind: "error", text: "Нужен ролик MP4, MOV или WebM или картинка PNG, JPG, WebP, GIF." });
     }
     if (file.size > PROMO_MAX_BYTES) {
-      return setPhase({ kind: "error", text: "Файл больше 50 МБ — хранилище его не примет. Сожмите и попробуйте снова." });
+      return setPhase({ kind: "error", text: "Файл больше 500 МБ. Сожмите ролик и попробуйте снова." });
     }
 
     setPhase({ kind: "busy", text: "Читаю файл…", progress: null });
     const meta = await readMeta(file);
 
-    setPhase({ kind: "busy", text: "Готовлю место в хранилище…", progress: null });
-    const slot = await ticket({ mime: file.type, bytes: file.size });
+    setPhase({ kind: "busy", text: "Готовлю место на сервере…", progress: null });
+    const slot = await start({ mime: file.type, bytes: file.size });
     if (!slot.ok) return setPhase({ kind: "error", text: slot.reason });
 
     setPhase({ kind: "busy", text: "Загружаю…", progress: 0 });
-    const failed = await put(slot.url, file, (share) =>
+    const failed = await sendChunks(file, slot.uploadId, chunk, (share) =>
       setPhase({ kind: "busy", text: "Загружаю…", progress: share }),
     );
-    if (failed) return setPhase({ kind: "error", text: `Файл не загрузился: ${failed}.` });
+    if (failed) {
+      await discard(slot.uploadId).catch(() => undefined);
+      return setPhase({ kind: "error", text: `Файл не загрузился: ${failed}. Попробуйте ещё раз.` });
+    }
 
     setPhase({ kind: "busy", text: "Записываю…", progress: 1 });
     const notify = data.get("notify") === "on";
     const saved = await register({
-      path: slot.path,
+      uploadId: slot.uploadId,
       title: String(data.get("title") ?? ""),
       locale: String(data.get("locale") ?? "all"),
       caption: String(data.get("caption") ?? ""),
@@ -176,7 +189,7 @@ export function PromoUpload({
   return (
     <form ref={form} onSubmit={submit} className="mt-2 grid gap-3 rounded-xl border border-line bg-surface px-5 py-4 sm:grid-cols-2">
       <label className="block text-xs text-faint sm:col-span-2">
-        Файл — ролик MP4, MOV, WebM или картинка, до 50 МБ
+        Файл — ролик MP4, MOV, WebM или картинка, до 500 МБ
         <input name="file" type="file" accept={ACCEPT} required disabled={busy} className={`mt-1 ${INPUT}`} />
       </label>
       <label className="block text-xs text-faint">

@@ -272,6 +272,25 @@ docker build \
   --build-arg "GIT_COMMIT=$GIT_COMMIT" \
   -t devuz:latest "$APP_DIR"
 
+# Промо-материалы партнёров лежат на диске хоста, а не в контейнере: тот
+# пересобирается на каждой выкатке, и всё, что внутри, пропадает. Папку
+# создаём здесь и отдаём пользователю контейнера (nextjs, uid 1001 — см.
+# Dockerfile): иначе docker создаст её сам, от root, и первая же загрузка
+# упадёт с «permission denied». Содержимое выкатка не трогает. Вне
+# $APP_DIR намеренно: там git, и файлы в нём — чужие для репозитория.
+# «|| true»: переменной может не быть в .env, grep тогда вернёт 1, и set -e
+# оборвал бы выкатку на пустом месте.
+MEDIA_HOST_DIR="$(envval MEDIA_HOST_DIR || true)"
+MEDIA_HOST_DIR="${MEDIA_HOST_DIR:-/var/lib/devuz/media}"
+export MEDIA_HOST_DIR
+if [ "$(id -u)" = "0" ]; then
+  mkdir -p "$MEDIA_HOST_DIR/promo" "$MEDIA_HOST_DIR/tmp"
+  chown -R 1001:1001 "$MEDIA_HOST_DIR"
+else
+  mkdir -p "$MEDIA_HOST_DIR/promo" "$MEDIA_HOST_DIR/tmp" 2>/dev/null || true
+  [ -w "$MEDIA_HOST_DIR" ] || echo "  · $MEDIA_HOST_DIR недоступна на запись — промо-материалы не загрузятся" >&2
+fi
+
 echo "▸ Перезапускаем ($GIT_COMMIT)"
 # Без --build: образ уже собран выше. Компоуз сравнит его с тем, на котором
 # работает контейнер, и пересоздаст контейнер только если образ новый.

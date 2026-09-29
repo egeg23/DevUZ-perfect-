@@ -89,6 +89,10 @@ export function middleware(request: NextRequest) {
   // через middleware.
   if (pathname.startsWith("/r/")) return NextResponse.next();
 
+  // Файлы промо-материалов (app/media/promo/[id]) — тоже вне языков: это
+  // ролик, а не страница, и редирект на /ru/media/… вёл бы в 404.
+  if (pathname.startsWith("/media/")) return NextResponse.next();
+
   const hasLocale = locales.some(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   );
