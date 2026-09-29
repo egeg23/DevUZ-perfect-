@@ -254,6 +254,7 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
  */
 const STILL_RUSSIAN_IN_PL: readonly string[] = [
   // бот в Telegram — пока по-русски
+  "dostają w Telegramie wiadomość z przyciskami «Подтвердить» (zatwierdź) i «Отклонить» (odrzuć)",
   // кабинет и бот партнёра — отдельный продукт, по-русски
 ];
 
