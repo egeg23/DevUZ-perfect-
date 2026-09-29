@@ -1036,6 +1036,103 @@
   transform: scale(0.9);
 }
 
+/* С чем приходят — стеклянные карточки разворачиваются к зрителю. */
+.asks {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  perspective: 1200px;
+}
+
+@media (min-width: 720px) {
+  .asks {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .asks {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.ask {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 24px;
+  border-radius: var(--radius);
+  background: hsla(0, 0%, 100%, 0.52);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid hsla(0, 0%, 100%, 0.7);
+  box-shadow: 0 10px 24px hsla(224, 40%, 20%, 0.12);
+  transform-origin: 0 50%;
+  transition:
+    opacity 600ms calc(var(--i) * 100ms) var(--ease),
+    transform 900ms calc(var(--i) * 100ms) var(--ease);
+}
+
+:global(.mx-js) .ask:not([data-shown]) {
+  opacity: 0;
+  transform: rotateY(-24deg);
+}
+
+.askQ {
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.askA {
+  color: var(--muted);
+}
+
+/* Что вы увидите — пузырьки с номерами поднимаются снизу. */
+.results {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: result;
+}
+
+.result {
+  position: relative;
+  padding: 16px 16px 16px 64px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  counter-increment: result;
+  transition:
+    opacity 500ms calc(var(--i) * 120ms) var(--ease),
+    transform 700ms calc(var(--i) * 120ms) var(--spring);
+}
+
+.result::before {
+  content: counter(result);
+  position: absolute;
+  left: 16px;
+  top: 12px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+:global(.mx-js) .result:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(24px) scale(0.95);
+}
+
 .ghost {
   display: inline-flex;
   align-items: center;

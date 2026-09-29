@@ -625,6 +625,92 @@
   transform: translateX(-24px);
 }
 
+/* С чем приходят — субтитры: реплика родителя опускается в кадр сверху. */
+.asks {
+  display: grid;
+  gap: 16px;
+  margin: 32px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .asks {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .asks {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.ask {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 24px;
+  border-top: 2px solid var(--gold);
+  background: var(--ink-2);
+  transition:
+    opacity 700ms calc(var(--i) * 110ms) var(--ease),
+    transform 700ms calc(var(--i) * 110ms) var(--ease);
+}
+
+:global(.mx-js) .ask:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+
+.askQ {
+  font-family: var(--mx-cormorant), Georgia, serif;
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.askA {
+  color: var(--muted);
+}
+
+/* Что вы увидите — лента справа налево, как титры следующей сцены. */
+.results {
+  display: grid;
+  gap: 0;
+  max-width: 800px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: result;
+}
+
+.result {
+  position: relative;
+  padding: 16px 0 16px 64px;
+  border-bottom: 1px solid var(--ink-3);
+  counter-increment: result;
+  transition:
+    opacity 600ms calc(var(--i) * 140ms) var(--ease),
+    transform 600ms calc(var(--i) * 140ms) var(--ease);
+}
+
+.result::before {
+  content: counter(result, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 16px;
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+}
+
+:global(.mx-js) .result:not([data-shown]) {
+  opacity: 0;
+  transform: translateX(24px);
+}
+
 .ghost {
   display: inline-flex;
   align-items: center;

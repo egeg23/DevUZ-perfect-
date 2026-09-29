@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import {
   AGES,
   CUTS,
+  DIARY,
   MOMS_COURSE,
   MOMS_DETAILS,
   PHOTOS,
@@ -14,7 +15,19 @@ import {
   TRIAL,
 } from "@/content/clients/maximova/facts";
 
-import { FaqList, Later, LessonSteps, MomsLink, PlainList, PriceList, TrialPoints, WhereBlock } from "../Blocks";
+import {
+  DiaryList,
+  FaqList,
+  Later,
+  LessonSteps,
+  MomsLink,
+  PlainList,
+  PriceList,
+  RequestList,
+  ResultList,
+  TrialPoints,
+  WhereBlock,
+} from "../Blocks";
 import { Book } from "../Book";
 import { Credit } from "../Credit";
 import { Motion } from "../Motion";
@@ -107,6 +120,14 @@ export function Cinema() {
               </ul>
             </div>
           </div>
+        </section>
+
+        <section className={s.scene} aria-labelledby="a-asks">
+          <p className={s.sceneNo}>С чем приходят</p>
+          <h2 id="a-asks" className={s.h2}>
+            С чем к Дарье приходят родители
+          </h2>
+          <RequestList s={s} />
         </section>
 
         <section className={`${s.scene} ${s.principle}`} aria-labelledby="a-rule">
@@ -212,6 +233,21 @@ export function Cinema() {
           <blockquote className={s.credits} data-reveal="">
             «{QUOTES.goal}»
           </blockquote>
+        </section>
+
+        <section className={s.scene} aria-labelledby="a-results">
+          <h2 id="a-results" className={s.h2}>
+            Что вы увидите по ходу занятий
+          </h2>
+          <p className={s.muted}>Без обещаний в сроках — только то, что родитель действительно видит.</p>
+          <ResultList s={s} />
+        </section>
+
+        <section className={s.scene} aria-labelledby="a-diary">
+          <h2 id="a-diary" className={s.h2}>
+            {DIARY.title}
+          </h2>
+          <DiaryList s={s} />
         </section>
 
         <section className={s.scene} aria-labelledby="a-faq">
