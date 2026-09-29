@@ -8,6 +8,7 @@ import {
   hashToken,
   staffByTelegramId,
 } from "@/lib/admin/session";
+import { PANEL_LANG_COOKIE } from "@/lib/admin/i18n";
 import { AUTH_FRESH_SECONDS, checkTelegramAuth, destinationFrom } from "@/lib/admin/tg-auth";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
 import { absoluteUrl } from "@/lib/seo";
@@ -121,6 +122,14 @@ export async function GET(
     sameSite: "lax",
     path: "/admin",
     maxAge: ABSOLUTE_DAYS * 24 * 3600,
+  });
+  // Зеркало языка панели для <html lang> — см. lib/admin/i18n.ts.
+  response.cookies.set(PANEL_LANG_COOKIE, staff.panel_locale, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/admin",
+    maxAge: 365 * 24 * 3600,
   });
   return response;
 }

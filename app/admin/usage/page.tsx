@@ -217,7 +217,7 @@ export default async function UsagePage({ searchParams }: { searchParams: Promis
                   <td data-label="Кто" className={TD}>
                     {p.name}
                     <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint">
-                      {ROLE_BADGE[p.role]}
+                      {ROLE_BADGE[p.role][staff.panel_locale]}
                     </span>
                   </td>
                   <td data-label="Входов" className={`${TD} font-mono`}>{p.logins}</td>

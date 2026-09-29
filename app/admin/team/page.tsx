@@ -223,7 +223,7 @@ export default async function TeamPage({
                     // сервера; лишнего — можно перевести в руководители.
                     // Руководителю проектов роли показываются без кнопки.
                     <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint">
-                      {ROLE_BADGE[member.role]}
+                      {ROLE_BADGE[member.role][viewer.panel_locale]}
                     </span>
                   ) : (
                     <form action={changeRole} className="flex items-center gap-2">
@@ -234,7 +234,7 @@ export default async function TeamPage({
                         value={member.role === "head" ? "manager" : "head"}
                       />
                       <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint">
-                        {ROLE_BADGE[member.role]}
+                        {ROLE_BADGE[member.role][viewer.panel_locale]}
                       </span>
                       <button type="submit" className="text-xs text-faint hover:text-green">
                         {member.role === "head" ? "сделать менеджером" : "сделать руководителем"}

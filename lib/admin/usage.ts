@@ -26,7 +26,7 @@ export type Tracked = { href: string; label: string; roles: readonly Role[] };
  * работа с лидом, и «на главную зашли, а в карточку нет» — ответ сам по себе.
  */
 export const TRACKED: readonly Tracked[] = [
-  ...SECTIONS.map((s) => (s.href === "/admin" ? { ...s, label: "Главная и лиды" } : s)),
+  ...SECTIONS.map((s) => ({ ...s, label: s.href === "/admin" ? "Главная и лиды" : s.label.ru })),
   { href: "/admin/leads", label: "Карточка лида", roles: ["admin", "head", "manager"] },
 ];
 

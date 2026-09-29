@@ -61,6 +61,7 @@ test("руководитель разгребает чужие лиды, мен�
     username: null,
     display_name: "Менеджер",
     role: "manager" as const,
+    panel_locale: "ru" as const,
   };
   const head = { ...manager, id: "s-2", role: "head" as const };
 

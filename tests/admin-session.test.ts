@@ -70,6 +70,7 @@ test("менять лид может владелец, руководитель 
     username: null,
     display_name: "Менеджер",
     role: "manager" as const,
+    panel_locale: "ru" as const,
   };
   const other = { ...manager, id: "s-2", display_name: "Другой" };
   const admin = { ...manager, id: "s-3", role: "admin" as const };

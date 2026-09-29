@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/shell";
-import { RememberHelpLang } from "@/components/admin/help-link";
 import {
   HELP_LOCALES,
   HELP_LOCALE_NAME,
@@ -32,7 +31,8 @@ export function HelpView({ staff, locale, role }: { staff: Staff; locale: HelpLo
     const params = new URLSearchParams();
     const l = next.lang ?? locale;
     const r = next.as ?? role;
-    if (l !== "ru") params.set("lang", l);
+    // Язык всегда в адресе: без него откроется язык панели, а не выбранный.
+    params.set("lang", l);
     if (staff.role === "admin" && r !== "admin") params.set("as", r);
     const s = params.toString();
     return `/admin/help${s ? `?${s}` : ""}`;
@@ -74,7 +74,6 @@ export function HelpView({ staff, locale, role }: { staff: Staff; locale: HelpLo
 
   return (
     <AdminShell staff={staff}>
-      <RememberHelpLang lang={locale} />
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
         <h1 className="text-lg font-semibold">{t.title}</h1>
         <div className="flex gap-2 text-sm">
@@ -109,7 +108,7 @@ export function HelpView({ staff, locale, role }: { staff: Staff; locale: HelpLo
           {visible.map((href) => (
             <li key={href}>
               <a href={`#${helpAnchor(href)}`} className="text-muted hover:text-green">
-                {sectionOf(href)?.label ?? href}
+                {sectionOf(href)?.label[locale] ?? href}
               </a>
             </li>
           ))}
@@ -143,7 +142,7 @@ export function HelpView({ staff, locale, role }: { staff: Staff; locale: HelpLo
               className={`scroll-mt-28 ${CARD} target:border-green/50`}
             >
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <h3 className="text-base font-semibold">{section.label}</h3>
+                <h3 className="text-base font-semibold">{section.label[locale]}</h3>
                 <Link href={href} className="text-xs text-faint hover:text-green">
                   {t.openSection} →
                 </Link>
