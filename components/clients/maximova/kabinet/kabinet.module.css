@@ -1,0 +1,270 @@
+/* Кабинет и политика — в палитре сайта «Две страны»: бумага, чернила, красный. */
+
+.page {
+  --paper: hsl(40 45% 95%);
+  --card: hsl(40 60% 99%);
+  --ink: hsl(222 40% 18%);
+  --muted: hsl(222 14% 40%);
+  --line: hsl(36 24% 80%);
+  --red: hsl(4 70% 48%);
+  --blue: hsl(220 60% 40%);
+  --radius: 16px;
+
+  min-height: 100svh;
+  display: flow-root;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--mx-golos), system-ui, sans-serif;
+  font-size: clamp(16px, 15.12px + 0.233vw, 18px);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+:global(body):has(.page) {
+  margin: 0;
+  background: hsl(40 45% 95%);
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.page :where(p, h1, h2, h3, ol, ul, blockquote) {
+  margin: 0;
+}
+
+.page a {
+  color: var(--blue);
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  padding: 8px 16px;
+  background: hsla(40, 45%, 95%, 0.94);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 700;
+  color: var(--ink) !important;
+  text-decoration: none;
+}
+
+.link {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  background: none;
+  color: var(--red);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.main {
+  display: grid;
+  gap: 24px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+.title {
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: clamp(30px, 27.35px + 0.698vw, 36px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.h2 {
+  margin-bottom: 12px !important;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.lead {
+  color: var(--muted);
+}
+
+.hint {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.error {
+  margin-top: 12px !important;
+  color: var(--red);
+  font-weight: 700;
+}
+
+.card {
+  display: grid;
+  gap: 16px;
+  padding: 24px 16px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 6px hsla(222, 40%, 18%, 0.08);
+}
+
+@media (min-width: 720px) {
+  .card {
+    padding: 32px;
+  }
+}
+
+.how {
+  display: grid;
+  gap: 8px;
+  padding-left: 24px !important;
+  list-style: decimal;
+}
+
+.how li::marker {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.consent {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  align-items: start;
+  cursor: pointer;
+}
+
+.consent input {
+  width: 24px;
+  height: 24px;
+  margin: 2px 0 0;
+  accent-color: var(--red);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 32px;
+  border: 0;
+  border-radius: 999px;
+  background: hsl(200 80% 44%);
+  color: hsl(0 0% 100%);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.button:focus-visible,
+.link:focus-visible,
+.statusNew:focus-visible,
+.statusDone:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+}
+
+.waiting {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+  padding: 0 !important;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  gap: 4px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.itemTitle {
+  font-weight: 700;
+}
+
+.statusNew,
+.statusDone {
+  justify-self: start;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.statusNew {
+  border: 2px solid var(--red);
+  background: none;
+  color: var(--red);
+}
+
+.statusDone {
+  border: 2px solid var(--line);
+  background: var(--paper);
+  color: var(--muted);
+}
+
+.footer {
+  display: grid;
+  gap: 8px;
+  padding: 32px 16px 48px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.doc h2 {
+  margin: 32px 0 12px !important;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.doc p,
+.doc li {
+  margin-bottom: 12px !important;
+}
+
+.doc ul {
+  padding-left: 24px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

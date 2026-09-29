@@ -151,6 +151,7 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   install_unit devuz-reminders.timer
   install_unit devuz-scout.service
   install_unit devuz-bot.service
+  install_unit devuz-maximova-bot.service
   # daemon-reload нужен только когда файл юнита изменился.
   [ "$UNITS_CHANGED" = "1" ] && systemctl daemon-reload
 
@@ -242,6 +243,18 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   else
     echo "  · TELEGRAM_BOT_TOKEN или TELEGRAM_WEBHOOK_SECRET не заданы — бот не запускаю" >&2
   fi
+  # Бот школы Дарьи Максимовой — тот же поллер с другим токеном. Нужны токен,
+  # общий с приложением секрет и имя бота (без имени сайт не соберёт ссылку
+  # на вход). Нет чего-то — не запускаем: сайт честно покажет, что вход и
+  # уведомления ещё не подключены, а заявки всё равно сохраняются.
+  if grep -q '^MAXIMOVA_BOT_TOKEN=.\+' "$APP_DIR/.env" && grep -q '^MAXIMOVA_BOT_SECRET=.\+' "$APP_DIR/.env" \
+    && grep -q '^MAXIMOVA_BOT_USERNAME=.\+' "$APP_DIR/.env"; then
+    systemctl enable --now devuz-maximova-bot.service >/dev/null 2>&1
+    systemctl restart devuz-maximova-bot.service >/dev/null 2>&1
+    echo "  · бот Дарьи забирает обновления"
+  else
+    echo "  · MAXIMOVA_BOT_TOKEN, MAXIMOVA_BOT_SECRET или MAXIMOVA_BOT_USERNAME не заданы — бот Дарьи не запускаю" >&2
+  fi
 fi
 
 echo "▸ Собираем образ ($GIT_COMMIT)"
@@ -289,6 +302,21 @@ if [ "$(id -u)" = "0" ]; then
 else
   mkdir -p "$MEDIA_HOST_DIR/promo" "$MEDIA_HOST_DIR/tmp" 2>/dev/null || true
   [ -w "$MEDIA_HOST_DIR" ] || echo "  · $MEDIA_HOST_DIR недоступна на запись — промо-материалы не загрузятся" >&2
+fi
+
+# База школы Дарьи (SQLite) — на диске хоста, в России: там персональные
+# данные родителей, и они не должны пропадать при пересборке образа. Та же
+# схема, что у промо-материалов: папка отдаётся пользователю контейнера.
+MAXIMOVA_HOST_DIR="$(envval MAXIMOVA_HOST_DIR || true)"
+MAXIMOVA_HOST_DIR="${MAXIMOVA_HOST_DIR:-/var/lib/devuz/maximova}"
+export MAXIMOVA_HOST_DIR
+if [ "$(id -u)" = "0" ]; then
+  mkdir -p "$MAXIMOVA_HOST_DIR"
+  chown -R 1001:1001 "$MAXIMOVA_HOST_DIR"
+  chmod 700 "$MAXIMOVA_HOST_DIR"
+else
+  mkdir -p "$MAXIMOVA_HOST_DIR" 2>/dev/null || true
+  [ -w "$MAXIMOVA_HOST_DIR" ] || echo "  · $MAXIMOVA_HOST_DIR недоступна на запись — заявки школы Дарьи не сохранятся" >&2
 fi
 
 echo "▸ Перезапускаем ($GIT_COMMIT)"

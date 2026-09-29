@@ -36,6 +36,10 @@ services:
     # живут. Папку создаёт и отдаёт контейнеру scripts/vps-deploy.sh.
     volumes:
       - ${MEDIA_HOST_DIR:-/var/lib/devuz/media}:/app/media
+      # База школы Дарьи Максимовой (SQLite): персональные данные родителей,
+      # поэтому на диске сервера в России, а не в образе. Папку создаёт
+      # scripts/vps-deploy.sh.
+      - ${MAXIMOVA_HOST_DIR:-/var/lib/devuz/maximova}:/app/data/maximova
 
     environment:
       # Читается в рантайме, в образ не попадает.
@@ -159,6 +163,18 @@ services:
 
       # Куда внутри контейнера смонтирована папка промо-материалов (см. volumes).
       MEDIA_DIR: /app/media
+
+      # Сайт школы Дарьи Максимовой (/maximova): база и её бот. Бот — свой,
+      # не студийный: токен от @BotFather, имя бота без @, общий с поллером
+      # секрет (любая длинная строка) и Telegram ID Дарьи через запятую —
+      # им приходят заявки и открывается её кабинет. Узнать ID — команда /id
+      # в боте. Пусто — заявки всё равно сохраняются, а сайт честно пишет,
+      # что вход через Telegram ещё не подключён.
+      MAXIMOVA_DATA_DIR: /app/data/maximova
+      MAXIMOVA_BOT_TOKEN: ${MAXIMOVA_BOT_TOKEN:-}
+      MAXIMOVA_BOT_USERNAME: ${MAXIMOVA_BOT_USERNAME:-}
+      MAXIMOVA_BOT_SECRET: ${MAXIMOVA_BOT_SECRET:-}
+      MAXIMOVA_ADMIN_TG_IDS: ${MAXIMOVA_ADMIN_TG_IDS:-}
 
     healthcheck:
       test:

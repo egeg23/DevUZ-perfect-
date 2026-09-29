@@ -28,7 +28,9 @@ const SCANNED = ["app", "lib", "components"];
 // MEDIA_DIR — путь внутри контейнера, куда compose монтирует папку
 // промо-материалов; его задаёт сам compose, владелец настраивает
 // MEDIA_HOST_DIR — папку на сервере.
-const PROVIDED_BY_RUNTIME = new Set(["NODE_ENV", "GIT_COMMIT", "MEDIA_DIR"]);
+// MAXIMOVA_DATA_DIR — так же путь внутри контейнера, куда смонтирована база
+// школы Дарьи; владелец настраивает MAXIMOVA_HOST_DIR.
+const PROVIDED_BY_RUNTIME = new Set(["NODE_ENV", "GIT_COMMIT", "MEDIA_DIR", "MAXIMOVA_DATA_DIR"]);
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(root(dir), { recursive: true, encoding: "utf8" })
