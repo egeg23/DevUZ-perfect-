@@ -48,7 +48,7 @@ import {
 import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
-import { inPortion } from "@/lib/admin/portion-store";
+import { deliverReplacement, inPortion, topUpPortion } from "@/lib/admin/portion-store";
 import { approves, decideTransfer } from "@/lib/admin/transfers";
 import { markSelfContacted, prospectById, queueOutreach, skipProspect } from "@/lib/admin/outreach-store";
 
@@ -1180,7 +1180,20 @@ async function handlePortionButton(
     }
     if (action === "skip") {
       await skipProspect(prospectId, "Порция дня: не подошла");
-      await done("✖ Не подошла");
+      // В счёт порции идут только касания, поэтому на место пропущенной —
+      // сразу новая компания. Выдаём до ответа (это быстро), чтобы сказать
+      // человеку, будет ли замена; письмо и карточка — после ответа.
+      const top = await topUpPortion(staff.id);
+      await done(
+        top.made.length
+          ? "✖ Не подошла · замена ниже"
+          : top.empty
+            ? "✖ Не подошла · в пуле пусто"
+            : top.limit
+              ? "✖ Не подошла · замены на сегодня всё"
+              : "✖ Не подошла",
+      );
+      for (const item of top.made) await deliverReplacement(item.rowId);
       return;
     }
     await answerCallback(query.id, "Неизвестная команда");

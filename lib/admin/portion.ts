@@ -112,11 +112,58 @@ export function outcomeOf(
   return prospect.status === "manual" ? "self" : "sent";
 }
 
-export type PersonReport = { name: string; total: number; done: number; skipped: number };
+/**
+ * Замен за «Не подходит» в день — не больше двух порций.
+ *
+ * Владелец, 29.09: «сделать нужно 5 в день, без учёта „не подходит“. То есть
+ * именно 5 „связались“, а не 3 связались и 2 пропустили». Поэтому на каждую
+ * «Не подходит» выдаётся замена из пула. Но «Не подходит» навсегда убирает
+ * компанию из пула, и без потолка пропусками можно было бы перебрать всю
+ * базу в поисках самых удобных. Две порции замен — с запасом на честный
+ * день, когда пул подсунул подряд несколько мёртвых сайтов.
+ */
+export const REPLACE_FACTOR = 2;
+export const replaceLimit = (target: number): number => target * REPLACE_FACTOR;
 
-/** Строка отчёта: «Данил — 4 из 5, пропущено 1». Ноль сделанного — отметкой. */
+export type PortionTally = {
+  /** Цель дня — утренняя раздача. Замены в неё не входят: они вместо пропущенных. */
+  target: number;
+  /** «Отправить» и «Написал сам» — только они в счёт. */
+  done: number;
+  skipped: number;
+  replaced: number;
+  /** «Не подходит», на место которых замены не нашлось: пул пуст или лимит. */
+  short: number;
+};
+
+export function tallyPortion(
+  rows: readonly { replaces: string | null; outcome: PortionOutcome | null }[],
+): PortionTally {
+  const target = rows.filter((r) => !r.replaces).length;
+  const done = rows.filter((r) => r.outcome === "sent" || r.outcome === "self").length;
+  const skipped = rows.filter((r) => r.outcome === "skipped").length;
+  const replaced = rows.filter((r) => r.replaces).length;
+  return { target, done, skipped, replaced, short: Math.max(0, skipped - replaced) };
+}
+
+/** Сколько замен выдать сейчас: по одной на каждую «Не подходит» без замены — в пределах лимита. */
+export function replacementsDue(t: PortionTally): number {
+  return Math.max(0, Math.min(t.skipped - t.replaced, replaceLimit(t.target) - t.replaced));
+}
+
+export type PersonReport = { name: string; target: number; done: number; skipped: number; short: number };
+
+/**
+ * Строка отчёта: «Данил — 4 из 5, не подошло 2, без замены 1».
+ *
+ * «Из» — цель дня, а сделано — только касания: две «Не подходит» при трёх
+ * отправленных — это 3 из 5, а не «порция закрыта». Ноль касаний — ⚠️,
+ * сколько бы ни было пропусков.
+ */
 export function reportLine(p: PersonReport): string {
-  const tail = p.skipped ? `, не подошло ${p.skipped}` : "";
-  const flag = p.done === 0 && p.skipped === 0 ? " ⚠️" : p.done >= p.total ? " ✅" : "";
-  return `${p.name} — ${p.done} из ${p.total}${tail}${flag}`;
+  const tail = [p.skipped ? `не подошло ${p.skipped}` : "", p.short ? `без замены ${p.short}` : ""]
+    .filter(Boolean)
+    .join(", ");
+  const flag = p.done === 0 ? " ⚠️" : p.done >= p.target ? " ✅" : "";
+  return `${p.name} — ${p.done} из ${p.target}${tail ? `, ${tail}` : ""}${flag}`;
 }

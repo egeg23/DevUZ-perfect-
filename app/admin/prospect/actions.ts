@@ -15,6 +15,7 @@ import {
   saveNoSite,
 } from "@/lib/admin/outreach-store";
 import { requestIp, requireRole, requireStaff } from "@/lib/admin/guard";
+import { deliverReplacement, portionOwner, topUpPortion } from "@/lib/admin/portion-store";
 import { createCampaign, listCampaigns, processPlaces, runSearch, setCampaignActive } from "@/lib/maps/store";
 import { pitchLocales, type PitchLocale } from "@/lib/audit/pitch";
 import {
@@ -204,11 +205,24 @@ export async function recordManualAnswerAction(formData: FormData) {
   );
 }
 
-/** «Не пишем»: сайт убирается из очереди руками, с причиной. */
+/**
+ * «Не пишем»: сайт убирается из очереди руками, с причиной.
+ *
+ * Если это компания из чьей-то сегодняшней порции, хозяину порции сразу
+ * выдаётся замена — как за «Не подходит» в Telegram: в счёт порции идут
+ * только касания. Письмо и карточка в Telegram — после ответа.
+ */
 export async function skipProspectAction(formData: FormData) {
   await requireStaff();
   const id = String(formData.get("prospect") ?? "");
   await skipProspect(id, String(formData.get("reason") ?? ""));
+  const owner = await portionOwner(id);
+  if (owner) {
+    const top = await topUpPortion(owner);
+    if (top.made.length) after(async () => {
+      for (const item of top.made) await deliverReplacement(item.rowId);
+    });
+  }
   revalidatePath("/admin/prospect");
   redirect("/admin/prospect");
 }

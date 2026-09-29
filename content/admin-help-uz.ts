@@ -379,19 +379,19 @@ export const uz: HelpCopy = {
             manager: [
               "Ish kunlari soat 07:00 da tizim umumiy zaxiradagi kompaniyalarni teng tarqatadi — aylana bo‘yicha bittadan. Sizga qanchasi: haftalik aloqalar rejasi 5 ga bo‘linadi (kuniga 2 dan 15 gacha). Reja bo‘lmasa — kuniga 5 ta.",
               "09:00 ga kelib xatlar tayyor bo‘ladi va to‘plam sizga Telegramda keladi: har bir kompaniyada — kimga yozish, gapni nimadan boshlash va matn (matnni bossangiz — nusxalanadi). Tugmalar: **«📤 Отправить через бота»**, **«WhatsApp ↗»**, **«✋ Написал сам»**, **«✖ Не подходит»** va **«Открыть в панели»**.",
-              "Xuddi shu to‘plam — bo‘lim tepasida, «Ваша порция на сегодня: сделано 2 из 6» blokida, «текст готов», «сделано», «не подошла» holatlari bilan.",
+              "Xuddi shu to‘plam — bo‘lim tepasida, «Ваша порция на сегодня: сделано 2 из 5» blokida, «текст готов», «сделано», «не подошла» holatlari bilan; o‘rniga berilgan kompaniyalar «замена» deb belgilangan.",
               "**18:00 da** bajarilmagani umumiy zaxiraga qaytadi, xat esa o‘chiriladi — u sizning ismingiz bilan imzolangan. Rahbar va egasi hisobot oladi: kim qanchasini bajargan.",
-              "«Отправить» va «Написал сам» / «Связался сам» bajarilgan deb hisoblanadi — Telegramdan ham, paneldan ham bir xil. «Не подходит» — bu «сделано» emas, lekin ishni qilmaslik ham emas.",
+              "Faqat aloqa bajarilgan deb hisoblanadi: «Отправить» va «Написал сам» / «Связался сам» — Telegramdan ham, paneldan ham bir xil. To‘plam — aynan shuncha aloqa: «Не подходит» hisobga kirmaydi, lekin uning o‘rniga darhol zaxiradan **almashtiruvchi** keladi — Telegramga tayyor matnli «🔁 Замена» kartochkasi (matn bir daqiqagacha yoziladi) va to‘plam blokiga. Paneldagi kartochkadagi «не пишем» uchun ham xuddi shunday. Kuniga almashtirishlar — ikki to‘plamdan oshmaydi: zaxira bo‘sh bo‘lsa yoki almashtirishlar tugasa, bot tugma ostida shuni aytadi, kechki hisobotda esa bu «без замены» bo‘ladi.",
             ],
             head: [
               "Siz ham to‘plam olasiz: ish kunlari soat 07:00 da zaxiradagi kompaniyalar navbatdagi hammaga — sizga va menejerlarga teng tarqatiladi. Hajmi — haftalik reja ÷ 5 (2 dan 15 gacha), reja bo‘lmasa — 5.",
               "09:00 da to‘plam Telegramga tayyor matnlar va «📤 Отправить через бота», «WhatsApp ↗», «✋ Написал сам», «✖ Не подходит», «Открыть в панели» tugmalari bilan keladi. Bo‘limda u «Ваша порция на сегодня» blokida turadi.",
-              "18:00 da bajarilmagani zaxiraga qaytadi, sizga esa o‘zingiz va jamoangiz bo‘yicha hisobot keladi: «Имя — 3 из 5, не подошло 1». ⚠️ — hech narsa bajarilmagan, ✅ — to‘plam yopilgan.",
+              "18:00 da bajarilmagani zaxiraga qaytadi, sizga esa o‘zingiz va jamoangiz bo‘yicha hisobot keladi: «Имя — 3 из 5, не подошло 2, без замены 1». Faqat aloqalar hisoblanadi: «Не подходит» hisobga kirmaydi — uning uchun odamga darhol zaxiradan almashtiruvchi beriladi, kuniga ikki to‘plamgacha; «без замены» — zaxira bo‘sh edi yoki almashtirishlar tugagan. ⚠️ — birorta ham aloqa yo‘q, ✅ — kerakli hammasi bajarilgan.",
               "Zaxirani [xaritalar bo‘yicha avtoqidiruv](#prospect-maps) va saytlarni qo‘lda tekshirish to‘ldiradi. Zaxira bo‘sh — to‘plamlar ham bo‘sh.",
             ],
             admin: [
               "Siz to‘plam olmaysiz. Ish kunlari soat 07:00 da zaxiradagi kompaniyalar menejerlar va rahbarlarga teng tarqatiladi: haftalik reja ÷ 5 (2 dan 15 gacha), reja bo‘lmasa — 5. Avval — bahosi eng yomon saytlar.",
-              "Xatlar fonda tayyorlanadi, 09:00 ga kelib to‘plam odamlarga Telegramda ketadi (matnlarning bir qismi tayyor bo‘lmasa ham, 10:00 dan kechikmay). 18:00 da bajarilmagani zaxiraga qaytadi, sizga esa hamma bo‘yicha hisobot keladi.",
+              "Xatlar fonda tayyorlanadi, 09:00 ga kelib to‘plam odamlarga Telegramda ketadi (matnlarning bir qismi tayyor bo‘lmasa ham, 10:00 dan kechikmay). To‘plam — aynan shuncha aloqa: botdagi har bir «Не подходит» yoki paneldagi «не пишем» uchun odamga darhol zaxiradan tayyor xatli almashtiruvchi beriladi, kuniga ikki to‘plamgacha. 18:00 da bajarilmagani zaxiraga qaytadi, sizga esa hamma bo‘yicha hisobot keladi: «Имя — 3 из 5, не подошло 2, без замены 1».",
               "Zaxirani [xaritalar bo‘yicha avtoqidiruv](#prospect-maps) va qo‘lda tekshiruvlar to‘ldiradi. Hisobotda bo‘sh to‘plamlar ko‘rinsa — zaxirada kompaniyalar tugagan: yangi kampaniya oching.",
             ],
           },
