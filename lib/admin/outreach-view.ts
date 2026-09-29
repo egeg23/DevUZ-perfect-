@@ -11,7 +11,8 @@ import type { Prospect } from "@/lib/admin/outreach-store";
  * попадало в замирание, и браузер писал «Страница не отвечает».
  *
  * Поэтому сразу — только то, с чем работают: строки в работе, отправленные
- * за неделю, порция дня и открытая карточка. Остальное — по REST_PAGE,
+ * за неделю (кроме закрытых «Клиент отказался» / «Игнорирует»), порция дня
+ * и открытая карточка. Остальное — по REST_PAGE,
  * кнопкой «Показать ещё».
  */
 
@@ -46,7 +47,9 @@ export function visibleProspects(
   const pinned = (row: Prospect) =>
     IN_WORK.has(row.status) ||
     options.keep.has(row.id) ||
-    (row.status === "sent" && row.sent_at !== null && Date.parse(row.sent_at) >= freshSince);
+    // «Клиент отказался» / «Игнорирует» — уже не в работе, сколько бы
+    // дней ни прошло: владелец просил, чтобы такие «вылетали из очереди».
+    (row.status === "sent" && !row.closed_reason && row.sent_at !== null && Date.parse(row.sent_at) >= freshSince);
 
   const rest = rows.filter((row) => !pinned(row));
   const restShown = new Set(rest.slice(0, options.more).map((row) => row.id));

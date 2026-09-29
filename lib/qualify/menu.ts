@@ -1,3 +1,5 @@
+import { inQueue } from "@/lib/admin/lead-queue";
+import type { Role } from "@/lib/admin/roles";
 import { deleteMyCommands, setMyCommands, type BotCommand } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -6,8 +8,9 @@ import { serviceClient } from "@/lib/supabase";
  *
  * Telegram показывает список команд по кнопке «/» — без него человек не
  * узнает ни про /ref, ни про /payout. Список общий для всех личек, а
- * сотрудникам к нему добавляется /login: команда назначается на их чат
- * отдельно, и клиент служебного пункта не видит.
+ * сотрудникам к нему добавляется /login (менеджерам и руководителям ещё и
+ * /leads): команды назначаются на их чат отдельно, и клиент служебных
+ * пунктов не видит.
  *
  * Синхронизируется при каждой выкатке, при заведении и отключении
  * сотрудника и кнопкой на странице команды. Идемпотентно: одинаковый
@@ -34,6 +37,12 @@ const PUBLIC_EN: BotCommand[] = [
 
 const STAFF_EXTRA: BotCommand[] = [{ command: "login", description: "Вход в панель (для сотрудников)" }];
 
+/**
+ * Поток «Получать лиды» — тем, кто получает порцию: менеджерам и
+ * руководителям. Владельцу команда ответила бы «не для вас».
+ */
+const QUEUE_EXTRA: BotCommand[] = [{ command: "leads", description: "Получать лиды: включить или выключить поток" }];
+
 export type MenuSync = { ok: boolean; staff: number; failed: number };
 
 export async function syncBotMenu(): Promise<MenuSync> {
@@ -45,7 +54,7 @@ export async function syncBotMenu(): Promise<MenuSync> {
   const db = serviceClient();
   if (!db) return { ok: publicOk, staff: 0, failed: publicOk ? 0 : 1 };
 
-  const { data } = await db.from("staff").select("telegram_user_id, is_active").limit(500);
+  const { data } = await db.from("staff").select("telegram_user_id, is_active, role").limit(500);
   let staff = 0;
   let failed = publicOk ? 0 : 1;
   for (const row of data ?? []) {
@@ -55,7 +64,10 @@ export async function syncBotMenu(): Promise<MenuSync> {
     // Отключённому сотруднику /login в меню больше не нужен — а увидеть его
     // и получить «вас нет в списке» было бы обидно.
     const ok = row.is_active
-      ? await setMyCommands([...PUBLIC_RU, ...STAFF_EXTRA], { scope })
+      ? await setMyCommands(
+          [...PUBLIC_RU, ...STAFF_EXTRA, ...(inQueue(row.role as Role) ? QUEUE_EXTRA : [])],
+          { scope },
+        )
       : await deleteMyCommands(scope);
     if (ok) staff++;
     else failed++;

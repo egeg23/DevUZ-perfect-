@@ -183,6 +183,9 @@ export async function offboardStaff(staffId: string, actor: Staff, ip: string): 
     .eq("staff_id", staffId)
     .is("outcome", null);
 
+  // 5в. Поток «Получать лиды» выключается: отключённому компании не льются.
+  await db.from("lead_streams").delete().eq("staff_id", staffId);
+
   // 6. Команда руководителя — открепляется: менеджеры становятся ничьими, их
   //    берёт другой руководитель или закрепляет владелец.
   if (target.role === "head") out.team = await detachTeam(staffId);

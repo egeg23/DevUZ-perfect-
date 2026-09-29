@@ -36,6 +36,7 @@ import {
   sendMessage,
   sendPlain,
   sendWithButtons,
+  setButtons,
   typingIndicator,
 } from "@/lib/qualify/telegram";
 import { record } from "@/lib/admin/audit";
@@ -48,9 +49,12 @@ import {
 import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
-import { deliverReplacement, inPortion, topUpPortion } from "@/lib/admin/portion-store";
+import { closeRows, deliverReplacement, portionSource, topUpPortion } from "@/lib/admin/portion-store";
 import { approves, decideTransfer } from "@/lib/admin/transfers";
-import { markSelfContacted, prospectById, queueOutreach, skipProspect } from "@/lib/admin/outreach-store";
+import { closeTouch, markSelfContacted, prospectById, queueOutreach, skipProspect } from "@/lib/admin/outreach-store";
+import { CLOSE_TEXT, isCloseReason } from "@/lib/admin/touch-close";
+import { streamCommand } from "@/lib/admin/stream";
+import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -177,6 +181,13 @@ async function route(update: Update): Promise<void> {
         return;
       }
 
+      // «▶️ Получать лиды» / «⏸ Не получать лиды» и /leads — кнопки внизу
+      // чата сотрудника. Незнакомцу эти слова ничего не включают: его
+      // сообщение идёт дальше, в обычный разговор.
+      if (chat.type === "private" && streamCommand(update.message.text)) {
+        if (await handleStreamCommand(update.message)) return;
+      }
+
       // Партнёрская программа — тоже раньше клиентского разговора: /ref и
       // /payout шлёт человек из лички, и для остального кода он клиент.
       const partnerIdentity = identityOf(update.message.from);
@@ -299,6 +310,39 @@ async function handleStaffLogin(message: NonNullable<Update["message"]>) {
     ].join("\n"),
     [{ text: "🔓 Открыть панель", panel: "/admin" }],
   );
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Поток «Получать лиды»
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Включить или выключить поток. true — сообщение разобрано; false — это не
+ * сотрудник, и сообщение уходит в обычный разговор.
+ *
+ * Включение сразу доливает поток (lib/admin/stream-store → feedStream):
+ * первая компания приходит, пока человек ещё в чате, а не через пять минут
+ * со свипом.
+ */
+async function handleStreamCommand(message: NonNullable<Update["message"]>): Promise<boolean> {
+  const command = streamCommand(message.text);
+  const staff = message.from?.id ? await staffByTelegramId(message.from.id) : null;
+  if (!command || !staff) return false;
+
+  const on = command === "toggle" ? !(await streamState(staff.id)).on : command === "on";
+  const result = await setStream(staff, on);
+  if (!result.ok) {
+    await sendMessage(
+      message.chat.id,
+      result.why === "role"
+        ? "Поток — для менеджеров и руководителей: компании из пула приходят тем, кто получает порцию дня."
+        : "Не получилось — база сейчас недоступна. Попробуйте через минуту.",
+    );
+    return true;
+  }
+  await answerStream(message.chat.id, on);
+  if (on) await feedStream(staff.id);
+  return true;
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -920,6 +964,18 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     return;
   }
 
+  // «Клиент отказался» / «Игнорирует» и «⏸ Не получать лиды» под
+  // карточкой — только в личке: такие сообщения бот шлёт только туда.
+  if (parts[0] === "tc" || parts[0] === "ls") {
+    if (chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    if (parts[0] === "tc") await handleCloseButton(query, parts[1] ?? "", parts[2] ?? "");
+    else await handleStreamButton(query, parts[1] ?? "");
+    return;
+  }
+
   // Порция дня: тоже личка сотрудника, и тоже только своя.
   if (parts[0] === "tp") {
     if (chatId !== undefined && isSalesChat(chatId)) {
@@ -1141,7 +1197,8 @@ async function handlePortionButton(
   prospectId: string,
 ) {
   const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
-  if (!staff || !prospectId || !(await inPortion(staff.id, prospectId))) {
+  const source = staff && prospectId ? await portionSource(staff.id, prospectId) : null;
+  if (!staff || !source) {
     await answerCallback(query.id, "Это не ваша порция на сегодня");
     return;
   }
@@ -1149,6 +1206,13 @@ async function handlePortionButton(
   const done = async (label: string) => {
     await answerCallback(query.id, label);
     if (query.message) await markBriefHandled(query.message.chat.id, query.message.message_id, label);
+  };
+  // Касание сделано — под карточкой встают «Клиент отказался» и
+  // «Игнорирует»: чем кончилось, станет ясно позже, и закрыть касание
+  // удобнее всего из той же карточки.
+  const touched = async (label: string) => {
+    await answerCallback(query.id, label);
+    if (query.message) await setButtons(query.message.chat.id, query.message.message_id, closeRows(prospectId, label));
   };
 
   try {
@@ -1166,7 +1230,8 @@ async function handlePortionButton(
         await answerCallback(query.id, result.why === "no_way" ? "Писать некуда — нет контакта" : `Не отправлено: ${result.why}`.slice(0, 190));
         return;
       }
-      await done("📤 В очереди бота");
+      await touched("📤 В очереди бота");
+      if (source === "stream") await feedStream(staff.id);
       return;
     }
     if (action === "self") {
@@ -1175,7 +1240,15 @@ async function handlePortionButton(
         await answerCallback(query.id, result.why.slice(0, 190));
         return;
       }
-      await done("✋ Отмечено: написал сам");
+      await touched("✋ Отмечено: написал сам");
+      if (source === "stream") await feedStream(staff.id);
+      return;
+    }
+    if (action === "skip" && source === "stream") {
+      // В потоке замен нет — следующая компания приходит и так.
+      await skipProspect(prospectId, "Поток: не подошла");
+      await done("✖ Не подошла · следующая придёт");
+      await feedStream(staff.id);
       return;
     }
     if (action === "skip") {
@@ -1201,4 +1274,52 @@ async function handlePortionButton(
     console.error("telegram webhook: порция", error);
     await answerCallback(query.id, "Не получилось");
   }
+}
+
+/**
+ * «🙅 Клиент отказался» / «🔇 Игнорирует» под карточкой касания и под
+ * ответом клиента.
+ *
+ * Право и состояние проверяет closeTouch — тот же, что в панели: чужое
+ * касание, ещё не отправленное или уже закрытое бот не закроет, а ответит
+ * словами почему.
+ */
+async function handleCloseButton(
+  query: NonNullable<Update["callback_query"]>,
+  reason: string,
+  prospectId: string,
+) {
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (!staff || !prospectId || !isCloseReason(reason)) {
+    await answerCallback(query.id, "Недоступно");
+    return;
+  }
+  try {
+    const result = await closeTouch(prospectId, reason, staff, "", "telegram");
+    if (!result.ok) {
+      await answerCallback(query.id, result.why.slice(0, 190));
+      return;
+    }
+    await answerCallback(query.id, result.leadClosed ? `${CLOSE_TEXT[reason].done}, лид закрыт` : CLOSE_TEXT[reason].done);
+    if (query.message) await markBriefHandled(query.message.chat.id, query.message.message_id, CLOSE_TEXT[reason].done);
+  } catch (error) {
+    console.error("telegram webhook: закрытие касания", error);
+    await answerCallback(query.id, "Не получилось — откройте карточку в панели");
+  }
+}
+
+/** «⏸ Не получать лиды» под карточкой потока — то же, что кнопка внизу чата. */
+async function handleStreamButton(query: NonNullable<Update["callback_query"]>, action: string) {
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (!staff || action !== "off") {
+    await answerCallback(query.id, "Недоступно");
+    return;
+  }
+  const result = await setStream(staff, false);
+  if (!result.ok) {
+    await answerCallback(query.id, "Не получилось — попробуйте через минуту");
+    return;
+  }
+  await answerCallback(query.id, result.changed ? "Поток выключен" : "Поток уже выключен");
+  if (result.changed && query.message) await answerStream(query.message.chat.id, false);
 }

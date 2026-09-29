@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import {
+  closeTouchAction,
   markSelfContactedAction,
   prepareOutreachAction,
   recordManualAnswerAction,
@@ -27,6 +28,8 @@ import { outreachHooks } from "@/lib/admin/outreach";
 import { GRADE_TEXT, seoReport, type SeoGrade } from "@/lib/audit/seo";
 import type { Prospect } from "@/lib/admin/outreach-store";
 import { REST_PAGE } from "@/lib/admin/outreach-view";
+import type { Role } from "@/lib/admin/roles";
+import { CLOSE_REASONS, CLOSE_TEXT, mayClose } from "@/lib/admin/touch-close";
 import { contactsLine, hasAnyContact } from "@/lib/audit/contacts";
 
 /**
@@ -92,6 +95,7 @@ export function OutreachList({
   replies,
   owners = [],
   more = null,
+  viewer = null,
 }: {
   rows: Prospect[];
   /** Что ушло за последний час: предел считается по факту отправки. */
@@ -108,6 +112,8 @@ export function OutreachList({
    * не целиком, см. lib/admin/outreach-view.ts.
    */
   more?: { hidden: number; href: string } | null;
+  /** Кто смотрит: «Клиент отказался» видит тот, кто касание ведёт, руководитель и владелец. */
+  viewer?: { id: string; role: Role } | null;
 }) {
   if (!rows.length) return null;
 
@@ -217,8 +223,9 @@ export function OutreachList({
                     без сайта{row.niche ? ` · ${row.niche}` : ""}
                   </span>
                 )}
-                <span className={`text-xs ${STATUS_TONE[row.status]}`}>
+                <span className={`text-xs ${row.closed_reason ? "text-faint" : STATUS_TONE[row.status]}`}>
                   {STATUS_LABEL[row.status]}
+                  {row.closed_reason ? ` · ${CLOSE_TEXT[row.closed_reason].label}` : ""}
                   {row.claimed_name ? ` · ${row.claimed_name}` : ""}
                   {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
                 </span>
@@ -588,6 +595,35 @@ export function OutreachList({
                     </p>
                   )}
                 </div>
+              ) : null}
+
+              {/* Касание сделано — дальше либо разговор, либо его конец.
+                  Владелец: «если лид отказался… сделать кнопку — клиент
+                  отказался / игнорирует. Чтобы он вылетал из очереди». */}
+              {row.status === "sent" && row.closed_reason ? (
+                <p className="mt-3 rounded-lg border border-line bg-surface-2/40 px-4 py-2 text-xs text-muted">
+                  {CLOSE_TEXT[row.closed_reason].button}
+                  {row.closed_name ? ` · ${row.closed_name}` : ""}
+                  {row.closed_at ? ` · ${when(row.closed_at)}` : ""}. Касание закрыто: бот не дожимает, модель не
+                  отвечает, лид — «проиграли». Напишет клиент сам — бот позовёт того, кто вёл.
+                </p>
+              ) : row.status === "sent" && viewer && mayClose(row, viewer) ? (
+                <form action={closeTouchAction} className="mt-3 flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="prospect" value={row.id} />
+                  {CLOSE_REASONS.map((reason) => (
+                    <SubmitButton
+                      key={reason}
+                      name="reason"
+                      value={reason}
+                      pendingLabel="Закрываем…"
+                      base="rounded-lg px-3 py-1.5 text-xs"
+                      tone="quiet"
+                    >
+                      {CLOSE_TEXT[reason].button}
+                    </SubmitButton>
+                  ))}
+                  <HelpHint topic={helpAnchor("/admin/prospect", "close")} label="Что будет после нажатия" />
+                </form>
               ) : null}
 
               {row.status === "new" || row.status === "contacting" || row.status === "manual" ? (

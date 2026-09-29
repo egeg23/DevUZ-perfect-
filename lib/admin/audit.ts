@@ -75,6 +75,11 @@ export const AUDIT_ACTIONS = [
   "prospect.manual_sent",
   "prospect.manual_reply",
   "prospect.taken_over",
+  // «Клиент отказался» / «Игнорирует»: касание убрано из работы, лид закрыт.
+  "prospect.closed",
+  // Поток «Получать лиды» в боте: включил и выключил.
+  "stream.on",
+  "stream.off",
   "invoice.issued",
   "invoice.paid",
   // Оплата счёта стала платежом в проекте — или отметку сняли как ошибочную.

@@ -711,6 +711,39 @@ export async function withdrawCards(notices: readonly Notice[]): Promise<number>
  * текст — то есть кнопка «Взять в работу» ломала бы ровно тот бриф, ради
  * которого её нажали. Правка клавиатуры оставляет сообщение нетронутым.
  */
+/**
+ * Заменить кнопки под уже отправленным сообщением — например, после
+ * «Написал сам» под карточкой касания встают «Клиент отказался» и
+ * «Игнорирует».
+ */
+export async function setButtons(chatId: number | string, messageId: number, rows: Button[][]): Promise<boolean> {
+  return call("editMessageReplyMarkup", {
+    chat_id: chatId,
+    message_id: messageId,
+    reply_markup: { inline_keyboard: forTelegram(rows) },
+  });
+}
+
+/**
+ * Сообщение с постоянной клавиатурой внизу чата — кнопки, которые остаются
+ * под полем ввода, а не под одним сообщением. Нажатие присылает боту текст
+ * кнопки обычным сообщением. Так устроены «▶️ Получать лиды» и
+ * «⏸ Не получать лиды».
+ */
+export async function sendKeyboard(chatId: number | string, text: string, keys: string[][]): Promise<boolean> {
+  return call("sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+    reply_markup: {
+      keyboard: keys.map((row) => row.map((key) => ({ text: key }))),
+      resize_keyboard: true,
+      is_persistent: true,
+    },
+  });
+}
+
 export async function markBriefHandled(
   chatId: number | string,
   messageId: number,

@@ -3,6 +3,8 @@ import { after } from "next/server";
 
 import { record } from "@/lib/admin/audit";
 import { preparePortionsInBackground, runPortions } from "@/lib/admin/portion-store";
+import { feedStreams } from "@/lib/admin/stream-store";
+import { sendTeamNews } from "@/lib/admin/team-news";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
 import { advanceQueues, redeliverLostCards } from "@/lib/admin/lead-queue-store";
@@ -229,6 +231,15 @@ export async function POST(request: Request) {
     if (followups.errors.length) console.error("дожим:", followups.errors.join("; "));
     await processPlaces(new Date()).catch((error) => console.error("карты:", error));
     await preparePortionsInBackground(new Date()).catch((error) => console.error("порция:", error));
+    // Поток «Получать лиды» — после порции: пока утренняя порция не ушла,
+    // он и так ждёт. Письма к нему пишутся тут же, по одному.
+    await feedStreams(new Date()).catch((error) => console.error("поток:", error));
+  });
+
+  // Объявления команде — отдельно от тяжёлого выше: они короткие, и ждать
+  // за подготовкой писем им незачем. Каждому — один раз (lib/admin/team-news).
+  after(async () => {
+    await sendTeamNews(new Date()).catch((error) => console.error("объявления:", error));
   });
 
   // Уборка просроченных сигналов скаута едет здесь же, а не отдельным

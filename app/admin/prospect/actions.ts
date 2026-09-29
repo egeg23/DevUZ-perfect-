@@ -6,6 +6,7 @@ import { after } from "next/server";
 
 import { record } from "@/lib/admin/audit";
 import {
+  closeTouch,
   markSelfContacted,
   prepareOutreach,
   queueOutreach,
@@ -16,6 +17,8 @@ import {
 } from "@/lib/admin/outreach-store";
 import { requestIp, requireRole, requireStaff } from "@/lib/admin/guard";
 import { deliverReplacement, portionOwner, topUpPortion } from "@/lib/admin/portion-store";
+import { nudgeStream } from "@/lib/admin/stream-store";
+import { isCloseReason } from "@/lib/admin/touch-close";
 import { createCampaign, listCampaigns, processPlaces, runSearch, setCampaignActive } from "@/lib/maps/store";
 import { pitchLocales, type PitchLocale } from "@/lib/audit/pitch";
 import {
@@ -153,6 +156,8 @@ export async function sendOutreachAction(formData: FormData) {
     console.error("касания: отправка упала", error);
     result = { ok: false, why: error instanceof Error ? error.message : String(error) };
   }
+  // Компания из потока «Получать лиды» — следующая придёт в Telegram сразу.
+  if (result.ok) after(() => nudgeStream(id));
 
   revalidatePath("/admin/prospect");
   revalidatePath("/admin");
@@ -177,6 +182,7 @@ export async function markSelfContactedAction(formData: FormData) {
   const staff = await requireStaff();
   const id = String(formData.get("prospect") ?? "");
   const result = await markSelfContacted(id, staff, String(formData.get("note") ?? ""), await requestIp());
+  if (result.ok) after(() => nudgeStream(id));
   revalidatePath("/admin/prospect");
   revalidatePath("/admin");
   redirect(
@@ -206,6 +212,27 @@ export async function recordManualAnswerAction(formData: FormData) {
 }
 
 /**
+ * «Клиент отказался» / «Игнорирует»: касание уходит из работы — без дожима,
+ * без ответов модели, лид закрыт «проиграли» (outreach-store → closeTouch).
+ * Возврат — на ту же карточку: там теперь стоит, чем кончилось.
+ */
+export async function closeTouchAction(formData: FormData) {
+  const staff = await requireStaff();
+  const id = String(formData.get("prospect") ?? "");
+  const reason = String(formData.get("reason") ?? "");
+  const result = isCloseReason(reason)
+    ? await closeTouch(id, reason, staff, await requestIp(), "panel")
+    : { ok: false as const, why: "Неизвестная причина." };
+  revalidatePath("/admin/prospect");
+  revalidatePath("/admin/leads");
+  redirect(
+    result.ok
+      ? `/admin/prospect?open=${id}#p-${id}`
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}#p-${id}`,
+  );
+}
+
+/**
  * «Не пишем»: сайт убирается из очереди руками, с причиной.
  *
  * Если это компания из чьей-то сегодняшней порции, хозяину порции сразу
@@ -222,6 +249,7 @@ export async function skipProspectAction(formData: FormData) {
     if (top.made.length) after(async () => {
       for (const item of top.made) await deliverReplacement(item.rowId);
     });
+    after(() => nudgeStream(id));
   }
   revalidatePath("/admin/prospect");
   redirect("/admin/prospect");
