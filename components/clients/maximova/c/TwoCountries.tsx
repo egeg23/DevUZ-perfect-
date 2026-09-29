@@ -83,8 +83,8 @@ export function TwoCountries() {
             Два языка, <em>две страны</em>
           </h1>
           <p className={s.lead}>
-            {TEACHER.name}, преподаватель {TEACHER.universityShort}, сама растит двоих детей билингвами. Английский и
-            французский для детей 5–8 и 8–17 лет — у метро Китай-город и онлайн.
+            Я — {TEACHER.name}, преподаватель {TEACHER.universityShort}. Сама воспитываю двоих детей билингвами. Учу
+            английскому и французскому детей 5–8 и 8–17 лет — у метро Китай-город и онлайн.
           </p>
           <a className={s.cta} href="#zapis">
             Пробное занятие −30%
@@ -120,13 +120,13 @@ export function TwoCountries() {
             </figure>
             <div>
               <h2 id="c-meet" className={s.h2}>
-                Знакомьтесь: {TEACHER.firstName}
+                Здравствуйте, я {TEACHER.firstName}
               </h2>
               <p className={s.name}>{TEACHER.fullName}</p>
               <ul className={s.list}>
-                <li>{TEACHER.university}</li>
-                <li>{TEACHER.experience}</li>
-                <li>«{QUOTES.mother}»</li>
+                <li>Действующий преподаватель иностранных языков в Российском университете дружбы народов (РУДН).</li>
+                <li>Мой педагогический стаж — 10 лет.</li>
+                <li>{QUOTES.mother}</li>
               </ul>
             </div>
           </div>
@@ -134,7 +134,7 @@ export function TwoCountries() {
 
         <section className={s.section} aria-labelledby="c-asks">
           <h2 id="c-asks" className={s.h2}>
-            С чем к Дарье приходят родители
+            С чем ко мне приходят родители
           </h2>
           <RequestList s={s} />
         </section>
@@ -143,7 +143,7 @@ export function TwoCountries() {
           <h2 id="c-langs" className={s.h2}>
             Два языка, две программы
           </h2>
-          <p className={s.muted}>{SCHOOL.method} — для каждого возраста своя.</p>
+          <p className={s.muted}>Мои авторские методики — для каждого возраста своя.</p>
           <div className={s.passports}>
             {GREETINGS.map((item, i) => (
               <article key={item.lang} className={s.passport} data-reveal="" style={at(i)}>
@@ -236,7 +236,7 @@ export function TwoCountries() {
             <h2 id="c-rule" className={s.noteTitle}>
               Про домашние задания
             </h2>
-            <blockquote className={s.noteQuote}>«{QUOTES.homework}»</blockquote>
+            <p className={s.noteQuote}>{QUOTES.homework}</p>
           </div>
         </section>
 
@@ -256,7 +256,7 @@ export function TwoCountries() {
               <h2 id="c-moms" className={s.h2}>
                 {MOMS_COURSE.title}
               </h2>
-              <p className={s.lead}>{MOMS_COURSE.line}</p>
+              <p className={s.lead}>Научу, как воспитать билингва в русскоязычной семье с нуля, сохраняя культуру и культурный код.</p>
               <p className={s.momsFacts}>
                 {MOMS_DETAILS.format} · {MOMS_DETAILS.line}
               </p>
@@ -268,9 +268,9 @@ export function TwoCountries() {
         <section className={s.section} aria-labelledby="c-goal">
           <div className={s.letter} data-reveal="">
             <h2 id="c-goal" className={s.h2}>
-              На что рассчитана программа
+              На что рассчитана моя программа
             </h2>
-            <blockquote className={s.letterQuote}>«{QUOTES.goal}»</blockquote>
+            <p className={s.letterQuote}>{QUOTES.goal}</p>
             <p className={s.sign}>— {TEACHER.firstName}</p>
           </div>
         </section>
@@ -300,7 +300,7 @@ export function TwoCountries() {
             <h2 id="c-book" className={s.h2}>
               Запись на пробное занятие
             </h2>
-            <p className={s.muted}>Заполните за минуту — Дарья получит заявку в Telegram и свяжется с вами.</p>
+            <p className={s.muted}>Заполните за минуту — я получу заявку в Telegram и свяжусь с вами.</p>
             <BookingForm
               s={{
                 form: s.form,

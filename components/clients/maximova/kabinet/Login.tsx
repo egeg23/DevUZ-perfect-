@@ -73,7 +73,7 @@ export function Login({ ready }: { ready: boolean }) {
     return (
       <div className={s.card}>
         <p className={s.lead}>
-          Вход через Telegram заработает, как только подключим бота Дарьи. Пока записаться можно на{" "}
+          Вход через Telegram заработает, как только я подключу своего бота. Пока записаться можно на{" "}
           <a href="/maximova#zapis">главной странице</a>.
         </p>
       </div>
@@ -83,7 +83,7 @@ export function Login({ ready }: { ready: boolean }) {
   return (
     <div className={s.card}>
       <ol className={s.how}>
-        <li>Нажмите «Войти через Telegram» — откроется бот Дарьи.</li>
+        <li>Нажмите «Войти через Telegram» — откроется мой бот.</li>
         <li>В боте нажмите «Старт».</li>
         <li>Вернитесь сюда — кабинет откроется сам.</li>
       </ol>

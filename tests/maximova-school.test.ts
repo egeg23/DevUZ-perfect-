@@ -109,7 +109,7 @@ test("бот: /start login_ подтверждает вход, /zayavki — то
   const login = handleUpdate(private_(7, `/start login_${loginToken}`), config);
   assert.match(login[0].text, /Вы вошли в личный кабинет/);
 
-  assert.match(handleUpdate(private_(7, "/zayavki"), config)[0].text, /только для Дарьи/);
+  assert.match(handleUpdate(private_(7, "/zayavki"), config)[0].text, /только для преподавателя/);
   assert.match(handleUpdate(private_(42, "/zayavki"), config)[0].text, /Заявок пока нет/);
   assert.match(handleUpdate(private_(7, "/id"), config)[0].text, /<code>7<\/code>/);
   assert.match(handleUpdate(private_(7, "/start"), config)[0].text, /Записаться на пробное/);

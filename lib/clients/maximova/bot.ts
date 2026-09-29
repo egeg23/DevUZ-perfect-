@@ -80,7 +80,7 @@ export function handleUpdate(update: Update, config: BotConfig, now = Date.now()
   if (text === "/id") return reply(`Ваш Telegram ID: <code>${from.id}</code>`);
 
   if (text === "/zayavki") {
-    if (!isAdmin) return reply("Эта команда — только для Дарьи.");
+    if (!isAdmin) return reply("Эта команда — только для преподавателя.");
     const list = listBookings(10);
     if (!list.length) return reply("Заявок пока нет.");
     const rows = list.map(
@@ -93,13 +93,13 @@ export function handleUpdate(update: Update, config: BotConfig, now = Date.now()
   const links = siteLinks();
   return reply(
     [
-      "Здравствуйте! Это бот школы английского и французского Дарьи Максимовой.",
+      "Здравствуйте! Это Дарья Максимова — английский и французский для детей.",
       "",
       `Записаться на пробное занятие: ${links.booking}`,
       `Личный кабинет: ${links.cabinet}`,
       "",
-      "После входа в кабинет сюда будут приходить задания на дом, замечания и напоминания об оплате.",
-      isAdmin ? "\nДля Дарьи: /zayavki — последние заявки." : "",
+      "После входа в кабинет я буду присылать сюда задания на дом, замечания и напоминания об оплате.",
+      isAdmin ? "\nДля вас: /zayavki — последние заявки." : "",
     ]
       .join("\n")
       .trim(),
