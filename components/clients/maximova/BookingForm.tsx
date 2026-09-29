@@ -23,8 +23,8 @@ type Done = { id: number; notified: boolean };
  * - кнопки выбора крупные (от 48 px), с промежутком — под палец;
  * - после отправки — понятный итог: номер заявки и что будет дальше.
  */
-export function BookingForm({ s }: { s: FormSkin }) {
-  const [language, setLanguage] = useState<string>(SCHOOL.languages[0]);
+export function BookingForm({ s, language: preset }: { s: FormSkin; language?: string }) {
+  const [language, setLanguage] = useState<string>(preset ?? SCHOOL.languages[0]);
   const [age, setAge] = useState<string>(AGES[0].range);
   const [format, setFormat] = useState<string>(FORMATS[0]);
   const [errors, setErrors] = useState<Errors>({});
