@@ -11,7 +11,9 @@ import {
   isWorkday,
   outcomeOf,
   quotaOf,
+  replacementsDue,
   reportLine,
+  tallyPortion,
   tashkentHour,
   type PersonReport,
 } from "@/lib/admin/portion";
@@ -31,6 +33,10 @@ import { serviceClient } from "@/lib/supabase";
  *   18:00  отчёт — руководителю по его людям, владельцу по всем;
  *          несделанное — обратно в пул, письмо стирается: оно подписано
  *          именем того, кому было выдано.
+ *
+ * Весь день — замены: на каждую «Не подходит» человеку сразу выдаётся
+ * новая компания из пула, с готовым письмом и карточкой в Telegram (см.
+ * topUpPortion). Цель дня — касания, а не нажатия.
  */
 
 type Person = { id: string; name: string; chat: number | null; head: string | null; role: string; off: string[] };
@@ -64,7 +70,7 @@ async function dayRow(day: string): Promise<{ assigned_at: string | null; report
  * Пул: новые, ничьи, с кем есть как связаться. Худшие сайты — первыми:
  * чем больше находок, тем честнее повод написать.
  */
-async function pool(limit: number): Promise<string[]> {
+async function pool(limit: number, exclude: ReadonlySet<string> = new Set()): Promise<string[]> {
   const db = serviceClient();
   if (!db) return [];
   const { data } = await db
@@ -74,8 +80,11 @@ async function pool(limit: number): Promise<string[]> {
     .is("claimed_by", null)
     .order("score", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true })
-    .limit(limit * 3);
+    .limit(limit * 3 + exclude.size);
   return (data ?? [])
+    // Уже в чьей-то сегодняшней порции: письмо ещё не готово, и компания
+    // числится ничьей, но выдать её второму — значит написать дважды.
+    .filter((row) => !exclude.has(row.id as string))
     .filter((row) => {
       const contacts = row.contacts as Prospect["contacts"];
       const findings = (row.findings as Prospect["findings"]) ?? [];
@@ -190,10 +199,12 @@ function ready(p: Prospect | undefined): boolean {
   return !p || Boolean(p.message) || (p.status !== "new" && p.status !== "contacting");
 }
 
-function itemText(p: Prospect, n: number, total: number): string {
+const titleOf = (p: Prospect) => p.label || p.host || "Компания без сайта";
+
+/** Карточка компании в Telegram. `heading` — «2/5» в утренней порции или «🔁 Замена». */
+function itemText(p: Prospect, heading: string): string {
   const route = routeFor(p.contacts);
-  const title = p.label || p.host || "Компания без сайта";
-  const lines = [`<b>${n}/${total} · ${esc(title)}</b>${p.host ? ` — ${esc(p.host)}` : " — без сайта"}`];
+  const lines = [`<b>${heading} · ${esc(titleOf(p))}</b>${p.host ? ` — ${esc(p.host)}` : " — без сайта"}`];
   if (route) {
     lines.push(
       route.kind === "handle"
@@ -233,76 +244,291 @@ function itemButtons(p: Prospect): Button[][] {
   ];
 }
 
-/** В личку. С 09:00, когда тексты готовы; в 10:00 — как есть. */
-export async function deliverPortions(now: Date = new Date()): Promise<number> {
+type DayRow = {
+  id: string;
+  staff_id: string;
+  prospect_id: string;
+  replaces: string | null;
+  delivered_at: string | null;
+  created_at: string;
+  /** Строку уже закрыли: вечерний отчёт или отключение сотрудника. */
+  closed: boolean;
+};
+
+async function rowsOfDay(day: string, staffId?: string): Promise<DayRow[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  let query = db
+    .from("touch_portions")
+    .select("id, staff_id, prospect_id, replaces, delivered_at, created_at, outcome")
+    .eq("day", day);
+  if (staffId) query = query.eq("staff_id", staffId);
+  const { data } = await query;
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    staff_id: r.staff_id as string,
+    prospect_id: r.prospect_id as string,
+    replaces: (r.replaces as string | null) ?? null,
+    delivered_at: (r.delivered_at as string | null) ?? null,
+    created_at: r.created_at as string,
+    closed: r.outcome !== null,
+  }));
+}
+
+/**
+ * Забрать строки под отправку: отметка «выдано» ставится до сообщения и
+ * условно. Свип и кнопка «Не подходит» зовут выдачу одновременно — без
+ * этого одна карточка пришла бы дважды.
+ */
+async function claimDelivery(ids: readonly string[], now: Date): Promise<Set<string>> {
+  const db = serviceClient();
+  if (!db || !ids.length) return new Set();
+  const { data } = await db
+    .from("touch_portions")
+    .update({ delivered_at: now.toISOString() })
+    .in("id", [...ids])
+    .is("delivered_at", null)
+    .select("id");
+  return new Set((data ?? []).map((r) => r.id as string));
+}
+
+/** Замена уходит, как только готов текст, но не ждёт его дольше пятнадцати минут. */
+const REPLACE_WAIT_MS = 15 * 60_000;
+
+/** «5 касаний», «3 касания», «1 касание». */
+function touches(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  const word = mod10 === 1 && mod100 !== 11 ? "касание" : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? "касания" : "касаний";
+  return `${n} ${word}`;
+}
+
+/**
+ * В личку. Утренняя порция — с 09:00, когда тексты готовы (в 10:00 — как
+ * есть). Замены после неё — по одной, как только готов текст.
+ *
+ * `staffId` — выдать только одному: так кнопка «Не подходит» присылает
+ * замену сразу, не дожидаясь свипа.
+ */
+export async function deliverPortions(now: Date = new Date(), staffId?: string): Promise<number> {
   const hour = tashkentHour(now);
   if (!isWorkday(now) || hour < DELIVER_HOUR) return 0;
   const db = serviceClient();
   if (!db) return 0;
   const day = todayInTashkent(now);
 
-  const { data } = await db
-    .from("touch_portions")
-    .select("id, staff_id, prospect_id")
-    .eq("day", day)
-    .is("delivered_at", null)
-    .is("outcome", null);
-  if (!data?.length) return 0;
+  const all = (await rowsOfDay(day, staffId)).filter((r) => !r.closed);
+  const pending = all.filter((r) => !r.delivered_at);
+  if (!pending.length) return 0;
 
-  const prospects = await prospectsByIds(data.map((r) => r.prospect_id as string));
-  const byId = new Map(prospects.map((p) => [p.id, p]));
+  const byId = new Map((await prospectsByIds(all.map((r) => r.prospect_id))).map((p) => [p.id, p]));
   const people = new Map((await team()).map((p) => [p.id, p]));
   const plans = await touchProgressFor([...people.keys()], now);
 
   let delivered = 0;
-  const byStaff = new Map<string, typeof data>();
-  for (const row of data) byStaff.set(row.staff_id as string, [...(byStaff.get(row.staff_id as string) ?? []), row]);
-
-  for (const [staffId, rows] of byStaff) {
-    const person = people.get(staffId);
+  for (const owner of new Set(pending.map((r) => r.staff_id))) {
+    const person = people.get(owner);
     if (!person?.chat) continue;
+    const mine = pending.filter((r) => r.staff_id === owner);
     // Галочка «Порция касаний на день» снята: порция остаётся в «Касаниях»,
     // а в Telegram не идёт. Отмечаем выданной, чтобы не пытаться снова
     // каждые пять минут до вечера.
     if (!wants(person.off, "portion")) {
-      await db
-        .from("touch_portions")
-        .update({ delivered_at: now.toISOString() })
-        .in(
-          "id",
-          rows.map((r) => r.id as string),
-        );
+      await claimDelivery(
+        mine.map((r) => r.id),
+        now,
+      );
       continue;
     }
-    const allReady = rows.every((r) => ready(byId.get(r.prospect_id as string)));
-    if (!allReady && hour < DELIVER_LATEST_HOUR) continue;
 
-    const items = rows.map((r) => byId.get(r.prospect_id as string)).filter((p): p is Prospect => Boolean(p));
-    const plan = plans.get(staffId);
-    await sendMessage(
-      person.chat,
-      [
-        `<b>Порция на сегодня: ${items.length}</b>`,
-        plan?.plan ? `План недели: ${plan.done} из ${plan.plan}.` : "",
-        "Тексты готовы — нажмите на текст, он скопируется. Или «Отправить через бота».",
-        "Что не сделаете до 18:00, вернётся в общий пул.",
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    );
-    for (const [i, p] of items.entries()) {
-      await sendWithRows(person.chat, itemText(p, i + 1, items.length), itemButtons(p));
-    }
-    await db
-      .from("touch_portions")
-      .update({ delivered_at: now.toISOString() })
-      .in(
-        "id",
-        rows.map((r) => r.id as string),
+    const morningSent = all.some((r) => r.staff_id === owner && !r.replaces && r.delivered_at);
+    if (!morningSent) {
+      // Утро: всё одним пакетом — вместе с заменами, выданными до 09:00.
+      const allReady = mine.every((r) => ready(byId.get(r.prospect_id)));
+      if (!allReady && hour < DELIVER_LATEST_HOUR) continue;
+      const claimed = await claimDelivery(
+        mine.map((r) => r.id),
+        now,
       );
-    delivered += items.length;
+      // Уже сделанное и «Не подходит», нажатое в панели до 09:00, в пакет не идёт.
+      const items = mine
+        .filter((r) => claimed.has(r.id))
+        .map((r) => byId.get(r.prospect_id))
+        .filter((p): p is Prospect => Boolean(p) && outcomeOf(p!, owner, day) === null);
+      if (!items.length) continue;
+      const target = all.filter((r) => r.staff_id === owner && !r.replaces).length;
+      const plan = plans.get(owner);
+      await sendMessage(
+        person.chat,
+        [
+          `<b>Порция на сегодня: ${target}</b>`,
+          plan?.plan ? `План недели: ${plan.done} из ${plan.plan}.` : "",
+          `Нужно ${touches(target)}: «Отправить через бота» или «Написал сам». «Не подходит» в счёт не идёт — на её место сразу придёт замена.`,
+          "Тексты готовы — нажмите на текст, он скопируется.",
+          "Что не сделаете до 18:00, вернётся в общий пул.",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+      for (const [i, p] of items.entries()) {
+        await sendWithRows(person.chat, itemText(p, `${i + 1}/${items.length}`), itemButtons(p));
+      }
+      delivered += items.length;
+      continue;
+    }
+
+    // Утро пришло — значит, это замены: по одной, как только готов текст.
+    for (const row of mine) {
+      const p = byId.get(row.prospect_id);
+      const waited = now.getTime() - Date.parse(row.created_at) >= REPLACE_WAIT_MS;
+      if (!ready(p) && !waited) continue;
+      if (!(await claimDelivery([row.id], now)).size) continue;
+      if (!p || outcomeOf(p, owner, day) !== null) continue;
+      const instead = all.find((r) => r.id === row.replaces);
+      const old = instead ? byId.get(instead.prospect_id) : undefined;
+      await sendWithRows(
+        person.chat,
+        [`🔁 Вместо «${esc(old ? titleOf(old) : "не подошедшей")}» — она в счёт порции.`, "", itemText(p, "Замена")].join("\n"),
+        itemButtons(p),
+      );
+      delivered += 1;
+    }
   }
   return delivered;
+}
+
+export type TopUp = {
+  /** Выданные замены: строка порции и компания. */
+  made: { rowId: string; prospectId: string }[];
+  /** Замены кончились: лимит на день (lib/admin/portion → replaceLimit). */
+  limit: boolean;
+  /** В пуле не нашлось компании. */
+  empty: boolean;
+};
+
+/**
+ * Выдать замены за «Не подходит» — по одной на каждую пропущенную, у
+ * которой замены ещё нет, в пределах лимита.
+ *
+ * Считает по самим компаниям (outcomeOf), а не по нажатой кнопке: «Не
+ * подходит» можно нажать в Telegram, а «не пишем» — в панели, и замена
+ * положена за обе. Вызывается сразу после нажатия и ещё раз каждым проходом
+ * свипа — на случай, если сразу не вышло (пул был пуст, упал запрос).
+ */
+export async function topUpPortion(staffId: string, now: Date = new Date()): Promise<TopUp> {
+  const none: TopUp = { made: [], limit: false, empty: false };
+  // После 18:00 порция закрыта, и выдавать в неё нечего.
+  if (!isWorkday(now) || tashkentHour(now) >= REPORT_HOUR) return none;
+  const db = serviceClient();
+  if (!db) return none;
+  const day = todayInTashkent(now);
+  const mark = await dayRow(day);
+  if (!mark?.assigned_at || mark.reported_at) return none;
+
+  const everyone = await rowsOfDay(day);
+  const rows = everyone.filter((r) => r.staff_id === staffId && !r.closed);
+  if (!rows.length) return none;
+  const prospects = new Map((await prospectsByIds(rows.map((r) => r.prospect_id))).map((p) => [p.id, p]));
+  const outcomes = rows.map((r) => {
+    const p = prospects.get(r.prospect_id);
+    return { ...r, outcome: p ? outcomeOf(p, staffId, day) : null };
+  });
+  const tally = tallyPortion(outcomes);
+  const due = replacementsDue(tally);
+  const limit = due < tally.skipped - tally.replaced;
+  if (!due) return { ...none, limit };
+
+  const replacedIds = new Set(rows.map((r) => r.replaces).filter(Boolean));
+  const waiting = outcomes.filter((r) => r.outcome === "skipped" && !replacedIds.has(r.id)).slice(0, due);
+  const candidates = await pool(due + 3, new Set(everyone.map((r) => r.prospect_id)));
+
+  const made: TopUp["made"] = [];
+  for (const skipped of waiting) {
+    let placed = false;
+    while (!placed && candidates.length) {
+      const prospectId = candidates.shift()!;
+      const { data, error } = await db
+        .from("touch_portions")
+        .insert({ day, staff_id: staffId, prospect_id: prospectId, replaces: skipped.id })
+        .select("id")
+        .maybeSingle();
+      if (data) {
+        made.push({ rowId: data.id as string, prospectId });
+        placed = true;
+      } else if (error?.message.includes("touch_portions_replaces_key")) {
+        // Эту «Не подходит» уже заменил параллельный вызов — второй не нужен.
+        placed = true;
+      } else if (error && !error.message.includes("touch_portions_day_prospect_id_key")) {
+        console.error("порция: не выдал замену", error.message);
+        return { made, limit, empty: false };
+      }
+      // Иначе компанию только что выдали кому-то ещё — берём следующую.
+    }
+    if (!placed) return { made, limit, empty: true };
+  }
+  return { made, limit, empty: false };
+}
+
+/** Замены всем, кому положены, — из свипа, раз в пять минут. */
+export async function topUpPortions(now: Date = new Date()): Promise<number> {
+  if (!isWorkday(now) || tashkentHour(now) >= REPORT_HOUR) return 0;
+  const day = todayInTashkent(now);
+  const rows = (await rowsOfDay(day)).filter((r) => !r.closed);
+  const prospects = new Map((await prospectsByIds(rows.map((r) => r.prospect_id))).map((p) => [p.id, p]));
+  let made = 0;
+  for (const staffId of new Set(rows.map((r) => r.staff_id))) {
+    const mine = rows
+      .filter((r) => r.staff_id === staffId)
+      .map((r) => {
+        const p = prospects.get(r.prospect_id);
+        return { replaces: r.replaces, outcome: p ? outcomeOf(p, staffId, day) : null };
+      });
+    if (!replacementsDue(tallyPortion(mine))) continue;
+    made += (await topUpPortion(staffId, now)).made.length;
+  }
+  return made;
+}
+
+/**
+ * Замена сразу после «Не подходит»: письмо — тут же, карточка — в личку.
+ *
+ * Тяжёлое — обход сайта и модель, до минуты, — поэтому зовётся после
+ * ответа на нажатие. Письмо забирается той же условной отметкой, что и у
+ * свипа, а карточка уходит той же выдачей: что сорвётся здесь, подберёт
+ * следующий проход свипа.
+ */
+export async function deliverReplacement(rowId: string, now: Date = new Date()): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { data: claimed } = await db
+    .from("touch_portions")
+    .update({ preparing_at: now.toISOString() })
+    .eq("id", rowId)
+    .is("preparing_at", null)
+    .select("staff_id, prospect_id");
+  const row = claimed?.[0];
+  if (row) {
+    const staff = await staffById(row.staff_id as string);
+    if (staff) {
+      const result = await prepareOutreach(row.prospect_id as string, staff);
+      if (!result.ok) console.error("порция: не подготовил замену", row.prospect_id, result.why || result.reason);
+    }
+  }
+  const { data: owner } = await db.from("touch_portions").select("staff_id").eq("id", rowId).maybeSingle();
+  if (owner) await deliverPortions(new Date(), owner.staff_id as string);
+}
+
+/** Чья сегодня в порции эта компания — для «не пишем» в панели: замена положена хозяину порции. */
+export async function portionOwner(prospectId: string, now: Date = new Date()): Promise<string | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data } = await db
+    .from("touch_portions")
+    .select("staff_id")
+    .eq("day", todayInTashkent(now))
+    .eq("prospect_id", prospectId)
+    .maybeSingle();
+  return (data?.staff_id as string | undefined) ?? null;
 }
 
 /**
@@ -327,12 +553,14 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     .select("day");
   if (!claimed?.length) return 0;
 
-  const { data } = await db.from("touch_portions").select("id, staff_id, prospect_id, outcome").eq("day", day);
+  const { data } = await db.from("touch_portions").select("id, staff_id, prospect_id, outcome, replaces").eq("day", day);
   if (!data?.length) return 0;
 
   const prospects = new Map((await prospectsByIds(data.map((r) => r.prospect_id as string))).map((p) => [p.id, p]));
   const people = await team();
-  const reports = new Map<string, PersonReport>();
+  // Итог по человеку — по всем его строкам сразу: цель — утренняя раздача,
+  // сделано — только касания, «Не подходит» — отдельно (lib/admin/portion).
+  const byPerson = new Map<string, { replaces: string | null; outcome: ReturnType<typeof outcomeOf> }[]>();
 
   for (const row of data) {
     const staffId = row.staff_id as string;
@@ -340,11 +568,7 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     if (!person) continue;
     const p = prospects.get(row.prospect_id as string);
     const outcome = p ? outcomeOf(p, staffId, day) : null;
-    const r = reports.get(staffId) ?? { name: person.name, total: 0, done: 0, skipped: 0 };
-    r.total += 1;
-    if (outcome === "sent" || outcome === "self") r.done += 1;
-    if (outcome === "skipped") r.skipped += 1;
-    reports.set(staffId, r);
+    byPerson.set(staffId, [...(byPerson.get(staffId) ?? []), { replaces: (row.replaces as string | null) ?? null, outcome }]);
 
     await db
       .from("touch_portions")
@@ -362,13 +586,20 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     }
   }
 
+  const reports = new Map<string, PersonReport>();
+  for (const [staffId, rows] of byPerson) {
+    const person = people.find((p) => p.id === staffId)!;
+    const t = tallyPortion(rows);
+    reports.set(staffId, { name: person.name, target: t.target, done: t.done, skipped: t.skipped, short: t.short });
+  }
+
   const lines = (ids: string[]) =>
     ids
       .map((id) => reports.get(id))
       .filter((r): r is PersonReport => Boolean(r))
       .map(reportLine);
   const header = `<b>Порция дня · ${day.split("-").reverse().join(".")}</b>`;
-  const footer = "Несделанное вернулось в общий пул.";
+  const footer = "Считаются только касания: «Не подходит» не в счёт, за неё выдаётся замена. Несделанное вернулось в общий пул.";
 
   // Руководителю — его люди и он сам; владельцу — все.
   for (const head of people.filter((p) => p.role === "head" && p.chat && wants(p.off, "reports"))) {
@@ -390,16 +621,25 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
   return reports.size;
 }
 
-/** Порция человека на сегодня — для блока в «Касаниях». */
-export async function portionOf(staffId: string, now: Date = new Date()): Promise<Prospect[]> {
+/** Компания из порции; `replacement` — выдана вместо «Не подходит» и в цель дня не входит. */
+export type PortionItem = Prospect & { replacement: boolean };
+
+/** Порция человека на сегодня — для блока в «Касаниях», в порядке выдачи. */
+export async function portionOf(staffId: string, now: Date = new Date()): Promise<PortionItem[]> {
   const db = serviceClient();
   if (!db) return [];
   const { data } = await db
     .from("touch_portions")
-    .select("prospect_id")
+    .select("prospect_id, replaces, created_at")
     .eq("day", todayInTashkent(now))
-    .eq("staff_id", staffId);
-  return prospectsByIds((data ?? []).map((r) => r.prospect_id as string));
+    .eq("staff_id", staffId)
+    .order("created_at", { ascending: true });
+  const rows = data ?? [];
+  const byId = new Map((await prospectsByIds(rows.map((r) => r.prospect_id as string))).map((p) => [p.id, p]));
+  return rows.flatMap((r) => {
+    const p = byId.get(r.prospect_id as string);
+    return p ? [{ ...p, replacement: Boolean(r.replaces) }] : [];
+  });
 }
 
 /** Принадлежит ли компания сегодняшней порции этого человека — для кнопок бота. */
@@ -422,13 +662,17 @@ export async function inPortion(staffId: string, prospectId: string, now: Date =
  */
 export async function runPortions(now: Date = new Date()): Promise<{
   assigned: PortionAssign | null;
+  replaced: number;
   delivered: number;
   reported: number;
 }> {
   const assigned = await assignPortions(now);
+  // Замены за «Не подходит», которые не выдались сразу: пул был пуст, упал
+  // запрос, «не пишем» нажали в панели, пока свип спал.
+  const replaced = await topUpPortions(now);
   const delivered = await deliverPortions(now);
   const reported = await reportPortions(now);
-  return { assigned, delivered, reported };
+  return { assigned, replaced, delivered, reported };
 }
 
 /** Несколько писем подряд, пока укладываемся в четыре минуты — до следующего прохода. */

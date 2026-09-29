@@ -8,7 +8,7 @@ import { ProspectRunner } from "@/components/admin/prospect-runner";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
 import { requireStaff } from "@/lib/admin/guard";
 import { touchProgressOf } from "@/lib/admin/touch-store";
-import { outcomeOf } from "@/lib/admin/portion";
+import { outcomeOf, replaceLimit, tallyPortion } from "@/lib/admin/portion";
 import { portionOf } from "@/lib/admin/portion-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { MapsCampaigns } from "@/components/admin/maps-campaigns";
@@ -43,7 +43,11 @@ export default async function ProspectPage({
     queueOwners(),
   ]);
   const today = todayInTashkent(new Date());
-  const portionDone = portion.filter((p) => outcomeOf(p, staff.id, today) !== null).length;
+  // В счёт — только касания: «Не подходит» не делает порцию сделанной, за
+  // неё выдаётся замена (lib/admin/portion-store → topUpPortion).
+  const tally = tallyPortion(
+    portion.map((p) => ({ replaces: p.replacement ? p.id : null, outcome: outcomeOf(p, staff.id, today) })),
+  );
   // Сразу — только карточки в работе, порция и открытая; остальные по
   // двадцать. Все 200 сразу весили 2 МБ и вешали слабые компьютеры.
   const more = parseMore(moreRaw);
@@ -69,7 +73,7 @@ export default async function ProspectPage({
       {portion.length ? (
         <section className="mb-6 rounded-xl border border-green/30 bg-green/5 px-5 py-4">
           <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-green">
-            Ваша порция на сегодня: сделано {portionDone} из {portion.length}
+            Ваша порция на сегодня: сделано {tally.done} из {tally.target}
             <HelpHint topic={helpAnchor("/admin/prospect", "portion")} label="Как работает порция дня" />
           </p>
           <ul className="mt-3 flex flex-col gap-1.5 text-sm">
@@ -89,11 +93,17 @@ export default async function ProspectPage({
                     {p.label || p.host || "Компания без сайта"}
                   </Link>
                   <span className={`text-xs ${outcome ? "text-faint" : "text-muted"}`}>{state}</span>
+                  {p.replacement ? <span className="text-xs text-green">замена</span> : null}
                 </li>
               );
             })}
           </ul>
-          <p className="mt-3 text-xs text-faint">Что не сделано до 18:00, вернётся в общий пул.</p>
+          <p className="mt-3 text-xs text-faint">
+            В счёт идут «Отправить» и «Связался сам». «Не подходит» не в счёт — вместо неё сразу
+            выдаётся замена, до {replaceLimit(tally.target)} в день.
+            {tally.short ? ` Без замены: ${tally.short} — в пуле пусто или замены на сегодня кончились.` : ""}{" "}
+            Что не сделано до 18:00, вернётся в общий пул.
+          </p>
         </section>
       ) : null}
 

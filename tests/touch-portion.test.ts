@@ -19,7 +19,10 @@ import {
   isWorkday,
   outcomeOf,
   quotaOf,
+  replaceLimit,
+  replacementsDue,
   reportLine,
+  tallyPortion,
   tashkentHour,
 } from "@/lib/admin/portion";
 
@@ -80,10 +83,87 @@ test("сделано — по самому касанию: кем и в этот
   assert.equal(outcomeOf({ status: "contacting", touched_by: null, touched_at: null }, "m1", day), null);
 });
 
-test("строка отчёта", () => {
-  assert.equal(reportLine({ name: "Данил", total: 5, done: 5, skipped: 0 }), "Данил — 5 из 5 ✅");
-  assert.equal(reportLine({ name: "Мадина", total: 5, done: 0, skipped: 0 }), "Мадина — 0 из 5 ⚠️");
-  assert.equal(reportLine({ name: "Арсений", total: 5, done: 3, skipped: 1 }), "Арсений — 3 из 5, не подошло 1");
+test("строка отчёта: «из» — цель дня, сделано — только касания", () => {
+  assert.equal(reportLine({ name: "Данил", target: 5, done: 5, skipped: 0, short: 0 }), "Данил — 5 из 5 ✅");
+  assert.equal(reportLine({ name: "Мадина", target: 5, done: 0, skipped: 0, short: 0 }), "Мадина — 0 из 5 ⚠️");
+  // Пять касаний при двух «Не подходит» — порция закрыта: за пропуски были замены.
+  assert.equal(reportLine({ name: "Лола", target: 5, done: 5, skipped: 2, short: 0 }), "Лола — 5 из 5, не подошло 2 ✅");
+  assert.equal(reportLine({ name: "Арсений", target: 5, done: 3, skipped: 2, short: 1 }), "Арсений — 3 из 5, не подошло 2, без замены 1");
+  // Одни пропуски — это ноль касаний, а не «работал».
+  assert.equal(reportLine({ name: "Тимур", target: 5, done: 0, skipped: 3, short: 0 }), "Тимур — 0 из 5, не подошло 3 ⚠️");
+});
+
+/*
+ * Владелец, 29.09: «сделать нужно 5 в день, без учёта „не подходит“. То есть
+ * именно 5 „связались“, а не 3 связались и 2 пропустили. Это и в боте тг
+ * должно работать как надо».
+ */
+test("«Не подходит» не в счёт: цель — утренняя раздача, за каждый пропуск — замена в пределах лимита", () => {
+  const R = (replaces: string | null, outcome: "sent" | "self" | "skipped" | null) => ({ replaces, outcome });
+  // Утром пять, две пропущены, за одну уже выдана замена.
+  const t = tallyPortion([R(null, "sent"), R(null, "self"), R(null, "skipped"), R(null, "skipped"), R(null, null), R("a", null)]);
+  assert.deepEqual(t, { target: 5, done: 2, skipped: 2, replaced: 1, short: 1 });
+  assert.equal(replacementsDue(t), 1, "за вторую «Не подходит» замена положена");
+
+  // Замена тоже может не подойти — за неё положена следующая…
+  const chain = tallyPortion([R(null, "skipped"), R("x", "skipped")]);
+  assert.equal(chain.target, 1);
+  assert.equal(replacementsDue(chain), 1);
+  // …а когда она выдана и сделана, больше не нужно ничего.
+  assert.equal(replacementsDue(tallyPortion([R(null, "skipped"), R("x", "skipped"), R("y", "sent")])), 0);
+
+  // Потолок — две порции замен в день: пропусками нельзя перебрать весь пул.
+  assert.equal(replaceLimit(5), 10);
+  const burned = tallyPortion([
+    ...Array.from({ length: 5 }, () => R(null, "skipped")),
+    ...Array.from({ length: 10 }, (_, i) => R(`r${i}`, "skipped")),
+  ]);
+  assert.equal(replacementsDue(burned), 0);
+  assert.equal(burned.short, 5);
+
+  // Всё сделано — замен не нужно.
+  assert.equal(replacementsDue(tallyPortion([R(null, "sent"), R(null, "sent")])), 0);
+});
+
+test("замена: выдаётся сразу и в боте, и в панели, приходит карточкой, пул без чужих порций", () => {
+  const store = read("lib/admin/portion-store.ts");
+  const top = store.slice(store.indexOf("export async function topUpPortion("), store.indexOf("export async function topUpPortions("));
+  // После 18:00 порция закрыта — выдавать в неё нечего.
+  assert.match(top, /isWorkday\(now\) \|\| tashkentHour\(now\) >= REPORT_HOUR/);
+  assert.match(top, /insert\(\{ day, staff_id: staffId, prospect_id: prospectId, replaces: skipped\.id \}\)/);
+  // Компания из чьей-то сегодняшней порции — не кандидат в замену.
+  assert.match(top, /pool\(due \+ 3, new Set\(everyone\.map\(\(r\) => r\.prospect_id\)\)\)/);
+  assert.match(store, /\.filter\(\(row\) => !exclude\.has\(row\.id as string\)\)/);
+  // Двойное нажатие не даёт двух замен: уникальный индекс на replaces.
+  assert.match(read("supabase/migrations/0067_portion_replacements.sql"), /create unique index if not exists touch_portions_replaces_key\s+on public\.touch_portions \(replaces\) where replaces is not null/);
+
+  // Карточка — одна: отметка «выдано» ставится до сообщения и условно.
+  const deliver = store.slice(store.indexOf("export async function deliverPortions("), store.indexOf("export type TopUp"));
+  assert.match(store, /\.is\("delivered_at", null\)\s*\.select\("id"\)/);
+  assert.match(deliver, /🔁 Вместо «/);
+  assert.match(deliver, /«Не подходит» в счёт не идёт — на её место сразу придёт замена/);
+
+  // Свип подбирает то, что не выдалось сразу.
+  const run = store.slice(store.indexOf("export async function runPortions("));
+  assert.ok(run.indexOf("await topUpPortions(now)") < run.indexOf("await deliverPortions(now)"));
+
+  // Бот: пропуск → замена → ответ под кнопкой → письмо и карточка.
+  const hook = read("app/api/telegram/webhook/route.ts");
+  const skip = hook.slice(hook.indexOf('if (action === "skip")'));
+  assert.ok(skip.indexOf("skipProspect(") < skip.indexOf("topUpPortion(staff.id)"));
+  assert.ok(skip.indexOf("await done(") < skip.indexOf("deliverReplacement(item.rowId)"), "письмо пишется до ответа на нажатие");
+
+  // Панель: «не пишем» у компании из порции — замена хозяину порции.
+  const actions = read("app/admin/prospect/actions.ts");
+  const panelSkip = actions.slice(actions.indexOf("export async function skipProspectAction("));
+  assert.match(panelSkip, /const owner = await portionOwner\(id\);/);
+  assert.match(panelSkip, /await topUpPortion\(owner\)/);
+  assert.match(panelSkip, /after\(async \(\) => \{\s*for \(const item of top\.made\) await deliverReplacement\(item\.rowId\);/);
+
+  // Блок порции: «сделано X из N» — только касания и цель дня.
+  const page = read("app/admin/prospect/page.tsx");
+  assert.match(page, /сделано \{tally\.done\} из \{tally\.target\}/);
+  assert.match(page, /p\.replacement \? <span className="text-xs text-green">замена<\/span>/);
 });
 
 test("раздача — раз в день и без двойной раздачи", () => {
