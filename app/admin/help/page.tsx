@@ -20,8 +20,9 @@ export const dynamic = "force-dynamic";
  * Владелец может открыть инструкцию глазами руководителя или менеджера
  * (`?as=`): проверить, что команда читает, без чужого входа.
  *
- * Язык переключается ссылкой, а не куком: ссылкой на узбекскую версию
- * удобно поделиться с новым сотрудником.
+ * По умолчанию — на языке панели сотрудника (если инструкция на нём уже
+ * есть). Другой язык — ссылкой `?lang=`: ею удобно поделиться с новым
+ * сотрудником.
  */
 export default async function HelpPage({
   searchParams,
@@ -30,7 +31,11 @@ export default async function HelpPage({
 }) {
   const staff = await requireStaff();
   const { lang, as } = await searchParams;
-  const locale: HelpLocale = isHelpLocale(lang) ? lang : "ru";
+  const locale: HelpLocale = isHelpLocale(lang)
+    ? lang
+    : isHelpLocale(staff.panel_locale)
+      ? staff.panel_locale
+      : "ru";
 
   // Смотреть глазами другой роли может только владелец: у него и так видно всё.
   const role: Role = staff.role === "admin" && as && isRole(as) ? as : staff.role;

@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin/session";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
 import { NEXT_COOKIE, returnTo } from "@/lib/admin/return-to";
+import { PANEL_LANG_COOKIE } from "@/lib/admin/i18n";
 
 /**
  * Обмен одноразовой ссылки на сессию.
@@ -66,6 +67,14 @@ export async function signIn(formData: FormData) {
     sameSite: "lax",
     path: "/admin",
     maxAge: ABSOLUTE_DAYS * 24 * 3600,
+  });
+  // Зеркало языка панели для <html lang> — см. lib/admin/i18n.ts.
+  jar.set(PANEL_LANG_COOKIE, staff.panel_locale, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/admin",
+    maxAge: 365 * 24 * 3600,
   });
 
   // Куда он шёл до того, как его развернуло сюда.

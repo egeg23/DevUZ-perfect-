@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
+import { usePanelDict, usePanelLocale } from "@/components/admin/panel-locale";
+import { isHelpLocale, type HelpLocale } from "@/content/admin-help";
+import { shellDict } from "@/content/admin-panel/shell";
 import { helpTopicFor } from "@/lib/admin/help";
 
 /**
@@ -14,27 +16,18 @@ import { helpTopicFor } from "@/lib/admin/help";
  * панели, а не на каждой странице: раздел, заведённый завтра, получит её
  * сам, без правки своей страницы.
  *
- * Язык инструкции запоминается в браузере: узбекоязычному менеджеру
- * переключать его заново при каждом «?» — повод больше не нажимать.
+ * Инструкция открывается на языке панели сотрудника. Пока инструкции на
+ * каком-то языке панели нет (польская пишется отдельным этапом), — на
+ * русском: пустая страница объяснила бы меньше.
  */
 
-const LANG_KEY = "devuz-help-lang";
-
-function useHelpLang(): string | null {
-  const [lang, setLang] = useState<string | null>(null);
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(LANG_KEY);
-      if (saved === "uz") setLang(saved);
-    } catch {
-      // Хранилище закрыто — инструкция откроется по-русски.
-    }
-  }, []);
-  return lang;
+function useHelpLang(): HelpLocale {
+  const locale = usePanelLocale();
+  return isHelpLocale(locale) ? locale : "ru";
 }
 
-function withLang(href: string, lang: string | null): string {
-  if (!lang) return href;
+function withLang(href: string, lang: HelpLocale): string {
+  if (lang === "ru") return href;
   const [path, hash] = href.split("#");
   return `${path}?lang=${lang}${hash ? `#${hash}` : ""}`;
 }
@@ -43,13 +36,14 @@ function withLang(href: string, lang: string | null): string {
 export function SectionHelpLink() {
   const pathname = usePathname();
   const lang = useHelpLang();
+  const t = usePanelDict(shellDict);
   const href = pathname ? helpTopicFor(pathname) : null;
   if (!href) return null;
   return (
     <Link
       href={withLang(href, lang)}
       className="flex items-center gap-1.5 text-faint transition hover:text-green"
-      title="Как пользоваться разделом"
+      title={t.sectionHelp}
     >
       <span
         aria-hidden
@@ -57,8 +51,8 @@ export function SectionHelpLink() {
       >
         ?
       </span>
-      <span className="hidden md:inline">Как пользоваться разделом</span>
-      <span className="sr-only md:hidden">Как пользоваться разделом</span>
+      <span className="hidden md:inline">{t.sectionHelp}</span>
+      <span className="sr-only md:hidden">{t.sectionHelp}</span>
     </Link>
   );
 }
@@ -69,8 +63,10 @@ export function SectionHelpLink() {
  * `topic` — якорь целиком, из helpAnchor(): так опечатка в нём ловится
  * тестом, который сверяет якоря в коде с пунктами инструкции.
  */
-export function HelpHint({ topic, label = "Как это работает" }: { topic: string; label?: string }) {
+export function HelpHint({ topic, label }: { topic: string; label?: string }) {
   const lang = useHelpLang();
+  const t = usePanelDict(shellDict);
+  label ??= t.howItWorks;
   return (
     <Link
       href={withLang(`/admin/help#${topic}`, lang)}
@@ -81,17 +77,4 @@ export function HelpHint({ topic, label = "Как это работает" }: { 
       ?
     </Link>
   );
-}
-
-/** Страница инструкций запоминает выбранный язык для кнопок «?». */
-export function RememberHelpLang({ lang }: { lang: string }) {
-  useEffect(() => {
-    try {
-      if (lang === "ru") window.localStorage.removeItem(LANG_KEY);
-      else window.localStorage.setItem(LANG_KEY, lang);
-    } catch {
-      // Не запомнили — не страшно, язык переключается ссылкой.
-    }
-  }, [lang]);
-  return null;
 }

@@ -4,9 +4,12 @@ import type { HelpCopy } from "./admin-help";
  * Инструкция по-узбекски, латиницей.
  *
  * Перевод admin-help-ru.ts абзац в абзац: те же пункты, роли и число
- * абзацев — это сверяет тест. Названия кнопок, блоков и статусов остаются
- * по-русски в «ёлочках»: панель русская, и человек ищет их глазами на
- * экране. Всё остальное — по-узбекски, с ‘ в o‘/g‘ и ’ в тутук белгиси.
+ * абзацев — это сверяет тест. Названия кнопок, блоков и статусов — в
+ * «ёлочках» и ровно так, как они написаны на узбекской панели: человек ищет
+ * их глазами на экране. Пока раздел панели не переведён, его кнопки здесь
+ * по-русски — как у него на экране; сообщения бота тоже по-русски, пока бот
+ * не пишет на языке панели. Всё остальное — по-узбекски, с ‘ в o‘/g‘ и ’ в
+ * тутук белгиси.
  */
 
 const BOT_URL = "https://t.me/Devuz_studio_bot";
@@ -15,7 +18,7 @@ const SCOUT_URL = "https://t.me/+puC_Ns-kCbQ5NzJi";
 
 export const uz: HelpCopy = {
   title: "Yo‘riqnoma",
-  lead: "Panel qanday tuzilgani va undan qanday foydalanish — bo‘limlar bo‘yicha, oddiy so‘zlar bilan. Bu yerda faqat sizga ochiq narsalar yozilgan. Istalgan bo‘limdan bu yerga sahifa tepasidagi «Как пользоваться разделом» tugmasi olib keladi, bloklar yonidagi «?» esa kerakli bandni ochadi.",
+  lead: "Panel qanday tuzilgani va undan qanday foydalanish — bo‘limlar bo‘yicha, oddiy so‘zlar bilan. Bu yerda faqat sizga ochiq narsalar yozilgan. Istalgan bo‘limdan bu yerga sahifa tepasidagi «Bo‘limdan qanday foydalanish» tugmasi olib keladi, bloklar yonidagi «?» esa kerakli bandni ochadi.",
   contentsTitle: "Mundarija",
   sectionsTitle: "Bo‘limlar",
   openSection: "bo‘limni ochish",
@@ -26,7 +29,7 @@ export const uz: HelpCopy = {
   sections: {
     /* ── Лиды ─────────────────────────────────────────────────────────── */
     "/admin": {
-      what: "Panelning bosh sahifasi va mijozlarning barcha murojaatlari: saytdagi chat, forma, Telegram-bot, vitrina, «Поиск» va sizning aloqalaringizdan. Bu yerda kim yozgani, unga nima kerakligi, qanchalik shoshilinchligi va u bilan kim ishlayotgani ko‘rinadi. Lid bilan har bir harakat — olish, kontaktni ochish, holatni o‘zgartirish — jurnalga ism va vaqt bilan yoziladi.",
+      what: "Panelning bosh sahifasi va mijozlarning barcha murojaatlari: saytdagi chat, forma, Telegram-bot, vitrina, «Qidiruv» va sizning aloqalaringizdan. Bu yerda kim yozgani, unga nima kerakligi, qanchalik shoshilinchligi va u bilan kim ishlayotgani ko‘rinadi. Lid bilan har bir harakat — olish, kontaktni ochish, holatni o‘zgartirish — jurnalga ism va vaqt bilan yoziladi.",
       items: [
         {
           id: "home",
@@ -41,14 +44,14 @@ export const uz: HelpCopy = {
               "Birinchi bo‘lib — **«Ждут вашего решения»**: menejerlarning lidni hamkasbga berish haqidagi so‘rovlari. Buni siz yoki egasi hal qiladi — batafsil [lidni berish](#leads-transfer) bandida.",
               "Plitkalar sizni va jamoangizni birga hisoblaydi: **«к выплате»** — faqat sizning balansingiz, **«лидов в работе у команды»**, **«срочно связаться»**, **«поступлений за неделю»**.",
               "Keyin: «На сегодня» — lidlaringiz bo‘yicha ertalabki maslahatlar, siz va jamoa bo‘yicha ismlar bilan [«Срочно связаться»](#leads-urgent), [«Команда за эту неделю»](#leads-team-week), jamoaga va sizga tavsiyalar, «Лучшие за неделю», [«План и факт»](#leads-plan-fact) va [lidlar ro‘yxati](#leads-list).",
-              "Jamoa — bu [«Команда»](/admin/team) bo‘limida sizga biriktirilgan menejerlar. Jamoa bo‘lmaguncha, bosh sahifada uning bloklari chiqmaydi.",
+              "Jamoa — bu [«Jamoa»](/admin/team) bo‘limida sizga biriktirilgan menejerlar. Jamoa bo‘lmaguncha, bosh sahifada uning bloklari chiqmaydi.",
             ],
             admin: [
               "Sizda bosh sahifa varaqlarga bo‘lingan — bitta uzun lentani aylantirib o‘tirmaslik uchun. Varaq manzilda saqlanadi, uni xatcho‘plarga qo‘yib qo‘ysa bo‘ladi.",
               "**«Сегодня»** — kunni nimadan boshlash: «Ждут вашего решения» (lidni berish so‘rovlari), imzoga kelgan shartnomalar, pul plitkalari, «На сегодня» maslahatlari («собрать заново» tugmasi modelga bitta so‘rov sarflaydi), butun studiya bo‘yicha «Срочно связаться» va ikki haftalik soliq muddatlari.",
-              "**«Лиды»** — barcha filtrlari bilan [lidlar ro‘yxati](#leads-list). Varaqdagi tilla rangli raqam — hozir nechta lid bo‘shligi.",
+              "**«Lidlar»** — barcha filtrlari bilan [lidlar ro‘yxati](#leads-list). Varaqdagi tilla rangli raqam — hozir nechta lid bo‘shligi.",
               "**«Деньги»** — «Касса по месяцам» (yarim yillik tushum va xarajatlar, har oy ostida — farqi) va «Ожидаем оплат»: faol loyihalar bo‘yicha yana qancha to‘lanishi kerak.",
-              "**«Команда»** — [haftalik jadval](#leads-team-week), eng yaxshilar, har biriga tavsiyalar va [«План и факт»](#leads-plan-fact) — u yerda maqsadlarni qo‘yasiz va o‘zgartirasiz.",
+              "**«Jamoa»** — [haftalik jadval](#leads-team-week), eng yaxshilar, har biriga tavsiyalar va [«План и факт»](#leads-plan-fact) — u yerda maqsadlarni qo‘yasiz va o‘zgartirasiz.",
               "Metrika va Google Analytics bo‘yicha saytga tashriflar — varaq emas, alohida [Trafik](/admin/traffic) bo‘limi: uni siz va rahbarlar ko‘rasiz. Varaqqa eski xatcho‘plar ham o‘sha yerga olib boradi.",
             ],
           },
@@ -112,7 +115,7 @@ export const uz: HelpCopy = {
               "Holat ostida lidni olib borayotgan odamning niki ko‘rinadi. Ro‘yxatda kontaktlar yo‘q — ular [kartochkada](#leads-card) ochiladi va jurnalga yoziladi.",
             ],
             admin: [
-              "Ro‘yxat — «Лиды» varag‘ida. Siz barcha lidlarni ko‘rasiz. Filtrlar: «все лиды / свободные / мои», ustuvorlik va holat; har sahifada 50 ta.",
+              "Ro‘yxat — «Lidlar» varag‘ida. Siz barcha lidlarni ko‘rasiz. Filtrlar: «все лиды / свободные / мои», ustuvorlik va holat; har sahifada 50 ta.",
               "**«Бюджет»** — summa emas, mijoz pul haqida qanday gapirayotgani («назван и утверждён», «есть, сравнивает», «не назван»). **«Балл»**: A — 75 dan, B — 55 dan, C — 35 dan, D — undan past. **«Приоритет»**: «горячий» — A yoki odam so‘ragan, «тёплый» — B, «дозреет» — qolganlari, «архив» — rad etgan.",
               "Ro‘yxatda kontaktlar ataylab yo‘q: aks holda «kontaktlarni kim ko‘rgan» degani «panelni ochgan hamma» degani bo‘lardi. Kartochkada kontaktning har bir ochilishi — [jurnalda](/admin/audit) bitta qator.",
             ],
@@ -217,7 +220,7 @@ export const uz: HelpCopy = {
               "Chiziq: 100% dan — yashil, 50% dan past — tilla rang.",
             ],
             admin: [
-              "«Команда» varag‘ida. Siz istalgan odamga reja qo‘yasiz, yana «изменить» va «снять» bilan istalgan rejani o‘zgartira va olib tashlay olasiz. Rahbar faqat o‘z menejeriga reja qo‘sha oladi — siz shunday qaror qilgansiz.",
+              "«Jamoa» varag‘ida. Siz istalgan odamga reja qo‘yasiz, yana «изменить» va «снять» bilan istalgan rejani o‘zgartira va olib tashlay olasiz. Rahbar faqat o‘z menejeriga reja qo‘sha oladi — siz shunday qaror qilgansiz.",
               "Ko‘rsatkichlar: «поступления, $», «выигранных лидов», «первых контактов» (bu «Показать контакт» bosilishlari). Davrlar: dushanbadan boshlanadigan joriy hafta va joriy oy.",
             ],
           },
@@ -247,7 +250,7 @@ export const uz: HelpCopy = {
           body: {
             head: [
               "Siz va jamoangiz bo‘yicha jadval, strelka — o‘tgan haftaga nisbatan.",
-              "**«В работе»** — «в работе» holatidagi lidlar. **«Срочно»** — ulardan nechtasi [uzoq vaqt harakatsiz](#leads-urgent). **«Касаний»** — odamning hafta davomida lidlar bilan barcha harakatlari: kartochkani, kontaktni ochdi, eslatma, holat, muhokamadagi xabar. Bu lidlar bilan ish, sovuq aloqalar emas. **«Контактов»** — «Показать контакт» bosilishlari. **«Выиграно»**, **«Поступления»** — hafta davomida uning loyihalari bo‘yicha kelgan pul. **«План касаний»** — sovuq aloqalar siz [«Команда»](/admin/team) bo‘limida qo‘yadigan rejaga nisbatan.",
+              "**«В работе»** — «в работе» holatidagi lidlar. **«Срочно»** — ulardan nechtasi [uzoq vaqt harakatsiz](#leads-urgent). **«Касаний»** — odamning hafta davomida lidlar bilan barcha harakatlari: kartochkani, kontaktni ochdi, eslatma, holat, muhokamadagi xabar. Bu lidlar bilan ish, sovuq aloqalar emas. **«Контактов»** — «Показать контакт» bosilishlari. **«Выиграно»**, **«Поступления»** — hafta davomida uning loyihalari bo‘yicha kelgan pul. **«План касаний»** — sovuq aloqalar siz [«Jamoa»](/admin/team) bo‘limida qo‘yadigan rejaga nisbatan.",
               "«Лучшие за неделю» jamoada ikki va undan ko‘p odam bo‘lganda chiqadi.",
             ],
             admin: [
@@ -302,7 +305,7 @@ export const uz: HelpCopy = {
           title: "To‘lov va fayllarni berish",
           body: [
             "Pul hisob raqamga tushdi — **«строка выписки»** maydoniga bank ko‘chirmasidagi qatorni yozing va **«оплата получена»** tugmasini bosing. Qatorsiz bo‘lmaydi: aks holda bir oydan keyin to‘lov bo‘lganini isbotlab bo‘lmaydi.",
-            "Shu daqiqadan xaridorga fayllar ochiladi — agar egasi ularni «Релизы» bo‘limiga joylagan bo‘lsa. Yuklab olish — jami 20 tagacha va kuniga 10 tagacha, o‘sha faylni 10 daqiqa ichida qayta yuklash hisoblanmaydi.",
+            "Shu daqiqadan xaridorga fayllar ochiladi — agar egasi ularni «Relizlar» bo‘limiga joylagan bo‘lsa. Yuklab olish — jami 20 tagacha va kuniga 10 tagacha, o‘sha faylni 10 daqiqa ichida qayta yuklash hisoblanmaydi.",
             "Birinchi yuklab olish o‘zi «передан» qo‘yadi. **«код передан»** tugmasi — boshqacha berganingizda, masalan, repozitoriyga kirish huquqi bilan. To‘lovdan oldin u ishlamaydi: kodni berish — bekor qilib bo‘lmaydigan yagona qadam.",
           ],
         },
@@ -426,12 +429,12 @@ export const uz: HelpCopy = {
               "«Связаться» — hali aloqa emas: bu faqat xatni tayyorlash.",
             ],
             head: [
-              "Menejerlaringizga rejani [«Команда»](/admin/team) bo‘limida, «План касаний» ustunida qo‘yasiz: haftasiga son va «сохранить». Bo‘sh maydon — «без плана», bu 0 bilan bir xil emas: 0 bo‘lsa, to‘plam umuman bo‘lmaydi. 500 dan ko‘p emas.",
+              "Menejerlaringizga rejani [«Jamoa»](/admin/team) bo‘limida, «План касаний» ustunida qo‘yasiz: haftasiga son va «сохранить». Bo‘sh maydon — «без плана», bu 0 bilan bir xil emas: 0 bo‘lsa, to‘plam umuman bo‘lmaydi. 500 dan ko‘p emas.",
               "Odam dushanbadan beri yozgan kompaniyalar hisoblanadi: «Отправить» yoki «Связался сам»; ketmagan xatlar hisoblanmaydi.",
               "Sizning o‘z rejangizni egasi qo‘yadi.",
             ],
             admin: [
-              "Reja [«Команда»](/admin/team) bo‘limida, «План касаний» ustunida qo‘yiladi: siz — istalgan odamga, rahbar — faqat o‘z odamlariga. Bo‘sh maydon — «без плана» (kuniga 5 tadan to‘plam), 0 — reja ham, to‘plam ham yo‘q.",
+              "Reja [«Jamoa»](/admin/team) bo‘limida, «План касаний» ustunida qo‘yiladi: siz — istalgan odamga, rahbar — faqat o‘z odamlariga. Bo‘sh maydon — «без плана» (kuniga 5 tadan to‘plam), 0 — reja ham, to‘plam ham yo‘q.",
               "Odam dushanbadan beri yozgan kompaniyalar hisoblanadi: «Отправить» yoki «Связался сам»; ketmagan xatlar hisoblanmaydi.",
             ],
           },
@@ -637,7 +640,7 @@ export const uz: HelpCopy = {
 
     /* ── Проекты ──────────────────────────────────────────────────────── */
     "/admin/projects": {
-      what: "Kelishib bo‘lingan ish: qaysi bosqichda, qaysi muddatgacha, qancha summaga, kim olib boradi va mijoz qancha to‘lagan. «Финансы» bo‘limidagi hisoblanmalar loyihaga bog‘liq: summasi bor loyiha bo‘lmasa, bitim uchun hech kim pul olmaydi.",
+      what: "Kelishib bo‘lingan ish: qaysi bosqichda, qaysi muddatgacha, qancha summaga, kim olib boradi va mijoz qancha to‘lagan. «Moliya» bo‘limidagi hisoblanmalar loyihaga bog‘liq: summasi bor loyiha bo‘lmasa, bitim uchun hech kim pul olmaydi.",
       items: [
         {
           id: "create",
@@ -674,7 +677,7 @@ export const uz: HelpCopy = {
             manager: [
               "Tepadan pastga: «Стадия», «Смета», «Деньги», «Данные проекта», «Договор».",
               "**«Смета»** — toifani va muddatni haftalarda tanlang, panel «не ниже» (chegara), «до» va muddatni hisoblaydi. Chegara — bundan past summada loyiha o‘zini oqlamaydi; undan pastga faqat egasi tusha oladi.",
-              "**«Деньги»**: «Вид сделки» — «новый клиент» yoki «допродажа» (foizingiz shunga bog‘liq, [«Финансы»](/admin/finance) bo‘limiga qarang) va «Сумма по договору». Butun dollarda yozing, «$» va sentlarsiz, aks holda maydon tozalanadi. Loyiha bo‘yicha birorta to‘lov bo‘lmaguncha summani siz tahrirlaysiz; keyin — faqat egasi.",
+              "**«Деньги»**: «Вид сделки» — «новый клиент» yoki «допродажа» (foizingiz shunga bog‘liq, [«Moliya»](/admin/finance) bo‘limiga qarang) va «Сумма по договору». Butun dollarda yozing, «$» va sentlarsiz, aks holda maydon tozalanadi. Loyiha bo‘yicha birorta to‘lov bo‘lmaguncha summani siz tahrirlaysiz; keyin — faqat egasi.",
               "Soliq va tannarxni shartnomadan keyin egasi yozadi. Mijoz to‘lovlarini ham egasi yozadi — va faqat shundan keyin hisoblanmalaringiz muzdan chiqadi. Shartnoma hisobi bo‘yicha to‘lov egasi uni tasdiqlaganda bu yerga o‘zi tushadi; ungacha «Платежи клиента» blokida sariq qator turadi: «платёж ещё не подтверждён».",
               "**«Данные проекта»** — nomi, mijoz, muddat, izohlar; ularni siz mas’ul sifatida tahrirlaysiz. **«Договор»** — loyiha shartnomasiga havola va u hozir qayerda: qoralama, egasida imzoda, tasdiqlangan, imzolangan. Shartnoma yo‘q ekan — uni tayyorlash formasi; tayyorlanmasa, forma ustida nimani tuzatish kerakligi yoziladi. Batafsil — [shartnomalar](/admin/contracts).",
             ],
@@ -686,7 +689,7 @@ export const uz: HelpCopy = {
             admin: [
               "Siz hammasini tahrirlaysiz: bosqich (10 ta tugma), smeta, summa va bitim turini istalgan paytda, **«Налог, %»** (odatiy 4) va **«Себестоимость разработки, $»** — faqat siz, hech kim tannarxni kamaytirib, o‘z hisoblanmasini oshirmasligi uchun.",
               "Hisoblanma qatorlarida — shu bitim uchun foiz: «задать» yoki «по грейду» ga qaytarish. **«Партнёр»** bloki: kim olib kelgan, hamkorga foiz («по ступени» — loyiha summasi va hamkor modeliga qarab: foydadan 10–30% yoki aylanmadan 6–20%), «Заказ агентства» — agar loyiha hamkor agentligidan bo‘lsa — va «Не засчитывать, причина».",
-              "**«Платежи клиента»** → «Записать платёж»: summa, sana, maqsad. Hammasi to‘langanda hisoblanmalar «заработано» bo‘ladi, hamkorga esa xabar ketadi. Shartnoma hisoblari bo‘yicha to‘lovlar bu yerga o‘zi yoziladi — sizning «Оплачен» belgingizdan yoki shartnomadagi «Подтвердить платёж» tugmasidan; to‘lov sizni kutayotgan paytda bu yerda shartnomaga havolali sariq qator turadi. Kartochkadagi «Остаётся владельцу» — hamkor ulushi ayirilmagan; aniq raqam — [«Финансы»](/admin/finance) bo‘limida.",
+              "**«Платежи клиента»** → «Записать платёж»: summa, sana, maqsad. Hammasi to‘langanda hisoblanmalar «заработано» bo‘ladi, hamkorga esa xabar ketadi. Shartnoma hisoblari bo‘yicha to‘lovlar bu yerga o‘zi yoziladi — sizning «Оплачен» belgingizdan yoki shartnomadagi «Подтвердить платёж» tugmasidan; to‘lov sizni kutayotgan paytda bu yerda shartnomaga havolali sariq qator turadi. Kartochkadagi «Остаётся владельцу» — hamkor ulushi ayirilmagan; aniq raqam — [«Moliya»](/admin/finance) bo‘limida.",
             ],
           },
         },
@@ -741,13 +744,13 @@ export const uz: HelpCopy = {
           title: "Rejalar qayerda",
           body: {
             manager: [
-              "Bu yerda rejalar yo‘q. «План и факт» — [bosh sahifada](/admin), aloqalar rejasi — [«Касания»](/admin/prospect) bo‘limida.",
+              "Bu yerda rejalar yo‘q. «План и факт» — [bosh sahifada](/admin), aloqalar rejasi — [«Aloqalar»](/admin/prospect) bo‘limida.",
             ],
             head: [
-              "Bu yerda rejalar yo‘q. «План и факт» — [bosh sahifada](/admin), jamoaga aloqalar rejasi [«Команда»](/admin/team) bo‘limida qo‘yiladi.",
+              "Bu yerda rejalar yo‘q. «План и факт» — [bosh sahifada](/admin), jamoaga aloqalar rejasi [«Jamoa»](/admin/team) bo‘limida qo‘yiladi.",
             ],
             admin: [
-              "Bu yerda rejalar yo‘q. «План и факт» — [bosh sahifaning](/admin) «Команда» varag‘ida, aloqalar rejasi — [«Команда»](/admin/team) bo‘limida.",
+              "Bu yerda rejalar yo‘q. «План и факт» — [bosh sahifaning](/admin) «Jamoa» varag‘ida, aloqalar rejasi — [«Jamoa»](/admin/team) bo‘limida.",
             ],
           },
         },
@@ -790,7 +793,7 @@ export const uz: HelpCopy = {
               "**Metrika** `YANDEX_METRIKA_TOKEN` tokeni bilan ulanadi (hisoblagich raqamini panel o‘zi biladi) — serverdagi `/opt/devuz/.env` faylida yoki Supabase maxfiy ma’lumotlar omborida (Vault) `app.YANDEX_METRIKA_TOKEN` nomi bilan: `.env`da kalit bo‘lmasa, panel uni o‘sha yerdan oladi.",
               "**Google Analytics** Google orqali kirish bilan ulanadi — kalitlarsiz va serverga kirmasdan. Google Cloud’da bir marta «mijoz» (client) yaratiladi — Google panelimizni taniydigan ruxsatnoma; qadamlari «Google Analytics» kartochkasining o‘zida yozilgan. Uning Client ID va Client secret qatorlari kartochkaga qo‘yiladi, keyin — **«Сохранить и войти через Google»**. Saytning Analytics’iga kirish huquqi bor Google akkaunti bilan kirish kerak va «See and download your Google Analytics data» belgisini olib tashlamaslik kerak. Resurs raqamini panel o‘zi topadi — sayt hisoblagichi `G-L52MCVNS0W` bo‘yicha. Olingan hamma narsa Supabase’ning shifrlangan maxfiy ma’lumotlar omborida saqlanadi, panelda esa faqat o‘qish huquqi bor: Analytics’da biror narsani o‘zgartira olmaydi. Har bir kirish [jurnalda](/admin/audit) ko‘rinadi.",
               "Agar Google kiritmay qo‘ysa — kartochkada «Google больше не пускает по сохранённому входу» deb yoziladi va bu **«Войти через Google»** tugmasi bilan hal bo‘ladi. Ko‘pincha sabab bitta: Google Cloud’dagi ilova e’lon qilinmagan — «Testing» rejimida Google kirishni 7 kundan keyin o‘chiradi, shuning uchun u yerda bir marta «Publish app» bosish kerak. Agar panel resurs raqamini o‘zi topa olmasa («Google Analytics Admin API» yoqilmagan yoki resurs boshqa akkauntda), uni yozishni so‘raydi: Google Analytics → «Администратор» → «Сведения о ресурсе», faqat raqamlar. Raqamlar ostidagi **«войти заново»** havolasi — Google akkauntini almashtirish uchun.",
-              "Rahbarlar bu bo‘limni ko‘radi, lekin ulash qadamlarisiz, kirish tugmalarisiz va Google akkauntingiz pochtasisiz — ularning o‘rniga «Подключает владелец» deb yozilgan. Menejerlarga bo‘lim ko‘rinmaydi. Oldin «Трафик» bosh sahifadagi varaq edi — eski xatcho‘plar shu yerga olib keladi.",
+              "Rahbarlar bu bo‘limni ko‘radi, lekin ulash qadamlarisiz, kirish tugmalarisiz va Google akkauntingiz pochtasisiz — ularning o‘rniga «Подключает владелец» deb yozilgan. Menejerlarga bo‘lim ko‘rinmaydi. Oldin «Trafik» bosh sahifadagi varaq edi — eski xatcho‘plar shu yerga olib keladi.",
             ],
           },
         },
@@ -893,7 +896,7 @@ export const uz: HelpCopy = {
             ],
             admin: [
               "«Добавить расход» va har bir qatordagi «убрать». Muassis-rahbar yoza oladi, lekin o‘chira olmaydi: o‘chirish orqali birovning xarajatini manzaradan olib tashlash mumkin, o‘ylab topilgan xarajat esa uni yozganning ulushini ham kamaytiradi.",
-              "Bu yerda [«Финансы»](/admin/finance) bo‘limidagi «Расходы студии» blokidagi xarajatlarning o‘zi.",
+              "Bu yerda [«Moliya»](/admin/finance) bo‘limidagi «Расходы студии» blokidagi xarajatlarning o‘zi.",
             ],
           },
         },
@@ -913,7 +916,7 @@ export const uz: HelpCopy = {
               "Bu yerda faqat xarajatlar va ularning bo‘linishi ko‘rinadi. Foyda va undagi ulushlar — egasida: 30% ni ko‘rsatish qolgan 70% ni ham ko‘rsatish demak, biri ikkinchisidan xayolan hisoblanadi.",
             ],
             admin: [
-              "Rahbarga bu yerda faqat xarajatlar ko‘rinadi: foyda va undagi ulushlar — faqat sizda, [«Финансы»](/admin/finance) bo‘limidagi «Доли соучредителей» blokida. Uning 30% ini ko‘rsatish sizning 70% ingizni ham ko‘rsatish bo‘lardi.",
+              "Rahbarga bu yerda faqat xarajatlar ko‘rinadi: foyda va undagi ulushlar — faqat sizda, [«Moliya»](/admin/finance) bo‘limidagi «Доли соучредителей» blokida. Uning 30% ini ko‘rsatish sizning 70% ingizni ham ko‘rsatish bo‘lardi.",
             ],
           },
         },
@@ -929,7 +932,7 @@ export const uz: HelpCopy = {
           title: "Foiz qanday hisoblanadi",
           body: [
             "**Bitimning sof foydasi** = shartnoma summasi − soliq − ishlab chiqish tannarxi. Foiz shartnoma summasidan emas, undan olinadi. Soliq va tannarxni egasi yozadi.",
-            "Daraja bo‘yicha stavkalar: **kichik menejer** — yangi mijozdan 10% va qo‘shimcha sotuvdan 0; **menejer** — 15% va 5%; **rahbar** — 30% va 30%. Daraja va shaxsiy stavkani egasi «Команда» bo‘limida qo‘yadi. Shaxsiy stavka darajani faqat yangi mijozlar uchun almashtiradi.",
+            "Daraja bo‘yicha stavkalar: **kichik menejer** — yangi mijozdan 10% va qo‘shimcha sotuvdan 0; **menejer** — 15% va 5%; **rahbar** — 30% va 30%. Daraja va shaxsiy stavkani egasi «Jamoa» bo‘limida qo‘yadi. Shaxsiy stavka darajani faqat yangi mijozlar uchun almashtiradi.",
             "Rahbar qo‘shimcha ravishda o‘z jamoasi menejerlarining har bir bitimidan 5% oladi — ustiga, ularning ulushidan emas. Muassis-rahbarda bu qator 0: u baribir qolgan hamma narsadan ulush oladi.",
             "Egasi aniq bitim uchun foiz belgilashi mumkin — u daraja va shaxsiy stavkadan muhimroq. Hisoblanma loyihada summa va mas’ul bo‘lganda paydo bo‘ladi. Bitim minusga ketdi — hisoblanma 0: minus — egasining tashvishi.",
           ],
@@ -957,7 +960,7 @@ export const uz: HelpCopy = {
             ],
             admin: [
               "Studiya bo‘yicha plitkalar: «По договорам», «Оплачено клиентами», «Чистая прибыль» (nechta loyihada tannarx yo‘qligi belgisi bilan), «Начислено команде и партнёрам», «Остаётся владельцу».",
-              "«По людям» va «По проектам» — soliq, tannarx, foyda va «Владельцу» (hamkorlar ayirilgan) ustunlari bilan. «Доли соучредителей» — kelgan pul minus xarajatlar va u qanday bo‘linadi. «Расходы студии» — [«Расходы»](/admin/expenses) bo‘limidagi ro‘yxatning o‘zi.",
+              "«По людям» va «По проектам» — soliq, tannarx, foyda va «Владельцу» (hamkorlar ayirilgan) ustunlari bilan. «Доли соучредителей» — kelgan pul minus xarajatlar va u qanday bo‘linadi. «Расходы студии» — [«Xarajatlar»](/admin/expenses) bo‘limidagi ro‘yxatning o‘zi.",
             ],
           },
         },
@@ -981,7 +984,7 @@ export const uz: HelpCopy = {
 
     /* ── Релизы ───────────────────────────────────────────────────────── */
     "/admin/releases": {
-      what: "«Заявки» bo‘limida to‘lovdan keyin xaridorlar oladigan tayyor mahsulot fayllari. Faylni joylash — allaqachon to‘lagan har bir kishi aynan nimani olishini hal qilish demak, shuning uchun bo‘lim faqat egasida.",
+      what: "«Buyurtmalar» bo‘limida to‘lovdan keyin xaridorlar oladigan tayyor mahsulot fayllari. Faylni joylash — allaqachon to‘lagan har bir kishi aynan nimani olishini hal qilish demak, shuning uchun bo‘lim faqat egasida.",
       items: [
         {
           id: "upload",
@@ -996,7 +999,7 @@ export const uz: HelpCopy = {
           title: "Xaridor nimani ko‘radi",
           body: [
             "To‘lovdan keyin — buyurtma sahifasida yuklab olish tugmasini: jami 20 tagacha va kuniga 10 tagacha yuklab olish, har bir havola 60 soniya yashaydi. Reliz bo‘lmaguncha — «файл готовим».",
-            "Tepada `DOWNLOAD_SIGNING_SECRET` haqida ogohlantirish bo‘lsa — yuklab olish hech kimda ishlamaydi. Kirishni yopish — [«Заявки»](/admin/orders) bo‘limidagi buyurtma kartochkasidagi tugma bilan.",
+            "Tepada `DOWNLOAD_SIGNING_SECRET` haqida ogohlantirish bo‘lsa — yuklab olish hech kimda ishlamaydi. Kirishni yopish — [«Buyurtmalar»](/admin/orders) bo‘limidagi buyurtma kartochkasidagi tugma bilan.",
           ],
         },
       ],
@@ -1011,12 +1014,12 @@ export const uz: HelpCopy = {
           title: "Xodim qo‘shish",
           body: {
             head: [
-              "«Завести сотрудника» bloki: Telegram id (raqamli — odam uni @userinfobot kabi istalgan botdan bilib, sizga yuboradi), paneldagi ism, username ixtiyoriy. Sizda rol bitta — «менеджер»: ikkinchi rahbarni egasi tayinlaydi. **«Завести»** tugmasini bosing.",
+              "«Завести сотрудника» bloki: Telegram id (raqamli — odam uni @userinfobot kabi istalgan botdan bilib, sizga yuboradi), paneldagi ism, username ixtiyoriy. Sizda rol bitta — «menejer»: ikkinchi rahbarni egasi tayinlaydi. **«Завести»** tugmasini bosing.",
               "Siz qo‘shgan menejer **darhol sizniki** — egasiga bildirishnoma boradi. Odamga bot taklifnoma yuboradi: rol, unga nima ochiq va bir bosishda panelga kiritadigan «Открыть панель» tugmasi.",
               "«Бот не может написать первым» — odam hali botga yozmagan. U [botni](https://t.me/Devuz_studio_bot) ochib, «Старт» tugmasini bossin, siz esa uning qatorida «отправить приглашение» ni bosing.",
             ],
             admin: [
-              "«Завести сотрудника»: Telegram id (raqamli, @userinfobot orqali), ism, username ixtiyoriy va rol — «руководитель проектов» yoki «менеджер». Siz qo‘shgan odam rahbarsiz bo‘ladi; uni «Руководитель» ustunida biriktiring.",
+              "«Завести сотрудника»: Telegram id (raqamli, @userinfobot orqali), ism, username ixtiyoriy va rol — «руководитель проектов» yoki «menejer». Siz qo‘shgan odam rahbarsiz bo‘ladi; uni «Руководитель» ustunida biriktiring.",
               "Bot «Открыть панель» tugmasi bilan taklifnoma yuboradi. Yetib bormadi — odam botda «Старт» tugmasini bosmagan; shundan keyin — uning qatorida «отправить приглашение». Bu id oldin bo‘lgan va o‘chirilgan bo‘lsa — odam butun tarixi bilan qaytadi.",
               "«обновить меню команд бота» — agar kimdadir botda /login ko‘rinmasa. Menyu baribir har bir yangilanish chiqqanda, xodim qo‘shilganda va o‘chirilganda yangilanadi.",
             ],
@@ -1056,11 +1059,11 @@ export const uz: HelpCopy = {
           title: "Daraja va stavka",
           body: {
             head: [
-              "Daraja va shaxsiy stavkani egasi qo‘yadi — siz ularni ko‘rasiz, lekin tahrirlamaysiz. Daraja bitim sof foydasidan foizni belgilaydi: kichik menejer — yangi mijozdan 10%, menejer — 15%, rahbar — 30%. Batafsil — [«Финансы»](/admin/finance) bo‘limida.",
+              "Daraja va shaxsiy stavkani egasi qo‘yadi — siz ularni ko‘rasiz, lekin tahrirlamaysiz. Daraja bitim sof foydasidan foizni belgilaydi: kichik menejer — yangi mijozdan 10%, menejer — 15%, rahbar — 30%. Batafsil — [«Moliya»](/admin/finance) bo‘limida.",
             ],
             admin: [
-              "«младший менеджер» (yangi mijozdan 10%, qo‘shimcha sotuvdan 0), «менеджер» (15% va 5%), «руководитель» (30% va 30%). Shaxsiy stavka, % — darajani faqat yangi mijozlar uchun almashtiradi; bo‘sh — «по грейду».",
-              "Rol almashganda daraja o‘zi almashadi: rahbarga — «руководитель», menejerga — «менеджер»; shaxsiy stavka qoladi.",
+              "«младший менеджер» (yangi mijozdan 10%, qo‘shimcha sotuvdan 0), «menejer» (15% va 5%), «руководитель» (30% va 30%). Shaxsiy stavka, % — darajani faqat yangi mijozlar uchun almashtiradi; bo‘sh — «по грейду».",
+              "Rol almashganda daraja o‘zi almashadi: rahbarga — «руководитель», menejerga — «menejer»; shaxsiy stavka qoladi.",
             ],
           },
         },
@@ -1082,7 +1085,7 @@ export const uz: HelpCopy = {
             head: [
               "Oxirgi ustunda har bir menejeringizda va o‘zingizda **«Уведомления»** qatori bor — yonida «приходит всё» yoki «выключено: 2 из 8» deb yozilgan. Uni bosing: belgilar ochiladi. Belgi turgan bo‘lsa — bot buni yuboradi, olib tashlansa — yo‘q. Keraklisini belgilab, **«Сохранить»** ni bosing. Yangi xodimlarda sukut bo‘yicha barcha belgilar turadi.",
               "Har bir belgi ostida usiz nima bo‘lishi yozilgan — olib tashlashdan oldin o‘qing. Asosiysi: **«Новые заявки по очереди»**. Usiz odam [navbatdan](#leads-queue) chiqadi — lidlar unga taklif qilinmaydi va darhol keyingisiga ketadi. Bu ta’til yoki kasallik vaqtida qulay: kirish qoladi, arizalar esa yarim soatdan turib qolmaydi.",
-              "Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi — ishning o‘zi panelda qoladi: eslatma lid kartochkasida ko‘rinadi, kunlik to‘plam — [«Касания»](/admin/prospect) da, mijozning aloqaga javobi — o‘sha yerda. «Ответы клиентов на касания» ni olib tashlasangiz, menejer o‘zi «Касания» ga kirmaguncha mijoz javob kutib qolishi mumkin — faqat javoblarni boshqa odam olib borsa, olib tashlang.",
+              "Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi — ishning o‘zi panelda qoladi: eslatma lid kartochkasida ko‘rinadi, kunlik to‘plam — [«Aloqalar»](/admin/prospect)da, mijozning aloqaga javobi — o‘sha yerda. «Ответы клиентов на касания» ni olib tashlasangiz, menejer o‘zi «Aloqalar»ga kirmaguncha mijoz javob kutib qolishi mumkin — faqat javoblarni boshqa odam olib borsa, olib tashlang.",
               "O‘chirilmaydi: panelga taklif, rol va rahbar almashishi, lidni berishni tasdiqlash so‘rovi — bu xabarlarsiz amal bajarilmaydi. Menejerlarga belgilarni siz va egasi o‘zgartirasiz; menejerlarning o‘zi ularni ko‘rmaydi. Kim va qachon o‘zgartirgani — jurnalda.",
             ],
             admin: [
@@ -1217,7 +1220,7 @@ export const uz: HelpCopy = {
           id: "shift",
           title: "Tahlillar smenasi",
           body: [
-            "Har kuni Toshkent vaqti bilan 08:03 da smena «Касания» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi va qolganlari nega olinmadi.",
+            "Har kuni Toshkent vaqti bilan 08:03 da smena «Aloqalar» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi va qolganlari nega olinmadi.",
             "Rad etish sabablari: sayt ochilmadi, sayt joyida yoki topilmalar kam, nisha yoki shahar aniqlanmadi, nishani tahlil qilmaymiz (tibbiyot), maqola tekshiruvdan o‘tmadi. 11:03 gacha hisobot bo‘lmasa — «Смена разборов — молчит» keladi.",
           ],
         },
@@ -1301,9 +1304,19 @@ export const uz: HelpCopy = {
           id: "how",
           title: "Yo‘riqnomadan qanday foydalanish",
           body: [
-            "Istalgan bo‘limning tepasida — «Как пользоваться разделом» tugmasi: u shu yerda o‘sha bo‘limning bandini ochadi. Bo‘limlar ichidagi murakkab bloklar yonida — kichik «?», u to‘g‘ri kerakli bandga olib boradi.",
-            "Tepada — mundarija va tilni almashtirish. O‘zbek tili eslab qolinadi: bundan keyin «?» tugmalari yo‘riqnomani shu tilda ochadi.",
+            "Istalgan bo‘limning tepasida — «Bo‘limdan qanday foydalanish» tugmasi: u shu yerda o‘sha bo‘limning bandini ochadi. Bo‘limlar ichidagi murakkab bloklar yonida — kichik «?», u to‘g‘ri kerakli bandga olib boradi.",
+            "Tepada — mundarija va yo‘riqnoma tilini almashtirish. Yo‘riqnomaning o‘zi — bo‘lim tugmasidan ham, «?» dan ham — [panel tilida](#help-language) ochiladi.",
             "Biror narsa yetishmasa yoki ekrandagidan boshqacha yozilgan bo‘lsa — egasiga ayting, qo‘shib qo‘yamiz.",
+          ],
+        },
+        {
+          id: "language",
+          title: "Panel tili: RU / UZ / PL",
+          body: [
+            "Panel tepasida, «Bo‘limdan qanday foydalanish» yonida — **RU / UZ / PL** tanlagichi: ruscha, o‘zbekcha (lotin yozuvida) va polyakcha. Keraklisini bosing — sahifa darhol shu tilda qayta ochiladi, manzil va ochiq bo‘lim o‘zgarmaydi.",
+            "Til brauzerga emas, sizga saqlanadi: telefondan yoki boshqa kompyuterdan kirsangiz ham, panel o‘sha tilda ochiladi. Tilni faqat o‘zingizga o‘zgartira olasiz — hamkasblaringizda u o‘zgarmaydi. Til tanlanmaguncha panel ruscha.",
+            "Panel bo‘limma-bo‘lim tarjima qilinmoqda. Bo‘lim hali tarjima qilinmagan bo‘lsa, uning tugma va yozuvlari ruscha qoladi — yo‘riqnomada ham ular ruscha nomlangan, ekranda ko‘z bilan topishingiz uchun. Telegramdagi bot xabarlari hozircha ruscha keladi.",
+            "Yo‘riqnoma panel tilida ochiladi. Polyakcha yo‘riqnoma hali yo‘q — polyak tilida u ruscha ochiladi. Yo‘riqnomaning boshqa tilini shu sahifaning tepasida tanlash mumkin, bu panel tiliga ta’sir qilmaydi.",
           ],
         },
         {
@@ -1312,7 +1325,7 @@ export const uz: HelpCopy = {
           body: [
             "[Studiya botini](https://t.me/Devuz_studio_bot) oching va «Старт» tugmasini bosing — busiz u sizga na lid, na eslatma yubora oladi. Panelga kirish — /login buyrug‘i bilan.",
             "«Devuz Scout» kanaliga qo‘shiling va bot hamda kanal ovozini yoqing: lid taklifi 30 daqiqa yashaydi, chatdagi post — bir-ikki soat.",
-            "[Lidlar navbati](#leads-queue) va [lid kartochkasi](#leads-card) haqidagi bandlarni o‘qing — bu ishning asosi. Qolganini bo‘limni birinchi marta ochganingizda o‘qing: «Как пользоваться разделом» tugmasi doim tepada.",
+            "[Lidlar navbati](#leads-queue) va [lid kartochkasi](#leads-card) haqidagi bandlarni o‘qing — bu ishning asosi. Qolganini bo‘limni birinchi marta ochganingizda o‘qing: «Bo‘limdan qanday foydalanish» tugmasi doim tepada.",
           ],
         },
         {
@@ -1339,15 +1352,15 @@ export const uz: HelpCopy = {
         "Botni oching va «Старт» tugmasini bosing — aks holda bot sizga birinchi bo‘lib yoza olmaydi.",
         "/login deb yozing — «🔓 Открыть панель» tugmasi va 15 daqiqalik bir martalik havola keladi. Xabarlar ostidagi «Открыть» tugmalari ham panelga o‘zi kiritadi.",
         "Ovozni o‘chirmang: navbat taklifi 30 daqiqa yashaydi, bildirishnoma jim tursa, lid keyingi odamga ketadi.",
-        "Bot qaysi xabarlarni yuborishini egasi va loyihalar rahbari «Команда» sahifasidagi belgilar bilan tanlaydi. Nimadir kelmasa — ulardan so‘rang: ehtimol, o‘sha belgi olib tashlangan.",
-        "Menejerlar va rahbarlarga: chat pastidagi «▶️ Получать лиды» tugmasi (yoki /leads) to‘plamdan tashqari kompaniyalar oqimini yoqadi, «⏸ Не получать лиды» — o‘chiradi. Batafsil — «Касания» bo‘limida.",
+        "Bot qaysi xabarlarni yuborishini egasi va loyihalar rahbari «Jamoa» sahifasidagi belgilar bilan tanlaydi. Nimadir kelmasa — ulardan so‘rang: ehtimol, o‘sha belgi olib tashlangan.",
+        "Menejerlar va rahbarlarga: chat pastidagi «▶️ Получать лиды» tugmasi (yoki /leads) to‘plamdan tashqari kompaniyalar oqimini yoqadi, «⏸ Не получать лиды» — o‘chiradi. Batafsil — «Aloqalar» bo‘limida.",
         "Mijoz olib kelib foiz olmoqchi bo‘lsangiz, /ref deb yozing.",
       ],
     },
     {
       name: "«Devuz Scout» kanali",
       url: SCOUT_URL,
-      what: "Skaut bu yerga ochiq chatlarda hozir dasturchi qidirayotgan odamlarni va ertalabki xulosani yuboradi. Batafsil — «Поиск» bo‘limida.",
+      what: "Skaut bu yerga ochiq chatlarda hozir dasturchi qidirayotgan odamlarni va ertalabki xulosani yuboradi. Batafsil — «Qidiruv» bo‘limida.",
       how: [
         "Havolani oching va kanalga qo‘shiling. Ovozni yoqing: bunday postlar bir-ikki soat yashaydi.",
         "«Сильный сигнал» belgisi bor signalga o‘zingiz yozmang — u navbat bo‘yicha lid bo‘lib keladi.",

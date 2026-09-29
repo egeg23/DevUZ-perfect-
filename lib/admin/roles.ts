@@ -7,6 +7,8 @@
  * узнать об этом от менеджера, увидевшего чужие контакты.
  */
 
+import type { PanelLocale, Tr } from "@/lib/admin/i18n";
+
 export const ROLES = ["admin", "head", "manager"] as const;
 export type Role = (typeof ROLES)[number];
 
@@ -36,15 +38,16 @@ export const ROLE_TITLE: Record<Role, string> = {
 };
 
 /** Короткая подпись рядом с именем в шапке панели. */
-export const ROLE_BADGE: Record<Role, string> = {
-  admin: "админ",
-  head: "рук. проектов",
-  manager: "менеджер",
+export const ROLE_BADGE: Record<Role, Tr> = {
+  admin: { ru: "админ", uz: "admin", pl: "admin" },
+  head: { ru: "рук. проектов", uz: "loyiha rahbari", pl: "kier. projektów" },
+  manager: { ru: "менеджер", uz: "menejer", pl: "menedżer" },
 };
 
 export type Section = {
   href: string;
-  label: string;
+  /** Название в меню на каждом языке панели — см. lib/admin/i18n.ts. */
+  label: Tr;
   roles: readonly Role[];
 };
 
@@ -60,41 +63,41 @@ const WITH_HEAD: readonly Role[] = ["admin", "head"];
  * команды отвечают редиректом.
  */
 export const SECTIONS: readonly Section[] = [
-  { href: "/admin", label: "Лиды", roles: EVERYONE },
-  { href: "/admin/orders", label: "Заявки", roles: EVERYONE },
-  { href: "/admin/scout", label: "Поиск", roles: EVERYONE },
-  { href: "/admin/prospect", label: "Касания", roles: EVERYONE },
+  { href: "/admin", label: { ru: "Лиды", uz: "Lidlar", pl: "Leady" }, roles: EVERYONE },
+  { href: "/admin/orders", label: { ru: "Заявки", uz: "Buyurtmalar", pl: "Zamówienia" }, roles: EVERYONE },
+  { href: "/admin/scout", label: { ru: "Поиск", uz: "Qidiruv", pl: "Wyszukiwanie" }, roles: EVERYONE },
+  { href: "/admin/prospect", label: { ru: "Касания", uz: "Aloqalar", pl: "Kontakty" }, roles: EVERYONE },
   // Надзор — рядом с касаниями: это разбор тех же разговоров. Всем, а не
   // только владельцу: урок нужен тому, кто пишет следующее письмо.
-  { href: "/admin/talks", label: "Надзор", roles: EVERYONE },
+  { href: "/admin/talks", label: { ru: "Надзор", uz: "Nazorat", pl: "Nadzór" }, roles: EVERYONE },
   // Кандидаты — только нанимающим. Владелец: «доступен руководителям и
   // мне, не менеджерам». Это не иерархия ради иерархии: в разборе лежат
   // чужие персональные данные и решение о человеке, и ни то ни другое не
   // становится лучше от того, что его читает вся студия.
-  { href: "/admin/candidates", label: "Кандидаты", roles: ["admin", "head"] },
-  { href: "/admin/projects", label: "Проекты", roles: EVERYONE },
-  { href: "/admin/stats", label: "Статистика", roles: EVERYONE },
+  { href: "/admin/candidates", label: { ru: "Кандидаты", uz: "Nomzodlar", pl: "Kandydaci" }, roles: ["admin", "head"] },
+  { href: "/admin/projects", label: { ru: "Проекты", uz: "Loyihalar", pl: "Projekty" }, roles: EVERYONE },
+  { href: "/admin/stats", label: { ru: "Статистика", uz: "Statistika", pl: "Statystyki" }, roles: EVERYONE },
   // Трафик сайта — владельцу и руководителям. Владелец: «чтобы Александр и
   // руководители имели доступ». Реклама — их работа, и без посещаемости её
   // не оценить. Смотреть — да; подключать Метрику и Google остаётся
   // владельцу: вход в Google — его аккаунт, и кнопки у руководителя нет.
-  { href: "/admin/traffic", label: "Трафик", roles: WITH_HEAD },
+  { href: "/admin/traffic", label: { ru: "Трафик", uz: "Trafik", pl: "Ruch" }, roles: WITH_HEAD },
   // Финансы — всем, но каждому своё: менеджер видит свои проекты и баланс,
   // руководитель — команду, владелец — всё. Границу держит страница.
-  { href: "/admin/contracts", label: "Договоры", roles: EVERYONE },
+  { href: "/admin/contracts", label: { ru: "Договоры", uz: "Shartnomalar", pl: "Umowy" }, roles: EVERYONE },
   // Расходы — только соучредителям. Менеджеру они не нужны и не полагаются:
   // это не его деньги и не его решения.
-  { href: "/admin/expenses", label: "Расходы", roles: ["admin", "head"] },
-  { href: "/admin/finance", label: "Финансы", roles: EVERYONE },
+  { href: "/admin/expenses", label: { ru: "Расходы", uz: "Xarajatlar", pl: "Wydatki" }, roles: ["admin", "head"] },
+  { href: "/admin/finance", label: { ru: "Финансы", uz: "Moliya", pl: "Finanse" }, roles: EVERYONE },
   // Релизы — только у админа: выложить файл значит решить, что именно
   // получит каждый, кто уже заплатил.
-  { href: "/admin/releases", label: "Релизы", roles: ADMIN_ONLY },
+  { href: "/admin/releases", label: { ru: "Релизы", uz: "Relizlar", pl: "Wydania" }, roles: ADMIN_ONLY },
   // Команда — владельцу и руководителю проектов. Но видят они разное:
   // руководитель заводит менеджеров и смотрит состав, а роли, грейды и
   // отключение остаются за владельцем — см. hiresStaff и managesStaff.
-  { href: "/admin/team", label: "Команда", roles: WITH_HEAD },
+  { href: "/admin/team", label: { ru: "Команда", uz: "Jamoa", pl: "Zespół" }, roles: WITH_HEAD },
   // Партнёры — деньги посторонним людям: только владелец.
-  { href: "/admin/partners", label: "Партнёры", roles: ADMIN_ONLY },
+  { href: "/admin/partners", label: { ru: "Партнёры", uz: "Hamkorlar", pl: "Partnerzy" }, roles: ADMIN_ONLY },
   // Прототипы — временно только владельцу, и причина не в доступе к данным,
   // а в деньгах. Сборка прототипа — самый дорогой вызов модели из всех:
   // на выходе целая страница, и платится она за каждый черновик, включая
@@ -103,19 +106,24 @@ export const SECTIONS: readonly Section[] = [
   //
   // Код вкладки остался на месте: вернуть её всем — это одна строка здесь
   // и три проверки прав, которые уже написаны.
-  { href: "/admin/proto", label: "Прототипы", roles: ADMIN_ONLY },
+  { href: "/admin/proto", label: { ru: "Прототипы", uz: "Prototiplar", pl: "Prototypy" }, roles: ADMIN_ONLY },
   // Разборы — только владельцу: опубликованный разбор называет чужой сайт
   // плохим под именем студии, и отозвать это нельзя.
-  { href: "/admin/razbor", label: "Разборы", roles: ADMIN_ONLY },
-  { href: "/admin/audit", label: "Журнал", roles: ADMIN_ONLY },
+  { href: "/admin/razbor", label: { ru: "Разборы", uz: "Tahlillar", pl: "Analizy" }, roles: ADMIN_ONLY },
+  { href: "/admin/audit", label: { ru: "Журнал", uz: "Jurnal", pl: "Dziennik" }, roles: ADMIN_ONLY },
   // Использование — тихий кастдев: чем команда пользуется, а что шум.
   // Только владельцу: отчёт, о котором знают, меряет не работу, а
   // старание выглядеть в нём хорошо.
-  { href: "/admin/usage", label: "Использование", roles: ADMIN_ONLY },
+  { href: "/admin/usage", label: { ru: "Использование", uz: "Foydalanish", pl: "Użycie" }, roles: ADMIN_ONLY },
   // Инструкции — последними: это справка, а не ежедневная работа. Видят все,
   // и каждый читает только про свои вкладки.
-  { href: "/admin/help", label: "Инструкции", roles: EVERYONE },
+  { href: "/admin/help", label: { ru: "Инструкции", uz: "Yo‘riqnoma", pl: "Instrukcje" }, roles: EVERYONE },
 ];
+
+/** Название раздела на языке панели. */
+export function sectionLabel(section: Section, locale: PanelLocale): string {
+  return section.label[locale];
+}
 
 export function navFor(role: Role): Section[] {
   return SECTIONS.filter((section) => section.roles.includes(role));

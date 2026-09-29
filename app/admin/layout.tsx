@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { sans, mono } from "@/app/fonts";
 import type { ReactNode } from "react";
+
+import { shellDict } from "@/content/admin-panel/shell";
+import { PANEL_HTML_LANG, PANEL_LANG_COOKIE, panelLocale } from "@/lib/admin/i18n";
 
 import "../globals.css";
 
@@ -9,10 +13,13 @@ import "../globals.css";
  * ссылка на неё может утечь откуда угодно, и полагаться на то, что робот
  * сначала спросит robots.txt, — значит полагаться на его вежливость.
  */
-export const metadata: Metadata = {
-  title: "Панель — DevUz Studio",
-  robots: { index: false, follow: false, nocache: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = panelLocale((await cookies()).get(PANEL_LANG_COOKIE)?.value);
+  return {
+    title: shellDict.pageTitle[locale],
+    robots: { index: false, follow: false, nocache: true },
+  };
+}
 
 /**
  * Свои html и body: корневой layout только пробрасывает children, а
@@ -22,9 +29,12 @@ export const metadata: Metadata = {
  * Шрифт display здесь не грузится: в панели нет ни одного заголовка, ради
  * которого стоило бы тянуть третье семейство.
  */
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  // Язык — из куки-зеркала: layout не ходит в базу за сотрудником (см.
+  // requireStaff), а для атрибута lang подсказки браузеру достаточно.
+  const locale = panelLocale((await cookies()).get(PANEL_LANG_COOKIE)?.value);
   return (
-    <html lang="ru" className={`${sans.variable} ${mono.variable}`}>
+    <html lang={PANEL_HTML_LANG[locale]} className={`${sans.variable} ${mono.variable}`}>
       <body className="min-h-screen bg-ink text-text antialiased">{children}</body>
     </html>
   );
