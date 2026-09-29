@@ -14,7 +14,7 @@ import {
   TRIAL,
 } from "@/content/clients/maximova/facts";
 
-import { FaqList, Later, LessonSteps, MomsLink, PriceList, TrialPoints, WhereBlock } from "../Blocks";
+import { FaqList, Later, LessonSteps, MomsLink, PlainList, PriceList, TrialPoints, WhereBlock } from "../Blocks";
 import { Book } from "../Book";
 import { Credit } from "../Credit";
 import { Motion } from "../Motion";
@@ -159,6 +159,8 @@ export function Cinema() {
             Стоимость
           </h2>
           <PriceList s={s} />
+          <h3 className={s.plainTitle}>Без сюрпризов</h3>
+          <PlainList s={s} />
         </section>
 
         <section className={s.scene} aria-labelledby="a-trial">

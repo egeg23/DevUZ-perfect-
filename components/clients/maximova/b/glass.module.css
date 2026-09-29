@@ -1017,6 +1017,25 @@
   background: var(--accent-soft);
 }
 
+.plainTitle {
+  margin: 32px 0 16px;
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.plain .trialItem {
+  background: hsla(0, 0%, 100%, 0.6);
+  transition:
+    opacity 500ms calc(var(--i) * 100ms) var(--ease),
+    transform 700ms calc(var(--i) * 100ms) var(--spring);
+}
+
+:global(.mx-js) .plain .trialItem:not([data-shown]) {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
 .ghost {
   display: inline-flex;
   align-items: center;

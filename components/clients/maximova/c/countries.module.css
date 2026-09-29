@@ -957,6 +957,10 @@
   transform: rotate(-12deg) scale(1.8);
 }
 
+.trial h2 {
+  padding-right: 96px;
+}
+
 .trialList {
   display: grid;
   gap: 12px;
@@ -984,6 +988,24 @@
   margin-top: 16px !important;
   color: var(--blue);
   font-weight: 700;
+}
+
+.plainTitle {
+  margin: 48px 0 16px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.plain .trialItem {
+  transition:
+    opacity 500ms calc(var(--i) * 120ms) var(--ease),
+    transform 600ms calc(var(--i) * 120ms) var(--pop);
+}
+
+:global(.mx-js) .plain .trialItem:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(12px);
 }
 
 .ghost {

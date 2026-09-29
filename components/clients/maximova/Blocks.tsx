@@ -7,6 +7,7 @@ import {
   LESSON,
   MISSING,
   MOMS_TEXT,
+  PLAIN,
   PRICES,
   TRIAL,
   phoneUrl,
@@ -51,6 +52,19 @@ export function PriceList({ s }: { s: Skin }) {
           <span className={s.priceTitle}>{item.title}</span>
           <span className={s.priceValue}>{item.price}</span>
           <span className={s.priceUnit}>{item.unit}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** «Без сюрпризов» — ответ на частые претензии к сетевым школам. */
+export function PlainList({ s }: { s: Skin }) {
+  return (
+    <ul className={`${s.trialList ?? ""} ${s.plain ?? ""}`}>
+      {PLAIN.map((point, i) => (
+        <li key={point} className={s.trialItem} data-reveal="" style={at(i)}>
+          {point}
         </li>
       ))}
     </ul>
