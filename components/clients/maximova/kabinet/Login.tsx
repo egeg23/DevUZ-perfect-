@@ -14,7 +14,7 @@ type Phase = "idle" | "starting" | "waiting" | "expired" | "error";
  * и страница, которая всё это время тихо спрашивала сервер, открывает
  * кабинет. Первый вход и есть регистрация: имя берётся из Telegram.
  */
-export function Login({ ready }: { ready: boolean }) {
+export function Login({ ready, invite = "" }: { ready: boolean; invite?: string }) {
   const [consent, setConsent] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [link, setLink] = useState("");
@@ -53,7 +53,7 @@ export function Login({ ready }: { ready: boolean }) {
     const response = await fetch("/api/maximova/auth/start", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ consent }),
+      body: JSON.stringify({ consent, invite }),
     }).catch(() => null);
     const data = (await response?.json().catch(() => null)) as { ok?: boolean; link?: string; token?: string; error?: string } | null;
     if (!data?.ok || !data.link || !data.token) {
