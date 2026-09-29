@@ -1589,3 +1589,71 @@ textarea.input {
     transform: none !important;
   }
 }
+
+/* ── Посадочные страницы ──────────────────────────────────────────────── */
+
+.landingHero {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 16px 16px;
+}
+
+@media (min-width: 720px) {
+  .landingHero {
+    padding: 64px 24px 24px;
+  }
+}
+
+.crumbs {
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.crumbs a {
+  color: var(--blue);
+}
+
+.landingTitle {
+  margin: 0 0 16px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(36px, 30.7px + 1.395vw, 48px);
+  line-height: 1.1;
+}
+
+.landingList {
+  display: grid;
+  gap: 8px;
+  max-width: 800px;
+  margin: 16px 0 0;
+  padding-left: 24px;
+}
+
+.linkList {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linkList a {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 16px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink) !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.linkList a::after {
+  content: "→";
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--red);
+}

@@ -3,8 +3,13 @@ import type { Metadata } from "next";
 import { Credit } from "@/components/clients/maximova/Credit";
 import s from "@/components/clients/maximova/kabinet/kabinet.module.css";
 import { CONTACTS, TEACHER } from "@/content/clients/maximova/facts";
+import { pageMetadata } from "@/lib/clients/maximova/seo";
 
-export const metadata: Metadata = { title: "Политика обработки персональных данных — Дарья Максимова" };
+export const metadata: Metadata = pageMetadata({
+  path: "/privacy",
+  title: "Политика обработки персональных данных — Дарья Максимова",
+  description: "Какие персональные данные собирает сайт Дарьи Максимовой, зачем, где хранит и как отозвать согласие.",
+});
 
 /**
  * Политика обработки персональных данных (152-ФЗ).

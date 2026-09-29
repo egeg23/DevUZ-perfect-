@@ -158,10 +158,11 @@ export function MomsLink({ className }: { className?: string }) {
 }
 
 /** Вопросы родителей — `details`, чтобы работало и без скрипта. */
-export function FaqList({ s }: { s: Skin }) {
+export function FaqList({ s, only }: { s: Skin; only?: string[] }) {
+  const items = only ? FAQ.filter((item) => only.some((p) => item.q.startsWith(p))) : FAQ;
   return (
     <div className={s.faq}>
-      {FAQ.map((item, i) => (
+      {items.map((item, i) => (
         <details key={item.q} className={s.faqItem} data-reveal="" style={at(i)}>
           <summary>{item.q}</summary>
           <p>{item.a}</p>

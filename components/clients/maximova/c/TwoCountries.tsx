@@ -32,6 +32,9 @@ import { BookingForm } from "../BookingForm";
 import { Credit } from "../Credit";
 import { Motion } from "../Motion";
 import { Skyline } from "./Skyline";
+import { LANDINGS } from "@/content/clients/maximova/pages";
+import { homeGraph } from "@/lib/clients/maximova/schema";
+import { jsonLd } from "@/lib/clients/maximova/seo";
 import s from "./countries.module.css";
 
 const at = (i: number) => ({ "--i": i }) as CSSProperties;
@@ -60,6 +63,7 @@ export function TwoCountries() {
   return (
     <div className={s.page}>
       <Motion />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(homeGraph()) }} />
 
       <nav className={s.bar} aria-label="Разделы">
         <a className={s.brand} href="#top">
@@ -78,9 +82,9 @@ export function TwoCountries() {
 
       <header className={s.hero} id="top">
         <div className={s.heroText}>
-          <p className={s.kicker}>{SCHOOL.title}</p>
+          <p className={s.kicker}>Два языка, две страны · у метро Китай-город</p>
           <h1 className={s.title}>
-            Два языка, <em>две страны</em>
+            Английский и французский <em>для детей в Москве</em>
           </h1>
           <p className={s.lead}>
             Я — {TEACHER.name}, преподаватель {TEACHER.universityShort}. Сама воспитываю двоих детей билингвами. Учу
@@ -167,6 +171,19 @@ export function TwoCountries() {
               </article>
             ))}
           </div>
+        </section>
+
+        <section className={s.section} aria-labelledby="c-programs">
+          <h2 id="c-programs" className={s.h2}>
+            Программы подробнее
+          </h2>
+          <ul className={s.linkList}>
+            {LANDINGS.map((l) => (
+              <li key={l.slug}>
+                <a href={`/maximova/${l.slug}`}>{l.h1}</a>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className={s.section} aria-labelledby="c-time">
