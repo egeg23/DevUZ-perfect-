@@ -324,9 +324,18 @@ function Timeline({ order, locale }: { order: OrderView; locale: Locale }) {
   );
 }
 
+const DATE_LOCALE: Record<Locale, string> = {
+  ru: "ru-RU",
+  en: "en-GB",
+  uz: "en-GB",
+  zh: "zh-CN",
+  uk: "uk-UA",
+  pl: "pl-PL",
+};
+
 function shortDate(value: string, locale: Locale): string {
   return new Date(value).toLocaleDateString(
-    locale === "ru" ? "ru-RU" : locale === "zh" ? "zh-CN" : "en-GB",
+    DATE_LOCALE[locale],
     { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Tashkent" },
   );
 }

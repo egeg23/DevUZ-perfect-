@@ -136,6 +136,10 @@ export function Invoice({
         <p className="mt-1 text-right text-xs text-faint">
           {locale === "ru"
             ? `Оплата в сумах по курсу ЦБ РУз на дату платежа (ориентировочно ${(amount * USD_RATE).toLocaleString("ru-RU")} сум).`
+            : locale === "uk"
+            ? `Оплата в сумах за курсом ЦБ РУз на дату платежу (орієнтовно ${(amount * USD_RATE).toLocaleString("ru-RU")} сум).`
+            : locale === "pl"
+            ? `Płatność w sumach po kursie Banku Centralnego Uzbekistanu z dnia płatności (orientacyjnie ${(amount * USD_RATE).toLocaleString("ru-RU")} UZS).`
             : `Payable in UZS at the Central Bank rate on the payment date (approx. ${(amount * USD_RATE).toLocaleString("en-US")} UZS).`}
         </p>
       ) : null}
@@ -187,7 +191,9 @@ function Party({
  * превращает вечерний счёт во вчерашний.
  */
 function date(value: Date, locale: Locale): string {
-  return value.toLocaleDateString(locale === "ru" ? "ru-RU" : locale === "zh" ? "zh-CN" : "en-GB", {
+  const tags: Partial<Record<Locale, string>> = { ru: "ru-RU", zh: "zh-CN", uk: "uk-UA", pl: "pl-PL" };
+  const tag = tags[locale] ?? "en-GB";
+  return value.toLocaleDateString(tag, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

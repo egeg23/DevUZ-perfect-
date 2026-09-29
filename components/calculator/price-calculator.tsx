@@ -37,7 +37,9 @@ export function PriceCalculator({ locale, dict }: { locale: Locale; dict: Dictio
   const [currency, setCurrency] = useState<Currency>(
     // Местный заказчик думает в сумах, зарубежный — в долларах. Локаль
     // угадывает это лучше, чем любое значение по умолчанию для всех.
-    locale === "en" || locale === "zh" ? "usd" : "uzs",
+    // Украинский и польский — тоже зарубежный заказчик: сум для него
+    // незнакомая валюта, и первая же цифра в ней ничего не скажет.
+    locale === "en" || locale === "zh" || locale === "uk" || locale === "pl" ? "usd" : "uzs",
   );
   const [sent, setSent] = useState(false);
 

@@ -274,4 +274,8 @@ const openers: Record<Locale, (name: string, tier: string, total: string) => str
     `Assalomu alaykum${name ? ", " + name : ""}! Men DevUz studiyasidan [ism] — vitrinadan brifingizni oldim: «${tier}» paketi, jami ${total}. Qachon boshlashni rejalashtiryapsiz va tayyor matn hamda suratlar bormi?`,
   zh: (name, tier, total) =>
     `您好${name ? "，" + name : ""}！我是 DevUz Studio 的 [姓名]，已收到您在展示页提交的需求：「${tier}」套餐，合计 ${total}。请问计划何时启动，是否已有现成的文案和图片？`,
+  uk: (name, tier, total) =>
+    `Доброго дня${name ? ", " + name : ""}! Мене звати [ім'я], я зі студії DevUz — отримав ваш бриф із вітрини: пакет «${tier}», разом ${total}. Підкажіть, коли плануєте стартувати і чи є у вас готові тексти та фотографії?`,
+  pl: (name, tier, total) =>
+    `Dzień dobry${name ? ", " + name : ""}! Nazywam się [imię], piszę ze studia DevUz — dostałem Twój brief z witryny: pakiet „${tier}”, łącznie ${total}. Kiedy planujesz start i czy masz już gotowe teksty i zdjęcia?`,
 };

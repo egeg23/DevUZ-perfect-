@@ -345,7 +345,7 @@ test("агентство — любая компания с регулярным
     assert.ok(program.tenderTitle && program.tenderText, `${locale}: нет слайда про тендеры`);
     assert.equal(program.tenderPoints.length, ru.tenderPoints.length, `${locale}: пунктов про тендеры меньше`);
     assert.ok(
-      getDictionary(locale).partners.faq.some((item) => /тендер|tender|招标/i.test(item.q)),
+      getDictionary(locale).partners.faq.some((item) => /тендер|tender|招标|przetarg/i.test(item.q)),
       `${locale}: в FAQ программы нет вопроса про тендеры`,
     );
   }

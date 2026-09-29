@@ -95,24 +95,32 @@ export const products: Product[] = [
       en: "Ready-Made Delivery Marketplace — Full Source Code",
       uz: "Tayyor yetkazib berish marketpleysi — to'liq manba kodi",
       zh: "成品配送市场平台 — 完整源代码",
+      uk: "Готовий маркетплейс доставки під ключ — вихідний код",
+      pl: "Gotowy marketplace dostaw pod klucz — kod źródłowy",
     },
     seoDescription: {
       ru: "Исходный код маркетплейса доставки: приложение на Flutter для iOS, Android и веба, бэкенд на Node, три роли и интеграции с POS-системами. 16 000 $.",
       en: "Source code for a delivery marketplace: Flutter app for iOS, Android and web, Node backend, three user roles and POS integrations. $16,000.",
       uz: "Yetkazib berish marketpleysi manba kodi: iOS, Android va veb uchun Flutter ilova, Node backend, uchta rol va POS integratsiyalari. 30 000 $.",
       zh: "配送市场平台源代码：适用于 iOS、Android 和网页的 Flutter 应用、Node 后端、三种角色及 POS 集成。16,000 美元。",
+      uk: "Вихідний код маркетплейсу доставки: застосунок на Flutter для iOS, Android і вебу, бекенд на Node, три ролі та інтеграції з POS-системами. 16 000 $.",
+      pl: "Kod źródłowy marketplace’u dostaw: aplikacja we Flutterze na iOS, Androida i web, backend w Node, trzy role i integracje z systemami POS. 16 000 $.",
     },
     title: {
       ru: "Маркетплейс доставки",
       en: "Delivery Marketplace",
       uz: "Yetkazib berish marketpleysi",
       zh: "配送市场平台",
+      uk: "Маркетплейс доставки",
+      pl: "Marketplace dostaw",
     },
     tagline: {
       ru: "Одно приложение, три роли, готовые B2B-интеграции",
       en: "One app, three roles, B2B integrations included",
       uz: "Bitta ilova, uchta rol, tayyor B2B integratsiyalar",
       zh: "一个应用，三种角色，内置 B2B 集成",
+      uk: "Один застосунок, три ролі, готові B2B-інтеграції",
+      pl: "Jedna aplikacja, trzy role, gotowe integracje B2B",
     },
     priceUsd: 16000,
     description: {
@@ -120,6 +128,8 @@ export const products: Product[] = [
       en: "The complete source code of a food and grocery delivery marketplace. Buyer, courier and restaurant live in one app and switch by role rather than by separate builds. Sign-in is through Telegram, with no SMS and no passwords. Restaurants connect their own POS through the interface and the menu syncs automatically.",
       uz: "Oziq-ovqat yetkazib berish marketpleysining to'liq manba kodi. Xaridor, kuryer va restoran bitta ilovada yashaydi va alohida yig'malar emas, rol orqali almashadi. Kirish — Telegram orqali, SMS va parolsiz. Restoranlar o'z kassa tizimini interfeys orqali ulaydi, menyu avtomatik sinxronlanadi.",
       zh: "餐饮与生鲜配送市场平台的完整源代码。买家、骑手和商家共处一个应用，通过切换角色而非分别打包。使用 Telegram 登录，无需短信与密码。商家可自行在界面中接入自己的收银系统，菜单自动同步。",
+      uk: "Повний вихідний код маркетплейсу доставки їжі та продуктів. Покупець, кур'єр і ресторан працюють в одному застосунку й перемикаються роллю, а не окремими збірками. Вхід — через Telegram, без SMS і паролів. Ресторани самі підключають свою касову систему через інтерфейс, і меню синхронізується автоматично.",
+      pl: "Pełny kod źródłowy marketplace’u z dostawą jedzenia i zakupów. Klient, kurier i restauracja korzystają z jednej aplikacji i przełączają się rolą, a nie osobnymi buildami. Logowanie przez Telegram — bez SMS-ów i haseł. Restauracje same podłączają swój system kasowy w interfejsie, a menu synchronizuje się automatycznie.",
     },
     blocks: [
       {
@@ -128,6 +138,8 @@ export const products: Product[] = [
           en: "Mobile app",
           uz: "Mobil ilova",
           zh: "移动应用",
+          uk: "Мобільний застосунок",
+          pl: "Aplikacja mobilna",
         },
         items: {
           ru: [
@@ -162,6 +174,22 @@ export const products: Product[] = [
             "商家：概览、订单队列、商品、集成、设置",
             "骑手位置实时地图，Telegram 登录",
           ],
+          uk: [
+            "Flutter: iOS, Android і веб з одного коду, близько 14 000 рядків",
+            "Три повноцінні ролі: покупець, кур'єр, менеджер ресторану",
+            "Покупець: головна, каталог, кошик, відстеження замовлення, профіль",
+            "Кур'єр: вільні замовлення, активна доставка, заробіток, верифікація",
+            "Ресторан: зведення, черга замовлень, товари, інтеграції, налаштування",
+            "Карта з кур'єром у реальному часі, вхід через Telegram",
+          ],
+          pl: [
+            "Flutter: iOS, Android i web z jednego kodu, około 14 000 linii",
+            "Trzy pełnoprawne role: klient, kurier, menedżer restauracji",
+            "Klient: strona główna, katalog, koszyk, śledzenie zamówienia, profil",
+            "Kurier: wolne zamówienia, aktywna dostawa, zarobki, weryfikacja",
+            "Restauracja: podsumowanie, kolejka zamówień, produkty, integracje, ustawienia",
+            "Mapa z kurierem w czasie rzeczywistym, logowanie przez Telegram",
+          ],
         },
       },
       {
@@ -170,6 +198,8 @@ export const products: Product[] = [
           en: "Backend and data",
           uz: "Backend va ma'lumotlar",
           zh: "后端与数据",
+          uk: "Бекенд і дані",
+          pl: "Backend i dane",
         },
         items: {
           ru: [
@@ -200,6 +230,20 @@ export const products: Product[] = [
             "后台任务队列：通知、同步、延时任务",
             "PostgreSQL 16 与 Redis 7",
           ],
+          uk: [
+            "Node 20 і Express, понад тридцять моделей даних у Prisma",
+            "Замовлення, магазини, товари, платежі, геокодування адрес",
+            "Оновлення замовлення й кур'єра через вебсокет, без опитування сервера",
+            "Черга фонових задач: сповіщення, синхронізація, відкладені дії",
+            "PostgreSQL 16 і Redis 7",
+          ],
+          pl: [
+            "Node 20 i Express, ponad trzydzieści modeli danych w Prisma",
+            "Zamówienia, sklepy, produkty, płatności, geokodowanie adresów",
+            "Aktualizacje zamówienia i kuriera przez WebSocket, bez odpytywania serwera",
+            "Kolejka zadań w tle: powiadomienia, synchronizacja, zadania odroczone",
+            "PostgreSQL 16 i Redis 7",
+          ],
         },
       },
       {
@@ -208,6 +252,8 @@ export const products: Product[] = [
           en: "B2B: connecting chains",
           uz: "B2B: tarmoqlarni ulash",
           zh: "B2B：连锁接入",
+          uk: "B2B: підключення мереж",
+          pl: "B2B: podłączanie sieci",
         },
         items: {
           ru: [
@@ -238,6 +284,20 @@ export const products: Product[] = [
             "后台内置带示例的文档与实时请求日志",
             "面向百家门店的连锁而非单店设计",
           ],
+          uk: [
+            "Ресторан сам підключає iiko, Poster або 1С через інтерфейс",
+            "Меню й залишки синхронізуються автоматично",
+            "Замовлення повертаються партнерові через webhook з підписом HMAC",
+            "Документація з прикладами просто в кабінеті, з живим логом запитів",
+            "Розраховано на мережу із сотні точок, а не на одну кав'ярню",
+          ],
+          pl: [
+            "Restauracja sama podłącza iiko, Poster lub 1C w interfejsie",
+            "Menu i stany magazynowe synchronizują się automatycznie",
+            "Zamówienia wracają do partnera przez webhook z podpisem HMAC",
+            "Dokumentacja z przykładami bezpośrednio w panelu, z podglądem logu zapytań na żywo",
+            "Zaprojektowane dla sieci liczącej sto lokali, a nie dla jednej kawiarni",
+          ],
         },
       },
       {
@@ -246,6 +306,8 @@ export const products: Product[] = [
           en: "Deployment",
           uz: "Joylashtirish",
           zh: "部署",
+          uk: "Розгортання",
+          pl: "Wdrożenie",
         },
         items: {
           ru: [
@@ -271,6 +333,18 @@ export const products: Product[] = [
             "HTTPS 证书自动签发",
             "从空服务器到可用环境：10–15 分钟",
             "附带首次启动所需的示例数据",
+          ],
+          uk: [
+            "Один скрипт піднімає чотири контейнери на чистій Ubuntu",
+            "Сертифікат HTTPS випускається автоматично",
+            "Від порожнього сервера до робочого стенда — 10–15 хвилин",
+            "Демодані для першого запуску в комплекті",
+          ],
+          pl: [
+            "Jeden skrypt uruchamia cztery kontenery na czystym Ubuntu",
+            "Certyfikat HTTPS wystawiany jest automatycznie",
+            "Od pustego serwera do działającego środowiska — 10–15 minut",
+            "Dane demo do pierwszego uruchomienia w zestawie",
           ],
         },
       },
@@ -304,12 +378,26 @@ export const products: Product[] = [
         "连锁收银系统 B2B 接入的订阅费",
         "配送收费与加急附加费",
       ],
+      uk: [
+        "Комісія з кожного замовлення — основна модель",
+        "Платне розміщення й просування ресторанів у видачі",
+        "Абонентська плата за B2B-підключення касової системи мережі",
+        "Платна доставка й націнка за терміновість",
+      ],
+      pl: [
+        "Prowizja od każdego zamówienia — główny model",
+        "Płatne wyróżnienie i promowanie restauracji w wynikach",
+        "Abonament za podłączenie B2B systemu kasowego sieci",
+        "Płatna dostawa i dopłata za ekspres",
+      ],
     },
     readiness: {
       ru: "Готов к закрытой бете (пять ресторанов, оплата наличными) — примерно на 80%. До публичного запуска с реальными деньгами и приложением в сторах — около 48%: недостающее не в коде, а в договорах и аккаунтах, см. ниже.",
       en: "Ready for a closed beta (five restaurants, cash only) at roughly 80%. For a public launch with real money and store apps, roughly 48% — what is missing is not code but contracts and accounts, see below.",
       uz: "Yopiq betaga (beshta restoran, naqd to'lov) taxminan 80% tayyor. Haqiqiy pul va do'kondagi ilova bilan ommaviy ishga tushirishgacha — taxminan 48%: yetishmayotgani kod emas, shartnomalar va hisoblar, quyiga qarang.",
       zh: "封闭测试（五家商户、仅现金）就绪度约 80%。面向真实资金与应用商店上架的公开发布约 48% —— 欠缺的不是代码，而是合同与账号，详见下文。",
+      uk: "Готовий до закритої бети (п'ять ресторанів, оплата готівкою) — приблизно на 80%. До публічного запуску з реальними грошима й застосунком у сторах — близько 48%: бракує не коду, а договорів та акаунтів, див. нижче.",
+      pl: "Gotowy do zamkniętej bety (pięć restauracji, płatność gotówką) — mniej więcej w 80%. Do publicznego startu z prawdziwymi pieniędzmi i aplikacją w sklepach — w około 48%: brakujące elementy nie leżą w kodzie, tylko w umowach i kontach, patrz niżej.",
     },
     buyerProvides: {
       ru: [
@@ -336,12 +424,26 @@ export const products: Product[] = [
         "法律文件：公开要约、数据处理、商家合同",
         "生产服务器与域名",
       ],
+      uk: [
+        "Договори з платіжною системою: Click, Payme або аналог",
+        "Акаунти розробника в App Store і Google Play",
+        "Юридичне оформлення: оферта, обробка даних, договори з ресторанами",
+        "Продакшн-сервер і домен",
+      ],
+      pl: [
+        "Umowy z operatorem płatności: Click, Payme lub odpowiednik",
+        "Konta deweloperskie w App Store i Google Play",
+        "Formalności prawne: regulamin, przetwarzanie danych, umowy z restauracjami",
+        "Serwer produkcyjny i domena",
+      ],
     },
     savings: {
       ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 22 400–27 200 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
       en: "Building the same from scratch costs on average 40–70% more — that is $22,400–27,200. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
       uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 22 400–27 200 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
       zh: "从零开发同样的产品平均要贵 40–70% —— 约合22,400–27,200 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
+      uk: "Розробка такого самого з нуля коштує в середньому на 40–70% дорожче — це 22 400–27 200 $. І навіть з урахуванням ціни покупки доопрацювати готовий продукт під ваше завдання дешевше: ви платите лише за відмінності, а не за те, що вже написано й перевірено в роботі. Це оцінка студії, а не вимір: точна сума залежить від обсягу переробок.",
+      pl: "Stworzenie takiego samego rozwiązania od zera kosztuje średnio o 40–70% więcej — to 22 400–27 200 $. Nawet po doliczeniu ceny zakupu dopracowanie gotowego produktu pod Twoje potrzeby wychodzi taniej: płacisz tylko za różnice, a nie za to, co już zostało napisane i sprawdzone w działaniu. To szacunek studia, a nie pomiar: dokładna kwota zależy od zakresu zmian.",
     },
   },
   {
@@ -351,24 +453,32 @@ export const products: Product[] = [
       en: "AI Agent Service for Marketplace Sellers — Source Code",
       uz: "Marketpleys sotuvchilari uchun AI-agentlar xizmati — manba kodi",
       zh: "面向电商卖家的 AI 代理服务 — 源代码",
+      uk: "Сервіс ШІ-агентів для продавців маркетплейсів — вихідний код",
+      pl: "Serwis agentów AI dla sprzedawców na marketplace’ach — kod",
     },
     seoDescription: {
       ru: "Готовый SaaS: шесть ИИ-агентов ведут карточки, цены, отзывы и рекламу продавца на семи площадках. С биллингом, тарифами и админкой. 15 000 $.",
       en: "A ready SaaS: six AI agents run a seller's listings, pricing, reviews and ads across seven marketplaces. Billing, tariffs and an admin panel included. $15,000.",
       uz: "Tayyor SaaS: oltita AI-agent sotuvchining kartochkalari, narxlari, sharhlari va reklamasini yettita maydonchada boshqaradi. Billing, tariflar va admin panel bilan. 15 000 $.",
       zh: "成品 SaaS：六个 AI 代理在七个平台上管理卖家的商品页、定价、评价与广告。含计费、套餐与管理后台。15,000 美元。",
+      uk: "Готовий SaaS: шість ШІ-агентів ведуть картки, ціни, відгуки й рекламу продавця на семи майданчиках. З білінгом, тарифами й адмінкою. 15 000 $.",
+      pl: "Gotowy SaaS: sześć agentów AI prowadzi karty produktów, ceny, opinie i reklamy sprzedawcy na siedmiu platformach. Z billingiem, planami i panelem. 15 000 $.",
     },
     title: {
       ru: "Сервис ИИ-агентов для продавцов",
       en: "AI Agent Service for Sellers",
       uz: "Sotuvchilar uchun AI-agentlar xizmati",
       zh: "面向卖家的 AI 代理服务",
+      uk: "Сервіс ШІ-агентів для продавців",
+      pl: "Serwis agentów AI dla sprzedawców",
     },
     tagline: {
       ru: "Агент предлагает, человек подтверждает, система учится на исходе",
       en: "The agent proposes, a human approves, the system learns from the outcome",
       uz: "Agent taklif qiladi, inson tasdiqlaydi, tizim natijadan o'rganadi",
       zh: "代理提出建议，人工确认，系统从结果中学习",
+      uk: "Агент пропонує, людина підтверджує, система вчиться на результаті",
+      pl: "Agent proponuje, człowiek zatwierdza, system uczy się na wynikach",
     },
     priceUsd: 15000,
     description: {
@@ -376,10 +486,12 @@ export const products: Product[] = [
       en: "A working SaaS in full: six agents on a custom LLM handle a seller's reviews, listings, pricing, competitors, ads and logistics. Each agent runs in one of three modes — off, propose and wait for approval, or act within set guardrails. The point is not text generation but the feedback loop: the system records what the human approved, edited or rejected, and adapts to that particular seller.",
       uz: "To'liq ishlaydigan SaaS: maxsus LLM asosidagi oltita agent sotuvchining sharhlari, kartochkalari, narxlari, raqobatchilari, reklamasi va logistikasini boshqaradi. Har bir agent uchta rejimdan birida ishlaydi — o'chirilgan, taklif qilib tasdiq kutadi yoki belgilangan qoidalar doirasida o'zi harakat qiladi. Asosiysi matn yaratish emas, teskari aloqa halqasi: tizim inson nimani tasdiqlagani, tahrirlagani va rad etganini eslab qoladi.",
       zh: "一套完整可用的 SaaS：六个基于定制 LLM 的代理负责卖家的评价、商品页、定价、竞品、广告与物流。每个代理运行在三种模式之一 —— 关闭、提出建议并等待确认、或在既定护栏内自行执行。关键不在于文本生成，而在于反馈闭环：系统记录人工确认、修改或拒绝了什么，并针对该卖家进行调整。",
+      uk: "Робочий SaaS повністю: шість агентів на кастомній LLM ведуть відгуки, картки, ціни, конкурентів, рекламу й логістику продавця. Кожен агент працює в одному з трьох режимів — вимкнений, пропонує й чекає на підтвердження, діє сам у межах заданих правил. Головне тут не генерація тексту, а цикл зворотного зв'язку: система запам'ятовує, що людина підтвердила, що відредагувала, а що відхилила, і підлаштовується під конкретного продавця.",
+      pl: "Kompletny, działający SaaS: sześć agentów na własnym LLM obsługuje opinie, karty produktów, ceny, konkurencję, reklamę i logistykę sprzedawcy. Każdy agent działa w jednym z trzech trybów — wyłączony, proponuje i czeka na zatwierdzenie albo działa sam w granicach ustalonych reguł. Kluczowe nie jest tu generowanie tekstu, lecz pętla informacji zwrotnej: system zapamiętuje, co człowiek zatwierdził, co poprawił, a co odrzucił, i dopasowuje się do konkretnego sprzedawcy.",
     },
     blocks: [
       {
-        title: { ru: "Шесть агентов", en: "Six agents", uz: "Oltita agent", zh: "六个代理" },
+        title: { ru: "Шесть агентов", en: "Six agents", uz: "Oltita agent", zh: "六个代理", uk: "Шість агентів", pl: "Sześć agentów" },
         items: {
           ru: [
             "Отзывы: разбирает на претензии и обычные, пишет ответ, публикует",
@@ -413,10 +525,26 @@ export const products: Product[] = [
             "广告：投放出价与预算",
             "物流：库存、补货、仓间分配",
           ],
+          uk: [
+            "Відгуки: відокремлює претензії від звичайних, пише відповідь, публікує",
+            "Контент: картки товару — заголовки, описи, характеристики",
+            "Ціни: стежить за попитом і маржею, пропонує переоцінку",
+            "Конкуренти: відстежує чужі картки й ціни в категорії",
+            "Реклама: ставки й бюджети кампаній",
+            "Логістика: залишки, поставки, розподіл по складах",
+          ],
+          pl: [
+            "Opinie: dzieli na reklamacje i zwykłe, pisze odpowiedź, publikuje",
+            "Treści: karty produktów — tytuły, opisy, parametry",
+            "Ceny: śledzi popyt i marżę, proponuje zmianę cen",
+            "Konkurencja: monitoruje cudze karty i ceny w kategorii",
+            "Reklama: stawki i budżety kampanii",
+            "Logistyka: stany, dostawy, rozkład między magazynami",
+          ],
         },
       },
       {
-        title: { ru: "Площадки", en: "Marketplaces", uz: "Maydonchalar", zh: "平台" },
+        title: { ru: "Площадки", en: "Marketplaces", uz: "Maydonchalar", zh: "平台", uk: "Майданчики", pl: "Platformy" },
         items: {
           ru: [
             "Wildberries, Ozon, Яндекс Маркет — основной контур",
@@ -442,6 +570,18 @@ export const products: Product[] = [
             "Uzum（乌兹别克斯坦）与 Kaspi（哈萨克斯坦）—— 区域平台",
             "Amazon —— 面向独联体以外市场的插件",
           ],
+          uk: [
+            "Wildberries, Ozon, Яндекс Маркет — основний контур",
+            "Авіто — окремим підключенням, з кабінетами",
+            "Uzum (Узбекистан) і Kaspi (Казахстан) — регіональні",
+            "Amazon — підключення для виходу за межі СНД",
+          ],
+          pl: [
+            "Wildberries, Ozon, Yandex Market — główny zestaw",
+            "Avito — osobne podłączenie, z kontami",
+            "Uzum (Uzbekistan) i Kaspi (Kazachstan) — regionalne",
+            "Amazon — podłączenie do wyjścia poza WNP",
+          ],
         },
       },
       {
@@ -450,6 +590,8 @@ export const products: Product[] = [
           en: "Self-learning",
           uz: "O'z-o'zidan o'rganish",
           zh: "自学习",
+          uk: "Самонавчання",
+          pl: "Samouczenie",
         },
         items: {
           ru: [
@@ -480,6 +622,20 @@ export const products: Product[] = [
             "依据累积历史，代理逐步适配该卖家",
             "影子模式：代理只计算不执行 —— 花钱之前就能看到质量",
           ],
+          uk: [
+            "Кожне рішення агента зберігається разом із результатом",
+            "Розрізняються підтвердження, правка, відмова та «людина зробила сама раніше»",
+            "Правка цінніша за підтвердження: вона показує, що саме не так",
+            "За накопиченою історією агент підлаштовується під конкретного продавця",
+            "Пробний режим: агент рахує, але нічого не робить — якість видно ще до грошей",
+          ],
+          pl: [
+            "Każda decyzja agenta zapisywana jest razem z wynikiem",
+            "System odróżnia zatwierdzenie, poprawkę, odrzucenie i „człowiek zrobił to sam wcześniej”",
+            "Poprawka jest cenniejsza niż zatwierdzenie: pokazuje, co dokładnie jest nie tak",
+            "Na podstawie zebranej historii agent dopasowuje się do konkretnego sprzedawcy",
+            "Tryb próbny: agent liczy, ale niczego nie robi — jakość widać, zanim wydasz pieniądze",
+          ],
         },
       },
       {
@@ -488,6 +644,8 @@ export const products: Product[] = [
           en: "Billing and admin",
           uz: "Billing va admin panel",
           zh: "计费与管理后台",
+          uk: "Білінг і адмінка",
+          pl: "Billing i panel admina",
         },
         items: {
           ru: [
@@ -521,6 +679,22 @@ export const products: Product[] = [
             "带提现申请的推荐返佣计划",
             "后台：客户、带角色的管理员、支付、工单、指标",
             "按客户核算模型开销",
+          ],
+          uk: [
+            "Тарифи з різним набором можливостей і лімітами",
+            "Оплата через платіжного провайдера, історія платежів, повернення",
+            "Промокоди: відсоток, фіксована знижка, безкоштовні дні",
+            "Реферальна програма із заявками на виплату",
+            "Адмінка: клієнти, менеджери з ролями, платежі, тікети, метрики",
+            "Облік витрат на модель для кожного клієнта",
+          ],
+          pl: [
+            "Plany z różnym zakresem funkcji i limitami",
+            "Płatności przez operatora płatności, historia płatności, zwroty",
+            "Kody promocyjne: procent, stały rabat, darmowe dni",
+            "Program poleceń z wnioskami o wypłatę",
+            "Panel admina: klienci, menedżerowie z rolami, płatności, zgłoszenia, metryki",
+            "Rozliczanie kosztów modelu dla każdego klienta",
           ],
         },
       },
@@ -557,6 +731,20 @@ export const products: Product[] = [
         "付费插件：单独平台与额外账户",
         "推荐返佣：合作伙伴带来卖家并分成",
         "无生成额度的套餐 —— 仅分析与建议，低价入门",
+      ],
+      uk: [
+        "Підписка за тарифами — основний дохід, від пробного до бізнес-рівня",
+        "Докупівля кредитів на генерації понад включене в тариф",
+        "Платні підключення: окремі майданчики й додаткові кабінети",
+        "Реферальна програма: партнер приводить продавця й отримує частку",
+        "Тариф без генерацій — лише аналітика й рекомендації, дешевий вхід",
+      ],
+      pl: [
+        "Subskrypcja w planach — główny przychód, od wersji próbnej po poziom biznesowy",
+        "Dokupowanie kredytów na generowanie ponad limit z planu",
+        "Płatne podłączenia: dodatkowe platformy i kolejne konta",
+        "Program poleceń: partner przyprowadza sprzedawcę i dostaje udział",
+        "Plan bez generowania — tylko analityka i rekomendacje, tani start",
       ],
     },
     rebuild: {
@@ -596,12 +784,32 @@ export const products: Product[] = [
         "物流：代理挑选承运商并就运价议价，物流员批准",
         "改变的是连接器与代理提示词。确认闭环、自学习、套餐、支付与后台原样沿用。",
       ],
+      uk: [
+        "Ядро не про маркетплейси. Це зв'язка: конектор до зовнішньої системи → агент пропонує дію → людина підтверджує або править → результат записується → агент навчається. Плюс білінг, тарифи й адмінка. Галузь тут — змінна частина.",
+        "Аптеки й дистрибуція: агент стежить за залишками й термінами придатності, пропонує замовлення постачальнику, закупівельник підтверджує",
+        "Нерухомість: агент веде оголошення на майданчиках, відповідає на заявки, підказує ринкову ціну, рієлтор править",
+        "Громадське харчування: агент коригує меню й ціни за продажами та собівартістю, керуючий підтверджує",
+        "Клініки: агент обробляє записи, нагадує пацієнтам, дозаповнює картку, адміністратор перевіряє",
+        "Логістика: агент підбирає перевізника й торгується за ставку, логіст затверджує",
+        "Змінюються конектори й промпти агентів. Цикли підтвердження, самонавчання, тарифи, платежі й адмінка переносяться як є.",
+      ],
+      pl: [
+        "Rdzeń nie dotyczy marketplace’ów. To schemat: konektor do zewnętrznego systemu → agent proponuje działanie → człowiek zatwierdza lub poprawia → wynik jest zapisywany → agent się uczy. Do tego billing, plany i panel admina. Branża jest tu wymiennym elementem.",
+        "Apteki i dystrybucja: agent pilnuje stanów i terminów ważności, proponuje zamówienie u dostawcy, zaopatrzeniowiec zatwierdza",
+        "Nieruchomości: agent prowadzi ogłoszenia na portalach, odpowiada na zapytania, podpowiada cenę rynkową, pośrednik poprawia",
+        "Gastronomia: agent poprawia menu i ceny na podstawie sprzedaży i kosztów, kierownik zatwierdza",
+        "Kliniki: agent obsługuje wizyty, przypomina pacjentom, uzupełnia kartę, rejestracja sprawdza",
+        "Logistyka: agent dobiera przewoźnika i negocjuje stawkę, logistyk zatwierdza",
+        "Zmieniają się konektory i prompty agentów. Pętle zatwierdzania, samouczenie, plany, płatności i panel admina przenosisz bez zmian.",
+      ],
     },
     readiness: {
       ru: "Работающий сервис с платящими клиентами: биллинг, тарифы, админка и агенты — в проде. Покупателю нужны свои ключи площадок, свой договор с платёжным провайдером и свой ключ доступа к модели.",
       en: "A live service with paying customers: billing, tariffs, admin and agents are in production. The buyer needs their own marketplace keys, their own payment provider contract and their own model access key.",
       uz: "To'lovchi mijozlari bor ishlaydigan xizmat: billing, tariflar, admin panel va agentlar prodda. Xaridorga o'z maydoncha kalitlari, to'lov provayderi bilan shartnomasi va modelga kirish kaliti kerak.",
       zh: "已有付费客户的在运服务：计费、套餐、后台与代理均在生产环境。买方需自备平台密钥、支付服务商合同与模型访问密钥。",
+      uk: "Робочий сервіс із клієнтами, які платять: білінг, тарифи, адмінка й агенти — у продакшні. Покупцеві потрібні власні ключі майданчиків, власний договір із платіжним провайдером і власний ключ доступу до моделі.",
+      pl: "Działający serwis z płacącymi klientami: billing, plany, panel admina i agenci — na produkcji. Kupujący potrzebuje własnych kluczy do platform, własnej umowy z operatorem płatności i własnego klucza dostępu do modelu.",
     },
     buyerProvides: {
       ru: [
@@ -628,12 +836,26 @@ export const products: Product[] = [
         "语言模型访问密钥",
         "服务器与域名",
       ],
+      uk: [
+        "API-ключі майданчиків, на яких він працюватиме",
+        "Договір із платіжним провайдером для приймання оплати від своїх клієнтів",
+        "Ключ доступу до мовної моделі",
+        "Сервер і домен",
+      ],
+      pl: [
+        "Klucze API platform, na których serwis ma działać",
+        "Umowa z operatorem płatności na przyjmowanie opłat od własnych klientów",
+        "Klucz dostępu do modelu językowego",
+        "Serwer i domena",
+      ],
     },
     savings: {
       ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 21 000–25 500 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
       en: "Building the same from scratch costs on average 40–70% more — that is $21,000–25,500. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
       uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 21 000–25 500 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
       zh: "从零开发同样的产品平均要贵 40–70% —— 约合21,000–25,500 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
+      uk: "Розробка такого самого з нуля коштує в середньому на 40–70% дорожче — це 21 000–25 500 $. І навіть з урахуванням ціни покупки доопрацювати готовий продукт під ваше завдання дешевше: ви платите лише за відмінності, а не за те, що вже написано й перевірено в роботі. Це оцінка студії, а не вимір: точна сума залежить від обсягу переробок.",
+      pl: "Stworzenie takiego samego rozwiązania od zera kosztuje średnio o 40–70% więcej — to 21 000–25 500 $. Nawet po doliczeniu ceny zakupu dopracowanie gotowego produktu pod Twoje potrzeby wychodzi taniej: płacisz tylko za różnice, a nie za to, co już zostało napisane i sprawdzone w działaniu. To szacunek studia, a nie pomiar: dokładna kwota zależy od zakresu zmian.",
     },
   },
   {
@@ -643,24 +865,32 @@ export const products: Product[] = [
       en: "AI Legal Document Analysis Service — Source Code",
       uz: "Hujjatlarni yuridik tahlil qiluvchi AI-xizmat — manba kodi",
       zh: "AI 法律文书分析服务 — 源代码",
+      uk: "ШІ-сервіс юридичного аналізу документів — вихідний код",
+      pl: "Serwis AI do prawnej analizy dokumentów — kod źródłowy",
     },
     seoDescription: {
       ru: "Готовый сервис: клиент загружает документы по делу, получает разбор и готовый документ в Word. Вход по коду из SMS, оплата пакетами запросов. 3 500 $.",
       en: "A ready service: the client uploads case documents and gets an analysis plus a finished Word document. SMS-code sign-in, payment by request packages. $3,500.",
       uz: "Tayyor xizmat: mijoz ish hujjatlarini yuklaydi, tahlil va tayyor Word hujjatini oladi. SMS kodi bilan kirish, so'rov paketlari bilan to'lov. 3 500 $.",
       zh: "成品服务：客户上传案件文书，获得分析与生成的 Word 文档。短信验证码登录，按请求包付费。3,500 美元。",
+      uk: "Готовий сервіс: клієнт завантажує документи у справі, отримує розбір і готовий документ у Word. Вхід за кодом з SMS, оплата пакетами запитів. 3 500 $.",
+      pl: "Gotowy serwis: klient wgrywa dokumenty sprawy, dostaje analizę i gotowy dokument Word. Logowanie kodem SMS, płatność pakietami zapytań. 3 500 $.",
     },
     title: {
       ru: "ИИ-юрист: анализ документов",
       en: "AI Lawyer: Document Analysis",
       uz: "AI-yurist: hujjatlar tahlili",
       zh: "AI 律师：文书分析",
+      uk: "ШІ-юрист: аналіз документів",
+      pl: "Prawnik AI: analiza dokumentów",
     },
     tagline: {
       ru: "Загрузил дело — получил разбор и готовый документ",
       en: "Upload the case, get the analysis and a finished document",
       uz: "Ishni yukladingiz — tahlil va tayyor hujjat oldingiz",
       zh: "上传案件，获得分析与成稿文书",
+      uk: "Завантажили справу — отримали розбір і готовий документ",
+      pl: "Wgrywasz sprawę — dostajesz analizę i gotowy dokument",
     },
     priceUsd: 3500,
     description: {
@@ -668,10 +898,12 @@ export const products: Product[] = [
       en: "A service where the client uploads the documents of their case, receives an analysis and then a finished, properly formatted legal document in Word. Payment is by request packages rather than subscription: a person pays for a specific case, not for a month in which they may need nothing.",
       uz: "Mijoz o'z ishi bo'yicha hujjatlarni yuklaydi va tahlil, keyin esa rasmiylashtirilgan tayyor yuridik hujjatni Word formatida oladi. To'lov obuna emas, so'rov paketlari bilan: inson aniq ish uchun to'laydi, hech nima kerak bo'lmasligi mumkin bo'lgan oy uchun emas.",
       zh: "客户上传自己案件的文书，先获得分析，随后得到排版规范的 Word 法律文书。付费方式为请求包而非订阅：为具体案件付费，而不是为可能什么都用不上的一个月付费。",
+      uk: "Сервіс, у якому клієнт завантажує документи у своїй справі й отримує розбір, а слідом — готовий юридичний документ у форматі Word з оформленням. Оплата не за підпискою, а пакетами запитів: людина платить за конкретну справу, а не за місяць, у якому їй може нічого не знадобитися.",
+      pl: "Serwis, w którym klient wgrywa dokumenty swojej sprawy i otrzymuje ich analizę, a zaraz potem — gotowy, sformatowany dokument prawny w formacie Word. Płatność nie w subskrypcji, tylko pakietami zapytań: człowiek płaci za konkretną sprawę, a nie za miesiąc, w którym może niczego nie potrzebować.",
     },
     blocks: [
       {
-        title: { ru: "Работа с делом", en: "Working a case", uz: "Ish bilan ishlash", zh: "案件处理" },
+        title: { ru: "Работа с делом", en: "Working a case", uz: "Ish bilan ishlash", zh: "案件处理", uk: "Робота зі справою", pl: "Praca ze sprawą" },
         items: {
           ru: [
             "Загрузка документов по делу, несколько файлов за раз",
@@ -697,6 +929,18 @@ export const products: Product[] = [
             "后台保存案件历史，可回看任意一件并删除",
             "下载前可预览结果",
           ],
+          uk: [
+            "Завантаження документів у справі, кілька файлів за раз",
+            "Розбір із показом етапу: клієнт бачить, що відбувається, а не крутилку",
+            "Історія справ у кабінеті, повернення до будь-якої та видалення",
+            "Попередній перегляд результату до завантаження",
+          ],
+          pl: [
+            "Wgrywanie dokumentów sprawy, kilka plików naraz",
+            "Analiza z widocznym etapem: klient widzi, co się dzieje, a nie kręcące się kółko",
+            "Historia spraw w panelu, powrót do dowolnej i usuwanie",
+            "Podgląd wyniku przed pobraniem",
+          ],
         },
       },
       {
@@ -705,6 +949,8 @@ export const products: Product[] = [
           en: "The finished document",
           uz: "Tayyor hujjat",
           zh: "成稿文书",
+          uk: "Готовий документ",
+          pl: "Gotowy dokument",
         },
         items: {
           ru: [
@@ -731,10 +977,22 @@ export const products: Product[] = [
             "案件报告作为独立文件",
             "可随时从后台下载",
           ],
+          uk: [
+            "Генерація у Word із заданими шрифтами, відступами й заголовками",
+            "Оформлення за структурою юридичного документа, а не суцільний текст",
+            "Звіт у справі окремим файлом",
+            "Завантаження з кабінету будь-коли",
+          ],
+          pl: [
+            "Generowanie w Wordzie z ustalonymi czcionkami, wcięciami i nagłówkami",
+            "Układ zgodny ze strukturą dokumentu prawnego, a nie ciągły tekst",
+            "Raport ze sprawy w osobnym pliku",
+            "Pobieranie z panelu w dowolnym momencie",
+          ],
         },
       },
       {
-        title: { ru: "Вход и оплата", en: "Sign-in and payment", uz: "Kirish va to'lov", zh: "登录与付费" },
+        title: { ru: "Вход и оплата", en: "Sign-in and payment", uz: "Kirish va to'lov", zh: "登录与付费", uk: "Вхід і оплата", pl: "Logowanie i płatność" },
         items: {
           ru: [
             "Вход по номеру телефона с кодом, без пароля",
@@ -763,6 +1021,20 @@ export const products: Product[] = [
             "请求包：从单次到律所套餐",
             "后台显示余额与支付历史",
             "请求额度将尽时发出提醒",
+          ],
+          uk: [
+            "Вхід за номером телефону з кодом, без пароля",
+            "Звичайна реєстрація з поштою теж доступна",
+            "Пакети запитів: від разового до пакета для юридичної фірми",
+            "Баланс та історія платежів у кабінеті",
+            "Сповіщення, коли запити закінчуються",
+          ],
+          pl: [
+            "Logowanie numerem telefonu z kodem, bez hasła",
+            "Dostępna jest też zwykła rejestracja przez e-mail",
+            "Pakiety zapytań: od jednorazowego po pakiet dla kancelarii",
+            "Saldo i historia płatności w panelu",
+            "Powiadomienie, gdy kończą się zapytania",
           ],
         },
       },
@@ -793,12 +1065,26 @@ export const products: Product[] = [
         "面向律所与协会的大额套餐",
         "首批客户折扣作为启动手段",
       ],
+      uk: [
+        "Пакети запитів замість підписки — платять за справу, а не за місяць",
+        "Разовий запит як дешевий вхід для фізичної особи",
+        "Великі пакети для юридичних фірм і колегій",
+        "Знижка першим клієнтам як інструмент запуску",
+      ],
+      pl: [
+        "Pakiety zapytań zamiast subskrypcji — płaci się za sprawę, a nie za miesiąc",
+        "Jednorazowe zapytanie jako tani start dla osoby prywatnej",
+        "Duże pakiety dla kancelarii i izb adwokackich",
+        "Rabat dla pierwszych klientów jako narzędzie na start",
+      ],
     },
     readiness: {
       ru: "Сервис собран и работает: кабинет, загрузка, анализ, генерация документа и оплата. Тарифная сетка задана и требует подстройки под рынок покупателя.",
       en: "The service is assembled and working: cabinet, upload, analysis, document generation and payment. The tariff grid is defined and needs tuning to the buyer's market.",
       uz: "Xizmat yig'ilgan va ishlaydi: kabinet, yuklash, tahlil, hujjat yaratish va to'lov. Tarif to'ri belgilangan va xaridor bozoriga moslashtirishni talab qiladi.",
       zh: "服务已搭建并可运行：后台、上传、分析、文书生成与支付。套餐体系已定义，需按买方市场调整。",
+      uk: "Сервіс зібраний і працює: кабінет, завантаження, аналіз, генерація документа й оплата. Тарифну сітку задано, її треба підлаштувати під ринок покупця.",
+      pl: "Serwis jest zbudowany i działa: panel, wgrywanie, analiza, generowanie dokumentu i płatności. Cennik jest ustawiony i wymaga dopasowania do rynku kupującego.",
     },
     buyerProvides: {
       ru: [
@@ -825,12 +1111,26 @@ export const products: Product[] = [
         "支付系统合同",
         "由所在法域的律师审核文书模板",
       ],
+      uk: [
+        "Ключ доступу до мовної моделі",
+        "Шлюз для надсилання SMS з кодом входу",
+        "Договір із платіжною системою",
+        "Перевірка шаблонів документів юристом своєї юрисдикції",
+      ],
+      pl: [
+        "Klucz dostępu do modelu językowego",
+        "Bramka SMS do wysyłki kodów logowania",
+        "Umowa z operatorem płatności",
+        "Weryfikacja szablonów dokumentów przez prawnika z Twojej jurysdykcji",
+      ],
     },
     savings: {
       ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 4 900–5 950 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
       en: "Building the same from scratch costs on average 40–70% more — that is $4,900–5,950. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
       uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 4 900–5 950 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
       zh: "从零开发同样的产品平均要贵 40–70% —— 约合4,900–5,950 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
+      uk: "Розробка такого самого з нуля коштує в середньому на 40–70% дорожче — це 4 900–5 950 $. І навіть з урахуванням ціни покупки доопрацювати готовий продукт під ваше завдання дешевше: ви платите лише за відмінності, а не за те, що вже написано й перевірено в роботі. Це оцінка студії, а не вимір: точна сума залежить від обсягу переробок.",
+      pl: "Stworzenie takiego samego rozwiązania od zera kosztuje średnio o 40–70% więcej — to 4 900–5 950 $. Nawet po doliczeniu ceny zakupu dopracowanie gotowego produktu pod Twoje potrzeby wychodzi taniej: płacisz tylko za różnice, a nie za to, co już zostało napisane i sprawdzone w działaniu. To szacunek studia, a nie pomiar: dokładna kwota zależy od zakresu zmian.",
     },
   },
   {
@@ -840,19 +1140,25 @@ export const products: Product[] = [
       en: "Turnkey Landing Page in Tashkent from $800 — DevUz",
       uz: "Toshkentda kalit topshirish landing sahifasi 800 $ dan — DevUz",
       zh: "塔什干交钥匙落地页，800 美元起 — DevUz",
+      uk: "Лендинг під ключ у Ташкенті: ціна від 800 $ — DevUz",
+      pl: "Landing page w Taszkencie: cena od 800 $ — DevUz",
     },
     seoDescription: {
       ru: "Лендинг на Next.js: статическая генерация, до четырёх языков, форма заявки в Telegram, две готовые концепции дизайна. От 800 до 2 500 $ в зависимости от сложности.",
       en: "A Next.js landing page: static generation, up to four languages, a Telegram lead form, two ready design concepts. From $800 to $2,500 depending on complexity.",
       uz: "Next.js'da landing: statik generatsiya, to'rttagacha til, Telegram'ga ariza shakli, ikkita tayyor dizayn konsepsiyasi. Murakkabligiga qarab 800 dan 2 500 $ gacha.",
       zh: "基于 Next.js 的落地页：静态生成、最多四种语言、Telegram 表单、两套现成设计方案。依复杂度 800 至 2,500 美元。",
+      uk: "Лендинг на Next.js: статична генерація, до чотирьох мов, форма заявки в Telegram, дві готові концепції дизайну. Від 800 до 2 500 $ залежно від складності.",
+      pl: "Landing page w Next.js: statyczne generowanie, do 4 języków, formularz do Telegrama, dwie gotowe koncepcje designu. Od 800 do 2 500 $ zależnie od złożoności.",
     },
-    title: { ru: "Лендинг", en: "Landing Page", uz: "Landing sahifa", zh: "落地页" },
+    title: { ru: "Лендинг", en: "Landing Page", uz: "Landing sahifa", zh: "落地页", uk: "Лендинг", pl: "Landing page" },
     tagline: {
       ru: "Две готовые концепции дизайна, четыре языка, заявки в Telegram",
       en: "Two ready design concepts, four languages, leads into Telegram",
       uz: "Ikkita tayyor dizayn konsepsiyasi, to'rt til, Telegram'ga arizalar",
       zh: "两套现成设计方案、四种语言、线索直达 Telegram",
+      uk: "Дві готові концепції дизайну, чотири мови, заявки в Telegram",
+      pl: "Dwie gotowe koncepcje designu, cztery języki, zapytania w Telegramie",
     },
     priceUsd: 800,
     priceToUsd: 2500,
@@ -861,6 +1167,8 @@ export const products: Product[] = [
       en: "A single-page site on the same engine as this one: pages are built ahead of time and served as static files, so they open instantly and index well. Two design concepts are already drawn and written — a cinematic dark one and a light catalogue one; take either and recolour it for your brand, or commission your own. Animations are pure CSS with no libraries, so they add nothing to load time.",
       uz: "Shu saytdagi kabi dvigatelda bir sahifali sayt: sahifalar oldindan yig'iladi va statik tarzda beriladi, shuning uchun bir zumda ochiladi va yaxshi indekslanadi. Ikkita dizayn konsepsiyasi allaqachon chizilgan — kinematografik qorong'i va yorug' katalog; istalganini olib brendingizga bo'yash yoki o'zingiznikini buyurtma qilish mumkin. Animatsiyalar CSS'da, kutubxonasiz.",
       zh: "与本站同引擎的单页站点：页面预先构建并以静态文件提供，因此打开迅速、易于收录。两套设计方案已完成 —— 电影感深色版与明亮目录版；可任选其一改配品牌色，也可定制专属方案。动画纯用 CSS 实现，不引入任何库，因而不增加加载负担。",
+      uk: "Односторінковий сайт на тому самому рушії, що й цей сайт: сторінки збираються заздалегідь і віддаються як статика, тож відкриваються миттєво й добре індексуються. Дві концепції дизайну вже намальовані й зверстані — кінематографічна темна та світла каталожна; можна взяти будь-яку й перефарбувати під свій бренд, а можна замовити власну. Анімації зроблено на CSS, без бібліотек, тому вони не обтяжують завантаження.",
+      pl: "Strona typu one page na tym samym silniku co ta strona: podstrony są budowane z wyprzedzeniem i serwowane statycznie, dlatego otwierają się błyskawicznie i dobrze się indeksują. Dwie koncepcje designu są już zaprojektowane i zakodowane — filmowa ciemna i jasna katalogowa; możesz wziąć dowolną i przemalować ją w barwy swojej marki albo zamówić własną. Animacje są zrobione w CSS, bez bibliotek, więc nie spowalniają ładowania.",
     },
     blocks: [
       {
@@ -869,6 +1177,8 @@ export const products: Product[] = [
           en: "$800 — basic",
           uz: "800 $ — asosiy",
           zh: "800 美元 —— 基础版",
+          uk: "800 $ — базовий",
+          pl: "800 $ — podstawowy",
         },
         items: {
           ru: [
@@ -899,6 +1209,20 @@ export const products: Product[] = [
             "元数据、站点地图、搜索结构化标记",
             "部署到您的域名",
           ],
+          uk: [
+            "Одна сторінка однією мовою",
+            "Готова концепція дизайну, перефарбована під ваш бренд",
+            "Форма заявки з надсиланням у Telegram",
+            "Метадані, карта сайту, розмітка для пошуку",
+            "Розгортання на вашому домені",
+          ],
+          pl: [
+            "Jedna strona w jednym języku",
+            "Gotowa koncepcja designu w barwach Twojej marki",
+            "Formularz zgłoszeń z wysyłką do Telegrama",
+            "Metadane, mapa strony, znaczniki dla wyszukiwarek",
+            "Wdrożenie na Twojej domenie",
+          ],
         },
       },
       {
@@ -907,6 +1231,8 @@ export const products: Product[] = [
           en: "$1,500 — multilingual",
           uz: "1 500 $ — ko'p tilli",
           zh: "1,500 美元 —— 多语言版",
+          uk: "1 500 $ — багатомовний",
+          pl: "1 500 $ — wielojęzyczny",
         },
         items: {
           ru: [
@@ -937,6 +1263,20 @@ export const products: Product[] = [
             "配置 hreflang，避免多语言页面在搜索中相互竞争",
             "分析统计与转化目标",
           ],
+          uk: [
+            "До чотирьох мов з автовизначенням і перемикачем",
+            "Власна структура секцій під ваш продукт, а не готова «риба»",
+            "Розширена форма й передавання заявки у вашу CRM",
+            "Налаштування hreflang, щоб мовні версії не конкурували у видачі",
+            "Аналітика та цілі",
+          ],
+          pl: [
+            "Do czterech języków z automatycznym wykrywaniem i przełącznikiem",
+            "Własny układ sekcji pod Twój produkt, a nie gotowy szablon",
+            "Rozbudowany formularz i przekazywanie zapytań do Twojego CRM",
+            "Konfiguracja hreflang, aby wersje językowe nie konkurowały w wynikach",
+            "Analityka i cele",
+          ],
         },
       },
       {
@@ -945,6 +1285,8 @@ export const products: Product[] = [
           en: "$2,500 — custom design with an admin panel",
           uz: "2 500 $ — o'z dizayni va admin paneli bilan",
           zh: "2,500 美元 —— 定制设计并带后台",
+          uk: "2 500 $ — з власним дизайном і адмінкою",
+          pl: "2 500 $ — z własnym designem i panelem",
         },
         items: {
           ru: [
@@ -975,6 +1317,20 @@ export const products: Product[] = [
             "复杂动画与滚动场景",
             "从现有网站迁移内容",
           ],
+          uk: [
+            "Власна концепція дизайну, намальована саме для вас, а не перефарбована",
+            "Внутрішні сторінки: каталог, новини, про компанію",
+            "Адмінка: ви самі додаєте товари, новини й фотографії",
+            "Складні анімації та сцени прокручування",
+            "Перенесення контенту з чинного сайту",
+          ],
+          pl: [
+            "Własna koncepcja designu, zaprojektowana dla Ciebie, a nie przemalowana",
+            "Podstrony: katalog, aktualności, o firmie",
+            "Panel admina: sam dodajesz produkty, aktualności i zdjęcia",
+            "Złożone animacje i sceny przewijania",
+            "Przeniesienie treści z obecnej strony",
+          ],
         },
       },
     ],
@@ -996,6 +1352,8 @@ export const products: Product[] = [
           en: "The “Showcase” concept: a hero screen with one large product photo and two actions — catalogue and bulk quote",
           uz: "«Vitrina» konsepsiyasi: yirik mahsulot surati va ikkita amal — katalog hamda partiya hisobi",
           zh: "「展示」方案：首屏为大幅商品照片，配两个操作——目录与批量报价",
+          uk: "Концепція «Вітрина»: перший екран із великим фото товару та двома діями — каталог і розрахунок партії",
+          pl: "Koncepcja „Witryna”: pierwszy ekran z dużym zdjęciem produktu i dwoma przyciskami — katalog i wycena partii",
         },
       },
       {
@@ -1007,6 +1365,8 @@ export const products: Product[] = [
           en: "The “Catalogue” concept: search by what is inside the set, right on the first screen",
           uz: "«Katalog» konsepsiyasi: to‘plam tarkibi bo‘yicha qidiruv birinchi ekranda",
           zh: "「目录」方案：按礼盒内容搜索，直接放在首屏",
+          uk: "Концепція «Каталог»: пошук за складом набору винесено на перший екран",
+          pl: "Koncepcja „Katalog”: wyszukiwanie po składzie zestawu na pierwszym ekranie",
         },
       },
       {
@@ -1018,6 +1378,8 @@ export const products: Product[] = [
           en: "The “Premium” concept: a dark hero screen with a rotating archive of past work",
           uz: "«Premium» konsepsiyasi: ishlar arxivi aylanadigan to‘q rangli birinchi ekran",
           zh: "「高端」方案：深色首屏，带可旋转的作品档案",
+          uk: "Концепція «Преміум»: темний перший екран із барабаном архіву робіт",
+          pl: "Koncepcja „Premium”: ciemny pierwszy ekran z bębnem archiwum realizacji",
         },
       },
     ],
@@ -1026,6 +1388,8 @@ export const products: Product[] = [
       en: "Both design concepts are written and working; you can see them before ordering. From sign-off to launch: a week and up for the basic option.",
       uz: "Ikkala dizayn konsepsiyasi yozilgan va ishlaydi, buyurtmadan oldin ko'rish mumkin. Kelishuvdan ishga tushirishgacha — asosiy variant uchun bir haftadan.",
       zh: "两套设计方案均已实现并可运行，下单前即可查看。从确认到上线：基础版一周起。",
+      uk: "Обидві концепції дизайну зверстані й працюють, їх можна подивитися до замовлення. Термін від погодження до запуску — від тижня для базового варіанта.",
+      pl: "Obie koncepcje designu są zakodowane i działają — możesz je obejrzeć przed zamówieniem. Czas od uzgodnień do startu — od tygodnia w wariancie podstawowym.",
     },
     buyerProvides: {
       ru: [
@@ -1052,12 +1416,26 @@ export const products: Product[] = [
         "标志与品牌色（若已有）",
         "用于接收线索的 Telegram 群或 CRM 权限",
       ],
+      uk: [
+        "Домен і доступ до його налаштувань",
+        "Тексти й фотографії або завдання на їх підготовку",
+        "Логотип і фірмові кольори, якщо вони є",
+        "Чат у Telegram або доступ до CRM для приймання заявок",
+      ],
+      pl: [
+        "Domena i dostęp do jej ustawień",
+        "Teksty i zdjęcia albo brief do ich przygotowania",
+        "Logo i kolory firmowe, jeśli je masz",
+        "Czat w Telegramie lub dostęp do CRM do odbioru zapytań",
+      ],
     },
     savings: {
       ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 1 120–4 250 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
       en: "Building the same from scratch costs on average 40–70% more — that is $1,120–4,250. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
       uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 1 120–4 250 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
       zh: "从零开发同样的产品平均要贵 40–70% —— 约合1,120–4,250 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
+      uk: "Розробка такого самого з нуля коштує в середньому на 40–70% дорожче — це 1 120–4 250 $. І навіть з урахуванням ціни покупки доопрацювати готовий продукт під ваше завдання дешевше: ви платите лише за відмінності, а не за те, що вже написано й перевірено в роботі. Це оцінка студії, а не вимір: точна сума залежить від обсягу переробок.",
+      pl: "Stworzenie takiego samego rozwiązania od zera kosztuje średnio o 40–70% więcej — to 1 120–4 250 $. Nawet po doliczeniu ceny zakupu dopracowanie gotowego produktu pod Twoje potrzeby wychodzi taniej: płacisz tylko za różnice, a nie za to, co już zostało napisane i sprawdzone w działaniu. To szacunek studia, a nie pomiar: dokładna kwota zależy od zakresu zmian.",
     },
   },
   {
@@ -1067,24 +1445,32 @@ export const products: Product[] = [
       en: "Ready-Made Microservice Marketplace — Source Code",
       uz: "Mikroservislarda tayyor marketpleys — manba kodi",
       zh: "成品微服务电商平台 — 源代码",
+      uk: "Готовий маркетплейс на мікросервісах — вихідний код",
+      pl: "Gotowy marketplace na mikroserwisach — kod źródłowy",
     },
     seoDescription: {
       ru: "Исходный код маркетплейса: 35 компонентов, 21 сервис на Java и Spring, каталог с поиском, платежи, склад, логистика, ОФД и интеграции для Узбекистана. 30 000 $.",
       en: "Marketplace source code: 35 components, 21 services on Java and Spring, catalogue with search, payments, warehouse, logistics, fiscal receipts and Uzbek integrations. $30,000.",
       uz: "Marketpleys manba kodi: 35 komponent, Java va Spring'da 21 servis, qidiruvli katalog, to'lovlar, ombor, logistika, OFD va O'zbekiston integratsiyalari. 30 000 $.",
       zh: "电商平台源代码：共 35 个组件，其中 21 个基于 Java 与 Spring 的服务，含搜索目录、支付、仓储、物流、财政票据及乌兹别克本地集成。30,000 美元。",
+      uk: "Вихідний код маркетплейсу: 35 компонентів, 21 сервіс на Java і Spring, каталог і пошук, платежі, склад, логістика, ОФД й інтеграції для Узбекистану. 30 000 $.",
+      pl: "Kod marketplace’u: 35 komponentów, 21 serwisów Java i Spring, katalog z wyszukiwarką, płatności, magazyn, logistyka, OFD i integracje dla Uzbekistanu. 30 000 $.",
     },
     title: {
       ru: "Маркетплейс на микросервисах",
       en: "Microservice Marketplace",
       uz: "Mikroservislarda marketpleys",
       zh: "微服务电商平台",
+      uk: "Маркетплейс на мікросервісах",
+      pl: "Marketplace na mikroserwisach",
     },
     tagline: {
       ru: "35 компонентов, шлюз, шина сообщений, оркестрация процессов",
       en: "35 components, a gateway, a message bus, process orchestration",
       uz: "35 komponent, shlyuz, xabarlar shinasi, jarayonlar orkestratsiyasi",
       zh: "35 个组件、网关、消息总线、流程编排",
+      uk: "35 компонентів, шлюз, шина повідомлень, оркестрація процесів",
+      pl: "35 komponentów, bramka, szyna komunikatów, orkiestracja procesów",
     },
     priceUsd: 30000,
     description: {
@@ -1092,6 +1478,8 @@ export const products: Product[] = [
       en: "The source code of a full enterprise-scale marketplace: thirty-five components, twenty-one of them Java and Spring backend services behind a single gateway, each with its own database, an asynchronous bus between them, and business processes described and executed by an orchestration engine rather than scattered through the code as conditionals. This is not a storefront with a cart: it has warehousing, logistics, billing, fiscal receipts, cashback and three separate frontends — for the buyer, the seller and the warehouse.",
       uz: "To'laqonli korporativ miqyosdagi marketpleysning manba kodi: o'ttiz beshta komponent, ulardan yigirma bittasi yagona shlyuz ortidagi Java va Spring backend-servislari, har birida o'z bazasi, ular orasida asinxron shina, biznes-jarayonlar esa kodga shartlar bilan sochilgan emas, orkestratsiya dvigateli tomonidan bajariladi. Bu savatli vitrina emas: bu yerda ombor, logistika, billing, fiskal cheklar, keshbek va uchta alohida frontend bor.",
       zh: "一套企业级电商平台的完整源代码：共三十五个组件，其中二十一个是单一网关之后的 Java 与 Spring 后端服务，各自独立数据库，服务间通过异步消息总线通信，业务流程由编排引擎描述并执行，而非以条件语句散落在代码中。这不是带购物车的展示页：其中包含仓储、物流、计费、财政票据、返现，以及面向买家、卖家与仓库的三套独立前端。",
+      uk: "Вихідний код повноцінного маркетплейсу корпоративного масштабу: тридцять п'ять компонентів, із них двадцять один backend-сервіс на Java і Spring за єдиним шлюзом, у кожного своя база, між ними — асинхронна шина, а бізнес-процеси описані й виконуються рушієм оркестрації, а не розкидані по коду умовами. Це не вітрина з кошиком: тут склад, логістика, білінг, фіскальні чеки, кешбек і три окремі фронтенди — для покупця, продавця та складу.",
+      pl: "Kod źródłowy pełnoprawnego marketplace’u na skalę korporacyjną: trzydzieści pięć komponentów, w tym dwadzieścia jeden serwisów backendowych w Javie i Springu za wspólną bramką, każdy z własną bazą, między nimi — asynchroniczna szyna, a procesy biznesowe są opisane i wykonywane przez silnik orkiestracji, a nie rozsiane po kodzie w warunkach. To nie witryna z koszykiem: jest tu magazyn, logistyka, billing, paragony fiskalne, cashback i trzy osobne frontendy — dla kupującego, sprzedawcy i magazynu.",
     },
     blocks: [
       {
@@ -1100,6 +1488,8 @@ export const products: Product[] = [
           en: "Services: commerce",
           uz: "Servislar: savdo",
           zh: "服务：交易",
+          uk: "Сервіси: торгівля",
+          pl: "Serwisy: handel",
         },
         items: {
           ru: [
@@ -1134,6 +1524,22 @@ export const products: Product[] = [
             "卖家内容：评价、问答、媒体",
             "CMS：横幅、专题、静态页",
           ],
+          uk: [
+            "Каталог: товари, категорії, атрибути, модерація карток",
+            "Пошук на Elasticsearch: фасети, синоніми, ранжування",
+            "Продажі: замовлення, скасування, повернення, статуси",
+            "Оформлення замовлення окремим сервісом і фронтендом",
+            "Контент продавців: відгуки, запитання, медіа",
+            "CMS: банери, добірки, статичні сторінки",
+          ],
+          pl: [
+            "Katalog: produkty, kategorie, atrybuty, moderacja kart",
+            "Wyszukiwanie na Elasticsearch: fasety, synonimy, ranking",
+            "Sprzedaż: zamówienia, anulowania, zwroty, statusy",
+            "Składanie zamówienia jako osobny serwis i frontend",
+            "Treści sprzedawców: opinie, pytania, media",
+            "CMS: banery, kolekcje, strony statyczne",
+          ],
         },
       },
       {
@@ -1142,6 +1548,8 @@ export const products: Product[] = [
           en: "Services: money and warehouse",
           uz: "Servislar: pul va ombor",
           zh: "服务：资金与仓储",
+          uk: "Сервіси: гроші та склад",
+          pl: "Serwisy: pieniądze i magazyn",
         },
         items: {
           ru: [
@@ -1180,6 +1588,24 @@ export const products: Product[] = [
             "物流：配送、路线、运单状态",
             "积分与返现独立服务",
           ],
+          uk: [
+            "Платіжний шлюз: приймання оплати, холдування, повернення",
+            "Білінг: розрахунки з продавцями, комісії, взаєморозрахунки",
+            "ОФД: фіскальні чеки й передавання до податкової",
+            "Генератор чеків на NestJS з рендерингом у PDF",
+            "Склад: залишки, приймання, відвантаження, інвентаризація",
+            "Логістика: доставка, маршрути, статуси відправлень",
+            "Бонуси й кешбек окремим сервісом",
+          ],
+          pl: [
+            "Bramka płatności: przyjmowanie płatności, blokada środków, zwroty",
+            "Billing: rozliczenia ze sprzedawcami, prowizje, rozrachunki",
+            "OFD: paragony fiskalne i przekazywanie do urzędu skarbowego",
+            "Generator paragonów w NestJS z renderowaniem do PDF",
+            "Magazyn: stany, przyjęcia, wydania, inwentaryzacja",
+            "Logistyka: dostawy, trasy, statusy przesyłek",
+            "Bonusy i cashback jako osobny serwis",
+          ],
         },
       },
       {
@@ -1188,6 +1614,8 @@ export const products: Product[] = [
           en: "Frontends and bots",
           uz: "Frontendlar va botlar",
           zh: "前端与机器人",
+          uk: "Фронтенди та боти",
+          pl: "Frontendy i boty",
         },
         items: {
           ru: [
@@ -1218,6 +1646,20 @@ export const products: Product[] = [
             "自研 UI 组件库与图标集，各前端共用",
             "Telegram 中的卖家机器人与运输服务机器人",
           ],
+          uk: [
+            "Вітрина й сайт покупця на Next.js",
+            "Кабінет продавця й адмінка платформи на React",
+            "Інтерфейс складу (WMS) окремим застосунком",
+            "Власний UI-кит і набір іконок — спільні для всіх фронтендів",
+            "Бот продавця й бот транспортної служби в Telegram",
+          ],
+          pl: [
+            "Witryna i strona kupującego w Next.js",
+            "Panel sprzedawcy i panel admina platformy w React",
+            "Interfejs magazynu (WMS) jako osobna aplikacja",
+            "Własny UI kit i zestaw ikon — wspólne dla wszystkich frontendów",
+            "Bot sprzedawcy i bot firmy transportowej w Telegramie",
+          ],
         },
       },
       {
@@ -1226,6 +1668,8 @@ export const products: Product[] = [
           en: "Infrastructure and integrations",
           uz: "Infratuzilma va integratsiyalar",
           zh: "基础设施与集成",
+          uk: "Інфраструктура та інтеграції",
+          pl: "Infrastruktura i integracje",
         },
         items: {
           ru: [
@@ -1259,6 +1703,22 @@ export const products: Product[] = [
             "每个服务独立 PostgreSQL 数据库，会话与权限共用 Redis",
             "面向乌兹别克市场的集成：Click、Uzum、Didox、财政系统、参考登记",
             "机密信息已移至环境变量，代码中不再保留",
+          ],
+          uk: [
+            "Єдиний шлюз на Spring Cloud Gateway перед усіма сервісами",
+            "Асинхронна шина на RabbitMQ між сервісами",
+            "Бізнес-процеси в рушії оркестрації Camunda, а не в коді",
+            "Окрема база PostgreSQL для кожного сервісу, спільний Redis для сесій і прав",
+            "Інтеграції під ринок Узбекистану: Click, Uzum, Didox, ОФД, НСІ",
+            "Секрети винесено в змінні оточення, у коді їх немає",
+          ],
+          pl: [
+            "Wspólna bramka na Spring Cloud Gateway przed wszystkimi serwisami",
+            "Asynchroniczna szyna na RabbitMQ między serwisami",
+            "Procesy biznesowe w silniku orkiestracji Camunda, a nie w kodzie",
+            "Osobna baza PostgreSQL dla każdego serwisu, wspólny Redis na sesje i uprawnienia",
+            "Integracje pod rynek Uzbekistanu: Click, Uzum, Didox, OFD, NSI",
+            "Sekrety wyniesione do zmiennych środowiskowych, w kodzie ich nie ma",
           ],
         },
       },
@@ -1296,12 +1756,28 @@ export const products: Product[] = [
         "平台仓储与物流服务单独收费",
         "商城内的广告与横幅位",
       ],
+      uk: [
+        "Комісія з продажів продавців — основна модель майданчика",
+        "Платне просування товарів у пошуку й добірках",
+        "Абонентська плата за розширений кабінет продавця",
+        "Складські й логістичні послуги майданчика за окрему плату",
+        "Реклама й банери на вітрині",
+      ],
+      pl: [
+        "Prowizja od sprzedaży sprzedawców — główny model platformy",
+        "Płatna promocja produktów w wyszukiwarce i kolekcjach",
+        "Abonament za rozszerzony panel sprzedawcy",
+        "Usługi magazynowe i logistyczne platformy za dodatkową opłatą",
+        "Reklamy i banery w witrynie",
+      ],
     },
     readiness: {
       ru: "Код работавшего маркетплейса, а не заготовка: все тридцать пять компонентов написаны и связаны между собой. Но это корпоративная система, и развернуть её — не «поднять контейнер»: нужен кластер, отдельные базы, брокер сообщений, поисковый кластер и человек, который это обслуживает. Оценивайте не только цену покупки, но и стоимость эксплуатации.",
       en: "The code of a marketplace that ran, not a skeleton: all thirty-five components are written and wired together. But it is an enterprise system, and deploying it is not «bring up a container»: it needs a cluster, separate databases, a message broker, a search cluster and someone to operate all of it. Budget for running costs, not just the purchase price.",
       uz: "Bu andoza emas, ishlagan marketpleys kodi: o'ttiz beshta komponentning barchasi yozilgan va o'zaro bog'langan. Lekin bu korporativ tizim va uni joylashtirish «konteyner ko'tarish» emas: klaster, alohida bazalar, xabar brokeri, qidiruv klasteri va buni qo'llab-quvvatlaydigan odam kerak. Faqat sotib olish narxini emas, ekspluatatsiya xarajatini ham baholang.",
       zh: "这是曾实际运行过的电商平台代码，而非骨架：三十五个组件均已实现并相互打通。但它是企业级系统，部署并非「起一个容器」：需要集群、独立数据库、消息代理、搜索集群，以及负责运维的人。请把运行成本也纳入预算，而不仅是购买价格。",
+      uk: "Код маркетплейсу, що працював, а не заготовка: усі тридцять п'ять компонентів написані й пов'язані між собою. Але це корпоративна система, і розгорнути її — не «підняти контейнер»: потрібні кластер, окремі бази, брокер повідомлень, пошуковий кластер і людина, яка все це обслуговує. Оцінюйте не лише ціну покупки, а й вартість експлуатації.",
+      pl: "Kod działającego marketplace’u, a nie szkielet: wszystkie trzydzieści pięć komponentów jest napisanych i połączonych ze sobą. Ale to system korporacyjny i jego wdrożenie to nie „postawienie kontenera”: potrzebny jest klaster, osobne bazy, broker komunikatów, klaster wyszukiwania i osoba, która to utrzymuje. Licz nie tylko cenę zakupu, ale też koszt utrzymania.",
     },
     buyerProvides: {
       ru: [
@@ -1332,12 +1808,28 @@ export const products: Product[] = [
         "所有外部集成的自有密钥",
         "平台的法律设立与卖家合同",
       ],
+      uk: [
+        "Інфраструктура: кластер, бази, брокер повідомлень, пошуковий кластер",
+        "Інженер з експлуатації — система мікросервісна, сама себе не обслуговуватиме",
+        "Договори з платіжними системами та оператором фіскальних даних",
+        "Власні ключі до всіх зовнішніх інтеграцій",
+        "Юридичне оформлення майданчика й договори з продавцями",
+      ],
+      pl: [
+        "Infrastruktura: klaster, bazy, broker komunikatów, klaster wyszukiwania",
+        "Inżynier utrzymania — system jest mikroserwisowy i sam się nie obsłuży",
+        "Umowy z operatorami płatności i operatorem danych fiskalnych",
+        "Własne klucze do wszystkich zewnętrznych integracji",
+        "Formalności prawne platformy i umowy ze sprzedawcami",
+      ],
     },
     savings: {
       ru: "Разработка такого же с нуля обходится в среднем на 40–70% дороже — это 42 000–51 000 $. И даже с учётом стоимости покупки доработка готового под вашу задачу выходит дешевле: платите только за отличия, а не за то, что уже написано и проверено в работе. Оценка студии, а не замер: точная цифра зависит от объёма переделок.",
       en: "Building the same from scratch costs on average 40–70% more — that is $42,000–51,000. And even counting the purchase price, adapting a ready product to your task comes out cheaper: you pay for the differences only, not for what is already written and proven in use. This is the studio's estimate, not a measurement: the exact figure depends on how much has to be reworked.",
       uz: "Xuddi shunday narsani noldan ishlab chiqish o'rtacha 40–70% qimmatga tushadi — bu 42 000–51 000 $. Sotib olish narxini hisobga olganda ham tayyorni sizning vazifangizga moslashtirish arzonroq: siz faqat farqlar uchun to'laysiz, allaqachon yozilgan va ishda sinalgan narsa uchun emas. Bu studiyaning bahosi, o'lchov emas: aniq raqam qayta ishlash hajmiga bog'liq.",
       zh: "从零开发同样的产品平均要贵 40–70% —— 约合 42,000–51,000 美元。即便计入购买价格，将现成产品改造成您所需的方案依然更便宜：您只为差异付费，而不为已经写好并在实际使用中验证过的部分付费。这是本工作室的估算而非实测：具体数字取决于改造工作量。",
+      uk: "Розробка такого самого з нуля коштує в середньому на 40–70% дорожче — це 42 000–51 000 $. І навіть з урахуванням ціни покупки доопрацювати готовий продукт під ваше завдання дешевше: ви платите лише за відмінності, а не за те, що вже написано й перевірено в роботі. Це оцінка студії, а не вимір: точна сума залежить від обсягу переробок.",
+      pl: "Stworzenie takiego samego rozwiązania od zera kosztuje średnio o 40–70% więcej — to 42 000–51 000 $. Nawet po doliczeniu ceny zakupu dopracowanie gotowego produktu pod Twoje potrzeby wychodzi taniej: płacisz tylko za różnice, a nie za to, co już zostało napisane i sprawdzone w działaniu. To szacunek studia, a nie pomiar: dokładna kwota zależy od zakresu zmian.",
     },
   },
 ];

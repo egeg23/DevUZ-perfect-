@@ -1044,7 +1044,459 @@ const zh: CabinetCopy = {
   botNote: (bot) => `申请、合同和提现的通知会发送到 Telegram 机器人 @${bot}。`,
 };
 
-const copies: Record<Locale, CabinetCopy> = { ru, en, uz, zh };
+const uk: CabinetCopy = {
+  title: "Кабінет партнера",
+  signedOutTitle: "Вхід для партнерів",
+  signedOutLead:
+    "Увійдіть через Telegram: бот надішле кнопку, яка відкриє кабінет. Якщо ви ще не партнер — бот зареєструє вас одразу, це безкоштовно й ні до чого не зобов'язує.",
+  signIn: "Увійти через Telegram",
+  signInHint: "Відкриється наш бот. Натисніть «Старт» — прийде кнопка входу, вона діє 15 хвилин.",
+  errors: {
+    expired: "Посилання для входу застаріло або вже використане. Натисніть «Увійти через Telegram» ще раз — бот надішле нове.",
+    offline: "Сервіс зараз недоступний. Спробуйте за хвилину.",
+  },
+  hello: (name) => `Вітаємо, ${name}`,
+  logout: "Вийти",
+  rate: (model, from, to) =>
+    model === "turnover"
+      ? `Ваша модель — з обороту: від ${from} до ${to} % від суми договору, що більший проєкт, то вищий відсоток`
+      : `Ваша модель — від чистого прибутку: від ${from} до ${to} % від прибутку проєкту, що більший проєкт, то вищий відсоток`,
+  personalRate: (percent) => `Ваша персональна ставка — ${percent} % з кожного проєкту клієнта`,
+  tiersTitle: "Модель доходу",
+  tierUpTo: (amount) => `до ${amount}`,
+  tierOver: (amount) => `понад ${amount}`,
+  tiersNote: "Щабель визначається за сумою кожного проєкту окремо. Відсоток — з кожного проєкту клієнта, зокрема й наступних.",
+  colRange: "Сума проєкту",
+  modelNames: { profit: "Від чистого прибутку", turnover: "З обороту" },
+  modelHints: {
+    profit: "Відсоток вищий, але рахується від прибутку: сума договору мінус податок і собівартість. Точна сума частки з'явиться, коли студія внесе собівартість.",
+    turnover: "Відсоток нижчий, але від усієї суми договору: частку відомо одразу, щойно договір підписано.",
+  },
+  modelCurrent: "зараз",
+  modelChoose: (name) => `Перейти на «${name}»`,
+  modelNext: (date) => `Змінити модель знову можна з ${date}.`,
+  modelFixed: "Змінювати модель можна раз на тиждень. За клієнтом закріплюється модель, що діяла в день його заявки: зміна стосується нових клієнтів, а тих, хто вже прийшов, не перераховує.",
+  modelResult: {
+    ok: "Модель змінено. Вона діє для клієнтів, які прийдуть із цього моменту.",
+    same: "Цю модель у вас уже обрано.",
+    too_soon: "Модель можна змінювати раз на тиждень — дату наступної зміни вказано нижче.",
+    invalid: "Такої моделі немає.",
+    offline: "Сервіс зараз недоступний. Спробуйте за хвилину.",
+    failed: "Не вдалося змінити модель. Спробуйте ще раз.",
+  },
+
+  agenciesTitle: "Агенції та компанії",
+  agenciesLead:
+    "Підключіть агенцію або компанію, від якої регулярно надходять замовлення на розробку: IT-компанію, вебстудію, маркетингову чи дизайн-агенцію, інтегратора, генпідрядника IT-тендерів. Вона передає нам замовлення на субпідряд, і після нашого підтвердження всі її замовлення — ваші протягом 12 місяців, без обмеження в 30 днів: і перше, і кожне наступне. Посилання їй не потрібне — ми впізнаємо її замовлення за контактом і назвою.",
+  agencyName: "Назва компанії",
+  agencyContact: "Контакт компанії",
+  agencyContactHint: "@telegram, телефон або пошта — звідки вона нам писатиме",
+  agencyWebsite: "Сайт",
+  agencyNote: "Коментар",
+  agencyAdd: "Підключити компанію",
+  agenciesEmpty: "Агенцій поки немає. Презентація програми для агенцій — нижче, її можна надіслати їм посиланням.",
+  agencyStatus: { pending: "чекає на підтвердження", active: "підключено — замовлення ваші", rejected: "не підключено" },
+  agencyUntil: (date) => `до ${date}`,
+  agencyExpired: (date) => `термін минув ${date} — нові замовлення не зараховуються`,
+  agencyResult: {
+    ok: "Агенцію надіслано на підтвердження. Щойно підтвердимо — бот вам напише.",
+    offline: "Сервіс зараз недоступний. Спробуйте за хвилину.",
+    invalid: "Потрібні назва й контакт агенції.",
+    limit: "Агенцій уже максимум. Напишіть нам — обговоримо.",
+    duplicate: "Цю агенцію вже підключено — вами або іншим партнером.",
+    failed: "Не вдалося підключити агенцію. Спробуйте ще раз.",
+  },
+  viaAgency: (name) => `агенція «${name}»`,
+
+  decksTitle: "Презентації",
+  decksLead: "Надішліть посиланням або збережіть у PDF (кнопка на сторінці). У посиланні вже ваш код: хто відкриє його й залишить заявку протягом 30 днів, стане вашим клієнтом.",
+  decks: {
+    studio: { title: "DevUz Studio", text: "Хто ми, що робимо, штат, мови, терміни, ціни «від» і проєкти — для клієнта, якому ви нас рекомендуєте." },
+    program: { title: "Програма для агенцій і компаній", text: "Як агенції, IT-компанії чи генпідряднику тендерів передавати нам замовлення на субпідряд і як це рахується." },
+  },
+  deckOpen: "Відкрити",
+  deckCopy: "Скопіювати посилання",
+
+  statClicks: "Переходів за 30 днів",
+  statLeads: "Заявок усього",
+  statSigned: "Договорів підписано",
+  statPaid: "Проєктів оплачено",
+  statEarned: "Зароблено",
+  statFrozen: "Чекає на оплату клієнтом",
+  statAvailable: "До виведення",
+  statPaidOut: "Виплачено",
+
+  chartTitle: "Переходи за 30 днів",
+  chartLead: "Кожен стовпчик — люди, які відкрили ваші посилання за день. Роботи прев'ю й повторні відкриття однією людиною не рахуються.",
+  chartLeadMark: "крапка — цього дня була заявка",
+  chartTip: (day, clicks, leads) => `${day}: переходів ${clicks}${leads ? `, заявок ${leads}` : ""}`,
+
+  linksTitle: "Мої посилання",
+  linksLead:
+    "Під кожен канал — окреме коротке посилання. Так видно, звідки приходять клієнти, а однакове посилання в десяти чатах не ріже антиспам.",
+  colChannel: "Канал",
+  colLink: "Посилання",
+  colTarget: "Куди веде",
+  colClicks: "Переходи",
+  colLeads: "Заявки",
+  mainLink: "Основне",
+  botLinkTitle: "Посилання одразу на Telegram-бота",
+  copy: "Скопіювати",
+  copied: "Скопійовано",
+  newLink: "Нове посилання",
+  fieldLabel: "Назва каналу",
+  fieldLabelHint: "Наприклад: Telegram-канал, Instagram, розсилка",
+  fieldTarget: "Куди веде",
+  fieldPerk: "Бонус вашій аудиторії",
+  fieldCode: "Свій код",
+  fieldCodeHint: "Необов'язково. Латиниця й цифри, 3–24 знаки",
+  createLink: "Створити посилання",
+  targets: {
+    "/": "Головна",
+    "/services": "Послуги",
+    "/calculator": "Калькулятор",
+    "/audit": "Перевірка сайту",
+    "/cases": "Кейси",
+    "/products": "Продукти",
+    "/partners": "Партнерська програма",
+    bot: "Telegram-бот",
+  },
+  perks: {
+    none: "Без бонусу",
+    disc_5: "Знижка 5 % на перший проєкт",
+    disc_10: "Знижка 10 % на перший проєкт",
+    disc_15: "Знижка 15 % на перший проєкт",
+  },
+  linkResult: {
+    ok: "Посилання створено — скопіюйте його в таблиці.",
+    offline: "Сервіс зараз недоступний. Спробуйте за хвилину.",
+    invalid: "Код: латиниця, цифри, дефіс або підкреслення, 3–24 знаки.",
+    reserved: "Цей код зарезервовано — оберіть інший.",
+    taken: "Такий код уже зайнятий — придумайте інший або залиште поле порожнім.",
+    limit: "Посилань уже максимум. Напишіть нам — приберемо невикористовувані.",
+    failed: "Не вдалося створити посилання. Спробуйте ще раз.",
+  },
+
+  clientsTitle: "Мої клієнти",
+  clientsLead:
+    "Усі, хто залишив заявку за вашими посиланнями. Контактів клієнта ми не показуємо — лише етап і ваші гроші. Частка — відсоток від суми проєкту за ставкою його щабля.",
+  clientsEmpty: "Поки нікого. Поділіться посиланням — перший клієнт з'явиться тут одразу після заявки.",
+  colDate: "Дата",
+  colClient: "Клієнт",
+  colFrom: "Звідки",
+  colStage: "Етап",
+  colShare: "Ваша частка",
+  unnamed: "Клієнт",
+  stages: {
+    lead: "Заявка",
+    work: "У роботі",
+    contract: "Готуємо договір",
+    signed: "Договір підписано",
+    paid: "Оплачено",
+    lost: "Не склалося",
+  },
+  shareFrozen: (amount) => `${amount} · після повної оплати`,
+  shareEarned: (amount) => `${amount} · нараховано`,
+  notCounted: (reason) => `не зараховано: ${reason}`,
+  voidReasons: {
+    self: "заявка від вас самих",
+    existing_client: "клієнт уже працював зі студією",
+    blocked: "партнерство призупинено",
+  },
+
+  payoutTitle: "Виплата",
+  payoutRules: (min) =>
+    `Виведення — від ${min}, з першого робочого дня місяця. Гроші переказує власник студії: USDT (TRC-20) або за реквізитами. Одна заявка за раз.`,
+  payoutOpens: (date) => `Виведення відкриється ${date}.`,
+  requisites: "Куди платити",
+  requisitesHint: "Адреса USDT TRC-20 або реквізити словами",
+  saveRequisites: "Зберегти",
+  requestPayout: (amount) => `Запросити виплату ${amount}`,
+  payoutResult: {
+    ok: "Заявку прийнято. Коли гроші буде надіслано, бот вам напише.",
+    saved: "Реквізити збережено.",
+    bad_requisites: "Не схоже на адресу USDT TRC-20 чи реквізити. Перевірте й збережіть ще раз.",
+    offline: "Сервіс зараз недоступний. Спробуйте за хвилину.",
+    window: "Виведення відкривається з першого робочого дня місяця — після звірки платежів.",
+    requisites: "Спочатку вкажіть, куди платити.",
+    pending: "Одна заявка вже чекає на рішення — другу поверх неї подати не можна.",
+    min: "Доступно менше за мінімальну виплату. Зачекайте на наступну оплату клієнта.",
+    failed: "Не вдалося подати заявку. Спробуйте ще раз.",
+  },
+  historyTitle: "Історія виплат",
+  payoutStatus: { requested: "На розгляді", paid: "Виплачено", rejected: "Відхилено" },
+
+  mediaTitle: "Промоматеріали",
+  mediaLead:
+    "Ролики й картинки студії для ваших соцмереж. Завантажте, викладіть у Reels, Shorts, TikTok, сторіс або канал і вставте підпис — ваше коротке посилання в ньому вже є. Клієнти, які прийшли за ним, зараховуються вам, як за будь-яким вашим посиланням.",
+  mediaDownload: "Завантажити",
+  mediaCopyCaption: "Скопіювати підпис",
+  mediaCaptionTitle: "Підпис до допису",
+  mediaCaption: (link) =>
+    `DevUz Studio робить сайти, інтернет-магазини й Telegram-ботів, які приносять заявки. Безкоштовно розберуть ваш сайт і покажуть, що виправити: ${link}`,
+  mediaShape: { vertical: "вертикальне 9:16", square: "квадрат", horizontal: "горизонтальне 16:9" },
+  mediaLang: { all: "без слів", ru: "російською", uz: "узбецькою", en: "англійською", zh: "китайською" },
+  mediaSeconds: "с",
+  mediaMb: "МБ",
+  mediaGone: "Цей матеріал прибрали з кабінету — візьміть інший.",
+
+  promoTitle: "Готові тексти",
+  promoLead:
+    "Скопіюйте й вставте — посилання вже всередині. Найкраще працює особисте: допишіть одну фразу про те, чому ви нам довіряєте.",
+  promo: [
+    {
+      title: "Допис у канал",
+      text: (link) =>
+        `Якщо потрібен сайт, інтернет-магазин чи Telegram-бот — рекомендую DevUz Studio. Роблять під ключ, показують, скільки заявок сайт втрачає зараз і що з цим робити. Перевірити свій сайт і обговорити завдання: ${link}`,
+    },
+    {
+      title: "Особисте повідомлення",
+      text: (link) =>
+        `Ти казав, що потрібен сайт. Подивись DevUz Studio — спершу безкоштовно розберуть, що не так зараз, і лише потім запропонують ціну: ${link}`,
+    },
+    {
+      title: "Коротко — для сторіс",
+      text: (link) => `Сайти й боти, які приносять заявки. Розбір безкоштовно: ${link}`,
+    },
+  ],
+
+  howTitle: "Як це працює",
+  how: [
+    "Діліться коротким посиланням — окремим під кожен канал.",
+    "Людина відкриває посилання — сайт запам'ятовує вас на 30 днів. Якщо за цей час вона залишить заявку на сайті або напише боту, клієнт ваш, навіть якщо зайшов знову вже без посилання.",
+    "Етапи видно тут: заявка, робота, договір, оплата. Про підписаний договір і про оплату бот пише вам сам.",
+    "Коли клієнт оплатив проєкт повністю, частка стає доступною до виведення — з першого робочого дня місяця.",
+  ],
+  botNote: (bot) => `Сповіщення про заявки, договори й виплати надходять у Telegram-бот @${bot}.`,
+};
+
+const pl: CabinetCopy = {
+  title: "Panel partnera",
+  signedOutTitle: "Logowanie dla partnerów",
+  signedOutLead:
+    "Zaloguj się przez Telegram: bot wyśle przycisk, który otworzy panel. Jeśli nie jesteś jeszcze partnerem, bot od razu Cię zarejestruje — to bezpłatne i do niczego nie zobowiązuje.",
+  signIn: "Zaloguj przez Telegram",
+  signInHint: "Otworzy się nasz bot. Naciśnij „Start” — dostaniesz przycisk logowania, ważny przez 15 minut.",
+  errors: {
+    expired: "Link logowania wygasł lub został już użyty. Kliknij „Zaloguj przez Telegram” jeszcze raz — bot wyśle nowy.",
+    offline: "Serwis jest chwilowo niedostępny. Spróbuj za minutę.",
+  },
+  hello: (name) => `Cześć, ${name}`,
+  logout: "Wyloguj",
+  rate: (model, from, to) =>
+    model === "turnover"
+      ? `Twój model — od obrotu: od ${from} do ${to} % wartości umowy; im większy projekt, tym wyższy procent`
+      : `Twój model — od zysku netto: od ${from} do ${to} % zysku z projektu; im większy projekt, tym wyższy procent`,
+  personalRate: (percent) => `Twoja indywidualna stawka — ${percent} % od każdego projektu klienta`,
+  tiersTitle: "Model wynagrodzenia",
+  tierUpTo: (amount) => `do ${amount}`,
+  tierOver: (amount) => `powyżej ${amount}`,
+  tiersNote: "Próg liczy się osobno dla wartości każdego projektu. Procent — od każdego projektu klienta, także kolejnych.",
+  colRange: "Wartość projektu",
+  modelNames: { profit: "Od zysku netto", turnover: "Od obrotu" },
+  modelHints: {
+    profit: "Wyższy procent, ale liczony od zysku: wartość umowy minus podatek i koszty własne. Dokładna kwota Twojego udziału pojawi się, gdy studio wprowadzi koszty własne.",
+    turnover: "Niższy procent, ale od całej wartości umowy: udział jest znany od razu po podpisaniu umowy.",
+  },
+  modelCurrent: "obecnie",
+  modelChoose: (name) => `Przejdź na „${name}”`,
+  modelNext: (date) => `Model możesz ponownie zmienić od ${date}.`,
+  modelFixed: "Model można zmieniać raz w tygodniu. Do klienta przypisany jest model obowiązujący w dniu jego zapytania: zmiana dotyczy nowych klientów, a tych, którzy już przyszli, nie przelicza.",
+  modelResult: {
+    ok: "Model zmieniony. Obowiązuje dla klientów, którzy przyjdą od teraz.",
+    same: "Ten model masz już wybrany.",
+    too_soon: "Model można zmieniać raz w tygodniu — data następnej zmiany jest podana niżej.",
+    invalid: "Nie ma takiego modelu.",
+    offline: "Serwis jest chwilowo niedostępny. Spróbuj za minutę.",
+    failed: "Nie udało się zmienić modelu. Spróbuj jeszcze raz.",
+  },
+
+  agenciesTitle: "Agencje i firmy",
+  agenciesLead:
+    "Podłącz agencję lub firmę, od której regularnie płyną zlecenia na development: firmę IT, studio webowe, agencję marketingową lub projektową, integratora, generalnego wykonawcę przetargów IT. Przekazuje nam zlecenia w podwykonawstwie, a po naszym potwierdzeniu wszystkie jej zlecenia są Twoje przez 12 miesięcy, bez limitu 30 dni: pierwsze i każde kolejne. Link nie jest jej potrzebny — rozpoznajemy jej zlecenia po kontakcie i nazwie.",
+  agencyName: "Nazwa firmy",
+  agencyContact: "Kontakt do firmy",
+  agencyContactHint: "@telegram, telefon lub e-mail — skąd będzie do nas pisać",
+  agencyWebsite: "Strona",
+  agencyNote: "Komentarz",
+  agencyAdd: "Podłącz firmę",
+  agenciesEmpty: "Nie masz jeszcze agencji. Prezentacja programu dla agencji jest niżej — możesz ją wysłać linkiem.",
+  agencyStatus: { pending: "czeka na potwierdzenie", active: "podłączona — zlecenia są Twoje", rejected: "niepodłączona" },
+  agencyUntil: (date) => `do ${date}`,
+  agencyExpired: (date) => `okres minął ${date} — nowe zlecenia nie są zaliczane`,
+  agencyResult: {
+    ok: "Agencja wysłana do potwierdzenia. Gdy tylko potwierdzimy, bot do Ciebie napisze.",
+    offline: "Serwis jest chwilowo niedostępny. Spróbuj za minutę.",
+    invalid: "Podaj nazwę i kontakt do agencji.",
+    limit: "Osiągnięto limit agencji. Napisz do nas — omówimy to.",
+    duplicate: "Ta agencja jest już podłączona — przez Ciebie lub innego partnera.",
+    failed: "Nie udało się podłączyć agencji. Spróbuj jeszcze raz.",
+  },
+  viaAgency: (name) => `agencja „${name}”`,
+
+  decksTitle: "Prezentacje",
+  decksLead: "Wyślij linkiem lub zapisz jako PDF (przycisk na stronie). Link zawiera już Twój kod: kto go otworzy i zostawi zapytanie w ciągu 30 dni, zostanie Twoim klientem.",
+  decks: {
+    studio: { title: "DevUz Studio", text: "Kim jesteśmy, co robimy, zespół, języki, terminy, ceny „od” i realizacje — dla klienta, któremu nas polecasz." },
+    program: { title: "Program dla agencji i firm", text: "Jak agencja, firma IT lub generalny wykonawca przetargów może przekazywać nam zlecenia w podwykonawstwie i jak to się rozlicza." },
+  },
+  deckOpen: "Otwórz",
+  deckCopy: "Kopiuj link",
+
+  statClicks: "Wejścia w 30 dni",
+  statLeads: "Zapytania łącznie",
+  statSigned: "Podpisane umowy",
+  statPaid: "Opłacone projekty",
+  statEarned: "Zarobiono",
+  statFrozen: "Czeka na płatność klienta",
+  statAvailable: "Do wypłaty",
+  statPaidOut: "Wypłacono",
+
+  chartTitle: "Wejścia w ciągu 30 dni",
+  chartLead: "Każdy słupek to osoby, które danego dnia otworzyły Twoje linki. Boty podglądu i ponowne otwarcia przez tę samą osobę nie są liczone.",
+  chartLeadMark: "kropka — tego dnia było zapytanie",
+  chartTip: (day, clicks, leads) => `${day}: wejścia ${clicks}${leads ? `, zapytania ${leads}` : ""}`,
+
+  linksTitle: "Moje linki",
+  linksLead:
+    "Dla każdego kanału — osobny krótki link. Widać wtedy, skąd przychodzą klienci, a filtr antyspamowy nie blokuje tego samego linku w dziesięciu czatach.",
+  colChannel: "Kanał",
+  colLink: "Link",
+  colTarget: "Dokąd prowadzi",
+  colClicks: "Wejścia",
+  colLeads: "Zapytania",
+  mainLink: "Główny",
+  botLinkTitle: "Link prosto do bota w Telegramie",
+  copy: "Kopiuj",
+  copied: "Skopiowano",
+  newLink: "Nowy link",
+  fieldLabel: "Nazwa kanału",
+  fieldLabelHint: "Np.: kanał na Telegramie, Instagram, newsletter",
+  fieldTarget: "Dokąd prowadzi",
+  fieldPerk: "Bonus dla Twoich odbiorców",
+  fieldCode: "Własny kod",
+  fieldCodeHint: "Opcjonalnie. Litery łacińskie i cyfry, 3–24 znaki",
+  createLink: "Utwórz link",
+  targets: {
+    "/": "Strona główna",
+    "/services": "Usługi",
+    "/calculator": "Kalkulator",
+    "/audit": "Audyt strony",
+    "/cases": "Realizacje",
+    "/products": "Produkty",
+    "/partners": "Program partnerski",
+    bot: "Bot w Telegramie",
+  },
+  perks: {
+    none: "Bez bonusu",
+    disc_5: "Rabat 5 % na pierwszy projekt",
+    disc_10: "Rabat 10 % na pierwszy projekt",
+    disc_15: "Rabat 15 % na pierwszy projekt",
+  },
+  linkResult: {
+    ok: "Link utworzony — skopiuj go z tabeli.",
+    offline: "Serwis jest chwilowo niedostępny. Spróbuj za minutę.",
+    invalid: "Kod: litery łacińskie, cyfry, myślnik lub podkreślnik, 3–24 znaki.",
+    reserved: "Ten kod jest zarezerwowany — wybierz inny.",
+    taken: "Ten kod jest już zajęty — wymyśl inny lub zostaw pole puste.",
+    limit: "Osiągnięto limit linków. Napisz do nas — usuniemy nieużywane.",
+    failed: "Nie udało się utworzyć linku. Spróbuj jeszcze raz.",
+  },
+
+  clientsTitle: "Moi klienci",
+  clientsLead:
+    "Wszyscy, którzy zostawili zapytanie z Twoich linków. Nie pokazujemy danych kontaktowych klienta — tylko etap i Twoje pieniądze. Udział to procent od wartości projektu według stawki jego progu.",
+  clientsEmpty: "Na razie nikogo. Udostępnij link — pierwszy klient pojawi się tu zaraz po zapytaniu.",
+  colDate: "Data",
+  colClient: "Klient",
+  colFrom: "Źródło",
+  colStage: "Etap",
+  colShare: "Twój udział",
+  unnamed: "Klient",
+  stages: {
+    lead: "Zapytanie",
+    work: "W realizacji",
+    contract: "Przygotowujemy umowę",
+    signed: "Umowa podpisana",
+    paid: "Opłacony",
+    lost: "Nie doszło do skutku",
+  },
+  shareFrozen: (amount) => `${amount} · po pełnej płatności`,
+  shareEarned: (amount) => `${amount} · naliczono`,
+  notCounted: (reason) => `niezaliczony: ${reason}`,
+  voidReasons: {
+    self: "zapytanie od Ciebie samego",
+    existing_client: "klient już współpracował ze studiem",
+    blocked: "partnerstwo zawieszone",
+  },
+
+  payoutTitle: "Wypłata",
+  payoutRules: (min) =>
+    `Wypłata — od ${min}, od pierwszego dnia roboczego miesiąca. Pieniądze przelewa właściciel studia: USDT (TRC-20) lub na podane dane. Jedno zlecenie naraz.`,
+  payoutOpens: (date) => `Wypłata będzie dostępna ${date}.`,
+  requisites: "Dane do wypłaty",
+  requisitesHint: "Adres USDT TRC-20 lub dane do przelewu słowami",
+  saveRequisites: "Zapisz",
+  requestPayout: (amount) => `Zleć wypłatę ${amount}`,
+  payoutResult: {
+    ok: "Zlecenie przyjęte. Gdy pieniądze zostaną wysłane, bot do Ciebie napisze.",
+    saved: "Dane do wypłaty zapisane.",
+    bad_requisites: "To nie wygląda na adres USDT TRC-20 ani dane do przelewu. Sprawdź i zapisz ponownie.",
+    offline: "Serwis jest chwilowo niedostępny. Spróbuj za minutę.",
+    window: "Wypłaty są dostępne od pierwszego dnia roboczego miesiąca — po uzgodnieniu płatności.",
+    requisites: "Najpierw podaj dane do wypłaty.",
+    pending: "Jedno zlecenie już czeka na decyzję — drugiego nie można złożyć, dopóki ono trwa.",
+    min: "Dostępna kwota jest niższa niż minimalna wypłata. Poczekaj na kolejną płatność klienta.",
+    failed: "Nie udało się złożyć zlecenia. Spróbuj jeszcze raz.",
+  },
+  historyTitle: "Historia wypłat",
+  payoutStatus: { requested: "W trakcie weryfikacji", paid: "Wypłacono", rejected: "Odrzucono" },
+
+  mediaTitle: "Materiały promocyjne",
+  mediaLead:
+    "Filmy i grafiki studia do Twoich social mediów. Pobierz, opublikuj w Reels, Shorts, TikToku, relacjach lub na kanale i wklej opis — Twój krótki link już w nim jest. Klienci, którzy przez niego przyjdą, są zaliczani Tobie, jak przy każdym Twoim linku.",
+  mediaDownload: "Pobierz",
+  mediaCopyCaption: "Kopiuj opis",
+  mediaCaptionTitle: "Opis do posta",
+  mediaCaption: (link) =>
+    `DevUz Studio tworzy strony, sklepy internetowe i boty w Telegramie, które przynoszą zapytania. Bezpłatnie przeanalizują Twoją stronę i pokażą, co poprawić: ${link}`,
+  mediaShape: { vertical: "pionowy 9:16", square: "kwadrat", horizontal: "poziomy 16:9" },
+  mediaLang: { all: "bez słów", ru: "po rosyjsku", uz: "po uzbecku", en: "po angielsku", zh: "po chińsku" },
+  mediaSeconds: "s",
+  mediaMb: "MB",
+  mediaGone: "Ten materiał został usunięty z panelu — wybierz inny.",
+
+  promoTitle: "Gotowe teksty",
+  promoLead:
+    "Skopiuj i wklej — link jest już w środku. Najlepiej działa osobisty ton: dopisz jedno zdanie o tym, dlaczego nam ufasz.",
+  promo: [
+    {
+      title: "Post na kanał",
+      text: (link) =>
+        `Jeśli potrzebujesz strony, sklepu internetowego albo bota w Telegramie — polecam DevUz Studio. Robią wszystko od A do Z, pokazują, ile zapytań strona traci teraz i co z tym zrobić. Sprawdź swoją stronę i omów zadanie: ${link}`,
+    },
+    {
+      title: "Wiadomość prywatna",
+      text: (link) =>
+        `Podobno potrzebujesz strony. Zajrzyj do DevUz Studio — najpierw bezpłatnie przeanalizują, co jest nie tak teraz, a dopiero potem podadzą cenę: ${link}`,
+    },
+    {
+      title: "Krótko — do relacji",
+      text: (link) => `Strony i boty, które przynoszą zapytania. Analiza gratis: ${link}`,
+    },
+  ],
+
+  howTitle: "Jak to działa",
+  how: [
+    "Udostępniaj krótki link — osobny dla każdego kanału.",
+    "Ktoś otwiera link — strona zapamiętuje Cię na 30 dni. Jeśli w tym czasie zostawi zapytanie na stronie lub napisze do bota, klient jest Twój, nawet jeśli wróci już bez linku.",
+    "Etapy widać tutaj: zapytanie, realizacja, umowa, płatność. O podpisanej umowie i płatności bot poinformuje Cię sam.",
+    "Gdy klient opłaci cały projekt, udział staje się dostępny do wypłaty — od pierwszego dnia roboczego miesiąca.",
+  ],
+  botNote: (bot) => `Powiadomienia o zapytaniach, umowach i wypłatach przychodzą do bota w Telegramie @${bot}.`,
+};
+
+const copies: Record<Locale, CabinetCopy> = { ru, en, uz, zh, uk, pl };
 
 export function cabinetCopy(locale: Locale): CabinetCopy {
   return copies[locale];

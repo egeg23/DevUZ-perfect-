@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 
 import { razborCopy } from "@/content/razbor/page-copy";
 import { forecast, lossFor, lostBesides } from "@/lib/razbor/forecast";
+import { locales } from "@/lib/i18n";
 import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
 
 /**
@@ -177,11 +178,11 @@ test("аудитор показывает потери и ту же оговор
   assert.match(audit, /loss\.counted\.length > 0 && loss\.lostPer100\[1\] > 0/);
 });
 
-test("подписи есть во всех четырёх языках сайта", () => {
+test("подписи есть во всех языках сайта", () => {
   const dict = read("content/dictionaries.ts");
   for (const key of ["lossTitle", "lossBody", "lossHow", "lossNone"]) {
     const count = dict.split(`${key}:`).length - 1;
-    assert.equal(count, 4, `${key}: заведён в ${count} словарях вместо четырёх`);
+    assert.equal(count, locales.length, `${key}: заведён в ${count} словарях вместо ${locales.length}`);
   }
 });
 
@@ -218,10 +219,10 @@ test("без введённого числа блок молчит, а не по
   assert.match(audit, /if \(hi <= 0\) return null;/);
 });
 
-test("вопрос и ответ заведены во всех четырёх языках", () => {
+test("вопрос и ответ заведены во всех языках сайта", () => {
   const dict = read("content/dictionaries.ts");
   for (const key of ["lossAsk", "lossAskHint", "lossResult"]) {
-    assert.equal(dict.split(`${key}:`).length - 1, 4, `${key}: не во всех словарях`);
+    assert.equal(dict.split(`${key}:`).length - 1, locales.length, `${key}: не во всех словарях`);
   }
   // В ответе должны быть все три подстановки, иначе фраза развалится.
   const line = dict.split("lossResult:")[1].split("\n")[0];

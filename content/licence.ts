@@ -318,4 +318,152 @@ const zh: LegalDoc = {
   ],
 };
 
-export const licence: Record<Locale, LegalDoc> = { ru, en, uz, zh };
+const uk: LegalDoc = {
+  title: "Ліцензія на програмний код",
+  updated: "Редакція від 10 вересня 2026 року",
+  intro:
+    "Цей документ описує, що покупець може робити з вихідним кодом, придбаним у каталозі DevUz Studio, і чого робити не можна. Він є невід'ємною частиною Публічної оферти та приймається разом із нею. Коротко: код ваш, користуйтеся ним у своїх проєктах скільки завгодно, але не продавайте його як товар. Це переклад, підготовлений для зручності. Юридичну силу має російська редакція, опублікована на devuz.studio/ru/licence; у разі розбіжностей між редакціями застосовується російська.",
+  sections: [
+    {
+      heading: "1. Що ви отримуєте",
+      body: [
+        "Невиключне право використовувати вихідний код безстроково та на території всього світу. Оплативши рахунок, ви отримуєте це право назавжди: воно не спливає, не потребує продовження і не відкликається, якщо ви дотримуєтеся наведених нижче умов.",
+        "Право змінювати код як завгодно: доповнювати, вирізати, переписувати, поєднувати зі своїм кодом. Змінена версія належить вам у частині ваших змін.",
+        "Право запускати код у необмеженій кількості власних проєктів і на необмеженій кількості серверів — як власних, так і орендованих.",
+        "Право передати код підряднику, який працює над вашим проєктом, — за умови, що він використовує його лише для вас і на тих самих умовах.",
+      ],
+    },
+    {
+      heading: "2. Чого робити не можна",
+      body: [
+        "Продавати, дарувати чи в інший спосіб передавати вихідний код як самостійний товар — повністю або в істотній частині. Це єдина заборона, заради якої існує весь документ: продукт продається багатьом покупцям, і кожен перепродаж знецінює покупку всіх інших.",
+        "Публікувати код у відкритому доступі — у публічному репозиторії, у складі відкритого проєкту, у навчальному матеріалі з доданими вихідними кодами.",
+        "Видавати субліцензії, тобто передавати третім особам права за цим документом. Права отримує покупець, а не той, кому він захоче їх передати.",
+        "Видаляти з файлів відомості про авторство, якщо вони там є.",
+        "Заборона не заважає продавати продукт, створений на цьому коді: сайт, застосунок чи сервіс, усередині якого працює код, — це ваш продукт, і розпоряджаєтеся ним ви. Межа проста: покупець платить вам за те, що робить код, а не за сам код.",
+      ],
+    },
+    {
+      heading: "3. Скільки компаній і проєктів",
+      body: [
+        "Ліцензія видається одній юридичній особі або індивідуальному підприємцю — тому, на кого виставлено рахунок. Дочірні та афілійовані компанії вважаються окремими особами, і їм потрібна власна ліцензія.",
+        "Кількість проєктів усередині вашої компанії не обмежена. Кількість зовнішніх клієнтів, яким ви робите проєкти на цьому коді, теж не обмежена — за умови, що ви продаєте їм готовий продукт або роботу, а не сам код.",
+      ],
+    },
+    {
+      heading: "4. Сторонні компоненти всередині",
+      body: [
+        "До коду входять бібліотеки та компоненти з відкритим вихідним кодом. На них ця ліцензія не поширюється — діють їхні власні умови, і ми не маємо права їх змінити.",
+        "Перелік таких компонентів із зазначенням їхніх ліцензій передається разом із кодом. Якщо якась із них покладає обов'язки на вас як на розповсюджувача, це окремо зазначено в переліку.",
+      ],
+    },
+    {
+      heading: "5. Що передається разом із кодом",
+      body: [
+        "Вихідний код повністю, без вирізаних частин і без обмежувачів, що потребують зв'язку з нашими серверами.",
+        "Документація: як розгорнути, як налаштувати, з чого складається, де що змінювати.",
+        "Перелік зовнішніх залежностей і сервісів, без яких код не працює, із зазначенням, які з них платні.",
+        "Коду, який потребує підписки на будь-що в DevUz Studio, у каталозі немає. Придбаний продукт і далі працює, навіть якщо студія припинить існування.",
+      ],
+    },
+    {
+      heading: "6. Оновлення та підтримка",
+      body: [
+        "Ви отримуєте ту версію продукту, яка актуальна на день оплати. Подальші оновлення не входять у ціну, якщо це прямо не зазначено в рахунку.",
+        "Помилки в переданій версії виправляються безкоштовно протягом 30 календарних днів з моменту передання. Ідеться про помилки в коді, а не про доопрацювання під ваші задачі.",
+        "Доопрацювання під ваші задачі — окрема робота за окремим рахунком. Це не відмова в допомозі: ціну продукту розраховано з того, що код передається як є, і включити до неї невідомий обсяг доопрацювань означало б підняти її для всіх.",
+      ],
+    },
+    {
+      heading: "7. Гарантії та їхні межі",
+      body: [
+        "Ми гарантуємо, що код працює так, як описано в документації, і що ми маємо право його вам передати.",
+        "Ми не гарантуємо, що код підійде під вашу конкретну задачу, якщо вона відрізняється від описаної, і що він працюватиме в середовищі, відмінному від описаного в документації. Саме тому демонстрація продукту доступна до купівлі — перегляньте її.",
+        "Ми не відповідаємо за збитки, що виникли внаслідок використання коду, понад суму, яку ви за нього сплатили.",
+      ],
+    },
+    {
+      heading: "8. Припинення",
+      body: [
+        "Право використовувати код припиняється, лише якщо порушено розділ 2 — тобто якщо код продано, опубліковано або субліцензовано. У такому разі ліцензія припиняється з моменту порушення, а сплачені кошти не повертаються.",
+        "Жодні інші обставини — завершення підтримки, зміна каталогу, припинення роботи студії — не впливають на ваше право використовувати вже придбаний код.",
+      ],
+    },
+  ],
+};
+
+const pl: LegalDoc = {
+  title: "Licencja na kod programu",
+  updated: "Wersja z dnia 10 września 2026 r.",
+  intro:
+    "Ten dokument określa, co Nabywca może robić z kodem źródłowym kupionym w katalogu DevUz Studio, a czego robić nie wolno. Stanowi integralną część Oferty publicznej i jest akceptowany razem z nią. W skrócie: kod jest Twój, korzystaj z niego we własnych projektach, ile chcesz, ale nie sprzedawaj go jako towaru. To tłumaczenie przygotowane dla wygody. Moc prawną ma rosyjska wersja opublikowana pod adresem devuz.studio/ru/licence; w razie rozbieżności między wersjami rozstrzyga wersja rosyjska.",
+  sections: [
+    {
+      heading: "1. Co otrzymujesz",
+      body: [
+        "Niewyłączne prawo do korzystania z kodu źródłowego bezterminowo i na terytorium całego świata. Po opłaceniu faktury proforma otrzymujesz to prawo na zawsze: nie wygasa, nie wymaga przedłużenia i nie może zostać cofnięte, jeśli przestrzegasz poniższych warunków.",
+        "Prawo do dowolnego modyfikowania kodu: dopisywania, usuwania fragmentów, przepisywania, łączenia z własnym kodem. Zmodyfikowana wersja należy do Ciebie w zakresie wprowadzonych przez Ciebie zmian.",
+        "Prawo do uruchamiania kodu w nieograniczonej liczbie własnych projektów i na nieograniczonej liczbie serwerów — zarówno własnych, jak i dzierżawionych.",
+        "Prawo do przekazania kodu wykonawcy (podwykonawcy), który pracuje nad Twoim projektem — pod warunkiem, że korzysta z niego wyłącznie na Twoją rzecz i na tych samych warunkach.",
+      ],
+    },
+    {
+      heading: "2. Czego nie wolno robić",
+      body: [
+        "Sprzedawać, darować ani w inny sposób przekazywać kodu źródłowego jako samodzielnego towaru — w całości lub w istotnej części. To jedyny zakaz, dla którego istnieje cały ten dokument: produkt jest sprzedawany wielu nabywcom, a każda odsprzedaż obniża wartość zakupu wszystkich pozostałych.",
+        "Publikować kodu w otwartym dostępie — w publicznym repozytorium, w ramach projektu open source, w materiale szkoleniowym z dołączonym kodem źródłowym.",
+        "Udzielać sublicencji, czyli przekazywać osobom trzecim praw wynikających z tego dokumentu. Prawa otrzymuje Nabywca, a nie ten, komu zechciałby je przekazać.",
+        "Usuwać z plików informacji o autorstwie, jeśli się w nich znajdują.",
+        "Zakaz nie przeszkadza w sprzedaży produktu zbudowanego na tym kodzie: strona internetowa, aplikacja lub usługa, w której kod działa, jest Twoim produktem i to Ty nim rozporządzasz. Granica jest prosta: Twój klient płaci Ci za to, co kod robi, a nie za sam kod.",
+      ],
+    },
+    {
+      heading: "3. Ile firm i projektów",
+      body: [
+        "Licencji udziela się jednej osobie prawnej lub jednemu przedsiębiorcy indywidualnemu — temu, na kogo wystawiono fakturę proforma. Spółki zależne i powiązane uważa się za odrębne podmioty i potrzebują one własnej licencji.",
+        "Liczba projektów w Twojej firmie nie jest ograniczona. Liczba klientów zewnętrznych, dla których realizujesz projekty na tym kodzie, również nie jest ograniczona — pod warunkiem, że sprzedajesz im gotowy produkt lub pracę, a nie sam kod.",
+      ],
+    },
+    {
+      heading: "4. Cudze komponenty w środku",
+      body: [
+        "Kod zawiera biblioteki i komponenty o otwartym kodzie źródłowym. Niniejsza licencja ich nie obejmuje — obowiązują ich własne warunki, a my nie mamy prawa ich zmieniać.",
+        "Wykaz takich komponentów wraz ze wskazaniem ich licencji przekazuje się razem z kodem. Jeśli którakolwiek z nich nakłada na Ciebie obowiązki jako na podmiot rozpowszechniający, zaznaczono to w wykazie osobno.",
+      ],
+    },
+    {
+      heading: "5. Co przekazujemy razem z kodem",
+      body: [
+        "Kompletny kod źródłowy, bez usuniętych fragmentów i bez blokad wymagających połączenia z naszymi serwerami.",
+        "Dokumentację: jak uruchomić, jak skonfigurować, z czego się składa, gdzie co zmieniać.",
+        "Wykaz zewnętrznych zależności i usług, bez których kod nie działa, ze wskazaniem, które z nich są płatne.",
+        "W katalogu nie ma kodu, który wymaga jakiejkolwiek subskrypcji w DevUz Studio. Kupiony produkt działa nadal, nawet jeśli studio zakończy działalność.",
+      ],
+    },
+    {
+      heading: "6. Aktualizacje i wsparcie",
+      body: [
+        "Otrzymujesz wersję produktu aktualną w dniu dokonania płatności. Późniejsze aktualizacje nie są wliczone w cenę, chyba że wprost wskazano to w fakturze proforma.",
+        "Błędy w przekazanej wersji są usuwane nieodpłatnie w ciągu 30 dni kalendarzowych od przekazania. Chodzi o błędy w kodzie, a nie o dostosowanie do Twoich potrzeb.",
+        "Dostosowanie do Twoich potrzeb to odrębna praca na podstawie odrębnej faktury proforma. To nie odmowa pomocy: cena produktu została skalkulowana przy założeniu, że kod jest przekazywany w stanie, w jakim jest, a wliczenie w nią nieznanego zakresu prac dodatkowych oznaczałoby podniesienie jej dla wszystkich.",
+      ],
+    },
+    {
+      heading: "7. Gwarancje i ich granice",
+      body: [
+        "Gwarantujemy, że kod działa w sposób opisany w dokumentacji i że mamy prawo Ci go przekazać.",
+        "Nie gwarantujemy, że kod będzie odpowiedni do Twojego konkretnego zadania, jeśli różni się ono od opisanego, ani że będzie działał w środowisku innym niż opisane w dokumentacji. Właśnie dlatego demonstracja produktu jest dostępna przed zakupem — zapoznaj się z nią.",
+        "Nie odpowiadamy za szkody wynikłe z korzystania z kodu ponad kwotę, którą za niego zapłaciłeś.",
+      ],
+    },
+    {
+      heading: "8. Wygaśnięcie",
+      body: [
+        "Prawo do korzystania z kodu wygasa wyłącznie w razie naruszenia sekcji 2 — czyli jeśli kod został sprzedany, opublikowany lub objęty sublicencją. W takim przypadku licencja wygasa z chwilą naruszenia, a zapłacone pieniądze nie podlegają zwrotowi.",
+        "Żadne inne okoliczności — zakończenie wsparcia, zmiana katalogu, zakończenie działalności studia — nie wpływają na Twoje prawo do korzystania z już kupionego kodu.",
+      ],
+    },
+  ],
+};
+
+export const licence: Record<Locale, LegalDoc> = { ru, en, uz, zh, uk, pl };

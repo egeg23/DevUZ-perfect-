@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { Container } from "@/components/ui/container";
 import { razborCopy, tenderCopy } from "@/content/razbor/page-copy";
@@ -10,7 +10,7 @@ import { evidenceFor } from "@/lib/razbor/evidence";
 import { listRazbors, razborBySlug, siblings } from "@/lib/razbor/store";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata, siteUrl, type AltPaths } from "@/lib/seo";
-import { RAZBOR_LOCALES, isRazborLocale, localeHref } from "@/lib/razbor/routing";
+import { RAZBOR_LOCALES, isRazborBorrowing, isRazborLocale, localeHref } from "@/lib/razbor/routing";
 import type { RazborLocale } from "@/lib/razbor/model";
 import { serviceFor } from "@/lib/razbor/service-link";
 import { isTender } from "@/lib/razbor/tender";
@@ -78,6 +78,15 @@ export default async function RazborPage({
   params: Promise<{ locale: string; slug: string }>;
 }) {
   const { locale: raw, slug } = await params;
+  // /uk/razbor/<адрес> получается переключателем языка со страницы разбора.
+  // Своей статьи на этом языке нет — ведём туда, где она есть: на русскую
+  // или узбекскую статью с тем же адресом, иначе на список раздела.
+  if (isLocale(raw) && isRazborBorrowing(raw)) {
+    for (const where of RAZBOR_LOCALES) {
+      if (await razborBySlug(where, slug)) redirect(localeHref(where, slug));
+    }
+    redirect(`/${raw}/razbor`);
+  }
   if (!isLocale(raw) || !isRazborLocale(raw)) notFound();
   const locale = raw;
   const item = await razborBySlug(locale, slug);

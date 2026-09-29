@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { company } from "@/content/company";
-import { hreflang, locales, type Locale } from "@/lib/i18n";
+import { hreflang, locales, ogLocale, type Locale } from "@/lib/i18n";
 
 /**
  * Канонический адрес сайта. Держится в одной переменной окружения именно
@@ -23,7 +23,7 @@ export function absoluteUrl(path = ""): string {
  * Ключ — язык, значение — путь без префикса локали. Языка нет в карте —
  * значит страницы на нём не существует, и обещать её нельзя.
  *
- * Нужна ровно там, где страница живёт не на всех четырёх языках или живёт
+ * Нужна ровно там, где страница живёт не на всех языках сайта или живёт
  * под разными адресами. Такой раздел у нас один — разборы: они пишутся
  * только по-русски и по-узбекски, и это не перевод одного текста, а два
  * запроса с разными адресами.
@@ -117,7 +117,10 @@ export function buildMetadata({
       title,
       description,
       url,
-      locale: hreflang[locale].replace("-", "_"),
+      // Остальные языки страницы — тоже: так Facebook и Telegram знают, что
+      // у ссылки есть версия на языке читателя.
+      locale: ogLocale[locale],
+      alternateLocale: locales.filter((l) => l !== locale && (!alternates || alternates[l] !== undefined)).map((l) => ogLocale[l]),
       images: [{ url: image, width: 1200, height: 630, alt: title }],
     },
     twitter: {

@@ -35,6 +35,24 @@ const PUBLIC_EN: BotCommand[] = [
   { command: "reset", description: "Start over" },
 ];
 
+const PUBLIC_UK: BotCommand[] = [
+  { command: "start", description: "Почати розмову" },
+  { command: "ref", description: "Партнерська програма: посилання й баланс" },
+  { command: "payout", description: "Заявка на виплату партнеру" },
+  { command: "cabinet", description: "Кабінет партнера на сайті" },
+  { command: "help", description: "Що вміє бот" },
+  { command: "reset", description: "Почати розмову заново" },
+];
+
+const PUBLIC_PL: BotCommand[] = [
+  { command: "start", description: "Rozpocznij rozmowę" },
+  { command: "ref", description: "Program partnerski: link i saldo" },
+  { command: "payout", description: "Wniosek o wypłatę dla partnera" },
+  { command: "cabinet", description: "Panel partnera na stronie" },
+  { command: "help", description: "Co potrafi bot" },
+  { command: "reset", description: "Zacznij rozmowę od nowa" },
+];
+
 const STAFF_EXTRA: BotCommand[] = [{ command: "login", description: "Вход в панель (для сотрудников)" }];
 
 /**
@@ -46,10 +64,15 @@ const QUEUE_EXTRA: BotCommand[] = [{ command: "leads", description: "Получ�
 export type MenuSync = { ok: boolean; staff: number; failed: number };
 
 export async function syncBotMenu(): Promise<MenuSync> {
-  // Общее меню: русский по умолчанию, английский — для тех, у кого Telegram
-  // на английском. Узбекский и китайский получают русский: Telegram отдаёт
-  // список без language_code всем, для кого нет своего.
-  const publicOk = (await setMyCommands(PUBLIC_RU)) && (await setMyCommands(PUBLIC_EN, { language_code: "en" }));
+  // Общее меню: русский по умолчанию, английский, украинский и польский —
+  // для тех, у кого Telegram на этих языках. Узбекский и китайский получают
+  // русский: Telegram отдаёт список без language_code всем, для кого нет
+  // своего.
+  const publicOk =
+    (await setMyCommands(PUBLIC_RU)) &&
+    (await setMyCommands(PUBLIC_EN, { language_code: "en" })) &&
+    (await setMyCommands(PUBLIC_UK, { language_code: "uk" })) &&
+    (await setMyCommands(PUBLIC_PL, { language_code: "pl" }));
 
   const db = serviceClient();
   if (!db) return { ok: publicOk, staff: 0, failed: publicOk ? 0 : 1 };

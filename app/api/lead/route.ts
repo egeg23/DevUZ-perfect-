@@ -76,6 +76,8 @@ export async function POST(request: Request) {
     en: `Hello${name ? " " + name : ""}! I'm [name] from DevUz Studio — you left a request on our site. Could you tell me a bit more about the project: what does your company do and what needs building?`,
     uz: `Assalomu alaykum${name ? ", " + name : ""}! Men DevUz studiyasidan [ism] — siz saytimizda ariza qoldirgansiz. Iltimos, vazifa haqida biroz batafsilroq aytib bering: kompaniyangiz nima bilan shug‘ullanadi va nima qilish kerak?`,
     zh: `您好${name ? "，" + name : ""}！我是 DevUz Studio 的 [姓名]，您在我们网站留了咨询。能否再多说一些项目情况：贵公司主要做什么，需要开发什么？`,
+    uk: `Доброго дня${name ? ", " + name : ""}! Мене звати [ім'я], я зі студії DevUz — ви залишили заявку на нашому сайті. Розкажіть, будь ласка, трохи докладніше про задачу: чим займається компанія і що потрібно зробити?`,
+    pl: `Dzień dobry${name ? ", " + name : ""}! Nazywam się [imię], piszę ze studia DevUz — zostawiłeś zapytanie na naszej stronie. Opowiedz, proszę, trochę więcej o zadaniu: czym zajmuje się Twoja firma i co trzeba zrobić?`,
   };
 
   const input: QualifyToolInput = {

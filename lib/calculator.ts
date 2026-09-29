@@ -42,7 +42,7 @@ function roundUzs(value: number): number {
 export function formatUzs(value: number, locale: Locale): string {
   // Разряды разделяются неразрывным пробелом, чтобы число не переносилось.
   const grouped = Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-  const suffix = { ru: "сум", en: "UZS", uz: "so‘m", zh: "苏姆" }[locale];
+  const suffix = { ru: "сум", en: "UZS", uz: "so‘m", zh: "苏姆", uk: "сум", pl: "UZS" }[locale];
   return `${grouped} ${suffix}`;
 }
 
