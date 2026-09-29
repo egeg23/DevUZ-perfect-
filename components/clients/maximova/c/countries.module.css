@@ -1008,6 +1008,90 @@
   transform: translateY(12px);
 }
 
+/* С чем приходят — переписка: вопрос родителя слева, ответ Дарьи справа,
+   каждая реплика «выскакивает», как сообщение в мессенджере. */
+.asks {
+  display: grid;
+  gap: 24px;
+  max-width: 800px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ask {
+  display: grid;
+  gap: 8px;
+  transform-origin: 0 100%;
+  transition:
+    opacity 400ms calc(var(--i) * 120ms) var(--ease),
+    transform 500ms calc(var(--i) * 120ms) var(--pop);
+}
+
+:global(.mx-js) .ask:not([data-shown]) {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+.askQ {
+  justify-self: start;
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: var(--radius) var(--radius) var(--radius) 4px;
+  background: var(--card);
+  box-shadow: 0 1px 3px hsla(222, 40%, 18%, 0.16);
+  font-family: var(--mx-lora), Georgia, serif;
+  font-style: italic;
+}
+
+.askA {
+  justify-self: end;
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: var(--radius) var(--radius) 4px var(--radius);
+  background: hsl(210 60% 92%);
+  color: var(--ink);
+}
+
+/* Что вы увидите — галочки в тетради, по одной. */
+.results {
+  display: grid;
+  gap: 12px;
+  max-width: 800px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result {
+  position: relative;
+  padding-left: 40px;
+  transition:
+    opacity 500ms calc(var(--i) * 150ms) var(--ease),
+    transform 500ms calc(var(--i) * 150ms) var(--ease);
+}
+
+.result::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--red);
+  border-radius: 4px;
+  color: var(--red);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+:global(.mx-js) .result:not([data-shown]) {
+  opacity: 0;
+  transform: translateX(-16px);
+}
+
 .ghost {
   display: inline-flex;
   align-items: center;

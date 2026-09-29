@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import {
   AGES,
   CUTS,
+  DIARY,
   MOMS_COURSE,
   MOMS_DETAILS,
   PHOTOS,
@@ -14,7 +15,19 @@ import {
   TRIAL,
 } from "@/content/clients/maximova/facts";
 
-import { FaqList, Later, LessonSteps, MomsLink, PlainList, PriceList, TrialPoints, WhereBlock } from "../Blocks";
+import {
+  DiaryList,
+  FaqList,
+  Later,
+  LessonSteps,
+  MomsLink,
+  PlainList,
+  PriceList,
+  RequestList,
+  ResultList,
+  TrialPoints,
+  WhereBlock,
+} from "../Blocks";
 import { Book } from "../Book";
 import { Credit } from "../Credit";
 import { Motion } from "../Motion";
@@ -100,6 +113,13 @@ export function TwoCountries() {
               </ul>
             </div>
           </div>
+        </section>
+
+        <section className={s.section} aria-labelledby="c-asks">
+          <h2 id="c-asks" className={s.h2}>
+            С чем к Дарье приходят родители
+          </h2>
+          <RequestList s={s} />
         </section>
 
         <section className={s.section} aria-labelledby="c-langs">
@@ -245,6 +265,21 @@ export function TwoCountries() {
             <blockquote className={s.letterQuote}>«{QUOTES.goal}»</blockquote>
             <p className={s.sign}>— {TEACHER.firstName}</p>
           </div>
+        </section>
+
+        <section className={s.section} aria-labelledby="c-results">
+          <h2 id="c-results" className={s.h2}>
+            Что вы увидите по ходу занятий
+          </h2>
+          <p className={s.muted}>Без обещаний в сроках — только то, что родитель действительно видит.</p>
+          <ResultList s={s} />
+        </section>
+
+        <section className={s.section} aria-labelledby="c-diary">
+          <h2 id="c-diary" className={s.h2}>
+            {DIARY.title}
+          </h2>
+          <DiaryList s={s} />
         </section>
 
         <section className={s.section} aria-labelledby="c-faq">

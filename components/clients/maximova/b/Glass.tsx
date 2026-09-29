@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import {
   AGES,
   CUTS,
+  DIARY,
   MOMS_COURSE,
   MOMS_DETAILS,
   PHOTOS,
@@ -14,7 +15,19 @@ import {
   TRIAL,
 } from "@/content/clients/maximova/facts";
 
-import { FaqList, Later, LessonSteps, MomsLink, PlainList, PriceList, TrialPoints, WhereBlock } from "../Blocks";
+import {
+  DiaryList,
+  FaqList,
+  Later,
+  LessonSteps,
+  MomsLink,
+  PlainList,
+  PriceList,
+  RequestList,
+  ResultList,
+  TrialPoints,
+  WhereBlock,
+} from "../Blocks";
 import { Book } from "../Book";
 import { Credit } from "../Credit";
 import { Motion } from "../Motion";
@@ -104,6 +117,13 @@ export function Glass() {
               <p>Для детей 5–8 лет и для 8–17 лет — английский и французский.</p>
             </article>
           </div>
+        </section>
+
+        <section aria-labelledby="b-asks">
+          <h2 id="b-asks" className={s.h2}>
+            С чем к Дарье приходят родители
+          </h2>
+          <RequestList s={s} />
         </section>
 
         <section aria-labelledby="b-ages">
@@ -208,6 +228,21 @@ export function Glass() {
           </h2>
           <blockquote className={s.goalQuote}>«{QUOTES.goal}»</blockquote>
           <p className={s.sign}>— {TEACHER.name}</p>
+        </section>
+
+        <section aria-labelledby="b-results">
+          <h2 id="b-results" className={s.h2}>
+            Что вы увидите по ходу занятий
+          </h2>
+          <p className={s.lead}>Без обещаний в сроках — только то, что родитель действительно видит.</p>
+          <ResultList s={s} />
+        </section>
+
+        <section aria-labelledby="b-diary">
+          <h2 id="b-diary" className={s.h2}>
+            {DIARY.title}
+          </h2>
+          <DiaryList s={s} />
         </section>
 
         <section aria-labelledby="b-faq">

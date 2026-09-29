@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 
 import {
   CONTACTS,
+  DIARY,
   FAQ,
   FORMAT,
   LESSON,
@@ -9,10 +10,39 @@ import {
   MOMS_TEXT,
   PLAIN,
   PRICES,
+  REQUESTS,
+  RESULTS,
   TRIAL,
   phoneUrl,
   telegramUrl,
 } from "@/content/clients/maximova/facts";
+
+/** С чем приходят родители: запрос его словами — и ответ её словами. */
+export function RequestList({ s }: { s: Skin }) {
+  return (
+    <ul className={s.asks}>
+      {REQUESTS.map((item, i) => (
+        <li key={item.ask} className={s.ask} data-reveal="" style={at(i)}>
+          <span className={s.askQ}>{item.ask}</span>
+          <span className={s.askA}>{item.answer}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Что родитель увидит по ходу занятий — без сроков и обещаний. */
+export function ResultList({ s }: { s: Skin }) {
+  return (
+    <ol className={s.results}>
+      {RESULTS.map((item, i) => (
+        <li key={item} className={s.result} data-reveal="" style={at(i)}>
+          {item}
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 /**
  * Блоки, у которых устройство общее, а одежда и движение — свои у каждого
@@ -63,6 +93,19 @@ export function PlainList({ s }: { s: Skin }) {
   return (
     <ul className={`${s.trialList ?? ""} ${s.plain ?? ""}`}>
       {PLAIN.map((point, i) => (
+        <li key={point} className={s.trialItem} data-reveal="" style={at(i)}>
+          {point}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Связь с родителями: кабинет и Telegram-дневник. */
+export function DiaryList({ s }: { s: Skin }) {
+  return (
+    <ul className={`${s.trialList ?? ""} ${s.plain ?? ""}`}>
+      {DIARY.points.map((point, i) => (
         <li key={point} className={s.trialItem} data-reveal="" style={at(i)}>
           {point}
         </li>
