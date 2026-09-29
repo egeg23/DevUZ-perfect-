@@ -155,6 +155,7 @@
 }
 
 .cta:focus-visible,
+.ghost:focus-visible,
 .bookOption:focus-visible,
 .faqItem summary:focus-visible {
   outline: 2px solid var(--blue);
@@ -165,6 +166,30 @@
   position: relative;
   min-height: 280px;
   pointer-events: none;
+}
+
+/* Дарья между Лондоном и Парижем: вырезка стоит за набережной, так что
+   ровный нижний край снимка прячется под водой. */
+.heroCut {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5%;
+  height: 82%;
+  width: auto;
+  max-width: none !important;
+  margin: 0 auto;
+  /* Руки на снимке обрезаны рамкой кадра — прямые края растворяются. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 18%, #000 82%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 18%, #000 82%, transparent 100%);
+  animation: rise 1200ms 400ms var(--ease) both;
+}
+
+/* На телефоне сцена низкая, и Дарья поднимается над крышами. */
+@media (max-width: 899px) {
+  .heroCut {
+    height: 170%;
+  }
 }
 
 .layer {
@@ -185,7 +210,7 @@
   .scene {
     min-height: 0;
     aspect-ratio: 1440 / 600;
-    margin-top: 24px;
+    margin-top: 128px;
   }
 }
 
@@ -268,8 +293,19 @@
 
 .postcardPhoto {
   position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   aspect-ratio: 3 / 4;
   overflow: hidden;
+  background: hsl(200 40% 78%);
+}
+
+.postcardPhoto img,
+.archInner img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .stamp {
@@ -567,9 +603,16 @@
   box-shadow: 0 10px 24px hsla(222, 40%, 18%, 0.18);
 }
 
+.arch {
+  background: var(--sun);
+}
+
 .archInner {
   position: absolute;
-  inset: -12% 0;
+  inset: 0 0 -12% 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   pointer-events: none;
   will-change: transform;
 }
@@ -662,25 +705,6 @@
   font-size: 14px;
 }
 
-.missing span {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--red);
-}
-
-.missingRow {
-  display: grid;
-  gap: 8px;
-  margin-top: 32px;
-}
-
-@media (min-width: 720px) {
-  .missingRow {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 /* Запись — конверт. */
 .envelope {
   padding: 32px 24px;
@@ -746,32 +770,299 @@
   font-weight: 700;
 }
 
-.bookNote {
-  padding: 24px;
-  background: var(--paper);
-  border-radius: 12px;
-  color: var(--muted);
-  animation: rise 500ms var(--ease) both;
-}
-
-.bookNote p {
-  margin: 0 0 8px;
-}
-
-.bookNote button {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--blue);
-  font: inherit;
-  font-weight: 700;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 .bookMessage {
-  color: var(--ink);
+  padding: 16px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  font-family: var(--mx-lora), Georgia, serif;
   font-style: italic;
+}
+
+.bookNote {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.bookNote a,
+.whereNote a {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+/* Шаги занятия — строчки тетради, каждая «пропечатывается» штампом. */
+.steps {
+  display: grid;
+  gap: 0;
+  max-width: 800px;
+  margin: 24px 0 16px;
+  padding: 8px 24px;
+  list-style: none;
+  background: var(--card);
+  border-left: 4px solid var(--red);
+  border-radius: 4px;
+  box-shadow: 0 4px 6px hsla(222, 40%, 18%, 0.08);
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  column-gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid hsl(210 50% 88%);
+  transition:
+    opacity 400ms calc(var(--i) * 160ms) var(--ease),
+    transform 500ms calc(var(--i) * 160ms) var(--pop);
+}
+
+.step:last-child {
+  border-bottom: 0;
+}
+
+:global(.mx-js) .step:not([data-shown]) {
+  opacity: 0;
+  transform: scale(1.12);
+}
+
+.stepNo {
+  grid-row: span 2;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-style: italic;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--red);
+}
+
+.stepTitle {
+  font-weight: 700;
+}
+
+.stepNote {
+  color: var(--muted);
+}
+
+.stepsPlan {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+/* Цены — багажные бирки: качнулись на нитке и повисли. */
+.prices {
+  display: grid;
+  gap: 24px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .prices {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .prices {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.price {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 32px 24px 24px;
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  transform-origin: 50% 0;
+  transition:
+    opacity 400ms calc(var(--i) * 140ms) var(--ease),
+    transform 900ms calc(var(--i) * 140ms) var(--pop);
+}
+
+.price::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: calc(50% - 6px);
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+:global(.mx-js) .price:not([data-shown]) {
+  opacity: 0;
+  transform: rotate(-10deg);
+}
+
+.priceTitle {
+  font-weight: 700;
+}
+
+.priceValue {
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--red);
+}
+
+.priceUnit {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Пробное — открытка, на которую ставят печать «−30%». */
+.trial {
+  position: relative;
+  max-width: 800px;
+  padding: 48px 32px 32px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 24px hsla(222, 40%, 18%, 0.12);
+  transition:
+    opacity 600ms var(--ease),
+    transform 800ms var(--ease);
+}
+
+:global(.mx-js) .trial:not([data-shown]) {
+  opacity: 0;
+  transform: translateX(-32px) rotate(-2deg);
+}
+
+.trialStamp {
+  position: absolute;
+  top: -16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border: 4px double var(--blue);
+  border-radius: 50%;
+  background: hsla(40, 60%, 99%, 0.9);
+  color: var(--blue);
+  font-size: 24px;
+  font-weight: 700;
+  transform: rotate(-12deg);
+  transition:
+    opacity 300ms 600ms var(--ease),
+    transform 500ms 600ms var(--pop);
+}
+
+:global(.mx-js) .trial:not([data-shown]) .trialStamp {
+  opacity: 0;
+  transform: rotate(-12deg) scale(1.8);
+}
+
+.trial h2 {
+  padding-right: 96px;
+}
+
+.trialList {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.trialItem {
+  position: relative;
+  padding-left: 32px;
+}
+
+.trialItem::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 16px;
+  height: 2px;
+  background: var(--blue);
+}
+
+.momsFacts {
+  margin-top: 16px !important;
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.plainTitle {
+  margin: 48px 0 16px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.plain .trialItem {
+  transition:
+    opacity 500ms calc(var(--i) * 120ms) var(--ease),
+    transform 600ms calc(var(--i) * 120ms) var(--pop);
+}
+
+:global(.mx-js) .plain .trialItem:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin-top: 24px;
+  padding: 0 24px;
+  border: 2px solid var(--red);
+  border-radius: 999px;
+  color: var(--red) !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.where {
+  display: grid;
+  gap: 4px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px dashed var(--line);
+}
+
+.whereMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.metro {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--red);
+  color: hsl(0 0% 100%);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.whereNote {
+  color: var(--muted);
+}
+
+.later {
+  display: grid;
+  gap: 8px;
+  margin-top: 32px;
+}
+
+@media (min-width: 720px) {
+  .later {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .footer {

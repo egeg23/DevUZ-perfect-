@@ -1,11 +1,22 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 
-import { AGES, FAQ, MISSING, MOMS_COURSE, PHOTOS, QUOTES, RHYTHM, SCHOOL, TEACHER } from "@/content/clients/maximova/facts";
+import {
+  AGES,
+  CUTS,
+  MOMS_COURSE,
+  MOMS_DETAILS,
+  PHOTOS,
+  QUOTES,
+  RHYTHM,
+  SCHOOL,
+  TEACHER,
+  TRIAL,
+} from "@/content/clients/maximova/facts";
 
+import { FaqList, Later, LessonSteps, MomsLink, PlainList, PriceList, TrialPoints, WhereBlock } from "../Blocks";
 import { Book } from "../Book";
 import { Credit } from "../Credit";
-import { Missing } from "../Missing";
 import { Motion } from "../Motion";
 import { Skyline } from "./Skyline";
 import s from "./countries.module.css";
@@ -41,13 +52,23 @@ export function TwoCountries() {
           </h1>
           <p className={s.lead}>
             {TEACHER.name}, преподаватель {TEACHER.universityShort}, сама растит двоих детей билингвами. Английский и
-            французский для детей 5–8 и 8–17 лет.
+            французский для детей 5–8 и 8–17 лет — у метро Китай-город и онлайн.
           </p>
           <a className={s.cta} href="#zapis">
-            Записаться на знакомство
+            Пробное занятие −30%
           </a>
         </div>
-        <Skyline className={s.scene} layer={{ sky: s.layer, city: s.layer, front: s.layer }} />
+        <Skyline className={s.scene} layer={{ sky: s.layer, city: s.layer, front: s.layer }}>
+          <Image
+            className={s.heroCut}
+            src={PHOTOS.kangol.cut}
+            alt=""
+            width={CUTS.kangol.width}
+            height={CUTS.kangol.height}
+            priority
+            sizes="(min-width: 900px) 24vw, 40vw"
+          />
+        </Skyline>
       </header>
 
       <main>
@@ -55,7 +76,13 @@ export function TwoCountries() {
           <div className={s.meet}>
             <figure className={s.postcard} data-reveal="">
               <div className={s.postcardPhoto}>
-                <Image src={PHOTOS.urban.src} alt={PHOTOS.urban.alt} fill sizes="(min-width: 900px) 36vw, 80vw" />
+                <Image
+                  src={PHOTOS.urban.cut}
+                  alt={PHOTOS.urban.alt}
+                  width={CUTS.urban.width}
+                  height={CUTS.urban.height}
+                  sizes="(min-width: 900px) 36vw, 80vw"
+                />
               </div>
               <span className={s.stamp} aria-hidden="true">
                 {TEACHER.universityShort}
@@ -143,6 +170,37 @@ export function TwoCountries() {
           </div>
         </section>
 
+        <section className={s.section} aria-labelledby="c-lesson">
+          <h2 id="c-lesson" className={s.h2}>
+            Что происходит за 45 минут
+          </h2>
+          <LessonSteps s={s} />
+        </section>
+
+        <section className={s.section} aria-labelledby="c-prices">
+          <h2 id="c-prices" className={s.h2}>
+            Стоимость
+          </h2>
+          <PriceList s={s} />
+          <h3 className={s.plainTitle}>Без сюрпризов</h3>
+          <PlainList s={s} />
+        </section>
+
+        <section className={s.section} aria-labelledby="c-trial">
+          <div className={s.trial} data-reveal="">
+            <span className={s.trialStamp} aria-hidden="true">
+              −30%
+            </span>
+            <h2 id="c-trial" className={s.h2}>
+              {TRIAL.title}
+            </h2>
+            <TrialPoints s={s} />
+            <a className={s.cta} href="#zapis">
+              Записаться на пробное
+            </a>
+          </div>
+        </section>
+
         <section className={s.section} aria-labelledby="c-rule">
           <div className={s.note} data-reveal="">
             <h2 id="c-rule" className={s.noteTitle}>
@@ -156,7 +214,13 @@ export function TwoCountries() {
           <div className={s.moms}>
             <div className={s.arch}>
               <div className={s.archInner} data-speed="-0.08">
-                <Image src={PHOTOS.bench.src} alt={PHOTOS.bench.alt} fill sizes="(min-width: 900px) 32vw, 80vw" />
+                <Image
+                  src={PHOTOS.bench.cut}
+                  alt={PHOTOS.bench.alt}
+                  width={CUTS.bench.width}
+                  height={CUTS.bench.height}
+                  sizes="(min-width: 900px) 32vw, 80vw"
+                />
               </div>
             </div>
             <div className={s.momsText} data-reveal="">
@@ -165,6 +229,10 @@ export function TwoCountries() {
                 {MOMS_COURSE.title}
               </h2>
               <p className={s.lead}>{MOMS_COURSE.line}</p>
+              <p className={s.momsFacts}>
+                {MOMS_DETAILS.format} · {MOMS_DETAILS.line}
+              </p>
+              <MomsLink className={s.ghost} />
             </div>
           </div>
         </section>
@@ -183,26 +251,15 @@ export function TwoCountries() {
           <h2 id="c-faq" className={s.h2}>
             Вопросы родителей
           </h2>
-          <div className={s.faq}>
-            {FAQ.map((item) => (
-              <details key={item.q} className={s.faqItem}>
-                <summary>{item.q}</summary>
-                {item.a ? (
-                  <p>{item.a}</p>
-                ) : (
-                  <Missing className={s.missing} what={`${MISSING.prices}, ${MISSING.format.toLowerCase()}`} />
-                )}
-              </details>
-            ))}
-          </div>
+          <FaqList s={s} />
         </section>
 
         <section id="zapis" className={s.section} aria-labelledby="c-book">
           <div className={s.envelope}>
             <h2 id="c-book" className={s.h2}>
-              Запись на знакомство
+              Запись на пробное занятие
             </h2>
-            <p className={s.muted}>Выберите язык и возраст — сообщение Дарье соберётся само.</p>
+            <p className={s.muted}>Выберите язык, возраст и формат — сообщение Дарье соберётся само.</p>
             <Book
               skin={{
                 root: s.bookRoot,
@@ -215,13 +272,9 @@ export function TwoCountries() {
                 note: s.bookNote,
                 message: s.bookMessage,
               }}
-              cta="Записаться на знакомство"
             />
-            <div className={s.missingRow}>
-              <Missing className={s.missing} what={MISSING.prices} />
-              <Missing className={s.missing} what={MISSING.format} />
-              <Missing className={s.missing} what={MISSING.reviews} />
-            </div>
+            <WhereBlock s={s} />
+            <Later s={s} />
           </div>
         </section>
       </main>
@@ -235,7 +288,7 @@ export function TwoCountries() {
       </footer>
 
       <a className={s.dock} href="#zapis" data-dock="">
-        Записаться на знакомство
+        Пробное занятие −30%
       </a>
     </div>
   );

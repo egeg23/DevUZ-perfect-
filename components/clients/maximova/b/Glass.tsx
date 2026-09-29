@@ -1,11 +1,22 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 
-import { AGES, FAQ, MISSING, MOMS_COURSE, PHOTOS, QUOTES, RHYTHM, SCHOOL, TEACHER } from "@/content/clients/maximova/facts";
+import {
+  AGES,
+  CUTS,
+  MOMS_COURSE,
+  MOMS_DETAILS,
+  PHOTOS,
+  QUOTES,
+  RHYTHM,
+  SCHOOL,
+  TEACHER,
+  TRIAL,
+} from "@/content/clients/maximova/facts";
 
+import { FaqList, Later, LessonSteps, MomsLink, PlainList, PriceList, TrialPoints, WhereBlock } from "../Blocks";
 import { Book } from "../Book";
 import { Credit } from "../Credit";
-import { Missing } from "../Missing";
 import { Motion } from "../Motion";
 import { Hello } from "./Hello";
 import s from "./glass.module.css";
@@ -48,14 +59,22 @@ export function Glass() {
           <Hello />
           <h1 className={s.title}>Английский и французский для детей, которые думают на языке</h1>
           <p className={s.lead}>
-            {SCHOOL.title}. Авторские методики для детей 5–8 и 8–17 лет, {RHYTHM.line}.
+            {SCHOOL.title}: 5–8 и 8–17 лет, {RHYTHM.line}. Группы у метро Китай-город и онлайн.
           </p>
           <a className={s.cta} href="#zapis">
-            Записаться на знакомство
+            Пробное занятие −30%
           </a>
         </div>
         <div className={s.heroPhoto}>
-          <Image src={PHOTOS.bench.src} alt={PHOTOS.bench.alt} fill priority sizes="(min-width: 900px) 40vw, 90vw" />
+          <Image
+            className={s.cut}
+            src={PHOTOS.bench.cut}
+            alt={PHOTOS.bench.alt}
+            width={CUTS.bench.width}
+            height={CUTS.bench.height}
+            priority
+            sizes="(min-width: 900px) 40vw, 90vw"
+          />
           <p className={`${s.glass} ${s.badge}`}>
             <strong>{TEACHER.universityShort}</strong> действующий преподаватель
           </p>
@@ -110,7 +129,7 @@ export function Glass() {
 
         <section className={s.rhythm} aria-labelledby="b-rhythm">
           <h2 id="b-rhythm" className={s.h2}>
-            Почему 45 минут
+            Как проходят 45 минут
           </h2>
           <div className={s.rhythmRow}>
             <div className={`${s.glass} ${s.dial}`} data-reveal="">
@@ -128,6 +147,26 @@ export function Glass() {
             </div>
           </div>
           <p className={s.why}>{RHYTHM.why}</p>
+          <LessonSteps s={s} />
+        </section>
+
+        <section aria-labelledby="b-prices">
+          <h2 id="b-prices" className={s.h2}>
+            Стоимость
+          </h2>
+          <PriceList s={s} />
+          <h3 className={s.plainTitle}>Без сюрпризов</h3>
+          <PlainList s={s} />
+        </section>
+
+        <section className={`${s.glass} ${s.trial}`} aria-labelledby="b-trial" data-reveal="">
+          <h2 id="b-trial" className={s.h2}>
+            {TRIAL.title}
+          </h2>
+          <TrialPoints s={s} />
+          <a className={s.cta} href="#zapis">
+            Записаться на пробное
+          </a>
         </section>
 
         <section className={s.rule} aria-labelledby="b-rule" data-reveal="">
@@ -139,7 +178,14 @@ export function Glass() {
 
         <section className={s.moms} aria-labelledby="b-moms">
           <div className={s.momsPhoto} data-reveal="">
-            <Image src={PHOTOS.kangol.src} alt={PHOTOS.kangol.alt} fill sizes="(min-width: 900px) 36vw, 90vw" />
+            <Image
+              className={s.cut}
+              src={PHOTOS.kangol.cut}
+              alt={PHOTOS.kangol.alt}
+              width={CUTS.kangol.width}
+              height={CUTS.kangol.height}
+              sizes="(min-width: 900px) 36vw, 90vw"
+            />
           </div>
           <div className={`${s.glass} ${s.momsCard}`} data-reveal="">
             <p className={s.eyebrow}>Для родителей</p>
@@ -147,7 +193,12 @@ export function Glass() {
               {MOMS_COURSE.title}
             </h2>
             <p className={s.lead}>{MOMS_COURSE.line}</p>
+            <ul className={s.chips}>
+              <li>{MOMS_DETAILS.format}</li>
+              <li>{MOMS_DETAILS.line}</li>
+            </ul>
             <blockquote className={s.quote}>«{QUOTES.mother}»</blockquote>
+            <MomsLink className={s.ghost} />
           </div>
         </section>
 
@@ -163,25 +214,14 @@ export function Glass() {
           <h2 id="b-faq" className={s.h2}>
             Вопросы родителей
           </h2>
-          <div className={s.faq}>
-            {FAQ.map((item, i) => (
-              <details key={item.q} className={`${s.glass} ${s.faqItem}`} data-reveal="" style={at(i)}>
-                <summary>{item.q}</summary>
-                {item.a ? (
-                  <p>{item.a}</p>
-                ) : (
-                  <Missing className={s.missing} what={`${MISSING.prices}, ${MISSING.format.toLowerCase()}`} />
-                )}
-              </details>
-            ))}
-          </div>
+          <FaqList s={s} />
         </section>
 
         <section id="zapis" className={`${s.glass} ${s.book}`} aria-labelledby="b-book">
           <h2 id="b-book" className={s.h2}>
-            Запись на знакомство
+            Запись на пробное занятие
           </h2>
-          <p>Выберите язык и возраст — сообщение Дарье соберётся само.</p>
+          <p>Выберите язык, возраст и формат — сообщение Дарье соберётся само.</p>
           <Book
             skin={{
               root: s.bookRoot,
@@ -194,13 +234,9 @@ export function Glass() {
               note: s.bookNote,
               message: s.bookMessage,
             }}
-            cta="Записаться на знакомство"
           />
-          <div className={s.missingRow}>
-            <Missing className={s.missing} what={MISSING.prices} />
-            <Missing className={s.missing} what={MISSING.format} />
-            <Missing className={s.missing} what={MISSING.reviews} />
-          </div>
+          <WhereBlock s={s} />
+          <Later s={s} />
         </section>
       </main>
 
@@ -212,7 +248,7 @@ export function Glass() {
       </footer>
 
       <a className={s.dock} href="#zapis" data-dock="">
-        Записаться на знакомство
+        Пробное занятие −30%
       </a>
     </div>
   );

@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 
-import { FAQ, QUOTES, bookingText, contactUrl } from "@/content/clients/maximova/facts";
+import { FAQ, PRICES, QUOTES, bookingText, phoneUrl, telegramUrl, whatsappUrl } from "@/content/clients/maximova/facts";
 
 /**
  * Сайт Дарьи Максимовой: правила proto-master, которые можно проверить
@@ -131,13 +131,21 @@ test("обещание результата — только «рассчита�
   assert.doesNotMatch(text, /гарант/i);
 });
 
-test("пока контакта нет, кнопка никуда не отправляет", () => {
-  assert.equal(contactUrl(null, "x"), null);
-  assert.equal(
-    contactUrl({ kind: "telegram", handle: "daria" }, bookingText("Английский", "5–8 лет")),
-    `https://t.me/daria?text=${encodeURIComponent(bookingText("Английский", "5–8 лет"))}`,
-  );
-  assert.match(bookingText("Французский", "8–17 лет"), /французский язык\. Возраст: 8–17 лет/);
+test("запись уходит Дарье: Telegram с готовым текстом, WhatsApp и звонок на один номер", () => {
+  const text = bookingText("Французский", "8–17 лет", "В группе");
+  assert.match(text, /французский язык, в группе, возраст 8–17 лет/);
+  assert.equal(telegramUrl(text), `https://t.me/bird_dasha?text=${encodeURIComponent(text)}`);
+  assert.equal(whatsappUrl(text), `https://wa.me/79994313196?text=${encodeURIComponent(text)}`);
+  assert.equal(phoneUrl, "tel:+79994313196");
+});
+
+test("цены — её числа, производные посчитаны из её процентов", () => {
+  const nb = (s: string) => s.replace(/\u00a0/g, " ");
+  assert.equal(nb(PRICES.group.price), "2 900 ₽");
+  assert.equal(nb(PRICES.individual.price), "4 000 ₽");
+  // Абонемент −15%: 2 900 × 0,85 = 2 465. Пробное −30%: 2 900 × 0,7 = 2 030.
+  assert.match(nb(PRICES.season.unit), /^2 465 ₽ за групповое занятие/);
+  assert.match(nb(PRICES.trial.unit), /^2 030 ₽ вместо 2 900 ₽/);
 });
 
 test("слои параллакса не ловят нажатия и не читаются вслух", () => {

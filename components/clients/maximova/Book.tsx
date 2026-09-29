@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 
-import { AGES, CONTACT, SCHOOL, bookingText, contactUrl } from "@/content/clients/maximova/facts";
+import {
+  AGES,
+  CONTACTS,
+  SCHOOL,
+  bookingText,
+  phoneUrl,
+  telegramUrl,
+  whatsappUrl,
+} from "@/content/clients/maximova/facts";
 
 /** Классы оформления: у каждого прототипа своя одежда, устройство одно. */
 export type BookSkin = {
@@ -17,89 +25,64 @@ export type BookSkin = {
   note?: string;
 };
 
+const FORMATS = ["В группе", "Индивидуально"] as const;
+
 /**
- * Запись на знакомство: язык, возраст — и готовое сообщение Дарье.
+ * Запись на пробное: язык, возраст, формат — и готовое сообщение Дарье.
  *
- * Главное действие одно и работает по нажатию. Когда контакт Дарьи появится
- * в facts.ts, кнопка откроет её мессенджер с этим текстом. Пока его нет,
- * кнопка честно показывает текст и говорит, что контакт ещё не подключён:
- * форма, которая делает вид, что отправила, — обман.
+ * Главное действие одно — Telegram с этим текстом. WhatsApp и звонок —
+ * строкой ниже, для тех, у кого Telegram нет: номер у Дарьи один.
  */
-export function Book({ skin, cta = "Написать Дарье" }: { skin: BookSkin; cta?: string }) {
+export function Book({ skin, cta = "Записаться на пробное" }: { skin: BookSkin; cta?: string }) {
   const [language, setLanguage] = useState<string>(SCHOOL.languages[0]);
   const [age, setAge] = useState<string>(AGES[0].range);
-  const [shown, setShown] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [format, setFormat] = useState<string>(FORMATS[0]);
 
-  const text = bookingText(language, age);
-  const url = contactUrl(CONTACT, text);
+  const text = bookingText(language, age, format);
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  };
+  const choice = (legend: string, items: readonly string[], value: string, set: (v: string) => void) => (
+    <fieldset className={skin.group}>
+      <legend className={skin.label}>{legend}</legend>
+      <div className={skin.options}>
+        {items.map((item) => (
+          <button
+            key={item}
+            type="button"
+            aria-pressed={value === item}
+            className={`${skin.option ?? ""} ${value === item ? (skin.optionOn ?? "") : ""}`}
+            onClick={() => set(item)}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  );
 
   return (
     <div className={skin.root}>
-      <fieldset className={skin.group}>
-        <legend className={skin.label}>Язык</legend>
-        <div className={skin.options}>
-          {SCHOOL.languages.map((item) => (
-            <button
-              key={item}
-              type="button"
-              aria-pressed={language === item}
-              className={`${skin.option ?? ""} ${language === item ? (skin.optionOn ?? "") : ""}`}
-              onClick={() => setLanguage(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </fieldset>
-      <fieldset className={skin.group}>
-        <legend className={skin.label}>Возраст ребёнка</legend>
-        <div className={skin.options}>
-          {AGES.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              aria-pressed={age === item.range}
-              className={`${skin.option ?? ""} ${age === item.range ? (skin.optionOn ?? "") : ""}`}
-              onClick={() => setAge(item.range)}
-            >
-              {item.range}
-            </button>
-          ))}
-        </div>
-      </fieldset>
-
-      {url ? (
-        <a className={skin.button} href={url} target="_blank" rel="noopener noreferrer">
-          {cta}
-        </a>
-      ) : (
-        <button type="button" className={skin.button} onClick={() => setShown(true)} aria-expanded={shown}>
-          {cta}
-        </button>
+      {choice("Язык", SCHOOL.languages, language, setLanguage)}
+      {choice(
+        "Возраст ребёнка",
+        AGES.map((a) => a.range),
+        age,
+        setAge,
       )}
+      {choice("Формат", FORMATS, format, setFormat)}
 
-      {shown && !url ? (
-        <div className={skin.note} role="status">
-          <p>Сообщение, которое уйдёт Дарье:</p>
-          <p className={skin.message}>«{text}»</p>
-          <p>
-            Контакт для записи ещё не подключён — Дарья выберет, куда ей удобнее получать сообщения.{" "}
-            <button type="button" onClick={copy}>
-              {copied ? "Скопировано" : "Скопировать текст"}
-            </button>
-          </p>
-        </div>
-      ) : null}
+      <p className={skin.message}>«{text}»</p>
+
+      <a className={skin.button} href={telegramUrl(text)} target="_blank" rel="noopener noreferrer">
+        {cta} в Telegram
+      </a>
+
+      <p className={skin.note}>
+        Нет Telegram?{" "}
+        <a href={whatsappUrl(text)} target="_blank" rel="noopener noreferrer">
+          WhatsApp
+        </a>
+        , Max или звонок: <a href={phoneUrl}>{CONTACTS.phoneLabel}</a>
+      </p>
     </div>
   );
 }

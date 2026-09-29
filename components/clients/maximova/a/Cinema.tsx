@@ -1,11 +1,22 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 
-import { AGES, FAQ, MISSING, MOMS_COURSE, PHOTOS, QUOTES, RHYTHM, SCHOOL, TEACHER } from "@/content/clients/maximova/facts";
+import {
+  AGES,
+  CUTS,
+  MOMS_COURSE,
+  MOMS_DETAILS,
+  PHOTOS,
+  QUOTES,
+  RHYTHM,
+  SCHOOL,
+  TEACHER,
+  TRIAL,
+} from "@/content/clients/maximova/facts";
 
+import { FaqList, Later, LessonSteps, MomsLink, PlainList, PriceList, TrialPoints, WhereBlock } from "../Blocks";
 import { Book } from "../Book";
 import { Credit } from "../Credit";
-import { Missing } from "../Missing";
 import { Motion } from "../Motion";
 import s from "./cinema.module.css";
 
@@ -15,10 +26,11 @@ const at = (i: number) => ({ "--i": i }) as CSSProperties;
 /**
  * Прототип A — «Кино».
  *
- * Страница как фильм в шести сценах: тёмный зал, крупные планы её
- * фотографий, титры. Каждая сцена появляется своим монтажным приёмом:
- * шторка, слово за словом, наводка фокуса, счётчик плёнки, раздвижка кадра,
- * титры. Всё — transform и opacity, скролл не перехватывается.
+ * Страница как фильм в сценах: тёмный зал, Дарья на фоне «экрана» —
+ * вырезанная из снимка, без двора и машин за спиной, — и титры. Каждая сцена
+ * появляется своим монтажным приёмом: шторка, слово за словом, наводка
+ * фокуса, кадры плёнки, переворот афиши, билет, раздвижка кадра, титры.
+ * Всё — transform и opacity, скролл не перехватывается.
  */
 export function Cinema() {
   const words = QUOTES.homework.split(" ");
@@ -29,11 +41,18 @@ export function Cinema() {
       <div className={s.progress} data-progress="" aria-hidden="true" />
 
       <header className={s.hero}>
-        <div className={s.heroPhoto}>
-          <Image src={PHOTOS.urban.src} alt={PHOTOS.urban.alt} fill priority sizes="(min-width: 900px) 55vw, 100vw" />
+        <div className={s.heroStage}>
+          <span className={s.screen} aria-hidden="true" />
+          <Image
+            className={s.heroCut}
+            src={PHOTOS.urban.cut}
+            alt={PHOTOS.urban.alt}
+            width={CUTS.urban.width}
+            height={CUTS.urban.height}
+            priority
+            sizes="(min-width: 900px) 44vw, 90vw"
+          />
         </div>
-        <div className={s.letterTop} aria-hidden="true" />
-        <div className={s.letterBottom} aria-hidden="true" />
         <div className={s.heroText}>
           <p className={s.kicker}>
             {SCHOOL.languages.join(" · ")} · <span className={s.nowrap}>дети 5–17 лет</span>
@@ -48,10 +67,10 @@ export function Cinema() {
           </h1>
           <p className={s.lead}>
             {TEACHER.name} — действующий преподаватель {TEACHER.universityShort}, {TEACHER.experienceYears} лет
-            педагогического стажа. {SCHOOL.title}: 5–8 и 8–17 лет.
+            педагогического стажа. Группы у метро Китай-город и онлайн.
           </p>
           <a className={s.cta} href="#zapis">
-            Записаться на знакомство
+            Записаться на пробное −30%
           </a>
         </div>
       </header>
@@ -61,7 +80,13 @@ export function Cinema() {
           <p className={s.sceneNo}>Сцена 01</p>
           <div className={s.whoGrid}>
             <div className={s.shutter} data-reveal="">
-              <Image src={PHOTOS.kangol.src} alt={PHOTOS.kangol.alt} fill sizes="(min-width: 900px) 40vw, 100vw" />
+              <Image
+                src={PHOTOS.kangol.cut}
+                alt={PHOTOS.kangol.alt}
+                width={CUTS.kangol.width}
+                height={CUTS.kangol.height}
+                sizes="(min-width: 900px) 40vw, 90vw"
+              />
               <span className={s.shutterPanel} aria-hidden="true" />
             </div>
             <div>
@@ -104,9 +129,7 @@ export function Cinema() {
           <h2 id="a-ages" className={s.h2}>
             Две программы — два возраста
           </h2>
-          <p className={s.muted}>
-            {SCHOOL.method}. Языки на выбор: английский и французский.
-          </p>
+          <p className={s.muted}>{SCHOOL.method}. Языки на выбор: английский и французский.</p>
           <div className={s.ages}>
             {AGES.map((age, i) => (
               <article key={age.id} className={s.age} data-reveal="" style={at(i)}>
@@ -119,39 +142,51 @@ export function Cinema() {
           </div>
         </section>
 
-        <section className={`${s.scene} ${s.rhythm}`} aria-labelledby="a-rhythm">
+        <section className={s.scene} aria-labelledby="a-lesson">
           <p className={s.sceneNo}>Сцена 04</p>
-          <h2 id="a-rhythm" className={s.h2}>
-            Ритм занятий
+          <h2 id="a-lesson" className={s.h2}>
+            45 минут по кадрам
           </h2>
-          <div className={s.counters}>
-            <div className={s.counter} data-reveal="">
-              <span className={s.reel} aria-hidden="true">
-                <span>0</span>
-                <span>1</span>
-                <span>2</span>
-              </span>
-              <span className={s.srOnly}>2</span>
-              <p>занятия в неделю</p>
-            </div>
-            <div className={s.counter} data-reveal="">
-              <span className={s.reel} aria-hidden="true">
-                <span>15</span>
-                <span>30</span>
-                <span>45</span>
-              </span>
-              <span className={s.srOnly}>45</span>
-              <p>минут каждое</p>
-            </div>
+          <p className={s.muted}>
+            {RHYTHM.line}. {RHYTHM.why}
+          </p>
+          <LessonSteps s={s} />
+        </section>
+
+        <section className={s.scene} aria-labelledby="a-prices">
+          <p className={s.sceneNo}>Сцена 05</p>
+          <h2 id="a-prices" className={s.h2}>
+            Стоимость
+          </h2>
+          <PriceList s={s} />
+          <h3 className={s.plainTitle}>Без сюрпризов</h3>
+          <PlainList s={s} />
+        </section>
+
+        <section className={s.scene} aria-labelledby="a-trial">
+          <p className={s.sceneNo}>Сцена 06</p>
+          <div className={s.ticket} data-reveal="">
+            <h2 id="a-trial" className={s.h2}>
+              {TRIAL.title}
+            </h2>
+            <TrialPoints s={s} />
+            <a className={s.cta} href="#zapis">
+              Записаться на пробное
+            </a>
           </div>
-          <p className={s.why}>{RHYTHM.why}</p>
         </section>
 
         <section className={s.scene} aria-labelledby="a-moms">
-          <p className={s.sceneNo}>Сцена 05</p>
+          <p className={s.sceneNo}>Сцена 07</p>
           <div className={s.momsGrid}>
             <div className={s.split} data-reveal="">
-              <Image src={PHOTOS.bench.src} alt={PHOTOS.bench.alt} fill sizes="(min-width: 900px) 40vw, 100vw" />
+              <Image
+                src={PHOTOS.bench.cut}
+                alt={PHOTOS.bench.alt}
+                width={CUTS.bench.width}
+                height={CUTS.bench.height}
+                sizes="(min-width: 900px) 40vw, 90vw"
+              />
               <span className={s.splitLeft} aria-hidden="true" />
               <span className={s.splitRight} aria-hidden="true" />
             </div>
@@ -160,13 +195,17 @@ export function Cinema() {
                 {MOMS_COURSE.title}
               </h2>
               <p className={s.lead}>{MOMS_COURSE.line}</p>
+              <p className={s.momsFacts}>
+                {MOMS_DETAILS.format} · {MOMS_DETAILS.line}
+              </p>
               <blockquote className={s.quote}>«{QUOTES.mother}»</blockquote>
+              <MomsLink className={s.ghost} />
             </div>
           </div>
         </section>
 
         <section className={`${s.scene} ${s.goal}`} aria-labelledby="a-goal">
-          <p className={s.sceneNo}>Сцена 06</p>
+          <p className={s.sceneNo}>Сцена 08</p>
           <h2 id="a-goal" className={s.h2}>
             К чему ведёт программа
           </h2>
@@ -179,25 +218,14 @@ export function Cinema() {
           <h2 id="a-faq" className={s.h2}>
             Вопросы родителей
           </h2>
-          <div className={s.faq}>
-            {FAQ.map((item) => (
-              <details key={item.q} className={s.faqItem}>
-                <summary>{item.q}</summary>
-                {item.a ? (
-                  <p>{item.a}</p>
-                ) : (
-                  <Missing className={s.missing} what={`${MISSING.prices}, ${MISSING.format.toLowerCase()}`} />
-                )}
-              </details>
-            ))}
-          </div>
+          <FaqList s={s} />
         </section>
 
         <section id="zapis" className={`${s.scene} ${s.book}`} aria-labelledby="a-book">
           <h2 id="a-book" className={s.h2}>
-            Запись на знакомство
+            Запись на пробное занятие
           </h2>
-          <p className={s.muted}>Выберите язык и возраст — сообщение Дарье соберётся само.</p>
+          <p className={s.muted}>Выберите язык, возраст и формат — сообщение Дарье соберётся само.</p>
           <Book
             skin={{
               root: s.bookRoot,
@@ -210,13 +238,9 @@ export function Cinema() {
               note: s.bookNote,
               message: s.bookMessage,
             }}
-            cta="Записаться на знакомство"
           />
-          <div className={s.missingRow}>
-            <Missing className={s.missing} what={MISSING.prices} />
-            <Missing className={s.missing} what={MISSING.format} />
-            <Missing className={s.missing} what={MISSING.reviews} />
-          </div>
+          <WhereBlock s={s} />
+          <Later s={s} />
         </section>
       </main>
 
@@ -227,7 +251,7 @@ export function Cinema() {
       </footer>
 
       <a className={s.dock} href="#zapis" data-dock="">
-        Записаться на знакомство
+        Записаться на пробное −30%
       </a>
     </div>
   );
