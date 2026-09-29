@@ -13,6 +13,8 @@ import {
   money,
   type TeamRow,
 } from "@/components/admin/dashboard";
+import { dashboardDict, planNoticeDict } from "@/content/admin-panel/dashboard";
+import { pick } from "@/lib/admin/i18n";
 import { accrualsOf, balanceOf, earnersOf, visibleStaff } from "@/lib/admin/finance";
 import { loadLedger, sharesOf } from "@/lib/admin/ledger";
 import {
@@ -46,15 +48,8 @@ import { touchProgressFor } from "@/lib/admin/touch-store";
  * для всех, различается только то, кому что показано.
  */
 
-const PLAN_NOTICE: Record<string, string> = {
-  ok: "План сохранён.",
-  forbidden: "Менять и снимать план может только владелец; руководитель ставит новый своему сотруднику.",
-  invalid: "Цель не разобралась: целое число, без знаков.",
-  offline: "База недоступна.",
-  failed: "Не получилось.",
-  coach_ok: "Рекомендации собраны.",
-  coach_failed: "Рекомендации не собрались: модель не ответила или ответила числами, которых нет в данных. Подробности в логе сервера.",
-};
+// Ответы после сохранения плана и сборки рекомендаций — planNoticeDict
+// (content/admin-panel/dashboard.ts), по коду из `?p=` в адресе.
 
 /**
  * Вкладки дашборда владельца.
@@ -76,6 +71,8 @@ export async function DashboardHome({
   planNotice?: string;
   section?: OwnerSection;
 }) {
+  const locale = staff.panel_locale;
+  const t = pick(dashboardDict, locale);
   const now = new Date();
   const today = todayInTashkent(now);
   const weekStart = periodStart("week", now);
@@ -133,7 +130,7 @@ export async function DashboardHome({
     staffName: p.staff_id === staff.id ? undefined : names.get(p.staff_id),
   }));
 
-  const notice = planNotice ? PLAN_NOTICE[planNotice] : null;
+  const notice = planNotice ? (planNoticeDict[planNotice as keyof typeof planNoticeDict]?.[locale] ?? null) : null;
 
   // Рекомендации: недельные — всем, кроме владельца; дневные — владельцу и
   // руководителям. Читаются одним запросом на вид.
@@ -153,15 +150,15 @@ export async function DashboardHome({
         {notice ? <p className="rounded-xl border border-line bg-surface px-4 py-2 text-sm text-muted">{notice}</p> : null}
         <Tiles
           items={[
-            { value: money(b.due), label: "к выплате", tone: "green", hint: b.frozen ? `ещё ${money(b.frozen)} ждут оплаты клиентом` : undefined },
-            { value: String(mine.inWork), label: "лидов в работе" },
-            { value: String(mine.stuck.length), label: "срочно связаться", tone: mine.stuck.length ? "gold" : "plain" },
-            { value: money(mineMonth.revenue), label: "поступлений за месяц" },
+            { value: money(b.due), label: t.tileDue, tone: "green", hint: b.frozen ? t.tileFrozen(money(b.frozen)) : undefined },
+            { value: String(mine.inWork), label: t.tileInWork },
+            { value: String(mine.stuck.length), label: t.tileUrgent, tone: mine.stuck.length ? "gold" : "plain" },
+            { value: money(mineMonth.revenue), label: t.tileRevenueMonthMine },
           ]}
         />
-        <StuckLeads rows={mine.stuck} />
-        <ReviewCard review={weekly.get(staff.id) ?? null} title="Рекомендации на неделю" />
-        <PlanFactBlock plans={planRows} canAdd={false} canEdit={false} staffOptions={[]} />
+        <StuckLeads rows={mine.stuck} locale={locale} />
+        <ReviewCard review={weekly.get(staff.id) ?? null} title={t.reviewWeekly} locale={locale} />
+        <PlanFactBlock plans={planRows} canAdd={false} canEdit={false} staffOptions={[]} locale={locale} />
       </div>
     );
   }
@@ -182,19 +179,19 @@ export async function DashboardHome({
         {notice ? <p className="rounded-xl border border-line bg-surface px-4 py-2 text-sm text-muted">{notice}</p> : null}
         <Tiles
           items={[
-            { value: money(b.due), label: "к выплате", tone: "green" },
-            { value: String(teamRows.reduce((s, r) => s + r.week.inWork, 0) + mine.inWork), label: "лидов в работе у команды" },
-            { value: String(teamStuck.length + mine.stuck.length), label: "срочно связаться", tone: teamStuck.length + mine.stuck.length ? "gold" : "plain" },
-            { value: money(teamRows.reduce((s, r) => s + r.week.revenue, 0) + mine.revenue), label: "поступлений за неделю" },
+            { value: money(b.due), label: t.tileDue, tone: "green" },
+            { value: String(teamRows.reduce((s, r) => s + r.week.inWork, 0) + mine.inWork), label: t.tileTeamInWork },
+            { value: String(teamStuck.length + mine.stuck.length), label: t.tileUrgent, tone: teamStuck.length + mine.stuck.length ? "gold" : "plain" },
+            { value: money(teamRows.reduce((s, r) => s + r.week.revenue, 0) + mine.revenue), label: t.tileRevenueWeek },
           ]}
         />
-        <ReviewCard review={daily.get(staff.id) ?? null} title="На сегодня" />
-        <StuckLeads rows={[...mine.stuck, ...teamStuck]} names={names} />
-        <TeamTable rows={teamRows} showMoney={false} />
-        <TeamReviews rows={teamReviews} />
-        <ReviewCard review={weekly.get(staff.id) ?? null} title="Рекомендации на неделю" />
-        <BestOfWeek rows={teamRows} />
-        <PlanFactBlock plans={planRows} canAdd={options.length > 0} canEdit={false} staffOptions={options} />
+        <ReviewCard review={daily.get(staff.id) ?? null} title={t.reviewDaily} daily locale={locale} />
+        <StuckLeads rows={[...mine.stuck, ...teamStuck]} names={names} locale={locale} />
+        <TeamTable rows={teamRows} showMoney={false} locale={locale} />
+        <TeamReviews rows={teamReviews} locale={locale} />
+        <ReviewCard review={weekly.get(staff.id) ?? null} title={t.reviewWeekly} locale={locale} />
+        <BestOfWeek rows={teamRows} locale={locale} />
+        <PlanFactBlock plans={planRows} canAdd={options.length > 0} canEdit={false} staffOptions={options} locale={locale} />
       </div>
     );
   }
@@ -211,10 +208,10 @@ export async function DashboardHome({
   const moneyTiles = (
     <Tiles
       items={[
-        { value: money(thisMonth?.revenue ?? 0), label: "поступления за месяц", tone: "green" },
-        { value: money(thisMonth?.expenses ?? 0), label: "расходы за месяц" },
-        { value: money(expected.reduce((s, r) => s + r.remaining, 0)), label: "ожидаем от клиентов" },
-        { value: money(dueAll), label: "к выплате команде", tone: dueAll > 0 ? "gold" : "plain" },
+        { value: money(thisMonth?.revenue ?? 0), label: t.tileRevenueMonth, tone: "green" },
+        { value: money(thisMonth?.expenses ?? 0), label: t.tileExpensesMonth },
+        { value: money(expected.reduce((s, r) => s + r.remaining, 0)), label: t.tileExpected },
+        { value: money(dueAll), label: t.tileDueTeam, tone: dueAll > 0 ? "gold" : "plain" },
       ]}
     />
   );
@@ -229,13 +226,13 @@ export async function DashboardHome({
     return (
       <div className="mb-8 space-y-4">
         {planNote}
-        <ContractsToSign rows={contracts} />
+        <ContractsToSign rows={contracts} locale={locale} />
         {moneyTiles}
         <div className="grid items-start gap-4 lg:grid-cols-2">
-          <ReviewCard review={daily.get(staff.id) ?? null} title="На сегодня" canRefresh />
+          <ReviewCard review={daily.get(staff.id) ?? null} title={t.reviewDaily} daily canRefresh locale={locale} />
           <div className="space-y-4">
-            <StuckLeads rows={allStuck} names={names} />
-            <TaxesSoon rows={taxes} />
+            <StuckLeads rows={allStuck} names={names} locale={locale} />
+            <TaxesSoon rows={taxes} locale={locale} />
           </div>
         </div>
       </div>
@@ -246,10 +243,10 @@ export async function DashboardHome({
     return (
       <div className="mb-8 space-y-4">
         {moneyTiles}
-        <CashChart rows={cash} />
+        <CashChart rows={cash} locale={locale} />
         <div className="grid items-start gap-4 lg:grid-cols-2">
-          <ExpectedPayments rows={expected} names={names} />
-          <TaxesSoon rows={taxes} />
+          <ExpectedPayments rows={expected} names={names} locale={locale} />
+          <TaxesSoon rows={taxes} locale={locale} />
         </div>
       </div>
     );
@@ -258,12 +255,12 @@ export async function DashboardHome({
   return (
     <div className="mb-8 space-y-4">
       {planNote}
-      <TeamTable rows={teamRows} showMoney />
+      <TeamTable rows={teamRows} showMoney locale={locale} />
       <div className="grid items-start gap-4 lg:grid-cols-2">
-        <BestOfWeek rows={teamRows} />
-        <TeamReviews rows={teamReviews} />
+        <BestOfWeek rows={teamRows} locale={locale} />
+        <TeamReviews rows={teamReviews} locale={locale} />
       </div>
-      <PlanFactBlock plans={planRows} canAdd={options.length > 0} canEdit staffOptions={options} />
+      <PlanFactBlock plans={planRows} canAdd={options.length > 0} canEdit staffOptions={options} locale={locale} />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { budgetDict, homeDict, priorityDict, statusDict } from "@/content/admin-panel/home";
+import { PANEL_INTL, pick, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import type { LeadRow } from "@/lib/admin/leads";
 
 const GRADE_TONE: Record<string, string> = {
@@ -9,35 +11,25 @@ const GRADE_TONE: Record<string, string> = {
   D: "bg-line text-faint",
 };
 
-const PRIORITY_LABEL: Record<string, string> = {
-  hot: "горячий",
-  warm: "тёплый",
-  nurture: "дозреет",
-  archive: "архив",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  new: "новый",
-  taken: "в работе",
-  dropped: "отложен",
-  won: "выиграли",
-  lost: "проиграли",
-};
-
 /**
- * Бюджет — не сумма, а то, как клиент говорит о деньгах.
+ * Подписи по-русски — для страниц, которые ещё не переведены на язык
+ * панели. Слова — в словаре (content/admin-panel/home.ts): приоритет,
+ * статус и бюджет — `priorityDict`, `statusDict`, `budgetDict`.
  *
- * Раньше здесь стояли суммы («до 3 тыс.», «от 15 тыс.»), а модель ставит
- * B1–B3 по другому признаку (lib/qualify/prompt.ts): B1 — сумма названа и
- * утверждена, B3 — уходит от разговора о деньгах. Форма и касания получают
- * B3 по умолчанию, и в списке у них стояло «от 15 тыс.» — самый крупный
- * бюджет у лидов, о деньгах которых не знает никто.
+ * Бюджет — не сумма, а то, как клиент говорит о деньгах: почему — у
+ * `budgetDict`.
  */
-const BUDGET_LABEL: Record<string, string> = {
-  B1: "назван и утверждён",
-  B2: "есть, сравнивает",
-  B3: "не назван",
-};
+const ruLabels = (dict: Record<string, Tr<string>>): Record<string, string> =>
+  Object.fromEntries(Object.entries(dict).map(([key, value]) => [key, value.ru]));
+
+const PRIORITY_LABEL: Record<string, string> = ruLabels(priorityDict);
+const STATUS_LABEL: Record<string, string> = ruLabels(statusDict);
+const BUDGET_LABEL: Record<string, string> = ruLabels(budgetDict);
+
+/** Подпись из словаря по ключу из базы; незнакомый ключ — как есть. */
+function label(dict: Record<string, Tr<string>>, key: string, locale: PanelLocale): string {
+  return dict[key]?.[locale] ?? key;
+}
 
 /**
  * Дата в часовом поясе Ташкента и на сервере, и в браузере.
@@ -47,8 +39,8 @@ const BUDGET_LABEL: Record<string, string> = {
  * пользуются из Ташкента, и «поступил в 03:40» вместо «в 08:40» — это не
  * косметика, а неверное представление о том, когда человек написал.
  */
-function when(iso: string): string {
-  return new Intl.DateTimeFormat("ru-RU", {
+function when(iso: string, locale: PanelLocale = "ru"): string {
+  return new Intl.DateTimeFormat(PANEL_INTL[locale], {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
@@ -57,11 +49,12 @@ function when(iso: string): string {
   }).format(new Date(iso));
 }
 
-export function LeadTable({ rows }: { rows: LeadRow[] }) {
+export function LeadTable({ rows, locale }: { rows: LeadRow[]; locale: PanelLocale }) {
+  const t = pick(homeDict, locale);
   if (!rows.length) {
     return (
       <p className="rounded-xl border border-line bg-surface px-5 py-8 text-center text-sm text-muted">
-        Под фильтр ничего не попало.
+        {t.tableEmpty}
       </p>
     );
   }
@@ -71,14 +64,14 @@ export function LeadTable({ rows }: { rows: LeadRow[] }) {
       <table className="cards-on-phone w-full min-w-0 border-collapse text-sm sm:min-w-[880px]">
         <thead>
           <tr className="bg-surface text-left text-xs uppercase tracking-wider text-faint">
-            <th className="px-4 py-3 font-medium">Когда</th>
-            <th className="px-4 py-3 font-medium">Заявка</th>
-            <th className="px-4 py-3 font-medium">Кто</th>
-            <th className="px-4 py-3 font-medium">Ниша</th>
-            <th className="px-4 py-3 font-medium">Бюджет</th>
-            <th className="px-4 py-3 font-medium">Балл</th>
-            <th className="px-4 py-3 font-medium">Приоритет</th>
-            <th className="px-4 py-3 font-medium">Статус</th>
+            <th className="px-4 py-3 font-medium">{t.colWhen}</th>
+            <th className="px-4 py-3 font-medium">{t.colRequest}</th>
+            <th className="px-4 py-3 font-medium">{t.colWho}</th>
+            <th className="px-4 py-3 font-medium">{t.colNiche}</th>
+            <th className="px-4 py-3 font-medium">{t.colBudget}</th>
+            <th className="px-4 py-3 font-medium">{t.colScore}</th>
+            <th className="px-4 py-3 font-medium">{t.colPriority}</th>
+            <th className="px-4 py-3 font-medium">{t.colStatus}</th>
           </tr>
         </thead>
         <tbody>
@@ -87,10 +80,10 @@ export function LeadTable({ rows }: { rows: LeadRow[] }) {
               key={lead.id}
               className="border-t border-line-soft bg-surface/40 transition hover:bg-surface"
             >
-              <td data-label="Когда" className="whitespace-nowrap px-4 py-3 text-muted">
-                {when(lead.created_at)}
+              <td data-label={t.colWhen} className="whitespace-nowrap px-4 py-3 text-muted">
+                {when(lead.created_at, locale)}
               </td>
-              <td data-label="Заявка" className="px-4 py-3">
+              <td data-label={t.colRequest} className="px-4 py-3">
                 <Link
                   href={`/admin/leads/${lead.id}`}
                   className="font-mono text-xs text-blue-soft hover:underline"
@@ -98,17 +91,17 @@ export function LeadTable({ rows }: { rows: LeadRow[] }) {
                   {lead.request_no ?? lead.id.slice(0, 8)}
                 </Link>
               </td>
-              <td data-label="Кто" className="px-4 py-3">
+              <td data-label={t.colWho} className="px-4 py-3">
                 <span className="block">{lead.contact_name || "—"}</span>
                 {lead.company ? (
                   <span className="block text-xs text-faint">{lead.company}</span>
                 ) : null}
               </td>
-              <td data-label="Ниша" className="px-4 py-3 text-muted">{lead.niche || "—"}</td>
-              <td data-label="Бюджет" className="whitespace-nowrap px-4 py-3 text-muted">
-                {lead.budget ? BUDGET_LABEL[lead.budget] ?? lead.budget : "—"}
+              <td data-label={t.colNiche} className="px-4 py-3 text-muted">{lead.niche || "—"}</td>
+              <td data-label={t.colBudget} className="whitespace-nowrap px-4 py-3 text-muted">
+                {lead.budget ? label(budgetDict, lead.budget, locale) : "—"}
               </td>
-              <td data-label="Балл" className="whitespace-nowrap px-4 py-3">
+              <td data-label={t.colScore} className="whitespace-nowrap px-4 py-3">
                 <span
                   className={`rounded px-1.5 py-0.5 font-mono text-xs ${
                     GRADE_TONE[lead.grade] ?? GRADE_TONE.D
@@ -117,11 +110,11 @@ export function LeadTable({ rows }: { rows: LeadRow[] }) {
                   {lead.grade} · {lead.score}
                 </span>
               </td>
-              <td data-label="Приоритет" className="px-4 py-3 text-muted">
-                {PRIORITY_LABEL[lead.priority] ?? lead.priority}
+              <td data-label={t.colPriority} className="px-4 py-3 text-muted">
+                {label(priorityDict, lead.priority, locale)}
               </td>
-              <td data-label="Статус" className="px-4 py-3 text-muted">
-                {STATUS_LABEL[lead.status] ?? lead.status}
+              <td data-label={t.colStatus} className="px-4 py-3 text-muted">
+                {label(statusDict, lead.status, locale)}
                 {lead.assigned_to ? (
                   <span className="block text-xs text-faint">{lead.assigned_to}</span>
                 ) : null}

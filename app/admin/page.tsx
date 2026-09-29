@@ -6,7 +6,9 @@ import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
 import { LeadTable } from "@/components/admin/lead-table";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
+import { homeDict, priorityFilterDict, statusFilterDict } from "@/content/admin-panel/home";
 import { requireStaff } from "@/lib/admin/guard";
+import { pick } from "@/lib/admin/i18n";
 import { touchProgressOf } from "@/lib/admin/touch-store";
 import { PRIORITIES, STATUSES, leadCounts, listLeads, scopeFor } from "@/lib/admin/leads";
 import { canSee } from "@/lib/admin/roles";
@@ -16,20 +18,8 @@ import { approves, pendingTransfers } from "@/lib/admin/transfers";
 // означает менеджера, который звонит по лиду, взятому полчаса назад другим.
 export const dynamic = "force-dynamic";
 
-const PRIORITY_LABEL: Record<string, string> = {
-  hot: "горячие",
-  warm: "тёплые",
-  nurture: "дозреют",
-  archive: "архив",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  new: "новые",
-  taken: "в работе",
-  dropped: "отложены",
-  won: "выиграны",
-  lost: "проиграны",
-};
+// Подписи фильтров — priorityFilterDict и statusFilterDict
+// (content/admin-panel/home.ts), на языке сотрудника.
 
 function Chip({
   href,
@@ -60,10 +50,10 @@ function Chip({
  * значило бы добавить шаг к каждому рабочему дню.
  */
 const OWNER_TABS = [
-  { key: "today", label: "Сегодня" },
-  { key: "leads", label: "Лиды" },
-  { key: "money", label: "Деньги" },
-  { key: "team", label: "Команда" },
+  { key: "today", label: "tabToday" },
+  { key: "leads", label: "tabLeads" },
+  { key: "money", label: "tabMoney" },
+  { key: "team", label: "tabTeam" },
 ] as const;
 type OwnerTab = (typeof OWNER_TABS)[number]["key"];
 
@@ -98,6 +88,8 @@ export default async function AdminHome({
 }) {
   const staff = await requireStaff();
   const params = await searchParams;
+  const locale = staff.panel_locale;
+  const t = pick(homeDict, locale);
 
   // Трафик был вкладкой владельца, теперь это раздел для владельца и
   // руководителей. Старые закладки и адреса возврата из Google ведут сюда —
@@ -154,7 +146,7 @@ export default async function AdminHome({
       {pending.length ? (
         <section className="mb-6 rounded-xl border border-gold/30 bg-gold/5 px-5 py-4">
           <p className="text-xs uppercase tracking-wider text-gold">
-            Ждут вашего решения: {pending.length}
+            {t.pendingTitle(pending.length)}
           </p>
           <ul className="mt-3 flex flex-col gap-2 text-sm">
             {pending.map((item) => (
@@ -177,26 +169,26 @@ export default async function AdminHome({
   const leadsBlock = (
     <>
       <div className="grid grid-cols-3 gap-3 sm:max-w-lg">
-        <Stat value={counts.total} label="всего" />
-        <Stat value={counts.free} label="свободных" />
-        <Stat value={counts.mine} label="на мне" />
+        <Stat value={counts.total} label={t.statTotal} />
+        <Stat value={counts.free} label={t.statFree} />
+        <Stat value={counts.mine} label={t.statMine} />
       </div>
 
       <div className="mt-8 flex flex-wrap items-center gap-2">
         <Chip href={base({ owner: undefined })} active={!params.owner}>
-          все лиды
+          {t.allLeads}
         </Chip>
         <Chip href={base({ owner: "free" })} active={params.owner === "free"}>
-          свободные
+          {t.freeLeads}
         </Chip>
         <Chip href={base({ owner: "mine" })} active={params.owner === "mine"}>
-          мои
+          {t.myLeads}
         </Chip>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <Chip href={base({ priority: undefined })} active={!params.priority}>
-          все приоритеты
+          {t.allPriorities}
         </Chip>
         {PRIORITIES.map((value) => (
           <Chip
@@ -204,31 +196,31 @@ export default async function AdminHome({
             href={base({ priority: value })}
             active={params.priority === value}
           >
-            {PRIORITY_LABEL[value]}
+            {priorityFilterDict[value][locale]}
           </Chip>
         ))}
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <Chip href={base({ status: undefined })} active={!params.status}>
-          все статусы
+          {t.allStatuses}
         </Chip>
         {STATUSES.map((value) => (
           <Chip key={value} href={base({ status: value })} active={params.status === value}>
-            {STATUS_LABEL[value]}
+            {statusFilterDict[value][locale]}
           </Chip>
         ))}
       </div>
 
       <div className="mt-6">
-        <LeadTable rows={leads.rows} />
+        <LeadTable rows={leads.rows} locale={locale} />
       </div>
 
       {pages > 1 ? (
         <div className="mt-5 flex items-center gap-3 text-sm text-muted">
           {page > 1 ? (
             <Link href={`${base({})}${base({}).includes("?") ? "&" : "?"}page=${page - 1}`}>
-              ← назад
+              {t.pagePrev}
             </Link>
           ) : null}
           <span className="font-mono text-xs text-faint">
@@ -236,17 +228,13 @@ export default async function AdminHome({
           </span>
           {page < pages ? (
             <Link href={`${base({})}${base({}).includes("?") ? "&" : "?"}page=${page + 1}`}>
-              вперёд →
+              {t.pageNext}
             </Link>
           ) : null}
         </div>
       ) : null}
 
-      <p className="mt-8 max-w-2xl text-xs leading-relaxed text-faint">
-        Контактов и переписки в списке нет: контакт открывается в карточке и
-        только тому, за кем лид закреплён. Каждое открытие — строка в журнале
-        с именем и временем. Свободного лида сначала нужно взять.
-      </p>
+      <p className="mt-8 max-w-2xl text-xs leading-relaxed text-faint">{t.listNote}</p>
     </>
   );
 
@@ -255,7 +243,7 @@ export default async function AdminHome({
       {/* Стоит выше всего остального намеренно: человек, у которого молча
           перестали приходить напоминания, ничего об этом не знает, а
           узнаёт по остывшему лиду через неделю. */}
-      <SweepBanner />
+      <SweepBanner locale={locale} />
 
       {/* План касаний на неделю — здесь, а не только в самих касаниях.
           Открывают панель с главной, и число, ради которого человек пойдёт
@@ -263,10 +251,7 @@ export default async function AdminHome({
       <TouchPlanLine progress={plan} />
 
       {leads.offline ? (
-        <p className="mb-6 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
-          База недоступна. Это не «лидов нет» — это значит, что панель сейчас
-          ничего не видит; проверьте переменные Supabase на сервере.
-        </p>
+        <p className="mb-6 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">{t.offline}</p>
       ) : null}
 
       {ownerTab ? (
@@ -274,19 +259,19 @@ export default async function AdminHome({
           {/* Вкладки — ссылками, а не скриптом: страница серверная, вкладка
               живёт в адресе, и «Деньги» можно открыть закладкой. */}
           <nav className="no-scrollbar -mx-1 mb-5 flex gap-1 overflow-x-auto border-b border-line px-1">
-            {OWNER_TABS.map((t) => {
-              const badge = t.key === "today" ? pending.length : t.key === "leads" ? counts.free : 0;
+            {OWNER_TABS.map((tab) => {
+              const badge = tab.key === "today" ? pending.length : tab.key === "leads" ? counts.free : 0;
               return (
                 <Link
-                  key={t.key}
-                  href={t.key === "today" ? "/admin" : `/admin?tab=${t.key}`}
+                  key={tab.key}
+                  href={tab.key === "today" ? "/admin" : `/admin?tab=${tab.key}`}
                   className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm transition ${
-                    ownerTab === t.key
+                    ownerTab === tab.key
                       ? "border-green text-green"
                       : "border-transparent text-muted hover:text-text"
                   }`}
                 >
-                  {t.label}
+                  {t[tab.label]}
                   {badge ? (
                     <span className="ml-1.5 rounded-full bg-gold/15 px-1.5 py-0.5 font-mono text-[10px] text-gold">
                       {badge}

@@ -206,6 +206,6 @@ test("главная панели показывает дашборд роли �
   assert.match(home, /canAdd=\{options\.length > 0\} canEdit=\{false\}/);
   assert.match(home, /canAdd=\{options\.length > 0\} canEdit staffOptions/);
   // Руководитель не видит «к выплате» чужих — деньги команды только владельцу.
-  assert.match(home, /<TeamTable rows=\{teamRows\} showMoney=\{false\} \/>/);
-  assert.match(home, /<TeamTable rows=\{teamRows\} showMoney \/>/);
+  assert.match(home, /<TeamTable rows=\{teamRows\} showMoney=\{false\} locale=\{locale\} \/>/);
+  assert.match(home, /<TeamTable rows=\{teamRows\} showMoney locale=\{locale\} \/>/);
 });

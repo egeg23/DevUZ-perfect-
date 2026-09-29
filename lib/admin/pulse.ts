@@ -10,6 +10,9 @@
  * «по понедельникам» и план «на неделю» считают именно эти границы.
  */
 
+import { metricDict, monthDict } from "@/content/admin-panel/dashboard";
+import type { PanelLocale } from "@/lib/admin/i18n";
+
 export const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
 
 /** Календарная дата в Ташкенте для момента времени. */
@@ -223,10 +226,14 @@ export function isMetric(value: string): value is Metric {
   return (METRICS as readonly string[]).includes(value);
 }
 
+/**
+ * Подписи показателей по-русски — для модели рекомендаций (lib/admin/coach.ts).
+ * На экране — на языке панели, из того же словаря: `metricDict`.
+ */
 export const METRIC_TITLE: Record<Metric, string> = {
-  revenue_usd: "поступления, $",
-  won: "выигранных лидов",
-  contacts: "первых контактов",
+  revenue_usd: metricDict.revenue_usd.ru,
+  won: metricDict.won.ru,
+  contacts: metricDict.contacts.ru,
 };
 
 export function factOf(metric: Metric, pulse: StaffPulse): number {
@@ -318,9 +325,15 @@ export function expectedPayments(projects: readonly ProjectLite[], payments: rea
   return out.sort((a, b) => b.remaining - a.remaining);
 }
 
-export const MONTH_SHORT = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+/** Короткий месяц на языке панели: «янв», «yan», «sty». */
+function monthShort(index: number, locale: PanelLocale): string {
+  const entry = monthDict[`m${index + 1}` as keyof typeof monthDict];
+  return entry ? entry[locale] : "";
+}
 
-export function monthLabel(month: string): string {
+export const MONTH_SHORT = Array.from({ length: 12 }, (_, i) => monthShort(i, "ru"));
+
+export function monthLabel(month: string, locale: PanelLocale = "ru"): string {
   const [y, m] = month.split("-");
-  return `${MONTH_SHORT[Number(m) - 1]} ${y.slice(2)}`;
+  return `${monthShort(Number(m) - 1, locale)} ${y.slice(2)}`;
 }

@@ -1,4 +1,8 @@
+"use client";
+
 import { HelpHint } from "@/components/admin/help-link";
+import { usePanelLocale } from "@/components/admin/panel-locale";
+import { homeDict } from "@/content/admin-panel/home";
 import { helpAnchor } from "@/lib/admin/help";
 import { planLine, type TouchProgress } from "@/lib/admin/touch-plan";
 
@@ -12,9 +16,13 @@ import { planLine, type TouchProgress } from "@/lib/admin/touch-plan";
  *
  * Плана нет — нет и строки. Пустая рамка «плана нет» на видном месте читается
  * как упрёк, которого никто не делал.
+ *
+ * Клиентский — ради языка: он берётся у провайдера каркаса, и страницам,
+ * которые показывают строку (главная и «Касания»), не нужно его передавать.
  */
 export function TouchPlanLine({ progress }: { progress: TouchProgress }) {
-  const line = planLine(progress);
+  const locale = usePanelLocale();
+  const line = planLine(progress, locale);
   if (!line) return null;
 
   const done = progress.left === 0;
@@ -28,7 +36,7 @@ export function TouchPlanLine({ progress }: { progress: TouchProgress }) {
         {done ? "✓" : "→"}
       </span>
       {line}
-      <HelpHint topic={helpAnchor("/admin/prospect", "plan")} label="Что считается касанием" />
+      <HelpHint topic={helpAnchor("/admin/prospect", "plan")} label={homeDict.touchPlanHint[locale]} />
     </p>
   );
 }

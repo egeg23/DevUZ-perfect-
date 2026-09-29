@@ -1,3 +1,5 @@
+import { homeDict } from "@/content/admin-panel/home";
+import type { PanelLocale } from "@/lib/admin/i18n";
 import type { Bucket } from "@/lib/admin/stats";
 
 /**
@@ -16,17 +18,21 @@ export function Bars({
   labels,
   colors,
   total,
-  empty = "нет данных",
+  empty,
+  locale = "ru",
 }: {
   rows: Bucket[];
   labels?: Record<string, string>;
   /** Цвет на ключ. Не задан — один тон: это измерение величины, не различие. */
   colors?: Record<string, string>;
   total?: number;
+  /** Не задано — «нет данных» на языке панели. */
   empty?: string;
+  /** Язык панели; страницы, ещё не переведённые, остаются на русском. */
+  locale?: PanelLocale;
 }) {
   if (!rows.length) {
-    return <p className="mt-3 text-sm text-muted">{empty}</p>;
+    return <p className="mt-3 text-sm text-muted">{empty ?? homeDict.barsEmpty[locale]}</p>;
   }
 
   const max = Math.max(...rows.map((row) => row.count), 1);
@@ -66,9 +72,9 @@ export function Bars({
  * Объём по неделям. Вертикальные столбики: время идёт слева направо, и
  * горизонтальные строки читались бы как список, а не как динамика.
  */
-export function WeeklyBars({ rows }: { rows: Bucket[] }) {
+export function WeeklyBars({ rows, locale = "ru" }: { rows: Bucket[]; locale?: PanelLocale }) {
   if (!rows.length) {
-    return <p className="mt-3 text-sm text-muted">Пока не по чему считать.</p>;
+    return <p className="mt-3 text-sm text-muted">{homeDict.weeklyEmpty[locale]}</p>;
   }
 
   const max = Math.max(...rows.map((row) => row.count), 1);
@@ -99,7 +105,7 @@ export function WeeklyBars({ rows }: { rows: Bucket[] }) {
                 height: `${Math.max((row.count / max) * 100, 3)}%`,
                 background: "var(--color-chart-bar)",
               }}
-              title={`неделя с ${row.key}: ${row.count}`}
+              title={homeDict.weekOf[locale](row.key, row.count)}
             />
           </span>
         ))}
