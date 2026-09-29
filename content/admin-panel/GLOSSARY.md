@@ -88,6 +88,20 @@
 | подпись (владельца) | imzo | podpis |
 | подтвердить (договор, платёж) | tasdiqlash | zatwierdź / potwierdź |
 | налог | soliq | podatek |
+| партнёр (приводит клиентов) | hamkor | partner |
+| кабинет партнёра | hamkor kabineti | panel partnera |
+| агентство партнёра | agentlik | agencja |
+| выплата / заявка на выплату | to‘lov / to‘lov so‘rovi | wypłata / wniosek o wypłatę |
+| заморожено / заработано / доступно | muzlatilgan / ishlab topilgan / mavjud | zamrożone / zarobione / dostępne |
+| реквизиты | rekvizitlar | dane do przelewu |
+| промо-материалы | promo-materiallar | materiały promocyjne |
+| релиз (файл продукта) | reliz | wydanie |
+| прототип | prototip | prototyp |
+| разбор (статья о чужом сайте) | tahlil | analiza |
+| находка (в разборе) | topilma | ustalenie |
+| снимок (скриншот) | skrinshot | zrzut |
+| опубликовать / снять с публикации | e’lon qilish / e’londan olish | opublikuj / zdejmij z publikacji |
+| удалить | o‘chirish | usuń |
 
 Суммы и даты — через `Intl` с `PANEL_INTL[locale]` (lib/admin/i18n.ts),
 формы слова при числе — `plural()` для ru и pl; по-узбекски слово после
