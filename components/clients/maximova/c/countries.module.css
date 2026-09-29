@@ -70,6 +70,7 @@
   position: relative;
   min-height: 100svh;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   overflow: hidden;
 }
@@ -77,6 +78,7 @@
 .heroText {
   position: relative;
   z-index: 2;
+  width: 100%;
   max-width: 800px;
   margin: 0 auto;
   padding: 64px 24px 24px;
@@ -164,6 +166,7 @@
 
 .scene {
   position: relative;
+  width: 100%;
   min-height: 280px;
   pointer-events: none;
 }
@@ -188,7 +191,7 @@
 /* На телефоне сцена низкая, и Дарья поднимается над крышами. */
 @media (max-width: 899px) {
   .heroCut {
-    height: 170%;
+    height: 180%;
   }
 }
 
@@ -203,14 +206,26 @@
 /* На телефоне сцена ровно в пропорцию рисунка: обрезка по краям съела бы
    и Биг-Бен, и Эйфелеву башню, оставив пустое небо посередине. */
 @media (max-width: 899px) {
+  /* Не сетка, а обычный поток: в сетке Safari на iPhone (и браузер внутри
+     Telegram) растягивал сцену с aspect-ratio по высоте строки и выводил из
+     неё ширину — первый экран становился шире телефона, заголовок и кнопка
+     уезжали за правый край. В потоке ширина задана, высота считается от
+     неё — одинаково во всех движках. */
   .hero {
+    display: block;
     min-height: auto;
   }
 
+  .heroText {
+    padding: 32px 16px 16px;
+  }
+
   .scene {
+    width: 100%;
+    height: auto;
     min-height: 0;
     aspect-ratio: 1440 / 600;
-    margin-top: 128px;
+    margin-top: 144px;
   }
 }
 
@@ -1217,6 +1232,44 @@
 @media (min-width: 900px) {
   .dock {
     display: none;
+  }
+}
+
+/* iOS до 16 не знает overflow: clip — там край страницы режет body.
+   Не на .page: overflow: hidden у предка сломал бы липкую панель. */
+@supports not (overflow: clip) {
+  :global(html):has(.page),
+  :global(body):has(.page) {
+    overflow-x: hidden;
+  }
+}
+
+/* Страховка от той же беды в остальных сетках: колонка никогда не шире
+   экрана, что бы ни лежало внутри. */
+.meet,
+.moms,
+.time,
+.passports,
+.route,
+.asks,
+.results,
+.steps,
+.prices,
+.form {
+  min-width: 0;
+}
+
+@media (max-width: 719px) {
+  .meet,
+  .moms,
+  .time,
+  .route,
+  .prices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .passports {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
