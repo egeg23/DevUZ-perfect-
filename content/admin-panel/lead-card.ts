@@ -100,28 +100,16 @@ export const leadResultDict = defineDict({
   },
 });
 
-/** Статус лида — в кнопках статуса и в поле «Статус». */
-export const leadStatusDict = defineDict({
-  new: { ru: "новый", uz: "yangi", pl: "nowy" },
-  taken: { ru: "в работе", uz: "ishda", pl: "w toku" },
-  dropped: { ru: "отложен", uz: "qoldirilgan", pl: "odłożony" },
-  won: { ru: "выиграли", uz: "yutilgan", pl: "wygrany" },
-  lost: { ru: "проиграли", uz: "yutqazilgan", pl: "przegrany" },
-});
-
-export const leadPriorityDict = defineDict({
-  hot: { ru: "горячий", uz: "issiq", pl: "gorący" },
-  warm: { ru: "тёплый", uz: "iliq", pl: "ciepły" },
-  nurture: { ru: "дозреет", uz: "pishib yetiladi", pl: "do dojrzenia" },
-  archive: { ru: "архив", uz: "arxiv", pl: "archiwum" },
-});
-
-/** Бюджет — не сумма, а то, как клиент говорит о деньгах (B1–B3). */
-export const leadBudgetDict = defineDict({
-  B1: { ru: "назван и утверждён", uz: "aytilgan va tasdiqlangan", pl: "podany i zatwierdzony" },
-  B2: { ru: "есть, сравнивает", uz: "bor, solishtirmoqda", pl: "jest, porównuje oferty" },
-  B3: { ru: "не назван", uz: "aytilmagan", pl: "nie podany" },
-});
+/**
+ * Статус, приоритет и бюджет — одни на всю панель: в списке на главной и в
+ * карточке лида подпись обязана совпадать. Живут в home.ts, здесь — имена,
+ * под которыми их знает карточка.
+ */
+export {
+  statusDict as leadStatusDict,
+  priorityDict as leadPriorityDict,
+  budgetDict as leadBudgetDict,
+} from "@/content/admin-panel/home";
 
 export const leadTimingDict = defineDict({
   T1: { ru: "сейчас", uz: "hozir", pl: "teraz" },
