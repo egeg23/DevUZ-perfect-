@@ -210,10 +210,60 @@ test("инструкция рисуется на каждом языке для 
  * название в «ёлочках» — это русский текст из словаря, узбекская инструкция
  * обязана звать его по-узбекски, из того же словаря.
  *
- * Исключения — сообщения и кнопки бота: бот пишет по-русски, пока не научен
- * языку панели (отдельный этап), и человек ищет в Telegram русскую кнопку.
+ * Исключения — места, где человек с узбекской панелью видит русский текст:
+ * сообщения и кнопки бота (бот пишет по-русски, пока не научен языку панели)
+ * и разделы, которые ещё не переведены. Каждая строка — кусок узбекского
+ * текста вокруг такого названия. Раздел перевели — его группу снимаем, и
+ * тест сам покажет, какие названия в инструкции пора поменять.
  */
-const BOT_TEXT_IN_UZ: readonly string[] = ["«Команда» tugmasi bilan xabar keladi"];
+const STILL_RUSSIAN_IN_UZ: readonly string[] = [
+  // бот в Telegram — пока по-русски
+  "«Команда» tugmasi bilan xabar keladi",
+  "Telegramda «Подтвердить» va «Отклонить» tugmalari",
+  "ostida esa «🙅 Клиент отказался» tugmasi",
+  "(Telegramda — «🙅 Клиент отказался»)",
+  "(Telegramda — «🔇 Игнорирует»)",
+  "xabari ostida — faqat «🙅 Клиент отказался»",
+  "«Взять в работу» va «Отклонить» tugmalari u yerda ham",
+
+  // раздел ещё не переведён: Проекты (карточка проекта)
+  "[«Данные проекта»](#projects-data) → «Ведёт»",
+  "«Стадия», «Смета», «Деньги», «Данные проекта», «Договор»",
+  "**«Смета»** — toifani",
+  "panel «не ниже» (chegara), «до» va muddatni",
+  "**«Деньги»**: «Вид сделки»",
+  "**«Партнёр»** bloki: kim olib kelgan",
+  "egasi almashtiradi — «Ведёт» maydoni",
+  "u «Деньги» blokida",
+  "Loyiha kartochkasida, «Партнёр» blokida",
+  "Loyiha kartochkasida «Партнёр» yonida",
+  "«Партнёр» bloki → «Заказ агентства»",
+
+  // раздел ещё не переведён: Команда
+  "«План касаний» ustunida qo‘yasiz",
+  "«План касаний» ustunida qo‘yiladi",
+  "«План касаний» ustunida: «в неделю»",
+  "«План касаний» ustuni — o‘zingizdan",
+
+  // раздел ещё не переведён: Статистика
+  "«По моей команде» — siz va menejerlaringiz: «В работе»",
+
+  // раздел ещё не переведён: Расходы
+  "«дата не подтверждена бухгалтером» belgisi",
+
+  // раздел ещё не переведён: Финансы
+  "**«К выплате»** = ishlab",
+  "«Выплачено», «К выплате»",
+  "va «К выплате» ni kamaytiradi",
+  "«Выплаты» → «Кому»",
+
+  // раздел ещё не переведён: Партнёры
+  "**«Подтвердить»** — agar agentlik",
+  "qayta «Подтвердить» ham",
+
+  // раздел ещё не переведён: Журнал
+  "«Кто» filtri",
+];
 
 test("узбекская инструкция зовёт кнопки так, как они написаны на узбекской панели", async () => {
   const ruToUz = new Map<string, string>();
@@ -231,10 +281,14 @@ test("узбекская инструкция зовёт кнопки так, к
       ...s.items.flatMap((i) => [i.title, ...(isByRole(i.body) ? Object.values(i.body).flat() : i.body)]),
     ]),
     ...uz.channels.flatMap((c) => [c.what, ...c.how]),
-  ];
+  ].map(String);
+  // Исключение, которого в тексте больше нет, — лишнее: его пора снять.
+  for (const allowed of STILL_RUSSIAN_IN_UZ) {
+    assert.ok(texts.some((t) => t.includes(allowed)), `исключения «${allowed}» в узбекской инструкции нет — уберите его`);
+  }
   for (let text of texts) {
-    for (const allowed of BOT_TEXT_IN_UZ) text = String(text).replace(allowed, "");
-    for (const [, name] of String(text).matchAll(/«([^»]+)»/g)) {
+    for (const allowed of STILL_RUSSIAN_IN_UZ) text = text.replaceAll(allowed, "");
+    for (const [, name] of text.matchAll(/«([^»]+)»/g)) {
       const want = ruToUz.get(name);
       assert.ok(!want, `в узбекской инструкции «${name}», а на узбекской панели — «${want}»: ${text.slice(0, 120)}`);
     }
