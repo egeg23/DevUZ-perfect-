@@ -486,7 +486,7 @@ export function CabinetView({
                 const facts = [
                   shape ? t.mediaShape[shape] : null,
                   material.duration_s ? `${Math.round(material.duration_s)} ${t.mediaSeconds}` : null,
-                  promoSize(material.bytes, t.mediaMb, locale === "ru" || locale === "uz") || null,
+                  promoSize(material.bytes, t.mediaMb, locale === "ru" || locale === "uz" || locale === "uk" || locale === "pl") || null,
                   t.mediaLang[material.locale],
                 ].filter(Boolean);
                 return (

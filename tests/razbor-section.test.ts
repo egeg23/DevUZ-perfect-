@@ -255,11 +255,11 @@ test("разбор без пары не ссылается на несущест
   assert.equal(languages["x-default"], "https://devuz.studio/uz/razbor/logistika-uchun-sayt");
 });
 
-test("обычные страницы по-прежнему собирают все четыре языка", () => {
+test("обычные страницы по-прежнему собирают все языки сайта", () => {
   const languages = (buildAlternates("ru", "cases/tezketkaz") as {
     languages: Record<string, string>;
   }).languages;
-  assert.deepEqual(Object.keys(languages).sort(), ["ru", "en", "uz-UZ", "zh-Hans", "x-default"].sort());
+  assert.deepEqual(Object.keys(languages).sort(), ["ru", "en", "uz-UZ", "zh-Hans", "uk", "pl", "x-default"].sort());
 });
 
 test("страницы разборов объявляют языки явно, а не общим правилом", () => {

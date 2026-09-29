@@ -15,6 +15,8 @@ export const company = {
     en: "We write code that makes money",
     uz: "Biz pul keltiradigan kod yozamiz",
     zh: "我们编写创造收益的代码",
+    uk: "Ми пишемо код, який приносить гроші",
+    pl: "Piszemy kod, który zarabia pieniądze",
   } satisfies LocalizedText,
 
   description: {
@@ -22,6 +24,8 @@ export const company = {
     en: "A full-cycle studio in Tashkent: websites, mobile apps, AI products built on LLM and RAG, marketplaces and delivery services.",
     uz: "Toshkentdagi to‘liq siklli studiya: veb-saytlar, mobil ilovalar, LLM va RAG asosidagi AI mahsulotlar, marketpleyslar va yetkazib berish xizmatlari.",
     zh: "位于塔什干的全流程开发工作室：网站、移动应用、基于 LLM 与 RAG 的 AI 产品、电商平台与配送服务。",
+    uk: "Студія повного циклу з Ташкента: сайти, мобільні застосунки, AI-продукти на LLM і RAG, маркетплейси та сервіси доставки.",
+    pl: "Studio pełnego cyklu z Taszkentu: strony internetowe, aplikacje mobilne, produkty AI oparte na LLM i RAG, marketplace’y i serwisy dostaw.",
   } satisfies LocalizedText,
 
   // ─── Контакты ──────────────────────────────────────────────────────────────
@@ -47,21 +51,21 @@ export const company = {
     {
       e164: "+998909123772",
       display: "+998 90 912-37-72",
-      country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦" } satisfies LocalizedText,
+      country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦", uk: "Узбекистан", pl: "Uzbekistan" } satisfies LocalizedText,
       flag: "🇺🇿",
       whatsapp: true,
     },
     {
       e164: "+998909120578",
       display: "+998 90 912-05-78",
-      country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦" } satisfies LocalizedText,
+      country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦", uk: "Узбекистан", pl: "Uzbekistan" } satisfies LocalizedText,
       flag: "🇺🇿",
       whatsapp: true,
     },
     {
       e164: "+79232330037",
       display: "+7 923 233-00-37",
-      country: { ru: "Россия", en: "Russia", uz: "Rossiya", zh: "俄罗斯" } satisfies LocalizedText,
+      country: { ru: "Россия", en: "Russia", uz: "Rossiya", zh: "俄罗斯", uk: "Росія", pl: "Rosja" } satisfies LocalizedText,
       flag: "🇷🇺",
       whatsapp: true,
     },
@@ -71,7 +75,7 @@ export const company = {
       // региона 151 в США не выдаётся, и дозвон стоит проверить.
       e164: "+11517095555",
       display: "+1 151 709-5555",
-      country: { ru: "США", en: "USA", uz: "AQSH", zh: "美国" } satisfies LocalizedText,
+      country: { ru: "США", en: "USA", uz: "AQSH", zh: "美国", uk: "США", pl: "USA" } satisfies LocalizedText,
       flag: "🇺🇸",
       whatsapp: false,
     },
@@ -83,12 +87,16 @@ export const company = {
       en: "138 Shota Rustaveli Street",
       uz: "Shota Rustaveli ko‘chasi, 138",
       zh: "肖塔·鲁斯塔韦利街 138 号",
+      uk: "вулиця Шота Руставелі, 138",
+      pl: "ul. Shota Rustaveli 138",
     } satisfies LocalizedText,
     city: {
       ru: "Ташкент",
       en: "Tashkent",
       uz: "Toshkent",
       zh: "塔什干",
+      uk: "Ташкент",
+      pl: "Taszkent",
     } satisfies LocalizedText,
     country: "UZ",
     countryName: {
@@ -96,6 +104,8 @@ export const company = {
       en: "Uzbekistan",
       uz: "O‘zbekiston",
       zh: "乌兹别克斯坦",
+      uk: "Узбекистан",
+      pl: "Uzbekistan",
     } satisfies LocalizedText,
     // Координаты центра Ташкента — уточнить на адрес офиса.
     lat: 41.2995,
@@ -123,6 +133,8 @@ export const company = {
       en: "Individual entrepreneur",
       uz: "Yakka tartibdagi tadbirkor",
       zh: "个体工商户",
+      uk: "Індивідуальний підприємець",
+      pl: "Przedsiębiorca indywidualny",
     } satisfies LocalizedText,
     pinfl: "32303946570039",
 
@@ -140,6 +152,8 @@ export const company = {
       en: "138 Shota Rustaveli Street, Tashkent, Republic of Uzbekistan",
       uz: "O‘zbekiston Respublikasi, Toshkent shahri, Shota Rustaveli ko‘chasi, 138",
       zh: "乌兹别克斯坦共和国塔什干市肖塔·鲁斯塔韦利街 138 号",
+      uk: "Республіка Узбекистан, м. Ташкент, вулиця Шота Руставелі, 138",
+      pl: "ul. Shota Rustaveli 138, Taszkent, Republika Uzbekistanu",
     } satisfies LocalizedText,
   },
 } as const;
@@ -221,6 +235,8 @@ export const headline = [
       en: "developers on staff",
       uz: "shtatdagi dasturchi",
       zh: "名在职开发者",
+      uk: "розробників у штаті",
+      pl: "programistów na etacie",
     } satisfies LocalizedText,
   },
   {
@@ -231,6 +247,8 @@ export const headline = [
       en: "completed projects",
       uz: "yakunlangan loyiha",
       zh: "个已完成项目",
+      uk: "завершених проєктів",
+      pl: "zrealizowanych projektów",
     } satisfies LocalizedText,
   },
   {
@@ -241,6 +259,8 @@ export const headline = [
       en: "countries we work in",
       uz: "ishlayotgan mamlakatlarimiz",
       zh: "个国家有我们的客户",
+      uk: "країн, у яких працюємо",
+      pl: "krajów, w których działamy",
     } satisfies LocalizedText,
   },
 ] as const;
@@ -261,6 +281,8 @@ export const stats = [
       en: "languages on our sites",
       uz: "saytlarimizdagi tillar",
       zh: "个网站语言版本",
+      uk: "мови на наших сайтах",
+      pl: "języki na naszych stronach",
     } satisfies LocalizedText,
   },
   {
@@ -271,6 +293,8 @@ export const stats = [
       en: "microservices in our largest project",
       uz: "eng yirik loyihadagi mikroservislar",
       zh: "最大项目的微服务数量",
+      uk: "мікросервісів у найбільшому проєкті",
+      pl: "mikroserwisów w największym projekcie",
     } satisfies LocalizedText,
   },
   {
@@ -281,12 +305,16 @@ export const stats = [
       en: " sec",
       uz: " son.",
       zh: " 秒",
+      uk: " с",
+      pl: " s",
     } satisfies LocalizedText,
     label: {
       ru: "первый ответ клиенту, круглосуточно",
       en: "first reply to a client, around the clock",
       uz: "mijozga birinchi javob, kunu tun",
       zh: "全天候首次回复时间",
+      uk: "перша відповідь клієнту, цілодобово",
+      pl: "pierwsza odpowiedź dla klienta, całą dobę",
     } satisfies LocalizedText,
   },
 ] as const;

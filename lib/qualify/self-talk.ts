@@ -125,6 +125,8 @@ const REDIRECT: Record<Locale, string> = {
   en: "The assistant is our own build; we don't disclose the technical stack. We build these to order as well: an assistant on your data, search across your knowledge base, tuning for your task. Back to business: what does your company do?",
   uz: "Assistent — bizning ishlanmamiz, texnik stekni oshkor qilmaymiz. Bunday yechimlarni buyurtmaga ham qilamiz: sizning ma'lumotlaringiz asosidagi assistent, bazangiz bo'ylab qidiruv, vazifangizga moslash. Ishga qaytaylik: kompaniyangiz nima bilan shug'ullanadi?",
   zh: "这个助手是我们自己的成果，技术栈我们不对外透露。这类方案我们也承接定制：基于贵方数据的助手、面向贵方知识库的检索、针对具体任务的调优。回到正事：贵公司是做什么的？",
+  uk: "Асистент — наша розробка, технічний стек ми не розкриваємо. Такі рішення ми робимо і на замовлення: асистент на ваших даних, пошук по вашій базі, донавчання під задачу. Повернімося до справи: чим займається ваша компанія?",
+  pl: "Asystent to nasze własne rozwiązanie, stosu technologicznego nie ujawniamy. Takie rozwiązania robimy też na zamówienie: asystent na Twoich danych, wyszukiwanie w Twojej bazie wiedzy, dostrajanie pod konkretne zadanie. Wróćmy do rzeczy: czym zajmuje się Twoja firma?",
 };
 
 export function redirectLine(locale: Locale): string {

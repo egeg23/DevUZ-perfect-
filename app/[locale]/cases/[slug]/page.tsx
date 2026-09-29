@@ -197,7 +197,7 @@ export default async function CasePage({
   );
 }
 
-const MONTH_LOCALE: Record<Locale, string> = { ru: "ru-RU", en: "en-GB", uz: "uz-Latn-UZ", zh: "zh-CN" };
+const MONTH_LOCALE: Record<Locale, string> = { ru: "ru-RU", en: "en-GB", uz: "uz-Latn-UZ", zh: "zh-CN", uk: "uk-UA", pl: "pl-PL" };
 
 /**
  * «2026-09» → «сентябрь 2026» на языке страницы. Русское «г.» срезается:

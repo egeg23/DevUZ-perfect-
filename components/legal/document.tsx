@@ -14,11 +14,11 @@ import { t, type Locale } from "@/lib/i18n";
  */
 
 const LABEL: Record<string, Record<Locale, string>> = {
-  name: { ru: "Наименование", en: "Legal name", uz: "Nomi", zh: "名称" },
-  form: { ru: "Правовая форма", en: "Legal form", uz: "Huquqiy shakl", zh: "组织形式" },
-  pinfl: { ru: "ПИНФЛ", en: "PINFL", uz: "PINFL", zh: "自然人识别码（PINFL）" },
-  address: { ru: "Адрес", en: "Address", uz: "Manzil", zh: "地址" },
-  contact: { ru: "Связь", en: "Contact", uz: "Aloqa", zh: "联系方式" },
+  name: { ru: "Наименование", en: "Legal name", uz: "Nomi", zh: "名称", uk: "Найменування", pl: "Nazwa" },
+  form: { ru: "Правовая форма", en: "Legal form", uz: "Huquqiy shakl", zh: "组织形式", uk: "Правова форма", pl: "Forma prawna" },
+  pinfl: { ru: "ПИНФЛ", en: "PINFL", uz: "PINFL", zh: "自然人识别码（PINFL）", uk: "ПІНФЛ (PINFL)", pl: "PINFL" },
+  address: { ru: "Адрес", en: "Address", uz: "Manzil", zh: "地址", uk: "Адреса", pl: "Adres" },
+  contact: { ru: "Связь", en: "Contact", uz: "Aloqa", zh: "联系方式", uk: "Зв'язок", pl: "Kontakt" },
 };
 
 export function LegalDocument({ doc, locale }: { doc: LegalDoc; locale: Locale }) {

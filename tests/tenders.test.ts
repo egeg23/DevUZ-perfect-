@@ -73,7 +73,7 @@ test("вопрос про тендеры в FAQ главной — на всех
   for (const locale of locales) {
     const faq = getDictionary(locale).faq.items;
     assert.ok(
-      faq.some((item) => /тендер|tender|招标/i.test(item.q)),
+      faq.some((item) => /тендер|tender|招标|przetarg/i.test(item.q)),
       `${locale}: вопроса про тендеры нет`,
     );
   }

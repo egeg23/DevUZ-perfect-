@@ -151,6 +151,8 @@ test("оговорка про способ оплаты никуда не дел
     en: /cryptocurrenc/i,
     uz: /kriptovalyuta/i,
     zh: /加密货币/,
+    uk: /криптовалют/i,
+    pl: /kryptowalut/i,
   };
 
   for (const locale of locales) {

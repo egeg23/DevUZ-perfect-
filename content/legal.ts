@@ -361,4 +361,168 @@ const zh: LegalDoc = {
   ],
 };
 
-export const privacy: Record<Locale, LegalDoc> = { ru, en, uz, zh };
+const uk: LegalDoc = {
+  title: "Політика конфіденційності",
+  updated: "Діє з 9 вересня 2026 року",
+  intro:
+    "Тут описано, які дані збирає сайт DevUz Studio, навіщо вони потрібні, кому передаються і як їх видалити. Документ написано звичайною мовою: якщо щось залишилося незрозумілим, напишіть нам, і ми пояснимо. Це переклад, підготовлений для зручності. Юридичну силу має російська редакція, опублікована на devuz.studio/ru/privacy; у разі розбіжностей між редакціями застосовується російська.",
+  sections: [
+    {
+      heading: "Які дані ми збираємо",
+      body: [
+        "Контактні дані, які ви залишаєте самі: ім'я, телефон, адресу електронної пошти, ім'я користувача в Telegram, назву компанії.",
+        "Зміст листування з AI-асистентом і текст заявки з форми зворотного зв'язку.",
+        "Технічні дані: IP-адресу, тип браузера й пристрою, мову інтерфейсу, сторінки, які ви відкривали. Вони потрібні для захисту від автоматичних запитів і для статистики відвідуваності.",
+      ],
+    },
+    {
+      heading: "Навіщо вони потрібні",
+      body: [
+        "Щоб відповісти на ваш запит, підготувати комерційну пропозицію і зв'язатися з вами.",
+        "Щоб зрозуміти, яка послуга вам підходить, і передати менеджеру контекст розмови — без цього вам довелося б переказувати задачу заново.",
+        "Щоб покращувати сайт і захищати його від зловживань.",
+        "Ми не продаємо дані, не передаємо їх рекламним мережам і не надсилаємо листів, на які ви не підписувалися.",
+      ],
+    },
+    {
+      heading: "AI-асистент у чаті",
+      body: [
+        "Першу лінію спілкування веде AI-асистент студії. Щоб сформувати відповідь, текст вашого повідомлення обробляється на інфраструктурі нашого технологічного постачальника — компанії Anthropic (США).",
+        "Не надсилайте в чат паролі, реквізити карток, доступи до систем та інші відомості, які не повинні залишати межі вашої компанії. Асистент ніколи не запитує їх сам.",
+        "Підсумок розмови та її розшифровка передаються менеджеру відділу продажів у Telegram, щоб він продовжив розмову з того місця, де ви зупинилися.",
+      ],
+    },
+    {
+      heading: "Кому передаються дані",
+      body: [
+        "Anthropic (США) — обробка повідомлень AI-асистентом.",
+        "Telegram — доставка заявок менеджерам відділу продажів.",
+        "Supabase — зберігання заявок та історії звернень.",
+        "Сервіси вебаналітики Google і Яндекс — знеособлена статистика відвідуваності.",
+        "Кожен із них обробляє дані за власними правилами, з якими можна ознайомитися на їхніх сайтах.",
+      ],
+    },
+    {
+      heading: "Хто зі студії бачить ваші дані",
+      body: [
+        "Заявки зберігаються в службовій панелі, доступ до якої мають лише співробітники студії. Доступ іменний і прив'язаний до особистого акаунта співробітника в Telegram — спільного пароля не існує.",
+        "Кожне відкриття картки заявки фіксується: хто відкрив і коли. Ці записи неможливо ні змінити, ні видалити.",
+        "Співробітник, який залишив студію, негайно втрачає доступ.",
+      ],
+    },
+    {
+      heading: "Скільки ми зберігаємо дані",
+      body: [
+        "Заявки та листування — до п'яти років з моменту останнього звернення. Цей строк потрібен, щоб повернутися до вашого проєкту, якщо ви звернетеся повторно, і щоб в обох сторін залишалися підтвердження домовленостей.",
+        "Журнал доступу співробітників — до п'яти років. З нього видно, хто зі студії працював із вашою заявкою.",
+        "Технічні логи — до 90 днів.",
+        "На ваш запит видалимо раніше.",
+      ],
+    },
+    {
+      heading: "Ваші права",
+      body: [
+        "Ви можете запросити копію своїх даних, попросити їх виправити чи видалити, а також відкликати згоду на обробку.",
+        "Для цього напишіть на нашу пошту з адреси або номера, які ви залишали. Ми відповімо протягом десяти робочих днів.",
+      ],
+    },
+    {
+      heading: "Файли cookie",
+      body: [
+        "Сайт зберігає один службовий файл cookie з обраною мовою інтерфейсу, щоб наступного разу відкрити сайт тією ж мовою.",
+        "Співробітники студії, які входять до службової панелі, отримують ще один — сесійний, лише для неї. Відвідувачам сайту він не видається.",
+        "Якщо підключено вебаналітику, вона встановлює власні файли cookie. Їх можна вимкнути в налаштуваннях браузера — на роботу сайту це не вплине.",
+      ],
+    },
+    {
+      heading: "Зміни",
+      body: [
+        "Якщо політика зміниться, ми оновимо дату на початку документа. Суттєві зміни зазвичай означають появу нового сервісу-обробника — їх завжди буде перелічено в розділі «Кому передаються дані».",
+      ],
+    },
+  ],
+};
+
+const pl: LegalDoc = {
+  title: "Polityka prywatności",
+  updated: "Obowiązuje od 9 września 2026 r.",
+  intro:
+    "Tutaj opisujemy, jakie dane zbiera strona DevUz Studio, do czego są potrzebne, komu są przekazywane i jak je usunąć. Dokument jest napisany prostym językiem: jeśli coś pozostanie niejasne, napisz do nas, a wyjaśnimy. To tłumaczenie przygotowane dla wygody. Moc prawną ma rosyjska wersja opublikowana pod adresem devuz.studio/ru/privacy; w razie rozbieżności między wersjami rozstrzyga wersja rosyjska.",
+  sections: [
+    {
+      heading: "Jakie dane zbieramy",
+      body: [
+        "Dane kontaktowe, które podajesz sam: imię, numer telefonu, adres e-mail, nazwę użytkownika w Telegramie, nazwę firmy.",
+        "Treść rozmowy z asystentem AI oraz tekst zapytania wysłanego przez formularz kontaktowy.",
+        "Dane techniczne: adres IP, typ przeglądarki i urządzenia, język interfejsu, odwiedzone strony. Są potrzebne do ochrony przed automatycznymi zapytaniami i do statystyk odwiedzin.",
+      ],
+    },
+    {
+      heading: "Do czego są potrzebne",
+      body: [
+        "Aby odpowiedzieć na Twoje zapytanie, przygotować ofertę handlową i skontaktować się z Tobą.",
+        "Aby ustalić, która usługa Ci odpowiada, i przekazać menedżerowi kontekst rozmowy — bez tego musiałbyś opisywać swoje zadanie od nowa.",
+        "Aby ulepszać stronę i chronić ją przed nadużyciami.",
+        "Nie sprzedajemy danych, nie przekazujemy ich sieciom reklamowym i nie wysyłamy wiadomości, których nie zamawiałeś.",
+      ],
+    },
+    {
+      heading: "Asystent AI na czacie",
+      body: [
+        "Pierwszy kontakt prowadzi asystent AI studia. Aby przygotować odpowiedź, treść Twojej wiadomości jest przetwarzana w infrastrukturze naszego dostawcy technologii — spółki Anthropic (USA).",
+        "Nie wysyłaj na czacie haseł, danych kart płatniczych, danych dostępowych do systemów ani innych informacji, które nie powinny opuszczać Twojej firmy. Asystent nigdy sam o nie nie prosi.",
+        "Podsumowanie rozmowy i jej zapis są przekazywane menedżerowi działu sprzedaży w Telegramie, aby mógł kontynuować rozmowę od miejsca, w którym ją przerwałeś.",
+      ],
+    },
+    {
+      heading: "Komu przekazujemy dane",
+      body: [
+        "Anthropic (USA) — przetwarzanie wiadomości przez asystenta AI.",
+        "Telegram — dostarczanie zapytań menedżerom działu sprzedaży.",
+        "Supabase — przechowywanie zapytań i historii kontaktów.",
+        "Usługi analityki internetowej Google i Yandex — zanonimizowane statystyki odwiedzin.",
+        "Każdy z tych podmiotów przetwarza dane według własnych zasad, z którymi można zapoznać się na jego stronie internetowej.",
+      ],
+    },
+    {
+      heading: "Kto w studiu widzi Twoje dane",
+      body: [
+        "Zapytania są przechowywane w wewnętrznym panelu, do którego dostęp mają wyłącznie pracownicy studia. Dostęp jest imienny i powiązany z osobistym kontem pracownika w Telegramie — nie istnieje wspólne hasło.",
+        "Każde otwarcie karty zapytania jest rejestrowane: kto je otworzył i kiedy. Tych zapisów nie można ani zmienić, ani usunąć.",
+        "Pracownik, który odchodzi ze studia, natychmiast traci dostęp.",
+      ],
+    },
+    {
+      heading: "Jak długo przechowujemy dane",
+      body: [
+        "Zapytania i korespondencję — do pięciu lat od ostatniego kontaktu. Ten okres jest potrzebny, abyśmy mogli wrócić do Twojego projektu, jeśli zwrócisz się do nas ponownie, oraz aby obie strony zachowały potwierdzenie ustaleń.",
+        "Rejestr dostępu pracowników — do pięciu lat. Widać w nim, kto ze studia pracował z Twoim zapytaniem.",
+        "Logi techniczne — do 90 dni.",
+        "Na Twoją prośbę usuniemy je wcześniej.",
+      ],
+    },
+    {
+      heading: "Twoje prawa",
+      body: [
+        "Możesz zażądać kopii swoich danych, ich sprostowania lub usunięcia, a także wycofać zgodę na ich przetwarzanie.",
+        "W tym celu napisz na nasz adres e-mail z adresu lub numeru, który nam podałeś. Odpowiemy w ciągu dziesięciu dni roboczych.",
+      ],
+    },
+    {
+      heading: "Pliki cookie",
+      body: [
+        "Strona zapisuje jeden techniczny plik cookie z wybranym językiem interfejsu, aby przy następnej wizycie otworzyć się w tym samym języku.",
+        "Pracownicy studia logujący się do wewnętrznego panelu otrzymują jeszcze jeden — sesyjny, wyłącznie dla tego panelu. Odwiedzającym stronę nie jest on przydzielany.",
+        "Jeśli podłączona jest analityka internetowa, instaluje ona własne pliki cookie. Można je wyłączyć w ustawieniach przeglądarki — nie wpłynie to na działanie strony.",
+      ],
+    },
+    {
+      heading: "Zmiany",
+      body: [
+        "Jeśli polityka się zmieni, zaktualizujemy datę na początku dokumentu. Istotne zmiany oznaczają zwykle pojawienie się nowego podmiotu przetwarzającego dane — zawsze będą one wymienione w sekcji „Komu przekazujemy dane”.",
+      ],
+    },
+  ],
+};
+
+export const privacy: Record<Locale, LegalDoc> = { ru, en, uz, zh, uk, pl };

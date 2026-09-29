@@ -401,4 +401,192 @@ const zh: LegalDoc = {
   ],
 };
 
-export const offer: Record<Locale, LegalDoc> = { ru, en, uz, zh };
+const uk: LegalDoc = {
+  title: "Публічна оферта",
+  updated: "Редакція від 10 вересня 2026 року",
+  intro:
+    "Це пропозиція укласти договір. Вона адресована кожному, хто залишає заявку на сайті DevUz Studio. Окремий документ підписувати не потрібно: договір вважається укладеним з моменту, описаного в розділі «Як укладається договір». Прочитайте текст до того, як залишите заявку, — після оплати рахунку він стає обов'язковим для обох сторін. Це переклад, підготовлений для зручності. Юридичну силу має російська редакція, опублікована на devuz.studio/ru/offer; у разі розбіжностей між редакціями застосовується російська.",
+  sections: [
+    {
+      heading: "1. Хто і що пропонує",
+      body: [
+        "Виконавець — індивідуальний підприємець MAKSIMOV EGOR ANDREEVICH (DevUz Studio), Республіка Узбекистан, місто Ташкент. Реквізити зазначено наприкінці документа.",
+        "Замовник — юридична особа або індивідуальний підприємець, що залишив заявку на сайті. Фізичним особам студія за цією офертою не продає: розрахунки здійснюються за рахунком шляхом банківського переказу.",
+        "Предмет — розроблення програмного забезпечення за завданням Замовника (послуги) та передання прав на готові програмні продукти з каталогу студії (ліцензія). Умови використання готового коду описано в окремому документі — Ліцензії на програмний код, яка є невід'ємною частиною цієї оферти.",
+      ],
+    },
+    {
+      heading: "2. Як укладається договір",
+      body: [
+        "Заявка на сайті — це запит рахунку, а не укладення договору. На цьому етапі сторони нічим одна одній не зобов'язані, і заявку можна відкликати одним повідомленням.",
+        "Отримавши заявку, Виконавець виставляє рахунок із зазначенням предмета, суми та строку оплати. Рахунок дійсний 14 календарних днів, якщо в ньому не зазначено інше.",
+        "Договір вважається укладеним у момент надходження оплати на рахунок Виконавця. Оплата рахунку означає, що Замовник прочитав цю оферту та Ліцензію на програмний код і приймає їх повністю та без застережень.",
+        "Якщо оплата надійшла частково або після закінчення строку дії рахунку, Виконавець має право або прийняти її, письмово це підтвердивши, або повернути протягом 10 банківських днів. Мовчання не вважається згодою.",
+      ],
+    },
+    {
+      heading: "3. Ціна та оплата",
+      body: [
+        "Ціни на сайті зазначено в доларах США, і вони є орієнтовними: остаточна сума фіксується в рахунку. Ціна в каталозі не є публічною офертою в розумінні статті 369 Цивільного кодексу Республіки Узбекистан — офертою є виставлений рахунок.",
+        "Оплата здійснюється в сумах за курсом Центрального банку Республіки Узбекистан на день виставлення рахунку, якщо в рахунку не зазначено інше.",
+        "Виконавець не є платником податку на додану вартість. У рахунку зазначається «ПДВ не обкладається».",
+        "На кожен платіж оформлюється електронна рахунок-фактура (ЕРФ) у порядку, встановленому законодавством. Для цього Замовник — юридична особа зобов'язаний повідомити свій ідентифікаційний номер платника податків (ІНН) до виставлення рахунку.",
+        "Оплата готівкою та в криптовалюті не приймається.",
+      ],
+    },
+    {
+      heading: "4. Строки та передання результату",
+      body: [
+        "Строк виконання робіт зазначається в рахунку або в погодженому сторонами технічному завданні та відраховується від дати надходження оплати.",
+        "Готовий продукт із каталогу передається протягом 3 робочих днів з моменту оплати — посиланням на архів із вихідним кодом і документацією. Посилання діє обмежений час і видається повторно на запит Замовника.",
+        "Роботи за завданням Замовника передаються частинами в погодженому порядку. Результат вважається прийнятим, якщо Замовник не надіслав мотивованих зауважень протягом 10 робочих днів з моменту передання.",
+        "Строк зсувається на час, протягом якого Виконавець чекає від Замовника даних, доступів або рішень, без яких робота не може тривати. Про таке очікування Виконавець повідомляє письмово.",
+      ],
+    },
+    {
+      heading: "5. Права на результат",
+      body: [
+        "Права на готові продукти з каталогу передаються на умовах Ліцензії на програмний код. Замовник отримує право використовувати код, змінювати його та запускати у своїх проєктах; перепродаж вихідного коду як самостійного товару не допускається.",
+        "Права на роботи, виконані за завданням Замовника, переходять до нього в обсязі, зазначеному в рахунку або технічному завданні, після повної оплати. До оплати всі права залишаються у Виконавця.",
+        "До коду можуть входити компоненти з відкритим вихідним кодом. На них поширюються їхні власні ліцензії, і ця оферта їх не скасовує та не змінює. Перелік таких компонентів передається разом із кодом.",
+        "Виконавець має право зазначати факт співпраці та загальний опис задачі у своєму портфоліо. Комерційні показники, зміст листування та дані, які Замовник позначив як конфіденційні, не публікуються.",
+      ],
+    },
+    {
+      heading: "6. Повернення коштів",
+      body: [
+        "До початку робіт — Замовник має право відмовитися та отримати всю суму назад протягом 10 банківських днів.",
+        "Після початку робіт — повертається сума за вирахуванням вартості фактично виконаного, підтвердженої переданими результатами.",
+        "Готовий продукт із каталогу після передання посилання на вихідний код поверненню не підлягає: код неможливо повернути так, щоб він перестав бути у Замовника. Це прямо відповідає статті 21 Закону Республіки Узбекистан «Про захист прав споживачів» у частині товарів, що не підлягають поверненню, і є причиною, з якої демонстрація продукту доступна до купівлі.",
+        "Якщо Виконавець не може передати оплачений продукт — наприклад, у продукту немає актуального релізу, — кошти повертаються повністю протягом 10 банківських днів, незалежно від того, скільки часу минуло з моменту оплати.",
+      ],
+    },
+    {
+      heading: "7. Відповідальність",
+      body: [
+        "Виконавець відповідає за те, що переданий код працює так, як описано в документації до нього. Помилки, виявлені протягом 30 календарних днів з моменту передання, виправляються безкоштовно.",
+        "Виконавець не відповідає за роботу коду в середовищі Замовника, якщо воно відрізняється від описаного в документації, за наслідки змін, внесених Замовником або третіми особами, та за збої сторонніх сервісів, від яких залежить код.",
+        "Розмір відповідальності Виконавця в будь-якому разі обмежено сумою, фактично отриманою від Замовника за конкретним рахунком.",
+        "Жодна зі сторін не несе відповідальності за невиконання, спричинене обставинами непереборної сили, зокрема обмеженнями доступу до мережі зв'язку та рішеннями державних органів.",
+      ],
+    },
+    {
+      heading: "8. Дані та листування",
+      body: [
+        "Обробку персональних даних описано в Політиці конфіденційності. Залишаючи заявку, Замовник підтверджує, що ознайомлений з нею.",
+        "Листування в Telegram та електронною поштою з адрес, зазначених сторонами, визнається юридично значущим. Повідомлення вважається отриманим у день надсилання.",
+        "Сторони зобов'язуються не розголошувати відомості, отримані одна від одної та позначені як конфіденційні, протягом трьох років після завершення робіт.",
+      ],
+    },
+    {
+      heading: "9. Зміна оферти",
+      body: [
+        "Виконавець має право змінити текст оферти. Нова редакція діє з дати публікації на сайті та застосовується до заявок, поданих після неї.",
+        "До вже укладених договорів застосовується та редакція, яка діяла на момент оплати. Версія документа зберігається разом із заявкою, тому встановити її можна точно.",
+      ],
+    },
+    {
+      heading: "10. Спори",
+      body: [
+        "Сторони розв'язують розбіжності шляхом переговорів. Претензія розглядається протягом 15 календарних днів з моменту отримання.",
+        "Якщо домовитися не вдалося, спір розглядається компетентним судом Республіки Узбекистан за місцезнаходженням Виконавця. Застосовується право Республіки Узбекистан.",
+      ],
+    },
+  ],
+};
+
+const pl: LegalDoc = {
+  title: "Oferta publiczna",
+  updated: "Wersja z dnia 10 września 2026 r.",
+  intro:
+    "Niniejszy dokument jest ofertą zawarcia umowy. Jest skierowany do każdego, kto składa zgłoszenie na stronie DevUz Studio. Podpisywanie odrębnego dokumentu nie jest wymagane: umowę uważa się za zawartą z chwilą opisaną w sekcji „Jak zawierana jest umowa”. Z treścią należy zapoznać się przed złożeniem zgłoszenia — po opłaceniu faktury proforma staje się ona wiążąca dla obu stron. To tłumaczenie przygotowane dla wygody. Moc prawną ma rosyjska wersja opublikowana pod adresem devuz.studio/ru/offer; w razie rozbieżności między wersjami rozstrzyga wersja rosyjska.",
+  sections: [
+    {
+      heading: "1. Kto i co oferuje",
+      body: [
+        "Wykonawca — przedsiębiorca indywidualny MAKSIMOV EGOR ANDREEVICH (DevUz Studio), Republika Uzbekistanu, miasto Taszkent. Dane rejestrowe podano na końcu dokumentu.",
+        "Zamawiający — osoba prawna lub przedsiębiorca indywidualny, który złożył zgłoszenie na stronie. Na podstawie niniejszej oferty studio nie prowadzi sprzedaży na rzecz osób fizycznych: rozliczenia odbywają się na podstawie faktury proforma przelewem bankowym.",
+        "Przedmiot — wytwarzanie oprogramowania na zlecenie Zamawiającego (usługi) oraz przekazanie praw do gotowych produktów programistycznych z katalogu studia (licencja). Warunki korzystania z gotowego kodu opisano w odrębnym dokumencie — Licencji na kod programu, która stanowi integralną część niniejszej oferty.",
+      ],
+    },
+    {
+      heading: "2. Jak zawierana jest umowa",
+      body: [
+        "Zgłoszenie na stronie jest prośbą o wystawienie faktury proforma, a nie zawarciem umowy. Na tym etapie strony nie mają wobec siebie żadnych zobowiązań, a zgłoszenie można wycofać jedną wiadomością.",
+        "Po otrzymaniu zgłoszenia Wykonawca wystawia fakturę proforma, w której wskazuje przedmiot, kwotę i termin płatności. Faktura proforma jest ważna 14 dni kalendarzowych, o ile nie wskazano w niej inaczej.",
+        "Umowę uważa się za zawartą z chwilą wpływu płatności na rachunek bankowy Wykonawcy. Opłacenie faktury proforma oznacza, że Zamawiający zapoznał się z niniejszą ofertą i Licencją na kod programu oraz akceptuje je w całości i bez zastrzeżeń.",
+        "Jeżeli płatność wpłynęła częściowo lub po upływie terminu ważności faktury proforma, Wykonawca może ją przyjąć, potwierdzając to na piśmie, albo zwrócić w ciągu 10 dni bankowych. Milczenia nie uważa się za zgodę.",
+      ],
+    },
+    {
+      heading: "3. Cena i płatność",
+      body: [
+        "Ceny na stronie podano w dolarach amerykańskich i mają charakter orientacyjny: ostateczna kwota jest ustalana w fakturze proforma. Cena w katalogu nie stanowi oferty publicznej w rozumieniu art. 369 Kodeksu cywilnego Republiki Uzbekistanu — ofertę stanowi wystawiona faktura proforma.",
+        "Płatność następuje w sumach według kursu Banku Centralnego Republiki Uzbekistanu z dnia wystawienia faktury proforma, o ile nie wskazano w niej inaczej.",
+        "Wykonawca nie jest podatnikiem podatku od wartości dodanej. W fakturze proforma zamieszcza się adnotację „Nie podlega opodatkowaniu VAT”.",
+        "Dla każdej płatności wystawiana jest elektroniczna faktura (ESF) w trybie określonym przepisami prawa. W tym celu Zamawiający będący osobą prawną jest zobowiązany podać swój numer identyfikacji podatkowej (INN) przed wystawieniem faktury proforma.",
+        "Płatności gotówką ani w kryptowalutach nie są przyjmowane.",
+      ],
+    },
+    {
+      heading: "4. Terminy i przekazanie rezultatu",
+      body: [
+        "Termin wykonania prac wskazuje się w fakturze proforma lub w uzgodnionej przez strony specyfikacji technicznej i liczy się go od dnia wpływu płatności.",
+        "Gotowy produkt z katalogu przekazuje się w ciągu 3 dni roboczych od dokonania płatności — w postaci linku do archiwum z kodem źródłowym i dokumentacją. Link jest ważny przez ograniczony czas i na prośbę Zamawiającego jest udostępniany ponownie.",
+        "Prace wykonywane na zlecenie Zamawiającego przekazuje się etapami w uzgodnionym trybie. Rezultat uważa się za odebrany, jeżeli Zamawiający nie zgłosił umotywowanych zastrzeżeń w ciągu 10 dni roboczych od jego przekazania.",
+        "Termin ulega przesunięciu o czas, w którym Wykonawca oczekuje od Zamawiającego danych, dostępów lub decyzji, bez których nie można kontynuować prac. O takim oczekiwaniu Wykonawca informuje na piśmie.",
+      ],
+    },
+    {
+      heading: "5. Prawa do rezultatu",
+      body: [
+        "Prawa do gotowych produktów z katalogu przekazuje się na warunkach Licencji na kod programu. Zamawiający uzyskuje prawo do korzystania z kodu, jego modyfikowania i uruchamiania we własnych projektach; odsprzedaż kodu źródłowego jako samodzielnego towaru jest niedozwolona.",
+        "Prawa do prac wykonanych na zlecenie Zamawiającego przechodzą na niego w zakresie wskazanym w fakturze proforma lub specyfikacji technicznej, po dokonaniu pełnej płatności. Do chwili zapłaty wszystkie prawa pozostają przy Wykonawcy.",
+        "Kod może zawierać komponenty o otwartym kodzie źródłowym. Obowiązują je ich własne licencje, a niniejsza oferta ich nie uchyla ani nie zmienia. Wykaz takich komponentów przekazuje się wraz z kodem.",
+        "Wykonawca ma prawo informować w swoim portfolio o fakcie współpracy i podawać ogólny opis zadania. Wskaźniki handlowe, treść korespondencji oraz dane, które Zamawiający oznaczył jako poufne, nie są publikowane.",
+      ],
+    },
+    {
+      heading: "6. Zwrot",
+      body: [
+        "Przed rozpoczęciem prac — Zamawiający może odstąpić od umowy i otrzymać zwrot całej kwoty w ciągu 10 dni bankowych.",
+        "Po rozpoczęciu prac — zwracana jest kwota pomniejszona o wartość prac faktycznie wykonanych, potwierdzoną przekazanymi rezultatami.",
+        "Gotowy produkt z katalogu po przekazaniu linku do kodu źródłowego nie podlega zwrotowi: kodu nie da się zwrócić tak, aby przestał znajdować się w posiadaniu Zamawiającego. Jest to wprost zgodne z art. 21 ustawy Republiki Uzbekistanu „O ochronie praw konsumentów” w części dotyczącej towarów niepodlegających zwrotowi i stanowi powód, dla którego demonstracja produktu jest dostępna przed zakupem.",
+        "Jeżeli Wykonawca nie może przekazać opłaconego produktu — na przykład gdy produkt nie ma aktualnego wydania — pieniądze zwraca się w całości w ciągu 10 dni bankowych, niezależnie od tego, ile czasu upłynęło od dokonania płatności.",
+      ],
+    },
+    {
+      heading: "7. Odpowiedzialność",
+      body: [
+        "Wykonawca odpowiada za to, że przekazany kod działa w sposób opisany w dołączonej do niego dokumentacji. Błędy wykryte w ciągu 30 dni kalendarzowych od przekazania są usuwane nieodpłatnie.",
+        "Wykonawca nie odpowiada za działanie kodu w środowisku Zamawiającego, jeżeli różni się ono od opisanego w dokumentacji, za skutki zmian wprowadzonych przez Zamawiającego lub osoby trzecie ani za awarie usług zewnętrznych, od których kod zależy.",
+        "Odpowiedzialność Wykonawcy jest w każdym przypadku ograniczona do kwoty faktycznie otrzymanej od Zamawiającego na podstawie danej faktury proforma.",
+        "Żadna ze stron nie ponosi odpowiedzialności za niewykonanie zobowiązań spowodowane siłą wyższą, w tym ograniczeniami dostępu do sieci telekomunikacyjnych i decyzjami organów państwowych.",
+      ],
+    },
+    {
+      heading: "8. Dane i korespondencja",
+      body: [
+        "Przetwarzanie danych osobowych opisano w Polityce prywatności. Składając zgłoszenie, Zamawiający potwierdza, że się z nią zapoznał.",
+        "Korespondencję prowadzoną w Telegramie i pocztą elektroniczną z adresów wskazanych przez strony uznaje się za prawnie wiążącą. Wiadomość uważa się za otrzymaną w dniu jej wysłania.",
+        "Strony zobowiązują się nie ujawniać informacji otrzymanych od siebie nawzajem i oznaczonych jako poufne przez trzy lata od zakończenia prac.",
+      ],
+    },
+    {
+      heading: "9. Zmiana oferty",
+      body: [
+        "Wykonawca ma prawo zmienić treść oferty. Nowa wersja obowiązuje od dnia jej opublikowania na stronie i ma zastosowanie do zgłoszeń złożonych po tej dacie.",
+        "Do umów już zawartych stosuje się wersję obowiązującą w chwili dokonania płatności. Wersja dokumentu jest zapisywana razem ze zgłoszeniem, dzięki czemu można ją dokładnie ustalić.",
+      ],
+    },
+    {
+      heading: "10. Spory",
+      body: [
+        "Strony rozstrzygają spory w drodze negocjacji. Reklamacja jest rozpatrywana w ciągu 15 dni kalendarzowych od jej otrzymania.",
+        "W razie nieosiągnięcia porozumienia spór rozpoznaje właściwy sąd Republiki Uzbekistanu według siedziby Wykonawcy. Prawem właściwym jest prawo Republiki Uzbekistanu.",
+      ],
+    },
+  ],
+};
+
+export const offer: Record<Locale, LegalDoc> = { ru, en, uz, zh, uk, pl };

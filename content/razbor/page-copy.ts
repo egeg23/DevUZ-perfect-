@@ -119,3 +119,51 @@ export const tenderCopy: Record<RazborLocale, Partial<Copy>> = {
     ctaButton: "Tenderni muhokama qilish",
   },
 };
+
+/**
+ * Раздел на украинском и польском — без своих статей.
+ *
+ * Отдельный набор, а не ещё два ключа в `razborCopy`: у этих языков нет
+ * статьи, и подписи вроде «Как есть» / «Что делаем» им не нужны. Здесь
+ * только то, что видит человек на странице списка.
+ */
+export type RazborBorrowedCopy = {
+  kicker: string;
+  title: string;
+  lead: string;
+  /** Честная строка о том, на каких языках выходят статьи. */
+  languageNote: string;
+  /** Метка языка на карточке: «RU». */
+  badge: string;
+  /** Подпись ссылки на карточке. */
+  readIn: string;
+  empty: string;
+  anonymous: string;
+};
+
+export const razborBorrowedCopy: Record<"uk" | "pl", RazborBorrowedCopy> = {
+  uk: {
+    kicker: "розбори",
+    title: "Розбори сайтів",
+    lead: "Щодня беремо один живий сайт, дивимося на нього очима клієнта й показуємо, що заважає йому продавати. Компанію не називаємо: розмова про помилки, а не про людей.",
+    languageNote:
+      "Статті поки що виходять російською та узбецькою: кожен розбір пишеться під пошукові запити бізнесу в Узбекистані. Нижче — російські версії.",
+    badge: "RU",
+    readIn: "Читати російською →",
+    empty: "Перший розбір вийде найближчим часом — російською та узбецькою.",
+    anonymous:
+      "Компанію не називаємо й посилання не даємо. Мова про типові помилки, а не про конкретних людей; на знімку назву й логотип закрито.",
+  },
+  pl: {
+    kicker: "analizy",
+    title: "Analizy stron",
+    lead: "Codziennie bierzemy jedną działającą stronę, patrzymy na nią oczami klienta i pokazujemy, co przeszkadza jej sprzedawać. Nie podajemy nazwy firmy: rozmawiamy o błędach, nie o ludziach.",
+    languageNote:
+      "Artykuły ukazują się na razie po rosyjsku i po uzbecku: każda analiza powstaje pod zapytania, które wpisują firmy w Uzbekistanie. Poniżej — wersje rosyjskie.",
+    badge: "RU",
+    readIn: "Czytaj po rosyjsku →",
+    empty: "Pierwsza analiza ukaże się wkrótce — po rosyjsku i po uzbecku.",
+    anonymous:
+      "Nie podajemy nazwy firmy ani linku. Chodzi o typowe błędy, a nie o konkretnych ludzi; nazwa i logo na zrzucie są zasłonięte.",
+  },
+};

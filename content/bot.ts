@@ -240,7 +240,111 @@ const zh: BotCopy = {
   briefMarker: "[在展示页提交了需求单并通过链接打开了机器人]",
 };
 
-const copy: Record<Locale, BotCopy> = { ru, en, uz, zh };
+const uk: BotCopy = {
+  welcome: [
+    "👋 <b>DevUz Studio</b> — розробка повного циклу в Ташкенті.",
+    "",
+    "Менеджер уже тут і чекає на ваше повідомлення. Сайти, мобільні застосунки, маркетплейси, сервіси доставки, AI-продукти на LLM і RAG.",
+    "",
+    "⚡️ Відповідаємо за 20 секунд, цілодобово. Не встигнемо — знижка 30% на проєкт.",
+    "",
+    "Розкажіть своїми словами, що потрібно зробити.",
+  ].join("\n"),
+  resumeLost: [
+    "Вітаємо! Розмова із сайту не підтягнулася — мабуть, минуло забагато часу.",
+    "",
+    "Нічого страшного: напишіть коротко, що потрібно зробити, і продовжимо звідси.",
+  ].join("\n"),
+  alreadySent: (requestNo) =>
+    [
+      `Ваша заявка <b>${requestNo}</b> уже в менеджера — він напише вам сюди.`,
+      "",
+      "Якщо хочете щось додати чи уточнити, пишіть просто тут: усе дійде разом із заявкою.",
+    ].join("\n"),
+  discount: "Перепрошуємо, за 20 секунд ми не встигли — знижка <b>30%</b> ваша. Менеджер її врахує.",
+  minuteWon: [
+    "👋 <b>DevUz Studio</b> — розробка повного циклу в Ташкенті.",
+    "",
+    "🎁 Ви встигли за першу хвилину — знижку <b>30%</b> на проєкт закріплено за вами. Менеджер урахує її в розрахунку.",
+    "",
+    "Розкажіть своїми словами, що потрібно зробити.",
+  ].join("\n"),
+  minuteLate: [
+    "👋 <b>DevUz Studio</b> — розробка повного циклу в Ташкенті.",
+    "",
+    "⏱ Хвилина на знижку вже минула, але гарантія діє: відповідаємо за 20 секунд, цілодобово. Не встигнемо — знижка 30% на проєкт.",
+    "",
+    "Розкажіть своїми словами, що потрібно зробити.",
+  ].join("\n"),
+  error:
+    "Щось пішло не так на нашому боці. Надішліть повідомлення ще раз — зазвичай із другої спроби все проходить.",
+  unknown: "Такої команди в мене немає. Просто напишіть, що потрібно зробити, — я на зв'язку.",
+  help: [
+    "<b>DevUz Studio</b>",
+    "",
+    "Опишіть завдання звичайним повідомленням — я поставлю кілька уточнювальних запитань і передам усе менеджерові разом із номером заявки.",
+    "",
+    "/ref — партнерська програма: ваше посилання й баланс",
+    "/reset — почати розмову заново",
+  ].join("\n"),
+  reset: "Готово, починаємо з чистого аркуша. Розкажіть, що потрібно зробити.",
+  resumeMarker: "[перейшов із чату на сайті в Telegram і натиснув «Старт»]",
+  briefMarker: "[надіслав бриф із вітрини й відкрив бота за посиланням]",
+};
+
+const pl: BotCopy = {
+  welcome: [
+    "👋 <b>DevUz Studio</b> — software house z Taszkentu, pełen cykl tworzenia produktu.",
+    "",
+    "Menedżer już tu jest i czeka na Twoją wiadomość. Strony internetowe, aplikacje mobilne, marketplace'y, serwisy dostaw, produkty AI oparte na LLM i RAG.",
+    "",
+    "⚡️ Odpowiadamy w 20 sekund, całą dobę. Jeśli się spóźnimy — 30% rabatu na projekt.",
+    "",
+    "Opisz własnymi słowami, czego potrzebujesz.",
+  ].join("\n"),
+  resumeLost: [
+    "Cześć! Nie udało się wczytać rozmowy ze strony — pewnie minęło zbyt dużo czasu.",
+    "",
+    "Nic nie szkodzi: napisz w dwóch słowach, czego potrzebujesz, i kontynuujemy tutaj.",
+  ].join("\n"),
+  alreadySent: (requestNo) =>
+    [
+      `Twoje zapytanie <b>${requestNo}</b> jest już u menedżera — odezwie się do Ciebie tutaj.`,
+      "",
+      "Jeśli chcesz coś dodać lub doprecyzować, pisz śmiało tutaj: wszystko trafi do niego razem z zapytaniem.",
+    ].join("\n"),
+  discount: "Przepraszamy, nie zmieściliśmy się w 20 sekundach — rabat <b>30%</b> jest Twój. Menedżer go uwzględni.",
+  minuteWon: [
+    "👋 <b>DevUz Studio</b> — software house z Taszkentu, pełen cykl tworzenia produktu.",
+    "",
+    "🎁 Udało się w pierwszej minucie — rabat <b>30%</b> na projekt jest już Twój. Menedżer uwzględni go w wycenie.",
+    "",
+    "Opisz własnymi słowami, czego potrzebujesz.",
+  ].join("\n"),
+  minuteLate: [
+    "👋 <b>DevUz Studio</b> — software house z Taszkentu, pełen cykl tworzenia produktu.",
+    "",
+    "⏱ Minuta na rabat już minęła, ale gwarancja obowiązuje: odpowiadamy w 20 sekund, całą dobę. Jeśli się spóźnimy — 30% rabatu na projekt.",
+    "",
+    "Opisz własnymi słowami, czego potrzebujesz.",
+  ].join("\n"),
+  error:
+    "Coś poszło nie tak po naszej stronie. Wyślij wiadomość jeszcze raz — zwykle za drugim razem wszystko działa.",
+  unknown: "Nie znam takiej komendy. Po prostu napisz, czego potrzebujesz — jestem tutaj.",
+  help: [
+    "<b>DevUz Studio</b>",
+    "",
+    "Opisz zadanie zwykłą wiadomością — zadam kilka pytań doprecyzowujących i przekażę wszystko menedżerowi razem z numerem zapytania.",
+    "",
+    "/ref — program partnerski: Twój link i saldo",
+    "/reset — zacznij rozmowę od nowa",
+  ].join("\n"),
+  reset: "Gotowe, zaczynamy od czystej karty. Napisz, czego potrzebujesz.",
+  resumeMarker: "[przeszedł z czatu na stronie do Telegrama i nacisnął „Start”]",
+  briefMarker: "[wysłał brief z witryny i otworzył bota przez link]",
+};
+
+const copy: Record<Locale, BotCopy> = { ru, en, uz, zh, uk, pl };
 
 export function botCopy(locale: Locale): BotCopy {
   return copy[locale] ?? ru;

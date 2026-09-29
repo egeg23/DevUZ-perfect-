@@ -1,6 +1,13 @@
 /**
- * Четыре локали сайта. Порядок важен: он определяет порядок в переключателе
+ * Шесть локалей сайта. Порядок важен: он определяет порядок в переключателе
  * языка и в hreflang-разметке.
+ *
+ * Украинский и польский стоят последними, а не рядом с русским по
+ * алфавиту или по семье языков. Порядок — это приоритет рынков: первые
+ * четыре пункта — те, на которых к студии приходят клиенты из Узбекистана
+ * и её партнёры, и те, на которых написаны разборы. Новые языки
+ * добавились позже, и сдвигать ради них привычные места в переключателе
+ * значило бы переучивать тех, кто уже ходит по сайту.
  *
  * `ru` намеренно без региона — русскоязычная выдача Узбекистана, России и
  * Казахстана обслуживается одной страницей, сужать её до `ru-UZ` значит
@@ -8,7 +15,7 @@
  * встречается практически только в Узбекистане, и явный сигнал помогает
  * геотаргетингу.
  */
-export const locales = ["ru", "en", "uz", "zh"] as const;
+export const locales = ["ru", "en", "uz", "zh", "uk", "pl"] as const;
 export type Locale = (typeof locales)[number];
 
 export const defaultLocale: Locale = "ru";
@@ -19,6 +26,25 @@ export const hreflang: Record<Locale, string> = {
   en: "en",
   uz: "uz-UZ",
   zh: "zh-Hans",
+  // Без региона, как и русский: по-украински и по-польски читают не
+  // только в Украине и Польше, и сужать страницу до одной страны незачем.
+  uk: "uk",
+  pl: "pl",
+};
+
+/**
+ * Локаль Open Graph — язык_СТРАНА, как её ждут Facebook и Telegram.
+ *
+ * Отдельная таблица, а не hreflang с заменой дефиса: у hreflang регион
+ * есть не везде (`ru`, `uk`, `pl`), а Open Graph без региона не принимает.
+ */
+export const ogLocale: Record<Locale, string> = {
+  ru: "ru_RU",
+  en: "en_US",
+  uz: "uz_UZ",
+  zh: "zh_CN",
+  uk: "uk_UA",
+  pl: "pl_PL",
 };
 
 /** Подпись в переключателе языка — всегда на самом языке. */
@@ -27,6 +53,8 @@ export const localeLabel: Record<Locale, string> = {
   en: "English",
   uz: "O‘zbekcha",
   zh: "中文",
+  uk: "Українська",
+  pl: "Polski",
 };
 
 /** Короткая подпись для компактного переключателя в шапке. */
@@ -35,6 +63,8 @@ export const localeShort: Record<Locale, string> = {
   en: "EN",
   uz: "UZ",
   zh: "中文",
+  uk: "UK",
+  pl: "PL",
 };
 
 export function isLocale(value: string | undefined): value is Locale {
@@ -67,6 +97,8 @@ export function matchLocale(acceptLanguage: string | null): Locale {
     if (tag.startsWith("uz")) return tag.includes("cyrl") ? "ru" : "uz";
     if (tag.startsWith("ru")) return "ru";
     if (tag.startsWith("en")) return "en";
+    if (tag.startsWith("uk")) return "uk";
+    if (tag.startsWith("pl")) return "pl";
     // Языки постсоветского пространства чаще всего означают, что человеку
     // комфортнее на русском, чем на английском.
     if (["kk", "ky", "tg", "tk", "be", "hy", "az"].some((l) => tag.startsWith(l))) {
