@@ -84,3 +84,24 @@ export function pick<D extends Record<string, Tr<Msg>>>(dict: D, locale: PanelLo
 export function tr<T>(value: Tr<T>, locale: PanelLocale): T {
   return value[locale];
 }
+
+/** Тег для Intl: даты, числа, суммы. Узбекский — латиница, как вся панель. */
+export const PANEL_INTL: Record<PanelLocale, string> = { ru: "ru-RU", uz: "uz-Latn-UZ", pl: "pl-PL" };
+
+/**
+ * Форма слова при числе: русский и польский.
+ *
+ * Правила разные в одном месте: по-русски 21 лид — «лид», по-польски 21
+ * leadów — «many»: единственное число у поляков только у самой единицы.
+ * В узбекском после числа слово не меняется («3 ta lid»), поэтому
+ * узбекской ветки нет — узбекская строка пишется без этой функции.
+ */
+export function plural(locale: "ru" | "pl", n: number, one: string, few: string, many: string): string {
+  const abs = Math.abs(Math.trunc(n));
+  const d10 = abs % 10;
+  const d100 = abs % 100;
+  const isFew = d10 >= 2 && d10 <= 4 && (d100 < 12 || d100 > 14);
+  if (locale === "pl") return abs === 1 ? one : isFew ? few : many;
+  if (d10 === 1 && d100 !== 11) return one;
+  return isFew ? few : many;
+}

@@ -257,3 +257,11 @@ test("русская инструкция зовёт разделы так, ка
 declare global {
   var __pathname: string | undefined;
 }
+
+test("формы слова при числе: русский и польский считают по-разному", async () => {
+  const { plural } = await import("@/lib/admin/i18n");
+  const ru = (n: number) => plural("ru", n, "лид", "лида", "лидов");
+  assert.deepEqual([1, 2, 5, 11, 21, 22, 25, 112].map(ru), ["лид", "лида", "лидов", "лидов", "лид", "лида", "лидов", "лидов"]);
+  const pl = (n: number) => plural("pl", n, "lead", "leady", "leadów");
+  assert.deepEqual([1, 2, 5, 12, 21, 22, 25, 0].map(pl), ["lead", "leady", "leadów", "leadów", "leadów", "leady", "leadów", "leadów"]);
+});
