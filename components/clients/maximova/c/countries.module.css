@@ -1,0 +1,852 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Прототип C — «Две страны».
+
+   Бумага детской книги, тёмно-синие чернила, красный лондонский и синий
+   парижский. Параллакс — только у декоративных слоёв, у которых нет ни
+   нажатий, ни текста для чтения вслух.
+
+   Шкалы общие: размеры 12…72, отступы 4…128, веса 400/700, радиус 16 px.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.page {
+  --paper: hsl(40 45% 95%);
+  --paper-2: hsl(38 40% 90%);
+  --card: hsl(40 60% 99%);
+  --ink: hsl(222 40% 18%);
+  --muted: hsl(222 14% 40%);
+  --line: hsl(36 24% 80%);
+  --red: hsl(4 70% 48%);
+  --blue: hsl(220 60% 40%);
+  --sun: hsl(40 92% 62%);
+  --radius: 16px;
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --pop: cubic-bezier(0.34, 1.5, 0.5, 1);
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--mx-golos), system-ui, sans-serif;
+  font-size: clamp(16px, 15.12px + 0.233vw, 18px);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  /* Отступ первого блока не выпадает наружу, где виден чужой фон. */
+  display: flow-root;
+}
+
+/* Пока сайт живёт на devuz.studio, корневой layout студии подключает её
+   глобальные стили: тёмный фон body и сброс отступов Tailwind. Здесь фон и
+   отступы заданы явно, чтобы после переезда на свой домен, где этих стилей
+   не будет, страница выглядела так же. */
+:global(body):has(.page) {
+  margin: 0;
+  background: hsl(40 45% 95%);
+}
+
+.page :where(p, h1, h2, h3, blockquote, figure, ul, fieldset) {
+  margin: 0;
+}
+
+.page :where(img) {
+  max-width: 100%;
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.page img {
+  object-fit: cover;
+}
+
+.page a {
+  color: inherit;
+}
+
+/* ── Первый экран ─────────────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.heroText {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 64px 24px 24px;
+  text-align: center;
+}
+
+.heroText > * {
+  animation: rise 900ms var(--ease) both;
+}
+
+.heroText > :nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.heroText > :nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.heroText > :nth-child(4) {
+  animation-delay: 360ms;
+}
+
+.kicker {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.title {
+  margin: 0 0 24px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(48px, 42.7px + 1.395vw, 60px);
+  line-height: 1.05;
+}
+
+.title em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--blue);
+}
+
+.lead {
+  margin: 0 0 32px;
+  font-size: clamp(18px, 16.23px + 0.465vw, 20px);
+  color: var(--muted);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 32px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--red);
+  color: hsl(0 0% 100%) !important;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 0 hsl(4 60% 34%);
+  transition: transform 200ms var(--ease);
+}
+
+.cta:hover {
+  transform: translateY(-2px);
+}
+
+.cta:active {
+  transform: translateY(2px);
+}
+
+.cta:focus-visible,
+.bookOption:focus-visible,
+.faqItem summary:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+}
+
+.scene {
+  position: relative;
+  min-height: 280px;
+  pointer-events: none;
+}
+
+.layer {
+  position: absolute;
+  inset: -8% 0 0 0;
+  width: 100%;
+  height: 108%;
+  will-change: transform;
+}
+
+/* На телефоне сцена ровно в пропорцию рисунка: обрезка по краям съела бы
+   и Биг-Бен, и Эйфелеву башню, оставив пустое небо посередине. */
+@media (max-width: 899px) {
+  .hero {
+    min-height: auto;
+  }
+
+  .scene {
+    min-height: 0;
+    aspect-ratio: 1440 / 600;
+    margin-top: 24px;
+  }
+}
+
+@media (min-width: 900px) {
+  .heroText {
+    padding-top: 96px;
+  }
+
+  .title {
+    font-size: clamp(60px, 54.7px + 1.395vw, 72px);
+  }
+}
+
+/* ── Секции ───────────────────────────────────────────────────────────── */
+
+.section {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 96px 24px 0;
+}
+
+.h2 {
+  margin: 0 0 16px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(30px, 27.35px + 0.698vw, 36px);
+  line-height: 1.2;
+}
+
+.h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.muted {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.name {
+  margin: 0 0 16px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--blue);
+}
+
+/* Знакомство — открытка ложится на стол, печать «шлёпается» сверху. */
+.meet {
+  display: grid;
+  gap: 48px;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .meet {
+    grid-template-columns: 5fr 7fr;
+  }
+}
+
+.postcard {
+  position: relative;
+  margin: 0 auto;
+  width: min(100%, 400px);
+  padding: 12px 12px 48px;
+  background: var(--card);
+  border-radius: 4px;
+  box-shadow: 0 10px 24px hsla(222, 40%, 18%, 0.18);
+  transform: rotate(-3deg);
+  transition:
+    opacity 800ms var(--ease),
+    transform 900ms var(--ease);
+}
+
+:global(.mx-js) .postcard:not([data-shown]) {
+  opacity: 0;
+  transform: rotate(-12deg) translateY(48px);
+}
+
+.postcardPhoto {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+
+.stamp {
+  position: absolute;
+  right: -12px;
+  bottom: 16px;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border: 4px double var(--red);
+  border-radius: 50%;
+  color: var(--red);
+  font-weight: 700;
+  font-size: 20px;
+  background: hsla(40, 60%, 99%, 0.9);
+  transform: rotate(12deg);
+  transition:
+    opacity 300ms 700ms var(--ease),
+    transform 500ms 700ms var(--pop);
+}
+
+:global(.mx-js) .postcard:not([data-shown]) .stamp {
+  opacity: 0;
+  transform: rotate(12deg) scale(1.8);
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list li {
+  position: relative;
+  padding-left: 32px;
+}
+
+.list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 16px;
+  height: 2px;
+  background: var(--red);
+}
+
+/* Языки — две страницы паспорта раскрываются от корешка. */
+.passports {
+  display: grid;
+  gap: 16px;
+  perspective: 1400px;
+}
+
+@media (min-width: 720px) {
+  .passports {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.passport {
+  padding: 32px 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 6px hsla(222, 40%, 18%, 0.08);
+  transform-origin: 0 50%;
+  transition:
+    opacity 700ms calc(var(--i) * 200ms) var(--ease),
+    transform 1000ms calc(var(--i) * 200ms) var(--ease);
+}
+
+.passport:nth-child(1) {
+  border-top: 8px solid var(--red);
+}
+
+.passport:nth-child(2) {
+  border-top: 8px solid var(--blue);
+}
+
+:global(.mx-js) .passport:not([data-shown]) {
+  opacity: 0;
+  transform: rotateY(-70deg);
+}
+
+.greeting {
+  margin: 0 0 8px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-style: italic;
+  font-size: 48px;
+  line-height: 1.1;
+}
+
+.passport:nth-child(1) .greeting {
+  color: var(--red);
+}
+
+.passport:nth-child(2) .greeting {
+  color: var(--blue);
+}
+
+/* Программы — самолётик перелетает от младших к старшим. */
+.route {
+  position: relative;
+  display: grid;
+  gap: 24px;
+  margin-top: 32px;
+  padding-top: 64px;
+}
+
+@media (min-width: 720px) {
+  .route {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.routeLine {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px dashed var(--line);
+}
+
+.plane {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 48px;
+  height: 48px;
+  color: var(--blue);
+  transform: translateX(calc(100cqw - 48px)) rotate(45deg);
+  transition:
+    transform 1800ms 200ms var(--ease),
+    opacity 400ms var(--ease);
+}
+
+.route {
+  container-type: inline-size;
+}
+
+:global(.mx-js) .route:not([data-shown]) .plane {
+  opacity: 0;
+  transform: translateX(0) rotate(45deg);
+}
+
+.stop {
+  padding: 24px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 6px hsla(222, 40%, 18%, 0.08);
+  transition:
+    opacity 600ms calc(var(--i) * 700ms + 200ms) var(--ease),
+    transform 600ms calc(var(--i) * 700ms + 200ms) var(--pop);
+}
+
+:global(.mx-js) .route:not([data-shown]) .stop {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.stopRange {
+  margin: 0 0 8px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1.1;
+  color: var(--blue);
+}
+
+/* Время — стрелка доходит до 45 минут. */
+.time {
+  display: grid;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (min-width: 720px) {
+  .time {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+.clock {
+  position: relative;
+  width: min(240px, 60vw);
+  aspect-ratio: 1;
+  color: var(--ink);
+}
+
+.clock svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hand {
+  position: absolute;
+  left: calc(50% - 3px);
+  top: 16%;
+  width: 6px;
+  height: 34%;
+  border-radius: 3px;
+  background: var(--red);
+  transform-origin: 50% 100%;
+  transform: rotate(270deg);
+  transition: transform 2000ms 200ms var(--ease);
+}
+
+:global(.mx-js) .clock:not([data-shown]) .hand {
+  transform: rotate(0deg);
+}
+
+.hub {
+  position: absolute;
+  left: calc(50% - 8px);
+  top: calc(50% - 8px);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+/* Принцип — записка прилипает к странице с лёгким доворотом. */
+.note {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 48px 32px 32px;
+  background: hsl(48 96% 86%);
+  box-shadow: 0 10px 24px hsla(222, 40%, 18%, 0.16);
+  transform: rotate(-1deg);
+  transition:
+    opacity 600ms var(--ease),
+    transform 800ms var(--pop);
+}
+
+.note::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: calc(50% - 48px);
+  width: 96px;
+  height: 24px;
+  background: hsla(200, 40%, 70%, 0.7);
+  transform: rotate(-3deg);
+}
+
+:global(.mx-js) .note:not([data-shown]) {
+  opacity: 0;
+  transform: rotate(6deg) translateY(-32px) scale(1.04);
+}
+
+.noteTitle {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.noteQuote {
+  margin: 0;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: clamp(24px, 21.35px + 0.698vw, 30px);
+  line-height: 1.35;
+}
+
+/* Курс для мам — снимок в арке, внутри арки свой параллакс. */
+.moms {
+  display: grid;
+  gap: 48px;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .moms {
+    grid-template-columns: 5fr 7fr;
+  }
+}
+
+.arch {
+  position: relative;
+  width: min(100%, 360px);
+  margin: 0 auto;
+  aspect-ratio: 3 / 4;
+  border-radius: 999px 999px var(--radius) var(--radius);
+  overflow: hidden;
+  border: 8px solid var(--card);
+  box-shadow: 0 10px 24px hsla(222, 40%, 18%, 0.18);
+}
+
+.archInner {
+  position: absolute;
+  inset: -12% 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.momsText {
+  transition:
+    opacity 800ms var(--ease),
+    transform 800ms var(--ease);
+}
+
+:global(.mx-js) .momsText:not([data-shown]) {
+  opacity: 0;
+  transform: translateX(32px);
+}
+
+/* Цель — письмо разворачивается сверху вниз. */
+.letter {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 48px 32px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transform-origin: 50% 0;
+  transition:
+    opacity 600ms var(--ease),
+    transform 1000ms var(--ease);
+}
+
+:global(.mx-js) .letter:not([data-shown]) {
+  opacity: 0;
+  transform: perspective(1200px) rotateX(-60deg);
+}
+
+.letterQuote {
+  margin: 0 0 16px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-style: italic;
+  font-size: clamp(20px, 18.23px + 0.465vw, 24px);
+  line-height: 1.45;
+}
+
+.sign {
+  margin: 0;
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* Вопросы. */
+.faq {
+  max-width: 800px;
+}
+
+.faqItem {
+  border-bottom: 1px solid var(--line);
+}
+
+.faqItem summary {
+  cursor: pointer;
+  padding: 16px 0;
+  font-weight: 700;
+  list-style: none;
+}
+
+.faqItem summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqItem summary::after {
+  content: "+";
+  float: right;
+  color: var(--red);
+}
+
+.faqItem[open] summary::after {
+  content: "−";
+}
+
+.faqItem p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.missing {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.missing span {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+.missingRow {
+  display: grid;
+  gap: 8px;
+  margin-top: 32px;
+}
+
+@media (min-width: 720px) {
+  .missingRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Запись — конверт. */
+.envelope {
+  padding: 32px 24px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 6px hsla(222, 40%, 18%, 0.08);
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--red) 0 12px,
+    var(--card) 12px 24px,
+    var(--blue) 24px 36px,
+    var(--card) 36px 48px
+  );
+  background-size: 100% 8px;
+  background-repeat: no-repeat;
+}
+
+@media (min-width: 900px) {
+  .envelope {
+    padding: 48px;
+  }
+}
+
+.bookRoot {
+  display: grid;
+  gap: 24px;
+  max-width: 560px;
+}
+
+.bookGroup {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.bookLabel {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bookOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bookOption {
+  min-height: 48px;
+  padding: 0 24px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.bookOptionOn {
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.bookNote {
+  padding: 24px;
+  background: var(--paper);
+  border-radius: 12px;
+  color: var(--muted);
+  animation: rise 500ms var(--ease) both;
+}
+
+.bookNote p {
+  margin: 0 0 8px;
+}
+
+.bookNote button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bookMessage {
+  color: var(--ink);
+  font-style: italic;
+}
+
+.footer {
+  margin-top: 96px;
+  padding: 48px 24px 128px;
+  text-align: center;
+  background: var(--paper-2);
+  color: var(--muted);
+}
+
+.footer p {
+  margin: 0 0 8px;
+}
+
+.credit {
+  margin-top: 24px !important;
+  font-size: 14px;
+}
+
+.dock {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  border-radius: 999px;
+  background: var(--red);
+  color: hsl(0 0% 100%) !important;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 24px hsla(222, 40%, 18%, 0.28);
+  transition:
+    opacity 400ms var(--ease),
+    transform 400ms var(--ease);
+}
+
+/* Пока видна кнопка первого экрана, вторая такая же не нужна: две равные
+   кнопки рядом читаются как ноль кнопок. */
+:global(.mx-js) .dock:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(24px);
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .dock {
+    display: none;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .layer,
+  .archInner {
+    transform: none !important;
+  }
+}

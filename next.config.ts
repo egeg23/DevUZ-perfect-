@@ -72,6 +72,13 @@ const config: NextConfig = {
       // проверять догадку о матчере каждый раз при обновлении Next.
       { source: "/admin", headers: admin },
       { source: "/admin/:path*", headers: admin },
+      // Сайт Дарьи Максимовой, пока он живёт на нашем домене. Когда он
+      // переедет на её домен, копия здесь отбирала бы у него выдачу.
+      // Мета-тег стоит в app/maximova/layout.tsx; заголовок закрывает и то,
+      // что не HTML, — например, её фотографии в Google Картинках.
+      { source: "/maximova", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      { source: "/maximova/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      { source: "/clients/maximova/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
       // Страница заказа: чужие реквизиты и счёт по неугадываемой ссылке.
       // Мета-тег noindex на ней уже стоит, но он не действует на ответы,
       // которые не HTML, и не защищает от кэша браузера на общем ноутбуке.

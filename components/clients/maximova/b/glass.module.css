@@ -1,0 +1,979 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Прототип B — «Стекло».
+
+   Светлый фон, плоские цветные фигуры и матовое стекло поверх. Никакого
+   свечения: фигуры залиты ровным цветом, глубину дают размытие стекла, его
+   светлая кромка и тени из шкалы.
+
+   Шкалы те же, что у остальных: размеры 12…72, отступы 4…128, веса 400/700,
+   один радиус — 24 px, потому что стекло круглое.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.page {
+  --bg: hsl(220 40% 97%);
+  --text: hsl(224 30% 14%);
+  --muted: hsl(222 14% 40%);
+  --line: hsla(224, 30%, 14%, 0.12);
+  --accent: hsl(222 78% 52%);
+  --accent-ink: hsl(0 0% 100%);
+  --accent-soft: hsl(222 90% 94%);
+  --radius: 24px;
+  --spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+
+  position: relative;
+  min-height: 100svh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mx-golos), system-ui, sans-serif;
+  font-size: clamp(16px, 15.12px + 0.233vw, 18px);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  /* Отступ первого блока не выпадает наружу, где виден чужой фон. */
+  display: flow-root;
+  isolation: isolate;
+}
+
+/* Французский — коралловый. Меняется мгновенно, без перерисовки на кадрах. */
+.page[data-lang="fr"] {
+  --accent: hsl(356 72% 52%);
+  --accent-soft: hsl(356 90% 95%);
+}
+
+/* Пока сайт живёт на devuz.studio, корневой layout студии подключает её
+   глобальные стили: тёмный фон body и сброс отступов Tailwind. Здесь фон и
+   отступы заданы явно, чтобы после переезда на свой домен, где этих стилей
+   не будет, страница выглядела так же. */
+:global(body):has(.page) {
+  margin: 0;
+  background: hsl(220 40% 97%);
+}
+
+.page :where(p, h1, h2, h3, blockquote, figure, ul, fieldset) {
+  margin: 0;
+}
+
+.page :where(img) {
+  max-width: 100%;
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.page img {
+  object-fit: cover;
+}
+
+.page a {
+  color: inherit;
+}
+
+/* ── Фигуры за стеклом ────────────────────────────────────────────────── */
+
+.shapes {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.shapeA {
+  width: 64vmax;
+  height: 64vmax;
+  top: -24vmax;
+  left: -20vmax;
+  background: hsl(222 90% 72%);
+}
+
+.shapeB {
+  width: 48vmax;
+  height: 48vmax;
+  top: 30vh;
+  right: -24vmax;
+  background: hsl(356 90% 78%);
+  border-radius: 40% 60% 55% 45%;
+}
+
+.shapeC {
+  width: 32vmax;
+  height: 32vmax;
+  bottom: -12vmax;
+  left: 12vw;
+  background: hsl(46 96% 68%);
+}
+
+.shapeD {
+  width: 20vmax;
+  height: 20vmax;
+  top: 12vh;
+  right: 20vw;
+  background: hsl(160 60% 70%);
+  border-radius: 30%;
+}
+
+/* Дрейф фигур — только на больших экранах с мышью. На телефоне размытие
+   поверх движущегося фона пересчитывалось бы каждый кадр. */
+@media (min-width: 900px) and (hover: hover) {
+  .shapeA {
+    animation: drift 28s ease-in-out infinite alternate;
+  }
+
+  .shapeB {
+    animation: drift 34s ease-in-out -8s infinite alternate-reverse;
+  }
+
+  .shapeC {
+    animation: drift 30s ease-in-out -4s infinite alternate;
+  }
+
+  .shapeD {
+    animation: spin 60s linear infinite;
+  }
+}
+
+/* ── Стекло ───────────────────────────────────────────────────────────── */
+
+.glass {
+  background: hsla(0, 0%, 100%, 0.52);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid hsla(0, 0%, 100%, 0.7);
+  border-radius: var(--radius);
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.9),
+    0 10px 24px hsla(224, 40%, 20%, 0.12);
+}
+
+/* Где стекло не поддерживается — просто светлая панель. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: hsla(0, 0%, 100%, 0.92);
+  }
+}
+
+.bar {
+  position: sticky;
+  top: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 12px 16px 0;
+  padding: 8px 8px 8px 24px;
+  border-radius: 999px;
+  background: hsla(0, 0%, 100%, 0.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  backdrop-filter: blur(16px) saturate(1.6);
+  border: 1px solid hsla(0, 0%, 100%, 0.7);
+  box-shadow: 0 4px 6px hsla(224, 40%, 20%, 0.08);
+}
+
+@media (min-width: 900px) {
+  .bar {
+    max-width: 1152px;
+    margin: 16px auto 0;
+  }
+}
+
+.brand {
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.barLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink) !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ── Первый экран ─────────────────────────────────────────────────────── */
+
+.hero {
+  display: grid;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    grid-template-columns: 7fr 5fr;
+    align-items: center;
+    padding: 64px 24px 96px;
+    min-height: calc(100svh - 80px);
+  }
+}
+
+.heroCard {
+  padding: 32px 24px;
+  animation: condense 900ms var(--ease) both;
+}
+
+@media (min-width: 900px) {
+  .heroCard {
+    padding: 48px;
+  }
+}
+
+.hello {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.helloWords {
+  display: grid;
+  margin: 0;
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.2;
+  color: var(--accent);
+}
+
+.helloWord {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 400ms var(--ease),
+    transform 400ms var(--ease);
+}
+
+.helloWord[data-on] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.switch {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  justify-self: start;
+  padding: 4px;
+  border-radius: 999px;
+  background: hsla(224, 30%, 14%, 0.06);
+  border: 1px solid var(--line);
+}
+
+.drop {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 999px;
+  background: hsla(0, 0%, 100%, 0.9);
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100%),
+    0 1px 3px hsla(224, 40%, 20%, 0.24);
+  transition: transform 500ms var(--spring);
+  pointer-events: none;
+}
+
+.drop[data-at="fr"] {
+  transform: translateX(100%);
+}
+
+.switchOption {
+  position: relative;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.switchOption[aria-pressed="false"] {
+  color: var(--muted);
+}
+
+.title {
+  margin: 0 0 16px;
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(36px, 30.7px + 1.395vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  margin: 0 0 24px;
+  font-size: clamp(18px, 16.23px + 0.465vw, 20px);
+  color: var(--muted);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 32px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink) !important;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 6px hsla(224, 40%, 20%, 0.22);
+  transition: transform 300ms var(--spring);
+}
+
+.cta:hover {
+  transform: scale(1.04);
+}
+
+.cta:active {
+  transform: scale(0.97);
+}
+
+.cta:focus-visible,
+.switchOption:focus-visible,
+.bookOption:focus-visible,
+.barLink:focus-visible,
+.faqItem summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.heroPhoto {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 10px 24px hsla(224, 40%, 20%, 0.18);
+  animation: droplet 1100ms 200ms var(--spring) both;
+}
+
+.heroPhoto img {
+  object-position: 50% 35%;
+}
+
+.badge {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 14px;
+  animation: condense 700ms 900ms var(--ease) both;
+}
+
+.badge strong {
+  display: block;
+  font-size: 18px;
+}
+
+/* ── Секции ───────────────────────────────────────────────────────────── */
+
+.main {
+  display: grid;
+  gap: 96px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px 96px;
+}
+
+@media (min-width: 900px) {
+  .main {
+    padding: 0 24px 128px;
+  }
+}
+
+.h2 {
+  margin: 0 0 24px;
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(30px, 27.35px + 0.698vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.h3 {
+  margin: 0 0 8px;
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* О Дарье — плитки «капают» на место с упругим отскоком. */
+.bento {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 720px) {
+  .bento {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .tileWide {
+    grid-column: span 2;
+  }
+}
+
+.tile {
+  padding: 24px;
+  transition:
+    opacity 700ms calc(var(--i) * 110ms) var(--ease),
+    transform 800ms calc(var(--i) * 110ms) var(--spring);
+}
+
+.tile p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.tileBig {
+  margin-bottom: 8px !important;
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text) !important;
+}
+
+.tileNum {
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-size: 60px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--accent) !important;
+}
+
+:global(.mx-js) .tile:not([data-shown]) {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* Программы — наклоняются к зрителю, как страница на подставке. */
+.ages {
+  display: grid;
+  gap: 16px;
+  perspective: 1200px;
+}
+
+@media (min-width: 720px) {
+  .ages {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.age {
+  padding: 32px 24px;
+  transform-origin: 50% 100%;
+  transition:
+    opacity 800ms calc(var(--i) * 160ms) var(--ease),
+    transform 900ms calc(var(--i) * 160ms) var(--ease);
+}
+
+.age p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+:global(.mx-js) .age:not([data-shown]) {
+  opacity: 0;
+  transform: rotateX(24deg) translateY(32px);
+}
+
+.ageRange {
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-size: 48px !important;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--accent) !important;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-size: 14px;
+}
+
+/* Ритм — циферблат собирается из 45 точек, по минуте. */
+.rhythmRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 640px;
+}
+
+.dial {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+  transition:
+    opacity 700ms var(--ease),
+    transform 900ms var(--spring);
+}
+
+:global(.mx-js) .dial:not([data-shown]) {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+.dialNum {
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(48px, 42.7px + 1.395vw, 60px);
+  line-height: 1;
+  color: var(--text);
+}
+
+.dots {
+  position: absolute;
+  inset: 6%;
+  container-type: inline-size;
+}
+
+/* Точка стоит в центре и уезжает к краю по своему углу. */
+.dots i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: rotate(var(--a)) translateY(-48cqw);
+  transition: opacity 200ms calc(var(--i) * 28ms + 400ms) linear;
+}
+
+:global(.mx-js) .dial:not([data-shown]) .dots i {
+  opacity: 0;
+}
+
+.why {
+  margin: 24px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Принцип — цветная плоскость выезжает сбоку. Это самое крупное на экране. */
+.rule {
+  padding: 48px 24px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  transition:
+    opacity 700ms var(--ease),
+    transform 900ms var(--ease);
+}
+
+@media (min-width: 900px) {
+  .rule {
+    padding: 64px;
+  }
+}
+
+:global(.mx-js) .rule:not([data-shown]) {
+  opacity: 0;
+  transform: translateX(-12%);
+}
+
+.ruleTitle {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ruleQuote {
+  margin: 0;
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(24px, 21.35px + 0.698vw, 30px);
+  line-height: 1.3;
+}
+
+/* Курс для мам — фото и стекло съезжаются навстречу. */
+.moms {
+  display: grid;
+  gap: 16px;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .moms {
+    grid-template-columns: 5fr 7fr;
+  }
+
+  .momsCard {
+    margin-left: -96px;
+  }
+}
+
+.momsPhoto {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition:
+    opacity 800ms var(--ease),
+    transform 900ms var(--ease);
+}
+
+.momsCard {
+  position: relative;
+  padding: 32px 24px;
+  transition:
+    opacity 800ms 150ms var(--ease),
+    transform 900ms 150ms var(--ease);
+}
+
+@media (min-width: 900px) {
+  .momsCard {
+    padding: 48px;
+  }
+}
+
+:global(.mx-js) .momsPhoto:not([data-shown]) {
+  opacity: 0;
+  transform: translateX(-48px);
+}
+
+:global(.mx-js) .momsCard:not([data-shown]) {
+  opacity: 0;
+  transform: translateX(48px);
+}
+
+.quote {
+  margin: 0;
+  padding-left: 16px;
+  border-left: 4px solid var(--accent);
+  font-style: italic;
+}
+
+/* Цель — стекло «проявляется» из тумана снизу. */
+.goal {
+  padding: 48px 24px;
+  text-align: center;
+  transition:
+    opacity 1200ms var(--ease),
+    transform 1200ms var(--ease);
+}
+
+:global(.mx-js) .goal:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(24px) scale(0.98);
+}
+
+.goalQuote {
+  margin: 0 auto 16px;
+  max-width: 32em;
+  font-family: var(--mx-manrope), system-ui, sans-serif;
+  font-size: clamp(20px, 18.23px + 0.465vw, 24px);
+  line-height: 1.4;
+}
+
+.sign {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Вопросы — по одному, лёгкой ступенькой. */
+.faq {
+  display: grid;
+  gap: 8px;
+  max-width: 800px;
+}
+
+.faqItem {
+  padding: 0 24px;
+  transition:
+    opacity 600ms calc(var(--i) * 80ms) var(--ease),
+    transform 600ms calc(var(--i) * 80ms) var(--ease);
+}
+
+:global(.mx-js) .faqItem:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.faqItem summary {
+  cursor: pointer;
+  padding: 16px 0;
+  font-weight: 700;
+  list-style: none;
+}
+
+.faqItem summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqItem summary::after {
+  content: "+";
+  float: right;
+  color: var(--accent);
+}
+
+.faqItem[open] summary::after {
+  content: "−";
+}
+
+.faqItem p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.missing {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px dashed hsla(224, 30%, 14%, 0.3);
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.missing span {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.missingRow {
+  display: grid;
+  gap: 8px;
+  margin-top: 32px;
+}
+
+@media (min-width: 720px) {
+  .missingRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Запись. */
+.book {
+  padding: 32px 24px;
+  scroll-margin-top: 96px;
+}
+
+@media (min-width: 900px) {
+  .book {
+    padding: 48px;
+  }
+}
+
+.book > p {
+  color: var(--muted);
+}
+
+.bookRoot {
+  display: grid;
+  gap: 24px;
+  max-width: 560px;
+}
+
+.bookGroup {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.bookLabel {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bookOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bookOption {
+  min-height: 48px;
+  padding: 0 24px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: hsla(0, 0%, 100%, 0.6);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.bookOptionOn {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+
+.bookNote {
+  padding: 24px;
+  border-radius: 16px;
+  background: hsla(0, 0%, 100%, 0.8);
+  color: var(--muted);
+  animation: droplet 500ms var(--spring) both;
+}
+
+.bookNote p {
+  margin: 0 0 8px;
+}
+
+.bookNote button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bookMessage {
+  color: var(--text);
+  font-style: italic;
+}
+
+.footer {
+  padding: 32px 16px 128px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.footer p {
+  margin: 0 0 8px;
+}
+
+.credit {
+  font-size: 14px;
+}
+
+.dock {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink) !important;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 24px hsla(224, 40%, 20%, 0.28);
+  transition:
+    opacity 400ms var(--ease),
+    transform 400ms var(--ease);
+}
+
+/* Пока видна кнопка первого экрана, вторая такая же не нужна: две равные
+   кнопки рядом читаются как ноль кнопок. */
+:global(.mx-js) .dock:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(24px);
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .dock {
+    display: none;
+  }
+}
+
+/* ── Кадры ────────────────────────────────────────────────────────────── */
+
+@keyframes condense {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes droplet {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(6vw, 4vh, 0) rotate(20deg);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

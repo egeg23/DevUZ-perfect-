@@ -1,0 +1,161 @@
+/* Страница выбора — нейтральная, чтобы не спорить ни с одним из вариантов. */
+
+.page {
+  min-height: 100svh;
+  background: hsl(36 30% 96%);
+  color: hsl(222 30% 16%);
+  font-family: var(--mx-golos), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+/* Пока сайт живёт на devuz.studio, корневой layout студии подключает её
+   глобальные стили: тёмный фон body и сброс отступов Tailwind. Здесь фон и
+   отступы заданы явно, чтобы после переезда на свой домен, где этих стилей
+   не будет, страница выглядела так же. */
+:global(body):has(.page) {
+  margin: 0;
+  background: hsl(36 30% 96%);
+}
+
+.page :where(p, h1, h2, h3, blockquote, figure, ul, fieldset) {
+  margin: 0;
+}
+
+.page :where(img) {
+  max-width: 100%;
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.page a {
+  color: inherit;
+}
+
+.head {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 64px 24px 32px;
+}
+
+.kicker {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(222 14% 44%);
+}
+
+.title {
+  margin: 0 0 16px;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: clamp(30px, 27.35px + 0.698vw, 36px);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.lead {
+  margin: 0;
+  font-size: 18px;
+  color: hsl(222 14% 36%);
+}
+
+.grid {
+  display: grid;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border-radius: 16px;
+  background: hsl(0 0% 100%);
+  text-decoration: none;
+  box-shadow: 0 4px 6px hsla(222, 30%, 16%, 0.1);
+  transition: transform 300ms cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card:focus-visible {
+  outline: 2px solid hsl(222 78% 52%);
+  outline-offset: 4px;
+}
+
+.shot {
+  position: relative;
+  display: block;
+  aspect-ratio: 390 / 440;
+  background: hsl(36 20% 88%);
+}
+
+.shot img {
+  object-fit: cover;
+  object-position: 50% 0;
+}
+
+.body {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 24px;
+}
+
+.letter {
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(222 14% 44%);
+}
+
+.name {
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.text {
+  color: hsl(222 14% 30%);
+}
+
+.for {
+  font-size: 14px;
+  color: hsl(222 14% 44%);
+}
+
+.open {
+  margin-top: 8px;
+  font-weight: 700;
+  color: hsl(222 78% 46%);
+}
+
+.footer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  font-size: 14px;
+  color: hsl(222 14% 40%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}
