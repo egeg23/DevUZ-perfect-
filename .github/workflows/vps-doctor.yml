@@ -367,6 +367,32 @@ jobs:
             du -sh "${MEDIA_HOST_DIR:-/var/lib/devuz/media}" 2>/dev/null | sed 's/^/промо-материалы: /' || echo "промо-материалы: папки ещё нет"
 
             echo
+            echo "════ Витрина globalex: открыта ли поиску ════"
+            # Витрина (egeg23/Global-Export) живёт на этом же сервере. С
+            # 29.09.2026 её проекты открыты поиску, а заголовок noindex в
+            # nginx её deploy.sh снимает сам — если найдёт конфиг. Здесь видно,
+            # где конфиг лежит на самом деле и что писала выкатка. Только
+            # смотрим: в TROUBLE не идёт, связь devuz.studio от этого не зависит.
+            GX=/srv/globalex
+            if [ -d "$GX/.git" ]; then
+              echo "код: $(git -C "$GX" log -1 --format='%h %ci %s' 2>/dev/null | cut -c1-100)"
+              echo "ветка площадки: $(cat /etc/globalex-branch 2>/dev/null || git -C "$GX" symbolic-ref --short HEAD 2>/dev/null)"
+            else
+              echo "· $GX не найден"
+            fi
+            echo "конфиги nginx с доменом витрины:"
+            grep -rls "globalex.maximov-tech.ru" /etc/nginx/ 2>/dev/null | sed 's/^/  /'
+            ls -l /etc/nginx/sites-enabled/ 2>/dev/null | tail -n +2 | awk '{print "  " $9, $10, $11}'
+            echo "где в nginx стоит X-Robots-Tag:"
+            grep -rn "X-Robots-Tag" /etc/nginx/ 2>/dev/null | sed 's/^/  /' || true
+            echo "снаружи:"
+            curl -sS -o /dev/null -D - --max-time 10 --noproxy '*' https://globalex.maximov-tech.ru/mavera 2>/dev/null \
+              | grep -i -E "^(HTTP|x-robots)" | sed 's/^/  /'
+            echo "выкатки витрины за 6 часов:"
+            journalctl -u globalex-autodeploy --since "-6h" --no-pager -o cat 2>/dev/null \
+              | grep -E "→|✓|✗|nginx" | tail -30 | cut -c1-200 | sed 's/^/  /'
+
+            echo
             if [ "$TROUBLE" = "0" ]; then
               echo "✓ Связь цела: код доезжает, сайт отвечает."
             else
