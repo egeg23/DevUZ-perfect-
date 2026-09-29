@@ -151,19 +151,43 @@ export function replacementsDue(t: PortionTally): number {
   return Math.max(0, Math.min(t.skipped - t.replaced, replaceLimit(t.target) - t.replaced));
 }
 
-export type PersonReport = { name: string; target: number; done: number; skipped: number; short: number };
+/** «5 касаний», «3 касания», «1 касание». */
+export function touchesText(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  const word =
+    mod10 === 1 && mod100 !== 11
+      ? "касание"
+      : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)
+        ? "касания"
+        : "касаний";
+  return `${n} ${word}`;
+}
+
+export type PersonReport = {
+  name: string;
+  target: number;
+  done: number;
+  skipped: number;
+  short: number;
+  /** Касания из потока «Получать лиды» — сверх порции, в «из» не входят. */
+  stream?: number;
+};
 
 /**
- * Строка отчёта: «Данил — 4 из 5, не подошло 2, без замены 1».
+ * Строка отчёта: «Данил — 4 из 5, не подошло 2, без замены 1 · поток: 7 касаний».
  *
  * «Из» — цель дня, а сделано — только касания: две «Не подходит» при трёх
  * отправленных — это 3 из 5, а не «порция закрыта». Ноль касаний — ⚠️,
- * сколько бы ни было пропусков.
+ * сколько бы ни было пропусков. Поток — отдельным хвостом: он сверх
+ * порции, и смешать его с ней значило бы закрывать порцию потоком.
  */
 export function reportLine(p: PersonReport): string {
+  const stream = p.stream ? ` · поток: ${touchesText(p.stream)}` : "";
+  if (p.target === 0) return `${p.name} — порции не было${stream}`;
   const tail = [p.skipped ? `не подошло ${p.skipped}` : "", p.short ? `без замены ${p.short}` : ""]
     .filter(Boolean)
     .join(", ");
   const flag = p.done === 0 ? " ⚠️" : p.done >= p.target ? " ✅" : "";
-  return `${p.name} — ${p.done} из ${p.target}${tail ? `, ${tail}` : ""}${flag}`;
+  return `${p.name} — ${p.done} из ${p.target}${tail ? `, ${tail}` : ""}${flag}${stream}`;
 }

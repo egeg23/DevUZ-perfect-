@@ -1,6 +1,7 @@
 import { wants } from "@/lib/admin/notify-prefs";
 import { HANDOVER_TEXT, normalizeHandle, readInbound, type TalkRow } from "@/lib/admin/outreach-talk";
-import { esc, sendMessage } from "@/lib/qualify/telegram";
+import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
+import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -65,7 +66,7 @@ export async function recordInbound(input: {
   // Сравниваем в общем виде: в проспекте адрес мог остаться ссылкой.
   const { data: rows } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling")
+    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason")
     .eq("status", "sent")
     .order("sent_at", { ascending: false })
     .limit(500);
@@ -111,7 +112,7 @@ export async function recordManualInbound(
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling")
+    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason")
     .eq("id", prospectId)
     .maybeSingle();
   if (!prospect) return { matched: false };
@@ -119,9 +120,21 @@ export async function recordManualInbound(
   return saveInbound(prospect, body);
 }
 
+/**
+ * Первая строка сообщения «клиент написал». Касание закрыли «Клиент
+ * отказался» / «Игнорирует», а клиент вернулся — это надо сказать прямо:
+ * лид уже «проиграли», и если разговор пошёл, его стоит открыть снова.
+ */
+function writesAgain(closedReason: unknown): string {
+  const closed = String(closedReason ?? "");
+  return isCloseReason(closed)
+    ? `Клиент, которого отметили «${CLOSE_TEXT[closed].label}», написал снова — отвечаете вы. Лид закрыт «проиграли»: если разговор пошёл, верните ему статус «в работе».`
+    : "Клиент написал — отвечаете вы:";
+}
+
 /** Общий хвост обоих путей: записать, оценить, при нужде отпустить модель. */
 async function saveInbound(
-  prospect: { id: unknown; host: unknown; lead_id: unknown; ai_handling: unknown },
+  prospect: { id: unknown; host: unknown; lead_id: unknown; ai_handling: unknown; closed_reason?: unknown },
   raw: string,
 ): Promise<{ matched: boolean; host?: string; verdict?: string }> {
   const db = serviceClient();
@@ -153,12 +166,14 @@ async function saveInbound(
   await db.from("prospects").update(patch).eq("id", prospect.id);
 
   if (verdict !== "talk") {
-    await tellManager(String(prospect.id), `Ответ по ${prospect.host}: ${HANDOVER_TEXT[verdict] ?? verdict}.\n\n${body.slice(0, 500)}`);
+    await tellManager(String(prospect.id), `Ответ по ${prospect.host}: ${HANDOVER_TEXT[verdict] ?? verdict}.\n\n${body.slice(0, 500)}`, {
+      refuse: true,
+    });
   } else if (!prospect.ai_handling) {
     // Модель разговор не ведёт — её отпустили или его забрал человек. Тогда
     // кроме человека ответить некому, и молчать о сообщении нельзя: раньше
     // оно ложилось в переписку, и клиент ждал, пока кто-то откроет карточку.
-    await tellManager(String(prospect.id), `Клиент написал — отвечаете вы:\n\n${body.slice(0, 500)}`);
+    await tellManager(String(prospect.id), `${writesAgain(prospect.closed_reason)}\n\n${body.slice(0, 500)}`, { refuse: true });
   }
 
   return { matched: true, host: String(prospect.host), verdict };
@@ -293,13 +308,17 @@ export async function handOver(prospectId: string, reason: string, note: string)
  * нажал «Отвечать самому» (handled_by), — это может быть руководитель или
  * владелец, а не менеджер касания; иначе — тот, за кем касание.
  */
-export async function tellManager(prospectId: string, text: string): Promise<boolean> {
+export async function tellManager(
+  prospectId: string,
+  text: string,
+  options: { refuse?: boolean } = {},
+): Promise<boolean> {
   const db = serviceClient();
   if (!db) return false;
 
   const { data: p } = await db
     .from("prospects")
-    .select("claimed_by, handled_by, lead_id, host")
+    .select("claimed_by, handled_by, lead_id, host, status, closed_reason")
     .eq("id", prospectId)
     .maybeSingle();
   const to = p?.handled_by ?? p?.claimed_by;
@@ -317,7 +336,13 @@ export async function tellManager(prospectId: string, text: string): Promise<boo
   if (!wants(staff?.notify_off as string[] | null, "talks")) return false;
 
   const link = p.lead_id ? `\n\n${siteUrl}/admin/leads/${p.lead_id}` : "";
-  return sendMessage(chat, `<b>Касание · ${esc(String(p.host))}</b>\n${esc(text)}${link}`);
+  const body = `<b>Касание · ${esc(String(p.host))}</b>\n${esc(text)}${link}`;
+  // Под ответом клиента — «Клиент отказался»: «не интересно» читают здесь,
+  // и закрыть касание надо там же, не открывая панель.
+  if (options.refuse && canClose({ status: String(p.status), closed_reason: p.closed_reason as string | null })) {
+    return sendWithRows(chat, body, [[{ text: CLOSE_TEXT.refused.button, callback_data: closeCallback("refused", prospectId) }]]);
+  }
+  return sendMessage(chat, body);
 }
 
 /** Следующий ответ на отправку — для скаута. */

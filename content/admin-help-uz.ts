@@ -381,18 +381,38 @@ export const uz: HelpCopy = {
               "09:00 ga kelib xatlar tayyor bo‘ladi va to‘plam sizga Telegramda keladi: har bir kompaniyada — kimga yozish, gapni nimadan boshlash va matn (matnni bossangiz — nusxalanadi). Tugmalar: **«📤 Отправить через бота»**, **«WhatsApp ↗»**, **«✋ Написал сам»**, **«✖ Не подходит»** va **«Открыть в панели»**.",
               "Xuddi shu to‘plam — bo‘lim tepasida, «Ваша порция на сегодня: сделано 2 из 5» blokida, «текст готов», «сделано», «не подошла» holatlari bilan; o‘rniga berilgan kompaniyalar «замена» deb belgilangan.",
               "**18:00 da** bajarilmagani umumiy zaxiraga qaytadi, xat esa o‘chiriladi — u sizning ismingiz bilan imzolangan. Rahbar va egasi hisobot oladi: kim qanchasini bajargan.",
-              "Faqat aloqa bajarilgan deb hisoblanadi: «Отправить» va «Написал сам» / «Связался сам» — Telegramdan ham, paneldan ham bir xil. To‘plam — aynan shuncha aloqa: «Не подходит» hisobga kirmaydi, lekin uning o‘rniga darhol zaxiradan **almashtiruvchi** keladi — Telegramga tayyor matnli «🔁 Замена» kartochkasi (matn bir daqiqagacha yoziladi) va to‘plam blokiga. Paneldagi kartochkadagi «не пишем» uchun ham xuddi shunday. Kuniga almashtirishlar — ikki to‘plamdan oshmaydi: zaxira bo‘sh bo‘lsa yoki almashtirishlar tugasa, bot tugma ostida shuni aytadi, kechki hisobotda esa bu «без замены» bo‘ladi.",
+              "Faqat aloqa bajarilgan deb hisoblanadi: «Отправить» va «Написал сам» / «Связался сам» — Telegramdan ham, paneldan ham bir xil. To‘plam — aynan shuncha aloqa: «Не подходит» hisobga kirmaydi, lekin uning o‘rniga darhol zaxiradan **almashtiruvchi** keladi — Telegramga tayyor matnli «🔁 Замена» kartochkasi (matn bir daqiqagacha yoziladi) va to‘plam blokiga. Paneldagi kartochkadagi «не пишем» uchun ham xuddi shunday. Kuniga almashtirishlar — ikki to‘plamdan oshmaydi: zaxira bo‘sh bo‘lsa yoki almashtirishlar tugasa, bot tugma ostida shuni aytadi, kechki hisobotda esa bu «без замены» bo‘ladi. To‘plamdan ko‘proq kerak bo‘lsa — [«Получать лиды» oqimini](#prospect-stream) yoqing: to‘plamdan tashqari kompaniyalar, limitsiz.",
             ],
             head: [
               "Siz ham to‘plam olasiz: ish kunlari soat 07:00 da zaxiradagi kompaniyalar navbatdagi hammaga — sizga va menejerlarga teng tarqatiladi. Hajmi — haftalik reja ÷ 5 (2 dan 15 gacha), reja bo‘lmasa — 5.",
               "09:00 da to‘plam Telegramga tayyor matnlar va «📤 Отправить через бота», «WhatsApp ↗», «✋ Написал сам», «✖ Не подходит», «Открыть в панели» tugmalari bilan keladi. Bo‘limda u «Ваша порция на сегодня» blokida turadi.",
-              "18:00 da bajarilmagani zaxiraga qaytadi, sizga esa o‘zingiz va jamoangiz bo‘yicha hisobot keladi: «Имя — 3 из 5, не подошло 2, без замены 1». Faqat aloqalar hisoblanadi: «Не подходит» hisobga kirmaydi — uning uchun odamga darhol zaxiradan almashtiruvchi beriladi, kuniga ikki to‘plamgacha; «без замены» — zaxira bo‘sh edi yoki almashtirishlar tugagan. ⚠️ — birorta ham aloqa yo‘q, ✅ — kerakli hammasi bajarilgan.",
+              "18:00 da bajarilmagani zaxiraga qaytadi, sizga esa o‘zingiz va jamoangiz bo‘yicha hisobot keladi: «Имя — 3 из 5, не подошло 2, без замены 1». Faqat aloqalar hisoblanadi: «Не подходит» hisobga kirmaydi — uning uchun odamga darhol zaxiradan almashtiruvchi beriladi, kuniga ikki to‘plamgacha; «без замены» — zaxira bo‘sh edi yoki almashtirishlar tugagan. ⚠️ — birorta ham aloqa yo‘q, ✅ — kerakli hammasi bajarilgan. Odam [«Получать лиды» oqimini](#prospect-stream) yoqqan bo‘lsa, qator oxirida — «поток: 4 касания»: bu to‘plamdan tashqari.",
               "Zaxirani [xaritalar bo‘yicha avtoqidiruv](#prospect-maps) va saytlarni qo‘lda tekshirish to‘ldiradi. Zaxira bo‘sh — to‘plamlar ham bo‘sh.",
             ],
             admin: [
               "Siz to‘plam olmaysiz. Ish kunlari soat 07:00 da zaxiradagi kompaniyalar menejerlar va rahbarlarga teng tarqatiladi: haftalik reja ÷ 5 (2 dan 15 gacha), reja bo‘lmasa — 5. Avval — bahosi eng yomon saytlar.",
-              "Xatlar fonda tayyorlanadi, 09:00 ga kelib to‘plam odamlarga Telegramda ketadi (matnlarning bir qismi tayyor bo‘lmasa ham, 10:00 dan kechikmay). To‘plam — aynan shuncha aloqa: botdagi har bir «Не подходит» yoki paneldagi «не пишем» uchun odamga darhol zaxiradan tayyor xatli almashtiruvchi beriladi, kuniga ikki to‘plamgacha. 18:00 da bajarilmagani zaxiraga qaytadi, sizga esa hamma bo‘yicha hisobot keladi: «Имя — 3 из 5, не подошло 2, без замены 1».",
+              "Xatlar fonda tayyorlanadi, 09:00 ga kelib to‘plam odamlarga Telegramda ketadi (matnlarning bir qismi tayyor bo‘lmasa ham, 10:00 dan kechikmay). To‘plam — aynan shuncha aloqa: botdagi har bir «Не подходит» yoki paneldagi «не пишем» uchun odamga darhol zaxiradan tayyor xatli almashtiruvchi beriladi, kuniga ikki to‘plamgacha. 18:00 da bajarilmagani zaxiraga qaytadi, sizga esa hamma bo‘yicha hisobot keladi: «Имя — 3 из 5, не подошло 2, без замены 1». To‘plamdan tashqari aloqalar — Telegramdagi «Получать лиды» tugmasi bo‘yicha — o‘sha qatorda «поток: 4 касания» dumi bilan keladi.",
               "Zaxirani [xaritalar bo‘yicha avtoqidiruv](#prospect-maps) va qo‘lda tekshiruvlar to‘ldiradi. Hisobotda bo‘sh to‘plamlar ko‘rinsa — zaxirada kompaniyalar tugagan: yangi kampaniya oching.",
+            ],
+          },
+        },
+        {
+          id: "stream",
+          title: "«Получать лиды» oqimi (Telegramda)",
+          roles: ["manager", "head"],
+          body: {
+            manager: [
+              "**«▶️ Получать лиды»** tugmasi — bot bilan chat pastida, yozish maydoni ostida; u yerda bo‘lmasa, botga /leads yuboring (buyruq bot menyusida bor). Bosdingiz — umumiy zaxiradagi kompaniyalar sizga Telegramda bittadan, tayyor matn va [kunlik to‘plamdagi](#prospect-portion) kabi tugmalar bilan kela boshlaydi: «📤 Отправить через бота», «WhatsApp ↗», «✋ Написал сам», «✖ Не подходит». Bunday kartochka tepasida — «▶️ Поток».",
+              "Kunlik limit yo‘q: kompaniyani ko‘rib chiqdingiz — darhol keyingisi keladi. Ko‘rib chiqish — «Отправить через бота», «Написал сам» yoki «Не подходит» ni bosish (Telegramda yoki panelda). Bir vaqtda ko‘rib chiqilmaganlari uchtadan oshmaydi: shunda zaxira bitta odamga ketib, kechqurun tegilmagan holda qaytmaydi. Har bir kompaniyaga xatni model bir daqiqagacha yozadi, shuning uchun keyingi kartochka darhol kelmasligi mumkin.",
+              "Oqim ish kunlari 9:00 dan 18:00 gacha ishlaydi va ertalabki to‘plamdan keyin boshlanadi. 18:00 gacha ko‘rib chiqilmagani umumiy zaxiraga qaytadi. Oqimni tunga o‘chirish shart emas: u o‘zi ertalabni kutadi va keyingi ish kunida davom etadi — toki **«⏸ Не получать лиды»** ni (chat pastida yoki istalgan oqim kartochkasi ostida) bosmaguningizcha. /leads almashtiradi: yoqilgan bo‘lsa — o‘chiradi, o‘chirilgan bo‘lsa — yoqadi.",
+              "Oqim — to‘plamdan tashqari: «сделано N из 5» ga kirmaydi, «Не подходит» uchun almashtiruvchi ham yo‘q — keyingi kompaniya baribir keladi. Haftalik rejaga oqimdagi aloqalar hisoblanadi. Bugun nima kelgani va nima bilan tugagani — bo‘lim tepasidagi «Поток лидов» blokida. Zaxirada kompaniyalar tugasa — bot bu haqda kuniga bir marta aytadi va yangilari paydo bo‘lganda yuboradi.",
+            ],
+            head: [
+              "**«▶️ Получать лиды»** tugmasi — bot bilan chat pastida, yozish maydoni ostida; u yerda bo‘lmasa, botga /leads yuboring (buyruq bot menyusida bor). Bosdingiz — umumiy zaxiradagi kompaniyalar sizga Telegramda bittadan, tayyor matn va [kunlik to‘plamdagi](#prospect-portion) kabi tugmalar bilan kela boshlaydi: «📤 Отправить через бота», «WhatsApp ↗», «✋ Написал сам», «✖ Не подходит». Bunday kartochka tepasida — «▶️ Поток». Menejerlaringiz ham oqimni xuddi shu tugma bilan yoqadi.",
+              "Kunlik limit yo‘q: kompaniyani ko‘rib chiqdingiz — darhol keyingisi keladi. Ko‘rib chiqish — «Отправить через бота», «Написал сам» yoki «Не подходит» ni bosish (Telegramda yoki panelda). Bir odamda bir vaqtda ko‘rib chiqilmaganlari uchtadan oshmaydi: shunda zaxira bitta odamga ketib, kechqurun tegilmagan holda qaytmaydi. Har bir kompaniyaga xatni model bir daqiqagacha yozadi, shuning uchun keyingi kartochka darhol kelmasligi mumkin.",
+              "Oqim ish kunlari 9:00 dan 18:00 gacha ishlaydi va ertalabki to‘plamdan keyin boshlanadi. 18:00 gacha ko‘rib chiqilmagani umumiy zaxiraga qaytadi. Oqimni tunga o‘chirish shart emas: u o‘zi ertalabni kutadi va keyingi ish kunida davom etadi — toki odam **«⏸ Не получать лиды»** ni (chat pastida yoki istalgan oqim kartochkasi ostida) bosmaguncha. /leads almashtiradi: yoqilgan bo‘lsa — o‘chiradi, o‘chirilgan bo‘lsa — yoqadi.",
+              "Oqim — to‘plamdan tashqari: «сделано N из 5» ga kirmaydi, «Не подходит» uchun almashtiruvchi ham yo‘q — keyingi kompaniya baribir keladi. Haftalik rejaga oqimdagi aloqalar hisoblanadi. Bugun sizga nima kelgani va nima bilan tugagani — bo‘lim tepasidagi «Поток лидов» blokida. Zaxirada kompaniyalar tugasa — bot bu haqda kuniga bir marta aytadi va yangilari paydo bo‘lganda yuboradi.",
+              "Kunlik to‘plamlar bo‘yicha kechki hisobotda har kimda — oqimdan nechta aloqa qilgani: «Имя — 3 из 5 · поток: 4 касания». To‘plami bo‘lmagan, lekin oqimi bo‘lgan odamda — «Имя — порции не было · поток: 4 касания».",
             ],
           },
         },
@@ -430,7 +450,7 @@ export const uz: HelpCopy = {
           id: "list",
           title: "«Разобранные сайты» ro‘yxatida nima ko‘rsatiladi",
           body: [
-            "Birdaniga barcha tahlil qilingan saytlar emas, balki ular bilan ishlanayotganlari ko‘rinadi: tayyor matnli («текст готов»), yuborish navbatidagilar, «писать руками», oxirgi 7 kunda yuborilganlar, sizning [kunlik portsiyangiz](#prospect-portion) va hozirgina qaytgan kartochkangiz. Qolganlaridan — tegilmagan, o‘tkazib yuborilgan va bir haftadan oldin yuborilganlardan — birinchi 20 tasi, yangilari tepada.",
+            "Birdaniga barcha tahlil qilingan saytlar emas, balki ular bilan ishlanayotganlari ko‘rinadi: tayyor matnli («текст готов»), yuborish navbatidagilar, «писать руками», oxirgi 7 kunda yuborilganlar (yopilgan «Клиент отказался» va «Игнорирует» dan tashqari), sizning [kunlik portsiyangiz](#prospect-portion) va hozirgina qaytgan kartochkangiz. Qolganlaridan — tegilmagan, o‘tkazib yuborilgan va bir haftadan oldin yuborilganlardan — birinchi 20 tasi, yangilari tepada.",
             "Ro‘yxat ostida — **«Показать ещё 20»**: sahifa qo‘shilgan kartochkalarning birinchisida ochiladi, kerakli marta bosing. Nega shunday: ilgari sahifa 200 ta kartochkani birdaniga chizardi — taxminan 2 MB, — va kuchsiz kompyuterlarda har ochilganda va har «Связаться» dan keyin bir necha soniyaga qotib qolardi; brauzer shu paytda «Страница не отвечает» deb yozardi, matnni nusxalash esa ishlamasdi.",
           ],
         },
@@ -469,9 +489,19 @@ export const uz: HelpCopy = {
           body: [
             "Ishchi akkaunt xatlariga model javob beradi — bir necha daqiqadan keyin, darhol emas (darhol javob robotga o‘xshaydi), studiya nomidan, «biz» deb. Uning har bir javobi bitta aniq qadam bilan tugaydi; biror narsa yuborishni va’da qilish unga taqiqlangan.",
             "Model **sizni chaqiradi**, agar mijoz: rad etsa («yozmang», «qiziq emas»); odam yoki qo‘ng‘iroq so‘rasa; **tahlil, tijoriy taklif, smeta yoki fayl yuborishni so‘rasa** — unda o‘sha kuniyoq o‘zingiz yuboring; qisqa va tushunarsiz javob bersa. Yana — suhbat 12 replikadan beri davom etib, kelishuvga kelmasa yoki uning javobi tekshiruvdan o‘tmasa.",
-            "Chaqirdi — sizga Telegramda sabab, mijoz so‘zlari va lid havolasi bilan «Касание · сайт» keladi. Lid kartochkasida «Первичка по касанию» bloki: «отвечает ИИ» yoki «отвечаете вы — причина». **«Отвечать самому»** tugmasi suhbatni istalgan paytda modeldan olib qo‘yadi: keyin model jim turadi, mijozning har bir yangi xabari esa sizga Telegramda keladi — «Клиент написал — отвечаете вы», lid havolasi bilan. Tugmani bosgan odamga keladi, hatto u rahbar yoki ega bo‘lsa ham. Lid har holda sizniki. Lidni berishdi yoki uni navbatdan boshqa odam oldi — suhbat u bilan birga o‘tadi: mijoz xabarlari, qayta yozish va model imzosi endi lidning yangi egasida, oldingi egasining «Отвечать самому» belgisi esa olib tashlanadi.",
+            "Chaqirdi — sizga Telegramda sabab, mijoz so‘zlari va lid havolasi bilan «Касание · сайт» keladi, ostida esa «🙅 Клиент отказался» tugmasi: mijoz «qiziq emas» desa — bosing, aloqa [yopiladi](#prospect-close). Lid kartochkasida «Первичка по касанию» bloki: «отвечает ИИ» yoki «отвечаете вы — причина». **«Отвечать самому»** tugmasi suhbatni istalgan paytda modeldan olib qo‘yadi: keyin model jim turadi, mijozning har bir yangi xabari esa sizga Telegramda keladi — «Клиент написал — отвечаете вы», lid havolasi bilan. Tugmani bosgan odamga keladi, hatto u rahbar yoki ega bo‘lsa ham. Lid har holda sizniki. Lidni berishdi yoki uni navbatdan boshqa odam oldi — suhbat u bilan birga o‘tadi: mijoz xabarlari, qayta yozish va model imzosi endi lidning yangi egasida, oldingi egasining «Отвечать самому» belgisi esa olib tashlanadi.",
             "Model vazifa, byudjet va muddatlarni aniqlab olgach, xayrlashadi, sizga esa «Первичка по касанию · сайт» brifi keladi. Keyingi suhbat sizniki.",
             "⚠️ O‘zingiz javob berayotgan bo‘lsangiz, mijozning yangi oddiy xabarlari Telegramda sizga kelmaydi — yozishmaga o‘zingiz qarab turing.",
+          ],
+        },
+        {
+          id: "close",
+          title: "«Клиент отказался» va «Игнорирует»: aloqa yopildi",
+          body: [
+            "Suhbat bo‘lmasligi aniq bo‘lganda, aloqani yoping. **«🙅 Клиент отказался»** — «qiziq emas», «yozmang» deb javob berdi, telefonda rad etdi. **«🔇 Игнорирует»** — o‘qidi-yu jim, trubkani olmaydi. Tugmalar «Разобранные сайты» ro‘yxatidagi yuborilgan saytlar kartochkasida va Telegramda — to‘plam yoki oqimdagi kompaniya kartochkasi ostida, «📤 Отправить через бота» va «✋ Написал сам» dan keyin turadi. Botning mijoz javobi haqidagi «Касание · сайт» xabari ostida — faqat «🙅 Клиент отказался». Panelda tugmalarni aloqani olib borayotgan odam, rahbar va egasi ko‘radi.",
+            "Bosilgandan keyin nima bo‘ladi: bot mijozga boshqa qayta xabar yozmaydi ([qayta yozish](#prospect-followups)), navbatga qo‘yilgan xabar esa ketmaydi; model endi javob bermaydi; shu sayt bo‘yicha lid «проиграли» holati bilan yopiladi va u bo‘yicha eslatmalar olib tashlanadi. Ro‘yxatda kartochka ishdagilar qatoridan chiqadi va «клиент отказался» yoki «игнорирует» deb belgilanadi. Kim va qachon yopgani kartochkada ko‘rinadi.",
+            "Aloqa bunda bajarilgan bo‘lib qoladi — [kunlik to‘plamda](#prospect-portion), haftalik rejada va «soatiga ikki»da: mijozga haqiqatan yozilgan. Faqat aloqadan keyin yopish mumkin: xat hali «в очереди на отправку» bo‘lsa — bot «u ketganda belgilang» deb javob beradi; o‘zingiz qo‘ng‘iroq qilgan yoki yozgan bo‘lsangiz — avval «Связался сам».",
+            "Yopishni tugma bilan bekor qilib bo‘lmaydi va kerak ham emas: mijoz keyin o‘zi yozsa, bot aloqani olib borgan odamni chaqiradi — «Клиент, которого отметили …, написал снова». Havola orqali lidni oching va suhbat boshlangan bo‘lsa, unga «в работе» holatini qaytaring.",
           ],
         },
         {
@@ -480,7 +510,7 @@ export const uz: HelpCopy = {
           body: [
             "Ishchi akkaunt xatiga javob berilmasa, bot o‘zi 3 kundan keyin ikkinchi xabarni (boshqa topilma va «Siz uchun dolzarbmi?» savoli), 7 kundan keyin esa uchinchi, oxirgisini yozadi — suhbatni xushmuomalalik bilan yopadi. Undan keyin yozmaymiz.",
             "Faqat ish kunlari Toshkent vaqti bilan 10:00 dan 17:00 gacha: notanish studiyadan soat 23:00 da kelgan xabar — shikoyat qilishga sabab. Bir oydan eski aloqalarga qayta yozilmaydi.",
-            "Qayta yozish faqat bot orqali ketgan xatlar uchun ishlaydi. «Связался сам» bosilgandan keyin va qo‘lda yoziladigan kartochkalarda o‘zingizni eslatib turish — sizning ishingiz.",
+            "Qayta yozish faqat bot orqali ketgan xatlar uchun ishlaydi. «Связался сам» bosilgandan keyin va qo‘lda yoziladigan kartochkalarda o‘zingizni eslatib turish — sizning ishingiz. Aloqani «Клиент отказался» yoki «Игнорирует» tugmasi bilan yopdingiz — u bo‘yicha qayta yozish endi ketmaydi, navbatga qo‘yilgani ham.",
           ],
         },
         {
@@ -491,7 +521,7 @@ export const uz: HelpCopy = {
             "**«−24…48»** — saytni allaqachon ochgan va yozish yoki qo‘ng‘iroq qilishga tayyor bo‘lgan har yuz kishidan nechta murojaat yo‘qolishi. Bu topilgan muammolar bo‘yicha bizning bahomiz (narxlar yo‘q, telefon bosilmaydi, telefondan o‘qilmaydi), mijozning statistikasi emas — shunday deb ayting. Qidiruvga aloqasi yo‘q.",
             "**Oxirgi raqam** — umumiy baho: yuzdan har bir o‘ta jiddiy topilma uchun 25, jiddiy uchun 12 va mayda uchun 5 ayriladi. 60 dan past — sariq, 0 — sayt ochilmagan.",
             "**Topilma belgilari**: qizil ramka — o‘ta jiddiy, tilla rang — jiddiy, kulrang — mayda. Suhbatni texnik topilmadan emas, mijozlar va pul haqidagi topilmadan boshlang.",
-            "**Holatlar**: «не писали», «сообщение готово», «в очереди на отправку», «отправлено», «писать руками», «не ушло» (bot yetkazmadi — kartochkani oching), «пропущен». Xuddi shu narsa — ro‘yxat ustidagi yig‘ilgan «Как читать цифры» blokida.",
+            "**Holatlar**: «не писали», «сообщение готово», «в очереди на отправку», «отправлено», «писать руками», «не ушло» (bot yetkazmadi — kartochkani oching), «пропущен». Yopilganlarda «отправлено» ga «клиент отказался» yoki «игнорирует» qo‘shiladi. Xuddi shu narsa — ro‘yxat ustidagi yig‘ilgan «Как читать цифры» blokida.",
           ],
         },
         {
@@ -1310,6 +1340,7 @@ export const uz: HelpCopy = {
         "/login deb yozing — «🔓 Открыть панель» tugmasi va 15 daqiqalik bir martalik havola keladi. Xabarlar ostidagi «Открыть» tugmalari ham panelga o‘zi kiritadi.",
         "Ovozni o‘chirmang: navbat taklifi 30 daqiqa yashaydi, bildirishnoma jim tursa, lid keyingi odamga ketadi.",
         "Bot qaysi xabarlarni yuborishini egasi va loyihalar rahbari «Команда» sahifasidagi belgilar bilan tanlaydi. Nimadir kelmasa — ulardan so‘rang: ehtimol, o‘sha belgi olib tashlangan.",
+        "Menejerlar va rahbarlarga: chat pastidagi «▶️ Получать лиды» tugmasi (yoki /leads) to‘plamdan tashqari kompaniyalar oqimini yoqadi, «⏸ Не получать лиды» — o‘chiradi. Batafsil — «Касания» bo‘limida.",
         "Mijoz olib kelib foiz olmoqchi bo‘lsangiz, /ref deb yozing.",
       ],
     },

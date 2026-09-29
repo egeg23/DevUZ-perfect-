@@ -35,6 +35,8 @@ export function SubmitButton({
   pendingLabel,
   base,
   tone = "primary",
+  name,
+  value,
 }: {
   children: React.ReactNode;
   /** Что написано на кнопке, пока ждём. Здесь же говорим, сколько ждать. */
@@ -42,12 +44,17 @@ export function SubmitButton({
   /** Только геометрия: скругление, отступы, кегль. Без цвета. */
   base: string;
   tone?: keyof typeof TONE;
+  /** Две кнопки в одной форме — какая нажата, форма узнаёт по name/value. */
+  name?: string;
+  value?: string;
 }) {
   const { pending } = useFormStatus();
 
   return (
     <button
       type="submit"
+      name={name}
+      value={value}
       disabled={pending}
       // aria-busy — для читалки экрана: она видит не цвет, а состояние.
       aria-busy={pending}

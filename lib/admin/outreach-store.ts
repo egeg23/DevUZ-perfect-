@@ -1,6 +1,15 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { record } from "@/lib/admin/audit";
+import { setStatus, type ActionSource } from "@/lib/admin/ownership";
+import {
+  CLOSE_TEXT,
+  canClose,
+  closesLead,
+  isCloseReason,
+  mayClose,
+  type CloseReason,
+} from "@/lib/admin/touch-close";
 import {
   OUTREACH_SYSTEM,
   OUTREACH_TOOL,
@@ -108,14 +117,23 @@ export type Prospect = {
   delivery_note: string | null;
   failure: string | null;
   lead_id: string | null;
+  /**
+   * Касание закрыто человеком: «Клиент отказался» или «Игнорирует»
+   * (lib/admin/touch-close). Статус при этом остаётся «отправлено» —
+   * написали на самом деле.
+   */
+  closed_reason: CloseReason | null;
+  closed_at: string | null;
+  closed_name: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, staff:claimed_by (display_name)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, staff:claimed_by (display_name), closer:closed_by (display_name)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
   const person = (Array.isArray(joined) ? joined[0] : joined) as { display_name?: string } | null | undefined;
+  const closer = (Array.isArray(row.closer) ? row.closer[0] : row.closer) as { display_name?: string } | null | undefined;
   return {
     id: String(row.id),
     created_at: String(row.created_at),
@@ -142,6 +160,9 @@ function shape(row: Record<string, unknown>): Prospect {
     delivery_note: (row.delivery_note as string | null) ?? null,
     failure: (row.failure as string | null) ?? null,
     lead_id: (row.lead_id as string | null) ?? null,
+    closed_reason: isCloseReason(String(row.closed_reason ?? "")) ? (row.closed_reason as CloseReason) : null,
+    closed_at: (row.closed_at as string | null) ?? null,
+    closed_name: closer?.display_name ?? null,
   };
 }
 
@@ -905,4 +926,101 @@ export async function skipProspect(id: string, reason: string): Promise<void> {
     // «Писать руками» — тоже: кнопка «не пишем» там есть, и раньше она молча
     // ничего не делала — карточка без телеграма так и висела в работе.
     .in("status", ["new", "contacting", "manual"]);
+}
+
+/**
+ * «Клиент отказался» / «Игнорирует»: касание уходит из работы.
+ *
+ * Что именно делается — ровно то, что иначе продолжало бы требовать
+ * внимания: модель больше не отвечает и бот не дожимает (ai_handling), уже
+ * поставленные в очередь дожим и ответ не уходят, лид закрывается
+ * «проиграли» — это снимает автонапоминания, — а в «Касаниях» карточка
+ * уходит из тех, что в работе (lib/admin/outreach-view). Статус касания не
+ * трогается: написали на самом деле, и порция, план и «два в час» это
+ * помнят.
+ *
+ * Если клиент потом всё же напишет, его ответ найдётся как обычно и придёт
+ * тому, кто вёл, — см. saveInbound.
+ */
+export type CloseResult = { ok: true; host: string | null; leadClosed: boolean } | { ok: false; why: string };
+
+export async function closeTouch(
+  id: string,
+  reason: CloseReason,
+  staff: Staff,
+  ip: string,
+  via: ActionSource = "panel",
+): Promise<CloseResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, why: "База недоступна." };
+  if (!isCloseReason(reason)) return { ok: false, why: "Неизвестная причина." };
+
+  const { data: p } = await db
+    .from("prospects")
+    .select("id, host, label, status, closed_reason, claimed_by, touched_by, handled_by, lead_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!p) return { ok: false, why: "Такого касания уже нет." };
+  if (isCloseReason(String(p.closed_reason ?? ""))) {
+    return { ok: false, why: `Уже отмечено: ${CLOSE_TEXT[p.closed_reason as CloseReason].label}.` };
+  }
+  if (!canClose({ status: String(p.status) })) {
+    return {
+      ok: false,
+      why:
+        p.status === "sending"
+          ? "Письмо ещё в очереди бота — отметьте, когда оно уйдёт."
+          : "Сначала отметьте касание: «Связался сам» или «Отправить».",
+    };
+  }
+  const who = {
+    claimed_by: (p.claimed_by as string | null) ?? null,
+    touched_by: (p.touched_by as string | null) ?? null,
+    handled_by: (p.handled_by as string | null) ?? null,
+  };
+  if (!mayClose(who, staff)) return { ok: false, why: "Это касание ведёт другой сотрудник." };
+
+  const { data: updated, error } = await db
+    .from("prospects")
+    .update({
+      closed_reason: reason,
+      closed_at: new Date().toISOString(),
+      closed_by: staff.id,
+      ai_handling: false,
+      handover_reason: CLOSE_TEXT[reason].handover,
+    })
+    .eq("id", id)
+    .eq("status", "sent")
+    .is("closed_reason", null)
+    .select("id");
+  if (error) return { ok: false, why: "Не получилось отметить." };
+  if (!updated?.length) return { ok: false, why: "Уже отмечено." };
+
+  // Дожим или ответ модели, стоящий в очереди скаута, после отказа уходить
+  // не должен: следующее сообщение после «не пишите» — ровно то, за что
+  // блокируют рабочий аккаунт.
+  await db
+    .from("outreach_messages")
+    .update({ status: "failed", failure: `не отправлено: ${CLOSE_TEXT[reason].label}` })
+    .eq("prospect_id", id)
+    .eq("direction", "out")
+    .eq("status", "queued");
+
+  let leadClosed = false;
+  const leadId = (p.lead_id as string | null) ?? null;
+  if (leadId) {
+    const { data: lead } = await db.from("leads").select("status").eq("id", leadId).maybeSingle();
+    if (closesLead(lead?.status as string | undefined)) {
+      leadClosed = (await setStatus(leadId, "lost", staff, ip, via)).ok;
+    }
+  }
+
+  await record("prospect.closed", {
+    actorStaffId: staff.id,
+    targetType: "prospect",
+    targetId: id,
+    ip,
+    meta: { host: p.host, reason, via, lead: leadId, lead_closed: leadClosed },
+  });
+  return { ok: true, host: (p.host as string | null) ?? (p.label as string | null) ?? null, leadClosed };
 }

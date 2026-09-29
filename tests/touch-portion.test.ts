@@ -204,7 +204,8 @@ test("кнопки бота — только своя порция и те же 
   const hook = read("app/api/telegram/webhook/route.ts");
   assert.match(hook, /parts\[0\] === "tp"/);
   const handler = hook.slice(hook.indexOf("async function handlePortionButton("));
-  assert.match(handler, /await inPortion\(staff\.id, prospectId\)/);
+  assert.match(handler, /await portionSource\(staff\.id, prospectId\)/);
+  assert.match(handler, /if \(!staff \|\| !source\)/);
   assert.match(handler, /queueOutreach\(prospectId, message, staff, ip\)/);
   assert.match(handler, /markSelfContacted\(prospectId, staff/);
   assert.match(handler, /skipProspect\(prospectId/);

@@ -15,8 +15,10 @@ import {
   reportLine,
   tallyPortion,
   tashkentHour,
+  touchesText,
   type PersonReport,
 } from "@/lib/admin/portion";
+import { CLOSE_REASONS, CLOSE_TEXT, closeCallback } from "@/lib/admin/touch-close";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { staffById } from "@/lib/admin/session";
 import { touchProgressFor } from "@/lib/admin/touch-store";
@@ -37,6 +39,11 @@ import { serviceClient } from "@/lib/supabase";
  * Весь день — замены: на каждую «Не подходит» человеку сразу выдаётся
  * новая компания из пула, с готовым письмом и карточкой в Telegram (см.
  * topUpPortion). Цель дня — касания, а не нажатия.
+ *
+ * В той же таблице живёт поток «Получать лиды» (source = 'stream',
+ * lib/admin/stream-store): он сверх порции, и всё, что считает порцию, —
+ * цель, замены, утренняя выдача, — берёт только строки source = 'portion'.
+ * Вечерний возврат в пул и кнопки бота общие для обоих.
  */
 
 type Person = { id: string; name: string; chat: number | null; head: string | null; role: string; off: string[] };
@@ -59,7 +66,7 @@ async function team(): Promise<Person[]> {
   }));
 }
 
-async function dayRow(day: string): Promise<{ assigned_at: string | null; reported_at: string | null } | null> {
+export async function dayRow(day: string): Promise<{ assigned_at: string | null; reported_at: string | null } | null> {
   const db = serviceClient();
   if (!db) return null;
   const { data } = await db.from("touch_portion_days").select("assigned_at, reported_at").eq("day", day).maybeSingle();
@@ -70,7 +77,7 @@ async function dayRow(day: string): Promise<{ assigned_at: string | null; report
  * Пул: новые, ничьи, с кем есть как связаться. Худшие сайты — первыми:
  * чем больше находок, тем честнее повод написать.
  */
-async function pool(limit: number, exclude: ReadonlySet<string> = new Set()): Promise<string[]> {
+export async function pool(limit: number, exclude: ReadonlySet<string> = new Set()): Promise<string[]> {
   const db = serviceClient();
   if (!db) return [];
   const { data } = await db
@@ -195,14 +202,14 @@ export async function prepareNextPortion(now: Date = new Date()): Promise<boolea
 }
 
 /** Готов ли текст: письмо написано или его и не будет (карточку уже тронули). */
-function ready(p: Prospect | undefined): boolean {
+export function ready(p: Prospect | undefined): boolean {
   return !p || Boolean(p.message) || (p.status !== "new" && p.status !== "contacting");
 }
 
-const titleOf = (p: Prospect) => p.label || p.host || "Компания без сайта";
+export const titleOf = (p: Prospect) => p.label || p.host || "Компания без сайта";
 
 /** Карточка компании в Telegram. `heading` — «2/5» в утренней порции или «🔁 Замена». */
-function itemText(p: Prospect, heading: string): string {
+export function itemText(p: Prospect, heading: string): string {
   const route = routeFor(p.contacts);
   const lines = [`<b>${heading} · ${esc(titleOf(p))}</b>${p.host ? ` — ${esc(p.host)}` : " — без сайта"}`];
   if (route) {
@@ -225,7 +232,7 @@ function itemText(p: Prospect, heading: string): string {
   return lines.join("\n");
 }
 
-function itemButtons(p: Prospect): Button[][] {
+export function itemButtons(p: Prospect): Button[][] {
   const route = routeFor(p.contacts);
   const first: Button[] = [];
   if (p.message && route && route.kind !== "manual") {
@@ -244,10 +251,24 @@ function itemButtons(p: Prospect): Button[][] {
   ];
 }
 
-type DayRow = {
+/**
+ * Кнопки после касания: надпись о том, что сделано, и «Клиент отказался» /
+ * «Игнорирует» — закрыть касание можно прямо из той же карточки, когда
+ * станет ясно, чем кончилось (lib/admin/touch-close).
+ */
+export function closeRows(prospectId: string, label: string): Button[][] {
+  return [
+    [{ text: label, callback_data: "noop" }],
+    CLOSE_REASONS.map((reason) => ({ text: CLOSE_TEXT[reason].button, callback_data: closeCallback(reason, prospectId) })),
+  ];
+}
+
+export type DayRow = {
   id: string;
   staff_id: string;
   prospect_id: string;
+  /** portion — порция дня и её замены, stream — поток «Получать лиды». */
+  source: "portion" | "stream";
   replaces: string | null;
   delivered_at: string | null;
   created_at: string;
@@ -255,12 +276,12 @@ type DayRow = {
   closed: boolean;
 };
 
-async function rowsOfDay(day: string, staffId?: string): Promise<DayRow[]> {
+export async function rowsOfDay(day: string, staffId?: string): Promise<DayRow[]> {
   const db = serviceClient();
   if (!db) return [];
   let query = db
     .from("touch_portions")
-    .select("id, staff_id, prospect_id, replaces, delivered_at, created_at, outcome")
+    .select("id, staff_id, prospect_id, source, replaces, delivered_at, created_at, outcome")
     .eq("day", day);
   if (staffId) query = query.eq("staff_id", staffId);
   const { data } = await query;
@@ -268,6 +289,7 @@ async function rowsOfDay(day: string, staffId?: string): Promise<DayRow[]> {
     id: r.id as string,
     staff_id: r.staff_id as string,
     prospect_id: r.prospect_id as string,
+    source: r.source === "stream" ? "stream" : "portion",
     replaces: (r.replaces as string | null) ?? null,
     delivered_at: (r.delivered_at as string | null) ?? null,
     created_at: r.created_at as string,
@@ -280,7 +302,7 @@ async function rowsOfDay(day: string, staffId?: string): Promise<DayRow[]> {
  * условно. Свип и кнопка «Не подходит» зовут выдачу одновременно — без
  * этого одна карточка пришла бы дважды.
  */
-async function claimDelivery(ids: readonly string[], now: Date): Promise<Set<string>> {
+export async function claimDelivery(ids: readonly string[], now: Date): Promise<Set<string>> {
   const db = serviceClient();
   if (!db || !ids.length) return new Set();
   const { data } = await db
@@ -294,14 +316,6 @@ async function claimDelivery(ids: readonly string[], now: Date): Promise<Set<str
 
 /** Замена уходит, как только готов текст, но не ждёт его дольше пятнадцати минут. */
 const REPLACE_WAIT_MS = 15 * 60_000;
-
-/** «5 касаний», «3 касания», «1 касание». */
-function touches(n: number): string {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  const word = mod10 === 1 && mod100 !== 11 ? "касание" : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? "касания" : "касаний";
-  return `${n} ${word}`;
-}
 
 /**
  * В личку. Утренняя порция — с 09:00, когда тексты готовы (в 10:00 — как
@@ -317,7 +331,8 @@ export async function deliverPortions(now: Date = new Date(), staffId?: string):
   if (!db) return 0;
   const day = todayInTashkent(now);
 
-  const all = (await rowsOfDay(day, staffId)).filter((r) => !r.closed);
+  // Поток выдаёт свои карточки сам (stream-store) — здесь только порция.
+  const all = (await rowsOfDay(day, staffId)).filter((r) => !r.closed && r.source === "portion");
   const pending = all.filter((r) => !r.delivered_at);
   if (!pending.length) return 0;
 
@@ -363,7 +378,7 @@ export async function deliverPortions(now: Date = new Date(), staffId?: string):
         [
           `<b>Порция на сегодня: ${target}</b>`,
           plan?.plan ? `План недели: ${plan.done} из ${plan.plan}.` : "",
-          `Нужно ${touches(target)}: «Отправить через бота» или «Написал сам». «Не подходит» в счёт не идёт — на её место сразу придёт замена.`,
+          `Нужно ${touchesText(target)}: «Отправить через бота» или «Написал сам». «Не подходит» в счёт не идёт — на её место сразу придёт замена.`,
           "Тексты готовы — нажмите на текст, он скопируется.",
           "Что не сделаете до 18:00, вернётся в общий пул.",
         ]
@@ -425,8 +440,11 @@ export async function topUpPortion(staffId: string, now: Date = new Date()): Pro
   const mark = await dayRow(day);
   if (!mark?.assigned_at || mark.reported_at) return none;
 
+  // Из пула не берём ничего, что уже выдано сегодня, — ни в порцию, ни в
+  // поток; а считаем замены только по порции: «Не подходит» в потоке
+  // замены не даёт, там следующая компания приходит и так.
   const everyone = await rowsOfDay(day);
-  const rows = everyone.filter((r) => r.staff_id === staffId && !r.closed);
+  const rows = everyone.filter((r) => r.staff_id === staffId && !r.closed && r.source === "portion");
   if (!rows.length) return none;
   const prospects = new Map((await prospectsByIds(rows.map((r) => r.prospect_id))).map((p) => [p.id, p]));
   const outcomes = rows.map((r) => {
@@ -473,7 +491,7 @@ export async function topUpPortion(staffId: string, now: Date = new Date()): Pro
 export async function topUpPortions(now: Date = new Date()): Promise<number> {
   if (!isWorkday(now) || tashkentHour(now) >= REPORT_HOUR) return 0;
   const day = todayInTashkent(now);
-  const rows = (await rowsOfDay(day)).filter((r) => !r.closed);
+  const rows = (await rowsOfDay(day)).filter((r) => !r.closed && r.source === "portion");
   const prospects = new Map((await prospectsByIds(rows.map((r) => r.prospect_id))).map((p) => [p.id, p]));
   let made = 0;
   for (const staffId of new Set(rows.map((r) => r.staff_id))) {
@@ -553,7 +571,10 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     .select("day");
   if (!claimed?.length) return 0;
 
-  const { data } = await db.from("touch_portions").select("id, staff_id, prospect_id, outcome, replaces").eq("day", day);
+  const { data } = await db
+    .from("touch_portions")
+    .select("id, staff_id, prospect_id, outcome, replaces, source")
+    .eq("day", day);
   if (!data?.length) return 0;
 
   const prospects = new Map((await prospectsByIds(data.map((r) => r.prospect_id as string))).map((p) => [p.id, p]));
@@ -561,6 +582,8 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
   // Итог по человеку — по всем его строкам сразу: цель — утренняя раздача,
   // сделано — только касания, «Не подходит» — отдельно (lib/admin/portion).
   const byPerson = new Map<string, { replaces: string | null; outcome: ReturnType<typeof outcomeOf> }[]>();
+  // Поток — отдельно: сколько касаний сверх порции.
+  const streamDone = new Map<string, number>();
 
   for (const row of data) {
     const staffId = row.staff_id as string;
@@ -568,7 +591,11 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     if (!person) continue;
     const p = prospects.get(row.prospect_id as string);
     const outcome = p ? outcomeOf(p, staffId, day) : null;
-    byPerson.set(staffId, [...(byPerson.get(staffId) ?? []), { replaces: (row.replaces as string | null) ?? null, outcome }]);
+    if (row.source === "stream") {
+      if (outcome === "sent" || outcome === "self") streamDone.set(staffId, (streamDone.get(staffId) ?? 0) + 1);
+    } else {
+      byPerson.set(staffId, [...(byPerson.get(staffId) ?? []), { replaces: (row.replaces as string | null) ?? null, outcome }]);
+    }
 
     await db
       .from("touch_portions")
@@ -587,10 +614,17 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
   }
 
   const reports = new Map<string, PersonReport>();
-  for (const [staffId, rows] of byPerson) {
+  for (const staffId of new Set([...byPerson.keys(), ...streamDone.keys()])) {
     const person = people.find((p) => p.id === staffId)!;
-    const t = tallyPortion(rows);
-    reports.set(staffId, { name: person.name, target: t.target, done: t.done, skipped: t.skipped, short: t.short });
+    const t = tallyPortion(byPerson.get(staffId) ?? []);
+    reports.set(staffId, {
+      name: person.name,
+      target: t.target,
+      done: t.done,
+      skipped: t.skipped,
+      short: t.short,
+      stream: streamDone.get(staffId) ?? 0,
+    });
   }
 
   const lines = (ids: string[]) =>
@@ -599,7 +633,8 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
       .filter((r): r is PersonReport => Boolean(r))
       .map(reportLine);
   const header = `<b>Порция дня · ${day.split("-").reverse().join(".")}</b>`;
-  const footer = "Считаются только касания: «Не подходит» не в счёт, за неё выдаётся замена. Несделанное вернулось в общий пул.";
+  const footer =
+    "Считаются только касания: «Не подходит» не в счёт, за неё выдаётся замена. «Поток» — касания сверх порции по кнопке «Получать лиды». Несделанное вернулось в общий пул.";
 
   // Руководителю — его люди и он сам; владельцу — все.
   for (const head of people.filter((p) => p.role === "head" && p.chat && wants(p.off, "reports"))) {
@@ -621,8 +656,11 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
   return reports.size;
 }
 
-/** Компания из порции; `replacement` — выдана вместо «Не подходит» и в цель дня не входит. */
-export type PortionItem = Prospect & { replacement: boolean };
+/**
+ * Компания из порции; `replacement` — выдана вместо «Не подходит» и в цель
+ * дня не входит; `stream` — пришла потоком «Получать лиды», сверх порции.
+ */
+export type PortionItem = Prospect & { replacement: boolean; stream: boolean };
 
 /** Порция человека на сегодня — для блока в «Касаниях», в порядке выдачи. */
 export async function portionOf(staffId: string, now: Date = new Date()): Promise<PortionItem[]> {
@@ -630,7 +668,7 @@ export async function portionOf(staffId: string, now: Date = new Date()): Promis
   if (!db) return [];
   const { data } = await db
     .from("touch_portions")
-    .select("prospect_id, replaces, created_at")
+    .select("prospect_id, replaces, source, created_at")
     .eq("day", todayInTashkent(now))
     .eq("staff_id", staffId)
     .order("created_at", { ascending: true });
@@ -638,22 +676,30 @@ export async function portionOf(staffId: string, now: Date = new Date()): Promis
   const byId = new Map((await prospectsByIds(rows.map((r) => r.prospect_id as string))).map((p) => [p.id, p]));
   return rows.flatMap((r) => {
     const p = byId.get(r.prospect_id as string);
-    return p ? [{ ...p, replacement: Boolean(r.replaces) }] : [];
+    return p ? [{ ...p, replacement: Boolean(r.replaces), stream: r.source === "stream" }] : [];
   });
 }
 
-/** Принадлежит ли компания сегодняшней порции этого человека — для кнопок бота. */
-export async function inPortion(staffId: string, prospectId: string, now: Date = new Date()): Promise<boolean> {
+/**
+ * Чья сегодня эта компания у этого человека: из порции, из потока — или
+ * ничья (null). Для кнопок бота: чужая и вчерашняя ничего не делают.
+ */
+export async function portionSource(
+  staffId: string,
+  prospectId: string,
+  now: Date = new Date(),
+): Promise<"portion" | "stream" | null> {
   const db = serviceClient();
-  if (!db) return false;
+  if (!db) return null;
   const { data } = await db
     .from("touch_portions")
-    .select("id")
+    .select("source")
     .eq("day", todayInTashkent(now))
     .eq("staff_id", staffId)
     .eq("prospect_id", prospectId)
     .maybeSingle();
-  return Boolean(data);
+  if (!data) return null;
+  return data.source === "stream" ? "stream" : "portion";
 }
 
 /**
