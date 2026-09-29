@@ -427,6 +427,14 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "list",
+          title: "«Разобранные сайты» ro‘yxatida nima ko‘rsatiladi",
+          body: [
+            "Birdaniga barcha tahlil qilingan saytlar emas, balki ular bilan ishlanayotganlari ko‘rinadi: tayyor matnli («текст готов»), yuborish navbatidagilar, «писать руками», oxirgi 7 kunda yuborilganlar, sizning [kunlik portsiyangiz](#prospect-portion) va hozirgina qaytgan kartochkangiz. Qolganlaridan — tegilmagan, o‘tkazib yuborilgan va bir haftadan oldin yuborilganlardan — birinchi 20 tasi, yangilari tepada.",
+            "Ro‘yxat ostida — **«Показать ещё 20»**: sahifa qo‘shilgan kartochkalarning birinchisida ochiladi, kerakli marta bosing. Nega shunday: ilgari sahifa 200 ta kartochkani birdaniga chizardi — taxminan 2 MB, — va kuchsiz kompyuterlarda har ochilganda va har «Связаться» dan keyin bir necha soniyaga qotib qolardi; brauzer shu paytda «Страница не отвечает» deb yozardi, matnni nusxalash esa ishlamasdi.",
+          ],
+        },
+        {
           id: "queue",
           title: "Ishchi akkaunt navbati: soatiga ikki xat",
           body: [

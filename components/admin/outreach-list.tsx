@@ -26,6 +26,7 @@ import {
 import { outreachHooks } from "@/lib/admin/outreach";
 import { GRADE_TEXT, seoReport, type SeoGrade } from "@/lib/audit/seo";
 import type { Prospect } from "@/lib/admin/outreach-store";
+import { REST_PAGE } from "@/lib/admin/outreach-view";
 import { contactsLine, hasAnyContact } from "@/lib/audit/contacts";
 
 /**
@@ -90,6 +91,7 @@ export function OutreachList({
   sent,
   replies,
   owners = [],
+  more = null,
 }: {
   rows: Prospect[];
   /** Что ушло за последний час: предел считается по факту отправки. */
@@ -101,6 +103,11 @@ export function OutreachList({
   sent?: boolean;
   /** Ответы модели по ручному маршруту: их отправляет человек. */
   replies?: Record<string, string>;
+  /**
+   * Сколько карточек скрыто и куда ведёт «Показать ещё» — список рисуется
+   * не целиком, см. lib/admin/outreach-view.ts.
+   */
+  more?: { hidden: number; href: string } | null;
 }) {
   if (!rows.length) return null;
 
@@ -600,6 +607,24 @@ export function OutreachList({
           );
         })}
       </ul>
+
+      {more && more.hidden > 0 ? (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {/* Без предзагрузки: это та же тяжёлая страница, и тянуть её заранее
+              на каждое появление кнопки в окне — ровно то, от чего уходим. */}
+          <Link
+            href={more.href}
+            prefetch={false}
+            className="rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:border-green/40 hover:text-text"
+          >
+            Показать ещё {Math.min(REST_PAGE, more.hidden)}
+          </Link>
+          <span className="flex items-center gap-2 text-xs text-faint">
+            скрыто ещё {more.hidden}: нетронутые, пропущенные и отправленные раньше недели
+            <HelpHint topic={helpAnchor("/admin/prospect", "list")} label="Что показано в списке" />
+          </span>
+        </div>
+      ) : null}
     </section>
   );
 }
