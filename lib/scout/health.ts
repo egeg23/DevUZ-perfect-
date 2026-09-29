@@ -1,3 +1,5 @@
+import { scoutHealthDict } from "@/content/admin-panel/scout";
+import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -62,7 +64,7 @@ export const EMPTY_PULSE: Omit<ScoutPulse, "at" | "startedAt"> = {
 /** Что показывать человеку. «ok» не значит «есть лиды» — значит «механизм цел». */
 export type ScoutVerdict = {
   state: "ok" | "quiet" | "stale" | "no_chats" | "model_down";
-  /** Одна фраза по-русски: её читают вместо чисел. */
+  /** Одна фраза на языке панели (бот — по-русски): её читают вместо чисел. */
   says: string;
 };
 
@@ -82,30 +84,21 @@ export const STALE_AFTER_MS = 15 * 60_000;
  * У мёртвого процесса числа чатов ничего не значат, а у аккаунта вне чатов
  * бессмысленно обсуждать отсев.
  */
-export function diagnose(pulse: ScoutPulse | null, now = Date.now()): ScoutVerdict {
+export function diagnose(pulse: ScoutPulse | null, now = Date.now(), locale: PanelLocale = "ru"): ScoutVerdict {
+  // Русский — для бота (утренняя сводка), язык панели — для раздела «Поиск».
+  const t = pick(scoutHealthDict, locale);
   if (!pulse) {
-    return {
-      state: "stale",
-      says: "Скаут ни разу не отчитывался. Либо не запускался, либо запущен без доступа к базе.",
-    };
+    return { state: "stale", says: t.never };
   }
 
   const silentMs = now - Date.parse(pulse.at);
   if (silentMs > STALE_AFTER_MS) {
     const minutes = Math.round(silentMs / 60_000);
-    return {
-      state: "stale",
-      says: `Скаут молчит ${minutes} мин. Процесс упал или остановлен — проверьте systemd.`,
-    };
+    return { state: "stale", says: t.stale(minutes) };
   }
 
   if (pulse.chatsReading === 0) {
-    return {
-      state: "no_chats",
-      says:
-        "Скаут жив, но не читает ни одного чата: аккаунт в них не состоит " +
-        "или адреса не открылись. Вступать нужно руками.",
-    };
+    return { state: "no_chats", says: t.noChats };
   }
 
   /**
@@ -118,37 +111,18 @@ export function diagnose(pulse: ScoutPulse | null, now = Date.now()): ScoutVerdi
    * читается и потерянный ключ модели.
    */
   if (pulse.passedPrefilter > 0 && pulse.classified === 0) {
-    return {
-      state: "model_down",
-      says:
-        `Отсев пропустил ${pulse.passedPrefilter}, а разобрано 0. Модель недоступна: ` +
-        "кончились деньги на ключе, ключа нет вовсе либо скаут запущен без " +
-        "NODE_OPTIONS=--use-env-proxy.",
-    };
+    return { state: "model_down", says: t.modelDown(pulse.passedPrefilter) };
   }
 
   if (pulse.seen === 0) {
-    return {
-      state: "quiet",
-      says: `Скаут читает ${pulse.chatsReading} чат(ов), но не видел ещё ни одного сообщения.`,
-    };
+    return { state: "quiet", says: t.noMessages(pulse.chatsReading) };
   }
 
   if (pulse.saved === 0) {
-    return {
-      state: "quiet",
-      says:
-        `Механизм цел: увидел ${pulse.seen}, до модели дошло ${pulse.passedPrefilter}. ` +
-        "Запросов на разработку пока не было — это тишина в чатах, а не поломка.",
-    };
+    return { state: "quiet", says: t.quiet(pulse.seen, pulse.passedPrefilter) };
   }
 
-  return {
-    state: "ok",
-    says:
-      `Увидел ${pulse.seen}, до модели дошло ${pulse.passedPrefilter}, ` +
-      `сохранено ${pulse.saved}, отправлено ${pulse.notified}.`,
-  };
+  return { state: "ok", says: t.ok(pulse.seen, pulse.passedPrefilter, pulse.saved, pulse.notified) };
 }
 
 /**

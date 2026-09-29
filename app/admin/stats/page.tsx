@@ -1,32 +1,15 @@
 import { AdminShell } from "@/components/admin/shell";
 import { Bars, WeeklyBars } from "@/components/admin/bars";
+import { statusFilterDict } from "@/content/admin-panel/home";
+import { leadChannelDict } from "@/content/admin-panel/lead-origin";
+import { leadLocaleDict, statsDict, statsSourceDict } from "@/content/admin-panel/stats";
 import { requireStaff } from "@/lib/admin/guard";
+import { pick, type Picked } from "@/lib/admin/i18n";
 import { seesEveryone } from "@/lib/admin/roles";
 import { teamOf } from "@/lib/admin/team";
 import { STATS_LIMIT, loadStaffStats, loadStats } from "@/lib/admin/stats";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_LABEL: Record<string, string> = {
-  new: "новые",
-  taken: "в работе",
-  dropped: "отложены",
-  won: "выиграны",
-  lost: "проиграны",
-};
-
-const SOURCE_LABEL: Record<string, string> = {
-  chat: "чат на сайте",
-  form: "форма",
-  audit: "проверка сайта",
-};
-
-const LOCALE_LABEL: Record<string, string> = {
-  ru: "русский",
-  en: "английский",
-  uz: "узбекский",
-  zh: "китайский",
-};
 
 /** Цвет закреплён за грейдом, а не за его местом в списке. */
 const GRADE_COLOR: Record<string, string> = {
@@ -37,15 +20,15 @@ const GRADE_COLOR: Record<string, string> = {
 };
 
 /** Минуты в человеческое: «14 мин», «3 ч 20 мин», «2 дн». */
-function humanMinutes(minutes: number | null): string {
+function humanMinutes(minutes: number | null, t: Picked<typeof statsDict>): string {
   if (minutes === null) return "—";
-  if (minutes < 60) return `${Math.round(minutes)} мин`;
+  if (minutes < 60) return t.minutes(Math.round(minutes));
   if (minutes < 60 * 24) {
     const hours = Math.floor(minutes / 60);
     const rest = Math.round(minutes % 60);
-    return rest ? `${hours} ч ${rest} мин` : `${hours} ч`;
+    return rest ? t.hoursMinutes(hours, rest) : t.hours(hours);
   }
-  return `${Math.round(minutes / (60 * 24))} дн`;
+  return t.days(Math.round(minutes / (60 * 24)));
 }
 
 /**
@@ -101,92 +84,96 @@ export default async function StatsPage() {
       : staff.role === "head"
         ? await loadStaffStats([staff.id, ...(await teamOf(staff.id))])
         : [];
+  const locale = staff.panel_locale;
+  const t = pick(statsDict, locale);
+  const statusLabels: Record<string, string> = pick(statusFilterDict, locale);
+  const sourceLabels: Record<string, string> = { ...pick(leadChannelDict, locale), ...pick(statsSourceDict, locale) };
+  const localeLabels: Record<string, string> = pick(leadLocaleDict, locale);
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Статистика</h1>
+      <h1 className="text-lg font-semibold">{t.title}</h1>
 
       {stats.offline ? (
         <p className="mt-4 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
-          База недоступна — это не «лидов нет», а «панель сейчас ничего не видит».
+          {t.offline}
         </p>
       ) : null}
 
       {stats.truncated ? (
         <p className="mt-4 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
-          В расчёт вошли последние {STATS_LIMIT} лидов — это предел выборки, и
-          числа ниже неполные.
+          {t.truncated(STATS_LIMIT)}
         </p>
       ) : null}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile value={stats.total} label="всего лидов" />
-        <Tile value={stats.taken} label="взято в работу" />
+        <Tile value={stats.total} label={t.tileTotal} />
+        <Tile value={stats.taken} label={t.tileTaken} />
         <Tile
           value={stats.winRate === null ? "—" : `${stats.winRate}%`}
-          label="доля выигранных"
-          hint="Считается от закрытых сделок, а не от всех лидов: то, что ещё в работе, не проиграно."
+          label={t.tileWinRate}
+          hint={t.tileWinRateHint}
         />
         <Tile
-          value={humanMinutes(stats.medianMinutesToTake)}
-          label="медиана до взятия"
+          value={humanMinutes(stats.medianMinutesToTake, t)}
+          label={t.tileMedian}
           hint={
             stats.slowTakes
-              ? `Дольше часа разобрали ${stats.slowTakes} — за это время лид успевает написать в другое место.`
-              : "Медиана, а не среднее: один забытый лид сдвинул бы среднее так, что оно перестало бы описывать обычный день."
+              ? t.tileMedianSlow(stats.slowTakes)
+              : t.tileMedianHint
           }
         />
       </div>
 
       <div className="mt-4">
         <Panel
-          title="Приходит по неделям"
-          note="Неделя считается от понедельника."
+          title={t.weekly}
+          note={t.weeklyNote}
         >
-          <WeeklyBars rows={stats.weekly} />
+          <WeeklyBars rows={stats.weekly} locale={locale} />
         </Panel>
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Panel
-          title="Качество лидов"
-          note={`Средний балл — ${stats.averageScore} из 100. Цвет закреплён за грейдом, но читать его необязательно: рядом стоит буква.`}
+          title={t.grade}
+          note={t.gradeNote(stats.averageScore)}
         >
-          <Bars rows={stats.byGrade} colors={GRADE_COLOR} total={stats.total} />
+          <Bars rows={stats.byGrade} colors={GRADE_COLOR} total={stats.total} locale={locale} />
         </Panel>
 
-        <Panel title="Статусы">
-          <Bars rows={stats.byStatus} labels={STATUS_LABEL} total={stats.total} />
+        <Panel title={t.statuses}>
+          <Bars rows={stats.byStatus} labels={statusLabels} total={stats.total} locale={locale} />
         </Panel>
 
-        <Panel title="Откуда приходят">
-          <Bars rows={stats.bySource} labels={SOURCE_LABEL} total={stats.total} />
+        <Panel title={t.sources}>
+          <Bars rows={stats.bySource} labels={sourceLabels} total={stats.total} locale={locale} />
         </Panel>
 
-        <Panel title="Язык обращения">
-          <Bars rows={stats.byLocale} labels={LOCALE_LABEL} total={stats.total} />
+        <Panel title={t.locales}>
+          <Bars rows={stats.byLocale} labels={localeLabels} total={stats.total} locale={locale} />
         </Panel>
 
         <Panel
-          title="Что спрашивают"
-          note="Один лид может попасть сразу в несколько строк, поэтому сумма больше числа лидов."
+          title={t.services}
+          note={t.servicesNote}
         >
-          <Bars rows={stats.topServices} empty="Услуги пока не проставлялись." />
+          <Bars rows={stats.topServices} empty={t.servicesEmpty} locale={locale} />
         </Panel>
 
         <Panel
-          title="Скидка 30%"
-          note="Каждая такая скидка — тридцать процентов от чека. Это про маржу, а не про статистику."
+          title={t.discount}
+          note={t.discountNote}
         >
           <p className="mt-3 font-mono text-2xl">{stats.discounts}</p>
           <p className="mt-1 text-xs text-faint">
             {stats.total
-              ? `${Math.round((stats.discounts / stats.total) * 100)}% от всех обращений`
-              : "пока не с чем сравнивать"}
+              ? t.discountShare(Math.round((stats.discounts / stats.total) * 100))
+              : t.discountNothing}
           </p>
           {stats.discounts ? (
             <p className="mt-2 text-xs text-muted">
-              первая минута — {stats.discountsMinute}, гарантия 20 секунд — {stats.discounts - stats.discountsMinute}
+              {t.discountSplit(stats.discountsMinute, stats.discounts - stats.discountsMinute)}
             </p>
           ) : null}
         </Panel>
@@ -195,19 +182,19 @@ export default async function StatsPage() {
       {seesEveryone(staff.role) ? (
         <div className="mt-4">
           <Panel
-            title={staff.role === "head" ? "По моей команде" : "По менеджерам"}
-            note="Виден руководителю и админу. Публичный рейтинг рядом с именем коллеги меняет поведение раньше, чем результат: лиды начинают брать по лёгкости, а не по важности."
+            title={staff.role === "head" ? t.byTeam : t.byManagers}
+            note={t.perStaffNote}
           >
             {perStaff.length ? (
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full min-w-0 border-collapse text-sm sm:min-w-[420px]">
                   <thead>
                     <tr className="text-left text-xs uppercase tracking-wider text-faint">
-                      <th className="py-2 font-medium">Кто</th>
-                      <th className="py-2 font-medium">В работе</th>
-                      <th className="py-2 font-medium">Выиграл</th>
-                      <th className="py-2 font-medium">Проиграл</th>
-                      <th className="py-2 font-medium">Всего</th>
+                      <th className="py-2 font-medium">{t.colWho}</th>
+                      <th className="py-2 font-medium">{t.colActive}</th>
+                      <th className="py-2 font-medium">{t.colWon}</th>
+                      <th className="py-2 font-medium">{t.colLost}</th>
+                      <th className="py-2 font-medium">{t.colTotal}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -224,7 +211,7 @@ export default async function StatsPage() {
                 </table>
               </div>
             ) : (
-              <p className="mt-3 text-sm text-muted">Пока никто ничего не брал.</p>
+              <p className="mt-3 text-sm text-muted">{t.nobody}</p>
             )}
           </Panel>
         </div>

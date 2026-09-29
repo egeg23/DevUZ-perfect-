@@ -33,6 +33,13 @@ import type { Staff } from "@/lib/admin/session";
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const CYRILLIC = /[а-яё]/i;
 
+/** Словарь — объект, у каждой записи которого есть `ru`; прочие экспорты (списки, константы) — не словари. */
+function isDict(value: unknown): value is Record<string, Tr<Msg>> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const entries = Object.values(value);
+  return entries.length > 0 && entries.every((e) => e && typeof e === "object" && "ru" in e);
+}
+
 /** Все словари панели: content/admin-panel/*.ts плюс меню и роли. */
 async function dictionaries(): Promise<Map<string, Record<string, Tr<Msg>>>> {
   const out = new Map<string, Record<string, Tr<Msg>>>();
@@ -40,7 +47,7 @@ async function dictionaries(): Promise<Map<string, Record<string, Tr<Msg>>>> {
   for (const name of readdirSync(dir).filter((n) => n.endsWith(".ts"))) {
     const mod = (await import(new URL(name, dir).href)) as Record<string, unknown>;
     for (const [key, value] of Object.entries(mod)) {
-      if (value && typeof value === "object") out.set(`${name}:${key}`, value as Record<string, Tr<Msg>>);
+      if (isDict(value)) out.set(`${name}:${key}`, value);
     }
   }
   out.set("roles.ts:SECTIONS", Object.fromEntries(SECTIONS.map((s) => [s.href, s.label])));
@@ -50,7 +57,18 @@ async function dictionaries(): Promise<Map<string, Record<string, Tr<Msg>>>> {
 
 /** Строка записи: функцию вызываем с правдоподобными аргументами. */
 function sample(msg: Msg): string {
-  return typeof msg === "string" ? msg : (msg as (...a: unknown[]) => string)(3, "Имя", 5, 7);
+  if (typeof msg === "string") return msg;
+  const fn = msg as (...a: unknown[]) => string;
+  // Аргументы у записей разные: число, имя, текст ответа базы. Пробуем по очереди.
+  const tries: unknown[][] = [[3, "Имя", 5, 7], ["Имя", "Имя", "Имя", "Имя"], [3, 3, 3, 3], [["Имя"], 3, 3, 3]];
+  for (const args of tries) {
+    try {
+      return fn(...args);
+    } catch {
+      // следующий набор
+    }
+  }
+  throw new Error(`запись не вызывается ни с одним набором аргументов: ${fn}`);
 }
 
 /** Где в узбекском и польском можно кириллицу: имена и то, что не переводится. */

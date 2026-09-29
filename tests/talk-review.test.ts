@@ -111,7 +111,9 @@ test("правила надзирателя записаны там, где их
 test("уроки пока только копятся — это сказано человеку, а не подразумевается", async () => {
   const { readFileSync } = await import("node:fs");
   const page = readFileSync(new URL("../app/admin/talks/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /никуда не подмешиваются/, "страница не говорит, что обучение не включено");
+  const dict = readFileSync(new URL("../content/admin-panel/talks.ts", import.meta.url), "utf8");
+  assert.match(page, /\{t\.notYet\}/, "страница не говорит, что обучение не включено");
+  assert.match(dict, /notYet: \{\s*ru: "[^"]*никуда не подмешиваются/, "страница не говорит, что обучение не включено");
 
   // И в промпт первого письма копилка действительно не заглядывает.
   const outreach = readFileSync(new URL("../lib/admin/outreach.ts", import.meta.url), "utf8");

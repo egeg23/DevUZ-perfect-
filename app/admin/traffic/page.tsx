@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin/shell";
 import { TrafficPanel, trafficPeriodOf } from "@/components/admin/traffic-panel";
+import { trafficDict } from "@/content/admin-panel/traffic";
 import { requireRole } from "@/lib/admin/guard";
 
 export const dynamic = "force-dynamic";
@@ -34,11 +35,12 @@ export default async function TrafficPage({
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="mb-4 text-lg font-semibold">Трафик сайта</h1>
+      <h1 className="mb-4 text-lg font-semibold">{trafficDict.title[staff.panel_locale]}</h1>
       <TrafficPanel
         days={trafficPeriodOf(params.d)}
         canConnect={owner}
         notice={owner ? { code: params.ga, detail: params.gd, property: params.gp } : {}}
+        locale={staff.panel_locale}
       />
     </AdminShell>
   );

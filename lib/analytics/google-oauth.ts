@@ -139,7 +139,7 @@ export async function exchangeCode(client: GoogleClient, code: string, redirectU
       redirect_uri: redirectUri,
     });
     if (!answer.access_token) {
-      return { ok: false, detail: answer.error_description || answer.error || `ответ ${status}` };
+      return { ok: false, detail: answer.error_description || answer.error || `HTTP ${status}` };
     }
     return {
       ok: true,
@@ -169,9 +169,9 @@ export async function refreshAccess(client: GoogleClient, refresh: string): Prom
     client_secret: client.secret,
   });
   if (answer.access_token) return { access: answer.access_token, expiresIn: answer.expires_in ?? 3600 };
-  const detail = answer.error_description || answer.error || `ответ ${status}`;
+  const detail = answer.error_description || answer.error || `HTTP ${status}`;
   if (answer.error === "invalid_grant") throw new GoogleSignInExpired(detail);
-  throw new Error(`Google не выдал доступ: ${detail}`);
+  throw new Error(`Google token: ${detail}`);
 }
 
 export type PropertySearch =
@@ -186,7 +186,7 @@ async function adminGet<T>(access: string, path: string): Promise<T> {
     cache: "no-store",
   });
   const body = (await response.json().catch(() => ({}))) as T & { error?: { message?: string } };
-  if (!response.ok) throw new Error(body.error?.message ?? `ответ ${response.status}`);
+  if (!response.ok) throw new Error(body.error?.message ?? `HTTP ${response.status}`);
   return body;
 }
 

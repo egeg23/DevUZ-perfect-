@@ -27,7 +27,22 @@ import { anthropic } from "@/lib/model-road";
 /** Разбор резюме — Соннет: задача та же, что у письма, и цена вчетверо ниже. */
 const MODEL = process.env.HIRING_MODEL || "claude-sonnet-5";
 
-export type ReviewResult = { ok: true; id: string } | { ok: false; why: string };
+/**
+ * Почему разбор не получился — кодом: панель показывает причину на языке
+ * сотрудника (content/admin-panel/candidates.ts). `detail` — ответ модели или
+ * разборщика PDF как есть, у `forbidden` — что нашлось в разборе.
+ */
+export type ReviewRefusal =
+  | "no_db"
+  | "no_key"
+  | "unreadable"
+  | "too_thin"
+  | "model_failed"
+  | "empty_report"
+  | "forbidden"
+  | "not_saved";
+
+export type ReviewResult = { ok: true; id: string } | { ok: false; why: ReviewRefusal; detail?: string };
 
 export async function reviewResume(input: {
   bytes: ArrayBuffer;
@@ -36,8 +51,8 @@ export async function reviewResume(input: {
   ip: string;
 }): Promise<ReviewResult> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
-  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, why: "Нет ключа модели — разбирать некому." };
+  if (!db) return { ok: false, why: "no_db" };
+  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, why: "no_key" };
 
   let text: string;
   let pages: number;
@@ -46,17 +61,14 @@ export async function reviewResume(input: {
     text = read.text;
     pages = read.pages;
   } catch (error) {
-    return { ok: false, why: `Файл не прочитался: ${error instanceof Error ? error.message : String(error)}` };
+    return { ok: false, why: "unreadable", detail: error instanceof Error ? error.message : String(error) };
   }
 
   // Скан без текстового слоя отдаёт пустоту. Сказать об этом надо прямо:
   // модель, получив пустой текст, напишет «опыт не указан» — то есть соврёт
   // о живом человеке.
   if (tooThin(text)) {
-    return {
-      ok: false,
-      why: "В файле почти нет текста — похоже, это скан или картинки. Нужен PDF, из которого текст копируется.",
-    };
+    return { ok: false, why: "too_thin" };
   }
 
   /**
@@ -93,9 +105,9 @@ export async function reviewResume(input: {
     const missing = report ? reportProblems(report) : [{ code: "empty", text: "разбор не собрался" }];
     if (missing.length) report = (await ask(missing.map((m) => m.text).join(", "))) ?? report;
   } catch (error) {
-    return { ok: false, why: `Модель не ответила: ${error instanceof Error ? error.message : String(error)}` };
+    return { ok: false, why: "model_failed", detail: error instanceof Error ? error.message : String(error) };
   }
-  if (!report) return { ok: false, why: "Модель вернула разбор, который нечего показать." };
+  if (!report) return { ok: false, why: "empty_report" };
 
   /**
    * Проверка оснований — машиной, а не доверием.
@@ -109,10 +121,7 @@ export async function reviewResume(input: {
    */
   const grounds = forbiddenGrounds(report);
   if (grounds.length) {
-    return {
-      ok: false,
-      why: `Разбор опёрся на то, что к работе не относится (${grounds.join(", ")}). Он не сохранён — попробуйте ещё раз.`,
-    };
+    return { ok: false, why: "forbidden", detail: grounds.join(", ") };
   }
 
   const { data, error } = await db
@@ -129,7 +138,7 @@ export async function reviewResume(input: {
     })
     .select("id")
     .maybeSingle();
-  if (error || !data) return { ok: false, why: "Разбор не сохранился." };
+  if (error || !data) return { ok: false, why: "not_saved" };
 
   await record("candidate.reviewed", {
     actorStaffId: input.staff.id,
