@@ -255,7 +255,15 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
 const STILL_RUSSIAN_IN_PL: readonly string[] = [
   // бот в Telegram — пока по-русски
   "dostają w Telegramie wiadomość z przyciskami «Подтвердить» (zatwierdź) i «Отклонить» (odrzuć)",
+  "a pod spodem przycisk «🙅 Клиент отказался»",
+  "(w Telegramie — «🙅 Клиент отказался»)",
+  "(w Telegramie — «🔇 Игнорирует»)",
+  "o odpowiedzi klienta jest tylko «🙅 Клиент отказался»",
+  "wiadomość z przyciskiem «Команда»",
+  "Przyciski «Взять в работу» i «Отклонить» działają i tam",
+
   // кабинет и бот партнёра — отдельный продукт, по-русски
+  "w bloku «Промо-материалы»: podgląd, «Скачать» i «Подпись к посту» z przyciskiem «Скопировать подпись»",
 ];
 
 function namesFollowPanel(locale: "uz" | "pl", exceptions: readonly string[]) {

@@ -1,9 +1,9 @@
 import type { HelpCopy } from "./admin-help";
 
-import { head, leadsSections } from "./admin-help-pl/leads";
-import { prospectSections } from "./admin-help-pl/prospect";
-import { workSections } from "./admin-help-pl/work";
-import { moreSections, tail } from "./admin-help-pl/more";
+import { head, leadsSections } from "@/content/admin-help-pl/leads";
+import { prospectSections } from "@/content/admin-help-pl/prospect";
+import { workSections } from "@/content/admin-help-pl/work";
+import { moreSections, tail } from "@/content/admin-help-pl/more";
 
 /**
  * Instrukcja po polsku.

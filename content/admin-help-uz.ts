@@ -1315,7 +1315,7 @@ export const uz: HelpCopy = {
           body: [
             "Panel tepasida, «Bo‘limdan qanday foydalanish» yonida — **RU / UZ / PL** tanlagichi: ruscha, o‘zbekcha (lotin yozuvida) va polyakcha. Keraklisini bosing — sahifa darhol shu tilda qayta ochiladi, manzil va ochiq bo‘lim o‘zgarmaydi.",
             "Til brauzerga emas, sizga saqlanadi: telefondan yoki boshqa kompyuterdan kirsangiz ham, panel o‘sha tilda ochiladi. Tilni faqat o‘zingizga o‘zgartira olasiz — hamkasblaringizda u o‘zgarmaydi. Til tanlanmaguncha panel ruscha.",
-            "Panel bo‘limma-bo‘lim tarjima qilinmoqda. Bo‘lim hali tarjima qilinmagan bo‘lsa, uning tugma va yozuvlari ruscha qoladi — yo‘riqnomada ham ular ruscha nomlangan, ekranda ko‘z bilan topishingiz uchun. Telegramdagi bot xabarlari hozircha ruscha keladi.",
+            "Panel to‘liq tarjima qilingan: tugmalar, yozuvlar va maslahatlar — tanlangan tilda. Ruscha faqat Telegramdagi bot xabarlari va tugmalari (bot hozircha ruscha yozadi), hamkor kabineti va buyurtmachi uchun shartnoma matni qoladi — yo‘riqnomada ular ruscha nomlangan, ekranda ko‘z bilan topishingiz uchun.",
             "Yo‘riqnoma panel tilida ochiladi: ruscha, o‘zbekcha yoki polyakcha. Yo‘riqnomaning boshqa tilini shu sahifaning tepasida tanlash mumkin — bu panel tiliga ta’sir qilmaydi.",
           ],
         },
@@ -1334,7 +1334,7 @@ export const uz: HelpCopy = {
           roles: ["admin"],
           body: [
             "«Kim sifatida ko‘rsatish: egasi / rahbar / menejer» — yo‘riqnoma aynan shu roldagi odam o‘qiydigan ko‘rinishda: sizning bo‘limlaringizsiz va uning matni bilan. Shunday qilib yangi odamga nima tushuntirilayotganini birovning akkauntiga kirmasdan tekshirasiz.",
-            "Qo‘shimchalar uchun qoida: har bir yangi funksiya shu yerdagi o‘z bandi bilan birga keladi — rus va o‘zbek tillarida, rollar bo‘yicha. Bu har bir yangilanish chiqishida test bilan tekshiriladi.",
+            "Qo‘shimchalar uchun qoida: har bir yangi funksiya shu yerdagi o‘z bandi bilan birga keladi — rus, o‘zbek va polyak tillarida, rollar bo‘yicha. Bu har bir yangilanish chiqishida test bilan tekshiriladi.",
           ],
         },
       ],
