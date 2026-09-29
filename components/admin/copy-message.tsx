@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 
+import { usePanelDict } from "@/components/admin/panel-locale";
+import { panelButtonsDict } from "@/content/admin-panel/lead-card";
+
 /**
  * Копирование готового текста.
  *
@@ -9,8 +12,9 @@ import { useState } from "react";
  * серверный, и превращать его целиком в клиентский ради буфера обмена
  * значило бы тащить в браузер все находки и контакты всех сайтов.
  */
-export function CopyMessage({ text, label = "Скопировать текст" }: { text: string; label?: string }) {
+export function CopyMessage({ text, label }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
+  const t = usePanelDict(panelButtonsDict);
 
   return (
     <button
@@ -23,7 +27,7 @@ export function CopyMessage({ text, label = "Скопировать текст" 
       }}
       className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
     >
-      {copied ? "Скопировано" : label}
+      {copied ? t.copied : (label ?? t.copy)}
     </button>
   );
 }
