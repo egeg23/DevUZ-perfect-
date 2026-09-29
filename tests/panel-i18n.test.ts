@@ -206,14 +206,13 @@ test("«Как пользоваться разделом» ведёт в инс�
   assert.match(uz, /href="\/admin\/help\?lang=uz#prospect"/);
   const ru = renderToStaticMarkup(createElement(AdminShell, { staff: staff("ru"), children: "x" }));
   assert.match(ru, /href="\/admin\/help#prospect"/);
-  // Польской инструкции ещё нет — открывается русская, а не пустая страница.
   const pl = renderToStaticMarkup(createElement(AdminShell, { staff: staff("pl"), children: "x" }));
-  assert.match(pl, /href="\/admin\/help#prospect"/);
+  assert.match(pl, /href="\/admin\/help\?lang=pl#prospect"/);
 });
 
 test("инструкция рисуется на каждом языке для каждой роли", () => {
   for (const role of ROLES) {
-    for (const locale of ["ru", "uz"] as const) {
+    for (const locale of ["ru", "uz", "pl"] as const) {
       const html = renderToStaticMarkup(createElement(HelpView, { staff: staff(locale, role), locale, role }));
       assert.match(html, new RegExp(helpCopy(locale).title));
       const menu = SECTIONS.find((s) => s.href === "/admin/prospect")!;
@@ -249,35 +248,49 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   "saytdagi kabinetida, «Промо-материалы» blokida ko‘radi: prevyu, «Скачать» va «Подпись к посту», yonida «Скопировать подпись»",
 ];
 
-test("узбекская инструкция зовёт кнопки так, как они написаны на узбекской панели", async () => {
-  const ruToUz = new Map<string, string>();
-  for (const dict of (await dictionaries()).values()) {
-    for (const entry of Object.values(dict)) {
-      if (typeof entry.ru === "string") ruToUz.set(entry.ru, entry.uz as string);
+/**
+ * Польская инструкция — то же правило: кнопки как на польской панели.
+ * Исключения — те же по смыслу: бот в Telegram и кабинет партнёра.
+ */
+const STILL_RUSSIAN_IN_PL: readonly string[] = [
+  // бот в Telegram — пока по-русски
+  // кабинет и бот партнёра — отдельный продукт, по-русски
+];
+
+function namesFollowPanel(locale: "uz" | "pl", exceptions: readonly string[]) {
+  return async () => {
+    const ruTo = new Map<string, string>();
+    for (const dict of (await dictionaries()).values()) {
+      for (const entry of Object.values(dict)) {
+        if (typeof entry.ru === "string") ruTo.set(entry.ru, entry[locale] as string);
+      }
     }
-  }
-  const uz = helpCopy("uz");
-  const texts = [
-    uz.lead,
-    ...uz.rules,
-    ...Object.values(uz.sections).flatMap((s) => [
-      s.what,
-      ...s.items.flatMap((i) => [i.title, ...(isByRole(i.body) ? Object.values(i.body).flat() : i.body)]),
-    ]),
-    ...uz.channels.flatMap((c) => [c.what, ...c.how]),
-  ].map(String);
-  // Исключение, которого в тексте больше нет, — лишнее: его пора снять.
-  for (const allowed of STILL_RUSSIAN_IN_UZ) {
-    assert.ok(texts.some((t) => t.includes(allowed)), `исключения «${allowed}» в узбекской инструкции нет — уберите его`);
-  }
-  for (let text of texts) {
-    for (const allowed of STILL_RUSSIAN_IN_UZ) text = text.replaceAll(allowed, "");
-    for (const [, name] of text.matchAll(/«([^»]+)»/g)) {
-      const want = ruToUz.get(name);
-      assert.ok(!want, `в узбекской инструкции «${name}», а на узбекской панели — «${want}»: ${text.slice(0, 120)}`);
+    const copy = helpCopy(locale);
+    const texts = [
+      copy.lead,
+      ...copy.rules,
+      ...Object.values(copy.sections).flatMap((s) => [
+        s.what,
+        ...s.items.flatMap((i) => [i.title, ...(isByRole(i.body) ? Object.values(i.body).flat() : i.body)]),
+      ]),
+      ...copy.channels.flatMap((c) => [c.what, ...c.how]),
+    ].map(String);
+    // Исключение, которого в тексте больше нет, — лишнее: его пора снять.
+    for (const allowed of exceptions) {
+      assert.ok(texts.some((t) => t.includes(allowed)), `${locale}: исключения «${allowed}» в инструкции нет — уберите его`);
     }
-  }
-});
+    for (let text of texts) {
+      for (const allowed of exceptions) text = text.replaceAll(allowed, "");
+      for (const [, name] of text.matchAll(/«([^»]+)»/g)) {
+        const want = ruTo.get(name);
+        assert.ok(!want, `${locale}: в инструкции «${name}», а на панели — «${want}»: ${text.slice(0, 120)}`);
+      }
+    }
+  };
+}
+
+test("узбекская инструкция зовёт кнопки так, как они написаны на узбекской панели", namesFollowPanel("uz", STILL_RUSSIAN_IN_UZ));
+test("польская инструкция зовёт кнопки так, как они написаны на польской панели", namesFollowPanel("pl", STILL_RUSSIAN_IN_PL));
 
 test("русская инструкция зовёт разделы так, как они написаны в русском меню", () => {
   const ru = read("content/admin-help-ru.ts");
@@ -285,10 +298,12 @@ test("русская инструкция зовёт разделы так, ка
     const section = SECTIONS.find((s) => s.href === href);
     if (section) assert.equal(name, section.label.ru, `ссылка на ${href} названа «${name}»`);
   }
-  const uz = read("content/admin-help-uz.ts");
-  for (const [, name, href] of uz.matchAll(/\[«([^»]+)»\]\((\/admin[^)#]*)/g)) {
-    const section = SECTIONS.find((s) => s.href === href);
-    if (section) assert.equal(name, section.label.uz, `uz: ссылка на ${href} названа «${name}»`);
+  for (const locale of ["uz", "pl"] as const) {
+    const copy = JSON.stringify(helpCopy(locale));
+    for (const [, name, href] of copy.matchAll(/\[«([^»]+)»\]\((\/admin[^)#]*)/g)) {
+      const section = SECTIONS.find((s) => s.href === href);
+      if (section) assert.equal(name, section.label[locale], `${locale}: ссылка на ${href} названа «${name}»`);
+    }
   }
 });
 

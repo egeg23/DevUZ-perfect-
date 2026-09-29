@@ -1316,7 +1316,7 @@ export const uz: HelpCopy = {
             "Panel tepasida, «Bo‘limdan qanday foydalanish» yonida — **RU / UZ / PL** tanlagichi: ruscha, o‘zbekcha (lotin yozuvida) va polyakcha. Keraklisini bosing — sahifa darhol shu tilda qayta ochiladi, manzil va ochiq bo‘lim o‘zgarmaydi.",
             "Til brauzerga emas, sizga saqlanadi: telefondan yoki boshqa kompyuterdan kirsangiz ham, panel o‘sha tilda ochiladi. Tilni faqat o‘zingizga o‘zgartira olasiz — hamkasblaringizda u o‘zgarmaydi. Til tanlanmaguncha panel ruscha.",
             "Panel bo‘limma-bo‘lim tarjima qilinmoqda. Bo‘lim hali tarjima qilinmagan bo‘lsa, uning tugma va yozuvlari ruscha qoladi — yo‘riqnomada ham ular ruscha nomlangan, ekranda ko‘z bilan topishingiz uchun. Telegramdagi bot xabarlari hozircha ruscha keladi.",
-            "Yo‘riqnoma panel tilida ochiladi. Polyakcha yo‘riqnoma hali yo‘q — polyak tilida u ruscha ochiladi. Yo‘riqnomaning boshqa tilini shu sahifaning tepasida tanlash mumkin, bu panel tiliga ta’sir qilmaydi.",
+            "Yo‘riqnoma panel tilida ochiladi: ruscha, o‘zbekcha yoki polyakcha. Yo‘riqnomaning boshqa tilini shu sahifaning tepasida tanlash mumkin — bu panel tiliga ta’sir qilmaydi.",
           ],
         },
         {
