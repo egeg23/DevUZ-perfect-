@@ -125,6 +125,19 @@ export function outcomeOf(
 export const REPLACE_FACTOR = 2;
 export const replaceLimit = (target: number): number => target * REPLACE_FACTOR;
 
+/**
+ * Кнопки порции в Telegram — без значков.
+ *
+ * Бот пока пишет по-русски, и панель на любом языке называет его кнопки
+ * так, как человек увидит их в Telegram: словарь панели подставляет эти
+ * строки, а не переводит их.
+ */
+export const BOT_BUTTON = {
+  send: "Отправить через бота",
+  self: "Написал сам",
+  skip: "Не подходит",
+} as const;
+
 export type PortionTally = {
   /** Цель дня — утренняя раздача. Замены в неё не входят: они вместо пропущенных. */
   target: number;

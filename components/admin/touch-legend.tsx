@@ -1,6 +1,10 @@
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
 import { HOURLY_CAP } from "@/lib/admin/outreach";
+import { BOT_BUTTON } from "@/lib/admin/portion";
+import { pick, type PanelLocale } from "@/lib/admin/i18n";
+import { outreachListDict, prospectStatusDict } from "@/content/admin-panel/prospect";
+import { touchLegendDict } from "@/content/admin-panel/prospect-tools";
 
 /**
  * Как читать цифры в «Касаниях».
@@ -12,71 +16,82 @@ import { HOURLY_CAP } from "@/lib/admin/outreach";
  *
  * Свёрнуто по умолчанию: тем, кто уже знает, оно не нужно, а новичку одно
  * нажатие.
+ *
+ * Язык — сотрудника: страница передаёт `staff.panel_locale`. Названия
+ * статусов берутся из того же словаря, что и подписи на карточках, —
+ * расшифровка и карточка не могут назвать одно и то же по-разному.
  */
-export function TouchLegend() {
+export function TouchLegend({ locale = "ru" }: { locale?: PanelLocale }) {
+  const t = pick(touchLegendDict, locale);
+  const status = pick(prospectStatusDict, locale);
+  const self = pick(outreachListDict, locale).selfContacted;
   return (
     <details className="mt-6 rounded-xl border border-line bg-surface px-5 py-3 text-sm">
       <summary className="cursor-pointer text-xs uppercase tracking-wider text-faint hover:text-text">
-        Как читать цифры
+        {t.summary}
       </summary>
 
       <dl className="mt-4 grid gap-x-6 gap-y-4 leading-relaxed sm:grid-cols-2">
-        <Term name={<span className="font-mono text-green">поиск 84</span>}>
-          <b>Видимость в поиске</b>, от 0 до 100: насколько легко найти сайт в Google и Яндексе.
-          Считается по тому, что мешает поиску: нет описания, нет карты сайта, страницы с одинаковыми
-          заголовками. <span className="text-green">80 и выше</span> — в порядке,{" "}
-          <span className="text-gold">50–79</span> — есть что поправить,{" "}
-          <span className="text-red-300">ниже 50</span> — находят плохо, до 10 — сайт закрыт от поиска.
+        <Term name={<span className="font-mono text-green">{t.searchSample}</span>}>
+          <b>{t.seoTitle}</b>
+          {t.seoBody} <span className="text-green">{t.seoGood}</span>
+          {t.seoGoodTail} <span className="text-gold">{t.seoMid}</span>
+          {t.seoMidTail} <span className="text-red-300">{t.seoLow}</span>
+          {t.seoLowTail}
         </Term>
 
         <Term name={<span className="font-mono text-red-300">−24…48</span>}>
-          <b>Сколько обращений теряется</b> из каждых ста человек, которые уже открыли сайт и готовы
-          были написать или позвонить: от 24 до 48. Это наша оценка по найденным проблемам (нет цен,
-          телефон не нажимается, с телефона не читается), а не статистика клиента — так и говорите.
-          С поиском не связано: сайт может хорошо находиться и при этом терять людей.
+          <b>{t.lostTitle}</b>
+          {t.lostBody}
         </Term>
 
         <Term name={<span className="font-mono text-gold">52</span>}>
-          <b>Общая оценка сайта</b>, от 0 до 100: сто минус 25 за каждую критичную находку, 12 за
-          серьёзную и 5 за мелкую. <span className="text-gold">Жёлтым</span> — ниже 60. Ноль — сайт не
-          открылся, и оценить его было нечем. Чем ниже оценка, тем больше честных поводов написать.
+          <b>{t.scoreTitle}</b>
+          {t.scoreBody} <span className="text-gold">{t.scoreYellow}</span>
+          {t.scoreTail}
         </Term>
 
         <Term
           name={
             <span className="flex flex-wrap gap-1">
-              <Chip tone="border-red-500/40 text-red-300">критично</Chip>
-              <Chip tone="border-gold/40 text-gold">серьёзно</Chip>
-              <Chip tone="border-line text-muted">мелочь</Chip>
+              <Chip tone="border-red-500/40 text-red-300">{t.critical}</Chip>
+              <Chip tone="border-gold/40 text-gold">{t.major}</Chip>
+              <Chip tone="border-line text-muted">{t.minor}</Chip>
             </span>
           }
         >
-          <b>Находки</b> — что не так на сайте. Цвет рамки — насколько это важно. Наведите курсор или
-          откройте карточку: там написано, чем это оборачивается для клиентов и что мы с этим делаем.
-          Начинайте разговор с находки про клиентов и деньги, а не с технической.
+          <b>{t.findingsTitle}</b>
+          {t.findingsBody}
         </Term>
 
-        <Term name={<span className="text-faint">ушло 1 из {HOURLY_CAP} · в очереди 3</span>}>
-          <b>Очередь рабочего аккаунта.</b> Бот пишет с аккаунта студии не больше {HOURLY_CAP} новых
-          компаний в час — иначе Telegram примет это за рассылку и ограничит аккаунт. «В очереди» —
-          сколько сообщений ждут своей минуты. Письма владельца уходят вне очереди. Не хотите ждать —
-          напишите со своего аккаунта и нажмите «Связался сам».
+        <Term name={<span className="text-faint">{t.queueSample(HOURLY_CAP)}</span>}>
+          <b>{t.queueTitle}</b>
+          {t.queueBody(HOURLY_CAP, self)}
         </Term>
 
-        <Term name={<span className="text-faint">осталось 12 — сделано 18 из 30</span>}>
-          <b>План касаний на неделю</b> — его ставит руководитель своим людям или владелец. Считаются
-          касания с понедельника: отправленные ботом и отмеченные «Связался сам» (в Telegram — «Написал
-          сам»). Порция дня — это план недели, разложенный по дням: сделали порцию — идёте по плану.
+        <Term name={<span className="text-faint">{t.planSample}</span>}>
+          <b>{t.planTitle}</b>
+          {t.planBody(self, BOT_BUTTON.self)}
         </Term>
       </dl>
 
       <p className="mt-4 text-xs text-faint">
-        Статусы карточки: <b>не писали</b> — ещё никто не касался; <b>сообщение готово</b> — письмо
-        написано, не отправлено; <b>в очереди на отправку</b> — ждёт своей минуты у бота;{" "}
-        <b>отправлено</b> — ушло, ждём ответа, через 3 и 7 дней молчания бот сам напомнит о себе;{" "}
-        <b>писать руками</b> — в Telegram не найти, звоните или пишите в WhatsApp; <b>не ушло</b> —
-        бот не смог доставить, откройте карточку; <b>пропущен</b> — решили не писать.{" "}
-        <HelpHint topic={helpAnchor("/admin/prospect", "numbers")} label="Подробнее в инструкции" />
+        {t.statusesLead}
+        <b>{status.new}</b>
+        {t.statusNew}
+        <b>{status.contacting}</b>
+        {t.statusContacting}
+        <b>{status.sending}</b>
+        {t.statusSending}
+        <b>{status.sent}</b>
+        {t.statusSent}
+        <b>{status.manual}</b>
+        {t.statusManual}
+        <b>{status.failed}</b>
+        {t.statusFailed}
+        <b>{status.skipped}</b>
+        {t.statusSkipped}{" "}
+        <HelpHint topic={helpAnchor("/admin/prospect", "numbers")} label={t.helpMore} />
       </p>
     </details>
   );

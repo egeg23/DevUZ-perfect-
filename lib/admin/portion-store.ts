@@ -7,6 +7,7 @@ import {
   DELIVER_HOUR,
   DELIVER_LATEST_HOUR,
   REPORT_HOUR,
+  BOT_BUTTON,
   distribute,
   isWorkday,
   outcomeOf,
@@ -236,7 +237,7 @@ export function itemButtons(p: Prospect): Button[][] {
   const route = routeFor(p.contacts);
   const first: Button[] = [];
   if (p.message && route && route.kind !== "manual") {
-    first.push({ text: "📤 Отправить через бота", callback_data: `tp:send:${p.id}` });
+    first.push({ text: `📤 ${BOT_BUTTON.send}`, callback_data: `tp:send:${p.id}` });
   }
   if (p.message && route && route.kind !== "handle") {
     first.push({ text: "WhatsApp ↗", url: whatsappLink(route.target, p.message) });
@@ -244,8 +245,8 @@ export function itemButtons(p: Prospect): Button[][] {
   return [
     ...(first.length ? [first] : []),
     [
-      { text: "✋ Написал сам", callback_data: `tp:self:${p.id}` },
-      { text: "✖ Не подходит", callback_data: `tp:skip:${p.id}` },
+      { text: `✋ ${BOT_BUTTON.self}`, callback_data: `tp:self:${p.id}` },
+      { text: `✖ ${BOT_BUTTON.skip}`, callback_data: `tp:skip:${p.id}` },
     ],
     [{ text: "Открыть в панели", panel: `/admin/prospect?open=${p.id}#p-${p.id}` }],
   ];

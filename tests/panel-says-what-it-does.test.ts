@@ -57,9 +57,14 @@ test("бюджет в списке — как клиент говорит о д�
   // Модель ставит B1–B3 по отношению к деньгам (lib/qualify/prompt.ts), а
   // список показывал суммы: у формы и касаний с B3 по умолчанию стояло
   // «от 15 тыс.».
-  const table = read("components/admin/lead-table.tsx");
-  const labels = table.slice(table.indexOf("const BUDGET_LABEL"), table.indexOf("};", table.indexOf("const BUDGET_LABEL")));
-  assert.doesNotMatch(labels, /тыс\./);
+  // Подписи бюджета — в словаре панели, на всех трёх языках.
+  const dict = read("content/admin-panel/home.ts");
+  const start = dict.indexOf("export const budgetDict");
+  assert.ok(start > 0, "подписей бюджета нет в словаре");
+  const labels = dict.slice(start, dict.indexOf("});", start));
+  assert.match(labels, /B3: \{ ru: "не назван"/);
+  assert.doesNotMatch(labels, /тыс\.|\bk\b|tys\.|ming/);
+  assert.match(read("components/admin/lead-table.tsx"), /label\(budgetDict, lead\.budget, locale\)/);
   assert.match(read("lib/qualify/prompt.ts"), /B1 — сумма или диапазон названы и утверждены/);
 });
 
@@ -70,6 +75,10 @@ test("приглашение называет настоящий срок ссы
 
 test("карточка лида не говорит, что переписка в панели не показывается", () => {
   const page = read("app/admin/leads/[id]/page.tsx");
-  assert.match(page, /Показать переписку/);
+  // Подпись кнопки — в словаре карточки, страница берёт её оттуда.
+  const dict = read("content/admin-panel/lead-card.ts");
+  assert.match(page, /\{t\.showTranscript\}/);
+  assert.match(dict, /showTranscript: \{ ru: "Показать переписку"/);
   assert.doesNotMatch(page, /Переписка с клиентом в панели не показывается/);
+  assert.doesNotMatch(dict, /Переписка с клиентом в панели не показывается/);
 });

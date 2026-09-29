@@ -19,6 +19,7 @@ import { requestIp, requireRole, requireStaff } from "@/lib/admin/guard";
 import { deliverReplacement, portionOwner, topUpPortion } from "@/lib/admin/portion-store";
 import { nudgeStream } from "@/lib/admin/stream-store";
 import { isCloseReason } from "@/lib/admin/touch-close";
+import { touchErrorParam } from "@/lib/admin/touch-errors";
 import { createCampaign, listCampaigns, processPlaces, runSearch, setCampaignActive } from "@/lib/maps/store";
 import { pitchLocales, type PitchLocale } from "@/lib/audit/pitch";
 import {
@@ -118,7 +119,8 @@ export async function prepareOutreachAction(formData: FormData) {
   try {
     result = await prepareOutreach(id, staff);
   } catch (error) {
-    result = { ok: false, why: error instanceof Error ? error.message : String(error) };
+    const detail = error instanceof Error ? error.message : String(error);
+    result = { ok: false, why: detail, code: "defect", detail };
   }
 
   revalidatePath("/admin/prospect");
@@ -128,7 +130,7 @@ export async function prepareOutreachAction(formData: FormData) {
   redirect(
     result.ok
       ? `/admin/prospect?open=${id}#p-${id}`
-      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.reason ?? result.why)}#p-${id}`,
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(touchErrorParam(result))}#p-${id}`,
   );
 }
 
@@ -154,7 +156,8 @@ export async function sendOutreachAction(formData: FormData) {
     result = await queueOutreach(id, message, staff, await requestIp());
   } catch (error) {
     console.error("касания: отправка упала", error);
-    result = { ok: false, why: error instanceof Error ? error.message : String(error) };
+    const detail = error instanceof Error ? error.message : String(error);
+    result = { ok: false, why: detail, code: "defect", detail };
   }
   // Компания из потока «Получать лиды» — следующая придёт в Telegram сразу.
   if (result.ok) after(() => nudgeStream(id));
@@ -166,7 +169,7 @@ export async function sendOutreachAction(formData: FormData) {
   redirect(
     result.ok
       ? `/admin/prospect?sent=1&open=${id}#p-${id}`
-      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}#p-${id}`,
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(touchErrorParam(result))}#p-${id}`,
   );
 }
 
@@ -188,7 +191,7 @@ export async function markSelfContactedAction(formData: FormData) {
   redirect(
     result.ok
       ? `/admin/prospect?open=${id}#p-${id}`
-      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}#p-${id}`,
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(touchErrorParam(result))}#p-${id}`,
   );
 }
 
@@ -207,7 +210,7 @@ export async function recordManualAnswerAction(formData: FormData) {
   redirect(
     result.ok
       ? `/admin/prospect?open=${id}#p-${id}`
-      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}#p-${id}`,
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(touchErrorParam(result))}#p-${id}`,
   );
 }
 
@@ -222,13 +225,13 @@ export async function closeTouchAction(formData: FormData) {
   const reason = String(formData.get("reason") ?? "");
   const result = isCloseReason(reason)
     ? await closeTouch(id, reason, staff, await requestIp(), "panel")
-    : { ok: false as const, why: "Неизвестная причина." };
+    : { ok: false as const, why: "Неизвестная причина.", code: "unknown_reason" as const };
   revalidatePath("/admin/prospect");
   revalidatePath("/admin/leads");
   redirect(
     result.ok
       ? `/admin/prospect?open=${id}#p-${id}`
-      : `/admin/prospect?open=${id}&e=${encodeURIComponent(result.why)}#p-${id}`,
+      : `/admin/prospect?open=${id}&e=${encodeURIComponent(touchErrorParam(result))}#p-${id}`,
   );
 }
 
