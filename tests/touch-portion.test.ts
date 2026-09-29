@@ -162,8 +162,9 @@ test("замена: выдаётся сразу и в боте, и в панел
 
   // Блок порции: «сделано X из N» — только касания и цель дня.
   const page = read("app/admin/prospect/page.tsx");
-  assert.match(page, /сделано \{tally\.done\} из \{tally\.target\}/);
-  assert.match(page, /p\.replacement \? <span className="text-xs text-green">замена<\/span>/);
+  assert.match(page, /t\.portionHead\(tally\.done, tally\.target\)/);
+  assert.match(read("content/admin-panel/prospect.ts"), /`Ваша порция на сегодня: сделано \$\{done\} из \$\{target\}`/);
+  assert.match(page, /p\.replacement \? <span className="text-xs text-green">\{t\.replacement\}<\/span>/);
 });
 
 test("раздача — раз в день и без двойной раздачи", () => {
@@ -215,5 +216,6 @@ test("отключённому порцию закрывают, в «Касан�
   assert.match(read("lib/admin/offboarding.ts"), /from\("touch_portions"\)[\s\S]{0,80}outcome: "expired"/);
   const page = read("app/admin/prospect/page.tsx");
   assert.match(page, /portionOf\(staff\.id\)/);
-  assert.ok(page.indexOf("Ваша порция на сегодня") < page.indexOf("<ProspectRunner"), "порция ниже прогона");
+  const head = page.indexOf("t.portionHead(");
+  assert.ok(head > 0 && head < page.indexOf("<ProspectRunner"), "порция ниже прогона");
 });

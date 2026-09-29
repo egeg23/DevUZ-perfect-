@@ -35,7 +35,12 @@ test("«Связался сам» снимает письмо с очереди 
 
   const list = read("components/admin/outreach-list.tsx");
   assert.match(list, /row\.status === "new" \|\| row\.status === "contacting" \|\| row\.status === "sending" \? \(\s*<form\s*action=\{markSelfContactedAction\}/);
-  assert.match(list, /нажмите «Связался сам» ниже — бот тогда свою копию не\s*отправит/);
+  // Совет — из словаря панели, и кнопка в нём названа так же, как на экране:
+  // тем же ключом `selfContacted` на каждом языке.
+  assert.match(list, /t\.noNeedToWait\(t\.selfContacted\)/);
+  const dict = read("content/admin-panel/prospect.ts");
+  assert.match(dict, /нажмите «\$\{self\}» ниже — бот тогда свою копию не\s*отправит/);
+  assert.match(dict, /selfContacted: \{ ru: "Связался сам"/);
 });
 
 test("«два в час» считает только то, что ушло с рабочего аккаунта", () => {

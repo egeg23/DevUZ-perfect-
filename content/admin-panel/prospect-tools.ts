@@ -167,10 +167,10 @@ export const mapsDict = defineDict({
     uz: "Ulanmagan. Bir marta nima qilish kerak:",
     pl: "Nie podłączono. Co trzeba zrobić jednorazowo:",
   },
-  step1Before: { ru: "В ", uz: "", pl: "W " },
+  step1Before: { ru: "В ", uz: "Google konsoli ", pl: "W " },
   step1After: {
     ru: " — проект (можно тот же, что для Google Analytics) → включите «Places API (New)». Нужна привязанная карта оплаты: без неё Google API не открывает, но первая тысяча запросов в месяц бесплатна.",
-    uz: " da — loyiha (Google Analytics uchun ishlatilgani ham bo‘ladi) → «Places API (New)» ni yoqing. To‘lov kartasi ulangan bo‘lishi kerak: usiz Google API ochmaydi, lekin oyiga birinchi ming so‘rov bepul.",
+    uz: " — loyiha (Google Analytics uchun ishlatilgani ham bo‘ladi) → «Places API (New)» ni yoqing. To‘lov kartasi ulangan bo‘lishi kerak: usiz Google API ochmaydi, lekin oyiga birinchi ming so‘rov bepul.",
     pl: " — projekt (może być ten sam co dla Google Analytics) → włącz «Places API (New)». Potrzebna jest podpięta karta płatnicza: bez niej Google nie udostępnia API, ale pierwszy tysiąc zapytań miesięcznie jest darmowy.",
   },
   step2: {

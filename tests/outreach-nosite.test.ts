@@ -104,12 +104,16 @@ test("ветка без сайта стоит до разбора, а не вн�
 
 test("галочка меняет смысл поля, и ниша спрашивается сразу", () => {
   const runner = read("components/admin/prospect-runner.tsx");
+  // Подписи — в словаре панели, в компоненте — ключи.
+  const dict = read("content/admin-panel/prospect-tools.ts");
 
-  assert.match(runner, /У компании нет сайта/);
+  assert.match(runner, /\{t\.noSite\}/);
+  assert.match(dict, /noSite: \{ ru: "У компании нет сайта"/);
   // Поле ниши появляется по галочке — оно и есть то единственное, от чего
   // будет написано письмо.
   assert.match(runner, /\{noSite \? \(\s*\n\s*<label/);
-  assert.match(runner, /Ниша — от неё будет написано письмо/);
+  assert.match(runner, /\{t\.nicheLabel\}/);
+  assert.match(dict, /Ниша — от неё будет написано письмо/);
   assert.match(runner, /saveNoSiteAction/);
 
   // Без ниши кнопка не нажимается: письмо вышло бы про «ваш бизнес», то есть
