@@ -15,7 +15,9 @@ import { useEffect } from "react";
  *    параллакс. Пишется transform в requestAnimationFrame, по одному разу за
  *    кадр, как бы часто ни приходили события прокрутки.
  * 3. `[data-dock]` — кнопка записи внизу телефона — показывается, когда
- *    первый экран с его собственной кнопкой уже пролистан.
+ *    первый экран с его собственной кнопкой уже пролистан, и прячется, пока
+ *    на экране сама форма (`[data-dock-hide]`): кнопка поверх формы, которая
+ *    ведёт на эту же форму, только закрывает поля.
  * 4. `[data-progress]` растягивается по ширине от 0 до 1 вместе с прочитанной
  *    долей страницы (scaleX, не width).
  *
@@ -29,11 +31,14 @@ export function Motion() {
 
     const docks = Array.from(document.querySelectorAll<HTMLElement>("[data-dock]"));
 
-    if (still || !("IntersectionObserver" in window)) {
+    if (!("IntersectionObserver" in window)) {
       reveal.forEach((el) => el.setAttribute("data-shown", ""));
       docks.forEach((el) => el.setAttribute("data-shown", ""));
       return;
     }
+    // Без анимаций всё видно сразу, а слои стоят. Кнопка внизу при этом
+    // живёт по тем же правилам: появиться и спрятаться — не анимация.
+    if (still) reveal.forEach((el) => el.setAttribute("data-shown", ""));
 
     const io = new IntersectionObserver(
       (entries) => {
@@ -45,9 +50,21 @@ export function Motion() {
       },
       { rootMargin: "0px 0px -12% 0px", threshold: 0.12 },
     );
-    reveal.forEach((el) => io.observe(el));
+    if (!still) reveal.forEach((el) => io.observe(el));
 
-    const layers = Array.from(document.querySelectorAll<HTMLElement>("[data-speed]"));
+    // Пока форма записи на экране, нижняя кнопка не нужна.
+    let formInView = false;
+    const hideZones = Array.from(document.querySelectorAll<HTMLElement>("[data-dock-hide]"));
+    const zoneIo = new IntersectionObserver(
+      (entries) => {
+        formInView = entries.some((e) => e.isIntersecting);
+        for (const dock of docks) dock.toggleAttribute("data-shown", !formInView && window.scrollY > window.innerHeight * 0.7);
+      },
+      { threshold: 0 },
+    );
+    hideZones.forEach((el) => zoneIo.observe(el));
+
+    const layers = still ? [] : Array.from(document.querySelectorAll<HTMLElement>("[data-speed]"));
     const bars = Array.from(document.querySelectorAll<HTMLElement>("[data-progress]"));
     let frame = 0;
 
@@ -66,7 +83,7 @@ export function Motion() {
         const offset = box.top + box.height / 2 - vh / 2;
         el.style.transform = `translate3d(0, ${(offset * speed).toFixed(1)}px, 0)`;
       }
-      for (const dock of docks) dock.toggleAttribute("data-shown", y > vh * 0.7);
+      for (const dock of docks) dock.toggleAttribute("data-shown", !formInView && y > vh * 0.7);
       if (bars.length) {
         const max = root.scrollHeight - vh;
         const share = max > 0 ? Math.min(1, Math.max(0, y / max)) : 0;
@@ -83,6 +100,7 @@ export function Motion() {
     window.addEventListener("resize", onScroll, { passive: true });
     return () => {
       io.disconnect();
+      zoneIo.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);

@@ -28,7 +28,7 @@ import {
   TrialPoints,
   WhereBlock,
 } from "../Blocks";
-import { Book } from "../Book";
+import { BookingForm } from "../BookingForm";
 import { Credit } from "../Credit";
 import { Motion } from "../Motion";
 import { Skyline } from "./Skyline";
@@ -37,8 +37,8 @@ import s from "./countries.module.css";
 const at = (i: number) => ({ "--i": i }) as CSSProperties;
 
 const GREETINGS = [
-  { lang: "en", word: "Hello", name: "Английский", note: "Для детей 5–8 и 8–17 лет" },
-  { lang: "fr", word: "Bonjour", name: "Французский", note: "Для детей 5–8 и 8–17 лет" },
+  { lang: "en", word: "Hello", name: "Английский" },
+  { lang: "fr", word: "Bonjour", name: "Французский" },
 ] as const;
 
 /**
@@ -48,7 +48,11 @@ const GREETINGS = [
  * кодом, едут с разной скоростью, пока страница листается. Скорость слоя
  * задаёт `data-speed`, скролл при этом не перехватывается.
  *
- * Движения блоков: открытка с печатью, страницы-паспорта раскрываются,
+ * Выбран владельцем и Дарьей как основной сайт (/maximova). Фото — без фона:
+ * Дарья стоит прямо на странице. Запись — настоящая форма: заявка уходит в
+ * базу и Дарье в Telegram. Кабинет — вход через её бота.
+ *
+ * Движения блоков: портрет с печатью, страницы-паспорта раскрываются,
  * самолётик перелетает между возрастами, стрелка часов доходит до 45 минут,
  * записка приклеивается, письмо разворачивается.
  */
@@ -57,7 +61,22 @@ export function TwoCountries() {
     <div className={s.page}>
       <Motion />
 
-      <header className={s.hero}>
+      <nav className={s.bar} aria-label="Разделы">
+        <a className={s.brand} href="#top">
+          {TEACHER.name}
+        </a>
+        <div className={s.chips}>
+          <a href="#zapis">Запись</a>
+          <a href="#ceny">Цены</a>
+          <a href="#probnoe">Пробное</a>
+          <a href="#voprosy">Вопросы</a>
+        </div>
+        <a className={s.cabinetLink} href="/maximova/kabinet">
+          Кабинет
+        </a>
+      </nav>
+
+      <header className={s.hero} id="top">
         <div className={s.heroText}>
           <p className={s.kicker}>{SCHOOL.title}</p>
           <h1 className={s.title}>
@@ -87,16 +106,14 @@ export function TwoCountries() {
       <main>
         <section className={s.section} aria-labelledby="c-meet">
           <div className={s.meet}>
-            <figure className={s.postcard} data-reveal="">
-              <div className={s.postcardPhoto}>
-                <Image
-                  src={PHOTOS.urban.cut}
-                  alt={PHOTOS.urban.alt}
-                  width={CUTS.urban.width}
-                  height={CUTS.urban.height}
-                  sizes="(min-width: 900px) 36vw, 80vw"
-                />
-              </div>
+            <figure className={s.portrait} data-reveal="">
+              <Image
+                src={PHOTOS.urban.cut}
+                alt={PHOTOS.urban.alt}
+                width={CUTS.urban.width}
+                height={CUTS.urban.height}
+                sizes="(min-width: 900px) 36vw, 80vw"
+              />
               <span className={s.stamp} aria-hidden="true">
                 {TEACHER.universityShort}
               </span>
@@ -124,8 +141,9 @@ export function TwoCountries() {
 
         <section className={s.section} aria-labelledby="c-langs">
           <h2 id="c-langs" className={s.h2}>
-            Два языка на выбор
+            Два языка, две программы
           </h2>
+          <p className={s.muted}>{SCHOOL.method} — для каждого возраста своя.</p>
           <div className={s.passports}>
             {GREETINGS.map((item, i) => (
               <article key={item.lang} className={s.passport} data-reveal="" style={at(i)}>
@@ -133,17 +151,9 @@ export function TwoCountries() {
                   {item.word}
                 </p>
                 <h3 className={s.h3}>{item.name}</h3>
-                <p className={s.muted}>{item.note}</p>
               </article>
             ))}
           </div>
-        </section>
-
-        <section className={s.section} aria-labelledby="c-ages">
-          <h2 id="c-ages" className={s.h2}>
-            Две программы
-          </h2>
-          <p className={s.muted}>{SCHOOL.method} — у каждой своя.</p>
           <div className={s.route} data-reveal="">
             <svg className={s.plane} viewBox="0 0 48 48" aria-hidden="true">
               <path d="M4 26 L44 8 L30 44 L24 30 Z" fill="currentColor" />
@@ -197,7 +207,7 @@ export function TwoCountries() {
           <LessonSteps s={s} />
         </section>
 
-        <section className={s.section} aria-labelledby="c-prices">
+        <section id="ceny" className={s.section} aria-labelledby="c-prices">
           <h2 id="c-prices" className={s.h2}>
             Стоимость
           </h2>
@@ -206,7 +216,7 @@ export function TwoCountries() {
           <PlainList s={s} />
         </section>
 
-        <section className={s.section} aria-labelledby="c-trial">
+        <section id="probnoe" className={s.section} aria-labelledby="c-trial">
           <div className={s.trial} data-reveal="">
             <span className={s.trialStamp} aria-hidden="true">
               −30%
@@ -232,17 +242,15 @@ export function TwoCountries() {
 
         <section className={s.section} aria-labelledby="c-moms">
           <div className={s.moms}>
-            <div className={s.arch}>
-              <div className={s.archInner} data-speed="-0.08">
-                <Image
-                  src={PHOTOS.bench.cut}
-                  alt={PHOTOS.bench.alt}
-                  width={CUTS.bench.width}
-                  height={CUTS.bench.height}
-                  sizes="(min-width: 900px) 32vw, 80vw"
-                />
-              </div>
-            </div>
+            <figure className={s.portrait}>
+              <Image
+                src={PHOTOS.bench.cut}
+                alt={PHOTOS.bench.alt}
+                width={CUTS.bench.width}
+                height={CUTS.bench.height}
+                sizes="(min-width: 900px) 32vw, 80vw"
+              />
+            </figure>
             <div className={s.momsText} data-reveal="">
               <p className={s.kicker}>Для мам</p>
               <h2 id="c-moms" className={s.h2}>
@@ -273,39 +281,45 @@ export function TwoCountries() {
           </h2>
           <p className={s.muted}>Без обещаний в сроках — только то, что родитель действительно видит.</p>
           <ResultList s={s} />
-        </section>
-
-        <section className={s.section} aria-labelledby="c-diary">
-          <h2 id="c-diary" className={s.h2}>
-            {DIARY.title}
-          </h2>
+          <h3 className={s.plainTitle}>{DIARY.title}</h3>
           <DiaryList s={s} />
+          <a className={s.ghost} href="/maximova/kabinet">
+            Войти в кабинет через Telegram
+          </a>
         </section>
 
-        <section className={s.section} aria-labelledby="c-faq">
+        <section id="voprosy" className={s.section} aria-labelledby="c-faq">
           <h2 id="c-faq" className={s.h2}>
             Вопросы родителей
           </h2>
           <FaqList s={s} />
         </section>
 
-        <section id="zapis" className={s.section} aria-labelledby="c-book">
+        <section id="zapis" className={s.section} aria-labelledby="c-book" data-dock-hide="">
           <div className={s.envelope}>
             <h2 id="c-book" className={s.h2}>
               Запись на пробное занятие
             </h2>
-            <p className={s.muted}>Выберите язык, возраст и формат — сообщение Дарье соберётся само.</p>
-            <Book
-              skin={{
-                root: s.bookRoot,
+            <p className={s.muted}>Заполните за минуту — Дарья получит заявку в Telegram и свяжется с вами.</p>
+            <BookingForm
+              s={{
+                form: s.form,
                 group: s.bookGroup,
                 label: s.bookLabel,
                 options: s.bookOptions,
                 option: s.bookOption,
                 optionOn: s.bookOptionOn,
-                button: s.cta,
-                note: s.bookNote,
-                message: s.bookMessage,
+                radio: s.radio,
+                field: s.field,
+                input: s.input,
+                hint: s.hint,
+                error: s.error,
+                more: s.more,
+                trap: s.trap,
+                consent: s.consent,
+                submit: s.cta,
+                done: s.done,
+                doneTitle: s.doneTitle,
               }}
             />
             <WhereBlock s={s} />
@@ -319,6 +333,9 @@ export function TwoCountries() {
           <strong>{TEACHER.fullName}</strong>
         </p>
         <p>{TEACHER.role}</p>
+        <p className={s.footerLinks}>
+          <a href="/maximova/kabinet">Личный кабинет</a> · <a href="/maximova/privacy">Политика обработки данных</a>
+        </p>
         <Credit className={s.credit} />
       </footer>
 

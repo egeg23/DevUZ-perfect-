@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
-import { Chooser } from "@/components/clients/maximova/Chooser";
+import { TwoCountries } from "@/components/clients/maximova/c/TwoCountries";
 
-export const metadata: Metadata = { title: "Дарья Максимова — выбор варианта сайта" };
+/** Сайт Дарьи — выбранный вариант «Две страны». Прежние варианты — в /maximova/variants. */
+export const metadata: Metadata = { title: "Дарья Максимова — английский и французский для детей" };
 
 export default function Page() {
-  return <Chooser />;
+  return <TwoCountries />;
 }

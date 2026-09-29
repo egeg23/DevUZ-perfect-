@@ -118,7 +118,9 @@ test("сайт клиента не тянет ничего из внутренн
   for (const file of files) {
     for (const m of read(file).matchAll(/from "(@\/[^"]+)"/g)) {
       assert.ok(
-        m[1].startsWith("@/components/clients/maximova") || m[1].startsWith("@/content/clients/maximova"),
+        m[1].startsWith("@/components/clients/maximova") ||
+          m[1].startsWith("@/content/clients/maximova") ||
+          m[1].startsWith("@/lib/clients/maximova"),
         `${file} импортирует ${m[1]}`,
       );
     }

@@ -1,0 +1,28 @@
+[Unit]
+Description=Бот школы Дарьи Максимовой: забор обновлений у Telegram
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/devuz
+EnvironmentFile=/opt/devuz/.env
+
+# Тот же поллер, что у бота студии (bot/poller.mjs), — с другим токеном,
+# секретом и адресом приложения. Флаги прокси — как у devuz-bot.service.
+Environment=NODE_OPTIONS=--use-env-proxy
+Environment=NO_PROXY=127.0.0.1,localhost
+Environment=POLLER_TOKEN_VAR=MAXIMOVA_BOT_TOKEN
+Environment=POLLER_SECRET_VAR=MAXIMOVA_BOT_SECRET
+Environment=POLLER_APP_PATH=/api/maximova/telegram
+
+ExecStart=/usr/bin/node /opt/devuz/bot/poller.mjs
+
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

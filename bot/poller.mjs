@@ -18,17 +18,25 @@
 import { roadFetch } from "../lib/egress.mjs";
 import { ackOffset, backoffMs, classifyError } from "./logic.mjs";
 
-const token = process.env.TELEGRAM_BOT_TOKEN;
-const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+// Один поллер — на любого бота с этого сервера. По умолчанию — бот студии;
+// бот школы Дарьи запускается тем же файлом с тремя переменными в юните
+// (deploy/devuz-maximova-bot.service): из какой переменной брать токен и
+// секрет и на какой адрес приложения отдавать обновления.
+const TOKEN_VAR = process.env.POLLER_TOKEN_VAR || "TELEGRAM_BOT_TOKEN";
+const SECRET_VAR = process.env.POLLER_SECRET_VAR || "TELEGRAM_WEBHOOK_SECRET";
+const APP_PATH = process.env.POLLER_APP_PATH || "/api/telegram/webhook";
+
+const token = process.env[TOKEN_VAR];
+const secret = process.env[SECRET_VAR];
 const port = process.env.APP_PORT || "3310";
 
 if (!token || !secret) {
-  console.error("bot: нужны TELEGRAM_BOT_TOKEN и TELEGRAM_WEBHOOK_SECRET в .env");
+  console.error(`bot: нужны ${TOKEN_VAR} и ${SECRET_VAR} в .env`);
   process.exit(1);
 }
 
 const API = `https://api.telegram.org/bot${token}`;
-const APP = `http://127.0.0.1:${port}/api/telegram/webhook`;
+const APP = `http://127.0.0.1:${port}${APP_PATH}`;
 /** Сколько Telegram держит длинный опрос, прежде чем ответить пустым списком. */
 const POLL_TIMEOUT_S = 25;
 
@@ -109,7 +117,7 @@ async function main() {
         await sleep(wait);
         await tg("deleteWebhook", { drop_pending_updates: false }, 20_000).catch(() => undefined);
       } else if (kind === "token") {
-        console.error("bot: Telegram не принимает токен — проверьте TELEGRAM_BOT_TOKEN");
+        console.error(`bot: Telegram не принимает токен — проверьте ${TOKEN_VAR}`);
         await sleep(30_000);
       } else {
         console.error(`bot: ${error.message}; пауза ${wait} мс`);

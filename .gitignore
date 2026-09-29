@@ -12,3 +12,6 @@ next-env.d.ts
 
 # Промо-материалы при локальном запуске (lib/partners/promo-files.ts).
 /.media
+
+# Локальная база школы Дарьи (на сервере — /var/lib/devuz/maximova)
+/.data/

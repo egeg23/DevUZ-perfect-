@@ -359,18 +359,20 @@
 /* Языки — две страницы паспорта раскрываются от корешка. */
 .passports {
   display: grid;
-  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
   perspective: 1400px;
 }
 
 @media (min-width: 720px) {
   .passports {
-    grid-template-columns: 1fr 1fr;
+    gap: 16px;
   }
 }
 
 .passport {
-  padding: 32px 24px;
+  padding: 24px 16px;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -398,7 +400,7 @@
   margin: 0 0 8px;
   font-family: var(--mx-lora), Georgia, serif;
   font-style: italic;
-  font-size: 48px;
+  font-size: clamp(30px, 27.35px + 0.698vw, 36px);
   line-height: 1.1;
 }
 
@@ -725,6 +727,23 @@
 @media (min-width: 900px) {
   .envelope {
     padding: 48px;
+  }
+}
+
+/* На телефоне каждые восемь пикселей по бокам — это кнопка выбора, которая
+   помещается в ряд, а не переносится на отдельную строку. */
+@media (max-width: 719px) {
+  .section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .envelope {
+    padding: 32px 16px 24px;
+  }
+
+  .bookOption {
+    padding: 0 16px;
   }
 }
 
@@ -1199,6 +1218,298 @@
   .dock {
     display: none;
   }
+}
+
+/* ── Панель разделов ──────────────────────────────────────────────────
+   Страница длинная, и на телефоне до цены или записи иначе долго листать.
+   Панель прилипает сверху: на телефоне — только разделы и «Кабинет», имя —
+   с планшета. Разделы прокручиваются вбок внутри панели, не страница. */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 6px 8px 6px 16px;
+  background: hsla(40, 45%, 95%, 0.94);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: none;
+  flex: none;
+  font-family: var(--mx-lora), Georgia, serif;
+  font-weight: 700;
+  color: var(--ink) !important;
+  text-decoration: none;
+}
+
+@media (min-width: 720px) {
+  .brand {
+    display: inline;
+    margin-right: 16px;
+  }
+}
+
+.chips {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 0;
+  overflow-x: auto;
+  /* Край растворяется — видно, что разделы листаются вбок. */
+  -webkit-mask-image: linear-gradient(to right, #000 85%, transparent);
+  mask-image: linear-gradient(to right, #000 85%, transparent);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chips a {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: var(--ink) !important;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.chips a:active {
+  background: var(--paper-2);
+}
+
+.cabinetLink {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  color: var(--ink) !important;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.chips a:focus-visible,
+.cabinetLink:focus-visible,
+.brand:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Якоря не прячутся под панелью. */
+.section,
+.hero {
+  scroll-margin-top: 64px;
+}
+
+/* ── Портрет без фона ─────────────────────────────────────────────────
+   Дарья вырезана из снимка и стоит прямо на бумаге страницы. Руки на
+   снимках обрезаны рамкой кадра — прямые края растворяются маской, а тень
+   под ногами обозначает, где она «стоит». */
+.portrait {
+  position: relative;
+  width: min(100%, 380px);
+  margin: 0 auto;
+  transition:
+    opacity 800ms var(--ease),
+    transform 900ms var(--ease);
+}
+
+.portrait img {
+  display: block;
+  width: 100%;
+  height: auto;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(to top, transparent 0, #000 16%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(to top, transparent 0, #000 16%);
+  mask-composite: intersect;
+}
+
+.portrait::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 2%;
+  height: 16px;
+  border-radius: 50%;
+  background: hsla(222, 40%, 18%, 0.12);
+  z-index: -1;
+}
+
+:global(.mx-js) .portrait[data-reveal]:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(32px);
+}
+
+.portrait .stamp {
+  right: 0;
+  bottom: 20%;
+}
+
+:global(.mx-js) .portrait:not([data-shown]) .stamp {
+  opacity: 0;
+  transform: rotate(12deg) scale(1.8);
+}
+
+/* ── Форма записи ─────────────────────────────────────────────────────── */
+.form {
+  display: grid;
+  gap: 24px;
+  max-width: 560px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.input {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: hsl(0 0% 100%);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+
+textarea.input {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--red);
+}
+
+.hint {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.hint a {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.error {
+  color: var(--red);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bookOption {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.bookOption:has(.radio:focus-visible) {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.more summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--blue);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.more[open] {
+  display: grid;
+  gap: 16px;
+}
+
+.trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.consent {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  align-items: start;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.consent input {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--red);
+}
+
+.consent a {
+  color: var(--blue);
+}
+
+.form .cta {
+  width: 100%;
+}
+
+.form .cta:disabled {
+  opacity: 0.6;
+}
+
+.done {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border: 2px solid var(--blue);
+  border-radius: var(--radius);
+  background: hsl(210 60% 96%);
+  animation: rise 500ms var(--ease) both;
+}
+
+.done a {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.doneTitle {
+  font-family: var(--mx-lora), Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.footerLinks a {
+  color: var(--ink);
 }
 
 @keyframes rise {
