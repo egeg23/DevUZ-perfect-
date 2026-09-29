@@ -73,7 +73,7 @@ function Parent({ viewer, botUsername }: { viewer: Viewer; botUsername: string }
                   № {b.id} · {b.language}, {b.age}, {b.format.toLowerCase()}
                 </p>
                 <p className={s.hint}>
-                  {DATE.format(new Date(b.createdAt))} · {b.status === "new" ? "Дарья скоро свяжется" : "Дарья связалась"}
+                  {DATE.format(new Date(b.createdAt))} · {b.status === "new" ? "Скоро свяжусь с вами" : "Я с вами связалась"}
                 </p>
               </li>
             ))}
@@ -89,9 +89,14 @@ function Parent({ viewer, botUsername }: { viewer: Viewer; botUsername: string }
           {DIARY.title}
         </h2>
         <p className={s.lead}>
-          После вступительного теста здесь появятся уровень ребёнка и группа, а в Telegram-боте{" "}
-          {botUsername ? <a href={`https://t.me/${botUsername}`}>@{botUsername}</a> : "Дарьи"} — задания на дом,
-          замечания по поведению и напоминания об оплате.
+          После вступительного теста здесь появятся уровень ребёнка и группа, а в моём Telegram-боте
+          {botUsername ? (
+            <>
+              {" "}
+              <a href={`https://t.me/${botUsername}`}>@{botUsername}</a>
+            </>
+          ) : null}{" "}
+          — задания на дом, замечания по поведению и напоминания об оплате.
         </p>
       </section>
     </>
@@ -103,7 +108,7 @@ function Admin({ viewer }: { viewer: Viewer }) {
   const fresh = bookings.filter((b) => b.status === "new").length;
   return (
     <>
-      <h1 className={s.title}>Кабинет Дарьи</h1>
+      <h1 className={s.title}>Кабинет преподавателя</h1>
       <p className={s.lead}>
         {viewer.firstName ? `${viewer.firstName}, з` : "З"}аявок: {bookings.length}, новых: {fresh}. Родителей в кабинете:{" "}
         {countUsers()}.

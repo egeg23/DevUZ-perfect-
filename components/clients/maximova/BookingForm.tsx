@@ -61,9 +61,9 @@ export function BookingForm({ s }: { s: FormSkin }) {
         errors?: Errors;
       };
       if (result.ok && result.id) setDone({ id: result.id, notified: Boolean(result.notified) });
-      else setErrors(result.errors ?? { form: "Не получилось отправить. Напишите Дарье в Telegram — ссылка ниже." });
+      else setErrors(result.errors ?? { form: "Не получилось отправить. Напишите мне в Telegram — ссылка ниже." });
     } catch {
-      setErrors({ form: "Нет связи. Проверьте интернет или напишите Дарье в Telegram — ссылка ниже." });
+      setErrors({ form: "Нет связи. Проверьте интернет или напишите мне в Telegram — ссылка ниже." });
     } finally {
       setSending(false);
     }
@@ -93,14 +93,14 @@ export function BookingForm({ s }: { s: FormSkin }) {
   if (done) {
     return (
       <div className={s.done} role="status">
-        <p className={s.doneTitle}>Заявка № {done.id} у Дарьи</p>
+        <p className={s.doneTitle}>Заявка № {done.id} у меня</p>
         {done.notified ? (
-          <p>Дарья получила её в Telegram и свяжется с вами по указанному контакту, чтобы договориться о пробном.</p>
+          <p>Я получила её в Telegram и свяжусь с вами по указанному контакту, чтобы договориться о пробном.</p>
         ) : (
           <p>
-            Заявка сохранена, Дарья увидит её в кабинете. Чтобы быстрее —{" "}
+            Заявка сохранена, я увижу её в кабинете. Чтобы быстрее —{" "}
             <a href={telegramUrl(message)} target="_blank" rel="noopener noreferrer">
-              напишите ей в Telegram
+              напишите мне в Telegram
             </a>
             .
           </p>
@@ -226,7 +226,7 @@ export function BookingForm({ s }: { s: FormSkin }) {
       </button>
 
       <p className={s.hint}>
-        Или напишите Дарье сами:{" "}
+        Или напишите мне сами:{" "}
         <a href={telegramUrl(message)} target="_blank" rel="noopener noreferrer">
           Telegram
         </a>

@@ -68,7 +68,7 @@ export function validateBooking(
   const digits = contact.replace(/\D/g, "");
   const isPhone = digits.length >= 10 && digits.length <= 15 && /^[+\d\s()-]+$/.test(contact);
   const isNick = /^@?[A-Za-z0-9_]{5,32}$/.test(contact);
-  if (!isPhone && !isNick) errors.contact = "Телефон или ник в Telegram — чтобы Дарья могла ответить";
+  if (!isPhone && !isNick) errors.contact = "Телефон или ник в Telegram — чтобы я могла ответить";
 
   if (raw.consent !== true && raw.consent !== "on" && raw.consent !== "true") {
     errors.consent = "Без согласия на обработку данных заявку принять нельзя";
