@@ -13,8 +13,8 @@ import { Container } from "@/components/ui/container";
 import { company } from "@/content/company";
 import { cabinetCopy, type CabinetCopy } from "@/content/partner-cabinet";
 import { isLocale } from "@/lib/i18n";
-import { listPromo, promoPreviews } from "@/lib/partners/promo";
-import { promoForLocale } from "@/lib/partners/promo-rules";
+import { listPromo } from "@/lib/partners/promo";
+import { promoFileUrl, promoForLocale } from "@/lib/partners/promo-rules";
 import { currentPartner } from "@/lib/partners/session";
 import { agenciesOf, dailyActivity, referralsOf, summarize } from "@/lib/partners/store";
 import { buildMetadata } from "@/lib/seo";
@@ -73,7 +73,6 @@ export default async function CabinetPage({
     listPromo({ withHidden: false }),
   ]);
   const materials = promoForLocale(promo, locale);
-  const previews = await promoPreviews(materials);
 
   return (
     <CabinetView
@@ -83,7 +82,7 @@ export default async function CabinetPage({
       summary={summary}
       referrals={referrals}
       agencies={agencies}
-      media={materials.map((material) => ({ material, preview: previews.get(material.id) ?? null }))}
+      media={materials.map((material) => ({ material, preview: promoFileUrl(material.id) }))}
       activity={activity}
       result={r ? resultText(t, r) : null}
       now={new Date()}

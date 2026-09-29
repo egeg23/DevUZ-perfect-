@@ -19,7 +19,7 @@ import {
   withdrawOpens,
 } from "@/lib/partners/rules";
 import type { PromoMaterial } from "@/lib/partners/promo";
-import { promoCaption, promoKind, promoShape, promoSize } from "@/lib/partners/promo-rules";
+import { promoCaption, promoFileUrl, promoKind, promoShape, promoSize } from "@/lib/partners/promo-rules";
 import type { Partner, PartnerAgency, PartnerSummary, Referral } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
@@ -77,7 +77,7 @@ export function CabinetView({
   summary: PartnerSummary;
   referrals: Referral[];
   agencies: PartnerAgency[];
-  /** Промо-материалы с подписанной ссылкой на превью; своя — у каждого. */
+  /** Промо-материалы и адрес превью (файл с нашего сервера, только вошедшим). */
   media?: { material: PromoMaterial; preview: string | null }[];
   activity: { day: string; clicks: number; leads: number }[];
   result: { ok: boolean; text: string } | null;
@@ -503,7 +503,7 @@ export function CabinetView({
                             className="h-full w-full object-contain"
                           />
                         ) : (
-                          // Подписанная ссылка на время: next/image её не оптимизирует и кэшировать не должен.
+                          // Файл за входом в кабинет: next/image его не оптимизирует и кэшировать не должен.
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={preview} alt={material.title} loading="lazy" className="h-full w-full object-contain" />
                         )}
@@ -517,7 +517,7 @@ export function CabinetView({
                     </p>
                     <div className="mt-4 flex flex-wrap items-center gap-2">
                       {/* Обычная ссылка, не Link: скачивание — ответ сервера, а не страница, и предзагружать его нельзя. */}
-                      <a href={`/api/partners/promo/${material.id}?l=${locale}`} className={BUTTON}>
+                      <a href={promoFileUrl(material.id, true, locale)} className={BUTTON}>
                         {t.mediaDownload}
                       </a>
                       <CopyButton

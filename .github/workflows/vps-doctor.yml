@@ -361,6 +361,10 @@ jobs:
             # кончившееся место: docker build падает на середине, а причина
             # уезжает в середину лога.
             df -h "$APP_DIR" | tail -1
+            # Промо-материалы партнёров — единственные файлы, которые копятся
+            # на диске сами (lib/partners/promo-files.ts).
+            MEDIA_HOST_DIR="$(grep -m1 '^MEDIA_HOST_DIR=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2-)"
+            du -sh "${MEDIA_HOST_DIR:-/var/lib/devuz/media}" 2>/dev/null | sed 's/^/промо-материалы: /' || echo "промо-материалы: папки ещё нет"
 
             echo
             if [ "$TROUBLE" = "0" ]; then

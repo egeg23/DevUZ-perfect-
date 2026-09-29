@@ -25,7 +25,10 @@ const SCANNED = ["app", "lib", "components"];
 // перебила бы его сборочное значение.
 // Даёт рантайм или выкатка, а не владелец: NODE_ENV выставляет Next,
 // GIT_COMMIT подставляет скрипт выкатки. Строка в .env их бы только сломала.
-const PROVIDED_BY_RUNTIME = new Set(["NODE_ENV", "GIT_COMMIT"]);
+// MEDIA_DIR — путь внутри контейнера, куда compose монтирует папку
+// промо-материалов; его задаёт сам compose, владелец настраивает
+// MEDIA_HOST_DIR — папку на сервере.
+const PROVIDED_BY_RUNTIME = new Set(["NODE_ENV", "GIT_COMMIT", "MEDIA_DIR"]);
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(root(dir), { recursive: true, encoding: "utf8" })

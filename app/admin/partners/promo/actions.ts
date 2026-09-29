@@ -8,28 +8,49 @@ import { requestIp, requireAdmin } from "@/lib/admin/guard";
 import {
   announcePromo,
   deletePromo,
-  promoTicket,
+  promoChunk,
+  promoDiscard,
+  promoStart,
   registerPromo,
   updatePromo,
-  type TicketResult,
+  type StartResult,
 } from "@/lib/partners/promo";
 
 /**
  * Промо-материалы партнёров. Только владелец — как и весь раздел партнёров.
  *
- * Первые два действия зовёт форма загрузки из браузера и ждёт ответа
- * данными, а не переходом: между ними файл уходит прямо в хранилище.
+ * Первые четыре действия зовёт форма загрузки из браузера и ждёт ответа
+ * данными, а не переходом: файл едет на наш сервер кусками, по одному
+ * действию на кусок (lib/partners/promo-files.ts).
  */
 
 const num = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : null);
 
-export async function promoTicketAction(input: { mime: string; bytes: number }): Promise<TicketResult> {
+export async function promoStartAction(input: { mime: string; bytes: number }): Promise<StartResult> {
   await requireAdmin();
-  return promoTicket({ mime: String(input?.mime ?? ""), bytes: Number(input?.bytes) });
+  return promoStart({ mime: String(input?.mime ?? ""), bytes: Number(input?.bytes) });
+}
+
+/** Кусок файла: FormData с upload, offset и самим куском. */
+export async function promoChunkAction(formData: FormData): Promise<{ ok: true; received: number } | { ok: false; reason: string }> {
+  await requireAdmin();
+  const chunk = formData.get("chunk");
+  if (!(chunk instanceof Blob)) return { ok: false, reason: "Кусок файла не дошёл." };
+  return promoChunk(
+    String(formData.get("upload") ?? ""),
+    Number(formData.get("offset")),
+    new Uint8Array(await chunk.arrayBuffer()),
+  );
+}
+
+/** Бросить загрузку: владелец передумал или связь не вернулась. */
+export async function promoDiscardAction(uploadId: string): Promise<void> {
+  await requireAdmin();
+  await promoDiscard(String(uploadId ?? ""));
 }
 
 export async function promoRegisterAction(input: {
-  path: string;
+  uploadId: string;
   title: string;
   locale: string;
   caption: string;
@@ -41,7 +62,7 @@ export async function promoRegisterAction(input: {
   const admin = await requireAdmin();
   const result = await registerPromo(
     {
-      path: String(input?.path ?? ""),
+      uploadId: String(input?.uploadId ?? ""),
       title: String(input?.title ?? ""),
       locale: String(input?.locale ?? "all"),
       caption: String(input?.caption ?? ""),

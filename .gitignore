@@ -9,3 +9,6 @@ build/
 next-env.d.ts
 .DS_Store
 .vercel
+
+# Промо-материалы при локальном запуске (lib/partners/promo-files.ts).
+/.media
