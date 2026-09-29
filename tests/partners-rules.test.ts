@@ -256,6 +256,8 @@ test("агентство засчитывается 12 месяцев с под�
   assert.match(store, /\(await agenciesOf\("all"\)\)\.filter\(\(a\) => agencyCounts\(a, now\)\)/);
   // Руками в карточке проекта — тоже, но уже привязанное не отвязывается.
   assert.match(store, /if \(!kept && !agencyCounts\(/);
-  // Продлить — то же «Подтвердить»: новый срок с сегодняшнего дня.
-  assert.match(read("app/admin/partners/page.tsx"), /Продлить на 12 месяцев/);
+  // Продлить — то же «Подтвердить»: новый срок с сегодняшнего дня. Подпись
+  // кнопки — в словаре панели, страница берёт её оттуда.
+  assert.match(read("content/admin-panel/partners.ts"), /extend: \{ ru: "Продлить на 12 месяцев"/);
+  assert.match(read("app/admin/partners/page.tsx"), /\{t\.extend\}/);
 });
