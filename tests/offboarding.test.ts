@@ -106,6 +106,10 @@ test("итог отключения — только то, что было", () 
 test("страница говорит, что будет, а не старое «переназначьте руками»", () => {
   const page = read("app/admin/team/page.tsx");
   assert.ok(!/останутся закреплены за ним/.test(page), "предупреждение обещает старое поведение");
-  assert.match(page, /вернутся в очередь/);
+  // Слова предупреждения — в словаре раздела, страница берёт их по ключу.
+  const dict = read("content/admin-panel/team.ts");
+  assert.ok(!/останутся закреплены за ним/.test(dict), "предупреждение обещает старое поведение");
+  assert.match(dict, /dRequeueBold: \{ ru: "вернутся в очередь"/);
+  assert.match(page, /\{t\.dRequeueBold\}/);
   assert.match(page, /offboardingSummary\(/);
 });

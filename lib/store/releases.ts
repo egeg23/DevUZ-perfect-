@@ -84,6 +84,17 @@ export async function currentRelease(productSlug: string): Promise<Release | nul
 }
 
 /**
+ * Почему релиз не выложен — кодом: текст на языке панели подбирает
+ * страница (content/admin-panel/releases.ts). В `detail` — только данные:
+ * слаг, путь в бакете, ответ хранилища или базы.
+ */
+export type ReleaseFailure = {
+  ok: false;
+  reason: "product" | "fields" | "sha" | "offline" | "storage" | "missing" | "failed";
+  detail?: string;
+};
+
+/**
  * Есть ли объект в бакете и сколько он весит.
  *
  * HEAD в клиенте Supabase не предусмотрен, поэтому спрашиваем список по
@@ -93,21 +104,21 @@ export async function currentRelease(productSlug: string): Promise<Release | nul
 async function probeObject(
   bucket: string,
   path: string,
-): Promise<{ ok: true; bytes: number | null } | { ok: false; reason: string }> {
+): Promise<{ ok: true; bytes: number | null } | ReleaseFailure> {
   const db = serviceClient();
-  if (!db) return { ok: false, reason: "Нет базы." };
+  if (!db) return { ok: false, reason: "offline" };
 
   const slash = path.lastIndexOf("/");
   const dir = slash === -1 ? "" : path.slice(0, slash);
   const name = slash === -1 ? path : path.slice(slash + 1);
 
   const { data, error } = await db.storage.from(bucket).list(dir, { search: name, limit: 100 });
-  if (error) return { ok: false, reason: `Хранилище ответило: ${error.message}` };
+  if (error) return { ok: false, reason: "storage", detail: error.message };
 
   // search — это поиск по подстроке, а не точное совпадение: «app.zip»
   // найдётся и по запросу «app». Сверяем имя сами.
   const found = (data ?? []).find((item) => item.name === name);
-  if (!found) return { ok: false, reason: `В бакете «${bucket}» нет объекта «${path}».` };
+  if (!found) return { ok: false, reason: "missing", detail: `${bucket}/${path}` };
 
   const size = (found.metadata as { size?: number } | null)?.size;
   return { ok: true, bytes: typeof size === "number" ? size : null };
@@ -124,26 +135,26 @@ export async function registerRelease(
   },
   staff: Staff,
   ip: string,
-): Promise<{ ok: true; bytes: number | null } | { ok: false; reason: string }> {
+): Promise<{ ok: true; bytes: number | null } | ReleaseFailure> {
   if (!productBySlug(input.productSlug)) {
-    return { ok: false, reason: `В каталоге нет продукта «${input.productSlug}».` };
+    return { ok: false, reason: "product", detail: input.productSlug };
   }
 
   const version = input.version.trim().slice(0, 60);
   const bucket = input.bucket.trim().slice(0, 100);
   const path = input.path.trim().replace(/^\/+/, "").slice(0, 500);
-  if (!version || !bucket || !path) return { ok: false, reason: "Заполните версию, бакет и путь." };
+  if (!version || !bucket || !path) return { ok: false, reason: "fields" };
 
   const sha = input.sha256.trim().toLowerCase().slice(0, 64);
   if (sha && !/^[0-9a-f]{64}$/.test(sha)) {
-    return { ok: false, reason: "Контрольная сумма должна быть sha256 в hex, 64 знака." };
+    return { ok: false, reason: "sha" };
   }
 
   const probe = await probeObject(bucket, path);
   if (!probe.ok) return probe;
 
   const db = serviceClient();
-  if (!db) return { ok: false, reason: "Нет базы." };
+  if (!db) return { ok: false, reason: "offline" };
 
   // Прежний актуальный снимается до вставки нового: частичный уникальный
   // индекс иначе отвергнет вставку, и релиз просто не зарегистрируется.
@@ -152,7 +163,7 @@ export async function registerRelease(
     .update({ is_current: false })
     .eq("product_slug", input.productSlug)
     .eq("is_current", true);
-  if (demote) return { ok: false, reason: demote.message };
+  if (demote) return { ok: false, reason: "failed", detail: demote.message };
 
   const { error } = await db.from("store_releases").insert({
     product_slug: input.productSlug,
@@ -165,7 +176,7 @@ export async function registerRelease(
     created_by: staff.id,
     is_current: true,
   });
-  if (error) return { ok: false, reason: error.message };
+  if (error) return { ok: false, reason: "failed", detail: error.message };
 
   await record("release.published", {
     actorStaffId: staff.id,

@@ -130,7 +130,17 @@ export function acceptsScan(contract: Pick<Contract, "status">): boolean {
 
 /* ── Проверки перед подтверждением ──────────────────────────────────────── */
 
-export type Problem = { field: string; text: string };
+/**
+ * Претензия к договору. `text` — по-русски, для журнала и бота; панель
+ * показывает текст по `code` (content/admin-panel/contracts.ts,
+ * contractProblemDict), а в адрес уходит код с числом — problemParam().
+ */
+export type Problem = { field: string; code: string; text: string; arg?: number };
+
+/** Претензии — в адрес: «stages_sum:90,client_mfo», без русского текста. */
+export function problemParam(problems: readonly Pick<Problem, "code" | "arg">[]): string {
+  return problems.map((p) => (p.arg === undefined ? p.code : `${p.code}:${p.arg}`)).join(",");
+}
 
 /**
  * Что должно быть заполнено, прежде чем владелец подтвердит.
@@ -170,33 +180,33 @@ export function problemsBeforeApproval(
 ): Problem[] {
   const out: Problem[] = [];
 
-  if (!contract.number.trim()) out.push({ field: "number", text: "Нет номера договора" });
-  if (!contract.signed_date) out.push({ field: "signed_date", text: "Нет даты договора" });
+  if (!contract.number.trim()) out.push({ field: "number", code: "number", text: "Нет номера договора" });
+  if (!contract.signed_date) out.push({ field: "signed_date", code: "signed_date", text: "Нет даты договора" });
 
   // Пять знаков, а не три: «ООО» — это организационная форма, а не сторона
   // договора. Сторона, которую нельзя опознать по названию, — первое, за что
   // цепляются при оспаривании.
   if (contract.client_name.trim().length < 5) {
-    out.push({ field: "client_name", text: "Не названа сторона заказчика" });
+    out.push({ field: "client_name", code: "client_name", text: "Не названа сторона заказчика" });
   }
   // Реквизиты заказчика — не формальность: без них некому предъявлять
   // претензию и некуда направлять уведомления, а договор с неустановленной
   // стороной оспаривается первым.
   if (contract.client_details.trim().length < 10) {
-    out.push({ field: "client_details", text: "Нет реквизитов заказчика: адрес, идентификатор, контакт" });
+    out.push({ field: "client_details", code: "client_details", text: "Нет реквизитов заказчика: адрес, идентификатор, контакт" });
   }
 
   if (contract.subject.trim().length < 20) {
-    out.push({ field: "subject", text: "Предмет договора описан слишком общо — его нельзя проверить на исполнение" });
+    out.push({ field: "subject", code: "subject", text: "Предмет договора описан слишком общо — его нельзя проверить на исполнение" });
   }
 
-  if (!(contract.amount_usd > 0)) out.push({ field: "amount_usd", text: "Сумма не указана" });
+  if (!(contract.amount_usd > 0)) out.push({ field: "amount_usd", code: "amount_usd", text: "Сумма не указана" });
 
   if (!contract.estimateItems || contract.estimateItems.length === 0) {
-    out.push({ field: "estimate", text: "Нет сметы: без неё в договоре не из чего собрать перечень работ" });
+    out.push({ field: "estimate", code: "estimate", text: "Нет сметы: без неё в договоре не из чего собрать перечень работ" });
   }
   if (!contract.deadlineText || contract.deadlineText.trim().length < 5) {
-    out.push({ field: "deadline", text: "Не указан согласованный срок выполнения" });
+    out.push({ field: "deadline", code: "deadline", text: "Не указан согласованный срок выполнения" });
   }
 
   // Банк обеих сторон. Договор без счёта — это договор, по которому нельзя
@@ -204,49 +214,50 @@ export function problemsBeforeApproval(
   if (!contract.seller) {
     out.push({
       field: "seller",
+      code: "seller",
       text: "Не заполнены банковские реквизиты студии — договор без счёта исполнителя не подписывают",
     });
   }
   if (!(contract.client_tax_id ?? "").trim()) {
-    out.push({ field: "client_tax_id", text: "Нет ИНН или ПИНФЛ заказчика" });
+    out.push({ field: "client_tax_id", code: "client_tax_id", text: "Нет ИНН или ПИНФЛ заказчика" });
   }
   if (!(contract.client_bank_name ?? "").trim()) {
-    out.push({ field: "client_bank_name", text: "Не указан банк заказчика" });
+    out.push({ field: "client_bank_name", code: "client_bank_name", text: "Не указан банк заказчика" });
   }
   // Расчётный счёт в Узбекистане — двадцать цифр. Проверяем длину и то, что
   // это цифры: счёт с лишним пробелом или буквой не примет ни один банк, а
   // заметят это в день платежа, а не в день подписания.
   const account = (contract.client_account ?? "").replace(/\s/g, "");
   if (!account) {
-    out.push({ field: "client_account", text: "Не указан расчётный счёт заказчика" });
+    out.push({ field: "client_account", code: "client_account", text: "Не указан расчётный счёт заказчика" });
   } else if (!/^\d{20}$/.test(account)) {
-    out.push({ field: "client_account", text: "Расчётный счёт заказчика — двадцать цифр, сейчас там другое" });
+    out.push({ field: "client_account", code: "client_account_format", text: "Расчётный счёт заказчика — двадцать цифр, сейчас там другое" });
   }
   // МФО — пять цифр. Это код банка, по нему платёж и находит отделение.
   const mfo = (contract.client_mfo ?? "").replace(/\s/g, "");
   if (!mfo) {
-    out.push({ field: "client_mfo", text: "Не указан МФО — код банка заказчика" });
+    out.push({ field: "client_mfo", code: "client_mfo", text: "Не указан МФО — код банка заказчика" });
   } else if (!/^\d{5}$/.test(mfo)) {
-    out.push({ field: "client_mfo", text: "МФО — пять цифр, сейчас там другое" });
+    out.push({ field: "client_mfo", code: "client_mfo_format", text: "МФО — пять цифр, сейчас там другое" });
   }
 
   if (contract.stages.length === 0) {
-    out.push({ field: "stages", text: "Нет ни одного этапа" });
+    out.push({ field: "stages", code: "stages_none", text: "Нет ни одного этапа" });
   } else {
     const total = contract.stages.reduce((sum, s) => sum + s.percent, 0);
     // Сравниваем с допуском: доли вводит человек, и 33,3 + 33,3 + 33,4
     // обязаны проходить, а 33 + 33 + 33 — нет.
     if (Math.abs(total - 100) > 0.05) {
-      out.push({ field: "stages", text: `Доли этапов дают ${total}% вместо 100%` });
+      out.push({ field: "stages", code: "stages_sum", text: `Доли этапов дают ${total}% вместо 100%`, arg: total });
     }
     if (contract.stages.some((s) => s.percent <= 0)) {
-      out.push({ field: "stages", text: "У этапа нулевая или отрицательная доля" });
+      out.push({ field: "stages", code: "stages_percent", text: "У этапа нулевая или отрицательная доля" });
     }
     if (contract.stages.some((s) => s.workdays <= 0)) {
-      out.push({ field: "stages", text: "У этапа не указан срок" });
+      out.push({ field: "stages", code: "stages_days", text: "У этапа не указан срок" });
     }
     if (contract.stages.some((s) => !s.title.trim())) {
-      out.push({ field: "stages", text: "У этапа нет названия" });
+      out.push({ field: "stages", code: "stages_title", text: "У этапа нет названия" });
     }
   }
 
@@ -310,3 +321,30 @@ export function signedFileName(number: string, path: string): string {
   const ext = dot > 0 ? name.slice(dot) : "";
   return `dogovor-${number}-podpisan${ext}`;
 }
+
+/* ── Заготовки содержания договора в формах панели ─────────────────────── */
+
+/**
+ * Этапы договора по умолчанию в форме подготовки. Это текст для документа
+ * клиента, а договор пока пишется по-русски, — поэтому это не подписи
+ * панели, а заготовка содержания: остаётся на русском на всех языках
+ * панели, менеджер правит её в поле.
+ */
+export const DEFAULT_CONTRACT_STAGES = [
+  { title: "Дизайн", percent: 30, days: 10 },
+  { title: "Разработка", percent: 50, days: 20 },
+  { title: "Запуск", percent: 20, days: 5 },
+] as const;
+
+/**
+ * Пример строк сметы в поле «Вставить строки сметы руками». Строки уходят в
+ * договор, а договор пишется по-русски, — поэтому пример не переводится:
+ * это образец содержания документа, а не подпись панели.
+ */
+export const ESTIMATE_ROWS_EXAMPLE = "Дизайн главной и внутренних\t1\t900\nВёрстка страниц; 6; 150\nИнтеграция оплаты; 1; 400";
+
+/**
+ * Пример срока в поле «Срок» — по той же причине по-русски: фраза целиком
+ * встаёт в текст договора.
+ */
+export const DEADLINE_EXAMPLE = "60 рабочих дней с даты аванса";

@@ -30,11 +30,18 @@ export function isAssignable(value: string): value is AssignableRole {
   return (ASSIGNABLE_ROLES as readonly string[]).includes(value);
 }
 
-/** Как роль называется человеку — в сообщениях и на странице команды. */
+/** Как роль называется человеку — на странице команды, на языке панели. */
+export const ROLE_TITLE_TR: Record<Role, Tr> = {
+  admin: { ru: "администратор", uz: "administrator", pl: "administrator" },
+  head: { ru: "руководитель проектов", uz: "loyiha rahbari", pl: "kierownik projektów" },
+  manager: { ru: "менеджер", uz: "menejer", pl: "menedżer" },
+};
+
+/** То же по-русски — для сообщений бота: бот пока пишет только по-русски. */
 export const ROLE_TITLE: Record<Role, string> = {
-  admin: "администратор",
-  head: "руководитель проектов",
-  manager: "менеджер",
+  admin: ROLE_TITLE_TR.admin.ru,
+  head: ROLE_TITLE_TR.head.ru,
+  manager: ROLE_TITLE_TR.manager.ru,
 };
 
 /** Короткая подпись рядом с именем в шапке панели. */

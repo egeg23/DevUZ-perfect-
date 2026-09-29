@@ -220,16 +220,19 @@ test("сумму ниже порога не принимают ни «Деньг
 
   const contracts = read("lib/admin/contract-store.ts");
   assert.match(contracts, /if \(staff\.role !== "admin"\) \{[\s\S]*belowFloor\(fields\.amountUsd, quote\)/);
-  assert.match(contracts, /сумма ниже порога сметы/);
+  // Отказ уходит кодом с порогом, текст — в словаре договоров на трёх языках.
+  assert.match(contracts, /problemParam\(\[\{ code: "below_floor", arg: quote!\.floorUsd \}\]\)/);
+  assert.match(read("content/admin-panel/contracts.ts"), /below_floor: \{\s*ru: \(floor: string\) => `сумма ниже порога сметы/);
 
   const page = read("app/admin/projects/[id]/page.tsx");
-  assert.match(page, /below_floor: \{/, "у отказа нет текста на странице");
+  assert.match(page, /const results = pick\(projectResultDict, locale\)/);
+  assert.match(read("content/admin-panel/projects.ts"), /below_floor: \{/, "у отказа нет текста на странице");
 });
 
 test("бриф с витрины ложится на лид структурой, и карточка его читает", () => {
   assert.match(read("app/api/brief/route.ts"), /saveLead\(lead, \[\], "showcase", \{ requestNo, brief \}\)/);
   assert.match(read("lib/qualify/store.ts"), /brief: meta\.brief \?\? null/);
   assert.match(read("lib/admin/leads.ts"), /"brief",\n\]\.join/);
-  assert.match(read("app/admin/leads/[id]/page.tsx"), /quoteForLead\(lead\)/);
-  assert.match(read("app/admin/projects/[id]/page.tsx"), /quoteFor\(quoteInput\)/);
+  assert.match(read("app/admin/leads/[id]/page.tsx"), /quoteForLead\(lead, locale\)/);
+  assert.match(read("app/admin/projects/[id]/page.tsx"), /quoteFor\(quoteInput, locale\)/);
 });

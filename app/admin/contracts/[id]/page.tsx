@@ -3,11 +3,20 @@ import { notFound } from "next/navigation";
 import { ContractDocument } from "@/components/docs/contract-document";
 import { PrintButton } from "@/components/store/print-button";
 import { HelpHint } from "@/components/admin/help-link";
+import { PanelLocaleProvider } from "@/components/admin/panel-locale";
+import {
+  contractBadgeDict,
+  contractCardDict,
+  contractErrorDict,
+  estimateHintDict,
+  problemsText,
+} from "@/content/admin-panel/contracts";
+import { PANEL_INTL, pick } from "@/lib/admin/i18n";
 import { helpAnchor } from "@/lib/admin/help";
-import { signatureVisible } from "@/lib/admin/contracts";
+import { DEADLINE_EXAMPLE, ESTIMATE_ROWS_EXAMPLE, signatureVisible } from "@/lib/admin/contracts";
 import { sellerBank } from "@/lib/store/requisites";
 import { invoicesFor } from "@/lib/admin/invoice-store";
-import { BLOCK_TEXT, canIssue, invoiceState, stageAmountUsd } from "@/lib/admin/invoices";
+import { canIssue, invoiceState, stageAmountUsd } from "@/lib/admin/invoices";
 import { siteUrl } from "@/lib/seo";
 import { contractById } from "@/lib/admin/contract-store";
 import { approvesContract } from "@/lib/admin/contracts";
@@ -44,13 +53,6 @@ export const dynamic = "force-dynamic";
  * линия, и это видно на просвет: черновик нельзя выдать за подписанный,
  * просто распечатав.
  */
-/** Что сказать после «Оплачен» — у владельца и у сотрудника исход разный. */
-const PAID_TEXT: Record<string, string> = {
-  confirmed: "Оплата записана платежом в проект — она в «Деньгах», начисления команде по ней открыты.",
-  awaiting: "Оплата отмечена. Владельцу ушло сообщение: платёж попадёт в проект, когда он его подтвердит.",
-  unmarked: "Отметка об оплате снята.",
-};
-
 export default async function ContractPage({
   params,
   searchParams,
@@ -67,6 +69,11 @@ export default async function ContractPage({
   }>;
 }) {
   const staff = await requireStaff();
+  const locale = staff.panel_locale;
+  const t = pick(contractCardDict, locale);
+  const badge = pick(contractBadgeDict, locale);
+  const errors = pick(contractErrorDict, locale);
+  const hints = pick(estimateHintDict, locale);
   const { id } = await params;
   const contract = await contractById(id);
   if (!contract) notFound();
@@ -83,24 +90,47 @@ export default async function ContractPage({
   const { error, detail, hint, sent, signed: justSigned, link, paid } = await searchParams;
   const canApprove = approvesContract(staff.role);
 
+  /** Что сказать после «Оплачен» — у владельца и у сотрудника исход разный. */
+  const paidText: Record<string, string> = {
+    confirmed: t.paidConfirmedText,
+    awaiting: t.paidAwaitingText,
+    unmarked: t.unmarkedText,
+  };
+
+  // Подсказка разбора сметы — кодом; старая ссылка с текстом — как есть.
+  const hintText = hint ? (hint in hints ? hints[hint as keyof typeof hints] : hint) : null;
+
+  // Отказ — кодом (contract-store, invoice-store); незнакомый код — «не
+  // получилось», старая ссылка с русским текстом — как есть.
+  const errorText = !error
+    ? null
+    : error === "invalid" && detail
+      ? errors.missing(problemsText(detail, locale, " · "))
+      : error in errors && typeof errors[error as keyof typeof errors] === "string"
+        ? (errors[error as keyof typeof errors] as string)
+        : /^[a-z_]+$/.test(error)
+          ? errors.failed
+          : error;
+
+  // Своей шапки у страницы договора нет: язык для «?» ставится здесь.
   return (
-    <>
+    <PanelLocaleProvider locale={locale}>
       <div className="no-print mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center gap-3 px-[20mm]">
-        <PrintButton label="Печать" />
+        <PrintButton label={t.print} />
         <span className="inline-flex items-center gap-1.5 text-sm text-black/60">
-          Как пользоваться <HelpHint topic={helpAnchor("/admin/contracts", "review")} label="Как пользоваться разделом" />
+          {t.howTo} <HelpHint topic={helpAnchor("/admin/contracts", "review")} label={t.howToLabel} />
         </span>
         <span className="text-sm text-black/60">
-          {contract.status === "draft" && "Черновик — подписи нет"}
-          {contract.status === "pending" && "Отправлен владельцу на подпись"}
-          {contract.status === "approved" && "Подтверждён владельцем"}
-          {contract.status === "signed" && "Подписан обеими сторонами"}
-          {contract.status === "void" && `Отменён: ${contract.void_reason}`}
+          {contract.status === "draft" && badge.draft}
+          {contract.status === "pending" && badge.pending}
+          {contract.status === "approved" && badge.approved}
+          {contract.status === "signed" && badge.signed}
+          {contract.status === "void" && badge.void(contract.void_reason ?? "")}
         </span>
 
         {signed && !hasSignatureFile ? (
           <span className="text-sm font-semibold text-red-700">
-            Договор подтверждён, но файл подписи не загружен
+            {t.noSignatureFile}
           </span>
         ) : null}
 
@@ -114,7 +144,7 @@ export default async function ContractPage({
               type="submit"
               className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
             >
-              Отправить на подпись
+              {t.sendToOwner}
             </button>
           </form>
         ) : null}
@@ -127,13 +157,13 @@ export default async function ContractPage({
                 type="submit"
                 className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
               >
-                Подтвердить и подписать
+                {t.approve}
               </button>
             </form>
             <form action={returnContract}>
               <input type="hidden" name="id" value={contract.id} />
               <button type="submit" className="text-sm text-black/60 underline">
-                Вернуть на доработку
+                {t.returnBack}
               </button>
             </form>
           </>
@@ -145,19 +175,19 @@ export default async function ContractPage({
             <input type="hidden" name="id" value={contract.id} />
             <input type="file" name="signed" accept=".pdf,image/*" required className="text-sm" />
             <button type="submit" className="rounded-xl border border-black/30 px-3 py-1.5 text-sm">
-              Загрузить подписанный
+              {t.uploadSigned}
             </button>
           </form>
         ) : null}
 
         {contract.estimate_path ? (
           <a href={`/admin/contracts/${contract.id}/file`} className="text-sm underline">
-            Смета: {contract.estimate_name}
+            {t.estimateFile(contract.estimate_name ?? "")}
           </a>
         ) : null}
         {contract.signed_path ? (
           <a href={`/admin/contracts/${contract.id}/file?kind=signed`} className="text-sm underline">
-            Скан с подписями
+            {t.signedScan}
           </a>
         ) : null}
 
@@ -168,11 +198,11 @@ export default async function ContractPage({
               type="text"
               name="reason"
               required
-              placeholder="Причина отмены"
+              placeholder={t.cancelReason}
               className="rounded-lg border border-black/20 px-2 py-1 text-sm"
             />
             <button type="submit" className="text-sm text-red-700 hover:underline">
-              Отменить
+              {t.cancel}
             </button>
           </form>
         ) : null}
@@ -183,13 +213,11 @@ export default async function ContractPage({
         <div className="no-print mx-auto mb-6 max-w-[210mm] px-[20mm]">
           <div className="rounded-xl border border-black/15 px-4 py-3">
             <p className="flex items-center gap-2 text-sm font-bold">
-              Счета на оплату
-              <HelpHint topic={helpAnchor("/admin/contracts", "invoices")} label="Как работают счета" />
+              {t.invoices}
+              <HelpHint topic={helpAnchor("/admin/contracts", "invoices")} label={t.invoicesHelp} />
             </p>
             <p className="mt-1 text-xs text-black/60">
-              По договору каждый этап оплачивается авансом в 100% его стоимости, поэтому
-              счёт выставляется на этап, а не на всю сумму. Счёт на первый этап выставлен
-              вместе с подтверждением.
+              {t.invoicesNote}
             </p>
 
             <ul className="mt-3 space-y-2">
@@ -207,9 +235,9 @@ export default async function ContractPage({
                 return (
                   <li key={index} className="flex flex-wrap items-center gap-3 border-t border-black/10 pt-2 text-sm">
                     <span className="min-w-[14rem]">
-                      Этап {index + 1}. {stage.title}
+                      {t.stage(index + 1, stage.title)}
                     </span>
-                    <span className="font-mono">${amount.toLocaleString("ru-RU")}</span>
+                    <span className="font-mono">${amount.toLocaleString(PANEL_INTL[locale])}</span>
 
                     {invoice ? (
                       <>
@@ -217,15 +245,13 @@ export default async function ContractPage({
                           href={`/admin/contracts/${contract.id}/invoice/${invoice.id}`}
                           className="rounded-lg border border-black/30 px-3 py-1 text-xs hover:bg-black/5"
                         >
-                          Счёт № {invoice.number}
+                          {t.invoiceNo(invoice.number)}
                         </a>
                         {invoiceState(invoice) === "confirmed" ? (
-                          <span className="text-xs text-green-700">оплачен · платёж в проекте</span>
+                          <span className="text-xs text-green-700">{t.paidConfirmed}</span>
                         ) : invoiceState(invoice) === "awaiting" ? (
                           <>
-                            <span className="text-xs text-amber-800">
-                              оплачен · ждёт подтверждения владельца
-                            </span>
+                            <span className="text-xs text-amber-800">{t.paidAwaiting}</span>
                             {staff.role === "admin" ? (
                               <>
                                 <form action={confirmInvoicePaymentAction}>
@@ -235,14 +261,14 @@ export default async function ContractPage({
                                     type="submit"
                                     className="rounded-lg bg-black px-3 py-1 text-xs font-semibold text-white"
                                   >
-                                    Подтвердить платёж
+                                    {t.confirmPayment}
                                   </button>
                                 </form>
                                 <form action={unmarkInvoicePaidAction}>
                                   <input type="hidden" name="id" value={contract.id} />
                                   <input type="hidden" name="invoice" value={invoice.id} />
                                   <button type="submit" className="text-xs text-black/60 underline">
-                                    Оплаты не было
+                                    {t.notPaid}
                                   </button>
                                 </form>
                               </>
@@ -250,12 +276,12 @@ export default async function ContractPage({
                           </>
                         ) : (
                           <>
-                            <span className="text-xs text-black/50">до {invoice.due_at}</span>
+                            <span className="text-xs text-black/50">{t.dueUntil(invoice.due_at)}</span>
                             <form action={markInvoicePaidAction}>
                               <input type="hidden" name="id" value={contract.id} />
                               <input type="hidden" name="invoice" value={invoice.id} />
                               <button type="submit" className="rounded-lg border border-black/30 px-3 py-1 text-xs hover:bg-black/5">
-                                Оплачен
+                                {t.markPaid}
                               </button>
                             </form>
                           </>
@@ -266,11 +292,11 @@ export default async function ContractPage({
                         <input type="hidden" name="id" value={contract.id} />
                         <input type="hidden" name="stage" value={index} />
                         <button type="submit" className="rounded-lg border border-black/30 px-3 py-1 text-xs hover:bg-black/5">
-                          Выставить счёт
+                          {t.issue}
                         </button>
                       </form>
                     ) : (
-                      <span className="text-xs text-black/50">{BLOCK_TEXT[block]}</span>
+                      <span className="text-xs text-black/50">{errors[block]}</span>
                     )}
                   </li>
                 );
@@ -284,13 +310,11 @@ export default async function ContractPage({
               <form action={issueLinkAction}>
                 <input type="hidden" name="id" value={contract.id} />
                 <button type="submit" className="rounded-lg border border-black/30 px-3 py-1.5 text-sm hover:bg-black/5">
-                  {contract.access_hash ? "Выпустить новую ссылку" : "Ссылка для заказчика"}
+                  {contract.access_hash ? t.newLink : t.clientLink}
                 </button>
               </form>
               <span className="text-xs text-black/50">
-                {contract.access_hash
-                  ? "ссылка уже выпущена; новая отменит прежнюю"
-                  : "по ней заказчик откроет договор и счета, без пароля"}
+                {contract.access_hash ? t.linkExists : t.linkAbout}
               </span>
             </div>
 
@@ -298,7 +322,7 @@ export default async function ContractPage({
               <p className="mt-2 break-all rounded-lg border border-green-600/40 bg-green-50 px-3 py-2 font-mono text-xs">
                 {siteUrl}/ru/contract/{link}
                 <span className="block font-sans text-black/60">
-                  Скопируйте сейчас — второй раз эта ссылка не покажется.
+                  {t.copyNow}
                 </span>
               </p>
             ) : null}
@@ -313,32 +337,31 @@ export default async function ContractPage({
             <input type="hidden" name="id" value={contract.id} />
             <input type="file" name="estimate" accept=".csv,.tsv,.txt,.xlsx,.pdf" required className="text-sm" />
             <button type="submit" className="rounded-lg border border-black/30 px-3 py-1.5 text-sm">
-              Загрузить смету
+              {t.uploadEstimate}
             </button>
             <span className="text-xs text-black/50">
-              Excel, CSV и PDF с текстом разбираются построчно; скан прикладывается файлом
+              {t.estimateFormats}
             </span>
           </form>
 
           {/* Строки текстом: скан, Word или смета, которой нет файлом.
               Из Excel строки копируются как есть — там они через табуляцию. */}
           <details open={Boolean(hint)} className="text-sm">
-            <summary className="cursor-pointer text-black/70">Вставить строки сметы руками</summary>
+            <summary className="cursor-pointer text-black/70">{t.pasteRows}</summary>
             <form action={pasteEstimate} className="mt-2 space-y-2">
               <input type="hidden" name="id" value={contract.id} />
               <textarea
                 name="rows"
                 required
                 rows={6}
-                placeholder={"Дизайн главной и внутренних\t1\t900\nВёрстка страниц; 6; 150\nИнтеграция оплаты; 1; 400"}
+                placeholder={ESTIMATE_ROWS_EXAMPLE}
                 className="w-full rounded-lg border border-black/20 px-2 py-1 font-mono text-xs"
               />
               <p className="text-xs text-black/50">
-                Скопируйте строки из Excel или впишите по строке на позицию: название, количество, цена — через
-                табуляцию или «;». Строка «Итого» не нужна: сумму посчитаем сами.
+                {t.pasteHowTo}
               </p>
               <button type="submit" className="rounded-lg border border-black/30 px-3 py-1.5 text-sm">
-                Сохранить строки
+                {t.saveRows}
               </button>
             </form>
           </details>
@@ -349,52 +372,44 @@ export default async function ContractPage({
               type="text"
               name="deadline"
               defaultValue={contract.deadline_text ?? ""}
-              placeholder="60 рабочих дней с даты аванса"
+              placeholder={DEADLINE_EXAMPLE}
               className="w-80 rounded-lg border border-black/20 px-2 py-1 text-sm"
             />
             <button type="submit" className="rounded-lg border border-black/30 px-3 py-1.5 text-sm">
-              Срок
+              {t.deadline}
             </button>
           </form>
         </div>
       ) : null}
 
-      {hint ? (
+      {hintText ? (
         <p className="no-print mx-auto mb-4 max-w-[210mm] rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900">
-          {decodeURIComponent(hint)}
+          {hintText}
         </p>
       ) : null}
       {sent === "1" ? (
         <p className="no-print mx-auto mb-4 max-w-[210mm] text-sm text-green-800">
-          Отправлено. Владельцу ушло уведомление в Telegram.
+          {t.sent}
         </p>
       ) : null}
       {sent === "silent" ? (
         <p className="no-print mx-auto mb-4 max-w-[210mm] rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900">
-          Договор отправлен, но уведомление в Telegram не ушло — скажите владельцу голосом.
+          {t.sentSilent}
         </p>
       ) : null}
       {justSigned ? (
         <p className="no-print mx-auto mb-4 max-w-[210mm] text-sm text-green-800">
-          Подписанный договор сохранён.
+          {t.signedSaved}
         </p>
       ) : null}
 
-      {paid && PAID_TEXT[paid] ? (
-        <p className="no-print mx-auto mb-4 max-w-[210mm] text-sm text-green-800">{PAID_TEXT[paid]}</p>
+      {paid && paidText[paid] ? (
+        <p className="no-print mx-auto mb-4 max-w-[210mm] text-sm text-green-800">{paidText[paid]}</p>
       ) : null}
 
-      {error ? (
+      {errorText ? (
         <p className="no-print mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900">
-          {error === "invalid" && detail
-            ? `Не хватает: ${decodeURIComponent(detail)}`
-            : error === "forbidden"
-              ? "Подтвердить договор может только владелец."
-              : error === "locked"
-                ? "Договор уже подтверждён или отменён."
-                : /^[a-z_]+$/.test(error)
-                  ? "Не получилось. Попробуйте ещё раз."
-                  : error}
+          {errorText}
         </p>
       ) : null}
 
@@ -403,6 +418,6 @@ export default async function ContractPage({
         signatureSrc={`/admin/contracts/${contract.id}/signature`}
         hasSignatureFile={hasSignatureFile}
       />
-    </>
+    </PanelLocaleProvider>
   );
 }

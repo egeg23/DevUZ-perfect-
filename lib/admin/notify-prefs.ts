@@ -1,3 +1,5 @@
+import { teamDict } from "@/content/admin-panel/team";
+import type { PanelLocale, Tr } from "@/lib/admin/i18n";
 import type { Staff } from "@/lib/admin/session";
 import { record } from "@/lib/admin/audit";
 import type { Role } from "@/lib/admin/roles";
@@ -46,56 +48,103 @@ const IN_QUEUE: readonly Role[] = ["head", "manager"];
  * Названия — ровно как на странице «Команда», пояснение — что будет, если
  * выключить. Второе важнее первого: галочку «Новые заявки по очереди»
  * снимают, не думая, что человек тем самым выходит из очереди.
+ *
+ * На трёх языках панели: галочки ставит владелец или руководитель на своём
+ * языке. Бот этих строк не шлёт.
  */
-export const NOTICES: Record<NoticeKind, { title: string; off: string; roles: readonly Role[] }> = {
+export const NOTICES: Record<NoticeKind, { title: Tr; off: Tr; roles: readonly Role[] }> = {
   queue: {
-    title: "Новые заявки по очереди",
-    off: "человек выходит из очереди: лиды ему не предлагаются и идут следующему",
+    title: { ru: "Новые заявки по очереди", uz: "Navbat bo‘yicha yangi buyurtmalar", pl: "Nowe zgłoszenia z kolejki" },
+    off: {
+      ru: "человек выходит из очереди: лиды ему не предлагаются и идут следующему",
+      uz: "xodim navbatdan chiqadi: unga lidlar taklif qilinmaydi va keyingisiga o‘tadi",
+      pl: "osoba wypada z kolejki: leady nie są jej proponowane i trafiają do następnej",
+    },
     roles: IN_QUEUE,
   },
   open: {
-    title: "Заявки для всех",
-    off: "ночные заявки и те, что очередь не разобрала, ему не приходят — только в панели",
+    title: { ru: "Заявки для всех", uz: "Hamma uchun buyurtmalar", pl: "Zgłoszenia dla wszystkich" },
+    off: {
+      ru: "ночные заявки и те, что очередь не разобрала, ему не приходят — только в панели",
+      uz: "tungi buyurtmalar va navbat taqsimlamaganlari unga kelmaydi — faqat panelda",
+      pl: "nocne zgłoszenia i te, których kolejka nie rozdzieliła, do niej nie trafiają — tylko w panelu",
+    },
     roles: EVERYONE,
   },
   watch: {
-    title: "Копии предложений очереди",
-    off: "не приходит, кому и когда очередь предложила лид",
+    title: { ru: "Копии предложений очереди", uz: "Navbat takliflari nusxalari", pl: "Kopie propozycji z kolejki" },
+    off: {
+      ru: "не приходит, кому и когда очередь предложила лид",
+      uz: "navbat lidni kimga va qachon taklif qilgani kelmaydi",
+      pl: "nie przychodzi informacja, komu i kiedy kolejka zaproponowała leada",
+    },
     roles: ["admin"],
   },
   reminders: {
-    title: "Напоминания по лидам",
-    off: "напоминания не приходят в Telegram, видны только в панели",
+    title: { ru: "Напоминания по лидам", uz: "Lidlar bo‘yicha eslatmalar", pl: "Przypomnienia o leadach" },
+    off: {
+      ru: "напоминания не приходят в Telegram, видны только в панели",
+      uz: "eslatmalar Telegram’ga kelmaydi, faqat panelda ko‘rinadi",
+      pl: "przypomnienia nie przychodzą w Telegramie, są widoczne tylko w panelu",
+    },
     roles: EVERYONE,
   },
   messages: {
-    title: "Сообщения в чате лида",
-    off: "о новом сообщении коллеги в карточке его лида бот не пишет",
+    title: { ru: "Сообщения в чате лида", uz: "Lid chatidagi xabarlar", pl: "Wiadomości w czacie leada" },
+    off: {
+      ru: "о новом сообщении коллеги в карточке его лида бот не пишет",
+      uz: "hamkasb uning lid kartochkasida yangi xabar yozsa, bot xabar bermaydi",
+      pl: "bot nie informuje o nowej wiadomości współpracownika w karcie jej leada",
+    },
     roles: EVERYONE,
   },
   transfers: {
-    title: "Передачи лидов",
-    off: "не приходит «вам передали лид» и ответ на его просьбу о передаче",
+    title: { ru: "Передачи лидов", uz: "Lidlarni berish", pl: "Przekazania leadów" },
+    off: {
+      ru: "не приходит «вам передали лид» и ответ на его просьбу о передаче",
+      uz: "«sizga lid berildi» xabari va uning lidni berish so‘roviga javob kelmaydi",
+      pl: "nie przychodzi «przekazano Ci leada» ani odpowiedź na jej prośbę o przekazanie",
+    },
     roles: EVERYONE,
   },
   talks: {
-    title: "Ответы клиентов на касания",
-    off: "ответ клиента на касание виден только в «Касаниях» — бот не позовёт",
+    title: { ru: "Ответы клиентов на касания", uz: "Mijozlarning aloqalarga javoblari", pl: "Odpowiedzi klientów na kontakty" },
+    off: {
+      ru: "ответ клиента на касание виден только в «Касаниях» — бот не позовёт",
+      uz: "mijozning aloqaga javobi faqat «Aloqalar»da ko‘rinadi — bot chaqirmaydi",
+      pl: "odpowiedź klienta na kontakt widać tylko w «Kontaktach» — bot nie zawoła",
+    },
     roles: EVERYONE,
   },
   portion: {
-    title: "Порция касаний на день",
-    off: "порция утром не приходит в Telegram, но остаётся в «Касаниях»",
+    title: { ru: "Порция касаний на день", uz: "Aloqalarning kunlik to‘plami", pl: "Porcja kontaktów na dzień" },
+    off: {
+      ru: "порция утром не приходит в Telegram, но остаётся в «Касаниях»",
+      uz: "kunlik to‘plam ertalab Telegram’ga kelmaydi, lekin «Aloqalar»da qoladi",
+      pl: "porcja nie przychodzi rano w Telegramie, ale zostaje w «Kontaktach»",
+    },
     roles: IN_QUEUE,
   },
   coach: {
-    title: "Рекомендации на неделю",
-    off: "недельный разбор не приходит, но есть на главной панели",
+    title: { ru: "Рекомендации на неделю", uz: "Haftalik tavsiyalar", pl: "Rekomendacje na tydzień" },
+    off: {
+      ru: "недельный разбор не приходит, но есть на главной панели",
+      uz: "haftalik tahlil kelmaydi, lekin panelning bosh sahifasida bor",
+      pl: "tygodniowe podsumowanie nie przychodzi, ale jest na stronie głównej panelu",
+    },
     roles: IN_QUEUE,
   },
   reports: {
-    title: "Отчёты: порция дня и сводка на сегодня",
-    off: "вечерний отчёт по порциям и утренняя сводка не приходят",
+    title: {
+      ru: "Отчёты: порция дня и сводка на сегодня",
+      uz: "Hisobotlar: kunlik to‘plam va bugungi qisqacha xulosa",
+      pl: "Raporty: porcja dnia i podsumowanie na dziś",
+    },
+    off: {
+      ru: "вечерний отчёт по порциям и утренняя сводка не приходят",
+      uz: "kunlik to‘plamlar bo‘yicha kechki hisobot va ertalabki xulosa kelmaydi",
+      pl: "wieczorny raport z porcji i poranne podsumowanie nie przychodzą",
+    },
     roles: ["admin", "head"],
   },
 };
@@ -122,12 +171,16 @@ export function offFromForm(checked: readonly string[], role: Role): NoticeKind[
   return kindsFor(role).filter((kind) => !on.has(kind));
 }
 
-/** Что выключено — строкой для страницы: «всё приходит» или перечень. */
-export function offSummary(off: readonly string[] | null | undefined, role: Role): string {
+/** Что выключено — строкой для страницы: «приходит всё» или сколько выключено. */
+export function offSummary(
+  off: readonly string[] | null | undefined,
+  role: Role,
+  locale: PanelLocale = "ru",
+): string {
   const muted = kindsFor(role).filter((kind) => !wants(off, kind));
-  if (!muted.length) return "приходит всё";
-  if (muted.length === kindsFor(role).length) return "всё выключено";
-  return `выключено: ${muted.length} из ${kindsFor(role).length}`;
+  if (!muted.length) return teamDict.offAllOn[locale];
+  if (muted.length === kindsFor(role).length) return teamDict.offAllOff[locale];
+  return teamDict.offSome[locale](muted.length, kindsFor(role).length);
 }
 
 /* ── База ───────────────────────────────────────────────────────────────── */

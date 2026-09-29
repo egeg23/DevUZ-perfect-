@@ -4,12 +4,14 @@ import { deleteExpense, deletePayout, saveExpense, savePayout } from "./actions"
 import { AdminShell } from "@/components/admin/shell";
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
+import { financeDict } from "@/content/admin-panel/finance";
+import { stageDict } from "@/content/admin-panel/projects";
 import {
-  ACCRUAL_TITLE,
+  ACCRUAL_TR,
   EXPENSE_CATEGORIES,
-  EXPENSE_TITLE,
-  GRADE_TITLE,
-  KIND_TITLE,
+  EXPENSE_TR,
+  GRADE_TR,
+  KIND_TR,
   accrualState,
   accrualsOf,
   balanceOf,
@@ -17,7 +19,7 @@ import {
   founderShares,
   foundersPool,
   isFounder,
-  money,
+  money as moneyIn,
   ownerShare,
   paidOf,
   profitOf,
@@ -25,10 +27,10 @@ import {
   type Accrual,
 } from "@/lib/admin/finance";
 import { requireStaff } from "@/lib/admin/guard";
+import { pick, type Picked } from "@/lib/admin/i18n";
 import { seesOwnerMoney } from "@/lib/admin/roles";
 import { loadExpenses, loadLedger, sharesOf } from "@/lib/admin/ledger";
 import { partnerAccrualOf, type PartnerAccrual } from "@/lib/partners/rules";
-import { STAGE_LABEL } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
 
 export const dynamic = "force-dynamic";
@@ -43,17 +45,21 @@ export const dynamic = "force-dynamic";
  * каждом открытии, поэтому правка себестоимости в проекте меняет их сразу.
  */
 
-const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
-  ok: { text: "Готово.", tone: "ok" },
-  forbidden: { text: "Выплаты записывает только владелец.", tone: "warn" },
-  invalid: {
-    text: "Сумма или дата не разобрались: сумма — целые доллары, дата — как в календаре. Себе выплату не записать.",
-    tone: "warn",
-  },
-  gone: { text: "Такой записи уже нет.", tone: "warn" },
-  failed: { text: "Не получилось записать. Попробуйте ещё раз.", tone: "warn" },
-  offline: { text: "База недоступна.", tone: "warn" },
-};
+type T = Picked<typeof financeDict>;
+
+/** Ответ действия (`?r=`) — код из ./actions, текст — на языке панели. */
+function resultOf(code: string, t: T): { text: string; tone: "ok" | "warn" } | null {
+  const texts: Record<string, string> = {
+    ok: t.r_ok,
+    forbidden: t.r_forbidden,
+    invalid: t.r_invalid,
+    gone: t.r_gone,
+    failed: t.r_failed,
+    offline: t.r_offline,
+  };
+  if (!Object.hasOwn(texts, code)) return null;
+  return { text: texts[code], tone: code === "ok" ? "ok" : "warn" };
+}
 
 const INPUT =
   "w-full rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
@@ -77,7 +83,13 @@ export default async function FinancePage({
 }) {
   const staff = await requireStaff();
   const { r } = await searchParams;
-  const notice = r ? RESULT[r] : null;
+  const locale = staff.panel_locale;
+  const t = pick(financeDict, locale);
+  const notice = r ? resultOf(r, t) : null;
+  // Суммы — с разрядами по языку панели.
+  const money = (usd: number | null) => moneyIn(usd, locale);
+  const stageOf = (stage: string) =>
+    Object.hasOwn(stageDict, stage) ? stageDict[stage as keyof typeof stageDict][locale] : stage;
 
   const team = staff.role === "head" ? await teamOf(staff.id) : [];
   const scope = visibleStaff(staff, team);
@@ -151,15 +163,11 @@ export default async function FinancePage({
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Финансы</h1>
+      <h1 className="text-lg font-semibold">{t.title}</h1>
       <p className="mt-1 text-sm text-muted">
-        {isAdmin
-          ? "По всей студии. Начисления считаются от чистой прибыли проекта и лежат в заморозке, пока клиент не заплатил целиком."
-          : staff.role === "head"
-            ? "Вы и ваша команда. Начисления считаются от чистой прибыли проекта и лежат в заморозке, пока клиент не заплатил целиком."
-            : "Ваши проекты и ваш баланс. Начисление считается от чистой прибыли проекта и лежит в заморозке, пока клиент не заплатил целиком."}{" "}
-        <HelpHint topic={helpAnchor("/admin/finance", "how")} label="Как считается процент" />{" "}
-        <HelpHint topic={helpAnchor("/admin/finance", "freeze")} label="Почему заморожено" />
+        {isAdmin ? t.introAdmin : staff.role === "head" ? t.introHead : t.introManager}{" "}
+        <HelpHint topic={helpAnchor("/admin/finance", "how")} label={t.helpHow} />{" "}
+        <HelpHint topic={helpAnchor("/admin/finance", "freeze")} label={t.helpFreeze} />
       </p>
 
       {notice ? (
@@ -176,30 +184,30 @@ export default async function FinancePage({
 
       {ledger.offline ? (
         <p className="mt-4 rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm text-gold">
-          База недоступна — показать нечего.
+          {t.offline}
         </p>
       ) : null}
 
       {/* ── Итоги ─────────────────────────────────────────────────────── */}
       {isAdmin ? (
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <Card label="По договорам" value={money(totals.contracted)} note={`${live.length} проектов с деньгами`} />
-          <Card label="Оплачено клиентами" value={money(totals.paid)} />
+          <Card label={t.cardContracted} value={money(totals.contracted)} note={t.cardContractedNote(live.length)} />
+          <Card label={t.cardPaid} value={money(totals.paid)} />
           <Card
-            label="Чистая прибыль"
+            label={t.cardProfit}
             value={money(totals.profit)}
-            note={withoutCost ? `у ${withoutCost} без себестоимости` : "сумма − налог − себестоимость"}
+            note={withoutCost ? t.cardProfitNoCost(withoutCost) : t.cardProfitFormula}
             warn={withoutCost > 0}
           />
-          <Card label="Начислено команде и партнёрам" value={money(totals.accrued)} note={`партнёрам ${money(partnerTotal)} · заморожено ${money(totals.frozen)}`} />
-          <Card label="Остаётся владельцу" value={money(totals.profit - totals.accrued)} note={`после налога, себестоимости и всех процентов · выплачено команде ${money(totals.paidOut)}`} />
+          <Card label={t.cardAccrued} value={money(totals.accrued)} note={t.cardAccruedNote(money(partnerTotal), money(totals.frozen))} />
+          <Card label={t.cardOwner} value={money(totals.profit - totals.accrued)} note={t.cardOwnerNote(money(totals.paidOut))} />
         </div>
       ) : (
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Card label="Заработано" value={money(mine.earned)} note="по оплаченным целиком проектам" />
-          <Card label="Заморожено" value={money(mine.frozen)} note="ждёт полной оплаты клиентом" />
-          <Card label="Выплачено" value={money(mine.paid_out)} />
-          <Card label="К выплате" value={money(mine.due)} warn={mine.due < 0} note={mine.due < 0 ? "выплачено вперёд" : undefined} />
+          <Card label={t.cardEarned} value={money(mine.earned)} note={t.cardEarnedNote} />
+          <Card label={t.cardFrozen} value={money(mine.frozen)} note={t.cardFrozenNote} />
+          <Card label={t.cardPaidOut} value={money(mine.paid_out)} />
+          <Card label={t.cardDue} value={money(mine.due)} warn={mine.due < 0} note={mine.due < 0 ? t.cardDueAhead : undefined} />
         </div>
       )}
 
@@ -209,31 +217,31 @@ export default async function FinancePage({
           <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[820px]">
             <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
               <tr>
-                <th className={TH}>Кто</th>
-                <th className={TH}>Грейд</th>
-                <th className={TH}>Проектов</th>
-                <th className={TH}>Заморожено</th>
-                <th className={TH}>Заработано</th>
-                <th className={TH}>Выплачено</th>
-                <th className={TH}>К выплате</th>
+                <th className={TH}>{t.colWho}</th>
+                <th className={TH}>{t.colGrade}</th>
+                <th className={TH}>{t.colProjects}</th>
+                <th className={TH}>{t.colFrozen}</th>
+                <th className={TH}>{t.colEarned}</th>
+                <th className={TH}>{t.colPaidOut}</th>
+                <th className={TH}>{t.colDue}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map(({ person, balance, projects }) => (
                 <tr key={person.id} className="border-b border-line-soft last:border-0">
-                  <td data-label="Кто" className={TD}>
+                  <td data-label={t.colWho} className={TD}>
                     {person.display_name}
-                    {person.is_active ? null : <span className="ml-2 text-xs text-faint">отключён</span>}
+                    {person.is_active ? null : <span className="ml-2 text-xs text-faint">{t.disabled}</span>}
                   </td>
-                  <td data-label="Грейд" className={`${TD} text-xs text-muted`}>
-                    {GRADE_TITLE[person.grade]}
+                  <td data-label={t.colGrade} className={`${TD} text-xs text-muted`}>
+                    {GRADE_TR[person.grade][locale]}
                     {person.rate_percent !== null ? ` · ${person.rate_percent} %` : ""}
                   </td>
-                  <td data-label="Проектов" className={`${TD} font-mono text-xs`}>{projects}</td>
-                  <td data-label="Заморожено" className={`${TD} font-mono text-xs text-muted`}>{money(balance.frozen)}</td>
-                  <td data-label="Заработано" className={`${TD} font-mono text-xs`}>{money(balance.earned)}</td>
-                  <td data-label="Выплачено" className={`${TD} font-mono text-xs text-muted`}>{money(balance.paid_out)}</td>
-                  <td data-label="К выплате" className={`${TD} font-mono text-xs ${balance.due > 0 ? "text-green" : balance.due < 0 ? "text-gold" : ""}`}>
+                  <td data-label={t.colProjects} className={`${TD} font-mono text-xs`}>{projects}</td>
+                  <td data-label={t.colFrozen} className={`${TD} font-mono text-xs text-muted`}>{money(balance.frozen)}</td>
+                  <td data-label={t.colEarned} className={`${TD} font-mono text-xs`}>{money(balance.earned)}</td>
+                  <td data-label={t.colPaidOut} className={`${TD} font-mono text-xs text-muted`}>{money(balance.paid_out)}</td>
+                  <td data-label={t.colDue} className={`${TD} font-mono text-xs ${balance.due > 0 ? "text-green" : balance.due < 0 ? "text-gold" : ""}`}>
                     {money(balance.due)}
                   </td>
                 </tr>
@@ -241,7 +249,7 @@ export default async function FinancePage({
               {rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-6 text-sm text-muted">
-                    Пока никого: начисления появятся, когда у проекта будет сумма и ответственный.
+                    {t.peopleEmpty}
                   </td>
                 </tr>
               ) : null}
@@ -251,27 +259,27 @@ export default async function FinancePage({
       ) : null}
 
       {/* ── Проекты ───────────────────────────────────────────────────── */}
-      <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">По проектам</h2>
+      <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">{t.byProjects}</h2>
       <section className="mt-2 overflow-x-auto rounded-xl border border-line bg-surface">
         <table className={`cards-on-phone w-full min-w-0 text-sm ${isAdmin ? "sm:min-w-[1240px]" : "sm:min-w-[880px]"}`}>
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
-              <th className={TH}>Проект</th>
-              <th className={TH}>Ведёт</th>
-              <th className={TH}>Вид</th>
-              <th className={TH}>Сумма</th>
-              <th className={TH}>Оплачено</th>
+              <th className={TH}>{t.colProject}</th>
+              <th className={TH}>{t.colOwner}</th>
+              <th className={TH}>{t.colKind}</th>
+              <th className={TH}>{t.colAmount}</th>
+              <th className={TH}>{t.colPaid}</th>
               {/* Налог, себестоимость и прибыль — только владельцу: по ним считается его
                   доля, а это его информация, не команды. */}
               {isAdmin ? (
                 <>
-                  <th className={TH}>Налог</th>
-                  <th className={TH}>Себестоимость</th>
-                  <th className={TH}>Прибыль</th>
+                  <th className={TH}>{t.colTax}</th>
+                  <th className={TH}>{t.colCost}</th>
+                  <th className={TH}>{t.colProfit}</th>
                 </>
               ) : null}
-              <th className={TH}>Начисления</th>
-              {ownerMoney ? <th className={TH}>Владельцу</th> : null}
+              <th className={TH}>{t.colAccruals}</th>
+              {ownerMoney ? <th className={TH}>{t.colToOwner}</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -287,57 +295,57 @@ export default async function FinancePage({
               const profit = profitOf(project);
               return (
                 <tr key={project.id} className="border-b border-line-soft last:border-0 align-top">
-                  <td data-label="Проект" className={TD}>
+                  <td data-label={t.colProject} className={TD}>
                     <Link href={`/admin/projects/${project.id}`} className="hover:text-green">
                       {project.title}
                     </Link>
                     <span className="block text-xs text-faint">
-                      {project.client || "клиент не указан"} · {STAGE_LABEL[project.stage] ?? project.stage}
+                      {project.client || t.noClient} · {stageOf(project.stage)}
                     </span>
                   </td>
-                  <td data-label="Ведёт" className={`${TD} text-xs text-muted`}>{nameOf(project.owner_staff_id)}</td>
-                  <td data-label="Вид" className={`${TD} text-xs text-muted`}>{KIND_TITLE[project.kind]}</td>
-                  <td data-label="Сумма" className={`${TD} font-mono text-xs`}>{money(project.amount_usd)}</td>
-                  <td data-label="Оплачено" className={`${TD} font-mono text-xs`}>
+                  <td data-label={t.colOwner} className={`${TD} text-xs text-muted`}>{nameOf(project.owner_staff_id)}</td>
+                  <td data-label={t.colKind} className={`${TD} text-xs text-muted`}>{KIND_TR[project.kind][locale]}</td>
+                  <td data-label={t.colAmount} className={`${TD} font-mono text-xs`}>{money(project.amount_usd)}</td>
+                  <td data-label={t.colPaid} className={`${TD} font-mono text-xs`}>
                     {money(paid)}
                     <span className={`block font-sans ${state === "earned" ? "text-green" : state === "void" ? "text-faint" : "text-gold"}`}>
-                      {project.stage === "cancelled" ? "отменён" : state === "earned" ? "целиком" : "не целиком"}
+                      {project.stage === "cancelled" ? t.cancelled : state === "earned" ? t.paidFull : t.paidPart}
                     </span>
                   </td>
                   {isAdmin ? (
                     <>
-                      <td data-label="Налог" className={`${TD} font-mono text-xs text-muted`}>{project.tax_percent} %</td>
-                      <td data-label="Себестоимость" className={`${TD} font-mono text-xs ${project.dev_cost_usd === null && project.amount_usd !== null ? "text-gold" : "text-muted"}`}>
-                        {project.dev_cost_usd === null ? "не вписана" : money(project.dev_cost_usd)}
+                      <td data-label={t.colTax} className={`${TD} font-mono text-xs text-muted`}>{project.tax_percent} %</td>
+                      <td data-label={t.colCost} className={`${TD} font-mono text-xs ${project.dev_cost_usd === null && project.amount_usd !== null ? "text-gold" : "text-muted"}`}>
+                        {project.dev_cost_usd === null ? t.costMissing : money(project.dev_cost_usd)}
                       </td>
-                      <td data-label="Прибыль" className={`${TD} font-mono text-xs ${profit !== null && profit < 0 ? "text-gold" : ""}`}>{money(profit)}</td>
+                      <td data-label={t.colProfit} className={`${TD} font-mono text-xs ${profit !== null && profit < 0 ? "text-gold" : ""}`}>{money(profit)}</td>
                     </>
                   ) : null}
-                  <td data-label="Начисления" className={`${TD} text-xs`}>
+                  <td data-label={t.colAccruals} className={`${TD} text-xs`}>
                     {lines.length === 0 && !partnerLine ? (
                       <span className="text-faint">—</span>
                     ) : (
                       lines.map((a) => (
                         <span key={`${a.staff_id}-${a.share}`} className="block">
-                          {nameOf(a.staff_id)} {a.percent} %{a.manual ? " (вручную)" : ""} — <span className="font-mono">{money(a.amount_usd)}</span>
+                          {nameOf(a.staff_id)} {a.percent} %{a.manual ? t.manual : ""} — <span className="font-mono">{money(a.amount_usd)}</span>
                           <span className={`ml-1 ${a.state === "earned" ? "text-green" : a.state === "void" ? "text-faint" : "text-gold"}`}>
-                            {ACCRUAL_TITLE[a.state]}
+                            {ACCRUAL_TR[a.state][locale]}
                           </span>
                         </span>
                       ))
                     )}
                     {partnerLine ? (
                       <span className="block">
-                        партнёр {ledger.partners.get(partnerLine.partner_id)?.name ?? "—"} {partnerLine.percent} %{partnerLine.manual ? " (вручную)" : ""} —{" "}
+                        {t.partner} {ledger.partners.get(partnerLine.partner_id)?.name ?? "—"} {partnerLine.percent} %{partnerLine.manual ? t.manual : ""} —{" "}
                         <span className="font-mono">{money(partnerLine.amount_usd)}</span>
                         <span className={`ml-1 ${partnerLine.state === "earned" ? "text-green" : partnerLine.state === "void" ? "text-faint" : "text-gold"}`}>
-                          {partnerLine.void_reason ? "не засчитано" : ACCRUAL_TITLE[partnerLine.state]}
+                          {partnerLine.void_reason ? t.notCounted : ACCRUAL_TR[partnerLine.state][locale]}
                         </span>
                       </span>
                     ) : null}
                   </td>
                   {ownerMoney ? (
-                    <td data-label="Владельцу" className={`${TD} font-mono text-xs`}>
+                    <td data-label={t.colToOwner} className={`${TD} font-mono text-xs`}>
                       {(() => {
                         const own = ownerShare(project, lines);
                         return money(own === null ? null : own - (partnerLine?.amount_usd ?? 0));
@@ -350,7 +358,7 @@ export default async function FinancePage({
             {ledger.projects.length === 0 ? (
               <tr>
                 <td colSpan={ownerMoney ? 10 : 6} className="px-4 py-6 text-sm text-muted">
-                  Проектов в вашем круге пока нет.
+                  {t.projectsEmpty}
                 </td>
               </tr>
             ) : null}
@@ -360,16 +368,16 @@ export default async function FinancePage({
 
       {/* ── Выплаты ───────────────────────────────────────────────────── */}
       <h2 className="mt-8 flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-        Выплаты
-        <HelpHint topic={helpAnchor("/admin/finance", "payouts")} label="Кто записывает выплаты" />
+        {t.payouts}
+        <HelpHint topic={helpAnchor("/admin/finance", "payouts")} label={t.helpPayouts} />
       </h2>
       {isAdmin ? (
         <form action={savePayout} className="mt-2 grid gap-3 rounded-xl border border-line bg-surface px-5 py-4 sm:grid-cols-5">
           <label className="block text-xs text-faint">
-            Кому
+            {t.fieldTo}
             <select name="staff" required defaultValue="" className={`mt-1 ${INPUT}`}>
               <option value="" disabled>
-                выбрать
+                {t.choose}
               </option>
               {ledger.people
                 .filter((p) => p.is_active && p.role !== "admin")
@@ -381,20 +389,20 @@ export default async function FinancePage({
             </select>
           </label>
           <label className="block text-xs text-faint">
-            Сумма, $
+            {t.fieldAmount}
             <input name="amount" required inputMode="numeric" placeholder="1 200" className={`mt-1 ${INPUT}`} />
           </label>
           <label className="block text-xs text-faint">
-            Дата
+            {t.fieldDate}
             <input name="paid_on" type="date" className={`mt-1 ${INPUT}`} />
           </label>
           <label className="block text-xs text-faint">
-            Заметка
-            <input name="note" maxLength={500} placeholder="за август" className={`mt-1 ${INPUT}`} />
+            {t.fieldNote}
+            <input name="note" maxLength={500} placeholder={t.notePlaceholder} className={`mt-1 ${INPUT}`} />
           </label>
           <div className="flex items-end">
             <button type="submit" className={BUTTON}>
-              Записать выплату
+              {t.savePayout}
             </button>
           </div>
         </form>
@@ -404,26 +412,26 @@ export default async function FinancePage({
         <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[640px]">
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
-              <th className={TH}>Когда</th>
-              <th className={TH}>Кому</th>
-              <th className={TH}>Сумма</th>
-              <th className={TH}>Заметка</th>
+              <th className={TH}>{t.colWhen}</th>
+              <th className={TH}>{t.colTo}</th>
+              <th className={TH}>{t.colAmount}</th>
+              <th className={TH}>{t.colNote}</th>
               {isAdmin ? <th className={TH} /> : null}
             </tr>
           </thead>
           <tbody>
             {ledger.payouts.map((payout) => (
               <tr key={payout.id} className="border-b border-line-soft last:border-0">
-                <td data-label="Когда" className={`${TD} text-xs text-muted`}>{day(payout.paid_on)}</td>
-                <td data-label="Кому" className={TD}>{payout.staff_name ?? nameOf(payout.staff_id)}</td>
-                <td data-label="Сумма" className={`${TD} font-mono text-xs`}>{money(payout.amount_usd)}</td>
-                <td data-label="Заметка" className={`${TD} text-xs text-muted`}>{payout.note ?? ""}</td>
+                <td data-label={t.colWhen} className={`${TD} text-xs text-muted`}>{day(payout.paid_on)}</td>
+                <td data-label={t.colTo} className={TD}>{payout.staff_name ?? nameOf(payout.staff_id)}</td>
+                <td data-label={t.colAmount} className={`${TD} font-mono text-xs`}>{money(payout.amount_usd)}</td>
+                <td data-label={t.colNote} className={`${TD} text-xs text-muted`}>{payout.note ?? ""}</td>
                 {isAdmin ? (
                   <td data-label="" className={TD}>
                     <form action={deletePayout}>
                       <input type="hidden" name="payout" value={payout.id} />
                       <button type="submit" className="text-xs text-faint hover:text-gold">
-                        удалить
+                        {t.remove}
                       </button>
                     </form>
                   </td>
@@ -433,7 +441,7 @@ export default async function FinancePage({
             {ledger.payouts.length === 0 ? (
               <tr>
                 <td colSpan={isAdmin ? 5 : 4} className="px-4 py-6 text-sm text-muted">
-                  Выплат пока не было.
+                  {t.payoutsEmpty}
                 </td>
               </tr>
             ) : null}
@@ -444,26 +452,22 @@ export default async function FinancePage({
       {/* ── Котёл соучредителей ─────────────────────────────────────────── */}
       {pool && shares.length ? (
         <section className="mt-8">
-          <h2 className="text-sm uppercase tracking-wider text-faint">Доли соучредителей</h2>
-          <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
-            Делится то, что уже пришло, за вычетом расходов. Незакрытые сделки показаны
-            отдельно и в делёж не идут: выплатить долю по сделке, которая ещё сорвётся,
-            дороже, чем подождать.
-          </p>
+          <h2 className="text-sm uppercase tracking-wider text-faint">{t.founders}</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">{t.foundersNote}</p>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card label="Пришло студии" value={money(pool.earned)} note="после начислений команде" />
+            <Card label={t.poolEarned} value={money(pool.earned)} note={t.poolEarnedNote} />
             <Card
-              label="Ещё не оплачено"
+              label={t.poolFrozen}
               value={money(pool.frozen)}
-              note="клиент не заплатил целиком"
+              note={t.poolFrozenNote}
               warn={pool.frozen > 0}
             />
-            <Card label="Расходы" value={money(pool.expenses)} note="реклама, сервисы, подрядчики" />
+            <Card label={t.poolExpenses} value={money(pool.expenses)} note={t.poolExpensesNote} />
             <Card
-              label="К делению"
+              label={t.poolShare}
               value={money(pool.pool)}
-              note="пришло минус расходы"
+              note={t.poolShareNote}
               warn={pool.pool < 0}
             />
           </div>
@@ -485,18 +489,15 @@ export default async function FinancePage({
       {/* ── Расходы студии ──────────────────────────────────────────────── */}
       {ownerMoney ? (
         <section className="mt-8">
-          <h2 className="text-sm uppercase tracking-wider text-faint">Расходы студии</h2>
-          <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
-            Только общие: реклама, сервисы, подрядчики. Себестоимость конкретного проекта
-            вписывается в сам проект — здесь она вычлась бы второй раз.
-          </p>
+          <h2 className="text-sm uppercase tracking-wider text-faint">{t.expenses}</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">{t.expensesNote}</p>
 
           <form
             action={saveExpense}
             className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-line bg-surface px-5 py-4"
           >
             <label className="text-xs text-faint">
-              Сумма, $
+              {t.fieldAmount}
               <input
                 name="amount"
                 inputMode="numeric"
@@ -506,29 +507,29 @@ export default async function FinancePage({
               />
             </label>
             <label className="text-xs text-faint">
-              Дата
+              {t.fieldDate}
               <input name="spent_on" type="date" className={`mt-1 block w-40 ${INPUT}`} />
             </label>
             <label className="text-xs text-faint">
-              На что
+              {t.fieldWhat}
               <select name="category" defaultValue="ads" className={`mt-1 block w-48 ${INPUT}`}>
                 {EXPENSE_CATEGORIES.map((category) => (
                   <option key={category} value={category}>
-                    {EXPENSE_TITLE[category]}
+                    {EXPENSE_TR[category][locale]}
                   </option>
                 ))}
               </select>
             </label>
             <label className="min-w-[12rem] flex-1 text-xs text-faint">
-              Комментарий
+              {t.fieldComment}
               <input
                 name="note"
-                placeholder="Instagram, кампания по стоматологиям"
+                placeholder={t.commentPlaceholder}
                 className={`mt-1 block w-full ${INPUT}`}
               />
             </label>
             <button type="submit" className={BUTTON}>
-              Записать
+              {t.saveExpense}
             </button>
           </form>
 
@@ -536,27 +537,27 @@ export default async function FinancePage({
             <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[720px]">
               <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
                 <tr>
-                  <th className={TH}>Когда</th>
-                  <th className={TH}>На что</th>
-                  <th className={TH}>Сколько</th>
-                  <th className={TH}>Комментарий</th>
+                  <th className={TH}>{t.colWhen}</th>
+                  <th className={TH}>{t.colWhat}</th>
+                  <th className={TH}>{t.colHowMuch}</th>
+                  <th className={TH}>{t.colComment}</th>
                   <th className={TH} />
                 </tr>
               </thead>
               <tbody>
                 {expenses.map((expense) => (
                   <tr key={expense.id} className="border-b border-line-soft last:border-0">
-                    <td data-label="Когда" className={`${TD} text-xs text-faint`}>{day(expense.spent_on)}</td>
-                    <td data-label="На что" className={TD}>{EXPENSE_TITLE[expense.category]}</td>
-                    <td data-label="Сколько" className={`${TD} font-mono`}>{money(expense.amount_usd)}</td>
-                    <td data-label="Комментарий" className={`${TD} text-xs text-muted`}>
+                    <td data-label={t.colWhen} className={`${TD} text-xs text-faint`}>{day(expense.spent_on)}</td>
+                    <td data-label={t.colWhat} className={TD}>{EXPENSE_TR[expense.category][locale]}</td>
+                    <td data-label={t.colHowMuch} className={`${TD} font-mono`}>{money(expense.amount_usd)}</td>
+                    <td data-label={t.colComment} className={`${TD} text-xs text-muted`}>
                       {expense.note ?? "—"}
                     </td>
                     <td data-label="" className={TD}>
                       <form action={deleteExpense}>
                         <input type="hidden" name="expense" value={expense.id} />
                         <button type="submit" className="text-xs text-faint hover:text-gold">
-                          удалить
+                          {t.remove}
                         </button>
                       </form>
                     </td>
@@ -565,8 +566,7 @@ export default async function FinancePage({
                 {expenses.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-6 text-sm text-muted">
-                      Расходов пока не записано. Пока их нет, доля соучредителя считается от
-                      валовой прибыли и выходит завышенной.
+                      {t.expensesEmpty}
                     </td>
                   </tr>
                 ) : null}
@@ -578,18 +578,10 @@ export default async function FinancePage({
 
       <div className="mt-8 max-w-2xl space-y-3 text-xs leading-relaxed text-faint">
         <p>
-          <span className="text-muted">Ставки.</span> Менеджер — 15 % с нового клиента и 5 % с
-          допродажи; начинающий — 10 %, допродажи не начисляются; руководитель — 30 % со своего
-          клиента и 5 % с каждой сделки своих менеджеров. Считается от чистой прибыли: сумма по
-          договору минус налог минус себестоимость разработки. Соучредителю 5 % с команды не
-          идут: он получает долю от всего, что осталось после расходов, и процент со сделки
-          сверх этого был бы теми же деньгами дважды.
+          <span className="text-muted">{t.ratesTitle}</span> {t.rates}
         </p>
         <p>
-          <span className="text-muted">Заморозка.</span> Пока клиент не заплатил целиком,
-          начисление видно, но к выплате не идёт. Себестоимость и платежи вписывает владелец
-          после подписания договора — до этого прибыль по проекту считается без неё, и в
-          таблице это помечено.
+          <span className="text-muted">{t.freezeTitle}</span> {t.freeze}
         </p>
       </div>
     </AdminShell>

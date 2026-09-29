@@ -52,12 +52,32 @@ export function wordmark(logo: ProtoImage | null): boolean {
  * поэтому проверяем формат: это ближайшее, что машина может сказать честно.
  */
 export function wheelProblems(image: ProtoImage | null): string[] {
+  return wheelIssues(image).map((issue) =>
+    issue.code === "square"
+      ? `снимок не квадратный (${issue.width}×${issue.height}) — будет крутиться эллипсом`
+      : issue.code === "small"
+        ? `снимок мельче ${WHEEL_MIN_WIDTH} px (${issue.width}) — на телефоне будет мылом`
+        : "нужен PNG или WebP с прозрачным фоном: у JPEG вокруг колеса поедет квадрат",
+  );
+}
+
+/**
+ * Те же претензии к снимку — кодами, для панели: там их показывают на
+ * языке сотрудника (content/admin-panel/proto.ts). `wheelProblems` —
+ * русский текст для машинной проверки, которая пишет его в базу.
+ */
+export type WheelIssue =
+  | { code: "square"; width: number; height: number }
+  | { code: "small"; width: number }
+  | { code: "format" };
+
+export function wheelIssues(image: ProtoImage | null): WheelIssue[] {
   if (!image) return [];
-  const out: string[] = [];
+  const out: WheelIssue[] = [];
   const ratio = image.height > 0 ? image.width / image.height : 0;
-  if (ratio < 0.96 || ratio > 1.04) out.push(`снимок не квадратный (${image.width}×${image.height}) — будет крутиться эллипсом`);
-  if (image.width < WHEEL_MIN_WIDTH) out.push(`снимок мельче ${WHEEL_MIN_WIDTH} px (${image.width}) — на телефоне будет мылом`);
-  if (!/\.(png|webp)($|\?)/i.test(image.url)) out.push("нужен PNG или WebP с прозрачным фоном: у JPEG вокруг колеса поедет квадрат");
+  if (ratio < 0.96 || ratio > 1.04) out.push({ code: "square", width: image.width, height: image.height });
+  if (image.width < WHEEL_MIN_WIDTH) out.push({ code: "small", width: image.width });
+  if (!/\.(png|webp)($|\?)/i.test(image.url)) out.push({ code: "format" });
   return out;
 }
 
@@ -194,9 +214,22 @@ export function factPool(facts: ProtoFacts): string {
 
 /** Есть ли чем заполнить страницу. Прототип из одного названия не отправляем. */
 export function enoughToBuild(facts: ProtoFacts): string[] {
-  const missing: string[] = [];
-  if (!facts.name.trim()) missing.push("название компании");
-  if (facts.services.length < 3) missing.push("хотя бы три услуги");
-  if (mainAction(facts).kind === "none") missing.push("телеграм, ватсап или телефон для кнопки");
+  return missingParts(facts).map((part) => MISSING_RU[part]);
+}
+
+/** Чего не хватает — кодами, для панели: текст там на языке сотрудника. */
+export type MissingPart = "name" | "services" | "action";
+
+const MISSING_RU: Record<MissingPart, string> = {
+  name: "название компании",
+  services: "хотя бы три услуги",
+  action: "телеграм, ватсап или телефон для кнопки",
+};
+
+export function missingParts(facts: ProtoFacts): MissingPart[] {
+  const missing: MissingPart[] = [];
+  if (!facts.name.trim()) missing.push("name");
+  if (facts.services.length < 3) missing.push("services");
+  if (mainAction(facts).kind === "none") missing.push("action");
   return missing;
 }

@@ -41,7 +41,38 @@ type UploadMeta = { path: string; mime: string; bytes: number; createdAt: string
  */
 const DISK_RESERVE = 2 * 1024 * 1024 * 1024;
 
-export type FileResult<T> = ({ ok: true } & T) | { ok: false; reason: string };
+/**
+ * Почему файл не принят — кодом, а не фразой: текст на языке панели
+ * подбирает страница (content/admin-panel/partners.ts, promoFailDict).
+ * В `detail` — только данные: числа, ответ файловой системы или базы.
+ */
+export type PromoReason =
+  | "bad_type"
+  | "empty"
+  | "too_big"
+  | "no_path"
+  | "bad_upload"
+  | "bad_size"
+  | "no_space"
+  | "server_start"
+  | "server_chunk"
+  | "server_move"
+  | "lost"
+  | "chunk_size"
+  | "chunk_order"
+  | "overflow"
+  | "incomplete"
+  | "signature"
+  | "foreign_path"
+  | "title"
+  | "offline"
+  | "failed"
+  | "chunk_missing"
+  | "network";
+
+export type PromoFail = { ok: false; reason: PromoReason; detail?: string };
+
+export type FileResult<T> = ({ ok: true } & T) | PromoFail;
 
 /** Завести загрузку: место на диске, путь будущего файла, пустой кусок. */
 export async function startUpload(input: {
@@ -50,9 +81,9 @@ export async function startUpload(input: {
   mime: string;
   bytes: number;
 }): Promise<FileResult<Record<never, never>>> {
-  if (!UPLOAD_ID.test(input.uploadId) || !isPromoPath(input.path)) return { ok: false, reason: "Не разобрал загрузку." };
+  if (!UPLOAD_ID.test(input.uploadId) || !isPromoPath(input.path)) return { ok: false, reason: "bad_upload" };
   if (!Number.isInteger(input.bytes) || input.bytes <= 0 || input.bytes > PROMO_MAX_BYTES) {
-    return { ok: false, reason: "Файл больше 500 МБ или пустой." };
+    return { ok: false, reason: "bad_size" };
   }
   try {
     await mkdir(tmpDir(), { recursive: true });
@@ -61,17 +92,15 @@ export async function startUpload(input: {
     const fs = await statfs(mediaRoot());
     const free = fs.bavail * fs.bsize;
     if (free - input.bytes < DISK_RESERVE) {
-      return {
-        ok: false,
-        reason: `На сервере мало места: свободно ${(free / 1024 ** 3).toFixed(1)} ГБ, а после загрузки должно остаться не меньше 2 ГБ.`,
-      };
+      // Свободно столько-то ГБ, а после загрузки должно остаться не меньше 2 ГБ.
+      return { ok: false, reason: "no_space", detail: (free / 1024 ** 3).toFixed(1) };
     }
     const meta: UploadMeta = { path: input.path, mime: input.mime, bytes: input.bytes, createdAt: new Date().toISOString() };
     await writeFile(path.join(tmpDir(), `${input.uploadId}.json`), JSON.stringify(meta));
     await writeFile(path.join(tmpDir(), `${input.uploadId}.part`), "");
     return { ok: true };
   } catch (error) {
-    return { ok: false, reason: `Сервер не смог завести файл: ${(error as Error).message}` };
+    return { ok: false, reason: "server_start", detail: (error as Error).message };
   }
 }
 
@@ -94,20 +123,20 @@ async function readMeta(uploadId: string): Promise<UploadMeta | null> {
  */
 export async function appendChunk(uploadId: string, offset: number, data: Uint8Array): Promise<FileResult<{ received: number }>> {
   const meta = await readMeta(uploadId);
-  if (!meta) return { ok: false, reason: "Загрузка не найдена — начните заново." };
+  if (!meta) return { ok: false, reason: "lost" };
   if (!Number.isInteger(offset) || offset < 0 || data.byteLength === 0 || data.byteLength > PROMO_CHUNK_BYTES) {
-    return { ok: false, reason: "Кусок файла не того размера." };
+    return { ok: false, reason: "chunk_size" };
   }
   const part = path.join(tmpDir(), `${uploadId}.part`);
   const have = (await stat(part).catch(() => null))?.size;
-  if (have === undefined) return { ok: false, reason: "Загрузка не найдена — начните заново." };
+  if (have === undefined) return { ok: false, reason: "lost" };
   if (offset + data.byteLength <= have) return { ok: true, received: have };
-  if (offset !== have) return { ok: false, reason: `Кусок не по порядку: ждал байт ${have}, пришёл ${offset}.` };
-  if (have + data.byteLength > meta.bytes) return { ok: false, reason: "Файл вышел больше заявленного размера." };
+  if (offset !== have) return { ok: false, reason: "chunk_order", detail: `${have} ≠ ${offset}` };
+  if (have + data.byteLength > meta.bytes) return { ok: false, reason: "overflow" };
   try {
     await appendFile(part, data);
   } catch (error) {
-    return { ok: false, reason: `Сервер не записал кусок: ${(error as Error).message}` };
+    return { ok: false, reason: "server_chunk", detail: (error as Error).message };
   }
   return { ok: true, received: have + data.byteLength };
 }
@@ -137,10 +166,10 @@ export function signatureMatches(mime: string, head: Uint8Array): boolean {
 /** Закончить загрузку: размер сошёлся, сигнатура тоже — файл переезжает в promo/. */
 export async function finishUpload(uploadId: string): Promise<FileResult<{ path: string; mime: string; bytes: number }>> {
   const meta = await readMeta(uploadId);
-  if (!meta) return { ok: false, reason: "Загрузка не найдена — начните заново." };
+  if (!meta) return { ok: false, reason: "lost" };
   const part = path.join(tmpDir(), `${uploadId}.part`);
   const size = (await stat(part).catch(() => null))?.size ?? -1;
-  if (size !== meta.bytes) return { ok: false, reason: `Файл дошёл не целиком: ${size} из ${meta.bytes} байт.` };
+  if (size !== meta.bytes) return { ok: false, reason: "incomplete", detail: `${size} / ${meta.bytes}` };
 
   const head = new Uint8Array(16);
   const handle = await open(part, "r");
@@ -151,16 +180,16 @@ export async function finishUpload(uploadId: string): Promise<FileResult<{ path:
   }
   if (!signatureMatches(meta.mime, head)) {
     await discardUpload(uploadId);
-    return { ok: false, reason: "Внутри файла не то, что в его названии: ни ролик, ни картинка." };
+    return { ok: false, reason: "signature" };
   }
 
   const target = promoFilePath(meta.path);
-  if (!target) return { ok: false, reason: "Путь файла не наш." };
+  if (!target) return { ok: false, reason: "foreign_path" };
   try {
     await mkdir(path.dirname(target), { recursive: true });
     await rename(part, target);
   } catch (error) {
-    return { ok: false, reason: `Сервер не переложил файл: ${(error as Error).message}` };
+    return { ok: false, reason: "server_move", detail: (error as Error).message };
   }
   await rm(path.join(tmpDir(), `${uploadId}.json`), { force: true });
   return { ok: true, path: meta.path, mime: meta.mime, bytes: size };

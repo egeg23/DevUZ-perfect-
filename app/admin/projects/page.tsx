@@ -2,25 +2,18 @@ import Link from "next/link";
 
 import { addProject } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
+import { projectsListDict, stageLabel } from "@/content/admin-panel/projects";
+import { money } from "@/lib/admin/finance";
 import { requireStaff } from "@/lib/admin/guard";
+import { PANEL_INTL, pick, type PanelLocale } from "@/lib/admin/i18n";
 import { loadPeople } from "@/lib/admin/ledger";
-import {
-  STAGE_LABEL,
-  daysOnStage,
-  listProjects,
-  stageProgress,
-} from "@/lib/admin/projects";
+import { daysOnStage, listProjects, stageProgress } from "@/lib/admin/projects";
 
 export const dynamic = "force-dynamic";
 
-function money(amount: number | null): string {
-  if (amount === null) return "—";
-  return `${amount.toLocaleString("ru-RU")} $`;
-}
-
-function shortDate(value: string | null): string {
+function shortDate(value: string | null, locale: PanelLocale): string {
   if (!value) return "—";
-  return new Intl.DateTimeFormat("ru-RU", {
+  return new Intl.DateTimeFormat(PANEL_INTL[locale], {
     day: "2-digit",
     month: "2-digit",
     year: "2-digit",
@@ -35,6 +28,8 @@ export default async function ProjectsPage({
 }) {
   const staff = await requireStaff();
   const { all, r } = await searchParams;
+  const locale = staff.panel_locale;
+  const t = pick(projectsListDict, locale);
 
   const includeClosed = all === "1";
   const isAdmin = staff.role === "admin";
@@ -49,18 +44,18 @@ export default async function ProjectsPage({
   return (
     <AdminShell staff={staff}>
       <div className="flex flex-wrap items-baseline gap-4">
-        <h1 className="text-lg font-semibold">Проекты</h1>
+        <h1 className="text-lg font-semibold">{t.title}</h1>
         <Link
           href={includeClosed ? "/admin/projects" : "/admin/projects?all=1"}
           className="text-sm text-muted hover:text-text"
         >
-          {includeClosed ? "только активные" : "показать закрытые"}
+          {includeClosed ? t.onlyActive : t.showClosed}
         </Link>
       </div>
 
       {r === "failed" ? (
         <p className="mt-4 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
-          Не получилось — проверьте название.
+          {t.createFailed}
         </p>
       ) : null}
 
@@ -85,30 +80,29 @@ export default async function ProjectsPage({
                       <span className="text-sm text-muted">{project.client}</span>
                     ) : null}
                     <span className="ml-auto font-mono text-sm text-muted">
-                      {money(project.amount_usd)}
+                      {money(project.amount_usd, locale)}
                     </span>
                   </div>
 
                   <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
                     <span className="rounded bg-surface-2 px-2 py-0.5 text-text">
-                      {STAGE_LABEL[project.stage] ?? project.stage}
+                      {stageLabel(project.stage, locale)}
                     </span>
                     <span className="text-faint">
-                      {days === 0 ? "сегодня" : `${days} дн. на этой стадии`}
+                      {days === 0 ? t.today : t.daysOnStage(days)}
                     </span>
                     {project.owner_name ? (
-                      <span className="text-faint">ведёт {project.owner_name}</span>
+                      <span className="text-faint">{t.ledBy(project.owner_name)}</span>
                     ) : null}
                     <span className={overdue ? "text-gold" : "text-faint"}>
-                      срок {shortDate(project.deadline)}
-                      {overdue ? " · просрочен" : ""}
+                      {t.due(shortDate(project.deadline, locale))}
+                      {overdue ? t.overdue : ""}
                     </span>
                   </div>
 
                   {progress === null ? (
                     <p className="mt-3 text-xs text-faint">
-                      Вне линии стадий — полосу не рисуем: «{STAGE_LABEL[project.stage]}»
-                      это не начало и не конец.
+                      {t.offLine(stageLabel(project.stage, locale))}
                     </p>
                   ) : (
                     <span className="mt-3 block h-1.5 overflow-hidden rounded-r-[4px] bg-line-soft">
@@ -128,12 +122,12 @@ export default async function ProjectsPage({
         </ul>
       ) : (
         <p className="mt-6 rounded-xl border border-line bg-surface px-5 py-8 text-center text-sm text-muted">
-          {includeClosed ? "Проектов пока нет." : "Активных проектов нет."}
+          {includeClosed ? t.emptyAll : t.emptyActive}
         </p>
       )}
 
       <section className="mt-8 rounded-xl border border-line bg-surface px-5 py-4">
-        <h2 className="text-xs uppercase tracking-wider text-faint">Новый проект</h2>
+        <h2 className="text-xs uppercase tracking-wider text-faint">{t.newProject}</h2>
         <form action={addProject} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {/* Проект, который владелец заводит на себя, никому не даёт
               начислений: владелец в них не участвует. Поэтому у него выбор
@@ -143,17 +137,17 @@ export default async function ProjectsPage({
               name="owner"
               required
               defaultValue=""
-              aria-label="Ведёт"
+              aria-label={t.ownerAria}
               className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm sm:col-span-2 lg:col-span-4"
             >
               <option value="" disabled>
-                Кто ведёт — ему идёт начисление
+                {t.ownerPick}
               </option>
               {leaders.map((person) => (
                 <option key={person.id} value={person.id}>
                   {person.display_name}
-                  {person.id === staff.id ? " (я)" : ""}
-                  {person.role === "admin" ? " — без начислений команде" : ""}
+                  {person.id === staff.id ? t.me : ""}
+                  {person.role === "admin" ? t.noTeamAccrual : ""}
                 </option>
               ))}
             </select>
@@ -162,13 +156,13 @@ export default async function ProjectsPage({
             name="title"
             required
             maxLength={200}
-            placeholder="Название"
+            placeholder={t.titlePh}
             className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm"
           />
           <input
             name="client"
             maxLength={200}
-            placeholder="Клиент"
+            placeholder={t.clientPh}
             className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm"
           />
           <input
@@ -176,7 +170,7 @@ export default async function ProjectsPage({
             type="number"
             min="0"
             step="100"
-            placeholder="Сумма, $"
+            placeholder={t.amountPh}
             className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm"
           />
           <div className="flex gap-2">
@@ -189,14 +183,12 @@ export default async function ProjectsPage({
               type="submit"
               className="shrink-0 rounded-lg bg-green px-4 py-2 text-xs font-semibold text-ink transition hover:bg-green-dim"
             >
-              Создать
+              {t.create}
             </button>
           </div>
         </form>
         <p className="mt-3 text-xs text-faint">
-          {isAdmin
-            ? "Проект заводит любой сотрудник и ведёт его сам; вы выбираете, кто ведёт. Стадию двигаете вы."
-            : "Проект заводит любой сотрудник — и ведёт его сам. Стадию двигает владелец."}
+          {isAdmin ? t.footAdmin : t.footStaff}
         </p>
       </section>
     </AdminShell>

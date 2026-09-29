@@ -10,7 +10,7 @@ import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
 import { newAccessToken } from "@/lib/store/access";
 import type { ProtoProblem } from "@/lib/proto/check";
-import type { ProtoFacts } from "@/lib/proto/facts";
+import { missingParts, type ProtoFacts } from "@/lib/proto/facts";
 import { buildProto } from "@/lib/proto/render";
 import { serviceClient } from "@/lib/supabase";
 
@@ -57,7 +57,14 @@ function shape(row: Record<string, unknown>): Proto {
 
 export type SaveResult =
   | { ok: true; proto: Proto; problems: ProtoProblem[] }
-  | { ok: false; why: string };
+  | { ok: false; why: SaveFailure; detail?: string };
+
+/**
+ * Почему не собралось — кодом: текст на языке панели подбирает страница
+ * (content/admin-panel/proto.ts). В `detail` — данные: ключ ниши, коды
+ * недостающего через запятую (MissingPart), ответ базы.
+ */
+export type SaveFailure = "niche" | "missing" | "offline" | "failed";
 
 /**
  * Собрать прототип и положить в базу.
@@ -73,11 +80,11 @@ export async function saveProto(input: {
   by?: Staff | null;
 }): Promise<SaveResult> {
   const build = buildProto(input.facts);
-  if (!build) return { ok: false, why: `Ниша «${input.facts.niche}» не заведена` };
-  if (build.missing.length) return { ok: false, why: `Не хватает: ${build.missing.join(", ")}` };
+  if (!build) return { ok: false, why: "niche", detail: input.facts.niche };
+  if (build.missing.length) return { ok: false, why: "missing", detail: missingParts(input.facts).join(",") };
 
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна" };
+  if (!db) return { ok: false, why: "offline" };
 
   const { data, error } = await db
     .from("protos")
@@ -97,7 +104,7 @@ export async function saveProto(input: {
     .select(COLUMNS)
     .single();
 
-  if (error || !data) return { ok: false, why: error?.message ?? "Не записалось" };
+  if (error || !data) return { ok: false, why: "failed", detail: error?.message };
 
   const proto = shape(data as Record<string, unknown>);
   await record("proto.build", {

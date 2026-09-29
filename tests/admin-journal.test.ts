@@ -13,9 +13,12 @@ import { ACTION_LABEL, SENSITIVE } from "@/lib/admin/journal";
  */
 test("у каждого журналируемого действия есть подпись", () => {
   for (const action of AUDIT_ACTIONS) {
-    const label = ACTION_LABEL[action];
-    assert.ok(label, `действие ${action} без подписи`);
-    assert.notEqual(label, action, `подпись для ${action} — это само действие`);
+    // Подпись — на каждом языке панели: журнал читают и по-узбекски, и по-польски.
+    for (const locale of ["ru", "uz", "pl"] as const) {
+      const label = ACTION_LABEL[action]?.[locale];
+      assert.ok(label, `действие ${action} без подписи (${locale})`);
+      assert.notEqual(label, action, `подпись для ${action} — это само действие`);
+    }
   }
 });
 

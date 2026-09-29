@@ -2,6 +2,8 @@ import { categories, categoryBySlug, optionsFor } from "@/content/calculator";
 import { USD_RATE } from "@/content/company";
 import { defaultSelection, estimate, type Selection } from "@/lib/calculator";
 import { t } from "@/lib/i18n";
+import { pick, type PanelLocale } from "@/lib/admin/i18n";
+import { quoteTextDict } from "@/content/admin-panel/projects";
 import type { Brief } from "@/lib/qualify/brief";
 
 /**
@@ -172,24 +174,33 @@ export function selectionForLead(category: string, lead: LeadLike): Selection {
 
 /* ── Расчёт ────────────────────────────────────────────────────────────── */
 
-function extrasFor(category: string, selection: Selection): Extra[] {
+/*
+ * Язык — панели сотрудника: смету читает менеджер, и «Что говорить» — это
+ * подсказка ему, а не документ клиенту (content/admin-panel/projects.ts,
+ * quoteTextDict). Подписи категорий и допов — из калькулятора сайта на том
+ * же языке: у сайта есть и узбекский, и польский. Без языка — русский: так
+ * смету считают договор и книга денег, им нужна только цифра порога.
+ */
+
+function extrasFor(category: string, selection: Selection, locale: PanelLocale): Extra[] {
+  const q = pick(quoteTextDict, locale);
   const out: Extra[] = [];
   for (const option of optionsFor(category)) {
-    const label = t(option.label, "ru");
+    const label = t(option.label, locale);
     const value = selection[option.id];
     if (option.kind === "toggle") {
       if (value === true) continue;
       const price = option.addUzs
         ? `+${money(floorUsdOf(option.addUzs))}`
         : option.mul
-          ? `+${Math.round((option.mul - 1) * 100)}% к сумме`
-          : "включено";
+          ? q.pctOfTotal(Math.round((option.mul - 1) * 100))
+          : q.included;
       out.push({ id: option.id, label, price });
     } else if (option.kind === "counter") {
-      const unit = t(option.unitLabel, "ru");
+      const unit = t(option.unitLabel, locale);
       const price = option.unitUzs
-        ? `${money(floorUsdOf(option.unitUzs))} за ${unit}`
-        : `+${Math.round((option.unitMul ?? 0) * 100)}% за ${unit}`;
+        ? q.perUnit(money(floorUsdOf(option.unitUzs)), unit)
+        : q.perUnit(`+${Math.round((option.unitMul ?? 0) * 100)}%`, unit);
       out.push({ id: option.id, label, price });
     } else {
       const chosen = option.choices.find((c) => c.id === value) ?? option.choices[0];
@@ -198,21 +209,22 @@ function extrasFor(category: string, selection: Selection): Extra[] {
         const price = choice.addUzs
           ? `+${money(floorUsdOf(choice.addUzs))}`
           : choice.mul && choice.mul !== 1
-            ? `+${Math.round((choice.mul - 1) * 100)}% к сумме`
-            : "включено";
-        out.push({ id: `${option.id}:${choice.id}`, label: `${label}: ${t(choice.label, "ru")}`, price });
+            ? q.pctOfTotal(Math.round((choice.mul - 1) * 100))
+            : q.included;
+        out.push({ id: `${option.id}:${choice.id}`, label: `${label}: ${t(choice.label, locale)}`, price });
       }
     }
   }
   return out;
 }
 
-export function quoteFor(input: QuoteInput): Quote | null {
+export function quoteFor(input: QuoteInput, locale: PanelLocale = "ru"): Quote | null {
   const category = categoryBySlug(input.category);
   if (!category) return null;
+  const q = pick(quoteTextDict, locale);
 
   const selection: Selection = { ...defaultSelection(input.category), ...input.selection };
-  const base = estimate(input.category, selection, "ru");
+  const base = estimate(input.category, selection, locale);
   if (!base) return null;
 
   // Обещали быстрее, чем считает калькулятор, — это ускорение, и оно уже
@@ -220,24 +232,22 @@ export function quoteFor(input: QuoteInput): Quote | null {
   const promised = input.weeks;
   const rush = promised !== null && promised < base.weeksLow && selection.urgency !== RUSH_CHOICE;
   if (rush) selection.urgency = RUSH_CHOICE;
-  const est = rush ? estimate(input.category, selection, "ru") ?? base : base;
+  const est = rush ? estimate(input.category, selection, locale) ?? base : base;
 
   // Порог — от точной суммы, а не от округлённой «от» с сайта: та
   // округляется до полумиллиона в обе стороны и на лендинге уходит ниже базы.
   const floorUsd = floorUsdOf(est.exactUzs);
   const ceilingUsd = Math.max(floorUsd, ceilingUsdOf(est.highUzs));
   const siteLowUsd = ceilingUsdOf(est.lowUzs);
-  const title = t(category.title, "ru");
+  const title = t(category.title, locale);
 
   const talk = [
-    `Ориентир по «${title}»: ${money(floorUsd)}–${money(ceilingUsd)}. Точную цифру называем после короткого созвона — в неё войдёт то, чего нет ни в одном калькуляторе.`,
+    q.talkRange(title, money(floorUsd), money(ceilingUsd)),
     promised !== null
-      ? `Срок: ${promised} ${weeksWord(promised)} с даты аванса${rush ? ` — быстрее расчётных ${base.weeksLow}–${base.weeksHigh}, поэтому в порог уже включено ускорение (+30%)` : ""}.`
-      : `Срок: ${est.weeksLow}–${est.weeksHigh} недель с даты аванса. Дизайн и разработка идут параллельно — это и есть наша скорость.`,
-    `Ниже ${money(floorUsd)} не опускаемся: это порог, под которым проект не окупается. Скидку согласует только владелец.`,
-    ...(siteLowUsd < floorUsd
-      ? [`На сайте калькулятор показывает «от ${money(siteLowUsd)}» — это округление вниз. Если клиент ссылается на него, объясняем: точная цифра ${money(floorUsd)}, разница — округление, а не наценка.`]
-      : []),
+      ? q.talkPromised(promised, rush, base.weeksLow, base.weeksHigh)
+      : q.talkEstimated(est.weeksLow, est.weeksHigh),
+    q.talkFloor(money(floorUsd)),
+    ...(siteLowUsd < floorUsd ? [q.talkSite(money(siteLowUsd), money(floorUsd))] : []),
   ];
 
   return {
@@ -254,24 +264,16 @@ export function quoteFor(input: QuoteInput): Quote | null {
     rush,
     work: est.work,
     breakdown: est.breakdown,
-    extras: extrasFor(input.category, selection),
+    extras: extrasFor(input.category, selection, locale),
     talk,
   };
 }
 
-function weeksWord(n: number): string {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "неделя";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "недели";
-  return "недель";
-}
-
 /** Смета по лиду без участия менеджера: категория и допы — из брифа. */
-export function quoteForLead(lead: LeadLike & { brief?: Brief | null }): Quote | null {
-  if (lead.brief) return briefQuote(lead.brief);
+export function quoteForLead(lead: LeadLike & { brief?: Brief | null }, locale: PanelLocale = "ru"): Quote | null {
+  if (lead.brief) return briefQuote(lead.brief, locale);
   const category = categoryForLead(lead);
-  return quoteFor({ category, selection: selectionForLead(category, lead), weeks: null });
+  return quoteFor({ category, selection: selectionForLead(category, lead), weeks: null }, locale);
 }
 
 /**
@@ -279,12 +281,13 @@ export function quoteForLead(lead: LeadLike & { brief?: Brief | null }): Quote |
  * ниже него нельзя по той же причине, что и с калькулятором, а выше
  * нечестно: цифра уже названа.
  */
-export function briefQuote(brief: Brief): Quote {
+export function briefQuote(brief: Brief, locale: PanelLocale = "ru"): Quote {
+  const q = pick(quoteTextDict, locale);
   const paid = brief.addons.filter((a) => !a.included && !a.monthly && !a.onRequest && a.priceUsd > 0);
   const total = Math.max(0, Math.round(brief.totalUsd));
   const extras: Extra[] = [
-    ...brief.addons.filter((a) => a.onRequest).map((a) => ({ id: a.id, label: a.label, price: "по запросу — цену называет менеджер" })),
-    ...brief.addons.filter((a) => a.monthly).map((a) => ({ id: a.id, label: a.label, price: `${money(a.priceUsd)}/мес` })),
+    ...brief.addons.filter((a) => a.onRequest).map((a) => ({ id: a.id, label: a.label, price: q.onRequest })),
+    ...brief.addons.filter((a) => a.monthly).map((a) => ({ id: a.id, label: a.label, price: q.perMonth(money(a.priceUsd)) })),
   ];
   return {
     kind: "brief",
@@ -299,18 +302,18 @@ export function briefQuote(brief: Brief): Quote {
     promisedWeeks: null,
     rush: false,
     work: [
-      `Пакет «${brief.tier.label}»`,
+      q.tier(brief.tier.label),
       ...brief.addons.filter((a) => a.included).map((a) => a.label),
     ],
     breakdown: [
-      { label: `Пакет «${brief.tier.label}»`, value: money(brief.tier.priceUsd) },
-      ...paid.map((a) => ({ label: a.label, value: `${a.from ? "от " : ""}${money(a.priceUsd)}` })),
+      { label: q.tier(brief.tier.label), value: money(brief.tier.priceUsd) },
+      ...paid.map((a) => ({ label: a.label, value: a.from ? q.fromPrice(money(a.priceUsd)) : money(a.priceUsd) })),
     ],
     extras,
     talk: [
-      `Итог ${brief.fromPrice ? "от " : ""}${money(total)} — клиент собрал его сам на витрине и видел цифру. Ниже нельзя, выше — нечестно.`,
-      "Срок называем после созвона: в брифе его нет.",
-      ...(extras.length ? ["Есть позиции «по запросу» — их цену считаем по калькулятору, не ниже его порога."] : []),
+      q.briefTotal(money(total), Boolean(brief.fromPrice)),
+      q.briefWeeks,
+      ...(extras.length ? [q.briefOnRequest] : []),
     ],
   };
 }
@@ -369,3 +372,8 @@ export function belowFloor(amountUsd: number | null | undefined, quote: Quote | 
 }
 
 export const CATEGORY_CHOICES = categories.map((c) => ({ slug: c.slug, title: t(c.title, "ru") }));
+
+/** Категории для выбора в карточке проекта — на языке панели. */
+export function categoryChoices(locale: PanelLocale): { slug: string; title: string }[] {
+  return categories.map((c) => ({ slug: c.slug, title: t(c.title, locale) }));
+}

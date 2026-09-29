@@ -8,6 +8,7 @@ import {
   finishUpload,
   removePromoFile,
   startUpload,
+  type PromoFail,
 } from "@/lib/partners/promo-files";
 import {
   PROMO_MAX_BYTES,
@@ -19,6 +20,8 @@ import {
 import { listPartners, notifyPartner, type Partner } from "@/lib/partners/store";
 import { esc } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
+
+export type { PromoFail, PromoReason } from "@/lib/partners/promo-files";
 
 /**
  * Промо-материалы партнёров: ролики и картинки, которые партнёр берёт из
@@ -107,7 +110,7 @@ export async function promoStats(): Promise<Map<string, PromoStats>> {
   return out;
 }
 
-export type StartResult = { ok: true; uploadId: string } | { ok: false; reason: string };
+export type StartResult = { ok: true; uploadId: string } | PromoFail;
 
 /**
  * Завести загрузку. Путь файла придумывает сервер, тип и размер проверяются
@@ -116,15 +119,15 @@ export type StartResult = { ok: true; uploadId: string } | { ok: false; reason: 
  */
 export async function promoStart(input: { mime: string; bytes: number }): Promise<StartResult> {
   if (!PROMO_MIME[input.mime]) {
-    return { ok: false, reason: "Такой файл не примем: нужен ролик MP4, MOV или WebM или картинка PNG, JPG, WebP, GIF." };
+    return { ok: false, reason: "bad_type" };
   }
-  if (!Number.isInteger(input.bytes) || input.bytes <= 0) return { ok: false, reason: "Файл пустой." };
+  if (!Number.isInteger(input.bytes) || input.bytes <= 0) return { ok: false, reason: "empty" };
   if (input.bytes > PROMO_MAX_BYTES) {
-    return { ok: false, reason: "Файл больше 500 МБ. Сожмите ролик: 1080×1920, H.264, 8–10 Мбит/с — минута займёт около 70 МБ." };
+    return { ok: false, reason: "too_big" };
   }
   const uploadId = randomUUID();
   const path = promoPath(input.mime, randomUUID());
-  if (!path) return { ok: false, reason: "Не получилось придумать путь файла." };
+  if (!path) return { ok: false, reason: "no_path" };
   const started = await startUpload({ uploadId, path, mime: input.mime, bytes: input.bytes });
   return started.ok ? { ok: true, uploadId } : started;
 }
@@ -152,14 +155,14 @@ export async function registerPromo(
   input: PromoInput,
   staff: Staff,
   ip: string,
-): Promise<{ ok: true; material: PromoMaterial } | { ok: false; reason: string }> {
+): Promise<{ ok: true; material: PromoMaterial } | PromoFail> {
   const title = input.title.trim().replace(/\s+/g, " ").slice(0, 120);
-  if (title.length < 2) return { ok: false, reason: "Назовите материал — хотя бы два знака." };
+  if (title.length < 2) return { ok: false, reason: "title" };
   const locale = isPromoLocale(input.locale) ? input.locale : "all";
   const caption = input.caption.trim().slice(0, 1000) || null;
 
   const db = serviceClient();
-  if (!db) return { ok: false, reason: "Нет базы." };
+  if (!db) return { ok: false, reason: "offline" };
   const file = await finishUpload(input.uploadId);
   if (!file.ok) return file;
   const duration =
@@ -185,7 +188,7 @@ export async function registerPromo(
   if (error || !data) {
     // Файл без строки в базе никто не увидит и не удалит из панели.
     await removePromoFile(file.path);
-    return { ok: false, reason: error?.message ?? "Не записал материал." };
+    return { ok: false, reason: "failed", detail: error?.message };
   }
 
   const material = shape(data as Record<string, unknown>);

@@ -1,14 +1,24 @@
 import { AdminShell } from "@/components/admin/shell";
-import { EXPENSE_TITLE, isExpenseCategory, type Expense } from "@/lib/admin/finance";
+import { taxTitleDict } from "@/content/admin-panel/dashboard";
+import { expensesDict, taxWhatDict } from "@/content/admin-panel/expenses";
+import { EXPENSE_TR, isExpenseCategory, type Expense } from "@/lib/admin/finance";
 import { byCategory, splitExpense, splitTotals, type Founder } from "@/lib/admin/expense-split";
 import { requireRole } from "@/lib/admin/guard";
+import { PANEL_INTL, pick, tr, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import { loadExpenses, loadPeople } from "@/lib/admin/ledger";
 import { DEFAULT_DEADLINES, upcoming } from "@/lib/admin/tax-calendar";
 import { addStudioExpense, dropStudioExpense } from "@/app/admin/expenses/actions";
 
 export const dynamic = "force-dynamic";
 
-const money = (n: number) => `$${n.toLocaleString("ru-RU", { maximumFractionDigits: 2 })}`;
+const money = (n: number, locale: PanelLocale) =>
+  `$${n.toLocaleString(PANEL_INTL[locale], { maximumFractionDigits: 2 })}`;
+
+/** Подпись по `id` налогового срока; свой срок без перевода — русский текст как есть. */
+function taxText(table: Record<string, Tr | undefined>, id: string, fallback: string, locale: PanelLocale): string {
+  const entry = table[id];
+  return entry ? tr(entry, locale) : fallback;
+}
 const day = (iso: string) => iso.slice(0, 10).split("-").reverse().join(".");
 
 /**
@@ -24,6 +34,9 @@ const day = (iso: string) => iso.slice(0, 10).split("-").reverse().join(".");
  */
 export default async function ExpensesPage() {
   const staff = await requireRole("admin", "head");
+  const locale = staff.panel_locale;
+  const t = pick(expensesDict, locale);
+  const usd = (n: number) => money(n, locale);
   const [expenses, team] = await Promise.all([loadExpenses(), loadPeople()]);
 
   const founders: Founder[] = team
@@ -41,11 +54,9 @@ export default async function ExpensesPage() {
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-2xl font-semibold">Расходы студии</h1>
+      <h1 className="text-2xl font-semibold">{t.title}</h1>
       <p className="max-w-2xl text-sm text-muted">
-        Общие траты студии: реклама, сервисы, подрядчики. Делятся между
-        соучредителями в той же пропорции, что и прибыль. Себестоимость
-        конкретного проекта сюда не идёт — она уже вычтена в самом проекте.
+        {t.intro}
       </p>
 
       {/* Налоги — первым блоком, а не внизу.
@@ -53,25 +64,25 @@ export default async function ExpensesPage() {
           список расходов можно посмотреть и завтра. */}
       <section className="mt-6 rounded-2xl border border-line bg-surface px-6 py-5">
         <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
-          Налоги: что подходит
+          {t.taxesSoon}
         </h2>
 
         {soon.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">В ближайшие две недели сроков нет.</p>
+          <p className="mt-3 text-sm text-muted">{t.noTaxes}</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {soon.map((item) => (
               <li key={item.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
-                <span className="font-semibold">{item.title}</span>
-                <span className="text-muted">{item.what}</span>
+                <span className="font-semibold">{taxText(taxTitleDict, item.id, item.title, locale)}</span>
+                <span className="text-muted">{taxText(taxWhatDict, item.id, item.what, locale)}</span>
                 <span className={item.daysLeft <= 3 ? "text-amber-500" : "text-faint"}>
-                  {day(item.due)} · через {item.daysLeft} дн.
+                  {day(item.due)} · {t.inDays(item.daysLeft)}
                 </span>
                 {/* Оговорка стоит рядом с датой, а не сноской внизу: сноску
                     не читают, а штраф приходит один. */}
                 {!item.verified ? (
                   <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs text-amber-500">
-                    дата не подтверждена бухгалтером
+                    {t.unverified}
                   </span>
                 ) : null}
               </li>
@@ -80,24 +91,21 @@ export default async function ExpensesPage() {
         )}
 
         <p className="mt-4 text-xs leading-relaxed text-faint">
-          Сроки выше — заготовка под разговор с бухгалтером, а не инструкция.
-          Режим ИП зависит от оборота и вида деятельности, правила меняются, и
-          знать их наверняка может только тот, кто ведёт конкретное ИП.
-          Календарь, которому доверяют по ошибке, опаснее отсутствующего.
+          {t.taxNote}
         </p>
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-line bg-surface px-5 py-4">
-          <p className="text-xs text-faint">Всего расходов</p>
-          <p className="mt-1 text-2xl font-semibold">{money(total)}</p>
+          <p className="text-xs text-faint">{t.total}</p>
+          <p className="mt-1 text-2xl font-semibold">{usd(total)}</p>
         </div>
         {totals.map((share) => (
           <div key={share.founderId} className="rounded-2xl border border-line bg-surface px-5 py-4">
             <p className="text-xs text-faint">
               {share.name} · {share.percent}%
             </p>
-            <p className="mt-1 text-2xl font-semibold">{money(share.amount)}</p>
+            <p className="mt-1 text-2xl font-semibold">{usd(share.amount)}</p>
           </div>
         ))}
       </section>
@@ -105,15 +113,15 @@ export default async function ExpensesPage() {
       {categories.length > 0 ? (
         <section className="mt-6 rounded-2xl border border-line bg-surface px-6 py-5">
           <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
-            Куда уходит
+            {t.where}
           </h2>
           <ul className="mt-3 space-y-1 text-sm">
             {categories.map((row) => (
               <li key={row.category} className="flex justify-between">
                 <span className="text-muted">
-                  {isExpenseCategory(row.category) ? EXPENSE_TITLE[row.category] : row.category}
+                  {isExpenseCategory(row.category) ? tr(EXPENSE_TR[row.category], locale) : row.category}
                 </span>
-                <span className="tabular-nums">{money(row.amount)}</span>
+                <span className="tabular-nums">{usd(row.amount)}</span>
               </li>
             ))}
           </ul>
@@ -122,7 +130,7 @@ export default async function ExpensesPage() {
 
       <section className="mt-6 rounded-2xl border border-line bg-surface px-6 py-5">
         <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
-          Добавить расход
+          {t.add}
         </h2>
         <form action={addStudioExpense} className="mt-4 grid gap-3 sm:grid-cols-4">
           <input
@@ -135,8 +143,8 @@ export default async function ExpensesPage() {
             name="category"
             className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
           >
-            {Object.entries(EXPENSE_TITLE).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
+            {Object.entries(EXPENSE_TR).map(([key, label]) => (
+              <option key={key} value={key}>{tr(label, locale)}</option>
             ))}
           </select>
           <input
@@ -150,7 +158,7 @@ export default async function ExpensesPage() {
           <input
             type="text"
             name="note"
-            placeholder="на что"
+            placeholder={t.notePh}
             className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
           />
           <div className="sm:col-span-4">
@@ -158,7 +166,7 @@ export default async function ExpensesPage() {
               type="submit"
               className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
             >
-              Записать
+              {t.record}
             </button>
           </div>
         </form>
@@ -166,18 +174,18 @@ export default async function ExpensesPage() {
 
       <section className="mt-6">
         <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
-          Все траты
+          {t.all}
         </h2>
         {expenses.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">Пока ничего не записано.</p>
+          <p className="mt-3 text-sm text-muted">{t.empty}</p>
         ) : (
           <table className="mt-3 w-full text-sm">
             <thead className="text-xs text-faint">
               <tr className="border-b border-line">
-                <th className="py-2 text-left font-normal">Когда</th>
-                <th className="py-2 text-left font-normal">Статья</th>
-                <th className="py-2 text-left font-normal">На что</th>
-                <th className="py-2 text-right font-normal">Сумма</th>
+                <th className="py-2 text-left font-normal">{t.colWhen}</th>
+                <th className="py-2 text-left font-normal">{t.colCategory}</th>
+                <th className="py-2 text-left font-normal">{t.colWhat}</th>
+                <th className="py-2 text-right font-normal">{t.colAmount}</th>
                 {founders.map((f) => (
                   <th key={f.id} className="py-2 text-right font-normal">
                     {f.display_name}
@@ -192,12 +200,12 @@ export default async function ExpensesPage() {
                 return (
                   <tr key={expense.id} className="border-b border-line-soft last:border-0">
                     <td className="py-2 text-xs text-faint">{day(expense.spent_on)}</td>
-                    <td className="py-2">{EXPENSE_TITLE[expense.category]}</td>
+                    <td className="py-2">{tr(EXPENSE_TR[expense.category], locale)}</td>
                     <td className="py-2 text-muted">{expense.note ?? "—"}</td>
-                    <td className="py-2 text-right tabular-nums">{money(expense.amount_usd)}</td>
+                    <td className="py-2 text-right tabular-nums">{usd(expense.amount_usd)}</td>
                     {shares.map((share) => (
                       <td key={share.founderId} className="py-2 text-right tabular-nums text-muted">
-                        {money(share.amount)}
+                        {usd(share.amount)}
                       </td>
                     ))}
                     {staff.role === "admin" ? (
@@ -205,7 +213,7 @@ export default async function ExpensesPage() {
                         <form action={dropStudioExpense}>
                           <input type="hidden" name="id" value={expense.id} />
                           <button type="submit" className="text-xs text-faint hover:text-red-400">
-                            убрать
+                            {t.remove}
                           </button>
                         </form>
                       </td>

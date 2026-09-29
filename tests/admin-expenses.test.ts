@@ -115,8 +115,9 @@ test("сроки по умолчанию помечены непроверенн
 test("страница говорит о непроверенных сроках рядом с датой", () => {
   // Сноску внизу страницы не читают, а штраф приходит один.
   const page = readFileSync(new URL("../app/admin/expenses/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /verified/);
-  assert.match(page, /бухгалтер/i);
+  assert.match(page, /\{!item\.verified \? \(\s*<span[^>]*>\s*\{t\.unverified\}/);
+  const dict = readFileSync(new URL("../content/admin-panel/expenses.ts", import.meta.url), "utf8");
+  assert.match(dict, /unverified: \{\s*ru: "[^"]*бухгалтер/i);
 });
 
 test("ежемесячный срок не уезжает в прошлое и перескакивает год", () => {

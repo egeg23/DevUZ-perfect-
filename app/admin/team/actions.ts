@@ -20,7 +20,7 @@ import {
   setTouchPlan,
   type TeamResult,
 } from "@/lib/admin/team";
-import { parseTouchPlan } from "@/lib/admin/touch-plan";
+import { parseTouchPlan, type TouchPlanError } from "@/lib/admin/touch-plan";
 
 /**
  * Каждое действие само проверяет права.
@@ -31,7 +31,14 @@ import { parseTouchPlan } from "@/lib/admin/touch-plan";
  * действие.
  */
 
-function back(result: TeamResult): never {
+/**
+ * Ответ — кодом в адресе (`?r=`), текст к нему берёт страница из
+ * content/admin-panel/team.ts на языке того, кто нажал. Кроме причин из
+ * lib/admin/team.ts, здесь свои: ошибки поля плана и ставки.
+ */
+type FormError = { ok: false; reason: TouchPlanError | "rate_invalid" };
+
+function back(result: TeamResult | FormError): never {
   const code = result.ok ? (result.note ?? "ok") : result.reason;
   const invite = result.ok && result.invite ? `&i=${result.invite}` : "";
   // Итог отключения — числами в адресе: страница соберёт из них строку.
@@ -152,7 +159,7 @@ export async function setGrade(formData: FormData) {
   // Пустое поле — «по грейду»; всё остальное должно быть целым процентом.
   const rateRaw = String(formData.get("rate") ?? "").trim();
   const rate = rateRaw ? parsePercent(rateRaw) : null;
-  if (rateRaw && rate === null) back({ ok: false, reason: "invalid" });
+  if (rateRaw && rate === null) back({ ok: false, reason: "rate_invalid" });
 
   const result = await setStaffGrade(id, grade, rate, admin, await requestIp());
   revalidatePath("/admin/team");
@@ -170,7 +177,7 @@ export async function setPlan(formData: FormData) {
   const actor = await requireRole("admin", "head");
   const id = String(formData.get("staff") ?? "");
   const parsed = parseTouchPlan(String(formData.get("plan") ?? ""));
-  if (!parsed.ok) back({ ok: false, reason: "invalid" });
+  if (!parsed.ok) back({ ok: false, reason: parsed.why });
 
   const result = await setTouchPlan(id, parsed.plan, actor, await requestIp());
   revalidatePath("/admin/team");

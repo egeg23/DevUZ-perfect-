@@ -44,7 +44,13 @@ test("у каждой роли свой набор, и он не пустой", 
   assert.ok(kindsFor("admin").includes("watch"));
   assert.ok(kindsFor("head").includes("reports"));
   for (const kind of NOTICE_KINDS) {
-    assert.ok(NOTICES[kind].title.length > 5 && NOTICES[kind].off.length > 20, `${kind}: нет пояснения`);
+    // На каждом языке панели: галочки ставят и по-узбекски, и по-польски.
+    for (const locale of ["ru", "uz", "pl"] as const) {
+      assert.ok(
+        NOTICES[kind].title[locale].length > 5 && NOTICES[kind].off[locale].length > 20,
+        `${kind}: нет пояснения (${locale})`,
+      );
+    }
   }
 });
 

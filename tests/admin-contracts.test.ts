@@ -271,7 +271,8 @@ test("страница печати не рисует подпись у черн
   const page = read("app/admin/contracts/[id]/page.tsx");
   // И честно говорит, если подтвердили, а файла нет: иначе владелец узнает
   // об этом от заказчика, получившего договор без подписи.
-  assert.match(page, /файл подписи не загружен/);
+  assert.match(page, /\{t\.noSignatureFile\}/);
+  assert.match(read("content/admin-panel/contracts.ts"), /noSignatureFile: \{\s*ru: "[^"]*файл подписи не загружен/);
 });
 
 test("подпись принимается только как настоящий PNG", () => {
@@ -429,7 +430,8 @@ test("неушедшее уведомление не выдаётся за от�
   const actions = read("app/admin/contracts/actions.ts");
   assert.match(actions, /sent=\$\{result\.notified \? "1" : "silent"\}/);
   const page = read("app/admin/contracts/[id]/page.tsx");
-  assert.match(page, /уведомление в Telegram не ушло/);
+  assert.match(page, /\{t\.sentSilent\}/);
+  assert.match(read("content/admin-panel/contracts.ts"), /sentSilent: \{\s*ru: "[^"]*уведомление в Telegram не ушло/);
 });
 
 test("смета и срок правятся только у черновика", () => {

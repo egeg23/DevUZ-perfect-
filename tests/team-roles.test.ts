@@ -105,16 +105,16 @@ test("журнал, релизы и партнёры остались тольк
 test("колонка «Владельцу» стоит за seesOwnerMoney, а не за ролью по месту", () => {
   const finance = read("app/admin/finance/page.tsx");
   assert.match(finance, /const ownerMoney = seesOwnerMoney\(staff\.role\)/);
-  assert.match(finance, /\{ownerMoney \? <th className=\{TH\}>Владельцу<\/th> : null\}/);
+  assert.match(finance, /\{ownerMoney \? <th className=\{TH\}>\{t\.colToOwner\}<\/th> : null\}/);
   assert.ok(
-    !/\{isAdmin \? <th className=\{TH\}>Владельцу/.test(finance),
+    !/\{isAdmin \? <th className=\{TH\}>\{t\.colToOwner\}/.test(finance),
     "колонка владельца снова привязана к isAdmin",
   );
 
   const project = read("app/admin/projects/[id]/page.tsx");
   assert.match(project, /const ownerMoney = seesOwnerMoney\(staff\.role\)/);
   // Строка и её условие стоят рядом; между ними только открывающая разметка.
-  const at = project.indexOf("Остаётся владельцу");
+  const at = project.indexOf("{t.ownerLeft}");
   assert.ok(at > 0, "строка «Остаётся владельцу» пропала");
   const before = project.slice(Math.max(0, at - 220), at);
   assert.match(before, /\{ownerMoney \?/, "строка владельца не за ownerMoney");

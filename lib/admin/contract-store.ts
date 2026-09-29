@@ -7,6 +7,7 @@ import {
   contractNumber,
   editable,
   preparesContract,
+  problemParam,
   problemsBeforeApproval,
   returnable,
   sendable,
@@ -28,9 +29,19 @@ import { sellerBank } from "@/lib/store/requisites";
  * не абстрактная осторожность — там подпись владельца.
  */
 
+/**
+ * `problems` — коды претензий с числом («stages_sum:90», «below_floor:360»,
+ * см. problemParam): они уезжают в адрес, текст на языке панели страница
+ * берёт из content/admin-panel/contracts.ts.
+ */
 export type Result =
   | { ok: true; id: string }
   | { ok: false; why: "forbidden" | "offline" | "invalid" | "notfound" | "locked"; problems?: string[] };
+
+/** Почему смета не разобралась — код, текст на странице (estimateHintDict). */
+export type EstimateHint = "unreadable" | "scan" | "unsupported" | "empty" | "shape";
+
+const codesOf = (problems: Parameters<typeof problemParam>[0]) => problems.map((p) => problemParam([p]));
 
 const fail = (why: Exclude<Result, { ok: true }>["why"], problems?: string[]): Result => ({
   ok: false, why, ...(problems ? { problems } : {}),
@@ -145,7 +156,8 @@ export async function createContract(
     const stored = parseQuote(project?.quote);
     const quote = stored ? quoteFor(stored) : null;
     if (belowFloor(fields.amountUsd, quote)) {
-      return fail("invalid", [`сумма ниже порога сметы — $${quote!.floorUsd.toLocaleString("en-US")}`]);
+      // Сумма ниже порога сметы — код с порогом, текст на странице.
+      return fail("invalid", [problemParam([{ code: "below_floor", arg: quote!.floorUsd }])]);
     }
   }
 
@@ -246,7 +258,7 @@ export async function approveContract(id: string, staff: Staff): Promise<Result>
     deadlineText: current.deadline_text,
     seller: sellerBank(),
   });
-  if (problems.length > 0) return fail("invalid", problems.map((p) => p.text));
+  if (problems.length > 0) return fail("invalid", codesOf(problems));
 
   const db = serviceClient();
   if (!db) return fail("offline");
@@ -295,7 +307,7 @@ export async function attachEstimate(
   id: string,
   file: { name: string; bytes: ArrayBuffer },
   staff: Staff,
-): Promise<Result & { hint?: string; items?: EstimateItem[] }> {
+): Promise<Result & { hint?: EstimateHint; items?: EstimateItem[] }> {
   if (!preparesContract(staff.role)) return fail("forbidden");
   const current = await contractById(id);
   if (!current) return fail("notfound");
@@ -310,10 +322,12 @@ export async function attachEstimate(
 
   // Excel и PDF — в строки, остальное — как текст (lib/admin/estimate-file.ts).
   const read = await estimateText(file.bytes, file.name);
+  // Не прочитался / скан / не разобрался — код, а не текст: подсказку
+  // страница показывает на языке панели.
   const parsed = !read
-    ? { ok: false as const, hint: "Файл не прочитался. Вставьте строки сметы руками ниже — файл всё равно приложен к договору." }
+    ? { ok: false as const, why: "unreadable" as const }
     : read.scan
-      ? { ok: false as const, hint: "В PDF нет текста — похоже, это скан. Вставьте строки сметы руками ниже — файл всё равно приложен к договору." }
+      ? { ok: false as const, why: "scan" as const }
       : parseEstimate(read.text, read.name);
   const items = parsed.ok ? parsed.items : [];
 
@@ -333,7 +347,7 @@ export async function attachEstimate(
 
   return parsed.ok
     ? { ok: true, id, items }
-    : { ok: true, id, hint: parsed.hint };
+    : { ok: true, id, hint: parsed.why };
 }
 
 /**
@@ -345,9 +359,9 @@ export async function setEstimateFromText(
   id: string,
   text: string,
   staff: Staff,
-): Promise<Result & { hint?: string }> {
+): Promise<Result & { hint?: EstimateHint }> {
   const parsed = parseEstimate(text.slice(0, 50_000), "rows.tsv");
-  if (!parsed.ok) return { ok: false, why: "invalid", hint: parsed.hint };
+  if (!parsed.ok) return { ok: false, why: "invalid", hint: parsed.why };
   return setEstimateItems(id, parsed.items, staff);
 }
 
@@ -429,7 +443,7 @@ export async function sendForSignature(
       deadlineText: current.deadline_text,
       seller,
     });
-    return fail(problems.length ? "invalid" : "locked", problems.map((p) => p.text));
+    return fail(problems.length ? "invalid" : "locked", codesOf(problems));
   }
 
   const db = serviceClient();

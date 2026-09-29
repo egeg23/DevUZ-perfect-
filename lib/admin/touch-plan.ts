@@ -45,13 +45,18 @@ export function weekWindow(now: Date): Window {
  *
  * Пустая строка — это «плана нет», а не ноль: руководителю нужен способ снять
  * план, и стирание поля — единственный, который он попробует.
+ *
+ * Ошибка — кодом, а не фразой: её показывает страница «Команда» на языке
+ * того, кто ставит план (teamDict.plan_nan / plan_big).
  */
-export function parseTouchPlan(raw: string): { ok: true; plan: number | null } | { ok: false; why: string } {
+export type TouchPlanError = "plan_nan" | "plan_big";
+
+export function parseTouchPlan(raw: string): { ok: true; plan: number | null } | { ok: false; why: TouchPlanError } {
   const text = raw.trim();
   if (!text) return { ok: true, plan: null };
-  if (!/^\d{1,3}$/.test(text)) return { ok: false, why: "План — это число касаний в неделю." };
+  if (!/^\d{1,3}$/.test(text)) return { ok: false, why: "plan_nan" };
   const plan = Number(text);
-  if (plan > TOUCH_PLAN_MAX) return { ok: false, why: `Больше ${TOUCH_PLAN_MAX} в неделю — это не план, а описка.` };
+  if (plan > TOUCH_PLAN_MAX) return { ok: false, why: "plan_big" };
   return { ok: true, plan };
 }
 

@@ -1,3 +1,4 @@
+import { PANEL_INTL, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import type { Role } from "@/lib/admin/roles";
 
 /**
@@ -32,11 +33,22 @@ export function isGrade(value: string): value is Grade {
   return (GRADES as readonly string[]).includes(value);
 }
 
-export const GRADE_TITLE: Record<Grade, string> = {
-  junior: "младший менеджер",
-  manager: "менеджер",
-  head: "руководитель",
+/**
+ * Подписи — на трёх языках панели (lib/admin/i18n.ts). Русские `*_TITLE`
+ * ниже собраны из них же: ими пользуются бот и тексты, которые пока
+ * русские, — две копии разошлись бы на первой же правке слова.
+ */
+function ruOf<K extends string>(table: Record<K, Tr>): Record<K, string> {
+  return Object.fromEntries(Object.entries<Tr>(table).map(([k, v]) => [k, v.ru])) as Record<K, string>;
+}
+
+export const GRADE_TR: Record<Grade, Tr> = {
+  junior: { ru: "младший менеджер", uz: "kichik menejer", pl: "młodszy menedżer" },
+  manager: { ru: "менеджер", uz: "menejer", pl: "menedżer" },
+  head: { ru: "руководитель", uz: "rahbar", pl: "kierownik" },
 };
+
+export const GRADE_TITLE: Record<Grade, string> = ruOf(GRADE_TR);
 
 export const DEAL_KINDS = ["new", "upsell"] as const;
 export type DealKind = (typeof DEAL_KINDS)[number];
@@ -45,7 +57,12 @@ export function isDealKind(value: string): value is DealKind {
   return (DEAL_KINDS as readonly string[]).includes(value);
 }
 
-export const KIND_TITLE: Record<DealKind, string> = { new: "новый клиент", upsell: "допродажа" };
+export const KIND_TR: Record<DealKind, Tr> = {
+  new: { ru: "новый клиент", uz: "yangi mijoz", pl: "nowy klient" },
+  upsell: { ru: "допродажа", uz: "qo‘shimcha sotuv", pl: "dosprzedaż" },
+};
+
+export const KIND_TITLE: Record<DealKind, string> = ruOf(KIND_TR);
 
 export const PURPOSES = ["advance", "rest", "other"] as const;
 export type Purpose = (typeof PURPOSES)[number];
@@ -54,11 +71,13 @@ export function isPurpose(value: string): value is Purpose {
   return (PURPOSES as readonly string[]).includes(value);
 }
 
-export const PURPOSE_TITLE: Record<Purpose, string> = {
-  advance: "аванс",
-  rest: "остаток",
-  other: "другое",
+export const PURPOSE_TR: Record<Purpose, Tr> = {
+  advance: { ru: "аванс", uz: "avans", pl: "zaliczka" },
+  rest: { ru: "остаток", uz: "qoldiq", pl: "reszta" },
+  other: { ru: "другое", uz: "boshqa", pl: "inne" },
 };
+
+export const PURPOSE_TITLE: Record<Purpose, string> = ruOf(PURPOSE_TR);
 
 /* ── Ставки ───────────────────────────────────────────────────────────────
  *
@@ -158,11 +177,13 @@ export function paidOf(projectId: string, payments: PaymentMoney[]): number {
 
 export type AccrualState = "frozen" | "earned" | "void";
 
-export const ACCRUAL_TITLE: Record<AccrualState, string> = {
-  frozen: "заморожено",
-  earned: "заработано",
-  void: "не начисляется",
+export const ACCRUAL_TR: Record<AccrualState, Tr> = {
+  frozen: { ru: "заморожено", uz: "muzlatilgan", pl: "zamrożone" },
+  earned: { ru: "заработано", uz: "ishlab topilgan", pl: "zarobione" },
+  void: { ru: "не начисляется", uz: "hisoblanmaydi", pl: "nie nalicza się" },
 };
+
+export const ACCRUAL_TITLE: Record<AccrualState, string> = ruOf(ACCRUAL_TR);
 
 /**
  * Состояние начисления по проекту.
@@ -263,13 +284,15 @@ export function isExpenseCategory(value: string): value is ExpenseCategory {
   return (EXPENSE_CATEGORIES as readonly string[]).includes(value);
 }
 
-export const EXPENSE_TITLE: Record<ExpenseCategory, string> = {
-  ads: "реклама",
-  tools: "сервисы и подписки",
-  contractors: "подрядчики",
-  office: "офис и связь",
-  other: "прочее",
+export const EXPENSE_TR: Record<ExpenseCategory, Tr> = {
+  ads: { ru: "реклама", uz: "reklama", pl: "reklama" },
+  tools: { ru: "сервисы и подписки", uz: "servislar va obunalar", pl: "usługi i subskrypcje" },
+  contractors: { ru: "подрядчики", uz: "pudratchilar", pl: "podwykonawcy" },
+  office: { ru: "офис и связь", uz: "ofis va aloqa", pl: "biuro i łączność" },
+  other: { ru: "прочее", uz: "boshqalar", pl: "pozostałe" },
 };
+
+export const EXPENSE_TITLE: Record<ExpenseCategory, string> = ruOf(EXPENSE_TR);
 
 /**
  * Общий расход студии.
@@ -439,10 +462,13 @@ export function canEditMoney(
 
 /* ── Формат и разбор ────────────────────────────────────────────────────── */
 
-/** «12 500 $», прочерк вместо непроставленной суммы. */
-export function money(usd: number | null): string {
+/**
+ * «12 500 $», прочерк вместо непроставленной суммы. Разряды — по языку
+ * панели; без языка — по-русски, как в боте и документах.
+ */
+export function money(usd: number | null, locale: PanelLocale = "ru"): string {
   if (usd === null) return "—";
-  return `${usd.toLocaleString("ru-RU")} $`;
+  return `${usd.toLocaleString(PANEL_INTL[locale])} $`;
 }
 
 /**

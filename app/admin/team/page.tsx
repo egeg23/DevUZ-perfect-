@@ -4,46 +4,53 @@ import { HelpHint } from "@/components/admin/help-link";
 import { when } from "@/components/admin/lead-table";
 import { requireRole } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
-import { GRADES, GRADE_TITLE } from "@/lib/admin/finance";
+import { teamDict } from "@/content/admin-panel/team";
+import { GRADES, GRADE_TR } from "@/lib/admin/finance";
+import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { NOTICES, kindsFor, offSummary, wants } from "@/lib/admin/notify-prefs";
-import { ROLE_BADGE, ROLE_TITLE, disables, hiredRoles, managesStaff, tunesNotices } from "@/lib/admin/roles";
+import { ROLE_BADGE, ROLE_TITLE_TR, disables, hiredRoles, managesStaff, tunesNotices } from "@/lib/admin/roles";
 import { listTeam, type TeamMember } from "@/lib/admin/team";
 import { offboardingSummary } from "@/lib/admin/offboarding";
+import { TOUCH_PLAN_MAX } from "@/lib/admin/touch-plan";
 
 export const dynamic = "force-dynamic";
 
-const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
-  ok: { text: "Готово.", tone: "ok" },
-  menu_ok: { text: "Меню команд бота обновлено: клиенты видят /ref и /payout, сотрудники — ещё и /login.", tone: "ok" },
-  menu_failed: { text: "Меню бота не обновилось — Telegram не ответил. Попробуйте ещё раз.", tone: "warn" },
-  reactivated: { text: "Сотрудник включён обратно — это его прежняя запись со всей историей.", tone: "ok" },
-  notices: { text: "Сохранено: бот будет присылать только то, что отмечено галочками.", tone: "ok" },
-  claimed: {
-    text: "Менеджер закреплён за вами: его статистика и план/факт теперь в вашей команде, план касаний ставите вы.",
-    tone: "ok",
-  },
-  has_head: {
-    text: "У этого менеджера уже есть руководитель. Переназначить или открепить может только владелец.",
-    tone: "warn",
-  },
-  exists: { text: "Такой Telegram id уже заведён и работает.", tone: "warn" },
-  invalid: { text: "Нужны числовой Telegram id и имя.", tone: "warn" },
-  self: { text: "Себя отключить или разжаловать нельзя — вернуться в панель будет некому.", tone: "warn" },
-  last_admin: { text: "Это последний админ. Сначала назначьте второго.", tone: "warn" },
-  owner: { text: "Это владелец панели: его роль и руководитель через панель не меняются.", tone: "warn" },
-  not_head: {
-    text: "Руководителем можно назначить только активного сотрудника с ролью «руководитель».",
-    tone: "warn",
-  },
-  forbidden: {
-    text:
-      "Это вам недоступно. Руководитель проектов заводит и отключает только менеджеров и выбирает уведомления только им и себе. Остальное — владелец.",
-    tone: "warn",
-  },
-  gone: { text: "Такого сотрудника уже нет.", tone: "warn" },
-  offline: { text: "База недоступна.", tone: "warn" },
-  failed: { text: "Не получилось.", tone: "warn" },
-};
+type T = Picked<typeof teamDict>;
+type Tone = "ok" | "warn";
+
+/**
+ * Ответ действия (`?r=`) — код из app/admin/team/actions.ts, текст — из
+ * словаря на языке того, кто смотрит. Незнакомый код не показывается.
+ */
+function resultOf(code: string, t: T): { text: string; tone: Tone } | null {
+  const ok: Record<string, string> = {
+    ok: t.r_ok,
+    menu_ok: t.r_menu_ok,
+    reactivated: t.r_reactivated,
+    notices: t.r_notices,
+    claimed: t.r_claimed,
+  };
+  const warn: Record<string, string> = {
+    menu_failed: t.r_menu_failed,
+    has_head: t.r_has_head,
+    exists: t.r_exists,
+    invalid: t.r_invalid,
+    rate_invalid: t.r_rate_invalid,
+    plan_nan: t.r_plan_nan,
+    plan_big: t.r_plan_big(TOUCH_PLAN_MAX),
+    self: t.r_self,
+    last_admin: t.r_last_admin,
+    owner: t.r_owner,
+    not_head: t.r_not_head,
+    forbidden: t.r_forbidden,
+    gone: t.r_gone,
+    offline: t.r_offline,
+    failed: t.r_failed,
+  };
+  if (Object.hasOwn(ok, code)) return { text: ok[code], tone: "ok" };
+  if (Object.hasOwn(warn, code)) return { text: warn[code], tone: "warn" };
+  return null;
+}
 
 /**
  * Что стало с приглашением.
@@ -56,16 +63,12 @@ const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
  * написать первым тому, кто ему ни разу не писал. Обойти нечем, так
  * задумано.
  */
-const INVITE: Record<string, { text: string; tone: "ok" | "warn" }> = {
-  sent: { text: "Приглашение отправлено в Telegram — там написано, как войти.", tone: "ok" },
-  blocked: {
-    text:
-      "Приглашение не доставлено: бот не может написать первым тому, кто ему ещё не писал. " +
-      "Попросите человека открыть бота и нажать «Старт», затем нажмите «отправить приглашение» в его строке.",
-    tone: "warn",
-  },
-  no_bot: { text: "Бот не настроен — приглашение отправить нечем.", tone: "warn" },
-};
+function inviteOf(code: string, t: T): { text: string; tone: Tone } | null {
+  if (code === "sent") return { text: t.i_sent, tone: "ok" };
+  if (code === "blocked") return { text: t.i_blocked(t.resend), tone: "warn" };
+  if (code === "no_bot") return { text: t.i_no_bot, tone: "warn" };
+  return null;
+}
 
 const INPUT =
   "w-full rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
@@ -83,15 +86,17 @@ export default async function TeamPage({
   const viewer = await requireRole("admin", "head");
   const manages = managesStaff(viewer.role);
   const canHire = hiredRoles(viewer.role);
-  const { r, i, o, t } = await searchParams;
+  const { r, i, o, t: detachedRaw } = await searchParams;
+  const locale = viewer.panel_locale;
+  const t = pick(teamDict, locale);
   const team = await listTeam();
 
   const nameById = new Map(team.map((m) => [m.id, m.display_name]));
   const active = team.filter((m) => m.is_active);
   const gone = team.filter((m) => !m.is_active);
   const heads = active.filter((m) => m.role === "head");
-  const notice = r ? RESULT[r] : null;
-  const invite = i ? INVITE[i] : null;
+  const notice = r ? resultOf(r, t) : null;
+  const invite = i ? inviteOf(i, t) : null;
   // Итог отключения: семь чисел через дефис — см. back() в actions.
   const counts = o && /^\d+(-\d+){6}$/.test(o) ? o.split("-").map(Number) : null;
   const offboarded = counts
@@ -103,26 +108,15 @@ export default async function TeamPage({
         reminders: counts[4],
         transfers: counts[5],
         cards: counts[6],
-      })
+      }, locale)
     : null;
-  const detached = t && /^\d+$/.test(t) ? Number(t) : 0;
+  const detached = detachedRaw && /^\d+$/.test(detachedRaw) ? Number(detachedRaw) : 0;
 
   return (
     <AdminShell staff={viewer}>
-      <h1 className="text-lg font-semibold">Команда</h1>
-      <p className="mt-1 text-sm text-muted">
-        Вход в панель — по числовому id в Telegram. Пароля нет: username человек меняет за
-        секунду, id — никогда.
-      </p>
-      {manages ? null : (
-        <p className="mt-2 text-sm text-muted">
-          Вы заводите менеджеров и высылаете им приглашения. Заведённый вами менеджер сразу
-          ваш, а ничьего можно взять к себе кнопкой в колонке «Руководитель» — после этого
-          вы отвечаете за его показатели и план/факт и ставите ему план касаний. Менеджеров
-          вы можете отключить и выбрать, какие сообщения бота им приходят (себе — тоже).
-          Открепить менеджера, менять роль, грейд и ставку может только владелец.
-        </p>
-      )}
+      <h1 className="text-lg font-semibold">{t.title}</h1>
+      <p className="mt-1 text-sm text-muted">{t.intro}</p>
+      {manages ? null : <p className="mt-2 text-sm text-muted">{t.headIntro}</p>}
 
       {notice ? (
         <p
@@ -138,14 +132,13 @@ export default async function TeamPage({
 
       {offboarded ? (
         <p className="mt-2 rounded-xl border border-green/30 bg-green/10 px-4 py-2.5 text-sm leading-relaxed text-green">
-          Доступ закрыт, сессии оборваны. {offboarded}
+          {t.offboarded(offboarded)}
         </p>
       ) : null}
 
       {detached ? (
         <p className="mt-2 rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm leading-relaxed text-gold">
-          Бывший руководитель больше не ведёт команду: откреплено менеджеров — {detached}. Закрепите
-          их за другим руководителем.
+          {t.detached(detached)}
         </p>
       ) : null}
 
@@ -164,7 +157,7 @@ export default async function TeamPage({
       {manages ? (
         <form action={refreshMenu} className="mt-4">
           <button type="submit" className="text-xs text-faint hover:text-green">
-            обновить меню команд бота
+            {t.refreshMenu}
           </button>
         </form>
       ) : null}
@@ -178,45 +171,45 @@ export default async function TeamPage({
         <table className="cards-on-phone w-full min-w-0 text-sm sm:min-w-[1180px]">
           <thead className="border-b border-line text-left text-xs uppercase tracking-wider text-faint">
             <tr>
-              <th className="px-4 py-3 font-normal">Кто</th>
-              <th className="px-4 py-3 font-normal">Telegram</th>
-              <th className="px-4 py-3 font-normal">Роль</th>
+              <th className="px-4 py-3 font-normal">{t.colWho}</th>
+              <th className="px-4 py-3 font-normal">{t.colTelegram}</th>
+              <th className="px-4 py-3 font-normal">{t.colRole}</th>
               <th className="px-4 py-3 font-normal">
                 <span className="inline-flex items-center gap-1.5">
-                  Руководитель
-                  <HelpHint topic={helpAnchor("/admin/team", "claim")} label="Руководитель и команда" />
+                  {t.colHead}
+                  <HelpHint topic={helpAnchor("/admin/team", "claim")} label={t.helpHead} />
                 </span>
               </th>
               <th className="px-4 py-3 font-normal">
                 <span className="inline-flex items-center gap-1.5">
-                  Грейд и ставка
-                  <HelpHint topic={helpAnchor("/admin/team", "grade")} label="Что меняет грейд" />
+                  {t.colGrade}
+                  <HelpHint topic={helpAnchor("/admin/team", "grade")} label={t.helpGrade} />
                 </span>
               </th>
               <th className="px-4 py-3 font-normal">
                 <span className="inline-flex items-center gap-1.5">
-                  План касаний
-                  <HelpHint topic={helpAnchor("/admin/team", "plan")} label="Как работает план касаний" />
+                  {t.colPlan}
+                  <HelpHint topic={helpAnchor("/admin/team", "plan")} label={t.helpPlan} />
                 </span>
               </th>
-              <th className="px-4 py-3 font-normal">С какого дня</th>
+              <th className="px-4 py-3 font-normal">{t.colSince}</th>
               <th className="px-4 py-3 font-normal" />
             </tr>
           </thead>
           <tbody>
             {active.map((member) => (
               <tr key={member.id} className="border-b border-line-soft last:border-0 align-top">
-                <td data-label="Кто" className="px-4 py-3">
+                <td data-label={t.colWho} className="px-4 py-3">
                   {member.display_name}
                   {member.id === viewer.id ? (
-                    <span className="ml-2 text-xs text-faint">это вы</span>
+                    <span className="ml-2 text-xs text-faint">{t.itsYou}</span>
                   ) : null}
                 </td>
-                <td data-label="Telegram" className="px-4 py-3 font-mono text-xs text-muted">
+                <td data-label={t.colTelegram} className="px-4 py-3 font-mono text-xs text-muted">
                   {member.username ? `@${member.username}` : "—"}
                   <span className="block text-faint">id {member.telegram_user_id}</span>
                 </td>
-                <td data-label="Роль" className="px-4 py-3">
+                <td data-label={t.colRole} className="px-4 py-3">
                   {!manages || (member.role === "admin" && member.id === viewer.id) ? (
                     // Себя не разжаловать: панель останется без хозяина.
                     // Назначить второго админа нельзя ни отсюда, ни с
@@ -237,12 +230,12 @@ export default async function TeamPage({
                         {ROLE_BADGE[member.role][viewer.panel_locale]}
                       </span>
                       <button type="submit" className="text-xs text-faint hover:text-green">
-                        {member.role === "head" ? "сделать менеджером" : "сделать руководителем"}
+                        {member.role === "head" ? t.makeManager : t.makeHead}
                       </button>
                     </form>
                   )}
                 </td>
-                <td data-label="Руководитель" className="px-4 py-3">
+                <td data-label={t.colHead} className="px-4 py-3">
                   {member.role === "admin" ? (
                     <span className="text-xs text-faint">—</span>
                   ) : !manages ? (
@@ -251,8 +244,8 @@ export default async function TeamPage({
                     // это решение владельца.
                     member.head_staff_id === viewer.id ? (
                       <span className="text-xs text-green">
-                        вы
-                        <span className="block text-faint">открепляет владелец</span>
+                        {t.you}
+                        <span className="block text-faint">{t.ownerDetaches}</span>
                       </span>
                     ) : member.head_staff_id ? (
                       <span className="text-xs text-muted">
@@ -261,13 +254,13 @@ export default async function TeamPage({
                     ) : member.role === "manager" && viewer.role === "head" ? (
                       <form action={claim} className="flex items-center gap-2">
                         <input type="hidden" name="staff" value={member.id} />
-                        <span className="text-xs text-muted">без руководителя</span>
+                        <span className="text-xs text-muted">{t.noHead}</span>
                         <button type="submit" className="text-xs text-faint hover:text-green">
-                          взять к себе
+                          {t.claim}
                         </button>
                       </form>
                     ) : (
-                      <span className="text-xs text-muted">без руководителя</span>
+                      <span className="text-xs text-muted">{t.noHead}</span>
                     )
                   ) : (
                     // Кто чей: от этого зависит, чью статистику и финансы
@@ -280,7 +273,7 @@ export default async function TeamPage({
                         defaultValue={member.head_staff_id ?? ""}
                         className="rounded-lg border border-line bg-ink px-2 py-1 text-xs text-text outline-none focus:border-green/50"
                       >
-                        <option value="">без руководителя</option>
+                        <option value="">{t.noHead}</option>
                         {heads
                           .filter((head) => head.id !== member.id)
                           .map((head) => (
@@ -290,17 +283,17 @@ export default async function TeamPage({
                           ))}
                       </select>
                       <button type="submit" className="text-xs text-faint hover:text-green">
-                        сохранить
+                        {t.save}
                       </button>
                     </form>
                   )}
                 </td>
-                <td data-label="Грейд и ставка" className="px-4 py-3">
+                <td data-label={t.colGrade} className="px-4 py-3">
                   {member.role === "admin" ? (
                     <span className="text-xs text-faint">—</span>
                   ) : !manages ? (
                     <span className="text-xs text-muted">
-                      {GRADE_TITLE[member.grade]}
+                      {GRADE_TR[member.grade][locale]}
                       {member.rate_percent === null ? null : (
                         <span className="ml-1 font-mono text-faint">{member.rate_percent} %</span>
                       )}
@@ -317,21 +310,21 @@ export default async function TeamPage({
                       >
                         {GRADES.map((grade) => (
                           <option key={grade} value={grade}>
-                            {GRADE_TITLE[grade]}
+                            {GRADE_TR[grade][locale]}
                           </option>
                         ))}
                       </select>
                       <input
                         name="rate"
                         inputMode="numeric"
-                        placeholder="по грейду"
+                        placeholder={t.byGrade}
                         defaultValue={member.rate_percent ?? ""}
-                        aria-label="Персональная ставка, %"
+                        aria-label={t.rateAria}
                         className="w-24 rounded-lg border border-line bg-ink px-2 py-1 text-xs text-text outline-none focus:border-green/50"
                       />
                       <span className="text-xs text-faint">%</span>
                       <button type="submit" className="text-xs text-faint hover:text-green">
-                        сохранить
+                        {t.save}
                       </button>
                     </form>
                   )}
@@ -340,7 +333,7 @@ export default async function TeamPage({
                     своим: план, который человек ставит сам, это не план.
                     Пустое поле снимает план, и это не то же самое, что ноль:
                     «осталось 0 из 0» тому, кому план не ставили, — неправда. */}
-                <td data-label="План касаний" className="px-4 py-3">
+                <td data-label={t.colPlan} className="px-4 py-3">
                   {member.role === "admin" ? (
                     <span className="text-xs text-faint">—</span>
                   ) : viewer.role === "admin" || member.head_staff_id === viewer.id ? (
@@ -349,23 +342,23 @@ export default async function TeamPage({
                       <input
                         name="plan"
                         inputMode="numeric"
-                        placeholder="без плана"
+                        placeholder={t.noPlan}
                         defaultValue={member.touch_plan ?? ""}
-                        aria-label="Касаний в неделю"
+                        aria-label={t.planAria}
                         className="w-24 rounded-lg border border-line bg-ink px-2 py-1 text-xs text-text outline-none focus:border-green/50"
                       />
-                      <span className="text-xs text-faint">в неделю</span>
+                      <span className="text-xs text-faint">{t.perWeek}</span>
                       <button type="submit" className="text-xs text-faint hover:text-green">
-                        сохранить
+                        {t.save}
                       </button>
                     </form>
                   ) : (
                     <span className="text-xs text-muted">
-                      {member.touch_plan === null ? "без плана" : `${member.touch_plan} в неделю`}
+                      {member.touch_plan === null ? t.noPlan : t.planPerWeek(member.touch_plan)}
                     </span>
                   )}
                 </td>
-                <td data-label="С какого дня" className="px-4 py-3 text-xs text-faint">{when(member.created_at)}</td>
+                <td data-label={t.colSince} className="px-4 py-3 text-xs text-faint">{when(member.created_at, locale)}</td>
                 <td data-label="" className="px-4 py-3">
                   <div className="flex flex-col items-start gap-2">
                     {/* Доступна всегда, а не только после неудачи: прислать
@@ -374,17 +367,18 @@ export default async function TeamPage({
                     <form action={resend}>
                       <input type="hidden" name="staff" value={member.id} />
                       <button type="submit" className="text-xs text-faint hover:text-green">
-                        отправить приглашение
+                        {t.resend}
                       </button>
                     </form>
                     {tunesNotices(viewer.role, member.role, member.id === viewer.id) ? (
-                      <NoticesBlock member={member} />
+                      <NoticesBlock member={member} t={t} locale={locale} />
                     ) : null}
                     {member.id === viewer.id || !disables(viewer.role, member.role) ? null : (
                       <DisableBlock
                         id={member.id}
                         name={member.display_name}
                         handle={member.username}
+                        t={t}
                       />
                     )}
                   </div>
@@ -394,7 +388,7 @@ export default async function TeamPage({
             {active.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-6 text-sm text-muted">
-                  Пусто — а значит, и эту страницу открыть было некому. База недоступна?
+                  {t.empty}
                 </td>
               </tr>
             ) : null}
@@ -405,11 +399,8 @@ export default async function TeamPage({
       {/* ── Кто ушёл ────────────────────────────────────────────────────── */}
       {gone.length ? (
         <section className="mt-6 rounded-xl border border-line bg-surface px-5 py-4">
-          <p className="text-xs uppercase tracking-wider text-faint">Отключённые</p>
-          <p className="mt-1 text-xs text-faint">
-            Не удалены намеренно: за ними остаются лиды, сообщения и записи журнала, и
-            обнулять авторство задним числом нельзя.
-          </p>
+          <p className="text-xs uppercase tracking-wider text-faint">{t.goneTitle}</p>
+          <p className="mt-1 text-xs text-faint">{t.goneNote}</p>
           <ul className="mt-3 flex flex-col gap-2">
             {gone.map((member) => (
               <li key={member.id} className="text-sm text-muted">
@@ -419,35 +410,31 @@ export default async function TeamPage({
                 </span>
                 {member.disabled_at ? (
                   <span className="ml-2 text-xs text-faint">
-                    отключён {when(member.disabled_at)}
+                    {t.disabledOn(when(member.disabled_at, locale))}
                   </span>
                 ) : null}
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-faint">
-            Чтобы вернуть человека — заведите его снова по тому же Telegram id: включится
-            прежняя запись, а не новая.
-          </p>
+          <p className="mt-3 text-xs text-faint">{t.goneReturn}</p>
         </section>
       ) : null}
 
       {/* ── Завести ─────────────────────────────────────────────────────── */}
       <section className="mt-6 max-w-2xl rounded-xl border border-line bg-surface px-5 py-4">
         <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-          Завести сотрудника
-          <HelpHint topic={helpAnchor("/admin/team", "invite")} label="Как завести сотрудника" />
+          {t.inviteTitle}
+          <HelpHint topic={helpAnchor("/admin/team", "invite")} label={t.inviteHelp} />
         </p>
         <p className="mt-1 text-xs text-faint">
-          Числовой id человек узнаёт у любого бота вроде @userinfobot и присылает вам. По
-          username завести нельзя: освободившийся ник займёт кто угодно.
-          {viewer.role === "head" ? " Заведённый вами менеджер сразу закрепляется за вами." : null}
+          {t.inviteNote}
+          {viewer.role === "head" ? t.inviteNoteHead : null}
         </p>
 
         <form action={addStaff} className="mt-4 flex flex-col gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-xs text-faint">
-              Telegram id
+              {t.fieldTelegramId}
               <input
                 name="telegram_id"
                 inputMode="numeric"
@@ -458,20 +445,20 @@ export default async function TeamPage({
               />
             </label>
             <label className="text-xs text-faint">
-              Имя в панели
-              <input name="display_name" required placeholder="Иван" className={`mt-1 ${INPUT}`} />
+              {t.fieldName}
+              <input name="display_name" required placeholder={t.fieldNamePlaceholder} className={`mt-1 ${INPUT}`} />
             </label>
             <label className="text-xs text-faint">
-              Username <span className="text-faint">(не обязателен)</span>
+              {t.fieldUsername} <span className="text-faint">{t.optional}</span>
               <input name="username" placeholder="ivan" className={`mt-1 ${INPUT}`} />
             </label>
             <label className="text-xs text-faint">
-              Роль
+              {t.fieldRole}
               {canHire.length > 1 ? (
                 <select name="role" defaultValue="manager" className={`mt-1 ${INPUT}`}>
                   {canHire.map((role) => (
                     <option key={role} value={role}>
-                      {ROLE_TITLE[role]}
+                      {ROLE_TITLE_TR[role][locale]}
                     </option>
                   ))}
                 </select>
@@ -482,14 +469,14 @@ export default async function TeamPage({
                 <>
                   <input type="hidden" name="role" value={canHire[0]} />
                   <p className="mt-1 rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-muted">
-                    {ROLE_TITLE[canHire[0]]}
+                    {ROLE_TITLE_TR[canHire[0]][locale]}
                   </p>
                 </>
               )}
             </label>
           </div>
           <button type="submit" className={`self-start ${BUTTON}`}>
-            Завести
+            {t.inviteSubmit}
           </button>
         </form>
       </section>
@@ -505,17 +492,17 @@ export default async function TeamPage({
  * галочкой — что будет без неё, потому что «Новые заявки по очереди»
  * снимают, не думая, что человек тем самым выходит из очереди.
  */
-function NoticesBlock({ member }: { member: TeamMember }) {
+function NoticesBlock({ member, t, locale }: { member: TeamMember; t: T; locale: PanelLocale }) {
   return (
     <details className="group">
       <summary className="cursor-pointer list-none text-xs text-faint transition hover:text-green">
-        Уведомления · {offSummary(member.notify_off, member.role)}
+        {t.notices(offSummary(member.notify_off, member.role, locale))}
       </summary>
       <form action={saveNotices} className="mt-2 w-80 rounded-lg border border-line bg-surface-2 px-3 py-3">
         <input type="hidden" name="staff" value={member.id} />
         <p className="flex items-center gap-2 text-xs text-muted">
-          Что бот присылает «{member.display_name}»:
-          <HelpHint topic={helpAnchor("/admin/team", "notices")} label="Как работают уведомления" />
+          {t.noticesFor(member.display_name)}
+          <HelpHint topic={helpAnchor("/admin/team", "notices")} label={t.noticesHelp} />
         </p>
         <ul className="mt-2 flex flex-col gap-2">
           {kindsFor(member.role).map((kind) => (
@@ -529,19 +516,16 @@ function NoticesBlock({ member }: { member: TeamMember }) {
                   className="mt-0.5 accent-green"
                 />
                 <span>
-                  <span className="text-text">{NOTICES[kind].title}</span>
-                  <span className="block leading-snug text-faint">Без галочки: {NOTICES[kind].off}.</span>
+                  <span className="text-text">{NOTICES[kind].title[locale]}</span>
+                  <span className="block leading-snug text-faint">{t.withoutTick(NOTICES[kind].off[locale])}</span>
                 </span>
               </label>
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-xs leading-snug text-faint">
-          Приглашение, смена роли и руководителя, просьба подтвердить передачу приходят всегда —
-          без них действие не состоится.
-        </p>
+        <p className="mt-3 text-xs leading-snug text-faint">{t.noticesAlways}</p>
         <button type="submit" className={`${BUTTON} mt-3`}>
-          Сохранить
+          {t.noticesSave}
         </button>
       </form>
     </details>
@@ -561,52 +545,45 @@ function DisableBlock({
   id,
   name,
   handle,
+  t,
 }: {
   id: string;
   name: string;
   handle: string | null;
+  t: T;
 }) {
   return (
     <details className="group">
       <summary className="cursor-pointer list-none text-xs text-faint transition hover:text-gold">
-        Отключить
+        {t.disable}
       </summary>
       <div className="mt-2 w-72 rounded-lg border border-gold/30 bg-gold/5 px-3 py-3">
         <p className="flex items-center gap-2 text-xs text-gold">
-          Что произойдёт с «{name}»:
-          <HelpHint topic={helpAnchor("/admin/team", "disable")} label="Подробно об отключении" />
+          {t.disableWhat(name)}
+          <HelpHint topic={helpAnchor("/admin/team", "disable")} label={t.disableHelp} />
         </p>
         <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-4 text-xs text-muted">
-          <li>Сессии оборвутся сразу, ссылки входа перестанут работать, кнопки бота — тоже.</li>
-          <li>Новые лиды ему больше не придут — ни в очередь, ни рассылкой.</li>
+          <li>{t.dSessions}</li>
+          <li>{t.dNoLeads}</li>
           <li>
-            Лиды в работе <b>вернутся в очередь</b> и уйдут другим по обычным правилам. Его
-            очередь на лид передастся следующему сразу.
+            {t.dRequeuePre}
+            <b>{t.dRequeueBold}</b>
+            {t.dRequeuePost}
           </li>
-          <li>
-            Идущие переписки из касаний перейдут его руководителю, а если его нет — вам.
-            Неотправленные касания вернутся в общий пул.
-          </li>
-          <li>Напоминания и просьбы о передаче лидов закроются.</li>
-          <li>Если он руководитель — его менеджеры станут ничьими.</li>
-          <li>
-            Карточки лидов из его Telegram удалятся (за последние 48 часов — так позволяет
-            Telegram), у более старых пропадут кнопки.
-          </li>
-          <li>
-            История остаётся: закрытые лиды, проекты, начисления и журнал — за ним, авторство
-            не стирается.
-          </li>
+          <li>{t.dTalks}</li>
+          <li>{t.dReminders}</li>
+          <li>{t.dTeam}</li>
+          <li>{t.dCards}</li>
+          <li>{t.dHistory}</li>
         </ul>
         {/* Единственный пункт, который система выполнить не может, — и
             единственный, из-за которого «отключённый» человек продолжит
             видеть каждого нового клиента. Поэтому он отдельно и последним:
             последнее читают. */}
         <p className="mt-3 rounded border border-gold/40 bg-gold/10 px-2 py-2 text-xs text-gold">
-          Этого система сделать не может: удалите <b>{handle ? `@${handle}` : name}</b> руками из
-          общих мест в Telegram — канала сигналов «Поиска» и общего чата отдела продаж, если он
-          есть. Бот не может выгнать человека из канала, а оттуда он продолжит видеть сигналы и
-          лиды.
+          {t.dManualPre}
+          <b>{handle ? `@${handle}` : name}</b>
+          {t.dManualPost}
         </p>
 
         <form action={disable} className="mt-3">
@@ -615,7 +592,7 @@ function DisableBlock({
             type="submit"
             className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs text-gold transition hover:bg-gold/20"
           >
-            Понятно, отключить
+            {t.disableConfirm}
           </button>
         </form>
       </div>

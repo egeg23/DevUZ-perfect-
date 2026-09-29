@@ -86,8 +86,9 @@ export async function prepareContract(formData: FormData) {
 
   revalidatePath(`/admin/projects/${projectId}`);
   if (result.ok) redirect(`/admin/contracts/${result.id}`);
-  // Причину — в адрес: карточка проекта её покажет над формой.
-  const detail = result.problems?.length ? `&detail=${encodeURIComponent(result.problems.join("; "))}` : "";
+  // Причину — в адрес кодами: карточка проекта покажет её над формой на
+  // языке панели (content/admin-panel/contracts.ts).
+  const detail = result.problems?.length ? `&detail=${encodeURIComponent(result.problems.join(","))}` : "";
   redirect(`/admin/projects/${projectId}?contract=${result.why}${detail}#contract`);
 }
 
@@ -139,7 +140,7 @@ export async function confirmContract(formData: FormData) {
   if (result.ok) redirect(`/admin/contracts/${id}`);
   // Список незаполненного уезжает в адрес, чтобы владелец увидел всё сразу,
   // а не выяснял по одному.
-  const detail = result.problems?.length ? `&detail=${encodeURIComponent(result.problems.join(" · "))}` : "";
+  const detail = result.problems?.length ? `&detail=${encodeURIComponent(result.problems.join(","))}` : "";
   redirect(`/admin/contracts/${id}?error=${result.why}${detail}`);
 }
 
@@ -159,7 +160,7 @@ export async function uploadSignature(formData: FormData) {
 
   const result = await saveSignature(await file.arrayBuffer());
   revalidatePath("/admin/contracts");
-  redirect(result.ok ? "/admin/contracts?saved=1" : `/admin/contracts?error=${encodeURIComponent(result.why ?? "")}`);
+  redirect(result.ok ? "/admin/contracts?saved=1" : `/admin/contracts?error=${result.why ?? "failed"}`);
 }
 
 /* ── Смета, срок, отправка на подпись, скан ─────────────────────────────── */
@@ -183,9 +184,9 @@ export async function uploadEstimate(formData: FormData) {
 
   const result = await attachEstimate(id, file, staff);
   revalidatePath(`/admin/contracts/${id}`);
-  // Подсказка разбора уезжает в адрес: менеджер должен увидеть, почему
+  // Подсказка разбора уезжает в адрес кодом: менеджер должен увидеть, почему
   // строки не подтянулись, а не гадать, почему смета «пустая».
-  const hint = "hint" in result && result.hint ? `?hint=${encodeURIComponent(result.hint)}` : "";
+  const hint = "hint" in result && result.hint ? `?hint=${result.hint}` : "";
   redirect(result.ok ? `/admin/contracts/${id}${hint}` : `/admin/contracts/${id}?error=${result.why}`);
 }
 
@@ -197,7 +198,7 @@ export async function pasteEstimate(formData: FormData) {
   revalidatePath(`/admin/contracts/${id}`);
   if (result.ok) redirect(`/admin/contracts/${id}`);
   const hint = "hint" in result && result.hint ? result.hint : null;
-  redirect(hint ? `/admin/contracts/${id}?hint=${encodeURIComponent(hint)}` : `/admin/contracts/${id}?error=${result.why}`);
+  redirect(hint ? `/admin/contracts/${id}?hint=${hint}` : `/admin/contracts/${id}?error=${result.why}`);
 }
 
 export async function saveDeadline(formData: FormData) {
@@ -217,7 +218,7 @@ export async function sendToOwner(formData: FormData) {
   revalidatePath(`/admin/contracts/${id}`);
   if (!result.ok) {
     const detail = result.problems?.length
-      ? `&detail=${encodeURIComponent(result.problems.join(" · "))}`
+      ? `&detail=${encodeURIComponent(result.problems.join(","))}`
       : "";
     redirect(`/admin/contracts/${id}?error=${result.why}${detail}`);
   }
@@ -253,7 +254,7 @@ export async function issueInvoiceAction(formData: FormData) {
 
   const result = await issueInvoice(id, stage, staff);
   revalidatePath(`/admin/contracts/${id}`);
-  redirect(result.ok ? `/admin/contracts/${id}` : `/admin/contracts/${id}?error=${encodeURIComponent(result.why)}`);
+  redirect(result.ok ? `/admin/contracts/${id}` : `/admin/contracts/${id}?error=${result.why}`);
 }
 
 function afterPaid(contractId: string, result: PaidResult, done: string): never {
@@ -261,7 +262,7 @@ function afterPaid(contractId: string, result: PaidResult, done: string): never 
   redirect(
     result.ok
       ? `/admin/contracts/${contractId}?paid=${done}`
-      : `/admin/contracts/${contractId}?error=${encodeURIComponent(result.why)}`,
+      : `/admin/contracts/${contractId}?error=${result.why}`,
   );
 }
 

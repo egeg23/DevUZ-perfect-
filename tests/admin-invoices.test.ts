@@ -119,7 +119,8 @@ test("ссылка заказчика хранится хешем, а не са�
   // это должно быть сказано менеджеру, а не выясняться.
   assert.doesNotMatch(store, /access_token: token|raw_token/);
   const page = read("app/admin/contracts/[id]/page.tsx");
-  assert.match(page, /второй раз эта ссылка не покажется/);
+  assert.match(page, /\{t\.copyNow\}/);
+  assert.match(read("content/admin-panel/contracts.ts"), /copyNow: \{\s*ru: "[^"]*второй раз эта ссылка не покажется/);
 });
 
 test("счёт собран на том же бланке, что и договор", () => {
