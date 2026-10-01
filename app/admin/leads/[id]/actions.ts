@@ -21,6 +21,8 @@ import { takeOverTalk } from "@/lib/admin/outreach-talk-store";
 import { record } from "@/lib/admin/audit";
 import { decideTransfer, requestTransfer } from "@/lib/admin/transfers";
 import { handledLabel, markLeadCards } from "@/lib/qualify/telegram";
+import { attributeClientAndNotify } from "@/lib/partners/attribute";
+import { setLeadInn } from "@/lib/partners/store";
 
 /**
  * Переписать карточки лида в Telegram у всей команды.
@@ -243,4 +245,40 @@ export async function decideTransferAction(formData: FormData) {
       ? `/admin/leads/${leadId}?r=${decision === "approved" ? "approved" : "declined"}`
       : `/admin/leads/${leadId}?r=${result.reason}`,
   );
+}
+
+/**
+ * ИНН компании в карточке лида. Вписать может тот, у кого лид, руководитель
+ * и владелец — как и всё остальное в карточке. Вписанный ИНН сразу
+ * сверяется с клиентами, которых партнёры закрепили вручную: совпал — лид
+ * становится клиентом партнёра, партнёру уходит сообщение.
+ */
+export async function saveInnAction(formData: FormData) {
+  const staff = await requireStaff();
+  const leadId = leadIdFrom(formData);
+  const lead = await leadById(leadId);
+  if (!lead) redirect("/admin");
+  if (!canEdit(lead, staff)) redirect(`/admin/leads/${leadId}?inn=forbidden#inn`);
+
+  const result = await setLeadInn(leadId, String(formData.get("inn") ?? ""));
+  if (!result.ok) redirect(`/admin/leads/${leadId}?inn=${result.reason === "invalid" ? "bad" : "failed"}#inn`);
+
+  await record("lead.inn_set", {
+    actorStaffId: staff.id,
+    targetType: "lead",
+    targetId: leadId,
+    ip: await requestIp(),
+    meta: { inn: result.inn },
+  });
+  // Уведомление партнёру не должно ронять сохранение.
+  let claimed = false;
+  if (result.inn) {
+    try {
+      claimed = Boolean(await attributeClientAndNotify(leadId));
+    } catch (error) {
+      console.error("partners: закрепление по ИНН из карточки", error);
+    }
+  }
+  revalidatePath(`/admin/leads/${leadId}`);
+  redirect(`/admin/leads/${leadId}?inn=${claimed ? "client" : "saved"}#inn`);
 }

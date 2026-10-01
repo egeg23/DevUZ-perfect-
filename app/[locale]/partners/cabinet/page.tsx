@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import {
   createLinkAction,
   requestAgencyAction,
+  requestClientAction,
   requestPayoutAction,
   saveRequisitesAction,
   switchModelAction,
@@ -16,7 +17,7 @@ import { isLocale } from "@/lib/i18n";
 import { listPromo } from "@/lib/partners/promo";
 import { promoFileUrl, promoForLocale } from "@/lib/partners/promo-rules";
 import { currentPartner } from "@/lib/partners/session";
-import { agenciesOf, dailyActivity, referralsOf, summarize } from "@/lib/partners/store";
+import { agenciesOf, clientsOf, dailyActivity, referralsOf, summarize } from "@/lib/partners/store";
 import { buildMetadata } from "@/lib/seo";
 
 /**
@@ -66,10 +67,11 @@ export default async function CabinetPage({
   if (!partner) return <SignedOut t={t} error={e === "expired" || e === "offline" ? t.errors[e] : null} />;
 
   const [summary] = await summarize([partner]);
-  const [referrals, activity, agencies, promo] = await Promise.all([
+  const [referrals, activity, agencies, clients, promo] = await Promise.all([
     referralsOf(summary),
     dailyActivity(partner.id, 30),
     agenciesOf([partner.id]),
+    clientsOf([partner.id]),
     listPromo({ withHidden: false }),
   ]);
   const materials = promoForLocale(promo, locale);
@@ -82,6 +84,7 @@ export default async function CabinetPage({
       summary={summary}
       referrals={referrals}
       agencies={agencies}
+      clients={clients}
       media={materials.map((material) => ({ material, preview: promoFileUrl(material.id) }))}
       activity={activity}
       result={r ? resultText(t, r) : null}
@@ -92,6 +95,7 @@ export default async function CabinetPage({
         requestPayout: requestPayoutAction,
         switchModel: switchModelAction,
         requestAgency: requestAgencyAction,
+        requestClient: requestClientAction,
       }}
     />
   );

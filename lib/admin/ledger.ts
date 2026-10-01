@@ -9,6 +9,7 @@ import {
   type Purpose,
 } from "@/lib/admin/finance";
 import { projectsOwnedBy, type Project } from "@/lib/admin/projects";
+import { settleTurnover } from "@/lib/partners/autopay";
 import { notifyPartner, partnerById, partnersById, summarize, type Partner } from "@/lib/partners/store";
 import { keepsExpenses, type Role } from "@/lib/admin/roles";
 import { belowFloor, parseQuote, quoteFor } from "@/lib/admin/quote";
@@ -699,6 +700,13 @@ async function notifyPartnerIfPaid(project: Record<string, unknown>, projectId: 
   const [summary] = await summarize([partner]);
   const line = summary?.accruals.find((a) => a.project_id === projectId);
   if (!line || line.state !== "earned" || line.amount_usd <= 0) return;
+
+  // С оборота — выплата заводится сама, и сообщение партнёру — про неё:
+  // «начислено, выплата в обработке», а не «подайте заявку».
+  if (line.model === "turnover") {
+    await settleTurnover(projectId);
+    return;
+  }
 
   const client = (project.client as string | null)?.trim();
   const sum = line.amount_usd.toLocaleString("ru-RU");
