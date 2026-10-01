@@ -15,10 +15,10 @@ import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
  * База — lib/admin/task-store.ts, сообщения бота — lib/admin/task-bot.ts.
  */
 
-export const TASK_STATUSES = ["new", "in_work", "done", "failed"] as const;
+export const TASK_STATUSES = ["new", "in_work", "done", "failed", "cancelled"] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
-export const TASK_EVENTS = ["created", "taken", "done", "failed", "moved"] as const;
+export const TASK_EVENTS = ["created", "taken", "done", "failed", "moved", "cancelled"] as const;
 export type TaskEvent = (typeof TASK_EVENTS)[number];
 
 export const TITLE_MAX = 200;
@@ -30,7 +30,10 @@ export type Task = {
   body: string;
   creator_id: string;
   assignee_id: string;
-  due_at: string;
+  /** Срок; null — без срока. */
+  due_at: string | null;
+  /** Проект из раздела «Проекты»; null — без проекта. */
+  project_id: string | null;
   status: TaskStatus;
   created_at: string;
   taken_at: string | null;
@@ -52,7 +55,22 @@ export function isOpen(status: TaskStatus): boolean {
 }
 
 export function isOverdue(task: Pick<Task, "status" | "due_at">, now: Date): boolean {
-  return isOpen(task.status) && Date.parse(task.due_at) <= now.getTime();
+  return isOpen(task.status) && task.due_at !== null && Date.parse(task.due_at) <= now.getTime();
+}
+
+/**
+ * Порядок по умолчанию — от ближайшего срока к дальнему; без срока — в
+ * конце, свежие первыми. Владелец: «порядок задач от самой ближайшей даты
+ * на выполнение к дальней».
+ */
+export function byDue(
+  a: Pick<Task, "due_at" | "created_at">,
+  b: Pick<Task, "due_at" | "created_at">,
+): number {
+  if (a.due_at && b.due_at) return Date.parse(a.due_at) - Date.parse(b.due_at);
+  if (a.due_at) return -1;
+  if (b.due_at) return 1;
+  return Date.parse(b.created_at) - Date.parse(a.created_at);
 }
 
 /* ── Время по Ташкенту ─────────────────────────────────────────────────── */
@@ -121,8 +139,9 @@ export function isMove(value: string): value is Move {
   return (MOVES as readonly string[]).includes(value);
 }
 
-export function movedDue(kind: Move, due: Date, now: Date): Date {
-  const base = new Date(Math.max(due.getTime(), now.getTime()));
+export function movedDue(kind: Move, due: Date | null, now: Date): Date {
+  // Задача без срока: варианты считаются от «сейчас».
+  const base = new Date(Math.max(due?.getTime() ?? 0, now.getTime()));
   if (kind === "1h") return new Date(base.getTime() + HOUR);
   if (kind === "tomorrow") return dayAt(now, 1, DAY_END_HOUR);
   if (kind === "3d") return new Date(base.getTime() + 3 * DAY);
@@ -179,24 +198,34 @@ export function dueProblem(due: Date, now: Date): DueProblem | null {
 
 /* ── Кто что может ─────────────────────────────────────────────────────── */
 
-export type TaskAction = "take" | "done" | "failed" | "move";
+export type TaskAction = "take" | "done" | "failed" | "move" | "cancel";
 
 export type ActRefusal = "not_yours" | "closed" | "taken";
 
 /**
  * Можно ли этому человеку сделать это с задачей.
  *
- * Двигает задачу только исполнитель: поставивший видит статус, но «сделано»
- * за другого не нажимает — иначе статус перестаёт значить, что сделал тот,
- * на ком задача. «Сделано» можно и без «Взять»: сделал сразу — нечего
- * брать.
+ * Взять, «Сделано» и «Не сделано» — только исполнитель: поставивший видит
+ * статус, но «сделано» за другого не нажимает — иначе статус перестаёт
+ * значить, что сделал тот, на ком задача. «Сделано» можно и без «Взять»:
+ * сделал сразу — нечего брать.
+ *
+ * Срок переносят оба: исполнитель — когда не успевает, поставивший — когда
+ * передумал. Отменяет только поставивший: задачу, которую ему поручили,
+ * исполнитель не может просто стереть — для этого есть «Не сделано».
  */
 export function canAct(
-  task: Pick<Task, "assignee_id" | "status">,
+  task: Pick<Task, "assignee_id" | "creator_id" | "status">,
   staffId: string,
   action: TaskAction,
 ): ActRefusal | null {
-  if (task.assignee_id !== staffId) return "not_yours";
+  const mine =
+    action === "move"
+      ? task.assignee_id === staffId || task.creator_id === staffId
+      : action === "cancel"
+        ? task.creator_id === staffId
+        : task.assignee_id === staffId;
+  if (!mine) return "not_yours";
   if (!isOpen(task.status)) return "closed";
   if (action === "take" && task.status !== "new") return "taken";
   return null;
@@ -204,7 +233,17 @@ export function canAct(
 
 /** Статус после действия. */
 export function statusAfter(action: Exclude<TaskAction, "move">): TaskStatus {
-  return action === "take" ? "in_work" : action;
+  if (action === "take") return "in_work";
+  if (action === "cancel") return "cancelled";
+  return action;
+}
+
+/** Кому сказать о шаге: другой стороне задачи. Себе — никому. */
+export function notifyOf(task: Pick<Task, "assignee_id" | "creator_id">, actorId: string): string | null {
+  if (task.assignee_id === task.creator_id) return null;
+  if (actorId === task.assignee_id) return task.creator_id;
+  if (actorId === task.creator_id) return task.assignee_id;
+  return null;
 }
 
 /**
@@ -220,10 +259,24 @@ export function initialStatus(creatorId: string, assigneeId: string): TaskStatus
 /* ── Когда писать ──────────────────────────────────────────────────────── */
 
 /**
- * Бот пишет о задачах в рабочее время — как порция: по будням с 09:00 до
- * 19:00 по Ташкенту. Поставили ночью — сообщение уйдёт утром; просрочилась
- * ночью — напоминание тоже утром. Ответ на нажатую кнопку — сразу: его
- * человек ждёт.
+ * Сообщения о действиях людей — новая задача, взял, сделано, перенёс,
+ * отменил — уходят сразу, в любой день. Владелец: «когда задача ставится —
+ * человеку, на которого её поставили, бот пишет в Telegram». Молчит бот
+ * только ночью, с 23:00 до 07:00 по Ташкенту: поставленное ночью придёт в
+ * 07:00.
+ */
+export const QUIET_FROM_HOUR = 23;
+export const QUIET_TO_HOUR = 7;
+
+export function messageWindow(now: Date): boolean {
+  const hour = tashkentHour(now);
+  return hour >= QUIET_TO_HOUR && hour < QUIET_FROM_HOUR;
+}
+
+/**
+ * Напоминания свипа — «не взяли», «через час срок», «просрочено» — в
+ * рабочее время, как порция: по будням с 09:00 до 19:00 по Ташкенту.
+ * Просрочилась ночью или в выходной — напоминание придёт утром рабочего дня.
  */
 export const TASK_FROM_HOUR = 9;
 export const TASK_TO_HOUR = 19;
@@ -265,9 +318,9 @@ export function nudgesDue(
   now: Date,
 ): Nudge[] {
   if (!isOpen(task.status)) return [];
-  const due = Date.parse(task.due_at);
   const t = now.getTime();
-  if (due <= t) return task.overdue_sent_at ? [] : ["overdue"];
+  const due = task.due_at ? Date.parse(task.due_at) : null;
+  if (due !== null && due <= t) return task.overdue_sent_at ? [] : ["overdue"];
 
   const out: Nudge[] = [];
   if (
@@ -280,7 +333,7 @@ export function nudgesDue(
   }
   // От какого момента у задачи был этот срок: от постановки или от переноса.
   const since = task.last_event === "moved" ? Date.parse(task.updated_at) : Date.parse(task.created_at);
-  if (!task.soon_nudged_at && due - t <= SOON_MINUTES * 60_000 && due - since > SOON_MINUTES * 60_000) {
+  if (due !== null && !task.soon_nudged_at && due - t <= SOON_MINUTES * 60_000 && due - since > SOON_MINUTES * 60_000) {
     out.push("soon");
   }
   return out;
@@ -294,15 +347,16 @@ export type FeedItem = {
   title: string;
   /** Кто сделал: поставил задачу или сменил её статус. */
   actorId: string | null;
-  due_at: string;
+  due_at: string | null;
 };
 
 /**
  * Что показать звуком и уведомлением тому, у кого открыта панель.
  *
- * Исполнителю — новая задача ему; поставившему — шаг по его задаче.
- * Собственные нажатия не в счёт: человек, который только что нажал
- * «Сделано», не должен услышать звук о том, что он нажал «Сделано».
+ * Исполнителю — новая задача ему, перенос её срока и отмена; поставившему
+ * — шаг по его задаче. Собственные нажатия не в счёт: человек, который
+ * только что нажал «Сделано», не должен услышать звук о том, что он нажал
+ * «Сделано».
  */
 export function feedFor(
   rows: readonly Pick<Task, "id" | "title" | "creator_id" | "assignee_id" | "due_at" | "updated_at" | "last_event" | "last_actor_id">[],
@@ -319,7 +373,8 @@ export function feedFor(
       }
       continue;
     }
-    if (row.creator_id === me) {
+    // Шаг поставившего — исполнителю; шаг исполнителя — поставившему.
+    if (row.last_actor_id === row.creator_id ? row.assignee_id === me : row.creator_id === me) {
       out.push({ id: row.id, kind: row.last_event, title: row.title, actorId: row.last_actor_id, due_at: row.due_at });
     }
   }
@@ -328,3 +383,55 @@ export function feedFor(
 
 /** Опрос панели — раз в столько секунд, пока она открыта. */
 export const FEED_POLL_SECONDS = 45;
+
+/* ── Группы ────────────────────────────────────────────────────────────── */
+
+/** Как сгруппировать списки: по умолчанию — никак, просто по сроку. */
+export const TASK_GROUPS = ["none", "due", "project", "person"] as const;
+export type TaskGroup = (typeof TASK_GROUPS)[number];
+
+export function taskGroup(value: unknown): TaskGroup {
+  return (TASK_GROUPS as readonly unknown[]).includes(value) ? (value as TaskGroup) : "none";
+}
+
+export const DUE_BUCKETS = ["overdue", "today", "tomorrow", "week", "later", "none"] as const;
+export type DueBucket = (typeof DUE_BUCKETS)[number];
+
+/** Корзина срока по календарю Ташкента: просрочено, сегодня, завтра, 7 дней, позже, без срока. */
+export function dueBucket(task: Pick<Task, "status" | "due_at">, now: Date): DueBucket {
+  if (!task.due_at) return "none";
+  if (isOverdue(task, now)) return "overdue";
+  const due = new Date(task.due_at);
+  const days = Math.round((dayAt(due, 0, 0).getTime() - dayAt(now, 0, 0).getTime()) / DAY);
+  if (days <= 0) return "today";
+  if (days === 1) return "tomorrow";
+  if (days <= 7) return "week";
+  return "later";
+}
+
+/**
+ * Разложить задачи по группам, не ломая порядка внутри: задачи уже идут от
+ * ближайшего срока, и группа, в которой срок ближе, встаёт выше. Пустой
+ * ключ (без проекта) — в конце.
+ */
+export function groupTasks<T extends Pick<Task, "status" | "due_at">>(
+  tasks: readonly T[],
+  keyOf: (task: T) => string,
+  order?: readonly string[],
+): { key: string; tasks: T[] }[] {
+  const groups = new Map<string, T[]>();
+  for (const task of tasks) {
+    const key = keyOf(task);
+    groups.set(key, [...(groups.get(key) ?? []), task]);
+  }
+  const keys = [...groups.keys()];
+  if (order) keys.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  else keys.sort((a, b) => (a === "" ? 1 : 0) - (b === "" ? 1 : 0));
+  return keys.map((key) => ({ key, tasks: groups.get(key)! }));
+}
+
+/** Как проект называется в задачах: «Клиент — Проект» или просто название. */
+export function projectLabel(project: { title: string; client: string | null }): string {
+  const client = project.client?.trim();
+  return client && client !== project.title.trim() ? `${client} — ${project.title}` : project.title;
+}

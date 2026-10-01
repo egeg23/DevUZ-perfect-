@@ -56,8 +56,8 @@ import { CLOSE_TEXT, isCloseReason } from "@/lib/admin/touch-close";
 import { streamCommand } from "@/lib/admin/stream";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
 import { actOnTask, afterAct, awaitDate, taskAwaitingDate, taskById, type ActResult } from "@/lib/admin/task-store";
-import { OWN_DATE_PROMPT, TASK_CALLBACK, looksLikeDue, moveRows, taskRows } from "@/lib/admin/task-bot";
-import { formatDue, isMove, movedDue, parseDueText, type TaskAction } from "@/lib/admin/tasks";
+import { OWN_DATE_PROMPT, TASK_CALLBACK, dueText, looksLikeDue, moveRows, taskRows } from "@/lib/admin/task-bot";
+import { isMove, movedDue, parseDueText, type TaskAction } from "@/lib/admin/tasks";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -1366,6 +1366,7 @@ const TASK_DONE: Record<TaskAction, string> = {
   done: "Отмечено: сделано",
   failed: "Отмечено: не сделано",
   move: "Срок перенесён",
+  cancel: "Задача отменена",
 };
 
 /**
@@ -1417,7 +1418,7 @@ async function handleTaskButton(query: NonNullable<Update["callback_query"]>, ac
       kind = action;
     } else if (isMove(action)) {
       kind = "move";
-      newDue = movedDue(action, new Date(task.due_at), new Date());
+      newDue = movedDue(action, task.due_at ? new Date(task.due_at) : null, new Date());
     } else {
       await answerCallback(query.id, "Неизвестная команда");
       return;
@@ -1430,7 +1431,7 @@ async function handleTaskButton(query: NonNullable<Update["callback_query"]>, ac
     }
     await answerCallback(
       query.id,
-      kind === "move" ? `${TASK_DONE.move} на ${formatDue(result.task.due_at)}` : TASK_DONE[kind],
+      kind === "move" ? `${TASK_DONE.move} на ${dueText(result.task.due_at)}` : TASK_DONE[kind],
     );
     if (here) await setButtons(here.chat, here.messageId, taskRows(result.task));
     await afterAct(result.task, result.eventId, new Date(), here);
@@ -1468,7 +1469,7 @@ async function handleTaskDate(message: NonNullable<Update["message"]>): Promise<
   }
   await sendMessage(
     message.chat.id,
-    `🕑 Срок задачи «${esc(result.task.title)}» перенесён на <b>${formatDue(result.task.due_at)}</b>.`,
+    `🕑 Срок задачи «${esc(result.task.title)}» перенесён на <b>${dueText(result.task.due_at)}</b>.`,
   );
   await afterAct(result.task, result.eventId, now);
   return true;

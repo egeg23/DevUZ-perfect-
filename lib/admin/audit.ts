@@ -125,6 +125,7 @@ export const AUDIT_ACTIONS = [
   "task.done",
   "task.failed",
   "task.moved",
+  "task.cancelled",
 ] as const;
 
 /**
