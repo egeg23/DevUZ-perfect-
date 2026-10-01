@@ -103,11 +103,11 @@ test("заявка партнёра: название, ИНН и телефон 
 /* ── Запись и антифрод ──────────────────────────────────────────────────── */
 
 test("одна компания — одному партнёру: уникальный ИНН среди действующих держит база", () => {
-  const sql = read("supabase/migrations/0071_partner_clients.sql");
+  const sql = read("supabase/migrations/0072_partner_clients.sql");
   assert.match(sql, /create unique index if not exists partner_clients_inn_active\s+on public\.partner_clients \(inn\) where status = 'active'/);
   assert.match(sql, /inn text not null check \(inn ~ '\^\[0-9\]\{9,12\}\$'\)/);
   assert.match(sql, /alter table public\.leads add column if not exists client_inn text/);
-  assert.match(read("supabase/migrations/0071_partner_clients.down.sql"), /drop table if exists public\.partner_clients/);
+  assert.match(read("supabase/migrations/0072_partner_clients.down.sql"), /drop table if exists public\.partner_clients/);
 });
 
 test("закрепить нельзя то, что студия уже знает, или то, что закрепил другой", () => {
@@ -215,7 +215,7 @@ test("автовыплата — только с оборота, только з
 });
 
 test("строго одна автовыплата на проект — уникальный индекс, а не память кода", () => {
-  const sql = read("supabase/migrations/0072_partner_auto_payouts.sql");
+  const sql = read("supabase/migrations/0073_partner_auto_payouts.sql");
   assert.match(sql, /create unique index if not exists partner_payouts_project_unique\s+on public\.partner_payouts \(project_id\) where project_id is not null/);
 
   const store = read("lib/partners/store.ts");
