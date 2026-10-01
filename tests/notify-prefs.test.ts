@@ -64,6 +64,12 @@ test("каждая галочка проверяется там, где бот �
       ["lib/admin/portion-store.ts", /wants\(reader\.off, "reports"\)/],
       ["lib/admin/coach-store.ts", /notify\(reader\.id, "reports"/],
     ],
+    // Задачи: исполнителю (новая задача и напоминания) и поставившему.
+    tasks: [
+      ["lib/admin/task-store.ts", /wants\(assignee\?\.notify_off, "tasks"\)/],
+      ["lib/admin/task-store.ts", /wants\(reader\?\.notify_off, "tasks"\)/],
+      ["lib/admin/task-store.ts", /wants\(creator\?\.notify_off, "tasks"\)/],
+    ],
   };
   for (const kind of NOTICE_KINDS) {
     assert.ok(where[kind], `галочка ${kind} нигде не проверяется`);

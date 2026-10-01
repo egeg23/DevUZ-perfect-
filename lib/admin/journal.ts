@@ -108,6 +108,11 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "google.client_saved": "сохранил Client ID Google для статистики",
   "google.connected": "подключил Google Analytics входом через Google",
   "google.property_set": "вписал номер ресурса Google Analytics",
+  "task.created": "поставил задачу",
+  "task.taken": "взял задачу в работу",
+  "task.done": "отметил задачу сделанной",
+  "task.failed": "отметил задачу несделанной",
+  "task.moved": "перенёс срок задачи",
 };
 
 /**

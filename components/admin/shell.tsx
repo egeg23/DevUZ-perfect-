@@ -10,6 +10,7 @@ import { SectionHelpLink } from "@/components/admin/help-link";
 import { LocaleSwitch } from "@/components/admin/locale-switch";
 import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { UsageBeacon } from "@/components/admin/usage-beacon";
+import { TaskPulse } from "@/components/admin/task-alerts";
 
 /**
  * Разделы приходят из матрицы ролей — одной на панель, уведомления и
@@ -41,6 +42,9 @@ export function AdminShell({
         {/* Учёт просмотров для отчёта «Использование». Владельца не считаем —
             и маячок ему не ставим: лишний запрос на каждый переход ни к чему. */}
         {staff.role === "admin" ? null : <UsageBeacon />}
+        {/* Задачи: пока панель открыта, новое приходит звуком и
+            уведомлением браузера — в любом разделе, не только на главной. */}
+        <TaskPulse />
         {/* Шапка липкая: на телефоне список лидов длинный, и уходить наверх
             ради перехода в другой раздел — лишняя прокрутка в обе стороны. */}
         <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">

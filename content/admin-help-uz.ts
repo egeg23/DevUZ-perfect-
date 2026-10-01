@@ -16,6 +16,15 @@ const BOT_URL = "https://t.me/Devuz_studio_bot";
 /** Канал закрытый, публичного имени у него нет — только ссылка-приглашение. */
 const SCOUT_URL = "https://t.me/+puC_Ns-kCbQ5NzJi";
 
+/** Vazifalar Telegramda — barcha rollar uchun umumiy; oxirgi xatboshi har birida o‘ziniki. */
+const TASKS_BOT = [
+  "Sizga vazifa qo‘yilganda, bot xabar yuboradi: kimdan, nima qilish kerak, muddat — va **«✅ Взять в работу»** tugmasi. Bosdingiz — o‘sha xabarning o‘zida **«✅ Сделано»**, **«✖ Не сделано»** va **«🕑 Перенести срок»** paydo bo‘ladi. Telegramda bosilgani darhol panelda ko‘rinadi va aksincha: vazifani panelda olsangiz — Telegramdagi tugmalar o‘zi almashadi.",
+  "«🕑 Перенести срок» quyidagilarni taklif qiladi: «+1 час», «Завтра 18:00», «+3 дня», «Неделя» va «✏️ Своя дата». «✏️ Своя дата» dan keyin botga muddatni bitta xabar bilan yozing — kun, oy va Toshkent vaqti bilan soat, masalan `05.10 15:00`. Bot bunday xabarni 30 daqiqa kutadi.",
+  "Vazifani qo‘ygan odamga bot har bir qadam haqida yozadi: ishga oldi, bajarildi, bajarilmadi, muddatni falon sana va vaqtga ko‘chirdi.",
+  "Eslatmalar: yangi vazifa bot xabaridan keyin 30 daqiqa ichida olinmasa — bot eslatadi; muddatga bir soat qolganda — yana eslatadi; muddat o‘tsa — bir marta ham ijrochiga, ham qo‘ygan odamga yozadi. Ko‘chirilgandan keyin «bir soat qoldi» va «muddati o‘tdi» qaytadan keladi — endi yangi muddatga.",
+  "Tunda bot yozmaydi: vazifalar haqida — ish kunlari Toshkent vaqti bilan 09:00 dan 19:00 gacha, kunlik portsiya kabi. Kechqurun yoki dam olish kuni qo‘yilgan vazifani ijrochi Telegramda ish kuni soat 09:00 da oladi, panelda esa darhol ko‘radi. Bosilgan tugmaga javob istalgan vaqtda keladi.",
+];
+
 export const uz: HelpCopy = {
   title: "Yo‘riqnoma",
   lead: "Panel qanday tuzilgani va undan qanday foydalanish — bo‘limlar bo‘yicha, oddiy so‘zlar bilan. Bu yerda faqat sizga ochiq narsalar yozilgan. Istalgan bo‘limdan bu yerga sahifa tepasidagi «Bo‘limdan qanday foydalanish» tugmasi olib keladi, bloklar yonidagi «?» esa kerakli bandni ochadi.",
@@ -55,6 +64,35 @@ export const uz: HelpCopy = {
               "Metrika va Google Analytics bo‘yicha saytga tashriflar — varaq emas, alohida [Trafik](/admin/traffic) bo‘limi: uni siz va rahbarlar ko‘rasiz. Varaqqa eski xatcho‘plar ham o‘sha yerga olib boradi.",
             ],
           },
+        },
+        {
+          id: "tasks",
+          title: "Vazifalar: qo‘yish, olish, yopish",
+          body: [
+            "**«Vazifalar»** bloki bosh sahifada hammasidan yuqorida turadi (egasida — «Сегодня» varag‘ida). Vazifani istalgan xodim istalgan xodimga, jumladan o‘ziga ham qo‘yishi mumkin: menejer — rahbarga, rahbar — egasiga, kim bo‘lsa ham — kimga bo‘lsa ham. Vazifani ikki kishi ko‘radi: uni qo‘ygan va kimga qo‘yilgan.",
+            "**«Menga»** — sizga qo‘yilgan vazifalar, eng yaqin muddat tepada. Yangisi «yangi» deb belgilangan va **«Ishga olish»** tugmasini kutadi: shunda qo‘ygan odam vazifani ko‘rganingiz va qabul qilganingizni biladi. Olingani — «ishda», ostida **«Bajarildi»** va **«Bajarilmadi»**. Muddati o‘tgan vazifa qizil rang bilan ajratilgan va «muddati o‘tgan» deb belgilangan.",
+            "**«Muddatni ko‘chirish»** variantlarni ochadi: «+1 soat», «Ertaga 18:00», «+3 kun», «Bir hafta» — yoki «Shu sanaga» tugmasi bilan o‘z sanangiz va vaqtingiz. «+1 soat», «+3 kun» va «Bir hafta» muddatdan hisoblanadi, agar u o‘tib ketgan bo‘lsa — hozirgi paytdan, toki yangi muddat yana o‘tmishda qolmasin. Har bir ko‘chirish vazifa tarixida qoladi: eski muddat, yangisi va kim ko‘chirgani.",
+            "**«Men qo‘yganlar»** — siz boshqalarga qo‘ygan vazifalar va ular hozir qanday holatda: «yangi» (hali olinmagan), «ishda», «bajarildi», «bajarilmadi», «muddati o‘tgan». Yopilganlari bu yerda yana bir hafta ko‘rinadi. Vazifani faqat u kimda bo‘lsa, o‘sha siljitadi: boshqa odam uchun «Bajarildi» ni bosib bo‘lmaydi — shuning uchun «bajarildi» doim ijrochining o‘zi bajarganini bildiradi.",
+            "**«Vazifa qo‘yish»** — blok pastida: «Kimga», «Nima qilish kerak», «Batafsil (ixtiyoriy)» va «Muddat» — «bugun 18:00 gacha», «ertaga» va «3 kundan keyin» (ikkalasi ham 18:00 gacha) yoki «boshqa sana». Vaqt hamma joyda Toshkent vaqti. O‘zingizga qo‘ygan vazifa darhol «ishda» — uni olish shart emas, bot ham u haqda yozmaydi. Kim nimani qo‘ygani, olgani, yopgani va ko‘chirgani amallar jurnaliga yoziladi.",
+          ],
+        },
+        {
+          id: "tasks-bot",
+          title: "Vazifalar Telegramda va eslatmalar",
+          body: {
+            manager: [...TASKS_BOT, "Agar vazifalar haqidagi Telegram xabarlari sizga kerak bo‘lmasa, ularni rahbar yoki egasi o‘chiradi — bildirishnomalaringizdagi «Vazifalar» belgisi bilan. Vazifalar bunda bosh sahifada qoladi, brauzerdagi ovoz esa avvalgidek ishlaydi."],
+            head: [...TASKS_BOT, "Vazifalar haqidagi xabarlar odamning [bildirishnomalaridagi](#team-notices) «Vazifalar» belgisi bilan o‘chiriladi — o‘zingizda va menejerlaringizda ularni «Jamoa» bo‘limida o‘zgartirasiz. Vazifalar bunda bosh sahifada qoladi, brauzerdagi ovoz ishlaydi."],
+            admin: [...TASKS_BOT, "Vazifalar haqidagi xabarlar [bildirishnomalardagi](#team-notices) «Vazifalar» belgisi bilan o‘chiriladi — istalgan xodimda, «Jamoa» bo‘limida. Vazifalar bunda bosh sahifada qoladi, brauzerdagi ovoz ishlaydi."],
+          },
+        },
+        {
+          id: "tasks-alerts",
+          title: "Brauzerdagi ovoz va bildirishnomalar",
+          body: [
+            "Panel ochiq ekan — istalgan bo‘limda — u har 45 soniyada serverdan yangilik bor-yo‘qligini so‘raydi: sizga qo‘yilgan vazifa yoki siz qo‘ygan vazifa bo‘yicha qadam (oldi, bajarildi, bajarilmadi, muddat ko‘chirildi). Bo‘lsa — qisqa «din-don» chalinadi, o‘ng pastki burchakda «Vazifalarni ochish» tugmali plashka chiqadi, bosh sahifa esa o‘zi yangilanadi.",
+            "Tizim bildirishnomasi ham chiqishi uchun — hatto varaq yig‘ilgan bo‘lsa ham — vazifalar blokidagi **«Bildirishnomalarni yoqish»** ni bosing va brauzer oynasida ruxsat bering. Brauzer ruxsatni faqat bosilgandan keyin so‘raydi — shuning uchun tugma. Ruxsatdan keyin uning o‘rnida — «Bildirishnomalar yoqilgan».",
+            "Agar brauzer taqiqlagan bo‘lsa, tugma o‘rnida maslahat chiqadi: bildirishnomalarga sayt sozlamalarida (manzil chap tomonidagi belgi) ruxsat berish mumkin. Ovozni brauzer paneldagi birinchi bosishdan keyin yoqadi — undan oldin sahifa ovoz chiqara olmaydi, barcha brauzerlar shunday ishlaydi. O‘z amallaringiz ovoz bilan belgilanmaydi. Panel yopiq bo‘lsa — brauzerda hech narsa yo‘q, Telegram qoladi.",
+          ],
         },
         {
           id: "queue",
@@ -1114,7 +1152,7 @@ export const uz: HelpCopy = {
             ],
             admin: [
               "Oxirgi ustunda har bir xodimda (va sizda) **«Уведомления»** qatori bor — yonida «приходит всё» yoki «выключено: 2 из 8». Bosing: belgilar ochiladi, turgan bo‘lsa — bot yuboradi, olib tashlansa — yo‘q. **«Сохранить»**. Sukut bo‘yicha hammada hammasi turadi. Loyihalar rahbari ham belgilarni o‘zgartiradi — o‘z menejerlariga va o‘ziga, lekin boshqa rahbarga va sizga emas.",
-              "Har bir rolning o‘z to‘plami bor. Menejerda — navbat bo‘yicha va hamma uchun arizalar, eslatmalar, lid chatidagi xabarlar, berishlar, aloqalarga javoblar, kunlik to‘plam, haftalik tavsiyalar. Rahbarda yana hisobotlar. Sizda — «Копии предложений очереди» (navbat lidni kimga va qachon taklif qilgani) va hisobotlar, navbat va to‘plamsiz: siz navbatda turmaysiz.",
+              "Har bir rolning o‘z to‘plami bor. Menejerda — navbat bo‘yicha va hamma uchun arizalar, eslatmalar, lid chatidagi xabarlar, berishlar, aloqalarga javoblar, kunlik to‘plam, haftalik tavsiyalar, vazifalar. Rahbarda yana hisobotlar. Sizda — «Копии предложений очереди» (navbat lidni kimga va qachon taklif qilgani), hisobotlar va vazifalar, navbat va to‘plamsiz: siz navbatda turmaysiz.",
               "Asosiy belgi — **«Новые заявки по очереди»**: usiz odam [navbatdan](#leads-queue) chiqadi, lidlar keyingisiga ketadi. Qolganlari faqat Telegramdagi xabarni olib tashlaydi, ish panelda qoladi. Agar hammada «Заявки для всех» olib tashlansa, tungi arizalarni Telegramda hech kim ko‘rmaydi — faqat panelda va sotuv chatida, agar u bo‘lsa.",
               "O‘chirilmaydi: taklif, rol va rahbar almashishi, berishni tasdiqlash so‘rovi, sizga pul va shartnomalar haqidagi xabarlar. Belgilarni kim va qachon o‘zgartirgani — [jurnalda](/admin/audit).",
             ],
