@@ -229,7 +229,7 @@ test("строго одна автовыплата на проект — уни�
 
 test("автовыплата срабатывает при записи платежа и страховочно в свипе", () => {
   const ledger = read("lib/admin/ledger.ts");
-  assert.match(ledger, /if \(line\.model === "turnover"\) \{\s*await settleTurnover\(projectId\);/);
+  assert.match(ledger, /if \(line\.model === "turnover" && !partner\.accumulate\) \{\s*await settleTurnover\(projectId\);/);
   // «Оплачен» у счёта договора пишет платёж через addPayment — тот же путь.
   assert.match(read("lib/admin/invoice-store.ts"), /const payment = await addPayment\(/);
   assert.match(read("app/api/reminders/sweep/route.ts"), /await settleTurnoverDue\(\)/);

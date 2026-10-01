@@ -32,6 +32,7 @@ import {
   normalizeCode,
   partnerAccrualOf,
   partnerBalanceOf,
+  withPool,
   validCode,
   validRequisites,
   voidReason,
@@ -73,6 +74,8 @@ export type Partner = {
   /** Модель дохода: от прибыли или с оборота. Меняется раз в неделю. */
   payout_model: PayoutModel;
   model_changed_at: string | null;
+  /** Копилка: автовыплаты выключены, ставка — по общей сумме невыплаченного (rules.ts, withPool). */
+  accumulate: boolean;
 };
 
 export type PartnerLink = {
@@ -108,12 +111,12 @@ export type PartnerPayout = {
 };
 
 const PARTNER_COLUMNS =
-  "id, created_at, telegram_user_id, username, name, code, requisites, status, percent_override, note, payout_model, model_changed_at";
+  "id, created_at, telegram_user_id, username, name, code, requisites, status, percent_override, note, payout_model, model_changed_at, accumulate";
 const LINK_COLUMNS = "id, created_at, partner_id, code, slug, target, label, perk, clicks, leads, is_default";
 const PAYOUT_COLUMNS =
   "id, created_at, partner_id, amount_usd, requisites, status, note, paid_at, decided_by, project_id";
 const PROJECT_COLUMNS =
-  "id, title, client, owner_staff_id, kind, amount_usd, tax_percent, dev_cost_usd, stage, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, partner_client_id";
+  "id, title, client, owner_staff_id, kind, amount_usd, tax_percent, dev_cost_usd, stage, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, partner_client_id, partner_payout_id, partner_bonus_percent";
 
 function shapePartner(row: Record<string, unknown>): Partner {
   return {
@@ -129,6 +132,7 @@ function shapePartner(row: Record<string, unknown>): Partner {
     note: (row.note as string | null) ?? null,
     payout_model: isPayoutModel(row.payout_model) ? row.payout_model : DEFAULT_MODEL,
     model_changed_at: (row.model_changed_at as string | null) ?? null,
+    accumulate: row.accumulate === true,
   };
 }
 
@@ -189,6 +193,8 @@ function shapeProject(row: Record<string, unknown>): ProjectWithPartner {
     partner_model: (row.partner_model as string | null) ?? null,
     partner_agency_id: (row.partner_agency_id as string | null) ?? null,
     partner_client_id: (row.partner_client_id as string | null) ?? null,
+    partner_payout_id: (row.partner_payout_id as string | null) ?? null,
+    partner_bonus_percent: (row.partner_bonus_percent as number | null) ?? null,
   };
 }
 
@@ -385,9 +391,13 @@ export async function summarize(partners: Partner[]): Promise<PartnerSummary[]> 
   return partners.map((partner) => {
     const mine = projects.filter((p) => p.partner_id === partner.id);
     // Ставка у каждого проекта своя — по его сумме (rules.ts, PARTNER_TIERS).
-    const accruals = mine
-      .map((p) => partnerAccrualOf(p, payments, partner))
-      .filter((a): a is PartnerAccrual => a !== null);
+    // Копилка поднимает ставку невыплаченных проектов до ступени их общей
+    // суммы — только пока тумблер включён (rules.ts, withPool).
+    const accruals = withPool(
+      mine.map((p) => partnerAccrualOf(p, payments, partner)).filter((a): a is PartnerAccrual => a !== null),
+      mine,
+      partner,
+    );
     const paidProjects = accruals.filter((a) => a.state === "earned").length;
     const own = payouts.filter((po) => po.partner_id === partner.id);
 
@@ -1012,6 +1022,7 @@ export async function requestPayout(
   if (requisites !== partner.requisites) {
     await db.from("partners").update({ requisites }).eq("id", partner.id);
   }
+  await settleProjects(summary, String(data.id));
 
   await record("partner.payout_requested", {
     targetType: "partner",
@@ -1019,6 +1030,25 @@ export async function requestPayout(
     meta: { payout_id: data.id, amount_usd: balance.available },
   });
   return { ok: true, payout: shapePayout(data as Record<string, unknown>), balance };
+}
+
+/**
+ * Выплата закрывает оплаченные невыплаченные проекты: копилка обнуляется,
+ * а ставка, по которой проект выплачен, фиксируется — выплаченное вниз не
+ * пересчитывается, когда следующая копилка начнётся с нуля.
+ */
+async function settleProjects(summary: PartnerSummary, payoutId: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const open = new Set(summary.projects.filter((p) => !p.partner_payout_id).map((p) => p.id));
+  for (const a of summary.accruals) {
+    if (a.state !== "earned" || !open.has(a.project_id)) continue;
+    await db
+      .from("projects")
+      .update({ partner_payout_id: payoutId, partner_bonus_percent: a.boosted ? a.percent : null })
+      .eq("id", a.project_id)
+      .is("partner_payout_id", null);
+  }
 }
 
 /** Владелец решил: выплачено или отклонено. Отклонённая возвращает сумму в доступное. */
@@ -1050,6 +1080,11 @@ export async function decidePayout(
   if (error) return { ok: false, reason: "failed" };
   if (!data) return { ok: false, reason: "gone" };
   const payout = shapePayout(data as Record<string, unknown>);
+  // Отклонили — проекты возвращаются в копилку, зафиксированная ставка
+  // снимается: её пересчитает копилка, если тумблер ещё включён.
+  if (status === "rejected") {
+    await db.from("projects").update({ partner_payout_id: null, partner_bonus_percent: null }).eq("partner_payout_id", payoutId);
+  }
 
   await record("partner.payout_decided", {
     actorStaffId: admin.id,
@@ -1780,9 +1815,11 @@ export async function autoPayoutTurnover(
   if (!project?.partner_id || project.partner_void_reason) return null;
 
   const partner = await partnerById(String(project.partner_id));
-  if (!partner || partner.status !== "active") return null;
+  // Копилка — партнёр сам решил не забирать автоматически.
+  if (!partner || partner.status !== "active" || partner.accumulate) return null;
   const [summary] = await summarize([partner]);
   if (summary.payouts.some((p) => p.project_id === projectId)) return null;
+  if (summary.projects.some((p) => p.id === projectId && p.partner_payout_id)) return null;
   const accrual = summary.accruals.find((a) => a.project_id === projectId) ?? null;
   if (!autoPayoutDue(accrual) || !accrual) return null;
   if (summary.balance.available < accrual.amount_usd) return null;
@@ -1798,6 +1835,7 @@ export async function autoPayoutTurnover(
     return null;
   }
   const payout = shapePayout(data as Record<string, unknown>);
+  await db.from("projects").update({ partner_payout_id: payout.id }).eq("id", projectId).is("partner_payout_id", null);
 
   await record("partner.payout_auto", {
     targetType: "partner",
@@ -1813,13 +1851,38 @@ export async function autoPayoutTurnover(
 
 /** Оплаченные целиком партнёрские проекты без автовыплаты — для свипа. */
 export async function turnoverProjectsDue(): Promise<string[]> {
-  const partners = (await listPartners()).filter((p) => p.status === "active");
+  const partners = (await listPartners()).filter((p) => p.status === "active" && !p.accumulate);
   if (!partners.length) return [];
   const summaries = await summarize(partners);
   const out: string[] = [];
   for (const s of summaries) {
-    const done = new Set(s.payouts.map((p) => p.project_id).filter(Boolean));
+    const done = new Set([
+      ...s.payouts.map((p) => p.project_id).filter(Boolean),
+      ...s.projects.filter((p) => p.partner_payout_id).map((p) => p.id),
+    ]);
     for (const a of s.accruals) if (autoPayoutDue(a) && !done.has(a.project_id)) out.push(a.project_id);
   }
   return out;
+}
+
+/* ── Копилка ────────────────────────────────────────────────────────────── */
+
+/**
+ * Тумблер «Копить, не забирать автоматически». Включён — автовыплаты с
+ * оборота не заводятся, оплаченные проекты копятся и считаются по ступени
+ * общей суммы (rules.ts, withPool). Выключил — копилка перестаёт поднимать
+ * ставку, и невыплаченное с оборота уходит автовыплатами по обычной ступени.
+ */
+export async function setAccumulate(partner: Partner, on: boolean): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  if (partner.accumulate === on) return true;
+  const { error } = await db.from("partners").update({ accumulate: on }).eq("id", partner.id);
+  if (error) return false;
+  await record("partner.accumulate_set", {
+    targetType: "partner",
+    targetId: partner.id,
+    meta: { accumulate: on },
+  });
+  return true;
 }

@@ -296,6 +296,10 @@ export type PartnerProject = ProjectMoney & {
   partner_void_reason: string | null;
   /** Модель, зафиксированная на клиенте при заявке. null — «от прибыли». */
   partner_model?: string | null;
+  /** Какой выплатой закрыт проект. Пусто — ещё в копилке. */
+  partner_payout_id?: string | null;
+  /** Ставка копилки, по которой проект выплачен (фиксируется при выплате). */
+  partner_bonus_percent?: number | null;
 };
 
 export type PartnerAccrual = {
@@ -308,6 +312,8 @@ export type PartnerAccrual = {
   amount_usd: number;
   state: AccrualState;
   void_reason: string | null;
+  /** Ставка поднята копилкой — сейчас или при выплате. */
+  boosted?: boolean;
 };
 
 /**
@@ -327,12 +333,16 @@ export function partnerAccrualOf(
 
   // Ступень — по сумме проекта в обеих моделях, а процент берётся с базы
   // своей модели.
-  const percent = partnerPercent({
+  const tier = partnerPercent({
     projectPercent: project.partner_percent,
     partnerOverride: partner.percent_override,
     amountUsd: project.amount_usd,
     model,
   });
+  // Выплачен по ставке копилки — она и остаётся: выплаченное вниз не
+  // пересчитывается. Процент, заданный владельцем на проекте, важнее.
+  const bonus = project.partner_percent === null ? (project.partner_bonus_percent ?? null) : null;
+  const percent = bonus !== null && bonus > tier ? bonus : tier;
   const voided = project.partner_void_reason !== null;
   const state: AccrualState = voided ? "void" : accrualState(project, paidOf(project.id, payments));
 
@@ -345,7 +355,80 @@ export function partnerAccrualOf(
     amount_usd: state === "void" ? 0 : Math.round((base * percent) / 100),
     state,
     void_reason: project.partner_void_reason,
+    ...(percent > tier ? { boosted: true } : {}),
   };
+}
+
+/* ── Копилка ────────────────────────────────────────────────────────────── */
+
+/**
+ * Копилка — не забирать автоматически, а копить на ступень выше.
+ *
+ * Владелец, 01.10: «Если партнёр не забирает деньги сразу, то по той же
+ * таблице от — до он может получить по достижению тех сумм тот %, который
+ * указан. Так мы сохраним деньги вначале и пустим их на развитие студии, а
+ * взамен человек позже получит больше».
+ *
+ * Пока тумблер включён, в копилке лежат проекты, оплаченные целиком и ещё
+ * не выплаченные. Ступень для каждого из них — по общей сумме проектов в
+ * копилке (та же таблица PARTNER_TIERS, те же пороги), а не по сумме
+ * одного проекта. Три проекта по 2 000 $ — это 6 000 $ и ступень 20 % от
+ * прибыли / 14 % с оборота вместо 10 / 6 %. Ставка не бывает ниже обычной.
+ *
+ * Не копят: проект с процентом, который владелец задал руками, и партнёр с
+ * персональной ставкой — у них договорённость отдельная. Выплата обнуляет
+ * копилку: ставка выплаченных проектов фиксируется (partner_bonus_percent),
+ * следующая копилка начинается с нуля. Выключил тумблер — копилка
+ * перестаёт поднимать ставку: невыплаченное считается по обычной ступени
+ * каждого проекта.
+ */
+export function poolProjects<P extends PartnerProject>(
+  projects: readonly P[],
+  accruals: readonly PartnerAccrual[],
+  partner: { percent_override: number | null },
+): P[] {
+  if (partner.percent_override !== null) return [];
+  const earned = new Set(accruals.filter((a) => a.state === "earned" && !a.manual).map((a) => a.project_id));
+  return projects.filter((p) => earned.has(p.id) && !p.partner_payout_id && p.amount_usd !== null);
+}
+
+/** Сумма проектов в копилке — по ней выбирается ступень. */
+export function poolAmount(projects: readonly Pick<PartnerProject, "amount_usd">[]): number {
+  return projects.reduce((sum, p) => sum + Math.max(0, p.amount_usd ?? 0), 0);
+}
+
+/**
+ * Начисления с поднятой копилкой ставкой. Без тумблера — как есть.
+ * Ставка проекта в копилке — по общей сумме копилки, если она выше его
+ * обычной ступени; сумма начисления пересчитывается от той же базы.
+ */
+export function withPool<P extends PartnerProject>(
+  accruals: PartnerAccrual[],
+  projects: readonly P[],
+  partner: { percent_override: number | null; accumulate?: boolean },
+): PartnerAccrual[] {
+  if (!partner.accumulate) return accruals;
+  const pool = poolProjects(projects, accruals, partner);
+  if (!pool.length) return accruals;
+  const total = poolAmount(pool);
+  const byId = new Map(pool.map((p) => [p.id, p]));
+  return accruals.map((a) => {
+    const project = byId.get(a.project_id);
+    if (!project) return a;
+    const boosted = tierPercent(total, a.model);
+    if (boosted <= a.percent) return a;
+    const base = partnerBase(project, a.model) ?? 0;
+    return { ...a, percent: boosted, amount_usd: Math.round((base * boosted) / 100), boosted: true };
+  });
+}
+
+/** Следующий порог таблицы после суммы копилки: «ещё 4 001 $ — и 25 %». null — уже на верхней ступени. */
+export function nextPoolTier(amountUsd: number, model: PayoutModel): { at: number; percent: number } | null {
+  for (let i = 0; i < PARTNER_TIERS.length - 1; i++) {
+    const upTo = PARTNER_TIERS[i].upTo as number;
+    if (amountUsd <= upTo) return { at: upTo + 1, percent: PARTNER_TIERS[i + 1][model] };
+  }
+  return null;
 }
 
 export type PayoutMoney = { status: "requested" | "paid" | "rejected"; amount_usd: number };

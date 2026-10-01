@@ -132,6 +132,17 @@ export type CabinetCopy = {
   notCounted: (reason: string) => string;
   voidReasons: Record<"self" | "existing_client" | "blocked", string>;
 
+  /** Копилка: тумблер «не забирать автоматически» и ступень по общей сумме. */
+  poolTitle: string;
+  poolToggle: string;
+  poolLead: string;
+  poolOffNote: string;
+  poolState: (amount: string, percent: number) => string;
+  poolNext: (left: string, percent: number) => string;
+  poolTop: string;
+  poolEmpty: string;
+  poolMark: string;
+  poolResult: Record<"on" | "off" | "failed", string>;
   payoutTitle: string;
   payoutRules: (min: string) => string;
   payoutOpens: (date: string) => string;
@@ -362,6 +373,22 @@ const ru: CabinetCopy = {
     blocked: "партнёрство приостановлено",
   },
 
+  poolTitle: "Копилка",
+  poolToggle: "Не забирать в автоматическом режиме",
+  poolLead:
+    "Чем больше скопили — тем больше выплата по итогу. Пока тумблер включён, деньги за оплаченные проекты не уходят вам сразу, а копятся, и ставка по ним считается по общей сумме проектов в копилке — по той же таблице «до … — %», что выше. Например, три проекта по 2 000 $ вместе — это 6 000 $, и по всем трём ставка третьей ступени вместо первой. Забираете, когда решите, — кнопкой «Запросить выплату»; после выплаты копилка начинается с нуля, а выплаченное остаётся по повышенной ставке.",
+  poolOffNote:
+    "Если выключить, повышение пропадёт: невыплаченное посчитается по обычной ставке каждого проекта, а выплаты с оборота снова будут приходить сами.",
+  poolState: (amount, percent) => `В копилке проекты на ${amount} — ставка ${percent} %.`,
+  poolNext: (left, percent) => `Ещё проектов на ${left} — и ставка станет ${percent} %.`,
+  poolTop: "Это верхняя ступень таблицы.",
+  poolEmpty: "Копилка пока пуста — сюда лягут проекты, когда клиенты оплатят их целиком.",
+  poolMark: "ставка копилки",
+  poolResult: {
+    on: "Копилка включена: оплаченные проекты копятся, ставка растёт с общей суммой.",
+    off: "Копилка выключена: выплаты снова приходят как обычно.",
+    failed: "Не получилось переключить. Попробуйте ещё раз.",
+  },
   payoutTitle: "Выплата",
   payoutRules: (min) =>
     `Вывод — от ${min}, с первого рабочего дня месяца. Деньги переводит владелец студии: USDT (TRC-20) или по реквизитам. Одна заявка за раз.`,
@@ -622,6 +649,22 @@ const en: CabinetCopy = {
     blocked: "partnership suspended",
   },
 
+  poolTitle: "Savings",
+  poolToggle: "Don't withdraw automatically",
+  poolLead:
+    "The more you save, the bigger the final payout. While the switch is on, money for paid projects isn't sent to you right away — it accumulates, and the rate is based on the total of the projects in your savings, using the same “up to … — %” table above. For example, three $2,000 projects together are $6,000, so all three get the third-tier rate instead of the first. Withdraw whenever you decide with “Request payout”; after a payout the savings start from zero, and what was paid stays at the higher rate.",
+  poolOffNote:
+    "If you turn it off, the boost is lost: unpaid amounts are counted at each project's regular rate, and turnover payouts start arriving automatically again.",
+  poolState: (amount, percent) => `Projects worth ${amount} in your savings — rate ${percent}%.`,
+  poolNext: (left, percent) => `Another ${left} in projects — and the rate becomes ${percent}%.`,
+  poolTop: "This is the top tier of the table.",
+  poolEmpty: "Your savings are empty for now — projects land here once clients pay them in full.",
+  poolMark: "savings rate",
+  poolResult: {
+    on: "Savings on: paid projects accumulate, and the rate grows with the total.",
+    off: "Savings off: payouts arrive as usual again.",
+    failed: "Couldn't switch. Try again.",
+  },
   payoutTitle: "Payout",
   payoutRules: (min) =>
     `Withdrawals from ${min}, starting on the first business day of the month. The studio owner sends the money: USDT (TRC-20) or bank details. One request at a time.`,
@@ -882,6 +925,22 @@ const uz: CabinetCopy = {
     blocked: "hamkorlik to'xtatilgan",
   },
 
+  poolTitle: "Jamg'arma",
+  poolToggle: "Avtomatik rejimda olmaslik",
+  poolLead:
+    "Qancha ko'p jamg'arsangiz — yakuniy to'lov shuncha katta. Tugma yoqilgan paytda to'langan loyihalar uchun pul sizga darhol ketmaydi, balki jamlanadi va ular bo'yicha stavka jamg'armadagi loyihalarning umumiy summasi bo'yicha — yuqoridagi o'sha «… gacha — %» jadvali bo'yicha hisoblanadi. Masalan, 2 000 $ lik uchta loyiha birgalikda 6 000 $, va uchalasi bo'yicha birinchi emas, uchinchi pog'ona stavkasi. Xohlagan paytingizda «To'lovni so'rash» tugmasi bilan olasiz; to'lovdan keyin jamg'arma noldan boshlanadi, to'langani esa oshirilgan stavkada qoladi.",
+  poolOffNote:
+    "O'chirsangiz, oshirish yo'qoladi: to'lanmagan pul har bir loyihaning oddiy stavkasi bo'yicha hisoblanadi, aylanmadan to'lovlar esa yana o'zi keladi.",
+  poolState: (amount, percent) => `Jamg'armada ${amount} lik loyihalar — stavka ${percent} %.`,
+  poolNext: (left, percent) => `Yana ${left} lik loyiha — va stavka ${percent} % bo'ladi.`,
+  poolTop: "Bu jadvalning eng yuqori pog'onasi.",
+  poolEmpty: "Jamg'arma hozircha bo'sh — mijozlar loyihani to'liq to'lagach, ular shu yerga tushadi.",
+  poolMark: "jamg'arma stavkasi",
+  poolResult: {
+    on: "Jamg'arma yoqildi: to'langan loyihalar jamlanadi, stavka umumiy summa bilan o'sadi.",
+    off: "Jamg'arma o'chirildi: to'lovlar yana odatdagidek keladi.",
+    failed: "Almashtirib bo'lmadi. Yana urinib ko'ring.",
+  },
   payoutTitle: "To'lov",
   payoutRules: (min) =>
     `Yechib olish — ${min} dan, oyning birinchi ish kunidan. Pulni studiya egasi o'tkazadi: USDT (TRC-20) yoki rekvizitlar bo'yicha. Bir vaqtda bitta so'rov.`,
@@ -1139,6 +1198,21 @@ const zh: CabinetCopy = {
     blocked: "合作已暂停",
   },
 
+  poolTitle: "存钱罐",
+  poolToggle: "不自动提取",
+  poolLead:
+    "攒得越多，最终到手越多。开关开启期间，已付清项目的佣金不会立即发给您，而是累积起来，费率按存钱罐中项目的总金额计算——使用上方同一张“至……——%”表格。例如，三个 2,000 美元的项目合计 6,000 美元，三个项目都按第三档费率而不是第一档计算。您可随时点击“申请提现”提取；提现后存钱罐从零开始，已发放部分保持提高后的费率。",
+  poolOffNote: "如果关闭，提升将失效：未发放的金额按各项目的普通费率计算，营业额模式的付款也会重新自动发放。",
+  poolState: (amount, percent) => `存钱罐中项目总额 ${amount}——费率 ${percent}%。`,
+  poolNext: (left, percent) => `再有 ${left} 的项目——费率将升至 ${percent}%。`,
+  poolTop: "这是表格的最高档。",
+  poolEmpty: "存钱罐暂时是空的——客户付清项目后，项目会进入这里。",
+  poolMark: "存钱罐费率",
+  poolResult: {
+    on: "存钱罐已开启：已付清的项目会累积，费率随总额提高。",
+    off: "存钱罐已关闭：付款恢复正常发放。",
+    failed: "切换失败，请重试。",
+  },
   payoutTitle: "提现",
   payoutRules: (min) => `最低提现 ${min}，每月第一个工作日起可申请。由工作室负责人转账：USDT (TRC-20) 或银行信息。每次只能有一个申请。`,
   payoutOpens: (date) => `提现将于 ${date} 开放。`,
@@ -1396,6 +1470,22 @@ const uk: CabinetCopy = {
     blocked: "партнерство призупинено",
   },
 
+  poolTitle: "Скарбничка",
+  poolToggle: "Не забирати в автоматичному режимі",
+  poolLead:
+    "Що більше накопичили — то більша виплата в результаті. Поки перемикач увімкнено, гроші за оплачені проєкти не йдуть вам одразу, а накопичуються, і ставка за ними рахується за загальною сумою проєктів у скарбничці — за тією ж таблицею «до … — %», що вище. Наприклад, три проєкти по 2 000 $ разом — це 6 000 $, і за всіма трьома ставка третього щабля замість першого. Забираєте, коли вирішите, — кнопкою «Запросити виплату»; після виплати скарбничка починається з нуля, а виплачене лишається за підвищеною ставкою.",
+  poolOffNote:
+    "Якщо вимкнути, підвищення зникне: невиплачене порахується за звичайною ставкою кожного проєкту, а виплати з обороту знову надходитимуть самі.",
+  poolState: (amount, percent) => `У скарбничці проєкти на ${amount} — ставка ${percent} %.`,
+  poolNext: (left, percent) => `Ще проєктів на ${left} — і ставка стане ${percent} %.`,
+  poolTop: "Це найвищий щабель таблиці.",
+  poolEmpty: "Скарбничка поки порожня — сюди потраплять проєкти, коли клієнти оплатять їх повністю.",
+  poolMark: "ставка скарбнички",
+  poolResult: {
+    on: "Скарбничку ввімкнено: оплачені проєкти накопичуються, ставка зростає із загальною сумою.",
+    off: "Скарбничку вимкнено: виплати знову надходять як звичайно.",
+    failed: "Не вдалося перемкнути. Спробуйте ще раз.",
+  },
   payoutTitle: "Виплата",
   payoutRules: (min) =>
     `Виведення — від ${min}, з першого робочого дня місяця. Гроші переказує власник студії: USDT (TRC-20) або за реквізитами. Одна заявка за раз.`,
@@ -1656,6 +1746,22 @@ const pl: CabinetCopy = {
     blocked: "partnerstwo zawieszone",
   },
 
+  poolTitle: "Skarbonka",
+  poolToggle: "Nie wypłacaj automatycznie",
+  poolLead:
+    "Im więcej uzbierasz, tym większa wypłata na koniec. Gdy przełącznik jest włączony, pieniądze za opłacone projekty nie trafiają do Ciebie od razu, tylko się zbierają, a stawka liczy się od łącznej kwoty projektów w skarbonce — według tej samej tabeli „do … — %” powyżej. Na przykład trzy projekty po 2 000 $ to razem 6 000 $, więc wszystkie trzy dostają stawkę trzeciego progu zamiast pierwszego. Wypłacasz, kiedy zechcesz, przyciskiem „Zleć wypłatę”; po wypłacie skarbonka zaczyna od zera, a wypłacone zostaje według podwyższonej stawki.",
+  poolOffNote:
+    "Jeśli wyłączysz, podwyżka przepadnie: niewypłacone policzy się według zwykłej stawki każdego projektu, a wypłaty od obrotu znów będą przychodzić same.",
+  poolState: (amount, percent) => `W skarbonce projekty na ${amount} — stawka ${percent}%.`,
+  poolNext: (left, percent) => `Jeszcze projekty na ${left} — i stawka wyniesie ${percent}%.`,
+  poolTop: "To najwyższy próg tabeli.",
+  poolEmpty: "Skarbonka jest na razie pusta — trafią tu projekty, gdy klienci opłacą je w całości.",
+  poolMark: "stawka skarbonki",
+  poolResult: {
+    on: "Skarbonka włączona: opłacone projekty się zbierają, a stawka rośnie z łączną kwotą.",
+    off: "Skarbonka wyłączona: wypłaty znów przychodzą jak zwykle.",
+    failed: "Nie udało się przełączyć. Spróbuj ponownie.",
+  },
   payoutTitle: "Wypłata",
   payoutRules: (min) =>
     `Wypłata — od ${min}, od pierwszego dnia roboczego miesiąca. Pieniądze przelewa właściciel studia: USDT (TRC-20) lub na podane dane. Jedno zlecenie naraz.`,

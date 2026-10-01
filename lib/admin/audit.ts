@@ -60,6 +60,7 @@ export const AUDIT_ACTIONS = [
   "lead.inn_set",
   "partner.client_cancelled",
   "partner.payout_auto",
+  "partner.accumulate_set",
   // Промо-материалы партнёров: что выложили, поправили и удалили.
   "partner.promo_added",
   "partner.promo_updated",

@@ -12,6 +12,9 @@ import {
   MIN_PAYOUT_USD,
   PARTNER_TIERS,
   PERK_TITLE,
+  poolAmount,
+  poolProjects,
+  tierPercent,
   agencyCounts,
   agencyUntilDay,
   linkUrl,
@@ -303,7 +306,7 @@ export default async function PartnersPage({
             </tr>
           </thead>
           <tbody>
-            {summaries.map(({ partner, links, balance, leads, projects, paidProjects }) => (
+            {summaries.map(({ partner, links, balance, leads, projects, paidProjects, accruals }) => (
               <tr key={partner.id} className="border-b border-line-soft last:border-0 align-top">
                 <td data-label="Кто" className={TD}>
                   {partner.name}
@@ -346,6 +349,14 @@ export default async function PartnersPage({
                         : `${PARTNER_TIERS[0].profit}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].profit} %`}
                     {partner.model_changed_at ? ` · сменил ${when(partner.model_changed_at)}` : ""}
                   </span>
+                  {partner.accumulate ? (
+                    <span className="block text-green">
+                      {(() => {
+                        const pool = poolAmount(poolProjects(projects, accruals, partner));
+                        return tc.accumulating(money(pool), tierPercent(pool, partner.payout_model));
+                      })()}
+                    </span>
+                  ) : null}
                 </td>
                 <td data-label="Клиентов" className={`${TD} font-mono text-xs`}>{leads}</td>
                 <td data-label="Проектов" className={`${TD} font-mono text-xs`}>

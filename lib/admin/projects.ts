@@ -70,12 +70,15 @@ export type Project = {
   partner_model: string | null;
   /** Заказ агентства партнёра на субподряде. */
   partner_agency_id: string | null;
+  /** Какой выплатой партнёру закрыт проект и по какой ставке копилки (lib/partners/rules.ts). */
+  partner_payout_id: string | null;
+  partner_bonus_percent: number | null;
   /** Смета менеджера: категория, допы, обещанный срок. Вилка считается из неё. */
   quote: QuoteInput | null;
 };
 
 const COLUMNS =
-  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, quote, staff!projects_owner_staff_id_fkey(display_name)";
+  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, partner_payout_id, partner_bonus_percent, quote, staff!projects_owner_staff_id_fkey(display_name)";
 
 function shape(row: Record<string, unknown>): Project {
   // Связанная запись приходит объектом или массивом — PostgREST выводит
@@ -109,6 +112,8 @@ function shape(row: Record<string, unknown>): Project {
     partner_void_reason: (row.partner_void_reason as string | null) ?? null,
     partner_model: (row.partner_model as string | null) ?? null,
     partner_agency_id: (row.partner_agency_id as string | null) ?? null,
+    partner_payout_id: (row.partner_payout_id as string | null) ?? null,
+    partner_bonus_percent: (row.partner_bonus_percent as number | null) ?? null,
     quote: parseQuote(row.quote),
   };
 }

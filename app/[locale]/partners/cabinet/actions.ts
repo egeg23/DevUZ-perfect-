@@ -7,7 +7,15 @@ import { alertOwners, alertPayoutRequest } from "@/lib/partners/bot";
 import { isPerk, isTarget } from "@/lib/partners/rules";
 import { currentPartner } from "@/lib/partners/session";
 import { clientUntilDay } from "@/lib/partners/rules";
-import { createLink, requestAgency, requestClient, requestPayout, saveRequisites, setPayoutModel } from "@/lib/partners/store";
+import {
+  createLink,
+  requestAgency,
+  requestClient,
+  requestPayout,
+  saveRequisites,
+  setAccumulate,
+  setPayoutModel,
+} from "@/lib/partners/store";
 import { esc } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
 
@@ -143,4 +151,15 @@ export async function requestClientAction(formData: FormData) {
     );
   }
   back(locale, result.ok ? "claim_ok" : `claim_${result.reason}`, "claims");
+}
+
+/** Тумблер копилки: «не забирать в автоматическом режиме». */
+export async function setAccumulateAction(formData: FormData) {
+  const locale = localeOf(formData);
+  const partner = await currentPartner();
+  if (!partner) redirect(`/${locale}/partners/cabinet`);
+
+  const on = String(formData.get("on") ?? "") === "1";
+  const ok = await setAccumulate(partner, on);
+  back(locale, ok ? (on ? "pool_on" : "pool_off") : "pool_failed", "pool");
 }

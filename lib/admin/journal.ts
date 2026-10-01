@@ -54,6 +54,7 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "lead.inn_set": "вписал ИНН компании в карточку лида",
   "partner.client_cancelled": "отменил закрепление клиента партнёра",
   "partner.payout_auto": "завелась выплата партнёру с оборота",
+  "partner.accumulate_set": "партнёр включил или выключил копилку",
   "partner.promo_added": "выложил промо-материал партнёрам",
   "partner.promo_updated": "изменил промо-материал партнёров",
   "partner.promo_deleted": "удалил промо-материал партнёров",

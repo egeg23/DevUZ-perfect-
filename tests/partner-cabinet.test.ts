@@ -195,6 +195,7 @@ test("вход: одноразовая ссылка, хеши в базе, ку�
     "switchModelAction",
     "requestAgencyAction",
     "requestClientAction",
+    "setAccumulateAction",
   ]) {
     const at = actions.indexOf(`export async function ${name}(`);
     assert.ok(at > 0, `${name} пропало`);

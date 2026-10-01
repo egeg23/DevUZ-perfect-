@@ -703,15 +703,22 @@ async function notifyPartnerIfPaid(project: Record<string, unknown>, projectId: 
 
   // С оборота — выплата заводится сама, и сообщение партнёру — про неё:
   // «начислено, выплата в обработке», а не «подайте заявку».
-  if (line.model === "turnover") {
+  // Копилка включена — автовыплаты нет, деньги копятся на ступень выше.
+  if (line.model === "turnover" && !partner.accumulate) {
     await settleTurnover(projectId);
     return;
   }
 
   const client = (project.client as string | null)?.trim();
   const sum = line.amount_usd.toLocaleString("ru-RU");
+  const pool = summary.accruals.filter(
+    (a) => a.state === "earned" && !summary.projects.find((p) => p.id === a.project_id)?.partner_payout_id,
+  );
+  const poolSum = pool.reduce((s, a) => s + a.amount_usd, 0).toLocaleString("ru-RU");
   await notifyPartner(
     partner,
-    `✅ Проект${client ? ` клиента «${client}»` : ""} оплачен целиком. Вам начислено <b>${sum} $</b> (${line.percent} %). Баланс и вывод: /ref, /payout.`,
+    partner.accumulate
+      ? `✅ Проект${client ? ` клиента «${client}»` : ""} оплачен целиком. Вам начислено <b>${sum} $</b> (${line.percent} %) — в копилку. В копилке ${poolSum} $: чем больше накопится, тем выше ставка по всем проектам в ней. Забрать — /payout или в кабинете: /cabinet.`
+      : `✅ Проект${client ? ` клиента «${client}»` : ""} оплачен целиком. Вам начислено <b>${sum} $</b> (${line.percent} %). Баланс и вывод: /ref, /payout.`,
   );
 }
