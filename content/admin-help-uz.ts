@@ -45,19 +45,19 @@ export const uz: HelpCopy = {
           title: "Bosh sahifada nima bor",
           body: {
             manager: [
-              "Tepada — plitkalar: **«к выплате»** — qancha ishlab topganingiz va hali olmaganingiz (pastda mayda harf bilan — mijoz qolganini to‘lashini qanchasi kutayotgani), **«лидов в работе»**, **«срочно связаться»** va loyihalaringiz bo‘yicha **«поступлений за месяц»**.",
+              "Bosh sahifada birinchi — [«Vazifalar»](#leads-tasks) bloki: sizga nima topshirilgan, siz nima topshirgansiz va «Vazifa qo‘yish» formasi. Pastroqda — plitkalar: **«к выплате»** — qancha ishlab topganingiz va hali olmaganingiz (pastda mayda harf bilan — mijoz qolganini to‘lashini qanchasi kutayotgani), **«лидов в работе»**, **«срочно связаться»** va loyihalaringiz bo‘yicha **«поступлений за месяц»**.",
               "Agar rahbar sizga aloqalar rejasini qo‘ygan bo‘lsa, plitkalar ustida shunday qator chiqadi: «До плана осталось 12 — сделано 18 из 30 за эту неделю». Batafsil — [aloqalar rejasi](#prospect-plan) bandida.",
               "Pastroqda: [«Срочно связаться»](#leads-urgent) — uzoq vaqt harakatsiz turgan lidlaringiz; «Рекомендации на неделю» — nimani yaxshilash kerak ([tavsiyalar](#leads-coach) bandiga qarang); [«План и факт»](#leads-plan-fact) — sizga qo‘yilgan maqsadlar; eng pastda esa — [lidlar ro‘yxati](#leads-list).",
             ],
             head: [
-              "Birinchi bo‘lib — **«Ждут вашего решения»**: menejerlarning lidni hamkasbga berish haqidagi so‘rovlari. Buni siz yoki egasi hal qiladi — batafsil [lidni berish](#leads-transfer) bandida.",
+              "Birinchi bo‘lib — **«Ждут вашего решения»**: menejerlarning lidni hamkasbga berish haqidagi so‘rovlari. Buni siz yoki egasi hal qiladi — batafsil [lidni berish](#leads-transfer) bandida. Ularning ostida — [«Vazifalar»](#leads-tasks) bloki: sizga nima topshirilgan va siz nima topshirgansiz.",
               "Plitkalar sizni va jamoangizni birga hisoblaydi: **«к выплате»** — faqat sizning balansingiz, **«лидов в работе у команды»**, **«срочно связаться»**, **«поступлений за неделю»**.",
               "Keyin: «На сегодня» — lidlaringiz bo‘yicha ertalabki maslahatlar, siz va jamoa bo‘yicha ismlar bilan [«Срочно связаться»](#leads-urgent), [«Команда за эту неделю»](#leads-team-week), jamoaga va sizga tavsiyalar, «Лучшие за неделю», [«План и факт»](#leads-plan-fact) va [lidlar ro‘yxati](#leads-list).",
               "Jamoa — bu [«Jamoa»](/admin/team) bo‘limida sizga biriktirilgan menejerlar. Jamoa bo‘lmaguncha, bosh sahifada uning bloklari chiqmaydi.",
             ],
             admin: [
               "Sizda bosh sahifa varaqlarga bo‘lingan — bitta uzun lentani aylantirib o‘tirmaslik uchun. Varaq manzilda saqlanadi, uni xatcho‘plarga qo‘yib qo‘ysa bo‘ladi.",
-              "**«Сегодня»** — kunni nimadan boshlash: «Ждут вашего решения» (lidni berish so‘rovlari), imzoga kelgan shartnomalar, pul plitkalari, «На сегодня» maslahatlari («собрать заново» tugmasi modelga bitta so‘rov sarflaydi), butun studiya bo‘yicha «Срочно связаться» va ikki haftalik soliq muddatlari.",
+              "**«Сегодня»** — kunni nimadan boshlash: «Ждут вашего решения» (lidni berish so‘rovlari), [«Vazifalar»](#leads-tasks) bloki, imzoga kelgan shartnomalar, pul plitkalari, «На сегодня» maslahatlari («собрать заново» tugmasi modelga bitta so‘rov sarflaydi), butun studiya bo‘yicha «Срочно связаться» va ikki haftalik soliq muddatlari.",
               "**«Lidlar»** — barcha filtrlari bilan [lidlar ro‘yxati](#leads-list). Varaqdagi tilla rangli raqam — hozir nechta lid bo‘shligi.",
               "**«Деньги»** — «Касса по месяцам» (yarim yillik tushum va xarajatlar, har oy ostida — farqi) va «Ожидаем оплат»: faol loyihalar bo‘yicha yana qancha to‘lanishi kerak.",
               "**«Jamoa»** — [haftalik jadval](#leads-team-week), eng yaxshilar, har biriga tavsiyalar va [«План и факт»](#leads-plan-fact) — u yerda maqsadlarni qo‘yasiz va o‘zgartirasiz.",
