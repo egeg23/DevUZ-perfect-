@@ -76,6 +76,11 @@ export const partnerClientsDict = defineDict({
     uz: "rekvizitlar yo‘q — hamkordan kiritish so‘raldi",
     pl: "brak danych do wypłaty — poprosiliśmy partnera o ich podanie",
   },
+  accumulating: {
+    ru: (amount: string, percent: number) => `копилка: ${amount} · ставка ${percent} %`,
+    uz: (amount: string, percent: number) => `jamg‘arma: ${amount} · stavka ${percent} %`,
+    pl: (amount: string, percent: number) => `skarbonka: ${amount} · stawka ${percent}%`,
+  },
   leadClient: {
     ru: (name: string, date: string) => `Клиент партнёра ${name} (закреплён ${date})`,
     uz: (name: string, date: string) => `${name} hamkorining mijozi (${date} biriktirilgan)`,

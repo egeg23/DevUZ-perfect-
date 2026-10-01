@@ -12,6 +12,10 @@ import {
   agencyUntilDay,
   clientCounts,
   clientUntilDay,
+  nextPoolTier,
+  poolAmount,
+  poolProjects,
+  tierPercent,
   MAX_CLIENTS_PER_MONTH,
   tashkentMonth,
   canSwitchModel,
@@ -43,6 +47,7 @@ export type CabinetActions = {
   switchModel: (formData: FormData) => Promise<void>;
   requestAgency: (formData: FormData) => Promise<void>;
   requestClient: (formData: FormData) => Promise<void>;
+  setAccumulate: (formData: FormData) => Promise<void>;
 };
 
 const CARD = "rounded-xl border border-white/12 bg-white/[0.03] px-5 py-5";
@@ -103,6 +108,11 @@ export function CabinetView({
   const switchable = canSwitchModel(partner.model_changed_at, now);
   const nextSwitch = nextModelSwitch(partner.model_changed_at, now);
   const month = tashkentMonth(now);
+  // Копилка: оплаченные и ещё не выплаченные проекты, ступень — по их сумме.
+  const pool = poolProjects(summary.projects, summary.accruals, partner);
+  const poolTotal = poolAmount(pool);
+  const poolRate = tierPercent(poolTotal, partner.payout_model);
+  const poolNext = nextPoolTier(poolTotal, partner.payout_model);
   const claimedThisMonth = clients.filter((c) => tashkentMonth(new Date(c.created_at)) === month).length;
 
 
@@ -348,6 +358,52 @@ export function CabinetView({
         </section>
 
         {/* ── Выплата ────────────────────────────────────────────── */}
+        {/* ── Копилка ─────────────────────────────────────────────── */}
+        {partner.percent_override === null ? (
+          <section id="pool" className={`mt-12 scroll-mt-28 ${CARD}`}>
+            <form action={actions.setAccumulate} className="flex items-center justify-between gap-4">
+              <input type="hidden" name="l" value={locale} />
+              <input type="hidden" name="on" value={partner.accumulate ? "0" : "1"} />
+              <span>
+                <span className="block font-display text-lg font-semibold">{t.poolTitle}</span>
+                <span className="block text-sm text-muted">{t.poolToggle}</span>
+              </span>
+              {/* Тумблер как в iPhone: кнопка отправляет форму с обратным значением. */}
+              <button
+                type="submit"
+                role="switch"
+                aria-checked={partner.accumulate}
+                aria-label={t.poolToggle}
+                className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
+                  partner.accumulate ? "bg-green" : "bg-white/20"
+                }`}
+              >
+                <span
+                  className={`absolute top-1 size-6 rounded-full bg-white shadow transition-all ${
+                    partner.accumulate ? "left-7" : "left-1"
+                  }`}
+                />
+              </button>
+            </form>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted">{t.poolLead}</p>
+            {partner.accumulate ? (
+              <p className="mt-3 text-sm">
+                {pool.length ? (
+                  <>
+                    <span className="text-green">{t.poolState(money(locale, poolTotal), poolRate)}</span>{" "}
+                    <span className="text-muted">
+                      {poolNext ? t.poolNext(money(locale, poolNext.at - poolTotal), poolNext.percent) : t.poolTop}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-muted">{t.poolEmpty}</span>
+                )}
+              </p>
+            ) : null}
+            {partner.accumulate ? <p className="mt-2 text-xs text-faint">{t.poolOffNote}</p> : null}
+          </section>
+        ) : null}
+
         <section id="payout" className="mt-12 grid scroll-mt-28 gap-4 lg:grid-cols-2">
           <div className={CARD}>
             <h2 className="font-display text-2xl font-semibold">{t.payoutTitle}</h2>
@@ -689,6 +745,10 @@ export function resultText(t: CabinetCopy, code: string): { ok: boolean; text: s
     return t.modelResult[key] ? { ok: key === "ok", text: t.modelResult[key] } : null;
   }
   if (code === "media_gone") return { ok: false, text: t.mediaGone };
+  if (code.startsWith("pool_")) {
+    const key = code.slice(5) as keyof CabinetCopy["poolResult"];
+    return t.poolResult[key] ? { ok: key !== "failed", text: t.poolResult[key] } : null;
+  }
   if (code.startsWith("claim_")) {
     const key = code.slice(6) as keyof CabinetCopy["clientResult"];
     return t.clientResult[key] ? { ok: key === "ok", text: t.clientResult[key] } : null;
@@ -716,6 +776,7 @@ function ReferralRow({ x, t, locale, mainLabel }: { x: Referral; t: CabinetCopy;
   else if (x.accrual && x.accrual.amount_usd > 0) {
     const amount = money(locale, x.accrual.amount_usd);
     share = x.accrual.state === "earned" ? t.shareEarned(amount) : x.accrual.state === "frozen" ? t.shareFrozen(amount) : "—";
+    if (x.accrual.boosted) share += ` · ${t.poolMark} ${x.accrual.percent} %`;
   }
   const stageTone =
     x.stage === "paid" ? "text-green" : x.stage === "signed" ? "text-text" : x.stage === "lost" ? "text-faint" : "text-muted";
