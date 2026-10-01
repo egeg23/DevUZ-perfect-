@@ -113,6 +113,7 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "task.done": "отметил задачу сделанной",
   "task.failed": "отметил задачу несделанной",
   "task.moved": "перенёс срок задачи",
+  "task.cancelled": "отменил задачу",
 };
 
 /**

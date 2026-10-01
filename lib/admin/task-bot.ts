@@ -36,6 +36,7 @@ const cb = (action: string, id: string) => `${TASK_CALLBACK}:${action}:${id}`;
 
 /** Надпись вместо кнопок у закрытой задачи. */
 export function closedLabel(status: TaskStatus): string {
+  if (status === "cancelled") return "🚫 Задача отменена";
   return status === "done" ? "✅ Сделано" : "✖ Не сделано";
 }
 
@@ -72,21 +73,32 @@ export function moveRows(taskId: string): Button[][] {
   ];
 }
 
-function taskLines(task: Pick<Task, "title" | "body" | "due_at">): string[] {
+/** Срок в сообщении: «05.10 15:00» или «без срока». */
+export function dueText(due: string | null): string {
+  return due ? formatDue(due) : "без срока";
+}
+
+type Shown = Pick<Task, "title" | "body" | "due_at">;
+
+function taskLines(task: Shown, project?: string | null): string[] {
   return [
     `<b>${esc(task.title)}</b>`,
     ...(task.body.trim() ? [esc(task.body.trim())] : []),
     "",
-    `Срок: <b>${formatDue(task.due_at)}</b>`,
+    ...(project ? [`Проект: ${esc(project)}`] : []),
+    `Срок: <b>${dueText(task.due_at)}</b>`,
   ];
 }
 
 /** Сообщение исполнителю о новой задаче. */
-export function assignedText(task: Pick<Task, "title" | "body" | "due_at">, creatorName: string): string {
-  return [`📌 <b>Новая задача</b> от ${esc(creatorName)}`, "", ...taskLines(task)].join("\n");
+export function assignedText(task: Shown, creatorName: string, project?: string | null): string {
+  return [`📌 <b>Новая задача</b> от ${esc(creatorName)}`, "", ...taskLines(task, project)].join("\n");
 }
 
-/** Постановщику — каждый шаг по его задаче. */
+/**
+ * Другой стороне — каждый шаг: поставившему — что сделал исполнитель,
+ * исполнителю — перенос срока и отмену от поставившего.
+ */
 export function stepText(
   kind: Exclude<TaskEvent, "created">,
   actorName: string,
@@ -98,13 +110,14 @@ export function stepText(
   if (kind === "taken") return `▶️ ${who} взял(а) в работу задачу ${what}`;
   if (kind === "done") return `✅ ${who}: задача ${what} — сделано`;
   if (kind === "failed") return `✖ ${who}: задача ${what} — не сделано`;
-  return `🕑 ${who} перенёс(ла) срок задачи ${what} на <b>${newDue ? formatDue(newDue) : "—"}</b>`;
+  if (kind === "cancelled") return `🚫 ${who} отменил(а) задачу ${what}`;
+  return `🕑 ${who} перенёс(ла) срок задачи ${what} на <b>${dueText(newDue ?? null)}</b>`;
 }
 
 /** Напоминания свипа. «Просрочено» уходит и исполнителю, и постановщику — текст у них разный. */
 export function nudgeText(
   kind: Nudge,
-  task: Pick<Task, "title" | "body" | "due_at">,
+  task: Shown,
   to: "assignee" | "creator",
   assigneeName = "",
 ): string {

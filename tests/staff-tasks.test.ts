@@ -4,11 +4,17 @@ import { test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { TasksView } from "@/components/admin/tasks-block";
+import { ProjectTasksView, TasksView } from "@/components/admin/tasks-block";
 import { moveRows, looksLikeDue, stepText, taskRows } from "@/lib/admin/task-bot";
 import {
+  byDue,
   canAct,
+  dueBucket,
   feedFor,
+  groupTasks,
+  messageWindow,
+  notifyOf,
+  projectLabel,
   formatDue,
   initialStatus,
   movedDue,
@@ -42,6 +48,7 @@ const task = (patch: Partial<Task> = {}): Task => ({
   creator_id: "boss",
   assignee_id: "worker",
   due_at: tk("2026-10-05T18:00:00").toISOString(),
+  project_id: null,
   status: "new",
   created_at: tk("2026-10-01T10:00:00").toISOString(),
   taken_at: null,
@@ -104,9 +111,19 @@ test("перенос считается от срока, а у просроче�
 
 /* ── Кто что может ────────────────────────────────────────────────────── */
 
-test("двигает задачу только исполнитель; закрытую — никто", () => {
+test("закрывает задачу только исполнитель, отменяет — поставивший, срок двигают оба", () => {
   assert.equal(canAct(task(), "worker", "take"), null);
   assert.equal(canAct(task(), "boss", "done"), "not_yours");
+  assert.equal(canAct(task(), "boss", "take"), "not_yours");
+  assert.equal(canAct(task(), "boss", "move"), null);
+  assert.equal(canAct(task(), "boss", "cancel"), null);
+  assert.equal(canAct(task(), "worker", "cancel"), "not_yours", "исполнителю — «Не сделано», а не стереть");
+  assert.equal(canAct(task(), "stranger", "move"), "not_yours");
+  assert.equal(canAct(task({ status: "cancelled" }), "boss", "move"), "closed");
+  // О шаге узнаёт другая сторона; себе — никто.
+  assert.equal(notifyOf(task(), "worker"), "boss");
+  assert.equal(notifyOf(task(), "boss"), "worker");
+  assert.equal(notifyOf(task({ creator_id: "worker" }), "worker"), null);
   assert.equal(canAct(task(), "worker", "done"), null, "сделал сразу — брать незачем");
   assert.equal(canAct(task({ status: "in_work" }), "worker", "take"), "taken");
   assert.equal(canAct(task({ status: "done" }), "worker", "move"), "closed");
@@ -147,6 +164,51 @@ test("просрочено — один раз; закрытой — ничег�
   assert.deepEqual(nudgesDue({ ...t, status: "done" }, tk("2026-10-06T10:00:00")), []);
 });
 
+test("без срока — только «ещё не взяли», напоминаний о сроке нет", () => {
+  const notified = tk("2026-10-01T10:00:00").toISOString();
+  const t = task({ due_at: null, notified_at: notified });
+  assert.deepEqual(nudgesDue(t, tk("2026-10-01T10:30:00")), ["take"]);
+  assert.deepEqual(nudgesDue({ ...t, status: "in_work" }, tk("2027-01-01T10:00:00")), []);
+  assert.equal(movedDue("1h", null, tk("2026-10-01T10:00:00")).toISOString(), tk("2026-10-01T11:00:00").toISOString());
+});
+
+test("сообщения о действиях — сразу, кроме ночи 23:00–07:00, и в выходной тоже", () => {
+  assert.equal(messageWindow(tk("2026-10-01T20:30:00")), true);
+  assert.equal(messageWindow(tk("2026-10-04T12:00:00")), true); // воскресенье
+  assert.equal(messageWindow(tk("2026-10-01T23:00:00")), false);
+  assert.equal(messageWindow(tk("2026-10-02T06:59:00")), false);
+  assert.equal(messageWindow(tk("2026-10-02T07:00:00")), true);
+  assert.match(read("app/admin/tasks/actions.ts"), /if \(messageWindow\(now\)\) \{\s+after\(async \(\) => \{\s+await deliverAssignment\(task\.id\)/);
+});
+
+test("порядок — от ближайшего срока к дальнему, без срока в конце", () => {
+  const rows = [
+    task({ id: "late", due_at: tk("2026-10-09T10:00:00").toISOString() }),
+    task({ id: "none-old", due_at: null, created_at: tk("2026-09-01T10:00:00").toISOString() }),
+    task({ id: "soon", due_at: tk("2026-10-02T10:00:00").toISOString() }),
+    task({ id: "none-new", due_at: null, created_at: tk("2026-10-01T10:00:00").toISOString() }),
+  ];
+  assert.deepEqual([...rows].sort(byDue).map((r) => r.id), ["soon", "late", "none-new", "none-old"]);
+});
+
+test("группы: по сроку — в своём порядке, по проекту — «без проекта» в конце", () => {
+  const now = tk("2026-10-01T12:00:00");
+  const at = (iso: string) => tk(iso).toISOString();
+  assert.equal(dueBucket(task({ due_at: at("2026-10-01T11:00:00") }), now), "overdue");
+  assert.equal(dueBucket(task({ due_at: at("2026-10-01T23:59:00") }), now), "today");
+  assert.equal(dueBucket(task({ due_at: at("2026-10-02T00:30:00") }), now), "tomorrow");
+  assert.equal(dueBucket(task({ due_at: at("2026-10-08T10:00:00") }), now), "week");
+  assert.equal(dueBucket(task({ due_at: at("2026-10-09T10:00:00") }), now), "later");
+  assert.equal(dueBucket(task({ due_at: null }), now), "none");
+  const rows = [task({ id: "a", project_id: null }), task({ id: "b", project_id: "p1" }), task({ id: "c", project_id: "p1" })];
+  assert.deepEqual(
+    groupTasks(rows, (t) => t.project_id ?? "").map((g) => [g.key, g.tasks.map((t) => t.id)]),
+    [["p1", ["b", "c"]], ["", ["a"]]],
+  );
+  assert.equal(projectLabel({ title: "Site", client: "Ivanov" }), "Ivanov — Site");
+  assert.equal(projectLabel({ title: "Site", client: null }), "Site");
+});
+
 test("бот пишет о задачах в рабочее время, как порция", () => {
   assert.equal(taskWindow(tk("2026-10-01T09:00:00")), true); // четверг
   assert.equal(taskWindow(tk("2026-10-01T18:59:00")), true);
@@ -174,6 +236,13 @@ test("новое для открытой панели: задача мне и ш
     feedFor(rows, "boss", since).map((i) => [i.id, i.kind]),
     [["b", "taken"]],
   );
+  // Поставивший перенёс или отменил — звенит у исполнителя, не у него.
+  const fromBoss = [
+    task({ id: "m", updated_at: later, last_event: "moved", last_actor_id: "boss" }),
+    task({ id: "x", updated_at: later, last_event: "cancelled", last_actor_id: "boss" }),
+  ];
+  assert.deepEqual(feedFor(fromBoss, "worker", since).map((i) => [i.id, i.kind]), [["m", "moved"], ["x", "cancelled"]]);
+  assert.deepEqual(feedFor(fromBoss, "boss", since), []);
 });
 
 /* ── Telegram ─────────────────────────────────────────────────────────── */
@@ -232,23 +301,49 @@ test("блок «Задачи» рисуется на каждом языке, �
       ["boss", "Egor"],
       ["worker", "Ali"],
     ]),
+    projects: new Map([["p1", "Ivanov — Site"]]),
   };
+  board.mine.push(task({ id: "z", due_at: null, project_id: "p1", status: "in_work" }));
+  const projects = [{ id: "p1", label: "Ivanov — Site" }];
   const people = [
     { id: "worker", display_name: "Ali" },
     { id: "boss", display_name: "Egor" },
   ];
   const ru = renderToStaticMarkup(
-    createElement(TasksView, { staff: { id: "worker" }, locale: "ru", board, people, notice: "created", now }),
+    createElement(TasksView, { staff: { id: "worker" }, locale: "ru", board, people, projects, notice: "created", now }),
   );
   assert.match(ru, /Взять в работу/);
   assert.match(ru, /просрочена/);
   assert.match(ru, /Задача поставлена/);
   assert.match(ru, /href="\/admin\/help#leads-tasks"/);
+  assert.match(ru, /без срока/);
+  assert.match(ru, /проект: Ivanov — Site/);
+  // Порядок: ближайший срок выше, задача без срока — последней.
+  assert.ok(ru.indexOf("Prepare offer") < ru.indexOf("Call Ali"), "просроченная выше");
+  const grouped = renderToStaticMarkup(
+    createElement(TasksView, { staff: { id: "worker" }, locale: "ru", board, people, projects, now, group: "due" }),
+  );
+  assert.match(grouped, /Срок прошёл/);
+  assert.match(grouped, /Без срока/);
   for (const locale of ["uz", "pl"] as const) {
-    const html = renderToStaticMarkup(
-      createElement(TasksView, { staff: { id: "worker" }, locale, board, people, notice: "moved", now }),
+    for (const group of ["none", "due", "project", "person"] as const) {
+      const html = renderToStaticMarkup(
+        createElement(TasksView, { staff: { id: "worker" }, locale, board, people, projects, notice: "moved", now, group }),
+      );
+      const text = html.replace(/<[^>]+>/g, " ");
+      assert.ok(!/[а-яё]/i.test(text), `${locale} ${group}: русское в блоке: ${text.match(/\S*[а-яё]\S*/i)}`);
+    }
+    const card = renderToStaticMarkup(
+      createElement(ProjectTasksView, {
+        staff: { id: "boss" },
+        locale,
+        projectId: "p1",
+        tasks: board.mine,
+        names: board.names,
+        now,
+      }),
     );
-    const text = html.replace(/<[^>]+>/g, " ");
-    assert.ok(!/[а-яё]/i.test(text), `${locale}: русское в блоке: ${text.match(/\S*[а-яё]\S*/i)}`);
+    assert.ok(!/[а-яё]/i.test(card.replace(/<[^>]+>/g, " ")), `${locale}: русское в карточке проекта`);
+    assert.match(card, /href="\/admin\?tp=p1#tasks"/);
   }
 });
