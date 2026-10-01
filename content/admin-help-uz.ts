@@ -20,9 +20,9 @@ const SCOUT_URL = "https://t.me/+puC_Ns-kCbQ5NzJi";
 const TASKS_BOT = [
   "Sizga vazifa qo‘yilganda, bot xabar yuboradi: kimdan, nima qilish kerak, muddat — va **«✅ Взять в работу»** tugmasi. Bosdingiz — o‘sha xabarning o‘zida **«✅ Сделано»**, **«✖ Не сделано»** va **«🕑 Перенести срок»** paydo bo‘ladi. Telegramda bosilgani darhol panelda ko‘rinadi va aksincha: vazifani panelda olsangiz — Telegramdagi tugmalar o‘zi almashadi.",
   "«🕑 Перенести срок» quyidagilarni taklif qiladi: «+1 час», «Завтра 18:00», «+3 дня», «Неделя» va «✏️ Своя дата». «✏️ Своя дата» dan keyin botga muddatni bitta xabar bilan yozing — kun, oy va Toshkent vaqti bilan soat, masalan `05.10 15:00`. Bot bunday xabarni 30 daqiqa kutadi.",
-  "Vazifani qo‘ygan odamga bot har bir qadam haqida yozadi: ishga oldi, bajarildi, bajarilmadi, muddatni falon sana va vaqtga ko‘chirdi.",
+  "Vazifani qo‘ygan odamga bot har bir qadam haqida yozadi: ishga oldi, bajarildi, bajarilmadi, muddatni falon sana va vaqtga ko‘chirdi. Ijrochiga bot qo‘ygan odam muddatni ko‘chirsa yoki vazifani bekor qilsa yozadi.",
   "Eslatmalar: yangi vazifa bot xabaridan keyin 30 daqiqa ichida olinmasa — bot eslatadi; muddatga bir soat qolganda — yana eslatadi; muddat o‘tsa — bir marta ham ijrochiga, ham qo‘ygan odamga yozadi. Ko‘chirilgandan keyin «bir soat qoldi» va «muddati o‘tdi» qaytadan keladi — endi yangi muddatga.",
-  "Tunda bot yozmaydi: vazifalar haqida — ish kunlari Toshkent vaqti bilan 09:00 dan 19:00 gacha, kunlik portsiya kabi. Kechqurun yoki dam olish kuni qo‘yilgan vazifani ijrochi Telegramda ish kuni soat 09:00 da oladi, panelda esa darhol ko‘radi. Bosilgan tugmaga javob istalgan vaqtda keladi.",
+  "Amallar haqidagi xabarlar — yangi vazifa, oldi, bajarildi, ko‘chirish, bekor qilish — darhol, istalgan kuni keladi, faqat tunda emas: Toshkent vaqti bilan 23:00 dan 07:00 gacha bot jim turadi, tungi xabar 07:00 da keladi. Eslatmalar — «olinmadi», «bir soatdan keyin muddat», «muddati o‘tdi» — faqat ish kunlari 09:00 dan 19:00 gacha, kunlik portsiya kabi. Panelda hammasi darhol ko‘rinadi, bosilgan tugmaga javob — istalgan vaqtda.",
 ];
 
 export const uz: HelpCopy = {
@@ -45,19 +45,19 @@ export const uz: HelpCopy = {
           title: "Bosh sahifada nima bor",
           body: {
             manager: [
-              "Tepada — plitkalar: **«к выплате»** — qancha ishlab topganingiz va hali olmaganingiz (pastda mayda harf bilan — mijoz qolganini to‘lashini qanchasi kutayotgani), **«лидов в работе»**, **«срочно связаться»** va loyihalaringiz bo‘yicha **«поступлений за месяц»**.",
+              "Bosh sahifada birinchi — [«Vazifalar»](#leads-tasks) bloki: sizga nima topshirilgan, siz nima topshirgansiz va «Vazifa qo‘yish» formasi. Pastroqda — plitkalar: **«к выплате»** — qancha ishlab topganingiz va hali olmaganingiz (pastda mayda harf bilan — mijoz qolganini to‘lashini qanchasi kutayotgani), **«лидов в работе»**, **«срочно связаться»** va loyihalaringiz bo‘yicha **«поступлений за месяц»**.",
               "Agar rahbar sizga aloqalar rejasini qo‘ygan bo‘lsa, plitkalar ustida shunday qator chiqadi: «До плана осталось 12 — сделано 18 из 30 за эту неделю». Batafsil — [aloqalar rejasi](#prospect-plan) bandida.",
               "Pastroqda: [«Срочно связаться»](#leads-urgent) — uzoq vaqt harakatsiz turgan lidlaringiz; «Рекомендации на неделю» — nimani yaxshilash kerak ([tavsiyalar](#leads-coach) bandiga qarang); [«План и факт»](#leads-plan-fact) — sizga qo‘yilgan maqsadlar; eng pastda esa — [lidlar ro‘yxati](#leads-list).",
             ],
             head: [
-              "Birinchi bo‘lib — **«Ждут вашего решения»**: menejerlarning lidni hamkasbga berish haqidagi so‘rovlari. Buni siz yoki egasi hal qiladi — batafsil [lidni berish](#leads-transfer) bandida.",
+              "Birinchi bo‘lib — **«Ждут вашего решения»**: menejerlarning lidni hamkasbga berish haqidagi so‘rovlari. Buni siz yoki egasi hal qiladi — batafsil [lidni berish](#leads-transfer) bandida. Ularning ostida — [«Vazifalar»](#leads-tasks) bloki: sizga nima topshirilgan va siz nima topshirgansiz.",
               "Plitkalar sizni va jamoangizni birga hisoblaydi: **«к выплате»** — faqat sizning balansingiz, **«лидов в работе у команды»**, **«срочно связаться»**, **«поступлений за неделю»**.",
               "Keyin: «На сегодня» — lidlaringiz bo‘yicha ertalabki maslahatlar, siz va jamoa bo‘yicha ismlar bilan [«Срочно связаться»](#leads-urgent), [«Команда за эту неделю»](#leads-team-week), jamoaga va sizga tavsiyalar, «Лучшие за неделю», [«План и факт»](#leads-plan-fact) va [lidlar ro‘yxati](#leads-list).",
               "Jamoa — bu [«Jamoa»](/admin/team) bo‘limida sizga biriktirilgan menejerlar. Jamoa bo‘lmaguncha, bosh sahifada uning bloklari chiqmaydi.",
             ],
             admin: [
               "Sizda bosh sahifa varaqlarga bo‘lingan — bitta uzun lentani aylantirib o‘tirmaslik uchun. Varaq manzilda saqlanadi, uni xatcho‘plarga qo‘yib qo‘ysa bo‘ladi.",
-              "**«Сегодня»** — kunni nimadan boshlash: «Ждут вашего решения» (lidni berish so‘rovlari), imzoga kelgan shartnomalar, pul plitkalari, «На сегодня» maslahatlari («собрать заново» tugmasi modelga bitta so‘rov sarflaydi), butun studiya bo‘yicha «Срочно связаться» va ikki haftalik soliq muddatlari.",
+              "**«Сегодня»** — kunni nimadan boshlash: «Ждут вашего решения» (lidni berish so‘rovlari), [«Vazifalar»](#leads-tasks) bloki, imzoga kelgan shartnomalar, pul plitkalari, «На сегодня» maslahatlari («собрать заново» tugmasi modelga bitta so‘rov sarflaydi), butun studiya bo‘yicha «Срочно связаться» va ikki haftalik soliq muddatlari.",
               "**«Lidlar»** — barcha filtrlari bilan [lidlar ro‘yxati](#leads-list). Varaqdagi tilla rangli raqam — hozir nechta lid bo‘shligi.",
               "**«Деньги»** — «Касса по месяцам» (yarim yillik tushum va xarajatlar, har oy ostida — farqi) va «Ожидаем оплат»: faol loyihalar bo‘yicha yana qancha to‘lanishi kerak.",
               "**«Jamoa»** — [haftalik jadval](#leads-team-week), eng yaxshilar, har biriga tavsiyalar va [«План и факт»](#leads-plan-fact) — u yerda maqsadlarni qo‘yasiz va o‘zgartirasiz.",
@@ -69,11 +69,21 @@ export const uz: HelpCopy = {
           id: "tasks",
           title: "Vazifalar: qo‘yish, olish, yopish",
           body: [
-            "**«Vazifalar»** bloki bosh sahifada hammasidan yuqorida turadi (egasida — «Сегодня» varag‘ida). Vazifani istalgan xodim istalgan xodimga, jumladan o‘ziga ham qo‘yishi mumkin: menejer — rahbarga, rahbar — egasiga, kim bo‘lsa ham — kimga bo‘lsa ham. Vazifani ikki kishi ko‘radi: uni qo‘ygan va kimga qo‘yilgan.",
-            "**«Menga»** — sizga qo‘yilgan vazifalar, eng yaqin muddat tepada. Yangisi «yangi» deb belgilangan va **«Ishga olish»** tugmasini kutadi: shunda qo‘ygan odam vazifani ko‘rganingiz va qabul qilganingizni biladi. Olingani — «ishda», ostida **«Bajarildi»** va **«Bajarilmadi»**. Muddati o‘tgan vazifa qizil rang bilan ajratilgan va «muddati o‘tgan» deb belgilangan.",
-            "**«Muddatni ko‘chirish»** variantlarni ochadi: «+1 soat», «Ertaga 18:00», «+3 kun», «Bir hafta» — yoki «Shu sanaga» tugmasi bilan o‘z sanangiz va vaqtingiz. «+1 soat», «+3 kun» va «Bir hafta» muddatdan hisoblanadi, agar u o‘tib ketgan bo‘lsa — hozirgi paytdan, toki yangi muddat yana o‘tmishda qolmasin. Har bir ko‘chirish vazifa tarixida qoladi: eski muddat, yangisi va kim ko‘chirgani.",
-            "**«Men qo‘yganlar»** — siz boshqalarga qo‘ygan vazifalar va ular hozir qanday holatda: «yangi» (hali olinmagan), «ishda», «bajarildi», «bajarilmadi», «muddati o‘tgan». Yopilganlari bu yerda yana bir hafta ko‘rinadi. Vazifani faqat u kimda bo‘lsa, o‘sha siljitadi: boshqa odam uchun «Bajarildi» ni bosib bo‘lmaydi — shuning uchun «bajarildi» doim ijrochining o‘zi bajarganini bildiradi.",
-            "**«Vazifa qo‘yish»** — blok pastida: «Kimga», «Nima qilish kerak», «Batafsil (ixtiyoriy)» va «Muddat» — «bugun 18:00 gacha», «ertaga» va «3 kundan keyin» (ikkalasi ham 18:00 gacha) yoki «boshqa sana». Vaqt hamma joyda Toshkent vaqti. O‘zingizga qo‘ygan vazifa darhol «ishda» — uni olish shart emas, bot ham u haqda yozmaydi. Kim nimani qo‘ygani, olgani, yopgani va ko‘chirgani amallar jurnaliga yoziladi.",
+            "**«Vazifalar»** bloki bosh sahifada hammasidan yuqorida turadi (egasida — «Сегодня» varag‘ida). Vazifani istalgan xodim istalgan xodimga, jumladan o‘ziga ham qo‘yishi mumkin: menejer — rahbarga, rahbar — egasiga, kim bo‘lsa ham — kimga bo‘lsa ham. Vazifani uni qo‘ygan va kimga qo‘yilgan ko‘radi; agar u loyihaga tegishli bo‘lsa — o‘sha loyiha kartochkasini ochadigan hamma ham.",
+            "**«Menga»** — sizga qo‘yilgan vazifalar: tepada eng yaqin muddat, pastroqda — uzoqroqlari, muddatsiz vazifalar — eng oxirida. Yangisi «yangi» deb belgilangan va **«Ishga olish»** tugmasini kutadi: shunda qo‘ygan odam vazifani ko‘rganingiz va qabul qilganingizni biladi. Olingani — «ishda», ostida **«Bajarildi»** va **«Bajarilmadi»**. Muddati o‘tgan vazifa qizil rang bilan ajratilgan va «muddati o‘tgan» deb belgilangan.",
+            "**«Muddatni ko‘chirish»** variantlarni ochadi: «+1 soat», «Ertaga 18:00», «+3 kun», «Bir hafta» — yoki «Shu sanaga» tugmasi bilan o‘z sanangiz va vaqtingiz. «+1 soat», «+3 kun» va «Bir hafta» muddatdan hisoblanadi, agar u o‘tib ketgan yoki muddat bo‘lmagan bo‘lsa — hozirgi paytdan, toki yangi muddat o‘tmishda qolmasin. Muddatsiz vazifada bu joyda xuddi shu variantlar bilan **«Muddat belgilash»** turadi. Muddatni ijrochi ham, qo‘ygan odam ham ko‘chiradi — ikkinchi tomonga bot yangi muddatni darhol yozadi. Har bir ko‘chirish vazifa tarixida qoladi: eski muddat, yangisi va kim ko‘chirgani.",
+            "**«Men qo‘yganlar»** — siz boshqalarga qo‘ygan vazifalar va ular hozir qanday holatda: «yangi» (hali olinmagan), «ishda», «bajarildi», «bajarilmadi», «muddati o‘tgan». Yopilganlari bu yerda yana bir hafta ko‘rinadi. «Bajarildi» va «Bajarilmadi» ni faqat vazifa kimda bo‘lsa, o‘sha bosadi — shuning uchun «bajarildi» doim ijrochining o‘zi bajarganini bildiradi. Siz muddatni ko‘chirishingiz yoki vazifa xato qo‘yilgan yoki endi kerak bo‘lmasa, **«Vazifani bekor qilish»** ni bosishingiz mumkin: vazifa «bekor qilingan» bo‘ladi, ijrochiga xabar boradi, uning Telegramidagi tugmalar «🚫 Задача отменена» ga almashadi.",
+            "**«Vazifa qo‘yish»** — blok pastida: «Kimga», «Nima qilish kerak», «Batafsil (ixtiyoriy)», «Loyiha (ixtiyoriy)» va «Muddat» — «bugun 18:00 gacha», «ertaga» va «3 kundan keyin» (ikkalasi ham 18:00 gacha), «muddatsiz» yoki «boshqa sana». Vaqt hamma joyda Toshkent vaqti. Loyiha [«Loyihalar»](/admin/projects) bo‘limidagi ochiq loyihalardan tanlanadi: avval u yerda mijoz loyihasi qo‘shiladi, keyin unga vazifalarni biriktirish mumkin. Loyihani ham, muddatni ham ko‘rsatish shart emas. Vazifa qo‘yilishi bilan bot ijrochiga darhol Telegramda yozadi. O‘zingizga qo‘ygan vazifa darhol «ishda» — uni olish shart emas, bot ham u haqda yozmaydi. Kim nimani qo‘ygani, olgani, yopgani, ko‘chirgani va bekor qilgani amallar jurnaliga yoziladi.",
+          ],
+        },
+        {
+          id: "tasks-filter",
+          title: "Vazifalarda tartib, guruhlar va loyihalar",
+          body: [
+            "Sukut bo‘yicha vazifalar eng yaqin muddatdan eng uzog‘iga qarab boradi: nima yonayotgan bo‘lsa, o‘sha tepada. Muddatsiz vazifalar — oxirida, yangilari birinchi. «Men qo‘yganlar» da avval ochiqlari, pastroqda — hafta ichida yopilganlari.",
+            "Ro‘yxatlar ustida — filtr. **«Guruhlash»**: «guruhlamaslik» (shunchaki muddat bo‘yicha), «muddat bo‘yicha» — «Muddat o‘tgan», «Muddat bugun», «Muddat ertaga», «Yaqin 7 kun ichida», «Keyinroq», «Muddatsiz» to‘plamlari; «loyiha bo‘yicha» — har bir loyihaning vazifalari birga, «Loyihasiz» oxirida; «odam bo‘yicha» — «Menga» da kim qo‘ygani bo‘yicha, «Men qo‘yganlar» da kimga qo‘yilgani bo‘yicha. Guruh ichida tartib o‘sha — eng yaqin muddatdan.",
+            "**«Loyiha»** bitta loyihaning yoki «Loyihasiz» vazifalarni qoldiradi. Tanlang va **«Ko‘rsatish»** ni bosing. Tanlov sahifa manzilida saqlanadi: vazifalardagi tugmalar bosilgandan keyin u tushib qolmaydi, bu sahifani xatcho‘plarda ham saqlash mumkin.",
+            "Loyihali vazifa qatorida loyiha nomi bor — bosing, loyiha kartochkasi ochiladi. Loyiha kartochkasida — uning barcha vazifalari va «Vazifa qo‘yish» havolasi: u bosh sahifaga, formada loyiha allaqachon tanlangan holda olib boradi.",
           ],
         },
         {
@@ -89,7 +99,7 @@ export const uz: HelpCopy = {
           id: "tasks-alerts",
           title: "Brauzerdagi ovoz va bildirishnomalar",
           body: [
-            "Panel ochiq ekan — istalgan bo‘limda — u har 45 soniyada serverdan yangilik bor-yo‘qligini so‘raydi: sizga qo‘yilgan vazifa yoki siz qo‘ygan vazifa bo‘yicha qadam (oldi, bajarildi, bajarilmadi, muddat ko‘chirildi). Bo‘lsa — qisqa «din-don» chalinadi, o‘ng pastki burchakda «Vazifalarni ochish» tugmali plashka chiqadi, bosh sahifa esa o‘zi yangilanadi.",
+            "Panel ochiq ekan — istalgan bo‘limda — u har 45 soniyada serverdan yangilik bor-yo‘qligini so‘raydi: sizga qo‘yilgan vazifa, vazifangizni qo‘ygan odam tomonidan ko‘chirish yoki bekor qilish, yoki siz qo‘ygan vazifa bo‘yicha qadam (oldi, bajarildi, bajarilmadi, muddat ko‘chirildi). Bo‘lsa — qisqa «din-don» chalinadi, o‘ng pastki burchakda «Vazifalarni ochish» tugmali plashka chiqadi, bosh sahifa esa o‘zi yangilanadi.",
             "Tizim bildirishnomasi ham chiqishi uchun — hatto varaq yig‘ilgan bo‘lsa ham — vazifalar blokidagi **«Bildirishnomalarni yoqish»** ni bosing va brauzer oynasida ruxsat bering. Brauzer ruxsatni faqat bosilgandan keyin so‘raydi — shuning uchun tugma. Ruxsatdan keyin uning o‘rnida — «Bildirishnomalar yoqilgan».",
             "Agar brauzer taqiqlagan bo‘lsa, tugma o‘rnida maslahat chiqadi: bildirishnomalarga sayt sozlamalarida (manzil chap tomonidagi belgi) ruxsat berish mumkin. Ovozni brauzer paneldagi birinchi bosishdan keyin yoqadi — undan oldin sahifa ovoz chiqara olmaydi, barcha brauzerlar shunday ishlaydi. O‘z amallaringiz ovoz bilan belgilanmaydi. Panel yopiq bo‘lsa — brauzerda hech narsa yo‘q, Telegram qoladi.",
           ],
@@ -704,6 +714,14 @@ export const uz: HelpCopy = {
     "/admin/projects": {
       what: "Kelishib bo‘lingan ish: qaysi bosqichda, qaysi muddatgacha, qancha summaga, kim olib boradi va mijoz qancha to‘lagan. «Moliya» bo‘limidagi hisoblanmalar loyihaga bog‘liq: summasi bor loyiha bo‘lmasa, bitim uchun hech kim pul olmaydi.",
       items: [
+        {
+          id: "tasks",
+          title: "Loyiha bo‘yicha vazifalar",
+          body: [
+            "Loyiha kartochkasida, nomining darhol ostida — **«Loyiha bo‘yicha vazifalar»**: unga biriktirilgan barcha vazifalar — kimdan, kimga, muddat va hozir ular qanday holatda. Ochiqlari tepada, eng yaqin muddatdan, yopilganlari pastda. Agar vazifa sizda bo‘lsa yoki uni siz qo‘ygan bo‘lsangiz, bu yerdagi tugmalar bosh sahifadagi bilan bir xil.",
+            "Loyiha bo‘yicha vazifa qo‘yish uchun o‘ngdagi **«Vazifa qo‘yish»** ni bosing: bosh sahifa forma bilan ochiladi, unda bu loyiha allaqachon tanlangan. Vazifani loyihaga faqat loyiha shu yerda, «Loyihalar» da qo‘shilgan bo‘lsa biriktirish mumkin — shuning uchun avval mijoz loyihasi qo‘shiladi. Vazifalar haqida batafsil — [vazifalar](#leads-tasks) bandida.",
+          ],
+        },
         {
           id: "create",
           title: "Loyiha ochish",
