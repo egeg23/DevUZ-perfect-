@@ -89,3 +89,30 @@ test("касания и порция считаются так же, как в �
   assert.match(store, /outcomeOf\(/);
   assert.match(store, /esc\(s\.display_name as string\)/, "имя в HTML-сообщении экранируется");
 });
+
+/* ── Объявление «Коллеги, а у нас обнова!» ───────────────────────────── */
+
+test("объявление о задачах и партнёрке: начало, кому, когда, кнопки — как на экране", async () => {
+  const news = NEWS.find((n) => n.id === "2026-10-02-tasks-partners");
+  assert.ok(news);
+  assert.deepEqual([...news.roles].sort(), ["head", "manager"]);
+  // Пятница, 2 октября, 10:00 по Ташкенту — уходит; 1 октября — ещё нет.
+  assert.equal(newsActive(news, new Date("2026-10-02T05:00:00Z")), true);
+  assert.equal(newsWindow(new Date("2026-10-02T05:00:00Z")), true);
+  assert.equal(newsActive(news, new Date("2026-10-01T10:00:00Z")), false);
+
+  const text = (await news.text("manager")) ?? "";
+  assert.ok(text.startsWith("<b>Коллеги, а у нас обнова!</b>"), "владелец просил начать с этих слов");
+  assert.ok(text.length < 4096);
+  assert.doesNotMatch(text.replace(/<\/?(b|i)>/g, ""), /[<>]/);
+
+  // Кнопки бота и панели — ровно те, что человек увидит.
+  const bot = read("lib/admin/task-bot.ts") + read("lib/qualify/telegram.ts");
+  for (const label of ["✅ Взять в работу", "✅ Сделано", "✖ Не сделано", "🕑 Перенести срок"]) {
+    assert.ok(text.includes(label) && bot.includes(label), label);
+  }
+  const panel = read("content/admin-panel/tasks.ts") + read("content/admin-panel/partner-clients.ts");
+  for (const label of ["Поставить задачу", "Включить уведомления", "ИНН компании", "Сохранить ИНН"]) {
+    assert.ok(text.includes(`«${label}»`) && panel.includes(`"${label}"`), label);
+  }
+});
