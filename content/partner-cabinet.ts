@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n";
+import type { ClientFailure } from "@/lib/partners/rules";
 import type { ReferralStage } from "@/lib/partners/store";
 
 /**
@@ -51,6 +52,27 @@ export type CabinetCopy = {
   agencyExpired: (date: string) => string;
   agencyResult: Record<"ok" | "offline" | "invalid" | "limit" | "duplicate" | "failed", string>;
   viaAgency: (name: string) => string;
+  /** Клиенты, закреплённые вручную по ИНН — без ссылки. */
+  claimsTitle: string;
+  claimsLead: string;
+  clientName: string;
+  clientInn: string;
+  clientInnHint: string;
+  clientContactName: string;
+  clientPhone: string;
+  clientTelegram: string;
+  clientWebsite: string;
+  clientNote: string;
+  clientNoteHint: string;
+  clientAdd: string;
+  claimsEmpty: string;
+  claimsLimit: (used: number, max: number) => string;
+  clientWaiting: (date: string) => string;
+  clientActive: (date: string) => string;
+  clientExpired: string;
+  clientCancelled: (note: string | null) => string;
+  clientResult: Record<"ok" | ClientFailure, string>;
+  viaClient: (name: string) => string;
 
   decksTitle: string;
   decksLead: string;
@@ -209,6 +231,40 @@ const ru: CabinetCopy = {
     failed: "Не получилось подключить агентство. Попробуйте ещё раз.",
   },
   viaAgency: (name) => `агентство «${name}»`,
+
+  claimsTitle: "Мои клиенты",
+  claimsLead:
+    "Приводите компанию сами, без ссылки? Закрепите её здесь: ИНН, название и как с ней связаться. Закрепление действует сразу — если с этой компанией студия ещё не работала и не связывалась и её не закрепил другой партнёр. Дальше ждём от клиента первую заявку 90 дней; пришла — все заказы этой компании ваши 12 месяцев, как по ссылке. Не пришла за 90 дней — закрепление снимается. В месяц можно закрепить до 20 компаний.",
+  clientName: "Название компании",
+  clientInn: "ИНН (СТИР)",
+  clientInnHint: "9 цифр; для других стран — до 12",
+  clientContactName: "Контактное лицо",
+  clientPhone: "Телефон",
+  clientTelegram: "Telegram",
+  clientWebsite: "Сайт",
+  clientNote: "Что нужно клиенту",
+  clientNoteHint: "сайт, бот, CRM… — коротко",
+  clientAdd: "Закрепить клиента",
+  claimsEmpty: "Закреплённых клиентов пока нет.",
+  claimsLimit: (used, max) => `В этом месяце закреплено ${used} из ${max}.`,
+  clientWaiting: (date) => `закреплён · ждём первую заявку до ${date}`,
+  clientActive: (date) => `заявка пришла · заказы ваши до ${date}`,
+  clientExpired: "срок вышел — новые заказы не засчитываются",
+  clientCancelled: (note) => `закрепление отменено${note ? ` · ${note}` : ""}`,
+  clientResult: {
+    ok: "Клиент закреплён за вами. Когда от него придёт заявка — бот напишет.",
+    offline: "Сервис сейчас недоступен. Попробуйте через минуту.",
+    blocked: "Партнёрство приостановлено — закреплять клиентов нельзя. Напишите нам.",
+    name: "Укажите название компании.",
+    inn: "ИНН — только цифры: 9 для Узбекистана, до 12 для других стран.",
+    contact: "Укажите телефон или Telegram клиента — хотя бы одно.",
+    limit: "В этом месяце уже закреплено 20 компаний. Следующие — с начала месяца.",
+    studio: "Эта компания уже есть у студии: с ней работаем или уже связывались. Закрепить её нельзя.",
+    taken: "Эту компанию уже закрепил другой партнёр.",
+    mine: "Эта компания уже закреплена за вами.",
+    failed: "Не получилось закрепить. Попробуйте ещё раз.",
+  },
+  viaClient: (name) => `закреплён: «${name}»`,
 
   decksTitle: "Презентации",
   decksLead: "Отправьте ссылкой или сохраните в PDF (кнопка на странице). В ссылке уже ваш код: кто откроет её и оставит заявку в течение 30 дней, будет вашим клиентом.",
@@ -436,6 +492,40 @@ const en: CabinetCopy = {
   },
   viaAgency: (name) => `agency “${name}”`,
 
+  claimsTitle: "My clients",
+  claimsLead:
+    "Bringing a company yourself, without a link? Register it here: tax ID, name and how to reach it. It's yours immediately — as long as the studio hasn't worked with or contacted this company before and no other partner has registered it. Then we wait 90 days for the client's first request; once it comes, all orders from this company are yours for 12 months, just like via a link. No request within 90 days — the registration lapses. Up to 20 companies a month.",
+  clientName: "Company name",
+  clientInn: "Tax ID (INN / STIR)",
+  clientInnHint: "9 digits; up to 12 for other countries",
+  clientContactName: "Contact person",
+  clientPhone: "Phone",
+  clientTelegram: "Telegram",
+  clientWebsite: "Website",
+  clientNote: "What the client needs",
+  clientNoteHint: "website, bot, CRM… — briefly",
+  clientAdd: "Register client",
+  claimsEmpty: "No registered clients yet.",
+  claimsLimit: (used, max) => `Registered this month: ${used} of ${max}.`,
+  clientWaiting: (date) => `registered · waiting for the first request until ${date}`,
+  clientActive: (date) => `request received · orders are yours until ${date}`,
+  clientExpired: "term ended — new orders no longer count",
+  clientCancelled: (note) => `registration cancelled${note ? ` · ${note}` : ""}`,
+  clientResult: {
+    ok: "The client is registered to you. When a request comes from them, the bot will message you.",
+    offline: "The service is unavailable right now. Try again in a minute.",
+    blocked: "Your partnership is paused — you can't register clients. Write to us.",
+    name: "Enter the company name.",
+    inn: "Tax ID — digits only: 9 for Uzbekistan, up to 12 for other countries.",
+    contact: "Enter the client's phone or Telegram — at least one.",
+    limit: "You've already registered 20 companies this month. More from the start of next month.",
+    studio: "The studio already knows this company: we work with it or have contacted it. It can't be registered.",
+    taken: "Another partner has already registered this company.",
+    mine: "This company is already registered to you.",
+    failed: "Couldn't register the client. Try again.",
+  },
+  viaClient: (name) => `registered: “${name}”`,
+
   decksTitle: "Presentations",
   decksLead: "Send as a link or save as PDF (button on the page). Your code is already in the link: whoever opens it and leaves a request within 30 days becomes your client.",
   decks: {
@@ -662,6 +752,40 @@ const uz: CabinetCopy = {
   },
   viaAgency: (name) => `«${name}» agentligi`,
 
+  claimsTitle: "Mening mijozlarim",
+  claimsLead:
+    "Kompaniyani havolasiz, o'zingiz olib kelyapsizmi? Uni shu yerda biriktiring: STIR, nomi va u bilan qanday bog'lanish. Biriktirish darhol kuchga kiradi — agar studiya bu kompaniya bilan hali ishlamagan va bog'lanmagan bo'lsa, uni boshqa hamkor biriktirmagan bo'lsa. Keyin mijozdan birinchi so'rovni 90 kun kutamiz; kelsa — bu kompaniyaning barcha buyurtmalari 12 oy sizniki, havola orqali kelgandek. 90 kunda kelmasa — biriktirish bekor bo'ladi. Oyiga 20 tagacha kompaniya biriktirish mumkin.",
+  clientName: "Kompaniya nomi",
+  clientInn: "STIR (INN)",
+  clientInnHint: "9 raqam; boshqa davlatlar uchun — 12 tagacha",
+  clientContactName: "Mas'ul shaxs",
+  clientPhone: "Telefon",
+  clientTelegram: "Telegram",
+  clientWebsite: "Sayt",
+  clientNote: "Mijozga nima kerak",
+  clientNoteHint: "sayt, bot, CRM… — qisqacha",
+  clientAdd: "Mijozni biriktirish",
+  claimsEmpty: "Hozircha biriktirilgan mijozlar yo'q.",
+  claimsLimit: (used, max) => `Bu oy ${max} tadan ${used} tasi biriktirildi.`,
+  clientWaiting: (date) => `biriktirilgan · birinchi so'rovni ${date} gacha kutamiz`,
+  clientActive: (date) => `so'rov keldi · buyurtmalar ${date} gacha sizniki`,
+  clientExpired: "muddat tugadi — yangi buyurtmalar hisoblanmaydi",
+  clientCancelled: (note) => `biriktirish bekor qilindi${note ? ` · ${note}` : ""}`,
+  clientResult: {
+    ok: "Mijoz sizga biriktirildi. Undan so'rov kelganda bot sizga yozadi.",
+    offline: "Xizmat hozir ishlamayapti. Bir daqiqadan keyin urinib ko'ring.",
+    blocked: "Hamkorlik to'xtatilgan — mijoz biriktirib bo'lmaydi. Bizga yozing.",
+    name: "Kompaniya nomini kiriting.",
+    inn: "STIR — faqat raqamlar: O'zbekiston uchun 9 ta, boshqa davlatlar uchun 12 tagacha.",
+    contact: "Mijozning telefoni yoki Telegramini kiriting — kamida bittasini.",
+    limit: "Bu oy 20 ta kompaniya allaqachon biriktirilgan. Keyingilari — oy boshidan.",
+    studio: "Bu kompaniya studiyada allaqachon bor: u bilan ishlaymiz yoki bog'langanmiz. Uni biriktirib bo'lmaydi.",
+    taken: "Bu kompaniyani boshqa hamkor allaqachon biriktirgan.",
+    mine: "Bu kompaniya allaqachon sizga biriktirilgan.",
+    failed: "Biriktirib bo'lmadi. Yana urinib ko'ring.",
+  },
+  viaClient: (name) => `biriktirilgan: «${name}»`,
+
   decksTitle: "Taqdimotlar",
   decksLead: "Havola bilan yuboring yoki PDF ga saqlang (sahifadagi tugma). Havolada kodingiz bor: uni ochib, 30 kun ichida so'rov qoldirgan kishi sizning mijozingiz bo'ladi.",
   decks: {
@@ -887,6 +1011,40 @@ const zh: CabinetCopy = {
   },
   viaAgency: (name) => `代理机构“${name}”`,
 
+  claimsTitle: "我的客户",
+  claimsLead:
+    "不通过链接、亲自带来公司？在这里登记：税号、名称和联系方式。登记立即生效——前提是工作室此前未与该公司合作或联系过，且没有其他合作伙伴登记过它。之后我们等待客户的第一个询价 90 天；询价到来后，该公司的所有订单 12 个月内都归您，与通过链接相同。90 天内没有询价——登记失效。每月最多可登记 20 家公司。",
+  clientName: "公司名称",
+  clientInn: "税号（INN / STIR）",
+  clientInnHint: "9 位数字；其他国家最多 12 位",
+  clientContactName: "联系人",
+  clientPhone: "电话",
+  clientTelegram: "Telegram",
+  clientWebsite: "网站",
+  clientNote: "客户需要什么",
+  clientNoteHint: "网站、机器人、CRM……简述即可",
+  clientAdd: "登记客户",
+  claimsEmpty: "暂无已登记的客户。",
+  claimsLimit: (used, max) => `本月已登记 ${used} / ${max}。`,
+  clientWaiting: (date) => `已登记 · 等待首个询价至 ${date}`,
+  clientActive: (date) => `询价已到 · 订单归您至 ${date}`,
+  clientExpired: "期限已过——新订单不再计入",
+  clientCancelled: (note) => `登记已取消${note ? ` · ${note}` : ""}`,
+  clientResult: {
+    ok: "客户已登记在您名下。收到其询价时，机器人会通知您。",
+    offline: "服务暂时不可用，请一分钟后再试。",
+    blocked: "合作已暂停——无法登记客户。请联系我们。",
+    name: "请填写公司名称。",
+    inn: "税号只能是数字：乌兹别克斯坦 9 位，其他国家最多 12 位。",
+    contact: "请填写客户的电话或 Telegram——至少一项。",
+    limit: "本月已登记 20 家公司。更多请于下月初再登记。",
+    studio: "工作室已知道这家公司：正在合作或已联系过。无法登记。",
+    taken: "这家公司已被其他合作伙伴登记。",
+    mine: "这家公司已登记在您名下。",
+    failed: "登记失败，请重试。",
+  },
+  viaClient: (name) => `已登记：“${name}”`,
+
   decksTitle: "演示资料",
   decksLead: "以链接发送或保存为 PDF（页面上的按钮）。链接中已包含您的代码：打开链接并在 30 天内提交申请的人将成为您的客户。",
   decks: {
@@ -1107,6 +1265,40 @@ const uk: CabinetCopy = {
     failed: "Не вдалося підключити агенцію. Спробуйте ще раз.",
   },
   viaAgency: (name) => `агенція «${name}»`,
+
+  claimsTitle: "Мої клієнти",
+  claimsLead:
+    "Приводите компанію самі, без посилання? Закріпіть її тут: ІПН/ІНН, назва і як з нею зв'язатися. Закріплення діє одразу — якщо студія з цією компанією ще не працювала й не зв'язувалася і її не закріпив інший партнер. Далі чекаємо від клієнта першу заявку 90 днів; прийшла — усі замовлення цієї компанії ваші 12 місяців, як за посиланням. Не прийшла за 90 днів — закріплення знімається. На місяць можна закріпити до 20 компаній.",
+  clientName: "Назва компанії",
+  clientInn: "ІНН (СТИР)",
+  clientInnHint: "9 цифр; для інших країн — до 12",
+  clientContactName: "Контактна особа",
+  clientPhone: "Телефон",
+  clientTelegram: "Telegram",
+  clientWebsite: "Сайт",
+  clientNote: "Що потрібно клієнту",
+  clientNoteHint: "сайт, бот, CRM… — коротко",
+  clientAdd: "Закріпити клієнта",
+  claimsEmpty: "Закріплених клієнтів поки немає.",
+  claimsLimit: (used, max) => `Цього місяця закріплено ${used} з ${max}.`,
+  clientWaiting: (date) => `закріплено · чекаємо першу заявку до ${date}`,
+  clientActive: (date) => `заявка прийшла · замовлення ваші до ${date}`,
+  clientExpired: "термін минув — нові замовлення не зараховуються",
+  clientCancelled: (note) => `закріплення скасовано${note ? ` · ${note}` : ""}`,
+  clientResult: {
+    ok: "Клієнта закріплено за вами. Коли від нього прийде заявка — бот напише.",
+    offline: "Сервіс зараз недоступний. Спробуйте за хвилину.",
+    blocked: "Партнерство призупинено — закріплювати клієнтів не можна. Напишіть нам.",
+    name: "Вкажіть назву компанії.",
+    inn: "ІНН — лише цифри: 9 для Узбекистану, до 12 для інших країн.",
+    contact: "Вкажіть телефон або Telegram клієнта — хоча б одне.",
+    limit: "Цього місяця вже закріплено 20 компаній. Наступні — з початку місяця.",
+    studio: "Ця компанія вже є у студії: з нею працюємо або вже зв'язувалися. Закріпити її не можна.",
+    taken: "Цю компанію вже закріпив інший партнер.",
+    mine: "Ця компанія вже закріплена за вами.",
+    failed: "Не вдалося закріпити. Спробуйте ще раз.",
+  },
+  viaClient: (name) => `закріплено: «${name}»`,
 
   decksTitle: "Презентації",
   decksLead: "Надішліть посиланням або збережіть у PDF (кнопка на сторінці). У посиланні вже ваш код: хто відкриє його й залишить заявку протягом 30 днів, стане вашим клієнтом.",
@@ -1333,6 +1525,40 @@ const pl: CabinetCopy = {
     failed: "Nie udało się podłączyć agencji. Spróbuj jeszcze raz.",
   },
   viaAgency: (name) => `agencja „${name}”`,
+
+  claimsTitle: "Moi klienci",
+  claimsLead:
+    "Przyprowadzasz firmę sam, bez linku? Przypisz ją tutaj: NIP/INN, nazwa i jak się z nią skontaktować. Przypisanie działa od razu — jeśli studio nie współpracowało jeszcze z tą firmą ani się z nią nie kontaktowało i nie przypisał jej inny partner. Potem czekamy 90 dni na pierwsze zapytanie klienta; gdy przyjdzie — wszystkie zamówienia tej firmy są Twoje przez 12 miesięcy, jak z linku. Brak zapytania w 90 dni — przypisanie wygasa. Miesięcznie można przypisać do 20 firm.",
+  clientName: "Nazwa firmy",
+  clientInn: "NIP (INN / STIR)",
+  clientInnHint: "9 cyfr; dla innych krajów — do 12",
+  clientContactName: "Osoba kontaktowa",
+  clientPhone: "Telefon",
+  clientTelegram: "Telegram",
+  clientWebsite: "Strona",
+  clientNote: "Czego potrzebuje klient",
+  clientNoteHint: "strona, bot, CRM… — krótko",
+  clientAdd: "Przypisz klienta",
+  claimsEmpty: "Nie masz jeszcze przypisanych klientów.",
+  claimsLimit: (used, max) => `W tym miesiącu przypisano ${used} z ${max}.`,
+  clientWaiting: (date) => `przypisany · czekamy na pierwsze zapytanie do ${date}`,
+  clientActive: (date) => `zapytanie przyszło · zamówienia Twoje do ${date}`,
+  clientExpired: "termin minął — nowe zamówienia nie są zaliczane",
+  clientCancelled: (note) => `przypisanie anulowane${note ? ` · ${note}` : ""}`,
+  clientResult: {
+    ok: "Klient jest przypisany do Ciebie. Gdy przyjdzie od niego zapytanie — bot napisze.",
+    offline: "Serwis jest teraz niedostępny. Spróbuj za minutę.",
+    blocked: "Partnerstwo jest wstrzymane — nie można przypisywać klientów. Napisz do nas.",
+    name: "Podaj nazwę firmy.",
+    inn: "NIP/INN — tylko cyfry: 9 dla Uzbekistanu, do 12 dla innych krajów.",
+    contact: "Podaj telefon lub Telegram klienta — przynajmniej jedno.",
+    limit: "W tym miesiącu przypisano już 20 firm. Kolejne — od początku miesiąca.",
+    studio: "Studio zna już tę firmę: współpracujemy z nią albo już się kontaktowaliśmy. Nie można jej przypisać.",
+    taken: "Tę firmę przypisał już inny partner.",
+    mine: "Ta firma jest już przypisana do Ciebie.",
+    failed: "Nie udało się przypisać. Spróbuj ponownie.",
+  },
+  viaClient: (name) => `przypisany: „${name}”`,
 
   decksTitle: "Prezentacje",
   decksLead: "Wyślij linkiem lub zapisz jako PDF (przycisk na stronie). Link zawiera już Twój kod: kto go otworzy i zostawi zapytanie w ciągu 30 dni, zostanie Twoim klientem.",

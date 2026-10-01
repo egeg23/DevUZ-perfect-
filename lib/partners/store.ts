@@ -13,6 +13,14 @@ import {
   generateSlug,
   agencyCounts,
   agencyMatches,
+  autoPayoutDue,
+  clientCounts,
+  clientFieldsProblem,
+  hostKey,
+  MAX_CLIENTS_PER_MONTH,
+  normalizeInn,
+  sameCompany,
+  tashkentMonth,
   companyKey,
   contactKey,
   DEFAULT_MODEL,
@@ -32,6 +40,8 @@ import {
   type PayoutModel,
   type PartnerBalance,
   type PartnerProject,
+  type ClientFailure,
+  type CompanyFacts,
   type Perk,
   type VoidReason,
 } from "@/lib/partners/rules";
@@ -93,15 +103,17 @@ export type PartnerPayout = {
   note: string | null;
   paid_at: string | null;
   decided_by: string | null;
+  /** Автовыплата с оборота за этот проект; пусто — заявка партнёра на всё доступное. */
+  project_id: string | null;
 };
 
 const PARTNER_COLUMNS =
   "id, created_at, telegram_user_id, username, name, code, requisites, status, percent_override, note, payout_model, model_changed_at";
 const LINK_COLUMNS = "id, created_at, partner_id, code, slug, target, label, perk, clicks, leads, is_default";
 const PAYOUT_COLUMNS =
-  "id, created_at, partner_id, amount_usd, requisites, status, note, paid_at, decided_by";
+  "id, created_at, partner_id, amount_usd, requisites, status, note, paid_at, decided_by, project_id";
 const PROJECT_COLUMNS =
-  "id, title, client, owner_staff_id, kind, amount_usd, tax_percent, dev_cost_usd, stage, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id";
+  "id, title, client, owner_staff_id, kind, amount_usd, tax_percent, dev_cost_usd, stage, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, partner_client_id";
 
 function shapePartner(row: Record<string, unknown>): Partner {
   return {
@@ -149,6 +161,7 @@ function shapePayout(row: Record<string, unknown>): PartnerPayout {
     note: (row.note as string | null) ?? null,
     paid_at: (row.paid_at as string | null) ?? null,
     decided_by: (row.decided_by as string | null) ?? null,
+    project_id: (row.project_id as string | null) ?? null,
   };
 }
 
@@ -156,6 +169,7 @@ export type ProjectWithPartner = PartnerProject & {
   title: string;
   client: string | null;
   partner_agency_id: string | null;
+  partner_client_id: string | null;
 };
 
 function shapeProject(row: Record<string, unknown>): ProjectWithPartner {
@@ -174,6 +188,7 @@ function shapeProject(row: Record<string, unknown>): ProjectWithPartner {
     partner_void_reason: (row.partner_void_reason as string | null) ?? null,
     partner_model: (row.partner_model as string | null) ?? null,
     partner_agency_id: (row.partner_agency_id as string | null) ?? null,
+    partner_client_id: (row.partner_client_id as string | null) ?? null,
   };
 }
 
@@ -674,6 +689,8 @@ export type Referral = {
   linkLabel: string | null;
   /** Заказ агентства партнёра — его название. */
   agencyName: string | null;
+  /** Заказ клиента, закреплённого партнёром вручную, — название из закрепления. */
+  clientName: string | null;
   stage: ReferralStage;
   voidReason: string | null;
   /** Начисление по проекту, если он есть. */
@@ -692,7 +709,7 @@ export async function referralsOf(summary: PartnerSummary): Promise<Referral[]> 
   if (!db) return [];
   const { data: leads } = await db
     .from("leads")
-    .select("id, created_at, company, status, partner_link_id, partner_void_reason, partner_agency_id")
+    .select("id, created_at, company, status, partner_link_id, partner_void_reason, partner_agency_id, partner_client_id")
     .eq("partner_id", summary.partner.id)
     .order("created_at", { ascending: false })
     .limit(300);
@@ -721,6 +738,7 @@ export async function referralsOf(summary: PartnerSummary): Promise<Referral[]> 
 
   const accrualByProject = new Map(summary.accruals.map((a) => [a.project_id, a]));
   const agencyName = new Map((await agenciesOf([summary.partner.id])).map((a) => [a.id, a.name]));
+  const clientName = new Map((await clientsOf([summary.partner.id])).map((c) => [c.id, c.name]));
   const labelByLink = new Map(summary.links.map((l) => [l.id, l.is_default ? null : l.label]));
 
   return rows.map((r) => {
@@ -739,6 +757,7 @@ export async function referralsOf(summary: PartnerSummary): Promise<Referral[]> 
       who: (r.company as string | null)?.trim() || null,
       linkLabel: r.partner_link_id ? (labelByLink.get(String(r.partner_link_id)) ?? null) : null,
       agencyName: r.partner_agency_id ? (agencyName.get(String(r.partner_agency_id)) ?? null) : null,
+      clientName: r.partner_client_id ? (clientName.get(String(r.partner_client_id)) ?? null) : null,
       stage,
       voidReason: (r.partner_void_reason as string | null) ?? null,
       accrual,
@@ -797,7 +816,25 @@ export async function saveRequisites(partner: Partner, raw: string): Promise<boo
   const requisites = raw.trim();
   if (!validRequisites(requisites)) return false;
   const { error } = await db.from("partners").update({ requisites }).eq("id", partner.id);
+  if (!error) await fillAutoPayoutRequisites(partner.id, requisites);
   return !error;
+}
+
+/**
+ * Автовыплата с оборота заводится и без реквизитов — деньги партнёра не
+ * ждут, пока он их внесёт. Внёс — реквизиты встают в открытые автовыплаты,
+ * чтобы владелец видел, куда переводить.
+ */
+async function fillAutoPayoutRequisites(partnerId: string, requisites: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  await db
+    .from("partner_payouts")
+    .update({ requisites })
+    .eq("partner_id", partnerId)
+    .eq("status", "requested")
+    .eq("requisites", "")
+    .not("project_id", "is", null);
 }
 
 /* ── Касания в боте ─────────────────────────────────────────────────────── */
@@ -958,7 +995,11 @@ export async function requestPayout(
   const [summary] = await summarize([partner]);
   const balance = summary.balance;
   if (!canWithdrawNow(now)) return { ok: false, reason: "window", balance };
-  if (summary.payouts.some((p) => p.status === "requested")) return { ok: false, reason: "pending", balance };
+  // Автовыплата с оборота — отдельная заявка за свой проект и ручную не
+  // держит: её сумма уже вычтена из доступного.
+  if (summary.payouts.some((p) => p.status === "requested" && !p.project_id)) {
+    return { ok: false, reason: "pending", balance };
+  }
   if (balance.available < MIN_PAYOUT_USD) return { ok: false, reason: "min", balance };
 
   const { data, error } = await db
@@ -1046,6 +1087,7 @@ export async function updatePartner(
   const { data, error } = await db.from("partners").update(patch).eq("id", partnerId).select("id").maybeSingle();
   if (error) return { ok: false, reason: "failed" };
   if (!data) return { ok: false, reason: "gone" };
+  if (typeof patch.requisites === "string") await fillAutoPayoutRequisites(partnerId, patch.requisites);
 
   await record("partner.updated", {
     actorStaffId: admin.id,
@@ -1087,7 +1129,7 @@ export async function setProjectPartner(
 
   const { data: before } = await db
     .from("projects")
-    .select("id, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id")
+    .select("id, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, partner_client_id")
     .eq("id", projectId)
     .maybeSingle();
   if (!before) return { ok: false, reason: "gone" };
@@ -1112,6 +1154,9 @@ export async function setProjectPartner(
           ? ((before.partner_agency_id as string | null) ?? null)
           : null
       : null,
+    // Закреплённый клиент — только у того же партнёра: другому партнёру
+    // чужое закрепление не переходит.
+    partner_client_id: same ? ((before.partner_client_id as string | null) ?? null) : null,
   };
   if (patch.partner_agency_id) {
     const { data: agency } = await db
@@ -1388,4 +1433,393 @@ export async function attributeAgencyLead(
     return null;
   }
   return { partner, agency };
+}
+
+/* ── Клиенты, закреплённые вручную ──────────────────────────────────────── */
+
+export type ClientStatus = "active" | "expired" | "cancelled";
+
+export type PartnerClient = {
+  id: string;
+  created_at: string;
+  partner_id: string;
+  name: string;
+  inn: string;
+  contact_name: string | null;
+  phone: string | null;
+  telegram: string | null;
+  website: string | null;
+  note: string | null;
+  status: ClientStatus;
+  first_lead_at: string | null;
+  cancelled_at: string | null;
+  cancel_note: string | null;
+};
+
+const CLIENT_COLUMNS =
+  "id, created_at, partner_id, name, inn, contact_name, phone, telegram, website, note, status, first_lead_at, cancelled_at, cancel_note";
+
+function shapeClient(row: Record<string, unknown>): PartnerClient {
+  const status = String(row.status);
+  return {
+    id: String(row.id),
+    created_at: String(row.created_at),
+    partner_id: String(row.partner_id),
+    name: String(row.name),
+    inn: String(row.inn),
+    contact_name: (row.contact_name as string | null) ?? null,
+    phone: (row.phone as string | null) ?? null,
+    telegram: (row.telegram as string | null) ?? null,
+    website: (row.website as string | null) ?? null,
+    note: (row.note as string | null) ?? null,
+    status: status === "expired" ? "expired" : status === "cancelled" ? "cancelled" : "active",
+    first_lead_at: (row.first_lead_at as string | null) ?? null,
+    cancelled_at: (row.cancelled_at as string | null) ?? null,
+    cancel_note: (row.cancel_note as string | null) ?? null,
+  };
+}
+
+/** Что известно о закреплённой компании — для сравнения с лидом. */
+export function clientFacts(client: Pick<PartnerClient, "inn" | "name" | "phone" | "telegram" | "website">): CompanyFacts {
+  return { inn: client.inn, name: client.name, contacts: [client.phone, client.telegram], host: client.website };
+}
+
+export async function clientsOf(partnerIds: readonly string[] | "all"): Promise<PartnerClient[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  if (partnerIds !== "all" && !partnerIds.length) return [];
+  let query = db.from("partner_clients").select(CLIENT_COLUMNS).order("created_at", { ascending: false });
+  if (partnerIds !== "all") query = query.in("partner_id", [...partnerIds]);
+  const { data, error } = await query.limit(2000);
+  if (error) {
+    console.error("partners: не прочитал закреплённых клиентов", error.message);
+    return [];
+  }
+  return (data ?? []).map((row) => shapeClient(row as Record<string, unknown>));
+}
+
+export async function clientById(id: string): Promise<PartnerClient | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data } = await db.from("partner_clients").select(CLIENT_COLUMNS).eq("id", id).maybeSingle();
+  return data ? shapeClient(data as Record<string, unknown>) : null;
+}
+
+/**
+ * ИНН компании в карточке лида — его вписывает менеджер, когда клиент его
+ * назвал. Пустое поле стирает ИНН. Лид, ещё ничей у партнёров, тут же
+ * проверяется на закрепление: `client` — чьим клиентом он оказался.
+ */
+export async function setLeadInn(
+  leadId: string,
+  raw: string,
+): Promise<{ ok: true; inn: string | null } | { ok: false; reason: "offline" | "invalid" | "failed" }> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const text = raw.trim();
+  const inn = text ? normalizeInn(text) : null;
+  if (text && !inn) return { ok: false, reason: "invalid" };
+  const { error } = await db.from("leads").update({ client_inn: inn }).eq("id", leadId);
+  if (error) return { ok: false, reason: "failed" };
+  return { ok: true, inn };
+}
+
+/**
+ * Закрепления, у которых вышел срок, — в «истекло».
+ *
+ * Сроки считаются из дат (rules.ts, clientCounts), так что для привязки
+ * лида это не нужно. Нужно базе: уникальный индекс держит одно действующее
+ * закрепление на ИНН, и просроченное, оставшись «active», не дало бы
+ * закрепить компанию никому. Зовётся перед новой заявкой и из свипа.
+ */
+export async function expireClients(now: Date = new Date()): Promise<number> {
+  const db = serviceClient();
+  if (!db) return 0;
+  const { data } = await db.from("partner_clients").select(CLIENT_COLUMNS).eq("status", "active").limit(2000);
+  const ids = (data ?? [])
+    .map((row) => shapeClient(row as Record<string, unknown>))
+    .filter((c) => !clientCounts(c, now))
+    .map((c) => c.id);
+  if (!ids.length) return 0;
+  await db.from("partner_clients").update({ status: "expired" }).in("id", ids).eq("status", "active");
+  return ids.length;
+}
+
+/**
+ * Знает ли студия эту компанию: лид, проект, договор или касание из
+ * «Касаний» с тем же ИНН, названием, контактом или сайтом.
+ *
+ * Это антифрод: нельзя «застолбить» тех, с кем студия уже работает или кому
+ * уже писала. Таблицы маленькие (сотни строк), поэтому сравнение — здесь, по
+ * тем же правилам, что и привязка лида, а не десятком запросов с ilike.
+ */
+async function studioKnows(facts: CompanyFacts): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const [leads, projects, contracts, prospects] = await Promise.all([
+    db.from("leads").select("client_inn, company, contact_handle, tg_username").limit(10000),
+    db.from("projects").select("client").limit(10000),
+    db.from("contracts").select("client_tax_id, client_name").limit(10000),
+    db.from("prospects").select("host, label, contacts").limit(20000),
+  ]);
+  const known: CompanyFacts[] = [
+    ...(leads.data ?? []).map((l) => ({
+      inn: l.client_inn as string | null,
+      name: l.company as string | null,
+      contacts: [l.contact_handle as string | null, l.tg_username as string | null],
+    })),
+    ...(projects.data ?? []).map((p) => ({ name: p.client as string | null })),
+    ...(contracts.data ?? []).map((c) => ({ inn: c.client_tax_id as string | null, name: c.client_name as string | null })),
+    ...(prospects.data ?? []).map((p) => {
+      const contacts = (p.contacts ?? {}) as Partial<Record<"phones" | "telegram" | "whatsapp" | "emails", string[]>>;
+      return {
+        host: p.host as string | null,
+        name: p.label as string | null,
+        contacts: [...(contacts.phones ?? []), ...(contacts.telegram ?? []), ...(contacts.whatsapp ?? []), ...(contacts.emails ?? [])],
+      };
+    }),
+  ];
+  return known.some((k) => sameCompany(facts, k));
+}
+
+/**
+ * Партнёр закрепляет клиента. Действует сразу — без подтверждения
+ * владельцем, потому что всё, ради чего агентство ждёт подтверждения,
+ * проверяется здесь: студия компанию не знает, другой партнёр её не
+ * закрепил, лимит в месяц не выбран.
+ */
+export async function requestClient(
+  partner: Partner,
+  fields: { name: string; inn: string; contactName: string; phone: string; telegram: string; website: string; note: string },
+  now: Date = new Date(),
+): Promise<{ ok: true; client: PartnerClient } | { ok: false; reason: ClientFailure }> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  if (partner.status !== "active") return { ok: false, reason: "blocked" };
+  const problem = clientFieldsProblem(fields);
+  if (problem) return { ok: false, reason: problem };
+
+  const row = {
+    partner_id: partner.id,
+    name: fields.name.trim().slice(0, 120),
+    inn: normalizeInn(fields.inn) as string,
+    contact_name: fields.contactName.trim().slice(0, 120) || null,
+    phone: fields.phone.trim().slice(0, 40) || null,
+    telegram: fields.telegram.trim().slice(0, 80) || null,
+    website: fields.website.trim().slice(0, 200) || null,
+    note: fields.note.trim().slice(0, 500) || null,
+  };
+  const facts = clientFacts(row);
+
+  await expireClients(now);
+  const all = await clientsOf("all");
+  const month = tashkentMonth(now);
+  if (all.filter((c) => c.partner_id === partner.id && tashkentMonth(new Date(c.created_at)) === month).length >= MAX_CLIENTS_PER_MONTH) {
+    return { ok: false, reason: "limit" };
+  }
+  const holder = all.find((c) => clientCounts(c, now) && sameCompany(facts, clientFacts(c)));
+  if (holder) return { ok: false, reason: holder.partner_id === partner.id ? "mine" : "taken" };
+  // Агентство другого партнёра — тоже занято: его заказы уже идут партнёру.
+  const agency = (await agenciesOf("all")).find(
+    (a) => a.status !== "rejected" && sameCompany(facts, { name: a.name, contacts: [a.contact], host: a.website }),
+  );
+  if (agency) return { ok: false, reason: agency.partner_id === partner.id ? "mine" : "taken" };
+  if (await studioKnows(facts)) return { ok: false, reason: "studio" };
+
+  const { data, error } = await db.from("partner_clients").insert(row).select(CLIENT_COLUMNS).maybeSingle();
+  // Уникальный индекс по ИНН: кто-то закрепил ту же компанию секундой раньше.
+  if (error?.code === "23505") return { ok: false, reason: "taken" };
+  if (error || !data) return { ok: false, reason: "failed" };
+  const client = shapeClient(data as Record<string, unknown>);
+
+  await record("partner.client_claimed", {
+    targetType: "partner",
+    targetId: partner.id,
+    meta: { client_id: client.id, name: client.name, inn: client.inn },
+  });
+  return { ok: true, client };
+}
+
+/** Владелец отменяет закрепление — с причиной, она уходит партнёру. */
+export async function cancelClient(
+  clientId: string,
+  note: string | null,
+  admin: Staff,
+  ip: string,
+): Promise<{ ok: true; client: PartnerClient } | { ok: false; reason: "offline" | "forbidden" | "gone" | "invalid" | "failed" }> {
+  if (admin.role !== "admin") return { ok: false, reason: "forbidden" };
+  const reason = note?.trim().slice(0, 300) || "";
+  if (!reason) return { ok: false, reason: "invalid" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const { data, error } = await db
+    .from("partner_clients")
+    .update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: admin.id, cancel_note: reason })
+    .eq("id", clientId)
+    .neq("status", "cancelled")
+    .select(CLIENT_COLUMNS)
+    .maybeSingle();
+  if (error) return { ok: false, reason: "failed" };
+  if (!data) return { ok: false, reason: "gone" };
+  const client = shapeClient(data as Record<string, unknown>);
+
+  await record("partner.client_cancelled", {
+    actorStaffId: admin.id,
+    targetType: "partner",
+    targetId: client.partner_id,
+    ip,
+    meta: { client_id: client.id, name: client.name, inn: client.inn, note: reason },
+  });
+  return { ok: true, client };
+}
+
+/**
+ * Лид — от клиента, которого партнёр закрепил вручную? Тогда он партнёра.
+ *
+ * Читает лид сам: так одна функция служит и новой заявке (форма, чат,
+ * бот), и ИНН, вписанному в карточку позже. Лид, уже привязанный к
+ * партнёру (по ссылке или агентству), не трогается — кто сработал раньше,
+ * тот и важнее. Исключение — привязка, которая не засчитана: тогда
+ * закрепление честнее.
+ *
+ * Первая заявка клиента запускает срок в 12 месяцев (rules.ts,
+ * CLIENT_TERM_MONTHS), и ИНН из закрепления ложится в лид, если его там нет.
+ */
+export async function attributeClientLead(
+  leadId: string,
+  now: Date = new Date(),
+): Promise<{ partner: Partner; client: PartnerClient; first: boolean } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data: lead } = await db
+    .from("leads")
+    .select("id, client_inn, company, contact_handle, tg_username, partner_id, partner_void_reason")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (!lead) return null;
+  if (lead.partner_id && !lead.partner_void_reason) return null;
+
+  const facts: CompanyFacts = {
+    inn: lead.client_inn as string | null,
+    name: lead.company as string | null,
+    contacts: [lead.contact_handle as string | null, lead.tg_username as string | null],
+  };
+  const client = (await clientsOf("all")).find((c) => clientCounts(c, now) && sameCompany(clientFacts(c), facts));
+  if (!client) return null;
+  const partner = await partnerById(client.partner_id);
+  if (!partner || partner.status !== "active") return null;
+
+  const { error } = await db
+    .from("leads")
+    .update({
+      partner_id: partner.id,
+      partner_link_id: null,
+      partner_code: partner.code,
+      partner_void_reason: null,
+      partner_model: partner.payout_model,
+      partner_agency_id: null,
+      partner_client_id: client.id,
+      ...(lead.client_inn ? {} : { client_inn: client.inn }),
+    })
+    .eq("id", leadId);
+  if (error) {
+    console.error("partners: не привязал лид закреплённого клиента", error.message);
+    return null;
+  }
+  // Проект, заведённый из лида раньше, чем лид узнали, — тоже партнёра.
+  await db
+    .from("projects")
+    .update({ partner_id: partner.id, partner_model: partner.payout_model, partner_client_id: client.id })
+    .eq("lead_id", leadId)
+    .is("partner_id", null);
+
+  // Срок в 12 месяцев — с первой заявки; условие в запросе, чтобы две
+  // заявки разом не сдвинули его дважды.
+  let first = false;
+  if (!client.first_lead_at) {
+    const { data: started } = await db
+      .from("partner_clients")
+      .update({ first_lead_at: now.toISOString() })
+      .eq("id", client.id)
+      .is("first_lead_at", null)
+      .select(CLIENT_COLUMNS)
+      .maybeSingle();
+    if (started) {
+      first = true;
+      Object.assign(client, shapeClient(started as Record<string, unknown>));
+    }
+  }
+  return { partner, client, first };
+}
+
+/* ── Автовыплата с оборота ──────────────────────────────────────────────── */
+
+/**
+ * Проект оплачен целиком, модель «с оборота» — завести выплату партнёру.
+ *
+ * Без заявки партнёра и без ожидания начала месяца: база «с оборота» —
+ * сумма проекта, и она известна сразу. Строго одна на проект: держит
+ * уникальный индекс по project_id (миграция 0072) — запись платежа и свип
+ * могут прийти одновременно, вторая вставка не пройдёт.
+ *
+ * Не заводится, если доступного меньше начисления: значит, эти деньги
+ * партнёр уже попросил обычной заявкой, и вторая выплата задвоила бы их.
+ *
+ * `null` — выплаты нет (не та модель, не оплачено, уже заведена).
+ */
+export async function autoPayoutTurnover(
+  projectId: string,
+): Promise<{ partner: Partner; payout: PartnerPayout; project: { title: string; client: string | null } } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data: project } = await db
+    .from("projects")
+    .select("id, title, client, partner_id, partner_void_reason")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (!project?.partner_id || project.partner_void_reason) return null;
+
+  const partner = await partnerById(String(project.partner_id));
+  if (!partner || partner.status !== "active") return null;
+  const [summary] = await summarize([partner]);
+  if (summary.payouts.some((p) => p.project_id === projectId)) return null;
+  const accrual = summary.accruals.find((a) => a.project_id === projectId) ?? null;
+  if (!autoPayoutDue(accrual) || !accrual) return null;
+  if (summary.balance.available < accrual.amount_usd) return null;
+
+  const requisites = partner.requisites && validRequisites(partner.requisites) ? partner.requisites : "";
+  const { data, error } = await db
+    .from("partner_payouts")
+    .insert({ partner_id: partner.id, amount_usd: accrual.amount_usd, requisites, project_id: projectId })
+    .select(PAYOUT_COLUMNS)
+    .maybeSingle();
+  if (error || !data) {
+    if (error?.code !== "23505") console.error("partners: автовыплата не записалась", error?.message);
+    return null;
+  }
+  const payout = shapePayout(data as Record<string, unknown>);
+
+  await record("partner.payout_auto", {
+    targetType: "partner",
+    targetId: partner.id,
+    meta: { payout_id: payout.id, project_id: projectId, amount_usd: payout.amount_usd },
+  });
+  return {
+    partner,
+    payout,
+    project: { title: String(project.title ?? ""), client: (project.client as string | null) ?? null },
+  };
+}
+
+/** Оплаченные целиком партнёрские проекты без автовыплаты — для свипа. */
+export async function turnoverProjectsDue(): Promise<string[]> {
+  const partners = (await listPartners()).filter((p) => p.status === "active");
+  if (!partners.length) return [];
+  const summaries = await summarize(partners);
+  const out: string[] = [];
+  for (const s of summaries) {
+    const done = new Set(s.payouts.map((p) => p.project_id).filter(Boolean));
+    for (const a of s.accruals) if (autoPayoutDue(a) && !done.has(a.project_id)) out.push(a.project_id);
+  }
+  return out;
 }

@@ -7,6 +7,8 @@ import { feedStreams } from "@/lib/admin/stream-store";
 import { sendTeamNews } from "@/lib/admin/team-news";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
+import { settleTurnoverDue } from "@/lib/partners/autopay";
+import { expireClients } from "@/lib/partners/store";
 import { advanceQueues, redeliverLostCards } from "@/lib/admin/lead-queue-store";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
 import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
@@ -262,6 +264,17 @@ export async function POST(request: Request) {
   // узнавать о них от самого покупателя значит узнавать слишком поздно.
   const orders = await sweepOrders();
 
+  // Партнёры. Выплата с оборота заводится при записи платежа; здесь —
+  // страховка, если та запись не дошла до конца (упал Telegram, оборвался
+  // запрос). Дубля не будет: одна выплата на проект держится базой.
+  // И закрепления клиентов, у которых вышел срок, — в «истекло», чтобы
+  // компанию снова можно было закрепить.
+  const partnerPayouts = await settleTurnoverDue().catch((error) => {
+    console.error("партнёры, автовыплаты:", error);
+    return 0;
+  });
+  const partnerClientsExpired = await expireClients(new Date()).catch(() => 0);
+
   // Рекомендации — здесь же: в понедельник утром недельные, каждое утро
   // дневные. Сам решает, пора ли; в остальные проходы возвращается сразу.
   const coach = await runCoach(new Date());
@@ -330,6 +343,8 @@ export async function POST(request: Request) {
     silent,
     talks,
     reviews,
+    partnerPayouts,
+    partnerClientsExpired,
     ok: true,
     sent,
     skipped,

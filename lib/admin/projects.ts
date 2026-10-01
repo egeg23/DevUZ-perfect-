@@ -212,20 +212,23 @@ export async function createProject(
   // Проект из лида наследует партнёра: клиент пришёл по ссылке, и это факт
   // о клиенте, а не о заявке. Аннулированная привязка не наследуется.
   // С ним едут модель дохода, зафиксированная при заявке, и агентство, если
-  // заказ пришёл от агентства партнёра.
+  // заказ пришёл от агентства партнёра, и закрепление — если от клиента,
+  // которого партнёр закрепил вручную.
   let partnerId: string | null = null;
   let partnerModel: string | null = null;
   let partnerAgencyId: string | null = null;
+  let partnerClientId: string | null = null;
   if (fields.leadId) {
     const { data: lead } = await db
       .from("leads")
-      .select("partner_id, partner_void_reason, partner_model, partner_agency_id")
+      .select("partner_id, partner_void_reason, partner_model, partner_agency_id, partner_client_id")
       .eq("id", fields.leadId)
       .maybeSingle();
     if (lead?.partner_id && !lead.partner_void_reason) {
       partnerId = lead.partner_id as string;
       partnerModel = (lead.partner_model as string | null) ?? null;
       partnerAgencyId = (lead.partner_agency_id as string | null) ?? null;
+      partnerClientId = (lead.partner_client_id as string | null) ?? null;
     }
   }
 
@@ -238,6 +241,7 @@ export async function createProject(
       partner_id: partnerId,
       partner_model: partnerModel,
       partner_agency_id: partnerAgencyId,
+      partner_client_id: partnerClientId,
       owner_staff_id: owner,
       amount_usd: fields.amountUsd ?? null,
       deadline: fields.deadline || null,

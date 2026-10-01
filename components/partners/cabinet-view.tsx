@@ -10,6 +10,10 @@ import {
   PAYOUT_MODELS,
   agencyCounts,
   agencyUntilDay,
+  clientCounts,
+  clientUntilDay,
+  MAX_CLIENTS_PER_MONTH,
+  tashkentMonth,
   canSwitchModel,
   nextModelSwitch,
   TARGETS,
@@ -20,7 +24,7 @@ import {
 } from "@/lib/partners/rules";
 import type { PromoMaterial } from "@/lib/partners/promo";
 import { promoCaption, promoFileUrl, promoKind, promoShape, promoSize } from "@/lib/partners/promo-rules";
-import type { Partner, PartnerAgency, PartnerSummary, Referral } from "@/lib/partners/store";
+import type { Partner, PartnerAgency, PartnerClient, PartnerSummary, Referral } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
 /**
@@ -38,6 +42,7 @@ export type CabinetActions = {
   requestPayout: (formData: FormData) => Promise<void>;
   switchModel: (formData: FormData) => Promise<void>;
   requestAgency: (formData: FormData) => Promise<void>;
+  requestClient: (formData: FormData) => Promise<void>;
 };
 
 const CARD = "rounded-xl border border-white/12 bg-white/[0.03] px-5 py-5";
@@ -65,6 +70,7 @@ export function CabinetView({
   summary,
   referrals,
   agencies,
+  clients = [],
   media = [],
   activity,
   result,
@@ -77,6 +83,8 @@ export function CabinetView({
   summary: PartnerSummary;
   referrals: Referral[];
   agencies: PartnerAgency[];
+  /** Клиенты, закреплённые вручную по ИНН. */
+  clients?: PartnerClient[];
   /** Промо-материалы и адрес превью (файл с нашего сервера, только вошедшим). */
   media?: { material: PromoMaterial; preview: string | null }[];
   activity: { day: string; clicks: number; leads: number }[];
@@ -94,6 +102,8 @@ export function CabinetView({
   const canRequest = open && !pending && summary.balance.available >= MIN_PAYOUT_USD && Boolean(partner.requisites);
   const switchable = canSwitchModel(partner.model_changed_at, now);
   const nextSwitch = nextModelSwitch(partner.model_changed_at, now);
+  const month = tashkentMonth(now);
+  const claimedThisMonth = clients.filter((c) => tashkentMonth(new Date(c.created_at)) === month).length;
 
 
   return (
@@ -448,6 +458,92 @@ export function CabinetView({
           </form>
         </section>
 
+        {/* ── Клиенты, закреплённые вручную ─────────────────────── */}
+        <section id="claims" className="mt-12 scroll-mt-28">
+          <h2 className="font-display text-2xl font-semibold">{t.claimsTitle}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.claimsLead}</p>
+          {clients.length ? (
+            <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+              {clients.map((c) => {
+                const live = clientCounts(c, now);
+                return (
+                  <li key={c.id} className={`${CARD} py-4`}>
+                    <p className="font-medium">{c.name}</p>
+                    <p className="mt-0.5 font-mono text-xs text-muted">
+                      {c.inn}
+                      {c.contact_name ? ` · ${c.contact_name}` : ""}
+                    </p>
+                    <p
+                      className={`mt-2 text-xs ${
+                        c.status === "cancelled" || !live
+                          ? "text-faint"
+                          : c.first_lead_at
+                            ? "text-green"
+                            : "text-gold"
+                      }`}
+                    >
+                      {c.status === "cancelled"
+                        ? t.clientCancelled(c.cancel_note)
+                        : !live
+                          ? t.clientExpired
+                          : c.first_lead_at
+                            ? t.clientActive(clientUntilDay(c))
+                            : t.clientWaiting(clientUntilDay(c))}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-faint">{t.claimsEmpty}</p>
+          )}
+          <form action={actions.requestClient} className={`mt-4 grid gap-4 sm:grid-cols-2 ${CARD}`}>
+            <input type="hidden" name="l" value={locale} />
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientName}
+              <input name="name" required maxLength={120} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientInn}
+              <input
+                name="inn"
+                required
+                inputMode="numeric"
+                pattern="[0-9 \-]{9,15}"
+                maxLength={15}
+                placeholder={t.clientInnHint}
+                className={INPUT}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientContactName}
+              <input name="contact_name" maxLength={120} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientPhone}
+              <input name="phone" type="tel" maxLength={40} placeholder="+998 90 123 45 67" className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientTelegram}
+              <input name="telegram" maxLength={80} placeholder="@username" className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientWebsite}
+              <input name="website" maxLength={200} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm sm:col-span-2">
+              {t.clientNote}
+              <input name="note" maxLength={500} placeholder={t.clientNoteHint} className={INPUT} />
+            </label>
+            <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
+              <button type="submit" className={BUTTON} disabled={claimedThisMonth >= MAX_CLIENTS_PER_MONTH}>
+                {t.clientAdd}
+              </button>
+              <span className="text-xs text-faint">{t.claimsLimit(claimedThisMonth, MAX_CLIENTS_PER_MONTH)}</span>
+            </div>
+          </form>
+        </section>
+
         {/* ── Презентации ────────────────────────────────────────── */}
         <section id="decks" className="mt-12 scroll-mt-28">
           <h2 className="font-display text-2xl font-semibold">{t.decksTitle}</h2>
@@ -593,6 +689,10 @@ export function resultText(t: CabinetCopy, code: string): { ok: boolean; text: s
     return t.modelResult[key] ? { ok: key === "ok", text: t.modelResult[key] } : null;
   }
   if (code === "media_gone") return { ok: false, text: t.mediaGone };
+  if (code.startsWith("claim_")) {
+    const key = code.slice(6) as keyof CabinetCopy["clientResult"];
+    return t.clientResult[key] ? { ok: key === "ok", text: t.clientResult[key] } : null;
+  }
   if (code.startsWith("agency_")) {
     const key = code.slice(7) as keyof CabinetCopy["agencyResult"];
     return t.agencyResult[key] ? { ok: key === "ok", text: t.agencyResult[key] } : null;
@@ -628,7 +728,7 @@ function ReferralRow({ x, t, locale, mainLabel }: { x: Referral; t: CabinetCopy;
         {x.who ?? t.unnamed}
       </td>
       <td data-label={t.colFrom} className="px-4 py-3 text-muted">
-        {x.agencyName ? t.viaAgency(x.agencyName) : (x.linkLabel ?? mainLabel)}
+        {x.agencyName ? t.viaAgency(x.agencyName) : x.clientName ? t.viaClient(x.clientName) : (x.linkLabel ?? mainLabel)}
       </td>
       <td data-label={t.colStage} className={`px-4 py-3 ${stageTone}`}>
         {t.stages[x.stage]}
