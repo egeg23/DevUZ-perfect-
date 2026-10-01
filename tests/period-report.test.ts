@@ -93,13 +93,18 @@ test("касания и порция считаются так же, как в �
 /* ── Объявление «Коллеги, а у нас обнова!» ───────────────────────────── */
 
 test("объявление о задачах и партнёрке: начало, кому, когда, кнопки — как на экране", async () => {
-  const news = NEWS.find((n) => n.id === "2026-10-02-tasks-partners");
+  const news = NEWS.find((n) => n.id === "2026-10-01-tasks");
   assert.ok(news);
   assert.deepEqual([...news.roles].sort(), ["head", "manager"]);
   // Пятница, 2 октября, 10:00 по Ташкенту — уходит; 1 октября — ещё нет.
-  assert.equal(newsActive(news, new Date("2026-10-02T05:00:00Z")), true);
-  assert.equal(newsWindow(new Date("2026-10-02T05:00:00Z")), true);
-  assert.equal(newsActive(news, new Date("2026-10-01T10:00:00Z")), false);
+  // Владелец: «отправляй сейчас» — 1 октября в 22:30 по Ташкенту уходит,
+  // хотя обычные объявления ждут 09:00; ночью, с 23:00 до 07:00, — нет.
+  const evening = new Date("2026-10-01T17:30:00Z");
+  assert.equal(newsActive(news, evening), true);
+  assert.equal(newsWindow(evening), false);
+  assert.ok(news.window);
+  assert.equal(news.window(evening), true);
+  assert.equal(news.window(new Date("2026-10-01T19:00:00Z")), false);
 
   const text = (await news.text("manager")) ?? "";
   assert.ok(text.startsWith("<b>Коллеги, а у нас обнова!</b>"), "владелец просил начать с этих слов");
@@ -111,8 +116,9 @@ test("объявление о задачах и партнёрке: начало
   for (const label of ["✅ Взять в работу", "✅ Сделано", "✖ Не сделано", "🕑 Перенести срок"]) {
     assert.ok(text.includes(label) && bot.includes(label), label);
   }
-  const panel = read("content/admin-panel/tasks.ts") + read("content/admin-panel/partner-clients.ts");
-  for (const label of ["Поставить задачу", "Включить уведомления", "ИНН компании", "Сохранить ИНН"]) {
+  const panel = read("content/admin-panel/tasks.ts");
+  assert.doesNotMatch(text, /партнёр|ИНН/i, "владелец просил только про CRM");
+  for (const label of ["Поставить задачу", "Включить уведомления"]) {
     assert.ok(text.includes(`«${label}»`) && panel.includes(`"${label}"`), label);
   }
 });
