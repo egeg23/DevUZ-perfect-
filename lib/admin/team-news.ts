@@ -2,6 +2,7 @@ import { isWorkday, tashkentHour } from "@/lib/admin/portion";
 import type { Role } from "@/lib/admin/roles";
 import { periodReport } from "@/lib/admin/period-report-store";
 import { STREAM_ON } from "@/lib/admin/stream";
+import { messageWindow } from "@/lib/admin/tasks";
 import { sendKeyboard, sendMessage } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -32,6 +33,12 @@ export type News = {
   text: (role: Role, now?: Date) => string | null | Promise<string | null>;
   /** Показать внизу чата кнопку «▶️ Получать лиды». */
   streamKey?: boolean;
+  /**
+   * Когда можно слать, если не в обычные 09:00–19:00 по будням. Владелец,
+   * 01.10, о задачах: «отправляй сейчас» — в 22:30; для них окно то же, что
+   * у сообщений бота о задачах: всё, кроме ночи 23:00–07:00.
+   */
+  window?: (now: Date) => boolean;
 };
 
 /** Объявления уходят по будням с 09:00 до 19:00 по Ташкенту — не ночью. */
@@ -79,7 +86,7 @@ function touchesNews(role: Role): string {
 }
 
 /**
- * Задачи команды (PR #175, #177) и клиенты партнёров без ссылки (PR #176).
+ * Задачи команды (PR #175, #177).
  *
  * Владелец, 01.10: «По этим 2 апдейтам разошли всем сотрудникам инфо в
  * боте, начни со слов: Коллеги, а у нас обнова!»
@@ -109,9 +116,6 @@ function tasksNews(): string {
     "<b>Скоро</b>",
     "Задачи по каждому лиду можно будет ставить прямо из «Касаний»: одна кнопка у компании — и задача «перезвонить» или «отправить КП» сразу в CRM, со ссылкой на лид. Ни один клиент не потеряется между первым сообщением и сделкой.",
     "",
-    "<b>И ещё: клиенты партнёров — теперь и без ссылки</b>",
-    "Партнёр может закрепить компанию за собой в своём кабинете по ИНН. Когда такая компания нам пишет, в карточке лида видно «Клиент партнёра Имя». Там же новое поле «ИНН компании» → «Сохранить ИНН»: клиент назвал ИНН — впишите, система сама проверит партнёра. Работаете с таким лидом как обычно.",
-    "",
     "Подробно — в панели: в «Лидах» кнопка «Как пользоваться разделом».",
   ].join("\n");
 }
@@ -136,11 +140,14 @@ export const NEWS: readonly News[] = [
     text: (_role, now) => periodReport(now),
   },
   {
-    id: "2026-10-02-tasks-partners",
-    from: "2026-10-02",
+    // Владелец, 01.10, 22:30: «Отправляй сейчас от бота сообщения с
+    // обновлениями по CRM только» — без партнёрки и не дожидаясь утра.
+    id: "2026-10-01-tasks",
+    from: "2026-10-01",
     until: "2026-10-07",
     roles: ["head", "manager"],
     text: tasksNews,
+    window: messageWindow,
   },
 ];
 
@@ -153,8 +160,7 @@ type Row = { id: string; role: Role; chat: number };
  * актуальна.
  */
 export async function sendTeamNews(now: Date = new Date(), list: readonly News[] = NEWS): Promise<number> {
-  if (!newsWindow(now)) return 0;
-  const active = list.filter((news) => newsActive(news, now));
+  const active = list.filter((news) => newsActive(news, now) && (news.window ?? newsWindow)(now));
   if (!active.length) return 0;
   const db = serviceClient();
   if (!db) return 0;
