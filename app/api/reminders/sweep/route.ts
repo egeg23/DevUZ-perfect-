@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { record } from "@/lib/admin/audit";
 import { preparePortionsInBackground, runPortions } from "@/lib/admin/portion-store";
 import { feedStreams } from "@/lib/admin/stream-store";
+import { runTaskSweep } from "@/lib/admin/task-store";
 import { sendTeamNews } from "@/lib/admin/team-news";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
@@ -222,6 +223,12 @@ export async function POST(request: Request) {
   // минуты на компанию, а таймер ждёт ответа шестьдесят секунд.
   // Автопоиск по картам: поиск раз в день с 06:00 — до раздачи порций, —
   // проверка найденных сайтов понемногу, после ответа таймеру.
+  // Задачи команды: досылка того, что поставили ночью, и напоминания —
+  // не взяли за 30 минут, час до срока, просрочено. Вне рабочего времени
+  // проход ничего не делает — всё дождётся утра.
+  const tasks = await runTaskSweep(new Date()).catch((error) => ({ assigned: 0, steps: 0, nudges: 0, errors: [String(error)] }));
+  if (tasks.errors.length) console.error("задачи:", tasks.errors.join("; "));
+
   const maps = await runDailySearches(new Date());
   const portions = await runPortions(new Date());
   after(async () => {
@@ -325,6 +332,7 @@ export async function POST(request: Request) {
     scout,
     maps,
     portions,
+    tasks,
     coach,
     shifts,
     silent,

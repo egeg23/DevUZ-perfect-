@@ -119,6 +119,12 @@ export const AUDIT_ACTIONS = [
   "google.client_saved",
   "google.connected",
   "google.property_set",
+  // Задачи команды: поставил, взял, закрыл, перенёс срок.
+  "task.created",
+  "task.taken",
+  "task.done",
+  "task.failed",
+  "task.moved",
 ] as const;
 
 /**
