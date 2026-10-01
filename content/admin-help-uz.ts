@@ -171,6 +171,7 @@ export const uz: HelpCopy = {
               "**«Переписка с клиентом»** → «Показать переписку»: mijoz saytdagi yoki botdagi assistentga vazifa, pul va muddatlar haqida aytgan hamma narsa. Bu ham faqat olgandan keyin ochiladi va bu ham yoziladi. Formadan kelgan murojaatlarda yozishma yo‘q.",
               "**«Обсуждение»** — mijoz haqida butun jamoa uchun izohlar; lidni olib borayotgan odamga Telegramda xabar keladi. Mijoz kontaktini u yerga yozmang. Pastroqda — brif, saytdan kelgan smeta va izohlar. Aloqalardan kelgan lidlar haqida — [aloqa bo‘yicha birlamchi suhbat](#prospect-replies) bandi.",
               "Ariza raqami yonidagi sariq belgi — mijozda 30% chegirma bor va nima uchun ekani yozilgan: **«написал в первую минуту»** — u saytda birinchi daqiqa taymeri ishlayotganda yordamchiga saytda yoki Telegramda yozgan; **«не уложились в 20 секунд»** — javob kafolati ishlagan. Chegirma mijozga allaqachon ko‘rsatilgan, u muhokama qilinmaydi — uni hisob-kitobda inobatga oling. Kutish uchun uzr so‘rash faqat ikkinchi holatda kerak.",
+              "**«Kompaniya STIRi»** — mijoz o‘z STIRini (INN) aytgan bo‘lsa yoki u rekvizitlarida bo‘lsa, 9–12 raqamni yozing va **«STIRni saqlash»** ni bosing. Bu kompaniyani oldin hamkor o‘ziga biriktirgan bo‘lsa, lid uning mijoziga aylanadi: «Партнёр» maydonida «… hamkorining mijozi (… biriktirilgan)» paydo bo‘ladi, hamkorga mijoz kontaktlarisiz xabar ketadi. Lidni avvalgidek siz olib borasiz; hamkorga shunchaki buyurtma hisoblanadi. STIRni faqat o‘z lidingizga yozish mumkin.",
             ],
             head: [
               "Siz istalgan kartochkani ochasiz. Har bir ochilish yozib qo‘yiladi.",
@@ -179,6 +180,7 @@ export const uz: HelpCopy = {
               "**«Показать контакт»** va **«Показать переписку»** olingan har qanday lid bo‘yicha ishlaydi. Bo‘sh lid bo‘yicha — faqat «Взять себе» bosilgandan keyin: siz navbatda hamma bilan teng turasiz. Har bir ochilish jurnalga tushadi.",
               "**«Обсуждение»** — butun jamoa uchun izohlar, lidni olib borayotgan odamga ular Telegramda keladi. Pastroqda — brif, smeta va izohlar.",
               "Ariza raqami yonidagi sariq belgi — mijozda 30% chegirma bor va nima uchun ekani yozilgan: **«написал в первую минуту»** — u saytda birinchi daqiqa taymeri ishlayotganda yordamchiga saytda yoki Telegramda yozgan; **«не уложились в 20 секунд»** — javob kafolati ishlagan. Chegirma mijozga allaqachon ko‘rsatilgan, u muhokama qilinmaydi — uni hisob-kitobda inobatga oling. Kutish uchun uzr so‘rash faqat ikkinchi holatda kerak.",
+              "**«Kompaniya STIRi»** → **«STIRni saqlash»** — istalgan lidda, 9–12 raqam. Kompaniyani hamkor biriktirgan bo‘lsa, lid uning mijoziga aylanadi: «Партнёр» maydonida — «… hamkorining mijozi (… biriktirilgan)», hamkorga — mijoz kontaktlarisiz xabar. Lidni kim olib borishi bundan o‘zgarmaydi.",
             ],
             admin: [
               "Siz istalgan kartochkani ochasiz va hamma narsani qila olasiz: olish, navbatga qaytarish, berish, holatni o‘zgartirish, kontakt va yozishmani ochish — bo‘sh lidda ham, olmasdan oldin. Har bir harakat jurnalga ismingiz bilan tushadi.",
@@ -186,6 +188,7 @@ export const uz: HelpCopy = {
               "**«Статус»**: «выиграли», «проиграли» va «отложен» avtoeslatmalarni bekor qiladi; «новый» faqat bo‘sh lidda bor, biriktirilganda yo‘q — lidni «Вернуть в очередь» bo‘shatadi.",
               "**«Обсуждение»** butun jamoaga ko‘rinadi, lidni olib borayotgan odamga Telegramda keladi. Pastroqda — brif, smeta va assistent izohlari.",
               "Ariza raqami yonidagi sariq belgi — mijozda 30% chegirma bor va nima uchun ekani yozilgan: **«написал в первую минуту»** — u saytda birinchi daqiqa taymeri ishlayotganda yordamchiga saytda yoki Telegramda yozgan; **«не уложились в 20 секунд»** — javob kafolati ishlagan. Chegirma mijozga allaqachon ko‘rsatilgan, u muhokama qilinmaydi — uni hisob-kitobda inobatga oling. Kutish uchun uzr so‘rash faqat ikkinchi holatda kerak. Bunday chegirmalar soni va sababi — [statistikada](/admin/stats), daqiqa uzunligi — serverdagi `FIRST_MINUTE_SECONDS` (odatda 60, 0 o‘chiradi).",
+              "**«Kompaniya STIRi»** → **«STIRni saqlash»** — istalgan lidda. STIR bo‘yicha lid [hamkor biriktirgan mijoz](#partners-claims) sifatida taniladi: «Партнёр» maydonida — «… hamkorining mijozi (… biriktirilgan)», hamkorga xabar ketadi, liddan ochilgan loyiha hamkorni meros oladi.",
             ],
           },
         },
@@ -1220,6 +1223,15 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "claims",
+          title: "Qo‘lda biriktirilgan mijozlar",
+          body: [
+            "Kompaniyani o‘zi — havolasiz — olib keladigan hamkor uni saytdagi kabinetda, «Mening mijozlarim» blokida biriktiradi: nomi, STIR (INN, 9–12 raqam), mas’ul shaxs, telefon yoki Telegram (kamida bittasi), sayt va mijozga nima kerakligi. Tasdiqlash shart emas — biriktirish darhol kuchga kiradi, kim oldin biriktirsa, mijoz o‘shaniki. Buning o‘rniga so‘rov paytida baza o‘zi tekshiradi: bu kompaniya lidlar, loyihalar, shartnomalar va [Aloqalar](/admin/prospect) orasida yo‘qmi — STIR, nom, telefon, Telegram va sayt bo‘yicha — va uni boshqa hamkor yoki uning agentligi biriktirmaganmi. Tekshiruvdan o‘tmasa — hamkor sababi bilan rad javobini ko‘radi («studiyada allaqachon bor», «boshqa hamkor biriktirgan»), biriktirish bo‘lmaydi. Shunday qilib biz allaqachon ishlayotgan yoki yozgan kompaniyalarni «egallab olish» mumkin emas. Bitta hamkordan oyiga 20 tadan ortiq biriktirish qabul qilinmaydi.",
+            "Sizga STIR va kontakt bilan «🧾 Партнёр закрепил клиента» keladi, bu yerda esa «Hamkorlar biriktirgan mijozlar» blokida qator paydo bo‘ladi. Avval mijozdan birinchi so‘rovni 90 kun kutamiz — «birinchi so‘rovni … gacha kutmoqda». So‘rov o‘zi taniladi: saytdagi formadan, chat va botdan — STIR, nom, telefon yoki Telegram mos kelsa; keyinroq ham — menejer lid kartochkasiga STIRni yozganda. Hamkorning havolasi yoki agentligi ishlagan bo‘lsa, ular biriktirishdan muhimroq. Birinchi so‘rovdan boshlab 12 oy mijozning barcha buyurtmalari hamkorga hisoblanadi — «buyurtmalar … gacha hamkorga», bunday liddan ochilgan loyiha hamkorni meros oladi, hamkorga esa mijoz kontaktlarisiz «🧾 Пришла заявка от закреплённого вами клиента» ketadi. 90 kun so‘rov bo‘lmasa yoki 12 oy o‘tsa — «muddat tugadi»: yangi buyurtmalar oddiydek ketadi, allaqachon bog‘langanlari hamkorda qoladi, kompaniyani esa yana biriktirish mumkin.",
+            "Kompaniya aslida bizniki ekanini ko‘rsangiz — u bilan paneldan tashqarida ishlaganmiz, studiya tanishlari, — sababini yozing va **«biriktirishni bekor qilish»** ni bosing. Sababsiz bekor bo‘lmaydi: uni hamkor botda oladi. Bekor qilingandan keyin mijozning yangi so‘rovlari hamkorga hisoblanmaydi; allaqachon bog‘langan lid yoki loyiha loyiha kartochkasida, «Партнёр» blokida o‘tkaziladi.",
+          ],
+        },
+        {
           id: "promo",
           title: "Promo materiallar",
           body: [
@@ -1235,6 +1247,7 @@ export const uz: HelpCopy = {
           body: [
             "Hamkor kabinetda «Запросить выплату» ni bosadi yoki botga /payout va rekvizitlarini yozadi (USDT TRC-20 yoki matn). Oyning birinchi ish kunidan boshlab, $50 dan, bitta ochiq so‘rov, doim butun mavjud summaga. Sizga «💸 Заявка на выплату» keladi.",
             "Avval pulni o‘zingiz o‘tkazing, keyin «Заявки на выплату» blokida **«Выплачено»** tugmasini bosing (izoh bilan ham bo‘ladi). Yoki «отклонить» — summa mavjud pulga qaytadi, hamkor sababini ko‘radi.",
+            "«Aylanmadan» modeli so‘rovni kutmaydi: loyiha bo‘yicha to‘lovlar uning summasiga yetishi bilan — to‘lov [Moliya](/admin/finance) bo‘limida yozilganda yoki shartnoma hisobida «Оплачен» bosilganda — to‘lov so‘rovi o‘zi yaratiladi, hamkorning shu loyihadagi butun ulushiga, oy boshini kutmasdan va $50 minimumisiz. Hamkorga — «✅ … выплата в обработке» (rekvizitlari bo‘lmasa — ularni kabinetga kiritish iltimosi), sizga — «💸 Выплата партнёру с оборота: выплатить … за …». «Заявки на выплату» blokida bunday qatorda «aylanmadan, «…» uchun — loyiha to‘liq to‘langanda o‘zi yaratildi» degan yozuv bor; keyin oddiysidek: o‘tkazdingiz — **«Выплачено»**. Bitta loyiha bo‘yicha bunday so‘rov qat’iy bitta yaratiladi: rad etsangiz — summa hamkorning mavjud puliga qaytadi va u uni oddiy so‘rov bilan so‘raydi. To‘lovni yozish yarim yo‘lda uzilib qolsa, svip o‘tkazib yuborilganini bir necha daqiqada yaratadi. «Foydadan» modeli — avvalgidek hamkor so‘rovi bo‘yicha: uning ulushi tannarxga bog‘liq.",
           ],
         },
       ],

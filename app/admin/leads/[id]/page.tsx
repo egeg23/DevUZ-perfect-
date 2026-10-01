@@ -10,6 +10,7 @@ import {
   decideTransferAction,
   revealContactAction,
   revealTranscriptAction,
+  saveInnAction,
   takeOverTalkAction,
   take,
   toggleAutoReminder,
@@ -17,7 +18,9 @@ import {
 import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
 import { VOID_TITLE, type VoidReason } from "@/lib/partners/rules";
-import { partnerById } from "@/lib/partners/store";
+import { clientById, partnerById } from "@/lib/partners/store";
+import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
+import { pick } from "@/lib/admin/i18n";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { HelpHint } from "@/components/admin/help-link";
 import { LeadThread } from "@/components/admin/lead-thread";
@@ -144,7 +147,7 @@ export default async function LeadPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ r?: string; contact?: string; transcript?: string }>;
+  searchParams: Promise<{ r?: string; contact?: string; transcript?: string; inn?: string }>;
 }) {
   const staff = await requireStaff();
   const { id } = await params;
@@ -152,6 +155,7 @@ export default async function LeadPage({
     r: result,
     contact: wantsContact,
     transcript: wantsTranscript,
+    inn: innResult,
   } = await searchParams;
 
   const lead = await leadById(id);
@@ -167,7 +171,15 @@ export default async function LeadPage({
   const refDays = lead.partner_ref_at
     ? Math.max(0, Math.floor((Date.parse(lead.created_at) - Date.parse(lead.partner_ref_at)) / 86_400_000))
     : null;
-  const partnerLabel = partner
+  // Клиент, закреплённый партнёром вручную по ИНН: «Клиент партнёра Имя
+  // (закреплён 01.10)» — менеджер видит, что это не просто заявка.
+  const tc = pick(partnerClientsDict, staff.panel_locale);
+  const claim = lead.partner_client_id ? await clientById(lead.partner_client_id) : null;
+  const claimLabel =
+    partner && claim ? tc.leadClient(partner.name, claim.created_at.slice(5, 10).split("-").reverse().join(".")) : null;
+  const partnerLabel = claimLabel
+    ? claimLabel
+    : partner
     ? `${partner.name} · ${lead.partner_code ?? partner.code}${
         refDays !== null ? ` · по ссылке за ${refDays} дн. до заявки` : ""
       }${
@@ -757,6 +769,41 @@ export default async function LeadPage({
         <Field label="Кто" value={lead.contact_name} />
         <Field label="Компания" value={lead.company} />
         <Field label="Партнёр" value={partnerLabel} />
+        <div id="inn" className="scroll-mt-24">
+          <dt className="text-xs uppercase tracking-wider text-faint">{tc.innLabel}</dt>
+          {mine ? (
+            <dd className="mt-1">
+              <form action={saveInnAction} className="flex flex-wrap items-center gap-2">
+                <input type="hidden" name="lead" value={lead.id} />
+                <input
+                  name="inn"
+                  inputMode="numeric"
+                  maxLength={15}
+                  defaultValue={lead.client_inn ?? ""}
+                  placeholder="123456789"
+                  aria-label={tc.innLabel}
+                  className="w-36 rounded-lg border border-line bg-surface-2 px-3 py-1.5 font-mono text-sm"
+                />
+                <SubmitButton pendingLabel={tc.innSaving} base="rounded-lg px-3 py-1.5 text-xs" tone="quiet">
+                  {tc.innSave}
+                </SubmitButton>
+              </form>
+              <p className={`mt-1 text-xs ${innResult === "bad" || innResult === "forbidden" || innResult === "failed" ? "text-gold" : innResult ? "text-green" : "text-faint"}`}>
+                {innResult === "bad"
+                  ? tc.innBad
+                  : innResult === "forbidden"
+                    ? tc.innForbidden
+                    : innResult === "client"
+                      ? tc.innSavedClient
+                      : innResult === "saved"
+                        ? tc.innSaved
+                        : tc.innHint}
+              </p>
+            </dd>
+          ) : (
+            <dd className="mt-1 font-mono text-sm">{lead.client_inn || "—"}</dd>
+          )}
+        </div>
         <Field label="Ниша" value={lead.niche} />
         <Field
           label="Услуги"

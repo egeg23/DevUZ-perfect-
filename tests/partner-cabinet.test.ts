@@ -194,6 +194,7 @@ test("вход: одноразовая ссылка, хеши в базе, ку�
     "requestPayoutAction",
     "switchModelAction",
     "requestAgencyAction",
+    "requestClientAction",
   ]) {
     const at = actions.indexOf(`export async function ${name}(`);
     assert.ok(at > 0, `${name} пропало`);
@@ -274,8 +275,11 @@ test("модель закрепляется за клиентом в день з
 test("заказ агентства — партнёру 12 месяцев с подтверждения, раньше кода и без окна в 30 дней", () => {
   const attribute = read("lib/partners/attribute.ts");
   const agency = attribute.indexOf("await attributeAgencyLead(leadId");
-  const noCode = attribute.indexOf("if (!attribution.code) return null;");
-  assert.ok(agency > 0 && noCode > agency, "без кода в заявке заказ агентства не проверяется");
+  const byCode = attribute.indexOf("await attributeLead(leadId, attribution.code");
+  assert.ok(agency > 0 && byCode > agency, "без кода в заявке заказ агентства не проверяется");
+  // Закреплённый вручную клиент — после ссылки: ссылка и агентство важнее.
+  const byClient = attribute.indexOf("await attributeClientAndNotify(leadId)");
+  assert.ok(byClient > byCode, "закрепление клиента проверяется раньше ссылки");
   // Заявка без кода тоже доходит до проверки агентства — во всех каналах.
   assert.match(read("lib/qualify/engine.ts"), /await attributeAndNotify\(leadId, options\.attribution \?\? \{ code: null \}, lead\);/);
   assert.doesNotMatch(read("app/api/lead/route.ts"), /if \(ref\)[^\n]*attributeAndNotify/);
