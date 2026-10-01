@@ -420,6 +420,27 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "no-text",
+          title: "Kartochka matnsiz keldi",
+          body: {
+            manager: [
+              "Ba’zan [kunlik to‘plamdagi](#prospect-portion) yoki [oqimdagi](#prospect-stream) kompaniya Telegramga xatsiz — «Текст ещё готовится» degan izoh bilan keladi. Bu xatlarni yozadigan model javob bermaganda bo‘ladi: uning hisobida pul tugagan yoki ta’minotchida nosozlik. To‘plam baribir 10:00 dan kechikmay keladi — kompaniyalar allaqachon sizniki.",
+              "Hech narsa bosish shart emas. Tizim xatni har besh daqiqada qayta yozib ko‘radi va u tayyor bo‘lishi bilan bot o‘sha kompaniyani yana yuboradi — tepasida «✍️ Текст готов», matn va «📤 Отправить через бота» tugmasi bilan. Birinchi kartochkaga tegmasangiz ham bo‘ladi: tugmalar ikkalasida ham ishlaydi.",
+              "Kutishni istamasangiz — o‘z so‘zlaringiz bilan yozsangiz «✋ Написал сам» ni bosing yoki kartochkani panelda ochib «Связаться» ni bosing. Kompaniya allaqachon ko‘rib chiqilgan bo‘lsa, ikkinchi kartochka kelmaydi. 18:00 da bajarilmagani zaxiraga qaytadi va qayta yuborish to‘xtaydi.",
+            ],
+            head: [
+              "Ba’zan [kunlik to‘plamdagi](#prospect-portion) yoki [oqimdagi](#prospect-stream) kompaniya Telegramga xatsiz — «Текст ещё готовится» degan izoh bilan keladi. Bu sizda ham, menejerlaringizda ham xatlarni yozadigan model javob bermaganda bo‘ladi: uning hisobida pul tugagan yoki ta’minotchida nosozlik. To‘plam baribir 10:00 dan kechikmay keladi.",
+              "Hech narsa bosish shart emas. Tizim xatni har besh daqiqada qayta yozib ko‘radi va u tayyor bo‘lishi bilan bot o‘sha kompaniyani yana yuboradi — tepasida «✍️ Текст готов», matn va «📤 Отправить через бота» tugmasi bilan. Birinchi kartochkaga tegmasangiz ham bo‘ladi: tugmalar ikkalasida ham ishlaydi.",
+              "Odam kutishni istamasa — «✋ Написал сам» yoki paneldagi «Связаться». Kechki hisobot aloqalarni odatdagidek hisoblaydi: matnsiz kartochka «не подошло» ga aylanmaydi. 18:00 da bajarilmagani zaxiraga qaytadi va qayta yuborish to‘xtaydi.",
+            ],
+            admin: [
+              "Model javob bermasa — Anthropic kalitida pul tugagan, kalit qabul qilinmagan yoki ta’minotchida nosozlik bo‘lsa, — [to‘plam](#prospect-portion) va oqim uchun xatlar yozilmaydi. To‘plam baribir odamlarga 10:00 dan kechikmay ketadi: matnsiz kartochkalar, «Текст ещё готовится» izohi bilan.",
+              "Modelning rad javobi hech narsa turmaydi, shuning uchun tizim har besh daqiqada qayta urinadi. Balansni to‘ldirdingiz — xatlar o‘zi yozib bo‘linadi, besh daqiqada ikki-uchtadan, va har kimga o‘z kompaniyasi yana, endi matn bilan keladi: «✍️ Текст готов». Hech narsani chiqarish yoki bosish shart emas.",
+              "Boshqa holat — xatning o‘zi chiqmaganda: model bo‘sh javob qaytargan, saytsiz kompaniyaning sohasi yozilmagan. Unda ikkinchi urinish yo‘q — takrorlash tuzatmaydi, pulni esa yechadi. Bunday kompaniyaga odam o‘zi yozadi: paneldagi «Связаться».",
+            ],
+          },
+        },
+        {
           id: "plan",
           title: "Haftalik aloqalar rejasi",
           body: {

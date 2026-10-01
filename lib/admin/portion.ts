@@ -113,6 +113,24 @@ export function outcomeOf(
 }
 
 /**
+ * Карточка ушла без текста (bare_at) — что с ней делать теперь.
+ *
+ * «send» — письмо написано, а компанию никто не тронул: досылаем текст.
+ * «drop» — уже не нужно: человек написал сам, отправил, нажал «Не
+ * подходит» или компанию забрал другой. «wait» — письма пока нет.
+ */
+export function textDue(
+  p: { status: string; message: string | null; claimed_by: string | null; touched_by: string | null; touched_at: string | null },
+  staffId: string,
+  day: string,
+): "send" | "drop" | "wait" {
+  if (outcomeOf(p, staffId, day) !== null) return "drop";
+  if (p.status !== "new" && p.status !== "contacting") return "drop";
+  if (p.claimed_by && p.claimed_by !== staffId) return "drop";
+  return p.message ? "send" : "wait";
+}
+
+/**
  * Замен за «Не подходит» в день — не больше двух порций.
  *
  * Владелец, 29.09: «сделать нужно 5 в день, без учёта „не подходит“. То есть
