@@ -60,8 +60,8 @@ test("каждая галочка проверяется там, где бот �
     portion: [["lib/admin/portion-store.ts", /wants\(person\.off, "portion"\)/]],
     coach: [["lib/admin/coach-store.ts", /"coach",/]],
     reports: [
-      ["lib/admin/portion-store.ts", /wants\(p\.off, "reports"\)/],
-      ["lib/admin/portion-store.ts", /wants\(owner\.notify_off as string\[\] \| null, "reports"\)/],
+      // Руководители и владелец — одним списком читателей, одной проверкой.
+      ["lib/admin/portion-store.ts", /wants\(reader\.off, "reports"\)/],
       ["lib/admin/coach-store.ts", /notify\(reader\.id, "reports"/],
     ],
   };

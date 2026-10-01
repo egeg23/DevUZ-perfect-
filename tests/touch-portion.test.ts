@@ -84,13 +84,22 @@ test("сделано — по самому касанию: кем и в этот
 });
 
 test("строка отчёта: «из» — цель дня, сделано — только касания", () => {
-  assert.equal(reportLine({ name: "Данил", target: 5, done: 5, skipped: 0, short: 0 }), "Данил — 5 из 5 ✅");
-  assert.equal(reportLine({ name: "Мадина", target: 5, done: 0, skipped: 0, short: 0 }), "Мадина — 0 из 5 ⚠️");
+  assert.equal(reportLine({ name: "Данил", target: 5, done: 5, skipped: 0, short: 0, touches: 5 }), "Данил — 5 касаний · порция 5 из 5 ✅");
+  assert.equal(reportLine({ name: "Мадина", target: 5, done: 0, skipped: 0, short: 0, touches: 0 }), "Мадина — 0 касаний · порция 0 из 5 ⚠️");
   // Пять касаний при двух «Не подходит» — порция закрыта: за пропуски были замены.
-  assert.equal(reportLine({ name: "Лола", target: 5, done: 5, skipped: 2, short: 0 }), "Лола — 5 из 5, не подошло 2 ✅");
-  assert.equal(reportLine({ name: "Арсений", target: 5, done: 3, skipped: 2, short: 1 }), "Арсений — 3 из 5, не подошло 2, без замены 1");
+  assert.equal(
+    reportLine({ name: "Лола", target: 5, done: 5, skipped: 2, short: 0, touches: 5 }),
+    "Лола — 5 касаний · порция 5 из 5, не подошло 2 ✅",
+  );
+  assert.equal(
+    reportLine({ name: "Арсений", target: 5, done: 3, skipped: 2, short: 1, touches: 3 }),
+    "Арсений — 3 касания · порция 3 из 5, не подошло 2, без замены 1",
+  );
   // Одни пропуски — это ноль касаний, а не «работал».
-  assert.equal(reportLine({ name: "Тимур", target: 5, done: 0, skipped: 3, short: 0 }), "Тимур — 0 из 5, не подошло 3 ⚠️");
+  assert.equal(
+    reportLine({ name: "Тимур", target: 5, done: 0, skipped: 3, short: 0, touches: 0 }),
+    "Тимур — 0 касаний · порция 0 из 5, не подошло 3 ⚠️",
+  );
 });
 
 /*
@@ -195,8 +204,8 @@ test("вечером несделанное — в пул, и без письм�
   const report = store.slice(store.indexOf("export async function reportPortions("), store.indexOf("export async function portionOf("));
   assert.match(report, /update\(\{ status: "new", claimed_by: null, claimed_at: null, message: null \}\)/);
   assert.match(report, /outcome: outcome \?\? "expired"/);
-  // Руководителю — его люди, владельцу — все.
-  assert.match(report, /p\.head === head\.id/);
+  // Руководителю — то же, что владельцу: вся команда (владелец, 01.10).
+  assert.match(report, /p\.role === "head"/);
   assert.match(report, /\.eq\("role", "admin"\)/);
 });
 

@@ -12,7 +12,9 @@ import {
   outcomeOf,
   quotaOf,
   replacementsDue,
+  byTouches,
   reportLine,
+  reportTotal,
   tallyPortion,
   tashkentHour,
   textDue,
@@ -22,7 +24,7 @@ import {
 import { CLOSE_REASONS, CLOSE_TEXT, closeCallback } from "@/lib/admin/touch-close";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { staffById } from "@/lib/admin/session";
-import { touchProgressFor } from "@/lib/admin/touch-store";
+import { touchesOnDay, touchProgressFor } from "@/lib/admin/touch-store";
 import { esc, sendMessage, sendWithRows, type Button } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 import { isModelTroubleSays } from "@/lib/model-trouble";
@@ -682,11 +684,13 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     .select("day");
   if (!claimed?.length) return 0;
 
-  const { data } = await db
+  // Пустой день порции — не повод молчать: касания из панели и потока
+  // отчёт показывает и тогда.
+  const { data: rows } = await db
     .from("touch_portions")
     .select("id, staff_id, prospect_id, outcome, replaces, source")
     .eq("day", day);
-  if (!data?.length) return 0;
+  const data = rows ?? [];
 
   const prospects = new Map((await prospectsByIds(data.map((r) => r.prospect_id as string))).map((p) => [p.id, p]));
   const people = await team();
@@ -724,47 +728,54 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     }
   }
 
-  const reports = new Map<string, PersonReport>();
-  for (const staffId of new Set([...byPerson.keys(), ...streamDone.keys()])) {
-    const person = people.find((p) => p.id === staffId)!;
-    const t = tallyPortion(byPerson.get(staffId) ?? []);
-    reports.set(staffId, {
-      name: person.name,
-      target: t.target,
-      done: t.done,
-      skipped: t.skipped,
-      short: t.short,
-      stream: streamDone.get(staffId) ?? 0,
-    });
-  }
+  // В отчёте — вся команда: и тот, у кого не было ни порции, ни потока, —
+  // ноль касаний за день тоже ответ.
+  const touches = await touchesOnDay(
+    people.map((p) => p.id),
+    day,
+  );
+  const reports: PersonReport[] = people
+    .map((person) => {
+      const t = tallyPortion(byPerson.get(person.id) ?? []);
+      return {
+        name: person.name,
+        target: t.target,
+        done: t.done,
+        skipped: t.skipped,
+        short: t.short,
+        stream: streamDone.get(person.id) ?? 0,
+        touches: touches.get(person.id) ?? 0,
+      };
+    })
+    .sort(byTouches);
+  if (!reports.length) return 0;
 
-  const lines = (ids: string[]) =>
-    ids
-      .map((id) => reports.get(id))
-      .filter((r): r is PersonReport => Boolean(r))
-      .map(reportLine);
-  const header = `<b>Порция дня · ${day.split("-").reverse().join(".")}</b>`;
-  const footer =
-    "Считаются только касания: «Не подходит» не в счёт, за неё выдаётся замена. «Поток» — касания сверх порции по кнопке «Получать лиды». Несделанное вернулось в общий пул.";
+  const text = [
+    `<b>Касания за день · ${day.split("-").reverse().join(".")}</b>`,
+    "",
+    ...reports.map(reportLine),
+    "",
+    reportTotal(reports),
+    "",
+    "Касания — все, кому человек написал за день («Отправить» или «Написал сам»): из порции, потока и панели. Порция — сколько из утренней раздачи; «Не подходит» не в счёт, за неё выдаётся замена. «Поток» — касания по кнопке «Получать лиды». Несделанное вернулось в общий пул.",
+  ].join("\n");
 
-  // Руководителю — его люди и он сам; владельцу — все.
-  for (const head of people.filter((p) => p.role === "head" && p.chat && wants(p.off, "reports"))) {
-    const ids = [head.id, ...people.filter((p) => p.head === head.id).map((p) => p.id)];
-    const text = lines(ids);
-    if (text.length) await sendMessage(head.chat!, [header, "", ...text, "", footer].join("\n"));
-  }
+  // Руководителям — тот же отчёт, что владельцу: вся команда. Владелец,
+  // 01.10: «руководителям в телеграм должно приходить как и мне».
   const { data: owners } = await db
     .from("staff")
     .select("telegram_user_id, notify_off")
     .eq("role", "admin")
     .eq("is_active", true);
-  const all = lines([...reports.keys()]);
-  for (const owner of owners ?? []) {
-    if (!wants(owner.notify_off as string[] | null, "reports")) continue;
-    const chat = Number(owner.telegram_user_id);
-    if (chat && all.length) await sendMessage(chat, [header, "", ...all, "", footer].join("\n"));
+  const readers = [
+    ...people.filter((p) => p.role === "head").map((p) => ({ chat: p.chat, off: p.off })),
+    ...(owners ?? []).map((o) => ({ chat: Number(o.telegram_user_id) || null, off: (o.notify_off as string[] | null) ?? [] })),
+  ];
+  for (const reader of readers) {
+    if (!reader.chat || !wants(reader.off, "reports")) continue;
+    if (!(await sendMessage(reader.chat, text))) console.error("порция: отчёт не дошёл", reader.chat);
   }
-  return reports.size;
+  return reports.length;
 }
 
 /**
