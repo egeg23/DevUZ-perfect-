@@ -174,13 +174,13 @@ test("отчёт: поток — хвостом, в «из» не входит",
   assert.equal(touchesText(11), "11 касаний");
   assert.equal(touchesText(22), "22 касания");
   assert.equal(
-    reportLine({ name: "Данил", target: 5, done: 3, skipped: 0, short: 0, stream: 4 }),
-    "Данил — 3 из 5 · поток: 4 касания",
+    reportLine({ name: "Данил", target: 5, done: 3, skipped: 0, short: 0, stream: 4, touches: 7 }),
+    "Данил — 7 касаний (поток 4) · порция 3 из 5",
   );
-  assert.equal(reportLine({ name: "Мадина", target: 5, done: 5, skipped: 0, short: 0 }), "Мадина — 5 из 5 ✅");
+  assert.equal(reportLine({ name: "Мадина", target: 5, done: 5, skipped: 0, short: 0, touches: 5 }), "Мадина — 5 касаний · порция 5 из 5 ✅");
   assert.equal(
-    reportLine({ name: "Алексей", target: 0, done: 0, skipped: 0, short: 0, stream: 2 }),
-    "Алексей — порции не было · поток: 2 касания",
+    reportLine({ name: "Алексей", target: 0, done: 0, skipped: 0, short: 0, stream: 2, touches: 2 }),
+    "Алексей — 2 касания (поток 2) · порции не было",
   );
 });
 
