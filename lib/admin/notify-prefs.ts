@@ -32,6 +32,7 @@ export const NOTICE_KINDS = [
   "portion",
   "coach",
   "reports",
+  "tasks",
 ] as const;
 export type NoticeKind = (typeof NOTICE_KINDS)[number];
 
@@ -97,6 +98,14 @@ export const NOTICES: Record<NoticeKind, { title: string; off: string; roles: re
     title: "Отчёты: порция дня и сводка на сегодня",
     off: "вечерний отчёт по порциям и утренняя сводка не приходят",
     roles: ["admin", "head"],
+  },
+  // Владелец, 01.10: задачи команды. Выключение глушит только Telegram:
+  // задача остаётся на главной панели, и открытая панель всё так же
+  // позовёт звуком.
+  tasks: {
+    title: "Задачи",
+    off: "новые задачи, напоминания о сроках и ответы по поставленным задачам не приходят в Telegram — только на главной панели",
+    roles: EVERYONE,
   },
 };
 

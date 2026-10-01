@@ -55,6 +55,9 @@ import { closeTouch, markSelfContacted, prospectById, queueOutreach, skipProspec
 import { CLOSE_TEXT, isCloseReason } from "@/lib/admin/touch-close";
 import { streamCommand } from "@/lib/admin/stream";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
+import { actOnTask, afterAct, awaitDate, taskAwaitingDate, taskById, type ActResult } from "@/lib/admin/task-store";
+import { OWN_DATE_PROMPT, TASK_CALLBACK, looksLikeDue, moveRows, taskRows } from "@/lib/admin/task-bot";
+import { formatDue, isMove, movedDue, parseDueText, type TaskAction } from "@/lib/admin/tasks";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -186,6 +189,13 @@ async function route(update: Update): Promise<void> {
       // сообщение идёт дальше, в обычный разговор.
       if (chat.type === "private" && streamCommand(update.message.text)) {
         if (await handleStreamCommand(update.message)) return;
+      }
+
+      // «Своя дата» для переноса срока задачи: сотрудник нажал кнопку, и бот
+      // ждёт от него «05.10 15:00». Проверяется только то, что похоже на
+      // срок: остальной текст идёт дальше, как шёл.
+      if (chat.type === "private" && looksLikeDue(update.message.text)) {
+        if (await handleTaskDate(update.message)) return;
       }
 
       // Партнёрская программа — тоже раньше клиентского разговора: /ref и
@@ -976,6 +986,17 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     return;
   }
 
+  // Задачи команды: личка исполнителя, и только его задача — это
+  // проверяет actOnTask.
+  if (parts[0] === TASK_CALLBACK) {
+    if (chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    await handleTaskButton(query, parts[1] ?? "", parts[2] ?? "");
+    return;
+  }
+
   // Порция дня: тоже личка сотрудника, и тоже только своя.
   if (parts[0] === "tp") {
     if (chatId !== undefined && isSalesChat(chatId)) {
@@ -1322,4 +1343,133 @@ async function handleStreamButton(query: NonNullable<Update["callback_query"]>, 
   }
   await answerCallback(query.id, result.changed ? "Поток выключен" : "Поток уже выключен");
   if (result.changed && query.message) await answerStream(query.message.chat.id, false);
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Задачи команды
+// ───────────────────────────────────────────────────────────────────────────
+
+const TASK_REFUSAL: Record<Exclude<ActResult, { ok: true }>["reason"], string> = {
+  not_yours: "Это не ваша задача",
+  closed: "Задача уже закрыта",
+  taken: "Задача уже в работе",
+  changed: "Задачу только что изменили — откройте панель",
+  gone: "Задачи больше нет",
+  past: "Этот срок уже прошёл",
+  far: "Срок дальше чем через год",
+  offline: "Не получилось — попробуйте через минуту",
+  failed: "Не получилось — попробуйте через минуту",
+};
+
+const TASK_DONE: Record<TaskAction, string> = {
+  take: "Задача в работе",
+  done: "Отмечено: сделано",
+  failed: "Отмечено: не сделано",
+  move: "Срок перенесён",
+};
+
+/**
+ * Кнопки под сообщением о задаче: «Взять в работу», «Сделано», «Не
+ * сделано», «Перенести срок» и варианты переноса.
+ *
+ * Все действия — через actOnTask, с теми же проверками, что в панели:
+ * чужую задачу из пересланного сообщения не закрыть. Кнопки переписываются
+ * под тем же сообщением, на которое нажали.
+ */
+async function handleTaskButton(query: NonNullable<Update["callback_query"]>, action: string, taskId: string) {
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (!staff || !taskId) {
+    await answerCallback(query.id, "Недоступно");
+    return;
+  }
+  const here = query.message ? { chat: query.message.chat.id, messageId: query.message.message_id } : undefined;
+  // Надпись «✅ Сделано» под закрытой задачей: нажатие ничего не меняет,
+  // но Telegram ждёт ответа, иначе у нажавшего висят «часики».
+  if (action === "noop") {
+    await answerCallback(query.id, TASK_REFUSAL.closed);
+    return;
+  }
+
+  try {
+    const task = await taskById(taskId);
+    if (!task || task.assignee_id !== staff.id) {
+      await answerCallback(query.id, task ? TASK_REFUSAL.not_yours : TASK_REFUSAL.gone);
+      return;
+    }
+
+    // Показать варианты переноса или вернуть прежние кнопки — без записи.
+    if (action === "move" || action === "back") {
+      if (here) await setButtons(here.chat, here.messageId, action === "move" ? moveRows(task.id) : taskRows(task));
+      await answerCallback(query.id, action === "move" ? "Выберите новый срок" : "");
+      return;
+    }
+
+    if (action === "own") {
+      const ok = await awaitDate(task.id, staff.id);
+      await answerCallback(query.id, ok ? "Напишите новый срок сообщением" : TASK_REFUSAL.closed);
+      if (ok && here) await sendMessage(here.chat, OWN_DATE_PROMPT);
+      return;
+    }
+
+    let kind: TaskAction;
+    let newDue: Date | undefined;
+    if (action === "take" || action === "done" || action === "failed") {
+      kind = action;
+    } else if (isMove(action)) {
+      kind = "move";
+      newDue = movedDue(action, new Date(task.due_at), new Date());
+    } else {
+      await answerCallback(query.id, "Неизвестная команда");
+      return;
+    }
+
+    const result = await actOnTask(task.id, staff, kind, { ip: "", via: "telegram", newDue });
+    if (!result.ok) {
+      await answerCallback(query.id, TASK_REFUSAL[result.reason]);
+      return;
+    }
+    await answerCallback(
+      query.id,
+      kind === "move" ? `${TASK_DONE.move} на ${formatDue(result.task.due_at)}` : TASK_DONE[kind],
+    );
+    if (here) await setButtons(here.chat, here.messageId, taskRows(result.task));
+    await afterAct(result.task, result.eventId, new Date(), here);
+  } catch (error) {
+    console.error("telegram webhook: задача", error);
+    await answerCallback(query.id, "Не получилось — откройте панель");
+  }
+}
+
+/**
+ * Текст «05.10 15:00» после «Своя дата». true — сообщение разобрано здесь;
+ * false — бот срока не ждал, и текст идёт дальше обычным путём.
+ */
+async function handleTaskDate(message: NonNullable<Update["message"]>): Promise<boolean> {
+  const staff = message.from?.id ? await staffByTelegramId(message.from.id) : null;
+  if (!staff) return false;
+  const task = await taskAwaitingDate(staff.id);
+  if (!task) return false;
+
+  const now = new Date();
+  const due = parseDueText(message.text ?? "", now);
+  if (!due) {
+    await sendMessage(message.chat.id, `Такой даты нет. ${OWN_DATE_PROMPT}`);
+    return true;
+  }
+  const result = await actOnTask(task.id, staff, "move", { ip: "", via: "telegram", newDue: due }, now);
+  if (!result.ok) {
+    await sendMessage(
+      message.chat.id,
+      result.reason === "past" || result.reason === "far"
+        ? `${TASK_REFUSAL[result.reason]}. ${OWN_DATE_PROMPT}`
+        : TASK_REFUSAL[result.reason],
+    );
+    return true;
+  }
+  await sendMessage(
+    message.chat.id,
+    `🕑 Срок задачи «${esc(result.task.title)}» перенесён на <b>${formatDue(result.task.due_at)}</b>.`,
+  );
+  await afterAct(result.task, result.eventId, now);
+  return true;
 }
