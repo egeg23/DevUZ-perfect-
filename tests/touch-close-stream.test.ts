@@ -261,10 +261,10 @@ test("объявление: руководителям и менеджерам, 
   assert.equal(newsWindow(new Date("2026-10-03T06:00:00Z")), false);
 });
 
-test("объявление: у каждого — своё, и всё про новые кнопки", () => {
+test("объявление: у каждого — своё, и всё про новые кнопки", async () => {
   const news = NEWS[0];
-  const manager = news.text("manager");
-  const head = news.text("head");
+  const manager = (await news.text("manager")) ?? "";
+  const head = (await news.text("head")) ?? "";
   for (const text of [manager, head]) {
     assert.ok(text.length < 4096, "Telegram не примет сообщение длиннее 4096");
     assert.match(text, /«🙅 Клиент отказался» и «🔇 Игнорирует»/);

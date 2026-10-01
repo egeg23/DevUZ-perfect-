@@ -1,5 +1,6 @@
 import { isWorkday, tashkentHour } from "@/lib/admin/portion";
 import type { Role } from "@/lib/admin/roles";
+import { periodReport } from "@/lib/admin/period-report-store";
 import { STREAM_ON } from "@/lib/admin/stream";
 import { sendKeyboard, sendMessage } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
@@ -23,7 +24,12 @@ export type News = {
   from: string;
   until: string;
   roles: readonly Role[];
-  text: (role: Role) => string;
+  /**
+   * Текст по роли. Может считаться в момент отправки — отчёт по базе
+   * (lib/admin/period-report-store); пусто — сейчас слать нечего, попробуем
+   * следующим проходом.
+   */
+  text: (role: Role, now?: Date) => string | null | Promise<string | null>;
   /** Показать внизу чата кнопку «▶️ Получать лиды». */
   streamKey?: boolean;
 };
@@ -81,6 +87,16 @@ export const NEWS: readonly News[] = [
     text: touchesNews,
     streamKey: true,
   },
+  // Владелец, 01.10: «Отправь мне и Александру отчёт по сотрудникам за 2
+  // недели работы, чтобы было видно, кто сколько касаний сделал». Владелец
+  // сам среди читателей — копии ему не будет.
+  {
+    id: "2026-10-01-touches-2w",
+    from: "2026-10-01",
+    until: "2026-10-03",
+    roles: ["admin", "head"],
+    text: (_role, now) => periodReport(now),
+  },
 ];
 
 type Row = { id: string; role: Role; chat: number };
@@ -115,8 +131,12 @@ export async function sendTeamNews(now: Date = new Date(), list: readonly News[]
     let reached = already.size > 0;
     for (const reader of readers) {
       if (!(await claim(news.id, reader.id))) continue;
-      const text = news.text(reader.role);
-      const ok = news.streamKey ? await sendKeyboard(reader.chat, text, [[STREAM_ON]]) : await sendMessage(reader.chat, text);
+      const text = await news.text(reader.role, now);
+      const ok = !text
+        ? false
+        : news.streamKey
+          ? await sendKeyboard(reader.chat, text, [[STREAM_ON]])
+          : await sendMessage(reader.chat, text);
       if (ok) {
         sent += 1;
         reached = true;
@@ -127,12 +147,13 @@ export async function sendTeamNews(now: Date = new Date(), list: readonly News[]
     if (!reached) continue;
     for (const owner of owners) {
       if (!(await claim(news.id, owner.id))) continue;
+      const head = await news.text("head", now);
       const copy = [
         "<i>Копия: это ушло руководителям и менеджерам. Ниже — текст для руководителя; у менеджеров нет пунктов, которые касаются только руководителей.</i>",
         "",
-        news.text("head"),
+        head,
       ].join("\n");
-      if (!(await sendMessage(owner.chat, copy))) {
+      if (!head || !(await sendMessage(owner.chat, copy))) {
         await db.from("team_news_sent").delete().eq("news_id", news.id).eq("staff_id", owner.id);
       }
     }
