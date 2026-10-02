@@ -173,5 +173,7 @@ test("та же ниша в том же городе второй раз не з
   const create = store.slice(store.indexOf("export async function createCampaign"));
   assert.ok(create.indexOf("existed: true") > 0 && create.indexOf("existed: true") < create.indexOf(".insert("));
   assert.match(read("app/admin/prospect/actions.ts"), /created\.existed[\s\S]{0,120}maps=exists/);
-  assert.match(read("components/admin/maps-campaigns.tsx"), /<SubmitButton pendingLabel="Ищем…"/);
+  // Кнопка поиска — SubmitButton: пока идёт первый поиск, второй раз не нажать.
+  assert.match(read("components/admin/maps-campaigns.tsx"), /<SubmitButton pendingLabel=\{t\.searching\}/);
+  assert.match(read("content/admin-panel/prospect-tools.ts"), /searching: \{ ru: "Ищем…"/);
 });

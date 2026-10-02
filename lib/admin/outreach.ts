@@ -648,7 +648,12 @@ export function bannedPhrase(text: string): boolean {
   return BANNED.some((re) => re.test(text));
 }
 
-export type MessageProblem = { code: string; text: string };
+/**
+ * Проблема письма. `text` — по-русски: его читает модель во второй попытке
+ * и бот. Панель берёт слова по `code` из словаря на языке сотрудника, а
+ * числа и имена — из `args` (content/admin-panel/prospect.ts → problemText).
+ */
+export type MessageProblem = { code: string; text: string; args?: (string | number)[] };
 
 /**
  * Что не даёт отправить сообщение как есть. Пусто — можно отправлять.
@@ -676,20 +681,21 @@ export function messageProblems(
   const problems: MessageProblem[] = [];
   const words = message.trim().split(/\s+/).filter(Boolean).length;
 
-  if (words < 40) problems.push({ code: "short", text: "Сообщение короче сорока слов — в нём не поместится ни находка, ни её последствие." });
-  if (words > 200) problems.push({ code: "long", text: "Сообщение длиннее двухсот слов — на телефоне такое не читают." });
-  if (!message.includes(host)) problems.push({ code: "no_host", text: `В сообщении нет домена ${host} — адресат не поймёт, что письмо про его сайт.` });
+  if (words < 40) problems.push({ code: "short", text: "Сообщение короче сорока слов — в нём не поместится ни находка, ни её последствие.", args: [40] });
+  if (words > 200) problems.push({ code: "long", text: "Сообщение длиннее двухсот слов — на телефоне такое не читают.", args: [200] });
+  if (!message.includes(host)) problems.push({ code: "no_host", text: `В сообщении нет домена ${host} — адресат не поймёт, что письмо про его сайт.`, args: [host] });
   if (!/devuz\.studio/i.test(message)) problems.push({ code: "no_us", text: "В сообщении нет devuz.studio — непонятно, кто пишет." });
 
   const invented = inventedNumbers(message, prompt);
   if (invented.length) {
-    problems.push({ code: "invented", text: `Числа, которых нет в анализе: ${invented.join(", ")}. Проверьте или уберите.` });
+    problems.push({ code: "invented", text: `Числа, которых нет в анализе: ${invented.join(", ")}. Проверьте или уберите.`, args: [invented.join(", ")] });
   }
   const alien = foreignScript(message);
   if (alien.length) {
     problems.push({
       code: "foreign_script",
       text: `В сообщении есть знаки чужого письма: ${alien.join(" ")}. Уберите их — это сбой модели, а не текст.`,
+      args: [alien.join(" ")],
     });
   }
   if (bannedPhrase(message)) {
@@ -704,12 +710,14 @@ export function messageProblems(
     problems.push({
       code: "no_seo_score",
       text: `В сообщении не назван балл видимости в поиске (${hooks.seo} из 100) — а это первое, за что цепляется взгляд.`,
+      args: [hooks.seo],
     });
   }
   if (hooks.lost && !(hasNumber(hooks.lost[0]) && hasNumber(hooks.lost[1]))) {
     problems.push({
       code: "no_loss",
       text: `В сообщении не сказано, сколько обращений это стоит (${hooks.lost[0]}–${hooks.lost[1]} из ста). Без этого письмо читается как список придирок.`,
+      args: [hooks.lost[0], hooks.lost[1]],
     });
   }
   /**
@@ -729,6 +737,7 @@ export function messageProblems(
     problems.push({
       code: "foreign_reference",
       text: `В сообщении назван наш проект не из его ниши: ${foreign.join(", ")}. «Делали в вашей нише» про чужую нишу адресат проверяет одним переходом по ссылке — и на этом письмо заканчивается.`,
+      args: [foreign.join(", ")],
     });
   }
 
@@ -736,6 +745,7 @@ export function messageProblems(
     problems.push({
       code: "no_reference",
       text: `В сообщении не назван «${hooks.reference}» — наш проект в его же нише. Это самая сильная строка письма: её адресат проверяет за десять секунд, и после неё разговор идёт иначе.`,
+      args: [hooks.reference],
     });
   }
   return problems;

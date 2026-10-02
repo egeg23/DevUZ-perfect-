@@ -1,3 +1,5 @@
+import { touchPlanDict } from "@/content/admin-panel/home";
+import type { PanelLocale } from "@/lib/admin/i18n";
 import { periodStart, windowOf, type Window } from "@/lib/admin/pulse";
 
 /**
@@ -59,13 +61,12 @@ export function parseTouchPlan(raw: string): { ok: true; plan: number | null } |
  * Собрана здесь, а не в разметке: показывается она в двух местах — на главной
  * и в касаниях, — и две копии разошлись бы на первой же правке слов.
  */
-export function planLine(p: TouchProgress): string | null {
+export function planLine(p: TouchProgress, locale: PanelLocale = "ru"): string | null {
   if (p.plan === null) return null;
-  if (p.plan === 0) return "Плана на эту неделю нет.";
+  const t = touchPlanDict;
+  if (p.plan === 0) return t.none[locale];
   if (p.left === 0) {
-    return p.done > p.plan
-      ? `План на неделю закрыт: ${p.done} касаний из ${p.plan}.`
-      : `План на неделю закрыт: ${p.done} из ${p.plan}.`;
+    return p.done > p.plan ? t.closedOver[locale](p.done, p.plan) : t.closed[locale](p.done, p.plan);
   }
-  return `До плана осталось ${p.left} — сделано ${p.done} из ${p.plan} за эту неделю.`;
+  return t.left[locale](p.left ?? 0, p.done, p.plan);
 }

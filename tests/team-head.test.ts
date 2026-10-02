@@ -124,7 +124,8 @@ test("план/факт касаний команды — на главной у
   const home = read("components/admin/dashboard-home.tsx");
   assert.match(home, /touchProgressFor\(peopleIds, now\)/);
   assert.match(home, /touch: touches\.get\(id\)/);
-  assert.match(read("components/admin/dashboard.tsx"), /План касаний/);
+  assert.match(read("components/admin/dashboard.tsx"), /\{t\.colTouchPlan\}/);
+  assert.match(read("content/admin-panel/dashboard.ts"), /colTouchPlan: \{ ru: "План касаний"/);
 });
 
 /* ── Сообщения ─────────────────────────────────────────────────────────── */

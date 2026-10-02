@@ -244,10 +244,14 @@ test("скаут отправляет только из очереди и ост
 
 test("очередь — не тупик: менеджеру предложено написать самому", () => {
   const list = readFileSync(new URL("../components/admin/outreach-list.tsx", import.meta.url), "utf8");
-  assert.match(list, /В очереди на отправку с рабочего аккаунта — \{waitText\(wait\.waitMs\)\}/);
-  assert.match(list, /Ждать не обязательно/);
+  // Слова — в словаре панели (три языка), в компоненте — ключи.
+  const dict = readFileSync(new URL("../content/admin-panel/prospect.ts", import.meta.url), "utf8");
+  assert.match(list, /t\.inQueueWait\(waitLabel\(wait\.waitMs, t\)\)/);
+  assert.match(dict, /`В очереди на отправку с рабочего аккаунта — \$\{wait\}`/);
+  assert.match(list, /t\.noNeedToWait\(/);
+  assert.match(dict, /Ждать не обязательно/);
   assert.match(list, /https:\/\/t\.me\/\$\{row\.target\.replace/, "нет ссылки на переписку со своего аккаунта");
-  assert.match(list, /<CopyMessage text=\{row\.message\} \/>/, "текст нельзя скопировать");
+  assert.match(list, /<CopyMessage text=\{row\.message\} label=\{t\.copyText\} \/>/, "текст нельзя скопировать");
   // Предел не запирает кнопку «Связаться»: он про очередь, а не про сайт.
   assert.ok(!/sentToday/.test(list), "предел всё ещё решает, показывать ли кнопку");
 });
@@ -274,7 +278,8 @@ test("нажатие видно: кнопка, которая ждёт мину�
     "кроме «не пишем», сабмиты должны идти через SubmitButton — иначе нажатие снова будет беззвучным",
   );
   assert.ok(/pendingLabel=/.test(list), "не сказано, что происходит, пока ждём");
-  assert.ok(/до минуты/.test(list), "не сказано, сколько ждать");
+  const dict = readFileSync(new URL("../content/admin-panel/prospect.ts", import.meta.url), "utf8");
+  assert.ok(/pendingLabel=\{t\.preparing\}/.test(list) && /preparing: \{\s*ru: "[^"]*до минуты/.test(dict), "не сказано, сколько ждать");
 });
 
 test("результат нажатия возвращается на ту же карточку", () => {
@@ -398,7 +403,9 @@ test("ручной маршрут доходит до BANT: отметка, от
 
   assert.match(list, /markSelfContactedAction/, "нечем отметить, что связался сам");
   assert.match(list, /recordManualAnswerAction/, "некуда перенести ответ клиента");
-  assert.match(list, /Скопировать ответ/, "ответ модели нельзя забрать");
+  const dict = readFileSync(new URL("../content/admin-panel/prospect.ts", import.meta.url), "utf8");
+  assert.match(list, /<CopyMessage text=\{replies\[row\.id\]\} label=\{t\.copyReply\} \/>/, "ответ модели нельзя забрать");
+  assert.match(dict, /copyReply: \{ ru: "Скопировать ответ"/, "ответ модели нельзя забрать");
 });
 
 test("нажал отправить — на месте кнопки написано, чем это кончилось", () => {
@@ -408,7 +415,9 @@ test("нажал отправить — на месте кнопки напис�
   // Владелец: «чтобы при нажатии кнопка меняла название — отправлено или
   // отправлено в очередь». Заголовок карточки писал это и раньше, но он
   // вверху и мелким, а человек смотрит туда, куда нажал.
-  assert.match(list, /Отправлено в очередь/);
+  const dict = readFileSync(new URL("../content/admin-panel/prospect.ts", import.meta.url), "utf8");
+  assert.match(list, /row\.status === "sending" \? t\.sentToQueue : t\.sent/);
+  assert.match(dict, /sentToQueue: \{ ru: "Отправлено в очередь"/);
 
   // Менеджер: «кнопка остаётся того же цвета, и я не понимаю, уходит
   // сообщение или нет». Зелёная кнопка под прозрачностью выглядит зелёной
@@ -423,8 +432,10 @@ test("нажал отправить — на месте кнопки напис�
   );
 
   // Подтверждение для себя: с кем, когда, кто.
-  assert.match(list, /Связались\{row\.target/, "нет подтверждения, что с контактом связались");
-  assert.match(list, /Связались руками\{row\.target/, "по ручному маршруту подтверждения нет");
+  assert.match(list, /\{t\.contacted\}\s*\{row\.target/, "нет подтверждения, что с контактом связались");
+  assert.match(dict, /contacted: \{ ru: "Связались"/, "нет подтверждения, что с контактом связались");
+  assert.match(list, /\{t\.contactedByHand\}\s*\{row\.target/, "по ручному маршруту подтверждения нет");
+  assert.match(dict, /contactedByHand: \{ ru: "Связались руками"/, "по ручному маршруту подтверждения нет");
 
   // И возврат — на ту же карточку, иначе результат остаётся ниже экрана.
   assert.match(actions, /sent=1&open=\$\{id\}#p-\$\{id\}/);

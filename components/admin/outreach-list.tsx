@@ -15,21 +15,30 @@ import { DoneButton, SubmitButton } from "@/components/admin/submit-button";
 import { sendProblems } from "@/lib/admin/outreach-store";
 import {
   HOURLY_CAP,
-  REASON_TEXT,
-  ROUTE_TEXT,
   canContact,
   queueView,
   routeFor,
-  waitText,
   whatsappLink,
-  type Reason,
 } from "@/lib/admin/outreach";
 import { outreachHooks } from "@/lib/admin/outreach";
-import { GRADE_TEXT, seoReport, type SeoGrade } from "@/lib/audit/seo";
+import { seoReport, type SeoGrade } from "@/lib/audit/seo";
 import type { Prospect } from "@/lib/admin/outreach-store";
 import { REST_PAGE } from "@/lib/admin/outreach-view";
 import type { Role } from "@/lib/admin/roles";
-import { CLOSE_REASONS, CLOSE_TEXT, mayClose } from "@/lib/admin/touch-close";
+import { CLOSE_REASONS, mayClose } from "@/lib/admin/touch-close";
+import { parseTouchError, type ParsedTouchError, type ProblemRef } from "@/lib/admin/touch-errors";
+import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
+import {
+  closeButtonDict,
+  closeLabelDict,
+  outreachListDict,
+  problemDict,
+  prospectStatusDict,
+  reasonDict,
+  routeDict,
+  seoGradeDict,
+  touchErrorDict,
+} from "@/content/admin-panel/prospect";
 import { contactsLine, hasAnyContact } from "@/lib/audit/contacts";
 
 /**
@@ -57,16 +66,6 @@ const SEVERITY: Record<string, string> = {
   minor: "border-line text-muted",
 };
 
-const STATUS_LABEL: Record<Prospect["status"], string> = {
-  new: "не писали",
-  contacting: "сообщение готово",
-  sending: "в очереди на отправку",
-  sent: "отправлено",
-  failed: "не ушло",
-  skipped: "пропущен",
-  manual: "писать руками",
-};
-
 const STATUS_TONE: Record<Prospect["status"], string> = {
   new: "text-faint",
   contacting: "text-blue-soft",
@@ -79,6 +78,63 @@ const STATUS_TONE: Record<Prospect["status"], string> = {
   // бы среди провалов.
   manual: "text-blue-soft",
 };
+
+/**
+ * Проблема письма словами на языке панели: код — из messageProblems /
+ * nositeProblems, числа и имена — из `args`. Русский `text` проблемы здесь
+ * не нужен: его читает модель, а не сотрудник.
+ */
+function problemText(p: ProblemRef, t: Picked<typeof problemDict>): string {
+  const [a, b] = p.args;
+  switch (p.code) {
+    case "short":
+      return t.short(Number(a ?? 40));
+    case "long":
+      return t.long(Number(a ?? 200));
+    case "no_host":
+      return t.no_host(String(a ?? ""));
+    case "no_us":
+      return t.no_us;
+    case "invented":
+      return t.invented(String(a ?? ""));
+    case "foreign_script":
+      return t.foreign_script(String(a ?? ""));
+    case "banned":
+      return t.banned;
+    case "no_seo_score":
+      return t.no_seo_score(Number(a ?? 0));
+    case "no_loss":
+      return t.no_loss(Number(a ?? 0), Number(b ?? 0));
+    case "foreign_reference":
+      return t.foreign_reference(String(a ?? ""));
+    case "no_reference":
+      return t.no_reference(String(a ?? ""));
+    default:
+      return t.unknown;
+  }
+}
+
+/** Отказ кнопки из `?e=` словами: причина, проверка письма, дефект или код. */
+function errorText(e: ParsedTouchError, locale: PanelLocale): string {
+  if (e.code === "no_way" || e.code === "nothing_to_say" || e.code === "already") {
+    return pick(reasonDict, locale)[e.code];
+  }
+  const errors = pick(touchErrorDict, locale);
+  if (e.code === "problems" && e.problems.length) {
+    const problems = pick(problemDict, locale);
+    return e.problems.map((p) => problemText(p, problems)).join(" ");
+  }
+  if (e.code === "defect") return e.detail ? `${errors.defect} ${e.detail}` : errors.defect;
+  return errors[e.code];
+}
+
+/** «вот-вот» / «примерно через 20 мин.» / «примерно через 2 часа» — как waitText в lib, на языке панели. */
+function waitLabel(ms: number, t: Picked<typeof outreachListDict>): string {
+  const minutes = Math.round(ms / 60_000);
+  if (minutes <= 1) return t.waitSoon;
+  if (minutes < 60) return t.waitMinutes(minutes);
+  return t.waitHours(Math.round(minutes / 60));
+}
 
 function when(iso: string | null): string {
   if (!iso) return "";
@@ -96,6 +152,7 @@ export function OutreachList({
   owners = [],
   more = null,
   viewer = null,
+  locale = "ru",
 }: {
   rows: Prospect[];
   /** Что ушло за последний час: предел считается по факту отправки. */
@@ -114,8 +171,22 @@ export function OutreachList({
   more?: { hidden: number; href: string } | null;
   /** Кто смотрит: «Клиент отказался» видит тот, кто касание ведёт, руководитель и владелец. */
   viewer?: { id: string; role: Role } | null;
+  /** Язык панели того, кто смотрит (`staff.panel_locale`). */
+  locale?: PanelLocale;
 }) {
   if (!rows.length) return null;
+
+  const t = pick(outreachListDict, locale);
+  const status = pick(prospectStatusDict, locale);
+  const closeButton = pick(closeButtonDict, locale);
+  const closeLabel = pick(closeLabelDict, locale);
+  const reasonText = pick(reasonDict, locale);
+  const routeText = pick(routeDict, locale);
+  const gradeText = pick(seoGradeDict, locale);
+  const problems = pick(problemDict, locale);
+  // Отказ приходит кодом (lib/admin/touch-errors.ts), слова — отсюда.
+  const failure = parseTouchError(error);
+  const failureText = failure ? errorText(failure, locale) : "";
 
   const queue = rows.filter((r) => r.status === "sending");
   const left = Math.max(0, HOURLY_CAP - hour.count);
@@ -124,28 +195,24 @@ export function OutreachList({
     <section className="mt-10">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
-          Разобранные сайты
-          <HelpHint topic={helpAnchor("/admin/prospect", "send")} label="Как написать компании" />
+          {t.heading}
+          <HelpHint topic={helpAnchor("/admin/prospect", "send")} label={t.helpSend} />
         </h2>
         <p className="flex items-center gap-2 text-xs text-faint">
-          <HelpHint topic={helpAnchor("/admin/prospect", "queue")} label="Почему два в час" />
-          За последний час ушло {hour.count} из {HOURLY_CAP}
-          {queue.length ? ` · в очереди ${queue.length}` : ""}
-          {left === 0 && queue.length ? " — ждут своей очереди" : ""}
+          <HelpHint topic={helpAnchor("/admin/prospect", "queue")} label={t.helpQueue} />
+          {t.hourLine(hour.count, HOURLY_CAP)}
+          {queue.length ? t.inQueue(queue.length) : ""}
+          {left === 0 && queue.length ? t.queueWaits : ""}
         </p>
       </div>
 
       <p className="mt-2 max-w-2xl text-xs leading-relaxed text-faint">
-        Пишет рабочий аккаунт студии, а не бот: два контакта в час, пауза между
-        сообщениями и одно касание на сайт. Этим же аккаунтом скаут читает чаты, и
-        ограничение за рассылку выключило бы оба канала сразу. Ждать очередь не
-        обязательно — сообщение можно отправить со своего аккаунта, тогда и ответ
-        придёт вам лично.
+        {t.intro}
       </p>
 
       {sent ? (
         <p className="mt-3 rounded-xl border border-green/30 bg-green/5 px-4 py-2 text-sm text-green">
-          Сообщение в очереди. Уйдёт с рабочего аккаунта в ближайшие минуты, лид уже закреплён за вами.
+          {t.sentNotice}
         </p>
       ) : null}
       {/*
@@ -158,9 +225,9 @@ export function OutreachList({
         уводил к карточке — на полсотни строк ниже. С точки зрения
         человека нажатие не делало ничего.
       */}
-      {error && !rows.some((row) => row.id === open) ? (
+      {failure && !rows.some((row) => row.id === open) ? (
         <p className="mt-3 rounded-xl border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-amber-200">
-          {REASON_TEXT[error as Reason] ?? decodeURIComponent(error)}
+          {failureText}
         </p>
       ) : null}
 
@@ -220,12 +287,13 @@ export function OutreachList({
                   </a>
                 ) : (
                   <span className="rounded-md border border-gold/30 bg-gold/5 px-2 py-0.5 font-mono text-xs text-gold">
-                    без сайта{row.niche ? ` · ${row.niche}` : ""}
+                    {t.noSite}
+                    {row.niche ? ` · ${row.niche}` : ""}
                   </span>
                 )}
                 <span className={`text-xs ${row.closed_reason ? "text-faint" : STATUS_TONE[row.status]}`}>
-                  {STATUS_LABEL[row.status]}
-                  {row.closed_reason ? ` · ${CLOSE_TEXT[row.closed_reason].label}` : ""}
+                  {status[row.status]}
+                  {row.closed_reason ? ` · ${closeLabel[row.closed_reason]}` : ""}
                   {row.claimed_name ? ` · ${row.claimed_name}` : ""}
                   {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
                 </span>
@@ -235,8 +303,8 @@ export function OutreachList({
                       до сайта из поиска. Менеджеру нужны оба: разговор с
                       владельцем, которого не находят, начинается иначе. */}
                   {seo.measured && seo.total > 0 ? (
-                    <span className={`font-mono text-sm ${SEO_TONE[seo.grade]}`} title={GRADE_TEXT[seo.grade]}>
-                      поиск {seo.score}
+                    <span className={`font-mono text-sm ${SEO_TONE[seo.grade]}`} title={gradeText[seo.grade]}>
+                      {t.search(seo.score)}
                     </span>
                   ) : null}
                   {/* То, ради чего письмо открывают. Менеджер должен видеть
@@ -244,12 +312,12 @@ export function OutreachList({
                       половина обращений, разговор начинается с одной фразы,
                       а с сайта, где теряется пять, — с другой. */}
                   {hooks.lost ? (
-                    <span className="font-mono text-sm text-red-300" title="Теряется обращений из каждых ста">
+                    <span className="font-mono text-sm text-red-300" title={t.lostTitle}>
                       −{hooks.lost[0]}…{hooks.lost[1]}
                     </span>
                   ) : null}
                   {row.score !== null ? (
-                    <span className={`font-mono text-sm ${row.score < 60 ? "text-gold" : "text-muted"}`} title="Общая оценка">
+                    <span className={`font-mono text-sm ${row.score < 60 ? "text-gold" : "text-muted"}`} title={t.scoreTitle}>
                       {row.score}
                     </span>
                   ) : null}
@@ -261,7 +329,7 @@ export function OutreachList({
                   {row.findings.slice(0, 6).map((f) => (
                     <span
                       key={f.code}
-                      title={`${f.impact}\n\nЧто делаем: ${f.fix}`}
+                      title={`${f.impact}\n\n${t.whatWeDo} ${f.fix}`}
                       className={`rounded-full border px-2 py-0.5 text-xs ${SEVERITY[f.severity] ?? SEVERITY.minor}`}
                     >
                       {f.title}
@@ -272,7 +340,7 @@ export function OutreachList({
 
               {hasAnyContact(row.contacts) ? (
                 <p className="mt-2 text-sm text-muted">
-                  <span className="text-xs uppercase tracking-wider text-faint">Контакты: </span>
+                  <span className="text-xs uppercase tracking-wider text-faint">{t.contacts}</span>
                   {contactsLine(row.contacts)}
                 </p>
               ) : null}
@@ -280,7 +348,7 @@ export function OutreachList({
               {row.lead_id ? (
                 <p className="mt-2 text-sm">
                   <Link href={`/admin/leads/${row.lead_id}`} className="text-green hover:underline">
-                    Лид по этому сайту →
+                    {t.leadLink}
                   </Link>
                 </p>
               ) : null}
@@ -298,8 +366,8 @@ export function OutreachList({
                   может пойти и проверить. */}
               {row.status === "manual" && row.target ? (
                 <div className="mt-3 rounded-lg border border-blue-soft/30 bg-blue-soft/5 px-4 py-3">
-                  <p className="text-sm text-blue-soft">Дальше руками: {row.target}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-muted">{ROUTE_TEXT.manual}</p>
+                  <p className="text-sm text-blue-soft">{t.manualNext(row.target)}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-muted">{routeText.manual}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <a
                       href={whatsappLink(row.target, row.message ?? "")}
@@ -307,15 +375,15 @@ export function OutreachList({
                       rel="noreferrer noopener"
                       className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
                     >
-                      Открыть WhatsApp с готовым текстом
+                      {t.whatsappDraft}
                     </a>
                     <a
                       href={`tel:${row.target}`}
                       className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
                     >
-                      Позвонить
+                      {t.call}
                     </a>
-                    {row.message ? <CopyMessage text={row.message} /> : null}
+                    {row.message ? <CopyMessage text={row.message} label={t.copyText} /> : null}
                   </div>
 
                   {/* Отметка не отчётность: с неё начинается разговор.
@@ -328,15 +396,15 @@ export function OutreachList({
                     <input type="hidden" name="prospect" value={row.id} />
                     <input
                       name="note"
-                      placeholder="чем написали — WhatsApp, звонок"
+                      placeholder={t.notePlaceholderManual}
                       className="rounded-lg border border-line bg-surface-2 px-2 py-1 text-xs"
                     />
                     <SubmitButton
-                      pendingLabel="Отмечаем…"
+                      pendingLabel={t.marking}
                       base="rounded-lg px-3 py-1.5 text-xs"
                       tone="quiet"
                     >
-                      Связался сам
+                      {t.selfContacted}
                     </SubmitButton>
                   </form>
                 </div>
@@ -349,7 +417,8 @@ export function OutreachList({
               {row.status === "sent" && row.target_kind === "manual" ? (
                 <div className="mt-3 rounded-lg border border-line bg-surface-2/40 px-4 py-3">
                   <p className="text-sm text-green">
-                    Связались руками{row.target ? ` — ${row.target}` : ""}
+                    {t.contactedByHand}
+                    {row.target ? ` — ${row.target}` : ""}
                     {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
                     {row.claimed_name ? ` · ${row.claimed_name}` : ""}
                   </p>
@@ -359,12 +428,12 @@ export function OutreachList({
 
                   {replies?.[row.id] ? (
                     <div className="mt-2 rounded-lg border border-green/25 bg-green/5 px-3 py-2">
-                      <p className="text-xs text-green">Модель написала ответ — отправьте его тем же путём.</p>
+                      <p className="text-xs text-green">{t.modelReplied}</p>
                       <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text">
                         {replies[row.id]}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-3">
-                        <CopyMessage text={replies[row.id]} label="Скопировать ответ" />
+                        <CopyMessage text={replies[row.id]} label={t.copyReply} />
                         {row.target ? (
                           <a
                             href={whatsappLink(row.target, replies[row.id])}
@@ -372,7 +441,7 @@ export function OutreachList({
                             rel="noreferrer noopener"
                             className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
                           >
-                            Открыть WhatsApp с ответом
+                            {t.whatsappReply}
                           </a>
                         ) : null}
                       </div>
@@ -382,7 +451,7 @@ export function OutreachList({
                   <form action={recordManualAnswerAction} className="mt-3">
                     <input type="hidden" name="prospect" value={row.id} />
                     <label className="block text-xs uppercase tracking-wider text-faint">
-                      Что ответил клиент — перенесите сюда, дальше ведёт модель
+                      {t.clientAnswerLabel}
                       <textarea
                         name="body"
                         rows={3}
@@ -390,11 +459,11 @@ export function OutreachList({
                       />
                     </label>
                     <SubmitButton
-                      pendingLabel="Записываем…"
+                      pendingLabel={t.recording}
                       base="mt-2 rounded-lg px-3 py-1.5 text-xs"
                       tone="quiet"
                     >
-                      Записать ответ
+                      {t.recordAnswer}
                     </SubmitButton>
                   </form>
                 </div>
@@ -405,17 +474,11 @@ export function OutreachList({
               {wait && row.target && row.message ? (
                 <div className="mt-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
                   <p className="text-sm text-gold">
-                    {vip ? (
-                      <>Письмо владельца — вне очереди, с рабочего аккаунта — {waitText(wait.waitMs)}</>
-                    ) : (
-                      <>В очереди на отправку с рабочего аккаунта — {waitText(wait.waitMs)}</>
-                    )}
-                    {wait.ahead ? `, перед ним ${wait.ahead}` : ""}.
+                    {vip ? t.ownerQueue(waitLabel(wait.waitMs, t)) : t.inQueueWait(waitLabel(wait.waitMs, t))}
+                    {wait.ahead ? t.ahead(wait.ahead) : ""}.
                   </p>
                   <p className="mt-2 text-xs leading-relaxed text-muted">
-                    Ждать не обязательно: откройте переписку со своего аккаунта, отправьте
-                    этот же текст и нажмите «Связался сам» ниже — бот тогда свою копию не
-                    отправит. Ответ придёт вам лично, и лид уже ваш.
+                    {t.noNeedToWait(t.selfContacted)}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <a
@@ -424,9 +487,9 @@ export function OutreachList({
                       rel="noreferrer noopener"
                       className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
                     >
-                      Открыть {row.target} в Telegram
+                      {t.openInTelegram(row.target)}
                     </a>
-                    <CopyMessage text={row.message} />
+                    <CopyMessage text={row.message} label={t.copyText} />
                   </div>
                 </div>
               ) : null}
@@ -442,29 +505,29 @@ export function OutreachList({
                 <form action={prepareOutreachAction} className="mt-3 flex flex-wrap items-center gap-3">
                   <input type="hidden" name="prospect" value={row.id} />
                   <SubmitButton
-                    pendingLabel="Читаем сайт — это до минуты…"
+                    pendingLabel={t.preparing}
                     base="rounded-xl px-4 py-2 text-sm font-semibold"
                   >
-                    Связаться
+                    {t.contact}
                   </SubmitButton>
-                  <span className="text-xs text-faint">{route ? ROUTE_TEXT[route.kind] : ""}</span>
-                  {error && open === row.id ? (
+                  <span className="text-xs text-faint">{route ? routeText[route.kind] : ""}</span>
+                  {failure && open === row.id ? (
                     <p className="w-full rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-amber-200">
-                      {REASON_TEXT[error as Reason] ?? decodeURIComponent(error)}
+                      {failureText}
                     </p>
                   ) : null}
                 </form>
               ) : null}
 
               {reason !== "ok" && row.status === "new" ? (
-                <p className="mt-2 text-xs text-faint">{REASON_TEXT[reason]}</p>
+                <p className="mt-2 text-xs text-faint">{reasonText[reason]}</p>
               ) : null}
 
               {row.status === "contacting" && row.message ? (
                 <form action={sendOutreachAction} className="mt-3">
                   <input type="hidden" name="prospect" value={row.id} />
                   <label className="block text-xs uppercase tracking-wider text-faint">
-                    Первое сообщение — правьте перед отправкой
+                    {t.firstMessageLabel}
                     <textarea
                       name="message"
                       defaultValue={row.message}
@@ -474,32 +537,30 @@ export function OutreachList({
                   </label>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <SubmitButton
-                      pendingLabel="Отправляем…"
+                      pendingLabel={t.sending}
                       base="rounded-xl px-4 py-2 text-sm font-semibold"
                     >
-                      {route?.kind === "manual" ? "Взять в работу" : `Отправить в ${route?.target ?? ""}`}
+                      {route?.kind === "manual" ? t.takeIntoWork : t.sendTo(route?.target ?? "")}
                     </SubmitButton>
                     <span className="text-xs text-faint">
-                      Лид закрепится за вами, как только нажмёте.
+                      {t.leadWillBeYours}
                     </span>
                   </div>
-                  {error && open === row.id ? (
+                  {failure && open === row.id ? (
                     <p className="mt-3 rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-amber-200">
-                      Не отправлено: {REASON_TEXT[error as Reason] ?? decodeURIComponent(error)}
-                      <span className="mt-1 block text-xs text-faint">
-                        Поправьте текст выше и нажмите ещё раз.
-                      </span>
+                      {t.notSent} {failureText}
+                      <span className="mt-1 block text-xs text-faint">{t.fixAndRetry}</span>
                     </p>
                   ) : willRefuse.length ? (
                     <div className="mt-3 rounded-lg border border-gold/40 bg-gold/5 px-4 py-3 text-sm text-amber-200">
-                      <p className="font-medium">Это письмо отправка не пропустит:</p>
+                      <p className="font-medium">{t.willRefuse}</p>
                       <ul className="mt-1 space-y-1 text-[0.86rem]">
                         {willRefuse.map((p) => (
-                          <li key={p.code}>— {p.text}</li>
+                          <li key={p.code}>— {problemText({ code: p.code, args: p.args ?? [] }, problems)}</li>
                         ))}
                       </ul>
                       <p className="mt-2 text-xs text-faint">
-                        Поправьте текст выше — проверка пересчитается после отправки.
+                        {t.willRefuseHint}
                       </p>
                     </div>
                   ) : null}
@@ -524,18 +585,18 @@ export function OutreachList({
                   <input type="hidden" name="prospect" value={row.id} />
                   <input
                     name="note"
-                    placeholder={row.message ? "чем написали — свой Telegram, звонок" : "что написали"}
+                    placeholder={row.message ? t.notePlaceholderMessage : t.notePlaceholderEmpty}
                     className="min-w-[16rem] flex-1 rounded-lg border border-line bg-surface-2 px-2 py-1 text-xs"
                   />
                   <SubmitButton
-                    pendingLabel="Отмечаем…"
+                    pendingLabel={t.marking}
                     base="rounded-lg px-3 py-1.5 text-xs"
                     tone="quiet"
                   >
-                    Связался сам
+                    {t.selfContacted}
                   </SubmitButton>
                   <span className="text-xs text-faint">
-                    Если писали со своего аккаунта — отметьте, иначе касание не засчитается.
+                    {t.selfHint}
                   </span>
                 </form>
               ) : null}
@@ -552,7 +613,7 @@ export function OutreachList({
                       отправлено». Менеджер смотрит туда, куда нажал, и ответ
                       должен быть там, а не в другом углу карточки. */}
                   <DoneButton base="rounded-xl px-4 py-2 text-sm font-semibold">
-                    {row.status === "sending" ? "Отправлено в очередь" : "Отправлено"}
+                    {row.status === "sending" ? t.sentToQueue : t.sent}
                   </DoneButton>
 
                   {/* Подтверждение для себя: с кем, когда, кто и чем.
@@ -571,7 +632,8 @@ export function OutreachList({
                       }`}
                     >
                       <p className={`text-sm ${row.delivered_at ? "text-green" : "text-gold"}`}>
-                        Связались{row.target ? ` — ${row.target}` : ""}
+                        {t.contacted}
+                        {row.target ? ` — ${row.target}` : ""}
                         {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
                         {row.claimed_name ? ` · ${row.claimed_name}` : ""}
                       </p>
@@ -583,15 +645,13 @@ export function OutreachList({
                           переписку и ищет в ней своё сообщение по номеру. */}
                       <p className="mt-1 text-xs text-muted">
                         {row.delivered_at
-                          ? `Сообщение нашлось в переписке с нашего аккаунта — ${when(row.delivered_at)}.`
-                          : (row.delivery_note ??
-                            "Доставку ещё не подтверждали: скаут перечитывает переписку сразу после отправки.")}
+                          ? t.delivered(when(row.delivered_at))
+                          : (row.delivery_note ?? t.notDeliveredYet)}
                       </p>
                     </div>
                   ) : (
                     <p className="mt-2 text-xs text-gold">
-                      Сообщение поставлено в очередь на отправку с рабочего аккаунта. Как только уйдёт,
-                      здесь появится подтверждение с временем.
+                      {t.queuedNote}
                     </p>
                   )}
                 </div>
@@ -602,10 +662,9 @@ export function OutreachList({
                   отказался / игнорирует. Чтобы он вылетал из очереди». */}
               {row.status === "sent" && row.closed_reason ? (
                 <p className="mt-3 rounded-lg border border-line bg-surface-2/40 px-4 py-2 text-xs text-muted">
-                  {CLOSE_TEXT[row.closed_reason].button}
+                  {closeButton[row.closed_reason]}
                   {row.closed_name ? ` · ${row.closed_name}` : ""}
-                  {row.closed_at ? ` · ${when(row.closed_at)}` : ""}. Касание закрыто: бот не дожимает, модель не
-                  отвечает, лид — «проиграли». Напишет клиент сам — бот позовёт того, кто вёл.
+                  {row.closed_at ? ` · ${when(row.closed_at)}` : ""}. {t.closedNote}
                 </p>
               ) : row.status === "sent" && viewer && mayClose(row, viewer) ? (
                 <form action={closeTouchAction} className="mt-3 flex flex-wrap items-center gap-2">
@@ -615,14 +674,14 @@ export function OutreachList({
                       key={reason}
                       name="reason"
                       value={reason}
-                      pendingLabel="Закрываем…"
+                      pendingLabel={t.closing}
                       base="rounded-lg px-3 py-1.5 text-xs"
                       tone="quiet"
                     >
-                      {CLOSE_TEXT[reason].button}
+                      {closeButton[reason]}
                     </SubmitButton>
                   ))}
-                  <HelpHint topic={helpAnchor("/admin/prospect", "close")} label="Что будет после нажатия" />
+                  <HelpHint topic={helpAnchor("/admin/prospect", "close")} label={t.helpClose} />
                 </form>
               ) : null}
 
@@ -631,11 +690,11 @@ export function OutreachList({
                   <input type="hidden" name="prospect" value={row.id} />
                   <input
                     name="reason"
-                    placeholder="почему не пишем"
+                    placeholder={t.skipPlaceholder}
                     className="rounded-lg border border-line bg-surface-2 px-2 py-1 text-xs"
                   />
                   <button type="submit" className="text-xs text-faint hover:text-gold">
-                    не пишем
+                    {t.skip}
                   </button>
                 </form>
               ) : null}
@@ -653,11 +712,11 @@ export function OutreachList({
             prefetch={false}
             className="rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:border-green/40 hover:text-text"
           >
-            Показать ещё {Math.min(REST_PAGE, more.hidden)}
+            {t.showMore(Math.min(REST_PAGE, more.hidden))}
           </Link>
           <span className="flex items-center gap-2 text-xs text-faint">
-            скрыто ещё {more.hidden}: нетронутые, пропущенные и отправленные раньше недели
-            <HelpHint topic={helpAnchor("/admin/prospect", "list")} label="Что показано в списке" />
+            {t.hiddenMore(more.hidden)}
+            <HelpHint topic={helpAnchor("/admin/prospect", "list")} label={t.helpList} />
           </span>
         </div>
       ) : null}

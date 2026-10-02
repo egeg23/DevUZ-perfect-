@@ -39,7 +39,8 @@ import {
   nositePrompt,
 } from "@/lib/admin/outreach-nosite";
 import { effortFor } from "@/lib/model-limits";
-import { modelTroubleSays } from "@/lib/model-trouble";
+import { modelTrouble, modelTroubleSays } from "@/lib/model-trouble";
+import type { TouchError, TouchFail } from "@/lib/admin/touch-errors";
 import { serviceClient } from "@/lib/supabase";
 import { anthropic } from "@/lib/model-road";
 
@@ -295,12 +296,12 @@ export async function prospectById(id: string): Promise<Prospect | null> {
  */
 async function prepareNoSite(prospect: Prospect, staff: Staff): Promise<PrepareResult> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "База недоступна.", code: "db" };
 
   const niche = (prospect.niche ?? "").trim();
   // Ниша — единственное, от чего здесь можно писать. Без неё письмо вышло бы
   // про «ваш бизнес», то есть про никого.
-  if (!niche) return { ok: false, why: "Не записана ниша — писать не от чего." };
+  if (!niche) return { ok: false, why: "Не записана ниша — писать не от чего.", code: "no_niche" };
 
   const prompt = nositePrompt({ label: prospect.label, niche, sender: staff.display_name });
 
@@ -329,7 +330,7 @@ async function prepareNoSite(prospect: Prospect, staff: Staff): Promise<PrepareR
   let message: string;
   try {
     const first = await write(null);
-    if (!first) return { ok: false, why: "Модель не вернула сообщение." };
+    if (!first) return { ok: false, why: "Модель не вернула сообщение.", code: "model_empty" };
     // Вторая попытка и выбор лучшей — как в обычном касании: менеджер нажал
     // и должен получить письмо, а не отказ проверки на пустом поле.
     const missed = nositeProblems(first, prompt);
@@ -337,7 +338,7 @@ async function prepareNoSite(prospect: Prospect, staff: Staff): Promise<PrepareR
     const secondMissed = second ? nositeProblems(second, prompt) : null;
     message = second && secondMissed && secondMissed.length <= missed.length ? second : first;
   } catch (error) {
-    return { ok: false, why: modelTroubleSays(error) };
+    return { ok: false, why: modelTroubleSays(error), ...modelFail(error) };
   }
 
   await db
@@ -356,7 +357,17 @@ async function prepareNoSite(prospect: Prospect, staff: Staff): Promise<PrepareR
 
 export type PrepareResult =
   | { ok: true; message: string }
-  | { ok: false; why: string; reason?: Reason };
+  | ({ ok: false; why: string; reason?: Reason } & TouchFail);
+
+/**
+ * Отказ модели — кодом для панели: у поставщика кончились деньги, ключ не
+ * принят, частота или недоступность. Всё прочее — дефект, текст как есть.
+ */
+function modelFail(error: unknown): TouchFail {
+  const trouble = modelTrouble(error);
+  if (trouble) return { code: `model_${trouble.kind}` };
+  return { code: "defect", detail: error instanceof Error ? error.message : String(error) };
+}
 
 /**
  * Модель пишет первое сообщение, отталкиваясь от находок анализа.
@@ -366,12 +377,12 @@ export type PrepareResult =
  */
 export async function prepareOutreach(id: string, staff: Staff): Promise<PrepareResult> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "База недоступна.", code: "db" };
 
   const prospect = await prospectById(id);
-  if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет." };
+  if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет.", code: "gone" };
 
-  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, why: "Нет ключа модели — сообщение некому написать." };
+  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, why: "Нет ключа модели — сообщение некому написать.", code: "no_key" };
 
   /**
    * Компания без сайта: разбирать нечего, пишем от ниши.
@@ -387,7 +398,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     findings: prospect.findings,
     status: prospect.status,
   });
-  if (reason !== "ok") return { ok: false, why: "", reason };
+  if (reason !== "ok") return { ok: false, why: "", reason, code: reason };
 
   const url = prospect.url;
   const host = prospect.host;
@@ -461,7 +472,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
   let message: string;
   try {
     const first = await write(null);
-    if (!first) return { ok: false, why: "Модель не вернула сообщение." };
+    if (!first) return { ok: false, why: "Модель не вернула сообщение.", code: "model_empty" };
 
     // Вторая попытка на любой промах, а не только на потерянные крючки.
     // Живой прогон по aparto.uz показал почему: модель написала «созвонимся
@@ -483,7 +494,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
   } catch (error) {
     // Отказ модели — не «что-то пошло не так»: менеджеру нужна фраза, по
     // которой понятно, идти к владельцу или нажать ещё раз через минуту.
-    return { ok: false, why: modelTroubleSays(error) };
+    return { ok: false, why: modelTroubleSays(error), ...modelFail(error) };
   }
 
   // Что не так — покажем сотруднику рядом с текстом: правит он, а не мы.
@@ -512,7 +523,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
 
 /* ── Отправка ──────────────────────────────────────────────────────────── */
 
-export type QueueResult = { ok: true; leadId: string | null } | { ok: false; why: string };
+export type QueueResult = { ok: true; leadId: string | null } | ({ ok: false; why: string } & TouchFail);
 
 /**
  * Поставить сообщение в очередь и завести лид.
@@ -576,10 +587,10 @@ export function sendProblems(
 
 export async function queueOutreach(id: string, message: string, staff: Staff, ip: string): Promise<QueueResult> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "База недоступна.", code: "db" };
 
   const prospect = await prospectById(id);
-  if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет." };
+  if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет.", code: "gone" };
 
   const reason = canContact({
     contacts: prospect.contacts,
@@ -587,16 +598,16 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
     status: prospect.status,
     noSite: !prospect.host,
   });
-  if (reason !== "ok") return { ok: false, why: reason };
+  if (reason !== "ok") return { ok: false, why: reason, code: reason };
 
   // Компании без сайта отправлять некуда: контактов у нас нет, и скаут не
   // найдёт их сам. Такая карточка живёт отметкой «связался сам».
   const route = routeFor(prospect.contacts);
-  if (!route) return { ok: false, why: "no_way" };
+  if (!route) return { ok: false, why: "no_way", code: "no_way" };
 
   const text = message.trim();
   const problems = sendProblems({ ...prospect, message: text }, staff.display_name);
-  if (problems.length) return { ok: false, why: problems.map((p) => p.text).join(" ") };
+  if (problems.length) return { ok: false, why: problems.map((p) => p.text).join(" "), code: "problems", problems };
 
   // Номер заявки рождается здесь, а не в конце разговора: по нему модель
   // допишет первичку в этот самый лид, когда клиент ответит. Без номера
@@ -630,7 +641,7 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
     })
     .eq("id", id)
     .in("status", ["new", "contacting"]);
-  if (error) return { ok: false, why: "Не получилось поставить в очередь." };
+  if (error) return { ok: false, why: "Не получилось поставить в очередь.", code: "queue_failed" };
 
   await record("prospect.queued", {
     actorStaffId: staff.id,
@@ -713,14 +724,14 @@ export async function markSelfContacted(
   staff: Staff,
   note: string,
   ip: string,
-): Promise<{ ok: true } | { ok: false; why: string }> {
+): Promise<{ ok: true } | { ok: false; why: string; code: TouchError }> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "База недоступна.", code: "db" };
 
   const prospect = await prospectById(id);
-  if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет." };
+  if (!prospect) return { ok: false, why: "Такого сайта в списке уже нет.", code: "gone" };
   if (!(SELF_CONTACT_FROM as readonly string[]).includes(prospect.status)) {
-    return { ok: false, why: "По этой карточке касание уже отмечено." };
+    return { ok: false, why: "По этой карточке касание уже отмечено.", code: "already_marked" };
   }
 
   const when = new Date().toISOString();
@@ -765,9 +776,9 @@ export async function markSelfContacted(
     .eq("id", id)
     .in("status", [...SELF_CONTACT_FROM])
     .select("id");
-  if (error) return { ok: false, why: "Не получилось отметить." };
+  if (error) return { ok: false, why: "Не получилось отметить.", code: "mark_failed" };
   // Пока человек писал, бот успел отправить своё: второе письмо в ленту не кладём.
-  if (!updated?.length) return { ok: false, why: "Бот уже отправил это письмо — отмечать не нужно." };
+  if (!updated?.length) return { ok: false, why: "Бот уже отправил это письмо — отмечать не нужно.", code: "bot_sent" };
 
   if (body) {
     await db.from("outreach_messages").insert({
@@ -815,20 +826,20 @@ export async function recordManualAnswer(
   body: string,
   staff: Staff,
   ip: string,
-): Promise<{ ok: true } | { ok: false; why: string }> {
+): Promise<{ ok: true } | { ok: false; why: string; code: TouchError }> {
   const text = body.trim();
-  if (!text) return { ok: false, why: "Пустой ответ записывать нечего." };
+  if (!text) return { ok: false, why: "Пустой ответ записывать нечего.", code: "empty_answer" };
 
   // Наше же письмо в поле «что ответил клиент» — так уже было с mcbro.uz:
   // скопировали из WhatsApp своё сообщение, и модель начала бы отвечать
   // самой себе, а в статистике появился ответ, которого не было.
   const prospect = await prospectById(id);
   if (prospect?.message && isOwnMessage(text, prospect.message)) {
-    return { ok: false, why: "Это наше же сообщение. Вставьте то, что ответил клиент." };
+    return { ok: false, why: "Это наше же сообщение. Вставьте то, что ответил клиент.", code: "own_message" };
   }
 
   const hit = await recordManualInbound(id, text);
-  if (!hit.matched) return { ok: false, why: "Такого сайта в списке уже нет." };
+  if (!hit.matched) return { ok: false, why: "Такого сайта в списке уже нет.", code: "gone" };
 
   await record("prospect.manual_reply", {
     actorStaffId: staff.id,
@@ -942,7 +953,9 @@ export async function skipProspect(id: string, reason: string): Promise<void> {
  * Если клиент потом всё же напишет, его ответ найдётся как обычно и придёт
  * тому, кто вёл, — см. saveInbound.
  */
-export type CloseResult = { ok: true; host: string | null; leadClosed: boolean } | { ok: false; why: string };
+export type CloseResult =
+  | { ok: true; host: string | null; leadClosed: boolean }
+  | { ok: false; why: string; code: TouchError };
 
 export async function closeTouch(
   id: string,
@@ -952,17 +965,21 @@ export async function closeTouch(
   via: ActionSource = "panel",
 ): Promise<CloseResult> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
-  if (!isCloseReason(reason)) return { ok: false, why: "Неизвестная причина." };
+  if (!db) return { ok: false, why: "База недоступна.", code: "db" };
+  if (!isCloseReason(reason)) return { ok: false, why: "Неизвестная причина.", code: "unknown_reason" };
 
   const { data: p } = await db
     .from("prospects")
     .select("id, host, label, status, closed_reason, claimed_by, touched_by, handled_by, lead_id")
     .eq("id", id)
     .maybeSingle();
-  if (!p) return { ok: false, why: "Такого касания уже нет." };
+  if (!p) return { ok: false, why: "Такого касания уже нет.", code: "touch_gone" };
   if (isCloseReason(String(p.closed_reason ?? ""))) {
-    return { ok: false, why: `Уже отмечено: ${CLOSE_TEXT[p.closed_reason as CloseReason].label}.` };
+    return {
+      ok: false,
+      why: `Уже отмечено: ${CLOSE_TEXT[p.closed_reason as CloseReason].label}.`,
+      code: p.closed_reason === "refused" ? "closed_refused" : "closed_ignored",
+    };
   }
   if (!canClose({ status: String(p.status) })) {
     return {
@@ -971,6 +988,7 @@ export async function closeTouch(
         p.status === "sending"
           ? "Письмо ещё в очереди бота — отметьте, когда оно уйдёт."
           : "Сначала отметьте касание: «Связался сам» или «Отправить».",
+      code: p.status === "sending" ? "still_queued" : "not_touched",
     };
   }
   const who = {
@@ -978,7 +996,7 @@ export async function closeTouch(
     touched_by: (p.touched_by as string | null) ?? null,
     handled_by: (p.handled_by as string | null) ?? null,
   };
-  if (!mayClose(who, staff)) return { ok: false, why: "Это касание ведёт другой сотрудник." };
+  if (!mayClose(who, staff)) return { ok: false, why: "Это касание ведёт другой сотрудник.", code: "not_yours" };
 
   const { data: updated, error } = await db
     .from("prospects")
@@ -993,8 +1011,8 @@ export async function closeTouch(
     .eq("status", "sent")
     .is("closed_reason", null)
     .select("id");
-  if (error) return { ok: false, why: "Не получилось отметить." };
-  if (!updated?.length) return { ok: false, why: "Уже отмечено." };
+  if (error) return { ok: false, why: "Не получилось отметить.", code: "mark_failed" };
+  if (!updated?.length) return { ok: false, why: "Уже отмечено.", code: "already_closed" };
 
   // Дожим или ответ модели, стоящий в очереди скаута, после отказа уходить
   // не должен: следующее сообщение после «не пишите» — ровно то, за что

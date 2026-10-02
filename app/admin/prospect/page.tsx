@@ -8,12 +8,13 @@ import { ProspectRunner } from "@/components/admin/prospect-runner";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
 import { requireStaff } from "@/lib/admin/guard";
 import { touchProgressOf } from "@/lib/admin/touch-store";
-import { outcomeOf, replaceLimit, tallyPortion } from "@/lib/admin/portion";
+import { BOT_BUTTON, outcomeOf, replaceLimit, tallyPortion } from "@/lib/admin/portion";
 import { portionOf, type PortionItem } from "@/lib/admin/portion-store";
 import { inQueue } from "@/lib/admin/lead-queue";
 import { STREAM_BUFFER, STREAM_OFF, STREAM_ON } from "@/lib/admin/stream";
 import { streamState } from "@/lib/admin/stream-store";
-import { CLOSE_TEXT } from "@/lib/admin/touch-close";
+import { pick } from "@/lib/admin/i18n";
+import { closeLabelDict, prospectPageDict } from "@/content/admin-panel/prospect";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { MapsCampaigns } from "@/components/admin/maps-campaigns";
 import { TouchLegend } from "@/components/admin/touch-legend";
@@ -33,6 +34,10 @@ export default async function ProspectPage({
 }) {
   const staff = await requireStaff();
   const { open, e, sent, maps, more: moreRaw } = await searchParams;
+  // Язык панели — сотрудника, а не браузера (lib/admin/i18n.ts).
+  const locale = staff.panel_locale;
+  const t = pick(prospectPageDict, locale);
+  const closeLabel = pick(closeLabelDict, locale);
   // Автопоиск ведут владелец и руководитель; менеджеру он приходит порцией.
   const seesMaps = staff.role === "admin" || staff.role === "head";
   const [campaigns, mapsUsage, mapsPending, mapsReady] = seesMaps
@@ -64,9 +69,9 @@ export default async function ProspectPage({
   // Что с компанией из порции или потока — словами, как в Telegram.
   const stateOf = (p: PortionItem): string => {
     const outcome = outcomeOf(p, staff.id, today);
-    if (outcome === "skipped") return "не подошла";
-    if (outcome) return p.closed_reason ? `сделано · ${CLOSE_TEXT[p.closed_reason].label}` : "сделано";
-    return p.message ? "текст готов" : "текст готовится";
+    if (outcome === "skipped") return t.stateSkipped;
+    if (outcome) return p.closed_reason ? `${t.stateDone} · ${closeLabel[p.closed_reason]}` : t.stateDone;
+    return p.message ? t.stateReady : t.statePreparing;
   };
   // Сразу — только карточки в работе, порция и открытая; остальные по
   // двадцать. Все 200 сразу весили 2 МБ и вешали слабые компьютеры.
@@ -79,12 +84,8 @@ export default async function ProspectPage({
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Холодные касания</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-        Тот же аудитор, что на публичной странице, но по списку. На выходе не
-        баллы, а черновик первого сообщения по каждому сайту — построенный
-        вокруг одной находки, которую адресат может пойти и проверить сам.
-      </p>
+      <h1 className="text-lg font-semibold">{t.title}</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro}</p>
 
       <TouchPlanLine progress={plan} />
 
@@ -93,8 +94,8 @@ export default async function ProspectPage({
       {mine.length ? (
         <section className="mb-6 rounded-xl border border-green/30 bg-green/5 px-5 py-4">
           <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-green">
-            Ваша порция на сегодня: сделано {tally.done} из {tally.target}
-            <HelpHint topic={helpAnchor("/admin/prospect", "portion")} label="Как работает порция дня" />
+            {t.portionHead(tally.done, tally.target)}
+            <HelpHint topic={helpAnchor("/admin/prospect", "portion")} label={t.portionHelp} />
           </p>
           <ul className="mt-3 flex flex-col gap-1.5 text-sm">
             {mine.map((p) => {
@@ -103,19 +104,17 @@ export default async function ProspectPage({
               return (
                 <li key={p.id} className="flex flex-wrap items-baseline gap-x-2">
                   <Link href={`/admin/prospect?open=${p.id}#p-${p.id}`} className="hover:text-green">
-                    {p.label || p.host || "Компания без сайта"}
+                    {p.label || p.host || t.noSiteCompany}
                   </Link>
                   <span className={`text-xs ${outcome ? "text-faint" : "text-muted"}`}>{state}</span>
-                  {p.replacement ? <span className="text-xs text-green">замена</span> : null}
+                  {p.replacement ? <span className="text-xs text-green">{t.replacement}</span> : null}
                 </li>
               );
             })}
           </ul>
           <p className="mt-3 text-xs text-faint">
-            В счёт идут «Отправить» и «Связался сам». «Не подходит» не в счёт — вместо неё сразу
-            выдаётся замена, до {replaceLimit(tally.target)} в день.
-            {tally.short ? ` Без замены: ${tally.short} — в пуле пусто или замены на сегодня кончились.` : ""}{" "}
-            Что не сделано до 18:00, вернётся в общий пул.
+            {t.portionRules(replaceLimit(tally.target), BOT_BUTTON.skip)}
+            {tally.short ? t.portionShort(tally.short) : ""} {t.portionReturn}
           </p>
         </section>
       ) : null}
@@ -125,15 +124,15 @@ export default async function ProspectPage({
       {inQueue(staff.role) && (stream.on || streamed.length) ? (
         <section className="mb-6 rounded-xl border border-blue-soft/30 bg-blue-soft/5 px-5 py-4">
           <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-blue-soft">
-            Поток лидов: {stream.on ? "включён" : "выключен"} · сегодня касаний {streamDone}
-            <HelpHint topic={helpAnchor("/admin/prospect", "stream")} label="Как работает поток" />
+            {t.streamHead(stream.on ? t.streamOn : t.streamOff, streamDone)}
+            <HelpHint topic={helpAnchor("/admin/prospect", "stream")} label={t.streamHelp} />
           </p>
           {streamed.length ? (
             <ul className="mt-3 flex flex-col gap-1.5 text-sm">
               {streamed.map((p) => (
                 <li key={p.id} className="flex flex-wrap items-baseline gap-x-2">
                   <Link href={`/admin/prospect?open=${p.id}#p-${p.id}`} className="hover:text-green">
-                    {p.label || p.host || "Компания без сайта"}
+                    {p.label || p.host || t.noSiteCompany}
                   </Link>
                   <span className={`text-xs ${outcomeOf(p, staff.id, today) ? "text-faint" : "text-muted"}`}>{stateOf(p)}</span>
                 </li>
@@ -141,9 +140,7 @@ export default async function ProspectPage({
             </ul>
           ) : null}
           <p className="mt-3 text-xs text-faint">
-            Включается и выключается в Telegram: кнопка «{STREAM_ON}» / «{STREAM_OFF}» внизу чата с ботом или
-            команда /leads. Компании приходят по одной, неразобранных — не больше {STREAM_BUFFER}; по будням с 9:00
-            до 18:00, после порции. Поток — сверх порции и в её счёт не идёт; несделанное в 18:00 вернётся в пул.
+            {t.streamNote(STREAM_ON, STREAM_OFF, STREAM_BUFFER)}
           </p>
         </section>
       ) : null}
@@ -159,10 +156,11 @@ export default async function ProspectPage({
           pending={mapsPending}
           canEdit
           notice={maps}
+          locale={locale}
         />
       ) : null}
 
-      <TouchLegend />
+      <TouchLegend locale={locale} />
 
       <OutreachList
         rows={view.shown}
@@ -177,35 +175,21 @@ export default async function ProspectPage({
         error={e}
         sent={sent === "1"}
         replies={replies}
+        locale={locale}
       />
 
       <div className="mt-10 max-w-2xl space-y-3 border-t border-line pt-6 text-xs leading-relaxed text-faint">
         <p>
-          <span className="text-muted">Список приносите вы.</span> Инструмент не
-          обходит чужие каталоги и не выгружает базы: он открывает публичный сайт
-          компании ровно так же, как его открывает любой посетитель. Там, где
-          начинается выгрузка чужих баз, начинаются правила, которые мы не
-          проверяли.
+          <span className="text-muted">{t.footListTitle}</span> {t.footList}
         </p>
         <p>
-          <span className="text-muted">Пустая строка вместо черновика — это результат.</span>{" "}
-          Если к сайту нет претензий, писать не о чем, и придумывать повод не
-          надо: касание без содержания портит и адресата, и того, кто пишет.
+          <span className="text-muted">{t.footEmptyTitle}</span> {t.footEmpty}
         </p>
         <p>
-          <span className="text-muted">Находок стало меньше, и это к лучшему.</span>{" "}
-          Аудитор читает то, что отдал сервер. Если сайт собирается уже в
-          браузере — а так устроена половина новых сайтов, — по проводу
-          приходит пустая заготовка, и «нет телефона» означало бы только то,
-          что мы его не увидели. Такие претензии больше не выписываются: вместо
-          них одна проверяемая — сколько слов получил поисковик. Владелец
-          проверяет её за минуту, открыв просмотр кода своей страницы.
+          <span className="text-muted">{t.footFewerTitle}</span> {t.footFewer}
         </p>
         <p>
-          <span className="text-muted">Черновик — это черновик.</span> Прочитайте
-          его перед отправкой и поправьте под человека. За один прогон —
-          не больше {BATCH_CAP} адресов; внутри прогона сайты проверяются по
-          одному, чтобы не стучаться к десятку сразу.
+          <span className="text-muted">{t.footDraftTitle}</span> {t.footDraft(BATCH_CAP)}
         </p>
       </div>
     </AdminShell>

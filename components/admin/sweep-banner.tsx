@@ -1,5 +1,7 @@
 import { HelpHint } from "@/components/admin/help-link";
+import { homeDict } from "@/content/admin-panel/home";
 import { helpAnchor } from "@/lib/admin/help";
+import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { readHealth } from "@/lib/admin/sweep-health";
 
 /**
@@ -17,7 +19,7 @@ import { readHealth } from "@/lib/admin/sweep-health";
 /** Свип ходит раз в пять минут; полчаса тишины — это шесть пропусков. */
 const STALE_MINUTES = 30;
 
-export async function SweepBanner() {
+export async function SweepBanner({ locale }: { locale: PanelLocale }) {
   const health = await readHealth();
   // Записи нет вовсе — свип ещё ни разу не отработал после выката. Это не
   // авария: пугать ею в первые пять минут после релиза не за что.
@@ -29,23 +31,19 @@ export async function SweepBanner() {
 
   if (!stale && !health.alerted) return null;
 
+  const t = pick(homeDict, locale);
   return (
     <p className="mb-6 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
-      <b>Напоминания не доставляются.</b>{" "}
-      {minutes === null
-        ? "Свип ни разу не отработал успешно."
-        : `Последний удачный проход был ${minutes} мин назад — ходить он должен раз в пять.`}
+      <b>{t.sweepTitle}</b>{" "}
+      {minutes === null ? t.sweepNever : t.sweepAgo(minutes)}
       {health.last_error ? (
         <>
           {" "}
-          Последняя ошибка: <code className="font-mono text-xs">{health.last_error}</code>
+          {t.sweepLastError} <code className="font-mono text-xs">{health.last_error}</code>
         </>
       ) : null}{" "}
-      <span className="text-faint">
-        Проверьте на сервере: systemctl status devuz-reminders.timer и переменную
-        REMINDER_SWEEP_SECRET.
-      </span>{" "}
-      <HelpHint topic={helpAnchor("/admin", "banner")} label="Что это значит" />
+      <span className="text-faint">{t.sweepCheck}</span>{" "}
+      <HelpHint topic={helpAnchor("/admin", "banner")} label={t.sweepHint} />
     </p>
   );
 }

@@ -2,6 +2,9 @@
 
 import { useFormStatus } from "react-dom";
 
+import { usePanelDict } from "@/components/admin/panel-locale";
+import { panelButtonsDict } from "@/content/admin-panel/lead-card";
+
 /**
  * Кнопка, по которой видно, что её нажали и что нажатие кончилось.
  *
@@ -39,8 +42,11 @@ export function SubmitButton({
   value,
 }: {
   children: React.ReactNode;
-  /** Что написано на кнопке, пока ждём. Здесь же говорим, сколько ждать. */
-  pendingLabel: string;
+  /**
+   * Что написано на кнопке, пока ждём. Здесь же говорим, сколько ждать.
+   * Без подписи — «Сохраняю…» на языке панели.
+   */
+  pendingLabel?: string;
   /** Только геометрия: скругление, отступы, кегль. Без цвета. */
   base: string;
   tone?: keyof typeof TONE;
@@ -49,6 +55,7 @@ export function SubmitButton({
   value?: string;
 }) {
   const { pending } = useFormStatus();
+  const t = usePanelDict(panelButtonsDict);
 
   return (
     <button
@@ -63,7 +70,7 @@ export function SubmitButton({
       {pending ? (
         <span aria-hidden="true" className="h-2 w-2 animate-ping rounded-full bg-muted" />
       ) : null}
-      {pending ? pendingLabel : children}
+      {pending ? (pendingLabel ?? t.saving) : children}
     </button>
   );
 }

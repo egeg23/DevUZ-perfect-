@@ -91,21 +91,22 @@ export function nositeProblems(message: string, prompt: string): MessageProblem[
   const problems: MessageProblem[] = [];
   const words = message.trim().split(/\s+/).filter(Boolean).length;
 
-  if (words < 40) problems.push({ code: "short", text: "Сообщение короче сорока слов — в нём не поместится ни мысль, ни повод ответить." });
-  if (words > 190) problems.push({ code: "long", text: "Сообщение длиннее ста девяноста слов — на телефоне такое не читают." });
+  if (words < 40) problems.push({ code: "short", text: "Сообщение короче сорока слов — в нём не поместится ни мысль, ни повод ответить.", args: [40] });
+  if (words > 190) problems.push({ code: "long", text: "Сообщение длиннее ста девяноста слов — на телефоне такое не читают.", args: [190] });
   if (!/devuz\.studio/i.test(message)) {
     problems.push({ code: "no_us", text: "В сообщении нет devuz.studio — непонятно, кто пишет." });
   }
 
   const invented = inventedNumbers(message, prompt);
   if (invented.length) {
-    problems.push({ code: "invented", text: `Числа, которых нет в задании: ${invented.join(", ")}. Проверьте или уберите.` });
+    problems.push({ code: "invented", text: `Числа, которых нет в задании: ${invented.join(", ")}. Проверьте или уберите.`, args: [invented.join(", ")] });
   }
   const alien = foreignScript(message);
   if (alien.length) {
     problems.push({
       code: "foreign_script",
       text: `В сообщении есть знаки чужого письма: ${alien.join(" ")}. Уберите их — это сбой модели, а не текст.`,
+      args: [alien.join(" ")],
     });
   }
   if (bannedPhrase(message)) {

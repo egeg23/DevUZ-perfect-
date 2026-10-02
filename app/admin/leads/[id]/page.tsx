@@ -17,20 +17,30 @@ import {
 } from "./actions";
 import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
-import { VOID_TITLE, type VoidReason } from "@/lib/partners/rules";
+import type { VoidReason } from "@/lib/partners/rules";
 import { clientById, partnerById } from "@/lib/partners/store";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
-import { pick } from "@/lib/admin/i18n";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { HelpHint } from "@/components/admin/help-link";
 import { LeadThread } from "@/components/admin/lead-thread";
 import { helpAnchor } from "@/lib/admin/help";
+import { pick, tr, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import {
-  BUDGET_LABEL,
-  PRIORITY_LABEL,
-  STATUS_LABEL,
-  when,
-} from "@/components/admin/lead-table";
+  cardWhen,
+  leadAuthorityDict,
+  leadBudgetDict,
+  leadCardDict,
+  leadContactKindDict,
+  leadDiscountDict,
+  leadExpertiseDict,
+  leadNeedDict,
+  leadPriorityDict,
+  leadResultDict,
+  leadStatusDict,
+  leadTimingDict,
+  leadTransferStatusDict,
+  leadVoidDict,
+} from "@/content/admin-panel/lead-card";
 import { record } from "@/lib/admin/audit";
 import { clock, mayTake } from "@/lib/admin/lead-queue";
 import { queueState, shareOf } from "@/lib/admin/lead-queue-store";
@@ -48,7 +58,7 @@ import {
   revealContact,
   revealTranscript,
 } from "@/lib/admin/ownership";
-import { CONTACT_LABEL, contactLink } from "@/lib/contact";
+import { contactLink } from "@/lib/contact";
 import {
   atTashkent,
   channelName,
@@ -58,57 +68,17 @@ import {
   type LeadOrigin,
 } from "@/lib/qualify/origin";
 import { activeStaff } from "@/lib/admin/team";
-import { TRANSFER_TITLE, approves, openTransferFor } from "@/lib/admin/transfers";
+import { approves, openTransferFor } from "@/lib/admin/transfers";
 
 export const dynamic = "force-dynamic";
 
-/** За что клиенту скидка — менеджеру важно: извиняться за ожидание или нет. */
-const DISCOUNT_CHIP: Record<"promise" | "minute", string> = {
-  promise: "скидка 30% — не уложились в 20 секунд",
-  minute: "скидка 30% — написал в первую минуту",
-};
-
-const EXPERTISE_LABEL: Record<string, string> = {
-  high: "разбирается",
-  medium: "средне",
-  low: "не разбирается",
-};
-
-const AUTHORITY_LABEL: Record<string, string> = {
-  A1: "решает сам",
-  A2: "влияет на решение",
-  A3: "передаёт дальше",
-};
-
-const NEED_LABEL: Record<string, string> = {
-  N1: "болит сейчас",
-  N2: "понимает задачу",
-  N3: "присматривается",
-};
-
-const TIMING_LABEL: Record<string, string> = {
-  T1: "сейчас",
-  T2: "в этом квартале",
-  T3: "когда-нибудь",
-};
-
-const RESULT_MESSAGE: Record<string, string> = {
-  ok: "Готово.",
-  taken: "Лида уже взял кто-то другой — обновите страницу.",
-  queued: "Не ваша очередь: лид сейчас предложен другому на 30 минут. Не возьмёт — лид уйдёт следующему, и очередь может дойти до вас.",
-  share: "Вы уже взяли свою равную долю лидов за месяц. Этот лид пришёл в нерабочее время и достаётся тем, у кого меньше.",
-  forbidden: "Лид закреплён не за вами.",
-  gone: "Лид не найден.",
-  offline: "База недоступна.",
-  failed: "Не получилось. Попробуйте ещё раз.",
-  asked: "Просьба отправлена. Лид остаётся у вас, пока её не подтвердят.",
-  approved: "Передача подтверждена — лид у нового ответственного.",
-  declined: "Передачу отклонили. Лид остаётся у прежнего ответственного.",
-  not_mine: "Передать может тот, у кого лид, либо руководитель или владелец.",
-  free: "Лид свободен — его берут кнопкой «Взять себе», а не передают.",
-  self: "Это тот же сотрудник.",
-  pending: "По этому лиду уже ждёт решения другая просьба.",
-};
+/**
+ * Подпись по коду из базы на языке панели. Незнакомый код показывается
+ * как есть: лучше «B4», чем пустое место.
+ */
+function label(table: Record<string, Tr>, code: string, locale: PanelLocale): string {
+  return Object.hasOwn(table, code) ? tr(table[code], locale) : code;
+}
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
@@ -150,6 +120,9 @@ export default async function LeadPage({
   searchParams: Promise<{ r?: string; contact?: string; transcript?: string; inn?: string }>;
 }) {
   const staff = await requireStaff();
+  const locale = staff.panel_locale;
+  const t = pick(leadCardDict, locale);
+  const when = (iso: string) => cardWhen(iso, locale);
   const { id } = await params;
   const {
     r: result,
@@ -181,14 +154,14 @@ export default async function LeadPage({
     ? claimLabel
     : partner
     ? `${partner.name} · ${lead.partner_code ?? partner.code}${
-        refDays !== null ? ` · по ссылке за ${refDays} дн. до заявки` : ""
+        refDays !== null ? ` · ${t.refDays(refDays)}` : ""
       }${
         lead.partner_void_reason
-          ? ` · не засчитано: ${VOID_TITLE[lead.partner_void_reason as VoidReason] ?? lead.partner_void_reason}`
+          ? ` · ${t.notCounted(label(leadVoidDict, lead.partner_void_reason as VoidReason, locale))}`
           : ""
       }`
     : lead.partner_code
-      ? `код ${lead.partner_code} — партнёр не найден`
+      ? t.partnerMissing(lead.partner_code)
       : null;
 
   const ip = await requestIp();
@@ -271,7 +244,7 @@ export default async function LeadPage({
   return (
     <AdminShell staff={staff}>
       <Link href="/admin" className="text-sm text-muted hover:text-text">
-        ← к списку
+        {t.back}
       </Link>
 
       {result ? (
@@ -282,7 +255,12 @@ export default async function LeadPage({
               : "border-gold/30 bg-gold/10 text-gold"
           }`}
         >
-          {RESULT_MESSAGE[result] ?? RESULT_MESSAGE.failed}
+          {tr(
+            Object.hasOwn(leadResultDict, result)
+              ? leadResultDict[result as keyof typeof leadResultDict]
+              : leadResultDict.failed,
+            locale,
+          )}
         </p>
       ) : null}
 
@@ -290,21 +268,21 @@ export default async function LeadPage({
           видит только владелец: остальным имя ни к чему, кроме спора. */}
       {free && offer && offer.staffId === staff.id ? (
         <p className="mt-4 rounded-lg border border-green/30 bg-green/5 px-4 py-3 text-sm text-green">
-          ⏳ Лид ваш до {clock(offer.expiresAt)}. Не возьмёте — он уйдёт следующему по очереди.{" "}
-          <HelpHint topic={helpAnchor("/admin", "queue")} label="Как работает очередь" />
+          {t.yourTurn(clock(offer.expiresAt))}{" "}
+          <HelpHint topic={helpAnchor("/admin", "queue")} label={t.queueHelp} />
         </p>
       ) : free && offer && staff.role === "admin" ? (
         <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
-          👁 В очереди у {holderName ?? "сотрудника"} до {clock(offer.expiresAt)}. Вы вне очереди — можете взять сами.
+          {t.adminQueue(holderName ?? t.someone, clock(offer.expiresAt))}
         </p>
       ) : hideHandle && !turn.ok && turn.reason === "share" ? (
         <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
-          🌙 Лид пришёл в нерабочее время и делится поровну. Свою долю за месяц вы уже взяли — он для тех, у кого меньше.
+          {t.shareBanner}
         </p>
       ) : hideHandle ? (
         <p className="mt-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
-          Лид сейчас в очереди у другого сотрудника. Ник клиента скрыт, пока очередь не дойдёт до вас.{" "}
-          <HelpHint topic={helpAnchor("/admin", "queue")} label="Как работает очередь" />
+          {t.hiddenBanner}{" "}
+          <HelpHint topic={helpAnchor("/admin", "queue")} label={t.queueHelp} />
         </p>
       ) : null}
 
@@ -316,7 +294,7 @@ export default async function LeadPage({
         </span>
         {lead.discount_granted ? (
           <span className="rounded bg-gold/15 px-2 py-0.5 text-xs text-gold">
-            {DISCOUNT_CHIP[lead.discount_reason ?? "promise"]}
+            {tr(leadDiscountDict[lead.discount_reason ?? "promise"], locale)}
           </span>
         ) : null}
       </div>
@@ -326,13 +304,13 @@ export default async function LeadPage({
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
           <div>
             <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-              Ведёт
-              <HelpHint topic={helpAnchor("/admin", "take")} label="Взять, вернуть, отказаться" />
+              {t.owner}
+              <HelpHint topic={helpAnchor("/admin", "take")} label={t.takeHelp} />
             </p>
             <p className="mt-1 text-sm">
-              {lead.assigned_to ?? "никто — лид свободен"}
+              {lead.assigned_to ?? t.nobody}
               {lead.assigned_at ? (
-                <span className="ml-2 text-xs text-faint">с {when(lead.assigned_at)}</span>
+                <span className="ml-2 text-xs text-faint">{t.since(when(lead.assigned_at))}</span>
               ) : null}
             </p>
           </div>
@@ -342,7 +320,7 @@ export default async function LeadPage({
               <form action={take}>
                 <input type="hidden" name="lead" value={lead.id} />
                 <button type="submit" className="rounded-lg bg-green px-4 py-1.5 text-xs font-semibold text-ink transition hover:bg-green-dim">
-                  Взять себе
+                  {t.take}
                 </button>
               </form>
             ) : null}
@@ -351,7 +329,7 @@ export default async function LeadPage({
               <form action={release}>
                 <input type="hidden" name="lead" value={lead.id} />
                 <button type="submit" className={BUTTON}>
-                  Вернуть в очередь
+                  {t.release}
                 </button>
               </form>
             ) : null}
@@ -365,7 +343,7 @@ export default async function LeadPage({
         {transfer ? (
           <div className="mt-4 border-t border-line-soft pt-4">
             <p className="text-xs uppercase tracking-wider text-gold">
-              Передача · {TRANSFER_TITLE[transfer.status]}
+              {t.transfer} · {tr(leadTransferStatusDict[transfer.status], locale)}
             </p>
             <p className="mt-1 text-sm">
               {transfer.from_name ?? "—"} → {transfer.to_name ?? "—"}
@@ -374,7 +352,7 @@ export default async function LeadPage({
               <p className="mt-1 text-xs text-muted">{transfer.note}</p>
             ) : null}
             <p className="mt-1 text-xs text-faint">
-              попросил {transfer.requested_name ?? "—"} · {when(transfer.created_at)}
+              {t.requestedBy(transfer.requested_name ?? "—", when(transfer.created_at))}
             </p>
 
             {decides ? (
@@ -387,7 +365,7 @@ export default async function LeadPage({
                     type="submit"
                     className="rounded-lg bg-green px-4 py-1.5 text-xs font-semibold text-ink transition hover:bg-green-dim"
                   >
-                    Подтвердить
+                    {t.approve}
                   </button>
                 </form>
                 <form action={decideTransferAction}>
@@ -395,14 +373,13 @@ export default async function LeadPage({
                   <input type="hidden" name="transfer" value={transfer.id} />
                   <input type="hidden" name="decision" value="declined" />
                   <button type="submit" className={BUTTON}>
-                    Отклонить
+                    {t.decline}
                   </button>
                 </form>
               </div>
             ) : (
               <p className="mt-2 text-xs text-faint">
-                Ждём решения руководителя или владельца. Пока лид остаётся у прежнего
-                ответственного.
+                {t.waitingDecision}
               </p>
             )}
           </div>
@@ -413,8 +390,8 @@ export default async function LeadPage({
           >
             <input type="hidden" name="lead" value={lead.id} />
             <span className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-              Передать
-              <HelpHint topic={helpAnchor("/admin", "transfer")} label="Как передать лид" />
+              {t.handOver}
+              <HelpHint topic={helpAnchor("/admin", "transfer")} label={t.transferHelp} />
             </span>
             <select
               name="to"
@@ -423,7 +400,7 @@ export default async function LeadPage({
               className="rounded-lg border border-line bg-ink px-2 py-1.5 text-xs text-text outline-none focus:border-green/50"
             >
               <option value="" disabled>
-                кому
+                {t.toWhom}
               </option>
               {colleagues
                 .filter((person) => person.id !== lead.assigned_staff_id)
@@ -436,21 +413,21 @@ export default async function LeadPage({
             <input
               name="note"
               maxLength={500}
-              placeholder="почему передаёте"
+              placeholder={t.whyHandOver}
               className="w-48 rounded-lg border border-line bg-ink px-2 py-1.5 text-xs text-text outline-none focus:border-green/50"
             />
             <button type="submit" className={BUTTON}>
-              {decides ? "Передать" : "Попросить передать"}
+              {decides ? t.handOver : t.askHandOver}
             </button>
             {decides ? null : (
-              <span className="text-xs text-faint">подтверждает руководитель или владелец</span>
+              <span className="text-xs text-faint">{t.approvedBy}</span>
             )}
           </form>
         ) : null}
 
         {mine ? (
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line-soft pt-4">
-            <span className="text-xs uppercase tracking-wider text-faint">Статус</span>
+            <span className="text-xs uppercase tracking-wider text-faint">{t.status}</span>
             {/* «Новый» — только у свободного лида: у закреплённого он
                 значил бы «новый, но чей-то». Отпустить — «Вернуть в очередь». */}
             {STATUSES.filter((value) => value !== "new" || !lead.assigned_staff_id).map((value) => (
@@ -466,7 +443,7 @@ export default async function LeadPage({
                       : "border-line bg-surface-2 text-muted hover:text-text"
                   }`}
                 >
-                  {STATUS_LABEL[value] ?? value}
+                  {label(leadStatusDict, value, locale)}
                 </button>
               </form>
             ))}
@@ -477,8 +454,8 @@ export default async function LeadPage({
       {/* ── Контакт ─────────────────────────────────────────────────── */}
       <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
         <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-          Контакт клиента
-          <HelpHint topic={helpAnchor("/admin", "card")} label="Контакт, переписка, обсуждение" />
+          {t.contact}
+          <HelpHint topic={helpAnchor("/admin", "card")} label={t.contactHelp} />
         </p>
 
         {contact && contactView ? (
@@ -497,11 +474,13 @@ export default async function LeadPage({
                 {contactView.label}
               </a>
             ) : (
-              <p className="mt-2 font-mono text-sm text-green">{contactView.label}</p>
+              <p className="mt-2 font-mono text-sm text-green">
+                {contact.handle?.trim() ? contactView.label : t.contactNone}
+              </p>
             )}
             <p className="mt-1 text-xs text-faint">
-              {contact.kind ? CONTACT_LABEL[contact.kind] ?? contact.kind : "тип не указан"} ·
-              просмотр записан в журнал
+              {contact.kind ? label(leadContactKindDict, contact.kind, locale) : t.kindUnknown} ·{" "}
+              {t.viewLogged}
             </p>
           </>
         ) : reveals ? (
@@ -509,20 +488,20 @@ export default async function LeadPage({
             <form action={revealContactAction}>
               <input type="hidden" name="lead" value={lead.id} />
               <button type="submit" className={BUTTON}>
-                Показать контакт
+                {t.showContact}
               </button>
             </form>
             <span className="text-xs text-faint">
               {lead.contact_revealed_at
-                ? `последний раз открывали ${when(lead.contact_revealed_at)}`
-                : "ещё никто не открывал"}
+                ? t.lastOpened(when(lead.contact_revealed_at))
+                : t.neverOpened}
             </span>
           </div>
         ) : (
           <p className="mt-2 text-sm text-muted">
             {free
-              ? "Возьмите лида в работу, чтобы увидеть контакт."
-              : "Лид закреплён за другим менеджером."}
+              ? t.takeForContact
+              : t.heldByOther}
           </p>
         )}
       </section>
@@ -532,8 +511,8 @@ export default async function LeadPage({
         <section id="talk" className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-              Первичка по касанию
-              <HelpHint topic={helpAnchor("/admin/prospect", "replies")} label="Кто отвечает клиенту" />
+              {t.talk}
+              <HelpHint topic={helpAnchor("/admin/prospect", "replies")} label={t.talkHelp} />
             </p>
             <span className="font-mono text-xs text-blue-soft">{talk.host}</span>
             <span
@@ -541,7 +520,7 @@ export default async function LeadPage({
                 talk.aiHandling ? "border-green/40 bg-green/10 text-green" : "border-gold/40 bg-gold/10 text-gold"
               }`}
             >
-              {talk.aiHandling ? "отвечает ИИ" : `отвечаете вы${talk.handoverReason ? ` — ${talk.handoverReason}` : ""}`}
+              {talk.aiHandling ? t.aiAnswers : t.youAnswer(talk.handoverReason ?? "")}
             </span>
           </div>
 
@@ -557,7 +536,7 @@ export default async function LeadPage({
                   }
                 >
                   <p className="text-[0.7rem] uppercase tracking-wider text-faint">
-                    {line.direction === "in" ? "клиент" : line.author === "ai" ? "ИИ от нашего имени" : "вы"}
+                    {line.direction === "in" ? t.client : line.author === "ai" ? t.aiForUs : t.you}
                   </p>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-text">{line.body}</p>
                 </div>
@@ -565,7 +544,7 @@ export default async function LeadPage({
             </div>
           ) : (
             <p className="mt-2 text-sm text-muted">
-              Письмо ушло, ответа пока нет. Как ответит — первичку подхватит ИИ, а вы увидите разговор здесь.
+              {t.talkEmpty}
             </p>
           )}
 
@@ -576,12 +555,11 @@ export default async function LeadPage({
                   <input type="hidden" name="lead" value={lead.id} />
                   <input type="hidden" name="prospect" value={talk.prospectId} />
                   <button type="submit" className={BUTTON}>
-                    Отвечать самому
+                    {t.takeOverTalk}
                   </button>
                 </form>
                 <span className="text-xs text-faint">
-                  ИИ ведёт первичку от имени студии и остановится сам, когда выяснит задачу, бюджет и сроки.
-                  Лид ваш в любом случае — он не переназначается.
+                  {t.aiNote}
                 </span>
               </>
             ) : talk.target ? (
@@ -592,10 +570,10 @@ export default async function LeadPage({
                   rel="noreferrer noopener"
                   className={BUTTON}
                 >
-                  Открыть переписку в Telegram
+                  {t.openTelegram}
                 </a>
                 <span className="text-xs text-faint">
-                  писать нужно с рабочего аккаунта студии — с него ушло письмо, и для клиента это один собеседник
+                  {t.telegramNote}
                 </span>
               </>
             ) : null}
@@ -608,7 +586,7 @@ export default async function LeadPage({
         id="transcript"
         className="mt-4 rounded-xl border border-line bg-surface px-5 py-4"
       >
-        <p className="text-xs uppercase tracking-wider text-faint">Переписка с клиентом</p>
+        <p className="text-xs uppercase tracking-wider text-faint">{t.transcript}</p>
 
         {transcript ? (
           transcript.length ? (
@@ -624,7 +602,7 @@ export default async function LeadPage({
                     }
                   >
                     <p className="text-[0.7rem] uppercase tracking-wider text-faint">
-                      {line.role === "user" ? "клиент" : "ассистент"}
+                      {line.role === "user" ? t.client : t.assistant}
                     </p>
                     {/* whitespace-pre-wrap: человек писал абзацами, и склеенный
                         в одну строку разговор читается вдвое дольше. */}
@@ -632,11 +610,11 @@ export default async function LeadPage({
                   </div>
                 ))}
               </div>
-              <p className="mt-3 text-xs text-faint">просмотр записан в журнал</p>
+              <p className="mt-3 text-xs text-faint">{t.viewLogged}</p>
             </>
           ) : (
             <p className="mt-2 text-sm text-muted">
-              Переписки нет — заявка пришла формой, а не из чата.
+              {t.noTranscript}
             </p>
           )
         ) : reveals ? (
@@ -644,18 +622,18 @@ export default async function LeadPage({
             <form action={revealTranscriptAction}>
               <input type="hidden" name="lead" value={lead.id} />
               <button type="submit" className={BUTTON}>
-                Показать переписку
+                {t.showTranscript}
               </button>
             </form>
             <span className="text-xs text-faint">
-              всё, что клиент рассказал о деньгах и сроках
+              {t.transcriptHint}
             </span>
           </div>
         ) : (
           <p className="mt-2 text-sm text-muted">
             {free
-              ? "Возьмите лида в работу, чтобы прочитать переписку."
-              : "Лид закреплён за другим менеджером."}
+              ? t.takeForTranscript
+              : t.heldByOther}
           </p>
         )}
       </section>
@@ -665,14 +643,14 @@ export default async function LeadPage({
         <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
           <div className="flex flex-wrap items-center gap-4">
             <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-              Напоминания
-              <HelpHint topic={helpAnchor("/admin", "reminders")} label="Как работают напоминания" />
+              {t.reminders}
+              <HelpHint topic={helpAnchor("/admin", "reminders")} label={t.remindersHelp} />
             </p>
             <form action={toggleAutoReminder} className="ml-auto">
               <input type="hidden" name="lead" value={lead.id} />
               <input type="hidden" name="enabled" value={lead.auto_reminder ? "0" : "1"} />
               <button type="submit" className={BUTTON}>
-                {lead.auto_reminder ? "Выключить автонапоминания" : "Включить автонапоминания"}
+                {lead.auto_reminder ? t.autoOff : t.autoOn}
               </button>
             </form>
           </div>
@@ -691,10 +669,10 @@ export default async function LeadPage({
                   }`}
                 >
                   <span className="font-mono text-xs text-blue-soft">{when(item.due_at)}</span>
-                  <span className="text-muted">{item.note || "без пометки"}</span>
+                  <span className="text-muted">{item.note || t.noNote}</span>
                   {item.kind === "auto" ? (
                     <span className="rounded bg-line px-1.5 py-0.5 text-[11px] text-faint">
-                      авто
+                      {t.auto}
                     </span>
                   ) : null}
                   {/* Три разных состояния, и их нельзя сливать. «Отправлено»
@@ -704,31 +682,31 @@ export default async function LeadPage({
                       отсутствие, потому что человек на него рассчитывал. */}
                   {item.attempts >= DELIVERY_GIVE_UP ? (
                     <span className="text-[11px] font-semibold text-gold">
-                      не доставлено ({item.attempts} попыток) — проверьте, не заблокирован ли бот
+                      {t.undelivered(item.attempts)}
                     </span>
                   ) : item.sent_at ? (
-                    <span className="text-[11px] text-faint">отправлено</span>
+                    <span className="text-[11px] text-faint">{t.sent}</span>
                   ) : Date.parse(item.due_at) < Date.now() ? (
-                    <span className="text-[11px] text-blue-soft">просрочено</span>
+                    <span className="text-[11px] text-blue-soft">{t.overdue}</span>
                   ) : null}
                   <form action={finishReminder} className="ml-auto">
                     <input type="hidden" name="lead" value={lead.id} />
                     <input type="hidden" name="reminder" value={item.id} />
                     <button type="submit" className="text-xs text-faint transition hover:text-green">
-                      сделано
+                      {t.done}
                     </button>
                   </form>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-3 text-sm text-muted">Ничего не запланировано.</p>
+            <p className="mt-3 text-sm text-muted">{t.nothingPlanned}</p>
           )}
 
           <form action={addReminder} className="mt-4 flex flex-wrap items-center gap-2">
             <input type="hidden" name="lead" value={lead.id} />
             <label className="text-xs text-faint" htmlFor="hours">
-              напомнить через
+              {t.remindIn}
             </label>
             <input
               id="hours"
@@ -740,18 +718,18 @@ export default async function LeadPage({
               defaultValue="24"
               className="w-20 rounded-lg border border-line bg-surface-2 px-2 py-1.5 text-sm"
             />
-            <span className="text-xs text-faint">ч.</span>
+            <span className="text-xs text-faint">{t.hoursUnit}</span>
             <input
               name="note"
               type="text"
               maxLength={300}
-              placeholder="о чём напомнить"
+              placeholder={t.remindWhat}
               className="min-w-[12rem] flex-1 rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-sm"
             />
             {/* Серая и неактивная, пока напоминание записывается: без этого
                 нетерпеливое нажатие ставило одно и то же десятки раз. */}
-            <SubmitButton pendingLabel="Ставим…" base="rounded-lg px-3 py-1.5 text-xs" tone="quiet">
-              Поставить
+            <SubmitButton pendingLabel={t.setting} base="rounded-lg px-3 py-1.5 text-xs" tone="quiet">
+              {t.set}
             </SubmitButton>
           </form>
         </section>
@@ -766,9 +744,9 @@ export default async function LeadPage({
       ) : null}
 
       <dl className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <Field label="Кто" value={lead.contact_name} />
-        <Field label="Компания" value={lead.company} />
-        <Field label="Партнёр" value={partnerLabel} />
+        <Field label={t.who} value={lead.contact_name} />
+        <Field label={t.company} value={lead.company} />
+        <Field label={t.partner} value={partnerLabel} />
         <div id="inn" className="scroll-mt-24">
           <dt className="text-xs uppercase tracking-wider text-faint">{tc.innLabel}</dt>
           {mine ? (
@@ -804,53 +782,56 @@ export default async function LeadPage({
             <dd className="mt-1 font-mono text-sm">{lead.client_inn || "—"}</dd>
           )}
         </div>
-        <Field label="Ниша" value={lead.niche} />
+        <Field label={t.niche} value={lead.niche} />
         <Field
-          label="Услуги"
+          label={t.services}
           value={lead.services?.length ? lead.services.join(", ") : null}
         />
         <Field
-          label="Бюджет"
-          value={lead.budget ? BUDGET_LABEL[lead.budget] ?? lead.budget : null}
+          label={t.budget}
+          value={lead.budget ? label(leadBudgetDict, lead.budget, locale) : null}
         />
         <Field
-          label="Сроки"
-          value={lead.timing ? TIMING_LABEL[lead.timing] ?? lead.timing : null}
+          label={t.timing}
+          value={lead.timing ? label(leadTimingDict, lead.timing, locale) : null}
         />
         <Field
-          label="Решение"
-          value={lead.authority ? AUTHORITY_LABEL[lead.authority] ?? lead.authority : null}
+          label={t.authority}
+          value={lead.authority ? label(leadAuthorityDict, lead.authority, locale) : null}
         />
         <Field
-          label="Потребность"
-          value={lead.need ? NEED_LABEL[lead.need] ?? lead.need : null}
+          label={t.need}
+          value={lead.need ? label(leadNeedDict, lead.need, locale) : null}
         />
         <Field
-          label="Экспертиза"
-          value={lead.expertise ? EXPERTISE_LABEL[lead.expertise] ?? lead.expertise : null}
+          label={t.expertise}
+          value={lead.expertise ? label(leadExpertiseDict, lead.expertise, locale) : null}
         />
-        <Field label="Приоритет" value={PRIORITY_LABEL[lead.priority] ?? lead.priority} />
-        <Field label="Статус" value={STATUS_LABEL[lead.status] ?? lead.status} />
+        <Field label={t.priority} value={label(leadPriorityDict, lead.priority, locale)} />
+        <Field label={t.status} value={label(leadStatusDict, lead.status, locale)} />
         {/*
           «Откуда писал, во сколько, где» — теми же словами, что и в
           уведомлении: менеджер читает бриф в чате, а карточку открывает
           следом, и два разных описания одного и того же места сбивают.
         */}
-        <Field label="Откуда писал" value={`${channelName(lead.source)} · ${lead.locale}`} />
-        <Field label="Когда" value={atTashkent(lead.created_at)} />
+        <Field label={t.wroteFrom} value={`${channelName(lead.source, locale)} · ${lead.locale}`} />
+        <Field label={t.when} value={atTashkent(lead.created_at, locale)} />
         <Field
-          label="Где"
-          value={[placeOf(lead2origin(lead)), refOf(lead2origin(lead))].filter(Boolean).join(" · ") || null}
+          label={t.where}
+          value={
+            [placeOf(lead2origin(lead), locale), refOf(lead2origin(lead), locale)].filter(Boolean).join(" · ") ||
+            null
+          }
         />
         <Field
-          label="Ник в Telegram"
-          value={hideHandle ? "скрыт — лид сейчас не ваш" : usernameOf(lead2origin(lead))}
+          label={t.tgHandle}
+          value={hideHandle ? t.handleHidden : usernameOf(lead2origin(lead))}
         />
       </dl>
 
       {summaryLines(lead.summary).length ? (
         <section className="mt-10">
-          <h2 className="text-xs uppercase tracking-wider text-faint">Бриф</h2>
+          <h2 className="text-xs uppercase tracking-wider text-faint">{t.brief}</h2>
           <dl className="mt-3 max-w-3xl space-y-3">
             {summaryLines(lead.summary).map(([key, value]) => (
               <div key={key} className="rounded-xl border border-line bg-surface px-5 py-3">
@@ -866,25 +847,20 @@ export default async function LeadPage({
           сотрудник видит порог и потолок раньше, чем поднимет трубку. */}
       {quote ? (
         <section className="mt-10 max-w-3xl">
-          <h2 className="text-xs uppercase tracking-wider text-faint">Смета</h2>
-          <QuoteCard quote={quote} />
+          <h2 className="text-xs uppercase tracking-wider text-faint">{t.quote}</h2>
+          <QuoteCard quote={quote} locale={locale} />
         </section>
       ) : null}
 
       {lead.notes ? (
         <section className="mt-8 max-w-3xl">
-          <h2 className="text-xs uppercase tracking-wider text-faint">Заметки</h2>
+          <h2 className="text-xs uppercase tracking-wider text-faint">{t.notes}</h2>
           <p className="mt-2 whitespace-pre-line text-sm leading-relaxed">{lead.notes}</p>
         </section>
       ) : null}
 
       <p className="mt-10 max-w-2xl text-xs leading-relaxed text-faint">
-        Контакт и переписка открываются кнопкой, а не сразу: полный разговор —
-        самое чувствительное из того, что клиент рассказал о своём бизнесе.
-        Открытие этой карточки, каждое получение контакта и каждое чтение
-        переписки записаны в журнал. Обсуждение видно всей команде — контакт
-        клиента в него лучше не вставлять: закрытость контакта на этом и
-        держится.
+        {t.footer}
       </p>
     </AdminShell>
   );

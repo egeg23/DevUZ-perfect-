@@ -73,7 +73,8 @@ test("страница отдаёт в список только отобран�
   assert.match(page, /href: `\/admin\/prospect\?more=\$\{more \+ REST_PAGE\}\$\{view\.nextId \? `#p-\$\{view\.nextId\}` : ""\}`/);
 
   const list = read("components/admin/outreach-list.tsx");
-  assert.match(list, /Показать ещё \{Math\.min\(REST_PAGE, more\.hidden\)\}/);
+  assert.match(list, /\{t\.showMore\(Math\.min\(REST_PAGE, more\.hidden\)\)\}/);
+  assert.match(read("content/admin-panel/prospect.ts"), /`Показать ещё \$\{n\}`/);
   // Кнопка ведёт на ту же тяжёлую страницу — предзагружать её нельзя.
   assert.match(list, /href=\{more\.href\}\s*prefetch=\{false\}/);
   assert.match(list, /helpAnchor\("\/admin\/prospect", "list"\)/);

@@ -152,7 +152,9 @@ test("взять вне очереди нельзя ни из бота, ни и�
   assert.match(ownership, /if \(status === "new"\) await openQueue\(leadId\)/);
 
   assert.match(read("app/api/telegram/webhook/route.ts"), /taken\.reason === "queued"/);
-  assert.match(read("app/admin/leads/[id]/page.tsx"), /queued: "Не ваша очередь/);
+  // Текст ответа — в словаре карточки, страница берёт его по коду из адреса.
+  assert.match(read("content/admin-panel/lead-card.ts"), /queued: \{\s*ru: "Не ваша очередь/);
+  assert.match(read("app/admin/leads/[id]/page.tsx"), /leadResultDict\[result as keyof typeof leadResultDict\]/);
 });
 
 test("очередь на всех входах, крупный заказ — мимо неё", () => {
@@ -189,7 +191,8 @@ test("ник клиента не виден тому, чья очередь не
   // увидел ник — написал клиенту сам.
   const page = read("app/admin/leads/[id]/page.tsx");
   assert.match(page, /const hideHandle = free && !turn\.ok;/);
-  assert.match(page, /hideHandle \? "скрыт — лид сейчас не ваш" : usernameOf\(/);
+  assert.match(page, /hideHandle \? t\.handleHidden : usernameOf\(/);
+  assert.match(read("content/admin-panel/lead-card.ts"), /handleHidden: \{ ru: "скрыт — лид сейчас не ваш"/);
 
   // Контакт и переписка свободного лида — только владельцу: руководитель
   // стоит в очереди наравне со всеми, и кнопка «Показать контакт» была
@@ -277,7 +280,8 @@ test("ночью очередь не начинается и дальше не �
   const ownership = read("lib/admin/ownership.ts");
   assert.match(ownership, /queue\.fairShare && staff\.role !== "admin" \? await shareOf\(staff\.id\) : null/);
   assert.match(read("app/api/telegram/webhook/route.ts"), /taken\.reason === "share"/);
-  assert.match(read("app/admin/leads/[id]/page.tsx"), /share: "Вы уже взяли свою равную долю/);
+  assert.match(read("content/admin-panel/lead-card.ts"), /share: \{\s*ru: "Вы уже взяли свою равную долю/);
+  assert.match(read("app/admin/leads/[id]/page.tsx"), /leadResultDict\[result as keyof typeof leadResultDict\]/);
   assert.match(read("supabase/migrations/0046_lead_fair_share.sql"), /add column if not exists fair_share boolean not null default false/);
 });
 

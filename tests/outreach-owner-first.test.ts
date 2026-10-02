@@ -61,5 +61,6 @@ test("письма владельца уходят вне очереди, но �
 
   // Панель говорит то же, что делает очередь.
   const list = read("components/admin/outreach-list.tsx");
-  assert.match(list, /Письмо владельца — вне очереди/);
+  assert.match(list, /vip \? t\.ownerQueue\(/);
+  assert.match(read("content/admin-panel/prospect.ts"), /`Письмо владельца — вне очереди/);
 });

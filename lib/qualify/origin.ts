@@ -12,18 +12,26 @@
  * написавший в бота в полночь — не тот же человек, что написал в обед.
  */
 
-/** Канал, по которому пришёл разговор. */
-export const CHANNEL: Record<string, string> = {
-  chat: "чат на сайте",
-  telegram: "бот в Telegram",
-  form: "форма на сайте",
-  showcase: "витрина — бриф по заказу",
-  outreach: "наше холодное касание",
-};
+import { PANEL_INTL, type PanelLocale } from "@/lib/admin/i18n";
+import { leadChannelDict, leadOriginDict } from "@/content/admin-panel/lead-origin";
 
-export function channelName(source: string | null | undefined): string {
+/*
+ * Язык — параметр с русским по умолчанию: бриф в Telegram пока по-русски,
+ * а карточка лида в панели — на языке того, кто её открыл. Слова — в
+ * content/admin-panel/lead-origin.ts, русские там те же, что в брифе.
+ */
+
+/** Канал, по которому пришёл разговор. Русские подписи — для брифа. */
+export const CHANNEL: Record<string, string> = Object.fromEntries(
+  Object.entries(leadChannelDict).map(([key, value]) => [key, value.ru]),
+);
+
+export function channelName(source: string | null | undefined, locale: PanelLocale = "ru"): string {
   const key = (source ?? "").trim();
-  return CHANNEL[key] ?? (key || "канал не указан");
+  const known = Object.hasOwn(leadChannelDict, key)
+    ? leadChannelDict[key as keyof typeof leadChannelDict][locale]
+    : undefined;
+  return known ?? (key || leadOriginDict.noChannel[locale]);
 }
 
 export type LeadOrigin = {
@@ -45,16 +53,17 @@ const TZ = "Asia/Tashkent";
  * «09:09» про заявку, пришедшую в обед, — и считал бы, что человек пишет по
  * ночам.
  */
-export function atTashkent(value: string | number | Date): string {
+export function atTashkent(value: string | number | Date, locale: PanelLocale = "ru"): string {
   const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "время неизвестно";
+  if (Number.isNaN(date.getTime())) return leadOriginDict.unknownTime[locale];
   // Дата и время собираются отдельно, а не одним форматом: одним получается
   // «18 сентября в 14:09», и это «в» зависит от версии данных локали в
   // Node. Строка уходит в уведомление и в карточку, её читают глазами, и
   // меняться от обновления рантайма она не должна.
   const where = { timeZone: TZ } as const;
-  const day = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", ...where }).format(date);
-  const time = new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit", ...where }).format(date);
+  const tag = PANEL_INTL[locale];
+  const day = new Intl.DateTimeFormat(tag, { day: "numeric", month: "long", ...where }).format(date);
+  const time = new Intl.DateTimeFormat(tag, { hour: "2-digit", minute: "2-digit", ...where }).format(date);
   return `${day}, ${time}`;
 }
 
@@ -65,10 +74,10 @@ export function atTashkent(value: string | number | Date): string {
  * писать «страница неизвестна» про разговор в мессенджере было бы враньём
  * по форме и бессмыслицей по сути.
  */
-export function placeOf(origin: LeadOrigin): string | null {
-  if (origin.source === "telegram") return "личные сообщения боту";
+export function placeOf(origin: LeadOrigin, locale: PanelLocale = "ru"): string | null {
+  if (origin.source === "telegram") return leadOriginDict.botDm[locale];
   const path = (origin.entryPath ?? "").trim();
-  return path ? `страница ${path}` : null;
+  return path ? leadOriginDict.page[locale](path) : null;
 }
 
 /**
@@ -79,11 +88,11 @@ export function placeOf(origin: LeadOrigin): string | null {
  * а не «источник неизвестен» — второе звучит как сбой, хотя это обычный
  * и хороший случай.
  */
-export function refOf(origin: LeadOrigin): string | null {
+export function refOf(origin: LeadOrigin, locale: PanelLocale = "ru"): string | null {
   if (origin.source === "telegram" || origin.source === "outreach") return null;
   const ref = (origin.entryRef ?? "").trim();
-  if (!ref) return "прямой заход";
-  return `перешёл с ${ref}`;
+  if (!ref) return leadOriginDict.direct[locale];
+  return leadOriginDict.cameFrom[locale](ref);
 }
 
 /** Ник с «@», если он есть. Пусто — значит ника нет, и выдумывать нечего. */
