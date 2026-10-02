@@ -12,6 +12,7 @@ import { newAccessToken } from "@/lib/store/access";
 import type { ProtoProblem } from "@/lib/proto/check";
 import { missingParts, type ProtoFacts } from "@/lib/proto/facts";
 import { buildProto } from "@/lib/proto/render";
+import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
 export type ProtoStatus = "draft" | "ready" | "sent";
@@ -31,10 +32,12 @@ export type Proto = {
   sent_at: string | null;
   opened_at: string | null;
   opens: number;
+  /** Собран сам, для касания (lib/proto/auto), а не менеджером в панели. */
+  auto: boolean;
 };
 
 const COLUMNS =
-  "id, token, prospect_id, niche, locale, name, source, facts, problems, status, created_at, sent_at, opened_at, opens";
+  "id, token, prospect_id, niche, locale, name, source, facts, problems, status, created_at, sent_at, opened_at, opens, auto";
 
 function shape(row: Record<string, unknown>): Proto {
   return {
@@ -52,7 +55,13 @@ function shape(row: Record<string, unknown>): Proto {
     sent_at: (row.sent_at as string | null) ?? null,
     opened_at: (row.opened_at as string | null) ?? null,
     opens: Number(row.opens ?? 0),
+    auto: row.auto === true,
   };
+}
+
+/** Публичная ссылка на прототип — та, что уходит клиенту. */
+export function protoUrl(token: string): string {
+  return `${siteUrl}/proto/${token}`;
 }
 
 export type SaveResult =
@@ -78,6 +87,8 @@ export async function saveProto(input: {
   facts: ProtoFacts;
   prospectId?: string | null;
   by?: Staff | null;
+  /** Собран сам, для касания. */
+  auto?: boolean;
 }): Promise<SaveResult> {
   const build = buildProto(input.facts);
   if (!build) return { ok: false, why: "niche", detail: input.facts.niche };
@@ -100,6 +111,7 @@ export async function saveProto(input: {
       problems: build.problems,
       status: build.problems.length ? "draft" : "ready",
       created_by: input.by?.id ?? null,
+      auto: input.auto ?? false,
     })
     .select(COLUMNS)
     .single();
@@ -111,7 +123,7 @@ export async function saveProto(input: {
     actorStaffId: input.by?.id ?? null,
     targetType: "proto",
     targetId: proto.id,
-    meta: { name: proto.name, niche: proto.niche, problems: build.problems.length },
+    meta: { name: proto.name, niche: proto.niche, problems: build.problems.length, auto: proto.auto },
   });
   return { ok: true, proto, problems: build.problems };
 }
@@ -146,11 +158,46 @@ export async function protoPage(token: string): Promise<{ html: string; id: stri
   return { html: String(data.html), id: String(data.id) };
 }
 
-/** Отметить, что ссылку открыли. Тихо: ради этого запрос клиента не ждёт. */
-export async function markOpened(id: string): Promise<void> {
+/**
+ * Отметить, что ссылку открыли, и узнать, первое ли это открытие.
+ *
+ * Первое — повод позвать того, кто ведёт касание (lib/proto/opened):
+ * владелец бизнеса прямо сейчас смотрит на свой новый сайт.
+ */
+export async function markOpened(
+  id: string,
+): Promise<{ first: boolean; prospectId: string | null; name: string } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data, error } = await db.rpc("proto_seen", { proto: id });
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row) {
+    // Старая база без proto_seen: счётчик всё равно должен расти.
+    if (error) await db.rpc("proto_opened", { proto: id });
+    return null;
+  }
+  return {
+    first: row.first_open === true,
+    prospectId: (row.prospect_id as string | null) ?? null,
+    name: String(row.name ?? ""),
+  };
+}
+
+/**
+ * Касание с прототипом ушло — прототип считается отправленным.
+ *
+ * Зовёт очередь касаний при отметке «отправлено»: ссылка ушла вместе с
+ * письмом, и по `sent_at` прототипа видно, когда клиент мог её открыть.
+ */
+export async function markAutoSent(prospectId: string): Promise<void> {
   const db = serviceClient();
   if (!db) return;
-  await db.rpc("proto_opened", { proto: id });
+  await db
+    .from("protos")
+    .update({ status: "sent", sent_at: new Date().toISOString() })
+    .eq("prospect_id", prospectId)
+    .eq("auto", true)
+    .eq("status", "ready");
 }
 
 /** Прототип ушёл клиенту. Ссылку возвращает тот, кто отправляет. */

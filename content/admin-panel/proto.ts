@@ -154,6 +154,9 @@ export const protoNichePl: Record<string, string> = {
   "salon-krasoty": "Salon kosmetyczny",
   "nogtevaya-studiya": "Studio paznokci",
   detailing: "Detailing",
+  stomatologiya: "Stomatologia",
+  "uchebnyy-centr": "Centrum szkoleniowe",
+  medcentr: "Centrum medyczne",
 };
 
 export const protoDict = defineDict({
@@ -214,6 +217,11 @@ export const protoDict = defineDict({
   draft: { ru: "черновик", uz: "qoralama", pl: "szkic" },
   ready: { ru: "готов", uz: "tayyor", pl: "gotowy" },
   sent: { ru: "отправлен", uz: "yuborilgan", pl: "wysłany" },
+  auto: {
+    ru: "собран сам, для касания",
+    uz: "o‘zi yig‘ildi, aloqa uchun",
+    pl: "zbudowany automatycznie, do kontaktu",
+  },
   draftNote: {
     ru: "Черновик наружу не уходит: по ссылке будет 404, пока проверка не пройдена.",
     uz: "Qoralama tashqariga chiqmaydi: tekshiruvdan o‘tmaguncha havola 404 beradi.",

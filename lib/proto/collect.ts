@@ -25,6 +25,15 @@ export type Collected = {
   headings: string[];
   /** Снимки, не прошедшие по ширине, — чтобы было видно, что их не забыли. */
   small: string[];
+  /**
+   * Видимый текст главной и страницы услуг, если она нашлась.
+   *
+   * Сырьё для автосборки (lib/proto/auto): из него модель выбирает услуги, и
+   * по нему же каждая услуга сверяется дословно. Заголовок вкладки — отдельно:
+   * в нём название компании пишут чаще, чем где-либо ещё.
+   */
+  text: string;
+  title: string | null;
   page: { url: string; status: number; ttfbMs: number };
 };
 
@@ -61,6 +70,50 @@ export async function measureImage(url: string): Promise<ProtoImage | null> {
   } catch {
     return null;
   }
+}
+
+/** Сколько текста страницы держим: на услуги хватает, на модель не дорого. */
+const TEXT_MAX = 14_000;
+
+/** Видимый текст: без стилей, скриптов, рисунков и разметки. */
+export function pageText(html: string): string {
+  return decodeEntities(
+    html
+      .replace(/<(script|style|svg|noscript|template)[\s\S]*?<\/\1>/gi, " ")
+      .replace(/<!--[\s\S]*?-->/g, " ")
+      .replace(/<(br|\/p|\/li|\/h[1-6]|\/div|\/tr)[^>]*>/gi, "\n")
+      .replace(/<[^>]+>/g, " "),
+  )
+    .replace(/[ \t\u00a0]+/g, " ")
+    .replace(/\s*\n\s*/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
+/**
+ * Страница услуг, если на главной есть на неё ссылка.
+ *
+ * У стоматологии и учебного центра список на главной часто урезан до трёх
+ * плиток, а полный — на «Услугах», «Курсах» или «Ценах». Берём одну, свою же
+ * (тот же сайт), — обходить весь сайт ради списка незачем.
+ */
+const SERVICES_LINK =
+  /^(?:услуги|наши услуги|все услуги|курсы|наши курсы|направления|цены|прайс|прайс-лист|xizmatlar|xizmatlarimiz|kurslar|narxlar|services|courses|prices)$/i;
+const SERVICES_PATH = /\/(?:uslugi|services?|xizmat\w*|kurs\w*|courses?|ceny|prices?|price-list|prajs|narx\w*|napravleniya)(?:[/?#.]|$)/i;
+
+export function servicesPagePath(html: string, base: URL): string | null {
+  for (const match of html.matchAll(/<a\b[^>]*href\s*=\s*["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    let href: URL;
+    try {
+      href = new URL(match[1], base);
+    } catch {
+      continue;
+    }
+    if (href.hostname !== base.hostname || href.pathname === base.pathname) continue;
+    const label = decodeEntities(match[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
+    if (SERVICES_LINK.test(label) || SERVICES_PATH.test(href.pathname)) return href.href;
+  }
+  return null;
 }
 
 export async function collectFacts(input: {
@@ -147,5 +200,23 @@ export async function collectFacts(input: {
     ),
   ].slice(0, 30);
 
-  return { facts, headings, small, page: { url: page.finalUrl, status: page.status, ttfbMs: page.ttfbMs } };
+  let text = pageText(html);
+  const servicesUrl = servicesPagePath(html, base);
+  if (servicesUrl) {
+    try {
+      const extra = await probe(servicesUrl);
+      if (extra.status < 400) text = `${text}\n\n${pageText(extra.html)}`;
+    } catch {
+      // Нет страницы услуг — значит услуги только на главной.
+    }
+  }
+
+  return {
+    facts,
+    headings,
+    small,
+    text: text.slice(0, TEXT_MAX),
+    title,
+    page: { url: page.finalUrl, status: page.status, ttfbMs: page.ttfbMs },
+  };
 }

@@ -111,9 +111,9 @@ export const NOTICES: Record<NoticeKind, { title: Tr; off: Tr; roles: readonly R
   talks: {
     title: { ru: "Ответы клиентов на касания", uz: "Mijozlarning aloqalarga javoblari", pl: "Odpowiedzi klientów na kontakty" },
     off: {
-      ru: "ответ клиента на касание виден только в «Касаниях» — бот не позовёт",
-      uz: "mijozning aloqaga javobi faqat «Aloqalar»da ko‘rinadi — bot chaqirmaydi",
-      pl: "odpowiedź klienta na kontakt widać tylko w «Kontaktach» — bot nie zawoła",
+      ru: "ответ клиента на касание и то, что он открыл прототип из письма, видны только в «Касаниях» — бот не позовёт",
+      uz: "mijozning aloqaga javobi va xatdagi prototipni ochgani faqat «Aloqalar»da ko‘rinadi — bot chaqirmaydi",
+      pl: "odpowiedź klienta na kontakt i to, że otworzył prototyp z wiadomości, widać tylko w «Kontaktach» — bot nie zawoła",
     },
     roles: EVERYONE,
   },

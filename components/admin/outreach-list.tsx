@@ -27,12 +27,14 @@ import { REST_PAGE } from "@/lib/admin/outreach-view";
 import type { Role } from "@/lib/admin/roles";
 import { CLOSE_REASONS, mayClose } from "@/lib/admin/touch-close";
 import { parseTouchError, type ParsedTouchError, type ProblemRef } from "@/lib/admin/touch-errors";
+import { isAutoNote } from "@/lib/proto/auto-note";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import {
   closeButtonDict,
   closeLabelDict,
   outreachListDict,
   problemDict,
+  protoNoteDict,
   prospectStatusDict,
   reasonDict,
   routeDict,
@@ -109,6 +111,8 @@ function problemText(p: ProblemRef, t: Picked<typeof problemDict>): string {
       return t.foreign_reference(String(a ?? ""));
     case "no_reference":
       return t.no_reference(String(a ?? ""));
+    case "no_proto_link":
+      return t.no_proto_link(String(a ?? ""));
     case "no_prototype":
       return t.no_prototype(Number(a ?? 12));
     default:
@@ -186,6 +190,7 @@ export function OutreachList({
   const routeText = pick(routeDict, locale);
   const gradeText = pick(seoGradeDict, locale);
   const problems = pick(problemDict, locale);
+  const protoNote = pick(protoNoteDict, locale);
   // Отказ приходит кодом (lib/admin/touch-errors.ts), слова — отсюда.
   const failure = parseTouchError(error);
   const failureText = failure ? errorText(failure, locale) : "";
@@ -352,6 +357,27 @@ export function OutreachList({
                   <Link href={`/admin/leads/${row.lead_id}`} className="text-green hover:underline">
                     {t.leadLink}
                   </Link>
+                </p>
+              ) : null}
+
+              {/* Прототип, собранный заранее (lib/proto/auto): ссылка из письма
+                  и открывал ли её клиент. Открытие — лучший повод написать:
+                  о первом бот зовёт того, кто ведёт касание. Наши собственные
+                  открытия из панели не считаются. */}
+              {row.proto_url ? (
+                <p className="mt-2 text-sm">
+                  <a href={row.proto_url} target="_blank" rel="noreferrer noopener" className="text-green hover:underline">
+                    {t.protoReady}
+                  </a>
+                  <span className="text-xs text-muted">
+                    {" · "}
+                    {row.proto_opened_at ? t.protoOpened(row.proto_opens, when(row.proto_opened_at)) : t.protoNotOpened}
+                  </span>
+                </p>
+              ) : row.proto_note && isAutoNote(row.proto_note) ? (
+                <p className="mt-2 text-xs text-faint">
+                  {t.protoNotBuilt}
+                  {protoNote[row.proto_note]}
                 </p>
               ) : null}
 

@@ -208,6 +208,32 @@ export const FONTS: Record<string, FontPair> = {
     "0em",
     g("family=Cormorant:wght@500;700&family=Montserrat:wght@400;700"),
   ),
+  // Три ниши касаний: чисто и спокойно, без «медицинского» холода. Кириллица
+  // у всех трёх сверена по data/google-fonts.csv навыка ui-ux-pro-max.
+  stomatologiya: font(
+    "Onest",
+    "Manrope",
+    700,
+    false,
+    "-0.02em",
+    g("family=Onest:wght@500;700&family=Manrope:wght@400;700"),
+  ),
+  "uchebnyy-centr": font(
+    "Rubik",
+    "Manrope",
+    700,
+    false,
+    "-0.01em",
+    g("family=Rubik:wght@500;700&family=Manrope:wght@400;700"),
+  ),
+  medcentr: font(
+    "Golos Text",
+    "Inter",
+    700,
+    false,
+    "-0.01em",
+    g("family=Golos+Text:wght@500;700&family=Inter:wght@400;700"),
+  ),
 };
 
 /** Пара для ниши, которой своей не завели. Inter есть кириллица, и он нейтрален. */

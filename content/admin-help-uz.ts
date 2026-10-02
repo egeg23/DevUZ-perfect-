@@ -430,7 +430,7 @@ export const uz: HelpCopy = {
 
     /* ── Касания ──────────────────────────────────────────────────────── */
     "/admin/prospect": {
-      what: "Sovuq aloqalar: kompaniyalarni topamiz, saytlarini tekshiramiz, model esa qisqa birinchi xabar yozadi: saytdagi odam o‘zi tekshira oladigan ikki-uchta haqiqiy muammo va 12 soatda yangi sayt prototipini yig‘ib berish taklifi. Studiyaning ishchi akkaunti yuboradi, mijoz javoblarini model olib boradi, odam kerak bo‘lganda esa yozgan odamni chaqiradi. Aloqadan kelgan lid darhol sizniki, navbatsiz.",
+      what: "Sovuq aloqalar: kompaniyalarni topamiz, saytlarini tekshiramiz, model esa qisqa birinchi xabar yozadi: saytdagi odam o‘zi tekshira oladigan ikki-uchta haqiqiy muammo va 12 soatda yangi sayt prototipini yig‘ib berish taklifi — yoki panel uning sayti ma’lumotlari bo‘yicha allaqachon yig‘gan prototipga darhol havola. Studiyaning ishchi akkaunti yuboradi, mijoz javoblarini model olib boradi, odam kerak bo‘lganda esa yozgan odamni chaqiradi. Aloqadan kelgan lid darhol sizniki, navbatsiz.",
       items: [
         {
           id: "portion",
@@ -522,10 +522,21 @@ export const uz: HelpCopy = {
           title: "Kompaniyaga yozish: «Bog‘lanish» va «Yuborish»",
           body: [
             "Sayt kartochkasida **«Bog‘lanish»** tugmasini bosing: panel saytni qaytadan ko‘rib chiqadi (bir daqiqagacha) va xat yozadi. Bu hali aloqa hisoblanmaydi.",
-            "Xat qisqa, 50–100 so‘z: kim yozayapti; uning saytidan ikki-uchta topilma — har biri joyi bilan (sahifa, ularning o‘z sarlavhasi) va mijoz shu sababli nima qilishi; qidiruvda ko‘rinish va yo‘qotishlar; agar bo‘lsa, uning nishasidagi loyihamiz; va savol — unga 12 soatda yangi sayt prototipini yig‘ib beraylikmi. Studiya hajmi va «2–4 barobar o‘sish» birinchi xatga yozilmaydi: har bir xatdagi bir xil iboralardan ommaviy tarqatmani taniydilar. Kimligimizni so‘rashsa — bu yozishmadagi javob.",
+            "Xat qisqa, 50–100 so‘z: kim yozayapti; uning saytidan ikki-uchta topilma — har biri joyi bilan (sahifa, ularning o‘z sarlavhasi) va mijoz shu sababli nima qilishi; qidiruvda ko‘rinish va yo‘qotishlar; agar bo‘lsa, uning nishasidagi loyihamiz; va savol — unga 12 soatda yangi sayt prototipini yig‘ib beraylikmi. Studiya hajmi va «2–4 barobar o‘sish» birinchi xatga yozilmaydi: har bir xatdagi bir xil iboralardan ommaviy tarqatmani taniydilar. Kimligimizni so‘rashsa — bu yozishmadagi javob. Panel [prototipni oldindan](#prospect-proto-ahead) yig‘ib ulgurgan bo‘lsa, xatda yig‘ib beraylikmi degan savol o‘rniga tayyor prototipga havola va bu variant unga qanday degan savol bo‘ladi.",
             "Xatni o‘qing va odamga moslab tuzating. Keyin **«Yuborish: @manzil»** — xat ishchi akkaunt navbatiga turadi. Shu daqiqadan lid ochilgan va sizga biriktirilgan, aloqa esa hisobga olingan.",
-            "Yuborishdan oldin panel xatni tekshiradi va nima noto‘g‘riligini yozadi: 40–150 so‘z; sayt manzili va devuz.studio bor; tekshiruvda yo‘q raqamlar yo‘q; «в топ», «гарантирую», «первое место», foizlar va emodzilar yo‘q; qidiruvda ko‘rinish va yo‘qotishlar, agar bo‘lsa, aytilgan; 12 soatlik prototip taklifi bor.",
+            "Yuborishdan oldin panel xatni tekshiradi va nima noto‘g‘riligini yozadi: 40–150 so‘z; sayt manzili va devuz.studio bor; tekshiruvda yo‘q raqamlar yo‘q; «в топ», «гарантирую», «первое место», foizlar va emodzilar yo‘q; qidiruvda ko‘rinish va yo‘qotishlar, agar bo‘lsa, aytilgan; 12 soatlik prototip taklifi bor, prototip oldindan yig‘ilgan bo‘lsa esa — unga havola, harfma-harf.",
             "Har qanday xodim istalgan kartochkani tayyorlab, yubora oladi — kartochka bosgan odamga biriktiriladi. Shuning uchun [kunlik to‘plamdan](#prospect-portion) boshlang: u yerda kompaniyalar allaqachon bo‘lingan.",
+          ],
+        },
+        {
+          id: "proto-ahead",
+          title: "Prototip oldindan: va’da o‘rniga xatda havola",
+          body: [
+            "Xat tayyorlanayotganda — [kunlik to‘plam](#prospect-portion) bo‘yicha, «Получать лиды» oqimida yoki «Bog‘lanish» tugmasi bilan — panel kompaniyaga yangi sayt prototipini o‘zi yig‘adi. Nishalar: stomatologiya, o‘quv markazi, tibbiyot markazi, avtoservis, shinomontaj, avtomoyka, deteyling, barbershop, go‘zallik saloni, tirnoq studiyasi. Sahifadagi hamma narsa uning o‘z saytidan: nomi, tavsifi, telefoni, messenjerlari, logotipi, suratlari; xizmatlar — faqat uning saytida yozilganlari, har biri sayt bilan so‘zma-so‘z solishtirilgan. O‘zimizdan — birorta ham raqam, narx yoki xizmat yo‘q.",
+            "Yig‘ilsa — xatda 12 soatda yig‘ib berish va’dasi o‘rniga tayyor sahifaga havola turadi, oxirgi qator esa bu variant unga qanday ekanini so‘raydi. Sayt kartochkasida — «Prototip oldindan yig‘ilgan →» va mijoz uni ochganmi. Yuborishdan oldingi tekshiruv havolani harfma-harf talab qiladi: yo‘qolgan bitta harf — mijozda «sahifa topilmadi».",
+            "Mijoz havolani ochdi — sizga Telegramda «Касание · сайт» va «👀 Клиент открыл прототип» keladi: u hozir o‘zining yangi saytiga qarab turibdi, yozish uchun eng yaxshi payt. Bir marta keladi — birinchi ochilishda, aloqani olib borayotgan odamga, agar unda «Mijozlarning aloqalarga javoblari» belgisi turgan bo‘lsa. Telegram o‘zi chizadigan havola prevyusi va sizning paneldan o‘z ochishlaringiz hisoblanmaydi.",
+            "Mijoz prototip haqida javob berdi («ko‘rdim», «buni o‘zgartirsa bo‘ladimi…») — model javob bermaydi, sizni chaqiradi: «ответил про прототип, который ушёл в письме, — дальше вы». Bunday aloqa bo‘yicha butun jamoaga «🔥 Нужен прототип» tarqatmasi ketmaydi: prototip allaqachon mijozda.",
+            "Yig‘ilmasa — kartochkada kulrang bilan «Prototip oldindan yig‘ilmadi:» va sababi (bu nishani hozircha bilmaymiz, saytda so‘z bilan yozilgan uchta xizmat yo‘q, tugma uchun telefon yoki messenjer yo‘q va h.k.), xat esa avvalgidek — 12 soatda yig‘ib berish va’dasi bilan. Quruvchilarga oldindan yig‘ilmaydi: ularga yozilish emas, kvartira tanlash sahifasi kerak.",
           ],
         },
         {
@@ -570,7 +581,7 @@ export const uz: HelpCopy = {
           title: "Mijoz javob berdi: kim javob beradi",
           body: [
             "Ishchi akkaunt xatlariga model javob beradi — bir necha daqiqadan keyin, darhol emas (darhol javob robotga o‘xshaydi), studiya nomidan, «biz» deb. Uning har bir javobi bitta aniq qadam bilan tugaydi; biror narsa yuborishni va’da qilish unga taqiqlangan.",
-            "Model **sizni chaqiradi**, agar mijoz: rad etsa («yozmang», «qiziq emas»); odam yoki qo‘ng‘iroq so‘rasa; **tahlil, tijoriy taklif, smeta yoki fayl yuborishni so‘rasa** — unda o‘sha kuniyoq o‘zingiz yuboring; **prototip istasa** («ha, yig‘ib bering», «да, соберите») — unda aloqa muallifiga «🛠 Беру прототип» tugmasi bilan «🛠 Хотят прототип» keladi: **birinchi 30 daqiqa** prototip faqat unda. Yarim soatda olmasa — **butun jamoaga** xuddi shu tugma bilan «🔥 Нужен прототип — бери срочно» ketadi (07:00 dan 23:00 gacha; tunda so‘rasa — 07:00 da ketadi): kim birinchi bossa, lid va yozishma o‘shaniki, boshqalarda tugma olgan odam ismi bilan o‘chadi; prototipni qo‘lda yig‘ib, mijozga havolani yuborish — 12 soat ichida, xatda va’da qilinganidek, muddatdan 2 soat oldin eslatma o‘zi qo‘yiladi; qisqa va tushunarsiz javob bersa. Yana — suhbat 12 replikadan beri davom etib, kelishuvga kelmasa yoki uning javobi tekshiruvdan o‘tmasa.",
+            "Model **sizni chaqiradi**, agar mijoz: rad etsa («yozmang», «qiziq emas»); odam yoki qo‘ng‘iroq so‘rasa; **tahlil, tijoriy taklif, smeta yoki fayl yuborishni so‘rasa** — unda o‘sha kuniyoq o‘zingiz yuboring; **prototip istasa** («ha, yig‘ib bering», «да, соберите») — unda aloqa muallifiga «🛠 Беру прототип» tugmasi bilan «🛠 Хотят прототип» keladi: **birinchi 30 daqiqa** prototip faqat unda. Yarim soatda olmasa — **butun jamoaga** xuddi shu tugma bilan «🔥 Нужен прототип — бери срочно» ketadi (07:00 dan 23:00 gacha; tunda so‘rasa — 07:00 da ketadi): kim birinchi bossa, lid va yozishma o‘shaniki, boshqalarda tugma olgan odam ismi bilan o‘chadi; prototipni qo‘lda yig‘ib, mijozga havolani yuborish — 12 soat ichida, xatda va’da qilinganidek, muddatdan 2 soat oldin eslatma o‘zi qo‘yiladi; qisqa va tushunarsiz javob bersa. Yana — suhbat 12 replikadan beri davom etib, kelishuvga kelmasa yoki uning javobi tekshiruvdan o‘tmasa. Xatda allaqachon [oldindan yig‘ilgan prototipga](#prospect-proto-ahead) havola bo‘lgan bo‘lsa, javobdagi «прототип» so‘zi «ko‘rdim» degani: model sizni «ответил про прототип, который ушёл в письме» sababi bilan chaqiradi, butun jamoaga «Нужен прототип» ketmaydi.",
             "Chaqirdi — sizga Telegramda sabab, mijoz so‘zlari va lid havolasi bilan «Касание · сайт» keladi, ostida esa «🙅 Клиент отказался» tugmasi: mijoz «qiziq emas» desa — bosing, aloqa [yopiladi](#prospect-close). Lid kartochkasida «Aloqa bo‘yicha birlamchi suhbat» bloki: «SI javob beryapti» yoki «siz javob berasiz — sabab». **«O‘zim javob beraman»** tugmasi suhbatni istalgan paytda modeldan olib qo‘yadi: keyin model jim turadi, mijozning har bir yangi xabari esa sizga Telegramda keladi — «Клиент написал — отвечаете вы», lid havolasi bilan. Tugmani bosgan odamga keladi, hatto u rahbar yoki ega bo‘lsa ham. Lid har holda sizniki. Lidni berishdi yoki uni navbatdan boshqa odam oldi — suhbat u bilan birga o‘tadi: mijoz xabarlari, qayta yozish va model imzosi endi lidning yangi egasida, oldingi egasining «O‘zim javob beraman» belgisi esa olib tashlanadi.",
             "Model vazifa, byudjet va muddatlarni aniqlab olgach, xayrlashadi, sizga esa «Первичка по касанию · сайт» brifi keladi. Keyingi suhbat sizniki.",
             "⚠️ O‘zingiz javob berayotgan bo‘lsangiz, mijozning yangi oddiy xabarlari Telegramda sizga kelmaydi — yozishmaga o‘zingiz qarab turing.",
@@ -1288,8 +1299,16 @@ export const uz: HelpCopy = {
           id: "build",
           title: "Yig‘ish",
           body: [
-            "«Mijoz sayti», nisha (shinomontaj, avtoservis, avtomoyka, barbershop, go‘zallik saloni, tirnoq studiyasi, deteyling) va sahifa tili. Nomi, tavsifi, telefoni, messenjerlari va logotipi uning saytidan o‘zi olinadi.",
+            "«Mijoz sayti», nisha (shinomontaj, avtoservis, avtomoyka, barbershop, go‘zallik saloni, tirnoq studiyasi, deteyling, stomatologiya, o‘quv markazi, tibbiyot markazi) va sahifa tili. Nomi, tavsifi, telefoni, messenjerlari va logotipi uning saytidan o‘zi olinadi.",
             "Xizmatlar — har qatorga bittadan, uning so‘zlari bilan, 3 tadan 12 tagacha. Narx — ikki tomonida bo‘sh joy qoldirilgan tiredan keyin, va faqat mijoz o‘zi aytgani. «Saytda topilganini almashtirish» — agar sayt xato qilgan bo‘lsa. «Prototipni yig‘ish».",
+          ],
+        },
+        {
+          id: "auto",
+          title: "O‘zi yig‘ilganlar — aloqalar uchun",
+          body: [
+            "«o‘zi yig‘ildi, aloqa uchun» belgisi bor prototiplarni panel sizsiz, aloqa xatini tayyorlayotganda yig‘gan: eng yomon saytli kompaniyalarga, yig‘uvchi biladigan nishalarda. Nomi, kontaktlari, logotipi va suratlari — uning saytidan, xizmatlar — uning saytida yozilganlari, har biri so‘zma-so‘z solishtirilgan. Tekshiruv qo‘lda yig‘ilganlarniki bilan bir xil: e’tiroz bo‘lsa, prototip «qoralama» bo‘lib qoladi va xatga tushmaydi.",
+            "Bunday prototipning havolasi aloqa xatida o‘zi ketadi — «Mijozga yubordim» tugmasini bosish shart emas: xat ketganda prototip «yuborilgan» bo‘ladi. Menejerda bu qanday ko‘rinishi — [prototip oldindan](#prospect-proto-ahead).",
           ],
         },
         {
@@ -1304,7 +1323,7 @@ export const uz: HelpCopy = {
           id: "opens",
           title: "Mijoz ochdimi",
           body: [
-            "«… da ochgan, kirishlar: N» yoki «hali ochmagan». Har bir ochilish hisoblanadi — sizning o‘z ko‘rishingiz ham.",
+            "«… da ochgan, kirishlar: N» yoki «hali ochmagan». Odamning har bir ochilishi hisoblanadi; sizning paneldan o‘z ochishlaringiz (shu brauzerda panelga kirgansiz) va messenjer o‘zi chizadigan havola prevyusi hisoblanmaydi.",
             "Ochib, ikkinchi marta qaytdi — bugun qo‘ng‘iroq qiling. Ikki kunda ochmadi — havola unga yetib bormagan. Prototipdagi «Yozilish» (rus tilidagi sahifada «Записаться») tugmasi mijozning o‘z Telegrami yoki WhatsApp’ini ochadi — shunda u buning ishlashini ko‘radi.",
           ],
         },

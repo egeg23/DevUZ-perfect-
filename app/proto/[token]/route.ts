@@ -1,4 +1,9 @@
+import { after } from "next/server";
+
+import { tellManager } from "@/lib/admin/outreach-talk-store";
+import { SESSION_COOKIE } from "@/lib/admin/return-to";
 import { looksLikeAccessToken } from "@/lib/store/access";
+import { fromPanel, isPreviewFetch, openedText } from "@/lib/proto/opened";
 import { markOpened, protoPage } from "@/lib/proto/store";
 
 export const runtime = "nodejs";
@@ -18,7 +23,7 @@ export const dynamic = "force-dynamic";
  * Черновики наружу не уходят — это решает `protoPage`, здесь их просто нет.
  */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ token: string }> },
 ) {
   const { token } = await params;
@@ -27,9 +32,20 @@ export async function GET(
   const page = await protoPage(token);
   if (!page) return new Response(null, { status: 404 });
 
-  // Отметка об открытии не задерживает ответ: менеджеру она нужна к вечеру, а
-  // человеку страница — сейчас.
-  void markOpened(page.id).catch(() => {});
+  // Отметка об открытии не задерживает ответ: человеку страница нужна сейчас.
+  // Превью мессенджера и наши собственные открытия из панели не считаются —
+  // см. lib/proto/opened. Первое настоящее открытие прототипа из касания —
+  // строка тому, кто касание ведёт.
+  if (!isPreviewFetch(request.headers.get("user-agent")) && !fromPanel(request.headers.get("cookie"), SESSION_COOKIE)) {
+    after(async () => {
+      try {
+        const seen = await markOpened(page.id);
+        if (seen?.first && seen.prospectId) await tellManager(seen.prospectId, openedText(seen.name));
+      } catch (error) {
+        console.error("прототип: открытие не записалось", error instanceof Error ? error.message : error);
+      }
+    });
+  }
 
   return new Response(page.html, {
     headers: {

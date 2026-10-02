@@ -53,6 +53,7 @@ services:
       # 21 сентября: письма, разбор резюме и подсказки менеджеру на
       # Соннете (то же качество по нашим проверкам, вчетверо дешевле).
       OUTREACH_MODEL: ${OUTREACH_MODEL:-}
+      PROTO_MODEL: ${PROTO_MODEL:-}
       HIRING_MODEL: ${HIRING_MODEL:-}
       COACH_MODEL: ${COACH_MODEL:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
