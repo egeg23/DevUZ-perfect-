@@ -1,3 +1,4 @@
+import { MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -78,44 +79,57 @@ export function sentCheck(
 }
 
 /** Следующая правка: самая старая из несделанных, у которой есть что править. */
-export async function nextEdit(): Promise<EditJob | null> {
+export async function nextEdit(
+  /** Править может только отправивший: письмо лежит в его переписке. */
+  account: string = MAIN_ACCOUNT,
+): Promise<EditJob | null> {
   const db = serviceClient();
   if (!db) return null;
 
-  const { data } = await db
+  const { data: rows } = await db
     .from("outreach_edits")
-    .select("id, prospect_id, body, prospects!outreach_edits_prospect_id_fkey (host, target_user_id, sent_message_id, sent_at)")
+    .select("id, prospect_id, body, prospects!outreach_edits_prospect_id_fkey (host, target_user_id, sent_message_id, sent_at, sent_via)")
     .is("done_at", null)
     .is("failure", null)
     .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!data) return null;
+    .limit(10);
 
-  const p = (Array.isArray(data.prospects) ? data.prospects[0] : data.prospects) as
-    | { host: string | null; target_user_id: string | number | null; sent_message_id: string | null; sent_at: string | null }
-    | null;
-  const id = String(data.id);
+  for (const data of rows ?? []) {
+    const p = (Array.isArray(data.prospects) ? data.prospects[0] : data.prospects) as
+      | {
+          host: string | null;
+          target_user_id: string | number | null;
+          sent_message_id: string | null;
+          sent_at: string | null;
+          sent_via: string | null;
+        }
+      | null;
+    const id = String(data.id);
 
-  // Править нечего или некому — это итог, а не повод крутиться в очереди.
-  if (!p?.target_user_id || !p.sent_message_id) {
-    await markEditFailed(id, "Письмо ушло не с рабочего аккаунта или без номера сообщения — править некому.");
-    return nextEdit();
+    // Правка чужого аккаунта — её заберёт он сам.
+    if (p && accountOf(p.sent_via) !== account) continue;
+
+    // Править нечего или некому — это итог, а не повод крутиться в очереди.
+    if (!p?.target_user_id || !p.sent_message_id) {
+      await markEditFailed(id, "Письмо ушло не с рабочего аккаунта или без номера сообщения — править некому.");
+      continue;
+    }
+    if (p.sent_at && Date.now() - Date.parse(p.sent_at) > EDIT_WINDOW_MS) {
+      await markEditFailed(id, TOO_LATE);
+      continue;
+    }
+
+    return {
+      id,
+      prospectId: String(data.prospect_id),
+      host: String(p.host ?? ""),
+      userId: String(p.target_user_id),
+      messageId: Number(p.sent_message_id),
+      body: String(data.body),
+      sentAt: p.sent_at,
+    };
   }
-  if (p.sent_at && Date.now() - Date.parse(p.sent_at) > EDIT_WINDOW_MS) {
-    await markEditFailed(id, TOO_LATE);
-    return nextEdit();
-  }
-
-  return {
-    id,
-    prospectId: String(data.prospect_id),
-    host: String(p.host ?? ""),
-    userId: String(p.target_user_id),
-    messageId: Number(p.sent_message_id),
-    body: String(data.body),
-    sentAt: p.sent_at,
-  };
+  return null;
 }
 
 /**

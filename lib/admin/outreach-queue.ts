@@ -8,6 +8,7 @@ import {
   isStopError,
   type RouteKind,
 } from "@/lib/admin/outreach";
+import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -34,7 +35,11 @@ const SENT_BY_ACCOUNT = "target_kind.is.null,target_kind.neq.manual";
  * очереди, ещё никого не побеспокоило. Отметка самого старого нужна, чтобы
  * сказать менеджеру, когда освободится место, — а не просто «занято».
  */
-export async function sentLastHour(now = Date.now()): Promise<{ count: number; oldestAgoMs: number | null }> {
+export async function sentLastHour(
+  now = Date.now(),
+  /** Чей час: один аккаунт. Не передан — все вместе, для панели. */
+  account?: string,
+): Promise<{ count: number; oldestAgoMs: number | null }> {
   const db = serviceClient();
   // База недоступна — считаем час занятым: лучше задержать, чем отправить
   // мимо предела.
@@ -42,13 +47,16 @@ export async function sentLastHour(now = Date.now()): Promise<{ count: number; o
 
   const { data } = await db
     .from("prospects")
-    .select("sent_at")
+    .select("sent_at, sent_via")
     .eq("status", "sent")
     .or(SENT_BY_ACCOUNT)
     .gte("sent_at", new Date(now - HOUR_MS).toISOString())
     .order("sent_at", { ascending: true });
 
-  const rows = data ?? [];
+  // Аккаунт — фильтром здесь, а не вторым `or` в запросе: строк за час
+  // единицы, а два логических условия в одном запросе PostgREST читает
+  // не так, как они написаны.
+  const rows = (data ?? []).filter((row) => !account || accountOf(row.sent_via as string | null) === account);
   const oldest = rows[0]?.sent_at ? Date.parse(String(rows[0].sent_at)) : null;
   return { count: rows.length, oldestAgoMs: oldest === null ? null : now - oldest };
 }
@@ -66,6 +74,32 @@ export async function aheadInQueue(claimedAt: string | null): Promise<number> {
 }
 
 export type Queued = { id: string; target: string; kind: RouteKind; message: string; host: string };
+
+/**
+ * Взять письмо из очереди — этим аккаунтом и только им.
+ *
+ * Аккаунтов несколько, и все смотрят в одну очередь. «Прочитать верхнее и
+ * отправить» отдало бы одно письмо двоим — и человек получил бы два
+ * одинаковых сообщения с двух номеров, ровно то, за что ограничивают оба.
+ * Поэтому отметка ставится условно, в самом update: свободное или брошенное
+ * больше DISPATCH_STALE_MS назад (скаут упал посередине).
+ */
+async function take(
+  db: NonNullable<ReturnType<typeof serviceClient>>,
+  id: string,
+  account: string,
+  now: number,
+): Promise<boolean> {
+  const stale = new Date(now - DISPATCH_STALE_MS).toISOString();
+  const { data } = await db
+    .from("prospects")
+    .update({ dispatch_by: account, dispatch_at: new Date(now).toISOString() })
+    .eq("id", id)
+    .eq("status", "sending")
+    .or(`dispatch_by.is.null,dispatch_at.lt."${stale}"`)
+    .select("id");
+  return Boolean(data?.length);
+}
 
 /**
  * Касания владельца уходят вне очереди.
@@ -110,53 +144,64 @@ export async function queueOwners(): Promise<string[]> {
 }
 
 /**
- * Следующее задание — одно за раз и не раньше паузы после предыдущего.
+ * Следующее задание для этого аккаунта — одно за раз и не раньше паузы
+ * после его предыдущего письма.
  *
- * Пауза здесь, а не в отправителе: предел общий для аккаунта, а
- * отправителей теоретически может стать больше одного.
+ * Предел и пауза — у каждого аккаунта свои: Telegram ограничивает номер, а
+ * не студию. Очередь общая, и письмо берёт тот аккаунт, у которого раньше
+ * освободилось место (см. take).
  */
-export async function nextQueued(now = Date.now()): Promise<Queued | null> {
+export async function nextQueued(
+  now = Date.now(),
+  account: string = MAIN_ACCOUNT,
+  cap: number = HOURLY_CAP,
+): Promise<Queued | null> {
   const db = serviceClient();
   if (!db) return null;
 
-  const { data: last } = await db
+  // Последнее письмо этого аккаунта — среди последних отправок всех: три
+  // аккаунта по два в час проходят полсотни писем за восемь часов, а пауза
+  // между письмами — минуты.
+  const { data: recent } = await db
     .from("prospects")
-    .select("sent_at")
+    .select("sent_at, sent_via")
     .eq("status", "sent")
     .or(SENT_BY_ACCOUNT)
     .order("sent_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(50);
+  const last = (recent ?? []).find((row) => accountOf(row.sent_via as string | null) === account);
   const lastAt = last?.sent_at ? Date.parse(String(last.sent_at)) : 0;
+  const stale = new Date(now - DISPATCH_STALE_MS).toISOString();
+
+  /** Верхние свободные задания — по одному, пока одно не возьмётся этим аккаунтом. */
+  const takeFirst = async (owners: string[] | null): Promise<Queued | null> => {
+    let query = db
+      .from("prospects")
+      .select(QUEUED_COLUMNS)
+      .eq("status", "sending")
+      .or(`dispatch_by.is.null,dispatch_at.lt."${stale}"`);
+    if (owners) query = query.in("claimed_by", owners);
+    const { data } = await query.order("claimed_at", { ascending: true }).limit(3);
+    for (const row of data ?? []) {
+      const job = toQueued(row as Record<string, unknown>);
+      if (job && (await take(db, job.id, account, now))) return job;
+    }
+    return null;
+  };
 
   // Сначала — владелец, мимо предела и паузы (см. OWNER_FLOOR_MS).
   const owners = await ownerIds(db);
   if (owners.length && (!lastAt || now - lastAt >= OWNER_FLOOR_MS)) {
-    const { data: mine } = await db
-      .from("prospects")
-      .select(QUEUED_COLUMNS)
-      .eq("status", "sending")
-      .in("claimed_by", owners)
-      .order("claimed_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    const job = toQueued(mine);
+    const job = await takeFirst(owners);
     if (job) return job;
   }
 
-  if ((await sentLastHour(now)).count >= HOURLY_CAP) return null;
+  if ((await sentLastHour(now, account)).count >= cap) return null;
 
   const gap = MIN_GAP_MS + Math.floor((MAX_GAP_MS - MIN_GAP_MS) * pseudoRandom(lastAt));
   if (lastAt && now - lastAt < gap) return null;
 
-  const { data } = await db
-    .from("prospects")
-    .select(QUEUED_COLUMNS)
-    .eq("status", "sending")
-    .order("claimed_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  return toQueued(data);
+  return takeFirst(null);
 }
 
 /**
@@ -181,6 +226,8 @@ export async function markSent(
   id: string,
   userId?: string | null,
   messageId?: string | number | null,
+  /** С какого аккаунта: ответы и правки потом пойдут с него же. */
+  account: string = MAIN_ACCOUNT,
 ): Promise<void> {
   const db = serviceClient();
   if (!db) return;
@@ -191,6 +238,9 @@ export async function markSent(
       status: "sent",
       sent_at: new Date().toISOString(),
       failure: null,
+      sent_via: account,
+      dispatch_by: null,
+      dispatch_at: null,
       ...(userId ? { target_user_id: userId } : {}),
       // Номер сообщения — то, по чему потом ищем его в переписке. Без него
       // проверка свелась бы к «там что-то есть», а нужна «там есть именно
@@ -313,6 +363,9 @@ export async function markUnreachable(
         target_kind: "phone",
         target: next,
         failure: `${note} Пробуем найти в Telegram по номеру ${next}.`.slice(0, 500),
+        // Следующим тиком письмо может взять любой аккаунт.
+        dispatch_by: null,
+        dispatch_at: null,
       })
       .eq("id", id)
       .eq("status", "sending");
@@ -321,26 +374,47 @@ export async function markUnreachable(
 
   await db
     .from("prospects")
-    .update({ status: "manual", target_kind: "manual", target: hand, failure: note.slice(0, 500) })
+    .update({ status: "manual", target_kind: "manual", target: hand, failure: note.slice(0, 500), dispatch_by: null, dispatch_at: null })
     .eq("id", id);
   return "manual";
 }
 
 /**
- * Отказ Telegram. Если он про аккаунт, а не про адресата, останавливаем всю
- * очередь: продолжать после PEER_FLOOD — верный способ потерять аккаунт.
+ * Отказ Telegram. Если он про аккаунт, а не про адресата, этот аккаунт
+ * останавливается: продолжать после PEER_FLOOD — верный способ его потерять.
+ *
+ * Аккаунтов несколько — и отказ про наш номер не повод ставить крест на
+ * письме: адресат тут ни при чём. Письмо возвращается в очередь, его возьмёт
+ * другой аккаунт. Других нет (или они тоже остановлены) — очередь снимается
+ * целиком, как и раньше: ждать некому.
  */
-export async function markFailed(id: string, why: string): Promise<{ stopped: boolean }> {
+export async function markFailed(
+  id: string,
+  why: string,
+  options: { othersAlive?: boolean } = {},
+): Promise<{ stopped: boolean }> {
   const db = serviceClient();
   if (!db) return { stopped: false };
 
-  await db.from("prospects").update({ status: "failed", failure: why.slice(0, 500) }).eq("id", id);
+  if (isStopError(why) && options.othersAlive) {
+    await db
+      .from("prospects")
+      .update({ dispatch_by: null, dispatch_at: null, failure: `аккаунт остановлен Telegram: ${why.slice(0, 200)} — уйдёт с другого` })
+      .eq("id", id);
+    console.error(`касания: ${why} — аккаунт остановлен, письмо вернулось в очередь`);
+    return { stopped: true };
+  }
+
+  await db
+    .from("prospects")
+    .update({ status: "failed", failure: why.slice(0, 500), dispatch_by: null, dispatch_at: null })
+    .eq("id", id);
 
   if (!isStopError(why)) return { stopped: false };
 
   const { data } = await db
     .from("prospects")
-    .update({ status: "new", failure: `очередь остановлена: ${why.slice(0, 200)}` })
+    .update({ status: "new", failure: `очередь остановлена: ${why.slice(0, 200)}`, dispatch_by: null, dispatch_at: null })
     .eq("status", "sending")
     .select("id");
   console.error(`касания: ${why} — очередь остановлена, снято заданий: ${(data ?? []).length}`);

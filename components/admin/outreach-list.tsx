@@ -151,6 +151,7 @@ function when(iso: string | null): string {
 export function OutreachList({
   rows,
   hour,
+  cap = HOURLY_CAP,
   open,
   error,
   sent,
@@ -163,6 +164,8 @@ export function OutreachList({
   rows: Prospect[];
   /** Что ушло за последний час: предел считается по факту отправки. */
   hour: { count: number; oldestAgoMs: number | null };
+  /** Первых писем в час со всех рабочих аккаунтов вместе (hourlyCapacity). */
+  cap?: number;
   /** Кто владелец: его письма уходят вне очереди (lib/admin/outreach-queue.ts). */
   owners?: readonly string[];
   open?: string;
@@ -196,7 +199,7 @@ export function OutreachList({
   const failureText = failure ? errorText(failure, locale) : "";
 
   const queue = rows.filter((r) => r.status === "sending");
-  const left = Math.max(0, HOURLY_CAP - hour.count);
+  const left = Math.max(0, cap - hour.count);
 
   return (
     <section className="mt-10">
@@ -207,7 +210,7 @@ export function OutreachList({
         </h2>
         <p className="flex items-center gap-2 text-xs text-faint">
           <HelpHint topic={helpAnchor("/admin/prospect", "queue")} label={t.helpQueue} />
-          {t.hourLine(hour.count, HOURLY_CAP)}
+          {t.hourLine(hour.count, cap)}
           {queue.length ? t.inQueue(queue.length) : ""}
           {left === 0 && queue.length ? t.queueWaits : ""}
         </p>
@@ -266,6 +269,7 @@ export function OutreachList({
                     ahead: queue.filter((q) => isOwner(q) || q.created_at < row.created_at).length,
                     sentLastHour: hour.count,
                     oldestSentAgoMs: hour.oldestAgoMs,
+                    cap,
                   })
               : null;
 

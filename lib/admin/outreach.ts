@@ -227,13 +227,16 @@ export function queueView(input: {
   sentLastHour: number;
   /** Сколько миллисекунд назад ушло самое старое из отправленных за час. */
   oldestSentAgoMs: number | null;
+  /** Первых писем в час со всех рабочих аккаунтов вместе. */
+  cap?: number;
 }): QueueView {
-  const slotsNow = Math.max(0, HOURLY_CAP - input.sentLastHour);
+  const cap = input.cap ?? HOURLY_CAP;
+  const slotsNow = Math.max(0, cap - input.sentLastHour);
   if (input.ahead < slotsNow) return { ahead: input.ahead, waitMs: input.ahead * MIN_GAP_MS };
 
   // Место освобождается, когда самое старое сообщение часа выпадает из окна.
   const freesIn = input.oldestSentAgoMs === null ? 0 : Math.max(0, HOUR_MS - input.oldestSentAgoMs);
-  const extraHours = Math.floor((input.ahead - slotsNow) / HOURLY_CAP);
+  const extraHours = Math.floor((input.ahead - slotsNow) / cap);
   return { ahead: input.ahead, waitMs: freesIn + extraHours * HOUR_MS };
 }
 

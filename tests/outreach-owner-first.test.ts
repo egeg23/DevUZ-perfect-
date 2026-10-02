@@ -52,7 +52,7 @@ test("письма владельца уходят вне очереди, но �
   const queue = read("lib/admin/outreach-queue.ts");
   const next = queue.slice(queue.indexOf("export async function nextQueued"));
   const owner = next.indexOf('.in("claimed_by", owners)');
-  const cap = next.indexOf("HOURLY_CAP");
+  const cap = next.indexOf("await sentLastHour(now, account)");
   assert.ok(owner > 0 && owner < cap, "владелец ждёт часового предела вместе со всеми");
   assert.match(next, /now - lastAt >= OWNER_FLOOR_MS/);
   assert.match(queue, /export const OWNER_FLOOR_MS = 60_000;/);

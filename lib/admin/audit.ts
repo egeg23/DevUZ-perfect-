@@ -103,6 +103,11 @@ export const AUDIT_ACTIONS = [
   "razbor.deleted",
   "proto.build",
   "proto.sent",
+  // Рабочие аккаунты Telegram: кто подключил номер, кто остановил и снял.
+  "work_account.add",
+  "work_account.pause",
+  "work_account.resume",
+  "work_account.remove",
   "project.payment_added",
   "project.payment_removed",
   "payout.recorded",
