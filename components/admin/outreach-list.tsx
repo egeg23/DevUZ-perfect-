@@ -90,7 +90,7 @@ function problemText(p: ProblemRef, t: Picked<typeof problemDict>): string {
     case "short":
       return t.short(Number(a ?? 40));
     case "long":
-      return t.long(Number(a ?? 200));
+      return t.long(Number(a ?? 150));
     case "no_host":
       return t.no_host(String(a ?? ""));
     case "no_us":
@@ -109,6 +109,8 @@ function problemText(p: ProblemRef, t: Picked<typeof problemDict>): string {
       return t.foreign_reference(String(a ?? ""));
     case "no_reference":
       return t.no_reference(String(a ?? ""));
+    case "no_prototype":
+      return t.no_prototype(Number(a ?? 12));
     default:
       return t.unknown;
   }

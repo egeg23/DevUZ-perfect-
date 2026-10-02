@@ -104,7 +104,7 @@ export const prospectSections: Record<string, HelpEntry> = {
 
   /* ── Касания ──────────────────────────────────────────────────────── */
   "/admin/prospect": {
-    what: "Zimne kontakty: znajdujemy firmy, sprawdzamy ich strony, a AI pisze pierwszą wiadomość wokół jednego prawdziwego problemu, który adresat może sam sprawdzić. Wysyła konto firmowe studia, odpowiedzi klienta prowadzi AI, a gdy potrzebny jest człowiek — woła tego, kto pisał. Lead z kontaktu jest od razu Twój, bez kolejki.",
+    what: "Zimne kontakty: znajdujemy firmy, sprawdzamy ich strony, a AI pisze krótką pierwszą wiadomość: dwa-trzy prawdziwe problemy jego strony, które adresat może sam sprawdzić, i propozycję zbudowania prototypu nowej strony w 12 godzin. Wysyła konto firmowe studia, odpowiedzi klienta prowadzi AI, a gdy potrzebny jest człowiek — woła tego, kto pisał. Lead z kontaktu jest od razu Twój, bez kolejki.",
     items: [
       {
         id: "portion",
@@ -196,8 +196,9 @@ export const prospectSections: Record<string, HelpEntry> = {
         title: "Napisz do firmy: «Skontaktuj się» i «Wyślij do …»",
         body: [
           "Na karcie strony kliknij **«Skontaktuj się»**: panel od nowa przechodzi stronę (do minuty) i pisze wiadomość. To się jeszcze nie liczy jako kontakt.",
+          "Wiadomość jest krótka, 50–100 słów: kto pisze; dwa-trzy znaleziska z jego strony — każde z miejscem (strona, ich własny nagłówek) i tym, co przez nie robi klient; widoczność w wyszukiwarce i straty; nasz projekt z jego branży, jeśli jest; i pytanie, czy zbudować mu prototyp nowej strony w 12 godzin. Skali studia i „wzrostu 2–4 razy” nie piszemy w pierwszej wiadomości: po zdaniach, które są w każdej wiadomości takie same, rozpoznaje się masową wysyłkę. Jeśli zapytają, kim jesteśmy — odpowiadamy w korespondencji.",
           "Przeczytaj wiadomość i dopasuj ją do człowieka. Potem **«Wyślij do @adres»** — wiadomość trafi do kolejki konta firmowego. Od tej chwili lead jest założony i przypisany do Ciebie, a kontakt zaliczony.",
-          "Przed wysłaniem panel sprawdza wiadomość i pisze, co jest nie tak: 40–200 słów; jest adres strony i devuz.studio; nie ma liczb, których nie ma w analizie; nie ma obietnic w rodzaju «в топ», «гарантирую», «первое место» (w języku wiadomości: „do topu”, „gwarantuję”, „pierwsze miejsce”), procentów ani emoji; wymieniona jest widoczność w wyszukiwarce i straty, jeśli są.",
+          "Przed wysłaniem panel sprawdza wiadomość i pisze, co jest nie tak: 40–150 słów; jest adres strony i devuz.studio; nie ma liczb, których nie ma w analizie; nie ma obietnic w rodzaju «в топ», «гарантирую», «первое место» (w języku wiadomości: „do topu”, „gwarantuję”, „pierwsze miejsce”), procentów ani emoji; wymieniona jest widoczność w wyszukiwarce i straty, jeśli są; jest propozycja prototypu w 12 godzin.",
           "Każdy pracownik może przygotować i wysłać dowolną kartę — kto kliknie, ten zostaje jej właścicielem. Dlatego zaczynaj od [porcji dnia](#prospect-portion): tam firmy są już podzielone.",
         ],
       },
@@ -243,7 +244,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         title: "Klient odpisał: kto odpowiada",
         body: [
           "Na wiadomości konta firmowego odpowiada AI — po kilku minutach, nie od razu (natychmiastowa odpowiedź wygląda jak robot), w imieniu studia, w formie „my”. Każda jego odpowiedź kończy się jednym konkretnym krokiem; obiecywać, że coś prześle, ma zakazane.",
-          "AI **woła Ciebie**, jeśli klient: odmówił („nie piszcie”, „nie jestem zainteresowany”); prosi o człowieka albo telefon; **prosi o przesłanie analizy, oferty, kosztorysu albo pliku** — wtedy wyślij to samodzielnie jeszcze tego samego dnia; odpowiedział krótko i niezrozumiale. A także — jeśli rozmowa trwa 12 wypowiedzi i się nie klei albo jego odpowiedź nie przeszła kontroli.",
+          "AI **woła Ciebie**, jeśli klient: odmówił („nie piszcie”, „nie jestem zainteresowany”); prosi o człowieka albo telefon; **prosi o przesłanie analizy, oferty, kosztorysu albo pliku** — wtedy wyślij to samodzielnie jeszcze tego samego dnia; **chce prototypu** («да, соберите», „prototip yig‘ib bering”) — ustal, kto go zbuduje, i wyślij link w ciągu 12 godzin: tyle obiecaliśmy w wiadomości; odpowiedział krótko i niezrozumiale. A także — jeśli rozmowa trwa 12 wypowiedzi i się nie klei albo jego odpowiedź nie przeszła kontroli.",
           "Gdy zawoła, dostaniesz na Telegramie «Касание · сайт» z powodem, słowami klienta i linkiem do leada, a pod spodem przycisk «🙅 Клиент отказался»: klient powiedział „nie jestem zainteresowany” — kliknij, a kontakt się [zamknie](#prospect-close). Na karcie leada jest blok «Pierwsza rozmowa po kontakcie»: «odpowiada AI» albo «odpowiadasz Ty — powód». Przycisk **«Odpowiadam osobiście»** w każdej chwili zabiera rozmowę AI: od tej pory AI milczy, a każda nowa wiadomość klienta przychodzi do Ciebie na Telegram — «Клиент написал — отвечаете вы» (klient napisał — odpowiadasz Ty) z linkiem do leada. Przychodzi do tego, kto kliknął przycisk, nawet jeśli to kierownik albo właściciel. Lead i tak jest Twój. Jeśli lead przekazano albo wziął go ktoś inny z kolejki — rozmowa idzie razem z nim: wiadomości klienta, follow-upy i podpis AI należą teraz do nowego właściciela leada, a «Odpowiadam osobiście» poprzedniego zostaje zdjęte.",
           "Gdy AI ustali zadanie, budżet i terminy, żegna się, a Ty dostajesz brief «Первичка по касанию · сайт». Dalej rozmowa jest Twoja.",
           "⚠️ Jeśli odpowiadasz osobiście, nowe zwykłe wiadomości klienta nie przychodzą do Ciebie na Telegram — zaglądaj do korespondencji samodzielnie.",

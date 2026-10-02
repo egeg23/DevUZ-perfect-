@@ -367,6 +367,14 @@ export const problemDict = defineDict({
     pl: (name: string) =>
       `W wiadomości nie wymieniono «${name}» — naszego projektu z tej samej branży. To najmocniejsze zdanie wiadomości: adresat sprawdzi je w dziesięć sekund i potem rozmowa idzie inaczej.`,
   },
+  no_prototype: {
+    ru: (hours: number) =>
+      `В сообщении нет предложения собрать прототип сайта за ${hours} часов — а это то, на что адресату проще всего ответить «да».`,
+    uz: (hours: number) =>
+      `Xabarda ${hours} soatda sayt prototipini yig‘ib berish taklifi yo‘q — adresat aynan shunga eng oson «ha» deydi.`,
+    pl: (hours: number) =>
+      `W wiadomości nie ma propozycji zbudowania prototypu strony w ${hours} godzin — a na to adresatowi najłatwiej odpowiedzieć «tak».`,
+  },
   unknown: {
     ru: "Проверка нашла в тексте то, что не даёт его отправить.",
     uz: "Tekshiruv matnda uni yuborishga to‘sqinlik qiladigan narsani topdi.",
