@@ -18,6 +18,7 @@ export const AUDIT_ACTIONS = [
   "logout",
   "lead.viewed",
   "lead.taken",
+  "lead.prototype_taken",
   "lead.released",
   "lead.status_changed",
   "lead.contact_revealed",

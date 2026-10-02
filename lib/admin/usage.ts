@@ -75,7 +75,7 @@ export type Feature = {
  */
 export const FEATURES: readonly Feature[] = [
   { key: "lead-open", label: { ru: "Открыть карточку лида", uz: "Lid kartochkasini ochish", pl: "Otwarcie karty leada" }, actions: ["lead.viewed"] },
-  { key: "lead-take", label: { ru: "Взять или отпустить лида", uz: "Lidni olish yoki qo‘yib yuborish", pl: "Przejęcie lub zwolnienie leada" }, actions: ["lead.taken", "lead.released"] },
+  { key: "lead-take", label: { ru: "Взять или отпустить лида", uz: "Lidni olish yoki qo‘yib yuborish", pl: "Przejęcie lub zwolnienie leada" }, actions: ["lead.taken", "lead.released", "lead.prototype_taken"] },
   { key: "lead-status", label: { ru: "Сменить статус лида", uz: "Lid holatini o‘zgartirish", pl: "Zmiana statusu leada" }, actions: ["lead.status_changed"] },
   { key: "lead-contact", label: { ru: "Открыть контакт клиента", uz: "Mijoz kontaktini ochish", pl: "Odsłonięcie danych kontaktowych klienta" }, actions: ["lead.contact_revealed"] },
   { key: "lead-transcript", label: { ru: "Прочитать переписку клиента с ботом", uz: "Mijozning bot bilan yozishmasini o‘qish", pl: "Odczyt korespondencji klienta z botem" }, actions: ["lead.transcript_viewed"] },

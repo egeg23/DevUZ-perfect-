@@ -36,9 +36,13 @@ import {
   sendMessage,
   sendPlain,
   sendWithButtons,
+  sendWithRows,
   setButtons,
   typingIndicator,
 } from "@/lib/qualify/telegram";
+import { PROTO_CALLBACK, protoMovedText, protoTakenLabel, protoTakerText, tashkentClock } from "@/lib/admin/prototype-claim";
+import { takePrototype } from "@/lib/admin/prototype-claim-store";
+import { serviceClient } from "@/lib/supabase";
 import { record } from "@/lib/admin/audit";
 import {
   completeReminder,
@@ -997,6 +1001,17 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     return;
   }
 
+  // «🛠 Беру прототип»: рассылка уходит каждому в личку, взять может
+  // первый нажавший (lib/admin/prototype-claim-store).
+  if (parts[0] === PROTO_CALLBACK) {
+    if (chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    await handlePrototypeButton(query, parts[1] ?? "");
+    return;
+  }
+
   // Порция дня: тоже личка сотрудника, и тоже только своя.
   if (parts[0] === "tp") {
     if (chatId !== undefined && isSalesChat(chatId)) {
@@ -1473,4 +1488,59 @@ async function handleTaskDate(message: NonNullable<Update["message"]>): Promise<
   );
   await afterAct(result.task, result.eventId, now);
   return true;
+}
+
+/**
+ * «🛠 Беру прототип» — кто первый нажал, того и лид.
+ *
+ * Владелец, 02.10.2026: «после подтверждения, что надо прототип, — сразу
+ * уведомление всем в телеграм, и кто успеет взять — того и лид». Взятие
+ * атомарное (takePrototype); у всех остальных кнопка сразу гаснет и
+ * показывает, кто взял, — иначе второй узнал бы об этом, только нажав.
+ */
+async function handlePrototypeButton(query: NonNullable<Update["callback_query"]>, prospectId: string) {
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (!staff || !prospectId) {
+    await answerCallback(query.id, "Недоступно");
+    return;
+  }
+
+  const taken = await takePrototype(prospectId, staff);
+  if (!taken.ok) {
+    await answerCallback(
+      query.id,
+      taken.reason === "taken"
+        ? `Прототип уже взяли${taken.by ? ` — ${taken.by}` : ""}`
+        : "Не удалось — откройте «Касания» в панели",
+    );
+    return;
+  }
+
+  await answerCallback(query.id, `Прототип ваш — до ${tashkentClock(taken.deadline)}`);
+
+  const label = protoTakenLabel(staff);
+  await Promise.all(
+    taken.notices.map((n) => setButtons(n.chatId, n.messageId, [[{ text: label, callback_data: "noop" }]])),
+  );
+
+  const chat = query.from?.id ?? 0;
+  const text = protoTakerText({ host: taken.host, deadline: taken.deadline }, esc);
+  if (taken.leadId) {
+    await sendWithRows(chat, text, [[{ text: "🔓 Открыть лид", panel: `/admin/leads/${taken.leadId}` }]]);
+  } else {
+    await sendMessage(chat, text);
+  }
+
+  if (taken.previous) {
+    const { data: prev } = (await serviceClient()
+      ?.from("staff")
+      .select("telegram_user_id")
+      .eq("id", taken.previous)
+      .eq("is_active", true)
+      .maybeSingle()) ?? { data: null };
+    const prevChat = Number(prev?.telegram_user_id);
+    if (Number.isFinite(prevChat) && prevChat !== 0) {
+      await sendMessage(prevChat, protoMovedText({ host: taken.host, who: staff.username ? `@${staff.username}` : staff.display_name }, esc));
+    }
+  }
 }
