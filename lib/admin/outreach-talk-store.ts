@@ -3,6 +3,7 @@ import { HANDOVER_TEXT, normalizeHandle, readInbound, type TalkRow } from "@/lib
 import { announcePrototype } from "@/lib/admin/prototype-claim-store";
 import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
+import { MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -363,7 +364,10 @@ export async function tellManager(
 }
 
 /** Следующий ответ на отправку — для скаута. */
-export async function nextReply(): Promise<{ id: string; target: string; body: string; host: string } | null> {
+export async function nextReply(
+  /** Чей разговор: отвечаем с того аккаунта, с которого ушло первое письмо. */
+  account: string = MAIN_ACCOUNT,
+): Promise<{ id: string; target: string; body: string; host: string } | null> {
   const db = serviceClient();
   if (!db) return null;
 
@@ -386,13 +390,38 @@ export async function nextReply(): Promise<{ id: string; target: string; body: s
     .limit(REPLY_SCAN);
   if (!queued?.length) return null;
 
+  // Какие дополнительные аккаунты живы — один запрос на проход. Нужен
+  // главному: переписку отключённого аккаунта отправить некому, и молча
+  // держать её в очереди значит оставить клиента без ответа.
+  let live: Set<string> | null = null;
+  const alive = async (other: string): Promise<boolean> => {
+    if (!live) {
+      const { data } = await db.from("tg_accounts").select("id").in("status", ["active", "paused"]);
+      live = new Set((data ?? []).map((a) => String(a.id)));
+    }
+    return live.has(other);
+  };
+
   for (const row of queued) {
     const { data: p } = await db
       .from("prospects")
-      .select("target, host, target_kind, target_user_id")
+      .select("target, host, target_kind, target_user_id, sent_via")
       .eq("id", row.prospect_id)
       .maybeSingle();
     if (!p?.target) continue;
+    // Чужой разговор — его отправит тот аккаунт, которому клиент отвечал.
+    // Ответ с другого номера для клиента — незнакомец в его переписке.
+    const owner = accountOf(p.sent_via as string | null);
+    if (owner !== account) {
+      // Аккаунт отключили — отвечать с него некому: разговор человеку.
+      if (account === MAIN_ACCOUNT && !(await alive(owner))) {
+        await markReplyFailed(
+          String(row.id),
+          "Рабочий аккаунт, с которого писали клиенту, отключён — ответьте сами со своего аккаунта",
+        );
+      }
+      continue;
+    }
 
     // Ответ модели по ручному маршруту никуда не девается: он остаётся в
     // очереди и показывается менеджеру в карточке, чтобы тот отправил его

@@ -62,7 +62,7 @@ test("письмо правится, только если оно наше и у
 
 test("скаут сверяет письмо до правки и записывает правку после", () => {
   const runner = read("scout/runner.mjs");
-  const step = runner.slice(runner.indexOf("nextEdit()"));
+  const step = runner.slice(runner.indexOf("nextEdit(key)"));
   const check = step.indexOf("sentCheck(");
   const edit = step.indexOf("client.editMessage(");
   const mark = step.indexOf("markEdited(job)");

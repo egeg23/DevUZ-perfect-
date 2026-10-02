@@ -208,12 +208,16 @@ test("лид заводится при отправке и закрепляет�
 
 test("очередь держит пределы аккаунта, а не надеется на отправителя", () => {
   const queue = readFileSync(new URL("../lib/admin/outreach-queue.ts", import.meta.url), "utf8");
-  assert.match(queue, /if \(\(await sentLastHour\(now\)\)\.count >= HOURLY_CAP\) return null;/);
+  // Предел — у каждого рабочего аккаунта свой: Telegram ограничивает номер.
+  assert.match(queue, /if \(\(await sentLastHour\(now, account\)\)\.count >= cap\) return null;/);
   // База недоступна — час считается занятым: лучше задержать, чем
   // отправить мимо предела.
   assert.match(queue, /if \(!db\) return \{ count: HOURLY_CAP, oldestAgoMs: null \};/);
   assert.match(queue, /if \(lastAt && now - lastAt < gap\) return null;/, "пауза между отправками не проверяется");
-  assert.match(queue, /\.limit\(1\)/, "очередь отдаёт больше одного задания за раз");
+  // Одно задание за раз — и взятое этим аккаунтом в самом update: аккаунтов
+  // несколько, и «прочитать верхнее» отдало бы письмо двоим.
+  assert.match(queue, /if \(job && \(await take\(db, job\.id, account, now\)\)\) return job;/, "очередь отдаёт письмо без захвата");
+  assert.match(queue, /\.update\(\{ dispatch_by: account, dispatch_at: new Date\(now\)\.toISOString\(\) \}\)\s*\.eq\("id", id\)\s*\.eq\("status", "sending"\)\s*\.or\(`dispatch_by\.is\.null,dispatch_at\.lt\."\$\{stale\}"`\)/);
   // Ошибка про аккаунт снимает всю очередь, а не только своё задание.
   assert.match(queue, /if \(!isStopError\(why\)\) return \{ stopped: false \};/);
   assert.match(queue, /\.eq\("status", "sending"\)\n\s+\.select\("id"\)/);
@@ -221,7 +225,7 @@ test("очередь держит пределы аккаунта, а не на�
 
 test("скаут отправляет только из очереди и останавливается на первой же ошибке аккаунта", () => {
   const runner = readFileSync(new URL("../scout/runner.mjs", import.meta.url), "utf8");
-  assert.match(runner, /const job = await nextQueued\(\);|job = await nextQueued\(\);/);
+  assert.match(runner, /job = await nextQueued\(Date\.now\(\), key, cap\(\)\);/);
   // Пишем не строке с сайта, а тому, кого телеграм назвал в ответ на вопрос
   // «кто это». У человека, найденного по номеру, @адреса может не быть вовсе.
   assert.match(runner, /await client\.sendMessage\(userId, \{ message: job\.message \}\)/);

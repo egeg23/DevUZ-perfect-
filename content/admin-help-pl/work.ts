@@ -9,6 +9,41 @@ import type { HelpEntry } from "@/lib/admin/help";
  * уходят в договор и счёт заказчику (срок в договоре, заметка платежа).
  */
 export const workSections: Record<string, HelpEntry> = {
+  /* ── Рабочие аккаунты ──────────────────────────────────────────────── */
+  "/admin/accounts": {
+    what: "Konta robocze Telegrama, z których wychodzą pierwsze wiadomości kontaktów i toczy się korespondencja z klientami. Główne jest podłączone na serwerze i dodatkowo czyta czaty; tutaj podłączasz dodatkowe. Sekcję widzisz tylko Ty.",
+    items: [
+      {
+        id: "add",
+        title: "Podłącz konto",
+        body: [
+          "Wpisz nazwę konta (na przykład «Konto Dilnozy») i jego numer telefonu — +998… albo 9 cyfr bez kodu kraju. Kliknij **«Wyślij kod»**. Za kilka sekund skaut poprosi Telegram o kod, a przy koncie pojawi się pole «Kod z Telegrama»; w trakcie logowania strona odświeża się sama.",
+          "Kod przychodzi do aplikacji Telegram na telefonie tego konta — wiadomością od Telegrama, zwykle nie SMS-em. Wpisz go i kliknij **«Zaloguj»**. Nie przesyłaj nikomu kodu i nie wysyłaj go na czat: Telegram unieważnia kod przesłany wiadomością i logowanie trzeba zaczynać od nowa.",
+          "Jeśli włączona jest weryfikacja dwuetapowa, pojawi się pole «Hasło weryfikacji dwuetapowej»: wpisz hasło i znowu **«Zaloguj»**. Hasła nie przechowujemy: skaut je sprawdza i od razu usuwa. Udało się — status «pracuje», a obok nazwa konta. Na telefonie konta na liście urządzeń pojawi się nowa sesja — to my; nie kończ jej, bo konto się odłączy.",
+          "«kod nie pasuje» — wpisz kod jeszcze raz; «kod wygasł» albo inny błąd — kliknij **«Odłącz»** i podłącz konto ponownie tym samym numerem.",
+        ],
+      },
+      {
+        id: "limits",
+        title: "Ile wiadomości i z którego konta",
+        body: [
+          "Każde konto ma własny limit pierwszych wiadomości na godzinę: główne — 2, nowe — 1. Po tygodniu spokojnej pracy nowe można podnieść do 2 w polu «Wiadomości na godzinę»: świeży numer Telegram ogranicza szybciej. Na górze sekcji — ile wychodzi ze wszystkich razem; ta sama liczba stoi nad listą w [Kontaktach](/admin/prospect).",
+          "Kolejka kontaktów jest jedna: wiadomość wychodzi z konta, na którym wcześniej zwolniło się miejsce — menedżer niczego nie wybiera. Odpowiedzi do klienta, odpowiedzi modelu i poprawka wiadomości idą z tego samego konta, z którego wyszła pierwsza wiadomość: napisać do człowieka z innego numeru to pojawić się w jego rozmowie jako nieznajomy.",
+          "Pod każdym kontem — ile pierwszych wiadomości wyszło w ostatniej godzinie i dziś, oraz «połączone», jeśli skaut trzyma je podłączone (znacznik co minutę). Brak znacznika dłużej niż trzy minuty — skaut nie pracuje tym kontem: sprawdź serwer albo podłącz konto ponownie.",
+        ],
+      },
+      {
+        id: "stop",
+        title: "Wstrzymanie, ograniczenie i odłączenie",
+        body: [
+          "**«Wstrzymaj»** — konto przestaje pisać pierwsze wiadomości, ale odpowiada w już rozpoczętych rozmowach. **«Przywróć do pracy»** — znowu pisze.",
+          "Jeśli Telegram ograniczy konto za masową wysyłkę, samo staje na dobę: pierwsze wiadomości wychodzą z pozostałych, korespondencja trwa, a przy koncie widać, do kiedy stoi. Wiadomość, przy której to się stało, wraca do kolejki i wyjdzie z innego konta. Jeśli nie ma już kto pisać, kolejka jest zdejmowana w całości, jak wcześniej.",
+          "**«Odłącz»** — skaut zamyka sesję w Telegramie (zniknie z urządzeń na telefonie) i usuwa ją u nas. Rozmowy rozpoczęte z tego konta zostają w «Kontaktach», ale dalej odpowiadasz w nich sam: z tego numeru nie ma już kto pisać.",
+        ],
+      },
+    ],
+  },
+
   /* ── Надзор ───────────────────────────────────────────────────────── */
   "/admin/talks": {
     what: "Analiza rozmów z zimnych kontaktów. Każdą rozmowę, która ucichła, czyta drugi model — nie ten, który ją prowadził — i odpowiada: co zaciekawiło klienta, jaki padł zarzut, na czym się posypało i jaka z tego lekcja. Lekcja przydaje się temu, kto pisze następną wiadomość.",

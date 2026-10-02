@@ -226,7 +226,7 @@ export const prospectSections: Record<string, HelpEntry> = {
         title: "Kolejka konta firmowego: dwie wiadomości na godzinę",
         body: [
           "Pierwszą wiadomość do nowej firmy konto firmowe wysyła nie częściej niż dwa razy na godzinę i z przerwą 8–20 minut. Inaczej Telegram uzna nas za masową wysyłkę i ograniczy konto — a tym samym kontem skaut czyta czaty, więc stracilibyśmy oba kanały naraz.",
-          "Nad listą: «W ostatniej godzinie wysłano 1 z 2 · w kolejce 3». Przy karcie w kolejce widać, mniej więcej za ile minut wyjdzie.",
+          "Nad listą: «W ostatniej godzinie wysłano 1 z 2 · w kolejce 3». Przy karcie w kolejce widać, mniej więcej za ile minut wyjdzie. Kont roboczych może być kilka — każde ma swój limit dwóch na godzinę, i wtedy druga liczba jest większa: tyle pierwszych wiadomości na godzinę wychodzi ze wszystkich razem. Wiadomość wychodzi z konta, na którym wcześniej zwolniło się miejsce; odpowiedzi i poprawki — z tego, z którego wyszła pierwsza wiadomość.",
           "Nie musisz czekać: otwórz rozmowę ze swojego konta, wyślij ten sam tekst i kliknij **«Skontaktowano samodzielnie»** — bot nie wyśle już swojej kopii, a odpowiedź klienta przyjdzie do Ciebie osobiście.",
           "**Wiadomości właściciela idą poza kolejką**: nie czekają ani na cudze wiadomości, ani na limit dwóch na godzinę, ani na przerwę 8–20 minut — wychodzą minutę po dowolnej poprzedniej wysyłce. Do limitu dwóch na godzinę jednak się wliczają: limit dotyczy konta, więc po takiej wiadomości pozostali będą musieli poczekać. Na takiej karcie jest napisane «Wiadomość właściciela — poza kolejką».",
         ],

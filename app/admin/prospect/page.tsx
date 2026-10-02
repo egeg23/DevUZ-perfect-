@@ -21,6 +21,8 @@ import { TouchLegend } from "@/components/admin/touch-legend";
 import { dailyCap, placesConfigured } from "@/lib/maps/places";
 import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
 import { queueOwners, sentLastHour } from "@/lib/admin/outreach-queue";
+import { hourlyCapacity } from "@/lib/admin/work-accounts";
+import { listAccounts } from "@/lib/admin/work-accounts-store";
 import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
 import { parseMore, REST_PAGE, visibleProspects } from "@/lib/admin/outreach-view";
 import { BATCH_CAP } from "@/lib/audit/batch";
@@ -43,7 +45,7 @@ export default async function ProspectPage({
   const [campaigns, mapsUsage, mapsPending, mapsReady] = seesMaps
     ? await Promise.all([listCampaigns(), usageToday(), pendingPlaces(), placesConfigured()])
     : [[], 0, 0, false];
-  const [rows, hour, replies, plan, portion, owners, stream] = await Promise.all([
+  const [rows, hour, replies, plan, portion, owners, stream, accounts] = await Promise.all([
     listProspects(),
     sentLastHour(),
     manualReplies(),
@@ -51,6 +53,8 @@ export default async function ProspectPage({
     portionOf(staff.id),
     queueOwners(),
     streamState(staff.id),
+    // Рабочих аккаунтов может быть несколько — у каждого свои «два в час».
+    listAccounts(),
   ]);
   const today = todayInTashkent(new Date());
   // Порция и поток «Получать лиды» приходят одним списком: поток — сверх
@@ -170,6 +174,7 @@ export default async function ProspectPage({
           href: `/admin/prospect?more=${more + REST_PAGE}${view.nextId ? `#p-${view.nextId}` : ""}`,
         }}
         hour={hour}
+        cap={hourlyCapacity(accounts)}
         owners={owners}
         open={open}
         error={e}

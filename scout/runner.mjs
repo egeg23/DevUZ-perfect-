@@ -26,6 +26,9 @@ import { markDelivered, markFailed, markSent, markUnreachable, nextQueued } from
 import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/outreach-peer";
 import { markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
 import { TOO_LATE, editOutcome, markEditFailed, markEdited, nextEdit, sentCheck } from "@/lib/admin/outreach-edit";
+import { HOURLY_CAP } from "@/lib/admin/outreach";
+import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
+import { startAccounts } from "./accounts.mjs";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
@@ -195,12 +198,19 @@ async function live() {
     }
   }
 
-  const client = new TelegramClient(
-    session,
-    Number(env("SCOUT_API_ID")),
-    env("SCOUT_API_HASH"),
-    { connectionRetries: 5, ...(bridge ? { proxy: bridge.socks } : { networkSocket: PromisedWebSockets }) },
-  );
+  const apiId = Number(env("SCOUT_API_ID"));
+  const apiHash = env("SCOUT_API_HASH");
+  /**
+   * Клиент на сессию — той же дорогой к Telegram, что выбрана выше. Ею же
+   * подключаются дополнительные рабочие аккаунты и вход новых: мост через
+   * прокси пускает к любому дата-центру, не только к дата-центру главного.
+   */
+  const makeClient = (clientSession) =>
+    new TelegramClient(clientSession, apiId, apiHash, {
+      connectionRetries: 5,
+      ...(bridge ? { proxy: bridge.socks } : { networkSocket: PromisedWebSockets }),
+    });
+  const client = makeClient(session);
 
   await client.connect();
   if (!(await client.isUserAuthorized())) {
@@ -285,16 +295,98 @@ async function live() {
     }
   }, WATCHDOG_MS);
 
+  // ── Касания, переписка и правки — на каждом рабочем аккаунте ─────────
+  //
+  // Главный аккаунт и читает чаты, и пишет. Дополнительные подключаются из
+  // панели и только пишут (scout/accounts.mjs). Работник у всех один и тот
+  // же — startWorker ниже.
+  const workers = new Map();
+  /** Есть ли кроме этого аккаунта ещё кто-то, кто может писать первые письма. */
+  const othersAlive = (key) => [...workers.entries()].some(([other, worker]) => other !== key && worker.canSend());
+  workers.set(
+    MAIN_ACCOUNT,
+    startWorker({
+      client,
+      Api,
+      NewMessage,
+      key: MAIN_ACCOUNT,
+      label: "главный",
+      cap: () => HOURLY_CAP,
+      paused: () => false,
+      othersAlive,
+      // Главный после ограничения стоит до перезапуска, как и раньше.
+      onFlood: async () => {},
+    }),
+  );
+  const accounts = startAccounts({
+    makeClient,
+    StringSession,
+    Api,
+    apiId,
+    apiHash,
+    workers,
+    startWorker: (options) => startWorker({ ...options, Api, NewMessage, othersAlive }),
+  });
+
+  let warnedNoChat = false;
+  client.addEventHandler((event) => {
+    const message = event.message;
+    if (!message?.message) return;
+    // Свои сообщения не разбираем: оператор отвечает из этого же аккаунта.
+    if (message.out) return;
+
+    const shaped = shape(message);
+    if (!shaped) {
+      // Один раз, а не на каждое: если такое повторяется, причина одна.
+      if (!warnedNoChat) {
+        warnedNoChat = true;
+        console.error(`scout: сообщение ${message.id} пришло без чата — пропускаю такие`);
+      }
+      return;
+    }
+    buffer.push(shaped);
+  }, new NewMessage({ chats: roster.opened.map((chat) => chat.id) }));
+
+  const stop = async (signal) => {
+    console.log(`scout: ${signal}, дочитываю накопленное`);
+    await buffer.stop();
+    await accounts.stop();
+    await client.disconnect();
+    if (bridge) await bridge.close();
+    process.exit(0);
+  };
+  process.on("SIGINT", () => void stop("SIGINT"));
+  process.on("SIGTERM", () => void stop("SIGTERM"));
+}
+
+/**
+ * Работник рабочего аккаунта: первые касания, переписка, правки и входящее
+ * в личку — на одном клиенте Telegram.
+ *
+ * Аккаунтов несколько (владелец, 02.10: «дополнительно будет 2 аккаунта для
+ * связи с клиентами»), и у каждого свой работник: предел «два в час» и
+ * остановка после PEER_FLOOD — про номер, а не про студию. Очередь одна, и
+ * письмо берёт тот аккаунт, у которого освободилось место. Переписку и
+ * правки ведёт тот, с которого ушло первое письмо (prospects.sent_via).
+ *
+ * `cap` и `paused` — функции, а не числа: владелец меняет предел и ставит
+ * паузу в панели, и работник узнаёт об этом со следующим тиком.
+ */
+function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersAlive, onFlood }) {
+  const timers = [];
   // ── Касания ───────────────────────────────────────────────────────────
   //
   // Раньше здесь было написано «ничего не отправляет». Теперь отправляет —
   // но только то, что человек прочитал, поправил и отправил сам, по одному
-  // сообщению и с паузами. Аккаунт один на чтение и на письмо: если его
-  // ограничат за рассылку, студия потеряет и ленту чатов.
+  // сообщению и с паузами. Главный аккаунт один и на чтение, и на письмо:
+  // если его ограничат за рассылку, студия потеряет и ленту чатов.
   //
-  // Первая же ошибка про аккаунт — PEER_FLOOD, FLOOD_WAIT — снимает всю
-  // очередь; продолжать после неё значит менять аккаунт на десяток писем.
+  // Первая же ошибка про аккаунт — PEER_FLOOD, FLOOD_WAIT — останавливает
+  // этот аккаунт: продолжать после неё значит менять его на десяток писем.
+  // Письмо при этом возвращается в очередь, если писать есть кому ещё, и
+  // снимается вся очередь, если некому (markFailed).
   let outreachStopped = false;
+  const tag = key === MAIN_ACCOUNT ? "" : ` [${label}]`;
 
   /**
    * Счётчик для импортируемых номеров.
@@ -353,11 +445,14 @@ async function live() {
    */
   const ABOUT_TARGET = /USERNAME_NOT_OCCUPIED|USERNAME_INVALID|PHONE_NOT_OCCUPIED|No user has|Cannot find any entity/i;
 
-  setInterval(async () => {
+  timers.push(setInterval(async () => {
     if (outreachStopped) return;
+    // Пауза из панели или сутки после ограничения Telegram — письма ждут
+    // другой аккаунт; переписка и правки при этом идут.
+    if (paused()) return;
     let job;
     try {
-      job = await nextQueued();
+      job = await nextQueued(Date.now(), key, cap());
     } catch (error) {
       console.error("касания: очередь не прочиталась —", error?.message ?? error);
       return;
@@ -374,9 +469,10 @@ async function live() {
         const next = await markUnreachable(job.id, note, job.kind, job.target);
         console.log(`касания: ${job.target} — ${note}${next === "phone" ? " Пробую по номеру." : ""}`);
       } else {
-        const { stopped } = await markFailed(job.id, why);
+        const { stopped } = await markFailed(job.id, why, { othersAlive: othersAlive(key) });
         outreachStopped = stopped;
-        console.error(`касания: адресат не опознан ${job.target} — ${why}${stopped ? " (очередь остановлена)" : ""}`);
+        if (stopped) await onFlood(why);
+        console.error(`касания${tag}: адресат не опознан ${job.target} — ${why}${stopped ? " (аккаунт остановлен)" : ""}`);
       }
       return;
     }
@@ -398,8 +494,8 @@ async function live() {
       // человека @адреса может не быть вовсе.
       const sent = await client.sendMessage(userId, { message: job.message });
       const messageId = sent?.id === undefined || sent?.id === null ? null : Number(sent.id);
-      await markSent(job.id, userId, messageId);
-      console.log(`касания: отправлено ${job.target} по сайту ${job.host}`);
+      await markSent(job.id, userId, messageId, key);
+      console.log(`касания${tag}: отправлено ${job.target} по сайту ${job.host}`);
 
       // И сразу перечитываем переписку.
       //
@@ -446,9 +542,10 @@ async function live() {
       }
     } catch (error) {
       const why = error?.errorMessage ?? error?.message ?? String(error);
-      const { stopped } = await markFailed(job.id, why);
+      const { stopped } = await markFailed(job.id, why, { othersAlive: othersAlive(key) });
       outreachStopped = stopped;
-      console.error(`касания: не ушло ${job.target} — ${why}${stopped ? " (очередь остановлена)" : ""}`);
+      if (stopped) await onFlood(why);
+      console.error(`касания${tag}: не ушло ${job.target} — ${why}${stopped ? " (аккаунт остановлен)" : ""}`);
     } finally {
       // Импортированный номер убираем из контактов сразу.
       //
@@ -465,17 +562,17 @@ async function live() {
         }
       }
     }
-  }, OUTREACH_MS);
+  }, OUTREACH_MS));
 
   // ── Переписка по касаниям ─────────────────────────────────────────────
   //
   // Ответы модели тем, кто ответил на наше письмо. Очередь отдельная от
   // касаний и без часового предела: он про первые письма незнакомым людям,
   // а молчать в ответ на вопрос клиента — не осторожность, а потеря лида.
-  setInterval(async () => {
+  timers.push(setInterval(async () => {
     let reply;
     try {
-      reply = await nextReply();
+      reply = await nextReply(key);
     } catch (error) {
       console.error("переписка: очередь не прочиталась —", error?.message ?? error);
       return;
@@ -485,23 +582,23 @@ async function live() {
     try {
       await client.sendMessage(reply.target, { message: reply.body });
       await markReplySent(reply.id);
-      console.log(`переписка: ответил ${reply.target} по сайту ${reply.host}`);
+      console.log(`переписка${tag}: ответил ${reply.target} по сайту ${reply.host}`);
     } catch (error) {
       const why = error?.errorMessage ?? error?.message ?? String(error);
       await markReplyFailed(reply.id, why);
-      console.error(`переписка: ответ не ушёл ${reply.target} — ${why}`);
+      console.error(`переписка${tag}: ответ не ушёл ${reply.target} — ${why}`);
     }
-  }, REPLY_MS);
+  }, REPLY_MS));
 
   // ── Правка отправленных касаний ───────────────────────────────────────
   //
   // Уже ушедшее письмо поправить может только тот, кто его отправил, — этот
   // аккаунт, и только 48 часов. Строку в очередь кладёт человек (см.
   // lib/admin/outreach-edit.ts), скаут правит.
-  setInterval(async () => {
+  timers.push(setInterval(async () => {
     let job;
     try {
-      job = await nextEdit();
+      job = await nextEdit(key);
     } catch (error) {
       console.error("правка: очередь не прочиталась —", error?.message ?? error);
       return;
@@ -535,7 +632,7 @@ async function live() {
         console.error(`правка: не вышло по сайту ${job.host} — ${why}`);
       }
     }
-  }, EDIT_MS);
+  }, EDIT_MS));
 
   // Входящее из лички: это может быть ответ на наше касание.
   //
@@ -546,7 +643,7 @@ async function live() {
   // Кто именно написал, решает база: адрес ищется среди тех, кому мы уже
   // писали. Не нашёлся — значит человек пишет по своему делу, и это не
   // наше: аккаунт рабочий, в него пишут и помимо касаний.
-  client.addEventHandler(async (event) => {
+  const inbound = async (event) => {
     const message = event.message;
     if (!message?.message || message.out) return;
     if (!message.isPrivate) return;
@@ -572,41 +669,24 @@ async function live() {
     try {
       const hit = await recordInbound({ handle, userId, body: String(message.message) });
       if (hit.matched) {
-        console.log(`переписка: ответ от ${handle ? `@${handle}` : `id ${userId}`} по сайту ${hit.host} (${hit.verdict})`);
+        console.log(`переписка${tag}: ответ от ${handle ? `@${handle}` : `id ${userId}`} по сайту ${hit.host} (${hit.verdict})`);
       }
     } catch (error) {
       console.error("переписка: входящее не записалось —", error?.message ?? error);
     }
-  }, new NewMessage({ incoming: true }));
-
-  let warnedNoChat = false;
-  client.addEventHandler((event) => {
-    const message = event.message;
-    if (!message?.message) return;
-    // Свои сообщения не разбираем: оператор отвечает из этого же аккаунта.
-    if (message.out) return;
-
-    const shaped = shape(message);
-    if (!shaped) {
-      // Один раз, а не на каждое: если такое повторяется, причина одна.
-      if (!warnedNoChat) {
-        warnedNoChat = true;
-        console.error(`scout: сообщение ${message.id} пришло без чата — пропускаю такие`);
-      }
-      return;
-    }
-    buffer.push(shaped);
-  }, new NewMessage({ chats: roster.opened.map((chat) => chat.id) }));
-
-  const stop = async (signal) => {
-    console.log(`scout: ${signal}, дочитываю накопленное`);
-    await buffer.stop();
-    await client.disconnect();
-    if (bridge) await bridge.close();
-    process.exit(0);
   };
-  process.on("SIGINT", () => void stop("SIGINT"));
-  process.on("SIGTERM", () => void stop("SIGTERM"));
+  const inboundEvent = new NewMessage({ incoming: true });
+  client.addEventHandler(inbound, inboundEvent);
+
+  return {
+    /** Может ли этот аккаунт сейчас писать первые письма — для соседей по очереди. */
+    canSend: () => !outreachStopped && !paused(),
+    stop: () => {
+      for (const timer of timers) clearInterval(timer);
+      client.removeEventHandler(inbound, inboundEvent);
+    },
+  };
 }
+
 
 await (DRY_RUN ? dryRun() : live());

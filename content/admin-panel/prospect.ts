@@ -406,9 +406,9 @@ export const outreachListDict = defineDict({
   },
   queueWaits: { ru: " — ждут своей очереди", uz: " — o‘z navbatini kutmoqda", pl: " — czekają na swoją kolej" },
   intro: {
-    ru: "Пишет рабочий аккаунт студии, а не бот: два контакта в час, пауза между сообщениями и одно касание на сайт. Этим же аккаунтом скаут читает чаты, и ограничение за рассылку выключило бы оба канала сразу. Ждать очередь не обязательно — сообщение можно отправить со своего аккаунта, тогда и ответ придёт вам лично.",
-    uz: "Bot emas, studiyaning ishchi akkaunti yozadi: soatiga ikkita kontakt, xabarlar orasida pauza va har bir saytga bitta aloqa. Skaut chatlarni ham shu akkaunt orqali o‘qiydi, ommaviy tarqatma uchun cheklov ikkala kanalni birdaniga o‘chirib qo‘yardi. Navbatni kutish shart emas — xabarni o‘z akkauntingizdan yuborsangiz bo‘ladi, shunda javob ham shaxsan sizga keladi.",
-    pl: "Pisze konto firmowe studia, a nie bot: dwa kontakty na godzinę, przerwa między wiadomościami i jeden kontakt na stronę. Tym samym kontem skaut czyta czaty, więc blokada za masową wysyłkę wyłączyłaby oba kanały naraz. Nie trzeba czekać w kolejce — wiadomość możesz wysłać ze swojego konta, wtedy odpowiedź też przyjdzie do ciebie.",
+    ru: "Пишут рабочие аккаунты студии, а не бот: с каждого — не больше двух первых писем в час, пауза между сообщениями и одно касание на сайт. Главным аккаунтом скаут ещё и читает чаты, и ограничение за рассылку выключило бы оба канала сразу. Ждать очередь не обязательно — сообщение можно отправить со своего аккаунта, тогда и ответ придёт вам лично.",
+    uz: "Bot emas, studiyaning ishchi akkauntlari yozadi: har biridan soatiga ikkitadan ko‘p bo‘lmagan birinchi xat, xabarlar orasida pauza va har bir saytga bitta aloqa. Skaut chatlarni ham asosiy akkaunt orqali o‘qiydi, ommaviy tarqatma uchun cheklov ikkala kanalni birdaniga o‘chirib qo‘yardi. Navbatni kutish shart emas — xabarni o‘z akkauntingizdan yuborsangiz bo‘ladi, shunda javob ham shaxsan sizga keladi.",
+    pl: "Piszą konta firmowe studia, a nie bot: z każdego najwyżej dwie pierwsze wiadomości na godzinę, przerwa między wiadomościami i jeden kontakt na stronę. Kontem głównym skaut dodatkowo czyta czaty, więc blokada za masową wysyłkę wyłączyłaby oba kanały naraz. Nie trzeba czekać w kolejce — wiadomość możesz wysłać ze swojego konta, wtedy odpowiedź też przyjdzie do ciebie.",
   },
   sentNotice: {
     ru: "Сообщение в очереди. Уйдёт с рабочего аккаунта в ближайшие минуты, лид уже закреплён за вами.",
