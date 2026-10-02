@@ -24,6 +24,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   logout: { ru: "вышел", uz: "chiqdi", pl: "wylogował się" },
   "lead.viewed": { ru: "открыл карточку лида", uz: "lid kartochkasini ochdi", pl: "otworzył kartę leada" },
   "lead.taken": { ru: "взял лида", uz: "lidni oldi", pl: "przejął leada" },
+  "lead.prototype_taken": { ru: "взял прототип по касанию", uz: "aloqa bo‘yicha prototipni oldi", pl: "wziął prototyp z kontaktu" },
   "lead.released": { ru: "отпустил лида", uz: "lidni qo‘yib yubordi", pl: "zwolnił leada" },
   "lead.status_changed": { ru: "сменил статус лида", uz: "lid holatini o‘zgartirdi", pl: "zmienił status leada" },
   "lead.contact_revealed": { ru: "открыл контакт клиента", uz: "mijoz kontaktini ochdi", pl: "odsłonił dane kontaktowe klienta" },
