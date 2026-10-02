@@ -146,14 +146,14 @@ const GOOD = [
   "",
   "Открыл его с телефона: страница показывается в масштабе большого экрана, текст мелкий, кнопки крошечные. Это можно проверить прямо сейчас, открыв сайт на своём телефоне. Большинство ваших клиентов заходит именно так, и многие уходят, не дочитав. Мобильная версия для небольшого сайта — это несколько дней работы.",
   "",
-  "Нашлось ещё пара мест, которые стоит поправить. Могу прислать разбор целиком — бесплатно и ни к чему не обязывает.",
+  "За 12 часов можем собрать прототип нового сайта — откроете с телефона и пощупаете сами. Собрать?",
 ].join("\n");
 
 test("готовое сообщение проходит, а типичные провалы — нет", () => {
   assert.deepEqual(messageProblems(GOOD, PROMPT, "mebel.uz"), []);
 
   const codes = (m: string) => messageProblems(m, PROMPT, "mebel.uz").map((p) => p.code);
-  assert.deepEqual(codes("Здравствуйте, devuz.studio, mebel.uz, есть предложение."), ["short"]);
+  assert.deepEqual(codes("Здравствуйте, devuz.studio, mebel.uz, есть предложение."), ["short", "no_prototype"]);
   assert.ok(codes(GOOD.replace("mebel.uz", "вашего сайта")).includes("no_host"));
   assert.ok(codes(GOOD.replace("devuz.studio", "нашей студии")).includes("no_us"));
   assert.ok(codes(`${GOOD} Выведем вас в топ по вашим запросам.`).includes("banned"));

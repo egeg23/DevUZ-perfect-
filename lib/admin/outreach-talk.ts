@@ -63,7 +63,7 @@ export function asTranscript(rows: readonly TalkRow[]): ChatMessage[] {
  * человека модель тоже не перехватывает: «сейчас позову менеджера» и
  * продолжение расспросов — самый быстрый способ потерять доверие.
  */
-export type InboundVerdict = "stop" | "human" | "send" | "unclear" | "talk";
+export type InboundVerdict = "stop" | "human" | "proto" | "send" | "unclear" | "talk";
 
 const STOP_WORDS = [
   /не\s+пиш/i,
@@ -144,6 +144,24 @@ const SEND_WORDS = [
 ];
 
 /**
+ * Ответ на предложение прототипа.
+ *
+ * Первое письмо заканчивается вопросом «собрать вам прототип за 12 часов?»
+ * (lib/admin/outreach.ts, PROTOTYPE_HOURS). Модель прототип не соберёт, а
+ * «да, соберём» от неё — обещание, которое некому сдержать. Поэтому любое
+ * упоминание прототипа и «соберите» сразу уходят человеку: отсчёт двенадцати
+ * часов пошёл с этой минуты. Стоит раньше «пришлите»: «пришлите прототип» —
+ * это согласие, а не просьба о файле.
+ */
+const PROTO_WORDS = [
+  /прототип/i,
+  /prototip/i,
+  /prototype/i,
+  /собер(?:и|ите|ёте|ете)(?!\p{L})/iu,
+  /yig['ʻ‘`]?ib\s*ber/i,
+];
+
+/**
  * Сколько слов делают ответ понятным.
  *
  * Меньше — и мы не знаем, что нам сказали. «Kerskmas» с сайта
@@ -163,6 +181,7 @@ export function readInbound(text: string): InboundVerdict {
   const body = text.trim();
   if (STOP_WORDS.some((re) => re.test(body))) return "stop";
   if (HUMAN_WORDS.some((re) => re.test(body))) return "human";
+  if (PROTO_WORDS.some((re) => re.test(body))) return "proto";
   if (SEND_WORDS.some((re) => re.test(body))) return "send";
 
   // Вопрос — это начало разговора на любом языке и любой длины: «Qancha
@@ -177,6 +196,7 @@ export const HANDOVER_TEXT: Record<string, string> = {
   stop: "просил больше не писать",
   unclear: "ответил коротко и непонятно — разберитесь сами",
   human: "просит человека — звонок или менеджера",
+  proto: "хочет прототип сайта — соберите и пришлите ссылку в течение 12 часов",
   send: "просит прислать разбор, смету или файл — пришлите сегодня сами",
   qualified: "первичка закрыта, дальше человек",
   turns: "разговор идёт долго и не сходится",

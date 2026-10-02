@@ -424,7 +424,7 @@ export const uz: HelpCopy = {
 
     /* ── Касания ──────────────────────────────────────────────────────── */
     "/admin/prospect": {
-      what: "Sovuq aloqalar: kompaniyalarni topamiz, saytlarini tekshiramiz, model esa odam o‘zi tekshira oladigan bitta haqiqiy muammo atrofida birinchi xabarni yozadi. Studiyaning ishchi akkaunti yuboradi, mijoz javoblarini model olib boradi, odam kerak bo‘lganda esa yozgan odamni chaqiradi. Aloqadan kelgan lid darhol sizniki, navbatsiz.",
+      what: "Sovuq aloqalar: kompaniyalarni topamiz, saytlarini tekshiramiz, model esa qisqa birinchi xabar yozadi: saytdagi odam o‘zi tekshira oladigan ikki-uchta haqiqiy muammo va 12 soatda yangi sayt prototipini yig‘ib berish taklifi. Studiyaning ishchi akkaunti yuboradi, mijoz javoblarini model olib boradi, odam kerak bo‘lganda esa yozgan odamni chaqiradi. Aloqadan kelgan lid darhol sizniki, navbatsiz.",
       items: [
         {
           id: "portion",
@@ -516,8 +516,9 @@ export const uz: HelpCopy = {
           title: "Kompaniyaga yozish: «Bog‘lanish» va «Yuborish»",
           body: [
             "Sayt kartochkasida **«Bog‘lanish»** tugmasini bosing: panel saytni qaytadan ko‘rib chiqadi (bir daqiqagacha) va xat yozadi. Bu hali aloqa hisoblanmaydi.",
+            "Xat qisqa, 50–100 so‘z: kim yozayapti; uning saytidan ikki-uchta topilma — har biri joyi bilan (sahifa, ularning o‘z sarlavhasi) va mijoz shu sababli nima qilishi; qidiruvda ko‘rinish va yo‘qotishlar; agar bo‘lsa, uning nishasidagi loyihamiz; va savol — unga 12 soatda yangi sayt prototipini yig‘ib beraylikmi. Studiya hajmi va «2–4 barobar o‘sish» birinchi xatga yozilmaydi: har bir xatdagi bir xil iboralardan ommaviy tarqatmani taniydilar. Kimligimizni so‘rashsa — bu yozishmadagi javob.",
             "Xatni o‘qing va odamga moslab tuzating. Keyin **«Yuborish: @manzil»** — xat ishchi akkaunt navbatiga turadi. Shu daqiqadan lid ochilgan va sizga biriktirilgan, aloqa esa hisobga olingan.",
-            "Yuborishdan oldin panel xatni tekshiradi va nima noto‘g‘riligini yozadi: 40–200 so‘z; sayt manzili va devuz.studio bor; tekshiruvda yo‘q raqamlar yo‘q; «в топ», «гарантирую», «первое место», foizlar va emodzilar yo‘q; qidiruvda ko‘rinish va yo‘qotishlar, agar bo‘lsa, aytilgan.",
+            "Yuborishdan oldin panel xatni tekshiradi va nima noto‘g‘riligini yozadi: 40–150 so‘z; sayt manzili va devuz.studio bor; tekshiruvda yo‘q raqamlar yo‘q; «в топ», «гарантирую», «первое место», foizlar va emodzilar yo‘q; qidiruvda ko‘rinish va yo‘qotishlar, agar bo‘lsa, aytilgan; 12 soatlik prototip taklifi bor.",
             "Har qanday xodim istalgan kartochkani tayyorlab, yubora oladi — kartochka bosgan odamga biriktiriladi. Shuning uchun [kunlik to‘plamdan](#prospect-portion) boshlang: u yerda kompaniyalar allaqachon bo‘lingan.",
           ],
         },
@@ -563,7 +564,7 @@ export const uz: HelpCopy = {
           title: "Mijoz javob berdi: kim javob beradi",
           body: [
             "Ishchi akkaunt xatlariga model javob beradi — bir necha daqiqadan keyin, darhol emas (darhol javob robotga o‘xshaydi), studiya nomidan, «biz» deb. Uning har bir javobi bitta aniq qadam bilan tugaydi; biror narsa yuborishni va’da qilish unga taqiqlangan.",
-            "Model **sizni chaqiradi**, agar mijoz: rad etsa («yozmang», «qiziq emas»); odam yoki qo‘ng‘iroq so‘rasa; **tahlil, tijoriy taklif, smeta yoki fayl yuborishni so‘rasa** — unda o‘sha kuniyoq o‘zingiz yuboring; qisqa va tushunarsiz javob bersa. Yana — suhbat 12 replikadan beri davom etib, kelishuvga kelmasa yoki uning javobi tekshiruvdan o‘tmasa.",
+            "Model **sizni chaqiradi**, agar mijoz: rad etsa («yozmang», «qiziq emas»); odam yoki qo‘ng‘iroq so‘rasa; **tahlil, tijoriy taklif, smeta yoki fayl yuborishni so‘rasa** — unda o‘sha kuniyoq o‘zingiz yuboring; **prototip istasa** («ha, yig‘ib bering», «да, соберите») — uni kim yig‘ishini kelishib oling va havolani 12 soat ichida yuboring: xatda shuncha va’da qilganmiz; qisqa va tushunarsiz javob bersa. Yana — suhbat 12 replikadan beri davom etib, kelishuvga kelmasa yoki uning javobi tekshiruvdan o‘tmasa.",
             "Chaqirdi — sizga Telegramda sabab, mijoz so‘zlari va lid havolasi bilan «Касание · сайт» keladi, ostida esa «🙅 Клиент отказался» tugmasi: mijoz «qiziq emas» desa — bosing, aloqa [yopiladi](#prospect-close). Lid kartochkasida «Aloqa bo‘yicha birlamchi suhbat» bloki: «SI javob beryapti» yoki «siz javob berasiz — sabab». **«O‘zim javob beraman»** tugmasi suhbatni istalgan paytda modeldan olib qo‘yadi: keyin model jim turadi, mijozning har bir yangi xabari esa sizga Telegramda keladi — «Клиент написал — отвечаете вы», lid havolasi bilan. Tugmani bosgan odamga keladi, hatto u rahbar yoki ega bo‘lsa ham. Lid har holda sizniki. Lidni berishdi yoki uni navbatdan boshqa odam oldi — suhbat u bilan birga o‘tadi: mijoz xabarlari, qayta yozish va model imzosi endi lidning yangi egasida, oldingi egasining «O‘zim javob beraman» belgisi esa olib tashlanadi.",
             "Model vazifa, byudjet va muddatlarni aniqlab olgach, xayrlashadi, sizga esa «Первичка по касанию · сайт» brifi keladi. Keyingi suhbat sizniki.",
             "⚠️ O‘zingiz javob berayotgan bo‘lsangiz, mijozning yangi oddiy xabarlari Telegramda sizga kelmaydi — yozishmaga o‘zingiz qarab turing.",
