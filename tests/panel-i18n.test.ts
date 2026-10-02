@@ -245,18 +245,12 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   "«Взять в работу» va «Отклонить» tugmalari u yerda ham",
   // Варианты переноса срока задачи — кнопки бота.
   "«+1 час», «Завтра 18:00», «+3 дня», «Неделя»",
+  // вечерний отчёт по порциям в Telegram
+  "Bunday kompaniya «не сделано» emas",
 
   // кабинет и бот партнёра — отдельный продукт, по-русски
   "saytdagi kabinetida, «Промо-материалы» blokida ko‘radi: prevyu, «Скачать» va «Подпись к посту», yonida «Скопировать подпись»",
 ];
-/**
- * Подписи блока «Задачи» (content/admin-panel/tasks.ts), которые по-русски
- * совпали с подписями ещё не переведённых экранов: статус лида «в работе», напоминание «сделано», порция «не сделано», заявка «отменена»,
- * «Кому» и «Срок» в формах плана и счёта. На узбекской панели те экраны
- * пока русские, и инструкция зовёт их по-русски — это не ошибка перевода
- * задач. Уходит вместе с переводом тех экранов.
- */
-const SAME_RU_ELSEWHERE: ReadonlySet<string> = new Set(["новая", "в работе", "сделано", "не сделано", "отменена", "Взять в работу", "Кому", "Срок", "Поставить"]);
 
 /**
  * Польская инструкция — то же правило: кнопки как на польской панели.
@@ -303,7 +297,6 @@ function namesFollowPanel(locale: "uz" | "pl", exceptions: readonly string[]) {
     for (let text of texts) {
       for (const allowed of exceptions) text = text.replaceAll(allowed, "");
       for (const [, name] of text.matchAll(/«([^»]+)»/g)) {
-        if (SAME_RU_ELSEWHERE.has(name)) continue;
         const want = ruTo.get(name);
         assert.ok(!want, `${locale}: в инструкции «${name}», а на панели — «${want}»: ${text.slice(0, 120)}`);
       }
