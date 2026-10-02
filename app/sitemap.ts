@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { cases } from "@/content/cases";
+import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { listRazbors } from "@/lib/razbor/store";
 import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
 import { products } from "@/content/products";
@@ -51,6 +52,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // покупки, и находить он должен наш документ, а не чужой пересказ.
     { path: "offer", priority: 0.3, changeFrequency: "yearly" as const },
     { path: "licence", priority: 0.3, changeFrequency: "yearly" as const },
+    // Условия на макеты — тоже: клиент, получивший прототип, должен находить
+    // их по названию студии.
+    { path: MOCKUP_TERMS_PATH, priority: 0.3, changeFrequency: "yearly" as const },
     ...services.map((s) => ({
       path: `services/${s.slug}`,
       priority: 0.8,
