@@ -276,6 +276,79 @@ export async function deleteMyCommands(scope: { type: "chat"; chat_id: number })
   return call("deleteMyCommands", { scope });
 }
 
+/**
+ * Ответ метода целиком — для get-методов, которым нужен сам результат.
+ * Не ответил или ответил ошибкой — null: вызывающий решает, что делать.
+ */
+async function callResult<T>(method: string, payload: unknown): Promise<T | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+  try {
+    const response = await roadFetch(`${API}${token}/${method}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      console.error("telegram", method, response.status, await response.text());
+      return null;
+    }
+    const data = (await response.json().catch(() => null)) as { result?: T } | null;
+    return data?.result ?? null;
+  } catch (error) {
+    console.error("telegram", method, error);
+    return null;
+  }
+}
+
+/** Имя, описание и короткое описание бота — для одного языка или по умолчанию. */
+export type BotProfileField = "name" | "description" | "short_description";
+
+const PROFILE_METHOD: Record<BotProfileField, string> = {
+  name: "MyName",
+  description: "MyDescription",
+  short_description: "MyShortDescription",
+};
+
+/** Что стоит сейчас. null — Telegram не ответил: тогда и менять не берёмся. */
+export async function getMyProfileField(field: BotProfileField, languageCode?: string): Promise<string | null> {
+  const result = await callResult<Record<string, string>>(
+    `get${PROFILE_METHOD[field]}`,
+    languageCode ? { language_code: languageCode } : {},
+  );
+  return result ? (result[field] ?? "") : null;
+}
+
+export async function setMyProfileField(field: BotProfileField, value: string, languageCode?: string): Promise<boolean> {
+  return call(`set${PROFILE_METHOD[field]}`, { [field]: value, ...(languageCode ? { language_code: languageCode } : {}) });
+}
+
+/**
+ * Аватар бота. Telegram берёт только JPG и только новой загрузкой — каждый
+ * вызов добавляет фото в историю профиля, поэтому зовётся он один раз на
+ * версию картинки (lib/qualify/profile.ts).
+ */
+export async function setMyProfilePhoto(jpeg: Uint8Array<ArrayBuffer>): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return false;
+  const form = new FormData();
+  form.append("photo", JSON.stringify({ type: "static", photo: "attach://avatar" }));
+  form.append("avatar", new Blob([jpeg], { type: "image/jpeg" }), "avatar.jpg");
+  try {
+    const response = await roadFetch(`${API}${token}/setMyProfilePhoto`, {
+      method: "POST",
+      body: form,
+      signal: AbortSignal.timeout(CALL_TIMEOUT_MS * 2),
+    });
+    if (!response.ok) console.error("telegram", "setMyProfilePhoto", response.status, await response.text());
+    return response.ok;
+  } catch (error) {
+    console.error("telegram", "setMyProfilePhoto", error);
+    return false;
+  }
+}
+
 export async function sendMessage(chatId: number | string, text: string): Promise<boolean> {
   return call("sendMessage", {
     chat_id: chatId,
