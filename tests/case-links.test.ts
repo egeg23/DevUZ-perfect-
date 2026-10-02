@@ -25,6 +25,7 @@ test("у каждого проекта витрины есть ссылка «П
     transtelecom: `${SHOWCASE}/ttc`,
     tranio: `${SHOWCASE}/tranio`,
     medacademy: `${SHOWCASE}/medacademy`,
+    "arsenal-d": `${SHOWCASE}/webname`,
   };
   for (const [slug, url] of Object.entries(expected)) {
     const item = cases.find((c) => c.slug === slug);
