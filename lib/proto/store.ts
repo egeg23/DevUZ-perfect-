@@ -12,6 +12,8 @@ import { newAccessToken } from "@/lib/store/access";
 import type { ProtoProblem } from "@/lib/proto/check";
 import { missingParts, type ProtoFacts } from "@/lib/proto/facts";
 import { buildProto } from "@/lib/proto/render";
+import { STAMP_VERSION, newSeed, stampHtml, type Stamp } from "@/lib/proto/stamp";
+import { mockupTermsUrl } from "@/lib/proto/booking";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -107,7 +109,12 @@ export async function saveProto(input: {
       name: input.facts.name,
       source: input.facts.source,
       facts: input.facts,
-      html: build.html,
+      // Отпечаток — у каждого прототипа свой (lib/proto/stamp): правило
+      // владельца для всех макетов, CLAUDE.md «Макеты и прототипы».
+      ...(() => {
+        const stamped = stampHtml(build.html, newSeed());
+        return { html: stamped.html, stamp: stamped.stamp };
+      })(),
       problems: build.problems,
       status: build.problems.length ? "draft" : "ready",
       created_by: input.by?.id ?? null,
@@ -151,11 +158,113 @@ export async function protoById(id: string): Promise<Proto | null> {
 export async function protoPage(token: string): Promise<{ html: string; id: string } | null> {
   const db = serviceClient();
   if (!db) return null;
-  const { data } = await db.from("protos").select("id, html, status").eq("token", token).maybeSingle();
+  const { data } = await db
+    .from("protos")
+    .select("id, html, status, stamp, facts")
+    .eq("token", token)
+    .maybeSingle();
   if (!data) return null;
   // Черновик наружу не отдаётся: это страница, не прошедшая проверку.
   if (data.status === "draft") return null;
+  const stamp = data.stamp as Stamp | null;
+  if (!stamp || stamp.v < STAMP_VERSION) {
+    const upgraded = await upgradeProto(String(data.id), String(data.html), data.facts as ProtoFacts, stamp);
+    if (upgraded) return { html: upgraded, id: String(data.id) };
+  }
   return { html: String(data.html), id: String(data.id) };
+}
+
+/**
+ * Прототип, собранный до отпечатков и до ссылки на условия, — перерисовать.
+ *
+ * Правило владельца — для всех макетов, сделанных раньше тоже. Страница
+ * собирается заново из тех же фактов: то, что клиенту отправили, по
+ * содержанию не меняется, добавляются подвал с условиями и отпечаток. Не
+ * собралась (проверка с тех пор стала строже) — старая страница остаётся,
+ * к ней дописывается строка про условия и ставится отпечаток.
+ *
+ * Условие в update — тот же отпечаток, что прочитали: открыли дважды в одну
+ * секунду — перерисует один, второй отдаст уже записанное.
+ */
+export async function upgradeProto(
+  id: string,
+  html: string,
+  facts: ProtoFacts,
+  stamp: Stamp | null,
+): Promise<string | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const build = buildProto(facts);
+  let base = build && !build.missing.length && !build.problems.length && build.html ? build.html : html;
+  if (!base.includes("mockup-terms")) {
+    const locale = facts?.locale === "uz" ? "uz" : "ru";
+    const line =
+      locale === "uz"
+        ? "Prototip DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin —"
+        : "Прототип принадлежит DevUz Studio. Использовать его можно только по договору —";
+    const link = locale === "uz" ? "foydalanish shartlari" : "условия использования";
+    base = base.replace(
+      /<\/footer>/,
+      `<span>${line} <a href="${mockupTermsUrl(locale)}">${link}</a></span></footer>`,
+    );
+  }
+  const stamped = stampHtml(base, newSeed());
+  const query = db.from("protos").update({ html: stamped.html, stamp: stamped.stamp }).eq("id", id);
+  const { data } = await (stamp ? query.eq("stamp->>seed", stamp.seed) : query.is("stamp", null)).select("html");
+  if (data?.length) return stamped.html;
+  const { data: fresh } = await db.from("protos").select("html").eq("id", id).maybeSingle();
+  return fresh ? String(fresh.html) : null;
+}
+
+/** Перерисовать все старые прототипы — пачкой, из панели. */
+export async function upgradeAllProtos(limit = 50): Promise<number> {
+  const db = serviceClient();
+  if (!db) return 0;
+  const { data } = await db.from("protos").select("id, html, facts, stamp").is("stamp", null).limit(limit);
+  let done = 0;
+  for (const row of data ?? []) {
+    if (await upgradeProto(String(row.id), String(row.html), row.facts as ProtoFacts, null)) done += 1;
+  }
+  return done;
+}
+
+/**
+ * Журнал показа: открытие живым человеком — время, адрес, браузер, откуда
+ * пришёл. Доказательство того, что клиент видел макет (условия, раздел 5).
+ */
+export async function logView(id: string, input: { ip: string | null; userAgent: string | null; referer: string | null }): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  await db.from("proto_views").insert({
+    proto_id: id,
+    ip: input.ip?.slice(0, 64) ?? null,
+    user_agent: input.userAgent?.slice(0, 400) ?? null,
+    referer: input.referer?.slice(0, 400) ?? null,
+  });
+}
+
+/** Отпечатки всех прототипов — для «Проверить сайт». */
+export async function protoStamps(): Promise<
+  { id: string; name: string; source: string; created_at: string; sent_at: string | null; opened_at: string | null; opens: number; stamp: Stamp }[]
+> {
+  const db = serviceClient();
+  if (!db) return [];
+  const { data } = await db
+    .from("protos")
+    .select("id, name, source, created_at, sent_at, opened_at, opens, stamp")
+    .not("stamp", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1000);
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    name: String(row.name),
+    source: String(row.source),
+    created_at: String(row.created_at),
+    sent_at: (row.sent_at as string | null) ?? null,
+    opened_at: (row.opened_at as string | null) ?? null,
+    opens: Number(row.opens ?? 0),
+    stamp: row.stamp as Stamp,
+  }));
 }
 
 /**
@@ -214,4 +323,17 @@ export async function markSent(id: string, by: Staff | null): Promise<string | n
   if (!data) return null;
   await record("proto.sent", { actorStaffId: by?.id ?? null, targetType: "proto", targetId: id });
   return String(data.token);
+}
+
+/** Последние открытия прототипа из журнала показа. */
+export async function protoViews(id: string, limit = 5): Promise<{ at: string; ip: string | null }[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  const { data } = await db
+    .from("proto_views")
+    .select("at, ip")
+    .eq("proto_id", id)
+    .order("at", { ascending: false })
+    .limit(limit);
+  return (data ?? []).map((row) => ({ at: String(row.at), ip: (row.ip as string | null) ?? null }));
 }

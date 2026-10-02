@@ -1362,6 +1362,16 @@ export const uz: HelpCopy = {
             "Ochib, ikkinchi marta qaytdi — bugun qo‘ng‘iroq qiling. Ikki kunda ochmadi — havola unga yetib bormagan. Prototipdagi «Yozilish» (rus tilidagi sahifada «Записаться») tugmasi mijozning o‘z Telegrami yoki WhatsApp’ini ochadi — shunda u buning ishlashini ko‘radi.",
           ],
         },
+        {
+          id: "trace",
+          title: "Yashirin iz va begona saytni tekshirish",
+          body: [
+            "Har bir prototipga yig‘ishda yashirin iz joylanadi: ranglar tuslari, burchak yumaloqligi, harflar oralig‘i va qator balandligi ko‘z ajrata olmaydigan miqdorga siljitiladi, siljishlar to‘plami esa har bir prototipda o‘ziniki. Sahifada bu haqda bir so‘z ham yo‘q, nima siljitilganini faqat panel biladi. Avval yig‘ilgan prototiplar izni va shartlar haqidagi qatorni o‘zi oladi — mijoz birinchi marta ochganda yoki siz shu bo‘limga kirganingizda.",
+            "Har bir prototipning pastki qismida maketlardan foydalanish shartlariga (devuz.studio/uz/mockup-terms) havola bilan «Prototip DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin» qatori bor: jarima mijozga e’lon qilingan narxning 200%, agar narx aytilmagan bo‘lsa — shunday ishlar uchun narxlarimizning 200%; shartlar mijoz sayti tilga olingan messenjerdagi yozishma yoki maketni ochish bilan qabul qilinadi.",
+            "«Saytni maketimizga tekshirish»: begona sayt manzilini kiriting va «Tekshirish» tugmasini bosing. Panel uning uslublarini o‘qiydi va barcha prototiplar izlari bilan solishtiradi. «bizning maket — aniq» — yashirin qiymatlarning yarmidan ko‘pi mos keldi, tasodifan bunday bo‘lmaydi; «maketimizga o‘xshaydi» — bir nechtasi mos keldi, ular orasida rang ham bor. Iz bitta prototipga ishora qilsa, panel shuni yozadi — u shu mijozga ko‘rsatilgan — va yonida ochilgan sanalar va manzillar.",
+            "Ko‘rsatish jurnali prototipni tirik odam har bir ochishini yozadi: vaqt, manzil va brauzer; messenjer prevyulari va sizning paneldan ochishlaringiz yozilmaydi. Bu mijoz maketni ko‘rgani va shartlarni qabul qilganining dalili. Da’vo uchun tekshiruv natijasini saqlang va saytni notarial ko‘rikdan o‘tkazishga buyurtma bering.",
+          ],
+        },
       ],
     },
 

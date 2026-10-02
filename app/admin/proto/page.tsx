@@ -1,3 +1,5 @@
+import { after } from "next/server";
+
 import { buildAction, sentAction } from "@/app/admin/proto/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { CopyMessage } from "@/components/admin/copy-message";
@@ -5,7 +7,8 @@ import { protoDict, protoNichePl, protoResultDict, protoWhen } from "@/content/a
 import { PROTO_NICHES, protoNicheByKey, type ProtoNiche } from "@/content/proto/models";
 import { requireAdmin } from "@/lib/admin/guard";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
-import { protosList } from "@/lib/proto/store";
+import { protosList, upgradeAllProtos } from "@/lib/proto/store";
+import { traceSite } from "@/lib/proto/trace-store";
 import { absoluteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +66,11 @@ export default async function ProtoPage({
   const results = pick(protoResultDict, locale);
   const notice = r ? (Object.hasOwn(results, r) ? results[r as keyof typeof results](d ?? "") : r) : null;
   const rows = await protosList();
+  // Прототипы, собранные до отпечатков и ссылки на условия, перерисовываются
+  // фоном — правило владельца для всех макетов, и сделанных раньше тоже.
+  after(() => upgradeAllProtos(50).catch(() => 0));
+  const check = (query.check ?? "").trim();
+  const traced = check ? await traceSite(check) : null;
 
   /*
    * Поля можно заполнить ссылкой: /admin/proto?url=tirex.uz&services=...
@@ -88,6 +96,55 @@ export default async function ProtoPage({
           {notice}
         </p>
       ) : null}
+
+      {/* Проверка чужого сайта на наш макет — по скрытому отпечатку
+          (lib/proto/stamp, lib/proto/trace). Форма GET: результат — по
+          адресу, его можно сохранить для претензии. */}
+      <section className="mt-6 rounded-xl border border-line bg-surface p-4 sm:p-5">
+        <h2 className="text-sm font-semibold">{t.checkTitle}</h2>
+        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted">{t.checkIntro}</p>
+        <form method="get" className="mt-3 flex flex-wrap gap-2">
+          <input name="check" defaultValue={check} placeholder="https://example.uz" className={`${INPUT} max-w-md`} />
+          <button className={BUTTON}>{t.checkButton}</button>
+        </form>
+        {traced ? (
+          traced.ok ? (
+            <div className="mt-4 space-y-3 text-sm">
+              <p className="text-xs text-faint">
+                {traced.url} · {t.checkStats(traced.cssFiles, traced.signals)}
+              </p>
+              {traced.hits.length ? (
+                <>
+                  {traced.hits.map((hit) => (
+                    <div key={hit.id} className="rounded-lg border border-line bg-surface-2/40 px-3 py-2">
+                      <p>
+                        <span className={hit.match.level === "strong" ? "font-semibold text-red-300" : "font-semibold text-gold"}>
+                          {hit.match.level === "strong" ? t.checkStrong : t.checkLikely}
+                        </span>
+                        {" · "}
+                        {hit.name} · {hit.source} · {protoWhen(hit.created_at, locale)}
+                      </p>
+                      <p className="mt-1 text-xs text-muted">{t.checkMatch(hit.match.matched, hit.match.total)}</p>
+                      {traced.attributed === hit.id ? <p className="mt-1 text-xs text-text">{t.checkClient}</p> : null}
+                      {hit.views.length ? (
+                        <p className="mt-1 text-xs text-faint">
+                          {t.checkViews} {hit.views.map((v) => `${protoWhen(v.at, locale)}${v.ip ? ` (${v.ip})` : ""}`).join(", ")}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                  {traced.attributed ? null : <p className="text-xs text-muted">{t.checkAmbiguous}</p>}
+                  <p className="text-xs leading-relaxed text-muted">{t.checkEvidence}</p>
+                </>
+              ) : (
+                <p className="text-muted">{t.checkNone}</p>
+              )}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-gold">{t.checkError(traced.error)}</p>
+          )
+        ) : null}
+      </section>
 
       <form action={buildAction} className="mt-6 rounded-xl border border-line bg-surface p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-2">

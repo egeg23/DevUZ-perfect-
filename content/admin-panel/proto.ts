@@ -217,6 +217,55 @@ export const protoDict = defineDict({
   draft: { ru: "черновик", uz: "qoralama", pl: "szkic" },
   ready: { ru: "готов", uz: "tayyor", pl: "gotowy" },
   sent: { ru: "отправлен", uz: "yuborilgan", pl: "wysłany" },
+  checkTitle: {
+    ru: "Проверить сайт на наш макет",
+    uz: "Saytni maketimizga tekshirish",
+    pl: "Sprawdź stronę pod kątem naszej makiety",
+  },
+  checkIntro: {
+    ru: "Вставьте адрес чужого сайта: панель прочитает его стили и сверит со скрытыми отпечатками всех наших прототипов. Отпечаток на странице не виден и переживает копирование через F12 и переписывание нейросетью.",
+    uz: "Begona sayt manzilini kiriting: panel uning uslublarini o‘qiydi va barcha prototiplarimizning yashirin izlari bilan solishtiradi. Iz sahifada ko‘rinmaydi va F12 orqali nusxalash hamda neyrotarmoq bilan qayta yozishdan keyin ham saqlanadi.",
+    pl: "Wklej adres cudzej strony: panel odczyta jej style i porówna je z ukrytymi odciskami wszystkich naszych prototypów. Odcisku nie widać na stronie i przetrwa kopiowanie przez F12 oraz przepisanie przez sieć neuronową.",
+  },
+  checkButton: { ru: "Проверить", uz: "Tekshirish", pl: "Sprawdź" },
+  checkStats: {
+    ru: (files: number, values: number) => `Прочитано файлов стилей: ${files}, значений оформления: ${values}.`,
+    uz: (files: number, values: number) => `O‘qilgan uslub fayllari: ${files}, bezak qiymatlari: ${values}.`,
+    pl: (files: number, values: number) => `Odczytano plików stylów: ${files}, wartości wyglądu: ${values}.`,
+  },
+  checkNone: {
+    ru: "Отпечатков наших прототипов не нашлось.",
+    uz: "Prototiplarimiz izlari topilmadi.",
+    pl: "Nie znaleziono odcisków naszych prototypów.",
+  },
+  checkStrong: { ru: "наш макет — точно", uz: "bizning maket — aniq", pl: "nasza makieta — na pewno" },
+  checkLikely: { ru: "похоже на наш макет", uz: "maketimizga o‘xshaydi", pl: "podobne do naszej makiety" },
+  checkMatch: {
+    ru: (matched: number, total: number) => `совпало ${matched} из ${total} скрытых значений`,
+    uz: (matched: number, total: number) => `${total} ta yashirin qiymatdan ${matched} tasi mos keldi`,
+    pl: (matched: number, total: number) => `zgodnych ${matched} z ${total} ukrytych wartości`,
+  },
+  checkClient: {
+    ru: "Отпечаток именно этого прототипа — показывали этому клиенту.",
+    uz: "Aynan shu prototipning izi — shu mijozga ko‘rsatilgan.",
+    pl: "Odcisk właśnie tego prototypu — pokazany temu klientowi.",
+  },
+  checkAmbiguous: {
+    ru: "Макет наш, но кому именно его показывали, по отпечатку не различить — смотрите журнал показа.",
+    uz: "Maket bizniki, lekin kimga ko‘rsatilganini iz bo‘yicha ajratib bo‘lmaydi — ko‘rsatish jurnaliga qarang.",
+    pl: "Makieta jest nasza, ale komu ją pokazano, odcisk nie rozstrzyga — sprawdź dziennik pokazów.",
+  },
+  checkViews: { ru: "Открывали:", uz: "Ochilgan:", pl: "Otwierano:" },
+  checkError: {
+    ru: (error: string) => `Сайт не открылся: ${error}`,
+    uz: (error: string) => `Sayt ochilmadi: ${error}`,
+    pl: (error: string) => `Strona się nie otworzyła: ${error}`,
+  },
+  checkEvidence: {
+    ru: "Для претензии: сохраните этот результат и закажите нотариальный осмотр сайта — отпечаток и журнал показа прикладываются к нему. Штраф по условиям — 200% от заявленной клиенту стоимости.",
+    uz: "Da’vo uchun: ushbu natijani saqlang va saytni notarial ko‘rikdan o‘tkazishga buyurtma bering — iz va ko‘rsatish jurnali unga ilova qilinadi. Shartlarga ko‘ra jarima — mijozga e’lon qilingan narxning 200%.",
+    pl: "Do wezwania: zapisz ten wynik i zamów notarialne oględziny strony — odcisk i dziennik pokazów dołącza się do nich. Kara według warunków — 200% ceny zadeklarowanej klientowi.",
+  },
   auto: {
     ru: "собран сам, для касания",
     uz: "o‘zi yig‘ildi, aloqa uchun",
