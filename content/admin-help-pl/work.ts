@@ -86,6 +86,14 @@ export const workSections: Record<string, HelpEntry> = {
     what: "Praca, na którą już się umówiliśmy: na jakim etapie, do kiedy, na jaką kwotę, kto prowadzi i ile klient zapłacił. Od projektu zależą naliczenia w «Finansach»: bez projektu z kwotą nikt nie dostanie pieniędzy za transakcję.",
     items: [
       {
+        id: "tasks",
+        title: "Zadania w projekcie",
+        body: [
+          "W karcie projektu, zaraz pod nazwą, jest **«Zadania w projekcie»**: wszystkie zadania do niego przypisane — od kogo, dla kogo, termin i co się z nimi teraz dzieje. Otwarte na górze, od najbliższego terminu, zamknięte niżej. Jeśli zadanie jest dla Ciebie albo Ty je zleciłeś, przyciski są tu te same co na stronie głównej.",
+          "Żeby zlecić zadanie w projekcie, kliknij **«Zleć zadanie»** po prawej: otworzy się strona główna z formularzem, w którym ten projekt jest już wybrany. Zadanie można przypisać do projektu tylko wtedy, gdy projekt jest założony tutaj, w «Projektach» — dlatego najpierw zakłada się projekt klienta. Więcej o zadaniach — w punkcie [zadania](#leads-tasks).",
+        ],
+      },
+      {
         id: "create",
         title: "Załóż projekt",
         body: {

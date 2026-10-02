@@ -271,6 +271,8 @@ const STILL_RUSSIAN_IN_PL: readonly string[] = [
   "o odpowiedzi klienta jest tylko «🙅 Клиент отказался»",
   "wiadomość z przyciskiem «Команда»",
   "Przyciski «Взять в работу» i «Отклонить» działają i tam",
+  // Варианты переноса срока задачи — кнопки бота.
+  "«+1 час», «Завтра 18:00», «+3 дня», «Неделя»",
 
   // кабинет и бот партнёра — отдельный продукт, по-русски
   "w bloku «Промо-материалы»: podgląd, «Скачать» i «Подпись к посту» z przyciskiem «Скопировать подпись»",

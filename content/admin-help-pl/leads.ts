@@ -1,6 +1,15 @@
 import type { HelpCopy } from "../admin-help";
 import type { HelpEntry } from "@/lib/admin/help";
 
+/** Zadania w Telegramie — wspólne dla wszystkich ról; ostatni akapit każda rola ma swój. */
+const TASKS_BOT = [
+  "Gdy ktoś zleca Ci zadanie, bot wysyła wiadomość: od kogo, co zrobić, termin — i przycisk **«✅ Взять в работу»** (przyjmij do realizacji). Po kliknięciu w tej samej wiadomości pojawiają się **«✅ Сделано»** (zrobione), **«✖ Не сделано»** (niezrobione) i **«🕑 Перенести срок»** (przesuń termin). To, co klikniesz w Telegramie, od razu widać w panelu, i odwrotnie: przyjmiesz zadanie w panelu — przyciski w Telegramie zmienią się same.",
+  "«🕑 Перенести срок» proponuje «+1 час», «Завтра 18:00», «+3 дня», «Неделя» i «✏️ Своя дата» (+1 godzina, jutro 18:00, +3 dni, tydzień, własna data). Po «✏️ Своя дата» napisz botowi termin w jednej wiadomości — dzień, miesiąc i godzinę czasu taszkenckiego, na przykład `05.10 15:00`. Bot czeka na taką wiadomość 30 minut.",
+  "Osobie, która zleciła zadanie, bot pisze o każdym kroku: przyjął(ęła) do realizacji, zrobione, niezrobione, przesunął(ęła) termin na taki a taki dzień i godzinę. Do wykonawcy bot pisze, jeśli zlecający przesunął termin albo anulował zadanie.",
+  "Przypomnienia: jeśli nowe zadanie nie zostanie przyjęte w ciągu 30 minut od wiadomości bota — bot przypomni; godzinę przed terminem — przypomni jeszcze raz; gdy termin minie — raz napisze i do wykonawcy, i do zlecającego. Po przesunięciu terminu «za godzinę termin» i «po terminie» przyjdą od nowa — już do nowego terminu.",
+  "Wiadomości o działaniach — nowe zadanie, przyjęcie, zrobione, przesunięcie, anulowanie — przychodzą od razu, w każdy dzień, poza nocą: od 23:00 do 07:00 czasu taszkenckiego bot milczy, a to, co przyszło w nocy, dotrze o 07:00. Przypomnienia — «nie przyjęto», «za godzinę termin», «po terminie» — tylko w dni robocze od 09:00 do 19:00, jak porcja dnia. W panelu wszystko widać od razu, a odpowiedź na kliknięty przycisk przychodzi o każdej porze.",
+];
+
 /**
  * Польская инструкция, часть первая: шапка страницы инструкций и раздел
  * «Лиды» (/admin) — главная, очередь, карточка лида, напоминания.
@@ -35,25 +44,64 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "Co jest na stronie głównej",
         body: {
           manager: [
-            "Na górze są kafelki: **«do wypłaty»** — ile już zarobiłeś, a jeszcze nie dostałeś (niżej drobnym drukiem — ile czeka, aż klient dopłaci), **«leady w toku»**, **«pilny kontakt»** i **«wpływy w miesiącu»** z Twoich projektów.",
+            "Na samym początku strony głównej jest blok [«Zadania»](#leads-tasks): co zlecono Tobie, co Ty zleciłeś i formularz «Zleć zadanie». Niżej są kafelki: **«do wypłaty»** — ile już zarobiłeś, a jeszcze nie dostałeś (niżej drobnym drukiem — ile czeka, aż klient dopłaci), **«leady w toku»**, **«pilny kontakt»** i **«wpływy w miesiącu»** z Twoich projektów.",
             "Jeśli kierownik ustalił Ci plan kontaktów, nad kafelkami zobaczysz wiersz w rodzaju «Do planu zostało 12 — w tym tygodniu 18 z 30». Szczegóły — w punkcie [plan kontaktów](#prospect-plan).",
             "Niżej: [«Pilny kontakt»](#leads-urgent) — Twoje leady, które od dawna stoją w miejscu; «Rekomendacje na tydzień» — co poprawić (zob. [rekomendacje](#leads-coach)); [«Plan i wykonanie»](#leads-plan-fact) — cele, które Ci wyznaczono; a na samym dole — [lista leadów](#leads-list).",
           ],
           head: [
-            "Na początku — **«Czeka na Twoją decyzję»**: prośby menedżerów o przekazanie leada koledze. Decydujesz Ty albo właściciel — szczegóły w punkcie [przekazanie leada](#leads-transfer).",
+            "Na początku — **«Czeka na Twoją decyzję»**: prośby menedżerów o przekazanie leada koledze. Decydujesz Ty albo właściciel — szczegóły w punkcie [przekazanie leada](#leads-transfer). Pod nimi — blok [«Zadania»](#leads-tasks): co zlecono Tobie i co Ty zleciłeś.",
             "Kafelki liczą Ciebie i Twój zespół razem: **«do wypłaty»** — tylko Twoje saldo, **«leady zespołu w toku»**, **«pilny kontakt»**, **«wpływy w tygodniu»**.",
             "Dalej: «Na dziś» — poranne wskazówki do Twoich leadów, [«Pilny kontakt»](#leads-urgent) dla Ciebie i zespołu z imionami, [«Zespół w tym tygodniu»](#leads-team-week), rekomendacje dla zespołu i dla Ciebie, «Najlepsi w tygodniu», [«Plan i wykonanie»](#leads-plan-fact) i [lista leadów](#leads-list).",
             "Zespół to menedżerowie przypisani do Ciebie w sekcji [«Zespół»](/admin/team). Dopóki nie masz zespołu, jego bloków na stronie głównej nie ma.",
           ],
           admin: [
             "Twoja strona główna jest podzielona na zakładki, żeby nie przewijać jednej długiej listy. Zakładka zapisuje się w adresie — możesz ją dodać do zakładek przeglądarki.",
-            "**«Dziś»** — od czego zacząć dzień: «Czeka na Twoją decyzję» (prośby o przekazanie leada), «Umowy do podpisu», kafelki z pieniędzmi, wskazówki «Na dziś» (przycisk «wygeneruj ponownie» zużywa jedno wywołanie modelu), «Pilny kontakt» dla całego studia i terminy podatkowe na dwa tygodnie.",
+            "**«Dziś»** — od czego zacząć dzień: «Czeka na Twoją decyzję» (prośby o przekazanie leada), blok [«Zadania»](#leads-tasks), «Umowy do podpisu», kafelki z pieniędzmi, wskazówki «Na dziś» (przycisk «wygeneruj ponownie» zużywa jedno wywołanie modelu), «Pilny kontakt» dla całego studia i terminy podatkowe na dwa tygodnie.",
             "**«Leady»** — [lista leadów](#leads-list) ze wszystkimi filtrami. Złota liczba na zakładce — ile leadów jest teraz wolnych.",
             "**«Finanse»** — «Kasa w podziale na miesiące» (wpływy i wydatki z pół roku, pod każdym miesiącem — różnica) i «Oczekiwane płatności»: ile jeszcze klienci mają zapłacić w aktywnych projektach.",
             "**«Zespół»** — [tabela tygodnia](#leads-team-week), najlepsi, rekomendacje dla każdego i [«Plan i wykonanie»](#leads-plan-fact), gdzie ustalasz i zmieniasz cele.",
             "Ruch na stronie z Metryki (Yandex Metrica) i Google Analytics to nie zakładka, tylko osobna sekcja [«Ruch»](/admin/traffic): widzisz ją Ty i kierownicy. Stare zakładki przeglądarki do dawnej zakładki prowadzą tam samo.",
           ],
         },
+      },
+      {
+        id: "tasks",
+        title: "Zadania: zlecanie, przyjmowanie, zamykanie",
+        body: [
+          "Blok **«Zadania»** stoi na stronie głównej nad wszystkim innym (u właściciela — na zakładce «Dziś»). Zadanie może zlecić każdy pracownik każdemu, także sobie: menedżer — kierownikowi, kierownik — właścicielowi, ktokolwiek — komukolwiek. Zadanie widzą zlecający i wykonawca; jeśli dotyczy projektu — także wszyscy, którzy otwierają kartę tego projektu.",
+          "**«Dla mnie»** — zadania dla Ciebie: na górze najbliższy termin, niżej dalsze, zadania bez terminu — na samym końcu. Nowe jest oznaczone «nowe» i czeka na przycisk **«Przyjmij do realizacji»**: dzięki temu zlecający widzi, że zadanie zobaczyłeś i przyjąłeś. Przyjęte jest «w toku», a pod nim są **«Zrobione»** i **«Niezrobione»**. Zadanie, którego termin minął, jest podświetlone na czerwono i oznaczone «po terminie».",
+          "**«Przesuń termin»** otwiera warianty: «+1 godz.», «Jutro 18:00», «+3 dni», «Tydzień» — albo własna data i godzina z przyciskiem «Przesuń na». «+1 godz.», «+3 dni» i «Tydzień» liczą się od terminu, a jeśli już minął albo terminu nie było — od bieżącej chwili, żeby nowy termin nie wypadł w przeszłości. Zadanie bez terminu ma w tym miejscu **«Ustal termin»** z tymi samymi wariantami. Termin przesuwa i wykonawca, i zlecający — drugiej stronie bot od razu pisze nowy termin. Każde przesunięcie zostaje w historii zadania: stary termin, nowy i kto przesunął.",
+          "**«Zleciłem»** — zadania, które zleciłeś innym, i co się z nimi teraz dzieje: «nowe» (jeszcze nieprzyjęte), «w toku», «zrobione», «niezrobione», «po terminie». Zamknięte są tu widoczne jeszcze przez tydzień. «Zrobione» i «Niezrobione» klika tylko wykonawca — dlatego «zrobione» zawsze znaczy, że zrobił to sam wykonawca. Możesz przesunąć termin albo kliknąć **«Anuluj zadanie»**, jeśli zlecono je przez pomyłkę albo nie jest już potrzebne: zadanie stanie się «anulowane», wykonawca dostanie wiadomość, a przyciski w jego Telegramie zmienią się na «🚫 Задача отменена» (zadanie anulowane).",
+          "**«Zleć zadanie»** — na dole bloku: «Komu», «Co zrobić», «Szczegóły (opcjonalnie)», «Projekt (opcjonalnie)» i «Termin» — «dziś do 18:00», «jutro» i «za 3 dni» (oba do 18:00), «bez terminu» albo «własna data». Czas wszędzie taszkencki. Projekt wybiera się z otwartych projektów sekcji [«Projekty»](/admin/projects): najpierw zakłada się tam projekt klienta, potem można przypisywać do niego zadania. Ani projekt, ani termin nie są obowiązkowe. Gdy tylko zadanie zostanie zlecone, bot od razu pisze do wykonawcy na Telegramie. Zadanie dla siebie od razu jest «w toku» — nie trzeba go przyjmować i bot o nim nie pisze. Kto co zlecił, przyjął, zamknął, przesunął i anulował, zapisuje się w dzienniku działań.",
+        ],
+      },
+      {
+        id: "tasks-filter",
+        title: "Kolejność, grupy i projekty w zadaniach",
+        body: [
+          "Domyślnie zadania idą od najbliższego terminu do najdalszego: co się pali, jest na górze. Zadania bez terminu — na końcu, najnowsze pierwsze. W «Zleciłem» najpierw są otwarte, niżej — zamknięte w ciągu tygodnia.",
+          "Nad listami jest filtr. **«Grupuj»**: «bez grupowania» (po prostu według terminu), «według terminu» — grupy «Po terminie», «Termin dziś», «Termin jutro», «W ciągu 7 dni», «Później», «Bez terminu»; «według projektu» — zadania każdego projektu razem, «Bez projektu» na końcu; «według osoby» — w «Dla mnie» według zlecającego, w «Zleciłem» — według wykonawcy. Wewnątrz grupy kolejność jest ta sama — od najbliższego terminu.",
+          "**«Projekt»** zostawia zadania jednego projektu albo «Bez projektu». Wybierz i kliknij **«Pokaż»**. Wybór zapisuje się w adresie strony: nie resetuje się po kliknięciu przycisków w zadaniach, a stronę z nim możesz dodać do zakładek przeglądarki.",
+          "Zadanie z projektem ma w wierszu jego nazwę — kliknij, a otworzy się karta projektu. W karcie projektu są wszystkie jego zadania i link «Zleć zadanie»: prowadzi na stronę główną z tym projektem już wybranym w formularzu.",
+        ],
+      },
+      {
+        id: "tasks-bot",
+        title: "Zadania w Telegramie i przypomnienia",
+        body: {
+          manager: [...TASKS_BOT, "Jeśli nie potrzebujesz wiadomości o zadaniach w Telegramie, wyłącza je kierownik albo właściciel — polem «Zadania» w Twoich powiadomieniach. Zadania zostają przy tym na stronie głównej panelu, a dźwięk w przeglądarce działa jak wcześniej."],
+          head: [...TASKS_BOT, "Wiadomości o zadaniach wyłącza się polem «Zadania» w [powiadomieniach](#team-notices) danej osoby — u siebie i u swoich menedżerów zmieniasz je w sekcji «Zespół». Zadania zostają przy tym na stronie głównej, a dźwięk w przeglądarce działa."],
+          admin: [...TASKS_BOT, "Wiadomości o zadaniach wyłącza się polem «Zadania» w [powiadomieniach](#team-notices) — u każdego pracownika, w sekcji «Zespół». Zadania zostają przy tym na stronie głównej, a dźwięk w przeglądarce działa."],
+        },
+      },
+      {
+        id: "tasks-alerts",
+        title: "Dźwięk i powiadomienia w przeglądarce",
+        body: [
+          "Dopóki panel jest otwarty — w dowolnej sekcji — co 45 sekund pyta serwer, czy jest coś nowego: zadanie zlecone Tobie, przesunięcie terminu albo anulowanie Twojego zadania przez zlecającego lub krok w zadaniu, które Ty zleciłeś (przyjęte, zrobione, niezrobione, przesunięty termin). Jeśli tak — rozlega się krótkie «ding-dong», w prawym dolnym rogu pojawia się okienko z przyciskiem «Otwórz zadania», a strona główna odświeża się sama.",
+          "Żeby dodatkowo wyskakiwało powiadomienie systemowe — nawet gdy karta przeglądarki jest zwinięta — kliknij **«Włącz powiadomienia»** w bloku zadań i zezwól na nie w oknie przeglądarki. Przeglądarka pyta o zgodę dopiero po kliknięciu — dlatego jest przycisk. Po wyrażeniu zgody w jego miejscu pojawia się «Powiadomienia włączone».",
+          "Jeśli przeglądarka odmówiła, zamiast przycisku zobaczysz podpowiedź: na powiadomienia można zezwolić w ustawieniach strony (ikona po lewej stronie adresu). Dźwięk przeglądarka włącza po pierwszym kliknięciu w panelu — wcześniej strona nie może odtwarzać dźwięku, tak działają wszystkie przeglądarki. Twoje własne działania nie są oznaczane dźwiękiem. Panel zamknięty — w przeglądarce nic się nie pojawia, zostaje Telegram.",
+        ],
       },
       {
         id: "queue",
@@ -132,6 +180,7 @@ export const leadsSections: Record<string, HelpEntry> = {
             "**«Korespondencja z klientem»** → «Pokaż korespondencję»: wszystko, co klient powiedział asystentowi na stronie albo w bocie o zadaniu, pieniądzach i terminach. Też tylko po przejęciu i też jest zapisywane. Zgłoszenia z formularza nie mają korespondencji.",
             "**«Dyskusja»** — notatki o kliencie dla całego zespołu; osoba prowadząca leada dostaje wiadomość w Telegramie. Nie wklejaj tam danych kontaktowych klienta. Niżej — brief, kosztorys ze strony i notatki. O leadach z kontaktów — punkt [pierwsza rozmowa po kontakcie](#prospect-replies).",
             "Żółta etykieta obok numeru zgłoszenia oznacza, że klient ma rabat 30%, i jest napisane, za co: **«napisał w pierwszej minucie»** — napisał do asystenta na stronie albo w Telegramie, kiedy na stronie odliczał się licznik pierwszej minuty; **«nie zdążyliśmy w 20 sekund»** — zadziałała gwarancja odpowiedzi. Klient już widział ten rabat i nie podlega on negocjacji — uwzględnij go w wycenie. Przepraszać za czekanie trzeba tylko w drugim przypadku.",
+            "**«NIP/INN firmy»** — jeśli klient podał swój INN (uzbecki numer podatkowy, STIR) albo jest on w danych jego firmy, wpisz 9–12 cyfr i kliknij **«Zapisz NIP/INN»**. Jeśli tę firmę wcześniej przypisał sobie partner, lead stanie się jego klientem: w polu «Partner» pojawi się «Klient partnera … (przypisany DD.MM)», a partner dostanie wiadomość bez danych kontaktowych klienta. Leada prowadzisz Ty, tak jak wcześniej; partnerowi po prostu zaliczy się zamówienie. Wpisać NIP/INN można tylko we własnym leadzie.",
           ],
           head: [
             "Otwierasz dowolną kartę. Każde otwarcie jest zapisywane.",
@@ -140,6 +189,7 @@ export const leadsSections: Record<string, HelpEntry> = {
             "**«Pokaż dane kontaktowe»** i **«Pokaż korespondencję»** działają dla każdego przejętego leada. Dla wolnego — dopiero po «Przejmij»: w kolejce jesteś na równi ze wszystkimi. Każde otwarcie trafia do dziennika.",
             "**«Dyskusja»** — notatki dla całego zespołu, osoba prowadząca leada dostaje je w Telegramie. Niżej — brief, kosztorys i notatki.",
             "Żółta etykieta obok numeru zgłoszenia oznacza, że klient ma rabat 30%, i jest napisane, za co: **«napisał w pierwszej minucie»** — napisał do asystenta na stronie albo w Telegramie, kiedy na stronie odliczał się licznik pierwszej minuty; **«nie zdążyliśmy w 20 sekund»** — zadziałała gwarancja odpowiedzi. Klient już widział ten rabat i nie podlega on negocjacji — uwzględnij go w wycenie. Przepraszać za czekanie trzeba tylko w drugim przypadku.",
+            "**«NIP/INN firmy»** → **«Zapisz NIP/INN»** — w każdym leadzie, 9–12 cyfr. Jeśli firmę przypisał partner, lead stanie się jego klientem: w polu «Partner» — «Klient partnera … (przypisany DD.MM)», a partner dostaje wiadomość bez danych kontaktowych klienta. To, kto prowadzi leada, się nie zmienia.",
           ],
           admin: [
             "Otwierasz dowolną kartę i możesz wszystko: przejąć, zwrócić do kolejki, przekazać, zmienić status, otworzyć dane kontaktowe i korespondencję — także w wolnym leadzie, przed przejęciem. Każde działanie trafia do dziennika z Twoim imieniem.",
@@ -147,6 +197,7 @@ export const leadsSections: Record<string, HelpEntry> = {
             "**«Status»**: «wygrany», «przegrany» i «odłożony» anulują automatyczne przypomnienia; «nowy» ma tylko wolny lead, przypisany go nie ma — leada zwalnia «Zwróć do kolejki».",
             "**«Dyskusję»** widzi cały zespół, osoba prowadząca leada dostaje ją w Telegramie. Niżej — brief, kosztorys i notatki asystenta.",
             "Żółta etykieta obok numeru zgłoszenia oznacza, że klient ma rabat 30%, i jest napisane, za co: **«napisał w pierwszej minucie»** — napisał do asystenta na stronie albo w Telegramie, kiedy na stronie odliczał się licznik pierwszej minuty; **«nie zdążyliśmy w 20 sekund»** — zadziałała gwarancja odpowiedzi. Klient już widział ten rabat i nie podlega on negocjacji — uwzględnij go w wycenie. Przepraszać za czekanie trzeba tylko w drugim przypadku. Ile jest takich rabatów i z jakiego powodu — w [Statystykach](/admin/stats), długość minuty — `FIRST_MINUTE_SECONDS` na serwerze (domyślnie 60, 0 wyłącza).",
+            "**«NIP/INN firmy»** → **«Zapisz NIP/INN»** — w każdym leadzie. Po NIP/INN lead jest rozpoznawany jako [klient przypisany przez partnera](#partners-claims): w polu «Partner» — «Klient partnera … (przypisany DD.MM)», partner dostaje wiadomość, a projekt utworzony z leada dziedziczy partnera.",
           ],
         },
       },
