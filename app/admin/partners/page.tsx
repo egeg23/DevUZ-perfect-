@@ -1,21 +1,27 @@
 import Link from "next/link";
 
-import { addPartner, decide, decideAgencyAction, editPartner } from "./actions";
+import { addPartner, cancelClientAction, decide, decideAgencyAction, editPartner } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { money } from "@/lib/admin/finance";
 import { requireAdmin } from "@/lib/admin/guard";
+import { pick } from "@/lib/admin/i18n";
+import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
+import { PartnerClientsBlock } from "@/components/admin/partner-clients";
 import {
   MIN_PAYOUT_USD,
   PARTNER_TIERS,
   PERK_TITLE,
+  poolAmount,
+  poolProjects,
+  tierPercent,
   agencyCounts,
   agencyUntilDay,
   linkUrl,
   shortUrl,
 } from "@/lib/partners/rules";
 import { listPromo } from "@/lib/partners/promo";
-import { agenciesOf, listPartners, summarize } from "@/lib/partners/store";
+import { agenciesOf, clientsOf, listPartners, summarize } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -59,12 +65,24 @@ export default async function PartnersPage({
 }) {
   const admin = await requireAdmin();
   const { r } = await searchParams;
-  const notice = r ? RESULT[r] : null;
+  const tc = pick(partnerClientsDict, admin.panel_locale);
+  const CLIENT_RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
+    client_cancelled: { text: tc.resultCancelled, tone: "ok" },
+    client_invalid: { text: tc.resultNeedNote, tone: "warn" },
+  };
+  const notice = r ? (CLIENT_RESULT[r] ?? RESULT[r]) : null;
 
   const summaries = await summarize(await listPartners());
-  const [agencies, promo] = await Promise.all([agenciesOf("all"), listPromo({ withHidden: false })]);
+  const [agencies, clients, promo] = await Promise.all([
+    agenciesOf("all"),
+    clientsOf("all"),
+    listPromo({ withHidden: false }),
+  ]);
   const pendingAgencies = agencies.filter((a) => a.status === "pending");
   const partnerName = new Map(summaries.map((s) => [s.partner.id, s.partner.name]));
+  const projectName = new Map(
+    summaries.flatMap((s) => s.projects.map((p) => [p.id, p.client?.trim() || p.title] as const)),
+  );
   const requests = summaries
     .flatMap((s) => s.payouts.filter((p) => p.status === "requested").map((p) => ({ ...p, partner: s.partner })))
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
@@ -145,8 +163,17 @@ export default async function PartnersPage({
                   {p.partner.name}
                   {p.partner.username ? <span className="ml-2 text-xs text-faint">@{p.partner.username}</span> : null}
                 </td>
-                <td data-label="Сумма" className={`${TD} font-mono`}>{money(p.amount_usd)}</td>
-                <td data-label="Куда" className={`${TD} break-all font-mono text-xs text-muted`}>{p.requisites}</td>
+                <td data-label="Сумма" className={`${TD} font-mono`}>
+                  {money(p.amount_usd)}
+                  {p.project_id ? (
+                    <span className="block font-sans text-xs text-faint">
+                      {tc.autoPayout(projectName.get(p.project_id) ?? "—")}
+                    </span>
+                  ) : null}
+                </td>
+                <td data-label="Куда" className={`${TD} break-all font-mono text-xs text-muted`}>
+                  {p.requisites || <span className="font-sans text-gold">{tc.noRequisites}</span>}
+                </td>
                 <td data-label="Решение" className={TD}>
                   {/* Деньги уходят руками — кошелёк или карта, — и только потом
                       «Выплачено». Отклонение возвращает сумму в доступное. */}
@@ -257,6 +284,9 @@ export default async function PartnersPage({
         </table>
       </section>
 
+      {/* ── Клиенты, закреплённые вручную ─────────────────────────────── */}
+      <PartnerClientsBlock clients={clients} partnerName={partnerName} locale={admin.panel_locale} cancel={cancelClientAction} />
+
       {/* ── Партнёры ──────────────────────────────────────────────────── */}
       <h2 className="mt-8 text-xs uppercase tracking-wider text-faint">Все партнёры</h2>
       <section className="mt-2 overflow-x-auto rounded-xl border border-line bg-surface">
@@ -276,7 +306,7 @@ export default async function PartnersPage({
             </tr>
           </thead>
           <tbody>
-            {summaries.map(({ partner, links, balance, leads, projects, paidProjects }) => (
+            {summaries.map(({ partner, links, balance, leads, projects, paidProjects, accruals }) => (
               <tr key={partner.id} className="border-b border-line-soft last:border-0 align-top">
                 <td data-label="Кто" className={TD}>
                   {partner.name}
@@ -319,6 +349,14 @@ export default async function PartnersPage({
                         : `${PARTNER_TIERS[0].profit}–${PARTNER_TIERS[PARTNER_TIERS.length - 1].profit} %`}
                     {partner.model_changed_at ? ` · сменил ${when(partner.model_changed_at)}` : ""}
                   </span>
+                  {partner.accumulate ? (
+                    <span className="block text-green">
+                      {(() => {
+                        const pool = poolAmount(poolProjects(projects, accruals, partner));
+                        return tc.accumulating(money(pool), tierPercent(pool, partner.payout_model));
+                      })()}
+                    </span>
+                  ) : null}
                 </td>
                 <td data-label="Клиентов" className={`${TD} font-mono text-xs`}>{leads}</td>
                 <td data-label="Проектов" className={`${TD} font-mono text-xs`}>

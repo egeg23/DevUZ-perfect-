@@ -1,4 +1,5 @@
 import { serviceClient } from "@/lib/supabase";
+import { dayStartUtc } from "@/lib/admin/portion";
 import { touchProgress, weekWindow, type TouchProgress } from "@/lib/admin/touch-plan";
 
 /**
@@ -29,6 +30,37 @@ export async function touchesThisWeek(
     .in("touched_by", [...staffIds])
     .gte("touched_at", week.from.toISOString())
     .lt("touched_at", week.to.toISOString())
+    .neq("status", "failed")
+    .limit(5000);
+
+  for (const row of data ?? []) {
+    const id = row.touched_by as string | null;
+    if (!id) continue;
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
+ * Касания за день по Ташкенту — по тому же правилу, что и за неделю: одна
+ * компания — одно касание, неудавшиеся отправки не в счёте. Порция, поток
+ * и всё, что написано из панели сверх них, — вместе: для вечернего отчёта.
+ */
+export async function touchesOnDay(staffIds: readonly string[], day: string): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (!staffIds.length) return counts;
+
+  const db = serviceClient();
+  if (!db) return counts;
+
+  const from = dayStartUtc(day);
+  const to = new Date(from.getTime() + 24 * 3600_000);
+  const { data } = await db
+    .from("prospects")
+    .select("touched_by")
+    .in("touched_by", [...staffIds])
+    .gte("touched_at", from.toISOString())
+    .lt("touched_at", to.toISOString())
     .neq("status", "failed")
     .limit(5000);
 

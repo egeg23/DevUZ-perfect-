@@ -113,6 +113,24 @@ export function outcomeOf(
 }
 
 /**
+ * Карточка ушла без текста (bare_at) — что с ней делать теперь.
+ *
+ * «send» — письмо написано, а компанию никто не тронул: досылаем текст.
+ * «drop» — уже не нужно: человек написал сам, отправил, нажал «Не
+ * подходит» или компанию забрал другой. «wait» — письма пока нет.
+ */
+export function textDue(
+  p: { status: string; message: string | null; claimed_by: string | null; touched_by: string | null; touched_at: string | null },
+  staffId: string,
+  day: string,
+): "send" | "drop" | "wait" {
+  if (outcomeOf(p, staffId, day) !== null) return "drop";
+  if (p.status !== "new" && p.status !== "contacting") return "drop";
+  if (p.claimed_by && p.claimed_by !== staffId) return "drop";
+  return p.message ? "send" : "wait";
+}
+
+/**
  * Замен за «Не подходит» в день — не больше двух порций.
  *
  * Владелец, 29.09: «сделать нужно 5 в день, без учёта „не подходит“. То есть
@@ -185,22 +203,46 @@ export type PersonReport = {
   short: number;
   /** Касания из потока «Получать лиды» — сверх порции, в «из» не входят. */
   stream?: number;
+  /** Все касания за день: порция, поток и написанное из панели сверх них. */
+  touches: number;
 };
 
+/** Всего касаний: не меньше, чем сделано по порции и потоку, — они его часть. */
+export function touchesOf(p: PersonReport): number {
+  return Math.max(p.touches, p.done + (p.stream ?? 0));
+}
+
 /**
- * Строка отчёта: «Данил — 4 из 5, не подошло 2, без замены 1 · поток: 7 касаний».
+ * Строка отчёта: «Данил — 7 касаний (поток 2) · порция 4 из 5, не подошло 2, без замены 1».
  *
- * «Из» — цель дня, а сделано — только касания: две «Не подходит» при трёх
- * отправленных — это 3 из 5, а не «порция закрыта». Ноль касаний — ⚠️,
- * сколько бы ни было пропусков. Поток — отдельным хвостом: он сверх
- * порции, и смешать его с ней значило бы закрывать порцию потоком.
+ * Сначала — сколько человек написал за день всего: владелец, 01.10, —
+ * руководителям «сколько было касаний у каждого менеджера, сколько из
+ * порции дня они сделали». Порция — следом: «из» — цель дня, сделано —
+ * только касания; две «Не подходит» при трёх отправленных — это 3 из 5, а
+ * не «порция закрыта». Ноль касаний по порции — ⚠️, сколько бы ни было
+ * пропусков. Поток — в скобках: он сверх порции, и смешать его с ней
+ * значило бы закрывать порцию потоком.
  */
 export function reportLine(p: PersonReport): string {
-  const stream = p.stream ? ` · поток: ${touchesText(p.stream)}` : "";
-  if (p.target === 0) return `${p.name} — порции не было${stream}`;
+  const stream = p.stream ? ` (поток ${p.stream})` : "";
+  const head = `${p.name} — ${touchesText(touchesOf(p))}${stream}`;
+  if (p.target === 0) return `${head} · порции не было`;
   const tail = [p.skipped ? `не подошло ${p.skipped}` : "", p.short ? `без замены ${p.short}` : ""]
     .filter(Boolean)
     .join(", ");
   const flag = p.done === 0 ? " ⚠️" : p.done >= p.target ? " ✅" : "";
-  return `${p.name} — ${p.done} из ${p.target}${tail ? `, ${tail}` : ""}${flag}${stream}`;
+  return `${head} · порция ${p.done} из ${p.target}${tail ? `, ${tail}` : ""}${flag}`;
+}
+
+/** Итог отчёта: «Всего: 34 касания · порции: 21 из 45». */
+export function reportTotal(reports: readonly PersonReport[]): string {
+  const touches = reports.reduce((sum, r) => sum + touchesOf(r), 0);
+  const done = reports.reduce((sum, r) => sum + r.done, 0);
+  const target = reports.reduce((sum, r) => sum + r.target, 0);
+  return `Всего: ${touchesText(touches)}${target ? ` · порции: ${done} из ${target}` : ""}`;
+}
+
+/** Порядок в отчёте: больше касаний — выше; поровну — по имени. */
+export function byTouches(a: PersonReport, b: PersonReport): number {
+  return touchesOf(b) - touchesOf(a) || a.name.localeCompare(b.name, "ru");
 }

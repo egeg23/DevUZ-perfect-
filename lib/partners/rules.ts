@@ -296,6 +296,10 @@ export type PartnerProject = ProjectMoney & {
   partner_void_reason: string | null;
   /** Модель, зафиксированная на клиенте при заявке. null — «от прибыли». */
   partner_model?: string | null;
+  /** Какой выплатой закрыт проект. Пусто — ещё в копилке. */
+  partner_payout_id?: string | null;
+  /** Ставка копилки, по которой проект выплачен (фиксируется при выплате). */
+  partner_bonus_percent?: number | null;
 };
 
 export type PartnerAccrual = {
@@ -308,6 +312,8 @@ export type PartnerAccrual = {
   amount_usd: number;
   state: AccrualState;
   void_reason: string | null;
+  /** Ставка поднята копилкой — сейчас или при выплате. */
+  boosted?: boolean;
 };
 
 /**
@@ -327,12 +333,16 @@ export function partnerAccrualOf(
 
   // Ступень — по сумме проекта в обеих моделях, а процент берётся с базы
   // своей модели.
-  const percent = partnerPercent({
+  const tier = partnerPercent({
     projectPercent: project.partner_percent,
     partnerOverride: partner.percent_override,
     amountUsd: project.amount_usd,
     model,
   });
+  // Выплачен по ставке копилки — она и остаётся: выплаченное вниз не
+  // пересчитывается. Процент, заданный владельцем на проекте, важнее.
+  const bonus = project.partner_percent === null ? (project.partner_bonus_percent ?? null) : null;
+  const percent = bonus !== null && bonus > tier ? bonus : tier;
   const voided = project.partner_void_reason !== null;
   const state: AccrualState = voided ? "void" : accrualState(project, paidOf(project.id, payments));
 
@@ -345,7 +355,80 @@ export function partnerAccrualOf(
     amount_usd: state === "void" ? 0 : Math.round((base * percent) / 100),
     state,
     void_reason: project.partner_void_reason,
+    ...(percent > tier ? { boosted: true } : {}),
   };
+}
+
+/* ── Копилка ────────────────────────────────────────────────────────────── */
+
+/**
+ * Копилка — не забирать автоматически, а копить на ступень выше.
+ *
+ * Владелец, 01.10: «Если партнёр не забирает деньги сразу, то по той же
+ * таблице от — до он может получить по достижению тех сумм тот %, который
+ * указан. Так мы сохраним деньги вначале и пустим их на развитие студии, а
+ * взамен человек позже получит больше».
+ *
+ * Пока тумблер включён, в копилке лежат проекты, оплаченные целиком и ещё
+ * не выплаченные. Ступень для каждого из них — по общей сумме проектов в
+ * копилке (та же таблица PARTNER_TIERS, те же пороги), а не по сумме
+ * одного проекта. Три проекта по 2 000 $ — это 6 000 $ и ступень 20 % от
+ * прибыли / 14 % с оборота вместо 10 / 6 %. Ставка не бывает ниже обычной.
+ *
+ * Не копят: проект с процентом, который владелец задал руками, и партнёр с
+ * персональной ставкой — у них договорённость отдельная. Выплата обнуляет
+ * копилку: ставка выплаченных проектов фиксируется (partner_bonus_percent),
+ * следующая копилка начинается с нуля. Выключил тумблер — копилка
+ * перестаёт поднимать ставку: невыплаченное считается по обычной ступени
+ * каждого проекта.
+ */
+export function poolProjects<P extends PartnerProject>(
+  projects: readonly P[],
+  accruals: readonly PartnerAccrual[],
+  partner: { percent_override: number | null },
+): P[] {
+  if (partner.percent_override !== null) return [];
+  const earned = new Set(accruals.filter((a) => a.state === "earned" && !a.manual).map((a) => a.project_id));
+  return projects.filter((p) => earned.has(p.id) && !p.partner_payout_id && p.amount_usd !== null);
+}
+
+/** Сумма проектов в копилке — по ней выбирается ступень. */
+export function poolAmount(projects: readonly Pick<PartnerProject, "amount_usd">[]): number {
+  return projects.reduce((sum, p) => sum + Math.max(0, p.amount_usd ?? 0), 0);
+}
+
+/**
+ * Начисления с поднятой копилкой ставкой. Без тумблера — как есть.
+ * Ставка проекта в копилке — по общей сумме копилки, если она выше его
+ * обычной ступени; сумма начисления пересчитывается от той же базы.
+ */
+export function withPool<P extends PartnerProject>(
+  accruals: PartnerAccrual[],
+  projects: readonly P[],
+  partner: { percent_override: number | null; accumulate?: boolean },
+): PartnerAccrual[] {
+  if (!partner.accumulate) return accruals;
+  const pool = poolProjects(projects, accruals, partner);
+  if (!pool.length) return accruals;
+  const total = poolAmount(pool);
+  const byId = new Map(pool.map((p) => [p.id, p]));
+  return accruals.map((a) => {
+    const project = byId.get(a.project_id);
+    if (!project) return a;
+    const boosted = tierPercent(total, a.model);
+    if (boosted <= a.percent) return a;
+    const base = partnerBase(project, a.model) ?? 0;
+    return { ...a, percent: boosted, amount_usd: Math.round((base * boosted) / 100), boosted: true };
+  });
+}
+
+/** Следующий порог таблицы после суммы копилки: «ещё 4 001 $ — и 25 %». null — уже на верхней ступени. */
+export function nextPoolTier(amountUsd: number, model: PayoutModel): { at: number; percent: number } | null {
+  for (let i = 0; i < PARTNER_TIERS.length - 1; i++) {
+    const upTo = PARTNER_TIERS[i].upTo as number;
+    if (amountUsd <= upTo) return { at: upTo + 1, percent: PARTNER_TIERS[i + 1][model] };
+  }
+  return null;
 }
 
 export type PayoutMoney = { status: "requested" | "paid" | "rejected"; amount_usd: number };
@@ -554,4 +637,154 @@ export function agencyMatches(
   const an = companyKey(agency.name);
   const ln = companyKey(lead.company);
   return an.length >= 4 && an === ln;
+}
+
+/* ── Клиенты партнёра ───────────────────────────────────────────────────── */
+
+/**
+ * Клиент, закреплённый партнёром вручную — без ссылки, по ИНН.
+ *
+ * Владелец, 01.10: «Кто-то будет приводить свои компании не через ссылку —
+ * надо закрыть эту дыру». Партнёр в кабинете заводит компанию: ИНН,
+ * название, контакт. Закрепление действует сразу — первенство по времени
+ * заявки, — если студия эту компанию ещё не знает и её не закрепил другой.
+ *
+ * Сроки. Закрепление ждёт первой заявки клиента CLIENT_WAIT_DAYS дней: иначе
+ * партнёр мог бы «застолбить» половину города и сидеть на ней годами. Пришла
+ * заявка — заказы клиента засчитываются партнёру CLIENT_TERM_MONTHS месяцев
+ * с неё, как у агентства. Заказы, пришедшие внутри срока, остаются партнёру
+ * и после него.
+ */
+export const CLIENT_WAIT_DAYS = 90;
+export const CLIENT_TERM_MONTHS = 12;
+/** Сколько клиентов партнёр может закрепить за календарный месяц — от массового столбления. */
+export const MAX_CLIENTS_PER_MONTH = 20;
+
+/**
+ * ИНН (СТИР) — только цифры: 9 в Узбекистане, до 12 в соседних странах
+ * (12 — у ИП в Казахстане и России). Пробелы и дефисы, с которыми его
+ * переписывают из документов, убираются. Не ИНН — `null`.
+ */
+export function normalizeInn(raw: string | null | undefined): string | null {
+  const digits = (raw ?? "").replace(/[\s-]/g, "");
+  return /^\d{9,12}$/.test(digits) ? digits : null;
+}
+
+/** Сайт в сравнимом виде: домен без схемы, www и пути. «https://www.Shop.uz/ru» → «shop.uz». */
+export function hostKey(raw: string | null | undefined): string {
+  const text = (raw ?? "").trim().toLowerCase();
+  if (!text) return "";
+  const host = text
+    .replace(/^[a-z]+:\/\//, "")
+    .replace(/^www\./, "")
+    .split(/[/?#\s]/)[0]
+    .replace(/:\d+$/, "");
+  return /^[a-z0-9.-]+\.[a-z]{2,}$/.test(host) ? host : "";
+}
+
+/** Что известно о компании — для сравнения «это та же компания?». */
+export type CompanyFacts = {
+  inn?: string | null;
+  name?: string | null;
+  contacts?: readonly (string | null | undefined)[];
+  host?: string | null;
+};
+
+/**
+ * Та же компания? Сходится ИНН, название, любой контакт или сайт.
+ *
+ * Короткие ключи не считаются: название меньше четырёх знаков («Art») и
+ * контакт меньше пяти совпали бы с половиной города.
+ */
+export function sameCompany(a: CompanyFacts, b: CompanyFacts): boolean {
+  const ai = normalizeInn(a.inn);
+  if (ai && ai === normalizeInn(b.inn)) return true;
+  const an = companyKey(a.name);
+  if (an.length >= 4 && an === companyKey(b.name)) return true;
+  const ah = hostKey(a.host);
+  if (ah && ah === hostKey(b.host)) return true;
+  const keys = new Set((a.contacts ?? []).map(contactKey).filter((k) => k.length >= 5));
+  return (b.contacts ?? []).some((c) => keys.has(contactKey(c)));
+}
+
+export type ClientClaim = {
+  status: string;
+  created_at: string;
+  first_lead_at: string | null;
+};
+
+/**
+ * До какого момента закрепление действует: CLIENT_WAIT_DAYS от заявки, пока
+ * клиент не написал; CLIENT_TERM_MONTHS от первой заявки клиента — после.
+ */
+export function clientUntil(claim: ClientClaim): Date | null {
+  const from = new Date(claim.first_lead_at ?? claim.created_at);
+  if (Number.isNaN(from.getTime())) return null;
+  const until = new Date(from);
+  if (claim.first_lead_at) until.setUTCMonth(until.getUTCMonth() + CLIENT_TERM_MONTHS);
+  else until.setUTCDate(until.getUTCDate() + CLIENT_WAIT_DAYS);
+  return until;
+}
+
+/** «30.12.2026» — до какого дня действует закрепление. */
+export function clientUntilDay(claim: ClientClaim): string {
+  const until = clientUntil(claim);
+  return until ? until.toISOString().slice(0, 10).split("-").reverse().join(".") : "";
+}
+
+/** Действует ли закрепление сейчас: не отменено и срок не вышел. */
+export function clientCounts(claim: ClientClaim, now: Date = new Date()): boolean {
+  if (claim.status !== "active") return false;
+  const until = clientUntil(claim);
+  return until !== null && now.getTime() < until.getTime();
+}
+
+/** «2026-10» — календарный месяц по Ташкенту: лимит закреплений считается по нему. */
+export function tashkentMonth(now: Date = new Date()): string {
+  const { year, month } = tashkent(now);
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+export type ClientFailure =
+  | "offline"
+  | "blocked"
+  | "name"
+  | "inn"
+  | "contact"
+  | "limit"
+  | "studio"
+  | "taken"
+  | "mine"
+  | "failed";
+
+/**
+ * Проверка полей заявки без базы. Название — от двух знаков, ИНН — 9–12
+ * цифр, связь — телефон или Telegram, хотя бы одно: без них не по чему
+ * узнать заявку клиента, кроме ИНН и названия.
+ */
+export function clientFieldsProblem(fields: {
+  name: string;
+  inn: string;
+  phone: string;
+  telegram: string;
+}): "name" | "inn" | "contact" | null {
+  if (fields.name.trim().length < 2) return "name";
+  if (!normalizeInn(fields.inn)) return "inn";
+  const phone = fields.phone.replace(/[^\d]/g, "");
+  if (phone.length < 7 && contactKey(fields.telegram).length < 5) return "contact";
+  return null;
+}
+
+/* ── Автовыплата с оборота ──────────────────────────────────────────────── */
+
+/**
+ * Заводить ли автовыплату по начислению.
+ *
+ * Владелец, 01.10: «Расчёт с оборота происходит автоматически, когда мы
+ * получаем 100 % суммы». Только модель «с оборота»: её база — сумма
+ * проекта — известна сразу. У «от прибыли» база зависит от себестоимости,
+ * и деньги по ней остаются на заявке партнёра.
+ */
+export function autoPayoutDue(accrual: Pick<PartnerAccrual, "model" | "state" | "amount_usd"> | null): boolean {
+  return Boolean(accrual && accrual.model === "turnover" && accrual.state === "earned" && accrual.amount_usd > 0);
 }

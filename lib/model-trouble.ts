@@ -34,11 +34,22 @@ export type ModelTrouble = {
  */
 const BILLING = /credit balance|billing|insufficient (funds|credit)|out of credit/i;
 
+/** Фразы отказов — одним местом: по ним же отказ узнаётся, когда до кода дошла только строка. */
+const SAYS = {
+  unreachable: "Модель не отвечает — до поставщика не достучаться. Повторите через несколько минут.",
+  billing:
+    "На ключе модели кончились деньги. Пополните баланс в Anthropic Console — " +
+    "всё заработает само, выкатывать ничего не нужно.",
+  auth: "Ключ модели не принят. Проверьте ANTHROPIC_API_KEY на сервере.",
+  limit: "Модель отказывает по частоте запросов. Подождите минуту и повторите.",
+  down: "Модель временно недоступна — это на стороне поставщика. Повторите через несколько минут.",
+} as const;
+
 export function modelTrouble(error: unknown): ModelTrouble | null {
   // Сеть до поставщика не дошла: для сайта это то же самое, что молчащая
   // модель, и посетителю нужен тот же запасной путь.
   if (error instanceof Anthropic.APIConnectionError) {
-    return { kind: "down", says: "Модель не отвечает — до поставщика не достучаться. Повторите через несколько минут." };
+    return { kind: "down", says: SAYS.unreachable };
   }
 
   if (!(error instanceof Anthropic.APIError)) return null;
@@ -47,21 +58,16 @@ export function modelTrouble(error: unknown): ModelTrouble | null {
   const text = `${error.message ?? ""}`;
 
   if (status === 400 && BILLING.test(text)) {
-    return {
-      kind: "billing",
-      says:
-        "На ключе модели кончились деньги. Пополните баланс в Anthropic Console — " +
-        "всё заработает само, выкатывать ничего не нужно.",
-    };
+    return { kind: "billing", says: SAYS.billing };
   }
   if (status === 401 || status === 403) {
-    return { kind: "auth", says: "Ключ модели не принят. Проверьте ANTHROPIC_API_KEY на сервере." };
+    return { kind: "auth", says: SAYS.auth };
   }
   if (status === 429) {
-    return { kind: "limit", says: "Модель отказывает по частоте запросов. Подождите минуту и повторите." };
+    return { kind: "limit", says: SAYS.limit };
   }
   if (typeof status === "number" && status >= 500) {
-    return { kind: "down", says: "Модель временно недоступна — это на стороне поставщика. Повторите через несколько минут." };
+    return { kind: "down", says: SAYS.down };
   }
 
   return null;
@@ -76,4 +82,17 @@ export function modelTroubleSays(error: unknown): string {
   const trouble = modelTrouble(error);
   if (trouble) return trouble.says;
   return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Отказ модели — по фразе, которую уже вернул modelTroubleSays.
+ *
+ * Для мест, куда доходит только строка: подготовка письма отдаёт
+ * `{ ok: false, why }`. Отказ модели там — повод попробовать снова, когда
+ * она вернётся (1 октября кончились деньги, и порция ушла без текстов), а
+ * дефект или письмо, не прошедшее проверку, — нет: повтор их не исправит,
+ * а деньги спишет.
+ */
+export function isModelTroubleSays(text: string | null | undefined): boolean {
+  return (Object.values(SAYS) as string[]).includes(text ?? "");
 }

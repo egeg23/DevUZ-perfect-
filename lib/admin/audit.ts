@@ -56,6 +56,11 @@ export const AUDIT_ACTIONS = [
   "partner.model_changed",
   "partner.agency_requested",
   "partner.agency_decided",
+  "partner.client_claimed",
+  "lead.inn_set",
+  "partner.client_cancelled",
+  "partner.payout_auto",
+  "partner.accumulate_set",
   // Промо-материалы партнёров: что выложили, поправили и удалили.
   "partner.promo_added",
   "partner.promo_updated",
@@ -119,6 +124,13 @@ export const AUDIT_ACTIONS = [
   "google.client_saved",
   "google.connected",
   "google.property_set",
+  // Задачи команды: поставил, взял, закрыл, перенёс срок.
+  "task.created",
+  "task.taken",
+  "task.done",
+  "task.failed",
+  "task.moved",
+  "task.cancelled",
 ] as const;
 
 /**

@@ -50,6 +50,11 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "partner.model_changed": "партнёр сменил модель дохода",
   "partner.agency_requested": "партнёр подключил агентство",
   "partner.agency_decided": "решил по агентству партнёра",
+  "partner.client_claimed": "партнёр закрепил клиента по ИНН",
+  "lead.inn_set": "вписал ИНН компании в карточку лида",
+  "partner.client_cancelled": "отменил закрепление клиента партнёра",
+  "partner.payout_auto": "завелась выплата партнёру с оборота",
+  "partner.accumulate_set": "партнёр включил или выключил копилку",
   "partner.promo_added": "выложил промо-материал партнёрам",
   "partner.promo_updated": "изменил промо-материал партнёров",
   "partner.promo_deleted": "удалил промо-материал партнёров",
@@ -104,6 +109,12 @@ export const ACTION_LABEL: Record<AuditAction, string> = {
   "google.client_saved": "сохранил Client ID Google для статистики",
   "google.connected": "подключил Google Analytics входом через Google",
   "google.property_set": "вписал номер ресурса Google Analytics",
+  "task.created": "поставил задачу",
+  "task.taken": "взял задачу в работу",
+  "task.done": "отметил задачу сделанной",
+  "task.failed": "отметил задачу несделанной",
+  "task.moved": "перенёс срок задачи",
+  "task.cancelled": "отменил задачу",
 };
 
 /**

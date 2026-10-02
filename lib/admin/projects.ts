@@ -70,12 +70,15 @@ export type Project = {
   partner_model: string | null;
   /** Заказ агентства партнёра на субподряде. */
   partner_agency_id: string | null;
+  /** Какой выплатой партнёру закрыт проект и по какой ставке копилки (lib/partners/rules.ts). */
+  partner_payout_id: string | null;
+  partner_bonus_percent: number | null;
   /** Смета менеджера: категория, допы, обещанный срок. Вилка считается из неё. */
   quote: QuoteInput | null;
 };
 
 const COLUMNS =
-  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, quote, staff!projects_owner_staff_id_fkey(display_name)";
+  "id, created_at, title, client, lead_id, owner_staff_id, stage, stage_since, started_at, deadline, amount_usd, notes, kind, tax_percent, dev_cost_usd, partner_id, partner_percent, partner_void_reason, partner_model, partner_agency_id, partner_payout_id, partner_bonus_percent, quote, staff!projects_owner_staff_id_fkey(display_name)";
 
 function shape(row: Record<string, unknown>): Project {
   // Связанная запись приходит объектом или массивом — PostgREST выводит
@@ -109,6 +112,8 @@ function shape(row: Record<string, unknown>): Project {
     partner_void_reason: (row.partner_void_reason as string | null) ?? null,
     partner_model: (row.partner_model as string | null) ?? null,
     partner_agency_id: (row.partner_agency_id as string | null) ?? null,
+    partner_payout_id: (row.partner_payout_id as string | null) ?? null,
+    partner_bonus_percent: (row.partner_bonus_percent as number | null) ?? null,
     quote: parseQuote(row.quote),
   };
 }
@@ -212,20 +217,23 @@ export async function createProject(
   // Проект из лида наследует партнёра: клиент пришёл по ссылке, и это факт
   // о клиенте, а не о заявке. Аннулированная привязка не наследуется.
   // С ним едут модель дохода, зафиксированная при заявке, и агентство, если
-  // заказ пришёл от агентства партнёра.
+  // заказ пришёл от агентства партнёра, и закрепление — если от клиента,
+  // которого партнёр закрепил вручную.
   let partnerId: string | null = null;
   let partnerModel: string | null = null;
   let partnerAgencyId: string | null = null;
+  let partnerClientId: string | null = null;
   if (fields.leadId) {
     const { data: lead } = await db
       .from("leads")
-      .select("partner_id, partner_void_reason, partner_model, partner_agency_id")
+      .select("partner_id, partner_void_reason, partner_model, partner_agency_id, partner_client_id")
       .eq("id", fields.leadId)
       .maybeSingle();
     if (lead?.partner_id && !lead.partner_void_reason) {
       partnerId = lead.partner_id as string;
       partnerModel = (lead.partner_model as string | null) ?? null;
       partnerAgencyId = (lead.partner_agency_id as string | null) ?? null;
+      partnerClientId = (lead.partner_client_id as string | null) ?? null;
     }
   }
 
@@ -238,6 +246,7 @@ export async function createProject(
       partner_id: partnerId,
       partner_model: partnerModel,
       partner_agency_id: partnerAgencyId,
+      partner_client_id: partnerClientId,
       owner_staff_id: owner,
       amount_usd: fields.amountUsd ?? null,
       deadline: fields.deadline || null,

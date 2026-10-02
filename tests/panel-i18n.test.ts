@@ -225,6 +225,8 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   "(Telegramda — «🔇 Игнорирует»)",
   "xabari ostida — faqat «🙅 Клиент отказался»",
   "«Взять в работу» va «Отклонить» tugmalari u yerda ham",
+  // Варианты переноса срока задачи — кнопки бота.
+  "«+1 час», «Завтра 18:00», «+3 дня», «Неделя»",
 
   // раздел ещё не переведён: Проекты (карточка проекта)
   "[«Данные проекта»](#projects-data) → «Ведёт»",
@@ -238,6 +240,7 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   "Loyiha kartochkasida, «Партнёр» blokida",
   "Loyiha kartochkasida «Партнёр» yonida",
   "«Партнёр» bloki → «Заказ агентства»",
+  "loyiha kartochkasida, «Партнёр» blokida o‘tkaziladi",
 
   // раздел ещё не переведён: Команда
   "«План касаний» ustunida qo‘yasiz",
@@ -264,6 +267,14 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   // раздел ещё не переведён: Журнал
   "«Кто» filtri",
 ];
+/**
+ * Подписи блока «Задачи» (content/admin-panel/tasks.ts), которые по-русски
+ * совпали с подписями ещё не переведённых экранов: статус лида «в работе», напоминание «сделано», порция «не сделано», заявка «отменена»,
+ * «Кому» и «Срок» в формах плана и счёта. На узбекской панели те экраны
+ * пока русские, и инструкция зовёт их по-русски — это не ошибка перевода
+ * задач. Уходит вместе с переводом тех экранов.
+ */
+const SAME_RU_ELSEWHERE: ReadonlySet<string> = new Set(["новая", "в работе", "сделано", "не сделано", "отменена", "Взять в работу", "Кому", "Срок", "Поставить"]);
 
 test("узбекская инструкция зовёт кнопки так, как они написаны на узбекской панели", async () => {
   const ruToUz = new Map<string, string>();
@@ -289,6 +300,7 @@ test("узбекская инструкция зовёт кнопки так, к
   for (let text of texts) {
     for (const allowed of STILL_RUSSIAN_IN_UZ) text = text.replaceAll(allowed, "");
     for (const [, name] of text.matchAll(/«([^»]+)»/g)) {
+      if (SAME_RU_ELSEWHERE.has(name)) continue;
       const want = ruToUz.get(name);
       assert.ok(!want, `в узбекской инструкции «${name}», а на узбекской панели — «${want}»: ${text.slice(0, 120)}`);
     }
