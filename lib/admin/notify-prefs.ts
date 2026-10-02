@@ -66,9 +66,9 @@ export const NOTICES: Record<NoticeKind, { title: Tr; off: Tr; roles: readonly R
   open: {
     title: { ru: "Заявки для всех", uz: "Hamma uchun buyurtmalar", pl: "Zgłoszenia dla wszystkich" },
     off: {
-      ru: "ночные заявки и те, что очередь не разобрала, ему не приходят — только в панели",
-      uz: "tungi buyurtmalar va navbat taqsimlamaganlari unga kelmaydi — faqat panelda",
-      pl: "nocne zgłoszenia i te, których kolejka nie rozdzieliła, do niej nie trafiają — tylko w panelu",
+      ru: "ночные заявки, те, что очередь не разобрала, и «хотят прототип» по касаниям ему не приходят — только в панели",
+      uz: "tungi buyurtmalar, navbat taqsimlamaganlari va aloqalar bo‘yicha «prototip kerak» unga kelmaydi — faqat panelda",
+      pl: "nocne zgłoszenia, te, których kolejka nie rozdzieliła, i «chcą prototyp» z kontaktów do niej nie trafiają — tylko w panelu",
     },
     roles: EVERYONE,
   },

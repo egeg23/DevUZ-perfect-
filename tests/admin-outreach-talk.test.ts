@@ -176,7 +176,10 @@ test("вердикт по входящему не остаётся в чисто
   assert.match(store, /if \(verdict !== "talk" && prospect\.ai_handling\) \{[\s\S]{0,200}?ai_handling = false/);
   // И человек об этом узнаёт: разговор, тихо оставленный без ответа, для
   // клиента неотличим от «нами перестали заниматься».
-  assert.match(store, /if \(verdict !== "talk"\) \{\s*\n\s+await tellManager\(/);
+  // «Хотят прототип» — не одному менеджеру, а всей команде (кто первый
+  // возьмёт); остальное, и повторная просьба о прототипе, — как раньше.
+  assert.match(store, /const announced = verdict === "proto" \? await announcePrototype\(String\(prospect\.id\), body\) : null;/);
+  assert.match(store, /if \(verdict !== "talk" && !announced\) \{\s*\n\s+await tellManager\(/);
 });
 
 test("после «Отвечать самому» каждое сообщение клиента уходит тому, кто перехватил", () => {

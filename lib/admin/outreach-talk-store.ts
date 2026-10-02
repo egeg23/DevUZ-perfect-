@@ -1,5 +1,6 @@
 import { wants } from "@/lib/admin/notify-prefs";
 import { HANDOVER_TEXT, normalizeHandle, readInbound, type TalkRow } from "@/lib/admin/outreach-talk";
+import { announcePrototype } from "@/lib/admin/prototype-claim-store";
 import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
 import { siteUrl } from "@/lib/seo";
@@ -165,7 +166,12 @@ async function saveInbound(
   }
   await db.from("prospects").update(patch).eq("id", prospect.id);
 
-  if (verdict !== "talk") {
+  // «Хотят прототип» — всей команде, кто первый возьмёт (prototype-claim).
+  // Повторная просьба того же клиента второй рассылки не запускает и идёт
+  // как обычный ответ — тому, у кого лид сейчас.
+  const announced = verdict === "proto" ? await announcePrototype(String(prospect.id), body) : null;
+
+  if (verdict !== "talk" && !announced) {
     await tellManager(String(prospect.id), `Ответ по ${prospect.host}: ${HANDOVER_TEXT[verdict] ?? verdict}.\n\n${body.slice(0, 500)}`, {
       refuse: true,
     });
