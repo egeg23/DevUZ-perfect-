@@ -40,7 +40,7 @@ import {
   setButtons,
   typingIndicator,
 } from "@/lib/qualify/telegram";
-import { PROTO_CALLBACK, protoMovedText, protoTakenLabel, protoTakerText, tashkentClock } from "@/lib/admin/prototype-claim";
+import { PROTO_CALLBACK, PROTO_FIRST_MINUTES, protoMovedText, protoTakenLabel, protoTakerText, tashkentClock } from "@/lib/admin/prototype-claim";
 import { takePrototype } from "@/lib/admin/prototype-claim-store";
 import { serviceClient } from "@/lib/supabase";
 import { record } from "@/lib/admin/audit";
@@ -1511,7 +1511,9 @@ async function handlePrototypeButton(query: NonNullable<Update["callback_query"]
       query.id,
       taken.reason === "taken"
         ? `Прототип уже взяли${taken.by ? ` — ${taken.by}` : ""}`
-        : "Не удалось — откройте «Касания» в панели",
+        : taken.reason === "early"
+          ? `Первые ${PROTO_FIRST_MINUTES} минут прототип у автора касания`
+          : "Не удалось — откройте «Касания» в панели",
     );
     return;
   }
