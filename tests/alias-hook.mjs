@@ -11,7 +11,7 @@
 // сборка его принимают. Модули, которые импортируются из тестов, должны его
 // избегать.
 import { registerHooks } from "node:module";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = new URL("../", import.meta.url);
@@ -19,7 +19,12 @@ const EXTENSIONS = [".ts", ".tsx", ".mjs", ".js"];
 
 function withExtension(url) {
   const path = fileURLToPath(url);
-  if (existsSync(path) && !path.endsWith("/")) return url;
+  // Файл с расширением важнее одноимённой папки — как у сборщика:
+  // content/admin-help-pl.ts собирает части из content/admin-help-pl/.
+  if (existsSync(path) && !path.endsWith("/") && !statSync(path).isDirectory()) return url;
+  for (const ext of EXTENSIONS) {
+    if (existsSync(path + ext)) return pathToFileURL(path + ext);
+  }
   for (const ext of EXTENSIONS) {
     if (existsSync(path + ext)) return pathToFileURL(path + ext);
     if (existsSync(`${path}/index${ext}`)) return pathToFileURL(`${path}/index${ext}`);

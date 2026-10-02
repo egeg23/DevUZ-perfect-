@@ -113,7 +113,7 @@ export const uz: HelpCopy = {
               "**Kunduzi, Toshkent vaqti bilan 08:00 dan 18:00 gacha** (dam olish kunlari ham), yangi lid bitta odamga taklif qilinadi — shu oyda «oldi + o‘tkazib yubordi» soni eng kam bo‘lganiga. Sizga Telegramda kartochka keladi: «⏳ Лид ваш на 30 минут — до 14:30». Qolganlar uni ko‘rmaydi va ololmaydi.",
               "30 daqiqada olmadingiz — lid navbatdagi odamga o‘tadi, sizga esa «⌛ 30 минут на лид вышли» keladi. O‘tkazib yuborish olingan imkoniyat sifatida hisoblanadi: aks holda ta’tildagi odam navbatda doim birinchi turardi va har bir lid uni yarim soat kutardi.",
               "Agar lidni butun aylana davomida hech kim olmasa, u hammaga ochiladi: «🔓 Никто из очереди не взял — лид открыт всем. Берёт первый, кто нажмёт».",
-              "**Kechasi, 18:00 dan 08:00 gacha**, yarim soat qoidasi ishlamaydi — lid darhol navbatdagi hammaga ochiq. Lekin oyiga teng ulushdan ko‘p olib bo‘lmaydi: ulushingizni olib bo‘lgan bo‘lsangiz, «🌙 …Свою долю за месяц вы уже взяли — он для тех, у кого меньше» yozuvini ko‘rasiz. Aks holda kechasi lidlarni yana uxlamay o‘tirgan odam olib ketardi.",
+              "**Kechasi, 18:00 dan 08:00 gacha**, yarim soat qoidasi ishlamaydi — lid darhol navbatdagi hammaga ochiq. Lekin oyiga teng ulushdan ko‘p olib bo‘lmaydi: ulushingizni olib bo‘lgan bo‘lsangiz, «🌙 …Oylik ulushingizni allaqachon oldingiz — u kamroq olganlar uchun» yozuvini ko‘rasiz. Aks holda kechasi lidlarni yana uxlamay o‘tirgan odam olib ketardi.",
               "Lid boshqa odamning navbatida turganda, kartochkada mijozning niki yashirin — «yashirilgan — lid hozir sizniki emas». O‘zingizning [aloqalaringizdan](/admin/prospect) kelgan lidlar navbatga tushmaydi: ular darhol sizniki.",
               "Agar kartochka hech kimga yetib bormagan bo‘lsa — masalan, server bir muddat Telegram bilan aloqani yo‘qotgan bo‘lsa, — aloqa tiklangach, u «⚠️ Досылка: карточка не дошла из-за сбоя связи» belgisi bilan keyinroq keladi. Bunda lid qayta yuborilgan paytdagi qoidalar bo‘yicha yangidan tarqatiladi: kunduzi — navbat bilan, kechasi — hammaga. Uch sutkadan eski lidlar qayta yuborilmaydi.",
             ],
@@ -1407,8 +1407,8 @@ export const uz: HelpCopy = {
           body: [
             "Panel tepasida, «Bo‘limdan qanday foydalanish» yonida — **RU / UZ / PL** tanlagichi: ruscha, o‘zbekcha (lotin yozuvida) va polyakcha. Keraklisini bosing — sahifa darhol shu tilda qayta ochiladi, manzil va ochiq bo‘lim o‘zgarmaydi.",
             "Til brauzerga emas, sizga saqlanadi: telefondan yoki boshqa kompyuterdan kirsangiz ham, panel o‘sha tilda ochiladi. Tilni faqat o‘zingizga o‘zgartira olasiz — hamkasblaringizda u o‘zgarmaydi. Til tanlanmaguncha panel ruscha.",
-            "Panel bo‘limma-bo‘lim tarjima qilinmoqda. Bo‘lim hali tarjima qilinmagan bo‘lsa, uning tugma va yozuvlari ruscha qoladi — yo‘riqnomada ham ular ruscha nomlangan, ekranda ko‘z bilan topishingiz uchun. Telegramdagi bot xabarlari hozircha ruscha keladi.",
-            "Yo‘riqnoma panel tilida ochiladi. Polyakcha yo‘riqnoma hali yo‘q — polyak tilida u ruscha ochiladi. Yo‘riqnomaning boshqa tilini shu sahifaning tepasida tanlash mumkin, bu panel tiliga ta’sir qilmaydi.",
+            "Panel to‘liq tarjima qilingan: tugmalar, yozuvlar va maslahatlar — tanlangan tilda. Ruscha faqat Telegramdagi bot xabarlari va tugmalari (bot hozircha ruscha yozadi), hamkor kabineti va buyurtmachi uchun shartnoma matni qoladi — yo‘riqnomada ular ruscha nomlangan, ekranda ko‘z bilan topishingiz uchun.",
+            "Yo‘riqnoma panel tilida ochiladi: ruscha, o‘zbekcha yoki polyakcha. Yo‘riqnomaning boshqa tilini shu sahifaning tepasida tanlash mumkin — bu panel tiliga ta’sir qilmaydi.",
           ],
         },
         {
@@ -1426,7 +1426,7 @@ export const uz: HelpCopy = {
           roles: ["admin"],
           body: [
             "«Kim sifatida ko‘rsatish: egasi / rahbar / menejer» — yo‘riqnoma aynan shu roldagi odam o‘qiydigan ko‘rinishda: sizning bo‘limlaringizsiz va uning matni bilan. Shunday qilib yangi odamga nima tushuntirilayotganini birovning akkauntiga kirmasdan tekshirasiz.",
-            "Qo‘shimchalar uchun qoida: har bir yangi funksiya shu yerdagi o‘z bandi bilan birga keladi — rus va o‘zbek tillarida, rollar bo‘yicha. Bu har bir yangilanish chiqishida test bilan tekshiriladi.",
+            "Qo‘shimchalar uchun qoida: har bir yangi funksiya shu yerdagi o‘z bandi bilan birga keladi — rus, o‘zbek va polyak tillarida, rollar bo‘yicha. Bu har bir yangilanish chiqishida test bilan tekshiriladi.",
           ],
         },
       ],

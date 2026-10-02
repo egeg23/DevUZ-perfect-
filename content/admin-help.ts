@@ -3,13 +3,13 @@ import { SECTIONS, type Role } from "@/lib/admin/roles";
 
 import { ru } from "@/content/admin-help-ru";
 import { uz } from "@/content/admin-help-uz";
+import { pl } from "@/content/admin-help-pl";
 
 /**
  * Инструкции к панели.
  *
- * Два языка, а не четыре, как у сайта: панелью пользуется команда, и языки
- * здесь те, на которых в команде говорят. Узбекский — латиницей, как везде
- * на сайте.
+ * Три языка — те же, что у панели (lib/admin/i18n.ts): русский, узбекский
+ * латиницей и польский. Инструкция открывается на языке панели сотрудника.
  *
  * Правило владельца (см. CLAUDE.md): простыми словами, но подробно — что от
  * чего зависит и зачем; у менеджера, руководителя и владельца — своё, по
@@ -22,7 +22,7 @@ import { uz } from "@/content/admin-help-uz";
  * забыли.
  */
 
-export const HELP_LOCALES = ["ru", "uz"] as const;
+export const HELP_LOCALES = ["ru", "uz", "pl"] as const;
 export type HelpLocale = (typeof HELP_LOCALES)[number];
 
 export function isHelpLocale(value: string | undefined): value is HelpLocale {
@@ -32,6 +32,7 @@ export function isHelpLocale(value: string | undefined): value is HelpLocale {
 export const HELP_LOCALE_NAME: Record<HelpLocale, string> = {
   ru: "Русский",
   uz: "O‘zbekcha",
+  pl: "Polski",
 };
 
 export type HelpChannel = {
@@ -65,7 +66,7 @@ export type HelpCopy = {
   ask: string;
 };
 
-const copy: Record<HelpLocale, HelpCopy> = { ru, uz };
+const copy: Record<HelpLocale, HelpCopy> = { ru, uz, pl };
 
 export function helpCopy(locale: HelpLocale): HelpCopy {
   return copy[locale];

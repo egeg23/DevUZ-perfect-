@@ -114,31 +114,33 @@ test("якоря пунктов — латиница и не повторяют�
   }
 });
 
-test("узбекская инструкция — тот же набор пунктов, ролей и абзацев, что русская", () => {
-  const ru = helpCopy("ru").sections;
-  const uz = helpCopy("uz").sections;
-  for (const section of SECTIONS) {
-    const a = ru[section.href].items;
-    const b = uz[section.href].items;
-    assert.deepEqual(
-      b.map((i) => i.id),
-      a.map((i) => i.id),
-      `${section.href}: пункты по-узбекски не те же, что по-русски`,
-    );
-    a.forEach((item, index) => {
-      const other = b[index];
-      assert.deepEqual(other.roles ?? null, item.roles ?? null, `${section.href}#${item.id}: другие роли`);
-      for (const { role, paras } of readers(item, section.roles)) {
-        const theirs = readers(other, section.roles).find((r) => r.role === role);
-        assert.equal(
-          theirs?.paras.length,
-          paras.length,
-          `${section.href}#${item.id} (${role}): по-узбекски другое число абзацев`,
-        );
-      }
-    });
-  }
-});
+for (const locale of ["uz", "pl"] as const) {
+  test(`${locale}: инструкция — тот же набор пунктов, ролей и абзацев, что русская`, () => {
+    const ru = helpCopy("ru").sections;
+    const other = helpCopy(locale).sections;
+    for (const section of SECTIONS) {
+      const a = ru[section.href].items;
+      const b = other[section.href].items;
+      assert.deepEqual(
+        b.map((i) => i.id),
+        a.map((i) => i.id),
+        `${locale} ${section.href}: пункты не те же, что по-русски`,
+      );
+      a.forEach((item, index) => {
+        const theirsItem = b[index];
+        assert.deepEqual(theirsItem.roles ?? null, item.roles ?? null, `${locale} ${section.href}#${item.id}: другие роли`);
+        for (const { role, paras } of readers(item, section.roles)) {
+          const theirs = readers(theirsItem, section.roles).find((r) => r.role === role);
+          assert.equal(
+            theirs?.paras.length,
+            paras.length,
+            `${locale} ${section.href}#${item.id} (${role}): другое число абзацев`,
+          );
+        }
+      });
+    }
+  });
+}
 
 test("ссылки в тексте ведут туда, куда читателя пустят", () => {
   for (const locale of HELP_LOCALES) {
@@ -255,41 +257,43 @@ test("«?» у блоков ведут в существующие пункты"
   assert.ok(hints >= 5, `«?» у блоков всего ${hints}`);
 });
 
-test("узбекский текст переведён, а не скопирован", () => {
-  // Кириллица в узбекском допустима ровно в одном случае — это название
-  // кнопки или блока, которое человек видит на экране: панель русская, и
-  // «нажмите Выплачено» ему надо найти глазами. Всё остальное переведено.
-  const uz = helpCopy("uz");
-  const strings = [
-    uz.title,
-    uz.lead,
-    uz.sectionsTitle,
-    uz.contentsTitle,
-    uz.openSection,
-    uz.viewAs,
-    ...Object.values(uz.roleNames),
-    uz.ownerOnly,
-    uz.channelsTitle,
-    uz.channelsLead,
-    uz.rulesTitle,
-    uz.askTitle,
-    uz.ask,
-    ...uz.rules,
-    ...Object.values(uz.sections).flatMap((s) => [
-      s.what,
-      ...s.items.flatMap((i) => [i.title, ...(isByRole(i.body) ? Object.values(i.body).flat() : i.body)]),
-    ]),
-    ...uz.channels.flatMap((c) => [c.name, c.what, ...c.how]),
-  ];
+for (const locale of ["uz", "pl"] as const) {
+  test(`${locale}: текст переведён, а не скопирован`, () => {
+    // Кириллица в переводе допустима ровно в одном случае — это название
+    // в «ёлочках», которое человек видит на экране по-русски: кнопка бота в
+    // Telegram или кабинета партнёра. Всё остальное переведено.
+    const t = helpCopy(locale);
+    const strings = [
+      t.title,
+      t.lead,
+      t.sectionsTitle,
+      t.contentsTitle,
+      t.openSection,
+      t.viewAs,
+      ...Object.values(t.roleNames),
+      t.ownerOnly,
+      t.channelsTitle,
+      t.channelsLead,
+      t.rulesTitle,
+      t.askTitle,
+      t.ask,
+      ...t.rules,
+      ...Object.values(t.sections).flatMap((s) => [
+        s.what,
+        ...s.items.flatMap((i) => [i.title, ...(isByRole(i.body) ? Object.values(i.body).flat() : i.body)]),
+      ]),
+      ...t.channels.flatMap((c) => [c.name, c.what, ...c.how]),
+    ];
 
-  assert.ok(strings.length > 150, `строк для проверки всего ${strings.length}`);
-  for (const line of strings) {
-    const plain = String(line)
-      .replace(/«[^»]*»/g, "")
-      .replace(/\]\([^)]*\)/g, "]");
-    assert.ok(!/[а-яё]/i.test(plain), `не переведено на узбекский: ${line}`);
-  }
-});
+    assert.ok(strings.length > 150, `строк для проверки всего ${strings.length}`);
+    for (const line of strings) {
+      const plain = String(line)
+        .replace(/«[^»]*»/g, "")
+        .replace(/\]\([^)]*\)/g, "]");
+      assert.ok(!/[а-яё]/i.test(plain), `${locale}: не переведено: ${line}`);
+    }
+  });
+}
 
 test("разметка абзаца: ссылки и выделение, остальное — текст", () => {
   assert.deepEqual(parseInline("Откройте [Касания](/admin/prospect#portion) и **нажмите**."), [
@@ -312,6 +316,7 @@ test("разметка абзаца: ссылки и выделение, ост�
 
 test("язык берётся только из своего списка", () => {
   assert.equal(isHelpLocale("uz"), true);
+  assert.equal(isHelpLocale("pl"), true);
   assert.equal(isHelpLocale("ru"), true);
   assert.equal(isHelpLocale("en"), false, "английской инструкции нет — не притворяемся");
   assert.equal(isHelpLocale(undefined), false);
