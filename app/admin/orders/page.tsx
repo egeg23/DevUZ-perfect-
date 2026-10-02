@@ -13,26 +13,15 @@ import {
 } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
+import { orderErrorDict, orderPaymentDict, orderStatusDict, ordersDict } from "@/content/admin-panel/orders";
 import { productBySlug } from "@/content/products";
 import { requireStaff } from "@/lib/admin/guard";
+import { PANEL_INTL, pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { listOrders, type Order } from "@/lib/admin/orders";
 import { missingBankVars } from "@/lib/store/requisites";
 import { ORDER_STATUSES } from "@/lib/store/orders";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_LABEL: Record<string, string> = {
-  new: "новая",
-  invoiced: "счёт выставлен",
-  paid: "оплачена",
-  delivered: "передан",
-  cancelled: "отменена",
-};
-
-const PAYMENT_LABEL: Record<string, string> = {
-  bank: "безнал по счёту",
-  manager: "хочет обсудить оплату",
-};
 
 const BTN = "rounded-lg border px-3 py-1.5 text-xs transition";
 const BTN_IDLE = `${BTN} border-line bg-surface-2 text-muted hover:text-text`;
@@ -43,17 +32,23 @@ const FIELD =
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; r?: string; e?: string; link?: string }>;
+  searchParams: Promise<{ status?: string; r?: string; e?: string; d?: string; link?: string }>;
 }) {
   const staff = await requireStaff();
-  const { status, r, e, link } = await searchParams;
+  const { status, r, e, d, link } = await searchParams;
+  const locale = staff.panel_locale;
+  const t = pick(ordersDict, locale);
+  const statusLabel = pick(orderStatusDict, locale);
+  const errors = pick(orderErrorDict, locale);
+  // Причина — кодом из действия; незнакомый код — общее «не получилось».
+  const reason = e && e in errors ? errors[e as keyof typeof errors] : t.failed;
 
   const orders = await listOrders(status);
   const missingBank = missingBankVars();
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Заявки на покупку</h1>
+      <h1 className="text-lg font-semibold">{t.title}</h1>
 
       {/* Без реквизитов счёт можно завести, но нельзя напечатать — покупатель
           увидит номер и не увидит, куда платить. Сказать об этом надо один
@@ -61,16 +56,14 @@ export default async function OrdersPage({
           сделке. */}
       {missingBank.length ? (
         <p className="mt-4 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
-          Банковские реквизиты не настроены: {missingBank.join(", ")}. Счёт
-          выставится, но покупатель не увидит, куда платить. Переменные задаются
-          в окружении на сервере.
+          {t.bankMissing(missingBank.join(", "))}
         </p>
       ) : null}
 
       {r === "link" && link ? (
         <div className="mt-4 rounded-xl border border-green/30 bg-green/10 px-4 py-3">
           <p className="text-sm text-green">
-            Ссылка перевыпущена. Старая больше не работает — отправьте покупателю эту:
+            {t.linkReissued}
           </p>
           <p className="mt-2 break-all font-mono text-xs text-text">{link}</p>
         </div>
@@ -82,7 +75,8 @@ export default async function OrdersPage({
               : "border-gold/30 bg-gold/10 text-gold"
           }`}
         >
-          {r === "ok" ? "Готово." : (e ?? "Не получилось.")}
+          {r === "ok" ? t.done : reason}
+          {r !== "ok" && d ? <span className="mt-1 block font-mono text-xs opacity-80">{d}</span> : null}
         </p>
       ) : null}
 
@@ -95,7 +89,7 @@ export default async function OrdersPage({
               : "border-line bg-surface text-muted hover:text-text"
           }`}
         >
-          все
+          {t.all}
         </Link>
         {ORDER_STATUSES.map((value) => (
           <Link
@@ -107,7 +101,7 @@ export default async function OrdersPage({
                 : "border-line bg-surface text-muted hover:text-text"
             }`}
           >
-            {STATUS_LABEL[value]}
+            {statusLabel[value]}
           </Link>
         ))}
       </div>
@@ -115,27 +109,27 @@ export default async function OrdersPage({
       {orders.length ? (
         <ul className="mt-6 space-y-3">
           {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
+            <OrderCard key={order.id} order={order} locale={locale} t={t} />
           ))}
         </ul>
       ) : (
         <p className="mt-6 rounded-xl border border-line bg-surface px-5 py-8 text-center text-sm text-muted">
-          Заявок нет.
+          {t.empty}
         </p>
       )}
 
       <p className="mt-8 max-w-2xl text-xs leading-relaxed text-faint">
-        Контакт покупателя показан сразу, в отличие от лида: он прислал
-        реквизиты сам, чтобы ему выставили счёт. Каждое действие закрепляет
-        заявку за вами и попадает в журнал. Подтверждение оплаты требует
-        ссылки на выписку — без неё «оплачено» нечем подтвердить.
+        {t.foot}
       </p>
     </AdminShell>
   );
 }
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({ order, locale, t }: { order: Order; locale: PanelLocale; t: Picked<typeof ordersDict> }) {
   const product = productBySlug(order.product_slug);
+  const statusLabel = pick(orderStatusDict, locale);
+  const paymentLabel = pick(orderPaymentDict, locale);
+  const at = (iso: string) => when(iso, locale);
   const cancelled = order.status === "cancelled";
 
   return (
@@ -144,8 +138,8 @@ function OrderCard({ order }: { order: Order }) {
         <span className="font-mono text-xs text-blue-soft">
           {order.request_no ?? order.id.slice(0, 8)}
         </span>
-        <span className="font-medium">{product ? product.title.ru : order.product_slug}</span>
-        <span className="text-sm text-muted">{when(order.created_at)}</span>
+        <span className="font-medium">{product ? product.title[locale] || product.title.ru : order.product_slug}</span>
+        <span className="text-sm text-muted">{at(order.created_at)}</span>
         <span
           className={`rounded-full border px-2 py-0.5 text-xs ${
             cancelled
@@ -153,18 +147,18 @@ function OrderCard({ order }: { order: Order }) {
               : "border-line bg-surface-2 text-muted"
           }`}
         >
-          {STATUS_LABEL[order.status] ?? order.status}
+          {order.status in statusLabel ? statusLabel[order.status as keyof typeof statusLabel] : order.status}
         </span>
         <span className="ml-auto font-mono text-sm">
           {order.price_usd === null
-            ? "сумма не проставлена"
-            : `${order.price_usd.toLocaleString("ru-RU")} $`}
+            ? t.noAmount
+            : `${order.price_usd.toLocaleString(PANEL_INTL[locale])} $`}
         </span>
       </div>
 
       <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          <dt className="text-xs uppercase tracking-wider text-faint">Компания</dt>
+          <dt className="text-xs uppercase tracking-wider text-faint">{t.company}</dt>
           <dd className="mt-0.5">
             {order.company}
             {order.tax_id ? (
@@ -173,37 +167,37 @@ function OrderCard({ order }: { order: Order }) {
           </dd>
         </div>
         <div>
-          <dt className="text-xs uppercase tracking-wider text-faint">Контакт</dt>
+          <dt className="text-xs uppercase tracking-wider text-faint">{t.contact}</dt>
           <dd className="mt-0.5">
             {order.contact_name} — <span className="text-green">{order.contact}</span>
             {order.buyer_chat_id ? (
-              <span className="ml-2 text-xs text-faint">· бот привязан</span>
+              <span className="ml-2 text-xs text-faint">· {t.botLinked}</span>
             ) : null}
           </dd>
         </div>
         <div>
-          <dt className="text-xs uppercase tracking-wider text-faint">Оплата</dt>
+          <dt className="text-xs uppercase tracking-wider text-faint">{t.payment}</dt>
           <dd className="mt-0.5 text-muted">
-            {PAYMENT_LABEL[order.payment] ?? order.payment}
+            {order.payment in paymentLabel ? paymentLabel[order.payment as keyof typeof paymentLabel] : order.payment}
             {order.country ? ` · ${order.country}` : ""}
           </dd>
         </div>
         {order.invoice_no ? (
           <div>
-            <dt className="text-xs uppercase tracking-wider text-faint">Счёт</dt>
+            <dt className="text-xs uppercase tracking-wider text-faint">{t.invoice}</dt>
             <dd className="mt-0.5 font-mono text-xs">
               {order.invoice_no}
               {order.invoice_issued_at ? (
-                <span className="ml-2 text-faint">{when(order.invoice_issued_at)}</span>
+                <span className="ml-2 text-faint">{at(order.invoice_issued_at)}</span>
               ) : null}
             </dd>
           </div>
         ) : null}
         {order.paid_at ? (
           <div>
-            <dt className="text-xs uppercase tracking-wider text-faint">Оплачено</dt>
+            <dt className="text-xs uppercase tracking-wider text-faint">{t.paid}</dt>
             <dd className="mt-0.5 text-xs">
-              {when(order.paid_at)}
+              {at(order.paid_at)}
               {order.paid_ref ? (
                 <span className="ml-2 font-mono text-faint">{order.paid_ref}</span>
               ) : null}
@@ -212,20 +206,20 @@ function OrderCard({ order }: { order: Order }) {
         ) : null}
         {order.delivered_at ? (
           <div>
-            <dt className="text-xs uppercase tracking-wider text-faint">Передан</dt>
-            <dd className="mt-0.5 text-xs">{when(order.delivered_at)}</dd>
+            <dt className="text-xs uppercase tracking-wider text-faint">{t.delivered}</dt>
+            <dd className="mt-0.5 text-xs">{at(order.delivered_at)}</dd>
           </div>
         ) : null}
         {order.access_closed_at ? (
           <div>
-            <dt className="text-xs uppercase tracking-wider text-faint">Доступ</dt>
-            <dd className="mt-0.5 text-xs text-gold">закрыт с {when(order.access_closed_at)}</dd>
+            <dt className="text-xs uppercase tracking-wider text-faint">{t.access}</dt>
+            <dd className="mt-0.5 text-xs text-gold">{t.accessClosed(at(order.access_closed_at))}</dd>
           </div>
         ) : order.entitlement_version > 1 ? (
           <div>
-            <dt className="text-xs uppercase tracking-wider text-faint">Доступ</dt>
+            <dt className="text-xs uppercase tracking-wider text-faint">{t.access}</dt>
             <dd className="mt-0.5 text-xs text-gold">
-              отзывался {order.entitlement_version - 1} раз(а), сейчас открыт
+              {t.accessRevoked(order.entitlement_version - 1)}
             </dd>
           </div>
         ) : null}
@@ -242,7 +236,7 @@ function OrderCard({ order }: { order: Order }) {
           <form action={reopenOrderAction}>
             <input type="hidden" name="order" value={order.id} />
             <button type="submit" className={BTN_GO}>
-              вернуть в работу
+              {t.reopen}
             </button>
           </form>
         ) : (
@@ -258,11 +252,11 @@ function OrderCard({ order }: { order: Order }) {
                   min={0}
                   step={1}
                   required
-                  placeholder="сумма, $"
+                  placeholder={t.amountPlaceholder}
                   className={`${FIELD} w-28`}
                 />
                 <button type="submit" className={BTN_IDLE}>
-                  проставить
+                  {t.setAmount}
                 </button>
               </form>
             ) : null}
@@ -271,7 +265,7 @@ function OrderCard({ order }: { order: Order }) {
               <form action={issueInvoiceAction}>
                 <input type="hidden" name="order" value={order.id} />
                 <button type="submit" className={BTN_GO}>
-                  выставить счёт
+                  {t.issueInvoice}
                 </button>
               </form>
             ) : null}
@@ -283,11 +277,11 @@ function OrderCard({ order }: { order: Order }) {
                   name="ref"
                   required
                   maxLength={200}
-                  placeholder="строка выписки"
+                  placeholder={t.refPlaceholder}
                   className={`${FIELD} w-44`}
                 />
                 <button type="submit" className={BTN_GO}>
-                  оплата получена
+                  {t.markPaid}
                 </button>
               </form>
             ) : null}
@@ -296,7 +290,7 @@ function OrderCard({ order }: { order: Order }) {
               <form action={markDeliveredAction}>
                 <input type="hidden" name="order" value={order.id} />
                 <button type="submit" className={BTN_GO}>
-                  код передан
+                  {t.markDelivered}
                 </button>
               </form>
             ) : null}
@@ -304,7 +298,7 @@ function OrderCard({ order }: { order: Order }) {
             <form action={reissueLinkAction}>
               <input type="hidden" name="order" value={order.id} />
               <button type="submit" className={BTN_IDLE}>
-                перевыпустить ссылку
+                {t.reissueLink}
               </button>
             </form>
 
@@ -315,14 +309,14 @@ function OrderCard({ order }: { order: Order }) {
               <form action={restoreAccessAction}>
                 <input type="hidden" name="order" value={order.id} />
                 <button type="submit" className={BTN_IDLE}>
-                  вернуть доступ к файлам
+                  {t.restoreAccess}
                 </button>
               </form>
             ) : order.paid_at ? (
               <form action={revokeAccessAction}>
                 <input type="hidden" name="order" value={order.id} />
                 <button type="submit" className={BTN_IDLE}>
-                  отозвать доступ к файлам
+                  {t.revokeAccess}
                 </button>
               </form>
             ) : null}
@@ -330,14 +324,14 @@ function OrderCard({ order }: { order: Order }) {
             <form action={cancelOrderAction}>
               <input type="hidden" name="order" value={order.id} />
               <button type="submit" className={BTN_IDLE}>
-                отменить
+                {t.cancel}
               </button>
             </form>
           </>
         )}
 
         {order.owner_name ? (
-          <span className="ml-auto text-xs text-faint">ведёт {order.owner_name}</span>
+          <span className="ml-auto text-xs text-faint">{t.ownedBy(order.owner_name)}</span>
         ) : null}
       </div>
     </li>

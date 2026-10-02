@@ -170,8 +170,9 @@ test("трафик видят владелец и руководители, по
 
   // Шаги подключения, кнопки входа и почта аккаунта — за canConnect.
   const panel = read("components/admin/traffic-panel.tsx");
-  assert.match(panel, /canConnect \? \(\s*<Setup steps=\{setup\} \/>\s*\) : \(\s*<OwnerConnects \/>/);
-  assert.match(panel, /if \(!canConnect\) return <p[^>]*>Ресурс Google Analytics \{link\.property\}<\/p>/);
+  assert.match(panel, /canConnect \? \(\s*<Setup steps=\{setup\} t=\{t\} \/>\s*\) : \(\s*<OwnerConnects t=\{t\} \/>/);
+  // Руководителю — только номер ресурса, без почты и «войти заново».
+  assert.match(panel, /if \(!canConnect\) return <p[^>]*>\{t\.gaProperty\(link\.property \?\? ""\)\}<\/p>/);
   assert.match(panel, /\} else if \(!canConnect\) \{/);
   assert.match(panel, /\{canConnect \? <Notice /);
   // Ветка руководителя стоит раньше всех веток с кнопками.

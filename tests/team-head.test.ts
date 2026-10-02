@@ -112,8 +112,12 @@ test("заведённый руководителем менеджер сраз�
 test("страница: руководитель видит «взять к себе» и не видит «открепить»", () => {
   const page = read("app/admin/team/page.tsx");
   assert.match(page, /action=\{claim\}/);
-  assert.match(page, /взять к себе/);
-  assert.match(page, /открепляет владелец/);
+  // Подписи — из словаря раздела на языке панели.
+  assert.match(page, /\{t\.claim\}/);
+  assert.match(page, /\{t\.ownerDetaches\}/);
+  const dict = read("content/admin-panel/team.ts");
+  assert.match(dict, /claim: \{ ru: "взять к себе"/);
+  assert.match(dict, /ownerDetaches: \{ ru: "открепляет владелец"/);
   // Выпадающий список с «без руководителя» — только в ветке владельца.
   const select = page.indexOf("action={assignHead}");
   const branch = page.lastIndexOf("!manages ?", select);

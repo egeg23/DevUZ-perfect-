@@ -56,6 +56,52 @@
 | сайт компании | kompaniya sayti | strona firmy |
 | ИИ (модель) | sun’iy intellekt (SI) | AI |
 | отказался / игнорирует | rad etdi / javob bermayapti | odmówił / ignoruje |
+| выставить счёт | hisob-faktura chiqarish | wystaw fakturę |
+| выписка (банковская) | ko‘chirma | wyciąg |
+| сигнал (скаута) | signal | sygnał |
+| скаут | skaut | skaut |
+| разбор (резюме, переписки) | tahlil | analiza |
+| урок (из разбора переписки) | saboq | lekcja |
+| резюме, кандидат | rezyume, nomzod | CV, kandydat |
+| визиты / посетители / просмотры / отказы | tashriflar / tashrif buyuruvchilar / ko‘rishlar / rad etishlar | wizyty / użytkownicy / odsłony / odrzucenia |
+| ресурс Google Analytics | Google Analytics resursi | usługa Google Analytics |
+| войти через Google / войти заново | Google orqali kirish / qayta kirish | zaloguj przez Google / zaloguj ponownie |
+| грейд | daraja | poziom |
+| ставка (процент) | stavka | stawka |
+| начислено / заморожено / заработано / выплачено | hisoblangan / muzlatilgan / ishlab topilgan / to‘langan | naliczone / zamrożone / zarobione / wypłacone |
+| выплата (сотруднику) | to‘lov | wypłata |
+| себестоимость | tannarx | koszt wytworzenia |
+| чистая прибыль | sof foyda | zysk netto |
+| расходы (студии) | xarajatlar | wydatki |
+| соучредитель | hammuassis | współzałożyciel |
+| допродажа | qo‘shimcha sotuv | dosprzedaż |
+| уведомления (бота) | bildirishnomalar | powiadomienia |
+| отключить (сотрудника) | o‘chirish | wyłącz |
+| завести (сотрудника) | qo‘shish | dodaj |
+| закрепить / открепить (менеджера) | biriktirish / ajratish | przypisz / odepnij |
+| стадия (проекта) | bosqich | etap |
+| этап (договора) | bosqich | etap |
+| ведёт (проект) / ведущий | olib boradi / olib boruvchi | prowadzi / osoba prowadząca |
+| заказчик (сторона договора) | buyurtmachi | zamawiający |
+| порог сметы | smeta chegarasi | próg kosztorysu |
+| платёж (клиента) / аванс / остаток | to‘lov / avans / qoldiq | płatność / zaliczka / reszta |
+| подпись (владельца) | imzo | podpis |
+| подтвердить (договор, платёж) | tasdiqlash | zatwierdź / potwierdź |
+| налог | soliq | podatek |
+| партнёр (приводит клиентов) | hamkor | partner |
+| кабинет партнёра | hamkor kabineti | panel partnera |
+| агентство партнёра | agentlik | agencja |
+| выплата / заявка на выплату | to‘lov / to‘lov so‘rovi | wypłata / wniosek o wypłatę |
+| заморожено / заработано / доступно | muzlatilgan / ishlab topilgan / mavjud | zamrożone / zarobione / dostępne |
+| реквизиты | rekvizitlar | dane do przelewu |
+| промо-материалы | promo-materiallar | materiały promocyjne |
+| релиз (файл продукта) | reliz | wydanie |
+| прототип | prototip | prototyp |
+| разбор (статья о чужом сайте) | tahlil | analiza |
+| находка (в разборе) | topilma | ustalenie |
+| снимок (скриншот) | skrinshot | zrzut |
+| опубликовать / снять с публикации | e’lon qilish / e’londan olish | opublikuj / zdejmij z publikacji |
+| удалить | o‘chirish | usuń |
 
 Суммы и даты — через `Intl` с `PANEL_INTL[locale]` (lib/admin/i18n.ts),
 формы слова при числе — `plural()` для ru и pl; по-узбекски слово после

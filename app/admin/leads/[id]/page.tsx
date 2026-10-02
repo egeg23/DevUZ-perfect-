@@ -134,7 +134,7 @@ export default async function LeadPage({
   const lead = await leadById(id);
   if (!lead) notFound();
 
-  const quote = quoteForLead(lead);
+  const quote = quoteForLead(lead, locale);
 
   // Кто привёл: менеджеру важно знать про обещанный партнёром бонус и про
   // то, что клиент партнёрский, — на сумму и на тон разговора это влияет.

@@ -1,7 +1,6 @@
 import { record } from "@/lib/admin/audit";
 import { contractById, ownerChatId } from "@/lib/admin/contract-store";
 import {
-  BLOCK_TEXT,
   canIssue,
   dueDate,
   invoiceNumber,
@@ -9,6 +8,7 @@ import {
   invoicePurpose,
   stageAmountUsd,
   type Invoice,
+  type InvoiceBlock,
 } from "@/lib/admin/invoices";
 import { addPayment, removePayment } from "@/lib/admin/ledger";
 import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
@@ -63,7 +63,25 @@ export async function invoiceById(id: string): Promise<Invoice | null> {
   return data ? shape(data as unknown as Record<string, unknown>) : null;
 }
 
-export type IssueResult = { ok: true; id: string } | { ok: false; why: string };
+/**
+ * Отказ — кодом: он уезжает в адрес (`?error=код`), текст на языке панели —
+ * в content/admin-panel/contracts.ts (contractErrorDict).
+ */
+export type InvoiceFail =
+  | "offline"
+  | "contract_gone"
+  | "invoice_gone"
+  | Exclude<InvoiceBlock, "ok">
+  | "zero_amount"
+  | "not_written"
+  | "already_paid"
+  | "owner_confirms"
+  | "not_marked"
+  | "payment_failed"
+  | "owner_unmarks"
+  | "payment_confirmed";
+
+export type IssueResult = { ok: true; id: string } | { ok: false; why: InvoiceFail };
 
 /**
  * Выставить счёт на этап.
@@ -79,10 +97,10 @@ export async function issueInvoice(
   today = new Date().toISOString().slice(0, 10),
 ): Promise<IssueResult> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "offline" };
 
   const contract = await contractById(contractId);
-  if (!contract) return { ok: false, why: "Договора уже нет." };
+  if (!contract) return { ok: false, why: "contract_gone" };
 
   const bank = sellerBank();
   const issued = (await invoicesFor(contractId)).map((invoice) => invoice.stage_index);
@@ -94,10 +112,10 @@ export async function issueInvoice(
     issuedStages: issued,
     hasBank: Boolean(bank),
   });
-  if (block !== "ok") return { ok: false, why: BLOCK_TEXT[block] };
+  if (block !== "ok") return { ok: false, why: block };
 
   const amount = stageAmountUsd(contract.amount_usd, contract.stages, stageIndex);
-  if (!(amount > 0)) return { ok: false, why: "Сумма этапа вышла нулевой — проверьте доли." };
+  if (!(amount > 0)) return { ok: false, why: "zero_amount" };
 
   const { data, error } = await db
     .from("contract_invoices")
@@ -115,7 +133,7 @@ export async function issueInvoice(
 
   // Уникальный индекс по этапу: два счёта на одну работу — это два платежа,
   // и лишний выяснится при сверке, а не при выставлении.
-  if (error || !data) return { ok: false, why: "Счёт не записался — возможно, он уже есть." };
+  if (error || !data) return { ok: false, why: "not_written" };
 
   if (staff) {
     await record("invoice.issued", {
@@ -130,7 +148,7 @@ export async function issueInvoice(
 
 export type PaidResult =
   | { ok: true; confirmed: boolean }
-  | { ok: false; why: string };
+  | { ok: false; why: InvoiceFail };
 
 /** Сегодня по Ташкенту — дата платежа в проекте. */
 function tashkentToday(now = Date.now()): string {
@@ -149,7 +167,7 @@ function tashkentToday(now = Date.now()): string {
  */
 export async function markPaid(id: string, staff: Staff, ip: string): Promise<PaidResult> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "offline" };
   const { data } = await db
     .from("contract_invoices")
     .update({ paid_at: new Date().toISOString(), paid_by: staff.id })
@@ -157,7 +175,7 @@ export async function markPaid(id: string, staff: Staff, ip: string): Promise<Pa
     .is("paid_at", null)
     .select("contract_id, number, amount_usd")
     .maybeSingle();
-  if (!data) return { ok: false, why: "Счёт уже отмечен оплаченным или его нет." };
+  if (!data) return { ok: false, why: "already_paid" };
 
   const contractId = String(data.contract_id);
   await record("invoice.paid", {
@@ -206,17 +224,17 @@ async function tellOwnerAboutPayment(contractId: string, number: string, amountU
  * удаляется сам.
  */
 export async function confirmInvoicePayment(invoiceId: string, staff: Staff, ip: string): Promise<PaidResult> {
-  if (staff.role !== "admin") return { ok: false, why: "Платёж подтверждает владелец." };
+  if (staff.role !== "admin") return { ok: false, why: "owner_confirms" };
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "offline" };
 
   const invoice = await invoiceById(invoiceId);
-  if (!invoice) return { ok: false, why: "Счёта уже нет." };
-  if (!invoice.paid_at) return { ok: false, why: "Счёт не отмечен оплаченным." };
+  if (!invoice) return { ok: false, why: "invoice_gone" };
+  if (!invoice.paid_at) return { ok: false, why: "not_marked" };
   if (invoice.payment_id) return { ok: true, confirmed: true };
 
   const contract = await contractById(invoice.contract_id);
-  if (!contract) return { ok: false, why: "Договора уже нет." };
+  if (!contract) return { ok: false, why: "contract_gone" };
 
   const payment = await addPayment(
     contract.project_id,
@@ -229,7 +247,7 @@ export async function confirmInvoicePayment(invoiceId: string, staff: Staff, ip:
     staff,
     ip,
   );
-  if (!payment.ok || !payment.paymentId) return { ok: false, why: "Платёж в проект не записался. Попробуйте ещё раз." };
+  if (!payment.ok || !payment.paymentId) return { ok: false, why: "payment_failed" };
 
   const { data: linked } = await db
     .from("contract_invoices")
@@ -260,9 +278,9 @@ export async function confirmInvoicePayment(invoiceId: string, staff: Staff, ip:
  * проекта, как любой другой платёж.
  */
 export async function unmarkPaid(invoiceId: string, staff: Staff, ip: string): Promise<PaidResult> {
-  if (staff.role !== "admin") return { ok: false, why: "Снять отметку может владелец." };
+  if (staff.role !== "admin") return { ok: false, why: "owner_unmarks" };
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "offline" };
   const { data } = await db
     .from("contract_invoices")
     .update({ paid_at: null, paid_by: null })
@@ -270,7 +288,7 @@ export async function unmarkPaid(invoiceId: string, staff: Staff, ip: string): P
     .is("payment_id", null)
     .select("contract_id, number")
     .maybeSingle();
-  if (!data) return { ok: false, why: "Платёж по счёту уже подтверждён — удалите его в карточке проекта." };
+  if (!data) return { ok: false, why: "payment_confirmed" };
 
   await record("invoice.unpaid", {
     actorStaffId: staff.id,

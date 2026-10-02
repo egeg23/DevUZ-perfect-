@@ -4,10 +4,12 @@ import { dropCandidateAction, reviewResumeAction } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { when } from "@/components/admin/lead-table";
+import { candidateErrorDict, candidatesDict, verdictDict } from "@/content/admin-panel/candidates";
 import { requireStaff } from "@/lib/admin/guard";
+import { pick } from "@/lib/admin/i18n";
 import { canSee } from "@/lib/admin/roles";
 import { MAX_PDF_BYTES } from "@/lib/hiring/pdf";
-import { VERDICT_TEXT, type Verdict } from "@/lib/hiring/resume";
+import type { Verdict } from "@/lib/hiring/resume";
 import { listCandidates } from "@/lib/hiring/store";
 
 export const dynamic = "force-dynamic";
@@ -38,37 +40,50 @@ const TONE: Record<Verdict, { chip: string; card: string }> = {
 export default async function CandidatesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ e?: string; open?: string }>;
+  searchParams: Promise<{ e?: string; d?: string; open?: string }>;
 }) {
   const staff = await requireStaff();
   // Меню такую вкладку менеджеру не покажет, но адрес можно набрать руками.
   if (!canSee(staff.role, "/admin/candidates")) redirect("/admin");
 
-  const { e, open } = await searchParams;
+  const { e, d, open } = await searchParams;
   const rows = await listCandidates();
+  const locale = staff.panel_locale;
+  const t = pick(candidatesDict, locale);
+  const verdict = pick(verdictDict, locale);
+  const errors = pick(candidateErrorDict, locale);
+  // Причина — кодом из действия; у «запретных оснований» пояснение
+  // вставляется в саму фразу, у остальных — строкой под ней.
+  const error = !e
+    ? null
+    : e === "forbidden"
+      ? errors.forbidden(d ?? "")
+      : e in errors
+        ? (errors[e as keyof typeof errors] as string)
+        : errors.unknown;
+  const errorDetail = e && e !== "forbidden" ? d : undefined;
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Анализ кандидатов</h1>
+      <h1 className="text-lg font-semibold">{t.title}</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-        Загрузите резюме в PDF и напишите, на какую работу смотрим. Разбор покажет вердикт,
-        сильные стороны, стопы, вопросы на собеседование и способ проверить человека делом.
+        {t.intro}
       </p>
 
       <div className="mt-6 rounded-xl border border-line bg-surface px-5 py-5">
         <form action={reviewResumeAction} className="space-y-4">
           <label className="block text-xs uppercase tracking-wider text-faint">
-            На какую работу смотрим
+            {t.roleLabel}
             <input
               name="role"
               required
-              defaultValue="менеджер по продажам IT-услуг: холодные касания и обработка заявок с рекламы"
+              defaultValue={t.roleDefault}
               className="mt-1 block w-full rounded-lg border border-line bg-surface-2 px-4 py-2.5 text-sm text-text"
             />
           </label>
 
           <label className="block text-xs uppercase tracking-wider text-faint">
-            Резюме в PDF
+            {t.resumeLabel}
             <input
               type="file"
               name="resume"
@@ -79,28 +94,29 @@ export default async function CandidatesPage({
           </label>
 
           <div className="flex flex-wrap items-center gap-3">
-            <SubmitButton pendingLabel="Читаем резюме — это до минуты…" base="rounded-xl px-4 py-2 text-sm font-semibold">
-              Разобрать
+            <SubmitButton pendingLabel={t.reading} base="rounded-xl px-4 py-2 text-sm font-semibold">
+              {t.review}
             </SubmitButton>
             <span className="text-xs text-faint">
-              До {Math.round(MAX_PDF_BYTES / 1024 / 1024)} МБ. Нужен PDF, из которого копируется текст: скан
-              страниц не прочитается.
+              {t.sizeNote(Math.round(MAX_PDF_BYTES / 1024 / 1024))}
             </span>
           </div>
         </form>
 
-        {e ? <p className="mt-4 text-sm text-gold">{decodeURIComponent(e)}</p> : null}
+        {error ? (
+          <p className="mt-4 text-sm text-gold">
+            {error}
+            {errorDetail ? <span className="mt-1 block font-mono text-xs opacity-80">{errorDetail}</span> : null}
+          </p>
+        ) : null}
       </div>
 
       <p className="mt-4 max-w-2xl text-xs leading-relaxed text-faint">
-        Файл нигде не сохраняется — остаётся только разбор. Возраст, пол, семейное положение и
-        национальность в оценке не участвуют: они ничего не говорят о работе, а решение, принятое
-        по ним, — это не оценка, а предрассудок. Разбор опирается только на опыт и на то, что
-        написано в резюме; последнее слово всё равно за вами.
+        {t.privacy}
       </p>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-faint">Разобранных резюме пока нет.</p>
+        <p className="mt-8 text-sm text-faint">{t.empty}</p>
       ) : (
         <ul className="mt-8 space-y-4">
           {rows.map((row) => (
@@ -114,11 +130,11 @@ export default async function CandidatesPage({
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="text-base font-semibold">{row.name}</span>
                 <span className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold ${TONE[row.verdict].chip}`}>
-                  {VERDICT_TEXT[row.verdict]}
+                  {verdict[row.verdict]}
                 </span>
                 <span className="text-xs text-faint">
                   {row.role}
-                  {row.author ? ` · ${row.author}` : ""} · {when(row.createdAt)}
+                  {row.author ? ` · ${row.author}` : ""} · {when(row.createdAt, locale)}
                 </span>
               </div>
 
@@ -127,12 +143,12 @@ export default async function CandidatesPage({
                 <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{row.report.why}</p>
               ) : null}
               {row.wants ? (
-                <p className="mt-2 text-xs text-faint">Сам претендует на: {row.wants}</p>
+                <p className="mt-2 text-xs text-faint">{t.wants} {row.wants}</p>
               ) : null}
 
               <div className="mt-5 grid gap-5 md:grid-cols-2">
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-faint">Сильные стороны</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-faint">{t.strengths}</h3>
                   <ul className="mt-2 space-y-2.5">
                     {row.report.strengths.map((s) => (
                       <li key={s.title} className="text-sm leading-relaxed">
@@ -145,7 +161,7 @@ export default async function CandidatesPage({
                 </div>
 
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-faint">Стопы</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-faint">{t.stops}</h3>
                   <ul className="mt-2 space-y-2.5">
                     {row.report.stops.map((s) => (
                       <li key={s.title} className="text-sm leading-relaxed">
@@ -160,7 +176,7 @@ export default async function CandidatesPage({
 
               {row.report.facts.length ? (
                 <div className="mt-5">
-                  <h3 className="text-xs uppercase tracking-wider text-faint">Что в резюме сказано прямо</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-faint">{t.facts}</h3>
                   <dl className="mt-2 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
                     {row.report.facts.map((f) => (
                       <div key={f.label} className="text-sm">
@@ -174,7 +190,7 @@ export default async function CandidatesPage({
 
               {row.report.questions.length ? (
                 <div className="mt-5 border-l-2 border-blue-soft/40 pl-4">
-                  <h3 className="text-xs uppercase tracking-wider text-faint">Спросить на собеседовании</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-faint">{t.questions}</h3>
                   <ul className="mt-2 space-y-2.5">
                     {row.report.questions.map((q) => (
                       <li key={q.ask} className="text-sm leading-relaxed">
@@ -188,10 +204,10 @@ export default async function CandidatesPage({
 
               {row.report.trial.length ? (
                 <div className="mt-5 rounded-lg border border-line bg-surface-2/40 px-4 py-3">
-                  <h3 className="text-xs uppercase tracking-wider text-faint">Как проверить делом</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-faint">{t.trial}</h3>
                   <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-muted">
-                    {row.report.trial.map((t) => (
-                      <li key={t}>{t}</li>
+                    {row.report.trial.map((step) => (
+                      <li key={step}>{step}</li>
                     ))}
                   </ol>
                 </div>
@@ -199,8 +215,8 @@ export default async function CandidatesPage({
 
               <form action={dropCandidateAction} className="mt-4">
                 <input type="hidden" name="candidate" value={row.id} />
-                <SubmitButton pendingLabel="Убираем…" base="rounded-lg px-3 py-1.5 text-xs" tone="quiet">
-                  Убрать разбор
+                <SubmitButton pendingLabel={t.removing} base="rounded-lg px-3 py-1.5 text-xs" tone="quiet">
+                  {t.remove}
                 </SubmitButton>
               </form>
             </li>

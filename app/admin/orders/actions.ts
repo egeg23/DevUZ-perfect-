@@ -14,6 +14,7 @@ import {
   restoreEntitlement,
   revokeEntitlement,
   setOrderAmount,
+  type OrderRefusal,
 } from "@/lib/admin/orders";
 
 /**
@@ -26,18 +27,21 @@ import {
  *
  * Причина отказа доезжает до экрана параметром `e`, а не теряется в логах:
  * менеджер, нажавший «оплата получена» на заявке без счёта, должен увидеть
- * почему, а не «не получилось».
+ * почему, а не «не получилось». В адресе — код причины, фразу страница
+ * берёт из словаря на языке сотрудника; ответ базы, если он есть, — в `d`.
  */
-async function run(
-  operation: () => Promise<{ ok: true } | { ok: false; reason: string }>,
-): Promise<never> {
+type Refused = { ok: false; reason: OrderRefusal; detail?: string };
+
+function failedUrl(result: Refused): string {
+  const params = new URLSearchParams({ r: "failed", e: result.reason });
+  if (result.detail) params.set("d", result.detail.slice(0, 300));
+  return `/admin/orders?${params}`;
+}
+
+async function run(operation: () => Promise<{ ok: true } | Refused>): Promise<never> {
   const result = await operation();
   revalidatePath("/admin/orders");
-  redirect(
-    result.ok
-      ? "/admin/orders?r=ok"
-      : `/admin/orders?r=failed&e=${encodeURIComponent(result.reason)}`,
-  );
+  redirect(result.ok ? "/admin/orders?r=ok" : failedUrl(result));
 }
 
 function orderId(formData: FormData): string {
@@ -112,6 +116,6 @@ export async function reissueLinkAction(formData: FormData) {
   redirect(
     result.ok
       ? `/admin/orders?r=link&link=${encodeURIComponent(result.url)}`
-      : `/admin/orders?r=failed&e=${encodeURIComponent(result.reason)}`,
+      : failedUrl(result),
   );
 }

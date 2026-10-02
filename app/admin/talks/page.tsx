@@ -2,8 +2,11 @@ import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
+import { leadLocaleDict } from "@/content/admin-panel/stats";
+import { talkOutcomeDict, talksDict } from "@/content/admin-panel/talks";
 import { requireStaff } from "@/lib/admin/guard";
-import { OUTCOME_TEXT, type TalkOutcome } from "@/lib/talk/review";
+import { pick } from "@/lib/admin/i18n";
+import type { TalkOutcome } from "@/lib/talk/review";
 import { listReviews } from "@/lib/talk/review-store";
 
 export const dynamic = "force-dynamic";
@@ -35,8 +38,6 @@ const OUTCOME_TONE: Record<TalkOutcome, string> = {
   talking: "text-gold",
 };
 
-const LANG_LABEL: Record<string, string> = { ru: "русский", uz: "узбекский", en: "английский" };
-
 function Tile({ value, label, hint }: { value: string | number; label: string; hint?: string }) {
   return (
     <div className="rounded-xl border border-line bg-surface px-5 py-4">
@@ -60,6 +61,10 @@ function Line({ title, text }: { title: string; text: string | null }) {
 export default async function TalksPage() {
   const staff = await requireStaff();
   const rows = await listReviews();
+  const locale = staff.panel_locale;
+  const t = pick(talksDict, locale);
+  const outcomeLabel = pick(talkOutcomeDict, locale);
+  const langLabel = pick(leadLocaleDict, locale);
 
   const lessons = rows.filter((r) => r.lesson && r.confidence === "high");
   const refused = rows.filter((r) => r.outcome === "refused").length;
@@ -67,37 +72,31 @@ export default async function TalksPage() {
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Надзор за перепиской</h1>
+      <h1 className="text-lg font-semibold">{t.title}</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-        Каждый разговор, который затих больше часа назад, читает вторая модель — не та, что
-        его вела. Она отвечает на четыре вопроса: что в нашем письме зацепило, какое
-        возражение прозвучало, где разговор сломался и какой отсюда урок.
+        {t.intro}
       </p>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile value={rows.length} label="разобрано переписок" />
+        <Tile value={rows.length} label={t.tileReviewed} />
         <Tile
           value={lessons.length}
-          label="уроков с опорой на слова"
-          hint="Разговоры короче двух реплик урока не дают: вывод из одной реплики — догадка."
+          label={t.tileLessons}
+          hint={t.tileLessonsHint}
         />
-        <Tile value={refused} label="отказов" />
-        <Tile value={uz} label="на узбекском" />
+        <Tile value={refused} label={t.tileRefused} />
+        <Tile value={uz} label={t.tileUzbek} />
       </div>
 
       {/* Пока уроков мало — так и сказано. Пустая страница с бодрым
           заголовком врёт не меньше, чем выдуманный вывод. */}
       <p className="mt-6 max-w-2xl rounded-xl border border-gold/30 bg-gold/5 px-5 py-4 text-sm leading-relaxed text-gold">
-        Уроки пока только копятся и никуда не подмешиваются. Учить систему на трёх
-        разговорах нельзя: она уверенно повторит случайность. Подмешивать их в промпт
-        первого письма начнём, когда наберётся несколько десятков ответов, — и это будет
-        отдельное решение, ваше.
+        {t.notYet}
       </p>
 
       {rows.length === 0 ? (
         <p className="mt-6 text-sm text-faint">
-          Разобранных переписок пока нет. Появятся, как только клиент ответит и разговор
-          затихнет на час.
+          {t.empty}
         </p>
       ) : (
         <ul className="mt-6 space-y-3">
@@ -106,17 +105,17 @@ export default async function TalksPage() {
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="font-mono text-xs text-blue-soft">{row.host}</span>
                 <span className={`text-xs ${OUTCOME_TONE[row.outcome]}`}>
-                  {OUTCOME_TEXT[row.outcome]}
+                  {outcomeLabel[row.outcome]}
                 </span>
                 <span className="text-xs text-faint">
-                  {LANG_LABEL[row.lang] ?? row.lang} · {row.turns} реплик клиента · {when(row.createdAt)}
+                  {row.lang in langLabel ? langLabel[row.lang as keyof typeof langLabel] : row.lang} · {t.turns(row.turns)} · {when(row.createdAt, locale)}
                 </span>
                 {row.confidence === "low" ? (
-                  <span className="text-xs text-faint">разговора мало — вывод слабый</span>
+                  <span className="text-xs text-faint">{t.weak}</span>
                 ) : null}
                 {row.leadId ? (
                   <Link href={`/admin/leads/${row.leadId}`} className="ml-auto text-xs text-green hover:underline">
-                    лид →
+                    {t.lead}
                   </Link>
                 ) : null}
               </div>
@@ -127,9 +126,9 @@ export default async function TalksPage() {
                 </p>
               ) : null}
 
-              <Line title="Зацепило" text={row.hook} />
-              <Line title="Возражение" text={row.objection} />
-              <Line title="Сломалось" text={row.failed} />
+              <Line title={t.hook} text={row.hook} />
+              <Line title={t.objection} text={row.objection} />
+              <Line title={t.failed} text={row.failed} />
             </li>
           ))}
         </ul>

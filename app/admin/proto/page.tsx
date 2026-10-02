@@ -1,8 +1,10 @@
 import { buildAction, sentAction } from "@/app/admin/proto/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { CopyMessage } from "@/components/admin/copy-message";
-import { PROTO_NICHES, protoNicheByKey } from "@/content/proto/models";
+import { protoDict, protoNichePl, protoResultDict, protoWhen } from "@/content/admin-panel/proto";
+import { PROTO_NICHES, protoNicheByKey, type ProtoNiche } from "@/content/proto/models";
 import { requireAdmin } from "@/lib/admin/guard";
+import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { protosList } from "@/lib/proto/store";
 import { absoluteUrl } from "@/lib/seo";
 
@@ -14,35 +16,24 @@ const BUTTON =
   "rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-xs transition hover:border-green/40 hover:text-green";
 const LABEL = "block text-xs text-faint";
 
-/** Поля, которыми перебивают то, что нашёл аудитор. */
-const OVERRIDES: readonly (readonly [string, string])[] = [
-  ["name", "Название компании"],
-  ["city", "Город — именительный: Ташкент"],
-  ["hours", "Часы работы — как у него на сайте"],
-  ["address", "Адрес"],
-  ["phone", "Телефон"],
-  ["telegram", "Телеграм — без собаки"],
-  ["whatsapp", "Ватсап — номер"],
-  ["wheel", "Снимок для трюка — ссылка на квадратный PNG от 1200 px"],
-  ["prospect", "ID касания, если прототип по лиду"],
-];
+/** Поля, которыми перебивают то, что нашёл аудитор: имя поля и ключ подписи. */
+const OVERRIDES = [
+  ["name", "fName"],
+  ["city", "fCity"],
+  ["hours", "fHours"],
+  ["address", "fAddress"],
+  ["phone", "fPhone"],
+  ["telegram", "fTelegram"],
+  ["whatsapp", "fWhatsapp"],
+  ["wheel", "fWheel"],
+  ["prospect", "fProspect"],
+] as const;
 
-const STATUS: Record<string, string> = {
-  draft: "черновик",
-  ready: "готов",
-  sent: "отправлен",
-};
+const STATUS = { draft: "draft", ready: "ready", sent: "sent" } as const;
 
-/** «13.09.26, 18:04» по Ташкенту — в базе время в UTC. */
-function when(iso: string): string {
-  return new Date(iso).toLocaleString("ru-RU", {
-    timeZone: "Asia/Tashkent",
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+/** Ниша на языке панели: в каталоге — русский и узбекский, польский — здесь. */
+function nicheName(niche: ProtoNiche, locale: PanelLocale): string {
+  return locale === "pl" ? (protoNichePl[niche.key] ?? niche.key) : niche[locale];
 }
 
 /**
@@ -66,7 +57,11 @@ export default async function ProtoPage({
 }) {
   const staff = await requireAdmin();
   const query = await searchParams;
-  const { r } = query;
+  const { r, d } = query;
+  const locale = staff.panel_locale;
+  const t = pick(protoDict, locale);
+  const results = pick(protoResultDict, locale);
+  const notice = r ? (Object.hasOwn(results, r) ? results[r as keyof typeof results](d ?? "") : r) : null;
   const rows = await protosList();
 
   /*
@@ -81,35 +76,23 @@ export default async function ProtoPage({
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Прототипы</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-        Страница, которую видно вместо разговора «а как это будет выглядеть».
-        Собирается за минуту после первички: адрес его сайта, ниша и услуги,
-        которые он сам назвал. Название, описание, телефон, мессенджеры и
-        логотип снимаются с его сайта — поля ниже нужны, только если там
-        этого нет.
-      </p>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-        Ничего, кроме сказанного им, на странице не появится: ни цифр, ни
-        сроков, ни цен. Кнопка «Записаться» открывает его же телеграм или
-        ватсап с готовым текстом — обращение падает ему, а не нам. Нет
-        мессенджера — кнопка набирает номер, и текст страницы меняется под
-        это сам.
-      </p>
+      <h1 className="text-lg font-semibold">{t.title}</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro1}</p>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro2}</p>
 
       {r && r !== "ok" ? (
-        <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">{r}</p>
+        <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">{notice}</p>
       ) : null}
       {r === "ok" ? (
         <p className="mt-4 rounded-lg border border-green/40 bg-green/10 px-4 py-3 text-sm text-green">
-          Готово.
+          {notice}
         </p>
       ) : null}
 
       <form action={buildAction} className="mt-6 rounded-xl border border-line bg-surface p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="sm:col-span-2">
-            <span className={LABEL}>Сайт клиента</span>
+            <span className={LABEL}>{t.site}</span>
             <input
               name="url"
               required
@@ -120,34 +103,32 @@ export default async function ProtoPage({
           </label>
 
           <label>
-            <span className={LABEL}>Ниша</span>
+            <span className={LABEL}>{t.niche}</span>
             <select name="niche" className={`${INPUT} mt-1`} defaultValue={prefill("niche") ?? PROTO_NICHES[0].key}>
               {PROTO_NICHES.map((niche) => (
                 <option key={niche.key} value={niche.key}>
-                  {niche.ru}
+                  {nicheName(niche, locale)}
                 </option>
               ))}
             </select>
           </label>
 
           <label>
-            <span className={LABEL}>Язык страницы</span>
+            <span className={LABEL}>{t.pageLang}</span>
             <select name="locale" className={`${INPUT} mt-1`} defaultValue={prefill("locale") ?? "ru"}>
-              <option value="ru">Русский</option>
-              <option value="uz">O‘zbekcha</option>
+              <option value="ru">{t.langRu}</option>
+              <option value="uz">{t.langUz}</option>
             </select>
           </label>
 
           <label className="sm:col-span-2">
-            <span className={LABEL}>
-              Услуги — по одной в строке, цена после тире. Пишите так, как он сам их называет.
-            </span>
+            <span className={LABEL}>{t.services}</span>
             <textarea
               name="services"
               required
               rows={6}
               defaultValue={prefill("services")}
-              placeholder={"Замена шин — от 40 000 сум\nБалансировка колеса\nРемонт прокола"}
+              placeholder={t.servicesPh}
               className={`${INPUT} mt-1 font-mono text-xs leading-relaxed`}
             />
           </label>
@@ -156,18 +137,16 @@ export default async function ProtoPage({
         {/* Раскрыт, если перебивки пришли ссылкой: иначе человек нажмёт
             «Собрать», не увидев подставленного за него. */}
         <details className="mt-4" open={OVERRIDES.some(([name]) => prefill(name))}>
-          <summary className="cursor-pointer text-xs text-faint">
-            Перебить то, что нашлось на сайте
-          </summary>
+          <summary className="cursor-pointer text-xs text-faint">{t.overrides}</summary>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {OVERRIDES.map(([name, label]) => (
               <label key={name}>
-                <span className={LABEL}>{label}</span>
+                <span className={LABEL}>{t[label]}</span>
                 <input name={name} defaultValue={prefill(name)} className={`${INPUT} mt-1`} />
               </label>
             ))}
             <label className="sm:col-span-2">
-              <span className={LABEL}>Строка о себе — его словами, не нашими</span>
+              <span className={LABEL}>{t.fAbout}</span>
               <input name="about" defaultValue={prefill("about")} className={`${INPUT} mt-1`} />
             </label>
           </div>
@@ -177,7 +156,7 @@ export default async function ProtoPage({
           type="submit"
           className="mt-4 rounded-xl bg-green px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-green-dim"
         >
-          Собрать прототип
+          {t.build}
         </button>
       </form>
 
@@ -191,14 +170,14 @@ export default async function ProtoPage({
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-semibold">{proto.name}</span>
                   <span className="text-xs text-faint">
-                    {niche?.ru ?? proto.niche} · {proto.source} · {when(proto.created_at)}
+                    {niche ? nicheName(niche, locale) : proto.niche} · {proto.source} · {protoWhen(proto.created_at, locale)}
                   </span>
                   <span
                     className={`ml-auto rounded px-2 py-0.5 font-mono text-[11px] ${
                       proto.status === "draft" ? "bg-gold/15 text-gold" : "bg-surface-2 text-faint"
                     }`}
                   >
-                    {STATUS[proto.status] ?? proto.status}
+                    {proto.status in STATUS ? t[STATUS[proto.status as keyof typeof STATUS]] : proto.status}
                   </span>
                 </div>
 
@@ -212,27 +191,23 @@ export default async function ProtoPage({
 
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-faint">
                   {proto.status === "draft" ? (
-                    <span>
-                      Черновик наружу не уходит: по ссылке будет 404, пока проверка не пройдена.
-                    </span>
+                    <span>{t.draftNote}</span>
                   ) : (
                     <>
                       <code className="rounded bg-ink px-2 py-1 font-mono text-[11px] text-muted">{link}</code>
-                      <CopyMessage text={link} label="Скопировать ссылку" />
+                      <CopyMessage text={link} label={t.copyLink} />
                       {proto.status === "ready" ? (
                         <form action={sentAction}>
                           <input type="hidden" name="proto" value={proto.id} />
                           <button type="submit" className={BUTTON}>
-                            Отправил клиенту
+                            {t.markSent}
                           </button>
                         </form>
                       ) : null}
                       {/* Открыл и вернулся второй раз — звонить сегодня. Не открыл
                           за два дня — прототип не дошёл, и дело не в прототипе. */}
                       <span>
-                        {proto.opened_at
-                          ? `открыл ${when(proto.opened_at)}${proto.opens > 1 ? `, заходов: ${proto.opens}` : ""}`
-                          : "ещё не открывал"}
+                        {proto.opened_at ? t.opened(protoWhen(proto.opened_at, locale), proto.opens) : t.notOpened}
                       </span>
                     </>
                   )}
@@ -242,7 +217,7 @@ export default async function ProtoPage({
           })}
         </ul>
       ) : (
-        <p className="mt-6 text-sm text-faint">Прототипов пока нет.</p>
+        <p className="mt-6 text-sm text-faint">{t.empty}</p>
       )}
     </AdminShell>
   );

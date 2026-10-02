@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 
 import { saveAction } from "@/app/admin/razbor/actions";
 import { AdminShell } from "@/components/admin/shell";
+import { razborDict, razborResultDict } from "@/content/admin-panel/razbor";
 import { requireStaff } from "@/lib/admin/guard";
+import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { evidenceFor, shootableCodes } from "@/lib/razbor/evidence";
 import { razborById, type RazborArticle } from "@/lib/razbor/store";
 
@@ -34,13 +36,17 @@ export default async function RazborEditPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ r?: string }>;
+  searchParams: Promise<{ r?: string; d?: string }>;
 }) {
   const staff = await requireStaff();
   if (staff.role !== "admin") notFound();
 
   const { id } = await params;
-  const { r } = await searchParams;
+  const { r, d } = await searchParams;
+  const locale = staff.panel_locale;
+  const t = pick(razborDict, locale);
+  const results = pick(razborResultDict, locale);
+  const notice = r ? (Object.hasOwn(results, r) ? results[r as keyof typeof results](d ?? "") : r) : null;
   const row = await razborById(id);
   if (!row || !row.ru || !row.uz) notFound();
 
@@ -55,33 +61,30 @@ export default async function RazborEditPage({
   return (
     <AdminShell staff={staff}>
       <Link href="/admin/razbor" className="text-xs text-faint transition hover:text-green">
-        ← к разборам
+        {t.back}
       </Link>
       <h1 className="mt-2 text-lg font-semibold">{row.ru.title}</h1>
       <p className="mt-1 text-xs text-faint">
-        {row.category} · {row.city} · {row.status === "published" ? "опубликован" : "на проверке"} ·{" "}
+        {row.category} · {row.city} · {row.status === "published" ? t.statusPublished : t.statusReview} ·{" "}
         {row.sourceUrl}
       </p>
 
       {r ? (
-        <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">{r}</p>
+        <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">{notice}</p>
       ) : null}
 
-      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">
-        Меняется только текст. Адрес страницы, запрос и цена собираются кодом:
-        адрес опубликованного разбора уже стоит в поиске, и переименовать его
-        тихо — значит потерять позицию и оставить битую ссылку.
-      </p>
+      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">{t.onlyText}</p>
 
       <form action={saveAction} className="mt-8 space-y-10">
         <input type="hidden" name="razbor" value={row.id} />
 
-        {(["ru", "uz"] as const).map((locale) => (
+        {(["ru", "uz"] as const).map((lang) => (
           <Side
-            key={locale}
+            key={lang}
+            lang={lang}
             locale={locale}
-            slug={locale === "ru" ? row.slugRu : row.slugUz}
-            article={locale === "ru" ? (row.ru as RazborArticle) : (row.uz as RazborArticle)}
+            slug={lang === "ru" ? row.slugRu : row.slugUz}
+            article={lang === "ru" ? (row.ru as RazborArticle) : (row.uz as RazborArticle)}
             codes={codes}
           />
         ))}
@@ -91,12 +94,10 @@ export default async function RazborEditPage({
             type="submit"
             className="rounded-lg border border-green/40 bg-green/10 px-4 py-2 text-sm text-green transition hover:bg-green/20"
           >
-            Сохранить
+            {t.save}
           </button>
           <span className="text-xs text-faint">
-            {row.status === "published"
-              ? "Страница на сайте обновится сразу после сохранения."
-              : "Разбор останется на проверке — опубликовать можно будет со списка."}
+            {row.status === "published" ? t.savePublished : t.saveReview}
           </span>
         </div>
       </form>
@@ -104,13 +105,19 @@ export default async function RazborEditPage({
   );
 }
 
+/**
+ * Одна языковая версия статьи. `lang` — язык статьи (ru или uz, контент
+ * сайта), `locale` — язык панели, на котором подписаны поля.
+ */
 function Side({
+  lang,
   locale,
   slug,
   article,
   codes,
 }: {
-  locale: "ru" | "uz";
+  lang: "ru" | "uz";
+  locale: PanelLocale;
   slug: string;
   article: RazborArticle;
   codes: string[];
@@ -118,6 +125,7 @@ function Side({
   // Пустые поля в конце — способ добавить находку без единой строки на
   // клиенте: форма отправляется целиком, а находка без заголовка просто не
   // сохраняется. Тем же способом находка и удаляется — заголовок стирается.
+  const t = pick(razborDict, locale);
   const findings = [
     ...article.findings,
     ...Array.from({ length: SPARE }, () => ({ code: "", title: "", impact: "", fix: "" })),
@@ -126,57 +134,54 @@ function Side({
   return (
     <section className="rounded-xl border border-line bg-surface px-5 py-5">
       <h2 className="text-sm font-semibold uppercase tracking-wider text-faint">
-        {locale === "ru" ? "По-русски" : "По-узбекски"}
+        {lang === "ru" ? t.sideRu : t.sideUz}
       </h2>
       <p className="mt-1 font-mono text-[0.7rem] text-faint">
-        /{locale}/razbor/{slug} · запрос: {article.query}
+        /{lang}/razbor/{slug} · {t.query} {article.query}
       </p>
 
       <label className="mt-5 block text-xs text-faint">
-        Заголовок страницы
-        <input name={`${locale}.title`} defaultValue={article.title} className={FIELD} />
+        {t.pageTitle}
+        <input name={`${lang}.title`} defaultValue={article.title} className={FIELD} />
       </label>
 
       <label className="mt-4 block text-xs text-faint">
-        Описание для выдачи
-        <input name={`${locale}.description`} defaultValue={article.description} className={FIELD} />
+        {t.description}
+        <input name={`${lang}.description`} defaultValue={article.description} className={FIELD} />
       </label>
 
       <label className="mt-4 block text-xs text-faint">
-        Преамбула — абзацы через пустую строку
+        {t.introLabel}
         <textarea
-          name={`${locale}.intro`}
+          name={`${lang}.intro`}
           defaultValue={article.intro.join("\n\n")}
           rows={6}
           className={FIELD}
         />
       </label>
 
-      <p className="mt-6 text-xs text-faint">
-        Находки. Пустой заголовок — находка удаляется; в пустых полях внизу
-        добавляется новая.
-      </p>
+      <p className="mt-6 text-xs text-faint">{t.findingsNote}</p>
       <div className="mt-2 space-y-3">
         {findings.map((finding, i) => {
           const rule = evidenceFor(finding.code);
           return (
             <div key={i} className="rounded-lg border border-line-soft bg-surface-2 px-4 py-3">
               <input
-                name={`${locale}.finding.${i}.title`}
+                name={`${lang}.finding.${i}.title`}
                 defaultValue={finding.title}
-                placeholder="Что видит посетитель"
+                placeholder={t.findingTitlePh}
                 className={FIELD}
               />
               <input
-                name={`${locale}.finding.${i}.impact`}
+                name={`${lang}.finding.${i}.impact`}
                 defaultValue={finding.impact}
-                placeholder="Чем оборачивается"
+                placeholder={t.findingImpactPh}
                 className={FIELD}
               />
               <input
-                name={`${locale}.finding.${i}.fix`}
+                name={`${lang}.finding.${i}.fix`}
                 defaultValue={finding.fix}
-                placeholder="Что делаем"
+                placeholder={t.findingFixPh}
                 className={FIELD}
               />
               {/* Какой снимок привязан к находке.
@@ -184,13 +189,13 @@ function Side({
                   появления снимков, кода не несут вовсе, и без выбора
                   руками они остались бы без картинок навсегда. */}
               <label className="mt-2 flex flex-wrap items-center gap-2 font-mono text-[0.65rem] text-faint">
-                снимок:
+                {t.shot}
                 <select
-                  name={`${locale}.finding.${i}.code`}
+                  name={`${lang}.finding.${i}.code`}
                   defaultValue={finding.code ?? ""}
                   className="rounded-lg border border-line bg-surface px-2 py-1 text-[0.7rem] text-text"
                 >
-                  <option value="">без снимка</option>
+                  <option value="">{t.withoutShot}</option>
                   {/* Прежний код остаётся в списке, даже если аудит его
                       больше не выносит: иначе открытие страницы правки
                       молча отвязало бы уже снятую картинку. */}
@@ -198,12 +203,12 @@ function Side({
                     const option = evidenceFor(code);
                     return (
                       <option key={code} value={code}>
-                        {option ? option.caption[locale] : code}
+                        {option ? option.caption[lang] : code}
                       </option>
                     );
                   })}
                 </select>
-                {rule ? null : finding.code ? "такой снимок не снимается" : null}
+                {rule ? null : finding.code ? t.unshootable : null}
               </label>
             </div>
           );
@@ -211,16 +216,16 @@ function Side({
       </div>
 
       <label className="mt-6 block text-xs text-faint">
-        Что это даёт — абзацы через пустую строку
+        {t.outcomeLabel}
         <textarea
-          name={`${locale}.outcome`}
+          name={`${lang}.outcome`}
           defaultValue={article.outcome.join("\n\n")}
           rows={5}
           className={FIELD}
         />
       </label>
 
-      <p className="mt-4 text-xs text-faint">Цена: {article.price} — из прайса, руками не меняется.</p>
+      <p className="mt-4 text-xs text-faint">{t.price(article.price)}</p>
     </section>
   );
 }

@@ -5,18 +5,13 @@ import { AdminShell } from "@/components/admin/shell";
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
 import { when } from "@/components/admin/lead-table";
+import { scoutDict, signalStatusDict } from "@/content/admin-panel/scout";
 import { requireStaff } from "@/lib/admin/guard";
+import { pick } from "@/lib/admin/i18n";
 import { SIGNAL_STATUSES, listSignals, scoutCounts } from "@/lib/admin/scout";
 import { diagnose, readPulse, unreadChats } from "@/lib/scout/health";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_LABEL: Record<string, string> = {
-  new: "новые",
-  answered: "ответили",
-  ignored: "мимо",
-  converted: "пришёл сам",
-};
 
 function Tile({ value, label, hint }: { value: string | number; label: string; hint?: string }) {
   return (
@@ -40,6 +35,9 @@ export default async function ScoutPage({
 }) {
   const staff = await requireStaff();
   const { status, r } = await searchParams;
+  const locale = staff.panel_locale;
+  const t = pick(scoutDict, locale);
+  const statusLabel = pick(signalStatusDict, locale);
 
   const [counts, signals, pulse] = await Promise.all([
     scoutCounts(),
@@ -50,13 +48,13 @@ export default async function ScoutPage({
   // Пустая лента одинаково выглядит при мёртвом скауте и при тишине в чатах.
   // Пока это не написано на странице, разбираться идут в systemd — и чаще
   // всего зря.
-  const health = diagnose(pulse);
+  const health = diagnose(pulse, Date.now(), locale);
   const unread = unreadChats(pulse);
   const back = status ? `/admin/scout?status=${status}` : "/admin/scout";
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Холодный поиск</h1>
+      <h1 className="text-lg font-semibold">{t.title}</h1>
 
       {r ? (
         <p
@@ -66,7 +64,7 @@ export default async function ScoutPage({
               : "border-gold/30 bg-gold/10 text-gold"
           }`}
         >
-          {r === "ok" ? "Готово." : "Не получилось."}
+          {r === "ok" ? t.done : t.failed}
         </p>
       ) : null}
 
@@ -78,7 +76,7 @@ export default async function ScoutPage({
         }`}
       >
         {health.says}{" "}
-        <HelpHint topic={helpAnchor("/admin/scout", "health")} label="Что значит это состояние" />
+        <HelpHint topic={helpAnchor("/admin/scout", "health")} label={t.healthHelp} />
       </p>
 
       {/*
@@ -89,30 +87,29 @@ export default async function ScoutPage({
       */}
       {unread > 0 && pulse ? (
         <p className="mt-2 rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-sm leading-relaxed text-gold">
-          Аккаунт читает {pulse.chatsReading} чат(ов) из {pulse.chatsWatched} заданных: в {unread} он
-          не состоит или адрес не открылся. Вступать нужно руками — из панели это не делается.
+          {t.unread(pulse.chatsReading, pulse.chatsWatched, unread)}
           {pulse.unread?.length ? (
-            <span className="mt-1 block font-mono text-xs">Не читаются: {pulse.unread.join(", ")}</span>
+            <span className="mt-1 block font-mono text-xs">{t.unreadList} {pulse.unread.join(", ")}</span>
           ) : null}
         </p>
       ) : null}
 
       <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-faint">
         <span className="inline-flex items-center gap-1.5">
-          Как работает скаут <HelpHint topic={helpAnchor("/admin/scout", "how")} label="Как работает скаут" />
+          {t.howItWorks} <HelpHint topic={helpAnchor("/admin/scout", "how")} label={t.howItWorks} />
         </span>
         <span className="inline-flex items-center gap-1.5">
-          Что делать с сигналом <HelpHint topic={helpAnchor("/admin/scout", "signals")} label="Что делать с сигналом" />
+          {t.whatToDo} <HelpHint topic={helpAnchor("/admin/scout", "signals")} label={t.whatToDo} />
         </span>
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile value={counts.total} label="сигналов" />
-        <Tile value={counts.fresh} label="не открывали" />
-        <Tile value={counts.converted} label="пришли сами" />
+        <Tile value={counts.total} label={t.tileSignals} />
+        <Tile value={counts.fresh} label={t.tileFresh} />
+        <Tile value={counts.converted} label={t.tileConverted} />
         <Tile
           value={counts.conversion === null ? "—" : `${counts.conversion}%`}
-          label="доходят до нас"
-          hint="Считается от отработанных. Сигнал, который никто не открывал, говорит о нехватке рук, а не о качестве отбора."
+          label={t.tileConversion}
+          hint={t.tileConversionHint}
         />
       </div>
 
@@ -125,7 +122,7 @@ export default async function ScoutPage({
               : "border-line bg-surface text-muted hover:text-text"
           }`}
         >
-          все
+          {t.all}
         </Link>
         {SIGNAL_STATUSES.map((value) => (
           <Link
@@ -137,7 +134,7 @@ export default async function ScoutPage({
                 : "border-line bg-surface text-muted hover:text-text"
             }`}
           >
-            {STATUS_LABEL[value]}
+            {statusLabel[value]}
           </Link>
         ))}
       </div>
@@ -150,13 +147,13 @@ export default async function ScoutPage({
                 <span className="rounded bg-surface-2 px-2 py-0.5 font-mono text-xs">
                   {signal.score ?? "—"}/100
                 </span>
-                <span className="text-sm">{signal.category ?? "без категории"}</span>
+                <span className="text-sm">{signal.category ?? t.noCategory}</span>
                 {signal.chat_title ? (
                   <span className="text-sm text-muted">{signal.chat_title}</span>
                 ) : null}
-                <span className="text-xs text-faint">{when(signal.created_at)}</span>
+                <span className="text-xs text-faint">{when(signal.created_at, locale)}</span>
                 <span className="ml-auto text-xs text-faint">
-                  {signal.lead_id ? "хранится как часть лида" : `сотрётся через ${daysLeft(signal.expires_at)} дн.`}
+                  {signal.lead_id ? t.keptWithLead : t.erasedIn(daysLeft(signal.expires_at))}
                 </span>
               </div>
 
@@ -170,7 +167,7 @@ export default async function ScoutPage({
 
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
                 <span className="text-faint">
-                  {signal.author_username ? `@${signal.author_username}` : "без username"}
+                  {signal.author_username ? `@${signal.author_username}` : t.noUsername}
                 </span>
                 {signal.message_link ? (
                   <a
@@ -179,17 +176,17 @@ export default async function ScoutPage({
                     rel="noreferrer"
                     className="text-blue-soft hover:underline"
                   >
-                    открыть сообщение →
+                    {t.openMessage}
                   </a>
                 ) : (
-                  <span className="text-faint">ссылки нет — закрытый чат без адреса</span>
+                  <span className="text-faint">{t.noLink}</span>
                 )}
                 {signal.lead_id ? (
                   <Link
                     href={`/admin/leads/${signal.lead_id}`}
                     className="text-green hover:underline"
                   >
-                    стал лидом →
+                    {t.becameLead}
                   </Link>
                 ) : null}
               </div>
@@ -209,13 +206,13 @@ export default async function ScoutPage({
                           : "border-line bg-surface-2 text-muted hover:text-text"
                       }`}
                     >
-                      {STATUS_LABEL[value]}
+                      {statusLabel[value]}
                     </button>
                   </form>
                 ))}
                 {signal.status === "converted" ? (
                   <span className="rounded-lg border border-green/40 bg-green/10 px-3 py-1.5 text-xs text-green">
-                    пришёл сам
+                    {t.convertedChip}
                   </span>
                 ) : null}
               </div>
@@ -224,15 +221,12 @@ export default async function ScoutPage({
         </ul>
       ) : (
         <p className="mt-6 rounded-xl border border-line bg-surface px-5 py-8 text-center text-sm text-muted">
-          Сигналов нет.
+          {t.empty}
         </p>
       )}
 
       <p className="mt-8 max-w-2xl text-xs leading-relaxed text-faint">
-        Отвечать нужно руками и в том же публичном чате — сервис в чаты не
-        пишет ни строкой. «Пришёл сам» проставляется автоматически, когда
-        человек напишет нашему боту: только тогда сигнал перестаёт стираться по
-        сроку и становится частью истории сделки.
+        {t.foot}
       </p>
     </AdminShell>
   );

@@ -116,7 +116,8 @@ test("план ставит руководитель, а видит его ме�
   // Руководитель — только своим: иначе он второй владелец.
   assert.match(team, /actor\.role !== "admin" && target\.head_staff_id !== actor\.id/);
 
-  assert.match(read("app/admin/team/page.tsx"), /План касаний/, "план негде поставить");
+  assert.match(read("app/admin/team/page.tsx"), /<form action=\{setPlan\}/, "план негде поставить");
+  assert.match(read("content/admin-panel/team.ts"), /colPlan: \{ ru: "План касаний"/);
   // Обе страницы, где менеджер работает: главная и сами касания.
   assert.match(read("app/admin/page.tsx"), /TouchPlanLine/);
   assert.match(read("app/admin/prospect/page.tsx"), /TouchPlanLine/);

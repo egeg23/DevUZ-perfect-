@@ -114,10 +114,31 @@ export async function listOrders(status?: string): Promise<Order[]> {
  * записав ничего.
  */
 
-type OpResult = { ok: true } | { ok: false; reason: string };
+/**
+ * Почему действие не прошло — кодом, а не фразой: панель показывает причину
+ * на языке сотрудника (content/admin-panel/orders.ts). `detail` — ответ
+ * базы как есть, по нему ищут причину.
+ */
+export type OrderRefusal =
+  | "bad_amount"
+  | "no_db"
+  | "not_found"
+  | "invoice_issued"
+  | "cancelled"
+  | "no_amount"
+  | "invoice_no_failed"
+  | "no_ref"
+  | "no_invoice"
+  | "not_paid"
+  | "not_cancelled"
+  | "access_open"
+  | "db_error";
+
+type Refused = { ok: false; reason: OrderRefusal; detail?: string };
+type OpResult = { ok: true } | Refused;
 
 const OK: OpResult = { ok: true };
-const fail = (reason: string): OpResult => ({ ok: false, reason });
+const fail = (reason: OrderRefusal, detail?: string): Refused => (detail ? { ok: false, reason, detail } : { ok: false, reason });
 
 async function currentOrder(orderId: string) {
   const db = serviceClient();
@@ -158,24 +179,24 @@ export async function setOrderAmount(
   staff: Staff,
   ip: string,
 ): Promise<OpResult> {
-  if (!Number.isFinite(usd) || usd < 0 || usd > 10_000_000) return fail("Сумма вне разумных границ.");
+  if (!Number.isFinite(usd) || usd < 0 || usd > 10_000_000) return fail("bad_amount");
 
   const db = serviceClient();
-  if (!db) return fail("Нет базы.");
+  if (!db) return fail("no_db");
 
   const before = await currentOrder(orderId);
-  if (!before) return fail("Заявка не найдена.");
+  if (!before) return fail("not_found");
   // После выставления счёта сумма — часть выданного покупателю документа.
   // Молча переписать её значит разойтись с бумагой, которая уже у него на
   // руках.
-  if (before.invoice_issued_at) return fail("Счёт уже выставлен — сумму менять поздно.");
+  if (before.invoice_issued_at) return fail("invoice_issued");
 
   const amount = Math.round(usd);
   const { error } = await db
     .from("orders")
     .update({ price_usd: amount, assigned_staff_id: staff.id })
     .eq("id", orderId);
-  if (error) return fail(error.message);
+  if (error) return fail("db_error", error.message);
 
   await record("order.amount_set", {
     actorStaffId: staff.id,
@@ -203,18 +224,18 @@ export async function issueInvoice(
   ip: string,
 ): Promise<OpResult> {
   const db = serviceClient();
-  if (!db) return fail("Нет базы.");
+  if (!db) return fail("no_db");
 
   const before = await currentOrder(orderId);
-  if (!before) return fail("Заявка не найдена.");
-  if (before.status === "cancelled") return fail("Заявка отменена.");
-  if (before.price_usd === null) return fail("Сначала проставьте сумму сделки.");
+  if (!before) return fail("not_found");
+  if (before.status === "cancelled") return fail("cancelled");
+  if (before.price_usd === null) return fail("no_amount");
 
   let invoiceNo = before.invoice_no;
   if (!invoiceNo) {
     const { data, error } = await db.rpc("next_invoice_no");
     if (error || typeof data !== "string") {
-      return fail(`Не выдался номер счёта: ${error?.message ?? "пустой ответ"}`);
+      return fail("invoice_no_failed", error?.message);
     }
     invoiceNo = data;
   }
@@ -231,7 +252,7 @@ export async function issueInvoice(
       assigned_staff_id: staff.id,
     })
     .eq("id", orderId);
-  if (error) return fail(error.message);
+  if (error) return fail("db_error", error.message);
 
   await record("order.invoiced", {
     actorStaffId: staff.id,
@@ -262,15 +283,15 @@ export async function markOrderPaid(
   ip: string,
 ): Promise<OpResult> {
   const reference = ref.trim().slice(0, 200);
-  if (!reference) return fail("Укажите, чем платёж опознаётся в выписке.");
+  if (!reference) return fail("no_ref");
 
   const db = serviceClient();
-  if (!db) return fail("Нет базы.");
+  if (!db) return fail("no_db");
 
   const before = await currentOrder(orderId);
-  if (!before) return fail("Заявка не найдена.");
-  if (before.status === "cancelled") return fail("Заявка отменена.");
-  if (!before.invoice_issued_at) return fail("Счёт не выставлен — оплачивать нечего.");
+  if (!before) return fail("not_found");
+  if (before.status === "cancelled") return fail("cancelled");
+  if (!before.invoice_issued_at) return fail("no_invoice");
 
   const { error } = await db
     .from("orders")
@@ -282,7 +303,7 @@ export async function markOrderPaid(
       assigned_staff_id: staff.id,
     })
     .eq("id", orderId);
-  if (error) return fail(error.message);
+  if (error) return fail("db_error", error.message);
 
   await record("order.paid", {
     actorStaffId: staff.id,
@@ -305,13 +326,13 @@ export async function markOrderDelivered(
   ip: string,
 ): Promise<OpResult> {
   const db = serviceClient();
-  if (!db) return fail("Нет базы.");
+  if (!db) return fail("no_db");
 
   const before = await currentOrder(orderId);
-  if (!before) return fail("Заявка не найдена.");
+  if (!before) return fail("not_found");
   // Передача до оплаты — единственный необратимый шаг во всей цепочке: код
   // нельзя забрать обратно.
-  if (!before.paid_at) return fail("Оплата не подтверждена — передавать код рано.");
+  if (!before.paid_at) return fail("not_paid");
 
   const { error } = await db
     .from("orders")
@@ -321,7 +342,7 @@ export async function markOrderDelivered(
       assigned_staff_id: staff.id,
     })
     .eq("id", orderId);
-  if (error) return fail(error.message);
+  if (error) return fail("db_error", error.message);
 
   await record("order.delivered", {
     actorStaffId: staff.id,
@@ -340,16 +361,16 @@ export async function cancelOrder(
   ip: string,
 ): Promise<OpResult> {
   const db = serviceClient();
-  if (!db) return fail("Нет базы.");
+  if (!db) return fail("no_db");
 
   const before = await currentOrder(orderId);
-  if (!before) return fail("Заявка не найдена.");
+  if (!before) return fail("not_found");
 
   const { error } = await db
     .from("orders")
     .update({ status: "cancelled", assigned_staff_id: staff.id })
     .eq("id", orderId);
-  if (error) return fail(error.message);
+  if (error) return fail("db_error", error.message);
 
   await record("order.cancelled", {
     actorStaffId: staff.id,
@@ -377,11 +398,11 @@ export async function reopenOrder(
   ip: string,
 ): Promise<OpResult> {
   const db = serviceClient();
-  if (!db) return fail("Нет базы.");
+  if (!db) return fail("no_db");
 
   const before = await currentOrder(orderId);
-  if (!before) return fail("Заявка не найдена.");
-  if (before.status !== "cancelled") return fail("Заявка и так в работе.");
+  if (!before) return fail("not_found");
+  if (before.status !== "cancelled") return fail("not_cancelled");
 
   const status = before.delivered_at
     ? "delivered"
@@ -395,7 +416,7 @@ export async function reopenOrder(
     .from("orders")
     .update({ status, assigned_staff_id: staff.id })
     .eq("id", orderId);
-  if (error) return fail(error.message);
+  if (error) return fail("db_error", error.message);
 
   await record("order.reopened", {
     actorStaffId: staff.id,
@@ -421,12 +442,12 @@ export async function reissueOrderLink(
   orderId: string,
   staff: Staff,
   ip: string,
-): Promise<{ ok: true; url: string } | { ok: false; reason: string }> {
+): Promise<{ ok: true; url: string } | Refused> {
   const db = serviceClient();
-  if (!db) return { ok: false, reason: "Нет базы." };
+  if (!db) return fail("no_db");
 
   const before = await currentOrder(orderId);
-  if (!before) return { ok: false, reason: "Заявка не найдена." };
+  if (!before) return fail("not_found");
 
   const token = newAccessToken();
   const locale: Locale = isLocale(before.locale) ? before.locale : "ru";
@@ -441,7 +462,7 @@ export async function reissueOrderLink(
       bind_code: newBindCode(),
     })
     .eq("id", orderId);
-  if (error) return { ok: false, reason: error.message };
+  if (error) return fail("db_error", error.message);
 
   await record("order.link_reissued", {
     actorStaffId: staff.id,
@@ -480,17 +501,17 @@ export async function revokeEntitlement(
   ip: string,
 ): Promise<OpResult> {
   const db = serviceClient();
-  if (!db) return fail("Нет базы.");
+  if (!db) return fail("no_db");
 
   const before = await currentOrder(orderId);
-  if (!before) return fail("Заявка не найдена.");
+  if (!before) return fail("not_found");
 
   const next = (before.entitlement_version ?? 1) + 1;
   const { error } = await db
     .from("orders")
     .update({ entitlement_version: next, access_closed_at: new Date().toISOString(), assigned_staff_id: staff.id })
     .eq("id", orderId);
-  if (error) return fail(error.message);
+  if (error) return fail("db_error", error.message);
 
   await record("entitlement.revoked", {
     actorStaffId: staff.id,
@@ -511,7 +532,7 @@ export async function revokeEntitlement(
  */
 export async function restoreEntitlement(orderId: string, staff: Staff, ip: string): Promise<OpResult> {
   const db = serviceClient();
-  if (!db) return fail("Нет базы.");
+  if (!db) return fail("no_db");
 
   const { data, error } = await db
     .from("orders")
@@ -520,8 +541,8 @@ export async function restoreEntitlement(orderId: string, staff: Staff, ip: stri
     .not("access_closed_at", "is", null)
     .select("id")
     .maybeSingle();
-  if (error) return fail(error.message);
-  if (!data) return fail("Доступ и так открыт.");
+  if (error) return fail("db_error", error.message);
+  if (!data) return fail("access_open");
 
   await record("entitlement.restored", { actorStaffId: staff.id, targetType: "order", targetId: orderId, ip });
   return OK;

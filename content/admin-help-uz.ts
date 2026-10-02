@@ -331,14 +331,14 @@ export const uz: HelpCopy = {
 
     /* ── Заявки ───────────────────────────────────────────────────────── */
     "/admin/orders": {
-      what: "Saytdagi do‘kondan tayyor mahsulotlarga buyurtmalar — mijozlar loyihalari emas. Xaridor rekvizitlari bilan buyurtma qoldiradi, biz hisob chiqaramiz, u naqd pulsiz to‘laydi va fayllarni oladi. Barcha xodimlar barcha buyurtmalarni ko‘radi va istalganini olib bora oladi; kim oxirgi bosgan bo‘lsa, o‘sha «ведёт».",
+      what: "Saytdagi do‘kondan tayyor mahsulotlarga buyurtmalar — mijozlar loyihalari emas. Xaridor rekvizitlari bilan buyurtma qoldiradi, biz hisob chiqaramiz, u naqd pulsiz to‘laydi va fayllarni oladi. Barcha xodimlar barcha buyurtmalarni ko‘radi va istalganini olib bora oladi; kim oxirgi bosgan bo‘lsa, buyurtmada o‘sha «mas’ul: …» bo‘ladi.",
       items: [
         {
           id: "flow",
           title: "Buyurtma yo‘li",
           body: [
-            "«новая» → «счёт выставлен» → «оплачена» → «передан». Yoki «отменена». Tepadagi filtrlar — shu holatlar bo‘yicha.",
-            "Xaridor kontakti darhol ko‘rinadi: hisob chiqarilishi uchun rekvizitlarni o‘zi qoldirgan. Kontakt yonidagi «бот привязан» xaridor botimizni ulaganini bildiradi — hisob va to‘lov haqidagi bildirishnomalar unga o‘sha yerga boradi.",
+            "«yangi» → «hisob-faktura chiqarilgan» → «to‘langan» → «topshirilgan». Yoki «bekor qilingan». Tepadagi filtrlar — shu holatlar bo‘yicha.",
+            "Xaridor kontakti darhol ko‘rinadi: hisob chiqarilishi uchun rekvizitlarni o‘zi qoldirgan. Kontakt yonidagi «bot ulangan» xaridor botimizni ulaganini bildiradi — hisob va to‘lov haqidagi bildirishnomalar unga o‘sha yerga boradi.",
             "Buyurtma qotib qolsa, Telegramga eslatma keladi: 2 kun hisobsiz, hisob 14 va 30 kun to‘lanmagan, to‘langan, lekin beriladigan fayl yo‘q.",
           ],
         },
@@ -346,27 +346,27 @@ export const uz: HelpCopy = {
           id: "invoice",
           title: "Summa va hisob",
           body: [
-            "Ba’zi mahsulotlarning narxi — oraliq, va buyurtma summasiz keladi. Uni «сумма, $» maydoniga yozing va **«проставить»** tugmasini bosing. Hisobdan keyin summani o‘zgartirib bo‘lmaydi.",
-            "**«выставить счёт»** — summa kerak. Hisob raqami o‘zi beriladi; qayta bosish raqamni o‘zgartirmaydi. Xaridor hisobni o‘z buyurtmasi sahifasida ko‘radi (havolani u buyurtma berayotganda olgan), bot ulangan bo‘lsa — yana xabar ham oladi. Xabarda to‘lov havolasi ataylab yo‘q: hisobdagi rekvizitlar bo‘yicha to‘lashadi.",
-            "Tepada «Банковские реквизиты не настроены» turgan bo‘lsa — hisob chiqadi, lekin xaridor qayerga to‘lashni ko‘rmaydi. Egasiga ayting.",
+            "Ba’zi mahsulotlarning narxi — oraliq, va buyurtma summasiz keladi. Uni «summa, $» maydoniga yozing va **«kiritish»** tugmasini bosing. Hisobdan keyin summani o‘zgartirib bo‘lmaydi.",
+            "**«hisob-faktura chiqarish»** — summa kerak. Hisob raqami o‘zi beriladi; qayta bosish raqamni o‘zgartirmaydi. Xaridor hisobni o‘z buyurtmasi sahifasida ko‘radi (havolani u buyurtma berayotganda olgan), bot ulangan bo‘lsa — yana xabar ham oladi. Xabarda to‘lov havolasi ataylab yo‘q: hisobdagi rekvizitlar bo‘yicha to‘lashadi.",
+            "Tepada «Bank rekvizitlari sozlanmagan» turgan bo‘lsa — hisob chiqadi, lekin xaridor qayerga to‘lashni ko‘rmaydi. Egasiga ayting.",
           ],
         },
         {
           id: "paid",
           title: "To‘lov va fayllarni berish",
           body: [
-            "Pul hisob raqamga tushdi — **«строка выписки»** maydoniga bank ko‘chirmasidagi qatorni yozing va **«оплата получена»** tugmasini bosing. Qatorsiz bo‘lmaydi: aks holda bir oydan keyin to‘lov bo‘lganini isbotlab bo‘lmaydi.",
+            "Pul hisob raqamga tushdi — **«ko‘chirmadagi qator»** maydoniga bank ko‘chirmasidagi qatorni yozing va **«to‘lov olindi»** tugmasini bosing. Qatorsiz bo‘lmaydi: aks holda bir oydan keyin to‘lov bo‘lganini isbotlab bo‘lmaydi.",
             "Shu daqiqadan xaridorga fayllar ochiladi — agar egasi ularni «Relizlar» bo‘limiga joylagan bo‘lsa. Yuklab olish — jami 20 tagacha va kuniga 10 tagacha, o‘sha faylni 10 daqiqa ichida qayta yuklash hisoblanmaydi.",
-            "Birinchi yuklab olish o‘zi «передан» qo‘yadi. **«код передан»** tugmasi — boshqacha berganingizda, masalan, repozitoriyga kirish huquqi bilan. To‘lovdan oldin u ishlamaydi: kodni berish — bekor qilib bo‘lmaydigan yagona qadam.",
+            "Birinchi yuklab olish o‘zi «topshirilgan» qo‘yadi. **«kod topshirildi»** tugmasi — boshqacha berganingizda, masalan, repozitoriyga kirish huquqi bilan. To‘lovdan oldin u ishlamaydi: kodni berish — bekor qilib bo‘lmaydigan yagona qadam.",
           ],
         },
         {
           id: "access",
           title: "Havolalar, kirish va bekor qilish",
           body: [
-            "**«перевыпустить ссылку»** — buyurtma sahifasiga yangi havola, eskisi ishlamay qoladi. Yangisi bir marta ko‘rsatiladi — uni darhol xaridorga yuboring.",
-            "**«отозвать доступ к файлам»** yuklab olishni butunlay yopadi: berilgan havolalar ishlamay qoladi, buyurtma sahifasida esa tugma o‘rniga xaridor «Доступ к файлам закрыт» deb ko‘radi. Sahifa va hisob saqlanadi — u o‘z hujjatlarini yo‘qotmaydi. Buyurtmada «Доступ: закрыт с …» paydo bo‘ladi. **«вернуть доступ к файлам»** yuklab olishni qayta ochadi, lekin eski havolalar o‘lik qoladi — shuning uchun havola sizib chiqqan bo‘lsa, «отозвать», keyin «вернуть» tugmasini bosing: sizib chiqqani o‘chadi, xaridor esa o‘z sahifasidan yangisini yuklab oladi.",
-            "**«отменить»** — xaridorga bildirishnoma boradi. **«вернуть в работу»** holatni tanlab emas, sanalar bo‘yicha tiklaydi: hisob chiqarilgan bo‘lsa — «счёт выставлен» qaytadi.",
+            "**«havolani qayta chiqarish»** — buyurtma sahifasiga yangi havola, eskisi ishlamay qoladi. Yangisi bir marta ko‘rsatiladi — uni darhol xaridorga yuboring.",
+            "**«fayllarga kirishni bekor qilish»** yuklab olishni butunlay yopadi: berilgan havolalar ishlamay qoladi, buyurtma sahifasida esa tugma o‘rniga xaridor «Fayllarga kirish yopildi» deb ko‘radi. Sahifa va hisob saqlanadi — u o‘z hujjatlarini yo‘qotmaydi. Buyurtmada «Kirish: … dan yopiq» paydo bo‘ladi. **«fayllarga kirishni qaytarish»** yuklab olishni qayta ochadi, lekin eski havolalar o‘lik qoladi — shuning uchun havola sizib chiqqan bo‘lsa, «fayllarga kirishni bekor qilish», keyin «fayllarga kirishni qaytarish» tugmasini bosing: sizib chiqqani o‘chadi, xaridor esa o‘z sahifasidan yangisini yuklab oladi.",
+            "**«bekor qilish»** — xaridorga bildirishnoma boradi. **«ishga qaytarish»** holatni tanlab emas, sanalar bo‘yicha tiklaydi: hisob chiqarilgan bo‘lsa — «hisob-faktura chiqarilgan» qaytadi.",
           ],
         },
       ],
@@ -381,7 +381,7 @@ export const uz: HelpCopy = {
           title: "Bu qanday ishlaydi",
           body: [
             "Skaut chatlarni studiyaning ishchi akkauntidan o‘qiydi. Har bir xabar saralashdan o‘tadi, qolganini model o‘qiydi va 0 dan 100 gacha baho hamda toifa qo‘yadi.",
-            "**20 dan past** — darhol «мимо», lentada xalaqit bermaydi. **60 dan** — Telegramdagi «Devuz Scout» kanaliga keladi. **70 dan** — kuchli signal: bir-ikki daqiqadan keyin svip undan tayyor birinchi xabar bilan lid ochadi va [lidlar navbati](#leads-queue) bo‘yicha yuboradi. «субподряд» toifasi har qanday bahoda kanalga ketadi.",
+            "**20 dan past** — darhol «mos emas», lentada xalaqit bermaydi. **60 dan** — Telegramdagi «Devuz Scout» kanaliga keladi. **70 dan** — kuchli signal: bir-ikki daqiqadan keyin svip undan tayyor birinchi xabar bilan lid ochadi va [lidlar navbati](#leads-queue) bo‘yicha yuboradi. «субподряд» toifasi har qanday bahoda kanalga ketadi.",
             "Har kuni ertalab 09:00 dan keyin o‘sha kanalga «☀️ Скаут за сутки» xulosasi keladi: robot ishlayaptimi va nima topdi.",
           ],
         },
@@ -398,8 +398,8 @@ export const uz: HelpCopy = {
           title: "Oddiy signal — nima qilish kerak",
           body: [
             "70 dan past signallarni sizdan boshqa hech kim ko‘rib chiqmaydi. Mos kelsa — tez, qo‘lda va o‘z akkauntingizdan javob bering: o‘sha chatda yoki muallifga shaxsiy xabarda. Servis chatlarga bir qator ham yozmaydi.",
-            "Keyin signal kartochkasida belgilang: **«ответили»** yoki **«мимо»**. «Пришёл сам» avtomatik qo‘yiladi — odam botimizga yozganda yoki signal lidga aylanganda.",
-            "Plitkalar: «сигналов» — jami, «не открывали» — qaror kutayotganlar, «пришли сами», «доходят до нас» — ko‘rib chiqilganlarning qancha qismi bizgacha yetib kelgani. Signal lidning bir qismiga aylanmasa, 90 kun saqlanadi.",
+            "Keyin signal kartochkasida belgilang: **«javob berildi»** yoki **«mos emas»**. «o‘zi keldi» avtomatik qo‘yiladi — odam botimizga yozganda yoki signal lidga aylanganda.",
+            "Plitkalar: «signallar» — jami, «ochilmagan» — qaror kutayotganlar, «o‘zlari kelgan», «bizgacha yetib keladi» — ko‘rib chiqilganlarning qancha qismi bizgacha yetib kelgani. Signal lidning bir qismiga aylanmasa, 90 kun saqlanadi.",
           ],
         },
         {
@@ -407,15 +407,15 @@ export const uz: HelpCopy = {
           title: "Skaut ishlayaptimi",
           body: {
             manager: [
-              "Tepadagi tilla rangli ogohlantirish — nimadir noto‘g‘ri: skaut jim, birorta chatni o‘qimayapti yoki model ishlamayapti. «Аккаунт читает 12 чатов из 29» ogohlantirishi — chatlarning bir qismi o‘qilmayapti. Ikkala holatda ham egasiga ayting: bu paneldan tuzatilmaydi.",
+              "Tepadagi tilla rangli ogohlantirish — nimadir noto‘g‘ri: skaut jim, birorta chatni o‘qimayapti yoki model ishlamayapti. «Akkaunt berilgan 29 ta chatdan 12 tasini o‘qiyapti» ogohlantirishi — chatlarning bir qismi o‘qilmayapti. Ikkala holatda ham egasiga ayting: bu paneldan tuzatilmaydi.",
             ],
             head: [
-              "Tepadagi tilla rangli ogohlantirish — nosozlik: «Скаут молчит N мин.» (jarayon to‘xtagan), «не читает ни одного чата» yoki «Модель недоступна». «Не читаются» ro‘yxati bilan «Аккаунт читает X чатов из Y» — ishchi akkaunt bu chatlarga qo‘shilmagan. Egasi tuzatadi.",
+              "Tepadagi tilla rangli ogohlantirish — nosozlik: «Skaut N daqiqadan beri jim» (jarayon to‘xtagan), «birorta ham chatni o‘qimayapti» yoki «Model ishlamayapti». «O‘qilmayapti» ro‘yxati bilan «Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» — ishchi akkaunt bu chatlarga qo‘shilmagan. Egasi tuzatadi.",
             ],
             admin: [
-              "«Скаут молчит N мин.» — serverdagi jarayon yiqilgan yoki to‘xtatilgan: `systemctl status devuz-scout`. «Модель недоступна» — kalitda yoki undagi pulda muammo.",
-              "«Аккаунт читает X чатов из Y» va «Не читаются» ro‘yxati — ishchi akkaunt bu chatlarga qo‘shilmagan yoki manzil ochilmagan. Ishchi akkauntdan qo‘lda qo‘shilish kerak: paneldan bu qilinmaydi.",
-              "«Механизм цел: … запросов пока не было» — bu chatlardagi jimlik, nosozlik emas.",
+              "«Skaut N daqiqadan beri jim» — serverdagi jarayon yiqilgan yoki to‘xtatilgan: `systemctl status devuz-scout`. «Model ishlamayapti» — kalitda yoki undagi pulda muammo.",
+              "«Akkaunt berilgan Y ta chatdan X tasini o‘qiyapti» va «O‘qilmayapti» ro‘yxati — ishchi akkaunt bu chatlarga qo‘shilmagan yoki manzil ochilmagan. Ishchi akkauntdan qo‘lda qo‘shilish kerak: paneldan bu qilinmaydi.",
+              "«Mexanizm butun: … Ishlab chiqish so‘rovlari hali bo‘lmagan» — bu chatlardagi jimlik, nosozlik emas.",
             ],
           },
         },
@@ -501,12 +501,12 @@ export const uz: HelpCopy = {
               "«Bog‘lanish» — hali aloqa emas: bu faqat xatni tayyorlash.",
             ],
             head: [
-              "Menejerlaringizga rejani [«Jamoa»](/admin/team) bo‘limida, «План касаний» ustunida qo‘yasiz: haftasiga son va «сохранить». Bo‘sh maydon — «без плана», bu 0 bilan bir xil emas: 0 bo‘lsa, to‘plam umuman bo‘lmaydi. 500 dan ko‘p emas.",
+              "Menejerlaringizga rejani [«Jamoa»](/admin/team) bo‘limida, «Aloqalar rejasi» ustunida qo‘yasiz: haftasiga son va «saqlash». Bo‘sh maydon — «rejasiz», bu 0 bilan bir xil emas: 0 bo‘lsa, to‘plam umuman bo‘lmaydi. 500 dan ko‘p emas.",
               "Odam dushanbadan beri yozgan kompaniyalar hisoblanadi: «Yuborish: …» yoki «O‘zim bog‘landim» (Telegramda — «📤 Отправить через бота» yoki «✋ Написал сам»); ketmagan xatlar hisoblanmaydi.",
               "Sizning o‘z rejangizni egasi qo‘yadi.",
             ],
             admin: [
-              "Reja [«Jamoa»](/admin/team) bo‘limida, «План касаний» ustunida qo‘yiladi: siz — istalgan odamga, rahbar — faqat o‘z odamlariga. Bo‘sh maydon — «без плана» (kuniga 5 tadan to‘plam), 0 — reja ham, to‘plam ham yo‘q.",
+              "Reja [«Jamoa»](/admin/team) bo‘limida, «Aloqalar rejasi» ustunida qo‘yiladi: siz — istalgan odamga, rahbar — faqat o‘z odamlariga. Bo‘sh maydon — «rejasiz» (kuniga 5 tadan to‘plam), 0 — reja ham, to‘plam ham yo‘q.",
               "Odam dushanbadan beri yozgan kompaniyalar hisoblanadi: «Yuborish: …» yoki «O‘zim bog‘landim» (Telegramda — «📤 Отправить через бота» yoki «✋ Написал сам»); ketmagan xatlar hisoblanmaydi.",
             ],
           },
@@ -654,8 +654,8 @@ export const uz: HelpCopy = {
           id: "read",
           title: "Qatorni qanday o‘qish",
           body: [
-            "Natija: «отказался», «позвал человека», «первичка закрыта», «разговор заглох» yoki «ещё идёт». «Разговор заглох» — qolgan hammasi: jimlik, fayl yuborish so‘rovi, tushunarsiz javob.",
-            "Yashil rangda — saboq. Pastroqda — «Зацепило», «Возражение», «Сломалось». «Разговора мало — вывод слабый» mijoz ikkitadan kam xabar yozganini bildiradi: bitta replikadan xulosa chiqarilmaydi, u yerda saboq yo‘q.",
+            "Natija: «rad etdi», «odamni chaqirdi», «dastlabki suhbat yakunlandi», «suhbat to‘xtab qoldi» yoki «hali davom etyapti». «Suhbat to‘xtab qoldi» — qolgan hammasi: jimlik, fayl yuborish so‘rovi, tushunarsiz javob.",
+            "Yashil rangda — saboq. Pastroqda — «E’tiborni tortdi», «E’tiroz», «Buzildi». «Suhbat kam — xulosa zaif» mijoz ikkitadan kam xabar yozganini bildiradi: bitta replikadan xulosa chiqarilmaydi, u yerda saboq yo‘q.",
             "Tepadagi plitkalar: nechtasi tahlil qilingan, nechta saboq mijoz so‘zlariga tayangan, rad etishlar va o‘zbek tilidagi suhbatlar soni.",
           ],
         },
@@ -665,7 +665,7 @@ export const uz: HelpCopy = {
           body: {
             manager: [
               "To‘plamdagi xatlarni tuzatishdan oldin yangi saboqlarni o‘qing: odamlarni nima qiziqtiradi va suhbatlar nimada uziladi. Saboqlar hozircha xatlarga o‘zi qo‘shilmaydi — buni bir necha o‘nlab javob yig‘ilganda egasi hal qiladi.",
-              "«лид →» bu suhbat bo‘yicha lidni ochadi, agar u sizniki bo‘lsa.",
+              "«lid →» bu suhbat bo‘yicha lidni ochadi, agar u sizniki bo‘lsa.",
             ],
             head: [
               "Saboqlarni jamoa bilan muhokama qiling: qaysi gaplar mijozni qiziqtiradi, qaysi e’tirozlarda suhbat uziladi. Xatlarga ular hozircha o‘zi qo‘shilmaydi — buni bir necha o‘nlab javob yig‘ilganda egasi hal qiladi.",
@@ -686,7 +686,7 @@ export const uz: HelpCopy = {
           id: "upload",
           title: "Rezyume yuklash",
           body: [
-            "«На какую работу смотрим» maydoni — vakansiyani yozing (odatiy — sotuv menejeri). Keyin «Резюме в PDF» va **«Разобрать»**. Tahlil bir daqiqagacha davom etadi.",
+            "«Qaysi ishga qarayapmiz» maydoni — vakansiyani yozing (odatiy — sotuv menejeri). Keyin «PDF formatidagi rezyume» va **«Tahlil qilish»**. Tahlil bir daqiqagacha davom etadi.",
             "Matni nusxalanadigan, 8 MB gacha PDF kerak; birinchi 12 sahifa o‘qiladi. Skan yoki rasmlar o‘qilmaydi — panel shunday deb aytadi.",
           ],
         },
@@ -694,7 +694,7 @@ export const uz: HelpCopy = {
           id: "result",
           title: "Tahlilda nima bor",
           body: [
-            "Xulosa: «брать», «брать с условием» yoki «не брать» — va nima uchun. Keyin: «Сильные стороны», «Стопы», «Что в резюме сказано прямо», «Спросить на собеседовании» (har bir to‘xtatuvchi belgiga savol) va «Как проверить делом» — bir kunlik pullik sinov kuni uchun topshiriq.",
+            "Xulosa: «olish», «shart bilan olish» yoki «olmaslik» — va nima uchun. Keyin: «Kuchli tomonlar», «To‘siqlar», «Rezyumeda to‘g‘ridan-to‘g‘ri nima yozilgan», «Suhbatda so‘rash» (har bir to‘xtatuvchi belgiga savol) va «Ishda qanday tekshirish» — bir kunlik pullik sinov kuni uchun topshiriq.",
             "Tahlil — suhbatga tayyorgarlik, hukm emas. Qaror sizniki.",
           ],
         },
@@ -702,8 +702,8 @@ export const uz: HelpCopy = {
           id: "privacy",
           title: "Shaxsiy ma’lumotlar",
           body: [
-            "Fayl hech qayerda saqlanmaydi — faqat ism, lavozim, xulosa va tahlilning o‘zi qoladi. «Убрать разбор» tugmasi uni butunlay o‘chiradi.",
-            "Yosh, jins, oilaviy holat, millat, din, tashqi ko‘rinish va tug‘ilgan joy bahoda qatnashmaydi. Agar tahlil baribir ularga tayangan bo‘lsa, u saqlanmaydi: «Разбор опёрся на то, что к работе не относится… попробуйте ещё раз».",
+            "Fayl hech qayerda saqlanmaydi — faqat ism, lavozim, xulosa va tahlilning o‘zi qoladi. «Tahlilni olib tashlash» tugmasi uni butunlay o‘chiradi.",
+            "Yosh, jins, oilaviy holat, millat, din, tashqi ko‘rinish va tug‘ilgan joy bahoda qatnashmaydi. Agar tahlil baribir ularga tayangan bo‘lsa, u saqlanmaydi: «Tahlil ishga aloqasi yo‘q narsaga tayandi… yana bir bor urinib ko‘ring».",
             "Har bir tahlil va o‘chirish jurnalga yoziladi.",
           ],
         },
@@ -727,16 +727,16 @@ export const uz: HelpCopy = {
           title: "Loyiha ochish",
           body: {
             manager: [
-              "Mijoz ishlashga rozi bo‘ldi — loyiha oching: «Новый проект» bloki, nomi, mijoz, summa, muddat va «Создать».",
+              "Mijoz ishlashga rozi bo‘ldi — loyiha oching: «Yangi loyiha» bloki, nomi, mijoz, summa, muddat va «Yaratish».",
               "**Kim ochsa, o‘sha mas’ul bo‘ladi.** Hisoblanmalar mas’ulga yoziladi, uni esa faqat egasi almashtira oladi — shuning uchun o‘z loyihangizni o‘zingiz oching, hamkasbdan so‘ramang.",
-              "Ro‘yxat: «N дн. на этой стадии», «ведёт …», «срок …» va muddat o‘tgan bo‘lsa «просрочен». «показать закрытые» — tugallangan va bekor qilinganlar.",
+              "Ro‘yxat: «shu bosqichda N kun», «olib boruvchi: …», «muddat …» va muddat o‘tgan bo‘lsa «muddati o‘tgan». «yopilganlarini ko‘rsatish» — tugallangan va bekor qilinganlar.",
             ],
             head: [
               "Loyihani istalgan odam ochadi — va kim ochsa, o‘sha mas’ul bo‘ladi. Hisoblanmalar mas’ulga yoziladi (sizga esa jamoangiz loyihalaridan 5%), mas’ulni esa faqat egasi almashtira oladi. Menejerlar o‘z loyihalarini o‘zlari ochishini kuzating.",
-              "Ro‘yxat hamma uchun umumiy: bosqich, undagi kunlar, mas’ul, muddat va «просрочен».",
+              "Ro‘yxat hamma uchun umumiy: bosqich, undagi kunlar, mas’ul, muddat va «muddati o‘tgan».",
             ],
             admin: [
-              "Loyihani ochgan xodim o‘zi mas’ul bo‘ladi. Siz ochganingizda birinchi maydonda **kim olib borishini** tanlang: hisoblanmalar unga yoziladi. O‘zingizni tanlasangiz — loyiha bo‘yicha jamoaga hisoblanma bo‘lmaydi, egasi foiz emas, qoldiqni oladi. Mas’ulni istalgan paytda almashtirish mumkin: [«Данные проекта»](#projects-data) → «Ведёт»; siz olib borayotgan loyiha kartochkasida sariq eslatma turadi.",
+              "Loyihani ochgan xodim o‘zi mas’ul bo‘ladi. Siz ochganingizda birinchi maydonda **kim olib borishini** tanlang: hisoblanmalar unga yoziladi. O‘zingizni tanlasangiz — loyiha bo‘yicha jamoaga hisoblanma bo‘lmaydi, egasi foiz emas, qoldiqni oladi. Mas’ulni istalgan paytda almashtirish mumkin: [«Loyiha ma’lumotlari»](#projects-data) → «Olib boradi»; siz olib borayotgan loyiha kartochkasida sariq eslatma turadi.",
               "Ro‘yxatda loyiha bosqichda necha kun turgani va muddati o‘tgan-o‘tmagani ko‘rinadi.",
             ],
           },
@@ -745,9 +745,9 @@ export const uz: HelpCopy = {
           id: "stages",
           title: "Bosqichlar",
           body: [
-            "Tartib bilan: «бриф» → «договор» → «дизайн» → «разработка» → «приёмка» → «запуск» → «поддержка». Alohida: «на паузе», «закрыт», «отменён».",
+            "Tartib bilan: «brif» → «shartnoma» → «dizayn» → «ishlab chiqish» → «qabul qilish» → «ishga tushirish» → «qo‘llab-quvvatlash». Alohida: «pauzada», «yopilgan», «bekor qilingan».",
             "Bosqichni faqat egasi o‘zgartiradi: bosqich — mijozga berilgan va’da, ijrochining kayfiyati haqidagi belgi emas. Har bir o‘zgarish jurnalga loyiha oldingi bosqichda necha kun turgani bilan birga yoziladi.",
-            "Pulga faqat «отменён» ta’sir qiladi — unda hisoblanmalar «не начисляются». «Закрыт» va «отменён» yana mas’ulga summani tahrirlashni ham yopadi.",
+            "Pulga faqat «bekor qilingan» ta’sir qiladi — unda hisoblanmalar «hisoblanmaydi» bo‘ladi. «Yopilgan» va «bekor qilingan» yana mas’ulga summani tahrirlashni ham yopadi.",
           ],
         },
         {
@@ -755,30 +755,30 @@ export const uz: HelpCopy = {
           title: "Loyiha kartochkasi",
           body: {
             manager: [
-              "Tepadan pastga: «Стадия», «Смета», «Деньги», «Данные проекта», «Договор».",
-              "**«Смета»** — toifani va muddatni haftalarda tanlang, panel «не ниже» (chegara), «до» va muddatni hisoblaydi. Chegara — bundan past summada loyiha o‘zini oqlamaydi; undan pastga faqat egasi tusha oladi.",
-              "**«Деньги»**: «Вид сделки» — «новый клиент» yoki «допродажа» (foizingiz shunga bog‘liq, [«Moliya»](/admin/finance) bo‘limiga qarang) va «Сумма по договору». Butun dollarda yozing, «$» va sentlarsiz, aks holda maydon tozalanadi. Loyiha bo‘yicha birorta to‘lov bo‘lmaguncha summani siz tahrirlaysiz; keyin — faqat egasi.",
-              "Soliq va tannarxni shartnomadan keyin egasi yozadi. Mijoz to‘lovlarini ham egasi yozadi — va faqat shundan keyin hisoblanmalaringiz muzdan chiqadi. Shartnoma hisobi bo‘yicha to‘lov egasi uni tasdiqlaganda bu yerga o‘zi tushadi; ungacha «Платежи клиента» blokida sariq qator turadi: «платёж ещё не подтверждён».",
-              "**«Данные проекта»** — nomi, mijoz, muddat, izohlar; ularni siz mas’ul sifatida tahrirlaysiz. **«Договор»** — loyiha shartnomasiga havola va u hozir qayerda: qoralama, egasida imzoda, tasdiqlangan, imzolangan. Shartnoma yo‘q ekan — uni tayyorlash formasi; tayyorlanmasa, forma ustida nimani tuzatish kerakligi yoziladi. Batafsil — [shartnomalar](/admin/contracts).",
+              "Tepadan pastga: «Bosqich», «Smeta», «Pul», «Loyiha ma’lumotlari», «Shartnoma».",
+              "**«Smeta»** — toifani va muddatni haftalarda tanlang, panel «kamida» (chegara), «ko‘pi bilan» va muddatni hisoblaydi. Chegara — bundan past summada loyiha o‘zini oqlamaydi; undan pastga faqat egasi tusha oladi.",
+              "**«Pul»**: «Bitim turi» — «yangi mijoz» yoki «qo‘shimcha sotuv» (foizingiz shunga bog‘liq, [«Moliya»](/admin/finance) bo‘limiga qarang) va «Shartnoma summasi, $». Butun dollarda yozing, «$» va sentlarsiz, aks holda maydon tozalanadi. Loyiha bo‘yicha birorta to‘lov bo‘lmaguncha summani siz tahrirlaysiz; keyin — faqat egasi.",
+              "Soliq va tannarxni shartnomadan keyin egasi yozadi. Mijoz to‘lovlarini ham egasi yozadi — va faqat shundan keyin hisoblanmalaringiz muzdan chiqadi. Shartnoma hisobi bo‘yicha to‘lov egasi uni tasdiqlaganda bu yerga o‘zi tushadi; ungacha «Mijoz to‘lovlari» blokida sariq qator turadi: «to‘lov hali tasdiqlanmagan».",
+              "**«Loyiha ma’lumotlari»** — nomi, mijoz, muddat, izohlar; ularni siz mas’ul sifatida tahrirlaysiz. **«Shartnoma»** — loyiha shartnomasiga havola va u hozir qayerda: qoralama, egasida imzoda, tasdiqlangan, imzolangan. Shartnoma yo‘q ekan — uni tayyorlash formasi; tayyorlanmasa, forma ustida nimani tuzatish kerakligi yoziladi. Batafsil — [shartnomalar](/admin/contracts).",
             ],
             head: [
-              "Bloklar: «Стадия», «Смета», «Деньги», «Данные проекта», «Договор». Siz istalgan loyiha kartochkasini ko‘rasiz; pulni — o‘z loyihalaringiz va jamoa loyihalari bo‘yicha.",
+              "Bloklar: «Bosqich», «Smeta», «Pul», «Loyiha ma’lumotlari», «Shartnoma». Siz istalgan loyiha kartochkasini ko‘rasiz; pulni — o‘z loyihalaringiz va jamoa loyihalari bo‘yicha.",
               "Smeta va summani loyiha mas’uli va egasi tahrirlaydi — siz jamoa loyihalarida ularni faqat ko‘rasiz. Summa — butun dollarda; birinchi to‘lovdan keyin uni faqat egasi o‘zgartiradi.",
-              "Hisoblanma qatorlari: daraja bo‘yicha mas’ul va siz — jamoa loyihalaridan «руководитель · 5%» (muassisda bu qator 0).",
+              "Hisoblanma qatorlari: daraja bo‘yicha mas’ul va siz — jamoa loyihalaridan «rahbar · 5 %» (muassisda bu qator 0).",
             ],
             admin: [
-              "Siz hammasini tahrirlaysiz: bosqich (10 ta tugma), smeta, summa va bitim turini istalgan paytda, **«Налог, %»** (odatiy 4) va **«Себестоимость разработки, $»** — faqat siz, hech kim tannarxni kamaytirib, o‘z hisoblanmasini oshirmasligi uchun.",
-              "Hisoblanma qatorlarida — shu bitim uchun foiz: «задать» yoki «по грейду» ga qaytarish. **«Партнёр»** bloki: kim olib kelgan, hamkorga foiz («по ступени» — loyiha summasi va hamkor modeliga qarab: foydadan 10–30% yoki aylanmadan 6–20%), «Заказ агентства» — agar loyiha hamkor agentligidan bo‘lsa — va «Не засчитывать, причина».",
-              "**«Платежи клиента»** → «Записать платёж»: summa, sana, maqsad. Hammasi to‘langanda hisoblanmalar «заработано» bo‘ladi, hamkorga esa xabar ketadi. Shartnoma hisoblari bo‘yicha to‘lovlar bu yerga o‘zi yoziladi — sizning «Оплачен» belgingizdan yoki shartnomadagi «Подтвердить платёж» tugmasidan; to‘lov sizni kutayotgan paytda bu yerda shartnomaga havolali sariq qator turadi. Kartochkadagi «Остаётся владельцу» — hamkor ulushi ayirilmagan; aniq raqam — [«Moliya»](/admin/finance) bo‘limida.",
+              "Siz hammasini tahrirlaysiz: bosqich (10 ta tugma), smeta, summa va bitim turini istalgan paytda, **«Soliq, %»** (odatiy 4) va **«Ishlab chiqish tannarxi, $»** — faqat siz, hech kim tannarxni kamaytirib, o‘z hisoblanmasini oshirmasligi uchun.",
+              "Hisoblanma qatorlarida — shu bitim uchun foiz: «belgilash» yoki «daraja bo‘yicha»ga qaytarish. **«Hamkor»** bloki: kim olib kelgan, hamkorga foiz («pog‘ona bo‘yicha» — loyiha summasi va hamkor modeliga qarab: foydadan 10–30% yoki aylanmadan 6–20%), «Agentlik buyurtmasi» — agar loyiha hamkor agentligidan bo‘lsa — va «Hisobga olmaslik sababi».",
+              "**«Mijoz to‘lovlari»** → «To‘lovni yozish»: summa, sana, maqsad. Hammasi to‘langanda hisoblanmalar «ishlab topilgan» bo‘ladi, hamkorga esa xabar ketadi. Shartnoma hisoblari bo‘yicha to‘lovlar bu yerga o‘zi yoziladi — sizning «To‘landi» belgingizdan yoki shartnomadagi «To‘lovni tasdiqlash» tugmasidan; to‘lov sizni kutayotgan paytda bu yerda shartnomaga havolali sariq qator turadi. Kartochkadagi «Egasiga qoladi» — hamkor ulushi ayirilmagan; aniq raqam — [«Moliya»](/admin/finance) bo‘limida.",
             ],
           },
         },
         {
           id: "data",
-          title: "«Данные проекта»",
+          title: "«Loyiha ma’lumotlari»",
           body: [
-            "Nomi, mijoz, muddat va izohlarni loyiha mas’uli, uning rahbari va egasi tahrirlaydi; qolganlar ularni formasiz ko‘radi. Mas’ulni faqat egasi almashtiradi — «Ведёт» maydoni: hisoblanmalar mas’ulga bog‘liq va xodim loyihani boshqa odamga yozib qo‘ya olmaydi.",
-            "Summa endi bu yerda tahrirlanmaydi — u «Деньги» blokida.",
+            "Nomi, mijoz, muddat va izohlarni loyiha mas’uli, uning rahbari va egasi tahrirlaydi; qolganlar ularni formasiz ko‘radi. Mas’ulni faqat egasi almashtiradi — «Olib boradi» maydoni: hisoblanmalar mas’ulga bog‘liq va xodim loyihani boshqa odamga yozib qo‘ya olmaydi.",
+            "Summa endi bu yerda tahrirlanmaydi — u «Pul» blokida.",
           ],
         },
       ],
@@ -792,16 +792,16 @@ export const uz: HelpCopy = {
           id: "tiles",
           title: "Asosiy raqamlar",
           body: [
-            "**«всего лидов»**, **«взято в работу»** — hozir nechtasining mas’uli bor.",
-            "**«доля выигранных»** — yutilganlar ÷ (yutilganlar + yutqazilganlar). Yopilgan bitimlardan hisoblanadi: hali ishdagisi yutqazilmagan. Shuning uchun lidni tashlab qo‘ymasdan, «yutqazilgan» holatini qo‘yish muhim.",
-            "**«медиана до взятия»** — murojaatdan «O‘zimga olish»gacha odatda qancha vaqt o‘tadi. O‘rtacha emas, mediana: dam olish kunlari yotib qolgan bitta lid manzarani buzmaydi. Lidni berish bu vaqtni nolga tushiradi.",
+            "**«jami lidlar»**, **«ishga olingan»** — hozir nechtasining mas’uli bor.",
+            "**«yutilganlar ulushi»** — yutilganlar ÷ (yutilganlar + yutqazilganlar). Yopilgan bitimlardan hisoblanadi: hali ishdagisi yutqazilmagan. Shuning uchun lidni tashlab qo‘ymasdan, «yutqazilgan» holatini qo‘yish muhim.",
+            "**«olishgacha mediana»** — murojaatdan «O‘zimga olish»gacha odatda qancha vaqt o‘tadi. O‘rtacha emas, mediana: dam olish kunlari yotib qolgan bitta lid manzarani buzmaydi. Lidni berish bu vaqtni nolga tushiradi.",
           ],
         },
         {
           id: "panels",
           title: "Pastdagi panellar",
           body: [
-            "«Приходит по неделям» — 12 hafta, hafta dushanbadan. «Качество лидов» — A–D harflari bo‘yicha. «Статусы». «Откуда приходят» — chat, forma, bot, vitrina, skaut, aloqalar. «Язык обращения». «Что спрашивают» — bitta lid bir necha qatorda bo‘lishi mumkin. «Скидка 30%» — nechta murojaat chegirma olgani va nima uchun: «первая минута» — saytda birinchi daqiqa taymeri ishlayotganda mijoz yordamchiga yozgan; «гарантия 20 секунд» — javobga ulgurmaganmiz. Har bir shunday chegirma — chekning 30%.",
+            "«Haftalar bo‘yicha kelishi» — 12 hafta, hafta dushanbadan. «Lidlar sifati» — A–D harflari bo‘yicha. «Holatlar». «Qayerdan keladi» — chat, forma, bot, vitrina, skaut, aloqalar. «Murojaat tili». «Nima so‘rashadi» — bitta lid bir necha qatorda bo‘lishi mumkin. «30% chegirma» — nechta murojaat chegirma olgani va nima uchun: «birinchi daqiqa» — saytda birinchi daqiqa taymeri ishlayotganda mijoz yordamchiga yozgan; «20 soniya kafolati» — javobga ulgurmaganmiz. Har bir shunday chegirma — chekning 30%.",
           ],
         },
         {
@@ -812,10 +812,10 @@ export const uz: HelpCopy = {
               "Odamlar bo‘yicha jadvalni siz ko‘rmaysiz — uni rahbar va egasi ko‘radi. Hamkasb ismi yonidagi ochiq reyting natijadan oldin xulqni o‘zgartiradi: lidlarni muhimligiga qarab emas, osonligiga qarab olishni boshlashadi. O‘z raqamlaringizni [bosh sahifada](/admin) ko‘ring: plitkalar va «Reja va fakt».",
             ],
             head: [
-              "«По моей команде» — siz va menejerlaringiz: «В работе», «Выиграл», «Проиграл», «Всего» — butun vaqt uchun, lid hozir kimga biriktirilganiga qarab. Menejerlar bu jadvalni ko‘rmaydi.",
+              "«Mening jamoam bo‘yicha» — siz va menejerlaringiz: «Ishda», «Yutdi», «Yutqazdi», «Jami» — butun vaqt uchun, lid hozir kimga biriktirilganiga qarab. Menejerlar bu jadvalni ko‘rmaydi.",
             ],
             admin: [
-              "«По менеджерам» — barcha faol xodimlar, butun vaqt uchun, lid hozir kimga biriktirilganiga qarab. Rahbar faqat o‘zini va jamoasini ko‘radi, menejerlar jadvalni umuman ko‘rmaydi.",
+              "«Menejerlar bo‘yicha» — barcha faol xodimlar, butun vaqt uchun, lid hozir kimga biriktirilganiga qarab. Rahbar faqat o‘zini va jamoasini ko‘radi, menejerlar jadvalni umuman ko‘rmaydi.",
             ],
           },
         },
@@ -845,10 +845,10 @@ export const uz: HelpCopy = {
           id: "numbers",
           title: "Raqamlar nimani bildiradi",
           body: [
-            "O‘ng tepada — davr: **«7 дней»**, **«30 дней»** yoki **«90 дней»**. Har bir raqam yonidagi strelka — u oldingi xuddi shuncha kunga nisbatan qancha o‘sgani yoki tushgani: «30 дней»da — oldingi 30 kunga nisbatan. Yashil strelka — yaxshi, sariq — yomon, «новое» — oldin nol edi.",
-            "**«визитов»** — saytga necha marta kirilgan: bitta odam ertalab va kechqurun — ikki tashrif. **«посетителей»** — nechta turli odam, aniqrog‘i turli brauzer: bitta odam telefondan va noutbukdan ikki marta hisoblanadi. **«просмотров»** — jami nechta sahifa ochilgan.",
-            "**«отказов»** — odam bitta sahifani ochib, deyarli darhol chiqib ketgan tashriflar ulushi. Bu yerda teskari: rad etishlar o‘sishi — sariq strelka, bu yomon. **«ср. визит»** — tashrif o‘rtacha qancha davom etadi, daqiqa:soniya.",
-            "Ustunlar — kunlar bo‘yicha tashriflar, ustunga sichqonchani olib borsangiz sana va son ko‘rinadi. **«Откуда приходят»** — qidiruvdan, ijtimoiy tarmoqlardan, reklamadan yoki to‘g‘ridan-to‘g‘ri havola orqali. Metrikada nomlar ruscha, Google’da inglizcha: «Organic Search» — qidiruv, «Direct» — to‘g‘ridan-to‘g‘ri kirish, «Referral» — boshqa saytlardan o‘tish, «Organic Social» va «Paid Social» — ijtimoiy tarmoqlar, «Paid Search» — qidiruvdagi reklama. **«Страницы входа»** — odam tashrifni qaysi sahifadan boshlagan.",
+            "O‘ng tepada — davr: **«7 kun»**, **«30 kun»** yoki **«90 kun»**. Har bir raqam yonidagi strelka — u oldingi xuddi shuncha kunga nisbatan qancha o‘sgani yoki tushgani: «30 kun»da — oldingi 30 kunga nisbatan. Yashil strelka — yaxshi, sariq — yomon, «yangi» — oldin nol edi.",
+            "**«tashriflar»** — saytga necha marta kirilgan: bitta odam ertalab va kechqurun — ikki tashrif. **«tashrif buyuruvchilar»** — nechta turli odam, aniqrog‘i turli brauzer: bitta odam telefondan va noutbukdan ikki marta hisoblanadi. **«ko‘rishlar»** — jami nechta sahifa ochilgan.",
+            "**«rad etishlar»** — odam bitta sahifani ochib, deyarli darhol chiqib ketgan tashriflar ulushi. Bu yerda teskari: rad etishlar o‘sishi — sariq strelka, bu yomon. **«o‘rtacha tashrif»** — tashrif o‘rtacha qancha davom etadi, daqiqa:soniya.",
+            "Ustunlar — kunlar bo‘yicha tashriflar, ustunga sichqonchani olib borsangiz sana va son ko‘rinadi. **«Qayerdan keladi»** — qidiruvdan, ijtimoiy tarmoqlardan, reklamadan yoki to‘g‘ridan-to‘g‘ri havola orqali. Metrikada nomlar ruscha, Google’da inglizcha: «Organic Search» — qidiruv, «Direct» — to‘g‘ridan-to‘g‘ri kirish, «Referral» — boshqa saytlardan o‘tish, «Organic Social» va «Paid Social» — ijtimoiy tarmoqlar, «Paid Search» — qidiruvdagi reklama. **«Kirish sahifalari»** — odam tashrifni qaysi sahifadan boshlagan.",
             "Raqamlar har 10 daqiqada yangilanadi: panel har ochilganda Metrika va Google’dan so‘ramaydi, shuning uchun hozirgina ishga tushirilgan reklama bu yerda darhol ko‘rinmaydi.",
           ],
         },
@@ -858,7 +858,7 @@ export const uz: HelpCopy = {
           body: [
             "Metrika va Google Analytics yonma-yon turadi va qo‘shilmaydi. Har biri tashrifni o‘zicha hisoblaydi va robotlarni o‘zicha ajratadi, ba’zi odamlarning brauzerida esa ulardan biri bloklangan, ikkinchisi yo‘q. Shuning uchun raqamlar farq qiladi va bu normal: yig‘indi na u yerda, na bu yerda yo‘q raqam bo‘lardi.",
             "Aniq songa emas, yo‘nalishga qarang. Reklama ishga tushgandan keyin ikkalasi ham o‘sishni ko‘rsatsa — reklama odam olib kelyapti. Faqat bittasi o‘ssa — ehtimol gap odamlarda emas, hisoblashda.",
-            "Saytga kirish — hali mijoz emas. Nechta odam yozgani [statistikada](/admin/stats), «Откуда приходят» blokida ko‘rinadi: u yerda murojaatlar, bu yerda tashriflar. Tashriflar ko‘paysa-yu, murojaatlar ko‘paymasa — odamlar keladi, lekin nima uchun kelganini topmaydi.",
+            "Saytga kirish — hali mijoz emas. Nechta odam yozgani [statistikada](/admin/stats), «Qayerdan keladi» blokida ko‘rinadi: u yerda murojaatlar, bu yerda tashriflar. Tashriflar ko‘paysa-yu, murojaatlar ko‘paymasa — odamlar keladi, lekin nima uchun kelganini topmaydi.",
           ],
         },
         {
@@ -867,13 +867,13 @@ export const uz: HelpCopy = {
           body: {
             head: [
               "Egasi ulaydi: Metrika uchun serverda kalit, Google uchun — uning Google akkaunti bilan kirish kerak. Sizda ulash tugmalari yo‘q, faqat raqamlar — bu yerdan ulanishni buzib ham, almashtirib ham bo‘lmaydi.",
-              "Kartochkada «Не подключено» yoki «Google перестал пускать по входу владельца» deb yozilgan bo‘lsa — egasiga ayting, unga bu bir daqiqalik ish. «Не ответил» — odatda vaqtinchalik: sahifani bir daqiqadan keyin yangilang, takrorlansa — yana egasiga.",
+              "Kartochkada «Ulanmagan» yoki «Google egasining kirishi bo‘yicha ruxsat bermay qo‘ydi» deb yozilgan bo‘lsa — egasiga ayting, unga bu bir daqiqalik ish. «Javob bermadi» — odatda vaqtinchalik: sahifani bir daqiqadan keyin yangilang, takrorlansa — yana egasiga.",
             ],
             admin: [
               "**Metrika** `YANDEX_METRIKA_TOKEN` tokeni bilan ulanadi (hisoblagich raqamini panel o‘zi biladi) — serverdagi `/opt/devuz/.env` faylida yoki Supabase maxfiy ma’lumotlar omborida (Vault) `app.YANDEX_METRIKA_TOKEN` nomi bilan: `.env`da kalit bo‘lmasa, panel uni o‘sha yerdan oladi.",
-              "**Google Analytics** Google orqali kirish bilan ulanadi — kalitlarsiz va serverga kirmasdan. Google Cloud’da bir marta «mijoz» (client) yaratiladi — Google panelimizni taniydigan ruxsatnoma; qadamlari «Google Analytics» kartochkasining o‘zida yozilgan. Uning Client ID va Client secret qatorlari kartochkaga qo‘yiladi, keyin — **«Сохранить и войти через Google»**. Saytning Analytics’iga kirish huquqi bor Google akkaunti bilan kirish kerak va «See and download your Google Analytics data» belgisini olib tashlamaslik kerak. Resurs raqamini panel o‘zi topadi — sayt hisoblagichi `G-L52MCVNS0W` bo‘yicha. Olingan hamma narsa Supabase’ning shifrlangan maxfiy ma’lumotlar omborida saqlanadi, panelda esa faqat o‘qish huquqi bor: Analytics’da biror narsani o‘zgartira olmaydi. Har bir kirish [jurnalda](/admin/audit) ko‘rinadi.",
-              "Agar Google kiritmay qo‘ysa — kartochkada «Google больше не пускает по сохранённому входу» deb yoziladi va bu **«Войти через Google»** tugmasi bilan hal bo‘ladi. Ko‘pincha sabab bitta: Google Cloud’dagi ilova e’lon qilinmagan — «Testing» rejimida Google kirishni 7 kundan keyin o‘chiradi, shuning uchun u yerda bir marta «Publish app» bosish kerak. Agar panel resurs raqamini o‘zi topa olmasa («Google Analytics Admin API» yoqilmagan yoki resurs boshqa akkauntda), uni yozishni so‘raydi: Google Analytics → «Администратор» → «Сведения о ресурсе», faqat raqamlar. Raqamlar ostidagi **«войти заново»** havolasi — Google akkauntini almashtirish uchun.",
-              "Rahbarlar bu bo‘limni ko‘radi, lekin ulash qadamlarisiz, kirish tugmalarisiz va Google akkauntingiz pochtasisiz — ularning o‘rniga «Подключает владелец» deb yozilgan. Menejerlarga bo‘lim ko‘rinmaydi. Oldin «Trafik» bosh sahifadagi varaq edi — eski xatcho‘plar shu yerga olib keladi.",
+              "**Google Analytics** Google orqali kirish bilan ulanadi — kalitlarsiz va serverga kirmasdan. Google Cloud’da bir marta «mijoz» (client) yaratiladi — Google panelimizni taniydigan ruxsatnoma; qadamlari «Google Analytics» kartochkasining o‘zida yozilgan. Uning Client ID va Client secret qatorlari kartochkaga qo‘yiladi, keyin — **«Saqlash va Google orqali kirish»**. Saytning Analytics’iga kirish huquqi bor Google akkaunti bilan kirish kerak va «See and download your Google Analytics data» belgisini olib tashlamaslik kerak. Resurs raqamini panel o‘zi topadi — sayt hisoblagichi `G-L52MCVNS0W` bo‘yicha. Olingan hamma narsa Supabase’ning shifrlangan maxfiy ma’lumotlar omborida saqlanadi, panelda esa faqat o‘qish huquqi bor: Analytics’da biror narsani o‘zgartira olmaydi. Har bir kirish [jurnalda](/admin/audit) ko‘rinadi.",
+              "Agar Google kiritmay qo‘ysa — kartochkada «Google saqlangan kirish bo‘yicha endi ruxsat bermayapti» deb yoziladi va bu **«Google orqali kirish»** tugmasi bilan hal bo‘ladi. Ko‘pincha sabab bitta: Google Cloud’dagi ilova e’lon qilinmagan — «Testing» rejimida Google kirishni 7 kundan keyin o‘chiradi, shuning uchun u yerda bir marta «Publish app» bosish kerak. Agar panel resurs raqamini o‘zi topa olmasa («Google Analytics Admin API» yoqilmagan yoki resurs boshqa akkauntda), uni yozishni so‘raydi: Google Analytics → «Admin» → «Property details», faqat raqamlar. Raqamlar ostidagi **«qayta kirish»** havolasi — Google akkauntini almashtirish uchun.",
+              "Rahbarlar bu bo‘limni ko‘radi, lekin ulash qadamlarisiz, kirish tugmalarisiz va Google akkauntingiz pochtasisiz — ularning o‘rniga «Egasi ulaydi» deb yozilgan. Menejerlarga bo‘lim ko‘rinmaydi. Oldin «Trafik» bosh sahifadagi varaq edi — eski xatcho‘plar shu yerga olib keladi.",
             ],
           },
         },
@@ -888,7 +888,7 @@ export const uz: HelpCopy = {
           id: "prepare",
           title: "Shartnoma tayyorlash",
           body: [
-            "[Loyihani](/admin/projects) oching → «Договор» bloki. To‘ldiring: sana, summa, buyurtmachining to‘liq nomi, manzili va kontakti, STIR yoki JShShIR, bank, hisob raqami (20 raqam), MFO (5 raqam), shartnoma predmeti va bosqichlar. **Bosqichlar ulushlari yig‘indisi — roppa-rosa 100%**. **«Подготовить договор»** tugmasini bosing.",
+            "[Loyihani](/admin/projects) oching → «Shartnoma» bloki. To‘ldiring: sana, summa, buyurtmachining to‘liq nomi, manzili va kontakti, STIR yoki JShShIR, bank, hisob raqami (20 raqam), MFO (5 raqam), shartnoma predmeti va bosqichlar. **Bosqichlar ulushlari yig‘indisi — roppa-rosa 100%**. **«Shartnomani tayyorlash»** tugmasini bosing.",
             "Natijada DU-2026-07 ko‘rinishidagi raqamli qoralama chiqadi. Qoralamada imzo hujjatda jismonan yo‘q — uni chop etib, imzolangan deb ko‘rsatib bo‘lmaydi.",
             "Smeta chegarasidan past summani tayyorlab bo‘lmaydi — buni faqat egasi hal qiladi. Bosgandan keyin hech narsa chiqmasa, maydonlarni tekshiring: panel hozircha qaysi biri noto‘g‘riligini yozmaydi.",
           ],
@@ -898,17 +898,17 @@ export const uz: HelpCopy = {
           title: "Shartnoma sahifasi: smeta va imzoga yuborish",
           body: {
             manager: [
-              "Shartnoma qoralama ekan: **«Загрузить смету»** va **«Срок»** («60 рабочих дней с даты аванса»). Smeta Excel (xlsx), CSV, TSV va matnli PDF dan qatorma-qator o‘qiladi: panel ustunlarni sarlavha bo‘yicha topadi («Наименование», «Кол-во», «Цена», «Сумма»), «Итого» qatorini o‘tkazib yuboradi, qatorlar yig‘indisi esa shartnoma summasiga aylanadi. PDF skan yoki Word’ni o‘qib bo‘lmaydi — unda **«Вставить строки сметы руками»**: qatorlarni Excel’dan nusxalang yoki har bir pozitsiyaga bitta qator yozing — nomi, soni, narxi «;» orqali. Smeta qatorlarisiz shartnomani imzoga yuborib bo‘lmaydi.",
-              "**«Отправить на подпись»** — panel hammasi joyidami tekshiradi, bo‘lmasa «Не хватает: …» deb yozadi. Yubordingiz — egasiga Telegramda xabar bordi, shartnoma «Отправлен владельцу на подпись» holatida va boshqa tahrirlanmaydi.",
-              "Egasi tasdiqlasa — «Подтверждён владельцем», yoki qayta ishlashga qaytaradi. Tasdiqlangandan keyin mijoz o‘z qismini imzolaydi, siz esa **«Загрузить подписанный»** tugmasini bosasiz (PDF yoki rasm) — shartnoma «Подписан обеими сторонами» bo‘ladi.",
+              "Shartnoma qoralama ekan: **«Smetani yuklash»** va **«Muddat»** («60 рабочих дней с даты аванса»). Smeta Excel (xlsx), CSV, TSV va matnli PDF dan qatorma-qator o‘qiladi: panel ustunlarni sarlavha bo‘yicha topadi («Nomi», «Miqdori», «Narxi», «Summa»; ruscha sarlavhalar ham tushuniladi), «Jami» qatorini o‘tkazib yuboradi, qatorlar yig‘indisi esa shartnoma summasiga aylanadi. PDF skan yoki Word’ni o‘qib bo‘lmaydi — unda **«Smeta qatorlarini qo‘lda kiritish»**: qatorlarni Excel’dan nusxalang yoki har bir pozitsiyaga bitta qator yozing — nomi, soni, narxi «;» orqali. Smeta qatorlarisiz shartnomani imzoga yuborib bo‘lmaydi.",
+              "**«Imzoga yuborish»** — panel hammasi joyidami tekshiradi, bo‘lmasa «Yetishmayapti: …» deb yozadi. Yubordingiz — egasiga Telegramda xabar bordi, shartnoma «Imzo uchun egasiga yuborilgan» holatida va boshqa tahrirlanmaydi.",
+              "Egasi tasdiqlasa — «Egasi tasdiqlagan», yoki qayta ishlashga qaytaradi. Tasdiqlangandan keyin mijoz o‘z qismini imzolaydi, siz esa **«Imzolanganini yuklash»** tugmasini bosasiz (PDF yoki rasm) — shartnoma «Ikki tomon imzolagan» bo‘ladi.",
               "Telegram bildirishnomani yetkazmasa, panel shuni aytadi — egasiga og‘zaki ayting.",
             ],
             head: [
-              "Siz ham menejer qiladigan ishni qilasiz: smeta (Excel, CSV, matnli PDF yoki qo‘lda qatorlar — qatorlarsiz yuborib bo‘lmaydi), «Срок», «Отправить на подпись», «Загрузить подписанный», hisoblar va buyurtmachi uchun havola. Shartnomani faqat egasi tasdiqlaydi, qaytaradi va bekor qiladi — tasdiqlash uning imzosining o‘zi.",
+              "Siz ham menejer qiladigan ishni qilasiz: smeta (Excel, CSV, matnli PDF yoki qo‘lda qatorlar — qatorlarsiz yuborib bo‘lmaydi), «Muddat», «Imzoga yuborish», «Imzolanganini yuklash», hisoblar va buyurtmachi uchun havola. Shartnomani faqat egasi tasdiqlaydi, qaytaradi va bekor qiladi — tasdiqlash uning imzosining o‘zi.",
             ],
             admin: [
-              "Imzoga shartnoma sizga Telegramda keladi va «Bugun» varag‘ida — «Imzolanadigan shartnomalar» blokida ko‘rinadi. Tugmalar: **«Подтвердить и подписать»** yoki **«Вернуть на доработку»**. Qaytarish — ishning oddiy qismi, xato emas.",
-              "Tasdiqlash imzongizni qo‘yadi va **birinchi bosqichga darhol hisob chiqaradi**. Tasdiqlangan shartnomani bekor qilish — «Причина отмены» va «Отменить»: shartnomalar o‘chirilmaydi, faqat belgilanadi. Tasdiqlangani tahrirlanmaydi — tuzatish kerak bo‘lsa, yangisi tayyorlanadi.",
+              "Imzoga shartnoma sizga Telegramda keladi va «Bugun» varag‘ida — «Imzolanadigan shartnomalar» blokida ko‘rinadi. Tugmalar: **«Tasdiqlash va imzolash»** yoki **«Qayta ishlashga qaytarish»**. Qaytarish — ishning oddiy qismi, xato emas.",
+              "Tasdiqlash imzongizni qo‘yadi va **birinchi bosqichga darhol hisob chiqaradi**. Tasdiqlangan shartnomani bekor qilish — «Bekor qilish sababi» va «Bekor qilish»: shartnomalar o‘chirilmaydi, faqat belgilanadi. Tasdiqlangani tahrirlanmaydi — tuzatish kerak bo‘lsa, yangisi tayyorlanadi.",
               "Imzolar bilan skan yuklangandan keyin shartnoma ekranida imzongiz boshqa ko‘rinmaydi — u allaqachon skanda bor.",
             ],
           },
@@ -918,19 +918,19 @@ export const uz: HelpCopy = {
           title: "Bosqichlar bo‘yicha hisoblar va buyurtmachi uchun havola",
           body: {
             manager: [
-              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Выставить счёт»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«Оплачен»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
-              "Belgingizdan keyin egasiga Telegram’da xabar keladi. U «Подтвердить платёж» tugmasini bosadi — va to‘lov [loyihada](/admin/projects) to‘lov bo‘lib yoziladi: pulga tushadi va shu bo‘yicha hisoblanmalaringiz muzdan chiqadi. U tasdiqlamaguncha hisob yonida «ждёт подтверждения владельца» deb yozilgan, loyiha kartochkasida esa sariq qator turadi. Xato belgilagan bo‘lsangiz — egasiga ayting, belgini u olib tashlaydi.",
-              "**«Ссылка для заказчика»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Выпустить новую ссылку» eskisini o‘chiradi.",
+              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Hisob-faktura berish»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«To‘landi»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
+              "Belgingizdan keyin egasiga Telegram’da xabar keladi. U «To‘lovni tasdiqlash» tugmasini bosadi — va to‘lov [loyihada](/admin/projects) to‘lov bo‘lib yoziladi: pulga tushadi va shu bo‘yicha hisoblanmalaringiz muzdan chiqadi. U tasdiqlamaguncha hisob yonida «egasining tasdig‘ini kutmoqda» deb yozilgan, loyiha kartochkasida esa sariq qator turadi. Xato belgilagan bo‘lsangiz — egasiga ayting, belgini u olib tashlaydi.",
+              "**«Buyurtmachi uchun havola»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Yangi havola yaratish» eskisini o‘chiradi.",
             ],
             head: [
-              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Выставить счёт»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«Оплачен»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
-              "Belgidan keyin egasiga Telegram’da xabar keladi. U «Подтвердить платёж» tugmasini bosadi — va to‘lov [loyihada](/admin/projects) to‘lov bo‘lib yoziladi: pulga tushadi va shu bo‘yicha hisoblanmalar — sizniki ham, jamoaniki ham — muzdan chiqadi. U tasdiqlamaguncha hisob yonida «ждёт подтверждения владельца» deb yozilgan, loyiha kartochkasida esa sariq qator turadi. Xato belgilangan bo‘lsa — egasiga ayting, belgini u olib tashlaydi.",
-              "**«Ссылка для заказчика»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Выпустить новую ссылку» eskisini o‘chiradi.",
+              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Hisob-faktura berish»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«To‘landi»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
+              "Belgidan keyin egasiga Telegram’da xabar keladi. U «To‘lovni tasdiqlash» tugmasini bosadi — va to‘lov [loyihada](/admin/projects) to‘lov bo‘lib yoziladi: pulga tushadi va shu bo‘yicha hisoblanmalar — sizniki ham, jamoaniki ham — muzdan chiqadi. U tasdiqlamaguncha hisob yonida «egasining tasdig‘ini kutmoqda» deb yozilgan, loyiha kartochkasida esa sariq qator turadi. Xato belgilangan bo‘lsa — egasiga ayting, belgini u olib tashlaydi.",
+              "**«Buyurtmachi uchun havola»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Yangi havola yaratish» eskisini o‘chiradi.",
             ],
             admin: [
-              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Выставить счёт»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«Оплачен»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
-              "Sizning «Оплачен» belgingiz to‘lovni darhol loyihaga yozadi — loyiha kartochkasida uni ikkinchi marta yozish shart emas: hisob summasi, sana — bugun, maqsad — birinchi bosqichda avans, oxirgisida qoldiq, izohda «Счёт № … по договору № …». Agar to‘lovni xodim belgilagan bo‘lsa, sizga Telegram’da xabar keladi, hisob yonida esa — **«Подтвердить платёж»** va **«Оплаты не было»** (xato belgini olib tashlaydi). Tasdiqlangan to‘lov oddiy to‘lov kabi loyiha kartochkasida o‘chiriladi; shundan keyin hisob yana tasdiqni kutadi.",
-              "**«Ссылка для заказчика»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Выпустить новую ссылку» eskisini o‘chiradi.",
+              "Har bir bosqich oldindan, narxining 100% to‘lanadi. Birinchi bosqichga hisob tasdiqlashda o‘zi chiqadi, keyingilari — **«Hisob-faktura berish»** tugmasi bilan. To‘lov muddati — 14 kun. Pul keldi — **«To‘landi»**: to‘lovni bankda ko‘rgan odam belgilaydi.",
+              "Sizning «To‘landi» belgingiz to‘lovni darhol loyihaga yozadi — loyiha kartochkasida uni ikkinchi marta yozish shart emas: hisob summasi, sana — bugun, maqsad — birinchi bosqichda avans, oxirgisida qoldiq, izohda «Счёт № … по договору № …». Agar to‘lovni xodim belgilagan bo‘lsa, sizga Telegram’da xabar keladi, hisob yonida esa — **«To‘lovni tasdiqlash»** va **«To‘lov bo‘lmagan»** (xato belgini olib tashlaydi). Tasdiqlangan to‘lov oddiy to‘lov kabi loyiha kartochkasida o‘chiriladi; shundan keyin hisob yana tasdiqni kutadi.",
+              "**«Buyurtmachi uchun havola»** — mijoz shartnoma va hisoblarni ko‘radigan sahifa. Havola bir marta ko‘rsatiladi — darhol nusxalang. «Yangi havola yaratish» eskisini o‘chiradi.",
             ],
           },
         },
@@ -939,7 +939,7 @@ export const uz: HelpCopy = {
           title: "Sizning imzongiz",
           roles: ["admin"],
           body: [
-            "Shu sahifadagi «Подпись» bloki: shaffof fonli PNG, 2 MB gacha, barcha shartnomalar uchun bitta — «Загрузить» yoki «Заменить».",
+            "Shu sahifadagi «Imzo» bloki: shaffof fonli PNG, 2 MB gacha, barcha shartnomalar uchun bitta — «Yuklash» yoki «Almashtirish».",
             "Imzo faqat tasdiqlangan shartnomalarda va ularning hisoblarida ko‘rsatiladi. Imzo fayli bo‘lmasa, tasdiqlangan shartnoma usiz chop etiladi — panel ogohlantiradi.",
           ],
         },
@@ -971,12 +971,12 @@ export const uz: HelpCopy = {
           title: "Yozish va o‘chirish",
           body: {
             head: [
-              "«Добавить расход»: sana, modda («реклама», «сервисы и подписки», «подрядчики», «офис и связь», «прочее»), summa va nimaga — «Записать». Siz va egasi yoza olasiz: o‘ylab topilgan xarajat sizning ulushingizni ham kamaytiradi, shuning uchun o‘zingizga foydali yolg‘on gapirib bo‘lmaydi.",
+              "«Xarajat qo‘shish»: sana, modda («reklama», «servislar va obunalar», «pudratchilar», «ofis va aloqa», «boshqalar»), summa va nimaga — «Yozish». Siz va egasi yoza olasiz: o‘ylab topilgan xarajat sizning ulushingizni ham kamaytiradi, shuning uchun o‘zingizga foydali yolg‘on gapirib bo‘lmaydi.",
               "Faqat egasi o‘chiradi: o‘chirish orqali birovning xarajatini manzaradan olib tashlash mumkin bo‘lardi. Xato qildingiz — unga ayting.",
             ],
             admin: [
-              "«Добавить расход» va har bir qatordagi «убрать». Muassis-rahbar yoza oladi, lekin o‘chira olmaydi: o‘chirish orqali birovning xarajatini manzaradan olib tashlash mumkin, o‘ylab topilgan xarajat esa uni yozganning ulushini ham kamaytiradi.",
-              "Bu yerda [«Moliya»](/admin/finance) bo‘limidagi «Расходы студии» blokidagi xarajatlarning o‘zi.",
+              "«Xarajat qo‘shish» va har bir qatordagi «olib tashlash». Muassis-rahbar yoza oladi, lekin o‘chira olmaydi: o‘chirish orqali birovning xarajatini manzaradan olib tashlash mumkin, o‘ylab topilgan xarajat esa uni yozganning ulushini ham kamaytiradi.",
+              "Bu yerda [«Moliya»](/admin/finance) bo‘limidagi «Studiya xarajatlari» blokidagi xarajatlarning o‘zi.",
             ],
           },
         },
@@ -984,8 +984,8 @@ export const uz: HelpCopy = {
           id: "taxes",
           title: "Soliq muddatlari",
           body: [
-            "«Налоги: что подходит» bloki — 14 kun oldinga muddatlar: aylanmadan soliq va ijtimoiy soliq — har oyning 15-sanasigacha, yillik hisobot — 1-aprelgacha. 3 kun va undan kam qolsa — sariq.",
-            "Har bir sana yonida «дата не подтверждена бухгалтером» belgisi bor: bu buxgalter bilan suhbat uchun qoralama, uning so‘zi emas. Kechikish uchun jarima bir marta va to‘liq keladi, shuning uchun blok birinchi turadi.",
+            "«Soliqlar: muddati yaqinlashayotganlar» bloki — 14 kun oldinga muddatlar: aylanmadan soliq va ijtimoiy soliq — har oyning 15-sanasigacha, yillik hisobot — 1-aprelgacha. 3 kun va undan kam qolsa — sariq.",
+            "Har bir sana yonida «sana buxgalter tomonidan tasdiqlanmagan» belgisi bor: bu buxgalter bilan suhbat uchun qoralama, uning so‘zi emas. Kechikish uchun jarima bir marta va to‘liq keladi, shuning uchun blok birinchi turadi.",
           ],
         },
         {
@@ -996,7 +996,7 @@ export const uz: HelpCopy = {
               "Bu yerda faqat xarajatlar va ularning bo‘linishi ko‘rinadi. Foyda va undagi ulushlar — egasida: 30% ni ko‘rsatish qolgan 70% ni ham ko‘rsatish demak, biri ikkinchisidan xayolan hisoblanadi.",
             ],
             admin: [
-              "Rahbarga bu yerda faqat xarajatlar ko‘rinadi: foyda va undagi ulushlar — faqat sizda, [«Moliya»](/admin/finance) bo‘limidagi «Доли соучредителей» blokida. Uning 30% ini ko‘rsatish sizning 70% ingizni ham ko‘rsatish bo‘lardi.",
+              "Rahbarga bu yerda faqat xarajatlar ko‘rinadi: foyda va undagi ulushlar — faqat sizda, [«Moliya»](/admin/finance) bo‘limidagi «Hammuassislar ulushlari» blokida. Uning 30% ini ko‘rsatish sizning 70% ingizni ham ko‘rsatish bo‘lardi.",
             ],
           },
         },
@@ -1021,8 +1021,8 @@ export const uz: HelpCopy = {
           id: "freeze",
           title: "Muzlatilgan, ishlab topilgan, to‘lanadigan",
           body: [
-            "**«Заморожено»** — bitim bor, lekin mijoz hali butun summani to‘lamagan. **«Заработано»** — mijoz loyihani to‘liq to‘lagan (egasi to‘lovlarni loyiha kartochkasiga yozgan). **«Не начисляется»** — loyiha bekor qilingan.",
-            "**«К выплате»** = ishlab topilgan − to‘lab berilgan. Manfiy bo‘lsa — «выплачено вперёд».",
+            "**«Muzlatilgan»** — bitim bor, lekin mijoz hali butun summani to‘lamagan. **«Ishlab topilgan»** — mijoz loyihani to‘liq to‘lagan (egasi to‘lovlarni loyiha kartochkasiga yozgan). **«hisoblanmaydi»** — loyiha bekor qilingan.",
+            "**«To‘lanadi»** = ishlab topilgan − to‘lab berilgan. Manfiy bo‘lsa — «oldindan to‘langan».",
             "Hisoblanmalar saqlanmaydi, har ochilganda qaytadan hisoblanadi — tannarxni o‘zgartirdingiz, raqam darhol boshqacha.",
           ],
         },
@@ -1031,16 +1031,16 @@ export const uz: HelpCopy = {
           title: "Sahifada nima bor",
           body: {
             manager: [
-              "Siz bo‘yicha plitkalar: «Заработано», «Заморожено», «Выплачено», «К выплате». Pastda «По проектам» — loyihalaringiz: summa, to‘liq to‘langanmi va sizning hisoblanmangiz. Va sizga qilingan to‘lovlar ro‘yxati.",
+              "Siz bo‘yicha plitkalar: «Ishlab topilgan», «Muzlatilgan», «To‘langan», «To‘lanadi». Pastda «Loyihalar bo‘yicha» — loyihalaringiz: summa, to‘liq to‘langanmi va sizning hisoblanmangiz. Va sizga qilingan to‘lovlar ro‘yxati.",
               "Ko‘proq olishni xohlaysizmi — yangi mijozlar qidiring: yangi mijozdan foiz qo‘shimcha sotuvdagidan yuqori. Va o‘z [loyihalaringizni](/admin/projects) o‘zingiz oching — hisoblanma olib borayotgan odamga yoziladi.",
             ],
             head: [
-              "Plitkalar — sizning balansingiz. «По людям» — siz va jamoangiz: daraja, loyihalar, muzlatilgan, ishlab topilgan, to‘lab berilgan, to‘lanadigan. «По проектам» — siznikilar va jamoanikilar, sizning doirangiz hisoblanmalari bilan. «Выплаты» — sizniki va jamoaniki.",
+              "Plitkalar — sizning balansingiz. Odamlar jadvali — siz va jamoangiz: daraja, loyihalar, muzlatilgan, ishlab topilgan, to‘lab berilgan, to‘lanadigan. «Loyihalar bo‘yicha» — siznikilar va jamoanikilar, sizning doirangiz hisoblanmalari bilan. «To‘lovlar» — sizniki va jamoaniki.",
               "Studiya foydasidagi ulushlarni va uning qoldig‘ini faqat egasi ko‘radi.",
             ],
             admin: [
-              "Studiya bo‘yicha plitkalar: «По договорам», «Оплачено клиентами», «Чистая прибыль» (nechta loyihada tannarx yo‘qligi belgisi bilan), «Начислено команде и партнёрам», «Остаётся владельцу».",
-              "«По людям» va «По проектам» — soliq, tannarx, foyda va «Владельцу» (hamkorlar ayirilgan) ustunlari bilan. «Доли соучредителей» — kelgan pul minus xarajatlar va u qanday bo‘linadi. «Расходы студии» — [«Xarajatlar»](/admin/expenses) bo‘limidagi ro‘yxatning o‘zi.",
+              "Studiya bo‘yicha plitkalar: «Shartnomalar bo‘yicha», «Mijozlar to‘lagan», «Sof foyda» (nechta loyihada tannarx yo‘qligi belgisi bilan), «Jamoa va hamkorlarga hisoblangan», «Egasiga qoladi».",
+              "Odamlar jadvali va «Loyihalar bo‘yicha» — soliq, tannarx, foyda va «Egasiga» (hamkorlar ayirilgan) ustunlari bilan. «Hammuassislar ulushlari» — kelgan pul minus xarajatlar va u qanday bo‘linadi. «Studiya xarajatlari» — [«Xarajatlar»](/admin/expenses) bo‘limidagi ro‘yxatning o‘zi.",
             ],
           },
         },
@@ -1049,13 +1049,13 @@ export const uz: HelpCopy = {
           title: "To‘lovlar",
           body: {
             manager: [
-              "To‘lovlarni egasi pulni o‘tkazgandan keyin yozadi. Ular «Выплаты» ro‘yxatida chiqadi va «К выплате» ni kamaytiradi.",
+              "To‘lovlarni egasi pulni o‘tkazgandan keyin yozadi. Ular «To‘lovlar» ro‘yxatida chiqadi va «To‘lanadi»ni kamaytiradi.",
             ],
             head: [
               "To‘lovlarni faqat egasi yozadi. Siz o‘zingizga va jamoangizga qilingan to‘lovlarni ko‘rasiz.",
             ],
             admin: [
-              "«Выплаты» → «Кому», «Сумма, $», «Дата» (bo‘sh — bugun), «Заметка» («avgust uchun») → «Записать выплату». Avval pulni o‘tkazing, keyin yozing. O‘zingizga to‘lov yozib bo‘lmaydi: sizga qoldiq qoladi.",
+              "«To‘lovlar» → «Kimga», «Summa, $», «Sana» (bo‘sh — bugun), «Izoh» («avgust uchun») → «To‘lovni yozish». Avval pulni o‘tkazing, keyin yozing. O‘zingizga to‘lov yozib bo‘lmaydi: sizga qoldiq qoladi.",
             ],
           },
         },
@@ -1070,7 +1070,7 @@ export const uz: HelpCopy = {
           id: "upload",
           title: "Versiyani joylash",
           body: [
-            "Avval arxivni o‘z kompyuteringizdan Supabase’dagi yopiq bucket’ga yuklang — sayt katta fayllarni qabul qilmaydi. Keyin «Выложить релиз» formasi: mahsulot, versiya, bucket, bucket ichidagi yo‘l, sha256 (ixtiyoriy) va izoh — «Выложить».",
+            "Avval arxivni o‘z kompyuteringizdan Supabase’dagi yopiq bucket’ga yuklang — sayt katta fayllarni qabul qilmaydi. Keyin «Relizni joylash» formasi: mahsulot, versiya, bucket, bucket ichidagi yo‘l, sha256 (ixtiyoriy) va izoh — «Joylash».",
             "Panel fayl joyidami tekshiradi. Yangi versiya amaldagi bo‘ladi, oldingisi — yo‘q.",
           ],
         },
@@ -1078,7 +1078,7 @@ export const uz: HelpCopy = {
           id: "downloads",
           title: "Xaridor nimani ko‘radi",
           body: [
-            "To‘lovdan keyin — buyurtma sahifasida yuklab olish tugmasini: jami 20 tagacha va kuniga 10 tagacha yuklab olish, har bir havola 60 soniya yashaydi. Reliz bo‘lmaguncha — «файл готовим».",
+            "To‘lovdan keyin — buyurtma sahifasida yuklab olish tugmasini: jami 20 tagacha va kuniga 10 tagacha yuklab olish, har bir havola 60 soniya yashaydi. Reliz bo‘lmaguncha — «fayl tayyorlanmoqda».",
             "Tepada `DOWNLOAD_SIGNING_SECRET` haqida ogohlantirish bo‘lsa — yuklab olish hech kimda ishlamaydi. Kirishni yopish — [«Buyurtmalar»](/admin/orders) bo‘limidagi buyurtma kartochkasidagi tugma bilan.",
           ],
         },
@@ -1094,14 +1094,14 @@ export const uz: HelpCopy = {
           title: "Xodim qo‘shish",
           body: {
             head: [
-              "«Завести сотрудника» bloki: Telegram id (raqamli — odam uni @userinfobot kabi istalgan botdan bilib, sizga yuboradi), paneldagi ism, username ixtiyoriy. Sizda rol bitta — «menejer»: ikkinchi rahbarni egasi tayinlaydi. **«Завести»** tugmasini bosing.",
+              "«Xodim qo‘shish» bloki: Telegram id (raqamli — odam uni @userinfobot kabi istalgan botdan bilib, sizga yuboradi), paneldagi ism, username ixtiyoriy. Sizda rol bitta — «menejer»: ikkinchi rahbarni egasi tayinlaydi. **«Qo‘shish»** tugmasini bosing.",
               "Siz qo‘shgan menejer **darhol sizniki** — egasiga bildirishnoma boradi. Odamga bot taklifnoma yuboradi: rol, unga nima ochiq va bir bosishda panelga kiritadigan «Открыть панель» tugmasi.",
-              "«Бот не может написать первым» — odam hali botga yozmagan. U [botni](https://t.me/Devuz_studio_bot) ochib, «Старт» tugmasini bossin, siz esa uning qatorida «отправить приглашение» ni bosing.",
+              "«Taklif yetkazilmadi: bot unga hali yozmagan odamga birinchi bo‘lib yoza olmaydi» — odam hali botga yozmagan. U [botni](https://t.me/Devuz_studio_bot) ochib, «Старт» tugmasini bossin, siz esa uning qatorida «taklif yuborish»ni bosing.",
             ],
             admin: [
-              "«Завести сотрудника»: Telegram id (raqamli, @userinfobot orqali), ism, username ixtiyoriy va rol — «руководитель проектов» yoki «menejer». Siz qo‘shgan odam rahbarsiz bo‘ladi; uni «Руководитель» ustunida biriktiring.",
-              "Bot «Открыть панель» tugmasi bilan taklifnoma yuboradi. Yetib bormadi — odam botda «Старт» tugmasini bosmagan; shundan keyin — uning qatorida «отправить приглашение». Bu id oldin bo‘lgan va o‘chirilgan bo‘lsa — odam butun tarixi bilan qaytadi.",
-              "«обновить меню команд бота» — agar kimdadir botda /login ko‘rinmasa. Menyu baribir har bir yangilanish chiqqanda, xodim qo‘shilganda va o‘chirilganda yangilanadi.",
+              "«Xodim qo‘shish»: Telegram id (raqamli, @userinfobot orqali), ism, username ixtiyoriy va rol — «loyiha rahbari» yoki «menejer». Siz qo‘shgan odam rahbarsiz bo‘ladi; uni «Rahbar» ustunida biriktiring.",
+              "Bot «Открыть панель» tugmasi bilan taklifnoma yuboradi. Yetib bormadi — odam botda «Старт» tugmasini bosmagan; shundan keyin — uning qatorida «taklif yuborish». Bu id oldin bo‘lgan va o‘chirilgan bo‘lsa — odam butun tarixi bilan qaytadi.",
+              "«bot buyruqlari menyusini yangilash» — agar kimdadir botda /login ko‘rinmasa. Menyu baribir har bir yangilanish chiqqanda, xodim qo‘shilganda va o‘chirilganda yangilanadi.",
             ],
           },
         },
@@ -1110,13 +1110,13 @@ export const uz: HelpCopy = {
           title: "Rahbar va uning jamoasi",
           body: {
             head: [
-              "«Руководитель» ustunida rahbarsiz menejerda **«взять к себе»** tugmasi bor. Undan keyin u sizning jamoangizda: uning statistikasi va «Reja va fakt» — sizda, aloqalar rejasini unga siz qo‘yasiz, sizga esa uning bitimlaridan 5% hisoblanadi. Egasiga bildirishnoma boradi.",
+              "«Rahbar» ustunida rahbarsiz menejerda **«o‘zimga olish»** tugmasi bor. Undan keyin u sizning jamoangizda: uning statistikasi va «Reja va fakt» — sizda, aloqalar rejasini unga siz qo‘yasiz, sizga esa uning bitimlaridan 5% hisoblanadi. Egasiga bildirishnoma boradi.",
               "Ikki rahbar bir vaqtda bossa, menejer bittasiga tushadi.",
-              "Menejerni ajratish yoki boshqa rahbarga berishni faqat egasi qila oladi — o‘zingizda «вы · открепляет владелец» yozuvini ko‘rasiz.",
+              "Menejerni ajratish yoki boshqa rahbarga berishni faqat egasi qila oladi — o‘zingizda «siz · egasi ajratadi» yozuvini ko‘rasiz.",
             ],
             admin: [
-              "«Руководитель» ustuni: rahbarni tanlang va «сохранить», yoki ajratish uchun «без руководителя». Odamga xabar boradi.",
-              "Rahbar hech kimga biriktirilmagan menejerlarni «взять к себе» tugmasi bilan o‘zi oladi, o‘zi qo‘shganlari esa darhol uniki. Bu haqda sizga «Команда» tugmasi bilan xabar keladi. Faqat siz ajratasiz.",
+              "«Rahbar» ustuni: rahbarni tanlang va «saqlash», yoki ajratish uchun «rahbarsiz». Odamga xabar boradi.",
+              "Rahbar hech kimga biriktirilmagan menejerlarni «o‘zimga olish» tugmasi bilan o‘zi oladi, o‘zi qo‘shganlari esa darhol uniki. Bu haqda sizga «Команда» tugmasi bilan xabar keladi. Faqat siz ajratasiz.",
               "«Jamoa» nimani anglatadi: menejerning statistikasi va «Reja va fakt» — rahbarda, aloqalar rejasini u qo‘yadi, unga esa menejerning har bir bitimidan 5% (muassisda — 0).",
             ],
           },
@@ -1126,11 +1126,11 @@ export const uz: HelpCopy = {
           title: "Aloqalar rejasi",
           body: {
             head: [
-              "O‘z menejerlaringizga — «План касаний» ustunida: «в неделю» soni va «сохранить». O‘zingizga reja qo‘ymaysiz — uni egasi qo‘yadi.",
-              "Bo‘sh maydon — «без плана»: unda kunlik to‘plam 5 ta kompaniya. 0 — reja yo‘q va to‘plam ham yo‘q. [Kunlik to‘plam](/admin/prospect) hajmi rejaga bog‘liq: reja ÷ 5, kuniga 2 dan 15 gacha.",
+              "O‘z menejerlaringizga — «Aloqalar rejasi» ustunida: «haftasiga» soni va «saqlash». O‘zingizga reja qo‘ymaysiz — uni egasi qo‘yadi.",
+              "Bo‘sh maydon — «rejasiz»: unda kunlik to‘plam 5 ta kompaniya. 0 — reja yo‘q va to‘plam ham yo‘q. [Kunlik to‘plam](/admin/prospect) hajmi rejaga bog‘liq: reja ÷ 5, kuniga 2 dan 15 gacha.",
             ],
             admin: [
-              "«План касаний» ustuni — o‘zingizdan boshqa istalgan odamga. Rahbar faqat o‘z odamlariga qo‘yadi. Bo‘sh maydon — «без плана» (kuniga 5 tadan to‘plam), 0 — na reja, na to‘plam, ko‘pi bilan 500.",
+              "«Aloqalar rejasi» ustuni — o‘zingizdan boshqa istalgan odamga. Rahbar faqat o‘z odamlariga qo‘yadi. Bo‘sh maydon — «rejasiz» (kuniga 5 tadan to‘plam), 0 — na reja, na to‘plam, ko‘pi bilan 500.",
             ],
           },
         },
@@ -1142,8 +1142,8 @@ export const uz: HelpCopy = {
               "Daraja va shaxsiy stavkani egasi qo‘yadi — siz ularni ko‘rasiz, lekin tahrirlamaysiz. Daraja bitim sof foydasidan foizni belgilaydi: kichik menejer — yangi mijozdan 10%, menejer — 15%, rahbar — 30%. Batafsil — [«Moliya»](/admin/finance) bo‘limida.",
             ],
             admin: [
-              "«младший менеджер» (yangi mijozdan 10%, qo‘shimcha sotuvdan 0), «menejer» (15% va 5%), «руководитель» (30% va 30%). Shaxsiy stavka, % — darajani faqat yangi mijozlar uchun almashtiradi; bo‘sh — «по грейду».",
-              "Rol almashganda daraja o‘zi almashadi: rahbarga — «руководитель», menejerga — «menejer»; shaxsiy stavka qoladi.",
+              "«kichik menejer» (yangi mijozdan 10%, qo‘shimcha sotuvdan 0), «menejer» (15% va 5%), «rahbar» (30% va 30%). Shaxsiy stavka, % — darajani faqat yangi mijozlar uchun almashtiradi; bo‘sh — «daraja bo‘yicha».",
+              "Rol almashganda daraja o‘zi almashadi: rahbarga — «rahbar», menejerga — «menejer»; shaxsiy stavka qoladi.",
             ],
           },
         },
@@ -1152,7 +1152,7 @@ export const uz: HelpCopy = {
           title: "Rol",
           roles: ["admin"],
           body: [
-            "«сделать руководителем» / «сделать менеджером». Administrator roli panel orqali hech kimga berilmaydi.",
+            "«rahbar qilish» / «menejer qilish». Administrator roli panel orqali hech kimga berilmaydi.",
             "Rahbarlikdan olsangiz, uning jamoasi ajraladi: panel nechta menejer rahbarsiz qolganini yozadi — ularni boshqasiga biriktiring. Menejerlarning o‘ziga bu haqda xabar berilmaydi.",
             "O‘zingizni va oxirgi administratorni lavozimdan tushirib bo‘lmaydi.",
           ],
@@ -1163,15 +1163,15 @@ export const uz: HelpCopy = {
           roles: ["admin", "head"],
           body: {
             head: [
-              "Oxirgi ustunda har bir menejeringizda va o‘zingizda **«Уведомления»** qatori bor — yonida «приходит всё» yoki «выключено: 2 из 8» deb yozilgan. Uni bosing: belgilar ochiladi. Belgi turgan bo‘lsa — bot buni yuboradi, olib tashlansa — yo‘q. Keraklisini belgilab, **«Сохранить»** ni bosing. Yangi xodimlarda sukut bo‘yicha barcha belgilar turadi.",
-              "Har bir belgi ostida usiz nima bo‘lishi yozilgan — olib tashlashdan oldin o‘qing. Asosiysi: **«Новые заявки по очереди»**. Usiz odam [navbatdan](#leads-queue) chiqadi — lidlar unga taklif qilinmaydi va darhol keyingisiga ketadi. Bu ta’til yoki kasallik vaqtida qulay: kirish qoladi, arizalar esa yarim soatdan turib qolmaydi.",
-              "Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi — ishning o‘zi panelda qoladi: eslatma lid kartochkasida ko‘rinadi, kunlik to‘plam — [«Aloqalar»](/admin/prospect)da, mijozning aloqaga javobi — o‘sha yerda. «Ответы клиентов на касания» ni olib tashlasangiz, menejer o‘zi «Aloqalar»ga kirmaguncha mijoz javob kutib qolishi mumkin — faqat javoblarni boshqa odam olib borsa, olib tashlang.",
+              "Oxirgi ustunda har bir menejeringizda va o‘zingizda **«Bildirishnomalar»** qatori bor — yonida «hammasi keladi» yoki «o‘chirilgan: 8 tadan 2 tasi» deb yozilgan. Uni bosing: belgilar ochiladi. Belgi turgan bo‘lsa — bot buni yuboradi, olib tashlansa — yo‘q. Keraklisini belgilab, **«Saqlash»**ni bosing. Yangi xodimlarda sukut bo‘yicha barcha belgilar turadi.",
+              "Har bir belgi ostida usiz nima bo‘lishi yozilgan — olib tashlashdan oldin o‘qing. Asosiysi: **«Navbat bo‘yicha yangi buyurtmalar»**. Usiz odam [navbatdan](#leads-queue) chiqadi — lidlar unga taklif qilinmaydi va darhol keyingisiga ketadi. Bu ta’til yoki kasallik vaqtida qulay: kirish qoladi, arizalar esa yarim soatdan turib qolmaydi.",
+              "Qolgan belgilar faqat Telegramdagi xabarni olib tashlaydi — ishning o‘zi panelda qoladi: eslatma lid kartochkasida ko‘rinadi, kunlik to‘plam — [«Aloqalar»](/admin/prospect)da, mijozning aloqaga javobi — o‘sha yerda. «Mijozlarning aloqalarga javoblari»ni olib tashlasangiz, menejer o‘zi «Aloqalar»ga kirmaguncha mijoz javob kutib qolishi mumkin — faqat javoblarni boshqa odam olib borsa, olib tashlang.",
               "O‘chirilmaydi: panelga taklif, rol va rahbar almashishi, lidni berishni tasdiqlash so‘rovi — bu xabarlarsiz amal bajarilmaydi. Menejerlarga belgilarni siz va egasi o‘zgartirasiz; menejerlarning o‘zi ularni ko‘rmaydi. Kim va qachon o‘zgartirgani — jurnalda.",
             ],
             admin: [
-              "Oxirgi ustunda har bir xodimda (va sizda) **«Уведомления»** qatori bor — yonida «приходит всё» yoki «выключено: 2 из 8». Bosing: belgilar ochiladi, turgan bo‘lsa — bot yuboradi, olib tashlansa — yo‘q. **«Сохранить»**. Sukut bo‘yicha hammada hammasi turadi. Loyihalar rahbari ham belgilarni o‘zgartiradi — o‘z menejerlariga va o‘ziga, lekin boshqa rahbarga va sizga emas.",
-              "Har bir rolning o‘z to‘plami bor. Menejerda — navbat bo‘yicha va hamma uchun arizalar, eslatmalar, lid chatidagi xabarlar, berishlar, aloqalarga javoblar, kunlik to‘plam, haftalik tavsiyalar, vazifalar. Rahbarda yana hisobotlar. Sizda — «Копии предложений очереди» (navbat lidni kimga va qachon taklif qilgani), hisobotlar va vazifalar, navbat va to‘plamsiz: siz navbatda turmaysiz.",
-              "Asosiy belgi — **«Новые заявки по очереди»**: usiz odam [navbatdan](#leads-queue) chiqadi, lidlar keyingisiga ketadi. Qolganlari faqat Telegramdagi xabarni olib tashlaydi, ish panelda qoladi. Agar hammada «Заявки для всех» olib tashlansa, tungi arizalarni Telegramda hech kim ko‘rmaydi — faqat panelda va sotuv chatida, agar u bo‘lsa.",
+              "Oxirgi ustunda har bir xodimda (va sizda) **«Bildirishnomalar»** qatori bor — yonida «hammasi keladi» yoki «o‘chirilgan: 8 tadan 2 tasi». Bosing: belgilar ochiladi, turgan bo‘lsa — bot yuboradi, olib tashlansa — yo‘q. **«Saqlash»**. Sukut bo‘yicha hammada hammasi turadi. Loyihalar rahbari ham belgilarni o‘zgartiradi — o‘z menejerlariga va o‘ziga, lekin boshqa rahbarga va sizga emas.",
+              "Har bir rolning o‘z to‘plami bor. Menejerda — navbat bo‘yicha va hamma uchun arizalar, eslatmalar, lid chatidagi xabarlar, berishlar, aloqalarga javoblar, kunlik to‘plam, haftalik tavsiyalar, vazifalar. Rahbarda yana hisobotlar. Sizda — «Navbat takliflari nusxalari» (navbat lidni kimga va qachon taklif qilgani), hisobotlar va vazifalar, navbat va to‘plamsiz: siz navbatda turmaysiz.",
+              "Asosiy belgi — **«Navbat bo‘yicha yangi buyurtmalar»**: usiz odam [navbatdan](#leads-queue) chiqadi, lidlar keyingisiga ketadi. Qolganlari faqat Telegramdagi xabarni olib tashlaydi, ish panelda qoladi. Agar hammada «Hamma uchun buyurtmalar» olib tashlansa, tungi arizalarni Telegramda hech kim ko‘rmaydi — faqat panelda va sotuv chatida, agar u bo‘lsa.",
               "O‘chirilmaydi: taklif, rol va rahbar almashishi, berishni tasdiqlash so‘rovi, sizga pul va shartnomalar haqidagi xabarlar. Belgilarni kim va qachon o‘zgartirgani — [jurnalda](/admin/audit).",
             ],
           },
@@ -1182,16 +1182,16 @@ export const uz: HelpCopy = {
           roles: ["admin", "head"],
           body: {
             head: [
-              "O‘zingizning va boshqalarning **menejerlarini** o‘zingiz o‘chira olasiz: oxirgi ustunda «Отключить» → nima bo‘lishini o‘qing → **«Понятно, отключить»**. Rahbarni va egasini faqat egasi o‘chiradi, o‘zini — hech kim.",
+              "O‘zingizning va boshqalarning **menejerlarini** o‘zingiz o‘chira olasiz: oxirgi ustunda «O‘chirish» → nima bo‘lishini o‘qing → **«Tushunarli, o‘chirish»**. Rahbarni va egasini faqat egasi o‘chiradi, o‘zini — hech kim.",
               "Darhol: kirish yopiladi, barcha sessiyalar uziladi, kirish havolalari bekor bo‘ladi. Keyin tizim o‘zi: ishdagi lidlar navbatga qaytadi, eslatmalar va berish so‘rovlari yopiladi, yuborilmagan aloqalar zaxiraga ketadi, davom etayotgan yozishmalar esa — o‘chirilganning rahbariga (agar u sizniki bo‘lsa — sizga) yoki egasiga.",
               "Tizim bitta narsani qila olmaydi: **odamni qo‘lda chiqarib yuboring** — «Devuz Scout» kanalidan va sotuv chatidan: bot kanaldan chiqarib yubora olmaydi.",
-              "O‘chirilganlar butunlay yo‘q qilinmaydi — ular sanasi bilan «Отключённые» ro‘yxatida: ularda yopilgan lidlar, hisoblanmalar va jurnal qoladi. Qaytarish — o‘sha Telegram id bilan qaytadan qo‘shish, avvalgi yozuv yoqiladi.",
+              "O‘chirilganlar butunlay yo‘q qilinmaydi — ular sanasi bilan «O‘chirilganlar» ro‘yxatida: ularda yopilgan lidlar, hisoblanmalar va jurnal qoladi. Qaytarish — o‘sha Telegram id bilan qaytadan qo‘shish, avvalgi yozuv yoqiladi.",
             ],
             admin: [
-              "«Отключить» → nima bo‘lishini o‘qing → **«Понятно, отключить»**. Darhol: kirish yopiladi, barcha sessiyalar uziladi, kirish havolalari bekor bo‘ladi. Menejerlarni loyihalar rahbari ham o‘chira oladi; rahbarni — faqat siz.",
+              "«O‘chirish» → nima bo‘lishini o‘qing → **«Tushunarli, o‘chirish»**. Darhol: kirish yopiladi, barcha sessiyalar uziladi, kirish havolalari bekor bo‘ladi. Menejerlarni loyihalar rahbari ham o‘chira oladi; rahbarni — faqat siz.",
               "Keyin tizim o‘zi: uning ishdagi lidlari navbatga qaytadi («↩️ Лид вернулся в очередь…»), navbatdagi yarim soatlari tugaydi, eslatmalar va berish so‘rovlari yopiladi, yuborilmagan aloqalar zaxiraga ketadi, davom etayotgan yozishmalar esa — uning rahbariga yoki sizga. Bunday yozishmadagi lidni navbatdan kimdir olsa, yozishma olgan odamga o‘tadi. Uning jamoasi (agar u rahbar bo‘lsa) ajraladi, Telegramidagi lid kartochkalari o‘chiriladi.",
               "Tizim bitta narsani qila olmaydi: **odamni qo‘lda chiqarib yuboring** — «Devuz Scout» kanalidan va sotuv chatidan.",
-              "O‘chirilganlar butunlay yo‘q qilinmaydi — ular «Отключённые» ro‘yxatida. Qaytarish — o‘sha id bilan qaytadan qo‘shish.",
+              "O‘chirilganlar butunlay yo‘q qilinmaydi — ular «O‘chirilganlar» ro‘yxatida. Qaytarish — o‘sha id bilan qaytadan qo‘shish.",
             ],
           },
         },
@@ -1207,7 +1207,7 @@ export const uz: HelpCopy = {
           title: "Hamkor qanday paydo bo‘ladi",
           body: [
             "O‘zi: saytda «Зарабатывай с нами» menyusida «Стать партнёром» yoki «Войти в кабинет» ni bosadi — bot uni ro‘yxatga oladi va hamkor kabinetiga bir martalik kirish tugmasini yuboradi. Botdagi /ref va /cabinet buyruqlari ham shunday. Har kim bo‘la oladi, jumladan xodim ham.",
-            "Yoki siz: «Завести партнёра руками» — ism, kod (bo‘sh — o‘zimiz o‘ylab topamiz), Telegram id ixtiyoriy, izoh. Telegram id bo‘lmasa, bunday hamkor keyin bot orqali kelgan odam bilan birlashmaydi va kabinetga kira olmaydi.",
+            "Yoki siz: «Hamkorni qo‘lda qo‘shish» — ism, kod (bo‘sh — o‘zimiz o‘ylab topamiz), Telegram id ixtiyoriy, izoh. Telegram id bo‘lmasa, bunday hamkor keyin bot orqali kelgan odam bilan birlashmaydi va kabinetga kira olmaydi.",
             "Havolalar: qisqa `devuz.studio/r/…` — hamkor aynan shuni e’lon qiladi, har bir kanal uchun alohida (kabinetda yoki `/ref KOD belgi`), 20 tagacha. Kabinetda hamkor havola qayerga olib borishini (bosh sahifa, xizmatlar, keyslar, bot) va auditoriya uchun bonusni — birinchi loyihaga 5/10/15% chegirmani tanlaydi. Eski `?ref=KOD` va `start=ref_KOD` avvalgidek ishlaydi. Havola orqali o‘tishni sayt brauzer cookie’sida 30 kun eslab qoladi (birinchi hamkor yutadi): shu vaqt ichidagi so‘rov — hamkorning mijozi, hatto odam keyin havolasiz qaytgan bo‘lsa ham. Lid kartochkasida «Hamkor» yonida o‘tish so‘rovdan necha kun oldin bo‘lgani ko‘rinadi. Botda ham xuddi shu 30 kun.",
             "O‘tishlar odamlar bo‘yicha hisoblanadi: messenjerdagi oldindan ko‘rish roboti va o‘sha kuni o‘sha odamning qayta ochishi hisoblanmaydi. Quyidagi jadvalda havolada — «o‘tishlar / so‘rovlar»; kod ustiga kursorni olib borsangiz — qisqa manzilni ko‘rasiz.",
           ],
@@ -1217,7 +1217,7 @@ export const uz: HelpCopy = {
           title: "Mijoz qachon hisobga olinadi",
           body: [
             "Havola orqali kelgan lid hamkorga hisoblanadi, agar bu uning o‘zi bo‘lmasa, mijoz oldin bizda bo‘lmagan bo‘lsa va hamkor bloklanmagan bo‘lsa. Hisoblandi — hamkorga «🤝 По вашей ссылке пришёл…» keladi. Mijoz saytga havola orqali kelib, keyin sayt chatidan botga yozsa ham, hamkor unga biriktirilgan bo‘lib qoladi.",
-            "Bunday liddan ochilgan loyiha hamkorni meros oladi. Loyiha kartochkasida, «Партнёр» blokida kim olib kelganini, foizni va «Не засчитывать, причина» ni o‘zgartirish mumkin. Loyiha bo‘yicha imzolangan shartnoma skanini yuklashganda, hamkorga darhol «📝 С клиентом … подписан договор» keladi — summa va taxminiy ulush bilan.",
+            "Bunday liddan ochilgan loyiha hamkorni meros oladi. Loyiha kartochkasida, «Hamkor» blokida kim olib kelganini, foizni va «Hisobga olmaslik sababi»ni o‘zgartirish mumkin. Loyiha bo‘yicha imzolangan shartnoma skanini yuklashganda, hamkorga darhol «📝 С клиентом … подписан договор» keladi — summa va taxminiy ulush bilan.",
             "Bloklash faqat yangi hisoblashlarni to‘xtatadi: eski hisoblanmalar va to‘lovlar qoladi.",
           ],
         },
@@ -1225,19 +1225,19 @@ export const uz: HelpCopy = {
           id: "percent",
           title: "Foiz",
           body: [
-            "Ikki model, hamkor o‘zi kabinetda tanlaydi. «От чистой прибыли» (summa − soliq − tannarx): $2 500 gacha — 10%, $2 501–5 000 — 15%, $5 001–10 000 — 20%, $10 001–30 000 — 25%, $30 001 dan — 30%. «С оборота» (butun shartnoma summasi) xuddi shu chegaralarda: 6, 10, 14, 17, 20%. Har bir loyihaning pog‘onasi o‘z summasiga qarab. «Все партнёры» jadvalida, «Ставка» ustunida model va qachon o‘zgartirilgani ko‘rinadi.",
-            "Model haftasiga bir martadan ko‘p o‘zgarmaydi, mijozga esa uning so‘rovi kunidagi model biriktiriladi: o‘zgartirish ketayotgan loyihalarni qayta hisoblamaydi. Loyiha kartochkasida «Партнёр» yonida — «20 % от прибыли» yoki «14 % с оборота». Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiysi — pog‘onadan. «От прибыли» modeli uchun loyiha tannarxini kiriting — usiz ulush soliq ayirilgan summadan hisoblanadi.",
+            "Ikki model, hamkor o‘zi kabinetda tanlaydi. «От чистой прибыли» (summa − soliq − tannarx): $2 500 gacha — 10%, $2 501–5 000 — 15%, $5 001–10 000 — 20%, $10 001–30 000 — 25%, $30 001 dan — 30%. «С оборота» (butun shartnoma summasi) xuddi shu chegaralarda: 6, 10, 14, 17, 20%. Har bir loyihaning pog‘onasi o‘z summasiga qarab. «Barcha hamkorlar» jadvalida, «Stavka» ustunida model va qachon o‘zgartirilgani ko‘rinadi.",
+            "Model haftasiga bir martadan ko‘p o‘zgarmaydi, mijozga esa uning so‘rovi kunidagi model biriktiriladi: o‘zgartirish ketayotgan loyihalarni qayta hisoblamaydi. Loyiha kartochkasida «Hamkor» yonida — «20 % foydadan» yoki «14 % aylanmadan». Loyihadagi foiz hamkorning shaxsiy stavkasidan muhimroq, shaxsiysi — pog‘onadan. «foydadan» modeli uchun loyiha tannarxini kiriting — usiz ulush soliq ayirilgan summadan hisoblanadi.",
             "Mijoz loyihani to‘liq to‘lamaguncha hisoblanma muzlatilgan — xodimlardagi kabi.",
-            "Jamg‘arma. Hamkor kabinetida tugma bor: o‘zbekcha kabinetda — «Avtomatik rejimda olmaslik», ruscha kabinetda — «Не забирать в автоматическом режиме». U yoqilgan paytda to‘langan loyihalar uchun pul hamkorga darhol ketmaydi: aylanmadan avtoto‘lovlar bo‘lmaydi, to‘langan va hali to‘lanmagan barcha loyihalar bo‘yicha stavka esa ularning umumiy summasi bo‘yicha — o‘sha jadval bo‘yicha hisoblanadi. $2 000 lik uchta loyiha — bu $6 000, va uchalasi bo‘yicha 10% (6%) emas, foydadan 20% (aylanmadan 14%). Studiya pulni o‘zida uzoqroq ushlab, rivojlanishga yo‘naltiradi, hamkor esa oxirida ko‘proq oladi. Stavka oddiysidan past bo‘lmaydi; qo‘lda foiz berilgan loyiha va shaxsiy stavkali hamkor jamg‘armada qatnashmaydi. «Все партнёры» jadvalida, «Ставка» ustunida bunday hamkorda yashil «jamg‘arma: $… · stavka …%» qatori bor. Tugmani o‘chirsa — oshirish yo‘qoladi, to‘lanmagani har bir loyihaning oddiy pog‘onasi bo‘yicha hisoblanadi, aylanmadan avtoto‘lovlar qaytadi.",
+            "Jamg‘arma. Hamkor kabinetida tugma bor: o‘zbekcha kabinetda — «Avtomatik rejimda olmaslik», ruscha kabinetda — «Не забирать в автоматическом режиме». U yoqilgan paytda to‘langan loyihalar uchun pul hamkorga darhol ketmaydi: aylanmadan avtoto‘lovlar bo‘lmaydi, to‘langan va hali to‘lanmagan barcha loyihalar bo‘yicha stavka esa ularning umumiy summasi bo‘yicha — o‘sha jadval bo‘yicha hisoblanadi. $2 000 lik uchta loyiha — bu $6 000, va uchalasi bo‘yicha 10% (6%) emas, foydadan 20% (aylanmadan 14%). Studiya pulni o‘zida uzoqroq ushlab, rivojlanishga yo‘naltiradi, hamkor esa oxirida ko‘proq oladi. Stavka oddiysidan past bo‘lmaydi; qo‘lda foiz berilgan loyiha va shaxsiy stavkali hamkor jamg‘armada qatnashmaydi. «Barcha hamkorlar» jadvalida, «Stavka» ustunida bunday hamkorda yashil «jamg‘arma: $… · stavka …%» qatori bor. Tugmani o‘chirsa — oshirish yo‘qoladi, to‘lanmagani har bir loyihaning oddiy pog‘onasi bo‘yicha hisoblanadi, aylanmadan avtoto‘lovlar qaytadi.",
           ],
         },
         {
           id: "agencies",
           title: "Hamkorlarning agentliklari",
           body: [
-            "Hamkor kabinetda ishlab chiqish bo‘yicha buyurtmalari muntazam bo‘ladigan har qanday agentlik yoki kompaniyani ulashi mumkin: IT-kompaniya, veb-studiya, marketing agentligi, integrator, IT-tenderlardagi bosh pudratchi (biz unda — subpudratchi). U bizga o‘z mijozlarining buyurtmalarini subpudratga beradi. Sizga «🏢 Партнёр подключает агентство» keladi, bu sahifada esa «Агентства партнёров» blokida — «ждёт решения» qatori. **«Подтвердить»** — agar agentlik biz bilan hali ishlamagan bo‘lsa; sabab bilan **«отклонить»** — agar ishlagan bo‘lsa yoki bu agentlik bo‘lmasa. Ikkala holatda ham bot hamkorga yozadi.",
-            "Tasdiqlangan agentlik — tasdiqlangandan keyin 12 oy davomida uning barcha buyurtmalari hamkorga, 30 kunlik oynasiz va «mijoz studiyada avval bo‘lgan» tekshiruvisiz: agentlikning takroriy buyurtmalari — asosiy maqsad. Muddat agentlik qatorida ko‘rinadi: «заказы партнёру до …». U tugagach, agentlikning yangi buyurtmalari oddiy tartibda o‘tadi, bog‘langanlari esa hamkorda qoladi; **«Продлить на 12 месяцев»** tugmasi bugundan boshlab yangi muddatni boshlaydi. O‘chirilgan agentlikda qayta «Подтвердить» ham muddatni yangidan boshlaydi. Sayt va botdan kelgan so‘rovlar o‘zi taniladi — agentlik kontakti (@nik, telefon, pochta) yoki kompaniya nomi bo‘yicha. Qo‘ng‘iroq yoki menejer shaxsiy xabari orqali kelgan buyurtmani loyiha kartochkasida bog‘lang: «Партнёр» bloki → «Заказ агентства».",
-            "Bitta agentlik — bitta hamkorga: xuddi shu agentlikni ikkinchi marta ulab bo‘lmaydi. Ulanganida «отключить» — agentlikning yangi buyurtmalari endi hamkorga bormaydi, bog‘langanlari qoladi. Loyiha kartochkasida «Заказ агентства» faqat muddati tugamagan agentliklarni taklif qiladi.",
+            "Hamkor kabinetda ishlab chiqish bo‘yicha buyurtmalari muntazam bo‘ladigan har qanday agentlik yoki kompaniyani ulashi mumkin: IT-kompaniya, veb-studiya, marketing agentligi, integrator, IT-tenderlardagi bosh pudratchi (biz unda — subpudratchi). U bizga o‘z mijozlarining buyurtmalarini subpudratga beradi. Sizga «🏢 Партнёр подключает агентство» keladi, bu sahifada esa «Hamkorlar agentliklari» blokida — «qaror kutmoqda» qatori. **«Tasdiqlash»** — agar agentlik biz bilan hali ishlamagan bo‘lsa; sabab bilan **«rad etish»** — agar ishlagan bo‘lsa yoki bu agentlik bo‘lmasa. Ikkala holatda ham bot hamkorga yozadi.",
+            "Tasdiqlangan agentlik — tasdiqlangandan keyin 12 oy davomida uning barcha buyurtmalari hamkorga, 30 kunlik oynasiz va «mijoz studiyada avval bo‘lgan» tekshiruvisiz: agentlikning takroriy buyurtmalari — asosiy maqsad. Muddat agentlik qatorida ko‘rinadi: «buyurtmalar hamkorga … gacha». U tugagach, agentlikning yangi buyurtmalari oddiy tartibda o‘tadi, bog‘langanlari esa hamkorda qoladi; **«12 oyga uzaytirish»** tugmasi bugundan boshlab yangi muddatni boshlaydi. O‘chirilgan agentlikda qayta «Tasdiqlash» ham muddatni yangidan boshlaydi. Sayt va botdan kelgan so‘rovlar o‘zi taniladi — agentlik kontakti (@nik, telefon, pochta) yoki kompaniya nomi bo‘yicha. Qo‘ng‘iroq yoki menejer shaxsiy xabari orqali kelgan buyurtmani loyiha kartochkasida bog‘lang: «Hamkor» bloki → «Agentlik buyurtmasi».",
+            "Bitta agentlik — bitta hamkorga: xuddi shu agentlikni ikkinchi marta ulab bo‘lmaydi. Ulanganida «o‘chirish» — agentlikning yangi buyurtmalari endi hamkorga bormaydi, bog‘langanlari qoladi. Loyiha kartochkasida «Agentlik buyurtmasi» faqat muddati tugamagan agentliklarni taklif qiladi.",
             "Hamkor kabinetida yuborish uchun ikkita taqdimot bor — «DevUz Studio» (jamoa, loyihalar, tillar, xizmatlar, boshlang‘ich narxlar, keyslar) va «Программа для агентств и компаний» (modellar, agentlik misoli, tender subpudrati). Havola hamkor kodini olib yuradi, shuning uchun taqdimotdan kelgan mijoz unga hisoblanadi.",
           ],
         },
@@ -1247,17 +1247,17 @@ export const uz: HelpCopy = {
           body: [
             "Kompaniyani o‘zi — havolasiz — olib keladigan hamkor uni saytdagi kabinetda, «Mening mijozlarim» blokida biriktiradi: nomi, STIR (INN, 9–12 raqam), mas’ul shaxs, telefon yoki Telegram (kamida bittasi), sayt va mijozga nima kerakligi. Tasdiqlash shart emas — biriktirish darhol kuchga kiradi, kim oldin biriktirsa, mijoz o‘shaniki. Buning o‘rniga so‘rov paytida baza o‘zi tekshiradi: bu kompaniya lidlar, loyihalar, shartnomalar va [Aloqalar](/admin/prospect) orasida yo‘qmi — STIR, nom, telefon, Telegram va sayt bo‘yicha — va uni boshqa hamkor yoki uning agentligi biriktirmaganmi. Tekshiruvdan o‘tmasa — hamkor sababi bilan rad javobini ko‘radi («studiyada allaqachon bor», «boshqa hamkor biriktirgan»), biriktirish bo‘lmaydi. Shunday qilib biz allaqachon ishlayotgan yoki yozgan kompaniyalarni «egallab olish» mumkin emas. Bitta hamkordan oyiga 20 tadan ortiq biriktirish qabul qilinmaydi.",
             "Sizga STIR va kontakt bilan «🧾 Партнёр закрепил клиента» keladi, bu yerda esa «Hamkorlar biriktirgan mijozlar» blokida qator paydo bo‘ladi. Avval mijozdan birinchi so‘rovni 90 kun kutamiz — «birinchi so‘rovni … gacha kutmoqda». So‘rov o‘zi taniladi: saytdagi formadan, chat va botdan — STIR, nom, telefon yoki Telegram mos kelsa; keyinroq ham — menejer lid kartochkasiga STIRni yozganda. Hamkorning havolasi yoki agentligi ishlagan bo‘lsa, ular biriktirishdan muhimroq. Birinchi so‘rovdan boshlab 12 oy mijozning barcha buyurtmalari hamkorga hisoblanadi — «buyurtmalar … gacha hamkorga», bunday liddan ochilgan loyiha hamkorni meros oladi, hamkorga esa mijoz kontaktlarisiz «🧾 Пришла заявка от закреплённого вами клиента» ketadi. 90 kun so‘rov bo‘lmasa yoki 12 oy o‘tsa — «muddat tugadi»: yangi buyurtmalar oddiydek ketadi, allaqachon bog‘langanlari hamkorda qoladi, kompaniyani esa yana biriktirish mumkin.",
-            "Kompaniya aslida bizniki ekanini ko‘rsangiz — u bilan paneldan tashqarida ishlaganmiz, studiya tanishlari, — sababini yozing va **«biriktirishni bekor qilish»** ni bosing. Sababsiz bekor bo‘lmaydi: uni hamkor botda oladi. Bekor qilingandan keyin mijozning yangi so‘rovlari hamkorga hisoblanmaydi; allaqachon bog‘langan lid yoki loyiha loyiha kartochkasida, «Партнёр» blokida o‘tkaziladi.",
+            "Kompaniya aslida bizniki ekanini ko‘rsangiz — u bilan paneldan tashqarida ishlaganmiz, studiya tanishlari, — sababini yozing va **«biriktirishni bekor qilish»** ni bosing. Sababsiz bekor bo‘lmaydi: uni hamkor botda oladi. Bekor qilingandan keyin mijozning yangi so‘rovlari hamkorga hisoblanmaydi; allaqachon bog‘langan lid yoki loyiha loyiha kartochkasida, «Hamkor» blokida o‘tkaziladi.",
           ],
         },
         {
           id: "promo",
           title: "Promo materiallar",
           body: [
-            "Hamkorlar o‘zlarida joylaydigan studiya roliklari va rasmlari ombori: Reels, Shorts, TikTok, stories, kanallar. Bu sahifa tepasidagi «Промо-материалы» havolasi orqali ochiladi — yoki to‘g‘ridan-to‘g‘ri: [«Промо-материалы»](/admin/partners/promo). Hamkor ularni saytdagi kabinetida, «Промо-материалы» blokida ko‘radi: prevyu, «Скачать» va «Подпись к посту», yonida «Скопировать подпись» tugmasi. Izohda aynan shu hamkorning qisqa havolasi allaqachon turadi, shuning uchun uning postidan kelgan mijoz unga hisoblanadi — uning har qanday havolasidagi kabi. Materiallar bo‘lmaguncha hamkor bu blokni umuman ko‘rmaydi.",
-            "Yuklash: faylni tanlang — MP4, MOV, WebM rolik yoki PNG, JPG, WebP, GIF rasm, 500 MB gacha. Fayllar Supabase’da emas, bizning serverimiz diskida turadi: u yerda bepul tarifda bitta fayl 50 MB dan, oylik yuklab olish 5 GB dan oshmaydi. Yuklashdan keyin diskda 2 GB dan kam joy qolsa ham server rad etadi — va qancha bo‘sh joy borligini aytadi. Nomni hamkorlar ko‘radi. «Язык слов в ролике» tartibni hal qiladi: hamkorga avval uning tilidagi va «без слов» materiallar, keyin qolganlari ko‘rsatiladi — boshqa tillarni yashirish shart emas, Toshkentdagi hamkor rus va o‘zbek rolikni ham joylaydi. **«Загрузить»** ni bosing: fayl serverga 4 MB lik bo‘laklar bilan ketadi, chiziq qancha ketganini ko‘rsatadi; aloqa uzilgan bo‘lak o‘zi qayta yuboriladi. «Готово» chiqmaguncha sahifani yopmang — tashlab ketilgan yuklash bir kundan keyin serverdan o‘chiriladi.",
-            "Post izohi: matndagi `{link}` har bir hamkorning qisqa havolasiga aylanadi; `{link}` ni unutsangiz — havola oxirgi qatorga qo‘yiladi, havolasiz post hamkorga hech narsa bermaydi. Maydonni bo‘sh qoldirsangiz — hamkor o‘z tilidagi standart izohni oladi (u bo‘sh maydonda kulrang ko‘rinadi). «Сообщить партнёрам в Telegram» belgisi — bot barcha faol hamkorlarga yangi material paydo bo‘lganini yozadi. Bir nechta faylni ketma-ket yuklasangiz — belgini faqat oxirgisida qoldiring, aks holda hamkor ketma-ket bir nechta xabar oladi.",
-            "Har bir materialda necha marta yuklab olingani va nechta turli hamkor olgani ko‘rinadi: shundan ularga nima kerakligi, nima bekor yotgani tushunarli. Nom, til va izoh shu yerning o‘zida tahrirlanadi — «сохранить». **«Скрыть от партнёров»** materialni kabinetdan olib tashlaydi va yuklab olishni darhol yopadi, lekin fayl qoladi — «Показать партнёрам» tugmasi bilan qaytariladi. «удалить» → **«Удалить насовсем»** faylni serverdan ham o‘chiradi; hamkorlar allaqachon yuklab olgan nusxalar ularda qoladi. Rolik fayllari bazaning tungi zaxira nusxasiga kirmaydi — asl fayllarni o‘zingizda saqlang.",
+            "Hamkorlar o‘zlarida joylaydigan studiya roliklari va rasmlari ombori: Reels, Shorts, TikTok, stories, kanallar. Bu sahifa tepasidagi «Promo-materiallar» havolasi orqali ochiladi — yoki to‘g‘ridan-to‘g‘ri: [«Promo-materiallar»](/admin/partners/promo). Hamkor ularni saytdagi kabinetida, «Промо-материалы» blokida ko‘radi: prevyu, «Скачать» va «Подпись к посту», yonida «Скопировать подпись» tugmasi. Izohda aynan shu hamkorning qisqa havolasi allaqachon turadi, shuning uchun uning postidan kelgan mijoz unga hisoblanadi — uning har qanday havolasidagi kabi. Materiallar bo‘lmaguncha hamkor bu blokni umuman ko‘rmaydi.",
+            "Yuklash: faylni tanlang — MP4, MOV, WebM rolik yoki PNG, JPG, WebP, GIF rasm, 500 MB gacha. Fayllar Supabase’da emas, bizning serverimiz diskida turadi: u yerda bepul tarifda bitta fayl 50 MB dan, oylik yuklab olish 5 GB dan oshmaydi. Yuklashdan keyin diskda 2 GB dan kam joy qolsa ham server rad etadi — va qancha bo‘sh joy borligini aytadi. Nomni hamkorlar ko‘radi. «Rolikdagi so‘zlar tili» tartibni hal qiladi: hamkorga avval uning tilidagi va «so‘zsiz» materiallar, keyin qolganlari ko‘rsatiladi — boshqa tillarni yashirish shart emas, Toshkentdagi hamkor rus va o‘zbek rolikni ham joylaydi. **«Yuklash»**ni bosing: fayl serverga 4 MB lik bo‘laklar bilan ketadi, chiziq qancha ketganini ko‘rsatadi; aloqa uzilgan bo‘lak o‘zi qayta yuboriladi. «Tayyor» chiqmaguncha sahifani yopmang — tashlab ketilgan yuklash bir kundan keyin serverdan o‘chiriladi.",
+            "Post izohi: matndagi `{link}` har bir hamkorning qisqa havolasiga aylanadi; `{link}` ni unutsangiz — havola oxirgi qatorga qo‘yiladi, havolasiz post hamkorga hech narsa bermaydi. Maydonni bo‘sh qoldirsangiz — hamkor o‘z tilidagi standart izohni oladi (u bo‘sh maydonda kulrang ko‘rinadi). «Hamkorlarga Telegramda yangi material paydo bo‘lgani haqida xabar berish» belgisi — bot barcha faol hamkorlarga yangi material paydo bo‘lganini yozadi. Bir nechta faylni ketma-ket yuklasangiz — belgini faqat oxirgisida qoldiring, aks holda hamkor ketma-ket bir nechta xabar oladi.",
+            "Har bir materialda necha marta yuklab olingani va nechta turli hamkor olgani ko‘rinadi: shundan ularga nima kerakligi, nima bekor yotgani tushunarli. Nom, til va izoh shu yerning o‘zida tahrirlanadi — «saqlash». **«Hamkorlardan yashirish»** materialni kabinetdan olib tashlaydi va yuklab olishni darhol yopadi, lekin fayl qoladi — «Hamkorlarga ko‘rsatish» tugmasi bilan qaytariladi. «o‘chirish» → **«Butunlay o‘chirish»** faylni serverdan ham o‘chiradi; hamkorlar allaqachon yuklab olgan nusxalar ularda qoladi. Rolik fayllari bazaning tungi zaxira nusxasiga kirmaydi — asl fayllarni o‘zingizda saqlang.",
           ],
         },
         {
@@ -1265,8 +1265,8 @@ export const uz: HelpCopy = {
           title: "Hamkorga to‘lov",
           body: [
             "Hamkor kabinetda «Запросить выплату» ni bosadi yoki botga /payout va rekvizitlarini yozadi (USDT TRC-20 yoki matn). Oyning birinchi ish kunidan boshlab, $50 dan, bitta ochiq so‘rov, doim butun mavjud summaga. Sizga «💸 Заявка на выплату» keladi.",
-            "Avval pulni o‘zingiz o‘tkazing, keyin «Заявки на выплату» blokida **«Выплачено»** tugmasini bosing (izoh bilan ham bo‘ladi). Yoki «отклонить» — summa mavjud pulga qaytadi, hamkor sababini ko‘radi.",
-            "«Aylanmadan» modeli so‘rovni kutmaydi: loyiha bo‘yicha to‘lovlar uning summasiga yetishi bilan — to‘lov [Moliya](/admin/finance) bo‘limida yozilganda yoki shartnoma hisobida «Оплачен» bosilganda — to‘lov so‘rovi o‘zi yaratiladi, hamkorning shu loyihadagi butun ulushiga, oy boshini kutmasdan va $50 minimumisiz. Hamkorga — «✅ … выплата в обработке» (rekvizitlari bo‘lmasa — ularni kabinetga kiritish iltimosi), sizga — «💸 Выплата партнёру с оборота: выплатить … за …». «Заявки на выплату» blokida bunday qatorda «aylanmadan, «…» uchun — loyiha to‘liq to‘langanda o‘zi yaratildi» degan yozuv bor; keyin oddiysidek: o‘tkazdingiz — **«Выплачено»**. Bitta loyiha bo‘yicha bunday so‘rov qat’iy bitta yaratiladi: rad etsangiz — summa hamkorning mavjud puliga qaytadi va u uni oddiy so‘rov bilan so‘raydi. To‘lovni yozish yarim yo‘lda uzilib qolsa, svip o‘tkazib yuborilganini bir necha daqiqada yaratadi. «Foydadan» modeli — avvalgidek hamkor so‘rovi bo‘yicha: uning ulushi tannarxga bog‘liq.",
+            "Avval pulni o‘zingiz o‘tkazing, keyin «To‘lov so‘rovlari» blokida **«To‘landi»** tugmasini bosing (izoh bilan ham bo‘ladi). Yoki «rad etish» — summa mavjud pulga qaytadi, hamkor sababini ko‘radi.",
+            "«Aylanmadan» modeli so‘rovni kutmaydi: loyiha bo‘yicha to‘lovlar uning summasiga yetishi bilan — to‘lov [Moliya](/admin/finance) bo‘limida yozilganda yoki shartnoma hisobida «To‘landi» bosilganda — to‘lov so‘rovi o‘zi yaratiladi, hamkorning shu loyihadagi butun ulushiga, oy boshini kutmasdan va $50 minimumisiz. Hamkorga — «✅ … выплата в обработке» (rekvizitlari bo‘lmasa — ularni kabinetga kiritish iltimosi), sizga — «💸 Выплата партнёру с оборота: выплатить … за …». «To‘lov so‘rovlari» blokida bunday qatorda «aylanmadan, «…» uchun — loyiha to‘liq to‘langanda o‘zi yaratildi» degan yozuv bor; keyin oddiysidek: o‘tkazdingiz — **«To‘landi»**. Bitta loyiha bo‘yicha bunday so‘rov qat’iy bitta yaratiladi: rad etsangiz — summa hamkorning mavjud puliga qaytadi va u uni oddiy so‘rov bilan so‘raydi. To‘lovni yozish yarim yo‘lda uzilib qolsa, svip o‘tkazib yuborilganini bir necha daqiqada yaratadi. «Foydadan» modeli — avvalgidek hamkor so‘rovi bo‘yicha: uning ulushi tannarxga bog‘liq.",
             "Jamg‘armasi yoqilgan hamkor pulni o‘zi xohlagan paytda oladi — o‘sha so‘rov bilan (kabinetda to‘lov so‘rash tugmasi yoki /payout), oyning birinchi ish kunidan boshlab va $50 minimum bilan. So‘rov jamg‘armadagi barcha loyihalarni uning stavkasi bo‘yicha yopadi: bu stavka ularga mahkamlanadi, keyingi jamg‘arma esa noldan boshlanadi. So‘rovni rad etsangiz — loyihalar jamg‘armaga qaytadi.",
           ],
         },
@@ -1281,24 +1281,24 @@ export const uz: HelpCopy = {
           id: "build",
           title: "Yig‘ish",
           body: [
-            "«Сайт клиента», nisha (shinomontaj, avtoservis, avtomoyka, barbershop, go‘zallik saloni, tirnoq studiyasi, deteyling) va sahifa tili. Nomi, tavsifi, telefoni, messenjerlari va logotipi uning saytidan o‘zi olinadi.",
-            "Xizmatlar — har qatorga bittadan, uning so‘zlari bilan, 3 tadan 12 tagacha. Narx — ikki tomonida bo‘sh joy qoldirilgan tiredan keyin, va faqat mijoz o‘zi aytgani. «Перебить то, что нашлось на сайте» — agar sayt xato qilgan bo‘lsa. «Собрать прототип».",
+            "«Mijoz sayti», nisha (shinomontaj, avtoservis, avtomoyka, barbershop, go‘zallik saloni, tirnoq studiyasi, deteyling) va sahifa tili. Nomi, tavsifi, telefoni, messenjerlari va logotipi uning saytidan o‘zi olinadi.",
+            "Xizmatlar — har qatorga bittadan, uning so‘zlari bilan, 3 tadan 12 tagacha. Narx — ikki tomonida bo‘sh joy qoldirilgan tiredan keyin, va faqat mijoz o‘zi aytgani. «Saytda topilganini almashtirish» — agar sayt xato qilgan bo‘lsa. «Prototipni yig‘ish».",
           ],
         },
         {
           id: "check",
           title: "Tekshiruv va havola",
           body: [
-            "Tayyor sahifani tekshiruv o‘qiydi: o‘ylab topilgan raqamlar, foizlar, maqtanish, kompaniya nomi yo‘q, ishlamaydigan tugma, mijoz aytmagan xizmatlar. Topsa — prototip «черновик» bo‘lib qoladi, havola 404 beradi, muammolar esa sanab o‘tiladi: tuzating va qaytadan yig‘ing.",
-            "Toza — «готов», havola allaqachon ishlaydi: «Скопировать ссылку». Yubordingiz — «Отправил клиенту».",
+            "Tayyor sahifani tekshiruv o‘qiydi: o‘ylab topilgan raqamlar, foizlar, maqtanish, kompaniya nomi yo‘q, ishlamaydigan tugma, mijoz aytmagan xizmatlar. Topsa — prototip «qoralama» bo‘lib qoladi, havola 404 beradi, muammolar esa sanab o‘tiladi: tuzating va qaytadan yig‘ing.",
+            "Toza — «tayyor», havola allaqachon ishlaydi: «Havolani nusxalash». Yubordingiz — «Mijozga yubordim».",
           ],
         },
         {
           id: "opens",
           title: "Mijoz ochdimi",
           body: [
-            "«открыл … заходов: N» yoki «ещё не открывал». Har bir ochilish hisoblanadi — sizning o‘z ko‘rishingiz ham.",
-            "Ochib, ikkinchi marta qaytdi — bugun qo‘ng‘iroq qiling. Ikki kunda ochmadi — havola unga yetib bormagan. Prototipdagi «Записаться» tugmasi mijozning o‘z Telegrami yoki WhatsApp’ini ochadi — shunda u buning ishlashini ko‘radi.",
+            "«… da ochgan, kirishlar: N» yoki «hali ochmagan». Har bir ochilish hisoblanadi — sizning o‘z ko‘rishingiz ham.",
+            "Ochib, ikkinchi marta qaytdi — bugun qo‘ng‘iroq qiling. Ikki kunda ochmadi — havola unga yetib bormagan. Prototipdagi «Yozilish» (rus tilidagi sahifada «Записаться») tugmasi mijozning o‘z Telegrami yoki WhatsApp’ini ochadi — shunda u buning ishlashini ko‘radi.",
           ],
         },
       ],
@@ -1321,23 +1321,23 @@ export const uz: HelpCopy = {
           title: "Haftaning tender tahlili",
           body: [
             "Haftada bir marta, haftaning birinchi kuni Toshkent vaqti bilan 08:33 dan keyin, alohida smena tender tahlilini yozadi: begona saytni emas, IT-xaridning odatiy texnik topshirig‘ini — davlat tashkiloti sayti, CRM, elektron hujjat aylanishi, chat-bot va hokazo. Bunday texnik topshiriqda odatda nima e’tibordan chetda qoladi, qabulda bu nimaga olib keladi va qanday to‘g‘ri yozish kerak. Mavzu `content/razbor/tenders.ts` dagi ro‘yxatdan navbatdagisi olinadi; maqola buyurtmachilar, xaridlar va shartnoma summalarini nomlamaydi. Agar dushanba kuni server ishlamagan bo‘lsa, maqola u ko‘tarilgan kuni chiqadi.",
-            "Maqola shu yerga, «На проверке» ga «тендеры и госконтракты» belgisi bilan tushadi — uning suratlari yo‘q va bo‘lmaydi, shunday rejalashtirilgan. Sayt tahlili kabi tekshirasiz va nashr qilasiz; saytda u «Тендеры и госконтракты» xizmatiga va «Контакты» ga olib boradi. Hisobot Telegramga alohida «Тендерный разбор недели» qatori bilan keladi. Rad etilgan mavzu ikkinchi marta yozilmaydi; mavzular tugaganda hisobot shuni aytadi — ro‘yxat kodda to‘ldiriladi.",
+            "Maqola shu yerga, «Tekshiruvda»ga «tenderlar va davlat shartnomalari» belgisi bilan tushadi — uning suratlari yo‘q va bo‘lmaydi, shunday rejalashtirilgan. Sayt tahlili kabi tekshirasiz va nashr qilasiz; saytda u «Тендеры и госконтракты» xizmatiga va «Контакты» ga olib boradi. Hisobot Telegramga alohida «Тендерный разбор недели» qatori bilan keladi. Rad etilgan mavzu ikkinchi marta yozilmaydi; mavzular tugaganda hisobot shuni aytadi — ro‘yxat kodda to‘ldiriladi.",
           ],
         },
         {
           id: "review",
           title: "Tahlilni tekshirish",
           body: [
-            "«На проверке» blokida — ikkala maqola to‘liq. Ikkalasini o‘qing: ular bir-birining tarjimasi emas, turli so‘rovlar uchun turli sahifalar. Manba-sayt manzili faqat sizga ko‘rinadi — saytda u yo‘q.",
-            "Kompaniya hech qayerda nomlanmaganini tekshiring — na nomi, na manzili, na rasmda, va har bir raqam topilmalarda borligini. «Править» faqat matnni o‘zgartiradi: sarlavha, tavsif, kirish, topilmalar va xulosa; manzil va so‘rov o‘zgarmaydi.",
+            "«Tekshiruvda» blokida — ikkala maqola to‘liq. Ikkalasini o‘qing: ular bir-birining tarjimasi emas, turli so‘rovlar uchun turli sahifalar. Manba-sayt manzili faqat sizga ko‘rinadi — saytda u yo‘q.",
+            "Kompaniya hech qayerda nomlanmaganini tekshiring — na nomi, na manzili, na rasmda, va har bir raqam topilmalarda borligini. «Tahrirlash» faqat matnni o‘zgartiradi: sarlavha, tavsif, kirish, topilmalar va xulosa; manzil va so‘rov o‘zgarmaydi.",
           ],
         },
         {
           id: "publish",
           title: "Chop etish, olib tashlash, rad etish",
           body: [
-            "**«Опубликовать»** — ikkala maqola kerak. Sahifa saytda darhol ochiladi, sayt xaritasi yangilanadi, Bing va Yandex signal oladi. **«Снять с публикации»** tahlilni «На проверке» ga qaytaradi.",
-            "**«Не публикуем»** — sabab bilan yoki sababsiz. Smena bu saytga boshqa qaytmaydi. Saytni smena navbatiga qaytarish — faqat **«Удалить»** (maydonga «удалить» deb yozing).",
+            "**«E’lon qilish»** — ikkala maqola kerak. Sahifa saytda darhol ochiladi, sayt xaritasi yangilanadi, Bing va Yandex signal oladi. **«E’londan olish»** tahlilni «Tekshiruvda»ga qaytaradi.",
+            "**«E’lon qilmaymiz»** — sabab bilan yoki sababsiz. Smena bu saytga boshqa qaytmaydi. Saytni smena navbatiga qaytarish — faqat **«O‘chirish»** (maydonga «o‘chirish» deb yozing).",
           ],
         },
       ],
@@ -1351,7 +1351,7 @@ export const uz: HelpCopy = {
           id: "filters",
           title: "Qanday qidirish",
           body: [
-            "«Кто» filtri — xodim (o‘chirilganlar belgilangan) yoki «система» — taymer, bot yoki bot orqali hamkor qilgan hamma narsa. «Что» — 75 ga yaqin harakat turi. Har sahifada 100 ta yozuv.",
+            "«Kim» filtri — xodim (o‘chirilganlar belgilangan) yoki «tizim» — taymer, bot yoki bot orqali hamkor qilgan hamma narsa. «Nima» — 75 ga yaqin harakat turi. Har sahifada 100 ta yozuv.",
             "Tilla rang bilan sezgir harakatlar ajratilgan: kontakt, yozishma, pul, kirish huquqi. Lidlarda — kartochkaga havola.",
           ],
         },
@@ -1374,14 +1374,14 @@ export const uz: HelpCopy = {
           title: "Qanday o‘qish",
           body: [
             "Davr — 7, 30 yoki 90 kun, strelkalar — undan oldingi xuddi shunday davrga nisbatan. Rahbarlar va menejerlar hisoblanadi; siz yo‘qsiz, shaxsiy bo‘limlaringiz ham.",
-            "Qator bo‘yicha xulosa: «ядро» — foydalanish huquqi borlarning kamida yarmi ishlatadi; «у единиц» — kamrog‘i; «никто — шум?» — hech kim. Faqat rahbarlar uchun funksiyalar rahbarlar bo‘yicha hisoblanadi.",
+            "Qator bo‘yicha xulosa: «asosiy» — foydalanish huquqi borlarning kamida yarmi ishlatadi; «bir-ikki kishida» — kamrog‘i; «hech kim — ortiqchami?» — hech kim. Faqat rahbarlar uchun funksiyalar rahbarlar bo‘yicha hisoblanadi.",
           ],
         },
         {
           id: "use",
           title: "Bu bilan nima qilish kerak",
           body: [
-            "«Никто — шум?» — so‘rash uchun sabab: funksiya keraksizmi yoki u haqda bilishmaydimi. Ko‘pincha javob — ikkinchisi: unda yo‘riqnomadagi band va «?» tugmasi yordam beradi.",
+            "«Hech kim — ortiqchami?» — so‘rash uchun sabab: funksiya keraksizmi yoki u haqda bilishmaydimi. Ko‘pincha javob — ikkinchisi: unda yo‘riqnomadagi band va «?» tugmasi yordam beradi.",
             "Bo‘limlarni ko‘rishlar hisobot yoqilgan paytdan, harakatlar esa butun vaqt uchun jurnaldan hisoblanadi.",
           ],
         },

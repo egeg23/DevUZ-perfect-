@@ -94,9 +94,13 @@ test("у владельца выбор ведущего обязателен, и
 
 test("карточка проекта ведёт на договор в любом статусе и говорит, почему он не подготовился", () => {
   const card = read("app/admin/projects/[id]/page.tsx");
+  // Подписи статусов — в словаре договоров, на трёх языках.
+  const dict = read("content/admin-panel/contracts.ts");
+  const statuses = dict.slice(dict.indexOf("export const contractStatusDict"), dict.indexOf("export const contractBadgeDict"));
   for (const status of ["draft", "pending", "approved", "signed"]) {
-    assert.match(card, new RegExp(`${status}: "`), `статус ${status} без подписи`);
+    assert.match(statuses, new RegExp(`${status}: \\{\\s*ru: "`), `статус ${status} без подписи`);
   }
+  assert.match(card, /labelOf\(contractStatusDict, c\.status, locale\)/);
   // Форма подготовки — только когда действующего договора нет.
   assert.match(card, /\{activeContracts\.length \? \(/);
   assert.match(card, /contractErrorText\(contractError, contractDetail\)/);

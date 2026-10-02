@@ -21,6 +21,17 @@ async function requireHiring() {
   return staff;
 }
 
+/**
+ * Причина — кодом: фразу страница берёт из словаря на языке сотрудника.
+ * Пояснение (ответ модели, что нашлось в разборе) — отдельным параметром как
+ * есть.
+ */
+function failed(code: string, detail?: string): URLSearchParams {
+  const params = new URLSearchParams({ e: code });
+  if (detail) params.set("d", detail.slice(0, 300));
+  return params;
+}
+
 export async function reviewResumeAction(formData: FormData) {
   const staff = await requireHiring();
 
@@ -28,10 +39,10 @@ export async function reviewResumeAction(formData: FormData) {
   const role = String(formData.get("role") ?? "").trim();
 
   if (!(file instanceof File) || file.size === 0) {
-    redirect(`/admin/candidates?e=${encodeURIComponent("Выберите файл резюме.")}`);
+    redirect("/admin/candidates?e=no_file");
   }
   if (!role) {
-    redirect(`/admin/candidates?e=${encodeURIComponent("Напишите, на какую вакансию смотрим.")}`);
+    redirect("/admin/candidates?e=no_role");
   }
 
   const result = await reviewResume({
@@ -45,7 +56,7 @@ export async function reviewResumeAction(formData: FormData) {
   redirect(
     result.ok
       ? `/admin/candidates?open=${result.id}#k-${result.id}`
-      : `/admin/candidates?e=${encodeURIComponent(result.why)}`,
+      : `/admin/candidates?${failed(result.why, result.detail)}`,
   );
 }
 

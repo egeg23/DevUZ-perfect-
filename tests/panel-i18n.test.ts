@@ -33,6 +33,13 @@ import type { Staff } from "@/lib/admin/session";
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const CYRILLIC = /[а-яё]/i;
 
+/** Словарь — объект, у каждой записи которого есть `ru`; прочие экспорты (списки, константы) — не словари. */
+function isDict(value: unknown): value is Record<string, Tr<Msg>> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const entries = Object.values(value);
+  return entries.length > 0 && entries.every((e) => e && typeof e === "object" && "ru" in e);
+}
+
 /** Все словари панели: content/admin-panel/*.ts плюс меню и роли. */
 async function dictionaries(): Promise<Map<string, Record<string, Tr<Msg>>>> {
   const out = new Map<string, Record<string, Tr<Msg>>>();
@@ -40,7 +47,7 @@ async function dictionaries(): Promise<Map<string, Record<string, Tr<Msg>>>> {
   for (const name of readdirSync(dir).filter((n) => n.endsWith(".ts"))) {
     const mod = (await import(new URL(name, dir).href)) as Record<string, unknown>;
     for (const [key, value] of Object.entries(mod)) {
-      if (value && typeof value === "object") out.set(`${name}:${key}`, value as Record<string, Tr<Msg>>);
+      if (isDict(value)) out.set(`${name}:${key}`, value);
     }
   }
   out.set("roles.ts:SECTIONS", Object.fromEntries(SECTIONS.map((s) => [s.href, s.label])));
@@ -50,7 +57,18 @@ async function dictionaries(): Promise<Map<string, Record<string, Tr<Msg>>>> {
 
 /** Строка записи: функцию вызываем с правдоподобными аргументами. */
 function sample(msg: Msg): string {
-  return typeof msg === "string" ? msg : (msg as (...a: unknown[]) => string)(3, "Имя", 5, 7);
+  if (typeof msg === "string") return msg;
+  const fn = msg as (...a: unknown[]) => string;
+  // Аргументы у записей разные: число, имя, текст ответа базы. Пробуем по очереди.
+  const tries: unknown[][] = [[3, "Имя", 5, 7], ["Имя", "Имя", "Имя", "Имя"], [3, 3, 3, 3], [["Имя"], 3, 3, 3]];
+  for (const args of tries) {
+    try {
+      return fn(...args);
+    } catch {
+      // следующий набор
+    }
+  }
+  throw new Error(`запись не вызывается ни с одним набором аргументов: ${fn}`);
 }
 
 /** Где в узбекском и польском можно кириллицу: имена и то, что не переводится. */
@@ -212,9 +230,10 @@ test("инструкция рисуется на каждом языке для 
  *
  * Исключения — места, где человек с узбекской панелью видит русский текст:
  * сообщения и кнопки бота (бот пишет по-русски, пока не научен языку панели)
- * и разделы, которые ещё не переведены. Каждая строка — кусок узбекского
- * текста вокруг такого названия. Раздел перевели — его группу снимаем, и
- * тест сам покажет, какие названия в инструкции пора поменять.
+ * и кабинет партнёра — отдельный продукт на русском. Все разделы панели
+ * переведены. Каждая строка — кусок узбекского текста вокруг такого
+ * названия. Бот или кабинет заговорят по-узбекски — группу снимаем, и тест
+ * сам покажет, какие названия в инструкции пора поменять.
  */
 const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   // бот в Telegram — пока по-русски
@@ -227,54 +246,12 @@ const STILL_RUSSIAN_IN_UZ: readonly string[] = [
   "«Взять в работу» va «Отклонить» tugmalari u yerda ham",
   // Варианты переноса срока задачи — кнопки бота.
   "«+1 час», «Завтра 18:00», «+3 дня», «Неделя»",
+  // вечерний отчёт по порциям в Telegram
+  "Bunday kompaniya «не сделано» emas",
 
-  // раздел ещё не переведён: Проекты (карточка проекта)
-  "[«Данные проекта»](#projects-data) → «Ведёт»",
-  "«Стадия», «Смета», «Деньги», «Данные проекта», «Договор»",
-  "**«Смета»** — toifani",
-  "panel «не ниже» (chegara), «до» va muddatni",
-  "**«Деньги»**: «Вид сделки»",
-  "**«Партнёр»** bloki: kim olib kelgan",
-  "egasi almashtiradi — «Ведёт» maydoni",
-  "u «Деньги» blokida",
-  "Loyiha kartochkasida, «Партнёр» blokida",
-  "Loyiha kartochkasida «Партнёр» yonida",
-  "«Партнёр» bloki → «Заказ агентства»",
-  "loyiha kartochkasida, «Партнёр» blokida o‘tkaziladi",
-
-  // раздел ещё не переведён: Команда
-  "«План касаний» ustunida qo‘yasiz",
-  "«План касаний» ustunida qo‘yiladi",
-  "«План касаний» ustunida: «в неделю»",
-  "«План касаний» ustuni — o‘zingizdan",
-
-  // раздел ещё не переведён: Статистика
-  "«По моей команде» — siz va menejerlaringiz: «В работе»",
-
-  // раздел ещё не переведён: Расходы
-  "«дата не подтверждена бухгалтером» belgisi",
-
-  // раздел ещё не переведён: Финансы
-  "**«К выплате»** = ishlab",
-  "«Выплачено», «К выплате»",
-  "va «К выплате» ni kamaytiradi",
-  "«Выплаты» → «Кому»",
-
-  // раздел ещё не переведён: Партнёры
-  "**«Подтвердить»** — agar agentlik",
-  "qayta «Подтвердить» ham",
-
-  // раздел ещё не переведён: Журнал
-  "«Кто» filtri",
+  // кабинет и бот партнёра — отдельный продукт, по-русски
+  "saytdagi kabinetida, «Промо-материалы» blokida ko‘radi: prevyu, «Скачать» va «Подпись к посту», yonida «Скопировать подпись»",
 ];
-/**
- * Подписи блока «Задачи» (content/admin-panel/tasks.ts), которые по-русски
- * совпали с подписями ещё не переведённых экранов: статус лида «в работе», напоминание «сделано», порция «не сделано», заявка «отменена»,
- * «Кому» и «Срок» в формах плана и счёта. На узбекской панели те экраны
- * пока русские, и инструкция зовёт их по-русски — это не ошибка перевода
- * задач. Уходит вместе с переводом тех экранов.
- */
-const SAME_RU_ELSEWHERE: ReadonlySet<string> = new Set(["новая", "в работе", "сделано", "не сделано", "отменена", "Взять в работу", "Кому", "Срок", "Поставить"]);
 
 test("узбекская инструкция зовёт кнопки так, как они написаны на узбекской панели", async () => {
   const ruToUz = new Map<string, string>();
@@ -300,7 +277,6 @@ test("узбекская инструкция зовёт кнопки так, к
   for (let text of texts) {
     for (const allowed of STILL_RUSSIAN_IN_UZ) text = text.replaceAll(allowed, "");
     for (const [, name] of text.matchAll(/«([^»]+)»/g)) {
-      if (SAME_RU_ELSEWHERE.has(name)) continue;
       const want = ruToUz.get(name);
       assert.ok(!want, `в узбекской инструкции «${name}», а на узбекской панели — «${want}»: ${text.slice(0, 120)}`);
     }

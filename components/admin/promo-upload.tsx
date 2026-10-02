@@ -3,15 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { usePanelDict, usePanelLocale } from "@/components/admin/panel-locale";
+import { promoFailText, promoLocaleDict, promoUploadDict } from "@/content/admin-panel/partners";
 import {
   PROMO_CHUNK_BYTES,
   PROMO_LOCALES,
-  PROMO_LOCALE_TITLE,
   PROMO_MAX_BYTES,
   PROMO_MIME,
   promoKind,
 } from "@/lib/partners/promo-rules";
-import type { StartResult } from "@/lib/partners/promo";
+import type { PromoFail, StartResult } from "@/lib/partners/promo";
 
 /**
  * Загрузка промо-материала на наш сервер — кусками.
@@ -79,7 +80,7 @@ function readMeta(file: File): Promise<Meta> {
   });
 }
 
-type ChunkResult = { ok: true; received: number } | { ok: false; reason: string };
+type ChunkResult = { ok: true; received: number } | PromoFail;
 
 /** Файл кусками, по порядку; оборвавшийся кусок — ещё раз, с паузой. */
 async function sendChunks(
@@ -87,7 +88,7 @@ async function sendChunks(
   uploadId: string,
   send: (formData: FormData) => Promise<ChunkResult>,
   onProgress: (share: number) => void,
-): Promise<string | null> {
+): Promise<PromoFail | null> {
   let offset = 0;
   while (offset < file.size) {
     const piece = file.slice(offset, Math.min(offset + PROMO_CHUNK_BYTES, file.size));
@@ -97,11 +98,13 @@ async function sendChunks(
       form.set("upload", uploadId);
       form.set("offset", String(offset));
       form.set("chunk", piece);
-      result = await send(form).catch((error: Error) => ({ ok: false as const, reason: error.message || "связь оборвалась" }));
+      result = await send(form).catch(
+        (error: Error): PromoFail => ({ ok: false, reason: "network", detail: error.message || undefined }),
+      );
       if (result.ok) break;
       await new Promise((resolve) => window.setTimeout(resolve, 1500 * (attempt + 1)));
     }
-    if (!result || !result.ok) return result?.reason ?? "связь оборвалась";
+    if (!result || !result.ok) return result ?? { ok: false, reason: "network" };
     offset = result.received;
     onProgress(offset / file.size);
   }
@@ -127,44 +130,46 @@ export function PromoUpload({
     height: number | null;
     duration: number | null;
     notify: boolean;
-  }) => Promise<{ ok: true } | { ok: false; reason: string }>;
+  }) => Promise<{ ok: true } | PromoFail>;
   /** Подпись по умолчанию — чтобы было видно, что получит партнёр, если оставить поле пустым. */
   captionHint: string;
 }) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
+  const locale = usePanelLocale();
+  const t = usePanelDict(promoUploadDict);
   const busy = phase.kind === "busy";
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const file = data.get("file");
-    if (!(file instanceof File) || !file.size) return setPhase({ kind: "error", text: "Выберите файл." });
+    if (!(file instanceof File) || !file.size) return setPhase({ kind: "error", text: t.chooseFile });
     if (!PROMO_MIME[file.type]) {
-      return setPhase({ kind: "error", text: "Нужен ролик MP4, MOV или WebM или картинка PNG, JPG, WebP, GIF." });
+      return setPhase({ kind: "error", text: t.wrongType });
     }
     if (file.size > PROMO_MAX_BYTES) {
-      return setPhase({ kind: "error", text: "Файл больше 500 МБ. Сожмите ролик и попробуйте снова." });
+      return setPhase({ kind: "error", text: t.tooBig });
     }
 
-    setPhase({ kind: "busy", text: "Читаю файл…", progress: null });
+    setPhase({ kind: "busy", text: t.reading, progress: null });
     const meta = await readMeta(file);
 
-    setPhase({ kind: "busy", text: "Готовлю место на сервере…", progress: null });
+    setPhase({ kind: "busy", text: t.preparing, progress: null });
     const slot = await start({ mime: file.type, bytes: file.size });
-    if (!slot.ok) return setPhase({ kind: "error", text: slot.reason });
+    if (!slot.ok) return setPhase({ kind: "error", text: promoFailText(slot, locale) });
 
-    setPhase({ kind: "busy", text: "Загружаю…", progress: 0 });
+    setPhase({ kind: "busy", text: t.uploading, progress: 0 });
     const failed = await sendChunks(file, slot.uploadId, chunk, (share) =>
-      setPhase({ kind: "busy", text: "Загружаю…", progress: share }),
+      setPhase({ kind: "busy", text: t.uploading, progress: share }),
     );
     if (failed) {
       await discard(slot.uploadId).catch(() => undefined);
-      return setPhase({ kind: "error", text: `Файл не загрузился: ${failed}. Попробуйте ещё раз.` });
+      return setPhase({ kind: "error", text: t.notUploaded(promoFailText(failed, locale)) });
     }
 
-    setPhase({ kind: "busy", text: "Записываю…", progress: 1 });
+    setPhase({ kind: "busy", text: t.writing, progress: 1 });
     const notify = data.get("notify") === "on";
     const saved = await register({
       uploadId: slot.uploadId,
@@ -174,14 +179,12 @@ export function PromoUpload({
       ...meta,
       notify,
     });
-    if (!saved.ok) return setPhase({ kind: "error", text: saved.reason });
+    if (!saved.ok) return setPhase({ kind: "error", text: promoFailText(saved, locale) });
 
     form.current?.reset();
     setPhase({
       kind: "done",
-      text: notify
-        ? "Готово: материал в кабинете партнёров, бот рассылает им сообщение."
-        : "Готово: материал в кабинете партнёров.",
+      text: notify ? t.doneNotify : t.done,
     });
     router.refresh();
   }
@@ -189,30 +192,30 @@ export function PromoUpload({
   return (
     <form ref={form} onSubmit={submit} className="mt-2 grid gap-3 rounded-xl border border-line bg-surface px-5 py-4 sm:grid-cols-2">
       <label className="block text-xs text-faint sm:col-span-2">
-        Файл — ролик MP4, MOV, WebM или картинка, до 500 МБ
+        {t.fileLabel}
         <input name="file" type="file" accept={ACCEPT} required disabled={busy} className={`mt-1 ${INPUT}`} />
       </label>
       <label className="block text-xs text-faint">
-        Название — его видят партнёры
-        <input name="title" required minLength={2} maxLength={120} disabled={busy} placeholder="Ролик «Кто мы» за 28 секунд" className={`mt-1 ${INPUT}`} />
+        {t.titleLabel}
+        <input name="title" required minLength={2} maxLength={120} disabled={busy} placeholder={t.titlePh} className={`mt-1 ${INPUT}`} />
       </label>
       <label className="block text-xs text-faint">
-        Язык слов в ролике
+        {t.langLabel}
         <select name="locale" defaultValue="ru" disabled={busy} className={`mt-1 ${INPUT}`}>
-          {PROMO_LOCALES.map((locale) => (
-            <option key={locale} value={locale}>
-              {PROMO_LOCALE_TITLE[locale]}
+          {PROMO_LOCALES.map((lang) => (
+            <option key={lang} value={lang}>
+              {promoLocaleDict[lang][locale]}
             </option>
           ))}
         </select>
       </label>
       <label className="block text-xs text-faint sm:col-span-2">
-        Подпись к посту — {"{link}"} станет короткой ссылкой партнёра. Пусто — подпись по умолчанию на языке партнёра
+        {t.captionLabel}
         <textarea name="caption" rows={3} maxLength={1000} disabled={busy} placeholder={captionHint} className={`mt-1 ${INPUT}`} />
       </label>
       <label className="flex items-center gap-2 text-xs text-muted sm:col-span-2">
         <input name="notify" type="checkbox" defaultChecked disabled={busy} />
-        Сообщить партнёрам в Telegram, что появился новый материал
+        {t.notify}
       </label>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <button
@@ -222,7 +225,7 @@ export function PromoUpload({
             busy ? "cursor-progress border border-line bg-line/60 text-muted" : "bg-green/90 text-ink hover:bg-green"
           }`}
         >
-          {busy ? "Идёт загрузка…" : "Загрузить"}
+          {busy ? t.busy : t.upload}
         </button>
         {phase.kind === "busy" ? (
           <span className="flex min-w-[12rem] flex-1 items-center gap-3 text-xs text-muted">

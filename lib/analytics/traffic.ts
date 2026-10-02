@@ -101,7 +101,7 @@ async function metrika(token: string, params: Record<string, string>): Promise<M
     cache: "no-store",
   });
   const body = (await response.json().catch(() => ({}))) as MetrikaResponse;
-  if (!response.ok) throw new Error(`Метрика ${response.status}: ${body.message ?? "без описания"}`);
+  if (!response.ok) throw new Error(`Metrika ${response.status}: ${body.message ?? "—"}`);
   return body;
 }
 
@@ -281,7 +281,7 @@ async function googleToken(account: ServiceAccount, key: string): Promise<string
   });
   const body = (await response.json().catch(() => ({}))) as { access_token?: string; expires_in?: number; error_description?: string };
   if (!response.ok || !body.access_token) {
-    throw new Error(`Google не выдал доступ: ${body.error_description ?? response.status}`);
+    throw new Error(`Google token: ${body.error_description ?? `HTTP ${response.status}`}`);
   }
   gaTokens.set(key, { value: body.access_token, until: Date.now() + (body.expires_in ?? 3600) * 1000 });
   return body.access_token;
@@ -350,7 +350,7 @@ export async function loadGa(days: number, now: Date = new Date()): Promise<Traf
       );
       const body = (await response.json().catch(() => ({}))) as { reports?: GaReport[]; error?: { message?: string } };
       if (!response.ok || !body.reports) {
-        throw new Error(`GA ${response.status}: ${body.error?.message ?? "без описания"}`);
+        throw new Error(`GA ${response.status}: ${body.error?.message ?? "—"}`);
       }
       const [cur, prev, byDay, sources, pages] = body.reports;
       const totalsOf = (r: GaReport | undefined): TrafficTotals => {

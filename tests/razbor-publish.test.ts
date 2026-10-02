@@ -90,9 +90,13 @@ test("правка не трогает адрес, запрос и цену", ()
   assert.ok(!/slug_ru:/.test(actions), "правка меняет адрес страницы");
 });
 
-test("удаление требует слова, а не одной кнопки", () => {
+test("удаление требует слова, а не одной кнопки", async () => {
   const actions = read("app/admin/razbor/actions.ts");
-  assert.match(actions, /confirm !== "удалить"/);
+  assert.match(actions, /if \(!isDeleteWord\(confirm\)\) redirect\("\/admin\/razbor\?r=confirm"\)/);
+  // Слово — на языке панели; засчитывается только оно, а не что угодно.
+  const { isDeleteWord } = await import("@/content/admin-panel/razbor");
+  for (const word of ["удалить", " Удалить ", "o‘chirish", "o'chirish", "usuń"]) assert.ok(isDeleteWord(word), word);
+  for (const word of ["", "да", "delete", "удали"]) assert.equal(isDeleteWord(word), false, word);
   // Удаление сносит и отпечаток адреса, то есть возвращает сайт в очередь
   // ночной смены. Такое не должно случаться от промаха мимо кнопки.
   assert.match(read("app/admin/razbor/page.tsx"), /name="confirm"/);
@@ -101,8 +105,12 @@ test("удаление требует слова, а не одной кнопк�
 test("панель показывает историю, а не только очередь на проверку", () => {
   const page = read("app/admin/razbor/page.tsx");
   assert.match(page, /history\(\)/);
-  assert.match(page, /Опубликованы/);
-  assert.match(page, /Снять с публикации/);
+  // Подписи — в словаре панели (content/admin-panel/razbor.ts).
+  assert.match(page, /t\.published\(published\.length\)/);
+  assert.match(page, /\{t\.unpublish\}/);
+  const dict = read("content/admin-panel/razbor.ts");
+  assert.match(dict, /Опубликованы · /);
+  assert.match(dict, /Снять с публикации/);
   assert.match(page, /admin\/razbor\/\$\{row\.id\}/, "нет ссылки на правку");
 });
 

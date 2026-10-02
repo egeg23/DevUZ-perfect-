@@ -9,8 +9,10 @@ import {
 } from "@/app/admin/razbor/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { ShotState } from "@/components/admin/razbor-shots";
+import { razborDict, razborResultDict } from "@/content/admin-panel/razbor";
 import { isTender } from "@/lib/razbor/tender";
 import { requireStaff } from "@/lib/admin/guard";
+import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { forReview, history, type ReviewRow } from "@/lib/razbor/store";
 
 export const dynamic = "force-dynamic";
@@ -46,73 +48,73 @@ function day(iso: string): string {
 export default async function RazborReviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ r?: string }>;
+  searchParams: Promise<{ r?: string; d?: string }>;
 }) {
   const staff = await requireStaff();
   if (staff.role !== "admin") notFound();
 
-  const { r } = await searchParams;
+  const { r, d } = await searchParams;
+  const locale = staff.panel_locale;
+  const t = pick(razborDict, locale);
+  const results = pick(razborResultDict, locale);
+  // У «confirm» в тексте — слово на языке панели; у остальных — данные из адреса.
+  const notice = r
+    ? Object.hasOwn(results, r)
+      ? results[r as keyof typeof results](r === "confirm" ? t.deleteWord : (d ?? ""))
+      : r
+    : null;
   const [rows, past] = await Promise.all([forReview(), history()]);
   const published = past.filter((row) => row.status === "published");
   const rejected = past.filter((row) => row.status === "rejected");
 
   return (
     <AdminShell staff={staff}>
-      <h1 className="text-lg font-semibold">Разборы</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-        Ночная смена разбирает сайты из касаний, до которых не дошли руки, и
-        кладёт статьи сюда. Опубликованное уходит в раздел на сайте и в карту
-        сайта сразу, без выкатки. Компания в тексте не называется — ни именем,
-        ни адресом.
-      </p>
+      <h1 className="text-lg font-semibold">{t.title}</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro}</p>
 
       {r && r !== "ok" ? (
-        <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">{r}</p>
+        <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">{notice}</p>
       ) : null}
       {r === "ok" ? (
-        <p className="mt-4 rounded-lg border border-green/40 bg-green/10 px-4 py-3 text-sm text-green">
-          Опубликовано. Страница уже открывается на сайте.
-        </p>
+        <p className="mt-4 rounded-lg border border-green/40 bg-green/10 px-4 py-3 text-sm text-green">{notice}</p>
       ) : null}
 
       {/* ── На проверке ──────────────────────────────────────────────── */}
       <h2 className="mt-10 text-sm font-semibold uppercase tracking-wider text-faint">
-        На проверке · {rows.length}
+        {t.onReview(rows.length)}
       </h2>
 
       {rows.length === 0 ? (
         <p className="mt-4 rounded-xl border border-line bg-surface px-5 py-4 text-sm text-muted">
-          Пусто. Смена ещё не приносила разборов — или все уже разобраны.
+          {t.reviewEmpty}
         </p>
       ) : (
         <ul className="mt-4 space-y-6">
           {rows.map((row) => (
             <li key={row.id} className="rounded-xl border border-line bg-surface px-5 py-4">
-              <Head row={row} />
+              <Head row={row} locale={locale} />
 
               {/* Адрес разобранного сайта — служебный: наружу он не уходит
                   никогда, но проверяющему без него не перепроверить разбор.
                   У тендерного разбора сайта нет — вместо адреса тема. */}
               <p className="mt-1 font-mono text-[0.7rem] text-faint">
-                {isTender(row.category)
-                  ? "тендерный разбор недели: типовое ТЗ, а не чей-то сайт — снимков у него нет"
-                  : `${row.sourceUrl} · только для проверки, на сайте адреса нет`}
+                {isTender(row.category) ? t.tenderNote : t.sourceNote(row.sourceUrl)}
               </p>
 
-              {(["ru", "uz"] as const).map((locale) => {
-                const article = row[locale];
+              {(["ru", "uz"] as const).map((lang) => {
+                const article = row[lang];
                 if (!article) {
                   return (
-                    <p key={locale} className="mt-3 text-sm text-gold">
-                      Нет статьи на «{locale}» — публиковать половину нельзя.
+                    <p key={lang} className="mt-3 text-sm text-gold">
+                      {t.noArticle(lang)}
                     </p>
                   );
                 }
                 return (
-                  <div key={locale} className="mt-4 border-t border-line-soft pt-3">
+                  <div key={lang} className="mt-4 border-t border-line-soft pt-3">
                     <p className="text-[0.7rem] uppercase tracking-wider text-faint">
-                      {locale === "ru" ? "по-русски" : "по-узбекски"} · запрос: {article.query} ·{" "}
-                      /{locale}/razbor/{locale === "ru" ? row.slugRu : row.slugUz}
+                      {lang === "ru" ? t.inRu : t.inUz} · {t.query} {article.query} ·{" "}
+                      /{lang}/razbor/{lang === "ru" ? row.slugRu : row.slugUz}
                     </p>
                     <p className="mt-2 text-sm font-medium">{article.title}</p>
                     <p className="mt-1 text-sm text-muted">{article.description}</p>
@@ -126,7 +128,7 @@ export default async function RazborReviewPage({
                         <li key={i} className="rounded-lg border border-line-soft bg-surface-2 px-4 py-2.5">
                           <p className="text-sm font-medium">{f.title}</p>
                           <p className="mt-1 text-sm text-muted">{f.impact}</p>
-                          <p className="mt-1 text-sm text-faint">Что делаем: {f.fix}</p>
+                          <p className="mt-1 text-sm text-faint">{t.whatWeDo(f.fix)}</p>
                         </li>
                       ))}
                     </ul>
@@ -142,23 +144,23 @@ export default async function RazborReviewPage({
                 );
               })}
 
-              {row.notes ? <p className="mt-3 text-xs text-faint">Смена пишет: {row.notes}</p> : null}
+              {row.notes ? <p className="mt-3 text-xs text-faint">{t.shiftSays(row.notes)}</p> : null}
 
               <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-3">
                 <form action={publishAction}>
                   <input type="hidden" name="razbor" value={row.id} />
                   <button type="submit" className={BUTTON}>
-                    Опубликовать
+                    {t.publish}
                   </button>
                 </form>
                 <Link href={`/admin/razbor/${row.id}`} className={BUTTON}>
-                  Править
+                  {t.edit}
                 </Link>
                 <form action={rejectAction} className="flex flex-wrap items-center gap-2">
                   <input type="hidden" name="razbor" value={row.id} />
-                  <input name="reason" placeholder="почему не публикуем" className={INPUT} />
+                  <input name="reason" placeholder={t.rejectPh} className={INPUT} />
                   <button type="submit" className={BUTTON}>
-                    Не публикуем
+                    {t.reject}
                   </button>
                 </form>
               </div>
@@ -169,20 +171,20 @@ export default async function RazborReviewPage({
 
       {/* ── Опубликованные ───────────────────────────────────────────── */}
       <h2 className="mt-12 text-sm font-semibold uppercase tracking-wider text-faint">
-        Опубликованы · {published.length}
+        {t.published(published.length)}
       </h2>
 
       {published.length === 0 ? (
         <p className="mt-4 rounded-xl border border-line bg-surface px-5 py-4 text-sm text-muted">
-          На сайте пока ни одного разбора.
+          {t.publishedEmpty}
         </p>
       ) : (
         <ul className="mt-4 space-y-3">
           {published.map((row) => (
             <li key={row.id} className="rounded-xl border border-line bg-surface px-5 py-4">
-              <Head row={row} />
+              <Head row={row} locale={locale} />
               <p className="mt-1 text-xs text-faint">
-                {row.publishedAt ? `вышел ${day(row.publishedAt)}` : "дата публикации не записана"}
+                {row.publishedAt ? t.publishedOn(day(row.publishedAt)) : t.noDate}
               </p>
 
               {/* Ссылки на живые страницы, а не на предпросмотр: проверять
@@ -209,15 +211,15 @@ export default async function RazborReviewPage({
 
               <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
                 <Link href={`/admin/razbor/${row.id}`} className={BUTTON}>
-                  Править
+                  {t.edit}
                 </Link>
                 <form action={unpublishAction}>
                   <input type="hidden" name="razbor" value={row.id} />
                   <button type="submit" className={BUTTON}>
-                    Снять с публикации
+                    {t.unpublish}
                   </button>
                 </form>
-                <Remove id={row.id} />
+                <Remove id={row.id} locale={locale} />
               </div>
             </li>
           ))}
@@ -228,13 +230,9 @@ export default async function RazborReviewPage({
       {rejected.length ? (
         <>
           <h2 className="mt-12 text-sm font-semibold uppercase tracking-wider text-faint">
-            Не публикуем · {rejected.length}
+            {t.rejected(rejected.length)}
           </h2>
-          <p className="mt-2 max-w-2xl text-xs leading-relaxed text-faint">
-            Строки остаются здесь нарочно: пока сайт числится разобранным,
-            ночная смена к нему не вернётся. Удалить — значит вернуть его в
-            очередь.
-          </p>
+          <p className="mt-2 max-w-2xl text-xs leading-relaxed text-faint">{t.rejectedAbout}</p>
           <ul className="mt-4 space-y-2">
             {rejected.map((row) => (
               <li
@@ -247,7 +245,7 @@ export default async function RazborReviewPage({
                 </span>
                 {row.notes ? <span className="text-xs text-gold">{row.notes}</span> : null}
                 <span className="ml-auto">
-                  <Remove id={row.id} />
+                  <Remove id={row.id} locale={locale} />
                 </span>
               </li>
             ))}
@@ -258,31 +256,31 @@ export default async function RazborReviewPage({
   );
 }
 
-function Head({ row }: { row: ReviewRow }) {
+function Head({ row, locale }: { row: ReviewRow; locale: PanelLocale }) {
+  const t = pick(razborDict, locale);
   return (
     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-      <span className="font-medium">{row.ru?.title ?? "без заголовка"}</span>
+      <span className="font-medium">{row.ru?.title ?? t.noTitle}</span>
       <span className="text-xs text-faint">
-        {isTender(row.category) ? "тендеры и госконтракты" : `${row.category} · ${row.city}`}
+        {isTender(row.category) ? t.tenders : `${row.category} · ${row.city}`}
       </span>
-      {isTender(row.category) ? null : <ShotState shots={row.shots} />}
+      {isTender(row.category) ? null : <ShotState shots={row.shots} locale={locale} />}
       {row.lostPer100 ? (
-        <span className="ml-auto font-mono text-xs text-gold">
-          теряет {row.lostPer100[0]}–{row.lostPer100[1]} из 100
-        </span>
+        <span className="ml-auto font-mono text-xs text-gold">{t.loses(row.lostPer100[0], row.lostPer100[1])}</span>
       ) : null}
     </div>
   );
 }
 
 /** Удаление сносит и отпечаток адреса — отсюда слово в поле, а не одна кнопка. */
-function Remove({ id }: { id: string }) {
+function Remove({ id, locale }: { id: string; locale: PanelLocale }) {
+  const t = pick(razborDict, locale);
   return (
     <form action={deleteAction} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="razbor" value={id} />
-      <input name="confirm" placeholder="удалить" className={`${INPUT} w-24`} />
+      <input name="confirm" placeholder={t.deleteWord} className={`${INPUT} w-24`} />
       <button type="submit" className={BUTTON}>
-        Удалить
+        {t.delete}
       </button>
     </form>
   );

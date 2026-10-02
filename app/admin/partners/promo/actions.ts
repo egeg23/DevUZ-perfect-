@@ -13,6 +13,7 @@ import {
   promoStart,
   registerPromo,
   updatePromo,
+  type PromoFail,
   type StartResult,
 } from "@/lib/partners/promo";
 
@@ -32,10 +33,10 @@ export async function promoStartAction(input: { mime: string; bytes: number }): 
 }
 
 /** Кусок файла: FormData с upload, offset и самим куском. */
-export async function promoChunkAction(formData: FormData): Promise<{ ok: true; received: number } | { ok: false; reason: string }> {
+export async function promoChunkAction(formData: FormData): Promise<{ ok: true; received: number } | PromoFail> {
   await requireAdmin();
   const chunk = formData.get("chunk");
-  if (!(chunk instanceof Blob)) return { ok: false, reason: "Кусок файла не дошёл." };
+  if (!(chunk instanceof Blob)) return { ok: false, reason: "chunk_missing" };
   return promoChunk(
     String(formData.get("upload") ?? ""),
     Number(formData.get("offset")),
@@ -58,7 +59,7 @@ export async function promoRegisterAction(input: {
   height: number | null;
   duration: number | null;
   notify: boolean;
-}): Promise<{ ok: true } | { ok: false; reason: string }> {
+}): Promise<{ ok: true } | PromoFail> {
   const admin = await requireAdmin();
   const result = await registerPromo(
     {

@@ -3,7 +3,9 @@ import Link from "next/link";
 import { saveGaProperty, startGoogleSignIn } from "@/app/admin/google/actions";
 import { HelpHint } from "@/components/admin/help-link";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { trafficDict } from "@/content/admin-panel/traffic";
 import { helpAnchor } from "@/lib/admin/help";
+import { PANEL_INTL, pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { enableApiLink, googleRedirectUri, measurementId } from "@/lib/analytics/google-oauth";
 import {
   gaConnection,
@@ -26,7 +28,9 @@ export function trafficPeriodOf(raw: string | undefined): TrafficPeriod {
   return (TRAFFIC_PERIODS as readonly number[]).includes(n) ? (n as TrafficPeriod) : 30;
 }
 
-const fmt = (n: number) => Math.round(n).toLocaleString("ru-RU");
+type T = Picked<typeof trafficDict>;
+
+const fmt = (n: number, locale: PanelLocale) => Math.round(n).toLocaleString(PANEL_INTL[locale]);
 
 function duration(seconds: number): string {
   const s = Math.round(seconds);
@@ -34,8 +38,8 @@ function duration(seconds: number): string {
 }
 
 /** Рост против прошлого периода — процентом; «новое», если раньше было ноль. */
-function Delta({ now, before, invert = false }: { now: number; before: number; invert?: boolean }) {
-  if (before === 0) return now > 0 ? <span className="text-xs text-muted">новое</span> : null;
+function Delta({ now, before, invert = false, t }: { now: number; before: number; invert?: boolean; t: T }) {
+  if (before === 0) return now > 0 ? <span className="text-xs text-muted">{t.deltaNew}</span> : null;
   const pct = Math.round(((now - before) / before) * 100);
   if (pct === 0) return <span className="text-xs text-faint">=</span>;
   // Для отказов рост — плохо: тон переворачивается.
@@ -48,13 +52,13 @@ function Delta({ now, before, invert = false }: { now: number; before: number; i
   );
 }
 
-function Totals({ t, prev }: { t: TrafficTotals; prev: TrafficTotals }) {
+function Totals({ now, prev, t, locale }: { now: TrafficTotals; prev: TrafficTotals; t: T; locale: PanelLocale }) {
   const items = [
-    { label: "визитов", value: fmt(t.visits), delta: <Delta now={t.visits} before={prev.visits} /> },
-    { label: "посетителей", value: fmt(t.users), delta: <Delta now={t.users} before={prev.users} /> },
-    { label: "просмотров", value: fmt(t.pageviews), delta: <Delta now={t.pageviews} before={prev.pageviews} /> },
-    { label: "отказов", value: `${Math.round(t.bounce)}%`, delta: <Delta now={t.bounce} before={prev.bounce} invert /> },
-    { label: "ср. визит", value: duration(t.duration), delta: <Delta now={t.duration} before={prev.duration} /> },
+    { label: t.visits, value: fmt(now.visits, locale), delta: <Delta now={now.visits} before={prev.visits} t={t} /> },
+    { label: t.users, value: fmt(now.users, locale), delta: <Delta now={now.users} before={prev.users} t={t} /> },
+    { label: t.pageviews, value: fmt(now.pageviews, locale), delta: <Delta now={now.pageviews} before={prev.pageviews} t={t} /> },
+    { label: t.bounce, value: `${Math.round(now.bounce)}%`, delta: <Delta now={now.bounce} before={prev.bounce} invert t={t} /> },
+    { label: t.avgVisit, value: duration(now.duration), delta: <Delta now={now.duration} before={prev.duration} t={t} /> },
   ];
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -72,16 +76,16 @@ function Totals({ t, prev }: { t: TrafficTotals; prev: TrafficTotals }) {
 }
 
 /** Визиты по дням — столбиками. Подпись — во всплывающей подсказке. */
-function Daily({ days }: { days: TrafficReport["days"] }) {
+function Daily({ days, t }: { days: TrafficReport["days"]; t: T }) {
   if (!days.length) return null;
   const max = Math.max(1, ...days.map((d) => d.visits));
   return (
     <div className="mt-4">
-      <div className="flex h-24 items-end gap-px" role="img" aria-label="Визиты по дням">
+      <div className="flex h-24 items-end gap-px" role="img" aria-label={t.dailyLabel}>
         {days.map((d) => (
           <div
             key={d.date}
-            title={`${d.date.split("-").reverse().join(".")}: ${d.visits} визитов, ${d.users} посетителей`}
+            title={t.dailyTip(d.date.split("-").reverse().join("."), d.visits, d.users)}
             className="min-w-0 flex-1 rounded-t-sm bg-green/60"
             style={{ height: `${Math.max(2, (d.visits / max) * 100)}%` }}
           />
@@ -96,7 +100,7 @@ function Daily({ days }: { days: TrafficReport["days"] }) {
 }
 
 /** Список с полосками: доля видна раньше, чем прочитана цифра. */
-function Ranked({ title, rows }: { title: string; rows: { name: string; visits: number }[] }) {
+function Ranked({ title, rows, locale }: { title: string; rows: { name: string; visits: number }[]; locale: PanelLocale }) {
   if (!rows.length) return null;
   const max = Math.max(1, ...rows.map((r) => r.visits));
   return (
@@ -108,7 +112,7 @@ function Ranked({ title, rows }: { title: string; rows: { name: string; visits: 
             <span className="min-w-0 truncate" title={r.name}>
               {r.name}
             </span>
-            <span className="font-mono text-xs text-muted">{fmt(r.visits)}</span>
+            <span className="font-mono text-xs text-muted">{fmt(r.visits, locale)}</span>
             <span className="col-span-2 h-1 overflow-hidden rounded bg-surface-2">
               <span className="block h-full bg-green/50" style={{ width: `${(r.visits / max) * 100}%` }} />
             </span>
@@ -125,17 +129,19 @@ function Ranked({ title, rows }: { title: string; rows: { name: string; visits: 
  * Шаги — это вход в аккаунт Google владельца и ключ на сервере: ни то ни
  * другое руководитель сделать не может, и инструкция ему была бы шумом.
  */
-function OwnerConnects() {
-  return <p className="mt-3 text-sm text-muted">Не подключено. Подключает владелец — если цифры нужны, скажите ему.</p>;
+function OwnerConnects({ t }: { t: T }) {
+  return <p className="mt-3 text-sm text-muted">{t.ownerConnects}</p>;
 }
 
-function Setup({ steps }: { steps: React.ReactNode[] }) {
+function Setup({ steps, t }: { steps: string[]; t: T }) {
   return (
     <div className="mt-3 text-sm text-muted">
-      <p>Не подключено. Что нужно сделать один раз:</p>
+      <p>{t.setupTitle}</p>
       <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-xs leading-relaxed">
         {steps.map((step, i) => (
-          <li key={i}>{step}</li>
+          <li key={i}>
+            <Rich text={step} />
+          </li>
         ))}
       </ol>
     </div>
@@ -146,32 +152,44 @@ const Code = ({ children }: { children: React.ReactNode }) => (
   <code className="rounded bg-surface-2 px-1 py-0.5 font-mono text-[11px] text-text">{children}</code>
 );
 
-const METRIKA_SETUP = [
-  <>
-    На <Code>oauth.yandex.ru</Code> — «Создать приложение», платформа «Веб-сервисы», Redirect URI{" "}
-    <Code>https://oauth.yandex.ru/verification_code</Code>, доступ «Яндекс.Метрика: получение статистики».
-  </>,
-  <>
-    Под аккаунтом, у которого есть доступ к счётчику 112925960, откройте{" "}
-    <Code>{"https://oauth.yandex.ru/authorize?response_type=token&client_id=<ClientID приложения>"}</Code> и
-    скопируйте токен.
-  </>,
-  <>
-    На сервере в <Code>/opt/devuz/.env</Code> добавьте строку <Code>YANDEX_METRIKA_TOKEN=токен</Code> и
-    выполните там же <Code>docker compose up -d</Code> — или просто дождитесь следующей выкатки.
-  </>,
-];
+/**
+ * Строка словаря с простой разметкой: `код`, **жирный**, [текст](адрес).
+ *
+ * Шаги подключения и ответы Google — это абзац с адресами и названиями
+ * кнопок внутри. Резать его на куски ради каждого `<Code>` значило бы
+ * разнести одну фразу по пяти ключам, и на другом языке порядок кусков уже
+ * не совпал бы.
+ */
+function Rich({ text }: { text: string }) {
+  const out: React.ReactNode[] = [];
+  let last = 0;
+  for (const m of text.matchAll(/`([^`]+)`|\*\*([^*]+)\*\*|\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g)) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const key = m.index;
+    if (m[1] !== undefined) out.push(<Code key={key}>{m[1]}</Code>);
+    else if (m[2] !== undefined) out.push(<b key={key}>{m[2]}</b>);
+    else out.push(<ExtLink key={key} href={m[4]}>{m[3]}</ExtLink>);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return <>{out}</>;
+}
 
-function Report({ report }: { report: TrafficReport }) {
+/** Ответ стороннего сервиса — в строку с разметкой, не ломая её. */
+const plain = (text: string) => text.replace(/[`*[\]]/g, "");
+
+const metrikaSetup = (t: T) => [t.ymStep1, t.ymStep2, t.ymStep3];
+
+function Report({ report, t, locale }: { report: TrafficReport; t: T; locale: PanelLocale }) {
   return (
     <>
       <div className="mt-3">
-        <Totals t={report.totals} prev={report.prev} />
+        <Totals now={report.totals} prev={report.prev} t={t} locale={locale} />
       </div>
-      <Daily days={report.days} />
+      <Daily days={report.days} t={t} />
       <div className="grid gap-x-6 sm:grid-cols-2">
-        <Ranked title="Откуда приходят" rows={report.sources} />
-        <Ranked title="Страницы входа" rows={report.pages} />
+        <Ranked title={t.sources} rows={report.sources} locale={locale} />
+        <Ranked title={t.pages} rows={report.pages} locale={locale} />
       </div>
     </>
   );
@@ -187,27 +205,30 @@ function Source({
   result,
   setup,
   canConnect,
+  t,
+  locale,
 }: {
   title: string;
   result: TrafficResult;
-  setup: React.ReactNode[];
+  setup: string[];
   canConnect: boolean;
+  t: T;
+  locale: PanelLocale;
 }) {
   return (
     <section className={CARD}>
       <p className={H2}>{title}</p>
       {result.ok ? (
-        <Report report={result.report} />
+        <Report report={result.report} t={t} locale={locale} />
       ) : result.reason === "not_configured" ? (
         canConnect ? (
-          <Setup steps={setup} />
+          <Setup steps={setup} t={t} />
         ) : (
-          <OwnerConnects />
+          <OwnerConnects t={t} />
         )
       ) : (
         <p className={WARN}>
-          Не ответил: {result.detail ?? "без описания"}. Попробуйте обновить страницу через минуту; если
-          повторяется — {canConnect ? "проверьте ключ в .env." : "скажите владельцу."}
+          {(canConnect ? t.failedOwner : t.failedHead)(result.detail ?? t.noDetail)}
         </p>
       )}
     </section>
@@ -226,10 +247,10 @@ const ExtLink = ({ href, children }: { href: string; children: React.ReactNode }
 );
 
 /** Кнопка «Войти через Google» — без полей: клиент уже сохранён. */
-function SignInButton({ label = "Войти через Google", tone = "primary" }: { label?: string; tone?: "primary" | "quiet" }) {
+function SignInButton({ t, label = t.signIn, tone = "primary" }: { t: T; label?: string; tone?: "primary" | "quiet" }) {
   return (
     <form action={startGoogleSignIn} className="mt-3">
-      <SubmitButton pendingLabel="Открываем Google…" base="rounded-lg px-4 py-2 text-sm font-semibold" tone={tone}>
+      <SubmitButton pendingLabel={t.openingGoogle} base="rounded-lg px-4 py-2 text-sm font-semibold" tone={tone}>
         {label}
       </SubmitButton>
     </form>
@@ -237,7 +258,7 @@ function SignInButton({ label = "Войти через Google", tone = "primary"
 }
 
 /** Client ID и секрет из Google Cloud — сохраняются и сразу ведут на вход. */
-function ClientForm() {
+function ClientForm({ t }: { t: T }) {
   return (
     <form action={startGoogleSignIn} className="mt-3 grid gap-2">
       <input
@@ -260,8 +281,8 @@ function ClientForm() {
         className={INPUT}
       />
       <div>
-        <SubmitButton pendingLabel="Сохраняем…" base="rounded-lg px-4 py-2 text-sm font-semibold">
-          Сохранить и войти через Google
+        <SubmitButton pendingLabel={t.saving} base="rounded-lg px-4 py-2 text-sm font-semibold">
+          {t.saveAndSignIn}
         </SubmitButton>
       </div>
     </form>
@@ -269,147 +290,56 @@ function ClientForm() {
 }
 
 /** Номер ресурса руками — если найти его сам вход не смог. */
-function PropertyForm() {
+function PropertyForm({ t }: { t: T }) {
   return (
     <form action={saveGaProperty} className="mt-3 flex flex-wrap items-center gap-2">
       <input
         name="property"
         required
         inputMode="numeric"
-        placeholder="Номер ресурса: 512345678"
-        aria-label="Номер ресурса Google Analytics"
+        placeholder={t.propertyPlaceholder}
+        aria-label={t.propertyAria}
         className={`${INPUT} max-w-[16rem]`}
       />
-      <SubmitButton pendingLabel="Сохраняем…" base="rounded-lg px-3 py-2 text-xs" tone="quiet">
-        Сохранить номер
+      <SubmitButton pendingLabel={t.saving} base="rounded-lg px-3 py-2 text-xs" tone="quiet">
+        {t.saveProperty}
       </SubmitButton>
     </form>
   );
 }
 
-function gaSetupSteps(redirect: string): React.ReactNode[] {
-  return [
-    <>
-      Откройте <ExtLink href="https://console.cloud.google.com/apis/library">console.cloud.google.com</ExtLink>,
-      вверху выберите тот же проект, что у ключа карт. В «APIs &amp; Services» → «Library» найдите и
-      включите кнопкой «Enable» два API: <b>Google Analytics Data API</b> (по нему идут цифры) и{" "}
-      <b>Google Analytics Admin API</b> (по нему панель сама найдёт ресурс сайта).
-    </>,
-    <>
-      «Google Auth Platform» (в старом меню — «APIs &amp; Services» → «OAuth consent screen») → «Get
-      started»: имя приложения — например «DevUz панель», почта — ваша, Audience — <b>External</b> →
-      «Create».
-    </>,
-    <>
-      Там же «Audience» → <b>«Publish app»</b> → «Confirm». Без этого приложение остаётся в режиме
-      «Testing», и Google выключает вход через 7 дней. Проверка Google не нужна: при входе он предупредит
-      «Google hasn&rsquo;t verified this app» — нажмите «Advanced» → «Go to … (unsafe)». Это ваше
-      приложение, и просит оно только чтение статистики.
-    </>,
-    <>
-      «Clients» → «Create client» → тип <b>Web application</b>. В «Authorized redirect URIs» → «Add URI»
-      вставьте ровно <Code>{redirect}</Code> → «Create».
-    </>,
-    <>
-      Google покажет Client ID и Client secret. Скопируйте оба сразу — секрет он потом не показывает, —
-      вставьте ниже и нажмите «Сохранить и войти через Google». Входите аккаунтом, у которого есть доступ к
-      Google Analytics сайта, и не снимайте галочку «See and download your Google Analytics data».
-    </>,
-  ];
+function gaSetupSteps(redirect: string, t: T): string[] {
+  return [t.gaStep1, t.gaStep2, t.gaStep3, t.gaStep4(redirect), t.gaStep5];
 }
 
 export type GaNotice = { code?: string; detail?: string; property?: string };
 
 /** Что вернул вход через Google — одной строкой над карточкой. */
-function Notice({ notice, redirect }: { notice: GaNotice; redirect: string }) {
-  const detail = notice.detail?.trim();
-  const link = enableApiLink(detail);
-  const text: Record<string, { ok?: boolean; body: React.ReactNode }> = {
-    connected: {
-      ok: true,
-      body: <>Google подключён, статистика берётся из ресурса {notice.property ?? "сайта"}.</>,
-    },
-    property_saved: { ok: true, body: <>Номер ресурса сохранён.</> },
-    denied: { body: <>Вход отменён на экране Google — ничего не сохранено.</> },
-    state: {
-      body: (
-        <>
-          Вход не прошёл проверку: он был начат слишком давно, в другом окне или на другом адресе панели.
-          Нажмите «Войти через Google» ещё раз.
-        </>
-      ),
-    },
-    client: { body: <>Нет Client ID и секрета — вставьте их ниже.</> },
-    client_bad: {
-      body: (
-        <>
-          Client ID выглядит как <Code>1234567890-abc….apps.googleusercontent.com</Code>, а секрет обычно
-          начинается с <Code>GOCSPX-</Code>. Проверьте, что скопировали обе строки целиком, без пробелов.
-        </>
-      ),
-    },
-    save_failed: { body: <>Не удалось сохранить в хранилище секретов. Попробуйте ещё раз через минуту.</> },
-    exchange: {
-      body: (
-        <>
-          Google не выдал доступ{detail ? <>: {detail}</> : null}. Частые причины: адрес возврата в клиенте не
-          совпадает до символа с <Code>{redirect}</Code>, или секрет скопирован не полностью.
-        </>
-      ),
-    },
-    scope: {
-      body: (
-        <>
-          Вход прошёл, но без права читать статистику: на экране Google была снята галочка «See and download
-          your Google Analytics data». Войдите ещё раз и оставьте её.
-        </>
-      ),
-    },
-    no_refresh: {
-      body: (
-        <>
-          Google не выдал постоянный доступ. Откройте{" "}
-          <ExtLink href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</ExtLink>,
-          удалите там это приложение и войдите ещё раз.
-        </>
-      ),
-    },
-    no_property: {
-      body: (
-        <>
-          Вход сохранён, но у этого аккаунта Google нет ресурса Analytics со счётчиком сайта{" "}
-          <Code>{measurementId()}</Code>
-          {detail ? <> (проверено ресурсов: {detail})</> : null}. Войдите аккаунтом, у которого есть доступ к
-          статистике сайта, или впишите номер ресурса ниже.
-        </>
-      ),
-    },
-    admin_api: {
-      body: link ? (
-        <>
-          Вход сохранён, но найти ресурс сам не получилось: в проекте Google Cloud не включён «Google Analytics
-          Admin API». <ExtLink href={link}>Включите его</ExtLink> (кнопка «Enable»), подождите минуту и нажмите
-          «Войти заново» — или впишите номер ресурса ниже.
-        </>
-      ) : (
-        <>
-          Вход сохранён, но найти ресурс сам не получилось{detail ? <>: {detail}</> : null}. Впишите номер ресурса
-          ниже или нажмите «Войти заново».
-        </>
-      ),
-    },
-    property_bad: {
-      body: (
-        <>
-          Номер ресурса — только цифры, например <Code>512345678</Code>. Это не <Code>G-…</Code>: он в Google
-          Analytics → «Администратор» → «Сведения о ресурсе».
-        </>
-      ),
-    },
+function Notice({ notice, redirect, t }: { notice: GaNotice; redirect: string; t: T }) {
+  const detail = plain(notice.detail?.trim() ?? "");
+  const link = enableApiLink(notice.detail?.trim());
+  const text: Record<string, { ok?: boolean; body: string }> = {
+    connected: { ok: true, body: t.connected(plain(notice.property ?? "") || t.site) },
+    property_saved: { ok: true, body: t.propertySaved },
+    denied: { body: t.denied },
+    state: { body: t.state },
+    client: { body: t.client },
+    client_bad: { body: t.clientBad },
+    save_failed: { body: t.saveFailed },
+    exchange: { body: t.exchange(detail, redirect) },
+    scope: { body: t.scope },
+    no_refresh: { body: t.noRefresh },
+    no_property: { body: t.noProperty(measurementId(), detail) },
+    admin_api: { body: link ? t.adminApi(link) : t.adminApiOther(detail) },
+    property_bad: { body: t.propertyBad },
   };
   const entry = notice.code ? text[notice.code] : undefined;
   if (!entry) return null;
-  return <p className={entry.ok ? OK : WARN}>{entry.body}</p>;
+  return (
+    <p className={entry.ok ? OK : WARN}>
+      <Rich text={entry.body} />
+    </p>
+  );
 }
 
 /**
@@ -418,19 +348,20 @@ function Notice({ notice, redirect }: { notice: GaNotice; redirect: string }) {
  * Руководителю — без почты и без «войти заново»: почта — аккаунт владельца,
  * а сменить вход может только он.
  */
-function ConnectedVia({ link, canConnect }: { link: GaConnection; canConnect: boolean }) {
-  if (!canConnect) return <p className="mt-4 text-xs text-faint">Ресурс Google Analytics {link.property}</p>;
+function ConnectedVia({ link, canConnect, t }: { link: GaConnection; canConnect: boolean; t: T }) {
+  if (!canConnect) return <p className="mt-4 text-xs text-faint">{t.gaProperty(link.property ?? "")}</p>;
   if (link.via === "service") {
-    return <p className="mt-4 text-xs text-faint">Через ключ сервисного аккаунта · ресурс {link.property}</p>;
+    return <p className="mt-4 text-xs text-faint">{t.viaService(link.property ?? "")}</p>;
   }
   return (
     <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-faint">
       <span>
-        Через вход Google{link.email ? <> · {link.email}</> : null} · ресурс {link.property}
+        {t.viaGoogle}
+        {link.email ? <> · {link.email}</> : null} · {t.resource(link.property ?? "")}
       </span>
       <form action={startGoogleSignIn}>
         <button type="submit" className="text-faint hover:text-green">
-          войти заново
+          {t.signInAgainLink}
         </button>
       </form>
     </div>
@@ -442,11 +373,15 @@ function GaSource({
   link,
   notice,
   canConnect,
+  t,
+  locale,
 }: {
   result: TrafficResult;
   link: GaConnection;
   notice: GaNotice;
   canConnect: boolean;
+  t: T;
+  locale: PanelLocale;
 }) {
   const redirect = googleRedirectUri();
   let body: React.ReactNode;
@@ -454,8 +389,8 @@ function GaSource({
   if (result.ok) {
     body = (
       <>
-        <Report report={result.report} />
-        <ConnectedVia link={link} canConnect={canConnect} />
+        <Report report={result.report} t={t} locale={locale} />
+        <ConnectedVia link={link} canConnect={canConnect} t={t} />
       </>
     );
   } else if (!canConnect) {
@@ -463,27 +398,17 @@ function GaSource({
     // аккаунт Google владельца.
     body =
       result.reason === "reauth" ? (
-        <p className={WARN}>
-          Google перестал пускать по входу владельца, поэтому цифр нет. Скажите владельцу — ему нужно войти заново,
-          это минута.
-        </p>
+        <p className={WARN}>{t.reauthHead}</p>
       ) : result.reason === "failed" ? (
-        <p className={WARN}>
-          Не ответил: {result.detail ?? "без описания"}. Попробуйте обновить страницу через минуту; если
-          повторяется — скажите владельцу.
-        </p>
+        <p className={WARN}>{t.failedHead(result.detail ?? t.noDetail)}</p>
       ) : (
-        <OwnerConnects />
+        <OwnerConnects t={t} />
       );
   } else if (result.reason === "reauth") {
     body = (
       <>
-        <p className={WARN}>
-          Google больше не пускает по сохранённому входу: доступ отозван, сменён пароль, или приложение в
-          Google Cloud не опубликовано (в режиме «Testing» вход живёт 7 дней — нажмите там «Publish app»).
-          Войдите ещё раз — это минута.
-        </p>
-        <SignInButton />
+        <p className={WARN}>{t.reauthOwner}</p>
+        <SignInButton t={t} />
       </>
     );
   } else if (result.reason === "failed") {
@@ -492,57 +417,41 @@ function GaSource({
       <>
         <p className={WARN}>
           {enable ? (
-            <>
-              Google не отдаёт цифры: в проекте Google Cloud не включён нужный API (обычно «Google Analytics Data
-              API»). <ExtLink href={enable}>Включите его</ExtLink> (кнопка «Enable»), подождите пару минут и
-              обновите страницу.
-            </>
+            <Rich text={t.enableApi(enable)} />
           ) : (
-            <>
-              Не ответил: {result.detail ?? "без описания"}. Попробуйте обновить страницу через минуту. Если Google
-              пишет про права (permission) — войдите аккаунтом, у которого есть доступ к ресурсу {link.property}.
-            </>
+            t.gaFailed(result.detail ?? t.noDetail, link.property ?? "")
           )}
         </p>
-        {link.via === "google" ? <SignInButton label="Войти заново" tone="quiet" /> : null}
+        {link.via === "google" ? <SignInButton t={t} label={t.signInAgain} tone="quiet" /> : null}
       </>
     );
   } else if (link.via && !link.property) {
     body = (
       <>
         <p className="mt-3 text-sm text-muted">
-          Вход есть, не хватает номера ресурса Google Analytics. Его можно найти в Google Analytics →
-          «Администратор» → «Сведения о ресурсе» (только цифры, не <Code>G-…</Code>) и вписать сюда:
+          <Rich text={t.needProperty} />
         </p>
-        <PropertyForm />
-        {link.via === "google" ? (
-          <p className="mt-3 text-xs text-faint">
-            Или включите в Google Cloud «Google Analytics Admin API» и войдите заново — панель найдёт номер
-            сама.
-          </p>
-        ) : null}
-        {link.via === "google" ? <SignInButton label="Войти заново" tone="quiet" /> : null}
+        <PropertyForm t={t} />
+        {link.via === "google" ? <p className="mt-3 text-xs text-faint">{t.orEnableAdmin}</p> : null}
+        {link.via === "google" ? <SignInButton t={t} label={t.signInAgain} tone="quiet" /> : null}
       </>
     );
   } else if (link.client) {
     body = (
       <>
-        <p className="mt-3 text-sm text-muted">
-          Client ID сохранён. Осталось войти: нажмите кнопку и войдите аккаунтом Google, у которого есть доступ к
-          Google Analytics сайта. Номер ресурса панель найдёт сама.
-        </p>
-        <SignInButton />
+        <p className="mt-3 text-sm text-muted">{t.clientSaved}</p>
+        <SignInButton t={t} />
         <details className="mt-3 text-xs text-faint">
-          <summary className="cursor-pointer hover:text-text">Заменить Client ID и секрет</summary>
-          <ClientForm />
+          <summary className="cursor-pointer hover:text-text">{t.replaceClient}</summary>
+          <ClientForm t={t} />
         </details>
       </>
     );
   } else {
     body = (
       <>
-        <Setup steps={gaSetupSteps(redirect)} />
-        <ClientForm />
+        <Setup steps={gaSetupSteps(redirect, t)} t={t} />
+        <ClientForm t={t} />
       </>
     );
   }
@@ -550,7 +459,7 @@ function GaSource({
   return (
     <section className={CARD}>
       <p className={H2}>Google Analytics</p>
-      {canConnect ? <Notice notice={notice} redirect={redirect} /> : null}
+      {canConnect ? <Notice notice={notice} redirect={redirect} t={t} /> : null}
       {body}
     </section>
   );
@@ -570,13 +479,15 @@ export async function TrafficPanel({
   days,
   canConnect,
   notice = {},
+  locale,
 }: {
   days: TrafficPeriod;
   canConnect: boolean;
   notice?: GaNotice;
+  locale: PanelLocale;
 }) {
   const [ym, ga, link] = await Promise.all([loadMetrika(days), loadGa(days), gaConnection()]);
-  return <TrafficView days={days} ym={ym} ga={ga} link={link} notice={notice} canConnect={canConnect} />;
+  return <TrafficView days={days} ym={ym} ga={ga} link={link} notice={notice} canConnect={canConnect} locale={locale} />;
 }
 
 /** Разметка отдельно от загрузки — чтобы её можно было проверить без API. */
@@ -587,6 +498,7 @@ export function TrafficView({
   link,
   notice,
   canConnect,
+  locale,
 }: {
   days: TrafficPeriod;
   ym: TrafficResult;
@@ -594,15 +506,17 @@ export function TrafficView({
   link: GaConnection;
   notice: GaNotice;
   canConnect: boolean;
+  locale: PanelLocale;
 }) {
+  const t = pick(trafficDict, locale);
   return (
     <div className="mb-8 space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-sm text-muted">
-          Последние {days} дней, стрелки — против {days} дней до них. Обновляется раз в 10 минут.{" "}
+          {t.intro(days)}{" "}
           <HelpHint
             topic={helpAnchor("/admin/traffic", "numbers")}
-            label={canConnect ? "Откуда цифры и как подключить" : "Откуда цифры"}
+            label={canConnect ? t.helpOwner : t.helpHead}
           />
         </p>
         <nav className="flex gap-3 text-sm">
@@ -612,14 +526,14 @@ export function TrafficView({
               href={`/admin/traffic?d=${p}`}
               className={p === days ? "text-green" : "text-faint hover:text-text"}
             >
-              {p} дней
+              {t.period(p)}
             </Link>
           ))}
         </nav>
       </div>
       <div className="grid items-start gap-4 xl:grid-cols-2">
-        <Source title="Яндекс Метрика" result={ym} setup={METRIKA_SETUP} canConnect={canConnect} />
-        <GaSource result={ga} link={link} notice={notice} canConnect={canConnect} />
+        <Source title={t.metrika} result={ym} setup={metrikaSetup(t)} canConnect={canConnect} t={t} locale={locale} />
+        <GaSource result={ga} link={link} notice={notice} canConnect={canConnect} t={t} locale={locale} />
       </div>
     </div>
   );

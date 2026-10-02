@@ -12,18 +12,26 @@ import { AdminShell } from "@/components/admin/shell";
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
 import { when } from "@/components/admin/lead-table";
+import { contractStatusDict, problemsText } from "@/content/admin-panel/contracts";
+import { DEFAULT_CONTRACT_STAGES } from "@/lib/admin/contracts";
 import {
-  ACCRUAL_TITLE,
+  partnerVoidDict,
+  projectCardDict,
+  projectResultDict,
+  stageLabel,
+} from "@/content/admin-panel/projects";
+import {
+  ACCRUAL_TR,
   DEAL_KINDS,
-  KIND_TITLE,
+  KIND_TR,
   PURPOSES,
-  PURPOSE_TITLE,
+  PURPOSE_TR,
   accrualState,
   accrualsOf,
   canEditMoney,
   canSeeMoney,
   earnersOf,
-  money,
+  money as formatMoney,
   ownerShare,
   paidOf,
   profitOf,
@@ -33,21 +41,21 @@ import {
 import { optionsFor } from "@/content/calculator";
 import { requireStaff } from "@/lib/admin/guard";
 import { ProjectTasksBlock } from "@/components/admin/tasks-block";
-import { CATEGORY_CHOICES, quoteFor } from "@/lib/admin/quote";
-import { t } from "@/lib/i18n";
+import { pick, tr, type Msg, type Tr } from "@/lib/admin/i18n";
+import { categoryChoices, quoteFor } from "@/lib/admin/quote";
+import { t as siteText } from "@/lib/i18n";
 import { seesOwnerMoney } from "@/lib/admin/roles";
 import { loadPeople, paymentsFor, sharesFor, sharesOf } from "@/lib/admin/ledger";
 import {
   ALL_STAGES,
   STAGES,
-  STAGE_LABEL,
   canEditProjectData,
   daysOnStage,
   projectById,
   stageProgress,
 } from "@/lib/admin/projects";
 import { teamOf } from "@/lib/admin/team";
-import { VOID_TITLE, agencyCounts, partnerAccrualOf, type VoidReason } from "@/lib/partners/rules";
+import { agencyCounts, partnerAccrualOf } from "@/lib/partners/rules";
 import { agenciesOf, listPartners, partnerById } from "@/lib/partners/store";
 
 export const dynamic = "force-dynamic";
@@ -55,44 +63,17 @@ export const dynamic = "force-dynamic";
 const FIELD =
   "w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm disabled:opacity-60";
 
-const RESULT: Record<string, { text: string; tone: "ok" | "warn" }> = {
-  ok: { text: "Готово.", tone: "ok" },
-  paid: { text: "Платёж записан.", tone: "ok" },
-  forbidden: {
-    text: "Это правит владелец. Сумму и вид меняет ещё тот, кто ведёт проект, — пока по нему нет платежей.",
-    tone: "warn",
-  },
-  invalid: { text: "Сумма, процент или дата не разобрались: целые доллары, целые проценты, дата как в календаре.", tone: "warn" },
-  below_floor: {
-    text: "Сумма ниже порога сметы. Порог — это то, под чем проект не окупается; опуститься ниже может только владелец.",
-    tone: "warn",
-  },
-  data_forbidden: {
-    text: "«Данные проекта» правит ведущий проекта, его руководитель и владелец. Ведущего меняет только владелец.",
-    tone: "warn",
-  },
-  gone: { text: "Такой записи уже нет.", tone: "warn" },
-  failed: { text: "Не получилось.", tone: "warn" },
-  offline: { text: "База недоступна.", tone: "warn" },
-};
-
-/** Где договор сейчас — словами, как в карточке договора. */
-const CONTRACT_STATUS: Record<string, string> = {
-  draft: "черновик: готовится, владельцу ещё не отправлен",
-  pending: "отправлен владельцу на подпись",
-  approved: "подтверждён владельцем, ждёт подписи заказчика",
-  signed: "подписан обеими сторонами",
-};
-
 /**
- * Почему договор не подготовился. Раньше форма молча возвращала на карточку:
- * человек видел ту же пустую форму и не понимал, что не так.
+ * Ответ действий: `?r=код` → текст из словаря (projectResultDict) и тон.
+ * Незнакомый код — «Не получилось», как и раньше.
  */
-function contractErrorText(code: string, detail: string | undefined): string {
-  if (code === "forbidden") return "Готовить договор этой роли нельзя.";
-  if (code === "offline") return "База недоступна — попробуйте через минуту.";
-  if (code === "invalid" && detail) return `Договор не подготовлен: ${detail}.`;
-  return "Договор не подготовлен. Проверьте: дата, сумма больше нуля, заказчик и его реквизиты, предмет договора, этапы с долями, которые вместе дают 100%.";
+const OK_CODES = new Set(["ok", "paid"]);
+
+/** Подпись из таблицы по ключу, который пришёл из базы; незнакомый — как есть. */
+function labelOf(dict: Record<string, Tr<Msg> | undefined>, key: string, locale: Parameters<typeof tr>[1]): string {
+  const entry = dict[key];
+  const value = entry ? tr(entry, locale) : key;
+  return typeof value === "string" ? value : key;
 }
 
 /** «13.09.26» из даты платежа — она хранится днём, без часов и пояса. */
@@ -109,6 +90,10 @@ export default async function ProjectPage({
   searchParams: Promise<{ r?: string; contract?: string; detail?: string; t?: string }>;
 }) {
   const staff = await requireStaff();
+  const locale = staff.panel_locale;
+  const t = pick(projectCardDict, locale);
+  const results = pick(projectResultDict, locale);
+  const money = (usd: number | null) => formatMoney(usd, locale);
   const { id } = await params;
   const { r, contract: contractError, detail: contractDetail, t: taskNotice } = await searchParams;
 
@@ -126,7 +111,20 @@ export default async function ProjectPage({
   // См. комментарий в «Финансах»: доля студии — не то же самое, что права
   // администратора, и держится отдельной функцией.
   const ownerMoney = seesOwnerMoney(staff.role);
-  const notice = r ? (RESULT[r] ?? RESULT.failed) : null;
+  const notice = r
+    ? { text: r in results ? results[r as keyof typeof results] : results.failed, tone: OK_CODES.has(r) ? "ok" : "warn" }
+    : null;
+
+  /**
+   * Почему договор не подготовился. Раньше форма молча возвращала на карточку:
+   * человек видел ту же пустую форму и не понимал, что не так.
+   */
+  const contractErrorText = (code: string, detail: string | undefined): string => {
+    if (code === "forbidden") return t.contractForbidden;
+    if (code === "offline") return t.contractOffline;
+    if (code === "invalid" && detail) return t.contractInvalid(problemsText(detail, locale, "; "));
+    return t.contractFailed;
+  };
 
   // Деньги: платежи и люди нужны, чтобы посчитать начисления по проекту.
   const [payments, people, team, shares, partner, partners, awaiting] = await Promise.all([
@@ -166,7 +164,7 @@ export default async function ProjectPage({
   const shownLines = lines.filter((a) => isAdmin || (scope !== "all" && scope.includes(a.staff_id)));
   const editsMoney = canEditMoney(staff, project, paid);
   const quoteInput = project.quote;
-  const quote = quoteInput ? quoteFor(quoteInput) : null;
+  const quote = quoteInput ? quoteFor(quoteInput, locale) : null;
   // Как и деньги: свой проект и владелец. Руководитель смотрит, не правит.
   const editsQuote = staff.role === "admin" || project.owner_staff_id === staff.id;
   const nameOf = (staffId: string | null) => people.find((p) => p.id === staffId)?.display_name ?? "—";
@@ -174,7 +172,7 @@ export default async function ProjectPage({
   return (
     <AdminShell staff={staff}>
       <Link href="/admin/projects" className="text-sm text-muted hover:text-text">
-        ← к проектам
+        {t.back}
       </Link>
 
       {notice ? (
@@ -191,8 +189,8 @@ export default async function ProjectPage({
 
       <h1 className="mt-4 text-xl font-semibold">{project.title}</h1>
       <p className="mt-1 text-sm text-muted">
-        {project.client || "клиент не указан"}
-        {project.owner_name ? ` · ведёт ${project.owner_name}` : ""}
+        {project.client || t.noClient}
+        {project.owner_name ? t.ledBy(project.owner_name) : ""}
       </p>
 
       {/* Задачи по проекту — первыми: это то, что по нему надо сделать
@@ -205,18 +203,19 @@ export default async function ProjectPage({
       <section className="mt-6 rounded-xl border border-line bg-surface px-5 py-4">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-faint">
-            Стадия
-            <HelpHint topic={helpAnchor("/admin/projects", "stages")} label="Кто и зачем двигает стадию" />
+            {t.stage}
+            <HelpHint topic={helpAnchor("/admin/projects", "stages")} label={t.stageHelp} />
           </span>
-          <span className="text-sm">{STAGE_LABEL[project.stage] ?? project.stage}</span>
+          <span className="text-sm">{stageLabel(project.stage, locale)}</span>
           <span className="text-xs text-faint">
-            {days === 0 ? "с сегодняшнего дня" : `${days} дн.`} · с {when(project.stage_since)}
+            {days === 0 ? t.sinceToday : t.days(days)}
+            {t.since(when(project.stage_since, locale))}
           </span>
         </div>
 
         {progress === null ? (
           <p className="mt-3 text-xs text-faint">
-            Стадия вне линии: полосу не рисуем — это не начало и не конец.
+            {t.offLine}
           </p>
         ) : (
           <>
@@ -229,7 +228,7 @@ export default async function ProjectPage({
             <ol className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-faint">
               {STAGES.map((stage) => (
                 <li key={stage} className={stage === project.stage ? "text-text" : undefined}>
-                  {STAGE_LABEL[stage]}
+                  {stageLabel(stage, locale)}
                 </li>
               ))}
             </ol>
@@ -251,15 +250,14 @@ export default async function ProjectPage({
                       : "border-line bg-surface-2 text-muted hover:text-text"
                   }`}
                 >
-                  {STAGE_LABEL[stage] ?? stage}
+                  {stageLabel(stage, locale)}
                 </button>
               </form>
             ))}
           </div>
         ) : (
           <p className="mt-4 border-t border-line-soft pt-4 text-xs text-faint">
-            Стадию двигает админ. Она — обещание клиенту, а не отметка о
-            самочувствии исполнителя.
+            {t.stageByAdmin}
           </p>
         )}
       </section>
@@ -268,13 +266,13 @@ export default async function ProjectPage({
       {/* Стоит перед деньгами намеренно: сумму по договору ставят после
           того, как посчитали порог, а не до. */}
       <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
-        <h2 className="text-xs uppercase tracking-wider text-faint">Смета</h2>
+        <h2 className="text-xs uppercase tracking-wider text-faint">{t.quote}</h2>
 
         {quote ? (
-          <QuoteCard quote={quote} />
+          <QuoteCard quote={quote} locale={locale} />
         ) : (
           <p className="mt-2 text-sm text-muted">
-            Сметы пока нет. Выберите категорию и сохраните — порог, потолок и срок посчитаются сами.
+            {t.noQuote}
           </p>
         )}
 
@@ -283,12 +281,12 @@ export default async function ProjectPage({
             <input type="hidden" name="project" value={project.id} />
 
             <label className="block sm:col-span-2">
-              <span className="text-xs text-faint">Категория</span>
+              <span className="text-xs text-faint">{t.category}</span>
               <select name="category" defaultValue={quoteInput?.category ?? ""} className={`${FIELD} mt-1`}>
                 <option value="" disabled>
-                  — выберите —
+                  {t.choose}
                 </option>
-                {CATEGORY_CHOICES.map((c) => (
+                {categoryChoices(locale).map((c) => (
                   <option key={c.slug} value={c.slug}>
                     {c.title}
                   </option>
@@ -296,18 +294,18 @@ export default async function ProjectPage({
               </select>
               {quoteInput ? null : (
                 <span className="mt-1 block text-xs text-faint">
-                  После сохранения появятся допы этой категории.
+                  {t.extrasAfterSave}
                 </span>
               )}
             </label>
 
             <label className="block">
-              <span className="text-xs text-faint">Обещанный срок, недель</span>
+              <span className="text-xs text-faint">{t.promisedWeeks}</span>
               <input
                 name="weeks"
                 inputMode="numeric"
                 defaultValue={quoteInput?.weeks ?? ""}
-                placeholder={quote?.weeksLow ? `расчётный ${quote.weeksLow}–${quote.weeksHigh}` : ""}
+                placeholder={quote?.weeksLow ? t.estimatedWeeks(quote.weeksLow, quote.weeksHigh ?? quote.weeksLow) : ""}
                 className={`${FIELD} mt-1`}
               />
             </label>
@@ -315,7 +313,7 @@ export default async function ProjectPage({
             {quoteInput
               ? optionsFor(quoteInput.category).map((option) => {
                   const value = quoteInput.selection[option.id];
-                  const label = t(option.label, "ru");
+                  const label = siteText(option.label, locale);
                   if (option.kind === "toggle") {
                     return (
                       <label key={option.id} className="flex items-center gap-2 text-sm">
@@ -335,7 +333,7 @@ export default async function ProjectPage({
                         >
                           {option.choices.map((choice) => (
                             <option key={choice.id} value={choice.id}>
-                              {t(choice.label, "ru")}
+                              {siteText(choice.label, locale)}
                             </option>
                           ))}
                         </select>
@@ -345,7 +343,8 @@ export default async function ProjectPage({
                   return (
                     <label key={option.id} className="block">
                       <span className="text-xs text-faint">
-                        {label} — {t(option.unitLabel, "ru")}, до {option.max}
+                        {label}
+                        {t.upTo(siteText(option.unitLabel, locale), option.max)}
                       </span>
                       <input
                         name={`opt_${option.id}`}
@@ -363,43 +362,43 @@ export default async function ProjectPage({
                 type="submit"
                 className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
               >
-                Сохранить смету
+                {t.saveQuote}
               </button>
               {quoteInput ? (
                 <button type="submit" name="clear" value="1" className="text-xs text-faint hover:text-gold">
-                  убрать смету
+                  {t.clearQuote}
                 </button>
               ) : null}
             </div>
           </form>
         ) : (
-          <p className="mt-3 text-xs text-faint">Смету правит тот, кто ведёт проект, и владелец.</p>
+          <p className="mt-3 text-xs text-faint">{t.quoteWho}</p>
         )}
       </section>
 
       {/* ── Деньги ──────────────────────────────────────────────────── */}
       <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
         <h2 className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-          Деньги
-          <HelpHint topic={helpAnchor("/admin/projects", "card")} label="Смета, сумма, платежи" />
+          {t.money}
+          <HelpHint topic={helpAnchor("/admin/projects", "card")} label={t.moneyHelp} />
         </h2>
 
         <form action={saveMoney} className="mt-3 grid gap-3 sm:grid-cols-4">
           <input type="hidden" name="project" value={project.id} />
 
           <label className="block">
-            <span className="text-xs text-faint">Вид сделки</span>
+            <span className="text-xs text-faint">{t.dealKind}</span>
             <select name="kind" defaultValue={project.kind} disabled={!editsMoney} className={`${FIELD} mt-1`}>
               {DEAL_KINDS.map((kind) => (
                 <option key={kind} value={kind}>
-                  {KIND_TITLE[kind]}
+                  {tr(KIND_TR[kind], locale)}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="block">
-            <span className="text-xs text-faint">Сумма по договору, $</span>
+            <span className="text-xs text-faint">{t.contractAmount}</span>
             <input
               name="amount"
               inputMode="numeric"
@@ -412,23 +411,23 @@ export default async function ProjectPage({
           {isAdmin ? (
             <>
               <label className="block">
-                <span className="text-xs text-faint">Налог, %</span>
+                <span className="text-xs text-faint">{t.taxPercent}</span>
                 <input name="tax" inputMode="numeric" defaultValue={project.tax_percent} className={`${FIELD} mt-1`} />
               </label>
               <label className="block">
-                <span className="text-xs text-faint">Себестоимость разработки, $</span>
+                <span className="text-xs text-faint">{t.devCost}</span>
                 <input
                   name="cost"
                   inputMode="numeric"
                   defaultValue={project.dev_cost_usd ?? ""}
-                  placeholder="после договора"
+                  placeholder={t.afterContract}
                   className={`${FIELD} mt-1`}
                 />
               </label>
             </>
           ) : (
             <p className="text-xs text-faint sm:col-span-2 sm:self-end">
-              Налог и себестоимость вписывает владелец после подписания договора.
+              {t.taxByOwner}
             </p>
           )}
 
@@ -438,13 +437,11 @@ export default async function ProjectPage({
                 type="submit"
                 className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
               >
-                Сохранить
+                {t.save}
               </button>
             ) : (
               <p className="text-xs text-faint">
-                {paid > 0
-                  ? "По проекту уже есть платёж — сумму теперь меняет только владелец."
-                  : "Сумму и вид правит владелец и тот, кто ведёт проект."}
+                {paid > 0 ? t.paidOwnerOnly : t.moneyWho}
               </p>
             )}
           </div>
@@ -454,23 +451,23 @@ export default async function ProjectPage({
           <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-line-soft pt-4 text-sm sm:grid-cols-4">
             {isAdmin ? (
               <div>
-                <dt className="text-xs text-faint">Налог</dt>
+                <dt className="text-xs text-faint">{t.tax}</dt>
                 <dd className="font-mono">{money(taxOf(project))}</dd>
               </div>
             ) : null}
             {isAdmin ? (
             <div>
-              <dt className="text-xs text-faint">Чистая прибыль</dt>
+              <dt className="text-xs text-faint">{t.profit}</dt>
               <dd className={`font-mono ${profit !== null && profit < 0 ? "text-gold" : ""}`}>
                 {money(profit)}
                 {project.dev_cost_usd === null ? (
-                  <span className="ml-2 font-sans text-xs text-gold">без себестоимости</span>
+                  <span className="ml-2 font-sans text-xs text-gold">{t.noCost}</span>
                 ) : null}
               </dd>
             </div>
             ) : null}
             <div>
-              <dt className="text-xs text-faint">Оплачено</dt>
+              <dt className="text-xs text-faint">{t.paid}</dt>
               <dd className="font-mono">
                 {money(paid)}
                 <span
@@ -479,16 +476,16 @@ export default async function ProjectPage({
                   }`}
                 >
                   {project.stage === "cancelled"
-                    ? "проект отменён"
+                    ? t.projectCancelled
                     : state === "earned"
-                      ? "целиком"
-                      : `из ${money(project.amount_usd)}`}
+                      ? t.paidFull
+                      : t.paidOf(money(project.amount_usd))}
                 </span>
               </dd>
             </div>
             {ownerMoney ? (
               <div>
-                <dt className="text-xs text-faint">Остаётся владельцу</dt>
+                <dt className="text-xs text-faint">{t.ownerLeft}</dt>
                 <dd className="font-mono">{money(ownerShare(project, lines))}</dd>
               </div>
             ) : null}
@@ -501,8 +498,8 @@ export default async function ProjectPage({
               <li key={`${a.staff_id}-${a.share}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>{nameOf(a.staff_id)}</span>
                 <span className="text-xs text-faint">
-                  {a.share === "head" ? "руководитель" : "ведёт"} · {a.percent} %
-                  {a.manual ? " · вручную" : " · по грейду"}
+                  {a.share === "head" ? t.shareHead : t.shareLeads} · {a.percent} %
+                  {a.manual ? t.manual : t.byGradeTail}
                 </span>
                 <span className="font-mono">{money(a.amount_usd)}</span>
                 <span
@@ -510,7 +507,7 @@ export default async function ProjectPage({
                     a.state === "earned" ? "text-green" : a.state === "void" ? "text-faint" : "text-gold"
                   }`}
                 >
-                  {ACCRUAL_TITLE[a.state]}
+                  {tr(ACCRUAL_TR[a.state], locale)}
                 </span>
                 {isAdmin ? (
                   // Процент по этой сделке — только закреплённым: строки здесь и
@@ -522,16 +519,16 @@ export default async function ProjectPage({
                       name="percent"
                       inputMode="numeric"
                       defaultValue={a.percent}
-                      aria-label="Процент по этой сделке"
+                      aria-label={t.sharePercentAria}
                       className="w-16 rounded-lg border border-line bg-surface-2 px-2 py-1 text-xs"
                     />
                     <span className="text-xs text-faint">%</span>
                     <button type="submit" className="text-xs text-faint hover:text-green">
-                      задать
+                      {t.setShare}
                     </button>
                     {a.manual ? (
                       <button type="submit" name="reset" value="1" className="text-xs text-faint hover:text-gold">
-                        по грейду
+                        {t.byGrade}
                       </button>
                     ) : null}
                   </form>
@@ -544,15 +541,15 @@ export default async function ProjectPage({
         {/* Партнёр: кто привёл клиента */}
         {isAdmin ? (
           <div className="mt-4 border-t border-line-soft pt-4">
-            <p className="text-xs uppercase tracking-wider text-faint">Партнёр</p>
+            <p className="text-xs uppercase tracking-wider text-faint">{t.partner}</p>
             {partner && partnerLine ? (
               <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                 <span>{partner.name}</span>
                 <span className="font-mono text-xs text-muted">{partner.code}</span>
                 <span className="text-xs text-faint">
-                  {partnerLine.percent} % {partnerLine.model === "turnover" ? "с оборота" : "от прибыли"}
-                  {partnerLine.manual ? " · вручную" : " · по сумме проекта"}
-                  {projectAgency ? ` · агентство «${projectAgency.name}»` : ""}
+                  {partnerLine.percent} % {partnerLine.model === "turnover" ? t.fromTurnover : t.fromProfit}
+                  {partnerLine.manual ? t.manual : t.byAmount}
+                  {projectAgency ? t.agency(projectAgency.name) : ""}
                 </span>
                 <span className="font-mono">{money(partnerLine.amount_usd)}</span>
                 <span
@@ -561,17 +558,17 @@ export default async function ProjectPage({
                   }`}
                 >
                   {partnerLine.void_reason
-                    ? `не засчитано: ${VOID_TITLE[partnerLine.void_reason as VoidReason] ?? partnerLine.void_reason}`
-                    : ACCRUAL_TITLE[partnerLine.state]}
+                    ? t.notCounted(labelOf(partnerVoidDict, partnerLine.void_reason, locale))
+                    : tr(ACCRUAL_TR[partnerLine.state], locale)}
                 </span>
               </p>
             ) : partner ? (
               <p className="mt-2 text-sm">
                 {partner.name} <span className="font-mono text-xs text-muted">{partner.code}</span>
-                <span className="ml-2 text-xs text-faint">начисление появится, когда будет сумма</span>
+                <span className="ml-2 text-xs text-faint">{t.partnerNoAmount}</span>
               </p>
             ) : (
-              <p className="mt-2 text-xs text-faint">Клиент пришёл без партнёрской ссылки.</p>
+              <p className="mt-2 text-xs text-faint">{t.noPartner}</p>
             )}
 
             {isAdmin ? (
@@ -580,9 +577,9 @@ export default async function ProjectPage({
               <form action={savePartner} className="mt-3 grid gap-3 sm:grid-cols-4">
                 <input type="hidden" name="project" value={project.id} />
                 <label className="block">
-                  <span className="text-xs text-faint">Кто привёл</span>
+                  <span className="text-xs text-faint">{t.broughtBy}</span>
                   <select name="partner" defaultValue={project.partner_id ?? ""} className={`${FIELD} mt-1`}>
-                    <option value="">без партнёра</option>
+                    <option value="">{t.withoutPartner}</option>
                     {partners.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name} · {p.code}
@@ -591,20 +588,20 @@ export default async function ProjectPage({
                   </select>
                 </label>
                 <label className="block">
-                  <span className="text-xs text-faint">Процент партнёру</span>
+                  <span className="text-xs text-faint">{t.partnerPercent}</span>
                   <input
                     name="percent"
                     inputMode="numeric"
-                    placeholder="по ступени"
+                    placeholder={t.byTier}
                     defaultValue={project.partner_percent ?? ""}
                     className={`${FIELD} mt-1`}
                   />
                 </label>
                 {partnerAgencies.length ? (
                   <label className="block">
-                    <span className="text-xs text-faint">Заказ агентства</span>
+                    <span className="text-xs text-faint">{t.agencyOrder}</span>
                     <select name="agency" defaultValue={project.partner_agency_id ?? ""} className={`${FIELD} mt-1`}>
-                      <option value="">не агентство</option>
+                      <option value="">{t.notAgency}</option>
                       {partnerAgencies.map((a) => (
                         <option key={a.id} value={a.id}>
                           {a.name} · {partners.find((p) => p.id === a.partner_id)?.name ?? "—"}
@@ -614,11 +611,11 @@ export default async function ProjectPage({
                   </label>
                 ) : null}
                 <label className="block">
-                  <span className="text-xs text-faint">Не засчитывать, причина</span>
+                  <span className="text-xs text-faint">{t.voidReason}</span>
                   <input
                     name="void_reason"
                     maxLength={64}
-                    placeholder="пусто — засчитано"
+                    placeholder={t.voidEmpty}
                     defaultValue={project.partner_void_reason ?? ""}
                     className={`${FIELD} mt-1`}
                   />
@@ -628,7 +625,7 @@ export default async function ProjectPage({
                     type="submit"
                     className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
                   >
-                    Сохранить
+                    {t.save}
                   </button>
                 </div>
               </form>
@@ -638,7 +635,7 @@ export default async function ProjectPage({
 
         {/* Платежи клиента */}
         <div className="mt-4 border-t border-line-soft pt-4">
-          <p className="text-xs uppercase tracking-wider text-faint">Платежи клиента</p>
+          <p className="text-xs uppercase tracking-wider text-faint">{t.payments}</p>
           {payments.length ? (
             <ul className="mt-2 flex flex-col gap-1 text-sm">
               {payments.map((payment) => (
@@ -646,16 +643,16 @@ export default async function ProjectPage({
                   <span className="text-xs text-muted">{day(payment.paid_on)}</span>
                   <span className="font-mono">{money(payment.amount_usd)}</span>
                   <span className="text-xs text-faint">
-                    {PURPOSE_TITLE[payment.purpose]}
+                    {tr(PURPOSE_TR[payment.purpose], locale)}
                     {payment.note ? ` · ${payment.note}` : ""}
-                    {payment.confirmed_name ? ` · подтвердил ${payment.confirmed_name}` : ""}
+                    {payment.confirmed_name ? t.confirmedBy(payment.confirmed_name) : ""}
                   </span>
                   {isAdmin ? (
                     <form action={deletePayment}>
                       <input type="hidden" name="project" value={project.id} />
                       <input type="hidden" name="payment" value={payment.id} />
                       <button type="submit" className="text-xs text-faint hover:text-gold">
-                        удалить
+                        {t.delete}
                       </button>
                     </form>
                   ) : null}
@@ -663,7 +660,7 @@ export default async function ProjectPage({
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-xs text-faint">Платежей пока нет.</p>
+            <p className="mt-2 text-xs text-faint">{t.noPayments}</p>
           )}
 
           {/* Оплату по счёту отметили, а платёж ещё не подтверждён: пока он
@@ -675,10 +672,9 @@ export default async function ProjectPage({
                   key={invoice.id}
                   className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-xs text-gold"
                 >
-                  Счёт № {invoice.number} на {money(Math.round(invoice.amount_usd))} отмечен оплаченным
-                  {invoice.paid_by_name ? ` (${invoice.paid_by_name})` : ""} — платёж ещё не подтверждён.{" "}
+                  {t.awaitingInvoice(invoice.number, money(Math.round(invoice.amount_usd)), invoice.paid_by_name ?? "")}{" "}
                   <Link href={`/admin/contracts/${invoice.contract_id}`} className="underline hover:text-text">
-                    {isAdmin ? "Подтвердить в договоре" : "Открыть договор"}
+                    {isAdmin ? t.confirmInContract : t.openContract}
                   </Link>
                 </li>
               ))}
@@ -689,25 +685,25 @@ export default async function ProjectPage({
             <form action={confirmPayment} className="mt-3 grid gap-3 sm:grid-cols-5">
               <input type="hidden" name="project" value={project.id} />
               <label className="block">
-                <span className="text-xs text-faint">Сумма, $</span>
+                <span className="text-xs text-faint">{t.amountUsd}</span>
                 <input name="amount" required inputMode="numeric" className={`${FIELD} mt-1`} />
               </label>
               <label className="block">
-                <span className="text-xs text-faint">Дата</span>
+                <span className="text-xs text-faint">{t.date}</span>
                 <input name="paid_on" type="date" className={`${FIELD} mt-1`} />
               </label>
               <label className="block">
-                <span className="text-xs text-faint">Назначение</span>
+                <span className="text-xs text-faint">{t.purpose}</span>
                 <select name="purpose" defaultValue="advance" className={`${FIELD} mt-1`}>
                   {PURPOSES.map((purpose) => (
                     <option key={purpose} value={purpose}>
-                      {PURPOSE_TITLE[purpose]}
+                      {tr(PURPOSE_TR[purpose], locale)}
                     </option>
                   ))}
                 </select>
               </label>
               <label className="block">
-                <span className="text-xs text-faint">Заметка</span>
+                <span className="text-xs text-faint">{t.note}</span>
                 <input name="note" maxLength={500} className={`${FIELD} mt-1`} />
               </label>
               <div className="flex items-end">
@@ -715,12 +711,12 @@ export default async function ProjectPage({
                   type="submit"
                   className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
                 >
-                  Записать платёж
+                  {t.recordPayment}
                 </button>
               </div>
             </form>
           ) : (
-            <p className="mt-2 text-xs text-faint">Платежи подтверждает владелец.</p>
+            <p className="mt-2 text-xs text-faint">{t.paymentsByOwner}</p>
           )}
         </div>
       </section>
@@ -728,38 +724,37 @@ export default async function ProjectPage({
       {/* ── Правки ──────────────────────────────────────────────────── */}
       <section className="mt-4 rounded-xl border border-line bg-surface px-5 py-4">
         <h2 className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
-          Данные проекта
-          <HelpHint topic={helpAnchor("/admin/projects", "data")} label="Кто может править" />
+          {t.data}
+          <HelpHint topic={helpAnchor("/admin/projects", "data")} label={t.dataHelp} />
         </h2>
         {isAdmin && ownerLeads ? (
           <p className="mt-3 rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-xs text-gold">
-            Проект ведёте вы — начислений команде по нему нет. Если ведёт сотрудник, выберите его в поле «Ведёт» и
-            сохраните.
+            {t.ownerLeadsWarn}
           </p>
         ) : null}
 
         {!canEditData ? (
           <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-xs text-faint">Ведёт</dt>
+              <dt className="text-xs text-faint">{t.leads}</dt>
               <dd>{project.owner_name ?? "—"}</dd>
             </div>
             <div>
-              <dt className="text-xs text-faint">Клиент</dt>
+              <dt className="text-xs text-faint">{t.client}</dt>
               <dd>{project.client ?? "—"}</dd>
             </div>
             <div>
-              <dt className="text-xs text-faint">Срок</dt>
+              <dt className="text-xs text-faint">{t.deadline}</dt>
               <dd>{project.deadline ?? "—"}</dd>
             </div>
             {project.notes ? (
               <div className="sm:col-span-2">
-                <dt className="text-xs text-faint">Заметки</dt>
+                <dt className="text-xs text-faint">{t.notes}</dt>
                 <dd className="whitespace-pre-line">{project.notes}</dd>
               </div>
             ) : null}
             <p className="text-xs text-faint sm:col-span-2">
-              Правит ведущий проекта, его руководитель и владелец.
+              {t.dataWho}
             </p>
           </dl>
         ) : (
@@ -768,17 +763,17 @@ export default async function ProjectPage({
 
           {isAdmin ? (
             <label className="block sm:col-span-2">
-              <span className="text-xs text-faint">Ведёт — ему идёт начисление по проекту</span>
+              <span className="text-xs text-faint">{t.leadsAccrual}</span>
               <select name="owner" defaultValue={project.owner_staff_id ?? ""} required className={`${FIELD} mt-1`}>
                 {project.owner_staff_id ? null : (
                   <option value="" disabled>
-                    — выберите —
+                    {t.choose}
                   </option>
                 )}
                 {leaders.map((person) => (
                   <option key={person.id} value={person.id}>
                     {person.display_name}
-                    {person.role === "admin" ? " — без начислений команде" : ""}
+                    {person.role === "admin" ? t.noTeamAccrual : ""}
                   </option>
                 ))}
               </select>
@@ -786,22 +781,22 @@ export default async function ProjectPage({
           ) : null}
 
           <label className="block">
-            <span className="text-xs text-faint">Название</span>
+            <span className="text-xs text-faint">{t.title}</span>
             <input name="title" required maxLength={200} defaultValue={project.title} className={`${FIELD} mt-1`} />
           </label>
 
           <label className="block">
-            <span className="text-xs text-faint">Клиент</span>
+            <span className="text-xs text-faint">{t.client}</span>
             <input name="client" maxLength={200} defaultValue={project.client ?? ""} className={`${FIELD} mt-1`} />
           </label>
 
           <label className="block">
-            <span className="text-xs text-faint">Срок</span>
+            <span className="text-xs text-faint">{t.deadline}</span>
             <input name="deadline" type="date" defaultValue={project.deadline ?? ""} className={`${FIELD} mt-1`} />
           </label>
 
           <label className="block sm:col-span-2">
-            <span className="text-xs text-faint">Заметки</span>
+            <span className="text-xs text-faint">{t.notes}</span>
             <textarea name="notes" rows={4} maxLength={4000} defaultValue={project.notes ?? ""} className={`${FIELD} mt-1 resize-y`} />
           </label>
 
@@ -810,7 +805,7 @@ export default async function ProjectPage({
               type="submit"
               className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
             >
-              Сохранить
+              {t.save}
             </button>
           </div>
         </form>
@@ -826,10 +821,10 @@ export default async function ProjectPage({
       <section id="contract" className="mt-8 scroll-mt-24 rounded-2xl border border-line bg-surface px-6 py-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-mono text-[0.7rem] uppercase tracking-[0.25em] text-faint">
-            Договор
+            {t.contract}
           </h2>
           <Link href="/admin/contracts" className="text-xs text-muted hover:text-green">
-            Как это устроено →
+            {t.howItWorks}
           </Link>
         </div>
 
@@ -841,7 +836,7 @@ export default async function ProjectPage({
 
         {voidContracts.length ? (
           <p className="mt-3 text-xs text-faint">
-            Отменены:{" "}
+            {t.voided}{" "}
             {voidContracts.map((c, i) => (
               <span key={c.id}>
                 {i ? ", " : ""}
@@ -858,7 +853,7 @@ export default async function ProjectPage({
             {activeContracts.map((c) => (
               <li key={c.id}>
                 <Link href={`/admin/contracts/${c.id}`} className="text-green hover:underline">
-                  № {c.number} — {CONTRACT_STATUS[c.status] ?? c.status}
+                  № {c.number} — {labelOf(contractStatusDict, c.status, locale)}
                 </Link>
               </li>
             ))}
@@ -867,7 +862,7 @@ export default async function ProjectPage({
           <form action={prepareContract} className="mt-4 grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="project_id" value={project.id} />
             <label className="text-xs text-muted">
-              Дата договора
+              {t.contractDate}
               <input
                 type="date"
                 name="signed_date"
@@ -877,7 +872,7 @@ export default async function ProjectPage({
               />
             </label>
             <label className="text-xs text-muted">
-              Сумма, $
+              {t.amountUsd}
               <input
                 type="number"
                 name="amount"
@@ -889,7 +884,7 @@ export default async function ProjectPage({
               />
             </label>
             <label className="text-xs text-muted sm:col-span-2">
-              Заказчик — полное название
+              {t.clientName}
               <input
                 type="text"
                 name="client_name"
@@ -899,12 +894,12 @@ export default async function ProjectPage({
               />
             </label>
             <label className="text-xs text-muted sm:col-span-2">
-              Адрес и контакт заказчика
+              {t.clientDetails}
               <input
                 type="text"
                 name="client_details"
                 required
-                placeholder="г. Ташкент, ул. …, директор …, почта@…"
+                placeholder={t.clientDetailsPh}
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
               />
             </label>
@@ -912,7 +907,7 @@ export default async function ProjectPage({
                 Номер счёта, набранный в предложении, нельзя ни проверить,
                 ни перенести в платёжку, не перечитывая фразу целиком. */}
             <label className="text-xs text-muted">
-              ИНН или ПИНФЛ заказчика
+              {t.clientTaxId}
               <input
                 type="text"
                 name="client_tax_id"
@@ -923,17 +918,17 @@ export default async function ProjectPage({
               />
             </label>
             <label className="text-xs text-muted">
-              Банк заказчика
+              {t.clientBank}
               <input
                 type="text"
                 name="client_bank_name"
                 required
-                placeholder="АКБ «Капиталбанк», Ташкент"
+                placeholder={t.clientBankPh}
                 className="mt-1 w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-text"
               />
             </label>
             <label className="text-xs text-muted">
-              Расчётный счёт — 20 цифр
+              {t.clientAccount}
               <input
                 type="text"
                 name="client_account"
@@ -944,7 +939,7 @@ export default async function ProjectPage({
               />
             </label>
             <label className="text-xs text-muted">
-              МФО — код банка, 5 цифр
+              {t.clientMfo}
               <input
                 type="text"
                 name="client_mfo"
@@ -955,7 +950,7 @@ export default async function ProjectPage({
               />
             </label>
             <label className="text-xs text-muted sm:col-span-2">
-              Предмет договора — что именно делаем
+              {t.subject}
               <input
                 type="text"
                 name="subject"
@@ -967,13 +962,11 @@ export default async function ProjectPage({
 
             <fieldset className="sm:col-span-2">
               <legend className="text-xs text-muted">
-                Этапы — доли обязаны давать 100%
+                {t.stages}
               </legend>
-              {[
-                { title: "Дизайн", percent: 30, days: 10 },
-                { title: "Разработка", percent: 50, days: 20 },
-                { title: "Запуск", percent: 20, days: 5 },
-              ].map((row, i) => (
+              {/* Названия этапов — заготовка текста договора, а договор
+                  пишется по-русски: они не переводятся (DEFAULT_CONTRACT_STAGES). */}
+              {DEFAULT_CONTRACT_STAGES.map((row, i) => (
                 <div key={i} className="mt-2 grid grid-cols-[1fr_5rem_5rem] gap-2">
                   <input
                     name="stage_title"
@@ -1002,7 +995,7 @@ export default async function ProjectPage({
                 type="submit"
                 className="rounded-lg border border-line bg-surface-2 px-4 py-1.5 text-xs transition hover:border-green/40 hover:text-green"
               >
-                Подготовить договор
+                {t.prepare}
               </button>
             </div>
           </form>
@@ -1012,15 +1005,13 @@ export default async function ProjectPage({
       {project.lead_id ? (
         <p className="mt-4 text-sm">
           <Link href={`/admin/leads/${project.lead_id}`} className="text-blue-soft hover:underline">
-            Лид, из которого вырос проект →
+            {t.fromLead}
           </Link>
         </p>
       ) : null}
 
       <p className="mt-8 max-w-2xl text-xs leading-relaxed text-faint">
-        Каждый переход стадии записан в журнал вместе с тем, откуда и куда, и
-        сколько дней проект простоял на предыдущей. По этим строкам потом видно,
-        где производство встаёт, — а это самый полезный вопрос про сроки.
+        {t.journalNote}
       </p>
     </AdminShell>
   );

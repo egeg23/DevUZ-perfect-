@@ -1,3 +1,5 @@
+import { razborDict } from "@/content/admin-panel/razbor";
+import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import type { ReviewRow } from "@/lib/razbor/store";
 
 /**
@@ -13,20 +15,15 @@ import type { ReviewRow } from "@/lib/razbor/store";
  * снимки, как только они появятся. Но молчать об их отсутствии — значит
  * дать выпустить полразбора, не заметив этого.
  */
-export function ShotState({ shots }: { shots: ReviewRow["shots"] }) {
+export function ShotState({ shots, locale = "ru" }: { shots: ReviewRow["shots"]; locale?: PanelLocale }) {
+  const t = pick(razborDict, locale);
   const missing: string[] = [];
-  if (!shots.before) missing.push("«как есть»");
-  if (!shots.after) missing.push("макета");
+  if (!shots.before) missing.push(t.shotBefore);
+  if (!shots.after) missing.push(t.shotAfter);
 
   if (!missing.length) {
-    return (
-      <span className="font-mono text-[0.7rem] text-green">
-        снимки: есть{shots.findings ? `, по находкам ${shots.findings}` : ""}
-      </span>
-    );
+    return <span className="font-mono text-[0.7rem] text-green">{t.shotsOk(shots.findings)}</span>;
   }
 
-  return (
-    <span className="font-mono text-[0.7rem] text-gold">нет снимка {missing.join(" и ")}</span>
-  );
+  return <span className="font-mono text-[0.7rem] text-gold">{t.noShot(missing.join(t.shotAnd))}</span>;
 }

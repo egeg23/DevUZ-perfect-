@@ -1,4 +1,6 @@
+import { offboardingDict } from "@/content/admin-panel/team";
 import { record } from "@/lib/admin/audit";
+import type { PanelLocale } from "@/lib/admin/i18n";
 import { advanceQueues, requeueLead } from "@/lib/admin/lead-queue-store";
 import type { Staff } from "@/lib/admin/session";
 import { LIVE_TALK } from "@/lib/admin/talk-follows-lead";
@@ -216,19 +218,21 @@ export async function offboardStaff(staffId: string, actor: Staff, ip: string): 
 }
 
 /**
- * Итог словами — для строки на странице «Команда» после отключения.
+ * Итог словами — для строки на странице «Команда» после отключения, на языке
+ * того, кто отключал.
  *
  * Только то, что было: «вернули 0 лидов» — не новость, а шум.
  */
-export function offboardingSummary(o: Offboarding): string {
+export function offboardingSummary(o: Offboarding, locale: PanelLocale = "ru"): string {
+  const t = offboardingDict;
   const parts = [
-    o.leads ? `лидов в работе вернулось в очередь — ${o.leads}` : "",
-    o.talks ? `переписок из касаний передано — ${o.talks}` : "",
-    o.pool ? `неотправленных касаний вернулось в общий пул — ${o.pool}` : "",
-    o.team ? `менеджеров откреплено от него как от руководителя — ${o.team}` : "",
-    o.reminders ? `напоминаний снято — ${o.reminders}` : "",
-    o.transfers ? `просьб о передаче лида закрыто — ${o.transfers}` : "",
-    o.cards ? `карточек лидов убрано из его Telegram — ${o.cards}` : "",
+    o.leads ? t.leads[locale](o.leads) : "",
+    o.talks ? t.talks[locale](o.talks) : "",
+    o.pool ? t.pool[locale](o.pool) : "",
+    o.team ? t.team[locale](o.team) : "",
+    o.reminders ? t.reminders[locale](o.reminders) : "",
+    o.transfers ? t.transfers[locale](o.transfers) : "",
+    o.cards ? t.cards[locale](o.cards) : "",
   ].filter(Boolean);
-  return parts.length ? `${parts.join("; ")}.` : "Незакрытых дел за ним не было.";
+  return parts.length ? `${parts.join("; ")}.` : t.nothing[locale];
 }

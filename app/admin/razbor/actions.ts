@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 
+import { isDeleteWord } from "@/content/admin-panel/razbor";
 import { record } from "@/lib/admin/audit";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { announceRazbors } from "@/lib/razbor/announce";
@@ -99,7 +100,9 @@ export async function publishAction(formData: FormData) {
 
   refresh(result.ok ? result.paths : null);
   if (result.ok) announce();
-  redirect(result.ok ? "/admin/razbor?r=ok" : `/admin/razbor?r=${encodeURIComponent(result.why)}`);
+  // В адрес — код; текст на языке панели подбирает страница
+  // (content/admin-panel/razbor.ts).
+  redirect(result.ok ? "/admin/razbor?r=ok" : `/admin/razbor?r=${result.why}`);
 }
 
 export async function rejectAction(formData: FormData) {
@@ -135,7 +138,7 @@ export async function unpublishAction(formData: FormData) {
   });
 
   refresh(paths);
-  redirect("/admin/razbor?r=снят с публикации");
+  redirect("/admin/razbor?r=unpublished");
 }
 
 /**
@@ -148,11 +151,12 @@ export async function unpublishAction(formData: FormData) {
 export async function deleteAction(formData: FormData) {
   const staff = await owner();
   const id = String(formData.get("razbor") ?? "");
-  const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
+  const confirm = String(formData.get("confirm") ?? "");
 
-  if (confirm !== "удалить") {
-    redirect(`/admin/razbor?r=${encodeURIComponent("Чтобы удалить, впишите рядом слово «удалить».")}`);
-  }
+  // Слово — на языке панели того, кто удаляет: «удалить», «o‘chirish»,
+  // «usuń». Принимается любое из трёх — язык мог смениться между загрузкой
+  // страницы и нажатием.
+  if (!isDeleteWord(confirm)) redirect("/admin/razbor?r=confirm");
 
   const paths = await remove(id);
   await record("razbor.deleted", {
@@ -164,7 +168,7 @@ export async function deleteAction(formData: FormData) {
   });
 
   refresh(paths);
-  redirect("/admin/razbor?r=удалён");
+  redirect("/admin/razbor?r=deleted");
 }
 
 /**
@@ -234,7 +238,7 @@ export async function saveAction(formData: FormData) {
 
   const row = await razborById(id);
   if (!row || !row.ru || !row.uz) {
-    redirect(`/admin/razbor?r=${encodeURIComponent("Разбора уже нет или он без статьи.")}`);
+    redirect("/admin/razbor?r=missing");
   }
 
   const next = {
@@ -249,11 +253,8 @@ export async function saveAction(formData: FormData) {
     (locale) => !next[locale].title || next[locale].findings.length < 3,
   );
   if (thin) {
-    redirect(
-      `/admin/razbor/${id}?r=${encodeURIComponent(
-        `Версия «${thin}»: нужен заголовок и хотя бы три находки.`,
-      )}`,
-    );
+    // Версии нужен заголовок и хотя бы три находки.
+    redirect(`/admin/razbor/${id}?r=thin&d=${thin}`);
   }
 
   const result = await saveArticles(id, next);
@@ -265,9 +266,11 @@ export async function saveAction(formData: FormData) {
     meta: { ok: result.ok },
   });
 
-  if (!result.ok) redirect(`/admin/razbor/${id}?r=${encodeURIComponent(result.why)}`);
+  if (!result.ok) {
+    redirect(`/admin/razbor/${id}?r=${result.why}${result.detail ? `&d=${encodeURIComponent(result.detail)}` : ""}`);
+  }
 
   refresh(result.paths);
   revalidatePath(`/admin/razbor/${id}`);
-  redirect("/admin/razbor?r=правка сохранена");
+  redirect("/admin/razbor?r=saved");
 }

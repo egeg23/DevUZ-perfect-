@@ -30,9 +30,11 @@ export async function publishReleaseAction(formData: FormData) {
   );
 
   revalidatePath("/admin/releases");
+  // В адрес — код причины; в `e` — только данные (слаг, путь, ответ
+  // хранилища). Текст на языке панели подбирает страница.
   redirect(
     result.ok
       ? "/admin/releases?r=ok"
-      : `/admin/releases?r=failed&e=${encodeURIComponent(result.reason)}`,
+      : `/admin/releases?r=${result.reason}${result.detail ? `&e=${encodeURIComponent(result.detail)}` : ""}`,
   );
 }

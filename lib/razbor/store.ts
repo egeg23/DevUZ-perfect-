@@ -491,7 +491,14 @@ export async function razborById(id: string): Promise<ReviewRow | null> {
  */
 export type RazborPaths = { ru: string; uz: string };
 
-export type PublishResult = { ok: true; paths: RazborPaths } | { ok: false; why: string };
+/**
+ * Почему не вышло — кодом: текст на языке панели подбирает страница
+ * (content/admin-panel/razbor.ts). `half` — нет статьи на одном из языков,
+ * публиковать половину нельзя. В `detail` — только ответ базы.
+ */
+export type RazborFailure = { ok: false; why: "offline" | "gone" | "half" | "failed"; detail?: string };
+
+export type PublishResult = { ok: true; paths: RazborPaths } | RazborFailure;
 
 const pathsOf = (row: { slug_ru?: unknown; slug_uz?: unknown }): RazborPaths => ({
   ru: `/ru/razbor/${String(row.slug_ru ?? "")}`,
@@ -513,23 +520,24 @@ const pathsOf = (row: { slug_ru?: unknown; slug_uz?: unknown }): RazborPaths => 
  */
 export async function publish(id: string): Promise<PublishResult> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "offline" };
 
   const { data } = await db
     .from("razbors")
     .select("article_ru, article_uz, slug_ru, slug_uz")
     .eq("id", id)
     .maybeSingle();
-  if (!data) return { ok: false, why: "Разбора уже нет." };
+  if (!data) return { ok: false, why: "gone" };
   if (!data.article_ru || !data.article_uz) {
-    return { ok: false, why: "Нет статьи на одном из языков — публиковать половину нельзя." };
+    // Нет статьи на одном из языков — публиковать половину нельзя.
+    return { ok: false, why: "half" };
   }
 
   const { error } = await db
     .from("razbors")
     .update({ status: "published", published_at: new Date().toISOString() })
     .eq("id", id);
-  return error ? { ok: false, why: "Не записалось." } : { ok: true, paths: pathsOf(data) };
+  return error ? { ok: false, why: "failed" } : { ok: true, paths: pathsOf(data) };
 }
 
 /**
@@ -570,7 +578,7 @@ export async function remove(id: string): Promise<RazborPaths | null> {
   return pathsOf(data);
 }
 
-export type SaveResult = { ok: true; paths: RazborPaths } | { ok: false; why: string };
+export type SaveResult = { ok: true; paths: RazborPaths } | RazborFailure;
 
 /**
  * Правка статьи руками.
@@ -589,10 +597,10 @@ export async function saveArticles(
   next: { ru: RazborArticle; uz: RazborArticle },
 ): Promise<SaveResult> {
   const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна." };
+  if (!db) return { ok: false, why: "offline" };
 
   const { data } = await db.from("razbors").select("slug_ru, slug_uz").eq("id", id).maybeSingle();
-  if (!data) return { ok: false, why: "Разбора уже нет." };
+  if (!data) return { ok: false, why: "gone" };
 
   const { error } = await db
     .from("razbors")
@@ -608,7 +616,7 @@ export async function saveArticles(
     })
     .eq("id", id);
 
-  return error ? { ok: false, why: `Не записалось: ${error.message}` } : { ok: true, paths: pathsOf(data) };
+  return error ? { ok: false, why: "failed", detail: error.message } : { ok: true, paths: pathsOf(data) };
 }
 
 /** Отказ хранится с причиной: иначе смена вернётся к этому сайту снова. */

@@ -140,7 +140,7 @@ test("отчёт: владелец не в счёте, нули на месте,
   assert.equal(danil.views, 7);
   assert.equal(danil.actions, 1);
   assert.equal(danil.activeDays, 2);
-  assert.deepEqual(danil.top, ["Касания"]);
+  assert.deepEqual(danil.top.map((l) => l.ru), ["Касания"]);
   const madina = report.persons.find((p) => p.id === "m2")!;
   assert.equal(madina.logins, 1);
   assert.equal(madina.actions, 0, "вход посчитан как действие");

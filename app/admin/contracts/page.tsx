@@ -1,7 +1,10 @@
 import Link from "next/link";
 
 import { SectionHelpLink } from "@/components/admin/help-link";
+import { PanelLocaleProvider } from "@/components/admin/panel-locale";
+import { contractErrorDict, contractsPageDict } from "@/content/admin-panel/contracts";
 import { requireStaff } from "@/lib/admin/guard";
+import { pick } from "@/lib/admin/i18n";
 import { approvesContract } from "@/lib/admin/contracts";
 import { signatureExists } from "@/lib/admin/signature";
 import { uploadSignature } from "@/app/admin/contracts/actions";
@@ -21,42 +24,50 @@ export default async function ContractsPage({
   searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const staff = await requireStaff();
+  const locale = staff.panel_locale;
+  const t = pick(contractsPageDict, locale);
+  const errors = pick(contractErrorDict, locale);
   const { saved, error } = await searchParams;
+  // Отказ — кодом (lib/admin/signature.ts); старая ссылка с текстом — как есть.
+  const errorText = error
+    ? error in errors && typeof errors[error as keyof typeof errors] === "string"
+      ? (errors[error as keyof typeof errors] as string)
+      : /^[a-z_]+$/.test(error)
+        ? errors.failed
+        : error
+    : null;
   const canApprove = approvesContract(staff.role);
   const hasSignature = await signatureExists();
 
+  // Своей шапки (AdminShell) у договоров нет, поэтому язык для клиентских
+  // кнопок — «?» и «Как пользоваться разделом» — ставится здесь.
   return (
+    <PanelLocaleProvider locale={locale}>
     <div className="space-y-8">
       <div>
         {/* Своей шапки у договоров нет — это страницы-документы, — поэтому
             кнопка инструкции стоит здесь, а не в общем каркасе. */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold">Договоры</h1>
+          <h1 className="text-2xl font-semibold">{t.title}</h1>
           <SectionHelpLink />
         </div>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Договор готовится в карточке проекта — блок «Договор». Подготовить и
-          проверить может любой из команды. Подтвердить может только владелец —
-          подтверждение и есть момент, когда под документом появляется подпись.
+          {t.intro}
         </p>
       </div>
 
       {canApprove ? (
         <section className="rounded-2xl border border-line bg-surface px-6 py-5">
-          <h2 className="font-semibold">Подпись</h2>
+          <h2 className="font-semibold">{t.signature}</h2>
           <p className="mt-1 text-sm text-muted">
-            PNG с прозрачным фоном. Накладывается поверх линии подписи и
-            показывается только в подтверждённых договорах — у черновика её нет
-            в документе физически, а не спрятана стилями.
+            {t.signatureNote}
           </p>
 
           <p className="mt-3 text-sm">
             {hasSignature ? (
-              <span className="text-green">Подпись загружена</span>
+              <span className="text-green">{t.signatureLoaded}</span>
             ) : (
-              <span className="text-amber-500">
-                Подписи нет. Подтверждённый договор напечатается без неё.
-              </span>
+              <span className="text-amber-500">{t.noSignature}</span>
             )}
           </p>
 
@@ -72,50 +83,43 @@ export default async function ContractsPage({
               type="submit"
               className="rounded-xl bg-green px-4 py-2 text-sm font-semibold text-ink transition hover:bg-white"
             >
-              {hasSignature ? "Заменить" : "Загрузить"}
+              {hasSignature ? t.replace : t.upload}
             </button>
           </form>
 
-          {saved ? <p className="mt-2 text-sm text-green">Сохранено.</p> : null}
-          {error ? <p className="mt-2 text-sm text-amber-500">{decodeURIComponent(error)}</p> : null}
+          {saved ? <p className="mt-2 text-sm text-green">{t.saved}</p> : null}
+          {errorText ? <p className="mt-2 text-sm text-amber-500">{errorText}</p> : null}
         </section>
       ) : null}
 
       <section className="rounded-2xl border border-line bg-surface px-6 py-5 text-sm leading-relaxed text-muted">
-        <h2 className="font-semibold text-text">Что защищает этот договор</h2>
+        <h2 className="font-semibold text-text">{t.protectsTitle}</h2>
         <ul className="mt-3 space-y-2">
           <li>
-            <b className="text-text">Споры идут в арбитраж, а не в суд.</b> Это
-            главное условие: оно меняет не аргументы, а того, кто их слушает.
+            <b className="text-text">{t.arbitrationHead}</b> {t.arbitrationBody}
           </li>
           <li>
-            <b className="text-text">Ответственность ограничена полученным.</b>{" "}
-            Даже проигранный спор не может стоить больше, чем пришло по договору.
+            <b className="text-text">{t.liabilityHead}</b> {t.liabilityBody}
           </li>
           <li>
-            <b className="text-text">Упущенная выгода исключена.</b> Именно ею
-            раздувают иск до сумм, которых никто не видел.
+            <b className="text-text">{t.lostProfitHead}</b> {t.lostProfitBody}
           </li>
           <li>
-            <b className="text-text">Молчание заказчика — это приёмка.</b> Пять
-            рабочих дней без ответа, и этап принят.
+            <b className="text-text">{t.silenceHead}</b> {t.silenceBody}
           </li>
           <li>
-            <b className="text-text">Права на код — после полной оплаты.</b> До
-            неё использование результата нарушает наши права.
+            <b className="text-text">{t.rightsHead}</b> {t.rightsBody}
           </li>
         </ul>
         <p className="mt-4 text-xs text-faint">
-          Документ не проверен юристом. До проверки его стоит показывать
-          заказчику как есть, но арбитражную оговорку нужно согласовать
-          отдельно: у неё есть формальные требования, и ошибка в формулировке
-          делает её недействительной — то есть возвращает спор в суд.
+          {t.lawyerNote}
         </p>
       </section>
 
       <Link href="/admin/projects" className="inline-block text-sm text-green hover:underline">
-        ← К проектам
+        {t.toProjects}
       </Link>
     </div>
+    </PanelLocaleProvider>
   );
 }

@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 import { protoNicheByKey } from "@/content/proto/models";
 import { requireAdmin } from "@/lib/admin/guard";
 import { collectFacts, measureImage } from "@/lib/proto/collect";
-import { wheelProblems } from "@/lib/proto/facts";
+import { wheelToken } from "@/content/admin-panel/proto";
+import { wheelIssues } from "@/lib/proto/facts";
 import { parseServices } from "@/lib/proto/form";
 import { markSent, saveProto } from "@/lib/proto/store";
 
@@ -24,8 +25,13 @@ import { markSent, saveProto } from "@/lib/proto/store";
  * случая, когда на сайте этого нет или аудитор ошибся.
  */
 
-function back(message: string): never {
-  redirect(`/admin/proto?r=${encodeURIComponent(message)}`);
+/**
+ * Ответ — кодом, текст на языке панели подбирает страница
+ * (content/admin-panel/proto.ts). В `d` — только данные: ответ сайта, ключ
+ * ниши, коды недостающего или претензий к снимку.
+ */
+function back(code: string, detail?: string): never {
+  redirect(`/admin/proto?r=${code}${detail ? `&d=${encodeURIComponent(detail)}` : ""}`);
 }
 
 function field(form: FormData, name: string): string | null {
@@ -40,16 +46,16 @@ export async function buildAction(formData: FormData) {
   const niche = String(formData.get("niche") ?? "");
   const services = parseServices(String(formData.get("services") ?? ""));
 
-  if (!url) back("Не указан сайт клиента");
-  if (!protoNicheByKey(niche)) back("Не выбрана ниша");
-  if (services.length < 3) back("Нужно хотя бы три услуги — по одной в строке");
+  if (!url) back("no_url");
+  if (!protoNicheByKey(niche)) back("no_niche");
+  if (services.length < 3) back("few_services");
 
   const collected = await collectFacts({
     url,
     niche,
     locale: String(formData.get("locale") ?? "ru") === "uz" ? "uz" : "ru",
   });
-  if ("error" in collected) back(`Сайт не разобрался: ${collected.error}`);
+  if ("error" in collected) back("collect", collected.error);
 
   // Перебивки поверх того, что нашёл аудитор. Пустое поле ничего не затирает:
   // «не заполнил» и «хочу стереть» — разные намерения, и второе на этой форме
@@ -76,19 +82,19 @@ export async function buildAction(formData: FormData) {
   const wheelUrl = field(formData, "wheel");
   if (wheelUrl) {
     const measured = await measureImage(wheelUrl);
-    if (!measured) back("Снимок для трюка не открылся или это не картинка");
-    const bad = wheelProblems(measured);
-    if (bad.length) back(`Снимок для трюка: ${bad.join("; ")}`);
+    if (!measured) back("wheel_open");
+    const bad = wheelIssues(measured);
+    if (bad.length) back("wheel", bad.map(wheelToken).join(","));
     facts.wheel = measured;
   }
 
   const saved = await saveProto({ facts, by: staff, prospectId: field(formData, "prospect") });
-  if (!saved.ok) back(saved.why);
+  if (!saved.ok) back(saved.why, saved.detail);
 
   revalidatePath("/admin/proto");
-  if (saved.problems.length) {
-    back(`Собрано, но отправлять нельзя: ${saved.problems.map((problem) => problem.text).join(" ")}`);
-  }
+  // Что именно не так, видно у прототипа в списке: претензии проверки
+  // лежат в базе вместе с ним.
+  if (saved.problems.length) back("draft");
   redirect("/admin/proto?r=ok");
 }
 
@@ -99,6 +105,6 @@ export async function sentAction(formData: FormData) {
 
   const token = await markSent(id, staff);
   revalidatePath("/admin/proto");
-  if (!token) back("Отправить можно только готовый прототип");
+  if (!token) back("not_ready");
   redirect("/admin/proto?r=ok");
 }

@@ -46,19 +46,28 @@ export async function signatureBytes(): Promise<ArrayBuffer | null> {
  * рядом. Проверяем сигнатуру файла, а не расширение: расширение переименует
  * кто угодно, а восемь байт заголовка — нет.
  */
-export async function saveSignature(bytes: ArrayBuffer): Promise<{ ok: boolean; why?: string }> {
+/** Отказ — кодом: текст на языке панели в content/admin-panel/contracts.ts. */
+export type SignatureFail = "not_png" | "too_big" | "storage" | "failed";
+
+export async function saveSignature(bytes: ArrayBuffer): Promise<{ ok: boolean; why?: SignatureFail }> {
   const head = new Uint8Array(bytes.slice(0, 8));
   const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
   if (head.length < 8 || PNG_MAGIC.some((b, i) => head[i] !== b)) {
-    return { ok: false, why: "Нужен файл PNG" };
+    return { ok: false, why: "not_png" };
   }
-  if (bytes.byteLength > MAX_SIGNATURE_BYTES) return { ok: false, why: "Файл больше 2 МБ" };
+  if (bytes.byteLength > MAX_SIGNATURE_BYTES) return { ok: false, why: "too_big" };
 
   const db = serviceClient();
-  if (!db) return { ok: false, why: "Хранилище недоступно" };
+  if (!db) return { ok: false, why: "storage" };
 
   const { error } = await db.storage
     .from(BUCKET)
     .upload(PATH, bytes, { contentType: "image/png", upsert: true });
-  return error ? { ok: false, why: error.message } : { ok: true };
+  if (error) {
+    // Текст ошибки хранилища — в лог, а не на экран: он английский и
+    // ничего не говорит тому, кто загружает подпись.
+    console.error("signature: не сохранил подпись", error.message);
+    return { ok: false, why: "failed" };
+  }
+  return { ok: true };
 }

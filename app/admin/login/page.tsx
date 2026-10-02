@@ -1,5 +1,9 @@
+import { cookies } from "next/headers";
+
 import { signIn } from "./actions";
+import { loginDict } from "@/content/admin-panel/login";
 import { company } from "@/content/company";
+import { PANEL_LANG_COOKIE, panelLocale, pick } from "@/lib/admin/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -15,23 +19,19 @@ export default async function LoginPage({
   searchParams: Promise<{ t?: string; e?: string }>;
 }) {
   const { t: token, e: error } = await searchParams;
+  // Сотрудника ещё нет — язык из куки-зеркала, без неё русский.
+  const t = pick(loginDict, panelLocale((await cookies()).get(PANEL_LANG_COOKIE)?.value));
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-faint">
         DevUz Studio
       </p>
-      <h1 className="mt-3 text-2xl font-semibold">Вход в панель</h1>
+      <h1 className="mt-3 text-2xl font-semibold">{t.title}</h1>
 
       {error ? (
         <p className="mt-6 rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">
-          {error === "3"
-            ? "Слишком много попыток. Подождите десять минут."
-            : error === "2"
-              ? "База недоступна — войти сейчас нельзя. Попробуйте через минуту."
-              : error === "4"
-                ? "Этим переходом уже входили или он просрочен. Нажмите кнопку в Telegram ещё раз — она выдаёт новый."
-                : "Ссылка не сработала: она одноразовая и живёт 15 минут. Запросите новую."}
+          {error === "3" ? t.tooMany : error === "2" ? t.offline : error === "4" ? t.spent : t.broken}
         </p>
       ) : null}
 
@@ -42,11 +42,9 @@ export default async function LoginPage({
             type="submit"
             className="w-full rounded-xl bg-green px-5 py-3 text-sm font-semibold text-ink transition hover:bg-green-dim"
           >
-            Войти
+            {t.signIn}
           </button>
-          <p className="mt-3 text-xs text-faint">
-            Ссылка сгорит после нажатия.
-          </p>
+          <p className="mt-3 text-xs text-faint">{t.burns}</p>
         </form>
       ) : (
         <>
@@ -60,12 +58,12 @@ export default async function LoginPage({
             href={`https://t.me/${company.telegram}?start=login`}
             className="mt-8 block w-full rounded-xl bg-green px-5 py-3 text-center text-sm font-semibold text-ink transition hover:bg-green-dim"
           >
-            Получить ссылку в Telegram
+            {t.getLink}
           </a>
           <p className="mt-3 text-xs text-faint">
-            Откроется чат с ботом — он пришлёт ссылку, она живёт 15 минут. Если чат уже открыт,
-            отправьте{" "}
-            <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-text">/login</code>.
+            {t.hintBefore}{" "}
+            <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-text">/login</code>
+            {t.hintAfter}
           </p>
         </>
       )}
