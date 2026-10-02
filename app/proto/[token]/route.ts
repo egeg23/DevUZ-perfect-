@@ -4,7 +4,8 @@ import { tellManager } from "@/lib/admin/outreach-talk-store";
 import { SESSION_COOKIE } from "@/lib/admin/return-to";
 import { looksLikeAccessToken } from "@/lib/store/access";
 import { fromPanel, isPreviewFetch, openedText } from "@/lib/proto/opened";
-import { markOpened, protoPage } from "@/lib/proto/store";
+import { logView, markOpened, protoPage } from "@/lib/proto/store";
+import { ipFromHeaders } from "@/lib/qualify/limiter";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,8 +38,14 @@ export async function GET(
   // см. lib/proto/opened. Первое настоящее открытие прототипа из касания —
   // строка тому, кто касание ведёт.
   if (!isPreviewFetch(request.headers.get("user-agent")) && !fromPanel(request.headers.get("cookie"), SESSION_COOKIE)) {
+    // Журнал показа — доказательство, что клиент видел макет (условия,
+    // раздел 5). Адрес — тем же способом, что у ограничителя запросов.
+    const ip = ipFromHeaders(request.headers);
+    const userAgent = request.headers.get("user-agent");
+    const referer = request.headers.get("referer");
     after(async () => {
       try {
+        await logView(page.id, { ip, userAgent, referer });
         const seen = await markOpened(page.id);
         if (seen?.first && seen.prospectId) await tellManager(seen.prospectId, openedText(seen.name));
       } catch (error) {
