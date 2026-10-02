@@ -1,4 +1,6 @@
+import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { PROTOTYPE_HOURS } from "@/lib/admin/outreach";
+import { siteUrl } from "@/lib/seo";
 
 /**
  * «Хотят прототип» — кто первый взял, того и лид. Чистая часть: тексты,
@@ -52,6 +54,37 @@ export function clientWords(text: string, max = 300): string {
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
+/**
+ * Клиенту — сразу после его «да»: макет готовим, вот условия.
+ *
+ * Владелец, 03.10.2026: «После подтверждения клиентом согласия на получение
+ * макета высылаем ссылку на условие, которое акцептируется автоматически.
+ * Ссылка не требует явного согласия, но предоставляется для ознакомления».
+ *
+ * Поэтому здесь нет вопроса «согласны?» — только то, что макет даётся на
+ * этих условиях, и где их прочитать. Принимаются они действиями клиента
+ * после этого сообщения (раздел 5 условий): ответ о проекте, получение или
+ * открытие макета. Срок в часах не называем — его обещало первое письмо, и
+ * второе обещание с другой цифрой клиенту ни к чему.
+ *
+ * Язык — по словам клиента: условия есть на всех трёх.
+ */
+export function protoTermsText(lang: "ru" | "uz" | "en"): string {
+  const url = `${siteUrl}/${lang}/${MOCKUP_TERMS_PATH}`;
+  switch (lang) {
+    case "uz":
+      return `Qabul qilindi — siz uchun bepul maket tayyorlayapmiz. Tayyor bo'lishi bilan havolasini yuboramiz.\n\nMaket DevUz Studio shartlari asosida taqdim etiladi, ular bilan tanishib chiqing: ${url}`;
+    case "en":
+      return `Noted — we are preparing a free mock-up for you and will send the link as soon as it is ready.\n\nThe mock-up is provided under DevUz Studio terms, please read them here: ${url}`;
+    default:
+      return `Принято — готовим для вас бесплатный макет. Пришлём ссылку, как только он будет готов.\n\nМакет предоставляется на условиях DevUz Studio, ознакомьтесь с ними: ${url}`;
+  }
+}
+
+/** Строка команде: клиенту уже ответили и дали условия — повторять не надо. */
+export const PROTO_TERMS_NOTE =
+  "Клиенту сам ушёл ответ «готовим макет» со ссылкой на условия предоставления макета — повторять её не нужно. Если переписка идёт не в Telegram, этот ответ ждёт в карточке касания: отправьте его сами.";
+
 /** Пора ли отдавать прототип всем: автор касания не взял за отведённые минуты. */
 export function protoBroadcastDue(requestedAt: Date, now: Date): boolean {
   return now.getTime() - requestedAt.getTime() >= PROTO_FIRST_MINUTES * 60_000;
@@ -72,6 +105,8 @@ export function protoFirstText(
     `Клиент: «${esc(clientWords(input.words))}»`,
     "",
     `Это ваш клиент — первые ${PROTO_FIRST_MINUTES} минут прототип только у вас: нажмите «${PROTO_BUTTON}». Не возьмёте до ${tashkentClock(until)} — он уйдёт всей команде, и лид получит тот, кто нажмёт первым. Собрать и прислать ссылку — за ${PROTOTYPE_HOURS} часов с момента, как взяли.`,
+    "",
+    PROTO_TERMS_NOTE,
   ].join("\n");
 }
 
@@ -83,6 +118,8 @@ export function protoAnnounceText(input: { host: string; words: string }, esc: (
     `Клиент: «${esc(clientWords(input.words))}»`,
     "",
     `Автор касания не взял за ${PROTO_FIRST_MINUTES} минут. В письме обещали прототип за ${PROTOTYPE_HOURS} часов — отсчёт с той минуты, как его возьмут. Кто первым нажмёт «${PROTO_BUTTON}», того и лид: переписка и клиент переходят к тому, кто нажал.`,
+    "",
+    PROTO_TERMS_NOTE,
   ].join("\n");
 }
 

@@ -16,6 +16,7 @@ import {
   PROTO_BUTTON,
   PROTO_CALLBACK,
   PROTO_FIRST_MINUTES,
+  PROTO_TERMS_NOTE,
   clientWords,
   protoAnnounceText,
   protoBroadcastDue,
@@ -25,6 +26,7 @@ import {
   protoMovedText,
   protoTakenLabel,
   protoTakerText,
+  protoTermsText,
   tashkentClock,
 } from "@/lib/admin/prototype-claim";
 import { esc } from "@/lib/qualify/telegram";
@@ -114,4 +116,31 @@ test("бот: кнопка только в личке, у остальных г�
 
   const talk = read("lib/admin/outreach-talk-store.ts");
   assert.match(talk, /verdict === "proto" \? await announcePrototype\(/);
+});
+
+test("клиенту после «да» — сразу условия макета: для ознакомления, без вопроса «согласны?»", () => {
+  // Владелец, 03.10.2026: «Ссылка на правила предоставления макета не требует
+  // явного согласия, но предоставляется для ознакомления после подтверждения
+  // начала разработки бесплатного макета».
+  const ru = protoTermsText("ru");
+  assert.match(ru, /готовим для вас бесплатный макет/);
+  assert.match(ru, /Макет предоставляется на условиях DevUz Studio, ознакомьтесь с ними: https:\/\/[^/\s]+\/ru\/mockup-terms$/);
+  assert.match(protoTermsText("uz"), /bepul maket[\s\S]*shartlari asosida taqdim etiladi[\s\S]*\/uz\/mockup-terms$/);
+  assert.match(protoTermsText("en"), /free mock-up[\s\S]*provided under DevUz Studio terms[\s\S]*\/en\/mockup-terms$/);
+  for (const lang of ["ru", "uz", "en"] as const) {
+    // Не спрашиваем согласия и не обещаем новый срок в часах.
+    assert.doesNotMatch(protoTermsText(lang), /соглас|rozimisiz|agree|\d+\s*(час|soat|hour)/i);
+  }
+
+  // Уходит один раз — вместе с первой рассылкой команде, на языке клиента.
+  const store = read("lib/admin/outreach-talk-store.ts");
+  assert.match(
+    store,
+    /if \(announced\) \{\s*await queueReply\(\{[\s\S]*?body: protoTermsText\(detectLang\(body\)\),\s*\}\);\s*\}/,
+  );
+  // Команда знает, что ссылка ушла, и не шлёт её второй раз.
+  const asked = new Date("2026-10-02T13:00:00Z");
+  assert.ok(protoFirstText({ host: "mebel.uz", words: "да", requestedAt: asked }, esc).endsWith(PROTO_TERMS_NOTE));
+  assert.ok(protoAnnounceText({ host: "mebel.uz", words: "да" }, esc).endsWith(PROTO_TERMS_NOTE));
+  assert.match(PROTO_TERMS_NOTE, /условия предоставления макета/);
 });

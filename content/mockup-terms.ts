@@ -21,19 +21,28 @@ import type { Locale } from "@/lib/i18n";
  * прототипе (lib/proto/booking.ts) и на каждой витрине проекта, а скрытые
  * отпечатки (раздел 6) показывают, чей именно макет оказался у клиента.
  *
+ * Владелец, там же, вторым шагом: «После подтверждения клиентом согласия на
+ * получение макета высылаем ссылку на условие, которое акцептируется
+ * автоматически… не требует явного согласия, но предоставляется для
+ * ознакомления». Раздел 5 так и устроен: ссылка уходит сама сразу после «да»
+ * (protoTermsText, lib/admin/prototype-claim.ts), а принимаются условия не
+ * ответом «согласен» — молчание акцептом не считается, — а действиями после
+ * неё: переписка о проекте, получение или открытие макета. Отказ — только до
+ * получения: иначе «взял и передумал» обнулял бы условия.
+ *
  * Юрист текст не читал — как и оферту. Решение владельца; суд вправе снизить
  * неустойку, явно несоразмерную нарушению, это стоит помнить в претензии.
  *
  * Меняя текст по существу — меняйте MOCKUP_TERMS_VERSION и `updated`.
  */
-export const MOCKUP_TERMS_VERSION = "2026-10-03";
+export const MOCKUP_TERMS_VERSION = "2026-10-03.2";
 
 /** Путь страницы на сайте — без языка: `/{locale}/mockup-terms`. */
 export const MOCKUP_TERMS_PATH = "mockup-terms";
 
 const ru: LegalDoc = {
-  title: "Условия использования макетов, прототипов и концепций",
-  updated: "Редакция от 3 октября 2026 года",
+  title: "Условия предоставления и использования макетов, прототипов и концепций",
+  updated: "Редакция от 3 октября 2026 года, № 2",
   intro:
     "Это публичная оферта индивидуального предпринимателя MAKSIMOV EGOR ANDREEVICH (DevUz Studio). Она обязательна для каждого, кому студия показала, передала или прислала ссылку на макет, прототип, концепцию или витрину проекта — в том числе бесплатно и до заключения договора. Если вы не согласны с условиями, не открывайте макет и сообщите об этом студии.",
   sections: [
@@ -70,10 +79,13 @@ const ru: LegalDoc = {
       ],
     },
     {
-      heading: "5. Как принимаются условия",
+      heading: "5. Как направляются и принимаются условия",
       body: [
-        "Клиент принимает эти условия полностью и без оговорок (акцепт) с момента первого из действий: переписки с Исполнителем в любом мессенджере (Telegram, WhatsApp и других), в которой указан сайт или домен Клиента; открытия Макета по ссылке, полученной от Исполнителя; запроса или получения Макета в любой форме.",
-        "Отдельного подписания не требуется. Переписка, журнал открытия ссылок и иные записи Исполнителя подтверждают акцепт и его дату.",
+        "После того как Клиент подтвердил, что хочет получить бесплатный Макет, Исполнитель направляет ему ссылку на эти условия в той же переписке. Ссылка направляется для ознакомления: отдельного согласия, подписи или ответа не требуется. Клиент, которому направлена ссылка, считается ознакомленным с условиями.",
+        "Бесплатный Макет предоставляется только на этих условиях. Условия считаются принятыми Клиентом полностью и без оговорок (акцепт путём совершения действий) с момента первого из действий, совершённых после направления ссылки: продолжения переписки с Исполнителем о проекте Клиента, в том числе с указанием его сайта или домена; получения Макета или открытия его по ссылке; использования Макета в любой форме.",
+        "Клиент, не согласный с условиями, сообщает об этом в той же переписке до получения Макета — тогда Исполнитель Макет не готовит и не направляет. Отказ, заявленный после получения Макета, не освобождает Клиента от обязательств по этим условиям.",
+        "Если Макет показан без предварительного запроса Клиента, например ссылкой в первом сообщении, ссылка на эти условия размещается на самом Макете, и они принимаются его открытием.",
+        "Переписка, журнал открытия ссылок и иные записи Исполнителя подтверждают направление ссылки, ознакомление Клиента, акцепт и их даты.",
       ],
     },
     {
@@ -102,8 +114,8 @@ const ru: LegalDoc = {
 };
 
 const en: LegalDoc = {
-  title: "Terms of use for mock-ups, prototypes and concepts",
-  updated: "Version of 3 October 2026",
+  title: "Terms for providing and using mock-ups, prototypes and concepts",
+  updated: "Version No. 2 of 3 October 2026",
   intro:
     "This is a public offer by the individual entrepreneur MAKSIMOV EGOR ANDREEVICH (DevUz Studio). It binds everyone to whom the studio has shown, handed over or sent a link to a mock-up, prototype, concept or project showcase — including free of charge and before any contract. If you do not agree with these terms, do not open the mock-up and let the studio know.",
   sections: [
@@ -140,10 +152,13 @@ const en: LegalDoc = {
       ],
     },
     {
-      heading: "5. How the terms are accepted",
+      heading: "5. How the terms are sent and accepted",
       body: [
-        "The Client accepts these terms in full and without reservation from the first of the following: correspondence with the Contractor in any messenger (Telegram, WhatsApp and others) in which the Client's website or domain is mentioned; opening the Mock-up through a link received from the Contractor; requesting or receiving the Mock-up in any form.",
-        "No separate signature is required. Correspondence, link-opening logs and other records of the Contractor confirm acceptance and its date.",
+        "After the Client has confirmed that it wants to receive a free Mock-up, the Contractor sends it a link to these terms in the same correspondence. The link is sent for information: no separate consent, signature or reply is required. A Client to whom the link has been sent is deemed to be familiar with the terms.",
+        "A free Mock-up is provided only on these terms. The terms are deemed accepted by the Client in full and without reservation (acceptance by conduct) from the first of the following actions taken after the link was sent: continuing the correspondence with the Contractor about the Client's project, including with mention of its website or domain; receiving the Mock-up or opening it through a link; using the Mock-up in any form.",
+        "A Client who does not agree with the terms says so in the same correspondence before receiving the Mock-up — the Contractor then does not prepare or send it. A refusal declared after receiving the Mock-up does not release the Client from its obligations under these terms.",
+        "If a Mock-up is shown without the Client's prior request, for example as a link in the first message, a link to these terms is placed on the Mock-up itself, and they are accepted by opening it.",
+        "Correspondence, link-opening logs and other records of the Contractor confirm that the link was sent, that the Client became familiar with the terms, the acceptance and their dates.",
       ],
     },
     {
@@ -172,8 +187,8 @@ const en: LegalDoc = {
 };
 
 const uz: LegalDoc = {
-  title: "Maketlar, prototiplar va konsepsiyalardan foydalanish shartlari",
-  updated: "2026-yil 3-oktabr tahriri",
+  title: "Maketlar, prototiplar va konsepsiyalarni taqdim etish va ulardan foydalanish shartlari",
+  updated: "2026-yil 3-oktabr tahriri, № 2",
   intro:
     "Bu yakka tartibdagi tadbirkor MAKSIMOV EGOR ANDREEVICH (DevUz Studio) ning ommaviy ofertasi. U studiya maket, prototip, konsepsiya yoki loyiha vitrinasini ko‘rsatgan, topshirgan yoki havolasini yuborgan har bir kishi uchun majburiy — shu jumladan bepul va shartnoma tuzilgunga qadar. Shartlarga rozi bo‘lmasangiz, maketni ochmang va bu haqda studiyaga xabar bering.",
   sections: [
@@ -210,10 +225,13 @@ const uz: LegalDoc = {
       ],
     },
     {
-      heading: "5. Shartlar qanday qabul qilinadi",
+      heading: "5. Shartlar qanday yuboriladi va qabul qilinadi",
       body: [
-        "Mijoz ushbu shartlarni to‘liq va izohsiz (aksept) quyidagi harakatlardan birinchisi sodir bo‘lgan paytdan qabul qiladi: Ijrochi bilan istalgan messenjerda (Telegram, WhatsApp va boshqalar) Mijozning sayti yoki domeni ko‘rsatilgan yozishma; Ijrochidan olingan havola orqali Maketni ochish; Maketni istalgan shaklda so‘rash yoki olish.",
-        "Alohida imzolash talab qilinmaydi. Yozishma, havolalarni ochish jurnali va Ijrochining boshqa yozuvlari akseptni va uning sanasini tasdiqlaydi.",
+        "Mijoz bepul Maket olishni xohlashini tasdiqlagandan so‘ng, Ijrochi unga o‘sha yozishmada ushbu shartlarga havola yuboradi. Havola tanishish uchun yuboriladi: alohida rozilik, imzo yoki javob talab qilinmaydi. Havola yuborilgan Mijoz shartlar bilan tanishgan hisoblanadi.",
+        "Bepul Maket faqat ushbu shartlar asosida taqdim etiladi. Shartlar Mijoz tomonidan havola yuborilgandan keyin sodir etilgan quyidagi harakatlardan birinchisi paytidan boshlab to‘liq va izohsiz qabul qilingan hisoblanadi (harakatlar orqali aksept): Mijoz loyihasi bo‘yicha, shu jumladan uning sayti yoki domeni ko‘rsatilgan holda Ijrochi bilan yozishmani davom ettirish; Maketni olish yoki havola orqali ochish; Maketdan istalgan shaklda foydalanish.",
+        "Shartlarga rozi bo‘lmagan Mijoz bu haqda Maketni olgunga qadar o‘sha yozishmada xabar beradi — unda Ijrochi Maketni tayyorlamaydi va yubormaydi. Maket olingandan keyin bildirilgan rad etish Mijozni ushbu shartlar bo‘yicha majburiyatlardan ozod qilmaydi.",
+        "Agar Maket Mijozning oldindan so‘rovisiz, masalan, birinchi xabardagi havola orqali ko‘rsatilgan bo‘lsa, ushbu shartlarga havola Maketning o‘zida joylashtiriladi va ular Maketni ochish bilan qabul qilinadi.",
+        "Yozishma, havolalarni ochish jurnali va Ijrochining boshqa yozuvlari havola yuborilganini, Mijoz tanishganini, akseptni va ularning sanalarini tasdiqlaydi.",
       ],
     },
     {
@@ -242,8 +260,8 @@ const uz: LegalDoc = {
 };
 
 const zh: LegalDoc = {
-  title: "样稿、原型和概念的使用条款",
-  updated: "2026年10月3日版",
+  title: "样稿、原型和概念的提供与使用条款",
+  updated: "2026年10月3日第2版",
   intro:
     "本文件是个体经营者 MAKSIMOV EGOR ANDREEVICH（DevUz Studio）的公开要约。凡工作室向其展示、交付或发送样稿、原型、概念或项目展示页链接的任何人，均受本条款约束——包括免费提供以及在签订合同之前。如您不同意本条款，请勿打开样稿并告知工作室。",
   sections: [
@@ -280,10 +298,13 @@ const zh: LegalDoc = {
       ],
     },
     {
-      heading: "5. 条款的接受方式",
+      heading: "5. 条款的发送与接受",
       body: [
-        "客户自下列行为中最先发生者之时起，完全且无保留地接受本条款（承诺）：在任何即时通讯工具（Telegram、WhatsApp 等）中与执行方进行提及客户网站或域名的通信；通过从执行方获得的链接打开样稿；以任何形式索取或接收样稿。",
-        "无需另行签字。执行方的通信记录、链接打开日志及其他记录可证明承诺及其日期。",
+        "客户确认希望获得免费样稿后，执行方在同一通信中向其发送本条款的链接。链接供客户知悉：无需另行同意、签字或回复。已收到链接的客户视为已知悉本条款。",
+        "免费样稿仅依本条款提供。客户自收到链接后实施下列行为中最先发生者之时起，视为完全且无保留地接受本条款（以行为承诺）：继续与执行方就客户项目进行通信，包括提及其网站或域名；接收样稿或通过链接打开样稿；以任何形式使用样稿。",
+        "不同意本条款的客户应在接收样稿之前于同一通信中告知——执行方随即不制作也不发送样稿。在接收样稿之后提出的拒绝，不免除客户依本条款承担的义务。",
+        "如样稿是在客户事先未请求的情况下展示的，例如通过第一条消息中的链接，则本条款链接置于样稿本身之上，客户打开样稿即视为接受。",
+        "执行方的通信记录、链接打开日志及其他记录可证明链接的发送、客户的知悉、承诺及其日期。",
       ],
     },
     {
@@ -312,8 +333,8 @@ const zh: LegalDoc = {
 };
 
 const uk: LegalDoc = {
-  title: "Умови використання макетів, прототипів і концепцій",
-  updated: "Редакція від 3 жовтня 2026 року",
+  title: "Умови надання та використання макетів, прототипів і концепцій",
+  updated: "Редакція № 2 від 3 жовтня 2026 року",
   intro:
     "Це публічна оферта фізичної особи-підприємця MAKSIMOV EGOR ANDREEVICH (DevUz Studio). Вона обов’язкова для кожного, кому студія показала, передала або надіслала посилання на макет, прототип, концепцію чи вітрину проєкту — зокрема безкоштовно і до укладення договору. Якщо ви не згодні з умовами, не відкривайте макет і повідомте про це студію.",
   sections: [
@@ -350,10 +371,13 @@ const uk: LegalDoc = {
       ],
     },
     {
-      heading: "5. Як приймаються умови",
+      heading: "5. Як надсилаються і приймаються умови",
       body: [
-        "Клієнт приймає ці умови повністю і без застережень (акцепт) з моменту першої з дій: листування з Виконавцем у будь-якому месенджері (Telegram, WhatsApp та інших), у якому зазначено сайт або домен Клієнта; відкриття Макета за посиланням, отриманим від Виконавця; запиту або отримання Макета в будь-якій формі.",
-        "Окремого підписання не потрібно. Листування, журнал відкриття посилань та інші записи Виконавця підтверджують акцепт і його дату.",
+        "Після того як Клієнт підтвердив, що хоче отримати безкоштовний Макет, Виконавець надсилає йому посилання на ці умови в тому самому листуванні. Посилання надсилається для ознайомлення: окремої згоди, підпису чи відповіді не потрібно. Клієнт, якому надіслано посилання, вважається ознайомленим з умовами.",
+        "Безкоштовний Макет надається лише на цих умовах. Умови вважаються прийнятими Клієнтом повністю і без застережень (акцепт шляхом вчинення дій) з моменту першої з дій, вчинених після надсилання посилання: продовження листування з Виконавцем щодо проєкту Клієнта, зокрема із зазначенням його сайту або домену; отримання Макета або відкриття його за посиланням; використання Макета в будь-якій формі.",
+        "Клієнт, який не згоден з умовами, повідомляє про це в тому самому листуванні до отримання Макета — тоді Виконавець Макет не готує і не надсилає. Відмова, заявлена після отримання Макета, не звільняє Клієнта від зобов’язань за цими умовами.",
+        "Якщо Макет показано без попереднього запиту Клієнта, наприклад посиланням у першому повідомленні, посилання на ці умови розміщується на самому Макеті, і вони приймаються його відкриттям.",
+        "Листування, журнал відкриття посилань та інші записи Виконавця підтверджують надсилання посилання, ознайомлення Клієнта, акцепт і їх дати.",
       ],
     },
     {
@@ -382,8 +406,8 @@ const uk: LegalDoc = {
 };
 
 const pl: LegalDoc = {
-  title: "Warunki korzystania z makiet, prototypów i koncepcji",
-  updated: "Wersja z 3 października 2026 r.",
+  title: "Warunki udostępniania i korzystania z makiet, prototypów i koncepcji",
+  updated: "Wersja nr 2 z 3 października 2026 r.",
   intro:
     "To oferta publiczna przedsiębiorcy MAKSIMOV EGOR ANDREEVICH (DevUz Studio). Wiąże każdego, komu studio pokazało, przekazało lub wysłało link do makiety, prototypu, koncepcji lub wizytówki projektu — także bezpłatnie i przed zawarciem umowy. Jeśli nie zgadzasz się z warunkami, nie otwieraj makiety i poinformuj o tym studio.",
   sections: [
@@ -420,10 +444,13 @@ const pl: LegalDoc = {
       ],
     },
     {
-      heading: "5. Jak przyjmuje się warunki",
+      heading: "5. Jak warunki są przesyłane i przyjmowane",
       body: [
-        "Klient przyjmuje te warunki w całości i bez zastrzeżeń (akceptacja) z chwilą pierwszego z działań: korespondencji z Wykonawcą w dowolnym komunikatorze (Telegram, WhatsApp i inne), w której wskazano stronę lub domenę Klienta; otwarcia Makiety przez link otrzymany od Wykonawcy; zapytania o Makietę lub jej otrzymania w dowolnej formie.",
-        "Odrębny podpis nie jest wymagany. Korespondencja, dziennik otwarć linków i inne zapisy Wykonawcy potwierdzają akceptację i jej datę.",
+        "Po tym, jak Klient potwierdził, że chce otrzymać bezpłatną Makietę, Wykonawca wysyła mu link do tych warunków w tej samej korespondencji. Link jest wysyłany do zapoznania się: odrębna zgoda, podpis ani odpowiedź nie są wymagane. Klienta, któremu wysłano link, uważa się za zapoznanego z warunkami.",
+        "Bezpłatna Makieta jest udostępniana wyłącznie na tych warunkach. Warunki uważa się za przyjęte przez Klienta w całości i bez zastrzeżeń (akceptacja przez działanie) z chwilą pierwszego z działań podjętych po wysłaniu linku: kontynuowania korespondencji z Wykonawcą o projekcie Klienta, w tym ze wskazaniem jego strony lub domeny; otrzymania Makiety lub otwarcia jej przez link; korzystania z Makiety w dowolnej formie.",
+        "Klient, który nie zgadza się z warunkami, informuje o tym w tej samej korespondencji przed otrzymaniem Makiety — wtedy Wykonawca nie przygotowuje jej ani nie wysyła. Odmowa zgłoszona po otrzymaniu Makiety nie zwalnia Klienta z obowiązków wynikających z tych warunków.",
+        "Jeśli Makietę pokazano bez wcześniejszej prośby Klienta, na przykład linkiem w pierwszej wiadomości, link do tych warunków umieszcza się na samej Makiecie, a warunki przyjmuje się przez jej otwarcie.",
+        "Korespondencja, dziennik otwarć linków i inne zapisy Wykonawcy potwierdzają wysłanie linku, zapoznanie się Klienta, akceptację i ich daty.",
       ],
     },
     {
