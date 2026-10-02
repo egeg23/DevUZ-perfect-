@@ -109,6 +109,17 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "google.client_saved": { ru: "сохранил Client ID Google для статистики", uz: "statistika uchun Google Client ID’ni saqladi", pl: "zapisał Client ID Google dla statystyk" },
   "google.connected": { ru: "подключил Google Analytics входом через Google", uz: "Google Analytics’ni Google orqali kirib uladi", pl: "podłączył Google Analytics przez logowanie Google" },
   "google.property_set": { ru: "вписал номер ресурса Google Analytics", uz: "Google Analytics resurs raqamini kiritdi", pl: "wpisał numer usługi Google Analytics" },
+  "partner.client_claimed": { ru: "партнёр закрепил клиента по ИНН", uz: "hamkor mijozni STIR bo‘yicha biriktirdi", pl: "partner przypisał klienta po NIP/INN" },
+  "lead.inn_set": { ru: "вписал ИНН компании в карточку лида", uz: "lid kartochkasiga kompaniya STIRini yozdi", pl: "wpisał NIP/INN firmy w karcie leada" },
+  "partner.client_cancelled": { ru: "отменил закрепление клиента партнёра", uz: "hamkor mijozining biriktirilishini bekor qildi", pl: "anulował przypisanie klienta partnera" },
+  "partner.payout_auto": { ru: "завелась выплата партнёру с оборота", uz: "hamkorga aylanmadan to‘lov yaratildi", pl: "utworzono wypłatę dla partnera od obrotu" },
+  "partner.accumulate_set": { ru: "партнёр включил или выключил копилку", uz: "hamkor jamg‘armani yoqdi yoki o‘chirdi", pl: "partner włączył lub wyłączył skarbonkę" },
+  "task.created": { ru: "поставил задачу", uz: "vazifa qo‘ydi", pl: "utworzył zadanie" },
+  "task.taken": { ru: "взял задачу в работу", uz: "vazifani ishga oldi", pl: "przyjął zadanie do realizacji" },
+  "task.done": { ru: "отметил задачу сделанной", uz: "vazifani bajarilgan deb belgiladi", pl: "oznaczył zadanie jako wykonane" },
+  "task.failed": { ru: "отметил задачу несделанной", uz: "vazifani bajarilmagan deb belgiladi", pl: "oznaczył zadanie jako niewykonane" },
+  "task.moved": { ru: "перенёс срок задачи", uz: "vazifa muddatini ko‘chirdi", pl: "przesunął termin zadania" },
+  "task.cancelled": { ru: "отменил задачу", uz: "vazifani bekor qildi", pl: "anulował zadanie" },
 };
 
 /**

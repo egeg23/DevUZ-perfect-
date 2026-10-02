@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { DashboardHome } from "@/components/admin/dashboard-home";
 import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
+import { TasksBlock } from "@/components/admin/tasks-block";
 import { LeadTable } from "@/components/admin/lead-table";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
 import { homeDict, priorityFilterDict, statusFilterDict } from "@/content/admin-panel/home";
@@ -84,6 +85,10 @@ export default async function AdminHome({
     ga?: string;
     gd?: string;
     gp?: string;
+    t?: string;
+    tg?: string;
+    tf?: string;
+    tp?: string;
   }>;
 }) {
   const staff = await requireStaff();
@@ -129,7 +134,7 @@ export default async function AdminHome({
 
   const base = (patch: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    const merged = { ...params, ...patch, page: undefined, p: undefined, d: undefined };
+    const merged = { ...params, ...patch, page: undefined, p: undefined, d: undefined, t: undefined, tg: undefined, tf: undefined, tp: undefined };
     for (const [key, value] of Object.entries(merged)) {
       if (value) next.set(key, value);
     }
@@ -284,6 +289,13 @@ export default async function AdminHome({
           {ownerTab === "today" ? (
             <>
               {pendingBlock}
+              <TasksBlock
+            staff={staff}
+            notice={params.t}
+            group={params.tg}
+            projectFilter={params.tf}
+            prefillProject={params.tp}
+          />
               <DashboardHome staff={staff} planNotice={params.p} section="today" />
             </>
           ) : null}
@@ -294,6 +306,15 @@ export default async function AdminHome({
       ) : (
         <>
           {pendingBlock}
+          {/* Задачи — до дашборда: поручение с утренним сроком важнее
+              недельных цифр. */}
+          <TasksBlock
+            staff={staff}
+            notice={params.t}
+            group={params.tg}
+            projectFilter={params.tf}
+            prefillProject={params.tp}
+          />
           {/* Личный дашборд: у каждой роли свой. Стоит выше общего списка —
               сначала то, что требует действия сегодня, потом всё остальное. */}
           <DashboardHome staff={staff} planNotice={params.p} />
