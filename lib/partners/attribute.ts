@@ -1,7 +1,8 @@
 import { partnerCopy } from "@/content/partner-bot";
-import { DEFAULT_MODEL, PERK_TITLE, agencyUntilDay, isPayoutModel, partnerPercent } from "@/lib/partners/rules";
+import { DEFAULT_MODEL, PERK_TITLE, agencyUntilDay, clientUntilDay, isPayoutModel, partnerPercent } from "@/lib/partners/rules";
 import {
   attributeAgencyLead,
+  attributeClientLead,
   attributeLead,
   notifyPartner,
   partnerById,
@@ -40,26 +41,50 @@ export async function attributeAndNotify(
     return { partner: fromAgency.partner, link: null, reason: null };
   }
 
-  if (!attribution.code) return null;
+  const result = attribution.code
+    ? await attributeLead(leadId, attribution.code, {
+        refAt: attribution.at ? new Date(attribution.at * 1000) : null,
+        telegramId: attribution.telegramId ?? null,
+        chatId: attribution.chatId ?? null,
+        contactHandle: lead.contact_handle ?? null,
+        company: lead.company ?? null,
+      })
+    : null;
 
-  const result = await attributeLead(leadId, attribution.code, {
-    refAt: attribution.at ? new Date(attribution.at * 1000) : null,
-    telegramId: attribution.telegramId ?? null,
-    chatId: attribution.chatId ?? null,
-    contactHandle: lead.contact_handle ?? null,
-    company: lead.company ?? null,
-  });
-  if (!result) return null;
-
-  if (!result.reason) {
+  if (result && !result.reason) {
     const who = lead.company?.trim() ? `«${lead.company.trim()}»` : "новый клиент";
     const perk = result.link && result.link.perk !== "none" ? `\nОбещанный бонус: ${PERK_TITLE[result.link.perk]}.` : "";
     await notifyPartner(
       result.partner,
       `🤝 По вашей ссылке пришёл ${who}.${perk}\nКогда проект будет оплачен целиком, начисление появится в /ref.`,
     );
+    return result;
   }
-  return result;
+
+  // Последним — клиент, которого партнёр закрепил вручную по ИНН. Ссылка и
+  // агентство, если сработали, важнее; не засчитанная ссылка — нет.
+  const fromClient = await attributeClientAndNotify(leadId);
+  return fromClient ?? result;
+}
+
+/**
+ * Лид — от клиента, закреплённого партнёром вручную? Привязать и сказать
+ * партнёру — без контактов клиента, как и про остальные каналы.
+ *
+ * Отдельно от `attributeAndNotify`, потому что срабатывает и позже заявки:
+ * менеджер вписал ИНН в карточку лида — и лид узнан.
+ */
+export async function attributeClientAndNotify(leadId: string): Promise<Attribution | null> {
+  const hit = await attributeClientLead(leadId);
+  if (!hit) return null;
+  const term = hit.first
+    ? `Это первая заявка от него — его заказы засчитываются вам 12 месяцев, до ${clientUntilDay(hit.client)}.`
+    : `Его заказы засчитываются вам до ${clientUntilDay(hit.client)}.`;
+  await notifyPartner(
+    hit.partner,
+    `🧾 Пришла заявка от закреплённого вами клиента «${esc(hit.client.name)}». ${term} Этапы — в кабинете: /cabinet.`,
+  );
+  return { partner: hit.partner, link: null, reason: null };
 }
 
 /**

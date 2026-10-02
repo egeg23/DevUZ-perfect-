@@ -174,13 +174,13 @@ test("отчёт: поток — хвостом, в «из» не входит",
   assert.equal(touchesText(11), "11 касаний");
   assert.equal(touchesText(22), "22 касания");
   assert.equal(
-    reportLine({ name: "Данил", target: 5, done: 3, skipped: 0, short: 0, stream: 4 }),
-    "Данил — 3 из 5 · поток: 4 касания",
+    reportLine({ name: "Данил", target: 5, done: 3, skipped: 0, short: 0, stream: 4, touches: 7 }),
+    "Данил — 7 касаний (поток 4) · порция 3 из 5",
   );
-  assert.equal(reportLine({ name: "Мадина", target: 5, done: 5, skipped: 0, short: 0 }), "Мадина — 5 из 5 ✅");
+  assert.equal(reportLine({ name: "Мадина", target: 5, done: 5, skipped: 0, short: 0, touches: 5 }), "Мадина — 5 касаний · порция 5 из 5 ✅");
   assert.equal(
-    reportLine({ name: "Алексей", target: 0, done: 0, skipped: 0, short: 0, stream: 2 }),
-    "Алексей — порции не было · поток: 2 касания",
+    reportLine({ name: "Алексей", target: 0, done: 0, skipped: 0, short: 0, stream: 2, touches: 2 }),
+    "Алексей — 2 касания (поток 2) · порции не было",
   );
 });
 
@@ -261,10 +261,10 @@ test("объявление: руководителям и менеджерам, 
   assert.equal(newsWindow(new Date("2026-10-03T06:00:00Z")), false);
 });
 
-test("объявление: у каждого — своё, и всё про новые кнопки", () => {
+test("объявление: у каждого — своё, и всё про новые кнопки", async () => {
   const news = NEWS[0];
-  const manager = news.text("manager");
-  const head = news.text("head");
+  const manager = (await news.text("manager")) ?? "";
+  const head = (await news.text("head")) ?? "";
   for (const text of [manager, head]) {
     assert.ok(text.length < 4096, "Telegram не примет сообщение длиннее 4096");
     assert.match(text, /«🙅 Клиент отказался» и «🔇 Игнорирует»/);

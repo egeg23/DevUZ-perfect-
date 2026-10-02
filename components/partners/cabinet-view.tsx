@@ -10,6 +10,14 @@ import {
   PAYOUT_MODELS,
   agencyCounts,
   agencyUntilDay,
+  clientCounts,
+  clientUntilDay,
+  nextPoolTier,
+  poolAmount,
+  poolProjects,
+  tierPercent,
+  MAX_CLIENTS_PER_MONTH,
+  tashkentMonth,
   canSwitchModel,
   nextModelSwitch,
   TARGETS,
@@ -20,7 +28,7 @@ import {
 } from "@/lib/partners/rules";
 import type { PromoMaterial } from "@/lib/partners/promo";
 import { promoCaption, promoFileUrl, promoKind, promoShape, promoSize } from "@/lib/partners/promo-rules";
-import type { Partner, PartnerAgency, PartnerSummary, Referral } from "@/lib/partners/store";
+import type { Partner, PartnerAgency, PartnerClient, PartnerSummary, Referral } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
 /**
@@ -38,6 +46,8 @@ export type CabinetActions = {
   requestPayout: (formData: FormData) => Promise<void>;
   switchModel: (formData: FormData) => Promise<void>;
   requestAgency: (formData: FormData) => Promise<void>;
+  requestClient: (formData: FormData) => Promise<void>;
+  setAccumulate: (formData: FormData) => Promise<void>;
 };
 
 const CARD = "rounded-xl border border-white/12 bg-white/[0.03] px-5 py-5";
@@ -65,6 +75,7 @@ export function CabinetView({
   summary,
   referrals,
   agencies,
+  clients = [],
   media = [],
   activity,
   result,
@@ -77,6 +88,8 @@ export function CabinetView({
   summary: PartnerSummary;
   referrals: Referral[];
   agencies: PartnerAgency[];
+  /** Клиенты, закреплённые вручную по ИНН. */
+  clients?: PartnerClient[];
   /** Промо-материалы и адрес превью (файл с нашего сервера, только вошедшим). */
   media?: { material: PromoMaterial; preview: string | null }[];
   activity: { day: string; clicks: number; leads: number }[];
@@ -94,6 +107,13 @@ export function CabinetView({
   const canRequest = open && !pending && summary.balance.available >= MIN_PAYOUT_USD && Boolean(partner.requisites);
   const switchable = canSwitchModel(partner.model_changed_at, now);
   const nextSwitch = nextModelSwitch(partner.model_changed_at, now);
+  const month = tashkentMonth(now);
+  // Копилка: оплаченные и ещё не выплаченные проекты, ступень — по их сумме.
+  const pool = poolProjects(summary.projects, summary.accruals, partner);
+  const poolTotal = poolAmount(pool);
+  const poolRate = tierPercent(poolTotal, partner.payout_model);
+  const poolNext = nextPoolTier(poolTotal, partner.payout_model);
+  const claimedThisMonth = clients.filter((c) => tashkentMonth(new Date(c.created_at)) === month).length;
 
 
   return (
@@ -338,6 +358,52 @@ export function CabinetView({
         </section>
 
         {/* ── Выплата ────────────────────────────────────────────── */}
+        {/* ── Копилка ─────────────────────────────────────────────── */}
+        {partner.percent_override === null ? (
+          <section id="pool" className={`mt-12 scroll-mt-28 ${CARD}`}>
+            <form action={actions.setAccumulate} className="flex items-center justify-between gap-4">
+              <input type="hidden" name="l" value={locale} />
+              <input type="hidden" name="on" value={partner.accumulate ? "0" : "1"} />
+              <span>
+                <span className="block font-display text-lg font-semibold">{t.poolTitle}</span>
+                <span className="block text-sm text-muted">{t.poolToggle}</span>
+              </span>
+              {/* Тумблер как в iPhone: кнопка отправляет форму с обратным значением. */}
+              <button
+                type="submit"
+                role="switch"
+                aria-checked={partner.accumulate}
+                aria-label={t.poolToggle}
+                className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
+                  partner.accumulate ? "bg-green" : "bg-white/20"
+                }`}
+              >
+                <span
+                  className={`absolute top-1 size-6 rounded-full bg-white shadow transition-all ${
+                    partner.accumulate ? "left-7" : "left-1"
+                  }`}
+                />
+              </button>
+            </form>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted">{t.poolLead}</p>
+            {partner.accumulate ? (
+              <p className="mt-3 text-sm">
+                {pool.length ? (
+                  <>
+                    <span className="text-green">{t.poolState(money(locale, poolTotal), poolRate)}</span>{" "}
+                    <span className="text-muted">
+                      {poolNext ? t.poolNext(money(locale, poolNext.at - poolTotal), poolNext.percent) : t.poolTop}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-muted">{t.poolEmpty}</span>
+                )}
+              </p>
+            ) : null}
+            {partner.accumulate ? <p className="mt-2 text-xs text-faint">{t.poolOffNote}</p> : null}
+          </section>
+        ) : null}
+
         <section id="payout" className="mt-12 grid scroll-mt-28 gap-4 lg:grid-cols-2">
           <div className={CARD}>
             <h2 className="font-display text-2xl font-semibold">{t.payoutTitle}</h2>
@@ -444,6 +510,92 @@ export function CabinetView({
               <button type="submit" className={BUTTON}>
                 {t.agencyAdd}
               </button>
+            </div>
+          </form>
+        </section>
+
+        {/* ── Клиенты, закреплённые вручную ─────────────────────── */}
+        <section id="claims" className="mt-12 scroll-mt-28">
+          <h2 className="font-display text-2xl font-semibold">{t.claimsTitle}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t.claimsLead}</p>
+          {clients.length ? (
+            <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+              {clients.map((c) => {
+                const live = clientCounts(c, now);
+                return (
+                  <li key={c.id} className={`${CARD} py-4`}>
+                    <p className="font-medium">{c.name}</p>
+                    <p className="mt-0.5 font-mono text-xs text-muted">
+                      {c.inn}
+                      {c.contact_name ? ` · ${c.contact_name}` : ""}
+                    </p>
+                    <p
+                      className={`mt-2 text-xs ${
+                        c.status === "cancelled" || !live
+                          ? "text-faint"
+                          : c.first_lead_at
+                            ? "text-green"
+                            : "text-gold"
+                      }`}
+                    >
+                      {c.status === "cancelled"
+                        ? t.clientCancelled(c.cancel_note)
+                        : !live
+                          ? t.clientExpired
+                          : c.first_lead_at
+                            ? t.clientActive(clientUntilDay(c))
+                            : t.clientWaiting(clientUntilDay(c))}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-faint">{t.claimsEmpty}</p>
+          )}
+          <form action={actions.requestClient} className={`mt-4 grid gap-4 sm:grid-cols-2 ${CARD}`}>
+            <input type="hidden" name="l" value={locale} />
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientName}
+              <input name="name" required maxLength={120} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientInn}
+              <input
+                name="inn"
+                required
+                inputMode="numeric"
+                pattern="[0-9 \-]{9,15}"
+                maxLength={15}
+                placeholder={t.clientInnHint}
+                className={INPUT}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientContactName}
+              <input name="contact_name" maxLength={120} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientPhone}
+              <input name="phone" type="tel" maxLength={40} placeholder="+998 90 123 45 67" className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientTelegram}
+              <input name="telegram" maxLength={80} placeholder="@username" className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm">
+              {t.clientWebsite}
+              <input name="website" maxLength={200} className={INPUT} />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm sm:col-span-2">
+              {t.clientNote}
+              <input name="note" maxLength={500} placeholder={t.clientNoteHint} className={INPUT} />
+            </label>
+            <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
+              <button type="submit" className={BUTTON} disabled={claimedThisMonth >= MAX_CLIENTS_PER_MONTH}>
+                {t.clientAdd}
+              </button>
+              <span className="text-xs text-faint">{t.claimsLimit(claimedThisMonth, MAX_CLIENTS_PER_MONTH)}</span>
             </div>
           </form>
         </section>
@@ -593,6 +745,14 @@ export function resultText(t: CabinetCopy, code: string): { ok: boolean; text: s
     return t.modelResult[key] ? { ok: key === "ok", text: t.modelResult[key] } : null;
   }
   if (code === "media_gone") return { ok: false, text: t.mediaGone };
+  if (code.startsWith("pool_")) {
+    const key = code.slice(5) as keyof CabinetCopy["poolResult"];
+    return t.poolResult[key] ? { ok: key !== "failed", text: t.poolResult[key] } : null;
+  }
+  if (code.startsWith("claim_")) {
+    const key = code.slice(6) as keyof CabinetCopy["clientResult"];
+    return t.clientResult[key] ? { ok: key === "ok", text: t.clientResult[key] } : null;
+  }
   if (code.startsWith("agency_")) {
     const key = code.slice(7) as keyof CabinetCopy["agencyResult"];
     return t.agencyResult[key] ? { ok: key === "ok", text: t.agencyResult[key] } : null;
@@ -616,6 +776,7 @@ function ReferralRow({ x, t, locale, mainLabel }: { x: Referral; t: CabinetCopy;
   else if (x.accrual && x.accrual.amount_usd > 0) {
     const amount = money(locale, x.accrual.amount_usd);
     share = x.accrual.state === "earned" ? t.shareEarned(amount) : x.accrual.state === "frozen" ? t.shareFrozen(amount) : "—";
+    if (x.accrual.boosted) share += ` · ${t.poolMark} ${x.accrual.percent} %`;
   }
   const stageTone =
     x.stage === "paid" ? "text-green" : x.stage === "signed" ? "text-text" : x.stage === "lost" ? "text-faint" : "text-muted";
@@ -628,7 +789,7 @@ function ReferralRow({ x, t, locale, mainLabel }: { x: Referral; t: CabinetCopy;
         {x.who ?? t.unnamed}
       </td>
       <td data-label={t.colFrom} className="px-4 py-3 text-muted">
-        {x.agencyName ? t.viaAgency(x.agencyName) : (x.linkLabel ?? mainLabel)}
+        {x.agencyName ? t.viaAgency(x.agencyName) : x.clientName ? t.viaClient(x.clientName) : (x.linkLabel ?? mainLabel)}
       </td>
       <td data-label={t.colStage} className={`px-4 py-3 ${stageTone}`}>
         {t.stages[x.stage]}

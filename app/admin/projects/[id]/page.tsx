@@ -40,6 +40,7 @@ import {
 } from "@/lib/admin/finance";
 import { optionsFor } from "@/content/calculator";
 import { requireStaff } from "@/lib/admin/guard";
+import { ProjectTasksBlock } from "@/components/admin/tasks-block";
 import { pick, tr, type Msg, type Tr } from "@/lib/admin/i18n";
 import { categoryChoices, quoteFor } from "@/lib/admin/quote";
 import { t as siteText } from "@/lib/i18n";
@@ -86,7 +87,7 @@ export default async function ProjectPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ r?: string; contract?: string; detail?: string }>;
+  searchParams: Promise<{ r?: string; contract?: string; detail?: string; t?: string }>;
 }) {
   const staff = await requireStaff();
   const locale = staff.panel_locale;
@@ -94,7 +95,7 @@ export default async function ProjectPage({
   const results = pick(projectResultDict, locale);
   const money = (usd: number | null) => formatMoney(usd, locale);
   const { id } = await params;
-  const { r, contract: contractError, detail: contractDetail } = await searchParams;
+  const { r, contract: contractError, detail: contractDetail, t: taskNotice } = await searchParams;
 
   const project = await projectById(id);
   if (!project) notFound();
@@ -191,6 +192,12 @@ export default async function ProjectPage({
         {project.client || t.noClient}
         {project.owner_name ? t.ledBy(project.owner_name) : ""}
       </p>
+
+      {/* Задачи по проекту — первыми: это то, что по нему надо сделать
+          сейчас. Поставить новую — на главной, с этим проектом в форме. */}
+      <div className="mt-6">
+        <ProjectTasksBlock staff={staff} projectId={project.id} notice={taskNotice} />
+      </div>
 
       {/* ── Стадия ──────────────────────────────────────────────────── */}
       <section className="mt-6 rounded-xl border border-line bg-surface px-5 py-4">

@@ -79,6 +79,10 @@ export const DETAIL_COLUMNS = [
   "auto_reminder",
   "contact_revealed_at",
   "contact_revealed_by",
+  // ИНН компании и закрепление партнёром — по ним лид узнаётся как клиент
+  // партнёра (lib/partners/store.ts, attributeClientLead).
+  "client_inn",
+  "partner_client_id",
   "brief",
 ].join(", ");
 
@@ -130,6 +134,10 @@ export type LeadDetail = LeadRow & {
   contact_revealed_by: string | null;
   /** Бриф с витрины структурой — есть только у лидов с витрины. */
   brief: Brief | null;
+  /** ИНН (СТИР) компании клиента: 9–12 цифр. */
+  client_inn: string | null;
+  /** Клиент, которого партнёр закрепил вручную по ИНН. */
+  partner_client_id: string | null;
 };
 
 export const PRIORITIES = ["hot", "warm", "nurture", "archive"] as const;

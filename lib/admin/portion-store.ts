@@ -13,18 +13,22 @@ import {
   outcomeOf,
   quotaOf,
   replacementsDue,
+  byTouches,
   reportLine,
+  reportTotal,
   tallyPortion,
   tashkentHour,
+  textDue,
   touchesText,
   type PersonReport,
 } from "@/lib/admin/portion";
 import { CLOSE_REASONS, CLOSE_TEXT, closeCallback } from "@/lib/admin/touch-close";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { staffById } from "@/lib/admin/session";
-import { touchProgressFor } from "@/lib/admin/touch-store";
+import { touchesOnDay, touchProgressFor } from "@/lib/admin/touch-store";
 import { esc, sendMessage, sendWithRows, type Button } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
+import { isModelTroubleSays } from "@/lib/model-trouble";
 
 /**
  * Порция дня — база, Telegram и расписание. Правила — в lib/admin/portion.
@@ -159,6 +163,13 @@ export async function assignPortions(now: Date = new Date()): Promise<PortionAss
  * сложилось с первого раза, не сложится и с десятого, а платить за каждую
  * попытку пришлось бы каждые пять минут. Такая позиция уходит без текста —
  * менеджер нажмёт «Связаться» в панели сам.
+ *
+ * Кроме отказа самой модели: кончились деньги, не принят ключ, частота,
+ * поставщик лежит. 1 октября так ушла без текстов вся утренняя порция.
+ * Это не письмо, а состояние, и запрос, отвергнутый на входе, ничего не
+ * стоит, — поэтому отметка «готовлю» снимается, и следующий проход
+ * пробует снова. Карточка, ушедшая за это время без текста, получит его
+ * отдельным сообщением (deliverTexts).
  */
 export async function prepareNextPortion(now: Date = new Date()): Promise<boolean> {
   const db = serviceClient();
@@ -198,8 +209,97 @@ export async function prepareNextPortion(now: Date = new Date()): Promise<boolea
   const staff = await staffById(waiting.staff_id as string);
   if (!staff) return false;
   const result = await prepareOutreach(waiting.prospect_id as string, staff);
-  if (!result.ok) console.error("порция: не подготовил письмо", waiting.prospect_id, result.why || result.reason);
-  return result.ok;
+  if (!result.ok) {
+    console.error("порция: не подготовил письмо", waiting.prospect_id, result.why || result.reason);
+    await releaseOnModelTrouble(waiting.id as string, result.why);
+    return false;
+  }
+  await deliverTexts(new Date(), waiting.staff_id as string);
+  return true;
+}
+
+/**
+ * Модель отказала сама — письмо возвращается в очередь подготовки: свип
+ * попробует снова следующим проходом. Любой другой промах остаётся
+ * промахом — см. prepareNextPortion.
+ */
+export async function releaseOnModelTrouble(rowId: string, why: string): Promise<void> {
+  if (!isModelTroubleSays(why)) return;
+  const db = serviceClient();
+  if (!db) return;
+  await db.from("touch_portions").update({ preparing_at: null }).eq("id", rowId);
+}
+
+/** Карточки ушли без текста — текст дошлёт deliverTexts, когда модель его напишет. */
+export async function markBare(ids: readonly string[], now: Date): Promise<void> {
+  const db = serviceClient();
+  if (!db || !ids.length) return;
+  await db.from("touch_portions").update({ bare_at: now.toISOString() }).in("id", [...ids]);
+}
+
+/**
+ * Дослать текст к карточкам, которые ушли без него.
+ *
+ * Карточка без текста — не ошибка менеджера и не повод идти в панель: он
+ * получил компанию, а письмо к ней модель допишет позже (отказала —
+ * prepareNextPortion повторит). Как только письмо есть, карточка приходит
+ * ещё раз — целиком, с текстом и кнопкой отправки. Тронул компанию раньше
+ * (написал сам, «Не подходит», забрал другой) — досылать нечего, отметка
+ * просто снимается.
+ *
+ * Отметка снимается до сообщения и условно: свип и подготовка письма зовут
+ * досылку одновременно. Не дошло — отметка возвращается.
+ */
+export async function deliverTexts(now: Date = new Date(), staffId?: string): Promise<number> {
+  if (!isWorkday(now) || tashkentHour(now) >= REPORT_HOUR) return 0;
+  const db = serviceClient();
+  if (!db) return 0;
+  const day = todayInTashkent(now);
+
+  let query = db
+    .from("touch_portions")
+    .select("id, staff_id, prospect_id, source")
+    .eq("day", day)
+    .is("outcome", null)
+    .not("bare_at", "is", null);
+  if (staffId) query = query.eq("staff_id", staffId);
+  const { data } = await query;
+  if (!data?.length) return 0;
+
+  const byId = new Map((await prospectsByIds(data.map((r) => r.prospect_id as string))).map((p) => [p.id, p]));
+  const people = new Map((await team()).map((p) => [p.id, p]));
+
+  let sent = 0;
+  for (const row of data) {
+    const owner = row.staff_id as string;
+    const p = byId.get(row.prospect_id as string);
+    const due = p ? textDue(p, owner, day) : "drop";
+    if (due === "wait") continue;
+    const { data: claimed } = await db
+      .from("touch_portions")
+      .update({ bare_at: null })
+      .eq("id", row.id as string)
+      .not("bare_at", "is", null)
+      .select("id");
+    if (!claimed?.length || due === "drop" || !p) continue;
+
+    const person = people.get(owner);
+    if (!person?.chat) continue;
+    const stream = row.source === "stream";
+    if (!stream && !wants(person.off, "portion")) continue;
+    const ok = await sendWithRows(
+      person.chat,
+      [
+        "✍️ <b>Текст готов.</b> Эта компания приходила без него — вот карточка целиком.",
+        "",
+        itemText(p, stream ? "▶️ Поток" : "Порция"),
+      ].join("\n"),
+      itemButtons(p),
+    );
+    if (ok) sent += 1;
+    else await markBare([row.id as string], now);
+  }
+  return sent;
 }
 
 /** Готов ли текст: письмо написано или его и не будет (карточку уже тронули). */
@@ -228,7 +328,7 @@ export function itemText(p: Prospect, heading: string): string {
     "",
     p.message
       ? `<code>${esc(p.message)}</code>`
-      : "Текст ещё готовится — откройте карточку в панели и нажмите «Связаться».",
+      : "Текст ещё готовится — пришлю его сюда отдельным сообщением. Не хотите ждать — откройте карточку в панели и нажмите «Связаться».",
   );
   return lines.join("\n");
 }
@@ -367,11 +467,15 @@ export async function deliverPortions(now: Date = new Date(), staffId?: string):
         now,
       );
       // Уже сделанное и «Не подходит», нажатое в панели до 09:00, в пакет не идёт.
-      const items = mine
+      const batch = mine
         .filter((r) => claimed.has(r.id))
-        .map((r) => byId.get(r.prospect_id))
-        .filter((p): p is Prospect => Boolean(p) && outcomeOf(p!, owner, day) === null);
+        .map((r) => ({ row: r, p: byId.get(r.prospect_id) }))
+        .filter((x): x is { row: DayRow; p: Prospect } => Boolean(x.p) && outcomeOf(x.p!, owner, day) === null);
+      const items = batch.map((x) => x.p);
       if (!items.length) continue;
+      // Без текста в 10:00 уходит то, что модель не написала, — чаще всего
+      // потому, что она не отвечала. Текст дойдёт отдельным сообщением.
+      const bare = batch.filter((x) => !x.p.message).map((x) => x.row.id);
       const target = all.filter((r) => r.staff_id === owner && !r.replaces).length;
       const plan = plans.get(owner);
       await sendMessage(
@@ -380,7 +484,11 @@ export async function deliverPortions(now: Date = new Date(), staffId?: string):
           `<b>Порция на сегодня: ${target}</b>`,
           plan?.plan ? `План недели: ${plan.done} из ${plan.plan}.` : "",
           `Нужно ${touchesText(target)}: «Отправить через бота» или «Написал сам». «Не подходит» в счёт не идёт — на её место сразу придёт замена.`,
-          "Тексты готовы — нажмите на текст, он скопируется.",
+          bare.length === items.length
+            ? "Тексты ещё пишутся — каждый пришлю отдельным сообщением, как только будет готов. Компании уже ваши: можно начинать и без них."
+            : bare.length
+              ? "Тексты готовы не ко всем — нажмите на текст, он скопируется. Недостающие пришлю отдельными сообщениями."
+              : "Тексты готовы — нажмите на текст, он скопируется.",
           "Что не сделаете до 18:00, вернётся в общий пул.",
         ]
           .filter(Boolean)
@@ -389,6 +497,7 @@ export async function deliverPortions(now: Date = new Date(), staffId?: string):
       for (const [i, p] of items.entries()) {
         await sendWithRows(person.chat, itemText(p, `${i + 1}/${items.length}`), itemButtons(p));
       }
+      await markBare(bare, now);
       delivered += items.length;
       continue;
     }
@@ -407,6 +516,7 @@ export async function deliverPortions(now: Date = new Date(), staffId?: string):
         [`🔁 Вместо «${esc(old ? titleOf(old) : "не подошедшей")}» — она в счёт порции.`, "", itemText(p, "Замена")].join("\n"),
         itemButtons(p),
       );
+      if (!p.message) await markBare([row.id], now);
       delivered += 1;
     }
   }
@@ -530,7 +640,10 @@ export async function deliverReplacement(rowId: string, now: Date = new Date()):
     const staff = await staffById(row.staff_id as string);
     if (staff) {
       const result = await prepareOutreach(row.prospect_id as string, staff);
-      if (!result.ok) console.error("порция: не подготовил замену", row.prospect_id, result.why || result.reason);
+      if (!result.ok) {
+        console.error("порция: не подготовил замену", row.prospect_id, result.why || result.reason);
+        await releaseOnModelTrouble(rowId, result.why);
+      }
     }
   }
   const { data: owner } = await db.from("touch_portions").select("staff_id").eq("id", rowId).maybeSingle();
@@ -572,11 +685,13 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     .select("day");
   if (!claimed?.length) return 0;
 
-  const { data } = await db
+  // Пустой день порции — не повод молчать: касания из панели и потока
+  // отчёт показывает и тогда.
+  const { data: rows } = await db
     .from("touch_portions")
     .select("id, staff_id, prospect_id, outcome, replaces, source")
     .eq("day", day);
-  if (!data?.length) return 0;
+  const data = rows ?? [];
 
   const prospects = new Map((await prospectsByIds(data.map((r) => r.prospect_id as string))).map((p) => [p.id, p]));
   const people = await team();
@@ -614,47 +729,54 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     }
   }
 
-  const reports = new Map<string, PersonReport>();
-  for (const staffId of new Set([...byPerson.keys(), ...streamDone.keys()])) {
-    const person = people.find((p) => p.id === staffId)!;
-    const t = tallyPortion(byPerson.get(staffId) ?? []);
-    reports.set(staffId, {
-      name: person.name,
-      target: t.target,
-      done: t.done,
-      skipped: t.skipped,
-      short: t.short,
-      stream: streamDone.get(staffId) ?? 0,
-    });
-  }
+  // В отчёте — вся команда: и тот, у кого не было ни порции, ни потока, —
+  // ноль касаний за день тоже ответ.
+  const touches = await touchesOnDay(
+    people.map((p) => p.id),
+    day,
+  );
+  const reports: PersonReport[] = people
+    .map((person) => {
+      const t = tallyPortion(byPerson.get(person.id) ?? []);
+      return {
+        name: person.name,
+        target: t.target,
+        done: t.done,
+        skipped: t.skipped,
+        short: t.short,
+        stream: streamDone.get(person.id) ?? 0,
+        touches: touches.get(person.id) ?? 0,
+      };
+    })
+    .sort(byTouches);
+  if (!reports.length) return 0;
 
-  const lines = (ids: string[]) =>
-    ids
-      .map((id) => reports.get(id))
-      .filter((r): r is PersonReport => Boolean(r))
-      .map(reportLine);
-  const header = `<b>Порция дня · ${day.split("-").reverse().join(".")}</b>`;
-  const footer =
-    "Считаются только касания: «Не подходит» не в счёт, за неё выдаётся замена. «Поток» — касания сверх порции по кнопке «Получать лиды». Несделанное вернулось в общий пул.";
+  const text = [
+    `<b>Касания за день · ${day.split("-").reverse().join(".")}</b>`,
+    "",
+    ...reports.map(reportLine),
+    "",
+    reportTotal(reports),
+    "",
+    "Касания — все, кому человек написал за день («Отправить» или «Написал сам»): из порции, потока и панели. Порция — сколько из утренней раздачи; «Не подходит» не в счёт, за неё выдаётся замена. «Поток» — касания по кнопке «Получать лиды». Несделанное вернулось в общий пул.",
+  ].join("\n");
 
-  // Руководителю — его люди и он сам; владельцу — все.
-  for (const head of people.filter((p) => p.role === "head" && p.chat && wants(p.off, "reports"))) {
-    const ids = [head.id, ...people.filter((p) => p.head === head.id).map((p) => p.id)];
-    const text = lines(ids);
-    if (text.length) await sendMessage(head.chat!, [header, "", ...text, "", footer].join("\n"));
-  }
+  // Руководителям — тот же отчёт, что владельцу: вся команда. Владелец,
+  // 01.10: «руководителям в телеграм должно приходить как и мне».
   const { data: owners } = await db
     .from("staff")
     .select("telegram_user_id, notify_off")
     .eq("role", "admin")
     .eq("is_active", true);
-  const all = lines([...reports.keys()]);
-  for (const owner of owners ?? []) {
-    if (!wants(owner.notify_off as string[] | null, "reports")) continue;
-    const chat = Number(owner.telegram_user_id);
-    if (chat && all.length) await sendMessage(chat, [header, "", ...all, "", footer].join("\n"));
+  const readers = [
+    ...people.filter((p) => p.role === "head").map((p) => ({ chat: p.chat, off: p.off })),
+    ...(owners ?? []).map((o) => ({ chat: Number(o.telegram_user_id) || null, off: (o.notify_off as string[] | null) ?? [] })),
+  ];
+  for (const reader of readers) {
+    if (!reader.chat || !wants(reader.off, "reports")) continue;
+    if (!(await sendMessage(reader.chat, text))) console.error("порция: отчёт не дошёл", reader.chat);
   }
-  return reports.size;
+  return reports.length;
 }
 
 /**
@@ -711,6 +833,7 @@ export async function runPortions(now: Date = new Date()): Promise<{
   assigned: PortionAssign | null;
   replaced: number;
   delivered: number;
+  texted: number;
   reported: number;
 }> {
   const assigned = await assignPortions(now);
@@ -718,8 +841,11 @@ export async function runPortions(now: Date = new Date()): Promise<{
   // запрос, «не пишем» нажали в панели, пока свип спал.
   const replaced = await topUpPortions(now);
   const delivered = await deliverPortions(now);
+  // Тексты к карточкам, ушедшим без них, — до отчёта: в 18:00 строки
+  // закрываются, и досылать станет нечего.
+  const texted = await deliverTexts(now);
   const reported = await reportPortions(now);
-  return { assigned, replaced, delivered, reported };
+  return { assigned, replaced, delivered, texted, reported };
 }
 
 /** Несколько писем подряд, пока укладываемся в четыре минуты — до следующего прохода. */

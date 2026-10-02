@@ -6,8 +6,10 @@ import {
   dayRow,
   itemButtons,
   itemText,
+  markBare,
   pool,
   ready,
+  releaseOnModelTrouble,
   rowsOfDay,
   type DayRow,
 } from "@/lib/admin/portion-store";
@@ -241,7 +243,11 @@ async function deliver(
         .select("id");
       if (claimed?.length) {
         const result = await prepareOutreach(p.id, who.staff);
-        if (!result.ok) console.error("поток: не подготовил письмо", p.id, result.why || result.reason);
+        if (!result.ok) {
+          console.error("поток: не подготовил письмо", p.id, result.why || result.reason);
+          // Модель отказала — свип допишет письмо, когда она вернётся.
+          await releaseOnModelTrouble(row.id, result.why);
+        }
         p = (await prospectById(p.id)) ?? p;
       } else if (Date.now() - Date.parse(row.created_at) < PREPARE_WAIT_MS) {
         // Письмо пишет свип — подождём его, заберём следующим проходом.
@@ -250,6 +256,8 @@ async function deliver(
     }
     if (!(await claimDelivery([row.id], new Date())).size) continue;
     await sendWithRows(who.chat, itemText(p, "▶️ Поток"), [...itemButtons(p), STREAM_STOP_ROW]);
+    // Ушла без текста — текст дошлёт свип (portion-store → deliverTexts).
+    if (!p.message) await markBare([row.id], new Date());
     sent += 1;
   }
   return sent;

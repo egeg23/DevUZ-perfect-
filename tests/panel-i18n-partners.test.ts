@@ -140,7 +140,16 @@ test("партнёры: каждый код ответа действия ест
   for (const code of ["created", "paid", "rejected", "invalid", "agency_active", "agency_rejected", "offline"]) {
     assert.ok(codes.has(code), `регэксп не нашёл «${code}» — действия поменялись, поправьте тест`);
   }
-  for (const code of codes) assert.ok(code in partnersResultDict, `нет текста для ?r=${code}`);
+  // Ответы по закреплённым клиентам (client_*) страница берёт из их словаря
+  // (content/admin-panel/partner-clients.ts) — сверяем со страницей.
+  const page = read("app/admin/partners/page.tsx");
+  for (const code of codes) {
+    if (code.startsWith("client_")) {
+      assert.match(page, new RegExp(`\\b${code}: \\{ text: tc\\.`), `нет текста для ?r=${code}`);
+      continue;
+    }
+    assert.ok(code in partnersResultDict, `нет текста для ?r=${code}`);
+  }
 });
 
 test("промо: коды ответов и причины загрузки — в словаре", () => {

@@ -7,6 +7,7 @@ import { partnerCopy } from "@/content/partner-bot";
 import { parsePercent } from "@/lib/admin/finance";
 import { requestIp, requireAdmin } from "@/lib/admin/guard";
 import {
+  cancelClient,
   createPartner,
   decideAgency,
   decidePayout,
@@ -117,4 +118,25 @@ export async function decideAgencyAction(formData: FormData) {
   }
   revalidatePath("/admin/partners");
   back(decision === "active" ? "agency_active" : "agency_rejected");
+}
+
+/**
+ * Владелец отменяет закрепление клиента — только с причиной: партнёр
+ * получает её в боте, иначе «закрепил, и пропало» выглядело бы обманом.
+ */
+export async function cancelClientAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const note = String(formData.get("note") ?? "").trim() || null;
+  const result = await cancelClient(String(formData.get("client") ?? ""), note, admin, await requestIp());
+  if (!result.ok) back(result.reason === "invalid" ? "client_invalid" : result.reason);
+
+  const partner = await partnerById(result.client.partner_id);
+  if (partner) {
+    await notifyPartner(
+      partner,
+      `Закрепление клиента «${esc(result.client.name)}» отменено. Причина: ${esc(result.client.cancel_note ?? "")}. Вопросы — напишите нам в этот бот.`,
+    );
+  }
+  revalidatePath("/admin/partners");
+  back("client_cancelled");
 }

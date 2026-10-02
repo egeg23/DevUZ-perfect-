@@ -24,6 +24,7 @@ test("у каждого проекта витрины есть ссылка «П
     "akbar-rich": `${SHOWCASE}/akbar`,
     transtelecom: `${SHOWCASE}/ttc`,
     tranio: `${SHOWCASE}/tranio`,
+    medacademy: `${SHOWCASE}/medacademy`,
   };
   for (const [slug, url] of Object.entries(expected)) {
     const item = cases.find((c) => c.slug === slug);
