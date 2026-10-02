@@ -1,11 +1,13 @@
 import { wants } from "@/lib/admin/notify-prefs";
 import { HANDOVER_TEXT, normalizeHandle, readInbound, type TalkRow } from "@/lib/admin/outreach-talk";
+import { protoTermsText } from "@/lib/admin/prototype-claim";
 import { announcePrototype } from "@/lib/admin/prototype-claim-store";
 import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
 import { MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
+import { detectLang } from "@/lib/talk/language";
 
 /**
  * Переписка по касанию — то, что ходит в базу.
@@ -182,6 +184,19 @@ async function saveInbound(
   // Повторная просьба того же клиента второй рассылки не запускает и идёт
   // как обычный ответ — тому, у кого лид сейчас.
   const announced = verdict === "proto" ? await announcePrototype(String(prospect.id), body) : null;
+
+  // Клиент согласился на бесплатный макет — в ту же переписку сразу ссылка на
+  // условия, на которых макет даётся (content/mockup-terms, раздел 5). Для
+  // ознакомления, без вопроса «согласны?»: условия принимаются действиями
+  // клиента после неё. Один раз на клиента — как и рассылка команде. По
+  // ручному маршруту сообщение ждёт в карточке, отправляет человек.
+  if (announced) {
+    await queueReply({
+      prospectId: String(prospect.id),
+      leadId: (prospect.lead_id as string | null) ?? null,
+      body: protoTermsText(detectLang(body)),
+    });
+  }
 
   if (verdict !== "talk" && !announced) {
     await tellManager(String(prospect.id), `Ответ по ${prospect.host}: ${HANDOVER_TEXT[verdict] ?? verdict}.\n\n${body.slice(0, 500)}`, {
