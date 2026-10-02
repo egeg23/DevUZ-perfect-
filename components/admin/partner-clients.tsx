@@ -58,7 +58,7 @@ export function PartnerClientsBlock({
                   <td data-label={t.colClient} className={TD}>
                     {c.name}
                     <span className="block font-mono text-xs text-faint">
-                      {t.inn} {c.inn}
+                      {t.inn} {c.inn ?? "—"}
                     </span>
                     {c.website ? <span className="block text-xs text-faint">{c.website}</span> : null}
                     {c.note ? <span className="block text-xs text-muted">{c.note}</span> : null}

@@ -690,21 +690,39 @@ export type CompanyFacts = {
   host?: string | null;
 };
 
+/** По чему совпали две компании. */
+export type CompanyMatch = "inn" | "contact" | "host" | "name";
+
 /**
- * Та же компания? Сходится ИНН, название, любой контакт или сайт.
+ * Та же компания? И по чему это видно.
+ *
+ * Владелец, 02.10: «Проверяем по названию компании; если название
+ * повторяется — проверка по ИНН». Поэтому:
+ * - ИНН совпал — та же, как бы ни называлась;
+ * - совпал телефон, Telegram или сайт — та же: это признак сильнее
+ *   названия, и подставной ИНН его не перебивает;
+ * - совпало только название — та же, если хотя бы с одной стороны ИНН
+ *   неизвестен (различить нечем); если ИНН известен у обеих и разный —
+ *   это две разные компании с одинаковым названием.
  *
  * Короткие ключи не считаются: название меньше четырёх знаков («Art») и
  * контакт меньше пяти совпали бы с половиной города.
  */
-export function sameCompany(a: CompanyFacts, b: CompanyFacts): boolean {
+export function companyMatch(a: CompanyFacts, b: CompanyFacts): CompanyMatch | null {
   const ai = normalizeInn(a.inn);
-  if (ai && ai === normalizeInn(b.inn)) return true;
-  const an = companyKey(a.name);
-  if (an.length >= 4 && an === companyKey(b.name)) return true;
+  const bi = normalizeInn(b.inn);
+  if (ai && ai === bi) return "inn";
   const ah = hostKey(a.host);
-  if (ah && ah === hostKey(b.host)) return true;
+  if (ah && ah === hostKey(b.host)) return "host";
   const keys = new Set((a.contacts ?? []).map(contactKey).filter((k) => k.length >= 5));
-  return (b.contacts ?? []).some((c) => keys.has(contactKey(c)));
+  if ((b.contacts ?? []).some((c) => keys.has(contactKey(c)))) return "contact";
+  const an = companyKey(a.name);
+  if (an.length >= 4 && an === companyKey(b.name)) return ai && bi ? null : "name";
+  return null;
+}
+
+export function sameCompany(a: CompanyFacts, b: CompanyFacts): boolean {
+  return companyMatch(a, b) !== null;
 }
 
 export type ClientClaim = {
@@ -750,6 +768,7 @@ export type ClientFailure =
   | "blocked"
   | "name"
   | "inn"
+  | "need_inn"
   | "contact"
   | "limit"
   | "studio"
@@ -758,9 +777,10 @@ export type ClientFailure =
   | "failed";
 
 /**
- * Проверка полей заявки без базы. Название — от двух знаков, ИНН — 9–12
- * цифр, связь — телефон или Telegram, хотя бы одно: без них не по чему
- * узнать заявку клиента, кроме ИНН и названия.
+ * Проверка полей заявки без базы. Название — от двух знаков; ИНН — если
+ * партнёр его знает, 9–12 цифр (не знает — проверяем по названию); связь —
+ * телефон или Telegram, хотя бы одно: без них заявку клиента узнать можно
+ * только по названию.
  */
 export function clientFieldsProblem(fields: {
   name: string;
@@ -769,7 +789,7 @@ export function clientFieldsProblem(fields: {
   telegram: string;
 }): "name" | "inn" | "contact" | null {
   if (fields.name.trim().length < 2) return "name";
-  if (!normalizeInn(fields.inn)) return "inn";
+  if (fields.inn.trim() && !normalizeInn(fields.inn)) return "inn";
   const phone = fields.phone.replace(/[^\d]/g, "");
   if (phone.length < 7 && contactKey(fields.telegram).length < 5) return "contact";
   return null;
