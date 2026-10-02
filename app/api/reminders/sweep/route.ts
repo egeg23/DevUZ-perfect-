@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { record } from "@/lib/admin/audit";
 import { preparePortionsInBackground, runPortions } from "@/lib/admin/portion-store";
 import { feedStreams } from "@/lib/admin/stream-store";
+import { broadcastDuePrototypes } from "@/lib/admin/prototype-claim-store";
 import { runTaskSweep } from "@/lib/admin/task-store";
 import { sendTeamNews } from "@/lib/admin/team-news";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
@@ -247,6 +248,10 @@ export async function POST(request: Request) {
 
   // Объявления команде — отдельно от тяжёлого выше: они короткие, и ждать
   // за подготовкой писем им незачем. Каждому — один раз (lib/admin/team-news).
+  // «Хотят прототип»: автор касания не взял за полчаса — всей команде.
+  after(async () => {
+    await broadcastDuePrototypes(new Date()).catch((error) => console.error("прототип:", error));
+  });
   after(async () => {
     await sendTeamNews(new Date()).catch((error) => console.error("объявления:", error));
   });
