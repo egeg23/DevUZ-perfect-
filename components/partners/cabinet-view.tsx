@@ -526,8 +526,7 @@ export function CabinetView({
                   <li key={c.id} className={`${CARD} py-4`}>
                     <p className="font-medium">{c.name}</p>
                     <p className="mt-0.5 font-mono text-xs text-muted">
-                      {c.inn}
-                      {c.contact_name ? ` · ${c.contact_name}` : ""}
+                      {[c.inn, c.contact_name].filter(Boolean).join(" · ")}
                     </p>
                     <p
                       className={`mt-2 text-xs ${
@@ -563,7 +562,6 @@ export function CabinetView({
               {t.clientInn}
               <input
                 name="inn"
-                required
                 inputMode="numeric"
                 pattern="[0-9 \-]{9,15}"
                 maxLength={15}

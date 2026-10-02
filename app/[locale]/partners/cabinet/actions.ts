@@ -137,7 +137,7 @@ export async function requestClientAction(formData: FormData) {
       [
         "🧾 <b>Партнёр закрепил клиента</b>",
         `Партнёр: ${esc(partner.name)}${partner.username ? ` (@${esc(partner.username)})` : ""}`,
-        `Клиент: ${esc(c.name)} · ИНН ${esc(c.inn)}`,
+        `Клиент: ${esc(c.name)} · ИНН ${c.inn ? esc(c.inn) : "не указан"}`,
         [c.contact_name, c.phone, c.telegram].filter(Boolean).length
           ? `Связь: ${esc([c.contact_name, c.phone, c.telegram].filter(Boolean).join(" · "))}`
           : "",

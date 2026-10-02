@@ -19,6 +19,7 @@ import {
   hostKey,
   MAX_CLIENTS_PER_MONTH,
   normalizeInn,
+  companyMatch,
   sameCompany,
   tashkentMonth,
   companyKey,
@@ -1479,7 +1480,8 @@ export type PartnerClient = {
   created_at: string;
   partner_id: string;
   name: string;
-  inn: string;
+  /** ИНН — если партнёр его знал; без него компания узнаётся по названию и контактам. */
+  inn: string | null;
   contact_name: string | null;
   phone: string | null;
   telegram: string | null;
@@ -1501,7 +1503,7 @@ function shapeClient(row: Record<string, unknown>): PartnerClient {
     created_at: String(row.created_at),
     partner_id: String(row.partner_id),
     name: String(row.name),
-    inn: String(row.inn),
+    inn: (row.inn as string | null) ?? null,
     contact_name: (row.contact_name as string | null) ?? null,
     phone: (row.phone as string | null) ?? null,
     telegram: (row.telegram as string | null) ?? null,
@@ -1581,16 +1583,17 @@ export async function expireClients(now: Date = new Date()): Promise<number> {
 }
 
 /**
- * Знает ли студия эту компанию: лид, проект, договор или касание из
- * «Касаний» с тем же ИНН, названием, контактом или сайтом.
+ * Компании, которые студия уже знает: лиды, проекты, договоры и касания из
+ * «Касаний». Новая заявка партнёра сверяется с ними по ИНН, названию,
+ * контакту и сайту (rules.ts, companyMatch).
  *
  * Это антифрод: нельзя «застолбить» тех, с кем студия уже работает или кому
  * уже писала. Таблицы маленькие (сотни строк), поэтому сравнение — здесь, по
  * тем же правилам, что и привязка лида, а не десятком запросов с ilike.
  */
-async function studioKnows(facts: CompanyFacts): Promise<boolean> {
+async function studioCompanies(): Promise<CompanyFacts[]> {
   const db = serviceClient();
-  if (!db) return false;
+  if (!db) return [];
   const [leads, projects, contracts, prospects] = await Promise.all([
     db.from("leads").select("client_inn, company, contact_handle, tg_username").limit(10000),
     db.from("projects").select("client").limit(10000),
@@ -1614,7 +1617,7 @@ async function studioKnows(facts: CompanyFacts): Promise<boolean> {
       };
     }),
   ];
-  return known.some((k) => sameCompany(facts, k));
+  return known;
 }
 
 /**
@@ -1637,7 +1640,7 @@ export async function requestClient(
   const row = {
     partner_id: partner.id,
     name: fields.name.trim().slice(0, 120),
-    inn: normalizeInn(fields.inn) as string,
+    inn: normalizeInn(fields.inn),
     contact_name: fields.contactName.trim().slice(0, 120) || null,
     phone: fields.phone.trim().slice(0, 40) || null,
     telegram: fields.telegram.trim().slice(0, 80) || null,
@@ -1652,14 +1655,33 @@ export async function requestClient(
   if (all.filter((c) => c.partner_id === partner.id && tashkentMonth(new Date(c.created_at)) === month).length >= MAX_CLIENTS_PER_MONTH) {
     return { ok: false, reason: "limit" };
   }
-  const holder = all.find((c) => clientCounts(c, now) && sameCompany(facts, clientFacts(c)));
-  if (holder) return { ok: false, reason: holder.partner_id === partner.id ? "mine" : "taken" };
-  // Агентство другого партнёра — тоже занято: его заказы уже идут партнёру.
-  const agency = (await agenciesOf("all")).find(
-    (a) => a.status !== "rejected" && sameCompany(facts, { name: a.name, contacts: [a.contact], host: a.website }),
-  );
-  if (agency) return { ok: false, reason: agency.partner_id === partner.id ? "mine" : "taken" };
-  if (await studioKnows(facts)) return { ok: false, reason: "studio" };
+  // Кто уже держит компанию — по порядку важности: закрепления партнёров,
+  // их агентства, сама студия. Совпало только название, а ИНН партнёр не
+  // указал, — просим ИНН: по нему разные компании с одним названием
+  // различаются (rules.ts, companyMatch).
+  const candidates: { facts: CompanyFacts; reason: ClientFailure }[] = [
+    ...all
+      .filter((c) => clientCounts(c, now))
+      .map((c) => ({ facts: clientFacts(c), reason: (c.partner_id === partner.id ? "mine" : "taken") as ClientFailure })),
+    ...(await agenciesOf("all"))
+      .filter((a) => a.status !== "rejected")
+      .map((a) => ({
+        facts: { name: a.name, contacts: [a.contact], host: a.website },
+        reason: (a.partner_id === partner.id ? "mine" : "taken") as ClientFailure,
+      })),
+    ...(await studioCompanies()).map((k) => ({ facts: k, reason: "studio" as ClientFailure })),
+  ];
+  let needInn = false;
+  for (const c of candidates) {
+    const match = companyMatch(facts, c.facts);
+    if (!match) continue;
+    if (match === "name" && !row.inn && normalizeInn(c.facts.inn)) {
+      needInn = true;
+      continue;
+    }
+    return { ok: false, reason: c.reason };
+  }
+  if (needInn) return { ok: false, reason: "need_inn" };
 
   const { data, error } = await db.from("partner_clients").insert(row).select(CLIENT_COLUMNS).maybeSingle();
   // Уникальный индекс по ИНН: кто-то закрепил ту же компанию секундой раньше.

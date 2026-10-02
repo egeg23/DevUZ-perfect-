@@ -9,6 +9,7 @@ import {
   autoPayoutDue,
   clientCounts,
   clientFieldsProblem,
+  companyMatch,
   clientUntil,
   clientUntilDay,
   hostKey,
@@ -48,6 +49,25 @@ test("сайт сравнивается по домену: схема, www, пу
   assert.equal(hostKey("http://shop.uz:8080"), "shop.uz");
   assert.equal(hostKey("не сайт"), "");
   assert.equal(hostKey(""), "");
+});
+
+test("название повторилось — решает ИНН; контакт и сайт — признак сильнее ИНН", () => {
+  // Владелец, 02.10: «Проверяем по названию; если название повторяется — по ИНН».
+  assert.equal(companyMatch({ name: "Тандыр Групп" }, { name: "ООО Тандыр групп" }), "name", "ИНН нет ни у кого — та же");
+  assert.equal(companyMatch({ name: "Тандыр Групп", inn: "305123456" }, { name: "Тандыр групп" }), "name", "у второй ИНН нет — различить нечем");
+  assert.equal(companyMatch({ name: "Тандыр Групп" }, { name: "Тандыр групп", inn: "305123456" }), "name");
+  assert.equal(
+    companyMatch({ name: "Тандыр Групп", inn: "305123456" }, { name: "Тандыр групп", inn: "309999999" }),
+    null,
+    "разный ИНН при одном названии — разные компании",
+  );
+  assert.equal(companyMatch({ name: "Другое", inn: "305123456" }, { name: "Тандыр", inn: "305 123 456" }), "inn");
+  assert.equal(
+    companyMatch({ name: "Тандыр", inn: "305123456", contacts: ["@tandyr_uz"] }, { name: "Тандыр", inn: "309999999", contacts: ["t.me/tandyr_uz"] }),
+    "contact",
+    "подставной ИНН не перебивает совпавший Telegram",
+  );
+  assert.equal(companyMatch({ host: "tandyr.uz", inn: "305123456" }, { host: "https://tandyr.uz", inn: "309999999" }), "host");
 });
 
 test("та же компания — по ИНН, названию, контакту или сайту; короткие ключи не считаются", () => {
@@ -90,12 +110,13 @@ test("лимит — 20 закреплений за календарный ме�
   assert.equal(tashkentMonth(new Date("2026-10-31T19:01:00Z")), "2026-11", "в Ташкенте уже 1 ноября");
 });
 
-test("заявка партнёра: название, ИНН и телефон или Telegram — хотя бы одно", () => {
+test("заявка партнёра: название, телефон или Telegram — хотя бы одно, ИНН — если знает", () => {
   const ok = { name: "Тандыр", inn: "305123456", phone: "+998 90 123 45 67", telegram: "" };
   assert.equal(clientFieldsProblem(ok), null);
   assert.equal(clientFieldsProblem({ ...ok, phone: "", telegram: "@tandyr_uz" }), null);
   assert.equal(clientFieldsProblem({ ...ok, name: " " }), "name");
   assert.equal(clientFieldsProblem({ ...ok, inn: "12345" }), "inn");
+  assert.equal(clientFieldsProblem({ ...ok, inn: "" }), null, "ИНН необязателен — партнёр может его не знать");
   assert.equal(clientFieldsProblem({ ...ok, phone: "", telegram: "" }), "contact");
   assert.equal(clientFieldsProblem({ ...ok, phone: "123", telegram: "@ab" }), "contact");
 });
@@ -116,12 +137,14 @@ test("закрепить нельзя то, что студия уже знае�
   const body = store.slice(at, store.indexOf("\n}\n", at));
   assert.match(body, /partner\.status !== "active"/, "заблокированный партнёр закрепляет");
   assert.match(body, />= MAX_CLIENTS_PER_MONTH/, "нет лимита в месяц");
-  assert.match(body, /holder\.partner_id === partner\.id \? "mine" : "taken"/);
+  assert.match(body, /c\.partner_id === partner\.id \? "mine" : "taken"/);
   assert.match(body, /agenciesOf\("all"\)/, "не сверяется с агентствами партнёров");
-  assert.match(body, /await studioKnows\(facts\)\) return \{ ok: false, reason: "studio" \}/);
+  assert.match(body, /\(await studioCompanies\(\)\)\.map\(\(k\) => \(\{ facts: k, reason: "studio" as ClientFailure \}\)\)/);
+  assert.match(body, /match === "name" && !row\.inn && normalizeInn\(c\.facts\.inn\)/, "совпало название без ИНН — не просим ИНН");
+  assert.match(body, /if \(needInn\) return \{ ok: false, reason: "need_inn" \};/);
   assert.match(body, /error\?\.code === "23505"\) return \{ ok: false, reason: "taken" \}/, "гонка двух заявок не превращается в «taken»");
 
-  const knows = store.slice(store.indexOf("async function studioKnows("), at);
+  const knows = store.slice(store.indexOf("async function studioCompanies("), at);
   for (const table of ["leads", "projects", "contracts", "prospects"]) {
     assert.match(knows, new RegExp(`from\\("${table}"\\)`), `студия не сверяется с ${table}`);
   }
