@@ -245,7 +245,7 @@ const ru: CabinetCopy = {
 
   claimsTitle: "Мои клиенты",
   claimsLead:
-    "Приводите компанию сами, без ссылки? Закрепите её здесь: название, как с ней связаться и ИНН, если знаете. Проверяем по названию; если такое название уже встречалось — по ИНН. Закрепление действует сразу — если с этой компанией студия ещё не работала и не связывалась и её не закрепил другой партнёр. Дальше ждём от клиента первую заявку 90 дней; пришла — все заказы этой компании ваши 12 месяцев, как по ссылке. Не пришла за 90 дней — закрепление снимается. В месяц можно закрепить до 20 компаний.",
+    "Приводите компанию сами, без ссылки? Закрепите её здесь: название, как с ней связаться и ИНН, если знаете. Проверяем по названию; если такое название уже встречалось — по ИНН. Закрепление действует сразу — если с этой компанией студия ещё не работала и не связывалась и её не закрепил другой партнёр. Закрепили — клиент сразу уходит нашим менеджерам приоритетной заявкой, и с ним свяжутся. Все заказы этой компании ваши 12 месяцев, как по ссылке. В месяц можно закрепить до 20 компаний.",
   clientName: "Название компании",
   clientInn: "ИНН (СТИР), если знаете",
   clientInnHint: "9 цифр; для других стран — до 12. Не знаете — оставьте пустым",
@@ -263,7 +263,7 @@ const ru: CabinetCopy = {
   clientExpired: "срок вышел — новые заказы не засчитываются",
   clientCancelled: (note) => `закрепление отменено${note ? ` · ${note}` : ""}`,
   clientResult: {
-    ok: "Клиент закреплён за вами. Когда от него придёт заявка — бот напишет.",
+    ok: "Клиент закреплён за вами и передан менеджерам — с ним свяжутся. Этапы — в таблице клиентов ниже, бот напишет о договоре и оплате.",
     offline: "Сервис сейчас недоступен. Попробуйте через минуту.",
     blocked: "Партнёрство приостановлено — закреплять клиентов нельзя. Напишите нам.",
     name: "Укажите название компании.",
@@ -522,7 +522,7 @@ const en: CabinetCopy = {
 
   claimsTitle: "My clients",
   claimsLead:
-    "Bringing a company yourself, without a link? Register it here: the name, how to reach it and the tax ID if you know it. We check by name; if that name has come up before — by tax ID. It's yours immediately — as long as the studio hasn't worked with or contacted this company before and no other partner has registered it. Then we wait 90 days for the client's first request; once it comes, all orders from this company are yours for 12 months, just like via a link. No request within 90 days — the registration lapses. Up to 20 companies a month.",
+    "Bringing a company yourself, without a link? Register it here: the name, how to reach it and the tax ID if you know it. We check by name; if that name has come up before — by tax ID. It's yours immediately — as long as the studio hasn't worked with or contacted this company before and no other partner has registered it. Once registered, the client goes straight to our managers as a priority request, and they will contact them. All orders from this company are yours for 12 months, just like via a link. Up to 20 companies a month.",
   clientName: "Company name",
   clientInn: "Tax ID (INN / STIR), if you know it",
   clientInnHint: "9 digits; up to 12 for other countries. Don't know it — leave blank",
@@ -540,7 +540,7 @@ const en: CabinetCopy = {
   clientExpired: "term ended — new orders no longer count",
   clientCancelled: (note) => `registration cancelled${note ? ` · ${note}` : ""}`,
   clientResult: {
-    ok: "The client is registered to you. When a request comes from them, the bot will message you.",
+    ok: "The client is registered to you and handed to our managers — they will get in touch. Stages are in the clients table below; the bot will message you about the contract and payment.",
     offline: "The service is unavailable right now. Try again in a minute.",
     blocked: "Your partnership is paused — you can't register clients. Write to us.",
     name: "Enter the company name.",
@@ -799,7 +799,7 @@ const uz: CabinetCopy = {
 
   claimsTitle: "Mening mijozlarim",
   claimsLead:
-    "Kompaniyani havolasiz, o'zingiz olib kelyapsizmi? Uni shu yerda biriktiring: nomi, u bilan qanday bog'lanish va bilsangiz — STIR. Nomi bo'yicha tekshiramiz; bunday nom avval uchragan bo'lsa — STIR bo'yicha. Biriktirish darhol kuchga kiradi — agar studiya bu kompaniya bilan hali ishlamagan va bog'lanmagan bo'lsa, uni boshqa hamkor biriktirmagan bo'lsa. Keyin mijozdan birinchi so'rovni 90 kun kutamiz; kelsa — bu kompaniyaning barcha buyurtmalari 12 oy sizniki, havola orqali kelgandek. 90 kunda kelmasa — biriktirish bekor bo'ladi. Oyiga 20 tagacha kompaniya biriktirish mumkin.",
+    "Kompaniyani havolasiz, o'zingiz olib kelyapsizmi? Uni shu yerda biriktiring: nomi, u bilan qanday bog'lanish va bilsangiz — STIR. Nomi bo'yicha tekshiramiz; bunday nom avval uchragan bo'lsa — STIR bo'yicha. Biriktirish darhol kuchga kiradi — agar studiya bu kompaniya bilan hali ishlamagan va bog'lanmagan bo'lsa, uni boshqa hamkor biriktirmagan bo'lsa. Biriktirdingiz — mijoz darhol menejerlarimizga ustuvor so'rov sifatida ketadi va u bilan bog'lanishadi. Bu kompaniyaning barcha buyurtmalari 12 oy sizniki, havola orqali kelgandek. Oyiga 20 tagacha kompaniya biriktirish mumkin.",
   clientName: "Kompaniya nomi",
   clientInn: "STIR (INN), bilsangiz",
   clientInnHint: "9 raqam; boshqa davlatlar uchun — 12 tagacha. Bilmasangiz — bo'sh qoldiring",
@@ -817,7 +817,7 @@ const uz: CabinetCopy = {
   clientExpired: "muddat tugadi — yangi buyurtmalar hisoblanmaydi",
   clientCancelled: (note) => `biriktirish bekor qilindi${note ? ` · ${note}` : ""}`,
   clientResult: {
-    ok: "Mijoz sizga biriktirildi. Undan so'rov kelganda bot sizga yozadi.",
+    ok: "Mijoz sizga biriktirildi va menejerlarga berildi — u bilan bog'lanishadi. Bosqichlar — quyidagi mijozlar jadvalida, bot shartnoma va to'lov haqida yozadi.",
     offline: "Xizmat hozir ishlamayapti. Bir daqiqadan keyin urinib ko'ring.",
     blocked: "Hamkorlik to'xtatilgan — mijoz biriktirib bo'lmaydi. Bizga yozing.",
     name: "Kompaniya nomini kiriting.",
@@ -1075,7 +1075,7 @@ const zh: CabinetCopy = {
 
   claimsTitle: "我的客户",
   claimsLead:
-    "不通过链接、亲自带来公司？在这里登记：名称、联系方式，以及您知道的话——税号。我们按名称核对；如果该名称已出现过——按税号核对。登记立即生效——前提是工作室此前未与该公司合作或联系过，且没有其他合作伙伴登记过它。之后我们等待客户的第一个询价 90 天；询价到来后，该公司的所有订单 12 个月内都归您，与通过链接相同。90 天内没有询价——登记失效。每月最多可登记 20 家公司。",
+    "不通过链接、亲自带来公司？在这里登记：名称、联系方式，以及您知道的话——税号。我们按名称核对；如果该名称已出现过——按税号核对。登记立即生效——前提是工作室此前未与该公司合作或联系过，且没有其他合作伙伴登记过它。登记后，客户会立即作为优先询价转给我们的经理，由他们联系客户。该公司的所有订单 12 个月内都归您，与通过链接相同。每月最多可登记 20 家公司。",
   clientName: "公司名称",
   clientInn: "税号（INN / STIR），如果知道",
   clientInnHint: "9 位数字；其他国家最多 12 位。不知道可留空",
@@ -1093,7 +1093,7 @@ const zh: CabinetCopy = {
   clientExpired: "期限已过——新订单不再计入",
   clientCancelled: (note) => `登记已取消${note ? ` · ${note}` : ""}`,
   clientResult: {
-    ok: "客户已登记在您名下。收到其询价时，机器人会通知您。",
+    ok: "客户已登记在您名下并已转给经理——他们会联系客户。进度见下方客户表，签约和付款时机器人会通知您。",
     offline: "服务暂时不可用，请一分钟后再试。",
     blocked: "合作已暂停——无法登记客户。请联系我们。",
     name: "请填写公司名称。",
@@ -1346,7 +1346,7 @@ const uk: CabinetCopy = {
 
   claimsTitle: "Мої клієнти",
   claimsLead:
-    "Приводите компанію самі, без посилання? Закріпіть її тут: назва, як з нею зв'язатися та ІНН, якщо знаєте. Перевіряємо за назвою; якщо така назва вже траплялася — за ІНН. Закріплення діє одразу — якщо студія з цією компанією ще не працювала й не зв'язувалася і її не закріпив інший партнер. Далі чекаємо від клієнта першу заявку 90 днів; прийшла — усі замовлення цієї компанії ваші 12 місяців, як за посиланням. Не прийшла за 90 днів — закріплення знімається. На місяць можна закріпити до 20 компаній.",
+    "Приводите компанію самі, без посилання? Закріпіть її тут: назва, як з нею зв'язатися та ІНН, якщо знаєте. Перевіряємо за назвою; якщо така назва вже траплялася — за ІНН. Закріплення діє одразу — якщо студія з цією компанією ще не працювала й не зв'язувалася і її не закріпив інший партнер. Закріпили — клієнт одразу йде нашим менеджерам пріоритетною заявкою, і з ним зв'яжуться. Усі замовлення цієї компанії ваші 12 місяців, як за посиланням. На місяць можна закріпити до 20 компаній.",
   clientName: "Назва компанії",
   clientInn: "ІНН (СТИР), якщо знаєте",
   clientInnHint: "9 цифр; для інших країн — до 12. Не знаєте — залиште порожнім",
@@ -1364,7 +1364,7 @@ const uk: CabinetCopy = {
   clientExpired: "термін минув — нові замовлення не зараховуються",
   clientCancelled: (note) => `закріплення скасовано${note ? ` · ${note}` : ""}`,
   clientResult: {
-    ok: "Клієнта закріплено за вами. Коли від нього прийде заявка — бот напише.",
+    ok: "Клієнта закріплено за вами й передано менеджерам — з ним зв'яжуться. Етапи — у таблиці клієнтів нижче, бот напише про договір і оплату.",
     offline: "Сервіс зараз недоступний. Спробуйте за хвилину.",
     blocked: "Партнерство призупинено — закріплювати клієнтів не можна. Напишіть нам.",
     name: "Вкажіть назву компанії.",
@@ -1623,7 +1623,7 @@ const pl: CabinetCopy = {
 
   claimsTitle: "Moi klienci",
   claimsLead:
-    "Przyprowadzasz firmę sam, bez linku? Przypisz ją tutaj: nazwa, jak się z nią skontaktować i NIP/INN, jeśli go znasz. Sprawdzamy po nazwie; jeśli taka nazwa już się pojawiła — po NIP/INN. Przypisanie działa od razu — jeśli studio nie współpracowało jeszcze z tą firmą ani się z nią nie kontaktowało i nie przypisał jej inny partner. Potem czekamy 90 dni na pierwsze zapytanie klienta; gdy przyjdzie — wszystkie zamówienia tej firmy są Twoje przez 12 miesięcy, jak z linku. Brak zapytania w 90 dni — przypisanie wygasa. Miesięcznie można przypisać do 20 firm.",
+    "Przyprowadzasz firmę sam, bez linku? Przypisz ją tutaj: nazwa, jak się z nią skontaktować i NIP/INN, jeśli go znasz. Sprawdzamy po nazwie; jeśli taka nazwa już się pojawiła — po NIP/INN. Przypisanie działa od razu — jeśli studio nie współpracowało jeszcze z tą firmą ani się z nią nie kontaktowało i nie przypisał jej inny partner. Po przypisaniu klient od razu trafia do naszych menedżerów jako priorytetowe zapytanie i skontaktują się z nim. Wszystkie zamówienia tej firmy są Twoje przez 12 miesięcy, jak z linku. Miesięcznie można przypisać do 20 firm.",
   clientName: "Nazwa firmy",
   clientInn: "NIP (INN / STIR), jeśli znasz",
   clientInnHint: "9 cyfr; dla innych krajów — do 12. Nie znasz — zostaw puste",
@@ -1641,7 +1641,7 @@ const pl: CabinetCopy = {
   clientExpired: "termin minął — nowe zamówienia nie są zaliczane",
   clientCancelled: (note) => `przypisanie anulowane${note ? ` · ${note}` : ""}`,
   clientResult: {
-    ok: "Klient jest przypisany do Ciebie. Gdy przyjdzie od niego zapytanie — bot napisze.",
+    ok: "Klient jest przypisany do Ciebie i przekazany menedżerom — skontaktują się z nim. Etapy — w tabeli klientów poniżej, bot napisze o umowie i płatności.",
     offline: "Serwis jest teraz niedostępny. Spróbuj za minutę.",
     blocked: "Partnerstwo jest wstrzymane — nie można przypisywać klientów. Napisz do nas.",
     name: "Podaj nazwę firmy.",

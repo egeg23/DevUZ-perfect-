@@ -325,7 +325,7 @@ export async function requeueLead(leadId: string, heading: string, now: Date = n
     .is("outcome", null);
   await db.from("leads").update({ queue_opened_at: null, fair_share: false }).eq("id", leadId);
 
-  const card = await cardOf(leadId);
+  const card = await leadCard(leadId);
   if (!card) return false;
   if (await startQueue({ ...card, heading }, now)) return true;
 
@@ -363,6 +363,9 @@ export async function redeliverLostCards(
     .eq("status", "new")
     .is("assigned_staff_id", null)
     .not("queue_opened_at", "is", null)
+    // Лид от партнёра досылают его собственные напоминания (lib/partners/
+    // priority-lead.ts); очередь сняла бы с него «открыт всем».
+    .neq("source", "partner")
     .gte("created_at", since);
   if (error) {
     report.errors.push(`не прочитал лиды: ${error.message}`);
@@ -406,8 +409,8 @@ export async function redeliverLostCards(
   return report;
 }
 
-/** Карточка лида, собранная из базы — для того, кому очередь дошла позже. */
-async function cardOf(leadId: string): Promise<(Card & { label: string; free: boolean }) | null> {
+/** Карточка лида, собранная из базы — для того, кому очередь дошла позже, и для напоминаний о лиде от партнёра. */
+export async function leadCard(leadId: string): Promise<(Card & { label: string; free: boolean }) | null> {
   const db = serviceClient();
   if (!db) return null;
   const { data } = await db.from("leads").select("*").eq("id", leadId).maybeSingle();
@@ -491,7 +494,7 @@ export async function advanceQueues(now: Date = new Date()): Promise<AdvanceRepo
       if (!closed) continue;
       report.expired += 1;
 
-      const card = await cardOf(offer.lead_id);
+      const card = await leadCard(offer.lead_id);
       if (!card) continue;
 
       const { people, candidates } = await queueCandidates(now);

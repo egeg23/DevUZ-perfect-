@@ -115,6 +115,7 @@ export const leadsSections: Record<string, HelpEntry> = {
             "**W nocy, od 18:00 do 08:00**, zasada pół godziny nie obowiązuje — lead od razu jest otwarty dla wszystkich w kolejce. Ale można przejąć nie więcej niż równą część na miesiąc: jeśli swoją część już wykorzystałeś, w karcie leada zobaczysz «🌙 …Twoja część na ten miesiąc jest już wykorzystana — trafi do osób, które mają mniej». Inaczej w nocy leady znów zabierałby ten, kto nie śpi.",
             "Dopóki lead jest w kolejce u kogoś innego, nick klienta w karcie jest ukryty — «ukryty — lead nie jest teraz Twój». Leady z Twoich własnych [kontaktów](/admin/prospect) nie trafiają do kolejki: od razu są Twoje.",
             "Jeśli karta nie dotarła do nikogo — na przykład serwer na chwilę stracił połączenie z Telegramem — przyjdzie później, gdy połączenie wróci, z dopiskiem «⚠️ Досылка: карточка не дошла из-за сбоя связи» (dosłanie: karta nie dotarła przez awarię łączności). Lead jest wtedy rozdzielany od nowa według zasad godziny, w której przyszło dosłanie: w dzień — po kolei, w nocy — wszystkim. Leady starsze niż trzy doby nie są dosyłane.",
+            "**Lead «od partnera» — poza kolejką.** To firma, którą partner przypisał w swoim panelu: poręczył za klienta i trzeba zadzwonić jako pierwsi. Taki lead jest od razu otwarty dla wszystkich — bierze pierwszy, kto kliknie «✅ Взять в работу», bez pół godziny i bez nocnego udziału. Karta trafia do wszystkich menedżerów z nagłówkiem «🤝 Приоритет: клиента привёл партнёр», a dopóki nikt go nie weźmie, bot co 15 minut od 08:00 do 18:00 wysyła ją ponownie: «⏰ Клиент от партнёра всё ещё ничей». Przypomnienia ustają, gdy ktoś weźmie leada, albo po tygodniu, jeśli nie weźmie nikt.",
           ],
           head: [
             "Stoisz w kolejce na równi z menedżerami — zasady są te same. Leady są rozdzielane po kolei, a nie temu, kto szybciej kliknie.",
@@ -124,6 +125,7 @@ export const leadsSections: Record<string, HelpEntry> = {
             "Dopóki lead jest wolny, jego danych kontaktowych i korespondencji nie otworzysz także Ty — najpierw «Przejmij». Nick klienta jest ukryty przed wszystkimi, do których kolejka jeszcze nie doszła. Inaczej kolejkę dałoby się obejść jednym przyciskiem.",
             "W kolejce są tylko osoby z połączonym Telegramem: bez niego nie da się człowiekowi powiedzieć, że lead jest jego.",
             "Karta, która przez awarię łączności serwera z Telegramem nie dotarła do nikogo, jest dosyłana sama, gdy połączenie wróci — z dopiskiem «⚠️ Досылка: карточка не дошла из-за сбоя связи» (dosłanie po awarii łączności) i według zasad bieżącej godziny. Leady starsze niż trzy doby nie są dosyłane.",
+            "**Lead «od partnera» — poza kolejką**: firma przypisana przez partnera. Otwarty od razu dla wszystkich, bierze pierwszy, kto kliknie; karta «🤝 Приоритет: клиента привёл партнёр» idzie do wszystkich menedżerów i do Ciebie, a dopóki lead jest niczyj, bot powtarza ją co 15 minut od 08:00 do 18:00 («⏰ Клиент от партнёра всё ещё ничей»). Pilnuj, żeby takie leady nie wisiały: przyprowadzają je ludzie, którym studio płaci prowizję.",
           ],
           admin: [
             "Jesteś **poza kolejką**: możesz przejąć dowolny wolny lead w dowolnej chwili, a limit nocnej części Cię nie dotyczy. W kolejce stoją menedżerowie i kierownicy z połączonym Telegramem.",
@@ -132,6 +134,7 @@ export const leadsSections: Record<string, HelpEntry> = {
             "W nocy (18:00–08:00) lead jest od razu otwarty dla wszystkich, ale każdy bierze nie więcej niż równą część na miesiąc: «przejęte od początku miesiąca ÷ liczba osób w kolejce», z zaokrągleniem w górę.",
             "Z pominięciem kolejki idą: leady z kontaktów (od razu do osoby, która pisała) i zamówienia z witryny powyżej $10 000 — przychodzą tylko do Ciebie.",
             "Jeśli karta leada nie dotarła do nikogo — serwer stracił połączenie z Telegramem — sweep dośle ją, gdy Telegram znów odpowie: z dopiskiem «⚠️ Досылка: карточка не дошла из-за сбоя связи» (dosłanie po awarii łączności) i według zasad bieżącej godziny. Sprawdzanie co pięć minut; leady starsze niż trzy doby nie są dosyłane. Tak 26 września dotarł nocny lead z formularza, który przez dobę leżał niczyj.",
+            "**Lead «od partnera» — poza kolejką**: tworzy go samo przypisanie klienta przez partnera ([Partnerzy](/admin/partners)). Otwarty od razu dla wszystkich, bez pół godziny i nocnego udziału. Pierwsza karta «🤝 Приоритет: клиента привёл партнёр» — menedżerom, kierownikom i Tobie; przypomnienia «⏰ Клиент от партнёра всё ещё ничей» — menedżerom i kierownikom co 15 minut od 08:00 do 18:00, dopóki ktoś nie weźmie leada, ale nie dłużej niż tydzień. Ustawienia powiadomień pracownika nie dotyczą tych kart — to priorytet.",
           ],
         },
       },
@@ -155,16 +158,19 @@ export const leadsSections: Record<string, HelpEntry> = {
             "**«Kiedy»** — czas taszkencki. **«Budżet»** — to nie kwota, tylko to, jak klient mówi o pieniądzach: «podany i zatwierdzony», «jest, porównuje oferty» albo «nie podany». W zgłoszeniach z formularza i z kontaktów budżet prawie zawsze jest «nie podany» — rozmowy o pieniądzach jeszcze nie było.",
             "**«Ocena»** — ocena leada od 0 do 100 i litera: A — od 75, B — od 55, C — od 35, D — poniżej. **«Priorytet»**: «gorący» — ocena A albo klient prosił o żywego człowieka; «ciepły» — B; «do dojrzenia» — pozostałe; «archiwum» — klient odmówił.",
             "Danych kontaktowych na liście celowo nie ma: otwierają się w [karcie leada](#leads-card), a każde otwarcie jest zapisywane.",
+            "Leady «od partnera» są wyróżnione na żółto i podpisane «od partnera». Dopóki taki lead jest niczyj, stoi **pierwszy na liście** przy dowolnych filtrach, z dopiskiem «priorytet — weź jako pierwszy»; po wzięciu wraca na swoje miejsce według czasu, ale zostaje podświetlony.",
           ],
           head: [
             "Widzisz **wszystkie leady studia** — wolne, swoje i cudze. Filtry: «wszystkie leady / wolne / moje leady», priorytet i status; 50 na stronę.",
             "**«Budżet»** — to nie kwota, tylko to, jak klient mówi o pieniądzach: «podany i zatwierdzony», «jest, porównuje oferty» albo «nie podany». **«Ocena»** — od 0 do 100 i litera: A — od 75, B — od 55, C — od 35, D — poniżej. **«Priorytet»**: «gorący» — A albo prosił o żywego człowieka, «ciepły» — B, «do dojrzenia» — pozostałe, «archiwum» — odmówił.",
             "Pod statusem widać nick osoby, która prowadzi leada. Danych kontaktowych na liście nie ma — otwierają się w [karcie leada](#leads-card) i trafiają do dziennika.",
+            "Leady «od partnera» są wyróżnione na żółto. Dopóki niczyj — stoi pierwszy na liście z dopiskiem «priorytet — weź jako pierwszy»; po wzięciu wraca na miejsce według czasu, podświetlenie zostaje.",
           ],
           admin: [
             "Lista jest na zakładce «Leady». Widzisz wszystkie leady. Filtry: «wszystkie leady / wolne / moje leady», priorytet i status; 50 na stronę.",
             "**«Budżet»** — jak klient mówi o pieniądzach («podany i zatwierdzony», «jest, porównuje oferty», «nie podany»), a nie kwota. **«Ocena»**: A — od 75, B — od 55, C — od 35, D — poniżej. **«Priorytet»**: «gorący» — A albo prosił o człowieka, «ciepły» — B, «do dojrzenia» — pozostałe, «archiwum» — odmówił.",
             "Danych kontaktowych na liście celowo nie ma: inaczej «kto widział kontakty» znaczyłoby «wszyscy, którzy otworzyli panel». W karcie każde otwarcie danych kontaktowych to wiersz w [dzienniku](/admin/audit).",
+            "Leady «od partnera» są wyróżnione na żółto; niczyj stoi pierwszy na liście z dopiskiem «priorytet — weź jako pierwszy». W karcie takiego leada jest wszystko, co podał partner (nazwa, NIP/INN, kontakt, strona, czego potrzebuje), a «Skąd pisał» — «klienta przypisał partner w swoim panelu».",
           ],
         },
       },

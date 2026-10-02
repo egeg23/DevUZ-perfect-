@@ -58,6 +58,7 @@ export const AUDIT_ACTIONS = [
   "partner.agency_requested",
   "partner.agency_decided",
   "partner.client_claimed",
+  "partner.client_lead",
   "lead.inn_set",
   "partner.client_cancelled",
   "partner.payout_auto",

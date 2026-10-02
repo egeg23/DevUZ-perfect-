@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { budgetDict, homeDict, priorityDict, statusDict } from "@/content/admin-panel/home";
+import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
 import { PANEL_INTL, pick, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import type { LeadRow } from "@/lib/admin/leads";
 
@@ -51,6 +52,7 @@ function when(iso: string, locale: PanelLocale = "ru"): string {
 
 export function LeadTable({ rows, locale }: { rows: LeadRow[]; locale: PanelLocale }) {
   const t = pick(homeDict, locale);
+  const tp = pick(partnerClientsDict, locale);
   if (!rows.length) {
     return (
       <p className="rounded-xl border border-line bg-surface px-5 py-8 text-center text-sm text-muted">
@@ -78,7 +80,15 @@ export function LeadTable({ rows, locale }: { rows: LeadRow[]; locale: PanelLoca
           {rows.map((lead) => (
             <tr
               key={lead.id}
-              className="border-t border-line-soft bg-surface/40 transition hover:bg-surface"
+              // Лид от партнёра — приоритет: выделен цветом, а ничей ещё и
+              // стоит первым (сортировка — lib/admin/leads.ts, partner_pin).
+              className={`border-t border-line-soft transition ${
+                lead.source === "partner"
+                  ? lead.partner_pin
+                    ? "border-l-4 border-l-gold bg-gold/[0.10] hover:bg-gold/[0.16]"
+                    : "border-l-4 border-l-gold/40 bg-gold/[0.04] hover:bg-surface"
+                  : "bg-surface/40 hover:bg-surface"
+              }`}
             >
               <td data-label={t.colWhen} className="whitespace-nowrap px-4 py-3 text-muted">
                 {when(lead.created_at, locale)}
@@ -95,6 +105,11 @@ export function LeadTable({ rows, locale }: { rows: LeadRow[]; locale: PanelLoca
                 <span className="block">{lead.contact_name || "—"}</span>
                 {lead.company ? (
                   <span className="block text-xs text-faint">{lead.company}</span>
+                ) : null}
+                {lead.source === "partner" ? (
+                  <span className="mt-1 inline-block rounded bg-gold/15 px-1.5 py-0.5 text-xs text-gold">
+                    {lead.partner_pin ? `${tp.leadChip} · ${tp.leadChipFree}` : tp.leadChip}
+                  </span>
                 ) : null}
               </td>
               <td data-label={t.colNiche} className="px-4 py-3 text-muted">{lead.niche || "—"}</td>

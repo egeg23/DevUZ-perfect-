@@ -15,6 +15,11 @@ export const leadChannelDict = defineDict({
   form: { ru: "форма на сайте", uz: "saytdagi forma", pl: "formularz na stronie" },
   showcase: { ru: "витрина — бриф по заказу", uz: "vitrina — buyurtma brifi", pl: "witryna — brief zamówienia" },
   outreach: { ru: "наше холодное касание", uz: "bizning sovuq aloqamiz", pl: "nasz zimny kontakt" },
+  partner: {
+    ru: "клиента закрепил партнёр в кабинете",
+    uz: "mijozni hamkor kabinetda biriktirgan",
+    pl: "klienta przypisał partner w swoim panelu",
+  },
 });
 
 export const leadOriginDict = defineDict({

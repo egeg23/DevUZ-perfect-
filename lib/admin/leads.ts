@@ -50,6 +50,8 @@ export const LIST_COLUMNS = [
   "partner_code",
   "partner_ref_at",
   "partner_void_reason",
+  // Лид от партнёра, пока ничей, — наверху списка и выделен (миграция 0077).
+  "partner_pin",
 ].join(", ");
 
 export const DETAIL_COLUMNS = [
@@ -113,6 +115,8 @@ export type LeadRow = {
   /** Когда клиент перешёл по ссылке партнёра — из куки, если заявка с сайта. */
   partner_ref_at: string | null;
   partner_void_reason: string | null;
+  /** Приоритетный лид от партнёра, ещё ничей (lib/partners/priority-lead.ts). */
+  partner_pin?: boolean | null;
 };
 
 export type LeadDetail = LeadRow & {
@@ -199,6 +203,8 @@ export async function listLeads(
   let query = db
     .from("leads")
     .select(LIST_COLUMNS, { count: "exact" })
+    // Ничьи лиды от партнёра — всегда первыми: они приоритет.
+    .order("partner_pin", { ascending: false })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 

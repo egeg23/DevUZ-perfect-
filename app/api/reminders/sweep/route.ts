@@ -10,6 +10,7 @@ import { sendTeamNews } from "@/lib/admin/team-news";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
 import { settleTurnoverDue } from "@/lib/partners/autopay";
+import { pingPriorityLeads } from "@/lib/partners/priority-lead";
 import { expireClients } from "@/lib/partners/store";
 import { advanceQueues, redeliverLostCards } from "@/lib/admin/lead-queue-store";
 import { DELIVERY_GIVE_UP } from "@/lib/admin/ownership";
@@ -286,6 +287,12 @@ export async function POST(request: Request) {
     return 0;
   });
   const partnerClientsExpired = await expireClients(new Date()).catch(() => 0);
+  // Ничьи лиды от партнёра — напомнить команде, пока кто-нибудь не возьмёт
+  // (lib/partners/priority-lead.ts): каждые 15 минут в рабочее время.
+  const partnerLeadPings = await pingPriorityLeads(new Date()).catch((error) => {
+    console.error("партнёры, напоминания о лидах:", error);
+    return 0;
+  });
 
   // Рекомендации — здесь же: в понедельник утром недельные, каждое утро
   // дневные. Сам решает, пора ли; в остальные проходы возвращается сразу.
@@ -358,6 +365,7 @@ export async function POST(request: Request) {
     reviews,
     partnerPayouts,
     partnerClientsExpired,
+    partnerLeadPings,
     ok: true,
     sent,
     skipped,
