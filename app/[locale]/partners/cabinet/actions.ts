@@ -6,9 +6,11 @@ import { defaultLocale, isLocale, type Locale } from "@/lib/i18n";
 import { alertOwners, alertPayoutRequest } from "@/lib/partners/bot";
 import { isPerk, isTarget } from "@/lib/partners/rules";
 import { currentPartner } from "@/lib/partners/session";
+import { createPartnerLead, partnerLeadNotice } from "@/lib/partners/priority-lead";
 import { clientUntilDay } from "@/lib/partners/rules";
 import {
   createLink,
+  notifyPartner,
   requestAgency,
   requestClient,
   requestPayout,
@@ -133,6 +135,11 @@ export async function requestClientAction(formData: FormData) {
   });
   if (result.ok) {
     const c = result.client;
+    // Сразу лидом — приоритетным, всем менеджерам (lib/partners/priority-lead.ts).
+    const now = new Date();
+    const leadId = await createPartnerLead(partner, c, now);
+    const until = clientUntilDay({ ...c, first_lead_at: leadId ? now.toISOString() : c.first_lead_at });
+    if (leadId) await notifyPartner(partner, partnerLeadNotice(c, until));
     await alertOwners(
       [
         "🧾 <b>Партнёр закрепил клиента</b>",
@@ -144,7 +151,10 @@ export async function requestClientAction(formData: FormData) {
         c.website ? `Сайт: ${esc(c.website)}` : "",
         c.note ? `Что нужно: ${esc(c.note)}` : "",
         "",
-        `Студия эту компанию не знала — закрепление действует сразу, ждёт первой заявки до ${clientUntilDay(c)}. Отменить: ${siteUrl}/admin/partners`,
+        leadId
+          ? `Студия эту компанию не знала — закрепление действует сразу, заказы партнёру до ${until}. Лид заведён и разослан менеджерам как приоритетный: ${siteUrl}/admin/leads/${leadId}`
+          : `Студия эту компанию не знала — закрепление действует сразу. Лид завести не вышло — заведите вручную.`,
+        `Отменить закрепление: ${siteUrl}/admin/partners`,
       ]
         .filter(Boolean)
         .join("\n"),
