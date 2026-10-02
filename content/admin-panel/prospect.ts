@@ -367,6 +367,13 @@ export const problemDict = defineDict({
     pl: (name: string) =>
       `W wiadomości nie wymieniono «${name}» — naszego projektu z tej samej branży. To najmocniejsze zdanie wiadomości: adresat sprawdzi je w dziesięć sekund i potem rozmowa idzie inaczej.`,
   },
+  no_proto_link: {
+    ru: (url: string) =>
+      `В сообщении нет ссылки на уже собранный прототип (${url}) — а это то, что адресат откроет первым.`,
+    uz: (url: string) => `Xabarda allaqachon yig‘ilgan prototipga havola yo‘q (${url}) — adresat birinchi shuni ochadi.`,
+    pl: (url: string) =>
+      `W wiadomości nie ma linku do już zbudowanego prototypu (${url}) — a to adresat otworzy jako pierwsze.`,
+  },
   no_prototype: {
     ru: (hours: number) =>
       `В сообщении нет предложения собрать прототип сайта за ${hours} часов — а это то, на что адресату проще всего ответить «да».`,
@@ -423,6 +430,22 @@ export const outreachListDict = defineDict({
   whatWeDo: { ru: "Что делаем:", uz: "Nima qilamiz:", pl: "Co robimy:" },
   contacts: { ru: "Контакты: ", uz: "Kontaktlar: ", pl: "Kontakty: " },
   leadLink: { ru: "Лид по этому сайту →", uz: "Shu sayt bo‘yicha lid →", pl: "Lead dla tej strony →" },
+  protoReady: {
+    ru: "Прототип собран заранее →",
+    uz: "Prototip oldindan yig‘ilgan →",
+    pl: "Prototyp zbudowany z wyprzedzeniem →",
+  },
+  protoOpened: {
+    ru: (n: number, at: string) => `клиент открыл ${n} ${plural("ru", n, "раз", "раза", "раз")}, впервые — ${at}`,
+    uz: (n: number, at: string) => `mijoz ${n} marta ochdi, birinchi marta — ${at}`,
+    pl: (n: number, at: string) => `klient otworzył ${n} ${plural("pl", n, "raz", "razy", "razy")}, pierwszy raz — ${at}`,
+  },
+  protoNotOpened: { ru: "клиент ещё не открывал", uz: "mijoz hali ochmagan", pl: "klient jeszcze nie otworzył" },
+  protoNotBuilt: {
+    ru: "Прототип заранее не собран: ",
+    uz: "Prototip oldindan yig‘ilmadi: ",
+    pl: "Prototyp nie został zbudowany z wyprzedzeniem: ",
+  },
   manualNext: {
     ru: (target: string) => `Дальше руками: ${target}`,
     uz: (target: string) => `Keyingisi qo‘lda: ${target}`,
@@ -589,4 +612,51 @@ export const outreachListDict = defineDict({
     pl: (n: number) => `ukryto jeszcze ${n}: nieruszone, pominięte i wysłane ponad tydzień temu`,
   },
   helpList: { ru: "Что показано в списке", uz: "Ro‘yxatda nima ko‘rsatilgan", pl: "Co widać na liście" },
+});
+
+/**
+ * Почему прототип заранее не собрался (lib/proto/auto, AutoNote). Письмо в
+ * этом случае прежнее — обещает собрать за 12 часов.
+ */
+export const protoNoteDict = defineDict({
+  niche: {
+    ru: "такую нишу сборщик пока не умеет — письмо обещает собрать за 12 часов",
+    uz: "bunday sohani yig‘uvchi hozircha bilmaydi — xat 12 soatda yig‘ib berishni va’da qiladi",
+    pl: "tej branży budowniczy jeszcze nie obsługuje — wiadomość obiecuje zbudować w 12 godzin",
+  },
+  collect: {
+    ru: "сайт не открылся сборщику",
+    uz: "sayt yig‘uvchiga ochilmadi",
+    pl: "strona nie otworzyła się budowniczemu",
+  },
+  services: {
+    ru: "на сайте не нашлось трёх услуг, написанных словами",
+    uz: "saytda so‘z bilan yozilgan uchta xizmat topilmadi",
+    pl: "na stronie nie znaleziono trzech usług zapisanych słowami",
+  },
+  name: {
+    ru: "на сайте не нашлось названия компании",
+    uz: "saytda kompaniya nomi topilmadi",
+    pl: "na stronie nie znaleziono nazwy firmy",
+  },
+  missing: {
+    ru: "на сайте нет телеграма, ватсапа или телефона для кнопки записи",
+    uz: "saytda yozilish tugmasi uchun Telegram, WhatsApp yoki telefon yo‘q",
+    pl: "na stronie nie ma Telegrama, WhatsAppa ani telefonu do przycisku zapisu",
+  },
+  draft: {
+    ru: "страница не прошла проверку и наружу не ушла",
+    uz: "sahifa tekshiruvdan o‘tmadi va tashqariga chiqmadi",
+    pl: "strona nie przeszła kontroli i nie wyszła na zewnątrz",
+  },
+  model: {
+    ru: "модель не разобрала сайт",
+    uz: "model saytni tahlil qila olmadi",
+    pl: "model nie przeanalizował strony",
+  },
+  failed: {
+    ru: "не сохранился",
+    uz: "saqlanmadi",
+    pl: "nie zapisał się",
+  },
 });

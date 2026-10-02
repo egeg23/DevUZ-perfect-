@@ -491,6 +491,10 @@ test("у каждой ниши своя гарнитура, и у всех ес�
     "Inter",
     "Manrope",
     "Montserrat",
+    // Ниши касаний, сверено по data/google-fonts.csv навыка ui-ux-pro-max.
+    "Onest",
+    "Rubik",
+    "Golos Text",
   ]);
   for (const niche of PROTO_NICHES) {
     const pair = fontsFor(niche.key);

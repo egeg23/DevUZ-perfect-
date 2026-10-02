@@ -171,6 +171,7 @@ export default async function ProtoPage({
                   <span className="font-semibold">{proto.name}</span>
                   <span className="text-xs text-faint">
                     {niche ? nicheName(niche, locale) : proto.niche} · {proto.source} · {protoWhen(proto.created_at, locale)}
+                    {proto.auto ? ` · ${t.auto}` : ""}
                   </span>
                   <span
                     className={`ml-auto rounded px-2 py-0.5 font-mono text-[11px] ${

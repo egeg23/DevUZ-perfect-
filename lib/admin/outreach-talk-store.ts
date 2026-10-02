@@ -67,7 +67,7 @@ export async function recordInbound(input: {
   // Сравниваем в общем виде: в проспекте адрес мог остаться ссылкой.
   const { data: rows } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason")
+    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url")
     .eq("status", "sent")
     .order("sent_at", { ascending: false })
     .limit(500);
@@ -113,7 +113,7 @@ export async function recordManualInbound(
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason")
+    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url")
     .eq("id", prospectId)
     .maybeSingle();
   if (!prospect) return { matched: false };
@@ -135,7 +135,14 @@ function writesAgain(closedReason: unknown): string {
 
 /** Общий хвост обоих путей: записать, оценить, при нужде отпустить модель. */
 async function saveInbound(
-  prospect: { id: unknown; host: unknown; lead_id: unknown; ai_handling: unknown; closed_reason?: unknown },
+  prospect: {
+    id: unknown;
+    host: unknown;
+    lead_id: unknown;
+    ai_handling: unknown;
+    closed_reason?: unknown;
+    proto_url?: unknown;
+  },
   raw: string,
 ): Promise<{ matched: boolean; host?: string; verdict?: string }> {
   const db = serviceClient();
@@ -154,7 +161,11 @@ async function saveInbound(
   });
 
   const patch: Record<string, unknown> = { replied_at: new Date().toISOString() };
-  const verdict = readInbound(body);
+  const read = readInbound(body);
+  // Прототип в письме уже был (lib/proto/auto) — «прототип» в ответе значит
+  // не «соберите», а «посмотрел»: правки, цена, сроки. Это разговор для
+  // человека, а не рассылка «нужен прототип» всей команде.
+  const verdict = read === "proto" && prospect.proto_url ? "proto_ready" : read;
 
   // Просьбу не писать и просьбу позвать человека модель не обсуждает.
   // Первая — потому что следующее сообщение после неё и есть то, за что

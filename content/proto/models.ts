@@ -57,6 +57,14 @@ export type ProtoNiche = {
   uzTo: string;
   /** Трюк ниши. `null` — берётся трюк модели. */
   trick: string | null;
+  /**
+   * Как клиент добирается: приезжает на машине или приходит сам.
+   *
+   * Третий шаг записи — «Приезжаете к назначенному времени». В шиномонтаж
+   * приезжают, а в стоматологию, барбершоп и на пробный урок приходят, и
+   * «приезжаете на маникюр» читается как текст, написанный не про них.
+   */
+  come: "drive" | "walk";
   tone: ProtoTone;
   accent: Accent;
   /**
@@ -78,6 +86,9 @@ const EMBER = { base: "hsl(14 90% 58%)", soft: "hsl(14 72% 46%)", ink: "hsl(14 7
 const MINT = { base: "hsl(158 74% 50%)", soft: "hsl(158 60% 38%)", ink: "hsl(158 70% 7%)" };
 const TERRACOTTA = { base: "hsl(14 62% 44%)", soft: "hsl(14 46% 92%)", ink: "hsl(0 0% 100%)" };
 const PLUM = { base: "hsl(282 46% 44%)", soft: "hsl(282 40% 94%)", ink: "hsl(0 0% 100%)" };
+const TEAL = { base: "hsl(192 72% 32%)", soft: "hsl(192 46% 93%)", ink: "hsl(0 0% 100%)" };
+const PINE = { base: "hsl(164 58% 28%)", soft: "hsl(164 36% 93%)", ink: "hsl(0 0% 100%)" };
+const INDIGO = { base: "hsl(232 58% 46%)", soft: "hsl(232 60% 95%)", ink: "hsl(0 0% 100%)" };
 
 /**
  * Ниши модели «запись на время».
@@ -95,6 +106,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     ruTo: "шиномонтаж",
     uzTo: "shinamontajga",
     trick: "wheel",
+    come: "drive",
     tone: "dark",
     accent: AMBER,
     ask: ["Сезонное хранение шин", "Правка дисков", "Балансировка", "Ремонт проколов", "Выезд к клиенту"],
@@ -107,6 +119,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     ruTo: "автосервис",
     uzTo: "avtoservisga",
     trick: null,
+    come: "drive",
     tone: "dark",
     accent: BLUE,
     ask: [
@@ -127,6 +140,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     ruTo: "автомойку",
     uzTo: "avtomoykaga",
     trick: null,
+    come: "drive",
     tone: "dark",
     accent: CYAN,
     ask: ["Мойка кузова", "Химчистка салона", "Полировка", "Мойка двигателя"],
@@ -139,6 +153,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     ruTo: "барбершоп",
     uzTo: "barbershopga",
     trick: null,
+    come: "walk",
     tone: "dark",
     accent: EMBER,
     ask: ["Стрижка", "Борода", "Бритьё опасной бритвой", "Детская стрижка"],
@@ -151,6 +166,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     ruTo: "салон красоты",
     uzTo: "go‘zallik saloniga",
     trick: null,
+    come: "walk",
     tone: "light",
     accent: TERRACOTTA,
     ask: ["Стрижка и укладка", "Окрашивание", "Уход за волосами", "Макияж", "Брови и ресницы"],
@@ -163,6 +179,7 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     ruTo: "ногтевую студию",
     uzTo: "tirnoq studiyasiga",
     trick: null,
+    come: "walk",
     tone: "light",
     accent: PLUM,
     ask: ["Маникюр", "Педикюр", "Покрытие", "Наращивание", "Дизайн"],
@@ -175,14 +192,98 @@ export const PROTO_NICHES: readonly ProtoNiche[] = [
     ruTo: "детейлинг",
     uzTo: "detailingga",
     trick: null,
+    come: "drive",
     tone: "dark",
     accent: MINT,
     ask: ["Полировка кузова", "Защитное покрытие", "Химчистка", "Оклейка плёнкой"],
+  },
+  /*
+   * Три ниши ниже заведены ради касаний. В пуле на 2 октября — почти сотня
+   * стоматологий и учебных центров с сайтами, и ни одна из прежних семи ниш
+   * к ним не подходила: прототип заранее собрать было не для кого. Работа
+   * страницы у них та же — человек выбирает время и приходит: на приём, на
+   * пробный урок, на анализы.
+   */
+  {
+    key: "stomatologiya",
+    model: "booking",
+    ru: "Стоматология",
+    uz: "Stomatologiya",
+    ruTo: "стоматологию",
+    uzTo: "stomatologiyaga",
+    trick: null,
+    come: "walk",
+    tone: "light",
+    accent: TEAL,
+    ask: ["Лечение кариеса", "Имплантация", "Брекеты", "Отбеливание", "Профессиональная чистка", "Детская стоматология"],
+  },
+  {
+    key: "uchebnyy-centr",
+    model: "booking",
+    ru: "Учебный центр",
+    uz: "O‘quv markazi",
+    ruTo: "учебный центр",
+    uzTo: "o‘quv markaziga",
+    trick: null,
+    come: "walk",
+    tone: "light",
+    accent: INDIGO,
+    ask: ["Какие курсы", "Возраст учеников", "Пробный урок", "Группы или индивидуально", "Онлайн или в классе"],
+  },
+  {
+    key: "medcentr",
+    model: "booking",
+    ru: "Медицинский центр",
+    uz: "Tibbiyot markazi",
+    ruTo: "медицинский центр",
+    uzTo: "tibbiyot markaziga",
+    trick: null,
+    come: "walk",
+    tone: "light",
+    accent: PINE,
+    ask: ["Приём врачей", "Анализы", "УЗИ", "Детский врач", "Выезд на дом"],
   },
 ];
 
 export function protoNicheByKey(key: string): ProtoNiche | null {
   return PROTO_NICHES.find((niche) => niche.key === key) ?? null;
+}
+
+/**
+ * Как ниша записана у касания — в ниши прототипа.
+ *
+ * У касания ниша приходит двумя путями, и записи у них разные: поиск по
+ * картам кладёт её по-русски («стоматология», «учебный центр»), разбор сайта —
+ * латинским слагом классификатора («stomatologiya», «avtoservis»). Шиномонтаж
+ * и автомойку классификатор не различает и зовёт автосервисом — так и
+ * собираем: автосервис ближе к ним, чем ничего.
+ *
+ * Не нашлось — null, и прототип заранее не собирается. Застройщика здесь нет
+ * намеренно: работа его страницы — не «записаться на время», а выбрать
+ * квартиру, и собирать ему страницу записи значит показать чужой бизнес.
+ */
+const NICHE_ALIASES: Record<string, readonly string[]> = {
+  shinomontazh: ["шиномонтаж", "shinamontaj"],
+  avtoservis: ["автосервис", "сто", "автотехцентр", "avtoservis"],
+  avtomoyka: ["автомойка", "avtomoyka"],
+  barbershop: ["барбершоп", "barbershop"],
+  "salon-krasoty": ["салон красоты", "go‘zallik saloni", "go'zallik saloni"],
+  "nogtevaya-studiya": ["ногтевая студия", "маникюр", "tirnoq studiyasi"],
+  detailing: ["детейлинг", "детейлинг-центр", "detailing"],
+  stomatologiya: ["стоматология", "стоматологическая клиника", "стоматологии", "stomatologiya", "dental"],
+  "uchebnyy-centr": ["учебный центр", "образовательный центр", "языковой центр", "курсы", "it образование для детей", "o‘quv markazi", "o'quv markazi"],
+  medcentr: ["медицинский центр", "медцентр", "клиника", "tibbiyot markazi"],
+};
+
+export function protoNicheFor(niche: string | null | undefined): ProtoNiche | null {
+  const raw = (niche ?? "").trim().toLowerCase().replace(/ё/g, "е");
+  if (!raw) return null;
+  const direct = protoNicheByKey(raw);
+  if (direct) return direct;
+  for (const [key, aliases] of Object.entries(NICHE_ALIASES)) {
+    if (aliases.includes(raw)) return protoNicheByKey(key);
+  }
+  return null;
 }
 
 /** Трюк по умолчанию для модели — если у ниши своего нет. */

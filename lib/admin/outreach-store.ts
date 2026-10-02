@@ -31,6 +31,8 @@ import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
 import { BATCH_CAP, auditDeep, type ProspectRow, type Walked } from "@/lib/audit/batch";
+import { autoPrototype } from "@/lib/proto/auto";
+import { markAutoSent } from "@/lib/proto/store";
 import { newRequestNo } from "@/lib/qualify/engine";
 import {
   NOSITE_SYSTEM,
@@ -126,10 +128,19 @@ export type Prospect = {
   closed_reason: CloseReason | null;
   closed_at: string | null;
   closed_name: string | null;
+  /**
+   * Прототип, собранный заранее (lib/proto/auto): ссылка, которую письмо даёт
+   * вместо обещания, и сколько раз клиент её открыл. Нет ссылки — почему
+   * (proto_note), чтобы менеджер видел, что машина пробовала.
+   */
+  proto_url: string | null;
+  proto_note: string | null;
+  proto_opens: number;
+  proto_opened_at: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, staff:claimed_by (display_name), closer:closed_by (display_name)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -164,7 +175,21 @@ function shape(row: Record<string, unknown>): Prospect {
     closed_reason: isCloseReason(String(row.closed_reason ?? "")) ? (row.closed_reason as CloseReason) : null,
     closed_at: (row.closed_at as string | null) ?? null,
     closed_name: closer?.display_name ?? null,
+    proto_url: (row.proto_url as string | null) ?? null,
+    proto_note: (row.proto_note as string | null) ?? null,
+    ...protoOpens(row.protos),
   };
+}
+
+/** Открытия прототипа, собранного заранее, — из связанных прототипов касания. */
+function protoOpens(joined: unknown): { proto_opens: number; proto_opened_at: string | null } {
+  const rows = (Array.isArray(joined) ? joined : joined ? [joined] : []) as {
+    auto?: boolean;
+    opens?: number;
+    opened_at?: string | null;
+  }[];
+  const auto = rows.find((row) => row.auto === true);
+  return { proto_opens: Number(auto?.opens ?? 0), proto_opened_at: auto?.opened_at ?? null };
 }
 
 /* ── Сохранение прогона ────────────────────────────────────────────────── */
@@ -427,6 +452,22 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     hints: deep.walked?.hints ?? [],
   }).reference;
 
+  /**
+   * Прототип заранее — здесь же, пока сайт открыт и разобран: ниша и язык
+   * уже известны. Собрался — письмо даёт ссылку вместо обещания. Не
+   * собрался — письмо прежнее, «соберём за 12 часов».
+   */
+  // Сбой сборки письму не мешает: без прототипа оно просто обещает его.
+  const proto = await autoPrototype({
+    prospect,
+    siteNiche: niche,
+    lang: deep.walked?.lang ?? "ru",
+  }).catch((error: unknown) => {
+    console.error("прототип заранее: сбой", host, error instanceof Error ? error.message : error);
+    return { url: null };
+  });
+  const prototype = proto.url;
+
   const prompt = outreachPrompt({
     host,
     label: prospect.label,
@@ -435,12 +476,14 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
     draft: prospect.draft,
     sender: staff.display_name,
     walked: deep.walked,
+    prototype,
     // Язык сайта снят при обходе. Не вышло обойти — пишем по-русски: это
     // не «мы решили», а «мы не знаем», и угадывать тут дороже.
     lang: deep.walked?.lang ?? "ru",
   });
 
-  const hooks = outreachHooks(findings, reference?.name ?? null);
+
+  const hooks = outreachHooks(findings, reference?.name ?? null, prototype);
 
   /**
    * Один ход модели.
@@ -545,7 +588,7 @@ export type QueueResult = { ok: true; leadId: string | null } | ({ ok: false; wh
  * карточка может звать её и не зная, кто сейчас смотрит.
  */
 export function sendProblems(
-  prospect: Pick<Prospect, "host" | "label" | "niche" | "findings" | "draft" | "walked" | "message">,
+  prospect: Pick<Prospect, "host" | "label" | "niche" | "findings" | "draft" | "walked" | "message" | "proto_url">,
   sender = "менеджер",
 ): MessageProblem[] {
   const text = (prospect.message ?? "").trim();
@@ -576,11 +619,13 @@ export function sendProblems(
       sender,
       walked: prospect.walked,
       lang: prospect.walked?.lang ?? "ru",
+      prototype: prospect.proto_url,
     }),
     host,
     outreachHooks(
       prospect.findings,
       outreachProof({ niche: prospect.niche, label: prospect.label, host }).reference?.name ?? null,
+      prospect.proto_url,
     ),
   );
 }
@@ -791,6 +836,9 @@ export async function markSelfContacted(
       sent_at: when,
     });
   }
+  // Написал сам, но со ссылкой на прототип, собранный заранее, — прототип
+  // ушёл клиенту так же, как с рабочего аккаунта.
+  if (body && prospect.proto_url && body.includes(prospect.proto_url)) await markAutoSent(id);
 
   await record("prospect.manual_sent", {
     actorStaffId: staff.id,

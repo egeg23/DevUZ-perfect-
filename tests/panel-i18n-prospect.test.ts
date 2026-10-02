@@ -165,6 +165,10 @@ const row = (over: Partial<Prospect>): Prospect => ({
   closed_reason: null,
   closed_at: null,
   closed_name: null,
+  proto_url: null,
+  proto_note: null,
+  proto_opens: 0,
+  proto_opened_at: null,
   ...over,
 });
 
@@ -185,6 +189,15 @@ const ROWS: Prospect[] = [
   }),
   row({ id: "f", status: "manual", target: "+998901234567", target_kind: "manual", contacts: EMPTY_CONTACTS }),
   row({ id: "g", status: "new", url: null, host: null, niche: "stomatologiya", message: null, contacts: EMPTY_CONTACTS }),
+  // Прототип, собранный заранее: открыт клиентом и ещё не собранный.
+  row({
+    id: "h",
+    proto_url: "https://devuz.studio/proto/0f8fad5bd9cb469fa16570867728950e",
+    proto_opens: 3,
+    proto_opened_at: "2026-09-29T10:00:00Z",
+  }),
+  row({ id: "i", proto_url: "https://devuz.studio/proto/1f8fad5bd9cb469fa16570867728950e" }),
+  row({ id: "j", proto_note: "services" }),
 ];
 
 function list(locale: PanelLocale, extra: Record<string, unknown> = {}): string {
@@ -207,6 +220,10 @@ test("«Разобранные сайты» на трёх языках: кноп
   assert.match(ru, /Связался сам/);
   assert.match(ru, /Отправить в @acme|Связаться/);
   assert.match(ru, /Текст письма клиенту/, "письмо клиенту пропало из поля");
+  assert.match(ru, /Прототип собран заранее/);
+  assert.match(ru, /клиент открыл 3 раза/);
+  assert.match(ru, /клиент ещё не открывал/);
+  assert.match(ru, /Прототип заранее не собран: на сайте не нашлось трёх услуг/);
   for (const locale of ["uz", "pl"] as const) {
     const html = list(locale);
     assertNoRussian(html, `список ${locale}`);

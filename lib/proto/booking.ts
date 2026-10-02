@@ -63,6 +63,8 @@ const COPY = {
         { title: "Приезжаете к назначенному времени", text: "Время подтверждают по телефону." },
       ],
     },
+    // Третий шаг — по тому, как клиент добирается (ProtoNiche.come).
+    arrive: { drive: "Приезжаете к назначенному времени", walk: "Приходите к назначенному времени" },
     where: "Где и когда",
     address: "Адрес",
     hours: "Часы работы",
@@ -97,6 +99,7 @@ const COPY = {
         { title: "Belgilangan vaqtda kelasiz", text: "Vaqt telefonda tasdiqlanadi." },
       ],
     },
+    arrive: { drive: "Belgilangan vaqtda kelasiz", walk: "Belgilangan vaqtda kelasiz" },
     where: "Qayerda va qachon",
     address: "Manzil",
     hours: "Ish vaqti",
@@ -404,7 +407,9 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
   // Кнопка либо открывает переписку, либо набирает номер. От этого зависят
   // и подзаголовок первого экрана, и шаги записи.
   const voice = action.kind === "phone" ? "call" : "chat";
-  const steps = c.steps[voice];
+  const steps = c.steps[voice].map((step, index) =>
+    index === c.steps[voice].length - 1 ? { ...step, title: c.arrive[niche.come] } : step,
+  );
   const stage = facts.services.slice(0, STAGE_MAX);
   const rest = facts.services.slice(STAGE_MAX);
   /*

@@ -172,7 +172,10 @@ test("вердикт по входящему не остаётся в чисто
   // Правило можно верно посчитать и не применить — тогда модель ответит
   // тому, кто попросил не писать, и аккаунт студии отправится в блокировку.
   const store = read("lib/admin/outreach-talk-store.ts");
-  assert.match(store, /const verdict = readInbound\(body\);/);
+  assert.match(store, /const read = readInbound\(body\);/);
+  // Прототип уже ушёл в письме (lib/proto/auto) — «прототип» в ответе зовёт
+  // человека, а не запускает рассылку «нужен прототип».
+  assert.match(store, /const verdict = read === "proto" && prospect\.proto_url \? "proto_ready" : read;/);
   assert.match(store, /if \(verdict !== "talk" && prospect\.ai_handling\) \{[\s\S]{0,200}?ai_handling = false/);
   // И человек об этом узнаёт: разговор, тихо оставленный без ответа, для
   // клиента неотличим от «нами перестали заниматься».
