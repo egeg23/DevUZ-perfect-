@@ -32,6 +32,11 @@ import { mainAction, wordmark } from "@/lib/proto/facts";
 import { icon, iconFor } from "@/lib/proto/icons";
 import { flingVars, motionCss, motionsFor } from "@/lib/proto/motion";
 import { trick } from "@/lib/proto/tricks";
+import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
+import { siteUrl } from "@/lib/seo";
+
+/** Условия на макеты — на языке прототипа. */
+export const mockupTermsUrl = (locale: "ru" | "uz") => `${siteUrl}/${locale}/${MOCKUP_TERMS_PATH}`;
 
 /** Сколько услуг выкидывает трюк. Дальше — списком, без театра. */
 const STAGE_MAX = 6;
@@ -79,6 +84,14 @@ const COPY = {
     viaTelegram: "Запись в Telegram",
     viaWhatsapp: "Запись в WhatsApp",
     madeBy: "Прототип. Собран DevUz Studio по данным с сайта",
+    /*
+     * Владелец, 03.10.2026: макет, увиденный до договора, уходит другому
+     * исполнителю «как образец». Условия использования (content/mockup-terms)
+     * обязаны быть видны на самом прототипе — иначе «клиент знал» нечем
+     * доказать.
+     */
+    rights: "Прототип принадлежит DevUz Studio. Использовать его можно только по договору —",
+    terms: "условия использования",
   },
   uz: {
     book: "Yozilish",
@@ -114,6 +127,8 @@ const COPY = {
     viaTelegram: "Telegram orqali yozilish",
     viaWhatsapp: "WhatsApp orqali yozilish",
     madeBy: "Prototip. DevUz Studio sayt ma’lumotlari asosida yig‘di:",
+    rights: "Prototip DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin —",
+    terms: "foydalanish shartlari",
   },
 } as const;
 
@@ -324,6 +339,7 @@ section{position:relative;padding-block:var(--gap-section);overflow:clip}
 /* Подвал и нижняя кнопка */
 footer{border-top:1px solid var(--line);padding-block:${SPACE[5]}px ${SPACE[6]}px;color:var(--faint);font-size:${TYPE[1]}px}
 footer .wrap{display:flex;flex-wrap:wrap;gap:${SPACE[2]}px ${SPACE[4]}px}
+footer a{color:inherit;text-decoration:underline}
 .dock{position:fixed;inset:auto 0 0 0;z-index:40;padding:${SPACE[2]}px ${SPACE[3]}px calc(${SPACE[2]}px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--ink) 90%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
 .dock .btn{width:100%;padding-block:${SPACE[3]}px}
 
@@ -628,6 +644,7 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
   <div class="wrap">
     <span>${esc(facts.name)}</span>
     <span>${esc(c.madeBy)} ${esc(facts.source)}</span>
+    <span>${esc(c.rights)} <a href="${esc(mockupTermsUrl(facts.locale))}">${esc(c.terms)}</a></span>
   </div>
 </footer>
 

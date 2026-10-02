@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/container";
 import { PhoneLinesCompact } from "@/components/ui/phone-links";
 import { company, proof } from "@/content/company";
 import type { Dictionary } from "@/content/dictionaries";
+import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { services } from "@/content/services";
 import { localeHref, t, type Locale } from "@/lib/i18n";
 
@@ -82,6 +83,13 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
               <li>
                 <Link href={localeHref(locale, "licence")} className="text-[0.9rem] text-muted transition-colors hover:text-text">
                   {dict.footer.licence}
+                </Link>
+              </li>
+              {/* Условия на макеты — рядом с офертой: клиент принимает их
+                  перепиской, и найти их должно быть так же просто. */}
+              <li>
+                <Link href={localeHref(locale, MOCKUP_TERMS_PATH)} className="text-[0.9rem] text-muted transition-colors hover:text-text">
+                  {dict.footer.mockups}
                 </Link>
               </li>
             </ul>
