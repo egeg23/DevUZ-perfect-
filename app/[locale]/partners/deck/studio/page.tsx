@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Deck, Slide, SlideTitle, usd } from "@/components/partners/deck";
-import { cases } from "@/content/cases";
+import { casesByDate } from "@/content/cases";
 import { company, proof } from "@/content/company";
 import { deckCopy } from "@/content/partner-decks";
 import { services } from "@/content/services";
@@ -45,7 +45,7 @@ export default async function StudioDeck({
   const ref = codeFromQuery((await searchParams).ref);
   const d = deckCopy(locale);
   const t = d.studio;
-  const shown = cases.filter((c) => c.slug !== "devuz").slice(0, 6);
+  const shown = casesByDate.filter((c) => c.slug !== "devuz").slice(0, 6);
   const bot = ref ? botLink(company.telegram, ref) : company.telegramUrl;
 
   return (

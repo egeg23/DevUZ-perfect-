@@ -25,7 +25,7 @@ function studioFacts(locale: Locale): string {
   const caseLines = cases
     .map(
       (c) =>
-        `- ${c.name} (${c.year}, Tier ${c.tier}): ${t(c.summary, locale)} Ниши: ${c.niches.join(", ")}. Стек: ${c.tech.join(", ")}.`,
+        `- ${c.name} (${c.date}, Tier ${c.tier}): ${t(c.summary, locale)} Ниши: ${c.niches.join(", ")}. Стек: ${c.tech.join(", ")}.`,
     )
     .join("\n");
 

@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { casesTitle } from "@/content/company";
-import { cases, showcaseSlug, type Case } from "@/content/cases";
+import { caseDate, casesByDate, showcaseSlug, type Case } from "@/content/cases";
 import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import { localeHref, t, type Locale } from "@/lib/i18n";
@@ -137,7 +137,7 @@ export function CaseCard({
         </div>
 
         <span className="absolute right-4 top-4 font-mono text-[0.62rem] text-faint">
-          {item.year}
+          {caseDate(item, locale)}
         </span>
 
         {/* У кейса есть шторка «было / стало» — сказать это на карточке:
@@ -175,13 +175,13 @@ export function CasesSection({ locale, dict }: { locale: Locale; dict: Dictionar
   // Сайт студии на главной показан отдельным блоком выше — в сетке он был бы
   // вторым рассказом об одном и том же. Шесть карточек — ровно два полных
   // ряда по три на широком экране, седьмая оставила бы дыру. Полный список,
-  // вместе с сайтом студии, живёт на странице /cases. Какие именно шесть —
-  // решает порядок в content/cases.ts: главная берёт начало списка.
-  const featured = cases.filter((item) => item.slug !== showcaseSlug).slice(0, 6);
+  // вместе с сайтом студии, живёт на странице /cases. Шесть — самые свежие:
+  // владелец, 03.10.2026, «свежие проекты с датами ставь наверх».
+  const featured = casesByDate.filter((item) => item.slug !== showcaseSlug).slice(0, 6);
 
   return (
     <section id="cases" className="border-t border-line py-24 md:py-32">
-      <CodeBoot code={"SELECT * FROM cases ORDER BY year DESC"}>
+      <CodeBoot code={"SELECT * FROM cases ORDER BY date DESC"}>
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading

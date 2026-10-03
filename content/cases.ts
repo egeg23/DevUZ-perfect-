@@ -1,4 +1,4 @@
-import type { LocalizedText } from "@/lib/i18n";
+import type { Locale, LocalizedText } from "@/lib/i18n";
 
 /**
  * Библиотека проектов.
@@ -8,15 +8,25 @@ import type { LocalizedText } from "@/lib/i18n";
  * при ICP-скоринге. Поэтому у каждого кейса есть `niches` — список ниш, к
  * которым он относится, в терминах, которыми говорит клиент.
  *
- * Порядок в массиве — редакторский, не по году: все проекты 2026-го, сортировать
- * нечем. Первым идёт то, чем студия представляется сейчас, и этот же порядок
- * определяет шесть карточек на главной — она берёт начало списка.
+ * На сайте кейсы идут по дате, новые сверху (casesByDate) — владелец,
+ * 03.10.2026: «Свежие проекты с датами ставь наверх». Шесть карточек на
+ * главной — шесть самых свежих.
+ *
+ * Порядок в самом массиве — редакторский, и его читают письма: пример для
+ * ниши берётся первым подходящим (lib/audit/proof.ts). Поэтому показ
+ * отсортирован отдельно, а пример в письме от новой даты не меняется.
  */
 export type Case = {
   slug: string;
   /** Название проекта — не переводится. */
   name: string;
-  year: number;
+  /**
+   * Когда сделан: `ГГГГ-ММ-ДД`, если день известен точно (макеты витрины —
+   * день, когда проект появился на ней), иначе `ГГГГ-ММ` — для долгих
+   * проектов это месяц, когда шла основная работа. По дате кейсы идут на
+   * сайте, новые сверху (casesByDate), и она же стоит на карточке.
+   */
+  date: string;
   /** Живой адрес, если проект публичный. */
   url?: string;
   /** Грейд ниши по ICP: 1 — высший приоритет, 3 — низший. */
@@ -100,7 +110,7 @@ export const cases: Case[] = [
     slug: "devuz",
     name: "DevUz Studio",
     monogram: "DU",
-    year: 2026,
+    date: "2026-08",
     url: "https://devuz.studio",
     tier: 2,
     niches: ["сайт компании", "корпоративный сайт", "лендинг", "мультиязычный сайт", "AI-менеджер", "чат-бот на сайт", "услуги", "corporate website", "veb-sayt", "企业官网"],
@@ -141,7 +151,7 @@ export const cases: Case[] = [
     slug: "mavera",
     name: "MAVERA",
     monogram: "MV",
-    year: 2026,
+    date: "2026-09-15",
     url: "https://globalex.maximov-tech.ru/mavera",
     tier: 1,
     niches: ["застройщик", "недвижимость", "жилой комплекс", "продажа квартир", "подбор квартиры", "ипотечный калькулятор", "real estate", "property developer", "ko‘chmas mulk", "quruvchi kompaniya", "房地产", "开发商"],
@@ -187,7 +197,7 @@ export const cases: Case[] = [
       taken: "2026-09",
       parts: ["hero", "about", "catalog", "product", "production", "news", "team", "contacts"],
     },
-    year: 2026,
+    date: "2026-08-20",
     url: "https://globalex.maximov-tech.ru/ru",
     tier: 1,
     niches: ["экспорт", "производство", "сельское хозяйство", "B2B", "FMCG", "export", "eksport", "出口"],
@@ -232,7 +242,7 @@ export const cases: Case[] = [
       taken: "2026-09",
       parts: ["hero", "showcase", "catalog", "product", "themes", "clients", "about", "contacts"],
     },
-    year: 2026,
+    date: "2026-09-08",
     url: "https://globalex.maximov-tech.ru/adar",
     tier: 2,
     niches: ["подарочные наборы", "корпоративные подарки", "новогодние подарки", "кондитерские изделия", "интернет-магазин", "каталог", "e-commerce", "gift sets", "corporate gifts", "sovg‘a to‘plamlari", "礼品套装", "企业礼品"],
@@ -273,7 +283,7 @@ export const cases: Case[] = [
     slug: "tezketkaz",
     name: "TezKetKaz",
     monogram: "TKK",
-    year: 2026,
+    date: "2026-05",
     tier: 1,
     niches: ["доставка еды", "ресторанный бизнес", "HoReCa", "маркетплейс", "логистика", "食品配送", "food delivery"],
     forNiches: ["dostavka-edy", "restoran", "logistika"],
@@ -322,7 +332,7 @@ export const cases: Case[] = [
     slug: "harvest-motion",
     name: "Harvest in Motion",
     monogram: "HM",
-    year: 2026,
+    date: "2026-08-21",
     url: "https://globalex.maximov-tech.ru/motion.html",
     tier: 1,
     niches: ["экспорт", "производство", "сельское хозяйство", "промо-сайт", "презентация", "анимация", "прототип", "animation", "prototype", "animatsiya", "动效"],
@@ -368,7 +378,7 @@ export const cases: Case[] = [
       taken: "2026-09",
       parts: ["hero", "picker", "projects", "commerce", "mortgage", "news", "contacts"],
     },
-    year: 2026,
+    date: "2026-09-18",
     url: "https://globalex.maximov-tech.ru/gh",
     tier: 1,
     niches: ["застройщик", "недвижимость", "жилой комплекс", "продажа квартир", "подбор квартиры", "ипотечный калькулятор", "редизайн", "real estate", "property developer", "ko‘chmas mulk", "房地产"],
@@ -416,7 +426,7 @@ export const cases: Case[] = [
       taken: "2026-09",
       parts: ["hero", "calculator", "works", "production", "steps", "materials", "faq", "contacts"],
     },
-    year: 2026,
+    date: "2026-09-22",
     url: "https://globalex.maximov-tech.ru/namuna",
     tier: 2,
     niches: ["мебель", "мебель на заказ", "кухни на заказ", "мебельная фабрика", "калькулятор", "редизайн", "furniture", "mebel", "家具"],
@@ -461,7 +471,7 @@ export const cases: Case[] = [
     slug: "comfort-mebel",
     name: "Comfort Mebel",
     monogram: "CM",
-    year: 2026,
+    date: "2026-09-29",
     url: "https://globalex.maximov-tech.ru/comfort",
     tier: 2,
     niches: ["мебель", "мебельная фабрика", "мебельный магазин", "мягкая мебель", "диваны", "спальные гарнитуры", "шкафы", "мебель в рассрочку", "furniture", "furniture store", "mebel", "mebel do‘koni", "家具"],
@@ -504,7 +514,7 @@ export const cases: Case[] = [
     slug: "medacademy",
     name: "MedAcademy",
     monogram: "MA",
-    year: 2026,
+    date: "2026-10-01",
     url: "https://globalex.maximov-tech.ru/medacademy",
     tier: 2,
     niches: ["учебный центр", "подготовка к поступлению", "курсы химии", "курсы биологии", "медвуз", "DTM", "o'quv markazi", "education", "培训中心"],
@@ -547,7 +557,7 @@ export const cases: Case[] = [
     slug: "delta",
     name: "Delta IT-School",
     monogram: "DIT",
-    year: 2026,
+    date: "2026-09-23",
     url: "https://globalex.maximov-tech.ru/delta",
     tier: 2,
     niches: ["IT-школа", "детская IT-школа", "программирование для детей", "курсы программирования", "школа программирования", "учебный центр", "образование для детей", "kids coding", "coding school", "IT maktab", "dasturlash kurslari", "少儿编程"],
@@ -590,7 +600,7 @@ export const cases: Case[] = [
     slug: "arsenal-d",
     name: "Arsenal D",
     monogram: "AD",
-    year: 2026,
+    date: "2026-10-02",
     url: "https://globalex.maximov-tech.ru/webname",
     tier: 2,
     niches: ["регистратор доменов", "домены .uz", "хостинг", "VPS", "SSL", "веб-студия", "domain registrar", "web hosting", "domen ro'yxatdan o'tkazish", "hosting", "域名注册"],
@@ -633,7 +643,7 @@ export const cases: Case[] = [
     slug: "akbar-rich",
     name: "Akbar Rich",
     monogram: "AR",
-    year: 2026,
+    date: "2026-09-24",
     url: "https://globalex.maximov-tech.ru/akbar",
     tier: 2,
     niches: ["двери", "межкомнатные двери", "межкомнатных дверей", "двери на заказ", "фабрика дверей", "стеновые панели", "погонаж", "конструктор двери", "interior doors", "doors", "eshiklar", "eshik", "门"],
@@ -676,7 +686,7 @@ export const cases: Case[] = [
     slug: "transtelecom",
     name: "Transtelecom",
     monogram: "TTC",
-    year: 2026,
+    date: "2026-09-25",
     url: "https://globalex.maximov-tech.ru/ttc",
     tier: 2,
     niches: ["интернет-провайдер", "провайдер", "оператор связи", "телеком", "связь", "телефония", "дата-центр", "облако", "системный интегратор", "internet provider", "telecom", "provayder", "aloqa operatori", "电信"],
@@ -720,7 +730,7 @@ export const cases: Case[] = [
     slug: "tranio",
     name: "Tranio",
     monogram: "TR",
-    year: 2026,
+    date: "2026-09-25",
     url: "https://globalex.maximov-tech.ru/tranio",
     tier: 1,
     niches: ["зарубежная недвижимость", "недвижимость за рубежом", "агентство недвижимости", "инвестиции в недвижимость", "ВНЖ за инвестиции", "риелтор", "overseas property", "real estate agency", "property investment", "xorijda ko‘chmas mulk", "ko‘chmas mulk agentligi", "海外房产"],
@@ -769,7 +779,7 @@ export const cases: Case[] = [
       taken: "2026-09",
       parts: ["hero", "quality", "catalog", "production", "clients", "about", "contacts"],
     },
-    year: 2026,
+    date: "2026-09-22",
     url: "https://globalex.maximov-tech.ru/foodmaxx",
     tier: 2,
     niches: ["производство", "консервы", "пищевое производство", "FMCG", "B2B", "дистрибуция", "food production", "oziq-ovqat", "食品"],
@@ -810,7 +820,7 @@ export const cases: Case[] = [
     slug: "usta",
     name: "USTA",
     monogram: "USTA",
-    year: 2026,
+    date: "2026-07",
     url: "https://usta.maximov-tech.ru",
     tier: 2,
     niches: ["сфера услуг", "маркетплейс услуг", "ремонт", "бытовые услуги", "services", "xizmatlar"],
@@ -854,7 +864,7 @@ export const cases: Case[] = [
     slug: "seller-ai",
     name: "Seller AI",
     monogram: "SAI",
-    year: 2026,
+    date: "2026-06",
     tier: 1,
     niches: ["e-commerce", "маркетплейс", "ритейл", "SaaS", "аналитика", "电商", "savdo"],
     forNiches: ["internet-magazin"],
@@ -894,7 +904,7 @@ export const cases: Case[] = [
     slug: "lbm-rentals",
     name: "LBM Rentals",
     monogram: "LBM",
-    year: 2026,
+    date: "2026-08",
     tier: 2,
     niches: ["недвижимость", "аренда", "туризм", "гостиничный бизнес", "HoReCa", "real estate", "ko‘chmas mulk"],
     forNiches: ["nedvizhimost", "turagentstvo"],
@@ -934,7 +944,7 @@ export const cases: Case[] = [
     slug: "legal-ai",
     name: "Legal AI",
     monogram: "LAI",
-    year: 2026,
+    date: "2026-03",
     tier: 1,
     niches: ["юридические услуги", "финансы", "консалтинг", "документооборот", "legal", "yuridik", "法律"],
     forNiches: ["yurfirma"],
@@ -973,7 +983,7 @@ export const cases: Case[] = [
     slug: "marketplace-audit",
     name: "Marketplace Audit",
     monogram: "MA",
-    year: 2026,
+    date: "2026-06",
     tier: 1,
     niches: ["маркетплейс", "e-commerce", "ритейл", "логистика", "финтех", "enterprise"],
     forNiches: ["internet-magazin"],
@@ -1018,6 +1028,22 @@ export const cases: Case[] = [
  * /cases, sitemap и промпт AI-менеджера видят его наравне с остальными.
  */
 export const showcaseSlug = "devuz";
+
+/** Для сайта: новые сверху. При одной дате — как в массиве. */
+export const casesByDate: readonly Case[] = [...cases].sort((a, b) => b.date.localeCompare(a.date));
+
+/**
+ * Дата под языком сайта: «2 октября 2026» или «август 2026», если известен
+ * только месяц. Хвост «г.» / «р.» срезается: в подписи карточки он лишний.
+ */
+export function caseDate(item: Pick<Case, "date">, locale: Locale): string {
+  const [year, month, day] = item.date.split("-").map(Number);
+  const at = new Date(Date.UTC(year, month - 1, day || 1, 12));
+  const options: Intl.DateTimeFormatOptions = day
+    ? { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }
+    : { month: "long", year: "numeric", timeZone: "UTC" };
+  return new Intl.DateTimeFormat(locale, options).format(at).replace(/\s?(г|р)\.$/, "");
+}
 
 export function caseBySlug(slug: string): Case | undefined {
   return cases.find((c) => c.slug === slug);
