@@ -6,7 +6,7 @@ import { BeforeAfter } from "@/components/cases/before-after";
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { caseBySlug, cases } from "@/content/cases";
+import { caseBySlug, caseDate, cases, casesByDate } from "@/content/cases";
 import { getDictionary } from "@/content/dictionaries";
 import { isLocale, locales, localeHref, t, type Locale } from "@/lib/i18n";
 import { breadcrumbSchema, caseSchema, jsonLdGraph } from "@/lib/schema";
@@ -54,7 +54,8 @@ export default async function CasePage({
   const locale = raw as Locale;
   const dict = getDictionary(locale);
 
-  const next = cases[(cases.findIndex((c) => c.slug === slug) + 1) % cases.length];
+  // «Следующий» — в том же порядке, что и список: от новых к старым.
+  const next = casesByDate[(casesByDate.findIndex((c) => c.slug === slug) + 1) % casesByDate.length];
 
   return (
     <>
@@ -157,7 +158,7 @@ export default async function CasePage({
               ))}
             </div>
             <p className="mt-6 border-t border-line pt-5 font-mono text-[0.72rem] text-faint">
-              {dict.cases.year}: {item.year}
+              {dict.cases.date}: {caseDate(item, locale)}
             </p>
           </aside>
         </div>

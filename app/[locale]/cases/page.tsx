@@ -5,7 +5,7 @@ import { CaseCard } from "@/components/sections/cases";
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { cases } from "@/content/cases";
+import { casesByDate } from "@/content/cases";
 import { casesTitle } from "@/content/company";
 import { getDictionary } from "@/content/dictionaries";
 import { isLocale, type Locale } from "@/lib/i18n";
@@ -52,7 +52,7 @@ export default async function CasesPage({
         </p>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {cases.map((item, i) => (
+          {casesByDate.map((item, i) => (
             <Reveal key={item.slug} delay={i * 60} className="h-full">
               <CaseCard item={item} locale={locale} dict={dict} />
             </Reveal>

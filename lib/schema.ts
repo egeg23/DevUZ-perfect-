@@ -174,7 +174,7 @@ export function caseSchema(item: Case, locale: Locale): Json {
     "@type": "CreativeWork",
     name: item.name,
     description: t(item.summary, locale),
-    dateCreated: String(item.year),
+    dateCreated: item.date,
     inLanguage: hreflang[locale],
     creator: { "@id": ORG_ID },
     url: absoluteUrl(`${locale}/cases/${item.slug}`),
