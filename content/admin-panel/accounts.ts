@@ -2,14 +2,14 @@ import { defineDict } from "@/lib/admin/i18n";
 
 /**
  * Раздел «Аккаунты» (/admin/accounts): рабочие аккаунты Telegram, с которых
- * уходят касания и идёт переписка. Только владелец.
+ * уходят касания и идёт переписка. Владелец и руководитель.
  */
 export const accountsDict = defineDict({
   title: { ru: "Рабочие аккаунты", uz: "Ishchi akkauntlar", pl: "Konta robocze" },
   intro: {
-    ru: "С этих аккаунтов Telegram уходят первые письма касаний и идёт переписка с клиентами. Главный подключён на сервере и ещё читает чаты. Здесь подключаются дополнительные: предел «два письма в час» у каждого свой, поэтому три аккаунта — втрое больше касаний, а ограничение одного не останавливает остальных.",
-    uz: "Aloqalarning birinchi xatlari shu Telegram akkauntlaridan ketadi va mijozlar bilan yozishma shu yerda boradi. Asosiysi serverda ulangan va chatlarni ham o‘qiydi. Bu yerda qo‘shimchalari ulanadi: «soatiga ikki xat» chegarasi har birida o‘ziniki, shuning uchun uchta akkaunt — uch barobar ko‘p aloqa, bittasining cheklanishi esa qolganlarini to‘xtatmaydi.",
-    pl: "Z tych kont Telegrama wychodzą pierwsze wiadomości kontaktów i toczy się korespondencja z klientami. Główne jest podłączone na serwerze i dodatkowo czyta czaty. Tutaj podłącza się dodatkowe: limit „dwie wiadomości na godzinę” każde ma swój, więc trzy konta to trzy razy więcej kontaktów, a ograniczenie jednego nie zatrzymuje pozostałych.",
+    ru: "С этих аккаунтов Telegram уходят первые письма касаний и идёт переписка с клиентами. Главный подключён на сервере и ещё читает чаты. Здесь подключаются дополнительные: предел «три письма новым людям в час» у каждого свой, поэтому три аккаунта — втрое больше касаний, а ограничение одного не останавливает остальных. Первые письма уходят с 07:30 до 20:30 по Ташкенту; переписка с теми, кто ответил, — в любое время и без предела.",
+    uz: "Aloqalarning birinchi xatlari shu Telegram akkauntlaridan ketadi va mijozlar bilan yozishma shu yerda boradi. Asosiysi serverda ulangan va chatlarni ham o‘qiydi. Bu yerda qo‘shimchalari ulanadi: «yangi odamlarga soatiga uchta xat» chegarasi har birida o‘ziniki, shuning uchun uchta akkaunt — uch barobar ko‘p aloqa, bittasining cheklanishi esa qolganlarini to‘xtatmaydi. Birinchi xatlar Toshkent vaqti bilan 07:30 dan 20:30 gacha ketadi; javob berganlar bilan yozishma — istalgan vaqtda va chegarasiz.",
+    pl: "Z tych kont Telegrama wychodzą pierwsze wiadomości kontaktów i toczy się korespondencja z klientami. Główne jest podłączone na serwerze i dodatkowo czyta czaty. Tutaj podłącza się dodatkowe: limit „trzy wiadomości do nowych osób na godzinę” każde ma swój, więc trzy konta to trzy razy więcej kontaktów, a ograniczenie jednego nie zatrzymuje pozostałych. Pierwsze wiadomości wychodzą od 07:30 do 20:30 czasu taszkenckiego; korespondencja z tymi, którzy odpisali, — o każdej porze i bez limitu.",
   },
   mainTitle: { ru: "Главный аккаунт", uz: "Asosiy akkaunt", pl: "Konto główne" },
   mainText: {
@@ -65,9 +65,20 @@ export const accountsDict = defineDict({
   capLabel: { ru: "Писем в час", uz: "Soatiga xat", pl: "Wiadomości na godzinę" },
   save: { ru: "Сохранить", uz: "Saqlash", pl: "Zapisz" },
   capHint: {
-    ru: "Новому аккаунту первую неделю — 1 в час: свежий номер Telegram ограничивает быстрее.",
-    uz: "Yangi akkauntga birinchi hafta — soatiga 1 ta: yangi raqamni Telegram tezroq cheklaydi.",
-    pl: "Nowemu kontu przez pierwszy tydzień — 1 na godzinę: świeży numer Telegram ogranicza szybciej.",
+    ru: "Свежему номеру на первую неделю лучше 1–2 в час: новый аккаунт Telegram ограничивает быстрее.",
+    uz: "Yangi raqamga birinchi haftada soatiga 1–2 ta yaxshiroq: yangi akkauntni Telegram tezroq cheklaydi.",
+    pl: "Świeżemu numerowi przez pierwszy tydzień lepiej 1–2 na godzinę: nowe konto Telegram ogranicza szybciej.",
+  },
+  staffTitle: { ru: "Кто работает на аккаунте", uz: "Akkauntda kim ishlaydi", pl: "Kto pracuje na koncie" },
+  staffHint: {
+    ru: "Первые письма отмеченных уходят только с их аккаунтов — с того, где раньше освободится место. Один человек может работать на нескольких аккаунтах. Никто не отмечен ни на одном аккаунте — его письма берёт любой.",
+    uz: "Belgilanganlarning birinchi xatlari faqat ularning akkauntlaridan ketadi — qaysi birida joy oldinroq bo‘shasa. Bir kishi bir nechta akkauntda ishlashi mumkin. Hech bir akkauntda belgilanmagan kishining xatlarini istalgan akkaunt oladi.",
+    pl: "Pierwsze wiadomości zaznaczonych osób wychodzą tylko z ich kont — z tego, na którym wcześniej zwolni się miejsce. Jedna osoba może pracować na kilku kontach. Osoby niezaznaczonej na żadnym koncie wiadomości bierze dowolne konto.",
+  },
+  staffNone: {
+    ru: "Никто не отмечен — аккаунт берёт письма всех, кто не привязан к другим аккаунтам.",
+    uz: "Hech kim belgilanmagan — akkaunt boshqa akkauntlarga bog‘lanmagan hammaning xatlarini oladi.",
+    pl: "Nikt nie jest zaznaczony — konto bierze wiadomości wszystkich, którzy nie są przypisani do innych kont.",
   },
   pause: { ru: "Пауза", uz: "Pauza", pl: "Wstrzymaj" },
   resume: { ru: "Вернуть в работу", uz: "Ishga qaytarish", pl: "Przywróć do pracy" },

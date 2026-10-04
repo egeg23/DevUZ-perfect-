@@ -3,6 +3,8 @@ import type { Staff } from "@/lib/admin/session";
 import {
   FLOOD_PAUSE_MS,
   LOGIN_STEPS,
+  MAIN_ACCOUNT,
+  MAX_ACCOUNT_CAP,
   NEW_ACCOUNT_CAP,
   accountOf,
   loginSecret,
@@ -118,7 +120,7 @@ export async function submitPassword(id: string, password: string): Promise<bool
 export async function setAccountCap(id: string, cap: number): Promise<void> {
   const db = serviceClient();
   if (!db) return;
-  await db.from("tg_accounts").update({ hourly_cap: Math.min(2, Math.max(1, Math.round(cap))) }).eq("id", id);
+  await db.from("tg_accounts").update({ hourly_cap: Math.min(MAX_ACCOUNT_CAP, Math.max(1, Math.round(cap))) }).eq("id", id);
 }
 
 /** Пауза и возврат: аккаунт остаётся подключённым, но первых писем не шлёт. */
@@ -145,7 +147,68 @@ export async function removeAccount(id: string, by: Staff): Promise<void> {
   await db.from("tg_accounts").update({ status: "removed", login_code: null }).eq("id", id);
   await saveAppSecret(loginSecret(id), null);
   await saveAppSecret(passwordSecret(id), null);
+  // Привязки отключённого аккаунта — тоже: иначе менеджер, привязанный только
+  // к нему, остался бы без единого аккаунта, и его письма стояли бы вечно.
+  await db.from("tg_account_staff").delete().eq("account_key", id);
   await record("work_account.remove", { actorStaffId: by.id, targetType: "tg_account", targetId: id });
+}
+
+/* ── Кто работает на аккаунте ──────────────────────────────────────────── */
+
+/** Кого можно отметить на аккаунте: все, кто работает, по имени. */
+export async function accountPeople(): Promise<{ id: string; display_name: string; role: string }[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  const { data } = await db.from("staff").select("id, display_name, role").eq("is_active", true).order("display_name");
+  return (data ?? []).map((row) => ({ id: String(row.id), display_name: String(row.display_name), role: String(row.role) }));
+}
+
+/** Аккаунт → кто на нём работает (id сотрудников). Ключ главного — MAIN_ACCOUNT. */
+export async function accountStaff(): Promise<Map<string, string[]>> {
+  const db = serviceClient();
+  const out = new Map<string, string[]>();
+  if (!db) return out;
+  const { data } = await db.from("tg_account_staff").select("account_key, staff_id");
+  for (const row of data ?? []) {
+    const key = String(row.account_key);
+    out.set(key, [...(out.get(key) ?? []), String(row.staff_id)]);
+  }
+  return out;
+}
+
+/**
+ * Отметить, кто работает на аккаунте, — списком целиком: кого нет в списке,
+ * с аккаунта снимают. Сотрудники — только работающие; аккаунт — главный
+ * или подключённый, не отключённый.
+ */
+export async function setAccountStaff(accountKey: string, staffIds: readonly string[], by: Staff): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  if (accountKey !== MAIN_ACCOUNT) {
+    const { data } = await db.from("tg_accounts").select("id").eq("id", accountKey).neq("status", "removed").maybeSingle();
+    if (!data) return false;
+  }
+  const wanted = [...new Set(staffIds.filter(Boolean))];
+  const { data: alive } = wanted.length
+    ? await db.from("staff").select("id").in("id", wanted).eq("is_active", true)
+    : { data: [] as { id: string }[] };
+  const ids = (alive ?? []).map((row) => String(row.id));
+
+  const { error: cleared } = await db.from("tg_account_staff").delete().eq("account_key", accountKey);
+  if (cleared) return false;
+  if (ids.length) {
+    const { error } = await db
+      .from("tg_account_staff")
+      .insert(ids.map((staff_id) => ({ account_key: accountKey, staff_id, created_by: by.id })));
+    if (error) return false;
+  }
+  await record("work_account.staff", {
+    actorStaffId: by.id,
+    targetType: "tg_account",
+    targetId: accountKey,
+    meta: { staff: ids },
+  });
+  return true;
 }
 
 /* ── Скаут ─────────────────────────────────────────────────────────────── */

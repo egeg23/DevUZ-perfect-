@@ -11,7 +11,7 @@ import type { HelpEntry } from "@/lib/admin/help";
 export const workSections: Record<string, HelpEntry> = {
   /* ── Рабочие аккаунты ──────────────────────────────────────────────── */
   "/admin/accounts": {
-    what: "Konta robocze Telegrama, z których wychodzą pierwsze wiadomości kontaktów i toczy się korespondencja z klientami. Główne jest podłączone na serwerze i dodatkowo czyta czaty; tutaj podłączasz dodatkowe. Sekcję widzisz tylko Ty.",
+    what: "Konta robocze Telegrama, z których wychodzą pierwsze wiadomości kontaktów i toczy się korespondencja z klientami. Główne jest podłączone na serwerze i dodatkowo czyta czaty; tutaj podłącza się dodatkowe i zaznacza, kto na którym pracuje. Sekcję widzą właściciel i kierownik.",
     items: [
       {
         id: "add",
@@ -27,9 +27,17 @@ export const workSections: Record<string, HelpEntry> = {
         id: "limits",
         title: "Ile wiadomości i z którego konta",
         body: [
-          "Każde konto ma własny limit pierwszych wiadomości na godzinę: główne — 2, nowe — 1. Po tygodniu spokojnej pracy nowe można podnieść do 2 w polu «Wiadomości na godzinę»: świeży numer Telegram ogranicza szybciej. Na górze sekcji — ile wychodzi ze wszystkich razem; ta sama liczba stoi nad listą w [Kontaktach](/admin/prospect).",
-          "Kolejka kontaktów jest jedna: wiadomość wychodzi z konta, na którym wcześniej zwolniło się miejsce — menedżer niczego nie wybiera. Odpowiedzi do klienta, odpowiedzi modelu i poprawka wiadomości idą z tego samego konta, z którego wyszła pierwsza wiadomość: napisać do człowieka z innego numeru to pojawić się w jego rozmowie jako nieznajomy.",
+          "Każde konto ma własny limit pierwszych wiadomości do nowych osób na godzinę: główne — 3, nowe — też 3. Świeżemu numerowi przez pierwszy tydzień lepiej ustawić 1–2 w polu «Wiadomości na godzinę»: nowe konto Telegram ogranicza szybciej. Pierwsze wiadomości wychodzą codziennie od 07:30 do 20:30 czasu taszkenckiego — dodane w nocy czekają i wychodzą rano; korespondencja z tymi, którzy już odpisali, toczy się o każdej porze i bez limitu. Na górze sekcji — ile wychodzi ze wszystkich razem; ta sama liczba stoi nad listą w [Kontaktach](/admin/prospect).",
+          "Kolejka kontaktów jest jedna: wiadomość wychodzi z konta, na którym wcześniej zwolniło się miejsce — menedżer niczego nie wybiera; jeśli ktoś jest przypisany do kont (punkt [kto pracuje na koncie](#accounts-staff)), — tylko z jego kont. Odpowiedzi do klienta, odpowiedzi modelu i poprawka wiadomości idą z tego samego konta, z którego wyszła pierwsza wiadomość: napisać do człowieka z innego numeru to pojawić się w jego rozmowie jako nieznajomy.",
           "Pod każdym kontem — ile pierwszych wiadomości wyszło w ostatniej godzinie i dziś, oraz «połączone», jeśli skaut trzyma je podłączone (znacznik co minutę). Brak znacznika dłużej niż trzy minuty — skaut nie pracuje tym kontem: sprawdź serwer albo podłącz konto ponownie.",
+        ],
+      },
+      {
+        id: "staff",
+        title: "Kto pracuje na koncie",
+        body: [
+          "Pod kontem głównym i pod każdym podłączonym — blok **«Kto pracuje na koncie»**: pola wyboru ze wszystkimi, którzy pracują w studiu. Zaznacz osoby tego konta i kliknij **«Zapisz»**. Ta sama osoba może być na kilku kontach — zaznacz ją na każdym; odznaczenie zdejmuje ją z konta.",
+          "Po co: pierwsze wiadomości zaznaczonej osoby wychodzą tylko z jej kont — z tego, na którym wcześniej zwolni się miejsce w limicie «3 na godzinę». Dzięki temu klient dostaje wiadomość z numeru, za którym stoi jego menedżer. Osoba niezaznaczona na żadnym koncie — jej wiadomości bierze dowolne konto, jak wcześniej: nowy menedżer może pisać od razu, bez czekania na przypisanie. Konto odłączono — jego przypisania znikają same, a wiadomości jego ludzi znowu biorą pozostałe. Kto kogo przypisał, zapisuje się w dzienniku działań.",
         ],
       },
       {

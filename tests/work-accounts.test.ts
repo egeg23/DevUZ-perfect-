@@ -58,7 +58,7 @@ test("писать может только подключённый и не ог
   assert.ok(!canSend({ ...active, status: "paused" }, NOW));
   assert.ok(!canSend({ ...active, flood_until: new Date(NOW + 60_000).toISOString() }, NOW));
   assert.ok(canSend({ ...active, flood_until: new Date(NOW - 60_000).toISOString() }, NOW), "ограничение кончилось");
-  assert.equal(NEW_ACCOUNT_CAP, 1, "свежий номер — одно письмо в час");
+  assert.equal(NEW_ACCOUNT_CAP, 3, "новый аккаунт — три в час, как главный (владелец, 04.10.2026)");
 
   assert.equal(hourlyCapacity([], NOW), HOURLY_CAP, "без дополнительных — как раньше");
   assert.equal(
@@ -144,10 +144,50 @@ test("вход: сессия и пароль — в хранилище, не в 
   assert.doesNotMatch(accounts, /openChats|processBatch/);
 });
 
-test("раздел «Аккаунты» — только владельцу", () => {
+test("раздел «Аккаунты» — владельцу и руководителю", () => {
+  // Владелец, 04.10.2026: «дай доступ к разделу „Аккаунты“ Александру».
   const section = SECTIONS.find((s) => s.href === "/admin/accounts");
   assert.ok(section, "раздела нет в меню");
-  assert.deepEqual([...section.roles], ["admin"]);
+  assert.deepEqual([...section.roles], ["admin", "head"]);
   const actions = read("app/admin/accounts/actions.ts");
-  assert.equal((actions.match(/await requireAdmin\(\);|const staff = await requireAdmin\(\);/g) ?? []).length, 6);
+  assert.match(actions, /const manage = \(\) => requireRole\("admin", "head"\);/);
+  assert.doesNotMatch(actions, /requireAdmin/, "где-то осталась проверка «только владелец»");
+  assert.equal((actions.match(/await manage\(\);/g) ?? []).length, 7, "каждое действие проверяет права");
+  assert.match(read("app/admin/accounts/page.tsx"), /requireRole\("admin", "head"\)/);
+});
+
+test("менеджеры на аккаунте: письма отмеченного — только с его аккаунтов", async () => {
+  const { mayTake } = await import("@/lib/admin/work-accounts");
+  // Не привязан ни к одному — берёт любой.
+  assert.equal(mayTake("main", undefined), true);
+  assert.equal(mayTake("acc-1", new Set()), true);
+  // Привязан к двум — только они.
+  const two = new Set(["main", "acc-2"]);
+  assert.equal(mayTake("main", two), true);
+  assert.equal(mayTake("acc-2", two), true);
+  assert.equal(mayTake("acc-1", two), false);
+
+  const queue = read("lib/admin/outreach-queue.ts");
+  assert.match(queue, /if \(by && !mayTake\(account, assigned\.get\(by\)\)\) continue;/);
+  // Привязка к отключённому аккаунту письма не держит.
+  assert.match(queue, /\.from\("tg_accounts"\)\.select\("id"\)\.neq\("status", "removed"\)/);
+  const store = read("lib/admin/work-accounts-store.ts");
+  assert.match(store, /await db\.from\("tg_account_staff"\)\.delete\(\)\.eq\("account_key", id\);/);
+  assert.match(store, /record\("work_account\.staff"/);
+  assert.match(read("app/admin/accounts/page.tsx"), /<StaffForm account=\{MAIN_ACCOUNT\}/);
+});
+
+
+test("в верхнем меню панели открытый раздел подсвечен", async () => {
+  // Владелец, 04.10.2026: «когда я нажимаю на пункт в верхнем меню, он не
+  // выделен цветом — сделай, чтобы активная вкладка выделялась».
+  const { sectionOfHref } = await import("@/lib/admin/help");
+  assert.equal(sectionOfHref("/admin/accounts"), "/admin/accounts");
+  assert.equal(sectionOfHref("/admin/projects/0f6c7c1e-1111-2222-3333-444455556666"), "/admin/projects");
+  assert.equal(sectionOfHref("/admin/leads/42"), "/admin", "карточка лида — раздел «Лиды»");
+  const link = read("components/admin/nav-link.tsx");
+  assert.match(link, /const active = sectionOfHref\(pathname \?\? ""\) === href;/);
+  assert.match(link, /aria-current=\{active \? "page" : undefined\}/);
+  assert.match(link, /border-green font-medium text-green/);
+  assert.match(read("components/admin/shell.tsx"), /<AdminNavLink key=\{item\.href\} href=\{item\.href\}/);
 });

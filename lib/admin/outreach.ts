@@ -23,14 +23,47 @@ import { forecast } from "@/lib/razbor/forecast";
 /* ── Предохранители ────────────────────────────────────────────────────── */
 
 /**
- * Сколько контактов в час со всего аккаунта.
+ * Сколько первых писем в час с одного аккаунта.
  *
  * Владелец: «выстави лимит написаний 2 контакта в час; остальные ставь в
  * очередь или предложи менеджеру не ждать очередь, а написать с личного
- * аккаунта». Предел — не отказ: сообщение всё равно принимается и уходит,
- * когда подойдёт его черёд.
+ * аккаунта». 04.10.2026 — поднял: «3 сообщения новым пользователям в час. В
+ * рабочие часы. С теми, с кем уже общаемся, лимита нет». Предел — не отказ:
+ * сообщение всё равно принимается и уходит, когда подойдёт его черёд.
+ * Переписка с ответившими через эту очередь не идёт и предела не знает.
  */
-export const HOURLY_CAP = 2;
+export const HOURLY_CAP = 3;
+
+/**
+ * Когда уходят первые письма: каждый день с 07:30 до 20:30 по Ташкенту
+ * (владелец, 04.10.2026). Незнакомому человеку в одиннадцать вечера пишут
+ * только рассылки — и жалуются на них тоже чаще. Письмо, поставленное ночью,
+ * ждёт в очереди и уходит утром первым. Ответы тем, кто уже пишет нам, —
+ * в любое время: это разговор, а не первое касание.
+ */
+export const SEND_FROM_MINUTE = 7 * 60 + 30;
+export const SEND_TO_MINUTE = 20 * 60 + 30;
+const TASHKENT_SHIFT_MS = 5 * 3600_000;
+
+function tashkentMinute(now: number): number {
+  const shifted = new Date(now + TASHKENT_SHIFT_MS);
+  return shifted.getUTCHours() * 60 + shifted.getUTCMinutes();
+}
+
+/** Можно ли сейчас отправлять первые письма. */
+export function sendWindowOpen(now = Date.now()): boolean {
+  const minute = tashkentMinute(now);
+  return minute >= SEND_FROM_MINUTE && minute < SEND_TO_MINUTE;
+}
+
+/** Через сколько откроется окно отправки; 0 — уже открыто. */
+export function untilSendWindow(now = Date.now()): number {
+  if (sendWindowOpen(now)) return 0;
+  const minute = tashkentMinute(now);
+  const minutes = minute < SEND_FROM_MINUTE ? SEND_FROM_MINUTE - minute : 24 * 60 - minute + SEND_FROM_MINUTE;
+  const intoMinute = (now + TASHKENT_SHIFT_MS) % 60_000;
+  return minutes * 60_000 - intoMinute;
+}
 
 /**
  * С какого балла видимость перестаёт быть находкой.
@@ -229,15 +262,19 @@ export function queueView(input: {
   oldestSentAgoMs: number | null;
   /** Первых писем в час со всех рабочих аккаунтов вместе. */
   cap?: number;
+  /** Сейчас — чтобы ночью прибавить ожидание до 07:30. */
+  now?: number;
 }): QueueView {
   const cap = input.cap ?? HOURLY_CAP;
-  const slotsNow = Math.max(0, cap - input.sentLastHour);
-  if (input.ahead < slotsNow) return { ahead: input.ahead, waitMs: input.ahead * MIN_GAP_MS };
+  // Ночью очередь стоит: сначала ждём утра, а там часы считаются заново.
+  const closed = input.now === undefined ? 0 : untilSendWindow(input.now);
+  const slotsNow = Math.max(0, cap - (closed ? 0 : input.sentLastHour));
+  if (input.ahead < slotsNow) return { ahead: input.ahead, waitMs: closed + input.ahead * MIN_GAP_MS };
 
   // Место освобождается, когда самое старое сообщение часа выпадает из окна.
-  const freesIn = input.oldestSentAgoMs === null ? 0 : Math.max(0, HOUR_MS - input.oldestSentAgoMs);
+  const freesIn = closed || input.oldestSentAgoMs === null ? 0 : Math.max(0, HOUR_MS - input.oldestSentAgoMs);
   const extraHours = Math.floor((input.ahead - slotsNow) / cap);
-  return { ahead: input.ahead, waitMs: freesIn + extraHours * HOUR_MS };
+  return { ahead: input.ahead, waitMs: closed + freesIn + extraHours * HOUR_MS };
 }
 
 /** «через 40 минут», «через 2 часа» — так, как это скажет человек. */

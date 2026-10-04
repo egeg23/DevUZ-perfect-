@@ -5,17 +5,19 @@ import {
   passwordAction,
   pauseAction,
   removeAction,
+  staffAction,
 } from "@/app/admin/accounts/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { accountsDict, accountsResultDict, loginErrorDict } from "@/content/admin-panel/accounts";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireRole } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { HOURLY_CAP } from "@/lib/admin/outreach";
 import { tashkentClock } from "@/lib/admin/prototype-claim";
 import {
   LOGIN_ERRORS,
   MAIN_ACCOUNT,
+  MAX_ACCOUNT_CAP,
   canSend,
   hourlyCapacity,
   maskedPhone,
@@ -23,7 +25,7 @@ import {
   type LoginError,
   type WorkAccount,
 } from "@/lib/admin/work-accounts";
-import { accountsActivity, listAccounts } from "@/lib/admin/work-accounts-store";
+import { accountPeople, accountStaff, accountsActivity, listAccounts } from "@/lib/admin/work-accounts-store";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +43,43 @@ function loginError(raw: string | null): LoginError | null {
 }
 
 /**
- * Рабочие аккаунты Telegram — только владельцу.
+ * Кто работает на аккаунте — галочками. Список целиком: снятая галочка
+ * снимает человека с аккаунта. Один человек может стоять на нескольких.
+ */
+function StaffForm({
+  account,
+  people,
+  checked,
+  t,
+}: {
+  account: string;
+  people: { id: string; display_name: string }[];
+  checked: readonly string[];
+  t: ReturnType<typeof pick<typeof accountsDict>>;
+}) {
+  return (
+    <form action={staffAction} className="mt-3 border-t border-line pt-3">
+      <input type="hidden" name="account" value={account} />
+      <p className="text-xs font-medium text-muted">{t.staffTitle}</p>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {people.map((p) => (
+          <label
+            key={p.id}
+            className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-ink px-2.5 py-1 text-xs has-[:checked]:border-green/50 has-[:checked]:bg-green/5"
+          >
+            <input type="checkbox" name="staff" value={p.id} defaultChecked={checked.includes(p.id)} className="accent-green" />
+            {p.display_name}
+          </label>
+        ))}
+      </div>
+      {checked.length ? null : <p className="mt-2 text-xs text-faint">{t.staffNone}</p>}
+      <button className={`${BUTTON} mt-2`}>{t.save}</button>
+    </form>
+  );
+}
+
+/**
+ * Рабочие аккаунты Telegram — владельцу и руководителю.
  *
  * Подключить, остановить, поставить предел в час. С Telegram говорит скаут,
  * панель только кладёт ввод — поэтому после «Отправить код» и «Войти»
@@ -52,7 +90,9 @@ export default async function AccountsPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const staff = await requireAdmin();
+  // Владелец, 04.10.2026: «дай доступ к разделу „Аккаунты“ Александру, чтобы
+  // он мог добавлять аккаунты для работы сам».
+  const staff = await requireRole("admin", "head");
   const { r } = await searchParams;
   const locale = staff.panel_locale;
   const t = pick(accountsDict, locale);
@@ -60,7 +100,12 @@ export default async function AccountsPage({
   const errors = pick(loginErrorDict, locale);
   const notice = r && Object.hasOwn(results, r) ? results[r as keyof typeof results] : null;
 
-  const [accounts, activity] = await Promise.all([listAccounts(), accountsActivity()]);
+  const [accounts, activity, onAccount, people] = await Promise.all([
+    listAccounts(),
+    accountsActivity(),
+    accountStaff(),
+    accountPeople(),
+  ]);
   const now = Date.now();
   const busy = accounts.some((a) => WORKING.has(a.status));
   const sentOf = (key: string, cap: number) => {
@@ -76,6 +121,7 @@ export default async function AccountsPage({
       <h1 className="text-lg font-semibold">{t.title}</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro}</p>
       <p className="mt-2 text-sm text-text">{t.capacity(hourlyCapacity(accounts, now))}</p>
+      <p className="mt-1 max-w-2xl text-xs leading-relaxed text-faint">{t.staffHint}</p>
 
       {notice ? (
         <p className="mt-4 rounded-xl border border-green/30 bg-green/5 px-4 py-3 text-sm text-green">{notice}</p>
@@ -88,6 +134,7 @@ export default async function AccountsPage({
             <span className="text-xs text-faint">{t.mainText(HOURLY_CAP)}</span>
           </div>
           <p className="mt-1 text-xs text-muted">{sentOf(MAIN_ACCOUNT, HOURLY_CAP)}</p>
+          <StaffForm account={MAIN_ACCOUNT} people={people} checked={onAccount.get(MAIN_ACCOUNT) ?? []} t={t} />
         </li>
 
         {accounts.length ? null : <li className="text-sm text-faint">{t.empty}</li>}
@@ -151,8 +198,11 @@ export default async function AccountsPage({
                     <label className="text-xs text-faint">
                       {t.capLabel}{" "}
                       <select name="cap" defaultValue={String(a.hourly_cap)} className="rounded border border-line bg-ink px-2 py-1 text-xs">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
+                        {Array.from({ length: MAX_ACCOUNT_CAP }, (_, i) => String(i + 1)).map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
                       </select>
                     </label>
                     <button className={BUTTON}>{t.save}</button>
@@ -171,6 +221,9 @@ export default async function AccountsPage({
                 </form>
               </div>
               {a.status === "active" || a.status === "paused" ? <p className="mt-2 text-xs text-faint">{t.capHint}</p> : null}
+              {a.status === "active" || a.status === "paused" ? (
+                <StaffForm account={a.id} people={people} checked={onAccount.get(a.id) ?? []} t={t} />
+              ) : null}
             </li>
           );
         })}

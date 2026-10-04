@@ -7,6 +7,7 @@ import type { Staff } from "@/lib/admin/session";
 import { pick } from "@/lib/admin/i18n";
 import { shellDict } from "@/content/admin-panel/shell";
 import { SectionHelpLink } from "@/components/admin/help-link";
+import { AdminNavLink } from "@/components/admin/nav-link";
 import { LocaleSwitch } from "@/components/admin/locale-switch";
 import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { UsageBeacon } from "@/components/admin/usage-beacon";
@@ -78,16 +79,12 @@ export function AdminShell({
               содержимое страницы начиналось за сгибом. */}
           <nav className="no-scrollbar mx-auto max-w-7xl overflow-x-auto px-4 pb-2.5 sm:px-5 sm:pb-3">
             <div className="flex w-max gap-4 text-sm sm:w-auto sm:flex-wrap">
+              {/* Открытый раздел подсвечен (AdminNavLink): по адресу видно,
+                  где ты, только в строке браузера, а её на телефоне нет. */}
               {navFor(staff.role).map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`whitespace-nowrap ${
-                    item.roles.length === 1 ? "text-faint hover:text-text" : "text-muted hover:text-text"
-                  }`}
-                >
+                <AdminNavLink key={item.href} href={item.href} quiet={item.roles.length === 1}>
                   {sectionLabel(item, locale)}
-                </Link>
+                </AdminNavLink>
               ))}
             </div>
           </nav>
