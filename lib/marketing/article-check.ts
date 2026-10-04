@@ -38,6 +38,28 @@ function length(what: string, value: string, min: number, max: number): string |
   return null;
 }
 
+/** Служебные слова запроса: их в заголовке может и не быть. */
+const STOP = new Set(["что", "такое", "как", "это", "для", "nima", "qanday", "uchun", "va"]);
+
+/**
+ * Слова запроса, которые должны быть в тексте, — по началу слова: «реклама
+ * в Ташкенте» находится и в «рекламы в Ташкенте», «продвижение стоматологии»
+ * — и в «продвигать стоматологию». Четыре буквы хватает, чтобы не путать.
+ */
+export function queryStems(query: string): string[] {
+  return query
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length >= 2 && !STOP.has(w))
+    .map((w) => w.slice(0, 4));
+}
+
+/** Каких слов запроса нет в тексте. */
+export function missingStems(query: string, text: string): string[] {
+  const words = text.toLowerCase().split(/[^\p{L}\p{N}]+/u);
+  return queryStems(query).filter((stem) => !words.some((w) => w.startsWith(stem)));
+}
+
 export function checkArticle(topic: MarketingTopic, locale: ArticleLocale, article: ArticleText): CheckProblem[] {
   const problems: string[] = [];
   const text = allText(article);
@@ -66,6 +88,20 @@ export function checkArticle(topic: MarketingTopic, locale: ArticleLocale, artic
   }
   for (const pattern of FORBIDDEN) {
     if (pattern.test(text)) problems.push(`Недопустимое в тексте: ${pattern.source}.`);
+  }
+
+  // Запрос — там, где его видят поисковик и человек в выдаче: заголовок,
+  // описание и первый абзац. Без этого статья пишется «в никуда».
+  const query = topic.query?.[locale];
+  if (query) {
+    for (const [where, text] of [
+      ["заголовке", article.title],
+      ["описании", article.description],
+      ["первом абзаце", article.paragraphs[0] ?? ""],
+    ] as const) {
+      const missing = missingStems(query, text);
+      if (missing.length) problems.push(`Запроса «${query}» нет в ${where} — поставь его естественно.`);
+    }
   }
 
   if (topic.kind === "case") {
