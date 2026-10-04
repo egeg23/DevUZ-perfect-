@@ -1396,6 +1396,14 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "marketing-articles",
+          title: "Marketing haqida maqolalar",
+          body: [
+            "Saytdagi «Marketing» sahifasi ostida (devuz.studio/ru/marketing va devuz.studio/uz/marketing) har kuni ikkita qisqa maqola chiqadi — Toshkent vaqti bilan 10:00 va 16:00 da, birdaniga rus va o‘zbek tillarida. Ularni arzon model `content/marketing-topics.ts` dagi mavzular ro‘yxati bo‘yicha yozadi: mashhur reklama keysi, keng tarqalgan xato, nishani kanalda targ‘ib qilish — navbat bilan. Ular «Tekshiruvda»ga tushmaydi: o‘zi chiqadi, darhol sayt xaritasiga qo‘shiladi, Bing va Yandex esa signal oladi. Nima uchun: har bir maqola — bizni Google va Yandexda topadigan yana bitta sahifa, har birining oxirida esa «sayt + marketing» taklifi va kalkulyator.",
+            "Inson tekshiruvi o‘rnida kod turadi: keys tahlilida mavzu faktlarida yo‘q birorta ham raqam bo‘lishi mumkin emas, qolgan maqolalarda — foizlar, summalar va yillar yo‘q, o‘zbekcha versiya — faqat lotin yozuvida. Tekshiruvdan ikki marta o‘tmasa — bu safar maqola chiqmaydi, Telegramga esa sababi bilan «Статьи о маркетинге» qatori keladi. Mavzular tugaganda ham (taxminan ikki oydan keyin) shu qator xabar beradi — ro‘yxat kodda to‘ldiriladi. Chiqqan maqolani paneldan olib tashlab bo‘lmaydi: dasturchilar chatiga yozing, uni bazada yashirishadi.",
+          ],
+        },
+        {
           id: "review",
           title: "Tahlilni tekshirish",
           body: [

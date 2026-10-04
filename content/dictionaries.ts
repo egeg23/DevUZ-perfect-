@@ -8,6 +8,7 @@ import type { Locale } from "@/lib/i18n";
 const ru = {
   nav: {
     services: "Услуги",
+    marketing: "Маркетинг",
     calculator: "Калькулятор",
     audit: "Проверить сайт",
     products: "Продукты",
@@ -443,7 +444,7 @@ const ru = {
 export type Dictionary = typeof ru;
 
 const en: Dictionary = {
-  nav: { services: "Services", calculator: "Calculator", audit: "Site check", products: "Products", razbor: "Teardowns", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts", partners: "Earn with us" },
+  nav: { services: "Services", marketing: "Marketing", calculator: "Calculator", audit: "Site check", products: "Products", razbor: "Teardowns", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts", partners: "Earn with us" },
   cta: {
     discuss: "Discuss a project",
     calculate: "Get an estimate",
@@ -842,7 +843,7 @@ const en: Dictionary = {
 };
 
 const uz: Dictionary = {
-  nav: { services: "Xizmatlar", calculator: "Kalkulyator", audit: "Saytni tekshirish", products: "Mahsulotlar", razbor: "Tahlillar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa", partners: "Hamkorlik" },
+  nav: { services: "Xizmatlar", marketing: "Marketing", calculator: "Kalkulyator", audit: "Saytni tekshirish", products: "Mahsulotlar", razbor: "Tahlillar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa", partners: "Hamkorlik" },
   cta: {
     discuss: "Loyihani muhokama qilish",
     calculate: "Loyihani hisoblash",
@@ -1241,7 +1242,7 @@ const uz: Dictionary = {
 };
 
 const zh: Dictionary = {
-  nav: { services: "服务", calculator: "报价", audit: "网站体检", products: "产品", razbor: "网站点评", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式", partners: "一起赚钱" },
+  nav: { services: "服务", marketing: "营销", calculator: "报价", audit: "网站体检", products: "产品", razbor: "网站点评", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式", partners: "一起赚钱" },
   cta: {
     discuss: "洽谈项目",
     calculate: "获取报价",
@@ -1636,6 +1637,7 @@ const zh: Dictionary = {
 const uk: Dictionary = {
   nav: {
     services: "Послуги",
+    marketing: "Маркетинг",
     calculator: "Калькулятор",
     audit: "Перевірити сайт",
     products: "Продукти",
@@ -2053,6 +2055,7 @@ const uk: Dictionary = {
 const pl: Dictionary = {
   nav: {
     services: "Usługi",
+    marketing: "Marketing",
     calculator: "Kalkulator",
     audit: "Sprawdź stronę",
     products: "Produkty",

@@ -7,6 +7,7 @@ import { CasesSection } from "@/components/sections/cases";
 import { ContactSection } from "@/components/sections/contact";
 import { DevuzShowcase } from "@/components/sections/devuz-showcase";
 import { FaqSection } from "@/components/sections/faq";
+import { MarketingSection } from "@/components/sections/marketing";
 import { ProcessSection } from "@/components/sections/process";
 import { ScaleSection } from "@/components/sections/scale";
 import { ServicesSection } from "@/components/sections/services";
@@ -50,6 +51,7 @@ export default async function HomePage({
       <ScaleSection locale={locale} />
       <ServicesSection locale={locale} dict={dict} />
       <CalculatorSection locale={locale} dict={dict} />
+      <MarketingSection locale={locale} />
       <DevuzShowcase locale={locale} dict={dict} />
       <CasesSection locale={locale} dict={dict} />
       <ProcessSection dict={dict} />

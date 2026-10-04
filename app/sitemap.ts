@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 
 import { cases } from "@/content/cases";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
+import { MARKETING_PATH } from "@/content/marketing";
+import { ARTICLE_LOCALES, articleHref, listArticles } from "@/lib/marketing/articles-store";
 import { listRazbors } from "@/lib/razbor/store";
 import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
 import { products } from "@/content/products";
@@ -35,9 +37,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     await Promise.all(RAZBOR_LOCALES.map((locale) => listRazbors(locale)))
   ).flat();
 
+  // Статьи о маркетинге — тоже из базы, по две в день, и тоже только на
+  // русском и узбекском: отдельным списком, как разборы.
+  const articles = await listArticles("ru");
+
   const paths = [
     { path: "", priority: 1, changeFrequency: "weekly" as const },
     { path: "services", priority: 0.9, changeFrequency: "monthly" as const },
+    // Маркетинг — на всех языках; под ним статьи, которые выходят каждый
+    // день, поэтому и перечитывать страницу стоит чаще остальных.
+    { path: MARKETING_PATH, priority: 0.9, changeFrequency: "daily" as const },
     { path: "calculator", priority: 0.9, changeFrequency: "monthly" as const },
     // Аудитор — вход для холодного трафика: по запросам вида «проверить
     // сайт» приходят те, у кого уже что-то не так, а это готовый разговор.
@@ -116,7 +125,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
-  return [...razborEntries, ...paths.flatMap((entry) =>
+  /** Статья живёт по одному адресу на двух языках — связка ru ↔ uz. */
+  const articleEntries: MetadataRoute.Sitemap = articles.flatMap((article) => {
+    const languages: Record<string, string> = {};
+    for (const locale of ARTICLE_LOCALES) {
+      languages[hreflang[locale]] = absoluteUrl(articleHref(locale, article.slug));
+    }
+    languages["x-default"] = absoluteUrl(articleHref("ru", article.slug));
+    return ARTICLE_LOCALES.map((locale) => ({
+      url: absoluteUrl(articleHref(locale, article.slug)),
+      lastModified: new Date(article.publishedAt),
+      changeFrequency: "yearly" as const,
+      priority: 0.6,
+      alternates: { languages },
+    }));
+  });
+
+  return [...razborEntries, ...articleEntries, ...paths.flatMap((entry) =>
     locales.map((locale) => {
       const languages: Record<string, string> = {};
       for (const alt of locales) {

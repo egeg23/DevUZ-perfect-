@@ -27,6 +27,7 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
 
   const links = [
     { href: localeHref(locale, "services"), label: dict.nav.services },
+    { href: localeHref(locale, "marketing"), label: dict.nav.marketing },
     { href: localeHref(locale, "calculator"), label: dict.nav.calculator },
     { href: localeHref(locale, "audit"), label: dict.nav.audit },
     { href: localeHref(locale, "products"), label: dict.nav.products },
@@ -46,7 +47,10 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
     // bilan daromad» не помещалось и так.
     { href: `${localeHref(locale)}#process`, label: dict.nav.process, mobileOnly: true },
     { href: localeHref(locale, "about"), label: dict.nav.about, mobileOnly: true },
-    { href: localeHref(locale, "contact"), label: dict.nav.contacts },
+    // «Контакты» уступили строку «Маркетингу» (владелец, 04.10): по ширине
+    // они меняются один к одному, а до контактов в шапке и так ведёт кнопка
+    // «Обсудить проект» — и они остаются в мобильном меню и в подвале.
+    { href: localeHref(locale, "contact"), label: dict.nav.contacts, mobileOnly: true },
     { href: localeHref(locale, "partners"), label: dict.nav.partners },
   ];
 
