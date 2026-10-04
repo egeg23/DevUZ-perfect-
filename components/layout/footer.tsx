@@ -38,6 +38,11 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link href={localeHref(locale, "marketing")} className="text-[0.9rem] text-muted transition-colors hover:text-text">
+                  {dict.nav.marketing}
+                </Link>
+              </li>
             </ul>
           </div>
 

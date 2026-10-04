@@ -21,6 +21,7 @@ import { runTalks } from "@/lib/admin/outreach-talk-run";
 import { runReviews } from "@/lib/talk/review-run";
 import { runRazborShift } from "@/lib/razbor/shift-run";
 import { runTenderShift } from "@/lib/razbor/tender-run";
+import { runMarketingArticles } from "@/lib/marketing/articles-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
 import { promoteStrongSignals } from "@/lib/scout/promote";
@@ -331,6 +332,13 @@ export async function POST(request: Request) {
   after(async () => {
     const tender = await runTenderShift(new Date()).catch((error) => ({ errors: [String(error)] }));
     if (tender.errors.length) console.error("тендерный разбор:", tender.errors.join("; "));
+  });
+
+  // Статьи о маркетинге: две в день, в 10:00 и 16:00 по Ташкенту, сразу на
+  // сайт. Сама решает, пора ли; вызов модели — после ответа таймеру.
+  after(async () => {
+    const articles = await runMarketingArticles(new Date()).catch((error) => ({ errors: [String(error)] }));
+    if (articles.errors.length) console.error("статьи о маркетинге:", articles.errors.join("; "));
   });
 
   // Отчёты плановых смен — владельцу. У смены нет токена бота, у свипа есть.
