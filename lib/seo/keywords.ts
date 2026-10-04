@@ -13,7 +13,7 @@ import { appSecret } from "@/lib/secrets";
  *
  * Google Trends открыт без ключа, но отвечает только с куками первого
  * захода — поэтому сначала главная, потом запрос. Вордстат отдаёт цифры только
- * по токену API (WORDSTAT_TOKEN в .env или в хранилище секретов); нет токена —
+ * по ключу (WORDSTAT_TOKEN в .env или в хранилище секретов); нет ключа —
  * источник пропускается, а в `research` так и написано.
  *
  * Ни один сбой здесь не останавливает статью: источники — подсказка, а не
@@ -122,19 +122,55 @@ async function trendsVia(query: string, road: Fetcher): Promise<SourceResult> {
   }
 }
 
-/** Запросы с этим словом за 30 дней — Вордстат, регион Узбекистан. */
-export async function wordstatTop(query: string): Promise<SourceResult> {
-  const token = await appSecret("WORDSTAT_TOKEN");
-  if (!token) return { ok: false, reason: "нет токена Вордстата (WORDSTAT_TOKEN)" };
-  try {
-    const response = await timed("https://api.wordstat.yandex.net/v1/topRequests", {
+/**
+ * Куда и с чем идти в Вордстат — по виду ключа.
+ *
+ * 04.10 владелец дал ключ Яндекс Облака (`AQVN…`): Вордстат теперь живёт в
+ * Search API облака, и ключ принимает только он — заголовок `Api-Key`, регион
+ * и устройства строками, число фраз обязательно. Старый api.wordstat.yandex.net
+ * берёт OAuth-токен (`y0_…`) — оставлен на случай такого токена.
+ */
+export function wordstatRequest(token: string, query: string): { url: string; init: RequestInit } {
+  if (token.startsWith("AQVN")) {
+    return {
+      url: "https://searchapi.api.cloud.yandex.net/v2/wordstat/topRequests",
+      init: {
+        method: "POST",
+        headers: { authorization: `Api-Key ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ phrase: query, numPhrases: "50", regions: [String(WORDSTAT_UZ)], devices: ["DEVICE_ALL"] }),
+      },
+    };
+  }
+  return {
+    url: "https://api.wordstat.yandex.net/v1/topRequests",
+    init: {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json;charset=utf-8" },
       body: JSON.stringify({ phrase: query, regions: [WORDSTAT_UZ], devices: ["all"] }),
-    });
+    },
+  };
+}
+
+/** Фразы из ответа: облако — `results`, числа строкой; старый API — `topRequests`. */
+export function wordstatPhrases(data: unknown): Array<{ phrase: string; value: number }> {
+  const d = (data ?? {}) as {
+    results?: Array<{ phrase: string; count: string | number }>;
+    topRequests?: Array<{ phrase: string; count: string | number }>;
+  };
+  return (d.results ?? d.topRequests ?? [])
+    .map((r) => ({ phrase: String(r.phrase ?? "").trim(), value: Number(r.count) || 0 }))
+    .filter((r) => r.phrase);
+}
+
+/** Запросы с этим словом за 30 дней — Вордстат, регион Узбекистан. */
+export async function wordstatTop(query: string): Promise<SourceResult> {
+  const token = await appSecret("WORDSTAT_TOKEN");
+  if (!token) return { ok: false, reason: "нет ключа Вордстата (WORDSTAT_TOKEN)" };
+  try {
+    const { url, init } = wordstatRequest(token, query);
+    const response = await timed(url, init);
     if (!response.ok) return { ok: false, reason: `Вордстат ответил ${response.status}` };
-    const data = (await response.json()) as { topRequests?: Array<{ phrase: string; count: number }> };
-    const phrases = (data.topRequests ?? []).map((r) => ({ phrase: r.phrase, value: r.count }));
+    const phrases = wordstatPhrases(await response.json());
     return phrases.length ? { ok: true, phrases } : { ok: false, reason: "в Вордстате по Узбекистану запросов нет" };
   } catch (error) {
     return { ok: false, reason: `Вордстат недоступен: ${error instanceof Error ? error.message : String(error)}` };

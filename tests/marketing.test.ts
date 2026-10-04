@@ -290,9 +290,31 @@ test("запрос — в заголовке, описании и первом �
 });
 
 test("перед статьёй — Google Trends и Вордстат по Узбекистану", async () => {
-  const { mergeRelated, trendsJson, WORDSTAT_UZ, TRENDS_GEO } = await import("@/lib/seo/keywords");
+  const { mergeRelated, trendsJson, wordstatPhrases, wordstatRequest, WORDSTAT_UZ, TRENDS_GEO } = await import(
+    "@/lib/seo/keywords"
+  );
   assert.equal(TRENDS_GEO, "UZ");
   assert.equal(WORDSTAT_UZ, 171);
+  // Ключ Яндекс Облака (AQVN…) — в Search API облака, OAuth-токен — в старый API.
+  const cloud = wordstatRequest("AQVNtest", "smm");
+  assert.equal(cloud.url, "https://searchapi.api.cloud.yandex.net/v2/wordstat/topRequests");
+  assert.equal((cloud.init.headers as Record<string, string>).authorization, "Api-Key AQVNtest");
+  assert.deepEqual(JSON.parse(String(cloud.init.body)), {
+    phrase: "smm",
+    numPhrases: "50",
+    regions: ["171"],
+    devices: ["DEVICE_ALL"],
+  });
+  const oauth = wordstatRequest("y0_test", "smm");
+  assert.equal(oauth.url, "https://api.wordstat.yandex.net/v1/topRequests");
+  assert.equal((oauth.init.headers as Record<string, string>).authorization, "Bearer y0_test");
+  // Ответ облака: числа строкой; старого API — числом.
+  assert.deepEqual(wordstatPhrases({ totalCount: "25", results: [{ phrase: "smm", count: "25" }, { phrase: "smm najot talim", count: "8" }] }), [
+    { phrase: "smm", value: 25 },
+    { phrase: "smm najot talim", value: 8 },
+  ]);
+  assert.deepEqual(wordstatPhrases({ topRequests: [{ phrase: "smm", count: 3 }] }), [{ phrase: "smm", value: 3 }]);
+  assert.deepEqual(wordstatPhrases(null), []);
   // Защитная строка Trends перед JSON.
   assert.deepEqual(trendsJson(")]}'\n{\"a\":1}"), { a: 1 });
   // Сначала Вордстат, потом Trends; без повторов и без самого запроса.
