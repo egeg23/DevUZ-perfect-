@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { HelpSearch } from "@/components/admin/help-search";
 import { AdminShell } from "@/components/admin/shell";
 import {
   HELP_LOCALES,
@@ -100,6 +101,13 @@ export function HelpView({ staff, locale, role }: { staff: Staff; locale: HelpLo
           ))}
         </div>
       ) : null}
+
+      {/* ── Поиск своими словами ─────────────────────────────────────── */}
+      <HelpSearch
+        copy={t.search}
+        lang={locale}
+        as={staff.role === "admin" && role !== "admin" ? role : undefined}
+      />
 
       {/* ── Оглавление ────────────────────────────────────────────────── */}
       <nav aria-label={t.contentsTitle} className={`mt-6 ${CARD}`}>

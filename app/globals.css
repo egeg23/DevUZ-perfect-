@@ -613,3 +613,34 @@
 @media (prefers-reduced-motion: reduce) {
   .nav-live::before { animation: none; }
 }
+
+/* ── Инструкция: пункт, найденный поиском ────────────────────────────────
+   «Найти в инструкции» прыгает к пункту, и он пять секунд мигает зелёной
+   рамкой (components/admin/help-search.tsx снимает класс через 5 с):
+   страница длинная, и без подсветки глаз после прыжка ищет, куда смотреть.
+   Четыре вспышки по 1,25 с — ровно пять секунд. */
+.help-flash {
+  animation: help-flash 1.25s ease-in-out 4;
+}
+
+@keyframes help-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-green) 35%, transparent);
+    background-color: color-mix(in oklab, var(--color-green) 4%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px color-mix(in oklab, var(--color-green) 85%, transparent),
+      0 0 24px color-mix(in oklab, var(--color-green) 30%, transparent);
+    background-color: color-mix(in oklab, var(--color-green) 12%, transparent);
+  }
+}
+
+/* Без мигания — ровная рамка те же пять секунд. */
+@media (prefers-reduced-motion: reduce) {
+  .help-flash {
+    animation: none;
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-green) 85%, transparent);
+  }
+}

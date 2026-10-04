@@ -45,6 +45,22 @@ export type HelpChannel = {
   roles?: readonly Role[];
 };
 
+/** Подписи поля «Найти в инструкции» (components/admin/help-search.tsx). */
+export type HelpSearchCopy = {
+  label: string;
+  placeholder: string;
+  button: string;
+  searching: string;
+  /** «Открыт пункт:» — перед названием найденного пункта. */
+  opened: string;
+  /** «Ещё может подойти:» — перед остальными найденными пунктами. */
+  also: string;
+  /** Нашли не модель, а совпадение слов. */
+  byWords: string;
+  nothing: string;
+  failed: string;
+};
+
 export type HelpCopy = {
   title: string;
   lead: string;
@@ -57,6 +73,7 @@ export type HelpCopy = {
   /** Ключ — адрес вкладки из меню. */
   sections: Record<string, HelpEntry>;
   ownerOnly: string;
+  search: HelpSearchCopy;
   channelsTitle: string;
   channelsLead: string;
   channels: HelpChannel[];

@@ -34,6 +34,17 @@ export const uz: HelpCopy = {
   viewAs: "Kim sifatida ko‘rsatish:",
   roleNames: { admin: "egasi", head: "rahbar", manager: "menejer" },
   ownerOnly: "Faqat egasi ko‘radi",
+  search: {
+    label: "Yo‘riqnomadan topish",
+    placeholder: "O‘z so‘zlaringiz bilan so‘rang…",
+    button: "Topish",
+    searching: "Qidiryapman…",
+    opened: "Band ochildi:",
+    also: "Yana mos kelishi mumkin:",
+    byWords: "So‘zlar mosligi bo‘yicha tanlandi — band o‘sha haqidami, tekshiring.",
+    nothing: "Bunday band topilmadi. Boshqacha yozing yoki jamoa chatida so‘rang.",
+    failed: "Topib bo‘lmadi — aloqani tekshirib, yana urinib ko‘ring.",
+  },
 
   sections: {
     /* ── Лиды ─────────────────────────────────────────────────────────── */
@@ -550,12 +561,26 @@ export const uz: HelpCopy = {
         {
           id: "queue",
           title: "Ishchi akkaunt navbati: soatiga uch xat, 07:30 dan 20:30 gacha",
-          body: [
-            "Yangi kompaniyaga birinchi xatni ishchi akkaunt soatiga uchtadan ko‘p emas, 8–20 daqiqa tanaffus bilan va faqat Toshkent vaqti bilan 07:30 dan 20:30 gacha, har kuni yuboradi: tunda qo‘yilgan xat navbatda kutadi va ertalab birinchi bo‘lib ketadi. Javob berganlar bilan yozishma istalgan vaqtda va chegarasiz boradi. Aks holda Telegram bizni ommaviy tarqatma deb hisoblab, akkauntni cheklaydi — skaut esa chatlarni aynan shu akkaunt bilan o‘qiydi, va biz ikkala kanalni birdan yo‘qotardik.",
-            "Ro‘yxat ustida: «Oxirgi soatda 3 tadan 1 tasi ketdi · navbatda 3 ta». Navbatdagi kartochkada — taxminan necha daqiqadan keyin ketishi. Ishchi akkauntlar bir nechta bo‘lishi mumkin — har birining o‘z «soatiga uch»i bor, unda ikkinchi raqam kattaroq bo‘ladi: hammasidan birga soatiga shuncha birinchi xat ketadi. Xat qaysi akkauntda joy oldinroq bo‘shasa, o‘shandan ketadi; agar rahbar sizni ma’lum akkauntlarda belgilagan bo‘lsa — faqat ulardan. Javoblar va tuzatishlar — birinchi xat ketgan akkauntdan.",
-            "Kutish shart emas: yozishmani o‘z akkauntingizdan oching, o‘sha matnni yuboring va **«O‘zim bog‘landim»** tugmasini bosing — bot o‘z nusxasini endi yubormaydi, mijoz javobi esa shaxsan sizga keladi.",
-            "**Egasining xatlari navbatsiz ketadi**: boshqalarning xatlarini ham, «soatiga uch»ni ham, 8–20 daqiqa tanaffusni ham kutmaydi — oldingi har qanday yuborishdan bir daqiqa o‘tib ketadi, lekin ular ham faqat 07:30 dan 20:30 gacha. «Soatiga uch»ga ular baribir kiradi: cheklov akkaunt haqida, va bunday xatdan keyin qolganlar kutishiga to‘g‘ri keladi. Bunday kartochkada «Egasining xati — navbatsiz» deb yozilgan.",
-          ],
+          body: {
+            manager: [
+              "Yangi kompaniyaga birinchi xatni ishchi akkaunt soatiga uchtadan ko‘p emas, 8–20 daqiqa tanaffus bilan va faqat Toshkent vaqti bilan 07:30 dan 20:30 gacha, har kuni yuboradi: tunda qo‘yilgan xat navbatda kutadi va ertalab birinchi bo‘lib ketadi. Javob berganlar bilan yozishma istalgan vaqtda va chegarasiz boradi. Aks holda Telegram bizni ommaviy tarqatma deb hisoblab, akkauntni cheklaydi — skaut esa chatlarni aynan shu akkaunt bilan o‘qiydi, va biz ikkala kanalni birdan yo‘qotardik.",
+              "Ro‘yxat ustida: «Oxirgi soatda 3 tadan 1 tasi ketdi · navbatda 3 ta». Navbatdagi kartochkada — taxminan necha daqiqadan keyin ketishi. Ishchi akkauntlar bir nechta bo‘lishi mumkin — har birining o‘z «soatiga uch»i bor, unda ikkinchi raqam kattaroq bo‘ladi: hammasidan birga soatiga shuncha birinchi xat ketadi. Xat qaysi akkauntda joy oldinroq bo‘shasa, o‘shandan ketadi; agar rahbar sizni ma’lum akkauntlarda belgilagan bo‘lsa — faqat ulardan: shunda mijozga ortida siz turgan raqamdan yoziladi. Javoblar va tuzatishlar — birinchi xat ketgan akkauntdan.",
+              "Kutish shart emas: yozishmani o‘z akkauntingizdan oching, o‘sha matnni yuboring va **«O‘zim bog‘landim»** tugmasini bosing — bot o‘z nusxasini endi yubormaydi, mijoz javobi esa shaxsan sizga keladi.",
+              "**Egasining xatlari navbatsiz ketadi**: boshqalarning xatlarini ham, «soatiga uch»ni ham, 8–20 daqiqa tanaffusni ham kutmaydi — oldingi har qanday yuborishdan bir daqiqa o‘tib ketadi, lekin ular ham faqat 07:30 dan 20:30 gacha. «Soatiga uch»ga ular baribir kiradi: cheklov akkaunt haqida, va bunday xatdan keyin qolganlar kutishiga to‘g‘ri keladi. Bunday kartochkada «Egasining xati — navbatsiz» deb yozilgan.",
+            ],
+            head: [
+              "Yangi kompaniyaga birinchi xatni ishchi akkaunt soatiga uchtadan ko‘p emas, 8–20 daqiqa tanaffus bilan va faqat Toshkent vaqti bilan 07:30 dan 20:30 gacha, har kuni yuboradi: tunda qo‘yilgan xat navbatda kutadi va ertalab birinchi bo‘lib ketadi. Javob berganlar bilan yozishma istalgan vaqtda va chegarasiz boradi. Aks holda Telegram bizni ommaviy tarqatma deb hisoblab, akkauntni cheklaydi — skaut esa chatlarni aynan shu akkaunt bilan o‘qiydi, va biz ikkala kanalni birdan yo‘qotardik.",
+              "Ro‘yxat ustida: «Oxirgi soatda 3 tadan 1 tasi ketdi · navbatda 3 ta». Navbatdagi kartochkada — taxminan necha daqiqadan keyin ketishi. Ishchi akkauntlar bir nechta bo‘lishi mumkin — har birining o‘z «soatiga uch»i bor, unda ikkinchi raqam kattaroq bo‘ladi: hammasidan birga soatiga shuncha birinchi xat ketadi. Xat qaysi akkauntda joy oldinroq bo‘shasa, o‘shandan ketadi. Kim qaysi akkauntlardan yozishini siz yoki egasi [Akkauntlar](/admin/accounts) bo‘limida belgilaysiz — [akkauntda kim ishlaydi](#accounts-staff) bandi: belgilangan menejer faqat o‘z akkauntlaridan yozadi, belgilanmagani — istalganidan. Sizning o‘z xatlaringiz ham shu qoidalar bo‘yicha ketadi. Javoblar va tuzatishlar — birinchi xat ketgan akkauntdan.",
+              "Kutish shart emas: yozishmani o‘z akkauntingizdan oching, o‘sha matnni yuboring va **«O‘zim bog‘landim»** tugmasini bosing — bot o‘z nusxasini endi yubormaydi, mijoz javobi esa shaxsan sizga keladi.",
+              "**Egasining xatlari navbatsiz ketadi**: boshqalarning xatlarini ham, «soatiga uch»ni ham, 8–20 daqiqa tanaffusni ham kutmaydi — oldingi har qanday yuborishdan bir daqiqa o‘tib ketadi, lekin ular ham faqat 07:30 dan 20:30 gacha. «Soatiga uch»ga ular baribir kiradi: cheklov akkaunt haqida, va bunday xatdan keyin qolganlar kutishiga to‘g‘ri keladi. Bunday kartochkada «Egasining xati — navbatsiz» deb yozilgan.",
+            ],
+            admin: [
+              "Yangi kompaniyaga birinchi xatni ishchi akkaunt soatiga uchtadan ko‘p emas, 8–20 daqiqa tanaffus bilan va faqat Toshkent vaqti bilan 07:30 dan 20:30 gacha, har kuni yuboradi: tunda qo‘yilgan xat navbatda kutadi va ertalab birinchi bo‘lib ketadi. Javob berganlar bilan yozishma istalgan vaqtda va chegarasiz boradi. Aks holda Telegram bizni ommaviy tarqatma deb hisoblab, akkauntni cheklaydi — skaut esa chatlarni aynan shu akkaunt bilan o‘qiydi, va biz ikkala kanalni birdan yo‘qotardik.",
+              "Ro‘yxat ustida: «Oxirgi soatda 3 tadan 1 tasi ketdi · navbatda 3 ta». Navbatdagi kartochkada — taxminan necha daqiqadan keyin ketishi. Ishchi akkauntlar bir nechta bo‘lishi mumkin — har birining o‘z «soatiga uch»i bor, unda ikkinchi raqam kattaroq bo‘ladi: hammasidan birga soatiga shuncha birinchi xat ketadi. Xat qaysi akkauntda joy oldinroq bo‘shasa, o‘shandan ketadi. Kim qaysi akkauntlardan yozishini siz yoki rahbar [Akkauntlar](/admin/accounts) bo‘limida belgilaysiz — [akkauntda kim ishlaydi](#accounts-staff) bandi: belgilangan xodim faqat o‘z akkauntlaridan yozadi, belgilanmagani — istalganidan. Javoblar va tuzatishlar — birinchi xat ketgan akkauntdan.",
+              "Kutish shart emas: yozishmani o‘z akkauntingizdan oching, o‘sha matnni yuboring va **«O‘zim bog‘landim»** tugmasini bosing — bot o‘z nusxasini endi yubormaydi, mijoz javobi esa shaxsan sizga keladi.",
+              "**Sizning xatlaringiz navbatsiz ketadi**: jamoaning xatlarini ham, «soatiga uch»ni ham, 8–20 daqiqa tanaffusni ham kutmaydi — oldingi har qanday yuborishdan bir daqiqa o‘tib ketadi, lekin ular ham faqat 07:30 dan 20:30 gacha. «Soatiga uch»ga ular baribir kiradi: cheklov akkaunt haqida, va xatingizdan keyin jamoa kutishiga to‘g‘ri keladi. Bunday kartochkada «Egasining xati — navbatsiz» deb yozilgan.",
+            ],
+          },
         },
         {
           id: "self",
@@ -1487,6 +1512,30 @@ export const uz: HelpCopy = {
             "Tepada — mundarija va yo‘riqnoma tilini almashtirish. Yo‘riqnomaning o‘zi — bo‘lim tugmasidan ham, «?» dan ham — [panel tilida](#help-language) ochiladi.",
             "Biror narsa yetishmasa yoki ekrandagidan boshqacha yozilgan bo‘lsa — egasiga ayting, qo‘shib qo‘yamiz.",
           ],
+        },
+        {
+          id: "search",
+          title: "Qidiruv: o‘z so‘zlaringiz bilan so‘rang",
+          body: {
+            manager: [
+              "Mundarija ustida — **«Yo‘riqnomadan topish»** maydoni. Savolingizni hamkasbdan so‘ragandek o‘z so‘zlaringiz bilan yozing: «lidni boshqa menejerga qanday o‘tkazaman», «nega mijozga xat hali ketmadi», «vazifani ikki kishiga birdan qanday qo‘yaman» — va **«Topish»** tugmasini bosing. Ruscha, o‘zbekcha yoki polyakcha, xatolar bilan va tugmalarning aniq nomlarisiz yozish mumkin.",
+              "Savolni model tahlil qiladi: u faqat shu sahifada sizda bor bandlarni ko‘radi va mosini so‘zlar mosligi bo‘yicha emas, ma’nosi bo‘yicha tanlaydi. Bir xil savol ikkinchi marta modelga berilmaydi — javob xotiradan, darhol olinadi.",
+              "Sahifa o‘zi topilgan bandga aylanadi va u besh soniya yashil ramka bilan miltillaydi — shunda u qo‘shnilari orasida darhol ko‘rinadi. Maydon ostida qaysi band ochilgani yoziladi, savol bir nechta mavzuga tegsa — «Yana mos kelishi mumkin» dan keyin yana ikkitagacha band: bossangiz, sahifa unga aylanadi va uni ham xuddi shunday yoritadi. «Bo‘limdan qanday foydalanish» tugmasi, blok yonidagi «?» yoki yo‘riqnoma ichidagi havola bilan kelgan band ham xuddi shunday yoritiladi.",
+              "Model ishlamasa yoki siz 10 daqiqada 20 martadan ko‘p so‘rasangiz, band so‘zlar mosligi bo‘yicha tanlanadi va maydon ostida shunday yozilgan bo‘ladi: band o‘sha haqidami, tekshiring. Hech narsa topilmasa — demak, bu yo‘riqnomada hali yo‘q: jamoa chatida so‘rang va egasiga ayting, qo‘shib qo‘yamiz.",
+            ],
+            head: [
+              "Mundarija ustida — **«Yo‘riqnomadan topish»** maydoni. Savolingizni hamkasbdan so‘ragandek o‘z so‘zlaringiz bilan yozing: «lidni boshqa menejerga qanday o‘tkazaman», «nega mijozga xat hali ketmadi», «vazifani ikki kishiga birdan qanday qo‘yaman» — va **«Topish»** tugmasini bosing. Ruscha, o‘zbekcha yoki polyakcha, xatolar bilan va tugmalarning aniq nomlarisiz yozish mumkin.",
+              "Savolni model tahlil qiladi: u faqat shu sahifada sizda bor bandlarni ko‘radi va mosini so‘zlar mosligi bo‘yicha emas, ma’nosi bo‘yicha tanlaydi. Bir xil savol ikkinchi marta modelga berilmaydi — javob xotiradan, darhol olinadi.",
+              "Sahifa o‘zi topilgan bandga aylanadi va u besh soniya yashil ramka bilan miltillaydi — shunda u qo‘shnilari orasida darhol ko‘rinadi. Maydon ostida qaysi band ochilgani yoziladi, savol bir nechta mavzuga tegsa — «Yana mos kelishi mumkin» dan keyin yana ikkitagacha band: bossangiz, sahifa unga aylanadi va uni ham xuddi shunday yoritadi. «Bo‘limdan qanday foydalanish» tugmasi, blok yonidagi «?» yoki yo‘riqnoma ichidagi havola bilan kelgan band ham xuddi shunday yoritiladi.",
+              "Model ishlamasa yoki siz 10 daqiqada 20 martadan ko‘p so‘rasangiz, band so‘zlar mosligi bo‘yicha tanlanadi va maydon ostida shunday yozilgan bo‘ladi: band o‘sha haqidami, tekshiring. Hech narsa topilmasa — demak, bu yo‘riqnomada hali yo‘q: jamoa chatida so‘rang va egasiga ayting, qo‘shib qo‘yamiz.",
+            ],
+            admin: [
+              "Mundarija ustida — **«Yo‘riqnomadan topish»** maydoni. Savolingizni hamkasbdan so‘ragandek o‘z so‘zlaringiz bilan yozing: «lidni boshqa menejerga qanday o‘tkazaman», «nega mijozga xat hali ketmadi», «vazifani ikki kishiga birdan qanday qo‘yaman» — va **«Topish»** tugmasini bosing. Ruscha, o‘zbekcha yoki polyakcha, xatolar bilan va tugmalarning aniq nomlarisiz yozish mumkin.",
+              "Savolni eng arzon model (Haiku) tahlil qiladi: unga faqat ro‘yxatdan bandni tanlash kerak, u hech narsa yozmaydi. U faqat shu sahifadagi bandlarni ko‘radi va mosini so‘zlar mosligi bo‘yicha emas, ma’nosi bo‘yicha tanlaydi. «Kim sifatida ko‘rsatish» rejimida qidiruv tanlangan rolning yo‘riqnomasi bo‘yicha boradi. Bir xil savol ikkinchi marta modelga berilmaydi — javob xotiradan olinadi. Model .env dagi `HELP_SEARCH_MODEL` o‘zgaruvchisi bilan almashtiriladi.",
+              "Sahifa o‘zi topilgan bandga aylanadi va u besh soniya yashil ramka bilan miltillaydi — shunda u qo‘shnilari orasida darhol ko‘rinadi. Maydon ostida qaysi band ochilgani yoziladi, savol bir nechta mavzuga tegsa — «Yana mos kelishi mumkin» dan keyin yana ikkitagacha band: bossangiz, sahifa unga aylanadi va uni ham xuddi shunday yoritadi. «Bo‘limdan qanday foydalanish» tugmasi, blok yonidagi «?» yoki yo‘riqnoma ichidagi havola bilan kelgan band ham xuddi shunday yoritiladi.",
+              "Model ishlamasa yoki xodim 10 daqiqada 20 martadan ko‘p so‘rasa, band so‘zlar mosligi bo‘yicha tanlanadi — bepul, va maydon ostida shunday yozilgan bo‘ladi. Hech narsa topilmasa — demak, yo‘riqnomada bunday band yo‘q: uni qo‘shish kerak.",
+            ],
+          },
         },
         {
           id: "language",
