@@ -22,7 +22,7 @@ const TASKS_BOT = [
 
 export const head: Pick<
   HelpCopy,
-  "title" | "lead" | "contentsTitle" | "sectionsTitle" | "openSection" | "viewAs" | "roleNames" | "ownerOnly"
+  "title" | "lead" | "contentsTitle" | "sectionsTitle" | "openSection" | "viewAs" | "roleNames" | "ownerOnly" | "search"
 > = {
   title: "Instrukcje",
   lead: "Jak działa panel i jak z niego korzystać — sekcja po sekcji, prostymi słowami. Znajdziesz tu tylko to, do czego masz dostęp. Z każdej sekcji prowadzi tu przycisk «Jak korzystać z sekcji» w nagłówku, a «?» przy blokach otwiera właściwy punkt.",
@@ -32,6 +32,17 @@ export const head: Pick<
   viewAs: "Pokaż jako:",
   roleNames: { admin: "właściciel", head: "kierownik", manager: "menedżer" },
   ownerOnly: "Widzi tylko właściciel",
+  search: {
+    label: "Szukaj w instrukcji",
+    placeholder: "Zapytaj własnymi słowami…",
+    button: "Szukaj",
+    searching: "Szukam…",
+    opened: "Otwarto punkt:",
+    also: "Może też pasować:",
+    byWords: "Dobrane po zgodności słów — sprawdź, czy to ten punkt.",
+    nothing: "Nie znaleziono takiego punktu. Spróbuj inaczej albo zapytaj na czacie zespołu.",
+    failed: "Nie udało się wyszukać — sprawdź połączenie i spróbuj ponownie.",
+  },
 };
 
 export const leadsSections: Record<string, HelpEntry> = {
