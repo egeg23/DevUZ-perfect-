@@ -26,8 +26,20 @@ test("номера — в международном формате и наби�
   }
   assert.deepEqual(
     company.phones.map((p) => p.e164),
-    ["+998909123772", "+998909120578", "+79232330037", "+11517095555"],
+    ["+998909120578", "+79232330037", "+11517095555"],
   );
+  // Владелец, 04.10: номер Данила снят, у узбекского и российского — имена.
+  assert.ok(!company.phones.some((p) => p.e164.endsWith("3772")), "номер …37-72 снова на сайте");
+  const person = (e164: string) => {
+    const phone = company.phones.find((p) => p.e164 === e164);
+    return phone && "person" in phone ? phone.person : null;
+  };
+  assert.equal(person("+998909120578")?.ru, "Александр");
+  assert.equal(person("+79232330037")?.ru, "Егор");
+  for (const locale of LOCALES) {
+    assert.ok(person("+998909120578")?.[locale], `${locale}: имя Александра не переведено`);
+    assert.ok(person("+79232330037")?.[locale], `${locale}: имя Егора не переведено`);
+  }
   // На американском номере WhatsApp нет — владелец, 23.09.
   assert.deepEqual(
     company.phones.filter((p) => !p.whatsapp).map((p) => p.e164),
@@ -39,7 +51,7 @@ test("WhatsApp открывается с уже набранным привет�
   for (const locale of LOCALES) {
     const text = getDictionary(locale).contact.whatsappText;
     const url = whatsappUrl(company.phones[0], text);
-    assert.match(url, /^https:\/\/wa\.me\/998909123772\?text=/);
+    assert.match(url, /^https:\/\/wa\.me\/998909120578\?text=/);
     assert.equal(decodeURIComponent(url.split("?text=")[1]), text);
   }
 });
@@ -51,7 +63,7 @@ test("номера есть в «Связаться», в подвале, в ш�
   // возникало ощущения, что тебя снова ждёт только наш ИИ-бот».
   assert.ok(contact.indexOf("<PhoneList") < contact.indexOf("<SectionHeading"), "номера ниже чата");
   assert.ok(contact.indexOf("<PhoneList") < contact.indexOf("<ChatPanel"), "номера ниже чата");
-  assert.match(read("components/layout/footer.tsx"), /<PhoneLinesCompact dict=\{dict\} \/>/);
+  assert.match(read("components/layout/footer.tsx"), /<PhoneLinesCompact locale=\{locale\} dict=\{dict\} \/>/);
   // Кнопка WhatsApp — только у номеров, где он есть: иначе клиент нажмёт и
   // увидит «номер не зарегистрирован в WhatsApp».
   const links = read("components/ui/phone-links.tsx");

@@ -10,7 +10,16 @@ import { telUrl, whatsappUrl } from "@/lib/phone-links";
  * WhatsApp открывает чат с уже набранным «Пишу с сайта DevUz Studio»:
  * человеку не нужно думать, с чего начать, а менеджер сразу видит, откуда
  * пришло сообщение.
+ *
+ * У номера может быть имя того, кто ответит (`person`), — оно подписано и
+ * в плитке, и в подвале: звонить человеку спокойнее, чем «в студию».
  */
+
+type Phone = (typeof company.phones)[number];
+
+function personOf(phone: Phone, locale: Locale): string | null {
+  return "person" in phone ? t(phone.person, locale) : null;
+}
 
 const WHATSAPP_ICON = (
   <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="currentColor">
@@ -39,7 +48,7 @@ export function PhoneList({ locale, dict }: { locale: Locale; dict: Dictionary }
   return (
     <div id="phones" className="scroll-mt-28 rounded-2xl border border-green/25 bg-surface p-6 sm:p-7">
       <p className="text-[1.05rem] font-semibold">{dict.contact.directTitle}</p>
-      <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {company.phones.map((phone) => (
           <li key={phone.e164} className="flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-ink/40 p-4">
             <div className="min-w-0">
@@ -49,6 +58,9 @@ export function PhoneList({ locale, dict }: { locale: Locale; dict: Dictionary }
                 </span>
                 {t(phone.country, locale)}
               </p>
+              {personOf(phone, locale) ? (
+                <p className="mt-1 text-[0.9rem] font-medium text-text">{personOf(phone, locale)}</p>
+              ) : null}
               <a
                 href={telUrl(phone)}
                 className="mt-1 block font-mono text-[1.02rem] text-text transition-colors hover:text-green"
@@ -95,7 +107,7 @@ export function PhoneList({ locale, dict }: { locale: Locale; dict: Dictionary }
 }
 
 /** Коротко: номер-ссылка и значок WhatsApp рядом. Для подвала. */
-export function PhoneLinesCompact({ dict }: { dict: Dictionary }) {
+export function PhoneLinesCompact({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   return (
     <>
       {company.phones.map((phone) => (
@@ -106,6 +118,7 @@ export function PhoneLinesCompact({ dict }: { dict: Dictionary }) {
             </span>
             {phone.display}
           </a>
+          {personOf(phone, locale) ? <span className="text-[0.8rem] text-faint">{personOf(phone, locale)}</span> : null}
           {phone.whatsapp ? (
             <a
               href={whatsappUrl(phone, dict.contact.whatsappText)}

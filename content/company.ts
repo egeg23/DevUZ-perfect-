@@ -44,21 +44,19 @@ export const company = {
    * телефона» и «Переход в мессенджер»).
    *
    * `e164` — для ссылок tel: и wa.me, `display` — для глаз, `whatsapp` —
-   * есть ли на номере WhatsApp (нет — только кнопка звонка). Порядок —
-   * порядок на сайте.
+   * есть ли на номере WhatsApp (нет — только кнопка звонка), `person` — кто
+   * ответит. Порядок — порядок на сайте; первый номер стоит ещё и в шапке.
+   *
+   * Владелец, 04.10: номер Данила (…37-72) снят, у остальных подписаны имена:
+   * узбекский — Александр, российский — Егор. Клиенту спокойнее звонить
+   * человеку, а не «в студию».
    */
   phones: [
-    {
-      e164: "+998909123772",
-      display: "+998 90 912-37-72",
-      country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦", uk: "Узбекистан", pl: "Uzbekistan" } satisfies LocalizedText,
-      flag: "🇺🇿",
-      whatsapp: true,
-    },
     {
       e164: "+998909120578",
       display: "+998 90 912-05-78",
       country: { ru: "Узбекистан", en: "Uzbekistan", uz: "O‘zbekiston", zh: "乌兹别克斯坦", uk: "Узбекистан", pl: "Uzbekistan" } satisfies LocalizedText,
+      person: { ru: "Александр", en: "Alexander", uz: "Aleksandr", zh: "亚历山大", uk: "Олександр", pl: "Aleksander" } satisfies LocalizedText,
       flag: "🇺🇿",
       whatsapp: true,
     },
@@ -66,6 +64,7 @@ export const company = {
       e164: "+79232330037",
       display: "+7 923 233-00-37",
       country: { ru: "Россия", en: "Russia", uz: "Rossiya", zh: "俄罗斯", uk: "Росія", pl: "Rosja" } satisfies LocalizedText,
+      person: { ru: "Егор", en: "Egor", uz: "Yegor", zh: "叶戈尔", uk: "Єгор", pl: "Jegor" } satisfies LocalizedText,
       flag: "🇷🇺",
       whatsapp: true,
     },
