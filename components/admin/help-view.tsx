@@ -26,7 +26,13 @@ import type { Staff } from "@/lib/admin/session";
 const CARD = "rounded-xl border border-line bg-surface px-5 py-4";
 
 /** Видео к инструкции — только то, что нужно странице (lib/admin/help-videos.ts). */
-export type HelpVideoView = { id: string; section: string; locale: string };
+export type HelpVideoView = {
+  id: string;
+  section: string;
+  locale: string;
+  /** Подписанная ссылка на файл; нет — обычная, с проверкой входа на каждый кусок. */
+  src?: string;
+};
 
 export function HelpView({
   staff,
@@ -52,7 +58,7 @@ export function HelpView({
           controls
           preload="metadata"
           playsInline
-          src={helpVideoUrl(video.id)}
+          src={video.src ?? helpVideoUrl(video.id)}
           className="aspect-video w-full rounded-lg border border-line bg-black"
         />
         {video.locale !== locale ? (

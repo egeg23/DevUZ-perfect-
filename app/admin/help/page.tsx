@@ -1,6 +1,7 @@
 import { HelpView } from "@/components/admin/help-view";
 import { isHelpLocale, type HelpLocale } from "@/content/admin-help";
 import { requireStaff } from "@/lib/admin/guard";
+import { signedHelpVideoUrl } from "@/lib/admin/help-video-link";
 import { listHelpVideos } from "@/lib/admin/help-videos";
 import { isRole, type Role } from "@/lib/admin/roles";
 
@@ -45,6 +46,13 @@ export default async function HelpPage({
   // Смотреть глазами другой роли может только владелец: у него и так видно всё.
   const role: Role = staff.role === "admin" && as && isRole(as) ? as : staff.role;
 
-  const videos = (await listHelpVideos()).map(({ id, section, locale: lang }) => ({ id, section, locale: lang }));
+  // Ссылка на файл — подписанная: куски видео идут без проверки входа и базы,
+  // права уже проверены здесь (lib/admin/help-video-link.ts).
+  const videos = (await listHelpVideos()).map((video) => ({
+    id: video.id,
+    section: video.section,
+    locale: video.locale,
+    src: signedHelpVideoUrl(video),
+  }));
   return <HelpView staff={staff} locale={locale} role={role} videos={videos} />;
 }
