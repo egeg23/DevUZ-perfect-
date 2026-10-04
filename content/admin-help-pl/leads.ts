@@ -22,7 +22,7 @@ const TASKS_BOT = [
 
 export const head: Pick<
   HelpCopy,
-  "title" | "lead" | "contentsTitle" | "sectionsTitle" | "openSection" | "viewAs" | "roleNames" | "ownerOnly" | "search"
+  "title" | "lead" | "contentsTitle" | "sectionsTitle" | "openSection" | "viewAs" | "roleNames" | "ownerOnly" | "search" | "video"
 > = {
   title: "Instrukcje",
   lead: "Jak działa panel i jak z niego korzystać — sekcja po sekcji, prostymi słowami. Znajdziesz tu tylko to, do czego masz dostęp. Z każdej sekcji prowadzi tu przycisk «Jak korzystać z sekcji» w nagłówku, a «?» przy blokach otwiera właściwy punkt.",
@@ -42,6 +42,25 @@ export const head: Pick<
     byWords: "Dobrane po zgodności słów — sprawdź, czy to ten punkt.",
     nothing: "Nie znaleziono takiego punktu. Spróbuj inaczej albo zapytaj na czacie zespołu.",
     failed: "Nie udało się wyszukać — sprawdź połączenie i spróbuj ponownie.",
+  },
+  video: {
+    introTitle: "Wideo: panel w minutę",
+    otherLanguage: "Wideo w języku: {lang}",
+    manageSection: "Wideo do sekcji",
+    manageIntro: "Wideo wprowadzające",
+    have: "Wgrane:",
+    remove: "Usuń",
+    removeConfirm: "Usunąć wideo ({lang})? Plik zostanie skasowany z serwera.",
+    removeFailed: "Nie udało się usunąć wideo — odśwież stronę i spróbuj ponownie.",
+    language: "Język wideo",
+    file: "Plik: MP4, MOV lub WebM, do 500 MB",
+    upload: "Wgraj",
+    busy: "Wgrywam…",
+    replaceNote: "W tym języku wideo już jest — nowe je zastąpi.",
+    done: "Wideo wgrane.",
+    chooseFile: "Wybierz plik.",
+    wrongType: "Potrzebny film MP4, MOV lub WebM.",
+    tooBig: "Plik ma ponad 500 MB — skompresuj go albo podziel na części.",
   },
 };
 

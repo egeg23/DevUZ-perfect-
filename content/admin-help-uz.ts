@@ -45,6 +45,25 @@ export const uz: HelpCopy = {
     nothing: "Bunday band topilmadi. Boshqacha yozing yoki jamoa chatida so‘rang.",
     failed: "Topib bo‘lmadi — aloqani tekshirib, yana urinib ko‘ring.",
   },
+  video: {
+    introTitle: "Video: panel bir daqiqada",
+    otherLanguage: "Video tili: {lang}",
+    manageSection: "Bo‘lim videosi",
+    manageIntro: "Kirish videosi",
+    have: "Yuklangan:",
+    remove: "Olib tashlash",
+    removeConfirm: "Video ({lang}) olib tashlansinmi? Fayl serverdan o‘chiriladi.",
+    removeFailed: "Videoni olib tashlab bo‘lmadi — sahifani yangilab, qayta urinib ko‘ring.",
+    language: "Video tili",
+    file: "Fayl: MP4, MOV yoki WebM, 500 MB gacha",
+    upload: "Yuklash",
+    busy: "Yuklanmoqda…",
+    replaceNote: "Bu tilda video allaqachon bor — yangisi uning o‘rnini egallaydi.",
+    done: "Video yuklandi.",
+    chooseFile: "Faylni tanlang.",
+    wrongType: "MP4, MOV yoki WebM video kerak.",
+    tooBig: "Fayl 500 MB dan katta — uni siqing yoki qismlarga bo‘ling.",
+  },
 
   sections: {
     /* ── Лиды ─────────────────────────────────────────────────────────── */
@@ -1534,6 +1553,26 @@ export const uz: HelpCopy = {
               "Savolni eng arzon model (Haiku) tahlil qiladi: unga faqat ro‘yxatdan bandni tanlash kerak, u hech narsa yozmaydi. U faqat shu sahifadagi bandlarni ko‘radi va mosini so‘zlar mosligi bo‘yicha emas, ma’nosi bo‘yicha tanlaydi. «Kim sifatida ko‘rsatish» rejimida qidiruv tanlangan rolning yo‘riqnomasi bo‘yicha boradi. Bir xil savol ikkinchi marta modelga berilmaydi — javob xotiradan olinadi. Model .env dagi `HELP_SEARCH_MODEL` o‘zgaruvchisi bilan almashtiriladi.",
               "Sahifa o‘zi topilgan bandga aylanadi va u besh soniya yashil ramka bilan miltillaydi — shunda u qo‘shnilari orasida darhol ko‘rinadi. Maydon ostida qaysi band ochilgani yoziladi, savol bir nechta mavzuga tegsa — «Yana mos kelishi mumkin» dan keyin yana ikkitagacha band: bossangiz, sahifa unga aylanadi va uni ham xuddi shunday yoritadi. «Bo‘limdan qanday foydalanish» tugmasi, blok yonidagi «?» yoki yo‘riqnoma ichidagi havola bilan kelgan band ham xuddi shunday yoritiladi.",
               "Model ishlamasa yoki xodim 10 daqiqada 20 martadan ko‘p so‘rasa, band so‘zlar mosligi bo‘yicha tanlanadi — bepul, va maydon ostida shunday yozilgan bo‘ladi. Hech narsa topilmasa — demak, yo‘riqnomada bunday band yo‘q: uni qo‘shish kerak.",
+            ],
+          },
+        },
+        {
+          id: "video",
+          title: "Bo‘limlar videosi",
+          body: {
+            manager: [
+              "Sahifa tepasida — kirish videosi: panelga qanday kirish va birinchi kuni nima qilish kerak. Bo‘lim tepasida — uning videosi, agar u allaqachon yozib olingan bo‘lsa, ostida esa batafsil matn. «Bo‘limdan qanday foydalanish» tugmasi bo‘limni shu yerda ochadi — ya’ni darhol videoni.",
+              "Video yo‘riqnoma tilida ko‘rsatiladi, agar bu tilda hali bo‘lmasa — boshqa tilda, va ostida shunday yozilgan bo‘ladi. Videolarni egasi va rahbar yozib oladi; biror bo‘limga video yetishmasa yoki unda nimadir ekrandagidek bo‘lmasa — ularga ayting.",
+            ],
+            head: [
+              "Sahifa tepasida — kirish videosi: panelga qanday kirish va birinchi kuni nima qilish kerak. Bo‘lim tepasida — uning videosi, agar u allaqachon yozib olingan bo‘lsa, ostida esa batafsil matn. «Bo‘limdan qanday foydalanish» tugmasi bo‘limni shu yerda ochadi — ya’ni darhol videoni.",
+              "Videoni siz va egasi yuklaysiz. Bo‘lim tavsifi ostida — yig‘ilgan «Bo‘lim videosi» bloki, sahifa tepasida — «Kirish videosi». «Video tili»ni tanlang — unda qaysi tilda gapirilgan va izohlar yozilgan, — 500 MB gacha MP4, MOV yoki WebM faylni tanlang va «Yuklash» tugmasini bosing. Fayl qismlarga bo‘linib ketadi va aloqa uzilgan qismni o‘zi qayta yuboradi; chiziq oxiriga yetmaguncha sahifani yopmang. Xuddi shu tildagi video eskisining o‘rnini egallaydi.",
+              "Video yo‘riqnoma tilida ko‘rsatiladi, agar bu tilda video bo‘lmasa — boshqa tilda: avval ruscha, keyin o‘zbekcha, keyin polyakcha. Shuning uchun istalgan tildagi bitta video hammada bo‘lishi uchun yetarli. Blokdagi til yonidagi «Olib tashlash» bu videoni serverdan o‘chiradi.",
+            ],
+            admin: [
+              "Sahifa tepasida — kirish videosi: panelga qanday kirish va birinchi kuni nima qilish kerak. Bo‘lim tepasida — uning videosi, agar u allaqachon yozib olingan bo‘lsa, ostida esa batafsil matn. «Bo‘limdan qanday foydalanish» tugmasi bo‘limni shu yerda ochadi — ya’ni darhol videoni.",
+              "Videoni siz va rahbar yuklaysiz. Bo‘lim tavsifi ostida — yig‘ilgan «Bo‘lim videosi» bloki, sahifa tepasida — «Kirish videosi». «Video tili»ni tanlang — unda qaysi tilda gapirilgan va izohlar yozilgan, — 500 MB gacha MP4, MOV yoki WebM faylni tanlang va «Yuklash» tugmasini bosing. Fayl qismlarga bo‘linib ketadi va aloqa uzilgan qismni o‘zi qayta yuboradi; chiziq oxiriga yetmaguncha sahifani yopmang. Xuddi shu tildagi video eskisining o‘rnini egallaydi.",
+              "Video yo‘riqnoma tilida ko‘rsatiladi, agar bu tilda video bo‘lmasa — boshqa tilda: avval ruscha, keyin o‘zbekcha, keyin polyakcha. Shuning uchun istalgan tildagi bitta video hammada bo‘lishi uchun yetarli. Blokdagi til yonidagi «Olib tashlash» bu videoni serverdan o‘chiradi. Kim video yuklagani va olib tashlagani — harakatlar jurnalida.",
             ],
           },
         },

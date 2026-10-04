@@ -39,7 +39,7 @@ const INPUT =
 const ACCEPT = Object.keys(PROMO_MIME).join(",");
 
 /** Размер кадра и длительность — из самого файла, до загрузки. Не вышло — без них. */
-function readMeta(file: File): Promise<Meta> {
+export function readMeta(file: File): Promise<Meta> {
   const empty: Meta = { width: null, height: null, duration: null };
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
@@ -83,7 +83,7 @@ function readMeta(file: File): Promise<Meta> {
 type ChunkResult = { ok: true; received: number } | PromoFail;
 
 /** Файл кусками, по порядку; оборвавшийся кусок — ещё раз, с паузой. */
-async function sendChunks(
+export async function sendChunks(
   file: File,
   uploadId: string,
   send: (formData: FormData) => Promise<ChunkResult>,

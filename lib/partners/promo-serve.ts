@@ -7,8 +7,9 @@ import { promoFileName } from "@/lib/partners/promo-rules";
 /**
  * Отдать файл промо-материала с диска — целиком или диапазоном.
  *
- * Общее для двух адресов: партнёрского (/media/promo/…) и владельца
- * (/admin/partners/promo/file/…). Два адреса, а не один, потому что кука
+ * Общее для трёх адресов: партнёрского (/media/promo/…), владельца
+ * (/admin/partners/promo/file/…) и видео инструкций (/admin/help/video/…) —
+ * они лежат в той же папке. Два адреса, а не один, потому что кука
  * сессии панели живёт только на /admin: на /media/ браузер владельца её не
  * пошлёт, и превью в панели было бы пустым.
  *
@@ -17,7 +18,7 @@ import { promoFileName } from "@/lib/partners/promo-rules";
  */
 export async function servePromo(
   request: NextRequest,
-  material: PromoMaterial,
+  material: Pick<PromoMaterial, "id" | "title" | "storage_path" | "mime">,
   options: { download: boolean; onFirstByte?: () => Promise<void> },
 ): Promise<NextResponse> {
   const file = promoFilePath(material.storage_path);

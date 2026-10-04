@@ -1,6 +1,7 @@
 import { HelpView } from "@/components/admin/help-view";
 import { isHelpLocale, type HelpLocale } from "@/content/admin-help";
 import { requireStaff } from "@/lib/admin/guard";
+import { listHelpVideos } from "@/lib/admin/help-videos";
 import { isRole, type Role } from "@/lib/admin/roles";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,10 @@ export const dynamic = "force-dynamic";
  *
  * Владелец может открыть инструкцию глазами руководителя или менеджера
  * (`?as=`): проверить, что команда читает, без чужого входа.
+ *
+ * Наверху раздела — его видео, если оно загружено (lib/admin/help-videos.ts),
+ * наверху страницы — вводное: кнопка «Как пользоваться разделом» приводит
+ * сначала к видео, а под ним — к тексту.
  *
  * По умолчанию — на языке панели сотрудника (если инструкция на нём уже
  * есть). Другой язык — ссылкой `?lang=`: ею удобно поделиться с новым
@@ -40,5 +45,6 @@ export default async function HelpPage({
   // Смотреть глазами другой роли может только владелец: у него и так видно всё.
   const role: Role = staff.role === "admin" && as && isRole(as) ? as : staff.role;
 
-  return <HelpView staff={staff} locale={locale} role={role} />;
+  const videos = (await listHelpVideos()).map(({ id, section, locale: lang }) => ({ id, section, locale: lang }));
+  return <HelpView staff={staff} locale={locale} role={role} videos={videos} />;
 }
