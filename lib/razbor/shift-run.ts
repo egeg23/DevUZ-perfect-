@@ -22,8 +22,13 @@ import { serviceClient } from "@/lib/supabase";
 import type { AuditReport } from "@/lib/audit/checks";
 import type { City, Niche } from "@/content/razbor/catalog";
 import { anthropic } from "@/lib/model-road";
+import { keywordResearch } from "@/lib/seo/keywords";
 
-const MODEL = process.env.RAZBOR_MODEL || process.env.ANTHROPIC_MODEL || "claude-opus-5";
+// Sonnet, а не Opus чата на сайте: владелец, 04.10.2026 — «не используй
+// сильно дорогую модель, стараемся сэкономить не в ущерб качеству». Разбор —
+// статья по готовому аудиту с проверкой каждого числа кодом; Sonnet с этим
+// справляется, а стоит заметно дешевле. Сменить — RAZBOR_MODEL в .env.
+const MODEL = process.env.RAZBOR_MODEL || "claude-sonnet-5";
 
 /**
  * Ночная смена разборов — на сервере, а не в плановой сессии.
@@ -297,9 +302,12 @@ async function writeChecked(input: {
   locale: "ru" | "uz";
   title: string | null;
 }): Promise<RazborArticle | string> {
-  const first = await writeArticle(input);
+  // Что ищут вместе с запросом в Узбекистане — Google Trends и Вордстат
+  // (правило владельца, 04.10.2026). Один раз на статью, на обе попытки.
+  const { related } = await keywordResearch(queryFor(input.niche, input.city, input.locale));
+  const first = await writeArticle({ ...input, related });
   if (typeof first !== "string" || !first.startsWith(CHECK_FAILED)) return first;
-  return writeArticle(input, first);
+  return writeArticle({ ...input, related }, first);
 }
 
 export async function writeArticle(
@@ -309,6 +317,8 @@ export async function writeArticle(
     city: City;
     locale: "ru" | "uz";
     title: string | null;
+    /** Сопутствующие запросы из Google Trends и Вордстата. */
+    related?: readonly string[];
   },
   notes: string | null = null,
 ): Promise<RazborArticle | string> {
@@ -334,6 +344,11 @@ export async function writeArticle(
   const prompt = [
     `Язык статьи: ${locale === "ru" ? "русский" : "узбекский (латиница)"}.`,
     `Запрос, под который пишем: «${query}». Он должен звучать в заголовке естественно, а не быть вставлен куском.`,
+    ...(input.related?.length
+      ? [
+          `С этим запросом в Узбекистане ищут ещё (Google Trends и Вордстат): ${input.related.map((r) => `«${r}»`).join(", ")}. 1–3 подходящих по смыслу вставь естественно; чисел из них не бери, чужие по теме пропусти.`,
+        ]
+      : []),
     `Как называем разобранный бизнес: «${label}». Имени компании у тебя нет и не будет.`,
     "",
     "Находки аудита — единственные факты о сайте, которые у тебя есть.",

@@ -15,6 +15,7 @@ import {
   type ArticleText,
 } from "@/lib/marketing/articles-store";
 import { anthropic } from "@/lib/model-road";
+import { keywordResearch, type KeywordResearch } from "@/lib/seo/keywords";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -102,8 +103,16 @@ export async function runMarketingArticles(now = new Date()): Promise<ArticleRun
     // те же факты, но своим языком. Две версии одним вызовом дешёвая модель
     // собирала через раз: 4 октября обе попытки первой статьи пришли без
     // одной из версий.
-    const ru = await writeChecked(topic, "ru", null);
-    const uz = typeof ru === "string" ? null : await writeChecked(topic, "uz", ru);
+    // Перед каждой версией — что ищут в Узбекистане: Google Trends и
+    // Вордстат (правило владельца, 04.10.2026). Сопутствующие запросы идут
+    // модели, ответ источников — в строку статьи.
+    const research: Partial<Record<ArticleLocale, KeywordResearch>> = {};
+    const ruQuery = topic.query?.ru;
+    if (ruQuery) research.ru = await keywordResearch(ruQuery);
+    const ru = await writeChecked(topic, "ru", null, research.ru?.related ?? []);
+    const uzQuery = topic.query?.uz;
+    if (typeof ru !== "string" && uzQuery) research.uz = await keywordResearch(uzQuery);
+    const uz = typeof ru === "string" ? null : await writeChecked(topic, "uz", ru, research.uz?.related ?? []);
     if (typeof ru === "string") run.errors.push(`ru: ${ru}`);
     else if (typeof uz === "string" || !uz) run.errors.push(`uz: ${uz ?? "не написана"}`);
     else {
@@ -115,6 +124,7 @@ export async function runMarketingArticles(now = new Date()): Promise<ArticleRun
         uz,
         sourceUrl: topic.source ?? null,
         model: MODEL,
+        research,
       });
       if (failed) run.errors.push(`не сохранилась: ${failed}`);
       else {
@@ -176,10 +186,11 @@ async function writeChecked(
   topic: MarketingTopic,
   locale: ArticleLocale,
   base: ArticleText | null,
+  related: readonly string[],
 ): Promise<ArticleText | string> {
   let notes: CheckProblem[] = [];
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const result = await writeVersion(topic, locale, base, notes);
+    const result = await writeVersion(topic, locale, base, notes, related);
     if (!("problems" in result)) return result;
     notes = result.problems;
   }
@@ -191,6 +202,7 @@ export async function writeVersion(
   locale: ArticleLocale,
   base: ArticleText | null = null,
   notes: CheckProblem[] = [],
+  related: readonly string[] = [],
 ): Promise<ArticleText | { problems: CheckProblem[] }> {
   const message = await anthropic().messages.create({
     model: MODEL,
@@ -198,7 +210,7 @@ export async function writeVersion(
     system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
     tools: [TOOL as unknown as Anthropic.Tool],
     tool_choice: { type: "tool", name: TOOL.name },
-    messages: [{ role: "user", content: articlePrompt(topic, { locale, base, notes }) }],
+    messages: [{ role: "user", content: articlePrompt(topic, { locale, base, notes, related }) }],
   });
 
   // Причина провала — словами, которые объяснят и модели при повторе, и
@@ -226,7 +238,8 @@ export function articlePrompt(
     locale = "ru",
     base = null,
     notes = [],
-  }: { locale?: ArticleLocale; base?: ArticleText | null; notes?: CheckProblem[] } = {},
+    related = [],
+  }: { locale?: ArticleLocale; base?: ArticleText | null; notes?: CheckProblem[]; related?: readonly string[] } = {},
 ): string {
   const lines = [
     `Язык версии: ${locale === "ru" ? "русский" : "узбекский, латиницей"}.`,
@@ -237,6 +250,12 @@ export function articlePrompt(
     lines.push(
       "",
       `Поисковый запрос, под который пишется версия: «${query}». Он должен естественно стоять в заголовке (лучше в начале), в описании и в первом абзаце; дальше — 1–2 раза, без повторов ради повторов. Статья отвечает именно на этот запрос.`,
+    );
+  }
+  if (related.length) {
+    lines.push(
+      "",
+      `С этим запросом в Узбекистане ищут ещё (Google Trends и Вордстат): ${related.map((r) => `«${r}»`).join(", ")}. Возьми 2–4 подходящих по смыслу и вставь естественно — в абзацы или советы. Чужие по теме (имена людей, другие страны, не то значение слова) пропусти.`,
     );
   }
   if (topic.kind === "explainer") {

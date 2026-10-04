@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import type { TenderTopic } from "@/content/razbor/tenders";
 import { anthropic } from "@/lib/model-road";
+import { keywordResearch } from "@/lib/seo/keywords";
 import type { RazborLocale } from "@/lib/razbor/model";
 import {
   TENDER_NICHE,
@@ -17,7 +18,11 @@ import {
 import { coveredHashes, saveDraft, sourceHash, type RazborArticle } from "@/lib/razbor/store";
 import { serviceClient } from "@/lib/supabase";
 
-const MODEL = process.env.RAZBOR_MODEL || process.env.ANTHROPIC_MODEL || "claude-opus-5";
+// Sonnet, а не Opus чата на сайте: владелец, 04.10.2026 — «не используй
+// сильно дорогую модель, стараемся сэкономить не в ущерб качеству». Разбор —
+// статья по готовому аудиту с проверкой каждого числа кодом; Sonnet с этим
+// справляется, а стоит заметно дешевле. Сменить — RAZBOR_MODEL в .env.
+const MODEL = process.env.RAZBOR_MODEL || "claude-sonnet-5";
 
 /**
  * Тендерный разбор недели — на сервере, рядом с ежедневной сменой.
@@ -129,9 +134,12 @@ const CHECK_FAILED = "статья не прошла проверку";
 
 /** Две попытки: провал проверки возвращается модели её же словами. */
 async function writeChecked(topic: TenderTopic, locale: RazborLocale): Promise<RazborArticle | string> {
-  const first = await writeTender(topic, locale);
+  // Что ищут вместе с запросом в Узбекистане — Google Trends и Вордстат
+  // (правило владельца, 04.10.2026). Один раз на статью, на обе попытки.
+  const { related } = await keywordResearch(topic[locale].query);
+  const first = await writeTender(topic, locale, null, related);
   if (typeof first !== "string" || !first.startsWith(CHECK_FAILED)) return first;
-  return writeTender(topic, locale, first);
+  return writeTender(topic, locale, first, related);
 }
 
 const TOOL = {
@@ -165,6 +173,7 @@ export async function writeTender(
   topic: TenderTopic,
   locale: RazborLocale,
   notes: string | null = null,
+  related: readonly string[] = [],
 ): Promise<RazborArticle | string> {
   const side = topic[locale];
   const price = tenderPrice(locale);
@@ -173,6 +182,11 @@ export async function writeTender(
   const prompt = [
     `Язык статьи: ${locale === "ru" ? "русский" : "узбекский (латиница)"}.`,
     `Запрос, под который пишем: «${side.query}». Он должен звучать в заголовке естественно.`,
+    ...(related.length
+      ? [
+          `С этим запросом в Узбекистане ищут ещё (Google Trends и Вордстат): ${related.map((r) => `«${r}»`).join(", ")}. 1–3 подходящих по смыслу вставь естественно; чисел из них не бери, чужие по теме пропусти.`,
+        ]
+      : []),
     `Что закупают: «${side.label}».`,
     "",
     "Бриф — единственное, на что опираешься:",
