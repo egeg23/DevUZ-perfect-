@@ -261,6 +261,53 @@ export async function createTask(
   return { ok: true, task };
 }
 
+/** Сколько человек можно отметить в одной постановке. */
+export const ASSIGNEES_MAX = 30;
+
+export type CreateManyResult =
+  | { ok: true; tasks: Task[]; missed: number }
+  | { ok: false; reason: CreateRefusal | "no_assignee" };
+
+/**
+ * Одна постановка — нескольким сразу (владелец, 04.10: «возможность ставить
+ * задачу на несколько человек сразу»).
+ *
+ * Каждому — своя задача с тем же текстом, сроком и проектом, а не одна на
+ * всех: взять, закрыть и перенести её каждый должен сам, иначе «сделано»
+ * одного закрывало бы задачу за всех, и в «Я поставил» не было бы видно,
+ * кто ещё не взялся.
+ *
+ * Люди проверяются до первой записи: отключённый в списке — не ставим
+ * никому, чтобы не пришлось разбираться, кому успело уйти. Сбой базы на
+ * середине честно возвращает, сколько не записалось.
+ */
+export async function createTasks(
+  input: { title: string; body: string; assigneeIds: readonly string[]; due: Date | null; projectId: string | null },
+  actor: Staff,
+  ip: string,
+  now: Date = new Date(),
+): Promise<CreateManyResult> {
+  const ids = [...new Set(input.assigneeIds.map((id) => id.trim()).filter(Boolean))];
+  if (!ids.length) return { ok: false, reason: "no_assignee" };
+  if (ids.length > ASSIGNEES_MAX) return { ok: false, reason: "assignee" };
+  if (ids.length > 1) {
+    const people = await peopleById(ids);
+    if (ids.some((id) => !people.get(id)?.is_active)) return { ok: false, reason: "assignee" };
+  }
+
+  const tasks: Task[] = [];
+  for (const assigneeId of ids) {
+    const result = await createTask({ ...input, assigneeId }, actor, ip, now);
+    if (!result.ok) {
+      // Первая не легла — значит, не ляжет ни одна: причина общая.
+      if (!tasks.length) return result;
+      return { ok: true, tasks, missed: ids.length - tasks.length };
+    }
+    tasks.push(result.task);
+  }
+  return { ok: true, tasks, missed: 0 };
+}
+
 /* ── Взять, закрыть, перенести ─────────────────────────────────────────── */
 
 export type ActResult =
