@@ -393,7 +393,7 @@ export const problemDict = defineDict({
 export const outreachListDict = defineDict({
   heading: { ru: "Разобранные сайты", uz: "Tahlil qilingan saytlar", pl: "Przeanalizowane strony" },
   helpSend: { ru: "Как написать компании", uz: "Kompaniyaga qanday yozish kerak", pl: "Jak napisać do firmy" },
-  helpQueue: { ru: "Почему два в час", uz: "Nega soatiga ikkita", pl: "Dlaczego dwa na godzinę" },
+  helpQueue: { ru: "Почему три в час", uz: "Nega soatiga uchta", pl: "Dlaczego trzy na godzinę" },
   hourLine: {
     ru: (count: number, cap: number) => `За последний час ушло ${count} из ${cap}`,
     uz: (count: number, cap: number) => `Oxirgi soatda ${cap} tadan ${count} tasi ketdi`,
@@ -406,9 +406,9 @@ export const outreachListDict = defineDict({
   },
   queueWaits: { ru: " — ждут своей очереди", uz: " — o‘z navbatini kutmoqda", pl: " — czekają na swoją kolej" },
   intro: {
-    ru: "Пишут рабочие аккаунты студии, а не бот: с каждого — не больше двух первых писем в час, пауза между сообщениями и одно касание на сайт. Главным аккаунтом скаут ещё и читает чаты, и ограничение за рассылку выключило бы оба канала сразу. Ждать очередь не обязательно — сообщение можно отправить со своего аккаунта, тогда и ответ придёт вам лично.",
-    uz: "Bot emas, studiyaning ishchi akkauntlari yozadi: har biridan soatiga ikkitadan ko‘p bo‘lmagan birinchi xat, xabarlar orasida pauza va har bir saytga bitta aloqa. Skaut chatlarni ham asosiy akkaunt orqali o‘qiydi, ommaviy tarqatma uchun cheklov ikkala kanalni birdaniga o‘chirib qo‘yardi. Navbatni kutish shart emas — xabarni o‘z akkauntingizdan yuborsangiz bo‘ladi, shunda javob ham shaxsan sizga keladi.",
-    pl: "Piszą konta firmowe studia, a nie bot: z każdego najwyżej dwie pierwsze wiadomości na godzinę, przerwa między wiadomościami i jeden kontakt na stronę. Kontem głównym skaut dodatkowo czyta czaty, więc blokada za masową wysyłkę wyłączyłaby oba kanały naraz. Nie trzeba czekać w kolejce — wiadomość możesz wysłać ze swojego konta, wtedy odpowiedź też przyjdzie do ciebie.",
+    ru: "Пишут рабочие аккаунты студии, а не бот: с каждого — не больше трёх первых писем в час и только с 07:30 до 20:30 по Ташкенту, пауза между сообщениями и одно касание на сайт. Главным аккаунтом скаут ещё и читает чаты, и ограничение за рассылку выключило бы оба канала сразу. Ждать очередь не обязательно — сообщение можно отправить со своего аккаунта, тогда и ответ придёт вам лично.",
+    uz: "Bot emas, studiyaning ishchi akkauntlari yozadi: har biridan soatiga uchtadan ko‘p bo‘lmagan birinchi xat va faqat Toshkent vaqti bilan 07:30 dan 20:30 gacha, xabarlar orasida pauza va har bir saytga bitta aloqa. Skaut chatlarni ham asosiy akkaunt orqali o‘qiydi, ommaviy tarqatma uchun cheklov ikkala kanalni birdaniga o‘chirib qo‘yardi. Navbatni kutish shart emas — xabarni o‘z akkauntingizdan yuborsangiz bo‘ladi, shunda javob ham shaxsan sizga keladi.",
+    pl: "Piszą konta firmowe studia, a nie bot: z każdego najwyżej trzy pierwsze wiadomości na godzinę i tylko od 07:30 do 20:30 czasu taszkenckiego, przerwa między wiadomościami i jeden kontakt na stronę. Kontem głównym skaut dodatkowo czyta czaty, więc blokada za masową wysyłkę wyłączyłaby oba kanały naraz. Nie trzeba czekać w kolejce — wiadomość możesz wysłać ze swojego konta, wtedy odpowiedź też przyjdzie do ciebie.",
   },
   sentNotice: {
     ru: "Сообщение в очереди. Уйдёт с рабочего аккаунта в ближайшие минуты, лид уже закреплён за вами.",

@@ -17,6 +17,7 @@ import {
   HOURLY_CAP,
   canContact,
   queueView,
+  untilSendWindow,
   routeFor,
   whatsappLink,
 } from "@/lib/admin/outreach";
@@ -264,12 +265,17 @@ export function OutreachList({
           const wait =
             row.status === "sending"
               ? vip
-                ? { ahead: queue.filter((q) => isOwner(q) && q.created_at < row.created_at).length, waitMs: 60_000 }
+                ? {
+                    ahead: queue.filter((q) => isOwner(q) && q.created_at < row.created_at).length,
+                    // Вне очереди — но не ночью: окно 07:30–20:30 и для владельца.
+                    waitMs: Math.max(60_000, untilSendWindow(Date.now())),
+                  }
                 : queueView({
                     ahead: queue.filter((q) => isOwner(q) || q.created_at < row.created_at).length,
                     sentLastHour: hour.count,
                     oldestSentAgoMs: hour.oldestAgoMs,
                     cap,
+                    now: Date.now(),
                   })
               : null;
 

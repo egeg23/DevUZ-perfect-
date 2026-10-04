@@ -87,19 +87,20 @@ test("касание разрешено, когда есть кому и о чё
   assert.equal(canContact({ ...base, status: "sending" }), "already");
 });
 
-test("предел — два контакта в час, и он отодвигает отправку, а не отменяет её", () => {
-  assert.equal(HOURLY_CAP, 2);
+test("предел — три новых в час, и он отодвигает отправку, а не отменяет её", () => {
+  // Владелец, 04.10.2026: «3 сообщения новым пользователям в час».
+  assert.equal(HOURLY_CAP, 3);
 
   // Час свободен: первое уходит сразу, второе — после паузы.
   assert.equal(queueView({ ahead: 0, sentLastHour: 0, oldestSentAgoMs: null }).waitMs, 0);
   assert.ok(queueView({ ahead: 1, sentLastHour: 0, oldestSentAgoMs: null }).waitMs > 0);
 
   // Час выбран: ждём, пока самое старое выпадет из окна.
-  const full = queueView({ ahead: 0, sentLastHour: 2, oldestSentAgoMs: 40 * 60_000 });
+  const full = queueView({ ahead: 0, sentLastHour: 3, oldestSentAgoMs: 40 * 60_000 });
   assert.equal(full.waitMs, 20 * 60_000, "место освободится через двадцать минут");
 
-  // Пятый в очереди при выбранном часе ждёт ещё два часа сверх того.
-  const deep = queueView({ ahead: 4, sentLastHour: 2, oldestSentAgoMs: 40 * 60_000 });
+  // Седьмой в очереди при выбранном часе ждёт ещё два часа сверх того.
+  const deep = queueView({ ahead: 6, sentLastHour: 3, oldestSentAgoMs: 40 * 60_000 });
   assert.equal(deep.waitMs, 20 * 60_000 + 2 * HOUR_MS);
 
   assert.equal(waitText(0), "вот-вот");
@@ -178,7 +179,7 @@ test("правила касания записаны там, где их про�
   assert.match(lib, /должен уметь проверить сам/);
   assert.match(lib, /Никаких обещаний про позиции в поиске/);
   // Пределы — не декорация: их видно и в коде, и в тексте для человека.
-  assert.match(lib, /HOURLY_CAP = 2/);
+  assert.match(lib, /HOURLY_CAP = 3/);
   assert.match(lib, /MIN_GAP_MS = 8 \* 60_000/);
 });
 
@@ -635,4 +636,23 @@ test("низкий балл поиска комплиментом не пода�
   });
   assert.ok(seoReport({ findings }).score < HIGH_SEO);
   assert.ok(!/это не находка, а комплимент/.test(prompt), "низкий балл назван комплиментом");
+});
+
+test("первые письма — с 07:30 до 20:30 по Ташкенту, ночью очередь ждёт утра", async () => {
+  const { sendWindowOpen, untilSendWindow } = await import("@/lib/admin/outreach");
+  const tk = (iso: string) => Date.parse(`${iso}+05:00`);
+  assert.equal(sendWindowOpen(tk("2026-10-04T07:29:00")), false);
+  assert.equal(sendWindowOpen(tk("2026-10-04T07:30:00")), true);
+  assert.equal(sendWindowOpen(tk("2026-10-04T20:29:00")), true);
+  assert.equal(sendWindowOpen(tk("2026-10-04T20:30:00")), false);
+  assert.equal(sendWindowOpen(tk("2026-10-05T12:00:00")), true, "и в воскресенье тоже");
+  assert.equal(untilSendWindow(tk("2026-10-04T12:00:00")), 0);
+  assert.equal(untilSendWindow(tk("2026-10-04T21:00:00")), 10.5 * HOUR_MS, "в 21:00 — ждать до 07:30");
+  assert.equal(untilSendWindow(tk("2026-10-05T06:30:00")), HOUR_MS);
+  // Карточка в очереди ночью показывает ожидание до утра.
+  const night = queueView({ ahead: 0, sentLastHour: 3, oldestSentAgoMs: 10 * 60_000, now: tk("2026-10-04T21:00:00") });
+  assert.equal(night.waitMs, 10.5 * HOUR_MS);
+  // Очередь отправки сама не берёт писем вне окна.
+  const queue = readFileSync(new URL("../lib/admin/outreach-queue.ts", import.meta.url), "utf8");
+  assert.match(queue, /if \(!sendWindowOpen\(now\)\) return null;/);
 });

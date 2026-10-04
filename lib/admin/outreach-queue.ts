@@ -3,12 +3,13 @@ import {
   HOUR_MS,
   MAX_GAP_MS,
   MIN_GAP_MS,
+  sendWindowOpen,
   handTargetFrom,
   isMobile,
   isStopError,
   type RouteKind,
 } from "@/lib/admin/outreach";
-import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
+import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake } from "@/lib/admin/work-accounts";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -115,7 +116,29 @@ async function take(
  */
 export const OWNER_FLOOR_MS = 60_000;
 
-const QUEUED_COLUMNS = "id, target, target_kind, message, host";
+const QUEUED_COLUMNS = "id, target, target_kind, message, host, claimed_by";
+
+/**
+ * Кто на каких аккаунтах работает: сотрудник → ключи аккаунтов.
+ *
+ * Только живые аккаунты: привязка к отключённому не держит письма — у
+ * сотрудника, привязанного лишь к нему, письма снова берёт любой аккаунт.
+ */
+async function assignments(db: NonNullable<ReturnType<typeof serviceClient>>): Promise<Map<string, Set<string>>> {
+  const [{ data: rows }, { data: live }] = await Promise.all([
+    db.from("tg_account_staff").select("account_key, staff_id"),
+    db.from("tg_accounts").select("id").neq("status", "removed"),
+  ]);
+  const alive = new Set([MAIN_ACCOUNT, ...(live ?? []).map((row) => String(row.id))]);
+  const out = new Map<string, Set<string>>();
+  for (const row of rows ?? []) {
+    const key = String(row.account_key);
+    if (!alive.has(key)) continue;
+    const staff = String(row.staff_id);
+    out.set(staff, (out.get(staff) ?? new Set()).add(key));
+  }
+  return out;
+}
 
 function toQueued(data: Record<string, unknown> | null): Queued | null {
   if (!data?.target || !data?.message) return null;
@@ -159,6 +182,10 @@ export async function nextQueued(
   const db = serviceClient();
   if (!db) return null;
 
+  // Первые письма — только с 07:30 до 20:30 по Ташкенту, и владельца тоже:
+  // ночью незнакомым пишут только рассылки. Очередь утром двинется сама.
+  if (!sendWindowOpen(now)) return null;
+
   // Последнее письмо этого аккаунта — среди последних отправок всех: три
   // аккаунта по два в час проходят полсотни писем за восемь часов, а пауза
   // между письмами — минуты.
@@ -173,6 +200,9 @@ export async function nextQueued(
   const lastAt = last?.sent_at ? Date.parse(String(last.sent_at)) : 0;
   const stale = new Date(now - DISPATCH_STALE_MS).toISOString();
 
+  // Письмо менеджера уходит с аккаунта, на котором он работает (см. mayTake).
+  const assigned = await assignments(db);
+
   /** Верхние свободные задания — по одному, пока одно не возьмётся этим аккаунтом. */
   const takeFirst = async (owners: string[] | null): Promise<Queued | null> => {
     let query = db
@@ -181,8 +211,11 @@ export async function nextQueued(
       .eq("status", "sending")
       .or(`dispatch_by.is.null,dispatch_at.lt."${stale}"`);
     if (owners) query = query.in("claimed_by", owners);
-    const { data } = await query.order("claimed_at", { ascending: true }).limit(3);
+    // С запасом: верхние письма могут принадлежать менеджерам других аккаунтов.
+    const { data } = await query.order("claimed_at", { ascending: true }).limit(25);
     for (const row of data ?? []) {
+      const by = (row as { claimed_by?: string | null }).claimed_by ?? null;
+      if (by && !mayTake(account, assigned.get(by))) continue;
       const job = toQueued(row as Record<string, unknown>);
       if (job && (await take(db, job.id, account, now))) return job;
     }

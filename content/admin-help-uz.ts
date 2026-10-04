@@ -549,12 +549,12 @@ export const uz: HelpCopy = {
         },
         {
           id: "queue",
-          title: "Ishchi akkaunt navbati: soatiga ikki xat",
+          title: "Ishchi akkaunt navbati: soatiga uch xat, 07:30 dan 20:30 gacha",
           body: [
-            "Yangi kompaniyaga birinchi xatni ishchi akkaunt soatiga ikkitadan ko‘p emas va 8–20 daqiqa tanaffus bilan yuboradi. Aks holda Telegram bizni ommaviy tarqatma deb hisoblab, akkauntni cheklaydi — skaut esa chatlarni aynan shu akkaunt bilan o‘qiydi, va biz ikkala kanalni birdan yo‘qotardik.",
-            "Ro‘yxat ustida: «Oxirgi soatda 2 tadan 1 tasi ketdi · navbatda 3 ta». Navbatdagi kartochkada — taxminan necha daqiqadan keyin ketishi. Ishchi akkauntlar bir nechta bo‘lishi mumkin — har birining o‘z «soatiga ikki»si bor, unda ikkinchi raqam kattaroq bo‘ladi: hammasidan birga soatiga shuncha birinchi xat ketadi. Xat qaysi akkauntda joy oldinroq bo‘shasa, o‘shandan ketadi; javoblar va tuzatishlar — birinchi xat ketgan akkauntdan.",
+            "Yangi kompaniyaga birinchi xatni ishchi akkaunt soatiga uchtadan ko‘p emas, 8–20 daqiqa tanaffus bilan va faqat Toshkent vaqti bilan 07:30 dan 20:30 gacha, har kuni yuboradi: tunda qo‘yilgan xat navbatda kutadi va ertalab birinchi bo‘lib ketadi. Javob berganlar bilan yozishma istalgan vaqtda va chegarasiz boradi. Aks holda Telegram bizni ommaviy tarqatma deb hisoblab, akkauntni cheklaydi — skaut esa chatlarni aynan shu akkaunt bilan o‘qiydi, va biz ikkala kanalni birdan yo‘qotardik.",
+            "Ro‘yxat ustida: «Oxirgi soatda 3 tadan 1 tasi ketdi · navbatda 3 ta». Navbatdagi kartochkada — taxminan necha daqiqadan keyin ketishi. Ishchi akkauntlar bir nechta bo‘lishi mumkin — har birining o‘z «soatiga uch»i bor, unda ikkinchi raqam kattaroq bo‘ladi: hammasidan birga soatiga shuncha birinchi xat ketadi. Xat qaysi akkauntda joy oldinroq bo‘shasa, o‘shandan ketadi; agar rahbar sizni ma’lum akkauntlarda belgilagan bo‘lsa — faqat ulardan. Javoblar va tuzatishlar — birinchi xat ketgan akkauntdan.",
             "Kutish shart emas: yozishmani o‘z akkauntingizdan oching, o‘sha matnni yuboring va **«O‘zim bog‘landim»** tugmasini bosing — bot o‘z nusxasini endi yubormaydi, mijoz javobi esa shaxsan sizga keladi.",
-            "**Egasining xatlari navbatsiz ketadi**: boshqalarning xatlarini ham, «soatiga ikki»ni ham, 8–20 daqiqa tanaffusni ham kutmaydi — oldingi har qanday yuborishdan bir daqiqa o‘tib ketadi. «Soatiga ikki»ga ular baribir kiradi: cheklov akkaunt haqida, va bunday xatdan keyin qolganlar kutishiga to‘g‘ri keladi. Bunday kartochkada «Egasining xati — navbatsiz» deb yozilgan.",
+            "**Egasining xatlari navbatsiz ketadi**: boshqalarning xatlarini ham, «soatiga uch»ni ham, 8–20 daqiqa tanaffusni ham kutmaydi — oldingi har qanday yuborishdan bir daqiqa o‘tib ketadi, lekin ular ham faqat 07:30 dan 20:30 gacha. «Soatiga uch»ga ular baribir kiradi: cheklov akkaunt haqida, va bunday xatdan keyin qolganlar kutishiga to‘g‘ri keladi. Bunday kartochkada «Egasining xati — navbatsiz» deb yozilgan.",
           ],
         },
         {
@@ -593,7 +593,7 @@ export const uz: HelpCopy = {
           body: [
             "Suhbat bo‘lmasligi aniq bo‘lganda, aloqani yoping. **«🙅 Mijoz rad etdi»** (Telegramda — «🙅 Клиент отказался») — «qiziq emas», «yozmang» deb javob berdi, telefonda rad etdi. **«🔇 Javob bermayapti»** (Telegramda — «🔇 Игнорирует») — o‘qidi-yu jim, trubkani olmaydi. Tugmalar «Tahlil qilingan saytlar» ro‘yxatidagi yuborilgan saytlar kartochkasida va Telegramda — to‘plam yoki oqimdagi kompaniya kartochkasi ostida, «📤 Отправить через бота» va «✋ Написал сам» dan keyin turadi. Botning mijoz javobi haqidagi «Касание · сайт» xabari ostida — faqat «🙅 Клиент отказался». Panelda tugmalarni aloqani olib borayotgan odam, rahbar va egasi ko‘radi.",
             "Bosilgandan keyin nima bo‘ladi: bot mijozga boshqa qayta xabar yozmaydi ([qayta yozish](#prospect-followups)), navbatga qo‘yilgan xabar esa ketmaydi; model endi javob bermaydi; shu sayt bo‘yicha lid «yutqazilgan» holati bilan yopiladi va u bo‘yicha eslatmalar olib tashlanadi. Ro‘yxatda kartochka ishdagilar qatoridan chiqadi va «mijoz rad etdi» yoki «javob bermayapti» deb belgilanadi. Kim va qachon yopgani kartochkada ko‘rinadi.",
-            "Aloqa bunda bajarilgan bo‘lib qoladi — [kunlik to‘plamda](#prospect-portion), haftalik rejada va «soatiga ikki»da: mijozga haqiqatan yozilgan. Faqat aloqadan keyin yopish mumkin: xat hali «yuborish navbatida» bo‘lsa — bot «u ketganda belgilang» deb javob beradi; o‘zingiz qo‘ng‘iroq qilgan yoki yozgan bo‘lsangiz — avval «O‘zim bog‘landim».",
+            "Aloqa bunda bajarilgan bo‘lib qoladi — [kunlik to‘plamda](#prospect-portion), haftalik rejada va «soatiga uch»da: mijozga haqiqatan yozilgan. Faqat aloqadan keyin yopish mumkin: xat hali «yuborish navbatida» bo‘lsa — bot «u ketganda belgilang» deb javob beradi; o‘zingiz qo‘ng‘iroq qilgan yoki yozgan bo‘lsangiz — avval «O‘zim bog‘landim».",
             "Yopishni tugma bilan bekor qilib bo‘lmaydi va kerak ham emas: mijoz keyin o‘zi yozsa, bot aloqani olib borgan odamni chaqiradi — «Клиент, которого отметили …, написал снова». Havola orqali lidni oching va suhbat boshlangan bo‘lsa, unga «ishda» holatini qaytaring.",
           ],
         },
@@ -658,7 +658,7 @@ export const uz: HelpCopy = {
 
     /* ── Рабочие аккаунты ──────────────────────────────────────────────── */
     "/admin/accounts": {
-      what: "Aloqalarning birinchi xatlari ketadigan va mijozlar bilan yozishma boradigan Telegram ishchi akkauntlari. Asosiysi serverda ulangan va chatlarni ham o‘qiydi; bu yerda qo‘shimchalarini ulaysiz. Bo‘limni faqat siz ko‘rasiz.",
+      what: "Aloqalarning birinchi xatlari ketadigan va mijozlar bilan yozishma boradigan Telegram ishchi akkauntlari. Asosiysi serverda ulangan va chatlarni ham o‘qiydi; bu yerda qo‘shimchalari ulanadi va kim qaysi birida ishlashi belgilanadi. Bo‘limni egasi va rahbar ko‘radi.",
       items: [
         {
           id: "add",
@@ -674,9 +674,17 @@ export const uz: HelpCopy = {
           id: "limits",
           title: "Qancha xat va qaysi akkauntdan",
           body: [
-            "Har bir akkauntning soatiga birinchi xatlar chegarasi o‘ziniki: asosiysida — 2, yangisida — 1. Bir hafta tinch ishlagandan keyin yangisini «Soatiga xat» maydonida 2 gacha ko‘tarish mumkin: yangi raqamni Telegram tezroq cheklaydi. Bo‘lim tepasida — hammasidan birga qanchasi ketishi; xuddi shu raqam [Aloqalar](/admin/prospect)dagi ro‘yxat ustida turadi.",
-            "Aloqalar navbati bitta: xat qaysi akkauntda joy oldinroq bo‘shasa, o‘shandan ketadi — menejer hech narsa tanlamaydi. Mijozga javoblar, model javoblari va xat tuzatishi birinchi xat ketgan akkauntdan boradi: odamga boshqa raqamdan yozish — uning yozishmasida begona bo‘lib paydo bo‘lish demak.",
+            "Har bir akkauntning yangi odamlarga soatiga birinchi xatlar chegarasi o‘ziniki: asosiysida — 3, yangisida ham — 3. Yangi raqamga birinchi haftada «Soatiga xat» maydonida 1–2 qo‘ygan ma’qul: yangi akkauntni Telegram tezroq cheklaydi. Birinchi xatlar har kuni Toshkent vaqti bilan 07:30 dan 20:30 gacha ketadi — tunda qo‘yilgani kutadi va ertalab ketadi; javob berganlar bilan yozishma istalgan vaqtda va chegarasiz boradi. Bo‘lim tepasida — hammasidan birga qanchasi ketishi; xuddi shu raqam [Aloqalar](/admin/prospect)dagi ro‘yxat ustida turadi.",
+            "Aloqalar navbati bitta: xat qaysi akkauntda joy oldinroq bo‘shasa, o‘shandan ketadi — menejer hech narsa tanlamaydi; agar odam akkauntlarda belgilangan bo‘lsa ([akkauntda kim ishlaydi](#accounts-staff) bandi), — faqat uning akkauntlaridan. Mijozga javoblar, model javoblari va xat tuzatishi birinchi xat ketgan akkauntdan boradi: odamga boshqa raqamdan yozish — uning yozishmasida begona bo‘lib paydo bo‘lish demak.",
             "Har bir akkaunt ostida — oxirgi soatda va bugun nechta birinchi xat ketgani, skaut uni ulangan holda ushlab turgan bo‘lsa «aloqada» (belgi har daqiqada). Belgi uch daqiqadan ko‘p bo‘lmasa — skaut bu akkaunt bilan ishlamayapti: serverni tekshiring yoki akkauntni qaytadan ulang.",
+          ],
+        },
+        {
+          id: "staff",
+          title: "Akkauntda kim ishlaydi",
+          body: [
+            "Asosiy akkaunt ostida va har bir ulangan akkaunt ostida — **«Akkauntda kim ishlaydi»** bloki: studiyada ishlaydigan hammaning belgilari. Shu akkaunt odamlarini belgilang va **«Saqlash»** ni bosing. Bitta odam bir nechta akkauntda turishi mumkin — har birida belgilang; olib tashlangan belgi uni akkauntdan oladi.",
+            "Nima uchun: belgilangan odamning birinchi xatlari faqat uning akkauntlaridan ketadi — «soatiga 3» chegarasida qaysi birida joy oldinroq bo‘shasa, o‘shandan. Shunda mijozga uning menejeri turgan raqamdan yoziladi. Odam hech bir akkauntda belgilanmagan bo‘lsa — uning xatlarini istalgan akkaunt oladi, avvalgidek: yangi menejer belgini kutmasdan darhol yozishi mumkin. Akkaunt o‘chirilsa — uning belgilari o‘zi olinadi va uning odamlari xatlarini qolganlari oladi. Kim kimni belgilagani amallar jurnaliga yoziladi.",
           ],
         },
         {

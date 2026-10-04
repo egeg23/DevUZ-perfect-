@@ -91,6 +91,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "work_account.pause": { ru: "остановил рабочий аккаунт", uz: "ishchi akkauntni to‘xtatdi", pl: "wstrzymał konto robocze" },
   "work_account.resume": { ru: "вернул рабочий аккаунт в работу", uz: "ishchi akkauntni ishga qaytardi", pl: "przywrócił konto robocze do pracy" },
   "work_account.remove": { ru: "отключил рабочий аккаунт", uz: "ishchi akkauntni o‘chirdi", pl: "odłączył konto robocze" },
+  "work_account.staff": { ru: "отметил, кто работает на рабочем аккаунте", uz: "ishchi akkauntda kim ishlashini belgiladi", pl: "wskazał, kto pracuje na koncie roboczym" },
   "razbor.rejected": { ru: "отклонил разбор", uz: "tahlilni rad etdi", pl: "odrzucił analizę" },
   "razbor.unpublished": { ru: "снял разбор с публикации", uz: "tahlilni e’londan olib tashladi", pl: "wycofał analizę z publikacji" },
   "razbor.edited": { ru: "поправил текст разбора", uz: "tahlil matnini tuzatdi", pl: "poprawił tekst analizy" },
