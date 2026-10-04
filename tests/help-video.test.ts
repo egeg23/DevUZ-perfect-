@@ -113,3 +113,58 @@ test("файл видео отдаёт только вошедшему и тол
   assert.match(migration, /unique \(section, locale\)/);
   assert.match(migration, /enable row level security/);
 });
+
+test("ссылка на видео подписана: кусок идёт без базы, подделку и просрочку не пускает", async () => {
+  const { LINK_WINDOW_S, signedHelpVideoUrl, verifyHelpVideoLink } = await import("@/lib/admin/help-video-link");
+  const saved = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-key";
+  try {
+    const video = { id: ID_PROSPECT, storage_path: "2026/10/3a497c34-dfdf-4b7c-9b05-1374c409c692.mp4" };
+    const now = Date.UTC(2026, 9, 5, 9, 0, 0);
+    const url = signedHelpVideoUrl(video, now);
+    assert.ok(url.startsWith(`${helpVideoUrl(ID_PROSPECT)}?`));
+    const params = new URL(url, "https://devuz.studio").searchParams;
+    assert.deepEqual(verifyHelpVideoLink(ID_PROSPECT, params, now), { path: video.storage_path, mime: "video/mp4" });
+
+    // Одна ссылка на всё 12-часовое окно — браузер берёт ролик из кэша.
+    const windowStart = Math.floor(now / 1000 / LINK_WINDOW_S) * LINK_WINDOW_S * 1000;
+    assert.equal(signedHelpVideoUrl(video, windowStart), url);
+    assert.equal(signedHelpVideoUrl(video, windowStart + LINK_WINDOW_S * 1000 - 1), url);
+    // Живёт не дольше суток.
+    assert.equal(verifyHelpVideoLink(ID_PROSPECT, params, now + 24 * 3600 * 1000), null);
+
+    // Чужое видео, чужой файл, подмена подписи — мимо.
+    assert.equal(verifyHelpVideoLink(ID_INTRO, params, now), null);
+    const swapped = new URLSearchParams(params);
+    swapped.set("p", "2026/10/00000000-0000-4000-8000-000000000000.mp4");
+    assert.equal(verifyHelpVideoLink(ID_PROSPECT, swapped, now), null);
+    const forged = new URLSearchParams(params);
+    forged.set("s", "x".repeat(43));
+    assert.equal(verifyHelpVideoLink(ID_PROSPECT, forged, now), null);
+    const outside = new URLSearchParams(params);
+    outside.set("p", "../../etc/passwd");
+    assert.equal(verifyHelpVideoLink(ID_PROSPECT, outside, now), null);
+
+    // Без ключа — обычная ссылка с проверкой входа на каждый кусок.
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    assert.equal(signedHelpVideoUrl(video, now), helpVideoUrl(ID_PROSPECT));
+    assert.equal(verifyHelpVideoLink(ID_PROSPECT, params, now), null);
+  } finally {
+    if (saved === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = saved;
+  }
+
+  // Страница отдаёт подписанную ссылку, маршрут сначала проверяет подпись.
+  assert.match(read("app/admin/help/page.tsx"), /src: signedHelpVideoUrl\(video\)/);
+  const route = read("app/admin/help/video/[id]/route.ts");
+  assert.ok(route.indexOf("verifyHelpVideoLink") < route.indexOf("currentStaff()"), "подпись — раньше проверки входа");
+  const html = renderToStaticMarkup(
+    createElement(HelpView, {
+      staff: staff("manager"),
+      locale: "ru",
+      role: "manager",
+      videos: [{ id: ID_INTRO, section: HELP_VIDEO_INTRO, locale: "ru", src: "/admin/help/video/x?p=a&e=1&s=b" }],
+    }),
+  );
+  assert.ok(html.includes('src="/admin/help/video/x?p=a&amp;e=1&amp;s=b"'));
+});
