@@ -43,6 +43,11 @@ export const tasksDict = defineDict({
 
   newTask: { ru: "Поставить задачу", uz: "Vazifa qo‘yish", pl: "Zleć zadanie" },
   fieldWho: { ru: "Кому", uz: "Kimga", pl: "Komu" },
+  whoHint: {
+    ru: "Можно отметить нескольких — каждому придёт своя задача.",
+    uz: "Bir nechta kishini belgilash mumkin — har biriga o‘z vazifasi keladi.",
+    pl: "Możesz zaznaczyć kilka osób — każda dostanie własne zadanie.",
+  },
   self: { ru: (name: string) => `${name} (себе)`, uz: (name: string) => `${name} (o‘zimga)`, pl: (name: string) => `${name} (sobie)` },
   fieldTitle: { ru: "Что сделать", uz: "Nima qilish kerak", pl: "Co zrobić" },
   fieldBody: { ru: "Подробнее (необязательно)", uz: "Batafsil (ixtiyoriy)", pl: "Szczegóły (opcjonalnie)" },
@@ -146,6 +151,26 @@ export const taskNoticeDict = defineDict({
     ru: "Задача поставлена. Сейчас ночь — бот напишет исполнителю в 07:00.",
     uz: "Vazifa qo‘yildi. Hozir tun — bot ijrochiga soat 07:00 da yozadi.",
     pl: "Zadanie zlecone. Jest noc — bot napisze do wykonawcy o 07:00.",
+  },
+  createdMany: {
+    ru: "Задачи поставлены — каждому своя.",
+    uz: "Vazifalar qo‘yildi — har biriga o‘ziniki.",
+    pl: "Zadania zlecone — każdy ma własne.",
+  },
+  createdManyLater: {
+    ru: "Задачи поставлены — каждому своя. Сейчас ночь — бот напишет исполнителям в 07:00.",
+    uz: "Vazifalar qo‘yildi — har biriga o‘ziniki. Hozir tun — bot ijrochilarga soat 07:00 da yozadi.",
+    pl: "Zadania zlecone — każdy ma własne. Jest noc — bot napisze do wykonawców o 07:00.",
+  },
+  createdPartly: {
+    ru: "Поставлено не всем: база не ответила. Проверьте «Я поставил» и поставьте остальным ещё раз.",
+    uz: "Hammaga qo‘yilmadi: baza javob bermadi. «Men qo‘yganlar» ni tekshiring va qolganlarga yana qo‘ying.",
+    pl: "Nie wszystkim zlecono: baza nie odpowiedziała. Sprawdź «Zleciłem» i zleć pozostałym jeszcze raz.",
+  },
+  noAssignee: {
+    ru: "Отметьте, кому поставить задачу.",
+    uz: "Vazifa kimga qo‘yilishini belgilang.",
+    pl: "Zaznacz, komu zlecić zadanie.",
   },
   taken: { ru: "Задача в работе.", uz: "Vazifa ishda.", pl: "Zadanie w toku." },
   done: { ru: "Отмечено: сделано.", uz: "Belgilandi: bajarildi.", pl: "Oznaczono: zrobione." },

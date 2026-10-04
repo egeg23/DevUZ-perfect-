@@ -178,7 +178,9 @@ test("сообщения о действиях — сразу, кроме ноч
   assert.equal(messageWindow(tk("2026-10-01T23:00:00")), false);
   assert.equal(messageWindow(tk("2026-10-02T06:59:00")), false);
   assert.equal(messageWindow(tk("2026-10-02T07:00:00")), true);
-  assert.match(read("app/admin/tasks/actions.ts"), /if \(messageWindow\(now\)\) \{\s+after\(async \(\) => \{\s+await deliverAssignment\(task\.id\)/);
+  const action = read("app/admin/tasks/actions.ts");
+  assert.match(action, /if \(messageWindow\(now\)\) \{\s+after\(\(\) => deliverAll\(others\)\);/);
+  assert.match(action, /async function deliverAll[\s\S]*?await deliverAssignment\(task\.id\)/);
 });
 
 test("порядок — от ближайшего срока к дальнему, без срока в конце", () => {
@@ -346,4 +348,50 @@ test("блок «Задачи» рисуется на каждом языке, �
     assert.ok(!/[а-яё]/i.test(card.replace(/<[^>]+>/g, " ")), `${locale}: русское в карточке проекта`);
     assert.match(card, /href="\/admin\?tp=p1#tasks"/);
   }
+});
+
+/* ── Нескольким сразу и телефон ───────────────────────────────────────── */
+
+test("«Кому» — галочки: себя отмечено сразу, можно нескольких, каждому своя задача", async () => {
+  const now = tk("2026-10-05T12:00:00");
+  const board = { offline: false, mine: [], given: [], names: new Map<string, string>(), projects: new Map<string, string>() };
+  const people = [
+    { id: "worker", display_name: "Ali" },
+    { id: "boss", display_name: "Egor" },
+    { id: "head", display_name: "Timur" },
+  ];
+  const html = renderToStaticMarkup(
+    createElement(TasksView, { staff: { id: "boss" }, locale: "ru", board, people, projects: [], now }),
+  );
+  const boxes = html.match(/<input type="checkbox"[^>]*name="assignee"[^>]*>/g) ?? [];
+  assert.equal(boxes.length, 3, "по галочке на каждого");
+  assert.match(boxes[0], /value="boss"/, "себя — первым");
+  assert.match(boxes[0], /checked/, "себя — отмечено");
+  assert.ok(!boxes.slice(1).some((b) => /checked/.test(b)), "остальные — нет");
+  assert.match(html, /каждому придёт своя задача/);
+  assert.doesNotMatch(html, /<select name="assignee"/, "выпадающий список на одного больше не нужен");
+
+  const action = read("app/admin/tasks/actions.ts");
+  assert.match(action, /assigneeIds: formData\.getAll\("assignee"\)\.map\(String\)/);
+  assert.match(action, /deliverAll\(others\)/, "сообщение — каждому, кроме себя");
+
+  // Без базы: пустой выбор и перебор отбиваются до записи.
+  const { createTasks, ASSIGNEES_MAX } = await import("@/lib/admin/task-store");
+  const actor = { id: "boss" } as Parameters<typeof createTasks>[1];
+  const base = { title: "Call", body: "", due: null, projectId: null };
+  assert.deepEqual(await createTasks({ ...base, assigneeIds: ["", " "] }, actor, ""), { ok: false, reason: "no_assignee" });
+  const many = Array.from({ length: ASSIGNEES_MAX + 1 }, (_, i) => `p${i}`);
+  assert.deepEqual(await createTasks({ ...base, assigneeIds: many }, actor, ""), { ok: false, reason: "assignee" });
+});
+
+test("на телефоне форма задач не шире экрана", () => {
+  // 04.10: длинное название проекта растягивало выпадающий список, форма
+  // вылезала за экран, и телефон уменьшал всю панель.
+  const block = read("components/admin/tasks-block.tsx");
+  assert.match(block, /const FIELD = "w-full min-w-0 /);
+  assert.match(block, /<form action=\{createTaskAction\} className="mt-3 grid grid-cols-1 /);
+  const css = read("app/globals.css");
+  const phone = css.slice(css.indexOf("@media (width < 40rem)"));
+  assert.match(phone, /\.admin-panel input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\) \{\n\s+min-width: 0;\n\s+max-width: 100%;/);
+  assert.match(phone, /\.admin-panel label,\n\s+\.admin-panel fieldset \{\n\s+min-width: 0;/);
 });

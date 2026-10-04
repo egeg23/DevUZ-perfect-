@@ -40,7 +40,10 @@ import {
 type T = Picked<typeof tasksDict>;
 
 const BUTTON = "rounded-lg px-3 py-1.5 text-xs";
-const FIELD = "rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text";
+// w-full и min-w-0: без них выпадающий список растягивается по самому
+// длинному варианту — на телефоне форма выходила шире экрана, и браузер
+// уменьшал всю страницу (владелец, 04.10: «мобильная версия кривая»).
+const FIELD = "w-full min-w-0 rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text";
 
 /** Что нужно ряду задачи, чтобы нарисоваться и вернуть нажатие туда же. */
 type RowContext = {
@@ -157,7 +160,7 @@ function TaskRow({ task, ctx }: { task: Task; ctx: RowContext }) {
                   {label}
                 </SubmitButton>
               ))}
-              <span className="flex items-center gap-2">
+              <span className="flex flex-wrap items-center gap-2">
                 <input
                   type="datetime-local"
                   name="due_at"
@@ -249,7 +252,17 @@ function TaskList({
   );
 }
 
-const OK_NOTICES: ReadonlySet<string> = new Set(["created", "createdLater", "taken", "done", "failed", "moved", "cancelled"]);
+const OK_NOTICES: ReadonlySet<string> = new Set([
+  "created",
+  "createdLater",
+  "createdMany",
+  "createdManyLater",
+  "taken",
+  "done",
+  "failed",
+  "moved",
+  "cancelled",
+]);
 
 function Notice({ code, locale }: { code?: string; locale: PanelLocale }) {
   const notices = pick(taskNoticeDict, locale);
@@ -326,7 +339,7 @@ export function TasksView({
       {/* Фильтр — обычной формой в адрес: выбор переживает перезагрузку и
           нажатия кнопок в задачах. */}
       <form action="/admin" className="mt-3 flex flex-wrap items-end gap-2 text-xs text-muted">
-        <label className="grid gap-1">
+        <label className="grid min-w-0 gap-1">
           {t.groupBy}
           <select name="tg" defaultValue={group} className="rounded-lg border border-line bg-ink px-2 py-1.5 text-xs text-text">
             <option value="none">{t.groupNone}</option>
@@ -335,12 +348,12 @@ export function TasksView({
             <option value="person">{t.groupPerson}</option>
           </select>
         </label>
-        <label className="grid gap-1">
+        <label className="grid min-w-0 gap-1">
           {t.filterProject}
           <select
             name="tf"
             defaultValue={projectFilter}
-            className="max-w-[16rem] rounded-lg border border-line bg-ink px-2 py-1.5 text-xs text-text"
+            className="w-full min-w-0 max-w-[16rem] rounded-lg border border-line bg-ink px-2 py-1.5 text-xs text-text"
           >
             <option value="">{t.allProjects}</option>
             <option value="none">{t.groupNoProject}</option>
@@ -356,15 +369,15 @@ export function TasksView({
         </button>
       </form>
 
-      <div className="mt-4 grid items-start gap-5 lg:grid-cols-2">
-        <div>
+      <div className="mt-4 grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
+        <div className="min-w-0">
           <h3 className="mb-2 text-xs uppercase tracking-wider text-muted">
             {t.forMe}
             {mine.length ? <span className="ml-1.5 font-mono text-gold">{mine.length}</span> : null}
           </h3>
           <TaskList tasks={mine} ctx={ctx} group={group} personOf={(task) => task.creator_id} empty={t.nothingMine} />
         </div>
-        <div>
+        <div className="min-w-0">
           <h3 className="mb-2 text-xs uppercase tracking-wider text-muted">{t.iGave}</h3>
           <TaskList tasks={given} ctx={ctx} group={group} personOf={(task) => task.assignee_id} empty={t.nothingGiven} />
         </div>
@@ -375,30 +388,38 @@ export function TasksView({
         open={Boolean(prefillProject) || (!board.mine.length && !board.given.length)}
       >
         <summary className="cursor-pointer text-sm text-green hover:underline">{t.newTask}</summary>
-        <form action={createTaskAction} className="mt-3 grid gap-3 sm:max-w-xl">
+        <form action={createTaskAction} className="mt-3 grid grid-cols-1 gap-3 sm:max-w-xl">
           <input type="hidden" name="back" value="/admin" />
           {Object.entries(keep).map(([key, value]) => (
             <input key={key} type="hidden" name={key} value={value} />
           ))}
-          <label className="grid gap-1 text-xs text-muted">
-            {t.fieldWho}
-            <select name="assignee" required defaultValue={staff.id} className={FIELD}>
+          {/* «Кому» — галочки, а не выпадающий список: задачу ставят и
+              нескольким сразу (владелец, 04.10), каждому — своя. Себя
+              первым и отмеченным: себе ставят чаще всего. */}
+          <fieldset className="grid min-w-0 gap-1.5 text-xs text-muted">
+            <legend className="mb-1">{t.fieldWho}</legend>
+            <div className="grid max-h-56 grid-cols-1 gap-1.5 overflow-y-auto sm:grid-cols-2">
               {options.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.id === staff.id ? t.self(p.display_name) : p.display_name}
-                </option>
+                <label
+                  key={p.id}
+                  className="flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text has-[:checked]:border-green/50 has-[:checked]:bg-green/5"
+                >
+                  <input type="checkbox" name="assignee" value={p.id} defaultChecked={p.id === staff.id} className="accent-green" />
+                  <span className="truncate">{p.id === staff.id ? t.self(p.display_name) : p.display_name}</span>
+                </label>
               ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-xs text-muted">
+            </div>
+            <span className="text-faint">{t.whoHint}</span>
+          </fieldset>
+          <label className="grid min-w-0 gap-1 text-xs text-muted">
             {t.fieldTitle}
             <input name="title" required maxLength={200} className={FIELD} />
           </label>
-          <label className="grid gap-1 text-xs text-muted">
+          <label className="grid min-w-0 gap-1 text-xs text-muted">
             {t.fieldBody}
             <textarea name="body" rows={2} maxLength={2000} className={FIELD} />
           </label>
-          <label className="grid gap-1 text-xs text-muted">
+          <label className="grid min-w-0 gap-1 text-xs text-muted">
             {t.fieldProject}
             <select name="project" defaultValue={prefillProject} className={FIELD}>
               <option value="">{t.projectNone}</option>
@@ -410,7 +431,7 @@ export function TasksView({
             </select>
             {projects.length ? null : <span className="text-faint">{t.noProjects}</span>}
           </label>
-          <fieldset className="grid gap-2 text-xs text-muted">
+          <fieldset className="grid min-w-0 gap-2 text-xs text-muted">
             <legend className="mb-1">{t.fieldDue}</legend>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text">
               {(
@@ -426,7 +447,7 @@ export function TasksView({
                   {label}
                 </label>
               ))}
-              <label className="flex items-center gap-1.5">
+              <label className="flex flex-wrap items-center gap-1.5">
                 <input type="radio" name="due" value="custom" />
                 {t.dueCustom}
                 <input

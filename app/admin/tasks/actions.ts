@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 
 import { requestIp, requireStaff } from "@/lib/admin/guard";
-import { actOnTask, afterAct, createTask, deliverAssignment, taskById } from "@/lib/admin/task-store";
+import { actOnTask, afterAct, createTasks, deliverAssignment, taskById } from "@/lib/admin/task-store";
 import {
   QUICK_DUES,
   isMove,
@@ -57,6 +57,7 @@ const REASON: Record<string, NoticeCode> = {
   title: "title",
   body: "body",
   assignee: "assignee",
+  no_assignee: "noAssignee",
   project: "project",
   past: "past",
   far: "far",
@@ -84,11 +85,12 @@ export async function createTaskAction(formData: FormData) {
   if (due === "bad") back(formData, "past");
   const project = String(formData.get("project") ?? "");
 
-  const result = await createTask(
+  // «Кому» — галочки: одному или нескольким сразу, каждому своя задача.
+  const result = await createTasks(
     {
       title: String(formData.get("title") ?? ""),
       body: String(formData.get("body") ?? ""),
-      assigneeId: String(formData.get("assignee") ?? ""),
+      assigneeIds: formData.getAll("assignee").map(String),
       due,
       projectId: project || null,
     },
@@ -98,17 +100,28 @@ export async function createTaskAction(formData: FormData) {
   );
   if (!result.ok) back(formData, REASON[result.reason] ?? "failedTry");
 
-  const { task } = result;
-  if (task.assignee_id === staff.id) back(formData, "created");
-  // Сообщение исполнителю — сразу после ответа: ждать Telegram ради
+  const { tasks, missed } = result;
+  const many = tasks.length > 1;
+  const others = tasks.filter((task) => task.assignee_id !== staff.id);
+  if (missed) {
+    // Кому-то не записалось: сообщения тем, кому записалось, всё равно уходят.
+    if (others.length && messageWindow(now)) after(() => deliverAll(others));
+    back(formData, "createdPartly");
+  }
+  if (!others.length) back(formData, many ? "createdMany" : "created");
+  // Сообщения исполнителям — сразу после ответа: ждать Telegram ради
   // редиректа незачем. Ночью (23:00–07:00) — в 07:00, проходом свипа.
   if (messageWindow(now)) {
-    after(async () => {
-      await deliverAssignment(task.id).catch((error) => console.error("задачи: сообщение исполнителю", error));
-    });
-    back(formData, "created");
+    after(() => deliverAll(others));
+    back(formData, many ? "createdMany" : "created");
   }
-  back(formData, "createdLater");
+  back(formData, many ? "createdManyLater" : "createdLater");
+}
+
+async function deliverAll(tasks: readonly { id: string }[]): Promise<void> {
+  for (const task of tasks) {
+    await deliverAssignment(task.id).catch((error) => console.error("задачи: сообщение исполнителю", error));
+  }
 }
 
 const DONE_CODE: Record<TaskAction, NoticeCode> = {
