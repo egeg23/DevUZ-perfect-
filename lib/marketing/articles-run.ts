@@ -11,6 +11,7 @@ import {
   parseText,
   saveArticle,
   writtenTopics,
+  type ArticleLocale,
   type ArticleText,
 } from "@/lib/marketing/articles-store";
 import { anthropic } from "@/lib/model-road";
@@ -22,14 +23,14 @@ import { serviceClient } from "@/lib/supabase";
  *
  * Модель — недорогая: статья короткая, по готовой теме и готовым фактам, и
  * сильная модель тут переплачивала бы за то, чего от неё не требуется.
- * Haiku пишет обе версии, русскую и узбекскую, одним вызовом — это около
- * полутора центов за статью; с повторной попыткой — до трёх. Модель можно
- * сменить переменной ARTICLE_MODEL, не трогая код.
+ * Haiku пишет русскую версию, потом узбекскую по ней — по вызову на язык,
+ * около полутора центов за статью; с повторными попытками — до трёх. Модель
+ * можно сменить переменной ARTICLE_MODEL, не трогая код.
  *
  * Время — 10:00 и 16:00 по Ташкенту. Слот забирается отметкой в
  * daily_claims до вызова модели: второй проход свипа через пять минут ту же
- * статью не начнёт, а неудачный слот не повторяется — больше двух вызовов
- * модели на слот не бывает. Пропущенный слот (сервер лежал в 10:00)
+ * статью не начнёт, а неудачный слот не повторяется — больше четырёх вызовов
+ * модели на слот (по две попытки на язык) не бывает. Пропущенный слот (сервер лежал в 10:00)
  * догоняется в тот же день следующим проходом.
  *
  * Статья публикуется сразу: проверка кодом (article-check.ts) стоит на месте
@@ -97,22 +98,21 @@ export async function runMarketingArticles(now = new Date()): Promise<ArticleRun
   run.topic = topic.key;
 
   try {
-    let notes: CheckProblem[] = [];
-    let pair: { ru: ArticleText; uz: ArticleText } | null = null;
-    for (let attempt = 0; attempt < 2 && !pair; attempt += 1) {
-      const result = await writeArticle(topic, notes);
-      if ("problems" in result) notes = result.problems;
-      else pair = result;
-    }
-    if (!pair) {
-      run.errors.push(notes.map((p) => `${p.locale}: ${p.text}`).join(" "));
-    } else {
+    // Сначала русская, потом узбекская — по готовой русской: тот же смысл и
+    // те же факты, но своим языком. Две версии одним вызовом дешёвая модель
+    // собирала через раз: 4 октября обе попытки первой статьи пришли без
+    // одной из версий.
+    const ru = await writeChecked(topic, "ru", null);
+    const uz = typeof ru === "string" ? null : await writeChecked(topic, "uz", ru);
+    if (typeof ru === "string") run.errors.push(`ru: ${ru}`);
+    else if (typeof uz === "string" || !uz) run.errors.push(`uz: ${uz ?? "не написана"}`);
+    else {
       const failed = await saveArticle({
         topicKey: topic.key,
         kind: topic.kind,
         slug: topic.slug,
-        ru: pair.ru,
-        uz: pair.uz,
+        ru,
+        uz,
         sourceUrl: topic.source ?? null,
         model: MODEL,
       });
@@ -156,54 +156,82 @@ async function announce(slug: string): Promise<void> {
   }
 }
 
-const TEXT_SCHEMA = {
-  type: "object",
-  properties: {
-    title: { type: "string" },
-    description: { type: "string" },
-    paragraphs: { type: "array", items: { type: "string" } },
-    tips: { type: "array", items: { type: "string" } },
-  },
-  required: ["title", "description", "paragraphs", "tips"],
-} as const;
-
 const TOOL = {
   name: "article",
-  description: "Статья о маркетинге на двух языках.",
+  description: "Одна языковая версия статьи о маркетинге.",
   input_schema: {
     type: "object",
-    properties: { ru: TEXT_SCHEMA, uz: TEXT_SCHEMA },
-    required: ["ru", "uz"],
+    properties: {
+      title: { type: "string", description: "Заголовок до 90 знаков." },
+      description: { type: "string", description: "Описание для выдачи, 100–180 знаков." },
+      paragraphs: { type: "array", items: { type: "string" }, description: "4–6 абзацев." },
+      tips: { type: "array", items: { type: "string" }, description: "3–5 советов по одному предложению." },
+    },
+    required: ["title", "description", "paragraphs", "tips"],
   },
 } as const;
 
-export async function writeArticle(
+/** Одна версия: до двух попыток, провал проверки возвращается модели её же словами. */
+async function writeChecked(
   topic: MarketingTopic,
+  locale: ArticleLocale,
+  base: ArticleText | null,
+): Promise<ArticleText | string> {
+  let notes: CheckProblem[] = [];
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const result = await writeVersion(topic, locale, base, notes);
+    if (!("problems" in result)) return result;
+    notes = result.problems;
+  }
+  return notes.map((p) => p.text).join(" ");
+}
+
+export async function writeVersion(
+  topic: MarketingTopic,
+  locale: ArticleLocale,
+  base: ArticleText | null = null,
   notes: CheckProblem[] = [],
-): Promise<{ ru: ArticleText; uz: ArticleText } | { problems: CheckProblem[] }> {
+): Promise<ArticleText | { problems: CheckProblem[] }> {
   const message = await anthropic().messages.create({
     model: MODEL,
-    max_tokens: 6000,
+    max_tokens: 4000,
     system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
     tools: [TOOL as unknown as Anthropic.Tool],
     tool_choice: { type: "tool", name: TOOL.name },
-    messages: [{ role: "user", content: articlePrompt(topic, notes) }],
+    messages: [{ role: "user", content: articlePrompt(topic, { locale, base, notes }) }],
   });
 
+  // Причина провала — словами, которые объяснят и модели при повторе, и
+  // владельцу в отчёте: «нет одной из версий» 4 октября не говорило ничего.
+  if (message.stop_reason === "max_tokens") {
+    return { problems: [{ locale, text: "Текст обрезан по лимиту длины — пиши короче, 4–6 абзацев." }] };
+  }
   const use = message.content.find((block) => block.type === "tool_use");
-  if (!use || use.type !== "tool_use") return { problems: [{ locale: "both", text: "модель не собрала статью" }] };
+  if (!use || use.type !== "tool_use") {
+    return { problems: [{ locale, text: `Модель не заполнила статью (stop_reason: ${message.stop_reason}).` }] };
+  }
+  const text = parseText(use.input);
+  if (!text) {
+    const keys = Object.keys((use.input ?? {}) as object).join(", ") || "пусто";
+    return { problems: [{ locale, text: `Нет заголовка или абзацев (пришли поля: ${keys}).` }] };
+  }
 
-  const raw = use.input as { ru?: unknown; uz?: unknown };
-  const ru = parseText(raw.ru);
-  const uz = parseText(raw.uz);
-  if (!ru || !uz) return { problems: [{ locale: "both", text: "нет одной из версий статьи — нужны обе, ru и uz" }] };
-
-  const problems = [...checkArticle(topic, "ru", ru), ...checkArticle(topic, "uz", uz)];
-  return problems.length ? { problems } : { ru, uz };
+  const problems = checkArticle(topic, locale, text);
+  return problems.length ? { problems } : text;
 }
 
-export function articlePrompt(topic: MarketingTopic, notes: CheckProblem[] = []): string {
-  const lines = [`Тема: ${topic.brief}`];
+export function articlePrompt(
+  topic: MarketingTopic,
+  {
+    locale = "ru",
+    base = null,
+    notes = [],
+  }: { locale?: ArticleLocale; base?: ArticleText | null; notes?: CheckProblem[] } = {},
+): string {
+  const lines = [
+    `Язык версии: ${locale === "ru" ? "русский" : "узбекский, латиницей"}.`,
+    `Тема: ${topic.brief}`,
+  ];
   if (topic.kind === "case") {
     lines.push(
       "",
@@ -224,12 +252,22 @@ export function articlePrompt(topic: MarketingTopic, notes: CheckProblem[] = [])
       "Вид: практическое руководство по нише и каналу. Что в этой нише решает клиент, какой контент и какие предложения работают, какие ошибки частые, с чего начать на первой неделе. Без статистики, процентов, сумм и годов.",
     );
   }
+  if (base) {
+    lines.push(
+      "",
+      "Русская версия уже написана. Напиши узбекскую по ней: тот же смысл, те же факты и числа, столько же абзацев и советов, но живым узбекским языком, а не дословным переводом. Без кириллицы.",
+      `Заголовок: ${base.title}`,
+      `Описание: ${base.description}`,
+      ...base.paragraphs.map((p, i) => `Абзац ${i + 1}: ${p}`),
+      ...base.tips.map((t) => `Совет: ${t}`),
+    );
+  }
   if (notes.length) {
     lines.push(
       "",
       "Предыдущая попытка не прошла проверку:",
-      ...notes.map((n) => `- ${n.locale}: ${n.text}`),
-      "Напиши обе версии заново, исправив это.",
+      ...notes.map((n) => `- ${n.text}`),
+      "Напиши заново, исправив это.",
     );
   }
   return lines.join("\n");
@@ -239,7 +277,7 @@ const SYSTEM = `Ты пишешь короткие статьи о маркет�
 
 Читатель — владелец или маркетолог малого и среднего бизнеса в Узбекистане. Он пришёл из Google или Яндекса и хочет за три минуты понять одну вещь и что с ней делать.
 
-Каждая статья — две версии одного текста: ru (русский) и uz (узбекский, латиница, литературный деловой язык, без кальки с русского и без кириллицы). Узбекская — не дословный перевод: пиши так, как ищут и говорят по-узбекски.
+Статья выходит на двух языках, и пишешь ты одну версию за раз — язык указан в задании. Русская пишется первой. Узбекская — по готовой русской: латиницей, литературным деловым языком, без кальки с русского и без кириллицы; пиши так, как ищут и говорят по-узбекски.
 
 Что нельзя ни при каких условиях:
 
@@ -248,7 +286,7 @@ const SYSTEM = `Ты пишешь короткие статьи о маркет�
 - Упоминать другие агентства и студии, ставить ссылки и адреса сайтов.
 - Рекламировать студию в тексте: предложение студии страница покажет сама после статьи.
 
-Как устроена версия:
+Статью сдаёшь инструментом article. Как устроена версия:
 
 - title — заголовок до 90 знаков с ключевой фразой темы, по-человечески, без кликбейта.
 - description — одно-два предложения для выдачи поисковика, 100–180 знаков.

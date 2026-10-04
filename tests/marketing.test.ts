@@ -212,10 +212,38 @@ test("огрызок вместо статьи не проходит", () => {
 });
 
 test("задание модели: факты кейса внутри, замечания проверки — при повторе", () => {
-  const prompt = articlePrompt(caseTopic, [{ locale: "ru", text: "Числа, которых нет в фактах темы: 7." }]);
+  const prompt = articlePrompt(caseTopic, { notes: [{ locale: "ru", text: "Числа, которых нет в фактах темы: 7." }] });
   for (const fact of caseTopic.facts ?? []) assert.ok(prompt.includes(fact));
   assert.match(prompt, /не прошла проверку/);
+  assert.match(prompt, /Язык версии: русский/);
   assert.match(articlePrompt(mistakeTopic), /Без статистики/);
+});
+
+test("узбекская версия пишется по готовой русской, отдельным вызовом", () => {
+  const base = article("Это первый абзац русской версии статьи.");
+  const prompt = articlePrompt(caseTopic, { locale: "uz", base });
+  assert.match(prompt, /Язык версии: узбекский, латиницей/);
+  assert.ok(prompt.includes(base.title));
+  for (const p of base.paragraphs) assert.ok(prompt.includes(p));
+  // Одна версия за вызов: схема инструмента плоская, без вложенных ru/uz.
+  const run = read("lib/marketing/articles-run.ts");
+  assert.match(run, /writeChecked\(topic, "ru", null\)/);
+  assert.match(run, /writeChecked\(topic, "uz", ru\)/);
+  assert.doesNotMatch(run, /properties: \{ ru: /);
+});
+
+test("ответ модели разбирается, даже если поля пришли строкой JSON", () => {
+  const text = parseText({
+    title: "Заголовок статьи",
+    description: "Описание",
+    paragraphs: JSON.stringify(["Первый абзац.", "Второй абзац."]),
+    tips: "Совет один.\n\nСовет два.",
+  });
+  assert.deepEqual(text?.paragraphs, ["Первый абзац.", "Второй абзац."]);
+  assert.deepEqual(text?.tips, ["Совет один.", "Совет два."]);
+  const whole = parseText(JSON.stringify({ title: "Т", description: "", paragraphs: ["А"], tips: [] }));
+  assert.equal(whole?.title, "Т");
+  assert.equal(parseText("просто текст"), null);
 });
 
 test("статья на сайте: Article и хлебные крошки, связка ru ↔ uz, ссылка на калькулятор", () => {

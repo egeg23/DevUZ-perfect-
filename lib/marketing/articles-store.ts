@@ -42,11 +42,32 @@ export function articleHref(locale: ArticleLocale, slug?: string): string {
   return slug ? `/${locale}/marketing/articles/${slug}` : `/${locale}/marketing#articles`;
 }
 
-const strings = (value: unknown): string[] =>
-  Array.isArray(value) ? value.map((v) => String(v).trim()).filter(Boolean) : [];
+/**
+ * Строка JSON — в значение. Дешёвая модель иногда кладёт вложенное поле
+ * инструмента строкой: `"paragraphs": "[\"…\"]"` вместо массива.
+ */
+function unwrap(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  const text = value.trim();
+  if (!/^[[{]/.test(text)) return value;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return value;
+  }
+}
+
+/** Массив строк; строка вместо массива — абзацы через пустую строку. */
+const strings = (value: unknown): string[] => {
+  const v = unwrap(value);
+  if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
+  if (typeof v === "string") return v.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean);
+  return [];
+};
 
 export function parseText(value: unknown): ArticleText | null {
-  const raw = (value ?? {}) as Record<string, unknown>;
+  const raw = (unwrap(value) ?? {}) as Record<string, unknown>;
+  if (typeof raw !== "object") return null;
   const text: ArticleText = {
     title: String(raw.title ?? "").trim(),
     description: String(raw.description ?? "").trim(),
