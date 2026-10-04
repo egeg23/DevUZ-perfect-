@@ -62,6 +62,16 @@ test("смена не отчиталась к сроку — сторож под
   assert.equal(again.filter((s) => s.shift.startsWith("razbor")).length, 0);
 });
 
+test("в сообщениях студии нет названий модели и её поставщика", () => {
+  // Владелец, 04.10.2026: «В сообщениях от студии не упоминай название
+  // Claude». Тревога о молчащей смене отсылала в claude.ai/code.
+  const vendor = /claude|anthropic/i;
+  for (const s of silentShifts({ now: afterDeadline, rows: [] })) {
+    assert.doesNotMatch(s.body, vendor, `тревога «${s.shift}» называет поставщика модели`);
+  }
+  for (const title of Object.values(SHIFT_TITLE)) assert.doesNotMatch(title, vendor);
+});
+
 test("честно пустая смена сторожа не будит: она отчиталась", () => {
   const rows = [{ shift: "razbor", created_at: "2026-09-17T03:35:00Z" }];
   assert.deepEqual(silentShifts({ now: afterDeadline, rows }), []);
