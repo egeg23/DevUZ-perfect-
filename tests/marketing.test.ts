@@ -12,7 +12,7 @@ import {
   projects,
 } from "@/content/marketing";
 import { locales } from "@/lib/i18n";
-import { checkArticle, numbersIn } from "@/lib/marketing/article-check";
+import { checkArticle, missingStems, numbersIn } from "@/lib/marketing/article-check";
 import { ARTICLE_HOURS, articlePrompt, dueSlots } from "@/lib/marketing/articles-run";
 import { articleHref, isArticleLocale, parseText, type ArticleText } from "@/lib/marketing/articles-store";
 import { estimateMarketing } from "@/lib/marketing/estimate";
@@ -125,8 +125,8 @@ test("темы: ключи и адреса уникальны, у кейса е�
       assert.match(topic.source ?? "", /^https:\/\/en\.wikipedia\.org\/wiki\//, `${topic.key}: нет источника`);
     }
   }
-  // По очереди: кейс, ошибка, ниша.
-  assert.deepEqual(MARKETING_TOPICS.slice(0, 3).map((t) => t.kind), ["case", "mistake", "niche"]);
+  // По очереди: объяснение, кейс, ошибка, ниша — объяснения первыми.
+  assert.deepEqual(MARKETING_TOPICS.slice(0, 4).map((t) => t.kind), ["explainer", "case", "mistake", "niche"]);
   assert.equal(nextMarketingTopic(new Set([MARKETING_TOPICS[0].key]))?.key, MARKETING_TOPICS[1].key);
   assert.equal(nextMarketingTopic(new Set(MARKETING_TOPICS.map((t) => t.key))), null);
 });
@@ -256,4 +256,35 @@ test("статья на сайте: Article и хлебные крошки, св
   assert.match(section, /faqSchema\(faq\)/);
   assert.match(section, /"OfferCatalog"/);
   assert.match(section, /id="articles"/);
+});
+
+test("объяснения — под запросы из поиска, на обоих языках", () => {
+  const explainers = MARKETING_TOPICS.filter((t) => t.kind === "explainer");
+  assert.ok(explainers.length >= 10, "объяснений меньше десяти");
+  for (const topic of explainers) {
+    assert.ok(topic.query?.ru && topic.query?.uz, `${topic.key}: нет запроса на одном из языков`);
+    assert.ok(!/[\u0400-\u04FF]/.test(topic.query.uz ?? ""), `${topic.key}: узбекский запрос кириллицей`);
+  }
+  const keys = explainers.map((t) => t.key);
+  for (const want of ["explainer:smm", "explainer:target", "explainer:seo", "explainer:tashkent-ads"]) {
+    assert.ok(keys.includes(want), `нет темы ${want}`);
+  }
+  // Ниши — тоже под запрос «продвижение … в …».
+  const niche = MARKETING_TOPICS.find((t) => t.kind === "niche");
+  assert.match(niche?.query?.ru ?? "", /^продвижение /);
+});
+
+test("запрос — в заголовке, описании и первом абзаце, по началу слова", () => {
+  assert.deepEqual(missingStems("реклама в Ташкенте", "Рекламы в Ташкенте: что работает"), []);
+  assert.deepEqual(missingStems("продвижение стоматологии в Instagram", "Как продвигать стоматологию в Instagram"), []);
+  assert.deepEqual(missingStems("SMM nima", "SMM nima va u biznesga nima beradi"), []);
+  assert.deepEqual(missingStems("что такое SMM", "Таргет для бизнеса"), ["smm"]);
+
+  const smm = MARKETING_TOPICS.find((t) => t.key === "explainer:smm")!;
+  const good = article("SMM — это ведение соцсетей бизнеса так, чтобы они приводили клиентов, а не просто собирали лайки.");
+  const ok = { ...good, title: "Что такое SMM и что он даёт бизнесу", description: "Что такое SMM простыми словами: из чего состоит работа, когда ждать результата и как понять, что он работает." };
+  assert.deepEqual(checkArticle(smm, "ru", ok), []);
+  const off = { ...ok, title: "Соцсети для бизнеса: с чего начать работу" };
+  assert.ok(checkArticle(smm, "ru", off).some((p) => /нет в заголовке/.test(p.text)));
+  assert.match(articlePrompt(smm, { locale: "uz" }), /Поисковый запрос, под который пишется версия: «SMM nima»/);
 });

@@ -1,8 +1,8 @@
 /**
  * Темы статей о маркетинге — то, о чём пишет модель два раза в день.
  *
- * Три вида, по очереди: известный кейс, частая ошибка, продвижение ниши в
- * канале. Кейс — единственный вид, где в тексте бывают факты и числа, и
+ * Четыре вида, по очереди: объяснение под поисковый запрос, известный кейс,
+ * частая ошибка, продвижение ниши в канале. Кейс — единственный вид, где в тексте бывают факты и числа, и
  * берутся они только отсюда: модель пересказывает `facts` своими словами и
  * ничего к ним не добавляет, а проверка в `lib/marketing/articles-run.ts`
  * не пропустит число, которого здесь нет. Источник каждого кейса —
@@ -17,7 +17,10 @@
  * не меняется: по нему смена помнит, что статья уже есть.
  */
 
-export type MarketingTopicKind = "case" | "mistake" | "niche";
+export type MarketingTopicKind = "explainer" | "case" | "mistake" | "niche";
+
+/** Поисковый запрос, под который пишется статья, — свой на каждом языке. */
+export type TopicQuery = { ru?: string; uz?: string };
 
 export type MarketingTopic = {
   key: string;
@@ -29,6 +32,8 @@ export type MarketingTopic = {
   facts?: string[];
   lesson?: string;
   source?: string;
+  /** Запрос стоит в заголовке, описании и первом абзаце — проверяет код. */
+  query?: TopicQuery;
 };
 
 type CaseSeed = { key: string; title: string; facts: string[]; lesson: string; source: string };
@@ -232,6 +237,110 @@ const CHANNELS: Array<{ key: string; in: string }> = [
   { key: "sayt", in: "через сайт" },
 ];
 
+/**
+ * Объяснения — под то, что в Узбекистане ищут на самом деле.
+ *
+ * Запросы сняты в Google Trends по Узбекистану за 12 месяцев (04.10.2026):
+ * «smm panel», «smm nima», «что такое smm», «smm это», «seo продвижение»
+ * (растёт, +800%), «seo nima», «таргет это», «instagram target»,
+ * «маркетинг это», «marketing nima», «digital marketing», «google ads»,
+ * «яндекс реклама», «гугл реклама», «реклама в ташкенте», «tashqi reklama»,
+ * «mahsulotni reklama qilish» (+120%), «reklama agentligi», «smm manager».
+ * Люди ищут, что это такое и как это работает, — и такая статья приводит
+ * их на страницу, где это можно заказать.
+ *
+ * Вордстат по Узбекистану без входа в аккаунт Яндекса цифр не показывает —
+ * когда доступ появится, запросы сверяются и с ним.
+ */
+const EXPLAINERS: Array<{ key: string; slug: string; query: Required<TopicQuery>; brief: string }> = [
+  {
+    key: "smm",
+    slug: "chto-takoe-smm",
+    query: { ru: "что такое SMM", uz: "SMM nima" },
+    brief: "Что такое SMM и что он даёт бизнесу в Узбекистане: из чего состоит работа, когда ждать результата и как понять, что SMM работает, а не просто публикует посты",
+  },
+  {
+    key: "smm-panel",
+    slug: "smm-panel-nakrutka",
+    query: { ru: "SMM панель", uz: "SMM panel" },
+    brief: "SMM-панели и накрутка подписчиков: почему купленные подписчики и лайки вредят аккаунту бизнеса и что делать вместо этого",
+  },
+  {
+    key: "target",
+    slug: "chto-takoe-target",
+    query: { ru: "что такое таргет", uz: "target nima" },
+    brief: "Что такое таргетированная реклама в Instagram и Facebook, чем она отличается от SMM и когда она нужна бизнесу",
+  },
+  {
+    key: "seo",
+    slug: "seo-prodvizhenie",
+    query: { ru: "SEO продвижение", uz: "SEO nima" },
+    brief: "SEO-продвижение сайта: что это, из чего состоит, сколько ждать результата и почему без технически исправного сайта оно не работает",
+  },
+  {
+    key: "product-ads",
+    slug: "kak-reklamirovat-tovar",
+    query: { ru: "как рекламировать товар", uz: "mahsulotni reklama qilish" },
+    brief: "Как рекламировать товар: с чего начать, какие каналы выбрать и как понять, что реклама окупается",
+  },
+  {
+    key: "marketing",
+    slug: "chto-takoe-marketing",
+    query: { ru: "что такое маркетинг", uz: "marketing nima" },
+    brief: "Что такое маркетинг для малого бизнеса: не только реклама, а система — продукт, цена, каналы и продажи",
+  },
+  {
+    key: "tashkent-ads",
+    slug: "reklama-v-tashkente",
+    query: { ru: "реклама в Ташкенте", uz: "Toshkentda reklama" },
+    brief: "Реклама в Ташкенте: какие каналы работают для малого бизнеса — Instagram, Telegram, Google, Яндекс, наружная реклама — и как их сочетать",
+  },
+  {
+    key: "google-ads",
+    slug: "google-ads-uzbekistan",
+    query: { ru: "реклама в Google", uz: "Google reklama" },
+    brief: "Реклама в Google (Google Ads) в Узбекистане: как работает поисковая реклама, кому она подходит и как не потратить бюджет впустую на старте",
+  },
+  {
+    key: "yandex-ads",
+    slug: "yandex-reklama",
+    query: { ru: "реклама в Яндексе", uz: "Yandex reklama" },
+    brief: "Реклама в Яндексе для бизнеса в Узбекистане: Яндекс Директ и Яндекс Карты, когда они нужны в дополнение к Google",
+  },
+  {
+    key: "digital",
+    slug: "digital-marketing",
+    query: { ru: "digital маркетинг", uz: "digital marketing" },
+    brief: "Digital-маркетинг: какие каналы в него входят и с чего начать бизнесу в Узбекистане",
+  },
+  {
+    key: "outdoor",
+    slug: "naruzhnaya-reklama-ili-internet",
+    query: { ru: "наружная реклама", uz: "tashqi reklama" },
+    brief: "Наружная реклама или реклама в интернете: что выбрать бизнесу в Ташкенте и как их сочетать, чтобы видеть результат",
+  },
+  {
+    key: "agency",
+    slug: "kak-vybrat-reklamnoe-agentstvo",
+    query: { ru: "рекламное агентство", uz: "reklama agentligi" },
+    brief: "Как выбрать рекламное агентство: что спросить до договора, какие отчёты требовать и какие обещания должны насторожить",
+  },
+  {
+    key: "smm-manager",
+    slug: "smm-menedzher",
+    query: { ru: "SMM менеджер", uz: "SMM menejer" },
+    brief: "SMM-менеджер: чем он занимается, что должен делать каждую неделю и когда бизнесу нужна команда вместо одного человека",
+  },
+];
+
+const explainerTopics: MarketingTopic[] = EXPLAINERS.map((e) => ({
+  key: `explainer:${e.key}`,
+  kind: "explainer",
+  slug: e.slug,
+  brief: e.brief,
+  query: e.query,
+}));
+
 const caseTopics: MarketingTopic[] = CASES.map((c) => ({
   key: `case:${c.key}`,
   kind: "case",
@@ -259,13 +368,17 @@ const nicheTopics: MarketingTopic[] = CHANNELS.flatMap((_, round) =>
       kind: "niche" as const,
       slug: `prodvizhenie-${niche.key}-${channel.key}`,
       brief: `Продвижение ${niche.of} ${channel.in} в Узбекистане: с чего начать и что работает`,
+      query: { ru: `продвижение ${niche.of} ${channel.in}` },
     };
   }),
 );
 
-/** Все темы в порядке выхода: кейс, ошибка, ниша — и снова по кругу. */
+/**
+ * Все темы в порядке выхода: объяснение, кейс, ошибка, ниша — и снова по
+ * кругу. Объяснения первыми: у них самый большой спрос в поиске.
+ */
 export const MARKETING_TOPICS: MarketingTopic[] = (() => {
-  const lists = [caseTopics, mistakeTopics, nicheTopics];
+  const lists = [explainerTopics, caseTopics, mistakeTopics, nicheTopics];
   const out: MarketingTopic[] = [];
   for (let i = 0; out.length < lists.reduce((n, l) => n + l.length, 0); i += 1) {
     for (const list of lists) if (list[i]) out.push(list[i]);
