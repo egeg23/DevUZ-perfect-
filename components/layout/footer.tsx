@@ -115,7 +115,7 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
                   Telegram @{company.telegram}
                 </a>
               </li>
-              <PhoneLinesCompact dict={dict} />
+              <PhoneLinesCompact locale={locale} dict={dict} />
               <li>
                 <Link href={localeHref(locale, "contact")} className="text-muted transition-colors hover:text-text">
                   {dict.cta.writeUs}
