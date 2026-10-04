@@ -140,6 +140,10 @@ test("модель выбирается на каждый узел отдель�
     "отбор скаута": ["lib/scout/classify.ts", "SCOUT_MODEL", "claude-sonnet-5"],
     "разбор резюме": ["lib/hiring/store.ts", "HIRING_MODEL", "claude-sonnet-5"],
     "подсказки менеджеру": ["lib/admin/coach.ts", "COACH_MODEL", "claude-sonnet-5"],
+    // Статьи — недорогой моделью (владелец, 04.10.2026).
+    "разборы сайтов": ["lib/razbor/shift-run.ts", "RAZBOR_MODEL", "claude-sonnet-5"],
+    "тендерный разбор": ["lib/razbor/tender-run.ts", "RAZBOR_MODEL", "claude-sonnet-5"],
+    "статьи о маркетинге": ["lib/marketing/articles-run.ts", "ARTICLE_MODEL", "claude-haiku-4-5"],
   } as const;
 
   for (const [name, [file, variable, model]] of Object.entries(nodes)) {

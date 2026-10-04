@@ -227,8 +227,8 @@ test("узбекская версия пишется по готовой рус�
   for (const p of base.paragraphs) assert.ok(prompt.includes(p));
   // Одна версия за вызов: схема инструмента плоская, без вложенных ru/uz.
   const run = read("lib/marketing/articles-run.ts");
-  assert.match(run, /writeChecked\(topic, "ru", null\)/);
-  assert.match(run, /writeChecked\(topic, "uz", ru\)/);
+  assert.match(run, /writeChecked\(topic, "ru", null, /);
+  assert.match(run, /writeChecked\(topic, "uz", ru, /);
   assert.doesNotMatch(run, /properties: \{ ru: /);
 });
 
@@ -287,4 +287,31 @@ test("запрос — в заголовке, описании и первом �
   const off = { ...ok, title: "Соцсети для бизнеса: с чего начать работу" };
   assert.ok(checkArticle(smm, "ru", off).some((p) => /нет в заголовке/.test(p.text)));
   assert.match(articlePrompt(smm, { locale: "uz" }), /Поисковый запрос, под который пишется версия: «SMM nima»/);
+});
+
+test("перед статьёй — Google Trends и Вордстат по Узбекистану", async () => {
+  const { mergeRelated, trendsJson, WORDSTAT_UZ, TRENDS_GEO } = await import("@/lib/seo/keywords");
+  assert.equal(TRENDS_GEO, "UZ");
+  assert.equal(WORDSTAT_UZ, 171);
+  // Защитная строка Trends перед JSON.
+  assert.deepEqual(trendsJson(")]}'\n{\"a\":1}"), { a: 1 });
+  // Сначала Вордстат, потом Trends; без повторов и без самого запроса.
+  const merged = mergeRelated(
+    "smm nima",
+    { ok: true, phrases: [{ phrase: "SMM nima", value: 9 }, { phrase: "smm kurslari", value: 5 }] },
+    { ok: false, reason: "нет токена" },
+    { ok: true, phrases: [{ phrase: "smm kurslari", value: 50 }, { phrase: "smm marketing", value: 40 }] },
+  );
+  assert.deepEqual(merged, ["smm kurslari", "smm marketing"]);
+
+  // Все генераторы статей спрашивают оба источника и передают модели.
+  const run = read("lib/marketing/articles-run.ts");
+  assert.match(run, /keywordResearch\(ruQuery\)/);
+  assert.match(run, /keywordResearch\(uzQuery\)/);
+  assert.match(run, /research,\n\s+\}\);/, "ответ источников пишется в строку статьи");
+  assert.match(articlePrompt(MARKETING_TOPICS[0], { related: ["smm kurslari"] }), /Google Trends и Вордстат\): «smm kurslari»/);
+  assert.match(read("lib/razbor/shift-run.ts"), /keywordResearch\(queryFor\(/);
+  assert.match(read("lib/razbor/tender-run.ts"), /keywordResearch\(topic\[locale\]\.query\)/);
+  // Правило — в CLAUDE.md, чтобы его видела и ручная работа.
+  assert.match(read("CLAUDE.md"), /## Статьи — под живые запросы и недорогой моделью/);
 });

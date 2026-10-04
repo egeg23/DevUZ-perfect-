@@ -147,6 +147,8 @@ export async function saveArticle(input: {
   uz: ArticleText;
   sourceUrl: string | null;
   model: string;
+  /** Что ответили Google Trends и Вордстат перед статьёй (миграция 0083). */
+  research?: unknown;
 }): Promise<string | null> {
   const db = serviceClient();
   if (!db) return "база недоступна";
@@ -158,6 +160,7 @@ export async function saveArticle(input: {
     uz: input.uz,
     source_url: input.sourceUrl,
     model: input.model,
+    research: input.research ?? null,
   });
   return error ? error.message : null;
 }
