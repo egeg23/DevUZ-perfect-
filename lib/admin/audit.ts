@@ -109,6 +109,9 @@ export const AUDIT_ACTIONS = [
   "work_account.resume",
   "work_account.remove",
   "work_account.staff",
+  // Видео к инструкциям: кто загрузил и кто убрал.
+  "help_video.saved",
+  "help_video.removed",
   "project.payment_added",
   "project.payment_removed",
   "payout.recorded",

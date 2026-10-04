@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { HelpSearch } from "@/components/admin/help-search";
+import { HelpVideoManager } from "@/components/admin/help-video";
 import { AdminShell } from "@/components/admin/shell";
 import {
   HELP_LOCALES,
@@ -10,6 +11,7 @@ import {
   type HelpLocale,
 } from "@/content/admin-help";
 import { bodyFor, helpAnchor, parseInline, sectionOfHref, type Para } from "@/lib/admin/help";
+import { HELP_VIDEO_INTRO, canManageHelpVideos, helpVideoUrl, pickHelpVideo } from "@/lib/admin/help-video-rules";
 import { ROLES, SECTIONS, canSee, type Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 
@@ -23,8 +25,54 @@ import type { Staff } from "@/lib/admin/session";
 
 const CARD = "rounded-xl border border-line bg-surface px-5 py-4";
 
-export function HelpView({ staff, locale, role }: { staff: Staff; locale: HelpLocale; role: Role }) {
+/** Видео к инструкции — только то, что нужно странице (lib/admin/help-videos.ts). */
+export type HelpVideoView = { id: string; section: string; locale: string };
+
+export function HelpView({
+  staff,
+  locale,
+  role,
+  videos = [],
+}: {
+  staff: Staff;
+  locale: HelpLocale;
+  role: Role;
+  videos?: readonly HelpVideoView[];
+}) {
   const t = helpCopy(locale);
+  // Загрузка — владельцу и руководителю, и только в своём виде: в «Показать
+  // как менеджер» страница должна выглядеть ровно как у менеджера.
+  const manages = canManageHelpVideos(staff.role) && role === staff.role;
+  const videoOf = (section: string) => {
+    const video = pickHelpVideo(videos, section, locale);
+    if (!video) return null;
+    return (
+      <figure className="mt-3 max-w-3xl">
+        <video
+          controls
+          preload="metadata"
+          playsInline
+          src={helpVideoUrl(video.id)}
+          className="aspect-video w-full rounded-lg border border-line bg-black"
+        />
+        {video.locale !== locale ? (
+          <figcaption className="mt-1 text-xs text-faint">
+            {t.video.otherLanguage.replace("{lang}", HELP_LOCALE_NAME[video.locale as HelpLocale] ?? video.locale)}
+          </figcaption>
+        ) : null}
+      </figure>
+    );
+  };
+  const managerOf = (section: string, title: string) =>
+    manages ? (
+      <HelpVideoManager
+        section={section}
+        title={title}
+        lang={locale}
+        copy={t.video}
+        have={videos.filter((video) => video.section === section).map(({ id, locale: lang }) => ({ id, locale: lang }))}
+      />
+    ) : null;
 
   const visible = HELP_ORDER.filter((href) => canSee(role, href));
   const sectionOf = (href: string) => SECTIONS.find((s) => s.href === href);
@@ -102,6 +150,13 @@ export function HelpView({ staff, locale, role }: { staff: Staff; locale: HelpLo
         </div>
       ) : null}
 
+      {/* ── Вводное видео ─────────────────────────────────────────────── */}
+      {pickHelpVideo(videos, HELP_VIDEO_INTRO, locale) ? (
+        <p className="mt-5 text-xs uppercase tracking-wider text-faint">{t.video.introTitle}</p>
+      ) : null}
+      {videoOf(HELP_VIDEO_INTRO)}
+      {managerOf(HELP_VIDEO_INTRO, t.video.manageIntro)}
+
       {/* ── Поиск своими словами ─────────────────────────────────────── */}
       <HelpSearch
         copy={t.search}
@@ -159,6 +214,8 @@ export function HelpView({ staff, locale, role }: { staff: Staff; locale: HelpLo
                 ) : null}
               </div>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{entry.what}</p>
+              {videoOf(href)}
+              {managerOf(href, t.video.manageSection)}
 
               {items.length ? (
                 <ol className="mt-4 flex flex-col gap-3">

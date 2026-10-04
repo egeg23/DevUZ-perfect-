@@ -61,6 +61,31 @@ export type HelpSearchCopy = {
   failed: string;
 };
 
+/** Подписи видео к разделам (components/admin/help-video.tsx). */
+export type HelpVideoCopy = {
+  /** Заголовок над вводным видео наверху страницы. */
+  introTitle: string;
+  /** Под видео, если оно на другом языке: «Видео — на языке: {lang}». */
+  otherLanguage: string;
+  /** Свёрнутый блок загрузки у раздела и у вводного видео. */
+  manageSection: string;
+  manageIntro: string;
+  have: string;
+  remove: string;
+  /** Вопрос перед удалением; {lang} — язык видео. */
+  removeConfirm: string;
+  removeFailed: string;
+  language: string;
+  file: string;
+  upload: string;
+  busy: string;
+  replaceNote: string;
+  done: string;
+  chooseFile: string;
+  wrongType: string;
+  tooBig: string;
+};
+
 export type HelpCopy = {
   title: string;
   lead: string;
@@ -74,6 +99,7 @@ export type HelpCopy = {
   sections: Record<string, HelpEntry>;
   ownerOnly: string;
   search: HelpSearchCopy;
+  video: HelpVideoCopy;
   channelsTitle: string;
   channelsLead: string;
   channels: HelpChannel[];
