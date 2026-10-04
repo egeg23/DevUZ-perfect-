@@ -315,3 +315,12 @@ test("перед статьёй — Google Trends и Вордстат по Уз�
   // Правило — в CLAUDE.md, чтобы его видела и ручная работа.
   assert.match(read("CLAUDE.md"), /## Статьи — под живые запросы и недорогой моделью/);
 });
+
+test("Google Trends — сначала напрямую, прокси — запасная дорога", () => {
+  // 04.10: с сервера через прокси Trends ответил 429 — общий адрес
+  // дата-центра Google режет первым.
+  const kw = read("lib/seo/keywords.ts");
+  assert.match(kw, /return direct \? \[viaDirect, roadFetch\] : \[roadFetch\];/);
+  assert.match(kw, /for \(const road of trendsRoads\(\)\)/);
+  assert.match(kw, /Trends ответил\|Trends недоступен/, "на 429 и обрыве — следующая дорога");
+});

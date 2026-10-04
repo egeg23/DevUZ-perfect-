@@ -1,4 +1,4 @@
-import { roadFetch } from "@/lib/egress.mjs";
+import { directDispatcher, roadFetch } from "@/lib/egress.mjs";
 import { appSecret } from "@/lib/secrets";
 
 /**
@@ -39,14 +39,30 @@ export type KeywordResearch = {
   related: string[];
 };
 
-async function timed(url: string, init: RequestInit = {}): Promise<Response> {
+type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
+
+async function timed(url: string, init: RequestInit = {}, fetcher: Fetcher = roadFetch): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    return await roadFetch(url, { ...init, signal: controller.signal });
+    return await fetcher(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Дороги к Google Trends: сначала напрямую, потом через прокси.
+ *
+ * 4 октября первая статья спросила Trends с сервера — и получила 429: прокси
+ * сервера — общий адрес дата-центра, а такие Google режет первыми. Google
+ * из России открыт, и прямой адрес сервера он пускает. Прокси — запасная
+ * дорога: и при обрыве, и при 429 на прямой.
+ */
+function trendsRoads(): Fetcher[] {
+  const direct = directDispatcher();
+  const viaDirect: Fetcher = (url, init) => fetch(url, { ...init, dispatcher: direct } as RequestInit);
+  return direct ? [viaDirect, roadFetch] : [roadFetch];
 }
 
 /** Ответы Trends начинаются с защитной строки `)]}'` — до первой скобки. */
@@ -60,8 +76,19 @@ type RankedList = { rankedKeyword?: Array<{ query: string; value: number }> };
 
 /** Популярные запросы вместе с этим — по Узбекистану за 12 месяцев. */
 export async function googleTrendsRelated(query: string): Promise<SourceResult> {
+  let last: SourceResult = { ok: false, reason: "Trends недоступен" };
+  for (const road of trendsRoads()) {
+    last = await trendsVia(query, road);
+    // Ответ по существу (данные или «запрос редкий») — дальше не идём;
+    // отказ Google или обрыв — пробуем следующую дорогу.
+    if (last.ok || !/Trends ответил|Trends недоступен/.test(last.reason)) return last;
+  }
+  return last;
+}
+
+async function trendsVia(query: string, road: Fetcher): Promise<SourceResult> {
   try {
-    const home = await timed(`https://trends.google.com/trends/?geo=${TRENDS_GEO}&hl=ru`, { headers: { "user-agent": UA } });
+    const home = await timed(`https://trends.google.com/trends/?geo=${TRENDS_GEO}&hl=ru`, { headers: { "user-agent": UA } }, road);
     const cookie = home.headers
       .getSetCookie()
       .map((c) => c.split(";")[0])
@@ -72,6 +99,7 @@ export async function googleTrendsRelated(query: string): Promise<SourceResult> 
     const explore = await timed(
       `https://trends.google.com/trends/api/explore?hl=ru&tz=-300&req=${encodeURIComponent(JSON.stringify(req))}`,
       { headers },
+      road,
     );
     if (!explore.ok) return { ok: false, reason: `Trends ответил ${explore.status}` };
     const widgets = (trendsJson(await explore.text()) as { widgets?: TrendsWidget[] }).widgets ?? [];
@@ -83,6 +111,7 @@ export async function googleTrendsRelated(query: string): Promise<SourceResult> 
         JSON.stringify(widget.request),
       )}&token=${encodeURIComponent(widget.token)}`,
       { headers },
+      road,
     );
     if (!related.ok) return { ok: false, reason: `Trends ответил ${related.status}` };
     const lists = ((trendsJson(await related.text()) as { default?: { rankedList?: RankedList[] } }).default?.rankedList ?? []);
