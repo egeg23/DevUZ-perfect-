@@ -12,7 +12,11 @@
   `http://localhost:4789/proto/<43 символа>/`; `/api/proto-ai` отвечает
   `fallback`, страницы показывают демо-ответы.
 
-В базу прототип кладётся одной записью `protos`: главная — `html`,
+Сборка ещё пишет `content/proto-bundles/bloger-agency.json` — оттуда страницы
+отдаёт сервер (lib/proto/bundles), ставя отпечаток зерном из `protos.stamp`.
+В базе — обычная запись `protos` с `facts.bundle = "bloger-agency"`.
+
+Раньше (без сборки) прототип клался одной записью: главная — `html`,
 остальные — `pages`, отпечаток — `stampPages` (lib/proto/stamp) одним зерном,
 `status = ready`, `auto = false`, в `facts.ai` — `["match","brief","ugc"]`,
 иначе /api/proto-ai ему не ответит.

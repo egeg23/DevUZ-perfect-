@@ -12,6 +12,7 @@ import { newAccessToken } from "@/lib/store/access";
 import type { ProtoProblem } from "@/lib/proto/check";
 import { missingParts, type ProtoFacts } from "@/lib/proto/facts";
 import { buildProto } from "@/lib/proto/render";
+import { stampedBundle } from "@/lib/proto/bundles";
 import { withBase } from "@/lib/proto/pages";
 import { STAMP_VERSION, newSeed, stampHtml, stampPages, type Stamp } from "@/lib/proto/stamp";
 import { mockupTermsUrl } from "@/lib/proto/booking";
@@ -175,7 +176,15 @@ export async function protoPage(token: string, path = ""): Promise<{ html: strin
   let html = String(data.html);
   let pages = (data.pages ?? {}) as Record<string, string>;
   const stamp = data.stamp as Stamp | null;
-  if (!stamp || stamp.v < STAMP_VERSION) {
+  // Макет, собранный руками, живёт в репозитории (lib/proto/bundles): из
+  // базы берём только зерно отпечатка. Без зерна такой макет не отдаётся —
+  // страница без отпечатка наружу не уходит.
+  const bundle = (data.facts as { bundle?: unknown } | null)?.bundle;
+  if (typeof bundle === "string") {
+    const site = stamp?.seed ? stampedBundle(bundle, stamp.seed) : null;
+    if (!site) return null;
+    ({ html, pages } = site);
+  } else if (!stamp || stamp.v < STAMP_VERSION) {
     const upgraded = await upgradeProto(id, html, data.facts as ProtoFacts, stamp, pages);
     if (upgraded) ({ html, pages } = upgraded);
   }

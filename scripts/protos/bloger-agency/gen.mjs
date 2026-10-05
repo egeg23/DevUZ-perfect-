@@ -503,4 +503,28 @@ const out = {};
 for (const l of ["ru", "uz"]) for (const p of PAGES) out[(l === "uz" ? "uz" + (p ? "/" : "") : "") + p] = BUILD[p](l);
 mkdirSync(DIR + "out", { recursive: true });
 writeFileSync(DIR + "out/pages.json", JSON.stringify(out));
+
+/*
+ * Сборка для сервера (lib/proto/bundles): общие куски — стили, скрипт,
+ * строки на языке, влёт в букву — один раз, в страницах вместо них метка
+ * @@имя@@. Так файл в репозитории в три раза меньше 12 готовых страниц.
+ */
+const first = out[""];
+const grab = (html, re) => html.match(re)[0];
+const parts = {
+  S: grab(first, /<style>[\s\S]*?<\/style>/),
+  J: first.slice(first.indexOf('<script type="application/json" id="cat">'), first.indexOf("</body>")),
+  IR: grab(first, /<script type="application\/json" id="i18n">[\s\S]*?<\/script>/),
+  IU: grab(out.uz, /<script type="application\/json" id="i18n">[\s\S]*?<\/script>/),
+  G: grab(first, /<script>\n\/\* Glyph Portal[\s\S]*?<\/script>/),
+};
+const pages = {};
+for (const [key, html] of Object.entries(out)) {
+  let page = html;
+  for (const [name, part] of Object.entries(parts)) page = page.split(part).join(`@@${name}@@`);
+  pages[key] = page;
+}
+const bundleDir = new URL("../../../content/proto-bundles/", import.meta.url).pathname;
+mkdirSync(bundleDir, { recursive: true });
+writeFileSync(bundleDir + "bloger-agency.json", JSON.stringify({ parts, pages }));
 for (const [k, v] of Object.entries(out)) console.log((k || "(main)").padEnd(14), v.length);
