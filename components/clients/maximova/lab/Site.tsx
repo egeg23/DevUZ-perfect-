@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 
-import { CUTS, DIARY, MOMS_COURSE, MOMS_DETAILS, PHOTOS, QUOTES, RHYTHM, TEACHER, TRIAL } from "@/content/clients/maximova/facts";
+import { DIARY, MOMS_COURSE, MOMS_DETAILS, QUOTES, RHYTHM, STUDIO, TEACHER, TRIAL } from "@/content/clients/maximova/facts";
 import { LANDINGS } from "@/content/clients/maximova/pages";
 import { homeGraph } from "@/lib/clients/maximova/schema";
 import { jsonLd } from "@/lib/clients/maximova/seo";
@@ -114,10 +114,10 @@ export function Site() {
             <div className={s.heroPhoto}>
               <div className={s.photoCard}>
                 <Image
-                  src={PHOTOS.kangol.cut}
-                  alt={PHOTOS.kangol.alt}
-                  width={CUTS.kangol.width}
-                  height={CUTS.kangol.height}
+                  src={STUDIO.shirt.cut}
+                  alt={STUDIO.shirt.alt}
+                  width={STUDIO.shirt.width}
+                  height={STUDIO.shirt.height}
                   priority
                   sizes="(min-width: 1024px) 34vw, 80vw"
                 />
@@ -144,7 +144,7 @@ export function Site() {
         <section className={s.section} aria-labelledby="lab-meet">
           <div className={s.meet}>
             <figure className={s.meetPhoto} data-reveal="">
-              <Image src={PHOTOS.urban.cut} alt={PHOTOS.urban.alt} width={CUTS.urban.width} height={CUTS.urban.height} sizes="(min-width: 1024px) 36vw, 86vw" />
+              <Image src={STUDIO.blazer.cut} alt={STUDIO.blazer.alt} width={STUDIO.blazer.width} height={STUDIO.blazer.height} sizes="(min-width: 1024px) 36vw, 86vw" />
             </figure>
             <div>
               <p className={s.eyebrow}>Знакомство</p>
@@ -263,7 +263,7 @@ export function Site() {
         <section className={s.section} aria-labelledby="lab-moms">
           <div className={s.moms}>
             <figure className={s.momsPhoto}>
-              <Image src={PHOTOS.bench.cut} alt={PHOTOS.bench.alt} width={CUTS.bench.width} height={CUTS.bench.height} sizes="(min-width: 1024px) 30vw, 80vw" />
+              <Image src={STUDIO.black.cut} alt={STUDIO.black.alt} width={STUDIO.black.width} height={STUDIO.black.height} sizes="(min-width: 1024px) 30vw, 80vw" />
             </figure>
             <div data-reveal="">
               <p className={s.eyebrow}>Для мам</p>

@@ -1,4 +1,4 @@
-import { CONTACTS, CUTS, FAQ, PHOTOS, TEACHER } from "@/content/clients/maximova/facts";
+import { CONTACTS, FAQ, STUDIO, TEACHER } from "@/content/clients/maximova/facts";
 import type { Landing } from "@/content/clients/maximova/pages";
 import { asset, url } from "@/lib/clients/maximova/seo";
 
@@ -28,7 +28,7 @@ export function schoolGraph() {
       name: "Дарья Максимова — английский и французский для детей",
       url: url(),
       telephone: CONTACTS.phone,
-      image: asset(PHOTOS.urban.cut),
+      image: asset(STUDIO.blazer.cut),
       address,
       areaServed: { "@type": "City", name: "Москва" },
       priceRange: "2900–4000 ₽",
@@ -43,7 +43,7 @@ export function schoolGraph() {
       jobTitle: TEACHER.role,
       worksFor: { "@type": "CollegeOrUniversity", name: "Российский университет дружбы народов (РУДН)" },
       knowsLanguage: ["ru", "en", "fr"],
-      image: { "@type": "ImageObject", url: asset(PHOTOS.urban.cut), width: CUTS.urban.width, height: CUTS.urban.height },
+      image: { "@type": "ImageObject", url: asset(STUDIO.blazer.cut), width: STUDIO.blazer.width, height: STUDIO.blazer.height },
     },
   ];
 }
