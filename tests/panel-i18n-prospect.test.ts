@@ -169,6 +169,8 @@ const row = (over: Partial<Prospect>): Prospect => ({
   proto_note: null,
   proto_opens: 0,
   proto_opened_at: null,
+  checked_at: new Date().toISOString(),
+  check_dropped: [],
   ...over,
 });
 

@@ -24,6 +24,9 @@ export const TOUCH_ERRORS = [
   "no_key",
   "no_niche",
   "model_empty",
+  // Проверка сайта по факту (lib/audit/verify.ts).
+  "not_verified",
+  "nothing_confirmed",
   "model_billing",
   "model_auth",
   "model_limit",
