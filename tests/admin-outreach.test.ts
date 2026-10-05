@@ -193,7 +193,9 @@ test("лид заводится при отправке и закрепляет�
   // Владелец: «тот сотрудник, который нажал отправить, — лид автоматически
   // закрепляется за ним». Значит, статус и владелец ставятся сразу.
   assert.match(store, /status: "taken",\n\s+assigned_staff_id: staff\.id,/);
-  assert.match(store, /const leadId = await createOutreachLead\(prospect, staff, text, requestNo, route\);/);
+  // Кроме автопрогона: его касание ничьё, и лид заводится на ответе клиента
+  // (lib/admin/autopilot-reply.ts).
+  assert.match(store, /const leadId = isAutopilot\(staff\) \? null : await createOutreachLead\(prospect, staff, text, requestNo, route\);/);
   // Лид заводится до постановки в очередь: отказ Telegram не должен
   // оставить касание без следа.
   assert.ok(

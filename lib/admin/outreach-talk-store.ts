@@ -11,6 +11,7 @@ import {
 } from "@/lib/admin/outreach-talk";
 import { protoTermsText } from "@/lib/admin/prototype-claim";
 import { announcePrototype } from "@/lib/admin/prototype-claim-store";
+import { offerLead, routeAutopilotReply } from "@/lib/admin/autopilot-reply";
 import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
 import { MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
@@ -304,10 +305,23 @@ async function saveInbound(
   }
   await db.from("prospects").update(patch).eq("id", prospect.id);
 
+  // Касание автопрогона ничьё, пока клиент не ответил: первый ответ заводит
+  // лид и отдаёт его команде через очередь на тёплые лиды
+  // (lib/admin/autopilot-reply.ts). Дальше — как с любым касанием: ответы
+  // тому, кто лид взял.
+  const auto = await routeAutopilotReply(String(prospect.id), body, verdict).catch((error: unknown) => {
+    console.error("автопрогон: ответ не ушёл команде", error instanceof Error ? error.message : error);
+    return null;
+  });
+
   // «Хотят прототип» — всей команде, кто первый возьмёт (prototype-claim).
   // Повторная просьба того же клиента второй рассылки не запускает и идёт
   // как обычный ответ — тому, у кого лид сейчас.
   const announced = verdict === "proto" ? await announcePrototype(String(prospect.id), body) : null;
+
+  // Лид автопрогона с просьбой о прототипе раздаёт рассылка «🔥 Нужен
+  // прототип». Не ушла — в очередь, как любой ответ: ничьим лид не остаётся.
+  if (auto?.kind === "held" && !announced) await offerLead(String(prospect.id), auto.leadId, body);
 
   // Клиент согласился на бесплатный макет — в ту же переписку сразу ссылка на
   // условия, на которых макет даётся (content/mockup-terms, раздел 5). Для

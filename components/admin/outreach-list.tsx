@@ -31,6 +31,7 @@ import { parseTouchError, type ParsedTouchError, type ProblemRef } from "@/lib/a
 import { isAutoNote } from "@/lib/proto/auto-note";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import {
+  autopilotDict,
   closeButtonDict,
   closeLabelDict,
   outreachListDict,
@@ -187,6 +188,8 @@ export function OutreachList({
   if (!rows.length) return null;
 
   const t = pick(outreachListDict, locale);
+  // Касание автопрогона ничьё, пока клиент не ответил: вместо имени — «автопрогон».
+  const auto = pick(autopilotDict, locale);
   const status = pick(prospectStatusDict, locale);
   const closeButton = pick(closeButtonDict, locale);
   const closeLabel = pick(closeLabelDict, locale);
@@ -311,7 +314,7 @@ export function OutreachList({
                 <span className={`text-xs ${row.closed_reason ? "text-faint" : STATUS_TONE[row.status]}`}>
                   {status[row.status]}
                   {row.closed_reason ? ` · ${closeLabel[row.closed_reason]}` : ""}
-                  {row.claimed_name ? ` · ${row.claimed_name}` : ""}
+                  {row.claimed_name ? ` · ${row.claimed_name}` : row.autopilot_at ? ` · ${auto.owner}` : ""}
                   {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
                 </span>
                 <span className="ml-auto flex items-baseline gap-3">
@@ -472,7 +475,7 @@ export function OutreachList({
                     {t.contactedByHand}
                     {row.target ? ` — ${row.target}` : ""}
                     {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
-                    {row.claimed_name ? ` · ${row.claimed_name}` : ""}
+                    {row.claimed_name ? ` · ${row.claimed_name}` : row.autopilot_at ? ` · ${auto.owner}` : ""}
                   </p>
                   {row.manual_note ? (
                     <p className="mt-1 text-xs text-muted">{row.manual_note}</p>
@@ -691,7 +694,7 @@ export function OutreachList({
                         {t.contacted}
                         {row.target ? ` — ${row.target}` : ""}
                         {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
-                        {row.claimed_name ? ` · ${row.claimed_name}` : ""}
+                        {row.claimed_name ? ` · ${row.claimed_name}` : row.autopilot_at ? ` · ${auto.owner}` : ""}
                       </p>
 
                       {/* Проверка доставки, а не пересказ ответа Telegram.
