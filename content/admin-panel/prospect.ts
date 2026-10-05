@@ -204,6 +204,16 @@ export const touchErrorDict = defineDict({
     uz: "Nisha yozilmagan — nimadan kelib chiqib yozishga asos yo‘q.",
     pl: "Nie wpisano branży — nie ma od czego zacząć wiadomości.",
   },
+  not_verified: {
+    ru: "Не получилось перепроверить сайт по факту: второй раз он не открылся. Без проверки письмо не пишется — попробуйте через несколько минут.",
+    uz: "Saytni fakt bo‘yicha qayta tekshirib bo‘lmadi: ikkinchi marta ochilmadi. Tekshiruvsiz xat yozilmaydi — bir necha daqiqadan keyin urinib ko‘ring.",
+    pl: "Nie udało się sprawdzić strony na faktach: za drugim razem się nie otworzyła. Bez sprawdzenia wiadomość nie powstaje — spróbuj za kilka minut.",
+  },
+  nothing_confirmed: {
+    ru: "Проверка по факту не подтвердила ни одной находки — писать владельцу не о чем.",
+    uz: "Fakt bo‘yicha tekshiruv birorta ham topilmani tasdiqlamadi — egasiga yozadigan narsa yo‘q.",
+    pl: "Sprawdzenie na faktach nie potwierdziło żadnego znaleziska — nie ma o czym pisać do właściciela.",
+  },
   model_empty: {
     ru: "Модель не вернула сообщение.",
     uz: "SI xabar qaytarmadi.",
@@ -330,6 +340,19 @@ export const problemDict = defineDict({
     uz: (chars: string) => `Xabarda begona yozuv belgilari bor: ${chars}. Ularni olib tashlang — bu SI xatosi, matn emas.`,
     pl: (chars: string) => `W wiadomości są znaki obcego pisma: ${chars}. Usuń je — to błąd AI, a nie tekst.`,
   },
+  jargon: {
+    ru: (words: string) =>
+      `В письме технические слова: ${words}. Владелец бизнеса их не знает — скажите то же самое тем, что видит и делает его покупатель.`,
+    uz: (words: string) =>
+      `Xatda texnik so‘zlar bor: ${words}. Biznes egasi ularni bilmaydi — xuddi shuni uning xaridori ko‘radigan va qiladigan narsa orqali ayting.`,
+    pl: (words: string) =>
+      `W wiadomości są słowa techniczne: ${words}. Właściciel firmy ich nie zna — powiedz to samo przez to, co widzi i robi jego klient.`,
+  },
+  not_checked: {
+    ru: "Сайт не перепроверен по факту перед этим письмом — нажмите «Связаться», чтобы проверить его заново и написать письмо по тому, что есть сейчас.",
+    uz: "Sayt bu xatdan oldin fakt bo‘yicha qayta tekshirilmagan — uni qaytadan tekshirib, hozirgi holat bo‘yicha xat yozish uchun «Bog‘lanish» tugmasini bosing.",
+    pl: "Strona nie została sprawdzona na faktach przed tą wiadomością — kliknij «Skontaktuj się», żeby sprawdzić ją od nowa i napisać wiadomość według tego, co jest teraz.",
+  },
   greets_sender: {
     ru: (name: string) =>
       `Письмо здоровается с клиентом именем «${name}» — так зовут того, кто пишет, а имени клиента мы не знаем. Поздоровайтесь без имени.`,
@@ -438,6 +461,21 @@ export const outreachListDict = defineDict({
   whatWeDo: { ru: "Что делаем:", uz: "Nima qilamiz:", pl: "Co robimy:" },
   contacts: { ru: "Контакты: ", uz: "Kontaktlar: ", pl: "Kontakty: " },
   leadLink: { ru: "Лид по этому сайту →", uz: "Shu sayt bo‘yicha lid →", pl: "Lead dla tej strony →" },
+  checkedAt: {
+    ru: (when: string) => `Сайт перепроверен по факту перед письмом: ${when}`,
+    uz: (when: string) => `Sayt xatdan oldin fakt bo‘yicha qayta tekshirildi: ${when}`,
+    pl: (when: string) => `Strona sprawdzona na faktach przed wiadomością: ${when}`,
+  },
+  checkHelp: {
+    ru: "Как работает проверка по факту",
+    uz: "Fakt bo‘yicha tekshiruv qanday ishlaydi",
+    pl: "Jak działa sprawdzenie na faktach",
+  },
+  checkDropped: {
+    ru: "Не подтвердилось и в письмо не пошло:",
+    uz: "Tasdiqlanmadi va xatga kirmadi:",
+    pl: "Nie potwierdziło się i nie trafiło do wiadomości:",
+  },
   protoReady: {
     ru: "Прототип собран заранее →",
     uz: "Prototip oldindan yig‘ilgan →",

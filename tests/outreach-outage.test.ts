@@ -33,7 +33,9 @@ const minor = (code: string): Finding => ({ code, severity: "minor", title: code
 test("ссылки, которые отдают 500, — это лежащий сервер, а не «несуществующие страницы»", () => {
   const f = brokenLinksFinding({ checkedLinks: 6, brokenLinks: CATALOG, brokenLinkStatuses: Array(6).fill(500) });
   assert.equal(f.severity, "critical", "все проверенные ссылки падают — это не мелочь");
-  assert.equal(f.title, "6 ссылок с главной открывают ошибку сервера 500");
+  // Словами покупателя: модель переносила «ошибку сервера 500» в письмо дословно.
+  assert.equal(f.title, "6 ссылок с главной открывают страницу с ошибкой вместо раздела");
+  assert.match(f.fix, /ошибкой 500/, "код — для разбора, в «что делаем»");
   // Адреса — настоящие, по ним владелец проверит сам; чужих слов нет.
   assert.match(f.impact, /например, \/catalog\/krossovki и \/catalog\/yubki\./);
   assert.doesNotMatch(f.impact, /Услуги|Контакты|не найдена/);
@@ -58,7 +60,8 @@ test("черновик без модели называет код и адрес
   const draft = pitch({ url: "https://cherrystore.uz/", score: 20, findings: [f], facts: {} } as never, "Cherry Shop", "ru");
   assert.ok(draft.ok);
   const text = draft.ok ? draft.text : "";
-  assert.match(text, /ошибку сервера 500 — например, \/catalog\/krossovki и \/catalog\/yubki/);
+  assert.match(text, /страницу с ошибкой — например, \/catalog\/krossovki и \/catalog\/yubki/);
+  assert.doesNotMatch(text, /500|сервер/);
   assert.doesNotMatch(text, /Услуги|Контакты/);
 });
 
@@ -72,7 +75,7 @@ test("сайт лежит — письмо начинается с поломк�
   assert.equal(hooks.lost, null, "теряется каждый, кто открыл раздел, — не «26–56 из ста»");
 
   const prompt = outreachPrompt({ host: "cherrystore.uz", label: "Cherry Shop", niche: null, findings, draft: null, sender: "Эльдар" });
-  assert.match(prompt, /Главное на сайте сейчас: 6 ссылок с главной открывают ошибку сервера 500/);
+  assert.match(prompt, /Главное на сайте сейчас: 6 ссылок с главной открывают страницу с ошибкой вместо раздела/);
   assert.doesNotMatch(prompt, /Видимость в поиске:/);
   assert.doesNotMatch(prompt, /Потери: из каждых ста/);
 
@@ -95,7 +98,7 @@ test("приветствие именем того, кто пишет, отпр�
   assert.match(prompt, /Имени адресата мы не знаем: здоровайся без имени/);
   const bad =
     "Здравствуйте, Эльдар. Это Эльдар из DevUz Studio, devuz.studio — открыл ваш сайт cherrystore.uz. " +
-    "Разделы каталога открываются с ошибкой сервера, и покупатель уходит, не увидев товара. " +
+    "Разделы каталога открываются страницей с ошибкой, и покупатель уходит, не увидев товара. " +
     "За 12 часов можем собрать прототип нового сайта с вашим каталогом — откроете с телефона и посмотрите вживую. " +
     "Собрать вам такой прототип?";
   const codes = messageProblems(bad, prompt, "cherrystore.uz", { seo: null, lost: null, reference: null, sender: "Эльдар" }).map((p) => p.code);
@@ -148,4 +151,151 @@ test("письмо знает, что компания пишет о себе, �
   assert.ok(rateLimited(403, "<title>Access denied</title> Error 1015 You are being rate limited"));
   assert.ok(!rateLimited(403, "<h1>Forbidden</h1>"));
   assert.ok(!rateLimited(200, "Error 1015"));
+});
+
+/* ── Человеческим языком ─────────────────────────────────────────────── */
+
+test("технические слова в письме ловит машина — клиент их не знает", async () => {
+  const { jargonWords } = await import("@/lib/admin/outreach");
+  // Живой черновик по cherrystore.uz — до правила.
+  assert.deepEqual(
+    jargonWords("Любой раздел открывается страницей «500 Internal Server Error». Судя по ответу сервера, упала база: WordPress пишет «критическая ошибка».", ["cherrystore.uz"]),
+    ["500", "Internal Server Error", "WordPress", "Server"],
+  );
+  assert.deepEqual(jargonWords("Поисковик видит 98 слов, нет карты сайта, сайт на Next.js, ошибка 404, SEO", []), ["ошибка 404", "Next.js", "SEO", "карты сайта"]);
+  assert.deepEqual(jargonWords("Sayt og‘ir yuklanadi, server javob bermayapti, sayt xaritasi yo‘q", []), ["server", "sayt xaritasi"]);
+  // Как надо: то, что видит покупатель. Адреса — не жаргон.
+  assert.deepEqual(
+    jargonWords("Вместо раздела с кроссовками cherrystore.uz/catalog/krossovki открывается страница с ошибкой. Делали ADAR: https://devuz.studio/cases/adar", ["cherrystore.uz"]),
+    [],
+  );
+  assert.deepEqual(jargonWords("Скидки и кэшбэк для постоянных покупателей", []), []);
+
+  const prompt = outreachPrompt({ host: "cherrystore.uz", label: null, niche: null, findings: [minor("no_canonical")], draft: "сборку страниц на сервере — Next.js", sender: "Эльдар" });
+  assert.match(prompt, /Адресату пересказывай их тем, что видит и делает его покупатель/);
+  assert.doesNotMatch(prompt, /Next\.js/, "черновик языком отчёта модели больше не показывается");
+  const { OUTREACH_SYSTEM } = await import("@/lib/admin/outreach");
+  assert.match(OUTREACH_SYSTEM, /\*\*Человеческим языком\.\*\*/);
+
+  const letter =
+    "Здравствуйте. Это Эльдар из DevUz Studio, devuz.studio — открыл cherrystore.uz. Любой раздел каталога открывается страницей " +
+    "«500 Internal Server Error», покупатель уходит, не увидев товара. За 12 часов соберём прототип нового сайта с вашим каталогом — " +
+    "откроете с телефона, ни к чему не обязывает. Собрать вам такой прототип?";
+  const codes = messageProblems(letter, prompt, "cherrystore.uz", { seo: null, lost: null, reference: null }).map((p) => p.code);
+  assert.ok(codes.includes("jargon"));
+  for (const lang of ["ru", "uz", "pl"] as const) assert.match(problemDict.jargon[lang]("WordPress"), /WordPress/);
+});
+
+/* ── Проверка по факту ───────────────────────────────────────────────── */
+
+const page = (over: Record<string, unknown> = {}) =>
+  ({
+    finalUrl: "https://cherrystore.uz/",
+    status: 200,
+    redirects: [],
+    html: "<html><head><title>CHERRY</title></head><body><h1>Одежда и обувь</h1><p>© 2021 Cherry</p></body></html>",
+    truncated: false,
+    headers: {},
+    ttfbMs: 300,
+    totalMs: 400,
+    https: true,
+    certDaysLeft: 90,
+    tlsIssue: null,
+    ...over,
+  }) as never;
+
+test("в письмо идёт только то, что повторилось на второй загрузке", async () => {
+  const { factCheck } = await import("@/lib/audit/verify");
+  const { analyze } = await import("@/lib/audit/checks");
+  const NOW = new Date("2026-10-05T12:00:00Z");
+  const home = page();
+  const findings = analyze(home, NOW).findings;
+  assert.ok(findings.some((f) => f.code === "stale_copyright"));
+
+  // Второй раз — то же самое: всё подтверждено.
+  const same = await factCheck({ findings, home, second: page(), recheck: async () => [], now: NOW });
+  assert.ok(same.ok);
+  assert.deepEqual(same.ok && same.findings.map((f) => f.code), findings.map((f) => f.code));
+  assert.equal(same.ok && same.at, NOW.toISOString());
+
+  // Во второй раз год свежий — «старый год в подвале» в письмо не идёт.
+  const fresh = page({ html: "<html><head><title>CHERRY</title></head><body><h1>Одежда и обувь</h1><p>© 2026 Cherry</p></body></html>" });
+  const changed = await factCheck({ findings, home, second: fresh, recheck: async () => [], now: NOW });
+  assert.ok(changed.ok);
+  assert.ok(changed.ok && !changed.findings.some((f) => f.code === "stale_copyright"));
+  assert.deepEqual(changed.ok && changed.dropped.map((d) => [d.code, d.why]), [["stale_copyright", "not_repeated"]]);
+
+  // Второй раз сайт не открылся вовсе — писать нельзя.
+  const none = await factCheck({ findings, home, second: null, recheck: async () => [], now: NOW });
+  assert.deepEqual(none, { ok: false, why: "no_second_look" });
+});
+
+test("битые разделы перезапрашиваются: открылись — находки нет; сайт «не открывается» — только если не открылся дважды", async () => {
+  const { factCheck } = await import("@/lib/audit/verify");
+  const NOW = new Date("2026-10-05T12:00:00Z");
+  const assets = { css: "", cssCount: 0, cssTruncated: false, favicon: true, checkedImages: 0, brokenImages: [], checkedLinks: 6, brokenLinks: CATALOG, brokenLinkStatuses: Array(6).fill(500), contactsHtml: null, contactsUrl: null };
+  const home = page({ assets });
+  const outage = brokenLinksFinding(assets);
+  const asked: string[][] = [];
+
+  const still = await factCheck({ findings: [outage], home, second: page(), recheck: async (urls) => (asked.push([...urls]), urls.map(() => 500)), now: NOW });
+  assert.ok(still.ok && still.findings.some((f) => f.code === "broken_links"));
+  assert.equal(asked[0].length, 3, "перезапрашиваем не больше трёх адресов");
+
+  const fixed = await factCheck({ findings: [outage], home, second: page(), recheck: async (urls) => urls.map(() => 200), now: NOW });
+  assert.ok(fixed.ok && !fixed.findings.length);
+  assert.deepEqual(fixed.ok && fixed.dropped[0].why, "opened_again");
+
+  // Охрана не пустила перезапрос — «не знаем», а не «починили».
+  const unknown = await factCheck({ findings: [outage], home, second: page(), recheck: async (urls) => urls.map(() => null), now: NOW });
+  assert.ok(unknown.ok && unknown.findings.length === 1);
+
+  const down = { code: "unreachable", severity: "critical" as const, title: "Сайт не открывается", impact: "", fix: "" };
+  const flaky = await factCheck({ findings: [down], home: null, second: page(), recheck: async () => [], now: NOW });
+  assert.ok(flaky.ok && !flaky.findings.length, "второй раз открылся — «не открывается» не пишем");
+  const really = await factCheck({ findings: [down], home: null, second: null, recheck: async () => [], now: NOW });
+  assert.ok(really.ok && really.findings[0].code === "unreachable");
+});
+
+test("письмо без свежей проверки по факту не отправляется, а обойти проверку нельзя", async () => {
+  const { checkFresh, CHECK_FRESH_MS, sendProblems } = await import("@/lib/admin/outreach-store");
+  const now = Date.parse("2026-10-05T12:00:00Z");
+  assert.ok(checkFresh("2026-10-05T10:00:00Z", now));
+  assert.ok(!checkFresh(new Date(now - CHECK_FRESH_MS - 1).toISOString(), now), "старше трёх дней — заново");
+  assert.ok(!checkFresh(null, now), "письмо до правила — заново");
+
+  const card = {
+    host: "cherrystore.uz",
+    label: "Cherry Shop",
+    niche: null,
+    findings: [minor("no_canonical")],
+    draft: null,
+    walked: null,
+    message: "Здравствуйте. Это Эльдар из DevUz Studio, devuz.studio — открыл cherrystore.uz.",
+    proto_url: null,
+    checked_at: null,
+  };
+  assert.ok(sendProblems(card, "Эльдар", now).some((p) => p.code === "not_checked"));
+  assert.ok(!sendProblems({ ...card, checked_at: "2026-10-05T11:00:00Z" }, "Эльдар", now).some((p) => p.code === "not_checked"));
+  for (const lang of ["ru", "uz", "pl"] as const) assert.ok(problemDict.not_checked[lang].length > 20);
+
+  // Письмо пишет только prepareOutreach, и в нём проверка стоит до модели:
+  // без неё — отказ, а находки берутся из проверки, не из старой пачки.
+  const { readFileSync } = await import("node:fs");
+  const store = readFileSync(new URL("../lib/admin/outreach-store.ts", import.meta.url), "utf8");
+  const prepare = store.slice(store.indexOf("export async function prepareOutreach"), store.indexOf("export function sendProblems"));
+  const check = prepare.indexOf("await factCheck(");
+  assert.ok(check > 0, "проверка по факту в подготовке письма");
+  assert.ok(check < prepare.indexOf("outreachPrompt("), "проверка — до промпта");
+  assert.match(prepare, /if \(!checked\.ok\) \{\s*return \{[\s\S]{0,300}code: "not_verified"/);
+  assert.match(prepare, /const findings = checked\.findings;/);
+  assert.doesNotMatch(prepare, /: prospect\.findings;/, "непроверенные находки из пачки письму не основание");
+});
+
+test("дожим — то же касание: технические слова не пропускаются и в нём", async () => {
+  const { FOLLOWUP_SYSTEM, followupProblems } = await import("@/lib/admin/outreach-followup");
+  assert.match(FOLLOWUP_SYSTEM, /Человеческим языком/);
+  const plain = "Добрый день. Коротко вернёмся к cherrystore.uz: разделы каталога по-прежнему открываются страницей с ошибкой. Актуально для вас?";
+  assert.deepEqual(followupProblems(plain, "", "cherrystore.uz"), []);
+  assert.ok(followupProblems(plain.replace("страницей с ошибкой", "ошибкой 500 — упал сервер"), "500", "cherrystore.uz").some((p) => p.startsWith("технические слова")));
 });

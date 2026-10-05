@@ -121,10 +121,21 @@ function headerValue(raw: string | string[] | undefined): string {
 }
 
 /** Один запрос по проверенному адресу, без следования редиректам. */
+/**
+ * Как представляемся при проверке по факту (lib/audit/verify.ts).
+ *
+ * Обычный телефонный браузер — так сайт открывает его покупатель, — но с
+ * нашей пометкой в конце: честность перед владельцем сайта та же, что у
+ * аудита. Часть сайтов отдаёт незнакомому роботу не ту страницу, что
+ * человеку; проверка по факту обязана смотреть на то, что видит человек.
+ */
+const BROWSER_UA =
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36 DevUzAudit/1.0 (+https://devuz.studio)";
+
 function once(
   url: URL,
   ip: string,
-  opts: { maxBytes?: number; accept?: string } = {},
+  opts: { maxBytes?: number; accept?: string; browser?: boolean } = {},
 ): Promise<{
   status: number;
   headers: Record<string, string>;
@@ -153,7 +164,7 @@ function once(
           Host: url.host,
           // Представляемся честно: владелец сайта должен понимать по логам,
           // кто к нему пришёл, а не гадать.
-          "User-Agent": "DevUzAudit/1.0 (+https://devuz.studio)",
+          "User-Agent": opts.browser ? BROWSER_UA : "DevUzAudit/1.0 (+https://devuz.studio)",
           Accept: opts.accept ?? "text/html,application/xhtml+xml",
           "Accept-Encoding": "identity",
         },
@@ -207,7 +218,7 @@ function once(
 }
 
 /** Идёт по адресу, перепроверяя каждый редирект. */
-export async function probe(raw: string): Promise<PageProbe> {
+export async function probe(raw: string, opts: { browser?: boolean } = {}): Promise<PageProbe> {
   const started = Date.now();
   let url = normalizeUrl(raw);
   const redirects: Hop[] = [];
@@ -223,12 +234,12 @@ export async function probe(raw: string): Promise<PageProbe> {
     const ip = await resolveSafely(url);
     let result;
     try {
-      result = await once(url, ip);
+      result = await once(url, ip, { browser: opts.browser });
     } catch (error) {
       if (url.protocol !== "https:" || !incompleteChain(error) || chainHosts.has(url.hostname)) throw error;
       rememberChain(url.hostname);
       tlsIssue = "chain";
-      result = await once(url, ip);
+      result = await once(url, ip, { browser: opts.browser });
     }
     if (chainHosts.has(url.hostname)) tlsIssue = "chain";
     if (result.certDaysLeft !== null) certDaysLeft = result.certDaysLeft;
@@ -569,6 +580,28 @@ export function readSitemap(xml: string): { urls: number; fresh: string | null }
   const urls = (xml.match(/<loc>/gi) ?? []).length;
   const dates = [...xml.matchAll(/<lastmod>\s*(\d{4}-\d{2}-\d{2})/gi)].map((m) => m[1]).sort();
   return { urls, fresh: dates.length ? dates[dates.length - 1] : null };
+}
+
+/**
+ * Перезапросить адреса, как их откроет покупатель: по одному, браузером.
+ *
+ * Нужен проверке по факту: «раздел не открывается» уходит в письмо, только
+ * если он не открылся и во второй раз. Код ответа или null — не дошли
+ * (таймаут, обрыв, охрана сайта попросила не спешить): это «не знаем», а не
+ * «починили».
+ */
+export async function recheck(urls: readonly string[]): Promise<(number | null)[]> {
+  const out: (number | null)[] = [];
+  for (const href of urls) {
+    try {
+      const url = new URL(href);
+      const r = await once(url, await resolveSafely(url), { maxBytes: PEEK_MAX_BYTES, accept: "*/*", browser: true });
+      out.push(rateLimited(r.status, r.body) ? null : r.status);
+    } catch {
+      out.push(null);
+    }
+  }
+  return out;
 }
 
 /** Пауза перед повтором, когда охрана сайта попросила не спешить. */

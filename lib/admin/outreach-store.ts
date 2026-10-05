@@ -16,6 +16,7 @@ import {
   canContact,
   isStopError,
   messageProblems,
+  notCheckedProblem,
   type MessageProblem,
   outreachPrompt,
   outreachHooks,
@@ -31,6 +32,8 @@ import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
 import { BATCH_CAP, auditDeep, type ProspectRow, type Walked } from "@/lib/audit/batch";
+import { probe, recheck } from "@/lib/audit/fetch";
+import { factCheck, type DroppedFinding } from "@/lib/audit/verify";
 import { autoPrototype } from "@/lib/proto/auto";
 import { markAutoSent } from "@/lib/proto/store";
 import { newRequestNo } from "@/lib/qualify/engine";
@@ -137,10 +140,17 @@ export type Prospect = {
   proto_note: string | null;
   proto_opens: number;
   proto_opened_at: string | null;
+  /**
+   * Проверка по факту перед письмом (lib/audit/verify.ts): когда сайт
+   * перепроверили и что не повторилось — в письмо это не пошло. null —
+   * письмо писалось до правила или не писалось вовсе.
+   */
+  checked_at: string | null;
+  check_dropped: DroppedFinding[];
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, checked_at, check_dropped, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -177,6 +187,8 @@ function shape(row: Record<string, unknown>): Prospect {
     closed_name: closer?.display_name ?? null,
     proto_url: (row.proto_url as string | null) ?? null,
     proto_note: (row.proto_note as string | null) ?? null,
+    checked_at: (row.checked_at as string | null) ?? null,
+    check_dropped: Array.isArray(row.check_dropped) ? (row.check_dropped as DroppedFinding[]) : [],
     ...protoOpens(row.protos),
   };
 }
@@ -437,11 +449,44 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
    * человек, прежде чем написать. Минута на каждый из пятидесяти сайтов в
    * пачке — это час, за который никто не сядет.
    *
-   * Обход не обязателен: не вышел — пишем по тому, что было. Письмо по одной
-   * главной лучше, чем отказ.
+   * Обход не обязателен: не вышел — пишем по одной главной.
+   *
+   * Проверка по факту — обязательна (lib/audit/verify.ts, правило в
+   * CLAUDE.md). Сайт открывается ещё раз — до обхода, пока охрана сайта не
+   * насторожилась, — как его открывает покупатель, и в письмо идёт только
+   * то, что повторилось. Старые находки из пачки письму больше не основание:
+   * их никто не перепроверял.
    */
+  const second = await probe(url, { browser: true }).catch(() => null);
   const deep = await auditDeep({ raw: url, url, label: prospect.label, problem: null });
-  const findings = deep.row.report?.findings.length ? deep.row.report.findings : prospect.findings;
+  const checked = await factCheck({
+    findings: deep.row.report?.findings ?? [],
+    home: deep.home,
+    second,
+    recheck,
+  });
+  if (!checked.ok) {
+    return {
+      ok: false,
+      why: "Не получилось перепроверить сайт по факту: второй раз он не открылся. Без проверки письмо не пишется — попробуйте через несколько минут.",
+      code: "not_verified",
+    };
+  }
+  const findings = checked.findings;
+  if (!findings.length) {
+    // Писать не о чем — и прежнее письмо, если было, тоже не о чем: убираем
+    // его, иначе свежая отметка о проверке пропустила бы к отправке текст,
+    // написанный по тому, что не подтвердилось.
+    await db
+      .from("prospects")
+      .update({ checked_at: checked.at, check_dropped: checked.dropped, message: null })
+      .eq("id", id);
+    return {
+      ok: false,
+      why: "Проверка по факту не подтвердила ни одной находки — писать владельцу не о чем.",
+      code: "nothing_confirmed",
+    };
+  }
   // Ниша нужна, чтобы подобрать наш проект из его же ниши. Раньше сюда
   // передавался null, и подбирать было не по чему.
   const niche = deep.row.report?.facts.niche ?? null;
@@ -554,6 +599,10 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
       // Обход — туда же и по той же причине: проверка перед отправкой
       // пересобирает промпт, и он обязан быть тем же самым.
       walked: deep.walked ?? null,
+      // Отметка о проверке — в одном обновлении с письмом, а не раньше: если
+      // модель откажет, у прежнего письма не появится чужой свежей отметки.
+      checked_at: checked.at,
+      check_dropped: checked.dropped,
       score: deep.row.report?.score ?? prospect.score,
       status: "contacting",
       claimed_by: staff.id,
@@ -587,9 +636,22 @@ export type QueueResult = { ok: true; leadId: string | null } | ({ ok: false; wh
  * Имя отправителя на проверку не влияет — в нём нет чисел, — поэтому
  * карточка может звать её и не зная, кто сейчас смотрит.
  */
+/**
+ * Сколько живёт проверка по факту. Сайт за три дня может починиться или
+ * сломаться иначе — письмо о нём тогда пишется заново.
+ */
+export const CHECK_FRESH_MS = 3 * 24 * 3600_000;
+
+/** Проверка по факту свежая — по ней можно отправлять. */
+export function checkFresh(checkedAt: string | null, now = Date.now()): boolean {
+  const at = checkedAt ? Date.parse(checkedAt) : Number.NaN;
+  return Number.isFinite(at) && now - at <= CHECK_FRESH_MS;
+}
+
 export function sendProblems(
-  prospect: Pick<Prospect, "host" | "label" | "niche" | "findings" | "draft" | "walked" | "message" | "proto_url">,
+  prospect: Pick<Prospect, "host" | "label" | "niche" | "findings" | "draft" | "walked" | "message" | "proto_url" | "checked_at">,
   sender = "менеджер",
+  now = Date.now(),
 ): MessageProblem[] {
   const text = (prospect.message ?? "").trim();
   if (!text) return [];
@@ -604,7 +666,16 @@ export function sendProblems(
   }
   const host = prospect.host;
 
-  return messageProblems(
+  /**
+   * Письмо о сайте уходит только после проверки по факту — правило владельца
+   * (lib/audit/verify.ts). Письма, написанные до правила, и те, чья проверка
+   * старше трёх дней, пишутся заново: «Связаться» перепроверит сайт.
+   */
+  const unchecked: MessageProblem[] = checkFresh(prospect.checked_at, now)
+    ? []
+    : [notCheckedProblem()];
+
+  return [...unchecked, ...messageProblems(
     text,
     // Тот же промпт, каким письмо писалось: с нишей, обходом и языком.
     // Пересобранный «почти такой же» промпт — это проверка на другом
@@ -632,7 +703,7 @@ export function sendProblems(
       // ловится по тому, кем пишущий представляется сам.
       sender: sender === "менеджер" ? null : sender,
     },
-  );
+  )];
 }
 
 export async function queueOutreach(id: string, message: string, staff: Staff, ip: string): Promise<QueueResult> {

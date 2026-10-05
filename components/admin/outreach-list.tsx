@@ -12,7 +12,7 @@ import { CopyMessage } from "@/components/admin/copy-message";
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
 import { DoneButton, SubmitButton } from "@/components/admin/submit-button";
-import { sendProblems } from "@/lib/admin/outreach-store";
+import { checkFresh, sendProblems } from "@/lib/admin/outreach-store";
 import {
   HOURLY_CAP,
   canContact,
@@ -374,6 +374,20 @@ export function OutreachList({
                   и открывал ли её клиент. Открытие — лучший повод написать:
                   о первом бот зовёт того, кто ведёт касание. Наши собственные
                   открытия из панели не считаются. */}
+              {/* Проверка по факту (lib/audit/verify.ts): когда сайт перепроверили
+                  перед письмом и что не подтвердилось — этого в письме нет. */}
+              {row.host && row.checked_at ? (
+                <p className="mt-2 text-xs text-muted" data-fact-check>
+                  {t.checkedAt(when(row.checked_at))}{" "}
+                  <HelpHint topic={helpAnchor("/admin/prospect", "fact-check")} label={t.checkHelp} />
+                  {row.check_dropped.length ? (
+                    <span className="block text-faint">
+                      {t.checkDropped} {row.check_dropped.map((d) => d.title).join("; ")}
+                    </span>
+                  ) : null}
+                </p>
+              ) : null}
+
               {row.proto_url ? (
                 <p className="mt-2 text-sm">
                   <a href={row.proto_url} target="_blank" rel="noreferrer noopener" className="text-green hover:underline">
@@ -538,8 +552,12 @@ export function OutreachList({
                   прежнее !expanded показало бы форму отправки на строке,
                   которая уже ушла, — то есть предложило бы отправить второй
                   раз. Второе касание тому же человеку — это ровно то, за что
-                  блокируют аккаунт. */}
-              {reason === "ok" && (row.status === "new" || !row.message) ? (
+                  блокируют аккаунт.
+                  Письмо без свежей проверки сайта по факту тоже получает
+                  кнопку: отправить его нельзя (not_checked), и «Связаться»
+                  перепроверит сайт и напишет письмо заново. */}
+              {reason === "ok" &&
+              (row.status === "new" || !row.message || (row.status === "contacting" && row.host && !checkFresh(row.checked_at))) ? (
                 <form action={prepareOutreachAction} className="mt-3 flex flex-wrap items-center gap-3">
                   <input type="hidden" name="prospect" value={row.id} />
                   <SubmitButton

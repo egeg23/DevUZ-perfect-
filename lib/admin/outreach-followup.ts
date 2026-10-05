@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-import { bannedPhrase, inventedNumbers, leadFindings } from "@/lib/admin/outreach";
+import { bannedPhrase, inventedNumbers, jargonWords, leadFindings } from "@/lib/admin/outreach";
 import { isWorkday, tashkentHour } from "@/lib/admin/portion";
 import type { Finding } from "@/lib/audit/checks";
 import { effortFor } from "@/lib/model-limits";
@@ -71,6 +71,7 @@ export const FOLLOWUP_SYSTEM = `Ты пишешь короткое повтор�
 — Второе сообщение: одна другая находка из переданных — не та, с которой открывалось первое, — и чем она оборачивается для его клиентов. Кончи простым вопросом, на который можно ответить одним словом: «Актуально для вас?».
 — Третье, последнее: вежливо закрой разговор — больше писать не будем; если вопрос с сайтом станет актуальным, короткий разбор на созвоне бесплатный, достаточно ответить на это сообщение.
 — Не обещай ничего прислать. Не называй чисел, которых нет в задании.
+— Человеческим языком: находку пересказывай тем, что видит и делает его покупатель. Без кодов ошибок, названий технологий и слов вроде «сервер», «индексация», «карта сайта», «SEO» — владелец бизнеса их не знает.
 — На «вы», без восклицательных знаков и эмодзи. Язык — тот же, что у первого письма.
 
 Ответь только текстом сообщения.`;
@@ -99,7 +100,7 @@ export function followupPrompt(input: {
 }
 
 /** Что не так с текстом дожима. Пусто — можно ставить в очередь. */
-export function followupProblems(text: string, prompt: string): string[] {
+export function followupProblems(text: string, prompt: string, host: string | null = null): string[] {
   const out: string[] = [];
   const t = text.trim();
   if (t.length < 40) out.push("слишком коротко");
@@ -107,6 +108,10 @@ export function followupProblems(text: string, prompt: string): string[] {
   const invented = inventedNumbers(t, prompt);
   if (invented.length) out.push(`числа не из анализа: ${invented.join(", ")}`);
   if (bannedPhrase(t)) out.push("запрещённый оборот");
+  // Дожим — то же касание: технические слова владелец не читает и тут
+  // (правило владельца 05.10.2026, lib/admin/outreach.ts → jargonWords).
+  const jargon = jargonWords(t, host ? [host] : []);
+  if (jargon.length) out.push(`технические слова: ${jargon.join(", ")}`);
   if (/!/.test(t)) out.push("восклицательный знак");
   return out;
 }
@@ -216,7 +221,7 @@ export async function runFollowups(now: Date = new Date()): Promise<FollowupRun>
     });
     const written = await writeFollowup(prompt);
     const body =
-      written && !followupProblems(written, prompt).length
+      written && !followupProblems(written, prompt, String(p.host)).length
         ? written
         : lang === "ru"
           ? fallbackFollowup(n, String(p.host), sender)
