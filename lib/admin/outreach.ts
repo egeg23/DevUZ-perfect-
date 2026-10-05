@@ -358,6 +358,8 @@ export type OutreachInput = {
     quote: string | null;
     sitemapUrls: number | null;
     sitemapFresh: string | null;
+    /** Что компания пишет о себе, дословно (lib/audit/deep.ts → aboutLines). */
+    about?: string[];
   } | null;
   /** Ссылка на прототип, собранный заранее (lib/proto/auto). Нет — обещаем собрать за 12 часов. */
   prototype?: string | null;
@@ -417,13 +419,39 @@ export type Hooks = {
    * дословно (no_proto_link) вместо обещания «за 12 часов».
    */
   prototype?: string | null;
+  /**
+   * Кто пишет — имя менеджера. Нужно проверке приветствия (greetsSender):
+   * в строке «Здравствуйте, …» его имени быть не должно.
+   */
+  sender?: string | null;
 };
+
+/**
+ * Сайт или его главный раздел сейчас не работает.
+ *
+ * Такое письмо — не про баллы. На cherrystore.uz лёг весь каталог: шесть
+ * разделов из шести отдавали 500, — а письмо, как положено, назвало
+ * «видимость в поиске 41 из 100» и «теряется 26–56 из ста». Оба числа там
+ * неправда в мягкую сторону: из тех, кто открыл раздел, теряется каждый, а
+ * балл поиска для лежащего каталога ничего не значит. Поэтому при такой
+ * находке чисел в письме нет, и машина их не требует.
+ */
+export const OUTAGE_CODES = ["unreachable", "http_error"] as const;
+
+export function outageFinding(findings: readonly Finding[]): Finding | null {
+  return (
+    findings.find((f) => (OUTAGE_CODES as readonly string[]).includes(f.code)) ??
+    findings.find((f) => f.code === "broken_links" && f.severity === "critical") ??
+    null
+  );
+}
 
 export function outreachHooks(
   findings: readonly Finding[],
   reference: string | null = null,
   prototype: string | null = null,
 ): Hooks {
+  if (outageFinding(findings)) return { reference, prototype, seo: null, lost: null };
   const seo = seoReport({ findings });
   const loss = forecast(findings);
   return {
@@ -488,6 +516,7 @@ export function leadFindings(findings: readonly Finding[], limit = 2): Finding[]
 export function outreachPrompt(input: OutreachInput): string {
   const seo = seoReport({ findings: input.findings });
   const hooks = outreachHooks(input.findings);
+  const outage = outageFinding(input.findings);
 
   // Показываем модели столько же, сколько она вправе назвать: дав больше,
   // мы полагались бы на то, что она удержится. Первыми — находки про
@@ -561,6 +590,18 @@ export function outreachPrompt(input: OutreachInput): string {
           .join(" ")
       : "";
 
+  /**
+   * Что компания пишет о себе — дословно, с её же сайта.
+   *
+   * Отдельно от обхода: у cherrystore.uz открылась одна главная, и строки
+   * «обошли N страниц» нет, а «бесплатная доставка от 300 000 сум» на ней
+   * есть. Числа отсюда проверка пропустит — они в промпте, — а выдумывать
+   * сверх этих строк по-прежнему нельзя.
+   */
+  const about = walked?.about?.length
+    ? `Что компания пишет о себе — дословно с её сайта: ${walked.about.map((l) => `«${l}»`).join("; ")}. Одну такую деталь назови в письме — так видно, что смотрели именно его бизнес, а не прогнали адрес через сканер. Сверх этих строк о компании ничего не утверждай.`
+    : "";
+
   const losing = hooks.lost
     ? `Потери: из каждых ста человек, которые дошли до сайта и готовы были обратиться, на найденных местах теряются примерно ${hooks.lost[0]}–${hooks.lost[1]}. Это про тех, кто уже открыл сайт, — не про поиск. Оба числа обязаны прозвучать в письме, и рядом — коротко, в полфразы, — что это наша оценка на сто посетителей, а не его статистика.`
     : "";
@@ -584,9 +625,13 @@ export function outreachPrompt(input: OutreachInput): string {
     `Сайт: ${input.host}`,
     input.label ? `Компания: ${input.label}` : "Название компании неизвестно.",
     nicheBrief(input.niche, proof.reference),
-    `Отправитель: ${input.sender}.`,
+    `Отправитель — это ты, пишешь от его имени: ${input.sender}. Имени адресата мы не знаем: здоровайся без имени («Здравствуйте.»), а имя ${input.sender} ставь только туда, где представляешься.`,
     referenceLine(proof),
     walkedLines,
+    about,
+    outage
+      ? `Главное на сайте сейчас: ${outage.title}. С этого письмо и начинается — это не придирка, а то, что прямо сейчас стоит ему клиентов. Баллов видимости и потерь в этом письме нет: когда страница не открывается, теряется каждый, кто на неё пришёл, — чисел про поиск и потери не называй.${outage.code === "broken_links" ? " Скажи, как проверить самому: открыть один из адресов из находки." : ""}`
+      : "",
     search,
     losing,
     "",
@@ -743,6 +788,31 @@ export function foreignScript(text: string): string[] {
   return [...new Set(text.match(ALIEN) ?? [])];
 }
 
+/**
+ * Приветствие именем того, кто пишет.
+ *
+ * Живой случай, cherrystore.uz: «Здравствуйте, Эльдар. Это Эльдар из DevUz
+ * Studio». Модель взяла имя из строки «Отправитель» и поздоровалась им с
+ * клиентом. Имени адресата у нас нет никогда, поэтому имя в приветствии —
+ * либо наше, либо выдуманное; ловим первое: оно совпадает с именем
+ * отправителя или с тем, кем пишущий представляется дальше.
+ */
+const GREETING =
+  /^\s*(?:здравствуйте|добрый\s+(?:день|вечер)|доброе\s+утро|привет|assalomu\s+alaykum|salom|hello|hi|dear|good\s+(?:morning|afternoon|evening))(?:\s*,\s*|\s+)([\p{L}’'-]+)/iu;
+
+export function greetsSender(message: string, sender?: string | null): string | null {
+  const name = message.match(GREETING)?.[1];
+  if (!name || !/^\p{Lu}/u.test(name)) return null;
+  const first = sender?.trim().split(/\s+/)[0];
+  if (first && name.toLowerCase() === first.toLowerCase()) return name;
+  const safe = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const intro = new RegExp(
+    `(?<!\\p{L})(?:это|меня\\s+зовут|men|mening\\s+ismim|i'?m|my\\s+name\\s+is|this\\s+is)\\s+${safe}(?!\\p{L})`,
+    "iu",
+  );
+  return intro.test(message.slice(message.indexOf(name) + name.length)) ? name : null;
+}
+
 export function bannedPhrase(text: string): boolean {
   return BANNED.some((re) => re.test(text));
 }
@@ -798,6 +868,14 @@ export function messageProblems(
       code: "foreign_script",
       text: `В сообщении есть знаки чужого письма: ${alien.join(" ")}. Уберите их — это сбой модели, а не текст.`,
       args: [alien.join(" ")],
+    });
+  }
+  const greeted = greetsSender(message, hooks.sender);
+  if (greeted) {
+    problems.push({
+      code: "greets_sender",
+      text: `Письмо здоровается с клиентом именем «${greeted}» — так зовут того, кто пишет, а имени клиента мы не знаем. Поздоровайтесь без имени.`,
+      args: [greeted],
     });
   }
   if (bannedPhrase(message)) {

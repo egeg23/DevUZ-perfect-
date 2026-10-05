@@ -84,6 +84,17 @@ function statusCode(finding: Finding): string | null {
   return finding.title.match(/\b([45]\d\d)\b/)?.[1] ?? null;
 }
 
+/**
+ * Адреса-примеры из находки: «/catalog/krossovki и /catalog/yubki».
+ *
+ * Как и код ошибки, разбираем свой же текст (lib/audit/design.ts,
+ * brokenLinksFinding), а не чужой ввод. Старые находки примеров не несут —
+ * тогда письмо обходится без них, а не выдумывает «Услуги» и «Контакты».
+ */
+function examplePaths(finding: Finding): string | null {
+  return finding.impact.match(/например, (\/.+?)\.(?:\s|$)/)?.[1] ?? null;
+}
+
 /** Замер в секундах с одним знаком — так он и попадает в письмо. */
 const seconds = (report: AuditReport) => (report.facts.ttfbMs / 1000).toFixed(1);
 
@@ -261,11 +272,21 @@ const OPENER: Record<string, Record<PitchLocale, Opener>> = {
   broken_links: {
     ru: (f) => {
       const n = f.title.match(/^\d+/)?.[0] ?? "несколько";
-      return `Проверил ссылки с вашей главной: ${n} из них вед${n === "1" ? "ёт" : "ут"} на несуществующие страницы. Посетитель нажимает «Услуги» или «Контакты», получает «страница не найдена» и уходит — до контактов он так и не добирается. Проверить все ссылки на сайте и починить каждую — вернуть страницу, перенаправить или убрать ссылку — пара часов.`;
+      const where = examplePaths(f);
+      const code = statusCode(f);
+      if (code && f.title.includes("ошибку сервера")) {
+        return `Проверил ссылки с вашей главной: ${n} из них открыва${n === "1" ? "ет" : "ют"} ошибку сервера ${code}${where ? ` — например, ${where}` : ""}. Ту же ошибку получает каждый, кто приходит на эти страницы из поиска или по пересланной ссылке, и уходит, так и не увидев, за чем пришёл. Чаще всего дело в базе данных или неудачном обновлении — найти причину и поднять обычно можно за день.`;
+      }
+      return `Проверил ссылки с вашей главной: ${n} из них вед${n === "1" ? "ёт" : "ут"} на несуществующие страницы${where ? ` — например, ${where}` : ""}. Посетитель нажимает ссылку, получает «страница не найдена» и уходит, так и не добравшись до того, за чем пришёл. Проверить все ссылки на сайте и починить каждую — вернуть страницу, перенаправить или убрать ссылку — пара часов.`;
     },
     en: (f) => {
       const n = f.title.match(/^\d+/)?.[0] ?? "several";
-      return `I checked the links on your home page: ${n} of them lead${n === "1" ? "s" : ""} to pages that don't exist. A visitor clicks “Services” or “Contacts”, gets “page not found” and leaves — never reaching your contact details. Checking every link on the site and fixing each one — restoring the page, redirecting, or removing the link — takes a couple of hours.`;
+      const where = examplePaths(f)?.replace(" и ", " and ");
+      const code = statusCode(f);
+      if (code && f.title.includes("ошибку сервера")) {
+        return `I checked the links on your home page: ${n} of them return${n === "1" ? "s" : ""} a ${code} server error${where ? ` — for example, ${where}` : ""}. Anyone arriving at those pages from search or a shared link gets the same error and leaves without seeing what they came for. It's usually the database or a failed update — finding the cause and bringing it back up typically takes a day.`;
+      }
+      return `I checked the links on your home page: ${n} of them lead${n === "1" ? "s" : ""} to pages that don't exist${where ? ` — for example, ${where}` : ""}. A visitor clicks, gets “page not found” and leaves without reaching what they came for. Checking every link on the site and fixing each one — restoring the page, redirecting, or removing the link — takes a couple of hours.`;
     },
   },
 

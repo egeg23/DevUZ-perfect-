@@ -92,6 +92,15 @@ export type PageAssets = {
   brokenImages: string[];
   checkedLinks: number;
   brokenLinks: string[];
+  /**
+   * Коды ответа битых ссылок — в том же порядке, что `brokenLinks`.
+   *
+   * 404 и 500 — разные истории для владельца: «страницы нет» и «сервер
+   * падает». На cherrystore.uz все шесть ссылок каталога отдавали 500, а
+   * письмо назвало их «несуществующими страницами». Необязательные: разборы,
+   * снятые раньше, кодов не несут.
+   */
+  brokenLinkStatuses?: number[];
   /** Разметка страницы контактов — там лежит почта и второй номер. */
   contactsHtml: string | null;
   contactsUrl: string | null;
@@ -484,6 +493,7 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
     brokenImages: images.filter((_, i) => broken(imageStatuses[i])).map((u) => u.href),
     checkedLinks: linkStatuses.filter((s) => s !== null).length,
     brokenLinks: links.filter((_, i) => broken(linkStatuses[i])).map((u) => u.href),
+    brokenLinkStatuses: linkStatuses.filter((s): s is number => broken(s)),
     contactsHtml: contactsPage,
     contactsUrl: contactsPage ? (contactsTarget?.href ?? null) : null,
     robots: robotsBody,
@@ -561,6 +571,14 @@ export function readSitemap(xml: string): { urls: number; fresh: string | null }
   return { urls, fresh: dates.length ? dates[dates.length - 1] : null };
 }
 
+/** Пауза перед повтором, когда охрана сайта попросила не спешить. */
+const CRAWL_RETRY_MS = 5_000;
+
+/** Ответ ограничителя частоты, а не страницы: 429 или заглушка Cloudflare 1015. */
+export function rateLimited(status: number, body: string): boolean {
+  return status === 429 || (status === 403 && /Error 1015|rate limited/i.test(body.slice(0, 20_000)));
+}
+
 export async function crawl(probe: PageProbe, pick: (links: string[]) => string[]): Promise<CrawlResult> {
   if (probe.status >= 400) return EMPTY_CRAWL;
 
@@ -585,7 +603,17 @@ export async function crawl(probe: PageProbe, pick: (links: string[]) => string[
     if (Date.now() > deadline) break;
     try {
       const url = new URL(href);
-      const r = await once(url, ip, { maxBytes: CRAWL_MAX_BYTES });
+      let r = await once(url, ip, { maxBytes: CRAWL_MAX_BYTES });
+      // «Слишком часто» — ответ не сайта, а его охраны (Cloudflare 1015 и
+      // подобные). На cherrystore.uz обход упёрся в неё сразу после проверки
+      // ссылок и увидел вместо пяти страниц пять заглушек. Ждём и пробуем
+      // один раз; не пустили и тогда — дальше не стучимся.
+      if (rateLimited(r.status, r.body)) {
+        if (Date.now() + CRAWL_RETRY_MS > deadline) break;
+        await new Promise((done) => setTimeout(done, CRAWL_RETRY_MS));
+        r = await once(url, ip, { maxBytes: CRAWL_MAX_BYTES });
+        if (rateLimited(r.status, r.body)) break;
+      }
       pages.push({ url: href, status: r.status, html: r.body });
     } catch {
       // Страница не отдалась — это не находка о сайте: мало ли что по дороге.

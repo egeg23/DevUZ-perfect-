@@ -104,6 +104,50 @@ export function snap(url: string, status: number, html: string): PageSnap {
 }
 
 /**
+ * Что компания пишет о себе — дословно, короткими строками.
+ *
+ * Письмо из «Касаний» про cherrystore.uz не сказало о самом магазине ни
+ * слова, хотя на главной крупно стоит «Бесплатная доставка по Ташкенту при
+ * заказе от 300 000 сум», а на /stores — восемь торговых центров. Одна такая
+ * строка в письме показывает, что смотрели именно его бизнес, а не прогнали
+ * адрес через сканер. Без неё модель о компании молчит, а живой менеджер,
+ * вписав «доставка от 300 000», получал отказ: числа нет в анализе.
+ *
+ * Берём только строки с признаком дела — доставка, рассрочка, магазины,
+ * филиалы, «с 2008 года», — от четырёх слов: пункт меню «Доставка и возврат»
+ * о компании не говорит ничего. Страницы с ошибкой не смотрим.
+ */
+const ABOUT =
+  /(бесплатн|доставк|рассрочк|гаранти|с\s+(?:19|20)\d\d\s+года|лет\s+на\s+рынке|филиал|магазин|шоурум|салон|ТРЦ|ТРК|ТЦ\s|производств|yetkazib|bepul|muddatli|filial|do[‘'’]kon|kafolat|delivery|free\s+shipping|showroom|since\s+(?:19|20)\d\d)/iu;
+
+const ENTITIES: Record<string, string> = { nbsp: " ", amp: "&", quot: '"', laquo: "«", raquo: "»", mdash: "—", ndash: "–", "#39": "'" };
+
+export function aboutLines(pages: readonly { status: number; html: string }[], limit = 6): string[] {
+  const found: string[] = [];
+  const seen = new Set<string>();
+  for (const page of pages) {
+    if (page.status >= 400) continue;
+    // Без <head>: заголовок вкладки письмо и так цитирует отдельно.
+    const blocks = page.html
+      .replace(/<head[\s\S]*?<\/head>|<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/gi, " ")
+      .replace(/<\/(?:p|div|li|h[1-6]|td|tr|section|article|span|a|button|label)>|<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&(nbsp|amp|quot|laquo|raquo|mdash|ndash|#39);/g, (_, e: string) => ENTITIES[e] ?? " ");
+    for (const raw of blocks.split("\n")) {
+      const line = raw.replace(/\s+/g, " ").trim();
+      if (line.length > 160 || line.split(" ").length < 4 || !ABOUT.test(line)) continue;
+      const key = line.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      found.push(line);
+    }
+  }
+  // Строка, склеенная с соседним пунктом меню («…от 300 000 сум Магазины»),
+  // уступает чистой: оставляем ту, что не содержит другую найденную.
+  return found.filter((line) => !found.some((other) => other !== line && line.includes(other))).slice(0, limit);
+}
+
+/**
  * Какие страницы смотреть после главной.
  *
  * Порядок не случайный: сначала то, где живут деньги. Страница цен и страница
