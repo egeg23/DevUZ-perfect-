@@ -388,6 +388,18 @@ async function status(url: URL, ip: string): Promise<number | null> {
  * Никогда не бросает: не удалось дотянуть — отчёт строится по странице,
  * как строился до этого.
  */
+/**
+ * robots.txt — или null, если его нет.
+ *
+ * Сайт-приложение на любой адрес отдаёт свою главную с кодом 200: так было
+ * у it-academy.uz (05.10.2026). HTML вместо правил — это не robots.txt, а
+ * его отсутствие: поисковик прочитает такую страницу как пустой файл.
+ */
+export function robotsText(status: number, body: string): string | null {
+  if (status >= 400) return null;
+  return /^\s*(?:<!doctype\s+html|<html[\s>])/i.test(body) ? null : body;
+}
+
 /** Адрес карты сайта, если robots.txt на неё показывает. */
 function sitemapFromRobots(robots: string | null, base: URL): URL | null {
   if (!robots) return null;
@@ -449,7 +461,7 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
           .catch(() => null)
       : Promise.resolve(null),
     once(new URL("/robots.txt", base), ip, { maxBytes: ROBOTS_MAX_BYTES, accept: "text/plain,*/*" })
-      .then((r) => (r.status < 400 ? r.body : null))
+      .then((r) => robotsText(r.status, r.body))
       .catch(() => null),
   ]);
 
