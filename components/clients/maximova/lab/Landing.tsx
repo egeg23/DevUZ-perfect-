@@ -3,6 +3,7 @@ import { landingGraph } from "@/lib/clients/maximova/schema";
 import { jsonLd } from "@/lib/clients/maximova/seo";
 
 import { FaqList, PlainList, PriceList } from "../Blocks";
+import { Drip, type Band } from "./Drip";
 import { Letters } from "./Letters";
 import { BookBlock, Head, Shell } from "./Shell";
 import s from "./lab.module.css";
@@ -16,6 +17,11 @@ import s from "./lab.module.css";
  */
 export function Landing({ page }: { page: LandingPage }) {
   const others = LANDINGS.filter((l) => l.slug !== page.slug);
+  // Полосы чередуются: первый экран тёмный, дальше слива / ультрафиолет.
+  const band = (n: number): Band => (n % 2 === 0 ? "plum" : "ink");
+  const cls = (n: number) => (band(n) === "plum" ? s.bandPlum : s.bandInk);
+  const prev = (n: number): Band => (n === 0 ? "ink" : band(n - 1));
+  const after = page.sections.length;
   return (
     <Shell>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(landingGraph(page)) }} />
@@ -44,8 +50,9 @@ export function Landing({ page }: { page: LandingPage }) {
           </div>
         </section>
 
-        {page.sections.map((section, i) => (
-          <section key={section.h2} className={`${s.section} ${s.sectionTight}`} aria-labelledby={`l-${i}`}>
+        {page.sections.map((section, i) => [
+          <Drip key={`d-${i}`} from={prev(i)} to={band(i)} seed={i + 21} />,
+          <section key={section.h2} className={`${s.section} ${s.sectionTight} ${cls(i)}`} aria-labelledby={`l-${i}`}>
             <div className={s.textBlock} data-reveal="">
               <p className={s.eyebrow}>{String(i + 1).padStart(2, "0")}</p>
               <h2 id={`l-${i}`} className={s.display3}>
@@ -64,22 +71,26 @@ export function Landing({ page }: { page: LandingPage }) {
                 </ol>
               ) : null}
             </div>
-          </section>
-        ))}
+          </section>,
+        ])}
 
-        <section id="ceny" className={s.section} aria-labelledby="l-prices">
+        <Drip from={prev(after)} to={band(after)} seed={31} />
+        <section id="ceny" className={`${s.section} ${cls(after)}`} aria-labelledby="l-prices">
           <Head id="l-prices" kicker="Цены" title="Стоимость занятий" />
           <PriceList s={s} />
           <h3 className={s.subTitle}>Без сюрпризов</h3>
           <PlainList s={s} />
         </section>
 
-        <section id="voprosy" className={s.section} aria-labelledby="l-faq">
+        <Drip from={band(after)} to={band(after + 1)} seed={32} />
+        <section id="voprosy" className={`${s.section} ${cls(after + 1)}`} aria-labelledby="l-faq">
           <Head id="l-faq" kicker="Вопросы" title="Вопросы родителей" />
           <FaqList s={s} only={page.faq} />
         </section>
 
+        <Drip from={band(after + 1)} to="lime" seed={33} />
         <BookBlock language={page.language} />
+        <Drip from="lime" to="ink" seed={34} />
 
         <section id="programmy" className={s.section} aria-labelledby="l-more">
           <Head id="l-more" kicker="Программы" title="Другие программы" />
