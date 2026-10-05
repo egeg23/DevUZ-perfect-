@@ -1136,20 +1136,20 @@ export const products: Product[] = [
   {
     slug: "landing",
     seoTitle: {
-      ru: "Лендинг под ключ в Ташкенте: цена от 800 $ — DevUz",
-      en: "Turnkey Landing Page in Tashkent from $800 — DevUz",
-      uz: "Toshkentda kalit topshirish landing sahifasi 800 $ dan — DevUz",
-      zh: "塔什干交钥匙落地页，800 美元起 — DevUz",
-      uk: "Лендинг під ключ у Ташкенті: ціна від 800 $ — DevUz",
-      pl: "Landing page w Taszkencie: cena od 800 $ — DevUz",
+      ru: "Лендинг под ключ в Ташкенте: цена от 500 $ — DevUz",
+      en: "Turnkey Landing Page in Tashkent from $500 — DevUz",
+      uz: "Toshkentda kalit topshirish landing sahifasi 500 $ dan — DevUz",
+      zh: "塔什干交钥匙落地页，500 美元起 — DevUz",
+      uk: "Лендинг під ключ у Ташкенті: ціна від 500 $ — DevUz",
+      pl: "Landing page w Taszkencie: cena od 500 $ — DevUz",
     },
     seoDescription: {
-      ru: "Лендинг на Next.js: статическая генерация, до четырёх языков, форма заявки в Telegram, две готовые концепции дизайна. От 800 до 2 500 $ в зависимости от сложности.",
-      en: "A Next.js landing page: static generation, up to four languages, a Telegram lead form, two ready design concepts. From $800 to $2,500 depending on complexity.",
-      uz: "Next.js'da landing: statik generatsiya, to'rttagacha til, Telegram'ga ariza shakli, ikkita tayyor dizayn konsepsiyasi. Murakkabligiga qarab 800 dan 2 500 $ gacha.",
-      zh: "基于 Next.js 的落地页：静态生成、最多四种语言、Telegram 表单、两套现成设计方案。依复杂度 800 至 2,500 美元。",
-      uk: "Лендинг на Next.js: статична генерація, до чотирьох мов, форма заявки в Telegram, дві готові концепції дизайну. Від 800 до 2 500 $ залежно від складності.",
-      pl: "Landing page w Next.js: statyczne generowanie, do 4 języków, formularz do Telegrama, dwie gotowe koncepcje designu. Od 800 do 2 500 $ zależnie od złożoności.",
+      ru: "Лендинг на Next.js: статическая генерация, до четырёх языков, форма заявки в Telegram, две готовые концепции дизайна. От 500 до 2 500 $ в зависимости от сложности.",
+      en: "A Next.js landing page: static generation, up to four languages, a Telegram lead form, two ready design concepts. From $500 to $2,500 depending on complexity.",
+      uz: "Next.js'da landing: statik generatsiya, to'rttagacha til, Telegram'ga ariza shakli, ikkita tayyor dizayn konsepsiyasi. Murakkabligiga qarab 500 dan 2 500 $ gacha.",
+      zh: "基于 Next.js 的落地页：静态生成、最多四种语言、Telegram 表单、两套现成设计方案。依复杂度 500 至 2,500 美元。",
+      uk: "Лендинг на Next.js: статична генерація, до чотирьох мов, форма заявки в Telegram, дві готові концепції дизайну. Від 500 до 2 500 $ залежно від складності.",
+      pl: "Landing page w Next.js: statyczne generowanie, do 4 języków, formularz do Telegrama, dwie gotowe koncepcje designu. Od 500 do 2 500 $ zależnie od złożoności.",
     },
     title: { ru: "Лендинг", en: "Landing Page", uz: "Landing sahifa", zh: "落地页", uk: "Лендинг", pl: "Landing page" },
     tagline: {
@@ -1160,7 +1160,7 @@ export const products: Product[] = [
       uk: "Дві готові концепції дизайну, чотири мови, заявки в Telegram",
       pl: "Dwie gotowe koncepcje designu, cztery języki, zapytania w Telegramie",
     },
-    priceUsd: 800,
+    priceUsd: 500,
     priceToUsd: 2500,
     description: {
       ru: "Одностраничник на том же движке, что и этот сайт: страницы собираются заранее и отдаются статикой, поэтому открываются мгновенно и хорошо индексируются. Две концепции дизайна уже нарисованы и написаны — кинематографичная тёмная и светлая каталожная; можно взять любую и перекрасить под свой бренд, а можно заказать свою. Анимации сделаны на CSS, без библиотек, поэтому не утяжеляют загрузку.",
@@ -1173,12 +1173,12 @@ export const products: Product[] = [
     blocks: [
       {
         title: {
-          ru: "800 $ — базовый",
-          en: "$800 — basic",
-          uz: "800 $ — asosiy",
-          zh: "800 美元 —— 基础版",
-          uk: "800 $ — базовий",
-          pl: "800 $ — podstawowy",
+          ru: "500 $ — базовый",
+          en: "$500 — basic",
+          uz: "500 $ — asosiy",
+          zh: "500 美元 —— 基础版",
+          uk: "500 $ — базовий",
+          pl: "500 $ — podstawowy",
         },
         items: {
           ru: [

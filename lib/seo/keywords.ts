@@ -75,16 +75,29 @@ type TrendsWidget = { id: string; token: string; request: unknown };
 type RankedList = { rankedKeyword?: Array<{ query: string; value: number }> };
 
 /** Популярные запросы вместе с этим — по Узбекистану за 12 месяцев. */
-export async function googleTrendsRelated(query: string): Promise<SourceResult> {
+export async function googleTrendsRelated(
+  query: string,
+  wait: (ms: number) => Promise<void> = (ms) => new Promise((done) => setTimeout(done, ms)),
+): Promise<SourceResult> {
   let last: SourceResult = { ok: false, reason: "Trends недоступен" };
-  for (const road of trendsRoads()) {
-    last = await trendsVia(query, road);
-    // Ответ по существу (данные или «запрос редкий») — дальше не идём;
-    // отказ Google или обрыв — пробуем следующую дорогу.
-    if (last.ok || !/Trends ответил|Trends недоступен/.test(last.reason)) return last;
+  // Два круга по дорогам. «Слишком часто» (429) — частый ответ Trends на
+  // первый заход: 4 октября статья в 16:00 вышла без его данных именно так.
+  // Пауза и второй круг — дешевле, чем статья без запросов Узбекистана.
+  for (let round = 0; round < 2; round += 1) {
+    if (round > 0) await wait(TRENDS_RETRY_MS);
+    for (const road of trendsRoads()) {
+      last = await trendsVia(query, road);
+      // Ответ по существу (данные или «запрос редкий») — дальше не идём;
+      // отказ Google или обрыв — пробуем следующую дорогу.
+      if (last.ok || !/Trends ответил|Trends недоступен/.test(last.reason)) return last;
+    }
+    if (!/429/.test(last.reason)) return last;
   }
   return last;
 }
+
+/** Пауза перед вторым кругом, когда Trends ответил «слишком часто». */
+export const TRENDS_RETRY_MS = 8_000;
 
 async function trendsVia(query: string, road: Fetcher): Promise<SourceResult> {
   try {
