@@ -90,24 +90,23 @@
 }
 
 .title {
+  --size: 30px;
   font-family: var(--mx-dela), var(--mx-commissioner), sans-serif;
-  font-size: 24px;
+  font-size: min(var(--size), 100cqi / var(--em, 0.01));
   font-weight: 400;
   line-height: 1.05;
   text-transform: uppercase;
-  overflow-wrap: break-word;
-  hyphens: auto;
-}
-
-@media (min-width: 400px) {
-  .title {
-    font-size: 30px;
-  }
+  /* Слова не рвутся: кегль ужимается под колонку (см. lab/fit.ts). */
+  overflow-wrap: normal;
+  hyphens: manual;
 }
 @media (min-width: 640px) {
   .title {
-    font-size: 36px;
+    --size: 36px;
   }
+}
+.main {
+  container-type: inline-size;
 }
 
 .h2 {

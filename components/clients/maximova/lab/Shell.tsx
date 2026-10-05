@@ -5,6 +5,7 @@ import { CONTACTS, FORMAT, TEACHER, phoneUrl, telegramUrl, whatsappUrl } from "@
 import { BookingForm } from "../BookingForm";
 import { Credit } from "../Credit";
 import { Motion } from "../Motion";
+import { fit } from "./fit";
 import s from "./lab.module.css";
 
 /**
@@ -67,7 +68,7 @@ export function BookBlock({ language, children }: { language?: string; children?
       <div className={s.book}>
         <div className={s.bookText}>
           <p className={s.eyebrowInk}>Запись</p>
-          <h2 id="lab-book" className={s.display2}>
+          <h2 id="lab-book" className={s.display2} style={fit("Пробное занятие −30%")}>
             Пробное занятие −30%
           </h2>
           <p className={s.bookLead}>Заполните за минуту — я получу заявку в Telegram и свяжусь с вами.</p>
@@ -132,7 +133,7 @@ export function Head({ id, kicker, title, note }: { id: string; kicker: string; 
   return (
     <div className={s.head} data-reveal="">
       <p className={s.eyebrow}>{kicker}</p>
-      <h2 id={id} className={s.display2}>
+      <h2 id={id} className={s.display2} style={typeof title === "string" ? fit(title) : undefined}>
         {title}
       </h2>
       {note ? <p className={s.headNote}>{note}</p> : null}

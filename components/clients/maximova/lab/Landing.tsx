@@ -6,6 +6,7 @@ import { FaqList, PlainList, PriceList } from "../Blocks";
 import { Drip, type Band } from "./Drip";
 import { Letters } from "./Letters";
 import { BookBlock, Head, Shell } from "./Shell";
+import { fit } from "./fit";
 import s from "./lab.module.css";
 
 /**
@@ -34,7 +35,7 @@ export function Landing({ page }: { page: LandingPage }) {
                 <a href="/maximova">Главная</a> / <span>{page.h1}</span>
               </nav>
               <p className={s.pill}>{page.kicker}</p>
-              <h1 id="lab-h1" className={s.display1}>
+              <h1 id="lab-h1" className={s.display1} style={fit(page.h1)}>
                 {page.h1}
               </h1>
               <p className={s.heroLead}>{page.lead}</p>
@@ -55,7 +56,7 @@ export function Landing({ page }: { page: LandingPage }) {
           <section key={section.h2} className={`${s.section} ${s.sectionTight} ${cls(i)}`} aria-labelledby={`l-${i}`}>
             <div className={s.textBlock} data-reveal="">
               <p className={s.eyebrow}>{String(i + 1).padStart(2, "0")}</p>
-              <h2 id={`l-${i}`} className={s.display3}>
+              <h2 id={`l-${i}`} className={s.display3} style={fit(section.h2)}>
                 {section.h2}
               </h2>
               {section.body.map((p) => (

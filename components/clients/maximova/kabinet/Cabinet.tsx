@@ -17,6 +17,7 @@ import type { Viewer } from "@/lib/clients/maximova/store";
 import { bookingsOf, countUsers, listBookings } from "@/lib/clients/maximova/store";
 
 import { Credit } from "../Credit";
+import { fit } from "../lab/fit";
 import { Logout, StatusToggle } from "./Actions";
 import { BindInvite, GroupForm, HomeworkForm, PaymentRow, StudentCard, StudentForm } from "./Diary";
 import { Login } from "./Login";
@@ -82,7 +83,9 @@ export function Cabinet({
       <main className={viewer?.role === "admin" ? `${s.main} ${s.wide}` : s.main}>
         {!viewer ? (
           <>
-            <h1 className={s.title}>Личный кабинет</h1>
+            <h1 className={s.title} style={fit("Личный кабинет")}>
+              Личный кабинет
+            </h1>
             {invite?.kind === "student" ? (
               <p className={s.lead}>
                 <strong>{invite.childName}</strong>, это вход в твой дневник. Войди через Telegram — здесь будут твоя
@@ -136,7 +139,9 @@ function Parent({
 
   return (
     <>
-      <h1 className={s.title}>Здравствуйте, {viewer.firstName || "родитель"}!</h1>
+      <h1 className={s.title} style={fit(`Здравствуйте, ${viewer.firstName || "родитель"}!`)}>
+        Здравствуйте, {viewer.firstName || "родитель"}!
+      </h1>
       {pendingInvite ? <BindInvite code={pendingInvite.code} childName={pendingInvite.childName} /> : null}
 
       {children.map((child) => (
@@ -195,7 +200,9 @@ function Learner({ viewer, diaries, invite }: { viewer: Viewer; diaries: Student
   const pendingInvite = invite && !diaries.some((d) => d.studentCode === invite.code) ? invite : null;
   return (
     <>
-      <h1 className={s.title}>Привет, {viewer.firstName || diaries[0].name}!</h1>
+      <h1 className={s.title} style={fit(`Привет, ${viewer.firstName || diaries[0].name}!`)}>
+        Привет, {viewer.firstName || diaries[0].name}!
+      </h1>
       {pendingInvite ? <BindInvite code={pendingInvite.code} childName={pendingInvite.childName} /> : null}
       {diaries.map((d) => (
         <StudentDiary key={d.id} student={d} />
@@ -343,7 +350,9 @@ function Admin({ viewer, tab }: { viewer: Viewer; tab: Tab }) {
 
   return (
     <>
-      <h1 className={s.title}>Кабинет преподавателя</h1>
+      <h1 className={s.title} style={fit("Кабинет преподавателя")}>
+        Кабинет преподавателя
+      </h1>
       <p className={s.lead}>
         {viewer.firstName ? `${viewer.firstName}, н` : "Н"}овых заявок: {fresh}. Учеников: {students.length}, групп:{" "}
         {groups.length}, вошли в кабинет через Telegram: {countUsers()}. Неоплаченных счетов: {due.length}.

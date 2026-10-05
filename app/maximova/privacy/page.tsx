@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Credit } from "@/components/clients/maximova/Credit";
 import s from "@/components/clients/maximova/kabinet/kabinet.module.css";
+import { fit } from "@/components/clients/maximova/lab/fit";
 import { CONTACTS, TEACHER } from "@/content/clients/maximova/facts";
 import { pageMetadata } from "@/lib/clients/maximova/seo";
 
@@ -30,7 +31,9 @@ export default function Page() {
         </a>
       </header>
       <main className={`${s.main} ${s.doc}`}>
-        <h1 className={s.title}>Политика обработки персональных данных</h1>
+        <h1 className={s.title} style={fit("Политика обработки персональных данных")}>
+          Политика обработки персональных данных
+        </h1>
         <p className={s.hint}>Редакция от 5 октября 2026 года</p>
 
         <h2>Кто обрабатывает данные</h2>

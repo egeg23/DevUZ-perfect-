@@ -5,6 +5,7 @@ import { useState } from "react";
 import { AGES, MOMS_COURSE, MOMS_DETAILS, PRICES, RHYTHM, RULES, TEACHER } from "@/content/clients/maximova/facts";
 import { MOMS_TEXT, telegramUrl } from "@/content/clients/maximova/facts";
 
+import { fit } from "./fit";
 import s from "./lab.module.css";
 
 /**
@@ -85,7 +86,9 @@ export function Programs() {
           <p className={s.programWord} lang={tab.lang} aria-hidden="true">
             {tab.word}
           </p>
-          <h3 className={s.display3}>{tab.name}</h3>
+          <h3 className={s.display3} style={fit(tab.name)}>
+            {tab.name}
+          </h3>
           <p className={s.programIntro}>{tab.intro}</p>
           {tab.href ? (
             <a className={s.programLink} href={tab.href}>
