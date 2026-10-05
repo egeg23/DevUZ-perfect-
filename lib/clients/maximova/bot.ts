@@ -69,7 +69,7 @@ export function handleUpdate(update: Update, config: BotConfig, now = Date.now()
     const result = confirmLogin(login[1], { ...from, id: from.id }, config.admins, now);
     if (result === "ok") {
       return reply(
-        `Готово, ${esc(from.first_name || "здравствуйте")}! Вы вошли в личный кабинет — вернитесь в браузер, страница откроется сама.\n\nСюда же будут приходить задания на дом, замечания и напоминания об оплате.`,
+        `Готово, ${esc(from.first_name || "здравствуйте")}! Вы вошли в личный кабинет — вернитесь в браузер, страница откроется сама.\n\nСюда же будут приходить сообщения из дневника: задания на дом, а родителям — ещё замечания и напоминания об оплате.`,
       );
     }
     return reply(

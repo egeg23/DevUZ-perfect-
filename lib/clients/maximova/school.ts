@@ -11,6 +11,10 @@ import { esc } from "@/lib/clients/maximova/telegram";
  * собирают функции *Message ниже, а отправляет маршрут. Родитель видит
  * только своих детей: каждая выборка для родителя идёт через
  * parent_telegram_id.
+ *
+ * У ученика свой вход — по своей ссылке (student_code) и своим Telegram
+ * (student_telegram_id). Ученик видит группу, уровень, задания и похвалу;
+ * замечания и оплата — разговор преподавателя с родителем, ученику их нет.
  */
 
 type Row = Record<string, unknown>;
@@ -31,6 +35,8 @@ export type Student = {
   level: string;
   parentTelegramId: number | null;
   inviteCode: string;
+  studentTelegramId: number | null;
+  studentCode: string;
 };
 export type Homework = { id: number; groupId: number | null; studentId: number | null; text: string; due: string; createdAt: string };
 export type Remark = { id: number; studentId: number; kind: "praise" | "remark"; text: string; createdAt: string };
@@ -64,6 +70,8 @@ const toStudent = (r: Row): Student => ({
   level: str(r.level),
   parentTelegramId: r.parent_telegram_id == null ? null : Number(r.parent_telegram_id),
   inviteCode: str(r.invite_code),
+  studentTelegramId: r.student_telegram_id == null ? null : Number(r.student_telegram_id),
+  studentCode: str(r.student_code),
 });
 
 const toHomework = (r: Row): Homework => ({
@@ -142,8 +150,8 @@ export function addStudent(input: Record<string, unknown>): Student {
   const db = open();
   const r = db
     .prepare(
-      `insert into students (name, language, age, group_id, level, invite_code, created_at)
-       values (?, ?, ?, ?, ?, ?, ?)`,
+      `insert into students (name, language, age, group_id, level, invite_code, student_code, created_at)
+       values (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       need(clean(input.name, 60), "Как зовут ученика?"),
@@ -151,6 +159,7 @@ export function addStudent(input: Record<string, unknown>): Student {
       age(input.age),
       optionalId(input.groupId),
       clean(input.level, 120),
+      randomBytes(9).toString("base64url"),
       randomBytes(9).toString("base64url"),
       now(),
     );
@@ -182,23 +191,59 @@ export function studentsOfParent(telegramId: number): Student[] {
   ).map(toStudent);
 }
 
-export function studentByInvite(code: string): Student | null {
+export type InviteKind = "parent" | "student";
+
+/** По ссылке-приглашению: чей это дневник и кого зовут — родителя или ученика. */
+export function inviteByCode(code: string): { student: Student; kind: InviteKind } | null {
   if (!/^[A-Za-z0-9_-]{8,20}$/.test(code)) return null;
-  const row = open().prepare(`${STUDENT_SELECT} where s.invite_code = ?`).get(code) as Row | undefined;
-  return row ? toStudent(row) : null;
+  const db = open();
+  const parent = db.prepare(`${STUDENT_SELECT} where s.invite_code = ?`).get(code) as Row | undefined;
+  if (parent) return { student: toStudent(parent), kind: "parent" };
+  const learner = db.prepare(`${STUDENT_SELECT} where s.student_code = ?`).get(code) as Row | undefined;
+  return learner ? { student: toStudent(learner), kind: "student" } : null;
+}
+
+export function studentByInvite(code: string): Student | null {
+  return inviteByCode(code)?.student ?? null;
 }
 
 /**
- * Привязать ребёнка к родителю по приглашению. Приглашение одноразовое по
- * смыслу: ребёнок, уже привязанный к другому родителю, не перепривязывается —
- * иначе пересланная ссылка отдала бы дневник чужому человеку.
+ * Привязать по приглашению: родителя — к ребёнку, ученика — к его дневнику.
+ * Приглашение одноразовое по смыслу: уже привязанный к другому Telegram не
+ * перепривязывается — иначе пересланная ссылка отдала бы дневник чужому.
  */
-export function bindInvite(code: string, parentTelegramId: number): "ok" | "taken" | "unknown" {
-  const student = studentByInvite(code);
-  if (!student) return "unknown";
-  if (student.parentTelegramId && student.parentTelegramId !== parentTelegramId) return "taken";
-  open().prepare("update students set parent_telegram_id = ? where id = ?").run(parentTelegramId, student.id);
+export function bindInvite(code: string, telegramId: number): "ok" | "taken" | "unknown" {
+  const found = inviteByCode(code);
+  if (!found) return "unknown";
+  const { student, kind } = found;
+  const current = kind === "parent" ? student.parentTelegramId : student.studentTelegramId;
+  if (current && current !== telegramId) return "taken";
+  const column = kind === "parent" ? "parent_telegram_id" : "student_telegram_id";
+  open().prepare(`update students set ${column} = ? where id = ?`).run(telegramId, student.id);
   return "ok";
+}
+
+/** Дневники, в которые этот Telegram входит как ученик. */
+export function studentsOfLearner(telegramId: number): Student[] {
+  return (
+    open().prepare(`${STUDENT_SELECT} where s.student_telegram_id = ? and s.active = 1 order by s.name`).all(telegramId) as Row[]
+  ).map(toStudent);
+}
+
+/** Кому из учеников писать: задания и похвала уходят и им самим. */
+export function learnersOf(target: { studentId?: number | null; groupId?: number | null }): { chatId: number; name: string }[] {
+  const db = open();
+  const rows = target.studentId
+    ? (db.prepare("select student_telegram_id, name from students where id = ? and active = 1").all(target.studentId) as Row[])
+    : (db.prepare("select student_telegram_id, name from students where group_id = ? and active = 1").all(target.groupId ?? -1) as Row[]);
+  return rows.filter((r) => r.student_telegram_id != null).map((r) => ({ chatId: Number(r.student_telegram_id), name: str(r.name) }));
+}
+
+/** Похвала — ученику; замечания ему не показываются. */
+export function praiseOf(studentId: number, limit = 10): Remark[] {
+  return (
+    open().prepare("select * from remarks where student_id = ? and kind = 'praise' order by id desc limit ?").all(studentId, limit) as Row[]
+  ).map(toRemark);
 }
 
 /** Кому из родителей писать: ученик или вся группа. */

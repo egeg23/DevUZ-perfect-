@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { Landing } from "@/components/clients/maximova/c/Landing";
+import { Landing } from "@/components/clients/maximova/lab/Landing";
 import { LANDINGS, landingBySlug } from "@/content/clients/maximova/pages";
 import { pageMetadata } from "@/lib/clients/maximova/seo";
 

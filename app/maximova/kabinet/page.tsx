@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { Cabinet, TABS, type Tab } from "@/components/clients/maximova/kabinet/Cabinet";
-import { studentByInvite } from "@/lib/clients/maximova/school";
+import { Cabinet, TABS, type Invite, type Tab } from "@/components/clients/maximova/kabinet/Cabinet";
+import { inviteByCode } from "@/lib/clients/maximova/school";
 import { currentViewer } from "@/lib/clients/maximova/session";
 import { botConfig } from "@/lib/clients/maximova/telegram";
 
@@ -20,11 +20,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const tab: Tab = TABS.some((t) => t.id === tabParam) ? (tabParam as Tab) : "zayavki";
 
   const code = typeof params.invite === "string" ? params.invite : "";
-  let invite: { code: string; childName: string } | null = null;
+  let invite: Invite | null = null;
   if (code) {
     try {
-      const student = studentByInvite(code);
-      if (student) invite = { code, childName: student.name };
+      const found = inviteByCode(code);
+      if (found) invite = { code, childName: found.student.name, kind: found.kind };
     } catch {
       invite = null;
     }

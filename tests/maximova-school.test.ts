@@ -139,7 +139,11 @@ import {
   addStudent,
   bindInvite,
   homeworkFor,
+  inviteByCode,
+  learnersOf,
   openPayments,
+  praiseOf,
+  studentsOfLearner,
   parentsOf,
   paymentMessage,
   remarksOf,
@@ -167,6 +171,26 @@ test("дневник: вход по приглашению сразу привя
   confirmLogin(loginToken, { id: 9, first_name: "Ольга" }, [], 10);
   assert.equal(pollLogin(loginToken, nonce, 20).status, "ok");
   assert.deepEqual(studentsOfParent(9).map((s) => s.name), ["Аня"]);
+});
+
+test("ученик: своя ссылка, свой вход — родительская ссылка его не заменяет", () => {
+  const kid = addStudent({ name: "Лиза", language: "Английский", age: "8–17 лет" });
+  assert.notEqual(kid.studentCode, kid.inviteCode);
+  assert.equal(inviteByCode(kid.inviteCode)?.kind, "parent");
+  assert.equal(inviteByCode(kid.studentCode)?.kind, "student");
+
+  const { loginToken, nonce } = startLogin(true, 0, kid.studentCode);
+  confirmLogin(loginToken, { id: 41, first_name: "Лиза" }, [], 10);
+  assert.equal(pollLogin(loginToken, nonce, 20).status, "ok");
+  assert.deepEqual(studentsOfLearner(41).map((s) => s.name), ["Лиза"]);
+  // Вошла как ученица — родителем не стала.
+  assert.equal(studentsOfParent(41).length, 0);
+  assert.equal(bindInvite(kid.studentCode, 42), "taken");
+
+  assert.deepEqual(learnersOf({ studentId: kid.id }), [{ chatId: 41, name: "Лиза" }]);
+  addRemark({ studentId: kid.id, kind: "remark", text: "Опоздала" });
+  addRemark({ studentId: kid.id, kind: "praise", text: "Молодец" });
+  assert.deepEqual(praiseOf(kid.id).map((r) => r.text), ["Молодец"]);
 });
 
 test("дневник: задание группе видно всем её ученикам и уходит их родителям", () => {

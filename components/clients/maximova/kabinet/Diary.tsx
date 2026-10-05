@@ -37,9 +37,9 @@ function useAction() {
     }
     let sent = "";
     if (typeof result.recipients === "number") {
-      if (!result.recipients) sent = " Родитель ещё не привязан — в Telegram не ушло, но в кабинете видно.";
-      else if (result.sent === result.recipients) sent = ` Родителям в Telegram: ${result.sent}.`;
-      else sent = ` Telegram не ответил: дошло ${result.sent ?? 0} из ${result.recipients}. В кабинете родителя всё видно.`;
+      if (!result.recipients) sent = " Пока никто не привязан — в Telegram не ушло, но в кабинете видно.";
+      else if (result.sent === result.recipients) sent = ` В Telegram: ${result.sent}.`;
+      else sent = ` Telegram не ответил: дошло ${result.sent ?? 0} из ${result.recipients}. В кабинете всё видно.`;
     }
     setNote({ ok: true, text: `${done ?? "Сохранено."}${sent}` });
     router.refresh();
@@ -173,9 +173,13 @@ export function StudentCard({ student, groups, payments }: { student: Student; g
   const level = useAction();
   const remark = useAction();
   const pay = useAction();
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"" | "parent" | "student">("");
 
-  const invite = () => `${window.location.origin}/maximova/kabinet?invite=${student.inviteCode}`;
+  const link = (code: string) => `${window.location.origin}/maximova/kabinet?invite=${code}`;
+  const copy = async (kind: "parent" | "student") => {
+    await navigator.clipboard?.writeText(link(kind === "parent" ? student.inviteCode : student.studentCode)).catch(() => null);
+    setCopied(kind);
+  };
 
   return (
     <li className={s.item}>
@@ -184,20 +188,21 @@ export function StudentCard({ student, groups, payments }: { student: Student; g
         {student.groupTitle ? ` · ${student.groupTitle}` : ""}
       </p>
       <p className={s.hint}>
-        {student.parentTelegramId ? "Родитель привязан — сообщения уходят ему в Telegram." : "Родитель ещё не привязан."}
+        {student.parentTelegramId ? "Родитель привязан — сообщения уходят ему в Telegram." : "Родитель ещё не привязан."}{" "}
+        {student.studentTelegramId ? "Ученик вошёл в свой дневник." : "Ученик в свой дневник ещё не входил."}
       </p>
-      {!student.parentTelegramId ? (
-        <button
-          type="button"
-          className={s.small}
-          onClick={async () => {
-            await navigator.clipboard?.writeText(invite()).catch(() => null);
-            setCopied(true);
-          }}
-        >
-          {copied ? "Ссылка скопирована — отправьте родителю" : "Скопировать приглашение для родителя"}
-        </button>
-      ) : null}
+      <span className={s.row}>
+        {!student.parentTelegramId ? (
+          <button type="button" className={s.small} onClick={() => copy("parent")}>
+            {copied === "parent" ? "Скопировано — отправьте родителю" : "Приглашение для родителя"}
+          </button>
+        ) : null}
+        {!student.studentTelegramId && student.studentCode ? (
+          <button type="button" className={s.small} onClick={() => copy("student")}>
+            {copied === "student" ? "Скопировано — отправьте ученику" : "Приглашение для ученика"}
+          </button>
+        ) : null}
+      </span>
 
       <details className={s.more}>
         <summary>Уровень по тесту и группа</summary>
@@ -241,7 +246,7 @@ export function StudentCard({ student, groups, payments }: { student: Student; g
           </div>
           <textarea name="text" className={s.input} rows={3} required />
           <button className={s.small} disabled={remark.busy}>
-            Записать и отправить родителю
+            Записать и отправить
           </button>
           <Note note={remark.note} />
         </form>

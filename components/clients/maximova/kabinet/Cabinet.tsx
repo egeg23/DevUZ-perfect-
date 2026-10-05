@@ -5,9 +5,12 @@ import {
   listStudents,
   openPayments,
   paymentsOf,
+  praiseOf,
   recentHomework,
   remarksOf,
+  studentsOfLearner,
   studentsOfParent,
+  type InviteKind,
   type Student,
 } from "@/lib/clients/maximova/school";
 import type { Viewer } from "@/lib/clients/maximova/store";
@@ -36,6 +39,7 @@ export const TABS = [
   { id: "oplata", title: "Оплата" },
 ] as const;
 export type Tab = (typeof TABS)[number]["id"];
+export type Invite = { code: string; childName: string; kind: InviteKind };
 
 /**
  * Личный кабинет.
@@ -46,6 +50,9 @@ export type Tab = (typeof TABS)[number]["id"];
  *
  * Родитель — дневник по каждому ребёнку: группа и расписание, уровень,
  * задания, замечания, оплата — и свои заявки.
+ *
+ * Ученик — свой дневник: группа, расписание, уровень, задания и похвала.
+ * Замечания и оплата — разговор с родителем, ученику их не видно.
  */
 export function Cabinet({
   viewer,
@@ -58,8 +65,12 @@ export function Cabinet({
   botReady: boolean;
   botUsername: string;
   tab: Tab;
-  invite: { code: string; childName: string } | null;
+  invite: Invite | null;
 }) {
+  const learning = viewer && viewer.role !== "admin" ? studentsOfLearner(viewer.telegramId) : [];
+  const parenting = viewer && viewer.role !== "admin" ? studentsOfParent(viewer.telegramId) : [];
+  // Ученик без детей и без родительского приглашения в руках — только свой дневник.
+  const asStudent = learning.length > 0 && !parenting.length && invite?.kind !== "parent";
   return (
     <div className={s.page}>
       <header className={s.bar}>
@@ -72,7 +83,12 @@ export function Cabinet({
         {!viewer ? (
           <>
             <h1 className={s.title}>Личный кабинет</h1>
-            {invite ? (
+            {invite?.kind === "student" ? (
+              <p className={s.lead}>
+                <strong>{invite.childName}</strong>, это вход в твой дневник. Войди через Telegram — здесь будут твоя
+                группа, расписание, задания на дом и похвала, а задания будут приходить и в Telegram.
+              </p>
+            ) : invite ? (
               <p className={s.lead}>
                 Вас пригласили в дневник: <strong>{invite.childName}</strong>. Войдите через Telegram — ребёнок появится
                 в вашем кабинете, а задания, замечания и напоминания об оплате будут приходить в Telegram.
@@ -87,8 +103,10 @@ export function Cabinet({
           </>
         ) : viewer.role === "admin" ? (
           <Admin viewer={viewer} tab={tab} />
+        ) : asStudent ? (
+          <Learner viewer={viewer} diaries={learning} invite={invite} />
         ) : (
-          <Parent viewer={viewer} botUsername={botUsername} invite={invite} />
+          <Parent viewer={viewer} botUsername={botUsername} invite={invite} kids={parenting} />
         )}
       </main>
       <footer className={s.footer}>
@@ -105,14 +123,16 @@ function Parent({
   viewer,
   botUsername,
   invite,
+  kids: children,
 }: {
   viewer: Viewer;
   botUsername: string;
-  invite: { code: string; childName: string } | null;
+  invite: Invite | null;
+  kids: Student[];
 }) {
-  const children = studentsOfParent(viewer.telegramId);
   const bookings = bookingsOf(viewer.telegramId);
-  const pendingInvite = invite && !children.some((c) => c.inviteCode === invite.code) ? invite : null;
+  const pendingInvite =
+    invite && !children.some((c) => c.inviteCode === invite.code || c.studentCode === invite.code) ? invite : null;
 
   return (
     <>
@@ -166,6 +186,73 @@ function Parent({
         )}
       </section>
     </>
+  );
+}
+
+// ─── Ученик ───────────────────────────────────────────────────────────────
+
+function Learner({ viewer, diaries, invite }: { viewer: Viewer; diaries: Student[]; invite: Invite | null }) {
+  const pendingInvite = invite && !diaries.some((d) => d.studentCode === invite.code) ? invite : null;
+  return (
+    <>
+      <h1 className={s.title}>Привет, {viewer.firstName || diaries[0].name}!</h1>
+      {pendingInvite ? <BindInvite code={pendingInvite.code} childName={pendingInvite.childName} /> : null}
+      {diaries.map((d) => (
+        <StudentDiary key={d.id} student={d} />
+      ))}
+    </>
+  );
+}
+
+function StudentDiary({ student }: { student: Student }) {
+  const homework = homeworkFor(student, 10);
+  const praise = praiseOf(student.id, 10);
+  return (
+    <section className={s.card} aria-label={`Мой дневник: ${student.language}`}>
+      <h2 className={s.h2}>Мой дневник · {student.language}</h2>
+      <dl className={s.facts}>
+        <dt>Группа</dt>
+        <dd>
+          {student.groupTitle || "подбирается"}
+          {student.schedule ? ` · ${student.schedule}` : ""}
+        </dd>
+        <dt>Уровень</dt>
+        <dd>{student.level || "после вступительного теста"}</dd>
+      </dl>
+
+      <h3 className={s.h3}>Задания на дом</h3>
+      {homework.length ? (
+        <ul className={s.list}>
+          {homework.map((h) => (
+            <li key={h.id} className={s.item}>
+              <p className={s.pre}>{h.text}</p>
+              <p className={s.hint}>
+                {DAY.format(new Date(h.createdAt))}
+                {h.due ? ` · срок: ${h.due}` : ""}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={s.hint}>Заданий пока нет.</p>
+      )}
+
+      <h3 className={s.h3}>Похвала</h3>
+      {praise.length ? (
+        <ul className={s.list}>
+          {praise.map((r) => (
+            <li key={r.id} className={s.item}>
+              <p>
+                <span className={s.praise}>Похвала</span> {r.text}
+              </p>
+              <p className={s.hint}>{DAY.format(new Date(r.createdAt))}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={s.hint}>Пока ничего — всё впереди.</p>
+      )}
+    </section>
   );
 }
 
@@ -259,7 +346,7 @@ function Admin({ viewer, tab }: { viewer: Viewer; tab: Tab }) {
       <h1 className={s.title}>Кабинет преподавателя</h1>
       <p className={s.lead}>
         {viewer.firstName ? `${viewer.firstName}, н` : "Н"}овых заявок: {fresh}. Учеников: {students.length}, групп:{" "}
-        {groups.length}, родителей в кабинете: {countUsers()}. Неоплаченных счетов: {due.length}.
+        {groups.length}, вошли в кабинет через Telegram: {countUsers()}. Неоплаченных счетов: {due.length}.
       </p>
 
       <nav className={s.tabs} aria-label="Разделы кабинета">
