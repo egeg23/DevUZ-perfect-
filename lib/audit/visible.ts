@@ -30,7 +30,26 @@ const FRAMEWORKS: [RegExp, string][] = [
   [/data-reactroot|react-dom|\breact\.production\b/i, "React"],
   [/\bvue\.runtime\b|\bdata-v-[0-9a-f]{8}\b/i, "Vue"],
   [/\bsvelte-[0-9a-z]{6}\b/i, "Svelte"],
+  // Сборка Vite: модульный скрипт из /assets/index-<хеш>.js.
+  [/<script\b[^>]*\btype=["']module["'][^>]*\bsrc=["'][^"']*\/assets\/index-[\w-]+\.js/i, "Vite"],
 ];
+
+/**
+ * Пустая точка, куда скрипт дорисует страницу: `<div id="root"></div>`.
+ *
+ * Разбор it-academy.uz, 05.10.2026. Владелец: «наш аудит абсолютно не
+ * соответствует наполнению сайта» — письмо говорило, что на сайте нет
+ * телефона, Telegram и цены, а там три номера, кнопка в Telegram и цена
+ * крупно. Сервер отдаёт 1,5 КБ: заголовок вкладки, пустой div и ссылку на
+ * скрипт. Правило ниже ждало больше 2 КБ разметки или перевеса скриптов
+ * внутри неё — а современная сборка кладёт весь код во внешний файл, и
+ * оболочка выходит меньше любой визитки.
+ *
+ * Пустая точка монтирования плюс внешний скрипт — однозначный признак:
+ * честная короткая страница свой текст несёт сама.
+ */
+const EMPTY_MOUNT = /<(div|main|app-root)\b[^>]*\bid=["'](?:root|app|__next|__nuxt|q-app|main|application)["'][^>]*>\s*<\/\1>/i;
+const EXTERNAL_SCRIPT = /<script\b[^>]*\bsrc=["'][^"']+["']/i;
 
 export type Seen = {
   /** Слов видимого текста в том, что отдал сервер. */
@@ -83,7 +102,8 @@ export function whatWeSee(html: string): Seen {
 
   const framework = FRAMEWORKS.find(([re]) => re.test(html))?.[1] ?? null;
 
-  const clientRendered = words < 120 && bytes > 2000 && (framework !== null || scriptShare > 0.5);
+  const emptyShell = EMPTY_MOUNT.test(html) && EXTERNAL_SCRIPT.test(html);
+  const clientRendered = words < 120 && ((bytes > 2000 && (framework !== null || scriptShare > 0.5)) || emptyShell);
 
   return { words, bytes, scriptShare, clientRendered, framework };
 }

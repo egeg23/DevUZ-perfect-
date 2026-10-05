@@ -183,3 +183,41 @@ test("страница ошибки разбирается как ошибка, 
   // «почти всё в порядке» напротив сайта, который не открывается вовсе.
   assert.equal(down.score, 0);
 });
+
+test("маленькая оболочка Vite — тоже оболочка: пустой div и внешний скрипт", () => {
+  // it-academy.uz, 05.10.2026: 1,5 КБ разметки, весь код — во внешнем
+  // файле. Аудит решил, что это обычная страница, и написал владельцу «нет
+  // телефона, нет Telegram, нет цены» — а всё это на сайте есть.
+  const vite = `<!doctype html><html lang="ru"><head><meta charset="UTF-8" />
+    <title>Онлайн IT курсы в Узбекистане – Программирование, Дизайн, Data Science</title>
+    <script>!function(f,b,e){f.fbq=f.fbq||function(){}}(window,document,"script");fbq("init","1");</script>
+    <script type="module" crossorigin src="/assets/index-GCzPPmey.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Bkn03CcN.css"></head>
+    <body><noscript><img height="1" width="1" src="https://www.facebook.com/tr?id=1&ev=PageView&noscript=1"/></noscript>
+    <div id="root"></div></body></html>`;
+  assert.ok(Buffer.byteLength(vite) < 2000, "оболочка меньше старого порога");
+  const seen = whatWeSee(vite);
+  assert.equal(seen.clientRendered, true);
+  assert.equal(seen.framework, "Vite");
+
+  // Про содержимое такой страницы аудит не утверждает ничего.
+  const codes = analyze(probe({ html: vite, finalUrl: "https://it-academy.uz/" })).findings.map((f) => f.code);
+  for (const lie of ["no_phone", "no_messenger", "no_prices", "no_h1"]) {
+    assert.ok(!codes.includes(lie), `ложная находка ${lie} на оболочке`);
+  }
+  assert.ok(codes.includes("client_rendered"), "вместо них — что поисковик видит пустую страницу");
+
+  // Визитка с пустым div, но со своим текстом — не оболочка: текст есть.
+  const card = `<!doctype html><html><body><h1>Ремонт обуви</h1><div id="app"></div>
+    <p>${"Улица Навои 12, с 9 до 19, телефон +998 90 123 45 67. ".repeat(12)}</p>
+    <script src="/widget.js"></script></body></html>`;
+  assert.equal(whatWeSee(card).clientRendered, false);
+});
+
+test("robots.txt, на который сервер отдаёт страницу, — это отсутствие robots.txt", async () => {
+  const { robotsText } = await import("@/lib/audit/fetch");
+  assert.equal(robotsText(200, "<!doctype html>\n<html lang=\"ru\"><div id=\"root\"></div></html>"), null);
+  assert.equal(robotsText(200, "  <html><body>404</body></html>"), null);
+  assert.equal(robotsText(404, "User-agent: *"), null);
+  assert.equal(robotsText(200, "User-agent: *\nDisallow: /admin\nSitemap: https://a.uz/sitemap.xml"), "User-agent: *\nDisallow: /admin\nSitemap: https://a.uz/sitemap.xml");
+});
