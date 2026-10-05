@@ -21,6 +21,7 @@
  * подменить их значит рассогласовать переписку с панелью.
  */
 import { auditOne, toProspectRow } from "@/lib/audit/batch";
+import { withMapsPhone } from "@/lib/maps/store";
 import { serviceClient } from "@/lib/supabase";
 
 const dryRun = process.argv.includes("--dry-run");
@@ -34,8 +35,11 @@ if (!db) {
 
 const { data, error } = await db
   .from("prospects")
-  .select("id, url, host, score")
+  .select("id, url, host, score, contacts")
   .eq("status", "new")
+  // Карточки без сайта пересобирать не из чего: разбор вернул бы пустые
+  // контакты и стёр бы номер, найденный в картах.
+  .not("url", "is", null)
   .order("created_at", { ascending: true })
   .limit(limit);
 
@@ -66,7 +70,9 @@ for (const row of rows) {
     .update({
       score: fresh.score,
       findings: fresh.findings,
-      contacts: fresh.contacts,
+      // Номера из карт сайт не знает — добавляем их к найденным на сайте,
+      // иначе пересборка стирала бы единственный способ связаться.
+      contacts: (row.contacts?.phones ?? []).reduce((acc, phone) => withMapsPhone(acc, phone), fresh.contacts),
       draft: fresh.draft,
     })
     .eq("id", row.id)

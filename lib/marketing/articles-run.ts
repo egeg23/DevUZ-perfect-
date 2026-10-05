@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { nextMarketingTopic, type MarketingTopic } from "@/content/marketing-topics";
 import { TASHKENT_OFFSET_MS, todayInTashkent } from "@/lib/admin/pulse";
 import { buildPayload, sendPing } from "@/lib/indexnow";
-import { checkArticle, type CheckProblem } from "@/lib/marketing/article-check";
+import { checkArticle, missingStems, type CheckProblem } from "@/lib/marketing/article-check";
 import {
   ARTICLE_LOCALES,
   articleHref,
@@ -181,7 +181,13 @@ const TOOL = {
   },
 } as const;
 
-/** Одна версия: до двух попыток, провал проверки возвращается модели её же словами. */
+/**
+ * Одна версия: до трёх попыток, провал проверки возвращается модели её же
+ * словами. Если после них не хватает только запроса в заголовке или
+ * описании — ставим его сами (placeQuery): 5 октября статья в 16:00 не
+ * вышла, потому что дешёвая модель дважды писала описание без «таргет в
+ * Instagram», а всё остальное было в порядке.
+ */
 async function writeChecked(
   topic: MarketingTopic,
   locale: ArticleLocale,
@@ -189,12 +195,41 @@ async function writeChecked(
   related: readonly string[],
 ): Promise<ArticleText | string> {
   let notes: CheckProblem[] = [];
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  let lastText: ArticleText | null = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const result = await writeVersion(topic, locale, base, notes, related);
     if (!("problems" in result)) return result;
     notes = result.problems;
+    if (result.text) lastText = result.text;
+  }
+  if (lastText) {
+    const placed = placeQuery(topic, locale, lastText);
+    if (placed && !checkArticle(topic, locale, placed).length) return placed;
   }
   return notes.map((p) => p.text).join(" ");
+}
+
+/**
+ * Запрос в заголовок и описание — без модели, когда не хватает только его.
+ *
+ * Ставим в начало: «Таргет в Instagram: …». Первый абзац так не чиним —
+ * приклеенная к нему фраза читалась бы швом; если запроса нет там, статья
+ * не выходит, и об этом пишется владельцу, как раньше. null — чинить нечем
+ * или длина не позволяет.
+ */
+export function placeQuery(topic: MarketingTopic, locale: ArticleLocale, text: ArticleText): ArticleText | null {
+  const query = topic.query?.[locale];
+  if (!query) return null;
+  const lead = query.charAt(0).toUpperCase() + query.slice(1);
+  const fix = (value: string, max: number): string | null => {
+    if (!missingStems(query, value).length) return value;
+    const joined = `${lead}: ${value.charAt(0).toLowerCase()}${value.slice(1)}`;
+    return joined.length <= max ? joined : null;
+  };
+  const title = fix(text.title, 110);
+  const description = fix(text.description, 200);
+  if (!title || !description) return null;
+  return { ...text, title, description };
 }
 
 export async function writeVersion(
@@ -203,7 +238,7 @@ export async function writeVersion(
   base: ArticleText | null = null,
   notes: CheckProblem[] = [],
   related: readonly string[] = [],
-): Promise<ArticleText | { problems: CheckProblem[] }> {
+): Promise<ArticleText | { problems: CheckProblem[]; text?: ArticleText }> {
   const message = await anthropic().messages.create({
     model: MODEL,
     max_tokens: 4000,
@@ -229,7 +264,7 @@ export async function writeVersion(
   }
 
   const problems = checkArticle(topic, locale, text);
-  return problems.length ? { problems } : text;
+  return problems.length ? { problems, text } : text;
 }
 
 export function articlePrompt(

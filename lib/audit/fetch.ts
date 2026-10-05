@@ -387,6 +387,15 @@ export function broken(status: number | null | undefined): boolean {
   return typeof status === "number" && (status === 404 || status === 410 || status >= 500);
 }
 
+/** По `size` запросов за раз — чужой сайт не должен видеть залп. */
+export async function inBatches<T, R>(items: readonly T[], run: (item: T) => Promise<R>, size = 2): Promise<R[]> {
+  const out: R[] = [];
+  for (let i = 0; i < items.length; i += size) {
+    out.push(...(await Promise.all(items.slice(i, i + size).map(run))));
+  }
+  return out;
+}
+
 async function status(url: URL, ip: string): Promise<number | null> {
   try {
     return (await once(url, ip, { maxBytes: PEEK_MAX_BYTES, accept: "*/*" })).status;
@@ -470,8 +479,11 @@ export async function enrich(probe: PageProbe): Promise<PageProbe> {
         }
       }),
     ),
-    Promise.all(images.map((url) => status(url, ip))),
-    Promise.all(links.map((url) => status(url, ip))),
+    // Картинки и ссылки — по два за раз, а не все двенадцать разом: охрана
+    // сайтов (Cloudflare 1015) принимала такой залп за налёт и закрывала
+    // сайт для всего обхода — cherrystore.uz, 05.10.2026.
+    inBatches(images, (url) => status(url, ip)),
+    inBatches(links, (url) => status(url, ip)),
     /<link\b[^>]*\brel\s*=\s*["']?[^"'>]*icon/i.test(html)
       ? Promise.resolve(200)
       : status(new URL("/favicon.ico", base), ip),

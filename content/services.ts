@@ -57,12 +57,12 @@ export const services: Service[] = [
       pl: "Tworzenie stron w Taszkencie: ceny i terminy — DevUz",
     },
     seoDescription: {
-      ru: "Корпоративные сайты, лендинги и каталоги под ключ. Четыре языка, своя админка, техническое SEO. Вилка от $2500, срок 3–8 недель — точную цену считаем по задаче.",
-      en: "Corporate sites, landing pages and catalogues, turnkey. Four languages, a custom admin panel, technical SEO. From $2,500, 3–8 weeks — exact quote after scoping.",
-      uz: "Korporativ saytlar, lendinglar va kataloglar — kalit topshirish sharti bilan. To‘rt til, o‘z admin paneli, texnik SEO. $2500 dan, 3–8 hafta.",
-      zh: "企业官网、落地页与产品目录，交钥匙交付。四种语言、自有后台、技术 SEO。起价 2500 美元，周期 3–8 周。",
-      uk: "Корпоративні сайти, лендинги й каталоги під ключ. Чотири мови, власна адмінка, технічне SEO. Від $2500, 3–8 тижнів — точну ціну рахуємо під задачу.",
-      pl: "Strony firmowe, landing page i katalogi pod klucz. Cztery języki, własny panel, techniczne SEO. Od $2500, 3–8 tygodni — dokładną cenę liczymy pod zadanie.",
+      ru: "Корпоративные сайты, лендинги и каталоги под ключ. Четыре языка, своя админка, техническое SEO. Лендинг от $500, корпоративный сайт от $2500, срок 1–8 недель — точную цену считаем по задаче.",
+      en: "Corporate sites, landing pages and catalogues, turnkey. Four languages, a custom admin panel, technical SEO. Landing pages from $500, corporate sites from $2,500, 1–8 weeks — exact quote after scoping.",
+      uz: "Korporativ saytlar, lendinglar va kataloglar — kalit topshirish sharti bilan. To‘rt til, o‘z admin paneli, texnik SEO. Lending $500 dan, korporativ sayt $2500 dan, 1–8 hafta.",
+      zh: "企业官网、落地页与产品目录，交钥匙交付。四种语言、自有后台、技术 SEO。落地页 500 美元起，企业官网 2500 美元起，周期 1–8 周。",
+      uk: "Корпоративні сайти, лендинги й каталоги під ключ. Чотири мови, власна адмінка, технічне SEO. Лендинг від $500, корпоративний сайт від $2500, 1–8 тижнів — точну ціну рахуємо під задачу.",
+      pl: "Strony firmowe, landing page i katalogi pod klucz. Cztery języki, własny panel, techniczne SEO. Landing page od $500, strona firmowa od $2500, 1–8 tygodni — dokładną cenę liczymy pod zadanie.",
     },
     icon: "globe",
     title: {
