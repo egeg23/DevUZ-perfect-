@@ -97,6 +97,8 @@
 | промо-материалы | promo-materiallar | materiały promocyjne |
 | релиз (файл продукта) | reliz | wydanie |
 | прототип | prototip | prototyp |
+| автопрогон (касаний) | avtomatik aloqalar | automatyczne kontakty |
+| ниша недели | hafta nishasi | nisza tygodnia |
 | разбор (статья о чужом сайте) | tahlil | analiza |
 | находка (в разборе) | topilma | ustalenie |
 | снимок (скриншот) | skrinshot | zrzut |

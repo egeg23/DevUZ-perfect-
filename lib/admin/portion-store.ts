@@ -90,6 +90,9 @@ export async function pool(limit: number, exclude: ReadonlySet<string> = new Set
     .select("id, host, findings, contacts, status")
     .eq("status", "new")
     .is("claimed_by", null)
+    // Карточку взял автопрогон (lib/admin/autopilot-store) — её письмо
+    // готовится прямо сейчас. Вернул с пометкой «не вышло» — снова общая.
+    .or("autopilot_at.is.null,autopilot_note.not.is.null")
     .order("score", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true })
     .limit(limit * 3 + exclude.size);

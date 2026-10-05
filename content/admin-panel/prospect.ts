@@ -706,3 +706,73 @@ export const protoNoteDict = defineDict({
     pl: "nie zapisał się",
   },
 });
+
+/**
+ * Блок «Автопрогон касаний» вверху раздела — владельцу и руководителю
+ * (lib/admin/autopilot.ts). Название ниши подставляется уже на языке панели.
+ */
+export const autopilotDict = defineDict({
+  head: {
+    ru: (niche: string) => `Автопрогон касаний · ниша недели: ${niche}`,
+    uz: (niche: string) => `Avtomatik aloqalar · hafta nishasi: ${niche}`,
+    pl: (niche: string) => `Automatyczne kontakty · nisza tygodnia: ${niche}`,
+  },
+  help: { ru: "Как работает автопрогон", uz: "Avtomatik aloqalar qanday ishlaydi", pl: "Jak działają automatyczne kontakty" },
+  on: { ru: "работает", uz: "ishlayapti", pl: "działa" },
+  off: { ru: "остановлен", uz: "to‘xtatilgan", pl: "zatrzymane" },
+  today: {
+    ru: (sent: number, target: number, waiting: number) =>
+      `Сегодня ушло в Telegram: ${sent} из ${target}${waiting ? ` · ждут отправки: ${waiting}` : ""}`,
+    uz: (sent: number, target: number, waiting: number) =>
+      `Bugun Telegram’ga ketdi: ${target} tadan ${sent} ta${waiting ? ` · yuborishni kutmoqda: ${waiting} ta` : ""}`,
+    pl: (sent: number, target: number, waiting: number) =>
+      `Dziś wysłano w Telegramie: ${sent} z ${target}${waiting ? ` · czeka na wysłanie: ${waiting}` : ""}`,
+  },
+  byAccount: {
+    ru: (list: string) => `По аккаунтам: ${list}`,
+    uz: (list: string) => `Akkauntlar bo‘yicha: ${list}`,
+    pl: (list: string) => `Według kont: ${list}`,
+  },
+  mainAccount: { ru: "главный", uz: "asosiy", pl: "główne" },
+  replies: {
+    ru: (replies: number, taken: number) => `Ответили сегодня: ${replies} · взяли в работу: ${taken}`,
+    uz: (replies: number, taken: number) => `Bugun javob berdi: ${replies} ta · ishga olindi: ${taken} ta`,
+    pl: (replies: number, taken: number) => `Odpowiedzieli dziś: ${replies} · wzięte do pracy: ${taken}`,
+  },
+  dropped: {
+    ru: (manual: number, dropped: number) =>
+      `Не нашлись в Telegram: ${manual} · не написали — проверка по факту ничего не подтвердила: ${dropped}`,
+    uz: (manual: number, dropped: number) =>
+      `Telegram’da topilmadi: ${manual} ta · yozilmadi — haqiqiy tekshiruv hech narsani tasdiqlamadi: ${dropped} ta`,
+    pl: (manual: number, dropped: number) =>
+      `Nie znaleziono w Telegramie: ${manual} · nie napisano — sprawdzenie na żywo niczego nie potwierdziło: ${dropped}`,
+  },
+  week: {
+    ru: (sent: number, replies: number) => `С начала недели: ${sent} ${plural("ru", sent, "письмо", "письма", "писем")}, ${replies} ${plural("ru", replies, "ответ", "ответа", "ответов")}`,
+    uz: (sent: number, replies: number) => `Hafta boshidan: ${sent} ta xabar, ${replies} ta javob`,
+    pl: (sent: number, replies: number) => `Od początku tygodnia: ${sent} ${plural("pl", sent, "wiadomość", "wiadomości", "wiadomości")}, ${replies} ${plural("pl", replies, "odpowiedź", "odpowiedzi", "odpowiedzi")}`,
+  },
+  next: {
+    ru: (niche: string, from: string) => `Следующая ниша — ${niche}, с ${from}. Её кампания автопоиска уже собирает компании.`,
+    uz: (niche: string, from: string) => `Keyingi nisha — ${niche}, ${from} dan. Uning avtoqidiruv kampaniyasi kompaniyalarni allaqachon yig‘yapti.`,
+    pl: (niche: string, from: string) => `Następna nisza — ${niche}, od ${from}. Jej kampania autowyszukiwania już zbiera firmy.`,
+  },
+  /** `mark` — шапка карточки лида в боте; бот пишет по-русски, поэтому строкой из lib. */
+  note: {
+    ru: (mark: string) =>
+      `Пишет сам с 07:00 до 19:30, письма уходят с рабочих аккаунтов в пределе «три в час» на аккаунт. Ответ клиента сразу уходит менеджерам в Telegram по очереди лидов с шапкой «${mark}».`,
+    uz: (mark: string) =>
+      `07:00 dan 19:30 gacha o‘zi yozadi, xabarlar ishchi akkauntlardan har bir akkauntga «soatiga uchta» chegarasida ketadi. Mijozning javobi darhol menejerlarga Telegram’da lidlar navbati bo‘yicha «${mark}» sarlavhasi bilan boradi.`,
+    pl: (mark: string) =>
+      `Pisze samo od 07:00 do 19:30, wiadomości wychodzą z kont roboczych w limicie „trzy na godzinę” na konto. Odpowiedź klienta od razu trafia do menedżerów w Telegramie przez kolejkę leadów z nagłówkiem «${mark}».`,
+  },
+  stop: { ru: "Остановить автопрогон", uz: "Avtomatik aloqalarni to‘xtatish", pl: "Zatrzymaj automatyczne kontakty" },
+  start: { ru: "Запустить автопрогон", uz: "Avtomatik aloqalarni ishga tushirish", pl: "Uruchom automatyczne kontakty" },
+  ownerOnly: {
+    ru: "Остановить и запустить автопрогон может владелец.",
+    uz: "Avtomatik aloqalarni egasi to‘xtatadi va ishga tushiradi.",
+    pl: "Zatrzymać i uruchomić automatyczne kontakty może właściciel.",
+  },
+  /** Подпись на карточке касания вместо имени менеджера. */
+  owner: { ru: "автопрогон", uz: "avtomatik aloqa", pl: "automatyczny kontakt" },
+});

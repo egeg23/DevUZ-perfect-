@@ -21,6 +21,7 @@ import { nudgeStream } from "@/lib/admin/stream-store";
 import { isCloseReason } from "@/lib/admin/touch-close";
 import { touchErrorParam } from "@/lib/admin/touch-errors";
 import { createCampaign, listCampaigns, processPlaces, runSearch, setCampaignActive } from "@/lib/maps/store";
+import { setAutopilot } from "@/lib/admin/autopilot-store";
 import { pitchLocales, type PitchLocale } from "@/lib/audit/pitch";
 import {
   auditOne,
@@ -308,4 +309,12 @@ export async function runMapsCampaignAction(formData: FormData) {
   }
   revalidatePath("/admin/prospect");
   redirect(`/admin/prospect?maps=${code}#maps`);
+}
+
+/** Остановить или запустить автопрогон касаний — только владелец. */
+export async function toggleAutopilotAction(formData: FormData) {
+  const staff = await requireRole("admin");
+  await setAutopilot(formData.get("enabled") === "1", staff, await requestIp());
+  revalidatePath("/admin/prospect");
+  redirect("/admin/prospect#autopilot");
 }

@@ -28,6 +28,7 @@ import {
 } from "@/lib/admin/outreach";
 import { recordManualInbound } from "@/lib/admin/outreach-talk-store";
 import type { Staff } from "@/lib/admin/session";
+import { AUTOPILOT_SENDER } from "@/lib/admin/autopilot";
 import type { Finding } from "@/lib/audit/checks";
 import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
@@ -48,6 +49,28 @@ import { modelTrouble, modelTroubleSays } from "@/lib/model-trouble";
 import type { TouchError, TouchFail } from "@/lib/admin/touch-errors";
 import { serviceClient } from "@/lib/supabase";
 import { anthropic } from "@/lib/model-road";
+
+/**
+ * Кто пишет касание: сотрудник — или автопрогон (lib/admin/autopilot.ts).
+ *
+ * У автопрогона нет строки в staff, и касание ничьё, пока клиент не
+ * ответил: claimed_by пустой, лида нет, письмо подписано AUTOPILOT_SENDER.
+ * Путь письма при этом тот же самый — проверка сайта по факту, модель,
+ * проверка перед отправкой: правило владельца не знает исключений для
+ * машины.
+ */
+export type Autopilot = { readonly autopilot: true; readonly id: ""; readonly display_name: string };
+
+export const AUTOPILOT: Autopilot = { autopilot: true, id: "", display_name: AUTOPILOT_SENDER };
+
+export type Writer = Pick<Staff, "id" | "display_name"> | Autopilot;
+
+export function isAutopilot(writer: Writer): writer is Autopilot {
+  return "autopilot" in writer && writer.autopilot === true;
+}
+
+/** claimed_by и touched_by: у автопрогона — пусто. */
+const ownerId = (writer: Writer): string | null => (isAutopilot(writer) ? null : writer.id);
 
 /**
  * Проспекты: хранение, подготовка сообщения и очередь отправки.
@@ -147,10 +170,12 @@ export type Prospect = {
    */
   checked_at: string | null;
   check_dropped: DroppedFinding[];
+  /** Касание автопрогона (lib/admin/autopilot.ts): ничьё, пока клиент не ответил. */
+  autopilot_at: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, checked_at, check_dropped, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, checked_at, check_dropped, autopilot_at, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -189,6 +214,7 @@ function shape(row: Record<string, unknown>): Prospect {
     proto_note: (row.proto_note as string | null) ?? null,
     checked_at: (row.checked_at as string | null) ?? null,
     check_dropped: Array.isArray(row.check_dropped) ? (row.check_dropped as DroppedFinding[]) : [],
+    autopilot_at: (row.autopilot_at as string | null) ?? null,
     ...protoOpens(row.protos),
   };
 }
@@ -331,7 +357,7 @@ export async function prospectById(id: string): Promise<Prospect | null> {
  * конкурентам. Адресат проверяет это со своего телефона за минуту — то же
  * правило, что и в обычном касании.
  */
-async function prepareNoSite(prospect: Prospect, staff: Staff): Promise<PrepareResult> {
+async function prepareNoSite(prospect: Prospect, staff: Writer): Promise<PrepareResult> {
   const db = serviceClient();
   if (!db) return { ok: false, why: "База недоступна.", code: "db" };
 
@@ -378,16 +404,21 @@ async function prepareNoSite(prospect: Prospect, staff: Staff): Promise<PrepareR
     return { ok: false, why: modelTroubleSays(error), ...modelFail(error) };
   }
 
-  await db
+  let save = db
     .from("prospects")
     .update({
       message,
       niche,
       status: "contacting",
-      claimed_by: prospect.claimed_by ?? staff.id,
+      claimed_by: prospect.claimed_by ?? ownerId(staff),
       claimed_at: new Date().toISOString(),
     })
     .eq("id", prospect.id);
+  // Автопрогон писал, а карточку тем временем взял менеджер, нажав
+  // «Связаться», — письмо его, наше поверх не кладём.
+  if (isAutopilot(staff)) save = save.is("claimed_by", null);
+  const { data: saved } = await save.select("id");
+  if (isAutopilot(staff) && !saved?.length) return { ok: false, why: "Карточку уже взял сотрудник.", code: "gone" };
 
   return { ok: true, message };
 }
@@ -412,7 +443,7 @@ function modelFail(error: unknown): TouchFail {
  * Сохраняется вместе с тем, кто нажал: дальше править и отправлять его
  * будет он, и лид закрепится за ним же.
  */
-export async function prepareOutreach(id: string, staff: Staff): Promise<PrepareResult> {
+export async function prepareOutreach(id: string, staff: Writer): Promise<PrepareResult> {
   const db = serviceClient();
   if (!db) return { ok: false, why: "База недоступна.", code: "db" };
 
@@ -588,7 +619,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
   // Что не так — покажем сотруднику рядом с текстом: правит он, а не мы.
   // Находки обхода сохраняются вместе с сообщением: на них сослалось письмо,
   // и менеджер, открыв карточку, должен видеть то же, что читает адресат.
-  await db
+  let save = db
     .from("prospects")
     .update({
       message,
@@ -605,10 +636,15 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
       check_dropped: checked.dropped,
       score: deep.row.report?.score ?? prospect.score,
       status: "contacting",
-      claimed_by: staff.id,
+      claimed_by: ownerId(staff),
       claimed_at: new Date().toISOString(),
     })
     .eq("id", id);
+  // Автопрогон писал, а карточку тем временем взял менеджер, нажав
+  // «Связаться», — письмо его, наше поверх не кладём.
+  if (isAutopilot(staff)) save = save.is("claimed_by", null);
+  const { data: saved } = await save.select("id");
+  if (isAutopilot(staff) && !saved?.length) return { ok: false, why: "Карточку уже взял сотрудник.", code: "gone" };
 
   return { ok: true, message };
 }
@@ -706,7 +742,13 @@ export function sendProblems(
   )];
 }
 
-export async function queueOutreach(id: string, message: string, staff: Staff, ip: string): Promise<QueueResult> {
+export async function queueOutreach(
+  id: string,
+  message: string,
+  /** Сотрудник — или AUTOPILOT: тогда касание ничьё и лида нет до ответа клиента. */
+  staff: Staff | Autopilot,
+  ip: string,
+): Promise<QueueResult> {
   const db = serviceClient();
   if (!db) return { ok: false, why: "База недоступна.", code: "db" };
 
@@ -733,10 +775,15 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
   // Номер заявки рождается здесь, а не в конце разговора: по нему модель
   // допишет первичку в этот самый лид, когда клиент ответит. Без номера
   // квалификация завела бы второй лид — уже ни за кем не закреплённый.
+  //
+  // У автопрогона лида до ответа нет (lib/admin/autopilot-reply.ts): его
+  // некому закрепить, а ничейный лид без ответа клиента очередь раздала бы
+  // как тёплый. Номер — тот же, лид заведётся с ним на первом ответе.
   const requestNo = newRequestNo();
-  const leadId = await createOutreachLead(prospect, staff, text, requestNo, route);
+  const auto = isAutopilot(staff);
+  const leadId = isAutopilot(staff) ? null : await createOutreachLead(prospect, staff, text, requestNo, route);
 
-  const { error } = await db
+  let update = db
     .from("prospects")
     .update({
       message: text,
@@ -746,12 +793,13 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
       // а место в часовом пределе потратит. Такая карточка сразу уходит
       // человеку — звонить.
       status: route.kind === "manual" ? "manual" : "sending",
-      claimed_by: staff.id,
+      claimed_by: ownerId(staff),
       claimed_at: new Date().toISOString(),
       // Касание засчитывается здесь, а не когда сработает очередь: работу
       // сделал человек в эту минуту, а скаут только донесёт. Если донести
       // не выйдет, карточка станет failed — такие в недельный счёт не идут.
-      touched_by: staff.id,
+      // Касание автопрогона — ничьё: в план недели оно никому не идёт.
+      touched_by: ownerId(staff),
       touched_at: new Date().toISOString(),
       lead_id: leadId,
       request_no: requestNo,
@@ -762,14 +810,19 @@ export async function queueOutreach(id: string, message: string, staff: Staff, i
     })
     .eq("id", id)
     .in("status", ["new", "contacting"]);
+  // Автопрогон ставит только ничью карточку: пока он писал письмо, менеджер
+  // мог нажать «Связаться» — тогда карточка его.
+  if (auto) update = update.is("claimed_by", null);
+  const { data: queuedRows, error } = await update.select("id");
   if (error) return { ok: false, why: "Не получилось поставить в очередь.", code: "queue_failed" };
+  if (auto && !queuedRows?.length) return { ok: false, why: "Карточку уже взял сотрудник.", code: "queue_failed" };
 
   await record("prospect.queued", {
-    actorStaffId: staff.id,
+    actorStaffId: ownerId(staff),
     targetType: "prospect",
     targetId: id,
     ip,
-    meta: { host: prospect.host, target: route.target, kind: route.kind },
+    meta: { host: prospect.host, target: route.target, kind: route.kind, ...(auto ? { autopilot: true } : {}) },
   });
   return { ok: true, leadId };
 }

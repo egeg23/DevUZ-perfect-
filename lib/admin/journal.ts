@@ -81,6 +81,8 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "prospect.closed": { ru: "закрыл касание: клиент отказался или не отвечает", uz: "aloqani yopdi: mijoz rad etdi yoki javob bermayapti", pl: "zamknął kontakt: klient odmówił lub nie odpowiada" },
   "stream.on": { ru: "включил поток «Получать лиды» в Telegram", uz: "Telegram’da «Получать лиды» oqimini yoqdi", pl: "włączył strumień «Получать лиды» w Telegramie" },
   "stream.off": { ru: "выключил поток «Получать лиды» в Telegram", uz: "Telegram’da «Получать лиды» oqimini o‘chirdi", pl: "wyłączył strumień «Получать лиды» w Telegramie" },
+  "autopilot.on": { ru: "включил автопрогон касаний", uz: "avtomatik aloqalarni yoqdi", pl: "włączył automatyczne kontakty" },
+  "autopilot.off": { ru: "выключил автопрогон касаний", uz: "avtomatik aloqalarni o‘chirdi", pl: "wyłączył automatyczne kontakty" },
   "invoice.issued": { ru: "выставил счёт по договору", uz: "shartnoma bo‘yicha hisob-faktura chiqardi", pl: "wystawił fakturę do umowy" },
   "invoice.paid": { ru: "отметил счёт оплаченным", uz: "hisob-fakturani to‘langan deb belgiladi", pl: "oznaczył fakturę jako opłaconą" },
   "invoice.payment_confirmed": { ru: "подтвердил оплату счёта — платёж записан в проект", uz: "hisob-faktura to‘lovini tasdiqladi — to‘lov loyihaga yozildi", pl: "potwierdził płatność faktury — płatność zapisana w projekcie" },
