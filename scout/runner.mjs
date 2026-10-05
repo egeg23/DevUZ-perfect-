@@ -656,10 +656,16 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
     // разговора и молча уходили в никуда.
     let handle = "";
     let userId = "";
+    // Номер виден, если клиент в контактах аккаунта: менеджер, написавший
+    // ему руками по номеру с сайта, сначала добавил его туда. Только по нему
+    // и узнаётся касание, сделанное мимо скаута, — id такого клиента у нас нет.
+    let phone = "";
     try {
       const sender = await message.getSender();
+      if (sender?.bot) return;
       handle = sender?.username ? String(sender.username) : "";
       userId = sender?.id === undefined || sender?.id === null ? "" : String(sender.id);
+      phone = sender?.phone ? String(sender.phone) : "";
     } catch (error) {
       console.error("переписка: не узнал отправителя —", error?.message ?? error);
       return;
@@ -667,9 +673,14 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
     if (!handle && !userId) return;
 
     try {
-      const hit = await recordInbound({ handle, userId, body: String(message.message) });
+      // Ключ аккаунта — чтобы разговор, начатый менеджером руками с этого
+      // аккаунта, перешёл сюда же и бот продолжил его отсюда.
+      const hit = await recordInbound({ handle, userId, phone, account: key, body: String(message.message) });
       if (hit.matched) {
-        console.log(`переписка${tag}: ответ от ${handle ? `@${handle}` : `id ${userId}`} по сайту ${hit.host} (${hit.verdict})`);
+        console.log(
+          `переписка${tag}: ответ от ${handle ? `@${handle}` : `id ${userId}`} по сайту ${hit.host} (${hit.verdict})` +
+            (hit.bound ? " — касание руками, разговор переведён на этот аккаунт" : ""),
+        );
       }
     } catch (error) {
       console.error("переписка: входящее не записалось —", error?.message ?? error);
