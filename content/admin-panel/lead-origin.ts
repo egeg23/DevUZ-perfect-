@@ -15,6 +15,7 @@ export const leadChannelDict = defineDict({
   form: { ru: "форма на сайте", uz: "saytdagi forma", pl: "formularz na stronie" },
   showcase: { ru: "витрина — бриф по заказу", uz: "vitrina — buyurtma brifi", pl: "witryna — brief zamówienia" },
   outreach: { ru: "наше холодное касание", uz: "bizning sovuq aloqamiz", pl: "nasz zimny kontakt" },
+  manual: { ru: "добавлен вручную в панели", uz: "panelda qo‘lda qo‘shilgan", pl: "dodany ręcznie w panelu" },
   partner: {
     ru: "клиента закрепил партнёр в кабинете",
     uz: "mijozni hamkor kabinetda biriktirgan",

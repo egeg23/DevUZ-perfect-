@@ -298,7 +298,9 @@ function namesFollowPanel(locale: "uz" | "pl", exceptions: readonly string[]) {
       for (const allowed of exceptions) text = text.replaceAll(allowed, "");
       for (const [, name] of text.matchAll(/«([^»]+)»/g)) {
         const want = ruTo.get(name);
-        assert.ok(!want, `${locale}: в инструкции «${name}», а на панели — «${want}»: ${text.slice(0, 120)}`);
+        // Название, которое на панели одинаково на всех языках («Username»,
+        // «Telegram id»), — и есть название с панели этого языка.
+        assert.ok(!want || want === name, `${locale}: в инструкции «${name}», а на панели — «${want}»: ${text.slice(0, 120)}`);
       }
     }
   };

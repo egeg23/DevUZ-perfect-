@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { requestIp, requireAdmin, requireRole } from "@/lib/admin/guard";
 import { isGrade, parsePercent } from "@/lib/admin/finance";
-import { hiredRoles, isAssignable, tunesNotices } from "@/lib/admin/roles";
+import { editsStaff, hiredRoles, isAssignable, tunesNotices } from "@/lib/admin/roles";
 import { offFromForm, setNotices } from "@/lib/admin/notify-prefs";
 import { syncBotMenu } from "@/lib/qualify/menu";
 import {
@@ -18,6 +18,8 @@ import {
   setStaffHead,
   setStaffRole,
   setTouchPlan,
+  staffDetailsFrom,
+  updateStaffDetails,
   type TeamResult,
 } from "@/lib/admin/team";
 import { parseTouchPlan, type TouchPlanError } from "@/lib/admin/touch-plan";
@@ -211,4 +213,31 @@ export async function saveNotices(formData: FormData) {
   const result = await setNotices(id, offFromForm(checked, target.role), actor, await requestIp());
   revalidatePath("/admin/team");
   back(result.ok ? { ok: true, note: "notices" } : { ok: false, reason: result.reason });
+}
+
+/**
+ * ФИО, имя в панели, @ и телефон сотрудника. Владелец, 05.10.2026: «менять
+ * может руководитель и я». Кому именно — решает роль цели (editsStaff), а не
+ * то, нарисована ли форма: её можно отправить и мимо страницы.
+ */
+export async function saveDetails(formData: FormData) {
+  const actor = await requireRole("admin", "head");
+  const id = String(formData.get("staff") ?? "");
+
+  const target = (await listTeam()).find((m) => m.id === id && m.is_active);
+  if (!target) back({ ok: false, reason: "gone" });
+  if (!editsStaff(actor.role, target.role, target.id === actor.id)) back({ ok: false, reason: "forbidden" });
+
+  const text = (key: string) => String(formData.get(key) ?? "");
+  const parsed = staffDetailsFrom({
+    fullName: text("full_name"),
+    displayName: text("display_name"),
+    username: text("username"),
+    phone: text("phone"),
+  });
+  if (!parsed.ok) back(parsed);
+
+  const result = await updateStaffDetails(id, parsed.details, actor, await requestIp());
+  revalidatePath("/admin/team");
+  back(result);
 }

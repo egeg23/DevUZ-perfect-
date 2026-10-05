@@ -5,6 +5,7 @@ import { DashboardHome } from "@/components/admin/dashboard-home";
 import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
 import { TasksBlock } from "@/components/admin/tasks-block";
+import { LeadAdd } from "@/components/admin/lead-add";
 import { LeadTable } from "@/components/admin/lead-table";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
 import { homeDict, priorityFilterDict, statusFilterDict } from "@/content/admin-panel/home";
@@ -13,6 +14,7 @@ import { pick } from "@/lib/admin/i18n";
 import { touchProgressOf } from "@/lib/admin/touch-store";
 import { PRIORITIES, STATUSES, leadCounts, listLeads, scopeFor } from "@/lib/admin/leads";
 import { canSee } from "@/lib/admin/roles";
+import { activeStaff } from "@/lib/admin/team";
 import { approves, pendingTransfers } from "@/lib/admin/transfers";
 
 // Панель показывает состояние базы прямо сейчас. Любое кэширование здесь
@@ -89,6 +91,8 @@ export default async function AdminHome({
     tg?: string;
     tf?: string;
     tp?: string;
+    /** Почему лид вручную не добавился (components/admin/lead-add.tsx). */
+    add?: string;
   }>;
 }) {
   const staff = await requireStaff();
@@ -171,8 +175,14 @@ export default async function AdminHome({
     </>
   );
 
+  // Кому можно отдать лид, добавленный вручную, — только руководителю и
+  // владельцу: менеджер добавляет себе (lib/admin/lead-add.ts).
+  const assignees = approves(staff.role) ? await activeStaff() : [];
+
   const leadsBlock = (
     <>
+      <LeadAdd locale={locale} selfId={staff.id} assignees={assignees} notice={params.add} />
+
       <div className="grid grid-cols-3 gap-3 sm:max-w-lg">
         <Stat value={counts.total} label={t.statTotal} />
         <Stat value={counts.free} label={t.statFree} />

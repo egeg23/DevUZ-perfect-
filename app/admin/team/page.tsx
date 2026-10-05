@@ -1,4 +1,4 @@
-import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveNotices, setGrade, setPlan } from "./actions";
+import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveDetails, saveNotices, setGrade, setPlan } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { HelpHint } from "@/components/admin/help-link";
 import { when } from "@/components/admin/lead-table";
@@ -8,7 +8,7 @@ import { teamDict } from "@/content/admin-panel/team";
 import { GRADES, GRADE_TR } from "@/lib/admin/finance";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { NOTICES, kindsFor, offSummary, wants } from "@/lib/admin/notify-prefs";
-import { ROLE_BADGE, ROLE_TITLE_TR, disables, hiredRoles, managesStaff, tunesNotices } from "@/lib/admin/roles";
+import { ROLE_BADGE, ROLE_TITLE_TR, disables, editsStaff, hiredRoles, managesStaff, tunesNotices } from "@/lib/admin/roles";
 import { listTeam, type TeamMember } from "@/lib/admin/team";
 import { offboardingSummary } from "@/lib/admin/offboarding";
 import { TOUCH_PLAN_MAX } from "@/lib/admin/touch-plan";
@@ -29,6 +29,7 @@ function resultOf(code: string, t: T): { text: string; tone: Tone } | null {
     reactivated: t.r_reactivated,
     notices: t.r_notices,
     claimed: t.r_claimed,
+    details: t.r_details,
   };
   const warn: Record<string, string> = {
     menu_failed: t.r_menu_failed,
@@ -43,6 +44,9 @@ function resultOf(code: string, t: T): { text: string; tone: Tone } | null {
     owner: t.r_owner,
     not_head: t.r_not_head,
     forbidden: t.r_forbidden,
+    name_empty: t.r_name_empty,
+    username_bad: t.r_username_bad,
+    phone_bad: t.r_phone_bad,
     gone: t.r_gone,
     offline: t.r_offline,
     failed: t.r_failed,
@@ -204,10 +208,12 @@ export default async function TeamPage({
                   {member.id === viewer.id ? (
                     <span className="ml-2 text-xs text-faint">{t.itsYou}</span>
                   ) : null}
+                  {member.full_name ? <span className="block text-xs text-faint">{member.full_name}</span> : null}
                 </td>
                 <td data-label={t.colTelegram} className="px-4 py-3 font-mono text-xs text-muted">
                   {member.username ? `@${member.username}` : "—"}
                   <span className="block text-faint">id {member.telegram_user_id}</span>
+                  {member.phone ? <span className="block text-faint">{member.phone}</span> : null}
                 </td>
                 <td data-label={t.colRole} className="px-4 py-3">
                   {!manages || (member.role === "admin" && member.id === viewer.id) ? (
@@ -370,6 +376,9 @@ export default async function TeamPage({
                         {t.resend}
                       </button>
                     </form>
+                    {editsStaff(viewer.role, member.role, member.id === viewer.id) ? (
+                      <DetailsBlock member={member} t={t} />
+                    ) : null}
                     {tunesNotices(viewer.role, member.role, member.id === viewer.id) ? (
                       <NoticesBlock member={member} t={t} locale={locale} />
                     ) : null}
@@ -526,6 +535,58 @@ function NoticesBlock({ member, t, locale }: { member: TeamMember; t: T; locale:
         <p className="mt-3 text-xs leading-snug text-faint">{t.noticesAlways}</p>
         <button type="submit" className={`${BUTTON} mt-3`}>
           {t.noticesSave}
+        </button>
+      </form>
+    </details>
+  );
+}
+
+/**
+ * ФИО, имя в панели, @ и телефон — свёрнуто, как уведомления: правят это
+ * редко, а строка сотрудника должна читаться с первого взгляда.
+ */
+function DetailsBlock({ member, t }: { member: TeamMember; t: T }) {
+  return (
+    <details className="group" data-staff-details>
+      <summary className="cursor-pointer list-none text-xs text-faint transition hover:text-green">{t.editDetails}</summary>
+      <form action={saveDetails} className="mt-2 w-80 rounded-lg border border-line bg-surface-2 px-3 py-3">
+        <input type="hidden" name="staff" value={member.id} />
+        <p className="flex items-center gap-2 text-xs text-muted">
+          {t.detailsFor(member.display_name)}
+          <HelpHint topic={helpAnchor("/admin/team", "details")} label={t.detailsHelp} />
+        </p>
+        <label className="mt-2 block text-xs text-faint">
+          {t.fieldFullName} {t.optional}
+          <input
+            name="full_name"
+            defaultValue={member.full_name ?? ""}
+            maxLength={120}
+            placeholder={t.fieldFullNamePlaceholder}
+            className={`mt-1 ${INPUT}`}
+          />
+        </label>
+        <label className="mt-2 block text-xs text-faint">
+          {t.fieldName}
+          <input name="display_name" required defaultValue={member.display_name} maxLength={80} className={`mt-1 ${INPUT}`} />
+        </label>
+        <label className="mt-2 block text-xs text-faint">
+          {t.fieldUsername} {t.optional}
+          <input name="username" defaultValue={member.username ? `@${member.username}` : ""} maxLength={40} className={`mt-1 ${INPUT}`} />
+        </label>
+        <label className="mt-2 block text-xs text-faint">
+          {t.fieldPhone} {t.optional}
+          <input
+            name="phone"
+            type="tel"
+            defaultValue={member.phone ?? ""}
+            maxLength={24}
+            placeholder={t.fieldPhonePlaceholder}
+            className={`mt-1 ${INPUT}`}
+          />
+        </label>
+        <p className="mt-3 text-xs leading-snug text-faint">{t.detailsNote}</p>
+        <button type="submit" className={`${BUTTON} mt-3`}>
+          {t.detailsSave}
         </button>
       </form>
     </details>

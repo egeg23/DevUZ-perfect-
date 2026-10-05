@@ -205,6 +205,24 @@ export const leadsSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "add",
+        title: "«Dodaj leada ręcznie»: klient przyszedł z pominięciem strony i bota",
+        body: {
+          manager: [
+            "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście — zapisz go przyciskiem **«Dodaj leada ręcznie»** nad listą. Potrzebne są «Imię klienta» i «Telefon, Telegram lub e-mail»; «Firma», «Czego potrzebuje klient» i «Skąd jest klient» są opcjonalne, ale wszystko, co zapiszesz, będzie potem widać w [karcie](#leads-card). Bez kontaktu lead się nie doda: inaczej nie da się skontaktować z klientem.",
+            "Lead od razu jest Twój, bez kolejki: status «w toku», numer zgłoszenia, a po 4 godzinach przypomnienie «Взят в работу — что дальше?». W karcie w «Skąd pisał» będzie «dodany ręcznie w panelu». Przekazanie go koledze — jak każdego leada: [«Poproś o przekazanie»](#leads-transfer).",
+          ],
+          head: [
+            "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście — zapisz go przyciskiem **«Dodaj leada ręcznie»** nad listą. Potrzebne są «Imię klienta» i «Telefon, Telegram lub e-mail»; «Firma», «Czego potrzebuje klient» i «Skąd jest klient» są opcjonalne, ale wszystko, co zapiszesz, będzie potem widać w [karcie](#leads-card).",
+            "W formularzu masz **«Komu lead»**: «Sobie» albo dowolny pracownik. Lead od razu jest «w toku» u wybranej osoby, bez kolejki, z numerem zgłoszenia i przypomnieniem po 4 godzinach «Взят в работу — что дальше?»; jeśli przekażesz go komuś innemu, ta osoba od razu dostanie w Telegramie «Вам добавили лид» z linkiem do karty. Menedżerowie nie wybierają: dodają leada tylko sobie.",
+          ],
+          admin: [
+            "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście — zapisz go przyciskiem **«Dodaj leada ręcznie»** nad listą w zakładce «Leady». Potrzebne są «Imię klienta» i «Telefon, Telegram lub e-mail»; «Firma», «Czego potrzebuje klient» i «Skąd jest klient» są opcjonalne, ale wszystko, co zapiszesz, będzie potem widać w [karcie](#leads-card).",
+            "W formularzu jest **«Komu lead»**: «Sobie» albo dowolny pracownik. Lead od razu jest «w toku» u wybranej osoby, bez kolejki, z numerem zgłoszenia i przypomnieniem po 4 godzinach «Взят в работу — что дальше?»; jeśli przekażesz go komuś innemu, ta osoba od razu dostanie w Telegramie «Вам добавили лид» z linkiem. Kto dodał — w [dzienniku](/admin/audit). Menedżerowie dodają leada tylko sobie, kierownik — tak jak Ty.",
+          ],
+        },
+      },
+      {
         id: "card",
         title: "Karta leada",
         body: {

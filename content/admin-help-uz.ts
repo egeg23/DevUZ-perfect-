@@ -206,6 +206,24 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "add",
+          title: "«Lidni qo‘lda qo‘shish»: mijoz sayt va botni chetlab keldi",
+          body: {
+            manager: [
+              "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ustidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi. Kontaktsiz lid qo‘shilmaydi: aks holda mijoz bilan bog‘lanib bo‘lmaydi.",
+              "Lid darhol sizniki, navbatsiz: «ishda» holati, ariza raqami, 4 soatdan keyin esa «Взят в работу — что дальше?» eslatmasi. Kartochkada «Qayerdan yozgan» qatorida «panelda qo‘lda qo‘shilgan» bo‘ladi. Uni hamkasbga berish — har qanday lid kabi: [«Berishni so‘rash»](#leads-transfer).",
+            ],
+            head: [
+              "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni ro‘yxat ustidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi.",
+              "Formada sizda **«Lid kimga»** bor: «O‘zimga» yoki istalgan xodim. Lid darhol tanlangan odamda «ishda» bo‘ladi, navbatsiz, ariza raqami va 4 soatdan keyin «Взят в работу — что дальше?» eslatmasi bilan; boshqaga bersangiz — unga darhol Telegramga kartochka havolasi bilan «Вам добавили лид» keladi. Menejerlar tanlay olmaydi: ular lidni faqat o‘zlariga qo‘shadi.",
+            ],
+            admin: [
+              "Mijoz qo‘ng‘iroq qildi, tavsiya bo‘yicha keldi yoki shaxsan uchrashdingiz — uni «Lidlar» varag‘idagi ro‘yxat ustidagi **«Lidni qo‘lda qo‘shish»** tugmasi bilan yozib qo‘ying. «Mijoz ismi» va «Telefon, Telegram yoki pochta» kerak; «Kompaniya», «Mijozga nima kerak» va «Mijoz qayerdan» — xohishga ko‘ra, lekin yozilgan hamma narsa keyin [kartochkada](#leads-card) ko‘rinadi.",
+              "Formada **«Lid kimga»** bor: «O‘zimga» yoki istalgan xodim. Lid darhol tanlangan odamda «ishda» bo‘ladi, navbatsiz, ariza raqami va 4 soatdan keyin «Взят в работу — что дальше?» eslatmasi bilan; boshqaga bersangiz — unga darhol Telegramga havola bilan «Вам добавили лид» keladi. Kim qo‘shgani — [jurnalda](/admin/audit). Menejerlar lidni faqat o‘zlariga qo‘shadi, rahbar — siz kabi.",
+            ],
+          },
+        },
+        {
           id: "card",
           title: "Lid kartochkasi",
           body: {
@@ -1278,6 +1296,21 @@ export const uz: HelpCopy = {
               "Har bir rolning o‘z to‘plami bor. Menejerda — navbat bo‘yicha va hamma uchun arizalar, eslatmalar, lid chatidagi xabarlar, berishlar, aloqalarga javoblar, kunlik to‘plam, haftalik tavsiyalar, vazifalar. Rahbarda yana hisobotlar. Sizda — «Navbat takliflari nusxalari» (navbat lidni kimga va qachon taklif qilgani), hisobotlar va vazifalar, navbat va to‘plamsiz: siz navbatda turmaysiz.",
               "Asosiy belgi — **«Navbat bo‘yicha yangi buyurtmalar»**: usiz odam [navbatdan](#leads-queue) chiqadi, lidlar keyingisiga ketadi. Qolganlari faqat Telegramdagi xabarni olib tashlaydi, ish panelda qoladi. Agar hammada «Hamma uchun buyurtmalar» olib tashlansa, tungi arizalarni va aloqalar bo‘yicha «🔥 Нужен прототип»ni Telegramda hech kim ko‘rmaydi — faqat panelda va sotuv chatida, agar u bo‘lsa. Aloqa muallifiga «🛠 Хотят прототип» har doim keladi — birinchi bo‘lib va 30 daqiqaga.",
               "O‘chirilmaydi: taklif, rol va rahbar almashishi, berishni tasdiqlash so‘rovi, sizga pul va shartnomalar haqidagi xabarlar. Belgilarni kim va qachon o‘zgartirgani — [jurnalda](/admin/audit).",
+            ],
+          },
+        },
+        {
+          id: "details",
+          title: "Xodim ma’lumotlari: F.I.Sh., paneldagi ism, username, telefon",
+          roles: ["admin", "head"],
+          body: {
+            head: [
+              "O‘zingizda ham, har bir menejerda ham oxirgi ustunda **«Ma’lumotlarni o‘zgartirish»** bor. U yerda to‘rtta maydon: **«F.I.Sh.»** — to‘liq, shartnomalar uchun; **«Paneldagi ism»** — qisqa, lidlar va vazifalar shu bilan imzolanadi, uni hamma ko‘radi; **«Username»** — Telegramdagi @; **«Telefon»**. To‘g‘rilang va **«Ma’lumotlarni saqlash»** tugmasini bosing. Shundan keyin F.I.Sh. va telefon xodim qatorida ism ostida va Telegram id ostida ko‘rinadi.",
+              "Yangi ism yoki username xodimning barcha lidlarida darhol paydo bo‘ladi — lidlar ro‘yxatida holat ostida. Telegram id bu yerda o‘zgarmaydi: odam panelga bot orqali shu bilan kiradi. Ikkinchi rahbar va egasining ma’lumotlarini faqat egasi o‘zgartiradi; menejerlar o‘z ma’lumotlarini o‘zgartira olmaydi.",
+            ],
+            admin: [
+              "Har bir xodimda, sizda ham, oxirgi ustunda **«Ma’lumotlarni o‘zgartirish»** bor: **«F.I.Sh.»** (to‘liq, shartnomalar uchun), **«Paneldagi ism»** (qisqa, lidlar va vazifalar shu bilan imzolanadi), **«Username»** (Telegramdagi @) va **«Telefon»**. To‘g‘rilang va **«Ma’lumotlarni saqlash»** tugmasini bosing; F.I.Sh. va telefon xodim qatorida ism ostida va Telegram id ostida ko‘rinadi.",
+              "Yangi ism yoki username xodimning barcha lidlarida darhol paydo bo‘ladi — ro‘yxatda holat ostida. Telegram id o‘zgarmaydi: bot orqali kirish shu bilan. Rahbar ma’lumotlarni o‘ziga va menejerlarga o‘zgartiradi, menejerlar — hech kimga. Kim nimani o‘zgartirgani — [jurnalda](/admin/audit).",
             ],
           },
         },
