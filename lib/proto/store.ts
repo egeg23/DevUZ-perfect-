@@ -12,7 +12,8 @@ import { newAccessToken } from "@/lib/store/access";
 import type { ProtoProblem } from "@/lib/proto/check";
 import { missingParts, type ProtoFacts } from "@/lib/proto/facts";
 import { buildProto } from "@/lib/proto/render";
-import { STAMP_VERSION, newSeed, stampHtml, type Stamp } from "@/lib/proto/stamp";
+import { withBase } from "@/lib/proto/pages";
+import { STAMP_VERSION, newSeed, stampHtml, stampPages, type Stamp } from "@/lib/proto/stamp";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
@@ -154,24 +155,32 @@ export async function protoById(id: string): Promise<Proto | null> {
  *
  * Возвращается сам html, а не запись: маршруту больше ничего не нужно, а
  * тащить в него факты и претензии значит однажды показать их наружу.
+ *
+ * `path` — страница внутри прототипа из нескольких страниц (lib/proto/pages);
+ * пустой — главная. Страницы, которой нет, — нет и ответа: 404, как на
+ * чужой токен.
  */
-export async function protoPage(token: string): Promise<{ html: string; id: string } | null> {
+export async function protoPage(token: string, path = ""): Promise<{ html: string; id: string } | null> {
   const db = serviceClient();
   if (!db) return null;
   const { data } = await db
     .from("protos")
-    .select("id, html, status, stamp, facts")
+    .select("id, html, pages, status, stamp, facts")
     .eq("token", token)
     .maybeSingle();
   if (!data) return null;
   // Черновик наружу не отдаётся: это страница, не прошедшая проверку.
   if (data.status === "draft") return null;
+  const id = String(data.id);
+  let html = String(data.html);
+  let pages = (data.pages ?? {}) as Record<string, string>;
   const stamp = data.stamp as Stamp | null;
   if (!stamp || stamp.v < STAMP_VERSION) {
-    const upgraded = await upgradeProto(String(data.id), String(data.html), data.facts as ProtoFacts, stamp);
-    if (upgraded) return { html: upgraded, id: String(data.id) };
+    const upgraded = await upgradeProto(id, html, data.facts as ProtoFacts, stamp, pages);
+    if (upgraded) ({ html, pages } = upgraded);
   }
-  return { html: String(data.html), id: String(data.id) };
+  const page = path ? pages[path] : html;
+  return typeof page === "string" ? { html: withBase(page, token), id } : null;
 }
 
 /**
@@ -191,7 +200,8 @@ export async function upgradeProto(
   html: string,
   facts: ProtoFacts,
   stamp: Stamp | null,
-): Promise<string | null> {
+  pages: Readonly<Record<string, string>> = {},
+): Promise<{ html: string; pages: Record<string, string> } | null> {
   const db = serviceClient();
   if (!db) return null;
   const build = buildProto(facts);
@@ -208,22 +218,23 @@ export async function upgradeProto(
       `<span>${line} <a href="${mockupTermsUrl(locale)}">${link}</a></span></footer>`,
     );
   }
-  const stamped = stampHtml(base, newSeed());
-  const query = db.from("protos").update({ html: stamped.html, stamp: stamped.stamp }).eq("id", id);
+  // Остальные страницы прототипа — тем же зерном, что и главная.
+  const stamped = stampPages(base, pages, newSeed());
+  const query = db.from("protos").update({ html: stamped.html, pages: stamped.pages, stamp: stamped.stamp }).eq("id", id);
   const { data } = await (stamp ? query.eq("stamp->>seed", stamp.seed) : query.is("stamp", null)).select("html");
-  if (data?.length) return stamped.html;
-  const { data: fresh } = await db.from("protos").select("html").eq("id", id).maybeSingle();
-  return fresh ? String(fresh.html) : null;
+  if (data?.length) return { html: stamped.html, pages: stamped.pages };
+  const { data: fresh } = await db.from("protos").select("html, pages").eq("id", id).maybeSingle();
+  return fresh ? { html: String(fresh.html), pages: (fresh.pages ?? {}) as Record<string, string> } : null;
 }
 
 /** Перерисовать все старые прототипы — пачкой, из панели. */
 export async function upgradeAllProtos(limit = 50): Promise<number> {
   const db = serviceClient();
   if (!db) return 0;
-  const { data } = await db.from("protos").select("id, html, facts, stamp").is("stamp", null).limit(limit);
+  const { data } = await db.from("protos").select("id, html, facts, stamp, pages").is("stamp", null).limit(limit);
   let done = 0;
   for (const row of data ?? []) {
-    if (await upgradeProto(String(row.id), String(row.html), row.facts as ProtoFacts, null)) done += 1;
+    if (await upgradeProto(String(row.id), String(row.html), row.facts as ProtoFacts, null, row.pages ?? {})) done += 1;
   }
   return done;
 }
@@ -232,7 +243,10 @@ export async function upgradeAllProtos(limit = 50): Promise<number> {
  * Журнал показа: открытие живым человеком — время, адрес, браузер, откуда
  * пришёл. Доказательство того, что клиент видел макет (условия, раздел 5).
  */
-export async function logView(id: string, input: { ip: string | null; userAgent: string | null; referer: string | null }): Promise<void> {
+export async function logView(
+  id: string,
+  input: { ip: string | null; userAgent: string | null; referer: string | null; path?: string },
+): Promise<void> {
   const db = serviceClient();
   if (!db) return;
   await db.from("proto_views").insert({
@@ -240,6 +254,8 @@ export async function logView(id: string, input: { ip: string | null; userAgent:
     ip: input.ip?.slice(0, 64) ?? null,
     user_agent: input.userAgent?.slice(0, 400) ?? null,
     referer: input.referer?.slice(0, 400) ?? null,
+    // Какая страница прототипа: пусто — главная.
+    path: input.path || null,
   });
 }
 

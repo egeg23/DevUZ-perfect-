@@ -139,3 +139,27 @@ export function stampHtml(html: string, seed: string): { html: string; stamp: St
 
   return { html: stamped, stamp: { v: STAMP_VERSION, seed, signals: [...new Set(signals)] } };
 }
+
+/**
+ * Отпечаток на прототип из нескольких страниц — одним зерном.
+ *
+ * У страниц одного прототипа общие стили, и сдвиги у них обязаны совпадать:
+ * иначе главная и страница курса различались бы на пиксель-другой, а набор
+ * признаков рос бы с каждой страницей. Одно зерно даёт один поток чисел — и
+ * одинаковые стили получают одинаковые сдвиги. Признаки — общий набор.
+ */
+export function stampPages(
+  html: string,
+  pages: Readonly<Record<string, string>>,
+  seed: string,
+): { html: string; pages: Record<string, string>; stamp: Stamp } {
+  const main = stampHtml(html, seed);
+  const signals = new Set(main.stamp.signals);
+  const out: Record<string, string> = {};
+  for (const [path, page] of Object.entries(pages)) {
+    const stamped = stampHtml(page, seed);
+    out[path] = stamped.html;
+    for (const signal of stamped.stamp.signals) signals.add(signal);
+  }
+  return { html: main.html, pages: out, stamp: { v: STAMP_VERSION, seed, signals: [...signals] } };
+}

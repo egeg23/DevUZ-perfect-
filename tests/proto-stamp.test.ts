@@ -86,10 +86,13 @@ test("отпечаток — у каждого нового и у старых �
   assert.match(store, /const stamped = stampHtml\(build\.html, newSeed\(\)\);\s*return \{ html: stamped\.html, stamp: stamped\.stamp \};/);
   // Старые — при первом открытии и из раздела.
   assert.match(store, /if \(!stamp \|\| stamp\.v < STAMP_VERSION\) \{/);
-  assert.match(store, /\.from\("protos"\)\.select\("id, html, facts, stamp"\)\.is\("stamp", null\)/);
+  assert.match(store, /\.from\("protos"\)\.select\("id, html, facts, stamp, pages"\)\.is\("stamp", null\)/);
   assert.match(read("app/admin/proto/page.tsx"), /after\(\(\) => upgradeAllProtos\(50\)/);
   // Журнал показа пишется вместе с открытием.
-  assert.match(read("app/proto/[token]/route.ts"), /await logView\(page\.id, \{ ip, userAgent, referer \}\);/);
+  assert.match(read("lib/proto/serve.ts"), /await logView\(page\.id, \{ ip, userAgent, referer, path \}\);/);
+  // Обе дороги к прототипу — главная и страница внутри — идут через serveProto.
+  assert.match(read("app/proto/[token]/route.ts"), /return serveProto\(request, token\);/);
+  assert.match(read("app/proto/[token]/[...page]/route.ts"), /return serveProto\(request, token, path\);/);
   const migration = read("supabase/migrations/0080_proto_stamp.sql");
   assert.match(migration, /alter table public\.proto_views enable row level security;/);
   // «Проверить сайт» — GET-форма, результат по адресу.

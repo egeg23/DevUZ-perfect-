@@ -93,6 +93,11 @@ export function middleware(request: NextRequest) {
   // ролик, а не страница, и редирект на /ru/media/… вёл бы в 404.
   if (pathname.startsWith("/media/")) return NextResponse.next();
 
+  // Прототипы по ссылке (app/proto/[token]) — тоже вне языков: язык у
+  // прототипа свой, внутри страницы. Без этого исключения ссылка, которую
+  // менеджер отправил клиенту, уезжала редиректом на /ru/proto/… — в 404.
+  if (pathname.startsWith("/proto/")) return NextResponse.next();
+
   // Сайт клиента, который временно живёт у нас (app/maximova). Он русский
   // и уедет на свой домен целиком — языковой префикс студии ему не нужен.
   if (pathname === "/maximova" || pathname.startsWith("/maximova/")) return NextResponse.next();

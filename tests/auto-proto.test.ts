@@ -187,7 +187,7 @@ test("открытие: превью мессенджера и свои из п�
 
   assert.match(openedText("Smile Dent"), /Клиент открыл прототип «Smile Dent»/);
 
-  const route = read("app/proto/[token]/route.ts");
+  const route = read("lib/proto/serve.ts");
   assert.match(route, /!isPreviewFetch\(request\.headers\.get\("user-agent"\)\) && !fromPanel\(/);
   assert.match(route, /if \(seen\?\.first && seen\.prospectId\) await tellManager\(seen\.prospectId, openedText\(seen\.name\)\)/);
 });
