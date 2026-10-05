@@ -191,6 +191,33 @@ export const CUTS = {
 } as const;
 
 /**
+ * Студийные портреты (5 октября 2026). Сделаны из её телефонных снимков
+ * через gpt-image (ProxyAPI): лицо, волосы и веснушки — как на исходнике,
+ * заменены фон, свет, одежда и ракурс. Выбраны владельцем. Фон снят rembg
+ * (BiRefNet-portrait), 1024 px по ширине.
+ */
+export const STUDIO = {
+  shirt: {
+    cut: "/clients/maximova/photos/cut/studio-shirt.webp",
+    alt: "Дарья Максимова в белой рубашке",
+    width: 1024,
+    height: 1459,
+  },
+  blazer: {
+    cut: "/clients/maximova/photos/cut/studio-blazer.webp",
+    alt: "Дарья Максимова в бежевом жакете",
+    width: 1024,
+    height: 1473,
+  },
+  black: {
+    cut: "/clients/maximova/photos/cut/studio-black.webp",
+    alt: "Дарья Максимова в чёрном жакете",
+    width: 1024,
+    height: 1464,
+  },
+} as const;
+
+/**
  * Правила — её ответы от 29.09.2026 на то, на что чаще всего жалуются
  * родители у конкурентов (faq-research.md): пропуски, возврат, подмены,
  * новичок в чужой группе, нет обратной связи.
