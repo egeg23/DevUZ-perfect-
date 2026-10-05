@@ -7,6 +7,7 @@ import { homeGraph } from "@/lib/clients/maximova/schema";
 import { jsonLd } from "@/lib/clients/maximova/seo";
 
 import { FaqList, LessonSteps, MomsLink, PlainList, PriceList, RequestList, ResultList, TrialPoints, Later } from "../Blocks";
+import { Drip } from "./Drip";
 import { Letters } from "./Letters";
 import { Programs } from "./Programs";
 import { Quiz } from "./Quiz";
@@ -141,7 +142,8 @@ export function Site() {
           </ul>
         </div>
 
-        <section className={s.section} aria-labelledby="lab-meet">
+        <Drip from="lime" to="ink" seed={1} />
+        <section className={`${s.section} ${s.bandInk}`} aria-labelledby="lab-meet">
           <div className={s.meet}>
             <figure className={s.meetPhoto} data-reveal="">
               <Image src={STUDIO.blazer.cut} alt={STUDIO.blazer.alt} width={STUDIO.blazer.width} height={STUDIO.blazer.height} sizes="(min-width: 1024px) 36vw, 86vw" />
@@ -162,11 +164,13 @@ export function Site() {
           </div>
         </section>
 
-        <section className={s.section} aria-labelledby="lab-asks">
+        <Drip from="ink" to="plum" seed={2} />
+        <section className={`${s.section} ${s.bandPlum}`} aria-labelledby="lab-asks">
           <Head id="lab-asks" kicker="Запросы" title="С чем ко мне приходят родители" />
           <RequestList s={s} />
         </section>
 
+        <Drip from="plum" to="light" seed={3} />
         <section id="programmy" className={s.light} aria-labelledby="lab-programs">
           <div className={s.lightInner}>
             <p className={s.eyebrowDeep}>Программы</p>
@@ -184,12 +188,14 @@ export function Site() {
           </div>
         </section>
 
-        <section className={s.section} aria-labelledby="lab-lesson">
+        <Drip from="light" to="ink" seed={4} />
+        <section className={`${s.section} ${s.bandInk}`} aria-labelledby="lab-lesson">
           <Head id="lab-lesson" kicker={RHYTHM.line} title="Что происходит за 45 минут" note={RHYTHM.why} />
           <LessonSteps s={s} />
         </section>
 
-        <section id="razminka" className={s.section} aria-labelledby="lab-quiz">
+        <Drip from="ink" to="plum" seed={5} />
+        <section id="razminka" className={`${s.section} ${s.bandPlum}`} aria-labelledby="lab-quiz">
           <div className={s.split}>
             <div>
               <p className={s.eyebrow}>Разминка</p>
@@ -204,14 +210,16 @@ export function Site() {
           </div>
         </section>
 
-        <section id="ceny" className={s.section} aria-labelledby="lab-prices">
+        <Drip from="plum" to="ink" seed={6} />
+        <section id="ceny" className={`${s.section} ${s.bandInk}`} aria-labelledby="lab-prices">
           <Head id="lab-prices" kicker="Цены" title="Стоимость — открыто" note="Цены на сайте — те же, что при записи." />
           <PriceList s={s} />
           <h3 className={s.subTitle}>Без сюрпризов</h3>
           <PlainList s={s} />
         </section>
 
-        <section className={s.section} aria-labelledby="lab-trial">
+        <Drip from="ink" to="plum" seed={7} />
+        <section className={`${s.section} ${s.bandPlum}`} aria-labelledby="lab-trial">
           <div className={s.trial} data-reveal="">
             <span className={s.trialStamp} aria-hidden="true">
               −30%
@@ -227,7 +235,8 @@ export function Site() {
           </div>
         </section>
 
-        <section className={s.section} aria-labelledby="lab-rule">
+        <Drip from="plum" to="ink" seed={8} />
+        <section className={`${s.section} ${s.bandInk}`} aria-labelledby="lab-rule">
           <div className={s.note} data-reveal="">
             <h2 id="lab-rule" className={s.noteTitle}>
               Про домашние задания
@@ -236,7 +245,8 @@ export function Site() {
           </div>
         </section>
 
-        <section className={s.section} aria-labelledby="lab-cabinet">
+        <Drip from="ink" to="plum" seed={9} />
+        <section className={`${s.section} ${s.bandPlum}`} aria-labelledby="lab-cabinet">
           <Head
             id="lab-cabinet"
             kicker="Кабинет"
@@ -260,7 +270,8 @@ export function Site() {
           </a>
         </section>
 
-        <section className={s.section} aria-labelledby="lab-moms">
+        <Drip from="plum" to="ink" seed={10} />
+        <section className={`${s.section} ${s.bandInk}`} aria-labelledby="lab-moms">
           <div className={s.moms}>
             <figure className={s.momsPhoto}>
               <Image src={STUDIO.black.cut} alt={STUDIO.black.alt} width={STUDIO.black.width} height={STUDIO.black.height} sizes="(min-width: 1024px) 30vw, 80vw" />
@@ -279,7 +290,8 @@ export function Site() {
           </div>
         </section>
 
-        <section className={s.section} aria-labelledby="lab-goal">
+        <Drip from="ink" to="plum" seed={11} />
+        <section className={`${s.section} ${s.bandPlum}`} aria-labelledby="lab-goal">
           <div className={s.goal} data-reveal="">
             <h2 id="lab-goal" className={s.eyebrow}>
               На что рассчитана моя программа
@@ -291,14 +303,17 @@ export function Site() {
           <ResultList s={s} />
         </section>
 
-        <section id="voprosy" className={s.section} aria-labelledby="lab-faq">
+        <Drip from="plum" to="ink" seed={12} />
+        <section id="voprosy" className={`${s.section} ${s.bandInk}`} aria-labelledby="lab-faq">
           <Head id="lab-faq" kicker="Вопросы" title="Вопросы родителей" note="Не нашли ответ — напишите мне, контакты внизу страницы." />
           <FaqList s={s} />
         </section>
 
+        <Drip from="ink" to="lime" seed={13} />
         <BookBlock>
           <Later s={s} />
         </BookBlock>
+        <Drip from="lime" to="ink" seed={14} />
       </main>
     </Shell>
   );
