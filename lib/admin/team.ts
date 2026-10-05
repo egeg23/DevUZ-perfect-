@@ -1,4 +1,4 @@
-import { disables, type AssignableRole, type Role } from "@/lib/admin/roles";
+import { disables, editsStaff, type AssignableRole, type Role } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import {
   notifyHeadChange,
@@ -40,15 +40,19 @@ export type TeamMember = {
   touch_plan: number | null;
   /** Какие сообщения бота выключены. Пусто — приходит всё (lib/admin/notify-prefs.ts). */
   notify_off: string[] | null;
+  /** ФИО полностью — для договоров. Имя в панели — display_name. */
+  full_name: string | null;
+  /** Телефон: + и 9–15 цифр. */
+  phone: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent, touch_plan, notify_off";
+  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent, touch_plan, notify_off, full_name, phone";
 
 export type TeamResult =
   | {
       ok: true;
-      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed" | "notices";
+      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed" | "notices" | "details";
       /**
        * Дошло ли до человека приглашение.
        *
@@ -81,7 +85,9 @@ export type TeamResult =
         | "has_head"
         // Роль, которую этот человек заводить не вправе: руководитель
         // проектов набирает менеджеров, но не вторых руководителей.
-        | "forbidden";
+        | "forbidden"
+        // Данные сотрудника: пустое имя, кривой @ или телефон.
+        | DetailsError;
     };
 
 /**
@@ -720,6 +726,99 @@ export async function setTouchPlan(
     meta: { from: before, to: plan },
   });
   return { ok: true };
+}
+
+export type StaffDetails = {
+  full_name: string | null;
+  display_name: string;
+  username: string | null;
+  phone: string | null;
+};
+
+export type DetailsError = "name_empty" | "username_bad" | "phone_bad";
+
+/**
+ * Данные сотрудника из формы — проверенные и в общем виде: @ без «@» и
+ * ссылки, телефон с «+» и кодом страны (девять цифр — номер Узбекистана).
+ */
+export function staffDetailsFrom(input: {
+  fullName: string;
+  displayName: string;
+  username: string;
+  phone: string;
+}): { ok: true; details: StaffDetails } | { ok: false; reason: DetailsError } {
+  const display_name = input.displayName.trim().slice(0, 80);
+  if (!display_name) return { ok: false, reason: "name_empty" };
+
+  const username = input.username.trim().replace(/^(?:https?:\/\/)?t\.me\//i, "").replace(/^@/, "");
+  if (username && !/^[A-Za-z0-9_]{4,32}$/.test(username)) return { ok: false, reason: "username_bad" };
+
+  const rawPhone = input.phone.trim();
+  let phone: string | null = null;
+  if (rawPhone) {
+    const digits = rawPhone.replace(/\D/g, "");
+    if (!/^[+\d\s()\-.]+$/.test(rawPhone) || digits.length < 9 || digits.length > 15) {
+      return { ok: false, reason: "phone_bad" };
+    }
+    phone = digits.length === 9 ? `+998${digits}` : `+${digits}`;
+  }
+
+  return {
+    ok: true,
+    details: {
+      full_name: input.fullName.trim().replace(/\s+/g, " ").slice(0, 120) || null,
+      display_name,
+      username: username || null,
+      phone,
+    },
+  };
+}
+
+/**
+ * Поправить данные сотрудника.
+ *
+ * Имя в панели и @ заодно переписываются в колонке «кто ведёт» у его лидов
+ * (`leads.assigned_to` — копия на момент взятия): иначе список показывал бы
+ * старое имя до следующей передачи лида.
+ */
+export async function updateStaffDetails(
+  staffId: string,
+  details: StaffDetails,
+  actor: Staff,
+  ip: string,
+): Promise<TeamResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+
+  const { data: target } = await db
+    .from("staff")
+    .select("id, role, is_active, full_name, display_name, username, phone")
+    .eq("id", staffId)
+    .maybeSingle();
+  if (!target || !target.is_active) return { ok: false, reason: "gone" };
+  if (!editsStaff(actor.role, target.role as Role, target.id === actor.id)) return { ok: false, reason: "forbidden" };
+
+  const changed = (Object.keys(details) as (keyof StaffDetails)[]).filter(
+    (key) => (target[key] ?? null) !== details[key],
+  );
+  if (!changed.length) return { ok: true, note: "details" };
+
+  const { error } = await db.from("staff").update(details).eq("id", staffId);
+  if (error) return { ok: false, reason: "failed" };
+
+  if (changed.includes("display_name") || changed.includes("username")) {
+    const handle = details.username ? `@${details.username}` : details.display_name;
+    await db.from("leads").update({ assigned_to: handle }).eq("assigned_staff_id", staffId);
+  }
+
+  await record("staff.updated", {
+    actorStaffId: actor.id,
+    targetType: "staff",
+    targetId: staffId,
+    ip,
+    meta: { fields: changed, name: details.display_name },
+  });
+  return { ok: true, note: "details" };
 }
 
 /** Активные сотрудники — для выпадающего списка «кому передать». */

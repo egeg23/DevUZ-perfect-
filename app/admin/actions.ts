@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { record } from "@/lib/admin/audit";
-import { currentStaff, requestIp } from "@/lib/admin/guard";
+import { currentStaff, requestIp, requireStaff } from "@/lib/admin/guard";
+import { addManualLead } from "@/lib/admin/lead-add";
 import { PANEL_LANG_COOKIE, isPanelLocale } from "@/lib/admin/i18n";
 import { SESSION_COOKIE, destroySession, setStaffLocale } from "@/lib/admin/session";
 
@@ -49,4 +50,28 @@ export async function setPanelLocale(formData: FormData) {
   });
   // Весь каркас: язык меняет и шапку, и страницу, которая сейчас открыта.
   revalidatePath("/admin", "layout");
+}
+
+/**
+ * Добавить лид вручную (lib/admin/lead-add.ts).
+ *
+ * Добавил — сразу в карточку лида: дальше там звонки, статусы и
+ * напоминания. Не вышло — назад к форме с причиной кодом: текст к нему
+ * берёт страница из словаря на языке панели.
+ */
+export async function addLead(formData: FormData) {
+  const staff = await requireStaff();
+  const text = (key: string) => String(formData.get(key) ?? "");
+  const result = await addManualLead(
+    staff,
+    { name: text("name"), company: text("company"), contact: text("contact"), need: text("need"), from: text("from") },
+    text("assignee"),
+    await requestIp(),
+  );
+  if (result.ok) {
+    revalidatePath("/admin");
+    redirect(`/admin/leads/${result.id}`);
+  }
+  // У владельца список лидов — на вкладке «Лиды».
+  redirect(`/admin?${staff.role === "admin" ? "tab=leads&" : ""}add=${result.reason}#add-lead`);
 }

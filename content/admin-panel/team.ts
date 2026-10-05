@@ -105,9 +105,9 @@ export const teamDict = defineDict({
     pl: "Kierownikiem można wyznaczyć tylko aktywnego pracownika z rolą «kierownik».",
   },
   r_forbidden: {
-    ru: "Это вам недоступно. Руководитель проектов заводит и отключает только менеджеров и выбирает уведомления только им и себе. Остальное — владелец.",
-    uz: "Bu sizga mavjud emas. Loyiha rahbari faqat menejerlarni qo‘shadi va o‘chiradi, bildirishnomalarni ham faqat ularga va o‘ziga tanlaydi. Qolgani — egasining ishi.",
-    pl: "To nie jest dla Ciebie dostępne. Kierownik projektów dodaje i wyłącza tylko menedżerów i wybiera powiadomienia tylko im i sobie. Resztą zajmuje się właściciel.",
+    ru: "Это вам недоступно. Руководитель проектов заводит и отключает только менеджеров, а уведомления и данные меняет только им и себе. Остальное — владелец.",
+    uz: "Bu sizga mavjud emas. Loyiha rahbari faqat menejerlarni qo‘shadi va o‘chiradi, bildirishnomalar va ma’lumotlarni ham faqat ularga va o‘ziga o‘zgartiradi. Qolgani — egasining ishi.",
+    pl: "To nie jest dla Ciebie dostępne. Kierownik projektów dodaje i wyłącza tylko menedżerów, a powiadomienia i dane zmienia tylko im i sobie. Resztą zajmuje się właściciel.",
   },
   r_gone: {
     ru: "Такого сотрудника уже нет.",
@@ -233,6 +233,49 @@ export const teamDict = defineDict({
   optional: { ru: "(не обязателен)", uz: "(majburiy emas)", pl: "(opcjonalnie)" },
   fieldRole: { ru: "Роль", uz: "Rol", pl: "Rola" },
   inviteSubmit: { ru: "Завести", uz: "Qo‘shish", pl: "Dodaj" },
+
+  // Данные сотрудника: ФИО, имя в панели, @ и телефон.
+  editDetails: { ru: "Изменить данные", uz: "Ma’lumotlarni o‘zgartirish", pl: "Zmień dane" },
+  detailsHelp: { ru: "Что здесь можно поменять", uz: "Bu yerda nimani o‘zgartirish mumkin", pl: "Co można tu zmienić" },
+  detailsFor: {
+    ru: (name: string) => `Данные: ${name}`,
+    uz: (name: string) => `Ma’lumotlar: ${name}`,
+    pl: (name: string) => `Dane: ${name}`,
+  },
+  fieldFullName: { ru: "ФИО", uz: "F.I.Sh.", pl: "Imię i nazwisko" },
+  fieldFullNamePlaceholder: {
+    ru: "Фамилия Имя Отчество",
+    uz: "Familiya Ism Otasining ismi",
+    pl: "Imię i nazwisko w pełnym brzmieniu",
+  },
+  fieldPhone: { ru: "Телефон", uz: "Telefon", pl: "Telefon" },
+  fieldPhonePlaceholder: { ru: "+998 90 123-45-67", uz: "+998 90 123-45-67", pl: "+998 90 123-45-67" },
+  detailsNote: {
+    ru: "Имя в панели видят все: им подписаны лиды и задачи, оно стоит под статусом в списке лидов. ФИО — полностью, для договоров. Telegram id здесь не меняется: по нему человек входит в панель.",
+    uz: "Paneldagi ismni hamma ko‘radi: lidlar va vazifalar shu ism bilan imzolanadi, lidlar ro‘yxatida u holat ostida turadi. F.I.Sh. — to‘liq, shartnomalar uchun. Telegram id bu yerda o‘zgarmaydi: odam panelga shu orqali kiradi.",
+    pl: "Imię w panelu widzą wszyscy: podpisane są nim leady i zadania, a na liście leadów stoi pod statusem. Imię i nazwisko — w pełnym brzmieniu, do umów. Id Telegrama się tu nie zmienia: przez nie pracownik loguje się do panelu.",
+  },
+  detailsSave: { ru: "Сохранить данные", uz: "Ma’lumotlarni saqlash", pl: "Zapisz dane" },
+  r_details: {
+    ru: "Данные сотрудника сохранены. Новое имя уже в списке лидов и задачах.",
+    uz: "Xodim ma’lumotlari saqlandi. Yangi ism lidlar ro‘yxati va vazifalarda allaqachon ko‘rinadi.",
+    pl: "Dane pracownika zapisane. Nowe imię jest już na liście leadów i w zadaniach.",
+  },
+  r_name_empty: {
+    ru: "Имя в панели не может быть пустым.",
+    uz: "Paneldagi ism bo‘sh bo‘lishi mumkin emas.",
+    pl: "Imię w panelu nie może być puste.",
+  },
+  r_username_bad: {
+    ru: "Username в Telegram — от 4 до 32 латинских букв, цифр или «_», без пробелов.",
+    uz: "Telegramdagi username — 4 tadan 32 tagacha lotin harfi, raqam yoki «_», bo‘sh joysiz.",
+    pl: "Username w Telegramie to od 4 do 32 liter łacińskich, cyfr lub «_», bez spacji.",
+  },
+  r_phone_bad: {
+    ru: "Телефон — от 9 до 15 цифр, например +998 90 123-45-67.",
+    uz: "Telefon — 9 tadan 15 tagacha raqam, masalan +998 90 123-45-67.",
+    pl: "Telefon to od 9 do 15 cyfr, na przykład +998 90 123-45-67.",
+  },
 
   // Уведомления.
   notices: {

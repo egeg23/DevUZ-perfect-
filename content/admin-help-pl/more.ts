@@ -129,6 +129,21 @@ export const moreSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "details",
+        title: "Dane pracownika: imię i nazwisko, imię w panelu, username, telefon",
+        roles: ["admin", "head"],
+        body: {
+          head: [
+            "U Ciebie i u każdego menedżera w ostatniej kolumnie jest **«Zmień dane»**. Są tam cztery pola: **«Imię i nazwisko»** — w pełnym brzmieniu, do umów; **«Imię w panelu»** — krótkie, podpisane są nim leady i zadania, widzą je wszyscy; **«Username»** — @ w Telegramie; **«Telefon»**. Popraw i kliknij **«Zapisz dane»**. Imię i nazwisko oraz telefon są potem widoczne w wierszu pracownika pod imieniem i pod id Telegrama.",
+            "Nowe imię albo username od razu pojawia się przy wszystkich leadach pracownika — na liście leadów pod statusem. Id Telegrama się tu nie zmienia: przez nie pracownik loguje się do panelu przez bota. Dane drugiego kierownika i właściciela zmienia tylko właściciel; menedżerowie nie zmieniają swoich danych.",
+          ],
+          admin: [
+            "U każdego pracownika, także u Ciebie, w ostatniej kolumnie jest **«Zmień dane»**: **«Imię i nazwisko»** (w pełnym brzmieniu, do umów), **«Imię w panelu»** (krótkie, podpisane są nim leady i zadania), **«Username»** (@ w Telegramie) i **«Telefon»**. Popraw i kliknij **«Zapisz dane»**; imię i nazwisko oraz telefon są widoczne w wierszu pracownika pod imieniem i pod id Telegrama.",
+            "Nowe imię albo username od razu pojawia się przy wszystkich leadach pracownika — na liście pod statusem. Id Telegrama się nie zmienia: przez nie odbywa się logowanie przez bota. Kierownik zmienia dane sobie i menedżerom, menedżerowie — nikomu. Kto co zmienił — w [dzienniku](/admin/audit).",
+          ],
+        },
+      },
+      {
         id: "disable",
         title: "Wyłącz pracownika",
         roles: ["admin", "head"],
