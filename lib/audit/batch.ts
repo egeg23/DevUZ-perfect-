@@ -3,7 +3,7 @@ import { analyze, unreachable, type AuditReport, type Finding } from "@/lib/audi
 import { type PitchLocale, pitch } from "@/lib/audit/pitch";
 import { crawl, enrich, probe, type PageProbe } from "@/lib/audit/fetch";
 import { classify } from "@/lib/razbor/classify";
-import { deepFindings, pagesToVisit, snap, trustFrom } from "@/lib/audit/deep";
+import { aboutLines, deepFindings, pagesToVisit, snap, trustFrom } from "@/lib/audit/deep";
 import { detectLang } from "@/lib/talk/language";
 import { visibleText } from "@/lib/audit/visible";
 // Разбор адреса — из чистого модуля: этот файл импортирует и браузер
@@ -206,6 +206,11 @@ export type Walked = {
    * а домен .uz не говорит ничего. Текст говорит.
    */
   lang: "ru" | "uz" | "en";
+  /**
+   * Что компания пишет о себе, дословно (lib/audit/deep.ts → aboutLines).
+   * Необязательное: обходы, снятые раньше, его не несут.
+   */
+  about?: string[];
 };
 
 /**
@@ -256,11 +261,16 @@ export async function auditDeep(
       quote: (snaps[0]?.h1?.length ?? 0) >= 12 ? (snaps[0].h1?.slice(0, 90) ?? null) : null,
       sitemapUrls: crawled.sitemapUrls,
       sitemapFresh: crawled.sitemapFresh,
-      hints: snaps.flatMap((p) => [p.title ?? "", p.h1 ?? ""]).filter(Boolean),
+      // Только с открывшихся страниц, как и пути. На cherrystore.uz обход
+      // упёрся в ограничитель Cloudflare, и в подсказки ниши ушли пять раз
+      // «Access denied» и «Error 1015» — заголовки чужой заглушки, а не
+      // сайта.
+      hints: snaps.filter((p) => p.status < 400).flatMap((p) => [p.title ?? "", p.h1 ?? ""]).filter(Boolean),
       // По видимому тексту главной, а не по заголовкам: заголовок часто
       // остаётся английским («Home», названием компании), а тело страницы
       // написано на языке, на котором с клиентом и говорят.
       lang: detectLang(visibleText(page.html).slice(0, 4000)),
+      about: aboutLines(pages),
     };
 
     // Находки обхода дописываются к отчёту главной, а не к строке пачки:

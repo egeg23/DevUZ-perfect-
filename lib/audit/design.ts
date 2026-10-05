@@ -94,6 +94,67 @@ export function copyrightYear(text: string): number | null {
   return latest;
 }
 
+/** Адрес ссылки так, как его наберёт человек: путь без домена. */
+function linkPath(href: string): string {
+  try {
+    const u = new URL(href);
+    return decodeURI(u.pathname + u.search);
+  } catch {
+    return href;
+  }
+}
+
+/**
+ * Битые ссылки с главной — со своими адресами и со своим кодом.
+ *
+ * Раньше находка говорила одно на все случаи: «ведут на несуществующие
+ * страницы, посетитель нажимает „Услуги“ или „Контакты“». На cherrystore.uz
+ * так ушло письмо о магазине, у которого лёг весь каталог: шесть разделов
+ * отдавали 500, а «Услуг» и «Контактов» на сайте нет вовсе. Владелец,
+ * проверив, увидел бы чужие слова — и не поверил бы остальному.
+ *
+ * Поэтому: адреса — настоящие, по которым адресат проверит сам; 404 —
+ * «страницы нет»; 500 — «сервер падает», и если так отвечают все проверенные
+ * ссылки или хотя бы три, это не мелочь, а лежащий сайт.
+ */
+export function brokenLinksFinding(assets: {
+  checkedLinks: number;
+  brokenLinks: string[];
+  brokenLinkStatuses?: number[];
+}): Finding {
+  const n = assets.brokenLinks.length;
+  const codes = assets.brokenLinkStatuses ?? [];
+  const known = codes.length === n;
+  const server = known && codes.every((c) => c >= 500);
+  const missing = !known || codes.every((c) => c < 500);
+  const paths = [...new Set(assets.brokenLinks.map(linkPath))].filter((p) => p !== "/").slice(0, 2);
+  const example = paths.length ? ` — например, ${paths.join(" и ")}` : "";
+  const links = `${n} ${plural(n, "ссылка", "ссылки", "ссылок")} с главной`;
+
+  if (server) {
+    const code = codes[0];
+    const all = n === assets.checkedLinks;
+    return {
+      code: "broken_links",
+      severity: all || n >= 3 ? "critical" : "major",
+      title: `${links} ${n === 1 ? "открывает" : "открывают"} ошибку сервера ${code}`,
+      impact:
+        `${all && n > 1 ? `Все ${n} ${plural(n, "проверенная ссылка", "проверенные ссылки", "проверенных ссылок")}` : `Из первых ${assets.checkedLinks} проверенных ссылок ${n}`} вместо страницы ${n === 1 ? "показывает" : "показывают"} ошибку сервера ${code}${example}. Это не переехавшая страница, а сломанный сервер: ту же ошибку видит каждый, кто открывает эти адреса из поиска, по пересланной ссылке или из соцсетей, — и поисковик, и превью ссылки в Telegram.`,
+      fix: "Находим, что роняет сервер на этих страницах — чаще всего база данных, неудачное обновление или закончившийся тариф, — и поднимаем. От часа до дня; заодно ставим проверку, которая сама сообщит, если упадёт снова.",
+    };
+  }
+  return {
+    code: "broken_links",
+    severity: "major",
+    title: missing
+      ? `${links} ${n === 1 ? "ведёт" : "ведут"} на несуществующие страницы`
+      : `${links} не ${n === 1 ? "открывается" : "открываются"}`,
+    impact:
+      `Из первых ${assets.checkedLinks} проверенных ссылок ${n} ${n === 1 ? "открывает" : "открывают"} страницу ошибки вместо раздела${example}. Посетитель нажимает ссылку, получает ошибку и уходит — до того, за чем пришёл, он так и не добрался.`,
+    fix: "Проверяем все ссылки на сайте и чиним каждую: возвращаем страницу, перенаправляем на новую или убираем ссылку. Пара часов.",
+  };
+}
+
 function plural(n: number, one: string, few: string, many: string): string {
   const mod10 = n % 10;
   const mod100 = n % 100;
@@ -334,15 +395,7 @@ export function designChecks(probe: PageProbe, now: Date): { findings: Finding[]
   }
 
   if (assets && assets.brokenLinks.length) {
-    const n = assets.brokenLinks.length;
-    add({
-      code: "broken_links",
-      severity: "major",
-      title: `${n} ${plural(n, "ссылка", "ссылки", "ссылок")} с главной ${n === 1 ? "ведёт" : "ведут"} на несуществующие страницы`,
-      impact:
-        `Из первых ${assets.checkedLinks} проверенных ссылок ${n} ${n === 1 ? "открывает" : "открывают"} страницу ошибки вместо раздела. Посетитель нажимает «Услуги» или «Контакты», получает «страница не найдена» и уходит — до контактов он так и не добрался.`,
-      fix: "Проверяем все ссылки на сайте и чиним каждую: возвращаем страницу, перенаправляем на новую или убираем ссылку. Пара часов.",
-    });
+    add(brokenLinksFinding(assets));
   }
 
   if (IE_ONLY.test(text)) {

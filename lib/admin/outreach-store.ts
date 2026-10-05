@@ -483,7 +483,7 @@ export async function prepareOutreach(id: string, staff: Staff): Promise<Prepare
   });
 
 
-  const hooks = outreachHooks(findings, reference?.name ?? null, prototype);
+  const hooks = { ...outreachHooks(findings, reference?.name ?? null, prototype), sender: staff.display_name };
 
   /**
    * Один ход модели.
@@ -622,11 +622,16 @@ export function sendProblems(
       prototype: prospect.proto_url,
     }),
     host,
-    outreachHooks(
-      prospect.findings,
-      outreachProof({ niche: prospect.niche, label: prospect.label, host }).reference?.name ?? null,
-      prospect.proto_url,
-    ),
+    {
+      ...outreachHooks(
+        prospect.findings,
+        outreachProof({ niche: prospect.niche, label: prospect.label, host }).reference?.name ?? null,
+        prospect.proto_url,
+      ),
+      // «менеджер» — заглушка, когда смотрящий неизвестен; приветствие тогда
+      // ловится по тому, кем пишущий представляется сам.
+      sender: sender === "менеджер" ? null : sender,
+    },
   );
 }
 

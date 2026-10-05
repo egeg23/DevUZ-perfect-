@@ -330,6 +330,14 @@ export const problemDict = defineDict({
     uz: (chars: string) => `Xabarda begona yozuv belgilari bor: ${chars}. Ularni olib tashlang — bu SI xatosi, matn emas.`,
     pl: (chars: string) => `W wiadomości są znaki obcego pisma: ${chars}. Usuń je — to błąd AI, a nie tekst.`,
   },
+  greets_sender: {
+    ru: (name: string) =>
+      `Письмо здоровается с клиентом именем «${name}» — так зовут того, кто пишет, а имени клиента мы не знаем. Поздоровайтесь без имени.`,
+    uz: (name: string) =>
+      `Xat mijoz bilan «${name}» ismi bilan salomlashadi — bu yozayotgan odamning ismi, mijozning ismini esa bilmaymiz. Ismsiz salomlashing.`,
+    pl: (name: string) =>
+      `Wiadomość wita klienta imieniem «${name}» — tak ma na imię nadawca, a imienia klienta nie znamy. Przywitaj się bez imienia.`,
+  },
   banned: {
     ru: "В сообщении есть обещание или знак, которых в первом касании быть не должно: «в топ», «гарантируем», любые проценты, «комплексный подход», эмодзи.",
     uz: "Xabarda birinchi aloqada bo‘lmasligi kerak bo‘lgan va’da yoki belgi bor: «top»ga chiqarish, «kafolat», har qanday foizlar, «kompleks yondashuv», emoji.",
