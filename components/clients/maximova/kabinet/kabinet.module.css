@@ -1,20 +1,22 @@
-/* Кабинет и политика — в палитре сайта «Две страны»: бумага, чернила, красный. */
+/* Кабинет и политика — в палитре сайта «Лаборатория»: ультрафиолет, лайм,
+   розовый для замечаний и ошибок. */
 
 .page {
-  --paper: hsl(40 45% 95%);
-  --card: hsl(40 60% 99%);
-  --ink: hsl(222 40% 18%);
-  --muted: hsl(222 14% 40%);
-  --line: hsl(36 24% 80%);
-  --red: hsl(4 70% 48%);
-  --blue: hsl(220 60% 40%);
-  --radius: 16px;
+  --paper: #191337;
+  --card: #1f1743;
+  --ink: #e5e4ee;
+  --muted: #a9a5c6;
+  --line: rgb(229 228 238 / 0.18);
+  --red: #e995be;
+  --blue: #cff846;
+  --lime: #cff846;
+  --radius: 24px;
 
   min-height: 100svh;
   display: flow-root;
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--mx-golos), system-ui, sans-serif;
+  font-family: var(--mx-commissioner), system-ui, sans-serif;
   font-size: clamp(16px, 15.12px + 0.233vw, 18px);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -23,7 +25,7 @@
 
 :global(body):has(.page) {
   margin: 0;
-  background: hsl(40 45% 95%);
+  background: #191337;
 }
 
 .page *,
@@ -50,7 +52,7 @@
   gap: 16px;
   min-height: 56px;
   padding: 8px 16px;
-  background: hsla(40, 45%, 95%, 0.94);
+  background: rgb(25 19 55 / 0.94);
   border-bottom: 1px solid var(--line);
 }
 
@@ -82,16 +84,35 @@
   padding: 32px 16px 64px;
 }
 
+/* Колонка сетки не растягивается по самому длинному слову заголовка. */
+.main > * {
+  min-width: 0;
+}
+
 .title {
-  font-family: var(--mx-lora), Georgia, serif;
-  font-size: clamp(30px, 27.35px + 0.698vw, 36px);
-  font-weight: 700;
-  line-height: 1.2;
+  font-family: var(--mx-dela), var(--mx-commissioner), sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+@media (min-width: 400px) {
+  .title {
+    font-size: 30px;
+  }
+}
+@media (min-width: 640px) {
+  .title {
+    font-size: 36px;
+  }
 }
 
 .h2 {
   margin-bottom: 12px !important;
-  font-family: var(--mx-lora), Georgia, serif;
+  font-family: var(--mx-commissioner), sans-serif;
   font-size: 24px;
   font-weight: 700;
   line-height: 1.25;
@@ -118,7 +139,7 @@
   padding: 24px 16px;
   background: var(--card);
   border-radius: var(--radius);
-  box-shadow: 0 4px 6px hsla(222, 40%, 18%, 0.08);
+  box-shadow: inset 0 0 0 1px var(--line), 0 15px 35px -18px rgb(0 0 0 / 0.6);
 }
 
 @media (min-width: 720px) {
@@ -162,8 +183,8 @@
   padding: 0 32px;
   border: 0;
   border-radius: 999px;
-  background: hsl(200 80% 44%);
-  color: hsl(0 0% 100%);
+  background: var(--lime);
+  color: #191337;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -249,7 +270,7 @@
 
 .doc h2 {
   margin: 32px 0 12px !important;
-  font-family: var(--mx-lora), Georgia, serif;
+  font-family: var(--mx-commissioner), sans-serif;
   font-size: 24px;
   font-weight: 700;
 }
@@ -307,9 +328,9 @@
 }
 
 .tabOn {
-  color: hsl(0 0% 100%) !important;
-  background: var(--ink);
-  border: 2px solid var(--ink);
+  color: #191337 !important;
+  background: var(--lime);
+  border: 2px solid var(--lime);
 }
 
 .form {
@@ -334,7 +355,7 @@
   padding: 10px 14px;
   border: 2px solid var(--line);
   border-radius: 12px;
-  background: hsl(0 0% 100%);
+  background: rgb(255 255 255 / 0.06);
   color: var(--ink);
   font: inherit;
   font-size: 16px;
@@ -416,7 +437,7 @@ textarea.input {
 }
 
 .success {
-  color: hsl(150 50% 30%);
+  color: var(--lime);
   font-weight: 700;
 }
 
@@ -445,7 +466,7 @@ textarea.input {
 
 .h3 {
   margin-top: 8px !important;
-  font-family: var(--mx-lora), Georgia, serif;
+  font-family: var(--mx-commissioner), sans-serif;
   font-size: 20px;
   font-weight: 700;
 }
@@ -460,7 +481,7 @@ textarea.input {
 }
 
 .praise {
-  color: hsl(150 50% 30%);
+  color: var(--lime);
 }
 
 .remark {

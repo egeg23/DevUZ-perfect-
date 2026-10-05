@@ -17,6 +17,8 @@ export const cormorant = localFont({
   ],
   variable: "--mx-cormorant",
   display: "swap",
+  // Гарнитуры архивных вариантов: не тянуть их заранее на основной сайт.
+  preload: false,
 });
 
 /** Текст «Кино» и заголовки «Стекла»: гротеск с ровным ритмом. */
@@ -25,6 +27,8 @@ export const manrope = localFont({
   weight: "400 700",
   variable: "--mx-manrope",
   display: "swap",
+  // Гарнитуры архивных вариантов: не тянуть их заранее на основной сайт.
+  preload: false,
 });
 
 /** «Две страны»: тёплая антиква, как в детской книге. */
@@ -35,6 +39,8 @@ export const lora = localFont({
   ],
   variable: "--mx-lora",
   display: "swap",
+  // Гарнитуры архивных вариантов: не тянуть их заранее на основной сайт.
+  preload: false,
 });
 
 /** Текст «Стекла» и «Двух стран». */
@@ -43,6 +49,31 @@ export const golos = localFont({
   weight: "400 700",
   variable: "--mx-golos",
   display: "swap",
+  // Гарнитуры архивных вариантов: не тянуть их заранее на основной сайт.
+  preload: false,
 });
 
-export const fontVars = [cormorant.variable, manrope.variable, lora.variable, golos.variable].join(" ");
+/** «Лаборатория»: плотный дисплейный гротеск капслоком — по эталону MedAcademy. */
+export const dela = localFont({
+  src: "./fonts/dela.woff2",
+  weight: "400",
+  variable: "--mx-dela",
+  display: "swap",
+});
+
+/** Текст «Лаборатории»: живой гротеск, 400 и 700. */
+export const commissioner = localFont({
+  src: "./fonts/commissioner.woff2",
+  weight: "400 700",
+  variable: "--mx-commissioner",
+  display: "swap",
+});
+
+export const fontVars = [
+  cormorant.variable,
+  manrope.variable,
+  lora.variable,
+  golos.variable,
+  dela.variable,
+  commissioner.variable,
+].join(" ");

@@ -8,6 +8,7 @@ import {
   addRemark,
   addStudent,
   homeworkMessage,
+  learnersOf,
   levelMessage,
   markReminded,
   parentsOf,
@@ -30,7 +31,8 @@ export const dynamic = "force-dynamic";
  * полем action. Доступ — только администратору (MAXIMOVA_ADMIN_TG_IDS).
  *
  * Что касается ребёнка — задание, замечание, оплата, результат теста —
- * сразу уходит его родителю в Telegram. Сколько сообщений дошло, отвечаем
+ * сразу уходит его родителю в Telegram. Задание и похвала уходят и самому
+ * ученику, если он вошёл по своей ссылке. Сколько сообщений дошло, отвечаем
  * числом: Дарья видит, что родитель ещё не привязан, а не думает, что
  * написала ему.
  */
@@ -73,16 +75,16 @@ export async function POST(request: NextRequest) {
 
       case "addHomework": {
         const homework = addHomework(body);
-        const sent = await notify(
-          parentsOf({ studentId: homework.studentId, groupId: homework.groupId }),
-          (name) => homeworkMessage(homework, name),
-        );
+        const target = { studentId: homework.studentId, groupId: homework.groupId };
+        const sent = await notify([...parentsOf(target), ...learnersOf(target)], (name) => homeworkMessage(homework, name));
         return NextResponse.json({ ok: true, homework, ...sent });
       }
 
       case "addRemark": {
         const remark = addRemark(body);
-        const sent = await notify(parentsOf({ studentId: remark.studentId }), (name) => remarkMessage(remark, name));
+        const target = { studentId: remark.studentId };
+        const to = remark.kind === "praise" ? [...parentsOf(target), ...learnersOf(target)] : parentsOf(target);
+        const sent = await notify(to, (name) => remarkMessage(remark, name));
         return NextResponse.json({ ok: true, remark, ...sent });
       }
 

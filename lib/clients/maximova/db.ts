@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -136,6 +137,15 @@ export function open(path?: string): DatabaseSync {
   // Поля, добавленные после первой выкатки: у старой базы их нет, а
   // create table if not exists существующую таблицу не меняет.
   addColumn(conn, "login_tokens", "invite text");
+  // Ученик входит в свой дневник по своей ссылке — не по родительской:
+  // ученику не видны оплата и замечания для родителя.
+  addColumn(conn, "students", "student_code text");
+  addColumn(conn, "students", "student_telegram_id integer");
+  for (const row of conn.prepare("select id from students where student_code is null").all() as { id: number }[]) {
+    conn.prepare("update students set student_code = ? where id = ?").run(randomBytes(9).toString("base64url"), row.id);
+  }
+  conn.exec("create unique index if not exists students_student_code on students(student_code)");
+  conn.exec("create index if not exists students_learner on students(student_telegram_id)");
   if (!path) db = conn;
   return conn;
 }
