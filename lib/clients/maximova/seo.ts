@@ -34,7 +34,7 @@ export function pageMetadata(input: { path: string; title: string; description: 
       title: input.title,
       description: input.description,
       siteName: "Дарья Максимова — английский и французский для детей",
-      images: [{ url: asset("/clients/maximova/previews/c.webp"), width: 585, height: 900 }],
+      images: [{ url: asset("/clients/maximova/previews/lab.webp"), width: 1200, height: 630 }],
     },
     robots: INDEXING ? { index: true, follow: true } : { index: false, follow: false, nocache: true },
   };
