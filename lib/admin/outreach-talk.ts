@@ -41,6 +41,108 @@ export function normalizeHandle(raw: string | null | undefined): string {
   return path.replace(/^@/, "").split(/[/?#]/)[0].toLowerCase();
 }
 
+/**
+ * Номер в общем виде — последние девять цифр.
+ *
+ * Telegram отдаёт номер без «+» и с кодом страны («998901234567»), на сайте
+ * он записан как угодно: «+998 (90) 123-45-67», «90 123 45 67». Девять цифр —
+ * это номер Узбекистана без кода страны; для чужих номеров совпадение по
+ * хвосту тоже не случайно. Короче девяти — не номер, сравнивать нечего.
+ */
+export function phoneKey(raw: string | null | undefined): string {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  return digits.length >= 9 ? digits.slice(-9) : "";
+}
+
+/** Касание, которое менеджер сделал руками, — то, что нужно, чтобы его узнать. */
+export type HandTouch = {
+  status: string;
+  target: string | null;
+  target_kind: string | null;
+  contacts: { telegram?: readonly string[]; phones?: readonly string[]; whatsapp?: readonly string[] } | null;
+};
+
+/**
+ * Кто из касаний, сделанных руками, — тот, кто сейчас написал рабочему
+ * аккаунту.
+ *
+ * Владелец, 05.10.2026: «с теми, с кем связались менеджеры с новых рабочих
+ * аккаунтов, где он закреплён, бот должен продолжить общение там». Менеджер
+ * пишет клиенту руками — с рабочего аккаунта студии на своём телефоне, — и
+ * id клиента в Telegram нам неизвестен: письмо ушло мимо скаута. Узнать
+ * клиента можно только по тому, что есть в карточке: @адрес или номер, из
+ * поля адресата или из контактов сайта.
+ *
+ * Строки — уже по свежести касания: первый совпавший и есть разговор.
+ */
+export function findHandTouch<T extends HandTouch>(
+  rows: readonly T[],
+  who: { handle: string; phone: string },
+): T | null {
+  const handle = normalizeHandle(who.handle);
+  const phone = phoneKey(who.phone);
+  if (!handle && !phone) return null;
+  return (
+    rows.find((row) => {
+      const contacts = row.contacts ?? {};
+      if (handle && [row.target, ...(contacts.telegram ?? [])].some((h) => normalizeHandle(h) === handle)) return true;
+      if (phone && [row.target, ...(contacts.phones ?? []), ...(contacts.whatsapp ?? [])].some((p) => phoneKey(p) === phone)) {
+        return true;
+      }
+      return false;
+    }) ?? null
+  );
+}
+
+/**
+ * Разговор ещё не живёт на рабочем аккаунте: касание сделано руками
+ * («Связался сам») или письмо стоит в очереди, а менеджер написал раньше
+ * бота. Ответ клиента пришёл на аккаунт — значит, переписка теперь там.
+ */
+export function needsBinding(p: { status: string; target_kind: string | null }): boolean {
+  return p.status !== "sent" || p.target_kind === "manual";
+}
+
+/**
+ * Что записать в касание, когда разговор переходит на рабочий аккаунт.
+ *
+ * Дальше это обычное касание с аккаунта: ответы модели уходят с того же
+ * номера, которому написал клиент (sent_via), и тому, кто написал
+ * (target_user_id). Отмеченное «Связался сам» уже засчитано — его время и
+ * автора не трогаем. Неотмеченное засчитываем тому, за кем карточка: он и
+ * написал.
+ */
+export function bindingPatch(
+  p: { status: string },
+  /** Кому засчитать неотмеченное касание: тот, за кем карточка. */
+  author: string | null,
+  who: { account: string; userId: string; handle: string; phone: string },
+  nowIso: string,
+): Record<string, unknown> {
+  const handle = normalizeHandle(who.handle);
+  const phone = String(who.phone ?? "").replace(/\D/g, "");
+  const patch: Record<string, unknown> = {
+    sent_via: who.account,
+    target_kind: handle ? "handle" : "phone",
+    ...(handle ? { target: `@${handle}` } : phone ? { target: `+${phone}` } : {}),
+    ...(who.userId ? { target_user_id: who.userId } : {}),
+  };
+  if (p.status !== "sent") {
+    Object.assign(patch, {
+      status: "sent",
+      sent_at: nowIso,
+      touched_at: nowIso,
+      touched_by: author,
+      ai_handling: true,
+      handover_reason: null,
+      failure: null,
+      dispatch_by: null,
+      dispatch_at: null,
+    });
+  }
+  return patch;
+}
+
 export type TalkRow = {
   direction: "in" | "out";
   body: string;

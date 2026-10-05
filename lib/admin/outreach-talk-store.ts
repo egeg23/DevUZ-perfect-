@@ -1,5 +1,14 @@
 import { wants } from "@/lib/admin/notify-prefs";
-import { HANDOVER_TEXT, normalizeHandle, readInbound, type TalkRow } from "@/lib/admin/outreach-talk";
+import {
+  HANDOVER_TEXT,
+  bindingPatch,
+  findHandTouch,
+  needsBinding,
+  normalizeHandle,
+  readInbound,
+  type HandTouch,
+  type TalkRow,
+} from "@/lib/admin/outreach-talk";
 import { protoTermsText } from "@/lib/admin/prototype-claim";
 import { announcePrototype } from "@/lib/admin/prototype-claim-store";
 import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
@@ -58,19 +67,24 @@ export async function recordInbound(input: {
   handle: string;
   /** Кого вернул телеграм при отправке. Главный ключ: он есть всегда. */
   userId?: string;
+  /** Номер написавшего, если Telegram его показал: по нему узнаётся касание, сделанное руками. */
+  phone?: string;
+  /** Каким аккаунтом принято сообщение: на него переходит разговор, начатый руками. */
+  account?: string;
   body: string;
-}): Promise<{ matched: boolean; host?: string; verdict?: string }> {
+}): Promise<{ matched: boolean; host?: string; verdict?: string; bound?: boolean }> {
   const db = serviceClient();
   if (!db) return { matched: false };
 
   const handle = normalizeHandle(input.handle);
   const userId = (input.userId ?? "").trim();
-  if (!handle && !userId) return { matched: false };
+  const phone = (input.phone ?? "").trim();
+  if (!handle && !userId && !phone) return { matched: false };
 
   // Сравниваем в общем виде: в проспекте адрес мог остаться ссылкой.
   const { data: rows } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url")
+    .select(PROSPECT_FIELDS)
     .eq("status", "sent")
     .order("sent_at", { ascending: false })
     .limit(500);
@@ -86,12 +100,122 @@ export async function recordInbound(input: {
    * Обратный порядок был бы хуже и по другой причине: адрес человек меняет,
    * id — нет.
    */
-  const prospect =
-    (userId ? (rows ?? []).find((row) => String(row.target_user_id ?? "") === userId) : undefined) ??
-    (handle ? (rows ?? []).find((row) => normalizeHandle(row.target as string | null) === handle) : undefined);
+  const sent = (rows ?? []) as unknown as ProspectRow[];
+  let prospect: ProspectRow | null =
+    (userId ? sent.find((row) => String(row.target_user_id ?? "") === userId) : undefined) ??
+    (handle ? sent.find((row) => normalizeHandle(row.target) === handle) : undefined) ??
+    null;
+
+  /**
+   * Не нашли среди отправленных ботом — ищем среди написанных руками.
+   *
+   * Менеджер написал клиенту сам, с рабочего аккаунта студии на своём
+   * телефоне: отметил «Связался сам» или ещё не успел. Id клиента у нас нет
+   * — письмо ушло мимо скаута, — поэтому узнаём его по @адресу или номеру из
+   * карточки (findHandTouch). Сюда же попадает письмо, которое ещё стоит в
+   * очереди бота: менеджер написал раньше бота, клиент уже ответил.
+   */
+  if (!prospect) {
+    // Отмеченные «Связался сам» — первыми: про них менеджер уже сказал, что
+    // написал. Потом те, что он отметить не успел.
+    const [marked, unmarked] = await Promise.all([
+      db
+        .from("prospects")
+        .select(PROSPECT_FIELDS)
+        .eq("status", "sent")
+        .eq("target_kind", "manual")
+        .order("touched_at", { ascending: false, nullsFirst: false })
+        .limit(300),
+      db
+        .from("prospects")
+        .select(PROSPECT_FIELDS)
+        .in("status", ["manual", "sending"])
+        .order("claimed_at", { ascending: false, nullsFirst: false })
+        .limit(300),
+    ]);
+    const hand = [...(marked.data ?? []), ...(unmarked.data ?? [])] as unknown as ProspectRow[];
+    prospect = findHandTouch(hand, { handle, phone });
+  }
   if (!prospect) return { matched: false };
 
-  return saveInbound(prospect, input.body);
+  // Клиент ответил на рабочий аккаунт — переписка теперь здесь, и бот ведёт
+  // её с этого же аккаунта (nextReply берёт по sent_via).
+  let bound = false;
+  if (input.account && needsBinding(prospect)) {
+    bound = await bindToAccount(prospect, { account: input.account, userId, handle, phone });
+    if (bound && prospect.status !== "sent") prospect = { ...prospect, status: "sent", ai_handling: true };
+  }
+
+  const saved = await saveInbound(prospect, input.body);
+  // Сказать менеджеру, что дальше пишет бот, — только если бот правда пишет:
+  // клиент просит человека или разговор уже забрали себе — об этом своё
+  // сообщение уходит из saveInbound.
+  if (bound && saved.verdict === "talk" && prospect.ai_handling) {
+    await tellManager(
+      String(prospect.id),
+      "Клиент ответил на рабочий аккаунт студии, с которого вы ему писали. Дальше переписку ведёт бот с этого же аккаунта — как с обычного касания. Забрать разговор себе — «Отвечать самому» в карточке лида.",
+    );
+  }
+  return { ...saved, bound };
+}
+
+const PROSPECT_FIELDS =
+  "id, host, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url";
+
+/** Строка касания из PROSPECT_FIELDS. Лид и закрепление здесь только читаются. */
+type ProspectRow = HandTouch &
+  Record<"id" | "host" | "target_user_id" | "message" | "lead_id" | "ai_handling" | "closed_reason" | "proto_url", unknown> &
+  Record<"claimed_by" | "touched_by", string | null>;
+
+/** Что лежит в ответе модели, который ждал ручной отправки, а бот его не отправил. */
+const HAND_REPLY_LEFT = "не отправлено ботом: ответ ждал ручной отправки, а разговор перешёл на рабочий аккаунт";
+
+/**
+ * Перевести разговор на рабочий аккаунт, которому ответил клиент.
+ *
+ * Условие на прежний статус — чтобы не перебить то, что успело случиться
+ * между чтением и записью: бот отправил письмо из очереди, менеджер нажал
+ * «Связался сам».
+ */
+async function bindToAccount(
+  prospect: ProspectRow,
+  who: { account: string; userId: string; handle: string; phone: string },
+): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+
+  const now = new Date().toISOString();
+  const { data: updated } = await db
+    .from("prospects")
+    .update(bindingPatch(prospect, prospect.touched_by ?? prospect.claimed_by, who, now))
+    .eq("id", prospect.id)
+    .eq("status", prospect.status)
+    .select("id");
+  if (!updated?.length) return false;
+
+  // Ответы модели, ждавшие, что менеджер отправит их руками, бот не досылает:
+  // их могли уже отправить, а клиенту сейчас нужен ответ на новое сообщение.
+  await db
+    .from("outreach_messages")
+    .update({ status: "done", failure: HAND_REPLY_LEFT })
+    .eq("prospect_id", prospect.id)
+    .eq("direction", "out")
+    .eq("status", "queued");
+
+  // Касание не отмечали — первого письма в ленте нет. Модель, отвечая, не
+  // должна ссылаться на несказанное: кладём то, что менеджер отправлял.
+  if (prospect.status !== "sent" && prospect.message) {
+    await db.from("outreach_messages").insert({
+      prospect_id: prospect.id,
+      lead_id: prospect.lead_id,
+      direction: "out",
+      author: "staff",
+      body: String(prospect.message).slice(0, 4000),
+      status: "sent",
+      sent_at: now,
+    });
+  }
+  return true;
 }
 
 /**

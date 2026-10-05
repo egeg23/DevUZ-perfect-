@@ -350,12 +350,12 @@ test("ответ находится по id отправителя, а не то
   // выглядело как «клиент не отвечает».
   assert.match(store, /target_user_id/, "id адресата не участвует в поиске разговора");
   const byId = store.indexOf("String(row.target_user_id ?? \"\") === userId");
-  const byHandle = store.indexOf("normalizeHandle(row.target as string | null) === handle");
+  const byHandle = store.indexOf("normalizeHandle(row.target) === handle");
   assert.ok(byId > 0 && byHandle > 0, "нет обоих способов");
   assert.ok(byId < byHandle, "адрес человек меняет, id — нет: сверять надо сперва по id");
 
   const runner = readFileSync(new URL("../scout/runner.mjs", import.meta.url), "utf8");
-  assert.match(runner, /recordInbound\(\{ handle, userId, body/, "скаут не передаёт id отправителя");
+  assert.match(runner, /recordInbound\(\{ handle, userId, /, "скаут не передаёт id отправителя");
 });
 
 test("ручной маршрут не запирает очередь ответов и не отдаётся скауту", () => {
