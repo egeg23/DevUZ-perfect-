@@ -111,6 +111,8 @@ services:
       # Чем «Найти в инструкции» выбирает пункт по вопросу сотрудника.
       # Пусто — Haiku: нужно только выбрать пункт из списка.
       HELP_SEARCH_MODEL: ${HELP_SEARCH_MODEL:-}
+      # ИИ на прототипах (lib/proto/ai.ts) — по умолчанию Haiku.
+      PROTO_AI_MODEL: ${PROTO_AI_MODEL:-}
       # Ключ Вордстата — API-ключ Яндекс Облака (AQVN…) или OAuth-токен:
       # запросы по Узбекистану перед каждой статьёй.
       WORDSTAT_TOKEN: ${WORDSTAT_TOKEN:-}
