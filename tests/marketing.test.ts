@@ -12,7 +12,7 @@ import {
   projects,
 } from "@/content/marketing";
 import { locales } from "@/lib/i18n";
-import { checkArticle, missingStems, numbersIn } from "@/lib/marketing/article-check";
+import { checkArticle, missingStems, numbersIn, queryStems } from "@/lib/marketing/article-check";
 import { ARTICLE_HOURS, articlePrompt, dueSlots } from "@/lib/marketing/articles-run";
 import { articleHref, isArticleLocale, parseText, type ArticleText } from "@/lib/marketing/articles-store";
 import { estimateMarketing } from "@/lib/marketing/estimate";
@@ -153,8 +153,11 @@ test("недорогая модель по умолчанию, переменн�
   assert.match(read("app/api/reminders/sweep/route.ts"), /runMarketingArticles\(new Date\(\)\)/);
 });
 
-const caseTopic = MARKETING_TOPICS.find((t) => t.key === "case:dollar-shave-club")!;
-const mistakeTopic = MARKETING_TOPICS.find((t) => t.kind === "mistake")!;
+// Проверки чисел, языка и ссылок — на темах без запроса: запрос в
+// заголовке, описании и первом абзаце проверяется своим тестом ниже, и
+// общая заготовка статьи под каждый запрос не подстраивается.
+const caseTopic = { ...MARKETING_TOPICS.find((t) => t.key === "case:dollar-shave-club")!, query: undefined };
+const mistakeTopic = { ...MARKETING_TOPICS.find((t) => t.kind === "mistake")!, query: undefined };
 
 function article(paragraph: string, locale: "ru" | "uz" = "ru"): ArticleText {
   const base =
@@ -272,6 +275,24 @@ test("объяснения — под запросы из поиска, на о�
   // Ниши — тоже под запрос «продвижение … в …».
   const niche = MARKETING_TOPICS.find((t) => t.kind === "niche");
   assert.match(niche?.query?.ru ?? "", /^продвижение /);
+});
+
+test("запрос — у каждой темы и на обоих языках: Trends и Вордстат спрашиваются перед любой статьёй", () => {
+  // Правило владельца 04.10.2026 — про любую статью. 05.10 кейс «Dollar
+  // Shave Club» вышел без исследования: запрос был только у объяснений и
+  // ниш, а без запроса смена Trends и Вордстат не спрашивает.
+  for (const topic of MARKETING_TOPICS) {
+    assert.ok(topic.query?.ru && topic.query?.uz, `${topic.key}: нет запроса на одном из языков`);
+    assert.ok(!/[Ѐ-ӿ]/.test(topic.query.uz ?? ""), `${topic.key}: узбекский запрос кириллицей`);
+    assert.ok(queryStems(topic.query.ru!).length && queryStems(topic.query.uz!).length, `${topic.key}: в запросе нечего проверять`);
+  }
+  const dsc = MARKETING_TOPICS.find((t) => t.key === "case:dollar-shave-club")!;
+  assert.deepEqual(dsc.query, { ru: "Dollar Shave Club", uz: "Dollar Shave Club" });
+  const blend = MARKETING_TOPICS.find((t) => t.key === "case:will-it-blend")!;
+  assert.equal(blend.query?.ru, "Will It Blend", "вопрос из названия в запрос не идёт");
+  const niche = MARKETING_TOPICS.find((t) => t.key === "niche:stomatologii:instagram")!;
+  assert.equal(niche.query?.uz, "stomatologiya uchun Instagram reklama");
+  assert.match(read("lib/marketing/articles-run.ts"), /if \(ruQuery\) research\.ru = await keywordResearch\(ruQuery\);/);
 });
 
 test("запрос — в заголовке, описании и первом абзаце, по началу слова", () => {

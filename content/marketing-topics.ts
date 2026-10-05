@@ -182,59 +182,74 @@ const CASES: CaseSeed[] = [
   },
 ];
 
-const MISTAKES: Array<{ key: string; brief: string }> = [
-  { key: "target-bez-pikselya", brief: "Таргет без пикселя на сайте: почему реклама в Instagram не учится и дорожает" },
-  { key: "reklama-na-glavnuyu", brief: "Реклама ведёт на главную страницу сайта вместо отдельной страницы под предложение" },
-  { key: "otvet-v-direkt", brief: "Ответ в директ через час и позже: как заявки уходят к конкурентам" },
-  { key: "utm-metki", brief: "UTM-метки: как понять, какая реклама приносит деньги, а какая нет" },
-  { key: "otchet-po-ohvatam", brief: "Отчёт по охватам вместо отчёта по заявкам и продажам" },
-  { key: "pokupka-podpischikov", brief: "Покупка подписчиков: почему это вредит охватам и доверию" },
-  { key: "net-retargetinga", brief: "Нет ретаргетинга: посетители сайта уходят, и реклама их больше не догоняет" },
-  { key: "medlennyy-sayt", brief: "Медленный сайт на телефоне: реклама приводит людей, а страница не успевает открыться" },
-  { key: "kartochka-v-kartah", brief: "Карточка компании в Google и Яндекс Картах: бесплатный канал, о котором забывают" },
-  { key: "uzbekskiy-yazyk", brief: "Узбекский язык на сайте и в соцсетях как формальность: что теряет бизнес" },
-  { key: "skidki-vmesto-cennosti", brief: "Скидки вместо ценности: как приучить клиентов ждать акций" },
-  { key: "konkursy-radi-podpischikov", brief: "Конкурсы ради подписчиков: приходит аудитория, которая не покупает" },
-  { key: "blogery-bez-proverki", brief: "Реклама у блогеров без проверки аудитории и статистики" },
-  { key: "odna-reklama-na-vseh", brief: "Одна реклама на всех: почему аудитории нужно делить" },
-  { key: "telegram-ads-bez-offera", brief: "Telegram Ads без понятного предложения: показы есть, заявок нет" },
-  { key: "kontent-bez-plana", brief: "Контент без контент-плана: публикации ради публикаций" },
-  { key: "seo-bez-tehniki", brief: "SEO без технической оптимизации сайта: тексты есть, позиций нет" },
-  { key: "stoimost-zayavki-i-klienta", brief: "Стоимость заявки и стоимость клиента: в чём разница и что считать" },
-  { key: "net-crm", brief: "Нет CRM: заявки теряются между мессенджерами и звонками" },
-  { key: "ab-test", brief: "A/B-тест рекламы: как проверять гипотезы без большого бюджета" },
+/**
+ * Запросы ошибок сверены в Google Trends по Узбекистану за 12 месяцев
+ * (05.10.2026). Данные есть у «лендинг», «landing page», «UTM» (рядом —
+ * «utm метки»), «накрутка подписчиков», «nakrutka», «Яндекс Карты» (рядом —
+ * «яндекс карты ташкент»), «Google Maps» («google maps tashkent»),
+ * «перевод на узбекский», «скидки», «chegirma», «giveaway» («instagram
+ * giveaway»), «CRM система», «таргет» и «instagram target» (04.10).
+ * Остальные Trends называет редкими: в Узбекистане по ним ищут мало, и
+ * Google цифр не даёт. Для них взята самая обычная формулировка, а сколько
+ * их ищут на самом деле, смена спрашивает у Вордстата перед статьёй.
+ */
+const MISTAKES: Array<{ key: string; brief: string; query: Required<TopicQuery> }> = [
+  { key: "target-bez-pikselya", brief: "Таргет без пикселя на сайте: почему реклама в Instagram не учится и дорожает", query: { ru: "таргет в Instagram", uz: "Instagram target" } },
+  { key: "reklama-na-glavnuyu", brief: "Реклама ведёт на главную страницу сайта вместо отдельной страницы под предложение", query: { ru: "лендинг", uz: "landing page" } },
+  { key: "otvet-v-direkt", brief: "Ответ в директ через час и позже: как заявки уходят к конкурентам", query: { ru: "продажи в Instagram", uz: "Instagram orqali sotish" } },
+  { key: "utm-metki", brief: "UTM-метки: как понять, какая реклама приносит деньги, а какая нет", query: { ru: "UTM метки", uz: "UTM" } },
+  { key: "otchet-po-ohvatam", brief: "Отчёт по охватам вместо отчёта по заявкам и продажам", query: { ru: "отчёт по рекламе", uz: "reklama hisoboti" } },
+  { key: "pokupka-podpischikov", brief: "Покупка подписчиков: почему это вредит охватам и доверию", query: { ru: "накрутка подписчиков", uz: "nakrutka" } },
+  { key: "net-retargetinga", brief: "Нет ретаргетинга: посетители сайта уходят, и реклама их больше не догоняет", query: { ru: "ретаргетинг", uz: "retargeting" } },
+  { key: "medlennyy-sayt", brief: "Медленный сайт на телефоне: реклама приводит людей, а страница не успевает открыться", query: { ru: "скорость сайта", uz: "sayt tezligi" } },
+  { key: "kartochka-v-kartah", brief: "Карточка компании в Google и Яндекс Картах: бесплатный канал, о котором забывают", query: { ru: "Яндекс Карты", uz: "Google Maps" } },
+  { key: "uzbekskiy-yazyk", brief: "Узбекский язык на сайте и в соцсетях как формальность: что теряет бизнес", query: { ru: "перевод на узбекский", uz: "o‘zbek tilida sayt" } },
+  { key: "skidki-vmesto-cennosti", brief: "Скидки вместо ценности: как приучить клиентов ждать акций", query: { ru: "скидки", uz: "chegirma" } },
+  { key: "konkursy-radi-podpischikov", brief: "Конкурсы ради подписчиков: приходит аудитория, которая не покупает", query: { ru: "розыгрыш в Instagram", uz: "Instagram giveaway" } },
+  { key: "blogery-bez-proverki", brief: "Реклама у блогеров без проверки аудитории и статистики", query: { ru: "реклама у блогеров", uz: "blogerlarda reklama" } },
+  { key: "odna-reklama-na-vseh", brief: "Одна реклама на всех: почему аудитории нужно делить", query: { ru: "целевая аудитория", uz: "maqsadli auditoriya" } },
+  { key: "telegram-ads-bez-offera", brief: "Telegram Ads без понятного предложения: показы есть, заявок нет", query: { ru: "Telegram Ads", uz: "Telegram Ads" } },
+  { key: "kontent-bez-plana", brief: "Контент без контент-плана: публикации ради публикаций", query: { ru: "контент план", uz: "kontent reja" } },
+  { key: "seo-bez-tehniki", brief: "SEO без технической оптимизации сайта: тексты есть, позиций нет", query: { ru: "SEO оптимизация", uz: "SEO optimizatsiya" } },
+  { key: "stoimost-zayavki-i-klienta", brief: "Стоимость заявки и стоимость клиента: в чём разница и что считать", query: { ru: "стоимость лида", uz: "lid narxi" } },
+  { key: "net-crm", brief: "Нет CRM: заявки теряются между мессенджерами и звонками", query: { ru: "CRM система", uz: "CRM tizimi" } },
+  { key: "ab-test", brief: "A/B-тест рекламы: как проверять гипотезы без большого бюджета", query: { ru: "A/B тест", uz: "A/B test" } },
 ];
 
-/** Ниша: адрес латиницей и как её назвать в теме «продвижение … в …». */
-const NICHES: Array<{ key: string; of: string }> = [
-  { key: "stomatologii", of: "стоматологии" },
-  { key: "medcentra", of: "медицинского центра" },
-  { key: "internet-magazina", of: "интернет-магазина" },
-  { key: "restorana", of: "ресторана" },
-  { key: "dostavki-edy", of: "доставки еды" },
-  { key: "avtoservisa", of: "автосервиса" },
-  { key: "stroitelnoy-kompanii", of: "строительной компании" },
-  { key: "mebelnoy-fabriki", of: "мебельной фабрики" },
-  { key: "uchebnogo-centra", of: "учебного центра" },
-  { key: "turagentstva", of: "турагентства" },
-  { key: "yuridicheskoy-firmy", of: "юридической фирмы" },
-  { key: "salona-krasoty", of: "салона красоты" },
-  { key: "logisticheskoy-kompanii", of: "логистической компании" },
-  { key: "agentstva-nedvizhimosti", of: "агентства недвижимости" },
-  { key: "fitnes-kluba", of: "фитнес-клуба" },
-  { key: "magazina-odezhdy", of: "магазина одежды" },
-  { key: "kofeyni", of: "кофейни" },
-  { key: "chastnoy-shkoly", of: "частной школы" },
-  { key: "detskogo-sada", of: "частного детского сада" },
-  { key: "otelya", of: "отеля" },
+/**
+ * Ниша: адрес латиницей, как её назвать в теме «продвижение … в …» и
+ * как по-узбекски — для запроса «… uchun Instagram reklama».
+ */
+const NICHES: Array<{ key: string; of: string; uz: string }> = [
+  { key: "stomatologii", of: "стоматологии", uz: "stomatologiya" },
+  { key: "medcentra", of: "медицинского центра", uz: "tibbiyot markazi" },
+  { key: "internet-magazina", of: "интернет-магазина", uz: "internet-do‘kon" },
+  { key: "restorana", of: "ресторана", uz: "restoran" },
+  { key: "dostavki-edy", of: "доставки еды", uz: "ovqat yetkazib berish" },
+  { key: "avtoservisa", of: "автосервиса", uz: "avtoservis" },
+  { key: "stroitelnoy-kompanii", of: "строительной компании", uz: "qurilish kompaniyasi" },
+  { key: "mebelnoy-fabriki", of: "мебельной фабрики", uz: "mebel fabrikasi" },
+  { key: "uchebnogo-centra", of: "учебного центра", uz: "o‘quv markazi" },
+  { key: "turagentstva", of: "турагентства", uz: "turagentlik" },
+  { key: "yuridicheskoy-firmy", of: "юридической фирмы", uz: "yuridik firma" },
+  { key: "salona-krasoty", of: "салона красоты", uz: "go‘zallik saloni" },
+  { key: "logisticheskoy-kompanii", of: "логистической компании", uz: "logistika kompaniyasi" },
+  { key: "agentstva-nedvizhimosti", of: "агентства недвижимости", uz: "ko‘chmas mulk agentligi" },
+  { key: "fitnes-kluba", of: "фитнес-клуба", uz: "fitnes klub" },
+  { key: "magazina-odezhdy", of: "магазина одежды", uz: "kiyim do‘koni" },
+  { key: "kofeyni", of: "кофейни", uz: "qahvaxona" },
+  { key: "chastnoy-shkoly", of: "частной школы", uz: "xususiy maktab" },
+  { key: "detskogo-sada", of: "частного детского сада", uz: "xususiy bog‘cha" },
+  { key: "otelya", of: "отеля", uz: "mehmonxona" },
 ];
 
-const CHANNELS: Array<{ key: string; in: string }> = [
-  { key: "instagram", in: "в Instagram" },
-  { key: "telegram", in: "в Telegram" },
-  { key: "google", in: "в Google" },
-  { key: "yandex", in: "в Яндексе" },
-  { key: "sayt", in: "через сайт" },
+/** Канал: как назвать по-русски и что ищут по-узбекски («stomatologiya uchun sayt»). */
+const CHANNELS: Array<{ key: string; in: string; uz: string }> = [
+  { key: "instagram", in: "в Instagram", uz: "Instagram reklama" },
+  { key: "telegram", in: "в Telegram", uz: "Telegram reklama" },
+  { key: "google", in: "в Google", uz: "Google reklama" },
+  { key: "yandex", in: "в Яндексе", uz: "Yandex reklama" },
+  { key: "sayt", in: "через сайт", uz: "sayt" },
 ];
 
 /**
@@ -341,21 +356,32 @@ const explainerTopics: MarketingTopic[] = EXPLAINERS.map((e) => ({
   query: e.query,
 }));
 
-const caseTopics: MarketingTopic[] = CASES.map((c) => ({
-  key: `case:${c.key}`,
-  kind: "case",
-  slug: `keys-${c.key}`,
-  brief: c.title,
-  facts: c.facts,
-  lesson: c.lesson,
-  source: c.source,
-}));
+/**
+ * Запрос кейса — само название, как его и ищут: «Old Spice», «Red Bull»,
+ * «Duolingo», «Spotify Wrapped» в Trends по Узбекистану есть (05.10.2026),
+ * у части кейсов данных нет. Название в заголовке стоит и так, на обоих
+ * языках одно.
+ */
+const caseTopics: MarketingTopic[] = CASES.map((c) => {
+  const name = c.title.split(":")[0].replace(/\?$/, "").trim();
+  return {
+    key: `case:${c.key}`,
+    kind: "case",
+    slug: `keys-${c.key}`,
+    brief: c.title,
+    facts: c.facts,
+    lesson: c.lesson,
+    source: c.source,
+    query: { ru: name, uz: name },
+  };
+});
 
 const mistakeTopics: MarketingTopic[] = MISTAKES.map((m) => ({
   key: `mistake:${m.key}`,
   kind: "mistake",
   slug: `oshibka-${m.key}`,
   brief: m.brief,
+  query: m.query,
 }));
 
 // Ниши по кругу со сдвигом канала: подряд не выходят пять статей про одну
@@ -368,7 +394,7 @@ const nicheTopics: MarketingTopic[] = CHANNELS.flatMap((_, round) =>
       kind: "niche" as const,
       slug: `prodvizhenie-${niche.key}-${channel.key}`,
       brief: `Продвижение ${niche.of} ${channel.in} в Узбекистане: с чего начать и что работает`,
-      query: { ru: `продвижение ${niche.of} ${channel.in}` },
+      query: { ru: `продвижение ${niche.of} ${channel.in}`, uz: `${niche.uz} uchun ${channel.uz}` },
     };
   }),
 );
