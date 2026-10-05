@@ -12,6 +12,7 @@ import { Letters } from "./Letters";
 import { Programs } from "./Programs";
 import { Quiz } from "./Quiz";
 import { BookBlock, Head, Shell } from "./Shell";
+import { fit } from "./fit";
 import s from "./lab.module.css";
 
 const at = (i: number) => ({ "--i": i }) as CSSProperties;
@@ -82,7 +83,7 @@ export function Site() {
                 </span>
                 Китай-город · и онлайн
               </p>
-              <h1 id="lab-h1" className={s.display1}>
+              <h1 id="lab-h1" className={s.display1} style={fit("Английский и французский для детей в Москве")}>
                 Английский <span className={s.plus}>и</span> французский <span className={s.lime}>для детей в Москве</span>
               </h1>
               <p className={s.heroLead}>
@@ -150,7 +151,7 @@ export function Site() {
             </figure>
             <div>
               <p className={s.eyebrow}>Знакомство</p>
-              <h2 id="lab-meet" className={s.display2}>
+              <h2 id="lab-meet" className={s.display2} style={fit(`Здравствуйте, я ${TEACHER.firstName}`)}>
                 Здравствуйте, я {TEACHER.firstName}
               </h2>
               <p className={s.meetName}>{TEACHER.fullName}</p>
@@ -174,7 +175,7 @@ export function Site() {
         <section id="programmy" className={s.light} aria-labelledby="lab-programs">
           <div className={s.lightInner}>
             <p className={s.eyebrowDeep}>Программы</p>
-            <h2 id="lab-programs" className={s.display2}>
+            <h2 id="lab-programs" className={s.display2} style={fit("Выберите программу")}>
               Выберите программу
             </h2>
             <Programs />
@@ -199,7 +200,7 @@ export function Site() {
           <div className={s.split}>
             <div>
               <p className={s.eyebrow}>Разминка</p>
-              <h2 id="lab-quiz" className={s.display2}>
+              <h2 id="lab-quiz" className={s.display2} style={fit("5 слов. Минута. Без регистрации.")}>
                 5 слов. Минута. Без регистрации.
               </h2>
               <p className={s.headNote}>Сыграйте вместе с ребёнком: английский и французский вперемешку.</p>
@@ -224,10 +225,12 @@ export function Site() {
             <span className={s.trialStamp} aria-hidden="true">
               −30%
             </span>
-            <p className={s.eyebrowInk}>Пробное</p>
-            <h2 id="lab-trial" className={s.display2}>
-              {TRIAL.title}
-            </h2>
+            <div className={s.trialHead}>
+              <p className={s.eyebrowInk}>Пробное</p>
+              <h2 id="lab-trial" className={s.display2} style={fit(TRIAL.title)}>
+                {TRIAL.title}
+              </h2>
+            </div>
             <TrialPoints s={s} />
             <a className={s.btnInk} href="#zapis">
               Записаться на пробное
@@ -278,7 +281,7 @@ export function Site() {
             </figure>
             <div data-reveal="">
               <p className={s.eyebrow}>Для мам</p>
-              <h2 id="lab-moms" className={s.display2}>
+              <h2 id="lab-moms" className={s.display2} style={fit(MOMS_COURSE.title)}>
                 {MOMS_COURSE.title}
               </h2>
               <p className={s.headNote}>Научу, как воспитать билингва в русскоязычной семье с нуля, сохраняя культуру и культурный код.</p>
