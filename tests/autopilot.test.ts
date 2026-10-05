@@ -9,7 +9,9 @@ import {
   DAILY_TARGET,
   IN_FLIGHT_MAX,
   PREPARE_PER_PASS,
+  REPLIED_SHOWN,
   REPLY_MARK,
+  REPORT_SPAN_MS,
   inNiche,
   nextNiche,
   nicheByKey,
@@ -64,14 +66,20 @@ test("неделя — с понедельника по Ташкенту", () =>
   assert.equal(weekOf(new Date("2026-10-11T19:00:00Z")), "2026-10-12");
 });
 
-test("готовит с 07:00 до 19:30, отчёт — после 20:45", () => {
+test("готовит с 07:00 до 17:30, отчёт — в 18:00, в конце рабочего дня", () => {
   const at = (hhmm: string) => new Date(`2026-10-06T${hhmm}:00+05:00`);
   assert.ok(!prepareWindow(at("06:59")));
   assert.ok(prepareWindow(at("07:00")));
-  assert.ok(prepareWindow(at("19:29")));
-  assert.ok(!prepareWindow(at("19:30")));
-  assert.ok(!reportDue(at("20:44")));
-  assert.ok(reportDue(at("20:45")));
+  assert.ok(prepareWindow(at("17:29")), "последние письма — до конца рабочего дня");
+  assert.ok(!prepareWindow(at("17:30")));
+  assert.ok(!reportDue(at("17:59")));
+  assert.ok(reportDue(at("18:00")));
+  // Отчёт — за сутки до него, а не с полуночи: ответ, пришедший в 19:00,
+  // иначе не попал бы ни в один отчёт.
+  assert.equal(REPORT_SPAN_MS, 24 * 3600_000);
+  const store = read("lib/admin/autopilot-store.ts");
+  assert.match(store, /dayStats\(now, new Date\(now\.getTime\(\) - REPORT_SPAN_MS\)\)/);
+  assert.match(store, /\.in\("role", \["admin", "head"\]\)/, "владельцу и руководителю");
 });
 
 test("норма: не меньше 20 ушедших, не больше четырёх в очереди, не больше двух за проход", () => {
@@ -185,16 +193,34 @@ test("отчёт за день: норма, аккаунты, ответы и ч
     refused: 1,
     weekSent: 41,
     weekReplies: 4,
+    replied: [
+      { who: "school.uz", takenBy: "@stas", refused: false },
+      { who: "<b>kids.uz</b>", takenBy: null, refused: false },
+      { who: "lang.uz", takenBy: null, refused: true },
+    ],
   };
   const ok = reportText(base, esc);
-  assert.match(ok, /Автопрогон за 06\.10/);
-  assert.match(ok, /ниша недели: учебные центры/);
-  assert.match(ok, /Ушло в Telegram: 21 из 20 ✅ \(M1 — 9, главный — 7, M2 — 5\)/);
-  assert.match(ok, /Ответили: 2 → взяли в работу: 1, просили не писать: 1/);
+  assert.match(ok, /Автопрогон касаний — отчёт за 06\.10/);
+  assert.match(ok, /Ниша недели: учебные центры/);
+  assert.match(ok, /За сутки до 18:00/);
+  assert.match(ok, /Написали — ушло в Telegram: <b>21<\/b> из 20 ✅ \(M1 — 9, главный — 7, M2 — 5\)/);
+  assert.match(ok, /Ответили: <b>2<\/b> → взяли в работу: 1, просили не писать: 1/);
+  assert.match(ok, /• school\.uz — взял @stas/);
+  assert.match(ok, /• &lt;b&gt;kids\.uz&lt;\/b&gt; — ⏳ ещё ничей/, "имя компании экранируется");
+  assert.match(ok, /• lang\.uz — просил не писать/);
   assert.doesNotMatch(ok, /Не добрали/);
+  assert.doesNotMatch(ok, /\n\n\n/, "без двойных пустых строк");
+  assert.match(ok, /С начала недели: 41 письмо, 4 ответа/);
+  assert.match(reportText({ ...base, weekSent: 25, weekReplies: 11 }, esc), /25 писем, 11 ответов/);
+
+  const many = reportText(
+    { ...base, replied: Array.from({ length: REPLIED_SHOWN + 3 }, (_, i) => ({ who: `s${i}.uz`, takenBy: null, refused: false })) },
+    esc,
+  );
+  assert.match(many, /• и ещё 3/);
 
   const short = reportText({ ...base, sent: 12 }, esc);
-  assert.match(short, /12 из 20 ⚠️/);
+  assert.match(short, /<b>12<\/b> из 20 ⚠️/);
   assert.match(short, /Не добрали/);
   assert.match(reportText({ ...base, sent: 12, attempts: 80 }, esc), /кончились попытки/);
   assert.match(reportText({ ...base, enabled: false, sent: 0 }, esc), /выключен/);

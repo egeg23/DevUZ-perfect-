@@ -29,7 +29,10 @@ import { TASHKENT_OFFSET_MS, periodStart } from "@/lib/admin/pulse";
  * 4. Касание ничьё, пока клиент не ответил. Ответил — заводится лид и идёт
  *    в очередь на тёплые лиды (днём — по очереди, ночью — всем), с шапкой
  *    «🤖 Ответ на касание автопрогона». Кто взял — того и лид, и переписка.
- * 5. В 20:45 владельцу и руководителям — отчёт за день.
+ * 5. В 18:00, в конце рабочего дня, владельцу и руководителю — отчёт:
+ *    сколько написали и сколько ответили (владелец, 05.10.2026: «Отчёт по
+ *    автоматическим касаниям мне и Александру каждый день от бота… сколько
+ *    написали, сколько ответили в конце рабочего дня»).
  */
 
 export type AutopilotNiche = {
@@ -116,14 +119,15 @@ export const PREPARE_PER_PASS = 2;
 export const ATTEMPTS_PER_TARGET = 4;
 
 /**
- * Когда готовить письма: с 07:00 до 19:30 по Ташкенту, каждый день.
+ * Когда готовить письма: с 07:00 до 17:30 по Ташкенту, каждый день.
  *
- * Отправка — с 07:30 до 20:30 (lib/admin/outreach.ts): к её началу первые
- * письма уже готовы, а после 19:30 новое письмо не успело бы уйти до
- * закрытия окна и пролежало бы до утра.
+ * Отправка — с 07:30 (lib/admin/outreach.ts): к её началу первые письма уже
+ * готовы. Заканчиваем за полчаса до конца рабочего дня: последние письма
+ * успевают уйти до 18:00, ответы на них приходят, пока менеджеры на месте,
+ * а отчёт в 18:00 видит день целиком.
  */
 export const PREPARE_FROM_MINUTE = 7 * 60;
-export const PREPARE_TO_MINUTE = 19 * 60 + 30;
+export const PREPARE_TO_MINUTE = 17 * 60 + 30;
 
 export function prepareWindow(now: Date): boolean {
   const shifted = new Date(now.getTime() + TASHKENT_OFFSET_MS);
@@ -131,8 +135,15 @@ export function prepareWindow(now: Date): boolean {
   return minute >= PREPARE_FROM_MINUTE && minute < PREPARE_TO_MINUTE;
 }
 
-/** Отчёт за день — в 20:45, когда окно отправки закрылось. */
-export const REPORT_MINUTE = 20 * 60 + 45;
+/** Отчёт — в 18:00, в конце рабочего дня. */
+export const REPORT_MINUTE = 18 * 60;
+
+/**
+ * За какой срок отчёт: сутки до него, то есть с прошлого отчёта. Не с
+ * полуночи — иначе ответы, пришедшие вечером и ночью, не попали бы ни в
+ * один отчёт: сегодняшний уже ушёл, а завтрашний считал бы с полуночи.
+ */
+export const REPORT_SPAN_MS = 24 * 3600_000;
 
 export function reportDue(now: Date): boolean {
   const shifted = new Date(now.getTime() + TASHKENT_OFFSET_MS);
@@ -181,6 +192,15 @@ export function replyHeading(
     .join("\n");
 }
 
+/** Кто ответил: сайт или название, и что с лидом. */
+export type Replied = {
+  who: string;
+  /** Кто взял лид; null — ещё ничей. */
+  takenBy: string | null;
+  /** Попросил больше не писать: лида нет. */
+  refused: boolean;
+};
+
 export type DayStats = {
   day: string;
   niche: string | null;
@@ -201,7 +221,18 @@ export type DayStats = {
   refused: number;
   weekSent: number;
   weekReplies: number;
+  /** Кто ответил за срок отчёта — по одному на строку. */
+  replied: readonly Replied[];
 };
+
+/** Слово при числе: 1 письмо, 3 письма, 5 писем. */
+function ru(n: number, one: string, few: string, many: string): string {
+  const d = n % 10;
+  const dd = n % 100;
+  if (d === 1 && dd !== 11) return one;
+  if (d >= 2 && d <= 4 && (dd < 12 || dd > 14)) return few;
+  return many;
+}
 
 /** «06.10» из «2026-10-06». */
 function shortDay(day: string): string {
@@ -209,21 +240,34 @@ function shortDay(day: string): string {
   return `${d}.${m}`;
 }
 
-/** Отчёт за день — владельцу и руководителям. HTML для бота. */
+/** Сколько ответивших показывать поимённо — остальные одной строкой. */
+export const REPLIED_SHOWN = 10;
+
+/** Отчёт за сутки — владельцу и руководителю. HTML для бота. */
 export function reportText(s: DayStats, escape: (t: string) => string): string {
   const accounts = s.byAccount.length
     ? ` (${s.byAccount.map(({ name, n }) => `${name === null ? "главный" : escape(name)} — ${n}`).join(", ")})`
     : "";
   const mark = s.sent >= s.target ? " ✅" : " ⚠️";
-  const lines = [
-    `🤖 <b>Автопрогон за ${shortDay(s.day)}</b>${s.niche ? ` · ниша недели: ${escape(s.niche)}` : ""}`,
-    s.enabled ? "" : "⏸ Автопрогон выключен в разделе «Касания».",
-    `Ушло в Telegram: ${s.sent} из ${s.target}${mark}${accounts}`,
-    s.inFlight ? `Ждут отправки: ${s.inFlight} — уйдут утром с 07:30` : "",
-    `Ответили: ${s.replies}${s.replies ? ` → взяли в работу: ${s.taken}${s.refused ? `, просили не писать: ${s.refused}` : ""}` : ""}`,
-    s.manual ? `Не нашлись в Telegram — карточки ушли на звонок: ${s.manual}` : "",
-    s.dropped ? `Не написали — проверка по факту ничего не подтвердила или сайт не открылся: ${s.dropped}` : "",
-    `С начала недели: ${s.weekSent} писем, ${s.weekReplies} ответов`,
+  // null — строки нет; "" — пустая строка между блоками.
+  const lines: (string | null)[] = [
+    `🤖 <b>Автопрогон касаний — отчёт за ${shortDay(s.day)}</b>`,
+    s.niche ? `Ниша недели: ${escape(s.niche)}` : null,
+    "<i>За сутки до 18:00 — с прошлого отчёта.</i>",
+    s.enabled ? null : "⏸ Автопрогон выключен в разделе «Касания».",
+    "",
+    `✉️ Написали — ушло в Telegram: <b>${s.sent}</b> из ${s.target}${mark}${accounts}`,
+    s.inFlight ? `Ждут отправки: ${s.inFlight} — уйдут сегодня до 20:30 или завтра с 07:30` : null,
+    s.manual ? `Не нашлись в Telegram — карточки ушли на звонок: ${s.manual}` : null,
+    s.dropped ? `Не написали — проверка по факту ничего не подтвердила или сайт не открылся: ${s.dropped}` : null,
+    "",
+    `💬 Ответили: <b>${s.replies}</b>${s.replies ? ` → взяли в работу: ${s.taken}${s.refused ? `, просили не писать: ${s.refused}` : ""}` : ""}`,
+    ...s.replied
+      .slice(0, REPLIED_SHOWN)
+      .map((r) => `• ${escape(r.who)} — ${r.refused ? "просил не писать" : r.takenBy ? `взял ${escape(r.takenBy)}` : "⏳ ещё ничей — в очереди лидов"}`),
+    s.replied.length > REPLIED_SHOWN ? `• и ещё ${s.replied.length - REPLIED_SHOWN}` : null,
+    "",
+    `С начала недели: ${s.weekSent} ${ru(s.weekSent, "письмо", "письма", "писем")}, ${s.weekReplies} ${ru(s.weekReplies, "ответ", "ответа", "ответов")}`,
   ];
   if (s.enabled && s.sent < s.target) {
     lines.push(
@@ -232,5 +276,5 @@ export function reportText(s: DayStats, escape: (t: string) => string): string {
         : "Не добрали: в пуле ниши кончились компании, до которых дотянется Telegram, или аккаунты были остановлены. Проверьте раздел «Аккаунты» и кампанию автопоиска.",
     );
   }
-  return lines.filter(Boolean).join("\n");
+  return lines.filter((line): line is string => line !== null).join("\n");
 }

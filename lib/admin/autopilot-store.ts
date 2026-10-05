@@ -6,6 +6,7 @@ import {
   nextNiche,
   nicheByKey,
   prepareWindow,
+  REPORT_SPAN_MS,
   reportDue,
   reportText,
   toPrepare,
@@ -355,6 +356,8 @@ async function forget(db: Db, id: string): Promise<void> {
 /* ── Цифры: панель и отчёт ─────────────────────────────────────────────── */
 
 type StatRow = {
+  host: string | null;
+  label: string | null;
   status: string;
   sent_at: string | null;
   sent_via: string | null;
@@ -372,13 +375,19 @@ async function accountNames(db: Db): Promise<Map<string, string>> {
   return out;
 }
 
-export async function dayStats(now: Date = new Date()): Promise<DayStats | null> {
+/**
+ * Цифры автопрогона: панель — с полуночи («сегодня»), отчёт в 18:00 — за
+ * сутки до него (REPORT_SPAN_MS), чтобы вечерние и ночные ответы не
+ * выпадали ни из одного отчёта.
+ */
+export async function dayStats(now: Date = new Date(), since?: Date): Promise<DayStats | null> {
   const db = serviceClient();
   if (!db) return null;
   const day = todayInTashkent(now);
-  const start = tashkentMidnight(day).getTime();
+  const start = (since ?? tashkentMidnight(day)).getTime();
   const week = weekOf(now);
-  const weekStart = tashkentMidnight(week).toISOString();
+  const weekStart = tashkentMidnight(week).getTime();
+  const from = new Date(Math.min(start, weekStart)).toISOString();
 
   const [settings, niche, names, { data }] = await Promise.all([
     autopilotSettings(),
@@ -386,55 +395,68 @@ export async function dayStats(now: Date = new Date()): Promise<DayStats | null>
     accountNames(db),
     db
       .from("prospects")
-      .select("status, sent_at, sent_via, autopilot_at, autopilot_note, autopilot_replied_at, lead_id")
+      .select("host, label, status, sent_at, sent_via, autopilot_at, autopilot_note, autopilot_replied_at, lead_id")
       .not("autopilot_at", "is", null)
-      .or(`autopilot_at.gte."${weekStart}",sent_at.gte."${weekStart}",autopilot_replied_at.gte."${weekStart}",status.eq.sending`)
+      .or(`autopilot_at.gte."${from}",sent_at.gte."${from}",autopilot_replied_at.gte."${from}",status.eq.sending`)
       .limit(2000),
   ]);
   const rows = (data ?? []) as StatRow[];
   const at = (v: string | null) => (v ? Date.parse(v) : Number.NaN);
-  const isToday = (v: string | null) => at(v) >= start;
-  const inWeek = (v: string | null) => at(v) >= Date.parse(weekStart);
+  const inSpan = (v: string | null) => at(v) >= start;
+  const inWeek = (v: string | null) => at(v) >= weekStart;
 
-  const sentToday = rows.filter((r) => r.status === "sent" && isToday(r.sent_at));
+  const sent = rows.filter((r) => r.status === "sent" && inSpan(r.sent_at));
   const byAccount = new Map<string, number>();
-  for (const r of sentToday) {
+  for (const r of sent) {
     const key = accountOf(r.sent_via);
     byAccount.set(key, (byAccount.get(key) ?? 0) + 1);
   }
-  const repliedToday = rows.filter((r) => isToday(r.autopilot_replied_at));
+  const replied = rows
+    .filter((r) => inSpan(r.autopilot_replied_at))
+    .sort((a, b) => at(a.autopilot_replied_at) - at(b.autopilot_replied_at));
 
-  const leadIds = repliedToday.map((r) => r.lead_id).filter((id): id is string => Boolean(id));
+  // Кто взял лид — по нику, как в карточке лида («ведёт»).
+  const leadIds = replied.map((r) => r.lead_id).filter((id): id is string => Boolean(id));
   const { data: leads } = leadIds.length
-    ? await db.from("leads").select("id, assigned_staff_id").in("id", leadIds)
+    ? await db.from("leads").select("id, assigned_staff_id, assigned_to").in("id", leadIds)
     : { data: [] };
+  const takenBy = new Map<string, string>();
+  for (const l of leads ?? []) {
+    if (l.assigned_staff_id) takenBy.set(String(l.id), String(l.assigned_to || "сотрудник"));
+  }
 
   return {
     day,
     niche: nicheByKey(niche.data?.niche as string | undefined)?.label ?? null,
     target: settings.target,
     enabled: settings.enabled,
-    sent: sentToday.length,
+    sent: sent.length,
     byAccount: [...byAccount.entries()]
       .sort((a, b) => b[1] - a[1])
       .map(([key, n]) => ({ name: key === MAIN_ACCOUNT ? null : (names.get(key) ?? key), n })),
     inFlight: rows.filter((r) => r.status === "sending").length,
-    attempts: rows.filter((r) => isToday(r.autopilot_at)).length,
-    manual: rows.filter((r) => r.status === "manual" && isToday(r.autopilot_at)).length,
-    dropped: rows.filter((r) => r.autopilot_note && isToday(r.autopilot_at)).length,
-    replies: repliedToday.length,
-    taken: (leads ?? []).filter((l) => l.assigned_staff_id).length,
-    refused: repliedToday.filter((r) => !r.lead_id).length,
+    attempts: rows.filter((r) => inSpan(r.autopilot_at)).length,
+    manual: rows.filter((r) => r.status === "manual" && inSpan(r.autopilot_at)).length,
+    dropped: rows.filter((r) => r.autopilot_note && inSpan(r.autopilot_at)).length,
+    replies: replied.length,
+    taken: replied.filter((r) => r.lead_id && takenBy.has(r.lead_id)).length,
+    refused: replied.filter((r) => !r.lead_id).length,
     weekSent: rows.filter((r) => r.status === "sent" && inWeek(r.sent_at)).length,
     weekReplies: rows.filter((r) => inWeek(r.autopilot_replied_at)).length,
+    replied: replied.map((r) => ({
+      who: r.host ?? r.label ?? "компания без сайта",
+      takenBy: r.lead_id ? (takenBy.get(r.lead_id) ?? null) : null,
+      refused: !r.lead_id,
+    })),
   };
 }
 
 const REPORT_JOB = "autopilot-report";
 
 /**
- * Отчёт за день — в 20:45, владельцу и руководителям, один раз
- * (daily_claims). Автопрогон выключен и за день ничего не делал — молчим.
+ * Отчёт в конце рабочего дня — в 18:00, владельцу и руководителю, один раз
+ * (daily_claims): сколько написали, сколько ответили и кто взял. Автопрогон
+ * выключен и за сутки ничего не было — молчим.
  */
 export async function sendAutopilotReport(now: Date = new Date()): Promise<number> {
   if (!reportDue(now)) return 0;
@@ -445,7 +467,7 @@ export async function sendAutopilotReport(now: Date = new Date()): Promise<numbe
   const { data: done } = await db.from("daily_claims").select("job").eq("job", REPORT_JOB).eq("day", day).maybeSingle();
   if (done) return 0;
 
-  const stats = await dayStats(now);
+  const stats = await dayStats(now, new Date(now.getTime() - REPORT_SPAN_MS));
   if (!stats || (!stats.enabled && !stats.attempts && !stats.replies)) return 0;
 
   // Отметка — условно: два прохода свипа не пришлют отчёт дважды.
