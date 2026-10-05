@@ -144,6 +144,8 @@ test("модель выбирается на каждый узел отдель�
     "разборы сайтов": ["lib/razbor/shift-run.ts", "RAZBOR_MODEL", "claude-sonnet-5"],
     "тендерный разбор": ["lib/razbor/tender-run.ts", "RAZBOR_MODEL", "claude-sonnet-5"],
     "статьи о маркетинге": ["lib/marketing/articles-run.ts", "ARTICLE_MODEL", "claude-haiku-4-5"],
+    // ИИ на прототипах — открыт клиентам, значит самой дешёвой моделью.
+    "ИИ на прототипах": ["lib/proto/ai.ts", "PROTO_AI_MODEL", "claude-haiku-4-5"],
   } as const;
 
   for (const [name, [file, variable, model]] of Object.entries(nodes)) {
