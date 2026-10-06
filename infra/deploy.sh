@@ -36,6 +36,27 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 chmod 600 "$ENV_FILE"
 
+# ── 1б. Секреты владельца из GitHub ──────────────────────────────────────────
+# Владелец заводит их в Settings → Secrets → Actions с префиксом SUNSCRYPT_;
+# выкатка передаёт их сюда в окружении и записывает в .env без префикса.
+# Пустой — не трогаем (секрет не заведён или уже записан раньше). Значения
+# не печатаются.
+env_set() {
+  local tmp; tmp="$(mktemp "$APP_DIR/.env.XXXXXX")"
+  grep -vE "^$1=" "$ENV_FILE" > "$tmp" || true
+  printf '%s=%s\n' "$1" "$2" >> "$tmp"
+  chmod 600 "$tmp"; mv "$tmp" "$ENV_FILE"
+}
+for name in TELEGRAM_TOKEN BYBIT_DEMO_API_KEY BYBIT_DEMO_API_SECRET; do
+  var="SUNSCRYPT_$name"
+  if [ -n "${!var:-}" ]; then
+    if [ "$(env_get "$name")" != "${!var}" ]; then
+      env_set "$name" "${!var}"
+      say "Секрет $name записан в .env"
+    fi
+  fi
+done
+
 # ── 2. Порт: свободный, запоминается ────────────────────────────────────────
 port_busy() { ss -ltnH "sport = :$1" 2>/dev/null | grep -q .; }
 if [ -z "$(env_get WEB_PORT)" ]; then
@@ -59,6 +80,8 @@ fi
 PUBLIC_HOST="$(env_get PUBLIC_HOST)"
 
 # ── 4. Сборка и запуск ──────────────────────────────────────────────────────
+export GIT_COMMIT
+GIT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo dev)"
 COMPOSE=(docker compose -p sunscrypt --env-file "$ENV_FILE" -f infra/docker-compose.yml)
 say "Собираю и запускаю (порт $WEB_PORT)"
 "${COMPOSE[@]}" up -d --build --remove-orphans
@@ -74,6 +97,19 @@ if [ -z "$ok" ]; then
   "${COMPOSE[@]}" logs --tail 80 >&2 || true
   die "Приложение не ответило на 127.0.0.1:$WEB_PORT"
 fi
+say "Проверяю API, базу и Redis"
+health=""
+for _ in $(seq 1 30); do
+  if health="$(curl -fsS --max-time 5 "http://127.0.0.1:$WEB_PORT/api/health")"; then break; fi
+  health=""; sleep 2
+done
+if [ -z "$health" ]; then
+  "${COMPOSE[@]}" ps >&2 || true
+  "${COMPOSE[@]}" logs --tail 80 backend >&2 || true
+  die "API не ответил: /api/health"
+fi
+say "API: $health"
+say "Память контейнеров: $(docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' $("${COMPOSE[@]}" ps -q) | tr '\n' ';')"
 
 # ── 5. nginx и сертификат ───────────────────────────────────────────────────
 SITE=/etc/nginx/sites-available/sunscrypt
