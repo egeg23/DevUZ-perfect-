@@ -11,6 +11,7 @@ const BASE = "__PROTO_BASE__";
 const SITE = "https://bloger.agency";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
 
+const usd = (n) => "$" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u2009");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const tg = (text) => `https://t.me/baluevgeorge?text=${encodeURIComponent(text)}`;
 const href = (l, path = "") => BASE + (l === "uz" ? "/uz" : "") + (path ? "/" + path : "");
@@ -81,6 +82,7 @@ ${portal ? portalHtml(l) : ""}<a class="skip" href="#main">${t("К содерж�
 <div class="lang"><a href="${href("ru", path)}" hreflang="ru"${l === "ru" ? ' aria-current="true"' : ""}>RU</a><a href="${href("uz", path)}" hreflang="uz"${l === "uz" ? ' aria-current="true"' : ""}>UZ</a></div>
 <a class="btn btn-main top-cta" href="${mainTg}">${ICON.tg}${ctaText}</a>
 </div></header>
+<nav class="mnav" aria-label="${t("Разделы", "Bo‘limlar")}"><div class="wrap">${navItems.map(([p, n]) => `<a href="${href(l, p)}"${p === path ? ' aria-current="page"' : ""}${p === "plan" ? ' class="hot"' : ""}>${n}</a>`).join("")}</div></nav>
 <main id="main">
 ${body}
 </main>
@@ -280,6 +282,10 @@ ${[
 </div>
 </div>
 </div></section>
+<section id="konstruktor-teaser"><div class="wrap"><a class="kit-teaser rv a-pop" href="${href(l, "plan")}">
+<div><span class="ours">${t("Предложение DevUz Studio", "DevUz Studio taklifi")}</span><h2 style="margin-top:16px">${t("Конструктор проекта: сайт и всё, что агентству нужно дальше", "Loyiha konstruktori: sayt va agentlikka keyin kerak bo‘ladigan hamma narsa")}</h2><p>${t("Админка, кампании по вашим 8 этапам, кабинеты бренда и блогера, оплата Click и Payme — включаете тумблером, итог считается сразу.", "Admin panel, 8 bosqichingiz bo‘yicha kampaniyalar, brend va bloger kabinetlari, Click va Payme to‘lovi — tumbler bilan yoqasiz, jami darhol hisoblanadi.")}</p></div>
+<div class="kit-teaser-side"><small>${t("Сайт", "Sayt")}</small><b class="num">${usd(KIT_BASE.price)}</b><span>${t("+ блоки на выбор", "+ tanlov bo‘yicha bloklar")}</span><span class="btn btn-main">${t("Открыть конструктор", "Konstruktorni ochish")}</span></div>
+</a></div></section>
 <section><div class="wrap"><div class="slot rv a-swing" id="slot">
 <div><span class="ours">${t("Наше предложение: генератор идей", "Bizning taklif: g‘oyalar generatori")}</span><h2 style="margin-top:16px">${t("Не знаете, с чего начать? Крутите", "Nimadan boshlashni bilmaysizmi? Aylantiring")}</h2><p style="margin-top:16px;color:var(--fg2)">${t("Ниша, формат из ваших услуг и фишка — идея кампании за одно нажатие. Понравилась — отправьте менеджеру.", "Nisha, xizmatlaringizdan format va fishka — bir bosishda kampaniya g‘oyasi. Yoqdimi — menejerga yuboring.")}</p></div>
 <div style="display:grid;gap:16px">
@@ -504,7 +510,6 @@ ${moreBlock(l, "keysy")}`;
 
 
 /* ── Что дальше: конструктор проекта для агентства (как у MAVERA) ───── */
-const usd = (n) => "$" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
 function previews(l) {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
