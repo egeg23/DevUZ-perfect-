@@ -1,31 +1,37 @@
 import { TASHKENT_OFFSET_MS, periodStart } from "@/lib/admin/pulse";
 
 /**
- * Автопрогон касаний — чистая часть: ниши по неделям, сколько писем
- * готовить, тексты для бота. База — в autopilot-store, ответ клиента — в
- * autopilot-reply.
+ * Автопрогон касаний — чистая часть: сколько писем готовить, тексты для
+ * бота, ниши для поиска компаний. База — в autopilot-store, ответ клиента —
+ * в autopilot-reply, поиск лидов через Firecrawl — в lead-search.
  *
- * Владелец, 05.10.2026: «Делай авто прогон сам по нишам — 1 неделя = 1
- * ниша. Лидов, которые ответят на сообщения от тебя на наших аккаунтах, —
- * закидывай сразу через тг бота к менеджерам, чтобы взяли в работу. В день
- * ты делаешь 20 касаний (написано в тг, не меньше), можешь с двух аккаунтов
- * это делать или с трёх».
+ * Владелец, 05.10.2026: «Лидов, которые ответят на сообщения от тебя на
+ * наших аккаунтах, — закидывай сразу через тг бота к менеджерам, чтобы взяли
+ * в работу. В день ты делаешь 20 касаний (написано в тг, не меньше), можешь с
+ * двух аккаунтов это делать или с трёх».
+ *
+ * Владелец, 06.10.2026: «Нам главное не 20 попыток связаться, а не
+ * останавливать поиск, пока 20 сообщений не будут отправлены. Убираем
+ * правило — 1 неделя = 1 ниша. Любые ниши».
  *
  * Как это устроено.
  *
- * 1. Неделя — одна ниша (AUTOPILOT_NICHES, по кругу). Кампания автопоиска по
- *    картам этой ниши и следующей держится включённой: пока идёт эта неделя,
- *    пул следующей уже набирается.
+ * 1. Ниши — любые: автопрогон берёт компании из всего пула, худший сайт
+ *    первым. Пул пополняют кампании автопоиска по картам — по каждой нише из
+ *    AUTOPILOT_NICHES кампания заводится сама — и поиск через Firecrawl
+ *    (lib/admin/lead-search.ts).
  * 2. Каждые пять минут свип смотрит, сколько писем автопрогона сегодня
  *    ушло в Telegram и сколько ждут в очереди, и готовит недостающие — по
  *    тем же правилам, что «Связаться» у менеджера: проверка сайта по факту,
  *    письмо человеческим языком, проверка перед отправкой (prepareOutreach,
  *    queueOutreach). Писать — только тем, до кого дотянется Telegram: по
- *    @адресу или мобильному номеру.
+ *    @адресу или мобильному номеру (скаут добавляет номер в контакты, и
+ *    Telegram находит по нему аккаунт).
  * 3. Отправляет скаут — с любого живого рабочего аккаунта, в общем пределе
  *    «три в час» на аккаунт и в окне 07:30–20:30. В счёт двадцати идёт
  *    только то, что на деле ушло в Telegram: письмо, которое ушло «руками»
- *    (номер без Telegram), счёт не пополняет — вместо него готовится новое.
+ *    (номер без Telegram), счёт не пополняет — вместо него готовится новое,
+ *    и так до двадцати.
  * 4. Касание ничьё, пока клиент не ответил. Ответил — заводится лид и идёт
  *    в очередь на тёплые лиды (днём — по очереди, ночью — всем), с шапкой
  *    «🤖 Ответ на касание автопрогона». Кто взял — того и лид, и переписка.
@@ -36,62 +42,50 @@ import { TASHKENT_OFFSET_MS, periodStart } from "@/lib/admin/pulse";
  */
 
 export type AutopilotNiche = {
-  /** Ключ — то, что записывается в autopilot_weeks. Не менять после выкатки. */
+  /** Ключ ниши. */
   key: string;
-  /** Как ниша называется в отчёте и в панели: «учебные центры». */
+  /** Как ниша называется в шапке лида: «учебные центры». */
   label: string;
-  /** То же на узбекской и польской панели. */
-  uz: string;
-  pl: string;
-  /** Запрос кампании автопоиска по картам. */
+  /** Запрос кампании автопоиска по картам — им же ниша записана у карточек, пришедших с карт. */
   maps: string;
-  /**
-   * Чем ниша записана у карточек в пуле: названием кампании, с которой
-   * пришла компания, или ключом классификатора сайта. Без учёта регистра.
-   */
-  match: readonly string[];
 };
 
 /**
- * Ниши по порядку. Первые шесть — те, по которым в пуле уже есть компании
- * (кампании заведены владельцем и руководителем), дальше — новые: их
- * кампания включается за неделю до их недели.
+ * Ниши, по которым держатся кампании автопоиска по картам и идёт поиск
+ * через Firecrawl. Писать автопрогон может любой компании из пула — этот
+ * список только про то, где искать новые.
  */
 export const AUTOPILOT_NICHES: readonly AutopilotNiche[] = [
-  { key: "uchebnyy-centr", label: "учебные центры", uz: "o‘quv markazlari", pl: "centra szkoleniowe", maps: "учебный центр", match: ["учебный центр", "uchebnyy-centr", "IT Образование для детей"] },
-  { key: "zastroyshchik", label: "застройщики", uz: "quruvchi kompaniyalar", pl: "deweloperzy", maps: "застройщик", match: ["застройщик", "stroitelnaya-kompaniya"] },
-  { key: "stomatologiya", label: "стоматологии", uz: "stomatologiyalar", pl: "gabinety stomatologiczne", maps: "стоматология", match: ["стоматология", "stomatologiya"] },
-  { key: "magazin-odezhdy", label: "магазины одежды", uz: "kiyim do‘konlari", pl: "sklepy odzieżowe", maps: "Магазин Одежды", match: ["Магазин Одежды", "internet-magazin"] },
-  { key: "shkoly-sady", label: "частные школы и детские сады", uz: "xususiy maktablar va bog‘chalar", pl: "szkoły prywatne i przedszkola", maps: "Частная школа", match: ["Частная школа", "Частный детский сад"] },
-  { key: "medcentr", label: "медицинские центры", uz: "tibbiyot markazlari", pl: "centra medyczne", maps: "медицинский центр", match: ["медицинский центр", "medcentr"] },
-  { key: "avtoservis", label: "автосервисы", uz: "avtoservislar", pl: "warsztaty samochodowe", maps: "автосервис", match: ["автосервис", "avtoservis"] },
-  { key: "salon-krasoty", label: "салоны красоты", uz: "go‘zallik salonlari", pl: "salony piękności", maps: "салон красоты", match: ["салон красоты", "salon-krasoty"] },
-  { key: "mebel", label: "мебель на заказ", uz: "buyurtma mebel", pl: "meble na zamówienie", maps: "мебель на заказ", match: ["мебель на заказ", "mebel"] },
-  { key: "nedvizhimost", label: "агентства недвижимости", uz: "ko‘chmas mulk agentliklari", pl: "agencje nieruchomości", maps: "агентство недвижимости", match: ["агентство недвижимости", "nedvizhimost", "agentstvo-nedvizhimosti"] },
-  { key: "turagentstvo", label: "турагентства", uz: "turagentliklar", pl: "biura podróży", maps: "турагентство", match: ["турагентство", "turagentstvo"] },
-  { key: "restoran", label: "рестораны", uz: "restoranlar", pl: "restauracje", maps: "ресторан", match: ["ресторан", "restoran", "dostavka-edy"] },
-  { key: "fitnes", label: "фитнес-клубы", uz: "fitnes-klublar", pl: "kluby fitness", maps: "фитнес клуб", match: ["фитнес клуб", "fitnes"] },
+  { key: "uchebnyy-centr", label: "учебные центры", maps: "учебный центр" },
+  { key: "zastroyshchik", label: "застройщики", maps: "застройщик" },
+  { key: "stomatologiya", label: "стоматологии", maps: "стоматология" },
+  { key: "magazin-odezhdy", label: "магазины одежды", maps: "Магазин Одежды" },
+  { key: "shkoly-sady", label: "частные школы и детские сады", maps: "Частная школа" },
+  { key: "medcentr", label: "медицинские центры", maps: "медицинский центр" },
+  { key: "avtoservis", label: "автосервисы", maps: "автосервис" },
+  { key: "salon-krasoty", label: "салоны красоты", maps: "салон красоты" },
+  { key: "mebel", label: "мебель на заказ", maps: "мебель на заказ" },
+  { key: "nedvizhimost", label: "агентства недвижимости", maps: "агентство недвижимости" },
+  { key: "turagentstvo", label: "турагентства", maps: "турагентство" },
+  { key: "restoran", label: "рестораны", maps: "ресторан" },
+  { key: "fitnes", label: "фитнес-клубы", maps: "фитнес клуб" },
 ];
 
-export function nicheByKey(key: string | null | undefined): AutopilotNiche | null {
-  return AUTOPILOT_NICHES.find((n) => n.key === key) ?? null;
+/**
+ * Как ниша карточки читается человеком: ключ классификатора сайта
+ * («stomatologiya») или кампания с карт («стоматология») — названием из
+ * списка, всё остальное — как записано.
+ */
+export function nicheLabel(value: string | null | undefined): string | null {
+  const v = (value ?? "").trim();
+  if (!v) return null;
+  const low = v.toLowerCase();
+  return AUTOPILOT_NICHES.find((n) => n.key === low || n.maps.toLowerCase() === low)?.label ?? v;
 }
 
-/** Следующая ниша по кругу. Прошлой нет или её убрали из списка — первая. */
-export function nextNiche(previous: string | null | undefined): AutopilotNiche {
-  const at = AUTOPILOT_NICHES.findIndex((n) => n.key === previous);
-  return AUTOPILOT_NICHES[(at + 1) % AUTOPILOT_NICHES.length];
-}
-
-/** Понедельник этой недели по Ташкенту: «2026-10-05». */
+/** Понедельник этой недели по Ташкенту: «2026-10-05». Для счёта «с начала недели». */
 export function weekOf(now: Date): string {
   return periodStart("week", now);
-}
-
-/** Карточка из этой ниши — по тому, как ниша записана у неё. */
-export function inNiche(niche: AutopilotNiche, value: string | null | undefined): boolean {
-  const v = (value ?? "").trim().toLowerCase();
-  return Boolean(v) && niche.match.some((m) => m.toLowerCase() === v);
 }
 
 /** Сколько писем в день по умолчанию — «20 касаний, не меньше». */
@@ -113,10 +107,13 @@ export const PREPARE_PER_PASS = 2;
  * Попыток в день не больше, чем столько раз по дневной норме.
  *
  * Попытка — карточка, взятая в работу: проверка по факту может ничего не
- * подтвердить, номер — не найтись в Telegram. Без потолка пустой или
- * негодный пул съел бы за день сотни обходов и вызовов модели.
+ * подтвердить, номер — не найтись в Telegram. Владелец, 06.10.2026: «не
+ * останавливать поиск, пока 20 сообщений не будут отправлены» — поэтому
+ * потолок высокий: двести попыток на двадцать писем. Он только страхует от
+ * поломки, при которой каждое письмо отбраковывается, — без него такая
+ * поломка съела бы за день сотни обходов и вызовов модели.
  */
-export const ATTEMPTS_PER_TARGET = 4;
+export const ATTEMPTS_PER_TARGET = 10;
 
 /**
  * Когда готовить письма: с 07:00 до 17:30 по Ташкенту, каждый день.
@@ -184,7 +181,7 @@ export function replyHeading(
   const short = words.length > 300 ? `${words.slice(0, 299)}…` : words;
   return [
     `<b>${REPLY_MARK}</b> · ${escape(who)}`,
-    input.niche ? `Ниша недели: ${escape(input.niche)}` : "",
+    input.niche ? `Ниша: ${escape(input.niche)}` : "",
     `Клиент ответил: «${escape(short)}»`,
     "Первое письмо и переписка — в карточке лида. Взяли — лид и разговор ваши: модель продолжит от вашего имени, «Отвечать самому» — в карточке.",
   ]
@@ -201,9 +198,11 @@ export type Replied = {
   refused: boolean;
 };
 
+/** Firecrawl за срок отчёта: потрачено, дневной лимит, кому нашёлся Telegram, сколько новых сайтов ушло на проверку. */
+export type SearchStats = { credits: number; cap: number | null; contacts: number; tried: number; queued: number };
+
 export type DayStats = {
   day: string;
-  niche: string | null;
   target: number;
   enabled: boolean;
   /** Ушло в Telegram с рабочих аккаунтов. */
@@ -225,6 +224,8 @@ export type DayStats = {
   replied: readonly Replied[];
   /** Последний сбой прохода за срок отчёта — текст ошибки; null — сбоев не было. */
   trouble?: string | null;
+  /** Поиск лидов через Firecrawl; null — ключа нет или поиск не работал. */
+  search?: SearchStats | null;
 };
 
 /** Слово при числе: 1 письмо, 3 письма, 5 писем. */
@@ -246,6 +247,17 @@ function shortDay(day: string): string {
 export const REPLIED_SHOWN = 10;
 
 /** Отчёт за сутки — владельцу и руководителю. HTML для бота. */
+/** Строка отчёта про Firecrawl: на что ушли кредиты и что это дало. */
+export function searchLine(s: SearchStats): string {
+  const parts = [
+    s.tried ? `Telegram или мобильный нашёлся у ${s.contacts} из ${s.tried} компаний без него` : null,
+    s.queued ? `новых сайтов на проверку: ${s.queued}` : null,
+  ].filter(Boolean);
+  // «31 из 33 кредитов» — после «из» слово всегда во множественном.
+  const spent = s.cap === null ? `${s.credits} ${ru(s.credits, "кредит", "кредита", "кредитов")}` : `${s.credits} из ${s.cap} кредитов`;
+  return `🔎 Поиск лидов (Firecrawl): ${spent}${parts.length ? ` — ${parts.join(", ")}` : ""}`;
+}
+
 export function reportText(s: DayStats, escape: (t: string) => string): string {
   const accounts = s.byAccount.length
     ? ` (${s.byAccount.map(({ name, n }) => `${name === null ? "главный" : escape(name)} — ${n}`).join(", ")})`
@@ -254,7 +266,6 @@ export function reportText(s: DayStats, escape: (t: string) => string): string {
   // null — строки нет; "" — пустая строка между блоками.
   const lines: (string | null)[] = [
     `🤖 <b>Автопрогон касаний — отчёт за ${shortDay(s.day)}</b>`,
-    s.niche ? `Ниша недели: ${escape(s.niche)}` : null,
     "<i>За сутки до 18:00 — с прошлого отчёта.</i>",
     s.enabled ? null : "⏸ Автопрогон выключен в разделе «Касания».",
     "",
@@ -265,6 +276,7 @@ export function reportText(s: DayStats, escape: (t: string) => string): string {
     s.inFlight ? `Ждут отправки: ${s.inFlight} — уйдут сегодня до 20:30 или завтра с 07:30` : null,
     s.manual ? `Не нашлись в Telegram — карточки ушли на звонок: ${s.manual}` : null,
     s.dropped ? `Не написали — проверка по факту ничего не подтвердила или сайт не открылся: ${s.dropped}` : null,
+    s.search ? searchLine(s.search) : null,
     "",
     `💬 Ответили: <b>${s.replies}</b>${s.replies ? ` → взяли в работу: ${s.taken}${s.refused ? `, просили не писать: ${s.refused}` : ""}` : ""}`,
     ...s.replied
@@ -279,8 +291,8 @@ export function reportText(s: DayStats, escape: (t: string) => string): string {
       s.trouble
         ? "Не добрали из-за сбоя выше: компании в нише есть, дело не в них. Перешлите отчёт разработчику."
         : s.attempts >= s.target * ATTEMPTS_PER_TARGET
-        ? "Не добрали: кончились попытки на день — в пуле ниши мало годных компаний. Проверьте кампанию автопоиска."
-        : "Не добрали: в пуле ниши кончились компании, до которых дотянется Telegram, или аккаунты были остановлены. Проверьте раздел «Аккаунты» и кампанию автопоиска.",
+          ? `Не добрали: ${s.attempts} попыток за день — почти все письма отбраковывались. Перешлите отчёт разработчику.`
+          : "Не добрали: в пуле кончились компании, до которых дотянется Telegram, или аккаунты были остановлены. Проверьте раздел «Аккаунты» и кампании автопоиска.",
     );
   }
   return lines.filter((line): line is string => line !== null).join("\n");

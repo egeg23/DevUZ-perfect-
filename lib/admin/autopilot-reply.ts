@@ -1,4 +1,4 @@
-import { AUTOPILOT_SENDER, nicheByKey, replyHeading, weekOf } from "@/lib/admin/autopilot";
+import { AUTOPILOT_SENDER, nicheLabel, replyHeading } from "@/lib/admin/autopilot";
 import { leadCard, routeNewLead } from "@/lib/admin/lead-queue-store";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { esc } from "@/lib/qualify/telegram";
@@ -83,14 +83,13 @@ export async function offerLead(prospectId: string, leadId: string, body: string
   const card = await leadCard(leadId);
   if (!card) return false;
 
-  const { data: p } = await db.from("prospects").select("host, label").eq("id", prospectId).maybeSingle();
-  const { data: week } = await db.from("autopilot_weeks").select("niche").eq("week", weekOf(new Date())).maybeSingle();
+  const { data: p } = await db.from("prospects").select("host, label, niche").eq("id", prospectId).maybeSingle();
   const heading = replyHeading(
     {
       host: (p?.host as string | null) ?? null,
       label: (p?.label as string | null) ?? null,
       words: body,
-      niche: nicheByKey(week?.niche as string | null)?.label ?? null,
+      niche: nicheLabel(p?.niche as string | null),
     },
     esc,
   );

@@ -12,13 +12,12 @@ import {
   REPLIED_SHOWN,
   REPLY_MARK,
   REPORT_SPAN_MS,
-  inNiche,
-  nextNiche,
-  nicheByKey,
+  nicheLabel,
   prepareWindow,
   replyHeading,
   reportDue,
   reportText,
+  searchLine,
   toPrepare,
   weekOf,
   type DayStats,
@@ -26,37 +25,35 @@ import {
 import { EMPTY_CONTACTS } from "@/lib/audit/contacts";
 
 /**
- * Автопрогон касаний — правило владельца, 05.10.2026: «1 неделя = 1 ниша…
- * в день ты делаешь 20 касаний (написано в тг, не меньше)… лидов, которые
- * ответят, — закидывай сразу через тг бота к менеджерам».
+ * Автопрогон касаний — правила владельца. 05.10.2026: «в день ты делаешь 20
+ * касаний (написано в тг, не меньше)… лидов, которые ответят, — закидывай
+ * сразу через тг бота к менеджерам». 06.10.2026: «Нам главное не 20 попыток
+ * связаться, а не останавливать поиск, пока 20 сообщений не будут
+ * отправлены. Убираем правило — 1 неделя = 1 ниша. Любые ниши».
  */
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-test("ниши идут по кругу, ключи не повторяются, у каждой есть перевод", () => {
+test("ниши поиска: ключи не повторяются, у каждой — запрос для карт; ниша карточки читается человеком", () => {
   const keys = AUTOPILOT_NICHES.map((n) => n.key);
   assert.equal(new Set(keys).size, keys.length);
-  assert.equal(nextNiche(null).key, AUTOPILOT_NICHES[0].key, "первая неделя — первая ниша");
-  assert.equal(nextNiche("какая-то-убранная").key, AUTOPILOT_NICHES[0].key);
-  assert.equal(nextNiche(AUTOPILOT_NICHES[0].key).key, AUTOPILOT_NICHES[1].key);
-  assert.equal(nextNiche(AUTOPILOT_NICHES.at(-1)!.key).key, AUTOPILOT_NICHES[0].key, "после последней — снова первая");
-  for (const n of AUTOPILOT_NICHES) {
-    assert.ok(n.uz && !/[Ѐ-ӿ]/.test(n.uz), `${n.key}: узбекское название латиницей`);
-    assert.ok(n.pl && !/[Ѐ-ӿ]/.test(n.pl), `${n.key}: польское название без кириллицы`);
-    assert.ok(n.match.length && n.maps, `${n.key}: есть по чему искать`);
-  }
+  for (const n of AUTOPILOT_NICHES) assert.ok(n.label && n.maps, `${n.key}: есть название и запрос`);
+  assert.equal(nicheLabel("stomatologiya"), "стоматологии", "ключ классификатора сайта");
+  assert.equal(nicheLabel("Учебный центр"), "учебные центры", "кампания с карт, без учёта регистра");
+  assert.equal(nicheLabel("IT Образование для детей"), "IT Образование для детей", "незнакомое — как записано");
+  assert.equal(nicheLabel(null), null);
 });
 
-test("первая ниша — та, где пул уже есть: учебные центры", () => {
-  // На 05.10.2026 в пуле учебных центров 55 сайтов и 189 мобильных номеров —
-  // больше, чем у любой другой ниши.
-  assert.equal(AUTOPILOT_NICHES[0].key, "uchebnyy-centr");
-  const n = nicheByKey("uchebnyy-centr")!;
-  assert.ok(inNiche(n, "Учебный центр"), "без учёта регистра");
-  assert.ok(inNiche(n, "uchebnyy-centr"), "ключ классификатора сайта");
-  assert.ok(!inNiche(n, "стоматология"));
-  assert.ok(!inNiche(n, null));
+test("ниши любые: ни недели-ниши, ни отбора по нише", () => {
+  const store = read("lib/admin/autopilot-store.ts");
+  assert.doesNotMatch(store, /autopilot_weeks/, "ниша недели больше не заводится и не читается");
+  assert.match(store, /export async function candidates\(limit: number/, "отбор — из всего пула");
+  assert.match(store, /ensureCampaigns\(db\)/, "кампании с карт — по всем нишам списка");
+  const ensure = store.slice(store.indexOf("async function ensureCampaigns"), store.indexOf("const POOL_COLUMNS"));
+  assert.doesNotMatch(ensure, /active: true/, "выключенную человеком кампанию не включает");
+  assert.doesNotMatch(read("lib/admin/autopilot-reply.ts"), /autopilot_weeks/);
+  assert.match(replyHeading({ host: "a.uz", label: null, words: "да", niche: "стоматологии" }, esc), /Ниша: стоматологии/);
 });
 
 test("неделя — с понедельника по Ташкенту", () => {
@@ -94,10 +91,12 @@ test("норма: не меньше 20 ушедших, не больше чет�
   // Номер без Telegram ушёл «руками» — в счёт не идёт, и следующий проход
   // увидит недостачу снова.
   assert.equal(toPrepare({ sent: 15, inFlight: 0, attempts: 22, target }), 2);
+  assert.equal(ATTEMPTS_PER_TARGET, 10, "не останавливаться, пока двадцать не уйдут: потолок — только от поломки");
+  assert.equal(toPrepare({ sent: 5, inFlight: 0, attempts: 80, target }), 2, "80 попыток — ещё не повод остановиться");
   assert.equal(
     toPrepare({ sent: 5, inFlight: 0, attempts: target * ATTEMPTS_PER_TARGET, target }),
     0,
-    "попытки на день кончились — пустой пул не съедает сотни обходов",
+    "двести попыток — что-то отбраковывает все письма, дальше не тратим",
   );
   assert.equal(toPrepare({ sent: 0, inFlight: 0, attempts: 0, target: 0 }), 0, "норма 0 — не пишет");
 });
@@ -140,7 +139,7 @@ test("ответ клиента — команде через очередь л�
     esc,
   );
   assert.ok(heading.startsWith(`<b>${REPLY_MARK}</b> · school.uz`));
-  assert.match(heading, /Ниша недели: учебные центры/);
+  assert.match(heading, /Ниша: учебные центры/);
   assert.match(heading, /&lt;интересно&gt;/, "слова клиента экранируются — их пишет посторонний");
 
   const reply = read("lib/admin/autopilot-reply.ts");
@@ -175,16 +174,16 @@ test("порция и поток не выдают карточку, котор�
   assert.match(pool, /autopilot_at\.is\.null,autopilot_note\.not\.is\.null/);
 });
 
-test("свип зовёт автопрогон и отчёт", () => {
+test("свип зовёт автопрогон, отчёт и поиск лидов", () => {
   const sweep = read("app/api/reminders/sweep/route.ts");
   assert.match(sweep, /runAutopilot\(new Date\(\)\)/);
   assert.match(sweep, /sendAutopilotReport\(new Date\(\)\)/);
+  assert.match(sweep, /leadSearchPass\(new Date\(\)\)/);
 });
 
 test("отчёт за день: норма, аккаунты, ответы и что делать, если не добрали", () => {
   const base: DayStats = {
     day: "2026-10-06",
-    niche: "учебные центры",
     target: 20,
     enabled: true,
     sent: 21,
@@ -210,7 +209,8 @@ test("отчёт за день: норма, аккаунты, ответы и ч
   };
   const ok = reportText(base, esc);
   assert.match(ok, /Автопрогон касаний — отчёт за 06\.10/);
-  assert.match(ok, /Ниша недели: учебные центры/);
+  assert.doesNotMatch(ok, /Ниша недели/, "ниши любые");
+  assert.doesNotMatch(ok, /Firecrawl/, "без ключа Firecrawl строки нет");
   assert.match(ok, /За сутки до 18:00/);
   assert.match(ok, /Написали — ушло в Telegram: <b>21<\/b> из 20 ✅ \(M1 — 9, главный — 7, M2 — 5\)/);
   assert.match(ok, /Ответили: <b>2<\/b> → взяли в работу: 1, просили не писать: 1/);
@@ -231,7 +231,6 @@ test("отчёт за день: норма, аккаунты, ответы и ч
   const short = reportText({ ...base, sent: 12 }, esc);
   assert.match(short, /<b>12<\/b> из 20 ⚠️/);
   assert.match(short, /Не добрали/);
-  assert.match(reportText({ ...base, sent: 12, attempts: 80 }, esc), /кончились попытки/);
   assert.match(reportText({ ...base, enabled: false, sent: 0 }, esc), /выключен/);
 
   // Сбой прохода назван в отчёте, а не списан на нишу и аккаунты.
@@ -241,6 +240,12 @@ test("отчёт за день: норма, аккаунты, ответы и ч
   assert.match(broke, /Не добрали из-за сбоя выше/);
   assert.doesNotMatch(broke, /Проверьте раздел «Аккаунты»/);
   assert.doesNotMatch(reportText({ ...base, trouble: "TypeError" }, esc), /сбоил/, "норма набрана — разовый сбой не тревога");
+
+  // Firecrawl: на что ушли кредиты и что дали.
+  const found = reportText({ ...base, search: { credits: 31, cap: 33, contacts: 4, tried: 27, queued: 6 } }, esc);
+  assert.match(found, /🔎 Поиск лидов \(Firecrawl\): 31 из 33 кредитов — Telegram или мобильный нашёлся у 4 из 27 компаний без него, новых сайтов на проверку: 6/);
+  assert.equal(searchLine({ credits: 0, cap: null, contacts: 0, tried: 0, queued: 0 }), "🔎 Поиск лидов (Firecrawl): 0 кредитов");
+  assert.match(reportText({ ...base, sent: 12, attempts: 200 }, esc), /200 попыток за день/);
 });
 
 test("миграция: отметки на карточке, неделя-ниша, настройки с нормой 20", () => {

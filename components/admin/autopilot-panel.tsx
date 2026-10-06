@@ -1,7 +1,7 @@
 import { HelpHint } from "@/components/admin/help-link";
 import { toggleAutopilotAction } from "@/app/admin/prospect/actions";
 import { autopilotDict } from "@/content/admin-panel/prospect";
-import { REPLY_MARK, type AutopilotNiche, type DayStats } from "@/lib/admin/autopilot";
+import { REPLY_MARK, type DayStats } from "@/lib/admin/autopilot";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 
@@ -10,24 +10,9 @@ import { pick, type PanelLocale } from "@/lib/admin/i18n";
  * (lib/admin/autopilot.ts). Цифры за сегодня и неделю — те же, что в
  * вечернем отчёте бота. Остановить и запустить — только владелец.
  */
-export function AutopilotPanel({
-  stats,
-  niche,
-  next,
-  nextFrom,
-  canToggle,
-  locale,
-}: {
-  stats: DayStats;
-  niche: AutopilotNiche;
-  next: AutopilotNiche;
-  /** «12.10» — с какого дня следующая ниша. */
-  nextFrom: string;
-  canToggle: boolean;
-  locale: PanelLocale;
-}) {
+export function AutopilotPanel({ stats, canToggle, locale }: { stats: DayStats; canToggle: boolean; locale: PanelLocale }) {
   const t = pick(autopilotDict, locale);
-  const name = (n: AutopilotNiche) => (locale === "ru" ? n.label : n[locale]);
+  const search = stats.search;
   const accounts = stats.byAccount.map(({ name: account, n }) => `${account ?? t.mainAccount} — ${n}`).join(", ");
 
   return (
@@ -36,7 +21,7 @@ export function AutopilotPanel({
       className={`mb-6 rounded-xl border px-5 py-4 ${stats.enabled ? "border-blue-soft/30 bg-blue-soft/5" : "border-line bg-surface-2/40"}`}
     >
       <p className={`flex flex-wrap items-center gap-2 text-xs uppercase tracking-wider ${stats.enabled ? "text-blue-soft" : "text-muted"}`}>
-        {t.head(name(niche))} · {stats.enabled ? t.on : t.off}
+        {t.head} · {stats.enabled ? t.on : t.off}
         <HelpHint topic={helpAnchor("/admin/prospect", "autopilot")} label={t.help} />
       </p>
       <ul className="mt-3 flex flex-col gap-1 text-sm">
@@ -45,7 +30,11 @@ export function AutopilotPanel({
         <li>{t.replies(stats.replies, stats.taken)}</li>
         {stats.manual || stats.dropped ? <li className="text-xs text-muted">{t.dropped(stats.manual, stats.dropped)}</li> : null}
         <li className="text-xs text-muted">{t.week(stats.weekSent, stats.weekReplies)}</li>
-        <li className="text-xs text-muted">{t.next(name(next), nextFrom)}</li>
+        {search ? (
+          <li className="text-xs text-muted">
+            {t.search(search.credits, search.cap === null ? "—" : String(search.cap), search.contacts, search.tried, search.queued)}
+          </li>
+        ) : null}
       </ul>
       <p className="mt-3 text-xs text-faint">{t.note(REPLY_MARK)}</p>
       {canToggle ? (

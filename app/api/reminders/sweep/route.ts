@@ -10,6 +10,7 @@ import { sendTeamNews } from "@/lib/admin/team-news";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
 import { noteAutopilotTrouble, runAutopilot, sendAutopilotReport } from "@/lib/admin/autopilot-store";
+import { leadSearchPass } from "@/lib/admin/lead-search-store";
 import { settleTurnoverDue } from "@/lib/partners/autopay";
 import { pingPriorityLeads } from "@/lib/partners/priority-lead";
 import { expireClients } from "@/lib/partners/store";
@@ -268,6 +269,13 @@ export async function POST(request: Request) {
       await noteAutopilotTrouble(autopilot.errors).catch(() => undefined);
     }
     await sendAutopilotReport(new Date()).catch((error) => console.error("автопрогон, отчёт:", error));
+  });
+  // Поиск лидов через Firecrawl — своей очередью: до двух кредитов за проход
+  // из дневного лимита (lib/firecrawl.ts), на контакты тех, кому писать
+  // некуда, или на новые компании (lib/admin/lead-search.ts).
+  after(async () => {
+    const search = await leadSearchPass(new Date()).catch((error) => ({ errors: [String(error)] }));
+    if (search.errors.length) console.error("поиск лидов:", search.errors.join("; "));
   });
 
   // Уборка просроченных сигналов скаута едет здесь же, а не отдельным

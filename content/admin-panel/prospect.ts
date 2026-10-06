@@ -713,9 +713,9 @@ export const protoNoteDict = defineDict({
  */
 export const autopilotDict = defineDict({
   head: {
-    ru: (niche: string) => `Автопрогон касаний · ниша недели: ${niche}`,
-    uz: (niche: string) => `Avtomatik aloqalar · hafta nishasi: ${niche}`,
-    pl: (niche: string) => `Automatyczne kontakty · nisza tygodnia: ${niche}`,
+    ru: "Автопрогон касаний · любые ниши",
+    uz: "Avtomatik aloqalar · istalgan nishalar",
+    pl: "Automatyczne kontakty · dowolne nisze",
   },
   help: { ru: "Как работает автопрогон", uz: "Avtomatik aloqalar qanday ishlaydi", pl: "Jak działają automatyczne kontakty" },
   on: { ru: "работает", uz: "ishlayapti", pl: "działa" },
@@ -752,10 +752,14 @@ export const autopilotDict = defineDict({
     uz: (sent: number, replies: number) => `Hafta boshidan: ${sent} ta xabar, ${replies} ta javob`,
     pl: (sent: number, replies: number) => `Od początku tygodnia: ${sent} ${plural("pl", sent, "wiadomość", "wiadomości", "wiadomości")}, ${replies} ${plural("pl", replies, "odpowiedź", "odpowiedzi", "odpowiedzi")}`,
   },
-  next: {
-    ru: (niche: string, from: string) => `Следующая ниша — ${niche}, с ${from}. Её кампания автопоиска уже собирает компании.`,
-    uz: (niche: string, from: string) => `Keyingi nisha — ${niche}, ${from} dan. Uning avtoqidiruv kampaniyasi kompaniyalarni allaqachon yig‘yapti.`,
-    pl: (niche: string, from: string) => `Następna nisza — ${niche}, od ${from}. Jej kampania autowyszukiwania już zbiera firmy.`,
+  /** Поиск лидов через Firecrawl за сегодня: кредиты из дневного лимита и что они дали. */
+  search: {
+    ru: (credits: number, cap: string, found: number, tried: number, queued: number) =>
+      `Поиск лидов (Firecrawl) сегодня: ${credits} из ${cap} кредитов · Telegram или мобильный нашёлся у ${found} из ${tried} · новых сайтов на проверку: ${queued}`,
+    uz: (credits: number, cap: string, found: number, tried: number, queued: number) =>
+      `Lidlarni qidirish (Firecrawl) bugun: ${cap} kreditdan ${credits} ta · Telegram yoki mobil raqam ${tried} tadan ${found} tasida topildi · tekshiruvga yangi saytlar: ${queued} ta`,
+    pl: (credits: number, cap: string, found: number, tried: number, queued: number) =>
+      `Wyszukiwanie leadów (Firecrawl) dziś: ${credits} z ${cap} kredytów · Telegram lub komórka znalezione u ${found} z ${tried} · nowych stron do sprawdzenia: ${queued}`,
   },
   /** `mark` — шапка карточки лида в боте; бот пишет по-русски, поэтому строкой из lib. */
   note: {
