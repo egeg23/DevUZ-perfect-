@@ -135,3 +135,28 @@ B2B, AI, контакты; языки — ru, uz, en.
 - https://insense.pro/ · https://insense.pro/pricing · https://billo.app/ · https://www.ugcroster.com/blog/brands/billo-pricing-breakdown-2026-costs-plans-hidden-fees (обзор) · https://www.trend.io/ · https://www.trend.io/pricing · https://joinbrands.com/ · https://joinbrands.com/pricing
 - Collabstr: https://collabstr.com/pricing (403), https://coldiq.com/tools/collabstr , https://influee.co/blog/collabstr-alternatives (обзоры)
 - https://www.modash.io/pricing · https://hypeauditor.com/ · https://www.upfluence.com/ · https://www.aspire.io/ · https://influence.co/
+
+## 6. Что агентству нужно дальше — раздел «Что дальше» в прототипе
+
+Конструктор проекта, как у MAVERA (`kp/mavera.html`, витрина globalex):
+сайт из прототипа — основа (2 900 $), остальное включается тумблером, блок
+сразу появляется в превью, итог пересчитывается. Цены — оценка DevUz той же
+сетки, что в КП MAVERA; блоки и цены — `scripts/protos/bloger-agency/plan.mjs`.
+
+| Кому | Что болит (по их сайту) | Блок |
+|---|---|---|
+| Команда | 65 карточек блогеров в коде, «цены могут быть не актуальны» | Админка агентства — 1 800 $ |
+| Команда | 8 этапов кампании и акты по этапам — в переписке | Кампании по 8 этапам — 2 900 $ |
+| Команда | Бриф — Google-форма | Заявки и подборки в Telegram — 280 $ |
+| Бренды | Обещана статистика: переходы и охваты | Отчёт кампании ссылкой — 700 $ |
+| Бренды | Статус кампании — только через менеджера | Кабинет бренда — 1 900 $ |
+| Блогеры | Обещаны ответ за 2 часа, ТЗ, выплаты | Кабинет резидента — 2 400 $ |
+| Блогеры | BLOGY живёт отдельно от сайта | Связка с ботом BLOGY — 1 200 $ |
+| Деньги | AI — «Скоро!» | ИИ-подбор и бриф-мастер — 900 $ |
+| Деньги | Нет продукта для малого бизнеса | UGC-студия за токены, Click/Payme — 2 200 $ |
+| Деньги | /ai продаёт контакты вручную через Click | Платный доступ к базе — 800 $ |
+| Рост | PRO BLOGGERS, TAF | Регистрация на ивенты — 600 $ |
+| Рост | Есть /en | Английская версия — 450 $ |
+| Рост | — | SEO и карта сайта — 180 $ |
+
+Всё вместе с сайтом — 19 210 $.

@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { I18N, nicheNames, nicheKeys } from "./i18n.mjs";
+import { BASE as KIT_BASE, BLOCKS, GROUPS } from "./plan.mjs";
 
 const DIR = new URL(".", import.meta.url).pathname;
 const CSS = readFileSync(DIR + "style.css", "utf8").replace(/\n/g, "");
@@ -27,7 +28,7 @@ const ICON = {
 const LOGO = '<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="9" width="17" height="17" rx="3" fill="none" stroke="currentColor" stroke-width="5"/><circle cx="6" cy="8" r="3.4" fill="currentColor"/><circle cx="6" cy="27" r="3.4" fill="currentColor"/><circle cx="25" cy="27" r="3.4" fill="currentColor"/><path d="M19 3h7a4 4 0 0 1 4 4v1a6 6 0 0 1-6 6h-1a4 4 0 0 1-4-4z" fill="hsl(225 30% 95%)"/></svg>';
 const DZLOGO = '<svg class="dz-logo" viewBox="-120 -120 240 240" aria-hidden="true"><defs><linearGradient id="dzg" x1="0" y1="-1" x2="1" y2="1"><stop offset="0" stop-color="#5B9BFF"/><stop offset=".55" stop-color="#3B82F6"/><stop offset="1" stop-color="#22F0A0"/></linearGradient><mask id="dzc"><rect x="-120" y="-120" width="240" height="240" fill="#fff"/><path d="M-22 -34 L-58 0 L-22 34M22 -34 L58 0 L22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/></mask></defs><path d="M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z" fill="url(#dzg)" mask="url(#dzc)"/><rect x="-5" y="-27" width="10" height="54" rx="5" fill="#E8B14C"/></svg>';
 
-const PAGES = ["", "blogery", "ugc", "brendam", "blogeram", "keysy"];
+const PAGES = ["", "blogery", "ugc", "brendam", "blogeram", "keysy", "plan"];
 
 /* ── Каркас ──────────────────────────────────────────────────────────── */
 function shell(l, path, meta, body, { portal = false } = {}) {
@@ -39,6 +40,7 @@ function shell(l, path, meta, body, { portal = false } = {}) {
     ["brendam", t("Брендам", "Brendlarga")],
     ["blogeram", t("Блогерам", "Blogerlarga")],
     ["keysy", t("Кейсы", "Keyslar")],
+    ["plan", t("Что дальше", "Keyingi qadam")],
   ];
   const mainTg = tg(t("Здравствуйте! Хочу рекламу у блогеров — помогите подобрать.", "Assalomu alaykum! Blogerlarda reklama qilmoqchiman — tanlashga yordam bering."));
   const ctaText = t("Написать в Telegram", "Telegramga yozish");
@@ -189,6 +191,7 @@ const blogyBlock = (l) => {
 const moreBlock = (l, skip) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   const all = [
+    ["plan", t("Что дальше", "Keyingi qadam"), t("Админка, кабинеты брендов и блогеров — конструктор", "Admin panel, brend va bloger kabinetlari — konstruktor")],
     ["blogery", t("Каталог блогеров", "Blogerlar katalogi"), t("Фильтры, ER, цены и подборка в один клик", "Filtrlar, ER, narxlar va bir bosishda tanlov")],
     ["ugc", t("UGC-студия", "UGC-studiya"), t("Сценарии роликов за токены — ИИ пишет за 20 секунд", "Tokenlar evaziga rolik ssenariylari — AI 20 soniyada yozadi")],
     ["brendam", t("Брендам", "Brendlarga"), t("Услуги и цены, ИИ-бриф-мастер", "Xizmatlar va narxlar, AI brif-master")],
@@ -306,6 +309,7 @@ ${quotesBlock(l)}
 <div><b>${t("Опечатки на bloger.agency", "bloger.agency’dagi xatolar")}</b><span>${t("Сейчас на вашем сайте: на странице «Бизнесу» компания четыре раза названа <s>BLOGET AGENCY</s>, на главной — «ассоциация <s>блоегров</s>», на «Оценке» — куски на английском. В прототипе везде Bloger Agency и «ассоциация блогеров».", "Hozir saytingizda: «Biznesga» sahifasida kompaniya to‘rt marta <s>BLOGET AGENCY</s> deb atalgan, bosh sahifada — «ассоциация <s>блоегров</s>», «Baholash» sahifasida — inglizcha bo‘laklar. Prototipda hamma joyda Bloger Agency.")}</span></div>
 <div><b>${t("Каталог: дубль и подборка", "Katalog: dubl va tanlov")}</b><span>${t("@gurmandiyauz стоял в каталоге дважды. Теперь у каждой карточки кнопка «В подборку», а подборка уходит менеджеру в Telegram одним сообщением.", "@gurmandiyauz katalogda ikki marta turgan edi. Endi har bir kartochkada «Tanlovga» tugmasi bor, tanlov esa menejerga Telegramda bitta xabar bo‘lib ketadi.")}</span></div>
 </div>
+<div class="cta"><a class="btn btn-main" href="${href(l, "plan")}">${t("Что ещё нужно агентству — конструктор проекта", "Agentlikka yana nima kerak — loyiha konstruktori")}</a></div>
 </div></div></section>
 ${finalBlock(l)}`;
   return shell(l, "", {
@@ -498,7 +502,78 @@ ${moreBlock(l, "keysy")}`;
   }, body);
 }
 
-const BUILD = { "": home, blogery: catalog, ugc, brendam: brands, blogeram: bloggers, keysy: cases };
+
+/* ── Что дальше: конструктор проекта для агентства (как у MAVERA) ───── */
+const usd = (n) => "$" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+function previews(l) {
+  const t = (ru, uz) => (l === "ru" ? ru : uz);
+  const cat = JSON.parse(CAT);
+  const pick = (h) => cat.find((r) => r[0] === h);
+  const row = (a, b, c = "") => `<div class="pv-row"><span>${a}</span>${c ? `<i>${c}</i>` : ""}<b>${b}</b></div>`;
+  const ex = `<span class="pv-ex">${t("пример", "namuna")}</span>`;
+  const stages = l === "ru" ? ["Бриф", "Подборка", "Предоплата", "ТЗ", "Выход", "Проверка", "Статистика", "Новая волна"] : ["Brif", "Tanlov", "Oldindan to‘lov", "TZ", "Chiqish", "Tekshiruv", "Statistika", "Yangi to‘lqin"];
+  const frame = (title, body) => `<div class="pv-win"><div class="pv-bar"><i></i><i></i><i></i><span>${title}</span></div><div class="pv-body">${body}</div></div>`;
+  return {
+    admin: frame(t("Админка · Блогеры", "Admin · Blogerlar"), ["shahlo_usmanovna", "madina_tws", "nodirax_", "gurmandiyauz"].map((h) => { const r = pick(h); return row("@" + r[0], `Story ${usd(r[5])} · Post ${usd(r[6])}`, `<em class="pv-edit">${t("изменить", "tahrirlash")}</em>`); }).join("") + `<p class="pv-note">${t("Цены — из вашего каталога. Правка здесь сразу меняет каталог, калькулятор и ИИ-подбор.", "Narxlar — katalogingizdan. Bu yerdagi tahrir katalog, kalkulyator va AI-tanlovni darhol o‘zgartiradi.")}</p>`),
+    crm: frame(t("Кампании", "Kampaniyalar") + " " + ex, `<div class="pv-kan">${stages.slice(0, 4).map((s, i) => `<div><small>${s}</small>${i === 0 ? `<p>${t("Кофейня, Юнусабад", "Qahvaxona, Yunusobod")} · Silver</p>` : i === 1 ? `<p>${t("Магазин на Uzum", "Uzum’dagi do‘kon")} · Gold</p><p>${t("Автосервис", "Avtoservis")} · ${t("бартер", "barter")}</p>` : i === 2 ? `<p>${t("Фитнес-клуб", "Fitnes-klub")} · Platinum <em>${t("акт", "dalolatnoma")}</em></p>` : ""}</div>`).join("")}</div><div class="pv-steps">${stages.map((s, i) => `<span${i < 3 ? ' class="on"' : ""}>${s}</span>`).join("")}</div>`),
+    leads: `<div class="pv-tg"><b>Bloger Agency · ${t("заявки", "arizalar")}</b><p>${t("Новая подборка с сайта", "Saytdan yangi tanlov")}<br>@obzor_edy, @sevas_cooking, @gulyamiddinova<br>${t("Бюджет", "Byudjet")}: $800 · Story<br>${t("Пришёл", "Kelgan")}: Instagram</p><span>12:04</span></div>`,
+    report: frame(t("Отчёт кампании", "Kampaniya hisoboti") + " " + ex, `<div class="pv-kpi"><div><small>${t("Блогеров", "Blogerlar")}</small><b>5</b></div><div><small>${t("Охват", "Qamrov")}</small><b>—</b></div><div><small>${t("Переходы", "O‘tishlar")}</small><b>—</b></div></div><div class="pv-bars">${[0.7, 0.45, 0.9, 0.3, 0.6].map((h) => `<i style="--h:${h}"></i>`).join("")}</div><p class="pv-note">${t("Цифры подставляются из кампании — мы их не придумываем.", "Raqamlar kampaniyadan olinadi — biz ularni o‘ylab topmaymiz.")}</p>`),
+    brand: frame(t("Кабинет бренда", "Brend kabineti") + " " + ex, `<div class="pv-steps">${stages.slice(0, 7).map((s, i) => `<span${i < 5 ? ' class="on"' : ""}>${s}</span>`).join("")}</div>${row(t("Ролик @kamillove_12", "Rolik @kamillove_12"), `<em class="pv-ok">${t("Согласовать", "Tasdiqlash")}</em>`)}${row(t("Акт за этап «Выход»", "«Chiqish» bosqichi dalolatnomasi"), "PDF")}${row(t("Отчёт", "Hisobot"), t("по ссылке", "havola orqali"))}`),
+    blogger: frame(t("Кабинет блогера", "Bloger kabineti") + " " + ex, `${row(t("Новый заказ · сторис", "Yangi buyurtma · storis"), "$130", `<em class="pv-timer">1:47</em>`)}${row(t("ТЗ и сроки", "TZ va muddatlar"), t("открыть", "ochish"))}${row(t("Загрузить ролик", "Rolikni yuklash"), "↑")}${row(t("Выплата за сентябрь", "Sentabr to‘lovi"), t("в работе", "jarayonda"))}<p class="pv-note">${t("Таймер — ваше обещание: ответ рекламодателю за 2 часа.", "Taymer — va’dangiz: reklama beruvchiga 2 soatda javob.")}</p>`),
+    blogy: `<div class="pv-tg"><b>BLOGY</b><p>${t("Новый заказ от бренда: сторис, $130. ТЗ — в кабинете на сайте.", "Brenddan yangi buyurtma: storis, $130. TZ — saytdagi kabinetda.")}</p><span>${t("Принять", "Qabul qilish")} · ${t("Отказаться", "Rad etish")}</span></div>`,
+    ai: frame(t("ИИ-подбор", "AI-tanlov"), `<p class="pv-q">${t("«Открываем кофейню в Юнусабаде, бюджет 800$, нужны сторис»", "«Yunusobodda qahvaxona ochyapmiz, byudjet 800$, storis kerak»")}</p>${row("Food", t("ниша", "nisha"))}${row("$800", t("бюджет", "byudjet"))}${row(t("запуск", "ishga tushirish"), t("цель", "maqsad"))}`),
+    ugc: frame(t("UGC-студия", "UGC-studiya"), `<div class="pv-coin"><i>B</i><b>300</b><span>${t("токенов", "token")}</span></div>${row(t("Сценарий ролика", "Rolik ssenariysi"), t("10 токенов", "10 token"))}${row(t("Пополнить", "To‘ldirish"), "Click · Payme")}${row(t("Снять у блогеров", "Blogerlarda suratga olish"), "10 → $650")}`),
+    access: frame(t("Доступ к базе", "Bazaga kirish"), `${row(t("10 блогеров", "10 bloger"), "60 000 so‘m")}${row(t("20 блогеров", "20 bloger"), "110 000 so‘m")}${row(t("50 блогеров", "50 bloger"), "250 000 so‘m")}<p class="pv-note">${t("Пакеты — как на вашей странице AI. Оплата Click — контакты открываются сразу.", "Paketlar — AI sahifangizdagidek. Click orqali to‘lov — kontaktlar darhol ochiladi.")}</p>`),
+    events: frame("PRO BLOGGERS", `${row(t("Участник", "Ishtirokchi"), t("регистрация", "ro‘yxatdan o‘tish"))}${row(t("Партнёр", "Hamkor"), t("пакеты для брендов", "brendlar uchun paketlar"))}${row(t("Напоминание в Telegram", "Telegramda eslatma"), t("за день", "bir kun oldin"))}`),
+    en: `<div class="pv-lang"><span>RU</span><span>UZ</span><span class="on">EN</span></div><p class="pv-q">Influencer marketing in Uzbekistan — simpler and more affordable</p>`,
+    seo: `<div class="pv-serp"><small>bloger.agency</small><b>${t("Реклама у блогеров в Ташкенте — Bloger Agency", "Toshkentda blogerlarda reklama — Bloger Agency")}</b><p>${t("Подбор блогеров, ТЗ, запуск и статистика. Тарифы от $700, оплата по этапам.", "Blogerlarni tanlash, TZ, ishga tushirish va statistika. Tariflar $700 dan, bosqichma-bosqich to‘lov.")}</p></div>`,
+  };
+}
+
+function plan(l) {
+  const t = (ru, uz) => (l === "ru" ? ru : uz);
+  const pv = previews(l);
+  const defaults = new Set(["admin", "leads", "ai"]);
+  const groups = Object.keys(GROUPS);
+  const body = `${phead(l, "plan", t("Что дальше", "Keyingi qadam"), `<span class="ours">${t("Предложение DevUz Studio для Bloger Agency", "DevUz Studio’ning Bloger Agency uchun taklifi")}</span>`, t("Что ещё нужно агентству — соберите сами", "Agentlikka yana nima kerak — o‘zingiz yig‘ing"), t("Как у застройщика MAVERA: сайт из этого прототипа — основа, остальное включается тумблером. Включили блок — он сразу появляется в превью справа, а итог пересчитывается. Почему каждый блок здесь — написано вашими же словами с bloger.agency.", "MAVERA quruvchisidagidek: shu prototipdagi sayt — asos, qolgani tumbler bilan yoqiladi. Blokni yoqdingiz — u darhol o‘ngdagi ko‘rinishda paydo bo‘ladi, jami esa qayta hisoblanadi. Har bir blok nima uchun shu yerda — bloger.agency’dagi o‘z so‘zlaringiz bilan yozilgan."))}
+<section style="padding-top:0"><div class="wrap">
+<div class="sec-head rv a-rise"><h2>${t("Кому и что сейчас мешает", "Kimga va hozir nima xalaqit beradi")}</h2></div>
+<div class="grid g3">
+<div class="card rv a-tilt"><span class="n">${t("КОМАНДА", "JAMOA")}</span><h3>${t("Всё руками", "Hammasi qo‘lda")}</h3><p>${t("Бриф — Google-форма, КП — PDF, 65 карточек блогеров — в коде страницы, 8 этапов кампании и акты — в переписке.", "Brif — Google-forma, TT — PDF, 65 ta bloger kartochkasi — sahifa kodida, kampaniyaning 8 bosqichi va dalolatnomalar — yozishmada.")}</p></div>
+<div class="card hot rv a-tilt" style="--d:90ms"><span class="n">${t("БРЕНДЫ", "BRENDLAR")}</span><h3>${t("Не видно цены и статуса", "Narx va holat ko‘rinmaydi")}</h3><p>${t("Цены спрятаны в КП, AI — «Скоро!», а после оплаты бренд узнаёт, что с кампанией, только спросив менеджера.", "Narxlar TTda yashirin, AI — «Tez kunda!», to‘lovdan keyin esa brend kampaniya holatini faqat menejerdan so‘rab biladi.")}</p></div>
+<div class="card rv a-tilt" style="--d:180ms"><span class="n">${t("БЛОГЕРЫ", "BLOGERLAR")}</span><h3>${t("Обещания без инструмента", "Vositasiz va’dalar")}</h3><p>${t("Ответ рекламодателю за 2 часа, ТЗ, договоры, выплаты — обещаны резидентам, но держатся на менеджере. BLOGY живёт отдельно от сайта.", "Reklama beruvchiga 2 soatda javob, TZ, shartnomalar, to‘lovlar — rezidentlarga va’da qilingan, lekin menejerga tayanadi. BLOGY saytdan alohida yashaydi.")}</p></div>
+</div>
+</div></section>
+<section id="konstruktor" style="padding-top:0"><div class="wrap">
+<div class="sec-head rv a-rise"><h2>${t("Конструктор проекта", "Loyiha konstruktori")}</h2><p class="src">${t("Цены — оценка DevUz Studio, той же сетки, что в КП для MAVERA. Точные — после брифа.", "Narxlar — DevUz Studio bahosi, MAVERA uchun TTdagi bilan bir xil to‘r. Aniq narx — brifdan keyin.")}</p></div>
+<div class="kit" id="plan">
+<div class="kit-list">
+<div class="kit-mini" aria-hidden="true"><span>${t("Итого с сайтом", "Sayt bilan jami")}</span><b class="num" id="kit-sum2">—</b></div>
+<div class="kit-base"><div><b>${KIT_BASE[l].t}</b><p>${KIT_BASE[l].d}</p></div><span class="kit-price num">${usd(KIT_BASE.price)}</span><span class="kit-in">${t("входит", "kiradi")}</span></div>
+${groups.map((g) => `<h3 class="kit-g">${GROUPS[g][l]}</h3>${BLOCKS.filter((b) => b.group === g).map((b) => `<label class="kit-row"><input type="checkbox" data-b="${b.id}" data-p="${b.price}" data-needs="${b.needs.join(" ")}"${defaults.has(b.id) ? " checked" : ""}><span class="sw" aria-hidden="true"></span><span class="kit-t"><b>${b[l].t}</b><small>${b[l].why}</small><span class="kit-li">${b[l].li.map((x) => `<em>${x}</em>`).join("")}</span>${b.needs.length ? `<span class="kit-need">${t("Включает", "Birga yoqiladi")}: ${b.needs.map((n) => BLOCKS.find((x) => x.id === n)[l].t).join(", ")}</span>` : ""}</span><span class="kit-price num">${usd(b.price)}</span></label>`).join("")}`).join("")}
+</div>
+<div class="kit-side">
+<div class="kit-screen" aria-live="polite"><p class="kit-cap">${t("Превью включённых блоков", "Yoqilgan bloklar ko‘rinishi")}</p>${BLOCKS.map((b) => `<div class="kit-pv" data-pv="${b.id}"${defaults.has(b.id) ? "" : " hidden"}><span class="kit-pv-t">${b[l].t}</span>${pv[b.pv]}</div>`).join("")}<p class="kit-empty src">${t("Включите блок слева — он появится здесь.", "Chapdagi blokni yoqing — u shu yerda paydo bo‘ladi.")}</p></div>
+<div class="kit-total">
+<div><small>${t("Итого с сайтом", "Sayt bilan jami")}</small><b class="num" id="kit-sum">—</b><span id="kit-n"></span></div>
+<div class="kit-actions"><button class="btn btn-ghost btn-sm" type="button" id="kit-all">${t("Взять всё", "Hammasini olish")}</button><button class="btn btn-ghost btn-sm" type="button" id="kit-copy">${t("Скопировать состав", "Tarkibni nusxalash")}</button><a class="btn btn-main" id="kit-go" href="https://t.me/Devuz_studio_bot?start=bloger_agency">${ICON.tg}${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</a></div>
+</div>
+</div>
+</div>
+</div></section>
+<section><div class="wrap"><div class="note rv a-pop">
+<span class="note-tag">${t("Как собираем", "Qanday yig‘amiz")}</span>
+<h2>${t("Блоки включаются, а не переписываются", "Bloklar qayta yozilmaydi, yoqiladi")}</h2>
+<p class="sub">${t("Сайт с самого начала собирается так, чтобы админка, кабинеты и оплата подключались к нему, а не требовали переделки. Взять можно сразу или через полгода — цена блока от этого не меняется. Код после оплаты — ваш.", "Sayt boshidanoq admin panel, kabinetlar va to‘lov unga ulanadigan qilib yig‘iladi, qayta ishlashni talab qilmaydi. Darhol yoki yarim yildan keyin olish mumkin — blok narxi bundan o‘zgarmaydi. To‘lovdan keyin kod — sizniki.")}</p>
+</div></div></section>`;
+  return shell(l, "plan", {
+    title: t("Что дальше: админка, кабинеты брендов и блогеров — конструктор проекта | Bloger Agency", "Keyingi qadam: admin panel, brend va bloger kabinetlari — loyiha konstruktori | Bloger Agency"),
+    desc: t("Конструктор проекта для Bloger Agency: админка агентства, кампании по этапам, кабинеты бренда и блогера, ИИ, UGC-студия с оплатой. Предложение DevUz Studio.", "Bloger Agency uchun loyiha konstruktori: agentlik admin paneli, bosqichli kampaniyalar, brend va bloger kabinetlari, AI, to‘lovli UGC-studiya. DevUz Studio taklifi."),
+  }, body);
+}
+
+const BUILD = { "": home, blogery: catalog, ugc, brendam: brands, blogeram: bloggers, keysy: cases, plan };
 const out = {};
 for (const l of ["ru", "uz"]) for (const p of PAGES) out[(l === "uz" ? "uz" + (p ? "/" : "") : "") + p] = BUILD[p](l);
 mkdirSync(DIR + "out", { recursive: true });
