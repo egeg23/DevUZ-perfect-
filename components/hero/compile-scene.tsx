@@ -262,7 +262,7 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
               {dict.hero.eyebrow}
             </p>
 
-            <h1 className="mt-5 md:mt-7 text-[clamp(1.75rem,6.4vw,4rem)] font-extrabold leading-[1.05]">
+            <h1 className="mt-5 md:mt-7 text-[clamp(1.75rem,5.2vw,3.25rem)] font-extrabold leading-[1.05]">
               {dict.hero.titleLead}
               <br />
               <span className="bg-gradient-to-r from-green to-blue-soft bg-clip-text text-transparent">
