@@ -151,6 +151,47 @@ for url in https://api.bybit.com/v5/market/time https://api-demo.bybit.com/v5/ma
   say "Bybit $url → $code"
 done
 
+# ── 7. Демо-ключ Bybit владельца: работает ли и какие у него права ──────────
+# Ключ и подпись в лог не попадают: только права, IP-привязка и баланс демо.
+# Ключ с правом вывода/переводов — громкое предупреждение (бриф, правило 3).
+if [ -n "$(env_get BYBIT_DEMO_API_KEY)" ] && command -v python3 >/dev/null 2>&1; then
+  BYBIT_KEY="$(env_get BYBIT_DEMO_API_KEY)" BYBIT_SECRET="$(env_get BYBIT_DEMO_API_SECRET)" \
+  python3 - <<'PY' || echo "⚠ проверка демо-ключа Bybit не прошла" >&2
+import hashlib, hmac, json, os, time, urllib.request
+
+key, secret = os.environ["BYBIT_KEY"], os.environ["BYBIT_SECRET"]
+
+def get(path, query=""):
+    ts, rw = str(int(time.time() * 1000)), "5000"
+    sign = hmac.new(secret.encode(), (ts + key + rw + query).encode(), hashlib.sha256).hexdigest()
+    req = urllib.request.Request(
+        f"https://api-demo.bybit.com{path}" + (f"?{query}" if query else ""),
+        headers={"X-BAPI-API-KEY": key, "X-BAPI-TIMESTAMP": ts, "X-BAPI-RECV-WINDOW": rw,
+                 "X-BAPI-SIGN": sign},
+    )
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.load(r)
+
+info = get("/v5/user/query-api")
+if info.get("retCode") != 0:
+    print(f"▸ Демо-ключ Bybit: ошибка {info.get('retCode')} — {info.get('retMsg')}")
+    raise SystemExit(0)
+res = info["result"]
+perms = {k: v for k, v in (res.get("permissions") or {}).items() if v}
+danger = {k: v for k, v in perms.items() if k in ("Wallet", "Exchange") or "Withdraw" in str(v)}
+print(f"▸ Демо-ключ Bybit работает. Права: {perms}")
+print(f"▸ Только чтение: {res.get('readOnly') == 1}; IP-привязка: {res.get('ips')}; "
+      f"единый счёт (UTA): {res.get('uta')}")
+if danger:
+    print(f"⚠ У ключа есть права на вывод/переводы: {danger} — такой ключ сервис отклонит")
+bal = get("/v5/account/wallet-balance", "accountType=UNIFIED")
+if bal.get("retCode") == 0 and bal["result"]["list"]:
+    print(f"▸ Демо-баланс: {float(bal['result']['list'][0]['totalEquity'] or 0):,.2f} USD")
+else:
+    print(f"▸ Демо-баланс: не прочитан ({bal.get('retMsg')})")
+PY
+fi
+
 SCHEME=http
 grep -q ssl_certificate "$SITE" && SCHEME=https
 say "Готово: $SCHEME://$PUBLIC_HOST (коммит $(git rev-parse --short HEAD))"
