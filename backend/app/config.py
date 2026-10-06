@@ -13,9 +13,23 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://sunscrypt:sunscrypt@localhost:5432/sunscrypt"
     redis_url: str = "redis://localhost:6379/0"
     git_commit: str = "dev"
+    # Тесты: без пула соединений (у каждого TestClient свой цикл событий).
+    db_nullpool: bool = False
+    # Адрес сайта — для ссылок в письмах.
+    public_url: str = "http://localhost:3000"
 
     master_key: SecretStr | None = None
     session_secret: SecretStr | None = None
+
+    session_days: int = 30
+    cookie_secure: bool = True
+
+    # Почта. Без SMTP_HOST письма копятся в outbox_emails и не уходят.
+    smtp_host: str | None = None
+    smtp_port: int = 465
+    smtp_user: str | None = None
+    smtp_password: SecretStr | None = None
+    smtp_from: str = "SUNSCRYPT <noreply@localhost>"
 
 
 @lru_cache

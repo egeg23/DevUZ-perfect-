@@ -2,16 +2,30 @@
 сайту."""
 
 from typing import Annotated
+from urllib.parse import urlsplit
 
-from fastapi import Depends, FastAPI, Response
+from fastapi import Depends, FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import safety
+from app import auth, safety
 from app.cache import redis_alive
 from app.config import get_settings
 from app.db import db_alive, get_session, read_flags
 
 app = FastAPI(title="SUNSCRYPT API", docs_url="/api/docs", openapi_url="/api/openapi.json")
+app.include_router(auth.router)
+
+
+@app.middleware("http")
+async def same_origin_only(request: Request, call_next):
+    """Защита от CSRF вдобавок к SameSite=Lax: изменяющие запросы из
+    браузера принимаем только со своего сайта."""
+    if request.method not in ("GET", "HEAD", "OPTIONS"):
+        origin = request.headers.get("origin")
+        if origin and urlsplit(origin).netloc != request.headers.get("host"):
+            return JSONResponse({"detail": "Чужой источник запроса"}, status_code=403)
+    return await call_next(request)
 
 
 async def get_flags(session: Annotated[AsyncSession, Depends(get_session)]) -> dict[str, bool]:

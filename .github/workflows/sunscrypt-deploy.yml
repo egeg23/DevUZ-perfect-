@@ -57,7 +57,7 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - name: Миграции вверх, вниз и снова вверх
-        run: alembic upgrade head && alembic downgrade base && alembic upgrade head
+        run: alembic upgrade head && alembic downgrade base && alembic upgrade head && alembic check
       - run: pytest -q
 
   web:
@@ -81,18 +81,49 @@ jobs:
       - run: npm run build
 
   images:
-    name: Сборка образов Docker
+    name: Образы Docker и сквозной тест в браузере
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      COMPOSE: docker compose -p sunscrypt --env-file ci.env -f infra/docker-compose.yml
     steps:
       - uses: actions/checkout@v4
-      - name: docker compose build
-        env:
-          POSTGRES_PASSWORD: ci
+      - name: Тестовые настройки (одноразовые, не секреты)
         run: |
-          docker compose -p sunscrypt -f infra/docker-compose.yml config -q
-          docker compose -p sunscrypt -f infra/docker-compose.yml build
+          {
+            echo "POSTGRES_PASSWORD=ci"
+            echo "WEB_PORT=3471"
+            echo "MASTER_KEY=$(openssl rand -base64 32)"
+            echo "PUBLIC_HOST=localhost"
+            echo "COOKIE_SECURE=false"
+          } > ci.env
+      - name: Сборка и запуск стека
+        run: |
+          $COMPOSE config -q
+          $COMPOSE up -d --build --wait
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:3471/api/health && exit 0
+            sleep 2
+          done
+          exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Браузер для теста
+        working-directory: e2e
+        run: npm ci --no-audit --no-fund && npx playwright install --with-deps chromium
+      - name: Регистрация → почта → вход → 2FA → сброс пароля
+        run: node e2e/auth.mjs http://localhost:3471 "$COMPOSE"
+      - name: Логи при падении
+        if: failure()
+        run: $COMPOSE logs --tail 100
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-failure
+          path: e2e-failure.png
+          if-no-files-found: ignore
 
   deploy:
     name: Выкатка SUNSCRYPT на сервер
@@ -107,6 +138,11 @@ jobs:
           SUNSCRYPT_TELEGRAM_TOKEN: ${{ secrets.SUNSCRYPT_TELEGRAM_TOKEN }}
           SUNSCRYPT_BYBIT_DEMO_API_KEY: ${{ secrets.SUNSCRYPT_BYBIT_DEMO_API_KEY }}
           SUNSCRYPT_BYBIT_DEMO_API_SECRET: ${{ secrets.SUNSCRYPT_BYBIT_DEMO_API_SECRET }}
+          SUNSCRYPT_SMTP_HOST: ${{ secrets.SUNSCRYPT_SMTP_HOST }}
+          SUNSCRYPT_SMTP_PORT: ${{ secrets.SUNSCRYPT_SMTP_PORT }}
+          SUNSCRYPT_SMTP_USER: ${{ secrets.SUNSCRYPT_SMTP_USER }}
+          SUNSCRYPT_SMTP_PASSWORD: ${{ secrets.SUNSCRYPT_SMTP_PASSWORD }}
+          SUNSCRYPT_SMTP_FROM: ${{ secrets.SUNSCRYPT_SMTP_FROM }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
@@ -115,7 +151,7 @@ jobs:
           command_timeout: 40m
           # Секреты владельца (SUNSCRYPT_*) — infra/deploy.sh пишет их в
           # /opt/sunscrypt/.env. Не заведён — придёт пустым, это нормально.
-          envs: SUNSCRYPT_TELEGRAM_TOKEN,SUNSCRYPT_BYBIT_DEMO_API_KEY,SUNSCRYPT_BYBIT_DEMO_API_SECRET
+          envs: SUNSCRYPT_TELEGRAM_TOKEN,SUNSCRYPT_BYBIT_DEMO_API_KEY,SUNSCRYPT_BYBIT_DEMO_API_SECRET,SUNSCRYPT_SMTP_HOST,SUNSCRYPT_SMTP_PORT,SUNSCRYPT_SMTP_USER,SUNSCRYPT_SMTP_PASSWORD,SUNSCRYPT_SMTP_FROM
           script: |
             set -euo pipefail
             # Прокси сервера — для приложений DevUZ, не для git и Docker Hub:

@@ -47,7 +47,8 @@ env_set() {
   printf '%s=%s\n' "$1" "$2" >> "$tmp"
   chmod 600 "$tmp"; mv "$tmp" "$ENV_FILE"
 }
-for name in TELEGRAM_TOKEN BYBIT_DEMO_API_KEY BYBIT_DEMO_API_SECRET; do
+for name in TELEGRAM_TOKEN BYBIT_DEMO_API_KEY BYBIT_DEMO_API_SECRET \
+            SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASSWORD SMTP_FROM; do
   var="SUNSCRYPT_$name"
   if [ -n "${!var:-}" ]; then
     if [ "$(env_get "$name")" != "${!var}" ]; then
