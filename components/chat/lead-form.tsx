@@ -2,6 +2,7 @@
 
 import { readRef } from "@/lib/partners/client";
 import { currentPage, readVisit } from "@/lib/visit/client";
+import { goal } from "@/lib/visit/goal";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -44,6 +45,7 @@ export function LeadForm({ locale, dict }: { locale: Locale; dict: Dictionary })
         }),
       });
       if (!response.ok) throw new Error("failed");
+      goal("lead_form");
       setState("sent");
       form.reset();
     } catch {

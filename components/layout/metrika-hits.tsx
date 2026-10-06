@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
+import { goal, goalOfClick } from "@/lib/visit/goal";
+
 declare global {
   interface Window {
     ym?: (id: number, action: string, ...rest: unknown[]) => void;
@@ -39,6 +41,18 @@ export function MetrikaHits({ id }: { id: number }) {
     // очередь вызовов, которую заводит сниппет, живёт в том же `window`.
     window.ym?.(id, "hit", window.location.href);
   }, [pathname, id]);
+
+  // Клики по телефону, Telegram, WhatsApp и кнопкам с `data-goal` — целью
+  // (lib/visit/goal.ts). Один слушатель на всю страницу, в фазе захвата:
+  // переход по ссылке не ждёт аналитику и не теряет её.
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      const name = goalOfClick(event.target);
+      if (name) goal(name);
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, []);
 
   return null;
 }

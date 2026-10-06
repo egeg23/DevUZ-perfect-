@@ -2,6 +2,7 @@
 
 import { readRef } from "@/lib/partners/client";
 import { currentPage, readVisit } from "@/lib/visit/client";
+import { goal } from "@/lib/visit/goal";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMinute, useMinuteLeft } from "@/components/chat/minute-offer";
@@ -198,6 +199,8 @@ export function ChatPanel({
     // быстро студия отзовётся, а не про темп переписки.
     const firstTurn = !messages.some((m) => m.role === "user");
 
+    if (firstTurn) goal("chat_message");
+
     const next: Message[] = [...messages, { role: "user", content: text }];
     setMessages(next);
     setInput("");
@@ -297,6 +300,7 @@ export function ChatPanel({
             });
           } else if (event.type === "qualified") {
             setQualified(true);
+            goal("chat_qualified");
             if (typeof event.requestNo === "string") setRequestNo(event.requestNo);
             // Доставка могла не удаться: в этом случае показываем прямой
             // канал, иначе человек уйдёт уверенным, что им уже занимаются.
