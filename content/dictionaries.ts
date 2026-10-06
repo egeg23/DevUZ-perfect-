@@ -29,10 +29,10 @@ const ru = {
     writeUs: "Написать нам",
   },
   hero: {
-    eyebrow: "Разработка полного цикла · Ташкент",
-    titleLead: "Мы пишем код,",
-    titleAccent: "который приносит деньги",
-    lead: "Сайты, мобильные приложения, AI-продукты на LLM и RAG, маркетплейсы и сервисы доставки. Для бизнеса Узбекистана — на русском, узбекском, английском и китайском.",
+    eyebrow: "Маркетинг и разработка · Ташкент",
+    titleLead: "Мы делаем маркетинг и пишем код,",
+    titleAccent: "которые приносят деньги",
+    lead: "Маркетинг, который приводит заявки, сайты, мобильные приложения, AI-продукты на LLM и RAG, маркетплейсы и сервисы доставки. Для бизнеса Узбекистана — на русском, узбекском, английском и китайском.",
     scroll: "Листайте вниз",
   },
   build: {
@@ -348,7 +348,7 @@ const ru = {
     home: {
       title: "Разработка сайтов и приложений в Ташкенте — DevUz",
       description:
-        "Студия полного цикла в Ташкенте: сайты, мобильные приложения, маркетплейсы, AI-продукты на LLM и RAG. Считаем стоимость онлайн, отвечаем за 20 секунд.",
+        "Маркетинг и разработка в Ташкенте: продвижение, которое приводит заявки, сайты, мобильные приложения, маркетплейсы, AI-продукты. Считаем стоимость онлайн.",
     },
     services: {
       title: "Услуги: сайты, приложения, AI — Ташкент | DevUz",
@@ -455,10 +455,10 @@ const en: Dictionary = {
     writeUs: "Write to us",
   },
   hero: {
-    eyebrow: "Full-cycle development · Tashkent",
-    titleLead: "We write code",
-    titleAccent: "that makes money",
-    lead: "Websites, mobile apps, AI products built on LLM and RAG, marketplaces and delivery services. For businesses in Uzbekistan — in Russian, Uzbek, English and Chinese.",
+    eyebrow: "Marketing & development · Tashkent",
+    titleLead: "We do marketing and write code",
+    titleAccent: "that make money",
+    lead: "Marketing that brings in leads, websites, mobile apps, AI products built on LLM and RAG, marketplaces and delivery services. For businesses in Uzbekistan — in Russian, Uzbek, English and Chinese.",
     scroll: "Scroll down",
   },
   build: {
@@ -753,7 +753,7 @@ const en: Dictionary = {
     home: {
       title: "Web & Mobile Development in Tashkent — DevUz",
       description:
-        "Full-cycle development studio in Tashkent, Uzbekistan: websites, mobile apps, marketplaces, AI products on LLM and RAG. Online cost estimate, replies in 20 seconds.",
+        "Marketing and development in Tashkent, Uzbekistan: promotion that brings in leads, websites, mobile apps, marketplaces, AI products. Online cost estimate.",
     },
     services: {
       title: "Services: Websites, Apps, AI — Tashkent | DevUz",
@@ -854,10 +854,10 @@ const uz: Dictionary = {
     writeUs: "Bizga yozing",
   },
   hero: {
-    eyebrow: "To‘liq siklli ishlab chiqish · Toshkent",
-    titleLead: "Biz kod yozamiz,",
-    titleAccent: "u pul keltiradi",
-    lead: "Saytlar, mobil ilovalar, LLM va RAG asosidagi AI mahsulotlar, marketpleyslar va yetkazib berish xizmatlari. O‘zbekiston biznesi uchun — rus, o‘zbek, ingliz va xitoy tillarida.",
+    eyebrow: "Marketing va dasturlash · Toshkent",
+    titleLead: "Biz marketing qilamiz va kod yozamiz,",
+    titleAccent: "ular pul keltiradi",
+    lead: "Buyurtma olib keladigan marketing, saytlar, mobil ilovalar, LLM va RAG asosidagi AI mahsulotlar, marketpleyslar va yetkazib berish xizmatlari. O‘zbekiston biznesi uchun — rus, o‘zbek, ingliz va xitoy tillarida.",
     scroll: "Pastga suring",
   },
   build: {
@@ -1152,7 +1152,7 @@ const uz: Dictionary = {
     home: {
       title: "Toshkentda sayt va ilova yaratish — DevUz",
       description:
-        "Toshkentdagi to‘liq tsiklli studiya: saytlar, mobil ilovalar, marketpleyslar, LLM va RAG asosidagi AI-mahsulotlar. Narxni onlayn hisoblaymiz, 20 soniyada javob beramiz.",
+        "Toshkentda marketing va dasturlash: buyurtma olib keladigan reklama, saytlar, mobil ilovalar, marketpleyslar, AI-mahsulotlar. Narxni onlayn hisoblaymiz.",
     },
     services: {
       title: "Xizmatlar: sayt, ilova, AI — Toshkent | DevUz",
@@ -1253,10 +1253,10 @@ const zh: Dictionary = {
     writeUs: "联系我们",
   },
   hero: {
-    eyebrow: "全流程开发 · 塔什干",
-    titleLead: "我们编写的代码，",
+    eyebrow: "营销与开发 · 塔什干",
+    titleLead: "我们做的营销和代码，",
     titleAccent: "为你创造收益",
-    lead: "网站、移动应用、基于 LLM 与 RAG 的 AI 产品、电商平台与配送服务。服务乌兹别克斯坦企业 —— 提供俄语、乌兹别克语、英语与中文四种语言。",
+    lead: "带来客户的营销、网站、移动应用、基于 LLM 与 RAG 的 AI 产品、电商平台与配送服务。服务乌兹别克斯坦企业 —— 提供俄语、乌兹别克语、英语与中文四种语言。",
     scroll: "向下滚动",
   },
   build: {
@@ -1550,7 +1550,7 @@ const zh: Dictionary = {
     home: {
       title: "塔什干网站与应用开发 — DevUz Studio",
       description:
-        "位于乌兹别克斯坦塔什干的全流程开发工作室：网站、移动应用、电商平台，以及基于 LLM 与 RAG 的 AI 产品。在线估价，20 秒内回复。",
+        "乌兹别克斯坦塔什干的营销与开发工作室：带来客户的推广、网站、移动应用、电商平台，以及基于 LLM 与 RAG 的 AI 产品。在线估价。",
     },
     services: {
       title: "服务：网站、应用、AI — 塔什干 | DevUz",
@@ -1658,10 +1658,10 @@ const uk: Dictionary = {
     writeUs: "Написати нам",
   },
   hero: {
-    eyebrow: "Розробка повного циклу · Ташкент",
-    titleLead: "Ми пишемо код,",
-    titleAccent: "який приносить гроші",
-    lead: "Сайти, мобільні застосунки, AI-продукти на LLM і RAG, маркетплейси та сервіси доставки. Для бізнесу Узбекистану — російською, узбецькою, англійською та китайською.",
+    eyebrow: "Маркетинг і розробка · Ташкент",
+    titleLead: "Ми робимо маркетинг і пишемо код,",
+    titleAccent: "які приносять гроші",
+    lead: "Маркетинг, що приводить заявки, сайти, мобільні застосунки, AI-продукти на LLM і RAG, маркетплейси та сервіси доставки. Для бізнесу Узбекистану — російською, узбецькою, англійською та китайською.",
     scroll: "Гортайте вниз",
   },
   build: {
@@ -1959,7 +1959,7 @@ const uk: Dictionary = {
     home: {
       title: "Розробка сайтів і застосунків у Ташкенті — DevUz",
       description:
-        "Студія повного циклу в Ташкенті: сайти, мобільні застосунки, маркетплейси, AI-продукти на LLM і RAG. Рахуємо вартість онлайн, відповідаємо за 20 секунд.",
+        "Маркетинг і розробка в Ташкенті: просування, що приводить заявки, сайти, мобільні застосунки, маркетплейси, AI-продукти. Рахуємо вартість онлайн.",
     },
     services: {
       title: "Послуги: сайти, застосунки, AI — Ташкент | DevUz",
@@ -2076,10 +2076,10 @@ const pl: Dictionary = {
     writeUs: "Napisz do nas",
   },
   hero: {
-    eyebrow: "Software house · Taszkent",
-    titleLead: "Piszemy kod,",
-    titleAccent: "który zarabia pieniądze",
-    lead: "Strony internetowe, aplikacje mobilne, produkty AI oparte na LLM i RAG, marketplace'y i serwisy dostaw. Dla biznesu w Uzbekistanie — po rosyjsku, uzbecku, angielsku i chińsku.",
+    eyebrow: "Marketing i programowanie · Taszkent",
+    titleLead: "Robimy marketing i piszemy kod,",
+    titleAccent: "które zarabiają pieniądze",
+    lead: "Marketing, który przynosi zapytania, strony internetowe, aplikacje mobilne, produkty AI oparte na LLM i RAG, marketplace'y i serwisy dostaw. Dla biznesu w Uzbekistanie — po rosyjsku, uzbecku, angielsku i chińsku.",
     scroll: "Przewiń w dół",
   },
   build: {
@@ -2377,7 +2377,7 @@ const pl: Dictionary = {
     home: {
       title: "Tworzenie stron i aplikacji w Taszkencie — DevUz",
       description:
-        "Software house w Taszkencie: strony, aplikacje mobilne, marketplace'y, produkty AI na LLM i RAG. Wycena online, odpowiedź w 20 sekund.",
+        "Marketing i programowanie w Taszkencie: promocja, która przynosi zapytania, strony, aplikacje mobilne, marketplace'y, produkty AI. Wycena online.",
     },
     services: {
       title: "Usługi: strony, aplikacje, AI — Taszkent | DevUz",
