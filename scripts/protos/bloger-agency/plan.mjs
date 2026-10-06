@@ -1,29 +1,56 @@
-// Раздел «Что дальше» — конструктор проекта для самого агентства, как у MAVERA:
-// блоки включаются тумблером, превью и итог меняются сразу.
+// Конструктор тарифа — как у MAVERA (egeg23/Global-Export:
+// components/configurator): на каждой странице прототипа плашка
+// «Конструктор», тумблер включает и выключает настоящий блок на странице,
+// итог «сайт + допы» считается сразу. То, чего на макете нет (админка,
+// кабинеты, оплата), — группа «Сверх сайта».
 //
 // Цены — средние по Ташкенту, в долларах. Сайт — 1 800 $ (решение владельца,
 // 06.10.2026). Допы — от ставок нашего калькулятора (content/calculator.ts:
 // базовая админка 5,5 млн сум, расширенная 13 млн, личный кабинет 7,5 млн,
 // онлайн-оплата 7 млн, интеграция 7,5 млн, уведомления и SEO по 4,5 млн) по
 // 12 650 сум за доллар, сдвинутых к середине рыночной вилки и округлённых до
-// 50 $. «Зачем» у каждого блока — из того, что агентство пишет на bloger.agency.
+// 50 $. Блоки витрины — по тем же ставкам, что у MAVERA, сдвинутым вниз.
 
-/** Сайт из прототипа — входит всегда. */
+/** Сайт: главная, каталог, «Брендам», «Блогерам», «Кейсы», русский язык. */
 export const BASE = {
   price: 1800,
   ru: {
-    t: "Сайт — как в этом прототипе",
-    d: "Главная с влётом в букву, каталог блогеров, UGC-студия, страницы для брендов и блогеров, кейсы. Русский и узбекский, телефон в первую очередь, заявки в ваш Telegram.",
+    t: "Сайт: главная, каталог блогеров, «Брендам», «Блогерам», «Кейсы»",
+    d: "Тарифы и услуги с ценами, каталог с фильтрами, телефон в первую очередь, заявки в ваш Telegram.",
   },
   uz: {
-    t: "Sayt — shu prototipdagidek",
-    d: "Harf ichiga kiradigan bosh sahifa, blogerlar katalogi, UGC-studiya, brendlar va blogerlar uchun sahifalar, keyslar. Rus va o‘zbek tillari, avvalo telefon uchun, arizalar Telegramingizga.",
+    t: "Sayt: bosh sahifa, blogerlar katalogi, «Brendlarga», «Blogerlarga», «Keyslar»",
+    d: "Narxlari bilan tariflar va xizmatlar, filtrli katalog, avvalo telefon uchun, arizalar Telegramingizga.",
   },
 };
 
 /**
- * Блоки. `needs` — без чего блок не работает: включается вместе с ним.
- * `pv` — вид превью (рисует client.js), данные превью — из их же сайта.
+ * Блоки, которые видно на макете. `where` — ключ страницы (как в адресе:
+ * "" — главная) или "all" — на всех страницах. На странице блок помечен
+ * data-addon="<id>"; выключили — его нет.
+ */
+export const ADDONS = [
+  { id: "portal", where: "", price: 300, ru: { t: "Влёт в букву", e: "Название огромными буквами, на прокрутке камера влетает в «O»" }, uz: { t: "Harf ichiga kirish", e: "Nom katta harflarda, aylantirganda kamera «O» ichiga kiradi" } },
+  { id: "stories", where: "", price: 250, ru: { t: "Сторис-плеер на первом экране", e: "Ваши топ-блогеры листаются, как сторис в Instagram" }, uz: { t: "Birinchi ekranda storis-pleer", e: "Top blogerlaringiz Instagram storislaridek almashadi" } },
+  { id: "ticker", where: "", price: 50, ru: { t: "Бегущая строка клиентов", e: "Schwarzkopf, Uzum, BYD и другие — лентой" }, uz: { t: "Mijozlar yuguruvchi satri", e: "Schwarzkopf, Uzum, BYD va boshqalar — lenta bo‘lib" } },
+  { id: "ai", where: "", price: 700, ru: { t: "ИИ-подбор блогеров по брифу", e: "Бриф своими словами — подборка из вашего каталога" }, uz: { t: "Brif bo‘yicha AI-tanlov", e: "O‘z so‘zlaringiz bilan brif — katalogingizdan tanlov" } },
+  { id: "calc", where: "", price: 300, ru: { t: "Калькулятор кампании", e: "Бюджет → блогеры, охват, переходы и подходящий тариф" }, uz: { t: "Kampaniya kalkulyatori", e: "Byudjet → blogerlar, qamrov, o‘tishlar va mos tarif" } },
+  { id: "slot", where: "", price: 150, ru: { t: "Слот-машина идей", e: "Ниша + формат + фишка — идея кампании за одно нажатие" }, uz: { t: "G‘oyalar slot-mashinasi", e: "Nisha + format + fishka — bir bosishda kampaniya g‘oyasi" } },
+  { id: "reviews", where: "", price: 100, ru: { t: "Отзывы клиентов", e: "Sabano, Fix Price, Skillbox" }, uz: { t: "Mijozlar sharhlari", e: "Sabano, Fix Price, Skillbox" } },
+  { id: "events", where: "", price: 100, ru: { t: "Блок ивентов", e: "PRO BLOGGERS и TAF" }, uz: { t: "Tadbirlar bloki", e: "PRO BLOGGERS va TAF" } },
+  { id: "blogybox", where: "", price: 50, ru: { t: "Блок BLOGY", e: "Платформа в Telegram и ссылка на бота" }, uz: { t: "BLOGY bloki", e: "Telegramdagi platforma va botga havola" } },
+  { id: "shortlist", where: "blogery", price: 250, ru: { t: "Подборка блогеров в Telegram", e: "«В подборку» на карточке, подборка уходит менеджеру одним сообщением" }, uz: { t: "Telegramga blogerlar tanlovi", e: "Kartochkada «Tanlovga», tanlov menejerga bitta xabar bo‘lib ketadi" } },
+  { id: "ugc", where: "ugc", price: 900, ru: { t: "UGC-студия за токены", e: "ИИ пишет хуки, сценарий и раскадровку; кошелёк токенов" }, uz: { t: "Tokenlar evaziga UGC-studiya", e: "AI xuklar, ssenariy va raskadrovka yozadi; token hamyoni" } },
+  { id: "brief", where: "brendam", price: 300, ru: { t: "ИИ-бриф-мастер", e: "Две фразы — и бриф разложен по полям" }, uz: { t: "AI brif-master", e: "Ikki jumla — va brif maydonlarga ajratilgan" } },
+  { id: "rate", where: "blogeram", price: 200, ru: { t: "Оценка блога для блогеров", e: "ER и цены похожих блогеров из вашего каталога" }, uz: { t: "Blogerlar uchun blog bahosi", e: "ER va katalogingizdagi o‘xshash blogerlar narxlari" } },
+  { id: "uz", where: "all", price: 300, ru: { t: "Узбекская версия", e: "Переключатель RU / UZ в шапке" }, uz: { t: "O‘zbekcha versiya", e: "Shapkada RU / UZ almashtirgich" } },
+  { id: "motion", where: "all", price: 200, ru: { t: "Анимации появления", e: "У каждого блока своё движение" }, uz: { t: "Paydo bo‘lish animatsiyalari", e: "Har bir blokning o‘z harakati" } },
+  { id: "tgbtn", where: "all", price: 50, ru: { t: "Кнопка Telegram под пальцем", e: "Плавающая кнопка внизу экрана на телефоне" }, uz: { t: "Barmoq ostidagi Telegram tugmasi", e: "Telefonda ekran pastidagi suzuvchi tugma" } },
+];
+
+/**
+ * Сверх сайта: блока на макете нет, в разделе «Что дальше» — превью.
+ * `needs` — без чего не работает: включается вместе с ним.
  */
 export const BLOCKS = [
   {
@@ -62,14 +89,9 @@ export const BLOCKS = [
     uz: { t: "BLOGY boti bilan bog‘lash", why: "Botingiz allaqachon bor. Sayt va BLOGY bitta bazada: botdagi bloger darhol katalogda, saytdagi buyurtma blogerga botda keladi.", li: ["Sayt va bot uchun bitta bloger anketasi", "Buyurtmalar va bildirishnomalar botga", "Saytga Telegram orqali kirish"] },
   },
   {
-    id: "ai", group: "money", price: 700, pv: "ai", needs: [],
-    ru: { t: "ИИ-подбор и бриф-мастер", why: "На вашей главной блок «AI-помощник» подписан «Скоро!». В прототипе он уже отвечает: модель переводит бриф в ниши и бюджет, подборку считает каталог. Переносим в боевой сайт с лимитами и недорогой моделью.", li: ["Подбор по брифу из вашего каталога", "Бриф из двух фраз", "Лимиты, чтобы расходы не росли"] },
-    uz: { t: "AI-tanlov va brif-master", why: "Bosh sahifangizda «AI-yordamchi» bloki «Tez kunda!» deb belgilangan. Prototipda u allaqachon javob beradi: model brifni nisha va byudjetga aylantiradi, tanlovni katalog hisoblaydi. Cheklovlar va arzon model bilan ishchi saytga ko‘chiramiz.", li: ["Katalogingizdan brif bo‘yicha tanlov", "Ikki jumladan brif", "Xarajat o‘smasligi uchun cheklovlar"] },
-  },
-  {
-    id: "ugc", group: "money", price: 1100, pv: "ugc", needs: ["ai"],
-    ru: { t: "UGC-студия за токены с оплатой", why: "Новый продукт для малого бизнеса, которому кампания у блогеров пока не по карману: платит за сценарии токенами, а из сценария — заказ съёмки по вашему прайсу на видео (10 роликов — 650 $).", li: ["Кошелёк токенов и пакеты", "Оплата Click и Payme", "История генераций в кабинете", "Заказ съёмки из сценария"] },
-    uz: { t: "To‘lovli tokenlar evaziga UGC-studiya", why: "Blogerlardagi kampaniya hozircha qimmatlik qiladigan kichik biznes uchun yangi mahsulot: ssenariylar uchun token bilan to‘laydi, ssenariydan esa video narxingiz bo‘yicha suratga olish buyurtmasi (10 rolik — 650 $).", li: ["Token hamyoni va paketlar", "Click va Payme orqali to‘lov", "Kabinetda generatsiyalar tarixi", "Ssenariydan suratga olish buyurtmasi"] },
+    id: "pay", group: "money", price: 550, pv: "ugc", needs: ["ugc"],
+    ru: { t: "Оплата токенов Click и Payme", why: "UGC-студия на макете считает токены в браузере. С оплатой это новый продукт: малый бизнес покупает пакет, пишет сценарии, а из сценария — заказ съёмки по вашему прайсу на видео (10 роликов — 650 $).", li: ["Пакеты токенов", "Оплата Click и Payme", "История генераций в кабинете"] },
+    uz: { t: "Click va Payme orqali token to‘lovi", why: "Maketdagi UGC-studiya tokenlarni brauzerda hisoblaydi. To‘lov bilan bu yangi mahsulot: kichik biznes paket sotib oladi, ssenariy yozadi, ssenariydan esa video narxingiz bo‘yicha suratga olish buyurtmasi (10 rolik — 650 $).", li: ["Token paketlari", "Click va Payme orqali to‘lov", "Kabinetda generatsiyalar tarixi"] },
   },
   {
     id: "access", group: "money", price: 600, pv: "access", needs: ["admin"],
@@ -77,7 +99,7 @@ export const BLOCKS = [
     uz: { t: "Blogerlar bazasiga pullik kirish", why: "AI sahifangiz allaqachon kontakt sotadi: 10 bloger — Click orqali 60 000 so‘m, soatiga 3 qidiruv. Buni sayt qismiga aylantiramiz: to‘ladi — kontaktlar kabinetda ochildi, qo‘lda berishsiz.", li: ["Blogerlar soni bo‘yicha paketlar", "Click orqali to‘lov, darhol kirish", "Kontaktlar va narxlar — admin paneldan"] },
   },
   {
-    id: "events", group: "grow", price: 400, pv: "events", needs: [],
+    id: "eventsreg", group: "grow", price: 400, pv: "events", needs: [],
     ru: { t: "Регистрация на ивенты", why: "PRO BLOGGERS — 500+ участников, TAF — 1000+. Регистрация и партнёрские пакеты прямо на сайте, список участников — в админке.", li: ["Страница события и регистрация", "Партнёрские пакеты для брендов", "Напоминания участникам в Telegram"] },
     uz: { t: "Tadbirlarga ro‘yxatdan o‘tish", why: "PRO BLOGGERS — 500+ ishtirokchi, TAF — 1000+. Ro‘yxatdan o‘tish va hamkorlik paketlari to‘g‘ridan-to‘g‘ri saytda, ishtirokchilar ro‘yxati — admin panelda.", li: ["Tadbir sahifasi va ro‘yxatdan o‘tish", "Brendlar uchun hamkorlik paketlari", "Ishtirokchilarga Telegramda eslatmalar"] },
   },
@@ -97,6 +119,6 @@ export const GROUPS = {
   team: { ru: "Для команды агентства", uz: "Agentlik jamoasi uchun" },
   brands: { ru: "Для брендов", uz: "Brendlar uchun" },
   bloggers: { ru: "Для блогеров", uz: "Blogerlar uchun" },
-  money: { ru: "ИИ и новые деньги", uz: "AI va yangi daromad" },
+  money: { ru: "Деньги", uz: "Daromad" },
   grow: { ru: "Рост", uz: "O‘sish" },
 };

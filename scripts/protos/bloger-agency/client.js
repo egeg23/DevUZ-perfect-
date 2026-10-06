@@ -316,30 +316,43 @@ if(rate){
   [rf,rl,rc].forEach(function(i){i.addEventListener('input',rr)});rr();
 }
 
-/* ── Конструктор проекта (как у MAVERA): тумблер — блок в превью и итог ── */
-var kit=$('plan');
-if(kit){
-  var boxes=[].slice.call(kit.querySelectorAll('input[data-b]')), base=+(L.kitBase||0), screenEl=kit.querySelector('.kit-screen');
-  var byId={};boxes.forEach(function(b){byId[b.dataset.b]=b});
-  function title(b){return b.closest('.kit-row').querySelector('.kit-t b').textContent}
-  function draw(fresh){
-    var on=boxes.filter(function(b){return b.checked}), sum=base+on.reduce(function(s,b){return s+(+b.dataset.p)},0);
-    kit.querySelectorAll('.kit-pv').forEach(function(p){
-      var show=byId[p.dataset.pv]&&byId[p.dataset.pv].checked;p.hidden=!show;
-      p.classList.toggle('fresh',show&&p.dataset.pv===fresh&&!reduce);
+/* ── Конструктор тарифа (как у MAVERA): тумблер — настоящий блок на странице ── */
+var KEY='ba-kit-v2', inputs=[].slice.call(d.querySelectorAll('input[data-k]'));
+if(inputs.length){
+  var price={},needs={},def={},title={};
+  inputs.forEach(function(x){var k=x.dataset.k;price[k]=+x.dataset.p;needs[k]=(x.dataset.needs||'').split(' ').filter(Boolean);if(x.hasAttribute('data-def'))def[k]=true;
+    var r=x.closest('label'),tt=r&&r.querySelector('b');if(tt&&!title[k])title[k]=tt.textContent});
+  var on=store.get(KEY,null)||{};Object.keys(price).forEach(function(k){if(!(k in on))on[k]=!!def[k]});
+  var pill=$('kd-pill'),panel=$('kd'),base=+(L.kitBase||0);
+  function apply(fresh){
+    Object.keys(price).forEach(function(k){
+      root.classList.toggle('k-no-'+k,!on[k]);
+      d.querySelectorAll('[data-addon="'+k+'"]').forEach(function(el){el.hidden=!on[k];if(fresh===k&&on[k]&&!reduce){el.classList.remove('k-fresh');void el.offsetWidth;el.classList.add('k-fresh')}});
     });
-    screenEl.classList.toggle('none',!on.length);
-    var el=$('kit-sum');el.textContent=money(sum);$('kit-sum2').textContent=money(sum);if(!reduce){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}
-    $('kit-n').textContent=L.kitN.replace('{n}',on.length);
-    kit.dataset.text=L.kitTg+'\n'+L.kitBaseName+' — '+money(base)+'\n'+on.map(function(b){return title(b)+' — '+money(+b.dataset.p)}).join('\n')+'\n'+L.kitTotal+': '+money(sum);
+    inputs.forEach(function(x){x.checked=!!on[x.dataset.k]});
+    d.querySelectorAll('.kit-pv[data-pv]').forEach(function(p){p.hidden=!on[p.dataset.pv];p.classList.toggle('fresh',p.dataset.pv===fresh&&!reduce)});
+    var ids=Object.keys(price).filter(function(k){return on[k]}),add=ids.reduce(function(s,k){return s+price[k]},0),site=ids.filter(function(k){return def[k]}).reduce(function(s,k){return s+price[k]},0),sum=base+add;
+    var set=function(id,v){var el=$(id);if(el)el.textContent=v};
+    set('kd-pill-sum',money(sum));set('kd-sum',money(sum));set('kd-add','+'+money(add));set('kd-n',L.kitN.replace('{n}',ids.length));
+    set('kit-sum',money(sum));set('kit-sum2',money(sum));set('kit-site-sum','+'+money(site));set('kit-n',L.kitN.replace('{n}',ids.length));
+    var sc=d.querySelector('.kit-screen');if(sc)sc.classList.toggle('none',!d.querySelector('.kit-pv:not([hidden])'));
+    var text=L.kitTg+'\n'+L.kitBaseName+' — '+money(base)+'\n'+ids.map(function(k){return title[k]+' — '+money(price[k])}).join('\n')+'\n'+L.kitTotal+': '+money(sum);
+    d.documentElement.dataset.kit=text;
+    store.set(KEY,on);
   }
-  boxes.forEach(function(b){b.addEventListener('change',function(){
-    if(b.checked)(b.dataset.needs||'').split(' ').filter(Boolean).forEach(function(n){if(byId[n])byId[n].checked=true});
-    else boxes.forEach(function(o){if(o.checked&&(o.dataset.needs||'').split(' ').indexOf(b.dataset.b)>=0)o.checked=false});
-    draw(b.checked?b.dataset.b:'');
-  })});
-  $('kit-all').addEventListener('click',function(){boxes.forEach(function(b){b.checked=true});draw('')});
-  $('kit-copy').addEventListener('click',function(){var btn=this;try{navigator.clipboard.writeText(kit.dataset.text).then(function(){var o=btn.textContent;btn.textContent=L.copied;setTimeout(function(){btn.textContent=o},1400)})}catch(e){}});
-  draw('');
+  function setK(k,v){
+    on[k]=v;
+    if(v)needs[k].forEach(function(n){if((n in on)&&!on[n])setK(n,true)});
+    else Object.keys(needs).forEach(function(o){if(on[o]&&needs[o].indexOf(k)>=0)setK(o,false)});
+  }
+  inputs.forEach(function(x){x.addEventListener('change',function(){setK(x.dataset.k,x.checked);apply(x.checked?x.dataset.k:'')})});
+  function open(v){if(!panel)return;panel.hidden=!v;pill.setAttribute('aria-expanded',String(v));pill.hidden=v}
+  if(pill)pill.addEventListener('click',function(){open(true)});
+  var xb=$('kd-x');if(xb)xb.addEventListener('click',function(){open(false)});
+  d.querySelectorAll('[data-kit-open]').forEach(function(b){b.addEventListener('click',function(){open(true)})});
+  addEventListener('keydown',function(e){if(e.key==='Escape'&&panel&&!panel.hidden)open(false)});
+  var rs=$('kd-reset');if(rs)rs.addEventListener('click',function(){Object.keys(price).forEach(function(k){on[k]=!!def[k]});apply('')});
+  var cp=$('kd-copy');if(cp)cp.addEventListener('click',function(){var t=d.documentElement.dataset.kit;try{navigator.clipboard.writeText(t).then(function(){var o=cp.textContent;cp.textContent=L.copied;setTimeout(function(){cp.textContent=o},1400)})}catch(e){}});
+  apply('');
 }
 })();
