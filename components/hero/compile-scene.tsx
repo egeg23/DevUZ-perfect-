@@ -277,6 +277,7 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
             <div className="mt-6 flex flex-wrap items-center gap-2.5 md:mt-8 md:gap-3">
               <Link
                 href={localeHref(locale, "contact")}
+                data-goal="cta_contact"
                 className="inline-flex items-center gap-2.5 rounded-xl bg-green px-5 py-3 text-[0.92rem] font-semibold text-ink md:px-7 md:py-4 md:text-base transition-all duration-300 hover:bg-white hover:shadow-[0_0_40px_-8px_var(--color-green)]"
               >
                 {dict.cta.calculate}
@@ -284,6 +285,7 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
               </Link>
               <Link
                 href={localeHref(locale, "cases")}
+                data-goal="cta_cases"
                 className="rounded-xl border border-line px-5 py-3 text-[0.92rem] font-medium text-text md:px-6 md:py-4 md:text-base transition-colors hover:border-green hover:text-green"
               >
                 {dict.cta.seeCases}

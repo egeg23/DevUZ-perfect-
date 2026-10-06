@@ -11,6 +11,7 @@ import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
 import { noteAutopilotTrouble, runAutopilot, sendAutopilotReport } from "@/lib/admin/autopilot-store";
 import { leadSearchPass } from "@/lib/admin/lead-search-store";
+import { refreshUxSnapshot } from "@/lib/analytics/ux-snapshot";
 import { settleTurnoverDue } from "@/lib/partners/autopay";
 import { pingPriorityLeads } from "@/lib/partners/priority-lead";
 import { expireClients } from "@/lib/partners/store";
@@ -269,6 +270,11 @@ export async function POST(request: Request) {
       await noteAutopilotTrouble(autopilot.errors).catch(() => undefined);
     }
     await sendAutopilotReport(new Date()).catch((error) => console.error("автопрогон, отчёт:", error));
+  });
+  // Снимок поведения посетителей из Метрики — раз в сутки
+  // (lib/analytics/ux-snapshot.ts): где люди уходят и дошли ли до заявки.
+  after(async () => {
+    await refreshUxSnapshot(new Date()).catch((error) => console.error("снимок Метрики:", error));
   });
   // Поиск лидов через Firecrawl — своей очередью: до двух кредитов за проход
   // из дневного лимита (lib/firecrawl.ts), на контакты тех, кому писать

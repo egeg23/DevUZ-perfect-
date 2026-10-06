@@ -89,10 +89,15 @@ async function cached(key: string, load: () => Promise<TrafficResult>): Promise<
 const METRIKA_API = "https://api-metrika.yandex.net/stat/v1/data";
 const DEFAULT_COUNTER = "112925960";
 
-type MetrikaRow = { dimensions: { name: string | null }[]; metrics: number[] };
-type MetrikaResponse = { data?: MetrikaRow[]; totals?: number[]; message?: string };
+export type MetrikaRow = { dimensions: { name: string | null }[]; metrics: number[] };
+export type MetrikaResponse = { data?: MetrikaRow[]; totals?: number[]; message?: string };
 
-async function metrika(token: string, params: Record<string, string>): Promise<MetrikaResponse> {
+/** Номер счётчика: из окружения, иначе — тот, что стоит в теге на сайте. */
+export function metrikaCounter(): string {
+  return (process.env.YANDEX_METRIKA_ID || process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID || DEFAULT_COUNTER).trim();
+}
+
+export async function metrika(token: string, params: Record<string, string>): Promise<MetrikaResponse> {
   const url = `${METRIKA_API}?${new URLSearchParams({ accuracy: "full", ...params })}`;
   // Яндекс отвечает и напрямую: умер прокси — Метрика не должна умирать с ним.
   const response = await roadFetch(url, {
@@ -121,7 +126,7 @@ export async function metrikaConfigured(): Promise<boolean> {
 export async function loadMetrika(days: number, now: Date = new Date()): Promise<TrafficResult> {
   const token = await appSecret("YANDEX_METRIKA_TOKEN");
   if (!token) return { ok: false, reason: "not_configured" };
-  const id = (process.env.YANDEX_METRIKA_ID || process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID || DEFAULT_COUNTER).trim();
+  const id = metrikaCounter();
   const d = periodDates(days, now);
 
   return cached(`ym:${id}:${d.from}:${d.to}`, async () => {

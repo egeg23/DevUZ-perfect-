@@ -8,6 +8,7 @@ import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n";
 import { clock, startMinute } from "@/lib/minute-client";
+import { goal } from "@/lib/visit/goal";
 
 /**
  * Плавающая кнопка чата.
@@ -71,6 +72,12 @@ export function ChatWidget({ locale, dict }: { locale: Locale; dict: Dictionary 
     window.addEventListener("devuz:prefill", onPrefill);
     return () => window.removeEventListener("devuz:prefill", onPrefill);
   }, []);
+
+  // Открыл чат — цель в Метрике (lib/visit/goal.ts): так видно, сколько
+  // людей дошли до разговора и сколько из них написали.
+  useEffect(() => {
+    if (open) goal("chat_open");
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
