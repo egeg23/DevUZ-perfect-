@@ -15,6 +15,7 @@ import {
   type DayStats,
 } from "@/lib/admin/autopilot";
 import { canContact, routeFor } from "@/lib/admin/outreach";
+import { contactsFrom } from "@/lib/audit/contacts";
 import { AUTOPILOT, prepareOutreach, queueOutreach, type Prospect } from "@/lib/admin/outreach-store";
 import { tashkentMidnight, todayInTashkent } from "@/lib/admin/pulse";
 import type { Staff } from "@/lib/admin/session";
@@ -168,9 +169,10 @@ export async function candidates(niche: AutopilotNiche, limit: number, now: Date
 export function rank(rows: readonly PoolRow[], busy: ReadonlySet<string> = new Set()): string[] {
   const weight = (row: PoolRow): number | null => {
     if (busy.has(row.id)) return null;
-    const route = row.contacts ? routeFor(row.contacts) : null;
+    const contacts = contactsFrom(row.contacts);
+    const route = routeFor(contacts);
     if (!route || route.kind === "manual") return null;
-    if (row.host && canContact({ contacts: row.contacts, findings: row.findings ?? [], status: "new" }) !== "ok") return null;
+    if (row.host && canContact({ contacts, findings: row.findings ?? [], status: "new" }) !== "ok") return null;
     return route.kind === "handle" ? 0 : row.host ? 1 : 2;
   };
   return rows
@@ -389,7 +391,7 @@ export async function dayStats(now: Date = new Date(), since?: Date): Promise<Da
   const weekStart = tashkentMidnight(week).getTime();
   const from = new Date(Math.min(start, weekStart)).toISOString();
 
-  const [settings, niche, names, { data }] = await Promise.all([
+  const [settings, niche, names, { data }, { data: trouble }] = await Promise.all([
     autopilotSettings(),
     db.from("autopilot_weeks").select("niche").eq("week", week).maybeSingle(),
     accountNames(db),
@@ -399,6 +401,7 @@ export async function dayStats(now: Date = new Date(), since?: Date): Promise<Da
       .not("autopilot_at", "is", null)
       .or(`autopilot_at.gte."${from}",sent_at.gte."${from}",autopilot_replied_at.gte."${from}",status.eq.sending`)
       .limit(2000),
+    db.from("stats_snapshots").select("payload, computed_at").eq("key", TROUBLE_KEY).maybeSingle(),
   ]);
   const rows = (data ?? []) as StatRow[];
   const at = (v: string | null) => (v ? Date.parse(v) : Number.NaN);
@@ -443,12 +446,35 @@ export async function dayStats(now: Date = new Date(), since?: Date): Promise<Da
     refused: replied.filter((r) => !r.lead_id).length,
     weekSent: rows.filter((r) => r.status === "sent" && inWeek(r.sent_at)).length,
     weekReplies: rows.filter((r) => inWeek(r.autopilot_replied_at)).length,
+    trouble:
+      trouble && Date.parse(String(trouble.computed_at)) >= start
+        ? String((trouble.payload as { error?: unknown } | null)?.error ?? "") || null
+        : null,
     replied: replied.map((r) => ({
       who: r.host ?? r.label ?? "компания без сайта",
       takenBy: r.lead_id ? (takenBy.get(r.lead_id) ?? null) : null,
       refused: !r.lead_id,
     })),
   };
+}
+
+const TROUBLE_KEY = "autopilot-trouble";
+
+/**
+ * Сбой прохода — в базу, чтобы отчёт в 18:00 назвал его, а не гадал «в нише
+ * мало компаний». 05–06.10 автопрогон падал на каждом проходе, а отчёт
+ * советовал проверить аккаунты: ошибка была видна только в журнале сервера.
+ */
+export async function noteAutopilotTrouble(errors: readonly string[], now: Date = new Date()): Promise<void> {
+  if (!errors.length) return;
+  const db = serviceClient();
+  if (!db) return;
+  await db
+    .from("stats_snapshots")
+    .upsert(
+      { key: TROUBLE_KEY, payload: { error: errors.join("; ").slice(0, 300) }, computed_at: now.toISOString() },
+      { onConflict: "key" },
+    );
 }
 
 const REPORT_JOB = "autopilot-report";

@@ -123,6 +123,15 @@ test("кому писать: только туда, куда дотянется 
     row("busy", { contacts: { ...EMPTY_CONTACTS, telegram: ["busy_uz"] } }),
   ] as never, new Set(["busy"]));
   assert.deepEqual(ids, ["handle", "phone", "nosite"]);
+
+  // 05–06.10 автопрогон простоял: три карточки старого импорта хранили
+  // contacts = {}, и отбор падал целиком на каждом проходе.
+  const broken = rank([
+    row("empty", { host: null, findings: [], contacts: {} }),
+    row("nulls", { contacts: null }),
+    row("partial", { contacts: { phones: ["+998931234567"] } }),
+  ] as never);
+  assert.deepEqual(broken, ["partial"], "карточка без списков контактов пропускается, а не роняет отбор");
 });
 
 test("ответ клиента — команде через очередь лидов, с понятной шапкой", () => {
@@ -224,6 +233,14 @@ test("отчёт за день: норма, аккаунты, ответы и ч
   assert.match(short, /Не добрали/);
   assert.match(reportText({ ...base, sent: 12, attempts: 80 }, esc), /кончились попытки/);
   assert.match(reportText({ ...base, enabled: false, sent: 0 }, esc), /выключен/);
+
+  // Сбой прохода назван в отчёте, а не списан на нишу и аккаунты.
+  const broke = reportText({ ...base, sent: 0, trouble: "TypeError: <x>" }, esc);
+  assert.match(broke, /❗ Автопрогон сбоил/);
+  assert.match(broke, /<code>TypeError: &lt;x&gt;<\/code>/);
+  assert.match(broke, /Не добрали из-за сбоя выше/);
+  assert.doesNotMatch(broke, /Проверьте раздел «Аккаунты»/);
+  assert.doesNotMatch(reportText({ ...base, trouble: "TypeError" }, esc), /сбоил/, "норма набрана — разовый сбой не тревога");
 });
 
 test("миграция: отметки на карточке, неделя-ниша, настройки с нормой 20", () => {

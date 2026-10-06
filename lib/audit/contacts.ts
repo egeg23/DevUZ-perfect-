@@ -35,6 +35,29 @@ export const EMPTY_CONTACTS: Contacts = {
   contactsUrl: null,
 };
 
+/**
+ * Контакты карточки, как они лежат в базе, — с пустыми списками на месте
+ * недостающих.
+ *
+ * Карточки, заведённые старым импортом, хранят `{}`. Прочесть у такой
+ * `telegram.find` — значит уронить весь проход, а не одну карточку: так
+ * автопрогон касаний простоял 05–06.10, споткнувшись о три карточки ниши
+ * «IT Образование для детей» в каждом отборе. Всё, что читает контакты прямо
+ * из базы, читает их через эту функцию.
+ */
+export function contactsFrom(raw: unknown): Contacts {
+  const value = raw && typeof raw === "object" ? (raw as Partial<Record<keyof Contacts, unknown>>) : {};
+  const list = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+  return {
+    phones: list(value.phones),
+    emails: list(value.emails),
+    telegram: list(value.telegram),
+    whatsapp: list(value.whatsapp),
+    instagram: list(value.instagram),
+    contactsUrl: typeof value.contactsUrl === "string" ? value.contactsUrl : null,
+  };
+}
+
 const LIMIT = 5;
 
 const uniq = (values: string[]): string[] => [...new Set(values)].slice(0, LIMIT);
