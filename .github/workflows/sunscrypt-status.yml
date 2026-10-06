@@ -4,6 +4,9 @@ name: SUNSCRYPT — состояние движка
 # id, позиции, сделки, сверка, события; без почт и ключей — лог публичный).
 on:
   workflow_dispatch:
+  push:
+    branches: [sunscrypt]
+    paths: [.github/workflows/sunscrypt-status.yml]
 
 jobs:
   status:
