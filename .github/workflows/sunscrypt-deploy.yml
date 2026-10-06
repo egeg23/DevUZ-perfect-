@@ -7,9 +7,9 @@ name: SUNSCRYPT — выкатка
 # (VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_PORT). Секретов приложения здесь нет:
 # они живут на сервере в /opt/sunscrypt/.env (infra/deploy.sh).
 
+# ЗАМОРОЖЕНО: проект переехал в egeg23/SUNSCRYPT (ветка main) и выкатывается
+# оттуда. Отсюда — только вручную, чтобы две выкатки не спорили за сервер.
 on:
-  push:
-    branches: [sunscrypt]
   workflow_dispatch:
 
 # Две выкатки подряд не должны собирать образы наперегонки.
