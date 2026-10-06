@@ -1,3 +1,5 @@
+import { BASE } from "./plan.mjs";
+
 // Строки для скрипта страницы прототипа bloger.agency (#i18n) — ru и uz.
 const NICHE_C = { life: "#5395E9", family: "#f472b6", vine: "#a855f7", humor: "#c084fc", travel: "#4ade80", food: "#fb923c", auto: "#22d3ee", sport: "#f87171", fashion: "#fbbf24", beauty: "#fb7185", model: "#fb7185", magic: "#fcd34d", estate: "#e2e8f0" };
 const NAMES = {
@@ -68,6 +70,7 @@ export const I18N = {
     briefTg: "Здравствуйте! Собрал бриф на вашем сайте:", briefCta: "Отправить бриф в Telegram",
     rank: "выше, чем у {a} из {b} блогеров каталога",
     rateTg: "Здравствуйте! Хочу стать резидентом Bloger Agency. Подписчиков: {f}, ER по калькулятору: {er}%.",
+    kitBase: BASE.price, kitBaseName: BASE.ru.t, kitN: "блоков включено: {n}", kitTotal: "Итого", kitTg: "Bloger Agency — состав проекта из прототипа DevUz Studio:",
   },
   uz: {
     niches: niches("uz"), kw: KW,
@@ -113,5 +116,6 @@ export const I18N = {
     briefTg: "Assalomu alaykum! Saytingizda brif yig‘dim:", briefCta: "Brifni Telegramga yuborish",
     rank: "katalogdagi {b} ta blogerdan {a} tasinikidan yuqori",
     rateTg: "Assalomu alaykum! Bloger Agency rezidenti bo‘lmoqchiman. Obunachilar: {f}, kalkulyator bo‘yicha ER: {er}%.",
+    kitBase: BASE.price, kitBaseName: BASE.uz.t, kitN: "yoqilgan bloklar: {n}", kitTotal: "Jami", kitTg: "Bloger Agency — DevUz Studio prototipidan loyiha tarkibi:",
   },
 };

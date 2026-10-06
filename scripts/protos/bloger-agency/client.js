@@ -315,4 +315,31 @@ if(rate){
   }
   [rf,rl,rc].forEach(function(i){i.addEventListener('input',rr)});rr();
 }
+
+/* ── Конструктор проекта (как у MAVERA): тумблер — блок в превью и итог ── */
+var kit=$('plan');
+if(kit){
+  var boxes=[].slice.call(kit.querySelectorAll('input[data-b]')), base=+(L.kitBase||0), screenEl=kit.querySelector('.kit-screen');
+  var byId={};boxes.forEach(function(b){byId[b.dataset.b]=b});
+  function title(b){return b.closest('.kit-row').querySelector('.kit-t b').textContent}
+  function draw(fresh){
+    var on=boxes.filter(function(b){return b.checked}), sum=base+on.reduce(function(s,b){return s+(+b.dataset.p)},0);
+    kit.querySelectorAll('.kit-pv').forEach(function(p){
+      var show=byId[p.dataset.pv]&&byId[p.dataset.pv].checked;p.hidden=!show;
+      p.classList.toggle('fresh',show&&p.dataset.pv===fresh&&!reduce);
+    });
+    screenEl.classList.toggle('none',!on.length);
+    var el=$('kit-sum');el.textContent=money(sum);$('kit-sum2').textContent=money(sum);if(!reduce){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}
+    $('kit-n').textContent=L.kitN.replace('{n}',on.length);
+    kit.dataset.text=L.kitTg+'\n'+L.kitBaseName+' — '+money(base)+'\n'+on.map(function(b){return title(b)+' — '+money(+b.dataset.p)}).join('\n')+'\n'+L.kitTotal+': '+money(sum);
+  }
+  boxes.forEach(function(b){b.addEventListener('change',function(){
+    if(b.checked)(b.dataset.needs||'').split(' ').filter(Boolean).forEach(function(n){if(byId[n])byId[n].checked=true});
+    else boxes.forEach(function(o){if(o.checked&&(o.dataset.needs||'').split(' ').indexOf(b.dataset.b)>=0)o.checked=false});
+    draw(b.checked?b.dataset.b:'');
+  })});
+  $('kit-all').addEventListener('click',function(){boxes.forEach(function(b){b.checked=true});draw('')});
+  $('kit-copy').addEventListener('click',function(){var btn=this;try{navigator.clipboard.writeText(kit.dataset.text).then(function(){var o=btn.textContent;btn.textContent=L.copied;setTimeout(function(){btn.textContent=o},1400)})}catch(e){}});
+  draw('');
+}
 })();

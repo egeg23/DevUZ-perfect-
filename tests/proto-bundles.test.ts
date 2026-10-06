@@ -12,11 +12,11 @@ import { stampPages } from "@/lib/proto/stamp";
 
 const SEED = "b1".repeat(16);
 
-test("bloger.agency: 12 страниц, метки сборки заменены, у каждой условия и noindex", () => {
+test("bloger.agency: 14 страниц, метки сборки заменены, у каждой условия и noindex", () => {
   const site = bundlePages("bloger-agency");
   assert.ok(site);
   const all = { "": site.html, ...site.pages };
-  assert.equal(Object.keys(all).length, 12);
+  assert.equal(Object.keys(all).length, 14);
   for (const [path, html] of Object.entries(all)) {
     assert.doesNotMatch(html, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
     const lang = path.startsWith("uz") ? "uz" : "ru";
