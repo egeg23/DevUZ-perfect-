@@ -48,7 +48,8 @@ env_set() {
   chmod 600 "$tmp"; mv "$tmp" "$ENV_FILE"
 }
 for name in TELEGRAM_TOKEN BYBIT_DEMO_API_KEY BYBIT_DEMO_API_SECRET \
-            SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASSWORD SMTP_FROM; do
+            SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASSWORD SMTP_FROM \
+            OWNER_EMAIL OWNER_PASSWORD WEIGHTS_IDS; do
   var="SUNSCRYPT_$name"
   if [ -n "${!var:-}" ]; then
     if [ "$(env_get "$name")" != "${!var}" ]; then
@@ -79,6 +80,38 @@ if [ -z "$(env_get PUBLIC_HOST)" ]; then
   echo "PUBLIC_HOST=sunscrypt.${IP//./-}.sslip.io" >> "$ENV_FILE"
 fi
 PUBLIC_HOST="$(env_get PUBLIC_HOST)"
+
+# ── 3б. Веса модели Kronos ──────────────────────────────────────────────────
+# Не в git. Скачиваем один раз; не вышло — выкатка идёт дальше: сайту веса
+# не нужны, нужны движку.
+MODELS_DIR="$APP_DIR/models"
+W_NAME="$(sed -n 's/^name=//p' infra/model-weights.txt)"
+W_SHA="$(sed -n 's/^sha256=//p' infra/model-weights.txt)"
+W_IDS="$(env_get WEIGHTS_IDS)"
+if [ -f "$MODELS_DIR/$W_NAME/.sha256" ] && [ "$(cat "$MODELS_DIR/$W_NAME/.sha256")" = "$W_SHA" ]; then
+  say "Веса $W_NAME на месте"
+elif [ -z "$W_IDS" ]; then
+  echo "⚠ веса $W_NAME не скачаны: нет секрета SUNSCRYPT_WEIGHTS_IDS" >&2
+else
+  say "Скачиваю веса $W_NAME"
+  tmp="$(mktemp -d)"; n=0; ok=1
+  for id in ${W_IDS//,/ }; do
+    curl -fsSL --max-time 600 -o "$tmp/part.$n" \
+      "https://drive.usercontent.google.com/download?id=$id&export=download&confirm=t" || { ok=""; break; }
+    n=$((n + 1))
+  done
+  parts() { for i in $(seq 0 $((n - 1))); do cat "$tmp/part.$i"; done; }
+  if [ -n "$ok" ] && [ "$(parts | sha256sum | cut -d' ' -f1)" = "$W_SHA" ]; then
+    mkdir -p "$MODELS_DIR"
+    rm -rf "${MODELS_DIR:?}/$W_NAME"
+    parts | tar xz -C "$MODELS_DIR"
+    echo "$W_SHA" > "$MODELS_DIR/$W_NAME/.sha256"
+    say "Веса $W_NAME: sha256 сошёлся, распакованы ($(du -sh "$MODELS_DIR/$W_NAME" | cut -f1))"
+  else
+    echo "⚠ веса $W_NAME не скачались или sha256 не сошёлся" >&2
+  fi
+  rm -rf "$tmp"
+fi
 
 # ── 4. Сборка и запуск ──────────────────────────────────────────────────────
 export GIT_COMMIT

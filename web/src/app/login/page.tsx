@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AuthShell } from "@/components/AuthShell";
@@ -92,8 +91,8 @@ export default function LoginPage() {
         </form>
       )}
       <div className="links">
-        <Link href="/register">Регистрация</Link>
-        <Link href="/forgot">Забыли пароль?</Link>
+        <span className="muted">Доступ — по приглашению владельца</span>
+        <span className="muted">Забыли пароль? Попросите у владельца ссылку сброса</span>
       </div>
     </AuthShell>
   );

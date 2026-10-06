@@ -1,5 +1,9 @@
 """Регистрация и вход (бриф, этап 2).
 
+Доступ закрытый (решение владельца): аккаунт создаётся только по
+приглашению, которое выдаёт владелец. Приглашённым почту подтверждать не
+нужно — ссылку им дал владелец.
+
 Почта + пароль (argon2), подтверждение почты, сброс пароля, TOTP-2FA
 (обязательна перед добавлением ключей Bybit — зависимость require_2fa),
 httpOnly-сессии, лимиты частоты, журнал входов.
@@ -24,7 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crypto, mailer
 from app.config import get_settings
 from app.db import get_session
-from app.models import EmailToken, LoginEvent, Session, User
+from app.models import EmailToken, Invite, LoginEvent, Session, User
 from app.ratelimit import enforce
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -50,6 +54,7 @@ class Credentials(BaseModel):
 
 
 class Register(BaseModel):
+    invite: str = Field(min_length=10, max_length=128)
     email: EmailStr
     password: str = Field(min_length=MIN_PASSWORD, max_length=256)
 
@@ -229,18 +234,62 @@ CurrentUser = Annotated[Current, Depends(require_login)]
 
 # ── Регистрация и почта ─────────────────────────────────────────────────────
 @router.post("/register", status_code=201)
-async def register(body: Register, request: Request, db: Db) -> dict:
+async def register(body: Register, request: Request, response: Response, db: Db) -> dict:
+    """Регистрация по приглашению; сразу входит в аккаунт."""
     await enforce(f"register:ip:{_ip(request)}", 10, 3600)
+    inv = await db.get(Invite, crypto.token_hash(body.invite))
+    if inv is None or inv.used_at or inv.expires_at < _now():
+        raise HTTPException(400, "Приглашение недействительно или устарело. Попросите новое.")
     email = _norm(body.email)
-    exists = await db.scalar(select(User.id).where(User.email == email))
-    if exists is None:
-        user = User(email=email, password_hash=_ph.hash(body.password))
-        db.add(user)
-        await db.flush()
-        await _send_verify(db, user)
-        await _log(db, request, email=email, event="register", success=True, user_id=user.id)
-        await db.commit()
-    return {"ok": True, "message": "Проверьте почту: мы отправили ссылку для подтверждения."}
+    if await db.scalar(select(User.id).where(User.email == email)):
+        raise HTTPException(409, "Такая почта уже зарегистрирована — войдите")
+    user = User(email=email, password_hash=_ph.hash(body.password), email_verified_at=_now())
+    db.add(user)
+    await db.flush()
+    inv.used_at, inv.used_by = _now(), user.id
+    await _start_session(db, request, response, user, mfa=True)
+    await _log(db, request, email=email, event="register", success=True, user_id=user.id)
+    await db.commit()
+    return {"ok": True}
+
+
+async def new_invite(db: AsyncSession, by: User, note: str | None, days: int = 7) -> str:
+    token = crypto.new_token()
+    db.add(
+        Invite(
+            token_hash=crypto.token_hash(token),
+            note=note,
+            created_by=by.id,
+            expires_at=_now() + timedelta(days=days),
+        )
+    )
+    return f"{get_settings().public_url}/invite?token={token}"
+
+
+async def new_reset_link(db: AsyncSession, user: User) -> str:
+    """Ссылка сброса пароля, которую владелец передаёт сам (почты нет)."""
+    return await _email_link(db, user, "reset", RESET_TTL)
+
+
+async def ensure_owner(db: AsyncSession) -> None:
+    """Создаёт владельца из настроек, если его ещё нет."""
+    s = get_settings()
+    if not (s.owner_email and s.owner_password):
+        return
+    email = _norm(s.owner_email)
+    user = await db.scalar(select(User).where(User.email == email))
+    if user is None:
+        db.add(
+            User(
+                email=email,
+                password_hash=_ph.hash(s.owner_password.get_secret_value()),
+                email_verified_at=_now(),
+                is_admin=True,
+            )
+        )
+    elif not user.is_admin:
+        user.is_admin = True
+    await db.commit()
 
 
 @router.post("/verify")

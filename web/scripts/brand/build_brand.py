@@ -9,13 +9,17 @@ d = re.sub(r"-?\d+\.\d+", lambda m: f"{float(m.group()):.0f}", wm[1])
 
 SUN = {"dark": "#F5A524", "light": "#D97A00"}
 INK = {"dark": "#F2EFE8", "light": "#14171C"}
+# Свечи-лучи: зелёные (рост) и красные (падение), как на графике.
+UP = {"dark": "#2BB673", "light": "#1F9D63"}
+DOWN = {"dark": "#E5484D", "light": "#D93F45"}
+RAYS = ((-60, "up"), (-30, "down"), (0, "up"), (30, "down"), (60, "up"))
 
-def mark(color, bg=None, reflect=True):
-    rays = "".join(
-        f'<g transform="rotate({a} 32 38)"><path d="M32 9.5v11" stroke="{color}" stroke-width="2" stroke-linecap="round"/>'
-        f'<rect x="29.5" y="11.5" width="5" height="7" rx="1.5" fill="{color}"/></g>'
-        for a in (-60, -30, 0, 30, 60)
-    )
+def mark(color, bg=None, reflect=True, theme="dark"):
+    def ray(a, kind):
+        c = (UP if kind == "up" else DOWN)[theme]
+        return (f'<g transform="rotate({a} 32 38)"><path d="M32 9.5v11" stroke="{c}" stroke-width="2" stroke-linecap="round"/>'
+                f'<rect x="29.5" y="11.5" width="5" height="7" rx="1.5" fill="{c}"/></g>')
+    rays = "".join(ray(a, k) for a, k in RAYS)
     return (
         (f'<rect width="64" height="64" fill="{bg}"/>' if bg else "")
         + f'<path d="M20 38a12 12 0 0 1 24 0z" fill="{color}"/>'
@@ -37,10 +41,10 @@ total_w = round(x0 + wm_w + 2)
 
 out = root / "public" / "brand"
 for theme in ("dark", "light"):
-    logo = mark(SUN[theme]) + (
+    logo = mark(SUN[theme], theme=theme) + (
         f'<path transform="translate({x0} {base}) scale({s:.5f})" fill="{INK[theme]}" d="{d}"/>')
     (out / f"logo-{theme}.svg").write_text(svg(total_w, 64, logo))
-    (out / f"mark-{theme}.svg").write_text(svg(64, 64, mark(SUN[theme])))
+    (out / f"mark-{theme}.svg").write_text(svg(64, 64, mark(SUN[theme], theme=theme)))
     wm_only = f'<path transform="translate(1 {cap_px + 1}) scale({s:.5f})" fill="{INK[theme]}" d="{d}"/>'
     (out / f"wordmark-{theme}.svg").write_text(svg(round(wm_w + 2), cap_px + 2, wm_only))
 

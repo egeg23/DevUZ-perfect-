@@ -10,3 +10,4 @@ results/preds/
 *.tar.gz.part*
 e2e-failure.png
 ci.env
+models/

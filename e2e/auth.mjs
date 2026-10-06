@@ -1,27 +1,18 @@
-// Сквозной тест этапа 2 в настоящем браузере на поднятом стеке Compose:
-// регистрация → письмо → подтверждение → вход → 2FA → выход → вход с кодом.
+// Сквозной тест этапа 2 в настоящем браузере на поднятом стеке Compose.
+// Доступ закрытый: владелец входит и включает 2FA → создаёт приглашение →
+// приглашённый регистрируется по ссылке, включает 2FA, выходит и входит с
+// кодом → владелец выдаёт ссылку сброса пароля → новый пароль работает.
 //
-//   node e2e/auth.mjs http://localhost:3471 "<команда compose без up>"
-//
-// Письма читаются из таблицы outbox_emails (SMTP в тесте нет).
+//   node e2e/auth.mjs http://localhost:3471 <почта владельца> <пароль владельца>
 import { createHmac } from "node:crypto";
-import { execFileSync } from "node:child_process";
 import { chromium } from "playwright";
 
-const [, , BASE, COMPOSE] = process.argv;
+const [, , BASE, OWNER_EMAIL, OWNER_PASSWORD] = process.argv;
 const email = `e2e-${Date.now()}@example.com`;
 const password = "e2e long password 1";
 
-function lastLink(kind) {
-  const sql = `SELECT body FROM outbox_emails WHERE "to"='${email}' ORDER BY id DESC LIMIT 1`;
-  const [cmd, ...args] = COMPOSE.split(/\s+/);
-  const body = execFileSync(cmd, [
-    ...args, "exec", "-T", "postgres", "psql", "-U", "sunscrypt", "-d", "sunscrypt", "-At", "-c", sql,
-  ]).toString();
-  const m = body.match(new RegExp(`/${kind}\\?token=(\\S+)`));
-  if (!m) throw new Error(`нет ссылки ${kind} в письме`);
-  return `${BASE}/${kind}?token=${m[1]}`;
-}
+// Ссылки сервис строит на свой публичный адрес — в тесте открываем их на BASE.
+const local = (link) => BASE + new URL(link).pathname + new URL(link).search;
 
 function totp(secret, at = Date.now()) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -37,69 +28,99 @@ function totp(secret, at = Date.now()) {
 
 const step = (s) => console.log(`▸ ${s}`);
 const browser = await chromium.launch();
-const page = await browser.newPage();
+const ctx = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+const page = await ctx.newPage();
 page.setDefaultTimeout(15000);
-try {
-  step("регистрация");
-  await page.goto(`${BASE}/register`);
-  await page.fill('input[name="email"]', email);
-  await page.fill('input[name="password"]', password);
-  await page.check('input[type="checkbox"]');
-  await page.click("button.btn");
-  await page.getByText("Мы отправили письмо").waitFor();
 
-  step("вход до подтверждения почты — отказ");
+async function login(who, pass) {
   await page.goto(`${BASE}/login`);
-  await page.fill('input[name="email"]', email);
-  await page.fill('input[name="password"]', password);
+  await page.fill('input[name="email"]', who);
+  await page.fill('input[name="password"]', pass);
   await page.click("button.btn >> text=Войти");
-  await page.getByText("Подтвердите почту").first().waitFor();
+}
 
-  step("подтверждение по ссылке из письма");
-  await page.goto(lastLink("verify"));
-  await page.getByText("Почта подтверждена").waitFor();
-
-  step("вход");
-  await page.goto(`${BASE}/login`);
-  await page.fill('input[name="email"]', email);
-  await page.fill('input[name="password"]', password);
-  await page.click("button.btn >> text=Войти");
-  await page.waitForURL(`${BASE}/account`);
-
-  step("включение 2FA");
+async function enable2fa() {
   await page.click("text=Включить 2FA");
   const secret = (await page.locator("code").first().textContent()).trim();
   await page.fill('input[name="code"]', totp(secret));
   await page.click("text=Подтвердить и включить");
   await page.getByText("Включена.").waitFor();
+  return secret;
+}
 
-  step("выход и вход с кодом 2FA");
+async function codeStep(secret) {
+  await page.locator('input[name="code"]').waitFor();
+  // Код следующего шага: текущий уже израсходован.
+  await page.fill('input[name="code"]', totp(secret, Date.now() + 30000));
+  await page.click("button.btn >> text=Подтвердить");
+  await page.waitForURL(`${BASE}/account`);
+}
+
+async function logout() {
+  await page.goto(`${BASE}/account`);
   await page.click("text=Выйти");
   await page.waitForURL(`${BASE}/login`);
+}
+
+try {
+  step("владелец: вход и включение 2FA");
+  await login(OWNER_EMAIL, OWNER_PASSWORD);
+  await page.waitForURL(`${BASE}/account`);
+  const ownerSecret = await enable2fa();
+
+  step("владелец: приглашение");
+  await page.goto(`${BASE}/admin`);
+  await page.fill('input[name="note"]', "e2e");
+  await page.click("text=Создать приглашение");
+  const inviteLink = (await page.locator("code").first().textContent()).trim();
+  await logout();
+
+  step("без приглашения регистрации нет");
+  await page.goto(`${BASE}/invite?token=nonexistent-token`);
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', password);
-  await page.click("button.btn >> text=Войти");
-  await page.locator('input[name="code"]').waitFor();
-  // Код следующего шага: текущий уже израсходован при включении.
-  await page.fill('input[name="code"]', totp(secret, Date.now() + 30000));
-  await page.click("text=Подтвердить");
+  await page.check('input[type="checkbox"]');
+  await page.click("text=Создать аккаунт");
+  await page.getByText("Приглашение недействительно").waitFor();
+
+  step("регистрация по приглашению");
+  await page.goto(local(inviteLink));
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="password"]', password);
+  await page.check('input[type="checkbox"]');
+  await page.click("text=Создать аккаунт");
   await page.waitForURL(`${BASE}/account`);
-  await page.getByText("Включена.").waitFor();
+
+  step("включение 2FA, выход и вход с кодом");
+  const secret = await enable2fa();
+  await logout();
+  await login(email, password);
+  await codeStep(secret);
   await page.getByText("Код 2FA").first().waitFor();
 
-  step("сброс пароля");
-  await page.click("text=Выйти");
-  await page.goto(`${BASE}/forgot`);
-  await page.fill('input[name="email"]', email);
-  await page.click("text=Прислать ссылку");
-  await page.getByText("пришла ссылка").waitFor();
-  await page.goto(lastLink("reset"));
+  step("не владелец в раздел владельца не попадает");
+  await page.goto(`${BASE}/admin`);
+  await page.getByText("Только для владельца").waitFor();
+  await logout();
+
+  step("владелец выдаёт ссылку сброса пароля");
+  await login(OWNER_EMAIL, OWNER_PASSWORD);
+  await codeStep(ownerSecret);
+  await page.goto(`${BASE}/admin`);
+  await page.locator("tr", { hasText: email }).locator("text=Ссылка сброса пароля").click();
+  const resetLink = (await page.locator("code").first().textContent()).trim();
+  await logout();
+
+  step("сброс пароля и вход с новым");
+  await page.goto(local(resetLink));
   await page.fill('input[name="password"]', "new e2e password 2");
   await page.fill('input[name="password2"]', "new e2e password 2");
   await page.click("text=Сохранить");
   await page.getByText("Пароль изменён").waitFor();
+  await login(email, "new e2e password 2");
+  await page.locator('input[name="code"]').waitFor();
 
-  console.log("✓ e2e: полный цикл регистрации и входа пройден");
+  console.log("✓ e2e: закрытый доступ, вход, 2FA и сброс пароля работают");
 } catch (e) {
   await page.screenshot({ path: "e2e-failure.png", fullPage: true }).catch(() => {});
   console.error("✗ e2e:", e.message);

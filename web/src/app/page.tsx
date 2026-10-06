@@ -19,11 +19,10 @@ export default function Home() {
         <div className="card">
           <h3>Что дальше</h3>
           <p className="muted" style={{ fontSize: 14 }}>
-            Регистрация и вход с 2FA уже работают. Дальше — подключение кабинета Bybit по API-ключу без права вывода,
+            Вход с 2FA работает; доступ — по приглашению владельца. Дальше — подключение кабинета Bybit по API-ключу без права вывода,
             дашборд с честной статистикой после комиссий.
           </p>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <Link href="/register">Регистрация →</Link>
             <Link href="/login">Вход →</Link>
             <Link href="/brand">Бренд →</Link>
           </div>

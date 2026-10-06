@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     master_key: SecretStr | None = None
     session_secret: SecretStr | None = None
 
+    # Владелец: создаётся при запуске, если его ещё нет (секреты
+    # SUNSCRYPT_OWNER_EMAIL / SUNSCRYPT_OWNER_PASSWORD). Пароль потом не
+    # перезаписывается — его можно сменить в кабинете.
+    owner_email: str | None = None
+    owner_password: SecretStr | None = None
+
     session_days: int = 30
     cookie_secure: bool = True
 

@@ -155,7 +155,15 @@ export default function AccountPage() {
           Выйти
         </button>
       </div>
-      <p className="muted">{me.email}</p>
+      <p className="muted">
+        {me.email}
+        {me.is_admin && !locked ? (
+          <>
+            {" · "}
+            <a href="/admin">раздел владельца →</a>
+          </>
+        ) : null}
+      </p>
 
       {locked ? (
         <div className="card" style={{ maxWidth: 420 }}>

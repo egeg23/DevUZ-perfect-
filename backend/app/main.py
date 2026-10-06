@@ -1,6 +1,8 @@
 """SUNSCRYPT API. Все пути — под /api: gateway отдаёт /api сюда, остальное —
 сайту."""
 
+import logging
+from contextlib import asynccontextmanager
 from typing import Annotated
 from urllib.parse import urlsplit
 
@@ -8,13 +10,30 @@ from fastapi import Depends, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import auth, safety
+from app import admin, auth, safety
 from app.cache import redis_alive
 from app.config import get_settings
-from app.db import db_alive, get_session, read_flags
+from app.db import SessionLocal, db_alive, get_session, read_flags
 
-app = FastAPI(title="SUNSCRYPT API", docs_url="/api/docs", openapi_url="/api/openapi.json")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    try:
+        async with SessionLocal() as db:
+            await auth.ensure_owner(db)
+    except Exception as e:  # база ещё не готова — повторим при следующем запуске
+        logging.getLogger(__name__).warning("владелец не создан: %s", type(e).__name__)
+    yield
+
+
+app = FastAPI(
+    title="SUNSCRYPT API",
+    docs_url="/api/docs",
+    openapi_url="/api/openapi.json",
+    lifespan=lifespan,
+)
 app.include_router(auth.router)
+app.include_router(admin.router)
 
 
 @app.middleware("http")
