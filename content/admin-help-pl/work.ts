@@ -60,7 +60,7 @@ export const workSections: Record<string, HelpEntry> = {
         id: "when",
         title: "Kiedy pojawia się analiza",
         body: [
-          "Mniej więcej godzinę po ostatniej odpowiedzi klienta. Jeśli klient napisze coś później, rozmowa jest analizowana od nowa, a stara analiza zostaje zastąpiona nową.",
+          "Mniej więcej godzinę po ostatniej odpowiedzi klienta. Jeśli klient napisze coś później, rozmowa jest analizowana od nowa, a stara analiza zostaje zastąpiona nową. Analiza powstaje od nowa także wtedy, gdy kontakt zamknięto przyciskiem «🙅 Klient odmówił» albo «🔇 Ignoruje»: wynik zmienia się na «odmówił» albo «rozmowa utknęła».",
           "Analizowane są tylko rozmowy z kontaktów, w których klient choć raz odpowiedział. Czaty ze strony i z bota tu nie trafiają.",
         ],
       },
