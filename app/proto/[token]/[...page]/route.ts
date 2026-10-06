@@ -1,5 +1,5 @@
 import { protoPagePath } from "@/lib/proto/pages";
-import { serveProto } from "@/lib/proto/serve";
+import { serveProto, unlockProto } from "@/lib/proto/serve";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,4 +13,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   const path = protoPagePath(page);
   if (!path) return new Response(null, { status: 404 });
   return serveProto(request, token, path);
+}
+
+/** Ввод пароля на странице внутри прототипа (lib/proto/lock). */
+export async function POST(request: Request, { params }: { params: Promise<{ token: string; page: string[] }> }) {
+  const { token, page } = await params;
+  const path = protoPagePath(page);
+  if (!path) return new Response(null, { status: 404 });
+  return unlockProto(request, token, path);
 }
