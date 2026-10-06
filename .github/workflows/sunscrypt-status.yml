@@ -1,0 +1,27 @@
+name: SUNSCRYPT — состояние движка
+
+# Только чтение: что делает движок на сервере (кабинеты по первым 8 символам
+# id, позиции, сделки, сверка, события; без почт и ключей — лог публичный).
+on:
+  workflow_dispatch:
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            cd /opt/sunscrypt
+            C="docker compose -p sunscrypt --env-file /opt/sunscrypt/.env -f infra/docker-compose.yml"
+            $C ps --format '{{.Service}} {{.State}} {{.Status}}'
+            $C exec -T backend python -m app.engine_report
+            echo "▸ Сигналы (последние строки):"
+            $C logs --tail 40 signals 2>&1 | grep -E "rhat|свечи|история|нет весов" | tail -10
+            echo "▸ Диспетчер (последние строки):"
+            $C logs --tail 300 orchestrator 2>&1 | grep -E "orchestrator|ERROR|WARN|Traceback|Error" | tail -20
