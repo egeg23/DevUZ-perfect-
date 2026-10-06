@@ -27,7 +27,7 @@ import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
 import { parseMore, REST_PAGE, visibleProspects } from "@/lib/admin/outreach-view";
 import { BATCH_CAP } from "@/lib/audit/batch";
 import { AutopilotPanel } from "@/components/admin/autopilot-panel";
-import { dayStats, peekWeek } from "@/lib/admin/autopilot-store";
+import { dayStats } from "@/lib/admin/autopilot-store";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +49,7 @@ export default async function ProspectPage({
     : [[], 0, 0, false];
   // Автопрогон касаний видят те же, кто ведёт автопоиск: он из него и
   // берёт компании. Менеджеру его касания приходят лидами в очередь.
-  const [autoStats, autoWeek] = seesMaps ? await Promise.all([dayStats(), peekWeek()]) : [null, null];
+  const autoStats = seesMaps ? await dayStats() : null;
   const [rows, hour, replies, plan, portion, owners, stream, accounts] = await Promise.all([
     listProspects(),
     sentLastHour(),
@@ -154,16 +154,7 @@ export default async function ProspectPage({
         </section>
       ) : null}
 
-      {autoStats && autoWeek ? (
-        <AutopilotPanel
-          stats={autoStats}
-          niche={autoWeek.niche}
-          next={autoWeek.next}
-          nextFrom={nextMonday(autoWeek.week)}
-          canToggle={staff.role === "admin"}
-          locale={locale}
-        />
-      ) : null}
+      {autoStats ? <AutopilotPanel stats={autoStats} canToggle={staff.role === "admin"} locale={locale} /> : null}
 
       <ProspectRunner />
 
@@ -217,8 +208,3 @@ export default async function ProspectPage({
   );
 }
 
-/** «12.10» — понедельник после недели, начавшейся `week`. */
-function nextMonday(week: string): string {
-  const d = new Date(Date.parse(`${week}T00:00:00Z`) + 7 * 86_400_000);
-  return `${String(d.getUTCDate()).padStart(2, "0")}.${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-}

@@ -98,7 +98,8 @@
 | релиз (файл продукта) | reliz | wydanie |
 | прототип | prototip | prototyp |
 | автопрогон (касаний) | avtomatik aloqalar | automatyczne kontakty |
-| ниша недели | hafta nishasi | nisza tygodnia |
+| любые ниши | istalgan nishalar | dowolne nisze |
+| поиск лидов (Firecrawl) | lidlarni qidirish | wyszukiwanie leadów |
 | разбор (статья о чужом сайте) | tahlil | analiza |
 | находка (в разборе) | topilma | ustalenie |
 | снимок (скриншот) | skrinshot | zrzut |
