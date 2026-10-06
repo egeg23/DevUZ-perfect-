@@ -1,0 +1,79 @@
+name: SUNSCRYPT — выкатка
+
+# Каждый пуш в ветку sunscrypt уезжает на наш сервер (тот же, где
+# devuz.studio). Ветка своя, с кодом DevUZ не связана и в main не сливается.
+#
+# Ключ SSH и адрес сервера — те же секреты репозитория, что у выкатки DevUZ
+# (VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_PORT). Секретов приложения здесь нет:
+# они живут на сервере в /opt/sunscrypt/.env (infra/deploy.sh).
+
+on:
+  push:
+    branches: [sunscrypt]
+  workflow_dispatch:
+
+# Две выкатки подряд не должны собирать образы наперегонки.
+concurrency:
+  group: deploy-sunscrypt
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Выкатка SUNSCRYPT на сервер
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Забрать ветку и запустить infra/deploy.sh по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 40m
+          script: |
+            set -euo pipefail
+            # Прокси сервера — для приложений DevUZ, не для git и Docker Hub:
+            # GitHub через него отвечает 403.
+            unset HTTPS_PROXY HTTP_PROXY ALL_PROXY https_proxy http_proxy all_proxy
+            export GIT_TERMINAL_PROMPT=0
+            DIR=/opt/sunscrypt
+            REPO=https://github.com/egeg23/DevUZ-perfect-.git
+            if [ ! -d "$DIR/.git" ]; then
+              mkdir -p "$DIR"
+              git -C "$DIR" init -q
+              git -C "$DIR" remote add origin "$REPO"
+            fi
+            cd "$DIR"
+            git fetch --depth 1 origin sunscrypt
+            git reset --hard -q origin/sunscrypt
+            echo "▸ SUNSCRYPT $(git rev-parse --short HEAD)"
+            bash infra/deploy.sh
+
+  # Упавшая выкатка будит владельца тем же каналом, что и выкатка DevUZ:
+  # строка в отчётах смен → Telegram.
+  alarm:
+    name: Сказать владельцу, что выкатка SUNSCRYPT не доехала
+    needs: [deploy]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Строка владельцу
+        env:
+          SHIFT_REPORT_SECRET: ${{ secrets.SHIFT_REPORT_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL || 'https://devuz.studio' }}
+        run: |
+          set -uo pipefail
+          if [ -z "${SHIFT_REPORT_SECRET:-}" ]; then
+            echo "SHIFT_REPORT_SECRET не задан — владелец о падении не узнает." >&2
+            exit 0
+          fi
+          RUN="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          BODY="SUNSCRYPT: выкатка ${GITHUB_SHA:0:7} не доехала до сервера. Лог: $RUN"
+          curl -sS --max-time 30 -X POST "$SITE_URL/api/shift/report" \
+            -H "x-devuz-shift: $SHIFT_REPORT_SECRET" \
+            -H "content-type: application/json" \
+            --data "$(jq -n --arg body "$BODY" '{shift: "deploy", body: $body}')" \
+            || echo "строка не ушла — сайт не ответил" >&2

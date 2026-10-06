@@ -1,0 +1,22 @@
+# SUNSCRYPT — проект Docker Compose «sunscrypt» на общем сервере.
+#
+# Запускает infra/deploy.sh:
+#   docker compose -p sunscrypt --env-file /opt/sunscrypt/.env -f infra/docker-compose.yml up -d --build
+#
+# Наружу смотрит только web, и только на петлевой адрес: в интернет его
+# отдаёт хостовый nginx с сертификатом. У каждого сервиса — потолок памяти:
+# рядом работает devuz.studio, и SUNSCRYPT не должен его вытеснить.
+#
+# Сейчас здесь заглушка (этап 0 брифа). Backend, движок, PostgreSQL и Redis
+# добавляются сюда же; порт web — WEB_PORT из .env.
+name: sunscrypt
+
+services:
+  web:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WEB_PORT}:80"
+    volumes:
+      - ./placeholder:/usr/share/nginx/html:ro
+    mem_limit: 64m
