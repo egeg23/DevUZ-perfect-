@@ -9,7 +9,7 @@ import { runTaskSweep } from "@/lib/admin/task-store";
 import { sendTeamNews } from "@/lib/admin/team-news";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
-import { runAutopilot, sendAutopilotReport } from "@/lib/admin/autopilot-store";
+import { noteAutopilotTrouble, runAutopilot, sendAutopilotReport } from "@/lib/admin/autopilot-store";
 import { settleTurnoverDue } from "@/lib/partners/autopay";
 import { pingPriorityLeads } from "@/lib/partners/priority-lead";
 import { expireClients } from "@/lib/partners/store";
@@ -263,7 +263,10 @@ export async function POST(request: Request) {
   // незачем, как и им его (lib/admin/autopilot-store).
   after(async () => {
     const autopilot = await runAutopilot(new Date()).catch((error) => ({ queued: 0, dropped: [], errors: [String(error)] }));
-    if (autopilot.errors.length) console.error("автопрогон:", autopilot.errors.join("; "));
+    if (autopilot.errors.length) {
+      console.error("автопрогон:", autopilot.errors.join("; "));
+      await noteAutopilotTrouble(autopilot.errors).catch(() => undefined);
+    }
     await sendAutopilotReport(new Date()).catch((error) => console.error("автопрогон, отчёт:", error));
   });
 

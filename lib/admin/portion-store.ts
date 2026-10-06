@@ -1,6 +1,7 @@
 import { wants } from "@/lib/admin/notify-prefs";
 import { QUEUE_ROLES } from "@/lib/admin/lead-queue";
 import { canContact, routeFor, whatsappLink } from "@/lib/admin/outreach";
+import { contactsFrom } from "@/lib/audit/contacts";
 import { prepareOutreach, prospectsByIds, type Prospect } from "@/lib/admin/outreach-store";
 import {
   ASSIGN_HOUR,
@@ -101,9 +102,9 @@ export async function pool(limit: number, exclude: ReadonlySet<string> = new Set
     // числится ничьей, но выдать её второму — значит написать дважды.
     .filter((row) => !exclude.has(row.id as string))
     .filter((row) => {
-      const contacts = row.contacts as Prospect["contacts"];
+      const contacts = contactsFrom(row.contacts);
       const findings = (row.findings as Prospect["findings"]) ?? [];
-      if (!row.host) return Boolean(contacts && routeFor(contacts));
+      if (!row.host) return Boolean(routeFor(contacts));
       return canContact({ contacts, findings, status: "new" }) === "ok";
     })
     .map((row) => row.id as string)

@@ -30,7 +30,7 @@ import { recordManualInbound } from "@/lib/admin/outreach-talk-store";
 import type { Staff } from "@/lib/admin/session";
 import { AUTOPILOT_SENDER } from "@/lib/admin/autopilot";
 import type { Finding } from "@/lib/audit/checks";
-import { EMPTY_CONTACTS, type Contacts } from "@/lib/audit/contacts";
+import { contactsFrom, type Contacts } from "@/lib/audit/contacts";
 import { hostOf } from "@/lib/audit/pitch";
 import { BATCH_CAP, auditDeep, type ProspectRow, type Walked } from "@/lib/audit/batch";
 import { probe, recheck } from "@/lib/audit/fetch";
@@ -189,7 +189,7 @@ function shape(row: Record<string, unknown>): Prospect {
     label: (row.label as string | null) ?? null,
     score: (row.score as number | null) ?? null,
     findings: Array.isArray(row.findings) ? (row.findings as Finding[]) : [],
-    contacts: { ...EMPTY_CONTACTS, ...((row.contacts as Partial<Contacts>) ?? {}) },
+    contacts: contactsFrom(row.contacts),
     draft: (row.draft as string | null) ?? null,
     message: (row.message as string | null) ?? null,
     niche: (row.niche as string | null) ?? null,

@@ -223,6 +223,8 @@ export type DayStats = {
   weekReplies: number;
   /** Кто ответил за срок отчёта — по одному на строку. */
   replied: readonly Replied[];
+  /** Последний сбой прохода за срок отчёта — текст ошибки; null — сбоев не было. */
+  trouble?: string | null;
 };
 
 /** Слово при числе: 1 письмо, 3 письма, 5 писем. */
@@ -257,6 +259,9 @@ export function reportText(s: DayStats, escape: (t: string) => string): string {
     s.enabled ? null : "⏸ Автопрогон выключен в разделе «Касания».",
     "",
     `✉️ Написали — ушло в Telegram: <b>${s.sent}</b> из ${s.target}${mark}${accounts}`,
+    s.trouble && s.sent < s.target
+      ? `❗ Автопрогон сбоил — письма не готовились. Для разработчика: <code>${escape(s.trouble)}</code>`
+      : null,
     s.inFlight ? `Ждут отправки: ${s.inFlight} — уйдут сегодня до 20:30 или завтра с 07:30` : null,
     s.manual ? `Не нашлись в Telegram — карточки ушли на звонок: ${s.manual}` : null,
     s.dropped ? `Не написали — проверка по факту ничего не подтвердила или сайт не открылся: ${s.dropped}` : null,
@@ -271,7 +276,9 @@ export function reportText(s: DayStats, escape: (t: string) => string): string {
   ];
   if (s.enabled && s.sent < s.target) {
     lines.push(
-      s.attempts >= s.target * ATTEMPTS_PER_TARGET
+      s.trouble
+        ? "Не добрали из-за сбоя выше: компании в нише есть, дело не в них. Перешлите отчёт разработчику."
+        : s.attempts >= s.target * ATTEMPTS_PER_TARGET
         ? "Не добрали: кончились попытки на день — в пуле ниши мало годных компаний. Проверьте кампанию автопоиска."
         : "Не добрали: в пуле ниши кончились компании, до которых дотянется Telegram, или аккаунты были остановлены. Проверьте раздел «Аккаунты» и кампанию автопоиска.",
     );
