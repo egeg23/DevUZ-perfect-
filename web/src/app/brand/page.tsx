@@ -145,7 +145,7 @@ export default function BrandPage() {
       <section>
         <h2>Telegram-бот</h2>
         <p className="muted" style={{ fontSize: 14, maxWidth: 720 }}>
-          Бота вы создаёте сами в @BotFather (/newbot), затем: /setuserpic — аватар,
+          Бот создан: @SUNSCRYPT_tradebot. В @BotFather: /setuserpic — аватар,
           /setabouttext и /setdescription — тексты ниже, /setcommands — список команд. Токен
           бота в чат не присылайте: заведите его секретом репозитория
           <code> SUNSCRYPT_TELEGRAM_TOKEN</code> (Settings → Secrets and variables → Actions).
@@ -163,7 +163,7 @@ export default function BrandPage() {
             <Counted label="Имя" text={bot.name} max={limits.name} />
             <div className={s.field}>
               <div className={s.label}>
-                <span>Адрес (@handle) — по порядку предпочтения; занятый пропустить</span>
+                <span>Адрес бота</span>
               </div>
               <div className={s.handles}>
                 {bot.handles.map((h) => (

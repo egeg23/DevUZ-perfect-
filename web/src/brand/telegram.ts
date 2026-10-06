@@ -2,13 +2,7 @@
 // символа, «About» — 120, «Description» — 512.
 export const bot = {
   name: "SUNSCRYPT",
-  handles: [
-    "@sunscrypt_bot",
-    "@SunscryptBot",
-    "@sunscrypt_trade_bot",
-    "@sunscrypt_alerts_bot",
-    "@sunscrypt_ru_bot",
-  ],
+  handles: ["@SUNSCRYPT_tradebot"],
   about:
     "Уведомления SUNSCRYPT: сделки, дневной отчёт, тревоги и аварийная остановка. Прибыль не гарантирована.",
   description:
