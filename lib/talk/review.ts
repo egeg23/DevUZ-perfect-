@@ -44,7 +44,9 @@ export function outcomeOf(input: {
   if (input.aiHandling) return "talking";
 
   const why = (input.handoverReason ?? "").toLowerCase();
-  if (why.includes("не писать")) return "refused";
+  // «Не писать» — клиент сам попросил; «отказался» — менеджер закрыл касание
+  // кнопкой «🙅 Клиент отказался» (lib/admin/touch-close.ts).
+  if (why.includes("не писать") || why.includes("отказал")) return "refused";
   if (why.includes("просит человека")) return "asked_human";
   if (why.includes("первичка закрыта")) return "qualified";
   return "stalled";

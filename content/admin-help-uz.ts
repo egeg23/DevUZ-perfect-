@@ -805,7 +805,7 @@ export const uz: HelpCopy = {
           id: "when",
           title: "Tahlil qachon paydo bo‘ladi",
           body: [
-            "Mijozning oxirgi javobidan taxminan bir soat o‘tib. Agar mijoz keyin yana yozsa — suhbat qaytadan tahlil qilinadi va eski tahlil yangisiga almashadi.",
+            "Mijozning oxirgi javobidan taxminan bir soat o‘tib. Agar mijoz keyin yana yozsa — suhbat qaytadan tahlil qilinadi va eski tahlil yangisiga almashadi. Aloqa «🙅 Mijoz rad etdi» yoki «🔇 Javob bermayapti» tugmasi bilan yopilsa ham tahlil qaytadan qilinadi: natija «rad etdi» yoki «suhbat to‘xtab qoldi» bo‘ladi.",
             "Faqat mijoz kamida bir marta javob bergan aloqa yozishmalari tahlil qilinadi. Saytdagi va botdagi chatlar bu yerga tushmaydi.",
           ],
         },

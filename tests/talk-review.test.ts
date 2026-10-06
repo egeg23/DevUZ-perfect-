@@ -26,6 +26,15 @@ test("исход считается по базе, а не со слов мод�
     "refused",
   );
   assert.equal(
+    outcomeOf({ aiHandling: false, handoverReason: "клиент отказался — касание закрыто", turns: 1 }),
+    "refused",
+    "кнопка «Клиент отказался» — тоже отказ",
+  );
+  assert.equal(
+    outcomeOf({ aiHandling: false, handoverReason: "клиент не отвечает — касание закрыто", turns: 1 }),
+    "stalled",
+  );
+  assert.equal(
     outcomeOf({ aiHandling: false, handoverReason: "просит человека — звонок или менеджера", turns: 2 }),
     "asked_human",
   );
@@ -171,4 +180,15 @@ test("отказ базы поднимается наружу, а не прев�
   // Свип обязан показать такую ошибку, а не считать проход удачным.
   const run = readFileSync(new URL("../lib/talk/review-run.ts", import.meta.url), "utf8");
   assert.match(run, /run\.errors\.push\(`очередь разборов/);
+});
+
+test("закрыли касание кнопкой после разбора — разбор переделывается", async () => {
+  // geometry.uz, 05.10.2026: клиент ответил «Сайт пока не нужен», разбор
+  // успел записать «ещё идёт», а менеджер потом нажал «Клиент отказался» —
+  // и в «Надзоре» так и висело «ещё идёт».
+  const { readFileSync } = await import("node:fs");
+  const store = readFileSync(new URL("../lib/talk/review-store.ts", import.meta.url), "utf8");
+  assert.match(store, /replied_at, closed_at/, "дата закрытия читается вместе с последней репликой");
+  assert.match(store, /const closedAfter = row\.closed_at && seen && Date\.parse\(String\(row\.closed_at\)\) > Date\.parse\(seen\)/);
+  assert.match(store, /&& !closedAfter\) continue;/);
 });

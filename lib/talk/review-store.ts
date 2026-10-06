@@ -56,7 +56,7 @@ export async function toReview(limit = 5, now = Date.now()): Promise<ToReview[]>
    */
   const { data: answered, error } = await db
     .from("prospects")
-    .select("id, host, lead_id, ai_handling, handover_reason, replied_at")
+    .select("id, host, lead_id, ai_handling, handover_reason, replied_at, closed_at")
     .not("replied_at", "is", null)
     .lt("replied_at", quietBefore)
     .order("replied_at", { ascending: false })
@@ -77,7 +77,10 @@ export async function toReview(limit = 5, now = Date.now()): Promise<ToReview[]>
     const id = String(row.id);
     const seen = reviewed.get(id);
     // Разбор новее последней реплики — значит с тех пор ничего не менялось.
-    if (seen && Date.parse(seen) >= Date.parse(String(row.replied_at))) continue;
+    // Кроме одного: касание закрыли кнопкой «Клиент отказался» или
+    // «Игнорирует» уже после разбора — тогда итог другой, разбираем заново.
+    const closedAfter = row.closed_at && seen && Date.parse(String(row.closed_at)) > Date.parse(seen);
+    if (seen && Date.parse(seen) >= Date.parse(String(row.replied_at)) && !closedAfter) continue;
 
     const { data: messages } = await db
       .from("outreach_messages")
