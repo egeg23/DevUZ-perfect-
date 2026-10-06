@@ -159,13 +159,13 @@ if [ -n "$(env_get BYBIT_DEMO_API_KEY)" ] && command -v python3 >/dev/null 2>&1;
   python3 - <<'PY' || echo "⚠ проверка демо-ключа Bybit не прошла" >&2
 import hashlib, hmac, json, os, time, urllib.request
 
-key, secret = os.environ["BYBIT_KEY"], os.environ["BYBIT_SECRET"]
+key, secret = os.environ["BYBIT_KEY"].strip(), os.environ["BYBIT_SECRET"].strip()
 
-def get(path, query=""):
+def get(path, query="", host="api-demo.bybit.com"):
     ts, rw = str(int(time.time() * 1000)), "5000"
     sign = hmac.new(secret.encode(), (ts + key + rw + query).encode(), hashlib.sha256).hexdigest()
     req = urllib.request.Request(
-        f"https://api-demo.bybit.com{path}" + (f"?{query}" if query else ""),
+        f"https://{host}{path}" + (f"?{query}" if query else ""),
         headers={"X-BAPI-API-KEY": key, "X-BAPI-TIMESTAMP": ts, "X-BAPI-RECV-WINDOW": rw,
                  "X-BAPI-SIGN": sign},
     )
@@ -175,6 +175,18 @@ def get(path, query=""):
 info = get("/v5/user/query-api")
 if info.get("retCode") != 0:
     print(f"▸ Демо-ключ Bybit: ошибка {info.get('retCode')} — {info.get('retMsg')}")
+    # Частая ошибка — ключ создан на основном счёте, а не в Demo Trading.
+    # Спрашиваем только сведения о ключе (чтение), ордеров нет.
+    main = get("/v5/user/query-api", host="api.bybit.com")
+    if main.get("retCode") == 0:
+        print("⚠ Это ключ ОСНОВНОГО (реального) счёта, не демо. Для демо нужен ключ, "
+              "созданный в режиме Demo Trading. Реальный ключ сервис сейчас не использует.")
+        r = main["result"]
+        perms = {k: v for k, v in (r.get("permissions") or {}).items() if v}
+        print(f"▸ Права этого ключа: {perms}; IP-привязка: {r.get('ips')}")
+    else:
+        print(f"▸ На основном счёте ключ тоже не принят: {main.get('retMsg')} — "
+              "вероятно, ключ или секрет скопированы с ошибкой")
     raise SystemExit(0)
 res = info["result"]
 perms = {k: v for k, v in (res.get("permissions") or {}).items() if v}
