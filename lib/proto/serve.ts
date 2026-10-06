@@ -5,7 +5,8 @@ import { SESSION_COOKIE } from "@/lib/admin/return-to";
 import { looksLikeAccessToken } from "@/lib/store/access";
 import { fromPanel, isPreviewFetch, openedText } from "@/lib/proto/opened";
 import { logView, markOpened, protoPage } from "@/lib/proto/store";
-import { ipFromHeaders } from "@/lib/qualify/limiter";
+import { PIN_LIMIT, hasPinCookie, pinCookieHeader, pinMatches, pinPage, type PinState } from "@/lib/proto/lock";
+import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
 
 /**
  * Прототип по ссылке — то, что открывает владелец чужого бизнеса.
@@ -29,6 +30,10 @@ export async function serveProto(request: Request, token: string, path = ""): Pr
 
   const page = await protoPage(token, path);
   if (!page) return new Response(null, { status: 404 });
+
+  // Пароль на макет (lib/proto/lock): без верного пароля — форма, а не макет,
+  // и в журнал показа ничего не пишется.
+  if (page.lock && !hasPinCookie(request.headers.get("cookie"), page.id, page.lock)) return pinResponse("ask");
 
   // Отметка об открытии не задерживает ответ: человеку страница нужна сейчас.
   // Превью мессенджера и наши собственные открытия из панели не считаются —
@@ -66,5 +71,46 @@ export async function serveProto(request: Request, token: string, path = ""): Pr
       "Cache-Control": "no-store, max-age=0",
       "Referrer-Policy": "no-referrer",
     },
+  });
+}
+
+const PIN_HEADERS = {
+  "Content-Type": "text/html; charset=utf-8",
+  "X-Robots-Tag": "noindex, nofollow, noarchive",
+  "Cache-Control": "no-store, max-age=0",
+  "Referrer-Policy": "no-referrer",
+};
+
+function pinResponse(state: PinState): Response {
+  return new Response(pinPage(state), { status: state === "ask" ? 200 : 401, headers: PIN_HEADERS });
+}
+
+/**
+ * Ввод пароля с формы (POST на тот же адрес). Верный — кука на 30 дней и
+ * переход на ту же страницу обычным GET; неверный — форма с ошибкой.
+ * Попытки ограничены по адресу: четыре цифры перебираются быстро.
+ */
+export async function unlockProto(request: Request, token: string, path = ""): Promise<Response> {
+  if (!looksLikeAccessToken(token)) return new Response(null, { status: 404 });
+  const page = await protoPage(token, path);
+  if (!page) return new Response(null, { status: 404 });
+  const self = `/proto/${token}${path ? `/${path}` : ""}`;
+  if (!page.lock) return new Response(null, { status: 303, headers: { Location: self } });
+
+  const ip = ipFromHeaders(request.headers);
+  if (!rateLimit(`proto-pin:${ip}`, PIN_LIMIT).ok) return pinResponse("limit");
+
+  let pin = "";
+  try {
+    const form = await request.formData();
+    pin = String(form.get("pin") ?? "").slice(0, 32);
+  } catch {
+    return pinResponse("wrong");
+  }
+  if (!pinMatches(page.id, page.lock, pin)) return pinResponse("wrong");
+
+  return new Response(null, {
+    status: 303,
+    headers: { Location: self, "Set-Cookie": pinCookieHeader(page.id, page.lock, token), "Cache-Control": "no-store" },
   });
 }

@@ -161,7 +161,10 @@ export async function protoById(id: string): Promise<Proto | null> {
  * пустой — главная. Страницы, которой нет, — нет и ответа: 404, как на
  * чужой токен.
  */
-export async function protoPage(token: string, path = ""): Promise<{ html: string; id: string } | null> {
+export async function protoPage(
+  token: string,
+  path = "",
+): Promise<{ html: string; id: string; lock: string | null } | null> {
   const db = serviceClient();
   if (!db) return null;
   const { data } = await db
@@ -189,7 +192,11 @@ export async function protoPage(token: string, path = ""): Promise<{ html: strin
     if (upgraded) ({ html, pages } = upgraded);
   }
   const page = path ? pages[path] : html;
-  return typeof page === "string" ? { html: withBase(page, token), id } : null;
+  // Пароль на макет (lib/proto/lock): в фактах — только хеш, не сам пароль.
+  const lock = (data.facts as { lock?: unknown } | null)?.lock;
+  return typeof page === "string"
+    ? { html: withBase(page, token), id, lock: typeof lock === "string" && lock ? lock : null }
+    : null;
 }
 
 /**
