@@ -546,7 +546,7 @@ function plan(l) {
 </div>
 </div></section>
 <section id="konstruktor" style="padding-top:0"><div class="wrap">
-<div class="sec-head rv a-rise"><h2>${t("Конструктор проекта", "Loyiha konstruktori")}</h2><p class="src">${t("Цены — оценка DevUz Studio, той же сетки, что в КП для MAVERA. Точные — после брифа.", "Narxlar — DevUz Studio bahosi, MAVERA uchun TTdagi bilan bir xil to‘r. Aniq narx — brifdan keyin.")}</p></div>
+<div class="sec-head rv a-rise"><h2>${t("Конструктор проекта", "Loyiha konstruktori")}</h2><p class="src">${t("Цены — средние по Ташкенту за такую работу. Точные — после брифа.", "Narxlar — Toshkentda bunday ish uchun o‘rtacha. Aniq narx — brifdan keyin.")}</p></div>
 <div class="kit" id="plan">
 <div class="kit-list">
 <div class="kit-mini" aria-hidden="true"><span>${t("Итого с сайтом", "Sayt bilan jami")}</span><b class="num" id="kit-sum2">—</b></div>
