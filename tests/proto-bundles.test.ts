@@ -81,3 +81,27 @@ test("AUTOMECHANIC: отпечаток ставится, манифест и ser
   assert.equal(site.pages.manifest, raw.pages.manifest);
   assert.equal(site.pages.sw, raw.pages.sw);
 });
+
+test("shox.hospital: 6 страниц на ru, uz, en — условия на языке страницы, noindex, без слов отпечатка", () => {
+  const site = bundlePages("shox-hospital");
+  assert.ok(site);
+  const all = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "en", "en/plan", "plan", "uz", "uz/plan"]);
+  for (const [path, html] of Object.entries(all)) {
+    assert.doesNotMatch(html, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    const lang = path.startsWith("uz") ? "uz" : path.startsWith("en") ? "en" : "ru";
+    assert.ok(html.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(html.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(html, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(html, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(html, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(html, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(html, /href="#"/, `${path}: ссылка в никуда`);
+  }
+  assert.match(site.html, /id="fly"/, "нет пролёта по врачам");
+  assert.match(site.html, /id="dsc"/, "нет таймера скидки");
+  assert.match(site.html, /data-k="admin" data-p="450"/, "админка — 450 $");
+  assert.match(site.html, /data-base="1500"/, "сайт — 1 500 $");
+  const stamped = stampedBundle("shox-hospital", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
