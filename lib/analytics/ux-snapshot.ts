@@ -62,6 +62,13 @@ export type UxSnapshot = {
   /** Целевые действия (lib/visit/goal.ts): визиты с параметром goal.<имя>. */
   goals: { name: string; n: number }[];
   goalsByDevice: { name: string; n: number }[];
+  /**
+   * Реклама по кампаниям: система · utm_source · utm_campaign · страница входа.
+   * Реклама — девять визитов из десяти, и «почему нет заявок» без неё не
+   * разобрать: кампания на площадках в приложениях приводит случайные
+   * нажатия, на поиске — людей с задачей, и сайт тут ни при чём.
+   */
+  ads?: Row[];
 };
 
 function isoDay(d: Date): string {
@@ -102,6 +109,18 @@ export async function buildUxSnapshot(now: Date = new Date()): Promise<UxSnapsho
     sort: "-ym:s:visits",
     limit: "60",
   });
+  // Отказ этого запроса не роняет снимок: без разбивки рекламы остальное
+  // всё равно нужно.
+  const ads = await ask({
+    metrics: VISIT,
+    dimensions: "ym:s:lastAdvEngine,ym:s:lastUTMSource,ym:s:lastUTMCampaign,ym:s:startURLPath",
+    filters: "ym:s:lastTrafficSource=='ad'",
+    sort: "-ym:s:visits",
+    limit: "40",
+  }).catch((error: unknown) => {
+    console.error("снимок Метрики, реклама:", error);
+    return {} as MetrikaResponse;
+  });
 
   const t = totals.totals ?? [];
   return {
@@ -122,6 +141,7 @@ export async function buildUxSnapshot(now: Date = new Date()): Promise<UxSnapsho
     countries: counts(countries),
     goals: counts(goals, 2).map((g) => ({ ...g, name: g.name.replace(/^goal · /, "") })),
     goalsByDevice: counts(goalsByDevice, 2),
+    ads: rows(ads, 4),
   };
 }
 
