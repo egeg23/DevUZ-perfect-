@@ -15,6 +15,14 @@ import { cn } from "@/lib/cn";
  * Наблюдатель вешается из ref-колбэка, а не из эффекта: так он начинает
  * следить в тот момент, когда узел появился, и снимается, когда React его
  * отцепил.
+ *
+ * Блок виден с первого байта. Прячется только тот, что при запуске скрипта
+ * лежит целиком ниже экрана, — его посетитель ещё не видел, и прятать его
+ * незаметно. Раньше прятались все блоки сразу, стилями, до всякого скрипта:
+ * пока на телефоне грузился JavaScript (а через мобильную сеть это секунды),
+ * под первым экраном была чёрная пустота — калькулятор, кейсы, форма заявки.
+ * Не загрузился скрипт вовсе — пустота навсегда. Владелец, 06.10.2026:
+ * «Людей приходит нормально на сайт, но заявок нет почти».
  */
 export function Reveal({
   children,
@@ -28,22 +36,25 @@ export function Reveal({
   delay?: number;
   as?: ElementType;
 }) {
-  const [visible, setVisible] = useState(false);
+  // "shown" — как пришло с сервера: виден. "armed" — ниже экрана, спрятан
+  // и ждёт прокрутки. "visible" — до него долистали.
+  const [state, setState] = useState<"shown" | "armed" | "visible">("shown");
 
   const attach = useCallback((node: HTMLElement | null) => {
     if (!node) return;
 
-    if (typeof IntersectionObserver === "undefined") {
-      // Очень старый браузер: лучше показать контент, чем спрятать навсегда.
-      setVisible(true);
-      return;
-    }
+    // Ref-колбэк срабатывает до первой отрисовки после гидратации, поэтому
+    // блок, который уже на экране или выше него, не мигает: он просто
+    // остаётся видимым, без анимации.
+    if (typeof IntersectionObserver === "undefined") return;
+    if (node.getBoundingClientRect().top < window.innerHeight) return;
 
+    setState("armed");
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            setVisible(true);
+            setState("visible");
             observer.disconnect();
           }
         }
@@ -60,7 +71,7 @@ export function Reveal({
   return (
     <Component
       ref={attach}
-      className={cn("reveal", visible && "reveal-visible", className)}
+      className={cn("reveal", state === "armed" && "reveal-armed", state === "visible" && "reveal-visible", className)}
       style={delay ? ({ "--reveal-delay": `${delay}ms` } as React.CSSProperties) : undefined}
     >
       {children}

@@ -82,3 +82,25 @@ test("дождь понижает качество только когда ус�
   const visibility = code(rain).slice(code(rain).indexOf("onVisibility"));
   assert.match(visibility.slice(0, 200), /last = 0;/, "отсчёт не сбрасывается после фона");
 });
+
+/**
+ * Владелец, 06.10.2026: «Людей приходит нормально на сайт, но заявок нет
+ * почти». На телефоне всё под первым экраном — калькулятор, кейсы, форма
+ * заявки — было чёрной пустотой, пока не загрузится JavaScript: .reveal
+ * прятал блок стилями ещё до скрипта. Не загрузился скрипт — пустота
+ * навсегда.
+ */
+test("контент виден до скриптов: прячется только блок ниже экрана", () => {
+  const css = code(read("app/globals.css"));
+
+  assert.ok(!/opacity:\s*0[;\s]/.test(rule(css, ".reveal")), ".reveal снова прячет блок до скрипта");
+  assert.match(rule(css, ".reveal-armed"), /opacity:\s*0/, "прятать должен только .reveal-armed");
+
+  const reveal = code(read("components/ui/reveal.tsx"));
+  // Начальное состояние — видимый: так блок приходит с сервера.
+  assert.match(reveal, /useState<[^>]*>\("shown"\)/);
+  // Прячется только то, что целиком ниже экрана: то, что посетитель уже
+  // видит, не мигает при запуске скрипта.
+  assert.match(reveal, /getBoundingClientRect\(\)\.top < window\.innerHeight\) return/);
+  assert.match(reveal, /"reveal-armed"/);
+});

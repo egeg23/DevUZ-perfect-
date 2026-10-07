@@ -44,3 +44,11 @@ test("снимок Метрики — раз в сутки из свипа, то
   assert.match(snap, /FRESH_MS = 20 \* 3600_000/);
   assert.match(read("app/api/reminders/sweep/route.ts"), /refreshUxSnapshot\(new Date\(\)\)/);
 });
+
+test("снимок разбирает рекламу по кампаниям и страницам входа", () => {
+  const snap = read("lib/analytics/ux-snapshot.ts");
+  assert.match(snap, /ym:s:lastAdvEngine,ym:s:lastUTMSource,ym:s:lastUTMCampaign,ym:s:startURLPath/);
+  assert.match(snap, /ym:s:lastTrafficSource=='ad'/);
+  // Ошибка разбивки рекламы не роняет весь снимок.
+  assert.match(snap, /limit: "40",\n  \}\)\.catch\(/);
+});
