@@ -26,7 +26,7 @@ test("на сайте новые сверху; на главной — шест�
     assert.ok(casesByDate[i - 1].date >= casesByDate[i].date, `${casesByDate[i - 1].slug} ниже ${casesByDate[i].slug}`);
   }
   const home = casesByDate.filter((c) => c.slug !== showcaseSlug).slice(0, 6).map((c) => c.slug);
-  assert.deepEqual(home, ["engelberg", "arsenal-d", "medacademy", "comfort-mebel", "transtelecom", "tranio"]);
+  assert.deepEqual(home, ["apollo-travel", "engelberg", "arsenal-d", "medacademy", "comfort-mebel", "transtelecom"]);
   // Главная, список, «следующий проект» и презентация студии берут один порядок.
   assert.match(read("components/sections/cases.tsx"), /casesByDate\.filter\(\(item\) => item\.slug !== showcaseSlug\)\.slice\(0, 6\)/);
   assert.match(read("app/[locale]/cases/page.tsx"), /\{casesByDate\.map\(/);
