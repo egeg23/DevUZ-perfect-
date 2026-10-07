@@ -532,3 +532,10 @@ footer .rights a{text-decoration:underline}
 .lcw[hidden]{display:none}
 .kit>*,.kit-t,.kd-t{min-width:0;overflow-wrap:anywhere}
 .kit-side>*,.pv-row>*{min-width:0;overflow-wrap:anywhere}
+.share-bar{position:sticky;bottom:calc(var(--tab) + 72px + env(safe-area-inset-bottom));z-index:20;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding:12px 16px;border-radius:20px;background:var(--ink);color:var(--on);box-shadow:var(--sh2);animation:sheet 360ms var(--ease)}
+.share-bar[hidden]{display:none}
+.share-bar span{display:inline-flex;align-items:center;gap:8px;font-size:14px}
+.share-bar span svg{color:var(--red);fill:currentColor}
+@media (min-width:1024px){.share-bar{bottom:24px}}
+.relax{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:16px}
+.relax button{background:var(--s1);box-shadow:inset 0 0 0 1px var(--line)}

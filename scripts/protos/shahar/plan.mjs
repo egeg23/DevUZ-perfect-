@@ -23,7 +23,9 @@
 //   страницы под поиск: SEO 4,5 млн (356 $) → 325 $, как у AUTOMECHANIC;
 //   узбекский язык — 300 $, как у bloger.agency (страниц вдвое больше, чем
 //     у автосервиса);
-//   эффекты витрины — по ставкам AUTOMECHANIC и bloger.agency.
+//   эффекты витрины — по ставкам AUTOMECHANIC и bloger.agency;
+//   запись на просмотр — 90 $: форма на готовой странице объекта, тот же
+//     путь в Telegram, что у подбора (как запись в цех у AUTOMECHANIC).
 
 /** Портал: главная, каталог, объект, новостройки, услуги, подбор, русский. */
 export const BASE = {
@@ -47,7 +49,8 @@ export const ADDONS = [
   { id: "pwa", where: "all", price: 195, star: true, ru: { t: "Сайт как приложение", e: "Иконка на экране телефона без App Store, нижнее меню, избранное, адреса и контакты без интернета" }, uz: { t: "Sayt ilova kabi", e: "App Store’siz telefon ekranida belgi, pastki menyu, sevimlilar, internetsiz manzil va kontaktlar" } },
   { id: "tg", where: "podbor", price: 155, star: true, ru: { t: "Заявки в Telegram", e: "Заявка «Подберём бесплатно» сразу приходит администратору в Telegram, без почты и капчи" }, uz: { t: "Arizalar Telegramga", e: "«Bepul tanlab beramiz» arizasi darhol administratorga Telegramda keladi, pochta va kapchasiz" } },
   { id: "portal", where: "", price: 260, ru: { t: "Влёт в букву SHAHAR", e: "Название крупно, камера влетает в букву, и из неё открывается город" }, uz: { t: "SHAHAR harfiga kirish", e: "Nom katta, kamera harf ichiga kiradi va undan shahar ochiladi" } },
-  { id: "fav", where: "katalog", price: 130, ru: { t: "Избранное без регистрации", e: "Сердечко на карточке сохраняет объект в телефоне, в меню есть вкладка «Избранное»" }, uz: { t: "Ro‘yxatdan o‘tmasdan sevimlilar", e: "Kartochkadagi yurakcha obyektni telefonda saqlaydi, menyuda «Sevimlilar» bo‘limi bor" } },
+  { id: "fav", where: "katalog", price: 130, ru: { t: "Избранное и подборка в Telegram", e: "Сердечко на карточке сохраняет объект в телефоне, а подборку можно одним сообщением отправить жене или риэлтору" }, uz: { t: "Sevimlilar va Telegramga tanlov", e: "Kartochkadagi yurakcha obyektni telefonda saqlaydi, tanlovni esa turmush o‘rtog‘ingiz yoki rieltorga bitta xabar bilan yuborasiz" } },
+  { id: "view", where: "obekt", price: 90, ru: { t: "Запись на просмотр", e: "День и время выбираются прямо на странице объекта, заявка с ID уходит администратору в Telegram" }, uz: { t: "Ko‘rishga yozilish", e: "Kun va vaqt obyekt sahifasida tanlanadi, ID bilan ariza administratorga Telegramda ketadi" } },
   { id: "cur", where: "all", price: 65, ru: { t: "Цена в $, сумах и евро", e: "Один переключатель меняет валюту на всех карточках сразу" }, uz: { t: "Narx $, so‘m va yevroda", e: "Bitta almashtirgich barcha kartochkalarda valyutani birdan o‘zgartiradi" } },
   { id: "mort", where: "obekt", price: 120, ru: { t: "Калькулятор ипотеки на объекте", e: "Выбрали взнос и срок, сразу видно платёж в месяц и кнопку «Оформить ипотеку»" }, uz: { t: "Obyektda ipoteka kalkulyatori", e: "Badal va muddatni tanlaysiz, darhol oylik to‘lov va «Ipoteka rasmiylashtirish» tugmasi chiqadi" } },
   { id: "motion", where: "all", price: 90, ru: { t: "Своё движение у каждого блока", e: "Карточки встают ключом, новостройки растут этажами, цифры катятся" }, uz: { t: "Har bir blokning o‘z harakati", e: "Kartochkalar kalit kabi joylashadi, yangi binolar qavatma-qavat o‘sadi, raqamlar aylanadi" } },
