@@ -1,0 +1,41 @@
+name: SUNSCRYPT — задача модели
+
+# Разовый запуск задачи модели на сервере вне расписания (этап 8):
+# retrain — дообучение с проверкой (≈ 40–60 мин на 2 ядрах), drift — контроль
+# дрейфа. По расписанию они идут сами (cron, ставит infra/deploy.sh). Задача
+# запускается в фоне; итог — в админке (раздел «Модель») и в журнале сервера.
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Задача"
+        type: choice
+        options: [retrain, drift]
+        default: drift
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: appleboy/ssh-action@v1
+        env:
+          JOB: ${{ inputs.job }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: JOB
+          script: |
+            set -euo pipefail
+            case "$JOB" in retrain|drift) ;; *) echo "неизвестная задача"; exit 1 ;; esac
+            cd /opt/sunscrypt
+            C="docker compose -p sunscrypt --env-file /opt/sunscrypt/.env -f infra/docker-compose.yml"
+            export MODELS_DIR=/opt/sunscrypt/models
+            if [ "$JOB" = drift ]; then
+              $C run --rm -T trainer python -m sunscrypt_engine.models_job drift 2>&1 | tail -20
+            else
+              nohup sh -c "$C run --rm -T trainer python -m sunscrypt_engine.models_job retrain 2>&1 | logger -t sunscrypt" >/dev/null 2>&1 &
+              echo "▸ дообучение запущено в фоне; итог — в админке, раздел «Модель»"
+            fi
