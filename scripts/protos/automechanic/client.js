@@ -11,6 +11,18 @@ var inOut=function(x){return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2};
 var easeIn=function(x){return x*x*x};
 var out3=function(x){return 1-Math.pow(1-x,3)};
 
+/* ── Заставка DevUz Studio: пока грузится страница, не дольше 2,2 с, тапом — сразу ── */
+var dz=$('dz');
+if(dz&&!root.classList.contains('dz-off')){
+  var t0=performance.now(),gone=false;
+  var hide=function(){if(gone)return;gone=true;dz.classList.add('out');try{sessionStorage.setItem('dz','1')}catch(e){}setTimeout(function(){dz.remove()},450)};
+  var ready=function(){setTimeout(hide,Math.max(0,(reduce?300:1100)-(performance.now()-t0)))};
+  if(d.readyState==='complete')ready();else addEventListener('load',ready);
+  setTimeout(hide,2200);
+  dz.addEventListener('click',hide);
+  addEventListener('keydown',hide,{once:true});
+}else if(dz){dz.remove()}
+
 /* ── Появление блоков ── */
 var rv=[].slice.call(d.querySelectorAll('.rv'));
 if('IntersectionObserver' in window&&!reduce){

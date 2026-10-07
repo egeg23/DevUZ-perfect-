@@ -56,6 +56,7 @@ test("AUTOMECHANIC: страницы на двух языках, условия,
     assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
     assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
     assert.ok(page.includes("AUTOMECHANIC"), `${path}: нет названия компании`);
+    if (!path.endsWith("offline")) assert.match(page, /id="dz"[\s\S]*DevUz Studio/, `${path}: нет заставки DevUz Studio`);
   }
   const manifest = JSON.parse(all.manifest);
   assert.equal(manifest.display, "standalone");
