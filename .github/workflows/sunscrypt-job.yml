@@ -12,6 +12,11 @@ on:
         type: choice
         options: [retrain, drift]
         default: drift
+  # Пуш файла — только чтобы GitHub узнал workflow (иначе ручной запуск 404);
+  # в этом случае выполняется безобидная проверка дрейфа.
+  push:
+    branches: [sunscrypt]
+    paths: [.github/workflows/sunscrypt-job.yml]
 
 jobs:
   run:
@@ -20,7 +25,7 @@ jobs:
     steps:
       - uses: appleboy/ssh-action@v1
         env:
-          JOB: ${{ inputs.job }}
+          JOB: ${{ inputs.job || 'drift' }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
