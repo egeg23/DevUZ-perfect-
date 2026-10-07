@@ -342,10 +342,10 @@ footer a{color:var(--on-night)}
 @media (min-width:900px){.dock{display:none}}
 
 /* ── 5 секунд на скидку ── */
-.dsc{position:fixed;right:12px;top:72px;z-index:60;width:min(320px,calc(100% - 24px));padding:16px;border-radius:16px;background:var(--sf);box-shadow:var(--sh4);border:1px solid var(--line);display:grid;gap:12px;opacity:0;transform:translateY(16px) scale(.96);pointer-events:none;transition:opacity .35s,transform .35s cubic-bezier(.2,.8,.2,1)}
+.dsc{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;width:min(320px,calc(100% - 24px));padding:16px;border-radius:16px;background:var(--sf);box-shadow:var(--sh4);border:1px solid var(--line);display:grid;gap:12px;opacity:0;transform:translateY(16px) scale(.96);pointer-events:none;transition:opacity .35s,transform .35s cubic-bezier(.2,.8,.2,1)}
 .dsc.on{opacity:1;transform:none;pointer-events:auto}
-@media (min-width:900px){.dsc{right:24px;top:auto;bottom:24px}}
-@media (max-width:899px){.dsc{padding:12px;gap:8px}.dsc-h small{display:none}}
+@media (min-width:900px){.dsc{right:24px;bottom:24px}}
+@media (max-width:899px){.dsc{padding:12px;gap:8px}.dsc-h small{display:none}.dock.on~.dsc{bottom:calc(72px + env(safe-area-inset-bottom))}}
 .dsc-h{display:flex;align-items:center;gap:12px}
 .dsc-n{font-family:var(--disp);font-size:36px;line-height:1;color:var(--red);min-width:2.2ch}
 .dsc-h b{font-size:16px;line-height:1.3}
@@ -362,7 +362,6 @@ footer a{color:var(--on-night)}
 .kd-pill{position:fixed;right:12px;top:76px;z-index:55;display:flex;align-items:center;gap:8px;min-height:44px;transition:opacity .3s;border:1px solid rgb(236 235 247 / .2)!important;padding:8px 16px;border-radius:999px;border:0;background:var(--night);color:var(--on-night);font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--sh4)}
 .kd-pill i{width:8px;height:8px;border-radius:50%;background:#7cf0c4}
 @media (min-width:900px){.kd-pill{right:24px;top:80px}}
-.dsc.on~.kd-pill{opacity:0;pointer-events:none}
 @media (min-width:1000px){[data-page="plan"] .kd-pill{top:auto;bottom:24px}}
 .kd{position:fixed;inset:auto 0 0 0;z-index:70;height:88svh;display:grid;grid-template-rows:auto 1fr auto;background:var(--sf);border-radius:24px 24px 0 0;box-shadow:var(--sh4);transform:translateY(0);animation:kdIn .4s cubic-bezier(.2,.8,.2,1)}
 .kd[hidden]{display:none}
