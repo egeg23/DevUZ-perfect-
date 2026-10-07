@@ -118,6 +118,6 @@ test("расчёт читает то же, что скаут: очередь, в
   assert.match(fn, /assignments\(db\)/);
   assert.match(fn, /\.from\("tg_accounts"\)\.select\("id, hourly_cap, flood_until"\)\.eq\("status", "active"\)/);
   assert.match(fn, /\.or\(SENT_BY_ACCOUNT\)/);
-  assert.match(fn, /accountState\(MAIN_ACCOUNT, HOURLY_CAP, null\)/);
+  assert.match(fn, /accountState\(MAIN_ACCOUNT, HOURLY_CAP, mainUntil \? new Date\(mainUntil\)\.toISOString\(\) : null\)/);
   assert.match(fn, /ownerFloorMs: OWNER_FLOOR_MS/);
 });

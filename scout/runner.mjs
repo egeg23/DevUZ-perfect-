@@ -28,6 +28,8 @@ import { markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/
 import { TOO_LATE, editOutcome, markEditFailed, markEdited, nextEdit, sentCheck } from "@/lib/admin/outreach-edit";
 import { HOURLY_CAP } from "@/lib/admin/outreach";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
+import { BAN_CHECK_MS, BAN_REPLY_WAIT_MS, spamBotVerdict } from "@/lib/admin/account-ban";
+import { lastBanCheck, mainLimitUntil, markMainFlood, recordBanCheck } from "@/lib/admin/account-ban-store";
 import { startAccounts } from "./accounts.mjs";
 
 const DRY_RUN = process.argv.includes("--dry-run");
@@ -301,6 +303,13 @@ async function live() {
   // панели и только пишут (scout/accounts.mjs). Работник у всех один и тот
   // же — startWorker ниже.
   const workers = new Map();
+  /**
+   * До какого времени ограничен главный аккаунт (мс). Хранится в базе
+   * (lib/admin/account-ban-store.ts): раньше главный после PEER_FLOOD стоял
+   * только до перезапуска скаута — а перезапускает его каждая выкатка, и он
+   * снова пробовал писать с ограниченного номера.
+   */
+  let mainUntil = (await mainLimitUntil().catch(() => null)) ?? 0;
   /** Есть ли кроме этого аккаунта ещё кто-то, кто может писать первые письма. */
   const othersAlive = (key) => [...workers.entries()].some(([other, worker]) => other !== key && worker.canSend());
   workers.set(
@@ -312,10 +321,16 @@ async function live() {
       key: MAIN_ACCOUNT,
       label: "главный",
       cap: () => HOURLY_CAP,
-      paused: () => false,
+      paused: () => mainUntil > Date.now(),
       othersAlive,
-      // Главный после ограничения стоит до перезапуска, как и раньше.
-      onFlood: async () => {},
+      // Ограничение главного — в базу: оно переживает перезапуск, его видят
+      // расчёт очереди и оповещение команды.
+      onFlood: async (why) => {
+        mainUntil = await markMainFlood(why).catch(() => Date.now() + 24 * 3600_000);
+      },
+      afterBanCheck: async () => {
+        mainUntil = (await mainLimitUntil().catch(() => null)) ?? 0;
+      },
     }),
   );
   const accounts = startAccounts({
@@ -372,7 +387,7 @@ async function live() {
  * `cap` и `paused` — функции, а не числа: владелец меняет предел и ставит
  * паузу в панели, и работник узнаёт об этом со следующим тиком.
  */
-function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersAlive, onFlood }) {
+function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersAlive, onFlood, afterBanCheck = async () => {} }) {
   const timers = [];
   // ── Касания ───────────────────────────────────────────────────────────
   //
@@ -689,10 +704,71 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
   const inboundEvent = new NewMessage({ incoming: true });
   client.addEventHandler(inbound, inboundEvent);
 
+  // ── Ограничен ли аккаунт: раз в час спрашиваем @SpamBot ──────────────
+  //
+  // Владелец, 07.10.2026: «Проводи проверку каждый час на предмет бана с
+  // уведомлением от бота всем». @SpamBot — служба Telegram: на /start он
+  // отвечает, ограничен ли аккаунт и до какого времени. Раньше об
+  // ограничении узнавали только по отказу на отправке, и то не все. Ответ
+  // разбирается в lib/admin/account-ban.ts, пишется в базу, а команде
+  // говорит свип (lib/admin/account-ban-sweep.ts). Сообщения от ботов
+  // обработчик лички выше пропускает, так что ответ @SpamBot за ответ
+  // клиента не примут.
+  const checkBan = async () => {
+    try {
+      const bot = await client.getInputEntity("SpamBot");
+      const asked = await client.sendMessage(bot, { message: "/start" });
+      const askedId = Number(asked?.id ?? 0);
+      let reply = null;
+      for (let waited = 0; waited < BAN_REPLY_WAIT_MS && !reply; waited += 2000) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const recent = await client.getMessages(bot, { limit: 5 });
+        reply = (recent ?? []).find((m) => m && !m.out && m.message && Number(m.id) > askedId) ?? null;
+      }
+      if (!reply) {
+        console.error(`бан${tag}: @SpamBot не ответил`);
+        return;
+      }
+      const text = String(reply.message);
+      const verdict = spamBotVerdict(text, Date.now());
+      await recordBanCheck(key, verdict, text);
+      await afterBanCheck(verdict);
+      console.log(
+        `бан${tag}: ` +
+          (verdict === null
+            ? `ответ не разобран — «${text.slice(0, 120)}»`
+            : verdict.limited
+              ? `ограничен${verdict.until ? ` до ${new Date(verdict.until).toISOString()}` : ", срок не назван"}`
+              : "ограничений нет"),
+      );
+    } catch (error) {
+      console.error(`бан${tag}: проверка не удалась —`, error?.errorMessage ?? error?.message ?? error);
+    }
+  };
+  // Раз в час, а не при каждом старте: скаут перезапускает каждая выкатка.
+  // Первая — когда с прошлой проверки пройдёт час, но не раньше чем через
+  // пару минут после старта (со сдвигом, чтобы аккаунты не спрашивали разом).
+  let halted = false;
+  void lastBanCheck(key)
+    .catch(() => null)
+    .then((last) => {
+      // Аккаунт успели отключить, пока читали базу, — таймер не заводим.
+      if (halted) return;
+      const jitter = 2 * 60_000 + Math.floor(Math.random() * 3 * 60_000);
+      const due = last ? Math.max(jitter, last + BAN_CHECK_MS - Date.now()) : jitter;
+      timers.push(
+        setTimeout(() => {
+          void checkBan();
+          timers.push(setInterval(checkBan, BAN_CHECK_MS));
+        }, due),
+      );
+    });
+
   return {
     /** Может ли этот аккаунт сейчас писать первые письма — для соседей по очереди. */
     canSend: () => !outreachStopped && !paused(),
     stop: () => {
+      halted = true;
       for (const timer of timers) clearInterval(timer);
       client.removeEventHandler(inbound, inboundEvent);
     },
