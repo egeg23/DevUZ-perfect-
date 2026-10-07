@@ -8,7 +8,7 @@ function $(id){return d.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function fmtK(n){if(n>=1e6)return (Math.round(n/1e5)/10+'M').replace('.',',');if(n>=1e3){var k=n/1e3;return (k>=100?Math.round(k):Math.round(k*10)/10)+'K'}return String(n)}
 function fmtK2(n){return fmtK(n).replace('.',',')}
-function money(n){if(n==null)return '—';return '$'+String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
+function money(n){if(n==null)return L.na;return '$'+String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
 function int(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
 function niche(k){return (L.niches[k]||{}).name||k}
 function color(k){return (L.niches[k]||{}).c||'#5395E9'}
@@ -77,8 +77,8 @@ function inCart(h){return cart.indexOf(h)>=0}
 function card(b,why){
   var per=b.story&&b.f?b.story/b.f*1000:null;
   return '<article class="bc" style="--cc:'+color(b.n)+'">'+(b.top?'<span class="star">★ TOP</span>':'')+
-    '<div class="bc-top"><span class="ava">'+esc(b.h[0].toUpperCase())+'</span><div><a href="https://www.instagram.com/'+esc(b.ig)+'/" rel="nofollow noopener" target="_blank">@'+esc(b.h)+'</a><span>'+esc(niche(b.n))+' · '+esc(b.city||'—')+'</span></div></div>'+
-    '<div class="bc-nums"><div><small>'+L.subs+'</small><b>'+fmtK2(b.f)+'</b></div><div><small>ER</small><b>'+(b.er!=null?String(b.er).replace('.',',')+'%':'—')+'</b></div><div><small>Story</small><b>'+money(b.story)+'</b></div></div>'+
+    '<div class="bc-top"><span class="ava">'+esc(b.h[0].toUpperCase())+'</span><div><a href="https://www.instagram.com/'+esc(b.ig)+'/" rel="nofollow noopener" target="_blank">@'+esc(b.h)+'</a><span>'+esc(niche(b.n))+(b.city?' · '+esc(b.city):'')+'</span></div></div>'+
+    '<div class="bc-nums"><div><small>'+L.subs+'</small><b>'+fmtK2(b.f)+'</b></div><div><small>ER</small><b>'+(b.er!=null?String(b.er).replace('.',',')+'%':L.na)+'</b></div><div><small>Story</small><b>'+money(b.story)+'</b></div></div>'+
     (why?'<p class="why">'+esc(why)+'</p>':'')+
     '<div class="bc-foot"><span>Post '+money(b.post)+(per?' · '+L.per1k.replace('{v}',money(per).replace('$','$')):'')+'</span><button class="add" type="button" data-h="'+esc(b.h)+'" aria-pressed="'+inCart(b.h)+'">'+(inCart(b.h)?L.added:L.add)+'</button></div></article>';
 }
@@ -92,7 +92,7 @@ function drawCart(){
   var st=list.reduce(function(s,b){return s+(b.story||0)},0), fl=list.reduce(function(s,b){return s+b.f},0);
   $('cart-n').textContent=L.cartN.replace('{n}',list.length);
   $('cart-s').textContent=L.cartS.replace('{f}',fmtK2(fl)).replace('{m}',money(st));
-  $('cart-go').href=tg(L.cartTg+'\n'+list.map(function(b){return '@'+b.h+' — Story '+money(b.story)+', Post '+money(b.post)}).join('\n'));
+  $('cart-go').href=tg(L.cartTg+'\n'+list.map(function(b){return '@'+b.h+': Story '+money(b.story)+', Post '+money(b.post)}).join('\n'));
 }
 d.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('.add[data-h]');if(!b)return;
@@ -157,7 +157,7 @@ function matcher(box){
       var m=pick(p), fl=m.list.reduce(function(s,x){return s+x.b.f},0);
       var lo=m.spent/6*1000, hi=m.spent/1.75*1000;
       res.innerHTML='<div class="res-sum"><b>'+esc(p.summary||L.matchSum.replace('{n}',p.niches.map(niche).join(', ')))+'</b>'+
-        '<ul class="chips"><li class="chip">'+L.picked+' <b>'+m.list.length+'</b></li><li class="chip">'+L.reach+' <b>'+fmtK2(fl)+'</b></li><li class="chip">'+(m.fmt==='post'?'Post':'Story')+' <b>'+money(m.spent)+'</b></li>'+(m.spent?'<li class="chip">'+L.views+' <b>'+fmtK2(lo)+'–'+fmtK2(hi)+'</b></li>':'')+'</ul>'+
+        '<ul class="chips"><li class="chip">'+L.picked+' <b>'+m.list.length+'</b></li><li class="chip">'+L.reach+' <b>'+fmtK2(fl)+'</b></li><li class="chip">'+(m.fmt==='post'?'Post':'Story')+' <b>'+money(m.spent)+'</b></li>'+(m.spent?'<li class="chip">'+L.views+' <b>'+fmtK2(lo)+'-'+fmtK2(hi)+'</b></li>':'')+'</ul>'+
         (p.tips&&p.tips.length?'<p>'+p.tips.map(esc).join(' · ')+'</p>':'')+'<p>'+L.matchNote+'</p></div>'+
         '<div class="cat-grid">'+m.list.map(function(x){return card(x.b,x.why)}).join('')+'</div>'+
         '<div class="ai-actions"><a class="btn btn-main" href="'+tg(L.matchTg+'\n'+text+'\n\n'+m.list.map(function(x){return '@'+x.b.h}).join(', '))+'">'+L.matchCta+'</a></div>';
@@ -208,7 +208,7 @@ if(calc){
     var spent=0,n=0,fl=0;pool.forEach(function(x){if(spent+x[cs.fmt]<=b){spent+=x[cs.fmt];n++;fl+=x.f}});
     $('c-cnt').textContent=n?L.bloggersN.replace('{n}',n):L.tooSmall;
     $('c-fl').textContent=fmtK2(fl);
-    $('c-v').textContent=fmtK2(b/6*1000)+' – '+fmtK2(b/1.75*1000);
+    $('c-v').textContent=fmtK2(b/6*1000)+'-'+fmtK2(b/1.75*1000);
     $('c-cl').textContent=L.from+' '+int(b*0.286);
     var t=b<950?'silver':b<1600?'gold':'platinum';
     d.querySelectorAll('.tariff').forEach(function(x){x.classList.toggle('pick',x.dataset.t===t)});
@@ -308,8 +308,8 @@ if(rate){
     var ers=C.filter(function(b){return b.er!=null}).map(function(b){return b.er}), better=ers.filter(function(x){return x<er}).length;
     $('r-rank').textContent=L.rank.replace('{a}',better).replace('{b}',ers.length);
     $('r-n').textContent=near.length;
-    $('r-s').textContent=near.length?money(med(near.map(function(b){return b.story}))):'—';
-    $('r-p').textContent=near.length?money(med(near.filter(function(b){return b.post}).map(function(b){return b.post}))):'—';
+    $('r-s').textContent=near.length?money(med(near.map(function(b){return b.story}))):L.na;
+    $('r-p').textContent=near.length?money(med(near.filter(function(b){return b.post}).map(function(b){return b.post}))):L.na;
     $('r-go').href=tg(L.rateTg.replace('{f}',int(f)).replace('{er}',er.toFixed(1)));
     $('r-out').hidden=false;
   }
@@ -336,7 +336,7 @@ if(inputs.length){
     set('kd-pill-sum',money(sum));set('kd-sum',money(sum));set('kd-add','+'+money(add));set('kd-n',L.kitN.replace('{n}',ids.length));
     set('kit-sum',money(sum));set('kit-sum2',money(sum));set('kit-site-sum','+'+money(site));set('kit-n',L.kitN.replace('{n}',ids.length));
     var sc=d.querySelector('.kit-screen');if(sc)sc.classList.toggle('none',!d.querySelector('.kit-pv:not([hidden])'));
-    var text=L.kitTg+'\n'+L.kitBaseName+' — '+money(base)+'\n'+ids.map(function(k){return title[k]+' — '+money(price[k])}).join('\n')+'\n'+L.kitTotal+': '+money(sum);
+    var text=L.kitTg+'\n'+L.kitBaseName+' · '+money(base)+'\n'+ids.map(function(k){return title[k]+' · '+money(price[k])}).join('\n')+'\n'+L.kitTotal+': '+money(sum);
     d.documentElement.dataset.kit=text;
     store.set(KEY,on);
   }

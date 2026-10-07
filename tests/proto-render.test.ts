@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { PROTO_NICHES, protoNicheByKey, trickFor } from "@/content/proto/models";
 import { bookingHtml, inCity } from "@/lib/proto/booking";
+import { pageProblems } from "@/lib/proto/plain-text";
 import { keyframeProperties, protoProblems, visibleText } from "@/lib/proto/check";
 import { enoughToBuild, mainAction, wheelProblems, wordmark, type ProtoFacts } from "@/lib/proto/facts";
 import { parseServices } from "@/lib/proto/form";
@@ -217,7 +218,10 @@ test("неизвестного не печатаем: нет адреса — н
   const full = build({ address: "Ташкент, Чиланзар 5", hours: "Пн–Сб 9:00–19:00" }).html;
   assert.ok(full.includes("Открыть на карте"));
   assert.ok(full.includes("google.com/maps"), "адрес не открывается на карте");
-  assert.ok(full.includes("Пн–Сб 9:00–19:00"));
+  // Часы — дословно с сайта компании, но без длинных тире: в макете их нет
+  // (lib/proto/plain-text, правило владельца 07.10.2026).
+  assert.ok(full.includes("Пн-Сб 9:00-19:00"));
+  assert.deepEqual(pageProblems(full), [], "тире или штамп в тексте макета");
 });
 
 test("страница не индексируется и знает, откуда взяты данные", () => {

@@ -36,8 +36,8 @@ const F = {
   mail: "tadjiyev_u@mail.ru",
   addr: { ru: "Ташкент, Чиланзарский район, 10 квартал, дом 23/1", uz: "Toshkent, Chilonzor tumani, 10-kvartal, 23/1-uy" },
   mark: { ru: "автостоянка № 75", uz: "75-son avtoturargoh" },
-  hours: { ru: "Пн–Сб, 09:00–18:00", uz: "Du–Sh, 09:00–18:00" },
-  off: { ru: "воскресенье — выходной", uz: "yakshanba — dam olish kuni" },
+  hours: { ru: "Пн-Сб, 09:00-18:00", uz: "Du-Sh, 09:00-18:00" },
+  off: { ru: "в воскресенье выходной", uz: "yakshanba dam olish kuni" },
 };
 const MAPQ = encodeURIComponent("Ташкент, Чиланзар, 10 квартал, 23/1");
 const YMAP = `https://yandex.uz/maps/?text=${MAPQ}`;
@@ -68,8 +68,8 @@ const ICON = {
 const SERVICES = [
   {
     id: "dvs", photo: "s-dvs", a: "engine",
-    ru: { t: "Ремонт двигателя", d: "Капитальный ремонт — максимально полное восстановление заводских характеристик двигателя.", li: ["Разборка, очистка и дефектовка: замеры, зазоры, проверка на трещины", "Ремонт головки блока и блока цилиндров", "Расточка, хонингование, замена поршней и колец", "Сборка, первый запуск, настройка зажигания и питания"], x: "Когда пора: нагар на свечах, растёт расход масла, сизый дым, теряется мощность, стуки." },
-    uz: { t: "Dvigatel ta’miri", d: "Kapital ta’mir — dvigatelning zavod ko‘rsatkichlarini imkon qadar to‘liq tiklash.", li: ["Qismlarga ajratish, tozalash va nuqsonlarni aniqlash: o‘lchovlar, tirqishlar, yoriqlarni tekshirish", "Blok kallagi va silindrlar blokini ta’mirlash", "Yo‘nish, xoninglash, porshen va halqalarni almashtirish", "Yig‘ish, birinchi ishga tushirish, o‘t oldirish va ta’minotni sozlash"], x: "Qachon vaqti keldi: shamlarda qurum, moy sarfi oshadi, ko‘kish tutun, quvvat pasayadi, taqillash." },
+    ru: { t: "Ремонт двигателя", d: "Капитальный ремонт: максимально полное восстановление заводских характеристик двигателя.", li: ["Разборка, очистка и дефектовка: замеры, зазоры, проверка на трещины", "Ремонт головки блока и блока цилиндров", "Расточка, хонингование, замена поршней и колец", "Сборка, первый запуск, настройка зажигания и питания"], x: "Когда пора: нагар на свечах, растёт расход масла, сизый дым, теряется мощность, стуки." },
+    uz: { t: "Dvigatel ta’miri", d: "Kapital ta’mir: dvigatelning zavod ko‘rsatkichlarini imkon qadar to‘liq tiklash.", li: ["Qismlarga ajratish, tozalash va nuqsonlarni aniqlash: o‘lchovlar, tirqishlar, yoriqlarni tekshirish", "Blok kallagi va silindrlar blokini ta’mirlash", "Yo‘nish, xoninglash, porshen va halqalarni almashtirish", "Yig‘ish, birinchi ishga tushirish, o‘t oldirish va ta’minotni sozlash"], x: "Qachon vaqti keldi: shamlarda qurum, moy sarfi oshadi, ko‘kish tutun, quvvat pasayadi, taqillash." },
   },
   {
     id: "svarka", photo: "s-svarka", a: "flash",
@@ -98,13 +98,13 @@ const SERVICES = [
   },
   {
     id: "meh", photo: "s-meh", a: "press",
-    ru: { t: "Механический цех", d: "Что делает цех и в какие сроки — расскажет мастер-приёмщик.", li: [] },
-    uz: { t: "Mexanik sex", d: "Sex nima qilishi va qancha muddatda — usta-qabulchi aytib beradi.", li: [] },
+    ru: { t: "Механический цех", d: "Что делает цех и в какие сроки, расскажет мастер-приёмщик.", li: [] },
+    uz: { t: "Mexanik sex", d: "Sex nima qilishi va qancha muddatda bajarishini usta-qabulchi aytib beradi.", li: [] },
   },
   {
     id: "farkop", photo: "s-farkop", a: "hitch",
-    ru: { t: "Установка фаркопов", d: "Подбор фаркопа под вашу машину — у мастера-приёмщика.", li: [] },
-    uz: { t: "Farkop o‘rnatish", d: "Mashinangizga farkop tanlash — usta-qabulchida.", li: [] },
+    ru: { t: "Установка фаркопов", d: "Фаркоп под вашу машину подберёт мастер-приёмщик.", li: [] },
+    uz: { t: "Farkop o‘rnatish", d: "Mashinangizga mos farkopni usta-qabulchi tanlab beradi.", li: [] },
   },
 ];
 
@@ -125,7 +125,7 @@ function dockHtml(l, path) {
   const others = [...new Set(ADDONS.map((a) => a.where))].filter((w) => w !== "all" && w !== path);
   return `<button class="kd-pill" type="button" id="kd-pill" aria-expanded="false" aria-controls="kd"><i aria-hidden="true"></i>${t("Конструктор", "Konstruktor")}<b class="num" id="kd-pill-sum"></b></button>
 <aside class="kd" id="kd" role="dialog" aria-label="${t("Конструктор сайта", "Sayt konstruktori")}" hidden>
-<header class="kd-h"><div><p class="kd-k">${t("Конструктор · предложение DevUz Studio", "Konstruktor · DevUz Studio taklifi")}</p><h2>${t("Что войдёт в сайт AUTOMECHANIC", "AUTOMECHANIC saytiga nima kiradi")}</h2><p class="kd-sub">${t("Выключите блок — он пропадёт со страницы, включите — появится. Цены — средние по Ташкенту.", "Blokni o‘chiring — sahifadan yo‘qoladi, yoqing — paydo bo‘ladi. Narxlar — Toshkent bo‘yicha o‘rtacha.")}</p></div><button class="kd-x" type="button" id="kd-x" aria-label="${t("Свернуть", "Yig‘ish")}">×</button></header>
+<header class="kd-h"><div><p class="kd-k">${t("Конструктор · предложение DevUz Studio", "Konstruktor · DevUz Studio taklifi")}</p><h2>${t("Что войдёт в сайт AUTOMECHANIC", "AUTOMECHANIC saytiga nima kiradi")}</h2><p class="kd-sub">${t("Выключите блок, и он пропадёт со страницы. Включите, и он появится снова. Цены средние по Ташкенту.", "Blokni o‘chirsangiz, u sahifadan yo‘qoladi. Yoqsangiz, yana paydo bo‘ladi. Narxlar Toshkent bo‘yicha o‘rtacha.")}</p></div><button class="kd-x" type="button" id="kd-x" aria-label="${t("Свернуть", "Yig‘ish")}">×</button></header>
 <div class="kd-list">
 ${group(t("На этой странице", "Shu sahifada"), "", here.map((a) => kdRow(l, a)))}
 ${group(t("На всех страницах", "Barcha sahifalarda"), "", all.map((a) => kdRow(l, a)))}
@@ -194,11 +194,11 @@ ${body}
 </main>
 <footer><div class="wrap">
 <div class="cols">
-<div><b>AUTOMECHANIC</b><ul><li>${F.addr[l]}</li><li>${t("Ориентир", "Mo‘ljal")} — ${F.mark[l]}</li><li>${F.hours[l]}, ${F.off[l]}</li></ul></div>
+<div><b>AUTOMECHANIC</b><ul><li>${F.addr[l]}</li><li>${t("Ориентир", "Mo‘ljal")}: ${F.mark[l]}</li><li>${F.hours[l]}, ${F.off[l]}</li></ul></div>
 <div><b>${t("Телефоны", "Telefonlar")}</b><ul><li>${t("Мастер-приёмщик", "Usta-qabulchi")}: <a href="${F.telM}">${F.phoneM}</a></li><li>${t("Офис", "Ofis")}: <a href="${F.telO}">${F.phoneO}</a></li><li><a href="mailto:${F.mail}">${F.mail}</a></li></ul></div>
 <div><b>${t("Страницы", "Sahifalar")}</b><ul>${["", ...nav].map((p) => `<li><a href="${href(l, p)}">${PAGE_NAMES[p][i]}</a></li>`).join("")}</ul></div>
 </div>
-<div class="rights"><span>${t("Это прототип: так может выглядеть новый сайт AUTOMECHANIC. Услуги, адрес, телефоны, часы работы и партнёры — с automechanic.uz (снимки 2021–2022 годов: сейчас сайт не открывается). Фото — открытые снимки Wikimedia Commons, авторы — на странице", "Bu prototip: AUTOMECHANIC’ning yangi sayti shunday ko‘rinishi mumkin. Xizmatlar, manzil, telefonlar, ish vaqti va hamkorlar — automechanic.uz saytidan (2021–2022 yillardagi nusxalar: hozir sayt ochilmaydi). Fotolar — Wikimedia Commons ochiq suratlari, mualliflar — sahifada")} <a href="${href(l, "plan")}#foto">${PAGE_NAMES.plan[i]}</a>.</span><span>${t("Прототип принадлежит DevUz Studio. Использовать его можно только по договору —", "Prototip DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin —")} <a href="${TERMS(l)}">${t("условия использования", "foydalanish shartlari")}</a></span></div>
+<div class="rights"><span>${t("Это прототип: так может выглядеть новый сайт AUTOMECHANIC. Услуги, адрес, телефоны, часы работы и партнёры взяты с automechanic.uz (снимки 2021-2022 годов: сейчас сайт не открывается). Фото: открытые снимки Wikimedia Commons, авторы указаны на странице", "Bu prototip: AUTOMECHANIC’ning yangi sayti shunday ko‘rinishi mumkin. Xizmatlar, manzil, telefonlar, ish vaqti va hamkorlar automechanic.uz saytidan olingan (2021-2022 yillardagi nusxalar: hozir sayt ochilmaydi). Fotolar: Wikimedia Commons ochiq suratlari, mualliflari ko‘rsatilgan sahifa:")} <a href="${href(l, "plan")}#foto">${PAGE_NAMES.plan[i]}</a>.</span><span>${t("Прототип принадлежит DevUz Studio. Использовать его можно только по договору:", "Prototip DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin:")} <a href="${TERMS(l)}">${t("условия использования", "foydalanish shartlari")}</a></span></div>
 </div></footer>
 <nav class="tabs" aria-label="${t("Меню приложения", "Ilova menyusi")}" data-addon="pwa">${tab("", ICON.home)}${tab("uslugi", ICON.wrench)}${tab("zapis", ICON.cal, true)}${tab("kontakty", ICON.pin)}</nav>
 <div class="dock" id="dock"><a class="btn btn-main" href="${href(l, "zapis")}">${ICON.cal}${t("Записаться", "Yozilish")}</a></div>
@@ -218,11 +218,11 @@ function L(l) {
     lang: l,
     kitBase: KIT_BASE.price,
     kitN: ru ? "{n} шт." : "{n} ta",
-    kitTg: ru ? "Сайт AUTOMECHANIC — состав из конструктора:" : "AUTOMECHANIC sayti — konstruktordagi tarkib:",
+    kitTg: ru ? "Состав сайта AUTOMECHANIC из конструктора:" : "Konstruktordan AUTOMECHANIC sayti tarkibi:",
     kitBaseName: KIT_BASE[l].t,
     kitTotal: ru ? "Итого" : "Jami",
     copied: ru ? "Скопировано" : "Nusxalandi",
-    say: ru ? ["Заезжаем в цех", "Ремонт окончен — опускаем", "Машина готова — можно ехать"] : ["Sexga kiramiz", "Ta’mir tugadi — tushiramiz", "Mashina tayyor — yo‘lga chiqish mumkin"],
+    say: ru ? ["Заезжаем в цех", "Ремонт окончен, опускаем", "Машина готова, можно ехать"] : ["Sexga kiramiz", "Ta’mir tugadi, tushiramiz", "Mashina tayyor, yo‘lga chiqish mumkin"],
     open: ru ? "Открыто до 18:00" : "18:00 gacha ochiq",
     closed: ru ? "Сейчас закрыто · откроется в 09:00" : "Hozir yopiq · 09:00 da ochiladi",
     closedSun: ru ? "Сегодня выходной · завтра с 09:00" : "Bugun dam olish kuni · ertaga 09:00 dan",
@@ -237,12 +237,13 @@ function L(l) {
     fWhen: ru ? "Когда" : "Qachon",
     fName: ru ? "Имя" : "Ism",
     fPhone: ru ? "Телефон" : "Telefon",
-    need: ru ? "Выберите услугу, день и время и оставьте телефон — без него мастеру-приёмщику некуда перезвонить." : "Xizmat, kun va vaqtni tanlang va telefon qoldiring — usiz usta-qabulchi qo‘ng‘iroq qila olmaydi.",
-    sent: ru ? "Текст заявки скопирован. Открываем Telegram мастера-приёмщика — вставьте его в чат. Если Telegram не открылся, позвоните: " : "Ariza matni nusxalandi. Usta-qabulchining Telegrami ochilmoqda — uni chatga qo‘ying. Telegram ochilmasa, qo‘ng‘iroq qiling: ",
+    empty: ru ? "не указано" : "ko‘rsatilmagan",
+    need: ru ? "Выберите услугу, день и время и оставьте телефон: без него мастеру-приёмщику некуда перезвонить." : "Xizmat, kun va vaqtni tanlang va telefon qoldiring: usiz usta-qabulchi qo‘ng‘iroq qila olmaydi.",
+    sent: ru ? "Текст заявки скопирован. Открываем Telegram мастера-приёмщика, вставьте текст в чат. Если Telegram не открылся, позвоните: " : "Ariza matni nusxalandi. Usta-qabulchining Telegrami ochilmoqda, matnni chatga qo‘ying. Telegram ochilmasa, qo‘ng‘iroq qiling: ",
     phoneM: F.phoneM,
     tgUrl: F.tg,
     iosTitle: ru ? "Как добавить на iPhone" : "iPhone’ga qanday qo‘shish",
-    installed: ru ? "Готово — иконка на экране телефона" : "Tayyor — belgi telefon ekranida",
+    installed: ru ? "Готово, иконка на экране телефона" : "Tayyor, belgi telefon ekranida",
   };
 }
 
@@ -254,15 +255,15 @@ const factsBlock = (l) => {
   return `<section style="padding-top:32px"><div class="wrap"><div class="facts rv a-rise">
 <div><b class="num">1991</b><span>${t("год, с которого работаем", "yildan beri ishlaymiz")}</span></div>
 <div><b>${t("Иномарки", "Xorijiy")}</b><span>${t("и машины отечественного производства", "va mahalliy ishlab chiqarilgan mashinalar")}</span></div>
-<div><b class="num">09:00–18:00</b><span>${F.hours[l].split(",")[0]} · ${F.off[l]}</span></div>
-<div><b>${t("Чиланзар", "Chilonzor")}</b><span>${t("10 квартал, 23/1 · ориентир — автостоянка № 75", "10-kvartal, 23/1 · mo‘ljal — 75-son avtoturargoh")}</span></div>
+<div><b class="num">09:00-18:00</b><span>${F.hours[l].split(",")[0]} · ${F.off[l]}</span></div>
+<div><b>${t("Чиланзар", "Chilonzor")}</b><span>${t("10 квартал, 23/1 · ориентир: автостоянка № 75", "10-kvartal, 23/1 · mo‘ljal: 75-son avtoturargoh")}</span></div>
 </div></div></section>`;
 };
 
 const servicesGrid = (l) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   return `<section id="uslugi"><div class="wrap">
-${head(l, t("Услуги", "Xizmatlar"), t("Восемь работ, которые делаем в цехе", "Sexda qiladigan sakkizta ish"), t("Ремонт автомобилей зарубежного производства — и отечественных тоже.", "Xorijda ishlab chiqarilgan avtomobillarni ta’mirlash — mahalliylarini ham."))}
+${head(l, t("Услуги", "Xizmatlar"), t("Восемь работ, которые делаем в цехе", "Sexda qiladigan sakkizta ish"), t("Ремонт автомобилей зарубежного производства, и отечественных тоже.", "Xorijda ishlab chiqarilgan avtomobillarni ta’mirlaymiz, mahalliylarini ham."))}
 <div class="svc">${SERVICES.map((s, k) => `<a class="card rv a-${s.a}" style="--d:${(k % 4) * 80}ms" href="${href(l, "uslugi")}#${s.id}"><span class="ph" style="background-image:url(${IMG}/${s.photo}.webp)" role="img" aria-label="${esc(s[l].t)}"></span><span class="bd"><h3>${s[l].t}</h3><p>${s[l].d}</p><span class="more">${t("Подробнее", "Batafsil")} →</span></span></a>`).join("")}</div>
 </div></section>`;
 };
@@ -287,12 +288,12 @@ const heroScene = (l) => {
 <div class="hero-txt" data-l="txt"><div class="wrap">
 <span class="kicker"><i></i>${t("Ташкент · Чиланзар · с 1991 года", "Toshkent · Chilonzor · 1991 yildan")}</span>
 <h1 style="margin-top:16px">${t("Ремонт <b>иномарок</b> в Ташкенте", "Toshkentda <b>xorijiy</b> avtomobillar ta’miri")}</h1>
-<p class="lead">${t("AUTOMECHANIC — один из первых автосервисов Ташкента по ремонту автомобилей зарубежного производства.", "AUTOMECHANIC — Toshkentda xorijiy avtomobillarni ta’mirlash bo‘yicha ilk avtoservislardan biri.")}</p>
+<p class="lead">${t("AUTOMECHANIC одним из первых в Ташкенте начал ремонтировать автомобили зарубежного производства.", "AUTOMECHANIC Toshkentda xorijiy avtomobillarni ta’mirlay boshlagan ilk avtoservislardan biri.")}</p>
 <div class="cta"><a class="btn btn-main" href="${href(l, "zapis")}">${ICON.cal}${t("Записаться", "Yozilish")}</a><a class="btn btn-ghost" href="${F.telM}">${ICON.phone}${F.phoneM}</a></div>
-<p class="scroll-hint" data-addon="hero">${ICON.down}${t("Листайте — машина съедет с подъёмника", "Pastga suring — mashina ko‘targichdan tushadi")}</p>
+<p class="scroll-hint" data-addon="hero">${ICON.down}${t("Листайте, и машина съедет с подъёмника", "Pastga suring, mashina ko‘targichdan tushadi")}</p>
 </div></div>
 <div class="say" aria-hidden="true" data-addon="hero"><p data-say="0"></p></div>
-<div class="end" data-addon="hero" data-l="end"><div class="wrap"><h2>${t("Следующая — ваша", "Navbatdagisi — sizniki")}</h2><div class="cta"><a class="btn btn-main" href="${href(l, "zapis")}">${ICON.cal}${t("Записаться", "Yozilish")}</a><a class="btn btn-ghost" href="${F.telM}">${ICON.phone}${t("Позвонить", "Qo‘ng‘iroq")}</a></div></div></div>
+<div class="end" data-addon="hero" data-l="end"><div class="wrap"><h2>${t("Следующей заедет ваша", "Endi navbat sizniki")}</h2><div class="cta"><a class="btn btn-main" href="${href(l, "zapis")}">${ICON.cal}${t("Записаться", "Yozilish")}</a><a class="btn btn-ghost" href="${F.telM}">${ICON.phone}${t("Позвонить", "Qo‘ng‘iroq")}</a></div></div></div>
 </div>
 </section>`;
 };
@@ -305,7 +306,7 @@ const oilScene = (l) => {
 <div class="par shade" aria-hidden="true"></div>
 <div class="oil-txt"><div class="wrap"><div class="in">
 <span class="kicker"><i></i>${t("Наши партнёры", "Hamkorlarimiz")}</span>
-<h2 style="margin-top:12px">${t("Смазочные материалы — от Aral и 77 Lubricants", "Moylash materiallari — Aral va 77 Lubricants’dan")}</h2>
+<h2 style="margin-top:12px">${t("Смазочные материалы от Aral и 77 Lubricants", "Aral va 77 Lubricants moylash materiallari")}</h2>
 <div class="partners"><span>Aral</span><span>77 Lubricants</span></div>
 <div class="gauge" aria-hidden="true"><span><i data-l="gauge"></i></span><b data-l="gaugeT">MIN</b></div>
 </div></div></div>
@@ -316,10 +317,10 @@ const oilScene = (l) => {
 const howBlock = (l) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   const s = l === "ru"
-    ? [["Выберите услугу", "Восемь работ цеха — или «не знаю, нужна диагностика»."], ["Опишите машину", "Марка, модель и что беспокоит — своими словами."], ["Выберите день и время", "Пн–Сб с 09:00 до 18:00. Заявка уходит мастеру-приёмщику."], ["Приезжайте", "Чиланзар, 10 квартал, 23/1. Ориентир — автостоянка № 75."]]
-    : [["Xizmatni tanlang", "Sexning sakkizta ishi — yoki «bilmayman, diagnostika kerak»."], ["Mashinani tasvirlang", "Marka, model va nima bezovta qilayotgani — o‘z so‘zlaringiz bilan."], ["Kun va vaqtni tanlang", "Du–Sh 09:00 dan 18:00 gacha. Ariza usta-qabulchiga ketadi."], ["Keling", "Chilonzor, 10-kvartal, 23/1. Mo‘ljal — 75-son avtoturargoh."]];
+    ? [["Выберите услугу", "Восемь работ цеха или «не знаю, нужна диагностика»."], ["Опишите машину", "Марка, модель и что беспокоит. Пишите своими словами."], ["Выберите день и время", "Пн-Сб с 09:00 до 18:00. Заявка уходит мастеру-приёмщику."], ["Приезжайте", "Чиланзар, 10 квартал, 23/1. Ориентир: автостоянка № 75."]]
+    : [["Xizmatni tanlang", "Sexning sakkizta ishidan biri yoki «bilmayman, diagnostika kerak»."], ["Mashinani tasvirlang", "Marka, model va nima bezovta qilayotganini o‘z so‘zlaringiz bilan yozing."], ["Kun va vaqtni tanlang", "Du-Sh 09:00 dan 18:00 gacha. Ariza usta-qabulchiga ketadi."], ["Keling", "Chilonzor, 10-kvartal, 23/1. Mo‘ljal: 75-son avtoturargoh."]];
   return `<section><div class="wrap">
-${head(l, t("Запись", "Yozilish"), t("Записаться — минута с телефона", "Yozilish — telefondan bir daqiqa"), "")}
+${head(l, t("Запись", "Yozilish"), t("Записаться с телефона за минуту", "Telefondan bir daqiqada yozilish"), "")}
 <ol class="steps">${s.map(([h, p], k) => `<li class="rv a-rise" style="--d:${k * 90}ms"><h3>${h}</h3><p>${p}</p></li>`).join("")}</ol>
 <div class="cta"><a class="btn btn-main" href="${href(l, "zapis")}">${ICON.cal}${t("Записаться", "Yozilish")}</a></div>
 </div></section>`;
@@ -328,7 +329,7 @@ ${head(l, t("Запись", "Yozilish"), t("Записаться — минут�
 const pricesBlock = (l) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   return `<section data-addon="prices"><div class="wrap">
-${head(l, t("Цены", "Narxlar"), t("Здесь будет ваш прайс «от …»", "Bu yerda sizning «…dan» narxlaringiz bo‘ladi"), t("На прежнем сайте цен не было, поэтому прототип их не придумывает. Цена — первое, что спрашивают: у сервисов Ташкента, которые мы разобрали, она стоит прямо на странице, по группам работ.", "Avvalgi saytda narxlar yo‘q edi, shuning uchun prototip ularni o‘ylab topmaydi. Narx — birinchi so‘raladigan narsa: biz ko‘rib chiqqan Toshkent servislarida u ish turlari bo‘yicha to‘g‘ridan-to‘g‘ri sahifada turadi."))}
+${head(l, t("Цены", "Narxlar"), t("Здесь будет ваш прайс «от …»", "Bu yerda sizning «…dan» narxlaringiz bo‘ladi"), t("На прежнем сайте цен не было, поэтому прототип их не придумывает. Первым делом клиенты спрашивают цену: у сервисов Ташкента, которые мы разобрали, она стоит прямо на странице, по группам работ.", "Avvalgi saytda narxlar yo‘q edi, shuning uchun prototip ularni o‘ylab topmaydi. Mijoz avval narxni so‘raydi: biz ko‘rib chiqqan Toshkent servislarida u ish turlari bo‘yicha to‘g‘ridan-to‘g‘ri sahifada turadi."))}
 <div class="price">${SERVICES.slice(0, 6).map((s, k) => `<div class="price-row rv a-rise" style="--d:${k * 60}ms"><span>${s[l].t}</span><em>${t("ваша цена", "sizning narxingiz")}</em></div>`).join("")}</div>
 <p class="src"><span class="ours">${t("Наше предложение", "Bizning taklif")}</span></p>
 </div></section>`;
@@ -337,15 +338,15 @@ ${head(l, t("Цены", "Narxlar"), t("Здесь будет ваш прайс �
 const finalBlock = (l) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   return `<section class="final"><div class="wrap"><div class="box rv a-rise">
-<h2>${t("Запишитесь — мастер-приёмщик перезвонит", "Yoziling — usta-qabulchi qo‘ng‘iroq qiladi")}</h2>
-<p class="sub" style="margin:12px auto 0">${F.addr[l]} · ${t("ориентир", "mo‘ljal")} — ${F.mark[l]}</p>
+<h2>${t("Запишитесь, мастер-приёмщик перезвонит", "Yoziling, usta-qabulchi qo‘ng‘iroq qiladi")}</h2>
+<p class="sub" style="margin:12px auto 0">${F.addr[l]} · ${t("ориентир", "mo‘ljal")}: ${F.mark[l]}</p>
 <div class="cta"><a class="btn btn-main" href="${href(l, "zapis")}">${ICON.cal}${t("Записаться", "Yozilish")}</a><a class="btn btn-ghost" href="${F.telM}">${ICON.phone}${F.phoneM}</a></div>
 </div></div></section>`;
 };
 
 const installBlock = (l) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
-  return `<div class="install" data-addon="pwa"><img src="${IMG}/icon-192.png" alt="" width="56" height="56"><p><b>${t("AUTOMECHANIC на экране телефона", "AUTOMECHANIC telefon ekranida")}</b>${t("Откроется как приложение: без строки браузера, с нижним меню. Адрес и телефоны — даже без интернета.", "Ilova kabi ochiladi: brauzer satrisiz, pastki menyu bilan. Manzil va telefonlar — hatto internetsiz ham.")}</p><button class="btn btn-main btn-sm" type="button" data-install>${ICON.plus}${t("Добавить", "Qo‘shish")}</button>
+  return `<div class="install" data-addon="pwa"><img src="${IMG}/icon-192.png" alt="" width="56" height="56"><p><b>${t("AUTOMECHANIC на экране телефона", "AUTOMECHANIC telefon ekranida")}</b>${t("Откроется как приложение: без строки браузера, с нижним меню. Адрес и телефоны открываются даже без интернета.", "Ilova kabi ochiladi: brauzer satrisiz, pastki menyu bilan. Manzil va telefonlar internetsiz ham ochiladi.")}</p><button class="btn btn-main btn-sm" type="button" data-install>${ICON.plus}${t("Добавить", "Qo‘shish")}</button>
 <div class="ios" data-ios><b>${t("Как добавить на iPhone", "iPhone’ga qanday qo‘shish")}</b><ol><li>${t("Нажмите «Поделиться»", "«Ulashish» tugmasini bosing")} ${ICON.share.replace("<svg", '<svg width="16" height="16" style="vertical-align:-3px"')}</li><li>${t("Выберите «На экран „Домой“»", "«Bosh ekranga» bandini tanlang")}</li><li>${t("Нажмите «Добавить»", "«Qo‘shish»ni bosing")}</li></ol></div></div>`;
 };
 
@@ -361,7 +362,7 @@ ${pricesBlock(l)}
 <section style="padding-top:0"><div class="wrap">${installBlock(l)}</div></section>
 ${finalBlock(l)}`;
   return shell(l, "", {
-    title: t("AUTOMECHANIC — ремонт иномарок в Ташкенте с 1991 года, Чиланзар", "AUTOMECHANIC — Toshkentda xorijiy avtomobillar ta’miri, 1991 yildan, Chilonzor"),
+    title: t("AUTOMECHANIC: ремонт иномарок в Ташкенте с 1991 года, Чиланзар", "AUTOMECHANIC: Toshkentda xorijiy avtomobillar ta’miri, 1991 yildan, Chilonzor"),
     desc: t("Ремонт двигателя, аргонная сварка, ходовая, компьютерная диагностика, электроника, шумоизоляция салона, фаркопы. Чиланзар, 10 квартал, 23/1. Запись онлайн.", "Dvigatel ta’miri, argon payvandlash, yurish qismi, kompyuter diagnostikasi, elektronika, salon shovqin izolyatsiyasi, farkoplar. Chilonzor, 10-kvartal, 23/1. Onlayn yozilish."),
   }, body);
 }
@@ -375,25 +376,25 @@ ${kicker ? `<span class="kicker"><i></i>${kicker}</span>` : ""}<h1 style="margin
 
 function uslugi(l) {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
-  const body = `${phead(l, PAGE_NAMES.uslugi[l === "ru" ? 0 : 1], t("С 1991 года", "1991 yildan"), t("Услуги", "Xizmatlar"), t("Ремонт автомобилей зарубежного производства и отечественных. Выберите работу — запись откроется сразу с ней.", "Xorijiy va mahalliy avtomobillarni ta’mirlash. Ishni tanlang — yozilish darhol u bilan ochiladi."))}
+  const body = `${phead(l, PAGE_NAMES.uslugi[l === "ru" ? 0 : 1], t("С 1991 года", "1991 yildan"), t("Услуги", "Xizmatlar"), t("Ремонт автомобилей зарубежного производства и отечественных. Выберите работу, и запись откроется уже с ней.", "Xorijiy va mahalliy avtomobillarni ta’mirlash. Ishni tanlang, yozilish shu ish bilan ochiladi."))}
 <section style="padding-top:0"><div class="wrap"><div class="svc-list">
 ${SERVICES.map((s) => `<article class="svc-item rv a-${s.a}" id="${s.id}"><div class="ph" style="background-image:url(${IMG}/${s.photo}.webp)" role="img" aria-label="${esc(s[l].t)}"></div><div class="bd"><h2 style="font-size:30px">${s[l].t}</h2><p class="sub">${s[l].d}</p>${s[l].li.length ? `<ul>${s[l].li.map((x) => `<li>${ICON.check}<span>${x}</span></li>`).join("")}</ul>` : ""}${s[l].x ? `<p class="src">${s[l].x}</p>` : ""}<div class="cta"><a class="btn btn-main btn-sm" href="${href(l, "zapis")}?s=${s.id}">${ICON.cal}${t("Записаться", "Yozilish")}</a><a class="btn btn-ghost btn-sm" href="${F.telM}">${ICON.phone}${t("Спросить", "So‘rash")}</a></div></div></article>`).join("")}
 </div></div></section>
 ${finalBlock(l)}`;
   return shell(l, "uslugi", {
-    title: t("Услуги автосервиса AUTOMECHANIC — ремонт двигателя, сварка, ходовая | Ташкент", "AUTOMECHANIC avtoservis xizmatlari — dvigatel, payvandlash, yurish qismi | Toshkent"),
-    desc: t("Ремонт двигателя, аргонная сварка, тюнинг и шумоизоляция салона, ходовая, электроника, компьютерная диагностика, механический цех, фаркопы — AUTOMECHANIC, Чиланзар.", "Dvigatel ta’miri, argon payvandlash, salon tyuningi, yurish qismi, elektronika, kompyuter diagnostikasi, mexanik sex, farkoplar — AUTOMECHANIC, Chilonzor."),
+    title: t("Услуги автосервиса AUTOMECHANIC: ремонт двигателя, сварка, ходовая | Ташкент", "AUTOMECHANIC avtoservis xizmatlari: dvigatel, payvandlash, yurish qismi | Toshkent"),
+    desc: t("Ремонт двигателя, аргонная сварка, тюнинг и шумоизоляция салона, ходовая, электроника, компьютерная диагностика, механический цех, фаркопы. AUTOMECHANIC, Чиланзар.", "Dvigatel ta’miri, argon payvandlash, salon tyuningi, yurish qismi, elektronika, kompyuter diagnostikasi, mexanik sex, farkoplar. AUTOMECHANIC, Chilonzor."),
   }, body);
 }
 
 function zapis(l) {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   const opt = (name, value, label, extra = "") => `<label class="opt"><input type="radio" name="${name}" value="${esc(value)}"${extra}><span>${label}</span></label>`;
-  const body = `${phead(l, PAGE_NAMES.zapis[l === "ru" ? 0 : 1], "", t("Запись в цех", "Sexga yozilish"), t("Три шага — и заявка у мастера-приёмщика. Он перезвонит и подтвердит время.", "Uch qadam — va ariza usta-qabulchida. U qo‘ng‘iroq qilib vaqtni tasdiqlaydi."))}
+  const body = `${phead(l, PAGE_NAMES.zapis[l === "ru" ? 0 : 1], "", t("Запись в цех", "Sexga yozilish"), t("Три шага, и заявка у мастера-приёмщика. Он перезвонит и подтвердит время.", "Uch qadamda ariza usta-qabulchiga yetadi. U qo‘ng‘iroq qilib vaqtni tasdiqlaydi."))}
 <section style="padding-top:0"><div class="wrap"><form class="book" id="book" novalidate>
 <div>
 <fieldset class="step"><h3><i>1</i>${t("Что нужно сделать", "Nima qilish kerak")}</h3>
-<div class="opts">${SERVICES.map((s) => opt("s", s[l].t, s[l].t, ` data-id="${s.id}"`)).join("")}${opt("s", t("Не знаю — нужна диагностика", "Bilmayman — diagnostika kerak"), t("Не знаю — нужна диагностика", "Bilmayman — diagnostika kerak"), ' data-id="x"')}</div></fieldset>
+<div class="opts">${SERVICES.map((s) => opt("s", s[l].t, s[l].t, ` data-id="${s.id}"`)).join("")}${opt("s", t("Не знаю, нужна диагностика", "Bilmayman, diagnostika kerak"), t("Не знаю, нужна диагностика", "Bilmayman, diagnostika kerak"), ' data-id="x"')}</div></fieldset>
 <fieldset class="step"><h3><i>2</i>${t("Машина", "Mashina")}</h3>
 <div class="field"><label for="car">${t("Марка и модель", "Marka va model")}</label><input id="car" name="car" autocomplete="off" placeholder="${t("Например, BMW 5 серии", "Masalan, BMW 5 seriya")}" maxlength="80"></div>
 <div class="field"><label for="trouble">${t("Что беспокоит", "Nima bezovta qilyapti")}</label><textarea id="trouble" name="trouble" maxlength="400" placeholder="${t("Своими словами: стучит спереди на кочках, горит лампа…", "O‘z so‘zlaringiz bilan: chuqurlarda old tomondan taqillaydi, chiroq yonadi…")}"></textarea></div></fieldset>
@@ -407,7 +408,7 @@ function zapis(l) {
 <div class="step">
 <h3>${t("Ваша заявка", "Arizangiz")}</h3>
 <div data-addon="tg"><div class="msg" aria-live="polite"><div class="msg-h">${ICON.tg}<span>AUTOMECHANIC · ${t("заявки", "arizalar")}</span></div><span id="msg"></span><time id="msg-t"></time></div>
-<p class="src">${t("Так заявка придёт мастеру-приёмщику в Telegram — сразу, без почты и CRM.", "Ariza usta-qabulchiga Telegramda shunday keladi — darhol, pochta va CRMsiz.")} <span class="ours">${t("Доп «Заказы в Telegram»", "«Buyurtmalar Telegramga» qo‘shimchasi")}</span></p></div>
+<p class="src">${t("Так заявка придёт мастеру-приёмщику в Telegram: сразу, без почты и CRM.", "Ariza usta-qabulchiga Telegramda shunday keladi: darhol, pochta va CRMsiz.")} <span class="ours">${t("Доп «Заказы в Telegram»", "«Buyurtmalar Telegramga» qo‘shimchasi")}</span></p></div>
 <div class="cta"><button class="btn btn-main" type="submit" style="width:100%">${ICON.tg}${t("Отправить мастеру-приёмщику", "Usta-qabulchiga yuborish")}</button><a class="btn btn-ghost" style="width:100%" href="${F.telM}">${ICON.phone}${t("Или позвонить", "Yoki qo‘ng‘iroq qilish")} ${F.phoneM}</a></div>
 <p class="err" id="err" role="alert" hidden></p>
 <p class="done" id="done" role="status" hidden></p>
@@ -415,8 +416,8 @@ function zapis(l) {
 </aside>
 </form></div></section>`;
   return shell(l, "zapis", {
-    title: t("Запись в автосервис AUTOMECHANIC онлайн — Чиланзар, Ташкент", "AUTOMECHANIC avtoservisiga onlayn yozilish — Chilonzor, Toshkent"),
-    desc: t("Выберите услугу, день и время — заявка уйдёт мастеру-приёмщику AUTOMECHANIC. Пн–Сб, 09:00–18:00.", "Xizmat, kun va vaqtni tanlang — ariza AUTOMECHANIC usta-qabulchisiga ketadi. Du–Sh, 09:00–18:00."),
+    title: t("Запись в автосервис AUTOMECHANIC онлайн · Чиланзар, Ташкент", "AUTOMECHANIC avtoservisiga onlayn yozilish · Chilonzor, Toshkent"),
+    desc: t("Выберите услугу, день и время, и заявка уйдёт мастеру-приёмщику AUTOMECHANIC. Пн-Сб, 09:00-18:00.", "Xizmat, kun va vaqtni tanlang, ariza AUTOMECHANIC usta-qabulchisiga ketadi. Du-Sh, 09:00-18:00."),
   }, body);
 }
 
@@ -434,14 +435,14 @@ function kontakty(l) {
 </dl>
 <div class="route" data-addon="route"><a class="btn btn-main btn-sm" href="${YMAP}">${ICON.pin}${t("Яндекс Карты", "Yandex Xaritalar")}</a><a class="btn btn-ghost btn-sm" href="${GMAP}">${ICON.pin}Google Maps</a></div>
 </div>
-<div class="photo-box rv a-scan" style="background-image:url(${IMG}/lift.webp)" role="img" aria-label="${t("Цех с подъёмником", "Ko‘targichli sex")}"><span>${t("Фото — открытый снимок, не ваш цех. Доп «Съёмка ваших работ и цеха» ставит сюда ваш.", "Foto — ochiq surat, sizning sexingiz emas. «Ishlaringiz va sexingizni suratga olish» qo‘shimchasi bu yerga sizniki qo‘yadi.")}</span></div>
+<div class="photo-box rv a-scan" style="background-image:url(${IMG}/lift.webp)" role="img" aria-label="${t("Цех с подъёмником", "Ko‘targichli sex")}"><span>${t("На фото открытый снимок, не ваш цех. Доп «Съёмка ваших работ и цеха» поставит сюда ваш.", "Bu ochiq surat, sizning sexingiz emas. «Ishlaringiz va sexingizni suratga olish» qo‘shimchasi bu yerga sizniki qo‘yadi.")}</span></div>
 </div>
 <div style="margin-top:24px">${installBlock(l)}</div>
 </div></section>
-<section style="padding-top:0"><div class="wrap">${head(l, t("Партнёры", "Hamkorlar"), "Aral · 77 Lubricants", t("Смазочные материалы — от партнёров, названных на вашем сайте.", "Moylash materiallari — saytingizda ko‘rsatilgan hamkorlardan."))}</div></section>`;
+<section style="padding-top:0"><div class="wrap">${head(l, t("Партнёры", "Hamkorlar"), "Aral · 77 Lubricants", t("Смазочные материалы от партнёров, которые названы на вашем сайте.", "Moylash materiallari saytingizda ko‘rsatilgan hamkorlardan olinadi."))}</div></section>`;
   return shell(l, "kontakty", {
-    title: t("Контакты AUTOMECHANIC — Чиланзар, 10 квартал, 23/1 · +998 90 965 61 31", "AUTOMECHANIC kontaktlari — Chilonzor, 10-kvartal, 23/1 · +998 90 965 61 31"),
-    desc: t("Адрес, ориентир, телефоны мастера-приёмщика и офиса, часы работы AUTOMECHANIC. Пн–Сб, 09:00–18:00.", "AUTOMECHANIC manzili, mo‘ljali, usta-qabulchi va ofis telefonlari, ish vaqti. Du–Sh, 09:00–18:00."),
+    title: t("Контакты AUTOMECHANIC: Чиланзар, 10 квартал, 23/1 · +998 90 965 61 31", "AUTOMECHANIC kontaktlari: Chilonzor, 10-kvartal, 23/1 · +998 90 965 61 31"),
+    desc: t("Адрес, ориентир, телефоны мастера-приёмщика и офиса, часы работы AUTOMECHANIC. Пн-Сб, 09:00-18:00.", "AUTOMECHANIC manzili, mo‘ljali, usta-qabulchi va ofis telefonlari, ish vaqti. Du-Sh, 09:00-18:00."),
   }, body);
 }
 
@@ -449,13 +450,13 @@ function offline(l) {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   const body = `<section class="phead"><div class="wrap">
 <span class="kicker"><i></i>${t("Нет интернета", "Internet yo‘q")}</span>
-<h1 style="margin-top:12px">${t("Позвоните — это работает без сети", "Qo‘ng‘iroq qiling — bu tarmoqsiz ishlaydi")}</h1>
+<h1 style="margin-top:12px">${t("Позвоните, это работает без сети", "Qo‘ng‘iroq qiling, bu tarmoqsiz ishlaydi")}</h1>
 <p class="lead">${t("Страница не загрузилась, но адрес и телефоны сохранены в телефоне.", "Sahifa yuklanmadi, lekin manzil va telefonlar telefonda saqlangan.")}</p>
 <div class="cta"><a class="btn btn-main" href="${F.telM}">${ICON.phone}${t("Мастер-приёмщик", "Usta-qabulchi")} ${F.phoneM}</a><a class="btn btn-ghost" href="${F.telO}">${ICON.phone}${t("Офис", "Ofis")} ${F.phoneO}</a></div>
 <div class="box" style="margin-top:32px"><dl><div><dt>${t("Адрес", "Manzil")}</dt><dd>${F.addr[l]}</dd></div><div><dt>${t("Ориентир", "Mo‘ljal")}</dt><dd>${F.mark[l]}</dd></div><div><dt>${t("Часы работы", "Ish vaqti")}</dt><dd>${F.hours[l]}, ${F.off[l]}</dd></div></dl></div>
 </div></section>`;
   return shell(l, "offline", {
-    title: t("Нет интернета — AUTOMECHANIC", "Internet yo‘q — AUTOMECHANIC"),
+    title: t("Нет интернета · AUTOMECHANIC", "Internet yo‘q · AUTOMECHANIC"),
     desc: t("Адрес и телефоны AUTOMECHANIC без интернета.", "AUTOMECHANIC manzili va telefonlari internetsiz."),
   }, body);
 }
@@ -475,11 +476,11 @@ function previews(l) {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   const row = (a, b) => `<div class="pv-row"><span>${a}</span><span>${b}</span></div>`;
   return {
-    status: `<div class="msg" style="margin:0"><div class="msg-h">${ICON.tg}<span>AUTOMECHANIC</span></div>${t("Ваша BMW 5 серии готова — можно забирать до 18:00.", "BMW 5 seriyangiz tayyor — 18:00 gacha olib ketish mumkin.")}</div>`,
+    status: `<div class="msg" style="margin:0"><div class="msg-h">${ICON.tg}<span>AUTOMECHANIC</span></div>${t("Ваша BMW 5 серии готова, забрать можно до 18:00.", "BMW 5 seriyangiz tayyor, 18:00 gacha olib ketishingiz mumkin.")}</div>`,
     remind: `<div class="msg" style="margin:0"><div class="msg-h">${ICON.tg}<span>AUTOMECHANIC</span></div>${t("Пора на плановый визит. Записать вас на эту неделю?", "Rejali tashrif vaqti keldi. Sizni shu haftaga yozaylikmi?")}</div>`,
     reviews: `${row(t("Яндекс Карты", "Yandex Xaritalar"), t("ваша оценка", "sizning bahoingiz"))}${row("Google Maps", t("ваша оценка", "sizning bahoingiz"))}${row(t("Оставить отзыв", "Sharh qoldirish"), "→")}`,
-    admin: `${row(t("Ремонт двигателя", "Dvigatel ta’miri"), t("от … сум", "… so‘mdan"))}${row(t("Аргонная сварка", "Argon payvandlash"), t("от … сум", "… so‘mdan"))}${row(t("Часы работы", "Ish vaqti"), "09:00–18:00")}`,
-    seo: `<div class="pv-row"><span><b style="margin:0">${t("Аргонная сварка в Ташкенте — AUTOMECHANIC", "Toshkentda argon payvandlash — AUTOMECHANIC")}</b>${t("Алюминий, легированные стали, титан. Чиланзар.", "Alyuminiy, legirlangan po‘latlar, titan. Chilonzor.")}</span></div>`,
+    admin: `${row(t("Ремонт двигателя", "Dvigatel ta’miri"), t("от … сум", "… so‘mdan"))}${row(t("Аргонная сварка", "Argon payvandlash"), t("от … сум", "… so‘mdan"))}${row(t("Часы работы", "Ish vaqti"), "09:00-18:00")}`,
+    seo: `<div class="pv-row"><span><b style="margin:0">${t("Аргонная сварка в Ташкенте | AUTOMECHANIC", "Toshkentda argon payvandlash | AUTOMECHANIC")}</b>${t("Алюминий, легированные стали, титан. Чиланзар.", "Alyuminiy, legirlangan po‘latlar, titan. Chilonzor.")}</span></div>`,
     photos: `${row(t("Цех и подъёмники", "Sex va ko‘targichlar"), "→")}${row(t("Работы до и после", "Ishlar oldin va keyin"), "→")}${row(t("Мастер-приёмщик", "Usta-qabulchi"), "→")}`,
   };
 }
@@ -488,25 +489,25 @@ function plan(l) {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   const pv = previews(l);
   const ba = (cls, was, now, cap, capB) => `<figure><div class="ba-box ${cls}" data-ba><img src="${IMG}/${now}" alt="${t("Стало", "Bo‘ldi")}" loading="lazy"><div class="was"><img src="${IMG}/${was}" alt="${t("Было", "Edi")}" loading="lazy"></div><span class="tag a">${t("Было", "Edi")}</span><span class="tag b">${t("Стало", "Bo‘ldi")}</span><div class="knob"><i>${ICON.arrows}</i></div><input type="range" min="0" max="100" value="50" aria-label="${t("Сдвиньте шторку: было или стало", "Pardani suring: edi yoki bo‘ldi")}"></div><figcaption><span>${cap}</span><span>${capB}</span></figcaption></figure>`;
-  const body = `${phead(l, PAGE_NAMES.plan[l === "ru" ? 0 : 1], `<span class="ours">${t("Предложение DevUz Studio для AUTOMECHANIC", "DevUz Studio’ning AUTOMECHANIC uchun taklifi")}</span>`, t("Было и стало", "Edi va bo‘ldi"), t("Слева — ваш сайт, каким он был в последний раз, когда открывался. Справа — этот прототип. Тяните шторку.", "Chapda — saytingiz oxirgi marta ochilgandagi holati. O‘ngda — shu prototip. Pardani torting."))}
+  const body = `${phead(l, PAGE_NAMES.plan[l === "ru" ? 0 : 1], `<span class="ours">${t("Предложение DevUz Studio для AUTOMECHANIC", "DevUz Studio’ning AUTOMECHANIC uchun taklifi")}</span>`, t("Было и стало", "Edi va bo‘ldi"), t("Слева ваш сайт, каким он был, когда открывался в последний раз. Справа этот прототип. Тяните шторку.", "Chapda saytingiz oxirgi marta ochilgandagi holatida. O‘ngda shu prototip. Pardani torting."))}
 <section style="padding-top:0"><div class="wrap">
-<div class="now rv a-rise"><img src="${IMG}/ba-now.webp" alt="${t("automechanic.uz сегодня: предупреждение браузера", "automechanic.uz bugun: brauzer ogohlantirishi")}" loading="lazy"><div><h2>${t("Сегодня automechanic.uz не открывается", "Bugun automechanic.uz ochilmaydi")}</h2><p class="sub">${t("Сертификат сайта истёк: телефон покупателя сначала пишет «Подключение не защищено». Кто нажмёт «всё равно перейти», видит белый экран — страница пустая. Человек, который ищет сервис, уходит к следующему в выдаче.", "Sayt sertifikati muddati o‘tgan: xaridorning telefoni avval «Ulanish himoyalanmagan» deb yozadi. «Baribir o‘tish»ni bosgan oq ekranni ko‘radi — sahifa bo‘sh. Servis qidirayotgan odam qidiruvdagi keyingisiga ketadi.")}</p></div></div>
+<div class="now rv a-rise"><img src="${IMG}/ba-now.webp" alt="${t("automechanic.uz сегодня: предупреждение браузера", "automechanic.uz bugun: brauzer ogohlantirishi")}" loading="lazy"><div><h2>${t("Сегодня automechanic.uz не открывается", "Bugun automechanic.uz ochilmaydi")}</h2><p class="sub">${t("Сертификат сайта истёк: телефон покупателя сначала пишет «Подключение не защищено». Кто нажмёт «всё равно перейти», видит белый экран: страница пустая. Человек, который ищет сервис, уходит к следующему в выдаче.", "Sayt sertifikati muddati o‘tgan: xaridorning telefoni avval «Ulanish himoyalanmagan» deb yozadi. «Baribir o‘tish»ni bosgan oq ekranni ko‘radi: sahifa bo‘sh. Servis qidirayotgan odam qidiruvdagi keyingisiga ketadi.")}</p></div></div>
 <div class="ba" style="margin-top:48px">
-${ba("ba-d", "ba-old-d.webp", "ba-new-d.webp", t("Компьютер · первый экран", "Kompyuter · birinchi ekran"), t("было — лента новостей BMW", "edi — BMW yangiliklari lentasi"))}
-${ba("ba-m", "ba-old-m.webp", "ba-new-m.webp", t("Телефон · первый экран", "Telefon · birinchi ekran"), t("было — уменьшенная копия", "edi — kichraytirilgan nusxa"))}
+${ba("ba-d", "ba-old-d.webp", "ba-new-d.webp", t("Компьютер · первый экран", "Kompyuter · birinchi ekran"), t("было: лента новостей BMW", "edi: BMW yangiliklari lentasi"))}
+${ba("ba-m", "ba-old-m.webp", "ba-new-m.webp", t("Телефон · первый экран", "Telefon · birinchi ekran"), t("было: уменьшенная копия", "edi: kichraytirilgan nusxa"))}
 </div>
 <div class="grid g3" style="margin-top:48px">
-<div class="note rv a-rise"><h3>${t("Было: новости вместо сервиса", "Edi: servis o‘rniga yangiliklar")}</h3><p>${t("Главная — статьи про BMW и Mercedes с чужого сайта, галерея — пресс-фото Lamborghini и Rolls-Royce. О вашем цехе — колонка сбоку.", "Bosh sahifa — boshqa saytdan BMW va Mercedes haqida maqolalar, galereya — Lamborghini va Rolls-Royce press-fotolari. Sexingiz haqida — yon ustun.")}</p></div>
-<div class="note rv a-rise" style="--d:90ms"><h3>${t("Было: только звонок", "Edi: faqat qo‘ng‘iroq")}</h3><p>${t("Ни записи, ни мессенджера: на телефоне номера не нажимались, почта в шапке — из шаблона.", "Yozilish ham, messenjer ham yo‘q: telefonda raqamlar bosilmasdi, shapkadagi pochta — shablondan.")}</p></div>
-<div class="note rv a-rise" style="--d:180ms"><h3>${t("Стало: запись и Telegram", "Bo‘ldi: yozilish va Telegram")}</h3><p>${t("Услуга, машина, день и время — и заявка у мастера-приёмщика в Telegram. На телефоне — меню как в приложении.", "Xizmat, mashina, kun va vaqt — va ariza usta-qabulchida Telegramda. Telefonda — ilovadagidek menyu.")}</p></div>
+<div class="note rv a-rise"><h3>${t("Было: новости вместо сервиса", "Edi: servis o‘rniga yangiliklar")}</h3><p>${t("На главной статьи про BMW и Mercedes с чужого сайта, в галерее пресс-фото Lamborghini и Rolls-Royce. О вашем цехе только колонка сбоку.", "Bosh sahifada boshqa saytdan olingan BMW va Mercedes haqidagi maqolalar, galereyada Lamborghini va Rolls-Royce press-fotolari. Sexingiz haqida faqat yon ustun.")}</p></div>
+<div class="note rv a-rise" style="--d:90ms"><h3>${t("Было: только звонок", "Edi: faqat qo‘ng‘iroq")}</h3><p>${t("Ни записи, ни мессенджера: на телефоне номера не нажимались, почта в шапке осталась от шаблона.", "Yozilish ham, messenjer ham yo‘q: telefonda raqamlar bosilmasdi, shapkadagi pochta shablondan qolgan.")}</p></div>
+<div class="note rv a-rise" style="--d:180ms"><h3>${t("Стало: запись и Telegram", "Bo‘ldi: yozilish va Telegram")}</h3><p>${t("Услуга, машина, день и время, и заявка уже у мастера-приёмщика в Telegram. На телефоне меню как в приложении.", "Xizmat, mashina, kun va vaqtni tanlaysiz, ariza esa usta-qabulchiga Telegramda keladi. Telefonda ilovadagidek menyu.")}</p></div>
 </div>
 </div></section>
 <section id="prilozhenie" data-addon="pwa"><div class="wrap">
-${head(l, t("Сайт как приложение · 195 $", "Sayt ilova kabi · 195 $"), t("Добавьте на экран телефона — и откройте", "Telefon ekraniga qo‘shing — va oching"), t("Это работает уже в прототипе. Иконка встаёт рядом с банком и такси, сайт открывается без строки браузера, внизу — меню «Главная · Услуги · Запись · Контакты». Без интернета открывается страница с адресом и телефонами.", "Bu prototipda allaqachon ishlaydi. Belgi bank va taksi yoniga qo‘yiladi, sayt brauzer satrisiz ochiladi, pastda — «Bosh sahifa · Xizmatlar · Yozilish · Kontaktlar» menyusi. Internetsiz manzil va telefonlar sahifasi ochiladi."))}
+${head(l, t("Сайт как приложение · 195 $", "Sayt ilova kabi · 195 $"), t("Добавьте на экран телефона и откройте", "Telefon ekraniga qo‘shing va oching"), t("Это работает уже в прототипе. Иконка встаёт рядом с банком и такси, сайт открывается без строки браузера, внизу меню «Главная · Услуги · Запись · Контакты». Без интернета открывается страница с адресом и телефонами.", "Bu prototipda allaqachon ishlaydi. Belgi bank va taksi yoniga qo‘yiladi, sayt brauzer satrisiz ochiladi, pastda «Bosh sahifa · Xizmatlar · Yozilish · Kontaktlar» menyusi. Internetsiz manzil va telefonlar sahifasi ochiladi."))}
 ${installBlock(l)}
 </div></section>
 <section id="konstruktor"><div class="wrap">
-${head(l, t("Конструктор проекта", "Loyiha konstruktori"), t("Соберите сайт под свой бюджет", "Saytni byudjetingizga moslab yig‘ing"), t("Сайт — 1 000 $. Остальное включается тумблером: включили блок — он появляется на странице и в превью, итог пересчитывается. Цены — средние по Ташкенту за такую работу, точные — после разговора.", "Sayt — 1 000 $. Qolgani tumbler bilan yoqiladi: blokni yoqdingiz — u sahifada va ko‘rinishda paydo bo‘ladi, jami qayta hisoblanadi. Narxlar — Toshkentda bunday ish uchun o‘rtacha, aniq narx — suhbatdan keyin."))}
+${head(l, t("Конструктор проекта", "Loyiha konstruktori"), t("Соберите сайт под свой бюджет", "Saytni byudjetingizga moslab yig‘ing"), t("Сайт стоит 1 000 $. Остальное включается тумблером: включили блок, и он появился на странице и в превью, итог пересчитался. Цены средние по Ташкенту за такую работу, точные назовём после разговора.", "Sayt narxi 1 000 $. Qolgani tumbler bilan yoqiladi: blokni yoqsangiz, u sahifada va ko‘rinishda paydo bo‘ladi, jami qayta hisoblanadi. Narxlar Toshkentda bunday ish uchun o‘rtacha, aniq narxni suhbatdan keyin aytamiz."))}
 <div class="kit">
 <div class="kit-list">
 <div class="kit-base"><div><b>${KIT_BASE[l].t}</b><p>${KIT_BASE[l].d}</p></div><span class="kit-price num">${usd(KIT_BASE.price)}</span></div>
@@ -516,27 +517,27 @@ ${Object.keys(GROUPS).map((g) => `<h3 class="kit-g">${t("Сверх сайта",
 </div>
 <div class="kit-side">
 <div aria-live="polite">${BLOCKS.map((b) => `<div class="kit-pv" data-pv="${b.id}" hidden><b>${b[l].t}</b>${pv[b.pv]}</div>`).join("")}</div>
-<div class="kit-total"><small>${t("Итого с сайтом", "Sayt bilan jami")}</small><b class="num" id="kit-sum">—</b><small id="kit-n"></small><a class="btn btn-main" href="https://t.me/Devuz_studio_bot?start=automechanic">${ICON.tg}${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</a></div>
+<div class="kit-total"><small>${t("Итого с сайтом", "Sayt bilan jami")}</small><b class="num" id="kit-sum"></b><small id="kit-n"></small><a class="btn btn-main" href="https://t.me/Devuz_studio_bot?start=automechanic">${ICON.tg}${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</a></div>
 </div>
 </div>
 </div></section>
 <section id="konkurenty"><div class="wrap">
 ${head(l, t("Что взяли у конкурентов", "Raqobatchilardan nima oldik"), t("Сильные стороны сайтов автосервисов Ташкента", "Toshkent avtoservislari saytlarining kuchli tomonlari"), "")}
 <div class="grid g3">
-<div class="note"><h3>fors.uz</h3><p>${t("Запись с машиной, причиной и временем — а не «перезвоним вам».", "Mashina, sabab va vaqt bilan yozilish — «sizga qo‘ng‘iroq qilamiz» emas.")}</p></div>
+<div class="note"><h3>fors.uz</h3><p>${t("Запись с машиной, причиной и временем, а не «перезвоним вам».", "«Sizga qo‘ng‘iroq qilamiz» emas, mashina, sabab va vaqt bilan yozilish.")}</p></div>
 <div class="note"><h3>carbox.uz</h3><p>${t("Звонок под большим пальцем и прайс прямо на сайте.", "Bosh barmoq ostida qo‘ng‘iroq va narxlar to‘g‘ridan-to‘g‘ri saytda.")}</p></div>
 <div class="note"><h3>car-driver.uz</h3><p>${t("Заявки в Telegram и калькулятор с итогом в сумах.", "Telegramga arizalar va so‘mda jami bilan kalkulyator.")}</p></div>
-<div class="note"><h3>aad.uz</h3><p>${t("История крупно: у них «с 1988 года», у вас — с 1991-го.", "Tarix katta qilib: ularda «1988 yildan», sizda — 1991 yildan.")}</p></div>
+<div class="note"><h3>aad.uz</h3><p>${t("История крупно: у них «с 1988 года», у вас с 1991-го.", "Tarix katta qilib: ularda «1988 yildan», sizda 1991 yildan.")}</p></div>
 <div class="note"><h3>olamavto.uz</h3><p>${t("Понятные шаги: что будет после заявки.", "Tushunarli qadamlar: arizadan keyin nima bo‘ladi.")}</p></div>
-<div class="note"><h3>${t("Ни у кого", "Hech kimda")}</h3><p>${t("Настоящего узбекского у частных сервисов нет ни у одного — у вас будет.", "Xususiy servislarning birortasida haqiqiy o‘zbekcha yo‘q — sizda bo‘ladi.")}</p></div>
+<div class="note"><h3>${t("Ни у кого", "Hech kimda")}</h3><p>${t("Настоящей узбекской версии нет ни у одного частного сервиса. У вас будет.", "Xususiy servislarning birortasida haqiqiy o‘zbekcha versiya yo‘q. Sizda bo‘ladi.")}</p></div>
 </div>
 </div></section>
 <section id="foto"><div class="wrap">
 ${head(l, t("Фото в прототипе", "Prototipdagi fotolar"), t("Откуда снимки", "Suratlar qayerdan"), t("Своих фото годного размера на вашем сайте не было, поэтому здесь открытые снимки Wikimedia Commons с разрешением на коммерческое использование. Мы их кадрировали, вырезали по слоям и подогнали по цвету. Нейросетью ничего не рисовали.", "Saytingizda yaroqli o‘lchamdagi o‘z fotolaringiz yo‘q edi, shuning uchun bu yerda tijoriy foydalanishga ruxsat berilgan Wikimedia Commons ochiq suratlari. Biz ularni kesdik, qatlamlarga ajratdik va rangini moslashtirdik. Neyrotarmoq bilan hech narsa chizilmagan."))}
-<ul class="credits">${PHOTO_CREDITS.map(([w, a, lic, u]) => `<li>${w} — ${a}, ${lic}, <a href="${u}">Wikimedia Commons</a></li>`).join("")}</ul>
+<ul class="credits">${PHOTO_CREDITS.map(([w, a, lic, u]) => `<li>${w} (${a}, ${lic}, <a href="${u}">Wikimedia Commons</a>)</li>`).join("")}</ul>
 </div></section>`;
   return shell(l, "plan", {
-    title: t("Что дальше: было и стало, конструктор сайта — AUTOMECHANIC", "Keyingi qadam: edi va bo‘ldi, sayt konstruktori — AUTOMECHANIC"),
+    title: t("Что дальше: было и стало, конструктор сайта · AUTOMECHANIC", "Keyingi qadam: edi va bo‘ldi, sayt konstruktori · AUTOMECHANIC"),
     desc: t("Было и стало: старый сайт AUTOMECHANIC и прототип. Конструктор: сайт 1 000 $, заказы в Telegram, сайт как приложение 195 $.", "Edi va bo‘ldi: AUTOMECHANIC eski sayti va prototip. Konstruktor: sayt 1 000 $, buyurtmalar Telegramga, sayt ilova kabi 195 $."),
   }, body);
 }

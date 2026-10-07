@@ -113,7 +113,8 @@ if(book){
   }
   function text(){
     var w=[val('d'),val('h')].filter(Boolean).join(', ');
-    return L.msgHead+'\n'+L.fService+': '+(val('s')||'—')+'\n'+L.fCar+': '+(fld('car')||'—')+'\n'+L.fTrouble+': '+(fld('trouble')||'—')+'\n'+L.fWhen+': '+(w||'—')+'\n'+L.fName+': '+(fld('nm')||'—')+'\n'+L.fPhone+': '+(fld('ph')||'—');
+    var E=L.empty||'';
+    return L.msgHead+'\n'+L.fService+': '+(val('s')||E)+'\n'+L.fCar+': '+(fld('car')||E)+'\n'+L.fTrouble+': '+(fld('trouble')||E)+'\n'+L.fWhen+': '+(w||E)+'\n'+L.fName+': '+(fld('nm')||E)+'\n'+L.fPhone+': '+(fld('ph')||E);
   }
   function draw(){
     times();
@@ -179,7 +180,7 @@ if(inputs.length){
     var set=function(id,v){var el=$(id);if(el)el.textContent=v};
     set('kd-pill-sum',money(sum));set('kd-sum',money(sum));set('kd-add','+'+money(add));set('kd-n',(L.kitN||'').replace('{n}',ids.length));
     set('kit-sum',money(sum));set('kit-n',(L.kitN||'').replace('{n}',ids.length));
-    root.dataset.kit=L.kitTg+'\n'+L.kitBaseName+' — '+money(kb)+'\n'+ids.map(function(k){return title[k]+' — '+money(price[k])}).join('\n')+'\n'+L.kitTotal+': '+money(sum);
+    root.dataset.kit=L.kitTg+'\n'+L.kitBaseName+' · '+money(kb)+'\n'+ids.map(function(k){return title[k]+' · '+money(price[k])}).join('\n')+'\n'+L.kitTotal+': '+money(sum);
     store.set(KEY,on);
   }
   function setK(k,v){

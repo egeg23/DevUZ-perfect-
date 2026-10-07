@@ -78,7 +78,7 @@ test("каждый прототип ссылается на условия — �
     telegram: "@smile_dent",
   };
   const ru = buildProto(facts)!.html;
-  assert.match(ru, /Прототип принадлежит DevUz Studio\. Использовать его можно только по договору — <a href="https:\/\/[^"]+\/ru\/mockup-terms">условия использования<\/a>/);
+  assert.match(ru, /Прототип принадлежит DevUz Studio и используется только по договору\. Подробно: <a href="https:\/\/[^"]+\/ru\/mockup-terms">условия использования<\/a>/);
   const uz = buildProto({ ...facts, locale: "uz" })!.html;
   assert.match(uz, /href="https:\/\/[^"]+\/uz\/mockup-terms">foydalanish shartlari<\/a>/);
 });

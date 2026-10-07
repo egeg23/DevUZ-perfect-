@@ -1540,7 +1540,7 @@ export const uz: HelpCopy = {
           id: "check",
           title: "Tekshiruv va havola",
           body: [
-            "Tayyor sahifani tekshiruv o‘qiydi: o‘ylab topilgan raqamlar, foizlar, maqtanish, kompaniya nomi yo‘q, ishlamaydigan tugma, mijoz aytmagan xizmatlar. Topsa — prototip «qoralama» bo‘lib qoladi, havola 404 beradi, muammolar esa sanab o‘tiladi: tuzating va qaytadan yig‘ing.",
+            "Tayyor sahifani tekshiruv o‘qiydi: o‘ylab topilgan raqamlar, foizlar, maqtanish, kompaniya nomi yo‘q, ishlamaydigan tugma, mijoz aytmagan xizmatlar; uzun tire va sun’iy intellekt matni shtamplari («shunchaki … emas», «… dunyosiga», «noyob»): biznes egasi ular orqali model yozgan matnni bir soniyada taniydi va maketga ishonmay qo‘yadi. Uning saytidan olingan ish vaqti va xizmat nomlaridagi tireni panel o‘zi almashtiradi, kompaniya o‘z saytida o‘zi haqida yozgan shtampni esa tekshiruv o‘tkazib yuboradi: bu uning o‘z so‘zlari. Topsa — prototip «qoralama» bo‘lib qoladi, havola 404 beradi, muammolar esa sanab o‘tiladi: tuzating va qaytadan yig‘ing.",
             "Toza — «tayyor», havola allaqachon ishlaydi: «Havolani nusxalash». Yubordingiz — «Mijozga yubordim».",
           ],
         },

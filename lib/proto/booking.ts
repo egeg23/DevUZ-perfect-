@@ -58,12 +58,12 @@ const COPY = {
      */
     steps: {
       chat: [
-        { title: "Выбираете услугу", text: "Список выше — с ценами там, где они есть." },
+        { title: "Выбираете услугу", text: "Услуги перечислены выше, цены указаны там, где они есть." },
         { title: "Пишете в один клик", text: "Кнопка открывает переписку с готовым текстом." },
         { title: "Приезжаете к назначенному времени", text: "Время подтверждают в ответном сообщении." },
       ],
       call: [
-        { title: "Выбираете услугу", text: "Список выше — с ценами там, где они есть." },
+        { title: "Выбираете услугу", text: "Услуги перечислены выше, цены указаны там, где они есть." },
         { title: "Звоните в один клик", text: "Кнопка набирает номер прямо с этой страницы." },
         { title: "Приезжаете к назначенному времени", text: "Время подтверждают по телефону." },
       ],
@@ -77,8 +77,8 @@ const COPY = {
     map: "Открыть на карте",
     photos: "Как у нас",
     heroSub: {
-      chat: "Запись через переписку — без звонков и ожидания на линии",
-      call: "Запись по телефону — назовите удобное время",
+      chat: "Запись через переписку, без звонков и ожидания на линии",
+      call: "Запись по телефону: назовите удобное время",
     },
     scroll: "Листайте",
     viaTelegram: "Запись в Telegram",
@@ -90,7 +90,7 @@ const COPY = {
      * обязаны быть видны на самом прототипе — иначе «клиент знал» нечем
      * доказать.
      */
-    rights: "Прототип принадлежит DevUz Studio. Использовать его можно только по договору —",
+    rights: "Прототип принадлежит DevUz Studio и используется только по договору. Подробно:",
     terms: "условия использования",
   },
   uz: {
@@ -102,12 +102,12 @@ const COPY = {
     how: "Qanday yozilish kerak",
     steps: {
       chat: [
-        { title: "Xizmatni tanlaysiz", text: "Yuqoridagi ro‘yxat — narxlari bor joyda narxi bilan." },
+        { title: "Xizmatni tanlaysiz", text: "Hammasi yuqoridagi ro‘yxatda, narxi bor joyda narxi ham bor." },
         { title: "Bir bosishda yozasiz", text: "Tugma tayyor matn bilan yozishmani ochadi." },
         { title: "Belgilangan vaqtda kelasiz", text: "Vaqt javob xabarida tasdiqlanadi." },
       ],
       call: [
-        { title: "Xizmatni tanlaysiz", text: "Yuqoridagi ro‘yxat — narxlari bor joyda narxi bilan." },
+        { title: "Xizmatni tanlaysiz", text: "Hammasi yuqoridagi ro‘yxatda, narxi bor joyda narxi ham bor." },
         { title: "Bir bosishda qo‘ng‘iroq qilasiz", text: "Tugma shu sahifadan raqamni teradi." },
         { title: "Belgilangan vaqtda kelasiz", text: "Vaqt telefonda tasdiqlanadi." },
       ],
@@ -120,14 +120,14 @@ const COPY = {
     map: "Xaritada ochish",
     photos: "Bizda shunday",
     heroSub: {
-      chat: "Yozishma orqali yozilish — qo‘ng‘iroqsiz va navbatsiz",
-      call: "Telefon orqali yozilish — qulay vaqtni ayting",
+      chat: "Yozishma orqali yozilish, qo‘ng‘iroqsiz va navbatsiz",
+      call: "Telefon orqali yozilish: qulay vaqtni ayting",
     },
     scroll: "Pastga",
     viaTelegram: "Telegram orqali yozilish",
     viaWhatsapp: "WhatsApp orqali yozilish",
     madeBy: "Prototip. DevUz Studio sayt ma’lumotlari asosida yig‘di:",
-    rights: "Prototip DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin —",
+    rights: "Prototip DevUz Studio’ga tegishli va faqat shartnoma asosida ishlatiladi. Batafsil:",
     terms: "foydalanish shartlari",
   },
 } as const;
@@ -440,7 +440,7 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
   const motions = ["rise", ...restMotions, ...stepMotions];
   const band = `<section><span class="par" aria-hidden="true"><i class="band" style="--a:-54px;--b:58px"></i></span>`;
   const where = inCity(facts.city, facts.locale);
-  const title = `${facts.name} — ${niche.ru}${where}`;
+  const title = `${facts.name} · ${niche.ru}${where}`;
   const description = facts.about ?? `${niche.ru}${where}. ${c.heroSub[voice]}.`;
 
   const logo = facts.logo

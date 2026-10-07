@@ -226,8 +226,8 @@ export async function upgradeProto(
     const locale = facts?.locale === "uz" ? "uz" : "ru";
     const line =
       locale === "uz"
-        ? "Prototip DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin —"
-        : "Прототип принадлежит DevUz Studio. Использовать его можно только по договору —";
+        ? "Prototip DevUz Studio’ga tegishli va faqat shartnoma asosida ishlatiladi. Batafsil:"
+        : "Прототип принадлежит DevUz Studio и используется только по договору. Подробно:";
     const link = locale === "uz" ? "foydalanish shartlari" : "условия использования";
     base = base.replace(
       /<\/footer>/,

@@ -162,7 +162,7 @@ function favBar(){
   bar.hidden=!picked.length;if(!picked.length)return;
   $('fav-n').textContent=(L.favN||'').replace('{n}',picked.length);
   var base=location.origin+(L.base||'');
-  var txt=(L.favHead||'')+'\n'+picked.map(function(c){return '• '+c.dataset.name+' — '+fmt(+c.dataset.usd,CUR)+' (ID '+c.dataset.id+')'}).join('\n');
+  var txt=(L.favHead||'')+'\n'+picked.map(function(c){return '• '+c.dataset.name+': '+fmt(+c.dataset.usd,CUR)+' (ID '+c.dataset.id+')'}).join('\n');
   $('fav-share').href='https://t.me/share/url?url='+encodeURIComponent(base+'/katalog?fav=1')+'&text='+encodeURIComponent(txt);
 }
 if(cat){
@@ -212,7 +212,7 @@ if(vf){
     if(!dd||!hh||ph.replace(/\D/g,'').length<9){err.textContent=L.vNeed;err.hidden=false;done.hidden=true;return}
     err.hidden=true;
     var id=(location.search.match(/[?&]id=(\d+)/)||[])[1]||'149645';
-    var msg=L.vHead+'\n'+L.vObj+': ID '+id+' — '+L.objName+'\n'+L.vWhen+': '+dd.value+', '+hh.value+'\n'+L.fPhone+': '+ph;
+    var msg=L.vHead+'\n'+L.vObj+': ID '+id+', '+L.objName+'\n'+L.vWhen+': '+dd.value+', '+hh.value+'\n'+L.fPhone+': '+ph;
     try{navigator.clipboard.writeText(msg)}catch(x){}
     done.textContent=L.vSent;done.hidden=false;window.open(L.adminUrl,'_blank','noopener');
   });
@@ -223,7 +223,7 @@ var book=$('book');
 if(book){
   var val=function(n){var x=book.querySelector('input[name="'+n+'"]:checked');return x?x.value:''};
   var fld=function(id){return ($(id).value||'').trim()};
-  var text=function(){return L.msgHead+'\n'+L.fDeal+': '+(val('deal')||'—')+'\n'+L.fType+': '+(val('type')||'—')+'\n'+L.fWhere+': '+(val('where')||'—')+'\n'+L.fRooms+': '+(val('rooms')||'—')+'\n'+L.fBudget+': '+(fld('budget')||'—')+'\n'+L.fWish+': '+(fld('wish')||'—')+'\n'+L.fName+': '+(fld('nm')||'—')+'\n'+L.fPhone+': '+(fld('ph')||'—')};
+  var no=L.empty||'',text=function(){return L.msgHead+'\n'+L.fDeal+': '+(val('deal')||no)+'\n'+L.fType+': '+(val('type')||no)+'\n'+L.fWhere+': '+(val('where')||no)+'\n'+L.fRooms+': '+(val('rooms')||no)+'\n'+L.fBudget+': '+(fld('budget')||no)+'\n'+L.fWish+': '+(fld('wish')||no)+'\n'+L.fName+': '+(fld('nm')||no)+'\n'+L.fPhone+': '+(fld('ph')||no)};
   var draw=function(){var m=$('msg');if(m)m.textContent=text();var t=new Date(Date.now()+5*36e5),mt=$('msg-t');if(mt)mt.textContent=('0'+t.getUTCHours()).slice(-2)+':'+('0'+t.getUTCMinutes()).slice(-2)};
   book.addEventListener('input',draw);book.addEventListener('change',draw);draw();
   book.addEventListener('submit',function(e){
@@ -267,7 +267,7 @@ if(inputs.length){
     var set=function(id,v){var el=$(id);if(el)el.textContent=v};
     set('kd-pill-sum',money(sum));set('kd-sum',money(sum));set('kd-add','+'+money(add));set('kd-n',(L.kitN||'').replace('{n}',ids.length));
     set('kit-sum',money(sum));set('kit-n',(L.kitN||'').replace('{n}',ids.length));
-    root.dataset.kit=L.kitTg+'\n'+L.kitBaseName+' — '+money(kb)+'\n'+ids.map(function(k){return title[k]+' — '+money(price[k])}).join('\n')+'\n'+L.kitTotal+': '+money(sum);
+    root.dataset.kit=L.kitTg+'\n'+L.kitBaseName+' · '+money(kb)+'\n'+ids.map(function(k){return title[k]+' · '+money(price[k])}).join('\n')+'\n'+L.kitTotal+': '+money(sum);
     store.set(KEY,on);
   };
   var setK=function(k,v){on[k]=v;if(v)needs[k].forEach(function(n){if((n in on)&&!on[n])setK(n,true)});else Object.keys(needs).forEach(function(o){if(on[o]&&needs[o].indexOf(k)>=0)setK(o,false)})};
