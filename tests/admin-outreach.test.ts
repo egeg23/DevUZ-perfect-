@@ -234,7 +234,9 @@ test("скаут отправляет только из очереди и ост
   assert.match(runner, /job = await nextQueued\(Date\.now\(\), key, cap\(\)\);/);
   // Пишем не строке с сайта, а тому, кого телеграм назвал в ответ на вопрос
   // «кто это». У человека, найденного по номеру, @адреса может не быть вовсе.
-  assert.match(runner, /await client\.sendMessage\(userId, \{ message: job\.message \}\)/);
+  // Первым — только «Здравствуйте»: письмо уйдёт после ответа
+  // (lib/admin/hello-first.ts).
+  assert.match(runner, /await client\.sendMessage\(userId, \{ message: job\.hello \}\)/);
   assert.match(runner, /if \(outreachStopped\) return;/);
   assert.match(runner, /outreachStopped = stopped;/);
   // README обещал «ничего не отправляет» — обещание переписано, а не забыто.

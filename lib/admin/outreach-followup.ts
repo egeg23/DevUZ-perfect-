@@ -164,6 +164,10 @@ export async function runFollowups(now: Date = new Date()): Promise<FollowupRun>
     )
     .eq("status", "sent")
     .is("replied_at", null)
+    // На «Здравствуйте» не ответили — ничего не шлём (lib/admin/hello-first.ts,
+    // владелец, 07.10.2026: «Ничего не шлём»). Дожим остаётся только у касаний,
+    // где письмо ушло сразу, — по старым правилам.
+    .is("hello_at", null)
     .eq("ai_handling", true)
     .lt("followups", MAX_FOLLOWUPS)
     .lte("sent_at", new Date(now.getTime() - FOLLOWUP_AFTER_DAYS[0] * DAY_MS).toISOString())

@@ -24,7 +24,9 @@ import { processBatch } from "@/lib/scout/store";
 import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
 import { markDelivered, markFailed, markSent, markUnreachable, nextQueued } from "@/lib/admin/outreach-queue";
 import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/outreach-peer";
-import { markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
+import { markCircleSkipped, markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
+import { NO_CIRCLE } from "@/lib/admin/hello-first";
+import { CIRCLE_CHECK_MS, recordCircle } from "@/lib/admin/circle-store";
 import { TOO_LATE, editOutcome, markEditFailed, markEdited, nextEdit, sentCheck } from "@/lib/admin/outreach-edit";
 import { HOURLY_CAP } from "@/lib/admin/outreach";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
@@ -388,6 +390,12 @@ async function live() {
  * паузу в панели, и работник узнаёт об этом со следующим тиком.
  */
 function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersAlive, onFlood, afterBanCheck = async () => {} }) {
+  /** Последний кружок в «Избранном» этого аккаунта — или null. */
+  const savedCircle = async () => {
+    const [found] = (await client.getMessages("me", { limit: 1, filter: new Api.InputMessagesFilterRoundVideo() })) ?? [];
+    return found?.media ? found : null;
+  };
+
   const timers = [];
   // ── Касания ───────────────────────────────────────────────────────────
   //
@@ -507,10 +515,14 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
     try {
       // Пишем найденному пользователю, а не строке с сайта: по номеру у
       // человека @адреса может не быть вовсе.
-      const sent = await client.sendMessage(userId, { message: job.message });
+      //
+      // Первым — только «Здравствуйте» (lib/admin/hello-first.ts): письмо о
+      // сайте от незнакомца получает жалобы «спам», за них Telegram и
+      // ограничивает аккаунт. Письмо уйдёт, когда клиент ответит.
+      const sent = await client.sendMessage(userId, { message: job.hello });
       const messageId = sent?.id === undefined || sent?.id === null ? null : Number(sent.id);
       await markSent(job.id, userId, messageId, key);
-      console.log(`касания${tag}: отправлено ${job.target} по сайту ${job.host}`);
+      console.log(`касания${tag}: «${job.hello}» — ${job.target} по сайту ${job.host}`);
 
       // И сразу перечитываем переписку.
       //
@@ -595,15 +607,53 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
     if (!reply) return;
 
     try {
+      if (reply.kind === "circle") {
+        // Кружок перед письмом после «Здравствуйте» (lib/admin/hello-first.ts)
+        // — копия последнего кружка из «Избранного» этого аккаунта, не
+        // пересылка: у пересланного стояло бы «переслано от».
+        const circle = await savedCircle();
+        if (!circle) {
+          await markCircleSkipped(reply.id, NO_CIRCLE);
+          console.log(`переписка${tag}: кружка в «Избранном» нет — письмо ${reply.target} уйдёт без него`);
+          return;
+        }
+        await client.sendFile(reply.target, { file: circle.media });
+        await markReplySent(reply.id);
+        console.log(`переписка${tag}: кружок ${reply.target} по сайту ${reply.host}`);
+        return;
+      }
       await client.sendMessage(reply.target, { message: reply.body });
       await markReplySent(reply.id);
       console.log(`переписка${tag}: ответил ${reply.target} по сайту ${reply.host}`);
     } catch (error) {
       const why = error?.errorMessage ?? error?.message ?? String(error);
-      await markReplyFailed(reply.id, why);
-      console.error(`переписка${tag}: ответ не ушёл ${reply.target} — ${why}`);
+      // Не ушёл кружок — письмо за ним уходит само, разговор у бота.
+      if (reply.kind === "circle") await markCircleSkipped(reply.id, `Кружок не ушёл: ${why}`);
+      else await markReplyFailed(reply.id, why);
+      console.error(`переписка${tag}: ${reply.kind === "circle" ? "кружок" : "ответ"} не ушёл ${reply.target} — ${why}`);
     }
   }, REPLY_MS));
+
+  // ── Кружок в «Избранном» ──────────────────────────────────────────────
+  //
+  // Последний кружок из «Избранного» аккаунта уходит перед письмом тем, кто
+  // ответил на «Здравствуйте». Есть ли он — видно только из сессии, поэтому
+  // смотрим раз в десять минут и пишем в базу: панель показывает это в
+  // «Аккаунтах».
+  const checkCircle = async () => {
+    try {
+      const circle = await savedCircle();
+      await recordCircle(key, circle ? Number(circle.date) * 1000 : null);
+    } catch (error) {
+      console.error(`кружок${tag}: «Избранное» не прочиталось —`, error?.errorMessage ?? error?.message ?? error);
+    }
+  };
+  timers.push(
+    setTimeout(() => {
+      void checkCircle();
+      timers.push(setInterval(checkCircle, CIRCLE_CHECK_MS));
+    }, 60_000),
+  );
 
   // ── Правка отправленных касаний ───────────────────────────────────────
   //

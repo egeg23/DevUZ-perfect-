@@ -95,7 +95,8 @@ test("приветствие именем того, кто пишет, отпр�
   assert.equal(greetsSender("Здравствуйте, команда Cherry. Это Эльдар", "Эльдар"), null);
 
   const prompt = outreachPrompt({ host: "cherrystore.uz", label: null, niche: null, findings: [minor("no_canonical")], draft: null, sender: "Эльдар" });
-  assert.match(prompt, /Имени адресата мы не знаем: здоровайся без имени/);
+  // Здороваться письму не нужно вовсе: «Здравствуйте» уже ушло отдельно (lib/admin/hello-first.ts).
+  assert.match(prompt, /Не здоровайся: «Здравствуйте» уже ушло отдельным сообщением[\s\S]*Имени адресата мы не знаем/);
   const bad =
     "Здравствуйте, Эльдар. Это Эльдар из DevUz Studio, devuz.studio — открыл ваш сайт cherrystore.uz. " +
     "Разделы каталога открываются страницей с ошибкой, и покупатель уходит, не увидев товара. " +

@@ -18,6 +18,15 @@ import { MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 import { detectLang } from "@/lib/talk/language";
+import { checkFresh } from "@/lib/admin/check-fresh";
+import {
+  CIRCLE_AFTER_MS,
+  CIRCLE_BODY,
+  PITCH_AFTER_MS,
+  pitchAfter,
+  waitsForPitch,
+  withoutGreeting,
+} from "@/lib/admin/hello-first";
 
 /**
  * Переписка по касанию — то, что ходит в базу.
@@ -161,11 +170,24 @@ export async function recordInbound(input: {
 }
 
 const PROSPECT_FIELDS =
-  "id, host, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url";
+  "id, host, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url, hello_at, pitch_at, checked_at";
 
 /** Строка касания из PROSPECT_FIELDS. Лид и закрепление здесь только читаются. */
 type ProspectRow = HandTouch &
-  Record<"id" | "host" | "target_user_id" | "message" | "lead_id" | "ai_handling" | "closed_reason" | "proto_url", unknown> &
+  Record<
+    | "id"
+    | "host"
+    | "target_user_id"
+    | "message"
+    | "lead_id"
+    | "ai_handling"
+    | "closed_reason"
+    | "proto_url"
+    | "hello_at"
+    | "pitch_at"
+    | "checked_at",
+    unknown
+  > &
   Record<"claimed_by" | "touched_by", string | null>;
 
 /** Что лежит в ответе модели, который ждал ручной отправки, а бот его не отправил. */
@@ -241,7 +263,7 @@ export async function recordManualInbound(
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url, message")
+    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at")
     .eq("id", prospectId)
     .maybeSingle();
   if (!prospect) return { matched: false };
@@ -271,6 +293,9 @@ async function saveInbound(
     closed_reason?: unknown;
     proto_url?: unknown;
     message?: unknown;
+    hello_at?: unknown;
+    pitch_at?: unknown;
+    checked_at?: unknown;
   },
   raw: string,
 ): Promise<{ matched: boolean; host?: string; verdict?: string }> {
@@ -280,6 +305,17 @@ async function saveInbound(
   const body = raw.trim().slice(0, 4000);
   if (!body) return { matched: false };
 
+  // Ответ на «Здравствуйте»: письма о сайте клиент ещё не видел
+  // (lib/admin/hello-first.ts). Отказ и просьба позвать человека идут
+  // обычным путём — к человеку, письмо не уходит.
+  const hello = waitsForPitch(prospect);
+  if (hello && pitchAfter(readInbound(body))) return answerHello(prospect, body);
+
+  // Письмо после «Здравствуйте» стоит в очереди, а клиент написал ещё раз
+  // («да?», «кто это?»): на это ответит само письмо — второй ответ модели
+  // поверх него вышел бы перебивающим.
+  const pitching = Boolean(prospect.pitch_at) && (await pitchQueued(String(prospect.id)));
+
   await db.from("outreach_messages").insert({
     prospect_id: prospect.id,
     lead_id: prospect.lead_id,
@@ -287,7 +323,9 @@ async function saveInbound(
     author: "staff",
     body,
     status: "done",
+    ...(pitching ? { answered_at: new Date().toISOString() } : {}),
   });
+  if (pitching) return { matched: true, host: String(prospect.host), verdict: "hello" };
 
   const patch: Record<string, unknown> = { replied_at: new Date().toISOString() };
   const read = readInbound(body);
@@ -344,7 +382,10 @@ async function saveInbound(
   }
 
   if (verdict !== "talk" && !announced) {
-    await tellManager(String(prospect.id), `Ответ по ${prospect.host}: ${HANDOVER_TEXT[verdict] ?? verdict}.\n\n${body.slice(0, 500)}`, {
+    // Ответили на «Здравствуйте» — письма о сайте клиент не видел, и
+    // менеджер, открыв переписку, должен это знать до того, как напишет.
+    const unseen = hello ? "\n\nКлиент получил только «Здравствуйте» — письмо о сайте не уходило." : "";
+    await tellManager(String(prospect.id), `Ответ по ${prospect.host}: ${HANDOVER_TEXT[verdict] ?? verdict}.${unseen}\n\n${body.slice(0, 500)}`, {
       refuse: true,
     });
   } else if (!prospect.ai_handling) {
@@ -355,6 +396,103 @@ async function saveInbound(
   }
 
   return { matched: true, host: String(prospect.host), verdict };
+}
+
+/**
+ * Клиент ответил на «Здравствуйте» — в очередь ответов ложатся кружок из
+ * «Избранного» рабочего аккаунта и письмо без приветствия, с паузой: ответ
+ * через секунду выглядит как робот (lib/admin/hello-first.ts).
+ *
+ * Модель на этот ответ не отвечает — за неё ответит письмо, — поэтому
+ * входящее сразу помечено отвеченным. Лид автопрогона заводится не здесь, а
+ * на ответ на письмо: «да?» на приветствие — ещё не тёплый лид.
+ *
+ * Проверке сайта больше трёх дней (CLAUDE.md, «проверка по факту») — письмо
+ * не уходит: разговор человеку, он напишет, проверив сайт.
+ */
+async function answerHello(
+  prospect: Parameters<typeof saveInbound>[0],
+  body: string,
+): Promise<{ matched: boolean; host?: string; verdict?: string }> {
+  const db = serviceClient();
+  if (!db) return { matched: false };
+  const id = String(prospect.id);
+  const host = String(prospect.host);
+  const now = Date.now();
+  const at = new Date(now).toISOString();
+  const letter = withoutGreeting(String(prospect.message ?? "")).trim();
+  const fresh = checkFresh((prospect.checked_at as string | null) ?? null, now);
+
+  await db.from("outreach_messages").insert({
+    prospect_id: id,
+    lead_id: prospect.lead_id,
+    direction: "in",
+    author: "staff",
+    body,
+    status: "done",
+    answered_at: at,
+  });
+
+  // Условно: два быстрых ответа подряд («да», «кто это?») письмо дважды не ставят.
+  const { data: claimed } = await db
+    .from("prospects")
+    .update({ replied_at: at, pitch_at: at })
+    .eq("id", id)
+    .is("pitch_at", null)
+    .select("id");
+  if (!claimed?.length) return { matched: true, host, verdict: "hello" };
+
+  if (!letter || !fresh) {
+    const reason = letter
+      ? "ответил на «Здравствуйте», но проверке сайта больше трёх дней — письмо не ушло: проверьте сайт и напишите сами"
+      : "ответил на «Здравствуйте», а письма о сайте нет — напишите сами";
+    await db.from("prospects").update({ ai_handling: false, handover_reason: reason }).eq("id", id);
+    await tellManager(id, `Ответ по ${host}: ${reason}.\n\n${body.slice(0, 500)}`, { refuse: true });
+    return { matched: true, host, verdict: "hello_stale" };
+  }
+
+  await db.from("outreach_messages").insert([
+    {
+      prospect_id: id,
+      lead_id: prospect.lead_id,
+      direction: "out",
+      author: "staff",
+      kind: "circle",
+      body: CIRCLE_BODY,
+      status: "queued",
+      send_after: new Date(now + CIRCLE_AFTER_MS).toISOString(),
+    },
+    {
+      prospect_id: id,
+      lead_id: prospect.lead_id,
+      direction: "out",
+      author: "staff",
+      kind: "text",
+      body: letter.slice(0, 4000),
+      status: "queued",
+      send_after: new Date(now + PITCH_AFTER_MS).toISOString(),
+    },
+  ]);
+
+  // Прототип, собранный заранее, уходит вместе с письмом (lib/proto/auto).
+  if (typeof prospect.proto_url === "string" && prospect.proto_url && letter.includes(prospect.proto_url)) {
+    await db.from("protos").update({ status: "sent", sent_at: at }).eq("prospect_id", id).eq("auto", true).eq("status", "ready");
+  }
+  return { matched: true, host, verdict: "hello" };
+}
+
+/** Письмо после «Здравствуйте» ещё ждёт отправки. */
+async function pitchQueued(prospectId: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { count } = await db
+    .from("outreach_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("prospect_id", prospectId)
+    .eq("direction", "out")
+    .eq("author", "staff")
+    .eq("status", "queued");
+  return Boolean(count);
 }
 
 /** Входящие, на которые ещё не отвечали и по которым модель ещё ведёт. */
@@ -527,7 +665,7 @@ export async function tellManager(
 export async function nextReply(
   /** Чей разговор: отвечаем с того аккаунта, с которого ушло первое письмо. */
   account: string = MAIN_ACCOUNT,
-): Promise<{ id: string; target: string; body: string; host: string } | null> {
+): Promise<{ id: string; target: string; body: string; host: string; kind: "text" | "circle" } | null> {
   const db = serviceClient();
   if (!db) return null;
 
@@ -541,14 +679,19 @@ export async function nextReply(
    * люди, которые сами нам написали. Поэтому ручное пропускается, а не
    * останавливает.
    */
+  // Кружок и письмо после «Здравствуйте» кладутся одной вставкой — с
+  // одинаковым временем, и порядок между ними решает send_after: кружок
+  // раньше.
   const { data: queued } = await db
     .from("outreach_messages")
-    .select("id, body, prospect_id")
+    .select("id, body, prospect_id, kind, send_after")
     .eq("direction", "out")
     .eq("status", "queued")
     .order("created_at", { ascending: true })
+    .order("send_after", { ascending: true, nullsFirst: true })
     .limit(REPLY_SCAN);
   if (!queued?.length) return null;
+  const now = Date.now();
 
   // Какие дополнительные аккаунты живы — один запрос на проход. Нужен
   // главному: переписку отключённого аккаунта отправить некому, и молча
@@ -562,7 +705,14 @@ export async function nextReply(
     return live.has(other);
   };
 
+  // Письмо одного разговора не обгоняет его же кружок, который ещё ждёт.
+  const waiting = new Set<string>();
   for (const row of queued) {
+    if (row.send_after && Date.parse(String(row.send_after)) > now) {
+      waiting.add(String(row.prospect_id));
+      continue;
+    }
+    if (waiting.has(String(row.prospect_id))) continue;
     const { data: p } = await db
       .from("prospects")
       .select("target, host, target_kind, target_user_id, sent_via")
@@ -593,7 +743,13 @@ export async function nextReply(
     // Пишем тому, кого телеграм вернул при отправке: у найденного по номеру
     // @адреса может не быть.
     const to = String(p.target_user_id ?? "") || String(p.target);
-    return { id: String(row.id), target: to, body: String(row.body), host: String(p.host) };
+    return {
+      id: String(row.id),
+      target: to,
+      body: String(row.body),
+      host: String(p.host),
+      kind: row.kind === "circle" ? "circle" : "text",
+    };
   }
   return null;
 }
@@ -605,6 +761,17 @@ export async function markReplySent(id: string): Promise<void> {
     .from("outreach_messages")
     .update({ status: "sent", sent_at: new Date().toISOString(), failure: null })
     .eq("id", id);
+}
+
+/**
+ * Кружок не ушёл — в «Избранном» аккаунта его нет или Telegram не принял.
+ * Разговор человеку не передаётся (в отличие от markReplyFailed): письмо
+ * за кружком уходит своим ходом, и клиенту есть что прочитать.
+ */
+export async function markCircleSkipped(id: string, why: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  await db.from("outreach_messages").update({ status: "done", failure: why.slice(0, 500) }).eq("id", id);
 }
 
 /**

@@ -696,6 +696,12 @@ export function OutreachList({
                       className="mt-1 block w-full rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm leading-relaxed text-text"
                     />
                   </label>
+                  {/* Касание в два шага (lib/admin/hello-first.ts): с рабочего
+                      аккаунта первым уходит только приветствие. По ручному
+                      маршруту пишет человек — у него порядок свой. */}
+                  {route && route.kind !== "manual" ? (
+                    <p className="mt-2 text-xs leading-relaxed text-faint">{t.helloFirstNote}</p>
+                  ) : null}
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <SubmitButton
                       pendingLabel={t.sending}
@@ -809,6 +815,12 @@ export function OutreachList({
                           ? t.delivered(when(row.delivered_at))
                           : (row.delivery_note ?? t.notDeliveredYet)}
                       </p>
+                      {/* Ушло «Здравствуйте» — письмо ждёт ответа клиента. */}
+                      {row.hello_at ? (
+                        <p className="mt-1 text-xs text-muted">
+                          {row.pitch_at ? t.helloAnswered(when(row.pitch_at)) : t.helloWaiting}
+                        </p>
+                      ) : null}
                     </div>
                   ) : (
                     <p className="mt-2 text-xs text-gold">

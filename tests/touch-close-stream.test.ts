@@ -126,7 +126,8 @@ test("бот: закрыть — только в личке, под карточ
   // Под «Клиент написал» — «Клиент отказался».
   const talk = read("lib/admin/outreach-talk-store.ts");
   assert.match(talk, /if \(options\.refuse && canClose\(/);
-  assert.equal((talk.match(/\{ refuse: true \}|refuse: true,/g) ?? []).length, 2);
+  // И под «ответил на „Здравствуйте“, но проверка сайта устарела» (hello-first).
+  assert.equal((talk.match(/\{ refuse: true \}|refuse: true,/g) ?? []).length, 3);
 });
 
 /* ── Поток «Получать лиды» ─────────────────────────────────────────────── */

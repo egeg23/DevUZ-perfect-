@@ -182,7 +182,7 @@ test("вердикт по входящему не остаётся в чисто
   // «Хотят прототип» — не одному менеджеру, а всей команде (кто первый
   // возьмёт); остальное, и повторная просьба о прототипе, — как раньше.
   assert.match(store, /const announced = verdict === "proto" \? await announcePrototype\(String\(prospect\.id\), body\) : null;/);
-  assert.match(store, /if \(verdict !== "talk" && !announced\) \{\s*\n\s+await tellManager\(/);
+  assert.match(store, /if \(verdict !== "talk" && !announced\) \{[\s\S]{0,400}?await tellManager\(/);
 });
 
 test("после «Отвечать самому» каждое сообщение клиента уходит тому, кто перехватил", () => {
