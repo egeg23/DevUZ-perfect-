@@ -10,6 +10,7 @@ import {
   type RouteKind,
 } from "@/lib/admin/outreach";
 import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake } from "@/lib/admin/work-accounts";
+import { queueEtas, type Eta, type EtaAccount } from "@/lib/admin/queue-eta";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -235,6 +236,68 @@ export async function nextQueued(
   if (lastAt && now - lastAt < gap) return null;
 
   return takeFirst(null);
+}
+
+/**
+ * Когда примерно уйдёт каждое письмо очереди (lib/admin/queue-eta.ts).
+ *
+ * Те же данные, что читает nextQueued: очередь по claimed_at, владельцы,
+ * привязка менеджеров к аккаунтам, пределы и ограничения аккаунтов и то,
+ * что каждый из них уже отправил за час. Главный аккаунт всегда может
+ * писать и пишет по HOURLY_CAP — его состояние в базе не хранится.
+ */
+export async function loadQueueEtas(now = Date.now()): Promise<Map<string, Eta>> {
+  const db = serviceClient();
+  if (!db) return new Map();
+
+  const [{ data: jobs }, owners, assigned, { data: live }, { data: recent }] = await Promise.all([
+    db.from("prospects").select("id, claimed_by").eq("status", "sending").order("claimed_at", { ascending: true }).limit(500),
+    ownerIds(db),
+    assignments(db),
+    // Выключенный или ещё не вошедший аккаунт письма не возьмёт: его нет в
+    // расчёте, и письмо, привязанное только к нему, честно «не уйдёт».
+    db.from("tg_accounts").select("id, hourly_cap, flood_until").eq("status", "active"),
+    db
+      .from("prospects")
+      .select("sent_at, sent_via")
+      .eq("status", "sent")
+      .or(SENT_BY_ACCOUNT)
+      .order("sent_at", { ascending: false })
+      .limit(50),
+  ]);
+
+  const sends = (recent ?? []).map((row) => ({
+    account: accountOf(row.sent_via as string | null),
+    at: Date.parse(String(row.sent_at)),
+  }));
+  const accountState = (key: string, cap: number, floodUntil: string | null): EtaAccount => {
+    const mine = sends.filter((s) => s.account === key).map((s) => s.at);
+    const until = floodUntil ? Date.parse(floodUntil) : null;
+    return {
+      key,
+      cap,
+      until: until !== null && until > now ? until : null,
+      sent: mine.filter((at) => at > now - HOUR_MS),
+      lastAt: mine.length ? Math.max(...mine) : null,
+    };
+  };
+  const accounts = [
+    accountState(MAIN_ACCOUNT, HOURLY_CAP, null),
+    ...(live ?? []).map((row) =>
+      accountState(String(row.id), Number(row.hourly_cap ?? HOURLY_CAP), (row.flood_until as string | null) ?? null),
+    ),
+  ];
+
+  const ownerSet = new Set(owners);
+  return queueEtas({
+    jobs: (jobs ?? []).map((row) => {
+      const by = (row.claimed_by as string | null) ?? null;
+      return { id: String(row.id), owner: Boolean(by && ownerSet.has(by)), accounts: by ? assigned.get(by) : undefined };
+    }),
+    accounts,
+    now,
+    ownerFloorMs: OWNER_FLOOR_MS,
+  });
 }
 
 /**

@@ -56,6 +56,8 @@ import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
 import { closeRows, deliverReplacement, portionSource, topUpPortion } from "@/lib/admin/portion-store";
 import { approves, decideTransfer } from "@/lib/admin/transfers";
 import { closeTouch, markSelfContacted, prospectById, queueOutreach, skipProspect } from "@/lib/admin/outreach-store";
+import { loadQueueEtas } from "@/lib/admin/outreach-queue";
+import { botQueueNote } from "@/lib/admin/queue-eta";
 import { CLOSE_TEXT, isCloseReason } from "@/lib/admin/touch-close";
 import { streamCommand } from "@/lib/admin/stream";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
@@ -1266,7 +1268,12 @@ async function handlePortionButton(
         await answerCallback(query.id, result.why === "no_way" ? "Писать некуда — нет контакта" : `Не отправлено: ${result.why}`.slice(0, 190));
         return;
       }
-      await touched("📤 В очереди бота");
+      // Когда примерно уйдёт — прямо на кнопке под карточкой: менеджеры
+      // переживали, что письмо «в очереди» не уйдёт вовсе (queue-eta.ts).
+      const now = Date.now();
+      const queued = botQueueNote((await loadQueueEtas(now)).get(prospectId), now);
+      await touched(queued.label);
+      if (queued.note && query.message) await sendMessage(query.message.chat.id, queued.note);
       if (source === "stream") await feedStream(staff.id);
       return;
     }

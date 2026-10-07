@@ -20,7 +20,7 @@ import { MapsCampaigns } from "@/components/admin/maps-campaigns";
 import { TouchLegend } from "@/components/admin/touch-legend";
 import { dailyCap, placesConfigured } from "@/lib/maps/places";
 import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
-import { queueOwners, sentLastHour } from "@/lib/admin/outreach-queue";
+import { loadQueueEtas, queueOwners, sentLastHour } from "@/lib/admin/outreach-queue";
 import { hourlyCapacity } from "@/lib/admin/work-accounts";
 import { listAccounts } from "@/lib/admin/work-accounts-store";
 import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
@@ -50,7 +50,7 @@ export default async function ProspectPage({
   // Автопрогон касаний видят те же, кто ведёт автопоиск: он из него и
   // берёт компании. Менеджеру его касания приходят лидами в очередь.
   const autoStats = seesMaps ? await dayStats() : null;
-  const [rows, hour, replies, plan, portion, owners, stream, accounts] = await Promise.all([
+  const [rows, hour, replies, plan, portion, owners, stream, accounts, etas] = await Promise.all([
     listProspects(),
     sentLastHour(),
     manualReplies(),
@@ -60,6 +60,9 @@ export default async function ProspectPage({
     streamState(staff.id),
     // Рабочих аккаунтов может быть несколько — у каждого свои «два в час».
     listAccounts(),
+    // Когда примерно уйдёт каждое письмо очереди — по аккаунтам, а не в
+    // среднем (lib/admin/queue-eta.ts).
+    loadQueueEtas(),
   ]);
   const today = todayInTashkent(new Date());
   // Порция и поток «Получать лиды» приходят одним списком: поток — сверх
@@ -182,6 +185,7 @@ export default async function ProspectPage({
         }}
         hour={hour}
         cap={hourlyCapacity(accounts)}
+        etas={Object.fromEntries(etas)}
         owners={owners}
         open={open}
         error={e}
