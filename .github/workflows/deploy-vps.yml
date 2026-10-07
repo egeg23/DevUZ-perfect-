@@ -86,9 +86,12 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
+          # Метка по хешу — всегда; «main» — только с main. У pull request
+          # имя ссылки вида «265/merge», и с косой чертой метка образа не
+          # собирается вовсе: первый же прогон на PR упал именно на этом.
           tags: |
             ${{ env.IMAGE }}:${{ github.sha }}
-            ${{ env.IMAGE }}:${{ github.ref_name }}
+            ${{ github.ref == 'refs/heads/main' && format('{0}:main', env.IMAGE) || '' }}
           build-args: |
             NEXT_PUBLIC_SITE_URL=${{ env.PUBLIC_SITE_URL }}
             NEXT_PUBLIC_SUPABASE_URL=${{ env.PUBLIC_SUPABASE_URL }}
