@@ -62,7 +62,8 @@ test("«12 часов» узнаётся на всех языках письма
 test("разбор глубже: до четырёх находок про клиентов и место на сайте у каждой", () => {
   for (const finding of findings.slice(0, 4)) assert.ok(prompt.includes(finding.title), finding.title);
   assert.match(prompt, /Первые четыре — про его клиентов и деньги: открывай письмо ими/);
-  assert.match(prompt, /Назови две-три находки, каждую — с местом на сайте/);
+  // Письмо после «Здравствуйте» короткое (lib/admin/hello-first.ts): одна-две находки.
+  assert.match(prompt, /Назови одну-две находки, каждую — с местом на сайте/);
   assert.match(OUTREACH_SYSTEM, /Глубже, а не длиннее/);
 });
 
@@ -70,7 +71,7 @@ test("вода убрана: ни масштаба студии, ни средн
   assert.doesNotMatch(prompt, /разработчиков в штате|Средний рост лидогенерации|до работ и после/);
   assert.doesNotMatch(OUTREACH_SYSTEM, /Масштаб студии и средний рост назвать можно/);
   assert.match(OUTREACH_SYSTEM, /Не рассказывай о студии/);
-  assert.match(OUTREACH_SYSTEM, /от 50 до 100 слов/);
+  assert.match(OUTREACH_SYSTEM, /от 45 до 70 слов/);
 
   // «30 разработчиков» больше не разрешено заданием — это выдумка письма.
   const withScale = `Здравствуйте! Это Данил из devuz.studio про сайт mebel.uz. У нас ${proof.staff} разработчиков и ${proof.projects} проектов. С телефона сайт открывается в масштабе монитора, цен нет, телефон не нажимается. За 12 часов соберём прототип. Собрать?`;
@@ -85,7 +86,7 @@ test("компания без сайта: тоже прототип за 12 ча
   assert.match(p, /за 12 часов соберём прототип/);
   assert.doesNotMatch(p, /разработчиков в штате|Средний рост/);
   assert.match(NOSITE_SYSTEM, /Предложи прототип/);
-  assert.match(NOSITE_SYSTEM, /от 50 до 100 слов/);
+  assert.match(NOSITE_SYSTEM, /от 45 до 70 слов/);
   const body = "Здравствуйте! Это Егор из devuz.studio. Вы барбершоп, а сайта нет — тот, кто ищет барбершоп в Ташкенте, попадает к конкурентам. Проверьте поиск сами, это минута. Аккаунт в соцсети можно потерять, и поиск его не читает.";
   assert.ok(nositeProblems(body, p).some((x) => x.code === "no_prototype"));
   assert.deepEqual(nositeProblems(`${body} За 12 часов соберём прототип сайта под ваши услуги. Собрать?`, p), []);

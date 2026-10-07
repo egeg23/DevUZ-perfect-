@@ -12,6 +12,7 @@ import {
 import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake } from "@/lib/admin/work-accounts";
 import { queueEtas, type Eta, type EtaAccount } from "@/lib/admin/queue-eta";
 import { mainLimitUntil } from "@/lib/admin/account-ban-store";
+import { helloFor } from "@/lib/admin/hello-first";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -76,7 +77,12 @@ export async function aheadInQueue(claimedAt: string | null): Promise<number> {
   return count ?? 0;
 }
 
-export type Queued = { id: string; target: string; kind: RouteKind; message: string; host: string };
+/**
+ * Письмо из очереди. Отправляется не `message`, а `hello` — «Здравствуйте»
+ * на языке письма; само письмо уйдёт, когда клиент ответит
+ * (lib/admin/hello-first.ts).
+ */
+export type Queued = { id: string; target: string; kind: RouteKind; message: string; hello: string; host: string };
 
 /**
  * Взять письмо из очереди — этим аккаунтом и только им.
@@ -118,7 +124,7 @@ async function take(
  */
 export const OWNER_FLOOR_MS = 60_000;
 
-const QUEUED_COLUMNS = "id, target, target_kind, message, host, claimed_by";
+const QUEUED_COLUMNS = "id, target, target_kind, message, host, claimed_by, walked";
 
 /**
  * Кто на каких аккаунтах работает: сотрудник → ключи аккаунтов.
@@ -152,6 +158,7 @@ function toQueued(data: Record<string, unknown> | null): Queued | null {
     // них он один возможный.
     kind: (data.target_kind as RouteKind | null) ?? "handle",
     message: String(data.message),
+    hello: helloFor(String(data.message), (data.walked as { lang?: string } | null)?.lang),
     host: String(data.host),
   };
 }
@@ -336,6 +343,8 @@ export async function markSent(
     .update({
       status: "sent",
       sent_at: new Date().toISOString(),
+      // Ушло «Здравствуйте», а не письмо: письмо ждёт ответа клиента.
+      hello_at: new Date().toISOString(),
       failure: null,
       sent_via: account,
       dispatch_by: null,
@@ -347,7 +356,7 @@ export async function markSent(
       ...(messageId ? { sent_message_id: String(messageId), delivered_at: null, delivery_note: null } : {}),
     })
     .eq("id", id)
-    .select("message, lead_id")
+    .select("message, lead_id, walked")
     .maybeSingle();
 
   // Прототип, собранный заранее, ушёл вместе с письмом (lib/proto/auto).
@@ -363,14 +372,15 @@ export async function markSent(
   // Лента переписки начинается здесь, в момент доставки, а не в момент
   // постановки в очередь. Записать письмо заранее значило бы показать
   // менеджеру отправленным то, что отдать не удалось, — а модель, читая
-  // такую ленту, стала бы ссылаться на несказанное.
+  // такую ленту, стала бы ссылаться на несказанное. Ушло «Здравствуйте» —
+  // его и пишем; письмо ляжет в ленту, когда уйдёт после ответа клиента.
   if (data?.message) {
     await db.from("outreach_messages").insert({
       prospect_id: id,
       lead_id: data.lead_id ?? null,
       direction: "out",
       author: "staff",
-      body: String(data.message).slice(0, 4000),
+      body: helloFor(String(data.message), (data.walked as { lang?: string } | null)?.lang),
       status: "sent",
       sent_at: new Date().toISOString(),
     });

@@ -25,6 +25,7 @@ import {
 } from "@/lib/admin/portion";
 import { CLOSE_REASONS, CLOSE_TEXT, closeCallback } from "@/lib/admin/touch-close";
 import { WRITE_MYSELF_BUTTON, writeMyselfCallback } from "@/lib/admin/write-myself";
+import { helloFor } from "@/lib/admin/hello-first";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { staffById } from "@/lib/admin/session";
 import { touchesOnDay, touchProgressFor } from "@/lib/admin/touch-store";
@@ -329,6 +330,11 @@ export function itemText(p: Prospect, heading: string): string {
   }
   const found = p.findings.slice(0, 2).map((f) => f.title).filter(Boolean);
   if (found.length) lines.push(`Зацепка: <i>${esc(found.join("; "))}</i>`);
+  // Касание в два шага (lib/admin/hello-first.ts): с рабочего аккаунта
+  // первым уходит только приветствие, письмо — после ответа.
+  if (p.message && route && route.kind !== "manual") {
+    lines.push(`Бот сначала напишет «${esc(helloFor(p.message, p.walked?.lang))}». Письмо ниже — с кружком перед ним — уйдёт, когда клиент ответит.`);
+  }
   lines.push(
     "",
     p.message

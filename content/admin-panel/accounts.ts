@@ -89,6 +89,26 @@ export const accountsDict = defineDict({
     uz: "skaut bu akkaunt bilan aloqada emas",
     pl: "skaut nie jest połączony tym kontem",
   },
+  /**
+   * Кружок для писем после «Здравствуйте» (lib/admin/hello-first.ts): есть
+   * ли он в «Избранном» аккаунта. Скаут смотрит раз в десять минут
+   * (lib/admin/circle-store.ts).
+   */
+  circleYes: {
+    ru: (when: string) => `Кружок для писем: есть, сохранён ${when}`,
+    uz: (when: string) => `Xatlar uchun dumaloq video: bor, ${when} da saqlangan`,
+    pl: (when: string) => `Kółko do wiadomości: jest, zapisane ${when}`,
+  },
+  circleNo: {
+    ru: "Кружка нет: сохраните его в «Избранное» этого аккаунта — без него тем, кто ответил на «Здравствуйте», уйдёт только письмо",
+    uz: "Dumaloq video yo‘q: uni shu akkauntning «Saqlangan xabarlar»iga saqlang — usiz salomga javob berganlarga faqat xat ketadi",
+    pl: "Brak kółka: zapisz je w «Zapisanych» tego konta — bez niego do tych, którzy odpowiedzieli na powitanie, wyjdzie tylko wiadomość",
+  },
+  circleUnknown: {
+    ru: "Кружок: скаут ещё не заглядывал в «Избранное» — смотрит раз в десять минут",
+    uz: "Dumaloq video: skaut hali «Saqlangan xabarlar»ga qaramadi — o‘n daqiqada bir marta qaraydi",
+    pl: "Kółko: skaut jeszcze nie zajrzał do «Zapisanych» — sprawdza co dziesięć minut",
+  },
   flood: {
     ru: (until: string) => `Telegram ограничил первые письма до ${until}: переписка идёт, новые письма уходят с других аккаунтов`,
     uz: (until: string) => `Telegram ${until} gacha birinchi xatlarni chekladi: yozishma davom etadi, yangi xatlar boshqa akkauntlardan ketadi`,

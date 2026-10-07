@@ -676,9 +676,28 @@ export const outreachListDict = defineDict({
   },
   contact: { ru: "Связаться", uz: "Bog‘lanish", pl: "Skontaktuj się" },
   firstMessageLabel: {
-    ru: "Первое сообщение — правьте перед отправкой",
-    uz: "Birinchi xabar — yuborishdan oldin tahrirlang",
-    pl: "Pierwsza wiadomość — popraw przed wysłaniem",
+    ru: "Письмо после «Здравствуйте» — правьте перед отправкой",
+    uz: "Salomdan keyingi xat — yuborishdan oldin tahrirlang",
+    pl: "Wiadomość po powitaniu — popraw przed wysłaniem",
+  },
+  /**
+   * Касание в два шага (lib/admin/hello-first.ts): первым уходит только
+   * приветствие, письмо — после ответа клиента, перед ним кружок.
+   */
+  helloFirstNote: {
+    ru: "Бот первым напишет только «Здравствуйте» (узбекскому сайту — «Assalomu alaykum»). Этот текст уйдёт, когда клиент ответит, а за минуту до него — кружок из «Избранного» рабочего аккаунта. Не ответит — больше ничего не уйдёт: так Telegram не считает нас рассылкой.",
+    uz: "Bot birinchi bo‘lib faqat salom yozadi: o‘zbekcha saytga — «Assalomu alaykum», ruscha saytga — ruscha salom. Bu matn mijoz javob berganda ketadi, undan bir daqiqa oldin esa — ishchi akkauntning «Saqlangan xabarlar»idagi dumaloq video. Javob bermasa — boshqa hech narsa ketmaydi: shunda Telegram bizni ommaviy tarqatma deb hisoblamaydi.",
+    pl: "Bot najpierw napisze tylko powitanie: do strony po rosyjsku — po rosyjsku, do strony po uzbecku — «Assalomu alaykum». Ten tekst wyjdzie, gdy klient odpowie, a minutę przed nim — wiadomość wideo (kółko) z «Zapisanych» konta firmowego. Jeśli nie odpowie — nic więcej nie wyjdzie: dzięki temu Telegram nie uznaje nas za masową wysyłkę.",
+  },
+  helloWaiting: {
+    ru: "Ушло «Здравствуйте» — письмо уйдёт, когда клиент ответит.",
+    uz: "Salom ketdi — xat mijoz javob berganda ketadi.",
+    pl: "Wysłano powitanie — wiadomość wyjdzie, gdy klient odpowie.",
+  },
+  helloAnswered: {
+    ru: (when: string) => `Клиент ответил на приветствие ${when} — бот отправил кружок и письмо.`,
+    uz: (when: string) => `Mijoz salomga ${when} da javob berdi — bot dumaloq video va xatni yubordi.`,
+    pl: (when: string) => `Klient odpowiedział na powitanie ${when} — bot wysłał kółko i wiadomość.`,
   },
   sending: { ru: "Отправляем…", uz: "Yuborilmoqda…", pl: "Wysyłamy…" },
   takeIntoWork: { ru: "Взять в работу", uz: "Ishga olish", pl: "Weź do realizacji" },

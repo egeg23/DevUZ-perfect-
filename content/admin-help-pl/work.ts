@@ -41,6 +41,14 @@ export const workSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "circle",
+        title: "Kółko do wiadomości",
+        body: [
+          "Tym, którzy odpowiedzieli na powitanie, przed wiadomością wychodzi kółko — krótkie wideo od studia, które nagrywa właściciel ([kontakt w dwóch krokach](#prospect-hello)). Bot bierze ostatnie kółko z «Zapisanych» tego konta firmowego, z którego szedł kontakt — dlatego zapisz je w «Zapisanych» każdego konta. Wysyłana jest kopia, bez oznaczenia „przekazano”.",
+          "Przy każdym koncie jest tu napisane, czy kółko jest: «Kółko do wiadomości: jest, zapisane …» albo «Brak kółka» — wtedy wyjdzie sama wiadomość. Bot zagląda do «Zapisanych» co dziesięć minut, więc po zapisaniu wiersz nie odświeży się od razu. Nagrałeś nowe — po prostu je zapisz: bot zawsze bierze ostatnie.",
+        ],
+      },
+      {
         id: "stop",
         title: "Wstrzymanie, ograniczenie i odłączenie",
         body: [

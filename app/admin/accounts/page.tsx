@@ -26,6 +26,7 @@ import {
   type WorkAccount,
 } from "@/lib/admin/work-accounts";
 import { accountPeople, accountStaff, accountsActivity, listAccounts } from "@/lib/admin/work-accounts-store";
+import { circleStates, type CircleState } from "@/lib/admin/circle-store";
 
 export const dynamic = "force-dynamic";
 
@@ -100,12 +101,23 @@ export default async function AccountsPage({
   const errors = pick(loginErrorDict, locale);
   const notice = r && Object.hasOwn(results, r) ? results[r as keyof typeof results] : null;
 
-  const [accounts, activity, onAccount, people] = await Promise.all([
+  const [accounts, activity, onAccount, people, circles] = await Promise.all([
     listAccounts(),
     accountsActivity(),
     accountStaff(),
     accountPeople(),
+    circleStates(),
   ]);
+  // Кружок для писем после «Здравствуйте» (lib/admin/hello-first.ts).
+  const circleLine = (key: string) => {
+    const state: CircleState | undefined = circles.get(key);
+    if (!state) return <p className="mt-1 text-xs text-faint">{t.circleUnknown}</p>;
+    return state.savedAt ? (
+      <p className="mt-1 text-xs text-green">{t.circleYes(tashkentClock(new Date(state.savedAt)))}</p>
+    ) : (
+      <p className="mt-1 text-xs text-gold">{t.circleNo}</p>
+    );
+  };
   const now = Date.now();
   const busy = accounts.some((a) => WORKING.has(a.status));
   const sentOf = (key: string, cap: number) => {
@@ -134,6 +146,7 @@ export default async function AccountsPage({
             <span className="text-xs text-faint">{t.mainText(HOURLY_CAP)}</span>
           </div>
           <p className="mt-1 text-xs text-muted">{sentOf(MAIN_ACCOUNT, HOURLY_CAP)}</p>
+          {circleLine(MAIN_ACCOUNT)}
           <StaffForm account={MAIN_ACCOUNT} people={people} checked={onAccount.get(MAIN_ACCOUNT) ?? []} t={t} />
         </li>
 
@@ -166,6 +179,7 @@ export default async function AccountsPage({
                 </p>
               ) : null}
               {flooded ? <p className="mt-1 text-xs text-gold">{t.flood(tashkentClock(new Date(a.flood_until!)))}</p> : null}
+              {a.status === "active" || a.status === "paused" ? circleLine(a.id) : null}
               {failure ? <p className="mt-1 text-xs text-red-300">{errors[failure]}</p> : null}
 
               {a.status === "awaiting_code" ? (

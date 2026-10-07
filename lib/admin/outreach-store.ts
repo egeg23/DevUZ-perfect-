@@ -38,6 +38,7 @@ import { factCheck, type DroppedFinding } from "@/lib/audit/verify";
 import { AUTO_PROTO, autoPrototype } from "@/lib/proto/auto";
 import { markAutoSent } from "@/lib/proto/store";
 import { WRITE_MYSELF_MAX, WRITE_MYSELF_NOTE, mayWriteMyself } from "@/lib/admin/write-myself";
+import { checkFresh } from "@/lib/admin/check-fresh";
 import { newRequestNo } from "@/lib/qualify/engine";
 import {
   NOSITE_SYSTEM,
@@ -173,10 +174,17 @@ export type Prospect = {
   check_dropped: DroppedFinding[];
   /** Касание автопрогона (lib/admin/autopilot.ts): ничьё, пока клиент не ответил. */
   autopilot_at: string | null;
+  /**
+   * Касание в два шага (lib/admin/hello-first.ts): когда ушло «Здравствуйте»
+   * и когда после ответа клиента ушли кружок и письмо. Есть первое, нет
+   * второго — письмо ждёт ответа.
+   */
+  hello_at: string | null;
+  pitch_at: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, checked_at, check_dropped, autopilot_at, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, checked_at, check_dropped, autopilot_at, hello_at, pitch_at, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -216,6 +224,8 @@ function shape(row: Record<string, unknown>): Prospect {
     checked_at: (row.checked_at as string | null) ?? null,
     check_dropped: Array.isArray(row.check_dropped) ? (row.check_dropped as DroppedFinding[]) : [],
     autopilot_at: (row.autopilot_at as string | null) ?? null,
+    hello_at: (row.hello_at as string | null) ?? null,
+    pitch_at: (row.pitch_at as string | null) ?? null,
     ...protoOpens(row.protos),
   };
 }
@@ -677,17 +687,8 @@ export type QueueResult = { ok: true; leadId: string | null } | ({ ok: false; wh
  * Имя отправителя на проверку не влияет — в нём нет чисел, — поэтому
  * карточка может звать её и не зная, кто сейчас смотрит.
  */
-/**
- * Сколько живёт проверка по факту. Сайт за три дня может починиться или
- * сломаться иначе — письмо о нём тогда пишется заново.
- */
-export const CHECK_FRESH_MS = 3 * 24 * 3600_000;
-
-/** Проверка по факту свежая — по ней можно отправлять. */
-export function checkFresh(checkedAt: string | null, now = Date.now()): boolean {
-  const at = checkedAt ? Date.parse(checkedAt) : Number.NaN;
-  return Number.isFinite(at) && now - at <= CHECK_FRESH_MS;
-}
+// Сколько живёт проверка по факту — lib/admin/check-fresh.ts.
+export { CHECK_FRESH_MS, checkFresh } from "@/lib/admin/check-fresh";
 
 /**
  * С каким прототипом письмо писалось — по нему его и проверяем.

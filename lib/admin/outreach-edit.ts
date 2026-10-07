@@ -1,3 +1,4 @@
+import { waitsForPitch } from "@/lib/admin/hello-first";
 import { MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
 import { serviceClient } from "@/lib/supabase";
 
@@ -88,7 +89,9 @@ export async function nextEdit(
 
   const { data: rows } = await db
     .from("outreach_edits")
-    .select("id, prospect_id, body, prospects!outreach_edits_prospect_id_fkey (host, target_user_id, sent_message_id, sent_at, sent_via)")
+    .select(
+      "id, prospect_id, body, prospects!outreach_edits_prospect_id_fkey (host, target_user_id, sent_message_id, sent_at, sent_via, hello_at, pitch_at)",
+    )
     .is("done_at", null)
     .is("failure", null)
     .order("created_at", { ascending: true })
@@ -102,12 +105,23 @@ export async function nextEdit(
           sent_message_id: string | null;
           sent_at: string | null;
           sent_via: string | null;
+          hello_at: string | null;
+          pitch_at: string | null;
         }
       | null;
     const id = String(data.id);
 
     // Правка чужого аккаунта — её заберёт он сам.
     if (p && accountOf(p.sent_via) !== account) continue;
+
+    // Ушло только «Здравствуйте», письмо ждёт ответа клиента
+    // (lib/admin/hello-first.ts): в Telegram править нечего — правим само
+    // письмо, оно уйдёт уже исправленным.
+    if (p && waitsForPitch(p)) {
+      await db.from("prospects").update({ message: String(data.body) }).eq("id", data.prospect_id);
+      await db.from("outreach_edits").update({ done_at: new Date().toISOString() }).eq("id", id);
+      continue;
+    }
 
     // Править нечего или некому — это итог, а не повод крутиться в очереди.
     if (!p?.target_user_id || !p.sent_message_id) {
