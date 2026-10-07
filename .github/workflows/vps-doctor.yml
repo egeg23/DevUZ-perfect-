@@ -60,18 +60,27 @@ jobs:
     steps:
       - name: Осмотреть сервер по SSH
         uses: appleboy/ssh-action@v1
+        # Каталог приходит переменной, а не подстановкой ${{ }} внутри
+        # скрипта. Скрипт с подстановкой GitHub считает одним выражением, а
+        # у выражения потолок 21 000 знаков со всеми экранированиями:
+        # 07.10.2026 осмотр перестал запускаться вовсе — «Exceeded max
+        # expression length». Без подстановки скрипт — просто текст, и
+        # потолка у него нет.
+        env:
+          VPS_APP_DIR_IN: ${{ secrets.VPS_APP_DIR }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
+          envs: VPS_APP_DIR_IN
           # Намеренно без set -e: осмотр обязан дойти до конца и показать
           # все находки сразу. Провал одной проверки — не повод скрыть
           # остальные девять, ради которых сюда и пришли.
           script: |
             set -uo pipefail
 
-            APP_DIR="${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
+            APP_DIR="${VPS_APP_DIR_IN:-/opt/devuz}"
             BRANCH=main
             TROUBLE=0
 
