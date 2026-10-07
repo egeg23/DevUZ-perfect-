@@ -126,3 +126,14 @@ test("осмотр связи запускается кнопкой и не пе
   assert.doesNotMatch(doctor, /cat .*\.env|envval/, "осмотр печатает содержимое .env в открытый лог");
   assert.match(doctor, /ls-remote/, "осмотр не проверяет главное — доступ сервера к GitHub");
 });
+
+test("на сервере одна выкатка за раз: замок до git fetch, переживает exec", () => {
+  const script = readFileSync(new URL("../scripts/vps-deploy.sh", import.meta.url), "utf8");
+  const lock = script.indexOf('exec 9>"${TMPDIR:-/tmp}/devuz-deploy.lock"');
+  const wait = script.indexOf("flock -w 900 9");
+  const fetch = script.indexOf('git fetch --depth 1 origin "$BRANCH"');
+  const reexec = script.indexOf('exec bash "$APP_DIR/scripts/vps-deploy.sh"');
+  assert.ok(lock > 0 && wait > lock, "нет замка на выкатку");
+  assert.ok(wait < fetch, "замок берётся после того, как код уже забирают");
+  assert.ok(reexec > fetch, "перезапуск свежей копии пропал");
+});
