@@ -94,6 +94,7 @@ function applyCur(){
   qa('[data-p]').forEach(function(el){el.textContent=fmt(+el.dataset.p,CUR)});
   qa('[data-pm]').forEach(function(el){el.textContent=fmt(+el.dataset.pm,CUR)+(L.perM||'')});
   root.classList.toggle('cur-sum',CUR==='sum');
+  favBar();
 }
 qa('[data-cur]').forEach(function(b){b.addEventListener('click',function(){CUR=b.dataset.cur;store.set('sh-cur',CUR);applyCur()})});
 applyCur();
@@ -123,22 +124,46 @@ if(sf){
 /* ── Каталог: фильтры одной лентой, счётчик сразу ── */
 var cat=$('cat');
 var F={deal:params.get('deal')||'buy',type:params.get('type')||'',rooms:params.get('rooms')||'',mort:'',fav:params.get('fav')||'',dist:params.get('dist')||'',max:params.get('max')||''};
+function match(c,f){
+  var id=+c.dataset.id,ok=f.deal==='buy';
+  if(f.type&&c.dataset.type!==f.type)ok=false;
+  if(f.rooms&&(f.rooms==='4'?+c.dataset.rooms<4:c.dataset.rooms!==f.rooms))ok=false;
+  if(f.mort&&c.dataset.mort!=='1')ok=false;
+  if(f.fav&&FAV.indexOf(id)<0)ok=false;
+  if(f.dist!==''&&c.dataset.dist!==f.dist)ok=false;
+  if(f.max&&+c.dataset.usd>+f.max)ok=false;
+  return ok;
+}
+function fname(k){var N=L.fNames||{};if(k==='type')return (N.type||{})[F.type]||F.type;if(k==='rooms')return (N.rooms||'').replace('{v}',F.rooms==='4'?'4+':F.rooms);return N[k]||k}
 function filter(){
-  var n=0;
-  qa('.lcw',cat).forEach(function(w){
-    var c=w.querySelector('.lc'),id=+c.dataset.id,ok=F.deal==='buy';
-    if(F.type&&c.dataset.type!==F.type)ok=false;
-    if(F.rooms&&(F.rooms==='4'?+c.dataset.rooms<4:c.dataset.rooms!==F.rooms))ok=false;
-    if(F.mort&&c.dataset.mort!=='1')ok=false;
-    if(F.fav&&FAV.indexOf(id)<0)ok=false;
-    if(F.dist!==''&&c.dataset.dist!==F.dist)ok=false;
-    if(F.max&&+c.dataset.usd>+F.max)ok=false;
-    w.hidden=!ok;if(ok)n++;
-  });
+  var n=0,cards=qa('.lc',cat);
+  qa('.lcw',cat).forEach(function(w){var ok=match(w.querySelector('.lc'),F);w.hidden=!ok;if(ok)n++});
   $('cat-empty').hidden=n>0;
   $('cat-n').textContent=(L.found||'').replace('{n}',n);
   qa('#filters [data-f]').forEach(function(b){b.setAttribute('aria-pressed',String(F[b.dataset.f]===b.dataset.v))});
   var ds=$('cat-dist');if(ds)ds.value=F.dist;
+  /* Ничего не нашлось — подсказываем, какой фильтр снять (как подбор Golden House). */
+  var rx=$('cat-relax');
+  if(rx){rx.innerHTML='';if(!n)['type','rooms','dist','max','mort','fav','deal'].forEach(function(k){
+    var on=k==='deal'?F.deal!=='buy':!!F[k];if(!on)return;
+    var g={};Object.keys(F).forEach(function(x){g[x]=F[x]});g[k]=k==='deal'?'buy':'';
+    var m=cards.filter(function(c){return match(c,g)}).length;if(!m)return;
+    var b=d.createElement('button');b.type='button';b.className='chip';b.textContent=(L.relax||'').replace('{f}',fname(k)).replace('{n}',m);
+    b.addEventListener('click',function(){F[k]=g[k];filter()});rx.appendChild(b);
+  });if(!n&&!rx.children.length){var r=d.createElement('button');r.type='button';r.className='chip';r.textContent=L.reset||'';r.addEventListener('click',function(){F={deal:'buy',type:'',rooms:'',mort:'',fav:'',dist:'',max:''};filter()});rx.appendChild(r)}}
+  /* Фильтры — в адресе: ссылку на подборку можно переслать (как каталог MAVERA). */
+  try{var q=new URLSearchParams();Object.keys(F).forEach(function(k){if(F[k]&&!(k==='deal'&&F[k]==='buy'))q.set(k,F[k])});history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:''))}catch(e){}
+  favBar();
+}
+/* Подборка из избранного — в Telegram одним сообщением (как «В подборку» у MAVERA). */
+function favBar(){
+  var bar=$('fav-bar');if(!bar||!cat)return;
+  var picked=qa('.lc',cat).filter(function(c){return FAV.indexOf(+c.dataset.id)>=0});
+  bar.hidden=!picked.length;if(!picked.length)return;
+  $('fav-n').textContent=(L.favN||'').replace('{n}',picked.length);
+  var base=location.origin+(L.base||'');
+  var txt=(L.favHead||'')+'\n'+picked.map(function(c){return '• '+c.dataset.name+' — '+fmt(+c.dataset.usd,CUR)+' (ID '+c.dataset.id+')'}).join('\n');
+  $('fav-share').href='https://t.me/share/url?url='+encodeURIComponent(base+'/katalog?fav=1')+'&text='+encodeURIComponent(txt);
 }
 if(cat){
   qa('#filters [data-f]').forEach(function(b){b.addEventListener('click',function(){var k=b.dataset.f;F[k]=k==='deal'?b.dataset.v:(F[k]===b.dataset.v?'':b.dataset.v);filter()})});
@@ -167,9 +192,30 @@ if(mf){
     var pay=r?S*r/(1-Math.pow(1+r,-n)):S/n;
     $('m-dv').textContent=dp+'%';$('m-yv').textContent=y;$('m-rv').textContent=$('m-r').value;
     var el=$('m-pay');el.dataset.p=String(Math.round(pay));el.textContent=fmt(Math.round(pay),CUR);
+    var lo=$('m-loan'),ov=$('m-over');if(lo){lo.dataset.p=String(Math.round(S));lo.textContent=fmt(Math.round(S),CUR)}if(ov){var o=Math.max(0,pay*n-S);ov.dataset.p=String(Math.round(o));ov.textContent=fmt(Math.round(o),CUR)}
   };
   mf.addEventListener('input',calc);calc();
   qa('[data-cur]').forEach(function(b){b.addEventListener('click',calc)});
+}
+
+/* ── Запись на просмотр объекта (как бронь и заявка у MAVERA) ── */
+var vf=$('viewf');
+if(vf){
+  var vd=$('v-days'),now=new Date(Date.now()+5*36e5),out=[];
+  for(var k=0;out.length<6&&k<8;k++){var dt=new Date(now.getTime()+k*864e5);if(k===0&&now.getUTCHours()>=17)continue;out.push({k:k,lab:k===0?L.today:k===1?L.tomorrow:L.days[dt.getUTCDay()]+', '+dt.getUTCDate()+' '+L.months[dt.getUTCMonth()]})}
+  vd.innerHTML=out.map(function(x){return '<label class="opt"><input type="radio" name="vd" value="'+x.lab+'" data-k="'+x.k+'"><span>'+x.lab+'</span></label>'}).join('');
+  var vtimes=function(){var c=vf.querySelector('input[name="vd"]:checked'),today=c&&c.dataset.k==='0',h=now.getUTCHours();qa('input[name="vh"]',vf).forEach(function(x){var dis=today&&parseInt(x.value,10)<=h;x.disabled=dis;if(dis)x.checked=false})};
+  vf.addEventListener('change',vtimes);
+  vf.addEventListener('submit',function(e){
+    e.preventDefault();
+    var dd=vf.querySelector('input[name="vd"]:checked'),hh=vf.querySelector('input[name="vh"]:checked'),ph=($('v-ph').value||'').trim(),err=$('v-err'),done=$('v-done');
+    if(!dd||!hh||ph.replace(/\D/g,'').length<9){err.textContent=L.vNeed;err.hidden=false;done.hidden=true;return}
+    err.hidden=true;
+    var id=(location.search.match(/[?&]id=(\d+)/)||[])[1]||'149645';
+    var msg=L.vHead+'\n'+L.vObj+': ID '+id+' — '+L.objName+'\n'+L.vWhen+': '+dd.value+', '+hh.value+'\n'+L.fPhone+': '+ph;
+    try{navigator.clipboard.writeText(msg)}catch(x){}
+    done.textContent=L.vSent;done.hidden=false;window.open(L.adminUrl,'_blank','noopener');
+  });
 }
 
 /* ── Подбор: заявка → Telegram администратора ── */
