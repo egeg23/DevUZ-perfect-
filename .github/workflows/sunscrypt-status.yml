@@ -24,6 +24,10 @@ jobs:
             C="docker compose -p sunscrypt --env-file /opt/sunscrypt/.env -f infra/docker-compose.yml"
             $C ps --format '{{.Service}} {{.State}} {{.Status}}'
             $C exec -T backend python -m app.engine_report
+            echo "▸ Текущие сигналы по парам:"
+            for k in $($C exec -T redis redis-cli --raw keys 'sig:*'); do
+              $C exec -T redis redis-cli --raw get "$k" | python3 -c "import sys,json,datetime;s=json.load(sys.stdin);print(' ',s['sym'],s.get('model'),'цель',s['target'],'от',datetime.datetime.utcfromtimestamp(s['ts_close']/1000).strftime('%m-%d %H:%M'),'пауза' if s.get('paused') else '')"
+            done
             echo "▸ Сигналы (последние строки):"
             $C logs --tail 40 signals 2>&1 | grep -E "rhat|свечи|история|нет весов" | tail -10
             echo "▸ Диспетчер (последние строки):"
