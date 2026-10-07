@@ -127,6 +127,13 @@ test("осмотр связи запускается кнопкой и не пе
   assert.match(doctor, /workflow_dispatch/, "осмотр нельзя запустить кнопкой");
   assert.doesNotMatch(doctor, /cat .*\.env|envval/, "осмотр печатает содержимое .env в открытый лог");
   assert.match(doctor, /ls-remote/, "осмотр не проверяет главное — доступ сервера к GitHub");
+
+  // Скрипт осмотра — без подстановок ${{ }}: с ними GitHub считает его
+  // одним выражением с потолком в 21 000 знаков, и 07.10.2026 осмотр
+  // перестал запускаться. Каталог приходит переменной через envs.
+  const script = doctor.slice(doctor.indexOf("script: |"));
+  assert.doesNotMatch(script, /\$\{\{/, "в скрипте осмотра подстановка GitHub — он снова упрётся в потолок выражения");
+  assert.match(doctor, /envs: VPS_APP_DIR_IN/);
 });
 
 test("на сервере одна выкатка за раз: замок до git fetch, переживает exec", () => {
