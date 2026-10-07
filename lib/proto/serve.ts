@@ -4,6 +4,7 @@ import { tellManager } from "@/lib/admin/outreach-talk-store";
 import { SESSION_COOKIE } from "@/lib/admin/return-to";
 import { looksLikeAccessToken } from "@/lib/store/access";
 import { fromPanel, isPreviewFetch, openedText } from "@/lib/proto/opened";
+import { isQuietProtoPath, protoContentType } from "@/lib/proto/pages";
 import { logView, markOpened, protoPage } from "@/lib/proto/store";
 import { PIN_LIMIT, hasPinCookie, pinCookieHeader, pinMatches, pinPage, type PinState } from "@/lib/proto/lock";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
@@ -39,7 +40,10 @@ export async function serveProto(request: Request, token: string, path = ""): Pr
   // Превью мессенджера и наши собственные открытия из панели не считаются —
   // см. lib/proto/opened. Первое настоящее открытие прототипа из касания —
   // строка тому, кто касание ведёт.
-  if (!isPreviewFetch(request.headers.get("user-agent")) && !fromPanel(request.headers.get("cookie"), SESSION_COOKIE)) {
+  // Манифест, service worker и офлайн-страницу запрашивает телефон, а не
+  // человек: в журнал показа они не идут (lib/proto/pages).
+  const countable = !isQuietProtoPath(path);
+  if (countable && !isPreviewFetch(request.headers.get("user-agent")) && !fromPanel(request.headers.get("cookie"), SESSION_COOKIE)) {
     // Журнал показа — доказательство, что клиент видел макет (условия,
     // раздел 5). Адрес — тем же способом, что у ограничителя запросов.
     const ip = ipFromHeaders(request.headers);
@@ -58,7 +62,7 @@ export async function serveProto(request: Request, token: string, path = ""): Pr
 
   return new Response(page.html, {
     headers: {
-      "Content-Type": "text/html; charset=utf-8",
+      "Content-Type": protoContentType(path),
       /*
        * noindex стоит и в самой странице, и здесь. Мета-тег не спасает, если
        * ссылку утащил агрегатор и отдаёт её содержимое у себя; заголовок
