@@ -106,3 +106,49 @@ test("shox.hospital: 6 страниц на ru, uz, en — условия на я
   const stamped = stampedBundle("shox-hospital", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
+
+test("ShahaR.Uz: 16 страниц на ru и uz — условия, noindex, заставка DevUz, влёт в букву, приложение", () => {
+  const site = bundlePages("shahar");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  const html = ["", "katalog", "obekt", "novostroyki", "uslugi", "podbor", "plan", "offline"].flatMap((p) => [p, p ? `uz/${p}` : "uz"]);
+  for (const path of html) {
+    const page = all[path];
+    assert.ok(page, `${path}: нет страницы`);
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.match(page, /<link rel="manifest" href="__PROTO_BASE__(\/uz)?\/manifest"/, `${path}: нет манифеста`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("ShahaR.Uz"), `${path}: нет названия компании`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], /id="gp-clip"/, `${path}: нет влёта в букву SHAHAR`);
+    assert.match(all[path], /Glyph Portal © 2026 Christian Katzmann, MIT/, `${path}: пропала строка лицензии влёта в букву`);
+  }
+  assert.ok(all["uz"].includes("o‘") || all["uz"].includes("O‘"), "узбекский — латиница с o‘");
+  const manifest = JSON.parse(all.manifest);
+  assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.scope, "__PROTO_BASE__/");
+  assert.ok(manifest.icons.some((i: { purpose?: string }) => i.purpose === "maskable"));
+  assert.match(all.sw, /addEventListener\('fetch'/);
+  assert.match(all.plan, /data-k="admin" data-p="450"/, "админ-панель — 450 $");
+  const stamped = stampedBundle("shahar", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.equal(stamped.pages.manifest, site.pages.manifest);
+});
+
+test("ShahaR.Uz: конструктор — портал 1 900 $, обязательные допы на месте", async () => {
+  const plan = await import("../scripts/protos/shahar/plan.mjs");
+  assert.equal(plan.BASE.price, 1900);
+  const ids = [...plan.ADDONS, ...plan.BLOCKS].map((a: { id: string }) => a.id);
+  for (const id of ["pwa", "tg", "admin"]) assert.ok(ids.includes(id), `нет обязательного допа ${id}`);
+  const all: { id: string; ru: { t: string; e?: string; why?: string }; uz: { t: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
+  for (const a of all) assert.ok(a.ru.t && a.uz.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
+});
