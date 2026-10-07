@@ -43,6 +43,9 @@ const MAPQ = encodeURIComponent("Ташкент, Чиланзар, 10 кварт
 const YMAP = `https://yandex.uz/maps/?text=${MAPQ}`;
 const GMAP = `https://www.google.com/maps/search/?api=1&query=${MAPQ}`;
 
+/* Логотип DevUz Studio для заставки — тот же, что у bloger.agency. */
+const DZLOGO = '<svg class="dz-logo" viewBox="-120 -120 240 240" aria-hidden="true"><defs><linearGradient id="dzg" x1="0" y1="-1" x2="1" y2="1"><stop offset="0" stop-color="#5B9BFF"/><stop offset=".55" stop-color="#3B82F6"/><stop offset="1" stop-color="#22F0A0"/></linearGradient><mask id="dzc"><rect x="-120" y="-120" width="240" height="240" fill="#fff"/><path d="M-22 -34 L-58 0 L-22 34M22 -34 L58 0 L22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/></mask></defs><path d="M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z" fill="url(#dzg)" mask="url(#dzc)"/><rect x="-5" y="-27" width="10" height="54" rx="5" fill="#E8B14C"/></svg>';
+
 /* Иконки — контуры 24×24, по смыслу. */
 const I = (d, w = 1.8) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON = {
@@ -168,11 +171,15 @@ ${path === "" ? `<link rel="preload" as="image" href="${IMG}/garage-far.webp"><l
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTS}" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="${FONTS}"></noscript>
-<script>document.documentElement.classList.add('js');try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('is-app')}catch(e){}</script>
+<script>document.documentElement.classList.add('js');try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('is-app','dz-off')}catch(e){}try{if(sessionStorage.getItem('dz'))document.documentElement.classList.add('dz-off')}catch(e){}</script>
 <style>${CSS}</style>
 <script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "AutoRepair", name: "AUTOMECHANIC", telephone: ["+998909656131", "+998712764431"], email: F.mail, foundingDate: "1991", address: { "@type": "PostalAddress", streetAddress: F.addr[l], addressLocality: l === "ru" ? "Ташкент" : "Toshkent", addressCountry: "UZ" }, openingHours: "Mo-Sa 09:00-18:00" })}</script>
 </head>
 <body data-page="${path}" data-lang="${l}">
+${path === "offline" ? "" : `<div class="dz" id="dz" role="presentation">
+<div class="dz-in">${DZLOGO}<div class="dz-word">DevUz Studio</div><div class="dz-sub">${t("прототип для AUTOMECHANIC", "AUTOMECHANIC uchun prototip")}</div></div>
+<div class="dz-skip">${t("Нажмите, чтобы пропустить", "O‘tkazib yuborish uchun bosing")}</div>
+</div>`}
 <a class="skip" href="#main">${t("К содержанию", "Asosiy qismga")}</a>
 <header class="top"><div class="wrap">
 <a class="logo" href="${href(l)}" aria-label="AUTOMECHANIC">AUTO<b>MECHANIC</b><small>.uz</small></a>

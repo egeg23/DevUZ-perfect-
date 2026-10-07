@@ -8,6 +8,9 @@ const b=await chromium.launch({executablePath:"/opt/pw-browsers/chromium-1194/ch
 let bad=0;
 for (const [name,vp] of [["m",{width:390,height:844}],["d",{width:1440,height:900}]]) {
   const ctx=await b.newContext({viewport:vp,deviceScaleFactor:name==="m"?2:1,isMobile:name==="m",hasTouch:name==="m"});
+  // Заставка DevUz — отдельным снимком, сцены снимаются уже без неё.
+  {const sp=await ctx.newPage();await sp.goto(`${B}/`,{waitUntil:"commit"});await sp.waitForTimeout(500);await sp.screenshot({path:`${S}/shots/${name}-splash.png`});await sp.waitForTimeout(2400);const left=await sp.evaluate(()=>!!document.getElementById("dz"));if(left){bad++;console.log("FAIL",name,"заставка не ушла сама")}await sp.close()}
+  await ctx.addInitScript(()=>{try{sessionStorage.setItem("dz","1")}catch(e){}});
   for (const p of pages) {
     const pg=await ctx.newPage(); const errs=[];
     pg.on("console",m=>{if(m.type()==="error")errs.push(m.text())}); pg.on("pageerror",e=>errs.push(String(e)));
