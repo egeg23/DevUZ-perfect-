@@ -32,13 +32,13 @@ function mover(el,fn){movers.push({el:el,fn:fn});if('IntersectionObserver' in W)
 /* ── 3D-пролёт по врачам ── */
 var fly=d.getElementById('fly');
 if(fly){
-  var world=$('.fly-world',fly),cards=$$('.fly-card',fly),xs=$$('.fly-x',fly),intro=$('.fly-intro',fly),outro=$('.fly-outro',fly),bar=$('.fly-hud .bar i',fly),now=$('.fly-now',fly);
+  var stage=$('.fly-stage',fly),world=$('.fly-world',fly),cards=$$('.fly-card',fly),xs=$$('.fly-x',fly),intro=$('.fly-intro',fly),outro=$('.fly-outro',fly),bar=$('.fly-hud .bar i',fly),now=$('.fly-now',fly);
   if(reduce||!('IntersectionObserver' in W)||!CSS.supports('transform-style','preserve-3d'))fly.classList.add('static');
   else{
-    var N=cards.length,GAP=0,FAR=0,NEAR=0,last=-1,lastNow=-1,ops=[];
+    var N=cards.length,GAP=0,FAR=0,NEAR=0,DROP=0,last=-1,lastNow=-1,ops=[];
     var layout=function(){
       var w=innerWidth,h=innerHeight,mob=w<900;
-      GAP=mob?420:560;FAR=GAP*4.2;NEAR=mob?240:380;
+      GAP=mob?420:560;DROP=mob?h*.2:0;FAR=GAP*4.2;NEAR=mob?240:380;
       var X=mob?w*.17:Math.min(w*.24,380);
       cards.forEach(function(c,i){var side=i%2?-1:1,y=((i%3)-1)*h*(mob?.07:.08);c.style.transform='translate3d('+(side*X).toFixed(1)+'px,'+y.toFixed(1)+'px,'+(-(i+1)*GAP)+'px) rotateY('+(-side*12)+'deg)'});
       xs.forEach(function(x,i){var a=(i*137.5)%360*Math.PI/180,r=(mob?.35:.42)*w+(i%5)*40;x.style.transform='translate3d('+(Math.cos(a)*r).toFixed(0)+'px,'+(Math.sin(a)*r*.6).toFixed(0)+'px,'+(-(i*GAP*N/xs.length)-200).toFixed(0)+'px)'});
@@ -61,7 +61,7 @@ if(fly){
         if(ops[i]!==o){ops[i]=o;cards[i].style.opacity=o;cards[i].style.visibility=o?'visible':'hidden'}
         var dist=Math.abs(dz+GAP*.9);if(dist<bd){bd=dist;best=i}
       }
-      var ip=clamp(p/.09,0,1);intro.style.opacity=(1-ip).toFixed(3);intro.style.transform='translate3d(0,'+(-ip*120).toFixed(1)+'px,0)';intro.style.visibility=ip>=1?'hidden':'visible';
+      var ip=clamp(p/.09,0,1);stage.style.transform='translate3d(0,'+(DROP*ip).toFixed(1)+'px,0)';intro.style.opacity=(1-ip).toFixed(3);intro.style.transform='translate3d(0,'+(-ip*120).toFixed(1)+'px,0)';intro.style.visibility=ip>=1?'hidden':'visible';
       var op=clamp((p-.9)/.08,0,1);outro.style.opacity=op.toFixed(3);outro.style.visibility=op>0?'visible':'hidden';
       bar.style.transform='scaleX('+p.toFixed(4)+')';
       if(best!==lastNow&&p>.06&&p<.92){lastNow=best;var c=cards[best];now.textContent=(best+1)+' / '+N+' · '+c.getAttribute('data-name')}

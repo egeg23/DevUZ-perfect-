@@ -66,7 +66,8 @@ html:not(.js) .dz{display:none}
 
 /* ── 3D-пролёт по врачам ── */
 .fly{position:relative;height:520svh;background:var(--night);color:var(--on-night)}
-.fly-pin{position:sticky;top:0;height:100svh;overflow:hidden;perspective:800px;perspective-origin:50% 24%}
+.fly-pin{position:sticky;top:0;height:100svh;overflow:hidden}
+.fly-stage{position:absolute;inset:0;perspective:800px;perspective-origin:50% 24%;will-change:transform}
 .fly-bg{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,var(--night) 0%,var(--night2) 60%,#2a1f6b 100%)}
 .fly-bg::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgb(236 235 247 / .08) 1px,transparent 1.5px);background-size:32px 32px}
 .fly-world{position:absolute;left:50%;top:24%;width:0;height:0;transform-style:preserve-3d;will-change:transform}
@@ -76,7 +77,7 @@ html:not(.js) .dz{display:none}
 .fly-card b{font-size:16px;line-height:1.25}
 .fly-card span{font-size:14px;color:var(--brand2)}
 .fly-x{position:absolute;color:rgb(236 235 247 / .35);font-size:24px;line-height:1;pointer-events:none}
-@media (min-width:900px){.fly-card{width:300px;margin:-230px 0 0 -150px}.fly-card b{font-size:18px}.fly-pin{perspective:1000px;perspective-origin:64% 46%}.fly-world{left:64%;top:46%}.fly-intro{background:linear-gradient(90deg,rgb(17 13 46 / .94) 30%,rgb(17 13 46 / 0) 62%)}}
+@media (min-width:900px){.fly-card{width:300px;margin:-230px 0 0 -150px}.fly-card b{font-size:18px}.fly-stage{perspective:1000px;perspective-origin:64% 46%}.fly-world{left:64%;top:46%}.fly-intro{background:linear-gradient(90deg,rgb(17 13 46 / .94) 30%,rgb(17 13 46 / 0) 62%)}}
 .fly-intro,.fly-outro{position:absolute;inset:0;display:grid;align-content:end;padding:96px 16px 128px;pointer-events:none;will-change:transform,opacity}
 .fly-intro>*,.fly-outro>*{pointer-events:auto}
 .fly-intro{background:linear-gradient(0deg,rgb(17 13 46 / .96) 38%,rgb(17 13 46 / 0) 62%)}
@@ -100,7 +101,8 @@ html:not(.js) .dz{display:none}
 .fly-now{min-width:12em}
 @media (min-width:900px){.fly-hud{left:max(16px,calc(50% - 600px));right:max(16px,calc(50% - 600px))}.fly-intro{padding-bottom:144px}}
 .fly.static{height:auto}
-.fly.static .fly-pin{position:relative;height:auto;perspective:none;overflow:visible;padding:96px 0 64px}
+.fly.static .fly-pin{position:relative;height:auto;overflow:visible;padding:96px 0 64px}
+.fly.static .fly-stage{position:static;perspective:none;transform:none!important}
 .fly.static .fly-intro{position:relative;inset:auto;padding:0 16px 32px;background:none}
 .fly.static .fly-world{position:relative;left:auto;top:auto;width:min(1200px,100% - 32px);height:auto;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;transform:none!important}
 .fly.static .fly-card{position:relative;width:auto;margin:0;transform:none!important;opacity:1!important}

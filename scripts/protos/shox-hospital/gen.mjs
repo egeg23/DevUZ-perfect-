@@ -176,9 +176,11 @@ function home(l) {
   const fly = `<section class="fly" id="fly" aria-label="${t("Врачи Shox International Hospital", "Shox International Hospital shifokorlari", "Shox International Hospital doctors")}" data-dock-after>
 <div class="fly-pin">
 <div class="fly-bg par" aria-hidden="true"></div>
+<div class="fly-stage">
 <div class="fly-world">
 ${Array.from({ length: 18 }, () => `<span class="fly-x" aria-hidden="true">+</span>`).join("")}
 ${FLY.map((x, i) => `<figure class="fly-card" data-name="${esc(name(x, l))}"><img src="${IMG}/doctors/${x.s}.webp" alt="${esc(name(x, l))}, ${esc(x.sp[l])}" width="480" height="600"${i < 4 ? "" : ' loading="lazy"'} decoding="async"><figcaption><b>${esc(name(x, l))}</b><span>${esc(x.sp[l])}</span></figcaption></figure>`).join("\n")}
+</div>
 </div>
 <div class="fly-intro"><div class="fly-in">
 <span class="kicker"><i></i>${t("Многопрофильная клиника · Ташкент и Андижан · 24/7", "Ko‘p tarmoqli klinika · Toshkent va Andijon · 24/7", "Multi-specialty hospital · Tashkent and Andijan · 24/7")}</span>
