@@ -36,6 +36,6 @@ jobs:
             if [ "$JOB" = drift ]; then
               $C run --rm -T trainer python -m sunscrypt_engine.models_job drift 2>&1 | tail -20
             else
-              nohup sh -c "$C run --rm -T trainer python -m sunscrypt_engine.models_job retrain 2>&1 | logger -t sunscrypt" >/dev/null 2>&1 &
+              setsid nohup sh -c "$C run --rm -T trainer python -m sunscrypt_engine.models_job retrain 2>&1 | logger -t sunscrypt" >/dev/null 2>&1 &
               echo "▸ дообучение запущено в фоне; итог — в админке, раздел «Модель»"
             fi
