@@ -147,6 +147,20 @@ jobs:
             echo
             echo "════ Приложение ════"
             docker compose ps --format '{{.Name}}: {{.State}} ({{.Status}})' 2>/dev/null || docker compose ps 2>/dev/null || echo "· docker compose не ответил"
+            # Откуда образ: собран в GitHub (есть метка с коммитом) или на
+            # сервере. Сборка на сервере — запасной путь, и если она стала
+            # обычным делом, значит реестр не отдаёт образ (см. выкатку).
+            BAKED_REV="$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' devuz:latest 2>/dev/null || true)"
+            if [ -n "$BAKED_REV" ]; then
+              echo "образ: из реестра GitHub (${BAKED_REV:0:7})"
+            else
+              echo "· образ собран на сервере — реестр на последней выкатке не отдал образ или это был запуск руками"
+            fi
+            docker image inspect devuz:previous >/dev/null 2>&1 && echo "откат: предыдущий образ на месте (devuz:previous)" || echo "· предыдущего образа нет — автооткату не на что"
+            echo "сторож за сутки:"
+            journalctl -u devuz-watchdog.service --since "-24h" --no-pager -o cat 2>/dev/null \
+              | grep -E "^watchdog: (не отвечает|приложение не ответило \(3|снова|строка)" | tail -5 | sed 's/^/  /' || true
+            echo "  перезапусков сторожем: $(journalctl -u devuz-watchdog.service --since "-24h" --no-pager -o cat 2>/dev/null | grep -c 'Перезапускаю контейнер' || true)"
             APP_PORT="$(grep -m1 '^APP_PORT=' .env 2>/dev/null | cut -d= -f2- || true)"
             HEALTH="$(curl -sS --max-time 20 "http://127.0.0.1:${APP_PORT:-3310}/api/health" 2>/dev/null || true)"
             if [ -n "$HEALTH" ]; then
@@ -197,7 +211,7 @@ jobs:
 
             echo
             echo "════ Фоновые службы ════"
-            for unit in devuz-bot.service devuz-scout.service devuz-backup.timer devuz-reminders.timer; do
+            for unit in devuz-bot.service devuz-scout.service devuz-backup.timer devuz-reminders.timer devuz-watchdog.timer; do
               echo "$unit: $(systemctl is-active "$unit" 2>/dev/null || echo 'нет')"
             done
 

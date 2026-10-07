@@ -44,13 +44,26 @@ docker compose ps
 docker compose logs --tail=100 app
 ```
 
-Откат на предыдущий образ. Docker хранит предыдущий слой, пока его не вычистили:
+Сначала проверьте, не откатилась ли выкатка сама: если новый контейнер не
+ответил за минуту, скрипт возвращает прежний образ и пишет об этом в лог
+Action («Откатываюсь на предыдущий образ»). `/api/health` тогда показывает
+старый коммит — сайт работает, чинить нужно новый код, а не сервер.
+
+Откат руками на предыдущий образ — он сохраняется перед каждой выкаткой под
+меткой `devuz:previous`:
 
 ```
-docker images | grep devuz
-docker compose down
-docker tag <ID предыдущего образа> devuz-app:latest
-docker compose up -d
+cd /opt/devuz
+docker tag devuz:previous devuz:latest
+docker compose up -d --no-build
+```
+
+Любой другой коммит — из реестра GitHub, по полному хешу коммита:
+
+```
+docker pull ghcr.io/egeg23/devuz:<полный хеш коммита>
+docker tag ghcr.io/egeg23/devuz:<полный хеш коммита> devuz:latest
+docker compose up -d --no-build
 ```
 
 Если предыдущего образа не осталось — собрать из последнего рабочего коммита:

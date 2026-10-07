@@ -1,0 +1,9 @@
+[Unit]
+Description=Сторож сайта DevUz: перезапуск зависшего контейнера и строка владельцу
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/devuz/deploy/watchdog.sh
+StandardOutput=journal
+StandardError=journal

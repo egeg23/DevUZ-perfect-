@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 import { SHIFT_TITLE } from "@/lib/admin/shift-reports";
@@ -129,11 +131,81 @@ test("осмотр связи запускается кнопкой и не пе
 
 test("на сервере одна выкатка за раз: замок до git fetch, переживает exec", () => {
   const script = readFileSync(new URL("../scripts/vps-deploy.sh", import.meta.url), "utf8");
-  const lock = script.indexOf('exec 9>"${TMPDIR:-/tmp}/devuz-deploy.lock"');
+  const lock = script.indexOf("exec 9>/tmp/devuz-deploy.lock");
   const wait = script.indexOf("flock -w 900 9");
   const fetch = script.indexOf('git fetch --depth 1 origin "$BRANCH"');
   const reexec = script.indexOf('exec bash "$APP_DIR/scripts/vps-deploy.sh"');
   assert.ok(lock > 0 && wait > lock, "нет замка на выкатку");
   assert.ok(wait < fetch, "замок берётся после того, как код уже забирают");
   assert.ok(reexec > fetch, "перезапуск свежей копии пропал");
+});
+
+/**
+ * Сайт собирается в GitHub, а на сервер приезжает готовым.
+ *
+ * 07.10.2026 пять сборок Next.js подряд на боевом VPS уронили сайт, бот,
+ * прототипы и свип напоминаний на несколько часов. Сборка на сервере
+ * остаётся только запасным путём — и обязана остаться: без неё выкатка
+ * руками и выкатка при лежащем реестре невозможны.
+ */
+test("образ собирается в Actions и публикуется только с main, не с pull request", () => {
+  const workflow = read(".github/workflows/deploy-vps.yml");
+  assert.match(workflow, /docker\/build-push-action/, "образ не собирается в GitHub — сборка снова на сервере");
+  assert.match(workflow, /push: \$\{\{ github\.event_name != 'pull_request' \}\}/, "образ с чужого pull request уедет в реестр");
+  assert.match(workflow, /packages: write/, "задаче сборки нечем записать образ в реестр");
+  assert.match(workflow, /packages: read/, "серверу нечем забрать образ из реестра");
+  assert.match(workflow, /DEPLOY_IMAGE: \$\{\{ env\.IMAGE \}\}:\$\{\{ github\.sha \}\}/, "сервер не знает, какой образ брать");
+  assert.match(workflow, /envs: DEPLOY_TOKEN,DEPLOY_ACTOR,DEPLOY_IMAGE/);
+  // Та же подпись открытых значений — в образе и в проверке на сервере.
+  assert.match(workflow, /studio\.devuz\.public=/);
+  assert.doesNotMatch(workflow, /^\s*- run: npm run build/m, "сборка идёт дважды: и на раннере, и в образе");
+});
+
+test("сервер берёт образ из реестра, сверяет его с .env и умеет собрать сам", () => {
+  const deploy = read("scripts/vps-deploy.sh");
+  const pull = deploy.indexOf('docker pull --quiet "$DEPLOY_IMAGE"');
+  const check = deploy.indexOf('"studio.devuz.public"');
+  const build = deploy.indexOf("docker build \\");
+  assert.ok(pull > 0, "сервер не забирает образ из реестра");
+  assert.ok(check > pull, "образ берётся без сверки открытых значений с .env");
+  assert.ok(build > check, "запасной сборки на сервере не осталось");
+  assert.match(deploy, /IMAGE_READY=0/);
+  assert.match(deploy, /docker logout ghcr\.io/, "токен задачи остаётся в ~/.docker/config.json");
+  assert.match(deploy, /uname -m\)" = "x86_64"/, "образ с другой архитектуры уедет на сервер");
+});
+
+test("новый образ не поднялся — выкатка сама возвращает прежний и остаётся красной", () => {
+  const deploy = read("scripts/vps-deploy.sh");
+  const keep = deploy.indexOf("docker tag devuz:latest devuz:previous");
+  const up = deploy.indexOf("docker compose up -d --no-build --remove-orphans");
+  const rollback = deploy.indexOf("docker tag devuz:previous devuz:latest");
+  assert.ok(keep > 0 && keep < up, "прежний образ не сохраняется до перезапуска — откатываться будет не на что");
+  assert.ok(rollback > up, "упавшая выкатка оставляет сайт лежать до человека");
+  assert.match(deploy.slice(rollback), /exit 1/, "откат красит выкатку зелёной — тревога не уйдёт");
+});
+
+/**
+ * Сторож: зависший контейнер перезапускается сам, а владелец узнаёт об
+ * этом из Telegram, а не по тому, что бот перестал его узнавать.
+ */
+test("сторож ставится выкаткой, включён всегда и не трогает контейнер во время выкатки", () => {
+  const deploy = read("scripts/vps-deploy.sh");
+  assert.match(deploy, /install_unit devuz-watchdog\.service/);
+  assert.match(deploy, /install_unit devuz-watchdog\.timer/);
+  assert.match(deploy, /systemctl enable --now devuz-watchdog\.timer/);
+
+  const timer = read("deploy/devuz-watchdog.timer");
+  assert.match(timer, /OnUnitActiveSec=1min/, "сторож проверяет реже раза в минуту");
+
+  const watchdog = read("deploy/watchdog.sh");
+  assert.match(watchdog, /flock -n "\$LOCK" true/, "сторож перезапустит контейнер посреди выкатки");
+  assert.match(watchdog, /LOCK=\/tmp\/devuz-deploy\.lock/, "сторож и выкатка смотрят на разные замки");
+  assert.match(watchdog, /FAILS_BEFORE_RESTART=3/);
+  assert.match(watchdog, /RESTART_COOLDOWN_S=600/, "сторож будет перезапускать контейнер каждую минуту");
+  assert.match(watchdog, /api\.telegram\.org\/bot%s\/sendMessage/, "о перезапуске некому узнать");
+  assert.match(watchdog, /docker compose restart web/);
+  // Скрипт хотя бы разбирается оболочкой: синтаксическую ошибку в нём
+  // иначе увидел бы только journal на сервере, и то когда сайт уже лежит.
+  execFileSync("bash", ["-n", fileURLToPath(new URL("../deploy/watchdog.sh", import.meta.url))]);
+  execFileSync("bash", ["-n", fileURLToPath(new URL("../scripts/vps-deploy.sh", import.meta.url))]);
 });

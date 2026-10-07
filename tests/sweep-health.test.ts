@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { transition, type SweepHealth } from "@/lib/admin/sweep-health";
@@ -81,4 +82,18 @@ test("последний удачный проход переживает ава
 test("длинную ошибку не тащим в базу целиком", () => {
   const { state } = run([fail("я".repeat(5000))]);
   assert.ok((state.last_error ?? "").length <= 200);
+});
+
+/**
+ * Проход за раз — один. 07.10.2026 проходы накладывались друг на друга,
+ * пока сервер был занят сборкой, и каждый новый отнимал процессор у тех,
+ * что ещё шли.
+ */
+test("свип не накладывается сам на себя: второй проход отвечает «занято» и ничего не делает", () => {
+  const route = readFileSync(new URL("../app/api/reminders/sweep/route.ts", import.meta.url), "utf8");
+  const guard = route.indexOf("if (sweeping) return Response.json({ ok: false, busy: true");
+  const body = route.indexOf("async function sweep()");
+  assert.ok(guard > 0, "второй проход начнёт работу поверх первого");
+  assert.ok(guard < body, "проверка «занято» стоит после начала работы");
+  assert.match(route, /sweeping = true;\s*try \{\s*return await sweep\(\);\s*\} finally \{\s*sweeping = false;/, "флаг не снимается при ошибке — свип остановится навсегда");
 });

@@ -1,0 +1,12 @@
+[Unit]
+Description=Проверка, отвечает ли сайт DevUz
+
+[Timer]
+# Раз в минуту: три молчания подряд — это три минуты до перезапуска.
+# Чаще незачем, реже — и сайт лежит заметно дольше, чем нужно, чтобы это
+# заметить.
+OnBootSec=2min
+OnUnitActiveSec=1min
+
+[Install]
+WantedBy=timers.target

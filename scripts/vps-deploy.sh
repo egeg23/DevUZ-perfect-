@@ -55,7 +55,9 @@ if [ -z "${DEVUZ_DEPLOY_REEXEC:-}" ]; then
   # знает только замок здесь. Дескриптор переживает exec ниже, так что замок
   # держится до конца выкатки. Ждём до 15 минут: дольше — значит, предыдущая
   # зависла, и честнее упасть с ясной строкой, чем собираться рядом с ней.
-  exec 9>"${TMPDIR:-/tmp}/devuz-deploy.lock"
+  # Путь без TMPDIR: его же читает сторож (deploy/watchdog.sh), чтобы не
+  # перезапускать контейнер посреди выкатки.
+  exec 9>/tmp/devuz-deploy.lock
   if ! flock -w 900 9; then
     echo "✗ Другая выкатка идёт на сервере дольше 15 минут — эту не начинаю." >&2
     exit 1
@@ -165,6 +167,8 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   install_unit devuz-backup.timer
   install_unit devuz-reminders.service
   install_unit devuz-reminders.timer
+  install_unit devuz-watchdog.service
+  install_unit devuz-watchdog.timer
   install_unit devuz-scout.service
   install_unit devuz-bot.service
   install_unit devuz-maximova-bot.service
@@ -204,6 +208,10 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   else
     echo "  · REMINDER_SWEEP_SECRET не задан — таймер напоминаний не включаю" >&2
   fi
+
+  # Сторож (deploy/watchdog.sh) нужен всегда: ему хватает порта из .env.
+  systemctl enable --now devuz-watchdog.timer >/dev/null 2>&1
+  echo "  · сторож контейнера включён"
 
   # Скаут — долгоживущий слушатель, а не задача по расписанию. Включается
   # только когда есть и строка сессии, и список чатов: без любого из двух он
@@ -273,33 +281,76 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   fi
 fi
 
-echo "▸ Собираем образ ($GIT_COMMIT)"
-
-# Сборка — самое тяжёлое, что здесь происходит: npm ci и next build на пару
-# минут забирают весь процессор, и работающий сайт вместе с ботом отвечает
-# с опозданием. Telegram ждёт от вебхука считаные секунды; не дождавшись,
-# откладывает доставку на минуты — так /login «висел» после каждой выкатки,
-# а в getWebhookInfo стояло «Connection timed out» ровно временем сборки.
-#
-# Поэтому образ собирается с пониженным приоритетом. cpu-shares действуют
-# только при нехватке процессора и отдают его тому, кто уже обслуживает
-# людей (у контейнера по умолчанию 1024). Компоуз такого флага не умеет —
-# собираем сами, а поднимаем уже готовый образ.
-#
-# Аргументы сборки берутся из .env по одному, а не через source: тот же файл
-# несёт HTTPS_PROXY, и docker build передал бы его внутрь сборки как
-# build-arg — npm ci пошёл бы через прокси скаута.
+# Аргументы сборки и проверки берутся из .env по одному, а не через source:
+# тот же файл несёт HTTPS_PROXY, и docker build передал бы его внутрь сборки
+# как build-arg — npm ci пошёл бы через прокси скаута.
 envval() {
   grep -m1 "^$1=" "$APP_DIR/.env" | cut -d= -f2- | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"
 }
-docker build \
-  --cpu-shares 128 \
-  --build-arg "NEXT_PUBLIC_SITE_URL=$(envval NEXT_PUBLIC_SITE_URL)" \
-  --build-arg "NEXT_PUBLIC_SUPABASE_URL=$(envval NEXT_PUBLIC_SUPABASE_URL)" \
-  --build-arg "NEXT_PUBLIC_YANDEX_METRIKA_ID=$(envval NEXT_PUBLIC_YANDEX_METRIKA_ID)" \
-  --build-arg "NEXT_PUBLIC_GA_ID=$(envval NEXT_PUBLIC_GA_ID)" \
-  --build-arg "GIT_COMMIT=$GIT_COMMIT" \
-  -t devuz:latest "$APP_DIR"
+
+# Предыдущий образ — под своей меткой, чтобы было на что откатиться, если
+# новый не поднимется (см. ниже). Иначе переметка новой сборки оставила бы
+# его безымянным, а docker image prune в конце выкатки — стёр.
+if docker image inspect devuz:latest >/dev/null 2>&1; then
+  docker tag devuz:latest devuz:previous
+fi
+
+# Образ приезжает готовым из реестра GitHub (.github/workflows/deploy-vps.yml).
+#
+# 07.10.2026 пять выкаток подряд собирали сайт прямо здесь, на боевом
+# сервере с полутора десятками чужих сайтов: каждая сборка на минуты
+# забирала весь процессор, и сайт, бот, прототипы, свип напоминаний
+# отвечали через раз. Теперь на сервере остаётся только docker pull.
+#
+# Сборка на месте никуда не делась — это запасной путь: запуск руками без
+# DEPLOY_IMAGE, реестр не ответил, другая архитектура, или в образ вшиты не
+# те открытые значения, что в .env. Истина — всегда .env на сервере.
+PUBLIC_SIGNATURE="$(envval NEXT_PUBLIC_SITE_URL)|$(envval NEXT_PUBLIC_SUPABASE_URL)|$(envval NEXT_PUBLIC_YANDEX_METRIKA_ID)|$(envval NEXT_PUBLIC_GA_ID)"
+IMAGE_READY=0
+if [ -n "${DEPLOY_IMAGE:-}" ] && [ "$(uname -m)" = "x86_64" ]; then
+  echo "▸ Забираем образ $DEPLOY_IMAGE"
+  # Токен задачи — одним входом в реестр, и тут же выход: в
+  # ~/.docker/config.json ему оставаться незачем, он и так истекает.
+  if [ -n "${DEPLOY_TOKEN:-}" ]; then
+    printf '%s' "$DEPLOY_TOKEN" | docker login ghcr.io -u "${DEPLOY_ACTOR:-x-access-token}" --password-stdin >/dev/null 2>&1 \
+      || echo "  · вход в реестр не удался — пробую без него" >&2
+  fi
+  if docker pull --quiet "$DEPLOY_IMAGE" >/dev/null 2>&1; then
+    BAKED="$(docker image inspect --format '{{ index .Config.Labels "studio.devuz.public" }}' "$DEPLOY_IMAGE" 2>/dev/null || true)"
+    if [ "$BAKED" = "$PUBLIC_SIGNATURE" ]; then
+      docker tag "$DEPLOY_IMAGE" devuz:latest
+      IMAGE_READY=1
+      echo "  · образ из реестра, собран в GitHub"
+    else
+      echo "  · в образе вшиты не те открытые значения, что в .env (${BAKED:-метки нет}) — соберу сам" >&2
+    fi
+  else
+    echo "  · реестр не отдал образ — соберу сам" >&2
+  fi
+  docker logout ghcr.io >/dev/null 2>&1 || true
+fi
+
+if [ "$IMAGE_READY" = "0" ]; then
+  echo "▸ Собираем образ на сервере ($GIT_COMMIT)"
+
+  # Сборка — самое тяжёлое, что здесь может происходить: npm ci и next build
+  # на пару минут забирают весь процессор, и работающий сайт вместе с ботом
+  # отвечает с опозданием. Telegram ждёт от вебхука считаные секунды; не
+  # дождавшись, откладывает доставку на минуты.
+  #
+  # Поэтому образ собирается с пониженным приоритетом. cpu-shares действуют
+  # только при нехватке процессора и отдают его тому, кто уже обслуживает
+  # людей (у контейнера по умолчанию 1024). Компоуз такого флага не умеет —
+  # собираем сами, а поднимаем уже готовый образ.
+  docker build \
+    --cpu-shares 128 \
+    --build-arg "NEXT_PUBLIC_SITE_URL=$(envval NEXT_PUBLIC_SITE_URL)" \
+    --build-arg "NEXT_PUBLIC_SUPABASE_URL=$(envval NEXT_PUBLIC_SUPABASE_URL)" \
+    --build-arg "NEXT_PUBLIC_YANDEX_METRIKA_ID=$(envval NEXT_PUBLIC_YANDEX_METRIKA_ID)" \
+    --build-arg "NEXT_PUBLIC_GA_ID=$(envval NEXT_PUBLIC_GA_ID)" \
+    --build-arg "GIT_COMMIT=$GIT_COMMIT" \
+    -t devuz:latest "$APP_DIR"
+fi
 
 # Промо-материалы партнёров лежат на диске хоста, а не в контейнере: тот
 # пересобирается на каждой выкатке, и всё, что внутри, пропадает. Папку
@@ -396,4 +447,23 @@ done
 
 echo "✗ Приложение не поднялось за минуту. Логи:" >&2
 docker compose logs --tail 60 web >&2
+
+# Откат по состоянию: новый образ не отвечает — возвращаем прежний сам, не
+# дожидаясь человека. Сайт, который лежит, пока кто-то прочитает тревогу,
+# хуже сайта на вчерашнем коммите. Выкатка при этом остаётся красной, и
+# тревога владельцу уходит: откат — не починка.
+if docker image inspect devuz:previous >/dev/null 2>&1; then
+  echo "▸ Откатываюсь на предыдущий образ" >&2
+  docker tag devuz:previous devuz:latest
+  docker compose up -d --no-build --remove-orphans
+  for i in $(seq 1 30); do
+    if docker compose exec -T web node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" 2>/dev/null; then
+      echo "  · прежний образ поднялся: сайт работает на старом коммите, новый не выкачен" >&2
+      break
+    fi
+    sleep 2
+  done
+else
+  echo "  · предыдущего образа нет — откатываться не на что" >&2
+fi
 exit 1

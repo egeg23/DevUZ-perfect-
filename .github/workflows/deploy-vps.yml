@@ -18,10 +18,37 @@ concurrency:
   group: deploy-vps
   cancel-in-progress: false
 
+# Готовый образ сайта живёт в реестре GitHub, а не собирается на сервере.
+#
+# 07.10.2026 пять выкаток подряд собирали Next.js прямо на боевом VPS, где
+# кроме devuz.studio живут ещё полтора десятка сайтов клиентов. Каждая
+# сборка на несколько минут забирала весь процессор: сайт, бот и прототипы
+# отвечали через раз, свип напоминаний не укладывался в минуту, запросы к
+# базе обрывались. Одну выкатку GitHub ещё и потерял, её запустили снова, и
+# две сборки шли рядом. Теперь сборка — здесь, на раннере GitHub, а сервер
+# только забирает готовый образ: секунды вместо минут и ноль нагрузки.
+#
+# Значения NEXT_PUBLIC_* вшиваются в образ на сборке. Все четыре — открытые:
+# они лежат в html каждой страницы сайта. Переменные репозитория (Settings →
+# Variables) переопределяют значения по умолчанию ниже; .env на сервере
+# остаётся истиной — выкатка сверяет образ с ним и при расхождении собирает
+# сама, как раньше.
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/devuz
+  PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://devuz.studio' }}
+  PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || 'https://owbkqoyutubqujdazdcc.supabase.co' }}
+  PUBLIC_METRIKA_ID: ${{ vars.NEXT_PUBLIC_YANDEX_METRIKA_ID || '112925960' }}
+  PUBLIC_GA_ID: ${{ vars.NEXT_PUBLIC_GA_ID || 'G-L52MCVNS0W' }}
+
 jobs:
   build-check:
     name: Сборка и проверка типов
     runs-on: ubuntu-latest
+    # Записать образ в реестр может только задача из этого репозитория; на
+    # pull request образ собирается, но не публикуется (см. push ниже).
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,11 +61,46 @@ jobs:
       # ловят, — сумму весов скоринга и разметку брифа, из-за которой Telegram
       # молча отвергает сообщение целиком.
       - run: npm test
-      # Собираем до выкатки: поймать сломанный билд в CI дешевле, чем
-      # обнаружить его на сервере, где старый контейнер уже остановлен.
-      - run: npm run build
-        env:
-          NEXT_PUBLIC_SITE_URL: https://example.com
+
+      # Короткий хеш — тот же, что пишет на сервере git rev-parse --short:
+      # /api/health показывает его, и по нему проверяют, что выкатка доехала.
+      - id: meta
+        run: echo "short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+      - if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Тот же Dockerfile, что собирал сервер: образ один и тот же, только
+      # собран здесь. Кэш слоёв в GitHub — чтобы npm ci не шёл с нуля на
+      # каждой выкатке.
+      #
+      # Метка studio.devuz.public — подпись вшитых открытых значений. Сервер
+      # сверяет её со своим .env перед тем, как взять образ: расходятся —
+      # собирает сам, и на сайт не уедут чужие Метрика или адрес.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:${{ github.ref_name }}
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=${{ env.PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ env.PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_YANDEX_METRIKA_ID=${{ env.PUBLIC_METRIKA_ID }}
+            NEXT_PUBLIC_GA_ID=${{ env.PUBLIC_GA_ID }}
+            GIT_COMMIT=${{ steps.meta.outputs.short }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            studio.devuz.public=${{ env.PUBLIC_SITE_URL }}|${{ env.PUBLIC_SUPABASE_URL }}|${{ env.PUBLIC_METRIKA_ID }}|${{ env.PUBLIC_GA_ID }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     name: Выкатка на VPS
@@ -53,20 +115,26 @@ jobs:
     # больше прав, чем нужно для git fetch, незачем.
     permissions:
       contents: read
+      # Этим же токеном сервер забирает образ из реестра.
+      packages: read
     steps:
       - name: Запустить деплой по SSH
         uses: appleboy/ssh-action@v1
         env:
           # Ключ на один запуск: истекает вместе с задачей и на сервере не
-          # остаётся. Нужен он тому дню, когда репозиторий закроют; пока он
-          # открыт, запасная выкачка обходится и без токена.
+          # остаётся. Им сервер входит в реестр за образом; для выкачки кода
+          # он нужен только тому дню, когда репозиторий закроют.
           DEPLOY_TOKEN: ${{ github.token }}
+          DEPLOY_ACTOR: ${{ github.actor }}
+          # Какой образ брать. Пусто (запуск руками на сервере) — сервер
+          # собирает сам, как раньше.
+          DEPLOY_IMAGE: ${{ env.IMAGE }}:${{ github.sha }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
-          envs: DEPLOY_TOKEN
+          envs: DEPLOY_TOKEN,DEPLOY_ACTOR,DEPLOY_IMAGE
           # По умолчанию у действия 10 минут на всю команду. 07.10.2026 сборка
           # на сервере дважды не уложилась: страницы «Разборов» ждали базу и
           # получали «fetch failed», сборка дошла до конца, а команду уже
