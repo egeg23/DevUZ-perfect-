@@ -70,6 +70,18 @@ const BATCH = 25;
  */
 const MAX_ATTEMPTS = DELIVERY_GIVE_UP;
 
+/**
+ * Проход за раз — один.
+ *
+ * Таймер зовёт свип каждые пять минут и ждёт ответа минуту. 07.10.2026
+ * сервер был занят сборкой, проход не укладывался в минуту, таймер уходил,
+ * а проход продолжал работать; через пять минут поверх него начинался
+ * следующий, потом ещё один — и каждый новый отнимал процессор у тех, что
+ * ещё шли. Так сбой кормил сам себя. Пока один проход не закончил, второй
+ * отвечает «занято» и не делает ничего: следующий таймер придёт сам.
+ */
+let sweeping = false;
+
 export async function POST(request: Request) {
   const expected = process.env.REMINDER_SWEEP_SECRET;
   const provided = request.headers.get("x-devuz-sweep");
@@ -78,6 +90,18 @@ export async function POST(request: Request) {
     return new Response("forbidden", { status: 403 });
   }
 
+  // 200, а не 409: для таймера это не поломка, и красить его проход
+  // «упавшим» незачем — упавшим считается тот, что не ответил вовсе.
+  if (sweeping) return Response.json({ ok: false, busy: true, note: "предыдущий проход ещё идёт" });
+  sweeping = true;
+  try {
+    return await sweep();
+  } finally {
+    sweeping = false;
+  }
+}
+
+async function sweep(): Promise<Response> {
   const db = serviceClient();
   if (!db) {
     // Здоровье писать некуда — база и есть то, что недоступно. Отвечаем
