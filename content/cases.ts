@@ -370,6 +370,50 @@ export const cases: Case[] = [
     ],
   },
   {
+    slug: "engelberg",
+    name: "Engelberg",
+    monogram: "EB",
+    date: "2026-10-06",
+    // Вторая, фотореалистичная версия — её владелец выбрал кейсом (07.10.2026).
+    // Макет закрыт паролем: ссылка ведёт на страницу ввода, пароль даёт менеджер.
+    url: "https://globalex.maximov-tech.ru/engelberg/v2",
+    tier: 1,
+    niches: ["окна", "окна и двери", "оконные системы", "алюминиевые окна", "раздвижные системы", "фасадное остекление", "фурнитура", "производитель окон", "windows", "window systems", "aluminium windows", "deraza", "derazalar", "门窗"],
+    // Макет для конкретной компании: в письмах другим не показываем.
+    forNiches: [],
+    accent: "gold",
+    category: {
+      ru: "Сайт-история на прокрутке для производителя окон",
+      en: "Scroll-story site for a window manufacturer",
+      uz: "Deraza ishlab chiqaruvchisi uchun aylantirishdagi hikoya-sayt",
+      zh: "门窗品牌的滚动叙事网站",
+      uk: "Сайт-історія на прокрутці для виробника вікон",
+      pl: "Strona-opowieść przy przewijaniu dla producenta okien",
+    },
+    summary: {
+      ru: "Премиальные окна, раздвижные и фасадные системы. Одна непрерывная история на прокрутке: камера спускается с Альп к дому, где встают окна в пол, пролетает сквозь разрез профиля и выходит в комнату к ручке. Каждый кадр — фотореалистичный рендер вокруг их настоящих товаров.",
+      en: "Premium windows, sliding and facade systems. One continuous scroll story: the camera descends from the Alps to a house where floor-to-ceiling windows go in, flies through a cut of the profile and comes out in a room at the handle. Every frame is a photorealistic render built around their real products.",
+      uz: "Premium derazalar, surma va fasad tizimlari. Aylantirishdagi bitta uzluksiz hikoya: kamera Alp tog‘laridan uyga tushadi, u yerda poldan shiftgacha derazalar o‘rnatiladi, profil kesimi orqali uchib o‘tadi va xonada tutqichga yetib keladi. Har bir kadr — ularning haqiqiy mahsulotlari atrofidagi fotorealistik render.",
+      zh: "高端门窗、推拉与幕墙系统。一段连续的滚动叙事：镜头从阿尔卑斯山降到一栋房子前，落地窗逐一装上，再穿过型材剖面，最后进入室内停在把手上。每一帧都是围绕其真实产品的照片级渲染。",
+      uk: "Преміальні вікна, розсувні та фасадні системи. Одна безперервна історія на прокрутці: камера спускається з Альп до будинку, де стають вікна в підлогу, пролітає крізь розріз профілю й виходить у кімнату до ручки. Кожен кадр — фотореалістичний рендер навколо їхніх справжніх товарів.",
+      pl: "Okna premium, systemy przesuwne i fasadowe. Jedna ciągła opowieść przy przewijaniu: kamera zjeżdża z Alp do domu, w którym pojawiają się okna od podłogi do sufitu, przelatuje przez przekrój profilu i wychodzi w pokoju przy klamce. Każde ujęcie to fotorealistyczny render wokół ich prawdziwych produktów.",
+    },
+    description: {
+      ru: "Заказчик хотел «вау со скроллом и непрерывной веткой повествования», как у mont-fort.com и Bentley. Сцена одна и приколота к экрану, камерой ведёт прокрутка. Переходы — без склеек: пары кадров сделаны правкой одного снимка и совпадают попиксельно, поэтому меняется сам мир в кадре — пустой дом получает окна, за стеклом той же комнаты начинается метель, створки раздвижной BKH 65 уезжают, на каркасе фасада FS 50 по этажам встаёт стекло. Разрез профиля и ручка — по их фото из каталога, с тремя контурами, потоками холодного и тёплого воздуха и гербом на рычаге. Характеристики — только с их сайта. Первая версия того же макета собрана на стоке и вектором.",
+      en: "The client wanted «wow scrolling with a continuous storyline», like mont-fort.com and Bentley. There is one scene pinned to the screen, and scrolling drives the camera. Transitions have no cuts: pairs of frames were made by editing a single shot and match pixel for pixel, so the world inside the frame changes instead — an empty house gets its windows, a snowstorm starts behind the glass of the same room, the BKH 65 sliding panels glide away, and glass goes onto the FS 50 facade frame floor by floor. The profile cut and the handle follow their catalogue photos, with three thermal zones, cold and warm air flows and the crest on the lever. Specifications come only from their site. The first version of the same mock-up is built from stock photos and vector art.",
+      uz: "Buyurtmachi mont-fort.com va Bentley’dagidek «aylantirishda vau va uzluksiz hikoya» xohladi. Sahna bitta va ekranga mahkamlangan, kamerani aylantirish boshqaradi. O‘tishlar kesimsiz: kadr juftliklari bitta suratni tahrirlash orqali qilingan va piksel-pikselgacha mos keladi, shuning uchun kadrdagi dunyoning o‘zi o‘zgaradi — bo‘sh uyga derazalar o‘rnatiladi, o‘sha xonaning oynasi ortida bo‘ron boshlanadi, BKH 65 surma tabaqalari siljiydi, FS 50 fasad karkasiga qavatma-qavat shisha o‘rnatiladi. Profil kesimi va tutqich — ularning katalogidagi suratlar bo‘yicha: uch kontur, sovuq va iliq havo oqimlari, richagdagi gerb bilan. Tavsiflar faqat ularning saytidan. Xuddi shu maketning birinchi versiyasi stok suratlar va vektorda yig‘ilgan.",
+      zh: "客户想要像 mont-fort.com 和 Bentley 那样「滚动带来惊艳、叙事一气呵成」。整个页面只有一个固定在屏幕上的场景，由滚动驱动镜头。转场没有剪接：成对的画面由同一张图修改而来、逐像素对齐，因此变化的是画面里的世界本身 —— 空房子装上窗户，同一个房间的玻璃外下起暴风雪，BKH 65 推拉扇缓缓滑开，FS 50 幕墙骨架上玻璃逐层装好。型材剖面和把手依据其产品目录照片制作，展示三道隔热层、冷暖气流和把手上的徽章。技术参数全部取自其官网。同一样稿的第一版用图库照片和矢量图完成。",
+      uk: "Замовник хотів «вау на прокрутці й безперервну лінію оповіді», як у mont-fort.com і Bentley. Сцена одна й закріплена на екрані, камерою керує прокрутка. Переходи — без склейок: пари кадрів зроблено правкою одного знімка, і вони збігаються піксель у піксель, тож змінюється сам світ у кадрі — порожній будинок отримує вікна, за склом тієї ж кімнати починається хуртовина, стулки розсувної BKH 65 від'їжджають, на каркасі фасаду FS 50 поверх за поверхом стає скло. Розріз профілю й ручка — за їхніми фото з каталогу, з трьома контурами, потоками холодного й теплого повітря та гербом на важелі. Характеристики — лише з їхнього сайту. Перша версія того ж макета зібрана на стоку й векторі.",
+      pl: "Klient chciał „efektu wow przy przewijaniu i ciągłej narracji”, jak mont-fort.com i Bentley. Scena jest jedna i przypięta do ekranu, kamerą steruje przewijanie. Przejścia są bez cięć: pary ujęć powstały przez edycję jednego zdjęcia i pokrywają się co do piksela, więc zmienia się sam świat w kadrze — pusty dom dostaje okna, za szybą tego samego pokoju zaczyna się zamieć, skrzydła przesuwnego BKH 65 odjeżdżają, a na szkielecie fasady FS 50 piętro po piętrze pojawia się szkło. Przekrój profilu i klamka powstały na podstawie zdjęć z ich katalogu, z trzema strefami, przepływem zimnego i ciepłego powietrza oraz herbem na dźwigni. Parametry pochodzą wyłącznie z ich strony. Pierwsza wersja tej samej makiety powstała ze zdjęć stockowych i grafiki wektorowej.",
+    },
+    tech: ["Next.js 16", "React 19", "TypeScript", "Lenis", "Canvas", "GPT Image"],
+    metrics: [
+      { value: "11", label: { ru: "сцен в одном непрерывном кадре", en: "scenes in one continuous shot", uz: "bitta uzluksiz kadrdagi sahna", zh: "一镜到底的场景", uk: "сцен в одному безперервному кадрі", pl: "scen w jednym ciągłym ujęciu" } },
+      { value: "17", label: { ru: "фотореалистичных кадров вокруг их товаров", en: "photorealistic frames around their products", uz: "ularning mahsulotlari atrofidagi fotorealistik kadr", zh: "围绕其产品的照片级画面", uk: "фотореалістичних кадрів навколо їхніх товарів", pl: "fotorealistycznych ujęć wokół ich produktów" } },
+      { value: "60", label: { ru: "кадров в секунду на телефоне", en: "frames per second on a phone", uz: "telefonda soniyasiga kadr", zh: "手机端每秒帧数", uk: "кадрів на секунду на телефоні", pl: "klatek na sekundę na telefonie" } },
+    ],
+  },
+  {
     slug: "golden-house",
     name: "Golden House",
     monogram: "GH",
