@@ -79,6 +79,9 @@ const config: NextConfig = {
       { source: "/maximova", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
       { source: "/maximova/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
       { source: "/clients/maximova/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      // Фото врачей и зданий для прототипа Shox International Hospital —
+      // снимки с их сайта, в выдаче под нашим доменом им не место.
+      { source: "/clients/shox-hospital/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
       // Страница заказа: чужие реквизиты и счёт по неугадываемой ссылке.
       // Мета-тег noindex на ней уже стоит, но он не действует на ответы,
       // которые не HTML, и не защищает от кэша браузера на общем ноутбуке.
