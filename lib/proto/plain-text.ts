@@ -75,7 +75,8 @@ export const AI_MARKERS: readonly Marker[] = [
   { re: /мы\s+гордимся/iu, say: "«мы гордимся»" },
   { re: /атмосфер\p{L}*\s+(?:уюта|комфорта|тепла|роскоши|гармонии)/iu, say: "«атмосфера уюта»" },
   { re: /незабываем\p{L}*|неповторим\p{L}*|волшебн\p{L}*|(?:^|[^\p{L}])маги[яию](?![\p{L}])/iu, say: "«незабываемый / волшебный / магия»" },
-  { re: /эксклюзивн\p{L}*/iu, say: "«эксклюзивный»" },
+  { re: /эксклюзив\p{L}*/iu, say: "«эксклюзивный / на эксклюзиве»" },
+  { re: /лидер\p{L}*\s+(?:отрасли|рынка)/iu, say: "«лидеры отрасли»" },
   { re: /открыва\p{L}*\s+(?:новые\s+)?(?:возможности|горизонты)|новые\s+горизонты/iu, say: "«открывает новые возможности»" },
   { re: /в\s+самом\s+сердце/iu, say: "«в самом сердце»" },
   { re: /(?:мечт\p{L}*|идеи)\s+в\s+(?:реальность|жизнь)/iu, say: "«воплотим мечты в реальность»" },
@@ -97,6 +98,7 @@ export const AI_MARKERS: readonly Marker[] = [
   { re: /har\s+bir\s+detal/iu, say: "«har bir detal»" },
   { re: /zamonaviy\s+dunyoda/iu, say: "«zamonaviy dunyoda»" },
   { re: /tanlash(?:ingiz)?\s+uchun\s+\S+\s+sabab/iu, say: "«… tanlash uchun N sabab»" },
+  { re: /eksklyuziv|soha\s+yetakchi/iu, say: "«eksklyuziv / soha yetakchilari»" },
   // Английский.
   { re: /\b(?:delve|elevate[sd]?|seamless(?:ly)?|unlock|unleash|tapestry|embark)\b/i, say: "«delve / elevate / seamless / unlock»" },
   { re: /\bcutting[- ]edge\b|\bstate[- ]of[- ]the[- ]art\b|\bworld[- ]class\b|\bgame[- ]chang/i, say: "«cutting-edge / world-class»" },
