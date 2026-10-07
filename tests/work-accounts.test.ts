@@ -109,7 +109,10 @@ test("ответ и правка — только с того аккаунта, 
   assert.match(read("lib/admin/outreach-edit.ts"), /if \(p && accountOf\(p\.sent_via\) !== account\) continue;/);
 
   const runner = read("scout/runner.mjs");
-  assert.match(runner, /function startWorker\(\{ client, Api, NewMessage, key, label, cap, paused, othersAlive, onFlood \}\)/);
+  assert.match(
+    runner,
+    /function startWorker\(\{ client, Api, NewMessage, key, label, cap, paused, othersAlive, onFlood, afterBanCheck = async \(\) => \{\} \}\)/,
+  );
   assert.match(runner, /reply = await nextReply\(key\);/);
   assert.match(runner, /job = await nextEdit\(key\);/);
   assert.match(runner, /await markSent\(job\.id, userId, messageId, key\);/);

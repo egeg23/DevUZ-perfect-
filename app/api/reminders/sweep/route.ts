@@ -31,6 +31,7 @@ import { promoteStrongSignals } from "@/lib/scout/promote";
 import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store";
 import { esc, sendWithButtons, telegramReachable } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
+import { banSweep } from "@/lib/admin/account-ban-sweep";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -275,6 +276,12 @@ export async function POST(request: Request) {
   // (lib/analytics/ux-snapshot.ts): где люди уходят и дошли ли до заявки.
   after(async () => {
     await refreshUxSnapshot(new Date()).catch((error) => console.error("снимок Метрики:", error));
+  });
+  // Рабочий аккаунт ограничен Telegram, ограничение продлено или снято —
+  // всей команде в бот (lib/admin/account-ban-sweep.ts). Проверяет скаут
+  // раз в час через @SpamBot; здесь — только кому и что сказать.
+  after(async () => {
+    await banSweep(Date.now()).catch((error) => console.error("ограничения аккаунтов:", error));
   });
   // Поиск лидов через Firecrawl — своей очередью: до двух кредитов за проход
   // из дневного лимита (lib/firecrawl.ts), на контакты тех, кому писать

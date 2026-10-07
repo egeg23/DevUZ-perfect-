@@ -11,6 +11,7 @@ import {
 } from "@/lib/admin/outreach";
 import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake } from "@/lib/admin/work-accounts";
 import { queueEtas, type Eta, type EtaAccount } from "@/lib/admin/queue-eta";
+import { mainLimitUntil } from "@/lib/admin/account-ban-store";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -125,7 +126,7 @@ const QUEUED_COLUMNS = "id, target, target_kind, message, host, claimed_by";
  * Только живые аккаунты: привязка к отключённому не держит письма — у
  * сотрудника, привязанного лишь к нему, письма снова берёт любой аккаунт.
  */
-async function assignments(db: NonNullable<ReturnType<typeof serviceClient>>): Promise<Map<string, Set<string>>> {
+export async function assignments(db: NonNullable<ReturnType<typeof serviceClient>>): Promise<Map<string, Set<string>>> {
   const [{ data: rows }, { data: live }] = await Promise.all([
     db.from("tg_account_staff").select("account_key, staff_id"),
     db.from("tg_accounts").select("id").neq("status", "removed"),
@@ -243,14 +244,14 @@ export async function nextQueued(
  *
  * Те же данные, что читает nextQueued: очередь по claimed_at, владельцы,
  * привязка менеджеров к аккаунтам, пределы и ограничения аккаунтов и то,
- * что каждый из них уже отправил за час. Главный аккаунт всегда может
- * писать и пишет по HOURLY_CAP — его состояние в базе не хранится.
+ * что каждый из них уже отправил за час. Главный пишет по HOURLY_CAP, а его
+ * ограничение — строка tg-ban:main (lib/admin/account-ban-store.ts).
  */
 export async function loadQueueEtas(now = Date.now()): Promise<Map<string, Eta>> {
   const db = serviceClient();
   if (!db) return new Map();
 
-  const [{ data: jobs }, owners, assigned, { data: live }, { data: recent }] = await Promise.all([
+  const [{ data: jobs }, owners, assigned, { data: live }, { data: recent }, mainUntil] = await Promise.all([
     db.from("prospects").select("id, claimed_by").eq("status", "sending").order("claimed_at", { ascending: true }).limit(500),
     ownerIds(db),
     assignments(db),
@@ -264,6 +265,8 @@ export async function loadQueueEtas(now = Date.now()): Promise<Map<string, Eta>>
       .or(SENT_BY_ACCOUNT)
       .order("sent_at", { ascending: false })
       .limit(50),
+    // Ограничение главного — в stats_snapshots (account-ban-store).
+    mainLimitUntil(now),
   ]);
 
   const sends = (recent ?? []).map((row) => ({
@@ -282,7 +285,7 @@ export async function loadQueueEtas(now = Date.now()): Promise<Map<string, Eta>>
     };
   };
   const accounts = [
-    accountState(MAIN_ACCOUNT, HOURLY_CAP, null),
+    accountState(MAIN_ACCOUNT, HOURLY_CAP, mainUntil ? new Date(mainUntil).toISOString() : null),
     ...(live ?? []).map((row) =>
       accountState(String(row.id), Number(row.hourly_cap ?? HOURLY_CAP), (row.flood_until as string | null) ?? null),
     ),
