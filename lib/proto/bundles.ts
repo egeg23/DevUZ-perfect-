@@ -17,6 +17,7 @@
 import automechanic from "@/content/proto-bundles/automechanic.json" with { type: "json" };
 import blogerAgency from "@/content/proto-bundles/bloger-agency.json" with { type: "json" };
 import shoxHospital from "@/content/proto-bundles/shox-hospital.json" with { type: "json" };
+import shahar from "@/content/proto-bundles/shahar.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -25,6 +26,7 @@ const BUNDLES: Record<string, Bundle> = {
   "bloger-agency": blogerAgency as Bundle,
   automechanic: automechanic as Bundle,
   "shox-hospital": shoxHospital as Bundle,
+  shahar: shahar as Bundle,
 };
 
 /** Страницы сборки без отпечатка: главная — `html`, остальные — `pages`. */
