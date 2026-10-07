@@ -35,9 +35,9 @@ if(fly){
   var stage=$('.fly-stage',fly),world=$('.fly-world',fly),cards=$$('.fly-card',fly),xs=$$('.fly-x',fly),intro=$('.fly-intro',fly),outro=$('.fly-outro',fly),bar=$('.fly-hud .bar i',fly),now=$('.fly-now',fly);
   if(reduce||!('IntersectionObserver' in W)||!CSS.supports('transform-style','preserve-3d'))fly.classList.add('static');
   else{
-    var N=cards.length,GAP=0,FAR=0,NEAR=0,DROP=0,last=-1,lastNow=-1,ops=[];
+    var N=cards.length,GAP=0,FAR=0,NEAR=0,DROP=0,MOB=false,last=-1,lastNow=-1,ops=[];
     var layout=function(){
-      var w=innerWidth,h=innerHeight,mob=w<900;
+      var w=innerWidth,h=innerHeight,mob=w<900;MOB=mob;
       GAP=mob?420:560;DROP=mob?h*.2:0;FAR=GAP*4.2;NEAR=mob?240:380;
       var X=mob?w*.17:Math.min(w*.24,380);
       cards.forEach(function(c,i){var side=i%2?-1:1,y=((i%3)-1)*h*(mob?.07:.08);c.style.transform='translate3d('+(side*X).toFixed(1)+'px,'+y.toFixed(1)+'px,'+(-(i+1)*GAP)+'px) rotateY('+(-side*12)+'deg)'});
@@ -50,14 +50,14 @@ if(fly){
       if(Math.abs(p-last)<.0004)return;last=p;
       var cam=p*(N+.6)*GAP-GAP*.9;
       world.style.transform='translate3d(0,0,'+cam.toFixed(1)+'px)';
-      var best=-1,bd=1e9;
+      var best=-1,bd=1e9,reveal=MOB?clamp((p-.07)/.06,0,1):1;
       for(var i=0;i<N;i++){
         var dz=-(i+1)*GAP+cam,o;
         if(dz>NEAR||dz<-FAR)o=0;
         else if(dz<-FAR+GAP)o=(dz+FAR)/GAP;
         else if(dz>NEAR-320)o=(NEAR-dz)/320;
         else o=1;
-        o=Math.round(clamp(o,0,1)*50)/50;
+        o=Math.round(clamp(o,0,1)*reveal*50)/50;
         if(ops[i]!==o){ops[i]=o;cards[i].style.opacity=o;cards[i].style.visibility=o?'visible':'hidden'}
         var dist=Math.abs(dz+GAP*.9);if(dist<bd){bd=dist;best=i}
       }
