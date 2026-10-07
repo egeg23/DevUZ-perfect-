@@ -1,0 +1,93 @@
+# Выкатка демо-площадки globalex.maximov-tech.ru, по кнопке.
+#
+# Площадка (репозиторий egeg23/Global-Export) живёт на том же сервере, что и
+# devuz.studio, и выкатывается сама — таймером globalex-autodeploy раз в
+# минуту. 07.10.2026 таймер перестал доезжать: у сервера в России рвётся путь
+# к GitHub, а у площадки, в отличие от devuz, не было запасного пути, и два
+# слитых PR повисли (владелец: «Выкатывай»). Этот запуск — способ выкатить
+# площадку и увидеть, что с её автовыкаткой, не заходя на сервер руками.
+#
+# Что делает: показывает таймер и журнал автовыкатки, забирает ветку
+# площадки по HTTPS (репозиторий публичный), запускает её свежий deploy.sh —
+# тот уже умеет запасной путь — и включает таймер, если он стоял.
+# Запускается со вкладки Actions → «Выкатка площадки globalex» → Run workflow.
+name: Выкатка площадки globalex
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: globalex-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Выкатить площадку
+    runs-on: ubuntu-latest
+    steps:
+      - name: Выкатка по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 40m
+          script: |
+            set -uo pipefail
+            export GIT_TERMINAL_PROMPT=0
+            unset HTTPS_PROXY HTTP_PROXY ALL_PROXY https_proxy http_proxy all_proxy
+
+            APP_DIR=/srv/globalex
+            APP_USER=globalex
+            REPO=https://github.com/egeg23/Global-Export.git
+            SUDO=""
+            [ "$(id -u)" -eq 0 ] || SUDO="sudo -n"
+            BRANCH="$(tr -d '[:space:]' < /etc/globalex-branch 2>/dev/null || true)"
+            [ -n "$BRANCH" ] || BRANCH=claude/global-export-website-u6yg03
+
+            echo "════ Автовыкатка площадки: что было ════"
+            $SUDO systemctl status globalex-autodeploy.timer --no-pager -n 0 || true
+            $SUDO systemctl status globalex-autodeploy.service --no-pager -n 0 || true
+            $SUDO journalctl -u globalex-autodeploy -n 80 --no-pager || true
+            echo "на сервере: $($SUDO runuser -u "$APP_USER" -- git -C "$APP_DIR" rev-parse --short HEAD 2>/dev/null || echo '?')"
+            echo "origin: $($SUDO runuser -u "$APP_USER" -- git -C "$APP_DIR" config --get remote.origin.url 2>/dev/null || echo '?')"
+
+            echo
+            echo "════ Забираем ${BRANCH} по HTTPS ════"
+            if ! $SUDO timeout 300 runuser -u "$APP_USER" -- env GIT_TERMINAL_PROMPT=0 \
+                git -C "$APP_DIR" fetch "$REPO" "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"; then
+              echo "✗ GitHub по HTTPS тоже не отвечает с сервера — выкатке не из чего собирать"
+              exit 1
+            fi
+            echo "в GitHub: $($SUDO runuser -u "$APP_USER" -- git -C "$APP_DIR" rev-parse --short "origin/${BRANCH}")"
+
+            echo
+            echo "════ Выкатка (deploy.sh из свежей ветки) ════"
+            # Сценарий берём из свежей ветки, а не из рабочего каталога: там
+            # может лежать старый, без запасного пути к GitHub.
+            SCRIPT="$(mktemp)"
+            $SUDO runuser -u "$APP_USER" -- git -C "$APP_DIR" show "origin/${BRANCH}:deploy/deploy.sh" > "$SCRIPT"
+            if $SUDO env APP_DIR="$APP_DIR" APP_USER="$APP_USER" BRANCH="$BRANCH" FALLBACK_URL="$REPO" bash "$SCRIPT"; then
+              DONE="$($SUDO runuser -u "$APP_USER" -- git -C "$APP_DIR" rev-parse HEAD)"
+              echo "$DONE" | $SUDO tee "$APP_DIR/.deployed-commit" >/dev/null
+              $SUDO rm -f "$APP_DIR/.deploy-failed"
+              echo "✓ Площадка выкачена: ${DONE:0:7}"
+              RESULT=0
+            else
+              echo "✗ deploy.sh не прошёл — журнал выше"
+              RESULT=1
+            fi
+            rm -f "$SCRIPT"
+
+            echo
+            echo "════ Таймер автовыкатки ════"
+            if ! $SUDO systemctl is-active --quiet globalex-autodeploy.timer; then
+              $SUDO systemctl enable --now globalex-autodeploy.timer && echo "✓ таймер включён" || echo "✗ таймер не включился"
+            else
+              echo "✓ таймер работает"
+            fi
+            exit "$RESULT"
