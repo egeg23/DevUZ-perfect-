@@ -37,6 +37,7 @@ import { probe, recheck } from "@/lib/audit/fetch";
 import { factCheck, type DroppedFinding } from "@/lib/audit/verify";
 import { AUTO_PROTO, autoPrototype } from "@/lib/proto/auto";
 import { markAutoSent } from "@/lib/proto/store";
+import { WRITE_MYSELF_MAX, WRITE_MYSELF_NOTE, mayWriteMyself } from "@/lib/admin/write-myself";
 import { newRequestNo } from "@/lib/qualify/engine";
 import {
   NOSITE_SYSTEM,
@@ -996,6 +997,49 @@ export async function markSelfContacted(
     meta: { host: prospect.host, target: prospect.target, note: comment.slice(0, 120) },
   });
   return { ok: true };
+}
+
+/**
+ * «Напишу сам — не отправлять» на несколько писем очереди разом — галочками
+ * в панели (lib/admin/write-myself.ts).
+ *
+ * Каждое письмо снимается тем же markSelfContacted, что и одна карточка, со
+ * всеми его проверками. Чужое письмо менеджеру не снять (mayWriteMyself);
+ * письмо, которое бот успел отправить, пока человек ставил галочки, — уже
+ * не снять, и об этом говорится отдельно: писать такому клиенту второй раз
+ * не нужно.
+ */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function writeMyself(
+  ids: readonly string[],
+  staff: Staff,
+  ip: string,
+): Promise<{ done: number; late: number; refused: number }> {
+  const unique = [...new Set(ids)].slice(0, WRITE_MYSELF_MAX);
+  // Один испорченный id уронил бы запрос целиком — и «не снято» все.
+  const wanted = unique.filter((id) => UUID.test(id));
+  const rows = new Map((await prospectsByIds(wanted)).map((p) => [p.id, p]));
+  let done = 0;
+  let late = 0;
+  let refused = unique.length - wanted.length;
+  for (const id of wanted) {
+    const prospect = rows.get(id);
+    if (!prospect || !mayWriteMyself({ status: "sending", claimed_by: prospect.claimed_by }, staff)) {
+      refused += 1;
+      continue;
+    }
+    if (prospect.status !== "sending") {
+      if (prospect.status === "sent" && prospect.target_kind !== "manual") late += 1;
+      else refused += 1;
+      continue;
+    }
+    const result = await markSelfContacted(id, staff, WRITE_MYSELF_NOTE, ip);
+    if (result.ok) done += 1;
+    else if (result.code === "bot_sent") late += 1;
+    else refused += 1;
+  }
+  return { done, late, refused };
 }
 
 /**

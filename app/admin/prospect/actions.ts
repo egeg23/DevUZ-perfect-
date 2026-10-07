@@ -14,6 +14,7 @@ import {
   saveProspects,
   skipProspect,
   saveNoSite,
+  writeMyself,
 } from "@/lib/admin/outreach-store";
 import { requestIp, requireRole, requireStaff } from "@/lib/admin/guard";
 import { deliverReplacement, portionOwner, topUpPortion } from "@/lib/admin/portion-store";
@@ -194,6 +195,20 @@ export async function markSelfContactedAction(formData: FormData) {
       ? `/admin/prospect?open=${id}#p-${id}`
       : `/admin/prospect?open=${id}&e=${encodeURIComponent(touchErrorParam(result))}#p-${id}`,
   );
+}
+
+/**
+ * «Напишу сам — не отправлять» на отмеченные галочками письма очереди
+ * (lib/admin/write-myself.ts). Возврат — наверх списка: там сказано,
+ * сколько снято и сколько бот успел отправить раньше.
+ */
+export async function writeMyselfAction(formData: FormData) {
+  const staff = await requireStaff();
+  const ids = formData.getAll("id").map(String);
+  const result = await writeMyself(ids, staff, await requestIp());
+  revalidatePath("/admin/prospect");
+  revalidatePath("/admin");
+  redirect(`/admin/prospect?own=${result.done}&late=${result.late}&refused=${result.refused}#outreach`);
 }
 
 /**
