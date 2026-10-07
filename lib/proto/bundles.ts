@@ -29,6 +29,9 @@ const BUNDLES: Record<string, Bundle> = {
   shahar: shahar as Bundle,
 };
 
+/** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */
+export const BUNDLE_NAMES = Object.keys(BUNDLES);
+
 /** Страницы сборки без отпечатка: главная — `html`, остальные — `pages`. */
 export function bundlePages(name: string): { html: string; pages: Record<string, string> } | null {
   const bundle = BUNDLES[name];

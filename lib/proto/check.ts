@@ -19,6 +19,7 @@ import type { ProtoFacts } from "@/lib/proto/facts";
 import { factPool, mainAction, wheelProblems } from "@/lib/proto/facts";
 import { TYPE } from "@/lib/proto/design";
 import { MOTIONS } from "@/lib/proto/motion";
+import { pageProblems } from "@/lib/proto/plain-text";
 import { unsupportedNumbers } from "@/lib/razbor/shift";
 
 export type ProtoProblem = { code: string; text: string };
@@ -135,6 +136,16 @@ export function protoProblems(input: {
   if (brags.length) {
     out.push({ code: "brag", text: `Обещания, которых компания не давала: ${brags.join(", ")}.` });
   }
+
+  /*
+   * 2б. Без длинных тире и штампов ИИ-текста.
+   *
+   * Владелец, 07.10.2026: «никаких длинных тире в макетах и маркеров ИИ
+   * текста». Тире в фактах компании чинит сборка (buildProto), так что
+   * тире здесь — всегда наше, из шаблона. Штамп, который компания пишет о
+   * себе сама, — её слова: он есть в фактах, и проверка его пропускает.
+   */
+  out.push(...pageProblems(html, pool));
 
   // 3. Выключатель анимации.
   if (!/prefers-reduced-motion/.test(css)) {

@@ -54,7 +54,8 @@ test("UGC: лишние поля выкидываются, хэштеги — с
     hashtags: ["вкусно ташкент", "#uzum"],
     extra: 1,
   });
-  assert.deepEqual(out.script, [{ time: "0–3", shot: "s", voice: "v", overlay: "" }]);
+  // Тире из ответа модели в макет не попадает: «0–3» → «0-3» (lib/proto/plain-text).
+  assert.deepEqual(out.script, [{ time: "0-3", shot: "s", voice: "v", overlay: "" }]);
   assert.deepEqual(out.storyboard, []);
   assert.deepEqual(out.hashtags, ["#вкусноташкент", "#uzum"]);
   assert.equal("extra" in out, false);
