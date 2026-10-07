@@ -219,6 +219,37 @@ export async function partnerById(id: string): Promise<Partner | null> {
   return data ? shapePartner(data as Record<string, unknown>) : null;
 }
 
+/**
+ * Сотрудник ли это — по Telegram.
+ *
+ * Владелец, 07.10.2026: «Убери у сотрудников возможность регистрироваться в
+ * качестве партнёров, через тг аутентиф делаем проверку пользователя в
+ * списке сотрудников». Партнёрский процент — за клиента, которого студия
+ * иначе не получила бы; у сотрудника приводить клиентов — работа, и она
+ * оплачивается в панели, а не второй раз здесь. Считаются только активные:
+ * ушедший из студии человек партнёром стать может.
+ */
+export async function isStaffTelegram(telegramUserId: number | null | undefined): Promise<boolean> {
+  if (!telegramUserId) return false;
+  const db = serviceClient();
+  if (!db) return false;
+  const { data } = await db
+    .from("staff")
+    .select("id")
+    .eq("telegram_user_id", telegramUserId)
+    .eq("is_active", true)
+    .limit(1);
+  return Boolean(data?.length);
+}
+
+/** Telegram id активных сотрудников — для пометки «сотрудник» в списке партнёров. */
+export async function staffTelegramIds(): Promise<Set<number>> {
+  const db = serviceClient();
+  if (!db) return new Set();
+  const { data } = await db.from("staff").select("telegram_user_id").eq("is_active", true);
+  return new Set((data ?? []).map((row) => Number(row.telegram_user_id)).filter((id) => Number.isFinite(id) && id !== 0));
+}
+
 export async function listPartners(): Promise<Partner[]> {
   const db = serviceClient();
   if (!db) return [];
@@ -461,6 +492,9 @@ async function freeSlug(db: NonNullable<ReturnType<typeof serviceClient>>): Prom
 export async function ensurePartner(from: TelegramIdentity): Promise<Partner | null> {
   const db = serviceClient();
   if (!db) return null;
+  // Сотрудник партнёром не становится — и запись, заведённая до запрета,
+  // ему ничего не открывает. Ответ ему пишет бот (lib/partners/bot.ts).
+  if (await isStaffTelegram(from.id)) return null;
 
   const existing = await partnerByTelegram(from.id);
   if (existing) {
@@ -518,9 +552,11 @@ export async function createPartner(
   fields: { name: string; telegramUserId: number | null; code: string | null; note: string | null },
   admin: Staff,
   ip: string,
-): Promise<{ ok: true; partner: Partner } | { ok: false; reason: "offline" | "invalid" | "taken" | "failed" }> {
+): Promise<{ ok: true; partner: Partner } | { ok: false; reason: "offline" | "forbidden" | "invalid" | "taken" | "staff" | "failed" }> {
+  if (!PARTNER_DESK.includes(admin.role)) return { ok: false, reason: "forbidden" };
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
+  if (await isStaffTelegram(fields.telegramUserId)) return { ok: false, reason: "staff" };
 
   const name = fields.name.trim().slice(0, 120);
   if (!name) return { ok: false, reason: "invalid" };
@@ -1099,13 +1135,26 @@ export async function decidePayout(
 
 /* ── Правки владельца ───────────────────────────────────────────────────── */
 
+/**
+ * Кто работает в разделе «Партнёры».
+ *
+ * Владелец, 07.10.2026: «Выведи в дашборд руководителю вкладку
+ * „партнёры“». Руководитель ведёт программу: заводит и блокирует
+ * партнёров, решает по агентствам и закреплённым клиентам. Деньги —
+ * решение по выплате и персональная ставка — и удаление партнёра остаются
+ * за владельцем.
+ */
+export const PARTNER_DESK: readonly Staff["role"][] = ["admin", "head"];
+
 export async function updatePartner(
   partnerId: string,
   fields: { status?: PartnerStatus; percentOverride?: number | null; note?: string | null; requisites?: string | null },
   admin: Staff,
   ip: string,
 ): Promise<{ ok: true } | { ok: false; reason: "offline" | "forbidden" | "gone" | "invalid" | "failed" }> {
-  if (admin.role !== "admin") return { ok: false, reason: "forbidden" };
+  if (!PARTNER_DESK.includes(admin.role)) return { ok: false, reason: "forbidden" };
+  // Персональная ставка — деньги: только владелец.
+  if (fields.percentOverride !== undefined && admin.role !== "admin") return { ok: false, reason: "forbidden" };
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
 
@@ -1133,6 +1182,61 @@ export async function updatePartner(
     meta: { fields: Object.keys(patch) },
   });
   return { ok: true };
+}
+
+/**
+ * Удалить партнёра — только владелец.
+ *
+ * Владелец, 07.10.2026: «Дай мне возможность удалять партнёра. Потому что
+ * сейчас например там часть наших сотрудников, которых там быть не должно».
+ * Уходят ссылки, переходы, сессии кабинета, агентства и закреплённые
+ * клиенты; у лидов и проектов снимается «кто привёл» — начислений по ним
+ * больше нет. Партнёра с выплатами удалить нельзя: выплата — это деньги,
+ * которые уже ушли или ждут решения, и их история не должна пропадать.
+ * Такого — «заблокирован».
+ */
+export async function deletePartner(
+  partnerId: string,
+  admin: Staff,
+  ip: string,
+): Promise<{ ok: true; partner: Partner } | { ok: false; reason: "offline" | "forbidden" | "gone" | "has_payouts" | "failed" }> {
+  if (admin.role !== "admin") return { ok: false, reason: "forbidden" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const partner = await partnerById(partnerId);
+  if (!partner) return { ok: false, reason: "gone" };
+
+  const { count } = await db
+    .from("partner_payouts")
+    .select("id", { count: "exact", head: true })
+    .eq("partner_id", partnerId);
+  if (count) return { ok: false, reason: "has_payouts" };
+
+  const [{ count: projects }, { count: leads }] = await Promise.all([
+    db.from("projects").select("id", { count: "exact", head: true }).eq("partner_id", partnerId),
+    db.from("leads").select("id", { count: "exact", head: true }).eq("partner_id", partnerId),
+  ]);
+  const { error } = await db.from("partners").delete().eq("id", partnerId);
+  if (error) {
+    console.error("partners: не удалил партнёра", error.message);
+    return { ok: false, reason: "failed" };
+  }
+
+  await record("partner.deleted", {
+    actorStaffId: admin.id,
+    targetType: "partner",
+    targetId: partnerId,
+    ip,
+    meta: {
+      name: partner.name,
+      code: partner.code,
+      telegram_user_id: partner.telegram_user_id,
+      username: partner.username,
+      projects: projects ?? 0,
+      leads: leads ?? 0,
+    },
+  });
+  return { ok: true, partner };
 }
 
 /**
@@ -1403,7 +1507,7 @@ export async function decideAgency(
   admin: Staff,
   ip: string,
 ): Promise<{ ok: true; agency: PartnerAgency } | { ok: false; reason: "offline" | "forbidden" | "gone" | "failed" }> {
-  if (admin.role !== "admin") return { ok: false, reason: "forbidden" };
+  if (!PARTNER_DESK.includes(admin.role)) return { ok: false, reason: "forbidden" };
   const db = serviceClient();
   if (!db) return { ok: false, reason: "offline" };
   const { data, error } = await db
@@ -1704,7 +1808,7 @@ export async function cancelClient(
   admin: Staff,
   ip: string,
 ): Promise<{ ok: true; client: PartnerClient } | { ok: false; reason: "offline" | "forbidden" | "gone" | "invalid" | "failed" }> {
-  if (admin.role !== "admin") return { ok: false, reason: "forbidden" };
+  if (!PARTNER_DESK.includes(admin.role)) return { ok: false, reason: "forbidden" };
   const reason = note?.trim().slice(0, 300) || "";
   if (!reason) return { ok: false, reason: "invalid" };
   const db = serviceClient();

@@ -182,7 +182,9 @@ test("вход: одноразовая ссылка, хеши в базе, ку�
   const session = read("lib/partners/session.ts");
   assert.match(session, /\.is\("used_at", null\)\s*\.gt\("expires_at"/, "ссылка входа не одноразовая или без срока");
   assert.match(session, /token_hash: hash\(token\)/);
-  assert.match(session, /partner && partner\.status === "active" \? partner : null/, "заблокированный партнёр входит");
+  assert.match(session, /if \(!partner \|\| partner\.status !== "active"\) return null;/, "заблокированный партнёр входит");
+  // Сотрудник в кабинет не входит, даже со старой сессией (владелец, 07.10.2026).
+  assert.match(session, /\(await isStaffTelegram\(partner\.telegram_user_id\)\) \? null : partner/);
 
   const enter = read("app/api/partners/enter/route.ts");
   assert.match(enter, /httpOnly: true/);
@@ -292,11 +294,12 @@ test("заказ агентства — партнёру 12 месяцев с п
   assert.match(body, /partner_agency_id: agency\.id,/);
 });
 
-test("агентство подтверждает только владелец", () => {
+test("агентство подтверждают владелец и руководитель — и никто больше", () => {
   const actions = read("app/admin/partners/actions.ts");
   const at = actions.indexOf("export async function decideAgencyAction(");
   assert.ok(at > 0);
-  assert.match(actions.slice(at, at + 120), /const admin = await requireAdmin\(\);/);
+  assert.match(actions.slice(at, at + 120), /const admin = await requireRole\("admin", "head"\);/);
+  assert.match(read("lib/partners/store.ts"), /export const PARTNER_DESK: readonly Staff\["role"\]\[\] = \["admin", "head"\];/);
   const sql = read("supabase/migrations/0065_partner_models_agencies.sql");
   assert.match(sql, /status text not null default 'pending'/, "новое агентство сразу засчитывается");
   assert.match(sql, /alter table public\.partner_agencies enable row level security;/);

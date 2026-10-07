@@ -251,7 +251,7 @@ test("кабинет: блок на всех языках, только откр
   assert.match(view, /code === "media_gone"/);
 });
 
-test("раздача: партнёру — открытое и после входа, владельцу — под /admin, скачивание — в журнал один раз", () => {
+test("раздача: партнёру — открытое и после входа, владельцу и руководителю — под /admin, скачивание — в журнал один раз", () => {
   const route = read("app/media/promo/[id]/route.ts");
   const authAt = route.indexOf("if (!partner)");
   const serveAt = route.indexOf("return servePromo(");
@@ -268,7 +268,7 @@ test("раздача: партнёру — открытое и после вхо
   const cookie = read("app/admin/login/actions.ts");
   assert.match(cookie, /path: "\/admin"/);
   const admin = read("app/admin/partners/promo/file/[id]/route.ts");
-  assert.match(admin, /if \(staff\?\.role !== "admin"\) return new NextResponse\(null, \{ status: 404 \}\);/);
+  assert.match(admin, /if \(staff\?\.role !== "admin" && staff\?\.role !== "head"\) return new NextResponse\(null, \{ status: 404 \}\);/);
   assert.equal(promoAdminFileUrl(ID), `/admin/partners/promo/file/${ID}`);
   assert.match(read("app/admin/partners/promo/page.tsx"), /const preview = promoAdminFileUrl\(m\.id\);/);
 
@@ -293,12 +293,16 @@ test("выкатка: папка на диске хоста, смонтиров�
 
 /* ── Панель ─────────────────────────────────────────────────────────────── */
 
-test("панель: только владелец, файл — кусками на наш сервер, материал — после проверки файла", () => {
+test("панель: владелец и руководитель, файл — кусками на наш сервер, материал — после проверки файла", () => {
   const actions = read("app/admin/partners/promo/actions.ts");
   const bodies = actions.split("export async function ").slice(1);
   assert.equal(bodies.length, 7);
   for (const body of bodies) {
-    assert.match(body, /^\w+\([^)]*[\s\S]*?\{\s*(const admin = )?await requireAdmin\(\);/, `${body.slice(0, 30)}: без requireAdmin`);
+    assert.match(
+      body,
+      /^\w+\([^)]*[\s\S]*?\{\s*(const admin = )?await requireRole\("admin", "head"\);/,
+      `${body.slice(0, 30)}: без проверки роли`,
+    );
   }
   assert.match(actions, /promoStartAction\(input: \{ mime: string; bytes: number \}\)/);
 

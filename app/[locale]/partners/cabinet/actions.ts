@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n";
-import { alertOwners, alertPayoutRequest } from "@/lib/partners/bot";
+import { alertPartnerDesk, alertPayoutRequest } from "@/lib/partners/bot";
 import { isPerk, isTarget } from "@/lib/partners/rules";
 import { currentPartner } from "@/lib/partners/session";
 import { createPartnerLead, partnerLeadNotice } from "@/lib/partners/priority-lead";
@@ -96,7 +96,7 @@ export async function requestAgencyAction(formData: FormData) {
   });
   if (result.ok) {
     // Решение за владельцем: без подтверждения заказы агентства партнёру не идут.
-    await alertOwners(
+    await alertPartnerDesk(
       [
         "🏢 <b>Партнёр подключает агентство</b>",
         `Партнёр: ${esc(partner.name)}${partner.username ? ` (@${esc(partner.username)})` : ""}`,
@@ -140,7 +140,7 @@ export async function requestClientAction(formData: FormData) {
     const leadId = await createPartnerLead(partner, c, now);
     const until = clientUntilDay({ ...c, first_lead_at: leadId ? now.toISOString() : c.first_lead_at });
     if (leadId) await notifyPartner(partner, partnerLeadNotice(c, until));
-    await alertOwners(
+    await alertPartnerDesk(
       [
         "🧾 <b>Партнёр закрепил клиента</b>",
         `Партнёр: ${esc(partner.name)}${partner.username ? ` (@${esc(partner.username)})` : ""}`,

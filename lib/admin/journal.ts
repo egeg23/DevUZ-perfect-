@@ -112,6 +112,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "partner.created": { ru: "завёл партнёра", uz: "hamkor qo‘shdi", pl: "dodał partnera" },
   "partner.link_created": { ru: "создал партнёрскую ссылку", uz: "hamkorlik havolasini yaratdi", pl: "utworzył link partnerski" },
   "partner.updated": { ru: "изменил партнёра", uz: "hamkorni o‘zgartirdi", pl: "zmienił partnera" },
+  "partner.deleted": { ru: "удалил партнёра", uz: "hamkorni o‘chirdi", pl: "usunął partnera" },
   "partner.payout_requested": { ru: "партнёр запросил выплату", uz: "hamkor to‘lov so‘radi", pl: "partner poprosił o wypłatę" },
   "partner.payout_decided": { ru: "решил по выплате партнёру", uz: "hamkorga to‘lov bo‘yicha qaror qildi", pl: "zdecydował w sprawie wypłaty dla partnera" },
   "project.partner_set": { ru: "привязал партнёра к проекту", uz: "loyihaga hamkorni biriktirdi", pl: "przypisał partnera do projektu" },

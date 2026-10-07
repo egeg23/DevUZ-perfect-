@@ -128,6 +128,7 @@ export const AUDIT_ACTIONS = [
   "partner.created",
   "partner.link_created",
   "partner.updated",
+  "partner.deleted",
   "partner.payout_requested",
   "partner.payout_decided",
   "project.partner_set",

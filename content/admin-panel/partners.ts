@@ -65,6 +65,21 @@ export const partnersResultDict = defineDict({
     uz: "Buni faqat egasi qila oladi.",
     pl: "To może zrobić tylko właściciel.",
   },
+  deleted: {
+    ru: "Партнёр удалён: ссылки не работают, кабинет закрыт.",
+    uz: "Hamkor o‘chirildi: havolalar ishlamaydi, kabinet yopildi.",
+    pl: "Partner usunięty: linki nie działają, panel jest zamknięty.",
+  },
+  staff: {
+    ru: "Это Telegram сотрудника студии — партнёром сотрудник быть не может.",
+    uz: "Bu studiya xodimining Telegrami — xodim hamkor bo‘la olmaydi.",
+    pl: "To Telegram pracownika studia — pracownik nie może być partnerem.",
+  },
+  has_payouts: {
+    ru: "У партнёра есть выплаты — удалить нельзя, чтобы не пропала история денег. Заблокируйте его.",
+    uz: "Hamkorda to‘lovlar bor — pul tarixi yo‘qolmasligi uchun o‘chirib bo‘lmaydi. Uni bloklang.",
+    pl: "Partner ma wypłaty — nie można go usunąć, żeby nie zniknęła historia pieniędzy. Zablokuj go.",
+  },
   failed: {
     ru: "Не получилось. Попробуйте ещё раз.",
     uz: "Bo‘lmadi. Yana bir bor urinib ko‘ring.",
@@ -219,6 +234,40 @@ export const partnersDict = defineDict({
   colAvailable: { ru: "Доступно", uz: "Mavjud", pl: "Dostępne" },
   colEdit: { ru: "Правки", uz: "Tahrirlash", pl: "Edycja" },
   blocked: { ru: "заблокирован", uz: "bloklangan", pl: "zablokowany" },
+  /** Пометка у партнёра, чей Telegram — у сотрудника: такого быть не должно. */
+  isStaff: { ru: "сотрудник студии", uz: "studiya xodimi", pl: "pracownik studia" },
+  /** У руководителя вместо кнопок выплаты. */
+  ownerDecides: { ru: "решает владелец", uz: "egasi hal qiladi", pl: "decyduje właściciel" },
+  deleteOpen: { ru: "удалить", uz: "o‘chirish", pl: "usuń" },
+  deleteWhat: {
+    ru: (name: string) => `Удалить партнёра «${name}» навсегда?`,
+    uz: (name: string) => `«${name}» hamkorini butunlay o‘chirasizmi?`,
+    pl: (name: string) => `Usunąć partnera «${name}» na zawsze?`,
+  },
+  deleteLinks: {
+    ru: "Его ссылки перестанут работать, кабинет и вход через бота закроются.",
+    uz: "Uning havolalari ishlamay qoladi, kabinet va bot orqali kirish yopiladi.",
+    pl: "Jego linki przestaną działać, panel i logowanie przez bota zostaną zamknięte.",
+  },
+  deleteCredit: {
+    ru: (projects: number, leads: number) =>
+      `У ${projects} проектов и ${leads} заявок снимется «кто привёл» — начислений по ним больше не будет.`,
+    uz: (projects: number, leads: number) =>
+      `${projects} ta loyiha va ${leads} ta buyurtmadan «kim olib kelgan» olib tashlanadi — ular bo‘yicha hisoblash bo‘lmaydi.`,
+    pl: (projects: number, leads: number) =>
+      `Z ${projects} projektów i ${leads} zgłoszeń zniknie «kto przyprowadził» — naliczeń za nie już nie będzie.`,
+  },
+  deleteRest: {
+    ru: "Агентства и закреплённые клиенты удалятся вместе с ним. Вернуть нельзя — только завести заново.",
+    uz: "Agentliklar va biriktirilgan mijozlar u bilan birga o‘chiriladi. Qaytarib bo‘lmaydi — faqat qaytadan qo‘shish mumkin.",
+    pl: "Agencje i przypisani klienci zostaną usunięci razem z nim. Nie da się tego cofnąć — można tylko dodać go od nowa.",
+  },
+  deleteConfirm: { ru: "Удалить навсегда", uz: "Butunlay o‘chirish", pl: "Usuń na zawsze" },
+  deleteBlockedByPayouts: {
+    ru: "Удалить нельзя: у партнёра есть выплаты, их история не должна пропасть. Заблокируйте его.",
+    uz: "O‘chirib bo‘lmaydi: hamkorda to‘lovlar bor, ularning tarixi yo‘qolmasligi kerak. Uni bloklang.",
+    pl: "Nie można usunąć: partner ma wypłaty, ich historia nie może zniknąć. Zablokuj go.",
+  },
   active: { ru: "активен", uz: "faol", pl: "aktywny" },
   noTelegram: { ru: "без Telegram", uz: "Telegramsiz", pl: "bez Telegrama" },
   since: {

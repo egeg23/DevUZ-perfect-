@@ -1,10 +1,10 @@
 import Link from "next/link";
 
-import { addPartner, cancelClientAction, decide, decideAgencyAction, editPartner } from "./actions";
+import { addPartner, cancelClientAction, decide, decideAgencyAction, deletePartnerAction, editPartner } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { partnersDict, partnersResultDict, perkDict, usd } from "@/content/admin-panel/partners";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireRole } from "@/lib/admin/guard";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
 import { PartnerClientsBlock } from "@/components/admin/partner-clients";
@@ -20,7 +20,7 @@ import {
   shortUrl,
 } from "@/lib/partners/rules";
 import { listPromo } from "@/lib/partners/promo";
-import { agenciesOf, clientsOf, listPartners, summarize } from "@/lib/partners/store";
+import { agenciesOf, clientsOf, listPartners, staffTelegramIds, summarize } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -28,13 +28,17 @@ export const dynamic = "force-dynamic";
 /**
  * Партнёры: кто привёл клиентов, что им начислено, кто просит выплату.
  *
- * Только владелец: это деньги посторонним людям. Начисления считаются на
- * лету из проектов и платежей, как у сотрудников; здесь — сводка по
- * каждому и заявки на выплату, которые нужно решить.
+ * Владелец и руководитель (владелец, 07.10.2026: «Выведи в дашборд
+ * руководителю вкладку „партнёры“»). Начисления считаются на лету из
+ * проектов и платежей, как у сотрудников; здесь — сводка по каждому и
+ * заявки на выплату. Деньги посторонним людям — решение по выплате и
+ * персональная ставка — и удаление партнёра остаются владельцу: у
+ * руководителя этих кнопок нет, и книга (lib/partners/store.ts) их ему не
+ * исполнит.
  */
 
 /** Тон ответа: зелёный — сделано, жёлтый — не вышло. Текст — из словаря по коду. */
-const OK_CODES = new Set(["ok", "created", "paid", "rejected", "agency_active", "agency_rejected"]);
+const OK_CODES = new Set(["ok", "created", "paid", "rejected", "agency_active", "agency_rejected", "deleted"]);
 
 const INPUT =
   "w-full rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
@@ -50,7 +54,8 @@ export default async function PartnersPage({
 }: {
   searchParams: Promise<{ r?: string }>;
 }) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
+  const owner = admin.role === "admin";
   const { r } = await searchParams;
   const locale = admin.panel_locale;
   const t = pick(partnersDict, locale);
@@ -70,10 +75,13 @@ export default async function PartnersPage({
   const money = (value: number | null) => usd(value, locale);
 
   const summaries = await summarize(await listPartners());
-  const [agencies, clients, promo] = await Promise.all([
+  const [agencies, clients, promo, staffIds] = await Promise.all([
     agenciesOf("all"),
     clientsOf("all"),
     listPromo({ withHidden: false }),
+    // Чей Telegram у сотрудника — пометка в списке: партнёром сотрудник
+    // быть не может (lib/partners/store.ts → isStaffTelegram).
+    staffTelegramIds(),
   ]);
   const pendingAgencies = agencies.filter((a) => a.status === "pending");
   const partnerName = new Map(summaries.map((s) => [s.partner.id, s.partner.name]));
@@ -162,17 +170,22 @@ export default async function PartnersPage({
                 </td>
                 <td data-label={t.colDecision} className={TD}>
                   {/* Деньги уходят руками — кошелёк или карта, — и только потом
-                      «Выплачено». Отклонение возвращает сумму в доступное. */}
-                  <form action={decide} className="flex flex-wrap items-center gap-2">
-                    <input type="hidden" name="payout" value={p.id} />
-                    <input name="note" maxLength={300} placeholder={t.notePartnerPh} className={`${SMALL} w-44`} />
-                    <button type="submit" name="status" value="paid" className={BUTTON}>
-                      {t.markPaid}
-                    </button>
-                    <button type="submit" name="status" value="rejected" className="text-xs text-faint hover:text-gold">
-                      {t.reject}
-                    </button>
-                  </form>
+                      «Выплачено». Отклонение возвращает сумму в доступное.
+                      Решает владелец: руководитель видит заявку, но не кнопки. */}
+                  {owner ? (
+                    <form action={decide} className="flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="payout" value={p.id} />
+                      <input name="note" maxLength={300} placeholder={t.notePartnerPh} className={`${SMALL} w-44`} />
+                      <button type="submit" name="status" value="paid" className={BUTTON}>
+                        {t.markPaid}
+                      </button>
+                      <button type="submit" name="status" value="rejected" className="text-xs text-faint hover:text-gold">
+                        {t.reject}
+                      </button>
+                    </form>
+                  ) : (
+                    <span className="text-xs text-faint">{t.ownerDecides}</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -284,11 +297,14 @@ export default async function PartnersPage({
             </tr>
           </thead>
           <tbody>
-            {summaries.map(({ partner, links, balance, leads, projects, paidProjects, accruals }) => (
+            {summaries.map(({ partner, links, balance, leads, projects, paidProjects, accruals, payouts }) => (
               <tr key={partner.id} className="border-b border-line-soft last:border-0 align-top">
                 <td data-label={t.colWho} className={TD}>
                   {partner.name}
                   {partner.status === "blocked" ? <span className="ml-2 text-xs text-gold">{t.blocked}</span> : null}
+                  {partner.telegram_user_id && staffIds.has(partner.telegram_user_id) ? (
+                    <span className="ml-2 rounded border border-gold/40 px-1.5 py-0.5 text-xs text-gold">{t.isStaff}</span>
+                  ) : null}
                   <span className="block text-xs text-faint">
                     {partner.username ? `@${partner.username}` : partner.telegram_user_id ? `id ${partner.telegram_user_id}` : t.noTelegram}
                     {" · "}
@@ -353,15 +369,20 @@ export default async function PartnersPage({
                   <form action={editPartner} className="flex flex-col gap-2">
                     <input type="hidden" name="partner" value={partner.id} />
                     <div className="flex items-center gap-2">
-                      <input
-                        name="percent"
-                        inputMode="numeric"
-                        placeholder={t.byTierPh}
-                        defaultValue={partner.percent_override ?? ""}
-                        aria-label={t.personalRate}
-                        className={`${SMALL} w-24`}
-                      />
-                      <span className="text-xs text-faint">%</span>
+                      {/* Персональная ставка — деньги: поле только у владельца. */}
+                      {owner ? (
+                        <>
+                          <input
+                            name="percent"
+                            inputMode="numeric"
+                            placeholder={t.byTierPh}
+                            defaultValue={partner.percent_override ?? ""}
+                            aria-label={t.personalRate}
+                            className={`${SMALL} w-24`}
+                          />
+                          <span className="text-xs text-faint">%</span>
+                        </>
+                      ) : null}
                       <select name="status" defaultValue={partner.status} className={SMALL}>
                         <option value="active">{t.active}</option>
                         <option value="blocked">{t.blocked}</option>
@@ -373,6 +394,16 @@ export default async function PartnersPage({
                       {t.save}
                     </button>
                   </form>
+                  {owner ? (
+                    <DeleteBlock
+                      id={partner.id}
+                      name={partner.name}
+                      projects={projects.length}
+                      leads={leads}
+                      hasPayouts={payouts.length > 0}
+                      locale={locale}
+                    />
+                  ) : null}
                 </td>
               </tr>
             ))}
@@ -429,6 +460,58 @@ export default async function PartnersPage({
         </p>
       </div>
     </AdminShell>
+  );
+}
+
+/**
+ * Удаление с разворачивающимся предупреждением — как «Отключить» в
+ * «Команде»: последствия стоят прямо над кнопкой, а не в окне confirm(),
+ * которое закрывают не читая. Партнёра с выплатами удалить нельзя — кнопки
+ * нет, есть объяснение.
+ */
+function DeleteBlock({
+  id,
+  name,
+  projects,
+  leads,
+  hasPayouts,
+  locale,
+}: {
+  id: string;
+  name: string;
+  projects: number;
+  leads: number;
+  hasPayouts: boolean;
+  locale: PanelLocale;
+}) {
+  const t = pick(partnersDict, locale);
+  return (
+    <details className="mt-2">
+      <summary className="cursor-pointer list-none text-xs text-faint transition hover:text-gold">{t.deleteOpen}</summary>
+      <div className="mt-2 w-72 rounded-lg border border-gold/30 bg-gold/5 px-3 py-3">
+        {hasPayouts ? (
+          <p className="text-xs text-gold">{t.deleteBlockedByPayouts}</p>
+        ) : (
+          <>
+            <p className="text-xs text-gold">{t.deleteWhat(name)}</p>
+            <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-4 text-xs text-muted">
+              <li>{t.deleteLinks}</li>
+              <li>{t.deleteCredit(projects, leads)}</li>
+              <li>{t.deleteRest}</li>
+            </ul>
+            <form action={deletePartnerAction} className="mt-3">
+              <input type="hidden" name="partner" value={id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs text-gold transition hover:bg-gold/20"
+              >
+                {t.deleteConfirm}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </details>
   );
 }
 

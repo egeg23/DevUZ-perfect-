@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 
-import { requestIp, requireAdmin } from "@/lib/admin/guard";
+import { requestIp, requireRole } from "@/lib/admin/guard";
 import {
   announcePromo,
   deletePromo,
@@ -28,13 +28,13 @@ import {
 const num = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : null);
 
 export async function promoStartAction(input: { mime: string; bytes: number }): Promise<StartResult> {
-  await requireAdmin();
+  await requireRole("admin", "head");
   return promoStart({ mime: String(input?.mime ?? ""), bytes: Number(input?.bytes) });
 }
 
 /** Кусок файла: FormData с upload, offset и самим куском. */
 export async function promoChunkAction(formData: FormData): Promise<{ ok: true; received: number } | PromoFail> {
-  await requireAdmin();
+  await requireRole("admin", "head");
   const chunk = formData.get("chunk");
   if (!(chunk instanceof Blob)) return { ok: false, reason: "chunk_missing" };
   return promoChunk(
@@ -46,7 +46,7 @@ export async function promoChunkAction(formData: FormData): Promise<{ ok: true; 
 
 /** Бросить загрузку: владелец передумал или связь не вернулась. */
 export async function promoDiscardAction(uploadId: string): Promise<void> {
-  await requireAdmin();
+  await requireRole("admin", "head");
   await promoDiscard(String(uploadId ?? ""));
 }
 
@@ -60,7 +60,7 @@ export async function promoRegisterAction(input: {
   duration: number | null;
   notify: boolean;
 }): Promise<{ ok: true } | PromoFail> {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
   const result = await registerPromo(
     {
       uploadId: String(input?.uploadId ?? ""),
@@ -86,7 +86,7 @@ function back(code: string): never {
 }
 
 export async function promoUpdateAction(formData: FormData) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
   const result = await updatePromo(
     String(formData.get("promo") ?? ""),
     {
@@ -102,7 +102,7 @@ export async function promoUpdateAction(formData: FormData) {
 }
 
 export async function promoVisibilityAction(formData: FormData) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
   const hidden = String(formData.get("hidden") ?? "") === "1";
   const result = await updatePromo(String(formData.get("promo") ?? ""), { hidden }, admin, await requestIp());
   revalidatePath("/admin/partners/promo");
@@ -110,7 +110,7 @@ export async function promoVisibilityAction(formData: FormData) {
 }
 
 export async function promoDeleteAction(formData: FormData) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
   const result = await deletePromo(String(formData.get("promo") ?? ""), admin, await requestIp());
   revalidatePath("/admin/partners/promo");
   back(result.ok ? "deleted" : result.reason);

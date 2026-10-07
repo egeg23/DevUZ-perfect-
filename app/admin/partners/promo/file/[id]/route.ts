@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const staff = await currentStaff();
-  if (staff?.role !== "admin") return new NextResponse(null, { status: 404 });
+  if (staff?.role !== "admin" && staff?.role !== "head") return new NextResponse(null, { status: 404 });
   const { id } = await params;
   const material = await promoById(id);
   if (!material) return new NextResponse(null, { status: 404 });

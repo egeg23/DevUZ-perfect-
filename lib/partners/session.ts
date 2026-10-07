@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 
 import type { Locale } from "@/lib/i18n";
-import { partnerById, type Partner } from "@/lib/partners/store";
+import { isStaffTelegram, partnerById, type Partner } from "@/lib/partners/store";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -80,6 +80,7 @@ export async function openSession(partnerId: string): Promise<{ token: string; m
 /**
  * Кто сейчас в кабинете. Заблокированный партнёр — никто: кабинет
  * показывает деньги и ссылки, а блокировка значит «больше не партнёр».
+ * Сотрудник студии — тоже никто.
  */
 export async function currentPartner(): Promise<Partner | null> {
   const token = (await cookies()).get(PARTNER_COOKIE)?.value;
@@ -100,7 +101,10 @@ export async function currentPartner(): Promise<Partner | null> {
   }
 
   const partner = await partnerById(String(data.partner_id));
-  return partner && partner.status === "active" ? partner : null;
+  if (!partner || partner.status !== "active") return null;
+  // Сотрудник в кабинет не входит, даже со старой сессией: партнёрская
+  // программа не для команды (владелец, 07.10.2026).
+  return (await isStaffTelegram(partner.telegram_user_id)) ? null : partner;
 }
 
 /** Выйти: сессия гаснет в базе, а не только кука в браузере. */
