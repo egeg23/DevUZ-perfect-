@@ -37,6 +37,10 @@ test("ответ @SpamBot: свободен, ограничен со сроко�
     "Ограничения будут автоматически сняты 8 окт. 2026 г., 08:07 UTC.";
   assert.deepEqual(spamBotVerdict(ru, now), { limited: true, until: Date.UTC(2026, 9, 8, 8, 7) });
 
+  assert.deepEqual(
+    spamBotVerdict("Ваш аккаунт временно ограничен. Ограничения будут автоматически сняты 9 октября 2026 года в 9:42 UTC.", now),
+    { limited: true, until: Date.UTC(2026, 9, 9, 9, 42) },
+  );
   assert.deepEqual(spamBotVerdict("Your account is now limited. While the account is limited, you will not be able to…", now), {
     limited: true,
     until: null,
