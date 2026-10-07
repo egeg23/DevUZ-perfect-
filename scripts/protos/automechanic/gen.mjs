@@ -495,7 +495,7 @@ ${ba("ba-m", "ba-old-m.webp", "ba-new-m.webp", t("Телефон · первый
 </div>
 </div></section>
 <section id="prilozhenie" data-addon="pwa"><div class="wrap">
-${head(l, t("Сайт как приложение · 150 $", "Sayt ilova kabi · 150 $"), t("Добавьте на экран телефона — и откройте", "Telefon ekraniga qo‘shing — va oching"), t("Это работает уже в прототипе. Иконка встаёт рядом с банком и такси, сайт открывается без строки браузера, внизу — меню «Главная · Услуги · Запись · Контакты». Без интернета открывается страница с адресом и телефонами.", "Bu prototipda allaqachon ishlaydi. Belgi bank va taksi yoniga qo‘yiladi, sayt brauzer satrisiz ochiladi, pastda — «Bosh sahifa · Xizmatlar · Yozilish · Kontaktlar» menyusi. Internetsiz manzil va telefonlar sahifasi ochiladi."))}
+${head(l, t("Сайт как приложение · 195 $", "Sayt ilova kabi · 195 $"), t("Добавьте на экран телефона — и откройте", "Telefon ekraniga qo‘shing — va oching"), t("Это работает уже в прототипе. Иконка встаёт рядом с банком и такси, сайт открывается без строки браузера, внизу — меню «Главная · Услуги · Запись · Контакты». Без интернета открывается страница с адресом и телефонами.", "Bu prototipda allaqachon ishlaydi. Belgi bank va taksi yoniga qo‘yiladi, sayt brauzer satrisiz ochiladi, pastda — «Bosh sahifa · Xizmatlar · Yozilish · Kontaktlar» menyusi. Internetsiz manzil va telefonlar sahifasi ochiladi."))}
 ${installBlock(l)}
 </div></section>
 <section id="konstruktor"><div class="wrap">
@@ -530,7 +530,7 @@ ${head(l, t("Фото в прототипе", "Prototipdagi fotolar"), t("Отк
 </div></section>`;
   return shell(l, "plan", {
     title: t("Что дальше: было и стало, конструктор сайта — AUTOMECHANIC", "Keyingi qadam: edi va bo‘ldi, sayt konstruktori — AUTOMECHANIC"),
-    desc: t("Было и стало: старый сайт AUTOMECHANIC и прототип. Конструктор: сайт 1 000 $, заказы в Telegram, сайт как приложение 150 $.", "Edi va bo‘ldi: AUTOMECHANIC eski sayti va prototip. Konstruktor: sayt 1 000 $, buyurtmalar Telegramga, sayt ilova kabi 150 $."),
+    desc: t("Было и стало: старый сайт AUTOMECHANIC и прототип. Конструктор: сайт 1 000 $, заказы в Telegram, сайт как приложение 195 $.", "Edi va bo‘ldi: AUTOMECHANIC eski sayti va prototip. Konstruktor: sayt 1 000 $, buyurtmalar Telegramga, sayt ilova kabi 195 $."),
   }, body);
 }
 

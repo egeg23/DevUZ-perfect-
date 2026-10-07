@@ -66,10 +66,10 @@ test("AUTOMECHANIC: страницы на двух языках, условия,
   assert.match(all.sw, /\/offline'/);
 });
 
-test("AUTOMECHANIC: цены владельца в конструкторе — сайт 1 000 $, приложение 150 $", async () => {
+test("AUTOMECHANIC: цены владельца в конструкторе — сайт 1 000 $, приложение 195 $ (допы +30%)", async () => {
   const plan = await import("../scripts/protos/automechanic/plan.mjs");
   assert.equal(plan.BASE.price, 1000);
-  assert.equal(plan.ADDONS.find((a: { id: string }) => a.id === "pwa")?.price, 150);
+  assert.equal(plan.ADDONS.find((a: { id: string }) => a.id === "pwa")?.price, 195);
   const tg = plan.ADDONS.find((a: { id: string }) => a.id === "tg");
   assert.ok(tg && tg.price < 500, "заказы в Telegram дешевле внедрения CRM");
 });
