@@ -50,7 +50,7 @@ import {
   snoozeReminder,
   takeLead,
 } from "@/lib/admin/ownership";
-import { issueLoginToken, staffByTelegramId } from "@/lib/admin/session";
+import { issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
 import { closeRows, deliverReplacement, portionSource, topUpPortion } from "@/lib/admin/portion-store";
@@ -58,6 +58,13 @@ import { approves, decideTransfer } from "@/lib/admin/transfers";
 import { closeTouch, markSelfContacted, prospectById, queueOutreach, skipProspect } from "@/lib/admin/outreach-store";
 import { loadQueueEtas } from "@/lib/admin/outreach-queue";
 import { botQueueNote } from "@/lib/admin/queue-eta";
+import {
+  WRITE_MYSELF_DONE,
+  WRITE_MYSELF_NOTE,
+  mayWriteMyself,
+  writeMyselfLink,
+  writeMyselfNote,
+} from "@/lib/admin/write-myself";
 import { CLOSE_TEXT, isCloseReason } from "@/lib/admin/touch-close";
 import { streamCommand } from "@/lib/admin/stream";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
@@ -1235,6 +1242,14 @@ async function handlePortionButton(
   prospectId: string,
 ) {
   const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  // «✋ Напишу сам — не отправлять» — не только под сегодняшней порцией:
+  // письмо, поставленное вчера, может ждать ограниченный аккаунт до завтра,
+  // и снять его нужно и тогда. Право — своё письмо, у руководителя и
+  // владельца — любое (mayWriteMyself).
+  if (staff && prospectId && action === "own") {
+    await writeMyselfFromBot(query, staff, prospectId);
+    return;
+  }
   const source = staff && prospectId ? await portionSource(staff.id, prospectId) : null;
   if (!staff || !source) {
     await answerCallback(query.id, "Это не ваша порция на сегодня");
@@ -1248,9 +1263,9 @@ async function handlePortionButton(
   // Касание сделано — под карточкой встают «Клиент отказался» и
   // «Игнорирует»: чем кончилось, станет ясно позже, и закрыть касание
   // удобнее всего из той же карточки.
-  const touched = async (label: string) => {
+  const touched = async (label: string, queued = false) => {
     await answerCallback(query.id, label);
-    if (query.message) await setButtons(query.message.chat.id, query.message.message_id, closeRows(prospectId, label));
+    if (query.message) await setButtons(query.message.chat.id, query.message.message_id, closeRows(prospectId, label, queued));
   };
 
   try {
@@ -1272,7 +1287,7 @@ async function handlePortionButton(
       // переживали, что письмо «в очереди» не уйдёт вовсе (queue-eta.ts).
       const now = Date.now();
       const queued = botQueueNote((await loadQueueEtas(now)).get(prospectId), now);
-      await touched(queued.label);
+      await touched(queued.label, true);
       if (queued.note && query.message) await sendMessage(query.message.chat.id, queued.note);
       if (source === "stream") await feedStream(staff.id);
       return;
@@ -1316,6 +1331,61 @@ async function handlePortionButton(
   } catch (error) {
     console.error("telegram webhook: порция", error);
     await answerCallback(query.id, "Не получилось");
+  }
+}
+
+/**
+ * «✋ Напишу сам — не отправлять» под письмом в очереди
+ * (lib/admin/write-myself.ts): бот письмо не отправит, карточка
+ * становится «связался сам», а в ответ приходит, кому писать, и текст,
+ * который копируется нажатием.
+ *
+ * Пока карточка лежала, письмо могло уйти — тогда кнопка под ней гаснет и
+ * говорит об этом, а не висит до следующего нажатия.
+ */
+async function writeMyselfFromBot(
+  query: NonNullable<Update["callback_query"]>,
+  staff: Staff,
+  prospectId: string,
+) {
+  const relabel = async (label: string) => {
+    await answerCallback(query.id, label);
+    if (query.message) await setButtons(query.message.chat.id, query.message.message_id, closeRows(prospectId, label));
+  };
+  try {
+    const prospect = await prospectById(prospectId);
+    if (!prospect) {
+      await answerCallback(query.id, "Такой компании в списке уже нет");
+      return;
+    }
+    if (prospect.status !== "sending") {
+      await relabel(
+        prospect.status === "sent" && prospect.target_kind !== "manual"
+          ? "📤 Бот уже отправил это письмо"
+          : "✋ Письмо уже не в очереди",
+      );
+      return;
+    }
+    if (!mayWriteMyself(prospect, staff)) {
+      await answerCallback(query.id, "Это письмо поставил в очередь другой человек — снять его может он, руководитель или владелец");
+      return;
+    }
+    const result = await markSelfContacted(prospectId, staff, WRITE_MYSELF_NOTE, "");
+    if (!result.ok) {
+      if (result.code === "bot_sent") await relabel("📤 Бот уже отправил это письмо");
+      else await answerCallback(query.id, result.why.slice(0, 190));
+      return;
+    }
+    await relabel(WRITE_MYSELF_DONE);
+    if (query.message) {
+      const link = writeMyselfLink(prospect);
+      const note = writeMyselfNote(prospect, esc);
+      if (link) await sendWithRows(query.message.chat.id, note, [[link]]);
+      else await sendMessage(query.message.chat.id, note);
+    }
+  } catch (error) {
+    console.error("telegram webhook: напишу сам", error);
+    await answerCallback(query.id, "Не получилось — откройте карточку в панели");
   }
 }
 

@@ -619,6 +619,51 @@ export const outreachListDict = defineDict({
     pl: (self: string) =>
       `Nie trzeba czekać: otwórz rozmowę ze swojego konta, wyślij ten sam tekst i kliknij «${self}» poniżej — wtedy bot nie wyśle swojej kopii. Odpowiedź przyjdzie do ciebie, a lead już jest twój.`,
   },
+  /**
+   * «Напишу сам — не отправлять» на несколько писем очереди разом
+   * (lib/admin/write-myself.ts): галочки в карточках, кнопка над списком.
+   * `button` — подпись кнопки, `pick` — подпись галочки на языке панели.
+   */
+  writeMyselfButton: { ru: "Напишу сам — не отправлять", uz: "O‘zim yozaman — yubormang", pl: "Napiszę sam — nie wysyłaj" },
+  writeMyselfPick: { ru: "Напишу сам", uz: "O‘zim yozaman", pl: "Napiszę sam" },
+  writeMyselfAll: { ru: "Отметить все", uz: "Hammasini belgilash", pl: "Zaznacz wszystkie" },
+  writeMyselfHint: {
+    ru: (pick: string, button: string) =>
+      `Хотите написать клиентам сами, не дожидаясь очереди, — поставьте галочку «${pick}» у своих писем ниже и нажмите «${button}». Бот их не отправит, а вы напишете со своего аккаунта.`,
+    uz: (pick: string, button: string) =>
+      `Navbatni kutmasdan mijozlarga o‘zingiz yozmoqchimisiz — quyida o‘z xatlaringizga «${pick}» belgisini qo‘ying va «${button}» tugmasini bosing. Bot ularni yubormaydi, siz esa o‘z akkauntingizdan yozasiz.`,
+    pl: (pick: string, button: string) =>
+      `Chcesz napisać do klientów sam, bez czekania w kolejce — zaznacz «${pick}» przy swoich wiadomościach poniżej i kliknij «${button}». Bot ich nie wyśle, a ty napiszesz ze swojego konta.`,
+  },
+  /** Руководителю и владельцу: галочки у всех писем очереди. */
+  writeMyselfHintLead: {
+    ru: (pick: string, button: string) =>
+      `Хотите написать клиентам сами, не дожидаясь очереди, — поставьте галочку «${pick}» у писем ниже и нажмите «${button}». Бот их не отправит. Галочка есть у каждого письма очереди — вашего, менеджера и автопрогона; касание запишется на вас, поэтому чужое письмо снимайте, только если пишете клиенту сами.`,
+    uz: (pick: string, button: string) =>
+      `Navbatni kutmasdan mijozlarga o‘zingiz yozmoqchimisiz — quyidagi xatlarga «${pick}» belgisini qo‘ying va «${button}» tugmasini bosing. Bot ularni yubormaydi. Belgi navbatdagi har bir xatda bor — sizniki, menejerniki va avtomatik aloqalarniki; aloqa sizga yoziladi, shuning uchun boshqaning xatini faqat mijozga o‘zingiz yozsangiz oling.`,
+    pl: (pick: string, button: string) =>
+      `Chcesz napisać do klientów sam, bez czekania w kolejce — zaznacz «${pick}» przy wiadomościach poniżej i kliknij «${button}». Bot ich nie wyśle. Pole jest przy każdej wiadomości w kolejce — twojej, menedżera i automatycznych kontaktów; kontakt zapisze się na ciebie, więc cudzą wiadomość zdejmuj tylko wtedy, gdy sam piszesz do klienta.`,
+  },
+  writeMyselfDone: {
+    ru: (n: number) => `Снято с очереди: ${n}. Бот эти письма не отправит — напишите клиентам сами. Ответ придёт вам лично: перенесите его в карточку.`,
+    uz: (n: number) => `Navbatdan olindi: ${n} ta. Bot bu xatlarni yubormaydi — mijozlarga o‘zingiz yozing. Javob shaxsan sizga keladi: uni kartochkaga ko‘chiring.`,
+    pl: (n: number) => `Zdjęto z kolejki: ${n}. Bot tych wiadomości nie wyśle — napisz do klientów sam. Odpowiedź przyjdzie do ciebie: przenieś ją do karty.`,
+  },
+  writeMyselfLate: {
+    ru: (n: number) => ` Уже отправлено ботом: ${n} — этим клиентам писать не нужно.`,
+    uz: (n: number) => ` Bot allaqachon yuborgan: ${n} ta — bu mijozlarga yozish shart emas.`,
+    pl: (n: number) => ` Już wysłane przez bota: ${n} — do tych klientów nie trzeba pisać.`,
+  },
+  writeMyselfRefused: {
+    ru: (n: number) => ` Не снято: ${n} — письмо уже не в очереди или его поставил другой человек.`,
+    uz: (n: number) => ` Olinmadi: ${n} ta — xat endi navbatda emas yoki uni boshqa odam qo‘ygan.`,
+    pl: (n: number) => ` Nie zdjęto: ${n} — wiadomość nie jest już w kolejce albo dodał ją ktoś inny.`,
+  },
+  writeMyselfNone: {
+    ru: (pick: string) => `Ничего не снято: поставьте галочку «${pick}» у писем в очереди и нажмите кнопку ещё раз.`,
+    uz: (pick: string) => `Hech narsa olinmadi: navbatdagi xatlarga «${pick}» belgisini qo‘ying va tugmani yana bosing.`,
+    pl: (pick: string) => `Nic nie zdjęto: zaznacz «${pick}» przy wiadomościach w kolejce i kliknij przycisk jeszcze raz.`,
+  },
   openInTelegram: {
     ru: (target: string) => `Открыть ${target} в Telegram`,
     uz: (target: string) => `${target} ni Telegram’da ochish`,

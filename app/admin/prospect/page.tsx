@@ -34,10 +34,19 @@ export const dynamic = "force-dynamic";
 export default async function ProspectPage({
   searchParams,
 }: {
-  searchParams: Promise<{ open?: string; e?: string; sent?: string; maps?: string; more?: string }>;
+  searchParams: Promise<{
+    open?: string;
+    e?: string;
+    sent?: string;
+    maps?: string;
+    more?: string;
+    own?: string;
+    late?: string;
+    refused?: string;
+  }>;
 }) {
   const staff = await requireStaff();
-  const { open, e, sent, maps, more: moreRaw } = await searchParams;
+  const { open, e, sent, maps, more: moreRaw, own, late, refused } = await searchParams;
   // Язык панели — сотрудника, а не браузера (lib/admin/i18n.ts).
   const locale = staff.panel_locale;
   const t = pick(prospectPageDict, locale);
@@ -190,6 +199,7 @@ export default async function ProspectPage({
         open={open}
         error={e}
         sent={sent === "1"}
+        wrote={own === undefined ? null : { done: count(own), late: count(late), refused: count(refused) }}
         replies={replies}
         locale={locale}
       />
@@ -212,3 +222,8 @@ export default async function ProspectPage({
   );
 }
 
+/** Число из адреса возврата «Напишу сам»: мусор — ноль. */
+function count(raw: string | undefined): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : 0;
+}

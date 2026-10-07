@@ -1,5 +1,6 @@
 import { HOUR_MS, MAX_GAP_MS, MIN_GAP_MS, sendWindowOpen, untilSendWindow } from "@/lib/admin/outreach";
 import { mayTake } from "@/lib/admin/work-accounts";
+import { WRITE_MYSELF_BUTTON } from "@/lib/admin/write-myself";
 
 /**
  * Когда примерно уйдёт письмо из очереди — часы, а не «через сколько».
@@ -199,7 +200,7 @@ export function botQueueNote(eta: Eta | undefined, now: number): { label: string
       label: "📤 В очереди · ждёт аккаунт",
       note:
         "⚠️ Это письмо сейчас не возьмёт ни один рабочий аккаунт: вы отмечены только на выключенных. " +
-        "Напишите клиенту сами и отметьте «Связался сам» в панели — или попросите руководителя добавить вас на работающий аккаунт.",
+        `Нажмите «${WRITE_MYSELF_BUTTON}» под карточкой и напишите клиенту сами — или попросите руководителя добавить вас на работающий аккаунт.`,
     };
   }
   const when = etaText(eta.at, now);
@@ -209,6 +210,6 @@ export function botQueueNote(eta: Eta | undefined, now: number): { label: string
     label,
     note:
       `⏳ Рабочий аккаунт, с которого уходят ваши письма, Telegram ограничил до ${untilText(eta.heldUntil)} по Ташкенту — ` +
-      `письмо уйдёт ${when}. Не хотите ждать — напишите клиенту сами и отметьте «Связался сам» в панели.`,
+      `письмо уйдёт ${when}. Не хотите ждать — нажмите «${WRITE_MYSELF_BUTTON}» под карточкой: бот письмо не отправит, а пришлёт его текст, чтобы вы написали клиенту сами.`,
   };
 }

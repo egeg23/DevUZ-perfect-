@@ -93,7 +93,7 @@ test("бот: время на кнопке, а ограниченный акка
 
   const hook = read("app/api/telegram/webhook/route.ts");
   assert.match(hook, /botQueueNote\(\(await loadQueueEtas\(now\)\)\.get\(prospectId\), now\)/);
-  assert.match(hook, /await touched\(queued\.label\)/);
+  assert.match(hook, /await touched\(queued\.label, true\)/);
   assert.match(hook, /if \(queued\.note && query\.message\) await sendMessage\(query\.message\.chat\.id, queued\.note\)/);
 });
 

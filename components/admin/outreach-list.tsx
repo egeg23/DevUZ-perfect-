@@ -7,7 +7,9 @@ import {
   recordManualAnswerAction,
   sendOutreachAction,
   skipProspectAction,
+  writeMyselfAction,
 } from "@/app/admin/prospect/actions";
+import { CheckAll } from "@/components/admin/check-all";
 import { CopyMessage } from "@/components/admin/copy-message";
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
@@ -30,6 +32,7 @@ import type { Role } from "@/lib/admin/roles";
 import { CLOSE_REASONS, mayClose } from "@/lib/admin/touch-close";
 import { parseTouchError, type ParsedTouchError, type ProblemRef } from "@/lib/admin/touch-errors";
 import { isAutoNote } from "@/lib/proto/auto-note";
+import { WRITE_MYSELF_FORM, mayWriteMyself } from "@/lib/admin/write-myself";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import {
   autopilotDict,
@@ -168,6 +171,7 @@ export function OutreachList({
   open,
   error,
   sent,
+  wrote = null,
   replies,
   owners = [],
   more = null,
@@ -189,6 +193,8 @@ export function OutreachList({
   open?: string;
   error?: string;
   sent?: boolean;
+  /** Чем кончилось «Напишу сам — не отправлять» на отмеченные письма (writeMyselfAction). */
+  wrote?: { done: number; late: number; refused: number } | null;
   /** Ответы модели по ручному маршруту: их отправляет человек. */
   replies?: Record<string, string>;
   /**
@@ -228,9 +234,15 @@ export function OutreachList({
     null,
   );
   const openEta = open ? etas[open] : undefined;
+  // Письма очереди, которые смотрящий может снять и написать сам
+  // (lib/admin/write-myself.ts): у менеджера — свои, у руководителя и
+  // владельца — все.
+  const mayWrite = (row: Prospect) => viewer !== null && mayWriteMyself(row, viewer);
+  const writable = queue.filter(mayWrite).length;
+  const lead = viewer?.role === "admin" || viewer?.role === "head";
 
   return (
-    <section className="mt-10">
+    <section id="outreach" className="mt-10 scroll-mt-24">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           {t.heading}
@@ -248,6 +260,46 @@ export function OutreachList({
       <p className="mt-2 max-w-2xl text-xs leading-relaxed text-faint">
         {t.intro}
       </p>
+
+      {wrote ? (
+        <p
+          className={`mt-3 rounded-xl border px-4 py-2 text-sm ${
+            wrote.done ? "border-green/30 bg-green/5 text-green" : "border-gold/40 bg-gold/5 text-amber-200"
+          }`}
+        >
+          {wrote.done ? t.writeMyselfDone(wrote.done) : ""}
+          {wrote.late ? t.writeMyselfLate(wrote.late) : ""}
+          {wrote.refused ? t.writeMyselfRefused(wrote.refused) : ""}
+          {!wrote.done && !wrote.late && !wrote.refused ? t.writeMyselfNone(t.writeMyselfPick) : ""}
+        </p>
+      ) : null}
+
+      {/* «Напишу сам — не отправлять» на несколько писем разом. Галочки
+          стоят в карточках и привязаны к этой форме атрибутом form:
+          карточки очереди разбросаны по списку, и одна форма вокруг них
+          обняла бы все остальные формы карточек. Владелец, 07.10.2026:
+          «хочу отправить им сам — как отменить отправку ботом?» */}
+      {writable ? (
+        <form
+          id={WRITE_MYSELF_FORM}
+          action={writeMyselfAction}
+          className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3"
+        >
+          <p className="w-full text-xs leading-relaxed text-muted">
+            {lead
+              ? t.writeMyselfHintLead(t.writeMyselfPick, t.writeMyselfButton)
+              : t.writeMyselfHint(t.writeMyselfPick, t.writeMyselfButton)}
+          </p>
+          <CheckAll
+            form={WRITE_MYSELF_FORM}
+            label={t.writeMyselfAll}
+            className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition hover:text-text"
+          />
+          <SubmitButton pendingLabel={t.marking} base="rounded-lg px-3 py-1.5 text-xs" tone="quiet">
+            {t.writeMyselfButton}
+          </SubmitButton>
+        </form>
+      ) : null}
 
       {sent ? (
         <p className="mt-3 rounded-xl border border-green/30 bg-green/5 px-4 py-2 text-sm text-green">
@@ -579,6 +631,12 @@ export function OutreachList({
                   <p className="mt-2 text-xs leading-relaxed text-muted">
                     {t.noNeedToWait(t.selfContacted)}
                   </p>
+                  {mayWrite(row) ? (
+                    <label className="mt-2 flex w-fit cursor-pointer items-center gap-2 text-xs text-gold">
+                      <input type="checkbox" name="id" value={row.id} form={WRITE_MYSELF_FORM} className="accent-gold" />
+                      {t.writeMyselfPick}
+                    </label>
+                  ) : null}
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <a
                       href={`https://t.me/${row.target.replace(/^@/, "")}`}

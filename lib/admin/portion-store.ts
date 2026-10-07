@@ -24,6 +24,7 @@ import {
   type PersonReport,
 } from "@/lib/admin/portion";
 import { CLOSE_REASONS, CLOSE_TEXT, closeCallback } from "@/lib/admin/touch-close";
+import { WRITE_MYSELF_BUTTON, writeMyselfCallback } from "@/lib/admin/write-myself";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { staffById } from "@/lib/admin/session";
 import { touchesOnDay, touchProgressFor } from "@/lib/admin/touch-store";
@@ -360,10 +361,15 @@ export function itemButtons(p: Prospect): Button[][] {
  * Кнопки после касания: надпись о том, что сделано, и «Клиент отказался» /
  * «Игнорирует» — закрыть касание можно прямо из той же карточки, когда
  * станет ясно, чем кончилось (lib/admin/touch-close).
+ *
+ * Письмо ушло в очередь (`queued`) — между ними ещё «✋ Напишу сам — не
+ * отправлять»: снять его с очереди и написать клиенту самому
+ * (lib/admin/write-myself.ts).
  */
-export function closeRows(prospectId: string, label: string): Button[][] {
+export function closeRows(prospectId: string, label: string, queued = false): Button[][] {
   return [
     [{ text: label, callback_data: "noop" }],
+    ...(queued ? [[{ text: WRITE_MYSELF_BUTTON, callback_data: writeMyselfCallback(prospectId) }]] : []),
     CLOSE_REASONS.map((reason) => ({ text: CLOSE_TEXT[reason].button, callback_data: closeCallback(reason, prospectId) })),
   ];
 }
