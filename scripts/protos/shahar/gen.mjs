@@ -718,7 +718,7 @@ ${head(t("Сайт как приложение · 195 $", "Sayt ilova kabi · 19
 ${installBlock(l)}
 </div></section>
 <section id="konstruktor" style="padding-top:0"><div class="wrap">
-${head(t("Конструктор проекта", "Loyiha konstruktori"), t("Соберите портал под свой бюджет", "Portalni byudjetingizga moslab yig‘ing"), t("Портал стоит 1 900 $: это ставка нашего калькулятора за каталог с фильтрами и карточкой объекта. Остальное включается тумблером: включили блок, и он появляется на странице и в превью, итог пересчитывается. Цены допов взяты по нижней границе рынка Ташкента, точные назовём после разговора.", "Portal 1 900 $ turadi: bu filtrli katalog va obyekt kartochkasi uchun kalkulyatorimiz stavkasi. Qolgani tumbler bilan yoqiladi: blokni yoqsangiz, u sahifada va ko‘rinishda paydo bo‘ladi, jami qayta hisoblanadi. Qo‘shimchalar narxi Toshkent bozorining quyi chegarasi bo‘yicha, aniq narxni suhbatdan keyin aytamiz."))}
+${head(t("Конструктор проекта", "Loyiha konstruktori"), t("Соберите портал под свой бюджет", "Portalni byudjetingizga moslab yig‘ing"), t("Портал стоит 2 300 $. Остальное включается тумблером: включили блок, и он появляется на странице и в превью, итог пересчитывается. Со всеми допами выходит 3 900 $, точные цены назовём после разговора.", "Portal 2 300 $ turadi. Qolgani tumbler bilan yoqiladi: blokni yoqsangiz, u sahifada va ko‘rinishda paydo bo‘ladi, jami qayta hisoblanadi. Barcha qo‘shimchalar bilan 3 900 $ chiqadi, aniq narxni suhbatdan keyin aytamiz."))}
 <div class="kit">
 <div class="kit-list">
 <div class="kit-base"><div><b>${KIT_BASE[l].t}</b><p>${KIT_BASE[l].d}</p></div><span class="kit-price num">${usd(KIT_BASE.price)}</span></div>
@@ -746,7 +746,7 @@ ${head(t("Фото в прототипе", "Prototipdagi fotolar"), t("Отку�
 </div></section>`;
   return shell(l, "plan", {
     title: t("Что дальше: было и стало, конструктор портала | ShahaR.Uz", "Keyingi qadam: edi va bo‘ldi, portal konstruktori | ShahaR.Uz"),
-    desc: t("Было и стало: shahar.uz сегодня и прототип. Конструктор: портал 1 900 $, сайт как приложение 195 $, заявки в Telegram, админ-панель.", "Edi va bo‘ldi: bugungi shahar.uz va prototip. Konstruktor: portal 1 900 $, sayt ilova kabi 195 $, Telegramga arizalar, admin panel."),
+    desc: t("Было и стало: shahar.uz сегодня и прототип. Конструктор: портал 2 300 $, со всеми допами 3 900 $: сайт как приложение, заявки в Telegram, админ-панель.", "Edi va bo‘ldi: bugungi shahar.uz va prototip. Konstruktor: portal 2 300 $, barcha qo‘shimchalar bilan 3 900 $: sayt ilova kabi, Telegramga arizalar, admin panel."),
   }, body);
 }
 
