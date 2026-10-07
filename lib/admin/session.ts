@@ -227,17 +227,40 @@ export async function staffById(id: string): Promise<Staff | null> {
 }
 
 export async function staffByTelegramId(telegramId: number): Promise<Staff | null> {
+  return (await findStaffByTelegram(telegramId)).staff;
+}
+
+/**
+ * Сотрудник по Telegram — и отдельно ответ на вопрос, ответила ли база.
+ *
+ * 07.10.2026 после сбоя владелец набрал /login и получил «Такой команды у
+ * меня нет»: база не ответила, поиск вернул «никого», и бот принял владельца
+ * за постороннего. Для входа эта разница главная: постороннему — ответ, как
+ * на любую неизвестную команду, а своему при сбое — «база не отвечает,
+ * попробуйте через минуту». Короткий сбой связи переживает один повтор.
+ */
+export async function findStaffByTelegram(
+  telegramId: number,
+): Promise<{ staff: Staff | null; offline: boolean }> {
   const db = serviceClient();
-  if (!db) return null;
+  if (!db) return { staff: null, offline: true };
 
-  const { data } = await db
-    .from("staff")
-    .select(STAFF_COLUMNS)
-    .eq("telegram_user_id", telegramId)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  return toStaff(data);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const { data, error } = await db
+        .from("staff")
+        .select(STAFF_COLUMNS)
+        .eq("telegram_user_id", telegramId)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (!error) return { staff: toStaff(data), offline: false };
+      console.error("admin: не прочитал сотрудника по Telegram", error.message);
+    } catch (error) {
+      console.error("admin: не прочитал сотрудника по Telegram", error instanceof Error ? error.message : error);
+    }
+    if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  return { staff: null, offline: true };
 }
 
 /** Сменить язык панели. Меняет только сам сотрудник — себе. */

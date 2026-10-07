@@ -6,7 +6,7 @@ import {
   SESSION_COOKIE,
   createSession,
   hashToken,
-  staffByTelegramId,
+  findStaffByTelegram,
 } from "@/lib/admin/session";
 import { PANEL_LANG_COOKIE } from "@/lib/admin/i18n";
 import { AUTH_FRESH_SECONDS, checkTelegramAuth, destinationFrom } from "@/lib/admin/tg-auth";
@@ -82,7 +82,9 @@ export async function GET(
     return fail(checked.why === "stale" ? "4" : "1");
   }
 
-  const staff = await staffByTelegramId(checked.auth.id);
+  const { staff, offline } = await findStaffByTelegram(checked.auth.id);
+  // База не ответила — «попробуйте позже», а не «вы не сотрудник».
+  if (offline) return fail("2");
   if (!staff) {
     await record("login.failed", { ip, meta: { via: "telegram_button", why: "not_staff" } });
     return fail("1");

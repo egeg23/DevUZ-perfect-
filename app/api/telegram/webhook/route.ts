@@ -50,7 +50,7 @@ import {
   snoozeReminder,
   takeLead,
 } from "@/lib/admin/ownership";
-import { issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
+import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
 import { closeRows, deliverReplacement, portionSource, topUpPortion } from "@/lib/admin/portion-store";
@@ -289,7 +289,14 @@ async function handleStaffLogin(message: NonNullable<Update["message"]>) {
   const telegramId = message.from?.id ?? chat.id;
   const locale = localeOf(message.from);
 
-  const staff = await staffByTelegramId(telegramId);
+  const { staff, offline } = await findStaffByTelegram(telegramId);
+  // База не ответила — это не «чужой». Ответ «нет такой команды» в сбой
+  // 07.10.2026 выглядел для владельца как сломанный вход. Постороннему этот
+  // ответ ничего не открывает: в базу за ним никто не заглядывал.
+  if (offline) {
+    await sendMessage(chat.id, "Не смог проверить вход: база сейчас не отвечает. Попробуйте через минуту.");
+    return;
+  }
   if (!staff) {
     await sendMessage(chat.id, botCopy(locale).unknown);
     return;
