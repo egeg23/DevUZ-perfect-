@@ -26,7 +26,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Забрать ветку и запустить infra/deploy.sh по SSH
+      - name: Секреты владельца — файлом на сервер
         uses: appleboy/ssh-action@v1
         env:
           SUNSCRYPT_TELEGRAM_TOKEN: ${{ secrets.SUNSCRYPT_TELEGRAM_TOKEN }}
@@ -45,10 +45,29 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
-          command_timeout: 40m
-          # Секреты владельца (SUNSCRYPT_*) — infra/deploy.sh пишет их в
-          # /opt/sunscrypt/.env. Не заведён — придёт пустым, это нормально.
+          command_timeout: 1m
+          # Секреты владельца (SUNSCRYPT_*) — в /opt/sunscrypt/.incoming (0600);
+          # infra/deploy.sh переносит их в .env и удаляет файл. Отдельный
+          # короткий шаг: значения не висят в списке процессов всю выкатку.
+          # Не заведён — придёт пустым, это нормально.
           envs: SUNSCRYPT_TELEGRAM_TOKEN,SUNSCRYPT_BYBIT_DEMO_API_KEY,SUNSCRYPT_BYBIT_DEMO_API_SECRET,SUNSCRYPT_SMTP_HOST,SUNSCRYPT_SMTP_PORT,SUNSCRYPT_SMTP_USER,SUNSCRYPT_SMTP_PASSWORD,SUNSCRYPT_SMTP_FROM,SUNSCRYPT_OWNER_EMAIL,SUNSCRYPT_OWNER_PASSWORD,SUNSCRYPT_WEIGHTS_IDS
+          script: |
+            set -euo pipefail
+            umask 077
+            mkdir -p /opt/sunscrypt
+            vars="$(compgen -v SUNSCRYPT_ || true)"
+            # shellcheck disable=SC2086
+            if [ -n "$vars" ]; then declare -p $vars > /opt/sunscrypt/.incoming; fi
+            echo "▸ секреты владельца переданы"
+
+      - name: Забрать ветку и запустить infra/deploy.sh по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 40m
           script: |
             set -euo pipefail
             # Прокси сервера — для приложений DevUZ, не для git и Docker Hub:
