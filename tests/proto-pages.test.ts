@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { PROTO_BASE, protoPagePath, withBase } from "@/lib/proto/pages";
+import { PROTO_BASE, isQuietProtoPath, protoContentType, protoPagePath, withBase } from "@/lib/proto/pages";
 import { stampHtml, stampPages } from "@/lib/proto/stamp";
 import { matchStamp, signalsOf } from "@/lib/proto/trace";
 
@@ -67,4 +67,17 @@ test("ссылка на прототип не уезжает в языковой
   const skip = middleware.indexOf('if (pathname.startsWith("/proto/")) return NextResponse.next();');
   assert.ok(skip > 0, "в middleware нет исключения для /proto/");
   assert.ok(skip < middleware.indexOf("return NextResponse.redirect(url, 307);"));
+});
+
+test("сайт как приложение: манифест и service worker — со своим типом и без журнала показа", () => {
+  assert.equal(protoContentType("manifest"), "application/manifest+json; charset=utf-8");
+  assert.equal(protoContentType("uz/manifest"), "application/manifest+json; charset=utf-8");
+  assert.equal(protoContentType("sw"), "text/javascript; charset=utf-8");
+  assert.equal(protoContentType(""), "text/html; charset=utf-8");
+  assert.equal(protoContentType("kurs/python"), "text/html; charset=utf-8");
+  for (const quiet of ["manifest", "uz/manifest", "sw", "offline", "uz/offline"]) assert.ok(isQuietProtoPath(quiet), quiet);
+  for (const page of ["", "uz", "zapis", "kurs/python"]) assert.ok(!isQuietProtoPath(page), page);
+  const serve = read("lib/proto/serve.ts");
+  assert.match(serve, /"Content-Type": protoContentType\(path\)/);
+  assert.match(serve, /const countable = !isQuietProtoPath\(path\);\s*if \(countable && !isPreviewFetch/);
 });
