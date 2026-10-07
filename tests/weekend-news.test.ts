@@ -58,3 +58,16 @@ test("текст: руководителю — «досрочное уведом
   assert.match(head, new RegExp(`«${accountsDict.staffTitle.ru}»`));
   assert.match(head, new RegExp(`«${accountsDict.addButton.ru}»`));
 });
+
+test("женский аккаунт: владельцу и руководителю, сразу, без копии дважды", () => {
+  const news = NEWS.find((n) => n.id === "2026-10-07-women-account");
+  assert.ok(news, "объявления нет");
+  assert.deepEqual([...news.roles].sort(), ["admin", "head"]);
+  // Ночью тоже: владелец попросил уведомить в 00:10 по Ташкенту.
+  assert.equal(news.window?.(new Date("2026-10-07T19:15:00Z")), true);
+  assert.equal(newsActive(news, new Date("2026-10-07T19:15:00Z")), true);
+  assert.equal(newsActive(news, new Date("2026-10-10T00:00:00Z")), false);
+  const text = String(news.text("head"));
+  for (const part of ["Арсений", "Эльдар", "Дина", "Салиха", "ограничения Telegram", "«Аккаунты»"]) assert.ok(text.includes(part), part);
+  assert.equal(news.text("admin"), news.text("head"), "владельцу и руководителю — один текст");
+});
