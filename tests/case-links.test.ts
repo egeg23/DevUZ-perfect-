@@ -60,5 +60,8 @@ test("в письма идёт проект из ниши адресата, да
   assert.deepEqual(forNiche("uchebnyy-centr"), ["medacademy", "delta"]);
   assert.deepEqual(forNiche("svyaz"), ["transtelecom"]);
   assert.deepEqual(forNiche("agentstvo-nedvizhimosti"), ["tranio"]);
+  // Владелец, 07.10.2026: на Apollo Travel можно ссылаться, если ниша —
+  // туризм. Он первый и уходит в письмо; LBM Rentals — второй пример.
+  assert.deepEqual(forNiche("turagentstvo"), ["apollo-travel", "lbm-rentals"]);
   assert.ok(!cases.find((c) => c.slug === "usta")?.forNiches.includes("mebel"), "USTA снова пример для мебели");
 });
