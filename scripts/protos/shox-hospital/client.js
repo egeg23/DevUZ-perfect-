@@ -219,8 +219,8 @@ if(kd&&pill){
   $$('[data-kit-open]').forEach(function(b){b.addEventListener('click',open)});
   $('#kd-reset').addEventListener('click',function(){kit=JSON.parse(JSON.stringify(def));apply()});
   $('#kd-copy').addEventListener('click',function(){
-    var lines=[T.kitHead,T.kitBase+' — $'+fmt(BASE)];var seen={};
-    inputs.forEach(function(i){var k=i.getAttribute('data-k');if(kit[k]&&!seen[k]){seen[k]=1;lines.push('+ '+i.getAttribute('data-t')+' — $'+fmt(price(k)))}});
+    var lines=[T.kitHead,T.kitBase+': $'+fmt(BASE)];var seen={};
+    inputs.forEach(function(i){var k=i.getAttribute('data-k');if(kit[k]&&!seen[k]){seen[k]=1;lines.push('+ '+i.getAttribute('data-t')+': $'+fmt(price(k)))}});
     lines.push(T.kitTotal+': '+$('[data-sum]').textContent);
     var btn=this;copy(lines.join('\n')).then(function(){btn.textContent=T.copied},function(){btn.textContent=T.copyFail});
   });
