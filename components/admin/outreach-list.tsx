@@ -25,6 +25,7 @@ import { outreachHooks } from "@/lib/admin/outreach";
 import { seoReport, type SeoGrade } from "@/lib/audit/seo";
 import type { Prospect } from "@/lib/admin/outreach-store";
 import { REST_PAGE } from "@/lib/admin/outreach-view";
+import { etaClock, untilText, type Eta } from "@/lib/admin/queue-eta";
 import type { Role } from "@/lib/admin/roles";
 import { CLOSE_REASONS, mayClose } from "@/lib/admin/touch-close";
 import { parseTouchError, type ParsedTouchError, type ProblemRef } from "@/lib/admin/touch-errors";
@@ -144,6 +145,15 @@ function waitLabel(ms: number, t: Picked<typeof outreachListDict>): string {
   return t.waitHours(Math.round(minutes / 60));
 }
 
+/** «сегодня около 14:20» / «завтра около 08:10» — часы по Ташкенту, на языке панели. */
+function etaLabel(at: number, now: number, t: Picked<typeof outreachListDict>): string {
+  const c = etaClock(at, now);
+  if (c.day === "soon") return t.etaSoon;
+  if (c.day === "today") return t.etaToday(c.time);
+  if (c.day === "tomorrow") return t.etaTomorrow(c.time);
+  return t.etaLater(c.date, c.time);
+}
+
 function when(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -154,6 +164,7 @@ export function OutreachList({
   rows,
   hour,
   cap = HOURLY_CAP,
+  etas = {},
   open,
   error,
   sent,
@@ -168,6 +179,11 @@ export function OutreachList({
   hour: { count: number; oldestAgoMs: number | null };
   /** Первых писем в час со всех рабочих аккаунтов вместе (hourlyCapacity). */
   cap?: number;
+  /**
+   * Когда примерно уйдёт каждое письмо очереди — по id (loadQueueEtas).
+   * Нет записи — грубая оценка queueView, как раньше.
+   */
+  etas?: Readonly<Record<string, Eta>>;
   /** Кто владелец: его письма уходят вне очереди (lib/admin/outreach-queue.ts). */
   owners?: readonly string[];
   open?: string;
@@ -204,6 +220,14 @@ export function OutreachList({
 
   const queue = rows.filter((r) => r.status === "sending");
   const left = Math.max(0, cap - hour.count);
+  const now = Date.now();
+  // Когда уйдёт последнее письмо очереди — по всей очереди, а не по
+  // видимым карточкам.
+  const lastAt = Object.values(etas).reduce<number | null>(
+    (max, eta) => (eta.at !== null && (max === null || eta.at > max) ? eta.at : max),
+    null,
+  );
+  const openEta = open ? etas[open] : undefined;
 
   return (
     <section className="mt-10">
@@ -217,6 +241,7 @@ export function OutreachList({
           {t.hourLine(hour.count, cap)}
           {queue.length ? t.inQueue(queue.length) : ""}
           {left === 0 && queue.length ? t.queueWaits : ""}
+          {queue.length && lastAt !== null ? t.queueDone(etaLabel(lastAt, now, t)) : ""}
         </p>
       </div>
 
@@ -226,7 +251,7 @@ export function OutreachList({
 
       {sent ? (
         <p className="mt-3 rounded-xl border border-green/30 bg-green/5 px-4 py-2 text-sm text-green">
-          {t.sentNotice}
+          {openEta?.at != null ? t.sentNotice(etaLabel(openEta.at, now, t)) : t.sentNoticePlain}
         </p>
       ) : null}
       {/*
@@ -265,8 +290,11 @@ export function OutreachList({
           // предыдущей отправки; все остальные ждут и его тоже.
           const isOwner = (q: Prospect) => q.claimed_by !== null && owners.includes(q.claimed_by);
           const vip = isOwner(row);
+          // Точный расчёт по аккаунтам (lib/admin/queue-eta.ts); его нет —
+          // прежняя грубая оценка.
+          const eta = row.status === "sending" ? etas[row.id] : undefined;
           const wait =
-            row.status === "sending"
+            row.status === "sending" && !eta
               ? vip
                 ? {
                     ahead: queue.filter((q) => isOwner(q) && q.created_at < row.created_at).length,
@@ -526,12 +554,28 @@ export function OutreachList({
 
               {/* В очереди — не тупик: можно подождать, а можно написать
                   самому. Второе быстрее, и ответ придёт прямо менеджеру. */}
-              {wait && row.target && row.message ? (
+              {(eta || wait) && row.target && row.message ? (
                 <div className="mt-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
-                  <p className="text-sm text-gold">
-                    {vip ? t.ownerQueue(waitLabel(wait.waitMs, t)) : t.inQueueWait(waitLabel(wait.waitMs, t))}
-                    {wait.ahead ? t.ahead(wait.ahead) : ""}.
-                  </p>
+                  {eta ? (
+                    eta.at === null ? (
+                      <p className="text-sm text-amber-200">{t.etaNever}</p>
+                    ) : (
+                      <>
+                        <p className="text-sm text-gold">
+                          {vip ? t.ownerQueue(etaLabel(eta.at, now, t)) : t.inQueueAt(etaLabel(eta.at, now, t))}
+                          {eta.ahead ? t.ahead(eta.ahead) : ""}.
+                        </p>
+                        {eta.heldUntil !== null ? (
+                          <p className="mt-1 text-xs text-amber-200">{t.etaHeld(untilText(eta.heldUntil))}</p>
+                        ) : null}
+                      </>
+                    )
+                  ) : wait ? (
+                    <p className="text-sm text-gold">
+                      {vip ? t.ownerQueue(waitLabel(wait.waitMs, t)) : t.inQueueWait(waitLabel(wait.waitMs, t))}
+                      {wait.ahead ? t.ahead(wait.ahead) : ""}.
+                    </p>
+                  ) : null}
                   <p className="mt-2 text-xs leading-relaxed text-muted">
                     {t.noNeedToWait(t.selfContacted)}
                   </p>

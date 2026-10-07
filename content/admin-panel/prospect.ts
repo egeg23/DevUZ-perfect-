@@ -441,10 +441,59 @@ export const outreachListDict = defineDict({
     uz: "Bot emas, studiyaning ishchi akkauntlari yozadi: har biridan soatiga uchtadan ko‘p bo‘lmagan birinchi xat va faqat Toshkent vaqti bilan 07:30 dan 20:30 gacha, xabarlar orasida pauza va har bir saytga bitta aloqa. Skaut chatlarni ham asosiy akkaunt orqali o‘qiydi, ommaviy tarqatma uchun cheklov ikkala kanalni birdaniga o‘chirib qo‘yardi. Navbatni kutish shart emas — xabarni o‘z akkauntingizdan yuborsangiz bo‘ladi, shunda javob ham shaxsan sizga keladi.",
     pl: "Piszą konta firmowe studia, a nie bot: z każdego najwyżej trzy pierwsze wiadomości na godzinę i tylko od 07:30 do 20:30 czasu taszkenckiego, przerwa między wiadomościami i jeden kontakt na stronę. Kontem głównym skaut dodatkowo czyta czaty, więc blokada za masową wysyłkę wyłączyłaby oba kanały naraz. Nie trzeba czekać w kolejce — wiadomość możesz wysłać ze swojego konta, wtedy odpowiedź też przyjdzie do ciebie.",
   },
+  /**
+   * После «Отправить»: когда примерно уйдёт — тем же расчётом, что у
+   * карточки (lib/admin/queue-eta.ts). Раньше здесь стояло «в ближайшие
+   * минуты» при любой очереди — и письмо, которое ждало до завтра,
+   * выглядело потерянным.
+   */
   sentNotice: {
-    ru: "Сообщение в очереди. Уйдёт с рабочего аккаунта в ближайшие минуты, лид уже закреплён за вами.",
-    uz: "Xabar navbatda. Yaqin daqiqalarda ishchi akkauntdan ketadi, lid allaqachon sizga biriktirildi.",
-    pl: "Wiadomość jest w kolejce. Wyjdzie z konta firmowego w ciągu kilku minut, lead jest już przypisany do ciebie.",
+    ru: (when: string) => `Сообщение в очереди — уйдёт ${when}. Лид уже закреплён за вами.`,
+    uz: (when: string) => `Xabar navbatda — ${when} ketadi. Lid allaqachon sizga biriktirildi.`,
+    pl: (when: string) => `Wiadomość jest w kolejce — wyjdzie ${when}. Lead jest już przypisany do ciebie.`,
+  },
+  sentNoticePlain: {
+    ru: "Сообщение в очереди: когда примерно уйдёт, написано в его карточке. Лид уже закреплён за вами.",
+    uz: "Xabar navbatda: taxminan qachon ketishi uning kartochkasida yozilgan. Lid allaqachon sizga biriktirildi.",
+    pl: "Wiadomość jest w kolejce: kiedy mniej więcej wyjdzie, jest napisane w jej karcie. Lead jest już przypisany do ciebie.",
+  },
+  /** Время отправки по Ташкенту (lib/admin/queue-eta.ts → etaClock). */
+  etaSoon: { ru: "в ближайшие минуты", uz: "yaqin daqiqalarda", pl: "w ciągu kilku minut" },
+  etaToday: {
+    ru: (time: string) => `сегодня около ${time}`,
+    uz: (time: string) => `bugun taxminan ${time} da`,
+    pl: (time: string) => `dziś około ${time}`,
+  },
+  etaTomorrow: {
+    ru: (time: string) => `завтра около ${time}`,
+    uz: (time: string) => `ertaga taxminan ${time} da`,
+    pl: (time: string) => `jutro około ${time}`,
+  },
+  etaLater: {
+    ru: (date: string, time: string) => `${date} около ${time}`,
+    uz: (date: string, time: string) => `${date} kuni taxminan ${time} da`,
+    pl: (date: string, time: string) => `${date} około ${time}`,
+  },
+  /** Письмо ждёт не очередь, а аккаунт: Telegram его ограничил. */
+  etaHeld: {
+    ru: (until: string) =>
+      `Рабочий аккаунт, с которого может уйти это письмо, Telegram ограничил до ${until} по Ташкенту — раньше оно не уйдёт.`,
+    uz: (until: string) =>
+      `Bu xat ketishi mumkin bo‘lgan ishchi akkauntni Telegram Toshkent vaqti bilan ${until} gacha cheklagan — undan oldin ketmaydi.`,
+    pl: (until: string) =>
+      `Konto firmowe, z którego może wyjść ta wiadomość, Telegram ograniczył do ${until} czasu taszkenckiego — wcześniej nie wyjdzie.`,
+  },
+  /** Ни один аккаунт письмо не возьмёт: автор отмечен только на выключенных. */
+  etaNever: {
+    ru: "Это письмо сейчас не возьмёт ни один рабочий аккаунт: автор отмечен только на выключенных. Напишите сами — или руководитель добавит автора на работающий аккаунт в разделе «Аккаунты».",
+    uz: "Bu xatni hozir birorta ishchi akkaunt olmaydi: muallif faqat o‘chirilgan akkauntlarda belgilangan. O‘zingiz yozing — yoki rahbar muallifni «Akkauntlar» bo‘limida ishlayotgan akkauntga qo‘shadi.",
+    pl: "Tej wiadomości nie weźmie teraz żadne konto firmowe: autor jest przypisany tylko do wyłączonych. Napisz sam — albo kierownik doda autora do działającego konta w sekcji «Konta».",
+  },
+  /** Над списком: когда уйдёт последнее письмо очереди. */
+  queueDone: {
+    ru: (when: string) => ` · последнее уйдёт ${when}`,
+    uz: (when: string) => ` · oxirgisi ${when} ketadi`,
+    pl: (when: string) => ` · ostatnia wyjdzie ${when}`,
   },
   noSite: { ru: "без сайта", uz: "saytsiz", pl: "bez strony" },
   search: {
@@ -539,6 +588,11 @@ export const outreachListDict = defineDict({
     ru: (wait: string) => `В очереди на отправку с рабочего аккаунта — ${wait}`,
     uz: (wait: string) => `Ishchi akkauntdan yuborish navbatida — ${wait}`,
     pl: (wait: string) => `W kolejce do wysłania z konta firmowego — ${wait}`,
+  },
+  inQueueAt: {
+    ru: (when: string) => `В очереди на отправку с рабочего аккаунта — уйдёт ${when}`,
+    uz: (when: string) => `Ishchi akkauntdan yuborish navbatida — ${when} ketadi`,
+    pl: (when: string) => `W kolejce do wysłania z konta firmowego — wyjdzie ${when}`,
   },
   ahead: {
     ru: (n: number) => `, перед ним ${n}`,

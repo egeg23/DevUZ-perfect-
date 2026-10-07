@@ -120,7 +120,7 @@ test("бот: закрыть — только в личке, под карточ
   // После «Отправить» и «Написал сам» кнопки не гаснут, а меняются на «Отказался» / «Игнорирует».
   const portion = between(hook, "async function handlePortionButton(", "async function handleCloseButton(");
   assert.match(portion, /setButtons\(query\.message\.chat\.id, query\.message\.message_id, closeRows\(prospectId, label\)\)/);
-  assert.match(portion, /await touched\("📤 В очереди бота"\)/);
+  assert.match(portion, /await touched\(queued\.label\)/);
   assert.match(portion, /await touched\("✋ Отмечено: написал сам"\)/);
   // Под «Клиент написал» — «Клиент отказался».
   const talk = read("lib/admin/outreach-talk-store.ts");
