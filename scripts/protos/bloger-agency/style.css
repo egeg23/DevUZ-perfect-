@@ -231,6 +231,7 @@ textarea:focus-visible,input:focus-visible,select:focus-visible{outline:3px soli
 .quote{padding:24px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);display:grid;gap:16px;align-content:space-between}
 .quote p{color:var(--fg2)}
 .quote b{font:700 16px/1.2 var(--display)}
+.quote b small{display:block;margin-top:8px;font:400 14px/1.4 var(--text);color:var(--mute)}
 .events{display:grid;gap:16px}
 @media (min-width:768px){.events{grid-template-columns:1fr 1fr}}
 .ev{padding:24px;border-radius:var(--r);display:grid;gap:16px;align-content:start;color:var(--ink)}

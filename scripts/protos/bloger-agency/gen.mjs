@@ -45,7 +45,7 @@ function dockHtml(l, path) {
   const others = [...new Set(ADDONS.map((a) => a.where))].filter((w) => w !== "all" && w !== path);
   return `<button class="kd-pill" type="button" id="kd-pill" aria-expanded="false" aria-controls="kd"><i aria-hidden="true"></i>${t("Конструктор", "Konstruktor")}<b class="num" id="kd-pill-sum"></b></button>
 <aside class="kd" id="kd" role="dialog" aria-label="${t("Конструктор сайта", "Sayt konstruktori")}" hidden>
-<header class="kd-h"><div><p class="kd-k">${t("Конструктор · предложение DevUz Studio", "Konstruktor · DevUz Studio taklifi")}</p><h2>${t("Что войдёт в сайт Bloger Agency", "Bloger Agency saytiga nima kiradi")}</h2><p class="kd-sub">${t("Выключите блок — он пропадёт со страницы, включите — появится. Цены — средние по Ташкенту.", "Blokni o‘chiring — sahifadan yo‘qoladi, yoqing — paydo bo‘ladi. Narxlar — Toshkent bo‘yicha o‘rtacha.")}</p></div><button class="kd-x" type="button" id="kd-x" aria-label="${t("Свернуть", "Yig‘ish")}">×</button></header>
+<header class="kd-h"><div><p class="kd-k">${t("Конструктор · предложение DevUz Studio", "Konstruktor · DevUz Studio taklifi")}</p><h2>${t("Что войдёт в сайт Bloger Agency", "Bloger Agency saytiga nima kiradi")}</h2><p class="kd-sub">${t("Выключите блок, и он пропадёт со страницы. Включите, и он появится. Цены средние по Ташкенту.", "Blokni o‘chirsangiz, u sahifadan yo‘qoladi, yoqsangiz, yana paydo bo‘ladi. Narxlar Toshkent bo‘yicha o‘rtacha.")}</p></div><button class="kd-x" type="button" id="kd-x" aria-label="${t("Свернуть", "Yig‘ish")}">×</button></header>
 <div class="kd-list">
 ${group(t("На этой странице", "Shu sahifada"), "", here.map((a) => kitRow(l, a.id, a.price, a[l].t, a[l].e, [], true)))}
 ${group(t("На всех страницах", "Barcha sahifalarda"), "", all.map((a) => kitRow(l, a.id, a.price, a[l].t, a[l].e, [], true)))}
@@ -74,7 +74,7 @@ function shell(l, path, meta, body, { portal = false } = {}) {
     ["keysy", t("Кейсы", "Keyslar")],
     ["plan", t("Что дальше", "Keyingi qadam")],
   ];
-  const mainTg = tg(t("Здравствуйте! Хочу рекламу у блогеров — помогите подобрать.", "Assalomu alaykum! Blogerlarda reklama qilmoqchiman — tanlashga yordam bering."));
+  const mainTg = tg(t("Здравствуйте! Хочу рекламу у блогеров, помогите подобрать.", "Assalomu alaykum! Blogerlarda reklama qilmoqchiman, tanlashga yordam bering."));
   const ctaText = t("Написать в Telegram", "Telegramga yozish");
   return `<!doctype html>
 <html lang="${l}">
@@ -123,7 +123,7 @@ ${body}
 <div><b>${t("Страницы", "Sahifalar")}</b><ul>${navItems.map(([p, n]) => `<li><a href="${href(l, p)}">${n}</a></li>`).join("")}</ul></div>
 <div><b>${t("Мы в сети", "Biz ijtimoiy tarmoqlarda")}</b><ul><li><a href="https://www.instagram.com/bloger.agency/">Instagram</a></li><li><a href="https://www.youtube.com/@baluev_george">YouTube</a></li><li><a href="https://t.me/blogyuz_bot">BLOGY ${t("в Telegram", "Telegramda")}</a></li></ul></div>
 </div>
-<div class="rights"><span>${t("Это прототип: так может выглядеть новый сайт Bloger Agency. Тексты, цены, блогеры и отзывы — с bloger.agency (снято 05.10.2026). ИИ-инструменты, UGC-студия, калькулятор и слот-машина — наше предложение.", "Bu prototip: Bloger Agency’ning yangi sayti shunday ko‘rinishi mumkin. Matnlar, narxlar, blogerlar va sharhlar — bloger.agency saytidan (05.10.2026 da olingan). AI-vositalar, UGC-studiya, kalkulyator va slot-mashina — bizning taklifimiz.")}</span><span>${t("Прототип принадлежит DevUz Studio. Использовать его можно только по договору —", "Prototip DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin —")} <a href="${TERMS(l)}">${t("условия использования", "foydalanish shartlari")}</a></span></div>
+<div class="rights"><span>${t("Это прототип: так может выглядеть новый сайт Bloger Agency. Тексты, цены, блогеры и отзывы взяты с bloger.agency (снято 05.10.2026). ИИ-инструменты, UGC-студию, калькулятор и слот-машину предлагаем мы.", "Bu prototip: Bloger Agency’ning yangi sayti shunday ko‘rinishi mumkin. Matnlar, narxlar, blogerlar va sharhlar bloger.agency saytidan olingan (05.10.2026). AI-vositalar, UGC-studiya, kalkulyator va slot-mashinani biz taklif qilamiz.")}</span><span>${t("Прототип принадлежит DevUz Studio. Использовать его можно только по договору. Подробнее:", "Prototip DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin. Batafsil:")} <a href="${TERMS(l)}">${t("условия использования", "foydalanish shartlari")}</a></span></div>
 </div></footer>
 <div class="dock" id="dock" data-addon="tgbtn"><a class="btn btn-main" href="${mainTg}">${ICON.tg}${ctaText}</a></div>
 <div class="cart" id="cart" role="region" aria-label="${t("Подборка", "Tanlov")}"><div><b id="cart-n"></b><span id="cart-s"></span></div><button class="copy" type="button" id="cart-clear">${t("Очистить", "Tozalash")}</button><a class="btn btn-main btn-sm" id="cart-go" href="${mainTg}">${t("Отправить", "Yuborish")}</a></div>
@@ -145,8 +145,8 @@ function portalHtml(l) {
 <svg class="gp-art" aria-hidden="true" focusable="false"><defs><clipPath id="gp-clip" clipPathUnits="userSpaceOnUse"><text font-family="Unbounded, sans-serif" font-weight="700" font-size="100"></text><text font-family="Unbounded, sans-serif" font-weight="700" font-size="100"></text></clipPath></defs></svg>
 <div class="gp-poster" aria-hidden="true"><span>BLOGER</span><span>AGENCY</span></div>
 <p class="gp-top">${t("Инфлюенс-агентство · Ташкент", "Influencer agentligi · Toshkent")}</p>
-<div class="gp-bottom"><p>${t("Листайте вниз — зайдём внутрь буквы", "Pastga suring — harf ichiga kiramiz")}</p><a class="gp-skip" href="#hero">${t("Пропустить", "O‘tkazib yuborish")}</a></div>
-<div class="gp-in"><h2>${t("Реклама у блогеров — доступнее и проще", "Blogerlarda reklama — oson va hamyonbop")}</h2><p>${t("Bloger Agency, Ташкент", "Bloger Agency, Toshkent")}</p></div>
+<div class="gp-bottom"><p>${t("Листайте вниз, зайдём внутрь буквы", "Pastga suring, harf ichiga kiramiz")}</p><a class="gp-skip" href="#hero">${t("Пропустить", "O‘tkazib yuborish")}</a></div>
+<div class="gp-in"><h2>${t("Реклама у блогеров: доступнее и проще", "Blogerlarda reklama: oson va hamyonbop")}</h2><p>${t("Bloger Agency, Ташкент", "Bloger Agency, Toshkent")}</p></div>
 </div>
 <script>
 ${GP}</script>
@@ -163,8 +163,8 @@ const matcherBlock = (l, id = "podbor") => {
   return `<section id="${id}" data-addon="ai"><div class="wrap"><div class="ai rv a-pop" data-matcher>
 <div>
 <span class="kicker k-ai"><i></i>${t("ИИ-подбор · работает вживую", "AI-tanlov · jonli ishlaydi")}</span>
-<h2 style="margin-top:16px">${t("Опишите задачу — ИИ соберёт подборку блогеров", "Vazifani yozing — AI blogerlar tanlovini yig‘adi")}</h2>
-<p class="sub">${t("На вашем сайте этот блок подписан «Скоро!». Здесь он уже работает: модель переводит бриф в ниши, бюджет и цель, а подборку собирает из ваших эксклюзивных блогеров — с их охватом, ER и ценами.", "Saytingizda bu blok «Tez kunda!» deb belgilangan. Bu yerda u allaqachon ishlaydi: model brifni nisha, byudjet va maqsadga aylantiradi, tanlovni esa eksklyuziv blogerlaringizdan — qamrovi, ER va narxlari bilan yig‘adi.")}</p>
+<h2 style="margin-top:16px">${t("Опишите задачу, и ИИ соберёт подборку блогеров", "Vazifani yozing, AI blogerlar tanlovini yig‘ib beradi")}</h2>
+<p class="sub">${t("На вашем сайте этот блок подписан «Скоро!». Здесь он уже работает: модель переводит бриф в ниши, бюджет и цель, а подборку собирает из блогеров вашего каталога, с их охватом, ER и ценами.", "Saytingizda bu blok «Tez kunda!» deb belgilangan. Bu yerda u allaqachon ishlaydi: model brifni nisha, byudjet va maqsadga aylantiradi, tanlovni esa katalogingizdagi blogerlardan qamrovi, ER va narxlari bilan yig‘adi.")}</p>
 <p style="margin-top:16px"><span class="ours">${t("Наше предложение", "Bizning taklif")}</span></p>
 </div>
 <div class="field">
@@ -181,7 +181,7 @@ const finalBlock = (l) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   return `<section class="final"><div class="wrap"><div class="box rv a-pop">
 <h2>${t("Готов наделать шума?", "Shov-shuv ko‘tarishga tayyormisiz?")}</h2>
-<p>${t("Напишите задачу в Telegram — пришлём список блогеров на утверждение и ТЗ. Оплата по этапам, перед каждой — акт выполненных работ.", "Vazifani Telegramga yozing — tasdiqlash uchun blogerlar ro‘yxati va TZ yuboramiz. To‘lov bosqichma-bosqich, har biridan oldin — bajarilgan ishlar dalolatnomasi.")}</p>
+<p>${t("Напишите задачу в Telegram, и мы пришлём список блогеров на утверждение и ТЗ. Оплата по этапам: перед каждой получаете акт выполненных работ.", "Vazifani Telegramga yozing, tasdiqlash uchun blogerlar ro‘yxati va TZ yuboramiz. To‘lov bosqichma-bosqich: har biridan oldin bajarilgan ishlar dalolatnomasini olasiz.")}</p>
 <div class="cta" style="margin-top:8px"><a class="btn btn-main" href="${tg(t("Здравствуйте! Хочу запустить рекламу у блогеров.", "Assalomu alaykum! Blogerlarda reklama boshlamoqchiman."))}">${ICON.tg}${t("Написать в Telegram", "Telegramga yozish")}</a></div>
 </div></div></section>`;
 };
@@ -190,22 +190,22 @@ const quotesBlock = (l) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   // Отзывы — дословно с bloger.agency (русская версия сайта), в узбекской — перевод.
   const q = [
-    ["SABANO", t("«Мне понравилось активное участие Георгия, основателя агентства, в организации рекламных кампаний. Акция, проведённая с bloger.agency, ощутимо повысила узнаваемость бренда и увеличила клиентскую базу.» — Боис Каттаходжаев, аналитик", "«Agentlik asoschisi Georgiyning reklama kampaniyalarini tashkil etishdagi faol ishtiroki menga yoqdi. bloger.agency bilan o‘tkazilgan aksiya brend taniqliligini sezilarli oshirdi va mijozlar bazasini kengaytirdi.» — Boyis Kattaxo‘jayev, tahlilchi")],
-    ["Fix Price", t("«Мы запустили первые филиалы в Узбекистане и решили раскрутить эту новость через блогеров, но работа с ними была для нас затруднительна из-за неорганизованности. Bloger Agency провели отличную работу и помогли нам в этом.»", "«O‘zbekistonda birinchi filiallarni ochdik va bu yangilikni blogerlar orqali tarqatishga qaror qildik, lekin tartibsizlik tufayli ular bilan ishlash qiyin edi. Bloger Agency ajoyib ish qildi va bunda bizga yordam berdi.»")],
-    ["Skillbox", t("«Каждый этап работы был чётко структурирован, и я всегда была в курсе происходящего благодаря оперативной коммуникации.» — Азиза, маркетолог Lerna (Skillbox, Geekbrains, Skillfactory)", "«Ishning har bir bosqichi aniq tuzilgan edi va tezkor aloqa tufayli men doim nima bo‘layotganidan xabardor edim.» — Aziza, Lerna marketologi (Skillbox, Geekbrains, Skillfactory)")],
+    ["SABANO", t("«Мне понравилось активное участие Георгия, основателя агентства, в организации рекламных кампаний. Акция, проведённая с bloger.agency, ощутимо повысила узнаваемость бренда и увеличила клиентскую базу.»", "«Agentlik asoschisi Georgiyning reklama kampaniyalarini tashkil etishdagi faol ishtiroki menga yoqdi. bloger.agency bilan o‘tkazilgan aksiya brend taniqliligini sezilarli oshirdi va mijozlar bazasini kengaytirdi.»"), t("Боис Каттаходжаев, аналитик", "Boyis Kattaxo‘jayev, tahlilchi")],
+    ["Fix Price", t("«Мы запустили первые филиалы в Узбекистане и решили раскрутить эту новость через блогеров, но работа с ними была для нас затруднительна из-за неорганизованности. Bloger Agency провели отличную работу и помогли нам в этом.»", "«O‘zbekistonda birinchi filiallarni ochdik va bu yangilikni blogerlar orqali tarqatishga qaror qildik, lekin tartibsizlik tufayli ular bilan ishlash qiyin edi. Bloger Agency ajoyib ish qildi va bunda bizga yordam berdi.»"), ""],
+    ["Skillbox", t("«Каждый этап работы был чётко структурирован, и я всегда была в курсе происходящего благодаря оперативной коммуникации.»", "«Ishning har bir bosqichi aniq tuzilgan edi va tezkor aloqa tufayli men doim nima bo‘layotganidan xabardor edim.»"), t("Азиза, маркетолог Lerna (Skillbox, Geekbrains, Skillfactory)", "Aziza, Lerna marketologi (Skillbox, Geekbrains, Skillfactory)")],
   ];
   return `<section data-addon="reviews"><div class="wrap">
-<div class="sec-head rv a-rise"><h2>${t("Нам доверяют лидеры отрасли", "Bizga soha yetakchilari ishonadi")}</h2><p class="src">${t("Отзывы — с bloger.agency.", "Sharhlar — bloger.agency saytidan.")}</p></div>
-<div class="quotes">${q.map(([n, text], i) => `<figure class="quote rv a-tilt" style="--d:${i * 90}ms;margin:0"><p>${esc(text)}</p><b>${esc(n)}</b></figure>`).join("")}</div>
+<div class="sec-head rv a-rise"><h2>${t("Отзывы клиентов", "Mijozlar sharhlari")}</h2><p class="src">${t("Отзывы взяты с bloger.agency.", "Sharhlar bloger.agency saytidan olingan.")}</p></div>
+<div class="quotes">${q.map(([n, text, who], i) => `<figure class="quote rv a-tilt" style="--d:${i * 90}ms;margin:0"><p>${esc(text)}</p><b>${esc(n)}${who ? `<small>${esc(who)}</small>` : ""}</b></figure>`).join("")}</div>
 </div></section>`;
 };
 
 const eventsBlock = (l) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   return `<section data-addon="events"><div class="wrap">
-<div class="sec-head rv a-rise"><h2>${t("Наши мероприятия", "Bizning tadbirlarimiz")}</h2><p>${t("Откройте для себя мир профессионального блогер-маркетинга через наши крупнейшие события.", "Eng yirik tadbirlarimiz orqali professional bloger-marketing dunyosini kashf eting.")}</p></div>
+<div class="sec-head rv a-rise"><h2>${t("Наши мероприятия", "Bizning tadbirlarimiz")}</h2><p>${t("Две конференции агентства, где встречаются блогеры, бренды и digital-специалисты.", "Agentlikning ikki konferensiyasi: bu yerda blogerlar, brendlar va digital-mutaxassislar uchrashadi.")}</p></div>
 <div class="events">
-<div class="ev a rv a-slide"><span class="tag">PRO BLOGGERS</span><p>${t("Ежегодная конференция для профессионалов блогер-маркетинга, где встречаются лучшие эксперты отрасли.", "Bloger-marketing mutaxassislari uchun har yili o‘tkaziladigan konferensiya — sohaning eng yaxshi ekspertlari uchrashadigan joy.")}</p><div class="pair"><div><b>500+</b><span>${t("участников", "ishtirokchi")}</span></div><div><b>50+</b><span>${t("спикеров", "spiker")}</span></div></div></div>
+<div class="ev a rv a-slide"><span class="tag">PRO BLOGGERS</span><p>${t("Ежегодная конференция для тех, кто работает в блогер-маркетинге. Выступают эксперты отрасли.", "Bloger-marketingda ishlaydiganlar uchun har yili o‘tkaziladigan konferensiya. Soha ekspertlari chiqish qiladi.")}</p><div class="pair"><div><b>500+</b><span>${t("участников", "ishtirokchi")}</span></div><div><b>50+</b><span>${t("спикеров", "spiker")}</span></div></div></div>
 <div class="ev b rv a-side"><span class="tag">TAF</span><p>${t("Технологическая конференция для продвинутых блогеров и digital-специалистов.", "Ilg‘or blogerlar va digital-mutaxassislar uchun texnologik konferensiya.")}</p><div class="pair"><div><b>1000+</b><span>${t("участников", "ishtirokchi")}</span></div><div><b>100+</b><span>${t("спикеров", "spiker")}</span></div></div></div>
 </div></div></section>`;
 };
@@ -216,7 +216,7 @@ const blogyBlock = (l) => {
     ? ["Мгновенная авторизация через Telegram", "Встроенная система безопасных платежей", "Аналитика эффективности рекламных кампаний", "Система отзывов и рейтингов"]
     : ["Telegram orqali bir zumda avtorizatsiya", "Ichki xavfsiz to‘lov tizimi", "Reklama kampaniyalari samaradorligi tahlili", "Sharhlar va reytinglar tizimi"];
   return `<section data-addon="blogybox"><div class="wrap"><div class="blogy rv a-pop">
-<div><span class="kicker"><i></i>BLOGY</span><h2 style="margin-top:16px">${t("Блогеры, бренды и фрилансеры — в одном месте", "Blogerlar, brendlar va frilanserlar — bir joyda")}</h2><p style="margin-top:16px;color:var(--fg2)">${t("Инновационная платформа агентства. Работает прямо в Telegram: блогеры ищут рекламодателей — за деньги или по бартеру, бренды публикуют задачи, фотографы, видеографы и SMM-специалисты предлагают услуги.", "Agentlikning innovatsion platformasi. To‘g‘ridan-to‘g‘ri Telegramda ishlaydi: blogerlar reklama beruvchilarni qidiradi — pul yoki barter evaziga, brendlar vazifa joylaydi, fotograf, videograf va SMM-mutaxassislar xizmat taklif qiladi.")}</p>
+<div><span class="kicker"><i></i>BLOGY</span><h2 style="margin-top:16px">${t("Блогеры, бренды и фрилансеры в одном месте", "Blogerlar, brendlar va frilanserlar bir joyda")}</h2><p style="margin-top:16px;color:var(--fg2)">${t("Платформа агентства прямо в Telegram. Блогеры ищут рекламодателей за деньги или по бартеру, бренды публикуют задачи, фотографы, видеографы и SMM-специалисты предлагают услуги.", "Agentlikning Telegramdagi platformasi. Blogerlar pul yoki barter evaziga reklama beruvchilarni qidiradi, brendlar vazifa joylaydi, fotograf, videograf va SMM-mutaxassislar xizmat taklif qiladi.")}</p>
 <div class="cta"><a class="btn btn-ghost" href="https://t.me/blogyuz_bot">${ICON.tg}${t("Открыть в Telegram", "Telegramda ochish")}</a></div></div>
 <ul class="ticks">${items.map((i) => `<li>${ICON.check}<span>${esc(i)}</span></li>`).join("")}</ul>
 </div></div></section>`;
@@ -225,9 +225,9 @@ const blogyBlock = (l) => {
 const moreBlock = (l, skip) => {
   const t = (ru, uz) => (l === "ru" ? ru : uz);
   const all = [
-    ["plan", t("Что дальше", "Keyingi qadam"), t("Админка, кабинеты брендов и блогеров — конструктор", "Admin panel, brend va bloger kabinetlari — konstruktor")],
+    ["plan", t("Что дальше", "Keyingi qadam"), t("Админка, кабинеты брендов и блогеров в конструкторе", "Admin panel, brend va bloger kabinetlari konstruktorda")],
     ["blogery", t("Каталог блогеров", "Blogerlar katalogi"), t("Фильтры, ER, цены и подборка в один клик", "Filtrlar, ER, narxlar va bir bosishda tanlov")],
-    ["ugc", t("UGC-студия", "UGC-studiya"), t("Сценарии роликов за токены — ИИ пишет за 20 секунд", "Tokenlar evaziga rolik ssenariylari — AI 20 soniyada yozadi")],
+    ["ugc", t("UGC-студия", "UGC-studiya"), t("Сценарии роликов за токены: ИИ пишет за 20 секунд", "Tokenlar evaziga rolik ssenariylari: AI 20 soniyada yozadi")],
     ["brendam", t("Брендам", "Brendlarga"), t("Услуги и цены, ИИ-бриф-мастер", "Xizmatlar va narxlar, AI brif-master")],
     ["blogeram", t("Блогерам", "Blogerlarga"), t("Заказы без переписки и оценка блога", "Yozishmalarsiz buyurtmalar va blog bahosi")],
     ["keysy", t("Кейсы", "Keyslar"), t("Бренды, этапы, мероприятия", "Brendlar, bosqichlar, tadbirlar")],
