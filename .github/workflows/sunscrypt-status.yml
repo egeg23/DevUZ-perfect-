@@ -30,3 +30,8 @@ jobs:
             $C logs --tail 300 orchestrator 2>&1 | grep -E "orchestrator|ERROR|WARN|Traceback|Error" | tail -20
             echo "▸ Задачи по расписанию (наблюдение, копии, модель):"
             journalctl -t sunscrypt --since "-3h" --no-pager -o short-iso 2>/dev/null | grep -v "httpx\|HTTP Request" | tail -25 || true
+            echo "▸ Задача модели (контейнер trainer):"
+            docker ps -a --filter name=sunscrypt-trainer --format '{{.Names}} {{.Status}}' || true
+            docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}' $(docker ps -q --filter name=sunscrypt-trainer) 2>/dev/null || true
+            echo "▸ Нехватка памяти (ядро, 3 ч):"
+            journalctl -k --since "-3h" --no-pager 2>/dev/null | grep -i -E "out of memory|oom-kill|killed process" | tail -5 || true
