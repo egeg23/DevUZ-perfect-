@@ -24,11 +24,11 @@ export const BASE = {
   price: 1000,
   ru: {
     t: "Сайт: главная, услуги, запись, контакты",
-    d: "Восемь ваших услуг, запись с выбором дня и времени, телефоны в одно касание, адрес с ориентиром. Сначала — под телефон.",
+    d: "Восемь ваших услуг, запись с выбором дня и времени, телефоны в одно касание, адрес с ориентиром. Делаем в первую очередь под телефон.",
   },
   uz: {
     t: "Sayt: bosh sahifa, xizmatlar, yozilish, kontaktlar",
-    d: "Sakkizta xizmatingiz, kun va vaqtni tanlab yozilish, bir bosishda telefon, mo‘ljali bilan manzil. Avvalo — telefon uchun.",
+    d: "Sakkizta xizmatingiz, kun va vaqtni tanlab yozilish, bir bosishda telefon, mo‘ljali bilan manzil. Avvalo telefon uchun qilinadi.",
   },
 };
 
@@ -38,11 +38,11 @@ export const BASE = {
  * выключили — его нет.
  */
 export const ADDONS = [
-  { id: "tg", where: "zapis", price: 155, star: true, ru: { t: "Заказы в Telegram", e: "Заявка с сайта сразу приходит мастеру-приёмщику в Telegram — дешёвый вход вместо CRM" }, uz: { t: "Buyurtmalar Telegramga", e: "Saytdagi ariza darhol usta-qabulchiga Telegramga keladi — CRM o‘rniga arzon yo‘l" } },
+  { id: "tg", where: "zapis", price: 155, star: true, ru: { t: "Заказы в Telegram", e: "Заявка с сайта сразу приходит мастеру-приёмщику в Telegram. Дешевле, чем заводить CRM" }, uz: { t: "Buyurtmalar Telegramga", e: "Saytdagi ariza darhol usta-qabulchiga Telegramga keladi. CRM joriy qilishdan arzonroq" } },
   { id: "pwa", where: "all", price: 195, star: true, ru: { t: "Сайт как приложение", e: "Иконка на экране телефона, открывается без строки браузера, нижнее меню, адрес и телефоны без интернета" }, uz: { t: "Sayt ilova kabi", e: "Telefon ekranida belgi, brauzer satrisiz ochiladi, pastki menyu, internetsiz manzil va telefonlar" } },
   { id: "hero", where: "", price: 325, ru: { t: "Пролёт по цеху: BMW съезжает с подъёмника", e: "Фото по слоям: камера заходит в цех, подъёмник опускается, машина уезжает" }, uz: { t: "Sex bo‘ylab parvoz: BMW ko‘targichdan tushadi", e: "Qatlamli foto: kamera sexga kiradi, ko‘targich tushadi, mashina chiqib ketadi" } },
   { id: "oil", where: "", price: 105, ru: { t: "Масло льётся по прокрутке", e: "Струя из фото наполняет горловину, пока листаете" }, uz: { t: "Moy aylantirganda quyiladi", e: "Fotodagi oqim sahifani surganingizda bo‘yinni to‘ldiradi" } },
-  { id: "prices", where: "", price: 65, ru: { t: "Место под прайс «от …»", e: "Цены по группам работ — вписываете свои" }, uz: { t: "«…dan» narxlar uchun joy", e: "Ish turlari bo‘yicha narxlar — o‘zingiznikini yozasiz" } },
+  { id: "prices", where: "", price: 65, ru: { t: "Место под прайс «от …»", e: "Цены по группам работ: вписываете свои" }, uz: { t: "«…dan» narxlar uchun joy", e: "Ish turlari bo‘yicha narxlarni o‘zingiz yozasiz" } },
   { id: "route", where: "kontakty", price: 40, ru: { t: "Маршрут в Яндекс и Google Картах", e: "Кнопки «Как доехать» и «Открыто сейчас» по вашим часам" }, uz: { t: "Yandex va Google Xaritalarda yo‘nalish", e: "«Qanday borish» tugmalari va ish vaqtingiz bo‘yicha «Hozir ochiq»" } },
   { id: "motion", where: "all", price: 90, ru: { t: "Своё движение у каждой услуги", e: "Двигатель опускается, шов вспыхивает, колесо наезжает" }, uz: { t: "Har bir xizmatning o‘z harakati", e: "Dvigatel tushadi, chok chaqnaydi, g‘ildirak yaqinlashadi" } },
   { id: "uz", where: "all", price: 195, ru: { t: "Узбекская версия", e: "Переключатель RU / UZ, все страницы на двух языках" }, uz: { t: "O‘zbekcha versiya", e: "RU / UZ almashtirgich, barcha sahifalar ikki tilda" } },
@@ -60,32 +60,32 @@ export const GROUPS = {
 export const BLOCKS = [
   {
     id: "status", group: "clients", price: 260, pv: "status", needs: ["tg"],
-    ru: { t: "«Машина готова» — клиенту в Telegram", why: "Мастер-приёмщик нажимает одну кнопку — клиенту приходит, что машину можно забирать. Не нужно обзванивать каждого вечером.", li: ["Принята · в работе · ждём деталь · готова", "Одна кнопка у мастера", "Клиент видит, что о нём помнят"] },
-    uz: { t: "«Mashina tayyor» — mijozga Telegramda", why: "Usta-qabulchi bitta tugmani bosadi — mijozga mashinani olib ketish mumkinligi haqida xabar keladi. Kechqurun har kimga qo‘ng‘iroq qilish shart emas.", li: ["Qabul qilindi · ishda · detal kutilmoqda · tayyor", "Ustada bitta tugma", "Mijoz o‘zini eslab qolishlarini ko‘radi"] },
+    ru: { t: "Клиенту в Telegram: «Машина готова»", why: "Мастер-приёмщик нажимает одну кнопку, и клиенту приходит сообщение, что машину можно забирать. Не нужно обзванивать каждого вечером.", li: ["Принята · в работе · ждём деталь · готова", "Одна кнопка у мастера", "Клиент видит, что о нём помнят"] },
+    uz: { t: "Mijozga Telegramda: «Mashina tayyor»", why: "Usta-qabulchi bitta tugmani bosadi va mijozga mashinani olib ketish mumkinligi haqida xabar keladi. Kechqurun har kimga qo‘ng‘iroq qilish shart emas.", li: ["Qabul qilindi · ishda · detal kutilmoqda · tayyor", "Ustada bitta tugma", "Mijoz o‘zini eslab qolishlarini ko‘radi"] },
   },
   {
     id: "remind", group: "clients", price: 325, pv: "remind", needs: ["tg"],
-    ru: { t: "Напоминание о ТО через полгода", why: "Клиент записывался — через срок, который вы зададите, бот сам напоминает о следующем визите. Постоянные клиенты возвращаются без рекламы.", li: ["Срок задаёте сами", "Запись из напоминания — в одно касание", "Без рассылок всем подряд"] },
-    uz: { t: "Yarim yildan keyin TXK eslatmasi", why: "Mijoz yozilgan edi — siz belgilagan muddatdan keyin bot keyingi tashrifni o‘zi eslatadi. Doimiy mijozlar reklamasiz qaytadi.", li: ["Muddatni o‘zingiz belgilaysiz", "Eslatmadan yozilish — bir bosishda", "Hammaga ommaviy xabarlarsiz"] },
+    ru: { t: "Напоминание о ТО через полгода", why: "Если клиент у вас записывался, бот сам напомнит ему о следующем визите через срок, который вы зададите. Постоянные клиенты возвращаются без рекламы.", li: ["Срок задаёте сами", "Запись из напоминания в одно касание", "Без рассылок всем подряд"] },
+    uz: { t: "Yarim yildan keyin TXK eslatmasi", why: "Mijoz yozilgan bo‘lsa, siz belgilagan muddatdan keyin bot keyingi tashrifni o‘zi eslatadi. Doimiy mijozlar reklamasiz qaytadi.", li: ["Muddatni o‘zingiz belgilaysiz", "Eslatmadan bir bosishda yozilish", "Hammaga ommaviy xabarlarsiz"] },
   },
   {
     id: "reviews", group: "clients", price: 130, pv: "reviews", needs: [],
-    ru: { t: "Отзывы с карт на сайте", why: "На прежнем сайте отзывов не было. Отзывы ваших клиентов с Яндекс и Google Карт показываются на главной — сами, без копирования.", li: ["Оценка и последние отзывы", "Ссылка «оставить отзыв»", "Обновляются сами"] },
+    ru: { t: "Отзывы с карт на сайте", why: "На прежнем сайте отзывов не было. Отзывы ваших клиентов с Яндекс и Google Карт показываются на главной сами, без копирования.", li: ["Оценка и последние отзывы", "Ссылка «оставить отзыв»", "Обновляются сами"] },
     uz: { t: "Xaritalardagi sharhlar saytda", why: "Avvalgi saytda sharhlar yo‘q edi. Mijozlaringizning Yandex va Google Xaritalardagi sharhlari bosh sahifada o‘zi ko‘rinadi, nusxalashsiz.", li: ["Baho va so‘nggi sharhlar", "«Sharh qoldirish» havolasi", "O‘zi yangilanadi"] },
   },
   {
     id: "admin", group: "team", price: 390, pv: "admin", needs: [],
-    ru: { t: "Админка: цены, услуги, фото", why: "Цены и услуги меняете сами с телефона — без программиста и без звонка нам. Прайс на сайте всегда тот, что у мастера-приёмщика.", li: ["Цены «от …» по группам", "Услуги и фото работ", "Часы работы и выходные"] },
-    uz: { t: "Admin panel: narxlar, xizmatlar, foto", why: "Narx va xizmatlarni telefondan o‘zingiz o‘zgartirasiz — dasturchisiz va bizga qo‘ng‘iroqsiz. Saytdagi narxlar doim usta-qabulchidagidek.", li: ["Guruhlar bo‘yicha «…dan» narxlar", "Xizmatlar va ish fotolari", "Ish vaqti va dam olish kunlari"] },
+    ru: { t: "Админка: цены, услуги, фото", why: "Цены и услуги меняете сами с телефона, без программиста и без звонка нам. Прайс на сайте всегда тот, что у мастера-приёмщика.", li: ["Цены «от …» по группам", "Услуги и фото работ", "Часы работы и выходные"] },
+    uz: { t: "Admin panel: narxlar, xizmatlar, foto", why: "Narx va xizmatlarni telefondan o‘zingiz o‘zgartirasiz, dasturchisiz va bizga qo‘ng‘iroqsiz. Saytdagi narxlar doim usta-qabulchidagidek.", li: ["Guruhlar bo‘yicha «…dan» narxlar", "Xizmatlar va ish fotolari", "Ish vaqti va dam olish kunlari"] },
   },
   {
     id: "seo", group: "team", price: 325, pv: "seo", needs: [],
-    ru: { t: "Страницы услуг под поиск", why: "Человек ищет «аргонная сварка Ташкент» или «ремонт двигателя Чиланзар» — у каждой из восьми услуг своя страница, которую находят Google и Яндекс.", li: ["Восемь страниц услуг", "Заголовки под живые запросы", "Карточка компании в поиске"] },
-    uz: { t: "Qidiruv uchun xizmat sahifalari", why: "Odam «argon payvandlash Toshkent» yoki «dvigatel ta’miri Chilonzor» deb qidiradi — sakkizta xizmatning har birida Google va Yandex topadigan o‘z sahifasi bor.", li: ["Sakkizta xizmat sahifasi", "Jonli so‘rovlarga mos sarlavhalar", "Qidiruvdagi kompaniya kartochkasi"] },
+    ru: { t: "Страницы услуг под поиск", why: "Человек ищет «аргонная сварка Ташкент» или «ремонт двигателя Чиланзар». У каждой из восьми услуг своя страница, и её находят Google и Яндекс.", li: ["Восемь страниц услуг", "Заголовки под живые запросы", "Карточка компании в поиске"] },
+    uz: { t: "Qidiruv uchun xizmat sahifalari", why: "Odam «argon payvandlash Toshkent» yoki «dvigatel ta’miri Chilonzor» deb qidiradi. Sakkizta xizmatning har biri uchun Google va Yandex topadigan alohida sahifa bo‘ladi.", li: ["Sakkizta xizmat sahifasi", "Jonli so‘rovlarga mos sarlavhalar", "Qidiruvdagi kompaniya kartochkasi"] },
   },
   {
     id: "photos", group: "team", price: 195, pv: "photos", needs: [],
-    ru: { t: "Съёмка ваших работ и цеха", why: "Сейчас на сайте — открытые снимки чужих цехов: своих фото у вас не было. Фотограф снимает ваш цех, мастеров и машины — и они встают на место этих.", li: ["Цех и подъёмники", "Работы до и после", "Мастер-приёмщик и вход"] },
-    uz: { t: "Ishlaringiz va sexingizni suratga olish", why: "Hozir saytda — boshqa sexlarning ochiq suratlari: sizda o‘z fotolaringiz yo‘q edi. Fotograf sexingizni, ustalarni va mashinalarni suratga oladi — ular shu suratlar o‘rniga qo‘yiladi.", li: ["Sex va ko‘targichlar", "Ishlar oldin va keyin", "Usta-qabulchi va kirish"] },
+    ru: { t: "Съёмка ваших работ и цеха", why: "Сейчас на сайте открытые снимки чужих цехов: своих фото у вас не было. Фотограф снимет ваш цех, мастеров и машины, и эти снимки встанут на их место.", li: ["Цех и подъёмники", "Работы до и после", "Мастер-приёмщик и вход"] },
+    uz: { t: "Ishlaringiz va sexingizni suratga olish", why: "Hozir saytda boshqa sexlarning ochiq suratlari turibdi: sizda o‘z fotolaringiz yo‘q edi. Fotograf sexingizni, ustalarni va mashinalarni suratga oladi, ular shu suratlar o‘rniga qo‘yiladi.", li: ["Sex va ko‘targichlar", "Ishlar oldin va keyin", "Usta-qabulchi va kirish"] },
   },
 ];
