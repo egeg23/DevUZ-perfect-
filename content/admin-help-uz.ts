@@ -1755,7 +1755,7 @@ export const uz: HelpCopy = {
       what: "Asosiy kanal. U orqali panelga kirasiz, yangi lidlar kartochkalarini va navbat takliflarini, eslatmalarni, kunlik to‘plamni, aloqalar va lid berish bo‘yicha xabarlarni olasiz.",
       how: [
         "Botni oching va «Старт» tugmasini bosing — aks holda bot sizga birinchi bo‘lib yoza olmaydi.",
-        "/login deb yozing — «🔓 Открыть панель» tugmasi va 15 daqiqalik bir martalik havola keladi. Xabarlar ostidagi «Открыть» tugmalari ham panelga o‘zi kiritadi.",
+        "/login deb yozing — «🔓 Открыть панель» tugmasi va 15 daqiqalik bir martalik havola keladi. Xabarlar ostidagi «Открыть» tugmalari ham panelga o‘zi kiritadi. Bot «Не смог проверить вход: база сейчас не отвечает» deb javob berdi — bu bizdagi nosozlik, sizning ruxsatingiz emas: bir daqiqa kuting va /login ni qayta yozing. «Такой команды у меня нет» javobi Telegramingiz xodimga bog‘lanmaganini yoki sizni o‘chirib qo‘yishganini bildiradi: rahbarga ayting.",
         "Ovozni o‘chirmang: navbat taklifi 30 daqiqa yashaydi, bildirishnoma jim tursa, lid keyingi odamga ketadi.",
         "Bot qaysi xabarlarni yuborishini egasi va loyihalar rahbari «Jamoa» sahifasidagi belgilar bilan tanlaydi. Nimadir kelmasa — ulardan so‘rang: ehtimol, o‘sha belgi olib tashlangan.",
         "Menejerlar va rahbarlarga: chat pastidagi «▶️ Получать лиды» tugmasi (yoki /leads) to‘plamdan tashqari kompaniyalar oqimini yoqadi, «⏸ Не получать лиды» — o‘chiradi. Batafsil — «Aloqalar» bo‘limida.",

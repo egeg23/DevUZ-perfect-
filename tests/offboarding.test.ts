@@ -29,7 +29,9 @@ function body(source: string, signature: string, length = 6000): string {
 test("доступ: сессия и бот видят только активных, сессии сносятся сразу", () => {
   const session = read("lib/admin/session.ts");
   assert.match(body(session, "export async function staffById(", 400), /\.eq\("is_active", true\)/);
-  assert.match(body(session, "export async function staffByTelegramId(", 400), /\.eq\("is_active", true\)/);
+  // staffByTelegramId — обёртка над findStaffByTelegram: фильтр стоит там.
+  assert.match(body(session, "export async function staffByTelegramId(", 400), /findStaffByTelegram\(/);
+  assert.match(body(session, "export async function findStaffByTelegram(", 1200), /\.eq\("is_active", true\)/);
 
   const disable = body(read("lib/admin/team.ts"), "export async function disableStaff(", 3000);
   assert.match(disable, /from\("staff_sessions"\)\.delete\(\)/);
