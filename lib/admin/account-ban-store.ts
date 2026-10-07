@@ -47,15 +47,20 @@ export async function recordBanCheck(account: string, verdict: BanVerdict | null
   const db = serviceClient();
   if (!db || !verdict) return;
   const checkedAt = new Date(now).toISOString();
-  const note = `SpamBot: ${text.replace(/\s+/g, " ").trim()}`.slice(0, 300);
+  const flat = `SpamBot: ${text.replace(/\s+/g, " ").trim()}`;
+  // В пометке аккаунта — коротко, в строке проверки — целиком: срок снятия
+  // @SpamBot пишет в самом конце длинного ответа, и по обрезку нельзя
+  // понять, был ли он и в каком виде.
+  const note = flat.slice(0, 300);
+  const full = flat.slice(0, 2000);
 
   if (account === MAIN_ACCOUNT) {
     const row = await readRow(db, account);
     if (verdict.limited) {
       const until = Math.max(verdict.until ?? now + BAN_DEFAULT_MS, row?.limited && row.until ? row.until : 0);
-      await writeRow(db, account, { limited: true, until, source: "spambot", text: note, checkedAt });
+      await writeRow(db, account, { limited: true, until, source: "spambot", text: full, checkedAt });
     } else if (!row?.limited || row.source === "spambot" || (row.until !== null && row.until <= now)) {
-      await writeRow(db, account, { limited: false, until: null, source: "spambot", text: note, checkedAt });
+      await writeRow(db, account, { limited: false, until: null, source: "spambot", text: full, checkedAt });
     } else {
       await writeRow(db, account, { ...row, checkedAt });
     }
@@ -70,7 +75,7 @@ export async function recordBanCheck(account: string, verdict: BanVerdict | null
   } else if (current > now && String(data?.flood_note ?? "").startsWith("SpamBot:")) {
     await db.from("tg_accounts").update({ flood_until: null, flood_note: note }).eq("id", account);
   }
-  await writeRow(db, account, { limited: verdict.limited, until: verdict.until, source: "spambot", text: note, checkedAt });
+  await writeRow(db, account, { limited: verdict.limited, until: verdict.until, source: "spambot", text: full, checkedAt });
 }
 
 /** PEER_FLOOD / FLOOD_WAIT на отправке с главного — сутки без первых писем, как у остальных. */

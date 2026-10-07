@@ -52,7 +52,8 @@ function releaseDate(text: string): number | null {
   // «October 8, 2026 at 08:07»
   const us = /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4}),?\s+(?:at\s+)?(\d{1,2}):(\d{2})/i.exec(text);
   if (us) return Date.UTC(Number(us[3]), MONTHS_EN.indexOf(us[1].toLowerCase()), Number(us[2]), Number(us[4]), Number(us[5]));
-  const ru = /(\d{1,2})\s+(янв|фев|мар|апр|ма[йя]|июн|июл|авг|сен|окт|ноя|дек)[а-я]*\.?\s+(\d{4})(?:\s*г\.?)?,?\s*(?:в\s*)?(\d{1,2}):(\d{2})/i.exec(text);
+  // «8 окт. 2026 г., 08:07», «8 октября 2026 года в 8:07»
+  const ru = /(\d{1,2})\s+(янв|фев|мар|апр|ма[йя]|июн|июл|авг|сен|окт|ноя|дек)[а-я]*\.?\s+(\d{4})(?:\s*(?:года|г\.?))?,?\s*(?:в\s*)?(\d{1,2}):(\d{2})/i.exec(text);
   if (ru) {
     const month = MONTHS_RU.indexOf(ru[2].toLowerCase().startsWith("ма") ? "ма" : ru[2].toLowerCase());
     return Date.UTC(Number(ru[3]), month, Number(ru[1]), Number(ru[4]), Number(ru[5]));
