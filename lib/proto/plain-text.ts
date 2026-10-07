@@ -81,6 +81,8 @@ export const AI_MARKERS: readonly Marker[] = [
   { re: /(?:мечт\p{L}*|идеи)\s+в\s+(?:реальность|жизнь)/iu, say: "«воплотим мечты в реальность»" },
   { re: /сделайте\s+(?:первый\s+)?шаг/iu, say: "«сделайте первый шаг»" },
   { re: /не\s+упустите/iu, say: "«не упустите»" },
+  { re: /(?:\d+|две|три|четыре|пять|шесть|семь|восемь|девять|десять)\s+причин\s+выбрать/iu, say: "«N причин выбрать нас»" },
+  { re: /первое,?\s+что\s+(?:видит|замечает|бросается)/iu, say: "«первое, что видит клиент»" },
   // Узбекский.
   { re: /noyob/iu, say: "«noyob»" },
   { re: /innovatsion/iu, say: "«innovatsion»" },
@@ -94,6 +96,7 @@ export const AI_MARKERS: readonly Marker[] = [
   { re: /yangi\s+(?:bosqich|daraja)ga/iu, say: "«yangi bosqichga»" },
   { re: /har\s+bir\s+detal/iu, say: "«har bir detal»" },
   { re: /zamonaviy\s+dunyoda/iu, say: "«zamonaviy dunyoda»" },
+  { re: /tanlash(?:ingiz)?\s+uchun\s+\S+\s+sabab/iu, say: "«… tanlash uchun N sabab»" },
   // Английский.
   { re: /\b(?:delve|elevate[sd]?|seamless(?:ly)?|unlock|unleash|tapestry|embark)\b/i, say: "«delve / elevate / seamless / unlock»" },
   { re: /\bcutting[- ]edge\b|\bstate[- ]of[- ]the[- ]art\b|\bworld[- ]class\b|\bgame[- ]chang/i, say: "«cutting-edge / world-class»" },

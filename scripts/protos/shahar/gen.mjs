@@ -145,9 +145,9 @@ function card(l, x, k = 0, anim = "key") {
   const t = T(l);
   const kind = x.type === "kv" ? t("квартира", "kvartira") : t("дача", "dacha");
   return `<a class="lc rv a-${anim}" style="--d:${(k % 4) * 90}ms" href="${href(l, "obekt")}?id=${x.id}" data-id="${x.id}" data-type="${x.type}" data-rooms="${x.rooms}" data-dist="${x.dist}" data-usd="${x.usd}" data-mort="${x.mort ? 1 : 0}">
-<div class="ph"><img src="${IMG}/l${x.id}-1.webp" alt="${esc(`${x[l].t}, ${x.area} м², ${placeOf(x, l)}`)}" loading="lazy" width="720" height="960"><div class="tag"><span>${t("Продажа", "Sotuv")} · ${kind}</span>${x.old ? `<span class="down">${t("Цена снижена", "Narx tushdi")}</span>` : ""}</div></div>
-<div class="bd"><div class="price"><b class="num" data-p="${x.usd}">${usd(x.usd)}</b>${x.old ? `<s class="num" data-p="${x.old}">${usd(x.old)}</s>` : ""}<small class="num" data-pm="${Math.round(x.usd / x.area)}">${usd(Math.round(x.usd / x.area))}/м²</small></div>
-<p class="pr">${x[l].t} · ${x.area} м² · ${x.type === "kv" ? `${t("этаж", "qavat")} ${x.floor}` : t("1 этаж", "1 qavat")}</p>
+<div class="ph"><img src="${IMG}/l${x.id}-1.webp" alt="${esc(`${x[l].t}, ${x.area} ${t("м²", "m²")}, ${placeOf(x, l)}`)}" loading="lazy" width="720" height="960"><div class="tag"><span>${t("Продажа", "Sotuv")} · ${kind}</span>${x.old ? `<span class="down">${t("Цена снижена", "Narx tushdi")}</span>` : ""}</div></div>
+<div class="bd"><div class="price"><b class="num" data-p="${x.usd}">${usd(x.usd)}</b>${x.old ? `<s class="num" data-p="${x.old}">${usd(x.old)}</s>` : ""}<small class="num" data-pm="${Math.round(x.usd / x.area)}">${usd(Math.round(x.usd / x.area))}/${t("м²", "m²")}</small></div>
+<p class="pr">${x[l].t} · ${x.area} ${t("м²", "m²")} · ${x.type === "kv" ? `${t("этаж", "qavat")} ${x.floor}` : t("1 этаж", "1 qavat")}</p>
 <p class="ad">${ICON.pin}<span>${placeOf(x, l)} · ${x[l].mark}</span></p>
 <p class="id">ID ${x.id} · ${x.date}</p></div>
 </a><button class="fav" type="button" data-fav="${x.id}" aria-pressed="false" aria-label="${t("В избранное", "Sevimlilarga")}" data-addon="fav">${ICON.heart}</button>`;
@@ -310,7 +310,7 @@ const head = (kicker, h, lead, side = "", anim = "rise") => `<div class="sec-hea
 function heroBlock(l) {
   const t = T(l);
   const [a, b, c] = [LISTINGS[0], LISTINGS[1], LISTINGS[3]];
-  const fc = (x, cls, k) => `<a class="fc ${cls}" href="${href(l, "obekt")}?id=${x.id}" data-depth="${k}" aria-label="${esc(x[l].t)}"><img src="${IMG}/l${x.id}-1.webp" alt="" width="720" height="960" loading="eager"><div><b class="num" data-p="${x.usd}">${usd(x.usd)}</b><small>${x[l].t} · ${x.area} м² · ${placeOf(x, l)}</small></div></a>`;
+  const fc = (x, cls, k) => `<a class="fc ${cls}" href="${href(l, "obekt")}?id=${x.id}" data-depth="${k}" aria-label="${esc(x[l].t)}"><img src="${IMG}/l${x.id}-1.webp" alt="" width="720" height="960" loading="eager"><div><b class="num" data-p="${x.usd}">${usd(x.usd)}</b><small>${x[l].t} · ${x.area} ${t("м²", "m²")} · ${placeOf(x, l)}</small></div></a>`;
   return `<section class="hero" id="hero" data-scene="hero" aria-label="ShahaR.Uz">
 <div class="hero-ph" data-l="ph" aria-hidden="true"></div><div class="hero-sh" aria-hidden="true"></div>
 <div class="hero-in"><div class="wrap"><div class="hero-grid">
@@ -380,7 +380,7 @@ ${head(t("Что делает ShahaR.Uz", "ShahaR.Uz nima qiladi"), t("Не то
 
 function zkCard(l, z, k) {
   const t = T(l);
-  return `<article class="zc rv a-grow" style="--d:${(k % 3) * 110}ms"><div class="bld" aria-hidden="true">${z.h.map((h, n) => `<i style="--h:${h};--k:${n}"></i>`).join("")}</div><span class="cls">${z.cls[l]}</span><h3>${t("ЖК", "TJM")} ${z.n}</h3><p>${l === "ru" ? "Ташкент" : "Toshkent"}, ${DISTRICTS[l][z.dist]}${z.dev ? ` · ${z.dev}` : ""} · ${t("срок сдачи", "topshirish")}: ${z.term[l]}</p>${z.rows.length ? `<table><tbody>${z.rows.map(([r, a, s]) => `<tr><td>${r}-${t("комн.", "xona")}${a ? ` · ${a} м²` : ""}</td><td class="num">${sp(s)} ${t("сум", "so‘m")}</td></tr>`).join("")}</tbody></table>` : ""}${z.left[l] ? `<p style="color:var(--gold)">${z.left[l]}</p>` : ""}</article>`;
+  return `<article class="zc rv a-grow" style="--d:${(k % 3) * 110}ms"><div class="bld" aria-hidden="true">${z.h.map((h, n) => `<i style="--h:${h};--k:${n}"></i>`).join("")}</div><span class="cls">${z.cls[l]}</span><h3>${t("ЖК", "TJM")} ${z.n}</h3><p>${l === "ru" ? "Ташкент" : "Toshkent"}, ${DISTRICTS[l][z.dist]}${z.dev ? ` · ${z.dev}` : ""} · ${t("срок сдачи", "topshirish")}: ${z.term[l]}</p>${z.rows.length ? `<table><tbody>${z.rows.map(([r, a, s]) => `<tr><td>${r}-${t("комн.", "xona")}${a ? ` · ${a} ${t("м²", "m²")}` : ""}</td><td class="num">${sp(s)} ${t("сум", "so‘m")}</td></tr>`).join("")}</tbody></table>` : ""}${z.left[l] ? `<p style="color:var(--gold)">${z.left[l]}</p>` : ""}</article>`;
 }
 
 function bandBlock(l) {
@@ -506,12 +506,12 @@ function obekt(l) {
   const pay0 = Math.round((x.usd * 0.7 * 0.015) / (1 - Math.pow(1.015, -180)));
   const infra = [["baby", t("Детсад", "Bog‘cha")], ["school", t("Школы", "Maktablar")], ["uni", t("ВУЗы", "OTMlar")], ["shop", t("Магазины", "Do‘konlar")], ["mall", t("ТРЦ", "SEM")], ["hosp", t("Больницы", "Kasalxonalar")], ["hosp", t("Поликлиники", "Poliklinikalar")], ["pill", t("Аптеки", "Dorixonalar")], ["cafe", t("Кафе", "Kafelar")], ["cafe", t("Рестораны", "Restoranlar")]];
   const dots = [[30, 26], [70, 34], [22, 64], [62, 72], [80, 58], [44, 18], [50, 84], [16, 44]];
-  const body = `${phead(l, `ID ${x.id}`, `${t("Продажа", "Sotuv")} · ${t("Ташкент", "Toshkent")}, ${DISTRICTS[l][x.dist]}`, `${x[l].t}, ${x.area} м² · ${x[l].mark}`, "")}
+  const body = `${phead(l, `ID ${x.id}`, `${t("Продажа", "Sotuv")} · ${t("Ташкент", "Toshkent")}, ${DISTRICTS[l][x.dist]}`, `${x[l].t}, ${x.area} ${t("м²", "m²")} · ${x[l].mark}`, "")}
 <section style="padding-top:0"><div class="wrap"><div class="obj">
 <div>
 <div class="gal rv a-pop"><div class="gal-t" id="gal">${Array.from({ length: x.photos }, (_, k) => `<img src="${IMG}/l${x.id}-${k + 1}.webp" alt="${esc(`${x[l].t}, ${t("фото", "foto")} ${k + 1}`)}" width="720" height="960" ${k ? 'loading="lazy"' : ""}>`).join("")}</div><span class="gal-n num" id="gal-n">1 / ${x.photos}</span><button class="fav" type="button" data-fav="${x.id}" aria-pressed="false" aria-label="${t("В избранное", "Sevimlilarga")}" data-addon="fav">${ICON.heart}</button></div>
 <div class="thumbs" id="thumbs">${Array.from({ length: x.photos }, (_, k) => `<button type="button" data-k="${k}" aria-current="${k === 0}" aria-label="${t("Фото", "Foto")} ${k + 1}"><img src="${IMG}/l${x.id}-${k + 1}.webp" alt="" loading="lazy"></button>`).join("")}</div>
-<div class="params rv a-rise"><div><b>${x.rooms}</b><span>${t("комнаты", "xona")}</span></div><div><b>${x.area} м²</b><span>${t("общая площадь", "umumiy maydon")}</span></div><div><b>${x.floor}</b><span>${t("этаж", "qavat")}</span></div><div><b>${t("Евро", "Yevro")}</b><span>${t("ремонт", "ta’mir")}</span></div></div>
+<div class="params rv a-rise"><div><b>${x.rooms}</b><span>${t("комнаты", "xona")}</span></div><div><b>${x.area} ${t("м²", "m²")}</b><span>${t("общая площадь", "umumiy maydon")}</span></div><div><b>${x.floor}</b><span>${t("этаж", "qavat")}</span></div><div><b>${t("Евро", "Yevro")}</b><span>${t("ремонт", "ta’mir")}</span></div></div>
 <div class="panel rv a-rise" style="margin-top:16px"><h2 style="font-size:24px">${t("Описание", "Tavsif")}</h2><p class="desc">${DESC[l]}</p><p class="src">${t("Текст из объявления на shahar.uz, ID", "Matn shahar.uz’dagi e’londan olingan, ID")} ${x.id}.</p></div>
 <div class="panel rv a-rise" style="margin-top:16px"><h2 style="font-size:24px">${t("Инфраструктура рядом", "Atrofdagi infratuzilma")}</h2><p class="sub">${t("Радиус поиска: 1500 м от объекта. Как у вас на сайте, только картой и списком вместо строки эмодзи.", "Qidiruv radiusi: obyektdan 1500 m. Saytingizdagidek, faqat emoji qatori o‘rniga xarita va ro‘yxat.")}</p>
 <div class="radar" aria-hidden="true"><b></b>${dots.map(([a, b]) => `<i style="left:${a}%;top:${b}%"></i>`).join("")}</div>
@@ -519,7 +519,7 @@ function obekt(l) {
 <p class="src">${t("Точки на схеме для примера: на сайте они встанут по карте вокруг объекта. Адрес на карте указан условно, как и у вас.", "Sxemadagi nuqtalar misol uchun: saytda ular obyekt atrofidagi xarita bo‘yicha joylashadi. Xaritadagi manzil shartli, xuddi sizdagidek.")}</p></div>
 </div>
 <aside class="side">
-<div class="panel rv a-slide"><div class="price"><b class="num" data-p="${x.usd}" style="font-size:36px">${usd(x.usd)}</b></div><p class="pr num" data-pm="${pm}" style="color:var(--fg2)">${usd(pm)}/м²</p>
+<div class="panel rv a-slide"><div class="price"><b class="num" data-p="${x.usd}" style="font-size:36px">${usd(x.usd)}</b></div><p class="pr num" data-pm="${pm}" style="color:var(--fg2)">${usd(pm)}/${t("м²", "m²")}</p>
 <div class="cur3"><div><span>${t("В сумах", "So‘mda")}</span><b class="num">${sp(Math.round(x.usd * RATE.sum))} ${t("сум", "so‘m")}</b></div><div><span>${t("В евро", "Yevroda")}</span><b class="num">€${sp(Math.round(x.usd * RATE.eur))}</b></div></div>
 <div class="cta" style="margin-top:16px"><a class="btn btn-main" style="width:100%" href="${F.admin}">${ICON.tg}${t("Написать по объекту", "Obyekt bo‘yicha yozish")}</a><a class="btn btn-ghost" style="width:100%" href="${href(l, "podbor")}">${ICON.spark}${t("Подобрать похожие", "O‘xshashlarini tanlash")}</a></div>
 <p class="src">${t("При звонке назовите ID", "Qo‘ng‘iroqda ID ni ayting")} <b class="num">${x.id}</b>. ${t("Пожалуйста, скажите, что нашли этот объект на ShahaR.Uz.", "Iltimos, bu obyektni ShahaR.Uz’da topganingizni ayting.")}</p></div>
@@ -707,7 +707,7 @@ ${head(t("Что взяли у конкурентов", "Raqobatchilardan nima o
 <div class="grid g3">${comp.map(([h, p], k) => `<div class="note rv a-rise" style="--d:${(k % 3) * 80}ms"><h3>${h}</h3><p>${p}</p></div>`).join("")}</div>
 </div></section>
 <section class="dark" id="utp"><div class="wrap">
-${head(t("Чем обходим конкурентов", "Raqobatchilardan qanday o‘zamiz"), t("Шесть вещей, которых нет у конкурентов", "Raqobatchilarda yo‘q oltita narsa"), "")}
+${head(t("Чем обходим конкурентов", "Raqobatchilardan qanday o‘zamiz"), t("Шесть сильных сторон ShahaR.Uz", "ShahaR.Uz’ning oltita kuchli tomoni"), "")}
 <div class="offer">${usp.map(([h, p], k) => `<div class="oc rv a-${["rise", "tilt", "pop"][k % 3]}" style="--d:${(k % 3) * 90}ms"><span class="ic num" style="font:700 18px/1 var(--head)">0${k + 1}</span><h3>${h}</h3><p>${p}</p></div>`).join("")}</div>
 </div></section>
 <section id="foto"><div class="wrap">
