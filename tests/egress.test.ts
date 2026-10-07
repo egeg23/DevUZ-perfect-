@@ -12,7 +12,7 @@ import { createServer } from "node:http";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { createRoads } from "../lib/egress.mjs";
+import { createRoads, dbRetryable } from "../lib/egress.mjs";
 
 const read = (file: string) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 const DIRECT = { direct: true };
@@ -203,4 +203,49 @@ test("Telegram, поллер, Метрика и скаут ходят двумя
   for (const file of ["app/api/health/route.ts", "lib/qualify/engine.ts"]) {
     assert.doesNotMatch(read(file), /roadFetch/, file);
   }
+});
+
+/** Подставные дороги для базы: обрыв с причиной — как его отдаёт undici. */
+function dbRoadsWith(proxyError: Error) {
+  const calls: Call[] = [];
+  const fetchImpl = async (url: string, init: RequestInit & { dispatcher?: unknown } = {}) => {
+    const road = init.dispatcher === DIRECT ? "direct" : "proxy";
+    calls.push({ url, road });
+    if (road === "proxy") throw proxyError;
+    return new Response("[]", { status: 200 });
+  };
+  const roads = createRoads({ fetchImpl, direct: () => DIRECT, proxied: () => true, log: () => {}, retryable: dbRetryable });
+  return { ...roads, calls };
+}
+
+const URL_DB = "https://owbkqoyutubqujdazdcc.supabase.co/rest/v1/staff?select=id";
+const reset = () => Object.assign(new TypeError("fetch failed"), { cause: { code: "ECONNRESET", message: "other side closed" } });
+const refused = () => Object.assign(new TypeError("fetch failed"), { cause: { code: "ECONNREFUSED", message: "connect ECONNREFUSED" } });
+
+test("база: чтение после обрыва прокси повторяется напрямую", async () => {
+  const r = dbRoadsWith(reset());
+  const res = await r.roadFetch(URL_DB, { method: "GET" });
+  assert.equal(res.status, 200);
+  assert.deepEqual(r.calls.map((c) => c.road), ["proxy", "direct"]);
+});
+
+test("база: запись, оборванная на середине, второй раз не уходит — но следующий запрос идёт другой дорогой", async () => {
+  const r = dbRoadsWith(reset());
+  await assert.rejects(r.roadFetch(URL_DB, { method: "POST", body: "{}" }), /fetch failed/);
+  assert.deepEqual(r.calls.map((c) => c.road), ["proxy"], "запись могла дойти — повтор задвоил бы её");
+  await r.roadFetch(URL_DB, { method: "GET" });
+  assert.deepEqual(r.calls.slice(1).map((c) => c.road), ["direct"]);
+});
+
+test("база: запись повторяется, если соединение не открылось вовсе", async () => {
+  const r = dbRoadsWith(refused());
+  const res = await r.roadFetch(URL_DB, { method: "PATCH", body: "{}" });
+  assert.equal(res.status, 200);
+  assert.deepEqual(r.calls.map((c) => c.road), ["proxy", "direct"]);
+  assert.equal(dbRetryable({ method: "POST" }, Object.assign(new TypeError("fetch failed"), { cause: { message: "Proxy response (502) !== 200 when HTTP Tunneling" } })), true);
+});
+
+test("клиент базы ходит через dbFetch, а health показывает и его дорогу", () => {
+  assert.match(read("lib/supabase.ts"), /global: \{ fetch: dbFetch as typeof fetch \}/);
+  assert.match(read("lib/egress.mjs"), /return \{ \.\.\.shared\.roads\(\), \.\.\.db\.roads\(\) \};/);
 });

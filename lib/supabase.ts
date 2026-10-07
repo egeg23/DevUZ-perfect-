@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { dbFetch } from "@/lib/egress.mjs";
+
 let cached: SupabaseClient | null = null;
 
 /**
@@ -29,6 +31,10 @@ export function serviceClient(): SupabaseClient | null {
 
   cached = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    // Две дороги к базе — через прокси и напрямую (lib/egress.mjs, dbFetch):
+    // 07.10.2026 прокси весь вечер мигал, и с одной дорогой падало всё, что
+    // читает базу, — от /login в боте до свипа напоминаний.
+    global: { fetch: dbFetch as typeof fetch },
   });
   return cached;
 }
