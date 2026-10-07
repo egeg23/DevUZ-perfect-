@@ -16,7 +16,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { partnersDict, promoDict, promoLocaleDict, promoResultDict } from "@/content/admin-panel/partners";
 import { cabinetCopy } from "@/content/partner-cabinet";
 import { helpAnchor } from "@/lib/admin/help";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireRole } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { listPromo, promoStats } from "@/lib/partners/promo";
 import {
@@ -46,7 +46,7 @@ const BUTTON =
   "rounded-lg border border-line bg-surface-2 px-3 py-1.5 text-xs transition hover:border-green/40 hover:text-green";
 
 export default async function PromoPage({ searchParams }: { searchParams: Promise<{ r?: string }> }) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
   const { r } = await searchParams;
   const locale = admin.panel_locale;
   const t = pick(promoDict, locale);

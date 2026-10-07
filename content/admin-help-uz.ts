@@ -1380,14 +1380,14 @@ export const uz: HelpCopy = {
 
     /* ── Партнёры ─────────────────────────────────────────────────────── */
     "/admin/partners": {
-      what: "O‘z havolasi bilan mijoz olib keladigan va loyiha foydasidan foiz oladigan odamlar. Bu yerda ularning havolalari, mijozlari, hisoblanmalari, to‘lov so‘rovlari va o‘zlarida joylaydigan promo materiallar. Bo‘lim faqat egasida: bu begona odamlarga beriladigan pul.",
+      what: "O‘z havolasi bilan mijoz olib keladigan va loyiha foydasidan foiz oladigan odamlar. Bu yerda ularning havolalari, mijozlari, hisoblanmalari, to‘lov so‘rovlari va o‘zlarida joylaydigan promo materiallar. Bo‘lim egasi va rahbarda. To‘lov bo‘yicha qaror, hamkorning shaxsiy stavkasi va hamkorni o‘chirish — faqat egasida: bu begona odamlarga beriladigan pul.",
       items: [
         {
           id: "join",
           title: "Hamkor qanday paydo bo‘ladi",
           body: [
-            "O‘zi: saytda «Зарабатывай с нами» menyusida «Стать партнёром» yoki «Войти в кабинет» ni bosadi — bot uni ro‘yxatga oladi va hamkor kabinetiga bir martalik kirish tugmasini yuboradi. Botdagi /ref va /cabinet buyruqlari ham shunday. Har kim bo‘la oladi, jumladan xodim ham.",
-            "Yoki siz: «Hamkorni qo‘lda qo‘shish» — ism, kod (bo‘sh — o‘zimiz o‘ylab topamiz), Telegram id ixtiyoriy, izoh. Telegram id bo‘lmasa, bunday hamkor keyin bot orqali kelgan odam bilan birlashmaydi va kabinetga kira olmaydi.",
+            "O‘zi: saytda «Зарабатывай с нами» menyusida «Стать партнёром» yoki «Войти в кабинет» ni bosadi — bot uni ro‘yxatga oladi va hamkor kabinetiga bir martalik kirish tugmasini yuboradi. Botdagi /ref va /cabinet buyruqlari ham shunday. Studiya xodimlaridan tashqari har kim bo‘la oladi: bot Telegramni xodimlar ro‘yxati bilan solishtiradi va ro‘yxatga olish o‘rniga dastur jamoa uchun yopiqligini aytadi — xodimlarning mijozlari panelda hisoblanadi. Avval qo‘shilgan yozuv ham xodimga hech narsa ochmaydi: na havolalar, na to‘lovlar, na kabinet.",
+            "Yoki siz: «Hamkorni qo‘lda qo‘shish» — ism, kod (bo‘sh — o‘zimiz o‘ylab topamiz), Telegram id ixtiyoriy, izoh. Telegram id bo‘lmasa, bunday hamkor keyin bot orqali kelgan odam bilan birlashmaydi va kabinetga kira olmaydi. Xodimning Telegram id sini panel qabul qilmaydi. Telegrami xodimniki bo‘lgan hamkorlarni «Barcha hamkorlar» jadvali «studiya xodimi» deb belgilaydi.",
             "Havolalar: qisqa `devuz.studio/r/…` — hamkor aynan shuni e’lon qiladi, har bir kanal uchun alohida (kabinetda yoki `/ref KOD belgi`), 20 tagacha. Kabinetda hamkor havola qayerga olib borishini (bosh sahifa, xizmatlar, keyslar, bot) va auditoriya uchun bonusni — birinchi loyihaga 5/10/15% chegirmani tanlaydi. Eski `?ref=KOD` va `start=ref_KOD` avvalgidek ishlaydi. Havola orqali o‘tishni sayt brauzer cookie’sida 30 kun eslab qoladi (birinchi hamkor yutadi): shu vaqt ichidagi so‘rov — hamkorning mijozi, hatto odam keyin havolasiz qaytgan bo‘lsa ham. Lid kartochkasida «Hamkor» yonida o‘tish so‘rovdan necha kun oldin bo‘lgani ko‘rinadi. Botda ham xuddi shu 30 kun.",
             "O‘tishlar odamlar bo‘yicha hisoblanadi: messenjerdagi oldindan ko‘rish roboti va o‘sha kuni o‘sha odamning qayta ochishi hisoblanmaydi. Quyidagi jadvalda havolada — «o‘tishlar / so‘rovlar»; kod ustiga kursorni olib borsangiz — qisqa manzilni ko‘rasiz.",
           ],
@@ -1395,11 +1395,18 @@ export const uz: HelpCopy = {
         {
           id: "count",
           title: "Mijoz qachon hisobga olinadi",
-          body: [
-            "Havola orqali kelgan lid hamkorga hisoblanadi, agar bu uning o‘zi bo‘lmasa, mijoz oldin bizda bo‘lmagan bo‘lsa va hamkor bloklanmagan bo‘lsa. Hisoblandi — hamkorga «🤝 По вашей ссылке пришёл…» keladi. Mijoz saytga havola orqali kelib, keyin sayt chatidan botga yozsa ham, hamkor unga biriktirilgan bo‘lib qoladi.",
-            "Bunday liddan ochilgan loyiha hamkorni meros oladi. Loyiha kartochkasida, «Hamkor» blokida kim olib kelganini, foizni va «Hisobga olmaslik sababi»ni o‘zgartirish mumkin. Loyiha bo‘yicha imzolangan shartnoma skanini yuklashganda, hamkorga darhol «📝 С клиентом … подписан договор» keladi — summa va taxminiy ulush bilan.",
-            "Bloklash faqat yangi hisoblashlarni to‘xtatadi: eski hisoblanmalar va to‘lovlar qoladi.",
-          ],
+          body: {
+            head: [
+              "Havola orqali kelgan lid hamkorga hisoblanadi, agar bu uning o‘zi bo‘lmasa, mijoz oldin bizda bo‘lmagan bo‘lsa va hamkor bloklanmagan bo‘lsa. Hisoblandi — hamkorga «🤝 По вашей ссылке пришёл…» keladi. Mijoz saytga havola orqali kelib, keyin sayt chatidan botga yozsa ham, hamkor unga biriktirilgan bo‘lib qoladi.",
+              "Bunday liddan ochilgan loyiha hamkorni meros oladi. Loyiha kartochkasida kim olib kelganini, foizni va «Hisobga olmaslik sababi»ni faqat egasi o‘zgartira oladi. Loyiha bo‘yicha imzolangan shartnoma skanini yuklashganda, hamkorga darhol «📝 С клиентом … подписан договор» keladi — summa va taxminiy ulush bilan.",
+              "Bloklash faqat yangi hisoblashlarni to‘xtatadi: eski hisoblanmalar va to‘lovlar qoladi.",
+            ],
+            admin: [
+              "Havola orqali kelgan lid hamkorga hisoblanadi, agar bu uning o‘zi bo‘lmasa, mijoz oldin bizda bo‘lmagan bo‘lsa va hamkor bloklanmagan bo‘lsa. Hisoblandi — hamkorga «🤝 По вашей ссылке пришёл…» keladi. Mijoz saytga havola orqali kelib, keyin sayt chatidan botga yozsa ham, hamkor unga biriktirilgan bo‘lib qoladi.",
+              "Bunday liddan ochilgan loyiha hamkorni meros oladi. Loyiha kartochkasida, «Hamkor» blokida kim olib kelganini, foizni va «Hisobga olmaslik sababi»ni o‘zgartirish mumkin. Loyiha bo‘yicha imzolangan shartnoma skanini yuklashganda, hamkorga darhol «📝 С клиентом … подписан договор» keladi — summa va taxminiy ulush bilan.",
+              "Bloklash faqat yangi hisoblashlarni to‘xtatadi: eski hisoblanmalar va to‘lovlar qoladi.",
+            ],
+          },
         },
         {
           id: "percent",
@@ -1443,11 +1450,28 @@ export const uz: HelpCopy = {
         {
           id: "payout",
           title: "Hamkorga to‘lov",
+          body: {
+            head: [
+              "Hamkor kabinetda «Запросить выплату» ni bosadi yoki botga /payout va rekvizitlarini yozadi (USDT TRC-20 yoki matn). Oyning birinchi ish kunidan boshlab, $50 dan, bitta ochiq so‘rov, doim butun mavjud summaga. Egasiga «💸 Заявка на выплату» keladi, bu yerda esa «To‘lov so‘rovlari» blokida qator paydo bo‘ladi.",
+              "Egasi hal qiladi: u pulni o‘tkazadi va «To‘landi» yoki «rad etish» ni bosadi. Sizda qatorda hamkor, summa va rekvizitlar ko‘rinadi, tugmalar o‘rnida esa — «egasi hal qiladi»: to‘lov — begona odamlarga beriladigan pul, va u bo‘yicha qaror egasida.",
+              "«Aylanmadan» modeli so‘rovni kutmaydi: loyiha bo‘yicha to‘lovlar uning summasiga yetishi bilan — to‘lov [Moliya](/admin/finance) bo‘limida yozilganda yoki shartnoma hisobida «To‘landi» bosilganda — to‘lov so‘rovi o‘zi yaratiladi, hamkorning shu loyihadagi butun ulushiga, oy boshini kutmasdan va $50 minimumisiz. Hamkorga — «✅ … выплата в обработке», egasiga — «💸 Выплата партнёру с оборота: выплатить … за …». «To‘lov so‘rovlari» blokida bunday qatorda «aylanmadan, «…» uchun — loyiha to‘liq to‘langanda o‘zi yaratildi» degan yozuv bor. «Foydadan» modeli — avvalgidek hamkor so‘rovi bo‘yicha: uning ulushi tannarxga bog‘liq.",
+              "Jamg‘armasi yoqilgan hamkor pulni o‘zi xohlagan paytda oladi — o‘sha so‘rov bilan (kabinetda to‘lov so‘rash tugmasi yoki /payout), oyning birinchi ish kunidan boshlab va $50 minimum bilan. So‘rov jamg‘armadagi barcha loyihalarni uning stavkasi bo‘yicha yopadi: bu stavka ularga mahkamlanadi, keyingi jamg‘arma esa noldan boshlanadi. Egasi so‘rovni rad etsa — loyihalar jamg‘armaga qaytadi.",
+            ],
+            admin: [
+              "Hamkor kabinetda «Запросить выплату» ni bosadi yoki botga /payout va rekvizitlarini yozadi (USDT TRC-20 yoki matn). Oyning birinchi ish kunidan boshlab, $50 dan, bitta ochiq so‘rov, doim butun mavjud summaga. Sizga «💸 Заявка на выплату» keladi.",
+              "Avval pulni o‘zingiz o‘tkazing, keyin «To‘lov so‘rovlari» blokida **«To‘landi»** tugmasini bosing (izoh bilan ham bo‘ladi). Yoki «rad etish» — summa mavjud pulga qaytadi, hamkor sababini ko‘radi.",
+              "«Aylanmadan» modeli so‘rovni kutmaydi: loyiha bo‘yicha to‘lovlar uning summasiga yetishi bilan — to‘lov [Moliya](/admin/finance) bo‘limida yozilganda yoki shartnoma hisobida «To‘landi» bosilganda — to‘lov so‘rovi o‘zi yaratiladi, hamkorning shu loyihadagi butun ulushiga, oy boshini kutmasdan va $50 minimumisiz. Hamkorga — «✅ … выплата в обработке» (rekvizitlari bo‘lmasa — ularni kabinetga kiritish iltimosi), sizga — «💸 Выплата партнёру с оборота: выплатить … за …». «To‘lov so‘rovlari» blokida bunday qatorda «aylanmadan, «…» uchun — loyiha to‘liq to‘langanda o‘zi yaratildi» degan yozuv bor; keyin oddiysidek: o‘tkazdingiz — **«To‘landi»**. Bitta loyiha bo‘yicha bunday so‘rov qat’iy bitta yaratiladi: rad etsangiz — summa hamkorning mavjud puliga qaytadi va u uni oddiy so‘rov bilan so‘raydi. To‘lovni yozish yarim yo‘lda uzilib qolsa, svip o‘tkazib yuborilganini bir necha daqiqada yaratadi. «Foydadan» modeli — avvalgidek hamkor so‘rovi bo‘yicha: uning ulushi tannarxga bog‘liq.",
+              "Jamg‘armasi yoqilgan hamkor pulni o‘zi xohlagan paytda oladi — o‘sha so‘rov bilan (kabinetda to‘lov so‘rash tugmasi yoki /payout), oyning birinchi ish kunidan boshlab va $50 minimum bilan. So‘rov jamg‘armadagi barcha loyihalarni uning stavkasi bo‘yicha yopadi: bu stavka ularga mahkamlanadi, keyingi jamg‘arma esa noldan boshlanadi. So‘rovni rad etsangiz — loyihalar jamg‘armaga qaytadi.",
+            ],
+          },
+        },
+        {
+          id: "delete",
+          title: "Hamkorni o‘chirish",
+          roles: ["admin"],
           body: [
-            "Hamkor kabinetda «Запросить выплату» ni bosadi yoki botga /payout va rekvizitlarini yozadi (USDT TRC-20 yoki matn). Oyning birinchi ish kunidan boshlab, $50 dan, bitta ochiq so‘rov, doim butun mavjud summaga. Sizga «💸 Заявка на выплату» keladi.",
-            "Avval pulni o‘zingiz o‘tkazing, keyin «To‘lov so‘rovlari» blokida **«To‘landi»** tugmasini bosing (izoh bilan ham bo‘ladi). Yoki «rad etish» — summa mavjud pulga qaytadi, hamkor sababini ko‘radi.",
-            "«Aylanmadan» modeli so‘rovni kutmaydi: loyiha bo‘yicha to‘lovlar uning summasiga yetishi bilan — to‘lov [Moliya](/admin/finance) bo‘limida yozilganda yoki shartnoma hisobida «To‘landi» bosilganda — to‘lov so‘rovi o‘zi yaratiladi, hamkorning shu loyihadagi butun ulushiga, oy boshini kutmasdan va $50 minimumisiz. Hamkorga — «✅ … выплата в обработке» (rekvizitlari bo‘lmasa — ularni kabinetga kiritish iltimosi), sizga — «💸 Выплата партнёру с оборота: выплатить … за …». «To‘lov so‘rovlari» blokida bunday qatorda «aylanmadan, «…» uchun — loyiha to‘liq to‘langanda o‘zi yaratildi» degan yozuv bor; keyin oddiysidek: o‘tkazdingiz — **«To‘landi»**. Bitta loyiha bo‘yicha bunday so‘rov qat’iy bitta yaratiladi: rad etsangiz — summa hamkorning mavjud puliga qaytadi va u uni oddiy so‘rov bilan so‘raydi. To‘lovni yozish yarim yo‘lda uzilib qolsa, svip o‘tkazib yuborilganini bir necha daqiqada yaratadi. «Foydadan» modeli — avvalgidek hamkor so‘rovi bo‘yicha: uning ulushi tannarxga bog‘liq.",
-            "Jamg‘armasi yoqilgan hamkor pulni o‘zi xohlagan paytda oladi — o‘sha so‘rov bilan (kabinetda to‘lov so‘rash tugmasi yoki /payout), oyning birinchi ish kunidan boshlab va $50 minimum bilan. So‘rov jamg‘armadagi barcha loyihalarni uning stavkasi bo‘yicha yopadi: bu stavka ularga mahkamlanadi, keyingi jamg‘arma esa noldan boshlanadi. So‘rovni rad etsangiz — loyihalar jamg‘armaga qaytadi.",
+            "«Barcha hamkorlar» jadvalida, «Tahrirlash» ustunida, «saqlash» ostida — «o‘chirish». Ogohlantirish ochiladi: hamkorning havolalari ishlamay qoladi, kabinet va bot orqali kirish yopiladi; uning loyihalari va buyurtmalaridan «kim olib kelgan» olib tashlanadi — ular bo‘yicha hisoblash bo‘lmaydi; agentliklar va biriktirilgan mijozlar o‘chiriladi. **«Butunlay o‘chirish»** tugmasi. Qaytarib bo‘lmaydi — faqat qaytadan qo‘shish mumkin. Hamkorga hech narsa yozilmaydi.",
+            "To‘lovlari bor hamkorni o‘chirib bo‘lmaydi: to‘lov — allaqachon ketgan yoki qaror kutayotgan pul, uning tarixi yo‘qolmasligi kerak. Bunday hamkorda tugma o‘rnida tushuntirish bor; uni faqat bloklash mumkin. O‘chirish [Jurnal](/admin/audit)ga yoziladi. Telegrami xodimniki bo‘lgan hamkorlarni jadval «studiya xodimi» deb belgilaydi — ularni o‘chiring: xodim hamkor bo‘la olmaydi.",
           ],
         },
       ],

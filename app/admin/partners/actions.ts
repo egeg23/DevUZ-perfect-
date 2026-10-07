@@ -5,11 +5,12 @@ import { redirect } from "next/navigation";
 
 import { partnerCopy } from "@/content/partner-bot";
 import { parsePercent } from "@/lib/admin/finance";
-import { requestIp, requireAdmin } from "@/lib/admin/guard";
+import { requestIp, requireAdmin, requireRole } from "@/lib/admin/guard";
 import {
   cancelClient,
   createPartner,
   decideAgency,
+  deletePartner,
   decidePayout,
   notifyPartner,
   partnerById,
@@ -20,8 +21,10 @@ import { esc } from "@/lib/qualify/telegram";
 
 /**
  * Партнёры — деньги посторонним людям, поэтому каждое действие начинается
- * с requireAdmin, а книга (`store.ts`) проверяет роль ещё раз: действие
- * сервера — обычный POST.
+ * с проверки роли, а книга (`store.ts`) проверяет её ещё раз: действие
+ * сервера — обычный POST. Руководитель ведёт программу (заводит, блокирует,
+ * решает по агентствам и клиентам); выплаты, персональная ставка и удаление
+ * — только владелец.
  */
 
 function back(code: string): never {
@@ -29,7 +32,7 @@ function back(code: string): never {
 }
 
 export async function addPartner(formData: FormData) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
   const telegramRaw = String(formData.get("telegram_id") ?? "").trim();
   const telegramUserId = /^\d{1,19}$/.test(telegramRaw) ? Number(telegramRaw) : null;
   if (telegramRaw && telegramUserId === null) back("invalid");
@@ -49,18 +52,21 @@ export async function addPartner(formData: FormData) {
 }
 
 export async function editPartner(formData: FormData) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
   const partnerId = String(formData.get("partner") ?? "");
   const statusRaw = String(formData.get("status") ?? "");
   const percentRaw = String(formData.get("percent") ?? "").trim();
   const percent = percentRaw ? parsePercent(percentRaw) : null;
   if (percentRaw && percent === null) back("invalid");
+  // Ставку меняет только владелец: у руководителя поля нет, и пустое
+  // значение не должно её стирать.
+  const owner = admin.role === "admin";
 
   const result = await updatePartner(
     partnerId,
     {
       status: statusRaw === "blocked" ? "blocked" : statusRaw === "active" ? "active" : undefined,
-      percentOverride: percent,
+      percentOverride: owner ? percent : undefined,
       note: String(formData.get("note") ?? ""),
       requisites: String(formData.get("requisites") ?? ""),
     },
@@ -101,7 +107,7 @@ export async function decide(formData: FormData) {
  * заказы агентства его; отклонили — с причиной, чтобы не гадал.
  */
 export async function decideAgencyAction(formData: FormData) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
   const decision = String(formData.get("decision") ?? "") === "active" ? "active" : "rejected";
   const note = String(formData.get("note") ?? "").trim() || null;
   const result = await decideAgency(String(formData.get("agency") ?? ""), decision, note, admin, await requestIp());
@@ -121,11 +127,11 @@ export async function decideAgencyAction(formData: FormData) {
 }
 
 /**
- * Владелец отменяет закрепление клиента — только с причиной: партнёр
+ * Владелец или руководитель отменяет закрепление клиента — только с причиной: партнёр
  * получает её в боте, иначе «закрепил, и пропало» выглядело бы обманом.
  */
 export async function cancelClientAction(formData: FormData) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin", "head");
   const note = String(formData.get("note") ?? "").trim() || null;
   const result = await cancelClient(String(formData.get("client") ?? ""), note, admin, await requestIp());
   if (!result.ok) back(result.reason === "invalid" ? "client_invalid" : result.reason);
@@ -139,4 +145,16 @@ export async function cancelClientAction(formData: FormData) {
   }
   revalidatePath("/admin/partners");
   back("client_cancelled");
+}
+
+/**
+ * Удалить партнёра — только владелец (lib/partners/store.ts → deletePartner).
+ * Партнёру ничего не пишем: удаляют тех, кого в программе быть не должно, —
+ * сотрудников, дубли, ошибочные записи.
+ */
+export async function deletePartnerAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const result = await deletePartner(String(formData.get("partner") ?? ""), admin, await requestIp());
+  revalidatePath("/admin/partners");
+  back(result.ok ? "deleted" : result.reason);
 }

@@ -25,11 +25,14 @@ import {
  * состава ему открыт целиком, а правка ролей, грейдов и отключение нет.
  */
 test("разделы владельца скрыты от руководителя и менеджера", () => {
-  for (const href of ["/admin/releases", "/admin/audit", "/admin/partners"]) {
+  for (const href of ["/admin/releases", "/admin/audit"]) {
     assert.equal(canSee("admin", href), true, `${href} у админа`);
     assert.equal(canSee("head", href), false, `${href} виден руководителю`);
     assert.equal(canSee("manager", href), false, `${href} виден менеджеру`);
   }
+  // Партнёры — у владельца и руководителя (владелец, 07.10.2026), не у менеджера.
+  assert.equal(canSee("head", "/admin/partners"), true);
+  assert.equal(canSee("manager", "/admin/partners"), false, "/admin/partners виден менеджеру");
   // Команда — общая у владельца и руководителя, но не у менеджера.
   assert.equal(canSee("admin", "/admin/team"), true);
   assert.equal(canSee("head", "/admin/team"), true);

@@ -167,14 +167,14 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Партнёры ─────────────────────────────────────────────────────── */
   "/admin/partners": {
-    what: "Osoby, które przyprowadzają klientów ze swojego linku i dostają procent od zysku z projektu. Tutaj są ich linki, klienci, naliczenia, wnioski o wypłatę i materiały promocyjne, które publikują u siebie. Sekcja tylko dla właściciela: to pieniądze dla osób spoza studia.",
+    what: "Osoby, które przyprowadzają klientów ze swojego linku i dostają procent od zysku z projektu. Tutaj są ich linki, klienci, naliczenia, wnioski o wypłatę i materiały promocyjne, które publikują u siebie. Sekcja dla właściciela i kierownika. Decyzja o wypłacie, indywidualna stawka partnera i usunięcie partnera — tylko u właściciela: to pieniądze dla osób spoza studia.",
     items: [
       {
         id: "join",
         title: "Skąd bierze się partner",
         body: [
-          "Sam: na stronie w menu «Зарабатывай с нами» klika «Стать партнёром» albo «Войти в кабинет» — bot go rejestruje i wysyła jednorazowy przycisk logowania do panelu partnera. To samo robią komendy /ref i /cabinet w bocie. Może to być każdy, także pracownik.",
-          "Albo Ty: «Dodaj partnera ręcznie» — imię, kod (puste — wymyślimy), Telegram id opcjonalnie, notatka. Bez Telegram id taki partner nie połączy się z osobą, która przyjdzie później przez bota, i nie zaloguje się do panelu partnera.",
+          "Sam: na stronie w menu «Зарабатывай с нами» klika «Стать партнёром» albo «Войти в кабинет» — bot go rejestruje i wysyła jednorazowy przycisk logowania do panelu partnera. To samo robią komendy /ref i /cabinet w bocie. Może to być każdy poza pracownikami studia: bot porównuje Telegram z listą pracowników i zamiast rejestracji odpowiada, że program jest zamknięty dla zespołu — klienci pracowników liczą się w panelu. Wpis założony wcześniej też nic pracownikowi nie otwiera: ani linków, ani wypłat, ani panelu partnera.",
+          "Albo Ty: «Dodaj partnera ręcznie» — imię, kod (puste — wymyślimy), Telegram id opcjonalnie, notatka. Bez Telegram id taki partner nie połączy się z osobą, która przyjdzie później przez bota, i nie zaloguje się do panelu partnera. Telegram id pracownika panel nie przyjmie. Partnerów, których Telegram należy do pracownika, tabela «Wszyscy partnerzy» oznacza «pracownik studia».",
           "Linki: krótki `devuz.studio/r/…` — to ten link partner publikuje, osobny dla każdego kanału (w panelu partnera albo `/ref KOD etykieta`), do 20. W panelu partner wybiera, dokąd prowadzi link (strona główna, usługi, realizacje, bot), i bonus dla odbiorców — rabat 5/10/15% na pierwszy projekt. Stare `?ref=KOD` i `start=ref_KOD` działają jak dotąd. Wejście z linku strona zapamiętuje w cookie przeglądarki na 30 dni (wygrywa pierwszy partner): zgłoszenie w tym czasie to klient partnera, nawet jeśli osoba wróciła już bez linku. W karcie leada przy «Partner» widać, ile dni przed zgłoszeniem było wejście. W bocie obowiązuje te same 30 dni.",
           "Wejścia liczą się po osobach: robot podglądu w komunikatorze i ponowne otwarcie przez tę samą osobę tego samego dnia się nie liczą. W tabeli poniżej przy linku widać „wejścia / zgłoszenia”; najedź na kod — zobaczysz krótki adres.",
         ],
@@ -182,11 +182,18 @@ export const moreSections: Record<string, HelpEntry> = {
       {
         id: "count",
         title: "Kiedy klient się zalicza",
-        body: [
-          "Lead z linku zalicza się partnerowi, jeśli to nie on sam, klient nie był u nas wcześniej, a partner nie jest zablokowany. Zaliczony — partner dostaje «🤝 По вашей ссылке пришёл…». Partner zostaje przy kliencie, nawet jeśli ten wszedł na stronę z linku, a napisał już do bota z czatu na stronie.",
-          "Projekt z takiego leada dziedziczy partnera. W karcie projektu, w bloku «Partner», można zmienić, kto polecił klienta, procent i «Nie zaliczać, powód». Gdy do projektu zostanie wgrany skan podpisanej umowy, partner od razu dostaje «📝 С клиентом … подписан договор» — z kwotą i przybliżonym udziałem.",
-          "Blokada zatrzymuje tylko nowe zaliczenia: dawne naliczenia i wypłaty zostają.",
-        ],
+        body: {
+          head: [
+            "Lead z linku zalicza się partnerowi, jeśli to nie on sam, klient nie był u nas wcześniej, a partner nie jest zablokowany. Zaliczony — partner dostaje «🤝 По вашей ссылке пришёл…». Partner zostaje przy kliencie, nawet jeśli ten wszedł na stronę z linku, a napisał już do bota z czatu na stronie.",
+            "Projekt z takiego leada dziedziczy partnera. Zmienić w karcie projektu, kto polecił klienta, procent i «Nie zaliczać, powód» może tylko właściciel. Gdy do projektu zostanie wgrany skan podpisanej umowy, partner od razu dostaje «📝 С клиентом … подписан договор» — z kwotą i przybliżonym udziałem.",
+            "Blokada zatrzymuje tylko nowe zaliczenia: dawne naliczenia i wypłaty zostają.",
+          ],
+          admin: [
+            "Lead z linku zalicza się partnerowi, jeśli to nie on sam, klient nie był u nas wcześniej, a partner nie jest zablokowany. Zaliczony — partner dostaje «🤝 По вашей ссылке пришёл…». Partner zostaje przy kliencie, nawet jeśli ten wszedł na stronę z linku, a napisał już do bota z czatu na stronie.",
+            "Projekt z takiego leada dziedziczy partnera. W karcie projektu, w bloku «Partner», można zmienić, kto polecił klienta, procent i «Nie zaliczać, powód». Gdy do projektu zostanie wgrany skan podpisanej umowy, partner od razu dostaje «📝 С клиентом … подписан договор» — z kwotą i przybliżonym udziałem.",
+            "Blokada zatrzymuje tylko nowe zaliczenia: dawne naliczenia i wypłaty zostają.",
+          ],
+        },
       },
       {
         id: "percent",
@@ -230,11 +237,28 @@ export const moreSections: Record<string, HelpEntry> = {
       {
         id: "payout",
         title: "Wypłata dla partnera",
+        body: {
+          head: [
+            "Partner klika «Zleć wypłatę» w swoim panelu (w rosyjskiej wersji — «Запросить выплату») albo pisze do bota /payout i dane do przelewu (USDT TRC-20 lub tekst). Można to zrobić od pierwszego dnia roboczego miesiąca, od $50, jeden otwarty wniosek, zawsze na całą dostępną kwotę. Właściciel dostaje «💸 Заявка на выплату», a tutaj pojawia się wiersz w bloku «Wnioski o wypłatę».",
+            "Decyduje właściciel: przelewa pieniądze i klika «Wypłacono» albo «odrzuć». U ciebie w wierszu widać partnera, kwotę i dane do przelewu, a zamiast przycisków — «decyduje właściciel»: wypłata to pieniądze dla osób spoza studia i decyzja o nich należy do właściciela.",
+            "Model „od obrotu” nie czeka na wniosek: gdy tylko płatności za projekt osiągną jego kwotę — płatność zapisano w [Finansach](/admin/finance) albo przy fakturze umowy kliknięto «Opłacona» — wniosek o wypłatę tworzy się sam, na cały udział partnera w tym projekcie, bez czekania na początek miesiąca i bez minimum $50. Partner dostaje «✅ … выплата в обработке» (wypłata w realizacji), a właściciel — «💸 Выплата партнёру с оборота: выплатить … за …» (wypłata od obrotu: wypłać … za …). W bloku «Wnioski o wypłatę» taki wiersz ma podpis «od obrotu za „…” — utworzona automatycznie po pełnej opłacie projektu». Model „od zysku” — jak dotąd na wniosek partnera: jego udział zależy od kosztu wytworzenia.",
+            "Partner z włączoną skarbonką odbiera pieniądze sam, kiedy zdecyduje — tym samym wnioskiem («Zleć wypłatę» albo /payout), z tym samym oknem od pierwszego dnia roboczego miesiąca i minimum $50. Wniosek zamyka wszystkie projekty ze skarbonki po jej stawce: ta stawka zostaje przy nich na stałe, a kolejna skarbonka zaczyna się od zera. Jeśli właściciel odrzuci wniosek, projekty wracają do skarbonki.",
+          ],
+          admin: [
+            "Partner klika «Zleć wypłatę» w swoim panelu (w rosyjskiej wersji — «Запросить выплату») albo pisze do bota /payout i dane do przelewu (USDT TRC-20 lub tekst). Można to zrobić od pierwszego dnia roboczego miesiąca, od $50, jeden otwarty wniosek, zawsze na całą dostępną kwotę. Dostajesz «💸 Заявка на выплату».",
+            "Najpierw sam przelej pieniądze, potem w bloku «Wnioski o wypłatę» kliknij **«Wypłacono»** (można z notatką). Albo «odrzuć» — kwota wróci do dostępnych środków, a partner zobaczy powód.",
+            "Model „od obrotu” nie czeka na wniosek: gdy tylko płatności za projekt osiągną jego kwotę — płatność zapisano w [Finansach](/admin/finance) albo przy fakturze umowy kliknięto «Opłacona» — wniosek o wypłatę tworzy się sam, na cały udział partnera w tym projekcie, bez czekania na początek miesiąca i bez minimum $50. Partner dostaje «✅ … выплата в обработке» (wypłata w realizacji; jeśli nie ma danych do przelewu — prośbę o wpisanie ich w panelu partnera), a Ty — «💸 Выплата партнёру с оборота: выплатить … за …» (wypłata od obrotu: wypłać … za …). W bloku «Wnioski o wypłatę» taki wiersz ma podpis «od obrotu za „…” — utworzona automatycznie po pełnej opłacie projektu»; dalej jak ze zwykłym: przelałeś — **«Wypłacono»**. Dla jednego projektu taki wniosek tworzy się dokładnie raz: jeśli go odrzucisz, kwota wróci do dostępnych środków partnera i poprosi on o nią zwykłym wnioskiem. Jeśli zapis płatności urwał się w połowie, sweep (przebieg według harmonogramu) utworzy brakujący wniosek w ciągu kilku minut. Model „od zysku” — jak dotąd na wniosek partnera: jego udział zależy od kosztu wytworzenia.",
+            "Partner z włączoną skarbonką odbiera pieniądze sam, kiedy zdecyduje — tym samym wnioskiem («Zleć wypłatę» albo /payout), z tym samym oknem od pierwszego dnia roboczego miesiąca i minimum $50. Wniosek zamyka wszystkie projekty ze skarbonki po jej stawce: ta stawka zostaje przy nich na stałe, a kolejna skarbonka zaczyna się od zera. Jeśli odrzucisz wniosek, projekty wracają do skarbonki.",
+          ],
+        },
+      },
+      {
+        id: "delete",
+        title: "Usuwanie partnera",
+        roles: ["admin"],
         body: [
-          "Partner klika «Zleć wypłatę» w swoim panelu (w rosyjskiej wersji — «Запросить выплату») albo pisze do bota /payout i dane do przelewu (USDT TRC-20 lub tekst). Można to zrobić od pierwszego dnia roboczego miesiąca, od $50, jeden otwarty wniosek, zawsze na całą dostępną kwotę. Dostajesz «💸 Заявка на выплату».",
-          "Najpierw sam przelej pieniądze, potem w bloku «Wnioski o wypłatę» kliknij **«Wypłacono»** (można z notatką). Albo «odrzuć» — kwota wróci do dostępnych środków, a partner zobaczy powód.",
-          "Model „od obrotu” nie czeka na wniosek: gdy tylko płatności za projekt osiągną jego kwotę — płatność zapisano w [Finansach](/admin/finance) albo przy fakturze umowy kliknięto «Opłacona» — wniosek o wypłatę tworzy się sam, na cały udział partnera w tym projekcie, bez czekania na początek miesiąca i bez minimum $50. Partner dostaje «✅ … выплата в обработке» (wypłata w realizacji; jeśli nie ma danych do przelewu — prośbę o wpisanie ich w panelu partnera), a Ty — «💸 Выплата партнёру с оборота: выплатить … за …» (wypłata od obrotu: wypłać … za …). W bloku «Wnioski o wypłatę» taki wiersz ma podpis «od obrotu za „…” — utworzona automatycznie po pełnej opłacie projektu»; dalej jak ze zwykłym: przelałeś — **«Wypłacono»**. Dla jednego projektu taki wniosek tworzy się dokładnie raz: jeśli go odrzucisz, kwota wróci do dostępnych środków partnera i poprosi on o nią zwykłym wnioskiem. Jeśli zapis płatności urwał się w połowie, sweep (przebieg według harmonogramu) utworzy brakujący wniosek w ciągu kilku minut. Model „od zysku” — jak dotąd na wniosek partnera: jego udział zależy od kosztu wytworzenia.",
-          "Partner z włączoną skarbonką odbiera pieniądze sam, kiedy zdecyduje — tym samym wnioskiem («Zleć wypłatę» albo /payout), z tym samym oknem od pierwszego dnia roboczego miesiąca i minimum $50. Wniosek zamyka wszystkie projekty ze skarbonki po jej stawce: ta stawka zostaje przy nich na stałe, a kolejna skarbonka zaczyna się od zera. Jeśli odrzucisz wniosek, projekty wracają do skarbonki.",
+          "W tabeli «Wszyscy partnerzy», w kolumnie «Edycja», pod «zapisz» — «usuń». Rozwija się ostrzeżenie: linki partnera przestaną działać, panel i logowanie przez bota zostaną zamknięte; z jego projektów i zgłoszeń zniknie «kto przyprowadził» — naliczeń za nie już nie będzie; agencje i przypisani klienci zostaną usunięci. Przycisk **«Usuń na zawsze»**. Nie da się tego cofnąć — można tylko dodać partnera od nowa. Partner nie dostaje żadnej wiadomości.",
+          "Partnera z wypłatami usunąć nie można: wypłata to pieniądze, które już wyszły albo czekają na decyzję, i ich historia nie może zniknąć. U takiego partnera zamiast przycisku jest wyjaśnienie; można go tylko zablokować. Usunięcie trafia do [Dziennika](/admin/audit). Partnerów z Telegramem pracownika tabela oznacza «pracownik studia» — to ich usuwaj: pracownik nie może być partnerem.",
         ],
       },
     ],

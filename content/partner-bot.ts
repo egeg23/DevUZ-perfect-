@@ -37,6 +37,8 @@ export type PartnerCopy = {
   paid: (amount: number, note: string | null) => string;
   rejected: (amount: number, note: string | null) => string;
   unavailable: string;
+  /** Пишет сотрудник студии: программа не для него (владелец, 07.10.2026). */
+  staffOnly: string;
   /** Ответ на /cabinet и на «Войти через Telegram» с сайта. */
   cabinet: (minutes: number) => string;
   cabinetButton: string;
@@ -138,6 +140,8 @@ const ru: PartnerCopy = {
     `Заявка на ${usd(amount)} отклонена, сумма вернулась в доступное.${note ? `\nПричина: ${note}` : ""} Напишите владельцу, если это ошибка.`,
 
   unavailable: "Партнёрская программа сейчас недоступна — попробуйте через минуту.",
+  staffOnly:
+    "Вы в команде DevUz — партнёрская программа для сотрудников закрыта. Клиенты, которых вы приводите, и ваши проекты считаются в панели, а не здесь.",
 
   cabinet: (minutes) =>
     [
@@ -235,6 +239,8 @@ const en: PartnerCopy = {
     `The request for ${usd(amount)} was declined and the amount is back in your available balance.${note ? `\nReason: ${note}` : ""} Write to the owner if this is a mistake.`,
 
   unavailable: "The partner program is unavailable right now — try again in a minute.",
+  staffOnly:
+    "You are on the DevUz team — the partner program is not open to staff. The clients you bring and your projects count in the panel, not here.",
 
   cabinet: (minutes) =>
     [
@@ -332,6 +338,8 @@ const uk: PartnerCopy = {
     `Заявку на ${usd(amount)} відхилено, сума повернулася в доступне.${note ? `\nПричина: ${note}` : ""} Напишіть власникові, якщо це помилка.`,
 
   unavailable: "Партнерська програма зараз недоступна — спробуйте за хвилину.",
+  staffOnly:
+    "Ви в команді DevUz — партнерська програма для співробітників закрита. Клієнти, яких ви приводите, і ваші проєкти рахуються в панелі, а не тут.",
 
   cabinet: (minutes) =>
     [
@@ -429,6 +437,8 @@ const pl: PartnerCopy = {
     `Zlecenie na ${usd(amount)} odrzucone, kwota wróciła do dostępnych środków.${note ? `\nPowód: ${note}` : ""} Napisz do właściciela, jeśli to pomyłka.`,
 
   unavailable: "Program partnerski jest chwilowo niedostępny — spróbuj za minutę.",
+  staffOnly:
+    "Jesteś w zespole DevUz — program partnerski nie jest dostępny dla pracowników. Klienci, których przyprowadzasz, i twoje projekty liczą się w panelu, nie tutaj.",
 
   cabinet: (minutes) =>
     [

@@ -94,10 +94,12 @@ test("роль называется «руководитель проектов�
   assert.equal(ROLE_TITLE.head, "руководитель проектов");
 });
 
-test("журнал, релизы и партнёры остались только у владельца", () => {
-  for (const href of ["/admin/audit", "/admin/releases", "/admin/partners"]) {
+test("журнал и релизы остались только у владельца; партнёры — и у руководителя", () => {
+  for (const href of ["/admin/audit", "/admin/releases"]) {
     assert.equal(canSee("head", href), false, `${href} открыт руководителю`);
   }
+  // Владелец, 07.10.2026: «Выведи в дашборд руководителю вкладку „партнёры“».
+  assert.equal(canSee("head", "/admin/partners"), true);
 });
 
 /* ── Проверки исходников ────────────────────────────────────────────────── */

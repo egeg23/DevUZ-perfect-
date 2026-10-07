@@ -150,25 +150,25 @@ test("закрепить нельзя то, что студия уже знае�
   }
 });
 
-test("отменяет только владелец и только с причиной", () => {
+test("отменяют владелец и руководитель и только с причиной", () => {
   const store = read("lib/partners/store.ts");
   const at = store.indexOf("export async function cancelClient(");
   const body = store.slice(at, store.indexOf("\n}\n", at));
-  assert.match(body, /admin\.role !== "admin"\) return \{ ok: false, reason: "forbidden" \}/);
+  assert.match(body, /if \(!PARTNER_DESK\.includes\(admin\.role\)\) return \{ ok: false, reason: "forbidden" \}/);
   assert.match(body, /if \(!reason\) return \{ ok: false, reason: "invalid" \}/);
   const actions = read("app/admin/partners/actions.ts");
   const cancel = actions.slice(actions.indexOf("export async function cancelClientAction("));
-  assert.match(cancel, /await requireAdmin\(\)/);
+  assert.match(cancel, /await requireRole\("admin", "head"\)/);
   assert.match(cancel, /notifyPartner\(/, "партнёр не узнаёт об отмене");
 });
 
-test("кабинет: закрепление — после проверки входа, владельцу — сообщение", () => {
+test("кабинет: закрепление — после проверки входа, владельцу и руководителю — сообщение", () => {
   const actions = read("app/[locale]/partners/cabinet/actions.ts");
   const at = actions.indexOf("export async function requestClientAction(");
   assert.ok(at > 0);
   const body = actions.slice(at);
   assert.match(body, /const partner = await currentPartner\(\);\s*if \(!partner\) redirect/);
-  assert.match(body, /await alertOwners\(/);
+  assert.match(body, /await alertPartnerDesk\(/);
   assert.match(body, /back\(locale, result\.ok \? "claim_ok" : `claim_\$\{result\.reason\}`, "claims"\)/);
 });
 

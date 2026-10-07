@@ -6,6 +6,7 @@ import { LOGIN_TOKEN_MINUTES, loginLink } from "@/lib/partners/session";
 import {
   createLink,
   ensurePartner,
+  isStaffTelegram,
   partnerByTelegram,
   requestPayout,
   summarize,
@@ -21,9 +22,10 @@ import { serviceClient } from "@/lib/supabase";
 /**
  * Партнёрская программа в боте: /ref и /payout.
  *
- * Открыта всем, кто пишет боту в личку: регистрация — это и есть первая
- * команда /ref. Сотрудник, клиент, блогер — здесь без разницы: у каждого
- * своя ссылка и свой баланс.
+ * Открыта всем, кто пишет боту в личку, кроме сотрудников студии:
+ * регистрация — это и есть первая команда /ref. Клиент, блогер, агентство —
+ * у каждого своя ссылка и свой баланс. Сотрудник получает отказ — его
+ * клиенты считаются в панели (владелец, 07.10.2026).
  */
 
 export type PartnerCommand = "ref" | "payout" | "cabinet";
@@ -59,17 +61,24 @@ function statsOf(summary: PartnerSummary): PartnerStats {
   };
 }
 
-/** Владельцы в Telegram — кому сказать о заявке на выплату. */
-async function adminChatIds(): Promise<number[]> {
+/**
+ * Кому сказать в Telegram: владельцам — о деньгах (заявка на выплату,
+ * выплата с оборота); владельцам и руководителям — о том, что решают оба
+ * (агентство партнёра, закреплённый клиент). Владелец, 07.10.2026: раздел
+ * «Партнёры» теперь и у руководителя.
+ */
+async function chatIdsOf(roles: readonly string[]): Promise<number[]> {
   const db = serviceClient();
   if (!db) return [];
   const { data } = await db
     .from("staff")
     .select("telegram_user_id")
-    .eq("role", "admin")
+    .in("role", [...roles])
     .eq("is_active", true);
   return (data ?? []).map((row) => Number(row.telegram_user_id)).filter((id) => Number.isFinite(id));
 }
+
+const adminChatIds = () => chatIdsOf(["admin"]);
 
 export async function handlePartnerCommand(
   chatId: number,
@@ -80,6 +89,15 @@ export async function handlePartnerCommand(
   const copy = partnerCopy(locale);
   const command = partnerCommand(text);
   if (!command) return;
+
+  // Сотрудник — не партнёр: проверка по списку сотрудников, по Telegram id,
+  // который подтвердил сам Telegram (владелец, 07.10.2026). Запись,
+  // заведённая до запрета, тоже ничего не открывает — ни ссылок, ни
+  // выплат, ни кабинета.
+  if (await isStaffTelegram(from.id)) {
+    await sendMessage(chatId, copy.staffOnly);
+    return;
+  }
 
   const existed = await partnerByTelegram(from.id);
   const partner = await ensurePartner(from);
@@ -172,9 +190,16 @@ export async function alertPayoutRequest(partner: Partner, payout: PartnerPayout
   }
 }
 
-/** Сказать владельцам — о новом агентстве партнёра и других решениях за ними. */
+/** Сказать владельцам — о деньгах партнёра, которые решают только они. */
 export async function alertOwners(text: string): Promise<void> {
   for (const id of await adminChatIds()) {
+    await sendMessage(id, text);
+  }
+}
+
+/** Сказать владельцам и руководителям — об агентстве и закреплённом клиенте: решают оба. */
+export async function alertPartnerDesk(text: string): Promise<void> {
+  for (const id of await chatIdsOf(["admin", "head"])) {
     await sendMessage(id, text);
   }
 }
