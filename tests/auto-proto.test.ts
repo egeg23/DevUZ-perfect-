@@ -140,13 +140,14 @@ test("без прототипа письмо прежнее — «соберём
   assert.equal(outreachHooks([]).prototype, null);
 });
 
-test("подготовка письма собирает прототип заранее и кладёт ссылку в письмо и в проверку", () => {
+test("подготовка письма собирает прототип заранее (когда включено) и кладёт ссылку в письмо и в проверку", () => {
   const store = read("lib/admin/outreach-store.ts");
-  assert.match(store, /const proto = await autoPrototype\(\{\s*prospect,\s*siteNiche: niche,[\s\S]{0,80}\}\)\.catch\(/);
+  assert.match(store, /const proto = AUTO_PROTO\s*\? await autoPrototype\(\{\s*prospect,\s*siteNiche: niche,[\s\S]{0,80}\}\)\.catch\(/);
   assert.match(store, /walked: deep\.walked,\s*prototype,/);
   assert.match(store, /outreachHooks\(findings, reference\?\.name \?\? null, prototype\)/);
-  // Проверка перед отправкой пересобирает то же самое.
-  assert.match(store, /prototype: prospect\.proto_url,/);
+  // Проверка перед отправкой пересобирает то же самое — с тем прототипом,
+  // с каким письмо писалось.
+  assert.match(store, /prototype: letterPrototype\(prospect\),/);
 
   const auto = read("lib/proto/auto.ts");
   // Одна попытка на касание — отметка условная, до обхода.
@@ -195,8 +196,9 @@ test("открытие: превью мессенджера и свои из п�
 test("ответ про прототип из письма — человеку, а не «нужен прототип» всей команде", () => {
   assert.match(HANDOVER_TEXT.proto_ready, /прототип, который ушёл в письме/);
   const talk = read("lib/admin/outreach-talk-store.ts");
-  assert.match(talk, /const verdict = read === "proto" && prospect\.proto_url \? "proto_ready" : read;/);
-  assert.match(talk, /closed_reason, proto_url"\)/);
+  assert.match(talk, /const verdict = read === "proto" && protoSent \? "proto_ready" : read;/);
+  assert.match(talk, /String\(prospect\.message \?\? ""\)\.includes\(prospect\.proto_url\)/);
+  assert.match(talk, /closed_reason, proto_url, message"\)/);
 });
 
 test("почему не собрался — словами на трёх языках, для каждого кода", () => {
@@ -205,4 +207,22 @@ test("почему не собрался — словами на трёх язы
     for (const locale of ["ru", "uz", "pl"] as const) assert.ok(protoNoteDict[code][locale].length > 5, `${code}/${locale}`);
   }
   assert.ok(!isAutoNote("tried"));
+});
+
+/**
+ * Владелец, 07.10.2026: «Убери, чтобы бот сам макеты делал, только вручную
+ * пока что».
+ */
+test("сборка заранее выключена: письмо обещает прототип, собирает человек", async () => {
+  const { AUTO_PROTO } = await import("@/lib/proto/auto");
+  assert.equal(AUTO_PROTO, false, "бот снова собирает макеты сам");
+  const { letterPrototype } = await import("@/lib/admin/outreach-store");
+  // Ссылка осталась с прошлых дней, а письмо — новое, без неё: проверяем без неё.
+  assert.equal(letterPrototype({ proto_url: "https://devuz.studio/p/abc", message: "Соберём прототип за 12 часов." }), null);
+  // Письмо, написанное ещё со ссылкой, проверяется со ссылкой.
+  assert.equal(
+    letterPrototype({ proto_url: "https://devuz.studio/p/abc", message: "Вот прототип: https://devuz.studio/p/abc" }),
+    "https://devuz.studio/p/abc",
+  );
+  assert.equal(letterPrototype({ proto_url: null, message: "x" }), null);
 });

@@ -241,7 +241,7 @@ export async function recordManualInbound(
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url")
+    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url, message")
     .eq("id", prospectId)
     .maybeSingle();
   if (!prospect) return { matched: false };
@@ -270,6 +270,7 @@ async function saveInbound(
     ai_handling: unknown;
     closed_reason?: unknown;
     proto_url?: unknown;
+    message?: unknown;
   },
   raw: string,
 ): Promise<{ matched: boolean; host?: string; verdict?: string }> {
@@ -292,8 +293,14 @@ async function saveInbound(
   const read = readInbound(body);
   // Прототип в письме уже был (lib/proto/auto) — «прототип» в ответе значит
   // не «соберите», а «посмотрел»: правки, цена, сроки. Это разговор для
-  // человека, а не рассылка «нужен прототип» всей команде.
-  const verdict = read === "proto" && prospect.proto_url ? "proto_ready" : read;
+  // человека, а не рассылка «нужен прототип» всей команде. «Был» — значит
+  // ссылка стоит в самом письме: сборка заранее выключена (AUTO_PROTO), и у
+  // компании может остаться ссылка с прошлых дней, которой клиент не видел.
+  const protoSent =
+    typeof prospect.proto_url === "string" &&
+    prospect.proto_url !== "" &&
+    String(prospect.message ?? "").includes(prospect.proto_url);
+  const verdict = read === "proto" && protoSent ? "proto_ready" : read;
 
   // Просьбу не писать и просьбу позвать человека модель не обсуждает.
   // Первая — потому что следующее сообщение после неё и есть то, за что

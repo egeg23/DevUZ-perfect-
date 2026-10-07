@@ -35,7 +35,7 @@ import { hostOf } from "@/lib/audit/pitch";
 import { BATCH_CAP, auditDeep, type ProspectRow, type Walked } from "@/lib/audit/batch";
 import { probe, recheck } from "@/lib/audit/fetch";
 import { factCheck, type DroppedFinding } from "@/lib/audit/verify";
-import { autoPrototype } from "@/lib/proto/auto";
+import { AUTO_PROTO, autoPrototype } from "@/lib/proto/auto";
 import { markAutoSent } from "@/lib/proto/store";
 import { newRequestNo } from "@/lib/qualify/engine";
 import {
@@ -534,14 +534,18 @@ export async function prepareOutreach(id: string, staff: Writer): Promise<Prepar
    * собрался — письмо прежнее, «соберём за 12 часов».
    */
   // Сбой сборки письму не мешает: без прототипа оно просто обещает его.
-  const proto = await autoPrototype({
-    prospect,
-    siteNiche: niche,
-    lang: deep.walked?.lang ?? "ru",
-  }).catch((error: unknown) => {
-    console.error("прототип заранее: сбой", host, error instanceof Error ? error.message : error);
-    return { url: null };
-  });
+  // Сейчас сборка выключена (AUTO_PROTO, владелец 07.10.2026: «только
+  // вручную»): письмо обещает прототип, собирает его человек.
+  const proto = AUTO_PROTO
+    ? await autoPrototype({
+        prospect,
+        siteNiche: niche,
+        lang: deep.walked?.lang ?? "ru",
+      }).catch((error: unknown) => {
+        console.error("прототип заранее: сбой", host, error instanceof Error ? error.message : error);
+        return { url: null };
+      })
+    : { url: null };
   const prototype = proto.url;
 
   const prompt = outreachPrompt({
@@ -684,6 +688,21 @@ export function checkFresh(checkedAt: string | null, now = Date.now()): boolean 
   return Number.isFinite(at) && now - at <= CHECK_FRESH_MS;
 }
 
+/**
+ * С каким прототипом письмо писалось — по нему его и проверяем.
+ *
+ * Пока сборка заранее выключена (AUTO_PROTO), новое письмо обещает
+ * прототип, а не даёт ссылку, — даже если ссылка у компании осталась с
+ * прошлых дней. Проверять такое письмо на «нет ссылки на собранный
+ * прототип» значило бы не пустить его вовсе. Письмо, написанное ещё со
+ * ссылкой, проверяется со ссылкой: в нём она дословно.
+ */
+export function letterPrototype(prospect: Pick<Prospect, "message" | "proto_url">): string | null {
+  if (!prospect.proto_url) return null;
+  if (AUTO_PROTO) return prospect.proto_url;
+  return (prospect.message ?? "").includes(prospect.proto_url) ? prospect.proto_url : null;
+}
+
 export function sendProblems(
   prospect: Pick<Prospect, "host" | "label" | "niche" | "findings" | "draft" | "walked" | "message" | "proto_url" | "checked_at">,
   sender = "менеджер",
@@ -726,14 +745,14 @@ export function sendProblems(
       sender,
       walked: prospect.walked,
       lang: prospect.walked?.lang ?? "ru",
-      prototype: prospect.proto_url,
+      prototype: letterPrototype(prospect),
     }),
     host,
     {
       ...outreachHooks(
         prospect.findings,
         outreachProof({ niche: prospect.niche, label: prospect.label, host }).reference?.name ?? null,
-        prospect.proto_url,
+        letterPrototype(prospect),
       ),
       // «менеджер» — заглушка, когда смотрящий неизвестен; приветствие тогда
       // ловится по тому, кем пишущий представляется сам.
