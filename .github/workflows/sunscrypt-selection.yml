@@ -1,0 +1,79 @@
+name: SUNSCRYPT — прогнозы для отбора пар
+
+# Этап 7: прогнозы дообученной Kronos во всех решающих точках валидации и
+# теста по 30 парам (engine/research/selection/preds.py из egeg23/SUNSCRYPT).
+# Счёт долгий (~10 мин на пару на 4 ядрах) — параллельно на раннерах GitHub.
+# Веса — с Диска владельца по секрету SUNSCRYPT_WEIGHTS_IDS (sha256 сверяется),
+# в артефакты попадают только прогнозы. Итоговый отбор по RULES.md — отдельно.
+on:
+  workflow_dispatch:
+  push:
+    branches: [sunscrypt]
+    paths: [.github/workflows/sunscrypt-selection.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    outputs:
+      chunks: ${{ steps.c.outputs.chunks }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { repository: egeg23/SUNSCRYPT, ref: main }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: pip install pandas==3.0.6 pyarrow==25.0.1
+      - name: Свечи и фандинг (Binance, публичный архив)
+        working-directory: engine
+        run: python research/selection/data.py | tail -5 && python research/selection/universe.py | tail -3
+      - id: c
+        name: Пары — по 3 на задачу
+        working-directory: engine
+        run: |
+          echo "chunks=$(python -c "import json;u=open('var/data/selection/universe.txt').read().split();print(json.dumps([' '.join(u[i:i+3]) for i in range(0,len(u),3)]))")" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with: { name: selection-data, path: engine/var/data/selection, retention-days: 7 }
+
+  preds:
+    needs: data
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        pairs: ${{ fromJson(needs.data.outputs.chunks) }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { repository: egeg23/SUNSCRYPT, ref: main }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.1
+          pip install pandas==3.0.6 pyarrow==25.0.1 numpy==2.5.3 einops==0.8.2 safetensors==0.8.0 huggingface_hub==2.1.1
+      - uses: actions/download-artifact@v4
+        with: { name: selection-data, path: engine/var/data/selection }
+      - name: Веса модели (Диск владельца, sha256)
+        env:
+          IDS: ${{ secrets.SUNSCRYPT_WEIGHTS_IDS }}
+        run: |
+          set -euo pipefail
+          sha="$(sed -n 's/^sha256=//p' infra/model-weights.txt)"
+          d="$(mktemp -d)"; n=0
+          for id in ${IDS//,/ }; do
+            curl -fsSL --max-time 600 -o "$d/part.$n" "https://drive.usercontent.google.com/download?id=$id&export=download&confirm=t"
+            n=$((n + 1))
+          done
+          parts() { for i in $(seq 0 $((n - 1))); do cat "$d/part.$i"; done; }
+          [ "$(parts | sha256sum | cut -d' ' -f1)" = "$sha" ] || { echo "sha256 не сошёлся"; exit 1; }
+          mkdir -p engine/var/models && parts | tar xz -C engine/var/models
+          rm -rf "$d"; ls engine/var/models
+      - name: Прогнозы
+        working-directory: engine
+        env: { KRONOS_THREADS: "4" }
+        run: python research/selection/preds.py ${{ matrix.pairs }} 2>&1 | grep -v Warning
+      - id: n
+        run: echo "name=preds-$(echo '${{ matrix.pairs }}' | tr ' ' '-')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with: { name: "${{ steps.n.outputs.name }}", path: engine/var/data/selection/preds, retention-days: 7 }
