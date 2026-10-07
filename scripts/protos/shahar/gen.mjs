@@ -144,7 +144,7 @@ const PAGES = ["", "katalog", "obekt", "novostroyki", "uslugi", "podbor", "plan"
 function card(l, x, k = 0, anim = "key") {
   const t = T(l);
   const kind = x.type === "kv" ? t("квартира", "kvartira") : t("дача", "dacha");
-  return `<a class="lc rv a-${anim}" style="--d:${(k % 4) * 90}ms" href="${href(l, "obekt")}?id=${x.id}" data-id="${x.id}" data-type="${x.type}" data-rooms="${x.rooms}" data-dist="${x.dist}" data-usd="${x.usd}" data-mort="${x.mort ? 1 : 0}">
+  return `<a class="lc rv a-${anim}" style="--d:${(k % 4) * 90}ms" href="${href(l, "obekt")}?id=${x.id}" data-id="${x.id}" data-type="${x.type}" data-rooms="${x.rooms}" data-dist="${x.dist}" data-usd="${x.usd}" data-mort="${x.mort ? 1 : 0}" data-name="${esc(`${x[l].t}, ${x.area} м², ${placeOf(x, l)}`)}">
 <div class="ph"><img src="${IMG}/l${x.id}-1.webp" alt="${esc(`${x[l].t}, ${x.area} м² — ${placeOf(x, l)}`)}" loading="lazy" width="720" height="960"><div class="tag"><span>${t("Продажа", "Sotuv")} · ${kind}</span>${x.old ? `<span class="down">${t("Цена снижена", "Narx tushdi")}</span>` : ""}</div></div>
 <div class="bd"><div class="price"><b class="num" data-p="${x.usd}">${usd(x.usd)}</b>${x.old ? `<s class="num" data-p="${x.old}">${usd(x.old)}</s>` : ""}<small class="num" data-pm="${Math.round(x.usd / x.area)}">${usd(Math.round(x.usd / x.area))}/м²</small></div>
 <p class="pr">${x[l].t} · ${x.area} м² · ${x.type === "kv" ? `${t("этаж", "qavat")} ${x.floor}` : t("1 этаж", "1 qavat")}</p>
@@ -300,6 +300,21 @@ function L(l) {
     iosTitle: ru ? "Как добавить на iPhone" : "iPhone’ga qanday qo‘shish",
     installed: ru ? "Готово — иконка на экране телефона" : "Tayyor — belgi telefon ekranida",
     month: ru ? "в месяц" : "oyiga",
+    today: ru ? "сегодня" : "bugun",
+    tomorrow: ru ? "завтра" : "ertaga",
+    days: ru ? ["вс", "пн", "вт", "ср", "чт", "пт", "сб"] : ["yak", "dush", "sesh", "chor", "pay", "jum", "shan"],
+    months: ru ? ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"] : ["yan", "fev", "mar", "apr", "may", "iyun", "iyul", "avg", "sen", "okt", "noy", "dek"],
+    vHead: ru ? "Запись на просмотр с сайта ShahaR.Uz" : "ShahaR.Uz saytidan ko‘rishga yozilish",
+    vObj: ru ? "Объект" : "Obyekt",
+    vWhen: ru ? "Когда" : "Qachon",
+    vNeed: ru ? "Выберите день, время и оставьте телефон — без него риэлтору некуда перезвонить." : "Kun, vaqtni tanlang va telefon qoldiring — usiz rieltor qo‘ng‘iroq qila olmaydi.",
+    vSent: ru ? "Текст заявки скопирован. Открываем Telegram администратора — вставьте его в чат." : "Ariza matni nusxalandi. Administrator Telegrami ochilmoqda — uni chatga qo‘ying.",
+    reset: ru ? "Сбросить все фильтры" : "Barcha filtrlarni tozalash",
+    favN: ru ? "Сохранено: {n}" : "Saqlangan: {n}",
+    favHead: ru ? "Подборка с ShahaR.Uz:" : "ShahaR.Uz’dan tanlov:",
+    relax: ru ? "Убрать «{f}» — найдётся {n}" : "«{f}»ni olib tashlash — {n} ta topiladi",
+    fNames: ru ? { type: { kv: "Квартира", dacha: "Дача", dom: "Дом" }, rooms: "{v} комн.", mort: "Ипотека", fav: "Избранное", dist: "Район", max: "Бюджет", deal: "Снять / посуточно" } : { type: { kv: "Kvartira", dacha: "Dacha", dom: "Uy" }, rooms: "{v} xona", mort: "Ipoteka", fav: "Sevimlilar", dist: "Tuman", max: "Byudjet", deal: "Ijara / kunbay" },
+    objName: ru ? "2-комн. квартира, 58 м², Мирзо-Улугбек, ЖК «O‘z Mahal»" : "2 xonali kvartira, 58 m², Mirzo Ulug‘bek, «O‘z Mahal» TJM",
   };
 }
 
@@ -481,7 +496,8 @@ ${chip("mort", "1", t("Ипотека", "Ipoteka"))}${chip("fav", "1", `${ICON.h
 </div>
 <div class="cat-bar"><p id="cat-n" aria-live="polite"></p><label class="s-f" style="min-width:200px"><span>${t("Район", "Tuman")}</span><select id="cat-dist"><option value="">${t("Все районы и регионы", "Barcha tuman va hududlar")}</option>${DISTRICTS[l].map((d, k) => `<option value="${k}">${d}</option>`).join("")}</select></label></div>
 <div class="grid g3" id="cat">${LISTINGS.map((x, k) => cardBox(l, x, k, ["key", "tilt", "pop", "rise"][k])).join("")}</div>
-<div class="empty" id="cat-empty" hidden><p>${t("По этим фильтрам в прототипе объектов нет — здесь только четыре последних объявления с shahar.uz. На сайте фильтр пойдёт по всей базе.", "Bu filtrlar bo‘yicha prototipda obyekt yo‘q — bu yerda shahar.uz’dagi faqat to‘rtta so‘nggi e’lon. Saytda filtr butun baza bo‘yicha ishlaydi.")}</p><div class="cta" style="justify-content:center"><a class="btn btn-main btn-sm" href="${href(l, "podbor")}">${ICON.spark}${t("Подберём бесплатно", "Bepul tanlab beramiz")}</a></div></div>
+<div class="share-bar" id="fav-bar" data-addon="fav" hidden><span>${ICON.heart.replace("<svg", '<svg width="18" height="18"')}<b id="fav-n"></b></span><a class="btn btn-main btn-sm" id="fav-share" href="https://t.me/share/url" target="_blank" rel="noopener">${ICON.tg}${t("Отправить подборку в Telegram", "Tanlovni Telegramga yuborish")}</a></div>
+<div class="empty" id="cat-empty" hidden><p>${t("По этим фильтрам в прототипе объектов нет — здесь только четыре последних объявления с shahar.uz. На сайте фильтр пойдёт по всей базе.", "Bu filtrlar bo‘yicha prototipda obyekt yo‘q — bu yerda shahar.uz’dagi faqat to‘rtta so‘nggi e’lon. Saytda filtr butun baza bo‘yicha ishlaydi.")}</p><div class="relax" id="cat-relax"></div><div class="cta" style="justify-content:center"><a class="btn btn-main btn-sm" href="${href(l, "podbor")}">${ICON.spark}${t("Подберём бесплатно", "Bepul tanlab beramiz")}</a></div></div>
 <p class="more-note">${t("В прототипе — четыре последних объявления с вашей главной (ID 149645, 149644, 149727, 149381). Фото и цены — как на shahar.uz 07.10.2026.", "Prototipda — bosh sahifangizdagi to‘rtta so‘nggi e’lon (ID 149645, 149644, 149727, 149381). Foto va narxlar — 07.10.2026 dagi shahar.uz’dagidek.")}</p>
 </div></section>
 ${finalBlock(l)}`;
@@ -520,9 +536,17 @@ function obekt(l) {
 <div class="cur3"><div><span>${t("В сумах", "So‘mda")}</span><b class="num">${sp(Math.round(x.usd * RATE.sum))} ${t("сум", "so‘m")}</b></div><div><span>${t("В евро", "Yevroda")}</span><b class="num">€${sp(Math.round(x.usd * RATE.eur))}</b></div></div>
 <div class="cta" style="margin-top:16px"><a class="btn btn-main" style="width:100%" href="${F.admin}">${ICON.tg}${t("Написать по объекту", "Obyekt bo‘yicha yozish")}</a><a class="btn btn-ghost" style="width:100%" href="${href(l, "podbor")}">${ICON.spark}${t("Подобрать похожие", "O‘xshashlarini tanlash")}</a></div>
 <p class="src">${t("При звонке назовите ID", "Qo‘ng‘iroqda ID ni ayting")} <b class="num">${x.id}</b>. ${t("Пожалуйста, скажите, что нашли этот объект на ShahaR.Uz.", "Iltimos, bu obyektni ShahaR.Uz’da topganingizni ayting.")}</p></div>
+<div class="panel rv a-slide" style="--d:60ms" id="view" data-addon="view"><h2 style="font-size:24px">${t("Записаться на просмотр", "Ko‘rishga yozilish")}</h2>
+<form class="viewf" id="viewf" novalidate><p class="src" style="margin-top:4px">${t("Выберите день и время — заявка с ID объекта уйдёт администратору ShahaR.Uz в Telegram, риэлтор подтвердит показ.", "Kun va vaqtni tanlang — obyekt ID’si bilan ariza ShahaR.Uz administratoriga Telegramda ketadi, rieltor ko‘rsatishni tasdiqlaydi.")}</p>
+<div class="opts" id="v-days" style="margin-top:12px"></div>
+<div class="opts">${["10:00", "12:00", "14:00", "16:00", "18:00"].map((h) => `<label class="opt"><input type="radio" name="vh" value="${h}"><span>${h}</span></label>`).join("")}</div>
+<div class="field"><label for="v-ph">${t("Телефон", "Telefon")}</label><input id="v-ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="+998" maxlength="20"></div>
+<button class="btn btn-main" type="submit" style="width:100%;margin-top:12px">${ICON.tg}${t("Записаться на просмотр", "Ko‘rishga yozilish")}</button>
+<p class="err" id="v-err" role="alert" hidden></p><p class="done" id="v-done" role="status" hidden></p></form></div>
 <div class="panel rv a-slide" style="--d:120ms" data-addon="mort"><h2 style="font-size:24px">${t("Ипотека на этот объект", "Bu obyektga ipoteka")}</h2><span class="ours" style="margin-top:8px">${t("Предложение DevUz Studio", "DevUz Studio taklifi")}</span>
 <form class="mort" id="mort" data-usd="${x.usd}"><label>${t("Первый взнос", "Boshlang‘ich badal")} · <output id="m-dv">30%</output><input type="range" id="m-d" min="20" max="70" step="5" value="30"></label><label>${t("Срок", "Muddat")} · <output id="m-yv">15</output> ${t("лет", "yil")}<input type="range" id="m-y" min="5" max="20" step="1" value="15"></label><label>${t("Ставка, % годовых", "Stavka, yillik %")} · <output id="m-rv">18</output>%<input type="range" id="m-r" min="10" max="26" step="1" value="18"></label>
 <div class="pay"><span>${t("Платёж в месяц", "Oylik to‘lov")}</span><b class="num" id="m-pay">—</b></div>
+<div class="cur3"><div><span>${t("Сумма кредита", "Kredit summasi")}</span><b class="num" id="m-loan">—</b></div><div><span>${t("Переплата за весь срок", "Butun muddat uchun ortiqcha to‘lov")}</span><b class="num" id="m-over">—</b></div></div>
 <p class="src">${t("Ставку подставьте свою — у банков она разная. Кнопка ведёт в вашу услугу «Оформить ипотеку».", "Stavkani o‘zingiznikiga almashtiring — banklarda u har xil. Tugma «Ipoteka rasmiylashtirish» xizmatingizga olib boradi.")}</p>
 <a class="btn btn-gold" href="${href(l, "uslugi")}#ipoteka">${ICON.pct}${t("Оформить ипотеку", "Ipoteka rasmiylashtirish")}</a></form></div>
 </aside>
@@ -659,6 +683,7 @@ function plan(l) {
     ["Immo.uz", t("Четыре понятных входа на первом экране: найти, ипотека, новостройки, разместить.", "Birinchi ekranda to‘rtta tushunarli kirish: topish, ipoteka, yangi binolar, joylashtirish.")],
     ["Zillow · Rightmove", t("Поиск — главное на первом экране, уведомления о новых объектах, отметка «цена снижена».", "Qidiruv — birinchi ekranda asosiysi, yangi obyektlar haqida xabarnomalar, «narx tushdi» belgisi.")],
     ["Cian", t("Ипотечный калькулятор прямо в карточке объекта.", "Obyekt kartochkasining o‘zida ipoteka kalkulyatori.")],
+    [t("Наши MAVERA и Golden House", "Bizning MAVERA va Golden House"), t("Подборка из избранного — в Telegram одним сообщением, фильтры в ссылке, запись на просмотр, подсказка, какой фильтр снять, когда ничего не нашлось, кредит и переплата в ипотеке.", "Sevimlilardan tanlov — Telegramga bitta xabar bilan, havoladagi filtrlar, ko‘rishga yozilish, hech narsa topilmaganda qaysi filtrni olib tashlash bo‘yicha maslahat, ipotekada kredit va ortiqcha to‘lov.")],
   ];
   const usp = [
     [t("С 1998 года, лицензия и полис — на первом экране", "1998 yildan, litsenziya va polis — birinchi ekranda"), t("Ни у одного из шести конкурентов нет на сайте ни лицензии, ни страховки риэлторов. У вас они спрятаны в подвале.", "Oltita raqobatchidan birortasining saytida na litsenziya, na rieltorlar sug‘urtasi bor. Sizda ular pastki qismda yashiringan.")],
