@@ -31,7 +31,7 @@ jobs:
             echo "▸ Сигналы (последние строки):"
             $C logs --tail 40 signals 2>&1 | grep -E "rhat|свечи|история|нет весов" | tail -10
             echo "▸ Диспетчер (последние строки):"
-            $C logs --tail 300 orchestrator 2>&1 | grep -E "orchestrator|ERROR|WARN|Traceback|Error" | tail -20
+            $C logs --since 4h orchestrator 2>&1 | grep -E "WARN|ERROR|Traceback|Rejected|Denied|rejected|остановка" | grep -v "httpx" | tail -25
             echo "▸ Задачи по расписанию (наблюдение, копии, модель):"
             journalctl -t sunscrypt --since "-3h" --no-pager -o short-iso 2>/dev/null | grep -v "httpx\|HTTP Request" | tail -25 || true
             echo "▸ Задача модели (контейнер trainer):"
