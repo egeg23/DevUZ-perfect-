@@ -138,15 +138,19 @@ test("ShahaR.Uz: 16 страниц на ru и uz — условия, noindex, з
   assert.equal(manifest.scope, "__PROTO_BASE__/");
   assert.ok(manifest.icons.some((i: { purpose?: string }) => i.purpose === "maskable"));
   assert.match(all.sw, /addEventListener\('fetch'/);
-  assert.match(all.plan, /data-k="admin" data-p="450"/, "админ-панель — 450 $");
+  assert.match(all.plan, /data-k="admin" data-p="195"/, "админ-панель — 195 $");
   const stamped = stampedBundle("shahar", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
   assert.equal(stamped.pages.manifest, site.pages.manifest);
 });
 
-test("ShahaR.Uz: конструктор — портал 1 900 $, обязательные допы на месте", async () => {
+test("ShahaR.Uz: конструктор — портал 2 300 $, допы добивают до 3 900 $, обязательные на месте", async () => {
   const plan = await import("../scripts/protos/shahar/plan.mjs");
-  assert.equal(plan.BASE.price, 1900);
+  // Владелец, 07.10.2026: «базовая цена 2300$, допники должны добить цену до 3900$».
+  assert.equal(plan.BASE.price, 2300);
+  const addons = [...plan.ADDONS, ...plan.BLOCKS].reduce((s: number, a: { price: number }) => s + a.price, 0);
+  assert.equal(addons, 1600, "все допы вместе — 1 600 $");
+  assert.equal(plan.BASE.price + addons, 3900, "со всеми допами — 3 900 $");
   const ids = [...plan.ADDONS, ...plan.BLOCKS].map((a: { id: string }) => a.id);
   for (const id of ["pwa", "tg", "admin"]) assert.ok(ids.includes(id), `нет обязательного допа ${id}`);
   const all: { id: string; ru: { t: string; e?: string; why?: string }; uz: { t: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
