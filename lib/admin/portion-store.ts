@@ -333,7 +333,7 @@ export function itemText(p: Prospect, heading: string): string {
   // Касание в два шага (lib/admin/hello-first.ts): с рабочего аккаунта
   // первым уходит только приветствие, письмо — после ответа.
   if (p.message && route && route.kind !== "manual") {
-    lines.push(`Бот сначала напишет «${esc(helloFor(p.message, p.walked?.lang))}». Письмо ниже — с кружком перед ним — уйдёт, когда клиент ответит.`);
+    lines.push(`Бот сначала напишет «${esc(helloFor(p.message, p.walked?.lang))}». Ответят по-русски — уйдёт кружок, на другом языке — письмо ниже, на языке ответа.`);
   }
   lines.push(
     "",

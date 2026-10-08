@@ -26,7 +26,9 @@ import { markDelivered, markFailed, markSent, markUnreachable, nextQueued } from
 import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/outreach-peer";
 import { markCircleSkipped, markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
 import { NO_CIRCLE } from "@/lib/admin/hello-first";
-import { CIRCLE_CHECK_MS, recordCircle } from "@/lib/admin/circle-store";
+import { CIRCLE_CHECK_MS, circleDue, circleFile, recordCircle } from "@/lib/admin/circle-store";
+import { isPromoPath } from "@/lib/partners/promo-rules";
+import path from "node:path";
 import { TOO_LATE, editOutcome, markEditFailed, markEdited, nextEdit, sentCheck } from "@/lib/admin/outreach-edit";
 import { HOURLY_CAP } from "@/lib/admin/outreach";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
@@ -608,13 +610,15 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
 
     try {
       if (reply.kind === "circle") {
-        // Кружок перед письмом после «Здравствуйте» (lib/admin/hello-first.ts)
-        // — копия последнего кружка из «Избранного» этого аккаунта, не
-        // пересылка: у пересланного стояло бы «переслано от».
+        // Кружок тем, кто ответил на «Здравствуйте» по-русски
+        // (lib/admin/hello-first.ts) — копия последнего кружка из
+        // «Избранного» этого аккаунта, не пересылка: у пересланного стояло бы
+        // «переслано от». Не ушёл — вместо него встаёт письмо
+        // (markCircleSkipped).
         const circle = await savedCircle();
         if (!circle) {
           await markCircleSkipped(reply.id, NO_CIRCLE);
-          console.log(`переписка${tag}: кружка в «Избранном» нет — письмо ${reply.target} уйдёт без него`);
+          console.log(`переписка${tag}: кружка в «Избранном» нет — ${reply.target} уйдёт письмо`);
           return;
         }
         await client.sendFile(reply.target, { file: circle.media });
@@ -627,7 +631,7 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
       console.log(`переписка${tag}: ответил ${reply.target} по сайту ${reply.host}`);
     } catch (error) {
       const why = error?.errorMessage ?? error?.message ?? String(error);
-      // Не ушёл кружок — письмо за ним уходит само, разговор у бота.
+      // Не ушёл кружок — вместо него уходит письмо, разговор у бота.
       if (reply.kind === "circle") await markCircleSkipped(reply.id, `Кружок не ушёл: ${why}`);
       else await markReplyFailed(reply.id, why);
       console.error(`переписка${tag}: ${reply.kind === "circle" ? "кружок" : "ответ"} не ушёл ${reply.target} — ${why}`);
@@ -640,9 +644,43 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
   // ответил на «Здравствуйте». Есть ли он — видно только из сессии, поэтому
   // смотрим раз в десять минут и пишем в базу: панель показывает это в
   // «Аккаунтах».
+  //
+  // Кружок, загруженный в «Аккаунтах» (lib/admin/circle-store.ts), бот
+  // кладёт в «Избранное» сам: загружен позже последнего кружка там — уходит
+  // туда кружком, с длительностью и размером, иначе Telegram покажет 0:00.
+  // Атрибут видео — только наш: флаг videoNote в teleproto добавляет ещё и
+  // «голосовое», и сообщение превращается в аудио.
+  const posted = new Set();
+  const placeCircle = async (circle) => {
+    const file = await circleFile();
+    const savedAt = circle ? Number(circle.date) * 1000 : null;
+    if (!file || !circleDue(file, savedAt) || posted.has(file.uploadedAt) || !isPromoPath(file.path)) return circle;
+    const media = process.env.MEDIA_HOST_DIR || "/var/lib/devuz/media";
+    await client.sendFile("me", {
+      file: path.join(media, "promo", file.path),
+      attributes: [
+        new Api.DocumentAttributeVideo({
+          roundMessage: true,
+          supportsStreaming: true,
+          duration: file.duration,
+          w: file.width,
+          h: file.height,
+        }),
+      ],
+    });
+    // Отметка — после отправки: не ушёл — попробуем в следующий взгляд, а
+    // ушёл — второй раз не кладём, даже если Telegram ещё не отдал его в
+    // «Избранном» (дата сообщения — по часам Telegram, не по нашим).
+    posted.add(file.uploadedAt);
+    console.log(`кружок${tag}: загруженный кружок положил в «Избранное»`);
+    return savedCircle();
+  };
   const checkCircle = async () => {
     try {
-      const circle = await savedCircle();
+      const circle = await placeCircle(await savedCircle()).catch(async (error) => {
+        console.error(`кружок${tag}: не положил загруженный кружок в «Избранное» —`, error?.errorMessage ?? error?.message ?? error);
+        return savedCircle();
+      });
       await recordCircle(key, circle ? Number(circle.date) * 1000 : null);
     } catch (error) {
       console.error(`кружок${tag}: «Избранное» не прочиталось —`, error?.errorMessage ?? error?.message ?? error);

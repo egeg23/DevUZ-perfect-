@@ -117,6 +117,8 @@ export const AUDIT_ACTIONS = [
   // Видео к инструкциям: кто загрузил и кто убрал.
   "help_video.saved",
   "help_video.removed",
+  // Кружок для касаний: кто загрузил новый (lib/admin/circle-upload.ts).
+  "tg_circle.saved",
   "project.payment_added",
   "project.payment_removed",
   "payout.recorded",

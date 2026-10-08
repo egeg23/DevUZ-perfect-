@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { OUTREACH_SYSTEM, leadFindings, outreachPrompt } from "@/lib/admin/outreach";
+import { OUTREACH_SYSTEM, leadFindings, outreachHooks, outreachPrompt } from "@/lib/admin/outreach";
 import {
   FOLLOWUP_SYSTEM,
   fallbackFollowup,
@@ -39,9 +39,23 @@ const desc = f("no_description", "Нет описания страницы дл�
 const prices = f("no_prices", "На сайте нет цен");
 const mobile = f("no_viewport", "С телефона сайт открывается в масштабе монитора");
 
+const messenger = f("no_messenger", "С сайта нельзя написать в Telegram");
+
 test("первыми — находки про клиентов и деньги, техническое — никогда", () => {
-  assert.deepEqual(leadFindings([og, desc, prices, mobile]).map((x) => x.code), ["no_viewport", "no_prices"]);
+  assert.deepEqual(leadFindings([og, desc, messenger, mobile]).map((x) => x.code), ["no_viewport", "no_messenger"]);
   assert.deepEqual(leadFindings([og, desc]), []);
+});
+
+test("цен в касании нет: прайс картинкой аудит не видит", () => {
+  // Владелец, 08.10.2026: «убери текст „у вас нигде не указаны цены“, потому
+  // что как правило они указаны, но картинками, а не текстом».
+  assert.deepEqual(leadFindings([prices, mobile]).map((x) => x.code), ["no_viewport"]);
+  const prompt = outreachPrompt({ host: "gh.uz", label: "GH", niche: null, findings: [prices, mobile], draft: null, sender: "Данил" });
+  assert.ok(!prompt.includes(prices.title), "находка про цены попала в задание");
+  const anywhere = f("no_price_anywhere", "Цен нет ни на одной из 6 страниц");
+  assert.ok(!outreachPrompt({ host: "gh.uz", label: null, niche: null, findings: [anywhere, mobile], draft: null, sender: "Данил" }).includes(anywhere.title));
+  // И в расчёт потерь цены не входят: число в письме — про то, что названо.
+  assert.equal(outreachHooks([prices]).lost, null);
 });
 
 test("письмо открывается деньгами, а не превью ссылки", () => {
@@ -49,13 +63,13 @@ test("письмо открывается деньгами, а не превью
     host: "gh.uz",
     label: "GH",
     niche: null,
-    findings: [og, desc, prices],
+    findings: [og, desc, messenger],
     draft: null,
     sender: "Данил",
   });
   const at = (s: string) => prompt.indexOf(s);
-  assert.ok(at(prices.title) > 0, "находки про цены нет в задании");
-  assert.ok(at(prices.title) < at(og.title) || at(og.title) < 0, "техническое стоит раньше денег");
+  assert.ok(at(messenger.title) > 0, "находки про клиентов нет в задании");
+  assert.ok(at(messenger.title) < at(og.title) || at(og.title) < 0, "техническое стоит раньше денег");
   assert.match(prompt, /про его клиентов и деньги: открывай письмо ими/);
   assert.match(OUTREACH_SYSTEM, /Открывай находкой про клиентов и деньги/);
   assert.match(OUTREACH_SYSTEM, /Не обещай ничего прислать позже/);

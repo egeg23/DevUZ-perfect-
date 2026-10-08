@@ -42,10 +42,11 @@ export const workSections: Record<string, HelpEntry> = {
       },
       {
         id: "circle",
-        title: "Kółko do wiadomości",
+        title: "Kółko do kontaktów",
         body: [
-          "Tym, którzy odpowiedzieli na powitanie, przed wiadomością wychodzi kółko — krótkie wideo od studia, które nagrywa właściciel ([kontakt w dwóch krokach](#prospect-hello)). Bot bierze ostatnie kółko z «Zapisanych» tego konta firmowego, z którego szedł kontakt — dlatego zapisz je w «Zapisanych» każdego konta. Wysyłana jest kopia, bez oznaczenia „przekazano”.",
-          "Przy każdym koncie jest tu napisane, czy kółko jest: «Kółko do wiadomości: jest, zapisane …» albo «Brak kółka» — wtedy wyjdzie sama wiadomość. Bot zagląda do «Zapisanych» co dziesięć minut, więc po zapisaniu wiersz nie odświeży się od razu. Nagrałeś nowe — po prostu je zapisz: bot zawsze bierze ostatnie.",
+          "Tym, którzy odpowiedzieli na powitanie po rosyjsku, wychodzi kółko — krótkie wideo od studia z ofertą: darmowa makieta strony głównej w 12 godzin i prośba o wysłanie «+» ([kontakt w dwóch krokach](#prospect-hello)). Tym, którzy odpowiedzieli w innym języku, wychodzi wiadomość w ich języku, bez kółka. Bot bierze ostatnie kółko z «Zapisanych» tego konta firmowego, z którego szedł kontakt, i wysyła kopię, bez oznaczenia „przekazano”.",
+          "Nie trzeba ręcznie zapisywać kółka w «Zapisanych» każdego konta: wgraj plik raz w bloku **«Kółko do kontaktów»** na górze tej strony — MP4, kwadratowe wideo do minuty (kółko zapisane z Telegrama pasuje bez zmian) — i kliknij **«Wgraj kółko»**. W ciągu dziesięciu minut bot sam zapisze je w «Zapisanych» konta głównego i każdego podłączonego. Tam też widać, które kółko wychodzi teraz, kiedy i przez kogo zostało wgrane; nowe zastępuje je na wszystkich kontach. Kto wgrał — w dzienniku działań.",
+          "Przy każdym koncie jest tu napisane, czy kółko jest: «Kółko do wiadomości: jest, zapisane …» albo «Brak kółka» — wtedy zamiast kółka wyjdzie wiadomość. Bot zagląda do «Zapisanych» co dziesięć minut, więc wiersz nie odświeży się od razu. Zapisałeś nowe kółko w «Zapisanych» ręcznie — bot je weźmie: zawsze bierze ostatnie.",
         ],
       },
       {

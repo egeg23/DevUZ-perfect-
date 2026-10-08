@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requireRole } from "@/lib/admin/guard";
+import { circleDiscard, circleStart, saveCircle } from "@/lib/admin/circle-upload";
+import { requestIp, requireRole } from "@/lib/admin/guard";
+import { promoChunk, type PromoFail, type StartResult } from "@/lib/partners/promo";
 import { loginCode, loginPhone } from "@/lib/admin/work-accounts";
 import {
   addAccount,
@@ -82,4 +84,44 @@ export async function staffAction(form: FormData) {
   const staff = await manage();
   const ids = form.getAll("staff").map((v) => String(v));
   back((await setAccountStaff(text(form, "account"), ids, staff)) ? "ok" : "failed");
+}
+
+/**
+ * Кружок для касаний (lib/admin/circle-upload.ts): загружают владелец и
+ * руководитель, скаут сам кладёт его в «Избранное» каждого аккаунта. Файл
+ * едет кусками, по одному действию на кусок — как видео к инструкциям.
+ */
+const num = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : null);
+
+export async function circleStartAction(input: { mime: string; bytes: number }): Promise<StartResult> {
+  await manage();
+  return circleStart({ mime: String(input?.mime ?? ""), bytes: Number(input?.bytes) });
+}
+
+export async function circleChunkAction(formData: FormData): Promise<{ ok: true; received: number } | PromoFail> {
+  await manage();
+  const chunk = formData.get("chunk");
+  if (!(chunk instanceof Blob)) return { ok: false, reason: "chunk_missing" };
+  return promoChunk(String(formData.get("upload") ?? ""), Number(formData.get("offset")), new Uint8Array(await chunk.arrayBuffer()));
+}
+
+export async function circleDiscardAction(uploadId: string): Promise<void> {
+  await manage();
+  await circleDiscard(String(uploadId ?? ""));
+}
+
+export async function circleSaveAction(input: {
+  uploadId: string;
+  width: number | null;
+  height: number | null;
+  duration: number | null;
+}): Promise<{ ok: true } | PromoFail> {
+  const staff = await manage();
+  const result = await saveCircle(
+    { uploadId: String(input?.uploadId ?? ""), width: num(input?.width), height: num(input?.height), duration: num(input?.duration) },
+    staff,
+    await requestIp(),
+  );
+  if (result.ok) revalidatePath("/admin/accounts");
+  return result;
 }

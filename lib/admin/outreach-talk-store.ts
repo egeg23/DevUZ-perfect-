@@ -22,10 +22,14 @@ import { checkFresh } from "@/lib/admin/check-fresh";
 import {
   CIRCLE_AFTER_MS,
   CIRCLE_BODY,
+  CIRCLE_LANG,
   PITCH_AFTER_MS,
+  letterLang,
   pitchAfter,
+  replyLang,
   waitsForPitch,
   withoutGreeting,
+  type HelloLang,
 } from "@/lib/admin/hello-first";
 
 /**
@@ -170,7 +174,7 @@ export async function recordInbound(input: {
 }
 
 const PROSPECT_FIELDS =
-  "id, host, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url, hello_at, pitch_at, checked_at";
+  "id, host, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url, hello_at, pitch_at, checked_at, walked";
 
 /** Строка касания из PROSPECT_FIELDS. Лид и закрепление здесь только читаются. */
 type ProspectRow = HandTouch &
@@ -185,7 +189,8 @@ type ProspectRow = HandTouch &
     | "proto_url"
     | "hello_at"
     | "pitch_at"
-    | "checked_at",
+    | "checked_at"
+    | "walked",
     unknown
   > &
   Record<"claimed_by" | "touched_by", string | null>;
@@ -263,7 +268,7 @@ export async function recordManualInbound(
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at")
+    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked")
     .eq("id", prospectId)
     .maybeSingle();
   if (!prospect) return { matched: false };
@@ -296,6 +301,7 @@ async function saveInbound(
     hello_at?: unknown;
     pitch_at?: unknown;
     checked_at?: unknown;
+    walked?: unknown;
   },
   raw: string,
 ): Promise<{ matched: boolean; host?: string; verdict?: string }> {
@@ -328,7 +334,9 @@ async function saveInbound(
   if (pitching) return { matched: true, host: String(prospect.host), verdict: "hello" };
 
   const patch: Record<string, unknown> = { replied_at: new Date().toISOString() };
-  const read = readInbound(body);
+  // Кружок спрашивает одно — хотите ли макет, — и «да» на него — согласие.
+  const afterCircle = prospect.pitch_at ? await circleWasPitch(String(prospect.id), String(prospect.pitch_at)) : false;
+  const read = readInbound(body, { afterCircle });
   // Прототип в письме уже был (lib/proto/auto) — «прототип» в ответе значит
   // не «соберите», а «посмотрел»: правки, цена, сроки. Это разговор для
   // человека, а не рассылка «нужен прототип» всей команде. «Был» — значит
@@ -399,16 +407,22 @@ async function saveInbound(
 }
 
 /**
- * Клиент ответил на «Здравствуйте» — в очередь ответов ложатся кружок из
- * «Избранного» рабочего аккаунта и письмо без приветствия, с паузой: ответ
- * через секунду выглядит как робот (lib/admin/hello-first.ts).
+ * Клиент ответил на «Здравствуйте» (lib/admin/hello-first.ts).
  *
- * Модель на этот ответ не отвечает — за неё ответит письмо, — поэтому
- * входящее сразу помечено отвеченным. Лид автопрогона заводится не здесь, а
- * на ответ на письмо: «да?» на приветствие — ещё не тёплый лид.
+ * Ответил по-русски — в очередь ответов ложится кружок из «Избранного»
+ * рабочего аккаунта: он сам и есть предложение, письмо за ним не идёт. Не
+ * ушёл кружок — письмо уходит вместо него (markCircleSkipped). Ответил на
+ * другом языке — письмо без приветствия на языке ответа, с паузой: ответ
+ * через секунду выглядит как робот.
+ *
+ * Модель на этот ответ не отвечает — за неё ответит кружок или письмо, —
+ * поэтому входящее сразу помечено отвеченным. Лид автопрогона заводится не
+ * здесь, а на ответ на кружок или письмо: «да?» на приветствие — ещё не
+ * тёплый лид.
  *
  * Проверке сайта больше трёх дней (CLAUDE.md, «проверка по факту») — письмо
- * не уходит: разговор человеку, он напишет, проверив сайт.
+ * не уходит: разговор человеку, он напишет, проверив сайт. Кружок про сайт
+ * ничего не утверждает и уходит и тогда.
  */
 async function answerHello(
   prospect: Parameters<typeof saveInbound>[0],
@@ -420,8 +434,6 @@ async function answerHello(
   const host = String(prospect.host);
   const now = Date.now();
   const at = new Date(now).toISOString();
-  const letter = withoutGreeting(String(prospect.message ?? "")).trim();
-  const fresh = checkFresh((prospect.checked_at as string | null) ?? null, now);
 
   await db.from("outreach_messages").insert({
     prospect_id: id,
@@ -442,17 +454,11 @@ async function answerHello(
     .select("id");
   if (!claimed?.length) return { matched: true, host, verdict: "hello" };
 
-  if (!letter || !fresh) {
-    const reason = letter
-      ? "ответил на «Здравствуйте», но проверке сайта больше трёх дней — письмо не ушло: проверьте сайт и напишите сами"
-      : "ответил на «Здравствуйте», а письма о сайте нет — напишите сами";
-    await db.from("prospects").update({ ai_handling: false, handover_reason: reason }).eq("id", id);
-    await tellManager(id, `Ответ по ${host}: ${reason}.\n\n${body.slice(0, 500)}`, { refuse: true });
-    return { matched: true, host, verdict: "hello_stale" };
-  }
+  const sentLang = letterLang(String(prospect.message ?? ""), (prospect.walked as { lang?: string } | null)?.lang);
+  const lang = replyLang(body, sentLang);
 
-  await db.from("outreach_messages").insert([
-    {
+  if (lang === CIRCLE_LANG) {
+    await db.from("outreach_messages").insert({
       prospect_id: id,
       lead_id: prospect.lead_id,
       direction: "out",
@@ -461,24 +467,90 @@ async function answerHello(
       body: CIRCLE_BODY,
       status: "queued",
       send_after: new Date(now + CIRCLE_AFTER_MS).toISOString(),
-    },
-    {
-      prospect_id: id,
-      lead_id: prospect.lead_id,
-      direction: "out",
-      author: "staff",
-      kind: "text",
-      body: letter.slice(0, 4000),
-      status: "queued",
-      send_after: new Date(now + PITCH_AFTER_MS).toISOString(),
-    },
-  ]);
+    });
+    return { matched: true, host, verdict: "hello" };
+  }
+
+  const queued = await queueHelloLetter(prospect, lang, now + PITCH_AFTER_MS, body);
+  return { matched: true, host, verdict: queued ? "hello" : "hello_stale" };
+}
+
+/**
+ * Письмо тем, кто ответил на «Здравствуйте» не по-русски или кому не ушёл
+ * кружок: без приветствия, на языке ответа. Письма нет, проверка сайта
+ * старше трёх дней или перевод не вышел — разговор человеку, и это видно в
+ * строке менеджеру. true — письмо в очереди.
+ */
+async function queueHelloLetter(
+  prospect: Parameters<typeof saveInbound>[0],
+  lang: HelloLang,
+  sendAt: number,
+  inbound: string,
+): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const id = String(prospect.id);
+  const host = String(prospect.host);
+  const letter = withoutGreeting(String(prospect.message ?? "")).trim();
+  const fresh = checkFresh((prospect.checked_at as string | null) ?? null, Date.now());
+  const sentLang = letterLang(String(prospect.message ?? ""), (prospect.walked as { lang?: string } | null)?.lang);
+
+  const handOverHello = async (reason: string) => {
+    await db.from("prospects").update({ ai_handling: false, handover_reason: reason }).eq("id", id);
+    await tellManager(id, `Ответ по ${host}: ${reason}.\n\n${inbound.slice(0, 500)}`, { refuse: true });
+    return false;
+  };
+  if (!letter) return handOverHello("ответил на «Здравствуйте», а письма о сайте нет — напишите сами");
+  if (!fresh) return handOverHello("ответил на «Здравствуйте», но проверке сайта больше трёх дней — письмо не ушло: проверьте сайт и напишите сами");
+
+  // Письмо на языке сайта, а ответили на другом — перевод того же письма,
+  // уже прошедшего проверку. Модель грузится только здесь: этот файл читает
+  // и процесс скаута.
+  let text = letter;
+  if (lang !== sentLang) {
+    const { translateLetter } = await import("@/lib/admin/letter-translate");
+    const translated = await translateLetter(letter, lang, host);
+    if (!translated) return handOverHello(`ответил на «Здравствуйте» на другом языке (${LANG_LABEL[lang]}), а письмо перевести не вышло — напишите сами`);
+    text = translated;
+  }
+
+  await db.from("outreach_messages").insert({
+    prospect_id: id,
+    lead_id: prospect.lead_id,
+    direction: "out",
+    author: "staff",
+    kind: "text",
+    body: text.slice(0, 4000),
+    status: "queued",
+    send_after: new Date(sendAt).toISOString(),
+  });
 
   // Прототип, собранный заранее, уходит вместе с письмом (lib/proto/auto).
-  if (typeof prospect.proto_url === "string" && prospect.proto_url && letter.includes(prospect.proto_url)) {
-    await db.from("protos").update({ status: "sent", sent_at: at }).eq("prospect_id", id).eq("auto", true).eq("status", "ready");
+  if (typeof prospect.proto_url === "string" && prospect.proto_url && text.includes(prospect.proto_url)) {
+    await db
+      .from("protos")
+      .update({ status: "sent", sent_at: new Date().toISOString() })
+      .eq("prospect_id", id)
+      .eq("auto", true)
+      .eq("status", "ready");
   }
-  return { matched: true, host, verdict: "hello" };
+  return true;
+}
+
+const LANG_LABEL: Record<HelloLang, string> = { ru: "по-русски", uz: "по-узбекски", en: "по-английски" };
+
+/** Предложением был кружок: после «Здравствуйте» ушёл он, а письма не было. */
+async function circleWasPitch(prospectId: string, pitchAt: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { data } = await db
+    .from("outreach_messages")
+    .select("kind, status")
+    .eq("prospect_id", prospectId)
+    .eq("direction", "out")
+    .gte("created_at", pitchAt);
+  const rows = data ?? [];
+  return rows.some((r) => r.kind === "circle" && r.status === "sent") && !rows.some((r) => r.kind !== "circle" && r.status === "sent");
 }
 
 /** Письмо после «Здравствуйте» ещё ждёт отправки. */
@@ -679,9 +751,8 @@ export async function nextReply(
    * люди, которые сами нам написали. Поэтому ручное пропускается, а не
    * останавливает.
    */
-  // Кружок и письмо после «Здравствуйте» кладутся одной вставкой — с
-  // одинаковым временем, и порядок между ними решает send_after: кружок
-  // раньше.
+  // Кружок и письмо в старых касаниях клались одной вставкой — с одинаковым
+  // временем, и порядок между ними решает send_after: кружок раньше.
   const { data: queued } = await db
     .from("outreach_messages")
     .select("id, body, prospect_id, kind, send_after")
@@ -764,14 +835,42 @@ export async function markReplySent(id: string): Promise<void> {
 }
 
 /**
- * Кружок не ушёл — в «Избранном» аккаунта его нет или Telegram не принял.
- * Разговор человеку не передаётся (в отличие от markReplyFailed): письмо
- * за кружком уходит своим ходом, и клиенту есть что прочитать.
+ * Кружок не ушёл — в «Избранном» аккаунта его нет или Telegram не принял
+ * (получатель запретил видео от незнакомых). Разговор человеку не
+ * передаётся (в отличие от markReplyFailed): вместо кружка уходит письмо, и
+ * клиенту есть что прочитать.
  */
 export async function markCircleSkipped(id: string, why: string): Promise<void> {
   const db = serviceClient();
   if (!db) return;
-  await db.from("outreach_messages").update({ status: "done", failure: why.slice(0, 500) }).eq("id", id);
+  const { data: row } = await db
+    .from("outreach_messages")
+    .update({ status: "done", failure: why.slice(0, 500) })
+    .eq("id", id)
+    .select("prospect_id, created_at")
+    .maybeSingle();
+  if (!row?.prospect_id) return;
+
+  // Кружок был предложением сам по себе (ответили по-русски) — тогда вместо
+  // него уходит письмо, по-русски. Письмо уже стоит или ушло (старые касания,
+  // где кружок шёл перед письмом) — второго не ставим.
+  const { count } = await db
+    .from("outreach_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("prospect_id", row.prospect_id)
+    .eq("direction", "out")
+    .eq("kind", "text")
+    .in("status", ["queued", "sent"])
+    .gte("created_at", String(row.created_at));
+  if (count) return;
+
+  const { data: prospect } = await db
+    .from("prospects")
+    .select("id, host, lead_id, ai_handling, message, checked_at, walked, proto_url")
+    .eq("id", row.prospect_id)
+    .maybeSingle();
+  if (!prospect) return;
+  await queueHelloLetter(prospect, CIRCLE_LANG, Date.now(), `(кружок не ушёл: ${why.slice(0, 200)})`);
 }
 
 /**

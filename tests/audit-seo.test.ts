@@ -121,7 +121,7 @@ test("что считается поисковой находкой, знают 
 test("в письме обязаны прозвучать балл и потери — это проверяет машина", async () => {
   const { messageProblems, outreachHooks, outreachPrompt } = await import("@/lib/admin/outreach");
 
-  const findings = [f("client_rendered", "critical"), f("no_canonical", "minor"), f("no_prices")];
+  const findings = [f("client_rendered", "critical"), f("no_canonical", "minor"), f("no_messenger")];
   const hooks = outreachHooks(findings);
   assert.equal(typeof hooks.seo, "number");
   assert.ok(hooks.lost, "потери должны считаться");

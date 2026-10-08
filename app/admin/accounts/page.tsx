@@ -9,7 +9,10 @@ import {
 } from "@/app/admin/accounts/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { SubmitButton } from "@/components/admin/submit-button";
-import { accountsDict, accountsResultDict, loginErrorDict } from "@/content/admin-panel/accounts";
+import { CircleUpload } from "@/components/admin/circle-upload";
+import { HelpHint } from "@/components/admin/help-link";
+import { accountsDict, accountsResultDict, circleUploadDict, loginErrorDict } from "@/content/admin-panel/accounts";
+import { helpAnchor } from "@/lib/admin/help";
 import { requireRole } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { HOURLY_CAP } from "@/lib/admin/outreach";
@@ -26,7 +29,7 @@ import {
   type WorkAccount,
 } from "@/lib/admin/work-accounts";
 import { accountPeople, accountStaff, accountsActivity, listAccounts } from "@/lib/admin/work-accounts-store";
-import { circleStates, type CircleState } from "@/lib/admin/circle-store";
+import { circleFile, circleStates, type CircleState } from "@/lib/admin/circle-store";
 
 export const dynamic = "force-dynamic";
 
@@ -101,12 +104,14 @@ export default async function AccountsPage({
   const errors = pick(loginErrorDict, locale);
   const notice = r && Object.hasOwn(results, r) ? results[r as keyof typeof results] : null;
 
-  const [accounts, activity, onAccount, people, circles] = await Promise.all([
+  const c = pick(circleUploadDict, locale);
+  const [accounts, activity, onAccount, people, circles, uploaded] = await Promise.all([
     listAccounts(),
     accountsActivity(),
     accountStaff(),
     accountPeople(),
     circleStates(),
+    circleFile(),
   ]);
   // Кружок для писем после «Здравствуйте» (lib/admin/hello-first.ts).
   const circleLine = (key: string) => {
@@ -138,6 +143,30 @@ export default async function AccountsPage({
       {notice ? (
         <p className="mt-4 rounded-xl border border-green/30 bg-green/5 px-4 py-3 text-sm text-green">{notice}</p>
       ) : null}
+
+      {/* Кружок для касаний: загружается здесь, в «Избранное» его кладёт скаут. */}
+      <section className={`${CARD} mt-6 max-w-2xl`}>
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          {c.title}
+          <HelpHint topic={helpAnchor("/admin/accounts", "circle")} />
+        </h2>
+        <p className="mt-2 text-xs leading-relaxed text-muted">{c.intro}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-4">
+          {uploaded ? (
+            <video
+              src={`/admin/accounts/circle?v=${uploaded.uploadedAt}`}
+              controls
+              playsInline
+              preload="metadata"
+              className="h-32 w-32 shrink-0 rounded-full border border-line object-cover"
+            />
+          ) : null}
+          <p className="min-w-0 flex-1 text-xs text-faint">
+            {uploaded ? c.current(tashkentClock(new Date(uploaded.uploadedAt)), uploaded.by ?? "", uploaded.duration) : c.none}
+          </p>
+        </div>
+        <CircleUpload have={Boolean(uploaded)} />
+      </section>
 
       <ul className="mt-6 space-y-3">
         <li className={CARD}>

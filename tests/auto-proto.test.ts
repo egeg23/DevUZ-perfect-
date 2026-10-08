@@ -198,7 +198,7 @@ test("ответ про прототип из письма — человеку,
   const talk = read("lib/admin/outreach-talk-store.ts");
   assert.match(talk, /const verdict = read === "proto" && protoSent \? "proto_ready" : read;/);
   assert.match(talk, /String\(prospect\.message \?\? ""\)\.includes\(prospect\.proto_url\)/);
-  assert.match(talk, /closed_reason, proto_url, message, hello_at, pitch_at, checked_at"\)/);
+  assert.match(talk, /closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked"\)/);
 });
 
 test("почему не собрался — словами на трёх языках, для каждого кода", () => {

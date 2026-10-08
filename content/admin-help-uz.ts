@@ -604,12 +604,12 @@ export const uz: HelpCopy = {
         },
         {
           id: "hello",
-          title: "Ikki bosqichli aloqa: salom → dumaloq video va xat",
+          title: "Ikki bosqichli aloqa: salom → dumaloq video yoki xat",
           body: [
             "Ishchi akkaunt notanish odamga birinchi bo‘lib faqat salom yozadi: o‘zbekcha saytga — «Assalomu alaykum», ruscha saytga — «Здравствуйте». Sayt haqidagi xatni odam faqat javob bersa oladi. Buni egasi 07.10.2026 da hal qildi: Telegram akkauntlarni «spam» shikoyatlari uchun cheklaydi, ular esa aynan notanishlarning uzun xatlariga qo‘yiladi. Salomga bunday shikoyat qilinmaydi — unga «ha?» deb javob berishadi yoki jim turishadi.",
-            "Mijoz javob berdi — ikki daqiqadan keyin bot unga ishchi akkauntning «Saqlangan xabarlar»idagi dumaloq videoni (oxirgi saqlanganini), uch daqiqadan keyin — kartochkadagi xatni salomsiz yuboradi. «Ha?», «kim bu?», «eshitaman» ga aynan xat javob beradi, SI bu daqiqada jim turadi. Keyin yozishmani SI odatdagidek olib boradi ([mijoz javob berdi](#prospect-replies)). «Saqlangan xabarlar»da dumaloq video bo‘lmasa — faqat xat ketadi.",
+            "Mijoz ruscha javob berdi («Здравствуйте», «да?», «кто это?») — ikki daqiqadan keyin bot unga ishchi akkauntning «Saqlangan xabarlar»idagi dumaloq videoni (oxirgi saqlanganini) yuboradi. Dumaloq videoning o‘zi taklif: 12 soatda bosh sahifaning bepul maketi va «+» yuborish so‘rovi, shuning uchun undan keyin xat ketmaydi. Boshqa tilda javob berdi («Assalomu alaykum», «Ha») — uch daqiqadan keyin kartochkadagi xat salomsiz va javob tilida ketadi: xat boshqa tilda bo‘lsa, bot uni tarjima qiladi. So‘zsiz javob — stiker, «+» — salom tilida hisoblanadi. «Saqlangan xabarlar»da dumaloq video bo‘lmasa yoki Telegram uni o‘tkazmasa (odam notanishlardan videoni taqiqlagan) — dumaloq video o‘rniga xat ketadi. SI bu daqiqalarda jim turadi, keyin yozishmani u odatdagidek olib boradi ([mijoz javob berdi](#prospect-replies)). Egasi, 08.10.2026: «ruscha javob berishsa — dumaloq video ketadi; boshqa tilda bo‘lsa — shu tilda, odatdagidek yozamiz».",
             "«Yozmang» deb javob bersa yoki qo‘ng‘iroq qilishni so‘rasa — xat ketmaydi, bot sizni chaqiradi va mijoz faqat salomni olganini, sayt haqidagi xat ketmaganini yozadi. Sayt tekshiruviga uch kundan ko‘p bo‘lsa — xat ham ketmaydi: bot sizni chaqiradi, saytni tekshirib, o‘zingiz yozing. Umuman javob bermasa — boshqa hech narsa ketmaydi: bitta salomdan keyin [qayta eslatma](#prospect-followups) yo‘q.",
-            "Kartochkada bu ko‘rinadi: «Salom ketdi — xat mijoz javob berganda ketadi», javobdan keyin esa — dumaloq video va xat qachon ketgani. Aloqalar, kunlik to‘plam va «soatiga uch» hisobiga salomning o‘zi kiradi: notanishga birinchi xabar — Telegram hisoblaydigan narsa.",
+            "Dumaloq videoga «+», «да», «ha», «хочу макет» deb javob berishadi — bu maketga rozilik: bot darhol shartlar havolasi bilan «Qabul qilindi — siz uchun bepul maket tayyorlayapmiz» deb javob beradi, jamoaga esa «🔥 Нужен прототип» ketadi (prototip haqidagi har qanday so‘rovdagidek — [mijoz javob berdi](#prospect-replies)). Kartochkada bu ko‘rinadi: «Salom ketdi — mijoz javob berganda dumaloq video yoki xat ketadi», javobdan keyin esa — aynan nima ketgani. Aloqalar, kunlik to‘plam va «soatiga uch» hisobiga salomning o‘zi kiradi: notanishga birinchi xabar — Telegram hisoblaydigan narsa.",
           ],
         },
         {
@@ -824,10 +824,11 @@ export const uz: HelpCopy = {
         },
         {
           id: "circle",
-          title: "Xatlar uchun dumaloq video",
+          title: "Aloqalar uchun dumaloq video",
           body: [
-            "Salomga javob berganlarga xatdan oldin dumaloq video ketadi — egasi yozib oladigan studiyadan qisqa video ([ikki bosqichli aloqa](#prospect-hello)). Bot aloqa ketgan ishchi akkauntning «Saqlangan xabarlar»idagi oxirgi dumaloq videoni oladi — shuning uchun uni har bir akkauntning «Saqlangan xabarlar»iga saqlang. «Uzatildi» belgisisiz nusxa yuboriladi.",
-            "Bu yerda har bir akkauntda dumaloq video bor-yo‘qligi yozilgan: «Xatlar uchun dumaloq video: bor, … da saqlangan» yoki «Dumaloq video yo‘q» — unda faqat xat ketadi. Bot «Saqlangan xabarlar»ga o‘n daqiqada bir marta qaraydi, shuning uchun saqlagandan keyin qator darhol yangilanmaydi. Yangisini yozdingiz — shunchaki saqlang: bot doim oxirgisini oladi.",
+            "Salomga ruscha javob berganlarga dumaloq video ketadi — taklifli studiyadan qisqa video: 12 soatda bosh sahifaning bepul maketi va «+» yuborish so‘rovi ([ikki bosqichli aloqa](#prospect-hello)). Boshqa tilda javob berganlarga dumaloq videosiz, ularning tilidagi xat ketadi. Bot aloqa ketgan ishchi akkauntning «Saqlangan xabarlar»idagi oxirgi dumaloq videoni oladi va «uzatildi» belgisisiz nusxasini yuboradi.",
+            "Dumaloq videoni har bir akkauntning «Saqlangan xabarlar»iga qo‘lda qo‘yish shart emas: faylni shu sahifaning tepasidagi **«Aloqalar uchun dumaloq video»** blokida bir marta yuklang — MP4, bir daqiqagacha kvadrat video (Telegramdan saqlangan dumaloq video shundayligicha mos keladi) — va **«Dumaloq videoni yuklash»** tugmasini bosing. O‘n daqiqa ichida bot uni asosiy va har bir ulangan akkauntning «Saqlangan xabarlar»iga o‘zi saqlaydi. U yerda hozir qaysi dumaloq video ketayotgani, qachon va kim yuklagani ham ko‘rinadi; yangisi barcha akkauntlarda uning o‘rnini oladi. Kim yuklagani — harakatlar jurnalida.",
+            "Bu yerda har bir akkauntda dumaloq video bor-yo‘qligi yozilgan: «Xatlar uchun dumaloq video: bor, … da saqlangan» yoki «Dumaloq video yo‘q» — unda dumaloq video o‘rniga xat ketadi. Bot «Saqlangan xabarlar»ga o‘n daqiqada bir marta qaraydi, shuning uchun qator darhol yangilanmaydi. Yangi dumaloq videoni «Saqlangan xabarlar»ga qo‘lda saqladingiz — bot uni oladi: u doim oxirgisini oladi.",
           ],
         },
         {
