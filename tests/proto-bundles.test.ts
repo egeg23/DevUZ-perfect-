@@ -279,14 +279,14 @@ test("HOP.UZ: 5 страниц на русском — условия, noindex, 
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
 
-test("HOP.UZ: конструктор — сайт 1 700 $, все допы не больше 1 300 $, обязательные на месте", async () => {
+test("HOP.UZ: конструктор — сайт 4 500 $, допы добивают до 8 000 $, обязательные на месте", async () => {
   const plan = await import("../scripts/protos/hop/plan.mjs");
-  // Задание владельца, 08.10.2026: сайт без допов 1 700 $, со всеми допами не больше 3 000 $.
-  assert.equal(plan.BASE.price, 1700);
+  // Владелец, 08.10.2026: «базовая версия без допов: 4500$, допы должны добить стоимость до 8000$».
+  assert.equal(plan.BASE.price, 4500);
   const all: { id: string; price: number; ru: { t: string; e?: string; why?: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
   const sum = all.reduce((s, a) => s + a.price, 0);
-  assert.ok(sum <= 1300, `все допы вместе ${sum} $, а можно не больше 1 300 $`);
-  assert.ok(plan.BASE.price + sum <= 3000, "со всеми допами — не больше 3 000 $");
-  for (const id of ["post", "pay", "pwa"]) assert.ok(all.some((a) => a.id === id), `нет обязательного допа ${id}`);
+  assert.equal(sum, 3500, "все допы вместе — 3 500 $");
+  assert.equal(plan.BASE.price + sum, 8000, "со всеми допами — 8 000 $");
+  for (const id of ["post", "pay", "pwa", "mod"]) assert.ok(all.some((a) => a.id === id), `нет обязательного допа ${id}`);
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
 });
