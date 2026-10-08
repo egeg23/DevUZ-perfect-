@@ -226,6 +226,12 @@ export type DayStats = {
   trouble?: string | null;
   /** Поиск лидов через Firecrawl; null — ключа нет или поиск не работал. */
   search?: SearchStats | null;
+  /**
+   * Сколько раз кружок не ушёл, потому что в «Избранном» аккаунта его нет:
+   * вместо него ушло письмо. 08.10.2026 так прошёл целый день — кружок не
+   * загрузили, и никто этого не видел.
+   */
+  circleMissing?: number;
 };
 
 /** Слово при числе: 1 письмо, 3 письма, 5 писем. */
@@ -277,6 +283,9 @@ export function reportText(s: DayStats, escape: (t: string) => string): string {
     s.manual ? `Не нашлись в Telegram — карточки ушли на звонок: ${s.manual}` : null,
     s.dropped ? `Не написали — проверка по факту ничего не подтвердила или сайт не открылся: ${s.dropped}` : null,
     s.search ? searchLine(s.search) : null,
+    s.circleMissing
+      ? `🎥 Кружок не ушёл ${s.circleMissing} ${ru(s.circleMissing, "раз", "раза", "раз")}: в «Избранном» рабочих аккаунтов его нет, вместо него ушло письмо. Перешлите кружок боту или загрузите в «Аккаунтах» — он разойдётся по всем аккаунтам.`
+      : null,
     "",
     `💬 Ответили: <b>${s.replies}</b>${s.replies ? ` → взяли в работу: ${s.taken}${s.refused ? `, просили не писать: ${s.refused}` : ""}` : ""}`,
     ...s.replied

@@ -67,6 +67,7 @@ import {
 } from "@/lib/admin/write-myself";
 import { CLOSE_TEXT, isCloseReason } from "@/lib/admin/touch-close";
 import { streamCommand } from "@/lib/admin/stream";
+import { changesCircle, circleBotReply, circleFromMessage, saveCircleFromBot } from "@/lib/admin/circle-bot";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
 import { actOnTask, afterAct, awaitDate, taskAwaitingDate, taskById, type ActResult } from "@/lib/admin/task-store";
 import { OWN_DATE_PROMPT, TASK_CALLBACK, dueText, looksLikeDue, moveRows, taskRows } from "@/lib/admin/task-bot";
@@ -103,6 +104,9 @@ type Update = {
     date?: number;
     chat: TelegramChat;
     from?: TelegramUser;
+    /** Кружок или видео — так владелец отдаёт кружок для касаний (lib/admin/circle-bot.ts). */
+    video_note?: { file_id: string; length?: number; duration?: number; file_size?: number };
+    video?: { file_id: string; width?: number; height?: number; duration?: number; mime_type?: string; file_size?: number };
   };
   callback_query?: {
     id: string;
@@ -197,6 +201,12 @@ async function route(update: Update): Promise<void> {
         return;
       }
 
+      // Кружок для касаний: владелец или руководитель пересылает его боту
+      // (lib/admin/circle-bot.ts). Видео от остальных идёт дальше, как шло.
+      if (chat.type === "private" && circleFromMessage(update.message)) {
+        if (await handleCircleUpload(update.message)) return;
+      }
+
       // «▶️ Получать лиды» / «⏸ Не получать лиды» и /leads — кнопки внизу
       // чата сотрудника. Незнакомцу эти слова ничего не включают: его
       // сообщение идёт дальше, в обычный разговор.
@@ -246,6 +256,25 @@ async function route(update: Update): Promise<void> {
     // единственный след случившегося.
     console.error("telegram webhook", error);
   }
+}
+
+/**
+ * Кружок, присланный боту. true — сообщение разобрано: это сотрудник, и он
+ * получил ответ. Незнакомцу — false: его видео идёт в обычный разговор.
+ */
+async function handleCircleUpload(message: NonNullable<Update["message"]>): Promise<boolean> {
+  const staff = message.from?.id ? await staffByTelegramId(message.from.id) : null;
+  if (!staff) return false;
+  const circle = circleFromMessage(message);
+  if (!circle) return false;
+  if (!changesCircle(staff)) {
+    await sendMessage(message.chat.id, "Кружок для касаний меняют владелец и руководитель. Если записали новый — перешлите его им.");
+    return true;
+  }
+  await sendMessage(message.chat.id, "Принял кружок, сохраняю…");
+  const result = await saveCircleFromBot(circle, staff);
+  await sendMessage(message.chat.id, esc(circleBotReply(result)));
+  return true;
 }
 
 /** Личность для партнёрской программы: без числового id её нет. */
