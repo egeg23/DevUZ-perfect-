@@ -20,6 +20,7 @@ const IMG = "/protos/pkvesta";
 const CSS = readFileSync(DIR + "style.css", "utf8").replace(/\n/g, "").replace(/__IMG__/g, IMG);
 const INTRO = readFileSync(DIR + "intro.js", "utf8");
 const JS_MAIN = readFileSync(DIR + "client.js", "utf8");
+const ASM = readFileSync(DIR + "assembly.js", "utf8");
 const BASE = "__PROTO_BASE__";
 const TERMS = "https://devuz.studio/ru/mockup-terms";
 const FONTS = "https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Manrope:wght@400;700&display=swap";
@@ -221,7 +222,7 @@ ${body}
 ${path === "raschet" ? "" : `<div class="dock" id="dock"><a class="btn btn-wa" href="${waLink(dockText)}">${ICON.wa}Рассчитать в WhatsApp</a></div>`}
 ${dockHtml(path)}
 <script type="application/json" id="i18n">${JSON.stringify(L()).replace(/</g, "\\u003c")}</script>
-${isHome ? `<script>\n${INTRO}</script>` : ""}
+${isHome ? `<script>\n${INTRO}</script>\n<script>\n${ASM}</script>` : ""}
 <script>
 ${JS_MAIN}</script>
 </body>
@@ -262,22 +263,23 @@ const head = (kicker, h, lead, side = "", anim = "rise") => `<div class="sec-hea
 const oById = (id) => OBJ.find((o) => o.id === id);
 
 function heroBlock() {
+  const tw = (w, i) => `<span class="tw" style="--i:${i}">${w}</span>`;
   const rot = ["ангар", "склад", "цех", "коровник", "автосервис", "спортзал"];
   const fc = (o, cls, k) => `<a class="fc ${cls}" href="${href("obekt")}?id=${o.id}" data-depth="${k}" aria-label="${esc(objName(o))}"><img src="${IMG}/o${o.id}-1.webp" alt="" width="1280" height="720" loading="eager"><div><b>${o.w} × ${o.l} × ${dec(o.h)} м</b><small>${o.kind} · ${o.city}</small></div></a>`;
   const seg = (id, vals, on) => `<div class="seg" id="${id}" role="group">${vals.map((v) => `<button type="button" data-v="${v}" aria-pressed="${v === on}">${v}</button>`).join("")}</div>`;
   return `<section class="hero" id="hero" data-scene="hero" aria-label="ПК Веста">
-<div class="hero-ph" data-l="ph" aria-hidden="true"></div><div class="hero-sh" aria-hidden="true"></div>
+<div class="hero-ph" data-l="ph" aria-hidden="true"></div><div class="hero-sh" aria-hidden="true"></div><canvas class="flick" aria-hidden="true"></canvas>
 <div class="hero-in"><div class="wrap"><div class="hero-grid">
 <div>
 <span class="kicker hi" style="color:var(--on2)"><i></i>ПК Веста · завод стальных зданий · с 1991 года</span>
-<h1 class="hi" style="margin-top:16px;--d:80ms">Стальной <span class="rot" aria-hidden="true">${rot.map((w, k) => `<span${k === 0 ? ' class="on"' : ""}>${w}</span>`).join("")}</span><span class="vh">ангар, склад, цех, коровник</span> под ключ напрямую с завода</h1>
+<h1 style="margin-top:16px">${tw("Стальной", 0)} <span class="rot" aria-hidden="true">${rot.map((w, k) => `<span${k === 0 ? ' class="on"' : ""}>${[...w].map((ch, c) => `<i style="--c:${c}">${ch}</i>`).join("")}</span>`).join("")}</span><span class="vh">ангар, склад, цех, коровник</span> ${["под", "ключ", "напрямую", "с", "завода"].map((w, i) => tw(w, i + 2)).join(" ")}</h1>
 <p class="lead hi" style="--d:160ms">Проектируем, изготавливаем и монтируем быстровозводимые здания из металлоконструкций. Каркас собирается на 100% болтовом соединении: при монтаже сварки нет.</p>
 
 <div class="cta hero-go hi" style="--d:240ms" data-addon-off="sizes"><a class="btn btn-wa" href="${waLink("Здравствуйте! Хочу рассчитать здание.")}">${ICON.wa}Получить расчёт в WhatsApp</a><a class="btn btn-ghost" href="${F.websteel}">${ICON.calc}Посчитать в WebSteel</a></div>
 <div class="trust hi" style="--d:320ms"><span>${ICON.shield}35 лет на строительном рынке</span><span>${ICON.check}1500 проектов</span><span>${ICON.calc}WebSteel® 24/7</span></div>
 </div>
 <div><form class="cfg hi" id="cfg" style="--d:240ms" data-addon="sizes" onsubmit="return false">
-<div class="cfg-h"><b>Рассчитайте здание</b><span>шаг колонн 6 м</span></div>
+<span class="shine" aria-hidden="true"></span><div class="cfg-h"><b>Рассчитайте здание</b><span>шаг колонн 6 м</span></div>
 <label class="cfg-row"><span>Назначение</span><select aria-label="Назначение">${["Склад", "Ангар", "Цех", "Коровник", "Овощехранилище", "Автосервис", "Спортивный зал", "Магазин", "Другое"].map((x) => `<option>${x}</option>`).join("")}</select></label>
 <div class="cfg-row"><span>Ширина, м</span>${seg("cfg-w", ["12", "15", "18", "24", "30", "36", "42"], "18")}</div>
 <div class="cfg-row"><span>Длина</span><div class="len"><input type="range" id="cfg-lr" min="12" max="120" step="6" value="36" aria-label="Длина, м"><output id="cfg-l" class="num">36 м</output></div></div>
@@ -291,42 +293,133 @@ function heroBlock() {
 }
 
 function statsBlock() {
-  return `<section style="padding-bottom:0"><div class="wrap"><div class="stats rv a-rise">
+  return `<section style="padding-bottom:0"><div class="wrap"><div class="stats-w rv a-rise"><span class="trail" aria-hidden="true"></span><div class="stats">
 <div><b class="num" data-count="35">35</b><span>лет на строительном рынке, с 1991 года</span></div>
 <div><b class="num" data-count="1500" data-from="200">1 500</b><span>реализованных проектов зданий в разных странах</span></div>
 <div><b class="num" data-count="100" data-suf=" тыс.">100 тыс.</b><span>онлайн-расчётов зданий в год в WebSteel®</span></div>
 <div><b class="num" data-count="50">50</b><span>регионов оцифрованы: Евразия, Африка, Ближний Восток</span></div>
-</div></div></section>`;
+</div></div></div></section>`;
 }
 
 function asmBlock() {
   const steps = [
-    ["Проектирование", "Спроектируем здание под местные строительные нормы. Разделы КМ, АР и КЖ делаем в BIM, снеговые, ветровые и сейсмические зоны учитывает WebSteel."],
-    ["Изготовление", "Полный комплект здания заводского изготовления на 100% болтовом соединении. Доставка в любую точку мира: землёй, по железной дороге или авиа."],
-    ["Строительство", "Земляные и фундаментные работы и монтаж силами местных подрядчиков и партнёров завода. Во время монтажа каркаса сварки нет."],
+    ["Фундамент и колонны", "Колонны встают на фундамент одна за другой. Комплект приходит с завода готовым, детали подписаны."],
+    ["Фермы на болтах", "Половины ферм сходятся у конька и крепятся на болтах. Во время монтажа каркаса сварки нет."],
+    ["Прогоны и связи", "Прогоны, ригели стен, фахверк торцов и связи жёсткости: каркас считается под снег, ветер и сейсмику."],
+    ["Профлист стен и кровли", "Стены и кровля закрываются оцинкованным профлистом или сэндвич-панелями. Их завод делает сам."],
   ];
-  const img = (k, alt) => `<img class="d" data-k="${k}" src="${IMG}/asm-${k}.webp" alt="${alt}" width="1600" height="667"${k > 1 ? ' loading="lazy"' : ""}><img class="m" data-k="${k}" src="${IMG}/asm-${k}-m.webp" alt="" width="900" height="900"${k > 1 ? ' loading="lazy"' : ""}>`;
-  return `<section class="asm" id="asm" data-addon="assembly" aria-label="Как появляется здание"><div class="asm-pin">
-<div class="asm-head"><div class="wrap"><span class="kicker" style="color:var(--on2)"><i></i>Проектирование · изготовление · строительство</span><h2 style="margin-top:12px">Здание собирается, пока вы листаете</h2><p class="asm-cap">Фруктохранилище 56 × 76 × 8 м из ЛСТК, Астана. Визуализации WebSteel® с pkvesta.kz</p></div></div>
-<div class="asm-stage">${img(1, "Чертёж каркаса фруктохранилища")}${img(2, "Стальной каркас фруктохранилища")}${img(3, "Готовое фруктохранилище в обшивке")}</div>
-<div class="wrap"><ol class="asm-steps">${steps.map(([h, p], k) => `<li${k === 0 ? ' class="on"' : ""}><b><i>0${k + 1}</i>${h}</b><p>${p}</p></li>`).join("")}</ol><span class="asm-now">${steps[0][1]}</span></div>
+  const cut = (s) => s.split(" ").map((w, i) => `<span class="cw"><span style="--w:${i}">${w}</span></span>`).join(" ");
+  return `<section class="asm" id="asm" data-addon="assembly" aria-label="Как собирается здание"><div class="asm-pin">
+<div class="asm-head"><span class="kicker" style="color:var(--on2)"><i></i>Комплект заводского изготовления · 100% болтовое соединение</span><h2 style="margin-top:12px">Здание собирается из деталей, пока вы листаете</h2></div>
+<div class="asm-frame"><canvas class="asm-cv" role="img" aria-label="Схема сборки стального здания 24 на 48 на 6 метров: фундамент, колонны, фермы, прогоны, связи, профлист стен и кровли"></canvas></div>
+<div class="asm-foot"><ol class="asm-steps">${steps.map(([h, p], k) => `<li${k === 0 ? ' class="on"' : ""} style="--s:${k}"><b><i>0${k + 1}</i>${cut(h)}</b><p>${p}</p></li>`).join("")}</ol><span class="asm-now">${steps[0][1]}</span><p class="asm-cap">Пример: склад 24 × 48 × 6 м, шаг колонн 6 м, как в вашей таблице цен. Нарисовано кодом, без фото.</p></div>
 <div class="asm-bar" aria-hidden="true"><i></i></div>
 </div></section>`;
 }
 
+/* ── Мини-здания отраслей: изометрия кодом, та же проекция, что в сцене
+   сборки. Грани по ролям (стены, кровля, акценты), чтобы карточка могла
+   «собрать» здание при появлении и приподнять кровлю под курсором. ── */
+const ISO_C = Math.cos(Math.PI / 6);
+const isoP = (x, y, z) => [(x - z) * ISO_C, (x + z) * 0.5 - y];
+const r1 = (n) => Math.round(n * 10) / 10;
+function isoScene(draw) {
+  const out = [], seen = [];
+  const pt = (p) => { const q = isoP(...p); seen.push(q); return `${r1(q[0])},${r1(q[1])}`; };
+  const S = {
+    poly(cls, ps) { out.push(`<polygon class="${cls}" points="${ps.map(pt).join(" ")}"/>`); },
+    path(cls, d) { out.push(`<path class="${cls}" d="${d}"/>`); },
+    lines(cls, segs) { if (segs.length) out.push(`<path class="${cls}" d="${segs.map(([a, b]) => `M${pt(a)}L${pt(b)}`).join("")}"/>`); },
+    /* Рёбра профлиста: n линий между нижним (a→b) и верхним (d→c) краем грани. */
+    ribs(cls, a, b, c, d, n) {
+      const mix = (u, v, t) => u.map((x, i) => x + (v[i] - x) * t);
+      const segs = [];
+      for (let i = 1; i < n; i++) segs.push([mix(a, b, i / n), mix(d, c, i / n)]);
+      S.lines(cls, segs);
+    },
+    box(x, z, w, l, h, y0 = 0, o = {}) {
+      const [x1, z1, y1] = [x + w, z + l, y0 + h];
+      S.poly(`wl ${o.zf || "fz"}`, [[x, y0, z1], [x1, y0, z1], [x1, y1, z1], [x, y1, z1]]);
+      S.poly(`wl ${o.xf || "fx"}`, [[x1, y0, z], [x1, y0, z1], [x1, y1, z1], [x1, y1, z]]);
+      if (o.rib) { S.ribs("wl rb", [x, y0, z1], [x1, y0, z1], [x1, y1, z1], [x, y1, z1], Math.round(w * 1.5)); S.ribs("wl rb", [x1, y0, z], [x1, y0, z1], [x1, y1, z1], [x1, y1, z], Math.round(l * 1.5)); }
+      S.poly(`${o.top || "rf rt"}`, [[x, y1, z], [x1, y1, z], [x1, y1, z1], [x, y1, z1]]);
+    },
+    /* Двускатное здание, конёк вдоль z. */
+    gable(x, z, w, l, h, rise) {
+      const [x1, z1, xm] = [x + w, z + l, x + w / 2];
+      S.poly("rf r0", [[x, h, z], [xm, h + rise, z], [xm, h + rise, z1], [x, h, z1]]);
+      S.poly("wl fx", [[x1, 0, z], [x1, 0, z1], [x1, h, z1], [x1, h, z]]);
+      S.ribs("wl rb", [x1, 0, z], [x1, 0, z1], [x1, h, z1], [x1, h, z], Math.round(l * 1.5));
+      S.poly("wl fz", [[x, 0, z1], [x1, 0, z1], [x1, h, z1], [xm, h + rise, z1], [x, h, z1]]);
+      S.poly("rf r1", [[xm, h + rise, z], [x1, h, z], [x1, h, z1], [xm, h + rise, z1]]);
+      const segs = [];
+      for (let i = 1; i < Math.round(l * 1.2); i++) { const zz = z + (l * i) / Math.round(l * 1.2); segs.push([[xm, h + rise, zz], [x1, h, zz]]); }
+      S.lines("rf rr", segs);
+      S.lines("rf tr", [[[xm, h + rise, z], [xm, h + rise, z1]], [[x, h, z1], [xm, h + rise, z1]], [[xm, h + rise, z1], [x1, h, z1]]]);
+    },
+    /* Арочный зал: стенка h, свод высотой rise, вдоль z. */
+    arch(x, z, w, l, h, rise) {
+      const z1 = z + l, N = 14, A = [];
+      for (let i = 0; i <= N; i++) { const t = (Math.PI * i) / N; A.push([x + w / 2 - (w / 2) * Math.cos(t), h + rise * Math.sin(t)]); }
+      S.poly("wl fx", [[x + w, 0, z], [x + w, 0, z1], [x + w, h, z1], [x + w, h, z]]);
+      for (let i = 0; i < N; i++) {
+        const [xa, ya] = A[i], [xb, yb] = A[i + 1], vis = -(yb - ya) + (xb - xa);
+        if (vis <= 0) continue;
+        const k = Math.min(3, Math.max(0, Math.round(((xb - xa) / Math.hypot(xb - xa, yb - ya)) * 3)));
+        S.poly(`rf a${k}`, [[xa, ya, z], [xb, yb, z], [xb, yb, z1], [xa, ya, z1]]);
+      }
+      S.poly("wl fz", [[x, 0, z1], [x + w, 0, z1], ...A.slice().reverse().map(([ax, ay]) => [ax, ay, z1])]);
+      S.lines("rf tr", A.slice(0, -1).map(([ax, ay], i) => [[ax, ay, z1], [A[i + 1][0], A[i + 1][1], z1]]));
+    },
+    /* Силос или труба: цилиндр, по желанию с конусом. */
+    cyl(x, z, r, h, cone = 0, y0 = 0) {
+      const [cx, cy0] = isoP(x, y0, z), [, cy1] = isoP(x, y0 + h, z), rx = r * Math.SQRT2 * ISO_C, ry = (r * Math.SQRT2) / 2;
+      seen.push([cx - rx, cy1 - ry - cone], [cx + rx, cy0 + ry]);
+      const L = r1(cx - rx), R = r1(cx + rx);
+      out.push(`<path class="wl cy" d="M${L},${r1(cy1)}L${L},${r1(cy0)}A${r1(rx)} ${r1(ry)} 0 0 0 ${R},${r1(cy0)}L${R},${r1(cy1)}Z"/>`);
+      const rings = [];
+      for (let i = 1; i < 4; i++) { const yy = r1(cy0 + ((cy1 - cy0) * i) / 4); rings.push(`M${L},${yy}A${r1(rx)} ${r1(ry)} 0 0 0 ${R},${yy}`); }
+      out.push(`<path class="wl rb" d="${rings.join("")}"/>`);
+      if (cone) out.push(`<path class="rf r1" d="M${L},${r1(cy1)}L${r1(cx)},${r1(cy1 - cone)}L${R},${r1(cy1)}A${r1(rx)} ${r1(ry)} 0 0 1 ${L},${r1(cy1)}Z"/>`);
+      else out.push(`<ellipse class="rf rt" cx="${r1(cx)}" cy="${r1(cy1)}" rx="${r1(rx)}" ry="${r1(ry)}"/>`);
+    },
+  };
+  draw(S);
+  const xs = seen.map((p) => p[0]), ys = seen.map((p) => p[1]);
+  const [mnx, mxx, mny, mxy] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  /* Плита с сеткой под зданием: ширина по рисунку, шаг 2 м. */
+  const pad = 3, gx = [mnx - pad, mxx + pad], gy = [mny - pad, mxy + pad];
+  return { body: out.join(""), vb: `${r1(gx[0])} ${r1(gy[0])} ${r1(gx[1] - gx[0])} ${r1(gy[1] - gy[0])}` };
+}
+function isoGround(x0, z0, x1, z1) {
+  const segs = [];
+  for (let x = x0; x <= x1; x += 2) segs.push([[x, 0, z0], [x, 0, z1]]);
+  for (let z = z0; z <= z1; z += 2) segs.push([[x0, 0, z], [x1, 0, z]]);
+  return segs;
+}
+const ISO_SCENES = {
+  agro: (S) => { S.lines("gd", isoGround(-3, -3, 16, 19)); S.poly("sh", [[0, 0, 0], [11, 0, 0], [11, 0, 16], [0, 0, 16]]); S.gable(0, 0, 8, 14, 3.2, 2.2); S.poly("ac", [[2.8, 0, 14], [5.2, 0, 14], [5.2, 2.4, 14], [2.8, 2.4, 14]]); S.cyl(12, 3, 1.7, 6.5, 1.6); },
+  comm: (S) => { S.lines("gd", isoGround(-3, -3, 15, 17)); S.poly("sh", [[0, 0, 0], [12, 0, 0], [12, 0, 14], [0, 0, 14]]); S.box(0, 0, 10, 12, 4.6, 0, { top: "rf rt" }); S.poly("wl gl", [[1, 1.3, 12], [9, 1.3, 12], [9, 3.6, 12], [1, 3.6, 12]]); S.poly("wl gl", [[10, 1.3, 1], [10, 1.3, 11], [10, 3.6, 11], [10, 3.6, 1]]); S.box(2, 3, 2.4, 2.4, 1, 4.6, { top: "rf rt", zf: "rf u1", xf: "rf u2" }); S.box(3.2, 12, 3.8, 1.6, 0.35, 3.1, { top: "ac", zf: "ac", xf: "ac" }); },
+  prom: (S) => { S.lines("gd", isoGround(-3, -3, 18, 21)); S.poly("sh", [[0, 0, 0], [15, 0, 0], [15, 0, 18], [0, 0, 18]]); S.gable(0, 0, 10, 16, 5, 1.8); S.poly("ac", [[2.5, 0, 16], [7.5, 0, 16], [7.5, 4, 16], [2.5, 4, 16]]); S.lines("gt", [0.8, 1.6, 2.4, 3.2].map((y) => [[2.5, y, 16], [7.5, y, 16]])); S.cyl(13.5, 2.5, 0.7, 10); S.box(10, 9, 4.5, 7, 3, 0, { rib: true }); },
+  sport: (S) => { S.lines("gd", isoGround(-3, -3, 16, 22)); S.poly("sh", [[0, 0, 0], [13, 0, 0], [13, 0, 19], [0, 0, 19]]); S.arch(0, 0, 12, 18, 1.4, 5); S.poly("ac", [[4.5, 0, 18], [7.5, 0, 18], [7.5, 2.6, 18], [4.5, 2.6, 18]]); },
+  tech: (S) => { S.lines("gd", isoGround(-3, -3, 17, 17)); S.poly("sh", [[0, 0, 0], [14, 0, 0], [14, 0, 15], [0, 0, 15]]); S.gable(0, 0, 12, 13, 5, 1.8); S.poly("ac", [[1.8, 0, 13], [10.2, 0, 13], [10.2, 4.3, 13], [1.8, 4.3, 13]]); S.lines("gt", [0.9, 1.8, 2.7, 3.6].map((y) => [[1.8, y, 13], [10.2, y, 13]])); S.box(12, 8, 2.6, 3, 2.6, 0, {}); },
+  gen: (S) => { S.lines("gd", isoGround(-3, -3, 14, 13)); S.poly("sh", [[0, 0, 0], [11, 0, 0], [11, 0, 10], [0, 0, 10]]); S.gable(0, 0, 6, 8, 3, 2.4); S.poly("wl gl", [[0.8, 1.1, 8], [2.4, 1.1, 8], [2.4, 2.3, 8], [0.8, 2.3, 8]]); S.poly("ac", [[3.4, 0, 8], [5, 0, 8], [5, 2.3, 8], [3.4, 2.3, 8]]); S.box(6.6, 3, 4, 5, 2.6, 0, { rib: true }); S.poly("ac", [[7.2, 0, 8], [10, 0, 8], [10, 2.1, 8], [7.2, 2.1, 8]]); },
+};
+const isoSvg = (k) => { const s = isoScene(ISO_SCENES[k]); return `<svg class="iso" viewBox="${s.vb}" aria-hidden="true" focusable="false">${s.body}</svg>`; };
+
 function indBlock() {
-  const anims = ["beam", "lift", "bolt", "panel", "beam", "lift"];
   return `<section><div class="wrap">
 ${head("Каталог быстровозводимых зданий", `${TYPES_N} типов зданий в шести отраслях`, "Каталог с вашего сайта, только крупно и в одно касание. В каждой отрасли пример вашего объекта с размерами.", `<a class="btn btn-ghost btn-sm" href="${href("katalog")}">Весь каталог ${ICON.arrow}</a>`)}
+<svg class="iso-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs><linearGradient id="cyl" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="hsl(218 32% 90%)"/><stop offset=".5" stop-color="hsl(220 26% 78%)"/><stop offset="1" stop-color="hsl(222 30% 58%)"/></linearGradient></defs></svg>
 <div class="inds">${IND.map((x, k) => {
     const o = x.ex ? oById(x.ex) : null;
-    return `<a class="ind${o ? " ph" : ""} rv a-${anims[k]}" style="--d:${(k % 3) * 90}ms" href="${href("katalog")}?ind=${x.k}">${o ? `<div class="bg" style="background-image:url(${IMG}/o${o.id}-1.webp)"></div>` : ""}<span class="ic">${ICON[x.ic]}</span><span class="n num">${x.items.length}</span><h3>${x.n}</h3><p>${o ? `${objName(o)}, ${o.city}` : x.note || x.items.slice(0, 4).join(", ")}</p><span class="go">Типы зданий ${ICON.arrow}</span></a>`;
+    return `<a class="ind rv a-blurin" style="--d:${(k % 3) * 110}ms" href="${href("katalog")}?ind=${x.k}"><span class="spot" aria-hidden="true"></span><span class="n num">${x.items.length}</span>${isoSvg(x.k)}<h3>${x.n}</h3><p>${o ? `${objName(o)}, ${o.city}` : x.note || x.items.slice(0, 4).join(", ")}</p><span class="go">Типы зданий ${ICON.arrow}</span></a>`;
   }).join("")}</div>
 </div></section>`;
 }
 
 function ocard(o, k = 0) {
-  return `<a class="oc" data-id="${o.id}" href="${href("obekt")}?id=${o.id}"><img src="${IMG}/o${o.id}-1.webp" alt="${esc(`${objName(o)}, ${o.city}`)}" width="1280" height="720" loading="lazy"><div class="bd"><span class="dims num">${dims(o)}<small>м</small></span><h3>${o.kind}${o.frame ? ` из ${o.frame}` : ""}</h3><p>${ICON.pin}${o.city}, ${o.country}</p></div></a>`;
+  return `<a class="oc" data-id="${o.id}" href="${href("obekt")}?id=${o.id}"><span class="oc-im"><img src="${IMG}/o${o.id}-1.webp" alt="${esc(`${objName(o)}, ${o.city}`)}" width="1280" height="720" loading="lazy"><i class="oc-tone" aria-hidden="true"></i></span><div class="bd"><span class="dims num">${dims(o)}<small>м</small></span><h3>${o.kind}${o.frame ? ` из ${o.frame}` : ""}</h3><p>${ICON.pin}${o.city}, ${o.country}</p></div></a>`;
 }
 
 function trackBlock() {
@@ -341,22 +434,25 @@ function geoBlock() {
   return `<section><div class="wrap">
 ${head("Где уже стоят здания ПК Веста", "Казахстан и Ташкент", "Объекты из вашего списка на pkvesta.kz. Города стоят по своим координатам, контуры границ не рисуем: это схема, а не карта.")}
 <div class="geo">
-<div class="geo-map rv" aria-hidden="true">${GEO.map((g) => { const kk = k++; return `<i class="${g.uz ? "uz" : ""}" style="left:${g.x}%;top:${g.y}%;--k:${kk}"></i><span class="${g.lf ? "lf" : ""}" style="left:${g.x}%;top:${g.y}%;--k:${kk}">${g.c}</span>`; }).join("")}<em>Жёлтые точки: Казахстан · белая: Узбекистан</em></div>
-<ul class="geo-list">${GEO.map((g) => `<li class="rv a-slide"><b>${g.c}</b>${g.items.map((x) => `<span>${x}</span>`).join("")}</li>`).join("")}</ul>
+<div class="geo-map rv" aria-hidden="true">${GEO.map((g) => { const kk = k++; return `<i class="${g.uz ? "uz" : ""}" data-k="${kk}" style="left:${g.x}%;top:${g.y}%;--k:${kk}"></i><span class="${g.lf ? "lf" : ""}" data-k="${kk}" style="left:${g.x}%;top:${g.y}%;--k:${kk}">${g.c}</span>`; }).join("")}<em>Жёлтые точки: Казахстан · белая: Узбекистан</em></div>
+<ul class="geo-list">${GEO.map((g, k) => `<li class="rv a-slide" data-k="${k}"><b>${g.c}</b>${g.items.map((x) => `<span>${x}</span>`).join("")}</li>`).join("")}</ul>
 </div>
 </div></section>`;
 }
 
+/* Текст перебирает символы и встаёт на место: читалка экрана видит только итог. */
+const hyper = (t) => `<span class="vh">${t}</span><span data-hyper="${t}" aria-hidden="true">${t}</span>`;
+
 function featsBlock() {
   const f = [
-    ["bolt", "100% болтовое соединение", "Каркас приходит готовым комплектом заводского изготовления и собирается на болтах, как конструктор.", "Во время монтажа каркаса сварка вообще отсутствует"],
-    ["shield", "По СНиП, без занижения", "Здание считается под снеговые, ветровые и сейсмические нагрузки на вашей площадке.", "без занижения коэффициентов надёжности"],
-    ["span", "Пролёт до 30 метров", "Тонкостенные конструкции из оцинкованного профиля до 3 мм: однопролётные здания с пролётом до 30 м.", "однопролётные здания с пролётом до 30 м"],
-    ["truck", "Комплект в любую точку", "Готовый комплект здания уходит с завода наземным транспортом, по железной дороге или авиа.", "в любую точку мира"],
+    ["bolt", "100%", "100% болтовое соединение", "Каркас приходит готовым комплектом заводского изготовления и собирается на болтах, как конструктор.", "Во время монтажа каркаса сварка вообще отсутствует"],
+    ["shield", "СНиП", "По СНиП, без занижения", "Здание считается под снеговые, ветровые и сейсмические нагрузки на вашей площадке.", "без занижения коэффициентов надёжности"],
+    ["span", "30 м", "Пролёт до 30 метров", "Тонкостенные конструкции из оцинкованного профиля до 3 мм: однопролётные здания с пролётом до 30 м.", "однопролётные здания с пролётом до 30 м"],
+    ["truck", "Авто · ЖД · Авиа", "Комплект в любую точку", "Готовый комплект здания уходит с завода наземным транспортом, по железной дороге или авиа.", "в любую точку мира"],
   ];
   return `<section style="padding-top:0"><div class="wrap">
 ${head("Каркас как конструктор", "Почему собирается быстро", "Всё ниже вы говорите о себе на pkvesta.kz. Мы только собрали это в одном месте.")}
-<div class="feats">${f.map(([i, h, p, q], k) => `<div class="ft rv a-${["bolt", "lift", "beam", "slide"][k]}" style="--d:${k * 80}ms"><span class="ic">${ICON[i]}</span><h3>${h}</h3><p>${p}</p><q>${q}</q></div>`).join("")}</div>
+<div class="feats">${f.map(([i, t, h, p, q], k) => `<div class="ft rv a-${["bolt", "lift", "beam", "slide"][k]}" style="--d:${k * 80}ms"><span class="beam" aria-hidden="true"></span><div class="ft-top"><span class="ic">${ICON[i]}</span><b class="tk${t.length > 6 ? " sm" : ""}">${hyper(t)}</b></div><h3>${h}</h3><p>${p}</p><q>${q}</q></div>`).join("")}</div>
 </div></section>`;
 }
 
@@ -366,8 +462,10 @@ function wsBlock() {
 ${head("Онлайн-калькулятор завода", "WebSteel®: посчитайте здание сами", "Ваш калькулятор работает круглосуточно и считает здание по технологическим возможностям завода. Из семи сайтов конкурентов в Казахстане, которые мы смотрели, настоящего расчёта нет ни у одного: у всех заявка менеджеру.")}
 <div class="ws">
 <ol>${steps.map((s, k) => `<li class="rv a-left" style="--d:${k * 60}ms">${s}</li>`).join("")}</ol>
+<div class="ws-hub rv a-pop" style="--d:240ms"><span class="ws-core"><b>${hyper("WebSteel®")}</b><small>считает 24/7</small></span></div>
 <div class="ws-res rv a-panel"><h3>Что приходит на почту</h3><ul><li>${ICON.check}Стоимость, которая меняется вместе с параметрами</li><li>${ICON.check}Бесплатные эскизы с учётом климатических зон: снег, ветер, сейсмика</li><li>${ICON.check}Техническое задание и готовые расчёты</li><li>${ICON.check}Официальное коммерческое предложение</li></ul>
 <div class="cta"><a class="btn btn-lime" href="${F.websteel}">${ICON.calc}Открыть WebSteel</a><a class="btn btn-ghost" href="${waLink("Здравствуйте! Хочу рассчитать здание, помогите с WebSteel.")}">${ICON.wa}Спросить в WhatsApp</a></div></div>
+<svg class="ws-beams" aria-hidden="true" focusable="false"></svg>
 </div>
 </div></section>`;
 }
@@ -383,12 +481,16 @@ const OFFERS = [
 function offerBlock(title = true) {
   return `<section class="dark" id="predlozhenie"><div class="wrap">
 ${title ? head('<span class="ours">Предложение DevUz Studio</span>', "Что добавить сайту завода", "Этого на pkvesta.kz пока нет. Каждое растёт из того, что у вас уже есть.") : ""}
-<div class="offer">${OFFERS.map(([i, h, p, s], k) => `<div class="of rv a-${["rise", "bolt", "panel"][k % 3]}" style="--d:${(k % 3) * 90}ms"><span class="ic">${ICON[i]}</span><h3>${h}</h3><p>${p}</p><small>${s}</small></div>`).join("")}</div>
+<div class="offer">${OFFERS.map(([i, h, p, s], k) => `<div class="of rv a-${["rise", "bolt", "panel"][k % 3]}" style="--d:${(k % 3) * 90}ms"><span class="spot" aria-hidden="true"></span><span class="beam" aria-hidden="true"></span><span class="ic">${ICON[i]}</span><h3>${h}</h3><p>${p}</p><small>${s}</small></div>`).join("")}</div>
 </div></section>`;
 }
 
-const finalBlock = () => `<section class="final"><div class="wrap"><div class="box rv a-pop"><div class="rings" aria-hidden="true"><i></i><i></i><i></i></div>
-<h2>Посчитаем ваше здание</h2>
+/* Тоннель из сетки с бегущими лучами — по мотивам «Warp Background» (@dillionverma, 21st.dev, MIT).
+   Лучи расставлены заранее, без случайных чисел: у каждого своё место, длина и задержка. */
+const WARP = { t: [[18, 4, 0], [52, 7, 1.2], [80, 3, 2.3]], b: [[30, 6, 0.6], [64, 3, 1.8], [88, 8, 2.9]], l: [[25, 5, 1.4], [70, 3, 0.2]], r: [[35, 4, 2.1], [75, 7, 0.9]] };
+const warp = () => `<div class="warp" aria-hidden="true">${Object.entries(WARP).map(([side, bs]) => `<div class="wp ${side}">${bs.map(([x, ar, dl], k) => `<i class="${k % 2 ? "c2" : ""}" style="--x:${x}%;--ar:${ar};--dl:${dl}s"></i>`).join("")}</div>`).join("")}</div>`;
+const finalBlock = () => `<section class="final"><div class="wrap"><div class="box rv a-pop">${warp()}
+<h2>${["Посчитаем", "ваше", "здание"].map((w, i) => `<span class="tw" style="--i:${i}">${w}</span>`).join(" ")}</h2>
 <p class="sub" style="margin-top:12px">Пришлите размеры в WhatsApp или посчитайте сами в WebSteel. Срок проектирования и изготовления типового здания: 2,5 месяца.</p>
 <div class="cta"><a class="btn btn-lime" href="${href("raschet")}">${ICON.calc}Рассчитать здание</a><a class="btn btn-ghost" href="tel:${F.tel}">${ICON.phone}${F.phone}</a></div>
 </div></div></section>`;
@@ -553,7 +655,7 @@ function plan() {
   const comp = [
     ["WhatsApp с готовым текстом", "Есть у всех восьми сайтов в Казахстане, которые мы смотрели. У вас текст сразу с размерами, кровлей и городом."],
     ["Готовые решения с размерами", "Star Building показывает «Склад от 1000 м², от 30 дней». У вас в каждой отрасли ваш объект с размерами Ш × Д × В."],
-    ["Главный объект в Казахстане", "Asyl Kazyna строит рассказ вокруг одного кейса. У вас фруктохранилище в Астане собирается при прокрутке."],
+    ["Главный объект в Казахстане", "Asyl Kazyna строит рассказ вокруг одного кейса. У вас склад из вашей таблицы цен собирается из деталей при прокрутке, а объекты с размерами едут лентой."],
     ["Где строили", "Asyl Kazyna перечисляет города. У вас города стоят на схеме по координатам, у каждого объект и размеры."],
     ["Расчёт по размерам на первом экране", "KAZMODUL просит длину, ширину и место. У вас ещё высота и площадь сразу, а дальше WebSteel."],
     ["Почему быстро", "StroyHub объясняет болтовые узлы. У вас блок «Каркас как конструктор» вашими же словами с pkvesta.kz."],
@@ -603,8 +705,8 @@ ${head("Чем обходим конкурентов", "Шесть сильны�
 </div></section>
 ${offerBlock(true)}
 <section id="foto"><div class="wrap">
-${head("Снимки в прототипе", "Откуда изображения", "Все изображения зданий: визуализации WebSteel® с ваших страниц «Наши объекты» на pkvesta.kz, с вашим знаком. Чертёж на первом экране: каркас фруктохранилища в Астане, перекрашенный в синьку. Нейросетью ничего не рисовали.")}
-<ul class="credits"><li>Объекты №213, 203, 199, 204, 217: <a href="${F.site}/objects/">pkvesta.kz/objects</a></li><li>Домик с воротами в заставке и шапке нарисован кодом по вашему логотипу.</li><li>Смена слова в заголовке и катящиеся цифры сделаны по мотивам компонентов Magic UI (MIT).</li></ul>
+${head("Снимки в прототипе", "Откуда изображения", "Все изображения зданий: визуализации WebSteel® с ваших страниц «Наши объекты» на pkvesta.kz, с вашим знаком. Чертёж на первом экране: каркас фруктохранилища в Астане, перекрашенный в синьку. Сборка здания и мини-здания отраслей нарисованы кодом. Нейросетью ничего не рисовали.")}
+<ul class="credits"><li>Объекты №213, 203, 199, 204, 217: <a href="${F.site}/objects/">pkvesta.kz/objects</a></li><li>Домик с воротами в заставке и шапке нарисован кодом по вашему логотипу.</li><li>Склад 24 × 48 × 6 м в сцене сборки взят из вашей таблицы цен: шаг колонн 6 м.</li><li>Движение сделано по мотивам открытых компонентов с 21st.dev (лицензия MIT), код свой: Text Effect, Text Rotate, Shine Border, Flickering Grid, Border Trail, Number Ticker, Scroll Expansion, Vertical Cut Reveal, Spotlight, Blur Fade, Tilt, Border Beam, Hyper Text, Animated Beam, Dot Pattern, Warp Background.</li></ul>
 </div></section>`;
   return shell("plan", {
     title: "Что дальше: было и стало, конструктор сайта | ПК Веста",

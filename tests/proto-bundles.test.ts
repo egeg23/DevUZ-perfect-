@@ -178,7 +178,10 @@ test("ПК Веста: 6 страниц на русском — условия, 
   }
   assert.match(all[""], /id="intro"[\s\S]*DevUz Studio/, "нет промо DevUz Studio");
   assert.match(all[""], /class="vx-gate"/, "нет ворот с логотипа в заставке");
-  assert.match(all[""], /id="asm"[\s\S]*asm-3\.webp/, "нет сцены «чертёж → каркас → здание»");
+  // Сборка из деталей рисуется кодом на canvas, без кадров-фото.
+  assert.match(all[""], /id="asm"[\s\S]*class="asm-cv"/, "нет сцены «здание собирается из деталей»");
+  assert.doesNotMatch(all[""], /asm-\d(-m)?\.webp/, "в сцене сборки снова фото");
+  assert.match(all[""], /class="iso"/, "у отраслей нет нарисованных кодом зданий");
   assert.match(all[""], /id="trk"/, "нет ленты объектов");
   for (const id of [213, 203, 199, 204, 217]) assert.match(all.obekt, new RegExp(`data-id="${id}"`), `нет объекта №${id}`);
   const stamped = stampedBundle("pkvesta", SEED)!;

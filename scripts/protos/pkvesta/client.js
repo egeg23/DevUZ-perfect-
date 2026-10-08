@@ -26,6 +26,11 @@ if('IntersectionObserver' in window&&!reduce){
   rv.forEach(function(el){io.observe(el)});
 }else rv.forEach(function(el){el.classList.add('in')});
 
+/* ── Пятно света за курсором на карточках (только мышь, только transform) ── */
+var hov=false;try{hov=matchMedia('(hover:hover) and (pointer:fine)').matches}catch(e){}
+if(hov&&!reduce)qa('.spot').forEach(function(sp){var card=sp.parentNode;
+  card.addEventListener('pointermove',function(e){var r=card.getBoundingClientRect();sp.style.transform='translate3d('+(e.clientX-r.left).toFixed(0)+'px,'+(e.clientY-r.top).toFixed(0)+'px,0)'})});
+
 /* ── Шапка над чертежом: прозрачная, после первого экрана — плотная ── */
 if(d.body.classList.contains('home')){
   var top=function(){d.body.classList.toggle('scrolled',scrollY>innerHeight*.6)};
@@ -64,6 +69,21 @@ if(hero&&!reduce){
   new IntersectionObserver(function(es){act=es[0].isIntersecting;if(act&&!hraf)hraf=requestAnimationFrame(hloop)}).observe(hero);
 }
 
+/* ── Мерцающая сетка над чертежом: десять кадров в секунду, только пока
+   первый экран виден; перерисовываются лишь сменившиеся клетки ── */
+var fl=d.querySelector('.hero .flick');
+if(fl&&fl.getContext&&!reduce){
+  var fx=fl.getContext('2d'),G=9,SQ=3,fw=0,fh=0,cols=0,rows=0,cell=null,fdpr=1,fon=false,fraf=0,ft=0;
+  var fcol=function(i){return (i*7919)%41===0?'214,232,64':'232,238,247'};
+  var fput=function(i){var x=(i%cols)*G,y=Math.floor(i/cols)*G;fx.clearRect(x,y,SQ,SQ);fx.fillStyle='rgba('+fcol(i)+','+cell[i].toFixed(2)+')';fx.fillRect(x,y,SQ,SQ)};
+  var fsize=function(){var r=fl.getBoundingClientRect();fdpr=Math.min(devicePixelRatio||1,2);fw=r.width;fh=r.height;fl.width=Math.round(fw*fdpr);fl.height=Math.round(fh*fdpr);fx.setTransform(fdpr,0,0,fdpr,0,0);
+    cols=Math.ceil(fw/G);rows=Math.ceil(fh/G);cell=new Float32Array(cols*rows);for(var i=0;i<cell.length;i++){cell[i]=Math.random()*.32;fput(i)}};
+  var ftick=function(t){fraf=0;if(!fon)return;fraf=requestAnimationFrame(ftick);if(t-ft<100||d.hidden||calm())return;ft=t;
+    for(var n=Math.round(cell.length*.025);n>0;n--){var i=(Math.random()*cell.length)|0;cell[i]=Math.random()<.12?.45+Math.random()*.3:Math.random()*.3;fput(i)}};
+  fsize();addEventListener('resize',function(){if(Math.abs(fl.getBoundingClientRect().width-fw)>1)fsize()});
+  new IntersectionObserver(function(es){fon=es[0].isIntersecting;if(fon&&!fraf)fraf=requestAnimationFrame(ftick)}).observe(fl);
+}
+
 /* ── Слово в заголовке меняется ── */
 var rot=d.querySelector('.hero h1 .rot');
 if(rot&&!reduce){
@@ -81,21 +101,6 @@ qa('[data-count]').forEach(function(el){
   o.observe(el);
 });
 
-/* ── Сцена: чертёж → каркас → здание. Липкий кадр, прокрутка своя ── */
-var asm=$('asm');
-if(asm&&!reduce){
-  var imgs=qa('.asm-stage img',asm),steps=qa('.asm-steps li',asm),bar=asm.querySelector('.asm-bar'),now=asm.querySelector('.asm-now'),lastK=-1;
-  scene(asm,function(r){
-    var p=clamp(-r.top/Math.max(1,r.height-innerHeight),0,1);
-    var o1=1-smooth(.26,.4,p),o3=smooth(.6,.74,p),o2=Math.min(smooth(.26,.4,p),1-o3);
-    var s=(1+p*.08).toFixed(4);
-    imgs.forEach(function(im){var k=+im.dataset.k,o=k===1?o1:k===2?o2:o3;im.style.setProperty('--o',o.toFixed(3));im.style.setProperty('--s',s)});
-    bar.style.setProperty('--p',p.toFixed(4));
-    var k=p<.36?0:p<.68?1:2;
-    if(k!==lastK){lastK=k;steps.forEach(function(li,i){li.classList.toggle('on',i===k)});if(now)now.textContent=steps[k].querySelector('p').textContent}
-  },true);
-}
-
 /* ── Объекты лентой: листаете вниз, лента едет вбок. Выключили — обычная лента пальцем ── */
 var trk=$('trk');
 function trackSet(){
@@ -110,6 +115,63 @@ if(trk){
   trackSet();addEventListener('resize',trackSet);d.addEventListener('pv-kit',trackSet);
   scene(trk,function(r){if(!trk.classList.contains('live'))return;var dist=+trk.dataset.dist||0,p=clamp(-r.top/Math.max(1,r.height-innerHeight),0,1);trk.querySelector('.trk-row').style.transform='translate3d('+(-p*dist).toFixed(1)+'px,0,0)'},true);
 }
+
+/* ── Карточка в средней полосе экрана — в цвете ── */
+if(trk&&'IntersectionObserver' in window){
+  var lit=new IntersectionObserver(function(es){es.forEach(function(e){e.target.classList.toggle('lit',e.isIntersecting)})},{rootMargin:'0px -32% 0px -32%'});
+  qa('.oc',trk).forEach(function(c){lit.observe(c)});
+}
+/* ── Наклон карточки за курсором, без пружин: ровно и мягко ── */
+if(hov&&!reduce)qa('.oc:not(.more)').forEach(function(c){
+  c.addEventListener('pointermove',function(e){if(calm())return;var r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    c.classList.remove('tilt-off');c.classList.add('tilt');c.style.transform='perspective(900px) rotateX('+(-y*7).toFixed(2)+'deg) rotateY('+(x*9).toFixed(2)+'deg) translateZ(0)'});
+  c.addEventListener('pointerleave',function(){c.classList.remove('tilt');c.classList.add('tilt-off');c.style.transform=''});
+});
+
+/* ── Символы перебираются и встают на место — по мотивам «Hyper Text»
+   (@dillionverma, 21st.dev, MIT): при появлении и при наведении ── */
+var POOL={c:'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ',l:'ABCDEFGHJKLMNPQRSTUVWXYZ',d:'0123456789'};
+var hyper=function(el){
+  if(el._h||calm())return;el._h=1;var fin=el.dataset.hyper,n=0,N=fin.length*3;
+  (function f(){var out='';for(var i=0;i<fin.length;i++){var ch=fin[i];
+      if(i<n/3||!/[0-9A-Za-zА-Яа-яЁё]/.test(ch)){out+=ch;continue}
+      var pool=/[0-9]/.test(ch)?POOL.d:/[A-Za-z]/.test(ch)?POOL.l:POOL.c,r=pool[(Math.random()*pool.length)|0];
+      out+=ch===ch.toLowerCase()?r.toLowerCase():r}
+    el.textContent=out;if(++n<=N)setTimeout(f,32);else{el.textContent=fin;el._h=0}})();
+};
+var hy=qa('[data-hyper]');
+if(hy.length&&!reduce&&'IntersectionObserver' in window){
+  var hio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){hio.unobserve(e.target);setTimeout(function(){hyper(e.target)},350)}})},{rootMargin:'0px 0px -12% 0px'});
+  hy.forEach(function(el){hio.observe(el);var box=el.closest('.ft,.ws-hub');if(box&&hov)box.addEventListener('pointerenter',function(){hyper(el)})});
+}
+
+/* ── WebSteel: лучи от шагов к калькулятору и от него к результату.
+   Точки берутся из раскладки (offset*), а не из кадра: на них не влияет
+   появление блоков со сдвигом. ── */
+var wsb=d.querySelector('.ws');
+if(wsb){
+  var svg=wsb.querySelector('.ws-beams'),core=wsb.querySelector('.ws-core'),res=wsb.querySelector('.ws-res'),ol=wsb.querySelector('ol'),lis=qa('li',ol);
+  var off=function(el){var x=0,y=0,e=el;while(e&&e!==wsb){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent}return {x:x,y:y,w:el.offsetWidth,h:el.offsetHeight}};
+  var pt=function(x,y){return x.toFixed(1)+','+y.toFixed(1)};
+  var beams=function(){
+    var H=off(core),S=off(res),O=off(ol),out='',k=0;
+    var add=function(dd){out+='<path class="bl" d="'+dd+'"/><path class="bm" pathLength="100" style="--t:'+((k++*.41)%2.8).toFixed(2)+'s" d="'+dd+'"/>'};
+    if(H.x>O.x+O.w-1){
+      var hx=H.x,hy=H.y+H.h/2;
+      lis.forEach(function(li){var r=off(li),x0=r.x+r.w,y0=r.y+r.h/2,mx=(x0+hx)/2;add('M'+pt(x0,y0)+'C'+pt(mx,y0)+' '+pt(mx,hy)+' '+pt(hx,hy))});
+      var x1=H.x+H.w,x2=S.x,y2=S.y+S.h/2,m2=(x1+x2)/2;add('M'+pt(x1,hy)+'C'+pt(m2,hy)+' '+pt(m2,y2)+' '+pt(x2,y2));
+    }else{var cx=H.x+H.w/2;add('M'+pt(cx,O.y+O.h)+'L'+pt(cx,H.y));add('M'+pt(cx,H.y+H.h)+'L'+pt(cx,S.y))}
+    svg.innerHTML=out;
+  };
+  beams();addEventListener('resize',beams);if(d.fonts&&d.fonts.ready)d.fonts.ready.then(beams);
+}
+
+/* ── География: город в списке подсвечивает свою точку на схеме ── */
+qa('.geo-list li[data-k]').forEach(function(li){
+  var k=li.dataset.k,mk=qa('.geo-map [data-k="'+k+'"]');
+  var on=function(v){mk.forEach(function(m){m.classList.toggle('hot',v)})};
+  li.addEventListener('pointerenter',function(){on(true)});li.addEventListener('pointerleave',function(){on(false)});
+});
 
 /* ── История завода: линия растёт, пока листаете ── */
 var tl=$('tl');
