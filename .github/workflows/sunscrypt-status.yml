@@ -32,8 +32,10 @@ jobs:
             $C logs --tail 40 signals 2>&1 | grep -E "rhat|свечи|история|нет весов" | tail -10
             echo "▸ Диспетчер (последние строки):"
             $C logs --since 4h orchestrator 2>&1 | grep -E "WARN|ERROR|Traceback|Rejected|Denied|rejected|остановка" | grep -v "httpx" | tail -25
+            echo "▸ Копии базы (последние):"
+            ls -lt --time-style=+%m-%d_%H:%M /opt/sunscrypt/backups/*.dump 2>/dev/null | head -3 | awk '{print "  "$6, $5" байт", $7}' || true
             echo "▸ Задачи по расписанию (наблюдение, копии, модель):"
-            journalctl -t sunscrypt --since "-3h" --no-pager -o short-iso 2>/dev/null | grep -v "httpx\|HTTP Request" | tail -25 || true
+            journalctl -t sunscrypt --since "-3h" --no-pager -o short-iso 2>/dev/null | grep -v "httpx\|HTTP Request\|Наблюдение: всё в порядке" | tail -25 || true
             echo "▸ Telegram-бот:"
             $C logs --tail 50 bot 2>&1 | grep -E "tgbot|telegram|Traceback|Error" | tail -5
             echo "▸ Задача модели (контейнер trainer):"
