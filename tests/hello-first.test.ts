@@ -1,10 +1,14 @@
 /**
- * Касание в два шага: первым — только «Здравствуйте», письмо — тем, кто ответил.
+ * Касание в два шага: первым — только «Здравствуйте», дальше — тем, кто ответил.
  *
  * Владелец, 07.10.2026: «Сначала мы пишем просто — „Здравствуйте“. Если
  * ответ есть — тут уже пишем сообщение. Короткое. Либо кружок отправляем,
- * который ранее записали… Потому что отлетают по спаму аккаунты». После
- * ответа — «кружок + короткий текст»; без ответа — «ничего не шлём».
+ * который ранее записали… Потому что отлетают по спаму аккаунты». Без
+ * ответа — «ничего не шлём».
+ *
+ * Владелец, 08.10.2026: «если после „Здравствуйте“ нам ответили на русском
+ * — „Здравствуйте“ или аналогично на русском, — то уходит кружок. Если
+ * ответили на другом языке — мы отвечаем на этом языке, как обычно пишем».
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -12,13 +16,20 @@ import { test } from "node:test";
 
 import {
   CIRCLE_AFTER_MS,
+  CIRCLE_BODY,
+  CIRCLE_LANG,
   HELLO_TEXT,
   PITCH_AFTER_MS,
   helloFor,
+  letterLang,
   pitchAfter,
+  replyLang,
   waitsForPitch,
   withoutGreeting,
 } from "@/lib/admin/hello-first";
+import { circleDue } from "@/lib/admin/circle-store";
+import { circleProblem } from "@/lib/admin/circle-rules";
+import { translationProblems } from "@/lib/admin/letter-translate";
 import { readInbound } from "@/lib/admin/outreach-talk";
 import { OUTREACH_SYSTEM, outreachPrompt } from "@/lib/admin/outreach";
 import { NOSITE_SYSTEM } from "@/lib/admin/outreach-nosite";
@@ -53,14 +64,14 @@ test("письмо после ответа — без второго приве�
   assert.equal(withoutGreeting("Здравствуйте!"), "Здравствуйте!");
 });
 
-test("на любой ответ на приветствие — письмо; на отказ и просьбу позвать человека — нет", () => {
+test("на любой ответ на приветствие — кружок или письмо; на отказ и просьбу позвать человека — нет", () => {
   for (const reply of ["Да", "Здравствуйте", "Кто это?", "Assalomu alaykum", "Слушаю вас", "Va alaykum assalom"]) {
     assert.ok(pitchAfter(readInbound(reply)), reply);
   }
   assert.equal(pitchAfter("stop"), false);
   assert.equal(pitchAfter("human"), false);
   assert.equal(pitchAfter(readInbound("Не пишите мне больше")), false);
-  assert.ok(CIRCLE_AFTER_MS < PITCH_AFTER_MS, "кружок раньше письма");
+  assert.ok(CIRCLE_AFTER_MS <= PITCH_AFTER_MS, "кружок не позже письма");
   assert.ok(CIRCLE_AFTER_MS >= 60_000, "мгновенный ответ выглядит как робот");
 
   assert.equal(waitsForPitch({ hello_at: "2026-10-07T10:00:00Z", pitch_at: null }), true);
@@ -81,23 +92,100 @@ test("скаут из очереди пишет только приветств�
   assert.match(sent, /body: helloFor\(String\(data\.message\), \(data\.walked/);
 });
 
-test("ответ на приветствие ставит кружок и письмо, модель в эту минуту молчит", () => {
+test("язык ответа: по-русски — кружок, на другом языке — письмо, без слов — язык приветствия", () => {
+  assert.equal(CIRCLE_LANG, "ru");
+  for (const reply of ["Здравствуйте", "Да?", "Кто это?", "Слушаю вас", "Добрый день"]) assert.equal(replyLang(reply, "ru"), "ru", reply);
+  for (const reply of ["Assalomu alaykum", "Va alaykum assalom", "Ha", "Ассалому алайкум", "Салом"]) assert.equal(replyLang(reply, "ru"), "uz", reply);
+  assert.equal(replyLang("Hello, who is this?", "ru"), "en");
+  // Стикер, «+», «?» — отвечают на то, что им написали.
+  assert.equal(replyLang("+", "ru"), "ru");
+  assert.equal(replyLang("👍", "uz"), "uz");
+  assert.equal(replyLang("?", "ru"), "ru");
+  // Язык письма — тот же, что решает «Здравствуйте».
+  assert.equal(letterLang("Пишу из DevUz Studio", "uz"), "uz");
+  assert.equal(letterLang("Пишу из DevUz Studio — открыл ваш сайт almazmed.uz."), "ru");
+});
+
+test("«+» и «да» на кружок — согласие на макет, «макет не нужен» — отказ", () => {
+  for (const reply of ["+", "++", "+ ", "➕", "Плюс"]) assert.equal(readInbound(reply), "proto", reply);
+  for (const reply of ["Да", "Давайте", "Ha", "Хочу", "Интересно, давайте"]) {
+    assert.equal(readInbound(reply, { afterCircle: true }), "proto", reply);
+  }
+  // Без кружка короткое «да» по-прежнему разбирает человек, вопрос — модель.
+  assert.equal(readInbound("Да"), "unclear");
+  assert.equal(readInbound("да?", { afterCircle: true }), "talk");
+  assert.equal(readInbound("Хочу макет"), "proto");
+  assert.equal(readInbound("Макет не нужен"), "stop");
+  assert.equal(readInbound("Нам не нужен сайт"), "stop");
+  // Номер телефона с «+» — не согласие.
+  assert.notEqual(readInbound("+998901234567"), "proto");
+  // Модель знает, что было в кружке: видео она не видит.
+  assert.match(CIRCLE_BODY, /бесплатно за 12 часов/);
+  assert.match(CIRCLE_BODY, /«\+»/);
+});
+
+test("ответ на приветствие: по-русски — кружок без письма, иначе — письмо на языке ответа", () => {
   const talk = read("lib/admin/outreach-talk-store.ts");
   const save = between(talk, "async function saveInbound(", "/** Входящие, на которые ещё не отвечали");
   assert.match(save, /if \(hello && pitchAfter\(readInbound\(body\)\)\) return answerHello\(prospect, body\);/);
-  const hello = between(talk, "async function answerHello(", "async function pitchQueued(");
+  assert.match(save, /const afterCircle = prospect\.pitch_at \? await circleWasPitch\(/);
+  const hello = between(talk, "async function answerHello(", "/** Письмо после «Здравствуйте» ещё ждёт отправки. */");
   // Входящее сразу отвечено — pendingTalks его не возьмёт.
   assert.match(hello, /answered_at: at/);
-  // Два быстрых ответа подряд не ставят письмо дважды.
+  // Два быстрых ответа подряд не ставят ничего дважды.
   assert.match(hello, /\.update\(\{ replied_at: at, pitch_at: at \}\)\s*\.eq\("id", id\)\s*\.is\("pitch_at", null\)/);
-  // Проверка по факту старше трёх дней — письмо не уходит, разговор человеку.
-  assert.match(hello, /checkFresh\(/);
-  assert.match(hello, /if \(!letter \|\| !fresh\)/);
-  assert.match(hello, /kind: "circle"/);
-  assert.match(hello, /send_after: new Date\(now \+ CIRCLE_AFTER_MS\)/);
-  assert.match(hello, /send_after: new Date\(now \+ PITCH_AFTER_MS\)/);
-  // Лид автопрогона — на ответ на письмо, не на «да?».
+  assert.match(hello, /const lang = replyLang\(body, sentLang\);/);
+  // Русский ответ — только кружок, и сразу выход: письма за ним нет.
+  const ru = between(hello, "if (lang === CIRCLE_LANG) {", "const queued = await queueHelloLetter(");
+  assert.match(ru, /kind: "circle"/);
+  assert.match(ru, /send_after: new Date\(now \+ CIRCLE_AFTER_MS\)/);
+  assert.match(ru, /return \{ matched: true, host, verdict: "hello" \};/);
+  assert.doesNotMatch(ru, /kind: "text"/);
+  assert.match(hello, /await queueHelloLetter\(prospect, lang, now \+ PITCH_AFTER_MS, body\)/);
+  // Письмо — после проверки по факту и на языке ответа.
+  const letter = between(hello, "async function queueHelloLetter(", "const LANG_LABEL");
+  assert.match(letter, /checkFresh\(/);
+  assert.match(letter, /if \(!fresh\) return handOverHello\(/);
+  assert.match(letter, /if \(lang !== sentLang\) \{[\s\S]{0,300}?translateLetter\(letter, lang, host\)/);
+  assert.match(letter, /kind: "text"/);
+  // Лид автопрогона — на ответ на кружок или письмо, не на «да?».
   assert.doesNotMatch(hello, /routeAutopilotReply/);
+});
+
+test("кружок не ушёл — вместо него письмо, по-русски", () => {
+  const talk = read("lib/admin/outreach-talk-store.ts");
+  const skipped = between(talk, "export async function markCircleSkipped(", "/**\n * Ответ не ушёл.");
+  // Письмо уже стоит или ушло (старые касания: кружок перед письмом) — второго нет.
+  assert.match(skipped, /\.eq\("kind", "text"\)\s*\.in\("status", \["queued", "sent"\]\)/);
+  assert.match(skipped, /await queueHelloLetter\(prospect, CIRCLE_LANG, Date\.now\(\)/);
+});
+
+test("перевод письма не добавляет фактов", () => {
+  const source = "Посмотрели almazmed.uz: с телефона сайт открывается в масштабе монитора, из 100 посетителей теряется 20–35. Собрать вам прототип за 12 часов?";
+  assert.deepEqual(translationProblems("almazmed.uz saytini ko‘rdik: telefonda sayt monitor masshtabida ochiladi, 100 tashrifchidan 20–35 tasi yo‘qoladi. 12 soatda prototip yig‘ib beraylikmi?", source, "almazmed.uz"), []);
+  assert.ok(translationProblems("almazmed.uz saytini ko‘rdik: 100 tashrifchidan 50 tasi yo‘qoladi, 12 soatda prototip yig‘ib beraylikmi? Bu juda muhim masala.", source, "almazmed.uz").some((p) => p.startsWith("числа")));
+});
+
+test("кружок загружают в «Аккаунтах», в «Избранное» его кладёт скаут", () => {
+  assert.equal(circleProblem({ mime: "video/mp4", bytes: 6_000_000, duration: 45.3, width: 400, height: 400 }), null);
+  assert.equal(circleProblem({ mime: "video/quicktime", bytes: 6_000_000, duration: 45, width: 400, height: 400 }), "type");
+  assert.equal(circleProblem({ mime: "video/mp4", bytes: 6_000_000, duration: 75, width: 400, height: 400 }), "long");
+  assert.equal(circleProblem({ mime: "video/mp4", bytes: 6_000_000, duration: 45, width: 1920, height: 1080 }), "shape");
+  assert.equal(circleProblem({ mime: "video/mp4", bytes: 6_000_000, duration: null, width: null, height: null }), "meta");
+
+  const file = { path: "x.mp4", bytes: 1, duration: 45, width: 400, height: 400, uploadedAt: 1_000, by: null };
+  assert.equal(circleDue(file, null), true, "кружка нет — кладём");
+  assert.equal(circleDue(file, 500), true, "в «Избранном» старый — кладём");
+  assert.equal(circleDue(file, 2_000), false, "в «Избранном» новее — его не перебиваем");
+  assert.equal(circleDue(null, null), false);
+
+  const runner = read("scout/runner.mjs");
+  const place = between(runner, "const placeCircle = async", "const checkCircle = async");
+  assert.match(place, /client\.sendFile\("me", \{/);
+  assert.match(place, /new Api\.DocumentAttributeVideo\(\{\s*roundMessage: true/);
+  // Флаг videoNote в teleproto добавляет «голосовое» — кружок стал бы аудио.
+  assert.doesNotMatch(place, /videoNote/);
+  assert.match(read("app/admin/accounts/page.tsx"), /<CircleUpload have=/);
 });
 
 test("очередь ответов: пауза, кружок раньше письма, кружок без пересылки", () => {
@@ -110,7 +198,7 @@ test("очередь ответов: пауза, кружок раньше пи�
   assert.match(runner, /filter: new Api\.InputMessagesFilterRoundVideo\(\)/);
   assert.match(runner, /client\.getMessages\("me"/);
   assert.match(runner, /await client\.sendFile\(reply\.target, \{ file: circle\.media \}\)/);
-  // Нет кружка или он не ушёл — письмо уходит само, разговор человеку не передаётся.
+  // Нет кружка или он не ушёл — вместо него письмо, разговор человеку не передаётся.
   assert.match(runner, /await markCircleSkipped\(reply\.id, NO_CIRCLE\)/);
   assert.match(runner, /if \(reply\.kind === "circle"\) await markCircleSkipped\(reply\.id, `Кружок не ушёл: \$\{why\}`\);/);
   // Панель видит, есть ли кружок в «Избранном».

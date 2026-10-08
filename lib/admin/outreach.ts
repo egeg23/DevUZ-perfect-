@@ -446,11 +446,28 @@ export function outageFinding(findings: readonly Finding[]): Finding | null {
   );
 }
 
+/**
+ * Находки, которых в касании нет.
+ *
+ * Цены — владелец, 08.10.2026: «убери текст „у вас нигде не указаны цены“,
+ * потому что как правило они указаны, но картинками, а не текстом. Бот их
+ * при аудите не видит». Аудит ищет цену в тексте страницы, прайс картинкой
+ * для него пуст — и письмо уверенно утверждало бы то, что адресат
+ * опровергнет, открыв свой сайт. В отчёте аудита находка остаётся, в
+ * письме, дожиме и расчёте потерь — нет.
+ */
+export const NOT_IN_OUTREACH: ReadonlySet<string> = new Set(["no_prices", "no_price_anywhere"]);
+
+export function outreachFindings<T extends { code: string }>(findings: readonly T[]): T[] {
+  return findings.filter((f) => !NOT_IN_OUTREACH.has(f.code));
+}
+
 export function outreachHooks(
-  findings: readonly Finding[],
+  all: readonly Finding[],
   reference: string | null = null,
   prototype: string | null = null,
 ): Hooks {
+  const findings = outreachFindings(all);
   if (outageFinding(findings)) return { reference, prototype, seo: null, lost: null };
   const seo = seoReport({ findings });
   const loss = forecast(findings);
@@ -469,9 +486,9 @@ export function outreachHooks(
  *
  * Разбор заглохших переписок показал, чем письма открывались: «ссылка
  * пересылается без карточки», «нет описания страницы». Владелец читает это
- * как придирку — а находку про его клиентов («цен на сайте нет, первый
- * вопрос посетителя остаётся без ответа», «с телефона сайт не читается»)
- * как разговор о деньгах. Порядок — по тому, сколько клиентов теряется и
+ * как придирку — а находку про его клиентов («с телефона сайт не читается»,
+ * «позвонить с сайта нельзя») как разговор о деньгах. Цен здесь нет: прайс
+ * картинкой аудит не видит (NOT_IN_OUTREACH). Порядок — по тому, сколько клиентов теряется и
  * насколько легко это проверить самому за минуту.
  */
 export const BUSINESS_FIRST = [
@@ -483,8 +500,6 @@ export const BUSINESS_FIRST = [
   "horizontal_scroll",
   "tiny_text",
   "zoom_locked",
-  "no_prices",
-  "no_price_anywhere",
   "no_phone",
   "phone_not_clickable",
   "no_messenger",
@@ -507,13 +522,14 @@ export const BUSINESS_FIRST = [
 
 export function leadFindings(findings: readonly Finding[], limit = 2): Finding[] {
   const rank = (code: string) => (BUSINESS_FIRST as readonly string[]).indexOf(code);
-  return findings
+  return outreachFindings(findings)
     .filter((f) => rank(f.code) >= 0)
     .sort((a, b) => rank(a.code) - rank(b.code))
     .slice(0, limit);
 }
 
-export function outreachPrompt(input: OutreachInput): string {
+export function outreachPrompt(raw: OutreachInput): string {
+  const input = { ...raw, findings: outreachFindings(raw.findings) };
   const seo = seoReport({ findings: input.findings });
   const hooks = outreachHooks(input.findings);
   const outage = outageFinding(input.findings);

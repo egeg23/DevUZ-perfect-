@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-import { bannedPhrase, inventedNumbers, jargonWords, leadFindings } from "@/lib/admin/outreach";
+import { bannedPhrase, inventedNumbers, jargonWords, leadFindings, outreachFindings } from "@/lib/admin/outreach";
 import { isWorkday, tashkentHour } from "@/lib/admin/portion";
 import type { Finding } from "@/lib/audit/checks";
 import { effortFor } from "@/lib/model-limits";
@@ -85,7 +85,7 @@ export function followupPrompt(input: {
   sender: string;
 }): string {
   const list = leadFindings(input.findings, 3);
-  const shown = list.length ? list : input.findings.slice(0, 3);
+  const shown = list.length ? list : outreachFindings(input.findings).slice(0, 3);
   return [
     `Сайт: ${input.host}${input.label ? ` (${input.label})` : ""}`,
     `Отправитель: ${input.sender}, DevUz Studio.`,

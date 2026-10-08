@@ -19,6 +19,7 @@ import {
   notCheckedProblem,
   type MessageProblem,
   outreachPrompt,
+  outreachFindings,
   outreachHooks,
   outreachProof,
   routeFor,
@@ -176,7 +177,7 @@ export type Prospect = {
   autopilot_at: string | null;
   /**
    * Касание в два шага (lib/admin/hello-first.ts): когда ушло «Здравствуйте»
-   * и когда после ответа клиента ушли кружок и письмо. Есть первое, нет
+   * и когда после ответа клиента ушёл кружок или письмо. Есть первое, нет
    * второго — письмо ждёт ответа.
    */
   hello_at: string | null;
@@ -514,8 +515,10 @@ export async function prepareOutreach(id: string, staff: Writer): Promise<Prepar
       code: "not_verified",
     };
   }
+  // В письмо идёт не всё, что повторилось: цен аудит не видит, если прайс
+  // картинкой (NOT_IN_OUTREACH), — одна такая находка письма не держит.
   const findings = checked.findings;
-  if (!findings.length) {
+  if (!outreachFindings(findings).length) {
     // Писать не о чем — и прежнее письмо, если было, тоже не о чем: убираем
     // его, иначе свежая отметка о проверке пропустила бы к отправке текст,
     // написанный по тому, что не подтвердилось.

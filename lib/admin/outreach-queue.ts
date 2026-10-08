@@ -79,7 +79,7 @@ export async function aheadInQueue(claimedAt: string | null): Promise<number> {
 
 /**
  * Письмо из очереди. Отправляется не `message`, а `hello` — «Здравствуйте»
- * на языке письма; само письмо уйдёт, когда клиент ответит
+ * на языке письма; кружок или письмо уйдёт, когда клиент ответит
  * (lib/admin/hello-first.ts).
  */
 export type Queued = { id: string; target: string; kind: RouteKind; message: string; hello: string; host: string };

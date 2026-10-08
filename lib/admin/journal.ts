@@ -98,6 +98,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "work_account.staff": { ru: "отметил, кто работает на рабочем аккаунте", uz: "ishchi akkauntda kim ishlashini belgiladi", pl: "wskazał, kto pracuje na koncie roboczym" },
   "help_video.saved": { ru: "загрузил видео к инструкции", uz: "yo‘riqnomaga video yukladi", pl: "wgrał wideo do instrukcji" },
   "help_video.removed": { ru: "убрал видео из инструкции", uz: "yo‘riqnomadan videoni olib tashladi", pl: "usunął wideo z instrukcji" },
+  "tg_circle.saved": { ru: "загрузил кружок для касаний", uz: "aloqalar uchun dumaloq video yukladi", pl: "wgrał kółko do kontaktów" },
   "razbor.rejected": { ru: "отклонил разбор", uz: "tahlilni rad etdi", pl: "odrzucił analizę" },
   "razbor.unpublished": { ru: "снял разбор с публикации", uz: "tahlilni e’londan olib tashladi", pl: "wycofał analizę z publikacji" },
   "razbor.edited": { ru: "поправил текст разбора", uz: "tahlil matnini tuzatdi", pl: "poprawił tekst analizy" },

@@ -184,3 +184,63 @@ export const accountsResultDict = defineDict({
   },
   ok: { ru: "Готово.", uz: "Tayyor.", pl: "Gotowe." },
 });
+
+/**
+ * «Кружок для касаний» в «Аккаунтах» (components/admin/circle-upload.tsx,
+ * lib/admin/circle-store.ts): один кружок на студию, скаут сам кладёт его в
+ * «Избранное» каждого аккаунта.
+ */
+export const circleUploadDict = defineDict({
+  title: { ru: "Кружок для касаний", uz: "Aloqalar uchun dumaloq video", pl: "Kółko do kontaktów" },
+  intro: {
+    ru: "Этот кружок уходит тем, кто ответил на «Здравствуйте» по-русски: в нём уже есть предложение — бесплатный макет за 12 часов и просьба отправить «+». Загрузите его один раз здесь — бот сам сохранит его в «Избранное» каждого рабочего аккаунта и главного, в течение десяти минут. Ответившим на другом языке уходит письмо на их языке, без кружка.",
+    uz: "Bu dumaloq video salomga ruscha javob berganlarga ketadi: taklif unda bor — 12 soatda bepul maket va «+» yuborish so‘rovi. Uni bu yerda bir marta yuklang — bot o‘zi uni har bir ishchi akkaunt va asosiy akkauntning «Saqlangan xabarlar»iga o‘n daqiqa ichida saqlaydi. Boshqa tilda javob berganlarga dumaloq videosiz, ularning tilidagi xat ketadi.",
+    pl: "To kółko wychodzi do tych, którzy odpowiedzieli na powitanie po rosyjsku: jest w nim już oferta — darmowa makieta w 12 godzin i prośba o wysłanie «+». Wgraj je tutaj raz — bot sam zapisze je w «Zapisanych» każdego konta roboczego i głównego, w ciągu dziesięciu minut. Tym, którzy odpowiedzieli w innym języku, wychodzi wiadomość w ich języku, bez kółka.",
+  },
+  current: {
+    ru: (when: string, who: string, seconds: number) => `Сейчас уходит этот: загружен ${when}${who ? `, ${who}` : ""}, ${seconds} с.`,
+    uz: (when: string, who: string, seconds: number) => `Hozir shu ketadi: ${when} da yuklangan${who ? `, ${who}` : ""}, ${seconds} soniya.`,
+    pl: (when: string, who: string, seconds: number) => `Teraz wychodzi to: wgrane ${when}${who ? `, ${who}` : ""}, ${seconds} s.`,
+  },
+  none: {
+    ru: "Загруженного кружка нет — бот берёт тот, что сохранён в «Избранном» аккаунта руками.",
+    uz: "Yuklangan dumaloq video yo‘q — bot akkauntning «Saqlangan xabarlar»iga qo‘lda saqlanganini oladi.",
+    pl: "Nie ma wgranego kółka — bot bierze to, które zapisano ręcznie w «Zapisanych» konta.",
+  },
+  file: { ru: "Файл кружка (MP4, квадрат, до минуты)", uz: "Dumaloq video fayli (MP4, kvadrat, bir daqiqagacha)", pl: "Plik kółka (MP4, kwadrat, do minuty)" },
+  upload: { ru: "Загрузить кружок", uz: "Dumaloq videoni yuklash", pl: "Wgraj kółko" },
+  busy: { ru: "Загружаем…", uz: "Yuklanmoqda…", pl: "Wgrywamy…" },
+  done: {
+    ru: "Загружен. Бот положит его в «Избранное» аккаунтов в течение десяти минут — строка «Кружок для писем» у каждого аккаунта обновится.",
+    uz: "Yuklandi. Bot uni o‘n daqiqa ichida akkauntlarning «Saqlangan xabarlar»iga qo‘yadi — har bir akkauntdagi «Xatlar uchun dumaloq video» qatori yangilanadi.",
+    pl: "Wgrane. Bot zapisze je w «Zapisanych» kont w ciągu dziesięciu minut — wiersz «Kółko do wiadomości» przy każdym koncie się odświeży.",
+  },
+  replaceNote: { ru: "Новый заменит этот у всех аккаунтов.", uz: "Yangisi barcha akkauntlarda buning o‘rnini oladi.", pl: "Nowe zastąpi to na wszystkich kontach." },
+  chooseFile: { ru: "Выберите файл кружка.", uz: "Dumaloq video faylini tanlang.", pl: "Wybierz plik kółka." },
+  bad_type: {
+    ru: "Нужен файл MP4 — так кружок сохраняет Telegram.",
+    uz: "MP4 fayl kerak — Telegram dumaloq videoni shunday saqlaydi.",
+    pl: "Potrzebny plik MP4 — tak Telegram zapisuje kółko.",
+  },
+  bad_size: {
+    ru: "Файл больше 50 МБ — для кружка это слишком много.",
+    uz: "Fayl 50 MB dan katta — dumaloq video uchun bu juda ko‘p.",
+    pl: "Plik większy niż 50 MB — to za dużo na kółko.",
+  },
+  bad_long: {
+    ru: "Кружок длиннее минуты — Telegram такой не примет.",
+    uz: "Dumaloq video bir daqiqadan uzun — Telegram uni qabul qilmaydi.",
+    pl: "Kółko dłuższe niż minuta — Telegram go nie przyjmie.",
+  },
+  bad_short: { ru: "Кружок короче секунды.", uz: "Dumaloq video bir soniyadan qisqa.", pl: "Kółko krótsze niż sekunda." },
+  bad_shape: {
+    ru: "Видео не квадратное — кружок вырезается из квадрата.",
+    uz: "Video kvadrat emas — dumaloq video kvadratdan kesiladi.",
+    pl: "Wideo nie jest kwadratowe — kółko wycina się z kwadratu.",
+  },
+  bad_meta: {
+    ru: "Не получилось прочитать длительность и размер видео — попробуйте другой файл.",
+    uz: "Videoning davomiyligi va o‘lchamini o‘qib bo‘lmadi — boshqa faylni sinab ko‘ring.",
+    pl: "Nie udało się odczytać długości i rozmiaru wideo — spróbuj innego pliku.",
+  },
+});

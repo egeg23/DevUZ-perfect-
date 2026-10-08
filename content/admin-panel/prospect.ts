@@ -682,22 +682,23 @@ export const outreachListDict = defineDict({
   },
   /**
    * Касание в два шага (lib/admin/hello-first.ts): первым уходит только
-   * приветствие, письмо — после ответа клиента, перед ним кружок.
+   * приветствие. Ответили по-русски — кружок, на другом языке — это письмо
+   * на языке ответа.
    */
   helloFirstNote: {
-    ru: "Бот первым напишет только «Здравствуйте» (узбекскому сайту — «Assalomu alaykum»). Этот текст уйдёт, когда клиент ответит, а за минуту до него — кружок из «Избранного» рабочего аккаунта. Не ответит — больше ничего не уйдёт: так Telegram не считает нас рассылкой.",
-    uz: "Bot birinchi bo‘lib faqat salom yozadi: o‘zbekcha saytga — «Assalomu alaykum», ruscha saytga — ruscha salom. Bu matn mijoz javob berganda ketadi, undan bir daqiqa oldin esa — ishchi akkauntning «Saqlangan xabarlar»idagi dumaloq video. Javob bermasa — boshqa hech narsa ketmaydi: shunda Telegram bizni ommaviy tarqatma deb hisoblamaydi.",
-    pl: "Bot najpierw napisze tylko powitanie: do strony po rosyjsku — po rosyjsku, do strony po uzbecku — «Assalomu alaykum». Ten tekst wyjdzie, gdy klient odpowie, a minutę przed nim — wiadomość wideo (kółko) z «Zapisanych» konta firmowego. Jeśli nie odpowie — nic więcej nie wyjdzie: dzięki temu Telegram nie uznaje nas za masową wysyłkę.",
+    ru: "Бот первым напишет только «Здравствуйте» (узбекскому сайту — «Assalomu alaykum»). Ответят по-русски — уйдёт кружок из «Избранного» рабочего аккаунта: в нём уже есть предложение, и этот текст не нужен. Ответят на другом языке — уйдёт этот текст, на языке ответа. Не ответят — больше ничего не уйдёт: так Telegram не считает нас рассылкой.",
+    uz: "Bot birinchi bo‘lib faqat salom yozadi: o‘zbekcha saytga — «Assalomu alaykum», ruscha saytga — ruscha salom. Ruscha javob berishsa — ishchi akkauntning «Saqlangan xabarlar»idagi dumaloq video ketadi: taklif unda bor, bu matn kerak emas. Boshqa tilda javob berishsa — shu matn javob tilida ketadi. Javob berishmasa — boshqa hech narsa ketmaydi: shunda Telegram bizni ommaviy tarqatma deb hisoblamaydi.",
+    pl: "Bot najpierw napisze tylko powitanie: do strony po rosyjsku — po rosyjsku, do strony po uzbecku — «Assalomu alaykum». Jeśli odpowiedzą po rosyjsku — wyjdzie wiadomość wideo (kółko) z «Zapisanych» konta firmowego: oferta już w niej jest, ten tekst nie jest potrzebny. Jeśli odpowiedzą w innym języku — wyjdzie ten tekst, w języku odpowiedzi. Jeśli nie odpowiedzą — nic więcej nie wyjdzie: dzięki temu Telegram nie uznaje nas za masową wysyłkę.",
   },
   helloWaiting: {
-    ru: "Ушло «Здравствуйте» — письмо уйдёт, когда клиент ответит.",
-    uz: "Salom ketdi — xat mijoz javob berganda ketadi.",
-    pl: "Wysłano powitanie — wiadomość wyjdzie, gdy klient odpowie.",
+    ru: "Ушло «Здравствуйте» — кружок или письмо уйдёт, когда клиент ответит.",
+    uz: "Salom ketdi — mijoz javob berganda dumaloq video yoki xat ketadi.",
+    pl: "Wysłano powitanie — kółko albo wiadomość wyjdzie, gdy klient odpowie.",
   },
   helloAnswered: {
-    ru: (when: string) => `Клиент ответил на приветствие ${when} — бот отправил кружок и письмо.`,
-    uz: (when: string) => `Mijoz salomga ${when} da javob berdi — bot dumaloq video va xatni yubordi.`,
-    pl: (when: string) => `Klient odpowiedział na powitanie ${when} — bot wysłał kółko i wiadomość.`,
+    ru: (when: string) => `Клиент ответил на приветствие ${when} — бот отправил кружок или письмо, смотрите переписку.`,
+    uz: (when: string) => `Mijoz salomga ${when} da javob berdi — bot dumaloq video yoki xat yubordi, yozishmaga qarang.`,
+    pl: (when: string) => `Klient odpowiedział na powitanie ${when} — bot wysłał kółko albo wiadomość, zobacz korespondencję.`,
   },
   sending: { ru: "Отправляем…", uz: "Yuborilmoqda…", pl: "Wysyłamy…" },
   takeIntoWork: { ru: "Взять в работу", uz: "Ishga olish", pl: "Weź do realizacji" },
