@@ -156,3 +156,40 @@ test("ShahaR.Uz: конструктор — портал 2 300 $, допы до�
   const all: { id: string; ru: { t: string; e?: string; why?: string }; uz: { t: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
   for (const a of all) assert.ok(a.ru.t && a.uz.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
 });
+
+test("ПК Веста: 6 страниц на русском — условия, noindex, заставка с воротами, заявка в WhatsApp завода", () => {
+  const site = bundlePages("pkvesta");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  for (const path of ["", "katalog", "obekt", "raschet", "zavod", "plan"]) {
+    const page = all[path];
+    assert.ok(page, `${path}: нет страницы`);
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes('<html lang="ru">'), `${path}: язык страницы`);
+    assert.ok(page.includes("https://devuz.studio/ru/mockup-terms"), `${path}: нет условий`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("ПК Веста"), `${path}: нет названия компании`);
+    // Главное действие — мессенджер самого завода, номер с их сайта.
+    assert.ok(page.includes("https://wa.me/79109434966"), `${path}: нет заявки в WhatsApp завода`);
+  }
+  assert.match(all[""], /id="intro"[\s\S]*DevUz Studio/, "нет промо DevUz Studio");
+  assert.match(all[""], /class="vx-gate"/, "нет ворот с логотипа в заставке");
+  assert.match(all[""], /id="asm"[\s\S]*asm-3\.webp/, "нет сцены «чертёж → каркас → здание»");
+  assert.match(all[""], /id="trk"/, "нет ленты объектов");
+  for (const id of [213, 203, 199, 204, 217]) assert.match(all.obekt, new RegExp(`data-id="${id}"`), `нет объекта №${id}`);
+  const stamped = stampedBundle("pkvesta", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("ПК Веста: конструктор — сайт 2 300 $, допы добивают до 3 900 $, обязательные на месте", async () => {
+  const plan = await import("../scripts/protos/pkvesta/plan.mjs");
+  assert.equal(plan.BASE.price, 2300);
+  const all: { id: string; price: number; ru: { t: string; e?: string; why?: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
+  assert.equal(all.reduce((s, a) => s + a.price, 0), 1600, "все допы вместе — 1 600 $");
+  for (const id of ["wa", "admin"]) assert.ok(all.some((a) => a.id === id), `нет обязательного допа ${id}`);
+  for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
+});
