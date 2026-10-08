@@ -164,12 +164,12 @@ export async function protoById(id: string): Promise<Proto | null> {
 export async function protoPage(
   token: string,
   path = "",
-): Promise<{ html: string; id: string; lock: string | null } | null> {
+): Promise<{ html: string; id: string; lock: string | null; closed: boolean } | null> {
   const db = serviceClient();
   if (!db) return null;
   const { data } = await db
     .from("protos")
-    .select("id, html, pages, status, stamp, facts")
+    .select("id, html, pages, status, stamp, facts, closed_at")
     .eq("token", token)
     .maybeSingle();
   if (!data) return null;
@@ -193,9 +193,16 @@ export async function protoPage(
   }
   const page = path ? pages[path] : html;
   // Пароль на макет (lib/proto/lock): в фактах — только хеш, не сам пароль.
+  // closed_at — макет закрыт паролями на сутки из раздела «Макеты»
+  // (lib/proto/codes).
   const lock = (data.facts as { lock?: unknown } | null)?.lock;
   return typeof page === "string"
-    ? { html: withBase(page, token), id, lock: typeof lock === "string" && lock ? lock : null }
+    ? {
+        html: withBase(page, token),
+        id,
+        lock: typeof lock === "string" && lock ? lock : null,
+        closed: Boolean(data.closed_at),
+      }
     : null;
 }
 

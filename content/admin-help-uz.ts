@@ -883,6 +883,60 @@ export const uz: HelpCopy = {
       ],
     },
 
+    /* ── Макеты ───────────────────────────────────────────────────────── */
+    "/admin/mockups": {
+      what: "Studiyaning barcha maketlari bitta ro‘yxatda: devuz.studio’dagi prototiplar va globalex vitrinasidagi loyihalar. Bu yerda maket kim uchun qilingani, qaysi nishada ekani va parol bilan yopilgan-yopilmagani ko‘rinadi. Mijoz o‘z maketini ochishi uchun bir sutkalik parol ham shu yerda beriladi.",
+      items: [
+        {
+          id: "list",
+          title: "Ro‘yxatda nima bor",
+          body: [
+            "devuz.studio’dagi prototiplar: aniq mijoz uchun qo‘lda yig‘ilganlari va [aloqalar](/admin/prospect) uchun o‘zi yig‘ilganlari, ikkinchilarida «aloqa uchun» belgisi bor. Yangi prototip tayyor bo‘lishi bilan shu yerda o‘zi paydo bo‘ladi. Qoralamalar ro‘yxatda yo‘q: ularning havolasida mijoz hech narsa ko‘rmaydi.",
+            "globalex vitrinasidagi loyihalar, «vitrina» belgisi bilan. Ularning ko‘pchiligi hammaga, qidiruv tizimlariga ham ochiq: buni egasi hal qilgan, ularga parol qo‘yilmaydi va tugma o‘rniga «parol kerak emas» deb yozilgan. MAVERA, Golden House va Engelberg parol bilan yopilgan.",
+            "Har bir maketda: nomi (kim uchun qilingan) va mijoz sayti, «Nisha», «Yaratilgan», kirish holati va mijozga yuboriladigan havola. «mijoz ochgan: 3 marta» maketni biz emas, boshqalar necha marta ochganini ko‘rsatadi: paneldan o‘zimiz ochganimiz va messenjerlardagi havola prevyusi hisoblanmaydi.",
+            "Yangi maketlar tepada. Qidiruv maydoni nom, sayt va nisha bo‘yicha qidiradi, «Hammasi», «Qo‘lda yig‘ilgan», «Aloqalar uchun» va «Vitrina» tugmalari ro‘yxatda faqat o‘z maketlarini qoldiradi. Tugmadagi son u yerda nechta maket borligini bildiradi.",
+          ],
+        },
+        {
+          id: "password",
+          title: "Bir sutkalik parol",
+          body: [
+            "**«Parol yaratish»** besh raqamli yangi parol beradi. U 24 soat ishlaydi, keyin yaramay qoladi. Mijozning kirishi parol bilan birga tugaydi: parolni allaqachon kiritgan kishi ham bir sutkadan keyin parol maydonini ko‘radi.",
+            "Har bir bosish yangi parol beradi. Avval berilganlari bekor qilinmaydi va o‘z soatigacha ishlaydi, shuning uchun har bir mijozga o‘z parolini bergan ma’qul. Qatordagi «mijoz paroli … gacha» oxirgi berilgan parol qaysi soatgacha ishlashini ko‘rsatadi.",
+            "Parol faqat bir marta, bosilgandan keyin darhol ko‘rsatiladi. Bizda faqat uning izi saqlanadi, parolni keyin o‘qib bo‘lmaydi. Yo‘qotib qo‘ysangiz, yangisini yarating.",
+            "**«Mijoz uchun nusxalash»** maket tilidagi tayyor matnni nusxalaydi: havola, parol, u Toshkent vaqti bilan qaysi soatgacha ishlashi va maketdan foydalanish shartlari havolasi. Uni darhol mijozga yuborish mumkin. **«Parolni nusxalash»** faqat besh raqamni nusxalaydi.",
+          ],
+        },
+        {
+          id: "closed",
+          title: "«havola orqali ochiq» va «parol bilan»",
+          body: {
+            manager: [
+              "«havola orqali ochiq» degani, havolasi bor har qanday kishi maketni ochadi. Birinchi parol bilan u yopiladi: panel qayta so‘raydi, shundan keyin parolsiz havola faqat parol maydonini ko‘rsatadi. Bu havola oldinroq yuborilganlarga ham tegishli: ularga ham parol kerak bo‘ladi.",
+              "«parol bilan» degani, maket allaqachon yopilgan. Maketda egasining doimiy paroli bo‘lsa, u avvalgidek, bir sutkalik parollar bilan birga ishlaydi. Maketni paneldan yana parolsiz havola orqali ochib bo‘lmaydi: kerak bo‘lsa, egasiga ayting.",
+            ],
+            head: [
+              "«havola orqali ochiq» degani, havolasi bor har qanday kishi maketni ochadi. Birinchi parol bilan u yopiladi: panel qayta so‘raydi, shundan keyin parolsiz havola faqat parol maydonini ko‘rsatadi. Bu havola oldinroq yuborilganlarga ham tegishli: ularga ham parol kerak bo‘ladi.",
+              "«parol bilan» degani, maket allaqachon yopilgan. Maketda egasining doimiy paroli bo‘lsa, u avvalgidek, bir sutkalik parollar bilan birga ishlaydi. Maketni paneldan yana parolsiz havola orqali ochib bo‘lmaydi: kerak bo‘lsa, egasiga ayting.",
+            ],
+            admin: [
+              "«havola orqali ochiq» degani, havolasi bor har qanday kishi maketni ochadi. Birinchi parol bilan u yopiladi: panel qayta so‘raydi, shundan keyin parolsiz havola faqat parol maydonini ko‘rsatadi. Bu havola oldinroq yuborilganlarga ham tegishli: ularga ham parol kerak bo‘ladi.",
+              "«parol bilan» degani, maket allaqachon yopilgan. Maketdagi doimiy parolingiz avvalgidek, bir sutkalik parollar bilan birga ishlaydi. Maketni yana parolsiz havola orqali ochadigan tugma yo‘q: bu bazada qilinadi, prototipda `closed_at` maydoni tozalanadi.",
+            ],
+          },
+        },
+        {
+          id: "open",
+          title: "O‘zingiz ochish",
+          body: [
+            "**«Ochish»** maketni yangi oynada ochadi. devuz.studio’dagi prototip yopiq bo‘lsa ham parolsiz ochiladi: panel sizga 12 soatlik kirishni o‘zi beradi. Bunday ochish mijozning ochishi hisoblanmaydi va bot mijoz prototipni ochdi deb yozmaydi.",
+            "Vitrina loyihasi vitrinaning o‘zida ochiladi. Yopig‘i kod so‘raydi: shu yerda yaratilgan bir sutkalik parol mos keladi.",
+            "**«Havolani nusxalash»** maket havolasini parolsiz nusxalaydi. Maket yopiq bo‘lsa, mijozga «Mijoz uchun nusxalash» matnini yuboring: unda parol ham bor.",
+          ],
+        },
+      ],
+    },
+
     /* ── Кандидаты ────────────────────────────────────────────────────── */
     "/admin/candidates": {
       what: "Suhbatdan oldin rezyumeni tahlil qilish. PDF yuklaysiz va qaysi ish uchun qarayotganimizni yozasiz — panel xulosa, kuchli tomonlar, to‘xtatuvchi belgilar va berish kerak bo‘lgan savollarni ko‘rsatadi. Faqat rahbarlar va egasi ko‘radi: tahlillarda begona odamlarning shaxsiy ma’lumotlari va odam haqidagi qaror bor.",

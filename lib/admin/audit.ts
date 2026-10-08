@@ -108,6 +108,9 @@ export const AUDIT_ACTIONS = [
   "razbor.deleted",
   "proto.build",
   "proto.sent",
+  // Пароль на сутки к макету из раздела «Макеты» (lib/admin/mockups-store.ts):
+  // кто выдал и к какому макету. Сам пароль в журнал не пишется.
+  "mockup.code",
   // Рабочие аккаунты Telegram: кто подключил номер, кто остановил и снял.
   "work_account.add",
   "work_account.pause",
