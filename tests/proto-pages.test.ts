@@ -79,5 +79,6 @@ test("сайт как приложение: манифест и service worker �
   for (const page of ["", "uz", "zapis", "kurs/python"]) assert.ok(!isQuietProtoPath(page), page);
   const serve = read("lib/proto/serve.ts");
   assert.match(serve, /"Content-Type": protoContentType\(path\)/);
-  assert.match(serve, /const countable = !isQuietProtoPath\(path\);\s*if \(countable && !isPreviewFetch/);
+  // «Открыть» из раздела «Макеты» (доступ команды) тоже не идёт в журнал.
+  assert.match(serve, /const countable = !isQuietProtoPath\(path\) && access !== "team";\s*if \(countable && !isPreviewFetch/);
 });

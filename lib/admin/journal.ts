@@ -91,6 +91,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "razbor.published": { ru: "опубликовал разбор", uz: "tahlilni e’lon qildi", pl: "opublikował analizę" },
   "proto.build": { ru: "собрал прототип", uz: "prototip yig‘di", pl: "zbudował prototyp" },
   "proto.sent": { ru: "отправил прототип клиенту", uz: "prototipni mijozga yubordi", pl: "wysłał prototyp klientowi" },
+  "mockup.code": { ru: "выдал пароль к макету на сутки", uz: "maketga bir sutkalik parol berdi", pl: "wydał hasło do makiety na dobę" },
   "work_account.add": { ru: "подключил рабочий аккаунт Telegram", uz: "Telegram ishchi akkauntini uladi", pl: "podłączył konto robocze Telegrama" },
   "work_account.pause": { ru: "остановил рабочий аккаунт", uz: "ishchi akkauntni to‘xtatdi", pl: "wstrzymał konto robocze" },
   "work_account.resume": { ru: "вернул рабочий аккаунт в работу", uz: "ishchi akkauntni ishga qaytardi", pl: "przywrócił konto robocze do pracy" },

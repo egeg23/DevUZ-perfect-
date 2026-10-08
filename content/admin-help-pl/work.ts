@@ -101,6 +101,60 @@ export const workSections: Record<string, HelpEntry> = {
     ],
   },
 
+  /* ── Макеты ───────────────────────────────────────────────────────── */
+  "/admin/mockups": {
+    what: "Wszystkie makiety studia na jednej liście: prototypy na devuz.studio i projekty witryny globalex. Widać tu, dla kogo zrobiono makietę, w jakiej branży i czy jest zamknięta hasłem. Tu też wydaje się hasło na dobę, żeby klient otworzył swoją makietę.",
+    items: [
+      {
+        id: "list",
+        title: "Co jest na liście",
+        body: [
+          "Prototypy na devuz.studio: zbudowane ręcznie pod konkretnego klienta i zbudowane automatycznie do [kontaktów](/admin/prospect), te drugie mają oznaczenie «do kontaktu». Nowy prototyp pojawia się tu sam, gdy tylko jest gotowy. Szkiców na liście nie ma: pod ich linkiem klient niczego nie zobaczy.",
+          "Projekty witryny globalex, z oznaczeniem «witryna». Większość z nich jest otwarta dla wszystkich, także dla wyszukiwarek: tak zdecydował właściciel, nie ustawia się im hasła, a zamiast przycisku jest napis «hasło niepotrzebne». Hasłem zamknięte są MAVERA, Golden House i Engelberg.",
+          "Przy każdej makiecie: nazwa (dla kogo ją zrobiono) i strona klienta, «Branża», «Zrobiona», dostęp i link, który trafia do klienta. «otwarcia klienta: 3» to liczba otwarć makiety przez kogoś innego niż my: nasze otwarcia z panelu i podglądy linku w komunikatorach się nie liczą.",
+          "Najnowsze makiety są na górze. Pole wyszukiwania szuka po nazwie, stronie i branży, a przyciski «Wszystkie», «Zrobione ręcznie», «Do kontaktów» i «Witryna» zostawiają na liście tylko swoje. Liczba na przycisku to liczba makiet w tej grupie.",
+        ],
+      },
+      {
+        id: "password",
+        title: "Hasło na dobę",
+        body: [
+          "**«Wygeneruj hasło»** daje nowe hasło z pięciu cyfr. Działa 24 godziny, potem przestaje. Dostęp klienta kończy się razem z hasłem: kto już je wpisał, po dobie też zobaczy pole na hasło.",
+          "Każde kliknięcie daje nowe hasło. Wydane wcześniej nie są anulowane i działają do swojej godziny, dlatego każdemu klientowi lepiej dać jego własne. «hasło klienta do …» w wierszu pokazuje, do której godziny działa ostatnie wydane.",
+          "Hasło pokazuje się tylko raz, zaraz po kliknięciu. U nas zapisany jest tylko jego odcisk, hasła nie da się potem odczytać. Zgubione? Wygeneruj nowe.",
+          "**«Kopiuj dla klienta»** kopiuje gotowy tekst w języku makiety: link, hasło, do której godziny czasu Taszkentu działa i link do warunków korzystania z makiety. Można go od razu wysłać klientowi. **«Kopiuj hasło»** kopiuje tylko pięć cyfr.",
+        ],
+      },
+      {
+        id: "closed",
+        title: "«otwarta przez link» i «na hasło»",
+        body: {
+          manager: [
+            "«otwarta przez link» oznacza, że makietę otworzy każdy, kto ma link. Z pierwszym hasłem się zamyka: panel dopyta, a potem link bez hasła pokazuje tylko pole na hasło. Dotyczy to także tych, którym link wysłano wcześniej: oni też będą potrzebować hasła.",
+            "«na hasło» oznacza, że makieta jest już zamknięta. Jeśli na makiecie jest stałe hasło właściciela, działa jak dotąd, razem z hasłami na dobę. Ponownie otworzyć makietę przez link bez hasła z panelu się nie da: jeśli to potrzebne, powiedz właścicielowi.",
+          ],
+          head: [
+            "«otwarta przez link» oznacza, że makietę otworzy każdy, kto ma link. Z pierwszym hasłem się zamyka: panel dopyta, a potem link bez hasła pokazuje tylko pole na hasło. Dotyczy to także tych, którym link wysłano wcześniej: oni też będą potrzebować hasła.",
+            "«na hasło» oznacza, że makieta jest już zamknięta. Jeśli na makiecie jest stałe hasło właściciela, działa jak dotąd, razem z hasłami na dobę. Ponownie otworzyć makietę przez link bez hasła z panelu się nie da: jeśli to potrzebne, powiedz właścicielowi.",
+          ],
+          admin: [
+            "«otwarta przez link» oznacza, że makietę otworzy każdy, kto ma link. Z pierwszym hasłem się zamyka: panel dopyta, a potem link bez hasła pokazuje tylko pole na hasło. Dotyczy to także tych, którym link wysłano wcześniej: oni też będą potrzebować hasła.",
+            "«na hasło» oznacza, że makieta jest już zamknięta. Twoje stałe hasło na makiecie działa jak dotąd, razem z hasłami na dobę. Przycisku, który znowu otwiera makietę przez link bez hasła, nie ma: robi się to w bazie, w prototypie czyści się pole `closed_at`.",
+          ],
+        },
+      },
+      {
+        id: "open",
+        title: "Otworzyć samemu",
+        body: [
+          "**«Otwórz»** otwiera makietę w nowej karcie. Prototyp z devuz.studio otwiera się bez hasła, nawet zamknięty: panel sam daje ci dostęp na 12 godzin. Takie otwarcie nie liczy się jako otwarcie klienta i bot nie napisze, że klient otworzył prototyp.",
+          "Projekt witryny otwiera się na samej witrynie. Zamknięty poprosi o kod: zadziała hasło na dobę wygenerowane tutaj.",
+          "**«Kopiuj link»** kopiuje link do makiety bez hasła. Jeśli makieta jest zamknięta, wysyłaj klientowi tekst z «Kopiuj dla klienta»: jest w nim też hasło.",
+        ],
+      },
+    ],
+  },
+
   /* ── Кандидаты ────────────────────────────────────────────────────── */
   "/admin/candidates": {
     what: "Analiza CV przed rozmową kwalifikacyjną. Wgrywasz PDF i piszesz, na jakie stanowisko patrzymy — panel pokazuje werdykt, mocne strony, przeszkody i pytania, które warto zadać. Widzą to tylko kierownicy i właściciel: w analizach są cudze dane osobowe i decyzja o człowieku.",

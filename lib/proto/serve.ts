@@ -7,7 +7,23 @@ import { fromPanel, isPreviewFetch, openedText } from "@/lib/proto/opened";
 import { isQuietProtoPath, protoContentType } from "@/lib/proto/pages";
 import { logView, markOpened, protoPage } from "@/lib/proto/store";
 import { PIN_LIMIT, hasPinCookie, pinCookieHeader, pinMatches, pinPage, type PinState } from "@/lib/proto/lock";
+import { CODE_LIMIT, codeCookieHeader, readCodeCookie, type CodeKind } from "@/lib/proto/codes";
+import { codeAccess, liveProtoCode } from "@/lib/proto/code-store";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
+
+/**
+ * Чем этот браузер открывает макет: постоянный пароль владельца, пароль
+ * клиента на сутки или «Открыть» из панели. null — ничем.
+ */
+async function accessBy(
+  cookie: string | null,
+  page: { id: string; lock: string | null; closed: boolean },
+): Promise<"pin" | CodeKind | null> {
+  if (page.lock && hasPinCookie(cookie, page.id, page.lock)) return "pin";
+  const key = readCodeCookie(cookie, page.id);
+  if (!key) return null;
+  return (await codeAccess(page.id, key))?.kind ?? null;
+}
 
 /**
  * Прототип по ссылке — то, что открывает владелец чужого бизнеса.
@@ -32,9 +48,12 @@ export async function serveProto(request: Request, token: string, path = ""): Pr
   const page = await protoPage(token, path);
   if (!page) return new Response(null, { status: 404 });
 
-  // Пароль на макет (lib/proto/lock): без верного пароля — форма, а не макет,
-  // и в журнал показа ничего не пишется.
-  if (page.lock && !hasPinCookie(request.headers.get("cookie"), page.id, page.lock)) return pinResponse("ask");
+  // Пароль на макет: постоянный пароль владельца (lib/proto/lock) или пароль
+  // на сутки из раздела «Макеты» (lib/proto/codes). Без верного — форма, а
+  // не макет, и в журнал показа ничего не пишется.
+  const cookie = request.headers.get("cookie");
+  const access = await accessBy(cookie, page);
+  if ((page.lock || page.closed) && !access) return pinResponse("ask");
 
   // Отметка об открытии не задерживает ответ: человеку страница нужна сейчас.
   // Превью мессенджера и наши собственные открытия из панели не считаются —
@@ -42,8 +61,9 @@ export async function serveProto(request: Request, token: string, path = ""): Pr
   // строка тому, кто касание ведёт.
   // Манифест, service worker и офлайн-страницу запрашивает телефон, а не
   // человек: в журнал показа они не идут (lib/proto/pages).
-  const countable = !isQuietProtoPath(path);
-  if (countable && !isPreviewFetch(request.headers.get("user-agent")) && !fromPanel(request.headers.get("cookie"), SESSION_COOKIE)) {
+  // «Открыть» из панели (доступ команды) — тоже свой человек, не клиент.
+  const countable = !isQuietProtoPath(path) && access !== "team";
+  if (countable && !isPreviewFetch(request.headers.get("user-agent")) && !fromPanel(cookie, SESSION_COOKIE)) {
     // Журнал показа — доказательство, что клиент видел макет (условия,
     // раздел 5). Адрес — тем же способом, что у ограничителя запросов.
     const ip = ipFromHeaders(request.headers);
@@ -99,10 +119,13 @@ export async function unlockProto(request: Request, token: string, path = ""): P
   const page = await protoPage(token, path);
   if (!page) return new Response(null, { status: 404 });
   const self = `/proto/${token}${path ? `/${path}` : ""}`;
-  if (!page.lock) return new Response(null, { status: 303, headers: { Location: self } });
+  if (!page.lock && !page.closed) return new Response(null, { status: 303, headers: { Location: self } });
 
   const ip = ipFromHeaders(request.headers);
   if (!rateLimit(`proto-pin:${ip}`, PIN_LIMIT).ok) return pinResponse("limit");
+  // Пароль на сутки — пять цифр, и перебирать их можно с разных адресов:
+  // поэтому ещё и предел на сам макет (lib/proto/codes).
+  if (!rateLimit(`proto-pin-all:${page.id}`, CODE_LIMIT).ok) return pinResponse("limit");
 
   let pin = "";
   try {
@@ -111,10 +134,16 @@ export async function unlockProto(request: Request, token: string, path = ""): P
   } catch {
     return pinResponse("wrong");
   }
-  if (!pinMatches(page.id, page.lock, pin)) return pinResponse("wrong");
+  if (page.lock && pinMatches(page.id, page.lock, pin)) {
+    return new Response(null, {
+      status: 303,
+      headers: { Location: self, "Set-Cookie": pinCookieHeader(page.id, page.lock, token), "Cache-Control": "no-store" },
+    });
+  }
 
-  return new Response(null, {
-    status: 303,
-    headers: { Location: self, "Set-Cookie": pinCookieHeader(page.id, page.lock, token), "Cache-Control": "no-store" },
-  });
+  // Пароль на сутки: доступ кончается вместе с ним — кука живёт до той же минуты.
+  const live = await liveProtoCode(page.id, pin);
+  if (!live) return pinResponse("wrong");
+  const set = codeCookieHeader({ protoId: page.id, token, codeId: live.id, codeHash: live.codeHash, expiresAt: live.expiresAt });
+  return new Response(null, { status: 303, headers: { Location: self, "Set-Cookie": set, "Cache-Control": "no-store" } });
 }
