@@ -391,11 +391,40 @@ async function live() {
  * `cap` и `paused` — функции, а не числа: владелец меняет предел и ставит
  * паузу в панели, и работник узнаёт об этом со следующим тиком.
  */
+/** Telegram не нашёл собеседника по номеру: в кэше сессии его нет. */
+function lostPeer(error) {
+  return /input entity/i.test(error?.message ?? "");
+}
+
 function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersAlive, onFlood, afterBanCheck = async () => {} }) {
   /** Последний кружок в «Избранном» этого аккаунта — или null. */
   const savedCircle = async () => {
     const [found] = (await client.getMessages("me", { limit: 1, filter: new Api.InputMessagesFilterRoundVideo() })) ?? [];
     return found?.media ? found : null;
+  };
+
+  /**
+   * Отправка тому, кто нам ответил.
+   *
+   * Номер пользователя Telegram находит только по кэшу сессии, а кэш живёт в
+   * памяти и пропадает с перезапуском скаута: 08.10.2026 после выкатки
+   * четыре кружка и письмо упали с «Could not find the input entity». Тогда
+   * грузим диалоги (собеседник в них есть: он нам писал) и пробуем снова, а
+   * не вышло — пишем на @адрес.
+   */
+  const toPeer = async (reply, send) => {
+    try {
+      return await send(reply.target);
+    } catch (error) {
+      if (!lostPeer(error)) throw error;
+    }
+    await client.getDialogs({ limit: 200 }).catch(() => {});
+    try {
+      return await send(reply.target);
+    } catch (error) {
+      if (!lostPeer(error) || !reply.fallback) throw error;
+    }
+    return send(reply.fallback);
   };
 
   const timers = [];
@@ -621,12 +650,12 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
           console.log(`переписка${tag}: кружка в «Избранном» нет — ${reply.target} уйдёт письмо`);
           return;
         }
-        await client.sendFile(reply.target, { file: circle.media });
+        await toPeer(reply, (to) => client.sendFile(to, { file: circle.media }));
         await markReplySent(reply.id);
         console.log(`переписка${tag}: кружок ${reply.target} по сайту ${reply.host}`);
         return;
       }
-      await client.sendMessage(reply.target, { message: reply.body });
+      await toPeer(reply, (to) => client.sendMessage(to, { message: reply.body }));
       await markReplySent(reply.id);
       console.log(`переписка${tag}: ответил ${reply.target} по сайту ${reply.host}`);
     } catch (error) {

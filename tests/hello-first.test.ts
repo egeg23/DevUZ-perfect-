@@ -201,13 +201,29 @@ test("очередь ответов: пауза, кружок раньше пи�
   const runner = read("scout/runner.mjs");
   assert.match(runner, /filter: new Api\.InputMessagesFilterRoundVideo\(\)/);
   assert.match(runner, /client\.getMessages\("me"/);
-  assert.match(runner, /await client\.sendFile\(reply\.target, \{ file: circle\.media \}\)/);
+  assert.match(runner, /await toPeer\(reply, \(to\) => client\.sendFile\(to, \{ file: circle\.media \}\)\)/);
+  assert.match(runner, /await toPeer\(reply, \(to\) => client\.sendMessage\(to, \{ message: reply\.body \}\)\)/);
   // Нет кружка или он не ушёл — вместо него письмо, разговор человеку не передаётся.
   assert.match(runner, /await markCircleSkipped\(reply\.id, NO_CIRCLE\)/);
   assert.match(runner, /if \(reply\.kind === "circle"\) await markCircleSkipped\(reply\.id, `Кружок не ушёл: \$\{why\}`\);/);
   // Панель видит, есть ли кружок в «Избранном».
   assert.match(runner, /await recordCircle\(key, circle \? Number\(circle\.date\) \* 1000 : null\)/);
   assert.match(read("app/admin/accounts/page.tsx"), /circleStates\(\)/);
+});
+
+test("собеседника нет в кэше после перезапуска — диалоги, потом @адрес", () => {
+  // 08.10.2026 после выкатки четыре кружка и письмо упали с «Could not find
+  // the input entity»: номер пользователя Telegram находит только по кэшу
+  // сессии, а он живёт в памяти скаута.
+  const runner = read("scout/runner.mjs");
+  const peer = between(runner, "const toPeer = async", "const placeCircle = async");
+  assert.ok(peer.indexOf("client.getDialogs(") > 0, "сначала грузим диалоги");
+  assert.ok(peer.indexOf("client.getDialogs(") < peer.indexOf("send(reply.fallback)"), "@адрес — последним");
+  assert.match(peer, /if \(!lostPeer\(error\)\) throw error;/, "другие ошибки не глушим");
+  assert.match(runner, /function lostPeer\(error\) \{\s*return \/input entity\/i\.test/);
+
+  const next = between(read("lib/admin/outreach-talk-store.ts"), "export async function nextReply(", "export async function markReplySent(");
+  assert.match(next, /fallback: handle !== to && handle\.startsWith\("@"\) \? handle : undefined/);
 });
 
 test("без ответа на приветствие — ничего: дожима нет", () => {

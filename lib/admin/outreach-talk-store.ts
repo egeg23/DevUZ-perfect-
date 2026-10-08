@@ -737,7 +737,15 @@ export async function tellManager(
 export async function nextReply(
   /** Чей разговор: отвечаем с того аккаунта, с которого ушло первое письмо. */
   account: string = MAIN_ACCOUNT,
-): Promise<{ id: string; target: string; body: string; host: string; kind: "text" | "circle" } | null> {
+): Promise<{
+  id: string;
+  target: string;
+  /** @адрес — если по номеру пользователя Telegram его не нашёл. */
+  fallback?: string;
+  body: string;
+  host: string;
+  kind: "text" | "circle";
+} | null> {
   const db = serviceClient();
   if (!db) return null;
 
@@ -814,9 +822,13 @@ export async function nextReply(
     // Пишем тому, кого телеграм вернул при отправке: у найденного по номеру
     // @адреса может не быть.
     const to = String(p.target_user_id ?? "") || String(p.target);
+    // Номер пользователя Telegram находит только по кэшу сессии, а кэш живёт
+    // в памяти скаута и пропадает с перезапуском. @адрес находится всегда.
+    const handle = String(p.target);
     return {
       id: String(row.id),
       target: to,
+      fallback: handle !== to && handle.startsWith("@") ? handle : undefined,
       body: String(row.body),
       host: String(p.host),
       kind: row.kind === "circle" ? "circle" : "text",
