@@ -47,7 +47,6 @@ def crop213(im):
     return im.crop((0, 200, 1920, 1000))     # 1920×800, здание целиком
 
 frame = Image.open(os.path.join(src, "o213_2.jpg")).convert("RGB")
-clad = Image.open(os.path.join(src, "o213_0.jpg")).convert("RGB")
 bp = blueprint(frame)
 
 # Первый экран: чертёж. На телефоне — правая половина здания крупнее.
@@ -56,12 +55,8 @@ save(hero.resize((1920, 800), Image.LANCZOS), "hero.webp", 76)
 m = bp.crop((560, 110, 560 + 820, 990))      # без светлой полосы внизу кадра
 save(m, "hero-m.webp", 74)
 
-# Сцена «чертёж → каркас → здание»: один ракурс, три кадра.
-for n, im in ((1, bp), (2, frame), (3, clad)):
-    c = crop213(im)
-    save(c.resize((1600, 667), Image.LANCZOS), f"asm-{n}.webp", 78)
-    mm = im.crop((520, 100, 520 + 900, 1000))
-    save(mm.resize((900, 900), Image.LANCZOS), f"asm-{n}-m.webp", 76)
+# Сцена сборки и мини-здания отраслей рисуются кодом (assembly.js, gen.mjs):
+# кадров для них нет.
 
 # Объекты: снимки как есть, только размер и формат.
 for oid in ("213", "203", "199", "217", "204"):

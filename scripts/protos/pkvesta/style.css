@@ -120,9 +120,20 @@ section{padding:64px 0}
 .hero h1{max-width:11em;text-shadow:0 2px 18px hsl(222 62% 6% / .5)}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .hero h1 .rot{display:grid;overflow:hidden;height:1.04em;color:var(--lime)}
-.hero h1 .rot span{grid-area:1/1;display:block;white-space:nowrap;transform:translateY(110%);opacity:0;transition:transform 700ms var(--spring),opacity 400ms ease}
-.hero h1 .rot span.on{transform:none;opacity:1}
-.hero h1 .rot span.out{transform:translateY(-110%);opacity:0}
+/* Слово меняется по буквам — по мотивам «Text Rotate» (@danielpetho, 21st.dev, MIT) */
+.hero h1 .rot>span{grid-area:1/1;display:block;white-space:nowrap}
+.hero h1 .rot i{display:inline-block;font-style:normal;transform:translateY(110%);opacity:0;transition:transform 640ms var(--ease),opacity 320ms ease;transition-delay:calc(var(--c,0) * 32ms)}
+.hero h1 .rot .on i{transform:none;opacity:1}
+.hero h1 .rot .out i{transform:translateY(-110%);opacity:0}
+/* Слова заголовка проявляются по очереди — по мотивам «Text Effect» (@ibelick, 21st.dev, MIT) */
+.tw{display:inline-block}
+.js .hero h1 .tw{opacity:0;filter:blur(10px);transform:translateY(.35em)}
+.js .hero-on h1 .tw{opacity:1;filter:blur(0);transform:none;transition:opacity 700ms var(--ease),filter 700ms var(--ease),transform 800ms var(--ease);transition-delay:calc(var(--i,0) * 70ms + 80ms)}
+.js .hero h1 .rot{opacity:0;transition:opacity 500ms ease 220ms}
+.js .hero-on h1 .rot{opacity:1}
+/* Мерцающая сетка за чертежом — по мотивам «Flickering Grid» (@dillionverma, 21st.dev, MIT) */
+.flick{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none;opacity:.8;-webkit-mask:radial-gradient(85% 34% at 50% 10%,#000 0%,transparent 100%);mask:radial-gradient(85% 34% at 50% 10%,#000 0%,transparent 100%)}
+@media (min-width:1024px){.flick{-webkit-mask:radial-gradient(60% 70% at 78% 40%,#000 0%,transparent 100%);mask:radial-gradient(60% 70% at 78% 40%,#000 0%,transparent 100%)}}
 .hero .lead{color:var(--on2)}
 .trust{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
 .trust span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;background:hsl(222 62% 8% / .55);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
@@ -132,10 +143,10 @@ section{padding:64px 0}
 .js .hero-on .hi{opacity:1;transform:none;transition:opacity 800ms var(--ease),transform 900ms var(--ease);transition-delay:var(--d,0ms)}
 
 /* Расчёт по размерам */
-.cfg{padding:16px;border-radius:20px;background:hsl(214 24% 97% / .97);color:var(--fg);box-shadow:var(--sh2);max-width:560px}
+.cfg{position:relative;isolation:isolate;padding:16px;border-radius:20px;background:hsl(214 24% 97% / .97);color:var(--fg);box-shadow:var(--sh2);max-width:560px}
 .cfg-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .cfg-h b{font:700 20px/1.2 var(--head);text-transform:uppercase}
-.cfg-h span{font-size:12px;color:var(--mut)}
+.cfg-h span{font-size:12px;color:var(--mut);white-space:nowrap}
 .cfg-row{display:grid;gap:6px;margin-top:12px}
 .cfg-row>span{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
@@ -152,6 +163,10 @@ section{padding:64px 0}
 .cfg .btn{width:100%;margin-top:12px}
 .cfg-alt{display:block;margin-top:10px;text-align:center;font-size:14px;color:var(--navy);font-weight:700}
 .hero-go{margin-top:24px}
+/* Свет бежит по рамке расчёта — по мотивам «Shine Border» (@dillionverma, 21st.dev, MIT) */
+.shine{position:absolute;inset:0;z-index:2;border-radius:inherit;padding:2px;overflow:hidden;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.shine::before{content:"";position:absolute;left:50%;top:50%;width:260%;aspect-ratio:1;margin:-130% 0 0 -130%;background:conic-gradient(from 0deg,transparent 0 62%,hsl(224 59% 35% / .9) 76%,hsl(63 75% 50%) 86%,transparent 94%);animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(1turn)}}
 
 /* Карточки объектов справа */
 .float{position:relative;height:440px;display:none}
@@ -166,59 +181,106 @@ section{padding:64px 0}
 .fc.c{right:120px;top:240px;width:230px}
 
 /* ── Лента цифр ── */
+/* Огонёк обходит рамку — по мотивам «Border Trail» (@ibelick, 21st.dev, MIT) */
+.stats-w{position:relative}
+.trail{display:none}
+@supports (offset-path:inset(0 round 16px)){
+.trail{display:block;position:absolute;inset:-1px;z-index:2;border-radius:calc(var(--r) + 1px);padding:2px;pointer-events:none;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.trail::before{content:"";position:absolute;left:0;top:0;width:120px;aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,hsl(63 75% 50%),hsl(63 75% 50% / .5) 45%,transparent);offset-path:inset(0 round 16px);offset-anchor:50% 50%;offset-rotate:0deg;animation:trail 10s linear infinite}
+@keyframes trail{to{offset-distance:100%}}
+}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border-radius:var(--r);overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
 @media (min-width:768px){.stats{grid-template-columns:repeat(4,1fr)}}
 .stats div{background:var(--s1);padding:20px}
 .stats b{display:block;font:700 clamp(36px,4.6vw,48px)/1 var(--head);color:var(--navy)}
 .stats span{display:block;font-size:14px;color:var(--fg2);margin-top:8px;line-height:1.4}
 
-/* ── Сцена: чертёж → каркас → здание (липкая, без перехвата прокрутки) ── */
-.asm{position:relative;height:320vh;background:var(--ink);color:var(--on);padding:0}
-.asm-pin{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto}
-.asm-head{position:relative;z-index:3;padding:88px 0 0}
-.asm-head h2{max-width:14em}
-.asm-stage{position:relative;margin:16px 0}
-.asm-stage img{position:absolute;left:50%;top:50%;width:min(100%,1400px);height:auto;max-height:100%;object-fit:contain;transform:translate(-50%,-50%) scale(var(--s,1));opacity:var(--o,0);will-change:transform,opacity;border-radius:12px}
-.asm-stage img.m{display:block}
-.asm-stage img.d{display:none}
-@media (min-width:768px){.asm-stage img.m{display:none}.asm-stage img.d{display:block}}
-.asm-stage img[data-k="1"]{--o:1}
-.asm-steps{position:relative;z-index:3;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-bottom:24px}
-.asm-steps li{list-style:none;padding:12px;border-radius:14px;background:hsl(222 50% 16% / .86);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .1);opacity:.5;transition:opacity 300ms ease,box-shadow 300ms ease}
+/* ── Сцена: здание собирается из деталей (canvas, липкий кадр) ── */
+.asm{position:relative;height:420vh;background:var(--ink);color:var(--on);padding:0}
+.asm-pin{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;grid-template:"head" auto "frame" 1fr "foot" auto/1fr;gap:12px;padding:76px 16px 14px;background:radial-gradient(120% 80% at 60% 55%,hsl(222 56% 15%) 0%,var(--ink) 72%)}
+@media (min-width:1024px){.asm-pin{grid-template:"head frame" auto "foot frame" 1fr/minmax(320px,400px) 1fr;column-gap:32px;row-gap:24px;padding:88px max(32px,calc((100vw - 1240px) / 2 + 32px)) 28px}}
+.asm-head{grid-area:head;position:relative;z-index:3}
+.asm-head h2{font-size:clamp(26px,3.6vw,44px);max-width:14em}
+.asm-frame{grid-area:frame;position:relative;min-height:0;border-radius:24px;background:radial-gradient(90% 70% at 50% 60%,hsl(222 58% 13%) 0%,hsl(222 62% 8%) 100%);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .08);transform-origin:50% 50%;will-change:transform;overflow:hidden}
+.asm-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.asm-foot{grid-area:foot;position:relative;z-index:3;min-width:0}
+.asm-steps{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+@media (min-width:640px){.asm-steps{grid-template-columns:repeat(4,1fr)}}
+@media (min-width:1024px){.asm-steps{grid-template-columns:1fr;gap:8px}}
+.asm-steps li{list-style:none;padding:8px 10px;border-radius:12px;background:hsl(222 50% 16% / .86);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .1);opacity:.5;transition:opacity 300ms ease,box-shadow 300ms ease}
+@media (min-width:1024px){.asm-steps li{padding:12px 14px}}
 .asm-steps li.on{opacity:1;box-shadow:inset 0 0 0 2px var(--lime)}
-.asm-steps b{display:block;font:700 20px/1.1 var(--head);text-transform:uppercase}
+.asm-steps li.past{opacity:.82}
+.asm-steps b{display:block;font:700 12px/1.15 var(--head);text-transform:uppercase}
+@media (min-width:640px){.asm-steps b{font-size:16px}}
+@media (min-width:1024px){.asm-steps b{font-size:18px}}
 .asm-steps b i{font-style:normal;color:var(--lime);margin-right:6px}
+.asm-steps li.past b i::after{content:" ✓"}
+/* Заголовок шага проявляется срезом снизу — по мотивам «Vertical Cut Reveal» (@danielpetho, 21st.dev, MIT) */
+.cw{display:inline-block;overflow:hidden;vertical-align:bottom}
+.cw>span{display:inline-block;transform:translateY(105%);transition:transform 560ms var(--ease);transition-delay:calc(var(--s,0) * 140ms + var(--w,0) * 60ms + 120ms)}
+.asm.seen .cw>span,.asm-steps li.on .cw>span{transform:none}
 .asm-steps p{display:none;font-size:14px;color:var(--on2);margin-top:6px;line-height:1.45}
-@media (min-width:768px){.asm-steps p{display:block}}
+@media (min-width:1024px){.asm-steps li.on p{display:block}}
 .asm-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:hsl(214 40% 97% / .1)}
 .asm-bar i{position:absolute;inset:0;background:var(--lime);transform-origin:0 50%;transform:scaleX(var(--p,0))}
 .asm-cap{font-size:12px;color:var(--on2);margin-top:8px}
-.asm-now{display:block;font-size:14px;color:var(--on2);margin-top:8px;min-height:3em}
-@media (min-width:768px){.asm-now{display:none}}
+.asm-now{display:block;font-size:14px;color:var(--on2);margin-top:8px;min-height:3em;line-height:1.45}
+@media (min-width:1024px){.asm-now{display:none}}
 .k-no-assembly .asm{display:none}
 
 /* ── Отрасли ── */
 .inds{display:grid;gap:16px;grid-template-columns:1fr}
 @media (min-width:640px){.inds{grid-template-columns:repeat(2,1fr)}}
 @media (min-width:1024px){.inds{grid-template-columns:repeat(3,1fr)}}
-.ind{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;min-height:240px;padding:24px;border-radius:20px;background:var(--s1);box-shadow:var(--sh1);overflow:hidden;text-decoration:none;transition:box-shadow 300ms ease,transform 300ms var(--ease)}
-.ind:hover{box-shadow:var(--sh2);transform:translateY(-4px)}
-.ind .ic{position:absolute;left:24px;top:24px;width:48px;height:48px;display:grid;place-items:center;border-radius:12px;background:var(--navys);color:var(--navy);transition:transform 400ms var(--spring)}
-.ind:hover .ic{transform:rotate(-8deg) scale(1.06)}
-.ind .ic svg{width:26px;height:26px}
-.ind .n{position:absolute;right:24px;top:24px;font:700 36px/1 var(--head);color:var(--s3)}
-.ind h3{font:700 24px/1.1 var(--head);text-transform:uppercase}
+.ind{position:relative;isolation:isolate;display:flex;flex-direction:column;gap:8px;padding:20px 24px 24px;border-radius:20px;background:linear-gradient(180deg,hsl(216 40% 96%) 0%,var(--s1) 58%);box-shadow:var(--sh1),inset 0 0 0 1px var(--line);overflow:hidden;text-decoration:none;transition:box-shadow 300ms ease,transform 300ms var(--ease)}
+.ind:hover{box-shadow:var(--sh2),inset 0 0 0 1px hsl(224 59% 35% / .3);transform:translateY(-4px)}
+.ind .n{position:absolute;right:20px;top:16px;font:700 36px/1 var(--head);color:var(--s3)}
+.ind h3{font:700 24px/1.1 var(--head);text-transform:uppercase;margin-top:4px}
 .ind p{font-size:14px;color:var(--fg2);line-height:1.5}
-.ind.ph{color:var(--on);min-height:300px}
-.ind.ph .bg{position:absolute;inset:0;z-index:-1;background-size:cover;background-position:center;transition:transform 900ms var(--ease)}
-.ind.ph:hover .bg{transform:scale(1.05)}
-.ind.ph::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,hsl(222 62% 8% / .1) 20%,hsl(222 62% 8% / .9))}
-.ind.ph p{color:var(--on2)}
-.ind.ph .ic{background:hsl(214 40% 97% / .16);color:var(--on);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.ind.ph .n{color:hsl(214 40% 97% / .4)}
-.ind .go{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--navy)}
-.ind.ph .go{color:var(--lime)}
-.ind .go svg{width:16px;height:16px}
+.ind .go{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:4px;font-size:14px;font-weight:700;color:var(--navy)}
+.ind .go svg{width:16px;height:16px;transition:transform 300ms var(--ease)}
+.ind:hover .go svg{transform:translateX(4px)}
+/* Пятно света идёт за курсором — по мотивам «Spotlight» (@ibelick, 21st.dev, MIT) */
+.ind .spot{position:absolute;left:0;top:0;z-index:-1;width:340px;height:340px;margin:-170px 0 0 -170px;border-radius:50%;background:radial-gradient(closest-side,hsl(63 75% 50% / .32),hsl(63 75% 50% / .08) 60%,transparent);pointer-events:none;opacity:0;transition:opacity 300ms ease;will-change:transform}
+.ind:hover .spot{opacity:1}
+/* Мини-здание: грани по ролям, кровля приподнимается под курсором */
+.iso-defs{position:absolute;width:0;height:0;overflow:hidden}
+.iso{display:block;width:100%;height:176px;overflow:visible}
+.iso polygon{stroke:hsl(222 45% 22% / .28);stroke-width:.8px;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.iso path,.iso ellipse{vector-effect:non-scaling-stroke}
+.iso .gd{fill:none;stroke:hsl(222 45% 35% / .13);stroke-width:1px}
+.iso .sh{fill:hsl(222 50% 18% / .09);stroke:none}
+.iso .fz{fill:hsl(216 34% 89%)}
+.iso .fx{fill:hsl(220 26% 71%)}
+.iso .rb{fill:none;stroke:hsl(222 45% 25% / .2);stroke-width:1px}
+.iso .r0{fill:hsl(224 52% 29%)}
+.iso .r1{fill:hsl(224 59% 41%)}
+.iso .rt{fill:hsl(216 30% 94%)}
+.iso .u1{fill:hsl(218 18% 82%)}
+.iso .u2{fill:hsl(220 16% 66%)}
+.iso .a0{fill:hsl(224 60% 27%)}
+.iso .a1{fill:hsl(224 58% 33%)}
+.iso .a2{fill:hsl(224 56% 39%)}
+.iso .a3{fill:hsl(224 52% 46%)}
+.iso .rr{fill:none;stroke:hsl(222 70% 12% / .35);stroke-width:1px}
+.iso .tr{fill:none;stroke:var(--lime);stroke-width:2px;stroke-linecap:round}
+.iso .ac{fill:var(--lime)}
+.iso .gt{fill:none;stroke:hsl(63 80% 22% / .55);stroke-width:1px}
+.iso .gl{fill:hsl(204 62% 74%)}
+.iso .cy{fill:url(#cyl)}
+.iso .wl{transform-box:fill-box;transform-origin:50% 100%}
+.iso .rf{transition:transform 520ms var(--ease)}
+.ind:hover .iso .rf,.ind:focus-visible .iso .rf{transform:translateY(-1.6px)}
+/* При появлении: стены растут от земли, кровля опускается сверху, ворота загораются */
+.js .ind.rv.in .iso .wl{animation:isoUp 700ms var(--ease) backwards;animation-delay:calc(var(--d,0ms) + 260ms)}
+.js .ind.rv.in .iso .rf{animation:isoDrop 760ms var(--ease) backwards;animation-delay:calc(var(--d,0ms) + 700ms)}
+.js .ind.rv.in .iso .ac,.js .ind.rv.in .iso .gt{animation:fade 400ms ease backwards;animation-delay:calc(var(--d,0ms) + 1100ms)}
+@keyframes isoUp{0%{transform:scaleY(0)}100%{transform:none}}
+@keyframes isoDrop{0%{opacity:0;transform:translateY(-7px)}100%{opacity:1;transform:none}}
+@keyframes fade{0%{opacity:0}100%{opacity:1}}
+/* Карточки проявляются из размытия — по мотивам «Blur Fade» (@dillionverma, 21st.dev, MIT) */
+@keyframes blurin{0%{opacity:0;filter:blur(10px);transform:translateY(20px)}100%{opacity:1;filter:blur(0);transform:none}}
 
 /* ── Объекты лентой: вниз листаете, лента едет вбок ── */
 .trk{position:relative;padding:0;background:var(--bg)}
@@ -230,6 +292,16 @@ section{padding:64px 0}
 .oc{flex:none;width:min(82vw,440px);scroll-snap-align:start;border-radius:20px;background:var(--s1);box-shadow:var(--sh1);overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:box-shadow 240ms ease}
 .oc:hover{box-shadow:var(--sh2)}
 .oc img{width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--s2)}
+.oc-im{position:relative;display:block;overflow:hidden}
+.oc-tone{display:none}
+/* В ленте объекты в фирменном синем, цвет проявляется у карточки в центре и под курсором */
+.trk .oc-tone{display:block;position:absolute;inset:0;background:linear-gradient(135deg,hsl(224 59% 38%),hsl(222 62% 14%));mix-blend-mode:color;transition:opacity 700ms var(--ease)}
+.trk .oc-im img{transform:scale(1.06);transition:transform 900ms var(--ease)}
+.trk .oc.lit .oc-tone,.trk .oc:hover .oc-tone{opacity:0}
+.trk .oc.lit .oc-im img,.trk .oc:hover .oc-im img{transform:none}
+/* Наклон за курсором — по мотивам «Tilt» (@ibelick, 21st.dev, MIT) */
+.oc.tilt{transition:box-shadow 240ms ease,transform 160ms ease-out;will-change:transform}
+.oc.tilt-off{transition:box-shadow 240ms ease,transform 600ms var(--ease)}
 .oc .bd{display:grid;gap:6px;padding:16px}
 .dims{font:700 30px/1 var(--head);color:var(--navy)}
 .dims small{font:700 14px/1 var(--text);color:var(--mut);margin-left:6px}
@@ -244,15 +316,26 @@ section{padding:64px 0}
 /* ── География: города по координатам, без контура границ ── */
 .geo{display:grid;gap:24px}
 @media (min-width:1024px){.geo{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:center}}
-.geo-map{position:relative;aspect-ratio:16/10;border-radius:20px;background:var(--ink);background-image:linear-gradient(to right,hsl(214 40% 97% / .06) 1px,transparent 1px),linear-gradient(to bottom,hsl(214 40% 97% / .06) 1px,transparent 1px);background-size:10% 12.5%;overflow:hidden}
-.geo-map i{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 6px hsl(63 75% 50% / .18)}
+.geo-map{position:relative;aspect-ratio:16/10;border-radius:20px;background:radial-gradient(80% 90% at 65% 45%,hsl(222 52% 17%),var(--ink) 75%);overflow:hidden}
+/* Точечная сетка вместо линий — по мотивам «Dot Pattern» (@dillionverma, 21st.dev, MIT) */
+.geo-map::before{content:"";position:absolute;inset:0;background-image:radial-gradient(hsl(214 40% 97% / .26) 1px,transparent 1.5px);background-size:14px 14px;-webkit-mask:radial-gradient(75% 80% at 62% 48%,#000 20%,transparent 100%);mask:radial-gradient(75% 80% at 62% 48%,#000 20%,transparent 100%)}
+.geo-map i{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 6px hsl(63 75% 50% / .18);transition:transform 360ms var(--spring),box-shadow 300ms ease}
 .geo-map i.uz{background:var(--on)}
+/* Круги расходятся от каждого объекта по очереди */
+.geo-map i::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 1.5px var(--lime);animation:ring 2.8s var(--ease) infinite;animation-delay:calc(var(--k,0) * 400ms + 1.2s);opacity:0}
+.geo-map i.uz::after{box-shadow:0 0 0 1.5px var(--on)}
+@keyframes ring{0%{transform:scale(1);opacity:.9}100%{transform:scale(4);opacity:0}}
+.geo-map i.hot{transform:scale(1.7);box-shadow:0 0 0 8px hsl(63 75% 50% / .3)}
+.geo-map span{transition:color 200ms ease}
+.geo-map span.hot{color:var(--lime)}
+.geo-list li{transition:box-shadow 200ms ease}
+.geo-list li:hover{box-shadow:inset 0 0 0 2px var(--navy)}
 .geo-map span{position:absolute;transform:translate(10px,-50%);font-size:12px;font-weight:700;color:var(--on);white-space:nowrap}
 .geo-map span.lf{transform:translate(calc(-100% - 10px),-50%)}
-.geo-map em{position:absolute;left:12px;bottom:10px;font-style:normal;font-size:12px;color:var(--on2)}
-.js .geo-map.rv i,.js .geo-map.rv span{opacity:0}
-.js .geo-map.rv.in i{animation:ping 700ms var(--spring) both;animation-delay:calc(var(--k,0) * 140ms + 300ms)}
-.js .geo-map.rv.in span{animation:rise 600ms var(--ease) both;animation-delay:calc(var(--k,0) * 140ms + 420ms)}
+.geo-map em{position:absolute;left:12px;top:10px;max-width:42%;font-style:normal;font-size:12px;line-height:1.35;color:var(--on2)}
+.js .geo-map.rv:not(.in) i,.js .geo-map.rv:not(.in) span{opacity:0}
+.js .geo-map.rv.in i{animation:ping 700ms var(--spring) backwards;animation-delay:calc(var(--k,0) * 140ms + 300ms)}
+.js .geo-map.rv.in span{animation:fade 600ms var(--ease) backwards;animation-delay:calc(var(--k,0) * 140ms + 420ms)}
 @keyframes ping{0%{opacity:0;transform:scale(0)}70%{transform:scale(1.4)}100%{opacity:1;transform:none}}
 .geo-list{list-style:none;display:grid;gap:8px}
 .geo-list li{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 16px;border-radius:14px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line)}
@@ -262,21 +345,43 @@ section{padding:64px 0}
 
 /* ── Каркас как конструктор ── */
 .feats{display:grid;gap:16px}
-@media (min-width:768px){.feats{grid-template-columns:repeat(2,1fr)}}
-@media (min-width:1100px){.feats{grid-template-columns:repeat(4,1fr)}}
-.ft{padding:24px;border-radius:20px;background:var(--s1);box-shadow:var(--sh1)}
-.ft .ic{width:48px;height:48px;display:grid;place-items:center;border-radius:12px;background:var(--lime);color:var(--ink);margin-bottom:16px}
+@media (min-width:768px){.feats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1100px){.feats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.ft{position:relative;isolation:isolate;padding:24px;border-radius:20px;background:var(--s1);box-shadow:var(--sh1);transition:box-shadow 300ms ease}
+.ft:hover{box-shadow:var(--sh2)}
+.ft-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.ft .ic{flex:none;width:48px;height:48px;display:grid;place-items:center;border-radius:12px;background:var(--lime);color:var(--ink);transition:transform 420ms var(--spring)}
+.ft:hover .ic{transform:rotate(-10deg) scale(1.08)}
 .ft .ic svg{width:24px;height:24px}
+.tk{font:700 clamp(24px,2.4vw,32px)/1 var(--head);color:var(--navy);text-transform:uppercase;text-align:right;font-variant-numeric:tabular-nums;min-width:0}
+.tk.sm{font-size:clamp(18px,1.6vw,22px);line-height:1.1}
+/* Луч обходит рамку под курсором — по мотивам «Border Beam» (@dillionverma, 21st.dev, MIT) */
+.beam{display:none}
+@supports (offset-path:inset(0 round 16px)){
+.beam{display:block;position:absolute;inset:0;z-index:2;border-radius:inherit;padding:2px;pointer-events:none;opacity:0;transition:opacity 300ms ease;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.beam::before{content:"";position:absolute;left:0;top:0;width:110px;aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,hsl(63 75% 52%),hsl(63 75% 50% / .55) 45%,hsl(224 59% 50% / .35) 72%,transparent);offset-path:inset(0 round 20px);offset-anchor:50% 50%;offset-rotate:0deg;animation:trail 3.4s linear infinite paused}
+.ft:hover .beam,.of:hover .beam{opacity:1}
+.ft:hover .beam::before,.of:hover .beam::before{animation-play-state:running}
+}
 .ft p{font-size:14px;color:var(--fg2);margin-top:8px}
 .ft q{display:block;margin-top:12px;padding-left:12px;border-left:3px solid var(--lime);font-size:14px;color:var(--fg2);quotes:"«" "»"}
 
 /* ── WebSteel ── */
-.ws{display:grid;gap:24px}
-@media (min-width:1024px){.ws{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}}
-.ws ol{list-style:none;display:grid;gap:8px;counter-reset:w}
-.ws li{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:14px;background:var(--ink2);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .08);font-size:16px}
-.ws li::before{counter-increment:w;content:counter(w);flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:var(--lime);color:var(--ink);font:700 16px/1 var(--head)}
-.ws-res{padding:24px;border-radius:20px;background:var(--ink2);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .1)}
+.ws{position:relative;display:grid;gap:40px}
+@media (min-width:1024px){.ws{grid-template-columns:minmax(0,1fr) 150px minmax(0,1fr);gap:56px;align-items:center}}
+.ws ol{position:relative;z-index:1;list-style:none;display:grid;gap:8px;counter-reset:w}
+/* Шаги сходятся в калькулятор, из него выходит результат — по мотивам «Animated Beam» (@dillionverma, 21st.dev, MIT) */
+.ws-hub{position:relative;z-index:1;display:grid;place-items:center}
+.ws-core{display:grid;place-items:center;align-content:center;gap:6px;width:136px;aspect-ratio:1;border-radius:28px;background:radial-gradient(circle at 50% 28%,hsl(224 56% 30%),var(--ink2) 70%);box-shadow:inset 0 0 0 1px hsl(63 75% 50% / .55),0 0 0 10px hsl(63 75% 50% / .06),0 24px 60px -20px hsl(63 75% 50% / .4);text-align:center}
+.ws-core b{font:700 20px/1 var(--head);color:var(--lime);letter-spacing:.02em}
+.ws-core small{font-size:12px;color:var(--on2)}
+.ws-beams{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.ws-beams .bl{fill:none;stroke:hsl(214 40% 97% / .12);stroke-width:1.5}
+.ws-beams .bm{fill:none;stroke:var(--lime);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:14 300;animation:flow 2.8s cubic-bezier(.45,0,.55,1) infinite;animation-delay:var(--t,0s)}
+@keyframes flow{from{stroke-dashoffset:14}to{stroke-dashoffset:-100}}
+.ws ol>li{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:14px;background:var(--ink2);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .08);font-size:16px}
+.ws ol>li::before{counter-increment:w;content:counter(w);flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:var(--lime);color:var(--ink);font:700 16px/1 var(--head)}
+.ws-res{position:relative;z-index:1;padding:24px;border-radius:20px;background:var(--ink2);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .1)}
 .ws-res h3{font:700 24px/1.1 var(--head);text-transform:uppercase}
 .ws-res ul{list-style:none;display:grid;gap:8px;margin-top:16px}
 .ws-res li{display:flex;gap:10px;font-size:14px;color:var(--on2)}
@@ -286,10 +391,12 @@ section{padding:64px 0}
 .offer{display:grid;gap:16px}
 @media (min-width:768px){.offer{grid-template-columns:repeat(2,1fr)}}
 @media (min-width:1100px){.offer{grid-template-columns:repeat(3,1fr)}}
-.of{position:relative;padding:24px;border-radius:20px;background:var(--ink2);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .1);overflow:hidden;transition:transform 300ms var(--ease)}
+.of{position:relative;isolation:isolate;padding:24px;border-radius:20px;background:var(--ink2);box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .1);overflow:hidden;transition:transform 300ms var(--ease)}
 .of:hover{transform:translateY(-4px)}
 .of .ic{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:var(--ink3);color:var(--lime);margin-bottom:16px}
 .of .ic svg{width:22px;height:22px}
+.of .spot{position:absolute;left:0;top:0;z-index:-1;width:360px;height:360px;margin:-180px 0 0 -180px;border-radius:50%;background:radial-gradient(closest-side,hsl(63 75% 50% / .16),hsl(224 59% 45% / .1) 55%,transparent);pointer-events:none;opacity:0;transition:opacity 300ms ease;will-change:transform}
+.of:hover .spot{opacity:1}
 .of p{font-size:14px;color:var(--on2);margin-top:8px}
 .of small{display:block;font-size:12px;color:hsl(216 18% 64%);margin-top:12px;line-height:1.5}
 
@@ -411,11 +518,19 @@ section{padding:64px 0}
 .final .box .sub{color:hsl(222 40% 88%);margin-left:auto;margin-right:auto}
 .final .cta{justify-content:center}
 .final .box .btn-ghost{box-shadow:inset 0 0 0 2px hsl(214 40% 97% / .4)}
-.final .rings{position:absolute;inset:0;z-index:-1;pointer-events:none}
-.final .rings i{position:absolute;left:50%;top:100%;width:800px;aspect-ratio:1;margin:-400px 0 0 -400px;border-radius:50%;box-shadow:inset 0 0 0 1px hsl(214 40% 97% / .14);animation:ripple 6s linear infinite}
-.final .rings i:nth-child(2){animation-delay:-2s}
-.final .rings i:nth-child(3){animation-delay:-4s}
-@keyframes ripple{0%{transform:scale(.2);opacity:0}20%{opacity:1}100%{transform:scale(1.4);opacity:0}}
+.warp{position:absolute;inset:0;z-index:-1;overflow:hidden;container-type:size;perspective:110px;pointer-events:none}
+.warp::after{content:"";position:absolute;inset:0;background:radial-gradient(48% 62% at 50% 50%,var(--navy) 35%,hsl(224 59% 35% / 0) 100%)}
+.wp{position:absolute;height:1400px;background:linear-gradient(hsl(214 40% 97% / .16) 0 1px,transparent 1px 44px) 50% -.5px/44px 44px,linear-gradient(90deg,hsl(214 40% 97% / .16) 0 1px,transparent 1px 44px) 50% 50%/44px 44px;transform-origin:50% 0}
+.wp.t{left:0;top:0;width:100cqw;transform:rotateX(-90deg)}
+.wp.b{left:0;top:100%;width:100cqw;transform:rotateX(-90deg)}
+.wp.l{left:0;top:0;width:100cqh;transform-origin:0 0;transform:rotate(90deg) rotateX(-90deg)}
+.wp.r{right:0;top:0;width:100cqh;transform-origin:100% 0;transform:rotate(-90deg) rotateX(-90deg)}
+.wp i{position:absolute;left:var(--x);top:0;width:4%;aspect-ratio:1/var(--ar,4);background:linear-gradient(hsl(63 75% 55%),transparent);transform:translate(-50%,1400px);animation:warp 3.6s linear infinite;animation-delay:var(--dl,0s)}
+.wp i.c2{background:linear-gradient(hsl(214 70% 80%),transparent)}
+@keyframes warp{0%{transform:translate(-50%,1400px)}100%{transform:translate(-50%,-100%)}}
+/* Заголовок финала проявляется по словам */
+.js .final .tw{opacity:0;filter:blur(10px);transform:translateY(.35em)}
+.js .final .box.in .tw{opacity:1;filter:blur(0);transform:none;transition:opacity 700ms var(--ease),filter 700ms var(--ease),transform 800ms var(--ease);transition-delay:calc(var(--i,0) * 90ms + 300ms)}
 footer{background:var(--ink);color:var(--on2);padding:48px 0 32px;font-size:14px}
 footer .cols{display:grid;gap:24px}
 @media (min-width:768px){footer .cols{grid-template-columns:1.4fr 1fr 1fr}}
@@ -425,7 +540,8 @@ footer a{text-decoration:none}
 footer a:hover{text-decoration:underline}
 footer .rights{display:grid;gap:8px;margin-top:32px;padding-top:24px;border-top:1px solid var(--ink3);font-size:12px;color:hsl(216 18% 64%)}
 footer .rights a{text-decoration:underline}
-.dock{position:fixed;left:16px;right:16px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;display:block}
+.dock{position:fixed;left:16px;right:16px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;display:block;transition:opacity 240ms ease,transform 300ms var(--ease)}
+.asm-in .dock,.asm-in .kd-pill{opacity:0;transform:translateY(24px);pointer-events:none}
 .dock .btn{width:100%;box-shadow:0 16px 40px -12px rgb(0 0 0 / .5)}
 @media (min-width:1024px){.dock{display:none}}
 
@@ -516,7 +632,7 @@ footer .rights a{text-decoration:underline}
 /* ── Появление блоков: у каждого своё движение ── */
 .js .rv{opacity:0}
 .js .rv.in{opacity:1;animation:var(--a,rise) 800ms var(--ease) both;animation-delay:var(--d,0ms)}
-.a-rise{--a:rise}.a-beam{--a:beam}.a-lift{--a:lift}.a-slide{--a:slide}.a-bolt{--a:bolt}.a-pop{--a:popin}.a-left{--a:left}.a-panel{--a:panel}
+.a-rise{--a:rise}.a-beam{--a:beam}.a-lift{--a:lift}.a-slide{--a:slide}.a-bolt{--a:bolt}.a-pop{--a:popin}.a-left{--a:left}.a-panel{--a:panel}.a-blurin{--a:blurin}
 @keyframes rise{0%{opacity:0;transform:translateY(32px)}100%{opacity:1;transform:none}}
 /* балка ложится сверху */
 @keyframes beam{0%{opacity:0;transform:translateY(-40px) rotate(-2deg)}100%{opacity:1;transform:none}}
@@ -533,8 +649,9 @@ footer .rights a{text-decoration:underline}
 .k-fresh{animation:popin 520ms var(--spring) both}
 .k-no-motion .rv{opacity:1 !important;animation:none !important}
 .k-no-motion .hero-ph,.k-no-motion .fc{transform:none !important}
+.k-no-motion .flick,.k-no-motion .shine,.k-no-motion .trail,.k-no-motion .wp i,.k-no-motion .geo-map i::after{display:none}
 
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}.intro{display:none}.js .rv{opacity:1}.js .rv.in{animation:none}.js .hi{opacity:1;transform:none}.hero-ph,.fc{transform:none !important}.final .rings i{animation:none}.asm{height:auto}.asm-pin{position:relative;height:auto}.asm-stage{height:56vw;max-height:70vh}.asm-stage img[data-k="3"]{--o:1}.asm-stage img[data-k="1"]{--o:0}.js .geo-map.rv i,.js .geo-map.rv span{opacity:1}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}.intro{display:none}.js .rv{opacity:1}.js .rv.in{animation:none}.js .hi{opacity:1;transform:none}.hero-ph,.fc{transform:none !important}.wp i{animation:none;opacity:0}.geo-map i::after{animation:none}.js .tw{opacity:1;filter:none;transform:none}.js .hero h1 .rot{opacity:1}.shine::before,.trail::before{animation:none}.js .ind.rv.in .iso *{animation:none}.asm{height:auto}.asm-pin{position:relative;height:auto;grid-template-rows:auto 60vh auto}.cw>span{transform:none}.asm-steps li p{display:block}.js .geo-map.rv i,.js .geo-map.rv span{opacity:1}}
 
 .kit>*,.kit-t,.kd-t{min-width:0;overflow-wrap:anywhere}
 .kit-side>*,.pv-row>*{min-width:0;overflow-wrap:anywhere}
