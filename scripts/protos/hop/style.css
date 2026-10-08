@@ -309,14 +309,20 @@ section{padding:64px 0}
 @media (min-width:1024px){.beat h3{font-size:36px}}
 .beat p{margin-top:12px;font-size:16px;color:var(--on2);max-width:34em}
 .beat .cta{margin-top:20px}
-.st-hud{position:absolute;z-index:6;left:16px;right:16px;bottom:24px;display:flex;align-items:center;gap:16px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--on2)}
+.st-hud{position:absolute;z-index:6;left:16px;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:16px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--on2)}
 @media (min-width:820px){.st-hud{left:max(32px,calc((100vw - 1240px) / 2 + 32px));right:max(32px,calc((100vw - 1240px) / 2 + 32px))}}
 .st-hud span{white-space:nowrap}
 .st-hud i{position:relative;flex:1;height:2px;border-radius:2px;background:hsl(350 100% 97% / .16);overflow:hidden}
 .st-hud b{position:absolute;inset:0;background:linear-gradient(90deg,var(--royal2),var(--azure),var(--sky));transform-origin:left;transform:scaleX(0)}
 .st-hud a{white-space:nowrap;text-decoration:none;padding:8px 12px;border-radius:999px;box-shadow:inset 0 0 0 1px hsl(350 100% 97% / .24);letter-spacing:.08em;text-transform:none;font-size:12px}
 .st-live .dock,.st-live .kd-pill{transition:opacity 240ms ease,transform 300ms var(--ease)}
-.st-in .dock,.st-in .kd-pill{opacity:0;transform:translateY(24px);pointer-events:none}
+.st-in .kd-pill{opacity:0;transform:translateY(24px);pointer-events:none}
+/* Пока идёт сцена, кнопка внизу прячется, а тёмная полоса и тёмный фон
+   страницы остаются: Safari на iPhone красит свою нижнюю панель в цвет того,
+   что под ней, и без них панель становится белой. */
+.st-in,.st-in body{background:var(--ink)}
+.st-in .dock{padding:0 0 env(safe-area-inset-bottom);background:var(--ink);box-shadow:none;pointer-events:none}
+.st-in .dock .btn{display:none}
 /* Без движения: та же история списком */
 .st-static .wrap{padding-top:64px;padding-bottom:64px}
 .st-list{list-style:none;display:grid;gap:12px;margin-top:24px;counter-reset:s}
