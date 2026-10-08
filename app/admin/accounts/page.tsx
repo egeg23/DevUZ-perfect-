@@ -151,6 +151,7 @@ export default async function AccountsPage({
           <HelpHint topic={helpAnchor("/admin/accounts", "circle")} />
         </h2>
         <p className="mt-2 text-xs leading-relaxed text-muted">{c.intro}</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted">{c.viaBot}</p>
         <div className="mt-3 flex flex-wrap items-center gap-4">
           {uploaded ? (
             <video
@@ -161,7 +162,7 @@ export default async function AccountsPage({
               className="h-32 w-32 shrink-0 rounded-full border border-line object-cover"
             />
           ) : null}
-          <p className="min-w-0 flex-1 text-xs text-faint">
+          <p className={`min-w-0 flex-1 text-xs ${uploaded ? "text-faint" : "text-gold"}`}>
             {uploaded ? c.current(tashkentClock(new Date(uploaded.uploadedAt)), uploaded.by ?? "", uploaded.duration) : c.none}
           </p>
         </div>

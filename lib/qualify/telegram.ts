@@ -311,6 +311,35 @@ const PROFILE_METHOD: Record<BotProfileField, string> = {
   short_description: "MyShortDescription",
 };
 
+
+/** Больше этого Bot API файл не отдаёт: getFile отвечает «file is too big». */
+export const BOT_FILE_MAX_BYTES = 20 * 1024 * 1024;
+
+const FILE_API = `${process.env.TELEGRAM_API_BASE || "https://api.telegram.org"}/file/bot`;
+
+/**
+ * Скачать файл, который прислали боту: getFile, затем сам файл. Больше
+ * `maxBytes` или не скачалось — null. Дорога та же, что у сообщений
+ * (roadFetch): через прокси или напрямую.
+ */
+export async function downloadBotFile(fileId: string, maxBytes = BOT_FILE_MAX_BYTES): Promise<Uint8Array | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+  const file = await callResult<{ file_path?: string; file_size?: number }>("getFile", { file_id: fileId });
+  if (!file?.file_path || (file.file_size ?? 0) > maxBytes) return null;
+  try {
+    const response = await roadFetch(`${FILE_API}${token}/${file.file_path}`, { signal: AbortSignal.timeout(90_000) });
+    if (!response.ok) {
+      console.error("telegram", "file", response.status);
+      return null;
+    }
+    const data = new Uint8Array(await response.arrayBuffer());
+    return data.byteLength > 0 && data.byteLength <= maxBytes ? data : null;
+  } catch (error) {
+    console.error("telegram", "file", error);
+    return null;
+  }
+}
 /** Что стоит сейчас. null — Telegram не ответил: тогда и менять не берёмся. */
 export async function getMyProfileField(field: BotProfileField, languageCode?: string): Promise<string | null> {
   const result = await callResult<Record<string, string>>(

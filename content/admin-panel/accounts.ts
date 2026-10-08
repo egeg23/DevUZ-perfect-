@@ -203,9 +203,14 @@ export const circleUploadDict = defineDict({
     pl: (when: string, who: string, seconds: number) => `Teraz wychodzi to: wgrane ${when}${who ? `, ${who}` : ""}, ${seconds} s.`,
   },
   none: {
-    ru: "Загруженного кружка нет — бот берёт тот, что сохранён в «Избранном» аккаунта руками.",
-    uz: "Yuklangan dumaloq video yo‘q — bot akkauntning «Saqlangan xabarlar»iga qo‘lda saqlanganini oladi.",
-    pl: "Nie ma wgranego kółka — bot bierze to, które zapisano ręcznie w «Zapisanych» konta.",
+    ru: "Кружок не загружен. Пока его нет, тем, кто ответил по-русски, вместо кружка уходит письмо. Если кружок сохранён в «Избранном» аккаунта руками, бот возьмёт его.",
+    uz: "Dumaloq video yuklanmagan. U yo‘q ekan, ruscha javob berganlarga dumaloq video o‘rniga xat ketadi. Agar dumaloq video akkauntning «Saqlangan xabarlar»iga qo‘lda saqlangan bo‘lsa, bot uni oladi.",
+    pl: "Kółko nie jest wgrane. Dopóki go nie ma, tym, którzy odpowiedzieli po rosyjsku, zamiast kółka wychodzi wiadomość. Jeśli kółko zapisano ręcznie w «Zapisanych» konta, bot je weźmie.",
+  },
+  viaBot: {
+    ru: "Можно и без файла: перешлите кружок боту студии в личку, он сохранит его так же.",
+    uz: "Faylsiz ham bo‘ladi: dumaloq videoni studiya botiga shaxsiy chatda yuboring, u uni xuddi shunday saqlaydi.",
+    pl: "Można też bez pliku: przekaż kółko botowi studia na prywatnym czacie, zapisze je tak samo.",
   },
   file: { ru: "Файл кружка (MP4, квадрат, до минуты)", uz: "Dumaloq video fayli (MP4, kvadrat, bir daqiqagacha)", pl: "Plik kółka (MP4, kwadrat, do minuty)" },
   upload: { ru: "Загрузить кружок", uz: "Dumaloq videoni yuklash", pl: "Wgraj kółko" },

@@ -320,7 +320,7 @@ export async function dayStats(now: Date = new Date(), since?: Date): Promise<Da
   const weekStart = tashkentMidnight(week).getTime();
   const from = new Date(Math.min(start, weekStart)).toISOString();
 
-  const [settings, search, names, { data }, { data: trouble }] = await Promise.all([
+  const [settings, search, names, { data }, { data: trouble }, { count: circleMissing }] = await Promise.all([
     autopilotSettings(),
     searchStats(db, new Date(start), now),
     accountNames(db),
@@ -331,6 +331,13 @@ export async function dayStats(now: Date = new Date(), since?: Date): Promise<Da
       .or(`autopilot_at.gte."${from}",sent_at.gte."${from}",autopilot_replied_at.gte."${from}",status.eq.sending`)
       .limit(2000),
     db.from("stats_snapshots").select("payload, computed_at").eq("key", TROUBLE_KEY).maybeSingle(),
+    // Кружок не нашёлся в «Избранном» — вместо него ушло письмо (lib/admin/hello-first.ts, NO_CIRCLE).
+    db
+      .from("outreach_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("kind", "circle")
+      .ilike("failure", "%нет кружка%")
+      .gte("created_at", new Date(start).toISOString()),
   ]);
   const rows = (data ?? []) as StatRow[];
   const at = (v: string | null) => (v ? Date.parse(v) : Number.NaN);
@@ -375,6 +382,7 @@ export async function dayStats(now: Date = new Date(), since?: Date): Promise<Da
     weekSent: rows.filter((r) => r.status === "sent" && inWeek(r.sent_at)).length,
     weekReplies: rows.filter((r) => inWeek(r.autopilot_replied_at)).length,
     search,
+    circleMissing: circleMissing ?? 0,
     trouble:
       trouble && Date.parse(String(trouble.computed_at)) >= start
         ? String((trouble.payload as { error?: unknown } | null)?.error ?? "") || null
