@@ -158,6 +158,10 @@ test("кружок не ушёл — вместо него письмо, по-р
   // Письмо уже стоит или ушло (старые касания: кружок перед письмом) — второго нет.
   assert.match(skipped, /\.eq\("kind", "text"\)\s*\.in\("status", \["queued", "sent"\]\)/);
   assert.match(skipped, /await queueHelloLetter\(prospect, CIRCLE_LANG, Date\.now\(\)/);
+  // Дослали кружок тем, кому уже ушло письмо, — счёт писем с ответа на
+  // «Здравствуйте» (pitch_at), иначе при неудачном кружке ушёл бы дубль.
+  assert.match(skipped, /select\("pitch_at"\)/);
+  assert.match(skipped, /\.gte\("created_at", since\)/);
 });
 
 test("перевод письма не добавляет фактов", () => {
