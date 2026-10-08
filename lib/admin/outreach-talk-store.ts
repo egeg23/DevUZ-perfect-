@@ -852,8 +852,14 @@ export async function markCircleSkipped(id: string, why: string): Promise<void> 
   if (!row?.prospect_id) return;
 
   // Кружок был предложением сам по себе (ответили по-русски) — тогда вместо
-  // него уходит письмо, по-русски. Письмо уже стоит или ушло (старые касания,
-  // где кружок шёл перед письмом) — второго не ставим.
+  // него уходит письмо, по-русски. Письмо уже стоит или ушло — второго не
+  // ставим. Считаем с ответа на «Здравствуйте» (pitch_at), а не с кружка:
+  // 08.10.2026 кружок дослали тем, кому днём вместо него ушло письмо, и
+  // второе такое же письмо им было бы дублем.
+  const { data: pitched } = await db.from("prospects").select("pitch_at").eq("id", row.prospect_id).maybeSingle();
+  const since = new Date(
+    Math.min(Date.parse(String(row.created_at)), pitched?.pitch_at ? Date.parse(String(pitched.pitch_at)) : Infinity),
+  ).toISOString();
   const { count } = await db
     .from("outreach_messages")
     .select("id", { count: "exact", head: true })
@@ -861,7 +867,7 @@ export async function markCircleSkipped(id: string, why: string): Promise<void> 
     .eq("direction", "out")
     .eq("kind", "text")
     .in("status", ["queued", "sent"])
-    .gte("created_at", String(row.created_at));
+    .gte("created_at", since);
   if (count) return;
 
   const { data: prospect } = await db
