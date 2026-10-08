@@ -196,3 +196,50 @@ test("ПК Веста: конструктор — сайт 2 300 $, допы д�
   for (const id of ["wa", "admin"]) assert.ok(all.some((a) => a.id === id), `нет обязательного допа ${id}`);
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
 });
+
+test("Aipply Academy: 8 страниц на uz и ru — условия, noindex, заставка с влётом в знак, история, запись в Telegram академии", () => {
+  const site = bundlePages("aipply");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  for (const path of ["", "kurs", "ochiq-dars", "plan"].flatMap((p) => [p, p ? `ru/${p}` : "ru"])) {
+    const page = all[path];
+    assert.ok(page, `${path}: нет страницы`);
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    const lang = path.startsWith("ru") ? "ru" : "uz";
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi|lenis/i, `${path}: прототип зовёт модель или перехватывает прокрутку`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("Aipply Academy"), `${path}: нет названия компании`);
+    // Главное действие — Telegram самой академии: бот, который их канал называет «для обращений».
+    assert.ok(page.includes('href="https://t.me/aipply_admin_bot"'), `${path}: нет записи в Telegram академии`);
+  }
+  for (const path of ["", "ru"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], /class="mk-svg"[\s\S]*class="mk-slit"/, `${path}: нет влёта в просвет знака Aipply`);
+    assert.match(all[path], /id="story"[\s\S]*class="st-world"/, `${path}: нет истории «Kompyuter noldan»`);
+    assert.match(all[path], /class="st-static"/, `${path}: у истории нет списка для тех, у кого движение выключено`);
+    assert.match(all[path], /backdrop-filter:url\(#lq\)/, `${path}: нет преломления у стекла`);
+    assert.match(all[path], /@supports not \(\(backdrop-filter/, `${path}: у стекла нет запасного варианта`);
+  }
+  assert.ok(all[""].includes("o‘rganing") && all[""].includes("Sun’iy"), "узбекский — латиница с o‘ и ’");
+  assert.match(all.kurs, /id="test"/, "нет теста уровня");
+  assert.match(all["ochiq-dars"], /id="book"/, "нет записи на открытый урок");
+  const stamped = stampedBundle("aipply", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Aipply Academy: конструктор — сайт 1 300 $, все допы не больше 1 700 $, обязательные на месте", async () => {
+  const plan = await import("../scripts/protos/aipply/plan.mjs");
+  // Задание владельца, 08.10.2026: сайт без допов 1 300 $, со всеми допами не больше 3 000 $.
+  assert.equal(plan.BASE.price, 1300);
+  const all: { id: string; price: number; uz: { t: string; e?: string; why?: string }; ru: { t: string; e?: string; why?: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
+  const sum = all.reduce((s, a) => s + a.price, 0);
+  assert.ok(sum <= 1700, `все допы вместе ${sum} $, а можно не больше 1 700 $`);
+  assert.ok(plan.BASE.price + sum <= 3000, "со всеми допами — не больше 3 000 $");
+  for (const id of ["tg", "admin"]) assert.ok(all.some((a) => a.id === id), `нет обязательного допа ${id}`);
+  for (const a of all) assert.ok(a.uz.t && a.ru.t && (a.uz.e || a.uz.why) && (a.ru.e || a.ru.why), `${a.id}: нет описания на обоих языках`);
+});
