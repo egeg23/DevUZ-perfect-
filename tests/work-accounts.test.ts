@@ -155,7 +155,7 @@ test("раздел «Аккаунты» — владельцу и руковод
   const actions = read("app/admin/accounts/actions.ts");
   assert.match(actions, /const manage = \(\) => requireRole\("admin", "head"\);/);
   assert.doesNotMatch(actions, /requireAdmin/, "где-то осталась проверка «только владелец»");
-  assert.equal((actions.match(/await manage\(\);/g) ?? []).length, 7, "каждое действие проверяет права");
+  assert.equal((actions.match(/await manage\(\);/g) ?? []).length, 11, "каждое действие проверяет права");
   assert.match(read("app/admin/accounts/page.tsx"), /requireRole\("admin", "head"\)/);
 });
 

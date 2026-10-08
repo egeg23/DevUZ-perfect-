@@ -173,7 +173,9 @@ const STOP_WORDS = [
   /не\s+интересует/i,
   /не\s+интересно/i,
   /не\s*на[дт]о/i,
-  /не\s+нужн/i,
+  // «не нужно», «не нужны» и «не нужен» — последнее без «нужн»: «макет не
+  // нужен» иначе читался бы как согласие на макет.
+  /не\s+нуж(?:н|ен)/i,
   /отстань/i,
   /отвали/i,
   /спам/i,
@@ -259,6 +261,10 @@ const PROTO_WORDS = [
   /прототип/i,
   /prototip/i,
   /prototype/i,
+  // Кружок предлагает «макет главной» — так его и называют в ответ.
+  /макет/i,
+  /maket/i,
+  /mock-?up/i,
   /собер(?:и|ите|ёте|ете)(?!\p{L})/iu,
   /yig['ʻ‘`]?ib\s*ber/i,
 ];
@@ -279,10 +285,32 @@ const PROTO_WORDS = [
  */
 const SHORT_WORDS = 3;
 
-export function readInbound(text: string): InboundVerdict {
+/**
+ * «+» — согласие на макет.
+ *
+ * Кружок (lib/admin/hello-first.ts) кончается словами «если интересно —
+ * отправьте плюс». Плюсом не отказывают и не задают вопросов, поэтому он
+ * значит «да» и после письма тоже: письмо кончается тем же предложением.
+ */
+const PLUS = /^[\s+＋➕]*(?:\+|＋|➕|плюс|plus)[\s+＋➕!.)]*$/iu;
+
+/**
+ * Короткое «да» в ответ на кружок.
+ *
+ * Сам по себе короткий ответ модели не отдаётся (SHORT_WORDS): «да» на
+ * письмо может значить что угодно. Но кружок задаёт один вопрос — хотите ли
+ * макет, — и «да», «давайте», «ha» на него — согласие. С вопросительным
+ * знаком («да?») — уже вопрос, его разбирает человек.
+ */
+const YES_WORDS =
+  /^(?:да|дa|давайте|давай|хочу|хотим|интересно|согласен|согласна|согласны|конечно|ок|окей|ok|okay|yes|sure|ha|xa|xo['ʻ‘`]?p|mayli|albatta|qiziq|ҳа|ха|хоп|майли|албатта)(?:[\s,!.)]+(?:да|давайте|хочу|интересно|конечно|ok|ha|xa|mayli|albatta|ҳа|ха|хоп|пожалуйста|iltimos))*[\s!.)]*$/iu;
+
+export function readInbound(text: string, opts: { afterCircle?: boolean } = {}): InboundVerdict {
   const body = text.trim();
   if (STOP_WORDS.some((re) => re.test(body))) return "stop";
   if (HUMAN_WORDS.some((re) => re.test(body))) return "human";
+  if (PLUS.test(body)) return "proto";
+  if (opts.afterCircle && YES_WORDS.test(body)) return "proto";
   if (PROTO_WORDS.some((re) => re.test(body))) return "proto";
   if (SEND_WORDS.some((re) => re.test(body))) return "send";
 

@@ -29,9 +29,9 @@ const f = (code: string, title: string): Finding => ({ code, severity: "major", 
 
 const findings = [
   f("no_viewport", "С телефона сайт открывается в масштабе монитора"),
-  f("no_prices", "На сайте нет цен"),
   f("phone_not_clickable", "Телефон на сайте не нажимается"),
   f("no_messenger", "Нет кнопки Telegram или WhatsApp"),
+  f("slow", "Главная открывается 9 секунд"),
   f("no_og", "Ссылка пересылается без карточки"),
 ];
 
