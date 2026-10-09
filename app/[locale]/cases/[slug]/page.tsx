@@ -9,6 +9,7 @@ import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { caseBySlug, caseDate, cases, casesByDate, type Case } from "@/content/cases";
 import { getDictionary } from "@/content/dictionaries";
+import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { isLocale, locales, localeHref, t, type Locale } from "@/lib/i18n";
 import { breadcrumbSchema, caseSchema, jsonLdGraph } from "@/lib/schema";
 import { buildMetadata } from "@/lib/seo";
@@ -89,6 +90,15 @@ export default async function CasePage({
                 {t(item.summary, locale)}
               </p>
               <p className="mt-5 max-w-xl text-[0.95rem] leading-relaxed text-muted">{dict.cases.playHint}</p>
+              {/* Игра — тоже макет, который видят до договора: ссылка на условия
+                  остаётся (владелец, 09.10.2026: «условия использования макетов
+                  оставь»), а строку «Демо-проект студии…» перед ней убрали. */}
+              <Link
+                href={localeHref(locale, MOCKUP_TERMS_PATH)}
+                className="mt-7 inline-block text-[0.85rem] text-faint underline decoration-line underline-offset-4 transition-colors hover:text-text"
+              >
+                {dict.footer.mockups}
+              </Link>
             </div>
             <PlayablePhone
               src={`${item.playable.src}?lang=${locale}`}
