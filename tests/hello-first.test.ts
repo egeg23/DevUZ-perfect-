@@ -20,6 +20,7 @@ import {
   CIRCLE_LANG,
   HELLO_TEXT,
   PITCH_AFTER_MS,
+  circleFailText,
   helloFor,
   letterLang,
   pitchAfter,
@@ -152,12 +153,17 @@ test("ответ на приветствие: по-русски — кружок
   assert.doesNotMatch(hello, /routeAutopilotReply/);
 });
 
-test("кружок не ушёл — вместо него письмо, по-русски", () => {
+test("кружок не ушёл — вместо него письмо на языке ответа", () => {
   const talk = read("lib/admin/outreach-talk-store.ts");
   const skipped = between(talk, "export async function markCircleSkipped(", "/**\n * Ответ не ушёл.");
   // Письмо уже стоит или ушло (старые касания: кружок перед письмом) — второго нет.
   assert.match(skipped, /\.eq\("kind", "text"\)\s*\.in\("status", \["queued", "sent"\]\)/);
-  assert.match(skipped, /await queueHelloLetter\(prospect, CIRCLE_LANG, Date\.now\(\)/);
+  // Владелец, 09.10.2026: «У кого запрещены голосовые и кружки, пишем на
+  // языке ответа» — язык берётся из последнего ответа клиента.
+  assert.match(skipped, /\.eq\("direction", "in"\)\s*\.order\("created_at", \{ ascending: false \}\)/);
+  assert.match(skipped, /const lang = inbound \? replyLang\(String\(inbound\.body \?\? ""\), sentLang\) : CIRCLE_LANG;/);
+  assert.match(skipped, /await queueHelloLetter\(prospect, lang, Date\.now\(\)/);
+  assert.match(skipped, /const why = circleFailText\(reason\);/);
   // Дослали кружок тем, кому уже ушло письмо, — счёт писем с ответа на
   // «Здравствуйте» (pitch_at), иначе при неудачном кружке ушёл бы дубль.
   assert.match(skipped, /select\("pitch_at"\)/);
@@ -224,6 +230,18 @@ test("собеседника нет в кэше после перезапуск�
 
   const next = between(read("lib/admin/outreach-talk-store.ts"), "export async function nextReply(", "export async function markReplySent(");
   assert.match(next, /fallback: handle !== to && handle\.startsWith\("@"\) \? handle : undefined/);
+});
+
+test("запрет голосовых — понятная причина в ленте, а не код Telegram", () => {
+  const text = circleFailText("VOICE_MESSAGES_FORBIDDEN");
+  assert.match(text, /запретил голосовые и видеосообщения/);
+  assert.match(text, /на языке ответа/);
+  assert.doesNotMatch(text, /VOICE_MESSAGES_FORBIDDEN/);
+  // Остальные причины — как есть.
+  assert.equal(circleFailText("Кружок не ушёл: FLOOD_WAIT"), "Кружок не ушёл: FLOOD_WAIT");
+  // Ответ по-узбекски — письмо по-узбекски, стикер — на языке приветствия.
+  assert.equal(replyLang("Assalomu alaykum, kim bu?", "ru"), "uz");
+  assert.equal(replyLang("👍", "ru"), "ru");
 });
 
 test("без ответа на приветствие — ничего: дожима нет", () => {
