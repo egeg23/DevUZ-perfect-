@@ -82,7 +82,6 @@ const ru = {
     playCtaText: "В настоящей рекламе она открывает App Store, Google Play или сайт магазина. Соберём такую игру под ваш продукт: механика, графика, выгрузка в рекламные сети и события для аналитики.",
     playCtaButton: "Обсудить свою игру",
     playClose: "Закрыть",
-    playDemo: "Демо-проект студии: игра и бренд придуманы для примера.",
     compareParts: {
       hero: "Первый экран",
       calculator: "Расчёт стоимости",
@@ -518,7 +517,6 @@ const en: Dictionary = {
     playCtaText: "In a live ad it opens the App Store, Google Play or the shop's website. We'll build a game like this for your product: mechanics, art, export to ad networks and events for analytics.",
     playCtaButton: "Discuss your game",
     playClose: "Close",
-    playDemo: "A studio demo: the game and the brand are made up for the example.",
     compareParts: {
       hero: "First screen",
       calculator: "Price estimate",
@@ -927,7 +925,6 @@ const uz: Dictionary = {
     playCtaText: "Haqiqiy reklamada u App Store, Google Play yoki do‘kon saytini ochadi. Mahsulotingiz uchun shunday o‘yin yasaymiz: mexanika, grafika, reklama tarmoqlariga chiqarish va analitika uchun hodisalar.",
     playCtaButton: "O‘z o‘yiningizni muhokama qilish",
     playClose: "Yopish",
-    playDemo: "Studiyaning demo loyihasi: o‘yin va brend misol uchun o‘ylab topilgan.",
     compareParts: {
       hero: "Birinchi ekran",
       calculator: "Narxni hisoblash",
@@ -1336,7 +1333,6 @@ const zh: Dictionary = {
     playCtaText: "在真实广告中，它会打开 App Store、Google Play 或商店网站。我们可以为您的产品打造这样的游戏：玩法、美术、适配各广告平台，以及用于数据分析的事件。",
     playCtaButton: "洽谈您的游戏",
     playClose: "关闭",
-    playDemo: "工作室演示项目：游戏与品牌均为示例虚构。",
     compareParts: {
       hero: "首屏",
       calculator: "价格估算",
@@ -1751,7 +1747,6 @@ const uk: Dictionary = {
     playCtaText: "У справжній рекламі вона відкриває App Store, Google Play або сайт магазину. Зберемо таку гру під ваш продукт: механіка, графіка, вивантаження в рекламні мережі та події для аналітики.",
     playCtaButton: "Обговорити свою гру",
     playClose: "Закрити",
-    playDemo: "Демо-проєкт студії: гру й бренд вигадано для прикладу.",
     compareParts: {
       hero: "Перший екран",
       calculator: "Розрахунок вартості",
@@ -2179,7 +2174,6 @@ const pl: Dictionary = {
     playCtaText: "W prawdziwej reklamie otwiera App Store, Google Play albo stronę sklepu. Zbudujemy taką grę dla Twojego produktu: mechanika, grafika, eksport do sieci reklamowych i zdarzenia do analityki.",
     playCtaButton: "Omów swoją grę",
     playClose: "Zamknij",
-    playDemo: "Projekt demo studia: gra i marka są wymyślone na potrzeby przykładu.",
     compareParts: {
       hero: "Pierwszy ekran",
       calculator: "Wycena",
