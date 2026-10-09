@@ -24,6 +24,7 @@ import {
   CIRCLE_BODY,
   CIRCLE_LANG,
   PITCH_AFTER_MS,
+  circleFailText,
   letterLang,
   pitchAfter,
   replyLang,
@@ -848,13 +849,14 @@ export async function markReplySent(id: string): Promise<void> {
 
 /**
  * Кружок не ушёл — в «Избранном» аккаунта его нет или Telegram не принял
- * (получатель запретил видео от незнакомых). Разговор человеку не
- * передаётся (в отличие от markReplyFailed): вместо кружка уходит письмо, и
- * клиенту есть что прочитать.
+ * (получатель запретил голосовые и видеосообщения). Разговор человеку не
+ * передаётся (в отличие от markReplyFailed): вместо кружка уходит письмо на
+ * языке ответа клиента, и ему есть что прочитать.
  */
-export async function markCircleSkipped(id: string, why: string): Promise<void> {
+export async function markCircleSkipped(id: string, reason: string): Promise<void> {
   const db = serviceClient();
   if (!db) return;
+  const why = circleFailText(reason);
   const { data: row } = await db
     .from("outreach_messages")
     .update({ status: "done", failure: why.slice(0, 500) })
@@ -863,8 +865,8 @@ export async function markCircleSkipped(id: string, why: string): Promise<void> 
     .maybeSingle();
   if (!row?.prospect_id) return;
 
-  // Кружок был предложением сам по себе (ответили по-русски) — тогда вместо
-  // него уходит письмо, по-русски. Письмо уже стоит или ушло — второго не
+  // Кружок был предложением сам по себе — тогда вместо него уходит письмо
+  // на языке ответа клиента. Письмо уже стоит или ушло — второго не
   // ставим. Считаем с ответа на «Здравствуйте» (pitch_at), а не с кружка:
   // 08.10.2026 кружок дослали тем, кому днём вместо него ушло письмо, и
   // второе такое же письмо им было бы дублем.
@@ -888,7 +890,21 @@ export async function markCircleSkipped(id: string, why: string): Promise<void> 
     .eq("id", row.prospect_id)
     .maybeSingle();
   if (!prospect) return;
-  await queueHelloLetter(prospect, CIRCLE_LANG, Date.now(), `(кружок не ушёл: ${why.slice(0, 200)})`);
+
+  // Язык письма — язык последнего ответа клиента (владелец, 09.10.2026: «У
+  // кого запрещены голосовые и кружки, пишем на языке ответа»). Ответа в
+  // ленте нет — язык кружка.
+  const { data: inbound } = await db
+    .from("outreach_messages")
+    .select("body")
+    .eq("prospect_id", row.prospect_id)
+    .eq("direction", "in")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const sentLang = letterLang(String(prospect.message ?? ""), (prospect.walked as { lang?: string } | null)?.lang);
+  const lang = inbound ? replyLang(String(inbound.body ?? ""), sentLang) : CIRCLE_LANG;
+  await queueHelloLetter(prospect, lang, Date.now(), `(${why.slice(0, 200)})`);
 }
 
 /**
