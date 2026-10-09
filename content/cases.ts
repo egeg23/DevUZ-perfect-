@@ -72,6 +72,21 @@ export type Case = {
    * живёт своей жизнью, и снимок честно говорит, от какого он числа.
    */
   compare?: { site: string; taken: string; parts: readonly ComparePart[] };
+  /**
+   * Собственный пример студии, а не проект клиента: игра, бренд и всё прочее
+   * придуманы, чтобы показать, что мы умеем. В шестёрку главной и в
+   * презентацию для партнёров такой кейс не идёт — там проекты клиентов, —
+   * а в списке /cases стоит по дате, как все.
+   */
+  demo?: true;
+  /**
+   * Играбельная реклама: игра — отдельный HTML-файл в public/playables, и
+   * страница кейса показывает её на экране айфона (components/cases/
+   * playable-phone.tsx). `src` — путь к файлу на сайте, с index.html на
+   * конце: .html middleware пропускает мимо себя, без него адрес ушёл бы в
+   * перенаправление на язык.
+   */
+  playable?: { src: `/playables/${string}/index.html` };
 };
 
 /**
@@ -1102,6 +1117,90 @@ export const cases: Case[] = [
     metrics: [
       { value: "35", label: { ru: "сервисов в аудите", en: "services audited", uz: "auditdagi servislar", zh: "受审计的服务数", uk: "сервісів в аудиті", pl: "serwisów objętych audytem" } },
       { value: "8", label: { ru: "человек в команде доработки", en: "people on the remediation team", uz: "takomillashtirish jamoasidagi odamlar", zh: "改造团队人数", uk: "людей у команді доопрацювання", pl: "osób w zespole rozwoju" } },
+    ],
+  },
+  {
+    slug: "karvon-run",
+    name: "Karvon Run",
+    monogram: "KR",
+    date: "2026-10-09",
+    demo: true,
+    playable: { src: "/playables/karvon-run/index.html" },
+    tier: 2,
+    niches: ["играбельная реклама", "playable-реклама", "реклама мобильной игры", "реклама приложения", "мини-игра для рекламы", "геймификация", "playable ads", "mobile game ads", "o‘yin reklamasi", "试玩广告"],
+    forNiches: [],
+    accent: "gold",
+    category: {
+      ru: "Играбельная реклама · демо",
+      en: "Playable ad · demo",
+      uz: "O‘ynaladigan reklama · demo",
+      zh: "试玩广告 · 演示",
+      uk: "Реклама-гра · демо",
+      pl: "Grywalna reklama · demo",
+    },
+    summary: {
+      ru: "Рекламная мини-игра, после которой хочется скачать полную: ведёте караван через ворота с умножением, обходите засады и берёте крепость. Партия на двадцать секунд, кнопка «Скачать» на экране всё время.",
+      en: "An ad mini-game that makes you want the full one: steer a caravan through multiplying gates, dodge ambushes and storm the fortress. A twenty-second round, with the «Install» button on screen the whole time.",
+      uz: "To‘liq o‘yinni yuklab olgisi keltiradigan reklama mini-o‘yini: karvonni ko‘paytiruvchi darvozalardan olib o‘tasiz, pistirmalarni aylanib o‘tasiz va qal’ani olasiz. Yigirma soniyalik raund, «Yuklab olish» tugmasi doim ekranda.",
+      zh: "一款让人想下载完整版的广告小游戏：带领商队穿过倍增之门，避开埋伏，攻下城堡。一局二十秒，「下载」按钮始终在屏幕上。",
+      uk: "Рекламна міні-гра, після якої хочеться завантажити повну: ведете караван крізь ворота з множенням, оминаєте засідки й берете фортецю. Партія на двадцять секунд, кнопка «Завантажити» весь час на екрані.",
+      pl: "Reklamowa minigra, po której chce się pobrać pełną wersję: prowadzisz karawanę przez bramy mnożące, omijasz zasadzki i zdobywasz twierdzę. Runda trwa dwadzieścia sekund, a przycisk „Pobierz” cały czas jest na ekranie.",
+    },
+    description: {
+      ru: "Демо-проект студии: игра Karvon Run придумана для примера, заказчика у неё нет. Так выглядит реклама мобильной игры, в которую человек играет прямо в ленте, ещё до установки.\n\nМеханика «толпа и ворота» — одна из самых ходовых в рекламе казуальных игр. Палец ведёт караван влево и вправо, синие ворота прибавляют и умножают (+10, ×2, ×3), красные отнимают и делят, красные отряды на дороге съедают часть каравана. В конце армия у портала в духе Регистана: хватило людей — победа, не хватило — «почти получилось» и предложение сыграть ещё. Оба исхода ведут на финальную карточку с кнопкой «Скачать бесплатно».\n\nЧто внутри. Один HTML-файл без картинок и библиотек: графика и звук рисуются кодом, поэтому вся игра весит около 50 КБ при лимите рекламных сетей в 5 МБ. На первом экране подсказка рукой, кнопка установки видна от начала до конца. Кнопка сама узнаёт площадку: MRAID (Unity Ads, AppLovin, ironSource, Mintegral, Liftoff), Meta, Google Ads. Старт, каждые ворота, победа и нажатие кнопки отдаются наружу событиями, их забирает аналитика сети или трекер. Тексты игры — на шести языках сайта.",
+      en: "A studio demo: Karvon Run is made up for the example and has no client. This is what a mobile game ad looks like when people can play it right in the feed, before installing.\n\nThe «crowd and gates» mechanic is one of the most common in casual game ads. A finger steers the caravan left and right, blue gates add and multiply (+10, ×2, ×3), red ones subtract and divide, and red squads on the road eat part of the caravan. At the end there is an army at a Registan-style portal: enough people means victory, too few means «so close» and an offer to try again. Both outcomes lead to the end card with the «Install for free» button.\n\nWhat is inside. One HTML file with no images or libraries: the art and sound are drawn by code, so the whole game weighs about 50 KB against the ad networks' 5 MB limit. A hand hint on the first screen, and the install button is visible from start to finish. The button detects the platform itself: MRAID (Unity Ads, AppLovin, ironSource, Mintegral, Liftoff), Meta, Google Ads. The start, every gate, the win and the button tap go out as events for the network's analytics or a tracker. The game text is in the site's six languages.",
+      uz: "Studiyaning demo loyihasi: Karvon Run o‘yini misol uchun o‘ylab topilgan, buyurtmachisi yo‘q. Mobil o‘yin reklamasi shunday ko‘rinadi: odam uni o‘rnatishdan oldin, to‘g‘ridan-to‘g‘ri lentada o‘ynaydi.\n\n«Olomon va darvozalar» mexanikasi kazual o‘yinlar reklamasida eng ko‘p uchraydiganlaridan biri. Barmoq karvonni chapga va o‘ngga boshqaradi, ko‘k darvozalar qo‘shadi va ko‘paytiradi (+10, ×2, ×3), qizillari ayiradi va bo‘ladi, yo‘ldagi qizil otryadlar karvonning bir qismini yeb qo‘yadi. Oxirida Registon uslubidagi peshtoq oldida qo‘shin turadi: odam yetarli bo‘lsa — g‘alaba, yetmasa — «sal qoldi» va yana o‘ynash taklifi. Ikkala natija ham «Bepul yuklab olish» tugmali yakuniy kartochkaga olib boradi.\n\nIchida nima bor. Rasm va kutubxonalarsiz bitta HTML fayl: grafika va ovoz kod bilan chiziladi, shuning uchun butun o‘yin reklama tarmoqlarining 5 MB chegarasida taxminan 50 KB og‘irlikda. Birinchi ekranda qo‘l bilan ishora, o‘rnatish tugmasi boshidan oxirigacha ko‘rinib turadi. Tugma maydonchani o‘zi aniqlaydi: MRAID (Unity Ads, AppLovin, ironSource, Mintegral, Liftoff), Meta, Google Ads. Boshlanish, har bir darvoza, g‘alaba va tugma bosilishi tashqariga hodisa sifatida uzatiladi, ularni tarmoq analitikasi yoki treker oladi. O‘yin matnlari saytning olti tilida.",
+      zh: "工作室演示项目：Karvon Run 是为示例虚构的游戏，没有客户。这就是用户在信息流中、安装之前就能直接试玩的手游广告。\n\n「人群与门」是休闲游戏广告中最常见的玩法之一。手指左右引导商队，蓝色的门做加法和乘法（+10、×2、×3），红色的门做减法和除法，路上的红色小队会吃掉一部分商队。终点是雷吉斯坦风格大门前的敌军：人数足够即胜利，不够则显示「差一点！」并邀请再玩一次。两种结局都会进入带有「免费下载」按钮的结束卡片。\n\n技术构成：一个不含图片和库的 HTML 文件，画面与音效全部由代码绘制，整个游戏约 50 KB，远低于广告平台 5 MB 的上限。首屏有手势提示，安装按钮自始至终可见。按钮会自动识别投放平台：MRAID（Unity Ads、AppLovin、ironSource、Mintegral、Liftoff）、Meta、Google Ads。开局、每一道门、胜利和点击按钮都会作为事件向外发送，供平台分析或归因工具采集。游戏文字支持网站的六种语言。",
+      uk: "Демо-проєкт студії: гру Karvon Run вигадано для прикладу, замовника в неї немає. Так виглядає реклама мобільної гри, у яку людина грає просто в стрічці, ще до встановлення.\n\nМеханіка «натовп і ворота» — одна з найпоширеніших у рекламі казуальних ігор. Палець веде караван ліворуч і праворуч, сині ворота додають і множать (+10, ×2, ×3), червоні віднімають і ділять, червоні загони на дорозі з'їдають частину каравану. Наприкінці армія біля порталу в дусі Регістану: вистачило людей — перемога, не вистачило — «майже вдалося» і пропозиція зіграти ще. Обидва результати ведуть на фінальну картку з кнопкою «Завантажити безкоштовно».\n\nЩо всередині. Один HTML-файл без картинок і бібліотек: графіка й звук малюються кодом, тож уся гра важить близько 50 КБ при ліміті рекламних мереж у 5 МБ. На першому екрані підказка рукою, кнопка встановлення видна від початку до кінця. Кнопка сама впізнає майданчик: MRAID (Unity Ads, AppLovin, ironSource, Mintegral, Liftoff), Meta, Google Ads. Старт, кожні ворота, перемога й натискання кнопки віддаються назовні подіями, їх забирає аналітика мережі або трекер. Тексти гри — шістьма мовами сайту.",
+      pl: "Projekt demo studia: gra Karvon Run jest wymyślona na potrzeby przykładu i nie ma klienta. Tak wygląda reklama gry mobilnej, w którą można zagrać prosto w feedzie, jeszcze przed instalacją.\n\nMechanika „tłum i bramy” to jedna z najczęstszych w reklamach gier casualowych. Palec prowadzi karawanę w lewo i w prawo, niebieskie bramy dodają i mnożą (+10, ×2, ×3), czerwone odejmują i dzielą, a czerwone oddziały na drodze zjadają część karawany. Na końcu czeka armia przed portalem w stylu Registanu: wystarczy ludzi — zwycięstwo, za mało — „było blisko” i propozycja kolejnej próby. Oba wyniki prowadzą do karty końcowej z przyciskiem „Pobierz za darmo”.\n\nCo jest w środku. Jeden plik HTML bez obrazków i bibliotek: grafika i dźwięk są rysowane kodem, więc cała gra waży około 50 KB przy limicie sieci reklamowych 5 MB. Na pierwszym ekranie podpowiedź ręką, przycisk instalacji widać od początku do końca. Przycisk sam rozpoznaje platformę: MRAID (Unity Ads, AppLovin, ironSource, Mintegral, Liftoff), Meta, Google Ads. Start, każda brama, zwycięstwo i kliknięcie przycisku wychodzą na zewnątrz jako zdarzenia dla analityki sieci albo trackera. Teksty gry są w sześciu językach strony.",
+    },
+    tech: ["HTML5 Canvas", "JavaScript", "Web Audio API", "MRAID", "Meta Playable Ads", "Google Ads HTML5"],
+    metrics: [
+      { value: "~50", label: { ru: "КБ весит вся игра: лимит рекламных сетей 5 МБ", en: "KB for the whole game: ad networks allow 5 MB", uz: "KB — butun o‘yin hajmi: tarmoqlar chegarasi 5 MB", zh: "KB 即整个游戏体积（平台上限 5 MB）", uk: "КБ важить уся гра: ліміт рекламних мереж 5 МБ", pl: "KB waży cała gra: limit sieci reklamowych to 5 MB" } },
+      { value: "20", label: { ru: "секунд длится партия до финальной карточки", en: "seconds per round before the end card", uz: "soniya — yakuniy kartochkagacha raund", zh: "秒即可打完一局并进入结束卡片", uk: "секунд триває партія до фінальної картки", pl: "sekund trwa runda do karty końcowej" } },
+      { value: "3", label: { ru: "стандарта кнопки «Скачать»: MRAID, Meta, Google Ads", en: "standards for the «Install» button: MRAID, Meta, Google Ads", uz: "«Yuklab olish» tugmasi standarti: MRAID, Meta, Google Ads", zh: "种「下载」按钮标准：MRAID、Meta、Google Ads", uk: "стандарти кнопки «Завантажити»: MRAID, Meta, Google Ads", pl: "standardy przycisku „Pobierz”: MRAID, Meta, Google Ads" } },
+    ],
+  },
+  {
+    slug: "gift-rush",
+    name: "Gift Rush",
+    monogram: "GR",
+    date: "2026-10-09",
+    demo: true,
+    playable: { src: "/playables/gift-rush/index.html" },
+    tier: 2,
+    niches: ["игра для акции", "геймификация", "игровая механика скидок", "промокод", "розыгрыш подарков", "реклама магазина", "интернет-магазин", "promo game", "gamification", "o‘yin aksiyasi", "游戏化营销"],
+    forNiches: [],
+    accent: "violet",
+    category: {
+      ru: "Игровая механика для акции · демо",
+      en: "Promo game mechanic · demo",
+      uz: "Aksiya uchun o‘yin mexanikasi · demo",
+      zh: "促销游戏机制 · 演示",
+      uk: "Ігрова механіка для акції · демо",
+      pl: "Mechanika gry do promocji · demo",
+    },
+    summary: {
+      ru: "Рекламная игра для магазина: двадцать секунд ловите корзиной подарки и купоны, копите скидку до 30% и обходите бомбы, а потом открываете одну из трёх коробок и получаете промокод.",
+      en: "An ad game for a shop: for twenty seconds you catch gifts and coupons in a cart, build a discount of up to 30% and dodge bombs, then open one of three boxes and get a promo code.",
+      uz: "Do‘kon uchun reklama o‘yini: yigirma soniya davomida savat bilan sovg‘a va kuponlarni tutasiz, 30% gacha chegirma yig‘asiz va bombalardan qochasiz, so‘ng uchta qutidan birini ochib, promokod olasiz.",
+      zh: "为商店打造的广告游戏：二十秒内用购物车接住礼物和优惠券，累积最高 30% 的折扣并躲开炸弹，然后打开三个礼盒中的一个，领取优惠码。",
+      uk: "Рекламна гра для магазину: двадцять секунд ловите кошиком подарунки й купони, накопичуєте знижку до 30% і оминаєте бомби, а потім відкриваєте одну з трьох коробок і отримуєте промокод.",
+      pl: "Gra reklamowa dla sklepu: przez dwadzieścia sekund łapiesz koszykiem prezenty i kupony, zbierasz rabat do 30% i unikasz bomb, a potem otwierasz jedno z trzech pudełek i dostajesz kod rabatowy.",
+    },
+    description: {
+      ru: "Демо-проект студии: магазин Qovun Market придуман для примера, заказчика у игры нет. Это механика для акции, распродажи или открытия магазина: человек не читает про скидку, а зарабатывает её сам, и промокод после игры воспринимается как выигрыш, а не как очередная рассылка.\n\nКак устроено. Корзина ездит за пальцем: подарок даёт +1%, купон +5%, золотая коробка +3%, бомба отнимает 3%. Пять предметов подряд без бомбы включают комбо, и скидка растёт вдвое быстрее. Шкала со ступенями 10, 20 и 30% показывает, сколько осталось до следующей. Через двадцать секунд — выбор одной из трёх коробок: она трясётся и открывается, внутри набранная скидка, от 20% — ещё бесплатная доставка, на 30% — подарок к заказу. На финальной карточке промокод с кнопкой «Скопировать», отсчёт срока действия и кнопка «Забрать скидку».\n\nЧто внутри. Один HTML-файл без картинок и библиотек, около 50 КБ, звук синтезируется на лету. Кнопка сама узнаёт площадку (MRAID, Meta, Google Ads) и может передать промокод в ссылку магазина. Старт, ступени скидки, выбор коробки, копирование кода и переход отдаются наружу событиями для аналитики. Под клиента меняются цвета, логотип, предметы, ступени и сам промокод, а ту же игру можно поставить на сайт или в Telegram как мини-приложение.",
+      en: "A studio demo: Qovun Market is a made-up shop and the game has no client. It is a mechanic for a promotion, a sale or a store opening: people do not read about a discount, they earn it themselves, and the promo code after the game feels like a prize rather than one more newsletter.\n\nHow it works. The cart follows the finger: a gift gives +1%, a coupon +5%, a golden box +3%, a bomb takes away 3%. Five items in a row without a bomb switch on a combo, and the discount grows twice as fast. A bar with 10, 20 and 30% steps shows how far the next one is. After twenty seconds you pick one of three boxes: it shakes and opens with the discount you earned inside, plus free delivery from 20% and a gift with the order at 30%. The end card has the promo code with a «Copy» button, a countdown of its validity and a «Claim discount» button.\n\nWhat is inside. One HTML file with no images or libraries, about 50 KB, with sound synthesised on the fly. The button detects the platform itself (MRAID, Meta, Google Ads) and can pass the promo code into the shop link. The start, discount steps, box choice, code copy and click-through go out as events for analytics. Colours, logo, items, steps and the code itself are swapped for the client, and the same game can run on a website or in Telegram as a mini app.",
+      uz: "Studiyaning demo loyihasi: Qovun Market do‘koni misol uchun o‘ylab topilgan, o‘yinning buyurtmachisi yo‘q. Bu aksiya, chegirmalar mavsumi yoki do‘kon ochilishi uchun mexanika: odam chegirma haqida o‘qimaydi, uni o‘zi ishlab oladi, o‘yindan keyingi promokod esa navbatdagi xabarnoma emas, yutuq sifatida qabul qilinadi.\n\nQanday ishlaydi. Savat barmoq ortidan yuradi: sovg‘a +1%, kupon +5%, oltin quti +3% beradi, bomba 3% ni olib qo‘yadi. Bombasiz ketma-ket beshta narsa kombo’ni yoqadi va chegirma ikki barobar tez o‘sadi. 10, 20 va 30% bosqichli shkala keyingisigacha qancha qolganini ko‘rsatadi. Yigirma soniyadan so‘ng uchta qutidan biri tanlanadi: u silkinadi va ochiladi, ichida yig‘ilgan chegirma, 20% dan boshlab bepul yetkazib berish, 30% da esa buyurtmaga sovg‘a. Yakuniy kartochkada «Nusxalash» tugmali promokod, amal qilish muddati hisobi va «Chegirmani olish» tugmasi.\n\nIchida nima bor. Rasm va kutubxonalarsiz bitta HTML fayl, taxminan 50 KB, ovoz shu zahoti sintez qilinadi. Tugma maydonchani o‘zi aniqlaydi (MRAID, Meta, Google Ads) va promokodni do‘kon havolasiga uzata oladi. Boshlanish, chegirma bosqichlari, quti tanlash, kodni nusxalash va o‘tish analitika uchun hodisa sifatida uzatiladi. Mijoz uchun ranglar, logotip, narsalar, bosqichlar va promokodning o‘zi almashtiriladi, xuddi shu o‘yinni saytga yoki Telegramga mini-ilova sifatida qo‘yish mumkin.",
+      zh: "工作室演示项目：Qovun Market 是为示例虚构的商店，这款游戏没有客户。它是一种用于促销、打折季或新店开业的机制：用户不是阅读折扣信息，而是亲手赢得折扣，游戏后的优惠码被视为奖品，而不是又一封推送。\n\n玩法说明：购物车跟随手指移动，礼物 +1%，优惠券 +5%，金色礼盒 +3%，炸弹扣 3%。连续接住五个物品且未碰到炸弹即触发连击，折扣增长速度翻倍。带有 10%、20%、30% 档位的进度条显示距下一档还差多少。二十秒后从三个礼盒中选一个：礼盒晃动后打开，里面是赢得的折扣，满 20% 加送免费配送，满 30% 再送订单赠品。结束卡片上有带「复制」按钮的优惠码、有效期倒计时和「领取折扣」按钮。\n\n技术构成：一个不含图片和库的 HTML 文件，约 50 KB，音效实时合成。按钮会自动识别投放平台（MRAID、Meta、Google Ads），并可将优惠码带入商店链接。开局、折扣档位、礼盒选择、复制优惠码和跳转都会作为事件向外发送，供数据分析使用。颜色、标志、物品、档位和优惠码本身均可按客户更换，同一款游戏也可以放到网站上，或作为 Telegram 小程序使用。",
+      uk: "Демо-проєкт студії: магазин Qovun Market вигадано для прикладу, замовника в гри немає. Це механіка для акції, розпродажу чи відкриття магазину: людина не читає про знижку, а заробляє її сама, і промокод після гри сприймається як виграш, а не як чергова розсилка.\n\nЯк влаштовано. Кошик їздить за пальцем: подарунок дає +1%, купон +5%, золота коробка +3%, бомба забирає 3%. П'ять предметів поспіль без бомби вмикають комбо, і знижка росте вдвічі швидше. Шкала зі сходинками 10, 20 і 30% показує, скільки лишилося до наступної. Через двадцять секунд — вибір однієї з трьох коробок: вона трясеться й відкривається, всередині набрана знижка, від 20% — ще безкоштовна доставка, на 30% — подарунок до замовлення. На фінальній картці промокод із кнопкою «Скопіювати», відлік терміну дії та кнопка «Забрати знижку».\n\nЩо всередині. Один HTML-файл без картинок і бібліотек, близько 50 КБ, звук синтезується на льоту. Кнопка сама впізнає майданчик (MRAID, Meta, Google Ads) і може передати промокод у посилання магазину. Старт, сходинки знижки, вибір коробки, копіювання коду й перехід віддаються назовні подіями для аналітики. Під клієнта змінюються кольори, логотип, предмети, сходинки й сам промокод, а ту саму гру можна поставити на сайт або в Telegram як міні-застосунок.",
+      pl: "Projekt demo studia: sklep Qovun Market jest wymyślony na potrzeby przykładu, a gra nie ma klienta. To mechanika do promocji, wyprzedaży albo otwarcia sklepu: człowiek nie czyta o rabacie, tylko sam go zdobywa, a kod po grze odbiera jako wygraną, a nie kolejny newsletter.\n\nJak to działa. Koszyk jeździ za palcem: prezent daje +1%, kupon +5%, złote pudełko +3%, bomba zabiera 3%. Pięć przedmiotów z rzędu bez bomby włącza kombo i rabat rośnie dwa razy szybciej. Pasek z progami 10, 20 i 30% pokazuje, ile zostało do następnego. Po dwudziestu sekundach wybierasz jedno z trzech pudełek: trzęsie się i otwiera, w środku jest zdobyty rabat, od 20% także darmowa dostawa, przy 30% prezent do zamówienia. Na karcie końcowej jest kod z przyciskiem „Kopiuj”, odliczanie ważności i przycisk „Odbierz rabat”.\n\nCo jest w środku. Jeden plik HTML bez obrazków i bibliotek, około 50 KB, dźwięk syntezowany na bieżąco. Przycisk sam rozpoznaje platformę (MRAID, Meta, Google Ads) i może przekazać kod do linku sklepu. Start, progi rabatu, wybór pudełka, skopiowanie kodu i przejście wychodzą na zewnątrz jako zdarzenia dla analityki. Pod klienta zmieniają się kolory, logo, przedmioty, progi i sam kod, a tę samą grę można postawić na stronie albo w Telegramie jako mini-aplikację.",
+    },
+    tech: ["HTML5 Canvas", "JavaScript", "Web Audio API", "MRAID", "Meta Playable Ads", "Google Ads HTML5"],
+    metrics: [
+      { value: "20", label: { ru: "секунд на ловлю подарков", en: "seconds of catching gifts", uz: "soniya sovg‘a tutishga", zh: "秒接礼物时间", uk: "секунд на ловлю подарунків", pl: "sekund na łapanie prezentów" } },
+      { value: "3", label: { ru: "ступени скидки: 10, 20 и 30%", en: "discount steps: 10, 20 and 30%", uz: "chegirma bosqichi: 10, 20 va 30%", zh: "档折扣：10%、20%、30%", uk: "сходинки знижки: 10, 20 і 30%", pl: "progi rabatu: 10, 20 i 30%" } },
+      { value: "~50", label: { ru: "КБ весит вся игра: лимит рекламных сетей 5 МБ", en: "KB for the whole game: ad networks allow 5 MB", uz: "KB — butun o‘yin hajmi: tarmoqlar chegarasi 5 MB", zh: "KB 即整个游戏体积（平台上限 5 MB）", uk: "КБ важить уся гра: ліміт рекламних мереж 5 МБ", pl: "KB waży cała gra: limit sieci reklamowych to 5 MB" } },
     ],
   },
 ];

@@ -45,7 +45,8 @@ export default async function StudioDeck({
   const ref = codeFromQuery((await searchParams).ref);
   const d = deckCopy(locale);
   const t = d.studio;
-  const shown = casesByDate.filter((c) => c.slug !== "devuz").slice(0, 6);
+  // Демо студии — не проекты клиентов, в презентацию для партнёров не идут.
+  const shown = casesByDate.filter((c) => c.slug !== "devuz" && !c.demo).slice(0, 6);
   const bot = ref ? botLink(company.telegram, ref) : company.telegramUrl;
 
   return (

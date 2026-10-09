@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="ad.orientation" content="portrait">
+<title>Gift Rush</title>
+<!--
+  Играбельная реклама магазина (playable ad), демо DevUz Studio. Механика —
+  «лови подарки»: 20 секунд игрок ловит корзиной подарки и купоны, копит
+  скидку, бомбы её отнимают. Потом выбирает одну из трёх коробок и получает
+  промокод на ту скидку, которую набрал. Бренд Qovun Market придуман.
+
+  Один файл, без картинок и библиотек. Кнопка «Забрать скидку» ищет
+  площадку сама: MRAID → Meta (FbPlayableAd) → Google (ExitApi); на сайте
+  студии только показывает подсказку и сообщает странице.
+-->
+<style>
+  html,body{margin:0;height:100%;background:#160a33;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  body{display:flex;align-items:center;justify-content:center}
+  canvas{display:block;height:100%;width:min(100%,calc(100vh * 0.5));touch-action:none}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Gift Rush"></canvas>
+<script>
+(() => {
+  "use strict";
+
+  // ── Язык ────────────────────────────────────────────────────────────
+  const T = {
+    ru: { title: "Лови подарки и получай скидку до 30%", hint: "Двигай корзину пальцем", your: "Ваша скидка", cta: "Забрать скидку", pick: "Выбери подарок", tapAny: "Нажми на любую коробку", unlocked: "Скидка {n}% открыта!", max: "Максимум!", combo: "Комбо ×2", prizeOn: "на первый заказ", delivery: "+ бесплатная доставка", gift: "+ подарок к заказу", code: "Промокод", copy: "Скопировать", copied: "Скопировано", valid: "Действует ещё", again: "Сыграть ещё", note: "В настоящей рекламе кнопка ведёт в магазин, и промокод уже применён", demo: "Демо-реклама · DevUz Studio" },
+    en: { title: "Catch gifts and get up to 30% off", hint: "Drag the cart", your: "Your discount", cta: "Claim discount", pick: "Pick a gift", tapAny: "Tap any box", unlocked: "{n}% off unlocked!", max: "Max discount!", combo: "Combo ×2", prizeOn: "on your first order", delivery: "+ free delivery", gift: "+ a gift with your order", code: "Promo code", copy: "Copy", copied: "Copied", valid: "Expires in", again: "Play again", note: "In a live ad this button opens the shop with the code already applied", demo: "Demo ad · DevUz Studio" },
+    uz: { title: "Sovg‘alarni tuting va 30% gacha chegirma oling", hint: "Savatni barmoq bilan suring", your: "Chegirmangiz", cta: "Chegirmani olish", pick: "Sovg‘ani tanlang", tapAny: "Istalgan qutini bosing", unlocked: "{n}% chegirma ochildi!", max: "Maksimum!", combo: "Kombo ×2", prizeOn: "birinchi buyurtmaga", delivery: "+ bepul yetkazib berish", gift: "+ buyurtmaga sovg‘a", code: "Promokod", copy: "Nusxalash", copied: "Nusxalandi", valid: "Amal qiladi yana", again: "Yana o‘ynash", note: "Haqiqiy reklamada tugma do‘konni ochadi va promokod allaqachon qo‘llangan bo‘ladi", demo: "Demo reklama · DevUz Studio" },
+    zh: { title: "接住礼物，最高享 30% 折扣", hint: "拖动购物车", your: "你的折扣", cta: "领取折扣", pick: "选一个礼物", tapAny: "点击任意一个礼盒", unlocked: "已解锁 {n}% 折扣！", max: "最高折扣！", combo: "连击 ×2", prizeOn: "首单可用", delivery: "+ 免费配送", gift: "+ 订单赠品", code: "优惠码", copy: "复制", copied: "已复制", valid: "剩余有效期", again: "再玩一次", note: "在真实广告中，此按钮会打开商店，并自动使用优惠码", demo: "演示广告 · DevUz Studio" },
+    uk: { title: "Лови подарунки й отримуй знижку до 30%", hint: "Рухай кошик пальцем", your: "Ваша знижка", cta: "Забрати знижку", pick: "Обери подарунок", tapAny: "Натисни на будь-яку коробку", unlocked: "Знижку {n}% відкрито!", max: "Максимум!", combo: "Комбо ×2", prizeOn: "на перше замовлення", delivery: "+ безкоштовна доставка", gift: "+ подарунок до замовлення", code: "Промокод", copy: "Скопіювати", copied: "Скопійовано", valid: "Діє ще", again: "Зіграти ще", note: "У справжній рекламі кнопка веде в магазин, і промокод уже застосовано", demo: "Демо-реклама · DevUz Studio" },
+    pl: { title: "Łap prezenty i zgarnij do 30% rabatu", hint: "Przesuwaj koszyk palcem", your: "Twój rabat", cta: "Odbierz rabat", pick: "Wybierz prezent", tapAny: "Dotknij dowolnego pudełka", unlocked: "Rabat {n}% odblokowany!", max: "Maksimum!", combo: "Kombo ×2", prizeOn: "na pierwsze zamówienie", delivery: "+ darmowa dostawa", gift: "+ prezent do zamówienia", code: "Kod rabatowy", copy: "Kopiuj", copied: "Skopiowano", valid: "Ważny jeszcze", again: "Zagraj jeszcze", note: "W prawdziwej reklamie przycisk otwiera sklep z już wpisanym kodem", demo: "Reklama demo · DevUz Studio" },
+  };
+  const query = new URLSearchParams(location.search);
+  let lang = (query.get("lang") || navigator.language || "en").slice(0, 2).toLowerCase();
+  if (!T[lang]) lang = "en";
+  document.documentElement.lang = lang;
+  const L = T[lang];
+  const FONT = '-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Noto Sans SC",sans-serif';
+  const MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace';
+  const font = (size, weight = 800, family = FONT) => `${weight} ${size}px ${family}`;
+
+  // ── Площадка ───────────────────────────────────────────────────────
+  const SHOP = "https://example.com/?promo=";
+  function track(name, data) {
+    try { window.parent !== window && window.parent.postMessage({ source: "devuz-playable", type: "event", game: "gift-rush", name, data }, "*"); } catch (e) {}
+    try { window.dataLayer && window.dataLayer.push({ event: "playable_" + name, ...data }); } catch (e) {}
+  }
+  let noteUntil = 0;
+  function cta(where) {
+    track("cta", { where, discount: Math.floor(disc) });
+    sfx.click();
+    try {
+      if (window.mraid && typeof mraid.open === "function") return mraid.open(SHOP + promo());
+      if (window.FbPlayableAd && typeof FbPlayableAd.onCTAClick === "function") return FbPlayableAd.onCTAClick();
+      if (window.ExitApi && typeof ExitApi.exit === "function") return ExitApi.exit();
+    } catch (e) {}
+    noteUntil = now + 3.8;
+    try { window.parent !== window && window.parent.postMessage({ source: "devuz-playable", type: "cta", game: "gift-rush" }, "*"); } catch (e) {}
+  }
+
+  // ── Звук ───────────────────────────────────────────────────────────
+  let AC = null, muted = false;
+  function audio() {
+    if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
+    if (AC && AC.state === "suspended") AC.resume();
+  }
+  function tone(freq, dur, type = "sine", vol = 0.07, slide = 0, delay = 0) {
+    if (!AC || muted) return;
+    const t = AC.currentTime + delay;
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq + slide), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(AC.destination);
+    o.start(t);
+    o.stop(t + dur + 0.03);
+  }
+  const sfx = {
+    catch(n) { const f = 520 * Math.pow(2, Math.min(n, 12) / 12); tone(f, 0.08, "triangle", 0.07); tone(f * 1.5, 0.1, "triangle", 0.05, 0, 0.05); },
+    coupon() { [660, 880, 1320].forEach((f, i) => tone(f, 0.12, "triangle", 0.07, 0, i * 0.06)); },
+    bomb() { tone(180, 0.35, "sawtooth", 0.06, -120); tone(90, 0.4, "square", 0.04, -40, 0.02); },
+    level() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.16, "triangle", 0.07, 0, i * 0.08)); },
+    shake() { tone(300 + Math.random() * 80, 0.05, "square", 0.02); },
+    open() { tone(392, 0.5, "triangle", 0.07, 400); [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.25, "sine", 0.06, 0, 0.25 + i * 0.09)); },
+    click() { tone(880, 0.07, "sine", 0.06); },
+  };
+
+  // ── Холст ──────────────────────────────────────────────────────────
+  const cv = document.getElementById("c");
+  const ctx = cv.getContext("2d");
+  let W = 390, H = 844, S = 1, DPR = 1;
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    DPR = Math.min(window.devicePixelRatio || 1, 3);
+    cv.width = Math.max(1, Math.round(r.width * DPR));
+    cv.height = Math.max(1, Math.round(r.height * DPR));
+    S = r.width / 390;
+    H = r.height / S;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+  const ctaY = () => H - 34 - 56 - 12;
+  const floorY = () => ctaY() - 14;
+
+  // ── Состояние ──────────────────────────────────────────────────────
+  const GAME_TIME = 20, MAX = 30;
+  const KINDS = [
+    { k: "gift", p: 0.43, v: 1 },
+    { k: "coin", p: 0.22, v: 1 },
+    { k: "coupon", p: 0.12, v: 5 },
+    { k: "gold", p: 0.06, v: 3 },
+    { k: "bomb", p: 0.17, v: -3 },
+  ];
+  const GIFT_COLORS = [["#ef4444", "#facc15"], ["#3b82f6", "#ffffff"], ["#22c55e", "#ef4444"], ["#f59e0b", "#7c3aed"], ["#ec4899", "#ffffff"]];
+  let state, t0, playT, items, spawnT, cartX, cartTX, cartVX, disc, streak, combo, parts, floats, confetti, pile, milestone, bannerText, bannerT, flash, shake, shX, shY;
+  let boxes, chosen, pickT, openT, prize, endShown, copiedUntil;
+
+  function reset() {
+    state = "intro"; t0 = now; playT = 0;
+    items = []; spawnT = 0.4;
+    cartX = W / 2; cartTX = W / 2; cartVX = 0;
+    disc = 0; streak = 0; combo = false;
+    parts = []; floats = []; confetti = []; pile = [];
+    milestone = 0; bannerText = ""; bannerT = -9; flash = 0; shake = 0; shX = 0; shY = 0;
+    boxes = []; chosen = -1; pickT = 0; openT = -1; prize = 10; endShown = 0; copiedUntil = 0;
+  }
+  const promo = () => "QOVUN" + prize;
+
+  function spawn() {
+    let r = Math.random(), kind = KINDS[0];
+    for (const k of KINDS) { if (r < k.p) { kind = k; break; } r -= k.p; }
+    const col = GIFT_COLORS[(Math.random() * GIFT_COLORS.length) | 0];
+    const size = { gift: 46, coin: 34, coupon: 60, gold: 52, bomb: 42 }[kind.k];
+    items.push({
+      kind: kind.k, v: kind.v, x0: 40 + Math.random() * (W - 80), x: 0, y: 176 - size / 2, size,
+      vy: 200 + playT * 9 + Math.random() * 60, ph: Math.random() * 6, rot: (Math.random() - 0.5) * 0.4, col,
+    });
+  }
+
+  // ── Ввод ───────────────────────────────────────────────────────────
+  const btn = {};
+  const inside = (b, x, y) => b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+  function local(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / S, (e.clientY - r.top) / S]; }
+  let dragging = false;
+  cv.addEventListener("pointerdown", (e) => {
+    audio();
+    const [x, y] = local(e);
+    if (state === "end") {
+      if (inside(btn.copy, x, y)) return copyCode();
+      if (inside(btn.big, x, y)) return cta("endcard");
+      if (inside(btn.again, x, y)) { sfx.click(); track("retry"); reset(); return; }
+      return;
+    }
+    if (inside(btn.mute, x, y) && state !== "pick") { muted = !muted; return; }
+    if (inside(btn.cta, x, y)) return cta(state);
+    if (state === "pick") {
+      if (chosen >= 0) return;
+      boxes.forEach((b, i) => { if (Math.hypot(x - b.x, y - b.y) < 62) choose(i); });
+      return;
+    }
+    if (state === "intro") { state = "play"; track("start"); }
+    if (state === "play") { dragging = true; cartTX = x; try { cv.setPointerCapture(e.pointerId); } catch (err) {} }
+  });
+  cv.addEventListener("pointermove", (e) => { if (dragging) cartTX = local(e)[0]; });
+  const up = () => { dragging = false; };
+  cv.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  document.addEventListener("visibilitychange", () => { if (AC) document.hidden ? AC.suspend() : AC.resume(); });
+
+  function copyCode() {
+    const code = promo();
+    const done = () => { copiedUntil = now + 1.8; sfx.click(); track("copy_code", { code }); };
+    const fallback = () => {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = code; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+      } catch (err) {}
+      done();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, fallback);
+    else fallback();
+  }
+
+  // ── Логика ─────────────────────────────────────────────────────────
+  function addDisc(v, x, y, color) {
+    const before = Math.floor(disc);
+    disc = Math.max(0, Math.min(MAX, disc + v));
+    const text = (v > 0 ? "+" : "−") + Math.abs(v) + "%";
+    floats.push({ text, x, y, life: 1, color, size: v >= 5 ? 34 : 26 });
+    const after = Math.floor(disc);
+    for (const m of [10, 20, 30]) {
+      if (before < m && after >= m && milestone < m) {
+        milestone = m;
+        bannerText = m === 30 ? L.max : L.unlocked.replace("{n}", m);
+        bannerT = now;
+        sfx.level();
+        burst(W / 2, 150, 40);
+        track("milestone", { discount: m });
+      }
+    }
+  }
+  function sparks(x, y, color, n = 10) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, s = 80 + Math.random() * 160;
+      parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 80, life: 0.7, color, r: 2 + Math.random() * 3 });
+    }
+  }
+  function burst(x, y, n) {
+    const colors = ["#facc15", "#22d3ee", "#f472b6", "#a3e635", "#ffffff", "#fb923c"];
+    for (let i = 0; i < n; i++) {
+      confetti.push({ x, y, vx: (Math.random() - 0.5) * 520, vy: -260 - Math.random() * 380, r: Math.random() * 6, vr: (Math.random() - 0.5) * 12, w: 6 + Math.random() * 6, h: 3 + Math.random() * 4, c: colors[i % colors.length], life: 3 });
+    }
+  }
+
+  function toPick() {
+    state = "pick"; pickT = now; chosen = -1; openT = -1;
+    prize = Math.max(10, Math.floor(disc / 5) * 5);
+    const y = Math.min(H * 0.52, 450);
+    boxes = [
+      { x: W / 2 - 118, y, col: ["#ef4444", "#facc15"], s: 1, ox: 0 },
+      { x: W / 2, y, col: ["#3b82f6", "#ffffff"], s: 1, ox: 0 },
+      { x: W / 2 + 118, y, col: ["#22c55e", "#facc15"], s: 1, ox: 0 },
+    ];
+    track("pick", { discount: Math.floor(disc), prize });
+  }
+  function choose(i) {
+    chosen = i; pickT = now;
+    sfx.click();
+    track("choose", { box: i });
+  }
+
+  function update(dt) {
+    cartX += (Math.max(70, Math.min(W - 70, cartTX)) - cartX) * (1 - Math.exp(-dt * 16));
+    const prevX = update.px ?? cartX;
+    cartVX = cartVX * 0.8 + ((cartX - prevX) / Math.max(dt, 0.001)) * 0.2;
+    update.px = cartX;
+
+    if (state === "intro") cartTX = W / 2 + Math.sin((now - t0) * 1.7) * 95;
+
+    if (state === "play") {
+      playT += dt;
+      spawnT -= dt;
+      if (spawnT <= 0) { spawn(); spawnT = Math.max(0.36, 0.62 - playT * 0.013) + Math.random() * 0.12; }
+      const rim = floorY() - 78;
+      for (const it of items) {
+        it.y += it.vy * dt;
+        it.x = it.x0 + Math.sin(now * 2 + it.ph) * 10;
+        if (it.done) continue;
+        const bottom = it.y + it.size * 0.4;
+        if (bottom >= rim - 4 && it.y <= rim + 22 && Math.abs(it.x - cartX) < 60) {
+          it.done = true;
+          if (it.kind === "bomb") {
+            streak = 0; combo = false; flash = 1; shake = 0.4;
+            sfx.bomb();
+            sparks(it.x, rim, "#111827", 14); sparks(it.x, rim, "#f97316", 10);
+            addDisc(it.v, it.x, rim - 40, "#ef4444");
+            track("bomb", { discount: Math.floor(disc) });
+          } else {
+            streak++;
+            if (streak === 5 && !combo) { combo = true; floats.push({ text: L.combo, x: cartX, y: rim - 90, life: 1.2, color: "#facc15", size: 30 }); }
+            const v = it.v * (combo ? 2 : 1);
+            if (it.kind === "coupon" || it.kind === "gold") sfx.coupon(); else sfx.catch(streak);
+            const color = it.kind === "gift" ? it.col[0] : it.kind === "coin" || it.kind === "gold" ? "#facc15" : "#fde047";
+            sparks(it.x, rim, color, it.kind === "gold" ? 18 : 10);
+            addDisc(v, it.x, rim - 40, "#facc15");
+            pile.push({ kind: it.kind, col: it.col, ph: Math.random() * 6 });
+            if (pile.length > 7) pile.shift();
+          }
+        }
+      }
+      items = items.filter((it) => !it.done && it.y < H + 60);
+      if (playT >= GAME_TIME || (disc >= MAX && now - bannerT > 1.1)) { items = []; toPick(); }
+    }
+
+    if (state === "pick" && chosen >= 0) {
+      const t = now - pickT;
+      boxes.forEach((b, i) => {
+        if (i === chosen) {
+          const k = Math.min(1, t / 0.45), e = 1 - Math.pow(1 - k, 3);
+          b.x += (W / 2 - b.x) * e * 0.3;
+          b.s = 1 + 0.55 * e;
+          b.ox = t > 0.45 && t < 1.25 ? Math.sin(t * 60) * (t - 0.45) * 9 : 0;
+          if (t > 0.45 && t < 1.25 && Math.random() < 0.3) sfx.shake();
+        } else b.s = Math.max(0, 1 - t * 3);
+      });
+      if (t > 1.25 && openT < 0) { openT = now; sfx.open(); burst(W / 2, boxes[chosen].y - 40, 120); track("open", { prize }); }
+      if (openT > 0 && now - openT > 2.1) { state = "end"; endShown = now; track("endcard", { prize }); }
+    }
+
+    flash = Math.max(0, flash - dt * 3);
+    shake = Math.max(0, shake - dt);
+    shX = shake > 0 ? (Math.random() - 0.5) * 12 * shake : 0;
+    shY = shake > 0 ? (Math.random() - 0.5) * 10 * shake : 0;
+    for (const p of parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 520 * dt; p.life -= dt; }
+    parts = parts.filter((p) => p.life > 0);
+    for (const f of floats) { f.y -= 60 * dt; f.life -= dt * 0.9; }
+    floats = floats.filter((f) => f.life > 0);
+    for (const c of confetti) { c.x += c.vx * dt; c.y += c.vy * dt; c.vy += 560 * dt; c.vx *= 0.99; c.r += c.vr * dt; c.life -= dt; }
+    confetti = confetti.filter((c) => c.life > 0 && c.y < H + 20);
+  }
+
+  // ── Рисование: предметы ────────────────────────────────────────────
+  function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+
+  function drawGift(x, y, s, col, rot = 0, lid = 0, lidRot = 0, glow = false) {
+    const [body, ribbon] = col;
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(rot);
+    if (glow) {
+      const g = ctx.createRadialGradient(0, 0, s * 0.2, 0, 0, s);
+      g.addColorStop(0, "rgba(255,230,120,0.55)"); g.addColorStop(1, "rgba(255,230,120,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
+    }
+    // коробка
+    const g = ctx.createLinearGradient(-s / 2, 0, s / 2, 0);
+    g.addColorStop(0, shade(body, 0.25)); g.addColorStop(0.5, body); g.addColorStop(1, shade(body, -0.28));
+    ctx.fillStyle = g; rr(-s * 0.45, -s * 0.28, s * 0.9, s * 0.76, s * 0.08); ctx.fill();
+    ctx.fillStyle = shade(ribbon, -0.05);
+    ctx.fillRect(-s * 0.09, -s * 0.28, s * 0.18, s * 0.76);
+    ctx.fillStyle = "rgba(0,0,0,0.12)"; ctx.fillRect(-s * 0.45, -s * 0.28, s * 0.9, s * 0.06);
+    // крышка
+    ctx.save();
+    ctx.translate(0, -s * 0.36 - lid); ctx.rotate(lidRot);
+    const lg = ctx.createLinearGradient(-s / 2, 0, s / 2, 0);
+    lg.addColorStop(0, shade(body, 0.35)); lg.addColorStop(0.5, shade(body, 0.1)); lg.addColorStop(1, shade(body, -0.2));
+    ctx.fillStyle = lg; rr(-s * 0.52, -s * 0.1, s * 1.04, s * 0.22, s * 0.06); ctx.fill();
+    ctx.fillStyle = ribbon; ctx.fillRect(-s * 0.09, -s * 0.1, s * 0.18, s * 0.22);
+    // бант
+    ctx.fillStyle = ribbon;
+    ctx.beginPath(); ctx.ellipse(-s * 0.17, -s * 0.2, s * 0.18, s * 0.1, -0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(s * 0.17, -s * 0.2, s * 0.18, s * 0.1, 0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = shade(ribbon, -0.25);
+    ctx.beginPath(); ctx.ellipse(-s * 0.15, -s * 0.2, s * 0.08, s * 0.04, -0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(s * 0.15, -s * 0.2, s * 0.08, s * 0.04, 0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = shade(ribbon, -0.1); ctx.beginPath(); ctx.arc(0, -s * 0.15, s * 0.07, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // блик
+    ctx.fillStyle = "rgba(255,255,255,0.22)"; rr(-s * 0.38, -s * 0.2, s * 0.1, s * 0.5, s * 0.05); ctx.fill();
+    ctx.restore();
+  }
+
+  function shade(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    const t = amt < 0 ? 0 : 255, p = Math.abs(amt);
+    r = Math.round((t - r) * p + r); g = Math.round((t - g) * p + g); b = Math.round((t - b) * p + b);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function drawCoupon(x, y, w, rot, text) {
+    const h = w * 0.56, n = h * 0.18, r = h * 0.16;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+    ctx.shadowColor = "rgba(0,0,0,0.25)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2 + r, -h / 2); ctx.lineTo(w / 2 - r, -h / 2); ctx.arcTo(w / 2, -h / 2, w / 2, -h / 2 + r, r);
+    ctx.lineTo(w / 2, -n); ctx.arc(w / 2, 0, n, -Math.PI / 2, Math.PI / 2, true);
+    ctx.lineTo(w / 2, h / 2 - r); ctx.arcTo(w / 2, h / 2, w / 2 - r, h / 2, r);
+    ctx.lineTo(-w / 2 + r, h / 2); ctx.arcTo(-w / 2, h / 2, -w / 2, h / 2 - r, r);
+    ctx.lineTo(-w / 2, n); ctx.arc(-w / 2, 0, n, Math.PI / 2, -Math.PI / 2, true);
+    ctx.lineTo(-w / 2, -h / 2 + r); ctx.arcTo(-w / 2, -h / 2, -w / 2 + r, -h / 2, r);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+    g.addColorStop(0, "#fff176"); g.addColorStop(1, "#fbbf24");
+    ctx.fillStyle = g; ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = "rgba(146,64,14,0.55)"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-w * 0.2, -h / 2 + 4); ctx.lineTo(-w * 0.2, h / 2 - 4); ctx.stroke(); ctx.setLineDash([]);
+    star(-w * 0.34, 0, h * 0.2, "#ea580c");
+    ctx.fillStyle = "#b91c1c"; ctx.font = font(h * 0.46, 900); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(text, w * 0.14, 1);
+    ctx.restore();
+  }
+
+  function star(x, y, r, color) {
+    ctx.fillStyle = color; ctx.beginPath();
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr2 = i % 2 ? r * 0.45 : r; ctx[i ? "lineTo" : "moveTo"](x + Math.cos(a) * rr2, y + Math.sin(a) * rr2); }
+    ctx.closePath(); ctx.fill();
+  }
+
+  function drawCoin(x, y, s, t) {
+    const sx = Math.max(0.15, Math.abs(Math.cos(t * 3)));
+    ctx.save(); ctx.translate(x, y); ctx.scale(sx, 1);
+    const g = ctx.createRadialGradient(-s * 0.15, -s * 0.15, 2, 0, 0, s / 2);
+    g.addColorStop(0, "#fff7c2"); g.addColorStop(0.5, "#fbbf24"); g.addColorStop(1, "#b45309");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, s / 2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "rgba(146,64,14,0.7)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, s * 0.36, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = "#92400e"; ctx.font = font(s * 0.46, 900); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("%", 0, 1);
+    ctx.restore();
+  }
+
+  function drawBomb(x, y, s, t) {
+    ctx.save(); ctx.translate(x, y);
+    const pulse = 0.5 + Math.sin(t * 10) * 0.5;
+    ctx.fillStyle = `rgba(239,68,68,${0.18 + pulse * 0.2})`; ctx.beginPath(); ctx.arc(0, 0, s * 0.62, 0, Math.PI * 2); ctx.fill();
+    const g = ctx.createRadialGradient(-s * 0.15, -s * 0.15, 2, 0, 0, s / 2);
+    g.addColorStop(0, "#6b7280"); g.addColorStop(0.4, "#1f2937"); g.addColorStop(1, "#030712");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, s * 0.05, s * 0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#374151"; ctx.fillRect(-s * 0.12, -s * 0.48, s * 0.24, s * 0.14);
+    ctx.strokeStyle = "#a16207"; ctx.lineWidth = 3; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(0, -s * 0.48); ctx.quadraticCurveTo(s * 0.12, -s * 0.72, s * 0.3, -s * 0.66); ctx.stroke(); ctx.lineCap = "butt";
+    star(s * 0.32, -s * 0.68, s * (0.16 + pulse * 0.08), "#fde047");
+    star(s * 0.32, -s * 0.68, s * 0.07, "#ffffff");
+    ctx.restore();
+  }
+
+  function drawItem(it) {
+    if (it.kind === "gift") drawGift(it.x, it.y, it.size, it.col, it.rot + Math.sin(now * 3 + it.ph) * 0.12);
+    else if (it.kind === "gold") { drawGift(it.x, it.y, it.size, ["#f5b301", "#fff7c2"], Math.sin(now * 3 + it.ph) * 0.12, 0, 0, true); sparkleAround(it.x, it.y, it.size); }
+    else if (it.kind === "coin") drawCoin(it.x, it.y, it.size, now + it.ph);
+    else if (it.kind === "coupon") drawCoupon(it.x, it.y, it.size, it.rot + Math.sin(now * 2.4 + it.ph) * 0.15, "−5%");
+    else drawBomb(it.x, it.y, it.size, now + it.ph);
+  }
+  function sparkleAround(x, y, s) {
+    for (let i = 0; i < 3; i++) {
+      const a = now * 2 + i * 2.1, r = s * 0.7;
+      star(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.8, 4 + Math.sin(now * 8 + i) * 2, "#fff7c2");
+    }
+  }
+
+  // ── Рисование: сцена ───────────────────────────────────────────────
+  const BOKEH = Array.from({ length: 16 }, (_, i) => ({ x: (i * 97) % 390, y: (i * 173) % 800, r: 18 + ((i * 37) % 40), c: ["255,214,102", "244,114,182", "34,211,238", "167,139,250"][i % 4], v: 6 + (i % 5) * 3 }));
+  function drawBg() {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#1d0b45"); g.addColorStop(0.5, "#4c1d8f"); g.addColorStop(1, "#b83280");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    for (const b of BOKEH) {
+      const y = ((b.y - now * b.v) % (H + 100) + H + 100) % (H + 100) - 50;
+      const rg = ctx.createRadialGradient(b.x, y, 0, b.x, y, b.r);
+      rg.addColorStop(0, `rgba(${b.c},0.22)`); rg.addColorStop(1, `rgba(${b.c},0)`);
+      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(b.x, y, b.r, 0, Math.PI * 2); ctx.fill();
+    }
+    // гирлянда
+    const y0 = 182;
+    ctx.strokeStyle = "rgba(255,255,255,0.35)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-10, y0); ctx.quadraticCurveTo(W / 2, y0 + 34, W + 10, y0); ctx.stroke();
+    const colors = ["#facc15", "#f472b6", "#22d3ee", "#a3e635", "#fb923c"];
+    for (let i = 0; i <= 13; i++) {
+      const t = i / 13, x = -10 + (W + 20) * t, y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * (y0 + 34) + t * t * y0;
+      const on = 0.55 + 0.45 * Math.sin(now * 3 + i * 1.3);
+      const c = colors[i % colors.length];
+      const gg = ctx.createRadialGradient(x, y + 6, 0, x, y + 6, 14);
+      gg.addColorStop(0, c); gg.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalAlpha = on * 0.55; ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(x, y + 6, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.6 + on * 0.4; ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y + 6, 3.5, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    // прилавок
+    const fy = floorY();
+    const fg = ctx.createLinearGradient(0, fy, 0, H);
+    fg.addColorStop(0, "rgba(20,8,48,0.75)"); fg.addColorStop(1, "rgba(20,8,48,0.95)");
+    ctx.fillStyle = fg; ctx.fillRect(0, fy, W, H - fy);
+    ctx.fillStyle = "rgba(255,255,255,0.18)"; ctx.fillRect(0, fy, W, 2);
+  }
+
+  function drawMelon(x, y, s) {
+    ctx.save(); ctx.translate(x, y);
+    const g = ctx.createRadialGradient(-s * 0.3, -s * 0.3, 1, 0, 0, s);
+    g.addColorStop(0, "#fff3b0"); g.addColorStop(0.6, "#f6c445"); g.addColorStop(1, "#c98a12");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, s, s * 0.8, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "rgba(150,95,10,0.45)"; ctx.lineWidth = Math.max(1, s * 0.08);
+    for (const k of [-0.5, 0, 0.5]) { ctx.beginPath(); ctx.ellipse(0, 0, s * Math.abs(k) + 0.1, s * 0.8, -0.3, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.fillStyle = "#22c55e"; ctx.beginPath(); ctx.ellipse(s * 0.45, -s * 0.85, s * 0.35, s * 0.16, -0.6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBrand(x, y, center) {
+    ctx.font = font(21, 900);
+    const w1 = ctx.measureText("QOVUN").width;
+    const total = 30 + w1;
+    const left = center ? x - total / 2 : x;
+    drawMelon(left + 13, y, 13);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#fff"; ctx.fillText("QOVUN", left + 30, y + 3);
+    ctx.font = font(9, 800); ctx.fillStyle = "#fcd34d";
+    ctx.fillText("M A R K E T", left + 31, y + 15);
+  }
+
+  function drawHeader() {
+    drawBrand(18, 82, false);
+    // таймер
+    const left = Math.max(0, GAME_TIME - playT), cx = W - 42, cy = 84;
+    ctx.fillStyle = "rgba(255,255,255,0.12)"; ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = left < 5 ? "#f87171" : "#facc15"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(cx, cy, 20, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (left / GAME_TIME)); ctx.stroke(); ctx.lineCap = "butt";
+    ctx.fillStyle = "#fff"; ctx.font = font(16, 900); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(String(Math.ceil(left)), cx, cy + 1);
+    // звук
+    btn.mute = { x: W - 104, y: 64, w: 40, h: 40 };
+    ctx.fillStyle = "rgba(255,255,255,0.12)"; ctx.beginPath(); ctx.arc(W - 84, 84, 17, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff"; const mx = W - 93, my = 84;
+    ctx.beginPath(); ctx.moveTo(mx, my - 4); ctx.lineTo(mx + 4, my - 4); ctx.lineTo(mx + 9, my - 9); ctx.lineTo(mx + 9, my + 9); ctx.lineTo(mx + 4, my + 4); ctx.lineTo(mx, my + 4); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.lineCap = "round";
+    if (muted) { ctx.beginPath(); ctx.moveTo(mx + 12, my - 4); ctx.lineTo(mx + 18, my + 4); ctx.moveTo(mx + 18, my - 4); ctx.lineTo(mx + 12, my + 4); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(mx + 10, my, 5, -0.9, 0.9); ctx.stroke(); ctx.beginPath(); ctx.arc(mx + 10, my, 9, -0.9, 0.9); ctx.stroke(); }
+    ctx.lineCap = "butt";
+
+    // шкала скидки
+    const x = 16, y = 114, w = W - 32, h = 60;
+    ctx.fillStyle = "rgba(255,255,255,0.1)"; rr(x, y, w, h, 16); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.16)"; ctx.lineWidth = 1; rr(x, y, w, h, 16); ctx.stroke();
+    ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.font = font(14, 700); ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.fillText(L.your, x + 14, y + 19);
+    const pct = Math.floor(disc);
+    ctx.textAlign = "right"; ctx.font = font(24, 900); ctx.fillStyle = "#facc15";
+    ctx.fillText(pct > 0 ? "−" + pct + "%" : "0%", x + w - 14, y + 19);
+    const bx = x + 14, bw = w - 28, by = y + 37, bh = 12;
+    ctx.fillStyle = "rgba(0,0,0,0.3)"; rr(bx, by, bw, bh, 6); ctx.fill();
+    const fill = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+    fill.addColorStop(0, "#f472b6"); fill.addColorStop(0.5, "#fb923c"); fill.addColorStop(1, "#facc15");
+    ctx.fillStyle = fill; rr(bx, by, Math.max(bh, (bw * disc) / MAX), bh, 6); ctx.fill();
+    for (const m of [10, 20]) {
+      const mx2 = bx + (bw * m) / MAX;
+      ctx.fillStyle = disc >= m ? "#fff" : "rgba(255,255,255,0.45)"; ctx.fillRect(mx2 - 1, by - 2, 2, bh + 4);
+    }
+  }
+
+  function drawCart(x, y, tilt) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(tilt);
+    // тень
+    ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 2, 70, 7, 0, 0, Math.PI * 2); ctx.fill();
+    // содержимое корзины — выглядывает над бортом
+    pile.forEach((p, i) => {
+      const px = -46 + i * 15, py = -84 + Math.sin(i * 1.7) * 4;
+      if (p.kind === "gift") drawGift(px, py, 26, p.col, Math.sin(i) * 0.3);
+      else if (p.kind === "gold") drawGift(px, py, 28, ["#f5b301", "#fff7c2"], Math.sin(i) * 0.3);
+      else if (p.kind === "coin") drawCoin(px, py, 20, i * 0.4);
+      else drawCoupon(px, py, 32, Math.sin(i) * 0.4, "%");
+    });
+    // ручка
+    ctx.strokeStyle = "#d1d5db"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath(); ctx.moveTo(-64, -76); ctx.lineTo(-80, -96); ctx.lineTo(-94, -96); ctx.stroke();
+    ctx.strokeStyle = "#111827"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(-90, -96); ctx.lineTo(-100, -96); ctx.stroke();
+    // корпус
+    const basket = () => { ctx.beginPath(); ctx.moveTo(-66, -78); ctx.lineTo(64, -78); ctx.lineTo(52, -26); ctx.lineTo(-50, -26); ctx.closePath(); };
+    const g = ctx.createLinearGradient(0, -78, 0, -26);
+    g.addColorStop(0, flash > 0 ? "#ef4444" : "#ff8a1f"); g.addColorStop(1, flash > 0 ? "#991b1b" : "#e2531f");
+    ctx.fillStyle = g; basket(); ctx.fill();
+    ctx.save(); basket(); ctx.clip();
+    ctx.strokeStyle = "rgba(255,255,255,0.28)"; ctx.lineWidth = 2;
+    for (let i = -60; i <= 64; i += 13) { ctx.beginPath(); ctx.moveTo(i, -78); ctx.lineTo(i * 0.8 + 1, -26); ctx.stroke(); }
+    for (const yy of [-60, -43]) { ctx.beginPath(); ctx.moveTo(-70, yy); ctx.lineTo(70, yy); ctx.stroke(); }
+    ctx.restore();
+    ctx.fillStyle = "rgba(255,255,255,0.95)"; rr(-26, -64, 52, 26, 8); ctx.fill();
+    drawMelon(-12, -51, 7);
+    ctx.fillStyle = "#4c1d95"; ctx.font = font(9, 900); ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText("QOVUN", -3, -51);
+    // борт
+    ctx.strokeStyle = "#f3f4f6"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-68, -78); ctx.lineTo(66, -78); ctx.stroke();
+    // шасси и колёса
+    ctx.strokeStyle = "#9ca3af"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(-50, -26); ctx.lineTo(-40, -12); ctx.lineTo(44, -12); ctx.lineTo(52, -26); ctx.stroke();
+    for (const wx of [-36, 40]) {
+      ctx.fillStyle = "#111827"; ctx.beginPath(); ctx.arc(wx, -9, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#9ca3af"; ctx.beginPath(); ctx.arc(wx, -9, 3.5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.lineCap = "butt"; ctx.lineJoin = "miter";
+    if (combo) {
+      ctx.font = font(13, 900); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const w = ctx.measureText(L.combo).width + 18;
+      ctx.fillStyle = "#facc15"; rr(-w / 2, -128, w, 24, 12); ctx.fill();
+      ctx.fillStyle = "#4c1d95"; ctx.fillText(L.combo, 0, -115);
+    }
+    ctx.restore();
+  }
+
+  function drawCta(label, big) {
+    const w = big ? 300 : 236, h = big ? 64 : 56, x = (W - w) / 2, y = big ? btn.bigY : ctaY();
+    const b = { x, y, w, h };
+    const pulse = 1 + Math.sin(now * 5) * 0.035;
+    ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.scale(pulse, pulse);
+    ctx.fillStyle = "#9a3412"; rr(-w / 2, -h / 2 + 5, w, h, 20); ctx.fill();
+    const g = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+    g.addColorStop(0, "#fde047"); g.addColorStop(1, "#f97316");
+    ctx.fillStyle = g; rr(-w / 2, -h / 2, w, h, 20); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.35)"; rr(-w / 2 + 8, -h / 2 + 5, w - 16, h * 0.36, 13); ctx.fill();
+    ctx.font = font(big ? 23 : 21, 900); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#3b0764"; ctx.fillText(label, 0, 2);
+    ctx.restore();
+    return b;
+  }
+
+  function wrap(text, maxW) {
+    const words = text.split(" "), lines = [];
+    let line = "";
+    for (const w of words) {
+      const t = line ? line + " " + w : w;
+      if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+    }
+    if (line) lines.push(line);
+    const out = [];
+    for (const l of lines) {
+      if (ctx.measureText(l).width <= maxW) { out.push(l); continue; }
+      let cur = "";
+      for (const ch of [...l]) { if (ctx.measureText(cur + ch).width > maxW && cur) { out.push(cur); cur = ch; } else cur += ch; }
+      if (cur) out.push(cur);
+    }
+    return out;
+  }
+
+  function drawNote(bottom) {
+    const a = Math.min(1, (noteUntil - now) / 0.4);
+    ctx.globalAlpha = a;
+    ctx.font = font(14, 700);
+    const lines = wrap(L.note, 300);
+    const h = lines.length * 19 + 22, w = 330, x = (W - w) / 2, y = bottom - h;
+    ctx.fillStyle = "rgba(10,6,28,0.92)"; rr(x, y, w, h, 14); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    lines.forEach((l, i) => ctx.fillText(l, W / 2, y + 11 + i * 19));
+    ctx.globalAlpha = 1;
+  }
+
+  function drawHand(x, y, s) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.rotate(-0.12);
+    ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+    ctx.lineJoin = "round"; ctx.lineWidth = 3.5; ctx.strokeStyle = "#1b1b2f"; ctx.fillStyle = "#fff";
+    const shape = () => {
+      ctx.beginPath();
+      ctx.roundRect(-7, -2, 14, 42, 7);
+      ctx.roundRect(-12, 28, 44, 40, 14);
+      ctx.moveTo(19, 34); ctx.arc(12, 34, 7, 0, Math.PI * 2);
+      ctx.moveTo(28, 37); ctx.arc(21, 37, 7, 0, Math.PI * 2);
+      ctx.moveTo(36, 42); ctx.arc(29, 42, 7, 0, Math.PI * 2);
+      ctx.ellipse(-12, 48, 7, 14, -0.6, 0, Math.PI * 2);
+    };
+    shape(); ctx.stroke(); shape(); ctx.fill();
+    ctx.restore();
+  }
+
+  function outlined(text, x, y, size, color, stroke = "rgba(30,8,70,0.85)") {
+    ctx.font = font(size, 900); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+    ctx.lineWidth = size * 0.2; ctx.strokeStyle = stroke; ctx.strokeText(text, x, y);
+    ctx.fillStyle = color; ctx.fillText(text, x, y);
+  }
+
+  function drawIntro() {
+    const t = now - t0;
+    ctx.globalAlpha = Math.min(1, t * 2.5);
+    ctx.fillStyle = "rgba(15,5,40,0.45)"; ctx.fillRect(0, 196, W, floorY() - 196);
+    ctx.font = font(28, 900);
+    const lines = wrap(L.title, 350);
+    lines.forEach((l, i) => outlined(l, W / 2, 262 + i * 36 + Math.sin(t * 2) * 2, 28, "#fff"));
+    // что ловить, а что нет
+    const y = 262 + lines.length * 36 + 64;
+    const cols = [[W / 2 - 110, "gift", "+1%"], [W / 2, "coupon", "+5%"], [W / 2 + 110, "bomb", "−3%"]];
+    for (const [x, k, v] of cols) {
+      ctx.fillStyle = "rgba(255,255,255,0.1)"; rr(x - 46, y - 46, 92, 104, 18); ctx.fill();
+      if (k === "gift") drawGift(x, y - 6, 44, GIFT_COLORS[0], -0.1);
+      if (k === "coupon") drawCoupon(x, y - 6, 62, -0.08, "−5%");
+      if (k === "bomb") drawBomb(x, y - 2, 42, now);
+      ctx.font = font(18, 900); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = k === "bomb" ? "#f87171" : "#facc15"; ctx.fillText(v, x, y + 38);
+    }
+    const hy = floorY() - 52;
+    drawHand(cartX + 6, hy, 1);
+    ctx.font = font(20, 900);
+    outlined(L.hint, W / 2, y + 108, 20, "#fff");
+    ctx.globalAlpha = 1;
+  }
+
+  function rays(x, y, r, a) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(now * 0.5);
+    ctx.globalAlpha = a;
+    for (let i = 0; i < 14; i++) {
+      ctx.rotate((Math.PI * 2) / 14);
+      const g = ctx.createLinearGradient(0, 0, r, 0);
+      g.addColorStop(0, "rgba(255,236,150,0.75)"); g.addColorStop(1, "rgba(255,236,150,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r, -r * 0.12); ctx.lineTo(r, r * 0.12); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
+
+  function drawPick() {
+    const t = now - pickT;
+    ctx.fillStyle = "rgba(15,5,40,0.55)"; ctx.fillRect(0, 0, W, H);
+    if (chosen < 0) {
+      outlined(L.pick, W / 2, Math.min(H * 0.3, 250), 34, "#fff");
+      ctx.font = font(16, 700); ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.textAlign = "center";
+      ctx.fillText(L.tapAny, W / 2, Math.min(H * 0.3, 250) + 38);
+    }
+    boxes.forEach((b, i) => {
+      if (b.s <= 0.01) return;
+      const bob = chosen < 0 ? Math.sin(now * 3 + i * 1.2) * 6 : 0;
+      const opened = i === chosen && openT > 0;
+      const ot = opened ? now - openT : 0;
+      if (opened) rays(b.x, b.y - 30, 220, Math.min(1, ot * 2));
+      const lid = opened ? Math.min(1, ot * 3) * 160 : 0;
+      const lidRot = opened ? Math.min(1, ot * 3) * -0.9 : 0;
+      drawGift(b.x + b.ox, b.y + bob, 92 * b.s, b.col, 0, lid, lidRot, i === chosen);
+      if (opened) {
+        const k = Math.min(1, ot * 1.8), e = 1 - Math.pow(1 - k, 3);
+        const py = b.y - 40 - e * 120;
+        ctx.save(); ctx.translate(W / 2, py); ctx.scale(0.4 + e * 0.6, 0.4 + e * 0.6);
+        ctx.fillStyle = "#fff"; rr(-120, -64, 240, 128, 22); ctx.fill();
+        ctx.font = font(64, 900); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        const g = ctx.createLinearGradient(0, -40, 0, 30); g.addColorStop(0, "#f97316"); g.addColorStop(1, "#db2777");
+        ctx.fillStyle = g; ctx.fillText("−" + prize + "%", 0, -10);
+        ctx.font = font(15, 800); ctx.fillStyle = "#4c1d95"; ctx.fillText(L.prizeOn, 0, 40);
+        ctx.restore();
+      }
+    });
+    if (chosen < 0 && t > 0.8) {
+      const b = boxes[1];
+      const press = (Math.sin(now * 5) + 1) / 2;
+      drawHand(b.x + 20, b.y + 40 + press * 8, 1);
+    }
+  }
+
+  function drawEnd() {
+    const t = now - endShown;
+    const a = Math.min(1, t * 3), rise = 1 - Math.pow(1 - Math.min(1, t * 2.2), 3);
+    ctx.fillStyle = `rgba(15,5,40,${0.7 * a})`; ctx.fillRect(0, 0, W, H);
+    rays(W / 2, Math.max(230, H * 0.3), 260, 0.35 * a);
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(0, (1 - rise) * 50);
+    const top = Math.max(96, H * 0.12);
+    drawBrand(W / 2, top, true);
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = font(16, 700); ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.fillText(L.your, W / 2, top + 54);
+    ctx.font = font(92, 900);
+    const g = ctx.createLinearGradient(0, top + 80, 0, top + 160); g.addColorStop(0, "#fde047"); g.addColorStop(1, "#f97316");
+    ctx.lineJoin = "round"; ctx.lineWidth = 12; ctx.strokeStyle = "rgba(60,10,90,0.9)"; ctx.strokeText("−" + prize + "%", W / 2, top + 122);
+    ctx.fillStyle = g; ctx.fillText("−" + prize + "%", W / 2, top + 122);
+    ctx.font = font(17, 800); ctx.fillStyle = "#fff"; ctx.fillText(L.prizeOn, W / 2, top + 182);
+    let y = top + 210;
+    ctx.font = font(15, 700); ctx.fillStyle = "#fcd34d";
+    if (prize >= 20) { ctx.fillText(L.delivery, W / 2, y); y += 22; }
+    if (prize >= 30) { ctx.fillText(L.gift, W / 2, y); y += 22; }
+    // промокод
+    const py = Math.max(y + 14, top + 250), pw = 314, px = (W - pw) / 2, ph = 66;
+    ctx.fillStyle = "rgba(255,255,255,0.1)"; rr(px, py, pw, ph, 16); ctx.fill();
+    ctx.setLineDash([7, 6]); ctx.strokeStyle = "rgba(253,224,71,0.85)"; ctx.lineWidth = 2; rr(px, py, pw, ph, 16); ctx.stroke(); ctx.setLineDash([]);
+    ctx.textAlign = "left"; ctx.font = font(11, 700); ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.fillText(L.code.toUpperCase(), px + 16, py + 17);
+    ctx.font = font(26, 800, MONO); ctx.fillStyle = "#fff"; ctx.fillText(promo(), px + 16, py + 43);
+    const copied = now < copiedUntil;
+    ctx.font = font(13, 800);
+    const cw = ctx.measureText(copied ? L.copied : L.copy).width + 26;
+    const cb = { x: px + pw - cw - 12, y: py + 17, w: cw, h: 32 };
+    btn.copy = { ...cb, y: cb.y + (1 - rise) * 50 };
+    ctx.fillStyle = copied ? "#22c55e" : "#fde047"; rr(cb.x, cb.y, cb.w, cb.h, 16); ctx.fill();
+    ctx.fillStyle = copied ? "#fff" : "#3b0764"; ctx.textAlign = "center"; ctx.fillText(copied ? L.copied : L.copy, cb.x + cb.w / 2, cb.y + 17);
+    // срок
+    const left = Math.max(0, 86400 - (now - endShown));
+    const hh = String(Math.floor(left / 3600)).padStart(2, "0"), mm = String(Math.floor((left % 3600) / 60)).padStart(2, "0"), ss = String(Math.floor(left % 60)).padStart(2, "0");
+    ctx.font = font(14, 700); ctx.fillStyle = "rgba(255,255,255,0.75)";
+    ctx.fillText(`⏱ ${L.valid} ${hh}:${mm}:${ss}`, W / 2, py + ph + 26);
+    // кнопки
+    btn.bigY = py + ph + 52;
+    const big = drawCta(L.cta, true);
+    btn.big = { ...big, y: big.y + (1 - rise) * 50 };
+    ctx.font = font(16, 800);
+    const aw = ctx.measureText("↻  " + L.again).width + 36, ay = big.y + big.h + 18;
+    btn.again = { x: W / 2 - aw / 2, y: ay + (1 - rise) * 50, w: aw, h: 42 };
+    ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2; rr(W / 2 - aw / 2, ay, aw, 42, 21); ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.fillText("↻  " + L.again, W / 2, ay + 22);
+    ctx.font = font(11, 600); ctx.fillStyle = "rgba(255,255,255,0.45)"; ctx.fillText(L.demo, W / 2, H - 46);
+    ctx.restore();
+    if (now < noteUntil) drawNote(btn.big.y - 12);
+  }
+
+  function drawFx() {
+    for (const p of parts) { ctx.globalAlpha = Math.max(0, p.life / 0.7); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    for (const f of floats) { ctx.globalAlpha = Math.min(1, f.life * 2); outlined(f.text, f.x, f.y, f.size * (1 + (1 - f.life) * 0.25), f.color); }
+    ctx.globalAlpha = 1;
+    for (const c of confetti) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.r); ctx.fillStyle = c.c; ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h); ctx.restore(); }
+  }
+
+  function drawBanner() {
+    const t = now - bannerT;
+    if (t < 0 || t > 1.6) return;
+    const k = Math.min(1, t * 5), e = 1 - Math.pow(1 - k, 3);
+    ctx.globalAlpha = t > 1.2 ? Math.max(0, (1.6 - t) / 0.4) : 1;
+    ctx.save(); ctx.translate(W / 2, 236); ctx.scale(0.6 + 0.4 * e, 0.6 + 0.4 * e);
+    ctx.font = font(24, 900);
+    const w = Math.min(350, ctx.measureText(bannerText).width + 40);
+    ctx.fillStyle = "#facc15"; rr(-w / 2, -26, w, 52, 26); ctx.fill();
+    ctx.fillStyle = "#3b0764"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(bannerText, 0, 1, w - 24);
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
+
+  // ── Цикл ───────────────────────────────────────────────────────────
+  let now = 0, last = 0;
+  function frame(ts) {
+    const dt = Math.min(0.05, (ts - last) / 1000);
+    last = ts; now += dt;
+    update(dt);
+    ctx.setTransform(DPR * S, 0, 0, DPR * S, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.save(); ctx.translate(shX, shY);
+    drawBg();
+    if (state === "play" || state === "intro") {
+      // Предметы появляются из-под шкалы и исчезают за прилавком.
+      ctx.save(); ctx.beginPath(); ctx.rect(-20, 176, W + 40, floorY() - 172); ctx.clip();
+      for (const it of items) drawItem(it);
+      ctx.restore();
+      drawCart(cartX, floorY(), Math.max(-0.12, Math.min(0.12, cartVX * 0.0005)));
+    }
+    ctx.restore();
+    if (state !== "end") drawHeader();
+    if (state === "play") drawBanner();
+    if (state === "intro") drawIntro();
+    if (state === "pick") drawPick();
+    drawFx();
+    if (state === "end") { btn.cta = null; drawEnd(); }
+    else {
+      btn.cta = drawCta(L.cta, false);
+      if (now < noteUntil) drawNote(btn.cta.y - 14);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function boot() {
+    reset();
+    track("load");
+    requestAnimationFrame((ts) => { last = ts; frame(ts); });
+  }
+  if (window.mraid && typeof mraid.getState === "function" && mraid.getState() === "loading") mraid.addEventListener("ready", boot);
+  else boot();
+})();
+</script>
+</body>
+</html>
