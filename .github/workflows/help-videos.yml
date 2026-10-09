@@ -1,0 +1,118 @@
+name: Видео к инструкциям
+
+# Ролики к инструкциям панели, которые не загружали руками через
+# «Инструкции» (lib/admin/help-videos.ts): например, смонтированные в другой
+# сессии. Файлы лежат на Google Диске с доступом по ссылке, задача качает их
+# здесь, на раннере GitHub, и кладёт на сервер в ту же папку, что и загрузка
+# из панели (MEDIA_HOST_DIR/promo/ГГГГ/ММ/<uuid>.mp4). Строку в help_videos
+# пишет тот, кто запустил задачу, по её отчёту: путь, размер, длина, кадр.
+#
+# Сервер ничего не скачивает и не пересчитывает (правило CLAUDE.md: тяжёлое —
+# в Actions): он только принимает готовые файлы по SSH.
+
+on:
+  workflow_dispatch:
+    inputs:
+      items:
+        description: 'JSON: [{"drive":"<id файла на Google Диске>","path":"2026/10/<uuid>.mp4"}]'
+        required: true
+      remove:
+        description: "Старые файлы через пробел (2026/10/<uuid>.mp4): стереть после копирования"
+        required: false
+        default: ""
+
+concurrency:
+  group: help-videos
+  cancel-in-progress: false
+
+jobs:
+  copy:
+    name: Скачать и положить на сервер
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Скачать с Google Диска и проверить
+        env:
+          ITEMS: ${{ inputs.items }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess, urllib.request
+
+          PATH_RE = re.compile(r"^\d{4}/\d{2}/[0-9a-f-]{36}\.mp4$")   # как isPromoPath, только mp4
+          DRIVE_RE = re.compile(r"^[A-Za-z0-9_-]{20,80}$")
+          MAX = 500 * 1024 * 1024                                     # PROMO_MAX_BYTES
+
+          items = json.loads(os.environ["ITEMS"])
+          assert isinstance(items, list) and 0 < len(items) <= 20, "от 1 до 20 файлов"
+          os.makedirs("out", exist_ok=True)
+          report = []
+          for item in items:
+              drive, path = str(item["drive"]), str(item["path"])
+              assert DRIVE_RE.match(drive), f"не id Диска: {drive}"
+              assert PATH_RE.match(path), f"не путь промо-файла: {path}"
+              local = os.path.join("out", path.replace("/", "_"))
+              url = f"https://drive.usercontent.google.com/download?id={drive}&export=download&confirm=t"
+              subprocess.run(["curl", "-fsSL", "--retry", "3", "-o", local, url], check=True)
+              size = os.path.getsize(local)
+              with open(local, "rb") as f:
+                  head = f.read(12)
+              assert head[4:8] == b"ftyp", f"{drive}: это не mp4 (нет доступа по ссылке?)"
+              assert size <= MAX, f"{drive}: больше 500 МБ"
+              probe = json.loads(subprocess.run(
+                  ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                   "stream=width,height:format=duration", "-of", "json", local],
+                  check=True, capture_output=True, text=True).stdout)
+              stream = (probe.get("streams") or [{}])[0]
+              report.append({
+                  "drive": drive, "path": path, "local": local, "bytes": size,
+                  "width": stream.get("width"), "height": stream.get("height"),
+                  "duration": round(float(probe.get("format", {}).get("duration") or 0), 1),
+              })
+          with open("report.json", "w") as f:
+              json.dump(report, f, ensure_ascii=False)
+          print(json.dumps(report, ensure_ascii=False, indent=1))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as s:
+              s.write("| файл | байт | кадр | секунд |\n|---|---|---|---|\n")
+              for r in report:
+                  s.write(f"| {r['path']} | {r['bytes']} | {r['width']}×{r['height']} | {r['duration']} |\n")
+          PY
+
+      - name: Положить на сервер
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT || 22 }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          APP_DIR: ${{ secrets.VPS_APP_DIR || '/opt/devuz' }}
+          REMOVE: ${{ inputs.remove }}
+        run: |
+          set -euo pipefail
+          install -m 600 /dev/null key && printf '%s\n' "$VPS_SSH_KEY" > key
+          SSH="ssh -i key -p $VPS_PORT -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30"
+          # Папка медиа — как в scripts/vps-deploy.sh: MEDIA_HOST_DIR из .env, иначе по умолчанию.
+          MEDIA=$($SSH "$VPS_USER@$VPS_HOST" 'bash -s' <<EOF
+          v=\$(grep -E '^MEDIA_HOST_DIR=' "$APP_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d "\"'")
+          echo "\${v:-/var/lib/devuz/media}"
+          EOF
+          )
+          echo "медиа на сервере: $MEDIA"
+          python3 -c "import json; [print(r['local'], r['path']) for r in json.load(open('report.json'))]" | while read -r local path; do
+            dir="$MEDIA/promo/$(dirname "$path")"
+            $SSH "$VPS_USER@$VPS_HOST" "mkdir -p '$dir'" < /dev/null
+            for try in 1 2 3; do
+              scp -i key -P "$VPS_PORT" -o StrictHostKeyChecking=accept-new "$local" "$VPS_USER@$VPS_HOST:$MEDIA/promo/$path.part" && break
+              sleep $((try * 5))
+            done
+            # Владелец папки — пользователь контейнера (1001, как в vps-deploy.sh).
+            $SSH "$VPS_USER@$VPS_HOST" "mv '$MEDIA/promo/$path.part' '$MEDIA/promo/$path' && chmod 644 '$MEDIA/promo/$path'" < /dev/null
+            $SSH "$VPS_USER@$VPS_HOST" "chown 1001:1001 '$MEDIA/promo/$path' '$dir' 2>/dev/null || true" < /dev/null
+            echo "положил: $path"
+          done
+          for old in $REMOVE; do
+            if [[ "$old" =~ ^[0-9]{4}/[0-9]{2}/[0-9a-f-]{36}\.(mp4|mov|webm)$ ]]; then
+              $SSH "$VPS_USER@$VPS_HOST" "rm -f '$MEDIA/promo/$old'" < /dev/null && echo "стёр: $old"
+            else
+              echo "пропустил странный путь: $old"
+            fi
+          done
+          rm -f key
