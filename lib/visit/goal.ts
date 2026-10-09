@@ -37,6 +37,10 @@ export const GOALS = {
   contact_tg: "Нажал Telegram",
   /** Нажал на ссылку WhatsApp. */
   contact_wa: "Нажал WhatsApp",
+  /** Начал партию в игре на странице кейса (components/cases/playable-phone.tsx). */
+  playable_start: "Начал игру в кейсе",
+  /** Нажал в игре кнопку рекламы («Скачать», «Забрать скидку»). */
+  playable_cta: "Нажал кнопку в игре",
 } as const;
 
 export type Goal = keyof typeof GOALS;

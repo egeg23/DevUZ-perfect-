@@ -147,6 +147,13 @@ export function CaseCard({
             ↔ {dict.cases.compareTitle}
           </span>
         ) : null}
+
+        {/* В кейс с игрой заходят, чтобы сыграть, — это и сказать. */}
+        {item.playable ? (
+          <span className={cn("absolute left-4 top-4 rounded-md border bg-ink/50 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] backdrop-blur-sm", accent.ring, accent.text)}>
+            ▶ {dict.cases.playBadge}
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col p-6">
@@ -176,8 +183,9 @@ export function CasesSection({ locale, dict }: { locale: Locale; dict: Dictionar
   // вторым рассказом об одном и том же. Шесть карточек — ровно два полных
   // ряда по три на широком экране, седьмая оставила бы дыру. Полный список,
   // вместе с сайтом студии, живёт на странице /cases. Шесть — самые свежие:
-  // владелец, 03.10.2026, «свежие проекты с датами ставь наверх».
-  const featured = casesByDate.filter((item) => item.slug !== showcaseSlug).slice(0, 6);
+  // владелец, 03.10.2026, «свежие проекты с датами ставь наверх». Демо
+  // студии (игры для рекламы) сюда не идут: на главной — проекты клиентов.
+  const featured = casesByDate.filter((item) => item.slug !== showcaseSlug && !item.demo).slice(0, 6);
 
   return (
     <section id="cases" className="border-t border-line py-24 md:py-32">

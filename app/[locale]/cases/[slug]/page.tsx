@@ -3,11 +3,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { BeforeAfter } from "@/components/cases/before-after";
+import { PlayablePhone } from "@/components/cases/playable-phone";
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { caseBySlug, caseDate, cases, casesByDate } from "@/content/cases";
+import { caseBySlug, caseDate, cases, casesByDate, type Case } from "@/content/cases";
 import { getDictionary } from "@/content/dictionaries";
+import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { isLocale, locales, localeHref, t, type Locale } from "@/lib/i18n";
 import { breadcrumbSchema, caseSchema, jsonLdGraph } from "@/lib/schema";
 import { buildMetadata } from "@/lib/seo";
@@ -54,30 +56,76 @@ export default async function CasePage({
   const locale = raw as Locale;
   const dict = getDictionary(locale);
 
+  const crumbs = (
+    <nav aria-label="breadcrumb" className="font-mono text-[0.72rem] text-faint">
+      <Link href={localeHref(locale, "cases")} className="hover:text-green">
+        {dict.nav.cases}
+      </Link>
+      <span className="mx-2">/</span>
+      <span className="text-muted">{item.name}</span>
+    </nav>
+  );
+
   // «Следующий» — в том же порядке, что и список: от новых к старым.
   const next = casesByDate[(casesByDate.findIndex((c) => c.slug === slug) + 1) % casesByDate.length];
 
   return (
     <>
-      <Container className="pt-36">
-        <nav aria-label="breadcrumb" className="font-mono text-[0.72rem] text-faint">
-          <Link href={localeHref(locale, "cases")} className="hover:text-green">
-            {dict.nav.cases}
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-muted">{item.name}</span>
-        </nav>
+      <Container className={item.playable ? "pt-24" : "pt-36"}>
+        {/* Кейс с игрой: телефон во весь рост окна сразу под шапкой, рядом с
+            заголовком — играть можно без прокрутки (владелец, 09.10.2026:
+            «размер айфона на экране страницы большой, не мельчи»). Поэтому и
+            «хлебные крошки» здесь в колонке текста, а не над телефоном. */}
+        {item.playable ? (
+          <div className="grid items-center gap-x-16 gap-y-10 lg:grid-cols-[minmax(0,1fr)_auto]">
+            <div>
+              {crumbs}
+              <span className="mt-8 inline-block rounded-md border border-line px-2.5 py-1 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-green">
+                {t(item.category, locale)}
+              </span>
+              <h1 className="mt-5 text-[clamp(2.2rem,5.4vw,3.8rem)] font-extrabold leading-[1.04]">
+                {item.name}
+              </h1>
+              <p className="mt-5 max-w-xl text-[1.12rem] leading-relaxed text-muted">
+                {t(item.summary, locale)}
+              </p>
+              <p className="mt-5 max-w-xl text-[0.95rem] leading-relaxed text-muted">{dict.cases.playHint}</p>
+              <p className="mt-7 max-w-xl border-l-2 border-green/40 pl-4 text-[0.85rem] leading-relaxed text-faint">
+                {dict.cases.playDemo}{" "}
+                <Link href={localeHref(locale, MOCKUP_TERMS_PATH)} className="underline decoration-line underline-offset-4 hover:text-text">
+                  {dict.footer.mockups}
+                </Link>
+              </p>
+            </div>
+            <PlayablePhone
+              src={`${item.playable.src}?lang=${locale}`}
+              glow={GLOW[item.accent]}
+              labels={{
+                screen: `${item.name}: ${dict.cases.playScreen}`,
+                restart: dict.cases.playRestart,
+                open: dict.cases.playOpen,
+                ctaTitle: dict.cases.playCtaTitle,
+                ctaText: dict.cases.playCtaText,
+                ctaButton: dict.cases.playCtaButton,
+                close: dict.cases.playClose,
+              }}
+            />
+          </div>
+        ) : (
+          <>
+            {crumbs}
+            <span className="mt-8 inline-block rounded-md border border-line px-2.5 py-1 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-green">
+              {t(item.category, locale)}
+            </span>
 
-        <span className="mt-8 inline-block rounded-md border border-line px-2.5 py-1 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-green">
-          {t(item.category, locale)}
-        </span>
-
-        <h1 className="mt-5 text-[clamp(2.2rem,5.4vw,3.8rem)] font-extrabold leading-[1.04]">
-          {item.name}
-        </h1>
-        <p className="mt-5 max-w-2xl text-[1.12rem] leading-relaxed text-muted">
-          {t(item.summary, locale)}
-        </p>
+            <h1 className="mt-5 text-[clamp(2.2rem,5.4vw,3.8rem)] font-extrabold leading-[1.04]">
+              {item.name}
+            </h1>
+            <p className="mt-5 max-w-2xl text-[1.12rem] leading-relaxed text-muted">
+              {t(item.summary, locale)}
+            </p>
+          </>
+        )}
 
         {item.url ? (
           <a
@@ -197,6 +245,9 @@ export default async function CasePage({
     </>
   );
 }
+
+/** Подсветка за айфоном — оттенок карточки кейса, те же цвета, что в теме. */
+const GLOW: Record<Case["accent"], string> = { green: "#22f0a0", blue: "#3b82f6", gold: "#e8b14c", violet: "#a78bfa" };
 
 const MONTH_LOCALE: Record<Locale, string> = { ru: "ru-RU", en: "en-GB", uz: "uz-Latn-UZ", zh: "zh-CN", uk: "uk-UA", pl: "pl-PL" };
 
