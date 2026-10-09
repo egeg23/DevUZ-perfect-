@@ -98,9 +98,12 @@ test("тексты игры — на шести языках сайта, без 
 test("страница кейса показывает игру на её языке, подписи — из словаря", () => {
   const page = read("app/[locale]/cases/[slug]/page.tsx");
   assert.match(page, /src=\{`\$\{item\.playable\.src\}\?lang=\$\{locale\}`\}/);
+  // Владелец, 09.10.2026: строку «Демо-проект студии… Условия использования
+  // макетов» под описанием убрать. Пометка «демо» остаётся в категории кейса.
+  assert.doesNotMatch(page, /playDemo|MOCKUP_TERMS_PATH/);
   for (const locale of locales) {
     const d = getDictionary(locale).cases;
-    for (const key of ["playBadge", "playScreen", "playRestart", "playOpen", "playHint", "playCtaTitle", "playCtaText", "playCtaButton", "playClose", "playDemo"] as const) {
+    for (const key of ["playBadge", "playScreen", "playRestart", "playOpen", "playHint", "playCtaTitle", "playCtaText", "playCtaButton", "playClose"] as const) {
       assert.ok(d[key]?.trim(), `${locale}: нет cases.${key}`);
     }
   }
