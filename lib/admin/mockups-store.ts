@@ -36,6 +36,10 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
       .limit(1000);
     if (error) console.error("макеты: не прочитал прототипы", error.message);
     for (const row of data ?? []) {
+      // Собранные ботом для касаний (lib/proto/auto) — не в списке. Владелец,
+      // 09.10.2026: «Убери из макетов „для касаний“… чтобы менеджеры не
+      // путались». Их ссылки у клиентов продолжают открываться.
+      if (row.auto === true) continue;
       const id = String(row.id);
       const closed = Boolean(row.closed_at) || Boolean(row.lock);
       rows.push({
@@ -50,7 +54,6 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
         access: closed ? "closed" : "open",
         canCode: true,
         liveUntil: live.protos.get(id) ?? null,
-        auto: row.auto === true,
         opens: Number(row.opens ?? 0),
         lang: row.locale === "uz" ? "uz" : "ru",
       });

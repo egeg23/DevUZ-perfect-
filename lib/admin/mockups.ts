@@ -9,9 +9,10 @@
  *
  * Макеты живут в двух местах, и список собирает оба:
  *
- * - прототипы на devuz.studio/proto — собранные руками (scripts/protos) и
- *   собранные сами для касаний (lib/proto/auto); берутся из базы, новый
- *   появляется в списке сам;
+ * - прототипы на devuz.studio/proto, собранные руками (scripts/protos и
+ *   «Прототипы» в панели); берутся из базы, новый появляется в списке сам.
+ *   Собранных ботом для касаний (lib/proto/auto) здесь нет (владелец,
+ *   09.10.2026), их ссылки у клиентов продолжают открываться;
  * - витрина globalex — проекты из content/cases.ts, чей адрес на витрине.
  *   Пароль на сутки витрина умеет только у тех, что закрыты кодом
  *   (SHOWCASE_LOCK): остальные владелец открыл всем, и для поисковиков тоже.
@@ -86,8 +87,6 @@ export type MockupRow = {
   canCode: boolean;
   /** До какой минуты живёт последний выданный пароль клиента. */
   liveUntil: string | null;
-  /** Собран сам для касания (lib/proto/auto), а не руками. */
-  auto: boolean;
   /** Сколько раз открыл клиент; у витрины не считается. */
   opens: number | null;
   /** Язык макета — на нём текст для клиента. */
@@ -122,7 +121,6 @@ export function showcaseRow(item: Case, locale: PanelLocale, liveUntil: string |
     access: locked ? "closed" : "public",
     canCode: locked,
     liveUntil: locked ? liveUntil : null,
-    auto: false,
     opens: null,
     lang: "ru",
   };
