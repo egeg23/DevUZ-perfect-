@@ -140,7 +140,13 @@ export async function saveProto(input: {
 export async function protosList(limit = 50): Promise<Proto[]> {
   const db = serviceClient();
   if (!db) return [];
-  const { data } = await db.from("protos").select(COLUMNS).order("created_at", { ascending: false }).limit(limit);
+  // Собранные ботом для касаний — закрыты и убраны (владелец, 09.10.2026).
+  const { data } = await db
+    .from("protos")
+    .select(COLUMNS)
+    .eq("auto", false)
+    .order("created_at", { ascending: false })
+    .limit(limit);
   return (data ?? []).map((row) => shape(row as Record<string, unknown>));
 }
 

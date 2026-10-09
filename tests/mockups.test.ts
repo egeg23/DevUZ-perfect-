@@ -38,6 +38,7 @@ import {
   showcaseCodeHash,
 } from "@/lib/proto/codes";
 
+const between = (text: string, from: string, to: string) => text.slice(text.indexOf(from), text.indexOf(to, text.indexOf(from)));
 const read = (file: string) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 const ID = "268e4f90-0e30-425d-8b7a-eaac34883bc1";
 const ROW = "0b7f6f3e-6a8e-4c62-9d55-1f1d2c3b4a59";
@@ -117,6 +118,9 @@ test("собранных ботом для касаний в списке нет
   const list = read("components/admin/mockup-list.tsx");
   assert.doesNotMatch(list, /"auto"|tagAuto|filterAuto/);
   assert.doesNotMatch(read("content/admin-panel/mockups.ts"), /filterAuto|tagAuto/);
+  // И в «Прототипах» их нет: 09.10.2026 все 29 закрыты паролем и убраны.
+  const protos = between(read("lib/proto/store.ts"), "export async function protosList(", "export async function protoById(");
+  assert.match(protos, /\.eq\("auto", false\)/);
 });
 
 test("витрина: все проекты globalex в списке, закрытые — те, что знает база", () => {
