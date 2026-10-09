@@ -109,10 +109,10 @@ export const workSections: Record<string, HelpEntry> = {
         id: "list",
         title: "Co jest na liście",
         body: [
-          "Prototypy na devuz.studio: zbudowane ręcznie pod konkretnego klienta i zbudowane automatycznie do [kontaktów](/admin/prospect), te drugie mają oznaczenie «do kontaktu». Nowy prototyp pojawia się tu sam, gdy tylko jest gotowy. Szkiców na liście nie ma: pod ich linkiem klient niczego nie zobaczy.",
+          "Prototypy na devuz.studio, zbudowane ręcznie pod konkretnego klienta. Nowy prototyp pojawia się tu sam, gdy tylko jest gotowy. Prototypów, które bot budował sam do [kontaktów](/admin/prospect) do 07.10.2026, tu nie ma, żeby nie myliły się z naszymi (właściciel, 09.10.2026); jeśli klient dostał taki link wcześniej, nadal mu się otwiera. Szkiców na liście nie ma: pod ich linkiem klient niczego nie zobaczy.",
           "Projekty witryny globalex, z oznaczeniem «witryna». Większość z nich jest otwarta dla wszystkich, także dla wyszukiwarek: tak zdecydował właściciel, nie ustawia się im hasła, a zamiast przycisku jest napis «hasło niepotrzebne». Hasłem zamknięte są MAVERA, Golden House i Engelberg.",
           "Przy każdej makiecie: nazwa (dla kogo ją zrobiono) i strona klienta, «Branża», «Zrobiona», dostęp i link, który trafia do klienta. «otwarcia klienta: 3» to liczba otwarć makiety przez kogoś innego niż my: nasze otwarcia z panelu i podglądy linku w komunikatorach się nie liczą.",
-          "Najnowsze makiety są na górze. Pole wyszukiwania szuka po nazwie, stronie i branży, a przyciski «Wszystkie», «Zrobione ręcznie», «Do kontaktów» i «Witryna» zostawiają na liście tylko swoje. Liczba na przycisku to liczba makiet w tej grupie.",
+          "Najnowsze makiety są na górze. Pole wyszukiwania szuka po nazwie, stronie i branży, a przyciski «Wszystkie», «Zrobione ręcznie» i «Witryna» zostawiają na liście tylko swoje. Liczba na przycisku to liczba makiet w tej grupie.",
         ],
       },
       {

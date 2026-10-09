@@ -21,7 +21,7 @@ import type { CodeResult } from "@/lib/admin/mockups-store";
 
 export type MockupView = MockupRow & { createdText: string; liveUntilText: string | null };
 
-type Filter = "all" | "hand" | "auto" | "showcase";
+type Filter = "all" | "hand" | "showcase";
 
 const INPUT = "w-full min-w-0 rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
 const BUTTON =
@@ -35,8 +35,7 @@ const ACCESS_TONE = {
 
 function matches(row: MockupView, filter: Filter): boolean {
   if (filter === "showcase") return row.kind === "showcase";
-  if (filter === "auto") return row.kind === "proto" && row.auto;
-  if (filter === "hand") return row.kind === "proto" && !row.auto;
+  if (filter === "hand") return row.kind === "proto";
   return true;
 }
 
@@ -60,7 +59,6 @@ export function MockupList({ rows }: { rows: MockupView[] }) {
   const filters: [Filter, string][] = [
     ["all", t.filterAll],
     ["hand", t.filterHand],
-    ["auto", t.filterAuto],
     ["showcase", t.filterShowcase],
   ];
 
@@ -121,7 +119,6 @@ export function MockupList({ rows }: { rows: MockupView[] }) {
                       <span className="font-medium text-text">{row.name}</span>
                       {row.site ? <span className="font-mono text-xs text-blue-soft">{row.site}</span> : null}
                       {row.kind === "showcase" ? <span className="text-xs text-faint">{t.tagShowcase}</span> : null}
-                      {row.auto ? <span className="text-xs text-faint">{t.tagAuto}</span> : null}
                     </p>
                     <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
                       <span>

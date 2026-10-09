@@ -110,6 +110,15 @@ test("раздел видят все роли; пароль выдаёт люб�
   assert.match(read("app/admin/mockups/page.tsx"), /requireStaff\(\)/);
 });
 
+test("собранных ботом для касаний в списке нет; фильтра и пометки «для касания» тоже", () => {
+  // Владелец, 09.10.2026: «Убери из макетов „для касаний“… чтобы менеджеры не путались».
+  const store = read("lib/admin/mockups-store.ts");
+  assert.match(store, /if \(row\.auto === true\) continue;/);
+  const list = read("components/admin/mockup-list.tsx");
+  assert.doesNotMatch(list, /"auto"|tagAuto|filterAuto/);
+  assert.doesNotMatch(read("content/admin-panel/mockups.ts"), /filterAuto|tagAuto/);
+});
+
 test("витрина: все проекты globalex в списке, закрытые — те, что знает база", () => {
   const showcase = showcaseCases();
   assert.ok(showcase.length >= 10);

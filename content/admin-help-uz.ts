@@ -891,10 +891,10 @@ export const uz: HelpCopy = {
           id: "list",
           title: "Ro‘yxatda nima bor",
           body: [
-            "devuz.studio’dagi prototiplar: aniq mijoz uchun qo‘lda yig‘ilganlari va [aloqalar](/admin/prospect) uchun o‘zi yig‘ilganlari, ikkinchilarida «aloqa uchun» belgisi bor. Yangi prototip tayyor bo‘lishi bilan shu yerda o‘zi paydo bo‘ladi. Qoralamalar ro‘yxatda yo‘q: ularning havolasida mijoz hech narsa ko‘rmaydi.",
+            "devuz.studio’dagi prototiplar, aniq mijoz uchun qo‘lda yig‘ilganlari. Yangi prototip tayyor bo‘lishi bilan shu yerda o‘zi paydo bo‘ladi. Bot 07.10.2026 gacha [aloqalar](/admin/prospect) uchun o‘zi yig‘gan prototiplar bu yerda yo‘q, ular biznikilar bilan adashtirilmasin (egasi, 09.10.2026); mijoz bunday havolani oldinroq olgan bo‘lsa, u ochilaveradi. Qoralamalar ro‘yxatda yo‘q: ularning havolasida mijoz hech narsa ko‘rmaydi.",
             "globalex vitrinasidagi loyihalar, «vitrina» belgisi bilan. Ularning ko‘pchiligi hammaga, qidiruv tizimlariga ham ochiq: buni egasi hal qilgan, ularga parol qo‘yilmaydi va tugma o‘rniga «parol kerak emas» deb yozilgan. MAVERA, Golden House va Engelberg parol bilan yopilgan.",
             "Har bir maketda: nomi (kim uchun qilingan) va mijoz sayti, «Nisha», «Yaratilgan», kirish holati va mijozga yuboriladigan havola. «mijoz ochgan: 3 marta» maketni biz emas, boshqalar necha marta ochganini ko‘rsatadi: paneldan o‘zimiz ochganimiz va messenjerlardagi havola prevyusi hisoblanmaydi.",
-            "Yangi maketlar tepada. Qidiruv maydoni nom, sayt va nisha bo‘yicha qidiradi, «Hammasi», «Qo‘lda yig‘ilgan», «Aloqalar uchun» va «Vitrina» tugmalari ro‘yxatda faqat o‘z maketlarini qoldiradi. Tugmadagi son u yerda nechta maket borligini bildiradi.",
+            "Yangi maketlar tepada. Qidiruv maydoni nom, sayt va nisha bo‘yicha qidiradi, «Hammasi», «Qo‘lda yig‘ilgan» va «Vitrina» tugmalari ro‘yxatda faqat o‘z maketlarini qoldiradi. Tugmadagi son u yerda nechta maket borligini bildiradi.",
           ],
         },
         {
