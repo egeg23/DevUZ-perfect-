@@ -15,6 +15,7 @@ import {
   indexForModel,
   plainText,
   searchHelp,
+  titleHit,
   wordSearch,
 } from "@/lib/admin/help-search";
 import { ROLES, canSee } from "@/lib/admin/roles";
@@ -91,7 +92,7 @@ test("без модели — поиск по словам, и он ведёт �
     assert.equal(wordSearch("как передать лид другому менеджеру", index)[0], "leads-transfer");
     assert.equal(wordSearch("сменить язык панели", index)[0], "help-language");
 
-    const found = await searchHelp({ question: "как передать лид коллеге", locale: "ru", role: "manager", useModel: true });
+    const found = await searchHelp({ question: "как передать лид другому менеджеру", locale: "ru", role: "manager", useModel: true });
     assert.equal(found.by, "words");
     assert.equal(found.hits[0]?.anchor, "leads-transfer");
     assert.ok(found.hits[0]?.title);
@@ -144,4 +145,36 @@ test("поле поиска на странице на каждом языке, 
       assert.ok(html.includes(`id="help-search"`), `${locale} ${role}: нет пункта о поиске`);
     }
   }
+});
+
+/**
+ * Вопрос словами заголовка одного пункта — пункт открывается сразу, без
+ * модели (разведка «ИИ → код», 10.10.2026): человек сам назвал пункт.
+ */
+test("вопрос словами заголовка одного пункта — без модели", async () => {
+  const index = helpIndex("ru", "manager");
+  assert.equal(titleHit("порция дня", index), "prospect-portion");
+  assert.equal(titleHit("Как передать лид коллеге?", index), "leads-transfer");
+  // Слово из нескольких заголовков — неоднозначно, решает модель.
+  assert.equal(titleHit("касания", index), null);
+  // Слово мимо заголовка — тоже модель.
+  assert.equal(titleHit("клиент молчит, письмо не ушло", index), null);
+  assert.equal(titleHit("как", index), null);
+
+  // Ключ модели есть, а вызова нет: ответ — по заголовку.
+  const saved = process.env.ANTHROPIC_API_KEY;
+  process.env.ANTHROPIC_API_KEY = "test-key-not-used";
+  try {
+    const found = await searchHelp({ question: "порция дня", locale: "ru", role: "manager", useModel: true });
+    assert.equal(found.by, "title");
+    assert.equal(found.hits[0]?.anchor, "prospect-portion");
+    assert.ok(found.hits.length <= HELP_SEARCH_HITS);
+    assert.equal(new Set(found.hits.map((h) => h.anchor)).size, found.hits.length, "пункт повторился в «Ещё может подойти»");
+  } finally {
+    if (saved === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = saved;
+  }
+
+  // Под полем «нашлось по словам» — только у поиска по словам, не у заголовка.
+  assert.match(read("components/admin/help-search.tsx"), /result\?\.by === "words"/);
 });
