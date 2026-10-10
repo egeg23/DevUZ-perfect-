@@ -33,6 +33,13 @@ test("цели стоят там, где человек делает шаг к �
   const hero = read("components/hero/compile-scene.tsx");
   assert.match(hero, /data-goal="cta_contact"/);
   assert.match(hero, /data-goal="cta_cases"/);
+  // «Рассчитать проект» ведёт в калькулятор (снимок 07–08.10.2026: ни одного
+  // нажатия, форма заявки на телефоне — 6 с на визит, калькулятор — 275 с).
+  assert.match(hero, /href=\{localeHref\(locale, "calculator"\)\}\s+data-goal="cta_contact"/);
+  // На телефоне текст героя стоит под шапкой, а не по центру экрана, и
+  // плашка минуты без пояснения: иначе она закрывала кнопки первого экрана.
+  assert.match(hero, /justify-start pt-\[6\.25rem\] md:justify-center/);
+  assert.match(read("components/chat/minute-offer.tsx"), /hidden text-\[0\.78rem\] leading-snug text-muted sm:block">\{dict\.chat\.minuteText\}/);
   assert.match(read("components/layout/metrika-hits.tsx"), /document\.addEventListener\("click", onClick, true\)/);
   for (const name of Object.keys(GOALS)) assert.match(name, /^[a-z_]+$/, `${name}: идентификатор цели — латиницей`);
 });
