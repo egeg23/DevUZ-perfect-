@@ -120,7 +120,7 @@ type Row = {
   id: string;
   category: string;
   city: string;
-  niche_words: { ruLabel?: string } | null;
+  niche_words: ({ ruLabel?: string } & Partial<Record<ForeignLocale, string>>) | null;
   /** Адрес версии на этом языке, если он уже был. */
   slug: string | null;
   article_ru: unknown;
@@ -229,8 +229,11 @@ const ASK: Record<ForeignLocale, { subject: string; tender: string }> = {
 };
 
 /**
- * Запрос версии. Ниша каталога — словарём, остальное — одним коротким
- * вызовом дешёвой модели, с проверкой формы ответа.
+ * Запрос версии. Ниша каталога — словарём (NICHE_NAMES); ниша вне каталога —
+ * названием, которое модель дала вместе с самой нишей (`niche_words.en`,
+ * `niche_words.pl`) или которое уже взял другой разбор той же ниши. Нет ни
+ * того, ни другого (разборы до 10.10.2026) — одним коротким вызовом дешёвой
+ * модели, и ответ записывается к нише: второй раз его не спрашивают.
  */
 async function queryFor(locale: ForeignLocale, row: Row, ru: RazborArticle): Promise<{ query: string } | { error: string }> {
   // Что ответила модель — в причину провала: без этого «не назвали запрос»
@@ -250,10 +253,42 @@ async function queryFor(locale: ForeignLocale, row: Row, ru: RazborArticle): Pro
   const known = NICHE_NAMES[locale][row.category];
   if (known) return { query: foreignQuery(locale, known, city) };
 
+  const stored = await storedName(locale, row);
+  if (stored) return { query: foreignQuery(locale, stored, city) };
+
   const label = row.niche_words?.ruLabel || ru.label;
   const answer = await askName(`Род занятий бизнеса: «${label}» (русский запрос: «${ru.query}»).\n${ASK[locale].subject}`);
   const result = named(answer, (raw) => validSubject(locale, raw));
-  return typeof result === "string" ? { query: foreignQuery(locale, result, city) } : result;
+  if (typeof result !== "string") return result;
+  await rememberName(locale, row, result);
+  return { query: foreignQuery(locale, result, city) };
+}
+
+/** Название ниши на этом языке: у самого разбора или у другого той же ниши. */
+async function storedName(locale: ForeignLocale, row: Row): Promise<string | null> {
+  const own = row.niche_words?.[locale];
+  const valid = own ? validSubject(locale, own) : null;
+  if (valid) return valid;
+
+  const db = serviceClient();
+  if (!db) return null;
+  const { data } = await db
+    .from("razbors")
+    .select("niche_words")
+    .eq("category", row.category)
+    .not(`niche_words->>${locale}`, "is", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const other = (data?.niche_words as Row["niche_words"])?.[locale];
+  return other ? validSubject(locale, other) : null;
+}
+
+/** Ответ модели — к нише разбора: следующая версия и следующий разбор ниши возьмут его. */
+async function rememberName(locale: ForeignLocale, row: Row, name: string): Promise<void> {
+  const db = serviceClient();
+  if (!db || !row.niche_words) return;
+  await db.from("razbors").update({ niche_words: { ...row.niche_words, [locale]: name } }).eq("id", row.id);
 }
 
 /* ── Статья ─────────────────────────────────────────────────────────────── */
