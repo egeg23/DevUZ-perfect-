@@ -24,7 +24,7 @@ import { runTalks } from "@/lib/admin/outreach-talk-run";
 import { runReviews } from "@/lib/talk/review-run";
 import { runRazborShift } from "@/lib/razbor/shift-run";
 import { runTenderShift } from "@/lib/razbor/tender-run";
-import { runEnglishPass } from "@/lib/razbor/english-run";
+import { runForeignPass } from "@/lib/razbor/foreign-run";
 import { runMarketingArticles } from "@/lib/marketing/articles-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
@@ -392,13 +392,14 @@ async function sweep(): Promise<Response> {
     if (tender.errors.length) console.error("тендерный разбор:", tender.errors.join("; "));
   });
 
-  // Английские версии разборов: по одному опубликованному разбору за
-  // проход, из его русской статьи (владелец, 10.10.2026: «На английском
-  // давай тоже делать, там 404»). Нечего переводить — один запрос в базу.
+  // Английские и польские версии разборов: по одному опубликованному
+  // разбору на язык за проход, из его русской статьи (владелец, 10.10.2026:
+  // «На английском давай тоже делать, там 404», «А в польской версии статей
+  // вообще, русские показываются»). Нечего переводить — запрос в базу.
   after(async () => {
-    const english = await runEnglishPass(new Date()).catch((error) => ({ errors: [String(error)], failed: [] as string[] }));
-    if (english.errors.length) console.error("английские разборы:", english.errors.join("; "));
-    if (english.failed.length) console.warn("английские разборы не вышли:", english.failed.join("; "));
+    const foreign = await runForeignPass(new Date()).catch((error) => ({ errors: [String(error)], failed: [] as string[] }));
+    if (foreign.errors.length) console.error("разборы на других языках:", foreign.errors.join("; "));
+    if (foreign.failed.length) console.warn("разборы на других языках не вышли:", foreign.failed.join("; "));
   });
 
   // Статьи о маркетинге: две в день, в 10:00 и 16:00 по Ташкенту, сразу на

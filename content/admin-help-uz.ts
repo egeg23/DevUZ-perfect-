@@ -1666,10 +1666,10 @@ export const uz: HelpCopy = {
         },
         {
           id: "english",
-          title: "Inglizcha versiya",
+          title: "Inglizcha va polyakcha versiyalar",
           body: [
-            "E’lon qilingan tahlil bir necha daqiqadan keyin uchinchi sahifani oladi — ingliz tilida, devuz.studio/en/razbor bo‘limida. Uni server o‘zi yozadi, panelda tekshiruvsiz: siz tekshirgan ruscha maqolani olib, inglizcha so‘rov ostida («restaurant website in Tashkent») ingliz tiliga o‘tkazadi, so‘rovni Google Trends va Wordstat bilan solishtirib. Topilmalar, raqamlar va skrinshotlar o‘sha-o‘sha; yangi raqam, foiz va topilmalarni kod o‘tkazmaydi, inglizcha matnda kirill harflari bo‘lishi mumkin emas.",
-            "Ikki marta tekshiruvdan o‘tmasa — server olti soatdan keyin yana urinadi, hozircha tahlilning inglizcha sahifasi yo‘q: til almashtirgich undan inglizcha tahlillar ro‘yxatiga olib boradi. **«Tahrirlash»** inglizcha versiyani o‘chiradi: u eski matndan yozilgan, server uni tuzatilgan matn bo‘yicha qaytadan yozadi — sahifa manzili o‘zgarmaydi. **«E’londan olish»** va **«O‘chirish»** uni ham saytdan olib tashlaydi.",
+            "E’lon qilingan tahlil bir soat ichida yana ikkita sahifa oladi — ingliz tilida (devuz.studio/en/razbor) va polyak tilida (devuz.studio/pl/razbor). Ularni server o‘zi yozadi, panelda tekshiruvsiz: siz tekshirgan ruscha maqolani olib, shu tildagi so‘rov ostiga o‘tkazadi — «restaurant website in Tashkent», «strona internetowa dla restauracji w Taszkencie», — so‘rovni Google Trends va Wordstat bilan solishtirib. Topilmalar, raqamlar va skrinshotlar o‘sha-o‘sha; yangi raqam, foiz va topilmalarni kod o‘tkazmaydi, bu versiyalarda kirill harflari bo‘lishi mumkin emas.",
+            "Ikki marta tekshiruvdan o‘tmasa — server olti soatdan keyin yana urinadi, hozircha tahlilning shu tildagi sahifasi yo‘q: til almashtirgich undan shu tildagi tahlillar ro‘yxatiga olib boradi. **«Tahrirlash»** ikkala versiyani o‘chiradi: ular eski matndan yozilgan, server ularni tuzatilgan matn bo‘yicha qaytadan yozadi — sahifa manzillari o‘zgarmaydi. **«E’londan olish»** va **«O‘chirish»** ularni ham saytdan olib tashlaydi.",
           ],
         },
       ],

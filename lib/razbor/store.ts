@@ -25,9 +25,10 @@ import { serviceClient } from "@/lib/supabase";
  * по-узбекски «internet do'kon yaratish narxi», и это разные страницы под
  * разные запросы. Связаны они только полем `alts` — для hreflang.
  *
- * Третья версия — английская (с 10.10.2026): её пишет сервер сам из
- * опубликованной русской (lib/razbor/english.ts), в той же строке, в
- * `slug_en` и `article_en`. Пока её нет, английской страницы у разбора нет.
+ * Ещё две версии — английская и польская (с 10.10.2026): их пишет сервер
+ * сам из опубликованной русской (lib/razbor/foreign.ts), в той же строке, в
+ * `slug_en`/`article_en` и `slug_pl`/`article_pl`. Пока версии нет, страницы
+ * на этом языке у разбора нет.
  */
 
 /** Структура статьи: то, что страница показывает блоками, а не сплошняком. */
@@ -43,7 +44,7 @@ export type RazborArticle = {
 };
 
 /** Все языки, на которых строку можно прочитать, — в порядке ссылок. */
-const READ: readonly RazborReadLocale[] = ["ru", "uz", "en"];
+const READ: readonly RazborReadLocale[] = ["ru", "uz", "en", "pl"];
 
 const strings = (value: unknown): string[] =>
   Array.isArray(value) ? value.map((v) => String(v)).filter(Boolean) : [];
@@ -163,12 +164,12 @@ export function toItem(row: Record<string, unknown>, locale: RazborReadLocale): 
 const COLUMNS =
   "category, city, country, published_at, created_at, shot_taken_at, shot_before, shot_before_mobile, " +
   "shot_after, shot_after_mobile, shot_findings, slug_ru, slug_uz, title_ru, title_uz, description_ru, description_uz, " +
-  "label_ru, label_uz, query_ru, query_uz, article_ru, article_uz, slug_en, article_en, lost_per_100";
+  "label_ru, label_uz, query_ru, query_uz, article_ru, article_uz, slug_en, article_en, slug_pl, article_pl, lost_per_100";
 
 /**
  * Версии разбора, которые открываются: адрес есть и статья на этом языке
- * есть. Английский адрес без статьи (статью сбросили правкой и ещё не
- * перевели заново) — не версия: страница по нему пока не откроется.
+ * есть. Английский или польский адрес без статьи (статью сбросили правкой
+ * и ещё не перевели заново) — не версия: страница по нему пока не откроется.
  */
 function versionsOf(row: Record<string, unknown>): { locale: RazborReadLocale; slug: string }[] {
   return READ.flatMap((locale) => {
@@ -228,7 +229,8 @@ export async function razborBySlug(locale: RazborReadLocale, slug: string): Prom
  * Тот же разбор на всех языках — по адресу на любом из них.
  *
  * Переключатель языка меняет только начало адреса: с /ru/razbor/sayt-dlya-…
- * он ведёт на /en/razbor/sayt-dlya-…, а у английской версии свой адрес.
+ * он ведёт на /en/razbor/sayt-dlya-…, а у английской и польской версий
+ * свои адреса.
  * По нему страница находит строку и ведёт туда, где разбор на нужном языке
  * действительно есть.
  */
@@ -238,9 +240,9 @@ export async function razborVersions(slug: string): Promise<Partial<Record<Razbo
 
   const { data } = await db
     .from("razbors")
-    .select("slug_ru, slug_uz, slug_en, article_ru, article_uz, article_en")
+    .select("slug_ru, slug_uz, slug_en, slug_pl, article_ru, article_uz, article_en, article_pl")
     .eq("status", "published")
-    .or(`slug_ru.eq.${slug},slug_uz.eq.${slug},slug_en.eq.${slug}`)
+    .or(`slug_ru.eq.${slug},slug_uz.eq.${slug},slug_en.eq.${slug},slug_pl.eq.${slug}`)
     .limit(1)
     .maybeSingle();
   if (!data) return null;
@@ -528,8 +530,8 @@ export async function razborById(id: string): Promise<ReviewRow | null> {
  * которая записала строку в базу, но не сбросила кэш, для человека
  * выглядит ровно как кнопка, которая ничего не сделала, — так и было.
  */
-/** `en` — только если у разбора есть английский адрес (lib/razbor/english.ts). */
-export type RazborPaths = { ru: string; uz: string; en: string | null };
+/** `en` и `pl` — только если у разбора есть такой адрес (lib/razbor/foreign.ts). */
+export type RazborPaths = { ru: string; uz: string; en: string | null; pl: string | null };
 
 /**
  * Почему не вышло — кодом: текст на языке панели подбирает страница
@@ -540,10 +542,11 @@ export type RazborFailure = { ok: false; why: "offline" | "gone" | "half" | "fai
 
 export type PublishResult = { ok: true; paths: RazborPaths } | RazborFailure;
 
-const pathsOf = (row: { slug_ru?: unknown; slug_uz?: unknown; slug_en?: unknown }): RazborPaths => ({
+const pathsOf = (row: { slug_ru?: unknown; slug_uz?: unknown; slug_en?: unknown; slug_pl?: unknown }): RazborPaths => ({
   ru: `/ru/razbor/${String(row.slug_ru ?? "")}`,
   uz: `/uz/razbor/${String(row.slug_uz ?? "")}`,
   en: row.slug_en ? `/en/razbor/${String(row.slug_en)}` : null,
+  pl: row.slug_pl ? `/pl/razbor/${String(row.slug_pl)}` : null,
 });
 
 /**
@@ -565,7 +568,7 @@ export async function publish(id: string): Promise<PublishResult> {
 
   const { data } = await db
     .from("razbors")
-    .select("article_ru, article_uz, slug_ru, slug_uz, slug_en")
+    .select("article_ru, article_uz, slug_ru, slug_uz, slug_en, slug_pl")
     .eq("id", id)
     .maybeSingle();
   if (!data) return { ok: false, why: "gone" };
@@ -593,7 +596,7 @@ export async function unpublish(id: string): Promise<RazborPaths | null> {
   const db = serviceClient();
   if (!db) return null;
 
-  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en").eq("id", id).maybeSingle();
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en, slug_pl").eq("id", id).maybeSingle();
   if (!data) return null;
 
   await db.from("razbors").update({ status: "review", published_at: null }).eq("id", id);
@@ -612,7 +615,7 @@ export async function remove(id: string): Promise<RazborPaths | null> {
   const db = serviceClient();
   if (!db) return null;
 
-  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en").eq("id", id).maybeSingle();
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en, slug_pl").eq("id", id).maybeSingle();
   if (!data) return null;
 
   await db.from("razbors").delete().eq("id", id);
@@ -640,7 +643,7 @@ export async function saveArticles(
   const db = serviceClient();
   if (!db) return { ok: false, why: "offline" };
 
-  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en").eq("id", id).maybeSingle();
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en, slug_pl").eq("id", id).maybeSingle();
   if (!data) return { ok: false, why: "gone" };
 
   const { error } = await db
@@ -654,11 +657,13 @@ export async function saveArticles(
       description_uz: next.uz.description,
       label_ru: next.ru.label,
       label_uz: next.uz.label,
-      // Английская версия написана с прежнего русского текста: после правки
-      // она устарела. Адрес остаётся тем же (он уже в поиске), статью сервер
-      // напишет заново со следующего свипа.
+      // Английская и польская версии написаны с прежнего русского текста:
+      // после правки они устарели. Адреса остаются теми же (они уже в
+      // поиске), статьи сервер напишет заново со следующего свипа.
       article_en: null,
       en_tried_at: null,
+      article_pl: null,
+      pl_tried_at: null,
     })
     .eq("id", id);
 
@@ -670,7 +675,7 @@ export async function reject(id: string, reason: string): Promise<RazborPaths | 
   const db = serviceClient();
   if (!db) return null;
 
-  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en").eq("id", id).maybeSingle();
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en, slug_pl").eq("id", id).maybeSingle();
   if (!data) return null;
 
   await db
