@@ -104,9 +104,27 @@ export function cleanName(raw: string): string {
     .replace(/\s+/g, " ");
 }
 
+/**
+ * Рамка запроса, которую модель возвращает вместе с родом занятий.
+ *
+ * Просили «hotel» — она отвечает «hotel website»; просили «hotelu» — «strona
+ * internetowa dla hotelu». Так 10.10.2026 не вышла ни одна польская версия
+ * разбора ниши вне каталога: «strona» запрос ставит сам, и проверка формы
+ * отбрасывала ответ целиком. Рамку снимаем, город в конце — тоже: его
+ * запрос ставит сам.
+ */
+const FRAME: Record<ForeignLocale, readonly RegExp[]> = {
+  en: [/^(a |an |the )?(website|web site|site) (for|of) (a |an |the )?/, /\s+(website|web site|site)$/, /\s+in \p{L}+$/u],
+  pl: [/^stron\p{L}*(\s+internetow\p{L}*)?(\s+dla)?(\s+|$)/u, /\s+w\s+\p{L}+$/u],
+};
+
+export function stripFrame(locale: ForeignLocale, name: string): string {
+  return FRAME[locale].reduce((s, re) => s.replace(re, ""), name).trim();
+}
+
 /** Род занятий от модели: буквы языка, без имени компании, города и «сайта». */
 export function validSubject(locale: ForeignLocale, raw: string): string | null {
-  const subject = cleanName(raw);
+  const subject = stripFrame(locale, cleanName(raw));
   const shape = new RegExp(`^[${LETTERS[locale]}][${LETTERS[locale]} -]{2,50}$`);
   // Город запрос ставит сам; в названии рода занятий он — признак того, что
   // модель назвала компанию, а не категорию.

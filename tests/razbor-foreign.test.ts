@@ -114,12 +114,12 @@ test("ответ модели о названии проверяется по ф
   assert.equal(validSubject("en", "Leather Manufacturer"), "leather manufacturer");
   assert.equal(validSubject("en", "event agency"), "event agency");
   assert.equal(validSubject("en", "кожевенное производство"), null);
-  assert.equal(validSubject("en", "hotel website"), null, "слово website запрос добавляет сам");
+  assert.equal(validSubject("en", "hotel website"), "hotel", "слово website запрос добавляет сам — его снимаем");
   assert.equal(validSubject("en", 'Hotel "Grand" Tashkent!'), null);
   assert.equal(validSubject("pl", "Garbarni"), "garbarni");
   assert.equal(validSubject("pl", "szkoły programowania"), "szkoły programowania");
-  assert.equal(validSubject("pl", "strony hotelu"), null, "«strona internetowa» запрос добавляет сам");
-  assert.equal(validSubject("pl", "strona internetowa hotelu"), null);
+  assert.equal(validSubject("pl", "strony hotelu"), "hotelu", "«strona internetowa» запрос добавляет сам — её снимаем");
+  assert.equal(validSubject("pl", "strona internetowa hotelu"), "hotelu");
   assert.equal(validSubject("pl", "sklepu internetowego"), "sklepu internetowego");
   assert.equal(validSubject("pl", "кожевенного производства"), null);
   assert.equal(
@@ -142,6 +142,17 @@ test("ответ модели снимается с обёртки: кавычк
   assert.equal(cleanName("event agency\nThis is a company that…"), "event agency");
   assert.equal(validSubject("en", '"Neurology center".'), "neurology center");
   assert.equal(validSubject("pl", "«Ośrodka neurologicznego»"), "ośrodka neurologicznego");
+});
+
+test("рамку запроса модель возвращает вместе с названием — её снимаем", () => {
+  // Ровно эти ответы стояли в en_note и pl_note 10.10.2026.
+  assert.equal(validSubject("en", "neurology clinic website"), "neurology clinic");
+  assert.equal(validSubject("en", "website for a hotel in Tashkent"), "hotel");
+  assert.equal(validSubject("pl", "strona internetowa dla hotelu"), "hotelu");
+  assert.equal(validSubject("pl", "strona internetowa dla ośrodka neurologicznego"), "ośrodka neurologicznego");
+  assert.equal(validSubject("pl", "strona internetowa dla producenta wyrobów polimerowych"), "producenta wyrobów polimerowych");
+  assert.equal(validSubject("pl", "strony internetowej dla agencji eventowej w Taszkencie"), "agencji eventowej");
+  assert.equal(validSubject("pl", "strona internetowa"), null, "без рода занятий — пусто");
 });
 
 test("польский без диакритики не проходит", () => {
