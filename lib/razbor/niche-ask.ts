@@ -69,7 +69,7 @@ export async function inventNiche(input: {
   if (!hints.length && !input.title) return null;
 
   try {
-    const client = anthropic();
+    const client = anthropic("razbor-niche");
     const message = await client.messages.create({
       model: MODEL,
       max_tokens: 700,

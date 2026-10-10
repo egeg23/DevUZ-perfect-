@@ -239,7 +239,7 @@ export async function writeVersion(
   notes: CheckProblem[] = [],
   related: readonly string[] = [],
 ): Promise<ArticleText | { problems: CheckProblem[]; text?: ArticleText }> {
-  const message = await anthropic().messages.create({
+  const message = await anthropic("marketing-article").messages.create({
     model: MODEL,
     max_tokens: 4000,
     system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],

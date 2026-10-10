@@ -110,7 +110,7 @@ test("без модели — поиск по словам, и он ведёт �
 test("модель — самая дешёвая, роль подменяет только владелец", () => {
   const lib = read("lib/admin/help-search.ts");
   assert.match(lib, /HELP_SEARCH_MODEL \|\| "claude-haiku-4-5"/);
-  assert.match(lib, /anthropic\(\)/);
+  assert.match(lib, /anthropic\("help-search"\)/);
   assert.match(lib, /cache_control/);
   const action = read("app/admin/help/actions.ts");
   assert.match(action, /^"use server";/);

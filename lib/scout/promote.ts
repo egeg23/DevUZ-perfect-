@@ -86,7 +86,7 @@ const REPLY_SYSTEM = `Ты менеджер веб-студии DevUz из Та�
 export async function draftReply(signal: SignalRow): Promise<string> {
   if (!process.env.ANTHROPIC_API_KEY) return fallbackReply(signal);
   try {
-    const client = anthropic();
+    const client = anthropic("scout-reply");
     const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 700,

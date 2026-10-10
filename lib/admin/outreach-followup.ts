@@ -130,7 +130,7 @@ export function fallbackFollowup(n: 1 | 2, host: string, sender: string): string
 async function writeFollowup(prompt: string): Promise<string | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   try {
-    const response = await anthropic().beta.messages.create({
+    const response = await anthropic("outreach-followup").beta.messages.create({
       model: MODEL,
       max_tokens: 600,
       system: FOLLOWUP_SYSTEM,

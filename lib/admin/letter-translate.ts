@@ -58,7 +58,7 @@ export function translationProblems(text: string, source: string, host: string):
 export async function translateLetter(letter: string, to: HelloLang, host: string): Promise<string | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   try {
-    const response = await anthropic().beta.messages.create({
+    const response = await anthropic("outreach-translate").beta.messages.create({
       model: MODEL,
       max_tokens: 900,
       system: translateSystem(to),

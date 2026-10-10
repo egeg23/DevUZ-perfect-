@@ -288,7 +288,7 @@ export async function askProtoAi(request: ProtoAiRequest): Promise<Record<string
   if (!process.env.ANTHROPIC_API_KEY) return null;
   const tool = spec(request);
   try {
-    const response = await anthropic().messages.create({
+    const response = await anthropic("proto-ai").messages.create({
       model: MODEL,
       max_tokens: tool.maxTokens,
       system: [{ type: "text", text: `${RULES}\n${LANG[request.locale]}` }],

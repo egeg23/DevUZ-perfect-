@@ -225,7 +225,7 @@ export type CoachResult = { ok: true; review: ReviewBody } | { ok: false; why: s
 
 export async function askCoach(kind: ReviewKind, prompt: string): Promise<CoachResult> {
   if (!process.env.ANTHROPIC_API_KEY) return { ok: false, why: "нет ключа модели" };
-  const client = anthropic();
+  const client = anthropic("coach");
 
   try {
     const response = await client.beta.messages.create({
