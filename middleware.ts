@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { NEXT_COOKIE, NEXT_TTL_SECONDS, SESSION_COOKIE, wantedPath } from "@/lib/admin/return-to";
-import { defaultLocale, isLocale, locales, matchLocale } from "@/lib/i18n";
+import { adLocale, defaultLocale, isAdClick, isLocale, locales, matchLocale } from "@/lib/i18n";
 import { REF_COOKIE, REF_COOKIE_OPTIONS, formatRef, parseRef } from "@/lib/partners/ref-cookie";
 
 const COOKIE = "NEXT_LOCALE";
@@ -125,10 +125,15 @@ export function middleware(request: NextRequest) {
     return rememberRef(request, NextResponse.next({ request: { headers } }));
   }
 
+  // Клик по рекламе без выбранного языка — русский или узбекский (adLocale):
+  // английский телефон не значит английского читателя.
   const saved = request.cookies.get(COOKIE)?.value;
+  const accept = request.headers.get("accept-language");
   const locale = isLocale(saved)
     ? saved
-    : matchLocale(request.headers.get("accept-language"));
+    : isAdClick(request.nextUrl.searchParams)
+      ? adLocale(accept)
+      : matchLocale(accept);
 
   const url = request.nextUrl.clone();
   url.pathname = `/${locale ?? defaultLocale}${pathname === "/" ? "" : pathname}`;
