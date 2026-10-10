@@ -481,3 +481,54 @@ test("недельный отчёт: понедельник утром, раз �
   const uz = reportText({ locale: "uz", account: { name: "X", external_id: "", currency: "UZS" }, week: null, applied: 0, saved: 0, waiting: 0 });
   assert.doesNotMatch(uz.replace(/«[^»]*»/g, ""), /[а-яё]/i);
 });
+
+/* ── Кросс-минусовка ───────────────────────────────────────────────────── */
+
+test("кросс-минусовка: общей группе — минус из уточнённого ключа, свой ключ не задет", async () => {
+  const { crossDrafts, crossNegatives } = await import("@/lib/ads/crossminus");
+  const kw = (adGroupId: string, text: string, campaignId = "1") => ({ campaignId, adGroupId, id: `${adGroupId}:${text}`, text });
+  const needs = crossNegatives([
+    kw("g1", "купить диван"),
+    kw("g2", "купить диван угловой"),
+    kw("g3", "купить диван угловой кожаный"),
+    kw("g4", "купить диван угловой", "2"), // другая кампания — не трогаем
+  ]);
+  const list = needs.get("1")!;
+  assert.deepEqual(
+    list.map((n) => `${n.adGroupId}:${n.phrase}`).sort(),
+    ["g1:угловой", "g2:кожаный"],
+  );
+  assert.equal(needs.get("2"), undefined);
+
+  // Минус, который задел бы ключ своей группы, не предлагается.
+  const own = crossNegatives([kw("g1", "купить диван"), kw("g1", "угловой диван недорого"), kw("g2", "купить диван угловой")]);
+  assert.equal(own.get("1"), undefined);
+
+  // Уже стоящий минус не предлагается второй раз.
+  assert.equal(crossNegatives([kw("g1", "купить диван"), kw("g2", "купить диван угловой")], { g1: ["угловой"] }).get("1"), undefined);
+
+  const [draft] = crossDrafts({ keywords: [kw("g1", "купить диван"), kw("g2", "купить диван угловой")], existing: {}, campaignNames: { "1": "Диваны" } });
+  assert.equal(draft.payload.kind, "cross_negatives");
+});
+
+test("кросс-минусовка на заглушке: применили, запрос ушёл в свою группу, откатили", async () => {
+  const { crossDrafts } = await import("@/lib/ads/crossminus");
+  const { conn } = stub();
+  const [draft] = crossDrafts({ keywords: await conn.keywords(), existing: {}, campaignNames: { "101": "Англ" } });
+  assert.ok(draft, "заглушка должна дать кросс-минус");
+  const payload = draft.payload as Extract<typeof draft.payload, { kind: "cross_negatives" }>;
+  assert.deepEqual(payload.groups, [{ adGroupId: "1011", phrases: ["детей"], because: ["курсы английского для детей ташкент"] }]);
+
+  const done = await applyPayload({ connector: conn, platform: "stub", limits: SUGGEST, actor: "human", actionsToday: 0, payload, period: PERIOD });
+  assert.ok(done.ok);
+  assert.deepEqual(await conn.groupNegatives("1011"), ["детей"]);
+  // Стоп-кран и минус, задевший ключ группы, — не применяются.
+  assert.equal((await applyPayload({ connector: conn, platform: "stub", limits: { ...SUGGEST, stopped: true }, actor: "human", actionsToday: 0, payload, period: PERIOD })).ok, false);
+  const bad = { ...payload, groups: [{ adGroupId: "1011", phrases: ["взрослых"], because: [] }] };
+  assert.equal((await applyPayload({ connector: conn, platform: "stub", limits: SUGGEST, actor: "human", actionsToday: 0, payload: bad, period: PERIOD })).ok, false);
+
+  await conn.setGroupNegatives("1011", [...(await conn.groupNegatives("1011")), "ручное"]);
+  const back = await rollback({ connector: conn, kind: "cross_negatives", before: done.before, after: done.after, period: PERIOD });
+  assert.ok(back.ok);
+  assert.deepEqual(await conn.groupNegatives("1011"), ["ручное"]);
+});

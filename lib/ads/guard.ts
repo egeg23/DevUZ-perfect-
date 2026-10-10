@@ -24,13 +24,17 @@ import type { AccountLimits, Campaign, Payload, Platform } from "@/lib/ads/types
  */
 
 export const HARD_MAX_SHIFT_PCT = 30;
+/** Директ: минус-фразы группы вместе — не больше 4 096 знаков. */
+export const YANDEX_GROUP_CHARS = 4096;
 
 export type Actor = "human" | "auto";
 
 export type LiveState = {
   campaigns: Campaign[];
-  keywords: { campaignId: string; text: string }[];
+  keywords: { campaignId: string; adGroupId?: string; text: string }[];
   negatives: Record<string, string[]>;
+  /** Минус-фразы групп — для кросс-минусовки. */
+  groupNegatives?: Record<string, string[]>;
 };
 
 export type Verdict = { ok: true } | { ok: false; reason: string };
@@ -62,6 +66,18 @@ export function allowed(input: {
       const merged = mergeNegatives(live.negatives[payload.campaignId] ?? [], payload.phrases);
       if (input.platform === "google" && merged.length > GOOGLE_CAMPAIGN_NEGATIVES) return no("В кампании не помещается столько минус-слов.");
       if (input.platform !== "google" && merged.join(" ").length > YANDEX_CAMPAIGN_CHARS) return no("Минус-фразы кампании не помещаются в 20 000 знаков.");
+      return { ok: true };
+    }
+    case "cross_negatives": {
+      if (!live.campaigns.some((c) => c.id === payload.campaignId)) return no("Кампании больше нет в кабинете.");
+      for (const group of payload.groups) {
+        const own = live.keywords.filter((k) => k.adGroupId === group.adGroupId).map((k) => k.text);
+        if (!own.length) return no("Группы больше нет или в ней не осталось ключей.");
+        const bad = group.phrases.filter((p) => !safeNegative(p, own));
+        if (bad.length) return no(`Минус-слова задевают ключи группы: ${bad.map((b) => `«${b}»`).join(", ")}.`);
+        const merged = mergeNegatives(live.groupNegatives?.[group.adGroupId] ?? [], group.phrases);
+        if (merged.join(" ").length > YANDEX_GROUP_CHARS) return no("Минус-фразы группы не помещаются в 4 096 знаков.");
+      }
       return { ok: true };
     }
     case "budget": {

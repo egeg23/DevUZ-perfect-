@@ -236,6 +236,31 @@ export function googleConnector(creds: GoogleCreds, opts: { fetchImpl?: Fetch } 
       if (operations.length) await mutate("campaignCriteria", operations);
     },
 
+    async groupNegatives(adGroupId) {
+      const rows = await query<{ adGroupCriterion?: { keyword?: { text?: string } } }>(
+        `SELECT ad_group_criterion.resource_name, ad_group_criterion.keyword.text FROM ad_group_criterion ` +
+          `WHERE ad_group.id = ${id(adGroupId)} AND ad_group_criterion.negative = TRUE AND ad_group_criterion.type = 'KEYWORD'`,
+      );
+      return rows.map((r) => r.adGroupCriterion?.keyword?.text ?? "").filter(Boolean);
+    },
+
+    async setGroupNegatives(adGroupId, phrases) {
+      const rows = await query<{ adGroupCriterion?: { resourceName?: string; keyword?: { text?: string } } }>(
+        `SELECT ad_group_criterion.resource_name, ad_group_criterion.keyword.text FROM ad_group_criterion ` +
+          `WHERE ad_group.id = ${id(adGroupId)} AND ad_group_criterion.negative = TRUE AND ad_group_criterion.type = 'KEYWORD'`,
+      );
+      const want = new Set(phrases.map((p) => p.toLowerCase()));
+      const have = new Map(rows.map((r) => [(r.adGroupCriterion?.keyword?.text ?? "").toLowerCase(), r.adGroupCriterion?.resourceName ?? ""]));
+      const operations: unknown[] = [];
+      for (const phrase of phrases) {
+        if (!have.has(phrase.toLowerCase())) {
+          operations.push({ create: { adGroup: `customers/${cid}/adGroups/${id(adGroupId)}`, negative: true, keyword: { text: phrase, matchType: "PHRASE" } } });
+        }
+      }
+      for (const [text, resourceName] of have) if (!want.has(text) && resourceName) operations.push({ remove: resourceName });
+      if (operations.length) await mutate("adGroupCriteria", operations);
+    },
+
     async setDailyBudget(campaignId, amount) {
       const resourceName = budgets.get(campaignId);
       if (!resourceName) throw new GoogleAdsError("Бюджет кампании не найден — заберите отчёт заново.");

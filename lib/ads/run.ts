@@ -2,6 +2,7 @@ import { judge, winnerDraft } from "@/lib/ads/abtest";
 import { alertText, detectAlerts } from "@/lib/ads/alerts";
 import { applyPayload, rollback } from "@/lib/ads/apply";
 import { budgetDrafts } from "@/lib/ads/budget";
+import { crossDrafts } from "@/lib/ads/crossminus";
 import { classifyQueries, groupLang, writeVariant } from "@/lib/ads/model";
 import { negativeDrafts, type NegativeCandidate } from "@/lib/ads/negatives";
 import {
@@ -139,6 +140,16 @@ export async function buildDrafts(account: Account, connector: AdsConnector, per
     ...negativeDrafts({ terms: liveTerms, keywords, existing, campaignNames: names, thresholds, extra, days: PERIOD_DAYS, currency: account.currency }),
     ...budgetDrafts({ campaigns: campaigns.filter((c) => !cooling.has(c.id)), maxShiftPct: account.max_shift_pct, currency: account.currency, days: PERIOD_DAYS }),
   ];
+
+  // Кросс-минусовка — Директу: в Google точное и фразовое соответствие и
+  // так ведут запрос к самому точному ключу.
+  if (connector.platform !== "google") {
+    const live = keywords.filter((k) => campaigns.some((c) => c.id === k.campaignId && c.active));
+    const groups = [...new Set(live.map((k) => k.adGroupId))];
+    const existingGroups: Record<string, string[]> = {};
+    for (const g of groups) existingGroups[g] = await connector.groupNegatives(g);
+    drafts.push(...crossDrafts({ keywords: live, existing: existingGroups, campaignNames: names }));
+  }
 
   // Идущие тесты: итог — предложение оставить победителя.
   const running = await testsOf(account.id);

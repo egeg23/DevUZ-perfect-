@@ -24,6 +24,8 @@ export type StubState = {
   terms: SearchTerm[];
   keywords: Keyword[];
   negatives: Record<string, string[]>;
+  /** Минус-фразы групп; в старых состояниях их нет. */
+  groupNegatives?: Record<string, string[]>;
   ads: StubAd[];
   nextId: number;
 };
@@ -66,6 +68,9 @@ export function seedStubState(): StubState {
       { campaignId: "101", adGroupId: "1011", id: "k1", text: "курсы английского ташкент" },
       { campaignId: "101", adGroupId: "1011", id: "k2", text: "английский для взрослых" },
       { campaignId: "101", adGroupId: "1011", id: "k3", text: "ingliz tili kurslari" },
+      // Своя группа для детей: общий ключ выше перехватывает её запросы —
+      // кросс-минусовке есть что показать.
+      { campaignId: "101", adGroupId: "1012", id: "k7", text: "курсы английского для детей ташкент" },
       { campaignId: "102", adGroupId: "1021", id: "k4", text: "курсы программирования ташкент" },
       { campaignId: "102", adGroupId: "1021", id: "k5", text: "python курсы" },
       { campaignId: "103", adGroupId: "1031", id: "k6", text: "подготовка ielts" },
@@ -161,7 +166,11 @@ export function stubConnector(
   const commit = async () => save(state);
 
   const visibleTerms = () =>
-    state.terms.filter((t) => !(state.negatives[t.campaignId] ?? []).some((n) => blocks(n, t.query)));
+    state.terms.filter(
+      (t) =>
+        !(state.negatives[t.campaignId] ?? []).some((n) => blocks(n, t.query)) &&
+        !(state.groupNegatives?.[t.adGroupId] ?? []).some((n) => blocks(n, t.query)),
+    );
 
   // Деньги кампании за 30 дней — сумма её видимых запросов: минус-слово,
   // срезавшее мусор, видно и в расходе.
@@ -204,6 +213,13 @@ export function stubConnector(
     },
     async setNegatives(campaignId, phrases) {
       state = { ...state, negatives: { ...state.negatives, [campaignId]: [...phrases] } };
+      await commit();
+    },
+    async groupNegatives(adGroupId) {
+      return [...(state.groupNegatives?.[adGroupId] ?? [])];
+    },
+    async setGroupNegatives(adGroupId, phrases) {
+      state = { ...state, groupNegatives: { ...(state.groupNegatives ?? {}), [adGroupId]: [...phrases] } };
       await commit();
     },
     async setDailyBudget(campaignId, amount) {

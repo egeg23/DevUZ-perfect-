@@ -252,6 +252,24 @@ export function yandexConnector(creds: YandexCreds, opts: { sandbox: boolean; fe
       if (errors.length) throw new YandexError(`Директ не принял минус-фразы: ${errors.join("; ")}`);
     },
 
+    async groupNegatives(adGroupId) {
+      const result = await call<{ AdGroups?: { NegativeKeywords?: { Items: string[] } | null }[] }>("adgroups", "get", {
+        SelectionCriteria: { Ids: [Number(adGroupId)] },
+        FieldNames: ["Id", "NegativeKeywords"],
+      });
+      return result.AdGroups?.[0]?.NegativeKeywords?.Items ?? [];
+    },
+
+    async setGroupNegatives(adGroupId, phrases) {
+      // У группы — не больше 4 096 знаков минус-фраз; лишнее Директ отклонит
+      // ошибкой в UpdateResults, и она дойдёт до человека.
+      const result = await call<{ UpdateResults?: unknown[] }>("adgroups", "update", {
+        AdGroups: [{ Id: Number(adGroupId), NegativeKeywords: phrases.length ? { Items: phrases } : null }],
+      });
+      const errors = itemErrors(result.UpdateResults);
+      if (errors.length) throw new YandexError(`Директ не принял минус-фразы группы: ${errors.join("; ")}`);
+    },
+
     async setDailyBudget(campaignId, amount) {
       const current = (await rawCampaigns()).find((c) => String(c.Id) === campaignId);
       if (!current?.DailyBudget) throw new YandexError("У кампании нет дневного бюджета — бюджет в стратегии.");

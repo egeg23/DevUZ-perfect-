@@ -40,7 +40,7 @@ export function statusLabel(t: T, status: Account["status"]): string {
 }
 
 function kindLabel(t: T, kind: string): string {
-  return kind === "negatives" ? t.kindNegatives : kind === "budget" ? t.kindBudget : kind === "ad_test" ? t.kindTest : kind === "ad_winner" ? t.kindWinner : kind;
+  return kind === "negatives" ? t.kindNegatives : kind === "cross_negatives" ? t.kindCross : kind === "budget" ? t.kindBudget : kind === "ad_test" ? t.kindTest : kind === "ad_winner" ? t.kindWinner : kind;
 }
 
 export function resultLine(t: T, r: string | undefined, d: string | undefined): { text: string; tone: "ok" | "bad" } | null {
@@ -196,6 +196,11 @@ export async function AdsBoard({
                 <p className="mt-1 text-sm text-muted">{text.why}</p>
                 {p.payload.kind === "negatives" ? (
                   <p className="mt-2 font-mono text-xs text-faint">{p.payload.phrases.join(", ")}</p>
+                ) : null}
+                {p.payload.kind === "cross_negatives" ? (
+                  <p className="mt-2 font-mono text-xs text-faint">
+                    {p.payload.groups.map((g) => `${g.adGroupId}: ${g.phrases.join(", ")}`).join(" · ")}
+                  </p>
                 ) : null}
                 {p.payload.kind === "budget" ? (
                   <p className="mt-2 font-mono text-xs text-faint">

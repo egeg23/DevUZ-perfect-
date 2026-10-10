@@ -206,6 +206,7 @@ export const adsDict = defineDict({
   },
   kindNegatives: { ru: "минус-слова", uz: "minus-so‘zlar", pl: "wykluczenia" },
   kindBudget: { ru: "бюджет", uz: "byudjet", pl: "budżet" },
+  kindCross: { ru: "кросс-минусовка", uz: "kross-minuslash", pl: "wykluczenia krzyżowe" },
   kindTest: { ru: "тест объявлений", uz: "e’lonlar testi", pl: "test reklam" },
   kindWinner: { ru: "итог теста", uz: "test natijasi", pl: "wynik testu" },
   testsTitle: { ru: "Идут тесты объявлений", uz: "E’lonlar testlari davom etmoqda", pl: "Trwające testy reklam" },
