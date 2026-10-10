@@ -14,9 +14,15 @@ on:
   workflow_dispatch:
 
 # Две выкатки одновременно на один сервер устроили бы гонку за docker build.
+#
+# Проверка pull request в эту очередь не встаёт: на сервер она не ходит, а
+# в общей группе новая проверка PR снимала ждущую выкатку main — слитое
+# лежало невыкаченным до следующего слияния (10.10.2026: проверка PR в
+# 18:55 сняла выкатку c9d8618). У PR своя группа, и новый пуш
+# снимает только прежнюю проверку того же PR.
 concurrency:
-  group: deploy-vps
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('check-{0}', github.ref) || 'deploy-vps' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Готовый образ сайта живёт в реестре GitHub, а не собирается на сервере.
 #
