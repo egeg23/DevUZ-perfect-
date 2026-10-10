@@ -19,8 +19,8 @@ export const TAKE_PREFIX = "ail:take:";
 type L = "ru" | "uz";
 
 const CHANNEL_TITLE: Record<L, Record<string, string>> = {
-  ru: { tg_business: "Telegram (ваш аккаунт)", tg_bot: "Telegram-бот", widget: "чат на сайте", test: "проверка в кабинете" },
-  uz: { tg_business: "Telegram (sizning akkauntingiz)", tg_bot: "Telegram-bot", widget: "saytdagi chat", test: "kabinetdagi sinov" },
+  ru: { tg_business: "Telegram (ваш аккаунт)", instagram: "Instagram Direct", tg_bot: "Telegram-бот", widget: "чат на сайте", test: "проверка в кабинете" },
+  uz: { tg_business: "Telegram (sizning akkauntingiz)", instagram: "Instagram Direct", tg_bot: "Telegram-bot", widget: "saytdagi chat", test: "kabinetdagi sinov" },
 };
 
 const CARD: Record<L, Record<string, string>> = {
@@ -35,6 +35,7 @@ const CARD: Record<L, Record<string, string>> = {
     budget: "Бюджет",
     when: "Когда",
     business: "Разговор у вас в Telegram: ответьте покупателю сами, ИИ в этом чате замолчит на 12 часов.",
+    direct: "Разговор у вас в Instagram Direct: ответьте покупателю сами, ИИ в этом чате замолчит на 12 часов.",
     take: "✋ Беру",
     open: "Открыть в кабинете",
   },
@@ -49,6 +50,7 @@ const CARD: Record<L, Record<string, string>> = {
     budget: "Byudjet",
     when: "Qachon",
     business: "Suhbat sizning Telegramingizda: xaridorga o'zingiz javob bering, sun'iy intellekt bu chatda 12 soat jim turadi.",
+    direct: "Suhbat sizning Instagram Direct'ingizda: xaridorga o'zingiz javob bering, sun'iy intellekt bu chatda 12 soat jim turadi.",
     take: "✋ Olaman",
     open: "Kabinetda ochish",
   },
@@ -73,6 +75,7 @@ export function leadCard(
   if (lead.urgency) lines.push(`${c.when}: ${esc(lead.urgency)}`);
   if (lead.summary) lines.push("", esc(lead.summary));
   if (conv.kind === "tg_business") lines.push("", c.business);
+  if (conv.kind === "instagram") lines.push("", c.direct);
   return lines.join("\n");
 }
 

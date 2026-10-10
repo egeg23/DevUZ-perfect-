@@ -104,3 +104,20 @@ limit 30;
    платежей — прогон в песочнице каждой системы.
 6. **Юрист** — вопросы в `legal.md`; до первых платных клиентов — оферта
    сервиса, договор поручения на обработку данных, политика.
+7. **Instagram Direct** (код готов, этап 5). Нужно приложение Meta с
+   Instagram API и входом через Instagram:
+   - developers.facebook.com → «Создать приложение» → тип «Бизнес» →
+     продукт Instagram → «API с входом через Instagram»;
+   - адрес возврата после входа: `https://devuz.studio/cabinet/instagram/callback`;
+   - вебхук: `https://devuz.studio/api/ai-staff/instagram`, поле `messages`,
+     verify token — любая строка, та же, что в `AI_STAFF_IG_VERIFY_TOKEN`;
+   - в хранилище секретов: `AI_STAFF_IG_APP_ID`, `AI_STAFF_IG_APP_SECRET`,
+     `AI_STAFF_IG_VERIFY_TOKEN`;
+   - **проверка бизнеса** в Meta Business (документы ООО или ИП) и **проверка
+     приложения** с разрешением `instagram_business_manage_messages`
+     (Advanced Access): без неё приложение отвечает только аккаунтам,
+     добавленным в него как тестеры. Обычно 1–3 недели; для заявки нужен
+     ролик, как клиент подключает Instagram и как ИИ отвечает.
+   Пока проверки нет, кнопка «Подключить Instagram» в кабинете работает для
+   тестовых аккаунтов, а клиентам показывается «скоро откроется».
+

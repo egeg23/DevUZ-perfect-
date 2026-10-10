@@ -129,6 +129,10 @@ services:
       AI_STAFF_CLICK_SERVICE_ID: ${AI_STAFF_CLICK_SERVICE_ID:-}
       AI_STAFF_CLICK_MERCHANT_ID: ${AI_STAFF_CLICK_MERCHANT_ID:-}
       AI_STAFF_CLICK_SECRET: ${AI_STAFF_CLICK_SECRET:-}
+      # Instagram Direct (lib/ai-staff/instagram.ts): приложение Meta с входом через Instagram.
+      AI_STAFF_IG_APP_ID: ${AI_STAFF_IG_APP_ID:-}
+      AI_STAFF_IG_APP_SECRET: ${AI_STAFF_IG_APP_SECRET:-}
+      AI_STAFF_IG_VERIFY_TOKEN: ${AI_STAFF_IG_VERIFY_TOKEN:-}
       # ИИ на прототипах (lib/proto/ai.ts) — по умолчанию Haiku.
       PROTO_AI_MODEL: ${PROTO_AI_MODEL:-}
       # Ключ Вордстата — API-ключ Яндекс Облака (AQVN…) или OAuth-токен:
