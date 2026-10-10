@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
+import { adLocale, isAdClick, matchLocale } from "@/lib/i18n";
 import { GOALS, goalOf } from "@/lib/visit/goal";
 
 /**
@@ -58,4 +59,39 @@ test("снимок разбирает рекламу по кампаниям и 
   assert.match(snap, /ym:s:lastTrafficSource=='ad'/);
   // Ошибка разбивки рекламы не роняет весь снимок.
   assert.match(snap, /limit: "40",\n  \}\)\.catch\(/);
+});
+
+test("снимок разбирает Директ по площадкам: поиск или сети, какой сайт", () => {
+  const snap = read("lib/analytics/ux-snapshot.ts");
+  assert.match(snap, /ym:s:lastDirectPlatformType,ym:s:lastDirectPlatform/);
+  assert.match(snap, /directPlaces: rows\(directPlaces, 2\)/);
+});
+
+/**
+ * 153 визита с Директа за 28 дней попали на английскую версию — телефон
+ * стоял на английском, — и 92% ушли через 4 секунды.
+ */
+test("клик по рекламе ведёт на русский или узбекский, а не на язык телефона", () => {
+  const ad = (q: string) => isAdClick(new URLSearchParams(q));
+  assert.ok(ad("yclid=123"));
+  assert.ok(ad("gclid=abc"));
+  assert.ok(ad("wbraid=abc"));
+  assert.ok(ad("utm_source=yandex&utm_medium=cpc"));
+  assert.ok(!ad("ysclid=abc"), "ysclid ставит и обычный поиск Яндекса");
+  assert.ok(!ad("utm_medium=organic"));
+  assert.ok(!ad(""));
+
+  assert.equal(adLocale("en-US,en;q=0.9"), "ru");
+  assert.equal(adLocale("en-US,uz;q=0.8,ru;q=0.5"), "uz");
+  assert.equal(adLocale("en-US,ru;q=0.8,uz;q=0.5"), "ru");
+  assert.equal(adLocale("uz-Cyrl-UZ"), "ru");
+  assert.equal(adLocale("zh-CN"), "ru");
+  assert.equal(adLocale(null), "ru");
+  // Без рекламы язык по-прежнему — по телефону.
+  assert.equal(matchLocale("en-US,en;q=0.9"), "en");
+
+  const mw = read("middleware.ts");
+  assert.match(mw, /isAdClick\(request\.nextUrl\.searchParams\)\s*\?\s*adLocale\(accept\)/, "middleware не спрашивает про рекламу");
+  // Выбор человека (кука) главнее рекламы.
+  assert.ok(mw.indexOf("isLocale(saved)") < mw.indexOf("isAdClick("));
 });

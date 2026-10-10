@@ -69,6 +69,13 @@ export type UxSnapshot = {
    * нажатия, на поиске — людей с задачей, и сайт тут ни при чём.
    */
   ads?: Row[];
+  /**
+   * Директ по площадкам: тип (поиск или сети) · площадка (сайт, приложение).
+   * Девять визитов из десяти — реклама с телефонов, 40 секунд и почти ноль
+   * действий; на поиске приходят с задачей, в приложениях — случайным
+   * нажатием, и отключить лишние площадки дешевле, чем переделывать сайт.
+   */
+  directPlaces?: Row[];
 };
 
 function isoDay(d: Date): string {
@@ -122,6 +129,18 @@ export async function buildUxSnapshot(now: Date = new Date()): Promise<UxSnapsho
     return {} as MetrikaResponse;
   });
 
+  // Нужна связка счётчика с Директом; без неё ответ пустой, и это не сбой.
+  const directPlaces = await ask({
+    metrics: VISIT,
+    dimensions: "ym:s:lastDirectPlatformType,ym:s:lastDirectPlatform",
+    filters: "ym:s:lastTrafficSource=='ad'",
+    sort: "-ym:s:visits",
+    limit: "40",
+  }).catch((error: unknown) => {
+    console.error("снимок Метрики, площадки Директа:", error);
+    return {} as MetrikaResponse;
+  });
+
   const t = totals.totals ?? [];
   return {
     from,
@@ -142,6 +161,7 @@ export async function buildUxSnapshot(now: Date = new Date()): Promise<UxSnapsho
     goals: counts(goals, 2).map((g) => ({ ...g, name: g.name.replace(/^goal · /, "") })),
     goalsByDevice: counts(goalsByDevice, 2),
     ads: rows(ads, 4),
+    directPlaces: rows(directPlaces, 2),
   };
 }
 
