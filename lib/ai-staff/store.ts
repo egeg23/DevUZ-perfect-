@@ -54,6 +54,7 @@ export async function setServiceEnabled(on: boolean): Promise<void> {
 
 export type Tenant = {
   id: string;
+  report_sent_on?: string | null;
   name: string;
   niche: string;
   site_url: string | null;
@@ -72,7 +73,7 @@ export type Tenant = {
 };
 
 const TENANT_COLUMNS =
-  "id, name, niche, site_url, locale, plan, status, trial_until, paid_until, answer_mode, work_hours, invite_code, limit_noticed_at, demo, notes, created_at";
+  "id, report_sent_on, name, niche, site_url, locale, plan, status, trial_until, paid_until, answer_mode, work_hours, invite_code, limit_noticed_at, demo, notes, created_at";
 
 function asTenant(row: Record<string, unknown>): Tenant {
   return { ...(row as unknown as Tenant), work_hours: parseHours(row.work_hours) };
@@ -758,4 +759,129 @@ export async function setting<T = unknown>(key: string): Promise<T | null> {
 
 export async function saveSetting(key: string, value: unknown): Promise<void> {
   await db().from("ai_settings").upsert({ key, value, updated_at: new Date().toISOString() });
+}
+
+/* ── Счета и транзакции оплаты картой ─────────────────────────────────── */
+
+export type InvoiceRow = {
+  id: string;
+  tenant_id: string;
+  plan: PlanId;
+  months: number;
+  amount_uzs: number;
+  provider: "payme" | "click" | null;
+  status: "pending" | "paid" | "cancelled";
+  paid_at: string | null;
+  created_at: string;
+};
+
+const INVOICE_COLUMNS = "id, tenant_id, plan, months, amount_uzs, provider, status, paid_at, created_at";
+const TX_COLUMNS = "id, provider, ext_id, invoice_id, amount_tiyin, state, create_time, perform_time, cancel_time, reason, provider_time";
+
+export async function createInvoice(
+  tenantId: string,
+  input: { plan: PlanId; months: number; amountUzs: number; provider: "payme" | "click" },
+): Promise<InvoiceRow> {
+  const { data, error } = await db()
+    .from("ai_invoices")
+    .insert({ tenant_id: tenantId, plan: input.plan, months: input.months, amount_uzs: input.amountUzs, provider: input.provider })
+    .select(INVOICE_COLUMNS)
+    .single();
+  if (error || !data) throw new Error(`ai-staff: счёт не создан — ${error?.message}`);
+  return data as InvoiceRow;
+}
+
+export async function invoicesOf(tenantId: string): Promise<InvoiceRow[]> {
+  const { data } = await db()
+    .from("ai_invoices")
+    .select(INVOICE_COLUMNS)
+    .eq("tenant_id", tenantId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return (data ?? []) as InvoiceRow[];
+}
+
+/** Счёт по id из запроса платёжной системы: клиента знает сам счёт. */
+export async function invoiceForPayment(id: string): Promise<InvoiceRow | null> {
+  const { data } = await db().from("ai_invoices").select(INVOICE_COLUMNS).eq("id", id).maybeSingle();
+  return (data as InvoiceRow | null) ?? null;
+}
+
+/** Отметить счёт оплаченным — только если он ещё ждал оплаты. true — отметили мы. */
+export async function claimInvoicePaid(id: string, provider: "payme" | "click"): Promise<boolean> {
+  const { data } = await db()
+    .from("ai_invoices")
+    .update({ status: "paid", paid_at: new Date().toISOString(), provider })
+    .eq("id", id)
+    .eq("status", "pending")
+    .select("id");
+  return Boolean(data?.length);
+}
+
+export async function payTx(provider: "payme" | "click", extId: string) {
+  const { data } = await db().from("ai_pay_tx").select(TX_COLUMNS).eq("provider", provider).eq("ext_id", extId).maybeSingle();
+  return data ? normalizeTx(data) : null;
+}
+
+export async function payTxById(id: number) {
+  const { data } = await db().from("ai_pay_tx").select(TX_COLUMNS).eq("id", id).maybeSingle();
+  return data ? normalizeTx(data) : null;
+}
+
+export async function openPayTx(provider: "payme" | "click", invoiceId: string) {
+  const { data } = await db()
+    .from("ai_pay_tx")
+    .select(TX_COLUMNS)
+    .eq("provider", provider)
+    .eq("invoice_id", invoiceId)
+    .eq("state", 1)
+    .limit(1)
+    .maybeSingle();
+  return data ? normalizeTx(data) : null;
+}
+
+export async function insertPayTx(row: Record<string, unknown>) {
+  const { data, error } = await db().from("ai_pay_tx").insert(row).select(TX_COLUMNS).single();
+  if (error || !data) throw new Error(`ai-staff: транзакция не записана — ${error?.message}`);
+  return normalizeTx(data);
+}
+
+export async function patchPayTx(id: number, patch: Record<string, unknown>): Promise<void> {
+  await db().from("ai_pay_tx").update(patch).eq("id", id);
+}
+
+export async function payTxBetween(provider: "payme" | "click", from: number, to: number) {
+  const { data } = await db()
+    .from("ai_pay_tx")
+    .select(TX_COLUMNS)
+    .eq("provider", provider)
+    .gte("create_time", from)
+    .lte("create_time", to)
+    .order("create_time")
+    .limit(1000);
+  return (data ?? []).map(normalizeTx);
+}
+
+/** bigint из PostgREST приходит числом или строкой — приводим к числу. */
+function normalizeTx(row: Record<string, unknown>) {
+  const n = (v: unknown) => Number(v ?? 0);
+  return {
+    id: n(row.id),
+    provider: row.provider as "payme" | "click",
+    ext_id: String(row.ext_id),
+    invoice_id: String(row.invoice_id),
+    amount_tiyin: n(row.amount_tiyin),
+    state: n(row.state),
+    create_time: n(row.create_time),
+    perform_time: n(row.perform_time),
+    cancel_time: n(row.cancel_time),
+    reason: row.reason === null || row.reason === undefined ? null : n(row.reason),
+    provider_time: n(row.provider_time),
+  };
+}
+
+/* ── Ежедневный отчёт ─────────────────────────────────────────────────── */
+
+export async function markReportSent(tenantId: string, day: string): Promise<void> {
+  await db().from("ai_tenants").update({ report_sent_on: day }).eq("id", tenantId);
 }

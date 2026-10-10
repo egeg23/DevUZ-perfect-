@@ -35,6 +35,7 @@ import { esc, sendWithButtons, telegramReachable } from "@/lib/qualify/telegram"
 import { serviceClient } from "@/lib/supabase";
 import { banSweep } from "@/lib/admin/account-ban-sweep";
 import { runAdsPass } from "@/lib/ads/run";
+import { runDailyReports as runAiStaffReports } from "@/lib/ai-staff/report";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -317,6 +318,11 @@ async function sweep(): Promise<Response> {
     const ads = await runAdsPass(new Date()).catch((error) => ({ synced: [{ error: String(error) }], reports: 0 }));
     const failed = ads.synced.filter((s) => s.error);
     if (failed.length) console.error("автопилот рекламы:", failed.map((s) => s.error).join("; "));
+  });
+  // ИИ-сотрудники: итоги дня владельцам клиентов в 19:00 по Ташкенту
+  // (lib/ai-staff/report.ts). Сервис выключен или бота нет — один запрос.
+  after(async () => {
+    await runAiStaffReports(new Date()).catch((error) => console.error("ИИ-сотрудники, отчёт дня:", error));
   });
   // Поиск лидов через Firecrawl — своей очередью: до двух кредитов за проход
   // из дневного лимита (lib/firecrawl.ts), на контакты тех, кому писать
