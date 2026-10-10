@@ -86,6 +86,12 @@ export const AUDIT_ACTIONS = [
   "prospect.taken_over",
   // «Клиент отказался» / «Игнорирует»: касание убрано из работы, лид закрыт.
   "prospect.closed",
+  // Тексты писем касания и A/B (lib/admin/letter-texts.ts): кто какой текст
+  // завёл, убрал, оставил победителем и сделал общим для всех.
+  "letter_text.saved",
+  "letter_text.removed",
+  "letter_text.kept",
+  "letter_text.made_common",
   // Поток «Получать лиды» в боте: включил и выключил.
   "stream.on",
   "stream.off",

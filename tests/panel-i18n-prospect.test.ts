@@ -174,6 +174,7 @@ const row = (over: Partial<Prospect>): Prospect => ({
   autopilot_at: null,
   hello_at: null,
   pitch_at: null,
+  letter_variant: null,
   ...over,
 });
 

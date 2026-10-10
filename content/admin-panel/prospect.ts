@@ -413,6 +413,11 @@ export const problemDict = defineDict({
     pl: (hours: number) =>
       `W wiadomości nie ma propozycji zbudowania prototypu strony w ${hours} godzin — a na to adresatowi najłatwiej odpowiedzieć «tak».`,
   },
+  greeting: {
+    ru: "Письмо начинается с приветствия, а «Здравствуйте» уже ушло отдельным сообщением.",
+    uz: "Xat salomlashuvdan boshlanadi, salom esa alohida xabar bilan allaqachon ketgan.",
+    pl: "Wiadomość zaczyna się od powitania, a powitanie poszło już osobną wiadomością.",
+  },
   unknown: {
     ru: "Проверка нашла в тексте то, что не даёт его отправить.",
     uz: "Tekshiruv matnda uni yuborishga to‘sqinlik qiladigan narsani topdi.",

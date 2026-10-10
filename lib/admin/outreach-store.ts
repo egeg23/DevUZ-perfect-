@@ -40,6 +40,11 @@ import { AUTO_PROTO, autoPrototype } from "@/lib/proto/auto";
 import { markAutoSent } from "@/lib/proto/store";
 import { WRITE_MYSELF_MAX, WRITE_MYSELF_NOTE, mayWriteMyself } from "@/lib/admin/write-myself";
 import { checkFresh } from "@/lib/admin/check-fresh";
+import { LETTER_TEXTS, letterProblems, renderLetter, theses } from "@/lib/admin/letter-texts";
+import { chooseVariant } from "@/lib/admin/letter-texts-store";
+import { translateLetter } from "@/lib/admin/letter-translate";
+import type { HelloLang } from "@/lib/admin/hello-first";
+import type { Reference } from "@/lib/audit/proof";
 import { newRequestNo } from "@/lib/qualify/engine";
 import {
   NOSITE_SYSTEM,
@@ -182,10 +187,16 @@ export type Prospect = {
    */
   hello_at: string | null;
   pitch_at: string | null;
+  /**
+   * Каким текстом писалось письмо (lib/admin/letter-texts.ts): text:<id> —
+   * свой или общий, auto:<ключ> — заход автопрогона, null — письмо модели.
+   * По нему проверка перед отправкой и статистика A/B.
+   */
+  letter_variant: string | null;
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, checked_at, check_dropped, autopilot_at, hello_at, pitch_at, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, checked_at, check_dropped, autopilot_at, hello_at, pitch_at, letter_variant, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -227,6 +238,7 @@ function shape(row: Record<string, unknown>): Prospect {
     autopilot_at: (row.autopilot_at as string | null) ?? null,
     hello_at: (row.hello_at as string | null) ?? null,
     pitch_at: (row.pitch_at as string | null) ?? null,
+    letter_variant: (row.letter_variant as string | null) ?? null,
     ...protoOpens(row.protos),
   };
 }
@@ -614,7 +626,17 @@ export async function prepareOutreach(
     return { ok: true, message: "" };
   }
 
-  const composed = await composeLetter(prompt, host, hooks);
+  const composed = LETTER_TEXTS
+    ? await letterFromText({
+        owner: ownerId(staff),
+        host,
+        label: prospect.label,
+        findings,
+        reference,
+        sender: staff.display_name,
+        lang: siteLang(deep.walked?.lang),
+      })
+    : { ...(await composeLetter(prompt, host, hooks)), variant: null };
   if (!composed.ok) return composed;
   const message = composed.message;
 
@@ -625,6 +647,7 @@ export async function prepareOutreach(
     .from("prospects")
     .update({
       message,
+      letter_variant: composed.variant,
       findings,
       // Ниша сохраняется вместе с письмом: по ней подобран наш пример, и
       // по ней же проверка перед отправкой поймёт, тот ли проект назван.
@@ -719,6 +742,49 @@ async function composeLetter(
   }
 }
 
+/** Язык сайта из обхода — на нём письмо и «Здравствуйте» перед ним. */
+function siteLang(lang: string | null | undefined): HelloLang {
+  return lang === "uz" || lang === "en" ? lang : "ru";
+}
+
+/**
+ * Письмо по тексту — без модели: текст менеджера, общий или заход
+ * автопрогона (lib/admin/letter-texts.ts) и тезисы из проверенных находок.
+ *
+ * Сайт не на русском — письмо на его языке, как раньше: язык письма решает
+ * обход (letterLang), и русский текст узбекскому сайту ушёл бы после
+ * «Assalomu alaykum» без перевода. Свой узбекский текст у менеджера — его
+ * слова, переводятся только тезисы. Перевод — та же модель и та же проверка,
+ * что у перевода на язык ответа (letter-translate).
+ */
+async function letterFromText(input: {
+  owner: string | null;
+  host: string;
+  label: string | null;
+  findings: readonly Finding[];
+  reference: Reference | null;
+  sender: string;
+  lang: HelloLang;
+}): Promise<({ ok: true; message: string; variant: string }) | ({ ok: false; why: string } & TouchFail)> {
+  const variant = await chooseVariant(input.owner, Boolean(input.reference));
+  if (!variant) return { ok: false, why: "Нет текста письма.", code: "model_empty" };
+  const points = theses(input.findings, input.reference);
+  if (!points.length) return { ok: false, why: "Проверка по факту не подтвердила ни одной находки — писать владельцу не о чем.", code: "nothing_confirmed" };
+  const ctx = { host: input.host, label: input.label, sender: input.sender, theses: points };
+  const unavailable = { ok: false as const, why: "Не получилось перевести письмо на язык сайта — попробуйте ещё раз через минуту.", code: "model_down" as const };
+
+  if (input.lang === "uz" && variant.body_uz) {
+    const block = await translateLetter(points.join("\n"), "uz", input.host);
+    if (!block) return unavailable;
+    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    return { ok: true, message: renderLetter(variant.body_uz, { ...ctx, theses: lines }), variant: variant.id };
+  }
+  const russian = renderLetter(variant.body, ctx);
+  if (input.lang === "ru") return { ok: true, message: russian, variant: variant.id };
+  const translated = await translateLetter(russian, input.lang, input.host);
+  return translated ? { ok: true, message: translated, variant: variant.id } : unavailable;
+}
+
 /**
  * Письмо о сайте — после ответа на «Здравствуйте», по проверке, сделанной
  * при подготовке касания (prepareOutreach с `letter: false`).
@@ -764,12 +830,23 @@ export async function writeLetterLater(id: string): Promise<{ ok: true; message:
   });
   const hooks = { ...outreachHooks(findings, reference?.name ?? null, null), sender: AUTOPILOT.display_name };
 
-  const composed = await composeLetter(prompt, host, hooks);
+  const composed = LETTER_TEXTS
+    ? await letterFromText({
+        owner: null,
+        host,
+        label: prospect.label,
+        findings,
+        reference,
+        sender: AUTOPILOT.display_name,
+        lang: siteLang(prospect.walked?.lang),
+      })
+    : { ...(await composeLetter(prompt, host, hooks)), variant: null };
   if (!composed.ok) return { ok: false, retry: composed.code.startsWith("model_") };
   // Та же проверка, что у кнопки «Отправить»: письмо уходит без человека.
-  if (sendProblems({ ...prospect, message: composed.message }, AUTOPILOT.display_name).length) return { ok: false, retry: false };
+  const ready = { ...prospect, message: composed.message, letter_variant: composed.variant };
+  if (sendProblems(ready, AUTOPILOT.display_name).length) return { ok: false, retry: false };
 
-  await db.from("prospects").update({ message: composed.message }).eq("id", id);
+  await db.from("prospects").update({ message: composed.message, letter_variant: composed.variant }).eq("id", id);
   return { ok: true, message: composed.message };
 }
 
@@ -815,7 +892,8 @@ export function letterPrototype(prospect: Pick<Prospect, "message" | "proto_url"
 }
 
 export function sendProblems(
-  prospect: Pick<Prospect, "host" | "label" | "niche" | "findings" | "draft" | "walked" | "message" | "proto_url" | "checked_at">,
+  prospect: Pick<Prospect, "host" | "label" | "niche" | "findings" | "draft" | "walked" | "message" | "proto_url" | "checked_at"> &
+    Partial<Pick<Prospect, "letter_variant">>,
   sender = "менеджер",
   now = Date.now(),
 ): MessageProblem[] {
@@ -840,6 +918,31 @@ export function sendProblems(
   const unchecked: MessageProblem[] = checkFresh(prospect.checked_at, now)
     ? []
     : [notCheckedProblem()];
+
+  /**
+   * Письмо по тексту (свой, общий, заход автопрогона) — свои проверки:
+   * балла и потерь в нём нет по просьбе владельца, а числа — только из
+   * тезисов. Тезисы пересобираются из тех же находок и того же проекта, что
+   * при подготовке, — с подсказками обхода, как там.
+   */
+  if (prospect.letter_variant) {
+    const reference = outreachProof({
+      niche: prospect.niche,
+      label: prospect.label,
+      host,
+      hints: prospect.walked?.hints ?? [],
+    }).reference;
+    return [
+      ...unchecked,
+      ...letterProblems(text, {
+        host,
+        label: prospect.label,
+        sender: sender === "менеджер" ? "" : sender,
+        theses: theses(prospect.findings, reference),
+        reference: reference?.name ?? null,
+      }),
+    ];
+  }
 
   return [...unchecked, ...messageProblems(
     text,

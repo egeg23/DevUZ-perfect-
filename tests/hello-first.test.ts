@@ -284,6 +284,9 @@ test("письмо автопрогона — после ответа: скау�
   const store = read("lib/admin/outreach-store.ts");
   const write = between(store, "export async function writeLetterLater(", "/* ── Отправка");
   assert.match(write, /checkFresh\(prospect\.checked_at/, "письмо — только по свежей проверке");
-  assert.match(write, /composeLetter\(prompt, host, hooks\)/, "то же письмо, что и при подготовке");
-  assert.match(write, /sendProblems\(\{ \.\.\.prospect, message: composed\.message \}/, "та же проверка перед отправкой");
+  // С 10.10.2026 письмо — по тексту (lib/admin/letter-texts.ts), за выключателем
+  // LETTER_TEXTS остаётся письмо модели — тем же путём, что при подготовке.
+  assert.match(write, /letterFromText\(\{/, "то же письмо, что и при подготовке");
+  assert.match(write, /composeLetter\(prompt, host, hooks\)/, "выключатель на письмо модели пропал");
+  assert.match(write, /const ready = \{ \.\.\.prospect, message: composed\.message, letter_variant: composed\.variant \};\s*if \(sendProblems\(ready,/, "та же проверка перед отправкой");
 });
