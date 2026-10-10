@@ -455,7 +455,18 @@ function modelFail(error: unknown): TouchFail {
  * Сохраняется вместе с тем, кто нажал: дальше править и отправлять его
  * будет он, и лид закрепится за ним же.
  */
-export async function prepareOutreach(id: string, staff: Writer): Promise<PrepareResult> {
+export async function prepareOutreach(
+  id: string,
+  staff: Writer,
+  /**
+   * `letter: false` — только проверка сайта по факту, без письма: его
+   * напишет свип, когда клиент ответит на «Здравствуйте» не по-русски
+   * (writeLetterLater). Так готовит автопрогон (LETTER_AFTER_REPLY): его
+   * письмо до ответа никто не читает, а уходит оно единицам — 10.10.2026
+   * из 94 писем автопрогона за две недели 65 не понадобились.
+   */
+  options: { letter?: boolean } = {},
+): Promise<PrepareResult> {
   const db = serviceClient();
   if (!db) return { ok: false, why: "База недоступна.", code: "db" };
 
@@ -579,60 +590,33 @@ export async function prepareOutreach(id: string, staff: Writer): Promise<Prepar
 
   const hooks = { ...outreachHooks(findings, reference?.name ?? null, prototype), sender: staff.display_name };
 
-  /**
-   * Один ход модели.
-   *
-   * `notes` — её же промахи с прошлой попытки. Возвращать их обратно дешевле,
-   * чем отдавать менеджеру письмо, которое проверка потом не пропустит: он
-   * нажал «связаться», а получил отказ и пустое поле.
-   */
-  const write = async (notes: string | null): Promise<string | null> => {
-    const response = await anthropic("outreach-letter").beta.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
-      system: [{ type: "text" as const, text: OUTREACH_SYSTEM, cache_control: { type: "ephemeral" as const } }],
-      messages: [
-        {
-          role: "user" as const,
-          content: notes ? `${prompt}\n\nПредыдущая попытка не прошла проверку: ${notes}\nНапиши заново, исправив это.` : prompt,
-        },
-      ],
-      tools: [OUTREACH_TOOL as unknown as Anthropic.Beta.BetaToolUnion],
-      tool_choice: { type: "tool", name: OUTREACH_TOOL.name },
-      ...effortFor(MODEL, "medium"),
-    });
-    const block = response.content.find((b) => b.type === "tool_use");
-    const raw = block && block.type === "tool_use" ? (block.input as { message?: unknown }).message : null;
-    return typeof raw === "string" && raw.trim() ? raw.trim() : null;
-  };
-
-  let message: string;
-  try {
-    const first = await write(null);
-    if (!first) return { ok: false, why: "Модель не вернула сообщение.", code: "model_empty" };
-
-    // Вторая попытка на любой промах, а не только на потерянные крючки.
-    // Живой прогон по aparto.uz показал почему: модель написала «созвонимся
-    // на 20 минут», проверка отбила число, которого нет в анализе, — и
-    // менеджер, нажав «Связаться», получил бы отказ вместо письма. Промах
-    // здесь дешевле исправить, чем показать.
-    const missed = messageProblems(first, prompt, host, hooks);
-    // Из двух попыток берём ту, к которой у проверки меньше претензий.
-    //
-    // Раньше вторая побеждала просто потому, что была второй. Так у
-    // менеджера оказывалось письмо, которое отправка не пропустит никогда:
-    // он жал «Отправить», получал отказ и говорил, что кнопка не работает.
-    // Совсем без письма оставлять тоже нельзя — он нажал «Связаться» и
-    // должен что-то получить, — поэтому письмо сохраняется, а претензии
-    // видны на карточке до нажатия.
-    const second = missed.length ? await write(missed.map((p) => p.text).join(" ")) : null;
-    const secondMissed = second ? messageProblems(second, prompt, host, hooks) : null;
-    message = second && secondMissed && secondMissed.length <= missed.length ? second : first;
-  } catch (error) {
-    // Отказ модели — не «что-то пошло не так»: менеджеру нужна фраза, по
-    // которой понятно, идти к владельцу или нажать ещё раз через минуту.
-    return { ok: false, why: modelTroubleSays(error), ...modelFail(error) };
+  if (options.letter === false) {
+    // Проверка — та же и сохраняется так же, только без письма: письмо
+    // напишется по этим же находкам и обходу, когда клиент ответит.
+    let verified = db
+      .from("prospects")
+      .update({
+        message: null,
+        findings,
+        niche,
+        walked: deep.walked ?? null,
+        checked_at: checked.at,
+        check_dropped: checked.dropped,
+        score: deep.row.report?.score ?? prospect.score,
+        status: "contacting",
+        claimed_by: ownerId(staff),
+        claimed_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+    if (isAutopilot(staff)) verified = verified.is("claimed_by", null);
+    const { data: kept } = await verified.select("id");
+    if (isAutopilot(staff) && !kept?.length) return { ok: false, why: "Карточку уже взял сотрудник.", code: "gone" };
+    return { ok: true, message: "" };
   }
+
+  const composed = await composeLetter(prompt, host, hooks);
+  if (!composed.ok) return composed;
+  const message = composed.message;
 
   // Что не так — покажем сотруднику рядом с текстом: правит он, а не мы.
   // Находки обхода сохраняются вместе с сообщением: на них сослалось письмо,
@@ -665,6 +649,128 @@ export async function prepareOutreach(id: string, staff: Writer): Promise<Prepar
   if (isAutopilot(staff) && !saved?.length) return { ok: false, why: "Карточку уже взял сотрудник.", code: "gone" };
 
   return { ok: true, message };
+}
+
+/**
+ * Письмо моделью: две попытки, вторая — с промахами первой; из двух берётся
+ * та, к которой у проверки меньше претензий.
+ *
+ * Одна функция на два места: подготовку касания (prepareOutreach) и письмо
+ * после ответа на «Здравствуйте» (writeLetterLater) — письмо одно и то же,
+ * разница только в том, когда оно пишется.
+ */
+async function composeLetter(
+  prompt: string,
+  host: string,
+  hooks: Parameters<typeof messageProblems>[3],
+): Promise<{ ok: true; message: string } | ({ ok: false; why: string } & TouchFail)> {
+  /**
+   * Один ход модели.
+   *
+   * `notes` — её же промахи с прошлой попытки. Возвращать их обратно дешевле,
+   * чем отдавать менеджеру письмо, которое проверка потом не пропустит: он
+   * нажал «связаться», а получил отказ и пустое поле.
+   */
+  const write = async (notes: string | null): Promise<string | null> => {
+    const response = await anthropic("outreach-letter").beta.messages.create({
+      model: MODEL,
+      max_tokens: 1024,
+      system: [{ type: "text" as const, text: OUTREACH_SYSTEM, cache_control: { type: "ephemeral" as const } }],
+      messages: [
+        {
+          role: "user" as const,
+          content: notes ? `${prompt}\n\nПредыдущая попытка не прошла проверку: ${notes}\nНапиши заново, исправив это.` : prompt,
+        },
+      ],
+      tools: [OUTREACH_TOOL as unknown as Anthropic.Beta.BetaToolUnion],
+      tool_choice: { type: "tool", name: OUTREACH_TOOL.name },
+      ...effortFor(MODEL, "medium"),
+    });
+    const block = response.content.find((b) => b.type === "tool_use");
+    const raw = block && block.type === "tool_use" ? (block.input as { message?: unknown }).message : null;
+    return typeof raw === "string" && raw.trim() ? raw.trim() : null;
+  };
+
+  try {
+    const first = await write(null);
+    if (!first) return { ok: false, why: "Модель не вернула сообщение.", code: "model_empty" };
+
+    // Вторая попытка на любой промах, а не только на потерянные крючки.
+    // Живой прогон по aparto.uz показал почему: модель написала «созвонимся
+    // на 20 минут», проверка отбила число, которого нет в анализе, — и
+    // менеджер, нажав «Связаться», получил бы отказ вместо письма. Промах
+    // здесь дешевле исправить, чем показать.
+    const missed = messageProblems(first, prompt, host, hooks);
+    // Из двух попыток берём ту, к которой у проверки меньше претензий.
+    //
+    // Раньше вторая побеждала просто потому, что была второй. Так у
+    // менеджера оказывалось письмо, которое отправка не пропустит никогда:
+    // он жал «Отправить», получал отказ и говорил, что кнопка не работает.
+    // Совсем без письма оставлять тоже нельзя — он нажал «Связаться» и
+    // должен что-то получить, — поэтому письмо сохраняется, а претензии
+    // видны на карточке до нажатия.
+    const second = missed.length ? await write(missed.map((p) => p.text).join(" ")) : null;
+    const secondMissed = second ? messageProblems(second, prompt, host, hooks) : null;
+    return { ok: true, message: second && secondMissed && secondMissed.length <= missed.length ? second : first };
+  } catch (error) {
+    // Отказ модели — не «что-то пошло не так»: менеджеру нужна фраза, по
+    // которой понятно, идти к владельцу или нажать ещё раз через минуту.
+    return { ok: false, why: modelTroubleSays(error), ...modelFail(error) };
+  }
+}
+
+/**
+ * Письмо о сайте — после ответа на «Здравствуйте», по проверке, сделанной
+ * при подготовке касания (prepareOutreach с `letter: false`).
+ *
+ * Пишет свип, а не скаут: скаут только отмечает, что письмо нужно
+ * (`letter_wanted`), — модуль касаний с его обходом и сборкой прототипа
+ * процессу скаута грузить незачем. Письмо — на языке сайта, как и при
+ * подготовке; ответили на другом — его переведёт та же очередь, что и раньше
+ * (queueHelloLetter → letter-translate).
+ *
+ * `retry` — модель не ответила (баланс, частота, сеть): письмо напишется
+ * следующим проходом. Иначе письма не будет — проверка устарела, писать не
+ * о чем, письмо не прошло проверку перед отправкой, — и разговор уходит
+ * человеку, как и раньше, когда письма не было.
+ */
+export async function writeLetterLater(id: string): Promise<{ ok: true; message: string } | { ok: false; retry: boolean }> {
+  const db = serviceClient();
+  if (!db) return { ok: false, retry: true };
+  const prospect = await prospectById(id);
+  if (!prospect?.host || !prospect.url) return { ok: false, retry: false };
+  if (prospect.message?.trim()) return { ok: true, message: prospect.message };
+  if (!checkFresh(prospect.checked_at, Date.now())) return { ok: false, retry: false };
+  const findings = prospect.findings ?? [];
+  if (!outreachFindings(findings).length) return { ok: false, retry: false };
+
+  const host = prospect.host;
+  const reference = outreachProof({
+    niche: prospect.niche,
+    label: prospect.label,
+    host,
+    hints: prospect.walked?.hints ?? [],
+  }).reference;
+  const prompt = outreachPrompt({
+    host,
+    label: prospect.label,
+    niche: prospect.niche,
+    findings,
+    draft: prospect.draft,
+    sender: AUTOPILOT.display_name,
+    walked: prospect.walked ?? undefined,
+    prototype: null,
+    lang: prospect.walked?.lang ?? "ru",
+  });
+  const hooks = { ...outreachHooks(findings, reference?.name ?? null, null), sender: AUTOPILOT.display_name };
+
+  const composed = await composeLetter(prompt, host, hooks);
+  if (!composed.ok) return { ok: false, retry: composed.code.startsWith("model_") };
+  // Та же проверка, что у кнопки «Отправить»: письмо уходит без человека.
+  if (sendProblems({ ...prospect, message: composed.message }, AUTOPILOT.display_name).length) return { ok: false, retry: false };
+
+  await db.from("prospects").update({ message: composed.message }).eq("id", id);
+  return { ok: true, message: composed.message };
 }
 
 /* ── Отправка ──────────────────────────────────────────────────────────── */
@@ -768,7 +874,8 @@ export function sendProblems(
 
 export async function queueOutreach(
   id: string,
-  message: string,
+  /** null — письма пока нет: только у автопрогона, письмо после ответа (LETTER_AFTER_REPLY). */
+  message: string | null,
   /** Сотрудник — или AUTOPILOT: тогда касание ничьё и лида нет до ответа клиента. */
   staff: Staff | Autopilot,
   ip: string,
@@ -792,8 +899,11 @@ export async function queueOutreach(
   const route = routeFor(prospect.contacts);
   if (!route) return { ok: false, why: "no_way", code: "no_way" };
 
-  const text = message.trim();
-  const problems = sendProblems({ ...prospect, message: text }, staff.display_name);
+  if (message === null && !isAutopilot(staff)) return { ok: false, why: "Нет текста письма.", code: "problems" };
+  const text = (message ?? "").trim();
+  // Без письма проверять нечего: уходит только «Здравствуйте», а письмо
+  // пройдёт ту же проверку, когда его напишут после ответа (writeLetterLater).
+  const problems = message === null ? [] : sendProblems({ ...prospect, message: text }, staff.display_name);
   if (problems.length) return { ok: false, why: problems.map((p) => p.text).join(" "), code: "problems", problems };
 
   // Номер заявки рождается здесь, а не в конце разговора: по нему модель
@@ -810,7 +920,7 @@ export async function queueOutreach(
   let update = db
     .from("prospects")
     .update({
-      message: text,
+      message: message === null ? null : text,
       target: route.target,
       target_kind: route.kind,
       // Городской номер в очередь не ставим: скаут по нему никого не найдёт,

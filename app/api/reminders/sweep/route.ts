@@ -25,6 +25,7 @@ import { runReviews } from "@/lib/talk/review-run";
 import { runRazborShift } from "@/lib/razbor/shift-run";
 import { runTenderShift } from "@/lib/razbor/tender-run";
 import { runForeignPass } from "@/lib/razbor/foreign-run";
+import { writeWantedLetters } from "@/lib/admin/letter-later";
 import { runMarketingArticles } from "@/lib/marketing/articles-run";
 import { sendShiftReports, warnAboutSilentShifts } from "@/lib/admin/shift-reports";
 import { sendScoutDigest } from "@/lib/scout/digest";
@@ -390,6 +391,17 @@ async function sweep(): Promise<Response> {
   after(async () => {
     const tender = await runTenderShift(new Date()).catch((error) => ({ errors: [String(error)] }));
     if (tender.errors.length) console.error("тендерный разбор:", tender.errors.join("; "));
+  });
+
+  // Письма автопрогона после ответа на «Здравствуйте» (LETTER_AFTER_REPLY):
+  // скаут отметил, на каком языке ответили, — модель пишет здесь, в процессе
+  // сайта. Нечего писать — один запрос в базу.
+  after(async () => {
+    const later = await writeWantedLetters(new Date()).catch((error) => {
+      console.error("письма после ответа:", error);
+      return null;
+    });
+    if (later?.handedOver) console.warn("письма после ответа: не написались, разговор человеку —", later.handedOver);
   });
 
   // Английские и польские версии разборов: по одному опубликованному

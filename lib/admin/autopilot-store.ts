@@ -2,6 +2,7 @@ import { record } from "@/lib/admin/audit";
 import {
   AUTOPILOT_NICHES,
   DAILY_TARGET,
+  LETTER_AFTER_REPLY,
   prepareWindow,
   REPORT_SPAN_MS,
   reportDue,
@@ -211,7 +212,9 @@ export async function runAutopilot(now: Date = new Date()): Promise<AutopilotRun
     if (!claimed?.length) continue;
     need -= 1;
 
-    const prepared = await prepareOutreach(id, AUTOPILOT).catch((error: unknown) => ({
+    // Письмо — после ответа (LETTER_AFTER_REPLY): здесь только проверка
+    // сайта по факту, а уходит «Здравствуйте».
+    const prepared = await prepareOutreach(id, AUTOPILOT, { letter: !LETTER_AFTER_REPLY }).catch((error: unknown) => ({
       ok: false as const,
       why: error instanceof Error ? error.message : String(error),
       code: "defect" as const,
@@ -236,7 +239,7 @@ export async function runAutopilot(now: Date = new Date()): Promise<AutopilotRun
       continue;
     }
 
-    const queued = await queueOutreach(id, prepared.message, AUTOPILOT, "autopilot");
+    const queued = await queueOutreach(id, LETTER_AFTER_REPLY ? null : prepared.message, AUTOPILOT, "autopilot");
     if (!queued.ok && queued.code === "queue_failed") {
       // Не поставилось: карточку взял менеджер или база отказала. Первое —
       // карточка его; второе — попробуем другую в следующий проход.

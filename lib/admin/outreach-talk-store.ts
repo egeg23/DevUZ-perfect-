@@ -19,6 +19,7 @@ import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 import { detectLang } from "@/lib/talk/language";
 import { checkFresh } from "@/lib/admin/check-fresh";
+import { LETTER_AFTER_REPLY } from "@/lib/admin/autopilot";
 import {
   CIRCLE_AFTER_MS,
   CIRCLE_BODY,
@@ -175,7 +176,7 @@ export async function recordInbound(input: {
 }
 
 const PROSPECT_FIELDS =
-  "id, host, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url, hello_at, pitch_at, checked_at, walked";
+  "id, host, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url, hello_at, pitch_at, checked_at, walked, autopilot_at";
 
 /** Строка касания из PROSPECT_FIELDS. Лид и закрепление здесь только читаются. */
 type ProspectRow = HandTouch &
@@ -191,7 +192,8 @@ type ProspectRow = HandTouch &
     | "hello_at"
     | "pitch_at"
     | "checked_at"
-    | "walked",
+    | "walked"
+    | "autopilot_at",
     unknown
   > &
   Record<"claimed_by" | "touched_by", string | null>;
@@ -269,7 +271,7 @@ export async function recordManualInbound(
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked")
+    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked, autopilot_at")
     .eq("id", prospectId)
     .maybeSingle();
   if (!prospect) return { matched: false };
@@ -303,6 +305,8 @@ async function saveInbound(
     pitch_at?: unknown;
     checked_at?: unknown;
     walked?: unknown;
+    /** Касание автопрогона: письмо к нему пишется после ответа (LETTER_AFTER_REPLY). */
+    autopilot_at?: unknown;
   },
   raw: string,
 ): Promise<{ matched: boolean; host?: string; verdict?: string }> {
@@ -487,6 +491,8 @@ async function queueHelloLetter(
   lang: HelloLang,
   sendAt: number,
   inbound: string,
+  /** false — письмо уже пытались дописать (letter-later): откладывать снова нельзя. */
+  options: { defer?: boolean } = {},
 ): Promise<boolean> {
   const db = serviceClient();
   if (!db) return false;
@@ -501,8 +507,18 @@ async function queueHelloLetter(
     await tellManager(id, `Ответ по ${host}: ${reason}.\n\n${inbound.slice(0, 500)}`, { refuse: true });
     return false;
   };
-  if (!letter) return handOverHello("ответил на «Здравствуйте», а письма о сайте нет — напишите сами");
   if (!fresh) return handOverHello("ответил на «Здравствуйте», но проверке сайта больше трёх дней — письмо не ушло: проверьте сайт и напишите сами");
+  // Автопрогон пишет письмо после ответа (LETTER_AFTER_REPLY): скаут только
+  // отмечает, на каком языке ответили, письмо напишет и поставит свип
+  // (lib/admin/letter-later.ts) — модель процессу скаута не грузим.
+  if (!letter && prospect.autopilot_at && LETTER_AFTER_REPLY && options.defer !== false) {
+    await db
+      .from("prospects")
+      .update({ letter_wanted: lang, letter_wanted_at: new Date(sendAt).toISOString() })
+      .eq("id", id);
+    return true;
+  }
+  if (!letter) return handOverHello("ответил на «Здравствуйте», а письма о сайте нет — напишите сами");
 
   // Письмо на языке сайта, а ответили на другом — перевод того же письма,
   // уже прошедшего проверку. Модель грузится только здесь: этот файл читает
@@ -539,6 +555,28 @@ async function queueHelloLetter(
 }
 
 const LANG_LABEL: Record<HelloLang, string> = { ru: "по-русски", uz: "по-узбекски", en: "по-английски" };
+
+/**
+ * Письмо, которое свип дописал после ответа (lib/admin/letter-later.ts), —
+ * в ту же очередь, что и письмо, написанное заранее: перевод на язык ответа,
+ * прототип, а не вышло — разговор человеку. Письма так и нет — тоже человеку:
+ * второй раз не откладываем.
+ */
+export async function queueLaterLetter(prospectId: string, lang: HelloLang): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { data: prospect } = await db.from("prospects").select(PROSPECT_FIELDS).eq("id", prospectId).maybeSingle();
+  if (!prospect) return false;
+  const { data: inbound } = await db
+    .from("outreach_messages")
+    .select("body")
+    .eq("prospect_id", prospectId)
+    .eq("direction", "in")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return queueHelloLetter(prospect as unknown as ProspectRow, lang, Date.now(), String(inbound?.body ?? ""), { defer: false });
+}
 
 /** Предложением был кружок: после «Здравствуйте» ушёл он, а письма не было. */
 async function circleWasPitch(prospectId: string, pitchAt: string): Promise<boolean> {
@@ -886,7 +924,7 @@ export async function markCircleSkipped(id: string, reason: string): Promise<voi
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, lead_id, ai_handling, message, checked_at, walked, proto_url")
+    .select("id, host, lead_id, ai_handling, message, checked_at, walked, proto_url, autopilot_at")
     .eq("id", row.prospect_id)
     .maybeSingle();
   if (!prospect) return;

@@ -96,13 +96,18 @@ export async function offerLead(prospectId: string, leadId: string, body: string
   return routeNewLead({ ...card, heading, fallback: await salesRecipients() });
 }
 
+/** Что ушло клиенту, если письма не было: «Здравствуйте» и кружок. */
+const CIRCLE_ONLY = "«Здравствуйте», после ответа — кружок: бесплатный макет главной за 12 часов, «отправьте плюс».";
+
 async function createLead(p: Record<string, unknown>, body: string): Promise<string | null> {
   const db = serviceClient();
   if (!db) return null;
 
   const host = (p.host as string | null) ?? null;
   const label = (p.label as string | null) ?? null;
-  const message = String(p.message ?? "");
+  // Письма может и не быть: по-русски ответившим вместо него ушёл кружок, а
+  // письмо автопрогон пишет только после ответа (LETTER_AFTER_REPLY).
+  const message = String(p.message ?? "").trim() || CIRCLE_ONLY;
   const kind = String(p.target_kind ?? "handle");
   const findings = Array.isArray(p.findings) ? (p.findings as { title?: string }[]) : [];
   const titles = findings.map((f) => String(f.title ?? "")).filter(Boolean);
