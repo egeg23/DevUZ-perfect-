@@ -103,6 +103,8 @@ function problemText(p: ProblemRef, t: Picked<typeof problemDict>): string {
       return t.no_host(String(a ?? ""));
     case "no_us":
       return t.no_us;
+    case "greeting":
+      return t.greeting;
     case "invented":
       return t.invented(String(a ?? ""));
     case "foreign_script":

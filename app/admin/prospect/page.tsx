@@ -15,6 +15,7 @@ import { STREAM_BUFFER, STREAM_OFF, STREAM_ON } from "@/lib/admin/stream";
 import { streamState } from "@/lib/admin/stream-store";
 import { pick } from "@/lib/admin/i18n";
 import { closeLabelDict, prospectPageDict } from "@/content/admin-panel/prospect";
+import { letterTextsDict } from "@/content/admin-panel/letter-texts";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { MapsCampaigns } from "@/components/admin/maps-campaigns";
 import { TouchLegend } from "@/components/admin/touch-legend";
@@ -51,6 +52,7 @@ export default async function ProspectPage({
   const locale = staff.panel_locale;
   const t = pick(prospectPageDict, locale);
   const closeLabel = pick(closeLabelDict, locale);
+  const textsLink = pick(letterTextsDict, locale).link;
   // Автопоиск ведут владелец и руководитель; менеджеру он приходит порцией.
   const seesMaps = staff.role === "admin" || staff.role === "head";
   const [campaigns, mapsUsage, mapsPending, mapsReady] = seesMaps
@@ -107,6 +109,13 @@ export default async function ProspectPage({
     <AdminShell staff={staff}>
       <h1 className="text-lg font-semibold">{t.title}</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro}</p>
+      {/* Свои тексты писем и A/B (lib/admin/letter-texts.ts) — каждому: это
+          его касания. */}
+      <p className="mt-2 text-sm">
+        <Link href="/admin/prospect/texts" className="text-green hover:underline">
+          {textsLink}
+        </Link>
+      </p>
 
       <TouchPlanLine progress={plan} />
 
