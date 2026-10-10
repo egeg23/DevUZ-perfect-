@@ -60,6 +60,16 @@ export type Niche = {
    */
   ruServices: readonly string[];
   uzServices: readonly string[];
+  /**
+   * Названия для английской и польской версий разбора — только у ниш вне
+   * каталога (у каталожных они в NICHE_NAMES, lib/razbor/foreign.ts).
+   * Даёт их та же модель и тем же вызовом, что и саму нишу: так отдельного
+   * вызова «как это назвать» на каждую версию нет, и у всех разборов ниши
+   * одно название. en — как в «… website»: «hotel»; pl — родительный падеж,
+   * как в «strona internetowa dla …»: «hotelu».
+   */
+  en?: string;
+  pl?: string;
 };
 
 /**

@@ -37,6 +37,8 @@ const TOOL = {
       uzMock: { type: "string", description: "То же по-узбекски, латиницей." },
       ruServices: { type: "array", items: { type: "string" }, description: "Три-четыре услуги, которые есть у любого такого бизнеса." },
       uzServices: { type: "array", items: { type: "string" }, description: "Те же услуги по-узбекски, латиницей." },
+      en: { type: "string", description: "Английское название рода занятий для запроса «… website», 1–4 слова строчными: «driving school», «printing house»." },
+      pl: { type: "string", description: "Польское название в родительном падеже для «strona internetowa dla …», 1–5 слов строчными, с диакритикой: «szkoły jazdy», «drukarni»." },
     },
     required: ["key", "ruGen", "ruLabel", "uz", "uzLabel", "ruMock", "uzMock", "ruServices", "uzServices"],
   },
@@ -51,6 +53,7 @@ const SYSTEM = `Ты определяешь род занятий компани
 - ruGen — родительный падеж, чтобы подставить в «сайт для …»: автошколы, типографии, ветеринарной клиники.
 - Узбекские поля — латиницей. Это отдельный язык поиска, а не транслит русского слова.
 - Услуги — то, что есть у любого такого бизнеса. Без цифр, без обещаний, без превосходных степеней.
+- en и pl — то, что набрал бы в Google англичанин и поляк, а не перевод слово в слово: en — как в «… website», без слова website; pl — родительный падеж, как в «strona internetowa dla …», без слов strona и internetowa, с ą, ć, ę, ł, ń, ó, ś, ź, ż. Коротко: до пяти слов.
 
 Если по заголовкам род занятий не понятен, не угадывай: верни key «neponyatno» и пустые поля.`;
 

@@ -53,7 +53,7 @@ const FORBIDDEN =
   /банк|(?<!ак)кредит|займ|ломбард|микрофинанс|страхов|аптек|фармац|клиник|больниц|госпитал|поликлин|медицин|медцентр|медико|лечеб|лечени|реабилит|санатор|(?<![а-яё])диагност|врач|доктор|стоматолог|невролог|неврол|кардиолог|педиатр|гинеколог|уролог|офтальм|окулист|дерматолог|онколог|хирург|травматолог|терапевт|эндокринолог|психиатр|наркол|лор-|диспансер|лаборатор|анализ крови|казино|букмекер|(?<![а-яё])ставк|лотере|табак|вейп|алкогол|(?<![а-яё])оруж|госуд|министерств|хоким|политич|парти|bank|kredit|lombard|dorixona|klinika|shifoxona|kasalxona|poliklinika|tibbiy|tibbiyot|shifokor|nevrolog|kardiolog|pediatr|ginekolog|stomatolog|davolash|reabilitatsiya|sanatoriy|laboratoriya|kazino|qimor|medical|clinic|hospital|neurolog|cardiolog|dental|pharma/i;
 
 export function forbiddenNiche(niche: Niche): boolean {
-  const words = [niche.key, niche.ruGen, niche.ruLabel, niche.uz, niche.uzLabel, niche.ruMock, niche.uzMock];
+  const words = [niche.key, niche.ruGen, niche.ruLabel, niche.uz, niche.uzLabel, niche.ruMock, niche.uzMock, niche.en ?? ""];
   return words.some((word) => FORBIDDEN.test(word));
 }
 
@@ -65,6 +65,19 @@ const clean = (value: unknown, max = 80): string =>
 
 const list = (value: unknown): string[] =>
   Array.isArray(value) ? value.map((v) => clean(v, 40)).filter(Boolean).slice(0, 4) : [];
+
+const FOREIGN_LETTERS = { en: "a-z", pl: "a-ząćęłńóśźż" } as const;
+
+/**
+ * Название ниши для версии разбора — если оно похоже на название. Нет или
+ * не похоже — поля нет, и версия спросит его отдельно, как раньше: ниша
+ * из-за этого не пропадает. Строгая проверка — в validSubject при версии.
+ */
+function foreignName(locale: keyof typeof FOREIGN_LETTERS, value: unknown): { en?: string; pl?: string } {
+  const name = clean(value, 60).toLowerCase();
+  const letters = FOREIGN_LETTERS[locale];
+  return new RegExp(`^[${letters}][${letters} -]{2,50}$`).test(name) ? { [locale]: name } : {};
+}
 
 /**
  * Ответ модели → ниша, либо ничего.
@@ -95,6 +108,8 @@ export function parseNiche(raw: unknown): Niche | null {
     uzMock: clean(input.uzMock, 30),
     ruServices: list(input.ruServices),
     uzServices: list(input.uzServices),
+    ...foreignName("en", input.en),
+    ...foreignName("pl", input.pl),
   };
 
   const filled =

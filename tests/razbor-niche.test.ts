@@ -171,3 +171,41 @@ test("медицина узнаётся по специальности, а «д
   }
   assert.deepEqual(NICHES.filter((n) => forbiddenNiche(n)).map((n) => n.key).sort(), ["medcentr", "stomatologiya"]);
 });
+
+/**
+ * Названия ниши для английской и польской версий — тем же вызовом, что и
+ * сама ниша (разведка «ИИ → код», 10.10.2026). Раньше их спрашивали
+ * отдельно на каждую версию, и польская версия «saas-marketing» не выходила
+ * сутками: модель называла нишу длиннее, чем пропускает проверка.
+ */
+test("названия en/pl идут вместе с нишей, кривые — отбрасываются без потери ниши", () => {
+  const niche = parseNiche({ ...GOOD, en: " Driving School ", pl: "szkoły jazdy" });
+  assert.equal(niche?.en, "driving school");
+  assert.equal(niche?.pl, "szkoły jazdy");
+
+  // Кириллица, кавычки, слишком длинно — поля нет, а ниша остаётся.
+  const bad = parseNiche({ ...GOOD, en: "автошкола", pl: "«szkoły jazdy»" });
+  assert.ok(bad);
+  assert.equal(bad.en, undefined);
+  assert.equal(bad.pl, undefined);
+  assert.equal(parseNiche({ ...GOOD, pl: "serwisu marketingu lokalnego i zarządzania reputacją i opinią" })?.pl, undefined);
+  assert.equal(parseNiche(GOOD)?.en, undefined, "у ниши без названий их и нет");
+
+  // Медицина узнаётся и по английскому названию.
+  assert.equal(parseNiche({ ...GOOD, en: "dental clinic" }), null);
+
+  const ask = read("lib/razbor/niche-ask.ts");
+  assert.match(ask, /\ben: \{ type: "string"/);
+  assert.match(ask, /\bpl: \{ type: "string"/);
+  assert.match(ask, /required: \["key", "ruGen", "ruLabel", "uz", "uzLabel", "ruMock", "uzMock", "ruServices", "uzServices"\]/, "en/pl не обязательны: без них ниша не пропадает");
+});
+
+test("версия берёт название ниши из базы, модель — только если его нет", () => {
+  const run = read("lib/razbor/foreign-run.ts");
+  // Ветка сайтов — после тендерной: у тендеров свой запрос.
+  const query = run.slice(run.indexOf("const city = cityByKey(row.city)"));
+  const order = ["NICHE_NAMES[locale][row.category]", "await storedName(locale, row)", "await askName(", "await rememberName(locale, row, result)"].map((s) => query.indexOf(s));
+  assert.ok(order.every((at) => at > 0), "нет одного из шагов");
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "порядок: каталог → база → модель → запомнить");
+  assert.match(run, /\.not\(`niche_words->>\$\{locale\}`, "is", null\)/, "другой разбор той же ниши не смотрится");
+});
