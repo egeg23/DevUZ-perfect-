@@ -35,7 +35,10 @@ test("страница разбора не отказывает адресу, к
 
 test("список раздела и карта сайта тоже обновляются без выкатки", () => {
   assert.match(read("app/[locale]/razbor/page.tsx"), /export const revalidate = \d+/);
-  assert.match(read("app/sitemap.ts"), /export const revalidate = \d+/);
+  // Карта — на каждый запрос: сборка идёт в GitHub без базы, и карта со
+  // сборки выходила без разборов (10.10.2026: 2 адреса раздела из 38).
+  assert.match(read("app/sitemap.ts"), /export const dynamic = "force-dynamic"/);
+  assert.doesNotMatch(read("app/sitemap.ts"), /export const revalidate/);
 });
 
 test("каждое действие над разбором сбрасывает кэш страниц", () => {
