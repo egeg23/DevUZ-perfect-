@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 /**
  * Шифрование токенов ботов клиентов.
@@ -57,4 +57,11 @@ export function newRequestNo(now = new Date()): string {
   let tail = "";
   for (const byte of randomBytes(4)) tail += ALPHABET[byte % ALPHABET.length];
   return `AI-${day}-${tail}`;
+}
+
+/** Сравнение секретов за постоянное время: по времени ответа секрет не подобрать. */
+export function safeEqual(a: string, b: string): boolean {
+  const x = Buffer.from(sha256(a));
+  const y = Buffer.from(sha256(b));
+  return timingSafeEqual(x, y) && a.length === b.length;
 }

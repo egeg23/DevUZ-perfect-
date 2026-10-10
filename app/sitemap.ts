@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 
 import { cases } from "@/content/cases";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
+import { LANDING_LOCALES, LANDING_PATH } from "@/content/ai-staff/landing";
+import { serviceEnabled } from "@/lib/ai-staff/store";
 import { MARKETING_PATH } from "@/content/marketing";
 import { ARTICLE_LOCALES, articleHref, listArticles } from "@/lib/marketing/articles-store";
 import type { RazborItem } from "@/content/razbor/items";
@@ -134,7 +136,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   });
 
-  return [...razborEntries, ...articleEntries, ...paths.flatMap((entry) =>
+  // Страница ИИ-сотрудников — только на русском и узбекском и только пока
+  // сервис включён: выключенный отвечает 404, и в карте ему не место.
+  const aiStaff: MetadataRoute.Sitemap = (await serviceEnabled().catch(() => false))
+    ? LANDING_LOCALES.map((locale) => ({
+        url: absoluteUrl(`${locale}/${LANDING_PATH}`),
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+        alternates: {
+          languages: Object.fromEntries(LANDING_LOCALES.map((l) => [hreflang[l], absoluteUrl(`${l}/${LANDING_PATH}`)])),
+        },
+      }))
+    : [];
+
+  return [...aiStaff, ...razborEntries, ...articleEntries, ...paths.flatMap((entry) =>
     locales.map((locale) => {
       const languages: Record<string, string> = {};
       for (const alt of locales) {

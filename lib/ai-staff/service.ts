@@ -207,7 +207,7 @@ async function deliver(tenant: store.Tenant, lead: store.Lead, conv: store.Conve
   try {
     const token = await (deps.botToken ?? botToken)();
     if (!token) return false;
-    return await sendLeadCard(token, await store.members(tenant.id), lead, conv);
+    return await sendLeadCard(token, await store.members(tenant.id), lead, conv, tenant.locale);
   } catch (error) {
     console.error("ai-staff: заявка не ушла в Telegram", (error as Error).message);
     return false;
