@@ -408,6 +408,14 @@ export const workSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "alerts",
+        title: "Alarmy",
+        body: [
+          "Raz na dobę, razem z odświeżeniem, autopilot porównuje wczorajszy dzień ze zwykłym — średnią z siedmiu dni przed nim. Alarm pojawia się, jeśli kampania wczoraj nic nie wydała, choć zwykle wydaje; jeśli wydatek wzrósł dwukrotnie, a zgłoszeń nie przybyło; jeśli przy zwykłych pieniądzach nie przyszło żadne zgłoszenie (zwykle to zepsuty formularz albo cel w Metryce); jeśli platforma odrzuciła reklamę; jeśli wykluczenie blokuje słowo kluczowe kampanii.",
+          "Każdy alarm przychodzi osobom z konta na Telegram raz i jest widoczny jako żółty blok **«Alarmy»** na górze konta. Gdy przyczyna ustąpi — na przykład kampania znów wydaje — alarm znika sam, nic nie trzeba klikać. Sam autopilot w reakcji na alarmy niczego nie zmienia: to sygnał dla człowieka.",
+        ],
+      },
+      {
         id: "stub",
         title: "Atrapa: testy bez konta reklamowego",
         body: [

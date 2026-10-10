@@ -68,6 +68,8 @@ export type Ad = {
   campaignId: string;
   adGroupId: string;
   active: boolean;
+  /** Площадка отклонила объявление на модерации — оно не показывается. */
+  rejected?: boolean;
   copy: AdCopy;
   clicks: number;
   impressions: number;

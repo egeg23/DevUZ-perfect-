@@ -205,11 +205,11 @@ export function yandexConnector(creds: YandexCreds, opts: { sandbox: boolean; fe
 
     async ads(period) {
       const ids = await campaignIds();
-      const list: { Id: number; AdGroupId: number; CampaignId: number; State: string; TextAd?: { Title: string; Title2?: string; Text: string; Href?: string } }[] = [];
+      const list: { Id: number; AdGroupId: number; CampaignId: number; State: string; Status?: string; TextAd?: { Title: string; Title2?: string; Text: string; Href?: string } }[] = [];
       for (let i = 0; i < ids.length; i += 10) {
         const result = await call<{ Ads?: typeof list }>("ads", "get", {
           SelectionCriteria: { CampaignIds: ids.slice(i, i + 10), Types: ["TEXT_AD"] },
-          FieldNames: ["Id", "AdGroupId", "CampaignId", "State"],
+          FieldNames: ["Id", "AdGroupId", "CampaignId", "State", "Status"],
           TextAdFieldNames: ["Title", "Title2", "Text", "Href"],
         });
         list.push(...(result.Ads ?? []));
@@ -222,6 +222,7 @@ export function yandexConnector(creds: YandexCreds, opts: { sandbox: boolean; fe
           adGroupId: String(a.AdGroupId),
           campaignId: String(a.CampaignId),
           active: a.State === "ON",
+          rejected: a.Status === "REJECTED",
           copy: {
             headlines: [a.TextAd?.Title ?? "", a.TextAd?.Title2 ?? ""].filter(Boolean),
             descriptions: [a.TextAd?.Text ?? ""],

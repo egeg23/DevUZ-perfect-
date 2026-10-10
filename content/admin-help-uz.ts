@@ -1210,6 +1210,14 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "alerts",
+          title: "Ogohlantirishlar",
+          body: [
+            "Kuniga bir marta, yangilanish bilan birga, avtopilot kechagi kunni odatdagisi — undan oldingi yetti kunning o‘rtachasi bilan solishtiradi. Ogohlantirish chiqadi, agar kampaniya kecha odatda sarflasa ham hech narsa sarflamagan bo‘lsa; agar sarf ikki baravar oshib, arizalar ko‘paymagan bo‘lsa; agar odatdagi pulda birorta ham ariza kelmagan bo‘lsa (odatda bu buzilgan forma yoki Metrikadagi maqsad); agar platforma e’lonni rad etgan bo‘lsa; agar minus-so‘z kampaniya kalit so‘zini kesayotgan bo‘lsa.",
+            "Har bir ogohlantirish kabinet odamlariga Telegram’ga bir marta keladi va kabinet tepasida sariq **«Ogohlantirishlar»** bloki sifatida ko‘rinadi. Sabab yo‘qolganda — masalan, kampaniya yana sarflay boshlasa — ogohlantirish o‘zi yo‘qoladi, hech narsa bosish shart emas. Avtopilotning o‘zi ogohlantirishlar bo‘yicha hech narsani o‘zgartirmaydi: bu insonga signal.",
+          ],
+        },
+        {
           id: "stub",
           title: "Namuna: reklama kabinetisiz sinov",
           body: [
