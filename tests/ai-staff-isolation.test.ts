@@ -33,6 +33,7 @@ const LOOKUPS = new Set([
   "saveSetting",
   // Оплата картой: платёжная система знает счёт и свою транзакцию, а не
   // клиента; клиента знает сам счёт (lib/ai-staff/pay.ts).
+  "instagramChannelsExpiring", // продление токенов Instagram свипом, по всем клиентам
   "invoiceForPayment",
   "claimInvoicePaid",
   "payTx",

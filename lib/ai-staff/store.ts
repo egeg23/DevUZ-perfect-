@@ -300,7 +300,7 @@ export async function replaceSiteKnowledge(tenantId: string, items: readonly Kno
 
 /* ── Каналы ───────────────────────────────────────────────────────────── */
 
-export type ChannelKind = "tg_business" | "tg_bot" | "widget";
+export type ChannelKind = "tg_business" | "tg_bot" | "widget" | "instagram";
 
 export type Channel = {
   id: string;
@@ -315,11 +315,12 @@ export type Channel = {
   token_enc: string | null;
   can_reply: boolean;
   error: string | null;
+  token_expires_at: string | null;
   created_at: string;
 };
 
 const CHANNEL_COLUMNS =
-  "id, tenant_id, kind, status, external_id, owner_user_id, title, widget_key, hook_secret, token_enc, can_reply, error, created_at";
+  "id, tenant_id, kind, status, external_id, owner_user_id, title, widget_key, hook_secret, token_enc, can_reply, error, token_expires_at, created_at";
 
 export async function channels(tenantId: string): Promise<Channel[]> {
   const { data } = await db().from("ai_channels").select(CHANNEL_COLUMNS).eq("tenant_id", tenantId).order("created_at");
@@ -397,6 +398,48 @@ export async function addBotChannel(
   const { data, error } = await query.select(CHANNEL_COLUMNS).single();
   if (error || !data) throw new Error(`ai-staff: канал не сохранён — ${error?.message}`);
   return data as Channel;
+}
+
+/** Instagram: профессиональный аккаунт по его id из вебхука (entry.id). */
+export async function saveInstagramChannel(
+  tenantId: string,
+  input: { igId: string; username: string; tokenEnc: string; expiresAt: Date },
+): Promise<void> {
+  const existing = await channelByExternal("instagram", input.igId);
+  if (existing && existing.tenant_id !== tenantId) throw new Error("instagram_taken");
+  const row = {
+    tenant_id: tenantId,
+    kind: "instagram",
+    external_id: input.igId,
+    title: `@${input.username}`,
+    token_enc: input.tokenEnc,
+    token_expires_at: input.expiresAt.toISOString(),
+    status: "active",
+    error: null,
+    updated_at: new Date().toISOString(),
+  };
+  if (existing) await db().from("ai_channels").update(row).eq("tenant_id", tenantId).eq("id", existing.id);
+  else await db().from("ai_channels").insert(row);
+}
+
+export async function setChannelToken(tenantId: string, id: string, tokenEnc: string, expiresAt: Date): Promise<void> {
+  await db()
+    .from("ai_channels")
+    .update({ token_enc: tokenEnc, token_expires_at: expiresAt.toISOString(), updated_at: new Date().toISOString() })
+    .eq("tenant_id", tenantId)
+    .eq("id", id);
+}
+
+/** Каналы Instagram, чей токен истекает раньше даты, — для продления свипом. */
+export async function instagramChannelsExpiring(before: Date): Promise<Channel[]> {
+  const { data } = await db()
+    .from("ai_channels")
+    .select(CHANNEL_COLUMNS)
+    .eq("kind", "instagram")
+    .eq("status", "active")
+    .lt("token_expires_at", before.toISOString())
+    .limit(50);
+  return (data ?? []) as Channel[];
 }
 
 export async function ensureWidgetChannel(tenantId: string): Promise<Channel> {
