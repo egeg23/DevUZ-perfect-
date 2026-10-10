@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { createHash } from "node:crypto";
 
 /**
  * Откуда приходят снимки разборов.
@@ -19,6 +20,23 @@ function shotHost(): NonNullable<NextConfig["images"]>["remotePatterns"] {
     return [];
   }
 }
+
+/**
+ * Постоянные id серверных действий — от одной сборки к другой.
+ *
+ * Next солит id каждого server action ключом сборки, а ключ без этой
+ * переменной случаен. Значит, после каждой выкатки все кнопки панели
+ * получали новые id, и первое нажатие на странице, открытой до выкатки,
+ * отвечало 404 «Server action not found». 10.10.2026 так владелец получил
+ * 404 в «Рекламе»: пять выкаток за час, страница открыта посреди них.
+ *
+ * Ключ не секрет и секретом быть не может: образ в ghcr публичный, и всё,
+ * что вшито в сборку, читается из него. Им шифруются только замыкания
+ * действий (inline "use server" и .bind), а их в коде нет — действия
+ * берут всё из формы и сами проверяют, кто нажал. Держит тест
+ * tests/deploy-chain.test.ts.
+ */
+process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY ||= createHash("sha256").update("devuz-server-actions-v1").digest("base64");
 
 const config: NextConfig = {
   // Standalone кладёт рядом с приложением только те зависимости, которые
