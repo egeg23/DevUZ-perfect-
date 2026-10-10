@@ -123,6 +123,12 @@ services:
       AI_STAFF_BOT_USERNAME: ${AI_STAFF_BOT_USERNAME:-}
       AI_STAFF_WEBHOOK_SECRET: ${AI_STAFF_WEBHOOK_SECRET:-}
       AI_STAFF_KEY: ${AI_STAFF_KEY:-}
+      # Оплата картой (lib/ai-staff/pay.ts): без ключей касса выключена.
+      AI_STAFF_PAYME_MERCHANT_ID: ${AI_STAFF_PAYME_MERCHANT_ID:-}
+      AI_STAFF_PAYME_KEY: ${AI_STAFF_PAYME_KEY:-}
+      AI_STAFF_CLICK_SERVICE_ID: ${AI_STAFF_CLICK_SERVICE_ID:-}
+      AI_STAFF_CLICK_MERCHANT_ID: ${AI_STAFF_CLICK_MERCHANT_ID:-}
+      AI_STAFF_CLICK_SECRET: ${AI_STAFF_CLICK_SECRET:-}
       # ИИ на прототипах (lib/proto/ai.ts) — по умолчанию Haiku.
       PROTO_AI_MODEL: ${PROTO_AI_MODEL:-}
       # Ключ Вордстата — API-ключ Яндекс Облака (AQVN…) или OAuth-токен:
