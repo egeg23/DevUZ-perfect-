@@ -99,6 +99,10 @@ export const SECTIONS: readonly Section[] = [
   // не оценить. Смотреть — да; подключать Метрику и Google остаётся
   // владельцу: вход в Google — его аккаунт, и кнопки у руководителя нет.
   { href: "/admin/traffic", label: { ru: "Трафик", uz: "Trafik", pl: "Ruch" }, roles: WITH_HEAD },
+  // Реклама — автопилот Google Ads и Яндекс Директа (docs/ads-autopilot).
+  // Владельцу и руководителю: решения о чужих рекламных деньгах и доступ к
+  // кабинетам агентств — не работа менеджера.
+  { href: "/admin/ads", label: { ru: "Реклама", uz: "Reklama", pl: "Reklamy" }, roles: WITH_HEAD },
   // Финансы — всем, но каждому своё: менеджер видит свои проекты и баланс,
   // руководитель — команду, владелец — всё. Границу держит страница.
   { href: "/admin/contracts", label: { ru: "Договоры", uz: "Shartnomalar", pl: "Umowy" }, roles: EVERYONE },
@@ -136,6 +140,9 @@ export const SECTIONS: readonly Section[] = [
   // Только владельцу: отчёт, о котором знают, меряет не работу, а
   // старание выглядеть в нём хорошо.
   { href: "/admin/usage", label: { ru: "Использование", uz: "Foydalanish", pl: "Użycie" }, roles: ADMIN_ONLY },
+  // ИИ-сотрудники по подписке — только владельцу: деньги клиентов сервиса,
+  // их сроки и вход поддержки в чужой кабинет (docs/ai-staff/design.md).
+  { href: "/admin/ai-staff", label: { ru: "ИИ-сотрудники", uz: "SI xodimlar", pl: "Pracownicy AI" }, roles: ADMIN_ONLY },
   // Инструкции — последними: это справка, а не ежедневная работа. Видят все,
   // и каждый читает только про свои вкладки.
   { href: "/admin/help", label: { ru: "Инструкции", uz: "Yo‘riqnoma", pl: "Instrukcje" }, roles: EVERYONE },

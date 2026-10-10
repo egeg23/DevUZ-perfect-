@@ -111,11 +111,37 @@ services:
       # Чем «Найти в инструкции» выбирает пункт по вопросу сотрудника.
       # Пусто — Haiku: нужно только выбрать пункт из списка.
       HELP_SEARCH_MODEL: ${HELP_SEARCH_MODEL:-}
+      # ИИ-сотрудники по подписке (docs/ai-staff/design.md). Модели: пусто —
+      # Sonnet для ответов покупателям, Opus для тарифа «Про», Haiku для
+      # разбора сайта клиента. Токен бота сервиса, секрет его вебхука и ключ
+      # шифрования токенов клиентов можно положить и в хранилище секретов.
+      AI_STAFF_MODEL: ${AI_STAFF_MODEL:-}
+      AI_STAFF_PREMIUM_MODEL: ${AI_STAFF_PREMIUM_MODEL:-}
+      AI_STAFF_IMPORT_MODEL: ${AI_STAFF_IMPORT_MODEL:-}
+      AI_STAFF_UZS_PER_USD: ${AI_STAFF_UZS_PER_USD:-}
+      AI_STAFF_BOT_TOKEN: ${AI_STAFF_BOT_TOKEN:-}
+      AI_STAFF_BOT_USERNAME: ${AI_STAFF_BOT_USERNAME:-}
+      AI_STAFF_WEBHOOK_SECRET: ${AI_STAFF_WEBHOOK_SECRET:-}
+      AI_STAFF_KEY: ${AI_STAFF_KEY:-}
       # ИИ на прототипах (lib/proto/ai.ts) — по умолчанию Haiku.
       PROTO_AI_MODEL: ${PROTO_AI_MODEL:-}
       # Ключ Вордстата — API-ключ Яндекс Облака (AQVN…) или OAuth-токен:
       # запросы по Узбекистану перед каждой статьёй.
       WORDSTAT_TOKEN: ${WORDSTAT_TOKEN:-}
+
+      # Автопилот рекламы (docs/ads-autopilot/design.md). Можно и в хранилище
+      # секретов вместо .env. ADS_AUTOPILOT=1 — фоновые проходы включены;
+      # ADS_TOKEN_KEY — 32 байта base64, им шифруются ключи кабинетов клиентов.
+      # ADS_MODEL пусто — Haiku: минус-слова и варианты объявлений.
+      ADS_AUTOPILOT: ${ADS_AUTOPILOT:-}
+      ADS_TOKEN_KEY: ${ADS_TOKEN_KEY:-}
+      ADS_MODEL: ${ADS_MODEL:-}
+      YANDEX_DIRECT_CLIENT_ID: ${YANDEX_DIRECT_CLIENT_ID:-}
+      YANDEX_DIRECT_CLIENT_SECRET: ${YANDEX_DIRECT_CLIENT_SECRET:-}
+      GOOGLE_ADS_CLIENT_ID: ${GOOGLE_ADS_CLIENT_ID:-}
+      GOOGLE_ADS_CLIENT_SECRET: ${GOOGLE_ADS_CLIENT_SECRET:-}
+      GOOGLE_ADS_DEVELOPER_TOKEN: ${GOOGLE_ADS_DEVELOPER_TOKEN:-}
+      GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${GOOGLE_ADS_LOGIN_CUSTOMER_ID:-}
 
       # Порог, ниже которого сигнал скаута не показывают оператору.
       # Пусто — берётся значение по умолчанию из кода.

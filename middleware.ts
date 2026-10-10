@@ -102,6 +102,15 @@ export function middleware(request: NextRequest) {
   // и уедет на свой домен целиком — языковой префикс студии ему не нужен.
   if (pathname === "/maximova" || pathname.startsWith("/maximova/")) return NextResponse.next();
 
+  // Кабинет автопилота рекламы (app/ads) — свой язык (ru/uz) у кабинета
+  // агентства, языковой префикс сайта ему не нужен.
+  if (pathname === "/ads" || pathname.startsWith("/ads/")) return NextResponse.next();
+
+  // Кабинет клиента ИИ-сотрудников (app/cabinet) — тоже вне языков: язык у
+  // него свой, переключателем RU / UZ, а вход и доступ проверяет сама
+  // страница (lib/ai-staff/auth.ts).
+  if (pathname === "/cabinet" || pathname.startsWith("/cabinet/")) return NextResponse.next();
+
   const hasLocale = locales.some(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   );

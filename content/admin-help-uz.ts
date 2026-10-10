@@ -1160,6 +1160,75 @@ export const uz: HelpCopy = {
       ],
     },
 
+    /* ── Reklama ──────────────────────────────────────────────────────── */
+    "/admin/ads": {
+      what: "Google Ads va Yandex Direct’dagi reklama avtopiloti — studiyaning marketologlar va agentliklar uchun yangi xizmati. Kuniga bir marta u reklama kabinetining hisobotlarini olib, uchta narsani taklif qiladi: minus-so‘zlar, byudjetni qayta taqsimlash va e’lonlar testi, — har biri sababi va raqamlari bilan. Odatiy holatda o‘zi hech narsani o‘zgartirmaydi: «Qabul qilish» va «Rad etish» tugmalari bilan inson hal qiladi. Egasi va rahbarlar ko‘radi, menejerlar — yo‘q.",
+      items: [
+        {
+          id: "what",
+          title: "Avtopilot nima qiladi",
+          body: [
+            "**Minus-so‘zlar.** Reklama ko‘rsatilgan qidiruv so‘rovlari so‘z va so‘z juftlariga bo‘linadi, har biri bo‘yicha pul va arizalar qo‘shiladi. Odatdagi ariza narxidan kam bo‘lmagan pul sarflagan, klik yig‘gan va birorta ariza keltirmagan so‘z («bepul», «yuklab olish», «vakansiya») minusga taklif qilinadi. Qoidaga ko‘rinmaydigan, lekin aniq bu biznes haqida bo‘lmagan so‘rovlarni arzon model belgilaydi. Taklifdan oldin kod minus-so‘z kampaniyaning birorta kalit so‘ziga tegmasligini tekshiradi.",
+            "**Byudjet.** Pul arizasi qimmat kampaniyadan arizasi arzon kampaniyaga o‘tadi, lekin faqat u har kuni o‘z byudjetiga tiralib qolsa. Ma’lumot kam bo‘lganda «ko‘z bilan» solishtirish aldaydi, shuning uchun avtopilot bitta kampaniya haqiqatan yaxshiroq ekanligi ehtimolini hisoblaydi va siljitishni faqat 90% va undan yuqorida taklif qiladi. Umumiy byudjet bunda o‘zgarmaydi.",
+            "**E’lonlar testi.** Guruhda bitta e’lon bo‘lsa, model guruh tilida ikkinchi variantni yozadi, uzun tire, shtamp va «kafolat» yoki «eng yaxshi» kabi va’dalarsiz. 10–45 kundan keyin ko‘proq ariza keltirgani qoladi, ikkinchisi pauzaga qo‘yiladi.",
+            "Kalit so‘zlar stavkalariga avtopilot tegmaydi: buni Google va Yandex o‘z strategiyalarida o‘zlari qiladi. Batafsil — `docs/ads-autopilot/design.md` da.",
+          ],
+        },
+        {
+          id: "setup",
+          title: "Agentlik kabinetini qanday ochish",
+          body: [
+            "Chapda — kabinetlar ro‘yxati. **«Yangi kabinet»**: nomi, kimligi (studiya, agentlik yoki biznes) va tili — bot shu kabinet odamlariga shu tilda yozadi. **«Yaratish»** ni bosing, kabinet o‘ngda ochiladi.",
+            "**«Odamlar»** blokiga agentlik tomonidan kabinetda ishlaydiganlarni qo‘shing: raqamli Telegram id va ism, **«Qo‘shish»** tugmasi. Ular devuz.studio/ads ga studiya boti orqali kiradi — «Telegram orqali kirish» tugmasi bir martalik havola yuboradi — va bildirishnomalar oladi. Odamni olib tashlasangiz, uning kirishi darhol ishlamay qoladi.",
+            "**«Reklama kabinetini qo‘shish»**: platforma, nom, Direct’dagi mijoz logini (agentlik uchun) yoki 123-456-7890 ko‘rinishidagi Google akkaunt raqami. Keyin kabinetning o‘zida — **«Ulash»**: Yandex yoki Google sahifasi ochiladi, reklama egasi u yerda ruxsat beradi. Kalit shifrlangan holda saqlanadi, uni hech kim, studiya ham ko‘rmaydi.",
+          ],
+        },
+        {
+          id: "proposals",
+          title: "Takliflar: «Qabul qilish» va «Rad etish»",
+          body: [
+            "**«Takliflar»** blokida — avtopilot oxirgi 30 kunda topgan narsalar, har birining sababi oddiy so‘zlar va raqamlar bilan. **«Qabul qilish»** o‘zgarishni reklama kabinetida darhol qo‘llaydi, **«Rad etish»** taklifni olib tashlaydi. Hal qilinmagan taklif 14 kundan keyin eskiradi: undagi ma’lumotlar endi boshqa.",
+            "Qo‘llashdan oldin avtopilot kabinetni hozirgi holatida yana bir bor ko‘radi. Agar byudjetni qo‘lda o‘zgartirishgan bo‘lsa, kampaniya o‘qitila boshlagan bo‘lsa yoki kalit so‘zlarga minusga tegadigan so‘z qo‘shilgan bo‘lsa, o‘zgarish qo‘llanmaydi va taklif ostida nima uchunligi yoziladi. Bu nosozlik emas, himoya.",
+            "**«Hozir yangilash»** bir kunni kutmasdan hisobotlarni olib, takliflar yozadi — odatda 1–2 daqiqada, natija Telegram’ga ham keladi.",
+          ],
+        },
+        {
+          id: "limits",
+          title: "Rejim, limitlar va stop-kran",
+          body: [
+            "**«Rejim va limitlar»** blokida ikki rejim bor. **«Taklif qilaman — siz tasdiqlaysiz»** odatiy: insonsiz hech narsa o‘zgarmaydi. **«O‘zim, limitlar doirasida»** — avtopilot takliflarni o‘zi qo‘llaydi va bu haqda Telegram’ga yozadi. Uni agentlik bir-ikki hafta takliflarni qabul qilib, ular bilan rozi bo‘lganda yoqish kerak.",
+            "Limitlar: bitta kampaniya byudjetini bir martada necha foizga siljitish mumkin (odatda 20, 30 dan ortig‘i umuman mumkin emas) va avtopilot bir kunda o‘zi nechta o‘zgarish qila oladi. Minus-so‘zlar uchun chegaralar, o‘z ariza narxingiz, minus qilib bo‘lmaydigan so‘zlar (brend, shahar, xizmat) va biznes haqida bir-ikki jumla keraksiz so‘rovlarni aniqroq ajratishga yordam beradi.",
+            "Hech qaysi rejimda o‘zgarmaydigan narsalar: umumiy byudjet oshmaydi, o‘qitilayotgan kampaniyalarga tegilmaydi, minus-so‘z kalit so‘zlarga tegmaydi, bitta kampaniya byudjeti 3 kunda bir martadan ko‘p o‘zgarmaydi, hech narsa o‘chirilmaydi — faqat pauza. **«Stop-kran: barcha o‘zgarishlarni to‘xtatish»** hammasini, «Qabul qilish» tugmasini ham to‘xtatadi; qilinganni u bosilganda ham qaytarish mumkin.",
+          ],
+        },
+        {
+          id: "journal",
+          title: "Jurnal, qaytarish va hafta hisoboti",
+          body: [
+            "**«Jurnal»** da har bir o‘zgarish: qachon, kim (inson yoki avtopilot, «o‘zi» belgisi), nima bo‘lgan va nima uchun. **«Qaytarish»** bir bosishda avvalgi holatga qaytaradi: minus-so‘zlar — faqat biz qo‘shganlari, byudjet — faqat o‘shandan beri qo‘lda o‘zgartirilmagan bo‘lsa, e’lon — yana yoqiladi yoki pauzaga qo‘yiladi. Rejim almashishi va stop-kran ham jurnalga yoziladi.",
+            "**«7 kun ichida»** bloki nechta o‘zgarish qo‘llanganini, minus-so‘zlar oyiga qancha pulni keraksiz so‘rovlarga yo‘l qo‘ymayotganini va nechta taklif qaror kutayotganini ko‘rsatadi. Hafta hisoboti kabinet odamlariga dushanba kunlari soat 09:00 dan keyin Telegram’ga keladi; **«Hafta hisobotini Telegram’ga yuborish»** uni sizga hozir yuboradi.",
+          ],
+        },
+        {
+          id: "stub",
+          title: "Namuna: reklama kabinetisiz sinov",
+          body: [
+            "**«Namuna (sinov)»** platformasi — Toshkentdagi o‘quv markazi, so‘mda haqiqatga yaqin raqamlar bilan. Unda hammasi ko‘rinadi: takliflar, «Qabul qilish», jurnal va qaytarish, — va hech bir haqiqiy reklama kabinetida hech narsa sodir bo‘lmaydi. Agentlikka ulashdan oldin ko‘rsatish uchun qulay.",
+            "**«7 kunni o‘tkazish»** faqat namunada va faqat panelda bor: e’lonlar testi ikki haftani kutmasdan natijaga yetishi uchun bir haftalik ko‘rsatishlarni qo‘shadi.",
+          ],
+        },
+        {
+          id: "keys",
+          title: "Kalitlar va yoqish",
+          roles: ["admin"],
+          body: [
+            "Fon rejimidagi yurishlarni `ADS_AUTOPILOT=1` yoqadi (`/opt/devuz/.env` da yoki maxfiy ma’lumotlar omborida `app.ADS_AUTOPILOT` sifatida); usiz faqat tugmalar ishlaydi. Mijozlar kalitlari `ADS_TOKEN_KEY` bilan shifrlanadi — base64 dagi 32 tasodifiy bayt; uni almashtirish barcha kabinetlarni qayta ulash demakdir.",
+            "«Ulash» tugmasi uchun ilova kalitlari kerak: `YANDEX_DIRECT_CLIENT_ID` va `YANDEX_DIRECT_CLIENT_SECRET`, `GOOGLE_ADS_CLIENT_ID` va `GOOGLE_ADS_CLIENT_SECRET`. Ularni qanday olish va Yandex hamda Google’ga nima topshirish — `docs/ads-autopilot/api-access.md` da qadamma-qadam. Model sarfi `model_usage` da `ads-negatives` va `ads-copy` belgilari bilan ko‘rinadi.",
+          ],
+        },
+      ],
+    },
+
     /* ── Договоры ─────────────────────────────────────────────────────── */
     "/admin/contracts": {
       what: "YaTTimiz nomidan buyurtmachi bilan shartnoma. Jamoadagi har kim tayyorlaydi va tekshiradi, faqat egasi tasdiqlaydi — aynan shu paytda hujjatda uning imzosi paydo bo‘ladi. Keyin — bosqichlar bo‘yicha hisoblar va buyurtmachi uchun havola. Bu yerda shartnomalar ro‘yxati yo‘q: shartnoma loyiha kartochkasida turadi.",
@@ -1736,6 +1805,45 @@ export const uz: HelpCopy = {
           body: [
             "«Hech kim — ortiqchami?» — so‘rash uchun sabab: funksiya keraksizmi yoki u haqda bilishmaydimi. Ko‘pincha javob — ikkinchisi: unda yo‘riqnomadagi band va «?» tugmasi yordam beradi.",
             "Bo‘limlarni ko‘rishlar hisobot yoqilgan paytdan, harakatlar esa butun vaqt uchun jurnaldan hisoblanadi.",
+          ],
+        },
+      ],
+    },
+
+    /* ── SI xodimlar ──────────────────────────────────────────────────── */
+    "/admin/ai-staff": {
+      what: "Studiyaning obuna asosidagi yangi xizmati: boshqa kompaniyalarning xaridorlariga ularning Telegrami va saytida javob beradigan va arizalarni ularning odamlariga topshiradigan SI savdo menejeri. Bu yerda xizmatning barcha mijozlari, ularning sarfi ko‘rinadi va to‘lovni belgilaysiz. Mijozlarning o‘zi devuz.studio/cabinet dagi kabinetida ishlaydi, bizning panelni ko‘rmaydi.",
+      items: [
+        {
+          id: "service",
+          title: "Xizmat va xizmat boti",
+          body: [
+            "Yuqorida xizmat yoqilganmi yoki yo‘qmi ko‘rinadi. U o‘chiq bo‘lsa, mijozlar kabineti, ularning saytlaridagi vidjet va xizmat boti hech kimga javob bermaydi, saytdagi xizmat sahifasi ochilmaydi. **«Xizmatni yoqish»** / **«Xizmatni o‘chirish»** tugmasi bir daqiqa ichida ishlaydi.",
+            "Xizmatning Telegramda o‘z boti bor, studiya boti emas: u orqali mijozlar kabinetga kiradi, Telegram Business ni ulaydi va arizalarni oladi. Botni @BotFather da o‘zingiz yaratasiz, u yerda Business Mode ni yoqasiz, tokenni sirlar omboriga `AI_STAFF_BOT_TOKEN` sifatida qo‘yasiz, yoniga `AI_STAFF_WEBHOOK_SECRET` (istalgan uzun tasodifiy qator) va `AI_STAFF_KEY` (mijozlar botlari tokenlarini shifrlash kaliti). So‘ng **«Xizmat botini ulash»** ni bosing: server botga vebxuk o‘rnatadi va Business Mode yoqilganini tekshiradi. Bu qadamsiz bot jim turadi.",
+          ],
+        },
+        {
+          id: "clients",
+          title: "Mijozlar va raqamlar qayerdan",
+          body: [
+            "Har bir kartochka xizmatning bitta mijozi. «Suhbatlar» SI shu oyda Toshkent vaqti bo‘yicha xaridorlar bilan nechta suhbat olib borganini tarif limitidan ko‘rsatadi: suhbat oyiga bir marta hisoblanadi, unda qancha xabar bo‘lishidan qat’i nazar. Limit tugasa, mijozning SI jim bo‘ladi, xaridor «menejer javob beradi» xabarini oladi, mijozning odamlariga xabar keladi.",
+            "«Tannarx» mijoz oy davomida model sarfi bo‘yicha qancha turganini model narxlarida dollarda ko‘rsatadi: har bir chaqiruv mijoz belgisi bilan yoziladi. Yonida bir suhbat narxi va «Marja»: tarif narxi minus `AI_STAFF_UZS_PER_USD` kursi bo‘yicha so‘mdagi tannarx (odatiy 12 700). ProxyAPI orqali model qimmatroq, bu raqamda hisobga olinmagan. Yuqorida barcha mijozlar sarfi va to‘langan tariflar bo‘yicha tushum.",
+          ],
+        },
+        {
+          id: "pay",
+          title: "To‘lov, sinov muddati va holat",
+          body: [
+            "Hozircha to‘lov hisob orqali: mijoz bizga yozadi, siz hisob chiqarasiz, pul kelganda tarif, oylar soni, summa va usulni tanlab **«To‘lovni belgilash»** ni bosasiz. Agar to‘langan sana hali o‘tmagan bo‘lsa, muddat undan uzaytiriladi: oldindan to‘lov yonib ketmaydi. Summa bo‘sh bo‘lsa, tanlangan oylar uchun tarif narxi olinadi. «Pro» tarifi mijozning SI ni o‘zi eng kuchli modelga o‘tkazadi.",
+            "Yangi mijoz 14 kunlik sinov muddati va 100 suhbat oladi. **«Sinovni 7 kunga uzaytirish»** mijozga to‘lovgacha vaqt kerak bo‘lganda. **«Holatni o‘zgartirish»**: «pauza» va «bloklangan» mijozning SI ni darhol to‘xtatadi, xaridorlar «menejer javob beradi» xabarini oladi.",
+          ],
+        },
+        {
+          id: "cabinet",
+          title: "Mijoz kabineti va demo",
+          body: [
+            "**«Kabinetni ochish»** mijoz kabinetiga yordam xizmati nomidan 2 soatga kirish: bilimlar bazasi yoki kanalni sozlashga yordam berish uchun. Kabinet sarlavhasida yordam xizmati kirgani belgisi bo‘ladi.",
+            "**«Demo sifatida ko‘rsatish»** shu mijozning chat-vidjetini saytdagi xizmat sahifasiga qo‘yadi: tashrif buyuruvchi SI ni jonli misolda sinab ko‘radi. Demo uchun o‘ylab topilgan kompaniya va to‘ldirilgan bilimlar bazasi bilan alohida mijoz ochgan ma’qul: tashrif buyuruvchining har bir savoli uning suhbatlari va model sarfini sarflaydi.",
           ],
         },
       ],
