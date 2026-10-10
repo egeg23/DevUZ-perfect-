@@ -226,6 +226,17 @@ export const cab = {
     uz: "Hozircha to'lov hisob-faktura orqali: bizga Telegramda qaysi tarif va necha oyga ekanini yozing, kompaniyaga hisob yoki o'tkazma rekvizitlarini yuboramiz. To'lovdan keyin muddat ish kuni davomida uzaytiriladi. Click va Payme orqali karta bilan to'lov tez orada shu yerda paydo bo'ladi.",
   },
   writeUs: { ru: "Написать в Telegram", uz: "Telegramda yozish" },
+  payCard: { ru: "Оплатить картой", uz: "Karta bilan to'lash" },
+  payCardHint: {
+    ru: "Выберите тариф и срок. Оплата идёт на стороне Payme или Click, после неё тариф продлится сам, а вам придёт сообщение в Telegram. Срок считается от уже оплаченной даты: оплата заранее не сгорает.",
+    uz: "Tarif va muddatni tanlang. To'lov Payme yoki Click tomonida bo'ladi, shundan keyin tarif o'zi uzaytiriladi va sizga Telegramda xabar keladi. Muddat to'langan sanadan hisoblanadi: oldindan to'lov yonib ketmaydi.",
+  },
+  payWith: { ru: "Оплатить через", uz: "Orqali to'lash" },
+  paidThanks: {
+    ru: "Спасибо! Как только платёжная система подтвердит оплату, срок обновится здесь, обычно за минуту.",
+    uz: "Rahmat! To'lov tizimi to'lovni tasdiqlashi bilan muddat shu yerda yangilanadi, odatda bir daqiqada.",
+  },
+  payFail: { ru: "Оплата картой сейчас недоступна. Напишите нам, пришлём счёт.", uz: "Karta bilan to'lov hozir mavjud emas. Bizga yozing, hisob yuboramiz." },
   history: { ru: "Оплаты", uz: "To'lovlar" },
   months: { ru: "мес.", uz: "oy" },
 } satisfies Record<string, Tr>;

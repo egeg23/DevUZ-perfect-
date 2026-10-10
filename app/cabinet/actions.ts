@@ -8,6 +8,8 @@ import { channelsLeft, connectBot, disconnectBot } from "@/lib/ai-staff/channels
 import { openToken, randomKey } from "@/lib/ai-staff/crypto";
 import { parseHours } from "@/lib/ai-staff/hours";
 import { importSite } from "@/lib/ai-staff/import";
+import { startPayment } from "@/lib/ai-staff/pay";
+import { isPlan } from "@/lib/ai-staff/plans";
 import { isKnowledgeKind } from "@/lib/ai-staff/prompt";
 import { handleIncoming } from "@/lib/ai-staff/service";
 import * as store from "@/lib/ai-staff/store";
@@ -260,4 +262,14 @@ export async function removeMemberAction(form: FormData): Promise<void> {
   const { tenant } = await owner();
   await store.removeMember(tenant.id, str(form, "id", 64));
   revalidatePath("/cabinet/team");
+}
+
+/* ── Оплата картой ── */
+
+export async function payByCard(form: FormData): Promise<void> {
+  const { tenant } = await owner();
+  const plan = str(form, "plan");
+  const provider = str(form, "provider") === "click" ? "click" : "payme";
+  const link = isPlan(plan) && plan !== "trial" ? await startPayment(tenant, { plan, months: Number(str(form, "months")) || 1, provider }) : null;
+  redirect(link ?? "/cabinet/plan?n=payfail");
 }

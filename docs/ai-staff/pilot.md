@@ -94,7 +94,13 @@ limit 30;
    юрлицо или ИП студии, расчётный счёт, договор с Click (SHOP/Merchant API)
    и с Payme Business (Merchant API, для автопродления — Subscribe API),
    публичная оферта и цены на сайте, HTTPS. Ставку эквайринга запросить в
-   договоре (публично не опубликована; ориентир 2–3%). После договора —
-   `merchant_id`, секретный ключ и адрес для уведомлений: их передать нам.
+   договоре (публично не опубликована; ориентир 2–3%). Код кассы уже
+   готов (этап 4): в кабинете Payme Business указать адрес
+   `https://devuz.studio/api/ai-staff/pay/payme`, в Click —
+   `https://devuz.studio/api/ai-staff/pay/click` (Prepare и Complete на
+   один адрес). Ключи — в хранилище секретов: `AI_STAFF_PAYME_MERCHANT_ID`,
+   `AI_STAFF_PAYME_KEY`, `AI_STAFF_CLICK_SERVICE_ID`,
+   `AI_STAFF_CLICK_MERCHANT_ID`, `AI_STAFF_CLICK_SECRET`. До боевых
+   платежей — прогон в песочнице каждой системы.
 6. **Юрист** — вопросы в `legal.md`; до первых платных клиентов — оферта
    сервиса, договор поручения на обработку данных, политика.

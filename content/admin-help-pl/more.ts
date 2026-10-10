@@ -437,7 +437,7 @@ export const moreSections: Record<string, HelpEntry> = {
         id: "pay",
         title: "Płatność, okres próbny i status",
         body: [
-          "Na razie płatność jest na fakturę: klient do nas pisze, wystawiasz fakturę, a gdy pieniądze dotrą, wybierasz plan, liczbę miesięcy, kwotę i sposób i naciskasz **«Zaznacz płatność»**. Termin przedłuża się od już opłaconej daty, jeśli jeszcze nie minęła: płatność z góry nie przepada. Pusta kwota to cena planu za wybrane miesiące. Plan «Pro» sam przełącza AI klienta na najmocniejszy model.",
+          "Na razie płatność jest na fakturę: klient do nas pisze, wystawiasz fakturę, a gdy pieniądze dotrą, wybierasz plan, liczbę miesięcy, kwotę i sposób i naciskasz **«Zaznacz płatność»**. Termin przedłuża się od już opłaconej daty, jeśli jeszcze nie minęła: płatność z góry nie przepada. Pusta kwota to cena planu za wybrane miesiące. Plan «Pro» sam przełącza AI klienta na najmocniejszy model. Gdy w magazynie sekretów pojawią się klucze Payme (`AI_STAFF_PAYME_MERCHANT_ID`, `AI_STAFF_PAYME_KEY`) albo Click (`AI_STAFF_CLICK_SERVICE_ID`, `AI_STAFF_CLICK_MERCHANT_ID`, `AI_STAFF_CLICK_SECRET`), w panelu klienta pojawi się płatność kartą: opłacona faktura sama przedłuży plan, bez Twojego zaznaczenia, i trafi do jego historii płatności.",
           "Nowy klient dostaje 14 dni okresu próbnego i 100 dialogów. **«Przedłuż okres próbny o 7 dni»** gdy klient potrzebuje czasu do płatności. **«Zmień status»**: «pauza» i «zablokowany» od razu zatrzymują AI klienta, kupujący dostają «menedżer odpowie».",
         ],
       },

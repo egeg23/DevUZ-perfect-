@@ -31,6 +31,16 @@ const LOOKUPS = new Set([
   "dropSession",
   "setting", // настройки сервиса (демо на странице сервиса)
   "saveSetting",
+  // Оплата картой: платёжная система знает счёт и свою транзакцию, а не
+  // клиента; клиента знает сам счёт (lib/ai-staff/pay.ts).
+  "invoiceForPayment",
+  "claimInvoicePaid",
+  "payTx",
+  "payTxById",
+  "openPayTx",
+  "insertPayTx",
+  "patchPayTx",
+  "payTxBetween",
 ]);
 
 function functions(source: string): Array<{ name: string; body: string; params: string }> {
