@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { NICHES, nicheByKey } from "@/content/razbor/catalog";
+import { NICHES, nicheByKey, type Niche } from "@/content/razbor/catalog";
 import { forbiddenNiche, parseNiche } from "@/lib/razbor/niche-words";
 
 const ROOT = new URL("../", import.meta.url);
@@ -151,8 +151,23 @@ test("правила ниши не тащат SDK в сборку публичн
 
 test("ниша определяется дешёвой моделью, а не той, что пишет статью", () => {
   const ask = read("lib/razbor/niche-ask.ts");
-  assert.match(ask, /RAZBOR_NICHE_MODEL \|\| "claude-sonnet-5"/);
+  assert.match(ask, /RAZBOR_NICHE_MODEL \|\| "claude-haiku-4-5"/);
   // Переменная должна быть и там, откуда её читает боевой контейнер.
   assert.match(read("docker-compose.yml"), /RAZBOR_NICHE_MODEL/);
   assert.match(read(".env.example"), /RAZBOR_NICHE_MODEL=/);
+});
+
+test("медицина узнаётся по специальности, а «доставка» — не «ставки»", () => {
+  const niche = (ruLabel: string) =>
+    ({ key: "x", ruGen: ruLabel, ruLabel, uz: "x", uzLabel: "x", ruMock: ruLabel, uzMock: "x", ruServices: [], uzServices: [] }) as Niche;
+  // 10.10.2026: опубликован разбор ниши «неврологический центр», которую
+  // запрет не узнал.
+  for (const banned of ["неврологический центр", "медицинский центр", "лабораторная диагностика", "кардиологическая клиника", "ставки на спорт", "магазин оружия", "кредитная организация"]) {
+    assert.ok(forbiddenNiche(niche(banned)), `${banned}: прошло`);
+  }
+  // «ставк» ловило «доСТАВКи»: каталожная «доставка еды» не разбиралась никогда.
+  for (const fine of ["доставка еды", "центр автодиагностики", "строительство сооружений", "кожевенное производство", "гостиница", "аккредитованный учебный центр"]) {
+    assert.ok(!forbiddenNiche(niche(fine)), `${fine}: запрещено зря`);
+  }
+  assert.deepEqual(NICHES.filter((n) => forbiddenNiche(n)).map((n) => n.key).sort(), ["medcentr", "stomatologiya"]);
 });

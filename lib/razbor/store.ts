@@ -350,6 +350,32 @@ export async function coveredHashes(): Promise<Set<string>> {
  * закончена, ждёт глаз», и смена, оставившая после себя `draft`, выглядела
  * бы как смена, которая чего-то не доделала.
  */
+/**
+ * Занят ли запрос или адрес разбора — в любом статусе, включая отклонённые.
+ *
+ * Смена спрашивает это до модели: уникальные индексы (`query_ru`, `query_uz`,
+ * `slug_ru`, `slug_uz`) всё равно не дали бы записать вторую страницу под
+ * тот же запрос, но узнавала она об этом, уже заплатив за обе статьи.
+ */
+export async function razborTaken(keys: { slugRu: string; slugUz: string; queryRu: string; queryUz: string }): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const quote = (v: string) => `"${v.replace(/"/g, "")}"`;
+  const { data } = await db
+    .from("razbors")
+    .select("id")
+    .or(
+      [
+        `slug_ru.eq.${quote(keys.slugRu)}`,
+        `slug_uz.eq.${quote(keys.slugUz)}`,
+        `query_ru.ilike.${quote(keys.queryRu)}`,
+        `query_uz.ilike.${quote(keys.queryUz)}`,
+      ].join(","),
+    )
+    .limit(1);
+  return Boolean(data?.length);
+}
+
 export async function saveDraft(draft: RazborDraft): Promise<string | null> {
   const db = serviceClient();
   if (!db) return null;

@@ -16,10 +16,11 @@ import { anthropic } from "@/lib/model-road";
 
 /**
  * Определить род занятий по заголовкам — не та работа, за которую стоит
- * платить как за статью. Отдельный ключ, и по умолчанию Sonnet: разбор
- * пишется дорогой моделью, а это один короткий ответ на сайт.
+ * платить как за статью. Отдельный ключ, и по умолчанию Haiku (с 10.10.2026,
+ * разведка «ИИ → код»): это один короткий ответ по готовой схеме, а Sonnet
+ * остаётся статьям. Не справится — вернуть Sonnet через RAZBOR_NICHE_MODEL.
  */
-const MODEL = process.env.RAZBOR_NICHE_MODEL || "claude-sonnet-5";
+const MODEL = process.env.RAZBOR_NICHE_MODEL || "claude-haiku-4-5";
 
 const TOOL = {
   name: "nisha",

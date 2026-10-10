@@ -255,3 +255,37 @@ test("вторая смена за день не начинается, пока 
   assert.match(migration, /primary key \(job, day\)/);
   assert.match(migration, /enable row level security/);
 });
+
+/* ── Разведка «ИИ → код», 10.10.2026: смена не платит за то, что выбросит ── */
+
+test("город и ниша из заголовка сайта — не «имя компании», домен — по-прежнему имя", () => {
+  const common = ["Ташкент", "Ташкенте", "Toshkent", "Toshkentda", "Tashkent", "мебельного салона", "мебельный салон", "mebel saloni"];
+  const plain = { ...GOOD, intro: ["Мебельный салон в Ташкенте продаёт кухни на заказ.", ...GOOD.intro.slice(1)] };
+  const codes = (article: typeof GOOD, title: string) =>
+    articleProblems({ article, report: REPORT, title, common }).map((p) => p.code);
+  // 02.10, 06.10, 07.10: «названа компания: Ресторан, Ташкенте» — и разбор терялся.
+  assert.ok(!codes(plain, "Мебельный салон в Ташкенте | Uyut").includes("named"));
+  // Имя из заголовка, которого нет среди слов города и ниши, — по-прежнему имя.
+  const named = { ...GOOD, intro: ["Салон Uyut продаёт кухни.", ...GOOD.intro.slice(1)] };
+  assert.ok(codes(named, "Uyut — мебельный салон в Ташкенте").includes("named"));
+  // Домен — всегда имя: mebel-tashkent.uz → «tashkent».
+  const domain = { ...GOOD, intro: ["Салон Mebel Tashkent работает давно.", ...GOOD.intro.slice(1)] };
+  assert.ok(codes(domain, "Кухни").includes("named"));
+});
+
+test("«из 100» и потери на сто — разрешённые числа", () => {
+  const scored = { ...GOOD, intro: [`Общий балл сайта — ${REPORT.score} из 100.`, ...GOOD.intro.slice(1)] };
+  assert.ok(!articleProblems({ article: scored, report: REPORT, title: null }).some((p) => p.code === "invented"));
+  const loss = { ...GOOD, outcome: ["Из каждых ста обратившихся теряются 17–34."] };
+  assert.ok(articleProblems({ article: loss, report: REPORT, title: null }).some((p) => p.code === "invented"));
+  assert.ok(!articleProblems({ article: loss, report: REPORT, title: null, extraNumbers: [17, 34] }).some((p) => p.code === "invented"));
+});
+
+test("смена проверяет город и занятость запроса до модели", () => {
+  const run = read("lib/razbor/shift-run.ts");
+  const one = run.slice(run.indexOf("async function draftOne"), run.indexOf("async function nicheFor"));
+  assert.ok(one.indexOf("cityFrom(page.html)") < one.indexOf("nicheFor("), "город — до ниши: ниша вне каталога стоит вызова модели");
+  assert.ok(one.indexOf("razborTaken(") > 0 && one.indexOf("razborTaken(") < one.indexOf("writeChecked("), "занятость — до статей");
+  assert.match(run, /common: \[city\.ru, city\.ruIn/);
+  assert.match(run, /extraNumbers: forecast\(picked\)\.lostPer100/);
+});
