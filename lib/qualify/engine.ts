@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { company } from "@/content/company";
 import type { Locale } from "@/lib/i18n";
 import type { DiscountReason } from "@/lib/promise-terms";
+import { closingText, type ClosingOutcome } from "@/lib/qualify/closing";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { scoreLead } from "@/lib/qualify/scoring";
 import { attributeAndNotify } from "@/lib/partners/attribute";
@@ -455,33 +456,20 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
 
   emit({ type: "qualified", lead, requestNo, delivered: !lost });
 
-  // Второй проход: отдаём модели результат инструмента, чтобы она
-  // закрыла разговор человеческой фразой, а не оборвала его на вызове.
-  // Модели сообщается фактический исход, а не желаемый: сказать «передал
-  // менеджеру», когда доставка не удалась, значит отпустить клиента в
-  // уверенности, что им займутся, — и потерять его молча.
-  const outcome = lost
-    ? `Заявку не удалось ни сохранить, ни доставить менеджеру. Не утверждай, что она передана, и не называй номер заявки. Коротко извинись и попроси написать напрямую в Telegram @${SUPPORT_TELEGRAM} — так запрос точно не потеряется.`
-    : delivered
-      ? `Лид сохранён и передан менеджеру отдела продаж. Номер заявки — ${requestNo}. Обязательно назови его клиенту: по нему менеджер найдёт разговор, и человек видит, что заявка не растворилась.`
-      : `Лид сохранён под номером ${requestNo}, но уведомление менеджеру сейчас не ушло. Скажи, что заявку принял, назови номер и на всякий случай дай наш Telegram @${SUPPORT_TELEGRAM} для прямой связи.`;
-
-  await secondPass({
-    client,
-    shared,
-    messages,
-    firstMessage,
-    toolUseId: toolUse.id,
-    onText: continuation(),
-    onFailure: () => emit({ type: "closing_failed" }),
-    toolResult: outcome,
-  });
+  // Последняя фраза — готовым текстом, без второго запроса к модели: всё её
+  // содержание — исход доставки и номер заявки — задаёт код (lib/qualify/closing.ts).
+  // Исход фактический: «передал менеджеру», когда доставка не удалась, —
+  // это отпустить клиента в уверенности, что им займутся, и потерять молча.
+  const outcome: ClosingOutcome = lost ? "lost" : delivered ? "delivered" : "saved";
+  continuation()(closingText({ locale, source, outcome, requestNo, telegram: SUPPORT_TELEGRAM }));
 
   return { qualified: true, lead, requestNo, delivered: !lost };
 }
 
 /**
- * Второй проход после инструмента.
+ * Второй проход после инструмента — только для повторного вызова, когда лид
+ * уже у менеджера: там клиент мог спросить что-то ещё, и ответить ему может
+ * только модель. Первый вызов закрывается шаблоном (lib/qualify/closing.ts).
  *
  * Заявка на этот момент уже у менеджера. Показывать посетителю ошибку значит
  * сообщить, что всё сломалось, когда сломалась лишь прощальная фраза, —

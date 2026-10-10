@@ -4,8 +4,10 @@ import { talkLang } from "@/lib/talk/language";
 import {
   REVIEW_SYSTEM,
   REVIEW_TOOL,
+  ENOUGH_TURNS,
   cleanReview,
   outcomeOf,
+  shortReview,
   reviewPrompt,
   type Review,
 } from "@/lib/talk/review";
@@ -51,6 +53,14 @@ export async function runReviews(limit = 5): Promise<ReviewRun> {
         handoverReason: item.handoverReason,
         turns,
       });
+
+      // Меньше двух реплик клиента — урока не будет (cleanReview его
+      // сотрёт), а остальное видно кодом: модель не зовём.
+      if (turns < ENOUGH_TURNS) {
+        await saveReview({ prospectId: item.prospectId, leadId: item.leadId, lang, turns, outcome, review: shortReview(item.thread) });
+        run.saved += 1;
+        continue;
+      }
 
       const raw = await ask({
         host: item.host,

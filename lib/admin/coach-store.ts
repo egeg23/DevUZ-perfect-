@@ -228,14 +228,21 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
       stuck: stuckLeads(rows.leads, rows.events, rows.messages, now).length,
       taxesSoon: upcoming(DEFAULT_DEADLINES, today).map((t) => `${t.title} — через ${t.daysLeft} дн.`),
     };
-    for (const reader of readers) {
+    // Один вызов на всех читателей, а не на каждого: данные компании и
+    // команды у них одни и те же, отличалась только прошлая рекомендация
+    // (разведка «ИИ → код», 10.10.2026). Прошлая — владельца, нет её — любая.
+    const waiting = readers.filter((reader) => {
       const had = existing.get(reader.id);
-      if (had && had.period_start === today && !opts.force) {
-        run.skipped += 1;
-        continue;
-      }
-      const previous = had && had.period_start !== today ? had.body : null;
-      const result = await askCoach("daily", dailyPrompt(company, team, previous, today));
+      return !(had && had.period_start === today && !opts.force);
+    });
+    run.skipped += readers.length - waiting.length;
+    const earlier = [...readers]
+      .sort((a, b) => Number(b.role === "admin") - Number(a.role === "admin"))
+      .map((reader) => existing.get(reader.id))
+      .find((had) => had && had.period_start !== today);
+    const shared = waiting.length ? await askCoach("daily", dailyPrompt(company, team, earlier?.body ?? null, today)) : null;
+    for (const reader of waiting) {
+      const result = shared!;
       if (!result.ok) {
         run.errors.push(`${reader.display_name}: ${result.why}`);
         continue;
