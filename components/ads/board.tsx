@@ -13,9 +13,10 @@ import {
 } from "@/app/ads/actions";
 import { adsDict } from "@/content/admin-panel/ads";
 import { pick, PANEL_INTL, type PanelLocale, type Picked } from "@/lib/admin/i18n";
+import { alertText } from "@/lib/ads/alerts";
 import { explain } from "@/lib/ads/explain";
 import { money } from "@/lib/ads/negatives";
-import { actionsOf, proposalsOf, testsOf, thresholdsOf, type Account, type Action, type Proposal } from "@/lib/ads/store";
+import { actionsOf, openAlerts, proposalsOf, testsOf, thresholdsOf, type Account, type Action, type Proposal } from "@/lib/ads/store";
 
 /**
  * Кабинет одного рекламного аккаунта — одинаковый у агентства (/ads/…) и в
@@ -39,7 +40,7 @@ export function statusLabel(t: T, status: Account["status"]): string {
 }
 
 function kindLabel(t: T, kind: string): string {
-  return kind === "negatives" ? t.kindNegatives : kind === "budget" ? t.kindBudget : kind === "ad_test" ? t.kindTest : kind === "ad_winner" ? t.kindWinner : kind;
+  return kind === "negatives" ? t.kindNegatives : kind === "cross_negatives" ? t.kindCross : kind === "budget" ? t.kindBudget : kind === "ad_test" ? t.kindTest : kind === "ad_winner" ? t.kindWinner : kind;
 }
 
 export function resultLine(t: T, r: string | undefined, d: string | undefined): { text: string; tone: "ok" | "bad" } | null {
@@ -92,12 +93,13 @@ export async function AdsBoard({
   flagOn: boolean;
 }) {
   const t = pick(adsDict, locale);
-  const [open, failed, applied, tests, actions] = await Promise.all([
+  const [open, failed, applied, tests, actions, alerts] = await Promise.all([
     proposalsOf(account.id, ["new"]),
     proposalsOf(account.id, ["failed"], 5),
     proposalsOf(account.id, ["applied"], 200),
     testsOf(account.id),
     actionsOf(account.id, 60),
+    openAlerts(account.id),
   ]);
   const th = thresholdsOf(account);
   const week = weekStats(actions, applied, open.length);
@@ -130,6 +132,21 @@ export async function AdsBoard({
       ) : null}
 
       {account.stopped ? <p className="rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">{t.stopped}</p> : null}
+
+      {/* ── Тревоги ──────────────────────────────────────────────────── */}
+      {alerts.length ? (
+        <section className="rounded-xl border border-gold/30 bg-gold/10 px-5 py-4">
+          <p className="text-xs uppercase tracking-wider text-gold">{t.alertsTitle}</p>
+          <ul className="mt-2 space-y-1 text-sm text-gold">
+            {alerts.map((a) => (
+              <li key={a.id}>
+                <span className="text-xs opacity-70">{whenText(a.created_at, locale)}</span> {alertText(a, locale, account.currency)}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-gold/80">{t.alertsNote}</p>
+        </section>
+      ) : null}
 
       {/* ── Подключение и обновление ─────────────────────────────────── */}
       <section className={CARD}>
@@ -179,6 +196,11 @@ export async function AdsBoard({
                 <p className="mt-1 text-sm text-muted">{text.why}</p>
                 {p.payload.kind === "negatives" ? (
                   <p className="mt-2 font-mono text-xs text-faint">{p.payload.phrases.join(", ")}</p>
+                ) : null}
+                {p.payload.kind === "cross_negatives" ? (
+                  <p className="mt-2 font-mono text-xs text-faint">
+                    {p.payload.groups.map((g) => `${g.adGroupId}: ${g.phrases.join(", ")}`).join(" · ")}
+                  </p>
                 ) : null}
                 {p.payload.kind === "budget" ? (
                   <p className="mt-2 font-mono text-xs text-faint">

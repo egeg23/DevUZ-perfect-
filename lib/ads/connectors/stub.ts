@@ -24,6 +24,8 @@ export type StubState = {
   terms: SearchTerm[];
   keywords: Keyword[];
   negatives: Record<string, string[]>;
+  /** Минус-фразы групп; в старых состояниях их нет. */
+  groupNegatives?: Record<string, string[]>;
   ads: StubAd[];
   nextId: number;
 };
@@ -66,6 +68,9 @@ export function seedStubState(): StubState {
       { campaignId: "101", adGroupId: "1011", id: "k1", text: "курсы английского ташкент" },
       { campaignId: "101", adGroupId: "1011", id: "k2", text: "английский для взрослых" },
       { campaignId: "101", adGroupId: "1011", id: "k3", text: "ingliz tili kurslari" },
+      // Своя группа для детей: общий ключ выше перехватывает её запросы —
+      // кросс-минусовке есть что показать.
+      { campaignId: "101", adGroupId: "1012", id: "k7", text: "курсы английского для детей ташкент" },
       { campaignId: "102", adGroupId: "1021", id: "k4", text: "курсы программирования ташкент" },
       { campaignId: "102", adGroupId: "1021", id: "k5", text: "python курсы" },
       { campaignId: "103", adGroupId: "1031", id: "k6", text: "подготовка ielts" },
@@ -136,30 +141,63 @@ export function simulateDays(state: StubState, days: number): StubState {
   return next;
 }
 
-export function stubConnector(initial: StubState, save: (state: StubState) => Promise<void>): AdsConnector & { state(): StubState } {
+export function periodDays(period: Period): number {
+  const days = Math.round((Date.parse(period.to) - Date.parse(period.from)) / 86_400_000) + 1;
+  return Number.isFinite(days) && days > 0 ? days : 30;
+}
+
+function scaleCampaign(c: Campaign, days: number): Campaign {
+  const k = days / 30;
+  return {
+    ...c,
+    activeDays: Math.min(days, c.activeDays),
+    cost: Math.round(c.cost * k),
+    clicks: Math.round(c.clicks * k),
+    impressions: Math.round(c.impressions * k),
+    conversions: Math.round(c.conversions * k * 10) / 10,
+  };
+}
+
+export function stubConnector(
+  initial: StubState,
+  save: (state: StubState) => Promise<void>,
+): AdsConnector & { state(): StubState; campaignsFor30(): Promise<Campaign[]> } {
   let state = structuredClone(initial);
   const commit = async () => save(state);
 
   const visibleTerms = () =>
-    state.terms.filter((t) => !(state.negatives[t.campaignId] ?? []).some((n) => blocks(n, t.query)));
+    state.terms.filter(
+      (t) =>
+        !(state.negatives[t.campaignId] ?? []).some((n) => blocks(n, t.query)) &&
+        !(state.groupNegatives?.[t.adGroupId] ?? []).some((n) => blocks(n, t.query)),
+    );
+
+  // Деньги кампании за 30 дней — сумма её видимых запросов: минус-слово,
+  // срезавшее мусор, видно и в расходе.
+  const month = (): Campaign[] =>
+    state.campaigns.map((c) => {
+      const terms = visibleTerms().filter((t) => t.campaignId === c.id);
+      const hidden = state.terms.filter((t) => t.campaignId === c.id).length - terms.length;
+      if (!hidden) return { ...c };
+      return {
+        ...c,
+        cost: terms.reduce((s, t) => s + t.cost, 0),
+        clicks: terms.reduce((s, t) => s + t.clicks, 0),
+        conversions: terms.reduce((s, t) => s + t.conversions, 0),
+      };
+    });
 
   return {
     platform: "stub",
     state: () => state,
-    async campaigns(_period: Period) {
-      // Деньги кампании — сумма её видимых запросов: минус-слово, срезавшее
-      // мусор, видно и в расходе.
-      return state.campaigns.map((c) => {
-        const terms = visibleTerms().filter((t) => t.campaignId === c.id);
-        const hidden = state.terms.filter((t) => t.campaignId === c.id).length - terms.length;
-        if (!hidden) return { ...c };
-        return {
-          ...c,
-          cost: terms.reduce((s, t) => s + t.cost, 0),
-          clicks: terms.reduce((s, t) => s + t.clicks, 0),
-          conversions: terms.reduce((s, t) => s + t.conversions, 0),
-        };
-      });
+    async campaigns(period: Period) {
+      // Цифры заглушки — за 30 дней; за короткий период — их доля, ровно
+      // по дням: «вчера» у заглушки — обычный день, тревог нет.
+      const days = periodDays(period);
+      return month().map((c) => (days >= 30 ? c : scaleCampaign(c, days)));
+    },
+    async campaignsFor30() {
+      return month();
     },
     async searchTerms() {
       return visibleTerms().map((t) => ({ ...t }));
@@ -175,6 +213,13 @@ export function stubConnector(initial: StubState, save: (state: StubState) => Pr
     },
     async setNegatives(campaignId, phrases) {
       state = { ...state, negatives: { ...state.negatives, [campaignId]: [...phrases] } };
+      await commit();
+    },
+    async groupNegatives(adGroupId) {
+      return [...(state.groupNegatives?.[adGroupId] ?? [])];
+    },
+    async setGroupNegatives(adGroupId, phrases) {
+      state = { ...state, groupNegatives: { ...(state.groupNegatives ?? {}), [adGroupId]: [...phrases] } };
       await commit();
     },
     async setDailyBudget(campaignId, amount) {

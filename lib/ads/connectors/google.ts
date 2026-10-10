@@ -178,11 +178,12 @@ export function googleConnector(creds: GoogleCreds, opts: { fetchImpl?: Fetch } 
       type AdRow = Row & {
         adGroupAd?: {
           status?: string;
+          policySummary?: { approvalStatus?: string };
           ad?: { id?: string; finalUrls?: string[]; responsiveSearchAd?: { headlines?: { text: string }[]; descriptions?: { text: string }[] } };
         };
       };
       const rows = await query<AdRow>(
-        `SELECT campaign.id, ad_group.id, ad_group_ad.status, ad_group_ad.ad.id, ad_group_ad.ad.final_urls, ` +
+        `SELECT campaign.id, ad_group.id, ad_group_ad.status, ad_group_ad.policy_summary.approval_status, ad_group_ad.ad.id, ad_group_ad.ad.final_urls, ` +
           `ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions, ` +
           `metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions FROM ad_group_ad ` +
           `WHERE ${range(period)} AND ad_group_ad.status != 'REMOVED' AND ad_group_ad.ad.type = 'RESPONSIVE_SEARCH_AD'`,
@@ -194,6 +195,7 @@ export function googleConnector(creds: GoogleCreds, opts: { fetchImpl?: Fetch } 
           campaignId: String(r.campaign?.id),
           adGroupId: String(r.adGroup?.id),
           active: r.adGroupAd?.status === "ENABLED",
+          rejected: r.adGroupAd?.policySummary?.approvalStatus === "DISAPPROVED",
           copy: {
             headlines: (r.adGroupAd?.ad?.responsiveSearchAd?.headlines ?? []).map((h) => h.text),
             descriptions: (r.adGroupAd?.ad?.responsiveSearchAd?.descriptions ?? []).map((d) => d.text),
@@ -232,6 +234,31 @@ export function googleConnector(creds: GoogleCreds, opts: { fetchImpl?: Fetch } 
       }
       for (const [text, resourceName] of have) if (!want.has(text) && resourceName) operations.push({ remove: resourceName });
       if (operations.length) await mutate("campaignCriteria", operations);
+    },
+
+    async groupNegatives(adGroupId) {
+      const rows = await query<{ adGroupCriterion?: { keyword?: { text?: string } } }>(
+        `SELECT ad_group_criterion.resource_name, ad_group_criterion.keyword.text FROM ad_group_criterion ` +
+          `WHERE ad_group.id = ${id(adGroupId)} AND ad_group_criterion.negative = TRUE AND ad_group_criterion.type = 'KEYWORD'`,
+      );
+      return rows.map((r) => r.adGroupCriterion?.keyword?.text ?? "").filter(Boolean);
+    },
+
+    async setGroupNegatives(adGroupId, phrases) {
+      const rows = await query<{ adGroupCriterion?: { resourceName?: string; keyword?: { text?: string } } }>(
+        `SELECT ad_group_criterion.resource_name, ad_group_criterion.keyword.text FROM ad_group_criterion ` +
+          `WHERE ad_group.id = ${id(adGroupId)} AND ad_group_criterion.negative = TRUE AND ad_group_criterion.type = 'KEYWORD'`,
+      );
+      const want = new Set(phrases.map((p) => p.toLowerCase()));
+      const have = new Map(rows.map((r) => [(r.adGroupCriterion?.keyword?.text ?? "").toLowerCase(), r.adGroupCriterion?.resourceName ?? ""]));
+      const operations: unknown[] = [];
+      for (const phrase of phrases) {
+        if (!have.has(phrase.toLowerCase())) {
+          operations.push({ create: { adGroup: `customers/${cid}/adGroups/${id(adGroupId)}`, negative: true, keyword: { text: phrase, matchType: "PHRASE" } } });
+        }
+      }
+      for (const [text, resourceName] of have) if (!want.has(text) && resourceName) operations.push({ remove: resourceName });
+      if (operations.length) await mutate("adGroupCriteria", operations);
     },
 
     async setDailyBudget(campaignId, amount) {

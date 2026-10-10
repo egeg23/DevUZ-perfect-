@@ -1,6 +1,8 @@
 import { judge, winnerDraft } from "@/lib/ads/abtest";
+import { alertText, detectAlerts } from "@/lib/ads/alerts";
 import { applyPayload, rollback } from "@/lib/ads/apply";
 import { budgetDrafts } from "@/lib/ads/budget";
+import { crossDrafts } from "@/lib/ads/crossminus";
 import { classifyQueries, groupLang, writeVariant } from "@/lib/ads/model";
 import { negativeDrafts, type NegativeCandidate } from "@/lib/ads/negatives";
 import {
@@ -21,6 +23,7 @@ import {
   membersOf,
   proposalById,
   proposalsOf,
+  reconcileAlerts,
   recordAction,
   setProposalStatus,
   startTest,
@@ -31,6 +34,7 @@ import {
   workspaceById,
   type Account,
   type Proposal,
+  type StoredAlert,
 } from "@/lib/ads/store";
 import type { AdsConnector, Draft, Period } from "@/lib/ads/types";
 
@@ -66,7 +70,7 @@ export function periodOf(now: Date, days = PERIOD_DAYS): Period {
 
 const daysBetween = (from: string, now: Date) => Math.floor((now.getTime() - Date.parse(from)) / (24 * 3600_000));
 
-export type SyncResult = { accountId: string; created: number; applied: number; refused: string[]; error?: string };
+export type SyncResult = { accountId: string; created: number; applied: number; refused: string[]; alerts?: number; error?: string };
 
 export async function syncAccount(account: Account, now = new Date(), deps: { useModel?: boolean } = {}): Promise<SyncResult> {
   const result: SyncResult = { accountId: account.id, created: 0, applied: 0, refused: [] };
@@ -89,8 +93,15 @@ export async function syncAccount(account: Account, now = new Date(), deps: { us
         else result.refused.push(outcome.reason);
       }
     }
+    // Тревоги — после предложений: они смотрят на вчерашний день, а не на месяц.
+    const fresh = await checkAlerts(account, connector, now).catch((error) => {
+      console.error("ads alerts:", error);
+      return [] as StoredAlert[];
+    });
+    result.alerts = fresh.length;
     await updateAccount(account.id, { status: "ok", last_error: null, last_sync_at: now.toISOString() });
     await notifyMembers(account, created, result);
+    await notifyAlerts(account, fresh);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await updateAccount(account.id, { status: "error", last_error: message.slice(0, 500), last_sync_at: now.toISOString() });
@@ -129,6 +140,16 @@ export async function buildDrafts(account: Account, connector: AdsConnector, per
     ...negativeDrafts({ terms: liveTerms, keywords, existing, campaignNames: names, thresholds, extra, days: PERIOD_DAYS, currency: account.currency }),
     ...budgetDrafts({ campaigns: campaigns.filter((c) => !cooling.has(c.id)), maxShiftPct: account.max_shift_pct, currency: account.currency, days: PERIOD_DAYS }),
   ];
+
+  // Кросс-минусовка — Директу: в Google точное и фразовое соответствие и
+  // так ведут запрос к самому точному ключу.
+  if (connector.platform !== "google") {
+    const live = keywords.filter((k) => campaigns.some((c) => c.id === k.campaignId && c.active));
+    const groups = [...new Set(live.map((k) => k.adGroupId))];
+    const existingGroups: Record<string, string[]> = {};
+    for (const g of groups) existingGroups[g] = await connector.groupNegatives(g);
+    drafts.push(...crossDrafts({ keywords: live, existing: existingGroups, campaignNames: names }));
+  }
 
   // Идущие тесты: итог — предложение оставить победителя.
   const running = await testsOf(account.id);
@@ -289,6 +310,52 @@ export async function undo(actionId: number, who: string): Promise<{ ok: true } 
   } catch (error) {
     await unmarkRolledBack(action.id);
     return { ok: false, reason: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/* ── Тревоги ───────────────────────────────────────────────────────────── */
+
+/** Вчера и семь дней до него — по Ташкенту не важно: площадки считают в своём поясе. */
+export function alertPeriods(now: Date): { yesterday: Period; week: Period } {
+  const day = 24 * 3600_000;
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const y = new Date(now.getTime() - day);
+  return {
+    yesterday: { from: iso(y), to: iso(y) },
+    week: { from: iso(new Date(y.getTime() - 7 * day)), to: iso(new Date(y.getTime() - day)) },
+  };
+}
+
+export async function checkAlerts(account: Account, connector: AdsConnector, now: Date): Promise<StoredAlert[]> {
+  const p = alertPeriods(now);
+  const [yesterday, week, ads, keywords] = await Promise.all([
+    connector.campaigns(p.yesterday),
+    connector.campaigns(p.week),
+    connector.ads(p.yesterday),
+    connector.keywords(),
+  ]);
+  const negatives: Record<string, string[]> = {};
+  for (const c of week.filter((c) => c.active)) negatives[c.id] = await connector.negatives(c.id);
+  return reconcileAlerts(account.id, detectAlerts({ yesterday, week, ads, keywords, negatives }), now);
+}
+
+export function alertsNotice(account: Pick<Account, "name" | "external_id" | "currency">, alerts: Pick<StoredAlert, "kind" | "data">[], locale: "ru" | "uz"): string | null {
+  if (!alerts.length) return null;
+  const name = escHtml(account.name || account.external_id);
+  const head = locale === "uz" ? `<b>⚠️ Reklama avtopiloti: «${name}»</b>` : `<b>⚠️ Автопилот рекламы: «${name}»</b>`;
+  return [head, ...alerts.slice(0, 8).map((a) => `• ${escHtml(alertText(a, locale, account.currency))}`)].join("\n");
+}
+
+async function notifyAlerts(account: Account, alerts: StoredAlert[]): Promise<void> {
+  if (!alerts.length) return;
+  const workspace = await workspaceById(account.workspace_id);
+  if (!workspace) return;
+  const text = alertsNotice(account, alerts, workspace.locale);
+  if (!text) return;
+  const { sendWithButtons } = await import("@/lib/qualify/telegram");
+  const button = workspace.locale === "uz" ? "Kabinetni ochish" : "Открыть кабинет";
+  for (const member of await membersOf(workspace.id)) {
+    if (member.notify) await sendWithButtons(member.telegram_user_id, text, [{ text: button, url: cabinetUrl(account.id) }]);
   }
 }
 

@@ -68,6 +68,8 @@ export type Ad = {
   campaignId: string;
   adGroupId: string;
   active: boolean;
+  /** Площадка отклонила объявление на модерации — оно не показывается. */
+  rejected?: boolean;
   copy: AdCopy;
   clicks: number;
   impressions: number;
@@ -91,6 +93,9 @@ export interface AdsConnector {
   negatives(campaignId: string): Promise<string[]>;
   /** Записать минус-фразы кампании целиком (добавление и откат — через него). */
   setNegatives(campaignId: string, phrases: string[]): Promise<void>;
+  /** Минус-фразы группы (кросс-минусовка) — как есть сейчас и целиком. */
+  groupNegatives(adGroupId: string): Promise<string[]>;
+  setGroupNegatives(adGroupId: string, phrases: string[]): Promise<void>;
   setDailyBudget(campaignId: string, amount: number): Promise<void>;
   /** Новое объявление в группе; вернуть его id. */
   createAd(adGroupId: string, copy: AdCopy): Promise<string>;
@@ -104,6 +109,14 @@ export type NegativesPayload = {
   campaignId: string;
   campaignName: string;
   phrases: string[];
+};
+
+export type CrossNegativesPayload = {
+  kind: "cross_negatives";
+  campaignId: string;
+  campaignName: string;
+  /** В какую группу какие минус-фразы и ради какого ключа другой группы. */
+  groups: { adGroupId: string; phrases: string[]; because: string[] }[];
 };
 
 export type BudgetMove = { campaignId: string; campaignName: string; from: number; to: number };
@@ -130,7 +143,7 @@ export type AdWinnerPayload = {
   winnerAdId: string;
 };
 
-export type Payload = NegativesPayload | BudgetPayload | AdTestPayload | AdWinnerPayload;
+export type Payload = NegativesPayload | CrossNegativesPayload | BudgetPayload | AdTestPayload | AdWinnerPayload;
 export type ProposalKind = Payload["kind"];
 
 export type Draft = {
