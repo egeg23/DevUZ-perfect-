@@ -111,6 +111,18 @@ services:
       # Чем «Найти в инструкции» выбирает пункт по вопросу сотрудника.
       # Пусто — Haiku: нужно только выбрать пункт из списка.
       HELP_SEARCH_MODEL: ${HELP_SEARCH_MODEL:-}
+      # ИИ-сотрудники по подписке (docs/ai-staff/design.md). Модели: пусто —
+      # Sonnet для ответов покупателям, Opus для тарифа «Про», Haiku для
+      # разбора сайта клиента. Токен бота сервиса, секрет его вебхука и ключ
+      # шифрования токенов клиентов можно положить и в хранилище секретов.
+      AI_STAFF_MODEL: ${AI_STAFF_MODEL:-}
+      AI_STAFF_PREMIUM_MODEL: ${AI_STAFF_PREMIUM_MODEL:-}
+      AI_STAFF_IMPORT_MODEL: ${AI_STAFF_IMPORT_MODEL:-}
+      AI_STAFF_UZS_PER_USD: ${AI_STAFF_UZS_PER_USD:-}
+      AI_STAFF_BOT_TOKEN: ${AI_STAFF_BOT_TOKEN:-}
+      AI_STAFF_BOT_USERNAME: ${AI_STAFF_BOT_USERNAME:-}
+      AI_STAFF_WEBHOOK_SECRET: ${AI_STAFF_WEBHOOK_SECRET:-}
+      AI_STAFF_KEY: ${AI_STAFF_KEY:-}
       # ИИ на прототипах (lib/proto/ai.ts) — по умолчанию Haiku.
       PROTO_AI_MODEL: ${PROTO_AI_MODEL:-}
       # Ключ Вордстата — API-ключ Яндекс Облака (AQVN…) или OAuth-токен:
