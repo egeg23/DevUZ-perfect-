@@ -54,6 +54,14 @@ COPY --from=build /app/public ./public
 COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Коммит, из которого собран образ, — для /api/health. Он нужен здесь, в
+# рантайме: ENV стадии сборки сюда не переезжает (10.10.2026 из-за этого
+# /api/health показал «unknown»). compose его не перебивает — так после
+# отката и при уехавшем вперёд main видно то, что реально работает. В конце
+# стадии: аргумент меняется каждую сборку и сбрасывает кэш слоёв ниже себя.
+ARG GIT_COMMIT
+ENV GIT_COMMIT=$GIT_COMMIT
+
 USER nextjs
 EXPOSE 3000
 
