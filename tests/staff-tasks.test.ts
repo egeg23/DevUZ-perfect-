@@ -395,3 +395,22 @@ test("на телефоне форма задач не шире экрана", (
   assert.match(phone, /\.admin-panel input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\) \{\n\s+min-width: 0;\n\s+max-width: 100%;/);
   assert.match(phone, /\.admin-panel label,\n\s+\.admin-panel fieldset \{\n\s+min-width: 0;/);
 });
+
+test("после переноса срока карточка задачи в Telegram показывает новый срок", () => {
+  // Владелец, 10.10.2026: «Когда я меняю дату через тг бота, дата в задаче
+  // этой не меняется в чате». Переписывались только кнопки, а «Срок: …» в
+  // тексте оставался прежним.
+  const store = read("lib/admin/task-store.ts");
+  const show = store.slice(store.indexOf("export async function showTask"), store.indexOf("export async function afterAct"));
+  assert.match(show, /assignedText\(task,/, "текст карточки собирается заново из задачи");
+  assert.match(show, /editMessage\(where\.chat, where\.messageId, text, taskRows\(task\)\)/);
+  const after = store.slice(store.indexOf("export async function afterAct"), store.indexOf("/* ── «Своя дата»"));
+  assert.match(after, /showTask\(task,/, "перенос из панели и «своя дата» переписывают карточку целиком");
+  assert.doesNotMatch(after, /setButtons\(/);
+
+  const hook = read("app/api/telegram/webhook/route.ts");
+  const button = hook.slice(hook.indexOf("async function handleTaskButton"), hook.indexOf("async function handleTaskDate"));
+  assert.match(button, /if \(here\) await showTask\(result\.task, here\)/, "кнопки переноса переписывают и срок");
+
+  assert.match(read("lib/qualify/telegram.ts"), /call\("editMessageText", \{[\s\S]*?parse_mode: "HTML"/);
+});

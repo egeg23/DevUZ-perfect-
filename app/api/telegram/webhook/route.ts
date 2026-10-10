@@ -69,7 +69,7 @@ import { CLOSE_TEXT, isCloseReason } from "@/lib/admin/touch-close";
 import { streamCommand } from "@/lib/admin/stream";
 import { changesCircle, circleBotReply, circleFromMessage, saveCircleFromBot } from "@/lib/admin/circle-bot";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
-import { actOnTask, afterAct, awaitDate, taskAwaitingDate, taskById, type ActResult } from "@/lib/admin/task-store";
+import { actOnTask, afterAct, awaitDate, showTask, taskAwaitingDate, taskById, type ActResult } from "@/lib/admin/task-store";
 import { OWN_DATE_PROMPT, TASK_CALLBACK, dueText, looksLikeDue, moveRows, taskRows } from "@/lib/admin/task-bot";
 import { isMove, movedDue, parseDueText, type TaskAction } from "@/lib/admin/tasks";
 
@@ -1561,7 +1561,8 @@ async function handleTaskButton(query: NonNullable<Update["callback_query"]>, ac
       query.id,
       kind === "move" ? `${TASK_DONE.move} на ${dueText(result.task.due_at)}` : TASK_DONE[kind],
     );
-    if (here) await setButtons(here.chat, here.messageId, taskRows(result.task));
+    // Карточка целиком, а не только кнопки: после переноса в ней новый срок.
+    if (here) await showTask(result.task, here);
     await afterAct(result.task, result.eventId, new Date(), here);
   } catch (error) {
     console.error("telegram webhook: задача", error);

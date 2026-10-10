@@ -827,6 +827,30 @@ export async function setButtons(chatId: number | string, messageId: number, row
 }
 
 /**
+ * Переписать уже отправленное сообщение целиком — текст и кнопки.
+ *
+ * Только когда текст собирается заново из данных, а не берётся из колбэка
+ * (почему — выше, у setButtons). Так переписывается карточка задачи после
+ * переноса срока: в ней стоит «Срок: …», и одни новые кнопки оставляли под
+ * ними старую дату.
+ */
+export async function editMessage(
+  chatId: number | string,
+  messageId: number,
+  text: string,
+  rows: Button[][],
+): Promise<boolean> {
+  return call("editMessageText", {
+    chat_id: chatId,
+    message_id: messageId,
+    text,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+    reply_markup: { inline_keyboard: forTelegram(rows) },
+  });
+}
+
+/**
  * Сообщение с постоянной клавиатурой внизу чата — кнопки, которые остаются
  * под полем ввода, а не под одним сообщением. Нажатие присылает боту текст
  * кнопки обычным сообщением. Так устроены «▶️ Получать лиды» и
