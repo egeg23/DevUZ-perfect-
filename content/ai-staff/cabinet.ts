@@ -177,6 +177,13 @@ export const cab = {
   ai: { ru: "ИИ", uz: "SI" },
   human: { ru: "Менеджер", uz: "Menejer" },
   back: { ru: "Назад", uz: "Orqaga" },
+  teach: { ru: "Добавить ответ в базу", uz: "Javobni bazaga qo'shish" },
+  teachHint: {
+    ru: "ИИ не нашёл ответа на этот вопрос в базе знаний. Напишите ответ так, как сказали бы покупателю: с ценой, сроком или условием. Он сразу попадёт в базу, и на такой вопрос ИИ дальше ответит сам.",
+    uz: "Sun'iy intellekt bu savolga bilimlar bazasida javob topmadi. Javobni xaridorga aytganingizdek yozing: narx, muddat yoki shart bilan. U darhol bazaga tushadi va bunday savolga sun'iy intellekt keyin o'zi javob beradi.",
+  },
+  teachPh: { ru: "Например: Рассрочки нет, принимаем Click, Payme и наличные.", uz: "Masalan: Muddatli to'lov yo'q, Click, Payme va naqd pul qabul qilamiz." },
+  taught: { ru: "Ответ добавлен в базу знаний. ИИ уже отвечает с ним.", uz: "Javob bilimlar bazasiga qo'shildi. Sun'iy intellekt endi u bilan javob beradi." },
 
   leadsEmpty: { ru: "Заявок пока нет.", uz: "Hozircha arizalar yo'q." },
   status_new: { ru: "новая", uz: "yangi" },
