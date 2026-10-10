@@ -34,7 +34,12 @@ test("страница разбора не отказывает адресу, к
 });
 
 test("список раздела и карта сайта тоже обновляются без выкатки", () => {
-  assert.match(read("app/[locale]/razbor/page.tsx"), /export const revalidate = \d+/);
+  // Список разборов и маркетинг со статьями — на каждый запрос: сборка идёт
+  // в GitHub без базы, и копия со сборки выходила пустой (10.10.2026).
+  for (const file of ["app/[locale]/razbor/page.tsx", "app/[locale]/marketing/page.tsx"]) {
+    assert.match(read(file), /export const dynamic = "force-dynamic"/, file);
+    assert.doesNotMatch(read(file), /export const revalidate/, file);
+  }
   // Карта — на каждый запрос: сборка идёт в GitHub без базы, и карта со
   // сборки выходила без разборов (10.10.2026: 2 адреса раздела из 38).
   assert.match(read("app/sitemap.ts"), /export const dynamic = "force-dynamic"/);
