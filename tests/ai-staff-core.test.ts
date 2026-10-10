@@ -202,3 +202,19 @@ test("движок: заявка инструментом, отказ модел
   assert.equal(no.fallback, true);
   assert.match(no.text, /менеджер/);
 });
+
+test("узбекский латиницей: русские слова из прайса не уходят покупателю", async () => {
+  const { cyrillicInLatin } = await import("@/lib/ai-staff/engine");
+  const uzPrompt = { ...prompt, company: "Мебель Плюс", assistantName: "Анна" };
+  const history: Turn[] = [{ role: "customer", text: "Salom, shkaf narxi qancha?" }];
+  assert.deepEqual(cyrillicInLatin("Shkaf 1 погон metr uchun 2 900 000 so'm", { lang: "uz", history, prompt: uzPrompt }), ["погон"]);
+  assert.deepEqual(cyrillicInLatin("Мебель Плюс kompaniyasi, Анна javob beradi", { lang: "uz", history, prompt: uzPrompt }), [], "имя компании и помощника можно");
+  assert.deepEqual(cyrillicInLatin("Салом, нархи бор", { lang: "uz", history: [{ role: "customer", text: "Салом" }], prompt: uzPrompt }), [], "покупатель сам пишет кириллицей");
+  assert.deepEqual(cyrillicInLatin("Кухня стоит", { lang: "ru", history, prompt: uzPrompt }), []);
+
+  const model = scripted([message([text("Shkaf 1 погон metr uchun 2 900 000 so'm.")]), message([text("Shkaf 1 metr uchun 2 900 000 so'm.")])]);
+  const out = await runSalesTurn({ prompt: { ...prompt, knowledge: [{ kind: "price", title: "", body: "Шкаф 2 900 000 сум за погонный метр" }] }, history, lang: "uz", model: "claude-sonnet-5", site: "saas-t", call: model.call });
+  assert.equal(out.fallback, false);
+  assert.equal(out.text, "Shkaf 1 metr uchun 2 900 000 so'm.");
+  assert.match(String(model.seen[1].messages.at(-1)?.content), /кириллицей: погон/);
+});
