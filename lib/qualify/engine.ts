@@ -4,6 +4,7 @@ import { company } from "@/content/company";
 import type { Locale } from "@/lib/i18n";
 import type { DiscountReason } from "@/lib/promise-terms";
 import { closingText, type ClosingOutcome } from "@/lib/qualify/closing";
+import { withTalkContact } from "@/lib/qualify/contact";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { scoreLead } from "@/lib/qualify/scoring";
 import { attributeAndNotify } from "@/lib/partners/attribute";
@@ -360,7 +361,7 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
   const requestNo = options.existing?.requestNo ?? brief?.requestNo ?? newRequestNo();
   const lead = scoreLead(
     withBrief(
-      withDiscount(sanitizeToolInput(toolUse.input as QualifyToolInput, truncated), options.discount),
+      withDiscount(withTalkContact(sanitizeToolInput(toolUse.input as QualifyToolInput, truncated), history), options.discount),
       brief,
     ),
     locale,

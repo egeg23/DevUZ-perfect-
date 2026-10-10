@@ -22,6 +22,8 @@ import { SECTIONS, canSee, type Role } from "@/lib/admin/roles";
  *
  * Модель недоступна, ответ пустой или человек спрашивает слишком часто —
  * ищем по словам (`wordSearch`): грубее, но тоже ведёт в пункт и стоит ноль.
+ * А вопрос словами заголовка одного пункта модель не читает вовсе
+ * (`titleHit`): человек сам назвал пункт.
  */
 
 const MODEL = process.env.HELP_SEARCH_MODEL || "claude-haiku-4-5";
@@ -48,8 +50,11 @@ export type HelpSearchHit = { anchor: string; section: string; title: string };
 
 export type HelpSearchResult = {
   hits: HelpSearchHit[];
-  /** Кто нашёл: модель, совпадение слов, или ничего не нашлось. */
-  by: "model" | "words" | "none";
+  /**
+   * Кто нашёл: заголовок пункта (вопрос — его же словами), модель,
+   * совпадение слов, или ничего не нашлось.
+   */
+  by: "title" | "model" | "words" | "none";
 };
 
 /** Абзац без разметки: ссылки — их текстом, без звёздочек и кавычек кода. */
@@ -143,6 +148,24 @@ export function wordSearch(question: string, index: readonly HelpIndexEntry[], l
     .sort((a, b) => b.score - a.score || a.order - b.order)
     .slice(0, limit)
     .map((x) => x.anchor);
+}
+
+/**
+ * Вопрос — словами заголовка одного пункта: «порция дня», «сменить язык».
+ *
+ * Разведка «ИИ → код», 10.10.2026: такой вопрос модель не уточняет —
+ * человек сам назвал пункт, и ждать её секунду-две незачем. Пункт один:
+ * все слова вопроса стоят в его заголовке, и ни в одном другом заголовке их
+ * всех нет. Два подходящих заголовка — вопрос неоднозначный, решает модель.
+ */
+export function titleHit(question: string, index: readonly HelpIndexEntry[]): string | null {
+  const asked = [...new Set(stems(question))];
+  if (!asked.length) return null;
+  const matched = index.filter((entry) => {
+    const title = new Set(stems(entry.title));
+    return asked.every((stem) => title.has(stem));
+  });
+  return matched.length === 1 ? matched[0].anchor : null;
 }
 
 const SYSTEM = `Ты помогаешь сотруднику студии найти нужный пункт в инструкции к рабочей панели.
@@ -243,6 +266,12 @@ export async function searchHelp(input: {
     return { anchor, section: entry.section, title: entry.title };
   };
   if (question.length < 2) return { hits: [], by: "none" };
+
+  const titled = titleHit(question, index);
+  if (titled) {
+    const rest = wordSearch(question, index, HELP_SEARCH_HITS + 1).filter((anchor) => anchor !== titled);
+    return { hits: [titled, ...rest].slice(0, HELP_SEARCH_HITS).map(hit), by: "title" };
+  }
 
   const key = `${input.locale}:${input.role}:${question.toLowerCase()}`;
   let anchors = remembered.get(key) ?? null;
