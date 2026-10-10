@@ -117,6 +117,20 @@ services:
       # запросы по Узбекистану перед каждой статьёй.
       WORDSTAT_TOKEN: ${WORDSTAT_TOKEN:-}
 
+      # Автопилот рекламы (docs/ads-autopilot/design.md). Можно и в хранилище
+      # секретов вместо .env. ADS_AUTOPILOT=1 — фоновые проходы включены;
+      # ADS_TOKEN_KEY — 32 байта base64, им шифруются ключи кабинетов клиентов.
+      # ADS_MODEL пусто — Haiku: минус-слова и варианты объявлений.
+      ADS_AUTOPILOT: ${ADS_AUTOPILOT:-}
+      ADS_TOKEN_KEY: ${ADS_TOKEN_KEY:-}
+      ADS_MODEL: ${ADS_MODEL:-}
+      YANDEX_DIRECT_CLIENT_ID: ${YANDEX_DIRECT_CLIENT_ID:-}
+      YANDEX_DIRECT_CLIENT_SECRET: ${YANDEX_DIRECT_CLIENT_SECRET:-}
+      GOOGLE_ADS_CLIENT_ID: ${GOOGLE_ADS_CLIENT_ID:-}
+      GOOGLE_ADS_CLIENT_SECRET: ${GOOGLE_ADS_CLIENT_SECRET:-}
+      GOOGLE_ADS_DEVELOPER_TOKEN: ${GOOGLE_ADS_DEVELOPER_TOKEN:-}
+      GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${GOOGLE_ADS_LOGIN_CUSTOMER_ID:-}
+
       # Порог, ниже которого сигнал скаута не показывают оператору.
       # Пусто — берётся значение по умолчанию из кода.
       SCOUT_MIN_SCORE: ${SCOUT_MIN_SCORE:-}
