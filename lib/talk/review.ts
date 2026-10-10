@@ -153,6 +153,26 @@ export function reviewPrompt(input: {
 }
 
 /**
+ * Разбор короткой переписки — кодом, без модели.
+ *
+ * Разведка «ИИ → код», 10.10.2026: у 56 из 70 разобранных за две недели
+ * переписок клиент написал меньше двух реплик — «да?», «кто это?», стикер.
+ * Урок из такой переписки cleanReview всё равно стирает, а «где сломалось»
+ * видно и так: на какое наше сообщение клиент не ответил.
+ */
+export function shortReview(thread: readonly { direction: "in" | "out"; body: string }[]): Review {
+  const last = thread[thread.length - 1];
+  const unanswered = last?.direction === "out" ? last.body.replace(/\s+/g, " ").trim() : "";
+  return {
+    hook: "",
+    objection: "",
+    failed: unanswered ? `Клиент не ответил на: «${unanswered.slice(0, 160)}${unanswered.length > 160 ? "…" : ""}»` : "",
+    lesson: "",
+    confidence: "low",
+  };
+}
+
+/**
  * Проверка разбора перед тем, как класть его в копилку.
  *
  * Модель, которую попросили сделать вывод, сделает его всегда — даже из
