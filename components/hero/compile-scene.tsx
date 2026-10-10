@@ -249,7 +249,12 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
           }}
         />
 
-        <Container className="relative z-10 flex min-h-0 flex-1 flex-col justify-center pt-[4.75rem] md:pt-[5.5rem]">
+        {/* На телефоне текст стоит сразу под шапкой, а не по центру экрана:
+            по центру над заголовком оставалось ~200 px пустоты, а кнопки
+            съезжали в нижнюю треть — туда, где их закрывала плашка минуты.
+            Снимок Метрики 07–08.10.2026: 89% визитов с телефона, ни одного
+            нажатия «Рассчитать проект». */}
+        <Container className="relative z-10 flex min-h-0 flex-1 flex-col justify-start pt-[6.25rem] md:justify-center md:pt-[5.5rem]">
           <div
             style={{
               opacity: 1 - heroOut,
@@ -275,8 +280,12 @@ export function CompileScene({ locale, dict }: { locale: Locale; dict: Dictionar
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-2.5 md:mt-8 md:gap-3">
+              {/* «Рассчитать проект» ведёт в калькулятор, а не в форму: кнопка
+                  обещает расчёт. И по Метрике (11.09–08.10) у калькулятора
+                  отказов 25% и 167 с на визит, на телефоне 275 с, а у формы
+                  заявки на телефоне — 6 с. Цель та же: путь к заявке. */}
               <Link
-                href={localeHref(locale, "contact")}
+                href={localeHref(locale, "calculator")}
                 data-goal="cta_contact"
                 className="inline-flex items-center gap-2.5 rounded-xl bg-green px-5 py-3 text-[0.92rem] font-semibold text-ink md:px-7 md:py-4 md:text-base transition-all duration-300 hover:bg-white hover:shadow-[0_0_40px_-8px_var(--color-green)]"
               >

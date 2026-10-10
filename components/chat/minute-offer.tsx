@@ -95,7 +95,9 @@ export function MinuteBubble({
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[0.9rem] font-semibold leading-snug">{dict.chat.minuteTitle}</p>
-          <p className="mt-1 text-[0.78rem] leading-snug text-muted">{dict.chat.minuteText}</p>
+          {/* На телефоне — без пояснения: плашка вдвое ниже и не закрывает
+              кнопки первого экрана. Что делать, говорят сами кнопки рядом. */}
+          <p className="mt-1 hidden text-[0.78rem] leading-snug text-muted sm:block">{dict.chat.minuteText}</p>
         </div>
         <button
           type="button"
