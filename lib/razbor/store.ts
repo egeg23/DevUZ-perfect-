@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import type { RazborFinding, RazborItem, RazborShot } from "@/content/razbor/items";
 import { razborBySlug as staticBySlug, razborsFor as staticFor } from "@/content/razbor/items";
 import type { Niche } from "@/content/razbor/catalog";
-import type { RazborLocale } from "@/lib/razbor/model";
+import type { RazborLocale, RazborReadLocale } from "@/lib/razbor/model";
 import { parseNiche } from "@/lib/razbor/niche-words";
 import { serviceClient } from "@/lib/supabase";
 
@@ -23,7 +23,11 @@ import { serviceClient } from "@/lib/supabase";
  * Одна строка базы — это ДВА разбора, русский и узбекский. Они не перевод
  * друг друга: по-русски ищут «интернет-магазин под ключ Ташкент», а
  * по-узбекски «internet do'kon yaratish narxi», и это разные страницы под
- * разные запросы. Связаны они только полем `alt` — для hreflang.
+ * разные запросы. Связаны они только полем `alts` — для hreflang.
+ *
+ * Третья версия — английская (с 10.10.2026): её пишет сервер сам из
+ * опубликованной русской (lib/razbor/english.ts), в той же строке, в
+ * `slug_en` и `article_en`. Пока её нет, английской страницы у разбора нет.
  */
 
 /** Структура статьи: то, что страница показывает блоками, а не сплошняком. */
@@ -38,7 +42,8 @@ export type RazborArticle = {
   price: string;
 };
 
-const OTHER: Record<RazborLocale, RazborLocale> = { ru: "uz", uz: "ru" };
+/** Все языки, на которых строку можно прочитать, — в порядке ссылок. */
+const READ: readonly RazborReadLocale[] = ["ru", "uz", "en"];
 
 const strings = (value: unknown): string[] =>
   Array.isArray(value) ? value.map((v) => String(v)).filter(Boolean) : [];
@@ -123,17 +128,15 @@ export function lostBand(value: unknown): readonly [number, number] | null {
   return [lo, hi];
 }
 
-export function toItem(row: Record<string, unknown>, locale: RazborLocale): RazborItem | null {
+export function toItem(row: Record<string, unknown>, locale: RazborReadLocale): RazborItem | null {
   const article = row[`article_${locale}`] as Record<string, unknown> | null;
   const slug = String(row[`slug_${locale}`] ?? "");
   if (!article || !slug) return null;
 
-  const otherSlug = String(row[`slug_${OTHER[locale]}`] ?? "");
-
   return {
     slug,
     locale,
-    alt: otherSlug ? { locale: OTHER[locale], slug: otherSlug } : null,
+    alts: versionsOf(row).filter((v) => v.locale !== locale),
     niche: String(row.category ?? ""),
     city: String(row.city ?? ""),
     publishedAt: String(row.published_at ?? row.created_at ?? "").slice(0, 10),
@@ -160,7 +163,19 @@ export function toItem(row: Record<string, unknown>, locale: RazborLocale): Razb
 const COLUMNS =
   "category, city, country, published_at, created_at, shot_taken_at, shot_before, shot_before_mobile, " +
   "shot_after, shot_after_mobile, shot_findings, slug_ru, slug_uz, title_ru, title_uz, description_ru, description_uz, " +
-  "label_ru, label_uz, query_ru, query_uz, article_ru, article_uz, lost_per_100";
+  "label_ru, label_uz, query_ru, query_uz, article_ru, article_uz, slug_en, article_en, lost_per_100";
+
+/**
+ * Версии разбора, которые открываются: адрес есть и статья на этом языке
+ * есть. Английский адрес без статьи (статью сбросили правкой и ещё не
+ * перевели заново) — не версия: страница по нему пока не откроется.
+ */
+function versionsOf(row: Record<string, unknown>): { locale: RazborReadLocale; slug: string }[] {
+  return READ.flatMap((locale) => {
+    const slug = String(row[`slug_${locale}`] ?? "");
+    return slug && row[`article_${locale}`] ? [{ locale, slug }] : [];
+  });
+}
 
 /**
  * Опубликованные разборы на языке — свежие первыми.
@@ -169,7 +184,7 @@ const COLUMNS =
  * вместе с базой, теряет ровно тот трафик из поиска, ради которого он и
  * написан.
  */
-export async function listRazbors(locale: RazborLocale): Promise<RazborItem[]> {
+export async function listRazbors(locale: RazborReadLocale): Promise<RazborItem[]> {
   const db = serviceClient();
   if (!db) return staticFor(locale);
 
@@ -192,7 +207,7 @@ export async function listRazbors(locale: RazborLocale): Promise<RazborItem[]> {
   return [...fromDb, ...staticFor(locale)].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
-export async function razborBySlug(locale: RazborLocale, slug: string): Promise<RazborItem | null> {
+export async function razborBySlug(locale: RazborReadLocale, slug: string): Promise<RazborItem | null> {
   const fromFile = staticBySlug(locale, slug);
   if (fromFile) return fromFile;
 
@@ -209,6 +224,30 @@ export async function razborBySlug(locale: RazborLocale, slug: string): Promise<
   return data ? toItem(data as unknown as Record<string, unknown>, locale) : null;
 }
 
+/**
+ * Тот же разбор на всех языках — по адресу на любом из них.
+ *
+ * Переключатель языка меняет только начало адреса: с /ru/razbor/sayt-dlya-…
+ * он ведёт на /en/razbor/sayt-dlya-…, а у английской версии свой адрес.
+ * По нему страница находит строку и ведёт туда, где разбор на нужном языке
+ * действительно есть.
+ */
+export async function razborVersions(slug: string): Promise<Partial<Record<RazborReadLocale, string>> | null> {
+  const db = serviceClient();
+  if (!db || !/^[a-z0-9-]{1,200}$/.test(slug)) return null;
+
+  const { data } = await db
+    .from("razbors")
+    .select("slug_ru, slug_uz, slug_en, article_ru, article_uz, article_en")
+    .eq("status", "published")
+    .or(`slug_ru.eq.${slug},slug_uz.eq.${slug},slug_en.eq.${slug}`)
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+
+  return Object.fromEntries(versionsOf(data as unknown as Record<string, unknown>).map((v) => [v.locale, v.slug]));
+}
+
 /** Соседние разборы той же ниши — перелинковка внизу страницы. */
 export async function siblings(item: RazborItem, limit = 3): Promise<RazborItem[]> {
   const all = await listRazbors(item.locale);
@@ -219,7 +258,7 @@ export type RazborLink = { slug: string; title: string; href: string };
 
 /** Разборы по нишам — для блока «в вашей нише» под отчётом аудитора. */
 export async function razborsByNiche(
-  locale: RazborLocale,
+  locale: RazborReadLocale,
   perNiche = 3,
 ): Promise<Record<string, RazborLink[]>> {
   const out: Record<string, RazborLink[]> = {};
@@ -489,7 +528,8 @@ export async function razborById(id: string): Promise<ReviewRow | null> {
  * которая записала строку в базу, но не сбросила кэш, для человека
  * выглядит ровно как кнопка, которая ничего не сделала, — так и было.
  */
-export type RazborPaths = { ru: string; uz: string };
+/** `en` — только если у разбора есть английский адрес (lib/razbor/english.ts). */
+export type RazborPaths = { ru: string; uz: string; en: string | null };
 
 /**
  * Почему не вышло — кодом: текст на языке панели подбирает страница
@@ -500,9 +540,10 @@ export type RazborFailure = { ok: false; why: "offline" | "gone" | "half" | "fai
 
 export type PublishResult = { ok: true; paths: RazborPaths } | RazborFailure;
 
-const pathsOf = (row: { slug_ru?: unknown; slug_uz?: unknown }): RazborPaths => ({
+const pathsOf = (row: { slug_ru?: unknown; slug_uz?: unknown; slug_en?: unknown }): RazborPaths => ({
   ru: `/ru/razbor/${String(row.slug_ru ?? "")}`,
   uz: `/uz/razbor/${String(row.slug_uz ?? "")}`,
+  en: row.slug_en ? `/en/razbor/${String(row.slug_en)}` : null,
 });
 
 /**
@@ -524,7 +565,7 @@ export async function publish(id: string): Promise<PublishResult> {
 
   const { data } = await db
     .from("razbors")
-    .select("article_ru, article_uz, slug_ru, slug_uz")
+    .select("article_ru, article_uz, slug_ru, slug_uz, slug_en")
     .eq("id", id)
     .maybeSingle();
   if (!data) return { ok: false, why: "gone" };
@@ -552,7 +593,7 @@ export async function unpublish(id: string): Promise<RazborPaths | null> {
   const db = serviceClient();
   if (!db) return null;
 
-  const { data } = await db.from("razbors").select("slug_ru, slug_uz").eq("id", id).maybeSingle();
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en").eq("id", id).maybeSingle();
   if (!data) return null;
 
   await db.from("razbors").update({ status: "review", published_at: null }).eq("id", id);
@@ -571,7 +612,7 @@ export async function remove(id: string): Promise<RazborPaths | null> {
   const db = serviceClient();
   if (!db) return null;
 
-  const { data } = await db.from("razbors").select("slug_ru, slug_uz").eq("id", id).maybeSingle();
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en").eq("id", id).maybeSingle();
   if (!data) return null;
 
   await db.from("razbors").delete().eq("id", id);
@@ -599,7 +640,7 @@ export async function saveArticles(
   const db = serviceClient();
   if (!db) return { ok: false, why: "offline" };
 
-  const { data } = await db.from("razbors").select("slug_ru, slug_uz").eq("id", id).maybeSingle();
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en").eq("id", id).maybeSingle();
   if (!data) return { ok: false, why: "gone" };
 
   const { error } = await db
@@ -613,6 +654,11 @@ export async function saveArticles(
       description_uz: next.uz.description,
       label_ru: next.ru.label,
       label_uz: next.uz.label,
+      // Английская версия написана с прежнего русского текста: после правки
+      // она устарела. Адрес остаётся тем же (он уже в поиске), статью сервер
+      // напишет заново со следующего свипа.
+      article_en: null,
+      en_tried_at: null,
     })
     .eq("id", id);
 
@@ -624,7 +670,7 @@ export async function reject(id: string, reason: string): Promise<RazborPaths | 
   const db = serviceClient();
   if (!db) return null;
 
-  const { data } = await db.from("razbors").select("slug_ru, slug_uz").eq("id", id).maybeSingle();
+  const { data } = await db.from("razbors").select("slug_ru, slug_uz, slug_en").eq("id", id).maybeSingle();
   if (!data) return null;
 
   await db

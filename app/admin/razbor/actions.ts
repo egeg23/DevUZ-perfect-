@@ -49,8 +49,11 @@ function refresh(paths: RazborPaths | null): void {
 
   revalidatePath(paths.ru);
   revalidatePath(paths.uz);
+  // Английская версия — если сервер её уже написал (lib/razbor/english.ts).
+  if (paths.en) revalidatePath(paths.en);
   revalidatePath("/ru/razbor");
   revalidatePath("/uz/razbor");
+  revalidatePath("/en/razbor");
   revalidatePath("/sitemap.xml");
 }
 

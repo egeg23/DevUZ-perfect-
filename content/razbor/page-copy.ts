@@ -1,11 +1,12 @@
 /**
  * Подписи раздела «Разборы».
  *
- * Только русский и узбекский: разборы пишутся под запросы этих двух
- * рынков, и переводить их на английский незачем — по-английски такие
- * запросы в Ташкенте не набирают.
+ * Русский и узбекский — языки, на которых разборы пишутся. Английский —
+ * с 10.10.2026, по слову владельца («На английском давай тоже делать»):
+ * статьи для него сервер делает сам из опубликованных русских
+ * (lib/razbor/english.ts), и подписи раздела нужны и ему.
  */
-import type { RazborLocale } from "@/lib/razbor/model";
+import type { RazborReadLocale } from "@/lib/razbor/model";
 
 type Copy = {
   kicker: string;
@@ -35,7 +36,7 @@ type Copy = {
   ctaButton: string;
 };
 
-export const razborCopy: Record<RazborLocale, Copy> = {
+export const razborCopy: Record<RazborReadLocale, Copy> = {
   ru: {
     kicker: "разборы",
     title: "Разборы сайтов",
@@ -86,6 +87,31 @@ export const razborCopy: Record<RazborLocale, Copy> = {
     cta: "O‘z saytingizga ham shunday tahlil kerakmi?",
     ctaButton: "Saytni tekshirish",
   },
+  en: {
+    kicker: "teardowns",
+    title: "Website teardowns",
+    lead: "Every day we take one live website, look at it through a customer's eyes and show what stops it from selling. We never name the company: this is about mistakes, not people. Once a week there is a tender teardown: what IT procurement specs usually miss.",
+    empty: "English versions are on their way",
+    emptyNote:
+      "Each teardown is written in Russian and Uzbek first and then adapted into English. The first English ones will appear here within a few hours.",
+    before: "As it is",
+    after: "How we would build it",
+    shotOn: "Screenshot taken",
+    whatBreaks: "What stops it from selling",
+    whatItCosts: "What it costs the business",
+    howWeFix: "What we do",
+    outcome: "What this gives",
+    price: "Price and timeline",
+    more: "More teardowns in this niche",
+    anonymous:
+      "We do not name the company or link to it. This is about typical mistakes, not specific people; the name and logo on the screenshot are covered.",
+    lossTitle: "What this costs",
+    lossBody: "Out of every hundred people who reach the site ready to get in touch, roughly {lo}–{hi} are lost at these points.",
+    lossHow: "This is an estimate based on our own stated assumptions, not a measurement of someone else's analytics: we do not know this site's traffic and do not make it up. We count per hundred visitors, and the share of every item is open in our code.",
+    serviceLink: "Order a website for a business like this →",
+    cta: "Want the same teardown of your own website?",
+    ctaButton: "Check my website",
+  },
 };
 
 /**
@@ -95,7 +121,7 @@ export const razborCopy: Record<RazborLocale, Copy> = {
  * мешает продавать» и «проверить сайт» к ней не подходят, а вместо снимков —
  * оговорка, что закупку мы не называем.
  */
-export const tenderCopy: Record<RazborLocale, Partial<Copy>> = {
+export const tenderCopy: Record<RazborReadLocale, Partial<Copy>> = {
   ru: {
     whatBreaks: "Что обычно упускают в ТЗ",
     whatItCosts: "Чем оборачивается",
@@ -117,6 +143,17 @@ export const tenderCopy: Record<RazborLocale, Partial<Copy>> = {
     serviceLink: "Tender uchun texnik topshiriq yoki subpudrat — batafsil →",
     cta: "Xaridga tayyorlanyapsizmi yoki tenderni allaqachon yutdingizmi?",
     ctaButton: "Tenderni muhokama qilish",
+  },
+  en: {
+    whatBreaks: "What specs usually miss",
+    whatItCosts: "What it leads to",
+    howWeFix: "How to write it right",
+    outcome: "What a good spec gives",
+    more: "More tender teardowns",
+    anonymous: "We do not name buyers or tenders: we look at a typical spec, not at anyone's procurement.",
+    serviceLink: "Tender specs or subcontracting: details →",
+    cta: "Preparing a procurement or already won a tender?",
+    ctaButton: "Discuss a tender",
   },
 };
 
@@ -147,10 +184,10 @@ export const razborBorrowedCopy: Record<"uk" | "pl", RazborBorrowedCopy> = {
     title: "Розбори сайтів",
     lead: "Щодня беремо один живий сайт, дивимося на нього очима клієнта й показуємо, що заважає йому продавати. Компанію не називаємо: розмова про помилки, а не про людей.",
     languageNote:
-      "Статті поки що виходять російською та узбецькою: кожен розбір пишеться під пошукові запити бізнесу в Узбекистані. Нижче — російські версії.",
+      "Статті виходять російською, узбецькою та англійською: кожен розбір пишеться під пошукові запити бізнесу в Узбекистані. Нижче — російські версії.",
     badge: "RU",
     readIn: "Читати російською →",
-    empty: "Перший розбір вийде найближчим часом — російською та узбецькою.",
+    empty: "Перший розбір вийде найближчим часом — російською, узбецькою та англійською.",
     anonymous:
       "Компанію не називаємо й посилання не даємо. Мова про типові помилки, а не про конкретних людей; на знімку назву й логотип закрито.",
   },
@@ -159,10 +196,10 @@ export const razborBorrowedCopy: Record<"uk" | "pl", RazborBorrowedCopy> = {
     title: "Analizy stron",
     lead: "Codziennie bierzemy jedną działającą stronę, patrzymy na nią oczami klienta i pokazujemy, co przeszkadza jej sprzedawać. Nie podajemy nazwy firmy: rozmawiamy o błędach, nie o ludziach.",
     languageNote:
-      "Artykuły ukazują się na razie po rosyjsku i po uzbecku: każda analiza powstaje pod zapytania, które wpisują firmy w Uzbekistanie. Poniżej — wersje rosyjskie.",
+      "Artykuły ukazują się po rosyjsku, po uzbecku i po angielsku: każda analiza powstaje pod zapytania, które wpisują firmy w Uzbekistanie. Poniżej — wersje rosyjskie.",
     badge: "RU",
     readIn: "Czytaj po rosyjsku →",
-    empty: "Pierwsza analiza ukaże się wkrótce — po rosyjsku i po uzbecku.",
+    empty: "Pierwsza analiza ukaże się wkrótce — po rosyjsku, po uzbecku i po angielsku.",
     anonymous:
       "Nie podajemy nazwy firmy ani linku. Chodzi o typowe błędy, a nie o konkretnych ludzi; nazwa i logo na zrzucie są zasłonięte.",
   },

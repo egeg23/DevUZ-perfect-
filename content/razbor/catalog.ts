@@ -24,6 +24,8 @@ export type City = {
   uz: string;
   /** Местный, для «где»: «Toshkentda». */
   uzIn: string;
+  /** По-английски: «Tashkent» — для английского запроса разбора. */
+  en: string;
 };
 
 export type Niche = {
@@ -61,18 +63,18 @@ export type Niche = {
  * разборов по нему должно быть больше, чем по соседним.
  */
 export const CITIES: readonly City[] = [
-  { key: "tashkent", country: "UZ", ru: "Ташкент", ruIn: "Ташкенте", uz: "Toshkent", uzIn: "Toshkentda" },
-  { key: "samarkand", country: "UZ", ru: "Самарканд", ruIn: "Самарканде", uz: "Samarqand", uzIn: "Samarqandda" },
-  { key: "bukhara", country: "UZ", ru: "Бухара", ruIn: "Бухаре", uz: "Buxoro", uzIn: "Buxoroda" },
-  { key: "namangan", country: "UZ", ru: "Наманган", ruIn: "Намангане", uz: "Namangan", uzIn: "Namanganda" },
-  { key: "andijan", country: "UZ", ru: "Андижан", ruIn: "Андижане", uz: "Andijon", uzIn: "Andijonda" },
-  { key: "fergana", country: "UZ", ru: "Фергана", ruIn: "Фергане", uz: "Farg'ona", uzIn: "Farg'onada" },
-  { key: "nukus", country: "UZ", ru: "Нукус", ruIn: "Нукусе", uz: "Nukus", uzIn: "Nukusda" },
-  { key: "almaty", country: "KZ", ru: "Алматы", ruIn: "Алматы", uz: "Olmaota", uzIn: "Olmaotada" },
-  { key: "astana", country: "KZ", ru: "Астана", ruIn: "Астане", uz: "Ostona", uzIn: "Ostonada" },
-  { key: "shymkent", country: "KZ", ru: "Шымкент", ruIn: "Шымкенте", uz: "Chimkent", uzIn: "Chimkentda" },
-  { key: "bishkek", country: "KG", ru: "Бишкек", ruIn: "Бишкеке", uz: "Bishkek", uzIn: "Bishkekda" },
-  { key: "osh", country: "KG", ru: "Ош", ruIn: "Оше", uz: "O'sh", uzIn: "O'shda" },
+  { key: "tashkent", country: "UZ", ru: "Ташкент", ruIn: "Ташкенте", uz: "Toshkent", uzIn: "Toshkentda", en: "Tashkent" },
+  { key: "samarkand", country: "UZ", ru: "Самарканд", ruIn: "Самарканде", uz: "Samarqand", uzIn: "Samarqandda", en: "Samarkand" },
+  { key: "bukhara", country: "UZ", ru: "Бухара", ruIn: "Бухаре", uz: "Buxoro", uzIn: "Buxoroda", en: "Bukhara" },
+  { key: "namangan", country: "UZ", ru: "Наманган", ruIn: "Намангане", uz: "Namangan", uzIn: "Namanganda", en: "Namangan" },
+  { key: "andijan", country: "UZ", ru: "Андижан", ruIn: "Андижане", uz: "Andijon", uzIn: "Andijonda", en: "Andijan" },
+  { key: "fergana", country: "UZ", ru: "Фергана", ruIn: "Фергане", uz: "Farg'ona", uzIn: "Farg'onada", en: "Fergana" },
+  { key: "nukus", country: "UZ", ru: "Нукус", ruIn: "Нукусе", uz: "Nukus", uzIn: "Nukusda", en: "Nukus" },
+  { key: "almaty", country: "KZ", ru: "Алматы", ruIn: "Алматы", uz: "Olmaota", uzIn: "Olmaotada", en: "Almaty" },
+  { key: "astana", country: "KZ", ru: "Астана", ruIn: "Астане", uz: "Ostona", uzIn: "Ostonada", en: "Astana" },
+  { key: "shymkent", country: "KZ", ru: "Шымкент", ruIn: "Шымкенте", uz: "Chimkent", uzIn: "Chimkentda", en: "Shymkent" },
+  { key: "bishkek", country: "KG", ru: "Бишкек", ruIn: "Бишкеке", uz: "Bishkek", uzIn: "Bishkekda", en: "Bishkek" },
+  { key: "osh", country: "KG", ru: "Ош", ruIn: "Оше", uz: "O'sh", uzIn: "O'shda", en: "Osh" },
 ];
 
 /**

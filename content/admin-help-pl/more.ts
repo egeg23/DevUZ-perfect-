@@ -357,6 +357,14 @@ export const moreSections: Record<string, HelpEntry> = {
           "**«Nie publikujemy»** — z powodem albo bez. Zmiana nie wróci już do tej strony. Przywrócić stronę do kolejki zmiany można tylko przez **«Usuń»** (wpisz «usuń»).",
         ],
       },
+      {
+        id: "english",
+        title: "Wersja angielska",
+        body: [
+          "Opublikowana analiza po kilku minutach dostaje trzecią stronę — po angielsku, w sekcji devuz.studio/en/razbor. Pisze ją sam serwer, bez sprawdzania w panelu: bierze sprawdzony już przez Ciebie artykuł rosyjski i przenosi go na angielski pod angielskie zapytanie («restaurant website in Tashkent»), sprawdzone w Google Trends i Wordstat. Ustalenia, liczby i zrzuty ekranu — te same; nowych liczb, procentów i ustaleń kod nie przepuszcza, a cyrylicy w angielskim tekście być nie może.",
+          "Dwa razy nie przeszła sprawdzenia — serwer spróbuje ponownie za sześć godzin, a na razie analiza nie ma strony angielskiej: przełącznik języka prowadzi z niej do angielskiej listy analiz. **«Edytuj»** kasuje wersję angielską: napisano ją z poprzedniego tekstu, a serwer napisze ją od nowa według poprawionego — adres strony zostaje ten sam. **«Zdejmij z publikacji»** i **«Usuń»** zdejmują z witryny także ją.",
+        ],
+      },
     ],
   },
 

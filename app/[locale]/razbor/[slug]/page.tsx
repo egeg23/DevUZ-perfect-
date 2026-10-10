@@ -7,11 +7,11 @@ import { Container } from "@/components/ui/container";
 import { razborCopy, tenderCopy } from "@/content/razbor/page-copy";
 import type { RazborFinding, RazborShot } from "@/content/razbor/items";
 import { evidenceFor } from "@/lib/razbor/evidence";
-import { listRazbors, razborBySlug, siblings } from "@/lib/razbor/store";
+import { listRazbors, razborBySlug, razborVersions, siblings } from "@/lib/razbor/store";
 import { isLocale } from "@/lib/i18n";
 import { buildMetadata, siteUrl, type AltPaths } from "@/lib/seo";
 import { RAZBOR_LOCALES, isRazborBorrowing, isRazborLocale, localeHref } from "@/lib/razbor/routing";
-import type { RazborLocale } from "@/lib/razbor/model";
+import type { RazborReadLocale } from "@/lib/razbor/model";
 import { serviceFor } from "@/lib/razbor/service-link";
 import { isTender } from "@/lib/razbor/tender";
 
@@ -56,7 +56,7 @@ export async function generateMetadata({
   // не перевод одного. Общее правило подставляло сюда русский адрес под
   // узбекским флагом, то есть обещало страницу, которой нет.
   const pages: AltPaths = { [locale]: `razbor/${item.slug}` };
-  if (item.alt) pages[item.alt.locale] = `razbor/${item.alt.slug}`;
+  for (const alt of item.alts) pages[alt.locale] = `razbor/${alt.slug}`;
 
   return buildMetadata({
     locale,
@@ -90,7 +90,17 @@ export default async function RazborPage({
   if (!isLocale(raw) || !isRazborLocale(raw)) notFound();
   const locale = raw;
   const item = await razborBySlug(locale, slug);
-  if (!item) notFound();
+  if (!item) {
+    // Переключатель языка меняет только начало адреса, а у каждой версии
+    // разбора свой адрес: /en/razbor/sayt-dlya-… — это русский адрес под
+    // английским флагом. Находим разбор по любому из адресов и ведём на ту
+    // же статью на выбранном языке; её нет (английскую ещё не написали) —
+    // на список раздела, а не в 404.
+    const versions = await razborVersions(slug);
+    if (versions?.[locale]) redirect(localeHref(locale, versions[locale]));
+    if (versions) redirect(localeHref(locale));
+    notFound();
+  }
 
   // Тендерный разбор недели: те же блоки, другие подписи и другой призыв.
   const tender = isTender(item.niche);
@@ -364,7 +374,7 @@ function Evidence({
 }: {
   finding: RazborFinding;
   shots: Readonly<Record<string, RazborShot>>;
-  locale: RazborLocale;
+  locale: RazborReadLocale;
 }) {
   const shot = finding.code ? shots[finding.code] : undefined;
   const rule = evidenceFor(finding.code);

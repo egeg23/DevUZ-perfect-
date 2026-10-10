@@ -31,10 +31,10 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
     { href: localeHref(locale, "calculator"), label: dict.nav.calculator },
     { href: localeHref(locale, "audit"), label: dict.nav.audit },
     { href: localeHref(locale, "products"), label: dict.nav.products },
-    // Разборы пишутся только по-русски и по-узбекски: это разные запросы,
-    // а не перевод одного. Показывать англичанину пункт, за которым пусто,
-    // незачем.
-    ...(locale === "ru" || locale === "uz"
+    // Разборы — по-русски, по-узбекски и (с 10.10.2026) по-английски. На
+    // остальных языках своих статей нет, и пункт, за которым пусто или
+    // чужой язык, в шапке не нужен.
+    ...(locale === "ru" || locale === "uz" || locale === "en"
       ? [{ href: localeHref(locale, "razbor"), label: dict.nav.razbor, live: true }]
       : []),
     { href: localeHref(locale, "cases"), label: dict.nav.cases },

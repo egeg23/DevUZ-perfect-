@@ -4,6 +4,7 @@ import { cases } from "@/content/cases";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { MARKETING_PATH } from "@/content/marketing";
 import { ARTICLE_LOCALES, articleHref, listArticles } from "@/lib/marketing/articles-store";
+import type { RazborItem } from "@/content/razbor/items";
 import { listRazbors } from "@/lib/razbor/store";
 import { RAZBOR_LOCALES } from "@/lib/razbor/routing";
 import { products } from "@/content/products";
@@ -91,13 +92,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /**
    * Разборы идут отдельным списком, а не через общий цикл по языкам.
    *
-   * Они существуют только на русском и узбекском: это разные запросы, а не
-   * перевод одного. Пустить их через общий цикл значит пообещать Google
-   * английскую и китайскую версии, которых нет, — и получить четыре
-   * страницы 404 на каждый разбор.
+   * Они существуют на русском и узбекском (разные запросы, а не перевод
+   * одного) и с 10.10.2026 — на английском, как только сервер напишет эту
+   * версию. Пустить их через общий цикл значит пообещать Google китайскую,
+   * украинскую и польскую версии, которых нет, — и получить 404 на каждый
+   * разбор.
    */
   const razborEntries: MetadataRoute.Sitemap = [
-    // Сам раздел — на двух языках.
+    // Сам раздел — на языках разборов: русском, узбекском и английском.
     ...RAZBOR_LOCALES.map((locale) => ({
       url: absoluteUrl(`${locale}/razbor`),
       lastModified,
@@ -112,21 +114,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(item.publishedAt),
       changeFrequency: "yearly" as const,
       priority: 0.8,
-      alternates: {
-        languages: item.alt
-          ? {
-              [hreflang[item.locale]]: absoluteUrl(`${item.locale}/razbor/${item.slug}`),
-              [hreflang[item.alt.locale]]: absoluteUrl(
-                `${item.alt.locale}/razbor/${item.alt.slug}`,
-              ),
-              "x-default": absoluteUrl(
-                item.locale === "ru"
-                  ? `ru/razbor/${item.slug}`
-                  : `ru/razbor/${item.alt.slug}`,
-              ),
-            }
-          : undefined,
-      },
+      alternates: { languages: razborItemLanguages(item) },
     })),
   ];
 
@@ -168,6 +156,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     }),
   )];
+}
+
+/**
+ * Языковые версии одного разбора — только те, что открываются: английской
+ * нет, пока сервер её не написал. x-default — русская версия.
+ */
+function razborItemLanguages(item: RazborItem): Record<string, string> | undefined {
+  if (!item.alts.length) return undefined;
+  const all = [{ locale: item.locale, slug: item.slug }, ...item.alts];
+  const languages: Record<string, string> = {};
+  for (const version of all) {
+    languages[hreflang[version.locale]] = absoluteUrl(`${version.locale}/razbor/${version.slug}`);
+  }
+  const ru = all.find((version) => version.locale === "ru");
+  if (ru) languages["x-default"] = absoluteUrl(`ru/razbor/${ru.slug}`);
+  return languages;
 }
 
 /** Языковые альтернативы самого раздела: только те, где он есть. */

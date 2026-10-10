@@ -43,7 +43,7 @@ export async function generateMetadata({
       // робот находит по карте сайта, так что закрыть страницу целиком
       // (noindex, nofollow — так buildMetadata закрывает всё) ничего не теряет.
       noIndex: true,
-      alternates: { ru: "razbor", uz: "razbor" },
+      alternates: { ru: "razbor", uz: "razbor", en: "razbor" },
     });
   }
   if (!isLocale(locale) || !isRazborLocale(locale)) return {};
@@ -54,9 +54,9 @@ export async function generateMetadata({
     path: "razbor",
     title: `${copy.title} — DevUz Studio`,
     description: copy.lead,
-    // Только русский и узбекский: на остальных языках раздела нет, и общее
-    // правило обещало бы Google две несуществующие страницы.
-    alternates: { ru: "razbor", uz: "razbor" },
+    // Русский, узбекский и английский (с 10.10.2026): на остальных языках
+    // раздела нет, и общее правило обещало бы Google несуществующие страницы.
+    alternates: { ru: "razbor", uz: "razbor", en: "razbor" },
   });
 }
 
