@@ -35,6 +35,23 @@ const ROW = {
   lost_per_100: [4, 9],
 };
 
+test("английская версия — третья страница той же строки, когда она написана", () => {
+  const withEn = {
+    ...ROW,
+    slug_en: "website-for-furniture-store-tashkent",
+    article_en: { ...(ROW.article_ru as Record<string, unknown>), title: "Website for a furniture store in Tashkent", query: "website for furniture store in Tashkent" },
+  };
+  const en = toItem(withEn, "en");
+  assert.ok(en);
+  assert.equal(en.slug, "website-for-furniture-store-tashkent");
+  assert.deepEqual(en.alts.map((a) => a.locale), ["ru", "uz"]);
+  assert.deepEqual(toItem(withEn, "ru")?.alts.map((a) => a.locale), ["uz", "en"]);
+  // Адрес есть, статьи нет (сбросили правкой): версии нет — и ссылки на неё.
+  const reset = { ...withEn, article_en: null };
+  assert.equal(toItem(reset, "en"), null);
+  assert.deepEqual(toItem(reset, "ru")?.alts.map((a) => a.locale), ["uz"]);
+});
+
 test("строка базы разворачивается в две страницы, а не в перевод одной", () => {
   const ru = toItem(ROW, "ru");
   const uz = toItem(ROW, "uz");
@@ -42,9 +59,11 @@ test("строка базы разворачивается в две стран�
 
   assert.equal(ru.slug, "mebel-tashkent");
   assert.equal(uz.slug, "mebel-toshkent");
-  // hreflang: каждая знает про вторую.
-  assert.deepEqual(ru.alt, { locale: "uz", slug: "mebel-toshkent" });
-  assert.deepEqual(uz.alt, { locale: "ru", slug: "mebel-tashkent" });
+  // hreflang: каждая знает про вторую. Английской в строке нет — и её не
+  // обещают.
+  assert.deepEqual(ru.alts, [{ locale: "uz", slug: "mebel-toshkent" }]);
+  assert.deepEqual(uz.alts, [{ locale: "ru", slug: "mebel-tashkent" }]);
+  assert.equal(toItem(ROW, "en"), null);
   // Запросы разные — это и есть смысл двух страниц.
   assert.notEqual(ru.query, uz.query);
 

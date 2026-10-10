@@ -16,7 +16,7 @@
  * был бы картинкой ради картинки — читатель ищет на нём названное, не
  * находит и перестаёт верить остальным снимкам. Пусто — честнее.
  */
-import type { RazborLocale } from "@/lib/razbor/model";
+import type { RazborReadLocale } from "@/lib/razbor/model";
 
 /**
  * Как искать элемент в странице.
@@ -56,7 +56,7 @@ export type EvidenceRule = {
   /** Находка про телефон снимается на телефоне, иначе её не видно. */
   screen: "desktop" | "mobile";
   /** Подпись под снимком: на что смотреть. Не пересказ находки. */
-  caption: Record<RazborLocale, string>;
+  caption: Record<RazborReadLocale, string>;
 };
 
 const RULES: Readonly<Record<string, EvidenceRule>> = {
@@ -65,160 +65,160 @@ const RULES: Readonly<Record<string, EvidenceRule>> = {
     mode: "element",
     hunt: "marquee",
     screen: "desktop",
-    caption: { ru: "Бегущая строка на странице", uz: "Sahifadagi yuguruvchi qator" },
+    caption: { ru: "Бегущая строка на странице", uz: "Sahifadagi yuguruvchi qator", en: "Scrolling ticker on the page" },
   },
   visitor_counter: {
     mode: "element",
     hunt: "counter",
     screen: "desktop",
-    caption: { ru: "Счётчик посетителей", uz: "Tashrifchilar hisoblagichi" },
+    caption: { ru: "Счётчик посетителей", uz: "Tashrifchilar hisoblagichi", en: "Visitor counter" },
   },
   under_construction: {
     mode: "element",
     hunt: "construction",
     screen: "desktop",
-    caption: { ru: "Надпись о том, что сайт в разработке", uz: "Sayt ishlanmoqda degan yozuv" },
+    caption: { ru: "Надпись о том, что сайт в разработке", uz: "Sayt ishlanmoqda degan yozuv", en: "A note that the site is under construction" },
   },
   placeholder_text: {
     mode: "element",
     hunt: "placeholder",
     screen: "desktop",
-    caption: { ru: "Текст-заготовка из шаблона", uz: "Shablondan qolgan namuna matn" },
+    caption: { ru: "Текст-заготовка из шаблона", uz: "Shablondan qolgan namuna matn", en: "Placeholder text left from the template" },
   },
   stale_copyright: {
     mode: "element",
     hunt: "footer",
     screen: "desktop",
-    caption: { ru: "Год в подвале сайта", uz: "Sayt pastki qismidagi yil" },
+    caption: { ru: "Год в подвале сайта", uz: "Sayt pastki qismidagi yil", en: "The year in the site footer" },
   },
   broken_images: {
     mode: "element",
     hunt: "broken-img",
     screen: "desktop",
-    caption: { ru: "Место картинки, которая не открылась", uz: "Ochilmagan rasm o'rni" },
+    caption: { ru: "Место картинки, которая не открылась", uz: "Ochilmagan rasm o'rni", en: "Where an image failed to load" },
   },
   img_no_alt: {
     mode: "element",
     hunt: "img-no-alt",
     screen: "desktop",
-    caption: { ru: "Картинка без подписи для поиска", uz: "Qidiruv uchun izohsiz rasm" },
+    caption: { ru: "Картинка без подписи для поиска", uz: "Qidiruv uchun izohsiz rasm", en: "An image with no description for search" },
   },
   tiny_text: {
     mode: "element",
     hunt: "body-text",
     screen: "desktop",
-    caption: { ru: "Основной текст в натуральном размере", uz: "Asosiy matn haqiqiy o'lchamda" },
+    caption: { ru: "Основной текст в натуральном размере", uz: "Asosiy matn haqiqiy o'lchamda", en: "Body text at actual size" },
   },
   wall_of_text: {
     mode: "element",
     hunt: "longest-text",
     screen: "desktop",
-    caption: { ru: "Текст без подзаголовков и списков", uz: "Sarlavhasiz va ro'yxatsiz matn" },
+    caption: { ru: "Текст без подзаголовков и списков", uz: "Sarlavhasiz va ro'yxatsiz matn", en: "Text with no subheadings or lists" },
   },
   popup_onload: {
     mode: "element",
     hunt: "popup",
     screen: "desktop",
-    caption: { ru: "Окно, которым сайт встречает посетителя", uz: "Saytga kirganda chiqadigan oyna" },
+    caption: { ru: "Окно, которым сайт встречает посетителя", uz: "Saytga kirganda chiqadigan oyna", en: "The pop-up that greets a visitor" },
   },
   autoplay_sound: {
     mode: "element",
     hunt: "media",
     screen: "desktop",
-    caption: { ru: "Проигрыватель, который включается сам", uz: "O'zi yoqiladigan pleyer" },
+    caption: { ru: "Проигрыватель, который включается сам", uz: "O'zi yoqiladigan pleyer", en: "A player that starts on its own" },
   },
   flash: {
     mode: "element",
     hunt: "legacy-embed",
     screen: "desktop",
-    caption: { ru: "Место, где стоял Flash", uz: "Flash turgan joy" },
+    caption: { ru: "Место, где стоял Flash", uz: "Flash turgan joy", en: "Where the Flash content used to be" },
   },
   frames: {
     mode: "element",
     hunt: "legacy-embed",
     screen: "desktop",
-    caption: { ru: "Страница, собранная из рамок", uz: "Ramkalardan yig'ilgan sahifa" },
+    caption: { ru: "Страница, собранная из рамок", uz: "Ramkalardan yig'ilgan sahifa", en: "A page built from frames" },
   },
   ie_only: {
     mode: "element",
     hunt: "ie-note",
     screen: "desktop",
-    caption: { ru: "Просьба открыть сайт в Internet Explorer", uz: "Saytni Internet Explorer’da ochish iltimosi" },
+    caption: { ru: "Просьба открыть сайт в Internet Explorer", uz: "Saytni Internet Explorer’da ochish iltimosi", en: "A request to open the site in Internet Explorer" },
   },
   phone_not_clickable: {
     mode: "element",
     hunt: "contacts",
     screen: "mobile",
-    caption: { ru: "Телефон на сайте — обычный текст, не ссылка", uz: "Saytdagi telefon — oddiy matn, havola emas" },
+    caption: { ru: "Телефон на сайте — обычный текст, не ссылка", uz: "Saytdagi telefon — oddiy matn, havola emas", en: "The phone number is plain text, not a link" },
   },
 
   /* ── Находки об отсутствии: первый экран целиком ────────────────────── */
   no_phone: {
     mode: "screen",
     screen: "desktop",
-    caption: { ru: "Первый экран сайта: телефона на нём нет", uz: "Saytning birinchi ekrani: telefon yo'q" },
+    caption: { ru: "Первый экран сайта: телефона на нём нет", uz: "Saytning birinchi ekrani: telefon yo'q", en: "The first screen: no phone number" },
   },
   no_messenger: {
     mode: "screen",
     screen: "desktop",
-    caption: { ru: "Первый экран: кнопок Telegram и WhatsApp нет", uz: "Birinchi ekran: Telegram va WhatsApp tugmalari yo'q" },
+    caption: { ru: "Первый экран: кнопок Telegram и WhatsApp нет", uz: "Birinchi ekran: Telegram va WhatsApp tugmalari yo'q", en: "The first screen: no Telegram or WhatsApp buttons" },
   },
   no_h1: {
     mode: "screen",
     screen: "desktop",
-    caption: { ru: "Первый экран: главного заголовка нет", uz: "Birinchi ekran: asosiy sarlavha yo'q" },
+    caption: { ru: "Первый экран: главного заголовка нет", uz: "Birinchi ekran: asosiy sarlavha yo'q", en: "The first screen: no main heading" },
   },
   no_prices: {
     mode: "screen",
     screen: "desktop",
-    caption: { ru: "Первый экран: цен нет", uz: "Birinchi ekran: narxlar yo'q" },
+    caption: { ru: "Первый экран: цен нет", uz: "Birinchi ekran: narxlar yo'q", en: "The first screen: no prices" },
   },
   no_price_anywhere: {
     mode: "screen",
     screen: "desktop",
-    caption: { ru: "Первый экран: цен нет ни здесь, ни на внутренних страницах", uz: "Birinchi ekran: na bu yerda, na ichki sahifalarda narx bor" },
+    caption: { ru: "Первый экран: цен нет ни здесь, ни на внутренних страницах", uz: "Birinchi ekran: na bu yerda, na ichki sahifalarda narx bor", en: "The first screen: no prices here or on inner pages" },
   },
   client_rendered: {
     mode: "screen",
     screen: "desktop",
-    caption: { ru: "Что отдаёт сервер до того, как отработают скрипты", uz: "Skriptlar ishlashidan oldin server nima beradi" },
+    caption: { ru: "Что отдаёт сервер до того, как отработают скрипты", uz: "Skriptlar ishlashidan oldin server nima beradi", en: "What the server sends before the scripts run" },
   },
   ancient_layout: {
     mode: "screen",
     screen: "desktop",
-    caption: { ru: "Первый экран целиком", uz: "Birinchi ekran to'liq" },
+    caption: { ru: "Первый экран целиком", uz: "Birinchi ekran to'liq", en: "The whole first screen" },
   },
   dated_layout: {
     mode: "screen",
     screen: "desktop",
-    caption: { ru: "Первый экран целиком", uz: "Birinchi ekran to'liq" },
+    caption: { ru: "Первый экран целиком", uz: "Birinchi ekran to'liq", en: "The whole first screen" },
   },
   font_zoo: {
     mode: "screen",
     screen: "desktop",
-    caption: { ru: "Первый экран: шрифты не собираются в один набор", uz: "Birinchi ekran: shriftlar bir to'plamga yig'ilmaydi" },
+    caption: { ru: "Первый экран: шрифты не собираются в один набор", uz: "Birinchi ekran: shriftlar bir to'plamga yig'ilmaydi", en: "The first screen: fonts do not form one set" },
   },
 
   /* ── Телефон: показываем на телефоне ────────────────────────────────── */
   no_viewport: {
     mode: "screen",
     screen: "mobile",
-    caption: { ru: "Тот же сайт на экране телефона", uz: "O'sha sayt telefon ekranida" },
+    caption: { ru: "Тот же сайт на экране телефона", uz: "O'sha sayt telefon ekranida", en: "The same site on a phone screen" },
   },
   no_responsive_css: {
     mode: "screen",
     screen: "mobile",
-    caption: { ru: "Тот же сайт на экране телефона", uz: "O'sha sayt telefon ekranida" },
+    caption: { ru: "Тот же сайт на экране телефона", uz: "O'sha sayt telefon ekranida", en: "The same site on a phone screen" },
   },
   zoom_locked: {
     mode: "screen",
     screen: "mobile",
-    caption: { ru: "Тот же сайт на экране телефона", uz: "O'sha sayt telefon ekranida" },
+    caption: { ru: "Тот же сайт на экране телефона", uz: "O'sha sayt telefon ekranida", en: "The same site on a phone screen" },
   },
   horizontal_scroll: {
     mode: "screen",
     screen: "mobile",
-    caption: { ru: "Тот же сайт на экране телефона: страница шире экрана", uz: "O'sha sayt telefonda: sahifa ekrandan keng" },
+    caption: { ru: "Тот же сайт на экране телефона: страница шире экрана", uz: "O'sha sayt telefonda: sahifa ekrandan keng", en: "The same site on a phone: the page is wider than the screen" },
   },
 };
 

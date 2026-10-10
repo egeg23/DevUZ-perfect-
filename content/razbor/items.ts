@@ -13,7 +13,7 @@
  *
  * Имени разобранной компании здесь нет нигде. Ни ссылки, ни домена.
  */
-import type { RazborLocale } from "@/lib/razbor/model";
+import type { RazborReadLocale } from "@/lib/razbor/model";
 
 export type RazborFinding = {
   /**
@@ -63,9 +63,13 @@ export type RazborShot = { src: string; width: number; height: number };
 
 export type RazborItem = {
   slug: string;
-  locale: RazborLocale;
-  /** Тот же разбор на другом языке — для hreflang. Пусто, если пары нет. */
-  alt: { locale: RazborLocale; slug: string } | null;
+  locale: RazborReadLocale;
+  /**
+   * Тот же разбор на других языках — для hreflang и переключателя языка.
+   * Только те версии, что реально открываются: английской нет, пока сервер
+   * её не написал, и обещать её поисковику раньше нельзя.
+   */
+  alts: readonly { locale: RazborReadLocale; slug: string }[];
 
   /** Ключи из content/razbor/catalog.ts. */
   niche: string;
@@ -114,13 +118,13 @@ export type RazborItem = {
  */
 export const razbors: readonly RazborItem[] = [];
 
-export function razborsFor(locale: RazborLocale): RazborItem[] {
+export function razborsFor(locale: RazborReadLocale): RazborItem[] {
   return razbors
     .filter((item) => item.locale === locale)
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
-export function razborBySlug(locale: RazborLocale, slug: string): RazborItem | null {
+export function razborBySlug(locale: RazborReadLocale, slug: string): RazborItem | null {
   return razbors.find((item) => item.locale === locale && item.slug === slug) ?? null;
 }
 
@@ -143,7 +147,7 @@ export type RazborLink = { slug: string; title: string; href: string };
  * заголовок, и не больше трёх на нишу.
  */
 export function razborsByNiche(
-  locale: RazborLocale,
+  locale: RazborReadLocale,
   perNiche = 3,
 ): Record<string, RazborLink[]> {
   const out: Record<string, RazborLink[]> = {};

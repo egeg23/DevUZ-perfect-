@@ -1664,6 +1664,14 @@ export const uz: HelpCopy = {
             "**«E’lon qilmaymiz»** — sabab bilan yoki sababsiz. Smena bu saytga boshqa qaytmaydi. Saytni smena navbatiga qaytarish — faqat **«O‘chirish»** (maydonga «o‘chirish» deb yozing).",
           ],
         },
+        {
+          id: "english",
+          title: "Inglizcha versiya",
+          body: [
+            "E’lon qilingan tahlil bir necha daqiqadan keyin uchinchi sahifani oladi — ingliz tilida, devuz.studio/en/razbor bo‘limida. Uni server o‘zi yozadi, panelda tekshiruvsiz: siz tekshirgan ruscha maqolani olib, inglizcha so‘rov ostida («restaurant website in Tashkent») ingliz tiliga o‘tkazadi, so‘rovni Google Trends va Wordstat bilan solishtirib. Topilmalar, raqamlar va skrinshotlar o‘sha-o‘sha; yangi raqam, foiz va topilmalarni kod o‘tkazmaydi, inglizcha matnda kirill harflari bo‘lishi mumkin emas.",
+            "Ikki marta tekshiruvdan o‘tmasa — server olti soatdan keyin yana urinadi, hozircha tahlilning inglizcha sahifasi yo‘q: til almashtirgich undan inglizcha tahlillar ro‘yxatiga olib boradi. **«Tahrirlash»** inglizcha versiyani o‘chiradi: u eski matndan yozilgan, server uni tuzatilgan matn bo‘yicha qaytadan yozadi — sahifa manzili o‘zgarmaydi. **«E’londan olish»** va **«O‘chirish»** uni ham saytdan olib tashlaydi.",
+          ],
+        },
       ],
     },
 

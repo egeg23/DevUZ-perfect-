@@ -20,11 +20,12 @@ import { templatedAcross } from "@/lib/razbor/sameness";
 const ROOT = new URL("../", import.meta.url);
 const read = (file: string) => readFileSync(new URL(file, ROOT), "utf8");
 
-test("разборы живут на русском и узбекском", () => {
-  assert.deepEqual([...RAZBOR_LOCALES], ["ru", "uz"]);
+test("разборы живут на русском, узбекском и английском", () => {
+  // Английский — с 10.10.2026: «На английском давай тоже делать, там 404».
+  assert.deepEqual([...RAZBOR_LOCALES], ["ru", "uz", "en"]);
   assert.equal(isRazborLocale("ru"), true);
   assert.equal(isRazborLocale("uz"), true);
-  assert.equal(isRazborLocale("en"), false);
+  assert.equal(isRazborLocale("en"), true);
   assert.equal(isRazborLocale("zh"), false);
 });
 
@@ -43,9 +44,13 @@ test("подписи есть на обоих языках и не пустые"
       assert.ok(value.trim().length > 1, `${locale}.${key} пустая`);
     }
   }
-  // Узбекская версия не должна оказаться копией русской.
+  // Узбекская и английская версии не должны оказаться копией русской.
   assert.notEqual(razborCopy.uz.title, razborCopy.ru.title, "узбекский текст не переведён");
   assert.notEqual(razborCopy.uz.lead, razborCopy.ru.lead, "узбекское описание не переведено");
+  assert.notEqual(razborCopy.en.lead, razborCopy.ru.lead, "английское описание не переведено");
+  for (const [key, value] of Object.entries(razborCopy.en)) {
+    assert.ok(!/[а-яё]/i.test(value), `en.${key}: кириллица`);
+  }
 });
 
 test("выборка и соседи работают на пустом списке", () => {
@@ -56,7 +61,7 @@ test("выборка и соседи работают на пустом спис
   const fake: RazborItem = {
     slug: "a",
     locale: "ru",
-    alt: null,
+    alts: [],
     niche: "stomatologiya",
     city: "tashkent",
     publishedAt: "2026-09-15",
@@ -263,10 +268,10 @@ test("обычные страницы по-прежнему собирают в�
 });
 
 test("страницы разборов объявляют языки явно, а не общим правилом", () => {
-  assert.match(read("app/[locale]/razbor/page.tsx"), /alternates: \{ ru: "razbor", uz: "razbor" \}/);
+  assert.match(read("app/[locale]/razbor/page.tsx"), /alternates: \{ ru: "razbor", uz: "razbor", en: "razbor" \}/);
 
   const page = read("app/[locale]/razbor/[slug]/page.tsx");
   assert.match(page, /const pages: AltPaths = \{ \[locale\]: `razbor\/\$\{item\.slug\}` \}/);
-  assert.match(page, /if \(item\.alt\) pages\[item\.alt\.locale\] = `razbor\/\$\{item\.alt\.slug\}`/);
+  assert.match(page, /for \(const alt of item\.alts\) pages\[alt\.locale\] = `razbor\/\$\{alt\.slug\}`/);
   assert.match(page, /alternates: pages/);
 });
