@@ -358,6 +358,75 @@ export const workSections: Record<string, HelpEntry> = {
   },
 
   /* ── Договоры ─────────────────────────────────────────────────────── */
+  /* ── Reklamy ──────────────────────────────────────────────────────── */
+  "/admin/ads": {
+    what: "Autopilot reklam w Google Ads i Yandex Direct — nowa usługa studia dla marketerów i agencji. Raz na dobę pobiera raporty konta reklamowego i proponuje trzy rzeczy: wykluczające słowa kluczowe, przesunięcie budżetu i testy reklam, — każdą z powodem i liczbami. Domyślnie sam niczego nie zmienia: decyduje człowiek przyciskami «Akceptuj» i «Odrzuć». Widzą to właściciel i kierownicy, menedżerowie — nie.",
+    items: [
+      {
+        id: "what",
+        title: "Co robi autopilot",
+        body: [
+          "**Wykluczenia.** Zapytania, na które wyświetlała się reklama, są dzielone na słowa i pary słów, a dla każdego sumuje się pieniądze i zgłoszenia. Słowo, które wydało nie mniej niż zwykły koszt zgłoszenia, zebrało kliknięcia i nie przyniosło żadnego zgłoszenia («za darmo», «pobierz», «praca»), jest proponowane do wykluczenia. Zapytania, których reguła nie widzi, ale które wyraźnie nie dotyczą tej firmy, oznacza tani model. Przed propozycją kod sprawdza, że wykluczenie nie blokuje żadnego słowa kluczowego kampanii.",
+          "**Budżet.** Pieniądze przechodzą z kampanii z drogim zgłoszeniem do kampanii z tanim, ale tylko jeśli ta codziennie wyczerpuje swój budżet. Przy małej ilości danych porównanie «na oko» wprowadza w błąd, dlatego autopilot liczy prawdopodobieństwo, że jedna kampania naprawdę jest lepsza, i proponuje przesunięcie dopiero przy 90% i więcej. Łączny budżet się przy tym nie zmienia.",
+          "**Testy reklam.** Jeśli w grupie jest jedna reklama, model pisze drugi wariant w języku grupy, bez długich myślników, sztampy i obietnic typu «gwarancja» czy «najlepszy». Po 10–45 dniach zostaje ta, która przynosi więcej zgłoszeń, druga idzie na pauzę.",
+          "Stawek za słowa kluczowe autopilot nie rusza: robią to same Google i Yandex w swoich strategiach. Szczegóły — w `docs/ads-autopilot/design.md`.",
+        ],
+      },
+      {
+        id: "setup",
+        title: "Jak założyć konto agencji",
+        body: [
+          "Po lewej — lista kont. **«Nowe konto»**: nazwa, kto to (studio, agencja albo firma) i język — w nim bot pisze do osób z tego konta. Kliknij **«Utwórz»**, a konto otworzy się po prawej.",
+          "W bloku **«Osoby»** dodaj te osoby, które będą pracować na koncie po stronie agencji: liczbowy Telegram id i imię, przycisk **«Dodaj»**. Logują się na devuz.studio/ads przez bota studia — przycisk «Zaloguj przez Telegram» wysyła jednorazowy link — i dostają powiadomienia. Usunięta osoba traci dostęp od razu.",
+          "**«Dodaj konto reklamowe»**: platforma, nazwa, login klienta w Direct (dla agencji) albo numer konta Google w formacie 123-456-7890. Potem na samym koncie — **«Połącz»**: otworzy się strona Yandex lub Google, gdzie właściciel reklam udziela dostępu. Klucz jest przechowywany w postaci zaszyfrowanej, nikt go nie widzi, łącznie ze studiem.",
+        ],
+      },
+      {
+        id: "proposals",
+        title: "Propozycje: «Akceptuj» i «Odrzuć»",
+        body: [
+          "W bloku **«Propozycje»** — to, co autopilot znalazł w ostatnich 30 dniach, każda z powodem prostymi słowami i liczbami. **«Akceptuj»** od razu stosuje zmianę na koncie reklamowym, **«Odrzuć»** usuwa propozycję. Nierozstrzygnięta propozycja po 14 dniach się przedawnia: dane w niej są już nieaktualne.",
+          "Przed zastosowaniem autopilot jeszcze raz patrzy na konto w obecnym stanie. Jeśli budżet zmieniono już ręcznie, kampania zaczęła się uczyć albo do słów kluczowych dodano słowo, które blokuje wykluczenie, zmiana nie zostanie zastosowana, a pod propozycją pojawi się wiersz z powodem. To nie awaria, tylko ochrona.",
+          "**«Odśwież teraz»** pobiera raporty i pisze propozycje bez czekania doby — zwykle w 1–2 minuty, wynik przyjdzie też na Telegram.",
+        ],
+      },
+      {
+        id: "limits",
+        title: "Tryb, limity i hamulec",
+        body: [
+          "W bloku **«Tryb i limity»** są dwa tryby. **«Proponuję — Ty zatwierdzasz»** jest domyślny: bez człowieka nic się nie zmienia. **«Sam, w granicach limitów»** — autopilot sam stosuje propozycje i pisze o tym na Telegram. Warto go włączyć, gdy agencja przez tydzień lub dwa akceptowała propozycje i się z nimi zgadza.",
+          "Limity: o ile procent można naraz przesunąć budżet jednej kampanii (domyślnie 20, więcej niż 30 w ogóle nie wolno) i ile zmian autopilot może zrobić sam w ciągu doby. Progi dla wykluczeń, własny koszt zgłoszenia, słowa, których nie wolno wykluczać (marka, miasto, usługa), i kilka zdań o firmie pomagają dokładniej odróżniać śmieciowe zapytania.",
+          "Co nie zmienia się w żadnym trybie: łączny budżet nie rośnie, kampanii w trakcie nauki się nie rusza, wykluczenie nie blokuje słów kluczowych, budżet jednej kampanii zmienia się nie częściej niż raz na 3 dni, nic nie jest usuwane — tylko pauza. **«Hamulec: zatrzymaj wszystkie zmiany»** zatrzymuje wszystko, łącznie z przyciskiem «Akceptuj»; cofać zrobione można także przy nim.",
+        ],
+      },
+      {
+        id: "journal",
+        title: "Dziennik, cofanie i raport tygodnia",
+        body: [
+          "W **«Dzienniku»** każda zmiana: kiedy, kto (człowiek czy autopilot, znacznik «sam»), co było i dlaczego. **«Cofnij»** jednym kliknięciem przywraca stan sprzed zmiany: wykluczenia — tylko te dodane przez nas, budżet — tylko jeśli od tamtej pory nie zmieniano go ręcznie, reklama — znów się włącza albo idzie na pauzę. Zmiana trybu i hamulec też trafiają do dziennika.",
+          "Blok **«Z 7 dni»** pokazuje, ile zmian zastosowano, ile pieniędzy miesięcznie wykluczenia nie wpuszczają już na śmieciowe zapytania i ile propozycji czeka na decyzję. Raport tygodnia przychodzi osobom z konta na Telegram w poniedziałki po 09:00; **«Wyślij raport tygodnia na Telegram»** wyśle go Tobie teraz.",
+        ],
+      },
+      {
+        id: "stub",
+        title: "Atrapa: testy bez konta reklamowego",
+        body: [
+          "Platforma **«Atrapa (testy)»** to ośrodek szkoleniowy w Taszkencie z realistycznymi liczbami w sumach. Widać na niej wszystko: propozycje, «Akceptuj», dziennik i cofanie, — a na żadnym prawdziwym koncie reklamowym nic się nie dzieje. Wygodnie pokazać agencji przed podłączeniem.",
+          "**«Przewiń 7 dni»** jest tylko przy atrapie i tylko w panelu: dodaje tydzień wyświetleń, żeby test reklam doszedł do wyniku bez czekania dwóch tygodni.",
+        ],
+      },
+      {
+        id: "keys",
+        title: "Klucze i włączenie",
+        roles: ["admin"],
+        body: [
+          "Przebiegi w tle włącza `ADS_AUTOPILOT=1` (w `/opt/devuz/.env` albo w magazynie sekretów jako `app.ADS_AUTOPILOT`); bez tego działają tylko przyciski. Klucze klientów są szyfrowane `ADS_TOKEN_KEY` — 32 losowe bajty w base64; zmiana oznacza ponowne podłączenie wszystkich kont.",
+          "Przycisk «Połącz» potrzebuje kluczy aplikacji: `YANDEX_DIRECT_CLIENT_ID` i `YANDEX_DIRECT_CLIENT_SECRET`, `GOOGLE_ADS_CLIENT_ID` i `GOOGLE_ADS_CLIENT_SECRET`. Jak je zdobyć i co złożyć w Yandex i Google — krok po kroku w `docs/ads-autopilot/api-access.md`. Zużycie modelu widać w `model_usage` z etykietami `ads-negatives` i `ads-copy`.",
+        ],
+      },
+    ],
+  },
+
   "/admin/contracts": {
     what: "Umowa naszej działalności gospodarczej (IP) z zamawiającym. Przygotować i sprawdzić może każdy z zespołu, zatwierdza tylko właściciel — w tym momencie w dokumencie pojawia się jego podpis. Potem — faktury za etapy i link dla zamawiającego. Nie ma tu listy umów: umowa żyje w karcie projektu.",
     items: [

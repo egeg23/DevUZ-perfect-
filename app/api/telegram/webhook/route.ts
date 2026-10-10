@@ -72,6 +72,7 @@ import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/st
 import { actOnTask, afterAct, awaitDate, showTask, taskAwaitingDate, taskById, type ActResult } from "@/lib/admin/task-store";
 import { OWN_DATE_PROMPT, TASK_CALLBACK, dueText, looksLikeDue, moveRows, taskRows } from "@/lib/admin/task-bot";
 import { isMove, movedDue, parseDueText, type TaskAction } from "@/lib/admin/tasks";
+import { handleAdsLogin } from "@/lib/ads/bot";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -457,6 +458,10 @@ async function handleClient(message: NonNullable<Update["message"]>) {
       await handlePartnerCommand(chat.id, identity, "/cabinet", locale);
       return;
     }
+
+    // «Войти через Telegram» в кабинете автопилота рекламы (/ads): ссылка —
+    // только участнику кабинета; постороннему — как на неизвестную команду.
+    if (payload === "ads" && identity && (await handleAdsLogin(chat.id, identity.id))) return;
 
     // Кнопка «Получить ссылку в Telegram» со страницы входа ведёт сюда.
     // Сотруднику остаётся нажать, а не искать чат и набирать команду;

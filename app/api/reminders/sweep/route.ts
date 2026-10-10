@@ -34,6 +34,7 @@ import { purgeExpiredSignals, resendUnnotifiedSignals } from "@/lib/scout/store"
 import { esc, sendWithButtons, telegramReachable } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 import { banSweep } from "@/lib/admin/account-ban-sweep";
+import { runAdsPass } from "@/lib/ads/run";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -308,6 +309,14 @@ async function sweep(): Promise<Response> {
   // раз в час через @SpamBot; здесь — только кому и что сказать.
   after(async () => {
     await banSweep(Date.now()).catch((error) => console.error("ограничения аккаунтов:", error));
+  });
+  // Автопилот рекламы (lib/ads/run.ts): до трёх рекламных кабинетов за
+  // проход, каждый раз в сутки, и недельный отчёт в понедельник. Флаг
+  // ADS_AUTOPILOT выключен — один запрос к хранилищу секретов.
+  after(async () => {
+    const ads = await runAdsPass(new Date()).catch((error) => ({ synced: [{ error: String(error) }], reports: 0 }));
+    const failed = ads.synced.filter((s) => s.error);
+    if (failed.length) console.error("автопилот рекламы:", failed.map((s) => s.error).join("; "));
   });
   // Поиск лидов через Firecrawl — своей очередью: до двух кредитов за проход
   // из дневного лимита (lib/firecrawl.ts), на контакты тех, кому писать
