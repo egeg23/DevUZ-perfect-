@@ -17,7 +17,7 @@ import {
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { inventNiche } from "@/lib/razbor/niche-ask";
 import { forbiddenNiche } from "@/lib/razbor/niche-words";
-import { coveredHashes, saveDraft, sourceHash, storedNiche, type RazborArticle } from "@/lib/razbor/store";
+import { coveredHashes, razborTaken, saveDraft, sourceHash, storedNiche, type RazborArticle } from "@/lib/razbor/store";
 import { serviceClient } from "@/lib/supabase";
 import type { AuditReport } from "@/lib/audit/checks";
 import type { City, Niche } from "@/content/razbor/catalog";
@@ -162,6 +162,11 @@ async function draftOne(url: string): Promise<true | string> {
   const verdict = worthWriting(report);
   if (!verdict.ok) return verdict.why === "too_good" ? "сайт в порядке" : verdict.why === "thin" ? "мало находок" : "сайт не открылся";
 
+  // Город — до ниши: он бесплатный, а ниша вне каталога стоит вызова модели.
+  // «Город не определился» бывает почти каждую смену.
+  const city = cityFrom(page.html);
+  if (!city) return "город не определился";
+
   const found = await nicheFor(report.facts.niche, {
     url,
     title: titleOf(page.html),
@@ -178,8 +183,20 @@ async function draftOne(url: string): Promise<true | string> {
   // что банк или аптеку классификатор просто не узнавал.
   if (OFF_LIMITS.has(niche.key) || forbiddenNiche(niche)) return "нишу не разбираем";
 
-  const city = cityFrom(page.html);
-  if (!city) return "город не определился";
+  // Запрос и адрес заняты — до модели, а не после. Каталожная ниша в
+  // Ташкенте разбирается один раз, а смена раньше писала обе статьи и
+  // только при записи узнавала, что такая страница уже есть: за две недели
+  // до 10.10 так ушло 9 пар статей.
+  if (
+    await razborTaken({
+      slugRu: slugFor(niche, city, "ru"),
+      slugUz: slugFor(niche, city, "uz"),
+      queryRu: queryFor(niche, city, "ru"),
+      queryUz: queryFor(niche, city, "uz"),
+    })
+  ) {
+    return "запрос уже занят";
+  }
 
   const title = titleOf(page.html);
   const loss = forecast(pickFindings(report));
@@ -405,7 +422,13 @@ export async function writeArticle(
   // Текст проверяется машиной, а не совестью: модель, уложившаяся во все
   // формальные рамки, всё равно способна перезамерить время ответа или
   // скопировать находки дословно.
-  const problems = articleProblems({ article, report, title: input.title });
+  const problems = articleProblems({
+    article,
+    report,
+    title: input.title,
+    common: [city.ru, city.ruIn, city.uz, city.uzIn, city.en, niche.ruGen, niche.ruLabel, niche.uz, niche.uzLabel, niche.ruMock, niche.uzMock],
+    extraNumbers: forecast(picked).lostPer100,
+  });
   if (problems.length) return `${CHECK_FAILED}: ${problems.map((p) => p.text).join(" ")}`;
 
   return article;

@@ -1,7 +1,7 @@
 import { services } from "@/content/services";
 import { CITIES, NICHES, type City, type Niche } from "@/content/razbor/catalog";
 import { TASHKENT_OFFSET_MS, todayInTashkent } from "@/lib/admin/pulse";
-import { redactions } from "@/lib/razbor/anonymize";
+import { domainTokens, titleTokens } from "@/lib/razbor/anonymize";
 import type { AuditReport } from "@/lib/audit/checks";
 import type { RazborArticle } from "@/lib/razbor/store";
 
@@ -90,10 +90,34 @@ export function factPool(report: AuditReport): string {
   return `${auditPool(report)} ${pricePool()}`;
 }
 
-/** Числа аудита: их можно округлять и переводить из миллисекунд в секунды. */
+/**
+ * Числа аудита: их можно округлять и переводить из миллисекунд в секунды.
+ *
+ * 100 — всегда: «балл 32 из 100», «из 100 посетителей». Без неё 06.10 и
+ * 08.10 смена хоронила честные статьи с «Числа, которых нет в аудите: 100».
+ */
 export function auditPool(report: AuditReport): string {
   const findings = report.findings.map((f) => `${f.title} ${f.impact} ${f.fix}`).join(" ");
-  return `${findings} ttfb ${report.facts.ttfbMs} балл ${report.score} сертификат ${report.facts.certDaysLeft ?? ""}`;
+  return `${findings} ttfb ${report.facts.ttfbMs} балл ${report.score} из 100 сертификат ${report.facts.certDaysLeft ?? ""}`;
+}
+
+/**
+ * Слова из заголовка сайта, которые называют не компанию, а город и нишу.
+ *
+ * Заголовок «Ресторан в Ташкенте | Имя» давал «названа компания: Ресторан,
+ * Ташкенте», а город обязан стоять в запросе статьи — повтор такую статью
+ * не спасал (02.10, 06.10, 07.10). Сверяем по началу слова: «Ташкенте» и
+ * «Ташкент», «Ресторан» и «ресторана». Слова из домена не прощаются: домен
+ * и есть имя компании.
+ */
+export function commonWord(token: string, common: readonly string[]): boolean {
+  const stem = token.toLowerCase().slice(0, 5);
+  return common.some((phrase) =>
+    phrase
+      .toLowerCase()
+      .split(/[^\p{L}]+/u)
+      .some((word) => word.length >= 4 && word.slice(0, 5) === stem),
+  );
 }
 
 /**
@@ -172,6 +196,10 @@ export function articleProblems(input: {
   article: RazborArticle;
   report: AuditReport;
   title: string | null;
+  /** Город и ниша разбора всеми формами: их слова в заголовке сайта — не имя компании. */
+  common?: readonly string[];
+  /** Ещё разрешённые числа: потери на сто из прогноза. */
+  extraNumbers?: readonly number[];
 }): ArticleProblem[] {
   const out: ArticleProblem[] = [];
   const text = [
@@ -188,7 +216,7 @@ export function articleProblems(input: {
     out.push({ code: "thin", text: "Меньше трёх находок — это заметка, а не разбор." });
   }
 
-  const invented = unsupportedNumbers(text, auditPool(input.report), pricePool());
+  const invented = unsupportedNumbers(text, `${auditPool(input.report)} ${(input.extraNumbers ?? []).join(" ")}`, pricePool());
   if (invented.length) {
     out.push({ code: "invented", text: `Числа, которых нет в аудите: ${invented.join(", ")}.` });
   }
@@ -202,8 +230,13 @@ export function articleProblems(input: {
 
   // Имя компании: разбор публикуется анонимно, и это не вежливость, а
   // снятый юридический риск.
-  const named = redactions(input.report.url, input.title).filter(
-    (token) => token.length >= 4 && text.toLowerCase().includes(token.toLowerCase()),
+  const common = input.common ?? [];
+  const tokens = [
+    ...domainTokens(input.report.url),
+    ...titleTokens(input.title).filter((token) => !commonWord(token, common)),
+  ];
+  const named = [...new Set(tokens.map((t) => t.toLowerCase()))].filter(
+    (token) => token.length >= 4 && text.toLowerCase().includes(token),
   );
   if (named.length) {
     out.push({ code: "named", text: `В тексте названа компания: ${named.join(", ")}.` });
