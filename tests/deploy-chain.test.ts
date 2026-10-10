@@ -216,3 +216,26 @@ test("сторож ставится выкаткой, включён всегд�
   execFileSync("bash", ["-n", fileURLToPath(new URL("../deploy/watchdog.sh", import.meta.url))]);
   execFileSync("bash", ["-n", fileURLToPath(new URL("../scripts/vps-deploy.sh", import.meta.url))]);
 });
+
+/**
+ * /api/health — тот коммит, что реально работает, а не тот, что лежит в git.
+ *
+ * 10.10.2026 выкатка #309 забрала на сервер уже слитый #310 и показала его
+ * хеш, хотя работал образ #309: страница из #310 отдавала 404 при «выкачено».
+ * После отката было бы то же: новый хеш на прежнем образе.
+ */
+test("коммит в /api/health берётся из образа, а не из git на сервере", () => {
+  const compose = read("docker-compose.yml");
+  const runtime = compose.slice(compose.indexOf("    environment:"));
+  assert.doesNotMatch(runtime, /^\s+GIT_COMMIT:/m, "compose перебивает коммит образа коммитом из git на сервере");
+  assert.match(read("Dockerfile"), /GIT_COMMIT=\$GIT_COMMIT/, "образ не знает, из какого коммита собран");
+  assert.match(read(".github/workflows/deploy-vps.yml"), /GIT_COMMIT=\$\{\{ steps\.meta\.outputs\.short \}\}/);
+  assert.match(read("scripts/vps-deploy.sh"), /--build-arg "GIT_COMMIT=\$GIT_COMMIT"/, "запасная сборка на сервере не вшивает коммит");
+});
+
+/** Проверка PR не снимает ждущую выкатку main (10.10.2026 сняла c9d8618). */
+test("проверка pull request в своей очереди, выкатки main — в общей", () => {
+  const workflow = read(".github/workflows/deploy-vps.yml");
+  assert.match(workflow, /group: \$\{\{ github\.event_name == 'pull_request' && format\('check-\{0\}', github\.ref\) \|\| 'deploy-vps' \}\}/);
+  assert.match(workflow, /cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/, "новая проверка PR снимет идущую выкатку");
+});
