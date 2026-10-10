@@ -366,7 +366,7 @@ export const workSections: Record<string, HelpEntry> = {
         id: "what",
         title: "Co robi autopilot",
         body: [
-          "**Wykluczenia.** Zapytania, na które wyświetlała się reklama, są dzielone na słowa i pary słów, a dla każdego sumuje się pieniądze i zgłoszenia. Słowo, które wydało nie mniej niż zwykły koszt zgłoszenia, zebrało kliknięcia i nie przyniosło żadnego zgłoszenia («za darmo», «pobierz», «praca»), jest proponowane do wykluczenia. Zapytania, których reguła nie widzi, ale które wyraźnie nie dotyczą tej firmy, oznacza tani model. Przed propozycją kod sprawdza, że wykluczenie nie blokuje żadnego słowa kluczowego kampanii.",
+          "**Wykluczenia.** Zapytania, na które wyświetlała się reklama, są dzielone na słowa i pary słów, a dla każdego sumuje się pieniądze i zgłoszenia. Słowo, które wydało nie mniej niż zwykły koszt zgłoszenia, zebrało kliknięcia i nie przyniosło żadnego zgłoszenia («za darmo», «pobierz», «praca»), jest proponowane do wykluczenia. Zapytania, których reguła nie widzi, ale które wyraźnie nie dotyczą tej firmy, oznacza tani model. Przed propozycją kod sprawdza, że wykluczenie nie blokuje żadnego słowa kluczowego kampanii. W Direct są jeszcze **wykluczenia krzyżowe**: jeśli ogólne słowo kluczowe («kursy angielskiego») i doprecyzowane («kursy angielskiego dla dzieci») są w różnych grupach, do ogólnej grupy proponowane jest wykluczenie «dzieci», żeby takie zapytanie trafiało do swojej reklamy.",
           "**Budżet.** Pieniądze przechodzą z kampanii z drogim zgłoszeniem do kampanii z tanim, ale tylko jeśli ta codziennie wyczerpuje swój budżet. Przy małej ilości danych porównanie «na oko» wprowadza w błąd, dlatego autopilot liczy prawdopodobieństwo, że jedna kampania naprawdę jest lepsza, i proponuje przesunięcie dopiero przy 90% i więcej. Łączny budżet się przy tym nie zmienia.",
           "**Testy reklam.** Jeśli w grupie jest jedna reklama, model pisze drugi wariant w języku grupy, bez długich myślników, sztampy i obietnic typu «gwarancja» czy «najlepszy». Po 10–45 dniach zostaje ta, która przynosi więcej zgłoszeń, druga idzie na pauzę.",
           "Stawek za słowa kluczowe autopilot nie rusza: robią to same Google i Yandex w swoich strategiach. Szczegóły — w `docs/ads-autopilot/design.md`.",
@@ -405,6 +405,14 @@ export const workSections: Record<string, HelpEntry> = {
         body: [
           "W **«Dzienniku»** każda zmiana: kiedy, kto (człowiek czy autopilot, znacznik «sam»), co było i dlaczego. **«Cofnij»** jednym kliknięciem przywraca stan sprzed zmiany: wykluczenia — tylko te dodane przez nas, budżet — tylko jeśli od tamtej pory nie zmieniano go ręcznie, reklama — znów się włącza albo idzie na pauzę. Zmiana trybu i hamulec też trafiają do dziennika.",
           "Blok **«Z 7 dni»** pokazuje, ile zmian zastosowano, ile pieniędzy miesięcznie wykluczenia nie wpuszczają już na śmieciowe zapytania i ile propozycji czeka na decyzję. Raport tygodnia przychodzi osobom z konta na Telegram w poniedziałki po 09:00; **«Wyślij raport tygodnia na Telegram»** wyśle go Tobie teraz.",
+        ],
+      },
+      {
+        id: "alerts",
+        title: "Alarmy",
+        body: [
+          "Raz na dobę, razem z odświeżeniem, autopilot porównuje wczorajszy dzień ze zwykłym — średnią z siedmiu dni przed nim. Alarm pojawia się, jeśli kampania wczoraj nic nie wydała, choć zwykle wydaje; jeśli wydatek wzrósł dwukrotnie, a zgłoszeń nie przybyło; jeśli przy zwykłych pieniądzach nie przyszło żadne zgłoszenie (zwykle to zepsuty formularz albo cel w Metryce); jeśli platforma odrzuciła reklamę; jeśli wykluczenie blokuje słowo kluczowe kampanii.",
+          "Każdy alarm przychodzi osobom z konta na Telegram raz i jest widoczny jako żółty blok **«Alarmy»** na górze konta. Gdy przyczyna ustąpi — na przykład kampania znów wydaje — alarm znika sam, nic nie trzeba klikać. Sam autopilot w reakcji na alarmy niczego nie zmienia: to sygnał dla człowieka.",
         ],
       },
       {

@@ -148,10 +148,31 @@ export function factsFor(prompt: PromptInput, history: readonly Turn[]): string 
   ].join("\n");
 }
 
+/**
+ * Покупатель пишет по-узбекски латиницей, а в ответ попали русские слова
+ * кириллицей — из русского прайса («погон метр»). Живой прогон 10.10.2026
+ * поймал ровно это. Имя компании и помощника из базы — их слова, их можно.
+ */
+export function cyrillicInLatin(reply: string, input: Pick<TurnInput, "lang" | "history" | "prompt">): string[] {
+  if (input.lang !== "uz") return [];
+  const lastCustomer = [...input.history].reverse().find((t) => t.role === "customer")?.text ?? "";
+  if (/\p{Script=Cyrillic}/u.test(lastCustomer)) return [];
+  const own = new Set(
+    `${input.prompt.company} ${input.prompt.assistantName}`.toLowerCase().match(/\p{Script=Cyrillic}+/gu) ?? [],
+  );
+  return [...new Set((reply.toLowerCase().match(/\p{Script=Cyrillic}{3,}/gu) ?? []).filter((w) => !own.has(w)))];
+}
+
 export async function runSalesTurn(input: TurnInput): Promise<TurnOutput> {
   const call = input.call ?? defaultCall(input.site);
   const system = buildSystemPrompt(input.prompt);
   const facts = factsFor(input.prompt, input.history);
+  const check = (reply: string) => {
+    const found = replyProblems(reply, facts).map((p) => p.text);
+    const cyr = cyrillicInLatin(reply, input);
+    if (cyr.length) found.push(`ответ латиницей, а в нём русские слова кириллицей: ${cyr.join(", ")}; переведи их на узбекский латиницей`);
+    return found;
+  };
   const messages = toMessages(input.history);
   if (!messages.length) return { text: "", handoff: null, fallback: false, problems: ["нет сообщения покупателя"] };
 
@@ -183,7 +204,7 @@ export async function runSalesTurn(input: TurnInput): Promise<TurnOutput> {
     return { text: ASK_MANAGER[input.lang], handoff: null, fallback: true, problems: ["модель отказалась отвечать"] };
   }
   let { text, handoff } = read(first);
-  let problems = text ? replyProblems(text, facts).map((p) => p.text) : [];
+  let problems = text ? check(text) : [];
 
   if (problems.length) {
     // Второй заход с замечанием. Ответ модели в историю не кладём как
@@ -197,7 +218,7 @@ export async function runSalesTurn(input: TurnInput): Promise<TurnOutput> {
     ]);
     if (retry.stop_reason !== "refusal") {
       const again = read(retry);
-      const againProblems = again.text ? replyProblems(again.text, facts).map((p) => p.text) : ["пустой ответ"];
+      const againProblems = again.text ? check(again.text) : ["пустой ответ"];
       if (!againProblems.length) {
         return { text: again.text, handoff: handoff ?? again.handoff, fallback: false, problems };
       }

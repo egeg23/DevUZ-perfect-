@@ -124,6 +124,14 @@ export const adsDict = defineDict({
     pl: "Atrapa: ośrodek szkoleniowy w Taszkencie z realistycznymi danymi. Wszystko zmienia się naprawdę, ale tylko tutaj, żadne konto reklamowe nie jest dotknięte.",
   },
 
+  /* ── Тревоги ───────────────────────────────────────────────────────── */
+  alertsTitle: { ru: "Тревоги", uz: "Ogohlantirishlar", pl: "Alarmy" },
+  alertsNote: {
+    ru: "Проверяются раз в сутки по вчерашнему дню. Каждая приходит в Telegram один раз и пропадает сама, когда причины больше нет.",
+    uz: "Kuniga bir marta kechagi kun bo‘yicha tekshiriladi. Har biri Telegram’ga bir marta keladi va sababi yo‘qolganda o‘zi yo‘qoladi.",
+    pl: "Sprawdzane raz na dobę za wczorajszy dzień. Każdy przychodzi na Telegram raz i znika sam, gdy przyczyna ustąpi.",
+  },
+
   /* ── Режим и лимиты ────────────────────────────────────────────────── */
   settingsTitle: { ru: "Режим и лимиты", uz: "Rejim va limitlar", pl: "Tryb i limity" },
   mode: { ru: "Режим", uz: "Rejim", pl: "Tryb" },
@@ -198,6 +206,7 @@ export const adsDict = defineDict({
   },
   kindNegatives: { ru: "минус-слова", uz: "minus-so‘zlar", pl: "wykluczenia" },
   kindBudget: { ru: "бюджет", uz: "byudjet", pl: "budżet" },
+  kindCross: { ru: "кросс-минусовка", uz: "kross-minuslash", pl: "wykluczenia krzyżowe" },
   kindTest: { ru: "тест объявлений", uz: "e’lonlar testi", pl: "test reklam" },
   kindWinner: { ru: "итог теста", uz: "test natijasi", pl: "wynik testu" },
   testsTitle: { ru: "Идут тесты объявлений", uz: "E’lonlar testlari davom etmoqda", pl: "Trwające testy reklam" },

@@ -1,22 +1,37 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { removeTalk, replyInTalk, setTalkMode } from "@/app/cabinet/actions";
-import { CabinetShell, Card, button, ghost, input } from "@/components/cabinet/shell";
+import { removeTalk, replyInTalk, setTalkMode, teachAnswer } from "@/app/cabinet/actions";
+import { CabinetShell, Card, Notice, button, ghost, input } from "@/components/cabinet/shell";
 import { cabinetPage } from "@/lib/ai-staff/page";
 import * as store from "@/lib/ai-staff/store";
 
 export const dynamic = "force-dynamic";
 
-export default async function CabinetTalk({ params }: { params: Promise<{ id: string }> }) {
+export default async function CabinetTalk({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ n?: string }> }) {
   const cab = await cabinetPage();
   const { tenant, t, locale } = cab;
   const { id } = await params;
+  const { n } = await searchParams;
   const conv = await store.conversationById(tenant.id, id);
   if (!conv) notFound();
   const who = { customer: t("customer"), ai: t("ai"), human: t("human") };
+  // Вопросы, на которые ИИ ответил «уточню у менеджера»: последний вопрос
+  // покупателя перед каждым таким ответом.
+  const unanswered = conv
+    ? [
+        ...new Set(
+          conv.messages.flatMap((m, i) =>
+            m.role === "ai" && m.fallback
+              ? [conv.messages.slice(0, i).reverse().find((x) => x.role === "customer")?.text ?? ""].filter(Boolean)
+              : [],
+          ),
+        ),
+      ]
+    : [];
   return (
     <CabinetShell t={t} locale={locale} company={tenant.name} current="/cabinet/talks" configure={cab.configure} support={cab.role === "support"}>
+      {n === "taught" ? <Notice text={t("taught")} /> : null}
       <Link href="/cabinet/talks" className="text-sm text-muted">
         ← {t("back")}
       </Link>
@@ -46,6 +61,18 @@ export default async function CabinetTalk({ params }: { params: Promise<{ id: st
           </form>
         ) : null}
       </div>
+      {cab.configure
+        ? unanswered.map((question) => (
+            <Card key={question} title={t("teach")} hint={t("teachHint")}>
+              <form action={teachAnswer} className="space-y-2">
+                <input type="hidden" name="id" value={conv.id} />
+                <input name="question" defaultValue={question.slice(0, 200)} maxLength={200} className={input} />
+                <textarea name="answer" rows={3} maxLength={4000} required placeholder={t("teachPh")} className={input} />
+                <button className={button}>{t("save")}</button>
+              </form>
+            </Card>
+          ))
+        : null}
       {conv.kind === "tg_bot" ? (
         <Card title={t("replyAsBot")}>
           <form action={replyInTalk} className="space-y-2">

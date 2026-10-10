@@ -464,3 +464,48 @@ export async function markReportSent(workspaceId: string, at: Date): Promise<voi
   if (!db) return;
   await db.from("ads_workspaces").update({ last_report_at: at.toISOString() }).eq("id", workspaceId);
 }
+
+/* ── Тревоги (0151) ────────────────────────────────────────────────────── */
+
+export type StoredAlert = {
+  id: number;
+  account_id: string;
+  kind: "stall" | "spike" | "no_leads" | "rejected" | "conflict";
+  key: string;
+  data: Record<string, string | number>;
+  created_at: string;
+  resolved_at: string | null;
+};
+
+export async function openAlerts(accountId: string): Promise<StoredAlert[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  const { data } = await db.from("ads_alerts").select("*").eq("account_id", accountId).is("resolved_at", null).order("created_at", { ascending: false });
+  return (data as StoredAlert[] | null) ?? [];
+}
+
+/**
+ * Свести тревоги кабинета с тем, что найдено сейчас: новые — завести, те,
+ * причины которых больше нет, — снять. Вернуть только новые: о них и пишет
+ * бот. Открытая с тем же ключом второй раз не заводится (уникальный индекс).
+ */
+export async function reconcileAlerts(
+  accountId: string,
+  found: { kind: StoredAlert["kind"]; key: string; data: StoredAlert["data"] }[],
+  now = new Date(),
+): Promise<StoredAlert[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  const open = await openAlerts(accountId);
+  const keys = new Set(found.map((f) => f.key));
+  const gone = open.filter((a) => !keys.has(a.key)).map((a) => a.id);
+  if (gone.length) await db.from("ads_alerts").update({ resolved_at: now.toISOString() }).in("id", gone);
+  const known = new Set(open.map((a) => a.key));
+  const fresh: StoredAlert[] = [];
+  for (const f of found) {
+    if (known.has(f.key)) continue;
+    const { data, error } = await db.from("ads_alerts").insert({ account_id: accountId, kind: f.kind, key: f.key, data: f.data }).select("*").single();
+    if (!error && data) fresh.push(data as StoredAlert);
+  }
+  return fresh;
+}

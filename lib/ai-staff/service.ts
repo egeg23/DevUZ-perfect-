@@ -93,10 +93,10 @@ async function handle(input: Incoming, deps: Deps): Promise<Outcome> {
     Object.assign(base, { mode: "ai", human_until: null });
   }
 
-  // Днём в Business отвечают люди клиента — если клиент так выбрал. В боте
-  // и виджете человеку ответить неоткуда, там ИИ работает всегда.
+  // Днём в Business и Instagram отвечают люди клиента — если клиент так
+  // выбрал. В боте и виджете человеку ответить неоткуда, там ИИ работает всегда.
   const workTime = isWorkTime(tenant.work_hours, now);
-  if (input.kind === "tg_business" && tenant.answer_mode === "off_hours" && workTime) {
+  if ((input.kind === "tg_business" || input.kind === "instagram") && tenant.answer_mode === "off_hours" && workTime) {
     await store.saveConversation(tenant.id, conv.id, base);
     return { kind: "silent", why: "work_hours" };
   }
@@ -246,11 +246,15 @@ async function stopped(
   return { kind: "stopped", why, text: said ? null : text };
 }
 
-/** Человек клиента ответил сам (в Business) — ИИ молчит в этом чате HUMAN_HOLD_MS. */
-export async function humanReplied(input: { tenantId: string; chatKey: string; channel: store.Channel; text: string }, now = new Date()): Promise<void> {
-  await serial(`${input.tenantId}:tg_business:${input.chatKey}`, async () => {
+/** Человек клиента ответил сам (Business, Instagram) — ИИ молчит в этом чате HUMAN_HOLD_MS. */
+export async function humanReplied(
+  input: { tenantId: string; chatKey: string; channel: store.Channel; text: string; kind?: "tg_business" | "instagram" },
+  now = new Date(),
+): Promise<void> {
+  const kind = input.kind ?? "tg_business";
+  await serial(`${input.tenantId}:${kind}:${input.chatKey}`, async () => {
     const conv = await store.openConversation(input.tenantId, {
-      kind: "tg_business",
+      kind,
       chatKey: input.chatKey,
       channelId: input.channel.id,
       customerName: "",

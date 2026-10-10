@@ -125,6 +125,20 @@ export const cab = {
   chToken: { ru: "Токен бота", uz: "Bot tokeni" },
   chConnect: { ru: "Подключить", uz: "Ulash" },
   chDisconnect: { ru: "Отключить", uz: "Uzish" },
+  chInstagram: { ru: "Instagram Direct", uz: "Instagram Direct" },
+  chInstagramHint: {
+    ru: "ИИ отвечает покупателям в Direct вашего Instagram от имени аккаунта. Нужен профессиональный аккаунт (бизнес или автор). Нажмите кнопку, войдите в Instagram и разрешите доступ к сообщениям. Ответить Instagram разрешает в течение 24 часов после сообщения покупателя: первым ИИ не пишет никому. Напишете в чат сами, и ИИ замолчит в этом чате на 12 часов.",
+    uz: "Sun'iy intellekt xaridorlarga Instagramingizning Direct'ida akkaunt nomidan javob beradi. Professional akkaunt (biznes yoki muallif) kerak. Tugmani bosing, Instagramga kiring va xabarlarga ruxsat bering. Instagram xaridor xabaridan keyin 24 soat ichida javob berishga ruxsat beradi: sun'iy intellekt hech kimga birinchi bo'lib yozmaydi. Chatga o'zingiz yozsangiz, sun'iy intellekt shu chatda 12 soat jim turadi.",
+  },
+  chInstagramConnect: { ru: "Подключить Instagram", uz: "Instagramni ulash" },
+  chInstagramSoon: {
+    ru: "Подключение Instagram скоро откроется: ждём одобрения Meta. Напишите нам, если Instagram для вас главный канал, подключим первыми.",
+    uz: "Instagramni ulash tez orada ochiladi: Meta tasdig'ini kutyapmiz. Agar Instagram siz uchun asosiy kanal bo'lsa, bizga yozing, birinchi bo'lib ulaymiz.",
+  },
+  ch_ig_ok: { ru: "Instagram подключён. Напишите себе в Direct с другого аккаунта и проверьте ответ.", uz: "Instagram ulandi. Boshqa akkauntdan Direct'ingizga yozing va javobni tekshiring." },
+  ch_ig_fail: { ru: "Instagram не подключился. Проверьте, что аккаунт профессиональный, и попробуйте ещё раз.", uz: "Instagram ulanmadi. Akkaunt professional ekanini tekshiring va qaytadan urinib ko'ring." },
+  ch_ig_off: { ru: "Подключение Instagram пока недоступно.", uz: "Instagramni ulash hozircha mavjud emas." },
+  chTokenExpired: { ru: "доступ истёк: подключите заново", uz: "ruxsat muddati tugadi: qayta ulang" },
   chWidget: { ru: "Чат на сайте", uz: "Saytdagi chat" },
   chWidgetHint: {
     ru: "Вставьте эту строку на сайт перед </body>. Справа внизу появится кнопка «Задать вопрос». Язык виджета берётся из языка страницы.",
@@ -163,6 +177,13 @@ export const cab = {
   ai: { ru: "ИИ", uz: "SI" },
   human: { ru: "Менеджер", uz: "Menejer" },
   back: { ru: "Назад", uz: "Orqaga" },
+  teach: { ru: "Добавить ответ в базу", uz: "Javobni bazaga qo'shish" },
+  teachHint: {
+    ru: "ИИ не нашёл ответа на этот вопрос в базе знаний. Напишите ответ так, как сказали бы покупателю: с ценой, сроком или условием. Он сразу попадёт в базу, и на такой вопрос ИИ дальше ответит сам.",
+    uz: "Sun'iy intellekt bu savolga bilimlar bazasida javob topmadi. Javobni xaridorga aytganingizdek yozing: narx, muddat yoki shart bilan. U darhol bazaga tushadi va bunday savolga sun'iy intellekt keyin o'zi javob beradi.",
+  },
+  teachPh: { ru: "Например: Рассрочки нет, принимаем Click, Payme и наличные.", uz: "Masalan: Muddatli to'lov yo'q, Click, Payme va naqd pul qabul qilamiz." },
+  taught: { ru: "Ответ добавлен в базу знаний. ИИ уже отвечает с ним.", uz: "Javob bilimlar bazasiga qo'shildi. Sun'iy intellekt endi u bilan javob beradi." },
 
   leadsEmpty: { ru: "Заявок пока нет.", uz: "Hozircha arizalar yo'q." },
   status_new: { ru: "новая", uz: "yangi" },

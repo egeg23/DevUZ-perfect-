@@ -25,16 +25,19 @@ export type Applied = {
 };
 export type Refused = { ok: false; reason: string };
 
-export async function liveState(connector: AdsConnector, period: Period, campaignIds: string[]): Promise<LiveState> {
+export async function liveState(connector: AdsConnector, period: Period, campaignIds: string[], groupIds: string[] = []): Promise<LiveState> {
   const [campaigns, keywords] = await Promise.all([connector.campaigns(period), connector.keywords()]);
   const negatives: Record<string, string[]> = {};
   for (const id of campaignIds) negatives[id] = await connector.negatives(id);
-  return { campaigns, keywords, negatives };
+  const groupNegatives: Record<string, string[]> = {};
+  for (const id of groupIds) groupNegatives[id] = await connector.groupNegatives(id);
+  return { campaigns, keywords, negatives, groupNegatives };
 }
 
 export function campaignsOf(payload: Payload): string[] {
   switch (payload.kind) {
     case "negatives":
+    case "cross_negatives":
       return [payload.campaignId];
     case "budget":
       return payload.moves.map((m) => m.campaignId);
@@ -55,7 +58,12 @@ export async function applyPayload(input: {
   period: Period;
 }): Promise<Applied | Refused> {
   const { connector, payload } = input;
-  const live = await liveState(connector, input.period, payload.kind === "negatives" ? [payload.campaignId] : []);
+  const live = await liveState(
+    connector,
+    input.period,
+    payload.kind === "negatives" ? [payload.campaignId] : [],
+    payload.kind === "cross_negatives" ? payload.groups.map((g) => g.adGroupId) : [],
+  );
   const verdict = allowed({ ...input, live });
   if (!verdict.ok) return verdict;
 
@@ -66,6 +74,24 @@ export async function applyPayload(input: {
       await connector.setNegatives(payload.campaignId, after);
       const added = after.filter((p) => !before.includes(p));
       return { ok: true, before: { campaignId: payload.campaignId, negatives: before }, after: { campaignId: payload.campaignId, negatives: after, added } };
+    }
+    case "cross_negatives": {
+      // Группа за группой; площадка не приняла очередную — сделанное возвращаем.
+      const done: { adGroupId: string; negatives: string[] }[] = [];
+      const after: { adGroupId: string; negatives: string[]; added: string[] }[] = [];
+      try {
+        for (const group of payload.groups) {
+          const before = live.groupNegatives?.[group.adGroupId] ?? [];
+          const next = mergeNegatives(before, group.phrases);
+          await connector.setGroupNegatives(group.adGroupId, next);
+          done.push({ adGroupId: group.adGroupId, negatives: before });
+          after.push({ adGroupId: group.adGroupId, negatives: next, added: next.filter((p) => !before.includes(p)) });
+        }
+      } catch (error) {
+        for (const g of done.reverse()) await connector.setGroupNegatives(g.adGroupId, g.negatives).catch(() => undefined);
+        return { ok: false, reason: `Площадка не приняла минус-фразы группы: ${error instanceof Error ? error.message : String(error)}. Сделанное вернули.` };
+      }
+      return { ok: true, before: { campaignId: payload.campaignId, groups: done }, after: { campaignId: payload.campaignId, groups: after } };
     }
     case "budget": {
       // Сначала снимаем, потом добавляем: если второй шаг упадёт, общий
@@ -120,6 +146,20 @@ export async function rollback(input: {
       const next = current.filter((p) => !added.has(p.toLowerCase()));
       await connector.setNegatives(campaignId, next);
       return { ok: true, before: { campaignId, negatives: current }, after: { campaignId, negatives: next, removed: [...added] } };
+    }
+    case "cross_negatives": {
+      const groups = (after.groups as { adGroupId: string; added: string[] }[]) ?? [];
+      const was: { adGroupId: string; negatives: string[] }[] = [];
+      const now: { adGroupId: string; negatives: string[] }[] = [];
+      for (const g of groups) {
+        const added = new Set(g.added.map((p) => p.toLowerCase()));
+        const current = await connector.groupNegatives(g.adGroupId);
+        const next = current.filter((p) => !added.has(p.toLowerCase()));
+        await connector.setGroupNegatives(g.adGroupId, next);
+        was.push({ adGroupId: g.adGroupId, negatives: current });
+        now.push({ adGroupId: g.adGroupId, negatives: next });
+      }
+      return { ok: true, before: { groups: was }, after: { groups: now } };
     }
     case "budget": {
       const want = (input.before.budgets as { campaignId: string; amount: number }[]) ?? [];

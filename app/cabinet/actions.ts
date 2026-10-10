@@ -273,3 +273,16 @@ export async function payByCard(form: FormData): Promise<void> {
   const link = isPlan(plan) && plan !== "trial" ? await startPayment(tenant, { plan, months: Number(str(form, "months")) || 1, provider }) : null;
   redirect(link ?? "/cabinet/plan?n=payfail");
 }
+
+/** Ответ на вопрос, на который ИИ не нашёл ответа в базе, — пунктом «Частые вопросы». */
+export async function teachAnswer(form: FormData): Promise<void> {
+  const { tenant } = await owner();
+  const id = str(form, "id", 64);
+  const question = str(form, "question", 200);
+  const answer = str(form, "answer", 4000);
+  if (answer && (await store.conversationById(tenant.id, id))) {
+    await store.addKnowledge(tenant.id, [{ kind: "faq", title: question, body: answer }]);
+  }
+  revalidatePath(`/cabinet/talks/${id}`);
+  redirect(`/cabinet/talks/${id}?n=taught`);
+}

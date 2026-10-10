@@ -1168,7 +1168,7 @@ export const uz: HelpCopy = {
           id: "what",
           title: "Avtopilot nima qiladi",
           body: [
-            "**Minus-so‘zlar.** Reklama ko‘rsatilgan qidiruv so‘rovlari so‘z va so‘z juftlariga bo‘linadi, har biri bo‘yicha pul va arizalar qo‘shiladi. Odatdagi ariza narxidan kam bo‘lmagan pul sarflagan, klik yig‘gan va birorta ariza keltirmagan so‘z («bepul», «yuklab olish», «vakansiya») minusga taklif qilinadi. Qoidaga ko‘rinmaydigan, lekin aniq bu biznes haqida bo‘lmagan so‘rovlarni arzon model belgilaydi. Taklifdan oldin kod minus-so‘z kampaniyaning birorta kalit so‘ziga tegmasligini tekshiradi.",
+            "**Minus-so‘zlar.** Reklama ko‘rsatilgan qidiruv so‘rovlari so‘z va so‘z juftlariga bo‘linadi, har biri bo‘yicha pul va arizalar qo‘shiladi. Odatdagi ariza narxidan kam bo‘lmagan pul sarflagan, klik yig‘gan va birorta ariza keltirmagan so‘z («bepul», «yuklab olish», «vakansiya») minusga taklif qilinadi. Qoidaga ko‘rinmaydigan, lekin aniq bu biznes haqida bo‘lmagan so‘rovlarni arzon model belgilaydi. Taklifdan oldin kod minus-so‘z kampaniyaning birorta kalit so‘ziga tegmasligini tekshiradi. Direct’da yana **kross-minuslash** bor: agar umumiy kalit so‘z («ingliz tili kurslari») va aniqlashtirilgani («bolalar uchun ingliz tili kurslari») turli guruhlarda bo‘lsa, umumiy guruhga «bolalar» minusi taklif qilinadi, shunda bunday so‘rov o‘z e’loniga boradi.",
             "**Byudjet.** Pul arizasi qimmat kampaniyadan arizasi arzon kampaniyaga o‘tadi, lekin faqat u har kuni o‘z byudjetiga tiralib qolsa. Ma’lumot kam bo‘lganda «ko‘z bilan» solishtirish aldaydi, shuning uchun avtopilot bitta kampaniya haqiqatan yaxshiroq ekanligi ehtimolini hisoblaydi va siljitishni faqat 90% va undan yuqorida taklif qiladi. Umumiy byudjet bunda o‘zgarmaydi.",
             "**E’lonlar testi.** Guruhda bitta e’lon bo‘lsa, model guruh tilida ikkinchi variantni yozadi, uzun tire, shtamp va «kafolat» yoki «eng yaxshi» kabi va’dalarsiz. 10–45 kundan keyin ko‘proq ariza keltirgani qoladi, ikkinchisi pauzaga qo‘yiladi.",
             "Kalit so‘zlar stavkalariga avtopilot tegmaydi: buni Google va Yandex o‘z strategiyalarida o‘zlari qiladi. Batafsil — `docs/ads-autopilot/design.md` da.",
@@ -1207,6 +1207,14 @@ export const uz: HelpCopy = {
           body: [
             "**«Jurnal»** da har bir o‘zgarish: qachon, kim (inson yoki avtopilot, «o‘zi» belgisi), nima bo‘lgan va nima uchun. **«Qaytarish»** bir bosishda avvalgi holatga qaytaradi: minus-so‘zlar — faqat biz qo‘shganlari, byudjet — faqat o‘shandan beri qo‘lda o‘zgartirilmagan bo‘lsa, e’lon — yana yoqiladi yoki pauzaga qo‘yiladi. Rejim almashishi va stop-kran ham jurnalga yoziladi.",
             "**«7 kun ichida»** bloki nechta o‘zgarish qo‘llanganini, minus-so‘zlar oyiga qancha pulni keraksiz so‘rovlarga yo‘l qo‘ymayotganini va nechta taklif qaror kutayotganini ko‘rsatadi. Hafta hisoboti kabinet odamlariga dushanba kunlari soat 09:00 dan keyin Telegram’ga keladi; **«Hafta hisobotini Telegram’ga yuborish»** uni sizga hozir yuboradi.",
+          ],
+        },
+        {
+          id: "alerts",
+          title: "Ogohlantirishlar",
+          body: [
+            "Kuniga bir marta, yangilanish bilan birga, avtopilot kechagi kunni odatdagisi — undan oldingi yetti kunning o‘rtachasi bilan solishtiradi. Ogohlantirish chiqadi, agar kampaniya kecha odatda sarflasa ham hech narsa sarflamagan bo‘lsa; agar sarf ikki baravar oshib, arizalar ko‘paymagan bo‘lsa; agar odatdagi pulda birorta ham ariza kelmagan bo‘lsa (odatda bu buzilgan forma yoki Metrikadagi maqsad); agar platforma e’lonni rad etgan bo‘lsa; agar minus-so‘z kampaniya kalit so‘zini kesayotgan bo‘lsa.",
+            "Har bir ogohlantirish kabinet odamlariga Telegram’ga bir marta keladi va kabinet tepasida sariq **«Ogohlantirishlar»** bloki sifatida ko‘rinadi. Sabab yo‘qolganda — masalan, kampaniya yana sarflay boshlasa — ogohlantirish o‘zi yo‘qoladi, hech narsa bosish shart emas. Avtopilotning o‘zi ogohlantirishlar bo‘yicha hech narsani o‘zgartirmaydi: bu insonga signal.",
           ],
         },
         {

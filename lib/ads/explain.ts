@@ -31,6 +31,19 @@ export function explain(p: Pick<Proposal, "title" | "why" | "numbers" | "payload
             why: `W 30 dni zapytania z tymi słowami wydały ${m(Number(n.wasted))} (${n.clicks} kliknięć) i nie przyniosły żadnego zgłoszenia: ${list}. Sprawdzone: nie blokują Twoich słów kluczowych.`,
           };
     }
+    case "cross_negatives": {
+      const total = pay.groups.reduce((s, g) => s + g.phrases.length, 0);
+      const list = pay.groups.flatMap((g) => g.phrases).slice(0, 8).map((x) => `«${x}»`).join(", ");
+      return locale === "uz"
+        ? {
+            title: `Kross-minuslash: «${pay.campaignName}» da ${total} ta`,
+            why: `Kampaniyada umumiy va aniqlashtirilgan kalit so‘zlar turli guruhlarda. Aniqlashtirilgan so‘rov hozir umumiy guruhga, umumiy e’longa ketishi mumkin. Umumiy guruhlardagi minus-so‘zlar uni o‘z guruhiga yuboradi: ${list}. Guruhlarning o‘z kalit so‘zlariga tegmasligi tekshirilgan.`,
+          }
+        : {
+            title: `Wykluczenia krzyżowe: ${total} w «${pay.campaignName}»`,
+            why: `W kampanii są ogólne i doprecyzowane słowa kluczowe w różnych grupach. Zapytanie doprecyzowane może teraz trafić do ogólnej grupy, do ogólnej reklamy. Wykluczenia w ogólnych grupach skierują je do właściwej: ${list}. Sprawdzone: nie blokują słów kluczowych samych grup.`,
+          };
+    }
     case "budget": {
       const donor = pay.moves.find((x) => x.to < x.from);
       const taker = pay.moves.find((x) => x.to > x.from);
