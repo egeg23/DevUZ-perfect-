@@ -26,6 +26,7 @@ import {
   foreignQuery,
   foreignSlug,
   plWeeks,
+  cleanName,
   ruNumberWords,
   validSubject,
   validTenderQuery,
@@ -131,6 +132,26 @@ test("ответ модели о названии проверяется по ф
     validTenderQuery("pl", "Specyfikacja techniczna aplikacji mobilnej do przetargu"),
     "specyfikacja techniczna aplikacji mobilnej do przetargu",
   );
+});
+
+test("ответ модели снимается с обёртки: кавычки, точка, второй вариант", () => {
+  assert.equal(cleanName('"Neurology center".'), "neurology center");
+  assert.equal(cleanName("«garbarni» / zakładu garbarskiego"), "garbarni");
+  assert.equal(cleanName("hotel (small, family-run)"), "hotel");
+  assert.equal(cleanName("ośrodka neurologicznego lub kliniki"), "ośrodka neurologicznego");
+  assert.equal(cleanName("event agency\nThis is a company that…"), "event agency");
+  assert.equal(validSubject("en", '"Neurology center".'), "neurology center");
+  assert.equal(validSubject("pl", "«Ośrodka neurologicznego»"), "ośrodka neurologicznego");
+});
+
+test("польский без диакритики не проходит", () => {
+  const plain = "Przeszlismy przez wszystkie szesc stron serwisu, zarowno na stronie glownej, jak i w sekcjach o restauracji i kontaktach cen nie ma w ogole. ";
+  const ascii = { ...PL, intro: [PL.intro[0], plain.repeat(8)] };
+  assert.ok(foreignProblems("pl", ascii, RU).some((p) => p.code === "diacritics"));
+  const proper = "Przeszliśmy przez wszystkie sześć stron serwisu, zarówno na stronie głównej, jak i w sekcjach o restauracji i kontaktach cen nie ma w ogóle. ";
+  assert.ok(!foreignProblems("pl", { ...PL, intro: [PL.intro[0], proper.repeat(8)] }, RU).some((p) => p.code === "diacritics"));
+  // Английский — без этой проверки.
+  assert.ok(!foreignProblems("en", { ...EN, intro: [EN.intro[0], "Plain English text. ".repeat(30)] }, RU).some((p) => p.code === "diacritics"));
 });
 
 test("цена — та же услуга и те же числа, что в русской версии", () => {
