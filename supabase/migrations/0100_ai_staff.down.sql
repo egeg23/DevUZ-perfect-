@@ -1,0 +1,11 @@
+drop table if exists public.ai_sessions;
+drop table if exists public.ai_login_tokens;
+drop table if exists public.ai_payments;
+drop table if exists public.ai_leads;
+drop table if exists public.ai_conversations;
+drop table if exists public.ai_channels;
+drop table if exists public.ai_knowledge;
+drop table if exists public.ai_employees;
+drop table if exists public.ai_members;
+drop table if exists public.ai_tenants;
+drop table if exists public.ai_settings;
