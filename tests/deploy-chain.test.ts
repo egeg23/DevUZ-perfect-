@@ -244,3 +244,26 @@ test("проверка pull request в своей очереди, выкатки
   assert.match(workflow, /group: \$\{\{ github\.event_name == 'pull_request' && format\('check-\{0\}', github\.ref\) \|\| 'deploy-vps' \}\}/);
   assert.match(workflow, /cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/, "новая проверка PR снимет идущую выкатку");
 });
+
+/**
+ * Кнопки панели переживают выкатку.
+ *
+ * Next солит id каждого server action ключом сборки; без постоянного ключа
+ * он случаен, и после выкатки нажатие на странице, открытой до неё,
+ * отвечало 404 «Server action not found» (10.10.2026, «Реклама»). Ключ —
+ * не секрет: им шифруются только замыкания действий, а их в коде нет.
+ */
+test("id серверных действий не меняются от выкатки к выкатке", () => {
+  assert.match(read("next.config.ts"), /process\.env\.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY \|\|= createHash/);
+  // Замыкание или .bind у действия зашифровалось бы публичным ключом —
+  // такого кода быть не должно.
+  const files = execFileSync("git", ["ls-files", "app", "components", "lib"], { encoding: "utf8" })
+    .split("\n")
+    .filter((f) => /\.tsx?$/.test(f));
+  for (const file of files) {
+    const code = read(file);
+    const inline = code.split("\n").slice(1).some((line) => /^\s*["']use server["'];?\s*$/.test(line));
+    assert.ok(!inline, `${file}: "use server" внутри функции — замыкание шифруется публичным ключом`);
+    assert.doesNotMatch(code, /Action\.bind\(/, `${file}: .bind у серверного действия`);
+  }
+});
