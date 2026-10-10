@@ -18,6 +18,8 @@ import {
   createModelFetch,
   gatewayRefused,
   planRoads,
+  usageFromJson,
+  usageFromSse,
   type GatewayEvent,
   type ModelRoad,
 } from "@/lib/model-road";
@@ -286,4 +288,54 @@ test("все клиенты модели создаются через anthropic
   walk("lib/");
   walk("app/");
   assert.deepEqual(offenders, [], "клиент без запасной дороги: при мёртвом прокси эти места замолчат");
+});
+
+/* ── Учёт расхода ─────────────────────────────────────────────────────── */
+
+test("расход вызова: из обычного ответа и из потока чата", () => {
+  assert.deepEqual(
+    usageFromJson({
+      model: "claude-sonnet-5",
+      usage: { input_tokens: 1200, output_tokens: 340, cache_creation_input_tokens: 0, cache_read_input_tokens: 900 },
+    }),
+    { model: "claude-sonnet-5", input: 1200, output: 340, cacheWrite: 0, cacheRead: 900 },
+  );
+  assert.equal(usageFromJson({ error: { type: "overloaded" } }), null);
+
+  const sse = [
+    "event: message_start",
+    `data: ${JSON.stringify({ type: "message_start", message: { model: "claude-opus-5", usage: { input_tokens: 40, output_tokens: 1, cache_creation_input_tokens: 9500, cache_read_input_tokens: 0 } } })}`,
+    "",
+    "event: content_block_delta",
+    `data: ${JSON.stringify({ type: "content_block_delta", delta: { type: "text_delta", text: "Здравствуйте" } })}`,
+    "",
+    "event: message_delta",
+    `data: ${JSON.stringify({ type: "message_delta", usage: { output_tokens: 120 } })}`,
+    "",
+    "event: message_delta",
+    `data: ${JSON.stringify({ type: "message_delta", usage: { output_tokens: 310 } })}`,
+    "",
+  ].join("\n");
+  assert.deepEqual(usageFromSse(sse), { model: "claude-opus-5", input: 40, output: 310, cacheWrite: 9500, cacheRead: 0 });
+  assert.equal(usageFromSse("data: not json\n"), null);
+});
+
+test("у каждого вызова модели своя метка — по ней видно, какой узел сколько стоит", () => {
+  const root = new URL("../", import.meta.url);
+  const unlabeled: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(new URL(dir, root))) {
+      const path = `${dir}${name}`;
+      if (statSync(new URL(path, root)).isDirectory()) walk(`${path}/`);
+      else if (/\.(ts|tsx|mjs)$/.test(name) && path !== "lib/model-road.ts") {
+        if (/\banthropic\(\s*\)/.test(readFileSync(new URL(path, root), "utf8"))) unlabeled.push(path);
+      }
+    }
+  };
+  walk("lib/");
+  walk("app/");
+  assert.deepEqual(unlabeled, [], "вызов без метки — его расход не с чем сравнить");
+  const road = readFileSync(new URL("lib/model-road.ts", root), "utf8");
+  assert.match(road, /from\("model_usage"\)\.insert/);
+  assert.match(road, /meter\(site, url, response\.clone\(\)\)\.catch/, "учёт не должен ронять ответ");
 });

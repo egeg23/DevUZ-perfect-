@@ -108,7 +108,7 @@ export async function autoPrototype(input: {
 
   let picked: { name: string | null; services: { name?: unknown; price?: unknown }[] };
   try {
-    const response = await anthropic().beta.messages.create({
+    const response = await anthropic("proto-auto").beta.messages.create({
       model: MODEL,
       max_tokens: 1500,
       system: [{ type: "text" as const, text: SERVICES_SYSTEM, cache_control: { type: "ephemeral" as const } }],

@@ -285,10 +285,112 @@ export const currentModelRoad = shared.state;
 /** fetch с дорогами — для пробы модели в /api/health, которая ходит без SDK. */
 export const modelFetch = shared.modelFetch;
 
+/* ── Учёт расхода ──────────────────────────────────────────────────────── */
+
+/**
+ * Сколько ушло на один вызов: токены по видам и модель, которая ответила
+ * (с `fallbacks` это может быть не та, что просили).
+ */
+export type ModelUsage = {
+  model: string;
+  input: number;
+  output: number;
+  cacheWrite: number;
+  cacheRead: number;
+};
+
+const num = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+
+function usageOf(model: unknown, usage: unknown): ModelUsage | null {
+  if (!usage || typeof usage !== "object") return null;
+  const u = usage as Record<string, unknown>;
+  return {
+    model: typeof model === "string" ? model : "",
+    input: num(u.input_tokens),
+    output: num(u.output_tokens),
+    cacheWrite: num(u.cache_creation_input_tokens),
+    cacheRead: num(u.cache_read_input_tokens),
+  };
+}
+
+/** Ответ без потока: `usage` лежит в теле. */
+export function usageFromJson(body: unknown): ModelUsage | null {
+  if (!body || typeof body !== "object") return null;
+  const b = body as Record<string, unknown>;
+  return usageOf(b.model, b.usage);
+}
+
+/**
+ * Ответ потоком (чат на сайте): вход и кэш приходят в `message_start`, выход
+ * копится в `message_delta` — последнее значение и есть итог.
+ */
+export function usageFromSse(text: string): ModelUsage | null {
+  let found: ModelUsage | null = null;
+  for (const line of text.split("\n")) {
+    if (!line.startsWith("data:")) continue;
+    let event: Record<string, unknown>;
+    try {
+      event = JSON.parse(line.slice(5));
+    } catch {
+      continue;
+    }
+    if (event.type === "message_start") {
+      const message = (event.message ?? {}) as Record<string, unknown>;
+      found = usageOf(message.model, message.usage) ?? found;
+    } else if (event.type === "message_delta" && found) {
+      const usage = (event.usage ?? {}) as Record<string, unknown>;
+      if (typeof usage.output_tokens === "number") found.output = usage.output_tokens;
+      if (typeof usage.input_tokens === "number" && usage.input_tokens > found.input) found.input = usage.input_tokens;
+    }
+  }
+  return found;
+}
+
+/**
+ * Записать расход вызова в `model_usage` — с меткой места, откуда звали.
+ *
+ * До 10.10.2026 расход модели нигде не записывался, и любая экономия была
+ * оценкой по коду. Пишется в фоне, по копии ответа: ни чат на сайте, ни
+ * смена не ждут записи, и сбой записи их не роняет.
+ */
+async function meter(site: string, url: string, response: Response): Promise<void> {
+  // Только сами сообщения: подсчёт токенов и пакеты — не расход ответа.
+  if (!/\/v1\/messages$/.test(new URL(url).pathname)) return;
+  const type = response.headers.get("content-type") ?? "";
+  const usage = type.includes("text/event-stream")
+    ? usageFromSse(await response.text())
+    : usageFromJson(await response.json());
+  const db = serviceClient();
+  if (!usage || !db) return;
+  await db.from("model_usage").insert({
+    site,
+    model: usage.model,
+    road: shared.state().road,
+    input_tokens: usage.input,
+    output_tokens: usage.output,
+    cache_write_tokens: usage.cacheWrite,
+    cache_read_tokens: usage.cacheRead,
+  });
+}
+
+function meteredFetch(site: string) {
+  return async (input: string | URL | Request, init: RequestInit = {}): Promise<Response> => {
+    const response = await shared.modelFetch(input, init);
+    if (response.ok) {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      meter(site, url, response.clone()).catch((error) => console.error("model-road: учёт расхода", error));
+    }
+    return response;
+  };
+}
+
 /**
  * Клиент модели. Вместо `new Anthropic()` везде: тот же клиент, но с
- * запасной дорогой через ProxyAPI.
+ * запасной дорогой через ProxyAPI и с учётом расхода.
+ *
+ * `site` — откуда зовут: «outreach-letter», «site-chat», «razbor-article».
+ * По этой метке в `model_usage` видно, какой узел сколько стоит.
  */
-export function anthropic(options: ConstructorParameters<typeof Anthropic>[0] = {}): Anthropic {
-  return new Anthropic({ ...options, fetch: shared.modelFetch });
+export function anthropic(site: string, options: ConstructorParameters<typeof Anthropic>[0] = {}): Anthropic {
+  return new Anthropic({ ...options, fetch: meteredFetch(site) });
 }

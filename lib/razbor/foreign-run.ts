@@ -192,7 +192,7 @@ const NAME_SYSTEM = `Ты называешь на нужном языке то, 
 /** Ответ модели — или почему его нет: причина уходит в `_note` разбора. */
 async function askName(task: string): Promise<{ text: string } | { error: string }> {
   try {
-    const message = await anthropic().messages.create({
+    const message = await anthropic("razbor-foreign-name").messages.create({
       model: NAME_MODEL,
       max_tokens: 100,
       system: [{ type: "text", text: NAME_SYSTEM }],
@@ -364,7 +364,7 @@ export async function writeVersion(
       : []),
   ].join("\n");
 
-  const message = await anthropic().beta.messages.create({
+  const message = await anthropic("razbor-foreign").beta.messages.create({
     model: MODEL,
     max_tokens: 6000,
     system: [{ type: "text", text: systemFor(locale), cache_control: { type: "ephemeral" } }],

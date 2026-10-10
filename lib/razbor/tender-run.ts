@@ -202,7 +202,7 @@ export async function writeTender(
       : []),
   ].join("\n");
 
-  const message = await anthropic().beta.messages.create({
+  const message = await anthropic("razbor-tender").beta.messages.create({
     model: MODEL,
     max_tokens: 4096,
     system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],

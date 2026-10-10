@@ -366,7 +366,7 @@ export async function writeArticle(
       : []),
   ].join("\n");
 
-  const client = anthropic();
+  const client = anthropic("razbor-article");
   const message = await client.beta.messages.create({
     model: MODEL,
     max_tokens: 4096,

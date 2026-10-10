@@ -197,7 +197,7 @@ export function anchorsFromReply(input: unknown, index: readonly HelpIndexEntry[
 async function askModel(question: string, index: readonly HelpIndexEntry[]): Promise<string[] | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   try {
-    const response = await anthropic().messages.create({
+    const response = await anthropic("help-search").messages.create({
       model: MODEL,
       max_tokens: 200,
       // Список пунктов одинаков для всех вопросов одной роли на одном языке —

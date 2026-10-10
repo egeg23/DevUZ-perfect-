@@ -250,7 +250,8 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
   const { history, locale, source, alreadyQualified, onText, onEvent } = options;
   const emit = (event: TurnEvent) => onEvent?.(event);
 
-  const client = anthropic();
+  // Метка расхода — по каналу: сайт, бот и переписка касаний идут одним движком.
+  const client = anthropic(`qualify-${source}`);
 
   // Ответ модели может складываться из двух запросов подряд. Между ними
   // нужен разрыв абзаца, иначе фразы склеиваются без пробела и выглядят

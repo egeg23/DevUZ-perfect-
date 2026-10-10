@@ -381,7 +381,7 @@ async function prepareNoSite(prospect: Prospect, staff: Writer): Promise<Prepare
   const prompt = nositePrompt({ label: prospect.label, niche, sender: staff.display_name });
 
   const write = async (notes: string | null): Promise<string | null> => {
-    const response = await anthropic().beta.messages.create({
+    const response = await anthropic("outreach-nosite").beta.messages.create({
       model: MODEL,
       max_tokens: 1024,
       system: [{ type: "text" as const, text: NOSITE_SYSTEM, cache_control: { type: "ephemeral" as const } }],
@@ -587,7 +587,7 @@ export async function prepareOutreach(id: string, staff: Writer): Promise<Prepar
    * нажал «связаться», а получил отказ и пустое поле.
    */
   const write = async (notes: string | null): Promise<string | null> => {
-    const response = await anthropic().beta.messages.create({
+    const response = await anthropic("outreach-letter").beta.messages.create({
       model: MODEL,
       max_tokens: 1024,
       system: [{ type: "text" as const, text: OUTREACH_SYSTEM, cache_control: { type: "ephemeral" as const } }],

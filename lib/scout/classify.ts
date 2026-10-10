@@ -133,7 +133,7 @@ export async function classify(batch: ScoutCandidate[]): Promise<ScoutVerdict[]>
     return [];
   }
 
-  const client = anthropic();
+  const client = anthropic("scout-classify");
 
   const payload = batch
     .slice(0, BATCH_SIZE)
