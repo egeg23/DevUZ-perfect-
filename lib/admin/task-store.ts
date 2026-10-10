@@ -24,7 +24,7 @@ import {
   type TaskAction,
   type TaskEvent,
 } from "@/lib/admin/tasks";
-import { sendMessage, sendRowsForId, sendWithRows, setButtons, telegramReachable } from "@/lib/qualify/telegram";
+import { editMessage, sendMessage, sendRowsForId, sendWithRows, setButtons, telegramReachable } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -412,10 +412,28 @@ export async function actOnTask(
 }
 
 /**
- * Что сделать после действия: переписать кнопки под сообщением исполнителю
- * (если нажимали в панели — в Telegram они должны стать такими же) и
- * сказать поставившему. `except` — сообщение, которое уже переписал сам
- * колбэк: второй раз тем же Telegram править не даёт.
+ * Карточка задачи в Telegram — заново, из данных задачи: текст и кнопки.
+ *
+ * Раньше после действия переписывались только кнопки, и после переноса
+ * срока в карточке так и стоял прежний «Срок: …» (владелец, 10.10.2026:
+ * «Когда я меняю дату через тг бота, дата в задаче этой не меняется в
+ * чате»). Текст собирается тем же assignedText, что и при отправке, — из
+ * базы, а не из колбэка, поэтому разметка не теряется. Не вышло переписать
+ * текст — хотя бы кнопки.
+ */
+export async function showTask(task: Task, where: { chat: number | string; messageId: number }): Promise<void> {
+  const people = await peopleById([task.creator_id]);
+  const project = task.project_id ? (await projectLabels([task.project_id])).get(task.project_id) : null;
+  const text = assignedText(task, people.get(task.creator_id)?.display_name ?? "—", project);
+  if (await editMessage(where.chat, where.messageId, text, taskRows(task))) return;
+  await setButtons(where.chat, where.messageId, taskRows(task));
+}
+
+/**
+ * Что сделать после действия: переписать карточку задачи у исполнителя
+ * (если нажимали в панели — в Telegram она должна стать такой же: кнопки и
+ * срок) и сказать поставившему. `except` — сообщение, которое уже переписал
+ * сам колбэк: второй раз тем же Telegram править не даёт.
  */
 export async function afterAct(
   task: Task,
@@ -428,7 +446,7 @@ export async function afterAct(
     task.tg_message_id &&
     !(except && Number(task.tg_chat) === except.chat && Number(task.tg_message_id) === except.messageId)
   ) {
-    await setButtons(task.tg_chat, task.tg_message_id, taskRows(task));
+    await showTask(task, { chat: task.tg_chat, messageId: Number(task.tg_message_id) });
   }
   if (eventId !== null && messageWindow(now)) await deliverEvent(eventId);
 }
