@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { razborCopy } from "@/content/razbor/page-copy";
+import { razborCopy, tenderCopy } from "@/content/razbor/page-copy";
 import { razborBySlug, razborsFor, siblings, type RazborItem } from "@/content/razbor/items";
 import { RAZBOR_LOCALES, isRazborLocale, localeHref } from "@/lib/razbor/routing";
 import { buildAlternates } from "@/lib/seo";
@@ -20,12 +20,15 @@ import { templatedAcross } from "@/lib/razbor/sameness";
 const ROOT = new URL("../", import.meta.url);
 const read = (file: string) => readFileSync(new URL(file, ROOT), "utf8");
 
-test("разборы живут на русском, узбекском и английском", () => {
-  // Английский — с 10.10.2026: «На английском давай тоже делать, там 404».
-  assert.deepEqual([...RAZBOR_LOCALES], ["ru", "uz", "en"]);
+test("разборы живут на русском, узбекском, английском и польском", () => {
+  // Английский и польский — с 10.10.2026: «На английском давай тоже делать,
+  // там 404», «А в польской версии статей вообще, русские показываются».
+  assert.deepEqual([...RAZBOR_LOCALES], ["ru", "uz", "en", "pl"]);
   assert.equal(isRazborLocale("ru"), true);
   assert.equal(isRazborLocale("uz"), true);
   assert.equal(isRazborLocale("en"), true);
+  assert.equal(isRazborLocale("pl"), true);
+  assert.equal(isRazborLocale("uk"), false);
   assert.equal(isRazborLocale("zh"), false);
 });
 
@@ -48,8 +51,10 @@ test("подписи есть на обоих языках и не пустые"
   assert.notEqual(razborCopy.uz.title, razborCopy.ru.title, "узбекский текст не переведён");
   assert.notEqual(razborCopy.uz.lead, razborCopy.ru.lead, "узбекское описание не переведено");
   assert.notEqual(razborCopy.en.lead, razborCopy.ru.lead, "английское описание не переведено");
-  for (const [key, value] of Object.entries(razborCopy.en)) {
-    assert.ok(!/[а-яё]/i.test(value), `en.${key}: кириллица`);
+  for (const locale of ["en", "pl"] as const) {
+    for (const [key, value] of Object.entries({ ...razborCopy[locale], ...tenderCopy[locale] })) {
+      assert.ok(!/[а-яё]/i.test(value ?? ""), `${locale}.${key}: кириллица`);
+    }
   }
 });
 
@@ -84,7 +89,8 @@ test("выборка и соседи работают на пустом спис
 
 test("пункт меню показывается только там, где раздел есть", () => {
   const header = read("components/layout/header.tsx");
-  assert.match(header, /locale === "ru" \|\| locale === "uz"/);
+  // Языки раздела — одним местом (lib/razbor/routing.ts), а не списком в шапке.
+  assert.match(header, /isRazborLocale\(locale\)/);
   assert.match(header, /localeHref\(locale, "razbor"\)/);
 });
 
@@ -268,7 +274,7 @@ test("обычные страницы по-прежнему собирают в�
 });
 
 test("страницы разборов объявляют языки явно, а не общим правилом", () => {
-  assert.match(read("app/[locale]/razbor/page.tsx"), /alternates: \{ ru: "razbor", uz: "razbor", en: "razbor" \}/);
+  assert.match(read("app/[locale]/razbor/page.tsx"), /alternates: \{ ru: "razbor", uz: "razbor", en: "razbor", pl: "razbor" \}/);
 
   const page = read("app/[locale]/razbor/[slug]/page.tsx");
   assert.match(page, /const pages: AltPaths = \{ \[locale\]: `razbor\/\$\{item\.slug\}` \}/);

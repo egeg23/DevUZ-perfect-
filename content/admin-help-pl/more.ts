@@ -359,10 +359,10 @@ export const moreSections: Record<string, HelpEntry> = {
       },
       {
         id: "english",
-        title: "Wersja angielska",
+        title: "Wersja angielska i polska",
         body: [
-          "Opublikowana analiza po kilku minutach dostaje trzecią stronę — po angielsku, w sekcji devuz.studio/en/razbor. Pisze ją sam serwer, bez sprawdzania w panelu: bierze sprawdzony już przez Ciebie artykuł rosyjski i przenosi go na angielski pod angielskie zapytanie («restaurant website in Tashkent»), sprawdzone w Google Trends i Wordstat. Ustalenia, liczby i zrzuty ekranu — te same; nowych liczb, procentów i ustaleń kod nie przepuszcza, a cyrylicy w angielskim tekście być nie może.",
-          "Dwa razy nie przeszła sprawdzenia — serwer spróbuje ponownie za sześć godzin, a na razie analiza nie ma strony angielskiej: przełącznik języka prowadzi z niej do angielskiej listy analiz. **«Edytuj»** kasuje wersję angielską: napisano ją z poprzedniego tekstu, a serwer napisze ją od nowa według poprawionego — adres strony zostaje ten sam. **«Zdejmij z publikacji»** i **«Usuń»** zdejmują z witryny także ją.",
+          "Opublikowana analiza w ciągu godziny dostaje jeszcze dwie strony — po angielsku (devuz.studio/en/razbor) i po polsku (devuz.studio/pl/razbor). Pisze je sam serwer, bez sprawdzania w panelu: bierze sprawdzony już przez Ciebie artykuł rosyjski i przenosi go pod zapytanie w tym języku — «restaurant website in Tashkent», «strona internetowa dla restauracji w Taszkencie» — sprawdzone w Google Trends i Wordstat. Ustalenia, liczby i zrzuty ekranu — te same; nowych liczb, procentów i ustaleń kod nie przepuszcza, a cyrylicy w tych wersjach być nie może.",
+          "Dwa razy nie przeszła sprawdzenia — serwer spróbuje ponownie za sześć godzin, a na razie analiza nie ma strony w tym języku: przełącznik języka prowadzi z niej do listy analiz w tym języku. **«Edytuj»** kasuje obie wersje: napisano je z poprzedniego tekstu, a serwer napisze je od nowa według poprawionego — adresy stron zostają te same. **«Zdejmij z publikacji»** i **«Usuń»** zdejmują z witryny także je.",
         ],
       },
     ],

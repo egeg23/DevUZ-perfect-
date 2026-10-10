@@ -108,9 +108,11 @@ test("карта сайта содержит uk и pl и связывает их
     for (const path of ["", "/cases", "/products", "/calculator", "/partners", "/offer"]) {
       assert.ok(urls.includes(`/${l}${path}`), `в карте нет /${l}${path}`);
     }
-    // Разборы на этих языках — список чужих по языку статей, в карту не идёт.
-    assert.ok(!urls.some((u) => u.startsWith(`/${l}/razbor`)), `/${l}/razbor попал в карту`);
   }
+  // Разборы на украинском — список чужих по языку статей, в карту не идёт.
+  // Польский с 10.10.2026 — свой язык раздела: статьи сервер пишет сам.
+  assert.ok(!urls.some((u) => u.startsWith("/uk/razbor")), "/uk/razbor попал в карту");
+  assert.ok(urls.includes("/pl/razbor"), "в карте нет /pl/razbor");
   const home = entries.find((e) => e.url.endsWith("/uk"));
   const languages = home?.alternates?.languages as Record<string, string>;
   for (const code of ["ru", "en", "uz-UZ", "zh-Hans", "uk", "pl", "x-default"]) {
@@ -118,15 +120,17 @@ test("карта сайта содержит uk и pl и связывает их
   }
 });
 
-test("разборы на uk и pl — страница раздела, а не 404 и не статьи-двойники", () => {
-  assert.deepEqual([...RAZBOR_BORROWING], ["uk", "pl"]);
-  for (const l of NEW) {
-    assert.equal(isRazborBorrowing(l), true);
-    assert.equal(isRazborLocale(l), false, `${l}: своих статей нет`);
-    for (const [key, value] of Object.entries(razborBorrowedCopy[l])) {
-      assert.ok(value.trim().length > 1, `${l}.${key} пустая`);
-    }
+test("разборы на uk — страница раздела, а не 404 и не статьи-двойники; на pl — свои статьи", () => {
+  // Владелец, 10.10.2026: «А в польской версии статей вообще, русские
+  // показываются» — польский стал своим языком раздела, украинский остался.
+  assert.deepEqual([...RAZBOR_BORROWING], ["uk"]);
+  assert.equal(isRazborBorrowing("uk"), true);
+  assert.equal(isRazborLocale("uk"), false, "uk: своих статей нет");
+  for (const [key, value] of Object.entries(razborBorrowedCopy.uk)) {
+    assert.ok(value.trim().length > 1, `uk.${key} пустая`);
   }
+  assert.equal(isRazborBorrowing("pl"), false);
+  assert.equal(isRazborLocale("pl"), true);
   assert.equal(isRazborBorrowing("en"), false);
   assert.equal(isRazborBorrowing("ru"), false);
 });

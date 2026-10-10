@@ -11,6 +11,7 @@ import type { Dictionary } from "@/content/dictionaries";
 import { cn } from "@/lib/cn";
 import { telUrl } from "@/lib/phone-links";
 import { localeHref, type Locale } from "@/lib/i18n";
+import { isRazborLocale } from "@/lib/razbor/routing";
 
 export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const [scrolled, setScrolled] = useState(false);
@@ -31,10 +32,10 @@ export function Header({ locale, dict }: { locale: Locale; dict: Dictionary }) {
     { href: localeHref(locale, "calculator"), label: dict.nav.calculator },
     { href: localeHref(locale, "audit"), label: dict.nav.audit },
     { href: localeHref(locale, "products"), label: dict.nav.products },
-    // Разборы — по-русски, по-узбекски и (с 10.10.2026) по-английски. На
-    // остальных языках своих статей нет, и пункт, за которым пусто или
-    // чужой язык, в шапке не нужен.
-    ...(locale === "ru" || locale === "uz" || locale === "en"
+    // Разборы — по-русски, по-узбекски и (с 10.10.2026) по-английски и
+    // по-польски. На остальных языках своих статей нет, и пункт, за которым
+    // пусто или чужой язык, в шапке не нужен.
+    ...(isRazborLocale(locale)
       ? [{ href: localeHref(locale, "razbor"), label: dict.nav.razbor, live: true }]
       : []),
     { href: localeHref(locale, "cases"), label: dict.nav.cases },
