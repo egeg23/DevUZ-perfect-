@@ -413,6 +413,45 @@ export const moreSections: Record<string, HelpEntry> = {
     ],
   },
 
+  /* ── Pracownicy AI ─────────────────────────────────────────────────── */
+  "/admin/ai-staff": {
+    what: "Nowa usługa studia w abonamencie: handlowiec AI, który odpowiada kupującym innych firm w ich Telegramie i na ich stronie oraz przekazuje zgłoszenia ich ludziom. Tutaj widzisz wszystkich klientów usługi, ich zużycie i zaznaczasz płatności. Sami klienci pracują w swoim panelu devuz.studio/cabinet, naszego panelu nie widzą.",
+    items: [
+      {
+        id: "service",
+        title: "Usługa i bot usługi",
+        body: [
+          "Na górze widać, czy usługa jest włączona. Gdy jest wyłączona, panel klientów, widżet na ich stronach i bot usługi nikomu nie odpowiadają, a strona usługi na naszej witrynie się nie otwiera. Przycisk **«Włącz usługę»** / **«Wyłącz usługę»** działa od razu, w ciągu minuty.",
+          "Usługa ma własnego bota w Telegramie, nie bota studia: przez niego klienci logują się do panelu, podłączają swój Telegram Business i dostają zgłoszenia. Bota tworzysz w @BotFather, tam włączasz Business Mode, token zapisujesz w magazynie sekretów jako `AI_STAFF_BOT_TOKEN`, obok `AI_STAFF_WEBHOOK_SECRET` (dowolny długi losowy ciąg) i `AI_STAFF_KEY` (klucz szyfrowania tokenów botów klientów). Potem naciśnij **«Podłącz bota usługi»**: serwer ustawi botowi webhook i sprawdzi, czy Business Mode jest włączony. Bez tego kroku bot milczy.",
+        ],
+      },
+      {
+        id: "clients",
+        title: "Klienci i skąd liczby",
+        body: [
+          "Każda karta to jeden klient usługi. «Dialogi» pokazują, ile rozmów z kupującymi AI prowadziło w tym miesiącu według czasu Taszkentu, na tle limitu planu: rozmowa liczy się raz w miesiącu, niezależnie od liczby wiadomości. Gdy limit się skończy, AI klienta milknie, kupujący dostaje «menedżer odpowie», a ludzie klienta dostają wiadomość.",
+          "«Koszt» to ile klient kosztował w tym miesiącu według zużycia modelu, w dolarach po cenach modelu: każde wywołanie zapisuje się z oznaczeniem klienta. Obok cena jednego dialogu i «Marża»: cena planu minus koszt w sumach po kursie z `AI_STAFF_UZS_PER_USD` (domyślnie 12 700). Przez ProxyAPI model jest droższy, liczba tego nie uwzględnia. Na górze zużycie wszystkich klientów i przychód z opłaconych planów.",
+        ],
+      },
+      {
+        id: "pay",
+        title: "Płatność, okres próbny i status",
+        body: [
+          "Na razie płatność jest na fakturę: klient do nas pisze, wystawiasz fakturę, a gdy pieniądze dotrą, wybierasz plan, liczbę miesięcy, kwotę i sposób i naciskasz **«Zaznacz płatność»**. Termin przedłuża się od już opłaconej daty, jeśli jeszcze nie minęła: płatność z góry nie przepada. Pusta kwota to cena planu za wybrane miesiące. Plan «Pro» sam przełącza AI klienta na najmocniejszy model.",
+          "Nowy klient dostaje 14 dni okresu próbnego i 100 dialogów. **«Przedłuż okres próbny o 7 dni»** gdy klient potrzebuje czasu do płatności. **«Zmień status»**: «pauza» i «zablokowany» od razu zatrzymują AI klienta, kupujący dostają «menedżer odpowie».",
+        ],
+      },
+      {
+        id: "cabinet",
+        title: "Panel klienta i demo",
+        body: [
+          "**«Otwórz panel klienta»** to wejście do panelu klienta jako wsparcie na 2 godziny: żeby pomóc ustawić bazę wiedzy albo kanał. W nagłówku panelu klienta będzie widać, że weszło wsparcie.",
+          "**«Pokazuj jako demo»** stawia widżet czatu tego klienta na stronie usługi na naszej witrynie: odwiedzający próbuje AI na żywym przykładzie. Do demo lepiej założyć osobnego klienta z wymyśloną firmą i wypełnioną bazą wiedzy: każde pytanie odwiedzającego zużywa jego dialogi i model.",
+        ],
+      },
+    ],
+  },
+
   /* ── Инструкции ───────────────────────────────────────────────────── */
   "/admin/help": {
     what: "Ta strona. Tutaj sekcja po sekcji opisane jest, jak działa panel i co od czego zależy — tylko to, do czego masz dostęp, i tak, jak to widzisz.",

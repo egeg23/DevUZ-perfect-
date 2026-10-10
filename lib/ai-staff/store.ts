@@ -679,3 +679,83 @@ export async function payments(tenantId: string): Promise<Payment[]> {
     .order("created_at", { ascending: false });
   return (data ?? []) as Payment[];
 }
+
+/* ── Вход в кабинет ───────────────────────────────────────────────────── */
+
+/** Одноразовая ссылка из бота: в базе только хеш, живёт 15 минут. */
+export async function saveLoginToken(tokenHash: string, person: TgPerson, expiresAt: Date): Promise<void> {
+  await db().from("ai_login_tokens").insert({
+    token_hash: tokenHash,
+    telegram_user_id: person.id,
+    name: person.name.slice(0, 120),
+    username: person.username,
+    expires_at: expiresAt.toISOString(),
+  });
+}
+
+/** Погасить ссылку: второй переход по ней уже не входит. */
+export async function useLoginToken(tokenHash: string, now: Date): Promise<TgPerson | null> {
+  const { data } = await db()
+    .from("ai_login_tokens")
+    .update({ used_at: now.toISOString() })
+    .eq("token_hash", tokenHash)
+    .is("used_at", null)
+    .gt("expires_at", now.toISOString())
+    .select("telegram_user_id, name, username")
+    .maybeSingle();
+  if (!data) return null;
+  return { id: Number(data.telegram_user_id), name: String(data.name ?? ""), username: (data.username as string | null) ?? null };
+}
+
+export type CabinetSession = { telegramUserId: number; tenantId: string | null; staffId: string | null; expiresAt: string };
+
+export async function saveSession(
+  tokenHash: string,
+  input: { telegramUserId: number; tenantId: string | null; staffId: string | null; expiresAt: Date },
+): Promise<void> {
+  await db().from("ai_sessions").insert({
+    token_hash: tokenHash,
+    telegram_user_id: input.telegramUserId,
+    tenant_id: input.tenantId,
+    staff_id: input.staffId,
+    expires_at: input.expiresAt.toISOString(),
+  });
+}
+
+export async function sessionByHash(tokenHash: string, now: Date): Promise<CabinetSession | null> {
+  const { data } = await db()
+    .from("ai_sessions")
+    .select("telegram_user_id, tenant_id, staff_id, expires_at")
+    .eq("token_hash", tokenHash)
+    .gt("expires_at", now.toISOString())
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    telegramUserId: Number(data.telegram_user_id),
+    tenantId: (data.tenant_id as string | null) ?? null,
+    staffId: (data.staff_id as string | null) ?? null,
+    expiresAt: String(data.expires_at),
+  };
+}
+
+/** Какой кабинет открыт в сессии — у человека их может быть несколько. */
+export async function setSessionTenant(tokenHash: string, tenantId: string): Promise<void> {
+  await db().from("ai_sessions").update({ tenant_id: tenantId }).eq("token_hash", tokenHash);
+}
+
+export async function dropSession(tokenHash: string): Promise<void> {
+  await db().from("ai_sessions").delete().eq("token_hash", tokenHash);
+}
+
+/* ── Настройки сервиса ────────────────────────────────────────────────── */
+
+export async function setting<T = unknown>(key: string): Promise<T | null> {
+  const client = serviceClient();
+  if (!client) return null;
+  const { data } = await client.from("ai_settings").select("value").eq("key", key).maybeSingle();
+  return (data?.value as T | undefined) ?? null;
+}
+
+export async function saveSetting(key: string, value: unknown): Promise<void> {
+  await db().from("ai_settings").upsert({ key, value, updated_at: new Date().toISOString() });
+}

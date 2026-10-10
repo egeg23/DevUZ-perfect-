@@ -1789,6 +1789,45 @@ export const uz: HelpCopy = {
       ],
     },
 
+    /* ── SI xodimlar ──────────────────────────────────────────────────── */
+    "/admin/ai-staff": {
+      what: "Studiyaning obuna asosidagi yangi xizmati: boshqa kompaniyalarning xaridorlariga ularning Telegrami va saytida javob beradigan va arizalarni ularning odamlariga topshiradigan SI savdo menejeri. Bu yerda xizmatning barcha mijozlari, ularning sarfi ko‘rinadi va to‘lovni belgilaysiz. Mijozlarning o‘zi devuz.studio/cabinet dagi kabinetida ishlaydi, bizning panelni ko‘rmaydi.",
+      items: [
+        {
+          id: "service",
+          title: "Xizmat va xizmat boti",
+          body: [
+            "Yuqorida xizmat yoqilganmi yoki yo‘qmi ko‘rinadi. U o‘chiq bo‘lsa, mijozlar kabineti, ularning saytlaridagi vidjet va xizmat boti hech kimga javob bermaydi, saytdagi xizmat sahifasi ochilmaydi. **«Xizmatni yoqish»** / **«Xizmatni o‘chirish»** tugmasi bir daqiqa ichida ishlaydi.",
+            "Xizmatning Telegramda o‘z boti bor, studiya boti emas: u orqali mijozlar kabinetga kiradi, Telegram Business ni ulaydi va arizalarni oladi. Botni @BotFather da o‘zingiz yaratasiz, u yerda Business Mode ni yoqasiz, tokenni sirlar omboriga `AI_STAFF_BOT_TOKEN` sifatida qo‘yasiz, yoniga `AI_STAFF_WEBHOOK_SECRET` (istalgan uzun tasodifiy qator) va `AI_STAFF_KEY` (mijozlar botlari tokenlarini shifrlash kaliti). So‘ng **«Xizmat botini ulash»** ni bosing: server botga vebxuk o‘rnatadi va Business Mode yoqilganini tekshiradi. Bu qadamsiz bot jim turadi.",
+          ],
+        },
+        {
+          id: "clients",
+          title: "Mijozlar va raqamlar qayerdan",
+          body: [
+            "Har bir kartochka xizmatning bitta mijozi. «Suhbatlar» SI shu oyda Toshkent vaqti bo‘yicha xaridorlar bilan nechta suhbat olib borganini tarif limitidan ko‘rsatadi: suhbat oyiga bir marta hisoblanadi, unda qancha xabar bo‘lishidan qat’i nazar. Limit tugasa, mijozning SI jim bo‘ladi, xaridor «menejer javob beradi» xabarini oladi, mijozning odamlariga xabar keladi.",
+            "«Tannarx» mijoz oy davomida model sarfi bo‘yicha qancha turganini model narxlarida dollarda ko‘rsatadi: har bir chaqiruv mijoz belgisi bilan yoziladi. Yonida bir suhbat narxi va «Marja»: tarif narxi minus `AI_STAFF_UZS_PER_USD` kursi bo‘yicha so‘mdagi tannarx (odatiy 12 700). ProxyAPI orqali model qimmatroq, bu raqamda hisobga olinmagan. Yuqorida barcha mijozlar sarfi va to‘langan tariflar bo‘yicha tushum.",
+          ],
+        },
+        {
+          id: "pay",
+          title: "To‘lov, sinov muddati va holat",
+          body: [
+            "Hozircha to‘lov hisob orqali: mijoz bizga yozadi, siz hisob chiqarasiz, pul kelganda tarif, oylar soni, summa va usulni tanlab **«To‘lovni belgilash»** ni bosasiz. Agar to‘langan sana hali o‘tmagan bo‘lsa, muddat undan uzaytiriladi: oldindan to‘lov yonib ketmaydi. Summa bo‘sh bo‘lsa, tanlangan oylar uchun tarif narxi olinadi. «Pro» tarifi mijozning SI ni o‘zi eng kuchli modelga o‘tkazadi.",
+            "Yangi mijoz 14 kunlik sinov muddati va 100 suhbat oladi. **«Sinovni 7 kunga uzaytirish»** mijozga to‘lovgacha vaqt kerak bo‘lganda. **«Holatni o‘zgartirish»**: «pauza» va «bloklangan» mijozning SI ni darhol to‘xtatadi, xaridorlar «menejer javob beradi» xabarini oladi.",
+          ],
+        },
+        {
+          id: "cabinet",
+          title: "Mijoz kabineti va demo",
+          body: [
+            "**«Kabinetni ochish»** mijoz kabinetiga yordam xizmati nomidan 2 soatga kirish: bilimlar bazasi yoki kanalni sozlashga yordam berish uchun. Kabinet sarlavhasida yordam xizmati kirgani belgisi bo‘ladi.",
+            "**«Demo sifatida ko‘rsatish»** shu mijozning chat-vidjetini saytdagi xizmat sahifasiga qo‘yadi: tashrif buyuruvchi SI ni jonli misolda sinab ko‘radi. Demo uchun o‘ylab topilgan kompaniya va to‘ldirilgan bilimlar bazasi bilan alohida mijoz ochgan ma’qul: tashrif buyuruvchining har bir savoli uning suhbatlari va model sarfini sarflaydi.",
+          ],
+        },
+      ],
+    },
+
     /* ── Инструкции ───────────────────────────────────────────────────── */
     "/admin/help": {
       what: "Shu sahifa. Bu yerda bo‘limlar bo‘yicha panel qanday ishlashi va nima nimaga bog‘liqligi yozilgan — faqat sizga ochiq narsalar haqida va siz ko‘rgandek.",

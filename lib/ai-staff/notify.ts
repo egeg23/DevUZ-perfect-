@@ -16,34 +16,70 @@ import { siteUrl } from "@/lib/seo";
 
 export const TAKE_PREFIX = "ail:take:";
 
-const CHANNEL_TITLE: Record<string, string> = {
-  tg_business: "Telegram (ваш аккаунт)",
-  tg_bot: "Telegram-бот",
-  widget: "чат на сайте",
-  test: "проверка в кабинете",
+type L = "ru" | "uz";
+
+const CHANNEL_TITLE: Record<L, Record<string, string>> = {
+  ru: { tg_business: "Telegram (ваш аккаунт)", tg_bot: "Telegram-бот", widget: "чат на сайте", test: "проверка в кабинете" },
+  uz: { tg_business: "Telegram (sizning akkauntingiz)", tg_bot: "Telegram-bot", widget: "saytdagi chat", test: "kabinetdagi sinov" },
 };
 
-export function leadCard(lead: Lead, conv: Pick<Conversation, "kind" | "customer_name" | "customer_handle" | "off_hours">): string {
+const CARD: Record<L, Record<string, string>> = {
+  ru: {
+    test: "Проверка",
+    head: "Новая заявка",
+    from: "Откуда",
+    off: "в нерабочее время",
+    name: "Имя",
+    contact: "Контакт",
+    need: "Нужно",
+    budget: "Бюджет",
+    when: "Когда",
+    business: "Разговор у вас в Telegram: ответьте покупателю сами, ИИ в этом чате замолчит на 12 часов.",
+    take: "✋ Беру",
+    open: "Открыть в кабинете",
+  },
+  uz: {
+    test: "Sinov",
+    head: "Yangi ariza",
+    from: "Qayerdan",
+    off: "ish vaqtidan tashqari",
+    name: "Ism",
+    contact: "Kontakt",
+    need: "Kerak",
+    budget: "Byudjet",
+    when: "Qachon",
+    business: "Suhbat sizning Telegramingizda: xaridorga o'zingiz javob bering, sun'iy intellekt bu chatda 12 soat jim turadi.",
+    take: "✋ Olaman",
+    open: "Kabinetda ochish",
+  },
+};
+
+export function leadCard(
+  lead: Lead,
+  conv: Pick<Conversation, "kind" | "customer_name" | "customer_handle" | "off_hours">,
+  lang: L = "ru",
+): string {
+  const c = CARD[lang];
   const lines = [
-    `${lead.test ? "🧪 <b>Проверка</b> · " : ""}<b>Новая заявка ${esc(lead.request_no)}</b>`,
-    `Откуда: ${esc(CHANNEL_TITLE[conv.kind] ?? conv.kind)}${conv.off_hours ? " · в нерабочее время" : ""}`,
+    `${lead.test ? `🧪 <b>${c.test}</b> · ` : ""}<b>${c.head} ${esc(lead.request_no)}</b>`,
+    `${c.from}: ${esc(CHANNEL_TITLE[lang][conv.kind] ?? conv.kind)}${conv.off_hours ? ` · ${c.off}` : ""}`,
   ];
   const name = lead.name || conv.customer_name;
-  if (name) lines.push(`Имя: ${esc(name)}`);
+  if (name) lines.push(`${c.name}: ${esc(name)}`);
   const contact = lead.contact || conv.customer_handle || "";
-  if (contact) lines.push(`Контакт: ${esc(contact)}`);
-  if (lead.need) lines.push(`Нужно: ${esc(lead.need)}`);
-  if (lead.budget) lines.push(`Бюджет: ${esc(lead.budget)}`);
-  if (lead.urgency) lines.push(`Когда: ${esc(lead.urgency)}`);
+  if (contact) lines.push(`${c.contact}: ${esc(contact)}`);
+  if (lead.need) lines.push(`${c.need}: ${esc(lead.need)}`);
+  if (lead.budget) lines.push(`${c.budget}: ${esc(lead.budget)}`);
+  if (lead.urgency) lines.push(`${c.when}: ${esc(lead.urgency)}`);
   if (lead.summary) lines.push("", esc(lead.summary));
-  if (conv.kind === "tg_business") lines.push("", "Разговор у вас в Telegram: ответьте покупателю сами, ИИ в этом чате замолчит на 12 часов.");
+  if (conv.kind === "tg_business") lines.push("", c.business);
   return lines.join("\n");
 }
 
-export function leadButtons(lead: Lead): InlineButton[][] {
+export function leadButtons(lead: Lead, lang: L = "ru"): InlineButton[][] {
   return [
-    [{ text: "✋ Беру", callback_data: `${TAKE_PREFIX}${lead.id}` }],
-    [{ text: "Открыть в кабинете", url: `${siteUrl}/cabinet/leads` }],
+    [{ text: CARD[lang].take, callback_data: `${TAKE_PREFIX}${lead.id}` }],
+    [{ text: CARD[lang].open, url: `${siteUrl}/cabinet/leads` }],
   ];
 }
 
@@ -57,10 +93,11 @@ export async function sendLeadCard(
   list: readonly Member[],
   lead: Lead,
   conv: Pick<Conversation, "kind" | "customer_name" | "customer_handle" | "off_hours">,
+  lang: L = "ru",
 ): Promise<boolean> {
   let delivered = false;
   for (const member of recipients(list)) {
-    delivered = (await sendHtml(token, member.telegram_user_id, leadCard(lead, conv), leadButtons(lead))) || delivered;
+    delivered = (await sendHtml(token, member.telegram_user_id, leadCard(lead, conv, lang), leadButtons(lead, lang))) || delivered;
   }
   return delivered;
 }

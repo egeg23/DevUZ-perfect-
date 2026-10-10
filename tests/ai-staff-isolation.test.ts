@@ -23,6 +23,14 @@ const LOOKUPS = new Set([
   "channelByExternal", // канал Business по business_connection_id
   "channelByWidgetKey", // канал виджета по ключу
   "channelForHook", // канал бота по id из адреса вебхука (секрет сверяет маршрут)
+  "saveLoginToken", // вход в кабинет: человек, а не клиент
+  "useLoginToken",
+  "saveSession",
+  "sessionByHash",
+  "setSessionTenant", // клиент сессии сверяет auth.ts по membershipsOf
+  "dropSession",
+  "setting", // настройки сервиса (демо на странице сервиса)
+  "saveSetting",
 ]);
 
 function functions(source: string): Array<{ name: string; body: string; params: string }> {

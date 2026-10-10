@@ -35,6 +35,14 @@ export const PLANS: Record<PlanId, Plan> = {
   pro: { id: "pro", priceUzs: 2_490_000, dialogs: 1_500, channels: 3, tier: "premium" },
 };
 
+/** Названия тарифов на трёх языках панели студии. */
+export const PLAN_TITLE: Record<PlanId, { ru: string; uz: string; pl: string }> = {
+  trial: { ru: "Пробный", uz: "Sinov", pl: "Próbny" },
+  start: { ru: "Старт", uz: "Start", pl: "Start" },
+  business: { ru: "Бизнес", uz: "Biznes", pl: "Biznes" },
+  pro: { ru: "Про", uz: "Pro", pl: "Pro" },
+};
+
 export function isPlan(value: unknown): value is PlanId {
   return typeof value === "string" && (PLAN_IDS as readonly string[]).includes(value);
 }
