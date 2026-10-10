@@ -124,7 +124,7 @@ async function take(
  */
 export const OWNER_FLOOR_MS = 60_000;
 
-const QUEUED_COLUMNS = "id, target, target_kind, message, host, claimed_by, walked";
+const QUEUED_COLUMNS = "id, target, target_kind, message, host, claimed_by, walked, autopilot_at";
 
 /**
  * Кто на каких аккаунтах работает: сотрудник → ключи аккаунтов.
@@ -149,7 +149,9 @@ export async function assignments(db: NonNullable<ReturnType<typeof serviceClien
 }
 
 function toQueued(data: Record<string, unknown> | null): Queued | null {
-  if (!data?.target || !data?.message) return null;
+  // Без письма в очередь встаёт только автопрогон: его письмо пишется после
+  // ответа (LETTER_AFTER_REPLY), а «Здравствуйте» — на языке сайта.
+  if (!data?.target || (!data?.message && !data?.autopilot_at)) return null;
   return {
     id: String(data.id),
     target: String(data.target),
@@ -157,8 +159,8 @@ function toQueued(data: Record<string, unknown> | null): Queued | null {
     // импортируется в контакты. Старые строки заведены до маршрутов, и у
     // них он один возможный.
     kind: (data.target_kind as RouteKind | null) ?? "handle",
-    message: String(data.message),
-    hello: helloFor(String(data.message), (data.walked as { lang?: string } | null)?.lang),
+    message: String(data.message ?? ""),
+    hello: helloFor(String(data.message ?? ""), (data.walked as { lang?: string } | null)?.lang),
     host: String(data.host),
   };
 }
@@ -356,7 +358,7 @@ export async function markSent(
       ...(messageId ? { sent_message_id: String(messageId), delivered_at: null, delivery_note: null } : {}),
     })
     .eq("id", id)
-    .select("message, lead_id, walked")
+    .select("message, lead_id, walked, autopilot_at")
     .maybeSingle();
 
   // Прототип, собранный заранее, ушёл вместе с письмом (lib/proto/auto).
@@ -374,13 +376,13 @@ export async function markSent(
   // менеджеру отправленным то, что отдать не удалось, — а модель, читая
   // такую ленту, стала бы ссылаться на несказанное. Ушло «Здравствуйте» —
   // его и пишем; письмо ляжет в ленту, когда уйдёт после ответа клиента.
-  if (data?.message) {
+  if (data?.message || data?.autopilot_at) {
     await db.from("outreach_messages").insert({
       prospect_id: id,
       lead_id: data.lead_id ?? null,
       direction: "out",
       author: "staff",
-      body: helloFor(String(data.message), (data.walked as { lang?: string } | null)?.lang),
+      body: helloFor(String(data.message ?? ""), (data.walked as { lang?: string } | null)?.lang),
       status: "sent",
       sent_at: new Date().toISOString(),
     });

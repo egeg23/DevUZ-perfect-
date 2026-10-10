@@ -157,8 +157,11 @@ test("ответ клиента — команде через очередь л�
 test("автопрогон пишет тем же путём, что менеджер: проверка по факту и проверка перед отправкой", () => {
   const store = read("lib/admin/autopilot-store.ts");
   const run = store.slice(store.indexOf("export async function runAutopilot"), store.indexOf("async function release("));
-  assert.match(run, /prepareOutreach\(id, AUTOPILOT\)/, "письмо пишет только prepareOutreach — там проверка по факту");
-  assert.match(run, /queueOutreach\(id, prepared\.message, AUTOPILOT/, "отправка — через проверку перед отправкой");
+  // С 10.10.2026 письмо автопрогона пишется после ответа (LETTER_AFTER_REPLY):
+  // prepareOutreach здесь — проверка сайта по факту, а письмо пишет тот же
+  // composeLetter по той же проверке и проверяет sendProblems (writeLetterLater).
+  assert.match(run, /prepareOutreach\(id, AUTOPILOT, \{ letter: !LETTER_AFTER_REPLY \}\)/, "проверка по факту — только prepareOutreach");
+  assert.match(run, /queueOutreach\(id, LETTER_AFTER_REPLY \? null : prepared\.message, AUTOPILOT/, "отправка — через проверку перед отправкой");
   assert.doesNotMatch(run, /from\("prospects"\)\s*\.update\(\{[^}]*message:/, "своего письма в обход не кладёт");
 
   const outreach = read("lib/admin/outreach-store.ts");

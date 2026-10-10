@@ -29,6 +29,7 @@ import {
   withoutGreeting,
 } from "@/lib/admin/hello-first";
 import { circleDue } from "@/lib/admin/circle-store";
+import { LETTER_AFTER_REPLY } from "@/lib/admin/autopilot";
 import { circleProblem } from "@/lib/admin/circle-rules";
 import { translationProblems } from "@/lib/admin/letter-translate";
 import { readInbound } from "@/lib/admin/outreach-talk";
@@ -86,11 +87,11 @@ test("скаут из очереди пишет только приветств�
   assert.match(runner, /await client\.sendMessage\(userId, \{ message: job\.hello \}\)/);
   assert.doesNotMatch(runner, /sendMessage\(userId, \{ message: job\.message \}\)/);
   const queue = read("lib/admin/outreach-queue.ts");
-  assert.match(queue, /hello: helloFor\(String\(data\.message\), \(data\.walked as \{ lang\?: string \} \| null\)\?\.lang\)/);
+  assert.match(queue, /hello: helloFor\(String\(data\.message \?\? ""\), \(data\.walked as \{ lang\?: string \} \| null\)\?\.lang\)/);
   const sent = between(queue, "export async function markSent(", "export async function markDelivered(");
   assert.match(sent, /hello_at: new Date\(\)\.toISOString\(\)/);
   // В ленту — то, что ушло: приветствие, а не письмо.
-  assert.match(sent, /body: helloFor\(String\(data\.message\), \(data\.walked/);
+  assert.match(sent, /body: helloFor\(String\(data\.message \?\? ""\), \(data\.walked/);
 });
 
 test("язык ответа: по-русски — кружок, на другом языке — письмо, без слов — язык приветствия", () => {
@@ -259,4 +260,30 @@ test("письмо короткое и не здоровается второй 
   const prompt = outreachPrompt({ host: "acme.uz", label: null, niche: null, findings: [], draft: null, sender: "Эльдар" });
   assert.match(prompt, /Не здоровайся: «Здравствуйте» уже ушло отдельным сообщением/);
   assert.doesNotMatch(prompt, /здоровайся без имени/);
+});
+
+test("письмо автопрогона — после ответа: скаут отмечает язык, письмо пишет свип", () => {
+  // Разведка «ИИ → код», 10.10.2026: из 94 писем автопрогона за две недели
+  // 65 не понадобились — по-русски ответившим уходит кружок.
+  assert.equal(LETTER_AFTER_REPLY, true);
+  const queue = read("lib/admin/outreach-queue.ts");
+  assert.match(queue, /if \(!data\?\.target \|\| \(!data\?\.message && !data\?\.autopilot_at\)\) return null;/, "без письма в очередь — только автопрогон");
+
+  const talk = read("lib/admin/outreach-talk-store.ts");
+  const letter = between(talk, "async function queueHelloLetter(", "const LANG_LABEL");
+  // Проверка сайта устарела — человеку, как и раньше; свежая — отметка, а не модель в скауте.
+  assert.ok(letter.indexOf("if (!fresh) return handOverHello") < letter.indexOf("letter_wanted: lang"));
+  assert.match(letter, /!letter && prospect\.autopilot_at && LETTER_AFTER_REPLY && options\.defer !== false/);
+  assert.doesNotMatch(talk, /writeLetterLater|outreach-store"/, "модуль касаний процессу скаута не грузим");
+
+  const later = read("lib/admin/letter-later.ts");
+  assert.match(later, /writeLetterLater\(id\)/);
+  assert.match(later, /letter_wanted: null, letter_wanted_at: null[\s\S]*queueLaterLetter\(id, lang\)/, "отметка снимается до очереди: второй раз не откладываем");
+  assert.match(read("app/api/reminders/sweep/route.ts"), /writeWantedLetters\(new Date\(\)\)/);
+
+  const store = read("lib/admin/outreach-store.ts");
+  const write = between(store, "export async function writeLetterLater(", "/* ── Отправка");
+  assert.match(write, /checkFresh\(prospect\.checked_at/, "письмо — только по свежей проверке");
+  assert.match(write, /composeLetter\(prompt, host, hooks\)/, "то же письмо, что и при подготовке");
+  assert.match(write, /sendProblems\(\{ \.\.\.prospect, message: composed\.message \}/, "та же проверка перед отправкой");
 });
