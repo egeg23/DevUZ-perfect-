@@ -131,8 +131,9 @@ async function translateOne(locale: ForeignLocale, row: Row): Promise<{ path: st
   const ru = articleOf(row.article_ru);
   if (!ru) return "нет русской статьи";
 
-  const query = await queryFor(locale, row, ru);
-  if (!query) return "не назвали запрос";
+  const named = await queryFor(locale, row, ru);
+  if ("error" in named) return `не назвали запрос: ${named.error}`;
+  const { query } = named;
 
   // Что ищут вместе с запросом в Узбекистане — Google Trends и Вордстат,
   // как у любой статьи сайта (правило владельца, 04.10.2026).
@@ -183,11 +184,13 @@ const NAME_TOOL = {
 
 const NAME_SYSTEM = `Ты называешь на нужном языке то, что человек набрал бы в Google, когда ищет это на этом языке.
 
-- Обычные слова поиска, как пишут люди, а не перевод слово в слово. Строчными буквами, латиницей языка.
+- Обычные слова поиска, как пишут люди, а не перевод слово в слово. Строчными буквами языка — по-польски с ą, ć, ę, ł, ń, ó, ś, ź, ż.
+- Одно название, без кавычек, пояснений и вариантов через «/».
 - Никаких имён компаний, брендов и городов, если тебя о них не просили.
 - Только то, что просят, без пояснений.`;
 
-async function askName(task: string): Promise<string | null> {
+/** Ответ модели — или почему его нет: причина уходит в `_note` разбора. */
+async function askName(task: string): Promise<{ text: string } | { error: string }> {
   try {
     const message = await anthropic().messages.create({
       model: NAME_MODEL,
@@ -198,9 +201,10 @@ async function askName(task: string): Promise<string | null> {
       messages: [{ role: "user", content: task }],
     });
     const use = message.content.find((block) => block.type === "tool_use");
-    return use && use.type === "tool_use" ? String((use.input as { name?: unknown }).name ?? "") : null;
-  } catch {
-    return null;
+    if (!use || use.type !== "tool_use") return { error: "модель не ответила инструментом" };
+    return { text: String((use.input as { name?: unknown }).name ?? "") };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : String(err) };
   }
 }
 
@@ -228,22 +232,28 @@ const ASK: Record<ForeignLocale, { subject: string; tender: string }> = {
  * Запрос версии. Ниша каталога — словарём, остальное — одним коротким
  * вызовом дешёвой модели, с проверкой формы ответа.
  */
-async function queryFor(locale: ForeignLocale, row: Row, ru: RazborArticle): Promise<string | null> {
+async function queryFor(locale: ForeignLocale, row: Row, ru: RazborArticle): Promise<{ query: string } | { error: string }> {
+  // Что ответила модель — в причину провала: без этого «не назвали запрос»
+  // чинится вслепую.
+  const named = (answer: { text: string } | { error: string }, valid: (raw: string) => string | null) =>
+    "error" in answer ? { error: `модель названия: ${answer.error}` } : valid(answer.text) ?? { error: `модель назвала «${answer.text.slice(0, 120)}» — не подходит по форме` };
+
   if (isTender(row.category)) {
-    const raw = await askName(`Русский запрос статьи: «${ru.query}». Заголовок: «${ru.title}».\n${ASK[locale].tender}`);
-    return raw ? validTenderQuery(locale, raw) : null;
+    const answer = await askName(`Русский запрос статьи: «${ru.query}». Заголовок: «${ru.title}».\n${ASK[locale].tender}`);
+    const result = named(answer, (raw) => validTenderQuery(locale, raw));
+    return typeof result === "string" ? { query: result } : result;
   }
 
   const city = cityByKey(row.city);
-  if (!city) return null;
+  if (!city) return { error: `город «${row.city}» не из каталога` };
 
   const known = NICHE_NAMES[locale][row.category];
-  if (known) return foreignQuery(locale, known, city);
+  if (known) return { query: foreignQuery(locale, known, city) };
 
   const label = row.niche_words?.ruLabel || ru.label;
-  const raw = await askName(`Род занятий бизнеса: «${label}» (русский запрос: «${ru.query}»).\n${ASK[locale].subject}`);
-  const subject = raw ? validSubject(locale, raw) : null;
-  return subject ? foreignQuery(locale, subject, city) : null;
+  const answer = await askName(`Род занятий бизнеса: «${label}» (русский запрос: «${ru.query}»).\n${ASK[locale].subject}`);
+  const result = named(answer, (raw) => validSubject(locale, raw));
+  return typeof result === "string" ? { query: foreignQuery(locale, result, city) } : result;
 }
 
 /* ── Статья ─────────────────────────────────────────────────────────────── */
@@ -320,7 +330,7 @@ const systemFor = (locale: ForeignLocale) => {
 - findings — все находки русской статьи, по одной, в том же порядке, с тем же code дословно (по нему к находке подставляется снимок).
 - outcome — итог русской статьи на языке версии.
 
-Кириллицы в ответе нет нигде.`;
+Кириллицы в ответе нет нигде.${locale === "pl" ? "\n\nПольский — со всеми диакритическими знаками: ą, ć, ę, ł, ń, ó, ś, ź, ż. Текст без них поляк читает как неграмотный." : ""}`;
 };
 
 export async function writeVersion(

@@ -84,16 +84,42 @@ const LETTERS: Record<ForeignLocale, string> = { en: "a-z", pl: "a-ząćęłńó
 // «Internetowy» сам по себе можно: «sklepu internetowego» — интернет-магазин.
 const OWN_WORDS: Record<ForeignLocale, RegExp> = { en: /\bwebsite\b/, pl: /(^|\s)stron/ };
 
-/** Род занятий от модели: буквы языка, без имени компании и без «сайта». */
+/**
+ * Ответ модели о названии — без обёртки.
+ *
+ * Дешёвая модель отвечает не всегда голым словом: «"neurology center".»,
+ * «garbarni / zakładu garbarskiego», «hotel (small)». Строгая проверка
+ * формы такой ответ выбрасывала целиком, и 10.10.2026 из-за этого не вышли
+ * версии всех разборов ниш вне каталога. Берём первую строку и первый
+ * вариант, без кавычек, скобок и точки в конце, — а форму проверяем как
+ * прежде.
+ */
+export function cleanName(raw: string): string {
+  return (raw.split("\n")[0] ?? "")
+    .split(/[/;|(]| или | or | lub /)[0]
+    .replace(/["'`«»“”„]/g, "")
+    .replace(/[.,:!?]+\s*$/, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+/** Род занятий от модели: буквы языка, без имени компании, города и «сайта». */
 export function validSubject(locale: ForeignLocale, raw: string): string | null {
-  const subject = raw.trim().toLowerCase().replace(/\s+/g, " ");
+  const subject = cleanName(raw);
   const shape = new RegExp(`^[${LETTERS[locale]}][${LETTERS[locale]} -]{2,50}$`);
-  return shape.test(subject) && !OWN_WORDS[locale].test(subject) ? subject : null;
+  // Город запрос ставит сам; в названии рода занятий он — признак того, что
+  // модель назвала компанию, а не категорию.
+  const words = subject.split(/[ -]/);
+  const city = CITIES.some((c) =>
+    [c.en, c.pl].some((name) => words.some((w) => w.startsWith(name.toLowerCase().slice(0, 5)))),
+  );
+  return shape.test(subject) && !OWN_WORDS[locale].test(subject) && !city ? subject : null;
 }
 
 /** Запрос тендерного разбора от модели: буквы языка и цифры, до десяти слов. */
 export function validTenderQuery(locale: ForeignLocale, raw: string): string | null {
-  const query = raw.trim().toLowerCase().replace(/\s+/g, " ");
+  const query = cleanName(raw);
   const shape = new RegExp(`^[${LETTERS[locale]}][${LETTERS[locale]}0-9 -]{8,90}$`);
   return shape.test(query) && query.split(" ").length <= 10 ? query : null;
 }
@@ -247,6 +273,17 @@ export function foreignProblems(locale: ForeignLocale, version: RazborArticle, r
   const invented = unsupportedNumbers(text, `${source} ${ruNumberWords(source)}`, `${pricePool()} ${numbersIn(ru.price).join(" ")}`);
   if (invented.length) {
     out.push({ code: "invented", text: `Числа, которых нет в русской версии: ${invented.join(", ")}.` });
+  }
+
+  // Польский без «ą, ę, ł, ś, ż» читается как текст, набранный с телефона
+  // без раскладки, — так 10.10.2026 вышли первые две польские версии. В
+  // обычном польском тексте такая буква — примерно каждая тридцатая.
+  if (locale === "pl") {
+    const letters = text.match(/\p{L}/gu)?.length ?? 0;
+    const marks = text.match(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g)?.length ?? 0;
+    if (letters > 300 && marks * 80 < letters) {
+      out.push({ code: "diacritics", text: "Польский текст без диакритики: пиши ą, ć, ę, ł, ń, ó, ś, ź, ż там, где они нужны." });
+    }
   }
 
   const percent = /\d+\s*%/;
