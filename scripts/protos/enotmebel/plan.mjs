@@ -26,7 +26,8 @@
 //                  статус заказа. Дороже корзины: две интеграции.
 //   nasiya  100 $  рассрочка Uzum Nasiya и Alif: кнопка партнёра на
 //                  карточке и в корзине, без своей кредитной логики.
-//   fabric  110 $  примерка цвета и ткани на кресле, нарисованном кодом.
+//   fabric  110 $  выбор ткани и цвета: все 242 образца с их карт расцветок,
+//                  крупное фото, номер цвета в заказе.
 //   size     50 $  подбор размера груши по росту: одна формула.
 //   b2b      80 $  корпоративный заказ: офисы, кафе, мероприятия.
 //   seo     100 $  SEO-старт: страница на каждую модель и запрос,
@@ -54,7 +55,7 @@ export const ADDONS = [
   { id: "cart", where: "", price: 90, star: true, ru: { t: "Корзина и заказ в Telegram", e: "Несколько моделей в одном заказе, состав, ткань и телефон приходят менеджерам одним сообщением" }, uz: { t: "Savat va Telegram orqali buyurtma", e: "Bitta buyurtmada bir nechta model, tarkib, mato va telefon menejerlarga bitta xabar bilan keladi" } },
   { id: "pay", where: "", price: 120, needs: ["cart"], ru: { t: "Оплата Payme и Click", e: "Покупатель платит с телефона прямо из корзины, вы видите, что заказ оплачен" }, uz: { t: "Payme va Click orqali to‘lov", e: "Xaridor savatdan telefon orqali to‘laydi, siz buyurtma to‘langanini ko‘rasiz" } },
   { id: "nasiya", where: "", price: 100, ru: { t: "Рассрочка Uzum Nasiya и Alif", e: "Кнопка рассрочки на карточке модели и в корзине: дорогое кресло проще купить частями" }, uz: { t: "Uzum Nasiya va Alif muddatli to‘lovi", e: "Model kartochkasida va savatda muddatli to‘lov tugmasi: qimmat kreslo bo‘lib to‘lashda osonroq" } },
-  { id: "fabric", where: "", price: 110, ru: { t: "Примерка цвета и ткани", e: "Кресло перекрашивается на глазах, выбор уходит в заказ" }, uz: { t: "Rang va matoni sinab ko‘rish", e: "Kreslo ko‘z oldida rangini o‘zgartiradi, tanlov buyurtmaga ketadi" } },
+  { id: "fabric", where: "", price: 110, ru: { t: "Выбор ткани и цвета", e: "Все 242 образца с ваших карт расцветок: открыть крупно, номер цвета уходит в заказ" }, uz: { t: "Mato va rangni tanlash", e: "Ranglar kartalaringizdagi barcha 242 namuna: katta ochiladi, rang raqami buyurtmaga ketadi" } },
   { id: "size", where: "", price: 50, ru: { t: "Подбор размера по росту", e: "Двигаете рост, и сайт показывает, какая груша подойдёт" }, uz: { t: "Bo‘y bo‘yicha o‘lcham tanlash", e: "Bo‘yni surasiz, sayt qaysi nok mos kelishini ko‘rsatadi" } },
   { id: "b2b", where: "", price: 80, ru: { t: "Корпоративный заказ", e: "Офисам, кафе и мероприятиям: количество, дата и адрес одной заявкой" }, uz: { t: "Korporativ buyurtma", e: "Ofislar, kafelar va tadbirlar uchun: soni, sana va manzil bitta arizada" } },
   { id: "uz", where: "all", price: 150, ru: { t: "Узбекская версия", e: "Переключатель RU / UZ, все страницы на двух языках" }, uz: { t: "O‘zbekcha versiya", e: "RU / UZ almashtirgich, barcha sahifalar ikki tilda" } },

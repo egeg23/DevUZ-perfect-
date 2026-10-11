@@ -122,9 +122,9 @@ function render(){
   fade('fly',Math.min(seg(t,9,9.5),1-seg(t,14.6,15.2)));
   if(t>8.8&&t<15.4)fly(t);
 
-  /* 4 · Ткани: образцы растут снизу по очереди. */
+  /* 4 · Ткани: столбики из настоящих образцов выезжают снизу по очереди. */
   fade('fab',Math.min(seg(t,14.9,15.4),1-seg(t,17.9,18.4)));
-  if(t>14.7&&t<18.6)for(var i=0;i<5;i++){var g=out(seg(t,15.2+i*.18,15.9+i*.18)),dr=(t-16.5)*(i%2?-10:10);write(N['fab'+i],'translate3d(0,'+((1-g)*30+dr).toFixed(1)+'px,0) scaleY('+(.08+g*.92).toFixed(4)+')',Math.min(1,g*1.6))}
+  if(t>14.7&&t<18.6)for(var i=0;i<5;i++){var g=out(seg(t,15.2+i*.18,15.9+i*.18)),dr=(t-16.5)*(i%2?-10:10);write(N['fab'+i],'translate3d(0,'+dr.toFixed(1)+'px,0)',Math.min(1,g*1.6));write(N['fabS'+i],'translate3d(0,'+((1-g)*100).toFixed(2)+'%,0)',null)}
 
   /* 5 · Для офиса: снимки сменяют друг друга, логотипы на стекле. */
   fade('off',Math.min(seg(t,18.1,18.6),1-seg(t,21.9,22.4)));

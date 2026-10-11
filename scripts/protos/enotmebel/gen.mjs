@@ -7,7 +7,7 @@ import { ADDONS, BASE as KIT_BASE, BLOCKS } from "./plan.mjs";
  * движку нашего Engelberg v2 (globalex/engelberg/v2): липкая сцена, слои во
  * весь экран со своей камерой, подписи снизу, глава и полоса внизу слева,
  * стеклянные карточки, точки на снимке, частицы на canvas. После истории —
- * каталог, подбор размера, примерка цвета, корпоративный заказ, гарантия и
+ * каталог, подбор размера, выбор ткани и цвета, корпоративный заказ, гарантия и
  * шоурум. Две страницы на двух языках: главная и «Что дальше».
  * Исследование — docs/research/enotmebel.md, фото — SOURCES.md, заходы
  * 21st.dev — 21ST.md.
@@ -28,6 +28,9 @@ const INTRO = readFileSync(DIR + "intro.js", "utf8");
 const STORY = readFileSync(DIR + "story.js", "utf8");
 const JS = readFileSync(DIR + "client.js", "utf8");
 const LOGO = JSON.parse(readFileSync(DIR + "logo.json", "utf8"));
+/* Образцы тканей: карты расцветок со страницы «Ткани» (photos.py): номер
+   цвета, ширина и высота большого фото, средний цвет, сторона плитки. */
+const SW = JSON.parse(readFileSync(DIR + "fabrics.json", "utf8"));
 const BASE = "__PROTO_BASE__";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
 const FONTS = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Manrope:wght@400;700&display=swap";
@@ -85,13 +88,14 @@ const M = Object.fromEntries(MODELS.map((m) => [m.id, m]));
 const priceOf = (l, m) => (m.min === m.max ? `${sp(m.min)} ${sum(l)}` : `${l === "ru" ? "от" : ""} ${sp(m.min)} ${sum(l)}${l === "uz" ? " dan" : ""}`.trim());
 const rangeOf = (l, m) => (m.min === m.max ? `${sp(m.min)} ${sum(l)}` : `${sp(m.min)}…${sp(m.max)} ${sum(l)}`);
 
-/* Ткани — страница «Ткани» на их сайте: пять, две водоотталкивающие. */
+/* Ткани — страница «Ткани» на их сайте: пять, две водоотталкивающие; card —
+   как подписаны образцы на их карте расцветок. */
 const FABRICS = [
-  { id: "polycon", n: ["Polycon", "Polycon"], d: ["водоотталкивающая, эконом", "suv o‘tkazmaydi, ekonom"], wet: true, tex: "polycon" },
-  { id: "velour2", n: ["Велюр усиленный", "Mustahkam velyur"], d: ["плотный и мягкий", "zich va yumshoq"], tex: "velour" },
-  { id: "diagonal", n: ["Диагональ", "Diagonal"], d: ["водоотталкивающая", "suv o‘tkazmaydi"], wet: true, tex: "diagonal" },
-  { id: "micro", n: ["Микровельвет люкс", "Mikrovelvet lyuks"], d: ["тонкий рубчик", "ingichka chiziqli"], tex: "micro" },
-  { id: "velour", n: ["Велюр", "Velyur"], d: ["бархатистый на ощупь", "qo‘lga baxmaldek"], tex: "velour" },
+  { id: "polycon", card: "Polycon", n: ["Polycon", "Polycon"], d: ["водоотталкивающая, эконом", "suv o‘tkazmaydi, ekonom"], wet: true, },
+  { id: "velour2", card: "Velutto", n: ["Велюр усиленный", "Mustahkam velyur"], d: ["плотный и мягкий", "zich va yumshoq"], },
+  { id: "diagonal", card: "Diagonal", n: ["Диагональ", "Diagonal"], d: ["водоотталкивающая", "suv o‘tkazmaydi"], wet: true, },
+  { id: "micro", card: "Velvet Lux", n: ["Микровельвет люкс", "Mikrovelvet lyuks"], d: ["тонкий рубчик", "ingichka chiziqli"], },
+  { id: "velour", card: "Zodiak", n: ["Велюр", "Velyur"], d: ["бархатистый на ощупь", "qo‘lga baxmaldek"], },
 ];
 
 /* Наполнители — страница «Наполнители». */
@@ -100,13 +104,6 @@ const FILL = [
   [["Пенополиуретан листом", "List penopoliuretan"], ["плотный поролон, держит форму", "zich porolon, shaklni ushlaydi"]],
   [["Гранулы EPP", "EPP granulalari"], ["плотнее EPS, в премиальных моделях", "EPS’dan zichroq, premium modellarda"]],
   [["Нарезанный пенополиуретан", "Kesilgan penopoliuretan"], ["упругий, ровно держит нагрузку", "elastik, yukni bir tekis taqsimlaydi"]],
-];
-
-/* Цвета для примерки — те, в которых кресла сняты на их фото. */
-const COLORS = [
-  ["#5f8f3a", "зелёный", "yashil"], ["#1f4fb8", "синий", "ko‘k"], ["#e0662f", "оранжевый", "to‘q sariq"], ["#e7b923", "жёлтый", "sariq"],
-  ["#cdb69b", "бежевый", "bej"], ["#2b2b2e", "чёрный", "qora"], ["#3fb6c4", "бирюзовый", "feruza"], ["#1d2a4d", "тёмно-синий", "to‘q ko‘k"],
-  ["#8a5a3c", "коричневый", "jigarrang"], ["#e45f97", "розовый", "pushti"], ["#c8352f", "красный", "qizil"], ["#9a9c9f", "серый", "kulrang"],
 ];
 
 /* Логотипы клиентов — блок на их главной. */
@@ -353,6 +350,8 @@ function Ls(l) {
     found: ru ? "Моделей: {n}" : "Modellar: {n}",
     models: Object.fromEntries(MODELS.map((m) => [m.id, { n: m.n[ru ? 0 : 1], min: m.min, max: m.max }])),
     fabrics: Object.fromEntries(FABRICS.map((f) => [f.id, f.n[ru ? 0 : 1]])),
+    cards: Object.fromEntries(FABRICS.map((f) => [f.id, f.card])),
+    img: IMG,
   };
 }
 
@@ -361,20 +360,19 @@ const head = (kicker, h, lead, side = "", anim = "rise") => `<div class="sec-hea
 const ours = (l) => `<span class="ours">${T(l)("Предложение DevUz Studio", "DevUz Studio taklifi")}</span>`;
 const pic = (id, cls, sizes, alt, eager = false) => `<img class="${cls}" src="${IMG}/m-${id}-600.webp" srcset="${IMG}/m-${id}-600.webp 600w, ${IMG}/m-${id}-1024.webp 1024w" sizes="${sizes}" alt="${esc(alt)}" width="1024" height="1536"${eager ? "" : ' loading="lazy"'} decoding="async">`;
 
-/* Груша кодом: контур кресла-мешка, по нему же — примерка цвета. */
+/* Груша кодом: контур кресла-мешка для главы «Внутри». */
 const PEAR = "M300 64C238 64 196 120 176 196C152 284 104 360 92 448C82 524 150 584 300 584C450 584 518 524 508 448C496 360 448 284 424 196C404 120 362 64 300 64Z";
 const PEAR_IN = "M300 98C250 98 216 146 199 210C177 292 135 362 125 444C117 506 175 552 300 552C425 552 483 506 475 444C465 362 423 292 401 210C384 146 350 98 300 98Z";
-const PEAR_SEAMS = "M300 64C292 160 286 300 300 584M210 140C232 250 238 400 220 576M390 140C368 250 362 400 380 576";
 
-/* Текстуры тканей кодом: у каждой свой рисунок, без фотографий. */
-const TEX = `<svg class="lq-defs" aria-hidden="true" focusable="false"><defs>
-<pattern id="tx-polycon" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 0h3v3H0zM3 3h3v3H3z" fill="#fff" opacity=".08"/></pattern>
-<pattern id="tx-velour" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M0 20C10 12 30 28 40 20" stroke="#fff" stroke-width="10" opacity=".07" fill="none"/></pattern>
-<pattern id="tx-diagonal" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0v8" stroke="#fff" stroke-width="2.5" opacity=".12"/></pattern>
-<pattern id="tx-micro" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 0v5" stroke="#000" stroke-width="1.6" opacity=".16"/></pattern>
-<radialGradient id="pear-light" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></radialGradient>
-</defs></svg>`;
-const pearSvg = (cls, tex = "velour") => `<svg class="${cls}" viewBox="40 40 520 580" aria-hidden="true" focusable="false"><ellipse cx="300" cy="590" rx="236" ry="22" fill="#000" opacity=".18"/><path d="${PEAR}" fill="currentColor"/><path d="${PEAR}" fill="url(#tx-${tex})" class="pear-fill"/><path d="${PEAR}" fill="url(#pear-light)"/><path d="${PEAR_SEAMS}" fill="none" stroke="#000" stroke-opacity=".16" stroke-width="2"/><path d="M196 300C236 352 364 352 404 300" fill="none" stroke="#000" stroke-opacity=".2" stroke-width="14" stroke-linecap="round"/><path d="M200 292C240 340 360 340 400 292" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="5" stroke-linecap="round"/></svg>`;
+
+/* Образцы для столбиков в истории: разные цвета каждой ткани. */
+const STORY_SW = {
+  polycon: ["5", "18", "12", "20", "3"],
+  velour2: ["27", "45", "56", "35", "72"],
+  diagonal: ["540", "779", "411", "694", "310"],
+  micro: ["09", "72", "45", "28", "84"],
+  velour: ["432", "667", "337", "796", "552"],
+};
 
 /* ── Схема Узбекистана: Natural Earth (общественное достояние) ────────── */
 const UZ = "M618 636L620 589L542 556L481 518L443 481L376 428L348 348L328 334L265 338L243 322L236 260L158 219L108 264L59 291L68 330L2 331L0 46L150 0L161 7L252 62L300 91L355 161L424 150L524 144L594 200L589 278L618 278L630 342L704 344L720 381L742 380L767 325L844 271L878 257L895 265L846 315L889 344L931 324L1000 365L925 421L881 413L857 415L848 394L861 358L782 376L764 426L736 468L687 465L672 499L715 517L728 575L695 653L651 637L618 636Z";
@@ -417,7 +415,7 @@ function storyBlock(l) {
 
 <div class="st-layer st-fly" data-k="fly"><div class="fly-world">${flyIds.map((id, k) => `<figure class="fly-c" data-fly="${k}"><img src="${IMG}/m-${id}-600.webp" srcset="${IMG}/m-${id}-600.webp 600w, ${IMG}/m-${id}-1024.webp 1024w" sizes="(max-width: 767px) 70vw, 34vw" alt="${esc(M[id].n[l === "ru" ? 0 : 1])}" width="1024" height="1536" loading="lazy" decoding="async"><figcaption><b>${M[id].n[l === "ru" ? 0 : 1]}</b><span class="num">${priceOf(l, M[id])}</span></figcaption></figure>`).join("")}</div></div>
 
-<div class="st-layer st-fab" data-k="fab"><div class="fab-row">${FABRICS.map((f, k) => `<div class="fab-c" data-k="fab${k}" style="--h:${[0.92, 0.74, 0.86, 0.66, 0.8][k]};color:${["#5f8f3a", "#8a5a3c", "#1f4fb8", "#cdb69b", "#c8352f"][k]}"><svg viewBox="0 0 10 10" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect width="10" height="10" fill="currentColor"/><rect width="10" height="10" fill="url(#tx-${f.tex})"/></svg><b>${f.n[l === "ru" ? 0 : 1]}</b><small>${f.d[l === "ru" ? 0 : 1]}</small>${f.wet ? `<em>${ICON.drop}</em>` : ""}</div>`).join("")}</div></div>
+<div class="st-layer st-fab" data-k="fab"><div class="fab-row">${FABRICS.map((f, k) => `<div class="fab-c" data-k="fab${k}" style="--h:${[0.92, 0.74, 0.86, 0.66, 0.8][k]}"><div class="fab-win"><div class="fab-st" data-k="fabS${k}">${STORY_SW[f.id].map((c) => `<img src="${IMG}/f-${f.id}-${c}-s.webp" alt="" width="280" height="280" loading="lazy" decoding="async">`).join("")}</div></div><span class="fab-l"><b>${f.n[l === "ru" ? 0 : 1]}</b><small>${f.d[l === "ru" ? 0 : 1]} · ${SW[f.id].length} ${t("цветов", "rang")}</small></span>${f.wet ? `<em>${ICON.drop}</em>` : ""}</div>`).join("")}</div></div>
 
 <div class="st-layer st-off" data-k="off"><div class="off-frame">${offPics.map((n, k) => `<div class="off-p" data-k="op${k}"><img src="${IMG}/g${n}-960.webp" alt="" width="960" height="1280" loading="lazy" decoding="async"></div>`).join("")}</div>
 <div class="logos glass lq" data-k="logos"><p class="spec-k">${t("Среди заказчиков", "Buyurtmachilar orasida")}</p><div>${CLIENTS.map(([f, n]) => `<img src="${IMG}/c-${f}.webp" alt="${n}" width="480" height="291" loading="lazy">`).join("")}</div></div></div>
@@ -434,7 +432,7 @@ ${beat(4.8, 6.9, t("02 · Внутри", "02 · Ichida"), t("Два чехла �
 ${beat(6.9, 9, t("02 · Внутри", "02 · Ichida"), t("Четыре наполнителя", "To‘rtta to‘ldiruvchi"), t("От классических шариков EPS до плотных гранул EPP в премиальных моделях.", "Klassik EPS sharchalaridan premium modellardagi zich EPP granulalarigacha."))}
 ${beat(9.3, 12, t("03 · Модели", "03 · Modellar"), t("15 моделей", "15 ta model"), t("Груши пяти размеров, Флаундер, Пирамида и Пифагор, кресла Аэро и Квадро, лежаки Max Relax, Sleep Relax и Стреч.", "Besh o‘lchamdagi noklar, Flaunder, Piramida va Pifagor, Aero va Kvadro kreslolari, Max Relax, Sleep Relax va Strech shezlonglari."))}
 ${beat(12, 14.8, t("03 · Модели", "03 · Modellar"), t("От 450\u00a0000 до 2\u00a0700\u00a0000 сум", "450\u00a0000 dan 2\u00a0700\u00a0000 so‘mgacha"), t("Цена зависит от модели и ткани. Цены всех моделей в каталоге ниже.", "Narx model va matoga bog‘liq. Barcha modellar narxi quyidagi katalogda."))}
-${beat(15.3, 18, t("04 · Ткани", "04 · Matolar"), t("Пять тканей", "Beshta mato"), t("Две из них водоотталкивающие: Polycon и Диагональ. Остальные мягкие: велюр, усиленный велюр, микровельвет.", "Ulardan ikkitasi suv o‘tkazmaydi: Polycon va Diagonal. Qolganlari yumshoq: velyur, mustahkam velyur, mikrovelvet."))}
+${beat(15.3, 18, t("04 · Ткани", "04 · Matolar"), t("Пять тканей, 242 цвета", "Beshta mato, 242 rang"), t("Две из них водоотталкивающие: Polycon и Диагональ. На столбиках настоящие образцы с карт расцветок Enotmebel.", "Ulardan ikkitasi suv o‘tkazmaydi: Polycon va Diagonal. Ustunlarda Enotmebel ranglar kartalaridan haqiqiy namunalar."))}
 ${beat(18.4, 21.8, t("05 · Для офиса", "05 · Ofis uchun"), t("Офисы, фестивали, зоны отдыха", "Ofislar, festivallar, dam olish zonalari"), t("Кресла Enotmebel стоят у заказчиков по всему городу. Корпоративный заказ считают по количеству.", "Enotmebel kreslolari butun shahar bo‘ylab buyurtmachilarda turibdi. Korporativ buyurtma soniga qarab hisoblanadi."))}
 ${beat(22.4, 25, t("06 · Доставка", "06 · Yetkazish"), t("По всему Узбекистану", "Butun O‘zbekiston bo‘ylab"), t("Детали доставки обговариваются при заказе. Кресло едет в упаковке, ремонт по гарантии бесплатный.", "Yetkazib berish tafsilotlari buyurtmada kelishiladi. Kreslo qadoqda boradi, kafolat bo‘yicha ta’mir bepul."))}
 <div class="st-beat st-last" data-beat="25.3 99"><span class="kicker" data-line><i></i>${t("07 · Выбор", "07 · Tanlov")}</span><h2 data-line>${t("Выберите своё кресло", "O‘z kreslongizni tanlang")}</h2><div class="cta" data-line><a class="btn btn-blue" href="#katalog">${t("Открыть каталог", "Katalogni ochish")}${ICON.arrow}</a>${tgBtn(l, "btn-ghost", t("Спросить в Telegram", "Telegramda so‘rash"), helloText(l))}</div></div>
@@ -477,15 +475,15 @@ ${head(t("Подбор размера", "O‘lcham tanlash"), t("Какая гр
 function fabricBlock(l) {
   const t = T(l);
   const i = l === "ru" ? 0 : 1;
+  const D0 = { f: "diagonal", fab: FABRICS.find((f) => f.id === "diagonal"), c: SW.diagonal.find((x) => x[0] === "540") };
   return `<section id="tkani" class="fab dark"><div class="wrap">
-${head(t("Ткани и цвет", "Matolar va rang"), t("Примерьте кресло", "Kresloni sinab ko‘ring"), t("Пять тканей с сайта Enotmebel. Выберите ткань и цвет: кресло перекрасится, а выбор уйдёт в сообщение менеджеру.", "Enotmebel saytidagi beshta mato. Mato va rangni tanlang: kreslo rangini o‘zgartiradi, tanlov esa menejerga xabarda ketadi."), `<span data-addon="fabric">${ours(l)}</span>`)}
+${head(t("Ткани и цвет", "Matolar va rang"), t("Выберите ткань и цвет", "Mato va rangni tanlang"), t("Пять тканей и 242 цвета с карт расцветок Enotmebel. Выберите ткань и цвет: номер образца уйдёт в сообщение менеджеру.", "Enotmebel ranglar kartalaridan beshta mato va 242 rang. Mato va rangni tanlang: namuna raqami menejerga xabarda ketadi."), `<span data-addon="fabric">${ours(l)}</span>`)}
 <div class="try" data-addon="fabric">
-<div class="try-pv rv a-puff"><div class="try-pear" id="try-pear" style="color:#5f8f3a">${pearSvg("pear")}</div><p class="try-lbl"><b id="try-fab">${FABRICS[0].n[i]}</b> · <span id="try-col">${COLORS[0][i + 1]}</span></p></div>
+<div class="try-pv rv a-puff"><figure class="sw-big"><img id="sw-img" src="${IMG}/f-${D0.f}-${D0.c[0]}.webp" width="${D0.c[1]}" height="${D0.c[2]}" style="max-width:${D0.c[1]}px" alt="${esc(`${D0.fab.n[i]}, ${D0.fab.card} ${D0.c[0]}`)}"></figure><p class="try-lbl"><b id="try-fab">${D0.fab.n[i]}</b> · <span id="try-col">${D0.fab.card} ${D0.c[0]}</span></p><p class="src">${t("Фото образца с карты расцветок Enotmebel, без обработки.", "Namuna fotosi Enotmebel ranglar kartasidan, ishlovsiz.")}</p></div>
 <div class="try-ctl">
-<fieldset><legend>${t("Ткань", "Mato")}</legend><div class="try-fabs">${FABRICS.map((f, k) => `<label class="fb"><input type="radio" name="fab" value="${f.id}" data-tex="${f.tex}"${k === 0 ? " checked" : ""}><span><b>${f.n[i]}</b><small>${f.d[i]}</small></span>${f.wet ? `<em aria-label="${t("водоотталкивающая", "suv o‘tkazmaydi")}">${ICON.drop}</em>` : ""}</label>`).join("")}</div></fieldset>
-<fieldset><legend>${t("Цвет", "Rang")}</legend><div class="try-cols">${COLORS.map(([c, ru, uz], k) => `<label class="cl" style="--c:${c}"><input type="radio" name="col" value="${c}" data-n="${l === "ru" ? ru : uz}"${k === 0 ? " checked" : ""}><span title="${l === "ru" ? ru : uz}"></span><i class="vh">${l === "ru" ? ru : uz}</i></label>`).join("")}</div></fieldset>
+<fieldset><legend>${t("Ткань", "Mato")}</legend><div class="try-fabs">${FABRICS.map((f) => `<label class="fb"><input type="radio" name="fab" value="${f.id}"${f.id === D0.f ? " checked" : ""}><img src="${IMG}/f-${f.id}-${STORY_SW[f.id][0]}-c.webp" alt="" width="150" height="150" loading="lazy"><span><b>${f.n[i]}</b><small>${f.d[i]} · ${SW[f.id].length} ${t("цветов", "rang")}</small></span>${f.wet ? `<em aria-label="${t("водоотталкивающая", "suv o‘tkazmaydi")}">${ICON.drop}</em>` : ""}</label>`).join("")}</div></fieldset>
+<fieldset><legend>${t("Цвет", "Rang")} · <span id="sw-n">${SW[D0.f].length}</span></legend>${FABRICS.map((f) => `<div class="sw-grid" data-fab="${f.id}"${f.id === D0.f ? "" : " hidden"}>${SW[f.id].map(([c, w, h]) => `<label class="swc"><input type="radio" name="col" value="${c}" data-w="${w}" data-h="${h}"${f.id === D0.f && c === D0.c[0] ? " checked" : ""}><img src="${IMG}/f-${f.id}-${c}-c.webp" alt="" width="150" height="150" loading="lazy" decoding="async"><span>${c}</span></label>`).join("")}</div>`).join("")}</fieldset>
 <label class="field"><span>${t("Модель", "Model")}</span><select id="try-m">${MODELS.map((m) => `<option value="${m.id}">${m.n[i]}</option>`).join("")}</select></label>
-<p class="src">${t("Цвета: те, в которых кресла сняты на фото Enotmebel. Точную палитру ткани покажет менеджер.", "Ranglar: Enotmebel fotolaridagi kreslolar ranglari. Matoning aniq palitrasini menejer ko‘rsatadi.")}</p>
 <div class="cta"><button class="btn btn-white" type="button" id="try-send">${ICON.tg}${t("Отправить выбор в Telegram", "Tanlovni Telegramga yuborish")}</button></div>
 <p class="note-ok" id="try-done" role="status" hidden></p>
 </div></div>
@@ -543,8 +541,7 @@ function showroomBlock(l) {
 /* ── Главная ──────────────────────────────────────────────────────────── */
 function home(l) {
   const t = T(l);
-  const body = `${TEX}
-${storyBlock(l)}
+  const body = `${storyBlock(l)}
 ${catalogBlock(l)}
 ${sizeBlock(l)}
 ${fabricBlock(l)}
@@ -564,7 +561,7 @@ function plan(l) {
   const comp = [
     [t("Цена на карточке, а не «по запросу»", "Narx kartochkada, «so‘rov bo‘yicha» emas"), t("Лучшие мебельные сайты Узбекистана показывают цену сразу. У вас она есть: мы подняли её на карточку и в историю.", "O‘zbekistonning eng yaxshi mebel saytlari narxni darhol ko‘rsatadi. Sizda u bor: biz uni kartochkaga va hikoyaga chiqardik.")],
     [t("Рассрочка на виду", "Muddatli to‘lov ko‘rinib turadi"), t("Uzum Nasiya и Alif у крупных магазинов мебели стоят прямо на карточке. Кресло за 2 700 000 сум проще купить частями.", "Yirik mebel do‘konlarida Uzum Nasiya va Alif to‘g‘ridan-to‘g‘ri kartochkada. 2 700 000 so‘mlik kresloni bo‘lib olish osonroq.")],
-    [t("Примерка цвета", "Rangni sinab ko‘rish"), t("Конкуренты показывают ткани списком. Здесь кресло перекрашивается на глазах, и выбор уходит в заказ.", "Raqobatchilar matolarni ro‘yxat qilib ko‘rsatadi. Bu yerda kreslo ko‘z oldida bo‘yaladi va tanlov buyurtmaga ketadi.")],
+    [t("Все 242 цвета на сайте", "Saytda barcha 242 rang"), t("Карты расцветок были картинкой без выбора. Теперь каждый образец можно открыть крупно, и его номер уходит в заказ.", "Ranglar kartalari tanlovsiz rasm edi. Endi har bir namunani katta ochish mumkin, uning raqami esa buyurtmaga ketadi.")],
     [t("Заказ в один шаг", "Bir qadamda buyurtma"), t("Вместо формы с корзиной WooCommerce: кнопка открывает ваш Telegram с готовым текстом.", "WooCommerce savatli forma o‘rniga: tugma tayyor matn bilan Telegramingizni ochadi.")],
     [t("Офисам отдельно", "Ofislarga alohida"), t("Корпоративные заказы дают большие чеки. У вас есть Carlsberg и IT Park: теперь у них есть своя форма.", "Korporativ buyurtmalar katta chek beradi. Sizda Carlsberg va IT Park bor: endi ularning o‘z formasi bor.")],
     [t("Шоурум по записи", "Oldindan yozilib shourum"), t("Ткань хочется потрогать. Запись в шоурум стала кнопкой, а не строкой мелким шрифтом в подвале.", "Matoni ushlab ko‘rgingiz keladi. Shourumga yozilish podvaldagi mayda qator emas, tugmaga aylandi.")],
@@ -598,7 +595,7 @@ ${head(t("Что взяли у конкурентов", "Raqobatchilardan nima o
 </div></section>
 <section id="foto"><div class="wrap">
 ${head(t("Изображения в прототипе", "Prototipdagi rasmlar"), t("Откуда снимки", "Suratlar qayerdan"), "")}
-<ul class="credits"><li>${t("Фото моделей, первого экрана, галереи и логотипы клиентов взяты с enotmebel.uz, со знаком Enotmebel. Мы ничего не дорисовывали и не увеличивали.", "Modellar, birinchi ekran, galereya fotolari va mijozlar logotiplari enotmebel.uz’dan, Enotmebel belgisi bilan olingan. Biz hech narsa chizmadik va kattalashtirmadik.")}</li><li>${t("Логотип Enotmebel перерисован в вектор по файлу с их сайта.", "Enotmebel logotipi ularning saytidagi fayl bo‘yicha vektorga qayta chizildi.")}</li><li>${t("Кресло в разрезе, шарики, ткани и схема доставки нарисованы кодом. Контур Узбекистана: Natural Earth, общественное достояние.", "Kesimdagi kreslo, sharchalar, matolar va yetkazish sxemasi kod bilan chizilgan. O‘zbekiston konturi: Natural Earth, jamoat mulki.")}</li><li>${t("Анимации по мотивам компонентов с 21st.dev под MIT: Magic UI (Marquee, Shimmer Button, Border Beam, Magic Card), motion-primitives (Tilt, Accordion), Magic UI (Border Beam). Код свой.", "Animatsiyalar 21st.dev’dagi MIT komponentlari asosida: Magic UI (Marquee, Shimmer Button, Border Beam, Magic Card), motion-primitives (Tilt, Accordion), Magic UI (Border Beam). Kod o‘zimizniki.")}</li></ul>
+<ul class="credits"><li>${t("Фото моделей, первого экрана, галереи и логотипы клиентов взяты с enotmebel.uz, со знаком Enotmebel. Мы ничего не дорисовывали и не увеличивали.", "Modellar, birinchi ekran, galereya fotolari va mijozlar logotiplari enotmebel.uz’dan, Enotmebel belgisi bilan olingan. Biz hech narsa chizmadik va kattalashtirmadik.")}</li><li>${t("Логотип Enotmebel перерисован в вектор по файлу с их сайта.", "Enotmebel logotipi ularning saytidagi fayl bo‘yicha vektorga qayta chizildi.")}</li><li>${t("Ткани: карты расцветок со страницы «Ткани» на enotmebel.uz, каждый образец вырезан как есть. Кресло в разрезе, шарики и схема доставки нарисованы кодом. Контур Узбекистана: Natural Earth, общественное достояние.", "Matolar: enotmebel.uz’dagi «Matolar» sahifasidagi ranglar kartalari, har bir namuna o‘zgarishsiz kesib olingan. Kesimdagi kreslo, sharchalar va yetkazish sxemasi kod bilan chizilgan. O‘zbekiston konturi: Natural Earth, jamoat mulki.")}</li><li>${t("Анимации по мотивам компонентов с 21st.dev под MIT: Magic UI (Marquee, Shimmer Button, Border Beam, Magic Card), motion-primitives (Tilt, Accordion), Magic UI (Border Beam). Код свой.", "Animatsiyalar 21st.dev’dagi MIT komponentlari asosida: Magic UI (Marquee, Shimmer Button, Border Beam, Magic Card), motion-primitives (Tilt, Accordion), Magic UI (Border Beam). Kod o‘zimizniki.")}</li></ul>
 </div></section>`;
   return shell(l, "plan", {
     title: t("Что дальше: было и стало, конструктор сайта | Enotmebel", "Keyingi qadam: edi va bo‘ldi, sayt konstruktori | Enotmebel"),

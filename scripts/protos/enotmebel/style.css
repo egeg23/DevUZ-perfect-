@@ -185,14 +185,17 @@ section{padding:64px 0}
 /* Ткани растут столбиками, по мотивам ламинаций Engelberg */
 .st-fab{background:var(--bg);color:var(--fg)}
 .fab-row{position:absolute;left:16px;right:16px;bottom:44%;height:30%;display:flex;align-items:flex-end;gap:8px}
-@media (min-width:820px){.fab-row{left:auto;right:6vw;width:min(56vw,760px);bottom:16%;height:62%;gap:16px}}
-.fab-c{position:relative;flex:1;height:calc(var(--h) * 100%);transform-origin:50% 100%;opacity:0;visibility:hidden;will-change:transform,opacity}
-.fab-c svg{width:100%;height:100%;border-radius:14px;box-shadow:0 24px 40px -24px rgb(20 24 42 / .6)}
-.fab-c b{position:absolute;left:0;right:0;top:calc(100% + 8px);font:700 12px/1.25 var(--text);color:var(--fg);overflow-wrap:anywhere}
-.fab-c small{display:none}
+@media (min-width:820px){.fab-row{left:auto;right:6vw;width:min(48vw,720px);bottom:16%;height:62%;gap:16px}}
+.fab-c{position:relative;flex:1;height:calc(var(--h) * 100%);opacity:0;visibility:hidden;will-change:transform,opacity}
+.fab-win{position:absolute;inset:0;overflow:hidden;border-radius:14px;box-shadow:0 24px 40px -24px rgb(20 24 42 / .6)}
+.fab-st{display:flex;flex-direction:column;will-change:transform;transform:translate3d(0,100%,0)}
+.fab-st img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.fab-l{position:absolute;left:0;right:-4px;top:calc(100% + 8px);display:grid;gap:4px}
+.fab-l b{font:700 12px/1.25 var(--text);color:var(--fg);overflow-wrap:anywhere}
+.fab-l small{display:none;font-size:12px;line-height:1.35;color:var(--mut)}
+@media (min-width:820px){.fab-l b{font:400 20px/1.05 var(--head)}.fab-l small{display:block}}
 .fab-c em{position:absolute;right:8px;top:8px;width:28px;height:28px;border-radius:50%;background:rgb(255 255 255 / .9);color:var(--blue);display:grid;place-items:center}
-.fab-c em svg{width:16px;height:16px;box-shadow:none;border-radius:0}
-@media (min-width:820px){.fab-c b{font:400 24px/1.1 var(--head)}.fab-c small{display:block;position:absolute;left:0;top:calc(100% + 36px);font-size:12px;color:var(--mut)}}
+.fab-c em svg{width:16px;height:16px}
 .st-fab .st-beat{color:var(--fg)}
 /* Офисы: снимки в рамке и логотипы на стекле */
 .st-off{background:radial-gradient(90% 70% at 70% 50%,#1f2745 0%,var(--ink) 72%)}
@@ -311,10 +314,9 @@ section{padding:64px 0}
 .try{display:grid;gap:24px}
 @media (min-width:900px){.try{grid-template-columns:1fr 1fr;align-items:center;gap:48px}}
 .try-pv{display:grid;justify-items:center;gap:12px}
-.try-pear{width:min(78vw,420px);transition:color 400ms ease}
-.try-pear .pear{width:100%;height:auto}
-.try-pear.swap .pear{animation:jelly 620ms var(--spring)}
-@keyframes jelly{0%{transform:scale(1,1)}30%{transform:scale(1.06,.92)}60%{transform:scale(.97,1.04)}100%{transform:none}}
+.sw-big{width:100%;display:grid;place-items:center}
+.sw-big img{width:100%;height:auto;border-radius:18px;box-shadow:0 30px 60px -24px rgb(0 0 0 / .7)}
+.sw-big img.swap{animation:popin 420ms var(--ease) both}
 .try-lbl{font-size:14px;color:var(--on2)}
 .try-lbl b{color:var(--on)}
 .try-ctl{display:grid;gap:20px}
@@ -322,19 +324,23 @@ section{padding:64px 0}
 .try legend{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--on2);margin-bottom:10px}
 .try-fabs{display:grid;gap:8px}
 @media (min-width:640px){.try-fabs{grid-template-columns:1fr 1fr}}
-.fb{position:relative;display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 14px;border-radius:14px;background:rgb(246 241 234 / .06);box-shadow:inset 0 0 0 1px rgb(246 241 234 / .12);cursor:pointer}
-.fb input,.cl input{position:absolute;opacity:0;pointer-events:none}
+.fb{position:relative;display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 14px;border-radius:14px;background:rgb(246 241 234 / .06);box-shadow:inset 0 0 0 1px rgb(246 241 234 / .12);cursor:pointer}
+.fb input{position:absolute;opacity:0;pointer-events:none}
+.fb>img{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none}
 .fb span{display:grid;flex:1}
 .fb b{font-size:14px}
 .fb small{font-size:12px;color:var(--on2)}
 .fb em{color:var(--sky);display:grid}
 .fb em svg{width:18px;height:18px}
 .fb:has(input:checked){box-shadow:inset 0 0 0 2px var(--sky);background:rgb(126 162 255 / .12)}
-.fb:has(input:focus-visible),.cl:has(input:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
-.try-cols{display:flex;flex-wrap:wrap;gap:10px}
-.cl{position:relative;width:44px;height:44px;cursor:pointer;border-radius:50%}
-.cl span{display:block;width:100%;height:100%;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 2px rgb(255 255 255 / .2);transition:transform 200ms var(--spring)}
-.cl:has(input:checked) span{transform:scale(.8);box-shadow:0 0 0 3px var(--ink2),0 0 0 5px var(--on)}
+.fb:has(input:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px;max-height:252px;overflow-y:auto;padding:4px;overscroll-behavior:contain}
+.swc{position:relative;cursor:pointer;display:grid;gap:2px;justify-items:center}
+.swc input{position:absolute;opacity:0;pointer-events:none}
+.swc img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;transition:transform 200ms var(--spring)}
+.swc span{font-size:12px;color:var(--on2)}
+.swc:has(input:checked) img{transform:scale(.88);box-shadow:0 0 0 3px var(--ink2),0 0 0 5px var(--on)}
+.swc:has(input:focus-visible) img{outline:3px solid var(--gold);outline-offset:2px}
 .try .field select{background:rgb(246 241 234 / .06);border-color:rgb(246 241 234 / .2);color:var(--on)}
 .try .field select option{color:var(--fg)}
 .fill-list{display:grid;gap:12px;margin-top:56px}
