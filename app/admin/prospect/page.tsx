@@ -52,7 +52,7 @@ export default async function ProspectPage({
   const locale = staff.panel_locale;
   const t = pick(prospectPageDict, locale);
   const closeLabel = pick(closeLabelDict, locale);
-  const textsLink = pick(letterTextsDict, locale).link;
+  const texts = pick(letterTextsDict, locale);
   // Автопоиск ведут владелец и руководитель; менеджеру он приходит порцией.
   const seesMaps = staff.role === "admin" || staff.role === "head";
   const [campaigns, mapsUsage, mapsPending, mapsReady] = seesMaps
@@ -110,12 +110,17 @@ export default async function ProspectPage({
       <h1 className="text-lg font-semibold">{t.title}</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro}</p>
       {/* Свои тексты писем и A/B (lib/admin/letter-texts.ts) — каждому: это
-          его касания. */}
-      <p className="mt-2 text-sm">
-        <Link href="/admin/prospect/texts" className="text-green hover:underline">
-          {textsLink}
+          его касания. Кнопкой, а не ссылкой: владелец, 11.10.2026, «чтобы её
+          прям было видно» — ссылку в строку менеджеры не замечали. */}
+      <div className="mt-4 flex max-w-2xl flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-green/40 bg-green/5 px-4 py-3">
+        <Link
+          href="/admin/prospect/texts"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-green px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-green-dim"
+        >
+          ✍️ {texts.link} →
         </Link>
-      </p>
+        <p className="min-w-0 flex-1 basis-60 text-xs leading-relaxed text-muted">{texts.linkHint}</p>
+      </div>
 
       <TouchPlanLine progress={plan} />
 
