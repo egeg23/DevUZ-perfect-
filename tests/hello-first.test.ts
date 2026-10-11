@@ -33,7 +33,7 @@ import { LETTER_AFTER_REPLY } from "@/lib/admin/autopilot";
 import { circleProblem } from "@/lib/admin/circle-rules";
 import { translationProblems } from "@/lib/admin/letter-translate";
 import { readInbound } from "@/lib/admin/outreach-talk";
-import { OUTREACH_SYSTEM, outreachPrompt } from "@/lib/admin/outreach";
+import { foreignScript, OUTREACH_SYSTEM, outreachPrompt } from "@/lib/admin/outreach";
 import { NOSITE_SYSTEM } from "@/lib/admin/outreach-nosite";
 
 const read = (file: string) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
@@ -175,6 +175,26 @@ test("перевод письма не добавляет фактов", () => {
   const source = "Посмотрели almazmed.uz: с телефона сайт открывается в масштабе монитора, из 100 посетителей теряется 20–35. Собрать вам прототип за 12 часов?";
   assert.deepEqual(translationProblems("almazmed.uz saytini ko‘rdik: telefonda sayt monitor masshtabida ochiladi, 100 tashrifchidan 20–35 tasi yo‘qoladi. 12 soatda prototip yig‘ib beraylikmi?", source, "almazmed.uz"), []);
   assert.ok(translationProblems("almazmed.uz saytini ko‘rdik: 100 tashrifchidan 50 tasi yo‘qoladi, 12 soatda prototip yig‘ib beraylikmi? Bu juda muhim masala.", source, "almazmed.uz").some((p) => p.startsWith("числа")));
+});
+
+/**
+ * 11.10.2026, maktabtop.uz: узбекский перевод ушёл клиенту со словом
+ * «raqibларга» — половина латиницей, половина кириллицей.
+ */
+test("узбекский перевод без кириллицы и без слов из двух алфавитов", () => {
+  const source = "Посмотрели maktabtop.uz: на сайте не видно номера телефона, те, кто хотел позвонить, звонят конкурентам. Собрать вам прототип за 12 часов?";
+  const good = "maktabtop.uz saytini koʻrib chiqdik: saytda telefon raqami koʻrinmayapti, qoʻngʻiroq qilmoqchi boʻlganlar raqiblarga qoʻngʻiroq qilishyapti. 12 soatda prototip tayyorlab beraylikmi?";
+  assert.deepEqual(translationProblems(good, source, "maktabtop.uz", "uz"), []);
+  const mixed = good.replace("raqiblarga", "raqibларга");
+  assert.ok(translationProblems(mixed, source, "maktabtop.uz", "uz").some((p) => p.includes("raqibларга")));
+  const russianWord = good.replace("raqiblarga", "конкурентам");
+  assert.ok(translationProblems(russianWord, source, "maktabtop.uz", "uz").some((p) => p.startsWith("кириллица")));
+  // Название компании кириллицей из исходного письма — можно.
+  const named = "Посмотрели сайт «Мактаб Топ» maktabtop.uz: на сайте не видно номера телефона. Собрать вам прототип за 12 часов?";
+  assert.deepEqual(translationProblems("«Мактаб Топ» maktabtop.uz saytini koʻrib chiqdik: saytda telefon raqami koʻrinmayapti. 12 soatda prototip tayyorlab beraylikmi?", named, "maktabtop.uz", "uz"), []);
+  // Перед отправкой то же слово держит и проверка письма.
+  assert.deepEqual(foreignScript(mixed), ["raqibларга"]);
+  assert.deepEqual(foreignScript("Сделаем IT-школе сайт и SEO-продвижение в Telegram-канале"), []);
 });
 
 test("кружок загружают в «Аккаунтах», в «Избранное» его кладёт скаут", () => {
