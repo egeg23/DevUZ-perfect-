@@ -315,7 +315,7 @@ test("Enotmebel: главная и «Что дальше» на ru и uz — у�
   }
   for (const path of ["", "uz"]) {
     assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
-    assert.match(all[path], /id="en-mask"[\s\S]*class="en-slit"/, `${path}: нет влёта в букву «O»`);
+    assert.match(all[path], /class="en-cv"[^>]*data-paths=/, `${path}: нет влёта в букву «O»`);
     assert.match(all[path], /id="story"[\s\S]*data-beads|data-k="beads"/, `${path}: нет шариков наполнителя`);
     assert.match(all[path], /class="st-static/, `${path}: у истории нет списка для тех, у кого движение выключено`);
     assert.match(all[path], /id="mgrid"/, `${path}: нет каталога`);

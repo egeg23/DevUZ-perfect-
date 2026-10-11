@@ -27,7 +27,7 @@ var BURST=2500,OPEN=3050;
 /* ENOT: от конца промо. */
 var M_TURN=1900,M_FLY=2250,M_END=3500;
 
-var cv=box.querySelector('.dz-code'),cx=cv&&cv.getContext('2d'),dpr=1,bits=[];
+var cv=box.querySelector('.dz-code'),cx=cv&&cv.getContext('2d'),dpr=1,bits=[],bitsDone=false;
 function resize(){if(!cx)return;dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(innerWidth*dpr);cv.height=Math.round(innerHeight*dpr);cx.setTransform(dpr,0,0,dpr,0,0)}
 resize();addEventListener('resize',resize);
 var GL=['</>','{ }','=>','( )','[ ]','&&','::','/*','*/','<>','01','10','#',';','|','$','~','!=','++','·'],SPARK=['#22f0a0','#5b9bff','#e8b14c'],INK=['#eaf0f7','#22f0a0','#5b9bff','#8b97a8','#e8b14c'];
@@ -49,13 +49,44 @@ function paint(dt){
 }
 
 /* ENOT: координаты — единицы логотипа (800 × 127), слово ENOT от 0 до 341.
-   Центр внутреннего круга «O» — EYE, его радиус — HOLE. */
-var svg=box.querySelector('.en-svg'),g=svg&&svg.querySelector('.en-cam'),img=svg&&svg.querySelector('.en-img');
-var clips=svg?[].slice.call(svg.querySelectorAll('.en-cp')):[],edges=svg?[].slice.call(svg.querySelectorAll('.en-edge')):[];
+   Центр внутреннего круга «O» — EYE, его радиус — HOLE.
+   Рисует canvas, а не SVG с маской: на подлёте к «O» SVG перерисовывал
+   маску, картинку и контур затемнения во весь экран на каждом кадре, и
+   влёт подлагивал. Canvas рисует буквы вектором (на любом увеличении
+   чёткие), картинку вписывает в буквы наложением (source-in, без маски),
+   а что ушло за край экрана, просто не рисуется. */
+var cvs=box.querySelector('.en-cv'),ctx=cvs&&cvs.getContext('2d'),G=[],HOLEP=null,pic=null,cw=0,ch=0,cd=1;
+if(cvs&&ctx&&typeof Path2D==='function'){
+  try{var P=JSON.parse(cvs.dataset.paths);G=P.g.map(function(d){return new Path2D(d)});HOLEP=new Path2D(P.hole)}catch(e){G=[]}
+  pic=new Image();pic.decoding='async';pic.src=cvs.dataset.img;
+}
+function sizeCv(){if(!cvs)return;cd=Math.min(devicePixelRatio||1,2);cw=innerWidth;ch=innerHeight;cvs.width=Math.round(cw*cd);cvs.height=Math.round(ch*cd)}
+sizeCv();addEventListener('resize',sizeCv);
 var MID=[170.6,66],EYE=[216.95,72.9],HOLE=20.6;
 /* Откуда прилетает каждая буква: сдвиг в единицах логотипа и поворот. */
 var FROM=[[-260,30,-12],[0,-230,0],[0,220,0],[30,-330,28]];
 function base(){var w=innerWidth,s=Math.min(w*.8,860)/350;return {s:Math.max(.6,s),cx:w/2,cy:innerHeight*.45}}
+/* Кадр ENOT: cam — [x, y, масштаб, px, py], pose — сдвиг и поворот букв,
+   pan — сдвиг картинки, slit — насколько прозрачен круг «O». */
+function drawEnot(cam,pose,pan,slit){
+  if(!ctx||!G.length)return;
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  var T=function(){ctx.setTransform(cd,0,0,cd,0,0);ctx.translate(cam[0],cam[1]);ctx.scale(cam[2],cam[2]);ctx.translate(-cam[3],-cam[4])};
+  /* 1. Буквы: заливка и обводка 9 единиц, как было в маске. */
+  T();ctx.fillStyle='#fff';ctx.strokeStyle='#fff';ctx.lineWidth=9;ctx.lineJoin='round';
+  for(var i=0;i<G.length;i++){var p=pose[i];ctx.save();ctx.translate(p[0],p[1]);if(p[2]){ctx.translate(170,72);ctx.rotate(p[2]*Math.PI/180);ctx.translate(-170,-72)}ctx.fill(G[i],i===2?'evenodd':'nonzero');ctx.stroke(G[i]);ctx.restore()}
+  /* 2. Внутри букв: подложка и кадр с креслом, только там, где буквы. */
+  ctx.globalCompositeOperation='source-in';ctx.fillStyle='#1c2b5c';ctx.fillRect(-60,-80,480,280);
+  ctx.globalCompositeOperation='source-atop';
+  if(pic&&pic.complete&&pic.naturalWidth)ctx.drawImage(pic,-20+pan,-58,380,224.4);
+  /* 3. Затемнение вокруг: всё, кроме круга «O»; круг закрыт, пока slit < 1. */
+  ctx.globalCompositeOperation='destination-over';ctx.fillStyle='#0b1120';
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.save();T();var r=new Path2D();r.rect(cam[3]-cam[0]/cam[2]-1,cam[4]-cam[1]/cam[2]-1,cw/cam[2]+2,ch/cam[2]+2);r.addPath(HOLEP);ctx.fill(r,'evenodd');
+  if(slit<1){ctx.globalAlpha=1-slit;ctx.fill(HOLEP)}
+  ctx.restore();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+}
 
 var raf=0,ended=false,mStart=-1;
 var start=performance.now()-Math.min(Math.max(performance.now()-900,0),1800);
@@ -68,7 +99,6 @@ function finish(){
 function toMark(){var now=performance.now();if(now-start<OPEN)start=now-OPEN}
 function onKey(e){if(e.key==='Escape')finish()}
 var last=performance.now();
-function place(i,tf){clips[i]&&clips[i].setAttribute('transform',tf);edges[i]&&edges[i].setAttribute('transform',tf)}
 function frame(now){
   var t=now-start,dt=Math.min(now-last,48);last=now;
   /* Промо */
@@ -89,27 +119,27 @@ function frame(now){
   set('--dz-flash',span(t,BURST-50,BURST+20)*(1-span(t,BURST+20,BURST+300)));
   set('--in-skip',span(t,620,1000));
   if(t>=BURST&&!bits.length){var mk=box.querySelector('.dz-mark').getBoundingClientRect();bits=makeBits(mk.left+mk.width/2,mk.top+mk.height/2)}
-  if(bits.length&&t<OPEN+2600)paint(dt);
+  /* Символы промо гаснут сами; когда погасли все, холст больше не трогаем. */
+  if(bits.length&&!bitsDone){paint(dt);bitsDone=bits.every(function(b){return b.age>b.life});if(bitsDone&&cx)cx.clearRect(0,0,cv.width/dpr,cv.height/dpr)}
   /* ENOT */
-  if(t>=OPEN-200&&g){
+  if(t>=OPEN-200&&cvs){
     if(mStart<0)mStart=OPEN-200;
-    var m=t-mStart,B=base();
+    var m=t-mStart,B=base(),pose=[];
     set('--en-on',span(m,0,360));
     for(var i=0;i<4;i++){
       var a=60+i*140,k=i===3?bounce(span(m,a,a+900)):out3(span(m,a,a+680)),f=FROM[i];
-      place(i,'translate('+(f[0]*(1-k)).toFixed(2)+' '+(f[1]*(1-k)).toFixed(2)+') rotate('+(f[2]*(1-k)).toFixed(2)+' 170 72)');
+      pose.push([f[0]*(1-k),f[1]*(1-k),f[2]*(1-k)]);
     }
-    /* Кадр внутри букв плывёт слева направо. */
-    if(img)img.setAttribute('transform','translate('+(-14+28*span(m,0,M_END)).toFixed(2)+' 0)');
     set('--en-cap',span(m,1000,1350)*(1-span(m,M_TURN,M_TURN+300)));
-    set('--en-slit',span(m,M_TURN-150,M_TURN+350));
+    var slit=span(m,M_TURN-150,M_TURN+350);set('--en-slit',slit);
     /* Камера: «O» уходит в центр экрана, круг растёт, пока не накроет экран. */
     var turn=ease(span(m,M_TURN,M_FLY+200)),fly=ease(span(m,M_FLY,M_END));
     var cover=Math.hypot(innerWidth,innerHeight)/(2*HOLE)*1.08;
     var sc=B.s*Math.exp(Math.log(cover/B.s)*fly);
     var px=MID[0]+(EYE[0]-MID[0])*turn,py=MID[1]+(EYE[1]-MID[1])*turn;
     var x=B.cx,y=B.cy+(innerHeight/2-B.cy)*turn;
-    g.setAttribute('transform','translate('+x.toFixed(1)+' '+y.toFixed(1)+') scale('+sc.toFixed(4)+') translate('+(-px).toFixed(2)+' '+(-py).toFixed(2)+')');
+    /* Кадр внутри букв плывёт слева направо. */
+    drawEnot([x,y,sc,px,py],pose,-14+28*span(m,0,M_END),slit);
     if(m>=M_END-140)heroOn();
     if(m>=M_END+60){finish();return}
   }
