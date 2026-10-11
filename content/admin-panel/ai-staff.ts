@@ -1,8 +1,9 @@
 import { defineDict } from "@/lib/admin/i18n";
 
 /**
- * Раздел «ИИ-сотрудники» (/admin/ai-staff) — только владельцу: клиенты
- * сервиса по подписке, их расход и оплаты (docs/ai-staff/design.md).
+ * Раздел «ИИ-сотрудники» (/admin/ai-staff), вкладка клиентов сервиса — только
+ * владельцу: клиенты по подписке, их расход и оплаты (docs/ai-staff/design.md).
+ * Вкладка «Блогеры» — content/admin-panel/ai-staff-bloggers.ts.
  *
  * Названия тарифов — Tr-таблица PLAN_TITLE в lib/ai-staff/plans.ts: «Старт»
  * в этом словаре столкнулся бы с кнопкой бота «Старт» в инструкции.

@@ -118,6 +118,8 @@ services:
       AI_STAFF_MODEL: ${AI_STAFF_MODEL:-}
       AI_STAFF_PREMIUM_MODEL: ${AI_STAFF_PREMIUM_MODEL:-}
       AI_STAFF_IMPORT_MODEL: ${AI_STAFF_IMPORT_MODEL:-}
+      # ИИ-сотрудник «Блогеры»: оценка блога (по умолчанию Haiku), docs/ai-staff/bloggers.md.
+      BLOGGER_MODEL: ${BLOGGER_MODEL:-}
       AI_STAFF_UZS_PER_USD: ${AI_STAFF_UZS_PER_USD:-}
       AI_STAFF_BOT_TOKEN: ${AI_STAFF_BOT_TOKEN:-}
       AI_STAFF_BOT_USERNAME: ${AI_STAFF_BOT_USERNAME:-}

@@ -140,9 +140,12 @@ export const SECTIONS: readonly Section[] = [
   // Только владельцу: отчёт, о котором знают, меряет не работу, а
   // старание выглядеть в нём хорошо.
   { href: "/admin/usage", label: { ru: "Использование", uz: "Foydalanish", pl: "Użycie" }, roles: ADMIN_ONLY },
-  // ИИ-сотрудники по подписке — только владельцу: деньги клиентов сервиса,
-  // их сроки и вход поддержки в чужой кабинет (docs/ai-staff/design.md).
-  { href: "/admin/ai-staff", label: { ru: "ИИ-сотрудники", uz: "SI xodimlar", pl: "Pracownicy AI" }, roles: ADMIN_ONLY },
+  // ИИ-сотрудники — владельцу и руководителю. Владелец, 11.10.2026: вкладка
+  // «Блогеры» (внутренний ИИ-сотрудник студии, docs/ai-staff/bloggers.md) —
+  // всем, кто видит раздел. Клиенты сервиса по подписке — их деньги, сроки и
+  // вход поддержки в чужой кабинет (docs/ai-staff/design.md) — остаются
+  // только владельцу: эту вкладку закрывает сама страница.
+  { href: "/admin/ai-staff", label: { ru: "ИИ-сотрудники", uz: "SI xodimlar", pl: "Pracownicy AI" }, roles: WITH_HEAD },
   // Инструкции — последними: это справка, а не ежедневная работа. Видят все,
   // и каждый читает только про свои вкладки.
   { href: "/admin/help", label: { ru: "Инструкции", uz: "Yo‘riqnoma", pl: "Instrukcje" }, roles: EVERYONE },

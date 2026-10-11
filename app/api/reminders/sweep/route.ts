@@ -37,6 +37,7 @@ import { banSweep } from "@/lib/admin/account-ban-sweep";
 import { runAdsPass } from "@/lib/ads/run";
 import { runDailyReports as runAiStaffReports } from "@/lib/ai-staff/report";
 import { refreshInstagramTokens } from "@/lib/ai-staff/instagram";
+import { bloggerPass } from "@/lib/bloggers/run";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -327,6 +328,13 @@ async function sweep(): Promise<Response> {
     // Токены Instagram живут 60 дней — продлеваем за 15 дней до конца.
     // Нет приложения Meta в секретах — ни одного запроса.
     await refreshInstagramTokens(new Date()).catch((error) => console.error("ИИ-сотрудники, токены Instagram:", error));
+  });
+  // ИИ-сотрудник «Блогеры» (lib/bloggers/run.ts): оценить до трёх найденных
+  // и, если очередь пуста, один поиск Firecrawl из своей дневной доли.
+  // Агент выключен в панели — один запрос к настройкам.
+  after(async () => {
+    const bloggers = await bloggerPass(new Date()).catch((error) => ({ errors: [String(error)] }));
+    if (bloggers.errors.length) console.error("блогеры:", bloggers.errors.join("; "));
   });
   // Поиск лидов через Firecrawl — своей очередью: до двух кредитов за проход
   // из дневного лимита (lib/firecrawl.ts), на контакты тех, кому писать

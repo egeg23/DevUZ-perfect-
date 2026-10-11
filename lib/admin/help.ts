@@ -121,6 +121,7 @@ export const PAGE_TOPICS: readonly { prefix: string; section: string; item: stri
   { prefix: "/admin/razbor/", section: "/admin/razbor", item: "review" },
   { prefix: "/admin/partners/", section: "/admin/partners", item: "promo" },
   { prefix: "/admin/prospect/", section: "/admin/prospect", item: "texts" },
+  { prefix: "/admin/ai-staff/", section: "/admin/ai-staff", item: "bloggers-agent" },
 ];
 
 /** Куда ведёт «Как пользоваться разделом» с этой страницы. null — страница без инструкции. */

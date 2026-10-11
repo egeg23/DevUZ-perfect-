@@ -1,4 +1,7 @@
 import { connectServiceBot, extendTrial, makeShowcase, markPaid, openCabinet, setStatus, toggleService } from "@/app/admin/ai-staff/actions";
+import { redirect } from "next/navigation";
+
+import { AiStaffTabs } from "@/app/admin/ai-staff/tabs";
 import { AdminShell } from "@/components/admin/shell";
 import { aiStaffDict } from "@/content/admin-panel/ai-staff";
 import { requireSection } from "@/lib/admin/guard";
@@ -22,6 +25,10 @@ const BTN = "rounded-md border border-line px-2.5 py-1 text-xs text-muted hover:
  */
 export default async function AiStaffPage({ searchParams }: { searchParams: Promise<{ n?: string; d?: string }> }) {
   const staff = await requireSection("/admin/ai-staff");
+  // Раздел видит и руководитель (и тот, кому владелец открыл его галочкой),
+  // но клиенты сервиса — деньги и подписки — только владельцу: остальным
+  // сразу открывается вкладка «Блогеры».
+  if (staff.role !== "admin") redirect("/admin/ai-staff/bloggers");
   const t = pick(aiStaffDict, staff.panel_locale);
   const q = await searchParams;
   const now = new Date();
@@ -59,9 +66,10 @@ export default async function AiStaffPage({ searchParams }: { searchParams: Prom
   return (
     <AdminShell staff={staff}>
       <div className="space-y-5">
-        <div>
+        <div className="space-y-3">
           <h1 className="text-xl font-semibold">{t.title}</h1>
-          <p className="mt-1 text-sm text-muted">{t.intro}</p>
+          <AiStaffTabs role={staff.role} locale={staff.panel_locale} current="clients" />
+          <p className="text-sm text-muted">{t.intro}</p>
         </div>
         {q.n === "bot_ok" ? <p className="text-sm text-green">{t.botOk}</p> : null}
         {q.n === "bot_nobiz" ? <p className="text-sm text-gold">{t.botNoBusiness}</p> : null}
