@@ -158,6 +158,7 @@ const row = (over: Partial<Prospect>): Prospect => ({
   touched_by: null,
   touched_at: null,
   sent_at: null,
+  sent_via: null,
   delivered_at: null,
   delivery_note: null,
   failure: null,

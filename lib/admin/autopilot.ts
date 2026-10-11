@@ -184,7 +184,7 @@ export const REPLY_MARK = "🤖 Ответ на касание автопрог�
 
 /** Шапка карточки лида в очереди: откуда лид и что клиент ответил. */
 export function replyHeading(
-  input: { host: string | null; label: string | null; words: string; niche: string | null },
+  input: { host: string | null; label: string | null; words: string; niche: string | null; account?: string | null },
   escape: (s: string) => string,
 ): string {
   const who = input.host ?? input.label ?? "компания без сайта";
@@ -193,6 +193,8 @@ export function replyHeading(
   return [
     `<b>${REPLY_MARK}</b> · ${escape(who)}`,
     input.niche ? `Ниша: ${escape(input.niche)}` : "",
+    // С какого аккаунта писали: взявший отвечает оттуда же.
+    input.account ? `Аккаунт: ${escape(input.account)}` : "",
     `Клиент ответил: «${escape(short)}»`,
     "Первое письмо и переписка — в карточке лида. Взяли — лид и разговор ваши: модель продолжит от вашего имени, «Отвечать самому» — в карточке.",
   ]

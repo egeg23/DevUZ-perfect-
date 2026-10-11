@@ -14,7 +14,8 @@ import { announcePrototype } from "@/lib/admin/prototype-claim-store";
 import { offerLead, routeAutopilotReply } from "@/lib/admin/autopilot-reply";
 import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
-import { MAIN_ACCOUNT, accountOf } from "@/lib/admin/work-accounts";
+import { MAIN_ACCOUNT, accountOf, sentFrom, sentFromText } from "@/lib/admin/work-accounts";
+import { accountTags } from "@/lib/admin/work-accounts-store";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 import { detectLang } from "@/lib/talk/language";
@@ -745,7 +746,7 @@ export async function tellManager(
 
   const { data: p } = await db
     .from("prospects")
-    .select("claimed_by, handled_by, lead_id, host, status, closed_reason")
+    .select("claimed_by, handled_by, lead_id, host, status, closed_reason, sent_via, target_kind")
     .eq("id", prospectId)
     .maybeSingle();
   const to = p?.handled_by ?? p?.claimed_by;
@@ -763,7 +764,10 @@ export async function tellManager(
   if (!wants(staff?.notify_off as string[] | null, "talks")) return false;
 
   const link = p.lead_id ? `\n\n${siteUrl}/admin/leads/${p.lead_id}` : "";
-  const body = `<b>Касание · ${esc(String(p.host))}</b>\n${esc(text)}${link}`;
+  // С какого аккаунта разговор: отвечать клиенту — оттуда же.
+  const from = sentFrom({ sent_via: p.sent_via as string | null, target_kind: p.target_kind as string | null }, await accountTags());
+  const via = from ? `\nАккаунт: ${esc(sentFromText(from))}` : "";
+  const body = `<b>Касание · ${esc(String(p.host))}</b>${via}\n${esc(text)}${link}`;
   // Под ответом клиента — «Клиент отказался»: «не интересно» читают здесь,
   // и закрыть касание надо там же, не открывая панель.
   if (options.refuse && canClose({ status: String(p.status), closed_reason: p.closed_reason as string | null })) {
@@ -975,6 +979,8 @@ export type TalkView = {
   aiHandling: boolean;
   handoverReason: string | null;
   target: string | null;
+  /** С какого аккаунта идёт разговор (sentFrom); null — «Написал сам». */
+  from: { label: string | null; handle: string | null } | null;
   lines: { direction: "in" | "out"; author: "staff" | "ai"; body: string; created_at: string }[];
 };
 
@@ -993,17 +999,20 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
 
   const { data: p } = await db
     .from("prospects")
-    .select("id, host, target, ai_handling, handover_reason")
+    .select("id, host, target, ai_handling, handover_reason, sent_via, target_kind")
     .eq("lead_id", leadId)
     .maybeSingle();
   if (!p) return null;
 
-  const { data } = await db
-    .from("outreach_messages")
-    .select("direction, author, body, created_at")
-    .eq("prospect_id", p.id)
-    .order("created_at", { ascending: true })
-    .limit(100);
+  const [{ data }, tags] = await Promise.all([
+    db
+      .from("outreach_messages")
+      .select("direction, author, body, created_at")
+      .eq("prospect_id", p.id)
+      .order("created_at", { ascending: true })
+      .limit(100),
+    accountTags(),
+  ]);
 
   return {
     prospectId: String(p.id),
@@ -1011,6 +1020,7 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
     aiHandling: Boolean(p.ai_handling),
     handoverReason: (p.handover_reason as string | null) ?? null,
     target: (p.target as string | null) ?? null,
+    from: sentFrom({ sent_via: p.sent_via as string | null, target_kind: p.target_kind as string | null }, tags),
     lines: (data ?? []).map((row) => ({
       direction: row.direction as "in" | "out",
       author: (row.author as "staff" | "ai") ?? "ai",

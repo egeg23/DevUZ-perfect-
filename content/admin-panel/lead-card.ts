@@ -286,6 +286,18 @@ export const leadCardDict = defineDict({
   client: { ru: "клиент", uz: "mijoz", pl: "klient" },
   aiForUs: { ru: "ИИ от нашего имени", uz: "SI bizning nomimizdan", pl: "AI w naszym imieniu" },
   you: { ru: "вы", uz: "siz", pl: "Ty" },
+  /**
+   * С какого рабочего аккаунта (sentFrom): `null` — главный, пусто — аккаунта
+   * в базе уже нет. Название и ник — как в «Аккаунтах», не переводятся.
+   */
+  from: {
+    ru: (label: string | null, handle: string | null) =>
+      label === null ? "с главного аккаунта" : label ? `с аккаунта «${label}»${handle ? ` ${handle}` : ""}` : "с рабочего аккаунта",
+    uz: (label: string | null, handle: string | null) =>
+      label === null ? "asosiy akkauntdan" : label ? `«${label}» akkauntidan${handle ? ` (${handle})` : ""}` : "ish akkauntidan",
+    pl: (label: string | null, handle: string | null) =>
+      label === null ? "z konta głównego" : label ? `z konta «${label}»${handle ? ` ${handle}` : ""}` : "z konta firmowego",
+  },
   talkEmpty: {
     ru: "Письмо ушло, ответа пока нет. Как ответит — первичку подхватит ИИ, а вы увидите разговор здесь.",
     uz: "Xat yuborildi, hozircha javob yo‘q. Javob kelishi bilan birlamchi suhbatni SI olib boradi, siz esa suhbatni shu yerda ko‘rasiz.",
@@ -306,6 +318,12 @@ export const leadCardDict = defineDict({
     ru: "писать нужно с рабочего аккаунта студии — с него ушло письмо, и для клиента это один собеседник",
     uz: "studiyaning ish akkauntidan yozish kerak — xat undan ketgan, mijoz uchun esa bu bitta suhbatdosh",
     pl: "pisz z firmowego konta studia — z niego wyszła wiadomość, a dla klienta to jeden rozmówca",
+  },
+  /** То же, когда известно, с какого аккаунта: `from` — уже готовое «с аккаунта «…»». */
+  telegramFrom: {
+    ru: (from: string) => `писать нужно ${from} — с него ушло письмо, и для клиента это один собеседник`,
+    uz: (from: string) => `${from} yozish kerak — xat undan ketgan, mijoz uchun esa bu bitta suhbatdosh`,
+    pl: (from: string) => `pisz ${from} — z niego wyszła wiadomość, a dla klienta to jeden rozmówca`,
   },
 
   // ── Переписка с клиентом ──

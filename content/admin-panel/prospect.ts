@@ -747,6 +747,18 @@ export const outreachListDict = defineDict({
   sentToQueue: { ru: "Отправлено в очередь", uz: "Navbatga yuborildi", pl: "Dodano do kolejki" },
   sent: { ru: "Отправлено", uz: "Yuborildi", pl: "Wysłano" },
   contacted: { ru: "Связались", uz: "Bog‘lanildi", pl: "Kontakt nawiązany" },
+  /**
+   * С какого рабочего аккаунта ушло (sentFrom): `null` — главный, пусто —
+   * аккаунта в базе уже нет. Название и ник — как в «Аккаунтах».
+   */
+  sentFrom: {
+    ru: (label: string | null, handle: string | null) =>
+      label === null ? "с главного аккаунта" : label ? `с аккаунта «${label}»${handle ? ` ${handle}` : ""}` : "с рабочего аккаунта",
+    uz: (label: string | null, handle: string | null) =>
+      label === null ? "asosiy akkauntdan" : label ? `«${label}» akkauntidan${handle ? ` (${handle})` : ""}` : "ish akkauntidan",
+    pl: (label: string | null, handle: string | null) =>
+      label === null ? "z konta głównego" : label ? `z konta «${label}»${handle ? ` ${handle}` : ""}` : "z konta firmowego",
+  },
   delivered: {
     ru: (at: string) => `Сообщение нашлось в переписке с нашего аккаунта — ${at}.`,
     uz: (at: string) => `Xabar akkauntimiz yozishmasida topildi — ${at}.`,

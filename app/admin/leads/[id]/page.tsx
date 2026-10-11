@@ -537,6 +537,11 @@ export default async function LeadPage({
                 >
                   <p className="text-[0.7rem] uppercase tracking-wider text-faint">
                     {line.direction === "in" ? t.client : line.author === "ai" ? t.aiForUs : t.you}
+                    {/* С какого аккаунта ушло: владелец, 11.10.2026. Ник — без
+                        заглавных, как в Telegram. */}
+                    {line.direction === "out" && talk.from ? (
+                      <span className="normal-case tracking-normal"> · {t.from(talk.from.label, talk.from.handle)}</span>
+                    ) : null}
                   </p>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-text">{line.body}</p>
                 </div>
@@ -573,7 +578,7 @@ export default async function LeadPage({
                   {t.openTelegram}
                 </a>
                 <span className="text-xs text-faint">
-                  {t.telegramNote}
+                  {talk.from ? t.telegramFrom(t.from(talk.from.label, talk.from.handle)) : t.telegramNote}
                 </span>
               </>
             ) : null}
