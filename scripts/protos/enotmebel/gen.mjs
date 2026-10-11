@@ -213,10 +213,7 @@ function introHtml(l) {
 <div class="dz-void"></div><div class="dz-grid"></div><div class="dz-glow"></div><div class="dz-ring"></div><div class="dz-flash"></div>
 <div class="dz-stage">${DZMARK}<div class="dz-name"><p class="dz-word" aria-hidden="true">${word.map(([c, a], i) => `<span${a ? ' class="a"' : ""} style="--i:${i}">${c}</span>`).join("")}</p><p class="dz-domain" aria-hidden="true">devuz.studio</p></div><div class="dz-bar" aria-hidden="true"></div><p class="dz-for">${t("прототип для Enotmebel", "Enotmebel uchun prototip")}</p></div>
 <canvas class="dz-code" aria-hidden="true"></canvas>
-<svg class="en-svg" aria-hidden="true" focusable="false"><defs><mask id="en-mask" maskUnits="userSpaceOnUse" x="-9000" y="-9000" width="18000" height="18000">${parts.map((d, i) => `<path class="en-cp" data-i="${i}" d="${d}" fill="#fff" fill-rule="${i === 2 ? "evenodd" : "nonzero"}" stroke="#fff" stroke-width="9" stroke-linejoin="round"/>`).join("")}</mask></defs>
-<g class="en-cam"><path class="en-veil" fill-rule="evenodd" d="M-9000 -9000H9000V9000H-9000Z ${GL.oIn}"/><path class="en-slit" d="${GL.oIn}"/>
-<g mask="url(#en-mask)"><rect x="-40" y="-40" width="420" height="210" fill="#1c2b5c"/><image class="en-img" href="${IMG}/hero-1440.webp" x="-20" y="-58" width="380" height="224.4" preserveAspectRatio="xMidYMid slice"/></g>
-</g></svg>
+<canvas class="en-cv" aria-hidden="true" data-img="${IMG}/hero-1440.webp" data-paths="${esc(JSON.stringify({ g: parts, hole: GL.oIn }))}"></canvas>
 <div class="en-cap"><b>Enotmebel</b><span>${t("бескаркасная мебель · Ташкент", "karkassiz mebel · Toshkent")}</span></div>
 <button type="button" class="in-skip" id="in-skip">${t("Пропустить", "O‘tkazib yuborish")}</button>
 </div>`;
