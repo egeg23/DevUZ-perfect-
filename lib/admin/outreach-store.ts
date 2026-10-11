@@ -777,7 +777,7 @@ async function letterFromText(input: {
     const block = await translateLetter(points.join("\n"), "uz", input.host);
     if (!block) return unavailable;
     const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
-    return { ok: true, message: renderLetter(variant.body_uz, { ...ctx, theses: lines }), variant: variant.id };
+    return { ok: true, message: renderLetter(variant.body_uz, { ...ctx, theses: lines }, "uz"), variant: variant.id };
   }
   const russian = renderLetter(variant.body, ctx);
   if (input.lang === "ru") return { ok: true, message: russian, variant: variant.id };

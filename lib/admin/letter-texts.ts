@@ -84,22 +84,30 @@ export type LetterContext = {
  * Кто пишет — одной фразой. У автопрогона «имя» — это сама студия, и
  * «{имя} из DevUz Studio» превратилось бы в «DevUz Studio из DevUz Studio».
  */
-export function whoLine(sender: string): string {
-  return /devuz/i.test(sender) || !sender.trim()
-    ? "Это студия DevUz (devuz.studio)"
-    : `Это ${sender.trim()} из студии DevUz (devuz.studio)`;
+export function whoLine(sender: string, lang: LetterLang = "ru"): string {
+  const studio = /devuz/i.test(sender) || !sender.trim();
+  if (lang === "uz") return studio ? "Bu DevUz studiyasi (devuz.studio)" : `Bu ${sender.trim()}, DevUz studiyasidan (devuz.studio)`;
+  return studio ? "Это студия DevUz (devuz.studio)" : `Это ${sender.trim()} из студии DevUz (devuz.studio)`;
 }
 
 export const PROTOTYPE_LINE = `За ${PROTOTYPE_HOURS} часов бесплатно соберём прототип вашего нового сайта: откроете с телефона и посмотрите вживую.`;
+export const PROTOTYPE_LINE_UZ = `${PROTOTYPE_HOURS} soat ichida yangi saytingiz prototipini bepul tayyorlab beramiz: telefoningizdan ochib, jonli koʻrasiz.`;
 
-export function renderLetter(template: string, ctx: LetterContext): string {
+/**
+ * Язык готовых фраз {кто} и {прототип}. Узбекский текст менеджера
+ * (`body_uz`) собирается с узбекскими: иначе посреди узбекского письма
+ * стояли бы «Это Дина из студии DevUz» и русская фраза про прототип.
+ */
+export type LetterLang = "ru" | "uz";
+
+export function renderLetter(template: string, ctx: LetterContext, lang: LetterLang = "ru"): string {
   const values: Record<Slot, string> = {
     theses: ctx.theses.join("\n"),
     site: ctx.host,
     company: ctx.label?.trim() || ctx.host,
     name: ctx.sender,
-    who: whoLine(ctx.sender),
-    prototype: PROTOTYPE_LINE,
+    who: whoLine(ctx.sender, lang),
+    prototype: lang === "uz" ? PROTOTYPE_LINE_UZ : PROTOTYPE_LINE,
   };
   return template
     .replace(TOKEN, (whole, name: string) => {
@@ -384,19 +392,70 @@ export const SAMPLE: LetterContext & { reference: string | null } = {
 };
 
 /**
+ * Пример над формой: как текст с подстановками превращается в письмо.
+ *
+ * Владелец, 11.10.2026: «Покажи пример подстановки блоков, сделай демо текст
+ * как это должно выглядеть, чтобы менеджеры поняли». Письмо из примера
+ * собирает тот же renderLetter, что и настоящее, и оно проходит те же
+ * проверки (держит тест) — пример не может разойтись с тем, что уходит
+ * клиенту. Компания и сайт выдуманы; кейс — настоящий.
+ *
+ * Подстановки — теми именами, что читатель видит в списке над примером: в
+ * русской панели {кто}, в узбекской и польской {kim}. Узбекский пример — для
+ * узбекского варианта текста.
+ */
+export const EXAMPLE: Readonly<Record<"ru" | "latin" | "uz", { text: string; ctx: LetterContext & { reference: string | null }; lang: LetterLang }>> = (() => {
+  const ru: LetterContext & { reference: string | null } = {
+    host: "bilim-markazi.uz",
+    label: "Bilim Markazi",
+    sender: "Имя",
+    theses: [
+      "• Номер телефона на сайте не найти: кто хотел записаться на курс, звонит конкурентам.",
+      "• По нашей оценке, так вы теряете от 25 до 40 обращений из каждых 100.",
+      "• Для «Delta IT-School» (учебный центр) мы это уже сделали, посмотрите: https://devuz.studio/cases/delta",
+    ],
+    reference: "Delta IT-School",
+  };
+  const ruText = "{кто}. Посмотрели ваш сайт {сайт} и нашли, где {компания} теряет клиентов:\n\n{тезисы}\n\n{прототип} Собрать для вас?";
+  return {
+    ru: { text: ruText, ctx: ru, lang: "ru" },
+    latin: {
+      text: "{kim}. Посмотрели ваш сайт {sayt} и нашли, где {kompaniya} теряет клиентов:\n\n{tezislar}\n\n{prototip} Собрать для вас?",
+      ctx: ru,
+      lang: "ru",
+    },
+    uz: {
+      text: "{kim}. {sayt} saytingizni koʻrib chiqdik va {kompaniya} mijozlarni qayerda yoʻqotayotganini topdik:\n\n{tezislar}\n\n{prototip} Tayyorlab beraylikmi?",
+      ctx: {
+        ...ru,
+        theses: [
+          "• Saytda telefon raqamini topib boʻlmaydi: kursga yozilmoqchi boʻlganlar raqobatchilarga qoʻngʻiroq qiladi.",
+          "• Bizning bahomizga koʻra, shu sababli har 100 ta murojaatdan 25 tadan 40 tagachasini yoʻqotyapsiz.",
+          "• «Delta IT-School» (oʻquv markazi) uchun buni allaqachon qilganmiz, koʻring: https://devuz.studio/cases/delta",
+        ],
+      },
+      lang: "uz",
+    },
+  };
+})();
+
+/**
  * Что не так с самим текстом — при сохранении, до первого касания.
  * `no_theses` — без тезисов письмо перестаёт быть письмом о его сайте, а это
  * то, ради чего человек вообще отвечает (и правило проверки по факту).
  */
-export function textProblems(template: string, sender: string): MessageProblem[] {
+export function textProblems(template: string, sender: string, lang: LetterLang = "ru"): MessageProblem[] {
   const problems: MessageProblem[] = [];
   const unknown = unknownPlaceholders(template);
   if (unknown.length) {
     problems.push({ code: "unknown_placeholder", text: `Неизвестные подстановки: ${unknown.map((u) => `{${u}}`).join(", ")}.`, args: [unknown.join(", ")] });
   }
   if (!hasSlot(template, "theses")) problems.push({ code: "no_theses", text: "В тексте нет {тезисы} — без них письмо не о его сайте." });
-  const rendered = renderLetter(template, { ...SAMPLE, sender });
-  return [...problems, ...letterProblems(rendered, { ...SAMPLE, sender })];
+  // Узбекский текст проверяется на узбекском образце: русские тезисы в нём
+  // дали бы письмо, какого клиент не получит.
+  const sample = lang === "uz" ? { ...EXAMPLE.uz.ctx, sender } : { ...SAMPLE, sender };
+  const rendered = renderLetter(template, sample, lang);
+  return [...problems, ...letterProblems(rendered, sample)];
 }
 
 /* ── A/B: кто лучше ──────────────────────────────────────────────────────── */

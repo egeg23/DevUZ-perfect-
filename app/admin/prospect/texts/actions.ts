@@ -38,7 +38,7 @@ export async function saveTextAction(formData: FormData) {
 
   // Проверка — та же, что перед отправкой, на образце: плохой текст не
   // доходит до клиента ни разу, а не отбивается на сотом касании.
-  const problems = [...textProblems(body, staff.display_name), ...(uz ? textProblems(uz, staff.display_name) : [])];
+  const problems = [...textProblems(body, staff.display_name), ...(uz ? textProblems(uz, staff.display_name, "uz") : [])];
   if (problems.length) {
     const codes = JSON.stringify(problems.map((p) => [p.code, ...(p.args ?? [])]));
     redirect(`${PAGE}?e=${encodeURIComponent(codes)}#${owner ? "mine" : "common"}`);
