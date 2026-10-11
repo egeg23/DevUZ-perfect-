@@ -25,6 +25,9 @@ h3{font:700 18px/1.3 var(--text);letter-spacing:-0.01em}
 .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--fg2)}
 .kicker i{width:24px;height:2px;border-radius:2px;background:var(--blue)}
 .dark .kicker i,.story .kicker i{background:var(--sky)}
+.st-beat h1,.st-beat h2,.st-beat p{text-shadow:0 1px 14px rgb(11 17 32 / .75)}
+.st-beat p{color:#e4dfd6}
+.st-text [data-beat^="15"] h2,.st-text [data-beat^="15"] p,.st-last h2{text-shadow:none}
 .lead{font-size:18px;color:var(--fg2);max-width:36em;margin-top:16px}
 .sub{color:var(--fg2);max-width:40em;margin-top:12px}
 .src{font-size:14px;color:var(--mut);margin-top:12px}
@@ -234,17 +237,21 @@ section{padding:64px 0}
 .st-text{position:absolute;inset:0;pointer-events:none}
 .st-beat{position:absolute;left:16px;right:16px;bottom:calc(92px + env(safe-area-inset-bottom));max-width:560px;opacity:0;visibility:hidden;will-change:transform,opacity}
 .st-beat.live{pointer-events:auto}
+/* Подпись главы на снимке: светлый текст на тёмном стекле, читается на любом кадре */
+.story .kicker{color:var(--on);padding:6px 12px 6px 10px;border-radius:999px;background:rgb(11 17 32 / .58);-webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4);box-shadow:inset 0 0 0 1px rgb(246 241 234 / .14)}
+.story .kicker i{background:var(--sky)}
 .st-beat h1,.st-beat h2{margin-top:12px}
 .st-beat h2{font-size:44px}
 .st-beat p{margin-top:12px;font-size:16px;color:var(--on2);max-width:34em}
 .st-first{opacity:1;visibility:visible}
 .st-first h1{font-size:44px}
 @media (min-width:820px){.st-beat{left:6vw;bottom:14vh}.st-beat h2{font-size:64px}.st-beat p{font-size:18px}.st-first h1{font-size:88px}}
-.st-fab~.st-text [data-beat^="15"] p,.st-text [data-beat^="15"] .kicker{color:var(--fg2)}
+.st-fab~.st-text [data-beat^="15"] p{color:var(--fg2)}
+.st-text [data-beat^="15"] .kicker,.st-last .kicker{color:var(--fg);background:rgb(255 253 249 / .8);box-shadow:inset 0 0 0 1px var(--line)}
+.st-text [data-beat^="15"] .kicker i,.st-last .kicker i{background:var(--blue)}
 .st-text [data-beat^="15"] h2{color:var(--fg)}
 .st-last h2{color:var(--fg)}
 .st-last .btn-ghost{color:var(--fg);box-shadow:inset 0 0 0 1.5px var(--s3)}
-.st-last .kicker{color:var(--fg2)}
 .st-hud{position:absolute;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:16px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--on2)}
 @media (min-width:820px){.st-hud{left:6vw;right:6vw;bottom:5vh}}
 @media (max-width:819px){.st-hud{display:none}}
