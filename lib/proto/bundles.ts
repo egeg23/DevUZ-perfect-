@@ -21,6 +21,7 @@ import shahar from "@/content/proto-bundles/shahar.json" with { type: "json" };
 import pkvesta from "@/content/proto-bundles/pkvesta.json" with { type: "json" };
 import aipply from "@/content/proto-bundles/aipply.json" with { type: "json" };
 import hop from "@/content/proto-bundles/hop.json" with { type: "json" };
+import enotmebel from "@/content/proto-bundles/enotmebel.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -33,6 +34,7 @@ const BUNDLES: Record<string, Bundle> = {
   pkvesta: pkvesta as Bundle,
   aipply: aipply as Bundle,
   hop: hop as Bundle,
+  enotmebel: enotmebel as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */

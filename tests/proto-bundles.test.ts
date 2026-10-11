@@ -290,3 +290,51 @@ test("HOP.UZ: конструктор — сайт 4 500 $, допы добива
   for (const id of ["post", "pay", "pwa", "mod"]) assert.ok(all.some((a) => a.id === id), `нет обязательного допа ${id}`);
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
 });
+
+test("Enotmebel: главная и «Что дальше» на ru и uz — условия, noindex, заставка, история, стекло", () => {
+  const site = bundlePages("enotmebel");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "plan", "uz", "uz/plan"]);
+  for (const [path, page] of Object.entries(all)) {
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("Enotmebel"), `${path}: нет названия компании`);
+    // Главное действие — их же Telegram с enotmebel.uz.
+    assert.ok(page.includes('href="https://t.me/enotmebel"'), `${path}: нет Telegram Enotmebel`);
+    assert.match(page, /backdrop-filter:url\(#lq\)/, `${path}: нет преломления у стекла`);
+    // Чего на их сайте нет, того нет и здесь.
+    assert.doesNotMatch(page, /лет на рынке|отзыв|за 15 минут|yil bozorda/i, `${path}: утверждение, которого нет на их сайте`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], /id="en-mask"[\s\S]*class="en-slit"/, `${path}: нет влёта в букву «O»`);
+    assert.match(all[path], /id="story"[\s\S]*data-beads|data-k="beads"/, `${path}: нет шариков наполнителя`);
+    assert.match(all[path], /class="st-static/, `${path}: у истории нет списка для тех, у кого движение выключено`);
+    assert.match(all[path], /id="mgrid"/, `${path}: нет каталога`);
+    assert.equal((all[path].match(/class="mc /g) || []).length, 15, `${path}: в каталоге не 15 моделей`);
+  }
+  assert.match(all[""], /450&nbsp;000…800&nbsp;000 сум|450 000…800 000 сум/, "цена Груши MINI с enotmebel.uz");
+  assert.ok(all.uz.includes("o‘") || all.uz.includes("O‘"), "узбекский — латиница с o‘");
+  const stamped = stampedBundle("enotmebel", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Enotmebel: конструктор — сайт 1 700 $, все допы вместе 800 $, итог 2 500 $", async () => {
+  const plan = await import("../scripts/protos/enotmebel/plan.mjs");
+  // Владелец, 11.10.2026: «Стоимость для клиента без допников 1700$, с допами не более 2500$».
+  assert.equal(plan.BASE.price, 1700);
+  const all: { id: string; price: number; ru: { t: string; e?: string; why?: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
+  const sum = all.reduce((s, a) => s + a.price, 0);
+  assert.equal(sum, 800, "все допы вместе — 800 $");
+  assert.ok(plan.BASE.price + sum <= 2500, "со всеми допами не больше 2 500 $");
+  for (const id of ["uz", "cart", "pay", "nasiya"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
+  for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
+});
