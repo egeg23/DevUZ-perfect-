@@ -167,3 +167,18 @@ test("кабинет и вебхуки живут вне языковых пре
   const mw = read("middleware.ts");
   assert.match(mw, /pathname === "\/cabinet" \|\| pathname\.startsWith\("\/cabinet\/"\)/);
 });
+
+test("бот ИИ-сотрудников забирает обновления поллером: секреты из хранилища, обновления Business", () => {
+  const unit = read("deploy/devuz-ai-staff-bot.service");
+  assert.match(unit, /POLLER_FROM_VAULT=1/);
+  assert.match(unit, /POLLER_APP_PATH=\/api\/ai-staff\/tg\/\{secret\}/);
+  assert.match(unit, /POLLER_UPDATES=.*business_connection.*business_message/);
+  const deploy = read("scripts/vps-deploy.sh");
+  assert.match(deploy, /install_unit devuz-ai-staff-bot\.service/);
+  assert.match(deploy, /systemctl restart devuz-ai-staff-bot\.service/);
+  const poller = read("bot/poller.mjs");
+  assert.match(poller, /allowed_updates: UPDATES/);
+  assert.match(poller, /"message,callback_query"/, "бот студии по умолчанию забирает то же, что раньше");
+  const setup = read("lib/ai-staff/channels.ts").split("export async function setupServiceBot")[1].split("\nexport ")[0];
+  assert.ok(!/setWebhook/.test(setup), "кнопка в панели не ставит боту сервиса вебхук: он мешал бы поллеру");
+});

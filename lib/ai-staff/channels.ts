@@ -64,8 +64,10 @@ export async function disconnectBot(tenant: store.Tenant, channel: store.Channel
 }
 
 /**
- * Наш бот сервиса: вебхук с business-обновлениями и команды. Нажимает
- * владелец студии в панели, когда положил токен в хранилище.
+ * Проверка бота сервиса из панели. Обновления бот забирает сам — службой
+ * devuz-ai-staff-bot на сервере (bot/poller.mjs): вебхук Telegram до
+ * сервера не дозванивается. Поэтому здесь вебхук не ставится: поставленный,
+ * он только мешал бы поллеру. Проверяем токен, Business Mode и команды.
  */
 export async function setupServiceBot(): Promise<{ ok: boolean; detail: string; username?: string; business?: boolean }> {
   const token = await appSecret("AI_STAFF_BOT_TOKEN");
@@ -74,12 +76,6 @@ export async function setupServiceBot(): Promise<{ ok: boolean; detail: string; 
   if (!secret || secret.length < 16) return { ok: false, detail: "нет AI_STAFF_WEBHOOK_SECRET (от 16 знаков)" };
   const me = await tg<{ username: string; can_connect_to_business?: boolean }>(token, "getMe", {});
   if (!me.ok) return { ok: false, detail: `getMe: ${me.description}` };
-  const hook = await tg(token, "setWebhook", {
-    url: `${siteUrl}/api/ai-staff/tg/${secret}`,
-    secret_token: secret,
-    allowed_updates: ["message", "callback_query", "business_connection", "business_message"],
-  });
-  if (!hook.ok) return { ok: false, detail: `setWebhook: ${hook.description}`, username: me.result.username };
   await tg(token, "setMyCommands", { commands: [{ command: "start", description: "Открыть кабинет" }] });
   return { ok: true, detail: "ok", username: me.result.username, business: me.result.can_connect_to_business === true };
 }

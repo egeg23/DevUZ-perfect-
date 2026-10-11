@@ -1,0 +1,32 @@
+[Unit]
+Description=Бот ИИ-сотрудников (@Devuz_staff_bot): забор обновлений у Telegram
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/devuz
+EnvironmentFile=/opt/devuz/.env
+
+# Тот же поллер, что у бота студии (bot/poller.mjs): Telegram не дозванивается
+# до сервера, вебхук ловил «Connection timed out». Токен и секрет — из
+# хранилища Supabase (POLLER_FROM_VAULT), адрес приложения содержит секрет,
+# и нужны обновления Telegram Business.
+Environment=NODE_OPTIONS=--use-env-proxy
+Environment=NO_PROXY=127.0.0.1,localhost
+Environment=POLLER_TOKEN_VAR=AI_STAFF_BOT_TOKEN
+Environment=POLLER_SECRET_VAR=AI_STAFF_WEBHOOK_SECRET
+Environment=POLLER_APP_PATH=/api/ai-staff/tg/{secret}
+Environment=POLLER_UPDATES=message,callback_query,business_connection,business_message
+Environment=POLLER_FROM_VAULT=1
+
+ExecStart=/usr/bin/node /opt/devuz/bot/poller.mjs
+
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
