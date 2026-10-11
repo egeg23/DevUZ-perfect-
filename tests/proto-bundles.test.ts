@@ -339,3 +339,35 @@ test("Enotmebel: конструктор — сайт 1 700 $, все допы в
   for (const id of ["uz", "cart", "pay", "nasiya", "admin"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
 });
+
+test("Giftora: демо мини-приложения на ru и en — условия, noindex, только игровая валюта, без внешних загрузок", () => {
+  const site = bundlePages("giftora");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "en"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path === "en" ? "en" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}"`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark|mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    // Свой бренд: механики копируем, айдентику нет.
+    assert.ok(page.includes("Giftora"), `${path}: нет своего названия`);
+    assert.doesNotMatch(page, /Epic Gift|epic_gift|giftbackpack|Tonnel|Portals/i, `${path}: чужой бренд в макете`);
+    // Всё своё: ни скриптов, ни картинок, ни шрифтов со стороны, ни кошелька.
+    assert.doesNotMatch(page, /<script[^>]+src=|<link[^>]+stylesheet|<img[^>]+src="https?:|url\(https?:/i, `${path}: внешняя загрузка`);
+    assert.doesNotMatch(page, /tonconnect|telegram-web-app\.js|openInvoice/i, `${path}: настоящий кошелёк или платёж`);
+    assert.match(page, /class="chip demo"/, `${path}: нет пометки «Демо»`);
+    for (const view of ["home", "box", "hub", "rocket", "dice", "upgrade", "pvp", "inv", "top", "tasks", "profile"]) {
+      assert.ok(page.includes(`V.${view} = function`), `${path}: нет экрана ${view}`);
+    }
+    assert.match(page, /TelegramWebviewProxy/, `${path}: нет моста к Telegram`);
+  }
+  const stamped = stampedBundle("giftora", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages.en, site.pages.en, "отпечаток не поставился на английской");
+});
