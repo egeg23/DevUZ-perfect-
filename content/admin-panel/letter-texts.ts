@@ -39,6 +39,26 @@ export const letterTextsDict = defineDict({
     uz: "{prototip} — 12 soatda bepul prototip haqidagi jumla",
     pl: "{prototip} — zdanie o darmowym prototypie w 12 godzin",
   },
+  exampleWrite: {
+    ru: "Пример. Вы пишете так:",
+    uz: "Misol. Siz shunday yozasiz:",
+    pl: "Przykład. Piszesz tak:",
+  },
+  exampleGet: {
+    ru: "А клиент получит так:",
+    uz: "Mijoz esa shunday oladi:",
+    pl: "A klient dostanie tak:",
+  },
+  exampleNote: {
+    ru: "Компания и сайт здесь выдуманы. В настоящем письме вместо {тезисы} встанут факты с сайта клиента после проверки по факту, вместо {кто} — ваше имя. Можно скопировать пример и переделать под себя: своими словами, подстановки — где удобно.",
+    uz: "Kompaniya va sayt bu yerda o‘ylab topilgan. Haqiqiy xatda {tezislar} o‘rniga fakt bo‘yicha tekshiruvdan keyin mijoz saytidagi faktlar, {kim} o‘rniga — sizning ismingiz turadi. Misolni nusxalab, o‘zingizga moslashtirish mumkin: o‘z so‘zlaringiz bilan, qo‘yiladigan joylar — qayerda qulay bo‘lsa.",
+    pl: "Firma i strona są tu wymyślone. W prawdziwej wiadomości zamiast {tezislar} pojawią się fakty ze strony klienta po sprawdzeniu na żywo, zamiast {kim} — Twoje imię. Możesz skopiować przykład i przerobić go po swojemu: własnymi słowami, wstawki tam, gdzie wygodnie.",
+  },
+  exampleUz: {
+    ru: "Пример узбекского варианта",
+    uz: "O‘zbekcha variant misoli",
+    pl: "Przykład wariantu uzbeckiego",
+  },
   rules: {
     ru: "Без «Здравствуйте» в начале — оно уже ушло. Без технических слов, процентов, обещаний «в топ» и чисел от себя: числа — только из тезисов и «12 часов». До 100 слов вместе с тезисами.",
     uz: "Boshida salomlashmang — u allaqachon ketgan. Texnik so‘zlarsiz, foizlarsiz, «topga chiqaramiz» va’dalarisiz hamda o‘zingizdan raqamlarsiz: raqamlar faqat tezislardan va «12 soat». Tezislar bilan birga 100 so‘zgacha.",

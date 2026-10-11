@@ -9,6 +9,7 @@ import { helpAnchor } from "@/lib/admin/help";
 import { pick, type Picked } from "@/lib/admin/i18n";
 import {
   AUTO_ARMS,
+  EXAMPLE,
   MIN_SENT,
   SAMPLE,
   renderLetter,
@@ -44,6 +45,9 @@ export default async function LetterTextsPage({
   const t = pick(letterTextsDict, staff.panel_locale);
   const tp = pick(textProblemDict, staff.panel_locale);
   const lead = staff.role === "admin" || staff.role === "head";
+  // Подстановки в примере — теми именами, что в списке над ним: в русской
+  // панели {кто}, в узбекской и польской {kim}.
+  const example = staff.panel_locale === "ru" ? EXAMPLE.ru : EXAMPLE.latin;
 
   const [texts, stats, people] = await Promise.all([liveTexts(), variantStats(), lead ? activeStaff() : Promise.resolve([])]);
   const own = texts.filter((x) => x.owner === staff.id);
@@ -86,6 +90,21 @@ export default async function LetterTextsPage({
           <li>{t.phPrototype}</li>
         </ul>
         <p className="mt-2">{t.rules}</p>
+
+        <p className="mt-4 text-text">{t.exampleWrite}</p>
+        <Example text={example.text} />
+        <p className="mt-3 text-text">{t.exampleGet}</p>
+        <p className="mt-1 whitespace-pre-line rounded-lg bg-surface-2 px-3 py-2 text-sm leading-relaxed text-text">
+          {renderLetter(example.text, { ...example.ctx, sender: staff.display_name }, example.lang)}
+        </p>
+        <details className="mt-3">
+          <summary className="cursor-pointer text-text">{t.exampleUz}</summary>
+          <Example text={EXAMPLE.uz.text} />
+          <p className="mt-2 whitespace-pre-line rounded-lg bg-surface-2 px-3 py-2 text-sm leading-relaxed text-text">
+            {renderLetter(EXAMPLE.uz.text, { ...EXAMPLE.uz.ctx, sender: staff.display_name }, "uz")}
+          </p>
+        </details>
+        <p className="mt-2">{t.exampleNote}</p>
       </div>
 
       {errors.length ? (
@@ -336,4 +355,21 @@ function problemText(p: { code: string; args: (string | number)[] }, t: Picked<t
     default:
       return t.unknown;
   }
+}
+
+/** Текст примера: подстановки — зелёным, чтобы было видно, что заменится. */
+function Example({ text }: { text: string }) {
+  return (
+    <p className="mt-1 whitespace-pre-line rounded-lg border border-dashed border-line px-3 py-2 text-sm leading-relaxed text-text">
+      {text.split(/(\{[^{}]+\})/).map((part, i) =>
+        /^\{[^{}]+\}$/.test(part) ? (
+          <span key={i} className="font-medium text-green">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </p>
+  );
 }

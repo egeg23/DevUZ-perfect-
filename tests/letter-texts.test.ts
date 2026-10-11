@@ -12,8 +12,10 @@ import { readFileSync } from "node:fs";
 
 import {
   AUTO_ARMS,
+  EXAMPLE,
   LETTER_TEXTS,
   MIN_SENT,
+  PROTOTYPE_LINE_UZ,
   candidates,
   chanceBetter,
   letterProblems,
@@ -180,4 +182,37 @@ test("письмо больше не пишет модель: подготовк
   const actions = read("app/admin/prospect/texts/actions.ts");
   assert.match(actions, /requireRole\("admin", "head"\)/, "общие тексты правит кто угодно");
   assert.match(actions, /textProblems\(body, staff\.display_name\)/, "текст сохраняется без проверки");
+});
+
+/**
+ * Пример над формой (владелец, 11.10.2026: «Покажи пример подстановки
+ * блоков… чтобы менеджеры поняли»). Пример собирается тем же renderLetter и
+ * проходит те же проверки, что настоящее письмо: менеджер, который скопирует
+ * его, сохранит текст без единой ошибки.
+ */
+test("пример подстановок проходит те же проверки, что и настоящее письмо", () => {
+  for (const key of ["ru", "latin", "uz"] as const) {
+    const { text, ctx, lang } = EXAMPLE[key];
+    assert.deepEqual(unknownPlaceholders(text), [], key);
+    const letter = renderLetter(text, { ...ctx, sender: "Дина" }, lang);
+    assert.deepEqual(letterProblems(letter, { ...ctx, sender: "Дина" }), [], `${key}: ${letter}`);
+    assert.doesNotMatch(letter, /[{}]/, `${key}: подстановка осталась фигурными скобками`);
+    assert.deepEqual(textProblems(text, "Дина", lang), [], key);
+  }
+  assert.equal(EXAMPLE.ru.text.replace(/\{[^{}]+\}/g, ""), EXAMPLE.latin.text.replace(/\{[^{}]+\}/g, ""), "русский пример и пример с латинскими подстановками — один текст");
+  assert.ok(renderLetter(EXAMPLE.ru.text, { ...EXAMPLE.ru.ctx, sender: "Дина" }).startsWith("Это Дина из студии DevUz (devuz.studio). Посмотрели ваш сайт bilim-markazi.uz"));
+});
+
+/** Узбекский текст менеджера: {kim} и {prototip} — по-узбекски, а не русской фразой посреди письма. */
+test("узбекский вариант текста собирается без единой русской буквы", () => {
+  const uz = renderLetter(EXAMPLE.uz.text, { ...EXAMPLE.uz.ctx, sender: "Dina" }, "uz");
+  assert.doesNotMatch(uz, /\p{Script=Cyrillic}/u, uz);
+  assert.ok(uz.startsWith("Bu Dina, DevUz studiyasidan (devuz.studio)."));
+  assert.ok(uz.includes(PROTOTYPE_LINE_UZ));
+  assert.equal(renderLetter("{kim}.", { host: "a.uz", label: null, sender: "DevUz Studio", theses: [] }, "uz"), "Bu DevUz studiyasi (devuz.studio).");
+  // Русский — как раньше.
+  assert.equal(renderLetter("{кто}.", { host: "a.uz", label: null, sender: "Мадина", theses: [] }), "Это Мадина из студии DevUz (devuz.studio).");
+  const store = readFileSync(new URL("../lib/admin/outreach-store.ts", import.meta.url), "utf8");
+  assert.match(store, /renderLetter\(variant\.body_uz, \{ \.\.\.ctx, theses: lines \}, "uz"\)/, "узбекский текст собирается с русскими фразами");
+  assert.match(readFileSync(new URL("../app/admin/prospect/texts/actions.ts", import.meta.url), "utf8"), /textProblems\(uz, staff\.display_name, "uz"\)/);
 });
