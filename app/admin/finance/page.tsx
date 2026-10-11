@@ -26,7 +26,7 @@ import {
   visibleStaff,
   type Accrual,
 } from "@/lib/admin/finance";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick, type Picked } from "@/lib/admin/i18n";
 import { seesOwnerMoney } from "@/lib/admin/roles";
 import { loadExpenses, loadLedger, sharesOf } from "@/lib/admin/ledger";
@@ -81,7 +81,7 @@ export default async function FinancePage({
 }: {
   searchParams: Promise<{ r?: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/finance");
   const { r } = await searchParams;
   const locale = staff.panel_locale;
   const t = pick(financeDict, locale);

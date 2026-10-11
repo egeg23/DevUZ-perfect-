@@ -158,7 +158,8 @@ test("отчёт видит только владелец", () => {
   assert.equal(canSee("admin", "/admin/usage"), true);
   assert.equal(canSee("head", "/admin/usage"), false);
   assert.equal(canSee("manager", "/admin/usage"), false);
-  assert.match(read("app/admin/usage/page.tsx"), /const staff = await requireAdmin\(\)/);
+  // По роли и галочкам владельца (tests/section-access.test.ts).
+  assert.match(read("app/admin/usage/page.tsx"), /const staff = await requireSection\("\/admin\/usage"\)/);
 });
 
 test("владелец не пишется ни маячком, ни сервером", () => {

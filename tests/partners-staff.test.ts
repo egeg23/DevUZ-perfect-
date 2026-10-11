@@ -71,7 +71,7 @@ test("раздел у руководителя: работа с программ
   );
 
   const page = read("app/admin/partners/page.tsx");
-  assert.match(page, /const admin = await requireRole\("admin", "head"\);\s*const owner = admin\.role === "admin";/);
+  assert.match(page, /const admin = await requireSection\("\/admin\/partners"\);\s*const owner = admin\.role === "admin";/);
   assert.match(page, /\{owner \? \(\s*<form action=\{decide\}/);
   assert.match(page, /\{owner \? \(\s*<DeleteBlock/);
   assert.match(page, /\{owner \? \(\s*<>\s*<input\s*name="percent"/);

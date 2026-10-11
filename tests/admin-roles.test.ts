@@ -118,6 +118,8 @@ test("прототипы закрыты не только в меню", () => {
   for (const file of ["app/admin/proto/page.tsx", "app/admin/proto/actions.ts"]) {
     const source = read(file);
     assert.doesNotMatch(source, /requireStaff\(\)/, `${file}: страницу откроет любой, кто наберёт адрес`);
-    assert.match(source, /requireAdmin\(\)/, `${file}: права не проверяются вовсе`);
   }
+  // Страница — по роли и галочкам владельца (section-access), сборка — только владельцу.
+  assert.match(read("app/admin/proto/page.tsx"), /requireSection\("\/admin\/proto"\)/, "страница: права не проверяются вовсе");
+  assert.match(read("app/admin/proto/actions.ts"), /requireAdmin\(\)/, "действия: права не проверяются вовсе");
 });

@@ -6,7 +6,7 @@ import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
 import { when } from "@/components/admin/lead-table";
 import { scoutDict, signalStatusDict } from "@/content/admin-panel/scout";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { SIGNAL_STATUSES, listSignals, scoutCounts } from "@/lib/admin/scout";
 import { diagnose, readPulse, unreadChats } from "@/lib/scout/health";
@@ -33,7 +33,7 @@ export default async function ScoutPage({
 }: {
   searchParams: Promise<{ status?: string; r?: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/scout");
   const { status, r } = await searchParams;
   const locale = staff.panel_locale;
   const t = pick(scoutDict, locale);

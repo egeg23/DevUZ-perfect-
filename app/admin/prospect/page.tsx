@@ -6,7 +6,7 @@ import { helpAnchor } from "@/lib/admin/help";
 import { OutreachList } from "@/components/admin/outreach-list";
 import { ProspectRunner } from "@/components/admin/prospect-runner";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { touchProgressOf } from "@/lib/admin/touch-store";
 import { BOT_BUTTON, outcomeOf, replaceLimit, tallyPortion } from "@/lib/admin/portion";
 import { portionOf, type PortionItem } from "@/lib/admin/portion-store";
@@ -46,7 +46,7 @@ export default async function ProspectPage({
     refused?: string;
   }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/prospect");
   const { open, e, sent, maps, more: moreRaw, own, late, refused } = await searchParams;
   // Язык панели — сотрудника, а не браузера (lib/admin/i18n.ts).
   const locale = staff.panel_locale;

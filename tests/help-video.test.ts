@@ -102,7 +102,7 @@ test("страница показывает видео раздела и вво�
 test("файл видео отдаёт только вошедшему и только из открытого ему раздела", () => {
   const route = read("app/admin/help/video/[id]/route.ts");
   assert.match(route, /const staff = await currentStaff\(\);\s*if \(!staff\) return new NextResponse\(null, \{ status: 404 \}\)/);
-  assert.match(route, /canWatchHelpVideo\(staff\.role, video\.section\)/);
+  assert.match(route, /canWatchHelpVideo\(staff, video\.section\)/);
   const actions = read("app/admin/help/actions.ts");
   assert.match(actions, /const manage = \(\) => requireRole\("admin", "head"\);/);
   for (const name of ["helpVideoStartAction", "helpVideoChunkAction", "helpVideoDiscardAction", "helpVideoSaveAction", "helpVideoRemoveAction"]) {

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { signOut } from "@/app/admin/actions";
-import { ROLE_BADGE, navFor, sectionLabel } from "@/lib/admin/roles";
+import { ROLE_BADGE, navOf, sectionLabel } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 import { pick } from "@/lib/admin/i18n";
 import { shellDict } from "@/content/admin-panel/shell";
@@ -81,7 +81,7 @@ export function AdminShell({
             <div className="flex w-max gap-4 text-sm sm:w-auto sm:flex-wrap">
               {/* Открытый раздел подсвечен (AdminNavLink): по адресу видно,
                   где ты, только в строке браузера, а её на телефоне нет. */}
-              {navFor(staff.role).map((item) => (
+              {navOf(staff).map((item) => (
                 <AdminNavLink key={item.href} href={item.href} quiet={item.roles.length === 1}>
                   {sectionLabel(item, locale)}
                 </AdminNavLink>

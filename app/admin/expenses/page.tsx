@@ -3,7 +3,7 @@ import { taxTitleDict } from "@/content/admin-panel/dashboard";
 import { expensesDict, taxWhatDict } from "@/content/admin-panel/expenses";
 import { EXPENSE_TR, isExpenseCategory, type Expense } from "@/lib/admin/finance";
 import { byCategory, splitExpense, splitTotals, type Founder } from "@/lib/admin/expense-split";
-import { requireRole } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { PANEL_INTL, pick, tr, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import { loadExpenses, loadPeople } from "@/lib/admin/ledger";
 import { DEFAULT_DEADLINES, upcoming } from "@/lib/admin/tax-calendar";
@@ -33,7 +33,7 @@ const day = (iso: string) => iso.slice(0, 10).split("-").reverse().join(".");
  * Доля от РАСХОДА такой задачи не решает — она и показана.
  */
 export default async function ExpensesPage() {
-  const staff = await requireRole("admin", "head");
+  const staff = await requireSection("/admin/expenses");
   const locale = staff.panel_locale;
   const t = pick(expensesDict, locale);
   const usd = (n: number) => money(n, locale);

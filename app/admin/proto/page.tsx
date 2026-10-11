@@ -5,7 +5,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { CopyMessage } from "@/components/admin/copy-message";
 import { protoDict, protoNichePl, protoResultDict, protoWhen } from "@/content/admin-panel/proto";
 import { PROTO_NICHES, protoNicheByKey, type ProtoNiche } from "@/content/proto/models";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { protosList, upgradeAllProtos } from "@/lib/proto/store";
 import { traceSite } from "@/lib/proto/trace-store";
@@ -58,7 +58,7 @@ export default async function ProtoPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const staff = await requireAdmin();
+  const staff = await requireSection("/admin/proto");
   const query = await searchParams;
   const { r, d } = query;
   const locale = staff.panel_locale;

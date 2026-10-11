@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SectionHelpLink } from "@/components/admin/help-link";
 import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { contractErrorDict, contractsPageDict } from "@/content/admin-panel/contracts";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { approvesContract } from "@/lib/admin/contracts";
 import { signatureExists } from "@/lib/admin/signature";
@@ -23,7 +23,7 @@ export default async function ContractsPage({
 }: {
   searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/contracts");
   const locale = staff.panel_locale;
   const t = pick(contractsPageDict, locale);
   const errors = pick(contractErrorDict, locale);

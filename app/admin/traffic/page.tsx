@@ -1,7 +1,7 @@
 import { AdminShell } from "@/components/admin/shell";
 import { TrafficPanel, trafficPeriodOf } from "@/components/admin/traffic-panel";
 import { trafficDict } from "@/content/admin-panel/traffic";
-import { requireRole } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export default async function TrafficPage({
     gp?: string;
   }>;
 }) {
-  const staff = await requireRole("admin", "head");
+  const staff = await requireSection("/admin/traffic");
   const params = await searchParams;
   const owner = staff.role === "admin";
 

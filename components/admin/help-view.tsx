@@ -12,7 +12,7 @@ import {
 } from "@/content/admin-help";
 import { bodyFor, helpAnchor, parseInline, sectionOfHref, type Para } from "@/lib/admin/help";
 import { HELP_VIDEO_INTRO, canManageHelpVideos, helpVideoUrl, pickHelpVideo } from "@/lib/admin/help-video-rules";
-import { ROLES, SECTIONS, canSee, type Role } from "@/lib/admin/roles";
+import { ROLES, SECTIONS, canSee, opens, type Role, type Section } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 
 /**
@@ -80,7 +80,15 @@ export function HelpView({
       />
     ) : null;
 
-  const visible = HELP_ORDER.filter((href) => canSee(role, href));
+  // Свой вид — с галочками владельца (roles.ts, opens); «Показать как …» —
+  // роль как есть, без чужих галочек.
+  const own = role === staff.role;
+  const sees = (href: string) => (own ? opens(staff, href) : canSee(role, href));
+  // Раздел открыт галочкой, а не ролью: инструкцию читаем глазами роли,
+  // которой он открыт по умолчанию, — у своей роли текста к нему нет.
+  const readAs = (section: Section): Role =>
+    section.roles.includes(role) ? role : section.roles.includes("head") ? "head" : "admin";
+  const visible = HELP_ORDER.filter(sees);
   const sectionOf = (href: string) => SECTIONS.find((s) => s.href === href);
   const query = (next: { lang?: HelpLocale; as?: Role }) => {
     const params = new URLSearchParams();
@@ -115,7 +123,7 @@ export function HelpView({
         // Ссылка в раздел, куда этой роли нельзя, — просто текст: редирект
         // на главную объяснил бы меньше, чем ничего.
         const target = sectionOfHref(part.href);
-        if (part.href.startsWith("/admin") && (!target || !canSee(role, target))) {
+        if (part.href.startsWith("/admin") && (!target || !sees(target))) {
           return <span key={i}>{part.text}</span>;
         }
         return (
@@ -202,7 +210,7 @@ export function HelpView({
           const section = sectionOf(href);
           if (!entry || !section) return null;
           const items = entry.items
-            .map((item) => ({ item, body: bodyFor(item, role, section.roles) }))
+            .map((item) => ({ item, body: bodyFor(item, readAs(section), section.roles) }))
             .filter((x): x is { item: typeof x.item; body: readonly Para[] } => x.body !== null);
           return (
             <section
@@ -215,7 +223,9 @@ export function HelpView({
                 <Link href={href} className="text-xs text-faint hover:text-green">
                   {t.openSection} →
                 </Link>
-                {section.roles.length === 1 ? (
+                {readAs(section) !== role ? (
+                  <span className="rounded bg-gold/10 px-1.5 py-0.5 text-[11px] text-gold">{t.granted}</span>
+                ) : section.roles.length === 1 ? (
                   <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] text-faint">{t.ownerOnly}</span>
                 ) : null}
               </div>

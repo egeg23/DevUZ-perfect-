@@ -13,7 +13,7 @@ import { CircleUpload } from "@/components/admin/circle-upload";
 import { HelpHint } from "@/components/admin/help-link";
 import { accountsDict, accountsResultDict, circleUploadDict, loginErrorDict } from "@/content/admin-panel/accounts";
 import { helpAnchor } from "@/lib/admin/help";
-import { requireRole } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { HOURLY_CAP } from "@/lib/admin/outreach";
 import { tashkentClock } from "@/lib/admin/prototype-claim";
@@ -96,7 +96,7 @@ export default async function AccountsPage({
 }) {
   // Владелец, 04.10.2026: «дай доступ к разделу „Аккаунты“ Александру, чтобы
   // он мог добавлять аккаунты для работы сам».
-  const staff = await requireRole("admin", "head");
+  const staff = await requireSection("/admin/accounts");
   const { r } = await searchParams;
   const locale = staff.panel_locale;
   const t = pick(accountsDict, locale);

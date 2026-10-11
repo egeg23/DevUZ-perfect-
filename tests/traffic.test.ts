@@ -162,7 +162,7 @@ test("трафик видят владелец и руководители, по
   assert.equal(canSee("manager", "/admin/traffic"), false, "менеджер видит трафик");
 
   const page = read("app/admin/traffic/page.tsx");
-  assert.match(page, /requireRole\("admin", "head"\)/);
+  assert.match(page, /requireSection\("\/admin\/traffic"\)/);
   assert.match(page, /canConnect=\{owner\}/);
   assert.match(page, /const owner = staff\.role === "admin"/);
   // Пометки входа через Google — только владельцу.
@@ -189,7 +189,7 @@ test("трафик видят владелец и руководители, по
   const home = read("app/admin/page.tsx");
   assert.doesNotMatch(home, /key: "traffic"/);
   assert.doesNotMatch(home, /<TrafficPanel/);
-  assert.match(home, /params\.tab === "traffic" && canSee\(staff\.role, "\/admin\/traffic"\)/);
+  assert.match(home, /params\.tab === "traffic" && opens\(staff, "\/admin\/traffic"\)/);
   assert.match(actions, /const TRAFFIC = "\/admin\/traffic"/);
   assert.match(read("app/admin/google/callback/route.ts"), /\/admin\/traffic\?\$\{new URLSearchParams\(\{ ga,/);
 });

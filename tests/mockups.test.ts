@@ -108,7 +108,7 @@ test("раздел видят все роли; пароль выдаёт люб�
   assert.ok(section, "нет раздела «Макеты»");
   assert.deepEqual([...section.roles].sort(), [...ROLES].sort());
   assert.match(read("app/admin/mockups/actions.ts"), /requireStaff\(\)/);
-  assert.match(read("app/admin/mockups/page.tsx"), /requireStaff\(\)/);
+  assert.match(read("app/admin/mockups/page.tsx"), /requireSection\("\/admin\/mockups"\)/);
 });
 
 test("собранных ботом для касаний в списке нет; фильтра и пометки «для касания» тоже", () => {

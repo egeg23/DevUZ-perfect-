@@ -1,4 +1,4 @@
-import { disables, editsStaff, type AssignableRole, type Role } from "@/lib/admin/roles";
+import { disables, editsStaff, type AssignableRole, type Role, type SectionAccess } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import {
   notifyHeadChange,
@@ -44,15 +44,17 @@ export type TeamMember = {
   full_name: string | null;
   /** Телефон: + и 9–15 цифр. */
   phone: string | null;
+  /** Галочки владельца по разделам поверх роли (roles.ts, opens). */
+  section_access: SectionAccess | null;
 };
 
 const COLUMNS =
-  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent, touch_plan, notify_off, full_name, phone";
+  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent, touch_plan, notify_off, full_name, phone, section_access";
 
 export type TeamResult =
   | {
       ok: true;
-      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed" | "notices" | "details";
+      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed" | "notices" | "details" | "sections";
       /**
        * Дошло ли до человека приглашение.
        *
@@ -113,6 +115,29 @@ export async function listTeam(): Promise<TeamMember[]> {
     return [];
   }
   return (data as TeamMember[] | null) ?? [];
+}
+
+/**
+ * Какие разделы панели открыты сотруднику сверх роли или закрыты (roles.ts,
+ * accessFromForm). Только владелец: это доступ к чужим данным, а не
+ * настройка удобства.
+ */
+export async function setSections(staffId: string, access: SectionAccess, actor: Staff, ip: string): Promise<TeamResult> {
+  if (actor.role !== "admin") return { ok: false, reason: "forbidden" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const { data, error } = await db
+    .from("staff")
+    .update({ section_access: access })
+    .eq("id", staffId)
+    .eq("is_active", true)
+    .neq("role", "admin")
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false, reason: "failed" };
+  if (!data) return { ok: false, reason: "gone" };
+  await record("staff.sections", { actorStaffId: actor.id, targetType: "staff", targetId: staffId, ip, meta: { access } });
+  return { ok: true, note: "sections" };
 }
 
 /** Сколько админов сейчас работает. Нужно, чтобы не остаться без единого. */

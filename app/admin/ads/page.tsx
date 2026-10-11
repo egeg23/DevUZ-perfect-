@@ -4,7 +4,7 @@ import { addAccountAction, addMemberAction, createWorkspaceAction, removeMemberA
 import { AdminShell } from "@/components/admin/shell";
 import { BTN, CARD, H2, INPUT, platformLabel, resultLine, statusLabel } from "@/components/ads/board";
 import { adsDict } from "@/content/admin-panel/ads";
-import { requireRole } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { accountsOf, adsEnabled, listWorkspaces, membersOf, proposalsOf, workspaceById } from "@/lib/ads/store";
 
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  * видит агентство на /ads.
  */
 export default async function AdsAdminPage({ searchParams }: { searchParams: Promise<{ w?: string; r?: string }> }) {
-  const staff = await requireRole("admin", "head");
+  const staff = await requireSection("/admin/ads");
   const { w, r } = await searchParams;
   const t = pick(adsDict, staff.panel_locale);
   const [workspaces, flagOn] = await Promise.all([listWorkspaces(), adsEnabled()]);

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { requestIp, requireAdmin, requireRole } from "@/lib/admin/guard";
 import { isGrade, parsePercent } from "@/lib/admin/finance";
-import { editsStaff, hiredRoles, isAssignable, tunesNotices } from "@/lib/admin/roles";
+import { accessFromForm, editsStaff, hiredRoles, isAssignable, tunesNotices } from "@/lib/admin/roles";
 import { offFromForm, setNotices } from "@/lib/admin/notify-prefs";
 import { syncBotMenu } from "@/lib/qualify/menu";
 import {
@@ -16,6 +16,7 @@ import {
   resendInvite,
   setStaffGrade,
   setStaffHead,
+  setSections,
   setStaffRole,
   setTouchPlan,
   staffDetailsFrom,
@@ -238,6 +239,25 @@ export async function saveDetails(formData: FormData) {
   if (!parsed.ok) back(parsed);
 
   const result = await updateStaffDetails(id, parsed.details, actor, await requestIp());
+  revalidatePath("/admin/team");
+  back(result);
+}
+
+/**
+ * Какие разделы панели открыты сотруднику (галочки владельца). Владелец,
+ * 11.10.2026: «через галочки выдавать права на просмотр каждого раздела
+ * сотрудникам». Сохраняется только отличие от роли (accessFromForm).
+ */
+export async function saveSections(formData: FormData) {
+  const actor = await requireAdmin();
+  const id = String(formData.get("staff") ?? "");
+
+  const target = (await listTeam()).find((m) => m.id === id && m.is_active);
+  if (!target) back({ ok: false, reason: "gone" });
+  if (target.role === "admin") back({ ok: false, reason: "owner" });
+
+  const access = accessFromForm(target.role, formData.getAll("on").map(String));
+  const result = await setSections(id, access, actor, await requestIp());
   revalidatePath("/admin/team");
   back(result);
 }

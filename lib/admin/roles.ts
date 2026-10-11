@@ -157,8 +157,69 @@ export function navFor(role: Role): Section[] {
   return SECTIONS.filter((section) => section.roles.includes(role));
 }
 
+/** Видит ли роль раздел по умолчанию — без галочек владельца (см. opens). */
 export function canSee(role: Role, href: string): boolean {
   return SECTIONS.some((section) => section.href === href && section.roles.includes(role));
+}
+
+/**
+ * Галочки владельца поверх роли: раздел → открыт или закрыт этому человеку.
+ *
+ * Владелец, 11.10.2026: «отдельные настройки доступа, чтобы я мог через
+ * галочки выдавать права на просмотр каждого раздела сотрудникам. А то
+ * только через тебя сейчас это делается». Хранится только отличие от роли
+ * (`staff.section_access`): новый раздел или смена роли не требуют
+ * пересохранять галочки всей команды.
+ *
+ * Галочка открывает раздел — меню, страницу и инструкцию к нему. Что
+ * человек может в разделе менять, по-прежнему решает роль: выплаты
+ * партнёрам, роли и ставки команды галочкой не отдаются.
+ */
+export type SectionAccess = Readonly<Record<string, boolean>>;
+
+/** Разделы, которые не закрываются никому: «Лиды» — главная панели, «Инструкции» — справка. */
+export const ALWAYS_OPEN: readonly string[] = ["/admin", "/admin/help"];
+
+/** Строка из базы — в галочки: только известные разделы и только да/нет. */
+export function sectionAccess(raw: unknown): SectionAccess {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: Record<string, boolean> = {};
+  for (const [href, on] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof on === "boolean" && SECTIONS.some((s) => s.href === href) && !ALWAYS_OPEN.includes(href)) out[href] = on;
+  }
+  return out;
+}
+
+/** Кто смотрит: роль и галочки владельца. */
+export type Viewer = { role: Role; section_access?: SectionAccess | null };
+
+/** Открыт ли раздел этому человеку: владельцу — всё, остальным — роль и галочки. */
+export function opens(who: Viewer, href: string): boolean {
+  if (who.role === "admin" || ALWAYS_OPEN.includes(href)) return true;
+  const section = SECTIONS.find((s) => s.href === href);
+  if (!section) return false;
+  const own = who.section_access?.[href];
+  return typeof own === "boolean" ? own : section.roles.includes(who.role);
+}
+
+/** Меню этого человека — с галочками владельца. */
+export function navOf(who: Viewer): Section[] {
+  return SECTIONS.filter((section) => opens(who, section.href));
+}
+
+/**
+ * Галочки из формы — в то, что сохранить: только отличия от роли.
+ * `checked` — разделы с галочкой; раздел без неё закрыт.
+ */
+export function accessFromForm(role: Role, checked: readonly string[]): SectionAccess {
+  const on = new Set(checked);
+  const out: Record<string, boolean> = {};
+  for (const section of SECTIONS) {
+    if (ALWAYS_OPEN.includes(section.href)) continue;
+    const want = on.has(section.href);
+    if (want !== section.roles.includes(role)) out[section.href] = want;
+  }
+  return out;
 }
 
 /**

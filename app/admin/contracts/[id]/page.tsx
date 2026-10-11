@@ -35,7 +35,7 @@ import {
   uploadEstimate,
   uploadSignedScan,
 } from "@/app/admin/contracts/actions";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { signatureExists } from "@/lib/admin/signature";
 
 export const dynamic = "force-dynamic";
@@ -68,7 +68,7 @@ export default async function ContractPage({
     paid?: string;
   }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/contracts");
   const locale = staff.panel_locale;
   const t = pick(contractCardDict, locale);
   const badge = pick(contractBadgeDict, locale);
