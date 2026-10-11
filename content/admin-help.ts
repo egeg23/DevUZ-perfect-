@@ -98,6 +98,8 @@ export type HelpCopy = {
   /** Ключ — адрес вкладки из меню. */
   sections: Record<string, HelpEntry>;
   ownerOnly: string;
+  /** Раздел открыт галочкой владельца, а не ролью (roles.ts, opens). */
+  granted: string;
   search: HelpSearchCopy;
   video: HelpVideoCopy;
   channelsTitle: string;

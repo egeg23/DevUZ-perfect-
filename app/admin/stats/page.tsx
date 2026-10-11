@@ -3,7 +3,7 @@ import { Bars, WeeklyBars } from "@/components/admin/bars";
 import { statusFilterDict } from "@/content/admin-panel/home";
 import { leadChannelDict } from "@/content/admin-panel/lead-origin";
 import { leadLocaleDict, statsDict, statsSourceDict } from "@/content/admin-panel/stats";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick, type Picked } from "@/lib/admin/i18n";
 import { seesEveryone } from "@/lib/admin/roles";
 import { teamOf } from "@/lib/admin/team";
@@ -74,7 +74,7 @@ function Panel({
 }
 
 export default async function StatsPage() {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/stats");
   const stats = await loadStats();
   // Админ — всех, руководитель — себя и своих, менеджер — никого: публичный
   // рейтинг рядом с именем коллеги меняет поведение раньше, чем результат.

@@ -129,6 +129,16 @@ export const moreSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "sections",
+        title: "Dostęp do działów: zaznaczenia właściciela",
+        roles: ["admin"],
+        body: [
+          "W ostatniej kolumnie przy każdym kierowniku i menedżerze jest wiersz **«Działy»** — obok «jak dla roli» albo ile działów otworzyłeś ponad rolę i ile zamknąłeś. Kliknij — otworzy się lista wszystkich działów panelu z zaznaczeniami: stoją przy tych, które człowiek widzi teraz, a «inaczej niż rola» — tam, gdzie już coś zmieniłeś. Zaznaczysz — dział pojawi się w jego menu i się otworzy; odznaczysz — zniknie z menu, a z bezpośredniego linku panel przeniesie go do «Leady». Kliknij **«Zapisz»**: zmiana działa od razu, człowiek nie musi logować się ponownie. Każde zapisanie trafia do [dziennika](/admin/audit).",
+          "Zaznaczenie daje **podgląd**: człowiek widzi dział, wszystko, co w nim pokazane, i instrukcję do niego — z adnotacją, że dział otworzył mu właściciel. Co może w dziale zmieniać, nadal decyduje rola. Menedżer, któremu otworzyłeś «Partnerzy», zobaczy partnerów, ale decyzje o wypłatach, stawkach i usuwaniu zostają przy Tobie; jeśli kliknie przycisk, którego nie ma jego rola, panel niczego nie zmieni i przeniesie go do «Leady». Żeby człowiek pracował w dziale w pełni, zmień mu rolę.",
+          "«Leady» i «Instrukcje» są zawsze otwarte dla wszystkich, dlatego nie ma ich na liście. Tobie otwarte jest wszystko. Zapisuje się tylko to, co zmieniłeś: jeśli potem zmienisz człowiekowi rolę, działy, których nie ruszałeś, same będą jak dla nowej roli, a Twoje zaznaczenia zostaną.",
+        ],
+      },
+      {
         id: "details",
         title: "Dane pracownika: imię i nazwisko, imię w panelu, username, telefon",
         roles: ["admin", "head"],

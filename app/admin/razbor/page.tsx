@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
 import {
   deleteAction,
@@ -11,7 +10,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { ShotState } from "@/components/admin/razbor-shots";
 import { razborDict, razborResultDict } from "@/content/admin-panel/razbor";
 import { isTender } from "@/lib/razbor/tender";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { forReview, history, type ReviewRow } from "@/lib/razbor/store";
 
@@ -50,8 +49,7 @@ export default async function RazborReviewPage({
 }: {
   searchParams: Promise<{ r?: string; d?: string }>;
 }) {
-  const staff = await requireStaff();
-  if (staff.role !== "admin") notFound();
+  const staff = await requireSection("/admin/razbor");
 
   const { r, d } = await searchParams;
   const locale = staff.panel_locale;

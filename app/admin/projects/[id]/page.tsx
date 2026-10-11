@@ -39,7 +39,7 @@ import {
   visibleStaff,
 } from "@/lib/admin/finance";
 import { optionsFor } from "@/content/calculator";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { ProjectTasksBlock } from "@/components/admin/tasks-block";
 import { pick, tr, type Msg, type Tr } from "@/lib/admin/i18n";
 import { categoryChoices, quoteFor } from "@/lib/admin/quote";
@@ -89,7 +89,7 @@ export default async function ProjectPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ r?: string; contract?: string; detail?: string; t?: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/projects");
   const locale = staff.panel_locale;
   const t = pick(projectCardDict, locale);
   const results = pick(projectResultDict, locale);

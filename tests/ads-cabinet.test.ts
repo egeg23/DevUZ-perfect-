@@ -20,8 +20,9 @@ test("раздел «Реклама» — владельцу и руководи
   assert.ok(canSee("head", "/admin/ads"));
   assert.ok(!canSee("manager", "/admin/ads"));
   // Страницы и действия проверяют сами, а не только меню.
-  assert.match(read("app/admin/ads/page.tsx"), /requireRole\("admin", "head"\)/);
-  assert.match(read("app/admin/ads/[account]/page.tsx"), /requireRole\("admin", "head"\)/);
+  // Страницы — по роли и галочкам владельца (tests/section-access.test.ts).
+  assert.match(read("app/admin/ads/page.tsx"), /requireSection\("\/admin\/ads"\)/);
+  assert.match(read("app/admin/ads/[account]/page.tsx"), /requireSection\("\/admin\/ads"\)/);
   assert.match(read("lib/ads/access.ts"), /staff\.role !== "admin" && staff\.role !== "head"/);
 });
 

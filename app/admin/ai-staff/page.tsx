@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { AiStaffTabs } from "@/app/admin/ai-staff/tabs";
 import { AdminShell } from "@/components/admin/shell";
 import { aiStaffDict } from "@/content/admin-panel/ai-staff";
-import { requireRole } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { PLANS, PLAN_IDS, PLAN_TITLE, formatUzs, monthKey, monthStart, usageCostUsd, uzsPerUsd } from "@/lib/ai-staff/plans";
 import { overview } from "@/lib/ai-staff/stats";
@@ -24,9 +24,10 @@ const BTN = "rounded-md border border-line px-2.5 py-1 text-xs text-muted hover:
  * (Click и Payme появятся позже, docs/ai-staff/pilot.md).
  */
 export default async function AiStaffPage({ searchParams }: { searchParams: Promise<{ n?: string; d?: string }> }) {
-  // Раздел видит и руководитель, но клиенты сервиса — деньги и подписки —
-  // только владельцу: руководителю сразу открывается вкладка «Блогеры».
-  const staff = await requireRole("admin", "head");
+  const staff = await requireSection("/admin/ai-staff");
+  // Раздел видит и руководитель (и тот, кому владелец открыл его галочкой),
+  // но клиенты сервиса — деньги и подписки — только владельцу: остальным
+  // сразу открывается вкладка «Блогеры».
   if (staff.role !== "admin") redirect("/admin/ai-staff/bloggers");
   const t = pick(aiStaffDict, staff.panel_locale);
   const q = await searchParams;

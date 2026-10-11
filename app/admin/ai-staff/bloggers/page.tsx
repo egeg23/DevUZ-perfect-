@@ -18,7 +18,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { aiStaffDict } from "@/content/admin-panel/ai-staff";
 import { bloggersDict } from "@/content/admin-panel/ai-staff-bloggers";
-import { requireRole } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { PANEL_INTL, pick, type Picked } from "@/lib/admin/i18n";
 import { discoveryConfig } from "@/lib/bloggers/discovery";
@@ -40,7 +40,7 @@ const BTN = "rounded-md border border-line px-2.5 py-1 text-xs text-muted hover:
  * ответил и кого завести партнёром. Владельцу и руководителю.
  */
 export default async function BloggersPage({ searchParams }: { searchParams: Promise<{ n?: string; j?: string; a?: string; d?: string }> }) {
-  const staff = await requireRole("admin", "head");
+  const staff = await requireSection("/admin/ai-staff");
   const t = pick(bloggersDict, staff.panel_locale);
   const title = pick(aiStaffDict, staff.panel_locale).title;
   const q = await searchParams;

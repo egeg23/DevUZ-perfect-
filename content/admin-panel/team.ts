@@ -300,6 +300,39 @@ export const teamDict = defineDict({
     pl: "Zaproszenie, zmiana roli i kierownika oraz prośba o potwierdzenie przekazania przychodzą zawsze — bez nich akcja się nie odbędzie.",
   },
   noticesSave: { ru: "Сохранить", uz: "Saqlash", pl: "Zapisz" },
+
+  // Разделы: галочки владельца поверх роли (roles.ts, opens).
+  sections: {
+    ru: (summary: string) => `Разделы · ${summary}`,
+    uz: (summary: string) => `Bo‘limlar · ${summary}`,
+    pl: (summary: string) => `Działy · ${summary}`,
+  },
+  sectionsAsRole: { ru: "как у роли", uz: "roldagidek", pl: "jak dla roli" },
+  sectionsDiff: {
+    ru: (extra: number, hidden: number) =>
+      [extra ? `открыто сверх роли: ${extra}` : "", hidden ? `закрыто: ${hidden}` : ""].filter(Boolean).join(", "),
+    uz: (extra: number, hidden: number) =>
+      [extra ? `roldan tashqari ochilgan: ${extra}` : "", hidden ? `yopilgan: ${hidden}` : ""].filter(Boolean).join(", "),
+    pl: (extra: number, hidden: number) =>
+      [extra ? `otwarte ponad rolę: ${extra}` : "", hidden ? `zamknięte: ${hidden}` : ""].filter(Boolean).join(", "),
+  },
+  sectionsFor: {
+    ru: (name: string) => `Какие разделы видит «${name}»:`,
+    uz: (name: string) => `«${name}» qaysi bo‘limlarni ko‘radi:`,
+    pl: (name: string) => `Jakie działy widzi «${name}»:`,
+  },
+  sectionsHelp: { ru: "Как работает доступ к разделам", uz: "Bo‘limlarga kirish qanday ishlaydi", pl: "Jak działa dostęp do działów" },
+  sectionsChanged: { ru: "не как у роли", uz: "roldagidek emas", pl: "inaczej niż rola" },
+  sectionsNote: {
+    ru: "Галочка открывает раздел для просмотра. Что человек может в нём менять, решает роль. «Лиды» и «Инструкции» открыты всем всегда.",
+    uz: "Belgi bo‘limni ko‘rish uchun ochadi. Unda nimani o‘zgartira olishini rol hal qiladi. «Lidlar» va «Yo‘riqnoma» hammaga doim ochiq.",
+    pl: "Zaznaczenie otwiera dział do podglądu. Co można w nim zmieniać, decyduje rola. «Leady» i «Instrukcje» są zawsze otwarte dla wszystkich.",
+  },
+  r_sections: {
+    ru: "Сохранено: меню и доступ к разделам у сотрудника уже поменялись.",
+    uz: "Saqlandi: xodimning menyusi va bo‘limlarga kirishi allaqachon o‘zgardi.",
+    pl: "Zapisano: menu i dostęp do działów pracownika już się zmieniły.",
+  },
   offAllOn: { ru: "приходит всё", uz: "hammasi keladi", pl: "przychodzi wszystko" },
   offAllOff: { ru: "всё выключено", uz: "hammasi o‘chirilgan", pl: "wszystko wyłączone" },
   offSome: {

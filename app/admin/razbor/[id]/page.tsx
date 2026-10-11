@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { saveAction } from "@/app/admin/razbor/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { razborDict, razborResultDict } from "@/content/admin-panel/razbor";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { evidenceFor, shootableCodes } from "@/lib/razbor/evidence";
 import { razborById, type RazborArticle } from "@/lib/razbor/store";
@@ -38,8 +38,7 @@ export default async function RazborEditPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ r?: string; d?: string }>;
 }) {
-  const staff = await requireStaff();
-  if (staff.role !== "admin") notFound();
+  const staff = await requireSection("/admin/razbor");
 
   const { id } = await params;
   const { r, d } = await searchParams;

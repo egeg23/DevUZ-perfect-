@@ -55,6 +55,7 @@ export const AUDIT_ACTIONS = [
   "staff.grade_changed",
   "staff.touch_plan_set",
   "staff.notices",
+  "staff.sections",
   "staff.updated",
   "partner.model_changed",
   "partner.agency_requested",

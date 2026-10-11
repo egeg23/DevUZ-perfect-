@@ -4,7 +4,7 @@ import { addProject } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { projectsListDict, stageLabel } from "@/content/admin-panel/projects";
 import { money } from "@/lib/admin/finance";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { PANEL_INTL, pick, type PanelLocale } from "@/lib/admin/i18n";
 import { loadPeople } from "@/lib/admin/ledger";
 import { daysOnStage, listProjects, stageProgress } from "@/lib/admin/projects";
@@ -26,7 +26,7 @@ export default async function ProjectsPage({
 }: {
   searchParams: Promise<{ all?: string; r?: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/projects");
   const { all, r } = await searchParams;
   const locale = staff.panel_locale;
   const t = pick(projectsListDict, locale);

@@ -1,7 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import type { Role } from "@/lib/admin/roles";
+import { opens, type Role } from "@/lib/admin/roles";
 import { ipFromHeaders } from "@/lib/qualify/limiter";
 import { SESSION_COOKIE, staffForSession, type Staff } from "@/lib/admin/session";
 
@@ -42,6 +42,17 @@ export async function requireAdmin(): Promise<Staff> {
 export async function requireRole(...roles: Role[]): Promise<Staff> {
   const staff = await requireStaff();
   if (!roles.includes(staff.role)) redirect("/admin");
+  return staff;
+}
+
+/**
+ * Раздел панели: роль и галочки владельца (roles.ts, opens). Страница
+ * каждого раздела начинается с этой проверки, а не с requireRole: иначе
+ * галочка открыла бы пункт меню, а страница всё равно увела бы на главную.
+ */
+export async function requireSection(href: string): Promise<Staff> {
+  const staff = await requireStaff();
+  if (!opens(staff, href)) redirect("/admin");
   return staff;
 }
 
