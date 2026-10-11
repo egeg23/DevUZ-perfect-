@@ -326,6 +326,58 @@ export const leadCardDict = defineDict({
     pl: (from: string) => `pisz ${from} — z niego wyszła wiadomość, a dla klienta to jeden rozmówca`,
   },
 
+  // ── Ответ клиенту из карточки (components/admin/talk-chat.tsx) ──
+  replyPlaceholder: { ru: "Напишите клиенту…", uz: "Mijozga yozing…", pl: "Napisz do klienta…" },
+  replySend: { ru: "Отправить", uz: "Yuborish", pl: "Wyślij" },
+  replySending: { ru: "Отправляю…", uz: "Yuborilmoqda…", pl: "Wysyłam…" },
+  /** `from` — готовое «с аккаунта «…»» (from). */
+  replyHint: {
+    ru: (from: string) =>
+      `Уйдёт ${from} — тем же собеседником, с которым клиент уже переписывается. Как только вы ответите, ИИ замолкает: дальше разговор ваш. Ctrl+Enter — отправить.`,
+    uz: (from: string) =>
+      `${from} ketadi — mijoz allaqachon yozishayotgan o‘sha suhbatdosh nomidan. Siz javob berishingiz bilan SI jim bo‘ladi: suhbat endi sizniki. Ctrl+Enter — yuborish.`,
+    pl: (from: string) =>
+      `Wyjdzie ${from} — od tego samego rozmówcy, z którym klient już pisze. Gdy tylko odpowiesz, AI milknie: dalej rozmowa jest Twoja. Ctrl+Enter — wyślij.`,
+  },
+  lineQueued: { ru: "отправляется…", uz: "yuborilmoqda…", pl: "wysyłanie…" },
+  /** Причина — как её записал скаут или Telegram, не переводится. */
+  lineFailed: {
+    ru: (why: string) => `не ушло${why ? `: ${why}` : ""}`,
+    uz: (why: string) => `yuborilmadi${why ? `: ${why}` : ""}`,
+    pl: (why: string) => `nie wysłano${why ? `: ${why}` : ""}`,
+  },
+  re_empty: { ru: "Пустое сообщение не отправить.", uz: "Bo‘sh xabarni yuborib bo‘lmaydi.", pl: "Pustej wiadomości nie da się wysłać." },
+  re_too_long: {
+    ru: "Слишком длинно: в Telegram одним сообщением уходит до 4000 знаков.",
+    uz: "Juda uzun: Telegramda bitta xabarda 4000 belgigacha ketadi.",
+    pl: "Za długo: w Telegramie jedna wiadomość to do 4000 znaków.",
+  },
+  re_gone: {
+    ru: "Переписка изменилась — обновите страницу.",
+    uz: "Yozishma o‘zgardi — sahifani yangilang.",
+    pl: "Rozmowa się zmieniła — odśwież stronę.",
+  },
+  re_manual: {
+    ru: "Эта переписка шла с вашего телефона — ответьте там же.",
+    uz: "Bu yozishma telefoningizdan bo‘lgan — o‘sha yerda javob bering.",
+    pl: "Ta rozmowa szła z Twojego telefonu — odpowiedz tam.",
+  },
+  re_offline: {
+    ru: "База не отвечает — попробуйте через минуту.",
+    uz: "Baza javob bermayapti — bir daqiqadan keyin urinib ko‘ring.",
+    pl: "Baza nie odpowiada — spróbuj za minutę.",
+  },
+  re_failed: {
+    ru: "Не получилось поставить в отправку — попробуйте ещё раз.",
+    uz: "Yuborishga qo‘yib bo‘lmadi — yana urinib ko‘ring.",
+    pl: "Nie udało się dodać do wysyłki — spróbuj jeszcze raz.",
+  },
+  re_forbidden: {
+    ru: "Лид не за вами — ответить отсюда нельзя.",
+    uz: "Lid sizga biriktirilmagan — bu yerdan javob berib bo‘lmaydi.",
+    pl: "Lead nie jest Twój — nie odpowiesz stąd.",
+  },
+
   // ── Переписка с клиентом ──
   transcript: { ru: "Переписка с клиентом", uz: "Mijoz bilan yozishma", pl: "Korespondencja z klientem" },
   assistant: { ru: "ассистент", uz: "assistent", pl: "asystent" },

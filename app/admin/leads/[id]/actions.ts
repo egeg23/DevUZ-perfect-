@@ -17,7 +17,7 @@ import {
 } from "@/lib/admin/ownership";
 import { leadById } from "@/lib/admin/leads";
 import { canEdit } from "@/lib/admin/ownership";
-import { takeOverTalk } from "@/lib/admin/outreach-talk-store";
+import { queueStaffReply, takeOverTalk, type StaffReplyError } from "@/lib/admin/outreach-talk-store";
 import { record } from "@/lib/admin/audit";
 import { decideTransfer, requestTransfer } from "@/lib/admin/transfers";
 import { handledLabel, markLeadCards } from "@/lib/qualify/telegram";
@@ -145,6 +145,34 @@ export async function takeOverTalkAction(formData: FormData) {
   });
   revalidatePath(`/admin/leads/${leadId}`);
   redirect(`/admin/leads/${leadId}#talk`);
+}
+
+/**
+ * Ответ клиенту из «Первички по касанию»: уйдёт с рабочего аккаунта
+ * разговора (queueStaffReply). Зовётся из чата карточки, а не формой: чат
+ * не перезагружает страницу и сразу показывает «отправляется».
+ */
+export async function replyInTalkAction(
+  leadId: string,
+  prospectId: string,
+  body: string,
+): Promise<{ ok: true } | { ok: false; reason: StaffReplyError | "forbidden" }> {
+  const staff = await requireStaff();
+  const lead = await leadById(leadId);
+  if (!lead || !canEdit(lead, staff) || !prospectId) return { ok: false, reason: "forbidden" };
+
+  const result = await queueStaffReply({ prospectId, leadId, staffId: staff.id, body: String(body ?? "") });
+  if (result.ok) {
+    await record("prospect.staff_reply", {
+      actorStaffId: staff.id,
+      targetType: "prospect",
+      targetId: prospectId,
+      ip: await requestIp(),
+      meta: { lead: leadId, chars: String(body ?? "").trim().length },
+    });
+    revalidatePath(`/admin/leads/${leadId}`);
+  }
+  return result;
 }
 
 export async function toggleAutoReminder(formData: FormData) {

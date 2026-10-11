@@ -17,6 +17,7 @@ import {
 } from "./actions";
 import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
+import { TalkChat } from "@/components/admin/talk-chat";
 import type { VoidReason } from "@/lib/partners/rules";
 import { clientById, partnerById } from "@/lib/partners/store";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
@@ -524,34 +525,17 @@ export default async function LeadPage({
             </span>
           </div>
 
-          {talk.lines.length ? (
-            <div className="mt-3 flex flex-col gap-3">
-              {talk.lines.map((line, i) => (
-                <div
-                  key={i}
-                  className={
-                    line.direction === "in"
-                      ? "max-w-[85%] self-start rounded-xl rounded-bl-sm bg-surface-2 px-4 py-2.5"
-                      : "max-w-[85%] self-end rounded-xl rounded-br-sm border border-line px-4 py-2.5"
-                  }
-                >
-                  <p className="text-[0.7rem] uppercase tracking-wider text-faint">
-                    {line.direction === "in" ? t.client : line.author === "ai" ? t.aiForUs : t.you}
-                    {/* С какого аккаунта ушло: владелец, 11.10.2026. Ник — без
-                        заглавных, как в Telegram. */}
-                    {line.direction === "out" && talk.from ? (
-                      <span className="normal-case tracking-normal"> · {t.from(talk.from.label, talk.from.handle)}</span>
-                    ) : null}
-                  </p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-text">{line.body}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-2 text-sm text-muted">
-              {t.talkEmpty}
-            </p>
-          )}
+          {/* Переписка как чат: обновляется сама, ответ уходит с рабочего
+              аккаунта разговора (владелец, 11.10.2026: «чтобы менеджеры не
+              переключались между несколькими аккаунтами»). */}
+          <TalkChat
+            leadId={lead.id}
+            prospectId={talk.prospectId}
+            initial={talk.lines}
+            from={talk.from ? t.from(talk.from.label, talk.from.handle) : null}
+            aiHandling={talk.aiHandling}
+            emptyText={t.talkEmpty}
+          />
 
           <div className="mt-3 flex flex-wrap items-center gap-3">
             {talk.aiHandling ? (
