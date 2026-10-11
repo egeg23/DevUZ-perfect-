@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 /* main: появление блоков, шапка, фильтр каталога, корзина, подбор по росту,
-   примерка ткани и цвета, корпоративная заявка, параллакс шоурума, «было /
+   выбор ткани и цвета, корпоративная заявка, параллакс шоурума, «было /
    стало», конструктор. Всё, что уходит менеджеру, уходит в Telegram
    Enotmebel. Анимации только transform и opacity, прокрутку только читаем. */
 var d=document,root=d.documentElement,$=function(id){return d.getElementById(id)};
@@ -99,21 +99,28 @@ if(sz){
   sz.addEventListener('input',pick);pick();
 }
 
-/* ── Примерка: ткань меняет рисунок, цвет меняет кресло ── */
-var pear=$('try-pear');
-if(pear){
-  var fill=pear.querySelector('.pear-fill'),fb=$('try-fab'),fc=$('try-col'),tm=$('try-m');
-  var cur=function(n){var x=d.querySelector('input[name="'+n+'"]:checked');return x};
-  var draw=function(){
-    var f=cur('fab'),c=cur('col');
-    if(f&&fill)fill.setAttribute('fill','url(#tx-'+f.dataset.tex+')');
-    if(c)pear.style.color=c.value;
-    if(fb&&f)fb.textContent=L.fabrics[f.value];if(fc&&c)fc.textContent=c.dataset.n;
-    if(!reduce){pear.classList.remove('swap');void pear.offsetWidth;pear.classList.add('swap')}
+/* ── Ткань и цвет: крупное фото образца с их карты расцветок. Сменили
+   ткань — показываем её цвета, первый становится выбранным. ── */
+var swImg=$('sw-img');
+if(swImg){
+  var fb=$('try-fab'),fc=$('try-col'),tm=$('try-m'),swN=$('sw-n');
+  var cur=function(n){return d.querySelector('input[name="'+n+'"]:checked')};
+  var show=function(){
+    var f=cur('fab'),c=cur('col');if(!f||!c)return;
+    var src=L.img+'/f-'+f.value+'-'+c.value+'.webp';
+    if(swImg.getAttribute('src')!==src){
+      swImg.width=+c.dataset.w;swImg.height=+c.dataset.h;swImg.style.maxWidth=c.dataset.w+'px';swImg.src=src;
+      swImg.alt=L.fabrics[f.value]+', '+L.cards[f.value]+' '+c.value;
+      if(!reduce){swImg.classList.remove('swap');void swImg.offsetWidth;swImg.classList.add('swap')}
+    }
+    fb.textContent=L.fabrics[f.value];fc.textContent=L.cards[f.value]+' '+c.value;
   };
-  qa('input[name="fab"],input[name="col"]').forEach(function(x){x.addEventListener('change',draw)});
+  qa('input[name="fab"]').forEach(function(x){x.addEventListener('change',function(){
+    var n=0;qa('.sw-grid').forEach(function(g){var on=g.dataset.fab===x.value;g.hidden=!on;if(on){n=g.querySelectorAll('input').length;var first=g.querySelector('input');if(first)first.checked=true}});
+    if(swN)swN.textContent=n;show()})});
+  qa('input[name="col"]').forEach(function(x){x.addEventListener('change',show)});
   $('try-send').addEventListener('click',function(){var f=cur('fab'),c=cur('col');
-    tgSend(L.fabHead+'\n'+L.model+': '+L.models[tm.value].n+'\n'+L.fabric+': '+L.fabrics[f.value]+'\n'+L.color+': '+c.dataset.n,$('try-done'))});
+    tgSend(L.fabHead+'\n'+L.model+': '+L.models[tm.value].n+'\n'+L.fabric+': '+L.fabrics[f.value]+'\n'+L.color+': '+L.cards[f.value]+' '+c.value,$('try-done'))});
 }
 
 /* ── Корпоративный заказ ── */
