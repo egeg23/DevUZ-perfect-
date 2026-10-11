@@ -15,6 +15,7 @@ const NAV: Array<{ href: string; key: CabKey; owner?: boolean }> = [
   { href: "/cabinet/test", key: "navTest" },
   { href: "/cabinet/talks", key: "navTalks" },
   { href: "/cabinet/leads", key: "navLeads" },
+  { href: "/cabinet/bloggers", key: "navBloggers" },
   { href: "/cabinet/settings", key: "navSettings", owner: true },
   { href: "/cabinet/team", key: "navTeam", owner: true },
   { href: "/cabinet/plan", key: "navPlan", owner: true },

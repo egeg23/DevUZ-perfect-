@@ -199,7 +199,7 @@ export async function removeMember(tenantId: string, memberId: string): Promise<
 export type Employee = {
   id: string;
   tenant_id: string;
-  role: "sales" | "smm" | "analyst";
+  role: "sales" | "smm" | "analyst" | "bloggers";
   name: string;
   greeting: string;
   tone: "friendly" | "formal";
@@ -229,6 +229,110 @@ export async function updateEmployee(
 /** Уровень модели меняет только панель студии: он следует из тарифа. */
 export async function setEmployeeTier(tenantId: string, tier: Employee["model_tier"]): Promise<void> {
   await db().from("ai_employees").update({ model_tier: tier }).eq("tenant_id", tenantId);
+}
+
+/* ── ИИ-менеджер по блогерам (lib/ai-staff/bloggers.ts) ──────────────── */
+
+export async function bloggersBrief(tenantId: string): Promise<Record<string, unknown> | null> {
+  const { data } = await db()
+    .from("ai_employees")
+    .select("brief, enabled")
+    .eq("tenant_id", tenantId)
+    .eq("role", "bloggers")
+    .maybeSingle();
+  return data && data.enabled ? ((data.brief as Record<string, unknown>) ?? {}) : null;
+}
+
+export async function saveBloggersBrief(tenantId: string, brief: Record<string, unknown>): Promise<void> {
+  await db()
+    .from("ai_employees")
+    .upsert({ tenant_id: tenantId, role: "bloggers", name: "", brief, enabled: true }, { onConflict: "tenant_id,role" });
+}
+
+export type TenantBlogger = {
+  id: string;
+  tenant_id: string;
+  handle: string;
+  name: string;
+  bio: string;
+  followers: number | null;
+  following: number | null;
+  engagement: number | null;
+  posts_per_week: number | null;
+  last_post_at: string | null;
+  topics: string[];
+  lang: string | null;
+  city: string | null;
+  fit: number | null;
+  why: string | null;
+  telegram: string | null;
+  email: string | null;
+  source: "manual" | "search";
+  score: number | null;
+  score_notes: string | null;
+  status: "new" | "ready" | "skipped" | "contacted" | "replied" | "deal" | "declined";
+  pitch: string | null;
+  contacted_at: string | null;
+  note: string | null;
+  created_at: string;
+};
+
+const shapeTenantBlogger = (row: Record<string, unknown>): TenantBlogger => ({
+  ...(row as unknown as TenantBlogger),
+  engagement: row.engagement === null || row.engagement === undefined ? null : Number(row.engagement),
+  posts_per_week: row.posts_per_week === null || row.posts_per_week === undefined ? null : Number(row.posts_per_week),
+  topics: Array.isArray(row.topics) ? (row.topics as string[]) : [],
+});
+
+export async function tenantBloggers(tenantId: string, limit = 200): Promise<TenantBlogger[]> {
+  const { data } = await db()
+    .from("ai_bloggers")
+    .select("*")
+    .eq("tenant_id", tenantId)
+    .order("score", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data ?? []).map((r) => shapeTenantBlogger(r as Record<string, unknown>));
+}
+
+export async function tenantBlogger(tenantId: string, id: string): Promise<TenantBlogger | null> {
+  const { data } = await db().from("ai_bloggers").select("*").eq("tenant_id", tenantId).eq("id", id).maybeSingle();
+  return data ? shapeTenantBlogger(data as Record<string, unknown>) : null;
+}
+
+/** Новые ники клиента; уже известные второй раз не заводятся. Возвращает заведённые. */
+export async function addTenantBloggers(
+  tenantId: string,
+  rows: ReadonlyArray<{ handle: string; name?: string; bio?: string; followers?: number | null; following?: number | null; source: "manual" | "search"; note?: string | null }>,
+): Promise<TenantBlogger[]> {
+  if (!rows.length) return [];
+  const { data } = await db()
+    .from("ai_bloggers")
+    .upsert(
+      rows.map((r) => ({ ...r, tenant_id: tenantId })),
+      { onConflict: "tenant_id,handle", ignoreDuplicates: true },
+    )
+    .select("*");
+  return (data ?? []).map((r) => shapeTenantBlogger(r as Record<string, unknown>));
+}
+
+export async function updateTenantBlogger(tenantId: string, id: string, patch: Partial<Omit<TenantBlogger, "id" | "tenant_id" | "created_at">>): Promise<void> {
+  await db()
+    .from("ai_bloggers")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("tenant_id", tenantId)
+    .eq("id", id);
+}
+
+/** Сколько блогеров клиент оценил с начала месяца — у оценки есть предел (BLOGGERS_PER_MONTH). */
+export async function tenantBloggersSince(tenantId: string, since: Date): Promise<number> {
+  const { count } = await db()
+    .from("ai_bloggers")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenantId)
+    .not("score", "is", null)
+    .gte("updated_at", since.toISOString());
+  return count ?? 0;
 }
 
 /* ── База знаний ──────────────────────────────────────────────────────── */

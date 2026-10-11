@@ -13,6 +13,8 @@ import { isPlan } from "@/lib/ai-staff/plans";
 import { isKnowledgeKind } from "@/lib/ai-staff/prompt";
 import { handleIncoming } from "@/lib/ai-staff/service";
 import * as store from "@/lib/ai-staff/store";
+import { assessForTenant, assessLeft, briefFrom, searchForTenant } from "@/lib/ai-staff/bloggers";
+import { normalizeHandle } from "@/lib/bloggers/rules";
 import { sendText } from "@/lib/ai-staff/telegram";
 import { appSecret } from "@/lib/secrets";
 
@@ -285,4 +287,66 @@ export async function teachAnswer(form: FormData): Promise<void> {
   }
   revalidatePath(`/cabinet/talks/${id}`);
   redirect(`/cabinet/talks/${id}?n=taught`);
+}
+
+/* ── ИИ-менеджер по блогерам (lib/ai-staff/bloggers.ts) ── */
+
+const BLOGGERS = "/cabinet/bloggers";
+
+/** Подключить роль и сохранить бриф — владелец кабинета. */
+export async function saveBloggersBrief(form: FormData): Promise<void> {
+  const { tenant } = await owner();
+  const brief = briefFrom({
+    brand: str(form, "brand", 600),
+    audience: str(form, "audience", 600),
+    offer: str(form, "offer", 600),
+    minFollowers: Number(str(form, "minFollowers", 12).replace(/\s/g, "")),
+    maxFollowers: Number(str(form, "maxFollowers", 12).replace(/\s/g, "")),
+  });
+  await store.saveBloggersBrief(tenant.id, brief);
+  revalidatePath(BLOGGERS);
+}
+
+export async function searchBloggers(form: FormData): Promise<void> {
+  const { tenant } = await requireTenant();
+  const raw = await store.bloggersBrief(tenant.id);
+  if (!raw) redirect(BLOGGERS);
+  const result = await searchForTenant(tenant, str(form, "query", 120), briefFrom(raw));
+  redirect(result.ok ? `${BLOGGERS}?n=found&a=${result.assessed}` : `${BLOGGERS}?n=${result.reason}`);
+}
+
+export async function addBloggerByHandle(form: FormData): Promise<void> {
+  const { tenant } = await requireTenant();
+  const raw = await store.bloggersBrief(tenant.id);
+  if (!raw) redirect(BLOGGERS);
+  const handle = normalizeHandle(str(form, "handle", 200));
+  if (!handle) redirect(`${BLOGGERS}?n=bad`);
+  if ((await assessLeft(tenant.id)) <= 0) redirect(`${BLOGGERS}?n=no_left`);
+  const [added] = await store.addTenantBloggers(tenant.id, [{ handle, source: "manual" }]);
+  if (added) await assessForTenant(tenant, added, briefFrom(raw)).catch((error) => console.error("ai-staff, блогеры:", (error as Error).message));
+  revalidatePath(BLOGGERS);
+}
+
+export async function reassessBlogger(form: FormData): Promise<void> {
+  const { tenant } = await requireTenant();
+  const raw = await store.bloggersBrief(tenant.id);
+  const blogger = await store.tenantBlogger(tenant.id, str(form, "id", 64));
+  if (raw && blogger && (await assessLeft(tenant.id)) > 0) {
+    await assessForTenant(tenant, blogger, briefFrom(raw)).catch((error) => console.error("ai-staff, блогеры:", (error as Error).message));
+  }
+  revalidatePath(BLOGGERS);
+}
+
+const BLOGGER_STATUSES = ["ready", "skipped", "contacted", "replied", "deal", "declined"] as const;
+
+export async function setBloggerStatus(form: FormData): Promise<void> {
+  const { tenant } = await requireTenant();
+  const status = str(form, "status", 20) as (typeof BLOGGER_STATUSES)[number];
+  if ((BLOGGER_STATUSES as readonly string[]).includes(status)) {
+    await store.updateTenantBlogger(tenant.id, str(form, "id", 64), {
+      status,
+      ...(status === "contacted" ? { contacted_at: new Date().toISOString() } : {}),
+    });
+  }
+  revalidatePath(BLOGGERS);
 }

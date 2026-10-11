@@ -307,3 +307,30 @@ test("Direct: картинки из вложений, событие студи�
     "b\nc",
   );
 });
+
+test("сервис: ИИ-менеджер по блогерам — бриф с пределами, текст только из слов клиента", async () => {
+  const { briefFrom, tenantPitch, BLOGGERS_PER_MONTH, SEARCHES_PER_DAY } = await import("@/lib/ai-staff/bloggers");
+  const brief = briefFrom({ brand: "Детская одежда, свой пошив.", audience: "мамы, Ташкент", offer: "бартер: комплект за обзор в сторис", minFollowers: 50, maxFollowers: 10 });
+  assert.equal(brief.minFollowers, 100);
+  assert.ok(brief.maxFollowers >= brief.minFollowers);
+  const ru = tenantPitch({ company: "Kids Wear", brief, name: "Dilnoza K", lang: "ru" });
+  assert.match(ru, /^Здравствуйте, Dilnoza! Пишем от Kids Wear: Детская одежда, свой пошив\./);
+  assert.match(ru, /бартер: комплект за обзор в сторис/);
+  assert.doesNotMatch(ru, /\d/, "чисел, которых клиент не писал, в тексте нет");
+  assert.doesNotMatch(tenantPitch({ company: "X", brief, name: "", lang: "uz" }), /Здравствуйте/);
+  assert.ok(SEARCHES_PER_DAY <= 1, "поиск — Firecrawl студии: не чаще раза в день на клиента");
+  assert.ok(BLOGGERS_PER_MONTH <= 200);
+});
+
+test("сервис: роль в базе, кабинете и на странице сервиса", async () => {
+  assert.match(read("supabase/migrations/0106_ai_staff_bloggers.sql"), /check \(role in \('sales', 'smm', 'analyst', 'bloggers'\)\)/);
+  assert.match(read("components/cabinet/shell.tsx"), /\{ href: "\/cabinet\/bloggers", key: "navBloggers" \}/);
+  assert.match(read("app/cabinet/bloggers/page.tsx"), /const cab = await cabinetPage\(\);/);
+  const { landing } = await import("@/content/ai-staff/landing");
+  assert.ok(landing.ru.roles.some((r) => r.title === "ИИ-менеджер по блогерам"));
+  assert.equal(landing.ru.roles.length, landing.uz.roles.length);
+  const { plainTextProblems } = await import("@/lib/proto/plain-text");
+  for (const locale of ["ru", "uz"] as const) {
+    for (const r of landing[locale].roles) assert.deepEqual(plainTextProblems({ text: `${r.title} ${r.text}` }), [], `${locale}: ${r.title}`);
+  }
+});

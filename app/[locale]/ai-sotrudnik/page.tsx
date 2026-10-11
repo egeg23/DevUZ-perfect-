@@ -54,6 +54,18 @@ export default async function AiStaffLanding({ params }: { params: Promise<{ loc
       </section>
 
       <section>
+        <h2 className="mb-6 text-2xl font-semibold">{copy.rolesTitle}</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {copy.roles.map((role) => (
+            <div key={role.title} className="rounded-2xl border border-line bg-surface p-5">
+              <div className="font-semibold">{role.title}</div>
+              <p className="mt-2 text-sm text-muted">{role.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
         <h2 className="mb-6 text-2xl font-semibold">{copy.howTitle}</h2>
         <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {copy.how.map((step, i) => (
