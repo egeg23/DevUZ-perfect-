@@ -1,10 +1,11 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 
 import { canUseAccount } from "@/lib/ads/access";
 import { tokenKey } from "@/lib/ads/crypto";
 import { exchangeCode, verifyState } from "@/lib/ads/oauth";
 import { siteBase } from "@/lib/ads/session";
-import { saveCredentials, updateAccount } from "@/lib/ads/store";
+import { syncAccount } from "@/lib/ads/run";
+import { accountById, saveCredentials, updateAccount } from "@/lib/ads/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,6 +44,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (platform === "google" && !tokens.refresh_token) {
       await updateAccount(access.account.id, { last_error: "Google не выдал долгий ключ — отзовите доступ DevUz в аккаунте Google и подключите снова." });
     }
+    // Первое обновление — сразу, а не через сутки: человек подключил кабинет
+    // и ждёт увидеть предложения. После ответа: забор отчётов не держит редирект.
+    after(async () => {
+      const fresh = await accountById(access.account.id);
+      if (fresh) await syncAccount(fresh).catch((error) => console.error("ads first sync:", error));
+    });
     return back("oauth_ok");
   } catch (error) {
     console.error("ads oauth:", error instanceof Error ? error.message : error);
