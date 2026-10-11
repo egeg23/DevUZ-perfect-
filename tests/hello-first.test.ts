@@ -113,6 +113,14 @@ test("«+» и «да» на кружок — согласие на макет, 
   for (const reply of ["Да", "Давайте", "Ha", "Хочу", "Интересно, давайте"]) {
     assert.equal(readInbound(reply, { afterCircle: true }), "proto", reply);
   }
+  // enotmebel.uz, 11.10.2026: «Делайте» ушло человеку как «непонятно».
+  for (const reply of ["Делайте", "Сделайте, пожалуйста", "Да, делайте", "Хорошо, жду", "Можно", "Qiling", "Mayli, tayyorlang", "Керак"]) {
+    assert.equal(readInbound(reply, { afterCircle: true }), "proto", reply);
+  }
+  // Отказ и вопрос словами согласия не становятся.
+  assert.equal(readInbound("Не надо", { afterCircle: true }), "stop");
+  assert.equal(readInbound("Делайте что хотите", { afterCircle: true }), "unclear");
+  assert.equal(readInbound("Можно?", { afterCircle: true }), "talk");
   // Без кружка короткое «да» по-прежнему разбирает человек, вопрос — модель.
   assert.equal(readInbound("Да"), "unclear");
   assert.equal(readInbound("да?", { afterCircle: true }), "talk");
