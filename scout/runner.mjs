@@ -33,6 +33,8 @@ import { TOO_LATE, editOutcome, markEditFailed, markEdited, nextEdit, sentCheck 
 import { HOURLY_CAP, isStopError } from "@/lib/admin/outreach";
 import {
   bloggerInbound,
+  bloggerPhoto,
+  isBloggerChat,
   markBloggerHelloFailed,
   markBloggerHelloSent,
   markBloggerReplyFailed,
@@ -861,6 +863,24 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
   // наше: аккаунт рабочий, в него пишут и помимо касаний.
   const inbound = async (event) => {
     const message = event.message;
+    // Скриншот статистики от блогера (lib/bloggers/tg-queue.ts): качаем
+    // картинку, только если пишет блогер из нашей переписки, — чужие фото в
+    // рабочий аккаунт не трогаем.
+    if (message && !message.out && message.isPrivate && message.photo) {
+      try {
+        const sender = await message.getSender();
+        const id = sender?.id === undefined || sender?.id === null ? "" : String(sender.id);
+        if (id && !sender.bot && (await isBloggerChat(id))) {
+          const file = await client.downloadMedia(message, {});
+          if (file && file.length <= 5 * 1024 * 1024) {
+            await bloggerPhoto({ handle: sender.username ? String(sender.username) : "", userId: id, mediaType: "image/jpeg", data: Buffer.from(file).toString("base64") });
+            console.log(`блогеры${tag}: скриншот от ${sender.username ? `@${sender.username}` : `id ${id}`}`);
+          }
+        }
+      } catch (error) {
+        console.error("блогеры: картинка не скачалась —", error?.message ?? error);
+      }
+    }
     if (!message?.message || message.out) return;
     if (!message.isPrivate) return;
 

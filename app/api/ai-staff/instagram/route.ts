@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { handleInstagramEvent, igConfig, parseEvents, validSignature } from "@/lib/ai-staff/instagram";
 import { serviceEnabled } from "@/lib/ai-staff/store";
 import { safeEqual } from "@/lib/ai-staff/crypto";
+import { handleStudioEvent, isStudioEvent } from "@/lib/bloggers/direct";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +30,6 @@ export async function POST(request: Request) {
   if (!cfg || !validSignature(raw, request.headers.get("x-hub-signature-256"), cfg.appSecret)) {
     return new Response("forbidden", { status: 403 });
   }
-  if (!(await serviceEnabled())) return Response.json({ ok: true });
   let payload: unknown = null;
   try {
     payload = JSON.parse(raw);
@@ -38,9 +38,13 @@ export async function POST(request: Request) {
   }
   const events = parseEvents(payload);
   after(async () => {
+    // Сервис клиентов может быть выключен, а Direct студии — нет: блогерам
+    // отвечает наш ИИ-сотрудник «Блогеры» (lib/bloggers/direct.ts).
+    const enabled = await serviceEnabled();
     for (const event of events) {
       try {
-        await handleInstagramEvent(event);
+        if (await isStudioEvent(event)) await handleStudioEvent(event);
+        else if (enabled) await handleInstagramEvent(event);
       } catch (error) {
         console.error("ai-staff: Instagram", error);
       }
