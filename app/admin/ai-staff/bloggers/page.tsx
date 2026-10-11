@@ -1,5 +1,7 @@
 import {
   addBlogger,
+  connectStudioInstagram,
+  holdAgent,
   findNow,
   makePartner,
   markDeclined,
@@ -21,6 +23,7 @@ import { bloggersDict } from "@/content/admin-panel/ai-staff-bloggers";
 import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { PANEL_INTL, pick, type Picked } from "@/lib/admin/i18n";
+import { studioIg } from "@/lib/bloggers/direct";
 import { discoveryConfig } from "@/lib/bloggers/discovery";
 import { directUrl, leftToday, mailtoUrl } from "@/lib/bloggers/rules";
 import * as store from "@/lib/bloggers/store";
@@ -45,7 +48,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
   const title = pick(aiStaffDict, staff.panel_locale).title;
   const q = await searchParams;
   const now = new Date();
-  const [settings, sent, used, counts, ready, found, waiting, talking, partners, skipped, fcKey, discovery, ig] = await Promise.all([
+  const [settings, sent, used, counts, ready, found, waiting, talking, partners, skipped, fcKey, discovery, ig, studio] = await Promise.all([
     store.loadSettings(),
     store.sentToday(now),
     store.firecrawlUsedToday(now),
@@ -59,6 +62,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
     firecrawlKey(),
     discoveryConfig(),
     igConfig(),
+    studioIg(),
   ]);
   const manualLeft = leftToday(settings.directDaily, sent.manual);
   const intl = PANEL_INTL[staff.panel_locale];
@@ -75,6 +79,9 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
         {q.n === "saved" ? <p className="text-sm text-green">{t.saved}</p> : null}
         {q.n === "bad" ? <p className="text-sm text-gold">{t.addBad}</p> : null}
         {q.n === "partner_fail" ? <p className="text-sm text-gold">{t.partnerFail}: {q.d}</p> : null}
+        {q.n === "ig_ok" ? <p className="text-sm text-green">{t.igOk}</p> : null}
+        {q.n === "ig_fail" ? <p className="text-sm text-gold">{t.igFail}</p> : null}
+        {q.n === "ig_off" ? <p className="text-sm text-gold">{t.igOff}</p> : null}
 
         <section className={`${CARD} space-y-3`}>
           <div className="flex flex-wrap items-center gap-3">
@@ -98,8 +105,14 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
             <span>
               {t.discovery}: <span className={discovery ? "text-green" : "text-gold"}>{discovery ? t.connected : t.notConnected}</span>
             </span>
-            <span>
-              {t.direct}: <span className={ig ? "text-green" : "text-gold"}>{ig ? t.connected : t.notConnected}</span>
+            <span className="flex flex-wrap items-center gap-2">
+              {t.direct}:{" "}
+              <span className={studio ? "text-green" : "text-gold"}>{studio ? `${t.connected} · @${studio.username}` : t.notConnected}</span>
+              {ig ? (
+                <form action={connectStudioInstagram}>
+                  <button className={BTN}>{t.connectIg}</button>
+                </form>
+              ) : null}
             </span>
             <span>
               {t.quotaTg(sent.telegram, settings.tgDaily)} · {t.quotaManual(sent.manual, settings.directDaily)}
@@ -195,9 +208,15 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
             <div className="space-y-3">
               {talking.map((b) => (
                 <BloggerCard key={b.id} b={b} t={t} intl={intl}>
+                  {b.human_until && Date.parse(b.human_until) > now.getTime() ? <p className="mt-1 text-xs text-gold">{t.humanLeads}</p> : null}
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Act action={makePartner} id={b.id} label={t.makePartner} />
                     <Act action={markDeclined} id={b.id} label={t.declined} />
+                    <form action={holdAgent}>
+                      <input type="hidden" name="id" value={b.id} />
+                      <input type="hidden" name="on" value={b.human_until && Date.parse(b.human_until) > now.getTime() ? "off" : "on"} />
+                      <button className={BTN}>{b.human_until && Date.parse(b.human_until) > now.getTime() ? t.holdOff : t.holdOn}</button>
+                    </form>
                   </div>
                 </BloggerCard>
               ))}
@@ -316,6 +335,11 @@ function BloggerCard({ b, t, intl, children }: { b: store.Blogger; t: Picked<typ
       </div>
       {b.why ? <p className="mt-1 text-sm">{b.why}</p> : null}
       {b.score_notes ? <p className="mt-1 text-xs text-gold">{b.score_notes}</p> : null}
+      {b.audience_notes ? (
+        <p className="mt-1 text-xs">
+          {t.audience}: {b.audience_notes}
+        </p>
+      ) : null}
       {b.note ? <p className="mt-1 text-xs text-muted">{b.note}</p> : null}
       {b.tg_account && b.contacted_at ? <p className="mt-1 text-xs text-muted">{t.sentFrom(b.tg_account)}</p> : null}
       {b.messages.length ? (

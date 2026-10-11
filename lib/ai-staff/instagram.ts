@@ -60,10 +60,10 @@ export function readState(state: string, key: string, now = Date.now()): string 
   return /^[0-9a-f-]{36}$/.test(tenantId) ? tenantId : null;
 }
 
-export function authorizeUrl(appId: string, state: string): string {
+export function authorizeUrl(appId: string, state: string, redirectPath: string = IG_REDIRECT_PATH): string {
   const q = new URLSearchParams({
     client_id: appId,
-    redirect_uri: `${siteUrl}${IG_REDIRECT_PATH}`,
+    redirect_uri: `${siteUrl}${redirectPath}`,
     response_type: "code",
     scope: IG_SCOPES.join(","),
     state,
@@ -88,6 +88,8 @@ export type IgEvent = {
   mid: string;
   text: string;
   media: boolean;
+  /** Адреса картинок из вложений — скриншоты статистики блогера (lib/bloggers/direct.ts). */
+  images?: string[];
   /** Сообщение отправил сам аккаунт клиента (человек или наш ответ). */
   echo: boolean;
   at: number;
@@ -97,8 +99,25 @@ type Messaging = {
   sender?: { id?: string };
   recipient?: { id?: string };
   timestamp?: number;
-  message?: { mid?: string; text?: string; is_echo?: boolean; is_deleted?: boolean; attachments?: unknown[] };
+  message?: {
+    mid?: string;
+    text?: string;
+    is_echo?: boolean;
+    is_deleted?: boolean;
+    attachments?: Attachment[];
+  };
 };
+
+/** Картинки из вложений — только если они есть: у обычного текста поля нет. */
+type Attachment = { type?: string; payload?: { url?: string } };
+
+function imagesOf(attachments: Attachment[] | undefined): { images?: string[] } {
+  const images = (Array.isArray(attachments) ? attachments : [])
+    .filter((a) => a?.type === "image" && typeof a.payload?.url === "string")
+    .map((a) => String(a.payload?.url))
+    .slice(0, 6);
+  return images.length ? { images } : {};
+}
 
 export function parseEvents(payload: unknown): IgEvent[] {
   const p = (payload ?? {}) as { object?: string; entry?: Array<{ id?: string; messaging?: Messaging[] }> };
@@ -117,6 +136,7 @@ export function parseEvents(payload: unknown): IgEvent[] {
         mid: message.mid,
         text: typeof message.text === "string" ? message.text.trim() : "",
         media: Array.isArray(message.attachments) && message.attachments.length > 0,
+        ...imagesOf(message.attachments),
         echo,
         at: typeof m.timestamp === "number" ? m.timestamp : Date.now(),
       });
@@ -213,12 +233,17 @@ export async function sendIg(
 
 export type IgAccount = { token: string; expiresAt: Date; igId: string; username: string };
 
-export async function exchangeCode(cfg: IgConfig, code: string, fetchImpl: typeof fetch = fetch): Promise<IgAccount | null> {
+export async function exchangeCode(
+  cfg: IgConfig,
+  code: string,
+  fetchImpl: typeof fetch = fetch,
+  redirectPath: string = IG_REDIRECT_PATH,
+): Promise<IgAccount | null> {
   const form = new URLSearchParams({
     client_id: cfg.appId,
     client_secret: cfg.appSecret,
     grant_type: "authorization_code",
-    redirect_uri: `${siteUrl}${IG_REDIRECT_PATH}`,
+    redirect_uri: `${siteUrl}${redirectPath}`,
     code: code.replace(/#_$/, ""),
   });
   const short = await fetchImpl("https://api.instagram.com/oauth/access_token", { method: "POST", body: form })

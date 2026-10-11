@@ -25,7 +25,7 @@ export const BLOGGER_STATUSES = [
 ] as const;
 export type BloggerStatus = (typeof BLOGGER_STATUSES)[number];
 
-export type BloggerMessage = { role: "blogger" | "agent" | "staff"; text: string; at: string; via?: string };
+export type BloggerMessage = { role: "blogger" | "agent" | "staff"; text: string; at: string; via?: string; disclosed?: boolean };
 
 export type Blogger = {
   id: string;
@@ -67,6 +67,12 @@ export type Blogger = {
   tg_user_id: string | null;
   tg_pending: string | null;
   tg_pending_at: string | null;
+  /** До какого времени разговор ведёт человек — агент молчит. */
+  human_until: string | null;
+  /** Агенту пора ответить в Telegram (сообщение записал скаут). */
+  agent_due_at: string | null;
+  /** Скриншоты из Telegram до разбора, base64. */
+  inbox_images: { mediaType: string; data: string }[] | null;
   messages: BloggerMessage[];
   audience: Record<string, unknown> | null;
   audience_score: number | null;

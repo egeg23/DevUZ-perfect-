@@ -38,6 +38,8 @@ import { runAdsPass } from "@/lib/ads/run";
 import { runDailyReports as runAiStaffReports } from "@/lib/ai-staff/report";
 import { refreshInstagramTokens } from "@/lib/ai-staff/instagram";
 import { bloggerPass } from "@/lib/bloggers/run";
+import { refreshStudioToken } from "@/lib/bloggers/direct";
+import { runTelegramAgent } from "@/lib/bloggers/tg-agent";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -333,8 +335,13 @@ async function sweep(): Promise<Response> {
   // и, если очередь пуста, один поиск Firecrawl из своей дневной доли.
   // Агент выключен в панели — один запрос к настройкам.
   after(async () => {
+    // Ответы блогерам в Telegram — первыми: человек ждёт ответа.
+    const talks = await runTelegramAgent(new Date()).catch((error) => ({ errors: [String(error)] }));
+    if (talks.errors.length) console.error("блогеры, переписка:", talks.errors.join("; "));
     const bloggers = await bloggerPass(new Date()).catch((error) => ({ errors: [String(error)] }));
     if (bloggers.errors.length) console.error("блогеры:", bloggers.errors.join("; "));
+    // Токен Direct студии живёт 60 дней — продлеваем за 15 дней до конца.
+    await refreshStudioToken(new Date()).catch((error) => console.error("блогеры, токен Instagram:", error));
   });
   // Поиск лидов через Firecrawl — своей очередью: до двух кредитов за проход
   // из дневного лимита (lib/firecrawl.ts), на контакты тех, кому писать

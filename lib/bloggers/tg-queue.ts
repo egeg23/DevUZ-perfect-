@@ -208,15 +208,48 @@ export async function bloggerInbound(input: { handle: string; userId: string; ac
             tg_pending: pitchText({ name: String(row.name ?? ""), handle }, lang, siteUrl),
             tg_pending_at: at,
           }
-        : {}),
+        : // Дальше отвечает агент: ответ напишет свип (lib/bloggers/tg-agent.ts).
+          { agent_due_at: at }),
       updated_at: at,
     })
     .eq("id", String(row.id));
-  await notifyDesk(replyNotice({ handle, score: row.score === null ? null : Number(row.score) }, input.body, first)).catch(() => undefined);
+  if (first) await notifyDesk(replyNotice({ handle, score: row.score === null ? null : Number(row.score) }, input.body, first)).catch(() => undefined);
   return { matched: true, handle };
 }
 
-/** Следующее сообщение блогеру с этого аккаунта: текст о программе после ответа. */
+/** Этот собеседник в Telegram — блогер, с которым мы переписываемся? Чтобы не качать чужие картинки. */
+export async function isBloggerChat(userId: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db || !userId) return false;
+  const { count } = await db.from("bloggers").select("id", { count: "exact", head: true }).eq("tg_user_id", userId);
+  return (count ?? 0) > 0;
+}
+
+/**
+ * Скриншот статистики в Telegram: скаут скачал картинку, кладём до разбора.
+ * Агент ответит через минуту — блогер часто шлёт несколько картинок подряд.
+ */
+export async function bloggerPhoto(input: { handle: string; userId: string; mediaType: string; data: string }, now = new Date()): Promise<boolean> {
+  const db = serviceClient();
+  if (!db || !input.userId) return false;
+  const { data: row } = await db.from("bloggers").select("id, messages, inbox_images, status").eq("tg_user_id", input.userId).maybeSingle();
+  if (!row || !["contacted", "replied", "stats", "agreed", "partner"].includes(String(row.status))) return false;
+  const images = Array.isArray(row.inbox_images) ? row.inbox_images : [];
+  if (images.length >= 4) return true;
+  const messages = Array.isArray(row.messages) ? row.messages : [];
+  await db
+    .from("bloggers")
+    .update({
+      inbox_images: [...images, { mediaType: input.mediaType, data: input.data }],
+      messages: [...messages, { role: "blogger", text: "[скриншот]", at: now.toISOString(), via: "telegram" }],
+      agent_due_at: new Date(now.getTime() + 60_000).toISOString(),
+      updated_at: now.toISOString(),
+    })
+    .eq("id", row.id);
+  return true;
+}
+
+/** Следующее сообщение блогеру с этого аккаунта: текст о программе после ответа или ответ агента. */
 export async function nextBloggerReply(account: string, now = Date.now()): Promise<BloggerReply | null> {
   const db = serviceClient();
   if (!db) return null;
@@ -245,10 +278,12 @@ export async function markBloggerReplySent(id: string, now = new Date()): Promis
   const { data } = await db.from("bloggers").select("messages, tg_pending").eq("id", id).maybeSingle();
   if (!data?.tg_pending) return;
   const messages = Array.isArray(data.messages) ? data.messages : [];
+  // Ответ агента уже лежит в переписке (lib/bloggers/converse.ts) — второй раз не пишем.
+  const already = (messages.at(-1) as { role?: string; text?: string } | undefined)?.text === data.tg_pending;
   await db
     .from("bloggers")
     .update({
-      messages: [...messages, { role: "agent", text: data.tg_pending, at: now.toISOString(), via: "telegram" }],
+      messages: already ? messages : [...messages, { role: "agent", text: data.tg_pending, at: now.toISOString(), via: "telegram" }],
       tg_pending: null,
       tg_pending_at: null,
       updated_at: now.toISOString(),

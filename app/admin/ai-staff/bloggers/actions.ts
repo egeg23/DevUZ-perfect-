@@ -7,7 +7,10 @@ import { requestIp, requireRole } from "@/lib/admin/guard";
 import { leftToday, normalizeHandle, settingsFrom } from "@/lib/bloggers/rules";
 import { assess, bloggerPass } from "@/lib/bloggers/run";
 import * as store from "@/lib/bloggers/store";
+import { authorizeUrl, igConfig, signState } from "@/lib/ai-staff/instagram";
+import { STUDIO_REDIRECT_PATH, STUDIO_STATE } from "@/lib/bloggers/direct";
 import { createPartner } from "@/lib/partners/store";
+import { appSecret } from "@/lib/secrets";
 
 /**
  * Действия вкладки «Блогеры» — владельцу и руководителю. Галочка раздела
@@ -141,5 +144,24 @@ export async function makePartner(form: FormData): Promise<void> {
   );
   if (!result.ok) redirect(`${PAGE}?n=partner_fail&d=${result.reason}`);
   await store.updateBlogger(blogger.id, { status: "partner", partner_id: result.partner.id });
+  revalidatePath(PAGE);
+}
+
+/** «Подключить Instagram студии»: вход через Instagram, возврат — instagram/callback. */
+export async function connectStudioInstagram(): Promise<void> {
+  await requireRole("admin", "head");
+  const [cfg, key] = await Promise.all([igConfig(), appSecret("AI_STAFF_KEY")]);
+  if (!cfg || !key) redirect(`${PAGE}?n=ig_off`);
+  redirect(authorizeUrl(cfg.appId, signState(STUDIO_STATE, key), STUDIO_REDIRECT_PATH));
+}
+
+/** «Вести самому»: агент молчит в этом разговоре 12 часов; «Вернуть агенту» — снова отвечает. */
+export async function holdAgent(form: FormData): Promise<void> {
+  await requireRole("admin", "head");
+  const blogger = await store.bloggerById(str(form, "id", 64));
+  if (blogger) {
+    const on = str(form, "on") === "on";
+    await store.updateBlogger(blogger.id, { human_until: on ? new Date(Date.now() + 12 * 3600_000).toISOString() : null });
+  }
   revalidatePath(PAGE);
 }

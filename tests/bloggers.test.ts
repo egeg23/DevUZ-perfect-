@@ -234,3 +234,76 @@ test("Telegram: ответ блогера — команде, без лишни�
   assert.match(text, /&lt;b&gt;интересно/);
   assert.match(text, /оценка 72/);
 });
+
+test("скриншоты: балл аудитории считает код, нечитаемое — без балла", async () => {
+  const { audienceFrom, audienceScore, imageType, uzbekShare } = await import("@/lib/bloggers/audience");
+  const a = audienceFrom({
+    readable: true,
+    uzbekistan_share: 82,
+    tashkent_share: 55,
+    top_cities: [{ city: "Ташкент", share: 55 }],
+    age_25_44_share: 61,
+    female_share: 70,
+    reach_30d: 12_000,
+    followers: 20_000,
+    notes: "за 30 дней",
+  });
+  assert.deepEqual(audienceScore(a, null).score, 40 + 30 + 30);
+  assert.equal(audienceScore({ ...a, readable: false }, null).score, null);
+  // Нет доли страны — считаем по узбекским городам.
+  assert.equal(uzbekShare({ ...a, uzbekistanShare: null, topCities: [{ city: "Tashkent", share: 40 }, { city: "Samarkand", share: 10 }, { city: "Almaty", share: 20 }] }), 50);
+  assert.equal(audienceFrom({ uzbekistan_share: 140, reach_30d: -5 }).uzbekistanShare, null, "мусор модели не проходит");
+  assert.equal(imageType(new Uint8Array([0xff, 0xd8, 0, 0])), "image/jpeg");
+  assert.equal(imageType(new Uint8Array([1, 2, 3])), null);
+});
+
+test("согласие: партнёр сам — только с проверенной аудиторией", async () => {
+  const { onAgree, withDisclosure, AUTO_PARTNER_MIN } = await import("@/lib/bloggers/converse");
+  assert.equal(onAgree({ audience_score: null, score: 70, partner_id: null }, 55), "ask_stats");
+  assert.equal(onAgree({ audience_score: AUTO_PARTNER_MIN, score: 70, partner_id: null }, 55), "partner");
+  assert.equal(onAgree({ audience_score: 40, score: 70, partner_id: null }, 55), "human");
+  assert.equal(onAgree({ audience_score: 90, score: 30, partner_id: null }, 55), "human");
+  assert.equal(onAgree({ audience_score: 90, score: 90, partner_id: "p" }, 55), "human", "второго партнёра не заводим");
+  // ИИ говорит, что он ИИ (docs/ai-staff/legal.md) — даже если модель забыла.
+  assert.match(withDisclosure("Да, расскажу.", "ru", false), /^Вам отвечает ИИ-помощник/);
+  assert.equal(withDisclosure("Да, расскажу.", "ru", true), "Да, расскажу.");
+  assert.equal(withDisclosure("Я ИИ-помощник студии.", "ru", false), "Я ИИ-помощник студии.");
+});
+
+test("агент: числа не из условий программы — повтор, второй промах — безопасная фраза и человек", async () => {
+  const { agentTurn, programFacts, SAFE_REPLY } = await import("@/lib/bloggers/agent");
+  const facts = programFacts("ru", "https://devuz.studio");
+  for (const t of PARTNER_TIERS) assert.match(facts, new RegExp(`${t.profit}% от прибыли или ${t.turnover}% от суммы`));
+  const say = (text: string, intent = "question") =>
+    async () => ({ content: [{ type: "tool_use", id: "x", name: "answer", input: { text, intent } }] }) as never;
+  const input = { lang: "ru" as const, name: "", history: [{ role: "blogger" as const, text: "Сколько платите?" }], disclosed: false, audience: null, siteUrl: "https://devuz.studio" };
+  const good = await agentTurn(input, say("От 10 до 30% от прибыли проекта."));
+  assert.equal(good.checked, true);
+  let calls = 0;
+  const bad = await agentTurn(input, async () => {
+    calls++;
+    return say("Платим 45% сразу.")();
+  });
+  assert.equal(calls, 2, "после промаха — один повтор с замечанием");
+  assert.deepEqual(bad, { text: SAFE_REPLY.ru, intent: "human", checked: false });
+});
+
+test("Direct: картинки из вложений, событие студии — агенту блогеров даже при выключенном сервисе", async () => {
+  const { parseEvents } = await import("@/lib/ai-staff/instagram");
+  const [e] = parseEvents({
+    object: "instagram",
+    entry: [{ id: "studio", messaging: [{ sender: { id: "b1" }, message: { mid: "m", text: "", attachments: [{ type: "image", payload: { url: "https://cdn/x.jpg" } }] } }] }],
+  });
+  assert.deepEqual(e.images, ["https://cdn/x.jpg"]);
+  const route = read("app/api/ai-staff/instagram/route.ts");
+  assert.match(route, /if \(await isStudioEvent\(event\)\) await handleStudioEvent\(event\);\s*else if \(enabled\) await handleInstagramEvent\(event\);/);
+  const { unanswered } = await import("@/lib/bloggers/tg-agent");
+  assert.equal(
+    unanswered([
+      { role: "agent", text: "a", at: "" },
+      { role: "blogger", text: "b", at: "" },
+      { role: "blogger", text: "c", at: "" },
+    ]),
+    "b\nc",
+  );
+});
