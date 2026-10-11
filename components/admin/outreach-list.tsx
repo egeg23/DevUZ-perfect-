@@ -34,6 +34,7 @@ import { parseTouchError, type ParsedTouchError, type ProblemRef } from "@/lib/a
 import { isAutoNote } from "@/lib/proto/auto-note";
 import { WRITE_MYSELF_FORM, mayWriteMyself } from "@/lib/admin/write-myself";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
+import { sentFrom, type AccountTag } from "@/lib/admin/work-accounts";
 import {
   autopilotDict,
   closeButtonDict,
@@ -179,6 +180,7 @@ export function OutreachList({
   more = null,
   viewer = null,
   locale = "ru",
+  accounts = {},
 }: {
   rows: Prospect[];
   /** Что ушло за последний час: предел считается по факту отправки. */
@@ -208,10 +210,13 @@ export function OutreachList({
   viewer?: { id: string; role: Role } | null;
   /** Язык панели того, кто смотрит (`staff.panel_locale`). */
   locale?: PanelLocale;
+  /** Подписи рабочих аккаунтов (accountTags): с какого ушло касание. */
+  accounts?: Readonly<Record<string, AccountTag>>;
 }) {
   if (!rows.length) return null;
 
   const t = pick(outreachListDict, locale);
+  const tags = new Map(Object.entries(accounts));
   // Касание автопрогона ничьё, пока клиент не ответил: вместо имени — «автопрогон».
   const auto = pick(autopilotDict, locale);
   const status = pick(prospectStatusDict, locale);
@@ -805,6 +810,11 @@ export function OutreachList({
                         {row.target ? ` — ${row.target}` : ""}
                         {row.sent_at ? ` · ${when(row.sent_at)}` : ""}
                         {row.claimed_name ? ` · ${row.claimed_name}` : row.autopilot_at ? ` · ${auto.owner}` : ""}
+                        {/* С какого аккаунта: оттуда же и отвечать клиенту. */}
+                        {(() => {
+                          const from = sentFrom(row, tags);
+                          return from ? ` · ${t.sentFrom(from.label, from.handle)}` : "";
+                        })()}
                       </p>
 
                       {/* Проверка доставки, а не пересказ ответа Telegram.

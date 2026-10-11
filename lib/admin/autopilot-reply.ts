@@ -2,6 +2,8 @@ import { AUTOPILOT_SENDER, nicheLabel, replyHeading } from "@/lib/admin/autopilo
 import { leadCard, routeNewLead } from "@/lib/admin/lead-queue-store";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { esc } from "@/lib/qualify/telegram";
+import { sentFrom, sentFromText } from "@/lib/admin/work-accounts";
+import { accountTags } from "@/lib/admin/work-accounts-store";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -83,13 +85,18 @@ export async function offerLead(prospectId: string, leadId: string, body: string
   const card = await leadCard(leadId);
   if (!card) return false;
 
-  const { data: p } = await db.from("prospects").select("host, label, niche").eq("id", prospectId).maybeSingle();
+  const [{ data: p }, tags] = await Promise.all([
+    db.from("prospects").select("host, label, niche, sent_via, target_kind").eq("id", prospectId).maybeSingle(),
+    accountTags(),
+  ]);
+  const from = p ? sentFrom({ sent_via: p.sent_via as string | null, target_kind: p.target_kind as string | null }, tags) : null;
   const heading = replyHeading(
     {
       host: (p?.host as string | null) ?? null,
       label: (p?.label as string | null) ?? null,
       words: body,
       niche: nicheLabel(p?.niche as string | null),
+      account: from ? sentFromText(from) : null,
     },
     esc,
   );

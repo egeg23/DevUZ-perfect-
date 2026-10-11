@@ -105,6 +105,37 @@ export function accountOf(sentVia: string | null | undefined): string {
   return sentVia?.trim() || MAIN_ACCOUNT;
 }
 
+/** Аккаунт, каким его видит человек: название из «Аккаунтов» и ник в Telegram. */
+export type AccountTag = { label: string; handle: string | null };
+
+/**
+ * С какого аккаунта ушло касание — для подписи у сообщений.
+ *
+ * Владелец, 11.10.2026: «Когда уходит сообщение — пусть менеджер видит, с
+ * какого аккаунта оно ушло». Разговор живёт на одном аккаунте (sent_via),
+ * поэтому подпись одна на касание: с него ушло «Здравствуйте», с него же
+ * кружок, письмо и ответы модели. `label: null` — главный аккаунт: его
+ * название в базе не хранится, панель зовёт его своим словом. Пустой
+ * `label` — аккаунта в базе уже нет. null — «Написал сам»: человек писал
+ * не через бота, и с какого номера, мы не знаем.
+ */
+export function sentFrom(
+  p: { sent_via: string | null; target_kind: string | null },
+  tags: ReadonlyMap<string, AccountTag>,
+): { label: string | null; handle: string | null } | null {
+  if (p.target_kind === "manual") return null;
+  const key = accountOf(p.sent_via);
+  if (key === MAIN_ACCOUNT) return { label: null, handle: null };
+  return tags.get(key) ?? { label: "", handle: null };
+}
+
+/** Та же подпись для бота: сообщения бота пока по-русски. */
+export function sentFromText(from: { label: string | null; handle: string | null }): string {
+  if (from.label === null) return "главный аккаунт студии";
+  if (!from.label) return "рабочий аккаунт студии";
+  return `«${from.label}»${from.handle ? ` ${from.handle}` : ""}`;
+}
+
 /**
  * Номер для входа: +998… и только цифры.
  *

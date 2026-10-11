@@ -148,6 +148,8 @@ export type Prospect = {
   touched_by: string | null;
   touched_at: string | null;
   sent_at: string | null;
+  /** С какого рабочего аккаунта ушло (work-accounts: accountOf, sentFrom). */
+  sent_via: string | null;
   /** Когда перечитали переписку и нашли там своё сообщение. */
   delivered_at: string | null;
   /** Почему подтвердить не вышло. Пусто — значит подтвердилось. */
@@ -196,7 +198,7 @@ export type Prospect = {
 };
 
 const COLUMNS =
-  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, checked_at, check_dropped, autopilot_at, hello_at, pitch_at, letter_variant, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
+  "id, created_at, url, host, label, score, findings, contacts, draft, message, niche, walked, status, target, target_kind, manual_note, claimed_by, touched_by, touched_at, sent_at, sent_via, delivered_at, delivery_note, failure, lead_id, closed_reason, closed_at, proto_url, proto_note, checked_at, check_dropped, autopilot_at, hello_at, pitch_at, letter_variant, staff:claimed_by (display_name), closer:closed_by (display_name), protos!protos_prospect_id_fkey (auto, opens, opened_at)";
 
 function shape(row: Record<string, unknown>): Prospect {
   const joined = row.staff as unknown;
@@ -224,6 +226,7 @@ function shape(row: Record<string, unknown>): Prospect {
     touched_by: (row.touched_by as string | null) ?? null,
     touched_at: (row.touched_at as string | null) ?? null,
     sent_at: (row.sent_at as string | null) ?? null,
+    sent_via: (row.sent_via as string | null) ?? null,
     delivered_at: (row.delivered_at as string | null) ?? null,
     delivery_note: (row.delivery_note as string | null) ?? null,
     failure: (row.failure as string | null) ?? null,

@@ -11,6 +11,7 @@ import {
   passwordSecret,
   sessionSecret,
   type AccountStatus,
+  type AccountTag,
   type LoginError,
   type WorkAccount,
 } from "@/lib/admin/work-accounts";
@@ -65,6 +66,24 @@ export async function listAccounts(): Promise<WorkAccount[]> {
     .neq("status", "removed")
     .order("created_at", { ascending: true });
   return (data ?? []).map((row) => shape(row as Record<string, unknown>));
+}
+
+/**
+ * Подписи всех аккаунтов, отключённых тоже: касание помнит, с какого
+ * аккаунта ушло, и после того, как аккаунт сняли.
+ */
+export async function accountTags(): Promise<Map<string, AccountTag>> {
+  const out = new Map<string, AccountTag>();
+  const db = serviceClient();
+  if (!db) return out;
+  const { data } = await db.from("tg_accounts").select("id, label, tg_username");
+  for (const row of data ?? []) {
+    out.set(String(row.id), {
+      label: String(row.label ?? ""),
+      handle: row.tg_username ? `@${String(row.tg_username).replace(/^@/, "")}` : null,
+    });
+  }
+  return out;
 }
 
 export async function addAccount(input: { label: string; phone: string; by: Staff }): Promise<string | null> {

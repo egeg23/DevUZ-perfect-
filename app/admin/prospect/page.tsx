@@ -23,7 +23,7 @@ import { dailyCap, placesConfigured } from "@/lib/maps/places";
 import { listCampaigns, pendingPlaces, usageToday } from "@/lib/maps/store";
 import { loadQueueEtas, queueOwners, sentLastHour } from "@/lib/admin/outreach-queue";
 import { hourlyCapacity } from "@/lib/admin/work-accounts";
-import { listAccounts } from "@/lib/admin/work-accounts-store";
+import { accountTags, listAccounts } from "@/lib/admin/work-accounts-store";
 import { listProspects, manualReplies } from "@/lib/admin/outreach-store";
 import { parseMore, REST_PAGE, visibleProspects } from "@/lib/admin/outreach-view";
 import { BATCH_CAP } from "@/lib/audit/batch";
@@ -61,7 +61,7 @@ export default async function ProspectPage({
   // Автопрогон касаний видят те же, кто ведёт автопоиск: он из него и
   // берёт компании. Менеджеру его касания приходят лидами в очередь.
   const autoStats = seesMaps ? await dayStats() : null;
-  const [rows, hour, replies, plan, portion, owners, stream, accounts, etas] = await Promise.all([
+  const [rows, hour, replies, plan, portion, owners, stream, accounts, etas, tags] = await Promise.all([
     listProspects(),
     sentLastHour(),
     manualReplies(),
@@ -74,6 +74,8 @@ export default async function ProspectPage({
     // Когда примерно уйдёт каждое письмо очереди — по аккаунтам, а не в
     // среднем (lib/admin/queue-eta.ts).
     loadQueueEtas(),
+    // С какого аккаунта ушло каждое касание — подпись на карточке.
+    accountTags(),
   ]);
   const today = todayInTashkent(new Date());
   // Порция и поток «Получать лиды» приходят одним списком: поток — сверх
@@ -216,6 +218,7 @@ export default async function ProspectPage({
         wrote={own === undefined ? null : { done: count(own), late: count(late), refused: count(refused) }}
         replies={replies}
         locale={locale}
+        accounts={Object.fromEntries(tags)}
       />
 
       <div className="mt-10 max-w-2xl space-y-3 border-t border-line pt-6 text-xs leading-relaxed text-faint">
