@@ -99,6 +99,30 @@ if(sz){
   sz.addEventListener('input',pick);pick();
 }
 
+/* ── Образцы тканей грузятся очередью: по четыре за раз и только те, что
+   на виду. 11.10.2026 iPhone запрашивал всю сетку из 77 образцов разом,
+   сервер отбивал пачку, и вместо тканей были знаки вопроса. Не ответил —
+   ещё две попытки с паузой. ── */
+var swQ=[],swBusy=0;
+function swPump(){
+  while(swBusy<4&&swQ.length){
+    var im=swQ.shift();swBusy++;
+    (function(im){var tries=0,src=im.getAttribute('data-src');
+      var done=function(){swBusy--;im.classList.add('ok');swPump()};
+      im.onload=done;
+      im.onerror=function(){if(tries<2){tries++;setTimeout(function(){im.src=src+'?r='+tries},900*tries)}else done()};
+      im.src=src})(im);
+  }
+}
+function swWant(im){if(im.dataset.q)return;im.dataset.q='1';swQ.push(im);swPump()}
+var swImgs=qa('img[data-src]');
+if('IntersectionObserver' in window){
+  var swIo=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){swIo.unobserve(e.target);swWant(e.target)}})},{rootMargin:'240px 0px'});
+  swImgs.forEach(function(im){swIo.observe(im)});
+}else swImgs.forEach(swWant);
+/* «Ещё N цветов»: остальные цвета этой ткани — по нажатию. */
+qa('.sw-more').forEach(function(b){b.addEventListener('click',function(){var g=b.closest('.sw-grid');if(g)g.classList.add('all');b.hidden=true})});
+
 /* ── Ткань и цвет: крупное фото образца с их карты расцветок. Сменили
    ткань — показываем её цвета, первый становится выбранным. ── */
 var swImg=$('sw-img');
