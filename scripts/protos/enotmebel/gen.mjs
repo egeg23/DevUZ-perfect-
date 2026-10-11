@@ -366,6 +366,17 @@ const PEAR_IN = "M300 98C250 98 216 146 199 210C177 292 135 362 125 444C117 506 
 
 
 /* Образцы для столбиков в истории: разные цвета каждой ткани. */
+/**
+ * Сколько цветов ткани видно сразу. Остальные — по кнопке «Ещё N цветов».
+ * 11.10.2026 на iPhone сетка из 77 образцов в прокручиваемом окне
+ * запрашивалась целиком, и сервер отбивал пачку (429): вместо образцов были
+ * знаки вопроса. Владелец: «не грузи все, сделай чисто на превью те,
+ * которые показываем». Картинки образцов грузит очередь в client.js.
+ */
+const SW_SHOW = 18;
+/** «цвет», «цвета», «цветов» — по числу. */
+const colorsRu = (n) => (n % 10 === 1 && n % 100 !== 11 ? "цвет" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? "цвета" : "цветов");
+
 const STORY_SW = {
   polycon: ["5", "18", "12", "20", "3"],
   velour2: ["27", "45", "56", "35", "72"],
@@ -415,7 +426,7 @@ function storyBlock(l) {
 
 <div class="st-layer st-fly" data-k="fly"><div class="fly-world">${flyIds.map((id, k) => `<figure class="fly-c" data-fly="${k}"><img src="${IMG}/m-${id}-600.webp" srcset="${IMG}/m-${id}-600.webp 600w, ${IMG}/m-${id}-1024.webp 1024w" sizes="(max-width: 767px) 70vw, 34vw" alt="${esc(M[id].n[l === "ru" ? 0 : 1])}" width="1024" height="1536" loading="lazy" decoding="async"><figcaption><b>${M[id].n[l === "ru" ? 0 : 1]}</b><span class="num">${priceOf(l, M[id])}</span></figcaption></figure>`).join("")}</div></div>
 
-<div class="st-layer st-fab" data-k="fab"><div class="fab-row">${FABRICS.map((f, k) => `<div class="fab-c" data-k="fab${k}" style="--h:${[0.92, 0.74, 0.86, 0.66, 0.8][k]}"><div class="fab-win"><div class="fab-st" data-k="fabS${k}">${STORY_SW[f.id].map((c) => `<img src="${IMG}/f-${f.id}-${c}-s.webp" alt="" width="280" height="280" loading="lazy" decoding="async">`).join("")}</div></div><span class="fab-l"><b>${f.n[l === "ru" ? 0 : 1]}</b><small>${f.d[l === "ru" ? 0 : 1]} · ${SW[f.id].length} ${t("цветов", "rang")}</small></span>${f.wet ? `<em>${ICON.drop}</em>` : ""}</div>`).join("")}</div></div>
+<div class="st-layer st-fab" data-k="fab"><div class="fab-row">${FABRICS.map((f, k) => `<div class="fab-c" data-k="fab${k}" style="--h:${[0.92, 0.74, 0.86, 0.66, 0.8][k]}"><div class="fab-win"><div class="fab-st" data-k="fabS${k}">${STORY_SW[f.id].map((c) => `<img data-src="${IMG}/f-${f.id}-${c}-s.webp" alt="" width="280" height="280" decoding="async">`).join("")}</div></div><span class="fab-l"><b>${f.n[l === "ru" ? 0 : 1]}</b><small>${f.d[l === "ru" ? 0 : 1]} · ${SW[f.id].length} ${t("цветов", "rang")}</small></span>${f.wet ? `<em>${ICON.drop}</em>` : ""}</div>`).join("")}</div></div>
 
 <div class="st-layer st-off" data-k="off"><div class="off-frame">${offPics.map((n, k) => `<div class="off-p" data-k="op${k}"><img src="${IMG}/g${n}-960.webp" alt="" width="960" height="1280" loading="lazy" decoding="async"></div>`).join("")}</div>
 <div class="logos glass lq" data-k="logos"><p class="spec-k">${t("Среди заказчиков", "Buyurtmachilar orasida")}</p><div>${CLIENTS.map(([f, n]) => `<img src="${IMG}/c-${f}.webp" alt="${n}" width="480" height="291" loading="lazy">`).join("")}</div></div></div>
@@ -482,7 +493,7 @@ ${head(t("Ткани и цвет", "Matolar va rang"), t("Выберите тк�
 <div class="try-pv rv a-puff"><figure class="sw-big"><img id="sw-img" src="${IMG}/f-${D0.f}-${D0.c[0]}.webp" width="${D0.c[1]}" height="${D0.c[2]}" style="max-width:${D0.c[1]}px" alt="${esc(`${D0.fab.n[i]}, ${D0.fab.card} ${D0.c[0]}`)}"></figure><p class="try-lbl"><b id="try-fab">${D0.fab.n[i]}</b> · <span id="try-col">${D0.fab.card} ${D0.c[0]}</span></p><p class="src">${t("Фото образца с карты расцветок Enotmebel, без обработки.", "Namuna fotosi Enotmebel ranglar kartasidan, ishlovsiz.")}</p></div>
 <div class="try-ctl">
 <fieldset><legend>${t("Ткань", "Mato")}</legend><div class="try-fabs">${FABRICS.map((f) => `<label class="fb"><input type="radio" name="fab" value="${f.id}"${f.id === D0.f ? " checked" : ""}><img src="${IMG}/f-${f.id}-${STORY_SW[f.id][0]}-c.webp" alt="" width="150" height="150" loading="lazy"><span><b>${f.n[i]}</b><small>${f.d[i]} · ${SW[f.id].length} ${t("цветов", "rang")}</small></span>${f.wet ? `<em aria-label="${t("водоотталкивающая", "suv o‘tkazmaydi")}">${ICON.drop}</em>` : ""}</label>`).join("")}</div></fieldset>
-<fieldset><legend>${t("Цвет", "Rang")} · <span id="sw-n">${SW[D0.f].length}</span></legend>${FABRICS.map((f) => `<div class="sw-grid" data-fab="${f.id}"${f.id === D0.f ? "" : " hidden"}>${SW[f.id].map(([c, w, h]) => `<label class="swc"><input type="radio" name="col" value="${c}" data-w="${w}" data-h="${h}"${f.id === D0.f && c === D0.c[0] ? " checked" : ""}><img src="${IMG}/f-${f.id}-${c}-c.webp" alt="" width="150" height="150" loading="lazy" decoding="async"><span>${c}</span></label>`).join("")}</div>`).join("")}</fieldset>
+<fieldset><legend>${t("Цвет", "Rang")} · <span id="sw-n">${SW[D0.f].length}</span></legend>${FABRICS.map((f) => `<div class="sw-grid" data-fab="${f.id}"${f.id === D0.f ? "" : " hidden"}>${SW[f.id].map(([c, w, h], k) => `<label class="swc${k >= SW_SHOW ? " sw-x" : ""}"><input type="radio" name="col" value="${c}" data-w="${w}" data-h="${h}"${f.id === D0.f && c === D0.c[0] ? " checked" : ""}><img data-src="${IMG}/f-${f.id}-${c}-c.webp" alt="" width="150" height="150" decoding="async"><span>${c}</span></label>`).join("")}${SW[f.id].length > SW_SHOW ? `<button type="button" class="sw-more">${t("Ещё", "Yana")} ${SW[f.id].length - SW_SHOW} ${t(colorsRu(SW[f.id].length - SW_SHOW), "ta rang")}</button>` : ""}</div>`).join("")}</fieldset>
 <label class="field"><span>${t("Модель", "Model")}</span><select id="try-m">${MODELS.map((m) => `<option value="${m.id}">${m.n[i]}</option>`).join("")}</select></label>
 <div class="cta"><button class="btn btn-white" type="button" id="try-send">${ICON.tg}${t("Отправить выбор в Telegram", "Tanlovni Telegramga yuborish")}</button></div>
 <p class="note-ok" id="try-done" role="status" hidden></p>
