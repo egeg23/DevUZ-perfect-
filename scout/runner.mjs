@@ -30,7 +30,17 @@ import { CIRCLE_CHECK_MS, circleDue, circleFile, recordCircle } from "@/lib/admi
 import { isPromoPath } from "@/lib/partners/promo-rules";
 import path from "node:path";
 import { TOO_LATE, editOutcome, markEditFailed, markEdited, nextEdit, sentCheck } from "@/lib/admin/outreach-edit";
-import { HOURLY_CAP } from "@/lib/admin/outreach";
+import { HOURLY_CAP, isStopError } from "@/lib/admin/outreach";
+import {
+  bloggerInbound,
+  markBloggerHelloFailed,
+  markBloggerHelloSent,
+  markBloggerReplyFailed,
+  markBloggerReplySent,
+  markBloggerUnreachable,
+  nextBloggerHello,
+  nextBloggerReply,
+} from "@/lib/bloggers/tg-queue";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
 import { BAN_CHECK_MS, BAN_REPLY_WAIT_MS, spamBotVerdict } from "@/lib/admin/account-ban";
 import { lastBanCheck, mainLimitUntil, markMainFlood, recordBanCheck } from "@/lib/admin/account-ban-store";
@@ -499,6 +509,52 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
    */
   const ABOUT_TARGET = /USERNAME_NOT_OCCUPIED|USERNAME_INVALID|PHONE_NOT_OCCUPIED|No user has|Cannot find any entity/i;
 
+  // ── «Здравствуйте» блогерам ───────────────────────────────────────────
+  //
+  // ИИ-сотрудник «Блогеры» (lib/bloggers/tg-queue.ts): блогеру с Telegram в
+  // шапке профиля — только приветствие, по тем же правилам, что компаниям:
+  // окно отправки, общий с ними предел в час и пауза этого аккаунта, своя
+  // дневная квота. Спрашиваем, только когда компаний в очереди нет: норма
+  // касаний компаний — первая.
+  const bloggerHello = async () => {
+    let job;
+    try {
+      job = await nextBloggerHello(Date.now(), key, cap());
+    } catch (error) {
+      console.error("блогеры: очередь не прочиталась —", error?.message ?? error);
+      return;
+    }
+    if (!job) return;
+    let verdict;
+    try {
+      verdict = verdictForHandle(await client.invoke(new Api.contacts.ResolveUsername({ username: job.target.replace(/^@/, "") })));
+    } catch (error) {
+      const why = error?.errorMessage ?? error?.message ?? String(error);
+      if (ABOUT_TARGET.test(why)) await markBloggerUnreachable(job.id, unreachableText("not_found", "handle"));
+      else await markBloggerHelloFailed(job.id);
+      console.error(`блогеры${tag}: ${job.target} не опознан — ${why}`);
+      return;
+    }
+    if (!verdict.ok) {
+      await markBloggerUnreachable(job.id, unreachableText(verdict.why, "handle"));
+      console.log(`блогеры${tag}: ${job.target} — в Telegram не написать, блогер вернулся в Direct`);
+      return;
+    }
+    try {
+      await client.sendMessage(verdict.userId, { message: job.hello });
+      await markBloggerHelloSent(job.id, verdict.userId, key, job.hello);
+      console.log(`блогеры${tag}: «${job.hello}» — ${job.target} (@${job.handle} в Instagram)`);
+    } catch (error) {
+      const why = error?.errorMessage ?? error?.message ?? String(error);
+      await markBloggerHelloFailed(job.id);
+      if (isStopError(why)) {
+        outreachStopped = true;
+        await onFlood(why);
+      }
+      console.error(`блогеры${tag}: не ушло ${job.target} — ${why}${isStopError(why) ? " (аккаунт остановлен)" : ""}`);
+    }
+  };
+
   timers.push(setInterval(async () => {
     if (outreachStopped) return;
     // Пауза из панели или сутки после ограничения Telegram — письма ждут
@@ -511,7 +567,10 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
       console.error("касания: очередь не прочиталась —", error?.message ?? error);
       return;
     }
-    if (!job) return;
+    if (!job) {
+      await bloggerHello();
+      return;
+    }
 
     let reach;
     try {
@@ -622,6 +681,28 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
     }
   }, OUTREACH_MS));
 
+  // Блогеру, который ответил на «Здравствуйте», — текст о партнёрской
+  // программе с того же аккаунта (lib/bloggers/tg-queue.ts).
+  const bloggerReply = async () => {
+    let reply;
+    try {
+      reply = await nextBloggerReply(key);
+    } catch (error) {
+      console.error("блогеры: ответы не прочитались —", error?.message ?? error);
+      return;
+    }
+    if (!reply) return;
+    try {
+      await toPeer(reply, (to) => client.sendMessage(to, { message: reply.body }));
+      await markBloggerReplySent(reply.id);
+      console.log(`блогеры${tag}: текст о программе — @${reply.handle}`);
+    } catch (error) {
+      const why = error?.errorMessage ?? error?.message ?? String(error);
+      await markBloggerReplyFailed(reply.id, why);
+      console.error(`блогеры${tag}: ответ не ушёл @${reply.handle} — ${why}`);
+    }
+  };
+
   // ── Переписка по касаниям ─────────────────────────────────────────────
   //
   // Ответы модели тем, кто ответил на наше письмо. Очередь отдельная от
@@ -635,7 +716,10 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
       console.error("переписка: очередь не прочиталась —", error?.message ?? error);
       return;
     }
-    if (!reply) return;
+    if (!reply) {
+      await bloggerReply();
+      return;
+    }
 
     try {
       if (reply.kind === "circle") {
@@ -808,6 +892,11 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
       // Ключ аккаунта — чтобы разговор, начатый менеджером руками с этого
       // аккаунта, перешёл сюда же и бот продолжил его отсюда.
       const hit = await recordInbound({ handle, userId, phone, account: key, body: String(message.message) });
+      if (!hit.matched) {
+        // Не компания — может быть, блогер ответил на наше «Здравствуйте».
+        const blogger = await bloggerInbound({ handle, userId, account: key, body: String(message.message) });
+        if (blogger.matched) console.log(`блогеры${tag}: ответ от @${blogger.handle}`);
+      }
       if (hit.matched) {
         console.log(
           `переписка${tag}: ответ от ${handle ? `@${handle}` : `id ${userId}`} по сайту ${hit.host} (${hit.verdict})` +

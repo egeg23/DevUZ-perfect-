@@ -13,6 +13,7 @@ import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake } from "@/lib/admin
 import { queueEtas, type Eta, type EtaAccount } from "@/lib/admin/queue-eta";
 import { mainLimitUntil } from "@/lib/admin/account-ban-store";
 import { helloFor } from "@/lib/admin/hello-first";
+import { bloggerSendsLastHour, lastBloggerSendAt } from "@/lib/bloggers/tg-sent";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -208,7 +209,10 @@ export async function nextQueued(
     .order("sent_at", { ascending: false })
     .limit(50);
   const last = (recent ?? []).find((row) => accountOf(row.sent_via as string | null) === account);
-  const lastAt = last?.sent_at ? Date.parse(String(last.sent_at)) : 0;
+  // «Здравствуйте» блогерам (lib/bloggers/tg-queue.ts) уходит с того же
+  // номера: пауза и предел в час считаются по всем его первым сообщениям.
+  const [bloggerHour, bloggerLast] = await Promise.all([bloggerSendsLastHour(now, account), lastBloggerSendAt(account)]);
+  const lastAt = Math.max(last?.sent_at ? Date.parse(String(last.sent_at)) : 0, bloggerLast ?? 0);
   const stale = new Date(now - DISPATCH_STALE_MS).toISOString();
 
   // Письмо менеджера уходит с аккаунта, на котором он работает (см. mayTake).
@@ -240,12 +244,27 @@ export async function nextQueued(
     if (job) return job;
   }
 
-  if ((await sentLastHour(now, account)).count >= cap) return null;
+  if ((await sentLastHour(now, account)).count + bloggerHour.count >= cap) return null;
 
   const gap = MIN_GAP_MS + Math.floor((MAX_GAP_MS - MIN_GAP_MS) * pseudoRandom(lastAt));
   if (lastAt && now - lastAt < gap) return null;
 
   return takeFirst(null);
+}
+
+/** Последнее первое письмо компании с этого аккаунта — для паузы перед «Здравствуйте» блогеру. */
+export async function lastAccountSendAt(account: string): Promise<number | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data } = await db
+    .from("prospects")
+    .select("sent_at, sent_via")
+    .eq("status", "sent")
+    .or(SENT_BY_ACCOUNT)
+    .order("sent_at", { ascending: false })
+    .limit(50);
+  const last = (data ?? []).find((row) => accountOf(row.sent_via as string | null) === account);
+  return last?.sent_at ? Date.parse(String(last.sent_at)) : null;
 }
 
 /**

@@ -215,7 +215,7 @@ test("лид заводится при отправке и закрепляет�
 test("очередь держит пределы аккаунта, а не надеется на отправителя", () => {
   const queue = readFileSync(new URL("../lib/admin/outreach-queue.ts", import.meta.url), "utf8");
   // Предел — у каждого рабочего аккаунта свой: Telegram ограничивает номер.
-  assert.match(queue, /if \(\(await sentLastHour\(now, account\)\)\.count >= cap\) return null;/);
+  assert.match(queue, /if \(\(await sentLastHour\(now, account\)\)\.count \+ bloggerHour\.count >= cap\) return null;/);
   // База недоступна — час считается занятым: лучше задержать, чем
   // отправить мимо предела.
   assert.match(queue, /if \(!db\) return \{ count: HOURLY_CAP, oldestAgoMs: null \};/);

@@ -202,3 +202,35 @@ test("доступ: раздел — владельцу и руководите�
 test("агент блогеров — недорогой моделью", () => {
   assert.match(read("lib/bloggers/judge.ts"), /BLOGGER_MODEL \|\| "claude-haiku/);
 });
+
+test("Telegram: «Здравствуйте» блогеру — в окне, по квоте, в общем пределе и после паузы аккаунта", async () => {
+  const { helloAllowed } = await import("@/lib/bloggers/tg-queue");
+  const noon = Date.parse("2026-10-11T07:00:00Z"); // 12:00 по Ташкенту
+  const ok = { now: noon, enabled: true, tgDaily: 3, sentToday: 0, accountHour: 0, cap: 3, lastAt: null };
+  assert.equal(helloAllowed(ok), true);
+  assert.equal(helloAllowed({ ...ok, enabled: false }), false, "агент выключен — никому не пишем");
+  assert.equal(helloAllowed({ ...ok, now: Date.parse("2026-10-11T18:00:00Z") }), false, "ночью первым не пишем");
+  assert.equal(helloAllowed({ ...ok, sentToday: 3 }), false, "своя квота блогеров кончилась");
+  assert.equal(helloAllowed({ ...ok, accountHour: 3 }), false, "предел в час общий с компаниями");
+  assert.equal(helloAllowed({ ...ok, lastAt: noon - 60_000 }), false, "пауза после прошлой отправки аккаунта");
+  assert.equal(helloAllowed({ ...ok, lastAt: noon - 30 * 60_000 }), true);
+});
+
+test("Telegram: блогерам первым — только приветствие, текст о программе — после ответа", () => {
+  const runner = read("scout/runner.mjs");
+  const hello = runner.slice(runner.indexOf("const bloggerHello = async"), runner.indexOf("timers.push(setInterval(async () => {\n    if (outreachStopped) return;"));
+  assert.match(hello, /client\.sendMessage\(verdict\.userId, \{ message: job\.hello \}\)/);
+  assert.doesNotMatch(hello, /pitch/, "до ответа блогеру уходит только «Здравствуйте»");
+  // Блогеров скаут спрашивает, только когда очередь компаний пуста.
+  assert.match(runner, /if \(!job\) \{\n\s*await bloggerHello\(\);/);
+  // Предел в час и пауза — общие на аккаунт: очередь компаний видит отправки блогерам.
+  assert.match(read("lib/admin/outreach-queue.ts"), /sentLastHour\(now, account\)\)\.count \+ bloggerHour\.count >= cap/);
+});
+
+test("Telegram: ответ блогера — команде, без лишних HTML", async () => {
+  const { replyNotice } = await import("@/lib/bloggers/tg-queue");
+  const text = replyNotice({ handle: "dilnoza.biz", score: 72 }, "Да, <b>интересно</b>", true);
+  assert.match(text, /@dilnoza\.biz/);
+  assert.match(text, /&lt;b&gt;интересно/);
+  assert.match(text, /оценка 72/);
+});

@@ -92,7 +92,7 @@ test("очередь: письмо берёт один аккаунт, пред�
   const queue = read("lib/admin/outreach-queue.ts");
   // Захват — условием в самом update, а не «прочитать и отправить».
   assert.match(queue, /\.update\(\{ dispatch_by: account, dispatch_at: new Date\(now\)\.toISOString\(\) \}\)/);
-  assert.match(queue, /if \(\(await sentLastHour\(now, account\)\)\.count >= cap\) return null;/);
+  assert.match(queue, /if \(\(await sentLastHour\(now, account\)\)\.count \+ bloggerHour\.count >= cap\) return null;/);
   // Последнее письмо — этого аккаунта: пауза между письмами своя.
   assert.match(queue, /const last = \(recent \?\? \[\]\)\.find\(\(row\) => accountOf\(row\.sent_via as string \| null\) === account\);/);
   // Ушло — запомнили, с какого: ответы и правки пойдут с него же.
