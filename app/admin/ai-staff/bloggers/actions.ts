@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requestIp, requireRole } from "@/lib/admin/guard";
+import { requestIp, requireRole, requireSection } from "@/lib/admin/guard";
 import { leftToday, normalizeHandle, settingsFrom } from "@/lib/bloggers/rules";
 import { assess, bloggerPass } from "@/lib/bloggers/run";
 import * as store from "@/lib/bloggers/store";
@@ -13,13 +13,17 @@ import { createPartner } from "@/lib/partners/store";
 import { appSecret } from "@/lib/secrets";
 
 /**
- * Действия вкладки «Блогеры» — владельцу и руководителю. Галочка раздела
- * даёт только просмотр (CLAUDE.md, «Доступ к разделам»): что меняется,
- * решает роль. Деньги и клиенты сервиса здесь не трогаются: они в
+ * Действия вкладки «Блогеры». Рабочие — отправить текст, отметить ответ или
+ * отказ, вести разговор самому — всем, кому открыт раздел, в том числе
+ * менеджеру по галочке владельца (решение владельца, 11.10.2026: менеджеры
+ * по галочке тоже работают с блогерами). Настройки агента, поиск, оценка,
+ * Instagram студии и заведение партнёра — владельцу и руководителю, по
+ * роли. Деньги и клиенты сервиса здесь не трогаются: они в
  * app/admin/ai-staff/actions.ts, только у владельца.
  */
 
 const PAGE = "/admin/ai-staff/bloggers";
+const SECTION = "/admin/ai-staff";
 const str = (form: FormData, name: string, max = 200) => String(form.get(name) ?? "").trim().slice(0, max);
 const intOf = (form: FormData, name: string) => Number(str(form, name, 12).replace(/\s/g, ""));
 
@@ -74,7 +78,7 @@ export async function reassess(form: FormData): Promise<void> {
 
 /** Менеджер отправил текст в Direct или на почту со своего телефона. Сверх дневной нормы — не отмечаем. */
 export async function markSent(form: FormData): Promise<void> {
-  const staff = await requireRole("admin", "head");
+  const staff = await requireSection(SECTION);
   const blogger = await store.bloggerById(str(form, "id", 64));
   if (!blogger || blogger.status !== "ready" || blogger.channel === "telegram") redirect(PAGE);
   const now = new Date();
@@ -99,25 +103,25 @@ async function setStatus(form: FormData, status: store.BloggerStatus, from: read
 }
 
 export async function skipBlogger(form: FormData): Promise<void> {
-  await requireRole("admin", "head");
+  await requireSection(SECTION);
   await setStatus(form, "skipped", ["found", "ready", "queued"]);
   revalidatePath(PAGE);
 }
 
 export async function restoreBlogger(form: FormData): Promise<void> {
-  await requireRole("admin", "head");
+  await requireSection(SECTION);
   await setStatus(form, "ready", ["skipped", "unreachable"]);
   revalidatePath(PAGE);
 }
 
 export async function markReplied(form: FormData): Promise<void> {
-  await requireRole("admin", "head");
+  await requireSection(SECTION);
   await setStatus(form, "replied", ["contacted"]);
   revalidatePath(PAGE);
 }
 
 export async function markDeclined(form: FormData): Promise<void> {
-  await requireRole("admin", "head");
+  await requireSection(SECTION);
   await setStatus(form, "declined", ["contacted", "replied", "stats", "agreed"]);
   revalidatePath(PAGE);
 }
@@ -157,7 +161,7 @@ export async function connectStudioInstagram(): Promise<void> {
 
 /** «Вести самому»: агент молчит в этом разговоре 12 часов; «Вернуть агенту» — снова отвечает. */
 export async function holdAgent(form: FormData): Promise<void> {
-  await requireRole("admin", "head");
+  await requireSection(SECTION);
   const blogger = await store.bloggerById(str(form, "id", 64));
   if (blogger) {
     const on = str(form, "on") === "on";

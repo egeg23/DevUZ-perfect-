@@ -65,6 +65,9 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
     studioIg(),
   ]);
   const manualLeft = leftToday(settings.directDaily, sent.manual);
+  // Менеджер по галочке владельца отправляет тексты и отмечает ответы;
+  // настройки, поиск, оценка и партнёр — владельцу и руководителю.
+  const desk = staff.role === "admin" || staff.role === "head";
   const intl = PANEL_INTL[staff.panel_locale];
 
   return (
@@ -87,15 +90,19 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
           <div className="flex flex-wrap items-center gap-3">
             <span className={H2}>{t.agent}</span>
             <span className={settings.enabled ? "text-green" : "text-gold"}>{settings.enabled ? t.agentOn : t.agentOff}</span>
-            <form action={toggleAgent}>
-              <input type="hidden" name="on" value={settings.enabled ? "off" : "on"} />
-              <button className={BTN}>{settings.enabled ? t.turnOff : t.turnOn}</button>
-            </form>
-            <form action={findNow}>
-              <SubmitButton pendingLabel={t.searching} tone="quiet" base="rounded-md px-2.5 py-1 text-xs">
-                {t.findNow}
-              </SubmitButton>
-            </form>
+            {desk ? (
+              <>
+                <form action={toggleAgent}>
+                  <input type="hidden" name="on" value={settings.enabled ? "off" : "on"} />
+                  <button className={BTN}>{settings.enabled ? t.turnOff : t.turnOn}</button>
+                </form>
+                <form action={findNow}>
+                  <SubmitButton pendingLabel={t.searching} tone="quiet" base="rounded-md px-2.5 py-1 text-xs">
+                    {t.findNow}
+                  </SubmitButton>
+                </form>
+              </>
+            ) : null}
             <HelpHint topic={helpAnchor("/admin/ai-staff", "bloggers-agent")} />
           </div>
           <div className="grid gap-1 text-sm sm:grid-cols-2">
@@ -108,7 +115,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
             <span className="flex flex-wrap items-center gap-2">
               {t.direct}:{" "}
               <span className={studio ? "text-green" : "text-gold"}>{studio ? `${t.connected} · @${studio.username}` : t.notConnected}</span>
-              {ig ? (
+              {ig && desk ? (
                 <form action={connectStudioInstagram}>
                   <button className={BTN}>{t.connectIg}</button>
                 </form>
@@ -118,6 +125,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
               {t.quotaTg(sent.telegram, settings.tgDaily)} · {t.quotaManual(sent.manual, settings.directDaily)}
             </span>
           </div>
+          {desk ? (
           <details>
             <summary className="cursor-pointer text-sm text-muted">{t.settings}</summary>
             <form action={saveBloggerSettings} className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
@@ -154,6 +162,8 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
               </div>
             </form>
           </details>
+          ) : null}
+          {desk ? (
           <form action={addBlogger} className="flex flex-wrap items-center gap-2">
             <input name="handle" required placeholder={t.addPlaceholder} aria-label={t.add} className={`${INPUT} w-56`} />
             <input name="note" placeholder={t.addNote} aria-label={t.addNote} className={`${INPUT} w-56`} />
@@ -161,6 +171,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
               {t.add}
             </SubmitButton>
           </form>
+          ) : null}
         </section>
 
         <section className={CARD}>
@@ -190,7 +201,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
                     </>
                   ) : null}
                   <Act action={skipBlogger} id={b.id} label={t.skip} />
-                  <Act action={reassess} id={b.id} label={t.reassess} />
+                  {desk ? <Act action={reassess} id={b.id} label={t.reassess} /> : null}
                 </div>
               </BloggerCard>
             ))}
@@ -210,7 +221,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
                 <BloggerCard key={b.id} b={b} t={t} intl={intl}>
                   {b.human_until && Date.parse(b.human_until) > now.getTime() ? <p className="mt-1 text-xs text-gold">{t.humanLeads}</p> : null}
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <Act action={makePartner} id={b.id} label={t.makePartner} />
+                    {desk ? <Act action={makePartner} id={b.id} label={t.makePartner} /> : null}
                     <Act action={markDeclined} id={b.id} label={t.declined} />
                     <form action={holdAgent}>
                       <input type="hidden" name="id" value={b.id} />
@@ -234,7 +245,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
                 <BloggerCard key={b.id} b={b} t={t} intl={intl}>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Act action={markReplied} id={b.id} label={t.replied} />
-                    <Act action={makePartner} id={b.id} label={t.makePartner} />
+                    {desk ? <Act action={makePartner} id={b.id} label={t.makePartner} /> : null}
                     <Act action={markDeclined} id={b.id} label={t.declined} />
                   </div>
                 </BloggerCard>
@@ -277,7 +288,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
                 <BloggerCard key={b.id} b={b} t={t} intl={intl}>
                   <div className="mt-2 flex gap-2">
                     <Act action={restoreBlogger} id={b.id} label={t.restore} />
-                    <Act action={reassess} id={b.id} label={t.reassess} />
+                    {desk ? <Act action={reassess} id={b.id} label={t.reassess} /> : null}
                   </div>
                 </BloggerCard>
               ))}

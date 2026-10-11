@@ -194,7 +194,10 @@ test("доступ: раздел — владельцу и руководите�
   assert.match(read("app/admin/ai-staff/page.tsx"), /if \(staff\.role !== "admin"\) redirect\("\/admin\/ai-staff\/bloggers"\)/);
   const actions = read("app/admin/ai-staff/bloggers/actions.ts");
   for (const m of actions.matchAll(/export async function (\w+)\([^)]*\)[^{]*\{\n([^\n]*)/g)) {
-    assert.match(m[2], /await requireRole\("admin", "head"\)/, `${m[1]}: первой строкой — проверка роли`);
+    // Рабочие действия — всем, кому открыт раздел (и менеджеру по галочке);
+    // настройки, поиск, оценка, Instagram и партнёр — по роли.
+    const work = ["markSent", "skipBlogger", "restoreBlogger", "markReplied", "markDeclined", "holdAgent"].includes(m[1]);
+    assert.match(m[2], work ? /await requireSection\(SECTION\)/ : /await requireRole\("admin", "head"\)/, `${m[1]}: первой строкой — проверка доступа`);
   }
   assert.match(read("app/admin/ai-staff/bloggers/page.tsx"), /const staff = await requireSection\("\/admin\/ai-staff"\)/);
 });
