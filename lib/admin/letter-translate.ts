@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import type { HelloLang } from "@/lib/admin/hello-first";
-import { bannedPhrase, inventedNumbers, jargonWords } from "@/lib/admin/outreach";
+import { bannedPhrase, foreignScript, inventedNumbers, jargonWords } from "@/lib/admin/outreach";
 import { effortFor } from "@/lib/model-limits";
 import { anthropic } from "@/lib/model-road";
 import { modelTroubleSays } from "@/lib/model-trouble";
@@ -41,8 +41,11 @@ ${to === "uz" ? "— Узбекский — латиницей, как пишу�
 Ответь только текстом перевода.`;
 }
 
+/** Кириллица в узбекском переводе: пишем латиницей, а модель иногда сбивается на неё посреди слова. */
+const CYRILLIC_WORD = /[\p{L}ʻʼ’']*\p{Script=Cyrillic}[\p{L}ʻʼ’']*/gu;
+
 /** Что не так с переводом. Пусто — можно отправлять. */
-export function translationProblems(text: string, source: string, host: string): string[] {
+export function translationProblems(text: string, source: string, host: string, to?: HelloLang): string[] {
   const out: string[] = [];
   const t = text.trim();
   if (t.length < 40) out.push("слишком коротко");
@@ -52,31 +55,42 @@ export function translationProblems(text: string, source: string, host: string):
   if (bannedPhrase(t)) out.push("запрещённый оборот");
   const jargon = jargonWords(t, [host]);
   if (jargon.length) out.push(`технические слова: ${jargon.join(", ")}`);
+  const alien = foreignScript(t);
+  if (alien.length) out.push(`чужое письмо: ${alien.join(" ")}`);
+  if (to === "uz") {
+    // Название компании кириллицей перевод оставляет как есть — оно с большой
+    // буквы и есть в исходном письме. Всё остальное кириллицей — сбой.
+    const cyrillic = [...new Set(t.match(CYRILLIC_WORD) ?? [])].filter((w) => !(/^\p{Lu}/u.test(w) && source.includes(w)));
+    if (cyrillic.length) out.push(`кириллица в узбекском: ${cyrillic.join(" ")}`);
+  }
   return out;
 }
+
+/** Попыток перевода: сбой модели в одном слове — повод спросить ещё раз, а не отдавать разговор человеку. */
+const ATTEMPTS = 2;
 
 export async function translateLetter(letter: string, to: HelloLang, host: string): Promise<string | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   try {
-    const response = await anthropic("outreach-translate").beta.messages.create({
-      model: MODEL,
-      max_tokens: 900,
-      system: translateSystem(to),
-      messages: [{ role: "user", content: letter }],
-      ...effortFor(MODEL, "low"),
-    });
-    const text = response.content
-      .filter((block): block is Anthropic.Beta.BetaTextBlock => block.type === "text")
-      .map((block) => block.text)
-      .join("")
-      .trim();
-    if (!text) return null;
-    const problems = translationProblems(text, letter, host);
-    if (problems.length) {
-      console.error(`перевод письма для ${host} не прошёл проверку: ${problems.join("; ")}`);
-      return null;
+    for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+      const response = await anthropic("outreach-translate").beta.messages.create({
+        model: MODEL,
+        max_tokens: 900,
+        system: translateSystem(to),
+        messages: [{ role: "user", content: letter }],
+        ...effortFor(MODEL, "low"),
+      });
+      const text = response.content
+        .filter((block): block is Anthropic.Beta.BetaTextBlock => block.type === "text")
+        .map((block) => block.text)
+        .join("")
+        .trim();
+      if (!text) return null;
+      const problems = translationProblems(text, letter, host, to);
+      if (!problems.length) return text;
+      console.error(`перевод письма для ${host} не прошёл проверку (попытка ${attempt}): ${problems.join("; ")}`);
     }
-    return text;
+    return null;
   } catch (error) {
     console.error("перевод письма: модель не ответила —", modelTroubleSays(error));
     return null;

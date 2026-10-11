@@ -805,7 +805,23 @@ const ALIEN =
   /[\u0590-\u05ff\u0600-\u06ff\u0900-\u097f\u0e00-\u0e7f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/gu;
 
 export function foreignScript(text: string): string[] {
-  return [...new Set(text.match(ALIEN) ?? [])];
+  return [...new Set([...(text.match(ALIEN) ?? []), ...mixedScriptWords(text)])];
+}
+
+/**
+ * Слово из латиницы и кириллицы сразу.
+ *
+ * Живой случай, 11.10.2026, maktabtop.uz: перевод письма на узбекский ушёл
+ * клиенту со словом «raqibларга» — модель начала слово латиницей и дописала
+ * кириллицей. Кириллица сама по себе не чужая (русские письма), поэтому
+ * знак за знаком её не поймать; а одно слово двумя алфавитами не пишут ни
+ * на одном из наших языков. Слово — сплошные буквы: «IT-школа» и
+ * «SEO-продвижение» через дефис — два слова, их не трогаем.
+ */
+const LETTER_RUN = /[\p{L}\p{M}ʻʼ’']+/gu;
+
+export function mixedScriptWords(text: string): string[] {
+  return [...new Set((text.match(LETTER_RUN) ?? []).filter((w) => /\p{Script=Latin}/u.test(w) && /\p{Script=Cyrillic}/u.test(w)))];
 }
 
 /**
