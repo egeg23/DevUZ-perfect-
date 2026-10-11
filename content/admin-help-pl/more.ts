@@ -415,11 +415,12 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Pracownicy AI ─────────────────────────────────────────────────── */
   "/admin/ai-staff": {
-    what: "Nowa usługa studia w abonamencie: handlowiec AI, który odpowiada kupującym innych firm w ich Telegramie i na ich stronie oraz przekazuje zgłoszenia ich ludziom. Tutaj widzisz wszystkich klientów usługi, ich zużycie i zaznaczasz płatności. Sami klienci pracują w swoim panelu devuz.studio/cabinet, naszego panelu nie widzą.",
+    what: "Sekcja pracowników AI studia: tu pracują nasi pracownicy AI i widać, co zdążyli zrobić. Zakładka «Blogerzy» to pracownik AI, który szuka blogerów z Uzbekistanu do programu partnerskiego, ocenia ich odbiorców i przygotowuje pierwszą wiadomość, a ludziom zostaje ją wysłać i się dogadać.",
     items: [
       {
         id: "service",
         title: "Usługa i bot usługi",
+        roles: ["admin"],
         body: [
           "Na górze widać, czy usługa jest włączona. Gdy jest wyłączona, panel klientów, widżet na ich stronach i bot usługi nikomu nie odpowiadają, a strona usługi na naszej witrynie się nie otwiera. Przycisk **«Włącz usługę»** / **«Wyłącz usługę»** działa od razu, w ciągu minuty.",
           "Usługa ma własnego bota w Telegramie, nie bota studia: przez niego klienci logują się do panelu, podłączają swój Telegram Business i dostają zgłoszenia. Bota tworzysz w @BotFather, tam włączasz Business Mode, token zapisujesz w magazynie sekretów jako `AI_STAFF_BOT_TOKEN`, obok `AI_STAFF_WEBHOOK_SECRET` (dowolny długi losowy ciąg) i `AI_STAFF_KEY` (klucz szyfrowania tokenów botów klientów). Potem naciśnij **«Podłącz bota usługi»**: serwer sprawdzi token, czy Business Mode jest włączony (w @BotFather nazywa się Secretary Mode), i włączy botowi komendę /start. Wiadomości bot pobiera z Telegrama sam, usługą na serwerze, jak bot studia: webhook Telegrama nie dociera do naszego serwera. Usługa bierze token z magazynu i instaluje się przy wdrożeniu, nie trzeba jej uruchamiać osobno.",
@@ -428,6 +429,7 @@ export const moreSections: Record<string, HelpEntry> = {
       {
         id: "clients",
         title: "Klienci i skąd liczby",
+        roles: ["admin"],
         body: [
           "Każda karta to jeden klient usługi. «Dialogi» pokazują, ile rozmów z kupującymi AI prowadziło w tym miesiącu według czasu Taszkentu, na tle limitu planu: rozmowa liczy się raz w miesiącu, niezależnie od liczby wiadomości. Gdy limit się skończy, AI klienta milknie, kupujący dostaje «menedżer odpowie», a ludzie klienta dostają wiadomość.",
           "«Koszt» to ile klient kosztował w tym miesiącu według zużycia modelu, w dolarach po cenach modelu: każde wywołanie zapisuje się z oznaczeniem klienta. Obok cena jednego dialogu i «Marża»: cena planu minus koszt w sumach po kursie z `AI_STAFF_UZS_PER_USD` (domyślnie 12 700). Przez ProxyAPI model jest droższy, liczba tego nie uwzględnia. Na górze zużycie wszystkich klientów i przychód z opłaconych planów.",
@@ -436,6 +438,7 @@ export const moreSections: Record<string, HelpEntry> = {
       {
         id: "pay",
         title: "Płatność, okres próbny i status",
+        roles: ["admin"],
         body: [
           "Na razie płatność jest na fakturę: klient do nas pisze, wystawiasz fakturę, a gdy pieniądze dotrą, wybierasz plan, liczbę miesięcy, kwotę i sposób i naciskasz **«Zaznacz płatność»**. Termin przedłuża się od już opłaconej daty, jeśli jeszcze nie minęła: płatność z góry nie przepada. Pusta kwota to cena planu za wybrane miesiące. Plan «Pro» sam przełącza AI klienta na najmocniejszy model. Gdy w magazynie sekretów pojawią się klucze Payme (`AI_STAFF_PAYME_MERCHANT_ID`, `AI_STAFF_PAYME_KEY`) albo Click (`AI_STAFF_CLICK_SERVICE_ID`, `AI_STAFF_CLICK_MERCHANT_ID`, `AI_STAFF_CLICK_SECRET`), w panelu klienta pojawi się płatność kartą: opłacona faktura sama przedłuży plan, bez Twojego zaznaczenia, i trafi do jego historii płatności.",
           "Nowy klient dostaje 14 dni okresu próbnego i 100 dialogów. **«Przedłuż okres próbny o 7 dni»** gdy klient potrzebuje czasu do płatności. **«Zmień status»**: «pauza» i «zablokowany» od razu zatrzymują AI klienta, kupujący dostają «menedżer odpowie».",
@@ -444,9 +447,45 @@ export const moreSections: Record<string, HelpEntry> = {
       {
         id: "cabinet",
         title: "Panel klienta i demo",
+        roles: ["admin"],
         body: [
           "**«Otwórz panel klienta»** to wejście do panelu klienta jako wsparcie na 2 godziny: żeby pomóc ustawić bazę wiedzy albo kanał. W nagłówku panelu klienta będzie widać, że weszło wsparcie.",
           "**«Pokazuj jako demo»** stawia widżet czatu tego klienta na stronie usługi na naszej witrynie: odwiedzający próbuje AI na żywym przykładzie. Do demo lepiej założyć osobnego klienta z wymyśloną firmą i wypełnioną bazą wiedzy: każde pytanie odwiedzającego zużywa jego dialogi i model.",
+        ],
+      },
+      {
+        id: "bloggers-agent",
+        title: "Blogerzy: co agent robi sam",
+        body: [
+          "Agent szuka blogerów z Uzbekistanu, którzy mogą przyprowadzać studiu klientów: przedsiębiorców, ekspertów, marketerów, blogerów IT. Szuka w internecie przez Firecrawl według zapytań z **«Ustawienia agenta»**, po kolei: za każdym razem bierze zapytanie, którego najdłużej nie używał. Z wyników bierze profile na Instagramie i nicki z artykułów z zestawieniami blogerów. Kredyty Firecrawl idą z tego samego dziennego limitu co wyszukiwanie firm do kontaktów: agent wydaje nie więcej niż swoją część «Kredytów wyszukiwania dziennie» (domyślnie 2) i nie więcej, niż zostało z limitu ogólnego, więc wyszukiwanie firm przez blogerów nie staje.",
+          "Włączony agent (**«Włącz agenta»**) pracuje sam co pięć minut od 9:00 do 20:00 czasu Taszkentu: ocenia do trzech znalezionych blogerów, a gdy nie ma kogo oceniać, robi jedno wyszukiwanie. Wyłączony niczego nie szuka i nie wydaje, ale dwa przyciski działają zawsze: **«Szukaj teraz»** robi taki przebieg od razu, o dowolnej porze, a **«Dodaj blogera»** dodaje blogera po nicku lub linku do profilu i od razu go ocenia, bez Firecrawl.",
+          "Wiersz «Źródła» pokazuje, co jest podłączone. «Wyszukiwanie w internecie» to ile kredytów agent wydał dziś ze swojej części. «Liczby z Instagrama» to czy jest oficjalny dostęp Instagrama do cudzych profili (Business Discovery): bez niego agent zna tylko liczbę obserwujących z wyników wyszukiwania, a polubień, komentarzy i częstotliwości postów nie. «Rozmowy w Direct» to czy podłączona jest aplikacja Instagrama, przez którą agent będzie mógł sam odpowiadać blogerom w Direct studia. Dopóki nie jest podłączona, rozmowę prowadzi człowiek.",
+        ],
+      },
+      {
+        id: "bloggers-score",
+        title: "Jak agent ocenia blogera",
+        body: [
+          "Punkty od 0 do 100 liczy kod, a nie model, i składają się z pięciu części. Wielkość odbiorców do 20: najlepiej od 10 do 100 tysięcy obserwujących, a poza zakresem «Obserwujących od» i «Obserwujących do» bloger odpada. Zaangażowanie do 30: ile średnio polubień i komentarzy mają ostatnie 12 postów, w procentach od obserwujących. Od 3% dobrze, poniżej 1% odbiorcy prawie nie reagują, powyżej 25% przy blogu od 10 tysięcy wygląda na sztuczne podbijanie. Aktywność do 15: ile postów tygodniowo, a ostatni post starszy niż 45 dni daje zero. Uzbekistan do 15. Tematyka do 20.",
+          "Tematy, język, miasto i to, czy odbiorcy pasują, czyta tani model (Haiku) z opisu profilu i podpisów pod postami: wysoko biznes, marketing, IT, eksperci z własnymi klientami; nisko humor, gry, uczniowie. Jego zdanie o tym, dlaczego tak, widać na karcie. Czegoś nie wiemy: agent stawia środek skali i pisze na żółto, czego brakuje; bloger spoza Uzbekistanu odpada od razu. Poniżej «Próg punktowy» (domyślnie 55) bloger trafia do «Odrzuceni»: tam można go **«Przywróć»** albo **«Oceń ponownie»**.",
+          "Obok liczb jest napisane, skąd są: «liczby z Instagrama» są dokładne, z oficjalnego dostępu; «liczby z wyszukiwarki» to tylko obserwujący z wyników. Miasta, wiek i zasięgi odbiorców widzi tylko sam bloger w swoich statystykach, więc gdy odpowie, warto poprosić go o zrzuty ekranu statystyk.",
+        ],
+      },
+      {
+        id: "bloggers-send",
+        title: "Pierwsza wiadomość: Telegram, Direct, e-mail",
+        body: [
+          "Pasujący bloger trafia do «Do wysłania» z gotowym tekstem. Gdzie pisać, agent decyduje według kontaktów z opisu profilu i z jego strony: jest Telegram, to tam; jest e-mail, to na e-mail; nie ma ani jednego, ani drugiego, to do Direct na Instagramie. Tekst to szablon, a nie model: kim jesteśmy, co proponujemy i warunki programu partnerskiego. Procenty i minimalna wypłata pochodzą z zasad programu, te same co w [«Partnerzy»](/admin/partners) i na stronie programu na naszej witrynie: własnych liczb agent nie wymyśla. Język tekstu to rosyjski albo uzbecki, w zależności od tego, w jakim języku bloger prowadzi bloga.",
+          "Instagram nie pozwala pisać pierwszym przez swój oficjalny dostęp, a logować się na konto studia obcym programem nie będziemy: Instagram za to blokuje konto. Dlatego do Direct i na e-mail wysyła człowiek ze swojego telefonu: **«Skopiuj i otwórz Direct»** kopiuje tekst do schowka i otwiera rozmowę z blogerem w aplikacji Instagram, a **«Skopiuj i otwórz pocztę»** otwiera gotowy list. Wklej, wyślij i naciśnij **«Wysłałem»**: bloger przechodzi do «Napisaliśmy, czekamy na odpowiedź». Wysyłaj z konta studia na Instagramie: odpowiedź blogera przyjdzie tam.",
+          "Dziennie nie więcej niż «Direct i e-mail dziennie» (domyślnie 10): wiele jednakowych pierwszych wiadomości z jednego konta Instagram uznaje za spam. Norma wykonana: przyciski wysyłania znikają do jutra. Blogerom z Telegramem, tak jak firmom w kontaktach, jako pierwsze z konta roboczego studia idzie tylko powitanie, a blogerzy mają własny limit «Telegram dziennie» (domyślnie 3), który nie rusza normy 20 kontaktów z firmami. **«Nie pasuje»** usuwa blogera z listy.",
+        ],
+      },
+      {
+        id: "bloggers-partner",
+        title: "Bloger odpowiedział: rozmowa i partnerstwo",
+        body: [
+          "Bloger odpowiedział w Direct albo na e-mail: naciśnij przy nim **«Odpowiedział»** w «Napisaliśmy, czekamy na odpowiedź», a przejdzie do «Odpowiedzieli». Dalej rozmowę prowadzi człowiek: odpowiada na pytania o program i prosi o zrzuty ekranu statystyk, żeby zrozumieć, skąd są jego odbiorcy. Nie jest zainteresowany: **«Odmowa»**, więcej do niego nie piszemy.",
+          "Zgodził się: **«Zrób partnerem»**, a agent zakłada partnera w [«Partnerzy»](/admin/partners) z głównym linkiem i w notatce zapisuje nick i ocenę. Wyślij blogerowi link z karty partnera: według niego liczą się jego klienci i procenty. Partner zakłada się bez Telegrama, więc bloger nie zobaczy swojego salda w bocie: podawaj mu je sam albo załóż go ponownie, jeśli napisze do bota studia.",
         ],
       },
     ],

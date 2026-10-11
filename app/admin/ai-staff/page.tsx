@@ -1,7 +1,10 @@
 import { connectServiceBot, extendTrial, makeShowcase, markPaid, openCabinet, setStatus, toggleService } from "@/app/admin/ai-staff/actions";
+import { redirect } from "next/navigation";
+
+import { AiStaffTabs } from "@/app/admin/ai-staff/tabs";
 import { AdminShell } from "@/components/admin/shell";
 import { aiStaffDict } from "@/content/admin-panel/ai-staff";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireRole } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { PLANS, PLAN_IDS, PLAN_TITLE, formatUzs, monthKey, monthStart, usageCostUsd, uzsPerUsd } from "@/lib/ai-staff/plans";
 import { overview } from "@/lib/ai-staff/stats";
@@ -21,7 +24,10 @@ const BTN = "rounded-md border border-line px-2.5 py-1 text-xs text-muted hover:
  * (Click и Payme появятся позже, docs/ai-staff/pilot.md).
  */
 export default async function AiStaffPage({ searchParams }: { searchParams: Promise<{ n?: string; d?: string }> }) {
-  const staff = await requireAdmin();
+  // Раздел видит и руководитель, но клиенты сервиса — деньги и подписки —
+  // только владельцу: руководителю сразу открывается вкладка «Блогеры».
+  const staff = await requireRole("admin", "head");
+  if (staff.role !== "admin") redirect("/admin/ai-staff/bloggers");
   const t = pick(aiStaffDict, staff.panel_locale);
   const q = await searchParams;
   const now = new Date();
@@ -59,9 +65,10 @@ export default async function AiStaffPage({ searchParams }: { searchParams: Prom
   return (
     <AdminShell staff={staff}>
       <div className="space-y-5">
-        <div>
+        <div className="space-y-3">
           <h1 className="text-xl font-semibold">{t.title}</h1>
-          <p className="mt-1 text-sm text-muted">{t.intro}</p>
+          <AiStaffTabs role={staff.role} locale={staff.panel_locale} current="clients" />
+          <p className="text-sm text-muted">{t.intro}</p>
         </div>
         {q.n === "bot_ok" ? <p className="text-sm text-green">{t.botOk}</p> : null}
         {q.n === "bot_nobiz" ? <p className="text-sm text-gold">{t.botNoBusiness}</p> : null}

@@ -1820,11 +1820,12 @@ export const uz: HelpCopy = {
 
     /* ── SI xodimlar ──────────────────────────────────────────────────── */
     "/admin/ai-staff": {
-      what: "Studiyaning obuna asosidagi yangi xizmati: boshqa kompaniyalarning xaridorlariga ularning Telegrami va saytida javob beradigan va arizalarni ularning odamlariga topshiradigan SI savdo menejeri. Bu yerda xizmatning barcha mijozlari, ularning sarfi ko‘rinadi va to‘lovni belgilaysiz. Mijozlarning o‘zi devuz.studio/cabinet dagi kabinetida ishlaydi, bizning panelni ko‘rmaydi.",
+      what: "Studiyaning SI xodimlari bo‘limi: bu yerda bizning SI xodimlarimiz ishlaydi va ular nima qilgani ko‘rinadi. «Blogerlar» yorlig‘i hamkorlik dasturi uchun O‘zbekistondan blogerlarni topadigan, auditoriyasini baholaydigan va birinchi xabarni tayyorlaydigan SI xodim, odamlarga esa uni yuborish va kelishish qoladi.",
       items: [
         {
           id: "service",
           title: "Xizmat va xizmat boti",
+          roles: ["admin"],
           body: [
             "Yuqorida xizmat yoqilganmi yoki yo‘qmi ko‘rinadi. U o‘chiq bo‘lsa, mijozlar kabineti, ularning saytlaridagi vidjet va xizmat boti hech kimga javob bermaydi, saytdagi xizmat sahifasi ochilmaydi. **«Xizmatni yoqish»** / **«Xizmatni o‘chirish»** tugmasi bir daqiqa ichida ishlaydi.",
             "Xizmatning Telegramda o‘z boti bor, studiya boti emas: u orqali mijozlar kabinetga kiradi, Telegram Business ni ulaydi va arizalarni oladi. Botni @BotFather da o‘zingiz yaratasiz, u yerda Business Mode ni yoqasiz, tokenni sirlar omboriga `AI_STAFF_BOT_TOKEN` sifatida qo‘yasiz, yoniga `AI_STAFF_WEBHOOK_SECRET` (istalgan uzun tasodifiy qator) va `AI_STAFF_KEY` (mijozlar botlari tokenlarini shifrlash kaliti). So‘ng **«Xizmat botini ulash»** ni bosing: server tokenni, Business Mode yoqilganini (@BotFather da u Secretary Mode deb ataladi) tekshiradi va botga /start buyrug‘ini yoqadi. Xabarlarni bot Telegramdan o‘zi oladi, studiya boti kabi serverdagi xizmat orqali: Telegram vebxuki serverimizga yetib bormaydi. Xizmat tokenni ombordan oladi va yangilanishda o‘rnatiladi, uni alohida ishga tushirish shart emas.",
@@ -1833,6 +1834,7 @@ export const uz: HelpCopy = {
         {
           id: "clients",
           title: "Mijozlar va raqamlar qayerdan",
+          roles: ["admin"],
           body: [
             "Har bir kartochka xizmatning bitta mijozi. «Suhbatlar» SI shu oyda Toshkent vaqti bo‘yicha xaridorlar bilan nechta suhbat olib borganini tarif limitidan ko‘rsatadi: suhbat oyiga bir marta hisoblanadi, unda qancha xabar bo‘lishidan qat’i nazar. Limit tugasa, mijozning SI jim bo‘ladi, xaridor «menejer javob beradi» xabarini oladi, mijozning odamlariga xabar keladi.",
             "«Tannarx» mijoz oy davomida model sarfi bo‘yicha qancha turganini model narxlarida dollarda ko‘rsatadi: har bir chaqiruv mijoz belgisi bilan yoziladi. Yonida bir suhbat narxi va «Marja»: tarif narxi minus `AI_STAFF_UZS_PER_USD` kursi bo‘yicha so‘mdagi tannarx (odatiy 12 700). ProxyAPI orqali model qimmatroq, bu raqamda hisobga olinmagan. Yuqorida barcha mijozlar sarfi va to‘langan tariflar bo‘yicha tushum.",
@@ -1841,6 +1843,7 @@ export const uz: HelpCopy = {
         {
           id: "pay",
           title: "To‘lov, sinov muddati va holat",
+          roles: ["admin"],
           body: [
             "Hozircha to‘lov hisob orqali: mijoz bizga yozadi, siz hisob chiqarasiz, pul kelganda tarif, oylar soni, summa va usulni tanlab **«To‘lovni belgilash»** ni bosasiz. Agar to‘langan sana hali o‘tmagan bo‘lsa, muddat undan uzaytiriladi: oldindan to‘lov yonib ketmaydi. Summa bo‘sh bo‘lsa, tanlangan oylar uchun tarif narxi olinadi. «Pro» tarifi mijozning SI ni o‘zi eng kuchli modelga o‘tkazadi. Sirlar omborida Payme (`AI_STAFF_PAYME_MERCHANT_ID`, `AI_STAFF_PAYME_KEY`) yoki Click (`AI_STAFF_CLICK_SERVICE_ID`, `AI_STAFF_CLICK_MERCHANT_ID`, `AI_STAFF_CLICK_SECRET`) kalitlari paydo bo‘lganda, mijoz kabinetida karta bilan to‘lov paydo bo‘ladi: to‘langan hisob tarifni sizning belgingizsiz o‘zi uzaytiradi va uning to‘lovlar tarixiga tushadi.",
             "Yangi mijoz 14 kunlik sinov muddati va 100 suhbat oladi. **«Sinovni 7 kunga uzaytirish»** mijozga to‘lovgacha vaqt kerak bo‘lganda. **«Holatni o‘zgartirish»**: «pauza» va «bloklangan» mijozning SI ni darhol to‘xtatadi, xaridorlar «menejer javob beradi» xabarini oladi.",
@@ -1849,9 +1852,45 @@ export const uz: HelpCopy = {
         {
           id: "cabinet",
           title: "Mijoz kabineti va demo",
+          roles: ["admin"],
           body: [
             "**«Kabinetni ochish»** mijoz kabinetiga yordam xizmati nomidan 2 soatga kirish: bilimlar bazasi yoki kanalni sozlashga yordam berish uchun. Kabinet sarlavhasida yordam xizmati kirgani belgisi bo‘ladi.",
             "**«Demo sifatida ko‘rsatish»** shu mijozning chat-vidjetini saytdagi xizmat sahifasiga qo‘yadi: tashrif buyuruvchi SI ni jonli misolda sinab ko‘radi. Demo uchun o‘ylab topilgan kompaniya va to‘ldirilgan bilimlar bazasi bilan alohida mijoz ochgan ma’qul: tashrif buyuruvchining har bir savoli uning suhbatlari va model sarfini sarflaydi.",
+          ],
+        },
+        {
+          id: "bloggers-agent",
+          title: "Blogerlar: agent o‘zi nima qiladi",
+          body: [
+            "Agent studiyaga mijoz olib kela oladigan O‘zbekistondagi blogerlarni qidiradi: tadbirkorlar, ekspertlar, marketologlar, IT-blogerlar. Internetda Firecrawl orqali **«Agent sozlamalari»** dagi so‘rovlar bo‘yicha navbat bilan qidiradi: har safar eng uzoq vaqt ishlatilmagan so‘rovni oladi. Natijalardan Instagram profillarini va blogerlar to‘plamlari maqolalaridan niklarni oladi. Firecrawl kreditlari aloqalar uchun kompaniyalarni qidirish bilan bir xil kunlik limitdan sarflanadi: agent o‘zining «Kuniga qidiruv kreditlari» ulushidan (odatiy 2) va umumiy limitdan qolganidan ko‘p sarflamaydi, shuning uchun kompaniyalar qidiruvi blogerlar sababli to‘xtamaydi.",
+            "Yoqilgan agent (**«Agentni yoqish»**) Toshkent vaqti bilan 9:00 dan 20:00 gacha har besh daqiqada o‘zi ishlaydi: topilgan blogerlardan uchtagacha baholaydi, baholaydigan hech kim bo‘lmasa, bitta qidiruv qiladi. O‘chirilgan agent hech narsa qidirmaydi va sarflamaydi, lekin ikki tugma doim ishlaydi: **«Hozir topish»** shunday o‘tishni darhol, istalgan vaqtda qiladi, **«Bloger qo‘shish»** esa blogerni nik yoki profil havolasi bo‘yicha qo‘shadi va Firecrawlsiz darhol baholaydi.",
+            "«Manbalar» qatori nima ulanganini ko‘rsatadi. «Internetda qidiruv» agent bugun o‘z ulushidan qancha kredit sarflaganini ko‘rsatadi. «Instagram raqamlari» Instagramning begona profillarga rasmiy kirishi (Business Discovery) bormi: usiz agent faqat qidiruv natijasidagi obunachilar sonini biladi, layklar, izohlar va postlar chastotasini bilmaydi. «Direct yozishmasi» agent studiya Directida blogerlarga o‘zi javob bera oladigan Instagram ilovasi ulanganmi. Ulanmaguncha yozishmani odam olib boradi.",
+          ],
+        },
+        {
+          id: "bloggers-score",
+          title: "Agent blogerni qanday baholaydi",
+          body: [
+            "0 dan 100 gacha ballni model emas, kod hisoblaydi va u besh qismdan iborat. Auditoriya hajmi 20 gacha: eng yaxshisi 10 dan 100 minggacha obunachi, «Obunachilar dan» va «Obunachilar gacha» chegarasidan tashqaridagi bloger saralanmaydi. Faollik 30 gacha: oxirgi 12 postdagi o‘rtacha layk va izohlar obunachilarga nisbatan foizda. 3% dan yaxshi, 1% dan kam bo‘lsa auditoriya deyarli javob bermaydi, 10 mingdan katta blogda 25% dan ko‘p bo‘lsa sun’iy oshirishga o‘xshaydi. Faolligi 15 gacha: haftasiga nechta post, oxirgi post 45 kundan eski bo‘lsa nol. O‘zbekiston 15 gacha. Mavzu 20 gacha.",
+            "Mavzular, til, shahar va auditoriya mos keladimi yo‘qligini profil sarlavhasi va postlar izohlari bo‘yicha arzon model (Haiku) o‘qiydi: yuqori biznes, marketing, IT, o‘z mijozlari bor ekspertlar; past hazil, o‘yinlar, maktab o‘quvchilari. Uning nima uchun shunday degan jumlasi kartochkada ko‘rinadi. Biror narsani bilmasak, agent shkalaning o‘rtasini qo‘yadi va aynan nima yetishmasligini sariq bilan yozadi; O‘zbekistondan bo‘lmagan bloger darhol saralanmaydi. «O‘tish bali» dan past (odatiy 55) bo‘lsa, bloger «Saralanmaganlar» ga tushadi: u yerda uni **«Qaytarish»** yoki **«Qayta baholash»** mumkin.",
+            "Raqamlar yonida ular qayerdanligi yozilgan: «Instagram raqamlari» aniq, rasmiy kirishdan; «raqamlar qidiruvdan» faqat natijadagi obunachilar. Auditoriyaning shaharlari, yoshi va qamrovini faqat blogerning o‘zi statistikasida ko‘radi, shuning uchun u javob berganda undan statistika skrinshotlarini so‘rash kerak.",
+          ],
+        },
+        {
+          id: "bloggers-send",
+          title: "Birinchi xabar: Telegram, Direct, pochta",
+          body: [
+            "Mos bloger tayyor matn bilan «Yuborishga» ga tushadi. Qayerga yozishni agent profil sarlavhasidagi va saytidagi kontaktlar bo‘yicha hal qiladi: Telegram bo‘lsa unga, pochta bo‘lsa pochtaga, ikkalasi ham bo‘lmasa Instagram Directiga. Matn model emas, shablon: biz kimmiz, nima taklif qilamiz va hamkorlik dasturi shartlari. Foizlar va eng kam to‘lov dastur qoidalaridan olinadi, [«Hamkorlar»](/admin/partners) va saytdagi dastur sahifasidagi bilan bir xil: agent o‘z raqamlarini o‘ylab topmaydi. Matn tili rus yoki o‘zbek, bloger blogini qaysi tilda yuritsa.",
+            "Instagram o‘zining rasmiy kirishi orqali birinchi bo‘lib yozishga ruxsat bermaydi, studiya akkauntiga begona dastur bilan kirmaymiz: buning uchun Instagram akkauntni bloklaydi. Shuning uchun Direct va pochtaga odam o‘z telefonidan yuboradi: **«Nusxalash va Directni ochish»** matnni buferga qo‘yadi va Instagram ilovasida bloger bilan yozishmani ochadi, **«Nusxalash va pochtani ochish»** esa tayyor xatni ochadi. Qo‘ying, yuboring va **«Yubordim»** ni bosing, bloger «Yozdik, javob kutyapmiz» ga o‘tadi. Studiyaning Instagram akkauntidan yuboring: blogerning javobi o‘sha yerga keladi.",
+            "Kuniga «Kuniga Direct va pochta» dan ko‘p emas (odatiy 10): bitta akkauntdan ko‘p bir xil birinchi xabarlarni Instagram spam deb hisoblaydi. Norma bajarilsa, yuborish tugmalari ertagacha yo‘qoladi. Telegrami bor blogerlarga, aloqalardagi kompaniyalar kabi, studiyaning ishchi akkauntidan birinchi bo‘lib faqat salom ketadi, blogerlarning esa o‘z «Kuniga Telegram» kvotasi bor (odatiy 3) va u kompaniyalar uchun 20 ta aloqa normasiga tegmaydi. **«Mos emas»** blogerni ro‘yxatdan olib tashlaydi.",
+          ],
+        },
+        {
+          id: "bloggers-partner",
+          title: "Bloger javob berdi: suhbat va hamkorlik",
+          body: [
+            "Bloger Direct yoki pochtada javob berdi, «Yozdik, javob kutyapmiz» da uning yonidagi **«Javob berdi»** ni bosing, u «Javob berganlar» ga o‘tadi. Keyin suhbatni odam olib boradi: dastur haqidagi savollarga javob beradi va auditoriyasi qayerdan ekanini tushunish uchun statistika skrinshotlarini so‘raydi. Qiziq bo‘lmasa, **«Rad etdi»**, unga boshqa yozmaymiz.",
+            "Rozi bo‘ldi, **«Hamkor qilish»**: agent [«Hamkorlar»](/admin/partners) da asosiy havola bilan hamkor ochadi, izohga nik va bahoni yozadi. Blogerga hamkor kartochkasidagi havolani yuboring: uning mijozlari va foizlari shu havola bo‘yicha hisoblanadi. Hamkor Telegramsiz ochiladi, shuning uchun bloger botda o‘z balansini ko‘rmaydi: uni o‘zingiz ayting yoki u studiya botiga yozsa, qaytadan oching.",
           ],
         },
       ],
