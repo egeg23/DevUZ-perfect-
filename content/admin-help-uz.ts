@@ -1180,7 +1180,7 @@ export const uz: HelpCopy = {
           body: [
             "Chapda — kabinetlar ro‘yxati. **«Yangi kabinet»**: nomi, kimligi (studiya, agentlik yoki biznes) va tili — bot shu kabinet odamlariga shu tilda yozadi. **«Yaratish»** ni bosing, kabinet o‘ngda ochiladi.",
             "**«Odamlar»** blokiga agentlik tomonidan kabinetda ishlaydiganlarni qo‘shing: raqamli Telegram id va ism, **«Qo‘shish»** tugmasi. Ular devuz.studio/ads ga studiya boti orqali kiradi — «Telegram orqali kirish» tugmasi bir martalik havola yuboradi — va bildirishnomalar oladi. Odamni olib tashlasangiz, uning kirishi darhol ishlamay qoladi.",
-            "**«Reklama kabinetini qo‘shish»**: platforma, nom, Direct’dagi mijoz logini (agentlik uchun) yoki 123-456-7890 ko‘rinishidagi Google akkaunt raqami. Keyin kabinetning o‘zida — **«Ulash»**: Yandex yoki Google sahifasi ochiladi, reklama egasi u yerda ruxsat beradi. Kalit shifrlangan holda saqlanadi, uni hech kim, studiya ham ko‘rmaydi.",
+            "**«Reklama kabinetini qo‘shish»**: platforma, nom, Direct’dagi mijoz logini (agentlik uchun) yoki 123-456-7890 ko‘rinishidagi Google akkaunt raqami. Keyin kabinetning o‘zida — **«Ulash»**: Yandex yoki Google sahifasi ochiladi, reklama egasi u yerda ruxsat beradi. Kalit shifrlangan holda saqlanadi, uni hech kim, studiya ham ko‘rmaydi. Ulangandan so‘ng avtopilot hisobotlarni darhol o‘zi oladi — takliflar bir-ikki daqiqada paydo bo‘ladi. Agar kabinet keyinchalik yangilanmay qolsa (ruxsat bekor qilingan, platforma rad etgan), kabinet odamlariga Telegram’da bitta xabar keladi va kabinetda sababi ko‘rinadi.",
           ],
         },
         {
