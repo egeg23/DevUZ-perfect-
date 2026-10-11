@@ -51,7 +51,27 @@ const SYSTEM = `Ты помогаешь студии DevUz (сайты, инте
 - fit от 0 до 10: насколько среди его аудитории владельцы бизнеса, предприниматели, эксперты и те, кому нужен сайт или бот. Бизнес, маркетинг, SMM, IT, предпринимательство, эксперты с клиентами — высоко; развлечения, юмор, игры, школьники — низко.
 Оценивай только по тексту. Не выдумывай того, чего в тексте нет. Вызови judge_blogger один раз.`;
 
-export type JudgeInput = { handle: string; name: string; bio: string; captions: readonly string[] };
+export type JudgeInput = {
+  handle: string;
+  name: string;
+  bio: string;
+  captions: readonly string[];
+  /** Для клиента сервиса: чей бренд и кто его покупатели. Нет — партнёрка студии. */
+  brand?: { brand: string; audience: string };
+};
+
+/** Для клиента сервиса тот же разбор, но «подходит» — к его бренду, а не к студии. */
+export function brandSystem(brand: { brand: string; audience: string }): string {
+  return `Ты помогаешь бренду выбрать блогеров для рекламы и сотрудничества в Узбекистане.
+Бренд: ${brand.brand.slice(0, 500)}
+Его покупатели: ${brand.audience.slice(0, 500) || "не указаны"}
+Прочитай шапку профиля и подписи к постам и оцени:
+- темы блога;
+- язык и город;
+- живёт ли блогер в Узбекистане и пишет ли для местной аудитории;
+- fit от 0 до 10: насколько аудитория блогера похожа на покупателей этого бренда.
+Оценивай только по тексту. Не выдумывай того, чего в тексте нет. Вызови judge_blogger один раз.`;
+}
 
 export function judgePrompt(b: JudgeInput): string {
   const captions = b.captions.slice(0, 8).map((c, i) => `${i + 1}. ${c.replace(/\s+/g, " ").slice(0, 300)}`);
@@ -79,7 +99,7 @@ export async function judgeBlogger(
   const response = await call({
     model: BLOGGER_MODEL,
     max_tokens: 600,
-    system: SYSTEM,
+    system: b.brand ? brandSystem(b.brand) : SYSTEM,
     tools: [TOOL as unknown as Anthropic.Beta.BetaToolUnion],
     tool_choice: { type: "tool", name: TOOL.name },
     messages: [{ role: "user", content: judgePrompt(b) }],

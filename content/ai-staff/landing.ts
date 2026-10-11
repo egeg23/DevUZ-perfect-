@@ -28,6 +28,9 @@ export type Landing = {
   demoSend: string;
   demoFail: string;
   demoOff: string;
+  /** Роли сервиса: продажи и блогеры (lib/ai-staff/bloggers.ts). */
+  rolesTitle: string;
+  roles: Array<{ title: string; text: string }>;
   howTitle: string;
   how: Array<{ title: string; text: string }>;
   whatTitle: string;
@@ -54,6 +57,14 @@ export const landing: Record<LandingLocale, Landing> = {
     demoSend: "Отправить",
     demoFail: "Не получилось отправить, попробуйте ещё раз.",
     demoOff: "Демо скоро появится здесь.",
+    rolesTitle: "Два ИИ-сотрудника в одном кабинете",
+    roles: [
+      { title: "ИИ-менеджер продаж", text: "Отвечает покупателям в Telegram, Instagram и на сайте по вашему прайсу и передаёт заявки вашим менеджерам." },
+      {
+        title: "ИИ-менеджер по блогерам",
+        text: "Находит блогеров Узбекистана, оценивает подписчиков, вовлечённость и тематику под ваших покупателей и готовит первое сообщение с вашим предложением. Отправляете вы в Direct в одно касание.",
+      },
+    ],
     howTitle: "Как подключить",
     how: [
       { title: "Создайте кабинет", text: "Нажмите «Старт» в нашем боте в Telegram. Пароль не нужен." },
@@ -82,6 +93,10 @@ export const landing: Record<LandingLocale, Landing> = {
       { q: "Что нужно для работы в моём Telegram?", a: "Telegram Premium: бизнес-функции Telegram работают с ним. Без Premium подключите своего бота или чат на сайт." },
       { q: "А если он ошибётся с ценой?", a: "Каждый ответ проверяется до отправки: число, которого нет в вашем прайсе, покупатель не увидит." },
       { q: "Сколько занимает настройка?", a: "Около 10 минут, если есть сайт или прайс текстом. Проверить ответы можно на себе до подключения." },
+      {
+        q: "ИИ-менеджер по блогерам сам пишет блогерам?",
+        a: "Нет. Instagram не даёт программам писать первыми, поэтому текст готовит ИИ, а отправляете вы с телефона в одно касание. Так ваш аккаунт не попадёт под ограничения.",
+      },
     ],
   },
   uz: {
@@ -98,6 +113,14 @@ export const landing: Record<LandingLocale, Landing> = {
     demoSend: "Yuborish",
     demoFail: "Yuborilmadi, qaytadan urinib ko'ring.",
     demoOff: "Demo tez orada shu yerda paydo bo'ladi.",
+    rolesTitle: "Bitta kabinetda ikkita sun'iy intellekt xodimi",
+    roles: [
+      { title: "Sun'iy intellekt sotuv menejeri", text: "Xaridorlarga Telegram, Instagram va saytda narxlaringiz bo'yicha javob beradi va arizalarni menejerlaringizga topshiradi." },
+      {
+        title: "Blogerlar bo'yicha sun'iy intellekt menejeri",
+        text: "O'zbekiston blogerlarini topadi, obunachilar, faollik va mavzuni xaridorlaringizga qarab baholaydi va taklifingiz bilan birinchi xabarni tayyorlaydi. Directga bir bosishda o'zingiz yuborasiz.",
+      },
+    ],
     howTitle: "Qanday ulash",
     how: [
       { title: "Kabinet yarating", text: "Telegramdagi botimizda «Start» ni bosing. Parol kerak emas." },
@@ -126,6 +149,10 @@ export const landing: Record<LandingLocale, Landing> = {
       { q: "Mening Telegramimda ishlashi uchun nima kerak?", a: "Telegram Premium: Telegramning biznes funksiyalari u bilan ishlaydi. Premium bo'lmasa, o'z botingizni yoki saytdagi chatni ulang." },
       { q: "Agar u narxda xato qilsa-chi?", a: "Har bir javob yuborishdan oldin tekshiriladi: narxlar ro'yxatingizda yo'q raqamni xaridor ko'rmaydi." },
       { q: "Sozlash qancha vaqt oladi?", a: "Sayt yoki matnli narxlar bo'lsa, taxminan 10 daqiqa. Javoblarni ulashdan oldin o'zingizda sinab ko'rish mumkin." },
+      {
+        q: "Blogerlar bo'yicha menejer blogerlarga o'zi yozadimi?",
+        a: "Yo'q. Instagram dasturlarga birinchi bo'lib yozishga ruxsat bermaydi, shuning uchun matnni sun'iy intellekt tayyorlaydi, telefondan bir bosishda o'zingiz yuborasiz. Shunda akkauntingiz cheklovga tushmaydi.",
+      },
     ],
   },
 };
