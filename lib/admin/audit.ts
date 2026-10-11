@@ -85,6 +85,7 @@ export const AUDIT_ACTIONS = [
   "prospect.manual_sent",
   "prospect.manual_reply",
   "prospect.taken_over",
+  "prospect.staff_reply",
   // «Клиент отказался» / «Игнорирует»: касание убрано из работы, лид закрыт.
   "prospect.closed",
   // Тексты писем касания и A/B (lib/admin/letter-texts.ts): кто какой текст

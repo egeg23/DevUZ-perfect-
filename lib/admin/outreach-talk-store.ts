@@ -763,10 +763,12 @@ export async function tellManager(
   // Галочка «Ответы клиентов на касания» снята — ответ ждёт в «Касаниях».
   if (!wants(staff?.notify_off as string[] | null, "talks")) return false;
 
-  const link = p.lead_id ? `\n\n${siteUrl}/admin/leads/${p.lead_id}` : "";
-  // С какого аккаунта разговор: отвечать клиенту — оттуда же.
+  // С какого аккаунта разговор: отвечать клиенту — оттуда же. Разговор на
+  // рабочем аккаунте — ответить можно прямо в карточке (queueStaffReply).
   const from = sentFrom({ sent_via: p.sent_via as string | null, target_kind: p.target_kind as string | null }, await accountTags());
   const via = from ? `\nАккаунт: ${esc(sentFromText(from))}` : "";
+  const url = p.lead_id ? `${siteUrl}/admin/leads/${p.lead_id}#talk` : "";
+  const link = !url ? "" : from ? `\n\nОтветить прямо в карточке лида — уйдёт с этого аккаунта:\n${url}` : `\n\n${url}`;
   const body = `<b>Касание · ${esc(String(p.host))}</b>${via}\n${esc(text)}${link}`;
   // Под ответом клиента — «Клиент отказался»: «не интересно» читают здесь,
   // и закрыть касание надо там же, не открывая панель.
@@ -981,7 +983,21 @@ export type TalkView = {
   target: string | null;
   /** С какого аккаунта идёт разговор (sentFrom); null — «Написал сам». */
   from: { label: string | null; handle: string | null } | null;
-  lines: { direction: "in" | "out"; author: "staff" | "ai"; body: string; created_at: string }[];
+  lines: TalkLine[];
+};
+
+/**
+ * Реплика разговора. `status` — у исходящих: «queued» ещё ждёт скаута,
+ * «failed» не ушло (`failure` — почему), «sent» ушло.
+ */
+export type TalkLine = {
+  id: string;
+  direction: "in" | "out";
+  author: "staff" | "ai";
+  body: string;
+  created_at: string;
+  status: "queued" | "sent" | "failed" | "done";
+  failure: string | null;
 };
 
 /**
@@ -1007,10 +1023,10 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
   const [{ data }, tags] = await Promise.all([
     db
       .from("outreach_messages")
-      .select("direction, author, body, created_at")
+      .select("id, direction, author, body, created_at, status, failure")
       .eq("prospect_id", p.id)
       .order("created_at", { ascending: true })
-      .limit(100),
+      .limit(200),
     accountTags(),
   ]);
 
@@ -1021,13 +1037,98 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
     handoverReason: (p.handover_reason as string | null) ?? null,
     target: (p.target as string | null) ?? null,
     from: sentFrom({ sent_via: p.sent_via as string | null, target_kind: p.target_kind as string | null }, tags),
-    lines: (data ?? []).map((row) => ({
-      direction: row.direction as "in" | "out",
-      author: (row.author as "staff" | "ai") ?? "ai",
-      body: String(row.body),
-      created_at: String(row.created_at),
-    })),
+    lines: (data ?? [])
+      // Снятое до отправки клиент не видел — и в ленте его нет
+      // (HAND_REPLY_LEFT, STAFF_TOOK_OVER).
+      .filter((row) => !(row.direction === "out" && row.status === "done" && row.failure))
+      .map((row) => ({
+        id: String(row.id),
+        direction: row.direction as "in" | "out",
+        author: (row.author as "staff" | "ai") ?? "ai",
+        body: String(row.body),
+        created_at: String(row.created_at),
+        status: (row.status as TalkLine["status"]) ?? "done",
+        failure: (row.failure as string | null) ?? null,
+      })),
   };
+}
+
+/** Что лежит в ответе модели, снятом потому, что менеджер ответил сам из карточки. */
+const STAFF_TOOK_OVER = "не отправлено: менеджер ответил сам из карточки лида";
+
+/** Длиннее ответа менеджера в Telegram не отправить одним сообщением. */
+export const STAFF_REPLY_MAX = 4000;
+
+export type StaffReplyError = "empty" | "too_long" | "gone" | "manual" | "offline" | "failed";
+
+/**
+ * Ответ менеджера прямо из карточки лида.
+ *
+ * Владелец, 11.10.2026: «чтобы у нас менеджеры не переключались между
+ * несколькими аккаунтами, а общались прямо через внутреннюю карточку… это
+ * будет автоматически делаться». Ответ ложится в ту же очередь, что ответы
+ * модели, и скаут отправляет его с аккаунта разговора (nextReply по
+ * sent_via) — за полминуты, без часового предела: это не первое письмо
+ * незнакомому.
+ *
+ * Ответил человек — модель замолкает, как после «Отвечать самому», а её
+ * неотправленные ответы снимаются: клиенту не придут два ответа подряд от
+ * «одного» собеседника. Ручной маршрут (писали со своего телефона) отсюда
+ * не отправить: с какого номера там шла переписка, мы не знаем.
+ */
+export async function queueStaffReply(input: {
+  prospectId: string;
+  leadId: string;
+  staffId: string;
+  body: string;
+}): Promise<{ ok: true } | { ok: false; reason: StaffReplyError }> {
+  const body = input.body.trim();
+  if (!body) return { ok: false, reason: "empty" };
+  if (body.length > STAFF_REPLY_MAX) return { ok: false, reason: "too_long" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+
+  const { data: p } = await db
+    .from("prospects")
+    .select("id, status, target, target_kind, lead_id")
+    .eq("id", input.prospectId)
+    .maybeSingle();
+  if (!p || String(p.lead_id ?? "") !== input.leadId || p.status !== "sent" || !p.target) return { ok: false, reason: "gone" };
+  if (p.target_kind === "manual") return { ok: false, reason: "manual" };
+
+  const now = new Date().toISOString();
+  await db
+    .from("prospects")
+    .update({ ai_handling: false, handover_reason: "менеджер отвечает сам", handled_by: input.staffId })
+    .eq("id", p.id);
+  await db
+    .from("outreach_messages")
+    .update({ status: "done", failure: STAFF_TOOK_OVER })
+    .eq("prospect_id", p.id)
+    .eq("direction", "out")
+    .eq("author", "ai")
+    .eq("status", "queued");
+  // На то, что клиент написал до этого, ответил человек.
+  await db
+    .from("outreach_messages")
+    .update({ answered_at: now })
+    .eq("prospect_id", p.id)
+    .eq("direction", "in")
+    .is("answered_at", null);
+
+  const { error } = await db.from("outreach_messages").insert({
+    prospect_id: p.id,
+    lead_id: input.leadId,
+    direction: "out",
+    author: "staff",
+    body,
+    status: "queued",
+  });
+  if (error) {
+    console.error("переписка: ответ менеджера не встал в очередь", error.message);
+    return { ok: false, reason: "failed" };
+  }
+  return { ok: true };
 }
 
 /**

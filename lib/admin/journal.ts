@@ -79,6 +79,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "prospect.manual_sent": { ru: "связался сам — со своего аккаунта, звонком или в WhatsApp", uz: "o‘zi bog‘landi — o‘z akkaunti, qo‘ng‘iroq yoki WhatsApp orqali", pl: "skontaktował się sam — ze swojego konta, telefonicznie lub przez WhatsApp" },
   "prospect.manual_reply": { ru: "перенёс ответ клиента из своей переписки", uz: "mijoz javobini o‘z yozishmasidan ko‘chirdi", pl: "przeniósł odpowiedź klienta ze swojej korespondencji" },
   "prospect.taken_over": { ru: "забрал переписку у ИИ", uz: "yozishmani SI’dan olib qo‘ydi", pl: "przejął korespondencję od AI" },
+  "prospect.staff_reply": { ru: "ответил клиенту из карточки лида", uz: "lid kartochkasidan mijozga javob berdi", pl: "odpowiedział klientowi z karty leada" },
   "prospect.closed": { ru: "закрыл касание: клиент отказался или не отвечает", uz: "aloqani yopdi: mijoz rad etdi yoki javob bermayapti", pl: "zamknął kontakt: klient odmówił lub nie odpowiada" },
   "letter_text.saved": { ru: "сохранил текст письма касания", uz: "aloqa xati matnini saqladi", pl: "zapisał tekst wiadomości kontaktowej" },
   "letter_text.removed": { ru: "убрал текст письма касания", uz: "aloqa xati matnini olib tashladi", pl: "usunął tekst wiadomości kontaktowej" },
