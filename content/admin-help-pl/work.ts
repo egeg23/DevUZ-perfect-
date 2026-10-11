@@ -378,7 +378,7 @@ export const workSections: Record<string, HelpEntry> = {
         body: [
           "Po lewej — lista kont. **«Nowe konto»**: nazwa, kto to (studio, agencja albo firma) i język — w nim bot pisze do osób z tego konta. Kliknij **«Utwórz»**, a konto otworzy się po prawej.",
           "W bloku **«Osoby»** dodaj te osoby, które będą pracować na koncie po stronie agencji: liczbowy Telegram id i imię, przycisk **«Dodaj»**. Logują się na devuz.studio/ads przez bota studia — przycisk «Zaloguj przez Telegram» wysyła jednorazowy link — i dostają powiadomienia. Usunięta osoba traci dostęp od razu.",
-          "**«Dodaj konto reklamowe»**: platforma, nazwa, login klienta w Direct (dla agencji) albo numer konta Google w formacie 123-456-7890. Potem na samym koncie — **«Połącz»**: otworzy się strona Yandex lub Google, gdzie właściciel reklam udziela dostępu. Klucz jest przechowywany w postaci zaszyfrowanej, nikt go nie widzi, łącznie ze studiem.",
+          "**«Dodaj konto reklamowe»**: platforma, nazwa, login klienta w Direct (dla agencji) albo numer konta Google w formacie 123-456-7890. Potem na samym koncie — **«Połącz»**: otworzy się strona Yandex lub Google, gdzie właściciel reklam udziela dostępu. Klucz jest przechowywany w postaci zaszyfrowanej, nikt go nie widzi, łącznie ze studiem. Zaraz po podłączeniu autopilot sam pobiera raporty — propozycje pojawią się w ciągu kilku minut. Jeśli konto przestanie się później odświeżać (dostęp cofnięty, platforma odmówiła), osoby z konta dostaną jedną wiadomość na Telegram, a na koncie będzie widoczna przyczyna.",
         ],
       },
       {

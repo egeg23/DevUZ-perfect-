@@ -106,3 +106,21 @@ test("бюджет кампании — не чаще раза в 3 дня; не
   );
   assert.deepEqual(week, { applied: 1, saved: 900_000, waiting: 2 });
 });
+
+test("сбой обновления — одно сообщение людям кабинета, на узбекском без русских слов", async () => {
+  const { failureNotice } = await import("@/lib/ads/run");
+  const ru = failureNotice({ name: "Учебный центр", external_id: "" }, "Директ: Ошибка авторизации", "ru");
+  assert.match(ru, /не обновился/);
+  assert.match(ru, /«Подключить заново»/);
+  const uz = failureNotice({ name: "X", external_id: "" }, "token revoked", "uz");
+  assert.doesNotMatch(uz.replace(/«[^»]*»/g, ""), /[а-яё]/i);
+  // Сказать один раз: только при переходе в сбой, а не каждые сутки.
+  const run = read("lib/ads/run.ts");
+  assert.match(run, /if \(account\.status !== "error"\) await notifyFailure/);
+  assert.match(run, /if \(account\.status !== "disconnected"\) await notifyFailure/);
+});
+
+test("после подключения кабинета первое обновление — сразу, фоном", () => {
+  const callback = read("app/api/ads/oauth/[platform]/callback/route.ts");
+  assert.match(callback, /after\(async \(\) => \{\n\s+const fresh = await accountById/);
+});

@@ -76,7 +76,9 @@ export async function syncAccount(account: Account, now = new Date(), deps: { us
   const result: SyncResult = { accountId: account.id, created: 0, applied: 0, refused: [] };
   const connector = await connectorFor(account);
   if (!connector) {
-    await updateAccount(account.id, { status: "disconnected", last_error: "Нет ключа доступа — подключите кабинет заново." });
+    const message = "Нет ключа доступа — подключите кабинет заново.";
+    await updateAccount(account.id, { status: "disconnected", last_error: message });
+    if (account.status !== "disconnected") await notifyFailure(account, message);
     return { ...result, error: "no-credentials" };
   }
   const period = periodOf(now);
@@ -105,9 +107,34 @@ export async function syncAccount(account: Account, now = new Date(), deps: { us
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await updateAccount(account.id, { status: "error", last_error: message.slice(0, 500), last_sync_at: now.toISOString() });
+    // Сказать один раз — на первом сбое подряд, а не каждые сутки, пока не починят.
+    if (account.status !== "error") await notifyFailure(account, message);
     result.error = message;
   }
   return result;
+}
+
+/**
+ * Кабинет перестал обновляться: отозвали доступ, площадка отказала, кончились
+ * баллы API. Без этого сообщения автопилот молча стоял бы до отчёта недели.
+ */
+export function failureNotice(account: Pick<Account, "name" | "external_id">, message: string, locale: "ru" | "uz"): string {
+  const name = escHtml(account.name || account.external_id);
+  const why = escHtml(message.slice(0, 300));
+  return locale === "uz"
+    ? `<b>⚠️ «${name}» yangilanmadi</b>\nPlatforma javobi: ${why}\nAvtopilot kabinet qayta ishlamaguncha hech narsa taklif qilmaydi va o‘zgartirmaydi. Kabinetda «Qayta ulash» tugmasini bosing yoki ruxsatni tekshiring.`
+    : `<b>⚠️ «${name}» не обновился</b>\nОтвет площадки: ${why}\nПока кабинет не заработает, автопилот ничего не предлагает и не меняет. Нажмите в кабинете «Подключить заново» или проверьте доступ.`;
+}
+
+async function notifyFailure(account: Account, message: string): Promise<void> {
+  const workspace = await workspaceById(account.workspace_id);
+  if (!workspace) return;
+  const { sendWithButtons } = await import("@/lib/qualify/telegram");
+  const text = failureNotice(account, message, workspace.locale);
+  const button = workspace.locale === "uz" ? "Kabinetni ochish" : "Открыть кабинет";
+  for (const member of await membersOf(workspace.id)) {
+    if (member.notify) await sendWithButtons(member.telegram_user_id, text, [{ text: button, url: cabinetUrl(account.id) }]).catch(() => false);
+  }
 }
 
 export async function buildDrafts(account: Account, connector: AdsConnector, period: Period, now: Date, useModel: boolean): Promise<Draft[]> {
