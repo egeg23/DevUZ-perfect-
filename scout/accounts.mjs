@@ -18,6 +18,7 @@ import telegram from "teleproto";
 
 import {
   accountSession,
+  accountSessionState,
   codeSent,
   liveAccounts,
   loggedIn,
@@ -165,7 +166,14 @@ export function startAccounts({ makeClient, StringSession, Api, apiId, apiHash, 
   };
 
   const connect = async (account) => {
-    const session = await accountSession(account.id);
+    const { session, offline } = await accountSessionState(account.id);
+    // Хранилище промолчало — это сбой связи, а не пропавшая сессия: следующая
+    // сверка через минуту спросит снова. 07.10.2026 такое молчание навсегда
+    // выключило «Рабочий аккаунт для мужчин» при живой сессии.
+    if (offline) {
+      console.error(`аккаунты: «${account.label}» — хранилище не ответило, попробую на следующей сверке`);
+      return;
+    }
     if (!session) {
       await markSessionDead(account.id, "сессии нет в хранилище — подключите аккаунт заново");
       return;
