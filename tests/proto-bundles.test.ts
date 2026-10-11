@@ -335,6 +335,7 @@ test("Enotmebel: конструктор — сайт 1 700 $, все допы в
   const sum = all.reduce((s, a) => s + a.price, 0);
   assert.equal(sum, 800, "все допы вместе — 800 $");
   assert.ok(plan.BASE.price + sum <= 2500, "со всеми допами не больше 2 500 $");
-  for (const id of ["uz", "cart", "pay", "nasiya"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
+  // Владелец, 11.10.2026: админка — отдельной строкой в конструкторе.
+  for (const id of ["uz", "cart", "pay", "nasiya", "admin"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
 });
