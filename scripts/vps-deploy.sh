@@ -172,6 +172,7 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
   install_unit devuz-scout.service
   install_unit devuz-bot.service
   install_unit devuz-maximova-bot.service
+  install_unit devuz-ai-staff-bot.service
   # daemon-reload нужен только когда файл юнита изменился.
   [ "$UNITS_CHANGED" = "1" ] && systemctl daemon-reload
 
@@ -278,6 +279,17 @@ if [ -d "$APP_DIR/deploy" ] && [ "$(id -u)" = "0" ]; then
     echo "  · бот Дарьи забирает обновления"
   else
     echo "  · MAXIMOVA_BOT_TOKEN, MAXIMOVA_BOT_SECRET или MAXIMOVA_BOT_USERNAME не заданы — бот Дарьи не запускаю" >&2
+  fi
+  # Бот ИИ-сотрудников — тот же поллер, но токен и секрет он берёт из
+  # хранилища Supabase сам (POLLER_FROM_VAULT): в .env их нет. Нужен только
+  # сервисный ключ базы — он есть всегда, пока работает сайт. Нет токена в
+  # хранилище — поллер ждёт его, а не падает.
+  if grep -q '^SUPABASE_SERVICE_ROLE_KEY=.\+' "$APP_DIR/.env"; then
+    systemctl enable --now devuz-ai-staff-bot.service >/dev/null 2>&1
+    systemctl restart devuz-ai-staff-bot.service >/dev/null 2>&1
+    echo "  · бот ИИ-сотрудников забирает обновления"
+  else
+    echo "  · SUPABASE_SERVICE_ROLE_KEY не задан — бот ИИ-сотрудников не запускаю" >&2
   fi
 fi
 

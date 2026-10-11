@@ -21,7 +21,7 @@ export const aiStaffDict = defineDict({
   turnOff: { ru: "Выключить сервис", uz: "Xizmatni o‘chirish", pl: "Wyłącz usługę" },
   bot: { ru: "Бот сервиса", uz: "Xizmat boti", pl: "Bot usługi" },
   setupBot: { ru: "Подключить бота сервиса", uz: "Xizmat botini ulash", pl: "Podłącz bota usługi" },
-  botOk: { ru: "Вебхук бота поставлен", uz: "Bot vebxuki o‘rnatildi", pl: "Webhook bota ustawiony" },
+  botOk: { ru: "Бот на месте, Business Mode включён", uz: "Bot joyida, Business Mode yoqilgan", pl: "Bot działa, Business Mode włączony" },
   botNoBusiness: {
     ru: "Business Mode у бота выключен: включите в @BotFather → Bot Settings → Business Mode.",
     uz: "Botda Business Mode o‘chiq: @BotFather → Bot Settings → Business Mode da yoqing.",

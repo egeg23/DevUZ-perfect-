@@ -15,7 +15,7 @@
 // Живёт на хосте под systemd, как скаут: долгоживущий цикл, а не задача по
 // расписанию. Зависимостей нет — только fetch и lib/egress.mjs из того же
 // репозитория.
-import { roadFetch } from "../lib/egress.mjs";
+import { dbFetch, roadFetch } from "../lib/egress.mjs";
 import { ackOffset, backoffMs, classifyError } from "./logic.mjs";
 
 // Один поллер — на любого бота с этого сервера. По умолчанию — бот студии;
@@ -25,9 +25,49 @@ import { ackOffset, backoffMs, classifyError } from "./logic.mjs";
 const TOKEN_VAR = process.env.POLLER_TOKEN_VAR || "TELEGRAM_BOT_TOKEN";
 const SECRET_VAR = process.env.POLLER_SECRET_VAR || "TELEGRAM_WEBHOOK_SECRET";
 const APP_PATH = process.env.POLLER_APP_PATH || "/api/telegram/webhook";
+// Какие обновления забирать. Боту ИИ-сотрудников нужны ещё business_* —
+// сообщения Telegram Business (deploy/devuz-ai-staff-bot.service).
+const UPDATES = (process.env.POLLER_UPDATES || "message,callback_query").split(",").map((u) => u.trim()).filter(Boolean);
+// Секреты бота ИИ-сотрудников лежат в хранилище Supabase, а не в .env:
+// владелец передал токен в разговоре, и выкатка .env не пишет. Тогда
+// поллер спрашивает их у базы той же функцией app_secret, что и сайт.
+const FROM_VAULT = process.env.POLLER_FROM_VAULT === "1";
 
-const token = process.env[TOKEN_VAR];
-const secret = process.env[SECRET_VAR];
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function vaultSecret(name) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  try {
+    const response = await dbFetch(`${url}/rest/v1/rpc/app_secret`, {
+      method: "POST",
+      headers: { apikey: key, authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body: JSON.stringify({ p_name: `app.${name}` }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    const value = response.ok ? await response.json() : null;
+    return typeof value === "string" && value.trim() ? value.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function secretValue(name) {
+  return process.env[name] || (FROM_VAULT ? await vaultSecret(name) : null);
+}
+
+let token = await secretValue(TOKEN_VAR);
+let secret = await secretValue(SECRET_VAR);
+// Из хранилища секрета может ещё не быть — бот сервиса подключают позже
+// выкатки. Ждём его, а не падаем: иначе systemd перезапускал бы поллер
+// каждые пять секунд и засорял journal.
+while (FROM_VAULT && (!token || !secret)) {
+  console.error(`bot: ${TOKEN_VAR} или ${SECRET_VAR} нет в хранилище — проверю через 5 минут`);
+  await sleep(5 * 60_000);
+  token = await secretValue(TOKEN_VAR);
+  secret = await secretValue(SECRET_VAR);
+}
 const port = process.env.APP_PORT || "3310";
 
 if (!token || !secret) {
@@ -36,11 +76,10 @@ if (!token || !secret) {
 }
 
 const API = `https://api.telegram.org/bot${token}`;
-const APP = `http://127.0.0.1:${port}${APP_PATH}`;
+// Адрес вебхука бота ИИ-сотрудников содержит секрет: /api/ai-staff/tg/{secret}.
+const APP = `http://127.0.0.1:${port}${APP_PATH.replace("{secret}", secret)}`;
 /** Сколько Telegram держит длинный опрос, прежде чем ответить пустым списком. */
 const POLL_TIMEOUT_S = 25;
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 class ApiError extends Error {
   constructor(status, description) {
@@ -104,7 +143,7 @@ async function main() {
     try {
       updates = await tg(
         "getUpdates",
-        { offset, timeout: POLL_TIMEOUT_S, allowed_updates: ["message", "callback_query"] },
+        { offset, timeout: POLL_TIMEOUT_S, allowed_updates: UPDATES },
         (POLL_TIMEOUT_S + 15) * 1_000,
       );
       failures = 0;
