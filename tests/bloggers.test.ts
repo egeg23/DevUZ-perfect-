@@ -194,9 +194,8 @@ test("доступ: раздел — владельцу и руководите�
   assert.match(read("app/admin/ai-staff/page.tsx"), /if \(staff\.role !== "admin"\) redirect\("\/admin\/ai-staff\/bloggers"\)/);
   const actions = read("app/admin/ai-staff/bloggers/actions.ts");
   for (const m of actions.matchAll(/export async function (\w+)\([^)]*\)[^{]*\{\n([^\n]*)/g)) {
-    assert.match(m[2], /await requireSection\(SECTION\)/, `${m[1]}: первой строкой — проверка доступа к разделу`);
+    assert.match(m[2], /await requireRole\("admin", "head"\)/, `${m[1]}: первой строкой — проверка роли`);
   }
-  assert.match(actions, /const SECTION = "\/admin\/ai-staff";/);
   assert.match(read("app/admin/ai-staff/bloggers/page.tsx"), /const staff = await requireSection\("\/admin\/ai-staff"\)/);
 });
 
