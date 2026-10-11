@@ -2,6 +2,8 @@
 *,*::before,*::after{box-sizing:border-box}
 *{margin:0;padding:0}
 html,body{overflow-x:clip}
+/* Главная: при оттягивании страницы вверх (iPhone) под историей тёмный фон, а не светлый */
+html:has(>body.home){background:var(--ink)}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--fg);font:400 16px/1.6 var(--text);-webkit-font-smoothing:antialiased;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 @media (min-width:1024px){body{padding-bottom:0}}
@@ -110,14 +112,18 @@ section{padding:64px 0}
 .en-cap span{display:block;margin-top:8px;font:400 24px/1.2 var(--head);color:var(--on)}
 
 /* ── Шапка ── */
-.top{position:sticky;top:0;z-index:50;background:rgb(246 241 234 / .84);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line);color:var(--fg);transition:background-color 240ms ease,border-color 240ms ease,color 240ms ease}
-.top .wrap{display:flex;align-items:center;gap:12px;min-height:64px}
-.home .top{position:fixed;left:0;right:0;background:transparent;border-color:transparent;color:var(--on);-webkit-backdrop-filter:none;backdrop-filter:none}
-.home.scrolled .top{background:rgb(11 17 32 / .5);border-color:rgb(246 241 234 / .1);-webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px)}
-.home.past .top{background:rgb(246 241 234 / .86);border-color:var(--line);color:var(--fg)}
+/* Шапка: плавающая капсула из жидкого стекла, без полосы во всю ширину.
+   Тон стекла — по тому, что под шапкой: на тёмном тёмное, на светлом светлое
+   (класс hd-dark ставит client.js). */
+.top{position:fixed;left:0;right:0;top:0;z-index:50;padding:8px 8px 0;pointer-events:none;color:var(--fg)}
+.top .wrap{pointer-events:auto;display:flex;align-items:center;gap:12px;min-height:56px;max-width:1240px;padding:0 8px 0 20px;border-radius:999px;background:rgb(255 253 249 / .74);-webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5);box-shadow:inset 0 1px 0 rgb(255 255 255 / .7),inset 0 0 0 1px rgb(20 24 42 / .07),0 12px 32px -16px rgb(20 24 42 / .4);transition:background-color 300ms ease,box-shadow 300ms ease,color 300ms ease}
+@media (min-width:768px){.top{padding:12px 16px 0}}
+.hd-dark .top{color:var(--on)}
+.hd-dark .top .wrap{background:rgb(11 17 32 / .4);box-shadow:inset 0 1px 0 rgb(255 255 255 / .2),inset 0 0 0 1px rgb(255 255 255 / .08),0 12px 32px -16px rgb(0 0 0 / .55)}
+.inner main{padding-top:76px}
 .logo{display:inline-flex;align-items:center;color:inherit}
+body:not(.hd-dark) .logo{color:var(--blue)}
 .logo svg{width:132px;height:21px}
-.home.past .logo,.inner .logo{color:var(--blue)}
 @media (min-width:1024px){.logo svg{width:168px;height:27px}}
 .nav{display:none;gap:4px;margin-left:16px}
 .nav a{padding:8px 12px;border-radius:999px;text-decoration:none;font-size:14px;font-weight:700;opacity:.82;white-space:nowrap}
@@ -126,11 +132,8 @@ section{padding:64px 0}
 .top-r{margin-left:auto;display:flex;align-items:center;gap:8px}
 .lang{display:flex;border-radius:999px;box-shadow:inset 0 0 0 1.5px currentColor;opacity:.86}
 .lang a{min-width:40px;min-height:36px;display:grid;place-items:center;font-size:12px;font-weight:700;text-decoration:none;border-radius:999px}
-.lang a[aria-current]{background:currentColor}
-.lang a[aria-current]{color:var(--blue)}
-.home:not(.past) .lang a[aria-current]{color:var(--ink)}
-.home:not(.past) .lang a[aria-current]{background:var(--on)}
-.past .lang a[aria-current],.inner .lang a[aria-current]{background:var(--blue);color:#fff}
+.lang a[aria-current]{background:var(--blue);color:#fff}
+.hd-dark .lang a[aria-current]{background:var(--on);color:var(--ink)}
 .cart-btn{position:relative;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:0;background:transparent;cursor:pointer}
 .cart-btn svg{width:24px;height:24px}
 .cart-btn b{position:absolute;right:2px;top:2px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;background:var(--clay);color:#fff;font-size:12px;line-height:18px}

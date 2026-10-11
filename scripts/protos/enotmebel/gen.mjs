@@ -249,7 +249,7 @@ ${isHome ? `<link rel="preload" as="image" href="${IMG}/hero-2560.webp">` : ""}
 <style>${CSS}</style>
 <script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "FurnitureStore", name: F.name, url: F.site, telephone: F.phone, address: { "@type": "PostalAddress", streetAddress: F.show.ru, addressLocality: "Ташкент", addressCountry: "UZ" }, areaServed: "UZ", sameAs: [F.tg, F.ig, F.yt] })}</script>
 </head>
-<body class="${isHome ? "home" : "inner"}" data-page="${path}" data-lang="${l}">
+<body class="${isHome ? "home hd-dark" : "inner"}" data-page="${path}" data-lang="${l}">
 ${LQ}
 ${isHome ? introHtml(l) : ""}
 <a class="skip" href="#main">${t("К содержанию", "Asosiy qismga")}</a>

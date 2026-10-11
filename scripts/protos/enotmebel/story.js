@@ -139,6 +139,8 @@ function render(){
 
   /* 7 · Финал */
   var e=seg(t,25.1,25.7);write(N.end,null,e);
+  /* Светлые главы: шапка над ними берёт светлое стекло (client.js). */
+  var fabO=Math.min(seg(t,14.9,15.4),1-seg(t,17.9,18.4));root.classList.toggle('st-light',fabO>.5||e>.5);
 
   /* Подписи: выплывают снизу, строки догоняют друг друга, уходят вверх. */
   beats.forEach(function(b){

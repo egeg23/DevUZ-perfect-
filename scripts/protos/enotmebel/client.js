@@ -34,8 +34,16 @@ if('IntersectionObserver' in window&&!reduce){
 
 /* ── Шапка: над историей прозрачная, дальше стекло ── */
 var story=$('story');
-var top=function(){var y=scrollY,past=story?story.getBoundingClientRect().bottom<80:y>40;d.body.classList.toggle('scrolled',y>40);d.body.classList.toggle('past',past)};
-addEventListener('scroll',top,{passive:true});top();
+var hdr=d.querySelector('.top .wrap'),tq=0;
+/* Тон шапки: что лежит под её серединой. В истории тёмное всё, кроме светлых
+   глав (story.js ставит st-light), дальше — тёмные блоки и подвал. */
+var tone=function(){tq=0;if(!hdr)return;var r=hdr.getBoundingClientRect(),x=innerWidth/2,y=r.top+r.height/2,dark=false;
+  var under=(d.elementsFromPoint?d.elementsFromPoint(x,y):[]).filter(function(e){return !e.closest('.top')&&!e.closest('#intro')})[0];
+  if(under){if(under.closest('#story'))dark=!root.classList.contains('st-light');else dark=!!under.closest('.dark,.foot')}
+  d.body.classList.toggle('hd-dark',dark)};
+var top=function(){var y=scrollY,past=story?story.getBoundingClientRect().bottom<80:y>40;d.body.classList.toggle('scrolled',y>40);d.body.classList.toggle('past',past);if(!tq)tq=requestAnimationFrame(tone)};
+addEventListener('scroll',top,{passive:true});addEventListener('resize',top);top();
+new MutationObserver(function(){if(!tq)tq=requestAnimationFrame(tone)}).observe(root,{attributes:true,attributeFilter:['class']});
 
 /* ── Карточка наклоняется за курсором, пятно света за ним же ── */
 if(hov&&!reduce)qa('.tilt').forEach(function(c){
