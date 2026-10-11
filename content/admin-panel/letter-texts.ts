@@ -10,6 +10,11 @@ import { defineDict } from "@/lib/admin/i18n";
  */
 export const letterTextsDict = defineDict({
   link: { ru: "Тексты писем и A/B", uz: "Xat matnlari va A/B", pl: "Teksty wiadomości i A/B" },
+  linkHint: {
+    ru: "Свой текст письма клиенту: пишете своими словами, факты о его сайте бот подставит сам. Два текста — и видно, на какой отвечают чаще.",
+    uz: "Mijozga o‘z xatingiz: o‘z so‘zlaringiz bilan yozasiz, uning sayti haqidagi faktlarni bot o‘zi qo‘yadi. Ikki matn — qaysi biriga ko‘proq javob berishlari ko‘rinadi.",
+    pl: "Własny tekst wiadomości do klienta: piszesz swoimi słowami, fakty o jego stronie bot wstawi sam. Dwa teksty — i widać, na który częściej odpowiadają.",
+  },
   title: { ru: "Тексты писем и A/B", uz: "Xat matnlari va A/B", pl: "Teksty wiadomości i A/B" },
   intro: {
     ru: "Письмо о сайте уходит клиенту после его ответа на «Здравствуйте» — по вашему тексту. Факты о его сайте бот подставит сам, двумя-тремя тезисами: что не так и сколько он на этом теряет, и, если у нас есть проект в его нише, что мы это уже сделали. Два текста — это A/B: касания делятся между ними поровну, а ниже видно, на какой отвечают чаще.",
