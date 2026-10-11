@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/shell";
 import { AdsBoard } from "@/components/ads/board";
-import { requireRole } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { accountById, adsEnabled } from "@/lib/ads/store";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export default async function AdsAccountAdminPage({
   params: Promise<{ account: string }>;
   searchParams: Promise<{ r?: string; d?: string }>;
 }) {
-  const staff = await requireRole("admin", "head");
+  const staff = await requireSection("/admin/ads");
   const { account: id } = await params;
   const { r, d } = await searchParams;
   const account = await accountById(id);

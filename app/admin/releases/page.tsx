@@ -3,7 +3,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { releaseResultDict, releasesDict } from "@/content/admin-panel/releases";
 import { products, productBySlug } from "@/content/products";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { PANEL_INTL, pick } from "@/lib/admin/i18n";
 import { deliveryConfigured } from "@/lib/store/delivery-token";
 import { DAILY_LIMIT, TOTAL_LIMIT } from "@/lib/store/delivery";
@@ -19,7 +19,7 @@ export default async function ReleasesPage({
 }: {
   searchParams: Promise<{ r?: string; e?: string }>;
 }) {
-  const staff = await requireAdmin();
+  const staff = await requireSection("/admin/releases");
   const { r, e } = await searchParams;
 
   const locale = staff.panel_locale;

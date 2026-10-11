@@ -1,5 +1,5 @@
 import { panelLocale, type PanelLocale } from "@/lib/admin/i18n";
-import type { Role } from "@/lib/admin/roles";
+import { sectionAccess, type Role, type SectionAccess } from "@/lib/admin/roles";
 import { createHash, randomBytes } from "node:crypto";
 
 import { serviceClient } from "@/lib/supabase";
@@ -36,6 +36,8 @@ export type Staff = {
   role: Role;
   /** Язык панели — сотрудник выбирает сам, переключателем в шапке. */
   panel_locale: PanelLocale;
+  /** Галочки владельца по разделам поверх роли (roles.ts, opens). */
+  section_access?: SectionAccess;
 };
 
 /**
@@ -203,13 +205,13 @@ export async function destroySession(token: string): Promise<void> {
  * запрещён осознанно: добавленная завтра колонка поедет в панель сама, без
  * решения о том, можно ли её там показывать.
  */
-const STAFF_COLUMNS = "id, telegram_user_id, username, display_name, role, panel_locale";
+const STAFF_COLUMNS = "id, telegram_user_id, username, display_name, role, panel_locale, section_access";
 
 /** Строка из базы — в сотрудника. Неизвестный язык читается как русский. */
 function toStaff(data: unknown): Staff | null {
   if (!data) return null;
   const row = data as Staff;
-  return { ...row, panel_locale: panelLocale(row.panel_locale) };
+  return { ...row, panel_locale: panelLocale(row.panel_locale), section_access: sectionAccess(row.section_access) };
 }
 
 export async function staffById(id: string): Promise<Staff | null> {

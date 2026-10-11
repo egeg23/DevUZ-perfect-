@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usageDict } from "@/content/admin-panel/usage";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { ROLE_BADGE } from "@/lib/admin/roles";
 import { USAGE_PERIODS, VERDICT_TITLE, periodOf, type Verdict } from "@/lib/admin/usage";
@@ -65,7 +65,7 @@ function Trend({ now, before }: { now: number; before: number }) {
  * меню закрывает пункт, страница закрывает саму себя.
  */
 export default async function UsagePage({ searchParams }: { searchParams: Promise<{ d?: string }> }) {
-  const staff = await requireAdmin();
+  const staff = await requireSection("/admin/usage");
   const { d } = await searchParams;
   const days = periodOf(d);
   const report = await loadUsage(days);

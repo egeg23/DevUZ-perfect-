@@ -34,6 +34,7 @@ export const uz: HelpCopy = {
   viewAs: "Kim sifatida ko‘rsatish:",
   roleNames: { admin: "egasi", head: "rahbar", manager: "menejer" },
   ownerOnly: "Faqat egasi ko‘radi",
+  granted: "Ega sizga ko‘rish uchun ochgan: bu yerda faqat rolingizga tegishli narsalarni o‘zgartira olasiz",
   search: {
     label: "Yo‘riqnomadan topish",
     placeholder: "O‘z so‘zlaringiz bilan so‘rang…",
@@ -1532,6 +1533,16 @@ export const uz: HelpCopy = {
               "O‘chirilmaydi: taklif, rol va rahbar almashishi, berishni tasdiqlash so‘rovi, sizga pul va shartnomalar haqidagi xabarlar. Belgilarni kim va qachon o‘zgartirgani — [jurnalda](/admin/audit).",
             ],
           },
+        },
+        {
+          id: "sections",
+          title: "Bo‘limlarga kirish: egasining belgilari",
+          roles: ["admin"],
+          body: [
+            "Oxirgi ustunda har bir rahbar va menejerda **«Bo‘limlar»** qatori bor — yonida «roldagidek» yoki roldan tashqari nechta bo‘lim ochganingiz va nechtasini yopganingiz yozilgan. Bosing — panelning barcha bo‘limlari belgilar bilan ochiladi: belgi odam hozir ko‘rayotgan bo‘limlarda turadi, «roldagidek emas» esa siz allaqachon o‘zgartirgan joyda. Belgi qo‘ydingiz — bo‘lim uning menyusida paydo bo‘ladi va ochiladi; olib tashladingiz — menyudan yo‘qoladi, to‘g‘ridan-to‘g‘ri havola bo‘yicha esa panel uni «Lidlar»ga olib boradi. **«Saqlash»** ni bosing: o‘zgarish darhol kuchga kiradi, odamga qayta kirish shart emas. Har bir saqlash [jurnal](/admin/audit)ga yoziladi.",
+            "Belgi **ko‘rish** huquqini beradi: odam bo‘limni, undagi hamma narsani va unga yo‘riqnomani ko‘radi — bo‘lim unga ega tomonidan ochilgani haqidagi belgi bilan. Bo‘limda nimani o‘zgartira olishini avvalgidek rol hal qiladi. «Hamkorlar» ochib berilgan menejer hamkorlarni ko‘radi, lekin to‘lovlar, stavkalar va o‘chirish bo‘yicha qarorlar sizda qoladi; rolida yo‘q tugmani bossa — panel hech narsani o‘zgartirmaydi va uni «Lidlar»ga olib boradi. Odam bo‘limda to‘liq ishlashi uchun uning rolini o‘zgartiring.",
+            "«Lidlar» va «Yo‘riqnoma» hammaga doim ochiq, shuning uchun ular ro‘yxatda yo‘q. Sizga hammasi ochiq. Faqat siz o‘zgartirgan narsa saqlanadi: keyin odamning rolini o‘zgartirsangiz, siz tegmagan bo‘limlar o‘zi yangi roldagidek bo‘ladi, belgilaringiz esa qoladi.",
+          ],
         },
         {
           id: "details",

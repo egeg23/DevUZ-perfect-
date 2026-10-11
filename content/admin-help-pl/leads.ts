@@ -22,7 +22,7 @@ const TASKS_BOT = [
 
 export const head: Pick<
   HelpCopy,
-  "title" | "lead" | "contentsTitle" | "sectionsTitle" | "openSection" | "viewAs" | "roleNames" | "ownerOnly" | "search" | "video"
+  "title" | "lead" | "contentsTitle" | "sectionsTitle" | "openSection" | "viewAs" | "roleNames" | "ownerOnly" | "granted" | "search" | "video"
 > = {
   title: "Instrukcje",
   lead: "Jak działa panel i jak z niego korzystać — sekcja po sekcji, prostymi słowami. Znajdziesz tu tylko to, do czego masz dostęp. Z każdej sekcji prowadzi tu przycisk «Jak korzystać z sekcji» w nagłówku, a «?» przy blokach otwiera właściwy punkt.",
@@ -32,6 +32,7 @@ export const head: Pick<
   viewAs: "Pokaż jako:",
   roleNames: { admin: "właściciel", head: "kierownik", manager: "menedżer" },
   ownerOnly: "Widzi tylko właściciel",
+  granted: "Otwarty Ci przez właściciela do podglądu: zmieniać możesz tu tylko to, co należy do Twojej roli",
   search: {
     label: "Szukaj w instrukcji",
     placeholder: "Zapytaj własnymi słowami…",

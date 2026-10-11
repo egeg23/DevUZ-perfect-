@@ -29,6 +29,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const staff = await currentStaff();
   if (!staff) return new NextResponse(null, { status: 404 });
   const video = await helpVideoById(id);
-  if (!video || !canWatchHelpVideo(staff.role, video.section)) return new NextResponse(null, { status: 404 });
+  if (!video || !canWatchHelpVideo(staff, video.section)) return new NextResponse(null, { status: 404 });
   return servePromo(request, { id: video.id, title: "help", storage_path: video.storage_path, mime: video.mime }, { download: false });
 }

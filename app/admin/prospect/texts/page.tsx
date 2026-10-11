@@ -4,7 +4,7 @@ import { HelpHint } from "@/components/admin/help-link";
 import { AdminShell } from "@/components/admin/shell";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { letterTextsDict, textProblemDict } from "@/content/admin-panel/letter-texts";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick, type Picked } from "@/lib/admin/i18n";
 import {
@@ -40,7 +40,7 @@ export default async function LetterTextsPage({
 }: {
   searchParams: Promise<{ e?: string; saved?: string; removed?: string; failed?: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/prospect");
   const { e, saved, removed, failed } = await searchParams;
   const t = pick(letterTextsDict, staff.panel_locale);
   const tp = pick(textProblemDict, staff.panel_locale);

@@ -15,7 +15,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { orderErrorDict, orderPaymentDict, orderStatusDict, ordersDict } from "@/content/admin-panel/orders";
 import { productBySlug } from "@/content/products";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { PANEL_INTL, pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { listOrders, type Order } from "@/lib/admin/orders";
 import { missingBankVars } from "@/lib/store/requisites";
@@ -34,7 +34,7 @@ export default async function OrdersPage({
 }: {
   searchParams: Promise<{ status?: string; r?: string; e?: string; d?: string; link?: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/orders");
   const { status, r, e, d, link } = await searchParams;
   const locale = staff.panel_locale;
   const t = pick(ordersDict, locale);

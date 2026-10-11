@@ -1,14 +1,14 @@
-import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveDetails, saveNotices, setGrade, setPlan } from "./actions";
+import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveDetails, saveNotices, saveSections, setGrade, setPlan } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { HelpHint } from "@/components/admin/help-link";
 import { when } from "@/components/admin/lead-table";
-import { requireRole } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { teamDict } from "@/content/admin-panel/team";
 import { GRADES, GRADE_TR } from "@/lib/admin/finance";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { NOTICES, kindsFor, offSummary, wants } from "@/lib/admin/notify-prefs";
-import { ROLE_BADGE, ROLE_TITLE_TR, disables, editsStaff, hiredRoles, managesStaff, tunesNotices } from "@/lib/admin/roles";
+import { ALWAYS_OPEN, ROLE_BADGE, ROLE_TITLE_TR, SECTIONS, disables, editsStaff, hiredRoles, managesStaff, opens, tunesNotices } from "@/lib/admin/roles";
 import { listTeam, type TeamMember } from "@/lib/admin/team";
 import { offboardingSummary } from "@/lib/admin/offboarding";
 import { TOUCH_PLAN_MAX } from "@/lib/admin/touch-plan";
@@ -30,6 +30,7 @@ function resultOf(code: string, t: T): { text: string; tone: Tone } | null {
     notices: t.r_notices,
     claimed: t.r_claimed,
     details: t.r_details,
+    sections: t.r_sections,
   };
   const warn: Record<string, string> = {
     menu_failed: t.r_menu_failed,
@@ -87,7 +88,7 @@ export default async function TeamPage({
   // Страницу открывают двое: владелец и руководитель проектов. Видят они
   // один и тот же состав, но правит его только владелец — `manages` ниже
   // решает, что показать формой, а что просто текстом.
-  const viewer = await requireRole("admin", "head");
+  const viewer = await requireSection("/admin/team");
   const manages = managesStaff(viewer.role);
   const canHire = hiredRoles(viewer.role);
   const { r, i, o, t: detachedRaw } = await searchParams;
@@ -382,6 +383,9 @@ export default async function TeamPage({
                     {tunesNotices(viewer.role, member.role, member.id === viewer.id) ? (
                       <NoticesBlock member={member} t={t} locale={locale} />
                     ) : null}
+                    {viewer.role === "admin" && member.role !== "admin" ? (
+                      <SectionsBlock member={member} t={t} locale={locale} />
+                    ) : null}
                     {member.id === viewer.id || !disables(viewer.role, member.role) ? null : (
                       <DisableBlock
                         id={member.id}
@@ -533,6 +537,59 @@ function NoticesBlock({ member, t, locale }: { member: TeamMember; t: T; locale:
           ))}
         </ul>
         <p className="mt-3 text-xs leading-snug text-faint">{t.noticesAlways}</p>
+        <button type="submit" className={`${BUTTON} mt-3`}>
+          {t.noticesSave}
+        </button>
+      </form>
+    </details>
+  );
+}
+
+/**
+ * Разделы панели — галочки владельца поверх роли (roles.ts, opens).
+ *
+ * Владелец, 11.10.2026: «через галочки выдавать права на просмотр каждого
+ * раздела сотрудникам. А то только через тебя сейчас это делается».
+ * Галочка стоит у того, что человек видит сейчас; «не как у роли» — где
+ * владелец уже поменял. «Лиды» и «Инструкции» не выключаются — их в списке нет.
+ */
+function SectionsBlock({ member, t, locale }: { member: TeamMember; t: T; locale: PanelLocale }) {
+  const who = { role: member.role, section_access: member.section_access };
+  const list = SECTIONS.filter((s) => !ALWAYS_OPEN.includes(s.href));
+  const changed = list.filter((s) => opens(who, s.href) !== s.roles.includes(member.role));
+  const extra = changed.filter((s) => opens(who, s.href)).length;
+  const summary = changed.length ? t.sectionsDiff(extra, changed.length - extra) : t.sectionsAsRole;
+  return (
+    <details className="group">
+      <summary className="cursor-pointer list-none text-xs text-faint transition hover:text-green">
+        {t.sections(summary)}
+      </summary>
+      <form action={saveSections} className="mt-2 w-80 rounded-lg border border-line bg-surface-2 px-3 py-3">
+        <input type="hidden" name="staff" value={member.id} />
+        <p className="flex items-center gap-2 text-xs text-muted">
+          {t.sectionsFor(member.display_name)}
+          <HelpHint topic={helpAnchor("/admin/team", "sections")} label={t.sectionsHelp} />
+        </p>
+        <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
+          {list.map((section) => (
+            <li key={section.href}>
+              <label className="flex cursor-pointer items-start gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  name="on"
+                  value={section.href}
+                  defaultChecked={opens(who, section.href)}
+                  className="mt-0.5 accent-green"
+                />
+                <span>
+                  <span className="text-text">{section.label[locale]}</span>
+                  {changed.includes(section) ? <span className="block text-[11px] text-gold">{t.sectionsChanged}</span> : null}
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs leading-snug text-faint">{t.sectionsNote}</p>
         <button type="submit" className={`${BUTTON} mt-3`}>
           {t.noticesSave}
         </button>

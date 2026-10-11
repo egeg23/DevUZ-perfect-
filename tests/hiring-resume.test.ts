@@ -123,7 +123,7 @@ test("вкладка закрыта от менеджеров — и меню, �
   // действие вызвать и вовсе без страницы. Право проверяется в обоих местах.
   const page = readFileSync(new URL("../app/admin/candidates/page.tsx", import.meta.url), "utf8");
   const actions = readFileSync(new URL("../app/admin/candidates/actions.ts", import.meta.url), "utf8");
-  assert.match(page, /canSee\(staff\.role, "\/admin\/candidates"\)/, "страница не проверяет право");
+  assert.match(page, /requireSection\("\/admin\/candidates"\)/, "страница не проверяет право");
   assert.match(actions, /canSee\(staff\.role, "\/admin\/candidates"\)/, "действие не проверяет право");
 });
 

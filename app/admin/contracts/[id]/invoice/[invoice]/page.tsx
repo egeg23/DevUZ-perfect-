@@ -6,7 +6,7 @@ import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { contractCardDict, invoicePageDict } from "@/content/admin-panel/contracts";
 import { PrintButton } from "@/components/store/print-button";
 import { contractById } from "@/lib/admin/contract-store";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick } from "@/lib/admin/i18n";
 import { invoiceById } from "@/lib/admin/invoice-store";
@@ -19,7 +19,7 @@ export default async function InvoicePage({
 }: {
   params: Promise<{ id: string; invoice: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/contracts");
   const locale = staff.panel_locale;
   const t = pick(invoicePageDict, locale);
   const card = pick(contractCardDict, locale);

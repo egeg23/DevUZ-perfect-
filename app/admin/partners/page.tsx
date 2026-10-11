@@ -4,7 +4,7 @@ import { addPartner, cancelClientAction, decide, decideAgencyAction, deletePartn
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { partnersDict, partnersResultDict, perkDict, usd } from "@/content/admin-panel/partners";
-import { requireRole } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 import { partnerClientsDict } from "@/content/admin-panel/partner-clients";
 import { PartnerClientsBlock } from "@/components/admin/partner-clients";
@@ -54,7 +54,7 @@ export default async function PartnersPage({
 }: {
   searchParams: Promise<{ r?: string }>;
 }) {
-  const admin = await requireRole("admin", "head");
+  const admin = await requireSection("/admin/partners");
   const owner = admin.role === "admin";
   const { r } = await searchParams;
   const locale = admin.panel_locale;

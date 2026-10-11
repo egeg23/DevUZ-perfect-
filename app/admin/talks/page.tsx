@@ -4,7 +4,7 @@ import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { leadLocaleDict } from "@/content/admin-panel/stats";
 import { talkOutcomeDict, talksDict } from "@/content/admin-panel/talks";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import type { TalkOutcome } from "@/lib/talk/review";
 import { listReviews } from "@/lib/talk/review-store";
@@ -59,7 +59,7 @@ function Line({ title, text }: { title: string; text: string | null }) {
 }
 
 export default async function TalksPage() {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/talks");
   const rows = await listReviews();
   const locale = staff.panel_locale;
   const t = pick(talksDict, locale);

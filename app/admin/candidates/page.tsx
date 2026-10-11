@@ -1,13 +1,11 @@
-import { redirect } from "next/navigation";
 
 import { dropCandidateAction, reviewResumeAction } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { when } from "@/components/admin/lead-table";
 import { candidateErrorDict, candidatesDict, verdictDict } from "@/content/admin-panel/candidates";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
-import { canSee } from "@/lib/admin/roles";
 import { MAX_PDF_BYTES } from "@/lib/hiring/pdf";
 import type { Verdict } from "@/lib/hiring/resume";
 import { listCandidates } from "@/lib/hiring/store";
@@ -42,9 +40,8 @@ export default async function CandidatesPage({
 }: {
   searchParams: Promise<{ e?: string; d?: string; open?: string }>;
 }) {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/candidates");
   // Меню такую вкладку менеджеру не покажет, но адрес можно набрать руками.
-  if (!canSee(staff.role, "/admin/candidates")) redirect("/admin");
 
   const { e, d, open } = await searchParams;
   const rows = await listCandidates();

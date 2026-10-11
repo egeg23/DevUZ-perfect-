@@ -4,7 +4,7 @@ import { auditDict } from "@/content/admin-panel/audit";
 import { AdminShell } from "@/components/admin/shell";
 import { when } from "@/components/admin/lead-table";
 import { AUDIT_ACTIONS } from "@/lib/admin/audit";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { ACTION_LABEL, SENSITIVE, readJournal, type JournalEntry } from "@/lib/admin/journal";
 import { listTeam } from "@/lib/admin/team";
@@ -22,7 +22,7 @@ export default async function AuditPage({
 }: {
   searchParams: Promise<{ actor?: string; action?: string; page?: string }>;
 }) {
-  const admin = await requireAdmin();
+  const admin = await requireSection("/admin/audit");
   const { actor, action, page: rawPage } = await searchParams;
   const locale = admin.panel_locale;
   const t = pick(auditDict, locale);

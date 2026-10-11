@@ -2,7 +2,7 @@ import { HelpHint } from "@/components/admin/help-link";
 import { MockupList, type MockupView } from "@/components/admin/mockup-list";
 import { AdminShell } from "@/components/admin/shell";
 import { mockupsDict } from "@/content/admin-panel/mockups";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick } from "@/lib/admin/i18n";
 import { tashkentTime } from "@/lib/admin/mockups";
@@ -28,7 +28,7 @@ function made(value: string): string {
  * lib/proto/codes.ts.
  */
 export default async function MockupsPage() {
-  const staff = await requireStaff();
+  const staff = await requireSection("/admin/mockups");
   const locale = staff.panel_locale;
   const t = pick(mockupsDict, locale);
   const rows: MockupView[] = (await mockupList(locale)).map((row) => ({

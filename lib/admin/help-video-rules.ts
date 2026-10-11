@@ -1,4 +1,4 @@
-import { SECTIONS, canSee, type Role } from "@/lib/admin/roles";
+import { SECTIONS, canSee, opens, type Role, type Viewer } from "@/lib/admin/roles";
 
 /**
  * Видео к инструкциям — то, что считается без базы и диска.
@@ -30,9 +30,10 @@ export function canManageHelpVideos(role: Role): boolean {
   return role === "admin" || role === "head";
 }
 
-/** Видео раздела видит тот, кому открыт раздел; вводное — все. */
-export function canWatchHelpVideo(role: Role, section: string): boolean {
-  return section === HELP_VIDEO_INTRO || canSee(role, section);
+/** Видео раздела видит тот, кому открыт раздел (с галочками владельца, если они переданы); вводное — все. */
+export function canWatchHelpVideo(who: Role | Viewer, section: string): boolean {
+  if (section === HELP_VIDEO_INTRO) return true;
+  return typeof who === "string" ? canSee(who, section) : opens(who, section);
 }
 
 /** Адрес файла — под /admin, где живёт кука сессии панели. */

@@ -1,7 +1,7 @@
 import { connectServiceBot, extendTrial, makeShowcase, markPaid, openCabinet, setStatus, toggleService } from "@/app/admin/ai-staff/actions";
 import { AdminShell } from "@/components/admin/shell";
 import { aiStaffDict } from "@/content/admin-panel/ai-staff";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { PLANS, PLAN_IDS, PLAN_TITLE, formatUzs, monthKey, monthStart, usageCostUsd, uzsPerUsd } from "@/lib/ai-staff/plans";
 import { overview } from "@/lib/ai-staff/stats";
@@ -21,7 +21,7 @@ const BTN = "rounded-md border border-line px-2.5 py-1 text-xs text-muted hover:
  * (Click и Payme появятся позже, docs/ai-staff/pilot.md).
  */
 export default async function AiStaffPage({ searchParams }: { searchParams: Promise<{ n?: string; d?: string }> }) {
-  const staff = await requireAdmin();
+  const staff = await requireSection("/admin/ai-staff");
   const t = pick(aiStaffDict, staff.panel_locale);
   const q = await searchParams;
   const now = new Date();

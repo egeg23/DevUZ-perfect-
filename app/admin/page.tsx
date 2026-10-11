@@ -13,7 +13,7 @@ import { requireStaff } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { touchProgressOf } from "@/lib/admin/touch-store";
 import { PRIORITIES, STATUSES, leadCounts, listLeads, scopeFor } from "@/lib/admin/leads";
-import { canSee } from "@/lib/admin/roles";
+import { opens } from "@/lib/admin/roles";
 import { activeStaff } from "@/lib/admin/team";
 import { approves, pendingTransfers } from "@/lib/admin/transfers";
 
@@ -103,7 +103,7 @@ export default async function AdminHome({
   // Трафик был вкладкой владельца, теперь это раздел для владельца и
   // руководителей. Старые закладки и адреса возврата из Google ведут сюда —
   // переводим их туда же, с периодом и пометкой входа.
-  if (params.tab === "traffic" && canSee(staff.role, "/admin/traffic")) {
+  if (params.tab === "traffic" && opens(staff, "/admin/traffic")) {
     const keep = new URLSearchParams();
     for (const key of ["d", "ga", "gd", "gp"] as const) {
       const value = params[key];
