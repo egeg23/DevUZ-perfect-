@@ -165,7 +165,7 @@ export default async function BloggersPage({ searchParams }: { searchParams: Pro
                 {b.pitch ? <pre className="mt-2 whitespace-pre-wrap rounded-md bg-ink p-2 text-xs text-muted">{b.pitch}</pre> : null}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {b.channel === "telegram" ? (
-                    <span className="text-xs text-muted">{t.viaTelegram}</span>
+                    <span className="text-xs text-muted">{b.status === "queued" ? t.queuedTg : t.viaTelegram}</span>
                   ) : manualLeft > 0 && b.pitch ? (
                     <>
                       <BloggerSend
@@ -317,6 +317,16 @@ function BloggerCard({ b, t, intl, children }: { b: store.Blogger; t: Picked<typ
       {b.why ? <p className="mt-1 text-sm">{b.why}</p> : null}
       {b.score_notes ? <p className="mt-1 text-xs text-gold">{b.score_notes}</p> : null}
       {b.note ? <p className="mt-1 text-xs text-muted">{b.note}</p> : null}
+      {b.tg_account && b.contacted_at ? <p className="mt-1 text-xs text-muted">{t.sentFrom(b.tg_account)}</p> : null}
+      {b.messages.length ? (
+        <div className="mt-2 space-y-1 border-l border-line pl-2 text-xs">
+          {b.messages.slice(-4).map((m, i) => (
+            <p key={i} className={m.role === "blogger" ? "text-text" : "text-muted"}>
+              <span className="text-faint">{m.role === "blogger" ? t.them : t.us}:</span> {m.text.length > 300 ? `${m.text.slice(0, 300)}…` : m.text}
+            </p>
+          ))}
+        </div>
+      ) : null}
       {children}
     </div>
   );

@@ -1901,7 +1901,7 @@ export const uz: HelpCopy = {
           id: "bloggers-partner",
           title: "Bloger javob berdi: suhbat va hamkorlik",
           body: [
-            "Bloger Direct yoki pochtada javob berdi, «Yozdik, javob kutyapmiz» da uning yonidagi **«Javob berdi»** ni bosing, u «Javob berganlar» ga o‘tadi. Keyin suhbatni odam olib boradi: dastur haqidagi savollarga javob beradi va auditoriyasi qayerdan ekanini tushunish uchun statistika skrinshotlarini so‘raydi. Qiziq bo‘lmasa, **«Rad etdi»**, unga boshqa yozmaymiz.",
+            "Telegramdagi javobni agent o‘zi ko‘radi: bloger darhol «Javob berganlar» ga o‘tadi, egasi va rahbarga botga xabar keladi, o‘sha ishchi akkauntdan esa uning javobi tilida dastur haqidagi matn ketadi. Bloger Direct yoki pochtada javob berdi, «Yozdik, javob kutyapmiz» da uning yonidagi **«Javob berdi»** ni bosing, u «Javob berganlar» ga o‘tadi. Keyin suhbatni odam olib boradi: dastur haqidagi savollarga javob beradi va auditoriyasi qayerdan ekanini tushunish uchun statistika skrinshotlarini so‘raydi. Qiziq bo‘lmasa, **«Rad etdi»**, unga boshqa yozmaymiz.",
             "Rozi bo‘ldi, **«Hamkor qilish»**: agent [«Hamkorlar»](/admin/partners) da asosiy havola bilan hamkor ochadi, izohga nik va bahoni yozadi. Blogerga hamkor kartochkasidagi havolani yuboring: uning mijozlari va foizlari shu havola bo‘yicha hisoblanadi. Hamkor Telegramsiz ochiladi, shuning uchun bloger botda o‘z balansini ko‘rmaydi: uni o‘zingiz ayting yoki u studiya botiga yozsa, qaytadan oching.",
           ],
         },

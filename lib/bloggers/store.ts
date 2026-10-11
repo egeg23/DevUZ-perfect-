@@ -62,6 +62,11 @@ export type Blogger = {
   contacted_by: string | null;
   replied_at: string | null;
   ig_scoped_id: string | null;
+  /** Рабочий аккаунт Telegram, с которого ушло «Здравствуйте», и id блогера в Telegram. */
+  tg_account: string | null;
+  tg_user_id: string | null;
+  tg_pending: string | null;
+  tg_pending_at: string | null;
   messages: BloggerMessage[];
   audience: Record<string, unknown> | null;
   audience_score: number | null;

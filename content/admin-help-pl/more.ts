@@ -494,7 +494,7 @@ export const moreSections: Record<string, HelpEntry> = {
         id: "bloggers-partner",
         title: "Bloger odpowiedział: rozmowa i partnerstwo",
         body: [
-          "Bloger odpowiedział w Direct albo na e-mail: naciśnij przy nim **«Odpowiedział»** w «Napisaliśmy, czekamy na odpowiedź», a przejdzie do «Odpowiedzieli». Dalej rozmowę prowadzi człowiek: odpowiada na pytania o program i prosi o zrzuty ekranu statystyk, żeby zrozumieć, skąd są jego odbiorcy. Nie jest zainteresowany: **«Odmowa»**, więcej do niego nie piszemy.",
+          "Odpowiedź w Telegramie agent widzi sam: bloger od razu przechodzi do «Odpowiedzieli», właściciel i kierownik dostają wiadomość w bocie, a z tego samego konta roboczego idzie tekst o programie w języku jego odpowiedzi. Bloger odpowiedział w Direct albo na e-mail: naciśnij przy nim **«Odpowiedział»** w «Napisaliśmy, czekamy na odpowiedź», a przejdzie do «Odpowiedzieli». Dalej rozmowę prowadzi człowiek: odpowiada na pytania o program i prosi o zrzuty ekranu statystyk, żeby zrozumieć, skąd są jego odbiorcy. Nie jest zainteresowany: **«Odmowa»**, więcej do niego nie piszemy.",
           "Zgodził się: **«Zrób partnerem»**, a agent zakłada partnera w [«Partnerzy»](/admin/partners) z głównym linkiem i w notatce zapisuje nick i ocenę. Wyślij blogerowi link z karty partnera: według niego liczą się jego klienci i procenty. Partner zakłada się bez Telegrama, więc bloger nie zobaczy swojego salda w bocie: podawaj mu je sam albo załóż go ponownie, jeśli napisze do bota studia.",
         ],
       },
