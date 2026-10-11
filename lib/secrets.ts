@@ -17,19 +17,40 @@ const TTL_MS = 10 * 60_000;
 const cache = new Map<string, { value: string | null; at: number }>();
 
 export async function appSecret(name: string, now = Date.now()): Promise<string | null> {
+  return (await readAppSecret(name, now)).value;
+}
+
+/**
+ * То же, но с ответом на вопрос, ответило ли хранилище.
+ *
+ * «Секрета нет» и «хранилище не ответило» — разные вещи. 07.10.2026, во
+ * время сбоя сервера, скаут спросил сессию рабочего аккаунта, хранилище
+ * промолчало, и аккаунт навсегда пометился «сессии нет в хранилище» при
+ * живой сессии — четыре дня он молчал. Молчание не помнится: следующий
+ * вопрос снова идёт в хранилище, а не получает запомненное «нет».
+ */
+export async function readAppSecret(name: string, now = Date.now()): Promise<{ value: string | null; offline: boolean }> {
   const fromEnv = process.env[name]?.trim();
-  if (fromEnv) return fromEnv;
+  if (fromEnv) return { value: fromEnv, offline: false };
 
   const hit = cache.get(name);
-  if (hit && now - hit.at < TTL_MS) return hit.value;
+  if (hit && now - hit.at < TTL_MS) return { value: hit.value, offline: false };
 
   const db = serviceClient();
-  if (!db) return null;
-  const { data, error } = await db.rpc("app_secret", { p_name: `app.${name}` });
-  if (error) console.error(`секрет ${name}: хранилище не ответило —`, error.message);
-  const value = !error && typeof data === "string" && data.trim() ? data.trim() : null;
-  cache.set(name, { value, at: now });
-  return value;
+  if (!db) return { value: null, offline: true };
+  try {
+    const { data, error } = await db.rpc("app_secret", { p_name: `app.${name}` });
+    if (error) {
+      console.error(`секрет ${name}: хранилище не ответило —`, error.message);
+      return { value: null, offline: true };
+    }
+    const value = typeof data === "string" && data.trim() ? data.trim() : null;
+    cache.set(name, { value, at: now });
+    return { value, offline: false };
+  } catch (error) {
+    console.error(`секрет ${name}: хранилище не ответило —`, error instanceof Error ? error.message : error);
+    return { value: null, offline: true };
+  }
 }
 
 /**

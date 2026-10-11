@@ -15,7 +15,7 @@ import {
   type LoginError,
   type WorkAccount,
 } from "@/lib/admin/work-accounts";
-import { appSecret, forgetSecrets, saveAppSecret } from "@/lib/secrets";
+import { appSecret, forgetSecrets, readAppSecret, saveAppSecret } from "@/lib/secrets";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -359,6 +359,15 @@ export async function logoutDone(id: string): Promise<void> {
 
 export async function accountSession(id: string): Promise<string | null> {
   return appSecret(sessionSecret(id));
+}
+
+/**
+ * Сессия аккаунта для подключения: `offline` — хранилище не ответило, и
+ * это не повод считать сессию пропавшей (readAppSecret).
+ */
+export async function accountSessionState(id: string): Promise<{ session: string | null; offline: boolean }> {
+  const { value, offline } = await readAppSecret(sessionSecret(id));
+  return { session: value, offline };
 }
 
 export async function markSeen(ids: readonly string[]): Promise<void> {
