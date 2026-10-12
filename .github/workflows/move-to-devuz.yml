@@ -108,9 +108,12 @@ jobs:
               echo "конфиг: ${file} → ${real}"
               $SUDO grep -nE "server_name|listen|ssl_certificate|proxy_pass|root[[:space:]]" "$real" | sed 's/^/  /'
 
+              # Только настоящие строки конфига, не комментарии: в шапке
+              # конфига витрины есть «…блок с ssl_certificate и редирект…», и
+              # пробный запуск 12.10 принял «и» за путь к сертификату.
               local oldcert oldkey
-              oldcert="$($SUDO grep -m1 -oE 'ssl_certificate[[:space:]]+[^;]+' "$real" | awk '{print $2}')"
-              oldkey="$($SUDO grep -m1 -oE 'ssl_certificate_key[[:space:]]+[^;]+' "$real" | awk '{print $2}')"
+              oldcert="$($SUDO grep -m1 -E '^[[:space:]]*ssl_certificate[[:space:]]' "$real" | awk '{print $2}' | tr -d ';')"
+              oldkey="$($SUDO grep -m1 -E '^[[:space:]]*ssl_certificate_key[[:space:]]' "$real" | awk '{print $2}' | tr -d ';')"
               echo "старый сертификат: ${oldcert:-нет}"
 
               if [ "$DRY" = "true" ]; then

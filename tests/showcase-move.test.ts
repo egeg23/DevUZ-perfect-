@@ -35,6 +35,12 @@ test("старый адрес ведёт на новый с тем же путё
   assert.doesNotMatch(flow, /server_name %s;\\n    return 301/);
 });
 
+test("путь старого сертификата берётся из строки конфига, а не из комментария", () => {
+  // Пробный запуск 12.10: «# … блок с ssl_certificate и редирект …» дал путь «и».
+  assert.match(flow, /grep -m1 -E '\^\[\[:space:\]\]\*ssl_certificate\[\[:space:\]\]'/);
+  assert.match(flow, /grep -m1 -E '\^\[\[:space:\]\]\*ssl_certificate_key\[\[:space:\]\]'/);
+});
+
 test("адрес витрины для поиска меняется на cases.devuz.studio", () => {
   assert.match(flow, /NEXT_PUBLIC_SITE_URL=https:\/\/cases\.devuz\.studio/);
 });
