@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { sectionOfHref } from "@/lib/admin/help";
 
@@ -15,28 +15,41 @@ import { sectionOfHref } from "@/lib/admin/help";
  * раздел определяется по адресу так же, как для «Как пользоваться разделом»
  * (карточка лида — это раздел «Лиды», карточка проекта — «Проекты»).
  *
- * На телефоне меню прокручивается вбок, и открытый раздел мог оказаться за
- * краем, — активный пункт сам доезжает в видимую часть.
+ * Тот же пункт — строкой в выпадающем списке группы и в меню телефона
+ * (`variant="item"`, components/admin/nav-menu.tsx).
  */
-export function AdminNavLink({ href, quiet, children }: { href: string; quiet: boolean; children: ReactNode }) {
+export function AdminNavLink({
+  href,
+  quiet,
+  variant = "tab",
+  onClick,
+  children,
+}: {
+  href: string;
+  quiet: boolean;
+  /** «tab» — в строке шапки, «item» — строкой в списке группы. */
+  variant?: "tab" | "item";
+  onClick?: () => void;
+  children: ReactNode;
+}) {
   const pathname = usePathname();
   const active = sectionOfHref(pathname ?? "") === href;
-  const ref = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    if (active) ref.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [active]);
+  const tone = quiet ? "text-faint" : "text-muted";
 
   return (
     <Link
-      ref={ref}
       href={href}
+      onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`-mb-px whitespace-nowrap border-b-2 pb-1 transition-colors ${
-        active
-          ? "border-green font-medium text-green"
-          : `border-transparent hover:text-text ${quiet ? "text-faint" : "text-muted"}`
-      }`}
+      className={
+        variant === "item"
+          ? `block whitespace-nowrap rounded-md px-3 py-2 transition-colors ${
+              active ? "bg-green/10 font-medium text-green" : `hover:bg-surface-2 hover:text-text ${tone}`
+            }`
+          : `-mb-px whitespace-nowrap border-b-2 pb-1 transition-colors ${
+              active ? "border-green font-medium text-green" : `border-transparent hover:text-text ${tone}`
+            }`
+      }
     >
       {children}
     </Link>

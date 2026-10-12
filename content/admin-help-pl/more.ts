@@ -600,6 +600,28 @@ export const moreSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "menu",
+        title: "Menu: grupy sekcji i «Znajdź sekcję»",
+        body: {
+          manager: [
+            "Sekcje w nagłówku są zebrane w grupy: **«Sprzedaż»** — «Leady», «Zamówienia», «Wyszukiwanie», «Kontakty», «Nadzór», «Makiety»; **«Projekty i finanse»** — «Projekty», «Umowy», «Finanse». «Statystyki» i «Instrukcje» są osobnymi linkami: w ich grupach masz po jednej sekcji, a grupa z jedną sekcją to od razu link do niej, bez listy. Na komputerze najedź myszą na grupę — otworzy się lista jej sekcji; kliknięcie w grupę przypina listę, drugie kliknięcie ją zamyka.",
+            "Grupa otwartej sekcji jest podświetlona na zielono, a obok jej nazwy widać samą sekcję, na przykład «Sprzedaż · Kontakty»; na liście grupy otwarta sekcja też jest zielona. Na telefonie zamiast rzędu grup jest jeden przycisk **«Menu»**: obok niego widać, w której sekcji jesteś, a dotknięcie otwiera wszystkie grupy jedną listą. Menu zamyka krzyżyk, klawisz Esc, kliknięcie obok albo samo przejście do sekcji.",
+            "Najszybciej — **«Znajdź sekcję»** po prawej w rzędzie menu (na wąskim ekranie — ikona lupy) albo klawisze **Ctrl+K** (na Macu — ⌘K) w dowolnym miejscu panelu. Zacznij pisać nazwę: «umo» — i pierwsze będą «Umowy»; Enter otwiera pierwszą, strzałki ↑ ↓ wybierają inną. Szukanie idzie po nazwach sekcji w języku panelu, po nazwie grupy («sprzedaż» pokaże wszystkie jej sekcje) i na wszelki wypadek po nazwach w innych językach. Na telefonie to samo pole jest na początku «Menu». Znajdziesz tylko to, co i tak masz w menu: wyszukiwanie nie otwiera zamkniętych sekcji.",
+          ],
+          head: [
+            "Sekcje w nagłówku są zebrane w grupy: **«Sprzedaż»** — «Leady», «Zamówienia», «Wyszukiwanie», «Kontakty», «Nadzór», «Makiety»; **«Projekty i finanse»** — «Projekty», «Umowy», «Finanse», «Wydatki»; **«Marketing»** — «Ruch», «Reklamy», «Partnerzy», «Pracownicy AI»; **«Zespół»** — «Konta», «Kandydaci», «Zespół», «Szkolenia». «Statystyki» i «Instrukcje» są osobnymi linkami: grupa, w której masz jedną sekcję, to od razu link do niej, bez listy. Na komputerze najedź myszą na grupę — otworzy się lista jej sekcji; kliknięcie w grupę przypina listę, drugie kliknięcie ją zamyka.",
+            "Grupa otwartej sekcji jest podświetlona na zielono, a obok jej nazwy widać samą sekcję, na przykład «Sprzedaż · Kontakty»; na liście grupy otwarta sekcja też jest zielona. Na telefonie zamiast rzędu grup jest jeden przycisk **«Menu»**: obok niego widać, w której sekcji jesteś, a dotknięcie otwiera wszystkie grupy jedną listą. Menu zamyka krzyżyk, klawisz Esc, kliknięcie obok albo samo przejście do sekcji.",
+            "Najszybciej — **«Znajdź sekcję»** po prawej w rzędzie menu (na wąskim ekranie — ikona lupy) albo klawisze **Ctrl+K** (na Macu — ⌘K) w dowolnym miejscu panelu. Zacznij pisać nazwę: «umo» — i pierwsze będą «Umowy»; Enter otwiera pierwszą, strzałki ↑ ↓ wybierają inną. Szukanie idzie po nazwach sekcji w języku panelu, po nazwie grupy («sprzedaż» pokaże wszystkie jej sekcje) i na wszelki wypadek po nazwach w innych językach. Na telefonie to samo pole jest na początku «Menu». Znajdziesz tylko to, co i tak masz w menu: wyszukiwanie nie otwiera zamkniętych sekcji.",
+          ],
+          admin: [
+            "Sekcje w nagłówku są zebrane w sześć grup: **«Sprzedaż»** — «Leady», «Zamówienia», «Wyszukiwanie», «Kontakty», «Nadzór», «Makiety», «Prototypy»; **«Projekty i finanse»** — «Projekty», «Umowy», «Wydatki», «Finanse»; **«Marketing»** — «Ruch», «Reklamy», «Partnerzy», «Analizy», «Pracownicy AI»; **«Zespół»** — «Konta», «Kandydaci», «Zespół», «Szkolenia»; **«Raporty»** — «Statystyki», «Wydania», «Dziennik», «Użycie»; i osobnym linkiem — «Instrukcje». Na komputerze najedź myszą na grupę — otworzy się lista jej sekcji; kliknięcie w grupę przypina listę, drugie kliknięcie ją zamyka.",
+            "Grupa otwartej sekcji jest podświetlona na zielono, a obok jej nazwy widać samą sekcję, na przykład «Sprzedaż · Kontakty»; na liście grupy otwarta sekcja też jest zielona. Na telefonie zamiast rzędu grup jest jeden przycisk **«Menu»**: obok niego widać, w której sekcji jesteś, a dotknięcie otwiera wszystkie grupy jedną listą. Menu zamyka krzyżyk, klawisz Esc, kliknięcie obok albo samo przejście do sekcji.",
+            "Najszybciej — **«Znajdź sekcję»** po prawej w rzędzie menu (na wąskim ekranie — ikona lupy) albo klawisze **Ctrl+K** (na Macu — ⌘K) w dowolnym miejscu panelu. Zacznij pisać nazwę: «umo» — i pierwsze będą «Umowy»; Enter otwiera pierwszą, strzałki ↑ ↓ wybierają inną. Szukanie idzie po nazwach sekcji w języku panelu, po nazwie grupy («sprzedaż» pokaże wszystkie jej sekcje) i na wszelki wypadek po nazwach w innych językach. Na telefonie to samo pole jest na początku «Menu». Znajdziesz tylko to, co i tak masz w menu: wyszukiwanie nie otwiera zamkniętych sekcji.",
+            "Menu słucha Twoich [ptaszków sekcji](#team-sections): otworzysz komuś sekcję — pojawi się u niego w swojej grupie (na przykład «Ruch» — w «Marketingu»; jeśli to jego jedyna sekcja w tej grupie — osobnym linkiem), zamkniesz — zniknie i z grupy, i z wyszukiwania. Menedżer i kierownik mają mniej grup: grupa, w której człowiek nie ma żadnej sekcji, w nagłówku się nie pojawia. Nowa sekcja panelu dostaje grupę przy tworzeniu — menu nie trzeba ustawiać osobno.",
+          ],
+        },
+      },
+      {
         id: "search",
         title: "Wyszukiwanie: zapytaj własnymi słowami",
         body: {
