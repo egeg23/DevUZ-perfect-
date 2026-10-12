@@ -54,9 +54,15 @@ h1,h2,h3,p{margin:0}
 .gl{stroke:hsla(250,40%,90%,.07)}
 .zl{stroke:hsla(250,40%,90%,.25)}
 .ax{fill:var(--mute);font-size:11px}
-.b-dep{fill:var(--ok)}
-.b-wd{fill:var(--bad);opacity:.9}
-.l-net{fill:none;stroke:var(--net);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 4px hsla(266,92%,66%,.6))}
+.b-dep,.b-wd{transform-box:fill-box;transform-origin:50% 100%;animation:grow .7s cubic-bezier(.2,.9,.25,1) both}
+.b-dep{fill:url(#gd-dep)}
+.b-wd{fill:url(#gd-wd);opacity:.92}
+@keyframes grow{from{transform:scaleY(0)}}
+.a-net{fill:url(#gd-net);animation:fade 1s .3s both}
+@keyframes fade{from{opacity:0}}
+.l-net{fill:none;stroke:var(--net);stroke-width:3;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.1s .25s cubic-bezier(.4,0,.2,1) forwards;filter:drop-shadow(0 0 6px hsla(266,92%,66%,.7))}
+@keyframes draw{to{stroke-dashoffset:0}}
+.d-net{fill:#fff;stroke:var(--net);stroke-width:3;animation:fade .4s 1.2s both}
 .hi{fill:hsla(250,40%,90%,.06);transition:opacity .15s}
 .tip{position:absolute;top:8px;width:180px;padding:10px 12px;border-radius:12px;background:hsla(250,30%,16%,.96);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.4);font-size:12px;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
 .tip.on{opacity:1;transform:none}

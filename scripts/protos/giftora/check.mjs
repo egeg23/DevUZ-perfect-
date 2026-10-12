@@ -53,8 +53,12 @@ for (const [name, vp] of [["m", { width: 390, height: 844 }], ["d", { width: 144
     else ok(tag, "Rocket: раунд прошёл (ракета улетела раньше)", label.trim().slice(0, 30));
     await p.waitForTimeout(1500);
     for (const q of ["medium", "low", "high"]) { await p.click(`#rk-q [data-q="${q}"]`); await p.waitForTimeout(250); }
-    const pl = await p.$$eval("#rk-pl .pr", (x) => x.length);
+    // Новый раунд мог только начаться: боты заходят в первые 5 секунд.
+    const pl = await p.waitForFunction(() => document.querySelectorAll("#rk-pl .pr").length >= 2, null, { timeout: 7000 }).then(() => p.$$eval("#rk-pl .pr", (x) => x.length)).catch(() => 0);
     if (pl < 2) fail(tag, "Rocket: нет других игроков"); else ok(tag, `Rocket: игроков ${pl}`);
+    // Без мерцания: строки не пересоздаются, пока раунд идёт.
+    const same = await p.evaluate(() => new Promise((r) => { const rows = [...document.querySelectorAll("#rk-pl .pr")]; setTimeout(() => r(rows.filter((x) => x.isConnected).length / rows.length), 700); }));
+    if (same < 0.5) fail(tag, "Rocket: строки игроков пересоздаются", same); else ok(tag, `Rocket: строки живут между обновлениями (${Math.round(same * 100)}%)`);
     // FPS на ракете.
     const fps = await p.evaluate(() => new Promise((r) => { let n = 0; const t0 = performance.now(); (function f() { n++; if (performance.now() - t0 < 1000) requestAnimationFrame(f); else r(n); })(); }));
     await go("home"); const fps0 = await p.evaluate(() => new Promise((r) => { let n = 0; const t0 = performance.now(); (function f() { n++; if (performance.now() - t0 < 1000) requestAnimationFrame(f); else r(n); })(); }));

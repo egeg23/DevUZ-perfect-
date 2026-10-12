@@ -153,6 +153,19 @@ MOUNT.overview = function(){
   $('#per').addEventListener('click', function(e){ var b = e.target.closest('[data-p]'); if (b) { period = +b.getAttribute('data-p'); show('overview'); } });
   chart();
 };
+/* Плавная линия через точки: кривые Безье по соседям (Catmull-Rom), без выбросов за точки. */
+function smooth(p){
+  if (p.length < 2) return '';
+  var d = 'M' + p[0][0].toFixed(1) + ' ' + p[0][1].toFixed(1);
+  for (var i = 0; i < p.length - 1; i++) {
+    var p0 = p[i - 1] || p[i], p1 = p[i], p2 = p[i + 1], p3 = p[i + 2] || p2, k = 0.18;
+    var c1x = p1[0] + (p2[0] - p0[0]) * k, c1y = p1[1] + (p2[1] - p0[1]) * k, c2x = p2[0] - (p3[0] - p1[0]) * k, c2y = p2[1] - (p3[1] - p1[1]) * k;
+    var lo = Math.min(p1[1], p2[1]), hi = Math.max(p1[1], p2[1]);
+    c1y = Math.max(lo, Math.min(hi, c1y)); c2y = Math.max(lo, Math.min(hi, c2y));
+    d += 'C' + c1x.toFixed(1) + ' ' + c1y.toFixed(1) + ' ' + c2x.toFixed(1) + ' ' + c2y.toFixed(1) + ' ' + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1);
+  }
+  return d;
+}
 function chart(){
   var box = $('#chart'), svg = $('#ch-svg'), tip = $('#tip');
   if (!box) return;
@@ -161,7 +174,7 @@ function chart(){
   var min = Math.min(0, Math.min.apply(null, list.map(function(d){ return d.dep - d.wd; })) * 1.2);
   var step = (W - pl - pr) / list.length, bw = Math.max(2, Math.min(18, step * 0.36));
   var Y = function(v){ return pt + (max - v) / (max - min) * (H - pt - pb); };
-  var out = '';
+  var out = '<defs><linearGradient id="gd-dep" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5dfab0"/><stop offset="1" stop-color="#14a866"/></linearGradient><linearGradient id="gd-wd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8aa0"/><stop offset="1" stop-color="#d42a4e"/></linearGradient><linearGradient id="gd-net" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a98bff" stop-opacity=".35"/><stop offset="1" stop-color="#a98bff" stop-opacity="0"/></linearGradient></defs>';
   var ticks = 4;
   for (var k = 0; k <= ticks; k++) { var v = min + (max - min) * k / ticks, y = Y(v); out += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" class="gl"/><text x="' + (pl - 8) + '" y="' + (y + 4).toFixed(1) + '" class="ax" text-anchor="end">' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1) + 'k' : Math.round(v)) + '</text>'; }
   out += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" class="zl"/>';
@@ -169,12 +182,15 @@ function chart(){
   var line = [];
   list.forEach(function(d, i){
     var cx = pl + step * (i + 0.5);
-    out += '<rect class="b-dep" x="' + (cx - bw - 1).toFixed(1) + '" y="' + Y(d.dep).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (Y(0) - Y(d.dep)).toFixed(1) + '" rx="2"/>';
-    out += '<rect class="b-wd" x="' + (cx + 1).toFixed(1) + '" y="' + Y(d.wd).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (Y(0) - Y(d.wd)).toFixed(1) + '" rx="2"/>';
-    line.push(cx.toFixed(1) + ',' + Y(d.dep - d.wd).toFixed(1));
+    var dl = 'style="animation-delay:' + Math.round(i / list.length * 380) + 'ms"', rx = Math.min(4, bw / 2).toFixed(1);
+    out += '<rect class="b-dep" ' + dl + ' x="' + (cx - bw - 1).toFixed(1) + '" y="' + Y(d.dep).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (Y(0) - Y(d.dep)).toFixed(1) + '" rx="' + rx + '"/>';
+    out += '<rect class="b-wd" ' + dl + ' x="' + (cx + 1).toFixed(1) + '" y="' + Y(d.wd).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (Y(0) - Y(d.wd)).toFixed(1) + '" rx="' + rx + '"/>';
+    line.push([cx, Y(d.dep - d.wd)]);
     if ((list.length - 1 - i) % every === 0) out += '<text x="' + cx.toFixed(1) + '" y="' + (H - 8) + '" class="ax" text-anchor="middle">' + (i + 1 === list.length ? L('сегодня', 'today') : dstr(d.t)) + '</text>';
   });
-  out += '<polyline class="l-net" points="' + line.join(' ') + '"/>';
+  var path = smooth(line);
+  out += '<path class="a-net" d="' + path + ' L' + line[line.length - 1][0].toFixed(1) + ' ' + Y(0).toFixed(1) + ' L' + line[0][0].toFixed(1) + ' ' + Y(0).toFixed(1) + 'Z"/><path class="l-net" pathLength="1" d="' + path + '"/>';
+  line.forEach(function(p, i){ if (i + 1 === line.length) out += '<circle class="d-net" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4"/>'; });
   out += '<rect id="ch-hi" class="hi" x="0" y="' + pt + '" width="' + step.toFixed(1) + '" height="' + (H - pt - pb) + '" style="opacity:0"/>';
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   svg.innerHTML = out;

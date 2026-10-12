@@ -340,7 +340,7 @@ test("Enotmebel: конструктор — сайт 1 700 $, все допы в
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
 });
 
-test("Giftora: демо мини-приложения и панель оператора на ru и en — условия, noindex, только игровая валюта, без внешних загрузок", () => {
+test("Giftora: демо мини-приложения и панель оператора на ru и en — условия, noindex, только игровая валюта, без внешних загрузок", async () => {
   const site = bundlePages("giftora");
   assert.ok(site);
   const all: Record<string, string> = { "": site.html, ...site.pages };
@@ -380,4 +380,10 @@ test("Giftora: демо мини-приложения и панель опера
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
   assert.notEqual(stamped.pages.en, site.pages.en, "отпечаток не поставился на английской");
   assert.notEqual(stamped.pages.admin, site.pages.admin, "отпечаток не поставился на панели");
+  // Объёмные подарки — два атласа WebP со своего сервера, а не 28 картинок (урок enotmebel: 429 на залп).
+  const { statSync } = await import("node:fs");
+  for (const f of ["atlas-s.webp", "atlas.webp"]) {
+    assert.ok(site.html.includes(`/protos/giftora/${f}`), `нет ссылки на ${f}`);
+    assert.ok(statSync(`public/protos/giftora/${f}`).size < 320_000, `${f} тяжелее 320 КБ`);
+  }
 });

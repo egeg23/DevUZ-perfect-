@@ -107,7 +107,7 @@ h2,h3,h4,p{margin:0}
 .ga.coin svg{width:52%;height:52%;color:#fff}
 .ga.xs{width:26px;border-radius:8px;flex:none}
 .ga.sm{width:46px;border-radius:12px;flex:none}
-.bx{aspect-ratio:1;display:grid;place-items:center}
+.bx{position:relative;aspect-ratio:1;display:grid;place-items:center}
 .bx svg{width:100%;height:100%;filter:drop-shadow(0 12px 18px rgba(0,0,0,.35))}
 .float{animation:float 3.6s ease-in-out infinite}
 @keyframes float{50%{transform:translateY(-6px) rotate(-2deg)}}
@@ -230,7 +230,12 @@ h2,h3,h4,p{margin:0}
 .chips.wide button{flex:1}
 .bet .btn.big{margin-top:4px}
 .pl{display:flex;flex-direction:column;gap:6px}
-.pr{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:14px;background:var(--glass);font-size:14px;animation:pop .35s ease}
+.pr{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:14px;background:var(--glass);font-size:14px;transition:background .35s,box-shadow .35s;contain:layout paint}
+.pr.enter{animation:slidein .45s cubic-bezier(.2,.9,.25,1)}
+@keyframes slidein{from{opacity:0;transform:translate3d(-14px,0,0)}}
+.pr.won{background:hsla(150,72%,50%,.12)}
+.pr.lost{opacity:.55;transition:opacity .5s}
+.pr .pl-w{animation:pop .4s cubic-bezier(.3,1.6,.5,1)}
 .pr.me{background:hsla(266,90%,66%,.2);border:1px solid hsla(266,90%,66%,.4)}
 .pr.won{background:hsla(42,96%,62%,.22);border:1px solid var(--gold)}
 .pr b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -467,3 +472,16 @@ h2,h3,h4,p{margin:0}
 .adm-link .ic{width:28px;height:28px;color:var(--gold)}
 .adm-link b{display:block}
 .adm-link small{font-size:12px;color:var(--mute)}
+:root{--atl:none}
+:root.hd1{--atl:url(/protos/giftora/atlas-s.webp)}
+:root.hd2{--atl:url(/protos/giftora/atlas.webp)}
+.ai{position:absolute;inset:6%;background:var(--atl) 0 0/700% 400% no-repeat;background-position:calc(var(--x) * 100% / 6) calc(var(--y) * 100% / 3);opacity:0;transition:opacity .45s ease;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+.bx .ai{inset:0}
+.hd1 .ai{opacity:1}
+.hd1 .ga>svg,.hd1 .bx>svg{opacity:0;transition:opacity .45s ease}
+.ga.r3 .ai,.ga.r4 .ai,.win-art .ai{animation:glint 4s ease-in-out infinite}
+@keyframes glint{50%{filter:drop-shadow(0 6px 10px rgba(0,0,0,.35)) brightness(1.12)}}
+.ga{background:radial-gradient(120% 90% at 50% 18%,hsla(0,0%,100%,.22),transparent 55%),radial-gradient(circle at 50% 46%,var(--b1),var(--b2) 80%)}
+.ga:after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 hsla(0,0%,100%,.28),inset 0 -12px 24px rgba(0,0,0,.18);pointer-events:none}
+.ga.dark:after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 40%,hsla(0,0%,100%,.16) 50%,transparent 60%);animation:sheen 3.4s ease-in-out infinite;box-shadow:none}
+.pv-c b span{display:inline-block}
