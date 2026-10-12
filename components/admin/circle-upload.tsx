@@ -17,6 +17,7 @@ import { CIRCLE_MIME, circleProblem } from "@/lib/admin/circle-rules";
  * загрузка, после которой сервер скажет «не квадрат», — потерянные минуты.
  * Дальше — кусками, как видео к инструкциям, и докачивается сам, если связь
  * мигнула. Скаут кладёт загруженный кружок в «Избранное» каждого аккаунта.
+ * Форм две — для русского и для узбекского кружка (`lang`).
  */
 
 type Phase =
@@ -27,7 +28,7 @@ type Phase =
 
 const INPUT = "w-full min-w-0 rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
 
-export function CircleUpload({ have }: { have: boolean }) {
+export function CircleUpload({ have, lang }: { have: boolean; lang: "ru" | "uz" }) {
   const router = useRouter();
   const locale = usePanelLocale();
   const t = usePanelDict(circleUploadDict);
@@ -57,7 +58,7 @@ export function CircleUpload({ have }: { have: boolean }) {
     }
 
     setPhase({ kind: "busy", progress: 1 });
-    const saved = await circleSaveAction({ uploadId: slot.uploadId, ...meta });
+    const saved = await circleSaveAction({ uploadId: slot.uploadId, ...meta, lang });
     if (!saved.ok) return setPhase({ kind: "error", text: promoFailText(saved, locale) });
     form.reset();
     setPhase({ kind: "done" });
@@ -65,7 +66,7 @@ export function CircleUpload({ have }: { have: boolean }) {
   }
 
   return (
-    <form onSubmit={submit} className="mt-3 space-y-2" data-circle-upload>
+    <form onSubmit={submit} className="mt-3 space-y-2" data-circle-upload={lang}>
       <label className="block text-xs text-faint">
         {t.file}
         <input name="file" type="file" accept={CIRCLE_MIME.join(",")} required disabled={busy} className={`mt-1 ${INPUT}`} />

@@ -105,24 +105,39 @@ export default async function AccountsPage({
   const notice = r && Object.hasOwn(results, r) ? results[r as keyof typeof results] : null;
 
   const c = pick(circleUploadDict, locale);
-  const [accounts, activity, onAccount, people, circles, uploaded] = await Promise.all([
+  const [accounts, activity, onAccount, people, circles, uploadedRu, uploadedUz] = await Promise.all([
     listAccounts(),
     accountsActivity(),
     accountStaff(),
     accountPeople(),
     circleStates(),
-    circleFile(),
+    circleFile("ru"),
+    circleFile("uz"),
   ]);
-  // Кружок для писем после «Здравствуйте» (lib/admin/hello-first.ts).
+  // Кружки для писем после «Здравствуйте» (lib/admin/hello-first.ts):
+  // русский и узбекский, у каждого аккаунта свой.
   const circleLine = (key: string) => {
     const state: CircleState | undefined = circles.get(key);
     if (!state) return <p className="mt-1 text-xs text-faint">{t.circleUnknown}</p>;
-    return state.savedAt ? (
-      <p className="mt-1 text-xs text-green">{t.circleYes(tashkentClock(new Date(state.savedAt)))}</p>
-    ) : (
-      <p className="mt-1 text-xs text-gold">{t.circleNo}</p>
+    return (
+      <>
+        {state.savedAt ? (
+          <p className="mt-1 text-xs text-green">{t.circleYes(tashkentClock(new Date(state.savedAt)))}</p>
+        ) : (
+          <p className="mt-1 text-xs text-gold">{t.circleNo}</p>
+        )}
+        {state.uzSavedAt ? (
+          <p className="mt-0.5 text-xs text-green">{t.circleUzYes(tashkentClock(new Date(state.uzSavedAt)))}</p>
+        ) : (
+          <p className="mt-0.5 text-xs text-gold">{t.circleUzNo}</p>
+        )}
+      </>
     );
   };
+  const circleSlots = [
+    { lang: "ru" as const, title: c.ruTitle, none: c.none, file: uploadedRu },
+    { lang: "uz" as const, title: c.uzTitle, none: c.noneUz, file: uploadedUz },
+  ];
   const now = Date.now();
   const busy = accounts.some((a) => WORKING.has(a.status));
   const sentOf = (key: string, cap: number) => {
@@ -152,21 +167,26 @@ export default async function AccountsPage({
         </h2>
         <p className="mt-2 text-xs leading-relaxed text-muted">{c.intro}</p>
         <p className="mt-1 text-xs leading-relaxed text-muted">{c.viaBot}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-4">
-          {uploaded ? (
-            <video
-              src={`/admin/accounts/circle?v=${uploaded.uploadedAt}`}
-              controls
-              playsInline
-              preload="metadata"
-              className="h-32 w-32 shrink-0 rounded-full border border-line object-cover"
-            />
-          ) : null}
-          <p className={`min-w-0 flex-1 text-xs ${uploaded ? "text-faint" : "text-gold"}`}>
-            {uploaded ? c.current(tashkentClock(new Date(uploaded.uploadedAt)), uploaded.by ?? "", uploaded.duration) : c.none}
-          </p>
-        </div>
-        <CircleUpload have={Boolean(uploaded)} />
+        {circleSlots.map((slot) => (
+          <div key={slot.lang} className="mt-4 border-t border-line pt-4">
+            <h3 className="text-xs font-semibold text-text">{slot.title}</h3>
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              {slot.file ? (
+                <video
+                  src={`/admin/accounts/circle?lang=${slot.lang}&v=${slot.file.uploadedAt}`}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="h-32 w-32 shrink-0 rounded-full border border-line object-cover"
+                />
+              ) : null}
+              <p className={`min-w-0 flex-1 text-xs ${slot.file ? "text-faint" : "text-gold"}`}>
+                {slot.file ? c.current(tashkentClock(new Date(slot.file.uploadedAt)), slot.file.by ?? "", slot.file.duration) : slot.none}
+              </p>
+            </div>
+            <CircleUpload have={Boolean(slot.file)} lang={slot.lang} />
+          </div>
+        ))}
       </section>
 
       <ul className="mt-6 space-y-3">

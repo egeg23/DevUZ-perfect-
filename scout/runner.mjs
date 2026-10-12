@@ -25,8 +25,16 @@ import { nextStrikes, shouldExit } from "@/lib/scout/watchdog";
 import { markDelivered, markFailed, markSent, markUnreachable, nextQueued } from "@/lib/admin/outreach-queue";
 import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/outreach-peer";
 import { markCircleSkipped, markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
-import { NO_CIRCLE } from "@/lib/admin/hello-first";
-import { CIRCLE_CHECK_MS, circleDue, circleFile, recordCircle } from "@/lib/admin/circle-store";
+import { noCircle } from "@/lib/admin/hello-first";
+import {
+  CIRCLE_CHECK_MS,
+  CIRCLE_LANGS,
+  circleDue,
+  circleFile,
+  circleStates,
+  pickCircles,
+  recordCircle,
+} from "@/lib/admin/circle-store";
 import { isPromoPath } from "@/lib/partners/promo-rules";
 import path from "node:path";
 import { TOO_LATE, editOutcome, markEditFailed, markEdited, nextEdit, sentCheck } from "@/lib/admin/outreach-edit";
@@ -409,10 +417,29 @@ function lostPeer(error) {
 }
 
 function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersAlive, onFlood, afterBanCheck = async () => {} }) {
-  /** Последний кружок в «Избранном» этого аккаунта — или null. */
-  const savedCircle = async () => {
-    const [found] = (await client.getMessages("me", { limit: 1, filter: new Api.InputMessagesFilterRoundVideo() })) ?? [];
-    return found?.media ? found : null;
+  /**
+   * Номера узбекских кружков, которые этот аккаунт сам положил в
+   * «Избранное» (circle-store, pickCircles): по виду кружка язык не узнать.
+   * Помнятся в базе — переживают перезапуск скаута.
+   */
+  let uzIds = [];
+  const uzReady = circleStates()
+    .then((states) => {
+      uzIds = states.get(key)?.uzIds ?? [];
+    })
+    .catch(() => {});
+
+  /** Кружки «Избранного» этого аккаунта по языкам: { ru, uz }, каждого может не быть. */
+  const savedCircles = async () => {
+    await uzReady;
+    const [found, uzFile] = await Promise.all([
+      client.getMessages("me", { limit: 30, filter: new Api.InputMessagesFilterRoundVideo() }),
+      circleFile("uz").catch(() => null),
+    ]);
+    const notes = (found ?? [])
+      .filter((m) => m?.media)
+      .map((m) => ({ id: Number(m.id), date: Number(m.date), media: m.media, bytes: Number(m.media?.document?.size ?? 0) || null }));
+    return pickCircles(notes, uzIds, uzFile?.bytes ?? null);
   };
 
   /**
@@ -725,20 +752,20 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
 
     try {
       if (reply.kind === "circle") {
-        // Кружок тем, кто ответил на «Здравствуйте» по-русски
-        // (lib/admin/hello-first.ts) — копия последнего кружка из
-        // «Избранного» этого аккаунта, не пересылка: у пересланного стояло бы
-        // «переслано от». Не ушёл — вместо него встаёт письмо
+        // Кружок тем, кто ответил на «Здравствуйте» по-русски или
+        // по-узбекски (lib/admin/hello-first.ts) — копия кружка на языке
+        // ответа из «Избранного» этого аккаунта, не пересылка: у пересланного
+        // стояло бы «переслано от». Не ушёл — вместо него встаёт письмо
         // (markCircleSkipped).
-        const circle = await savedCircle();
+        const circle = (await savedCircles())[reply.lang];
         if (!circle) {
-          await markCircleSkipped(reply.id, NO_CIRCLE);
-          console.log(`переписка${tag}: кружка в «Избранном» нет — ${reply.target} уйдёт письмо`);
+          await markCircleSkipped(reply.id, noCircle(reply.lang));
+          console.log(`переписка${tag}: кружка (${reply.lang}) в «Избранном» нет — ${reply.target} уйдёт письмо`);
           return;
         }
         await toPeer(reply, (to) => client.sendFile(to, { file: circle.media }));
         await markReplySent(reply.id);
-        console.log(`переписка${tag}: кружок ${reply.target} по сайту ${reply.host}`);
+        console.log(`переписка${tag}: кружок (${reply.lang}) ${reply.target} по сайту ${reply.host}`);
         return;
       }
       await toPeer(reply, (to) => client.sendMessage(to, { message: reply.body }));
@@ -753,25 +780,29 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
     }
   }, REPLY_MS));
 
-  // ── Кружок в «Избранном» ──────────────────────────────────────────────
+  // ── Кружки в «Избранном» ──────────────────────────────────────────────
   //
-  // Последний кружок из «Избранного» аккаунта уходит перед письмом тем, кто
-  // ответил на «Здравствуйте». Есть ли он — видно только из сессии, поэтому
+  // Кружок из «Избранного» аккаунта уходит тем, кто ответил на
+  // «Здравствуйте»: русский — ответившим по-русски, узбекский — по-узбекски
+  // (владелец, 12.10.2026). Есть ли они — видно только из сессии, поэтому
   // смотрим раз в десять минут и пишем в базу: панель показывает это в
   // «Аккаунтах».
   //
-  // Кружок, загруженный в «Аккаунтах» (lib/admin/circle-store.ts), бот
-  // кладёт в «Избранное» сам: загружен позже последнего кружка там — уходит
-  // туда кружком, с длительностью и размером, иначе Telegram покажет 0:00.
-  // Атрибут видео — только наш: флаг videoNote в teleproto добавляет ещё и
-  // «голосовое», и сообщение превращается в аудио.
+  // Кружок, загруженный в «Аккаунтах» или присланный боту
+  // (lib/admin/circle-store.ts), скаут кладёт в «Избранное» сам: загружен
+  // позже того, что там лежит на этом языке, — уходит туда кружком, с
+  // длительностью и размером, иначе Telegram покажет 0:00. Узбекский
+  // запоминается по номеру сообщения, прежний узбекский удаляется, чтобы
+  // его не приняли за русский. Атрибут видео — только наш: флаг videoNote в
+  // teleproto добавляет ещё и «голосовое», и сообщение превращается в аудио.
   const posted = new Set();
-  const placeCircle = async (circle) => {
-    const file = await circleFile();
-    const savedAt = circle ? Number(circle.date) * 1000 : null;
-    if (!file || !circleDue(file, savedAt) || posted.has(file.uploadedAt) || !isPromoPath(file.path)) return circle;
+  const placeCircle = async (lang, current) => {
+    const file = await circleFile(lang);
+    const savedAt = current ? Number(current.date) * 1000 : null;
+    const mark = `${lang}:${file?.uploadedAt}`;
+    if (!file || !circleDue(file, savedAt) || posted.has(mark) || !isPromoPath(file.path)) return false;
     const media = process.env.MEDIA_HOST_DIR || "/var/lib/devuz/media";
-    await client.sendFile("me", {
+    const sent = await client.sendFile("me", {
       file: path.join(media, "promo", file.path),
       attributes: [
         new Api.DocumentAttributeVideo({
@@ -786,17 +817,29 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
     // Отметка — после отправки: не ушёл — попробуем в следующий взгляд, а
     // ушёл — второй раз не кладём, даже если Telegram ещё не отдал его в
     // «Избранном» (дата сообщения — по часам Telegram, не по нашим).
-    posted.add(file.uploadedAt);
-    console.log(`кружок${tag}: загруженный кружок положил в «Избранное»`);
-    return savedCircle();
+    posted.add(mark);
+    if (lang === "uz" && sent?.id !== undefined) {
+      const old = uzIds;
+      uzIds = [Number(sent.id), ...old].slice(0, 20);
+      // Прежний узбекский — из «Избранного» долой. Не удалился — он всё
+      // равно в списке и за русский не сойдёт.
+      if (old.length) await client.deleteMessages("me", old, { revoke: true }).catch(() => {});
+    }
+    console.log(`кружок${tag}: загруженный кружок (${lang}) положил в «Избранное»`);
+    return true;
   };
   const checkCircle = async () => {
     try {
-      const circle = await placeCircle(await savedCircle()).catch(async (error) => {
-        console.error(`кружок${tag}: не положил загруженный кружок в «Избранное» —`, error?.errorMessage ?? error?.message ?? error);
-        return savedCircle();
-      });
-      await recordCircle(key, circle ? Number(circle.date) * 1000 : null);
+      let circles = await savedCircles();
+      for (const lang of CIRCLE_LANGS) {
+        const placed = await placeCircle(lang, circles[lang]).catch((error) => {
+          console.error(`кружок${tag}: не положил кружок (${lang}) в «Избранное» —`, error?.errorMessage ?? error?.message ?? error);
+          return false;
+        });
+        if (placed) circles = await savedCircles();
+      }
+      const at = (circle) => (circle ? Number(circle.date) * 1000 : null);
+      await recordCircle(key, { savedAt: at(circles.ru), uzSavedAt: at(circles.uz), uzIds });
     } catch (error) {
       console.error(`кружок${tag}: «Избранное» не прочиталось —`, error?.errorMessage ?? error?.message ?? error);
     }

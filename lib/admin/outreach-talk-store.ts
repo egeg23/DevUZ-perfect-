@@ -21,12 +21,15 @@ import { serviceClient } from "@/lib/supabase";
 import { detectLang } from "@/lib/talk/language";
 import { checkFresh } from "@/lib/admin/check-fresh";
 import { LETTER_AFTER_REPLY } from "@/lib/admin/autopilot";
+import type { CircleLang } from "@/lib/admin/circle-store";
 import {
   CIRCLE_AFTER_MS,
-  CIRCLE_BODY,
   CIRCLE_LANG,
   PITCH_AFTER_MS,
+  circleBody,
   circleFailText,
+  circleLangFor,
+  circleLangOf,
   letterLang,
   pitchAfter,
   replyLang,
@@ -463,14 +466,15 @@ async function answerHello(
   const sentLang = letterLang(String(prospect.message ?? ""), (prospect.walked as { lang?: string } | null)?.lang);
   const lang = replyLang(body, sentLang);
 
-  if (lang === CIRCLE_LANG) {
+  const circle = circleLangFor(lang);
+  if (circle) {
     await db.from("outreach_messages").insert({
       prospect_id: id,
       lead_id: prospect.lead_id,
       direction: "out",
       author: "staff",
       kind: "circle",
-      body: CIRCLE_BODY,
+      body: circleBody(circle),
       status: "queued",
       send_after: new Date(now + CIRCLE_AFTER_MS).toISOString(),
     });
@@ -790,6 +794,8 @@ export async function nextReply(
   body: string;
   host: string;
   kind: "text" | "circle";
+  /** Язык кружка: какой из «Избранного» отправить (circle-store, pickCircles). */
+  lang: CircleLang;
 } | null> {
   const db = serviceClient();
   if (!db) return null;
@@ -877,6 +883,7 @@ export async function nextReply(
       body: String(row.body),
       host: String(p.host),
       kind: row.kind === "circle" ? "circle" : "text",
+      lang: circleLangOf(String(row.body)),
     };
   }
   return null;
