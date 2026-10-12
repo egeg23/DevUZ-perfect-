@@ -51,11 +51,28 @@ export const ROLE_BADGE: Record<Role, Tr> = {
   manager: { ru: "менеджер", uz: "menejer", pl: "menedżer" },
 };
 
+/**
+ * Группы меню — в порядке шапки.
+ *
+ * Владелец, 12.10.2026: «вкладок куча, пока в каждую задаешь — с ума
+ * пойдешь». Двадцать с лишним пунктов в одну строку не читаются, поэтому
+ * шапка показывает группы, а разделы — в выпадающем списке группы
+ * (lib/admin/nav.ts, components/admin/nav-menu.tsx). Названия групп — в
+ * словаре content/admin-panel/shell.ts (`navGroupDict`).
+ */
+export const NAV_GROUPS = ["sales", "money", "marketing", "team", "reports", "help"] as const;
+export type NavGroup = (typeof NAV_GROUPS)[number];
+
 export type Section = {
   href: string;
   /** Название в меню на каждом языке панели — см. lib/admin/i18n.ts. */
   label: Tr;
   roles: readonly Role[];
+  /**
+   * Группа в меню. Поле, а не отдельный список групп: новый раздел без
+   * группы не соберётся, и потеряться в меню ему негде.
+   */
+  group: NavGroup;
 };
 
 const EVERYONE: readonly Role[] = ROLES;
@@ -70,59 +87,59 @@ const WITH_HEAD: readonly Role[] = ["admin", "head"];
  * команды отвечают редиректом.
  */
 export const SECTIONS: readonly Section[] = [
-  { href: "/admin", label: { ru: "Лиды", uz: "Lidlar", pl: "Leady" }, roles: EVERYONE },
-  { href: "/admin/orders", label: { ru: "Заявки", uz: "Buyurtmalar", pl: "Zamówienia" }, roles: EVERYONE },
-  { href: "/admin/scout", label: { ru: "Поиск", uz: "Qidiruv", pl: "Wyszukiwanie" }, roles: EVERYONE },
-  { href: "/admin/prospect", label: { ru: "Касания", uz: "Aloqalar", pl: "Kontakty" }, roles: EVERYONE },
+  { href: "/admin", label: { ru: "Лиды", uz: "Lidlar", pl: "Leady" }, roles: EVERYONE, group: "sales" },
+  { href: "/admin/orders", label: { ru: "Заявки", uz: "Buyurtmalar", pl: "Zamówienia" }, roles: EVERYONE, group: "sales" },
+  { href: "/admin/scout", label: { ru: "Поиск", uz: "Qidiruv", pl: "Wyszukiwanie" }, roles: EVERYONE, group: "sales" },
+  { href: "/admin/prospect", label: { ru: "Касания", uz: "Aloqalar", pl: "Kontakty" }, roles: EVERYONE, group: "sales" },
   // Надзор — рядом с касаниями: это разбор тех же разговоров. Всем, а не
   // только владельцу: урок нужен тому, кто пишет следующее письмо.
-  { href: "/admin/talks", label: { ru: "Надзор", uz: "Nazorat", pl: "Nadzór" }, roles: EVERYONE },
+  { href: "/admin/talks", label: { ru: "Надзор", uz: "Nazorat", pl: "Nadzór" }, roles: EVERYONE, group: "sales" },
   // Макеты — всем. Владелец, 08.10.2026: «Надо сделать вкладку
   // дополнительную у всех: макеты… Там же генерируется пароль на 24 часа для
   // доступа клиента». Пароль клиенту выдаёт тот, кто с ним говорит, — а это
   // любой из команды. Собирать прототипы по-прежнему владелец («Прототипы»).
-  { href: "/admin/mockups", label: { ru: "Макеты", uz: "Maketlar", pl: "Makiety" }, roles: EVERYONE },
+  { href: "/admin/mockups", label: { ru: "Макеты", uz: "Maketlar", pl: "Makiety" }, roles: EVERYONE, group: "sales" },
   // Рабочие аккаунты Telegram — владельцу и руководителю. Подключить аккаунт
   // значит дать студии писать от чужого номера, и сессия равна доступу к
   // нему, — поэтому не всем. Владелец, 04.10.2026: «дай доступ к разделу
   // „Аккаунты“ Александру, чтобы он мог добавлять аккаунты для работы сам».
-  { href: "/admin/accounts", label: { ru: "Аккаунты", uz: "Akkauntlar", pl: "Konta" }, roles: WITH_HEAD },
+  { href: "/admin/accounts", label: { ru: "Аккаунты", uz: "Akkauntlar", pl: "Konta" }, roles: WITH_HEAD, group: "team" },
   // Кандидаты — только нанимающим. Владелец: «доступен руководителям и
   // мне, не менеджерам». Это не иерархия ради иерархии: в разборе лежат
   // чужие персональные данные и решение о человеке, и ни то ни другое не
   // становится лучше от того, что его читает вся студия.
-  { href: "/admin/candidates", label: { ru: "Кандидаты", uz: "Nomzodlar", pl: "Kandydaci" }, roles: ["admin", "head"] },
-  { href: "/admin/projects", label: { ru: "Проекты", uz: "Loyihalar", pl: "Projekty" }, roles: EVERYONE },
-  { href: "/admin/stats", label: { ru: "Статистика", uz: "Statistika", pl: "Statystyki" }, roles: EVERYONE },
+  { href: "/admin/candidates", label: { ru: "Кандидаты", uz: "Nomzodlar", pl: "Kandydaci" }, roles: ["admin", "head"], group: "team" },
+  { href: "/admin/projects", label: { ru: "Проекты", uz: "Loyihalar", pl: "Projekty" }, roles: EVERYONE, group: "money" },
+  { href: "/admin/stats", label: { ru: "Статистика", uz: "Statistika", pl: "Statystyki" }, roles: EVERYONE, group: "reports" },
   // Трафик сайта — владельцу и руководителям. Владелец: «чтобы Александр и
   // руководители имели доступ». Реклама — их работа, и без посещаемости её
   // не оценить. Смотреть — да; подключать Метрику и Google остаётся
   // владельцу: вход в Google — его аккаунт, и кнопки у руководителя нет.
-  { href: "/admin/traffic", label: { ru: "Трафик", uz: "Trafik", pl: "Ruch" }, roles: WITH_HEAD },
+  { href: "/admin/traffic", label: { ru: "Трафик", uz: "Trafik", pl: "Ruch" }, roles: WITH_HEAD, group: "marketing" },
   // Реклама — автопилот Google Ads и Яндекс Директа (docs/ads-autopilot).
   // Владельцу и руководителю: решения о чужих рекламных деньгах и доступ к
   // кабинетам агентств — не работа менеджера.
-  { href: "/admin/ads", label: { ru: "Реклама", uz: "Reklama", pl: "Reklamy" }, roles: WITH_HEAD },
+  { href: "/admin/ads", label: { ru: "Реклама", uz: "Reklama", pl: "Reklamy" }, roles: WITH_HEAD, group: "marketing" },
   // Финансы — всем, но каждому своё: менеджер видит свои проекты и баланс,
   // руководитель — команду, владелец — всё. Границу держит страница.
-  { href: "/admin/contracts", label: { ru: "Договоры", uz: "Shartnomalar", pl: "Umowy" }, roles: EVERYONE },
+  { href: "/admin/contracts", label: { ru: "Договоры", uz: "Shartnomalar", pl: "Umowy" }, roles: EVERYONE, group: "money" },
   // Расходы — только соучредителям. Менеджеру они не нужны и не полагаются:
   // это не его деньги и не его решения.
-  { href: "/admin/expenses", label: { ru: "Расходы", uz: "Xarajatlar", pl: "Wydatki" }, roles: ["admin", "head"] },
-  { href: "/admin/finance", label: { ru: "Финансы", uz: "Moliya", pl: "Finanse" }, roles: EVERYONE },
+  { href: "/admin/expenses", label: { ru: "Расходы", uz: "Xarajatlar", pl: "Wydatki" }, roles: ["admin", "head"], group: "money" },
+  { href: "/admin/finance", label: { ru: "Финансы", uz: "Moliya", pl: "Finanse" }, roles: EVERYONE, group: "money" },
   // Релизы — только у админа: выложить файл значит решить, что именно
   // получит каждый, кто уже заплатил.
-  { href: "/admin/releases", label: { ru: "Релизы", uz: "Relizlar", pl: "Wydania" }, roles: ADMIN_ONLY },
+  { href: "/admin/releases", label: { ru: "Релизы", uz: "Relizlar", pl: "Wydania" }, roles: ADMIN_ONLY, group: "reports" },
   // Команда — владельцу и руководителю проектов. Но видят они разное:
   // руководитель заводит менеджеров и смотрит состав, а роли, грейды и
   // отключение остаются за владельцем — см. hiresStaff и managesStaff.
-  { href: "/admin/team", label: { ru: "Команда", uz: "Jamoa", pl: "Zespół" }, roles: WITH_HEAD },
+  { href: "/admin/team", label: { ru: "Команда", uz: "Jamoa", pl: "Zespół" }, roles: WITH_HEAD, group: "team" },
   // Партнёры — владельцу и руководителю. Владелец, 07.10.2026: «Выведи в
   // дашборд руководителю вкладку „партнёры“». Руководитель ведёт программу,
   // а деньги посторонним людям — решение по выплате, персональная ставка —
   // и удаление партнёра остаются за владельцем (PARTNER_DESK в
   // lib/partners/store.ts).
-  { href: "/admin/partners", label: { ru: "Партнёры", uz: "Hamkorlar", pl: "Partnerzy" }, roles: WITH_HEAD },
+  { href: "/admin/partners", label: { ru: "Партнёры", uz: "Hamkorlar", pl: "Partnerzy" }, roles: WITH_HEAD, group: "marketing" },
   // Прототипы — временно только владельцу, и причина не в доступе к данным,
   // а в деньгах. Сборка прототипа — самый дорогой вызов модели из всех:
   // на выходе целая страница, и платится она за каждый черновик, включая
@@ -131,29 +148,29 @@ export const SECTIONS: readonly Section[] = [
   //
   // Код вкладки остался на месте: вернуть её всем — это одна строка здесь
   // и три проверки прав, которые уже написаны.
-  { href: "/admin/proto", label: { ru: "Прототипы", uz: "Prototiplar", pl: "Prototypy" }, roles: ADMIN_ONLY },
+  { href: "/admin/proto", label: { ru: "Прототипы", uz: "Prototiplar", pl: "Prototypy" }, roles: ADMIN_ONLY, group: "sales" },
   // Разборы — только владельцу: опубликованный разбор называет чужой сайт
   // плохим под именем студии, и отозвать это нельзя.
-  { href: "/admin/razbor", label: { ru: "Разборы", uz: "Tahlillar", pl: "Analizy" }, roles: ADMIN_ONLY },
-  { href: "/admin/audit", label: { ru: "Журнал", uz: "Jurnal", pl: "Dziennik" }, roles: ADMIN_ONLY },
+  { href: "/admin/razbor", label: { ru: "Разборы", uz: "Tahlillar", pl: "Analizy" }, roles: ADMIN_ONLY, group: "marketing" },
+  { href: "/admin/audit", label: { ru: "Журнал", uz: "Jurnal", pl: "Dziennik" }, roles: ADMIN_ONLY, group: "reports" },
   // Использование — тихий кастдев: чем команда пользуется, а что шум.
   // Только владельцу: отчёт, о котором знают, меряет не работу, а
   // старание выглядеть в нём хорошо.
-  { href: "/admin/usage", label: { ru: "Использование", uz: "Foydalanish", pl: "Użycie" }, roles: ADMIN_ONLY },
+  { href: "/admin/usage", label: { ru: "Использование", uz: "Foydalanish", pl: "Użycie" }, roles: ADMIN_ONLY, group: "reports" },
   // ИИ-сотрудники — владельцу и руководителю. Владелец, 11.10.2026: вкладка
   // «Блогеры» (внутренний ИИ-сотрудник студии, docs/ai-staff/bloggers.md) —
   // всем, кто видит раздел. Клиенты сервиса по подписке — их деньги, сроки и
   // вход поддержки в чужой кабинет (docs/ai-staff/design.md) — остаются
   // только владельцу: эту вкладку закрывает сама страница.
-  { href: "/admin/ai-staff", label: { ru: "ИИ-сотрудники", uz: "SI xodimlar", pl: "Pracownicy AI" }, roles: WITH_HEAD },
+  { href: "/admin/ai-staff", label: { ru: "ИИ-сотрудники", uz: "SI xodimlar", pl: "Pracownicy AI" }, roles: WITH_HEAD, group: "marketing" },
   // Обучение — курсы по продажам и тест по панели (владелец, 12.10.2026:
   // «Добавить курсы по продажам и тестирование по знаниям дашборда»). Всем,
   // но с выключателем: пока владелец не нажал «Включить обучение для
   // команды», раздел видит только он (SWITCHED_SECTIONS ниже).
-  { href: "/admin/learn", label: { ru: "Обучение", uz: "Ta’lim", pl: "Szkolenia" }, roles: EVERYONE },
+  { href: "/admin/learn", label: { ru: "Обучение", uz: "Ta’lim", pl: "Szkolenia" }, roles: EVERYONE, group: "team" },
   // Инструкции — последними: это справка, а не ежедневная работа. Видят все,
   // и каждый читает только про свои вкладки.
-  { href: "/admin/help", label: { ru: "Инструкции", uz: "Yo‘riqnoma", pl: "Instrukcje" }, roles: EVERYONE },
+  { href: "/admin/help", label: { ru: "Инструкции", uz: "Yo‘riqnoma", pl: "Instrukcje" }, roles: EVERYONE, group: "help" },
 ];
 
 /** Название раздела на языке панели. */
