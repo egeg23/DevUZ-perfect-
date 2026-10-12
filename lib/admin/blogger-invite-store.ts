@@ -5,6 +5,7 @@ import {
   ALREADY_ANSWERED,
   BLOGGER_INVITE,
   INVITE_MEMO,
+  INVITE_ON,
   SUMMARY_HOUR,
   accessAfterYes,
   answerLine,
@@ -71,7 +72,7 @@ async function dropNote(key: string, staffId: string): Promise<void> {
  * дошло — строка снимается, следующий проход попробует снова.
  */
 export async function sendBloggerInvites(now: Date = new Date()): Promise<number> {
-  if (!active(now) || !messageWindow(now)) return 0;
+  if (!INVITE_ON || !active(now) || !messageWindow(now)) return 0;
   const db = serviceClient();
   if (!db) return 0;
   const everyone = await people();
@@ -130,7 +131,7 @@ export async function inviteTally(): Promise<Tally> {
 
 /** Итог владельцу — один раз, с 18:00 по Ташкенту, если приглашение уже кому-то ушло. */
 export async function sendInviteSummary(now: Date = new Date()): Promise<boolean> {
-  if (!active(now) || tashkentHour(now) < SUMMARY_HOUR || !messageWindow(now)) return false;
+  if (!INVITE_ON || !active(now) || tashkentHour(now) < SUMMARY_HOUR || !messageWindow(now)) return false;
   const tally = await inviteTally();
   if (!tally.yes.length && !tally.no.length && !tally.silent.length) return false;
   let ok = false;

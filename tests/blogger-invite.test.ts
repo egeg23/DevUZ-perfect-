@@ -5,6 +5,7 @@ import { test } from "node:test";
 import {
   BLOGGER_INVITE,
   INVITE_MEMO,
+  INVITE_ON,
   INVITE_SECTION,
   accessAfterYes,
   inviteRows,
@@ -106,4 +107,11 @@ test("миграция таблицы ответов закрыта RLS", () => 
   assert.match(sql, /create table if not exists public\.team_invites/);
   assert.match(sql, /answer text check \(answer in \('yes', 'no'\)\)/);
   assert.match(sql, /enable row level security/);
+});
+
+test("рассылка выключена, пока агент «Блогеры» не готов (владелец, 12.10.2026)", () => {
+  assert.equal(INVITE_ON, false);
+  const store = read("lib/admin/blogger-invite-store.ts");
+  assert.match(store, /if \(!INVITE_ON \|\| !active\(now\) \|\| !messageWindow\(now\)\) return 0;/);
+  assert.match(store, /if \(!INVITE_ON \|\|/g);
 });
