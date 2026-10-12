@@ -7,6 +7,7 @@ import { feedStreams } from "@/lib/admin/stream-store";
 import { broadcastDuePrototypes } from "@/lib/admin/prototype-claim-store";
 import { runTaskSweep } from "@/lib/admin/task-store";
 import { sendTeamNews } from "@/lib/admin/team-news";
+import { sendBloggerInvites, sendInviteSummary } from "@/lib/admin/blogger-invite-store";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
 import { noteAutopilotTrouble, runAutopilot, sendAutopilotReport } from "@/lib/admin/autopilot-store";
@@ -292,6 +293,12 @@ async function sweep(): Promise<Response> {
   });
   after(async () => {
     await sendTeamNews(new Date()).catch((error) => console.error("объявления:", error));
+  });
+  // Приглашение «Работа с блогерами» с кнопками и итог владельцу в 18:00
+  // (lib/admin/blogger-invite-store). Каждому — один раз, не ночью.
+  after(async () => {
+    await sendBloggerInvites(new Date()).catch((error) => console.error("приглашение:", error));
+    await sendInviteSummary(new Date()).catch((error) => console.error("приглашение, итог:", error));
   });
   // Автопрогон касаний — своей очередью: до двух писем за проход, каждое до
   // минуты (проверка сайта по факту, модель), и ждать порцию и поток ему

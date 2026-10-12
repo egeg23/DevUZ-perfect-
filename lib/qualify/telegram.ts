@@ -340,6 +340,40 @@ export async function downloadBotFile(fileId: string, maxBytes = BOT_FILE_MAX_BY
     return null;
   }
 }
+/**
+ * Файл документом — например, памятка PDF принявшему приглашение
+ * (lib/admin/blogger-invite-store.ts). Загрузкой, а не ссылкой: памятка
+ * внутренняя и публичного адреса у неё нет.
+ */
+export async function sendDocument(
+  chatId: number | string,
+  file: Uint8Array<ArrayBuffer>,
+  filename: string,
+  caption?: string,
+): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return false;
+  const form = new FormData();
+  form.append("chat_id", String(chatId));
+  form.append("document", new Blob([file], { type: "application/pdf" }), filename);
+  if (caption) {
+    form.append("caption", caption);
+    form.append("parse_mode", "HTML");
+  }
+  try {
+    const response = await roadFetch(`${API}${token}/sendDocument`, {
+      method: "POST",
+      body: form,
+      signal: AbortSignal.timeout(CALL_TIMEOUT_MS * 4),
+    });
+    if (!response.ok) console.error("telegram", "sendDocument", response.status, await response.text());
+    return response.ok;
+  } catch (error) {
+    console.error("telegram", "sendDocument", error);
+    return false;
+  }
+}
+
 /** Что стоит сейчас. null — Telegram не ответил: тогда и менять не берёмся. */
 export async function getMyProfileField(field: BotProfileField, languageCode?: string): Promise<string | null> {
   const result = await callResult<Record<string, string>>(

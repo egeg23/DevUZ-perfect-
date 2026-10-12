@@ -86,6 +86,8 @@ import { OWN_DATE_PROMPT, TASK_CALLBACK, dueText, looksLikeDue, moveRows, taskRo
 import { isMove, movedDue, parseDueText, type TaskAction } from "@/lib/admin/tasks";
 import { handleAdsLogin } from "@/lib/ads/bot";
 import { sectionOn } from "@/lib/admin/section-switch";
+import { INVITE_CALLBACK, parseInviteCallback } from "@/lib/admin/blogger-invite";
+import { ALREADY_ANSWERED, answerInvite } from "@/lib/admin/blogger-invite-store";
 import {
   LEARN_CALLBACK,
   LEARN_OFF_TEXT,
@@ -1184,6 +1186,23 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
       return;
     }
     await handleCircleLang(query, parts);
+    return;
+  }
+
+  // Приглашение «Работа с блогерами»: только личка адресата, ответ — один раз
+  // (lib/admin/blogger-invite-store).
+  if (parts[0] === INVITE_CALLBACK) {
+    const cb = parseInviteCallback(parts);
+    const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+    if (!cb || !staff || chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    const result = await answerInvite(staff, cb.answer, chatId, query.message?.message_id ?? null);
+    await answerCallback(
+      query.id,
+      result === "saved" ? (cb.answer === "yes" ? "Принято" : "Ответ записан") : result === "already" ? ALREADY_ANSWERED : "Недоступно",
+    );
     return;
   }
 

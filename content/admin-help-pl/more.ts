@@ -499,6 +499,29 @@ export const moreSections: Record<string, HelpEntry> = {
           "Zgodził się i punkty odbiorców od 60: agent sam zakłada partnera w [«Partnerzy»](/admin/partners) i wysyła blogerowi link, a właściciel i kierownik dostają wiadomość w bocie. Punkty niższe albo brak zrzutów: decydujesz ty, **«Zrób partnerem»** albo **«Odmowa»**. Prosi o człowieka, specjalne warunki albo odpowiedź nie przeszła sprawdzenia: agent milknie na 12 godzin, a ty dostajesz wiadomość w bocie. Odpisałeś blogerowi sam z konta studia albo nacisnąłeś **«Prowadzę sam»**: agent też milczy 12 godzin, a **«Oddaj agentowi»** włącza go znowu. Partner zakłada się bez Telegrama: bloger nie zobaczy salda w bocie, podawaj mu je sam.",
         ],
       },
+      {
+        id: "bloggers-invite",
+        title: "Zaproszenie «Работа с блогерами» w bocie",
+        body: [
+          "Właściciel 12.10.2026 zaprosił menedżerów i kierownika do pracy z blogerami: znajdować ich, pisać pierwsi, doprowadzać do «tak» i zapisywać jako partnerów. Zaproszenie przyszło na Telegram od bota studia, raz, nie w nocy: po co (własny zarobek ponad normę kontaktów: 5% zysku netto studia od wszystkich klientów przyprowadzonego blogera przez pierwsze pół roku), co robić i gdzie. Pod nim dwa przyciski: «✅ Принять» i «✖ Отклонить».",
+          "Odpowiedź zapisuje się raz: po kliknięciu przyciski znikają, pod zaproszeniem zostaje linijka z odpowiedzią, ponowne kliknięcie odpowiada «Ответ уже записан». «✅ Принять» od razu podłącza do pracy: menedżerowi otwiera się ta sekcja, zakładka «Blogerzy», jak znacznikiem właściciela, a bot przysyła notatkę PDF z tekstami pierwszej wiadomości i odpowiedziami na zastrzeżenia. Kierownik ma sekcję otwartą i tak, dostaje tylko notatkę. «✖ Отклонить» niczego nie otwiera; jeśli zmienisz zdanie, napisz do kierownika lub właściciela.",
+        ],
+      },
+      {
+        id: "bloggers-invite-answers",
+        title: "Kto przyjął zaproszenie",
+        roles: ["admin", "head"],
+        body: {
+          admin: [
+            "Każda odpowiedź przychodzi do Ciebie w bocie linijką «Imię przyjął / odmówił» razem z bieżącym podsumowaniem: kto przyjął, kto odmówił, kto milczy. O 18:00 w dniu wysyłki podsumowanie przychodzi jeszcze raz, jedną wiadomością. Zaraz po wysyłce bot przysyła kopię zaproszenia: tekst, który poszedł do menedżerów w Twoim imieniu.",
+            "Menedżerowi, który przyjął, sekcja «Pracownicy AI» otwiera się znacznikiem w [«Zespół»](/admin/team) → «Działy». Ten sam znacznik możesz odznaczyć, jeśli trzeba zamknąć sekcję z powrotem: odpowiedź w zaproszeniu zostaje, zaproszenie nie pójdzie ponownie. W zakładce «Blogerzy» menedżer może to samo co ze znacznikiem: wysyłać pierwsze wiadomości i oznaczać odpowiedzi; ustawienia agenta, wyszukiwanie i dodawanie partnera zostają u Ciebie i kierownika.",
+          ],
+          head: [
+            "Każda odpowiedź menedżera przychodzi do Ciebie w bocie linijką «Imię przyjął / odmówił». Podsumowanie całego zespołu (kto przyjął, kto odmówił, kto milczy) dostaje właściciel o 18:00 w dniu wysyłki.",
+            "Menedżerowi, który przyjął, otwiera się zakładka «Blogerzy»: wysyła pierwsze wiadomości i oznacza odpowiedzi, a ustawienia agenta, wyszukiwanie i dodawanie partnera zostają u Ciebie i właściciela. Gdy bloger powie menedżerowi «tak», zaznacz w karcie partnera, kto go przyprowadził: bez tego nie da się naliczyć menedżerowi premii.",
+          ],
+        },
+      },
     ],
   },
 
