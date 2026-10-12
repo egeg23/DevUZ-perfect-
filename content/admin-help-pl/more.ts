@@ -503,7 +503,7 @@ export const moreSections: Record<string, HelpEntry> = {
         id: "bloggers-invite",
         title: "Zaproszenie «Работа с блогерами» w bocie",
         body: [
-          "Właściciel 12.10.2026 zaprosił menedżerów i kierownika do pracy z blogerami: znajdować ich, pisać pierwsi, doprowadzać do «tak» i zapisywać jako partnerów. Zaproszenie przyszło na Telegram od bota studia, raz, nie w nocy: po co (własny zarobek ponad normę kontaktów: 5% zysku netto studia od wszystkich klientów przyprowadzonego blogera przez pierwsze pół roku), co robić i gdzie. Pod nim dwa przyciski: «✅ Принять» i «✖ Отклонить».",
+          "Na razie nie jest wysyłane: zaproszenie pójdzie, gdy agent «Blogerzy» zacznie działać i właściciel da zgodę. Właściciel 12.10.2026 zaprosił menedżerów i kierownika do pracy z blogerami: znajdować ich, pisać pierwsi, doprowadzać do «tak» i zapisywać jako partnerów. Zaproszenie przyszło na Telegram od bota studia, raz, nie w nocy: po co (własny zarobek ponad normę kontaktów: 5% zysku netto studia od wszystkich klientów przyprowadzonego blogera przez pierwsze pół roku), co robić i gdzie. Pod nim dwa przyciski: «✅ Принять» i «✖ Отклонить».",
           "Odpowiedź zapisuje się raz: po kliknięciu przyciski znikają, pod zaproszeniem zostaje linijka z odpowiedzią, ponowne kliknięcie odpowiada «Ответ уже записан». «✅ Принять» od razu podłącza do pracy: menedżerowi otwiera się ta sekcja, zakładka «Blogerzy», jak znacznikiem właściciela, a bot przysyła notatkę PDF z tekstami pierwszej wiadomości i odpowiedziami na zastrzeżenia. Kierownik ma sekcję otwartą i tak, dostaje tylko notatkę. «✖ Отклонить» niczego nie otwiera; jeśli zmienisz zdanie, napisz do kierownika lub właściciela.",
         ],
       },
