@@ -191,3 +191,11 @@ test("тумблер меняет только своё и хранится в s
   assert.match(read("supabase/migrations/0156_nav_classic.sql"), /nav_classic boolean not null default false/);
   assert.match(read("supabase/migrations/0156_nav_classic.down.sql"), /drop column if exists nav_classic/);
 });
+
+test("меню как раньше на телефоне прокручивается только вбок, а не вверх-вниз", () => {
+  // Владелец, 13.10.2026: «Когда я переключился на старое меню, я могу его
+  // вверх вниз тянуть». Подчёркивание открытого пункта (-mb-px) выходило за
+  // строку на пиксель — теперь у строки запас и запрет вертикальной прокрутки.
+  const shell = read("components/admin/shell.tsx");
+  assert.match(shell, /className="no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden pb-px"/);
+});
