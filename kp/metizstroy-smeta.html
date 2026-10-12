@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Смета на доработку системы METIZ STROY · DevUz Studio</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* Фирменный бланк DevUz Studio: белая бумага, чёрный текст, A4, поля 20 мм.
+     Повторяет components/docs/letterhead.tsx (шапка, чёрная линия, подвал с
+     реквизитами из кода). Зелёный и янтарь — только как акценты в таблице.
+     Длинных тире и штампов ИИ в тексте нет. */
+  :root {
+    --ink:    #111111;
+    --body:   #2B2B2B;
+    --muted:  #666666;
+    --line:   #D9D9D9;
+    --line-d: #111111;
+    --green:  #15502D;
+    --green-2:#1C6B3B;
+    --amber:  #B9770F;
+    --paper-tint: #F4F7F4;
+  }
+  * { box-sizing: border-box; }
+  html { background: #c9ccc9; }
+  body {
+    margin: 0; padding: 12mm 0;
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 10.2pt; line-height: 1.55; color: var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  .sheet {
+    position: relative; width: 210mm; min-height: 297mm;
+    margin: 0 auto 10mm; padding: 15mm 20mm 20mm;
+    background: #fff; box-shadow: 0 2mm 8mm rgba(0,0,0,.28); overflow: hidden;
+  }
+
+  /* Шапка бланка */
+  .lh { display: flex; align-items: flex-start; justify-content: space-between; gap: 10mm;
+        border-bottom: 2px solid var(--line-d); padding-bottom: 3.5mm; break-inside: avoid; }
+  .lh-l { display: flex; align-items: center; gap: 3mm; }
+  .lh-logo { width: 13mm; height: 13mm; flex: 0 0 auto; }
+  .lh-name { margin: 0; font-size: 13.5pt; font-weight: 700; letter-spacing: -.01em; color: var(--ink); line-height: 1; }
+  .lh-sub { margin: 1.2mm 0 0; font-size: 8.4pt; color: var(--muted); }
+  .lh-r { text-align: right; font-size: 8.4pt; line-height: 1.5; color: var(--muted); }
+  .lh-r p { margin: 0; }
+
+  /* Заголовок документа */
+  .doc-title { margin: 5mm 0 0; text-align: center; font-size: 15pt; font-weight: 700; color: var(--ink); }
+  .doc-sub { margin: 1.5mm 0 0; text-align: center; font-size: 10pt; color: var(--muted); }
+  .doc-meta { margin: 3.5mm 0 0; display: flex; justify-content: space-between; font-size: 9.6pt; color: var(--body); }
+
+  h2 { font-size: 12.5pt; font-weight: 700; color: var(--ink); margin: 0 0 2.5mm; }
+  section { margin-top: 4mm; }
+  p { margin: 0 0 3mm; }
+  .lead { font-size: 9.8pt; line-height: 1.6; color: var(--body); max-width: 160mm; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.6pt; line-height: 1.5; }
+
+  /* Смета */
+  table { width: 100%; border-collapse: collapse; margin-top: 2mm; }
+  th { text-align: left; font-size: 7.4pt; letter-spacing: .1em; text-transform: uppercase;
+       color: var(--green-2); font-weight: 700; padding: 0 0 2mm; border-bottom: 1.5px solid var(--green-2); }
+  th.r, td.r { text-align: right; white-space: nowrap; }
+  th.usdh, td.usd { padding-left: 7mm; }
+  td { padding: 1.6mm 0; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 9.1pt; line-height: 1.35; }
+  td.num { color: var(--amber); font-weight: 700; width: 7mm; }
+  td.mod { padding-right: 5mm; }
+  td.sum { padding-left: 5mm; font-weight: 600; color: var(--ink); }
+  td.usd { padding-left: 6mm; color: var(--muted); font-size: 8.6pt; }
+  .cond-note { display: block; margin-top: .6mm; font-size: 7.8pt; color: var(--muted); }
+  tr.total td { border-top: 1.5px solid var(--line-d); border-bottom: none; padding-top: 3mm; font-size: 10pt; font-weight: 700; color: var(--ink); }
+  tr.total td.sum, tr.total td.usd { color: var(--ink); }
+  tr.discount td { border: none; padding-top: 1.5mm; font-size: 9.4pt; color: var(--green-2); font-weight: 600; }
+
+  /* Пакеты */
+  .pack { border: 1.5px solid var(--green-2); border-radius: 3px; padding: 4.5mm 6mm; margin-top: 3mm; background: var(--paper-tint); }
+  .pack h3 { margin: 0 0 1.5mm; font-size: 11pt; color: var(--ink); font-weight: 700; display: flex; justify-content: space-between; gap: 5mm; align-items: baseline; }
+  .pack .price { color: var(--green-2); white-space: nowrap; }
+  .pack p { margin: 0; font-size: 9pt; color: var(--body); }
+
+  .list { list-style: none; margin: 2mm 0 0; padding: 0; }
+  .list li { position: relative; padding: 0 0 2mm 5mm; font-size: 9.1pt; line-height: 1.45; }
+  .list li::before { content: "·"; position: absolute; left: 1mm; color: var(--amber); font-weight: 700; }
+  .list b { color: var(--ink); font-weight: 600; }
+
+  /* Подвал бланка */
+  .lh-foot { position: absolute; left: 20mm; right: 20mm; bottom: 10mm;
+             border-top: 1px solid var(--line); padding-top: 2.5mm; break-inside: avoid; }
+  .lh-foot p { margin: 0; font-size: 7.6pt; line-height: 1.5; color: var(--muted); }
+  .lh-foot b { color: var(--ink); }
+  .lh-foot .pg { margin-top: .8mm; display: flex; justify-content: space-between; letter-spacing: .06em; text-transform: uppercase; font-size: 7pt; }
+
+  @media print {
+    html, body { background: #fff; }
+    body { padding: 0; }
+    .sheet { margin: 0; box-shadow: none; break-after: page; }
+    .sheet:last-child { break-after: auto; }
+  }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="lg-grad" x1="0" y1="-1" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B9BFF"/>
+      <stop offset="0.55" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#22F0A0"/>
+    </linearGradient>
+    <mask id="lg-cut">
+      <rect x="-112" y="-112" width="224" height="224" fill="#fff"/>
+      <path d="M-22 -34 L-58 0 L-22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M22 -34 L58 0 L22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+</svg>
+
+<!-- Лист 1 -->
+<section class="sheet">
+  <header class="lh">
+    <div class="lh-l">
+      <svg class="lh-logo" viewBox="-112 -112 224 224" aria-hidden="true"><path d="M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z" fill="url(#lg-grad)" mask="url(#lg-cut)"/><rect x="-5" y="-27" width="10" height="54" rx="5" fill="#e8b14c"/></svg>
+      <div><p class="lh-name">DevUz Studio</p><p class="lh-sub">Разработка сайтов, приложений и ИИ-продуктов · Ташкент</p></div>
+    </div>
+    <div class="lh-r">
+      <p>devuz.studio</p>
+      <p>t.me/Devuz_studio_bot</p>
+      <p>Республика Узбекистан, г. Ташкент, улица Шота Руставели, 138</p>
+    </div>
+  </header>
+
+  <h1 class="doc-title">Смета на доработку системы METIZ STROY</h1>
+  <p class="doc-sub">Автоматизация кабинета и работа с клиентской базой</p>
+  <div class="doc-meta"><span>Ташкент</span><span>12 октября 2026</span></div>
+
+  <section>
+    <p class="lead">
+      Мы встраиваемся отдельным модулем рядом с вашей рабочей системой, по
+      согласованию с вашим айтишником, и ничего в вашем кабинете не
+      переписываем. Можно взять любой набор модулей или начать с пакета
+      «Быстрый старт». Цены указаны по нижней границе рынка Ташкента.
+    </p>
+  </section>
+
+  <section>
+    <h2>Модули и стоимость</h2>
+    <table>
+      <thead>
+        <tr><th>№</th><th>Модуль</th><th class="r">Цена, сум</th><th class="r usdh">$</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">0</td><td class="mod">Связка с вашей системой и Telegram-бот<span class="cond-note">основа, без неё остальные модули не работают</span></td><td class="r sum">9 954 000</td><td class="r usd">840 $</td></tr>
+        <tr><td class="num">1</td><td class="mod">Помощник по долгам и прогноз поступлений</td><td class="r sum">9 954 000</td><td class="r usd">840 $</td></tr>
+        <tr><td class="num">2</td><td class="mod">Продление аренды в один тап</td><td class="r sum">4 266 000</td><td class="r usd">360 $</td></tr>
+        <tr><td class="num">3</td><td class="mod">Заявка превращается в готовое предложение за минуту</td><td class="r sum">8 532 000</td><td class="r usd">720 $</td></tr>
+        <tr><td class="num">4</td><td class="mod">Календарь и карта вашего парка техники</td><td class="r sum">9 954 000</td><td class="r usd">840 $</td></tr>
+        <tr><td class="num">5</td><td class="mod">Новые стройки, новые клиенты менеджерам</td><td class="r sum">8 532 000</td><td class="r usd">720 $</td></tr>
+        <tr><td class="num">6</td><td class="mod">Брифинг в 08:00 и отчёт в 18:00 руководителю</td><td class="r sum">3 555 000</td><td class="r usd">300 $</td></tr>
+        <tr><td class="num">7</td><td class="mod">Бот «спросить своими словами»</td><td class="r sum">7 110 000</td><td class="r usd">600 $</td></tr>
+        <tr><td class="num">8</td><td class="mod">Звонки сами становятся заявками и оценка разговора<span class="cond-note">при телефонии с записью звонков</span></td><td class="r sum">8 532 000</td><td class="r usd">720 $</td></tr>
+        <tr><td class="num">9</td><td class="mod">Кабинет клиента в Telegram и оплата Payme или Click<span class="cond-note">при подключённой онлайн-оплате</span></td><td class="r sum">19 908 000</td><td class="r usd">1 680 $</td></tr>
+        <tr><td class="num">10</td><td class="mod">Сервис и обслуживание техники по расписанию</td><td class="r sum">7 110 000</td><td class="r usd">600 $</td></tr>
+        <tr><td class="num">11</td><td class="mod">Документы каждый месяц и электронный документооборот<span class="cond-note">если у вашего оператора ЭДО есть открытый доступ для подключения (у Didox и UDOCS он есть)</span></td><td class="r sum">8 532 000</td><td class="r usd">720 $</td></tr>
+        <tr><td class="num">12</td><td class="mod">Подсказка «кому звонить сегодня»</td><td class="r sum">4 266 000</td><td class="r usd">360 $</td></tr>
+        <tr><td class="num">13</td><td class="mod">Поздравления и напоминания по базе 3 000 контактов</td><td class="r sum">4 977 000</td><td class="r usd">420 $</td></tr>
+        <tr class="total"><td></td><td class="mod">Итого по всем модулям</td><td class="r sum">115 182 000</td><td class="r usd">9 720 $</td></tr>
+        <tr class="discount"><td></td><td class="mod">Весь комплекс сразу, со скидкой 10 %</td><td class="r">≈ 103 700 000 сум</td><td class="r">8 750 $</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="margin-top:3mm">Курс в расчёте: 11 850 сум за 1 доллар. Итоговую сумму в сумах фиксируем на день счёта.</p>
+  </section>
+
+  <footer class="lh-foot">
+    <p><b>ИП MAKSIMOV EGOR ANDREEVICH</b> · Республика Узбекистан, г. Ташкент, улица Шота Руставели, 138 · ПИНФЛ 32303946570039</p>
+    <p class="pg"><span>Смета на доработку системы METIZ STROY</span><span>DevUz Studio · 1 / 2</span></p>
+  </footer>
+</section>
+
+<!-- Лист 2 -->
+<section class="sheet">
+  <header class="lh">
+    <div class="lh-l">
+      <svg class="lh-logo" viewBox="-112 -112 224 224" aria-hidden="true"><path d="M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z" fill="url(#lg-grad)" mask="url(#lg-cut)"/><rect x="-5" y="-27" width="10" height="54" rx="5" fill="#e8b14c"/></svg>
+      <div><p class="lh-name">DevUz Studio</p><p class="lh-sub">Разработка сайтов, приложений и ИИ-продуктов · Ташкент</p></div>
+    </div>
+    <div class="lh-r">
+      <p>devuz.studio</p>
+      <p>t.me/Devuz_studio_bot</p>
+      <p>Республика Узбекистан, г. Ташкент, улица Шота Руставели, 138</p>
+    </div>
+  </header>
+
+  <section style="margin-top:7mm">
+    <h2>С чего начать и сколько это займёт</h2>
+    <div class="pack">
+      <h3>Пакет «Быстрый старт» <span class="price">32 706 000 сум · 2 760 $</span></h3>
+      <p>Модули 0, 1, 2, 6 и 13: основа со связкой и ботом, помощник по долгам, продление аренды, брифинг руководителю и поздравления по базе. Срок 3-4 недели. Это самое дешёвое и заметное по отдаче.</p>
+    </div>
+    <div class="pack">
+      <h3>Весь комплекс <span class="price">≈ 103 700 000 сум · 8 750 $</span></h3>
+      <p>Все модули со скидкой 10 %, поэтапно за 2,5-3 месяца. Порядок этапов согласуем так, чтобы отдача шла с первых недель.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Что оплачивается отдельно, по факту</h2>
+    <ul class="list">
+      <li><b>SMS</b> по тарифу вашего SMS-шлюза.</li>
+      <li><b>Сервер</b> для работы модулей, примерно 15-30 $ в месяц.</li>
+      <li><b>Работа ИИ</b> при таких объёмах, примерно 10-40 $ в месяц.</li>
+      <li><b>GPS-трекеры</b> к модулю «Карта парка», по желанию: оборудование ваше, подключение 360 $.</li>
+      <li><b>Голос</b> в утреннем брифинге, 100 $ к модулю.</li>
+      <li><b>Поддержка после запуска</b>, 1 422 000 сум в месяц (120 $).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Условия</h2>
+    <ul class="list">
+      <li>Модуль 0 (связка и бот) нужен для всех остальных: без него они не работают.</li>
+      <li>Модуль 8 (звонки в заявки) подключается при телефонии с записью звонков.</li>
+      <li>Модуль 11 (документы и ЭДО) подключается, если у вашего оператора электронного документооборота есть открытый доступ для интеграции.</li>
+      <li>Все модули работают при доступе к вашим данным, по согласованию с вашим айтишником.</li>
+    </ul>
+    <p class="small muted" style="margin-top:4mm">Смета ознакомительная и не является офертой. Точный состав и сроки фиксируем в договоре после согласования.</p>
+  </section>
+
+  <footer class="lh-foot">
+    <p><b>ИП MAKSIMOV EGOR ANDREEVICH</b> · Республика Узбекистан, г. Ташкент, улица Шота Руставели, 138 · ПИНФЛ 32303946570039</p>
+    <p class="pg"><span>Смета на доработку системы METIZ STROY</span><span>DevUz Studio · 2 / 2</span></p>
+  </footer>
+</section>
+
+</body>
+</html>
