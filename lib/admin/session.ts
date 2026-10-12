@@ -37,6 +37,8 @@ export type Staff = {
   role: Role;
   /** Язык панели — сотрудник выбирает сам, переключателем в шапке. */
   panel_locale: PanelLocale;
+  /** Меню как раньше — одной строкой, без групп. Тумблер «Новое меню» в шапке, по умолчанию выключен. */
+  nav_classic?: boolean;
   /** Галочки владельца по разделам поверх роли (roles.ts, opens). */
   section_access?: SectionAccess;
   /** Разделы, которые владелец ещё не включил для команды (roles.ts, SWITCHED_SECTIONS). */
@@ -211,13 +213,18 @@ export async function destroySession(token: string): Promise<void> {
  * запрещён осознанно: добавленная завтра колонка поедет в панель сама, без
  * решения о том, можно ли её там показывать.
  */
-const STAFF_COLUMNS = "id, telegram_user_id, username, display_name, role, panel_locale, section_access";
+const STAFF_COLUMNS = "id, telegram_user_id, username, display_name, role, panel_locale, nav_classic, section_access";
 
 /** Строка из базы — в сотрудника. Неизвестный язык читается как русский. */
 function toStaff(data: unknown): Staff | null {
   if (!data) return null;
   const row = data as Staff;
-  return { ...row, panel_locale: panelLocale(row.panel_locale), section_access: sectionAccess(row.section_access) };
+  return {
+    ...row,
+    panel_locale: panelLocale(row.panel_locale),
+    nav_classic: row.nav_classic === true,
+    section_access: sectionAccess(row.section_access),
+  };
 }
 
 export async function staffById(id: string): Promise<Staff | null> {
@@ -269,6 +276,18 @@ export async function findStaffByTelegram(
     if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   return { staff: null, offline: true };
+}
+
+/** Новое меню или как раньше. Меняет только сам сотрудник — себе. */
+export async function setStaffNavClassic(staffId: string, classic: boolean): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { error } = await db.from("staff").update({ nav_classic: classic }).eq("id", staffId);
+  if (error) {
+    console.error("admin: не сменил меню панели", error);
+    return false;
+  }
+  return true;
 }
 
 /** Сменить язык панели. Меняет только сам сотрудник — себе. */

@@ -2,13 +2,14 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { signOut } from "@/app/admin/actions";
-import { ROLE_BADGE } from "@/lib/admin/roles";
+import { ROLE_BADGE, navOf } from "@/lib/admin/roles";
 import { findable, menuOf } from "@/lib/admin/nav";
 import type { Staff } from "@/lib/admin/session";
 import { pick } from "@/lib/admin/i18n";
 import { navGroupDict, shellDict } from "@/content/admin-panel/shell";
 import { SectionHelpLink } from "@/components/admin/help-link";
-import { NavMenu, type NavMenuGroup } from "@/components/admin/nav-menu";
+import { AdminNavLink } from "@/components/admin/nav-link";
+import { NavMenu, NavToggle, type NavMenuGroup } from "@/components/admin/nav-menu";
 import { LocaleSwitch } from "@/components/admin/locale-switch";
 import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { UsageBeacon } from "@/components/admin/usage-beacon";
@@ -81,8 +82,27 @@ export function AdminShell({
           {/* Меню группами: двадцать с лишним пунктов в строку владелец
               называл «с ума пойдешь». Открытая группа и раздел подсвечены —
               по адресу видно, где ты, только в строке браузера, а её на
-              телефоне нет. */}
-          <NavMenu groups={menu} />
+              телефоне нет. Тумблер «Новое меню» возвращает меню как раньше
+              (staff.nav_classic) — каждый выбирает себе сам. */}
+          {staff.nav_classic ? (
+            <div className="mx-auto flex max-w-7xl items-start gap-4 px-4 pb-2.5 sm:px-5 sm:pb-3">
+              {/* Как раньше — одной строкой с прокруткой, а не переносом:
+                  двенадцать пунктов в четыре ряда занимали на телефоне треть
+                  экрана, и содержимое страницы начиналось за сгибом. */}
+              <nav aria-label={t.nav} className="no-scrollbar min-w-0 flex-1 overflow-x-auto">
+                <div className="flex w-max gap-4 text-sm sm:w-auto sm:flex-wrap">
+                  {navOf(staff).map((item) => (
+                    <AdminNavLink key={item.href} href={item.href} quiet={item.roles.length === 1}>
+                      {item.label[locale]}
+                    </AdminNavLink>
+                  ))}
+                </div>
+              </nav>
+              <NavToggle classic className="pt-0.5" />
+            </div>
+          ) : (
+            <NavMenu groups={menu} />
+          )}
         </header>
 
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">{children}</main>

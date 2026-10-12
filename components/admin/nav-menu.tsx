@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+import { setNavClassic } from "@/app/admin/actions";
 import { AdminNavLink } from "@/components/admin/nav-link";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { shellDict } from "@/content/admin-panel/shell";
@@ -145,13 +146,14 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
             </div>
           );
         })}
+        <NavToggle classic={false} className="ml-auto" />
         {/* На узком экране — только значок: длинные названия групп по-польски
             и по-узбекски иначе выталкивают кнопку за край. */}
         <button
           type="button"
           onClick={() => setState({ kind: "finder", path: pathname })}
           title={t.findSection}
-          className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-line px-2.5 py-1.5 text-faint transition hover:border-muted hover:text-text lg:py-1"
+          className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-line px-2.5 py-1.5 text-faint transition hover:border-muted hover:text-text lg:py-1"
         >
           <SearchIcon />
           <span className="hidden lg:inline">{t.findSection}</span>
@@ -171,6 +173,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
           <span>{t.menu}</span>
           {currentItem ? <span className="truncate text-green">· {currentItem.label}</span> : null}
         </button>
+        <NavToggle classic={false} className="ml-auto" />
       </div>
 
       {opened?.kind === "finder" ? (
@@ -200,6 +203,37 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
         </Overlay>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Тумблер «Новое меню». Владелец, 13.10.2026: новое меню — всем, «но также
+ * сделай возможность оставить как сейчас тумблером». Выбор пишется в
+ * `staff.nav_classic` — один на человека, на всех его устройствах.
+ */
+export function NavToggle({ classic, className = "" }: { classic: boolean; className?: string }) {
+  const t = usePanelDict(shellDict);
+  return (
+    <form action={setNavClassic} className={`shrink-0 ${className}`}>
+      <input type="hidden" name="classic" value={classic ? "0" : "1"} />
+      <button
+        type="submit"
+        role="switch"
+        aria-checked={!classic}
+        title={t.navNewHint}
+        className="flex items-center gap-2 whitespace-nowrap text-xs text-faint transition hover:text-text"
+      >
+        <span>{t.navNew}</span>
+        <span
+          aria-hidden
+          className={`relative inline-block h-4 w-7 rounded-full transition-colors ${classic ? "bg-line" : "bg-green/70"}`}
+        >
+          <span
+            className={`absolute top-0.5 h-3 w-3 rounded-full bg-text transition-all ${classic ? "left-0.5" : "left-[0.875rem]"}`}
+          />
+        </span>
+      </button>
+    </form>
   );
 }
 

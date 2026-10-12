@@ -8,7 +8,7 @@ import { record } from "@/lib/admin/audit";
 import { currentStaff, requestIp, requireStaff } from "@/lib/admin/guard";
 import { addManualLead } from "@/lib/admin/lead-add";
 import { PANEL_LANG_COOKIE, isPanelLocale } from "@/lib/admin/i18n";
-import { SESSION_COOKIE, destroySession, setStaffLocale } from "@/lib/admin/session";
+import { SESSION_COOKIE, destroySession, setStaffLocale, setStaffNavClassic } from "@/lib/admin/session";
 
 /**
  * Выход. Сессия удаляется из базы, а не только кука из браузера: иначе
@@ -49,6 +49,20 @@ export async function setPanelLocale(formData: FormData) {
     maxAge: 365 * 24 * 3600,
   });
   // Весь каркас: язык меняет и шапку, и страницу, которая сейчас открыта.
+  revalidatePath("/admin", "layout");
+}
+
+/**
+ * Тумблер «Новое меню» в шапке: группы и «Найти раздел» — или меню как
+ * раньше, одной строкой. Владелец, 13.10.2026: «сделай возможность оставить
+ * как сейчас тумблером». Себе, из сессии — как язык панели.
+ */
+export async function setNavClassic(formData: FormData) {
+  const staff = await currentStaff();
+  if (!staff) redirect("/admin/login");
+  const classic = formData.get("classic") === "1";
+  if (classic === Boolean(staff.nav_classic)) return;
+  if (!(await setStaffNavClassic(staff.id, classic))) return;
   revalidatePath("/admin", "layout");
 }
 

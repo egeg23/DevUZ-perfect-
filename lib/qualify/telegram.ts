@@ -412,6 +412,15 @@ export async function setMyProfilePhoto(jpeg: Uint8Array<ArrayBuffer>): Promise<
   }
 }
 
+/**
+ * Картинка с подписью — например, скриншот в объявлении команде
+ * (lib/admin/team-news.ts). По адресу, а не загрузкой: картинка лежит в
+ * public/ и открыта и так. Подпись — до 1024 знаков (предел Telegram).
+ */
+export async function sendPhoto(chatId: number | string, photoUrl: string, caption: string): Promise<boolean> {
+  return call("sendPhoto", { chat_id: chatId, photo: photoUrl, caption, parse_mode: "HTML" });
+}
+
 export async function sendMessage(chatId: number | string, text: string): Promise<boolean> {
   return call("sendMessage", {
     chat_id: chatId,

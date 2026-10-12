@@ -152,3 +152,42 @@ test("Ctrl+K — по коду клавиши, чтобы работал и на
 declare global {
   var __pathname: string | undefined;
 }
+
+/**
+ * Тумблер «Новое меню». Владелец, 13.10.2026: новое меню — всем, «но также
+ * сделай возможность оставить как сейчас тумблером».
+ */
+test("тумблер: по умолчанию новое меню, выключен — меню одной строкой, как раньше", () => {
+  globalThis.__pathname = "/admin/contracts";
+  const fresh = renderToStaticMarkup(createElement(AdminShell, { staff: staff("ru", "manager"), children: "x" }));
+  assert.match(fresh, /role="switch" aria-checked="true"/);
+  assert.match(fresh, /aria-haspopup="true"/);
+  assert.match(fresh, /name="classic" value="1"/, "щелчок по включённому — выключает");
+
+  const classic = renderToStaticMarkup(
+    createElement(AdminShell, { staff: { ...staff("ru", "admin"), nav_classic: true }, children: "x" }),
+  );
+  assert.match(classic, /role="switch" aria-checked="false"/);
+  assert.match(classic, /name="classic" value="0"/);
+  assert.doesNotMatch(classic, /aria-haspopup/, "в старом меню групп нет");
+  // Все разделы — в одну строку, тем же набором, что navOf.
+  const links = [...classic.matchAll(/<nav[^>]*>([\s\S]*?)<\/nav>/g)][0][1].match(/href="[^"]+"/g) ?? [];
+  assert.equal(links.length, navOf({ role: "admin" }).length);
+  for (const locale of ["uz", "pl"] as const) {
+    const html = renderToStaticMarkup(
+      createElement(AdminShell, { staff: { ...staff(locale, "manager"), nav_classic: true }, children: "x" }),
+    );
+    assert.match(html, locale === "uz" ? />Yangi menyu</ : />Nowe menu</);
+  }
+});
+
+test("тумблер меняет только своё и хранится в staff, колонка — с откатом", () => {
+  const actions = read("app/admin/actions.ts");
+  const fn = actions.slice(actions.indexOf("export async function setNavClassic"));
+  assert.match(fn, /const staff = await currentStaff\(\);/);
+  assert.match(fn, /setStaffNavClassic\(staff\.id, classic\)/);
+  assert.doesNotMatch(fn.slice(0, fn.indexOf("\n}\n")), /formData\.get\("(staff|id)/);
+  assert.match(read("lib/admin/session.ts"), /STAFF_COLUMNS = "[^"]*nav_classic/);
+  assert.match(read("supabase/migrations/0156_nav_classic.sql"), /nav_classic boolean not null default false/);
+  assert.match(read("supabase/migrations/0156_nav_classic.down.sql"), /drop column if exists nav_classic/);
+});

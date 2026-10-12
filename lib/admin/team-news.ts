@@ -3,7 +3,8 @@ import type { Role } from "@/lib/admin/roles";
 import { periodReport } from "@/lib/admin/period-report-store";
 import { STREAM_ON } from "@/lib/admin/stream";
 import { messageWindow } from "@/lib/admin/tasks";
-import { sendKeyboard, sendMessage } from "@/lib/qualify/telegram";
+import { sendKeyboard, sendMessage, sendPhoto } from "@/lib/qualify/telegram";
+import { absoluteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -45,6 +46,11 @@ export type News = {
    * у сообщений бота о задачах: всё, кроме ночи 23:00–07:00.
    */
   window?: (now: Date) => boolean;
+  /**
+   * Картинка к объявлению — путь в public/ («/team-news/….png»). Тогда текст
+   * уходит подписью под ней и должен влезть в 1024 знака.
+   */
+  photo?: string;
 };
 
 /** Объявления уходят по будням с 09:00 до 19:00 по Ташкенту — не ночью. */
@@ -369,6 +375,29 @@ export function ownerNewsOct12Preview(): string {
   ].join("\n");
 }
 
+/**
+ * Меню панели группами — команде, 13.10 в 08:00 по Ташкенту, со скриншотом.
+ *
+ * Владелец, 13.10.2026: «Короткое уведомление в тг для команды должно уйти
+ * в 8 утра по Ташкенту, что меню сгруппировали и можно оставить старую
+ * версию, если удобно, а можно новой пользоваться через тумблер. Желательно
+ * показать скриншотом».
+ */
+export function navMenuNews(): string {
+  return [
+    "<b>Меню панели сгруппировали.</b>",
+    "",
+    "Разделы теперь собраны в группы: «Продажи», «Проекты и деньги» и другие. Наведите на группу — откроется список. Нужен раздел быстро — «Найти раздел» или Ctrl+K: наберите «дог», Enter — и вы в «Договорах». На телефоне всё в одной кнопке «Меню».",
+    "",
+    "Удобнее по-старому — выключите тумблер «Новое меню» справа в строке меню, и всё станет как раньше. Включите снова, когда захотите. Выбор у каждого свой.",
+  ].join("\n");
+}
+
+/** С 08:00 по Ташкенту — так просил владелец; ночью и до восьми не шлём. */
+export function navMenuNewsWindow(now: Date): boolean {
+  return tashkentHour(now) >= 8 && messageWindow(now);
+}
+
 export const NEWS: readonly News[] = [
   {
     id: "2026-09-29-touches",
@@ -499,6 +528,16 @@ export const NEWS: readonly News[] = [
     window: messageWindow,
     copyNote: "<i>Копия: это ушло руководителю и менеджерам от вашего имени.</i>",
   },
+  {
+    id: "2026-10-13-nav-menu",
+    from: "2026-10-13",
+    until: "2026-10-16",
+    roles: ["head", "manager"],
+    text: navMenuNews,
+    window: navMenuNewsWindow,
+    photo: "/team-news/nav-menu.png",
+    copyNote: "<i>Копия: это ушло руководителю и менеджерам.</i>",
+  },
 ];
 
 type Row = { id: string; role: Role; chat: number };
@@ -535,7 +574,9 @@ export async function sendTeamNews(now: Date = new Date(), list: readonly News[]
       const text = await news.text(reader.role, now);
       const ok = !text
         ? false
-        : news.streamKey
+        : news.photo
+          ? await sendPhoto(reader.chat, absoluteUrl(news.photo), text)
+          : news.streamKey
           ? await sendKeyboard(reader.chat, text, [[STREAM_ON]])
           : await sendMessage(reader.chat, text);
       if (ok) {
@@ -555,7 +596,10 @@ export async function sendTeamNews(now: Date = new Date(), list: readonly News[]
         "",
         head,
       ].join("\n");
-      if (!head || !(await sendMessage(owner.chat, copy))) {
+      const delivered =
+        Boolean(head) &&
+        (news.photo ? await sendPhoto(owner.chat, absoluteUrl(news.photo), copy) : await sendMessage(owner.chat, copy));
+      if (!delivered) {
         await db.from("team_news_sent").delete().eq("news_id", news.id).eq("staff_id", owner.id);
       }
     }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { sectionOfHref } from "@/lib/admin/help";
 
@@ -14,6 +14,10 @@ import { sectionOfHref } from "@/lib/admin/help";
  * рисует сервер, а он не знает адреса страницы, — поэтому пункт клиентский:
  * раздел определяется по адресу так же, как для «Как пользоваться разделом»
  * (карточка лида — это раздел «Лиды», карточка проекта — «Проекты»).
+ *
+ * В меню «как раньше» (тумблер «Новое меню» выключен) строка на телефоне
+ * прокручивается вбок, и открытый раздел мог оказаться за краем, —
+ * активный пункт строки сам доезжает в видимую часть.
  *
  * Тот же пункт — строкой в выпадающем списке группы и в меню телефона
  * (`variant="item"`, components/admin/nav-menu.tsx).
@@ -35,9 +39,15 @@ export function AdminNavLink({
   const pathname = usePathname();
   const active = sectionOfHref(pathname ?? "") === href;
   const tone = quiet ? "text-faint" : "text-muted";
+  const ref = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (active && variant === "tab") ref.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [active, variant]);
 
   return (
     <Link
+      ref={ref}
       href={href}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
