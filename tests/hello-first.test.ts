@@ -145,9 +145,12 @@ test("ответ на приветствие: по-русски — кружок
   // Два быстрых ответа подряд не ставят ничего дважды.
   assert.match(hello, /\.update\(\{ replied_at: at, pitch_at: at \}\)\s*\.eq\("id", id\)\s*\.is\("pitch_at", null\)/);
   assert.match(hello, /const lang = replyLang\(body, sentLang\);/);
-  // Русский ответ — только кружок, и сразу выход: письма за ним нет.
-  const ru = between(hello, "if (lang === CIRCLE_LANG) {", "const queued = await queueHelloLetter(");
+  // Русский или узбекский ответ — только кружок на этом языке, и сразу
+  // выход: письма за ним нет.
+  const ru = between(hello, "const circle = circleLangFor(lang);", "const queued = await queueHelloLetter(");
+  assert.match(ru, /if \(circle\) \{/);
   assert.match(ru, /kind: "circle"/);
+  assert.match(ru, /body: circleBody\(circle\)/);
   assert.match(ru, /send_after: new Date\(now \+ CIRCLE_AFTER_MS\)/);
   assert.match(ru, /return \{ matched: true, host, verdict: "hello" \};/);
   assert.doesNotMatch(ru, /kind: "text"/);
@@ -224,7 +227,7 @@ test("кружок загружают в «Аккаунтах», в «Избра
   assert.match(place, /new Api\.DocumentAttributeVideo\(\{\s*roundMessage: true/);
   // Флаг videoNote в teleproto добавляет «голосовое» — кружок стал бы аудио.
   assert.doesNotMatch(place, /videoNote/);
-  assert.match(read("app/admin/accounts/page.tsx"), /<CircleUpload have=/);
+  assert.match(read("app/admin/accounts/page.tsx"), /<CircleUpload have=\{Boolean\(slot\.file\)\} lang=\{slot\.lang\} \/>/);
 });
 
 test("очередь ответов: пауза, кружок раньше письма, кружок без пересылки", () => {
@@ -232,6 +235,7 @@ test("очередь ответов: пауза, кружок раньше пи�
   const next = between(talk, "export async function nextReply(", "export async function markReplySent(");
   assert.match(next, /row\.send_after && Date\.parse\(String\(row\.send_after\)\) > now/);
   assert.match(next, /kind: row\.kind === "circle" \? "circle" : "text"/);
+  assert.match(next, /lang: circleLangOf\(String\(row\.body\)\)/);
 
   const runner = read("scout/runner.mjs");
   assert.match(runner, /filter: new Api\.InputMessagesFilterRoundVideo\(\)/);
@@ -239,10 +243,11 @@ test("очередь ответов: пауза, кружок раньше пи�
   assert.match(runner, /await toPeer\(reply, \(to\) => client\.sendFile\(to, \{ file: circle\.media \}\)\)/);
   assert.match(runner, /await toPeer\(reply, \(to\) => client\.sendMessage\(to, \{ message: reply\.body \}\)\)/);
   // Нет кружка или он не ушёл — вместо него письмо, разговор человеку не передаётся.
-  assert.match(runner, /await markCircleSkipped\(reply\.id, NO_CIRCLE\)/);
+  assert.match(runner, /const circle = \(await savedCircles\(\)\)\[reply\.lang\];/);
+  assert.match(runner, /await markCircleSkipped\(reply\.id, noCircle\(reply\.lang\)\)/);
   assert.match(runner, /if \(reply\.kind === "circle"\) await markCircleSkipped\(reply\.id, `Кружок не ушёл: \$\{why\}`\);/);
   // Панель видит, есть ли кружок в «Избранном».
-  assert.match(runner, /await recordCircle\(key, circle \? Number\(circle\.date\) \* 1000 : null\)/);
+  assert.match(runner, /await recordCircle\(key, \{ savedAt: at\(circles\.ru\), uzSavedAt: at\(circles\.uz\), uzIds \}\)/);
   assert.match(read("app/admin/accounts/page.tsx"), /circleStates\(\)/);
 });
 

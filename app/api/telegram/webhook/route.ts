@@ -67,7 +67,18 @@ import {
 } from "@/lib/admin/write-myself";
 import { CLOSE_TEXT, isCloseReason } from "@/lib/admin/touch-close";
 import { streamCommand } from "@/lib/admin/stream";
-import { changesCircle, circleBotReply, circleFromMessage, saveCircleFromBot } from "@/lib/admin/circle-bot";
+import {
+  CIRCLE_CALLBACK,
+  changesCircle,
+  circleBotReply,
+  circleChoice,
+  circleFromMessage,
+  circleLangButtons,
+  circleLangQuestion,
+  holdCircle,
+  saveCircleFromBot,
+  takeCircle,
+} from "@/lib/admin/circle-bot";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
 import { actOnTask, afterAct, awaitDate, showTask, taskAwaitingDate, taskById, type ActResult } from "@/lib/admin/task-store";
 import { OWN_DATE_PROMPT, TASK_CALLBACK, dueText, looksLikeDue, moveRows, taskRows } from "@/lib/admin/task-bot";
@@ -100,6 +111,8 @@ type Update = {
   /** Номер обновления. У повтора он тот же — по нему повтор и опознаётся. */
   update_id?: number;
   message?: {
+    /** Номер сообщения в чате: по нему кружок ждёт кнопки языка (circle-bot, holdCircle). */
+    message_id?: number;
     text?: string;
     /** Когда человек отправил, по часам Telegram — по нему видно, сколько шло обновление. */
     date?: number;
@@ -272,10 +285,52 @@ async function handleCircleUpload(message: NonNullable<Update["message"]>): Prom
     await sendMessage(message.chat.id, "Кружок для касаний меняют владелец и руководитель. Если записали новый — перешлите его им.");
     return true;
   }
-  await sendMessage(message.chat.id, "Принял кружок, сохраняю…");
-  const result = await saveCircleFromBot(circle, staff);
-  await sendMessage(message.chat.id, esc(circleBotReply(result)));
+  // Язык кружка по видео не узнать — спрашиваем кнопками, кружок ждёт
+  // ответа в базе (lib/admin/circle-bot.ts, holdCircle).
+  const messageId = message.message_id ?? 0;
+  if (!messageId || !(await holdCircle(message.chat.id, messageId, circle))) {
+    await sendMessage(message.chat.id, esc(circleBotReply({ ok: false, reason: "save" })));
+    return true;
+  }
+  await sendWithButtons(message.chat.id, esc(circleLangQuestion), circleLangButtons(messageId));
   return true;
+}
+
+/**
+ * Нажата кнопка языка под присланным кружком: сохраняем его русским или
+ * узбекским. Кружок забирается из ожидания один раз — второе нажатие
+ * ничего не сохраняет.
+ */
+async function handleCircleLang(query: NonNullable<Update["callback_query"]>, parts: string[]): Promise<void> {
+  const chatId = query.message?.chat.id;
+  // Кнопка-статус «✅ Русский» под уже сохранённым кружком.
+  if (parts[1] === "done") {
+    await answerCallback(query.id, "Кружок уже сохранён");
+    return;
+  }
+  const choice = circleChoice(parts);
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (chatId === undefined || !choice || !staff || !changesCircle(staff)) {
+    await answerCallback(query.id, "Недоступно");
+    return;
+  }
+  const circle = await takeCircle(chatId, choice.messageId);
+  if (!circle) {
+    await answerCallback(query.id, "Этот кружок уже сохранён или устарел — перешлите его ещё раз");
+    return;
+  }
+  await answerCallback(query.id, "Сохраняю…");
+  const label = choice.lang === "uz" ? "🇺🇿 O‘zbekcha" : "🇷🇺 Русский";
+  if (query.message?.message_id) {
+    await setButtons(chatId, query.message.message_id, [[{ text: `${label} — сохраняю…`, callback_data: `${CIRCLE_CALLBACK}:done` }]]);
+  }
+  const result = await saveCircleFromBot(circle, staff, choice.lang);
+  if (query.message?.message_id) {
+    await setButtons(chatId, query.message.message_id, [
+      [{ text: result.ok ? `✅ ${label}` : `⚠️ ${label} — не сохранён`, callback_data: `${CIRCLE_CALLBACK}:done` }],
+    ]);
+  }
+  await sendMessage(chatId, esc(circleBotReply(result, choice.lang)));
 }
 
 /** Личность для партнёрской программы: без числового id её нет. */
@@ -1004,6 +1059,16 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
 
   const chatId = query.message?.chat.id;
   const parts = query.data.split(":");
+
+  // Язык присланного кружка: только личка того, кто его прислал.
+  if (parts[0] === CIRCLE_CALLBACK) {
+    if (chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    await handleCircleLang(query, parts);
+    return;
+  }
 
   // Напоминания: личка сотрудника, и только своя.
   if (parts[0] === "rem") {

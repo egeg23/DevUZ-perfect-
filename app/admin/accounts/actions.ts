@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { isCircleLang } from "@/lib/admin/circle-store";
 import { circleDiscard, circleStart, saveCircle } from "@/lib/admin/circle-upload";
 import { requestIp, requireRole } from "@/lib/admin/guard";
 import { promoChunk, type PromoFail, type StartResult } from "@/lib/partners/promo";
@@ -115,12 +116,15 @@ export async function circleSaveAction(input: {
   width: number | null;
   height: number | null;
   duration: number | null;
+  /** Русский или узбекский кружок; что-то другое — русский, как до узбекского. */
+  lang?: string;
 }): Promise<{ ok: true } | PromoFail> {
   const staff = await manage();
   const result = await saveCircle(
     { uploadId: String(input?.uploadId ?? ""), width: num(input?.width), height: num(input?.height), duration: num(input?.duration) },
     staff,
     await requestIp(),
+    isCircleLang(input?.lang) ? input.lang : "ru",
   );
   if (result.ok) revalidatePath("/admin/accounts");
   return result;

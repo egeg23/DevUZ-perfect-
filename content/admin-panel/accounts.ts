@@ -95,14 +95,25 @@ export const accountsDict = defineDict({
    * (lib/admin/circle-store.ts).
    */
   circleYes: {
-    ru: (when: string) => `Кружок для писем: есть, сохранён ${when}`,
-    uz: (when: string) => `Xatlar uchun dumaloq video: bor, ${when} da saqlangan`,
-    pl: (when: string) => `Kółko do wiadomości: jest, zapisane ${when}`,
+    ru: (when: string) => `Русский кружок: есть, сохранён ${when}`,
+    uz: (when: string) => `Ruscha dumaloq video: bor, ${when} da saqlangan`,
+    pl: (when: string) => `Kółko po rosyjsku: jest, zapisane ${when}`,
   },
   circleNo: {
-    ru: "Кружка нет: сохраните его в «Избранное» этого аккаунта — без него тем, кто ответил на «Здравствуйте», уйдёт только письмо",
-    uz: "Dumaloq video yo‘q: uni shu akkauntning «Saqlangan xabarlar»iga saqlang — usiz salomga javob berganlarga faqat xat ketadi",
-    pl: "Brak kółka: zapisz je w «Zapisanych» tego konta — bez niego do tych, którzy odpowiedzieli na powitanie, wyjdzie tylko wiadomość",
+    ru: "Русского кружка нет: загрузите его выше или перешлите боту — без него тем, кто ответил на «Здравствуйте» по-русски, уйдёт только письмо",
+    uz: "Ruscha dumaloq video yo‘q: uni yuqorida yuklang yoki botga yuboring — usiz salomga ruscha javob berganlarga faqat xat ketadi",
+    pl: "Brak kółka po rosyjsku: wgraj je wyżej albo przekaż botowi — bez niego do tych, którzy odpowiedzieli na powitanie po rosyjsku, wyjdzie tylko wiadomość",
+  },
+  /** Узбекский кружок (владелец, 12.10.2026): уходит тем, кто ответил по-узбекски. */
+  circleUzYes: {
+    ru: (when: string) => `Узбекский кружок: есть, сохранён ${when}`,
+    uz: (when: string) => `O‘zbekcha dumaloq video: bor, ${when} da saqlangan`,
+    pl: (when: string) => `Kółko po uzbecku: jest, zapisane ${when}`,
+  },
+  circleUzNo: {
+    ru: "Узбекского кружка нет: тем, кто ответил по-узбекски, уйдёт письмо на узбекском",
+    uz: "O‘zbekcha dumaloq video yo‘q: o‘zbekcha javob berganlarga o‘zbekcha xat ketadi",
+    pl: "Brak kółka po uzbecku: do tych, którzy odpowiedzieli po uzbecku, wyjdzie wiadomość po uzbecku",
   },
   circleUnknown: {
     ru: "Кружок: скаут ещё не заглядывал в «Избранное» — смотрит раз в десять минут",
@@ -187,16 +198,18 @@ export const accountsResultDict = defineDict({
 
 /**
  * «Кружок для касаний» в «Аккаунтах» (components/admin/circle-upload.tsx,
- * lib/admin/circle-store.ts): один кружок на студию, скаут сам кладёт его в
- * «Избранное» каждого аккаунта.
+ * lib/admin/circle-store.ts): два кружка на студию — русский и узбекский,
+ * скаут сам кладёт их в «Избранное» каждого аккаунта.
  */
 export const circleUploadDict = defineDict({
   title: { ru: "Кружок для касаний", uz: "Aloqalar uchun dumaloq video", pl: "Kółko do kontaktów" },
   intro: {
-    ru: "Этот кружок уходит тем, кто ответил на «Здравствуйте» по-русски: в нём уже есть предложение — бесплатный макет за 12 часов и просьба отправить «+». Загрузите его один раз здесь — бот сам сохранит его в «Избранное» каждого рабочего аккаунта и главного, в течение десяти минут. Ответившим на другом языке уходит письмо на их языке, без кружка.",
-    uz: "Bu dumaloq video salomga ruscha javob berganlarga ketadi: taklif unda bor — 12 soatda bepul maket va «+» yuborish so‘rovi. Uni bu yerda bir marta yuklang — bot o‘zi uni har bir ishchi akkaunt va asosiy akkauntning «Saqlangan xabarlar»iga o‘n daqiqa ichida saqlaydi. Boshqa tilda javob berganlarga dumaloq videosiz, ularning tilidagi xat ketadi.",
-    pl: "To kółko wychodzi do tych, którzy odpowiedzieli na powitanie po rosyjsku: jest w nim już oferta — darmowa makieta w 12 godzin i prośba o wysłanie «+». Wgraj je tutaj raz — bot sam zapisze je w «Zapisanych» każdego konta roboczego i głównego, w ciągu dziesięciu minut. Tym, którzy odpowiedzieli w innym języku, wychodzi wiadomość w ich języku, bez kółka.",
+    ru: "Кружков два: русский уходит тем, кто ответил на «Здравствуйте» по-русски, узбекский — тем, кто ответил по-узбекски. В кружке уже есть предложение — бесплатный макет за 12 часов и просьба отправить «+». Загрузите каждый один раз здесь — бот сам сохранит их в «Избранное» каждого рабочего аккаунта и главного, в течение десяти минут. Ответившим на другом языке уходит письмо на их языке, без кружка.",
+    uz: "Dumaloq video ikkita: ruschasi salomga ruscha javob berganlarga, o‘zbekchasi o‘zbekcha javob berganlarga ketadi. Taklif dumaloq videoda bor — 12 soatda bepul maket va «+» yuborish so‘rovi. Har birini bu yerda bir marta yuklang — bot o‘zi ularni har bir ishchi akkaunt va asosiy akkauntning «Saqlangan xabarlar»iga o‘n daqiqa ichida saqlaydi. Boshqa tilda javob berganlarga dumaloq videosiz, ularning tilidagi xat ketadi.",
+    pl: "Kółka są dwa: rosyjskie wychodzi do tych, którzy odpowiedzieli na powitanie po rosyjsku, uzbeckie do tych, którzy odpowiedzieli po uzbecku. W kółku jest już oferta — darmowa makieta w 12 godzin i prośba o wysłanie «+». Wgraj każde raz tutaj — bot sam zapisze je w «Zapisanych» każdego konta roboczego i głównego, w ciągu dziesięciu minut. Tym, którzy odpowiedzieli w innym języku, wychodzi wiadomość w ich języku, bez kółka.",
   },
+  ruTitle: { ru: "Русский кружок", uz: "Ruscha dumaloq video", pl: "Kółko po rosyjsku" },
+  uzTitle: { ru: "Узбекский кружок", uz: "O‘zbekcha dumaloq video", pl: "Kółko po uzbecku" },
   current: {
     ru: (when: string, who: string, seconds: number) => `Сейчас уходит этот: загружен ${when}${who ? `, ${who}` : ""}, ${seconds} с.`,
     uz: (when: string, who: string, seconds: number) => `Hozir shu ketadi: ${when} da yuklangan${who ? `, ${who}` : ""}, ${seconds} soniya.`,
@@ -207,20 +220,29 @@ export const circleUploadDict = defineDict({
     uz: "Dumaloq video yuklanmagan. U yo‘q ekan, ruscha javob berganlarga dumaloq video o‘rniga xat ketadi. Agar dumaloq video akkauntning «Saqlangan xabarlar»iga qo‘lda saqlangan bo‘lsa, bot uni oladi.",
     pl: "Kółko nie jest wgrane. Dopóki go nie ma, tym, którzy odpowiedzieli po rosyjsku, zamiast kółka wychodzi wiadomość. Jeśli kółko zapisano ręcznie w «Zapisanych» konta, bot je weźmie.",
   },
+  noneUz: {
+    ru: "Узбекский кружок не загружен. Пока его нет, тем, кто ответил по-узбекски, вместо кружка уходит письмо на узбекском. Узбекский кружок принимается только отсюда или через бота: сохранённый в «Избранное» руками бот считает русским.",
+    uz: "O‘zbekcha dumaloq video yuklanmagan. U yo‘q ekan, o‘zbekcha javob berganlarga dumaloq video o‘rniga o‘zbekcha xat ketadi. O‘zbekcha dumaloq video faqat shu yerdan yoki bot orqali qabul qilinadi: «Saqlangan xabarlar»ga qo‘lda saqlanganini bot ruscha deb hisoblaydi.",
+    pl: "Kółko po uzbecku nie jest wgrane. Dopóki go nie ma, tym, którzy odpowiedzieli po uzbecku, zamiast kółka wychodzi wiadomość po uzbecku. Kółko po uzbecku przyjmowane jest tylko stąd albo przez bota: zapisane ręcznie w «Zapisanych» bot uznaje za rosyjskie.",
+  },
   viaBot: {
-    ru: "Можно и без файла: перешлите кружок боту студии в личку, он сохранит его так же.",
-    uz: "Faylsiz ham bo‘ladi: dumaloq videoni studiya botiga shaxsiy chatda yuboring, u uni xuddi shunday saqlaydi.",
-    pl: "Można też bez pliku: przekaż kółko botowi studia na prywatnym czacie, zapisze je tak samo.",
+    ru: "Можно и без файла: перешлите кружок боту студии в личку и нажмите под его вопросом язык — «🇷🇺 Русский» или «🇺🇿 O‘zbekcha». Бот сохранит кружок так же.",
+    uz: "Faylsiz ham bo‘ladi: dumaloq videoni studiya botiga shaxsiy chatda yuboring va bot so‘raganda tilni tanlang: rus yoki o‘zbek. Bot dumaloq videoni xuddi shunday saqlaydi.",
+    pl: "Można też bez pliku: przekaż kółko botowi studia na prywatnym czacie i gdy bot zapyta, wybierz język: rosyjski albo uzbecki. Bot zapisze kółko tak samo.",
   },
   file: { ru: "Файл кружка (MP4, квадрат, до минуты)", uz: "Dumaloq video fayli (MP4, kvadrat, bir daqiqagacha)", pl: "Plik kółka (MP4, kwadrat, do minuty)" },
   upload: { ru: "Загрузить кружок", uz: "Dumaloq videoni yuklash", pl: "Wgraj kółko" },
   busy: { ru: "Загружаем…", uz: "Yuklanmoqda…", pl: "Wgrywamy…" },
   done: {
-    ru: "Загружен. Бот положит его в «Избранное» аккаунтов в течение десяти минут — строка «Кружок для писем» у каждого аккаунта обновится.",
-    uz: "Yuklandi. Bot uni o‘n daqiqa ichida akkauntlarning «Saqlangan xabarlar»iga qo‘yadi — har bir akkauntdagi «Xatlar uchun dumaloq video» qatori yangilanadi.",
-    pl: "Wgrane. Bot zapisze je w «Zapisanych» kont w ciągu dziesięciu minut — wiersz «Kółko do wiadomości» przy każdym koncie się odświeży.",
+    ru: "Загружен. Бот положит его в «Избранное» аккаунтов в течение десяти минут — строка про этот кружок у каждого аккаунта обновится.",
+    uz: "Yuklandi. Bot uni o‘n daqiqa ichida akkauntlarning «Saqlangan xabarlar»iga qo‘yadi — har bir akkauntdagi shu dumaloq video haqidagi qator yangilanadi.",
+    pl: "Wgrane. Bot zapisze je w «Zapisanych» kont w ciągu dziesięciu minut — wiersz o tym kółku przy każdym koncie się odświeży.",
   },
-  replaceNote: { ru: "Новый заменит этот у всех аккаунтов.", uz: "Yangisi barcha akkauntlarda buning o‘rnini oladi.", pl: "Nowe zastąpi to na wszystkich kontach." },
+  replaceNote: {
+    ru: "Новый заменит этот у всех аккаунтов; кружок другого языка останется.",
+    uz: "Yangisi barcha akkauntlarda buning o‘rnini oladi; boshqa tildagi dumaloq video qoladi.",
+    pl: "Nowe zastąpi to na wszystkich kontach; kółko w drugim języku zostanie.",
+  },
   chooseFile: { ru: "Выберите файл кружка.", uz: "Dumaloq video faylini tanlang.", pl: "Wybierz plik kółka." },
   bad_type: {
     ru: "Нужен файл MP4 — так кружок сохраняет Telegram.",
