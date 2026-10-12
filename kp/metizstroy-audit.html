@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Аудит сайта METIZ STROY · DevUz Studio</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* Палитра под бренд клиента: строительный тёмно-зелёный, рабочий янтарь,
+     светлая бумага. Документ свёрстан листами A4, чтобы экран и PDF ломались
+     по страницам одинаково. Длинных тире и штампов в тексте нет. */
+  :root {
+    --dark:   #0E1E15;
+    --green:  #15502D;
+    --green-2:#1C6B3B;
+    --paper:  #F6F6F1;
+    --sheet:  #FFFFFF;
+    --ink:    #122018;
+    --body:   #3B463F;
+    --muted:  #6F786F;
+    --amber:  #C98416;
+    --amber-b:#E0A23B;
+    --line:   #E3E2D8;
+    --line-d: rgba(255,255,255,.14);
+    --bad:    #B4472E;
+    --mid:    #C98416;
+    --good:   #1C6B3B;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--dark); }
+  body {
+    margin: 0;
+    padding: 12mm 0;
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 10.2pt;
+    line-height: 1.6;
+    color: var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    position: relative;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto 10mm;
+    padding: 15mm 18mm 20mm;
+    background: var(--sheet);
+    box-shadow: 0 2mm 8mm rgba(0,0,0,.35);
+    overflow: hidden;
+  }
+  .sheet--dark { background: var(--dark); color: #D4DCD4; }
+  .sheet--dark h1, .sheet--dark h2, .sheet--dark h3 { color: #F1F3EA; }
+  .sheet--dark .eyebrow, .sheet--dark .num { color: var(--amber-b); }
+  .sheet--dark .lead { color: #BDC8BD; }
+  .sheet--dark .foot { color: #7E8B7F; border-top-color: var(--line-d); }
+  .sheet--dark .items > li { border-color: var(--line-d); }
+  .sheet--dark .items > li:last-child { border-bottom-color: var(--line-d); }
+  .sheet--dark .contacts div { border-color: var(--line-d); }
+  .sheet--dark .contacts .v { color: #F1F3EA; }
+  .sheet--dark .muted { color: #94A194; }
+  .sheet--dark .stages b { color: #F1F3EA; }
+  .sheet--dark .stages span.d { color: #9FAC9F; }
+  .sheet--dark .contacts .k { color: var(--amber-b); }
+
+  h1, h2, h3 { color: var(--ink); margin: 0; font-weight: 600; letter-spacing: -.01em; }
+
+  .eyebrow {
+    font-size: 7.6pt; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--green-2); margin: 0; font-weight: 600;
+  }
+  .rule { height: 1px; background: var(--line); border: 0; margin: 5mm 0; }
+  .rule--green { background: var(--green-2); opacity: .5; }
+
+  /* Обложка */
+  .sheet--cover { display: flex; flex-direction: column; padding: 22mm 18mm 18mm; }
+  .cover-top { flex: 0 0 auto; }
+  .cover-mid { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+  .cover-bot { flex: 0 0 auto; }
+  h1 { font-size: 32pt; line-height: 1.1; color: #F1F3EA; }
+  h1 em { font-style: normal; color: var(--amber-b); }
+  .cover-lead { max-width: 120mm; margin: 6mm 0 0; font-size: 11pt; line-height: 1.68; color: #BDC8BD; }
+  .cover-meta {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    font-size: 8.6pt; color: #8E9A8E;
+    border-top: 1px solid var(--line-d); padding-top: 5mm;
+  }
+  .cover-meta strong { color: #D8DECF; font-weight: 600; }
+  .mark { display: block; width: 15mm; height: 15mm; margin-bottom: 6mm; }
+
+  /* Внутренние листы */
+  h2 { font-size: 15.5pt; line-height: 1.2; margin: 0 0 3mm; }
+  h3 { font-size: 10.4pt; font-weight: 600; margin: 0 0 1.5mm; }
+  .lead { font-size: 10pt; line-height: 1.62; color: var(--body); max-width: 152mm; margin: 0 0 4.5mm; }
+  p { margin: 0 0 3.2mm; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.8pt; line-height: 1.5; }
+  section + section { margin-top: 6mm; }
+
+  /* Оценки по разделам */
+  .scores { list-style: none; margin: 0; padding: 0; }
+  .scores li {
+    display: grid; grid-template-columns: 52mm 30mm 1fr; align-items: center;
+    gap: 0 5mm; padding: 3mm 0; border-top: 1px solid var(--line);
+  }
+  .scores li:last-child { border-bottom: 1px solid var(--line); }
+  .scores .name { font-weight: 600; color: var(--ink); font-size: 10pt; }
+  .meter { display: flex; gap: 1.6mm; }
+  .dot { width: 3.6mm; height: 3.6mm; border-radius: 50%; background: var(--line); }
+  .dot.on-bad { background: var(--bad); }
+  .dot.on-mid { background: var(--mid); }
+  .dot.on-good { background: var(--good); }
+  .scores .note { font-size: 8.8pt; color: var(--muted); line-height: 1.45; }
+
+  /* Находки */
+  .find { list-style: none; margin: 0; padding: 0; }
+  .find > li { padding: 3.4mm 0; border-top: 1px solid var(--line); }
+  .find > li:last-child { border-bottom: 1px solid var(--line); }
+  .find h3 { display: flex; align-items: baseline; gap: 3mm; }
+  .tag {
+    flex: 0 0 auto; font-size: 7pt; letter-spacing: .12em; text-transform: uppercase;
+    font-weight: 600; padding: .6mm 2mm; border-radius: 2px; color: #fff;
+  }
+  .tag.bad { background: var(--bad); }
+  .tag.mid { background: var(--amber); }
+  .see { margin: 1.5mm 0 1mm; font-size: 9.4pt; color: var(--body); }
+  .risk { margin: 0; font-size: 9.4pt; color: var(--ink); }
+  .risk b { color: var(--green-2); font-weight: 600; }
+  .scale { display: inline-block; margin-top: 1mm; font-size: 8.6pt; color: var(--muted); }
+
+  /* Нумерованные списки */
+  .items { list-style: none; margin: 0; padding: 0; }
+  .items > li {
+    display: grid; grid-template-columns: 11mm 1fr; gap: 0 3mm;
+    padding: 2.8mm 0; border-top: 1px solid var(--line);
+  }
+  .items > li:last-child { border-bottom: 1px solid var(--line); }
+  .num { font-size: 13pt; color: var(--amber); font-weight: 600; line-height: 1.2; }
+  .items p { margin: 0; font-size: 9.2pt; line-height: 1.5; }
+
+  /* Этапы плана */
+  .stages { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm 6mm; margin: 0; padding: 0; list-style: none; }
+  .stages li { border-top: 2px solid var(--green-2); padding-top: 2.5mm; }
+  .stages b { display: block; font-size: 10.5pt; color: var(--ink); font-weight: 600; }
+  .stages .when { font-size: 8.2pt; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); margin: .5mm 0 1mm; }
+  .stages span.d { font-size: 8.8pt; line-height: 1.5; color: var(--muted); display: block; }
+
+  .callout {
+    background: var(--paper); border-left: 2px solid var(--green-2);
+    padding: 4.5mm 6mm; font-size: 9.4pt; line-height: 1.6; margin: 0 0 4mm;
+  }
+  .callout strong { color: var(--ink); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 9mm; }
+
+  .foot {
+    position: absolute; left: 18mm; right: 18mm; bottom: 10mm;
+    display: flex; justify-content: space-between;
+    font-size: 7.6pt; letter-spacing: .1em; text-transform: uppercase;
+    color: #9AA49C; border-top: 1px solid var(--line); padding-top: 3mm;
+  }
+  .contacts { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm 10mm; }
+  .contacts div { border-top: 1px solid var(--line); padding-top: 3mm; }
+  .contacts .k { font-size: 7.6pt; letter-spacing: .16em; text-transform: uppercase; color: var(--amber-b); margin-bottom: 1.5mm; }
+  .contacts .v { font-size: 10pt; color: var(--ink); }
+
+  @media print {
+    html, body { background: #fff; }
+    body { padding: 0; }
+    .sheet { margin: 0; box-shadow: none; break-after: page; }
+    .sheet:last-child { break-after: auto; }
+  }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- 1. Обложка -->
+<section class="sheet sheet--dark sheet--cover">
+  <div class="cover-top">
+    <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="4" y="40" width="40" height="4" rx="1" fill="#E0A23B"/>
+      <path d="M10 40 L10 8 L34 8" stroke="#E0A23B" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M10 14 L24 8" stroke="#E0A23B" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <line x1="31" y1="8" x2="31" y2="20" stroke="#F1F3EA" stroke-width="2.4" stroke-linecap="round"/>
+      <rect x="28" y="20" width="6" height="5" rx="1" fill="#F1F3EA"/>
+    </svg>
+    <p class="eyebrow">Независимый аудит сайта · 12 октября 2026</p>
+  </div>
+
+  <div class="cover-mid">
+    <h1>Что видно на сайте<br><em>METIZ STROY</em><br>со стороны</h1>
+    <p class="cover-lead">
+      Мы посмотрели на ваш сайт глазами покупателя и глазами поисковика:
+      как он открывается, находят ли вас в Google и Яндексе, доходит ли
+      человек от «ищу технику» до заявки, и что видно снаружи из того, что
+      лучше бы не показывать. Ниже коротко и по делу: что видим и чем это
+      оборачивается для продаж.
+    </p>
+  </div>
+
+  <div class="cover-bot">
+    <div class="cover-meta">
+      <span>Для: <strong>METIZ STROY</strong>, спецтехника, Ташкент</span>
+      <span>От: <strong>DevUz Studio</strong> · devuz.studio</span>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Сводка и оценки -->
+<section class="sheet">
+  <p class="eyebrow">Коротко · оценки по разделам</p>
+  <hr class="rule rule--green">
+
+  <section>
+    <h2>Главное в двух абзацах</h2>
+    <p class="lead">
+      Сайт у вас по сути живёт в двух версиях сразу, и поисковик видит их как
+      две разные компании. Из-за этого новый, красивый сайт в поиске почти не
+      показывается: по запросам про аренду и покупку техники вас находят не по
+      сайту, а по страницам в Instagram и Facebook. Весь спрос, который идёт в
+      Google и Яндекс, проходит мимо.
+    </p>
+    <p class="lead">
+      Вторая большая тема: карточки техники продают вполсилы. Цена аренды почти
+      нигде не указана, описания короткие, у многих позиций имена вместо
+      названий и одно фото. Человек, который готов арендовать кран или люльку,
+      не находит на странице ответа на свой главный вопрос и уходит к тем, у
+      кого цена и условия видны сразу. Отдельно есть вопросы к скорости, к
+      узбекской версии и к тому, что часть служебных вещей заметна снаружи.
+    </p>
+  </section>
+
+  <section>
+    <h2>Оценки по разделам</h2>
+    <ul class="scores">
+      <li>
+        <span class="name">Дизайн</span>
+        <span class="meter"><i class="dot on-good"></i><i class="dot on-good"></i><i class="dot on-good"></i><i class="dot"></i><i class="dot"></i></span>
+        <span class="note">Новый сайт выглядит современно, первый экран понятный.</span>
+      </li>
+      <li>
+        <span class="name">Удобство покупки</span>
+        <span class="meter"><i class="dot on-mid"></i><i class="dot on-mid"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></span>
+        <span class="note">Путь до заявки рвётся на цене и условиях аренды.</span>
+      </li>
+      <li>
+        <span class="name">Видимость в поиске</span>
+        <span class="meter"><i class="dot on-bad"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></span>
+        <span class="note">Главная боль: сайта почти нет в выдаче.</span>
+      </li>
+      <li>
+        <span class="name">Надёжность и безопасность</span>
+        <span class="meter"><i class="dot on-mid"></i><i class="dot on-mid"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></span>
+        <span class="note">Снаружи видно лишнее, есть устаревшая защита соединения.</span>
+      </li>
+      <li>
+        <span class="name">Скорость</span>
+        <span class="meter"><i class="dot on-mid"></i><i class="dot on-mid"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></span>
+        <span class="note">Тяжёлый старт на телефоне, каталог грузится долго.</span>
+      </li>
+    </ul>
+    <p class="small muted" style="margin-top:4mm">
+      Шкала: чем больше закрашенных кружков, тем лучше. Красный кружок, значит
+      раздел требует внимания в первую очередь.
+    </p>
+  </section>
+
+  <div class="foot"><span>METIZ STROY · Аудит сайта</span><span>DevUz Studio · 2 / 7</span></div>
+</section>
+
+<!-- 3. Находки: поиск и каталог -->
+<section class="sheet">
+  <p class="eyebrow">Что видим и чем это оборачивается · часть 1</p>
+  <hr class="rule rule--green">
+
+  <ul class="find">
+    <li>
+      <h3><span class="tag bad">в первую очередь</span>Сайт существует в двух версиях сразу</h3>
+      <p class="see"><b>Что видим:</b> у компании работают два адреса одновременно, и это два разных сайта с разным оформлением. Поисковик считает их двумя разными компаниями и не понимает, какой показывать.</p>
+      <p class="risk"><b>Чем грозит:</b> усилия делятся надвое, ни одна версия не набирает вес в поиске, а клиент из рекламы и из поиска попадает на разные сайты.</p>
+    </li>
+    <li>
+      <h3><span class="tag bad">в первую очередь</span>Поисковик не видит содержимое нового сайта</h3>
+      <p class="see"><b>Что видим:</b> новый сайт устроен так, что поисковому роботу он отдаёт почти пустую страницу, одинаковую для каталога, для каждого товара и для главной. Живое наполнение подгружается уже в браузере у человека, а робот его не дожидается.</p>
+      <p class="risk"><b>Чем грозит:</b> в индексе Google и Яндекса оказывается по сути одна страница вместо сотен. Все карточки техники для поиска выглядят пустыми двойниками главной, поэтому по запросам про технику вас не находят.</p>
+      <span class="scale">Масштаб: затронуты практически все товарные и разделные страницы, это более 400 адресов.</span>
+    </li>
+    <li>
+      <h3><span class="tag bad">в первую очередь</span>В поиске вас заменяют соцсети</h3>
+      <p class="see"><b>Что видим:</b> по запросам про аренду кранов и люлек на узбекском в выдаче показываются ваши страницы в Instagram и Facebook, а не сайт. В топе по русским запросам стоят доски объявлений и каталоги, вашего сайта там нет.</p>
+      <p class="risk"><b>Чем грозит:</b> заявку получает та площадка, что выше. Вы платите за сайт, а обращения уходят через чужие площадки и соцсети, где меньше доверия и нет вашего каталога целиком.</p>
+    </li>
+    <li>
+      <h3><span class="tag bad">в первую очередь</span>Цена аренды почти нигде не указана</h3>
+      <p class="see"><b>Что видим:</b> у подавляющего большинства позиций не заполнена цена аренды, хотя аренда это половина бизнеса. Нет ни ставки, ни минимального срока, ни условий.</p>
+      <p class="risk"><b>Чем грозит:</b> человек, готовый арендовать, не получает ответа на главный вопрос и уходит к конкуренту, у которого цена за смену и за час видна сразу на странице.</p>
+      <span class="scale">Масштаб: цена аренды пустует примерно у 9 из 10 позиций каталога.</span>
+    </li>
+    <li>
+      <h3><span class="tag mid">важно</span>Карточки техники продают вполсилы</h3>
+      <p class="see"><b>Что видим:</b> у многих позиций одно фото, короткое или пустое описание, а вместо названия стоит набор символов или просто код. Характеристики лежат внутри описания вперемешку, а не отдельным понятным блоком.</p>
+      <p class="risk"><b>Чем грозит:</b> покупатель не может сравнить технику и не доверяет пустой карточке. Такие позиции почти не находятся через поиск внутри сайта и через Google.</p>
+      <span class="scale">Масштаб: короткое или пустое описание у большей части каталога, одно фото у двух третей позиций.</span>
+    </li>
+  </ul>
+
+  <div class="foot"><span>METIZ STROY · Аудит сайта</span><span>DevUz Studio · 3 / 7</span></div>
+</section>
+
+<!-- 4. Находки: надёжность, скорость, язык -->
+<section class="sheet">
+  <p class="eyebrow">Что видим и чем это оборачивается · часть 2</p>
+  <hr class="rule rule--green">
+
+  <ul class="find">
+    <li>
+      <h3><span class="tag mid">важно</span>Узбекская версия почти не переведена</h3>
+      <p class="see"><b>Что видим:</b> при переключении на узбекский каталог остаётся в основном на русском: у большинства позиций тексты те же, что и в русской версии.</p>
+      <p class="risk"><b>Чем грозит:</b> для узбекоязычного покупателя и для узбекоязычного поиска сайт выглядит недоделанным. Половина рынка в Ташкенте ищет на узбекском, и эта половина уходит.</p>
+    </li>
+    <li>
+      <h3><span class="tag mid">важно</span>Снаружи видно то, что обычно прячут</h3>
+      <p class="see"><b>Что видим:</b> в открытом коде нового сайта просматривается внутренняя служебная кухня рабочей системы. В рабочем меню попадается технический, тестовый пункт. Это не взлом, это просто заметно любому, кто посмотрит исходный код страницы.</p>
+      <p class="risk"><b>Чем грозит:</b> такая открытость подсказывает недоброжелателю, как устроена ваша система, и упрощает ему задачу. Это вопрос аккуратности, который лучше закрыть до того, как им кто-то воспользуется.</p>
+    </li>
+    <li>
+      <h3><span class="tag mid">важно</span>Устаревшая защита соединения на одном из адресов</h3>
+      <p class="see"><b>Что видим:</b> при одном из вариантов написания адреса браузер показывает предупреждение о небезопасном соединении из-за давно истёкшего сертификата.</p>
+      <p class="risk"><b>Чем грозит:</b> человек, увидевший такое предупреждение, в большинстве случаев закрывает вкладку и не возвращается. Для компании, продающей дорогую технику, это сразу бьёт по доверию.</p>
+    </li>
+    <li>
+      <h3><span class="tag mid">важно</span>Тяжёлый старт на телефоне</h3>
+      <p class="see"><b>Что видим:</b> новый сайт начинает показывать содержимое только после того, как телефон скачает и обработает большой объём данных, и этот объём отдаётся без обычного для таких случаев сжатия. Каталог подгружается одним большим куском и не сразу.</p>
+      <p class="risk"><b>Чем грозит:</b> на мобильном интернете первые секунды человек видит пустой экран. Часть посетителей уходит, не дождавшись, а поисковик понижает медленные сайты.</p>
+    </li>
+    <li>
+      <h3><span class="tag mid">важно</span>Каталог смешан с непрофильными товарами</h3>
+      <p class="see"><b>Что видим:</b> рядом с техникой в каталоге стоят вещи не из профиля: квартиры, входные двери, котлы отопления, пиломатериалы.</p>
+      <p class="risk"><b>Чем грозит:</b> покупателю сложнее найти нужное, а поисковик хуже понимает, про что ваш сайт, и реже показывает его по профильным запросам про спецтехнику.</p>
+    </li>
+  </ul>
+
+  <div class="foot"><span>METIZ STROY · Аудит сайта</span><span>DevUz Studio · 4 / 7</span></div>
+</section>
+
+<!-- 5. Конкуренты и запросы -->
+<section class="sheet">
+  <p class="eyebrow">Конкуренты и поисковый спрос</p>
+  <hr class="rule rule--green">
+
+  <section>
+    <h2>Что люди ищут</h2>
+    <p class="lead">
+      Спрос в Ташкенте есть, и он двуязычный. Люди ищут и на русском, и на
+      узбекском: аренду и покупку башенных кранов, фасадных люлек, строительных
+      и коленчатых подъёмников, грузовых лифтов, а также запчасти. Под каждую
+      такую группу запросов нужна своя понятная страница на двух языках.
+      Сейчас таких страниц поиску почти не видно.
+    </p>
+  </section>
+
+  <section>
+    <h2>Кто стоит в топе и чем берёт</h2>
+    <p class="lead">
+      По ключевым запросам первые места занимают доски объявлений и отраслевые
+      каталоги, а из прямых компаний вперёд выходят те, кто сделал простую
+      вещь: на каждую единицу техники отдельную страницу с ценой за смену и за
+      час, с минимальным сроком аренды и характеристиками. Плюс карточки в
+      справочниках и на картах, плюс отзывы с оценкой.
+    </p>
+    <ul class="items">
+      <li><span class="num">01</span><div><h3>Доски объявлений и каталоги</h3><p>Крупные площадки с объявлениями и рейтингами. Они сильны объёмом и доверием, и у них ваша техника соседствует с чужой.</p></div></li>
+      <li><span class="num">02</span><div><h3>Прямые конкуренты с посадочными страницами</h3><p>Компании, у которых на каждую машину своя страница с ценой за смену и за час, минимальным заказом и фотографиями. Именно они забирают заявку, когда человек ищет конкретную технику.</p></div></li>
+      <li><span class="num">03</span><div><h3>Справочники и карты</h3><p>Карточки в отраслевых справочниках и на картах с отзывами. Это приводит людей, которые ищут поставщика рядом.</p></div></li>
+    </ul>
+    <p class="small muted" style="margin-top:3mm">
+      Полный список площадок и запросов с источниками мы передаём отдельно,
+      в рабочем порядке.
+    </p>
+  </section>
+
+  <div class="foot"><span>METIZ STROY · Аудит сайта</span><span>DevUz Studio · 5 / 7</span></div>
+</section>
+
+<!-- 6. Что предлагаем доработать в их системе -->
+<section class="sheet">
+  <p class="eyebrow">Что предлагаем доработать в вашей системе</p>
+  <hr class="rule rule--green">
+
+  <div class="callout">
+    Мы встраиваемся <strong>рядом</strong> с вашей рабочей системой, отдельным
+    модулем, по согласованию с вашим айтишником, и ничего в вашем кабинете не
+    переписываем. Всё, что ниже, у нашей студии уже работает на других
+    клиентах: свой Telegram-бот, рассылки, отчёты в конце дня.
+  </div>
+
+  <section>
+    <h2>Напоминания о компании по вашей базе</h2>
+    <p class="lead">
+      У вас около трёх тысяч контактов. По ним можно спокойно и по-человечески
+      напоминать о себе: поздравлять с праздниками Узбекистана, с днём
+      рождения и годовщиной сотрудничества, на русском или узбекском, разным
+      текстом для VIP, клиентов и потенциальных. Через Telegram и SMS, с
+      отпиской в одно касание, тихими часами и отчётом о доставке.
+    </p>
+  </section>
+
+  <section>
+    <h2>Под ваши задачи, а не вообще</h2>
+    <ul class="items">
+      <li><span class="num">01</span><div><h3>Мягкие напоминания о долге</h3><p>У вас много должников и крупная сумма задолженности. Спокойная цепочка напоминаний, без давления, с передачей ответа менеджеру. Это прямой возврат денег в кассу.</p></div></li>
+      <li><span class="num">02</span><div><h3>Окончание аренды и продление</h3><p>Напоминание клиенту и менеджеру незадолго до конца срока. Удержанная в аренде техника это выручка, которая иначе простаивает.</p></div></li>
+      <li><span class="num">03</span><div><h3>Возврат потенциальных клиентов</h3><p>По большой базе тех, кто интересовался, но не дошёл до сделки, сезонная цепочка касаний перед стройсезоном.</p></div></li>
+      <li><span class="num">04</span><div><h3>Заявки и звонки сразу менеджеру</h3><p>Заявка с сайта и входящий звонок падают менеджеру в Telegram в ту же минуту, а руководителю в конце дня приходит короткий отчёт.</p></div></li>
+      <li><span class="num">05</span><div><h3>Отзыв после сделки и напоминание об обслуживании</h3><p>Запрос отзыва после закрытой сделки закрывает нехватку отзывов на сайте, а напоминание о плановом обслуживании техники добавляет повторных обращений.</p></div></li>
+    </ul>
+    <p class="small muted" style="margin-top:3mm">
+      Где это уместно, добавляем помощника на основе ИИ: черновик ответа
+      клиенту и короткий разбор звонков для менеджера.
+    </p>
+  </section>
+
+  <div class="foot"><span>METIZ STROY · Аудит сайта</span><span>DevUz Studio · 6 / 7</span></div>
+</section>
+
+<!-- 7. План и контакты -->
+<section class="sheet sheet--dark">
+  <p class="eyebrow">План работ по шагам</p>
+  <hr class="rule rule--green">
+
+  <section>
+    <h2>С чего начинаем</h2>
+    <p class="lead">
+      Порядок важен: сначала делаем так, чтобы поиск вообще видел ваш сайт, и
+      только потом наполняем его страницами и статьями. Иначе содержимое уходит
+      в пустоту. Сроки честные: техническая часть это недели, выход в топ по
+      конкурентным запросам обычно от трёх до шести месяцев.
+    </p>
+    <ul class="stages">
+      <li><b>Свести к одному сайту</b><p class="when">Первые недели</p><span class="d">Оставляем один главный адрес, второй аккуратно направляем на него. Поиск перестаёт делить вас надвое.</span></li>
+      <li><b>Открыть сайт для поиска</b><p class="when">Первые недели</p><span class="d">Делаем так, чтобы робот видел живое содержимое каждой страницы, закрываем служебное, чиним защиту соединения и скорость.</span></li>
+      <li><b>Наполнить каталог</b><p class="when">1-2 месяца</p><span class="d">Цены аренды, нормальные названия и описания, характеристики отдельным блоком, честный узбекский перевод, порядок в категориях.</span></li>
+      <li><b>Посадочные и карты</b><p class="when">1-2 месяца</p><span class="d">Отдельная страница под каждую технику и услугу аренды на двух языках, карточки в справочниках и на картах, сбор отзывов.</span></li>
+      <li><b>Статьи на автопилоте</b><p class="when">От 2 месяцев</p><span class="d">Регулярные материалы под живые запросы Узбекистана. Этот механизм у нас уже работает и идёт сам.</span></li>
+      <li><b>Напоминания и отчёты</b><p class="when">Параллельно</p><span class="d">Модуль напоминаний по вашей базе, заявки и звонки менеджеру, отчёт руководителю в конце дня.</span></li>
+    </ul>
+  </section>
+
+  <section style="margin-top:9mm">
+    <h2>Чтобы начать</h2>
+    <p class="lead">
+      Если направление понятно, следующий шаг простой: короткая встреча с вашим
+      айтишником, чтобы договориться о доступах и о том, что берём в первую
+      очередь. Дальше мы считаем точную смету под согласованный объём.
+    </p>
+    <div class="contacts">
+      <div><p class="k">Студия</p><p class="v">DevUz Studio, Ташкент</p></div>
+      <div><p class="k">Сайт</p><p class="v">devuz.studio</p></div>
+    </div>
+  </section>
+
+  <div class="foot"><span>METIZ STROY · Аудит сайта</span><span>DevUz Studio · 7 / 7</span></div>
+</section>
+
+</body>
+</html>
