@@ -1,3 +1,4 @@
+import { helloTexts } from "@/lib/admin/hello-text-store";
 import { record } from "@/lib/admin/audit";
 import { inQueue } from "@/lib/admin/lead-queue";
 import { prepareOutreach, prospectById, prospectsByIds, type Prospect } from "@/lib/admin/outreach-store";
@@ -255,7 +256,7 @@ async function deliver(
       }
     }
     if (!(await claimDelivery([row.id], new Date())).size) continue;
-    await sendWithRows(who.chat, itemText(p, "▶️ Поток"), [...itemButtons(p), STREAM_STOP_ROW]);
+    await sendWithRows(who.chat, itemText(p, "▶️ Поток", await helloTexts()), [...itemButtons(p), STREAM_STOP_ROW]);
     // Ушла без текста — текст дошлёт свип (portion-store → deliverTexts).
     if (!p.message) await markBare([row.id], new Date());
     sent += 1;

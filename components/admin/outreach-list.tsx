@@ -14,6 +14,7 @@ import { CopyMessage } from "@/components/admin/copy-message";
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
 import { DoneButton, SubmitButton } from "@/components/admin/submit-button";
+import { EditSent } from "@/components/admin/edit-sent";
 import { checkFresh, sendProblems } from "@/lib/admin/outreach-store";
 import {
   HOURLY_CAP,
@@ -29,8 +30,10 @@ import type { Prospect } from "@/lib/admin/outreach-store";
 import { REST_PAGE } from "@/lib/admin/outreach-view";
 import { etaClock, untilText, type Eta } from "@/lib/admin/queue-eta";
 import type { Role } from "@/lib/admin/roles";
+import type { EditState } from "@/lib/admin/outreach-edit";
 import { CLOSE_REASONS, mayClose } from "@/lib/admin/touch-close";
-import { parseTouchError, type ParsedTouchError, type ProblemRef } from "@/lib/admin/touch-errors";
+import { parseTouchError, type ParsedTouchError } from "@/lib/admin/touch-errors";
+import { problemText } from "@/lib/admin/problem-text";
 import { isAutoNote } from "@/lib/proto/auto-note";
 import { WRITE_MYSELF_FORM, mayWriteMyself } from "@/lib/admin/write-myself";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
@@ -88,47 +91,6 @@ const STATUS_TONE: Record<Prospect["status"], string> = {
   manual: "text-blue-soft",
 };
 
-/**
- * Проблема письма словами на языке панели: код — из messageProblems /
- * nositeProblems, числа и имена — из `args`. Русский `text` проблемы здесь
- * не нужен: его читает модель, а не сотрудник.
- */
-function problemText(p: ProblemRef, t: Picked<typeof problemDict>): string {
-  const [a, b] = p.args;
-  switch (p.code) {
-    case "short":
-      return t.short(Number(a ?? 40));
-    case "long":
-      return t.long(Number(a ?? 150));
-    case "no_host":
-      return t.no_host(String(a ?? ""));
-    case "no_us":
-      return t.no_us;
-    case "greeting":
-      return t.greeting;
-    case "invented":
-      return t.invented(String(a ?? ""));
-    case "foreign_script":
-      return t.foreign_script(String(a ?? ""));
-    case "banned":
-      return t.banned;
-    case "no_seo_score":
-      return t.no_seo_score(Number(a ?? 0));
-    case "no_loss":
-      return t.no_loss(Number(a ?? 0), Number(b ?? 0));
-    case "foreign_reference":
-      return t.foreign_reference(String(a ?? ""));
-    case "no_reference":
-      return t.no_reference(String(a ?? ""));
-    case "no_proto_link":
-      return t.no_proto_link(String(a ?? ""));
-    case "no_prototype":
-      return t.no_prototype(Number(a ?? 12));
-    default:
-      return t.unknown;
-  }
-}
-
 /** Отказ кнопки из `?e=` словами: причина, проверка письма, дефект или код. */
 function errorText(e: ParsedTouchError, locale: PanelLocale): string {
   if (e.code === "no_way" || e.code === "nothing_to_say" || e.code === "already") {
@@ -181,6 +143,8 @@ export function OutreachList({
   viewer = null,
   locale = "ru",
   accounts = {},
+  edits = {},
+  lastEdits = {},
 }: {
   rows: Prospect[];
   /** Что ушло за последний час: предел считается по факту отправки. */
@@ -212,6 +176,13 @@ export function OutreachList({
   locale?: PanelLocale;
   /** Подписи рабочих аккаунтов (accountTags): с какого ушло касание. */
   accounts?: Readonly<Record<string, AccountTag>>;
+  /**
+   * Что можно «Исправить» в карточке (outreach-edit-request → letterTargets):
+   * письмо ждёт ответа на приветствие или ушло не больше 48 часов назад.
+   */
+  edits?: Readonly<Record<string, { kind: "pending" | "line"; body: string }>>;
+  /** Последняя правка карточки: ждёт бота, исправлено или не вышло. */
+  lastEdits?: Readonly<Record<string, { state: EditState; failure: string | null }>>;
 }) {
   if (!rows.length) return null;
 
@@ -832,6 +803,18 @@ export function OutreachList({
                         <p className="mt-1 text-xs text-muted">
                           {row.pitch_at ? t.helloAnswered(when(row.pitch_at)) : t.helloWaiting}
                         </p>
+                      ) : null}
+                      {/* «Исправить» письмо касания: ждёт ответа — правится
+                          сразу, ушло — бот правит его в Telegram (48 часов).
+                          Право — как у «Клиент отказался». */}
+                      {viewer && mayClose(row, viewer) && (edits[row.id] || lastEdits[row.id]) ? (
+                        <EditSent
+                          prospectId={row.id}
+                          body={edits[row.id]?.body ?? row.message ?? ""}
+                          pending={edits[row.id]?.kind === "pending"}
+                          editable={Boolean(edits[row.id])}
+                          last={lastEdits[row.id] ?? null}
+                        />
                       ) : null}
                     </div>
                   ) : (

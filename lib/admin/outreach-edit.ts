@@ -16,6 +16,9 @@ import { serviceClient } from "@/lib/supabase";
 /** Сколько Telegram даёт на правку своего сообщения в личке. */
 export const EDIT_WINDOW_MS = 48 * 60 * 60_000;
 
+/** Сообщение ушло до того, как скаут стал запоминать номера реплик (0153). */
+export const NO_NUMBER = "Номер этого сообщения в Telegram не сохранился — поправить его можно только с телефона рабочего аккаунта.";
+
 /** Что пишется у правки, опоздавшей к окну. Одно на базу и на скаута. */
 export const TOO_LATE = "Прошло больше 48 часов после отправки — Telegram править уже не даёт.";
 
@@ -29,7 +32,62 @@ export type EditJob = {
   messageId: number;
   body: string;
   sentAt: string | null;
+  /**
+   * Какая реплика ленты правится (outreach_messages.id) — письмо или ответ
+   * после «Здравствуйте». Нет — старая правка: письмо, ушедшее первым
+   * сообщением, номер которого лежит в prospects.sent_message_id.
+   */
+  lineId?: string | null;
 };
+
+/** Чем кончилась правка — то, что видно под кнопкой «Исправить». */
+export type EditState = "waiting" | "done" | "failed";
+
+export function editState(row: { done_at?: string | null; failure?: string | null }): EditState {
+  if (row.failure) return "failed";
+  return row.done_at ? "done" : "waiting";
+}
+
+/** Реплика ленты, как её видит правка. */
+export type EditableLine = {
+  direction: string;
+  kind?: string | null;
+  status: string;
+  sent_at?: string | null;
+  created_at: string;
+  tg_message_id?: string | number | null;
+};
+
+/**
+ * Приветствие касания — первое, что ушло, до ответа клиента
+ * (lib/admin/hello-first.ts). Его не правим: правка превратила бы
+ * «Здравствуйте» в письмо незнакомцу — ровно то, за что ограничивают
+ * аккаунты.
+ */
+export function isHelloLine(
+  line: Pick<EditableLine, "direction" | "created_at">,
+  p: { hello_at?: string | null; pitch_at?: string | null },
+): boolean {
+  if (line.direction !== "out" || !p.hello_at) return false;
+  return !p.pitch_at || Date.parse(line.created_at) < Date.parse(p.pitch_at);
+}
+
+/**
+ * Можно ли нажать «Исправить» у реплики: наша, текстом (кружок не правится),
+ * не приветствие, и либо ещё ждёт отправки, либо ушла с номером не раньше
+ * 48 часов назад.
+ */
+export function lineEditable(
+  line: EditableLine,
+  p: { hello_at?: string | null; pitch_at?: string | null },
+  now = Date.now(),
+): boolean {
+  if (line.direction !== "out" || (line.kind ?? "text") !== "text") return false;
+  if (isHelloLine(line, p)) return false;
+  if (line.status === "queued") return true;
+  if (line.status !== "sent" || !line.tg_message_id || !line.sent_at) return false;
+  return now - Date.parse(line.sent_at) <= EDIT_WINDOW_MS;
+}
 
 /**
  * Что делать с ответом Telegram на правку.
@@ -90,7 +148,7 @@ export async function nextEdit(
   const { data: rows } = await db
     .from("outreach_edits")
     .select(
-      "id, prospect_id, body, prospects!outreach_edits_prospect_id_fkey (host, target_user_id, sent_message_id, sent_at, sent_via, hello_at, pitch_at)",
+      "id, prospect_id, body, message_id, prospects!outreach_edits_prospect_id_fkey (host, target_user_id, sent_message_id, sent_at, sent_via, hello_at, pitch_at), outreach_messages!outreach_edits_message_id_fkey (id, direction, kind, status, sent_at, created_at, tg_message_id, body)",
     )
     .is("done_at", null)
     .is("failure", null)
@@ -114,12 +172,65 @@ export async function nextEdit(
     // Правка чужого аккаунта — её заберёт он сам.
     if (p && accountOf(p.sent_via) !== account) continue;
 
+    // Правка реплики ленты: письма после «Здравствуйте» или ответа.
+    if (data.message_id) {
+      const line = (Array.isArray(data.outreach_messages) ? data.outreach_messages[0] : data.outreach_messages) as
+        | (EditableLine & { id: string; body: string })
+        | null;
+      if (!line) {
+        await markEditFailed(id, "Этого сообщения в переписке уже нет.");
+        continue;
+      }
+      // Ещё не ушло — правим текст в очереди, уйдёт уже исправленным.
+      if (line.status === "queued") {
+        await db.from("outreach_messages").update({ body: String(data.body) }).eq("id", line.id);
+        await db
+          .from("outreach_edits")
+          .update({ done_at: new Date().toISOString(), previous: line.body })
+          .eq("id", id);
+        continue;
+      }
+      if (line.direction !== "out" || (line.kind ?? "text") !== "text" || line.status !== "sent") {
+        await markEditFailed(id, "Это сообщение клиенту не уходило — править нечего.");
+        continue;
+      }
+      if (p && isHelloLine(line, p)) {
+        await markEditFailed(id, "Приветствие не правим: до ответа клиента ему уходит только оно.");
+        continue;
+      }
+      if (!line.tg_message_id || !p?.target_user_id) {
+        await markEditFailed(id, NO_NUMBER);
+        continue;
+      }
+      if (line.sent_at && Date.now() - Date.parse(line.sent_at) > EDIT_WINDOW_MS) {
+        await markEditFailed(id, TOO_LATE);
+        continue;
+      }
+      return {
+        id,
+        prospectId: String(data.prospect_id),
+        host: String(p.host ?? ""),
+        userId: String(p.target_user_id),
+        messageId: Number(line.tg_message_id),
+        body: String(data.body),
+        sentAt: line.sent_at ?? null,
+        lineId: line.id,
+      };
+    }
+
     // Ушло только «Здравствуйте», письмо ждёт ответа клиента
     // (lib/admin/hello-first.ts): в Telegram править нечего — правим само
     // письмо, оно уйдёт уже исправленным.
     if (p && waitsForPitch(p)) {
       await db.from("prospects").update({ message: String(data.body) }).eq("id", data.prospect_id);
       await db.from("outreach_edits").update({ done_at: new Date().toISOString() }).eq("id", id);
+      continue;
+    }
+
+    // Без реплики: sent_message_id после «Здравствуйте» — номер самого
+    // приветствия, и правка заменила бы его письмом. Такую правку не делаем.
+    if (p?.hello_at) {
+      await markEditFailed(id, "Не сказано, какое сообщение править: исправьте его кнопкой «Исправить» у нужной реплики.");
       continue;
     }
 
@@ -155,6 +266,22 @@ export async function markEdited(job: EditJob): Promise<void> {
   const db = serviceClient();
   if (!db) return;
 
+  // Правили реплику ленты: она и есть то, что у человека в переписке.
+  // Письмо в карточке — тот же текст, если ушло без перевода.
+  if (job.lineId) {
+    const { data: line } = await db.from("outreach_messages").select("body").eq("id", job.lineId).maybeSingle();
+    const before = (line?.body as string | null) ?? null;
+    await db.from("outreach_messages").update({ body: job.body }).eq("id", job.lineId);
+    if (before) {
+      await db.from("prospects").update({ message: job.body }).eq("id", job.prospectId).eq("message", before);
+    }
+    await db
+      .from("outreach_edits")
+      .update({ done_at: new Date().toISOString(), previous: before })
+      .eq("id", job.id);
+    return;
+  }
+
   const { data: prospect } = await db.from("prospects").select("message").eq("id", job.prospectId).maybeSingle();
   const previous = (prospect?.message as string | null) ?? null;
 
@@ -177,4 +304,34 @@ export async function markEditFailed(id: string, why: string): Promise<void> {
   const db = serviceClient();
   if (!db) return;
   await db.from("outreach_edits").update({ failure: why.slice(0, 300) }).eq("id", id);
+}
+
+/** Последняя правка — для подписи под кнопкой: ждёт, исправлено или не вышло и почему. */
+export type EditView = { state: EditState; failure: string | null; at: string; lineId: string | null };
+
+/** Последняя правка каждой карточки (lineId null — письмо до ответа) и каждой реплики. */
+export async function lastEdits(prospectIds: readonly string[]): Promise<Map<string, EditView>> {
+  const out = new Map<string, EditView>();
+  const db = serviceClient();
+  if (!db || !prospectIds.length) return out;
+  const { data } = await db
+    .from("outreach_edits")
+    .select("prospect_id, message_id, done_at, failure, created_at")
+    .in("prospect_id", [...prospectIds].slice(0, 200))
+    .gte("created_at", new Date(Date.now() - 2 * EDIT_WINDOW_MS).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(500);
+  for (const row of data ?? []) {
+    const view: EditView = {
+      state: editState(row as { done_at: string | null; failure: string | null }),
+      failure: (row.failure as string | null) ?? null,
+      at: String(row.created_at),
+      lineId: (row.message_id as string | null) ?? null,
+    };
+    // По карточке — самая свежая любая; по реплике — самая свежая её.
+    const card = String(row.prospect_id);
+    if (!out.has(card)) out.set(card, view);
+    if (view.lineId && !out.has(view.lineId)) out.set(view.lineId, view);
+  }
+  return out;
 }

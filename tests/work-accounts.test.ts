@@ -115,7 +115,7 @@ test("ответ и правка — только с того аккаунта, 
   );
   assert.match(runner, /reply = await nextReply\(key\);/);
   assert.match(runner, /job = await nextEdit\(key\);/);
-  assert.match(runner, /await markSent\(job\.id, userId, messageId, key\);/);
+  assert.match(runner, /await markSent\(job\.id, userId, messageId, key, job\.hello\);/);
   assert.match(runner, /markFailed\(job\.id, why, \{ othersAlive: othersAlive\(key\) \}\)/);
   // Главный — как раньше: читает чаты и пишет.
   assert.match(runner, /key: MAIN_ACCOUNT,[\s\S]{0,120}cap: \(\) => HOURLY_CAP,/);

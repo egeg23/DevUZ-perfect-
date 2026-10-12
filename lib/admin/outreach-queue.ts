@@ -12,7 +12,8 @@ import {
 import { DISPATCH_STALE_MS, MAIN_ACCOUNT, accountOf, mayTake } from "@/lib/admin/work-accounts";
 import { queueEtas, type Eta, type EtaAccount } from "@/lib/admin/queue-eta";
 import { mainLimitUntil } from "@/lib/admin/account-ban-store";
-import { helloFor } from "@/lib/admin/hello-first";
+import { HELLO_TEXT, helloFor, type HelloTexts } from "@/lib/admin/hello-first";
+import { helloTexts } from "@/lib/admin/hello-text-store";
 import { bloggerSendsLastHour, lastBloggerSendAt } from "@/lib/bloggers/tg-sent";
 import { serviceClient } from "@/lib/supabase";
 
@@ -149,7 +150,7 @@ export async function assignments(db: NonNullable<ReturnType<typeof serviceClien
   return out;
 }
 
-function toQueued(data: Record<string, unknown> | null): Queued | null {
+function toQueued(data: Record<string, unknown> | null, hellos: HelloTexts = HELLO_TEXT): Queued | null {
   // Без письма в очередь встаёт только автопрогон: его письмо пишется после
   // ответа (LETTER_AFTER_REPLY), а «Здравствуйте» — на языке сайта.
   if (!data?.target || (!data?.message && !data?.autopilot_at)) return null;
@@ -161,7 +162,8 @@ function toQueued(data: Record<string, unknown> | null): Queued | null {
     // них он один возможный.
     kind: (data.target_kind as RouteKind | null) ?? "handle",
     message: String(data.message ?? ""),
-    hello: helloFor(String(data.message ?? ""), (data.walked as { lang?: string } | null)?.lang),
+    // Своё приветствие руководителя или владельца (lib/admin/hello-text.ts), нет — обычное.
+    hello: helloFor(String(data.message ?? ""), (data.walked as { lang?: string } | null)?.lang, hellos),
     host: String(data.host),
   };
 }
@@ -217,6 +219,7 @@ export async function nextQueued(
 
   // Письмо менеджера уходит с аккаунта, на котором он работает (см. mayTake).
   const assigned = await assignments(db);
+  const hellos = await helloTexts();
 
   /** Верхние свободные задания — по одному, пока одно не возьмётся этим аккаунтом. */
   const takeFirst = async (owners: string[] | null): Promise<Queued | null> => {
@@ -231,7 +234,7 @@ export async function nextQueued(
     for (const row of data ?? []) {
       const by = (row as { claimed_by?: string | null }).claimed_by ?? null;
       if (by && !mayTake(account, assigned.get(by))) continue;
-      const job = toQueued(row as Record<string, unknown>);
+      const job = toQueued(row as Record<string, unknown>, hellos);
       if (job && (await take(db, job.id, account, now))) return job;
     }
     return null;
@@ -355,6 +358,8 @@ export async function markSent(
   messageId?: string | number | null,
   /** С какого аккаунта: ответы и правки потом пойдут с него же. */
   account: string = MAIN_ACCOUNT,
+  /** Что ушло на деле (job.hello): в ленте — то же приветствие, что у клиента. */
+  hello?: string | null,
 ): Promise<void> {
   const db = serviceClient();
   if (!db) return;
@@ -401,7 +406,7 @@ export async function markSent(
       lead_id: data.lead_id ?? null,
       direction: "out",
       author: "staff",
-      body: helloFor(String(data.message ?? ""), (data.walked as { lang?: string } | null)?.lang),
+      body: hello || helloFor(String(data.message ?? ""), (data.walked as { lang?: string } | null)?.lang, await helloTexts()),
       status: "sent",
       sent_at: new Date().toISOString(),
     });

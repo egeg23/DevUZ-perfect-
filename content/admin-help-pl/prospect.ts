@@ -257,6 +257,32 @@ export const prospectSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "edit-sent",
+        title: "«Popraw»: poprawić już wysłaną wiadomość",
+        body: [
+          "Pod wiadomością i odpowiedziami, które wyszły do klienta z konta firmowego, jest przycisk **«Popraw»**: w karcie firmy w [Kontaktach](/admin/prospect) — pod wiadomością kontaktu, w karcie leada w bloku «Pierwsza rozmowa po kontakcie» — pod każdą naszą wiadomością. Kliknij, popraw tekst i kliknij **«Zapisz poprawkę»**. Właściciel, 12.10.2026: literówka, nie ten przykład z branży albo niezręczne zdanie poprawia się na miejscu, a nie nową wiadomością na doczepkę — druga wiadomość z rzędu od nieznajomego wygląda jak masowa wysyłka.",
+          "Wiadomość wciąż czeka na odpowiedź na powitanie — poprawi się od razu i wyjdzie do klienta już nowa. Wiadomość jeszcze stoi w kolejce — też od razu. Już wyszła — poprawia ją bot, z tego samego konta firmowego, zwykle w minutę: pod przyciskiem najpierw «Poprawka czeka na bota», potem «Poprawiono» albo «Nie udało się poprawić» z przyczyną (na przykład klient usunął rozmowę). Klient zobaczy przy wiadomości dopisek Telegrama «edytowano». Telegram pozwala edytować własną wiadomość przez 48 godzin od wysłania — potem przycisku nie ma.",
+          "Nowy tekst jest sprawdzany tak samo jak przed wysłaniem: wiadomość o stronie — według tych samych zasad co [pierwsza wiadomość](#prospect-send) (od 12 do 100 słów, bez powitania, bez słów technicznych i liczb spoza sprawdzenia strony), odpowiedź w rozmowie — niepusta i mieści się w jednej wiadomości. Samego powitania ani kółka poprawić nie można: do odpowiedzi klienta wychodzi do niego tylko powitanie. Przycisk widzą osoba prowadząca kontakt i osoba, do której przypisany jest lead, a także kierownik i właściciel; kto i co poprawił — w dzienniku.",
+        ],
+      },
+      {
+        id: "hello-text",
+        title: "Własne powitanie zamiast zwykłego",
+        body: {
+          manager: [
+            "Z konta firmowego jako pierwsze wychodzi powitanie — zwykle «Здравствуйте», do strony po uzbecku «Assalomu alaykum». Kierownik i właściciel mogą zastąpić je własnym: w «Teksty wiadomości i A/B», blok «Pierwsza wiadomość» — tam też widać, co wychodzi teraz. Kontakt się przez to nie zmienia: wiadomość o stronie i kółko nadal dostaje tylko ten, kto odpowiedział ([kontakt w dwóch krokach](#prospect-hello)).",
+          ],
+          head: [
+            "Przycisk «Teksty wiadomości i A/B» → blok **«Pierwsza wiadomość»**: tu ustawiasz własne powitanie zamiast zwykłego — po rosyjsku i po uzbecku, każde osobno. Kliknij **«Zapisz powitanie»** — kolejne kontakty wszystkich menedżerów i automatycznych kontaktów zaczną się od niego. Puste pole — wychodzi zwykłe: «Здравствуйте» albo «Assalomu alaykum». Zmienić powitanie możesz Ty i właściciel; menedżerowie widzą, co wychodzi, ale zmienić nie mogą.",
+            "Zasada właściciela zostaje: jako pierwsze wychodzi tylko powitanie, nie wiadomość — Telegram ogranicza konta za zgłoszenia «spam» na wiadomości od nieznajomych ([kontakt w dwóch krokach](#prospect-hello)). Dlatego panel nie zapisze tekstu dłuższego niż 8 słów, tekstu, który nie zaczyna się od powitania («Assalomu alaykum», «Salom», «Xayrli kun» albo rosyjskie powitanie), ani tekstu z linkiem, adresem, cyframi, ceną, procentami, emoji lub słowami technicznymi. Rosyjskie pisze się cyrylicą, uzbeckie — alfabetem łacińskim. W jakim języku klient dostanie potem kółko albo wiadomość, decyduje jego odpowiedź, a nie tekst powitania. Kto i kiedy zmienił powitanie — w dzienniku.",
+          ],
+          admin: [
+            "Przycisk «Teksty wiadomości i A/B» → blok **«Pierwsza wiadomość»**: tu ustawiasz własne powitanie zamiast zwykłego — po rosyjsku i po uzbecku, każde osobno. Kliknij **«Zapisz powitanie»** — kolejne kontakty wszystkich menedżerów i automatycznych kontaktów zaczną się od niego. Puste pole — wychodzi zwykłe: «Здравствуйте» albo «Assalomu alaykum». Zmienić powitanie możesz Ty i kierownik; menedżerowie widzą, co wychodzi, ale zmienić nie mogą.",
+            "Twoja zasada zostaje: jako pierwsze wychodzi tylko powitanie, nie wiadomość — Telegram ogranicza konta za zgłoszenia «spam» na wiadomości od nieznajomych ([kontakt w dwóch krokach](#prospect-hello)). Dlatego panel nie zapisze tekstu dłuższego niż 8 słów, tekstu, który nie zaczyna się od powitania («Assalomu alaykum», «Salom», «Xayrli kun» albo rosyjskie powitanie), ani tekstu z linkiem, adresem, cyframi, ceną, procentami, emoji lub słowami technicznymi. Rosyjskie pisze się cyrylicą, uzbeckie — alfabetem łacińskim. W jakim języku klient dostanie potem kółko albo wiadomość, decyduje jego odpowiedź, a nie tekst powitania. Kto i kiedy zmienił powitanie — w dzienniku.",
+          ],
+        },
+      },
+      {
         id: "fact-check",
         title: "Sprawdzenie strony na faktach i ludzki język",
         body: [

@@ -635,6 +635,32 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "edit-sent",
+          title: "«Tuzatish»: yuborilgan xabarni to‘g‘rilash",
+          body: [
+            "Ishchi akkauntdan mijozga ketgan xat va javoblar ostida **«Tuzatish»** tugmasi bor: [Aloqalar](/admin/prospect) bo‘limidagi kompaniya kartochkasida — aloqa xati ostida, lid kartochkasida «Aloqa bo‘yicha birlamchi suhbat» blokida — har bir xabarimiz ostida. Bosing, matnni tuzating va **«Tuzatishni saqlash»** tugmasini bosing. Egasi, 12.10.2026: xato yozuv, nishaga mos kelmagan misol yoki noqulay jumla shu joyning o‘zida tuzatiladi, ketidan yangi xabar bilan emas — notanish odamdan ketma-ket ikkinchi xabar ommaviy tarqatmaga o‘xshaydi.",
+            "Xat hali salomga javobni kutayotgan bo‘lsa — u darhol tuzatiladi va mijozga yangi holda ketadi. Xabar hali navbatda turgan bo‘lsa — u ham darhol. Allaqachon ketgan bo‘lsa — uni bot o‘sha ishchi akkauntdan tuzatadi, odatda bir daqiqada: tugma ostida avval «Tuzatish botni kutmoqda», keyin «Tuzatildi» yoki sababi bilan «Tuzatib bo‘lmadi» ko‘rinadi (masalan, mijoz yozishmani o‘chirib yuborgan). Mijozda xabar yonida Telegramning «tahrirlangan» belgisi paydo bo‘ladi. Telegram o‘z xabarini yuborilganidan keyin 48 soat ichida tahrirlashga ruxsat beradi — keyin tugma yo‘q.",
+            "Yangi matn yuborishdan oldingi kabi tekshiriladi: sayt haqidagi xat — [birinchi xat](#prospect-send) bilan bir xil qoidalar bo‘yicha (12 dan 100 so‘zgacha, salomsiz, texnik so‘zlarsiz va sayt tekshiruvida bo‘lmagan raqamlarsiz), yozishmadagi javob — bo‘sh emas va bitta xabarga sig‘adi. Salomning o‘zini va dumaloq videoni tuzatib bo‘lmaydi: mijoz javob bermaguncha unga faqat salom ketadi. Tugmani aloqani olib borayotgan xodim, lid kimga biriktirilgan bo‘lsa o‘sha, shuningdek rahbar va egasi ko‘radi; kim nimani tuzatgani — jurnalda.",
+          ],
+        },
+        {
+          id: "hello-text",
+          title: "Odatiy salom o‘rniga o‘z salomingiz",
+          body: {
+            manager: [
+              "Ishchi akkauntdan birinchi bo‘lib salom ketadi — odatda ruscha saytga «Здравствуйте», o‘zbekcha saytga «Assalomu alaykum». Rahbar va egasi uni o‘zinikiga almashtira oladi: «Xat matnlari va A/B», «Birinchi xabar» bloki — hozir nima ketayotgani ham o‘sha yerda yozilgan. Aloqa bundan o‘zgarmaydi: sayt haqidagi xat va dumaloq videoni hamon faqat javob bergan odam oladi ([ikki bosqichli aloqa](#prospect-hello)).",
+            ],
+            head: [
+              "«Xat matnlari va A/B» tugmasi → **«Birinchi xabar»** bloki: bu yerda odatiy salom o‘rniga o‘z salomingizni berasiz — ruscha va o‘zbekcha, har birini alohida. **«Salomni saqlash»** tugmasini bosing — barcha menejerlar va avtoyurishning keyingi aloqalari shu salom bilan boshlanadi. Maydon bo‘sh bo‘lsa — odatiy salom ketadi: «Здравствуйте» yoki «Assalomu alaykum». Salomni siz va egasi o‘zgartira olasiz; menejerlar nima ketayotganini ko‘radi, lekin o‘zgartira olmaydi.",
+              "Egasining qoidasi o‘z kuchida: birinchi bo‘lib xat emas, faqat salom ketadi — Telegram notanish odamlardan kelgan xatlarga «spam» shikoyatlari uchun akkauntlarni cheklaydi ([ikki bosqichli aloqa](#prospect-hello)). Shuning uchun panel 8 so‘zdan uzun matnni, salomlashuvdan boshlanmagan matnni («Assalomu alaykum», «Salom», «Xayrli kun» yoki ruscha salom) va havola, manzil, raqamlar, narx, foizlar, emoji yoki texnik so‘zlar bor matnni saqlamaydi. Ruscha salom kirill yozuvida, o‘zbekchasi lotin yozuvida yoziladi. Mijozga keyin qaysi tilda dumaloq video yoki xat ketishini salom matni emas, uning javobi hal qiladi. Salomni kim va qachon o‘zgartirgani — jurnalda.",
+            ],
+            admin: [
+              "«Xat matnlari va A/B» tugmasi → **«Birinchi xabar»** bloki: bu yerda odatiy salom o‘rniga o‘z salomingizni berasiz — ruscha va o‘zbekcha, har birini alohida. **«Salomni saqlash»** tugmasini bosing — barcha menejerlar va avtoyurishning keyingi aloqalari shu salom bilan boshlanadi. Maydon bo‘sh bo‘lsa — odatiy salom ketadi: «Здравствуйте» yoki «Assalomu alaykum». Salomni siz va rahbar o‘zgartira olasiz; menejerlar nima ketayotganini ko‘radi, lekin o‘zgartira olmaydi.",
+              "Sizning qoidangiz o‘z kuchida: birinchi bo‘lib xat emas, faqat salom ketadi — Telegram notanish odamlardan kelgan xatlarga «spam» shikoyatlari uchun akkauntlarni cheklaydi ([ikki bosqichli aloqa](#prospect-hello)). Shuning uchun panel 8 so‘zdan uzun matnni, salomlashuvdan boshlanmagan matnni («Assalomu alaykum», «Salom», «Xayrli kun» yoki ruscha salom) va havola, manzil, raqamlar, narx, foizlar, emoji yoki texnik so‘zlar bor matnni saqlamaydi. Ruscha salom kirill yozuvida, o‘zbekchasi lotin yozuvida yoziladi. Mijozga keyin qaysi tilda dumaloq video yoki xat ketishini salom matni emas, uning javobi hal qiladi. Salomni kim va qachon o‘zgartirgani — jurnalda.",
+            ],
+          },
+        },
+        {
           id: "fact-check",
           title: "Saytni fakt bo‘yicha tekshirish va oddiy til",
           body: [

@@ -54,6 +54,14 @@ export const HELLO_TEXT = {
 
 export type HelloLang = keyof typeof HELLO_TEXT;
 
+/**
+ * Приветствия, которые уходят на деле: свои русское и узбекское задают
+ * руководитель и владелец в «Текстах писем и A/B» (lib/admin/hello-text.ts),
+ * не задали — HELLO_TEXT. На язык ответа это не влияет: он считается от
+ * письма (letterLang), а не от текста приветствия.
+ */
+export type HelloTexts = Readonly<Record<HelloLang, string>>;
+
 /** На каком языке письмо, а значит и «Здравствуйте» перед ним. */
 export function letterLang(letter: string, lang?: string | null): HelloLang {
   // Язык письма решает обход сайта (walked.lang) — им же писалось и письмо.
@@ -63,8 +71,8 @@ export function letterLang(letter: string, lang?: string | null): HelloLang {
   return detectLang(letter.replace(/\S*[./]\S*/g, " "));
 }
 
-export function helloFor(letter: string, lang?: string | null): string {
-  return HELLO_TEXT[letterLang(letter, lang)];
+export function helloFor(letter: string, lang?: string | null, texts: HelloTexts = HELLO_TEXT): string {
+  return texts[letterLang(letter, lang)];
 }
 
 /**

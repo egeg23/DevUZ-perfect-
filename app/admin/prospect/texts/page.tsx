@@ -18,10 +18,13 @@ import {
   type StoredText,
 } from "@/lib/admin/letter-texts";
 import { liveTexts, variantStats } from "@/lib/admin/letter-texts-store";
+import { HELLO_TEXT } from "@/lib/admin/hello-first";
+import { savedHello } from "@/lib/admin/hello-text-store";
+import { effectiveHello } from "@/lib/admin/hello-text";
 import { SECTIONS } from "@/lib/admin/roles";
 import { activeStaff } from "@/lib/admin/team";
 
-import { keepTextAction, makeCommonAction, removeTextAction, saveTextAction } from "./actions";
+import { keepTextAction, makeCommonAction, removeTextAction, saveHelloAction, saveTextAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -38,10 +41,10 @@ const AREA = "mt-1 block w-full rounded-lg border border-line bg-surface-2 px-3 
 export default async function LetterTextsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ e?: string; saved?: string; removed?: string; failed?: string }>;
+  searchParams: Promise<{ e?: string; he?: string; saved?: string; hsaved?: string; removed?: string; failed?: string }>;
 }) {
   const staff = await requireSection("/admin/prospect");
-  const { e, saved, removed, failed } = await searchParams;
+  const { e, he, saved, hsaved, removed, failed } = await searchParams;
   const t = pick(letterTextsDict, staff.panel_locale);
   const tp = pick(textProblemDict, staff.panel_locale);
   const lead = staff.role === "admin" || staff.role === "head";
@@ -49,7 +52,14 @@ export default async function LetterTextsPage({
   // панели {кто}, в узбекской и польской {kim}.
   const example = staff.panel_locale === "ru" ? EXAMPLE.ru : EXAMPLE.latin;
 
-  const [texts, stats, people] = await Promise.all([liveTexts(), variantStats(), lead ? activeStaff() : Promise.resolve([])]);
+  const [texts, stats, people, hello] = await Promise.all([
+    liveTexts(),
+    variantStats(),
+    lead ? activeStaff() : Promise.resolve([]),
+    savedHello(),
+  ]);
+  const helloNow = effectiveHello(hello);
+  const helloErrors = parseProblems(he).map((p) => problemText(p, tp));
   const own = texts.filter((x) => x.owner === staff.id);
   const common = texts.filter((x) => x.owner === null);
   const others = texts.filter((x) => x.owner !== null && x.owner !== staff.id);
@@ -116,6 +126,44 @@ export default async function LetterTextsPage({
       ) : failed ? (
         <p className="mt-4 text-sm text-red-300">{t.failed}</p>
       ) : null}
+
+      {/* Своё «Здравствуйте» (lib/admin/hello-text.ts): менять — руководитель и
+          владелец, менеджер видит, что уходит первым. */}
+      <section id="hello" className={BOX}>
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          {t.helloTitle}
+          <HelpHint topic={helpAnchor("/admin/prospect", "hello-text")} />
+        </h2>
+        {lead ? (
+          <form action={saveHelloAction} className="mt-2">
+            <p className="text-xs leading-relaxed text-faint">{t.helloIntro}</p>
+            <div className="mt-3 grid gap-4 md:grid-cols-2">
+              <label className="text-xs text-faint">
+                {t.helloRu}
+                <input name="hello_ru" defaultValue={hello.ru ?? ""} maxLength={80} placeholder={HELLO_TEXT.ru} className={AREA} />
+                <span className="mt-1 block">{t.helloDefault(HELLO_TEXT.ru)}</span>
+              </label>
+              <label className="text-xs text-faint">
+                {t.helloUz}
+                <input name="hello_uz" defaultValue={hello.uz ?? ""} maxLength={80} placeholder={HELLO_TEXT.uz} className={AREA} />
+                <span className="mt-1 block">{t.helloDefault(HELLO_TEXT.uz)}</span>
+              </label>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <SubmitButton pendingLabel={t.saving} base="rounded-lg px-3 py-1.5 text-xs">
+                {t.helloSave}
+              </SubmitButton>
+              {helloErrors.length ? (
+                <span className="text-xs text-red-300">{helloErrors.join(" ")}</span>
+              ) : hsaved ? (
+                <span className="text-xs text-green">{t.helloSaved}</span>
+              ) : null}
+            </div>
+          </form>
+        ) : (
+          <p className="mt-1 text-xs leading-relaxed text-muted">{t.helloNow(helloNow.ru, helloNow.uz)}</p>
+        )}
+      </section>
 
       <section id="mine" className={BOX}>
         <h2 className="text-sm font-semibold">{t.mine}</h2>
@@ -352,6 +400,20 @@ function problemText(p: { code: string; args: (string | number)[] }, t: Picked<t
       return t.unknown_placeholder(String(a ?? ""));
     case "no_theses":
       return t.no_theses;
+    case "hello_long":
+      return t.hello_long(Number(a ?? 8));
+    case "hello_not_greeting":
+      return t.hello_not_greeting;
+    case "hello_link":
+      return t.hello_link;
+    case "hello_digits":
+      return t.hello_digits;
+    case "hello_jargon":
+      return t.hello_jargon(String(a ?? ""));
+    case "hello_banned":
+      return t.hello_banned;
+    case "hello_script":
+      return t.hello_script;
     default:
       return t.unknown;
   }

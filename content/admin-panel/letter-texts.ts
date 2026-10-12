@@ -154,6 +154,33 @@ export const letterTextsDict = defineDict({
     uz: "Saqlanmadi: baza javob bermadi. Yana urinib ko‘ring.",
     pl: "Nie zapisano: baza nie odpowiedziała. Spróbuj jeszcze raz.",
   },
+  // Своё «Здравствуйте» (lib/admin/hello-text.ts): задают руководитель и владелец.
+  helloTitle: { ru: "Первое сообщение", uz: "Birinchi xabar", pl: "Pierwsza wiadomość" },
+  helloIntro: {
+    ru: "С рабочего аккаунта первым уходит только приветствие — письмо о сайте получит тот, кто ответил. Здесь можно заменить «Здравствуйте» своим приветствием: до 8 слов, начинается с приветствия, без ссылок, цифр, цен и технических слов. Поле пустое — уходит обычное.",
+    uz: "Ishchi akkauntdan birinchi bo‘lib faqat salom ketadi — sayt haqidagi xatni javob bergan odam oladi. Bu yerda odatiy salomni o‘z salomingiz bilan almashtirish mumkin: 8 so‘zgacha, salomlashuvdan boshlanadi, havolalar, raqamlar, narxlar va texnik so‘zlarsiz. Maydon bo‘sh bo‘lsa — odatiy salom ketadi.",
+    pl: "Z konta firmowego jako pierwsze wychodzi tylko powitanie — wiadomość o stronie dostaje ten, kto odpowiedział. Tu możesz zastąpić zwykłe powitanie własnym: do 8 słów, zaczyna się od powitania, bez linków, cyfr, cen i słów technicznych. Puste pole — wychodzi zwykłe powitanie.",
+  },
+  helloRu: { ru: "По-русски (кириллицей)", uz: "Ruscha (kirill yozuvida)", pl: "Po rosyjsku (cyrylicą)" },
+  helloUz: { ru: "По-узбекски (латиницей)", uz: "O‘zbekcha (lotin yozuvida)", pl: "Po uzbecku (alfabetem łacińskim)" },
+  /** Что уйдёт, если поле пустое: само приветствие не переводится. */
+  helloDefault: {
+    ru: (text: string) => `Пусто — уйдёт обычное: ${text}`,
+    uz: (text: string) => `Bo‘sh bo‘lsa — odatiy salom ketadi: ${text}`,
+    pl: (text: string) => `Puste — wyjdzie zwykłe: ${text}`,
+  },
+  /** Что уходит сейчас — менеджеру, который поменять не может. */
+  helloNow: {
+    ru: (ru: string, uz: string) => `Сейчас первым уходит: ${ru} (узбекскому сайту — ${uz}). Поменять его могут руководитель и владелец.`,
+    uz: (ru: string, uz: string) => `Hozir birinchi bo‘lib ketadi: ${ru} (o‘zbekcha saytga — ${uz}). Uni rahbar va egasi o‘zgartira oladi.`,
+    pl: (ru: string, uz: string) => `Teraz jako pierwsze wychodzi: ${ru} (do strony po uzbecku — ${uz}). Zmienić je mogą kierownik i właściciel.`,
+  },
+  helloSave: { ru: "Сохранить приветствие", uz: "Salomni saqlash", pl: "Zapisz powitanie" },
+  helloSaved: {
+    ru: "Приветствие сохранено — следующие касания начнутся с него.",
+    uz: "Salom saqlandi — keyingi aloqalar u bilan boshlanadi.",
+    pl: "Powitanie zapisane — kolejne kontakty zaczną się od niego.",
+  },
 });
 
 /** Почему текст не сохранился — по коду проверки (lib/admin/letter-texts.ts). */
@@ -212,6 +239,41 @@ export const textProblemDict = defineDict({
     ru: "Нет {тезисы}: без них письмо не о его сайте, и отвечать ему не на что.",
     uz: "{tezislar} yo‘q: ularsiz xat uning sayti haqida emas va javob berishga sabab yo‘q.",
     pl: "Brak {tezislar}: bez nich wiadomość nie jest o jego stronie i nie ma na co odpowiedzieć.",
+  },
+  hello_long: {
+    ru: (max: number) => `Приветствие длиннее ${max} слов — это уже письмо, а письмо уходит только после ответа.`,
+    uz: (max: number) => `Salom ${max} so‘zdan uzun — bu allaqachon xat, xat esa faqat javobdan keyin ketadi.`,
+    pl: (max: number) => `Powitanie dłuższe niż ${max} słów — to już wiadomość, a ta wychodzi dopiero po odpowiedzi.`,
+  },
+  hello_not_greeting: {
+    ru: "Первое сообщение должно начинаться с приветствия: «Здравствуйте», «Добрый день», «Assalomu alaykum», «Salom».",
+    uz: "Birinchi xabar salomlashuvdan boshlanishi kerak: «Assalomu alaykum», «Salom», «Xayrli kun».",
+    pl: "Pierwsza wiadomość musi zaczynać się od powitania, na przykład «Assalomu alaykum» albo «Salom».",
+  },
+  hello_link: {
+    ru: "В приветствии ссылка или адрес — незнакомцу со ссылкой ставят «спам».",
+    uz: "Salomda havola yoki manzil bor — notanish odamdan havola kelsa, «spam» deb belgilashadi.",
+    pl: "W powitaniu jest link lub adres — nieznajomemu z linkiem klikają «spam».",
+  },
+  hello_digits: {
+    ru: "В приветствии цифры — цены и числа уходят только после ответа клиента.",
+    uz: "Salomda raqamlar bor — narx va raqamlar faqat mijoz javobidan keyin ketadi.",
+    pl: "W powitaniu są cyfry — ceny i liczby wychodzą dopiero po odpowiedzi klienta.",
+  },
+  hello_jargon: {
+    ru: (w: string) => `Технические слова: ${w}.`,
+    uz: (w: string) => `Texnik so‘zlar: ${w}.`,
+    pl: (w: string) => `Słowa techniczne: ${w}.`,
+  },
+  hello_banned: {
+    ru: "Проценты, эмодзи и обещания вроде «в топ» в приветствии нельзя.",
+    uz: "Salomda foizlar, emoji va «topga chiqaramiz» kabi va’dalar bo‘lmasligi kerak.",
+    pl: "W powitaniu nie wolno używać procentów, emoji ani obietnic w rodzaju «na szczyt».",
+  },
+  hello_script: {
+    ru: "Русское приветствие — кириллицей, узбекское — латиницей, без смешения.",
+    uz: "Ruscha salom kirill yozuvida, o‘zbekcha salom lotin yozuvida yoziladi, aralashtirmasdan.",
+    pl: "Powitanie rosyjskie cyrylicą, uzbeckie alfabetem łacińskim, bez mieszania.",
   },
   unknown: {
     ru: "Проверка нашла в тексте то, что не даёт его сохранить.",

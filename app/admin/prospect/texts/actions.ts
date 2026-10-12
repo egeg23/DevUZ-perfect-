@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 
 import { record } from "@/lib/admin/audit";
 import { requestIp, requireRole, requireStaff } from "@/lib/admin/guard";
+import { helloProblems } from "@/lib/admin/hello-text";
+import { saveHello } from "@/lib/admin/hello-text-store";
 import { textProblems } from "@/lib/admin/letter-texts";
 import { liveTexts, makeCommon, removeText, saveText } from "@/lib/admin/letter-texts-store";
 
@@ -80,4 +82,31 @@ export async function makeCommonAction(formData: FormData) {
   await record("letter_text.made_common", { actorStaffId: staff.id, targetType: "letter_text", targetId: id, ip: await requestIp(), meta: { slot } });
   revalidatePath(PAGE);
   redirect(`${PAGE}?${ok ? "saved=1" : "failed=1"}#common`);
+}
+
+/**
+ * Своё «Здравствуйте» (lib/admin/hello-text.ts) — руководитель и владелец.
+ * Первое сообщение уходит с рабочих аккаунтов всех менеджеров, и жалобы
+ * «спам» на него ограничивают общий аккаунт, поэтому не каждому.
+ */
+export async function saveHelloAction(formData: FormData) {
+  const staff = await requireRole("admin", "head");
+  const ru = String(formData.get("hello_ru") ?? "").trim().slice(0, 200);
+  const uz = String(formData.get("hello_uz") ?? "").trim().slice(0, 200);
+
+  const problems = [...helloProblems(ru, "ru"), ...helloProblems(uz, "uz")];
+  if (problems.length) {
+    const codes = JSON.stringify(problems.map((p) => [p.code, ...(p.args ?? [])]));
+    redirect(`${PAGE}?he=${encodeURIComponent(codes)}#hello`);
+  }
+
+  const ok = await saveHello({ ru, uz }, staff.id);
+  await record("hello_text.saved", {
+    actorStaffId: staff.id,
+    targetType: "system",
+    ip: await requestIp(),
+    meta: { ru: ru || null, uz: uz || null },
+  });
+  revalidatePath(PAGE);
+  redirect(`${PAGE}?${ok ? "hsaved=1" : "failed=1"}#hello`);
 }
