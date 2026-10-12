@@ -29,6 +29,22 @@ test("на согласование — только владельцу и ср�
   assert.ok(!NEWS.some((n) => n.text === preview.text && n.roles.some((r) => r !== "admin")));
 });
 
+test("после «Отправляй» — руководителю и менеджерам, ночью ждёт утра", async () => {
+  const team = NEWS.find((n) => n.id === "2026-10-12-owner-day");
+  assert.ok(team);
+  assert.deepEqual([...team.roles].sort(), ["head", "manager"]);
+  assert.ok(team.window);
+  assert.equal(team.window(new Date("2026-10-12T19:45:00Z")), false, "00:45 по Ташкенту — ночь");
+  const morning = new Date("2026-10-13T02:30:00Z"); // 07:30 по Ташкенту
+  assert.equal(newsActive(team, morning), true);
+  assert.equal(team.window(morning), true);
+  assert.equal(newsActive(team, new Date("2026-10-15T01:00:00Z")), false, "через три дня — устарело");
+  assert.match(team.copyNote ?? "", /Копия/);
+  // Уходит ровно то, что владелец согласовал.
+  assert.equal(await team.text("head"), ownerNewsOct12("head"));
+  assert.equal(await team.text("manager"), ownerNewsOct12("manager"));
+});
+
 test("коротко, от первого лица, названия — как в панели", () => {
   for (const role of ["manager", "head"] as const) {
     const text = ownerNewsOct12(role);

@@ -488,6 +488,17 @@ export const NEWS: readonly News[] = [
     text: ownerNewsOct12Preview,
     window: () => true,
   },
+  // …и команде: владелец ответил «Отправляй» в 00:45 по Ташкенту. Ночью не
+  // шлём (messageWindow) — уйдёт с 07:00.
+  {
+    id: "2026-10-12-owner-day",
+    from: "2026-10-12",
+    until: "2026-10-15",
+    roles: ["head", "manager"],
+    text: ownerNewsOct12,
+    window: messageWindow,
+    copyNote: "<i>Копия: это ушло руководителю и менеджерам от вашего имени.</i>",
+  },
 ];
 
 type Row = { id: string; role: Role; chat: number };
