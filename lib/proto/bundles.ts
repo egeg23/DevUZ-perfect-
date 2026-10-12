@@ -23,6 +23,7 @@ import aipply from "@/content/proto-bundles/aipply.json" with { type: "json" };
 import hop from "@/content/proto-bundles/hop.json" with { type: "json" };
 import enotmebel from "@/content/proto-bundles/enotmebel.json" with { type: "json" };
 import giftora from "@/content/proto-bundles/giftora.json" with { type: "json" };
+import liderProf from "@/content/proto-bundles/lider-prof.json" with { type: "json" };
 import intalim from "@/content/proto-bundles/intalim.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
@@ -38,6 +39,7 @@ const BUNDLES: Record<string, Bundle> = {
   hop: hop as Bundle,
   enotmebel: enotmebel as Bundle,
   giftora: giftora as Bundle,
+  "lider-prof": liderProf as Bundle,
   intalim: intalim as Bundle,
 };
 
