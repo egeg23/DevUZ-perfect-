@@ -78,6 +78,15 @@ export const company = {
       flag: "🇺🇸",
       whatsapp: false,
     },
+    {
+      // Владелец, 12.10.2026: «Добавь польский контактный номер: +48
+      // 574050123, новая страна, где мы представлены». WhatsApp на нём есть.
+      e164: "+48574050123",
+      display: "+48 574 050 123",
+      country: { ru: "Польша", en: "Poland", uz: "Polsha", zh: "波兰", uk: "Польща", pl: "Polska" } satisfies LocalizedText,
+      flag: "🇵🇱",
+      whatsapp: true,
+    },
   ],
 
   address: {
