@@ -144,6 +144,9 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "task.failed": { ru: "отметил задачу несделанной", uz: "vazifani bajarilmagan deb belgiladi", pl: "oznaczył zadanie jako niewykonane" },
   "task.moved": { ru: "перенёс срок задачи", uz: "vazifa muddatini ko‘chirdi", pl: "przesunął termin zadania" },
   "task.cancelled": { ru: "отменил задачу", uz: "vazifani bekor qildi", pl: "anulował zadanie" },
+  "learn.switched": { ru: "включил или выключил обучение для команды", uz: "jamoa uchun ta’limni yoqdi yoki o‘chirdi", pl: "włączył lub wyłączył szkolenia dla zespołu" },
+  "learn.material_added": { ru: "добавил материал к курсу", uz: "kursga material qo‘shdi", pl: "dodał materiał do kursu" },
+  "learn.material_removed": { ru: "убрал материал курса", uz: "kurs materialini olib tashladi", pl: "usunął materiał kursu" },
 };
 
 /**

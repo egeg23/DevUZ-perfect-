@@ -1935,6 +1935,90 @@ export const uz: HelpCopy = {
       ],
     },
 
+    /* ── Обучение ─────────────────────────────────────────────────────── */
+    "/admin/learn": {
+      what: "Sotuv kurslari — studiya kompaniyalarga aslida qanday yozishi haqida — va panel bo‘yicha test. Har bir kurs — jonli iboralar bilan bir nechta qisqa dars va oxirida test; panel bo‘yicha test sizga ochiq bo‘limlar haqida so‘raydi. Testlarni shu yerda yoki studiyaning Telegram botida topshirish mumkin.",
+      items: [
+        {
+          id: "switch",
+          title: "O‘chirgich: jamoa bo‘limni faqat siz tugmani bosgandan keyin ko‘radi",
+          roles: ["admin"],
+          body: [
+            "Ta’lim o‘chirilgan ekan, bo‘limni faqat siz ko‘rasiz: rahbar va menejerlarda u na menyuda, na yo‘riqnomada bor, sahifa ularni bosh sahifaga qaytaradi, bot esa /learn ga ta’lim hali yoqilmaganini aytadi. Bu vaqtda majburiylik va o‘tish bali hech kimga ta’sir qilmaydi. O‘zingiz istalgan kurs va testni — panelda ham, botda ham — topshirib, qanday ko‘rinishini tekshirishingiz mumkin.",
+            "Bo‘lim tepasida sariq plashka va **«Jamoa uchun ta’limni yoqish»** tugmasi. Bosdingiz — bo‘lim hammaning menyusida paydo bo‘ladi, jamoaning bot menyusiga /learn qo‘shiladi, menejerlarda esa «Topshirish qoldi» bloki chiqadi. Plashka yashil bo‘ladi, tugma o‘rnida — **«Ta’limni o‘chirish»**: u bo‘limni yana yashiradi, natijalar yo‘qolmaydi. Kim va qachon yoqqan va o‘chirgani [Jurnal](/admin/audit)da ko‘rinadi.",
+            "O‘tish bali va majburiylik kodda yozilgan (`lib/learn/rules.ts`): hozir — 70% to‘g‘ri javob, kurslar menejerlar uchun majburiy. Egasining 12.10.2026 dagi qarori; ularni o‘zgartirish — bitta qatorni tahrirlash.",
+          ],
+        },
+        {
+          id: "courses",
+          title: "Sotuv kurslari",
+          body: [
+            "Oltita kurs: «Ikki qadamli aloqa», «Dumaloq video», «+» — maketga rozilik», «E’tirozlar», «Xat yondashuvlari» va «Iliq lidlar». Bu kitoblardagi umumiy maslahatlar emas, bizning jarayonimiz: nega birinchi bo‘lib faqat salom ketadi, qachon dumaloq video o‘rniga xat ketadi, dumaloq videoga nima «ha» hisoblanadi, «qimmat» va «taklif yuboring»ga nima deyish kerak, iliq lidlar navbati qanday ishlaydi. Yondashuvlar kursida avtoaloqaning haqiqiy matnlari bor — [«Aloqalar»](/admin/prospect) → «Xat matnlari va A/B»dagilarning o‘zi.",
+            "Kurs **«Sotuv kurslari»** blokidagi kartochka orqali ochiladi. Ichida — tartib bilan darslar, ular ostida **«Materiallar»** — egasi qo‘shadigan havolalar (video, suhbat yozuvlari, maqolalar) va test. Kurs kartochkasida unda nechta dars va savol borligi hamda eng yaxshi natijangiz ko‘rinadi: «topshirildi», eng yaxshi hisob bilan «topshirilmadi» yoki «hali topshirilmagan».",
+          ],
+        },
+        {
+          id: "quiz",
+          title: "Testni qanday topshirish kerak",
+          body: [
+            "**«Testni boshlash»**ni bosing. Savollar birma-bir keladi, variantlar aralashtirilgan. Javob tanladingiz — darhol to‘g‘ri yoki noto‘g‘riligi ko‘rinadi; noto‘g‘ri bo‘lsa — qaysi javob to‘g‘ri, nega va **«Darsni qayta o‘qish»** havolasi (panel bo‘yicha testda — **«Yo‘riqnoma bandini ochish»**). Keyin — **«Keyingi savol»**, oxirgisida — **«Testni yakunlash»**. Tepadagi chiziq qanchasi o‘tilganini ko‘rsatadi.",
+            "Topshirildi — kamida 70% to‘g‘ri javob. Savolni o‘tkazib yuborib bo‘lmaydi: javobsiz savol noto‘g‘ri hisoblanadi. Qayta topshirish cheklanmagan — **«Yana topshirish»**, eng yaxshi natija hisoblanadi. Javoblarni brauzer emas, server tekshiradi va har bir urinish saqlanadi.",
+            "Xuddi shu testlar studiyaning Telegram botida ham bor: unga /learn deb yozing va testni tanlang. Bot raqamlangan variantlar va raqamli tugmalar bilan savol yuboradi, bosgandan keyin tushuntirish bilan to‘g‘ri yoki noto‘g‘riligini aytadi, oxirida — natija. Botdagi natija paneldagi bilan bitta jadvalga tushadi. Bot panel tilini o‘rganmaguncha ruscha yozadi.",
+          ],
+        },
+        {
+          id: "panel-quiz",
+          title: "Panel bo‘yicha test",
+          body: [
+            "**«Panel bo‘yicha test»** panel bo‘limlarini qanchalik bilishingizni tekshiradi: lidlar navbati, [kunlik to‘plam](#prospect-portion), salom va dumaloq video, maketlar, loyihalar, moliya. Savollar shu yo‘riqnomadan yig‘ilgan va har biri o‘z bandiga olib boradi: xato qildingiz — yonida aynan shu haqda yozilgan joyga havola.",
+            "Savollar — faqat sizga ochiq bo‘limlar va rolingiz ko‘radigan bandlar haqida. Shuning uchun menejer va rahbarda ularning soni har xil: rahbar «Jamoa», «Hamkorlar» va «Akkauntlar» haqida ham javob beradi.",
+          ],
+        },
+        {
+          id: "required",
+          title: "Nima majburiy",
+          body: {
+            manager: [
+              "Ta’lim menejerlar uchun majburiy — egasining 12.10.2026 dagi qarori: har bir kurs va panel bo‘yicha test, kamida 70% to‘g‘ri javob. Bo‘lim tepasida **«Topshirish qoldi»** bloki — hali nima topshirilmagani, kursga havola bilan. Hammasini topshirdingiz — u yerda barcha majburiy testlar topshirilgani yoziladi.",
+              "Bu ishni yopmaydi: kartochkalar, kunlik to‘plam va lidlar odatdagidek keladi. Lekin rahbar va egasi kim nimani topshirganini ko‘radi — kurslarni birinchi kunlarda o‘ting.",
+            ],
+            head: [
+              "Kurslar menejerlar uchun majburiy — egasining 12.10.2026 dagi qarori: har bir kurs va panel bo‘yicha test, kamida 70% to‘g‘ri javob. Siz uchun — xohishga ko‘ra, lekin panel bo‘yicha testni o‘zingiz topshirgan foydali: menejerlaringizdan nima so‘ralishi ko‘rinadi.",
+              "Majburiylik ishni yopmaydi — faqat ko‘rsatiladi: menejerda «Topshirish qoldi» bloki, sizda — [jamoa natijalari](#learn-results)dagi **«Topshirilmagan»** ustuni.",
+            ],
+            admin: [
+              "Ta’lim yoqilgan ekan, kurslar menejerlar uchun majburiy: har bir kurs va panel bo‘yicha test, kamida 70% to‘g‘ri javob. Rahbar va siz uchun — xohishga ko‘ra. O‘chirilgan bo‘lsa — majburiylik hech kimga ta’sir qilmaydi, [o‘chirgich](#learn-switch)ga qarang.",
+              "U ishni yopmaydi — faqat ko‘rsatiladi: menejerda «Topshirish qoldi» bloki, sizda va rahbarda — [jamoa natijalari](#learn-results)dagi **«Topshirilmagan»** ustuni. «Yangi» menejer — bo‘lim ishga tushgandan keyin qo‘shilgan; unga ham, boshqalarga ham kurslar topshirilmaguncha majburiy.",
+            ],
+          },
+        },
+        {
+          id: "results",
+          title: "Jamoa natijalari",
+          roles: ["admin", "head"],
+          body: [
+            "Bo‘lim pastida — **«Jamoa natijalari»** jadvali: qatorda — xodim va uning roli, ustunlarda — har bir kurs va panel bo‘yicha test. Katakda — eng yaxshi natija, masalan «5/6»: yashil — topshirilgan, sariq — hali yo‘q, nuqta — topshirmagan. **«yangi»** belgisi — bo‘lim ishga tushgandan keyin qo‘shilgan menejer.",
+            "Ta’lim yoqilgan ekan, oxirgi **«Topshirilmagan»** ustuni menejerga nima topshirish qolganini sanaydi yoki hammasi topshirilganini yozadi; rahbar va egasida u yerda **«xohishga ko‘ra»**. Jadval panel va botdagi urinishlarni birga yig‘adi. Ortda qolganga shaxsan yozib, xatolarni birga ko‘rib chiqishni taklif qilgan yaxshi: test kimni urishishni emas, nimani tushuntirishni ko‘rsatadi.",
+          ],
+        },
+        {
+          id: "materials",
+          title: "Kurs materiallari",
+          body: {
+            manager: [
+              "Kursda darslar ostida — **«Materiallar»** bloki: egasi qo‘shgan havolalar — video, muvaffaqiyatli suhbatlar yozuvlari, maqolalar. Yangi oynada ochiladi. Havola yo‘q bo‘lsa, kursga hozircha material yo‘qligi yoziladi: kurs ularsiz ham o‘tiladi.",
+            ],
+            head: [
+              "Kursda darslar ostida — **«Materiallar»** bloki: egasi qo‘shgan havolalar — video, muvaffaqiyatli suhbatlar yozuvlari, maqolalar. Yangi oynada ochiladi. Jamoa uchun foydali narsa topsangiz — egasiga yuboring, u qo‘shadi.",
+            ],
+            admin: [
+              "Har bir kursda va panel bo‘yicha testda darslar ostida — **«Materiallar»** bloki. **«Nomi»** va **«Havola»**ni kiriting (faqat https:// yoki http:// bilan boshlanadigan manzil) va **«Material qo‘shish»**ni bosing — havola bo‘lim ochiq bo‘lgan hammada darhol paydo bo‘ladi. Havola yonidagi **«Materialni olib tashlash»** uni o‘chiradi. Qo‘shish va olib tashlashni faqat siz qila olasiz; har bir harakat — [Jurnal](/admin/audit)da.",
+            ],
+          },
+        },
+      ],
+    },
+
     /* ── Инструкции ───────────────────────────────────────────────────── */
     "/admin/help": {
       what: "Shu sahifa. Bu yerda bo‘limlar bo‘yicha panel qanday ishlashi va nima nimaga bog‘liqligi yozilgan — faqat sizga ochiq narsalar haqida va siz ko‘rgandek.",

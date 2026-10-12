@@ -1,5 +1,6 @@
 import { inQueue } from "@/lib/admin/lead-queue";
 import type { Role } from "@/lib/admin/roles";
+import { sectionOn } from "@/lib/admin/section-switch";
 import { deleteMyCommands, setMyCommands, type BotCommand } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -61,6 +62,13 @@ const STAFF_EXTRA: BotCommand[] = [{ command: "login", description: "Вход в
  */
 const QUEUE_EXTRA: BotCommand[] = [{ command: "leads", description: "Получать лиды: включить или выключить поток" }];
 
+/**
+ * Тесты «Обучения» в боте (lib/learn/bot.ts). Владельцу — всегда: он
+ * проверяет раздел до того, как включить его команде; остальным — только
+ * когда обучение включено (lib/admin/section-switch.ts).
+ */
+const LEARN_EXTRA: BotCommand[] = [{ command: "learn", description: "Обучение: курсы и тесты" }];
+
 export type MenuSync = { ok: boolean; staff: number; failed: number };
 
 export async function syncBotMenu(): Promise<MenuSync> {
@@ -78,6 +86,7 @@ export async function syncBotMenu(): Promise<MenuSync> {
   if (!db) return { ok: publicOk, staff: 0, failed: publicOk ? 0 : 1 };
 
   const { data } = await db.from("staff").select("telegram_user_id, is_active, role").limit(500);
+  const learnOn = await sectionOn("/admin/learn");
   let staff = 0;
   let failed = publicOk ? 0 : 1;
   for (const row of data ?? []) {
@@ -88,7 +97,12 @@ export async function syncBotMenu(): Promise<MenuSync> {
     // и получить «вас нет в списке» было бы обидно.
     const ok = row.is_active
       ? await setMyCommands(
-          [...PUBLIC_RU, ...STAFF_EXTRA, ...(inQueue(row.role as Role) ? QUEUE_EXTRA : [])],
+          [
+            ...PUBLIC_RU,
+            ...STAFF_EXTRA,
+            ...(inQueue(row.role as Role) ? QUEUE_EXTRA : []),
+            ...(learnOn || row.role === "admin" ? LEARN_EXTRA : []),
+          ],
           { scope },
         )
       : await deleteMyCommands(scope);

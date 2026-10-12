@@ -1,5 +1,6 @@
 import { panelLocale, type PanelLocale } from "@/lib/admin/i18n";
 import { sectionAccess, type Role, type SectionAccess } from "@/lib/admin/roles";
+import { sectionsOff } from "@/lib/admin/section-switch";
 import { createHash, randomBytes } from "node:crypto";
 
 import { serviceClient } from "@/lib/supabase";
@@ -38,6 +39,8 @@ export type Staff = {
   panel_locale: PanelLocale;
   /** Галочки владельца по разделам поверх роли (roles.ts, opens). */
   section_access?: SectionAccess;
+  /** Разделы, которые владелец ещё не включил для команды (roles.ts, SWITCHED_SECTIONS). */
+  sections_off?: readonly string[];
 };
 
 /**
@@ -181,6 +184,9 @@ export async function staffForSession(token: string): Promise<Staff | null> {
 
   const staff = await staffById(data.staff_id as string);
   if (!staff) return null;
+  // Выключатель разделов — только в сессии панели: меню, страницы и
+  // инструкция читают его через opens(). Владельцу не нужен — ему открыто всё.
+  if (staff.role !== "admin") staff.sections_off = await sectionsOff();
 
   await db
     .from("staff_sessions")

@@ -146,6 +146,11 @@ export const SECTIONS: readonly Section[] = [
   // вход поддержки в чужой кабинет (docs/ai-staff/design.md) — остаются
   // только владельцу: эту вкладку закрывает сама страница.
   { href: "/admin/ai-staff", label: { ru: "ИИ-сотрудники", uz: "SI xodimlar", pl: "Pracownicy AI" }, roles: WITH_HEAD },
+  // Обучение — курсы по продажам и тест по панели (владелец, 12.10.2026:
+  // «Добавить курсы по продажам и тестирование по знаниям дашборда»). Всем,
+  // но с выключателем: пока владелец не нажал «Включить обучение для
+  // команды», раздел видит только он (SWITCHED_SECTIONS ниже).
+  { href: "/admin/learn", label: { ru: "Обучение", uz: "Ta’lim", pl: "Szkolenia" }, roles: EVERYONE },
   // Инструкции — последними: это справка, а не ежедневная работа. Видят все,
   // и каждый читает только про свои вкладки.
   { href: "/admin/help", label: { ru: "Инструкции", uz: "Yo‘riqnoma", pl: "Instrukcje" }, roles: EVERYONE },
@@ -193,14 +198,33 @@ export function sectionAccess(raw: unknown): SectionAccess {
   return out;
 }
 
-/** Кто смотрит: роль и галочки владельца. */
-export type Viewer = { role: Role; section_access?: SectionAccess | null };
+/**
+ * Разделы с выключателем владельца: пока он не включил раздел для команды,
+ * его видит только владелец — ни меню, ни страницы, ни инструкции, ни бота.
+ *
+ * Владелец, 12.10.2026, об «Обучении»: «Пока не активируй, просто делаем
+ * чтобы я видел, потом через кнопку включу». Почему выключатель, а не роль
+ * ADMIN_ONLY в SECTIONS: роли раздела — это то, кому он положен, когда
+ * работает, и по ним написана и проверяется инструкция для каждой роли.
+ * Выключатель — временное состояние в базе (lib/admin/section-switch.ts),
+ * которое кнопка меняет без выкатки. Сессия кладёт выключенные разделы в
+ * `sections_off`, а `opens` их закрывает поверх роли и галочек.
+ */
+export const SWITCHED_SECTIONS: readonly string[] = ["/admin/learn"];
 
-/** Открыт ли раздел этому человеку: владельцу — всё, остальным — роль и галочки. */
+/**
+ * Кто смотрит: роль, галочки владельца и выключенные разделы. Без
+ * `sections_off` (тесты, бот, чужая запись в «Команде») выключатель не
+ * учитывается — его читает только сессия панели.
+ */
+export type Viewer = { role: Role; section_access?: SectionAccess | null; sections_off?: readonly string[] | null };
+
+/** Открыт ли раздел этому человеку: владельцу — всё, остальным — выключатель, роль и галочки. */
 export function opens(who: Viewer, href: string): boolean {
   if (who.role === "admin" || ALWAYS_OPEN.includes(href)) return true;
   const section = SECTIONS.find((s) => s.href === href);
   if (!section) return false;
+  if (who.sections_off?.includes(href)) return false;
   const own = who.section_access?.[href];
   return typeof own === "boolean" ? own : section.roles.includes(who.role);
 }
@@ -234,6 +258,14 @@ export function accessFromForm(role: Role, checked: readonly string[]): SectionA
  */
 export function seesEveryone(role: Role): boolean {
   return role === "admin" || role === "head";
+}
+
+/**
+ * Кто видит результаты обучения всей команды: кто что сдал и кто ещё нет.
+ * Руководитель и владелец — им решать, кого доучить. Менеджер видит свои.
+ */
+export function seesTeamLearning(role: Role): boolean {
+  return seesEveryone(role);
 }
 
 /**
