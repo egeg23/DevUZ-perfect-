@@ -428,3 +428,11 @@ test("IntalimStudents: прототип приложения автошколы 
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
   assert.notEqual(stamped.pages.uz, site.pages.uz, "отпечаток не поставился на узбекской");
 });
+
+test("шрифты макетов из public не уезжают в языковой редирект", async () => {
+  const { config } = await import("@/middleware");
+  const re = new RegExp(`^${config.matcher[0]}$`);
+  assert.equal(re.test("/protos/intalim/onest-cyr.woff2"), false, "woff2 попадает под языковой редирект");
+  assert.equal(re.test("/protos/giftora/atlas.webp"), false);
+  assert.equal(re.test("/razbory"), true, "страницы сайта по-прежнему идут через языки");
+});

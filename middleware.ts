@@ -153,7 +153,10 @@ export const config = {
   // в языковой редирект на /ru/yandex_<код>.html, где его нет, и робот
   // видит 404 вместо подтверждения. Проверяется это уже после того, как
   // код вставлен в панель вебмастера, — то есть в самый неудобный момент.
+  //
+  // Шрифты тоже: макет IntalimStudents грузит свой Onest из
+  // /protos/intalim/*.woff2, и с редиректом на /ru/… шрифт не доезжал.
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|html|webmanifest)).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|html|webmanifest|woff2|woff|ttf)).*)",
   ],
 };
