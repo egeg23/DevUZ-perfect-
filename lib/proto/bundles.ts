@@ -23,6 +23,7 @@ import aipply from "@/content/proto-bundles/aipply.json" with { type: "json" };
 import hop from "@/content/proto-bundles/hop.json" with { type: "json" };
 import enotmebel from "@/content/proto-bundles/enotmebel.json" with { type: "json" };
 import giftora from "@/content/proto-bundles/giftora.json" with { type: "json" };
+import intalim from "@/content/proto-bundles/intalim.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -37,6 +38,7 @@ const BUNDLES: Record<string, Bundle> = {
   hop: hop as Bundle,
   enotmebel: enotmebel as Bundle,
   giftora: giftora as Bundle,
+  intalim: intalim as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */
