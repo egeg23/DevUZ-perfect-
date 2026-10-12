@@ -5,6 +5,7 @@ import { Deck, Slide, SlideTitle, usd } from "@/components/partners/deck";
 import { company } from "@/content/company";
 import { deckCopy } from "@/content/partner-decks";
 import { isLocale, localeHref } from "@/lib/i18n";
+import { GRADES, gradeCap } from "@/lib/partners/grades";
 import { PARTNER_TIERS, tierPercent } from "@/lib/partners/rules";
 import { buildMetadata } from "@/lib/seo";
 
@@ -84,6 +85,32 @@ export default async function ProgramDeck({
           </tbody>
         </table>
         <p className="mt-6 max-w-3xl text-sm leading-relaxed text-muted">{t.modelsNote}</p>
+      </Slide>
+
+      <Slide>
+        <SlideTitle>{t.gradesTitle}</SlideTitle>
+        <p className="mt-4 max-w-3xl text-muted">{t.gradesLead}</p>
+        <div className="mt-6 grid gap-8 lg:grid-cols-2">
+          {(["agency", "blogger"] as const).map((kind) => (
+            <div key={kind}>
+              <p className="font-display text-lg font-semibold">{kind === "agency" ? t.gradesAgency : t.gradesBlogger}</p>
+              <table className="mt-3 w-full text-sm">
+                <tbody className="divide-y divide-white/10">
+                  {GRADES[kind].map((g) => (
+                    <tr key={g.key}>
+                      <td className="py-2.5 font-semibold">{t.gradeNames[g.key] ?? g.key}</td>
+                      <td className="py-2.5 text-muted">
+                        {g.projects === 0 ? t.gradeStart : t.gradeWhen(g.projects, g.turnoverUsd === null ? null : usd(locale, g.turnoverUsd))}
+                      </td>
+                      <td className="py-2.5 text-right font-display text-lg font-semibold text-green">+{g.bonus}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 max-w-3xl text-xs leading-relaxed text-faint">{t.gradesNote(gradeCap("profit"), gradeCap("turnover"))}</p>
       </Slide>
 
       <Slide>

@@ -155,7 +155,7 @@ export default async function StudioDeck({
           </a>
         </div>
         <p className="mt-8 text-sm text-faint">
-          devuz.studio · t.me/{company.telegram} · {company.phones[0].display}
+          devuz.studio · t.me/{company.telegram} · {company.phones.filter((p) => p.whatsapp).map((p) => p.display).join(" · ")}
         </p>
       </Slide>
     </Deck>
