@@ -340,13 +340,13 @@ test("Enotmebel: конструктор — сайт 1 700 $, все допы в
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why), `${a.id}: нет описания`);
 });
 
-test("Giftora: демо мини-приложения на ru и en — условия, noindex, только игровая валюта, без внешних загрузок", () => {
+test("Giftora: демо мини-приложения и панель оператора на ru и en — условия, noindex, только игровая валюта, без внешних загрузок", () => {
   const site = bundlePages("giftora");
   assert.ok(site);
   const all: Record<string, string> = { "": site.html, ...site.pages };
-  assert.deepEqual(Object.keys(all).sort(), ["", "en"]);
+  assert.deepEqual(Object.keys(all).sort(), ["", "admin", "en", "en/admin"]);
   for (const [path, page] of Object.entries(all)) {
-    const lang = path === "en" ? "en" : "ru";
+    const lang = path.startsWith("en") ? "en" : "ru";
     assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
     assert.ok(page.includes(`<html lang="${lang}"`), `${path}: язык страницы`);
     assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
@@ -361,7 +361,16 @@ test("Giftora: демо мини-приложения на ru и en — усло
     // Всё своё: ни скриптов, ни картинок, ни шрифтов со стороны, ни кошелька.
     assert.doesNotMatch(page, /<script[^>]+src=|<link[^>]+stylesheet|<img[^>]+src="https?:|url\(https?:/i, `${path}: внешняя загрузка`);
     assert.doesNotMatch(page, /tonconnect|telegram-web-app\.js|openInvoice/i, `${path}: настоящий кошелёк или платёж`);
+    if (path.endsWith("admin")) {
+      // Владелец, 12.10.2026: RTP, депозиты и выводы по дням на одном графике, пользователи, промо, рефералы.
+      assert.match(page, /class="chip"/, `${path}: нет пометки «Демо»`);
+      for (const tab of ["overview", "rtp", "users", "promo", "refs"]) assert.ok(page.includes(`data-tab="${tab}"`), `${path}: нет вкладки ${tab}`);
+      assert.match(page, /b-dep[\s\S]*b-wd[\s\S]*l-net/, `${path}: на графике нет депозитов, выводов и разницы`);
+      assert.ok(page.includes("gx-admin-1"), `${path}: настройки не общие с приложением`);
+      continue;
+    }
     assert.match(page, /class="chip demo"/, `${path}: нет пометки «Демо»`);
+    assert.ok(page.includes("gx-admin-1") && page.includes("/admin"), `${path}: приложение не читает настройки панели или нет входа в неё`);
     for (const view of ["home", "box", "hub", "rocket", "dice", "upgrade", "pvp", "inv", "top", "tasks", "profile"]) {
       assert.ok(page.includes(`V.${view} = function`), `${path}: нет экрана ${view}`);
     }
@@ -370,4 +379,5 @@ test("Giftora: демо мини-приложения на ru и en — усло
   const stamped = stampedBundle("giftora", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
   assert.notEqual(stamped.pages.en, site.pages.en, "отпечаток не поставился на английской");
+  assert.notEqual(stamped.pages.admin, site.pages.admin, "отпечаток не поставился на панели");
 });
