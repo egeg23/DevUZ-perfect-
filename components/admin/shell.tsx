@@ -2,22 +2,18 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { signOut } from "@/app/admin/actions";
-import { ROLE_BADGE, navOf, sectionLabel } from "@/lib/admin/roles";
+import { ROLE_BADGE } from "@/lib/admin/roles";
+import { findable, menuOf } from "@/lib/admin/nav";
 import type { Staff } from "@/lib/admin/session";
 import { pick } from "@/lib/admin/i18n";
-import { shellDict } from "@/content/admin-panel/shell";
+import { navGroupDict, shellDict } from "@/content/admin-panel/shell";
 import { SectionHelpLink } from "@/components/admin/help-link";
-import { AdminNavLink } from "@/components/admin/nav-link";
+import { NavMenu, type NavMenuGroup } from "@/components/admin/nav-menu";
 import { LocaleSwitch } from "@/components/admin/locale-switch";
 import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { UsageBeacon } from "@/components/admin/usage-beacon";
 import { TaskPulse } from "@/components/admin/task-alerts";
 
-/**
- * Разделы приходят из матрицы ролей — одной на панель, уведомления и
- * действия. Здесь только раскладка: общие пункты ярче, административные
- * тише.
- */
 /**
  * Каркас панели.
  *
@@ -37,6 +33,14 @@ export function AdminShell({
 }) {
   const locale = staff.panel_locale;
   const t = pick(shellDict, locale);
+  // Разделы приходят из матрицы ролей с галочками владельца (menuOf → navOf),
+  // уже разложенные по группам. Общие пункты ярче, административные тише.
+  const groupName = pick(navGroupDict, locale);
+  const menu: NavMenuGroup[] = menuOf(staff).map(({ group, sections }) => ({
+    id: group,
+    label: groupName[group],
+    items: sections.map((s) => ({ ...findable(s, groupName[group], locale), quiet: s.roles.length === 1 })),
+  }));
   return (
     <PanelLocaleProvider locale={locale}>
       <div className="admin-panel min-h-screen">
@@ -74,20 +78,11 @@ export function AdminShell({
             </div>
           </div>
 
-          {/* Меню — одной строкой с прокруткой, а не переносом: двенадцать
-              пунктов в четыре ряда занимали на телефоне треть экрана, и
-              содержимое страницы начиналось за сгибом. */}
-          <nav className="no-scrollbar mx-auto max-w-7xl overflow-x-auto px-4 pb-2.5 sm:px-5 sm:pb-3">
-            <div className="flex w-max gap-4 text-sm sm:w-auto sm:flex-wrap">
-              {/* Открытый раздел подсвечен (AdminNavLink): по адресу видно,
-                  где ты, только в строке браузера, а её на телефоне нет. */}
-              {navOf(staff).map((item) => (
-                <AdminNavLink key={item.href} href={item.href} quiet={item.roles.length === 1}>
-                  {sectionLabel(item, locale)}
-                </AdminNavLink>
-              ))}
-            </div>
-          </nav>
+          {/* Меню группами: двадцать с лишним пунктов в строку владелец
+              называл «с ума пойдешь». Открытая группа и раздел подсвечены —
+              по адресу видно, где ты, только в строке браузера, а её на
+              телефоне нет. */}
+          <NavMenu groups={menu} />
         </header>
 
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">{children}</main>

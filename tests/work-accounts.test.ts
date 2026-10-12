@@ -192,5 +192,5 @@ test("в верхнем меню панели открытый раздел по
   assert.match(link, /const active = sectionOfHref\(pathname \?\? ""\) === href;/);
   assert.match(link, /aria-current=\{active \? "page" : undefined\}/);
   assert.match(link, /border-green font-medium text-green/);
-  assert.match(read("components/admin/shell.tsx"), /<AdminNavLink key=\{item\.href\} href=\{item\.href\}/);
+  assert.match(read("components/admin/nav-menu.tsx"), /<AdminNavLink key=\{item\.href\} href=\{item\.href\}/);
 });
