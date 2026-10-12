@@ -85,6 +85,8 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "letter_text.removed": { ru: "убрал текст письма касания", uz: "aloqa xati matnini olib tashladi", pl: "usunął tekst wiadomości kontaktowej" },
   "letter_text.kept": { ru: "оставил лучший текст письма по A/B", uz: "A/B bo‘yicha eng yaxshi xat matnini qoldirdi", pl: "zostawił najlepszy tekst wiadomości po teście A/B" },
   "letter_text.made_common": { ru: "сделал текст менеджера общим для команды", uz: "menejer matnini jamoa uchun umumiy qildi", pl: "ustawił tekst menedżera jako wspólny dla zespołu" },
+  "hello_text.saved": { ru: "сменил первое сообщение касания («Здравствуйте»)", uz: "aloqaning birinchi xabarini (salomni) o‘zgartirdi", pl: "zmienił pierwszą wiadomość kontaktu (powitanie)" },
+  "prospect.edit_requested": { ru: "исправил отправленное сообщение касания", uz: "yuborilgan aloqa xabarini tuzatdi", pl: "poprawił wysłaną wiadomość kontaktu" },
   "stream.on": { ru: "включил поток «Получать лиды» в Telegram", uz: "Telegram’da «Получать лиды» oqimini yoqdi", pl: "włączył strumień «Получать лиды» w Telegramie" },
   "stream.off": { ru: "выключил поток «Получать лиды» в Telegram", uz: "Telegram’da «Получать лиды» oqimini o‘chirdi", pl: "wyłączył strumień «Получать лиды» w Telegramie" },
   "autopilot.on": { ru: "включил автопрогон касаний", uz: "avtomatik aloqalarni yoqdi", pl: "włączył automatyczne kontakty" },

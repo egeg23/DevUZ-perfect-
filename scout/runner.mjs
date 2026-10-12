@@ -640,7 +640,7 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
       // ограничивает аккаунт. Письмо уйдёт, когда клиент ответит.
       const sent = await client.sendMessage(userId, { message: job.hello });
       const messageId = sent?.id === undefined || sent?.id === null ? null : Number(sent.id);
-      await markSent(job.id, userId, messageId, key);
+      await markSent(job.id, userId, messageId, key, job.hello);
       console.log(`касания${tag}: «${job.hello}» — ${job.target} по сайту ${job.host}`);
 
       // И сразу перечитываем переписку.
@@ -763,13 +763,14 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
           console.log(`переписка${tag}: кружка (${reply.lang}) в «Избранном» нет — ${reply.target} уйдёт письмо`);
           return;
         }
-        await toPeer(reply, (to) => client.sendFile(to, { file: circle.media }));
-        await markReplySent(reply.id);
+        const sentCircle = await toPeer(reply, (to) => client.sendFile(to, { file: circle.media }));
+        await markReplySent(reply.id, sentCircle?.id ?? null);
         console.log(`переписка${tag}: кружок (${reply.lang}) ${reply.target} по сайту ${reply.host}`);
         return;
       }
-      await toPeer(reply, (to) => client.sendMessage(to, { message: reply.body }));
-      await markReplySent(reply.id);
+      // Номер ушедшего — для «Исправить» (lib/admin/outreach-edit.ts).
+      const sent = await toPeer(reply, (to) => client.sendMessage(to, { message: reply.body }));
+      await markReplySent(reply.id, sent?.id ?? null);
       console.log(`переписка${tag}: ответил ${reply.target} по сайту ${reply.host}`);
     } catch (error) {
       const why = error?.errorMessage ?? error?.message ?? String(error);

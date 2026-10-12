@@ -94,6 +94,11 @@ export const AUDIT_ACTIONS = [
   "letter_text.removed",
   "letter_text.kept",
   "letter_text.made_common",
+  // Своё «Здравствуйте» (lib/admin/hello-text.ts): руководитель или владелец
+  // сменил первое сообщение касания.
+  "hello_text.saved",
+  // «Исправить» у отправленного письма или ответа (lib/admin/outreach-edit-request.ts).
+  "prospect.edit_requested",
   // Поток «Получать лиды» в боте: включил и выключил.
   "stream.on",
   "stream.off",

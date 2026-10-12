@@ -9,6 +9,7 @@ import {
   closeTouch,
   markSelfContacted,
   prepareOutreach,
+  prospectById,
   queueOutreach,
   recordManualAnswer,
   saveProspects,
@@ -17,6 +18,10 @@ import {
   writeMyself,
 } from "@/lib/admin/outreach-store";
 import { requestIp, requireRole, requireStaff } from "@/lib/admin/guard";
+import { leadById } from "@/lib/admin/leads";
+import { canEdit } from "@/lib/admin/ownership";
+import type { EditState } from "@/lib/admin/outreach-edit";
+import { requestEdit, type EditError } from "@/lib/admin/outreach-edit-request";
 import { deliverReplacement, portionOwner, topUpPortion } from "@/lib/admin/portion-store";
 import { nudgeStream } from "@/lib/admin/stream-store";
 import { isCloseReason } from "@/lib/admin/touch-close";
@@ -332,4 +337,53 @@ export async function toggleAutopilotAction(formData: FormData) {
   await setAutopilot(formData.get("enabled") === "1", staff, await requestIp());
   revalidatePath("/admin/prospect");
   redirect("/admin/prospect#autopilot");
+}
+
+/**
+ * «Исправить» у отправленного письма или ответа (lib/admin/outreach-edit-request.ts).
+ *
+ * Зовётся из карточки «Касаний» (письмо касания, `lineId` null) и из чата
+ * карточки лида (любая наша реплика). Право — как у «Клиент отказался»: кто
+ * касание ведёт, руководитель и владелец; из карточки лида — ещё и тот, за
+ * кем лид. Ответ — код, слова берёт панель на языке сотрудника.
+ */
+export async function editSentAction(input: {
+  prospectId: string;
+  lineId: string | null;
+  leadId: string | null;
+  body: string;
+}): Promise<
+  | { ok: true; state: EditState }
+  | { ok: false; reason: EditError; problems?: { code: string; args: (string | number)[] }[] }
+> {
+  const staff = await requireStaff();
+  const prospectId = String(input?.prospectId ?? "");
+  const lineId = input?.lineId ? String(input.lineId) : null;
+  const leadId = input?.leadId ? String(input.leadId) : null;
+  if (!prospectId) return { ok: false, reason: "gone" };
+
+  // Свой лид — тоже право: разговор принадлежит тому, за кем лид (canEdit),
+  // если это лид именно этой карточки.
+  let leadOwner = false;
+  if (leadId) {
+    const lead = await leadById(leadId);
+    if (lead && canEdit(lead, staff)) leadOwner = (await prospectById(prospectId))?.lead_id === leadId;
+  }
+
+  const result = await requestEdit({
+    prospectId,
+    lineId,
+    body: String(input?.body ?? "").slice(0, 5000),
+    staff,
+    leadOwner,
+    ip: await requestIp(),
+  });
+  revalidatePath("/admin/prospect");
+  if (leadId) revalidatePath(`/admin/leads/${leadId}`);
+  if (result.ok) return result;
+  return {
+    ok: false,
+    reason: result.reason,
+    problems: result.problems?.map((p) => ({ code: p.code, args: p.args ?? [] })),
+  };
 }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { replyInTalkAction } from "@/app/admin/leads/[id]/actions";
+import { EditSent } from "@/components/admin/edit-sent";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { leadCardDict } from "@/content/admin-panel/lead-card";
 import type { TalkLine } from "@/lib/admin/outreach-talk-store";
@@ -116,6 +117,17 @@ export function TalkChat({
                 <p className="mt-1 text-[11px] text-faint">{t.lineQueued}</p>
               ) : line.direction === "out" && line.status === "failed" ? (
                 <p className="mt-1 text-[11px] text-red-300">{t.lineFailed(line.failure ?? "")}</p>
+              ) : null}
+              {/* «Исправить» — у нашего письма или ответа, 48 часов после отправки. */}
+              {line.direction === "out" && (line.editable || line.edit) ? (
+                <EditSent
+                  prospectId={prospectId}
+                  lineId={line.id}
+                  leadId={leadId}
+                  body={line.body}
+                  editable={Boolean(line.editable)}
+                  last={line.edit ?? null}
+                />
               ) : null}
             </div>
           ))}

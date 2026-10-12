@@ -25,7 +25,8 @@ import {
 } from "@/lib/admin/portion";
 import { CLOSE_REASONS, CLOSE_TEXT, closeCallback } from "@/lib/admin/touch-close";
 import { WRITE_MYSELF_BUTTON, writeMyselfCallback } from "@/lib/admin/write-myself";
-import { helloFor } from "@/lib/admin/hello-first";
+import { HELLO_TEXT, helloFor, type HelloTexts } from "@/lib/admin/hello-first";
+import { helloTexts } from "@/lib/admin/hello-text-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { staffById } from "@/lib/admin/session";
 import { touchesOnDay, touchProgressFor } from "@/lib/admin/touch-store";
@@ -298,7 +299,7 @@ export async function deliverTexts(now: Date = new Date(), staffId?: string): Pr
       [
         "✍️ <b>Текст готов.</b> Эта компания приходила без него — вот карточка целиком.",
         "",
-        itemText(p, stream ? "▶️ Поток" : "Порция"),
+        itemText(p, stream ? "▶️ Поток" : "Порция", await helloTexts()),
       ].join("\n"),
       itemButtons(p),
     );
@@ -316,7 +317,7 @@ export function ready(p: Prospect | undefined): boolean {
 export const titleOf = (p: Prospect) => p.label || p.host || "Компания без сайта";
 
 /** Карточка компании в Telegram. `heading` — «2/5» в утренней порции или «🔁 Замена». */
-export function itemText(p: Prospect, heading: string): string {
+export function itemText(p: Prospect, heading: string, hellos: HelloTexts = HELLO_TEXT): string {
   const route = routeFor(p.contacts);
   const lines = [`<b>${heading} · ${esc(titleOf(p))}</b>${p.host ? ` — ${esc(p.host)}` : " — без сайта"}`];
   if (route) {
@@ -333,7 +334,7 @@ export function itemText(p: Prospect, heading: string): string {
   // Касание в два шага (lib/admin/hello-first.ts): с рабочего аккаунта
   // первым уходит только приветствие, письмо — после ответа.
   if (p.message && route && route.kind !== "manual") {
-    lines.push(`Бот сначала напишет «${esc(helloFor(p.message, p.walked?.lang))}». Ответят по-русски — уйдёт кружок, на другом языке — письмо ниже, на языке ответа.`);
+    lines.push(`Бот сначала напишет «${esc(helloFor(p.message, p.walked?.lang, hellos))}». Ответят по-русски — уйдёт кружок, на другом языке — письмо ниже, на языке ответа.`);
   }
   lines.push(
     "",
@@ -511,7 +512,7 @@ export async function deliverPortions(now: Date = new Date(), staffId?: string):
           .join("\n"),
       );
       for (const [i, p] of items.entries()) {
-        await sendWithRows(person.chat, itemText(p, `${i + 1}/${items.length}`), itemButtons(p));
+        await sendWithRows(person.chat, itemText(p, `${i + 1}/${items.length}`, await helloTexts()), itemButtons(p));
       }
       await markBare(bare, now);
       delivered += items.length;
@@ -529,7 +530,7 @@ export async function deliverPortions(now: Date = new Date(), staffId?: string):
       const old = instead ? byId.get(instead.prospect_id) : undefined;
       await sendWithRows(
         person.chat,
-        [`🔁 Вместо «${esc(old ? titleOf(old) : "не подошедшей")}» — она в счёт порции.`, "", itemText(p, "Замена")].join("\n"),
+        [`🔁 Вместо «${esc(old ? titleOf(old) : "не подошедшей")}» — она в счёт порции.`, "", itemText(p, "Замена", await helloTexts())].join("\n"),
         itemButtons(p),
       );
       if (!p.message) await markBare([row.id], now);

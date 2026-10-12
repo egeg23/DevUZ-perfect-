@@ -21,6 +21,7 @@ import { serviceClient } from "@/lib/supabase";
 import { detectLang } from "@/lib/talk/language";
 import { checkFresh } from "@/lib/admin/check-fresh";
 import { LETTER_AFTER_REPLY } from "@/lib/admin/autopilot";
+import { lastEdits, lineEditable, type EditState } from "@/lib/admin/outreach-edit";
 import type { CircleLang } from "@/lib/admin/circle-store";
 import {
   CIRCLE_AFTER_MS,
@@ -889,12 +890,17 @@ export async function nextReply(
   return null;
 }
 
-export async function markReplySent(id: string): Promise<void> {
+export async function markReplySent(
+  id: string,
+  /** Номер ушедшего сообщения в Telegram: по нему «Исправить» правит именно его (outreach-edit). */
+  tgMessageId?: string | number | null,
+): Promise<void> {
   const db = serviceClient();
   if (!db) return;
+  const number = tgMessageId === undefined || tgMessageId === null || !Number.isFinite(Number(tgMessageId)) ? null : Number(tgMessageId);
   await db
     .from("outreach_messages")
-    .update({ status: "sent", sent_at: new Date().toISOString(), failure: null })
+    .update({ status: "sent", sent_at: new Date().toISOString(), failure: null, ...(number ? { tg_message_id: number } : {}) })
     .eq("id", id);
 }
 
@@ -1005,6 +1011,10 @@ export type TalkLine = {
   created_at: string;
   status: "queued" | "sent" | "failed" | "done";
   failure: string | null;
+  /** Можно нажать «Исправить» (outreach-edit → lineEditable): наше, текстом, не приветствие, 48 часов. */
+  editable?: boolean;
+  /** Последняя правка этой реплики: ждёт, исправлено или не вышло и почему. */
+  edit?: { state: EditState; failure: string | null } | null;
 };
 
 /**
@@ -1022,20 +1032,23 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
 
   const { data: p } = await db
     .from("prospects")
-    .select("id, host, target, ai_handling, handover_reason, sent_via, target_kind")
+    .select("id, host, target, ai_handling, handover_reason, sent_via, target_kind, hello_at, pitch_at")
     .eq("lead_id", leadId)
     .maybeSingle();
   if (!p) return null;
 
-  const [{ data }, tags] = await Promise.all([
+  const [{ data }, tags, edits] = await Promise.all([
     db
       .from("outreach_messages")
-      .select("id, direction, author, body, created_at, status, failure")
+      .select("id, direction, author, body, created_at, status, failure, kind, sent_at, tg_message_id")
       .eq("prospect_id", p.id)
       .order("created_at", { ascending: true })
       .limit(200),
     accountTags(),
+    lastEdits([String(p.id)]),
   ]);
+  const touch = { hello_at: (p.hello_at as string | null) ?? null, pitch_at: (p.pitch_at as string | null) ?? null };
+  const now = Date.now();
 
   return {
     prospectId: String(p.id),
@@ -1056,6 +1069,25 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
         created_at: String(row.created_at),
         status: (row.status as TalkLine["status"]) ?? "done",
         failure: (row.failure as string | null) ?? null,
+        // Ручной маршрут пишет человек со своего телефона — править нам нечего.
+        editable:
+          p.target_kind !== "manual" &&
+          lineEditable(
+            {
+              direction: String(row.direction),
+              kind: (row.kind as string | null) ?? "text",
+              status: String(row.status),
+              sent_at: (row.sent_at as string | null) ?? null,
+              created_at: String(row.created_at),
+              tg_message_id: (row.tg_message_id as string | number | null) ?? null,
+            },
+            touch,
+            now,
+          ),
+        edit: (() => {
+          const e = edits.get(String(row.id));
+          return e ? { state: e.state, failure: e.failure } : null;
+        })(),
       })),
   };
 }

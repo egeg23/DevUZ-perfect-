@@ -916,3 +916,79 @@ export const autopilotDict = defineDict({
   /** Подпись на карточке касания вместо имени менеджера. */
   owner: { ru: "автопрогон", uz: "avtomatik aloqa", pl: "automatyczny kontakt" },
 });
+
+/**
+ * «Исправить» у отправленного письма или ответа (components/admin/edit-sent.tsx,
+ * lib/admin/outreach-edit-request.ts) — в карточке «Касаний» и в чате
+ * карточки лида. Причина отказа скаута приходит по-русски и не переводится.
+ */
+export const editSentDict = defineDict({
+  edit: { ru: "Исправить", uz: "Tuzatish", pl: "Popraw" },
+  save: { ru: "Сохранить исправление", uz: "Tuzatishni saqlash", pl: "Zapisz poprawkę" },
+  saving: { ru: "Сохраняю…", uz: "Saqlanmoqda…", pl: "Zapisuję…" },
+  cancel: { ru: "Не исправлять", uz: "Tuzatmaslik", pl: "Nie poprawiaj" },
+  hintPending: {
+    ru: "Письмо ещё не ушло — оно уйдёт уже исправленным, когда клиент ответит на приветствие.",
+    uz: "Xat hali ketmagan — mijoz salomga javob berganda u tuzatilgan holda ketadi.",
+    pl: "Wiadomość jeszcze nie wyszła — wyjdzie już poprawiona, gdy klient odpowie na powitanie.",
+  },
+  hintSent: {
+    ru: "Бот исправит сообщение в Telegram с того же рабочего аккаунта, обычно за минуту. У клиента рядом с ним появится пометка «изменено». Исправить можно в течение 48 часов после отправки.",
+    uz: "Bot xabarni Telegramda o‘sha ishchi akkauntdan tuzatadi, odatda bir daqiqada. Mijozda xabar yonida «tahrirlangan» belgisi paydo bo‘ladi. Yuborilganidan keyin 48 soat ichida tuzatish mumkin.",
+    pl: "Bot poprawi wiadomość w Telegramie z tego samego konta firmowego, zwykle w minutę. Klient zobaczy przy niej dopisek «edytowano». Poprawić można w ciągu 48 godzin od wysłania.",
+  },
+  stateWaiting: {
+    ru: "Исправление ждёт бота — обычно меньше минуты.",
+    uz: "Tuzatish botni kutmoqda — odatda bir daqiqadan kam.",
+    pl: "Poprawka czeka na bota — zwykle mniej niż minutę.",
+  },
+  stateDone: { ru: "Исправлено.", uz: "Tuzatildi.", pl: "Poprawiono." },
+  /** Причина — как её записал скаут или Telegram, не переводится. */
+  stateFailed: {
+    ru: (why: string) => `Исправить не вышло${why ? `: ${why}` : "."}`,
+    uz: (why: string) => `Tuzatib bo‘lmadi${why ? `: ${why}` : "."}`,
+    pl: (why: string) => `Nie udało się poprawić${why ? `: ${why}` : "."}`,
+  },
+  err_forbidden: {
+    ru: "Исправлять может тот, кто ведёт это касание, руководитель и владелец.",
+    uz: "Bu aloqani olib borayotgan xodim, rahbar va egasi tuzata oladi.",
+    pl: "Poprawiać może osoba prowadząca ten kontakt, kierownik i właściciel.",
+  },
+  err_gone: {
+    ru: "Пока вы правили, касание изменилось — обновите страницу.",
+    uz: "Siz tuzatayotganingizda aloqa o‘zgardi — sahifani yangilang.",
+    pl: "W trakcie poprawiania kontakt się zmienił — odśwież stronę.",
+  },
+  err_empty: { ru: "Пустой текст отправить нельзя.", uz: "Bo‘sh matnni yuborib bo‘lmaydi.", pl: "Nie można wysłać pustego tekstu." },
+  err_too_long: {
+    ru: "Слишком длинно для одного сообщения в Telegram.",
+    uz: "Telegramdagi bitta xabar uchun juda uzun.",
+    pl: "Za długie na jedną wiadomość w Telegramie.",
+  },
+  err_same: { ru: "Текст не изменился.", uz: "Matn o‘zgarmadi.", pl: "Tekst się nie zmienił." },
+  err_hello: {
+    ru: "Приветствие не исправляется: до ответа клиента ему уходит только оно.",
+    uz: "Salom tuzatilmaydi: mijoz javob bermaguncha unga faqat salom ketadi.",
+    pl: "Powitania się nie poprawia: do odpowiedzi klienta wychodzi tylko ono.",
+  },
+  err_not_editable: {
+    ru: "Это сообщение исправить нельзя: кружок, сообщение клиента или ушло не с рабочего аккаунта.",
+    uz: "Bu xabarni tuzatib bo‘lmaydi: dumaloq video, mijoz xabari yoki ishchi akkauntdan ketmagan.",
+    pl: "Tej wiadomości nie można poprawić: to kółko, wiadomość klienta albo nie wyszła z konta firmowego.",
+  },
+  err_too_late: {
+    ru: "Прошло больше 48 часов после отправки — Telegram править уже не даёт.",
+    uz: "Yuborilganidan keyin 48 soatdan ko‘p o‘tdi — Telegram endi tahrirlashga ruxsat bermaydi.",
+    pl: "Minęło ponad 48 godzin od wysłania — Telegram nie pozwala już edytować.",
+  },
+  err_problems: {
+    ru: "Не сохранено — проверка нашла:",
+    uz: "Saqlanmadi — tekshiruv topdi:",
+    pl: "Nie zapisano — kontrola znalazła:",
+  },
+  err_offline: {
+    ru: "База не ответила — попробуйте ещё раз.",
+    uz: "Baza javob bermadi — yana urinib ko‘ring.",
+    pl: "Baza nie odpowiedziała — spróbuj jeszcze raz.",
+  },
+});

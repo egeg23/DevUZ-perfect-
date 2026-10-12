@@ -7,6 +7,8 @@ import { OutreachList } from "@/components/admin/outreach-list";
 import { ProspectRunner } from "@/components/admin/prospect-runner";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
 import { requireSection } from "@/lib/admin/guard";
+import { lastEdits } from "@/lib/admin/outreach-edit";
+import { letterTargets } from "@/lib/admin/outreach-edit-request";
 import { touchProgressOf } from "@/lib/admin/touch-store";
 import { BOT_BUTTON, outcomeOf, replaceLimit, tallyPortion } from "@/lib/admin/portion";
 import { portionOf, type PortionItem } from "@/lib/admin/portion-store";
@@ -106,6 +108,12 @@ export default async function ProspectPage({
     more,
     now: new Date(),
   });
+  // «Исправить» у отправленного письма (lib/admin/outreach-edit-request.ts) —
+  // только по видимым карточкам: что править и чем кончилась прошлая правка.
+  const [editTargets, editsDone] = await Promise.all([
+    letterTargets(view.shown),
+    lastEdits(view.shown.filter((r) => r.status === "sent").map((r) => r.id)),
+  ]);
 
   return (
     <AdminShell staff={staff}>
@@ -219,6 +227,13 @@ export default async function ProspectPage({
         replies={replies}
         locale={locale}
         accounts={Object.fromEntries(tags)}
+        edits={Object.fromEntries(editTargets)}
+        lastEdits={Object.fromEntries(
+          view.shown.flatMap((r) => {
+            const e = editsDone.get(r.id);
+            return e ? [[r.id, { state: e.state, failure: e.failure }]] : [];
+          }),
+        )}
       />
 
       <div className="mt-10 max-w-2xl space-y-3 border-t border-line pt-6 text-xs leading-relaxed text-faint">
