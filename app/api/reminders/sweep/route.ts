@@ -7,6 +7,7 @@ import { feedStreams } from "@/lib/admin/stream-store";
 import { broadcastDuePrototypes } from "@/lib/admin/prototype-claim-store";
 import { runTaskSweep } from "@/lib/admin/task-store";
 import { sendTeamNews } from "@/lib/admin/team-news";
+import { sendMorningGreetings } from "@/lib/admin/morning-store";
 import { sendBloggerInvites, sendInviteSummary } from "@/lib/admin/blogger-invite-store";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
@@ -293,6 +294,11 @@ async function sweep(): Promise<Response> {
   });
   after(async () => {
     await sendTeamNews(new Date()).catch((error) => console.error("объявления:", error));
+  });
+  // «Доброе утро» сотрудникам по имени — каждый день с 09:00, каждому один
+  // раз (lib/admin/morning-store).
+  after(async () => {
+    await sendMorningGreetings(new Date()).catch((error) => console.error("доброе утро:", error));
   });
   // Приглашение «Работа с блогерами» с кнопками и итог владельцу в 18:00
   // (lib/admin/blogger-invite-store). Каждому — один раз, не ночью.

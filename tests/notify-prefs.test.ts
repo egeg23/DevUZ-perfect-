@@ -76,6 +76,8 @@ test("каждая галочка проверяется там, где бот �
       ["lib/admin/task-store.ts", /wants\(reader\?\.notify_off, "tasks"\)/],
       ["lib/admin/task-store.ts", /wants\(creator\?\.notify_off, "tasks"\)/],
     ],
+    // «Доброе утро» в 09:00 (владелец, 13.10.2026).
+    morning: [["lib/admin/morning-store.ts", /wants\(row\.notify_off as string\[\] \| null, "morning"\)/]],
   };
   for (const kind of NOTICE_KINDS) {
     assert.ok(where[kind], `галочка ${kind} нигде не проверяется`);
