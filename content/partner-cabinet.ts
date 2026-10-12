@@ -324,7 +324,7 @@ const ru: CabinetCopy = {
   targets: {
     "/": "Главная",
     "/services": "Услуги",
-    "/calculator": "Калькулятор",
+    "/calculator": "Разработка",
     "/audit": "Проверка сайта",
     "/cases": "Кейсы",
     "/products": "Продукты",
@@ -601,7 +601,7 @@ const en: CabinetCopy = {
   targets: {
     "/": "Home",
     "/services": "Services",
-    "/calculator": "Calculator",
+    "/calculator": "Development",
     "/audit": "Website check",
     "/cases": "Cases",
     "/products": "Products",
@@ -878,7 +878,7 @@ const uz: CabinetCopy = {
   targets: {
     "/": "Bosh sahifa",
     "/services": "Xizmatlar",
-    "/calculator": "Kalkulyator",
+    "/calculator": "Ishlab chiqish",
     "/audit": "Saytni tekshirish",
     "/cases": "Keyslar",
     "/products": "Mahsulotlar",
@@ -1153,7 +1153,7 @@ const zh: CabinetCopy = {
   targets: {
     "/": "首页",
     "/services": "服务",
-    "/calculator": "计算器",
+    "/calculator": "开发",
     "/audit": "网站检测",
     "/cases": "案例",
     "/products": "产品",
@@ -1425,7 +1425,7 @@ const uk: CabinetCopy = {
   targets: {
     "/": "Головна",
     "/services": "Послуги",
-    "/calculator": "Калькулятор",
+    "/calculator": "Розробка",
     "/audit": "Перевірка сайту",
     "/cases": "Кейси",
     "/products": "Продукти",
@@ -1702,7 +1702,7 @@ const pl: CabinetCopy = {
   targets: {
     "/": "Strona główna",
     "/services": "Usługi",
-    "/calculator": "Kalkulator",
+    "/calculator": "Tworzenie",
     "/audit": "Audyt strony",
     "/cases": "Realizacje",
     "/products": "Produkty",
