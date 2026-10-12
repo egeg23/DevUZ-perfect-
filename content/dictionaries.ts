@@ -9,7 +9,7 @@ const ru = {
   nav: {
     services: "Услуги",
     marketing: "Маркетинг",
-    calculator: "Калькулятор",
+    calculator: "Разработка",
     audit: "Проверить сайт",
     products: "Продукты",
     razbor: "Разборы",
@@ -317,7 +317,7 @@ const ru = {
     cabinetTitle: "Что в кабинете",
     cabinetPoints: [
       "Короткие ссылки devuz.studio/r/… под каждый канал — без «?ref=» в адресе, их не режет антиспам чатов и соцсетей.",
-      "Куда ведёт ссылка — выбираете сами: главная, услуги, кейсы, калькулятор или сразу Telegram-бот.",
+      "Куда ведёт ссылка — выбираете сами: главная, услуги, кейсы, разработка (расчёт стоимости) или сразу Telegram-бот.",
       "Переходы по дням и заявки — видно, какой канал работает, а какой нет.",
       "Каждый клиент по этапам: заявка → в работе → договор подписан → оплачен, и ваша доля по нему.",
       "Баланс, реквизиты и заявка на выплату — в одном месте. Уведомления о заявках, договорах и выплатах — в Telegram.",
@@ -425,7 +425,7 @@ const ru = {
     text: "Кажется, такой страницы у нас нет. Возможно, ссылка устарела.",
   },
   calculator: {
-    kicker: "калькулятор",
+    kicker: "разработка · расчёт стоимости",
     title: "Посчитайте проект за минуту",
     description:
       "Выберите тип проекта и отметьте, что нужно. Калькулятор покажет вилку «от» и состав работ — тот же расчёт, который делает менеджер, только без ожидания.",
@@ -453,7 +453,7 @@ const ru = {
 export type Dictionary = typeof ru;
 
 const en: Dictionary = {
-  nav: { services: "Services", marketing: "Marketing", calculator: "Calculator", audit: "Site check", products: "Products", razbor: "Teardowns", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts", partners: "Earn with us" },
+  nav: { services: "Services", marketing: "Marketing", calculator: "Development", audit: "Site check", products: "Products", razbor: "Teardowns", cases: "Work", process: "Process", about: "Studio", contacts: "Contacts", partners: "Earn with us" },
   cta: {
     discuss: "Discuss a project",
     calculate: "Get an estimate",
@@ -731,7 +731,7 @@ const en: Dictionary = {
     cabinetTitle: "What's in the dashboard",
     cabinetPoints: [
       "Short devuz.studio/r/… links for every channel — no “?ref=” in the address, so chat and social anti-spam filters don't block them.",
-      "You choose where each link leads: home, services, cases, the calculator or straight to the Telegram bot.",
+      "You choose where each link leads: home, services, cases, development (price estimate) or straight to the Telegram bot.",
       "Clicks by day and requests — you see which channel works and which doesn't.",
       "Every client by stage: request → in progress → contract signed → paid, with your share for each.",
       "Balance, payment details and payout requests in one place. Notifications about requests, contracts and payouts arrive in Telegram.",
@@ -836,7 +836,7 @@ const en: Dictionary = {
   },
   notFound: { title: "Page not found", text: "We don't seem to have this page. The link may be out of date." },
   calculator: {
-    kicker: "calculator",
+    kicker: "development · price estimate",
     title: "Price your project in a minute",
     description:
       "Pick a project type and tick what you need. The calculator shows a «from» range and the scope of work — the same estimate a manager would make, without the wait.",
@@ -861,7 +861,7 @@ const en: Dictionary = {
 };
 
 const uz: Dictionary = {
-  nav: { services: "Xizmatlar", marketing: "Marketing", calculator: "Kalkulyator", audit: "Saytni tekshirish", products: "Mahsulotlar", razbor: "Tahlillar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa", partners: "Hamkorlik" },
+  nav: { services: "Xizmatlar", marketing: "Marketing", calculator: "Ishlab chiqish", audit: "Saytni tekshirish", products: "Mahsulotlar", razbor: "Tahlillar", cases: "Loyihalar", process: "Jarayon", about: "Studiya", contacts: "Aloqa", partners: "Hamkorlik" },
   cta: {
     discuss: "Loyihani muhokama qilish",
     calculate: "Loyihani hisoblash",
@@ -1139,7 +1139,7 @@ const uz: Dictionary = {
     cabinetTitle: "Kabinetda nima bor",
     cabinetPoints: [
       "Har bir kanal uchun devuz.studio/r/… qisqa havolalar — manzilda «?ref=» yo'q, ularni chat va ijtimoiy tarmoqlar antispami kesmaydi.",
-      "Havola qayerga olib borishini o'zingiz tanlaysiz: bosh sahifa, xizmatlar, keyslar, kalkulyator yoki to'g'ridan-to'g'ri Telegram-bot.",
+      "Havola qayerga olib borishini o'zingiz tanlaysiz: bosh sahifa, xizmatlar, keyslar, ishlab chiqish (narxni hisoblash) yoki to'g'ridan-to'g'ri Telegram-bot.",
       "Kunlar bo'yicha o'tishlar va so'rovlar — qaysi kanal ishlayotgani, qaysi biri ishlamayotgani ko'rinadi.",
       "Har bir mijoz bosqichlar bo'yicha: so'rov → ishda → shartnoma imzolandi → to'landi, va u bo'yicha sizning ulushingiz.",
       "Balans, rekvizitlar va to'lov so'rovi — bir joyda. So'rovlar, shartnomalar va to'lovlar haqidagi xabarlar — Telegramda.",
@@ -1244,7 +1244,7 @@ const uz: Dictionary = {
   },
   notFound: { title: "Sahifa topilmadi", text: "Bunday sahifa bizda yo‘q shekilli. Havola eskirgan bo‘lishi mumkin." },
   calculator: {
-    kicker: "kalkulyator",
+    kicker: "ishlab chiqish · narxni hisoblash",
     title: "Loyihani bir daqiqada hisoblang",
     description:
       "Loyiha turini tanlang va kerakli narsalarni belgilang. Kalkulyator «dan» oralig‘ini va ish tarkibini ko‘rsatadi — menejer qiladigan hisobning aynan o‘zi, faqat kutishsiz.",
@@ -1269,7 +1269,7 @@ const uz: Dictionary = {
 };
 
 const zh: Dictionary = {
-  nav: { services: "服务", marketing: "营销", calculator: "报价", audit: "网站体检", products: "产品", razbor: "网站点评", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式", partners: "一起赚钱" },
+  nav: { services: "服务", marketing: "营销", calculator: "开发", audit: "网站体检", products: "产品", razbor: "网站点评", cases: "案例", process: "流程", about: "关于我们", contacts: "联系方式", partners: "一起赚钱" },
   cta: {
     discuss: "洽谈项目",
     calculate: "获取报价",
@@ -1546,7 +1546,7 @@ const zh: Dictionary = {
     cabinetTitle: "后台功能",
     cabinetPoints: [
       "每个渠道都有 devuz.studio/r/… 短链接——地址中没有 “?ref=”，不会被群聊和社交网络的反垃圾过滤拦截。",
-      "链接指向哪里由您决定：首页、服务、案例、计算器，或直接进入 Telegram 机器人。",
+      "链接指向哪里由您决定：首页、服务、案例、开发（报价），或直接进入 Telegram 机器人。",
       "按天统计的点击和申请——一眼看出哪个渠道有效，哪个无效。",
       "每位客户的阶段：申请 → 进行中 → 合同已签 → 已付款，以及您在其中的分成。",
       "余额、收款信息和提现申请集中在一处。申请、合同和提现的通知会发送到 Telegram。",
@@ -1646,7 +1646,7 @@ const zh: Dictionary = {
   },
   notFound: { title: "页面未找到", text: "我们似乎没有这个页面，链接可能已经失效。" },
   calculator: {
-    kicker: "报价计算器",
+    kicker: "开发 · 报价计算器",
     title: "一分钟估算项目费用",
     description:
       "选择项目类型并勾选所需功能。计算器会给出「起价」区间与工作范围 —— 与客户经理所做的估算一致，只是无需等待。",
@@ -1674,7 +1674,7 @@ const uk: Dictionary = {
   nav: {
     services: "Послуги",
     marketing: "Маркетинг",
-    calculator: "Калькулятор",
+    calculator: "Розробка",
     audit: "Перевірити сайт",
     products: "Продукти",
     razbor: "Розбори сайтів",
@@ -1964,7 +1964,7 @@ const uk: Dictionary = {
     cabinetTitle: "Що в кабінеті",
     cabinetPoints: [
       "Короткі посилання devuz.studio/r/… під кожен канал — без «?ref=» в адресі, їх не ріже антиспам чатів і соцмереж.",
-      "Куди веде посилання — обираєте самі: головна, послуги, кейси, калькулятор або одразу Telegram-бот.",
+      "Куди веде посилання — обираєте самі: головна, послуги, кейси, розробка (розрахунок вартості) або одразу Telegram-бот.",
       "Переходи по днях і заявки — видно, який канал працює, а який ні.",
       "Кожен клієнт за етапами: заявка → у роботі → договір підписано → оплачено, і ваша частка за ним.",
       "Баланс, реквізити й заявка на виплату — в одному місці. Сповіщення про заявки, договори й виплати — у Telegram.",
@@ -2072,7 +2072,7 @@ const uk: Dictionary = {
     text: "Схоже, такої сторінки в нас немає. Можливо, посилання застаріло.",
   },
   calculator: {
-    kicker: "калькулятор",
+    kicker: "розробка · розрахунок вартості",
     title: "Порахуйте проєкт за хвилину",
     description:
       "Оберіть тип проєкту й позначте, що потрібно. Калькулятор покаже діапазон «від» і склад робіт — той самий розрахунок, який робить менеджер, тільки без очікування.",
@@ -2101,7 +2101,7 @@ const pl: Dictionary = {
   nav: {
     services: "Usługi",
     marketing: "Marketing",
-    calculator: "Kalkulator",
+    calculator: "Tworzenie",
     audit: "Sprawdź stronę",
     products: "Produkty",
     razbor: "Analizy stron",
@@ -2391,7 +2391,7 @@ const pl: Dictionary = {
     cabinetTitle: "Co jest w panelu",
     cabinetPoints: [
       "Krótkie linki devuz.studio/r/… dla każdego kanału — bez „?ref=” w adresie, więc nie blokują ich filtry antyspamowe czatów i social mediów.",
-      "Dokąd prowadzi link — wybierasz sam: strona główna, usługi, realizacje, kalkulator albo od razu bot na Telegramie.",
+      "Dokąd prowadzi link — wybierasz sam: strona główna, usługi, realizacje, tworzenie (wycena) albo od razu bot na Telegramie.",
       "Wejścia dzień po dniu i zgłoszenia — widać, który kanał działa, a który nie.",
       "Każdy klient etapami: zgłoszenie → w realizacji → umowa podpisana → opłacone, oraz Twoja prowizja od niego.",
       "Saldo, dane do wypłaty i wniosek o wypłatę — w jednym miejscu. Powiadomienia o zgłoszeniach, umowach i wypłatach — w Telegramie.",
@@ -2499,7 +2499,7 @@ const pl: Dictionary = {
     text: "Wygląda na to, że nie mamy takiej strony. Być może link jest nieaktualny.",
   },
   calculator: {
-    kicker: "kalkulator",
+    kicker: "tworzenie · wycena",
     title: "Wyceń projekt w minutę",
     description:
       "Wybierz typ projektu i zaznacz, czego potrzebujesz. Kalkulator pokaże cenę „od” i zakres prac — ten sam rachunek, który robi menedżer, tylko bez czekania.",
