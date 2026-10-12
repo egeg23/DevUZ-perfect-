@@ -29,6 +29,7 @@ import {
 import { shouldMissPromise } from "@/lib/qualify/promise";
 import {
   answerCallback,
+  editMessage,
   handledLabel,
   markLeadCards,
   esc,
@@ -84,6 +85,23 @@ import { actOnTask, afterAct, awaitDate, showTask, taskAwaitingDate, taskById, t
 import { OWN_DATE_PROMPT, TASK_CALLBACK, dueText, looksLikeDue, moveRows, taskRows } from "@/lib/admin/task-bot";
 import { isMove, movedDue, parseDueText, type TaskAction } from "@/lib/admin/tasks";
 import { handleAdsLogin } from "@/lib/ads/bot";
+import { sectionOn } from "@/lib/admin/section-switch";
+import {
+  LEARN_CALLBACK,
+  LEARN_OFF_TEXT,
+  LEARN_STALE_TEXT,
+  answersById,
+  answersFit,
+  feedbackText,
+  learnCommand,
+  menuMessage,
+  parseLearnCallback,
+  questionMessage,
+  resultText,
+  testTitle,
+} from "@/lib/learn/bot";
+import { grade, isRight, questionsFor } from "@/lib/learn/quiz";
+import { saveAttempt } from "@/lib/learn/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -226,6 +244,12 @@ async function route(update: Update): Promise<void> {
       // сообщение идёт дальше, в обычный разговор.
       if (chat.type === "private" && streamCommand(update.message.text)) {
         if (await handleStreamCommand(update.message)) return;
+      }
+
+      // «Обучение»: /learn — курсы и тесты в боте (lib/learn/bot.ts). Только
+      // сотруднику; незнакомцу эти слова ничего не открывают.
+      if (chat.type === "private" && learnCommand(update.message.text)) {
+        if (await handleLearnCommand(update.message)) return;
       }
 
       // «Своя дата» для переноса срока задачи: сотрудник нажал кнопку, и бот
@@ -458,6 +482,99 @@ async function handleStreamCommand(message: NonNullable<Update["message"]>): Pro
   await answerStream(message.chat.id, on);
   if (on) await feedStream(staff.id);
   return true;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Обучение
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Можно ли сотруднику проходить тесты в боте. Владельцу — всегда: он
+ * проверяет раздел до того, как включить его команде. Остальным — только
+ * когда обучение включено (lib/admin/section-switch.ts).
+ */
+async function learnAllowed(staff: Staff): Promise<boolean> {
+  return staff.role === "admin" || (await sectionOn("/admin/learn"));
+}
+
+/** /learn — список тестов. false — это не сотрудник: его сообщение идёт дальше. */
+async function handleLearnCommand(message: NonNullable<Update["message"]>): Promise<boolean> {
+  const staff = message.from?.id ? await staffByTelegramId(message.from.id) : null;
+  if (!staff) return false;
+  if (!(await learnAllowed(staff))) {
+    await sendMessage(message.chat.id, esc(LEARN_OFF_TEXT));
+    return true;
+  }
+  const menu = menuMessage(siteUrl);
+  await sendWithRows(message.chat.id, menu.text, menu.rows);
+  return true;
+}
+
+/**
+ * Кнопки теста: «начать» — первый вопрос; ответ — отметка под вопросом
+ * (кнопки снимаются), затем следующий вопрос или итог, который пишется в ту
+ * же таблицу, что тесты из панели (source: bot).
+ */
+async function handleLearnButton(query: NonNullable<Update["callback_query"]>, parts: string[]): Promise<void> {
+  const chatId = query.message?.chat.id;
+  const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+  if (!staff || chatId === undefined) {
+    await answerCallback(query.id, "Недоступно");
+    return;
+  }
+  if (!(await learnAllowed(staff))) {
+    await answerCallback(query.id, "Обучение пока не включено");
+    return;
+  }
+  const cb = parseLearnCallback(parts);
+  if (!cb) {
+    await answerCallback(query.id, "Неизвестная команда");
+    return;
+  }
+  const questions = questionsFor(cb.key, staff, "ru");
+  if (!questions.length) {
+    await answerCallback(query.id, "Для вас в этом тесте нет вопросов");
+    return;
+  }
+
+  if (cb.kind === "start") {
+    await answerCallback(query.id, testTitle(cb.key));
+    const first = questionMessage(cb.key, questions, 0, []);
+    await sendWithRows(chatId, first.text, first.rows);
+    return;
+  }
+
+  if (!answersFit(questions, cb.answers)) {
+    await answerCallback(query.id, LEARN_STALE_TEXT);
+    return;
+  }
+  const at = cb.answers.length - 1;
+  const chosen = cb.answers[at];
+  await answerCallback(query.id, isRight(chosen) ? "Верно" : "Неверно");
+  const asked = questionMessage(cb.key, questions, at, cb.answers.slice(0, at));
+  if (query.message?.message_id) {
+    await editMessage(chatId, query.message.message_id, `${asked.text}\n\n${feedbackText(questions[at], chosen, siteUrl)}`, []);
+  }
+
+  if (cb.answers.length < questions.length) {
+    const next = questionMessage(cb.key, questions, at + 1, cb.answers);
+    await sendWithRows(chatId, next.text, next.rows);
+    return;
+  }
+
+  const result = grade(questions, answersById(questions, cb.answers));
+  const saved = await saveAttempt({
+    staffId: staff.id,
+    course: cb.key,
+    score: result.score,
+    total: result.total,
+    passed: result.passed,
+    answers: result.answers,
+    // Не источник лида (lead_sources): попытка теста, `as const` — чтобы
+    // проверка источников лидов (tests/scout-cleanup) её не путала.
+    source: "bot" as const,
+  });
+  await sendMessage(chatId, resultText(result.score, result.total, result.passed, saved));
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -1067,6 +1184,16 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
       return;
     }
     await handleCircleLang(query, parts);
+    return;
+  }
+
+  // Тесты «Обучения»: только личка того, кто проходит тест.
+  if (parts[0] === LEARN_CALLBACK) {
+    if (chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    await handleLearnButton(query, parts);
     return;
   }
 

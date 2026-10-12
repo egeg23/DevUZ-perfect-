@@ -166,6 +166,11 @@ export const AUDIT_ACTIONS = [
   "task.failed",
   "task.moved",
   "task.cancelled",
+  // Обучение: владелец включил или выключил раздел для команды, добавил или
+  // убрал материал курса (app/admin/learn/actions.ts).
+  "learn.switched",
+  "learn.material_added",
+  "learn.material_removed",
 ] as const;
 
 /**
