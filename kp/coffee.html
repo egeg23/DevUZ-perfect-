@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Маркетинг для вашей кофейни · DevUz Studio</title>
+<link rel="stylesheet" href="fonts-coffee.css">
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     КП кофейне: брендинг, SMM, таргет. Палитра кофейная, не наша: эспрессо,
+     крема, карамель, бумага цвета молочной пенки. Заголовки Lora, текст
+     Manrope (kp/fonts-coffee.css, scripts/kp-fonts.mjs coffee …).
+
+     Цены: content/marketing.ts и devuz.studio/ru/marketing минус 10%,
+     вниз до 50 000 сум. Сверено с живой страницей 12.10.2026.
+       Брендинг            39 600 000 → 35 600 000
+       SMM, 1-й месяц      35 856 000 → 32 250 000
+       SMM, в месяц        23 256 000 → 20 900 000
+       Таргет, 1-й месяц    9 000 000 →  8 100 000
+       Таргет, в месяц      7 200 000 →  6 450 000
+       Telegram, 1-й месяц  4 410 000 →  3 950 000
+       Telegram, в месяц    2 970 000 →  2 650 000
+       Контекст G+Я, 1-й   12 195 000 → 10 950 000 (по желанию, не в итоге)
+       Контекст G+Я, мес.   9 315 000 →  8 350 000
+     Итоги: маркетинг 1-й месяц 49 266 000 → 44 300 000; дальше 33 426 000 →
+     30 000 000; с брендингом 88 866 000 → 79 900 000; три месяца (минимальный
+     срок договора) 155 718 000 → 139 900 000.
+
+     Без длинных тире и штампов: правило макетов из CLAUDE.md держим и здесь.
+     ───────────────────────────────────────────────────────────────────── */
+  :root {
+    --paper:  #F6EEE3;
+    --sheet:  #FCF8F2;
+    --ink:    #2A1A12;
+    --ink-2:  #3B271C;
+    --body:   #4B3B31;
+    --muted:  #8A7667;
+    --accent: #A8672F;
+    --crema:  #D9A066;
+    --line:   #E7D9C8;
+    --foam:   #F3E6D3;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: var(--ink); }
+
+  body {
+    margin: 0;
+    padding: 12mm 0;
+    font-family: Manrope, system-ui, sans-serif;
+    font-size: 9.9pt;
+    line-height: 1.6;
+    color: var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    position: relative;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto 10mm;
+    padding: 15mm 18mm 18mm;
+    background: var(--sheet);
+    box-shadow: 0 2mm 8mm rgba(0,0,0,.35);
+    overflow: hidden;
+  }
+
+  .sheet--dark { background: var(--ink); color: #E3D6C6; }
+  .sheet--dark h2, .sheet--dark h3 { color: #F6EBDD; }
+  .sheet--dark .bounds strong, .sheet--dark .contacts .v { color: #F6EBDD; }
+  .sheet--dark .items p, .sheet--dark .lead { color: #D2C2B0; }
+  .sheet--dark .eyebrow, .sheet--dark .num, .sheet--dark .k { color: var(--crema); }
+  .sheet--dark .rule--accent { background: var(--crema); }
+  .sheet--dark .items > li,
+  .sheet--dark .contacts div { border-color: rgba(255,240,220,.14); }
+  .sheet--dark .items > li:last-child { border-bottom-color: rgba(255,240,220,.14); }
+  .sheet--dark .muted { color: #A8957F; }
+  .sheet--dark .bounds li::before { background: var(--crema); }
+  .sheet--dark .foot { color: #8F7B68; border-top-color: rgba(255,240,220,.14); }
+
+  .sheet--cover {
+    background: var(--ink);
+    color: #F1E6D8;
+    display: flex;
+    flex-direction: column;
+    padding: 22mm 18mm 18mm;
+  }
+
+  h1, h2, h3, .num, .amount, .price, .stat b {
+    font-family: Lora, Georgia, serif;
+    font-weight: 500;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .eyebrow {
+    font-size: 7.6pt;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+  .sheet--cover .eyebrow { color: var(--crema); }
+
+  .rule { height: 1px; background: var(--line); border: 0; margin: 5mm 0; }
+  .rule--accent { background: var(--crema); opacity: .6; }
+
+  /* ── Обложка ───────────────────────────────────────────────────────── */
+  .cover-top { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: flex-start; }
+  .cover-mid { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+  .cover-bot { flex: 0 0 auto; }
+
+  /* Чашка сверху: круг пенки с «сердцем» латте-арта, нарисован кодом. */
+  .cup { width: 30mm; height: 30mm; }
+
+  h1 {
+    font-size: 36pt;
+    line-height: 1.08;
+    color: #F6EBDD;
+    letter-spacing: -.01em;
+  }
+  h1 em { font-style: italic; color: var(--crema); }
+
+  .cover-lead {
+    max-width: 125mm;
+    margin: 7mm 0 0;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #CDBBA6;
+  }
+
+  .amount-box {
+    margin-top: 12mm;
+    padding-top: 6mm;
+    border-top: 1px solid rgba(217,160,102,.4);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3mm 7mm;
+    align-items: baseline;
+  }
+  .amount { font-size: 28pt; color: var(--crema); line-height: 1; white-space: nowrap; }
+  .amount small { font-family: Manrope, sans-serif; font-size: 10pt; color: #CDBBA6; margin-left: 1.5mm; }
+  .amount-note { font-size: 9pt; color: #B5A28C; line-height: 1.55; }
+  .amount-note s { color: #8F7B68; }
+
+  .cover-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 8.6pt;
+    color: #A08B76;
+    border-top: 1px solid rgba(255,240,220,.12);
+    padding-top: 5mm;
+  }
+  .cover-meta strong { color: #E8D9C6; font-weight: 600; }
+
+  /* ── Внутренние листы ──────────────────────────────────────────────── */
+  h2 { font-size: 17pt; line-height: 1.2; margin: 0 0 3mm; }
+
+  h3 {
+    font-size: 10pt;
+    font-family: Manrope, sans-serif;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 1.2mm;
+  }
+
+  .lead { font-size: 10pt; line-height: 1.62; color: var(--body); max-width: 160mm; margin: 0 0 4.5mm; }
+
+  p { margin: 0 0 3.5mm; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.6pt; line-height: 1.55; }
+
+  section + section { margin-top: 6mm; }
+
+  .items { list-style: none; margin: 0; padding: 0; }
+  .items > li {
+    display: grid;
+    grid-template-columns: 11mm 1fr;
+    gap: 0 3mm;
+    padding: 2.5mm 0;
+    border-top: 1px solid var(--line);
+  }
+  .items > li:last-child { border-bottom: 1px solid var(--line); }
+  .num { font-size: 13pt; color: var(--accent); line-height: 1.2; }
+  .items p { margin: 0; font-size: 9.1pt; line-height: 1.52; color: var(--body); }
+  /* Заголовок пункта в строку с текстом: так список брендинга влезает на лист. */
+  .items--run h3 { display: inline; margin-right: 1.2mm; }
+  .items--run h3 + p { display: inline; }
+
+  /* Список с зёрнышком вместо тире. */
+  .bounds { list-style: none; margin: 0; padding: 0; }
+  .bounds li {
+    position: relative;
+    padding: 0 0 2.4mm 6mm;
+    font-size: 9.2pt;
+    line-height: 1.55;
+  }
+  .bounds li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 1.9mm;
+    width: 2.2mm;
+    height: 1.5mm;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .bounds strong { color: var(--ink); font-weight: 700; }
+
+  /* Пять особенностей кофейни: сетка карточек. */
+  .traits { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin: 0; padding: 0; list-style: none; }
+  .traits li { background: var(--foam); border-radius: 2.5mm; padding: 3.2mm 4.5mm; }
+  .traits li:last-child { grid-column: 1 / -1; }
+  .traits h3 { font-family: Lora, serif; font-weight: 500; font-size: 11.5pt; margin-bottom: 1.2mm; }
+  .traits p { margin: 0; font-size: 9pt; line-height: 1.5; }
+
+  /* Носители бренда. */
+  .carriers { display: flex; flex-wrap: wrap; gap: 2mm; margin: 3mm 0 0; padding: 0; list-style: none; }
+  .carriers li {
+    font-size: 8.6pt; font-weight: 600; color: var(--ink-2);
+    border: 1px solid var(--crema); border-radius: 10mm; padding: .8mm 3.2mm;
+  }
+
+  /* Объём SMM в месяц: числа из прайса. */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 0 0 4mm; }
+  .stat { background: var(--ink); color: #E3D6C6; border-radius: 2.5mm; padding: 3.5mm 4mm; }
+  .stat b { display: block; font-size: 22pt; line-height: 1.05; color: var(--crema); }
+  .stat span { font-size: 8.4pt; line-height: 1.35; display: block; margin-top: 1mm; }
+
+  .stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 0; padding: 0; list-style: none; }
+  .stages li { border-top: 2px solid var(--crema); padding-top: 2.5mm; }
+  .stages b { display: block; font-family: Lora, serif; font-weight: 500; font-size: 11.5pt; color: inherit; }
+  .sheet--dark .stages b { color: #F6EBDD; }
+  .sheet--dark .stages span { color: #BCA892; }
+  .stages span { font-size: 8.5pt; line-height: 1.5; color: var(--muted); display: block; margin-top: 1mm; }
+
+  /* Смета */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 7.2pt;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    padding: 0 0 2.2mm;
+    border-bottom: 1px solid var(--crema);
+  }
+  th.r, td.r { text-align: right; }
+  th + th { padding-left: 4mm; white-space: nowrap; }
+  td {
+    padding: 1.9mm 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    font-size: 9.2pt;
+    line-height: 1.45;
+  }
+  td.r { padding-left: 4mm; white-space: nowrap; }
+  td.term { color: var(--muted); font-size: 8.6pt; padding-left: 3mm; white-space: nowrap; }
+  td.old s { color: var(--muted); font-size: 9pt; }
+  .price { font-size: 12pt; color: var(--ink); }
+  .row-title { font-weight: 700; color: var(--ink); display: block; }
+  .row-note { font-size: 8.4pt; color: var(--muted); display: block; }
+  tr.group td { padding: 3mm 0 .6mm; border-bottom: 0; font-size: 7.2pt; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  tr.option td { background: var(--foam); }
+  tr.option td:first-child { padding-left: 3mm; }
+  tr.option td:last-child { padding-right: 3mm; }
+
+  .totals {
+    margin-top: 4.5mm; background: var(--ink); color: #F1E6D8; padding: 4mm 6mm;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0 8mm;
+  }
+  .totals div { padding: 2.4mm 0; border-top: 1px solid rgba(255,240,220,.12); }
+  .totals div:nth-child(-n+2) { border-top: 0; }
+  .totals .label { display: block; font-size: 8.6pt; color: #CDBBA6; line-height: 1.4; min-height: 7.6mm; }
+  .totals .label b { color: #F6EBDD; font-weight: 600; display: block; font-size: 9.4pt; }
+  .totals s { font-size: 9pt; color: #8F7B68; white-space: nowrap; margin-right: 3mm; }
+  .totals .value { font-family: Lora, serif; font-size: 17pt; color: var(--crema); white-space: nowrap; }
+
+  .callout {
+    background: var(--foam);
+    border-left: 2px solid var(--crema);
+    padding: 4mm 5.5mm;
+    font-size: 9.1pt;
+    line-height: 1.6;
+  }
+  .callout strong { color: var(--ink); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; }
+
+  .foot {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    bottom: 10mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.4pt;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #A8968A;
+    border-top: 1px solid var(--line);
+    padding-top: 3mm;
+  }
+
+  .contacts { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm 10mm; }
+  .contacts div { border-top: 1px solid var(--line); padding-top: 3mm; }
+  .contacts .k { font-size: 7.4pt; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.2mm; font-weight: 600; }
+  .contacts .v { font-size: 10pt; color: var(--ink); margin: 0; }
+
+  .sign { margin-top: 10mm; display: flex; align-items: center; gap: 5mm; }
+  .sign svg { width: 12mm; height: 12mm; flex: 0 0 auto; }
+  .sign span { font-family: Lora, Georgia, serif; font-size: 12pt; line-height: 1.35; color: var(--crema); }
+
+  @media print {
+    html, body { background: #fff; }
+    body { padding: 0; }
+    .sheet { margin: 0; box-shadow: none; break-after: page; }
+    .sheet:last-child { break-after: auto; }
+  }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- ─── 1. Обложка ──────────────────────────────────────────────────────── -->
+<section class="sheet sheet--cover">
+  <div class="cover-top">
+    <p class="eyebrow">Коммерческое предложение · 12 октября 2026</p>
+    <svg class="cup" viewBox="0 0 120 120" aria-hidden="true">
+      <circle cx="60" cy="60" r="56" fill="none" stroke="#D9A066" stroke-width="2" opacity=".55"/>
+      <circle cx="60" cy="60" r="46" fill="#5A3622"/>
+      <circle cx="60" cy="60" r="40" fill="#8A5530"/>
+      <path d="M60 86 C40 72 34 60 40 50 C45 42 55 43 60 52 C65 43 75 42 80 50 C86 60 80 72 60 86 Z" fill="#F3E6D3"/>
+      <path d="M60 52 L60 80" stroke="#8A5530" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="cover-mid">
+    <h1>Маркетинг<br>для вашей кофейни.<br><em>Бренд, соцсети, реклама</em></h1>
+    <p class="cover-lead">
+      Один подрядчик на всё, что гость видит до первой чашки: логотип на
+      стакане, профиль в Instagram, канал в Telegram и реклама, которую
+      показывают людям по соседству.
+    </p>
+
+    <div class="amount-box">
+      <span class="amount">30&nbsp;000&nbsp;000<small>сум в месяц</small></span>
+      <span class="amount-note">
+        SMM, таргет в Instagram и реклама в Telegram со второго месяца.
+        На сайте студии это <s>33&nbsp;426&nbsp;000</s>: для вас каждая позиция на 10%
+        ниже. Брендинг разово, смета на странице 4.
+      </span>
+    </div>
+  </div>
+
+  <div class="cover-bot">
+    <div class="cover-meta">
+      <span>Для: <strong>вашей кофейни</strong>, Ташкент</span>
+      <span>От: <strong>DevUz Studio</strong> · devuz.studio · @DevUz_Studio</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 2. Кофейня и брендинг ───────────────────────────────────────────── -->
+<section class="sheet">
+  <p class="eyebrow">С чего начинаем · брендинг</p>
+  <hr class="rule rule--accent">
+
+  <section>
+    <h2>Чем маркетинг кофейни отличается</h2>
+    <p class="lead">
+      Кофейне не нужен весь город. Ей нужны люди, которые живут и работают
+      в нескольких минутах от двери, и чтобы они заходили не один раз.
+    </p>
+    <ul class="traits">
+      <li>
+        <h3>Гости рядом</h3>
+        <p>Рекламу показываем тем, кто живёт, работает или часто бывает рядом с кофейней. Человек с другого конца Ташкента за капучино не поедет, и платить за его внимание незачем.</p>
+      </li>
+      <li>
+        <h3>Повторные визиты</h3>
+        <p>Выручку делает гость, который пришёл в пятый и в двадцатый раз. Сторис о сезонном напитке и свежей выпечке напоминают о вас тем, кто уже заходил.</p>
+      </li>
+      <li>
+        <h3>Instagram и Telegram</h3>
+        <p>В Ташкенте кофейню выбирают по профилю в Instagram: фото, рилс, отметки гостей. Telegram-канал держит постоянных гостей в курсе новинок и акций.</p>
+      </li>
+      <li>
+        <h3>Фото напитков и интерьера</h3>
+        <p>По кадру решают, зайти или пройти мимо. Поэтому съёмки у нас каждую неделю, а не раз в сезон: латте-арт, выпечка, бариста за работой, зал утром и вечером.</p>
+      </li>
+      <li>
+        <h3>Отзывы и фото на картах</h3>
+        <p>Перед первым визитом гость открывает Яндекс Карты или Google Maps: рейтинг, фото, часы работы. Снимки из наших съёмок подходят и туда, а в соцсетях мы напоминаем гостям оставить отзыв.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Брендинг</h2>
+    <p class="lead">
+      Два месяца. Кофейня получает узнаваемое лицо: один и тот же знак,
+      цвета и шрифты на стакане, в меню, на вывеске и в ленте.
+    </p>
+    <ol class="items items--run">
+      <li><span class="num">01</span><div><h3>Нейминг</h3><p>Если название уже есть и вы его оставляете, этот шаг пропускаем, а время уходит на носители.</p></div></li>
+      <li><span class="num">02</span><div><h3>Логотип</h3><p>Несколько направлений эскизов, выбираем одно вместе с вами и доводим. Знак читается и на крышке стакана, и на вывеске через дорогу.</p></div></li>
+      <li><span class="num">03</span><div><h3>Фирменный стиль</h3><p>Цвета, шрифты, узор, правила для фото и оформление носителей:</p>
+        <ul class="carriers">
+          <li>стаканы и крышки</li><li>меню и ценники</li><li>вывеска</li><li>фартуки</li><li>пакеты и наклейки</li><li>шаблоны постов и сторис</li><li>обложка Telegram-канала</li>
+        </ul></div></li>
+      <li><span class="num">04</span><div><h3>Брендбук</h3><p>Все правила в одном файле. По нему типография и рекламщики делают тиражи и вывеску без нас, а новый сотрудник собирает пост, который выглядит как ваш.</p></div></li>
+    </ol>
+    <p class="small muted" style="margin-top:3mm">
+      Печать стаканов, меню и изготовление вывески в цену не входят: их делает
+      типография по нашим файлам. Права на логотип и стиль переходят к вам после
+      полной оплаты.
+    </p>
+  </section>
+
+  <div class="foot"><span>Маркетинг для вашей кофейни</span><span>DevUz Studio · 2 / 5</span></div>
+</section>
+
+<!-- ─── 3. SMM и таргет ─────────────────────────────────────────────────── -->
+<section class="sheet">
+  <p class="eyebrow">SMM · таргет · Telegram</p>
+  <hr class="rule rule--accent">
+
+  <section>
+    <h2>SMM: Instagram, Telegram и Facebook</h2>
+    <p class="lead">
+      Ведём аккаунты целиком: от плана на месяц до публикации. Instagram и
+      Telegram в Ташкенте основные, Facebook идёт в комплекте. Тексты на
+      русском и узбекском.
+    </p>
+    <div class="stats">
+      <div class="stat"><b>4</b><span>съёмки в месяц, в кофейне</span></div>
+      <div class="stat"><b>8</b><span>рилс в месяц</span></div>
+      <div class="stat"><b>4</b><span>поста в месяц</span></div>
+      <div class="stat"><b>30</b><span>сторис в месяц</span></div>
+    </div>
+    <ol class="items">
+      <li><span class="num">01</span><div><h3>Контент-план</h3><p>Каждый месяц: что снимаем, что и когда выходит. Согласуем с вами до съёмок, сезонное меню и акции ставим заранее.</p></div></li>
+      <li><span class="num">02</span><div><h3>Съёмки</h3><p>Приезжаем в кофейню: напитки, выпечка, бариста, зал, гости (с их согласия). Из одной съёмки собираем и рилс, и посты, и сторис.</p></div></li>
+      <li><span class="num">03</span><div><h3>Ведение</h3><p>Публикуем по плану, оформляем профиль и закреплённые сторис: меню, адрес, часы работы, как пройти.</p></div></li>
+      <li><span class="num">04</span><div><h3>Первый месяц</h3><p>Он дороже следующих: в него входят стратегия, оформление страниц в стиле бренда, медиаплан и настройка рекламных кабинетов.</p></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Таргет и реклама в Telegram</h2>
+    <p class="lead">
+      Реклама зовёт в кофейню тех, кто рядом, и возвращает тех, кто уже вас видел.
+    </p>
+    <div class="two">
+      <ul class="bounds">
+        <li><strong>Instagram и Facebook.</strong> Медиаплан, 4 рекламных креатива в месяц, ретаргетинг.</li>
+        <li><strong>Telegram Ads.</strong> Подбираем каналы вашего района и города, запускаем рекламу.</li>
+        <li><strong>Яндекс, если нужен.</strong> Отдельной позицией «Контекст в Google и Яндексе», в итог не входит.</li>
+      </ul>
+      <ul class="bounds">
+        <li><strong>Гео вокруг кофейни.</strong> Показы в радиусе от вашего адреса, для людей, которые там живут, работают или часто бывают.</li>
+        <li><strong>Ретаргетинг.</strong> Догоняем тех, кто смотрел рилс, заходил в профиль или канал.</li>
+        <li><strong>Отчёт раз в неделю.</strong> Что запустили, сколько потратили, что сработало и что меняем.</li>
+      </ul>
+    </div>
+    <div class="callout" style="margin-top:3mm">
+      <p><strong>Рекламный бюджет отдельно от нашей работы.</strong> Его вы платите напрямую рекламным системам, на старт рекомендуем от $500 на канал. Площадки начисляют на бюджет НДС 12%, наша комиссия за ведение 10% от бюджета. Цены студии в сумах, без НДС.</p>
+    </div>
+  </section>
+
+  <div class="foot"><span>Маркетинг для вашей кофейни</span><span>DevUz Studio · 3 / 5</span></div>
+</section>
+
+<!-- ─── 4. Смета ────────────────────────────────────────────────────────── -->
+<section class="sheet">
+  <p class="eyebrow">Смета · цены в сумах, без НДС</p>
+  <hr class="rule rule--accent">
+
+  <h2>Смета</h2>
+  <p class="lead">
+    Цена с сайта devuz.studio/ru/marketing и ваша: минус 10% на каждую позицию.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Позиция</th><th>Срок</th><th class="r">Цена сайта</th><th class="r">Для вас</th></tr>
+    </thead>
+    <tbody>
+      <tr class="group"><td colspan="4">Разово</td></tr>
+      <tr>
+        <td><span class="row-title">Брендинг</span><span class="row-note">Нейминг, логотип, фирменный стиль, брендбук</span></td>
+        <td class="term">2 месяца</td>
+        <td class="r old"><s>39&nbsp;600&nbsp;000</s></td>
+        <td class="r price">35&nbsp;600&nbsp;000</td>
+      </tr>
+
+      <tr class="group"><td colspan="4">Первый месяц маркетинга</td></tr>
+      <tr>
+        <td><span class="row-title">SMM-продвижение</span><span class="row-note">Со стратегией, оформлением страниц и медиапланом</span></td>
+        <td class="term">1-й месяц</td>
+        <td class="r old"><s>35&nbsp;856&nbsp;000</s></td>
+        <td class="r price">32&nbsp;250&nbsp;000</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Таргет в Instagram и Facebook</span><span class="row-note">С настройкой рекламных кабинетов</span></td>
+        <td class="term">1-й месяц</td>
+        <td class="r old"><s>9&nbsp;000&nbsp;000</s></td>
+        <td class="r price">8&nbsp;100&nbsp;000</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Реклама в Telegram</span><span class="row-note">Подбор каналов, Telegram Ads</span></td>
+        <td class="term">1-й месяц</td>
+        <td class="r old"><s>4&nbsp;410&nbsp;000</s></td>
+        <td class="r price">3&nbsp;950&nbsp;000</td>
+      </tr>
+
+      <tr class="group"><td colspan="4">Со второго месяца</td></tr>
+      <tr>
+        <td><span class="row-title">SMM-продвижение</span><span class="row-note">4 съёмки, 8 рилс, 4 поста, 30 сторис</span></td>
+        <td class="term">в месяц</td>
+        <td class="r old"><s>23&nbsp;256&nbsp;000</s></td>
+        <td class="r price">20&nbsp;900&nbsp;000</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Таргет в Instagram и Facebook</span><span class="row-note">4 креатива, ретаргетинг, отчёт каждую неделю</span></td>
+        <td class="term">в месяц</td>
+        <td class="r old"><s>7&nbsp;200&nbsp;000</s></td>
+        <td class="r price">6&nbsp;450&nbsp;000</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Реклама в Telegram</span><span class="row-note">Отчёт каждую неделю</span></td>
+        <td class="term">в месяц</td>
+        <td class="r old"><s>2&nbsp;970&nbsp;000</s></td>
+        <td class="r price">2&nbsp;650&nbsp;000</td>
+      </tr>
+
+      <tr class="group"><td colspan="4">По желанию, в итог не входит</td></tr>
+      <tr class="option">
+        <td><span class="row-title">Контекст в Google и Яндексе</span><span class="row-note">Для тех, кто ищет кофе рядом в поиске. 1-й месяц <span style="white-space:nowrap"><s>12&nbsp;195&nbsp;000</s> 10&nbsp;950&nbsp;000</span></span></td>
+        <td class="term">в месяц</td>
+        <td class="r old"><s>9&nbsp;315&nbsp;000</s></td>
+        <td class="r price">8&nbsp;350&nbsp;000</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div><span class="label"><b>Первый месяц маркетинга</b>SMM, таргет и Telegram</span><s>49&nbsp;266&nbsp;000</s><span class="value">44&nbsp;300&nbsp;000</span></div>
+    <div><span class="label"><b>Дальше каждый месяц</b>SMM, таргет и Telegram</span><s>33&nbsp;426&nbsp;000</s><span class="value">30&nbsp;000&nbsp;000</span></div>
+    <div><span class="label"><b>Комплекс на старте</b>Брендинг и первый месяц маркетинга</span><s>88&nbsp;866&nbsp;000</s><span class="value">79&nbsp;900&nbsp;000</span></div>
+    <div><span class="label"><b>Первые 3 месяца целиком</b>Брендинг и три месяца: минимальный срок</span><s>155&nbsp;718&nbsp;000</s><span class="value">139&nbsp;900&nbsp;000</span></div>
+  </div>
+
+  <p class="small muted" style="margin-top:3.5mm">
+    Рекламный бюджет в смету не входит: от $500 на канал, платится напрямую
+    рекламным системам, плюс их НДС 12% и наша комиссия 10% от бюджета. Например,
+    при бюджете 6&nbsp;500&nbsp;000 сум на канал НДС площадки 780&nbsp;000 сум, наша комиссия 650&nbsp;000 сум.
+  </p>
+
+  <div class="foot"><span>Маркетинг для вашей кофейни</span><span>DevUz Studio · 4 / 5</span></div>
+</section>
+
+<!-- ─── 5. Как начинаем, оплата, контакты ──────────────────────────────── -->
+<section class="sheet sheet--dark">
+  <p class="eyebrow">Как начинаем · оплата · контакты</p>
+  <hr class="rule rule--accent">
+
+  <section>
+    <h2>Как начинаем</h2>
+    <ol class="stages">
+      <li><b>Бриф</b><span>Неделя 1. Разговор с вами, ваши соцсети и рекламные кабинеты, доступы.</span></li>
+      <li><b>Стратегия</b><span>Неделя 2. Медиаплан и контент-план: показываем и согласуем.</span></li>
+      <li><b>Брендинг</b><span>Два месяца. Логотип и стиль утверждаем первыми, брендбук в конце.</span></li>
+      <li><b>Запуск</b><span>Съёмки, первые публикации и реклама, как только утверждены логотип и стиль.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Кто на связи</h2>
+    <ul class="bounds">
+      <li><strong>Один менеджер в Telegram</strong> ведёт всё: брендинг, SMM и рекламу. Не нужно пересказывать задачу трём подрядчикам.</li>
+      <li><strong>Каждую неделю</strong> отчёт по рекламе: на что ушёл бюджет и что меняем. <strong>Раз в месяц</strong> итоги по каналам и план на следующий месяц.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Оплата</h2>
+    <ul class="bounds">
+      <li>Работаем по публичной оферте <strong>devuz.studio/ru/offer</strong>: договор считается заключённым, когда счёт оплачен.</li>
+      <li>Исполнитель: <strong>ИП MAKSIMOV EGOR ANDREEVICH (DevUz Studio)</strong>, Ташкент. Счёт в сумах, НДС не облагается, оплата банковским переводом.</li>
+      <li>Маркетинг: счёт в начале каждого месяца. Минимальный срок договора 3 месяца, дальше помесячно.</li>
+      <li>Брендинг: 50% на старте, 50% перед передачей брендбука. Права на логотип, стиль и съёмки переходят к вам после полной оплаты.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Из общепита у нас</h2>
+    <p class="lead small">
+      TezKetKaz: маркетплейс доставки еды для Узбекистана, меню синхронизируется с
+      кассами ресторанных сетей. Это наша разработка, не маркетинг:
+      devuz.studio/ru/cases/tezketkaz
+    </p>
+  </section>
+
+  <section>
+    <div class="contacts">
+      <div><p class="k">Telegram</p><p class="v">@DevUz_Studio</p></div>
+      <div><p class="k">Сайт</p><p class="v">devuz.studio</p></div>
+      <div><p class="k">Адрес</p><p class="v">Ташкент, ул. Шота Руставели, 138</p></div>
+      <div><p class="k">Предложение действует</p><p class="v">14 дней с даты на обложке</p></div>
+    </div>
+  </section>
+
+  <p class="sign">
+    <svg viewBox="-112 -112 224 224" aria-hidden="true">
+      <mask id="cut2">
+        <rect x="-112" y="-112" width="224" height="224" fill="#fff"/>
+        <path d="M-22 -34 L-58 0 L-22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M22 -34 L58 0 L22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </mask>
+      <path d="M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z" fill="#D9A066" mask="url(#cut2)"/>
+      <rect x="-5" y="-27" width="10" height="54" rx="5" fill="#F1E6D8"/>
+    </svg>
+    <span>Мы пишем код,<br>который приносит деньги</span>
+  </p>
+
+  <div class="foot"><span>Маркетинг для вашей кофейни</span><span>DevUz Studio · 5 / 5</span></div>
+</section>
+
+</body>
+</html>

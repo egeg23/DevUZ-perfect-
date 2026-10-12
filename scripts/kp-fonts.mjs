@@ -3,6 +3,12 @@
  * Шрифты коммерческого предложения — рядом с документом, а не с Google.
  *
  *   node scripts/kp-fonts.mjs
+ *   node scripts/kp-fonts.mjs coffee "Lora:wght@400;500;600" "Manrope:wght@400;500;600"
+ *
+ * Без аргументов собирает общий набор (Playfair Display и Inter) в
+ * kp/fonts.css. С именем и семействами — свой набор под клиента в
+ * kp/fonts-<имя>.css: КП верстается в регистре заказчика, а не студии, и
+ * гарнитуры у разных клиентов разные. Файлы шрифтов лежат в одной kp/fonts/.
  *
  * КП открывают с телефона в дороге и печатают в отделе продаж. Документ,
  * набранный системной гарнитурой из-за отсутствия сети, выглядит не тем
@@ -18,8 +24,14 @@ import path from "node:path";
 
 const UA =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
-const API =
-  "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@400;500;600&display=swap";
+const [set, ...families] = process.argv.slice(2);
+const FAMILIES = families.length
+  ? families
+  : ["Playfair Display:wght@400;500;600", "Inter:wght@400;500;600"];
+const API = `https://fonts.googleapis.com/css2?${FAMILIES.map(
+  (family) => `family=${family.replace(/ /g, "+")}`,
+).join("&")}&display=swap`;
+const CSS = set ? `fonts-${set}.css` : "fonts.css";
 const KEEP = new Set(["cyrillic", "latin"]);
 const OUT = "kp";
 
@@ -53,7 +65,7 @@ for (const [, subset, face] of css.matchAll(/\/\*\s*([a-z-]+)\s*\*\/\s*(@font-fa
 }
 
 await writeFile(
-  path.join(OUT, "fonts.css"),
+  path.join(OUT, CSS),
   `/* Собрано scripts/kp-fonts.mjs из Google Fonts. Правки — там. */\n\n${faces.join("\n\n")}\n`,
 );
 
