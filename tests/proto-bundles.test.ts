@@ -369,6 +369,10 @@ test("Giftora: демо мини-приложения и панель опера
       assert.ok(page.includes("gx-admin-1"), `${path}: настройки не общие с приложением`);
       continue;
     }
+    // Владелец, 12.10.2026: на телефоне листается только вверх и вниз, двойной тап не приближает.
+    assert.match(page, /maximum-scale=1[^"]*user-scalable=no/, `${path}: страницу можно приблизить`);
+    assert.match(page, /touch-action:pan-y/, `${path}: страница ездит вбок`);
+    assert.match(page, /gesturestart/, `${path}: щипок на iOS не погашен`);
     assert.match(page, /class="chip demo"/, `${path}: нет пометки «Демо»`);
     assert.ok(page.includes("gx-admin-1") && page.includes("/admin"), `${path}: приложение не читает настройки панели или нет входа в неё`);
     for (const view of ["home", "box", "hub", "rocket", "dice", "upgrade", "pvp", "inv", "top", "tasks", "profile"]) {
