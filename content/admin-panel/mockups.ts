@@ -97,6 +97,7 @@ export const mockupNicheDict = defineDict({
   kursy: { ru: "Онлайн-курсы", uz: "Onlayn kurslar", pl: "Kursy online" },
   "doska-obyavleniy": { ru: "Доска объявлений", uz: "E’lonlar taxtasi", pl: "Serwis ogłoszeń" },
   "telegram-mini-app": { ru: "Мини-приложение Telegram", uz: "Telegram mini-ilova", pl: "Mini-aplikacja Telegram" },
+  avtoshkola: { ru: "Автошкола", uz: "Avtomaktab", pl: "Szkoła jazdy" },
   podarki: { ru: "Подарочные наборы", uz: "Sovg‘a to‘plamlari", pl: "Zestawy prezentowe" },
   eksport: { ru: "Экспорт продуктов", uz: "Mahsulot eksporti", pl: "Eksport żywności" },
   turagentstvo: { ru: "Турагентство", uz: "Turagentlik", pl: "Biuro podróży" },

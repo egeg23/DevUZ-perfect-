@@ -444,3 +444,46 @@ test("LIDER PROF PROEKT: конструктор — сайт 1 700 $, все д�
   for (const id of ["filters", "pano", "calc", "en", "trust", "seo", "admin"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why) && a.uz.t, `${a.id}: нет описания`);
 });
+
+test("IntalimStudents: прототип приложения автошколы на ru и uz — условия, noindex, один язык на странице, без внешних загрузок", () => {
+  const site = bundlePages("intalim");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "uz"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path === "uz" ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}"`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark|mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /<script[^>]+src=|<link[^>]+stylesheet|<img[^>]+src="https?:|url\(https?:/i, `${path}: внешняя загрузка`);
+    assert.ok(page.includes("IntalimStudents"), `${path}: нет названия приложения`);
+    assert.match(page, /maximum-scale=1[^"]*user-scalable=no/, `${path}: страницу можно приблизить`);
+    // Владелец, 12.10.2026: айфон как у играбельных кейсов, внутри всё нажимается.
+    assert.match(page, /class="iphone"[\s\S]*class="island"/, `${path}: нет корпуса айфона`);
+    for (const view of ["home", "lessons", "subject", "topic", "tests", "quiz", "result", "signs", "guess", "schedule", "book", "fines", "forecast", "profile", "helper"]) {
+      assert.ok(page.includes(`V.${view} = function`), `${path}: нет экрана ${view}`);
+    }
+    // Один язык на экране: в данных узбекской страницы нет кириллицы, кроме выдуманного «№».
+    const data = page.match(/window\.IT=(\{[\s\S]*?\});<\/script>/)?.[1] ?? "";
+    assert.ok(data.length > 1000, `${path}: нет данных приложения`);
+    if (lang === "uz") assert.doesNotMatch(data, /[А-Яа-яЁё]/, "uz: кириллица в узбекской странице");
+    const it = JSON.parse(data);
+    assert.equal(it.questions.length >= 20, true, `${path}: меньше 20 вопросов`);
+    for (const q of it.questions) assert.ok(q.o[q.a] && q.e && q.simple, `${path}: вопрос ${q.id} без ответа или объяснения`);
+  }
+  const stamped = stampedBundle("intalim", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages.uz, site.pages.uz, "отпечаток не поставился на узбекской");
+});
+
+test("шрифты макетов из public не уезжают в языковой редирект", async () => {
+  const { config } = await import("@/middleware");
+  const re = new RegExp(`^${config.matcher[0]}$`);
+  assert.equal(re.test("/protos/intalim/onest-cyr.woff2"), false, "woff2 попадает под языковой редирект");
+  assert.equal(re.test("/protos/giftora/atlas.webp"), false);
+  assert.equal(re.test("/razbory"), true, "страницы сайта по-прежнему идут через языки");
+});
