@@ -1,0 +1,207 @@
+# Переезд витрины и USTA с maximov-tech.ru на devuz.studio, по кнопке.
+#
+# Владелец, 12.10.2026: «Перенеси готовые макеты и дизайны в Devuz Studio,
+# чтобы не осталось никаких следов .ru». Витрина (globalex.maximov-tech.ru,
+# репозиторий egeg23/Global-Export) переезжает на cases.devuz.studio, USTA
+# (usta.maximov-tech.ru) — на usta.devuz.studio. Оба — отдельные приложения
+# на том же сервере, что и devuz.studio, поэтому только свой адрес, а не путь
+# внутри devuz.studio: у витрины свой /_next и свой /ru.
+#
+# Перед запуском владелец добавляет у регистратора devuz.studio (Namecheap →
+# Advanced DNS) две A-записи на IP сервера: cases и usta. Без них запуск
+# ничего не трогает и говорит, какой записи нет.
+#
+# Что делает для каждого адреса:
+#   1. проверяет, что новый адрес в DNS смотрит на этот сервер;
+#   2. выпускает ему свой сертификат (certbot --nginx через временный блок);
+#   3. в том же конфиге nginx меняет старое имя на новое — порт приложения,
+#      логи и всё прочее остаются (выкатка витрины сверяет порт по этому
+#      файлу); копия старого — в /root;
+#   4. старый адрес — отдельным блоком переадресует на новый с тем же путём
+#      (старые ссылки в уже ушедших письмах продолжают работать);
+#   5. nginx не принял — всё возвращается как было, запуск красный.
+# Витрине ещё меняется NEXT_PUBLIC_SITE_URL (карта сайта, robots,
+# canonical): он вшивается при сборке, поэтому собирает её автовыкатка после
+# слияния PR в Global-Export.
+#
+# Запускается со вкладки Actions → «Переезд витрины и USTA на devuz.studio»
+# → Run workflow. «Только посмотреть» показывает конфиги и ничего не меняет.
+name: Переезд витрины и USTA на devuz.studio
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Только посмотреть: ничего не менять"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: move-to-devuz
+  cancel-in-progress: false
+
+jobs:
+  move:
+    name: Переезд
+    runs-on: ubuntu-latest
+    steps:
+      - name: Переезд по SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: DRY_RUN
+          command_timeout: 20m
+          script: |
+            set -uo pipefail
+            SUDO=""
+            [ "$(id -u)" -eq 0 ] || SUDO="sudo -n"
+            DRY="${DRY_RUN:-false}"
+            # Свой адрес сервера — тот, на который смотрит devuz.studio.
+            SERVER_IP="$(getent ahostsv4 devuz.studio | awk 'NR==1{print $1}')"
+            echo "сервер: ${SERVER_IP:-?} · только посмотреть: ${DRY}"
+            FAIL=0
+
+            # Конфиг nginx, где имя стоит в server_name. -R: в sites-enabled
+            # лежат ссылки, -r их пропускает.
+            vhost_of() {
+              local name="${1//./\\.}"
+              $SUDO grep -RlE "server_name[^;]*[[:space:]]${name}([[:space:]]|;)" /etc/nginx/sites-enabled/ 2>/dev/null | head -n 1
+            }
+
+            move_site() {
+              local old="$1" new="$2"
+              echo
+              echo "════ ${old} → ${new} ════"
+
+              local ip
+              ip="$(getent ahostsv4 "$new" | awk 'NR==1{print $1}')"
+              if [ -z "$ip" ]; then
+                echo "✗ ${new} нет в DNS — добавьте A-запись «${new%%.*}» → ${SERVER_IP} у devuz.studio в Namecheap"
+                [ "$DRY" = "true" ] || return 1
+              elif [ -n "$SERVER_IP" ] && [ "$ip" != "$SERVER_IP" ]; then
+                echo "✗ ${new} смотрит на ${ip}, а сервер — ${SERVER_IP}"
+                [ "$DRY" = "true" ] || return 1
+              else
+                echo "✓ DNS: ${new} → ${ip}"
+              fi
+
+              local file
+              file="$(vhost_of "$old")"
+              if [ -z "$file" ]; then
+                if [ -n "$(vhost_of "$new")" ]; then
+                  echo "· уже переехал: ${new} в $(vhost_of "$new")"
+                  return 0
+                fi
+                echo "✗ не нашёл конфиг nginx с ${old}"
+                return 1
+              fi
+              local real
+              real="$(readlink -f "$file")"
+              echo "конфиг: ${file} → ${real}"
+              $SUDO grep -nE "server_name|listen|ssl_certificate|proxy_pass|root[[:space:]]" "$real" | sed 's/^/  /'
+
+              local oldcert oldkey
+              oldcert="$($SUDO grep -m1 -oE 'ssl_certificate[[:space:]]+[^;]+' "$real" | awk '{print $2}')"
+              oldkey="$($SUDO grep -m1 -oE 'ssl_certificate_key[[:space:]]+[^;]+' "$real" | awk '{print $2}')"
+              echo "старый сертификат: ${oldcert:-нет}"
+
+              if [ "$DRY" = "true" ]; then
+                echo "(только посмотреть — ничего не меняю)"
+                return 0
+              fi
+
+              # 1. Сертификат нового адреса. Временный блок нужен certbot,
+              #    чтобы ответить на проверку домена; продлевать он будет по
+              #    основному конфигу, где имя уже новое.
+              local tmp="/etc/nginx/sites-enabled/zz-acme-${new}"
+              printf 'server {\n    listen 80;\n    listen [::]:80;\n    server_name %s;\n    location / { return 404; }\n}\n' "$new" | $SUDO tee "$tmp" >/dev/null
+              if ! { $SUDO nginx -t >/dev/null 2>&1 && $SUDO systemctl reload nginx; }; then
+                $SUDO rm -f "$tmp"
+                echo "✗ nginx не принял временный блок для ${new}"
+                return 1
+              fi
+              if ! $SUDO certbot certonly --nginx -d "$new" --cert-name "$new" \
+                  --non-interactive --agree-tos --keep-until-expiring --register-unsafely-without-email; then
+                $SUDO rm -f "$tmp"
+                $SUDO nginx -t >/dev/null 2>&1 && $SUDO systemctl reload nginx
+                echo "✗ сертификат для ${new} не выпустился"
+                return 1
+              fi
+              echo "✓ сертификат: /etc/letsencrypt/live/${new}/"
+
+              # 2. Тот же конфиг — с новым именем и новым сертификатом.
+              local backup
+              backup="/root/nginx-before-devuz-$(date +%Y%m%d%H%M%S)-$(basename "$real")"
+              $SUDO cp "$real" "$backup"
+              $SUDO sed -i "s/${old//./\\.}/${new}/g" "$real"
+              $SUDO rm -f "$tmp"
+
+              # 3. Старый адрес ведёт на новый, с тем же путём. Переадресация —
+              #    в location, а не на уровне server: так certbot сможет
+              #    продлить старый сертификат, пока по старым ссылкам ходят.
+              local moved="/etc/nginx/sites-available/moved-${old}"
+              {
+                echo "# ${old} переехал на ${new} ($(date +%F)): старые ссылки ведут на новый адрес."
+                printf 'server {\n    listen 80;\n    listen [::]:80;\n    server_name %s;\n    location / { return 301 https://%s$request_uri; }\n}\n' "$old" "$new"
+                if [ -n "$oldcert" ] && [ -n "$oldkey" ] && $SUDO test -r "$oldcert"; then
+                  printf 'server {\n    listen 443 ssl;\n    listen [::]:443 ssl;\n    server_name %s;\n    ssl_certificate %s;\n    ssl_certificate_key %s;\n    location / { return 301 https://%s$request_uri; }\n}\n' "$old" "$oldcert" "$oldkey" "$new"
+                fi
+              } | $SUDO tee "$moved" >/dev/null
+              $SUDO ln -sf "$moved" "/etc/nginx/sites-enabled/moved-${old}"
+
+              if $SUDO nginx -t && $SUDO systemctl reload nginx; then
+                echo "✓ nginx: ${new} отвечает, ${old} ведёт на него (копия старого конфига: ${backup})"
+              else
+                echo "✗ nginx не принял — возвращаю как было"
+                $SUDO cp "$backup" "$real"
+                $SUDO rm -f "/etc/nginx/sites-enabled/moved-${old}" "$moved"
+                $SUDO nginx -t >/dev/null 2>&1 && $SUDO systemctl reload nginx
+                return 1
+              fi
+
+              sleep 2
+              echo "снаружи:"
+              curl -sS -o /dev/null -w "  https://${new}/ → %{http_code}\n" --max-time 15 --noproxy '*' "https://${new}/" || true
+              curl -sS -o /dev/null -w "  https://${old}/mavera → %{http_code} %{redirect_url}\n" --max-time 15 --noproxy '*' "https://${old}/mavera" || true
+            }
+
+            move_site globalex.maximov-tech.ru cases.devuz.studio || FAIL=1
+            move_site usta.maximov-tech.ru usta.devuz.studio || FAIL=1
+
+            # Адрес витрины для поиска. Вшивается при сборке — витрину
+            # соберёт автовыкатка после слияния PR в Global-Export.
+            echo
+            echo "════ Адрес витрины для поиска ════"
+            GX=/srv/globalex
+            ENVF=""
+            for f in "$GX/.env.local" "$GX/.env.production" "$GX/.env"; do
+              if $SUDO test -f "$f" && $SUDO grep -q '^NEXT_PUBLIC_SITE_URL=' "$f"; then ENVF="$f"; break; fi
+            done
+            [ -n "$ENVF" ] || ENVF="$GX/.env.local"
+            echo "файл: ${ENVF}"
+            $SUDO grep -n '^NEXT_PUBLIC_SITE_URL=' "$ENVF" 2>/dev/null | sed 's/^/  было: /' || echo "  было: не задан"
+            if [ "$DRY" != "true" ] && [ "$FAIL" = "0" ]; then
+              if $SUDO grep -q '^NEXT_PUBLIC_SITE_URL=' "$ENVF" 2>/dev/null; then
+                $SUDO sed -i 's|^NEXT_PUBLIC_SITE_URL=.*|NEXT_PUBLIC_SITE_URL=https://cases.devuz.studio|' "$ENVF"
+              else
+                echo "NEXT_PUBLIC_SITE_URL=https://cases.devuz.studio" | $SUDO tee -a "$ENVF" >/dev/null
+              fi
+              echo "  стало: NEXT_PUBLIC_SITE_URL=https://cases.devuz.studio"
+              echo "  карта сайта сменится, когда автовыкатка соберёт витрину (после слияния PR в Global-Export)"
+            fi
+
+            echo
+            if [ "$FAIL" = "0" ]; then
+              echo "✓ Готово."
+            else
+              echo "✗ Не всё переехало — причины выше, со знаком ✗."
+              exit 1
+            fi
