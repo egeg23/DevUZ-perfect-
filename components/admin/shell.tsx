@@ -89,7 +89,11 @@ export function AdminShell({
               {/* Как раньше — одной строкой с прокруткой, а не переносом:
                   двенадцать пунктов в четыре ряда занимали на телефоне треть
                   экрана, и содержимое страницы начиналось за сгибом. */}
-              <nav aria-label={t.nav} className="no-scrollbar min-w-0 flex-1 overflow-x-auto">
+              {/* Только вбок: подчёркивание открытого пункта (-mb-px) выходило
+                  на пиксель за строку, и на телефоне её можно было тянуть
+                  вверх-вниз, обрезая буквы (владелец, 13.10.2026). pb-px
+                  оставляет ему место, overflow-y-hidden — запрет на всякий случай. */}
+              <nav aria-label={t.nav} className="no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden pb-px">
                 <div className="flex w-max gap-4 text-sm sm:w-auto sm:flex-wrap">
                   {navOf(staff).map((item) => (
                     <AdminNavLink key={item.href} href={item.href} quiet={item.roles.length === 1}>
