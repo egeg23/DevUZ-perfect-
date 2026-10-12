@@ -1294,6 +1294,12 @@ document.addEventListener('click', function(e){
   if (lang) { try { sessionStorage.setItem('gx-view', curName); } catch (x) {} if (location.hash) { e.preventDefault(); location.href = lang.getAttribute('href') + location.hash; } }
 });
 addEventListener('keydown', function(e){ if (e.key === 'Escape') closeSheet(); });
+/* Без приближения: щипок (iOS gesture*, два пальца) и двойной тап гасятся. */
+['gesturestart', 'gesturechange', 'gestureend'].forEach(function(t){ document.addEventListener(t, function(e){ e.preventDefault(); }, { passive: false }); });
+document.addEventListener('touchmove', function(e){ if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+var lastTouch = 0;
+document.addEventListener('touchend', function(e){ var now = Date.now(); if (now - lastTouch < 320 && !e.target.closest('input,textarea,select,button,a,label,[data-go],[data-act]')) e.preventDefault(); lastTouch = now; }, { passive: false });
+document.addEventListener('dblclick', function(e){ e.preventDefault(); }, { passive: false });
 addEventListener('resize', function(){ if (fxRun) fxSize(); });
 document.addEventListener('visibilitychange', function(){ if (document.hidden) save(); });
 addEventListener('storage', function(e){

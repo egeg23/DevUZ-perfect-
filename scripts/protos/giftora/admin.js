@@ -143,9 +143,9 @@ VIEW.overview = function(){
     '<div class="tiles">' + tiles.map(function(x){ return '<div class="tile ' + x[3] + '"><small>' + x[0] + '</small><b>' + x[1] + '</b>' + x[2] + '</div>'; }).join('') + '</div>' +
     '<div class="card"><div class="card-h"><h2>' + L('Депозиты и выводы по дням', 'Deposits and withdrawals per day') + '</h2><div class="lg"><span><i class="c-dep"></i>' + L('Депозиты', 'Deposits') + '</span><span><i class="c-wd"></i>' + L('Выводы', 'Withdrawals') + '</span><span><i class="c-net"></i>' + L('Разница', 'Difference') + '</span></div></div><div class="chart" id="chart"><svg id="ch-svg"></svg><div class="tip" id="tip"></div></div>' +
     (td.mine ? '<p class="note">' + L('В сегодняшнем столбце есть ваши демо-депозиты из приложения: ', 'Today includes your demo deposits from the app: ') + ton(td.mine) + ' TON.</p>' : '') + '</div>' +
-    '<div class="grid2"><div class="card"><div class="card-h"><h2>' + L('Игры за период', 'Games in the period') + '</h2></div><table class="tb"><thead><tr><th>' + L('Игра', 'Game') + '</th><th>' + L('Ставки', 'Bets') + '</th><th>' + L('Выплаты', 'Paid out') + '</th><th>' + L('Доход', 'Revenue') + '</th><th>RTP</th></tr></thead><tbody>' +
+    '<div class="grid2"><div class="card"><div class="card-h"><h2>' + L('Игры за период', 'Games in the period') + '</h2></div><div class="tbw"><table class="tb"><thead><tr><th>' + L('Игра', 'Game') + '</th><th>' + L('Ставки', 'Bets') + '</th><th>' + L('Выплаты', 'Paid out') + '</th><th>' + L('Доход', 'Revenue') + '</th><th>RTP</th></tr></thead><tbody>' +
     GAMES.map(function(g){ var to = turnover * g[2], r = A.rtp[g[0]] / 100, fact = Math.min(0.995, r + (rng(g[0].length * 91 + period)() - 0.5) * 0.02), po = to * fact; return '<tr><td><b>' + g[1] + '</b></td><td>' + ton(to) + '</td><td>' + ton(po) + '</td><td class="pos">' + ton(to - po) + '</td><td>' + pc(fact) + '<small> / ' + pc(r, 0) + '</small></td></tr>'; }).join('') +
-    '</tbody></table><p class="note">' + L('RTP: сколько из каждой ставки в среднем возвращается игрокам. Первое число по факту за период, второе выставлено вами.', 'RTP: how much of every bet goes back to players on average. First figure is actual for the period, second is what you set.') + '</p></div>' +
+    '</tbody></table></div><p class="note">' + L('RTP: сколько из каждой ставки в среднем возвращается игрокам. Первое число по факту за период, второе выставлено вами.', 'RTP: how much of every bet goes back to players on average. First figure is actual for the period, second is what you set.') + '</p></div>' +
     '<div class="card"><div class="card-h"><h2>' + L('Последние действия в панели', 'Latest panel actions') + '</h2></div>' + (A.log.length ? '<ul class="log">' + A.log.slice(0, 8).map(function(x){ var d = new Date(x.at); return '<li><time>' + dstr(x.at) + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + '</time>' + esc(x.t) + '</li>'; }).join('') + '</ul>' : '<p class="empty">' + L('Пока пусто. Измените RTP, промокод или пользователя, и запись появится здесь.', 'Nothing yet. Change RTP, a promo code or a user and it shows up here.') + '</p>') + '</div></div>';
 };
 MOUNT.overview = function(){
@@ -331,6 +331,8 @@ function drawer(html, mount){
 }
 function closeDrawer(){ var el = drawerEl; if (!el) return; drawerEl = null; el.classList.remove('on'); setTimeout(function(){ el.remove(); }, 300); }
 addEventListener('keydown', function(e){ if (e.key === 'Escape') closeDrawer(); });
+['gesturestart', 'gesturechange', 'gestureend'].forEach(function(t){ document.addEventListener(t, function(e){ e.preventDefault(); }, { passive: false }); });
+document.addEventListener('touchmove', function(e){ if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
 /* ── Промокоды ── */
 VIEW.promo = function(){

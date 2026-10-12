@@ -117,7 +117,7 @@ function page(l) {
     ["top", "cup", t("Рейтинг", "Top")],
     ["profile", "user", t("Профиль", "Profile")],
   ];
-  return `<!doctype html><html lang="${l}" data-base="${BASE}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0c0b16"><title>${t("Giftora · демо мини-приложения Telegram", "Giftora · Telegram mini app demo")}</title><meta name="description" content="${t("Демо-макет мини-приложения: боксы, Rocket, Dice, Upgrade, PvP на игровой валюте.", "Mini app demo: boxes, Rocket, Dice, Upgrade, PvP on play money.")}">@@S@@</head><body>
+  return `<!doctype html><html lang="${l}" data-base="${BASE}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0c0b16"><title>${t("Giftora · демо мини-приложения Telegram", "Giftora · Telegram mini app demo")}</title><meta name="description" content="${t("Демо-макет мини-приложения: боксы, Rocket, Dice, Upgrade, PvP на игровой валюте.", "Mini app demo: boxes, Rocket, Dice, Upgrade, PvP on play money.")}">@@S@@</head><body>
 <div class="stage">
 <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
 <aside class="side">
@@ -160,7 +160,7 @@ function admin(l) {
     ["promo", "tag", t("Промокоды", "Promo codes")],
     ["refs", "link", t("Рефералы", "Referrals")],
   ];
-  return `<!doctype html><html lang="${l}" data-base="${BASE}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0c0b16"><title>${t("Панель оператора · Giftora демо", "Operator panel · Giftora demo")}</title>@@T@@</head><body>
+  return `<!doctype html><html lang="${l}" data-base="${BASE}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0c0b16"><title>${t("Панель оператора · Giftora демо", "Operator panel · Giftora demo")}</title>@@T@@</head><body>
 <div class="adm">
 <aside class="adm-side">
 <div class="brand"><svg viewBox="0 0 100 100"><use href="#g-box" style="--c1:hsl(268 85% 62%);--c2:hsl(276 90% 72%);--c3:hsl(42 96% 62%)"/></svg><div><b>Giftora</b> <span class="chip">${t("Демо", "Demo")}</span><small>${t("панель оператора", "operator panel")}</small></div></div>
