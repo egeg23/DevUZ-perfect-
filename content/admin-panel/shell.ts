@@ -28,6 +28,13 @@ export const shellDict = defineDict({
     pl: "Zacznij pisać: «umo» — «Umowy»",
   },
   findNothing: { ru: "Такого раздела нет", uz: "Bunday bo‘lim yo‘q", pl: "Nie ma takiej sekcji" },
+  // Тумблер «Новое меню»: выключил — меню как раньше, одной строкой.
+  navNew: { ru: "Новое меню", uz: "Yangi menyu", pl: "Nowe menu" },
+  navNewHint: {
+    ru: "Включено — разделы группами и «Найти раздел». Выключите — меню будет как раньше, одной строкой.",
+    uz: "Yoqilgan — bo‘limlar guruhlarda va «Bo‘limni topish». O‘chirsangiz — menyu avvalgidek, bitta qatorda bo‘ladi.",
+    pl: "Włączone — sekcje w grupach i «Znajdź sekcję». Wyłącz — menu będzie jak dawniej, w jednym rzędzie.",
+  },
   findKeys: {
     ru: "↑ ↓ — выбрать, Enter — открыть, Esc — закрыть",
     uz: "↑ ↓ — tanlash, Enter — ochish, Esc — yopish",
