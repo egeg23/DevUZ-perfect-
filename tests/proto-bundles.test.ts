@@ -393,3 +393,54 @@ test("Giftora: демо мини-приложения и панель опера
     assert.ok(statSync(`public/protos/giftora/${f}`).size < 320_000, `${f} тяжелее 320 КБ`);
   }
 });
+
+test("LIDER PROF PROEKT: главная, проекты, проект и «Что дальше» на ru и uz — условия, noindex, заставка, история, стекло", () => {
+  const site = bundlePages("lider-prof");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "plan", "proekt", "proekty", "uz", "uz/plan", "uz/proekt", "uz/proekty"]);
+  for (const [path, page] of Object.entries(all)) {
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("LIDER PROF PROEKT"), `${path}: нет названия студии`);
+    // Главное действие — Telegram студии @lppuz из «Контактов» на их сайте, звонок — номер из шапки.
+    assert.ok(page.includes('href="https://t.me/lppuz"'), `${path}: нет Telegram студии`);
+    assert.ok(page.includes('href="tel:+998993050999"'), `${path}: нет звонка`);
+    assert.match(page, /backdrop-filter:url\(#lq\)/, `${path}: нет преломления у стекла`);
+    // Цен у студии на сайте нет — и здесь только наши, в конструкторе.
+    assert.doesNotMatch(page, /сум за м|so‘m\/m|\d\s?(сум|so‘m)\b/i, `${path}: цена, которой нет на их сайте`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], /class="lp-cv"[^>]*data-paths=/, `${path}: нет влёта в «O»`);
+    assert.match(all[path], /id="story"[\s\S]*data-k="draft"[\s\S]*data-k="land"/, `${path}: нет глав истории`);
+    assert.match(all[path], /class="st-static/, `${path}: у истории нет списка для тех, у кого движение выключено`);
+    assert.match(all[path], /id="calc"/, `${path}: нет расчёта проекта`);
+  }
+  for (const path of ["proekty", "uz/proekty"]) assert.equal((all[path].match(/<a class="pc rv a-[a-z]+" style=/g) || []).length, 61, `${path}: не 61 проект`);
+  // Превью — очередью из data-src, а не залпом (урок enotmebel, 429 от nginx).
+  assert.doesNotMatch(all.proekty, /class="pc [^"]*"[^>]*>\s*<span[^>]*>\s*<span[^>]*><\/span><img src=/, "превью проектов грузятся залпом");
+  assert.ok(all["uz/proekty"].includes("Jamoat binolari"), "узбекские направления");
+  assert.doesNotMatch(all["uz/proekty"], /[A-Za-z][А-Яа-я]|[А-Яа-я][A-Za-z]/, "слово из двух алфавитов в узбекской странице");
+  const stamped = stampedBundle("lider-prof", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("LIDER PROF PROEKT: конструктор — сайт 1 700 $, все допы вместе 1 300 $, итог не больше 3 000 $", async () => {
+  const plan = await import("../scripts/protos/lider-prof/plan.mjs");
+  // Владелец, 12.10.2026: «стоимость для клиента без допов 1 700 $, с допами не больше 3 000 $».
+  assert.equal(plan.BASE.price, 1700);
+  const all: { id: string; price: number; ru: { t: string; e?: string; why?: string }; uz: { t: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
+  const sum = all.reduce((s, a) => s + a.price, 0);
+  assert.equal(sum, 1300, "все допы вместе — 1 300 $");
+  assert.ok(plan.BASE.price + sum <= 3000, "со всеми допами не больше 3 000 $");
+  for (const id of ["filters", "pano", "calc", "en", "trust", "seo", "admin"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
+  for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why) && a.uz.t, `${a.id}: нет описания`);
+});
