@@ -43,6 +43,13 @@ const config: NextConfig = {
   // реально нужны в рантайме. Образ выходит десятками мегабайт вместо
   // сотен, а на VPS это разница во времени каждого деплоя.
   output: "standalone",
+  // Памятка менеджерам по блогерам уходит в боте файлом тому, кто принял
+  // приглашение (lib/admin/blogger-invite-store). Её читают с диска, а
+  // standalone кладёт рядом с приложением только то, что нашёл в импортах, —
+  // без этой строки файла в образе нет и памятка молча не доходит.
+  outputFileTracingIncludes: {
+    "/api/telegram/webhook": ["./kp/managers-bloggers.pdf"],
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   images: { formats: ["image/avif", "image/webp"], remotePatterns: shotHost() },

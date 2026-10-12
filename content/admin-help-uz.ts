@@ -1932,6 +1932,29 @@ export const uz: HelpCopy = {
             "Rozi bo‘ldi va auditoriya bali 60 dan yuqori bo‘lsa, agent o‘zi [«Hamkorlar»](/admin/partners) da hamkor ochadi va blogerga havola yuboradi, egasi va rahbarga esa botga xabar keladi. Bal past yoki skrinshotlar yo‘q bo‘lsa, siz hal qilasiz: **«Hamkor qilish»** yoki **«Rad etdi»**. Odamni, maxsus shartlarni so‘rasa yoki javob tekshiruvdan o‘tmasa, agent 12 soatga jim bo‘ladi, sizga botga xabar keladi. Blogerga studiya akkauntidan o‘zingiz javob bersangiz yoki **«O‘zim olib boraman»** ni bossangiz, agent ham 12 soat jim turadi, **«Agentga qaytarish»** esa uni yana yoqadi. Hamkor Telegramsiz ochiladi: bloger botda balansini ko‘rmaydi, uni o‘zingiz ayting.",
           ],
         },
+        {
+          id: "bloggers-invite",
+          title: "Botdagi «Работа с блогерами» taklifi",
+          body: [
+            "Egasi 12.10.2026 da menejerlar va rahbarni blogerlar bilan ishlashga taklif qildi: ularni topish, birinchi bo‘lib yozish, «ha» degan javobgacha olib borish va hamkor qilib ro‘yxatdan o‘tkazish. Taklif studiya botidan Telegramga bir marta keldi, tunda emas: nima uchun (kontaktlar me’yoridan tashqari o‘z daromadingiz: olib kelingan bloger mijozlaridan studiya sof foydasining 5% i, birinchi yarim yil davomida), nima qilish kerak va qayerda. Uning ostida ikki tugma: «✅ Принять» va «✖ Отклонить».",
+            "Javob bir marta yoziladi: bosgandan keyin tugmalar yo‘qoladi, taklif ostida javob qatori qoladi, qayta bosilsa «Ответ уже записан» deb javob beradi. «✅ Принять» darhol ishga ulaydi: menejerga shu bo‘lim, «Blogerlar» varag‘i, egasining belgisi kabi ochiladi va bot birinchi xabar matnlari hamda e’tirozlarga javoblar yozilgan PDF eslatmani yuboradi. Rahbarga bo‘lim baribir ochiq, unga faqat eslatma keladi. «✖ Отклонить» hech narsani ochmaydi; fikringiz o‘zgarsa, rahbar yoki egaga yozing.",
+          ],
+        },
+        {
+          id: "bloggers-invite-answers",
+          title: "Taklifni kim qabul qildi",
+          roles: ["admin", "head"],
+          body: {
+            admin: [
+              "Har bir javob sizga botga «Ism qabul qildi / rad etdi» qatori bilan joriy natija bilan birga keladi: kim qabul qildi, kim rad etdi, kim jim. Yuborilgan kuni soat 18:00 da natija yana bir xabar bilan keladi. Yuborilgandan so‘ng darhol bot taklif nusxasini yuboradi: sizning nomingizdan menejerlarga ketgan matn.",
+              "Qabul qilgan menejerga «SI xodimlar» bo‘limi [«Jamoa»](/admin/team) → «Bo‘limlar» dagi belgi bilan ochiladi. Bo‘limni qaytarib yopish kerak bo‘lsa, shu belgini olib tashlang: taklifdagi javob saqlanadi, taklif qayta ketmaydi. «Blogerlar» varag‘ida menejer belgi bo‘yicha qila oladigan ishlarni qiladi: birinchi xabarlarni yuboradi va javoblarni belgilaydi; agent sozlamalari, qidiruv va hamkor qo‘shish siz va rahbarda qoladi.",
+            ],
+            head: [
+              "Menejerning har bir javobi sizga botga «Ism qabul qildi / rad etdi» qatori bilan keladi. Butun jamoa bo‘yicha natijani (kim qabul qildi, kim rad etdi, kim jim) egasi yuborilgan kuni soat 18:00 da oladi.",
+              "Qabul qilgan menejerga «Blogerlar» varag‘i ochiladi: u birinchi xabarlarni yuboradi va javoblarni belgilaydi, agent sozlamalari, qidiruv va hamkor qo‘shish esa siz va egada qoladi. Bloger menejerga «ha» desa, hamkor kartasida uni kim olib kelganini belgilang: belgisiz menejerga bonus hisoblab bo‘lmaydi.",
+            ],
+          },
+        },
       ],
     },
 
