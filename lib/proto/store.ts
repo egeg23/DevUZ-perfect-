@@ -13,6 +13,7 @@ import type { ProtoProblem } from "@/lib/proto/check";
 import { missingParts, type ProtoFacts } from "@/lib/proto/facts";
 import { buildProto } from "@/lib/proto/render";
 import { stampedBundle } from "@/lib/proto/bundles";
+import { activeLock } from "@/lib/proto/lock";
 import { withBase } from "@/lib/proto/pages";
 import { STAMP_VERSION, newSeed, stampHtml, stampPages, type Stamp } from "@/lib/proto/stamp";
 import { mockupTermsUrl } from "@/lib/proto/booking";
@@ -201,12 +202,13 @@ export async function protoPage(
   // Пароль на макет (lib/proto/lock): в фактах — только хеш, не сам пароль.
   // closed_at — макет закрыт паролями на сутки из раздела «Макеты»
   // (lib/proto/codes).
-  const lock = (data.facts as { lock?: unknown } | null)?.lock;
+  // facts.lockAt — пароль с отсрочкой: до этого момента макет открыт.
+  const lock = activeLock(data.facts as { lock?: unknown; lockAt?: unknown } | null);
   return typeof page === "string"
     ? {
         html: withBase(page, token),
         id,
-        lock: typeof lock === "string" && lock ? lock : null,
+        lock,
         closed: Boolean(data.closed_at),
       }
     : null;
