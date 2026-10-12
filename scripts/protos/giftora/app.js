@@ -21,6 +21,13 @@ function fmt(v){
 function ic(k, c){ return '<svg class="ic ' + (c || '') + '"><use href="#i-' + k + '"/></svg>'; }
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
+/* Настройки из панели оператора (BASE/admin): RTP, промокоды, блокировка. Общие через localStorage. */
+var AKEY = 'gx-admin-1';
+var RTP_DEF = { box: 90, rocket: 96, dice: 96, upgrade: 92, pvp: 95 };
+function adm(){ try { var a = JSON.parse(localStorage.getItem(AKEY) || 'null'); if (a && a.v === 1) return a; } catch (e) {} return null; }
+function rtp(k){ var a = adm(), v = a && a.rtp ? +a.rtp[k] : 0; return (v >= 50 && v <= 99.5 ? v : RTP_DEF[k]) / 100; }
+function banned(){ var a = adm(); return !!(a && a.users && a.users.me && a.users.me.ban); }
+
 /* ── Telegram: SDK, если он есть, иначе мост событий Telegram напрямую ── */
 var TG = (function(){
   var w = window.Telegram && window.Telegram.WebApp;
@@ -116,10 +123,13 @@ function val(g){ return g.ton != null ? g.ton : r2(MODELS[g.m][0] * BGS[g.b][0])
 function rar(g){ var v = val(g); return v < 3 ? 0 : v < 10 ? 1 : v < 40 ? 2 : v < 200 ? 3 : 4; }
 function gname(g){ return g.ton != null ? fmt(g.ton) + ' TON' : MODELS[g.m][EN ? 2 : 1]; }
 function bname(g){ return g.ton != null ? L('на баланс', 'to balance') : BGS[g.b][EN ? 2 : 1]; }
+/* Объёмные иллюстрации: атлас WebP (atlas.py). Пока он грузится, видна векторная иконка. */
+var ATL = 'lolli,cake,candle,flame,clover,peach,star,bear,lamp,rose,frog,trophy,potion,gem,ring,watch,helmet,cap,crown,locket,cat,box-free,box-start,box-sweet,box-farm,box-luck,box-night,box-legend'.split(',');
+function atl(k){ var i = ATL.indexOf(k); return i < 0 ? '' : '<i class="ai" style="--x:' + (i % 7) + ';--y:' + Math.floor(i / 7) + '"></i>'; }
 function art(g, cls){
   if (g.ton != null) return '<div class="ga coin ' + (cls || '') + '"><svg viewBox="0 0 24 24"><use href="#i-ton"/></svg></div>';
   var B = BGS[g.b];
-  return '<div class="ga ' + (cls || '') + (g.b === 'black' || g.b === 'onyx' ? ' dark' : '') + '" style="--b1:' + B[3] + ';--b2:' + B[4] + '"><svg viewBox="0 0 100 100"><use href="#g-' + g.m + '"/></svg></div>';
+  return '<div class="ga ' + (cls || '') + (g.b === 'black' || g.b === 'onyx' ? ' dark' : '') + '" style="--b1:' + B[3] + ';--b2:' + B[4] + '"><svg viewBox="0 0 100 100"><use href="#g-' + g.m + '"/></svg>' + atl(g.m) + '</div>';
 }
 function card(g, extra){
   var r = rar(g);
@@ -136,16 +146,36 @@ var BOXES = [
   { id: 'night', n: L('Ночной', 'Night'), p: 15, tag: 'Black · Onyx', c: ['hsl(240 12% 22%)', 'hsl(240 10% 34%)', 'hsl(268 90% 70%)'], items: [['candle', 'black'], ['rose', 'black'], ['frog', 'black'], ['gem', 'onyx'], ['watch', 'onyx'], ['cap', 'black'], ['crown', 'black'], ['locket', 'black']] },
   { id: 'legend', n: L('Легенда', 'Legend'), p: 40, c: ['hsl(40 95% 50%)', 'hsl(45 100% 66%)', 'hsl(350 85% 58%)'], items: [['gem', 'emerald'], ['trophy', 'black'], ['helmet', 'sky'], ['cap', 'mint'], ['ring', 'onyx'], ['watch', 'onyx'], ['crown', 'sky'], ['locket', 'fuchsia'], ['cat', 'lav']] }
 ];
-BOXES.forEach(function(b){
-  b.items = b.items.map(function(x){ return Array.isArray(x) ? { m: x[0], b: x[1] } : x; });
-  var vs = b.items.map(val), target = b.ev != null ? b.ev : b.p * 0.9;
+BOXES.forEach(function(b){ b.items = b.items.map(function(x){ return Array.isArray(x) ? { m: x[0], b: x[1] } : x; }); });
+function odds(){ BOXES.forEach(function(b){
+  var vs = b.items.map(val), target = b.ev != null ? b.ev : b.p * rtp('box');
   var ev = function(a){ var w = vs.map(function(v){ return Math.pow(v, -a); }), s = w.reduce(function(x, y){ return x + y; }, 0); return { w: w, s: s, e: vs.reduce(function(acc, v, i){ return acc + v * w[i] / s; }, 0) }; };
   var lo = -2, hi = 9;
   for (var k = 0; k < 60; k++) { var mid = (lo + hi) / 2; if (ev(mid).e > target) lo = mid; else hi = mid; }
   var res = ev((lo + hi) / 2);
   b.ch = res.w.map(function(w){ return w / res.s; });
-});
-function boxArt(b, cls){ return '<div class="bx ' + (cls || '') + '" style="--c1:' + b.c[0] + ';--c2:' + b.c[1] + ';--c3:' + b.c[2] + '"><svg viewBox="0 0 100 100"><use href="#g-box"/></svg></div>'; }
+}); }
+odds();
+function boxArt(b, cls){ return '<div class="bx ' + (cls || '') + '" style="--c1:' + b.c[0] + ';--c2:' + b.c[1] + ';--c3:' + b.c[2] + '"><svg viewBox="0 0 100 100"><use href="#g-box"/></svg>' + atl('box-' + b.id) + '</div>'; }
+
+/* Список без мерцания: строки по ключу, меняется только то, что изменилось.
+   Раньше весь список собирался заново, и анимация появления проигрывалась
+   у всех строк при каждой ставке и каждом «забрать». */
+function keyed(el, items, key, cls, html){
+  var old = {}, now = performance.now();
+  Array.prototype.forEach.call(el.children, function(c){ if (c._k != null) old[c._k] = c; });
+  items.forEach(function(it, i){
+    var k = key(it), n = old[k], h = html(it);
+    if (!n) { n = document.createElement('div'); n._k = k; n._born = now; n._h = null; }
+    else delete old[k];
+    if (n._h !== h) { n.innerHTML = h; n._h = h; }
+    var c = cls(it) + (now - n._born < 450 ? ' enter' : '');
+    if (n.className !== c) n.className = c;
+    if (el.children[i] !== n) el.insertBefore(n, el.children[i] || null);
+  });
+  for (var k in old) old[k].remove();
+  Array.prototype.slice.call(el.children).forEach(function(c){ if (c._k == null) c.remove(); });
+}
 function drawFrom(b){ var x = rnd(), acc = 0; for (var i = 0; i < b.items.length; i++) { acc += b.ch[i]; if (x <= acc) return i; } return b.items.length - 1; }
 function pct(p){ return p >= 0.1 ? (p * 100).toFixed(1) + '%' : p >= 0.001 ? (p * 100).toFixed(2) + '%' : (p * 100).toFixed(3) + '%'; }
 
@@ -166,6 +196,7 @@ if (S.wk !== weekId()) { S.wk = weekId(); S.pts = 0; S.cnt = {}; S.tasks = {}; S
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 function addGift(g){ var x = { id: S.nid++, m: g.m, b: g.b, at: Date.now() }; S.inv.push(x); return x; }
 function count(k, n){ S.cnt[k] = (S.cnt[k] || 0) + (n || 1); }
+function depDay(v){ var d = new Date(); d.setHours(0, 0, 0, 0); S.dd = S.dd || {}; S.dd[d.getTime()] = r2((S.dd[d.getTime()] || 0) + v); }
 function points(n){ n = Math.round(n); S.pts += n; S.all += n; }
 
 /* ── Звук: синтез WebAudio, по умолчанию выключен ── */
@@ -241,7 +272,7 @@ function renderSnd(){ var b = $('[data-act="sound"]'); b.innerHTML = ic(S.snd ? 
 
 var toastT = 0;
 function toast(msg, kind){ var t = $('#toast'); t.innerHTML = msg; t.className = 'toast on ' + (kind || ''); clearTimeout(toastT); toastT = setTimeout(function(){ t.className = 'toast'; }, 2400); }
-function pay(cost){ if (S.bal + 1e-9 < cost) { toast(L('Не хватает демо-TON. Пополните баланс кнопкой «+».', 'Not enough demo TON. Top up with the «+» button.'), 'bad'); TG.haptic('error'); return false; } money(-cost); return true; }
+function pay(cost){ if (banned()) { toast(L('Аккаунт заблокирован оператором. Снять блок можно в панели оператора.', 'The operator has blocked this account. Unblock it in the operator panel.'), 'bad'); TG.haptic('error'); return false; } if (S.bal + 1e-9 < cost) { toast(L('Не хватает демо-TON. Пополните баланс кнопкой «+».', 'Not enough demo TON. Top up with the «+» button.'), 'bad'); TG.haptic('error'); return false; } money(-cost); return true; }
 
 /* ── Слои: нижний лист и окно выигрыша ── */
 var layer = $('#layer'), sheetOpen = null;
@@ -384,13 +415,19 @@ V.home = function(){
       $('#promo', pg).addEventListener('submit', function(e){
         e.preventDefault();
         var code = $('#promo-i', pg).value.trim().toUpperCase();
-        var CODES = { DEMO: 'luck', FARM: 'farm', GIFT: 'sweet' };
-        if (!CODES[code]) { toast(L('Такого промокода нет. В демо работают DEMO, FARM и GIFT.', 'No such code. In the demo try DEMO, FARM or GIFT.'), 'bad'); TG.haptic('error'); return; }
+        var a = adm(), list = a ? a.promos : [{ code: 'DEMO', type: 'box', box: 'luck', limit: 1e9, used: 0, until: 1e15, on: 1 }, { code: 'FARM', type: 'box', box: 'farm', limit: 1e9, used: 0, until: 1e15, on: 1 }, { code: 'GIFT', type: 'box', box: 'sweet', limit: 1e9, used: 0, until: 1e15, on: 1 }];
+        var p = list.filter(function(x){ return x.code === code; })[0];
+        if (!p || !p.on) { toast(L('Такого промокода нет. В демо работают DEMO, FARM и GIFT, свои коды создаются в панели оператора.', 'No such code. In the demo try DEMO, FARM or GIFT, or create your own in the operator panel.'), 'bad'); TG.haptic('error'); return; }
+        if (p.used >= p.limit || p.until < Date.now()) { toast(L('Промокод закончился', 'This code has run out'), 'bad'); TG.haptic('error'); return; }
         if (S.used[code]) { toast(L('Этот промокод уже применён', 'This code is already used'), 'bad'); return; }
-        S.used[code] = 1; S.freeOpens[CODES[code]] = (S.freeOpens[CODES[code]] || 0) + 1; save();
+        S.used[code] = 1;
+        if (a) { p.used++; try { localStorage.setItem(AKEY, JSON.stringify(a)); } catch (x) {} }
         TG.haptic('success'); snd('coin');
-        toast(L('Бесплатное открытие: ', 'Free open: ') + BOXES.filter(function(b){ return b.id === CODES[code]; })[0].n, 'good');
-        go('box', CODES[code]);
+        if (p.type === 'ton') { money(p.ton); save(); celebrate(false); toast('+' + fmt(p.ton) + L(' демо-TON по промокоду', ' demo TON from the code'), 'good'); return; }
+        var bx = BOXES.filter(function(b){ return b.id === p.box; })[0] || BOXES[4];
+        S.freeOpens[bx.id] = (S.freeOpens[bx.id] || 0) + 1; save();
+        toast(L('Бесплатное открытие: ', 'Free open: ') + bx.n, 'good');
+        go('box', bx.id);
       });
     },
     leave: function(){ clearInterval(tick); clearInterval(feed); }
@@ -411,7 +448,7 @@ V.box = function(id){
     '<button class="btn big" id="open"></button>' +
     '<h4 class="sec">' + L('Что внутри и шансы', 'Contents and odds') + '</h4>' +
     '<div class="odds">' + order.map(function(i){ var g = b.items[i]; return '<div class="od ' + RAR[rar(g)][1] + '">' + art(g) + '<div><b>' + esc(gname(g)) + (g.m && NEW[g.m] ? ' <i class="new">' + L('новинка', 'new') + '</i>' : '') + '</b><small>' + esc(bname(g)) + ' · ' + ic('ton') + fmt(val(g)) + '</small></div><span class="od-p">' + pct(b.ch[i]) + '</span></div>'; }).join('') + '</div>' +
-    '<p class="note">' + L('Шансы открыты и одинаковы для всех. В среднем бокс отдаёт 90% своей цены.', 'Odds are public and equal for everyone. On average a box returns 90% of its price.') + '</p>';
+    '<p class="note">' + L('Шансы открыты и одинаковы для всех. В среднем бокс отдаёт ' + Math.round(rtp('box') * 100) + '% своей цены.', 'Odds are public and equal for everyone. On average a box returns ' + Math.round(rtp('box') * 100) + '% of its price.') + '</p>';
   function strip(win){
     var cells = [];
     for (var i = 0; i < 60; i++) cells.push(i === 52 ? win : rnd() < 0.55 ? Math.floor(rnd() * b.items.length) : drawFrom(b));
@@ -508,7 +545,7 @@ V.hub = function(){
 /* ── Rocket: canvas, график множителя, забрать, другие игроки ── */
 var RK = { hist: [] };
 for (var hi0 = 0; hi0 < 12; hi0++) RK.hist.push(crashPoint());
-function crashPoint(){ var u = rnd(); return Math.min(500, Math.max(1, Math.floor(96 / (1 - u)) / 100)); }
+function crashPoint(){ var u = rnd(); return Math.min(500, Math.max(1, Math.floor(rtp('rocket') * 100 / (1 - u)) / 100)); }
 var K = 0.11;
 V.rocket = function(){
   var html = head('Rocket', L('Заберите до того, как ракета улетит', 'Cash out before the rocket is gone'), 'hub') +
@@ -518,12 +555,12 @@ V.rocket = function(){
     '<div class="bet-r"><label>' + L('Автовывод', 'Auto cash out') + '</label><div class="num-in"><input id="rk-auto" inputmode="decimal" placeholder="' + L('выкл', 'off') + '"><span class="suf">×</span></div></div>' +
     '<button class="btn big" id="rk-btn"></button></div>' +
     '<h4 class="sec">' + L('Игроки раунда', 'Players this round') + ' <span id="rk-n"></span></h4><div class="pl" id="rk-pl"></div>';
-  var R = null, raf = 0, cv, ctx, W = 0, H = 0, DPR = 1, stars = [], smoke = [], boom = [], last = 0, me = null, next = null;
+  var R = null, raf = 0, cv, ctx, W = 0, H = 0, DPR = 1, stars = [], smoke = [], boom = [], last = 0, me = null, next = null, cam = { x: 9, y: 2 };
   var mEl, sEl, btn, plEl, dirty = true, lastBtn = '';
   function size(){
     var r = cv.getBoundingClientRect(); W = r.width; H = r.height;
     var d = window.devicePixelRatio || 1;
-    DPR = S.q === 'high' ? Math.min(2, d) : S.q === 'medium' ? Math.min(1.5, d) : 1;
+    DPR = S.q === 'high' ? Math.min(3, Math.max(2, d)) : S.q === 'medium' ? Math.min(2, d) : 1;
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     var nStars = S.q === 'high' ? 110 : S.q === 'medium' ? 60 : 24;
     stars = []; for (var i = 0; i < nStars; i++) stars.push({ x: rnd() * W, y: rnd() * H, z: 0.2 + rnd() * 0.8 });
@@ -577,10 +614,10 @@ V.rocket = function(){
     if (me) list.unshift({ name: L('Вы', 'You'), h: 268, bet: me.bet, out: me.out, me: 1 });
     list.sort(function(a, b){ return (b.me || 0) - (a.me || 0) || b.bet - a.bet; });
     $('#rk-n').textContent = '· ' + list.length;
-    plEl.innerHTML = list.map(function(p){
+    keyed(plEl, list, function(p){ return p.me ? 'me' : p.name + p.h; }, function(p){ return 'pr' + (p.me ? ' me' : '') + (p.out ? ' won' : R.phase === 'crash' ? ' lost' : ''); }, function(p){
       var st = p.out ? '<span class="pl-w">' + p.out.toFixed(2) + '× · +' + fmt(p.bet * p.out) + '</span>' : R.phase === 'crash' ? '<span class="pl-l">' + L('сгорело', 'lost') + '</span>' : '<span class="pl-n">' + L('в игре', 'in game') + '</span>';
-      return '<div class="pr ' + (p.me ? 'me' : '') + '">' + ava(p.name, p.h) + '<b>' + esc(p.name) + '</b><span class="pl-b">' + ic('ton') + fmt(p.bet) + '</span>' + st + '</div>';
-    }).join('');
+      return ava(p.name, p.h) + '<b>' + esc(p.name) + '</b><span class="pl-b">' + ic('ton') + fmt(p.bet) + '</span>' + st;
+    });
   }
   function hist(){ $('#rk-h').innerHTML = RK.hist.slice(0, 14).map(function(c){ return '<span class="hc ' + (c >= 10 ? 'h3' : c >= 2 ? 'h2' : 'h1') + '">' + c.toFixed(2) + '×</span>'; }).join(''); }
   function rocketShape(x, y, a, s, t){
@@ -610,13 +647,14 @@ V.rocket = function(){
     }
     ctx.globalAlpha = 1;
     var pad = 18, xmax = Math.max(9, t * 1.15), ymax = Math.max(2, R.m * 1.2);
+    if (fly) { cam.x += (xmax - cam.x) * Math.min(1, dt * 6); cam.y += (ymax - cam.y) * Math.min(1, dt * 6); xmax = Math.max(cam.x, t * 1.02); ymax = Math.max(cam.y, R.m * 1.05); } else if (R.phase === 'wait') { cam.x = 9; cam.y = 2; } else { xmax = cam.x; ymax = cam.y; }
     var X = function(tt){ return pad + tt / xmax * (W - pad * 2); };
     var Y = function(m){ return H - pad - (m - 1) / (ymax - 1) * (H - pad * 2 - 30); };
     ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1; ctx.font = '600 10px system-ui, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.35)';
     var stepM = ymax > 20 ? 10 : ymax > 6 ? 2 : ymax > 3 ? 1 : 0.5;
     for (var gm = 1 + stepM; gm < ymax; gm += stepM) { var gy = Y(gm); ctx.beginPath(); ctx.moveTo(pad, gy); ctx.lineTo(W - pad, gy); ctx.stroke(); ctx.fillText(gm.toFixed(stepM < 1 ? 1 : 0) + '×', W - pad - 26, gy - 4); }
     if (fly || R.phase === 'crash') {
-      var N = 64, tipX = X(t), tipY = Y(R.m);
+      var N = S.q === 'low' ? 60 : 160, tipX = X(t), tipY = Y(R.m);
       ctx.beginPath(); ctx.moveTo(X(0), Y(1));
       for (var k = 1; k <= N; k++) { var tk = t * k / N; ctx.lineTo(X(tk), Y(Math.exp(K * tk))); }
       var crashed = R.phase === 'crash';
@@ -627,9 +665,12 @@ V.rocket = function(){
       ctx.beginPath(); ctx.moveTo(X(0), Y(1));
       for (k = 1; k <= N; k++) { tk = t * k / N; ctx.lineTo(X(tk), Y(Math.exp(K * tk))); }
       var lg = ctx.createLinearGradient(X(0), 0, tipX, 0); lg.addColorStop(0, crashed ? '#ff8a5c' : '#45d5ff'); lg.addColorStop(1, col);
-      ctx.strokeStyle = lg; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      if (S.q === 'high') { ctx.shadowColor = col; ctx.shadowBlur = 16; }
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      if (S.q !== 'low') { ctx.strokeStyle = crashed ? 'rgba(255,79,109,.18)' : 'rgba(155,123,255,.2)'; ctx.lineWidth = 14; ctx.stroke(); ctx.lineWidth = 8; ctx.stroke(); }
+      ctx.strokeStyle = lg; ctx.lineWidth = 4;
+      if (S.q === 'high') { ctx.shadowColor = col; ctx.shadowBlur = 18; }
       ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.2; ctx.stroke();
       if (fly) {
         var dm = K * R.m * (xmax / (W - pad * 2)) * ((H - pad * 2 - 30) / (ymax - 1));
         var ang = -Math.atan(dm);
@@ -676,7 +717,8 @@ V.rocket = function(){
         R.m = R.crash; R.phase = 'crash'; R.ft = Math.log(R.crash) / K; R.t0 = now;
         RK.hist.unshift(R.crash); hist(); dirty = true;
         var tipX = 0, tipY = 0;
-        var pad = 18, xmax = Math.max(9, R.ft * 1.15), ymax = Math.max(2, R.m * 1.2);
+        var pad = 18, xmax = Math.max(cam.x, R.ft * 1.02), ymax = Math.max(cam.y, R.m * 1.05);
+        cam.x = xmax; cam.y = ymax;
         tipX = pad + R.ft / xmax * (W - pad * 2); tipY = H - pad - (R.m - 1) / (ymax - 1) * (H - pad * 2 - 30);
         var nb = S.q === 'high' ? 70 : S.q === 'medium' ? 36 : 14;
         for (var i = 0; i < nb; i++) { var a = rnd() * Math.PI * 2, sp = 40 + rnd() * 220; boom.push({ x: tipX, y: tipY, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 2 + rnd() * 4, life: 0.5 + rnd() * 0.9, t: 0, c: pick(['#ffb347', '#ff4f6d', '#fff3c4', '#ff7a2f']) }); }
@@ -731,7 +773,7 @@ V.dice = function(){
     '<input type="range" class="rng" id="dc-r" min="2" max="95" step="1" value="50" aria-label="' + L('Шанс', 'Chance') + '">' +
     '<div class="bet-r"><label>' + L('Ставка', 'Bet') + '</label><div class="num-in"><button data-d="-1">−</button><input id="dc-bet" inputmode="decimal" value="1"><button data-d="1">+</button></div><div class="chips"><button data-x=".5">½</button><button data-x="2">×2</button></div></div>' +
     '<button class="btn big" id="dc-go">' + L('Бросить', 'Roll') + '</button></div>';
-  var mult = function(){ return 96 / chance; };
+  var mult = function(){ return rtp('dice') * 100 / chance; };
   function sync(){
     var bet = parseFloat($('#dc-bet').value) || 0;
     $('#dc-c').textContent = chance + '%';
@@ -798,8 +840,8 @@ V.upgrade = function(arg){
     '<div class="up-sl"><button class="slot glass" id="up-from"></button><span class="up-ar">' + ic('up') + '</span><button class="slot glass" id="up-to"></button></div>' +
     '<div class="chips wide" id="up-k"><button data-k="1.5">×1.5</button><button data-k="2">×2</button><button data-k="3">×3</button><button data-k="5">×5</button><button data-k="10">×10</button></div>' +
     '<button class="btn big" id="up-go">' + L('Улучшить', 'Upgrade') + '</button>' +
-    '<p class="note">' + L('Шанс равен 92% от отношения цен и не выше 80%. Не повезло: подарок сгорает.', 'Chance is 92% of the price ratio, capped at 80%. No luck: the gift burns.') + '</p>';
-  function chance(){ return from && to ? Math.min(0.8, 0.92 * val(from) / val(to)) : 0; }
+    '<p class="note">' + L('Шанс равен ' + Math.round(rtp('upgrade') * 100) + '% от отношения цен и не выше 80%. Не повезло: подарок сгорает.', 'Chance is ' + Math.round(rtp('upgrade') * 100) + '% of the price ratio, capped at 80%. No luck: the gift burns.') + '</p>';
+  function chance(){ return from && to ? Math.min(0.8, rtp('upgrade') * val(from) / val(to)) : 0; }
   function slot(el, g, empty){ el.innerHTML = g ? art(g) + '<b>' + esc(gname(g)) + '</b><small>' + ic('ton') + fmt(val(g)) + '</small>' : '<span class="slot-e">' + ic('plus') + '</span><b>' + empty + '</b>'; el.className = 'slot glass ' + (g ? RAR[rar(g)][1] : ''); }
   function sync(){
     slot($('#up-from'), from, L('Ваш подарок', 'Your gift'));
@@ -823,7 +865,7 @@ V.upgrade = function(arg){
   }
   function pickTo(){
     var list = CATALOG.filter(function(g){ return !from || val(g) > val(from); });
-    sheet('<h3>' + L('Во что улучшить', 'Upgrade into') + '</h3><div class="pick">' + list.map(function(g, i){ return '<button data-i="' + CATALOG.indexOf(g) + '">' + card(g, from ? '<span class="gc-p">' + (Math.min(0.8, 0.92 * val(from) / val(g)) * 100).toFixed(1) + '%</span>' : '') + '</button>'; }).join('') + '</div>', function(el){
+    sheet('<h3>' + L('Во что улучшить', 'Upgrade into') + '</h3><div class="pick">' + list.map(function(g, i){ return '<button data-i="' + CATALOG.indexOf(g) + '">' + card(g, from ? '<span class="gc-p">' + (Math.min(0.8, rtp('upgrade') * val(from) / val(g)) * 100).toFixed(1) + '%</span>' : '') + '</button>'; }).join('') + '</div>', function(el){
       el.addEventListener('click', function(e){ var b = e.target.closest('[data-i]'); if (!b) return; to = CATALOG[+b.getAttribute('data-i')]; sync(); closeSheet(); TG.haptic('select'); });
     });
   }
@@ -899,22 +941,26 @@ V.pvp = function(){
     var x0 = cx + r * Math.cos(rad(a0)), y0 = cy + r * Math.sin(rad(a0)), x1 = cx + r * Math.cos(rad(a1)), y1 = cy + r * Math.sin(rad(a1));
     return 'M' + x0.toFixed(2) + ' ' + y0.toFixed(2) + 'A' + r + ' ' + r + ' 0 ' + (a1 - a0 > 180 ? 1 : 0) + ' 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2);
   }
+  var wheelSig = '';
   function wheel(){
     var tot = total(), a = 0, out = '';
+    var sig = PV.round + ':' + PV.players.map(function(p){ return p.amt; }).join(',');
+    if (sig === wheelSig && $('#pv-g').firstChild) return;
+    wheelSig = sig;
     PV.players.forEach(function(p){
       var sw = tot ? p.amt / tot * 360 : 0; p.a0 = a; p.a1 = a + sw;
       if (PV.players.length === 1) out += '<circle cx="110" cy="110" r="88" fill="none" stroke="' + p.col + '" stroke-width="30"/>';
-      else out += '<path d="' + arc(110, 110, 88, a + 0.6, a + sw - 0.6) + '" fill="none" stroke="' + p.col + '" stroke-width="30"/>';
+      else out += '<path d="' + arc(110, 110, 88, a + 0.8, a + sw - 0.8) + '" fill="none" stroke="' + p.col + '" stroke-width="30"/><path d="' + arc(110, 110, 99, a + 0.8, a + sw - 0.8) + '" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="3"/>';
       a += sw;
     });
     $('#pv-g').innerHTML = out;
-    $('#pv-pot').innerHTML = ic('ton') + fmt(tot);
+    $('#pv-pot').innerHTML = ic('ton') + '<span>' + fmt(tot) + '</span>';
   }
   function list(){
     var tot = total();
-    $('#pv-pl').innerHTML = PV.players.slice().sort(function(a, b){ return b.amt - a.amt; }).map(function(p){
-      return '<div class="pr ' + (p.me ? 'me' : '') + (PV.winner === p ? ' won' : '') + '"><i class="pv-dot" style="background:' + p.col + '"></i>' + ava(p.name, p.h) + '<b>' + esc(p.name) + '</b>' + (p.gifts.length ? '<span class="pv-gs">' + p.gifts.slice(0, 3).map(function(g){ return art(g, 'xs'); }).join('') + '</span>' : '') + '<span class="pl-b">' + ic('ton') + fmt(p.amt) + '</span><span class="pv-ch">' + (tot ? (p.amt / tot * 100).toFixed(1) : '0') + '%</span></div>';
-    }).join('');
+    keyed($('#pv-pl'), PV.players.slice().sort(function(a, b){ return b.amt - a.amt; }), function(p){ return p.me ? 'me' : p.name; }, function(p){ return 'pr' + (p.me ? ' me' : '') + (PV.winner === p ? ' won' : ''); }, function(p){
+      return '<i class="pv-dot" style="background:' + p.col + '"></i>' + ava(p.name, p.h) + '<b>' + esc(p.name) + '</b>' + (p.gifts.length ? '<span class="pv-gs">' + p.gifts.slice(0, 3).map(function(g){ return art(g, 'xs'); }).join('') + '</span>' : '') + '<span class="pl-b">' + ic('ton') + fmt(p.amt) + '</span><span class="pv-ch">' + (tot ? (p.amt / tot * 100).toFixed(1) : '0') + '%</span>';
+    });
   }
   function sync(){
     $('#pv-r').textContent = PV.round;
@@ -963,7 +1009,7 @@ V.pvp = function(){
       if (win.me) {
         var tonPart = 0, ids = [], gifts = [];
         PV.players.forEach(function(pl){ var gv = pl.gifts.reduce(function(s, gg){ return s + val(gg); }, 0); tonPart += pl.amt - gv; pl.gifts.forEach(function(gg){ ids.push(addGift(gg).id); gifts.push(gg); }); });
-        var tonWin = r2(tonPart * 0.95);
+        var tonWin = r2(tonPart * rtp('pvp'));
         if (tonWin > 0) { money(tonWin); gifts.push({ ton: tonWin }); }
         count('pvpwin'); S.best = Math.max(S.best, tot); save(); renderMe();
         if ($('#pv-g')) winModal(gifts, { ids: ids, title: L('Банк ваш!', 'The pot is yours!'), cost: 1 });
@@ -1074,12 +1120,12 @@ function deposit(){
       if (!e.target.closest('#dp-go')) return;
       if (tab === 'gift') {
         var g = randGift(rnd() < 0.2 ? 40 : 10), x = addGift(g);
-        points(val(g) * 20); count('dep'); save(); renderMe(); closeSheet();
+        points(val(g) * 20); count('dep'); depDay(val(g)); save(); renderMe(); closeSheet();
         winModal([g], { ids: [x.id], title: L('Подарок внесён', 'Gift deposited') });
       } else {
         var on = $('[data-a].on', el), n = +(on ? on.getAttribute('data-a') : 10);
         var ton = tab === 'ton' ? n : r2(n * 0.042);
-        money(ton); points(ton * 20); count('dep'); save(); renderMe(); closeSheet();
+        money(ton); points(ton * 20); count('dep'); depDay(ton); save(); renderMe(); closeSheet();
         celebrate(false); toast('+' + fmt(ton) + L(' демо-TON на балансе', ' demo TON added'), 'good');
       }
     });
@@ -1208,6 +1254,7 @@ V.profile = function(){
     '<div class="set-r"><span>' + L('Графика', 'Graphics') + '</span><div class="seg sm" id="st-q"><button data-q="high">High</button><button data-q="medium">Medium</button><button data-q="low">Low</button></div></div>' +
     '<div class="set-r"><span>' + L('Язык', 'Language') + '</span><div class="seg sm"><a href="' + BASE + '" data-lang class="' + (EN ? '' : 'on') + '">RU</a><a href="' + BASE + '/en" data-lang class="' + (EN ? 'on' : '') + '">EN</a></div></div>' +
     '<div class="set-r"><span>' + L('Начать демо заново', 'Restart the demo') + '</span><button class="btn sm ghost" id="st-reset">' + L('Сбросить', 'Reset') + '</button></div></div>' +
+    '<a class="adm-link glass" href="' + BASE + (EN ? '/en' : '') + '/admin">' + ic('panel') + '<span><b>' + L('Панель оператора', 'Operator panel') + '</b><small>' + L('RTP, депозиты и выводы, игроки, промокоды, рефералы', 'RTP, deposits and withdrawals, players, promo codes, referrals') + '</small></span></a>' +
     '<div class="about glass"><b>' + L('Это демо-макет', 'This is a demo') + '</b><p>' + L('DevUz Studio собрала его, чтобы показать механики и внешний вид. Деньги игровые, ставки и подарки ненастоящие, данные никуда не отправляются.', 'DevUz Studio built it to show the mechanics and the look. The money is play money, bets and gifts are not real, nothing is sent anywhere.') + '</p></div>' + legal();
   return {
     html: html,
@@ -1249,12 +1296,22 @@ document.addEventListener('click', function(e){
 addEventListener('keydown', function(e){ if (e.key === 'Escape') closeSheet(); });
 addEventListener('resize', function(){ if (fxRun) fxSize(); });
 document.addEventListener('visibilitychange', function(){ if (document.hidden) save(); });
+addEventListener('storage', function(e){
+  if (e.key === AKEY) odds();
+  if (e.key === KEY && e.newValue) { try { var n = JSON.parse(e.newValue); if (n && n.v === 1) { S = n; renderBal(); renderMe(); } } catch (x) {} }
+});
 
 TG.ready();
 renderMe(); renderSnd(); balEl.textContent = fmt(S.bal);
 var startView = 'home';
 try { startView = sessionStorage.getItem('gx-view') || 'home'; } catch (e) {}
 if (V[startView] && startView !== 'box') go(startView); else go('home');
+function loadAtlas(src, cls, then){
+  var im = new Image();
+  im.onload = function(){ var go2 = function(){ root.classList.add(cls); if (then) then(); }; if (im.decode) im.decode().then(go2, go2); else go2(); };
+  im.src = src;
+}
+setTimeout(function(){ loadAtlas('/protos/giftora/atlas-s.webp', 'hd1', function(){ var big = function(){ loadAtlas('/protos/giftora/atlas.webp', 'hd2'); }; if (window.requestIdleCallback) requestIdleCallback(big, { timeout: 2500 }); else setTimeout(big, 1200); }); }, 120);
 var sp = $('#splash');
 setTimeout(function(){ sp.classList.add('off'); setTimeout(function(){ sp.remove(); }, 600); }, REDUCED ? 50 : 900);
 window.__gx = { go: go, state: function(){ return S; }, deposit: deposit };

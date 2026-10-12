@@ -21,6 +21,8 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 const DIR = new URL(".", import.meta.url).pathname;
 const CSS = readFileSync(DIR + "style.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n\s*/g, "");
 const JS = readFileSync(DIR + "app.js", "utf8");
+const ACSS = readFileSync(DIR + "admin.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n\s*/g, "");
+const AJS = readFileSync(DIR + "admin.js", "utf8");
 const BASE = "__PROTO_BASE__";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
 
@@ -80,6 +82,11 @@ const I = {
   check: `<path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`,
   users: `<circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .6 3.2 2.4 3.8 5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
   bolt: `<path d="M13 2L4 14h7l-1 8 9-12h-7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>`,
+  chart: `<path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
+  sliders: `<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/>`,
+  tag: `<path d="M3 12V4h8l10 10-8 8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.5" fill="currentColor"/>`,
+  link: `<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
+  panel: `<rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 4v16M13 9h5M13 13h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
 };
 const SPRITE = `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${Object.entries(GRAD)
   .map(([k, [a, b]]) => `<linearGradient id="q-${k}" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`)
@@ -117,7 +124,7 @@ function page(l) {
 <div class="side-brand"><span class="logo"><svg viewBox="0 0 100 100"><use href="#g-box" style="--c1:hsl(268 85% 62%);--c2:hsl(276 90% 72%);--c3:hsl(42 96% 62%)"/></svg></span><b>Giftora</b><span class="chip demo">${t("Демо", "Demo")}</span></div>
 <h1>${t("Мини-приложение Telegram с игрой на подарках", "Telegram mini app with gift games")}</h1>
 <p>${t("Демо-макет от DevUz Studio. Все экраны рабочие, на игровой валюте: настоящих денег, кошелька и платежей здесь нет. Откройте на телефоне или нажимайте экраны ниже.", "A demo by DevUz Studio. Every screen works on play money: there is no real money, wallet or payment here. Open it on a phone or tap the screens below.")}</p>
-<div class="side-nav">${screens.map(([k, n]) => `<button data-go="${k}">${n}</button>`).join("")}</div>
+<div class="side-nav">${screens.map(([k, n]) => `<button data-go="${k}">${n}</button>`).join("")}<a class="side-adm" href="${BASE}${l === "ru" ? "" : "/en"}/admin">${ic("panel")}${t("Панель оператора", "Operator panel")}</a></div>
 <p class="side-legal">${t("Макет принадлежит DevUz Studio.", "The mock-up belongs to DevUz Studio.")} <a href="${TERMS(l)}" target="_blank" rel="noopener">${t("Условия использования макета", "Mock-up terms of use")}</a></p>
 </aside>
 <div class="phone"><div class="island"></div>
@@ -141,15 +148,44 @@ ${SPRITE}
 </body></html>`;
 }
 
-const out = { "": page("ru"), en: page("en") };
-const parts = { S: `<style>${CSS}</style>`, J: `<script>\n${JS}\n</script>` };
+/* Панель оператора: RTP, депозиты и выводы по дням, пользователи, промокоды, рефералы. */
+function admin(l) {
+  const t = (ru, en) => (l === "ru" ? ru : en);
+  const app = BASE + (l === "ru" ? "" : "/en");
+  const other = l === "ru" ? BASE + "/en/admin" : BASE + "/admin";
+  const nav = [
+    ["overview", "chart", t("Обзор", "Overview")],
+    ["rtp", "sliders", t("RTP и шансы", "RTP and odds")],
+    ["users", "users", t("Пользователи", "Users")],
+    ["promo", "tag", t("Промокоды", "Promo codes")],
+    ["refs", "link", t("Рефералы", "Referrals")],
+  ];
+  return `<!doctype html><html lang="${l}" data-base="${BASE}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0c0b16"><title>${t("Панель оператора · Giftora демо", "Operator panel · Giftora demo")}</title>@@T@@</head><body>
+<div class="adm">
+<aside class="adm-side">
+<div class="brand"><svg viewBox="0 0 100 100"><use href="#g-box" style="--c1:hsl(268 85% 62%);--c2:hsl(276 90% 72%);--c3:hsl(42 96% 62%)"/></svg><div><b>Giftora</b> <span class="chip">${t("Демо", "Demo")}</span><small>${t("панель оператора", "operator panel")}</small></div></div>
+<nav class="nav">${nav.map(([k, i, n]) => `<button data-tab="${k}">${ic(i)}${n}</button>`).join("")}</nav>
+<a class="back" href="${app}">${ic("back")}${t("В приложение", "To the app")}</a>
+<a class="back" href="${other}">${l === "ru" ? "EN" : "RU"}</a>
+<div class="side-f"><p>${t("Демо: цифры игровые, настройки хранятся только в этом браузере и сразу действуют в приложении.", "Demo: figures are made up, settings live only in this browser and apply to the app right away.")}</p></div>
+</aside>
+<main class="adm-main" id="adm-scroll"><div id="adm-main"></div><p class="adm-legal">${t("Демо-макет DevUz Studio.", "DevUz Studio demo.")} <a href="${TERMS(l)}" target="_blank" rel="noopener">${t("Условия использования макета", "Mock-up terms of use")}</a></p></main>
+</div>
+<div class="adm-toast" id="adm-toast"></div>
+${SPRITE}
+@@A@@
+</body></html>`;
+}
+
+const out = { "": page("ru"), en: page("en"), admin: admin("ru"), "en/admin": admin("en") };
+const parts = { S: `<style>${CSS}</style>`, J: `<script>\n${JS}\n</script>`, T: `<style>${ACSS}</style>`, A: `<script>\n${AJS}\n</script>` };
 
 mkdirSync(DIR + "out", { recursive: true });
 writeFileSync(
   DIR + "out/pages.json",
-  JSON.stringify(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.split("@@S@@").join(parts.S).split("@@J@@").join(parts.J)]))),
+  JSON.stringify(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, Object.entries(parts).reduce((p, [n, part]) => p.split(`@@${n}@@`).join(part), v)]))),
 );
 const bundleDir = new URL("../../../content/proto-bundles/", import.meta.url).pathname;
 mkdirSync(bundleDir, { recursive: true });
 writeFileSync(bundleDir + "giftora.json", JSON.stringify({ parts, pages: out }));
-for (const [k, v] of Object.entries(out)) console.log((k || "(ru)").padEnd(6), v.length + CSS.length + JS.length);
+for (const [k, v] of Object.entries(out)) console.log((k || "(ru)").padEnd(9), Object.entries(parts).reduce((p, [n, part]) => p.split(`@@${n}@@`).join(part), v).length);
