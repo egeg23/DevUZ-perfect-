@@ -23,7 +23,7 @@ for (const [name, vp] of [["d", { width: 1440, height: 900 }], ["m", { width: 39
     await p.click('#dp-t [data-t="ton"]'); await p.click("#dp-go"); await p.waitForTimeout(500);
     await p.goto(`${pre}/admin`, { waitUntil: "load" }); await p.waitForTimeout(700);
     await p.screenshot({ path: `${S}/${tag}-overview.png` });
-    const box = await p.$("#chart"); const bb = await box.boundingBox();
+    const box = await p.$("#chart"); await box.scrollIntoViewIfNeeded(); await p.waitForTimeout(200); const bb = await box.boundingBox();
     await p.mouse.move(bb.x + bb.width - 20, bb.y + bb.height / 2); await p.waitForTimeout(250);
     const tip = await p.textContent("#tip");
     if (!/Сегодня|Today/.test(tip)) fail(tag, "подсказка графика", tip); else ok(tag, "подсказка на графике:", tip.replace(/\s+/g, " ").slice(0, 70));

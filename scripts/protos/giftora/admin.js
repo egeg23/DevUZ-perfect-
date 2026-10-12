@@ -406,4 +406,19 @@ var start = 'overview';
 try { start = sessionStorage.getItem('gx-adm') || 'overview'; } catch (e) {}
 show(VIEW[start] ? start : 'overview');
 window.__gxa = { show: show, state: function(){ return A; } };
+
+/* Плашка «Демо закроется через …»: отсчёт до facts.lockAt, после срока прячется. */
+(function(){
+  var el = document.getElementById('closing'); if (!el) return;
+  var until = Date.parse(el.getAttribute('data-until')), out = document.getElementById('cl-left');
+  function tick(){
+    var ms = until - Date.now();
+    if (!(ms > 0)) { el.classList.add('gone'); return; }
+    var s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); s %= 60;
+    out.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    el.classList.toggle('urgent', ms < 3600000);
+    setTimeout(tick, 1000 - Date.now() % 1000);
+  }
+  tick();
+})();
 })();

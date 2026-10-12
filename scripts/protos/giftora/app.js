@@ -1321,4 +1321,19 @@ setTimeout(function(){ loadAtlas('/protos/giftora/atlas-s.webp', 'hd1', function
 var sp = $('#splash');
 setTimeout(function(){ sp.classList.add('off'); setTimeout(function(){ sp.remove(); }, 600); }, REDUCED ? 50 : 900);
 window.__gx = { go: go, state: function(){ return S; }, deposit: deposit };
+
+/* Плашка «Демо закроется через …»: отсчёт до facts.lockAt, после срока прячется. */
+(function(){
+  var el = document.getElementById('closing'); if (!el) return;
+  var until = Date.parse(el.getAttribute('data-until')), out = document.getElementById('cl-left');
+  function tick(){
+    var ms = until - Date.now();
+    if (!(ms > 0)) { el.classList.add('gone'); return; }
+    var s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); s %= 60;
+    out.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    el.classList.toggle('urgent', ms < 3600000);
+    setTimeout(tick, 1000 - Date.now() % 1000);
+  }
+  tick();
+})();
 })();

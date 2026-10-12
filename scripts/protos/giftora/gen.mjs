@@ -25,6 +25,10 @@ const ACSS = readFileSync(DIR + "admin.css", "utf8").replace(/\/\*[\s\S]*?\*\//g
 const AJS = readFileSync(DIR + "admin.js", "utf8");
 const BASE = "__PROTO_BASE__";
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
+/* Владелец, 12.10.2026: «плашка вверху: макет закроется через 24 часа», после
+   этого макет по паролю. Тот же момент лежит в базе: protos.facts.lockAt. */
+const CLOSE_AT = "2026-10-13T10:00:00Z";
+const closing = (t) => `<div class="closing" id="closing" data-until="${CLOSE_AT}" role="status"><i class="cl-dot"></i><span class="cl-t">${t("Демо закроется через", "Demo closes in")} <b id="cl-left">24:00:00</b></span><span class="cl-n">${t("потом по паролю", "then by password")}</span></div>`;
 
 /* Иллюстрации подарков: свои, векторные, одним спрайтом на странице. */
 const GRAD = {
@@ -129,6 +133,7 @@ function page(l) {
 </aside>
 <div class="phone"><div class="island"></div>
 <div class="app" id="app">
+${closing(t)}
 <div class="demo-bar"><span class="chip demo">${t("Демо", "Demo")}</span><span>${t("игровая валюта, без настоящих денег", "play money, no real funds")}</span><a href="${TERMS(l)}" target="_blank" rel="noopener">${t("Условия", "Terms")}</a></div>
 <header class="top">
 <button class="me" data-go="profile"><span class="ava" id="me-ava">G</span><span class="me-t"><b id="me-name">${t("Гость", "Guest")}</b><small id="me-lvl">${t("Уровень 1", "Level 1")}</small></span></button>
@@ -169,7 +174,7 @@ function admin(l) {
 <a class="back" href="${other}">${l === "ru" ? "EN" : "RU"}</a>
 <div class="side-f"><p>${t("Демо: цифры игровые, настройки хранятся только в этом браузере и сразу действуют в приложении.", "Demo: figures are made up, settings live only in this browser and apply to the app right away.")}</p></div>
 </aside>
-<main class="adm-main" id="adm-scroll"><div id="adm-main"></div><p class="adm-legal">${t("Демо-макет DevUz Studio.", "DevUz Studio demo.")} <a href="${TERMS(l)}" target="_blank" rel="noopener">${t("Условия использования макета", "Mock-up terms of use")}</a></p></main>
+<main class="adm-main" id="adm-scroll">${closing(t)}<div id="adm-main"></div><p class="adm-legal">${t("Демо-макет DevUz Studio.", "DevUz Studio demo.")} <a href="${TERMS(l)}" target="_blank" rel="noopener">${t("Условия использования макета", "Mock-up terms of use")}</a></p></main>
 </div>
 <div class="adm-toast" id="adm-toast"></div>
 ${SPRITE}

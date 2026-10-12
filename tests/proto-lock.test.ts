@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { PIN_LIMIT, hasPinCookie, lockHash, pinCookieHeader, pinCookieName, pinCookieValue, pinMatches, pinPage } from "@/lib/proto/lock";
+import { PIN_LIMIT, activeLock, hasPinCookie, lockHash, pinCookieHeader, pinCookieName, pinCookieValue, pinMatches, pinPage } from "@/lib/proto/lock";
 
 const read = (file: string) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 const ID = "268e4f90-0e30-425d-8b7a-eaac34883bc1";
@@ -53,4 +53,22 @@ test("макет без пароля не отдаётся и журнал не 
   for (const route of ["app/proto/[token]/route.ts", "app/proto/[token]/[...page]/route.ts"]) {
     assert.match(read(route), /export async function POST/, `${route}: нет приёма пароля`);
   }
+});
+
+test("пароль с отсрочкой: до facts.lockAt макет открыт, после — по паролю", () => {
+  // Владелец, 12.10.2026: «макет закроется через 24 часа… уходит на пароль 2303».
+  const lock = lockHash(ID, "2303");
+  const at = "2026-10-13T10:00:00Z";
+  const t = Date.parse(at);
+  assert.equal(activeLock({ lock, lockAt: at }, t - 1000), null);
+  assert.equal(activeLock({ lock, lockAt: at }, t), lock);
+  assert.equal(activeLock({ lock, lockAt: at }, t + 60_000), lock);
+  // Без срока пароль действует сразу, как раньше; кривой срок не открывает макет.
+  assert.equal(activeLock({ lock }, 0), lock);
+  assert.equal(activeLock({ lock, lockAt: "не дата" }, 0), lock);
+  assert.equal(activeLock({ lockAt: at }, t + 1), null);
+  assert.equal(activeLock(null), null);
+  // Маршрут и список «Макетов» смотрят на тот же срок.
+  assert.match(read("lib/proto/store.ts"), /activeLock\(/);
+  assert.match(read("lib/admin/mockups-store.ts"), /activeLock\(row\)/);
 });

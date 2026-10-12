@@ -24,6 +24,21 @@ export const PIN_COOKIE_DAYS = 30;
 
 const sha = (text: string) => createHash("sha256").update(text).digest("hex");
 
+/**
+ * Пароль, который действует сейчас.
+ *
+ * Владелец, 12.10.2026: «макет закроется через 24 часа… уходит на пароль
+ * 2303». Пароль пишется в `facts.lock` сразу, а `facts.lockAt` (ISO) говорит,
+ * с какого момента он включается: до него макет открыт всем, после — по
+ * паролю. Без `lockAt` пароль действует сразу, как раньше.
+ */
+export function activeLock(facts: { lock?: unknown; lockAt?: unknown } | null | undefined, now = Date.now()): string | null {
+  const lock = facts?.lock;
+  if (typeof lock !== "string" || !lock) return null;
+  const at = typeof facts?.lockAt === "string" ? Date.parse(facts.lockAt) : Number.NaN;
+  return Number.isFinite(at) && now < at ? null : lock;
+}
+
 /** Хеш для `facts.lock`: так пароль и ставится на прототип. */
 export function lockHash(protoId: string, pin: string): string {
   return sha(`${protoId}:${pin.trim()}`);

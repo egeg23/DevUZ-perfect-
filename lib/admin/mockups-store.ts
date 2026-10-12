@@ -13,6 +13,7 @@ import {
 import type { Staff } from "@/lib/admin/session";
 import { issueProtoCode, issueShowcaseCode, liveCodesUntil } from "@/lib/proto/code-store";
 import { protoUrl } from "@/lib/proto/store";
+import { activeLock } from "@/lib/proto/lock";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -30,7 +31,7 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
     // Черновики не в списке: по их ссылке открывается 404 (lib/proto/serve).
     const { data, error } = await db
       .from("protos")
-      .select("id, token, niche, locale, name, source, created_at, opens, auto, closed_at, lock:facts->>lock")
+      .select("id, token, niche, locale, name, source, created_at, opens, auto, closed_at, lock:facts->>lock, lockAt:facts->>lockAt")
       .neq("status", "draft")
       .order("created_at", { ascending: false })
       .limit(1000);
@@ -41,7 +42,7 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
       // путались». Их ссылки у клиентов продолжают открываться.
       if (row.auto === true) continue;
       const id = String(row.id);
-      const closed = Boolean(row.closed_at) || Boolean(row.lock);
+      const closed = Boolean(row.closed_at) || Boolean(activeLock(row));
       rows.push({
         ref: `p:${id}`,
         kind: "proto",
@@ -110,11 +111,11 @@ export async function mockupCode(ref: string, staff: Staff, ip: string | null): 
   if (!db) return { ok: false, reason: "offline" };
   const { data: proto } = await db
     .from("protos")
-    .select("id, token, name, locale, status, closed_at, lock:facts->>lock")
+    .select("id, token, name, locale, status, closed_at, lock:facts->>lock, lockAt:facts->>lockAt")
     .eq("id", target.id)
     .maybeSingle();
   if (!proto || proto.status === "draft") return { ok: false, reason: "not_found" };
-  const wasOpen = !proto.closed_at && !proto.lock;
+  const wasOpen = !proto.closed_at && !activeLock(proto);
   const issued = await issueProtoCode(String(proto.id), "client", staff.id);
   if (!issued) return { ok: false, reason: "offline" };
   await record("mockup.code", {
