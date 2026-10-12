@@ -58,6 +58,8 @@ test("коротко, от первого лица, названия — как 
     assert.ok(text.includes("+48 574 050 123"));
     // «Обучение» выключено до кнопки владельца — о нём не пишем.
     assert.doesNotMatch(text, /Обучени/);
+    // Блогеры остановлены до готовности агента — ни бонуса, ни приглашения.
+    assert.doesNotMatch(text, /[Бб]логер|5%/);
   }
 });
 
@@ -66,6 +68,6 @@ test("менеджеру — только то, что он видит сам", 
   const head = ownerNewsOct12("head");
   assert.ok(head.includes(`«${letterTextsDict.link.ru}» → «${letterTextsDict.helloTitle.ru}»`));
   assert.doesNotMatch(manager, /Первое сообщение|грейд|кнопками/);
-  assert.match(manager, /Подробности — у Александра/);
+  assert.match(head, /грейды/);
   assert.equal(ownerNewsOct12("admin"), head, "владельцу — текст руководителя");
 });
