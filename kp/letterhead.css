@@ -1,0 +1,115 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Фирменный бланк DevUz Studio для документов, которые уходят файлом.
+
+   Копия `components/docs/letterhead.tsx` в обычном CSS: договор и счёт
+   печатаются со страницы панели, а регламенты, грейды и памятки собираются
+   в PDF скриптом `scripts/kp-pdf.mjs`, как КП. Бланк один — шапка, подвал
+   и поля те же, что у договора: по бланку адресат узнаёт отправителя.
+
+   Белый лист, чёрный текст, поля 20 мм. Каждый лист — `.sheet`, чтобы
+   скрипт поймал лист, переросший A4.
+   ───────────────────────────────────────────────────────────────────── */
+@import url("fonts.css");
+
+@page { size: A4; margin: 0; }
+
+* { box-sizing: border-box; }
+
+html { background: #e9ebee; }
+
+body {
+  margin: 0;
+  padding: 10mm 0;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 10pt;
+  line-height: 1.55;
+  color: #000;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media print {
+  html { background: #fff; }
+  body { padding: 0; }
+  .sheet { margin: 0; box-shadow: none; }
+}
+
+.sheet {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  margin: 0 auto 8mm;
+  padding: 14mm 20mm 26mm;
+  background: #fff;
+  box-shadow: 0 1mm 6mm rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  break-after: page;
+}
+
+/* Шапка бланка — как у договора: знак, имя студии, контакты справа. */
+.lh-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6mm;
+  padding-bottom: 4mm;
+  border-bottom: 2px solid #000;
+}
+.lh-brand { display: flex; align-items: center; gap: 3mm; }
+.lh-brand svg { width: 11mm; height: 11mm; flex: none; }
+.lh-name { margin: 0; font-size: 13pt; font-weight: 600; line-height: 1; letter-spacing: -0.01em; }
+.lh-tag { margin: 1.2mm 0 0; font-size: 8.5pt; color: rgba(0, 0, 0, 0.6); }
+.lh-contacts { text-align: right; font-size: 8.5pt; line-height: 1.4; color: rgba(0, 0, 0, 0.7); }
+.lh-contacts p { margin: 0; }
+
+/* Подвал с реквизитами — внизу каждого листа. */
+.lh-foot {
+  position: absolute;
+  left: 20mm;
+  right: 20mm;
+  bottom: 10mm;
+  padding-top: 2.5mm;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+  font-size: 7.6pt;
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: space-between;
+  gap: 4mm;
+}
+.lh-foot b { color: rgba(0, 0, 0, 0.8); font-weight: 600; }
+
+/* Название документа и строка «город — дата». */
+h1 { margin: 8mm 0 0; text-align: center; font-size: 14pt; font-weight: 600; line-height: 1.25; }
+.subtitle { margin: 1.5mm 0 0; text-align: center; font-size: 10pt; color: rgba(0, 0, 0, 0.7); }
+.place { display: flex; justify-content: space-between; margin-top: 5mm; font-size: 10pt; }
+
+h2 { margin: 6mm 0 2mm; font-size: 11.5pt; font-weight: 600; }
+h3 { margin: 4mm 0 1.5mm; font-size: 10.2pt; font-weight: 600; }
+p { margin: 0 0 2.2mm; }
+ul, ol { margin: 0 0 2.5mm; padding-left: 5mm; }
+li { margin-bottom: 1mm; }
+.muted { color: rgba(0, 0, 0, 0.6); }
+.small { font-size: 8.8pt; }
+
+table { width: 100%; border-collapse: collapse; margin: 2mm 0 3mm; font-size: 9pt; line-height: 1.4; }
+th, td { border: 1px solid rgba(0, 0, 0, 0.25); padding: 1.6mm 2mm; text-align: left; vertical-align: top; }
+th { background: #f2f3f5; font-weight: 600; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+
+.note {
+  margin: 3mm 0;
+  padding: 2.5mm 3.5mm;
+  border-left: 3px solid #000;
+  background: #f6f7f8;
+  font-size: 9.4pt;
+}
+.quote {
+  margin: 2mm 0 3mm;
+  padding: 2.5mm 3.5mm;
+  border: 1px dashed rgba(0, 0, 0, 0.35);
+  border-radius: 2mm;
+  font-size: 9.6pt;
+  white-space: pre-line;
+}
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.page-no { position: absolute; right: 20mm; bottom: 4.5mm; font-size: 7.6pt; color: rgba(0, 0, 0, 0.45); }

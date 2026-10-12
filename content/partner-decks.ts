@@ -69,6 +69,15 @@ export type DeckCopy = {
     ctaTitle: string;
     ctaJoin: string;
     ctaCabinet: string;
+    /** Грейды (lib/partners/grades.ts): уровни агентств и блогеров. */
+    gradesTitle: string;
+    gradesLead: string;
+    gradesAgency: string;
+    gradesBlogger: string;
+    gradeNames: Record<string, string>;
+    gradeStart: string;
+    gradeWhen: (projects: number, turnover: string | null) => string;
+    gradesNote: (capProfit: number, capTurnover: number) => string;
   };
 };
 
@@ -158,6 +167,14 @@ const ru: DeckCopy = {
     ctaTitle: "Начните сегодня",
     ctaJoin: "Стать партнёром",
     ctaCabinet: "Войти в кабинет",
+    gradesTitle: "Грейды: чем больше приводите, тем выше ставка",
+    gradesLead: "К ставке из таблицы прибавляется надбавка уровня — для обеих моделей. Уровень считается по проектам, которые клиенты оплатили за последние 12 месяцев.",
+    gradesAgency: "Агентства и компании",
+    gradesBlogger: "Блогеры и авторы каналов",
+    gradeNames: { start: "Старт", proven: "Проверенный", key: "Ключевой", strategic: "Стратегический", author: "Автор", ambassador: "Амбассадор", face: "Лицо студии" },
+    gradeStart: "с первого дня",
+    gradeWhen: (projects, turnover) => `${projects} ${projects === 1 ? "оплаченный проект" : projects < 5 ? "оплаченных проекта" : "оплаченных проектов"}${turnover ? ` или ${turnover} оборота` : ""}`,
+    gradesNote: (capProfit, capTurnover) => `Потолок с надбавкой — ${capProfit} % от прибыли и ${capTurnover} % с оборота. Уровень растёт в день, когда выполнено условие, и действует на проекты, оплаченные после этого. С уровнем растут и привилегии: личный менеджер, макет для вашего клиента за 12 часов, выплата за 3 рабочих дня.`,
   },
 };
 
@@ -247,6 +264,14 @@ const en: DeckCopy = {
     ctaTitle: "Start today",
     ctaJoin: "Become a partner",
     ctaCabinet: "Sign in to the dashboard",
+    gradesTitle: "Grades: the more you bring, the higher the rate",
+    gradesLead: "A level bonus is added to the rate from the table, for both models. The level is based on projects your clients paid for in the last 12 months.",
+    gradesAgency: "Agencies and companies",
+    gradesBlogger: "Bloggers and channel authors",
+    gradeNames: { start: "Start", proven: "Proven", key: "Key", strategic: "Strategic", author: "Author", ambassador: "Ambassador", face: "Face of the studio" },
+    gradeStart: "from day one",
+    gradeWhen: (projects, turnover) => `${projects} paid ${projects === 1 ? "project" : "projects"}${turnover ? ` or ${turnover} turnover` : ""}`,
+    gradesNote: (capProfit, capTurnover) => `The cap with the bonus is ${capProfit}% of profit and ${capTurnover}% of turnover. A level goes up on the day the condition is met and applies to projects paid after that. Perks grow with the level: a personal manager, a mockup for your client in 12 hours, payouts within 3 business days.`,
   },
 };
 
@@ -336,6 +361,14 @@ const uz: DeckCopy = {
     ctaTitle: "Bugun boshlang",
     ctaJoin: "Hamkor bo'lish",
     ctaCabinet: "Kabinetga kirish",
+    gradesTitle: "Darajalar: qancha ko‘p olib kelsangiz, stavka shuncha yuqori",
+    gradesLead: "Jadvaldagi stavkaga daraja ustamasi qo‘shiladi, ikkala model uchun ham. Daraja oxirgi 12 oyda mijozlaringiz to‘liq to‘lagan loyihalar bo‘yicha hisoblanadi.",
+    gradesAgency: "Agentliklar va kompaniyalar",
+    gradesBlogger: "Blogerlar va kanal mualliflari",
+    gradeNames: { start: "Start", proven: "Ishonchli", key: "Asosiy", strategic: "Strategik", author: "Muallif", ambassador: "Ambassador", face: "Studiya yuzi" },
+    gradeStart: "birinchi kundan",
+    gradeWhen: (projects, turnover) => `${projects} ta to‘langan loyiha${turnover ? ` yoki ${turnover} aylanma` : ""}`,
+    gradesNote: (capProfit, capTurnover) => `Ustama bilan eng yuqori stavka: foydaning ${capProfit} % i va aylanmaning ${capTurnover} % i. Daraja shart bajarilgan kuni oshadi va shundan keyin to‘langan loyihalarga amal qiladi. Daraja bilan imtiyozlar ham o‘sadi: shaxsiy menejer, mijozingiz uchun 12 soatda maket, 3 ish kunida to‘lov.`,
   },
 };
 
@@ -425,6 +458,14 @@ const zh: DeckCopy = {
     ctaTitle: "今天就开始",
     ctaJoin: "成为合作伙伴",
     ctaCabinet: "登录后台",
+    gradesTitle: "等级：带来的越多，比例越高",
+    gradesLead: "在表格比例之上再加等级加成，两种模式都适用。等级按过去 12 个月内客户全额付款的项目计算。",
+    gradesAgency: "代理机构和公司",
+    gradesBlogger: "博主和频道作者",
+    gradeNames: { start: "起步", proven: "可靠", key: "核心", strategic: "战略", author: "作者", ambassador: "大使", face: "工作室代言人" },
+    gradeStart: "从第一天起",
+    gradeWhen: (projects, turnover) => `${projects} 个已付款项目${turnover ? `或 ${turnover} 营业额` : ""}`,
+    gradesNote: (capProfit, capTurnover) => `含加成的上限：利润的 ${capProfit}% 或营业额的 ${capTurnover}%。达到条件当天升级，适用于此后付款的项目。权益随等级增加：专属经理、12 小时内为您的客户制作样稿、3 个工作日内付款。`,
   },
 };
 
@@ -514,6 +555,14 @@ const uk: DeckCopy = {
     ctaTitle: "Почніть сьогодні",
     ctaJoin: "Стати партнером",
     ctaCabinet: "Увійти в кабінет",
+    gradesTitle: "Грейди: що більше приводите, то вища ставка",
+    gradesLead: "До ставки з таблиці додається надбавка рівня — для обох моделей. Рівень рахується за проєктами, які клієнти оплатили за останні 12 місяців.",
+    gradesAgency: "Агенції та компанії",
+    gradesBlogger: "Блогери та автори каналів",
+    gradeNames: { start: "Старт", proven: "Перевірений", key: "Ключовий", strategic: "Стратегічний", author: "Автор", ambassador: "Амбасадор", face: "Обличчя студії" },
+    gradeStart: "з першого дня",
+    gradeWhen: (projects, turnover) => `${projects} ${projects === 1 ? "оплачений проєкт" : projects < 5 ? "оплачені проєкти" : "оплачених проєктів"}${turnover ? ` або ${turnover} обороту` : ""}`,
+    gradesNote: (capProfit, capTurnover) => `Стеля з надбавкою — ${capProfit} % від прибутку і ${capTurnover} % з обороту. Рівень зростає в день, коли виконано умову, і діє на проєкти, оплачені після цього. З рівнем зростають і привілеї: особистий менеджер, макет для вашого клієнта за 12 годин, виплата за 3 робочі дні.`,
   },
 };
 
@@ -603,6 +652,14 @@ const pl: DeckCopy = {
     ctaTitle: "Zacznij już dziś",
     ctaJoin: "Zostań partnerem",
     ctaCabinet: "Zaloguj się do panelu",
+    gradesTitle: "Poziomy: im więcej klientów, tym wyższa stawka",
+    gradesLead: "Do stawki z tabeli dochodzi dodatek za poziom, w obu modelach. Poziom liczymy z projektów opłaconych przez klientów w ostatnich 12 miesiącach.",
+    gradesAgency: "Agencje i firmy",
+    gradesBlogger: "Blogerzy i autorzy kanałów",
+    gradeNames: { start: "Start", proven: "Sprawdzony", key: "Kluczowy", strategic: "Strategiczny", author: "Autor", ambassador: "Ambasador", face: "Twarz studia" },
+    gradeStart: "od pierwszego dnia",
+    gradeWhen: (projects, turnover) => `${projects} ${projects === 1 ? "opłacony projekt" : projects < 5 ? "opłacone projekty" : "opłaconych projektów"}${turnover ? ` lub ${turnover} obrotu` : ""}`,
+    gradesNote: (capProfit, capTurnover) => `Pułap z dodatkiem: ${capProfit}% zysku i ${capTurnover}% obrotu. Poziom rośnie w dniu spełnienia warunku i obowiązuje dla projektów opłaconych później. Z poziomem rosną też przywileje: osobisty opiekun, makieta dla Twojego klienta w 12 godzin, wypłata w 3 dni robocze.`,
   },
 };
 
