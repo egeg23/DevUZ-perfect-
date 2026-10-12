@@ -35,6 +35,7 @@ export const NOTICE_KINDS = [
   "coach",
   "reports",
   "tasks",
+  "morning",
 ] as const;
 export type NoticeKind = (typeof NOTICE_KINDS)[number];
 
@@ -159,6 +160,17 @@ export const NOTICES: Record<NoticeKind, { title: Tr; off: Tr; roles: readonly R
       pl: "nowe zadania, przypomnienia o terminach i odpowiedzi do zleconych zadań nie przychodzą na Telegram — tylko na stronie głównej panelu",
     },
     roles: EVERYONE,
+  },
+  // Владелец, 13.10.2026: «Каждое утро в 09:00 бот должен желать хорошего
+  // дня сотрудникам поименно» (lib/admin/morning.ts). Владельцу не пишем.
+  morning: {
+    title: { ru: "Доброе утро в 09:00", uz: "Ertalabki salom 09:00 da", pl: "Dzień dobry o 9:00" },
+    off: {
+      ru: "утреннее пожелание хорошего дня по имени не приходит — больше ничего не меняется",
+      uz: "ertalab ismi bilan xayrli kun tilagi kelmaydi — boshqa hech narsa o‘zgarmaydi",
+      pl: "poranne życzenia miłego dnia z imieniem nie przychodzą — nic więcej się nie zmienia",
+    },
+    roles: IN_QUEUE,
   },
 };
 
