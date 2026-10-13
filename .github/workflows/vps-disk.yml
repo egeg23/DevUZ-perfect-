@@ -1,0 +1,112 @@
+# Место на сервере: что занимает диск и безопасная уборка, по кнопке.
+#
+# 13.10.2026 выкатка #373 упала с «No space left on device»: git не смог
+# записать даже .git/shallow.lock, сайт остался на прошлом коммите. На том
+# же сервере живут ещё полтора десятка сайтов, поэтому уборка здесь только
+# такая, после которой ничего чужого и нужного не пропадает:
+#   - кэш сборки Docker (builder prune) — пересоберётся сам, если понадобится;
+#   - образы без имени (image prune без -a): devuz:previous для отката и
+#     образы других сайтов с именем остаются;
+#   - остановленные контейнеры старше трёх суток;
+#   - системный журнал — до 300 МБ последних записей;
+#   - кэш apt и кэш сборки Next (.next/cache) в каталоге devuz: сервер
+#     собирает сайт только запасным путём, кэш ему не нужен;
+#   - журналы контейнеров больше 500 МБ — обрезаются до нуля (только они).
+#
+# Запуск: Actions → «Место на сервере» → Run workflow. «Только посмотреть» —
+# по умолчанию: покажет, где место, и ничего не тронет.
+name: Место на сервере
+
+on:
+  workflow_dispatch:
+    inputs:
+      clean:
+        description: "Убрать безопасное (иначе — только посмотреть)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vps-disk
+  cancel-in-progress: false
+
+jobs:
+  disk:
+    name: Место на диске
+    runs-on: ubuntu-latest
+    steps:
+      - name: Осмотр и уборка по SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          CLEAN: ${{ inputs.clean }}
+          VPS_APP_DIR_IN: ${{ secrets.VPS_APP_DIR }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: CLEAN,VPS_APP_DIR_IN
+          command_timeout: 20m
+          script: |
+            set -uo pipefail
+            SUDO=""
+            [ "$(id -u)" -eq 0 ] || SUDO="sudo -n"
+            APP_DIR="${VPS_APP_DIR_IN:-/opt/devuz}"
+            CLEAN="${CLEAN:-false}"
+
+            report() {
+              echo "════ Диски ════"
+              df -h / /var/lib/docker "$APP_DIR" 2>/dev/null | awk '!seen[$0]++'
+              echo
+              echo "════ Docker ════"
+              $SUDO docker system df 2>/dev/null || echo "  docker не ответил"
+            }
+
+            report
+            echo
+            echo "════ Где место (больше всего) ════"
+            for dir in / /var /var/lib/docker /srv /root /home /opt /tmp /var/log; do
+              [ -d "$dir" ] || continue
+              echo "— ${dir}"
+              $SUDO du -xh --max-depth=1 "$dir" 2>/dev/null | sort -rh | sed -n '2,9p' | sed 's/^/  /'
+            done
+            echo
+            echo "журналы контейнеров больше 100 МБ:"
+            $SUDO find /var/lib/docker/containers -name '*-json.log' -size +100M -printf '  %s байт  %p\n' 2>/dev/null | sort -rn | head -20 || true
+            echo "системный журнал: $($SUDO journalctl --disk-usage 2>/dev/null || echo '?')"
+            echo "кэш Next в devuz: $($SUDO du -sh "$APP_DIR/.next/cache" 2>/dev/null | cut -f1 || echo 'нет')"
+            echo "образы devuz:"
+            $SUDO docker images --format '  {{.Repository}}:{{.Tag}}  {{.Size}}  {{.CreatedSince}}' 2>/dev/null | grep -E 'devuz' | head -20 || true
+
+            if [ "$CLEAN" != "true" ]; then
+              echo
+              echo "(только посмотреть — ничего не убираю)"
+              exit 0
+            fi
+
+            echo
+            echo "════ Уборка ════"
+            $SUDO docker builder prune -af 2>&1 | tail -1 | sed 's/^/  кэш сборки: /' || true
+            $SUDO docker image prune -f 2>&1 | tail -1 | sed 's/^/  образы без имени: /' || true
+            $SUDO docker container prune -f --filter "until=72h" 2>&1 | tail -1 | sed 's/^/  остановленные контейнеры: /' || true
+            $SUDO journalctl --vacuum-size=300M 2>&1 | tail -1 | sed 's/^/  журнал: /' || true
+            $SUDO apt-get clean 2>/dev/null && echo "  кэш apt: убран" || true
+            if $SUDO test -d "$APP_DIR/.next/cache"; then
+              $SUDO rm -rf "$APP_DIR/.next/cache" && echo "  кэш Next: убран"
+            fi
+            $SUDO find /var/lib/docker/containers -name '*-json.log' -size +500M 2>/dev/null | while read -r log; do
+              $SUDO truncate -s 0 "$log" && echo "  обрезан журнал контейнера: $log"
+            done
+
+            echo
+            report
+            AVAIL="$(df -P / | awk 'NR==2{print $4}')"
+            if [ "${AVAIL:-0}" -lt 2097152 ]; then
+              echo
+              echo "✗ Свободно меньше 2 ГБ и после уборки — нужен человек: смотрите «Где место» выше."
+              exit 1
+            fi
+            echo
+            echo "✓ Место есть — выкатку можно повторить."
