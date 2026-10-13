@@ -25,6 +25,7 @@ import enotmebel from "@/content/proto-bundles/enotmebel.json" with { type: "jso
 import giftora from "@/content/proto-bundles/giftora.json" with { type: "json" };
 import liderProf from "@/content/proto-bundles/lider-prof.json" with { type: "json" };
 import intalim from "@/content/proto-bundles/intalim.json" with { type: "json" };
+import asmo from "@/content/proto-bundles/asmo.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -41,6 +42,7 @@ const BUNDLES: Record<string, Bundle> = {
   giftora: giftora as Bundle,
   "lider-prof": liderProf as Bundle,
   intalim: intalim as Bundle,
+  asmo: asmo as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */

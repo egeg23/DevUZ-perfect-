@@ -487,3 +487,51 @@ test("шрифты макетов из public не уезжают в языко�
   assert.equal(re.test("/protos/giftora/atlas.webp"), false);
   assert.equal(re.test("/razbory"), true, "страницы сайта по-прежнему идут через языки");
 });
+
+test("Asmo Clinic: главная и «Что дальше» на ru и uz — условия, noindex, заставка, история, запись, конструктор лечения", () => {
+  const site = bundlePages("asmo");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "plan", "uz", "uz/plan"]);
+  for (const [path, page] of Object.entries(all)) {
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("Asmo Clinic"), `${path}: нет названия клиники`);
+    // Запись — в Telegram клиники из кнопки чата на их сайте, звонок — номер с их сайта.
+    assert.ok(page.includes('href="https://t.me/asmo_clinic"'), `${path}: нет Telegram клиники`);
+    assert.ok(page.includes('href="tel:+998555018866"'), `${path}: нет звонка`);
+    assert.match(page, /backdrop-filter:url\(#lq\)/, `${path}: нет преломления у стекла`);
+    assert.ok(page.includes('<symbol id="am-logo"'), `${path}: нет логотипа клиники`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], /class="am-cv"[^>]*data-logo=/, `${path}: нет влёта в знак`);
+    assert.match(all[path], /id="story"[\s\S]*data-k="lens"[\s\S]*data-k="xs"[\s\S]*data-k="team"/, `${path}: нет глав истории`);
+    assert.match(all[path], /class="st-static/, `${path}: у истории нет списка для тех, у кого движение выключено`);
+    for (const id of ["zapis", "ceny", "test", "faq", "kontakty"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
+    // Цены на сайте клиники нет: в конструкторе лечения — ориентир по рынку, и это сказано.
+    assert.match(all[path], /Ориентир по рынку Ташкента|Toshkent bozori bo‘yicha mo‘ljal/, `${path}: цены не подписаны как ориентир`);
+  }
+  assert.doesNotMatch(all.uz, /[A-Za-z][А-Яа-яЁё]|[А-Яа-яЁё][A-Za-z]/, "слово из двух алфавитов в узбекской странице");
+  const stamped = stampedBundle("asmo", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Asmo Clinic: конструктор — сайт 1 700 $, все допы вместе 1 300 $, итог не больше 3 000 $", async () => {
+  const plan = await import("../scripts/protos/asmo/plan.mjs");
+  // Владелец, 13.10.2026: «Стоимость для клиента без допников 1700$, с допами не более 3000$».
+  assert.equal(plan.BASE.price, 1700);
+  const all: { id: string; price: number; ru: { t: string; e?: string; why?: string }; uz: { t: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
+  const sum = all.reduce((s, a) => s + a.price, 0);
+  assert.equal(sum, 1300, "все допы вместе — 1 300 $");
+  assert.ok(plan.BASE.price + sum <= 3000, "со всеми допами не больше 3 000 $");
+  for (const id of ["booking", "prices", "bot", "mis", "seo", "en", "reviews"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
+  for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why) && a.uz.t, `${a.id}: нет описания`);
+});
