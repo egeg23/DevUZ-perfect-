@@ -1,6 +1,6 @@
 import { currentStaff } from "@/lib/admin/guard";
 import { sectionOf } from "@/lib/admin/usage";
-import { bumpUsage } from "@/lib/admin/usage-store";
+import { bumpUsage, tickPresence } from "@/lib/admin/usage-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,14 +31,19 @@ export async function POST(request: Request) {
   if (!staff || staff.role === "admin") return done;
 
   let path = "";
+  let tick = false;
   try {
-    const body = (await request.json()) as { path?: unknown };
+    const body = (await request.json()) as { path?: unknown; tick?: unknown };
     path = typeof body.path === "string" ? body.path.slice(0, 200) : "";
+    tick = body.tick === true;
   } catch {
     return done;
   }
 
-  const section = sectionOf(path);
+  // Минута в панели — и на переход, и на сигнал «работаю» раз в минуту
+  // (components/admin/usage-beacon.tsx). Просмотр раздела — только на переход.
+  await tickPresence(staff.id);
+  const section = tick ? null : sectionOf(path);
   if (section) await bumpUsage(staff.id, section);
   return done;
 }

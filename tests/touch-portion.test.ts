@@ -206,8 +206,8 @@ test("вечером несделанное — в пул, и без письм�
   assert.match(report, /update\(\{ status: "new", claimed_by: null, claimed_at: null, message: null \}\)/);
   assert.match(report, /outcome: outcome \?\? "expired"/);
   // Руководителю — то же, что владельцу: вся команда (владелец, 01.10).
-  assert.match(report, /p\.role === "head"/);
-  assert.match(report, /\.eq\("role", "admin"\)/);
+  // Текст с 13.10 шлёт вечерний отчёт по сотрудникам.
+  assert.match(read("lib/admin/staff-report-store.ts"), /\.in\("role", \["admin", "head"\]\)/);
 });
 
 test("кнопки бота — только своя порция и те же проверки, что в панели", () => {

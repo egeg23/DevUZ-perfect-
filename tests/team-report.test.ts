@@ -63,21 +63,23 @@ test("итог по всем и порядок: больше касаний — 
   assert.equal(reportTotal([person({ name: "Лола", target: 0, touches: 1 })]), "Всего: 1 касание");
 });
 
-const store = read("lib/admin/portion-store.ts");
-const report = between(store, "export async function reportPortions", "/**\n * Компания из порции");
+// С 13.10.2026 текст шлёт вечерний отчёт по сотрудникам
+// (lib/admin/staff-report-store.ts), reportPortions только закрывает день.
+const store = read("lib/admin/staff-report-store.ts");
+const report = between(store, "export async function sendStaffReport", "/** День каждого сотрудника");
+const load = between(store, "export async function loadStaffDay", "\n}\n");
 
 test("руководителям — тот же текст, что владельцу: вся команда, не только свои люди", () => {
-  assert.doesNotMatch(report, /p\.head === head\.id/, "руководитель снова получает только своих");
-  assert.match(report, /people\.filter\(\(p\) => p\.role === "head"\)/);
-  assert.match(report, /\.eq\("role", "admin"\)/);
+  assert.doesNotMatch(report, /head_staff_id/, "руководитель снова получает только своих");
+  assert.match(report, /\.in\("role", \["admin", "head"\]\)/);
   assert.equal((report.match(/sendMessage\(/g) ?? []).length, 1, "один текст на всех читателей");
-  assert.match(report, /wants\(reader\.off, "reports"\)/, "галочка «Отчёты» по-прежнему выключает отчёт");
+  assert.match(report, /const text = staffReportText\(day, people\);/);
+  assert.match(report, /wants\(\(r\.notify_off as string\[\] \| null\) \?\? \[\], "reports"\)/, "галочка «Отчёты» по-прежнему выключает отчёт");
 });
 
 test("в отчёте вся команда и все её касания за день — даже без порции", () => {
-  assert.match(report, /touchesOnDay\(/);
-  assert.match(report, /people\s*\.map\(\(person\)/);
-  assert.doesNotMatch(report, /if \(!data\?\.length\) return 0;/, "пустой день порции не глушит отчёт");
+  assert.match(load, /touchesOnDay\(ids, day\)/);
+  assert.match(load, /return team\.map\(\(person\)/);
   const touches = between(read("lib/admin/touch-store.ts"), "export async function touchesOnDay", "/**");
   assert.match(touches, /dayStartUtc\(day\)/);
   assert.match(touches, /\.neq\("status", "failed"\)/);
@@ -85,5 +87,7 @@ test("в отчёте вся команда и все её касания за �
 
 test("отчёт — в конце рабочего дня по Ташкенту", () => {
   assert.equal(REPORT_HOUR, 18);
-  assert.match(report, /tashkentHour\(now\) < REPORT_HOUR/);
+  assert.match(report, /hour < REPORT_HOUR \|\| hour >= STAFF_REPORT_LATEST_HOUR/);
+  // Итоги порции к отчёту окончательные: строки дня уже закрыты.
+  assert.match(report, /if \(!mark\?\.reported_at\) return 0;/);
 });

@@ -14,14 +14,10 @@ import {
   outcomeOf,
   quotaOf,
   replacementsDue,
-  byTouches,
-  reportLine,
-  reportTotal,
   tallyPortion,
   tashkentHour,
   textDue,
   touchesText,
-  type PersonReport,
 } from "@/lib/admin/portion";
 import { CLOSE_REASONS, CLOSE_TEXT, closeCallback } from "@/lib/admin/touch-close";
 import { WRITE_MYSELF_BUTTON, writeMyselfCallback } from "@/lib/admin/write-myself";
@@ -29,7 +25,7 @@ import { HELLO_TEXT, helloFor, type HelloTexts } from "@/lib/admin/hello-first";
 import { helloTexts } from "@/lib/admin/hello-text-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { staffById } from "@/lib/admin/session";
-import { touchesOnDay, touchProgressFor } from "@/lib/admin/touch-store";
+import { touchProgressFor } from "@/lib/admin/touch-store";
 import { esc, sendMessage, sendWithRows, type Button } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 import { isModelTroubleSays } from "@/lib/model-trouble";
@@ -702,33 +698,23 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     .select("day");
   if (!claimed?.length) return 0;
 
-  // Пустой день порции — не повод молчать: касания из панели и потока
-  // отчёт показывает и тогда.
   const { data: rows } = await db
     .from("touch_portions")
-    .select("id, staff_id, prospect_id, outcome, replaces, source")
+    .select("id, staff_id, prospect_id")
     .eq("day", day);
   const data = rows ?? [];
 
   const prospects = new Map((await prospectsByIds(data.map((r) => r.prospect_id as string))).map((p) => [p.id, p]));
   const people = await team();
-  // Итог по человеку — по всем его строкам сразу: цель — утренняя раздача,
-  // сделано — только касания, «Не подходит» — отдельно (lib/admin/portion).
-  const byPerson = new Map<string, { replaces: string | null; outcome: ReturnType<typeof outcomeOf> }[]>();
-  // Поток — отдельно: сколько касаний сверх порции.
-  const streamDone = new Map<string, number>();
 
+  // Итог строки — по самим касаниям (outcomeOf), и порции, и потока: отчёт
+  // (sendStaffReport) читает его потом из outcome.
   for (const row of data) {
     const staffId = row.staff_id as string;
     const person = people.find((p) => p.id === staffId);
     if (!person) continue;
     const p = prospects.get(row.prospect_id as string);
     const outcome = p ? outcomeOf(p, staffId, day) : null;
-    if (row.source === "stream") {
-      if (outcome === "sent" || outcome === "self") streamDone.set(staffId, (streamDone.get(staffId) ?? 0) + 1);
-    } else {
-      byPerson.set(staffId, [...(byPerson.get(staffId) ?? []), { replaces: (row.replaces as string | null) ?? null, outcome }]);
-    }
 
     await db
       .from("touch_portions")
@@ -746,54 +732,10 @@ export async function reportPortions(now: Date = new Date()): Promise<number> {
     }
   }
 
-  // В отчёте — вся команда: и тот, у кого не было ни порции, ни потока, —
-  // ноль касаний за день тоже ответ.
-  const touches = await touchesOnDay(
-    people.map((p) => p.id),
-    day,
-  );
-  const reports: PersonReport[] = people
-    .map((person) => {
-      const t = tallyPortion(byPerson.get(person.id) ?? []);
-      return {
-        name: person.name,
-        target: t.target,
-        done: t.done,
-        skipped: t.skipped,
-        short: t.short,
-        stream: streamDone.get(person.id) ?? 0,
-        touches: touches.get(person.id) ?? 0,
-      };
-    })
-    .sort(byTouches);
-  if (!reports.length) return 0;
-
-  const text = [
-    `<b>Касания за день · ${day.split("-").reverse().join(".")}</b>`,
-    "",
-    ...reports.map(reportLine),
-    "",
-    reportTotal(reports),
-    "",
-    "Касания — все, кому человек написал за день («Отправить» или «Написал сам»): из порции, потока и панели. Порция — сколько из утренней раздачи; «Не подходит» не в счёт, за неё выдаётся замена. «Поток» — касания по кнопке «Получать лиды». Несделанное вернулось в общий пул.",
-  ].join("\n");
-
-  // Руководителям — тот же отчёт, что владельцу: вся команда. Владелец,
-  // 01.10: «руководителям в телеграм должно приходить как и мне».
-  const { data: owners } = await db
-    .from("staff")
-    .select("telegram_user_id, notify_off")
-    .eq("role", "admin")
-    .eq("is_active", true);
-  const readers = [
-    ...people.filter((p) => p.role === "head").map((p) => ({ chat: p.chat, off: p.off })),
-    ...(owners ?? []).map((o) => ({ chat: Number(o.telegram_user_id) || null, off: (o.notify_off as string[] | null) ?? [] })),
-  ];
-  for (const reader of readers) {
-    if (!reader.chat || !wants(reader.off, "reports")) continue;
-    if (!(await sendMessage(reader.chat, text))) console.error("порция: отчёт не дошёл", reader.chat);
-  }
-  return reports.length;
+  // Сам отчёт — владельцу и руководителям — шлёт следующий шаг свипа
+  // (lib/admin/staff-report-store, sendStaffReport): по закрытым строкам,
+  // с панелью, временем и выводами по каждому сотруднику.
+  return data.length;
 }
 
 /**

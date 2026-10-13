@@ -197,7 +197,8 @@ test("порция считает только свои строки, поток
   const tops = between(store, "export async function topUpPortions(", "export async function deliverReplacement(");
   assert.match(tops, /r\.source === "portion"/);
   const report = between(store, "export async function reportPortions(");
-  assert.match(report, /if \(row\.source === "stream"\)/);
+  // Поток в отчёте — отдельной цифрой, сверх порции (lib/admin/staff-report-store).
+  assert.match(read("lib/admin/staff-report-store.ts"), /if \(row\.source === "stream"\)/);
   // Вечерний возврат в пул — для всех строк, поток тоже.
   assert.ok(report.indexOf('update({ status: "new", claimed_by: null, claimed_at: null, message: null })') > 0);
 

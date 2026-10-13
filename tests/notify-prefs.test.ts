@@ -67,7 +67,7 @@ test("каждая галочка проверяется там, где бот �
     coach: [["lib/admin/coach-store.ts", /"coach",/]],
     reports: [
       // Руководители и владелец — одним списком читателей, одной проверкой.
-      ["lib/admin/portion-store.ts", /wants\(reader\.off, "reports"\)/],
+      ["lib/admin/staff-report-store.ts", /wants\(\(r\.notify_off as string\[\] \| null\) \?\? \[\], "reports"\)/],
       ["lib/admin/coach-store.ts", /notify\(reader\.id, "reports"/],
     ],
     // Задачи: исполнителю (новая задача и напоминания) и поставившему.
