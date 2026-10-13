@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { PROMO } from "@/lib/admin/mockup-offer";
+import { tasksDict } from "@/content/admin-panel/tasks";
 import { TIDY_BUTTONS } from "@/lib/admin/lead-tidy";
 import { NEWS, headNewsOct13, newsActive, teamNewsOct13 } from "@/lib/admin/team-news";
 
@@ -58,4 +59,13 @@ test("менеджерам — без отчёта руководителям и
   assert.doesNotMatch(text, /Сотрудники за день|18:00|Закрыть паролем|Утверждён|\/mockups|15:00/);
   assert.match(headNewsOct13(), /«Сотрудники за день»/);
   assert.match(headNewsOct13(), /«🔒 Закрыть паролем»/);
+});
+
+test("менеджерам — и про правку и историю задач, названиями как на панели", () => {
+  // Владелец: «Дополни нашими доработками сообщение для менеджеров» — #388.
+  const text = teamNewsOct13();
+  for (const name of [tasksDict.edit.ru, tasksDict.move.ru, tasksDict.historyLink.ru, tasksDict.title.ru]) {
+    assert.ok(text.includes(`«${name}»`), `нет «${name}»`);
+  }
+  assert.ok(text.indexOf("Задачи: «Изменить»") < text.indexOf("Вопросы — Александру."), "блок — до подписи");
 });
