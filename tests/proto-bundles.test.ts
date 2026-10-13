@@ -535,3 +535,56 @@ test("Asmo Clinic: конструктор — сайт 1 700 $, все допы 
   for (const id of ["booking", "prices", "bot", "mis", "seo", "en", "reviews"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why) && a.uz.t, `${a.id}: нет описания`);
 });
+
+test("GAZMETPROD SERVIS: главная и «Что дальше» на ru и uz — условия, noindex, заставка, история, калькулятор, запись, испытание, фургон", () => {
+  const site = bundlePages("europegas");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "plan", "uz", "uz/plan"]);
+  for (const [path, page] of Object.entries(all)) {
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    // Владелец: в том, что уходит клиенту, нет слов, по которым находят отпечаток.
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("GAZMETPROD SERVIS"), `${path}: нет названия компании`);
+    // Своего Telegram на их сайте нет: пишем на номер руководителя из «Контактов».
+    assert.ok(page.includes('href="https://t.me/+998909094949"'), `${path}: нет Telegram компании`);
+    assert.ok(page.includes('href="tel:+998909094949"'), `${path}: нет звонка`);
+    assert.match(page, /backdrop-filter:url\(#lq\)/, `${path}: нет преломления у стекла`);
+    assert.ok(page.includes('<symbol id="eg-logo"'), `${path}: нет логотипа компании`);
+    // Цен компании на их сайте нет — и в прототипе их нет.
+    assert.doesNotMatch(page, /установк[аи] от \d|o‘rnatish \d/i, `${path}: цена установки, которой нет на их сайте`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], /class="eg-cv"[^>]*data-logo=/, `${path}: нет влёта в пламя`);
+    assert.match(all[path], /id="story"[\s\S]*data-k="car"[\s\S]*data-k="cyl"[\s\S]*data-k="van"[\s\S]*data-k="team"/, `${path}: нет глав истории`);
+    assert.match(all[path], /class="st-static/, `${path}: у истории нет списка для тех, у кого движение выключено`);
+    for (const id of ["uslugi", "ekonomiya", "zapis", "ispytanie", "furgon", "raboty", "dokumenty", "faq", "kontakty"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
+    // Цены топлива и сроки испытаний — со ссылками на источник.
+    assert.ok(all[path].includes("https://www.spot.uz/ru/2026/06/01/cng-up/"), `${path}: цена метана без источника`);
+    assert.ok(all[path].includes("https://gov.uz/oz/advice/765/document/4168"), `${path}: сроки испытаний без источника`);
+  }
+  assert.doesNotMatch(all.uz, /[A-Za-z][А-Яа-яЁё]|[А-Яа-яЁё][A-Za-z]/, "слово из двух алфавитов в узбекской странице");
+  assert.doesNotMatch(all.uz.replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, "кириллица в узбекской странице");
+  const stamped = stampedBundle("europegas", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("GAZMETPROD SERVIS: конструктор — сайт 1 700 $, все допы вместе 1 300 $, итог не больше 3 000 $", async () => {
+  const plan = await import("../scripts/protos/europegas/plan.mjs");
+  // Владелец, 13.10.2026: «без допов 1 700 $, с допами не больше 3 000 $».
+  assert.equal(plan.BASE.price, 1700);
+  const all: { id: string; price: number; ru: { t: string; e?: string; why?: string }; uz: { t: string } }[] = [...plan.ADDONS, ...plan.BLOCKS];
+  const sum = all.reduce((s, a) => s + a.price, 0);
+  assert.equal(sum, 1300, "все допы вместе — 1 300 $");
+  assert.ok(plan.BASE.price + sum <= 3000, "со всеми допами не больше 3 000 $");
+  for (const id of ["booking", "calc", "test", "van", "bot", "seo", "maps"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
+  for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why) && a.uz.t, `${a.id}: нет описания`);
+});
