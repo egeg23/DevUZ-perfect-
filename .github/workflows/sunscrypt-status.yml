@@ -30,6 +30,19 @@ jobs:
             done
             echo "▸ Сигналы (последние строки):"
             $C logs --tail 40 signals 2>&1 | grep -E "rhat|свечи|история|нет весов" | tail -10
+            # Сервис сигналов не «running» — почему падает: код выхода, память,
+            # хвост лога с ошибкой (в окружении сигналов секретов нет).
+            S="$($C ps -a -q signals 2>/dev/null | head -1)"
+            if [ -n "$S" ] && [ "$(docker inspect -f '{{.State.Status}}' "$S")" != "running" ]; then
+              echo "▸ Сигналы НЕ работают:"
+              docker inspect -f '  выход {{.State.ExitCode}}, нехватка памяти {{.State.OOMKilled}}, перезапусков {{.RestartCount}}, упал {{.State.FinishedAt}}' "$S"
+              $C logs --tail 40 signals 2>&1 | grep -v "httpx\|HTTP Request" | tail -30
+              echo "  место на диске: $(df -h / | awk 'NR==2{print $4" свободно из "$2}')"
+              echo "  модели:"
+              ls -la /opt/sunscrypt/models /opt/sunscrypt/models/registry 2>&1 | sed 's/^/    /' | head -30
+              cat /opt/sunscrypt/models/registry/CHAMPION 2>&1 | sed 's/^/    CHAMPION: /'
+              du -sh /opt/sunscrypt/models/* 2>/dev/null | sed 's/^/    /'
+            fi
             echo "▸ Диспетчер (последние строки):"
             $C logs --since 4h orchestrator 2>&1 | grep -E "WARN|ERROR|Traceback|Rejected|Denied|rejected|остановка" | grep -v "httpx" | tail -25
             echo "▸ Копии базы (последние):"
