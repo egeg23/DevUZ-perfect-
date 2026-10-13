@@ -304,6 +304,7 @@ test("блок «Задачи» рисуется на каждом языке, �
       ["worker", "Ali"],
     ]),
     projects: new Map([["p1", "Ivanov — Site"]]),
+    steps: new Map(),
   };
   board.mine.push(task({ id: "z", due_at: null, project_id: "p1", status: "in_work" }));
   const projects = [{ id: "p1", label: "Ivanov — Site" }];
@@ -354,7 +355,7 @@ test("блок «Задачи» рисуется на каждом языке, �
 
 test("«Кому» — галочки: себя отмечено сразу, можно нескольких, каждому своя задача", async () => {
   const now = tk("2026-10-05T12:00:00");
-  const board = { offline: false, mine: [], given: [], names: new Map<string, string>(), projects: new Map<string, string>() };
+  const board = { offline: false, mine: [], given: [], names: new Map<string, string>(), projects: new Map<string, string>(), steps: new Map() };
   const people = [
     { id: "worker", display_name: "Ali" },
     { id: "boss", display_name: "Egor" },

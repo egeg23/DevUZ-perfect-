@@ -1,5 +1,6 @@
 import { isWorkday, tashkentHour } from "@/lib/admin/portion";
 import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
+import type { Role } from "@/lib/admin/roles";
 
 /**
  * Задачи команды — правила без базы.
@@ -18,7 +19,7 @@ import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
 export const TASK_STATUSES = ["new", "in_work", "done", "failed", "cancelled"] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
-export const TASK_EVENTS = ["created", "taken", "done", "failed", "moved", "cancelled"] as const;
+export const TASK_EVENTS = ["created", "taken", "done", "failed", "moved", "cancelled", "edited"] as const;
 export type TaskEvent = (typeof TASK_EVENTS)[number];
 
 export const TITLE_MAX = 200;
@@ -231,6 +232,47 @@ export function canAct(
   return null;
 }
 
+/**
+ * Изменить задачу — название, описание, проект, исполнителя — может только
+ * тот, кто её поставил, и только открытую (владелец, 13.10.2026: «Сделай
+ * возможность редактировать задачи»). Исполнитель не переписывает то, что
+ * ему поручили: не согласен — «Не сделано» или перенос срока. Закрытая
+ * задача — уже история, её не правят.
+ */
+export function canEdit(task: Pick<Task, "creator_id" | "status">, staffId: string): ActRefusal | null {
+  if (task.creator_id !== staffId) return "not_yours";
+  if (!isOpen(task.status)) return "closed";
+  return null;
+}
+
+/** Что можно поменять правкой. Срок — отдельно, «Перенести срок»: у переноса своя история. */
+export const EDIT_FIELDS = ["title", "body", "project", "assignee"] as const;
+export type EditField = (typeof EDIT_FIELDS)[number];
+
+/** Что поменялось: было → стало. Пустое — правка ничего не меняет. */
+export type TaskChanges = Partial<Record<EditField, { from: string | null; to: string | null }>>;
+
+export type TaskEdit = { title: string; body: string; projectId: string | null; assigneeId: string };
+
+/** Название и описание — так же, как при постановке: лишние пробелы не в счёт. */
+export function cleanTitle(title: string): string {
+  return title.trim().replace(/\s+/g, " ");
+}
+
+export function taskChanges(
+  task: Pick<Task, "title" | "body" | "project_id" | "assignee_id">,
+  edit: TaskEdit,
+): TaskChanges {
+  const out: TaskChanges = {};
+  const title = cleanTitle(edit.title);
+  const body = edit.body.trim();
+  if (title !== task.title) out.title = { from: task.title, to: title };
+  if (body !== task.body.trim()) out.body = { from: task.body, to: body };
+  if ((edit.projectId || null) !== (task.project_id || null)) out.project = { from: task.project_id, to: edit.projectId || null };
+  if (edit.assigneeId !== task.assignee_id) out.assignee = { from: task.assignee_id, to: edit.assigneeId };
+  return out;
+}
+
 /** Статус после действия. */
 export function statusAfter(action: Exclude<TaskAction, "move">): TaskStatus {
   if (action === "take") return "in_work";
@@ -434,4 +476,99 @@ export function groupTasks<T extends Pick<Task, "status" | "due_at">>(
 export function projectLabel(project: { title: string; client: string | null }): string {
   const client = project.client?.trim();
   return client && client !== project.title.trim() ? `${client} — ${project.title}` : project.title;
+}
+
+/* ── История ───────────────────────────────────────────────────────────── */
+
+/** Шаг из истории задачи (staff_task_events). */
+export type TaskStep = {
+  id: number;
+  task_id: string;
+  actor_id: string | null;
+  kind: TaskEvent;
+  old_due: string | null;
+  new_due: string | null;
+  at: string;
+  changes: TaskChanges | null;
+};
+
+/** Шаги, которые есть в истории сверх постановки, — есть ли что показать. */
+export function hasHistory(steps: readonly Pick<TaskStep, "kind">[] | undefined): boolean {
+  return (steps ?? []).some((s) => s.kind !== "created");
+}
+
+/** Сколько раз переносили срок — видно прямо в строке задачи. */
+export function movesOf(steps: readonly Pick<TaskStep, "kind">[] | undefined): number {
+  return (steps ?? []).filter((s) => s.kind === "moved").length;
+}
+
+/** За сколько дней — на странице «История задач». */
+export const HISTORY_DAYS = [7, 30, 90] as const;
+export type HistoryDays = (typeof HISTORY_DAYS)[number];
+
+export function historyDays(value: unknown): HistoryDays {
+  const n = Number(value);
+  return (HISTORY_DAYS as readonly number[]).includes(n) ? (n as HistoryDays) : 30;
+}
+
+/** Что показать: всё или задачи с таким шагом за период. */
+export const HISTORY_KINDS = ["all", "done", "failed", "cancelled", "moved", "edited"] as const;
+export type HistoryKind = (typeof HISTORY_KINDS)[number];
+
+export function historyKind(value: unknown): HistoryKind {
+  return (HISTORY_KINDS as readonly unknown[]).includes(value) ? (value as HistoryKind) : "all";
+}
+
+/** Какие шаги идут в историю за период: всё, кроме постановки и «взял». */
+export const HISTORY_STEP_KINDS = ["done", "failed", "cancelled", "moved", "edited"] as const;
+
+/**
+ * Чьи задачи человек видит в истории.
+ *
+ * Менеджер — только свои: поставленные им и поставленные ему. Владелец —
+ * все. Руководитель — все, кроме задач, которые владелец поставил сам
+ * себе: это его записная книжка, а не работа команды.
+ */
+export function seesTask(
+  task: Pick<Task, "creator_id" | "assignee_id">,
+  viewer: { id: string; role: Role },
+  ownerIds: ReadonlySet<string>,
+): boolean {
+  if (viewer.role === "admin") return true;
+  if (task.creator_id === viewer.id || task.assignee_id === viewer.id) return true;
+  if (viewer.role !== "head") return false;
+  return !(task.creator_id === task.assignee_id && ownerIds.has(task.creator_id));
+}
+
+export type HistoryCounts = Record<(typeof HISTORY_STEP_KINDS)[number], number>;
+
+/** Итоги периода: сколько сделано, не сделано, отменено, переносов и правок. */
+export function historyCounts(steps: readonly Pick<TaskStep, "kind">[]): HistoryCounts {
+  const out: HistoryCounts = { done: 0, failed: 0, cancelled: 0, moved: 0, edited: 0 };
+  for (const step of steps) if (step.kind in out) out[step.kind as keyof HistoryCounts] += 1;
+  return out;
+}
+
+export type PersonRow = { id: string; done: number; failed: number; moved: number; cancelled: number };
+
+/**
+ * По людям — у кого сколько задач сделано, не сделано, отменено и сколько
+ * раз переносили срок его задач. Считается по исполнителю: кто перенёс —
+ * он сам или поставивший, — видно в истории самой задачи. Сверху — у кого
+ * больше всего шагов.
+ */
+export function personRows(
+  steps: readonly Pick<TaskStep, "task_id" | "kind">[],
+  assigneeOf: ReadonlyMap<string, string>,
+): PersonRow[] {
+  const rows = new Map<string, PersonRow>();
+  for (const step of steps) {
+    const id = assigneeOf.get(step.task_id);
+    if (!id || !(step.kind === "done" || step.kind === "failed" || step.kind === "moved" || step.kind === "cancelled")) continue;
+    const row = rows.get(id) ?? { id, done: 0, failed: 0, moved: 0, cancelled: 0 };
+    row[step.kind] += 1;
+    rows.set(id, row);
+  }
+  const total = (r: PersonRow) => r.done + r.failed + r.moved + r.cancelled;
+  return [...rows.values()].sort((a, b) => total(b) - total(a));
 }

@@ -1,5 +1,15 @@
 import { esc, type Button } from "@/lib/qualify/telegram";
-import { formatDue, type Move, type Nudge, type Task, type TaskEvent, type TaskStatus } from "@/lib/admin/tasks";
+import {
+  EDIT_FIELDS,
+  formatDue,
+  type EditField,
+  type Move,
+  type Nudge,
+  type Task,
+  type TaskChanges,
+  type TaskEvent,
+  type TaskStatus,
+} from "@/lib/admin/tasks";
 
 /**
  * Задачи в Telegram: тексты и кнопки.
@@ -104,14 +114,42 @@ export function stepText(
   actorName: string,
   task: Pick<Task, "title">,
   newDue?: string | null,
+  changes?: TaskChanges | null,
 ): string {
   const who = esc(actorName);
   const what = `«${esc(task.title)}»`;
+  if (kind === "edited") return `✏️ ${who} изменил(а) задачу ${what}: ${changedText(changes)}.`;
   if (kind === "taken") return `▶️ ${who} взял(а) в работу задачу ${what}`;
   if (kind === "done") return `✅ ${who}: задача ${what} — сделано`;
   if (kind === "failed") return `✖ ${who}: задача ${what} — не сделано`;
   if (kind === "cancelled") return `🚫 ${who} отменил(а) задачу ${what}`;
   return `🕑 ${who} перенёс(ла) срок задачи ${what} на <b>${dueText(newDue ?? null)}</b>`;
+}
+
+/** Как поле правки зовётся в сообщении бота. */
+export const FIELD_WORD: Record<EditField, string> = {
+  title: "название",
+  body: "описание",
+  project: "проект",
+  assignee: "исполнитель",
+};
+
+/** «название, описание» — что поменяли, по порядку полей. */
+export function changedText(changes: TaskChanges | null | undefined): string {
+  const fields = EDIT_FIELDS.filter((field) => changes?.[field]);
+  return fields.length ? fields.map((field) => FIELD_WORD[field]).join(", ") : "без изменений";
+}
+
+/**
+ * Задачу передали другому: прежнему исполнителю — строка, а его карточка
+ * задачи в чате переписывается без кнопок. Новому — обычная «Новая задача».
+ */
+export function handedOverText(task: Pick<Task, "title">, actorName: string, toName: string): string {
+  return `↪️ ${esc(actorName)} передал(а) задачу «${esc(task.title)}» — теперь она у ${esc(toName)}. С вас она снята.`;
+}
+
+export function handedOverCard(task: Shown, toName: string): string {
+  return [`↪️ <b>Задача передана</b> — теперь она у ${esc(toName)}`, "", ...taskLines(task)].join("\n");
 }
 
 /** Напоминания свипа. «Просрочено» уходит и исполнителю, и постановщику — текст у них разный. */

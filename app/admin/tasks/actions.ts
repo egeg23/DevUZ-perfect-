@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 
 import { requestIp, requireStaff } from "@/lib/admin/guard";
-import { actOnTask, afterAct, createTasks, deliverAssignment, taskById } from "@/lib/admin/task-store";
+import { actOnTask, afterAct, afterEdit, createTasks, deliverAssignment, editTask, taskById } from "@/lib/admin/task-store";
 import {
   QUICK_DUES,
   isMove,
@@ -68,6 +68,7 @@ const REASON: Record<string, NoticeCode> = {
   gone: "closed",
   offline: "offline",
   failed: "failedTry",
+  unchanged: "unchanged",
 };
 
 /** Срок из формы: быстрый вариант, своя дата (по Ташкенту) или без срока. */
@@ -164,4 +165,33 @@ export async function taskAction(formData: FormData) {
     await afterAct(result.task, result.eventId).catch((error) => console.error("задачи: после действия", error));
   });
   back(formData, DONE_CODE[kind]);
+}
+
+/**
+ * «Изменить» → «Сохранить»: название, описание, проект, исполнитель.
+ * Править может только тот, кто поставил (canEdit), — проверяет editTask.
+ */
+export async function editTaskAction(formData: FormData) {
+  const staff = await requireStaff();
+  const now = new Date();
+  const result = await editTask(
+    String(formData.get("task") ?? ""),
+    staff,
+    {
+      title: String(formData.get("title") ?? ""),
+      body: String(formData.get("body") ?? ""),
+      projectId: String(formData.get("project") ?? "") || null,
+      assigneeId: String(formData.get("assignee") ?? ""),
+    },
+    await requestIp(),
+    now,
+  );
+  if (!result.ok) back(formData, REASON[result.reason] ?? "failedTry");
+
+  after(async () => {
+    await afterEdit(result, now).catch((error) => console.error("задачи: после правки", error));
+  });
+  // Себе бот о задаче не пишет — «передана» тут нечего сообщать.
+  if (!result.changes.assignee || result.task.assignee_id === staff.id) back(formData, "edited");
+  back(formData, messageWindow(now) ? "editedNew" : "editedNewLater");
 }

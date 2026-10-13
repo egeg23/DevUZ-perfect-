@@ -1,12 +1,23 @@
 import { record, type AuditAction } from "@/lib/admin/audit";
 import { wants } from "@/lib/admin/notify-prefs";
 import type { Staff } from "@/lib/admin/session";
-import { OWN_DATE_WAIT_MINUTES, assignedText, nudgeText, stepText, taskRows } from "@/lib/admin/task-bot";
+import {
+  OWN_DATE_WAIT_MINUTES,
+  assignedText,
+  handedOverCard,
+  handedOverText,
+  nudgeText,
+  stepText,
+  taskRows,
+} from "@/lib/admin/task-bot";
 import {
   BODY_MAX,
+  HISTORY_STEP_KINDS,
   TITLE_MAX,
   byDue,
   canAct,
+  canEdit,
+  cleanTitle,
   dueProblem,
   feedFor,
   initialStatus,
@@ -14,16 +25,24 @@ import {
   notifyOf,
   nudgesDue,
   projectLabel,
+  seesTask,
   statusAfter,
+  taskChanges,
   taskWindow,
   type ActRefusal,
   type DueProblem,
   type FeedItem,
   type Nudge,
+  type HistoryDays,
+  type HistoryKind,
   type Task,
   type TaskAction,
+  type TaskChanges,
+  type TaskEdit,
   type TaskEvent,
+  type TaskStep,
 } from "@/lib/admin/tasks";
+import type { Role } from "@/lib/admin/roles";
 import { editMessage, sendMessage, sendRowsForId, sendWithRows, setButtons, telegramReachable } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -122,16 +141,55 @@ export type TaskBoard = {
   /** Поставил я другим: открытые и закрытые за неделю. */
   given: Task[];
   names: Map<string, string>;
-  /** Подписи проектов у задач. */
+  /** Подписи проектов у задач — и тех, что в истории правок. */
   projects: Map<string, string>;
+  /** История каждой задачи: шаги по времени. */
+  steps: Map<string, TaskStep[]>;
 };
+
+const STEP_COLUMNS = "id, task_id, actor_id, kind, old_due, new_due, at, changes";
+
+/** История задач — шаги по времени, по сотне задач за запрос. */
+export async function taskSteps(taskIds: readonly string[]): Promise<Map<string, TaskStep[]>> {
+  const db = serviceClient();
+  const out = new Map<string, TaskStep[]>();
+  const ids = [...new Set(taskIds)];
+  if (!db || !ids.length) return out;
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data } = await db
+      .from("staff_task_events")
+      .select(STEP_COLUMNS)
+      .in("task_id", ids.slice(i, i + 100))
+      .order("at", { ascending: true })
+      .limit(2000);
+    for (const step of (data as TaskStep[] | null) ?? []) {
+      out.set(step.task_id, [...(out.get(step.task_id) ?? []), step]);
+    }
+  }
+  return out;
+}
+
+/** Кто и какие проекты упомянуты в истории: прежние исполнители и проекты правок. */
+function stepRefs(steps: Iterable<TaskStep[]>): { people: string[]; projects: string[] } {
+  const people: string[] = [];
+  const projects: string[] = [];
+  for (const list of steps) {
+    for (const step of list) {
+      if (step.actor_id) people.push(step.actor_id);
+      const c = step.changes;
+      if (c?.assignee) people.push(...[c.assignee.from, c.assignee.to].filter((v): v is string => Boolean(v)));
+      if (c?.project) projects.push(...[c.project.from, c.project.to].filter((v): v is string => Boolean(v)));
+    }
+  }
+  return { people, projects };
+}
 
 /** Закрытые задачи в «Я поставил» видны неделю — чтобы успеть увидеть итог. */
 export const GIVEN_CLOSED_DAYS = 7;
 
 export async function taskBoard(staffId: string, now: Date = new Date()): Promise<TaskBoard> {
   const db = serviceClient();
-  const empty: TaskBoard = { offline: true, mine: [], given: [], names: new Map(), projects: new Map() };
+  const empty: TaskBoard = { offline: true, mine: [], given: [], names: new Map(), projects: new Map(), steps: new Map() };
   if (!db) return empty;
 
   const since = new Date(now.getTime() - GIVEN_CLOSED_DAYS * 24 * 3_600_000).toISOString();
@@ -157,9 +215,11 @@ export async function taskBoard(staffId: string, now: Date = new Date()): Promis
   const mineRows = ((mine.data as Task[] | null) ?? []).sort(byDue);
   const givenRows = ((given.data as Task[] | null) ?? []).sort(openFirst);
   const all = [...mineRows, ...givenRows];
+  const steps = await taskSteps(all.map((t) => t.id));
+  const refs = stepRefs(steps.values());
   const [people, projects] = await Promise.all([
-    peopleById(all.flatMap((t) => [t.creator_id, t.assignee_id])),
-    projectLabels(all.map((t) => t.project_id)),
+    peopleById([...all.flatMap((t) => [t.creator_id, t.assignee_id]), ...refs.people]),
+    projectLabels([...all.map((t) => t.project_id), ...refs.projects]),
   ]);
   return {
     offline: false,
@@ -167,6 +227,7 @@ export async function taskBoard(staffId: string, now: Date = new Date()): Promis
     given: givenRows,
     names: new Map([...people.values()].map((p) => [p.id, p.display_name])),
     projects,
+    steps,
   };
 }
 
@@ -178,12 +239,17 @@ function openFirst(a: Task, b: Task): number {
   return ao ? Date.parse(b.closed_at!) - Date.parse(a.closed_at!) : byDue(a, b);
 }
 
-export type ProjectTasks = { tasks: Task[]; names: Map<string, string> };
+export type ProjectTasks = {
+  tasks: Task[];
+  names: Map<string, string>;
+  projects: Map<string, string>;
+  steps: Map<string, TaskStep[]>;
+};
 
 /** Задачи проекта — для его карточки: открытые сверху, закрытые за всё время ниже. */
 export async function projectTasks(projectId: string): Promise<ProjectTasks> {
   const db = serviceClient();
-  if (!db) return { tasks: [], names: new Map() };
+  if (!db) return { tasks: [], names: new Map(), projects: new Map(), steps: new Map() };
   const { data } = await db
     .from("staff_tasks")
     .select(COLUMNS)
@@ -191,8 +257,13 @@ export async function projectTasks(projectId: string): Promise<ProjectTasks> {
     .order("created_at", { ascending: false })
     .limit(200);
   const tasks = ((data as Task[] | null) ?? []).sort(openFirst);
-  const people = await peopleById(tasks.flatMap((t) => [t.creator_id, t.assignee_id]));
-  return { tasks, names: new Map([...people.values()].map((p) => [p.id, p.display_name])) };
+  const steps = await taskSteps(tasks.map((t) => t.id));
+  const refs = stepRefs(steps.values());
+  const [people, projects] = await Promise.all([
+    peopleById([...tasks.flatMap((t) => [t.creator_id, t.assignee_id]), ...refs.people]),
+    projectLabels([projectId, ...refs.projects]),
+  ]);
+  return { tasks, names: new Map([...people.values()].map((p) => [p.id, p.display_name])), projects, steps };
 }
 
 /* ── Поставить ─────────────────────────────────────────────────────────── */
@@ -206,7 +277,7 @@ export async function createTask(
   ip: string,
   now: Date = new Date(),
 ): Promise<CreateResult> {
-  const title = input.title.trim().replace(/\s+/g, " ");
+  const title = cleanTitle(input.title);
   const body = input.body.trim();
   if (!title || title.length > TITLE_MAX) return { ok: false, reason: "title" };
   if (body.length > BODY_MAX) return { ok: false, reason: "body" };
@@ -328,6 +399,7 @@ const AUDIT_OF: Record<Exclude<TaskEvent, "created">, AuditAction> = {
   failed: "task.failed",
   moved: "task.moved",
   cancelled: "task.cancelled",
+  edited: "task.edited",
 };
 
 /**
@@ -451,6 +523,250 @@ export async function afterAct(
   if (eventId !== null && messageWindow(now)) await deliverEvent(eventId);
 }
 
+/* ── Изменить ──────────────────────────────────────────────────────────── */
+
+export type EditRefusal = ActRefusal | "offline" | "gone" | "changed" | "failed" | "unchanged" | "title" | "body" | "assignee" | "project";
+export type EditResult =
+  | { ok: true; task: Task; before: Task; changes: TaskChanges; eventId: number | null }
+  | { ok: false; reason: EditRefusal };
+
+/**
+ * Правка открытой задачи тем, кто её поставил (canEdit): название,
+ * описание, проект, исполнитель. Срок здесь не меняется — для него
+ * «Перенести срок» со своей историей переносов.
+ *
+ * Пишется поверх того состояния, которое человек видел (`updated_at`), как
+ * и остальные действия. В историю — шаг «edited» с тем, что было и что
+ * стало.
+ *
+ * Сменили исполнителя — задача у нового начинается заново: «новая» (себе —
+ * сразу «в работе»), бот пишет ему как о новой задаче, напоминания — с
+ * нуля. Прежнему исполнителю — строка, что задачу с него сняли.
+ */
+export async function editTask(
+  taskId: string,
+  actor: Staff,
+  edit: TaskEdit,
+  ip: string,
+  now: Date = new Date(),
+): Promise<EditResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const task = await taskById(taskId);
+  if (!task) return { ok: false, reason: "gone" };
+  const refusal = canEdit(task, actor.id);
+  if (refusal) return { ok: false, reason: refusal };
+
+  const title = cleanTitle(edit.title);
+  const body = edit.body.trim();
+  if (!title || title.length > TITLE_MAX) return { ok: false, reason: "title" };
+  if (body.length > BODY_MAX) return { ok: false, reason: "body" };
+  const changes = taskChanges(task, { ...edit, title, body });
+  if (!Object.keys(changes).length) return { ok: false, reason: "unchanged" };
+  if (changes.assignee) {
+    const assignee = (await peopleById([edit.assigneeId])).get(edit.assigneeId);
+    if (!assignee?.is_active) return { ok: false, reason: "assignee" };
+  }
+  if (changes.project && edit.projectId && !(await projectLabels([edit.projectId])).has(edit.projectId)) {
+    return { ok: false, reason: "project" };
+  }
+
+  const at = now.toISOString();
+  const patch: Record<string, unknown> = {
+    title,
+    body,
+    project_id: edit.projectId || null,
+    updated_at: at,
+    // Новому исполнителю панель покажет «поставил(а) вам задачу» — для него
+    // это и есть новая задача. Остальным — «изменил(а)».
+    last_event: changes.assignee ? "created" : "edited",
+    last_actor_id: actor.id,
+  };
+  if (changes.assignee) {
+    const self = edit.assigneeId === task.creator_id;
+    Object.assign(patch, {
+      assignee_id: edit.assigneeId,
+      status: initialStatus(task.creator_id, edit.assigneeId),
+      taken_at: self ? at : null,
+      notified_at: self ? at : null,
+      tg_chat: null,
+      tg_message_id: null,
+      take_nudged_at: null,
+      soon_nudged_at: null,
+      overdue_sent_at: null,
+      awaiting_date_at: null,
+    });
+  }
+
+  const { data, error } = await db
+    .from("staff_tasks")
+    .update(patch)
+    .eq("id", task.id)
+    .eq("updated_at", task.updated_at)
+    .select(COLUMNS)
+    .maybeSingle();
+  if (error) return { ok: false, reason: "failed" };
+  if (!data) return { ok: false, reason: "changed" };
+  const next = data as Task;
+
+  // Исполнителю — строка о правке. Сменили исполнителя — нет: новому придёт
+  // сама задача, прежнему — что её сняли (afterEdit).
+  const notify = changes.assignee ? null : notifyOf(task, actor.id);
+  const { data: event } = await db
+    .from("staff_task_events")
+    .insert({ task_id: task.id, actor_id: actor.id, kind: "edited", changes, at, notify_staff_id: notify })
+    .select("id")
+    .maybeSingle();
+
+  await record("task.edited", {
+    actorStaffId: actor.id,
+    targetType: "task",
+    targetId: task.id,
+    ip,
+    meta: { via: "panel", fields: Object.keys(changes), ...(changes.assignee ? { assignee: changes.assignee } : {}) },
+  });
+  return { ok: true, task: next, before: task, changes, eventId: notify ? ((event?.id as number | undefined) ?? null) : null };
+}
+
+/**
+ * После правки — Telegram. Ночью (23:00–07:00) молчим: новому исполнителю
+ * задачу дошлёт утренний свип, строка о правке тоже уйдёт им.
+ *
+ * Сменили исполнителя: карточка у прежнего переписывается без кнопок —
+ * «Задача передана», ему строка, новому — «Новая задача». Не сменили —
+ * карточка исполнителя переписывается с новым текстом.
+ */
+export async function afterEdit(result: Extract<EditResult, { ok: true }>, now: Date = new Date()): Promise<void> {
+  const { task, before, changes, eventId } = result;
+  if (!changes.assignee) {
+    await afterAct(task, eventId, now);
+    return;
+  }
+  const people = await peopleById([before.assignee_id, task.assignee_id, task.creator_id]);
+  const toName = people.get(task.assignee_id)?.display_name ?? "—";
+  if (before.tg_chat && before.tg_message_id) {
+    await editMessage(before.tg_chat, Number(before.tg_message_id), handedOverCard(task, toName), []);
+  }
+  if (!messageWindow(now)) return;
+  const old = people.get(before.assignee_id);
+  const oldChat = chatOf(old);
+  if (oldChat && before.assignee_id !== task.creator_id && wants(old?.notify_off, "tasks")) {
+    await sendMessage(oldChat, handedOverText(task, people.get(task.creator_id)?.display_name ?? "—", toName));
+  }
+  if (task.assignee_id !== task.creator_id) await deliverAssignment(task.id);
+}
+
+/* ── История за период ─────────────────────────────────────────────────── */
+
+export type TaskHistory = {
+  offline: boolean;
+  tasks: Task[];
+  /** Все шаги этих задач — для истории каждой. */
+  steps: Map<string, TaskStep[]>;
+  /** Шаги за период, по которым считаются итоги. */
+  period: TaskStep[];
+  /** Исполнитель каждой задачи периода — для таблицы по людям. */
+  assigneeOf: Map<string, string>;
+  names: Map<string, string>;
+  projects: Map<string, string>;
+  /** Люди, которых можно выбрать в фильтре «Чьи». */
+  people: { id: string; display_name: string }[];
+  /** Задач с шагами за период больше, чем показано. */
+  more: boolean;
+};
+
+/** Сколько задач на странице истории. */
+export const HISTORY_LIMIT = 100;
+
+/**
+ * Задачи, у которых за период что-то случилось: сделали, не сделали,
+ * отменили, перенесли срок, изменили. Свежие — сверху.
+ *
+ * Кто что видит — seesTask: менеджер свои, руководитель — команду,
+ * владелец — всё. `person` — фильтр «Чьи»: задачи, где человек поставил или
+ * исполняет; менеджеру он не нужен — у него и так только свои.
+ */
+export async function taskHistory(
+  viewer: { id: string; role: Role },
+  filter: { days: HistoryDays; kind: HistoryKind; person: string },
+  now: Date = new Date(),
+): Promise<TaskHistory> {
+  const db = serviceClient();
+  const empty: TaskHistory = {
+    offline: true,
+    tasks: [],
+    steps: new Map(),
+    period: [],
+    assigneeOf: new Map(),
+    names: new Map(),
+    projects: new Map(),
+    people: [],
+    more: false,
+  };
+  if (!db) return empty;
+
+  const since = new Date(now.getTime() - filter.days * 24 * 3_600_000).toISOString();
+  const [{ data: stepRows, error }, { data: staffRows }] = await Promise.all([
+    db
+      .from("staff_task_events")
+      .select(STEP_COLUMNS)
+      .gte("at", since)
+      .in("kind", [...HISTORY_STEP_KINDS])
+      .order("at", { ascending: false })
+      .limit(3000),
+    db.from("staff").select("id, display_name, role, is_active").order("display_name", { ascending: true }),
+  ]);
+  if (error) return empty;
+  const staff = (staffRows as { id: string; display_name: string; role: Role; is_active: boolean }[] | null) ?? [];
+  const ownerIds = new Set(staff.filter((p) => p.role === "admin").map((p) => p.id));
+
+  // Задачи по порядку свежести последнего шага.
+  const periodAll = (stepRows as TaskStep[] | null) ?? [];
+  const order = [...new Set(periodAll.map((s) => s.task_id))];
+  const byId = new Map<string, Task>();
+  for (let i = 0; i < order.length; i += 100) {
+    const { data } = await db.from("staff_tasks").select(COLUMNS).in("id", order.slice(i, i + 100));
+    for (const task of (data as Task[] | null) ?? []) byId.set(task.id, task);
+  }
+
+  const person = viewer.role === "manager" ? "" : filter.person;
+  const visible = order
+    .map((id) => byId.get(id))
+    .filter((task): task is Task => Boolean(task))
+    .filter((task) => seesTask(task, viewer, ownerIds))
+    .filter((task) => !person || task.creator_id === person || task.assignee_id === person);
+  const shownIds = new Set(visible.map((t) => t.id));
+  const period = periodAll.filter((s) => shownIds.has(s.task_id));
+  const matching =
+    filter.kind === "all"
+      ? visible
+      : visible.filter((task) => period.some((s) => s.task_id === task.id && s.kind === filter.kind));
+  const tasks = matching.slice(0, HISTORY_LIMIT);
+
+  const steps = await taskSteps(tasks.map((t) => t.id));
+  const refs = stepRefs(steps.values());
+  const projects = await projectLabels([...tasks.map((t) => t.project_id), ...refs.projects]);
+  const names = new Map(staff.map((p) => [p.id, p.display_name]));
+  // В фильтре «Чьи» — работающие и те, кто есть в найденных задачах.
+  const involved = new Set(visible.flatMap((t) => [t.creator_id, t.assignee_id]));
+  const people = staff
+    .filter((p) => p.is_active || involved.has(p.id))
+    .filter((p) => viewer.role === "admin" || !ownerIds.has(p.id) || involved.has(p.id))
+    .map((p) => ({ id: p.id, display_name: p.display_name }));
+
+  return {
+    offline: false,
+    tasks,
+    steps,
+    period,
+    assigneeOf: new Map(visible.map((task) => [task.id, task.assignee_id])),
+    names,
+    projects,
+    people,
+    more: matching.length > tasks.length,
+  };
+}
+
 /* ── «Своя дата» в боте ────────────────────────────────────────────────── */
 
 /** Исполнитель нажал «Своя дата»: бот ждёт от него текст со сроком. */
@@ -534,7 +850,7 @@ export async function deliverEvent(eventId: number): Promise<boolean> {
     .update({ notified_at: new Date().toISOString() })
     .eq("id", eventId)
     .is("notified_at", null)
-    .select("id, task_id, actor_id, kind, new_due, notify_staff_id")
+    .select("id, task_id, actor_id, kind, new_due, changes, notify_staff_id")
     .maybeSingle();
   if (!data?.notify_staff_id) return true;
 
@@ -549,6 +865,7 @@ export async function deliverEvent(eventId: number): Promise<boolean> {
     people.get(data.actor_id as string)?.display_name ?? "—",
     task,
     data.new_due as string | null,
+    data.changes as TaskChanges | null,
   );
   if (await sendMessage(chat, text)) return true;
   if (await telegramReachable()) return true;

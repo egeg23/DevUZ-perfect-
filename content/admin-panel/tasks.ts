@@ -96,6 +96,77 @@ export const tasksDict = defineDict({
     pl: "Baza niedostępna — zadania są teraz niewidoczne.",
   },
 
+  edit: { ru: "Изменить", uz: "Tahrirlash", pl: "Edytuj" },
+  editSave: { ru: "Сохранить", uz: "Saqlash", pl: "Zapisz" },
+  fieldAssignee: { ru: "Исполнитель", uz: "Ijrochi", pl: "Wykonawca" },
+  editHint: {
+    ru: "Срок меняется кнопкой «Перенести срок». Смените исполнителя — задача у него начнётся заново, а с прежнего снимется.",
+    uz: "Muddat «Muddatni ko‘chirish» tugmasi bilan o‘zgaradi. Ijrochini almashtirsangiz, vazifa unda qaytadan boshlanadi, avvalgisidan esa olib tashlanadi.",
+    pl: "Termin zmienia się przyciskiem „Przesuń termin”. Zmień wykonawcę — zadanie zacznie się u niego od nowa, a poprzedniemu zostanie zdjęte.",
+  },
+  movedTimes: {
+    ru: (n: number) => `переносов: ${n}`,
+    uz: (n: number) => `ko‘chirishlar: ${n}`,
+    pl: (n: number) => `przesunięć: ${n}`,
+  },
+  history: {
+    ru: (n: number) => `История · ${n}`,
+    uz: (n: number) => `Tarix · ${n}`,
+    pl: (n: number) => `Historia · ${n}`,
+  },
+  historyLink: { ru: "История задач", uz: "Vazifalar tarixi", pl: "Historia zadań" },
+  stepCreated: {
+    ru: (who: string, due: string) => `${who} поставил(а) задачу, ${due}`,
+    uz: (who: string, due: string) => `${who} vazifa qo‘ydi, ${due}`,
+    pl: (who: string, due: string) => `${who} zlecił(a) zadanie, ${due}`,
+  },
+  stepTaken: {
+    ru: (who: string) => `${who} взял(а) в работу`,
+    uz: (who: string) => `${who} ishga oldi`,
+    pl: (who: string) => `${who} przyjął(ęła) do realizacji`,
+  },
+  stepDone: {
+    ru: (who: string) => `${who}: сделано`,
+    uz: (who: string) => `${who}: bajarildi`,
+    pl: (who: string) => `${who}: zrobione`,
+  },
+  stepFailed: {
+    ru: (who: string) => `${who}: не сделано`,
+    uz: (who: string) => `${who}: bajarilmadi`,
+    pl: (who: string) => `${who}: niezrobione`,
+  },
+  stepCancelled: {
+    ru: (who: string) => `${who} отменил(а) задачу`,
+    uz: (who: string) => `${who} vazifani bekor qildi`,
+    pl: (who: string) => `${who} anulował(a) zadanie`,
+  },
+  stepMoved: {
+    ru: (who: string, from: string, to: string) => `${who} перенёс(ла) срок: ${from} → ${to}`,
+    uz: (who: string, from: string, to: string) => `${who} muddatni ko‘chirdi: ${from} → ${to}`,
+    pl: (who: string, from: string, to: string) => `${who} przesunął(ęła) termin: ${from} → ${to}`,
+  },
+  stepEdited: {
+    ru: (who: string) => `${who} изменил(а) задачу`,
+    uz: (who: string) => `${who} vazifani o‘zgartirdi`,
+    pl: (who: string) => `${who} zmienił(a) zadanie`,
+  },
+  changeTitle: {
+    ru: (from: string, to: string) => `название: «${from}» → «${to}»`,
+    uz: (from: string, to: string) => `nomi: «${from}» → «${to}»`,
+    pl: (from: string, to: string) => `nazwa: «${from}» → «${to}»`,
+  },
+  changeBody: { ru: "описание изменено", uz: "tavsif o‘zgardi", pl: "opis zmieniony" },
+  changeProject: {
+    ru: (from: string, to: string) => `проект: ${from} → ${to}`,
+    uz: (from: string, to: string) => `loyiha: ${from} → ${to}`,
+    pl: (from: string, to: string) => `projekt: ${from} → ${to}`,
+  },
+  changeAssignee: {
+    ru: (from: string, to: string) => `исполнитель: ${from} → ${to}`,
+    uz: (from: string, to: string) => `ijrochi: ${from} → ${to}`,
+    pl: (from: string, to: string) => `wykonawca: ${from} → ${to}`,
+  },
+
   alertsOn: { ru: "Включить уведомления", uz: "Bildirishnomalarni yoqish", pl: "Włącz powiadomienia" },
   alertsGranted: { ru: "Уведомления включены", uz: "Bildirishnomalar yoqilgan", pl: "Powiadomienia włączone" },
   alertsDenied: {
@@ -139,6 +210,11 @@ export const tasksDict = defineDict({
     uz: (name: string, title: string) => `${name} muddatni ko‘chirdi: ${title}`,
     pl: (name: string, title: string) => `${name} przesunął(ęła) termin: ${title}`,
   },
+  feedEdited: {
+    ru: (name: string, title: string) => `${name} изменил(а) задачу: ${title}`,
+    uz: (name: string, title: string) => `${name} vazifani o‘zgartirdi: ${title}`,
+    pl: (name: string, title: string) => `${name} zmienił(a) zadanie: ${title}`,
+  },
   notifTitle: { ru: "Задачи — DevUz", uz: "Vazifalar — DevUz", pl: "Zadania — DevUz" },
   openTasks: { ru: "Открыть задачи", uz: "Vazifalarni ochish", pl: "Otwórz zadania" },
   close: { ru: "Закрыть", uz: "Yopish", pl: "Zamknij" },
@@ -177,6 +253,22 @@ export const taskNoticeDict = defineDict({
   failed: { ru: "Отмечено: не сделано.", uz: "Belgilandi: bajarilmadi.", pl: "Oznaczono: niezrobione." },
   moved: { ru: "Срок перенесён.", uz: "Muddat ko‘chirildi.", pl: "Termin przesunięty." },
   cancelled: { ru: "Задача отменена.", uz: "Vazifa bekor qilindi.", pl: "Zadanie anulowane." },
+  edited: { ru: "Задача изменена.", uz: "Vazifa o‘zgartirildi.", pl: "Zadanie zmienione." },
+  editedNew: {
+    ru: "Задача передана — новому исполнителю бот напишет сам.",
+    uz: "Vazifa topshirildi — yangi ijrochiga bot o‘zi yozadi.",
+    pl: "Zadanie przekazane — bot sam napisze do nowego wykonawcy.",
+  },
+  editedNewLater: {
+    ru: "Задача передана. Сейчас ночь — бот напишет новому исполнителю в 07:00.",
+    uz: "Vazifa topshirildi. Hozir tun — bot yangi ijrochiga soat 07:00 da yozadi.",
+    pl: "Zadanie przekazane. Jest noc — bot napisze do nowego wykonawcy o 07:00.",
+  },
+  unchanged: {
+    ru: "Ничего не поменялось — задача осталась как была.",
+    uz: "Hech narsa o‘zgarmadi — vazifa avvalgidek qoldi.",
+    pl: "Nic się nie zmieniło — zadanie zostało bez zmian.",
+  },
   project: {
     ru: "Такого проекта нет — выберите из списка.",
     uz: "Bunday loyiha yo‘q — ro‘yxatdan tanlang.",
@@ -221,4 +313,67 @@ export const taskNoticeDict = defineDict({
     uz: "Bo‘lmadi — yana urinib ko‘ring.",
     pl: "Nie udało się — spróbuj ponownie.",
   },
+});
+
+/** Страница «История задач» (/admin/tasks). */
+export const taskHistoryDict = defineDict({
+  title: { ru: "История задач", uz: "Vazifalar tarixi", pl: "Historia zadań" },
+  back: { ru: "← Задачи", uz: "← Vazifalar", pl: "← Zadania" },
+  leadMine: {
+    ru: "Что случилось с вашими задачами — теми, что поставили вы, и теми, что поставили вам: сделано, не сделано, отменено, перенесён срок, изменено.",
+    uz: "Vazifalaringiz bilan nima bo‘ldi — siz qo‘yganlar va sizga qo‘yilganlar: bajarildi, bajarilmadi, bekor qilindi, muddat ko‘chirildi, o‘zgartirildi.",
+    pl: "Co się stało z twoimi zadaniami — zleconymi przez ciebie i dla ciebie: zrobione, niezrobione, anulowane, przesunięty termin, zmienione.",
+  },
+  leadTeam: {
+    ru: "Что случилось с задачами команды: сделано, не сделано, отменено, перенесён срок, изменено. Ниже — по людям и каждая задача со своей историей.",
+    uz: "Jamoa vazifalari bilan nima bo‘ldi: bajarildi, bajarilmadi, bekor qilindi, muddat ko‘chirildi, o‘zgartirildi. Pastda — odamlar bo‘yicha va har bir vazifa o‘z tarixi bilan.",
+    pl: "Co się stało z zadaniami zespołu: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. Niżej — według osób i każde zadanie z własną historią.",
+  },
+  filterKind: { ru: "Что", uz: "Nima", pl: "Co" },
+  kindAll: { ru: "всё", uz: "hammasi", pl: "wszystko" },
+  kindDone: { ru: "сделано", uz: "bajarildi", pl: "zrobione" },
+  kindFailed: { ru: "не сделано", uz: "bajarilmadi", pl: "niezrobione" },
+  kindCancelled: { ru: "отменено", uz: "bekor qilingan", pl: "anulowane" },
+  kindMoved: { ru: "переносы срока", uz: "muddat ko‘chirishlari", pl: "przesunięcia terminu" },
+  kindEdited: { ru: "изменения", uz: "o‘zgarishlar", pl: "zmiany" },
+  filterWho: { ru: "Чьи", uz: "Kimniki", pl: "Czyje" },
+  whoAll: { ru: "все", uz: "hammasi", pl: "wszystkich" },
+  filterDays: { ru: "За", uz: "Davr", pl: "Za" },
+  days: {
+    ru: (n: number) => `${n} дней`,
+    uz: (n: number) => `${n} kun`,
+    pl: (n: number) => `${n} dni`,
+  },
+  show: { ru: "Показать", uz: "Ko‘rsatish", pl: "Pokaż" },
+  countDone: { ru: (n: number) => `сделано: ${n}`, uz: (n: number) => `bajarildi: ${n}`, pl: (n: number) => `zrobione: ${n}` },
+  countFailed: { ru: (n: number) => `не сделано: ${n}`, uz: (n: number) => `bajarilmadi: ${n}`, pl: (n: number) => `niezrobione: ${n}` },
+  countCancelled: { ru: (n: number) => `отменено: ${n}`, uz: (n: number) => `bekor qilingan: ${n}`, pl: (n: number) => `anulowane: ${n}` },
+  countMoved: {
+    ru: (n: number) => `переносов срока: ${n}`,
+    uz: (n: number) => `muddat ko‘chirishlari: ${n}`,
+    pl: (n: number) => `przesunięć terminu: ${n}`,
+  },
+  countEdited: { ru: (n: number) => `изменений: ${n}`, uz: (n: number) => `o‘zgarishlar: ${n}`, pl: (n: number) => `zmian: ${n}` },
+  byPerson: { ru: "По людям", uz: "Odamlar bo‘yicha", pl: "Według osób" },
+  byPersonHint: {
+    ru: "Считается по исполнителю: сколько его задач сделано, не сделано, отменено и сколько раз переносили их срок — он сам или тот, кто поставил.",
+    uz: "Ijrochi bo‘yicha hisoblanadi: uning nechta vazifasi bajarildi, bajarilmadi, bekor qilindi va ularning muddati necha marta ko‘chirildi — o‘zi yoki qo‘ygan odam.",
+    pl: "Liczone według wykonawcy: ile jego zadań zrobiono, nie zrobiono, anulowano i ile razy przesuwano ich termin — on sam albo zlecający.",
+  },
+  colPerson: { ru: "Исполнитель", uz: "Ijrochi", pl: "Wykonawca" },
+  colDone: { ru: "Сделано", uz: "Bajarildi", pl: "Zrobione" },
+  colFailed: { ru: "Не сделано", uz: "Bajarilmadi", pl: "Niezrobione" },
+  colCancelled: { ru: "Отменено", uz: "Bekor qilingan", pl: "Anulowane" },
+  colMoved: { ru: "Переносов", uz: "Ko‘chirishlar", pl: "Przesunięć" },
+  empty: {
+    ru: "За этот период с задачами ничего не происходило.",
+    uz: "Bu davrda vazifalar bilan hech narsa bo‘lmadi.",
+    pl: "W tym okresie nic się nie działo z zadaniami.",
+  },
+  more: {
+    ru: (n: number) => `Показаны последние ${n} задач — сузьте период или выберите человека.`,
+    uz: (n: number) => `Oxirgi ${n} ta vazifa ko‘rsatilgan — davrni qisqartiring yoki odamni tanlang.`,
+    pl: (n: number) => `Pokazano ostatnie ${n} zadań — zawęź okres albo wybierz osobę.`,
+  },
+  offline: { ru: "База недоступна — история сейчас не видна.", uz: "Baza ishlamayapti — tarix hozir ko‘rinmaydi.", pl: "Baza niedostępna — historia jest teraz niewidoczna." },
 });
