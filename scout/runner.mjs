@@ -26,6 +26,8 @@ import { markDelivered, markFailed, markSent, markUnreachable, nextQueued } from
 import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/outreach-peer";
 import { markCircleSkipped, markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
 import { noCircle } from "@/lib/admin/hello-first";
+import { hasMockupLink } from "@/lib/admin/mockup-offer";
+import { recordMockupOut } from "@/lib/admin/mockup-offer-store";
 import {
   CIRCLE_CHECK_MS,
   CIRCLE_LANGS,
@@ -973,6 +975,30 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
   };
   const inboundEvent = new NewMessage({ incoming: true });
   client.addEventHandler(inbound, inboundEvent);
+
+  // Своё исходящее со ссылкой на макет — менеджер отправил его руками с
+  // этого аккаунта: у клиента пошли 48 часов акции (lib/admin/mockup-offer).
+  // Остальные свои сообщения не разбираем, как и раньше.
+  const outbound = async (event) => {
+    const message = event.message;
+    if (!message?.out || !message.isPrivate || !message.message) return;
+    const text = String(message.message);
+    if (!hasMockupLink(text)) return;
+    try {
+      const peer = await message.getChat();
+      if (peer?.bot) return;
+      const started = await recordMockupOut({
+        account: key,
+        userId: peer?.id === undefined || peer?.id === null ? "" : String(peer.id),
+        handle: peer?.username ? String(peer.username) : "",
+        body: text,
+      });
+      if (started) console.log(`макет${tag}: ушёл ${peer?.username ? `@${peer.username}` : `id ${peer?.id}`} — акция 48 часов пошла`);
+    } catch (error) {
+      console.error("макет: отправку не записал —", error?.message ?? error);
+    }
+  };
+  client.addEventHandler(outbound, new NewMessage({ outgoing: true }));
 
   // ── Ограничен ли аккаунт: раз в час спрашиваем @SpamBot ──────────────
   //

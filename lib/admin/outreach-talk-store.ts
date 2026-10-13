@@ -12,6 +12,8 @@ import {
 import { protoTermsText } from "@/lib/admin/prototype-claim";
 import { announcePrototype } from "@/lib/admin/prototype-claim-store";
 import { leadOnHandover, offerLead, routeAutopilotReply } from "@/lib/admin/autopilot-reply";
+import { hasMockupLink } from "@/lib/admin/mockup-offer";
+import { recordMockupSent } from "@/lib/admin/mockup-offer-store";
 import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
 import { MAIN_ACCOUNT, accountOf, sentFrom, sentFromText } from "@/lib/admin/work-accounts";
@@ -943,10 +945,24 @@ export async function markReplySent(
   const db = serviceClient();
   if (!db) return;
   const number = tgMessageId === undefined || tgMessageId === null || !Number.isFinite(Number(tgMessageId)) ? null : Number(tgMessageId);
-  await db
+  const { data: sent } = await db
     .from("outreach_messages")
     .update({ status: "sent", sent_at: new Date().toISOString(), failure: null, ...(number ? { tg_message_id: number } : {}) })
-    .eq("id", id);
+    .eq("id", id)
+    .select("prospect_id, lead_id, body")
+    .maybeSingle();
+
+  // Ушла ссылка на макет — у клиента пошли 48 часов акции
+  // (lib/admin/mockup-offer.ts). Повторная ссылка срок не продлевает.
+  if (sent?.prospect_id && hasMockupLink(String(sent.body ?? ""))) {
+    const { data: p } = await db.from("prospects").select("sent_via").eq("id", sent.prospect_id).maybeSingle();
+    await recordMockupSent({
+      prospectId: String(sent.prospect_id),
+      leadId: (sent.lead_id as string | null) ?? null,
+      body: String(sent.body),
+      account: (p?.sent_via as string | null) ?? null,
+    }).catch((error: unknown) => console.error("акция по макету: не записалась", error instanceof Error ? error.message : error));
+  }
 }
 
 /**

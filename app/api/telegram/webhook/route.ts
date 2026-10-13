@@ -102,6 +102,7 @@ import {
   resultText,
   testTitle,
 } from "@/lib/learn/bot";
+import { MOCKUP_CALLBACK, OFFER_ROLES, actOnOffer, mockupsCommand, parseMockupCallback, sendOfferList } from "@/lib/admin/mockup-offer-bot";
 import { grade, isRight, questionsFor } from "@/lib/learn/quiz";
 import { saveAttempt } from "@/lib/learn/store";
 
@@ -246,6 +247,17 @@ async function route(update: Update): Promise<void> {
       // сообщение идёт дальше, в обычный разговор.
       if (chat.type === "private" && streamCommand(update.message.text)) {
         if (await handleStreamCommand(update.message)) return;
+      }
+
+      // «Макеты клиентов»: /mockups — кому ушли макеты и сколько осталось по
+      // акции, с кнопками (lib/admin/mockup-offer-bot.ts). Только владельцу
+      // и руководителю; у остальных слова идут дальше, как шли.
+      if (chat.type === "private" && mockupsCommand(update.message.text)) {
+        const staff = update.message.from?.id ? await staffByTelegramId(update.message.from.id) : null;
+        if (staff && (OFFER_ROLES as readonly string[]).includes(staff.role)) {
+          await sendOfferList(chat.id);
+          return;
+        }
       }
 
       // «Обучение»: /learn — курсы и тесты в боте (lib/learn/bot.ts). Только
@@ -1203,6 +1215,26 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
       query.id,
       result === "saved" ? (cb.answer === "yes" ? "Принято" : "Ответ записан") : result === "already" ? ALREADY_ANSWERED : "Недоступно",
     );
+    return;
+  }
+
+  // Кнопки под макетом клиента: «Закрыть паролем», «Утверждён → Егору».
+  // Только в личке владельца или руководителя (проверка роли — в actOnOffer).
+  if (parts[0] === MOCKUP_CALLBACK) {
+    const cb = parseMockupCallback(parts);
+    const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+    if (!cb || !staff || chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    const result = await actOnOffer(cb, staff);
+    if (!result.ok) {
+      await answerCallback(query.id, result.why);
+      return;
+    }
+    await answerCallback(query.id, cb.kind === "approve" ? "Передано в работу" : "Пароль выдан");
+    if (result.card && query.message?.message_id) await editMessage(chatId, query.message.message_id, result.card.text, result.card.rows);
+    await sendMessage(chatId, result.reply);
     return;
   }
 

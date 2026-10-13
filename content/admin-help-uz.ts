@@ -957,6 +957,29 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "offer",
+          title: "Maketdan keyin 48 soatlik aksiya",
+          body: {
+            manager: [
+              "Maket havolasi mijozga ishchi akkauntdan ketishi bilan — lid kartochkasidan, model javobi bilan yoki Telegram’da qo‘lda — mijozda **48 soatlik maxsus shartlar** boshlanadi: shu maket bo‘yicha to‘liq funksionalli lending va tanlovga 3 ta qo‘shimcha — 1 700 $ o‘rniga 500 $, to‘liq korporativ sayt — 2 500 $ o‘rniga 1 000 $. Maketdan 3 daqiqa o‘tib bot o‘sha akkauntdan mijozga shartlar va muddatni o‘zi yozadi. Xuddi shu havolani qayta yuborish muddatni uzaytirmaydi.",
+              "Keyin bot mijozga o‘zi eslatadi: har kuni Toshkent vaqti bilan 13:00 da — qancha qolgani, va tugashiga 2 soat qolganda yana bir bor (agar bu tun bo‘lsa — oldingi kuni 21:00 da). Tunda mijozga yozmaydi. Muddat tugadi — aksiya amal qilmaydi, narxlar odatiy; mijozga shunday ayting. Mijoz rad etdi yoki lid yutqazildi — eslatmalar to‘xtaydi.",
+              "Shaxsiy akkauntdan yuborilgan havola hisobga olinmaydi: bot uni ko‘rmaydi. Maketni ishchi akkauntdan yuboring — aks holda mijozga na shartlar, na eslatmalar boradi.",
+            ],
+            head: [
+              "Maket havolasi mijozga ishchi akkauntdan ketishi bilan — lid kartochkasidan, model javobi bilan yoki Telegram’da qo‘lda — mijozda **48 soatlik maxsus shartlar** boshlanadi: shu maket bo‘yicha to‘liq funksionalli lending va tanlovga 3 ta qo‘shimcha — 1 700 $ o‘rniga 500 $, to‘liq korporativ sayt — 2 500 $ o‘rniga 1 000 $. Maketdan 3 daqiqa o‘tib bot o‘sha akkauntdan mijozga shartlar va muddatni o‘zi yozadi. Xuddi shu havolani qayta yuborish muddatni uzaytirmaydi.",
+              "Sizga va egasiga bot mijozga shartlar ketishi bilan maket kartochkasini, aksiya tugaganda bir qatorni va 13:00 da — kimdadir aksiya davom etayotgan bo‘lsa — «🎨 Макеты клиентов» ro‘yxatini yuboradi. Xuddi shu ro‘yxat — botda «Макеты клиентов» yoki /mockups buyrug‘i bilan: maket kimga ketgani, aksiyadan qancha qolgani, lid havolasi. Aloqalardan bo‘lmagan mijoz (u bo‘yicha aloqa yo‘q) ro‘yxatda ko‘rinadi, lekin bot unga eslatma yozmaydi.",
+              "Har bir maket ostida ikkita tugma. **«🔒 Закрыть паролем»** — bir sutkalik parol, bu yerdagi «Parol yaratish» kabi: birinchi parol ochiq maketni yopadi, bot mijoz uchun tayyor matnni yuboradi. **«✅ Утверждён → Егору»** — mijoz maketni tasdiqladi: unga eslatmalar to‘xtaydi, Egorga maket va lid havolalari hamda maket aksiya muddatida tasdiqlanganmi degan belgi bilan «Сайт по макету» vazifasi qo‘yiladi.",
+              "Eslatmalarni arzon model yozadi, narxlar, muddat va qancha qolganini esa kod qo‘yadi va tekshiradi: xabarda begona raqamlar, havolalar va aksiyani uzaytirish va’dasi bo‘lmaydi. Tekshiruvdan o‘tmasa — tayyor matn ketadi. Shartlarning o‘zi doim tayyor matn bilan boradi.",
+            ],
+            admin: [
+              "Maket havolasi mijozga ishchi akkauntdan ketishi bilan — lid kartochkasidan, model javobi bilan yoki Telegram’da qo‘lda — mijozda **48 soatlik maxsus shartlar** boshlanadi: shu maket bo‘yicha to‘liq funksionalli lending va tanlovga 3 ta qo‘shimcha — 1 700 $ o‘rniga 500 $, to‘liq korporativ sayt — 2 500 $ o‘rniga 1 000 $. Maketdan 3 daqiqa o‘tib bot o‘sha akkauntdan mijozga shartlar va muddatni o‘zi yozadi. Xuddi shu havolani qayta yuborish muddatni uzaytirmaydi.",
+              "Sizga va rahbarga bot mijozga shartlar ketishi bilan maket kartochkasini, aksiya tugaganda bir qatorni va 13:00 da — kimdadir aksiya davom etayotgan bo‘lsa — «🎨 Макеты клиентов» ro‘yxatini yuboradi. Xuddi shu ro‘yxat — botda «Макеты клиентов» yoki /mockups buyrug‘i bilan: maket kimga ketgani, aksiyadan qancha qolgani, lid havolasi. Aloqalardan bo‘lmagan mijoz (u bo‘yicha aloqa yo‘q) ro‘yxatda ko‘rinadi, lekin bot unga eslatma yozmaydi.",
+              "Har bir maket ostida ikkita tugma. **«🔒 Закрыть паролем»** — bir sutkalik parol, bu yerdagi «Parol yaratish» kabi: birinchi parol ochiq maketni yopadi, bot mijoz uchun tayyor matnni yuboradi. **«✅ Утверждён → Егору»** — mijoz maketni tasdiqladi: unga eslatmalar to‘xtaydi, Egorga maket va lid havolalari hamda maket aksiya muddatida tasdiqlanganmi degan belgi bilan «Сайт по макету» vazifasi qo‘yiladi.",
+              "Eslatmalarni arzon model yozadi, narxlar, muddat va qancha qolganini esa kod qo‘yadi va tekshiradi: xabarda begona raqamlar, havolalar va aksiyani uzaytirish va’dasi bo‘lmaydi. Tekshiruvdan o‘tmasa — tayyor matn ketadi. Shartlarning o‘zi doim tayyor matn bilan boradi.",
+            ],
+          },
+        },
+        {
           id: "closed",
           title: "«havola orqali ochiq» va «parol bilan»",
           body: {
