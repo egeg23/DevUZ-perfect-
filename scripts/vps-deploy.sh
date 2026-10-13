@@ -318,6 +318,22 @@ fi
 # DEPLOY_IMAGE, реестр не ответил, другая архитектура, или в образ вшиты не
 # те открытые значения, что в .env. Истина — всегда .env на сервере.
 PUBLIC_SIGNATURE="$(envval NEXT_PUBLIC_SITE_URL)|$(envval NEXT_PUBLIC_SUPABASE_URL)|$(envval NEXT_PUBLIC_YANDEX_METRIKA_ID)|$(envval NEXT_PUBLIC_GA_ID)"
+# Старые образы из реестра: каждая выкатка забирает свой, около 800 МБ, а
+# image prune их не трогает — у них есть имя. 13.10.2026 они заняли диск
+# целиком (97 ГБ), и выкатка не смогла даже забрать код. Оставляем образ, на
+# котором стоит сайт (devuz:latest), и devuz:previous для отката.
+drop_old_images() {
+  local repo keep ref full
+  repo="${DEPLOY_IMAGE%:*}"
+  [ -n "$repo" ] && [ "$repo" != "${DEPLOY_IMAGE:-}" ] || repo="ghcr.io/egeg23/devuz"
+  keep="$(docker image inspect --format '{{.Id}}' devuz:latest devuz:previous 2>/dev/null | sort -u || true)"
+  [ -n "$keep" ] || return 0
+  docker images --format '{{.Repository}}:{{.Tag}}' "$repo" 2>/dev/null | while read -r ref; do
+    full="$(docker image inspect --format '{{.Id}}' "$ref" 2>/dev/null || true)"
+    printf '%s\n' "$keep" | grep -qxF "$full" || docker rmi "$ref" >/dev/null 2>&1 || true
+  done || true
+}
+
 IMAGE_READY=0
 if [ -n "${DEPLOY_IMAGE:-}" ] && [ "$(uname -m)" = "x86_64" ]; then
   echo "▸ Забираем образ $DEPLOY_IMAGE"
@@ -451,6 +467,7 @@ for i in $(seq 1 30); do
       fi
     fi
 
+    drop_old_images
     docker image prune -f >/dev/null 2>&1 || true
     exit 0
   fi

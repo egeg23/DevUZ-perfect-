@@ -5,9 +5,11 @@
 # же сервере живут ещё полтора десятка сайтов, поэтому уборка здесь только
 # такая, после которой ничего чужого и нужного не пропадает:
 #   - кэш сборки Docker (builder prune) — пересоберётся сам, если понадобится;
-#   - образы без имени (image prune без -a): devuz:previous для отката и
-#     образы других сайтов с именем остаются;
-#   - остановленные контейнеры старше трёх суток;
+#   - старые образы devuz из реестра (ghcr.io/egeg23/devuz:<коммит>): каждая
+#     выкатка оставляла свой, около 800 МБ, — именно они и заняли диск.
+#     Остаются devuz:latest (на нём стоит сайт) и devuz:previous для отката;
+#   - образы без имени (image prune без -a): образы других сайтов с именем
+#     остаются;
 #   - системный журнал — до 300 МБ последних записей;
 #   - кэш apt и кэш сборки Next (.next/cache) в каталоге devuz: сервер
 #     собирает сайт только запасным путём, кэш ему не нужен;
@@ -67,7 +69,7 @@ jobs:
             report
             echo
             echo "════ Где место (больше всего) ════"
-            for dir in / /var /var/lib/docker /srv /root /home /opt /tmp /var/log; do
+            for dir in / /var /var/lib /var/lib/docker /var/lib/containerd /srv /root /home /opt /tmp /var/log; do
               [ -d "$dir" ] || continue
               echo "— ${dir}"
               $SUDO du -xh --max-depth=1 "$dir" 2>/dev/null | sort -rh | sed -n '2,9p' | sed 's/^/  /'
@@ -77,8 +79,8 @@ jobs:
             $SUDO find /var/lib/docker/containers -name '*-json.log' -size +100M -printf '  %s байт  %p\n' 2>/dev/null | sort -rn | head -20 || true
             echo "системный журнал: $($SUDO journalctl --disk-usage 2>/dev/null || echo '?')"
             echo "кэш Next в devuz: $($SUDO du -sh "$APP_DIR/.next/cache" 2>/dev/null | cut -f1 || echo 'нет')"
-            echo "образы devuz:"
-            $SUDO docker images --format '  {{.Repository}}:{{.Tag}}  {{.Size}}  {{.CreatedSince}}' 2>/dev/null | grep -E 'devuz' | head -20 || true
+            echo "образов devuz из реестра: $($SUDO docker images --format '{{.Repository}}:{{.Tag}}' ghcr.io/egeg23/devuz 2>/dev/null | wc -l)"
+            $SUDO docker images --format '  {{.Repository}}:{{.Tag}}  {{.Size}}  {{.CreatedSince}}' 2>/dev/null | grep -E 'devuz' | head -5 || true
 
             if [ "$CLEAN" != "true" ]; then
               echo
@@ -88,9 +90,22 @@ jobs:
 
             echo
             echo "════ Уборка ════"
+            # Старые образы devuz — как в конце выкатки (scripts/vps-deploy.sh,
+            # drop_old_images): остаются devuz:latest и devuz:previous.
+            KEEP="$($SUDO docker image inspect --format '{{.Id}}' devuz:latest devuz:previous 2>/dev/null | sort -u || true)"
+            if [ -n "$KEEP" ]; then
+              DROPPED=0
+              for ref in $($SUDO docker images --format '{{.Repository}}:{{.Tag}}' ghcr.io/egeg23/devuz 2>/dev/null); do
+                full="$($SUDO docker image inspect --format '{{.Id}}' "$ref" 2>/dev/null || true)"
+                printf '%s\n' "$KEEP" | grep -qxF "$full" && continue
+                $SUDO docker rmi "$ref" >/dev/null 2>&1 && DROPPED=$((DROPPED + 1))
+              done
+              echo "  старые образы devuz: убрано ${DROPPED}"
+            else
+              echo "  старые образы devuz: devuz:latest не нашёлся — не трогаю"
+            fi
             $SUDO docker builder prune -af 2>&1 | tail -1 | sed 's/^/  кэш сборки: /' || true
             $SUDO docker image prune -f 2>&1 | tail -1 | sed 's/^/  образы без имени: /' || true
-            $SUDO docker container prune -f --filter "until=72h" 2>&1 | tail -1 | sed 's/^/  остановленные контейнеры: /' || true
             $SUDO journalctl --vacuum-size=300M 2>&1 | tail -1 | sed 's/^/  журнал: /' || true
             $SUDO apt-get clean 2>/dev/null && echo "  кэш apt: убран" || true
             if $SUDO test -d "$APP_DIR/.next/cache"; then
