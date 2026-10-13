@@ -20,10 +20,27 @@ import { serviceClient } from "@/lib/supabase";
  * очередь, а не «всем, кто первый нажал», — правило владельца о тёплых
  * лидах: иначе их снова забирал бы один, самый быстрый.
  *
+ * Не на любой ответ (владелец, 13.10.2026: «лид ответил „Добрый вечер“ и
+ * тут же он становится лидом, без ответа согласен / не согласен? Мы по
+ * одному сообщению не можем определить. Пусть ИИ ведёт переписку до
+ * макета, дальше мы»). Лид заводится, когда ясно, что человек хочет
+ * дальше (LEAD_ON): согласился на макет, просит позвонить или прислать.
+ * Приветствие, вопрос, «посмотрю» — разговор ведёт модель, лида нет. Модель
+ * отпустила разговор сама (первичка закрыта, разговор не сходится, ответ не
+ * прошёл проверку) — лид заводится тогда (leadOnHandover): ответить
+ * клиенту, кроме человека, больше некому.
+ *
  * Модуль лёгкий намеренно: его зовёт скаут, принимая входящее
  * (outreach-talk-store → saveInbound), и тянуть туда аудитор с моделью
  * незачем.
  */
+
+/**
+ * Ответы, на которых касание автопрогона становится лидом: «+» и «да» на
+ * макет, просьба позвать человека или прислать что-то. Всё прочее до
+ * согласия на макет ведёт модель.
+ */
+export const LEAD_ON: ReadonlySet<string> = new Set(["proto", "proto_ready", "human", "send"]);
 
 export type AutopilotReply =
   /** Лид заведён и отдан в очередь. */
@@ -35,7 +52,9 @@ export type AutopilotReply =
    */
   | { kind: "held"; leadId: string }
   /** Попросил не писать: лида нет, и звать никого не надо. */
-  | { kind: "refused" };
+  | { kind: "refused" }
+  /** Ни «да», ни «нет»: переписку до макета ведёт модель, лида пока нет. */
+  | { kind: "ai" };
 
 const FIELDS = "id, host, label, target, target_kind, message, findings, request_no, lead_id";
 
@@ -51,6 +70,20 @@ export async function routeAutopilotReply(
 ): Promise<AutopilotReply | null> {
   const db = serviceClient();
   if (!db) return null;
+
+  // Ни согласия, ни отказа — касание остаётся ничьим, разговор у модели.
+  // Отметку не ставим: следующий ответ («+», «позвоните») заведёт лид.
+  if (verdict !== "stop" && !LEAD_ON.has(verdict)) {
+    const { data: mine } = await db
+      .from("prospects")
+      .select("id")
+      .eq("id", prospectId)
+      .not("autopilot_at", "is", null)
+      .is("autopilot_replied_at", null)
+      .is("claimed_by", null)
+      .maybeSingle();
+    return mine ? { kind: "ai" } : null;
+  }
 
   // Отметка — до лида и условно: два входящих подряд (клиент пишет
   // несколькими сообщениями) не заведут два лида.
@@ -76,6 +109,41 @@ export async function routeAutopilotReply(
   if (verdict === "proto") return { kind: "held", leadId };
   await offerLead(prospectId, leadId, body);
   return { kind: "routed", leadId };
+}
+
+/**
+ * Модель отпустила разговор по касанию автопрогона, а лида ещё нет: завести
+ * и отдать в очередь — иначе ответить клиенту некому. null — касание не
+ * автопрогона или лид уже есть (тогда строка уходит тому, у кого он).
+ */
+export async function leadOnHandover(prospectId: string, why: string): Promise<string | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data: p } = await db
+    .from("prospects")
+    .update({ autopilot_replied_at: new Date().toISOString() })
+    .eq("id", prospectId)
+    .not("autopilot_at", "is", null)
+    .is("autopilot_replied_at", null)
+    .is("claimed_by", null)
+    .select(FIELDS)
+    .maybeSingle();
+  if (!p) return null;
+
+  // Последнее, что написал клиент, — в карточку лида и в шапку.
+  const { data: last } = await db
+    .from("outreach_messages")
+    .select("body")
+    .eq("prospect_id", prospectId)
+    .eq("direction", "in")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const body = String(last?.body ?? why);
+  const leadId = (p.lead_id as string | null) ?? (await createLead(p, body));
+  if (!leadId) return null;
+  await offerLead(prospectId, leadId, body);
+  return leadId;
 }
 
 /** Отдать лид автопрогона в очередь на тёплые лиды. */
@@ -119,7 +187,27 @@ async function createLead(p: Record<string, unknown>, body: string): Promise<str
   const findings = Array.isArray(p.findings) ? (p.findings as { title?: string }[]) : [];
   const titles = findings.map((f) => String(f.title ?? "")).filter(Boolean);
   const what = host ? `Холодное касание автопрогона по сайту ${host}.${titles.length ? ` Нашли: ${titles.slice(0, 4).join("; ")}.` : ""}` : "Холодное касание автопрогона: компания без сайта.";
-  const unknown = "не выяснено — клиент только ответил на первое письмо";
+
+  // Переписка до лида — целиком: до согласия на макет её вела модель, и
+  // менеджер должен видеть, что клиенту уже сказали.
+  const { data: rows } = await db
+    .from("outreach_messages")
+    .select("direction, body")
+    .eq("prospect_id", p.id as string)
+    .order("created_at", { ascending: true })
+    .limit(60);
+  const thread = (rows ?? []).map((r) => ({ who: r.direction === "in" ? "user" : "assistant", text: String(r.body ?? "") }));
+  const talked = thread.filter((m) => m.who === "user").length > 1;
+  const unknown = talked ? "не выяснено — смотрите переписку в карточке" : "не выяснено — клиент только ответил на первое письмо";
+  const transcript = thread.length
+    ? thread.map((m) => ({ role: m.who, content: m.text.slice(0, 4000) }))
+    : [
+        { role: "assistant", content: message },
+        { role: "user", content: body.slice(0, 4000) },
+      ];
+  const history = thread.length
+    ? `\n\nПереписка до лида:\n\n${thread.map((m) => `${m.who === "user" ? "Клиент" : "Мы"}: ${m.text.slice(0, 600)}`).join("\n\n").slice(0, 6000)}`
+    : `\n\nОтвет клиента:\n\n${body.slice(0, 2000)}`;
 
   const { data, error } = await db
     .from("leads")
@@ -154,14 +242,11 @@ async function createLead(p: Record<string, unknown>, body: string): Promise<str
         need: unknown,
         timing: unknown,
       },
-      notes: `Первое письмо отправил автопрогон с рабочего аккаунта студии (подпись «${AUTOPILOT_SENDER}»):\n\n${message}\n\nОтвет клиента:\n\n${body.slice(0, 2000)}`,
+      notes: `Первое письмо отправил автопрогон с рабочего аккаунта студии (подпись «${AUTOPILOT_SENDER}»):\n\n${message}${history}`,
       opening_line: message,
       already_told: [host ? `Разобрали сайт ${host}` : "Написали первыми", ...titles.slice(0, 3)],
       avoid_asking: [],
-      transcript: [
-        { role: "assistant", content: message },
-        { role: "user", content: body.slice(0, 4000) },
-      ],
+      transcript,
       status: "new",
     })
     .select("id")

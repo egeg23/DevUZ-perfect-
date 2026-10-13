@@ -196,7 +196,7 @@ test("открытие: превью мессенджера и свои из п�
 test("ответ про прототип из письма — человеку, а не «нужен прототип» всей команде", () => {
   assert.match(HANDOVER_TEXT.proto_ready, /прототип, который ушёл в письме/);
   const talk = read("lib/admin/outreach-talk-store.ts");
-  assert.match(talk, /const verdict = read === "proto" && protoSent \? "proto_ready" : read;/);
+  assert.match(talk, /const verdict = read === "proto" && protoSent \? "proto_ready" : aiLeads && read === "unclear" \? "talk" : read;/);
   assert.match(talk, /String\(prospect\.message \?\? ""\)\.includes\(prospect\.proto_url\)/);
   assert.match(talk, /closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked, autopilot_at"\)/);
 });

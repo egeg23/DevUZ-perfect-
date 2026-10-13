@@ -11,7 +11,7 @@ import {
 } from "@/lib/admin/outreach-talk";
 import { protoTermsText } from "@/lib/admin/prototype-claim";
 import { announcePrototype } from "@/lib/admin/prototype-claim-store";
-import { offerLead, routeAutopilotReply } from "@/lib/admin/autopilot-reply";
+import { leadOnHandover, offerLead, routeAutopilotReply } from "@/lib/admin/autopilot-reply";
 import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
 import { MAIN_ACCOUNT, accountOf, sentFrom, sentFromText } from "@/lib/admin/work-accounts";
@@ -63,6 +63,8 @@ const REPLY_SCAN = 20;
 
 export type Inbound = {
   messageId: string;
+  /** Когда пришло: клиент пишет несколькими сообщениями подряд (laterInbound). */
+  createdAt: string;
   prospectId: string;
   leadId: string | null;
   host: string;
@@ -75,6 +77,11 @@ export type Inbound = {
   managerName: string;
   managerChatId: number | null;
   repliesSoFar: number;
+  /**
+   * Касание автопрогона без лида: модель ведёт к согласию на бесплатный
+   * макет, а не к созвону (untilMockup).
+   */
+  untilMockup: boolean;
 };
 
 /**
@@ -276,7 +283,7 @@ export async function recordManualInbound(
 
   const { data: prospect } = await db
     .from("prospects")
-    .select("id, host, target, target_user_id, lead_id, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked, autopilot_at")
+    .select("id, host, target, target_user_id, lead_id, claimed_by, ai_handling, closed_reason, proto_url, message, hello_at, pitch_at, checked_at, walked, autopilot_at")
     .eq("id", prospectId)
     .maybeSingle();
   if (!prospect) return { matched: false };
@@ -312,6 +319,7 @@ async function saveInbound(
     walked?: unknown;
     /** Касание автопрогона: письмо к нему пишется после ответа (LETTER_AFTER_REPLY). */
     autopilot_at?: unknown;
+    claimed_by?: unknown;
   },
   raw: string,
 ): Promise<{ matched: boolean; host?: string; verdict?: string }> {
@@ -356,7 +364,13 @@ async function saveInbound(
     typeof prospect.proto_url === "string" &&
     prospect.proto_url !== "" &&
     String(prospect.message ?? "").includes(prospect.proto_url);
-  const verdict = read === "proto" && protoSent ? "proto_ready" : read;
+  // Касание автопрогона до лида: переписку до согласия на макет ведёт модель
+  // (владелец, 13.10.2026: «по одному сообщению не можем определить. Пусть
+  // ИИ ведёт переписку до макета, дальше мы»). Короткое «Добрый вечер»,
+  // «спасибо», «посмотрю» — не повод звать человека: модель ответит и снова
+  // предложит макет. Отказ, «+», «позвоните», «пришлите» — как всегда.
+  const aiLeads = untilMockup(prospect);
+  const verdict = read === "proto" && protoSent ? "proto_ready" : aiLeads && read === "unclear" ? "talk" : read;
 
   // Просьбу не писать и просьбу позвать человека модель не обсуждает.
   // Первая — потому что следующее сообщение после неё и есть то, за что
@@ -619,7 +633,7 @@ export async function pendingTalks(limit = 5): Promise<Inbound[]> {
 
   const { data } = await db
     .from("outreach_messages")
-    .select("id, prospect_id, lead_id, body")
+    .select("id, prospect_id, lead_id, body, created_at")
     .eq("direction", "in")
     .is("answered_at", null)
     .order("created_at", { ascending: true })
@@ -629,7 +643,7 @@ export async function pendingTalks(limit = 5): Promise<Inbound[]> {
   for (const row of data ?? []) {
     const { data: p } = await db
       .from("prospects")
-      .select("id, host, label, target, message, findings, lead_id, ai_handling, request_no, claimed_by")
+      .select("id, host, label, target, message, findings, lead_id, ai_handling, request_no, claimed_by, autopilot_at")
       .eq("id", row.prospect_id)
       .maybeSingle();
     if (!p) continue;
@@ -659,6 +673,7 @@ export async function pendingTalks(limit = 5): Promise<Inbound[]> {
 
     out.push({
       messageId: String(row.id),
+      createdAt: String(row.created_at),
       prospectId: String(p.id),
       leadId: (row.lead_id as string | null) ?? (p.lead_id as string | null) ?? null,
       host: String(p.host),
@@ -675,9 +690,27 @@ export async function pendingTalks(limit = 5): Promise<Inbound[]> {
       managerName: String(staff?.display_name ?? "менеджер студии"),
       managerChatId: Number(staff?.telegram_user_id) || null,
       repliesSoFar: count ?? 0,
+      untilMockup: untilMockup(p),
     });
   }
   return out;
+}
+
+/**
+ * После этого входящего клиент написал ещё. «Добрый вечер» и следом «Какие
+ * идеи?» — один заход: отвечать на каждое отдельно значит дважды подряд
+ * писать человеку. Отвечаем на последнее — модель видит всю ленту.
+ */
+export async function laterInbound(prospectId: string, createdAt: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { count } = await db
+    .from("outreach_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("prospect_id", prospectId)
+    .eq("direction", "in")
+    .gt("created_at", createdAt);
+  return Boolean(count);
 }
 
 /** Лента разговора целиком — её читает и модель, и менеджер в карточке. */
@@ -730,7 +763,19 @@ export async function handOver(prospectId: string, reason: string, note: string)
     .from("prospects")
     .update({ ai_handling: false, handover_reason: HANDOVER_TEXT[reason] ?? reason })
     .eq("id", prospectId);
+  // Касание автопрогона, которое модель вела до макета, ничьё: лид
+  // заводится сейчас и идёт в очередь на тёплые лиды — строку о нём получит
+  // тот, кому лид достанется (lib/admin/autopilot-reply.ts).
+  if (await leadOnHandover(prospectId, note).catch(() => null)) return;
   await tellManager(prospectId, note);
+}
+
+/**
+ * Касание автопрогона, по которому лида ещё нет: модель ведёт переписку до
+ * согласия на макет. Взял человек или лид уже заведён — как обычно.
+ */
+export function untilMockup(p: { autopilot_at?: unknown; lead_id?: unknown; claimed_by?: unknown; ai_handling?: unknown }): boolean {
+  return Boolean(p.autopilot_at) && !p.lead_id && !p.claimed_by && p.ai_handling !== false;
 }
 
 /**

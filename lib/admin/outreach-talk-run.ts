@@ -6,6 +6,7 @@ import {
 } from "@/lib/admin/outreach-talk";
 import {
   handOver,
+  laterInbound,
   markAnswered,
   pendingTalks,
   queueReply,
@@ -60,9 +61,15 @@ export async function runTalks(limit = 5): Promise<TalkRun> {
   return run;
 }
 
-type Outcome = "replied" | "handed";
+type Outcome = "replied" | "handed" | "merged";
 
 async function answerOne(inbound: Inbound): Promise<Outcome> {
+  // Клиент написал ещё — ответим один раз, на последнее, по всей ленте.
+  if (await laterInbound(inbound.prospectId, inbound.createdAt)) {
+    await markAnswered(inbound.messageId);
+    return "merged";
+  }
+
   // Разговор, который не сошёлся за дюжину реплик, дальше не сойдётся.
   // Держать его моделью значит тратить деньги и время человека, которому
   // он всё равно достанется.
@@ -83,6 +90,7 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
     firstMessage: inbound.firstMessage,
     managerName: inbound.managerName,
     repliesSoFar: inbound.repliesSoFar,
+    untilMockup: inbound.untilMockup,
   });
 
   const thread = await threadFor(inbound.prospectId);
