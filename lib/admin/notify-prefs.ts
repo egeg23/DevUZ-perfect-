@@ -36,6 +36,7 @@ export const NOTICE_KINDS = [
   "reports",
   "tasks",
   "morning",
+  "silence",
 ] as const;
 export type NoticeKind = (typeof NOTICE_KINDS)[number];
 
@@ -169,6 +170,22 @@ export const NOTICES: Record<NoticeKind, { title: Tr; off: Tr; roles: readonly R
       ru: "утреннее пожелание хорошего дня по имени не приходит — больше ничего не меняется",
       uz: "ertalab ismi bilan xayrli kun tilagi kelmaydi — boshqa hech narsa o‘zgarmaydi",
       pl: "poranne życzenia miłego dnia z imieniem nie przychodzą — nic więcej się nie zmienia",
+    },
+    roles: IN_QUEUE,
+  },
+  // Владелец, 13.10.2026: в 12:00 напомнить о порции тому, кто за день ещё
+  // ничего не сделал (lib/admin/silence.ts). Строка руководителям в 15:00 —
+  // под «Отчётами», не здесь.
+  silence: {
+    title: {
+      ru: "Напоминание в 12:00, если день не начат",
+      uz: "Kun boshlanmagan bo‘lsa, 12:00 dagi eslatma",
+      pl: "Przypomnienie o 12:00, jeśli dzień nie ruszył",
+    },
+    off: {
+      ru: "в полдень бот не напомнит про порцию, даже если касаний ещё нет; руководитель о молчании в 15:00 всё равно узнает",
+      uz: "tushda bot hali aloqa bo‘lmasa ham kunlik to‘plamni eslatmaydi; rahbar soat 15:00 da baribir bilib oladi",
+      pl: "w południe bot nie przypomni o porcji, nawet gdy nie ma jeszcze kontaktów; kierownik i tak dowie się o 15:00",
     },
     roles: IN_QUEUE,
   },

@@ -8,6 +8,7 @@ import { broadcastDuePrototypes } from "@/lib/admin/prototype-claim-store";
 import { runTaskSweep } from "@/lib/admin/task-store";
 import { sendTeamNews } from "@/lib/admin/team-news";
 import { sendMorningGreetings } from "@/lib/admin/morning-store";
+import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { sendBloggerInvites, sendInviteSummary } from "@/lib/admin/blogger-invite-store";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
@@ -305,6 +306,11 @@ async function sweep(): Promise<Response> {
   // раз (lib/admin/morning-store).
   after(async () => {
     await sendMorningGreetings(new Date()).catch((error) => console.error("доброе утро:", error));
+  });
+  // Сигнал о молчании: в 12:00 — тому, у кого за день ни касаний, ни
+  // панели, в 15:00 — руководителям, кто молчит (lib/admin/silence-store).
+  after(async () => {
+    await runSilence(new Date()).catch((error) => console.error("молчание:", error));
   });
   // Приглашение «Работа с блогерами» с кнопками и итог владельцу в 18:00
   // (lib/admin/blogger-invite-store). Каждому — один раз, не ночью.
