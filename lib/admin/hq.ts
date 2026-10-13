@@ -1,0 +1,569 @@
+/**
+ * «Главная» — командный центр владельца и руководителя (app/admin/hq).
+ *
+ * Владелец, 13.10.2026: «коротко что в компании, сколько лидов, сколько в
+ * работе, сколько отправили прототипов и ждём ответ… карточки наших
+ * сотрудников… Это командный центр с самыми важными пунктами».
+ *
+ * Здесь только арифметика над строками из базы — без запросов и без модели:
+ * одни и те же строки дают одни и те же числа, и всё проверяется тестом
+ * (tests/hq.test.ts). Строки собирает lib/admin/hq-store.ts.
+ *
+ * Время — Ташкент. «Сегодня» — с полуночи по Ташкенту, «за 7 дней» —
+ * последние 7 × 24 часа, и сравнение — с 7 днями до них. Неделя здесь не
+ * календарная намеренно: в понедельник утром календарная неделя пуста, и
+ * сравнение «0 против 34» ничего не говорит.
+ */
+
+import { activeNow, latest } from "@/lib/admin/lead-queue";
+import { tallyPortion, type PortionOutcome } from "@/lib/admin/portion";
+import { TASHKENT_OFFSET_MS, tashkentMidnight, todayInTashkent } from "@/lib/admin/pulse";
+import type { Role } from "@/lib/admin/roles";
+import { isModelTroubleSays } from "@/lib/model-trouble";
+
+export const HQ_HREF = "/admin/hq";
+
+const DAY_MS = 24 * 3600_000;
+const WEEK_MS = 7 * DAY_MS;
+
+/** Пульс обновляется сам, пока страница открыта и видна. */
+export const HQ_REFRESH_MS = 90_000;
+
+/* ── Сравнение «7 дней против 7 дней до них» ─────────────────────────── */
+
+export type Trend = { now: number; prev: number };
+
+/** Сколько меток попало в последние 7 дней и в 7 дней до них. */
+export function trendOf(stamps: readonly (string | null | undefined)[], now: Date): Trend {
+  const end = now.getTime();
+  let cur = 0;
+  let prev = 0;
+  for (const s of stamps) {
+    if (!s) continue;
+    const t = Date.parse(s);
+    if (!Number.isFinite(t) || t > end) continue;
+    if (t > end - WEEK_MS) cur += 1;
+    else if (t > end - 2 * WEEK_MS) prev += 1;
+  }
+  return { now: cur, prev };
+}
+
+/** Разница с прошлым периодом: +3, −2, 0. */
+export function deltaOf(t: Trend): number {
+  return t.now - t.prev;
+}
+
+/** Полночь сегодня по Ташкенту — момент времени. */
+export function dayStartOf(now: Date): number {
+  return tashkentMidnight(todayInTashkent(now)).getTime();
+}
+
+const since = (at: string | null | undefined, from: number) => Boolean(at) && Date.parse(at as string) >= from;
+
+/* ── Лиды ────────────────────────────────────────────────────────────── */
+
+export type HqLead = {
+  id: string;
+  created_at: string;
+  status: string;
+  priority: string;
+  assigned_staff_id: string | null;
+  /** Номер заявки, компания или имя — как звать лида в списке. */
+  label: string;
+};
+
+export type HqOffer = { lead_id: string; staff_id: string; expires_at: string };
+
+export type HqEvent = {
+  action: string;
+  created_at: string;
+  actor_staff_id: string | null;
+  target_id: string | null;
+  meta: Record<string, unknown> | null;
+};
+
+/** Тёплый — то, что очередь предлагает людям: горячий и тёплый приоритет. */
+export const WARM_PRIORITIES: readonly string[] = ["hot", "warm"];
+
+export type LeadsPulse = {
+  newToday: number;
+  new7: Trend;
+  /** «В работе» — статус taken. */
+  inWork: number;
+  /** Предлагается кому-то прямо сейчас: 30 минут ещё идут. */
+  offered: number;
+  /** Тёплые новые без хозяина и без действующего предложения — их никто не держит. */
+  unowned: HqLead[];
+  won7: Trend;
+  lost7: Trend;
+};
+
+/**
+ * «Выиграли» и «проиграли» — по журналу, а не по полю лида: у лида нет
+ * времени смены статуса, а журнал помнит, когда нажали. «Проиграли» сам
+ * (21+ день без движения, lib/admin/lead-tidy.ts) — тоже проигрыш.
+ */
+export function outcomeOf(e: HqEvent): "won" | "lost" | null {
+  if (e.action === "lead.auto_lost") return "lost";
+  if (e.action !== "lead.status_changed") return null;
+  const to = e.meta?.to;
+  return to === "won" ? "won" : to === "lost" ? "lost" : null;
+}
+
+export function leadsPulse(leads: readonly HqLead[], offers: readonly HqOffer[], events: readonly HqEvent[], now: Date): LeadsPulse {
+  const today = dayStartOf(now);
+  const offeredIds = new Set(offers.filter((o) => Date.parse(o.expires_at) > now.getTime()).map((o) => o.lead_id));
+  return {
+    newToday: leads.filter((l) => since(l.created_at, today)).length,
+    new7: trendOf(
+      leads.map((l) => l.created_at),
+      now,
+    ),
+    inWork: leads.filter((l) => l.status === "taken").length,
+    offered: offeredIds.size,
+    unowned: leads
+      .filter((l) => !l.assigned_staff_id && l.status === "new" && WARM_PRIORITIES.includes(l.priority) && !offeredIds.has(l.id))
+      .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)),
+    won7: trendOf(
+      events.filter((e) => outcomeOf(e) === "won").map((e) => e.created_at),
+      now,
+    ),
+    lost7: trendOf(
+      events.filter((e) => outcomeOf(e) === "lost").map((e) => e.created_at),
+      now,
+    ),
+  };
+}
+
+/* ── Касания ─────────────────────────────────────────────────────────── */
+
+export type HqProspect = {
+  id: string;
+  status: string;
+  touched_by: string | null;
+  touched_at: string | null;
+  sent_at: string | null;
+  autopilot_at: string | null;
+  replied_at: string | null;
+};
+
+export type HqPortionRow = { staff_id: string; replaces: string | null; outcome: string | null; source: string | null };
+
+export type TouchesPulse = {
+  /** Ушло сегодня: люди и автопрогон вместе, одна компания — одно касание. */
+  today: number;
+  /** Норма дня: порции людей плюс норма автопрогона, если он включён. */
+  norm: number;
+  portionTarget: number;
+  portionDone: number;
+  autopilotSent: number;
+  /** Норма автопрогона; null — выключен. */
+  autopilotTarget: number | null;
+  repliesToday: number;
+  sent7: Trend;
+  replies7: Trend;
+};
+
+/** Касание человека — как в touch-store: по тому, кто написал, неудавшиеся не в счёте. */
+function personTouchAt(p: HqProspect): string | null {
+  return p.touched_by && p.touched_at && p.status !== "failed" ? p.touched_at : null;
+}
+
+/** Касание автопрогона — ушедшее письмо, которое не написал человек. */
+function autopilotSentAt(p: HqProspect): string | null {
+  return p.autopilot_at && !p.touched_by && p.status === "sent" ? p.sent_at : null;
+}
+
+/** Когда компания получила касание — человеком или автопрогоном. */
+export function touchAt(p: HqProspect): string | null {
+  return personTouchAt(p) ?? autopilotSentAt(p);
+}
+
+export function touchesPulse(
+  prospects: readonly HqProspect[],
+  portions: readonly HqPortionRow[],
+  autopilot: { enabled: boolean; target: number },
+  now: Date,
+): TouchesPulse {
+  const today = dayStartOf(now);
+  const real = portions
+    .filter((r) => r.source !== "stream")
+    .map((r) => ({
+      replaces: r.replaces,
+      outcome: r.outcome === "expired" ? null : ((r.outcome as PortionOutcome | null) ?? null),
+    }));
+  const tally = tallyPortion(real);
+  const autopilotTarget = autopilot.enabled ? autopilot.target : null;
+  return {
+    today: prospects.filter((p) => since(touchAt(p), today)).length,
+    norm: tally.target + (autopilotTarget ?? 0),
+    portionTarget: tally.target,
+    portionDone: tally.done,
+    autopilotSent: prospects.filter((p) => since(autopilotSentAt(p), today)).length,
+    autopilotTarget,
+    repliesToday: prospects.filter((p) => since(p.replied_at, today)).length,
+    sent7: trendOf(prospects.map(touchAt), now),
+    replies7: trendOf(
+      prospects.map((p) => p.replied_at),
+      now,
+    ),
+  };
+}
+
+/* ── Макеты ──────────────────────────────────────────────────────────── */
+
+export type HqMockup = {
+  id: string;
+  client: string;
+  mockup_name: string;
+  status: string;
+  sent_at: string;
+  expires_at: string;
+  approved_at: string | null;
+};
+
+export type MockupsPulse = {
+  sent7: Trend;
+  /** Акция 48 часов идёт: макет у клиента, ждём ответа. */
+  waiting: number;
+  /** Ближайшая к концу акция. */
+  soonest: { client: string; endsAt: string } | null;
+  /** Акций, которым осталось меньше ENDING_SOON_H часов. */
+  endingSoon: number;
+  approved7: Trend;
+};
+
+export const ENDING_SOON_H = 6;
+
+export function liveOffer(m: HqMockup, now: Date): boolean {
+  return m.status === "active" && Date.parse(m.expires_at) > now.getTime();
+}
+
+export function mockupsPulse(mockups: readonly HqMockup[], now: Date): MockupsPulse {
+  const live = mockups.filter((m) => liveOffer(m, now)).sort((a, b) => Date.parse(a.expires_at) - Date.parse(b.expires_at));
+  return {
+    sent7: trendOf(
+      mockups.map((m) => m.sent_at),
+      now,
+    ),
+    waiting: live.length,
+    soonest: live[0] ? { client: live[0].client || live[0].mockup_name, endsAt: live[0].expires_at } : null,
+    endingSoon: live.filter((m) => Date.parse(m.expires_at) - now.getTime() <= ENDING_SOON_H * 3600_000).length,
+    approved7: trendOf(
+      mockups.map((m) => m.approved_at),
+      now,
+    ),
+  };
+}
+
+/** «5 ч 20 мин», «40 мин» — сколько осталось до конца. Числа, без слов: слова — в словаре. */
+export function leftOf(endsAt: string, now: Date): { h: number; m: number } {
+  const ms = Math.max(0, Date.parse(endsAt) - now.getTime());
+  const total = Math.floor(ms / 60_000);
+  return { h: Math.floor(total / 60), m: total % 60 };
+}
+
+/* ── Задачи ──────────────────────────────────────────────────────────── */
+
+export type HqTask = {
+  id: string;
+  title: string;
+  assignee_id: string;
+  creator_id: string;
+  status: string;
+  due_at: string;
+  closed_at: string | null;
+};
+
+export const OPEN_TASK: readonly string[] = ["new", "in_work"];
+
+export type TasksPulse = { open: number; overdue: HqTask[]; done7: Trend };
+
+export function isOverdue(t: HqTask, now: Date): boolean {
+  return OPEN_TASK.includes(t.status) && Date.parse(t.due_at) < now.getTime();
+}
+
+export function tasksPulse(tasks: readonly HqTask[], now: Date): TasksPulse {
+  return {
+    open: tasks.filter((t) => OPEN_TASK.includes(t.status)).length,
+    overdue: tasks.filter((t) => isOverdue(t, now)).sort((a, b) => Date.parse(a.due_at) - Date.parse(b.due_at)),
+    done7: trendOf(
+      tasks.filter((t) => t.status === "done").map((t) => t.closed_at),
+      now,
+    ),
+  };
+}
+
+/* ── Деньги — только владельцу ───────────────────────────────────────── */
+
+export type HqPayment = { amount_usd: number; paid_on: string };
+
+export type MoneyPulse = {
+  /** Поступило за 7 дней и за 7 дней до них, $. */
+  received7: Trend;
+  /** С первого числа месяца по Ташкенту, $. */
+  month: number;
+  /** Договоров ждут подписи. */
+  contracts: number;
+};
+
+/**
+ * Оплата — дата без времени (paid_on). «За 7 дней» по датам: сегодня и
+ * шесть дней до него; прошлые 7 — ещё семь дней раньше.
+ */
+export function moneyPulse(payments: readonly HqPayment[], contracts: number, now: Date): MoneyPulse {
+  const today = todayInTashkent(now);
+  const dayOf = (offset: number) => {
+    const d = new Date(Date.parse(`${today}T00:00:00Z`) - offset * DAY_MS);
+    return d.toISOString().slice(0, 10);
+  };
+  const from = dayOf(6);
+  const prevFrom = dayOf(13);
+  const month = `${today.slice(0, 7)}-01`;
+  const sum = (rows: readonly HqPayment[]) => Math.round(rows.reduce((s, r) => s + (Number(r.amount_usd) || 0), 0));
+  const upTo = payments.filter((p) => p.paid_on <= today);
+  return {
+    received7: {
+      now: sum(upTo.filter((p) => p.paid_on >= from)),
+      prev: sum(upTo.filter((p) => p.paid_on >= prevFrom && p.paid_on < from)),
+    },
+    month: sum(upTo.filter((p) => p.paid_on >= month)),
+    contracts,
+  };
+}
+
+/** Деньги на «Главной» — только владельцу: руководитель долю студии не видит (seesOwnerMoney). */
+export function seesHqMoney(role: Role): boolean {
+  return role === "admin";
+}
+
+/* ── Люди ────────────────────────────────────────────────────────────── */
+
+export type HqStaffRow = { id: string; display_name: string; role: Role; bot_seen_at: string | null };
+
+export type HqPresence = { staff_id: string; minutes: number; first_at: string | null; last_at: string | null };
+
+export type HqPersonInput = {
+  staff: HqStaffRow;
+  presence: HqPresence | null;
+  /** Последний просмотр раздела сегодня (panel_usage). */
+  lastView: string | null;
+  /** Последнее действие в журнале за полчаса. */
+  lastAction: string | null;
+  touches: number;
+  portion: readonly HqPortionRow[];
+  inWork: number;
+  burnedToday: number;
+  stale: number;
+  tasks: readonly HqTask[];
+};
+
+export type HqPerson = {
+  id: string;
+  name: string;
+  role: Role;
+  initials: string;
+  /** Был активен за последние 30 минут: панель, журнал, кнопка в боте. */
+  online: boolean;
+  activeAt: string | null;
+  firstAt: string | null;
+  minutes: number;
+  touches: number;
+  portionTarget: number;
+  portionDone: number;
+  inWork: number;
+  burnedToday: number;
+  stale: number;
+  openTasks: number;
+  overdue: number;
+  /** Сводка для цвета карточки. */
+  mood: Mood;
+};
+
+/**
+ * Настроение карточки — правилом, по тем же меркам, что вечерний отчёт:
+ * - `alert` — есть просроченные задачи или сгоревшие предложения;
+ * - `done` — порция дня сделана;
+ * - `idle` — сегодня ни панели, ни касаний (после 12:00 это уже повод);
+ * - `work` — всё остальное.
+ */
+export type Mood = "alert" | "done" | "idle" | "work";
+
+/** Инициалы для круглой метки: «Данил Петров» → «ДП», «@egor» → «E». */
+export function initials(name: string): string {
+  const words = name
+    .replace(/^@/, "")
+    .split(/[\s._-]+/)
+    .filter((w) => /\p{L}/u.test(w));
+  const letters = words.slice(0, 2).map((w) => [...w].find((c) => /\p{L}/u.test(c)) ?? "");
+  return letters.join("").toUpperCase() || "•";
+}
+
+export function personOf(input: HqPersonInput, now: Date): HqPerson {
+  const { staff, presence } = input;
+  const activeAt = latest(presence?.last_at, input.lastView, input.lastAction, staff.bot_seen_at);
+  const real = input.portion
+    .filter((r) => r.source !== "stream")
+    .map((r) => ({ replaces: r.replaces, outcome: r.outcome === "expired" ? null : ((r.outcome as PortionOutcome | null) ?? null) }));
+  const tally = tallyPortion(real);
+  const open = input.tasks.filter((t) => t.assignee_id === staff.id && OPEN_TASK.includes(t.status));
+  const overdue = open.filter((t) => isOverdue(t, now)).length;
+  const today = dayStartOf(now);
+  const seenToday = since(activeAt, today) || (presence?.minutes ?? 0) > 0;
+  const touches = Math.max(input.touches, tally.done);
+  const mood: Mood =
+    overdue > 0 || input.burnedToday > 0
+      ? "alert"
+      : tally.target > 0 && tally.done >= tally.target
+        ? "done"
+        : !seenToday && touches === 0
+          ? "idle"
+          : "work";
+  return {
+    id: staff.id,
+    name: staff.display_name,
+    role: staff.role,
+    initials: initials(staff.display_name),
+    online: activeNow(activeAt, now),
+    activeAt,
+    firstAt: presence?.first_at ?? null,
+    minutes: presence?.minutes ?? 0,
+    touches,
+    portionTarget: tally.target,
+    portionDone: tally.done,
+    inWork: input.inWork,
+    burnedToday: input.burnedToday,
+    stale: input.stale,
+    openTasks: open.length,
+    overdue,
+    mood,
+  };
+}
+
+/** Порядок карточек: сначала тревожные, потом кто на месте, потом по имени. */
+export function sortPeople(people: readonly HqPerson[]): HqPerson[] {
+  const rank: Record<Mood, number> = { alert: 0, work: 1, done: 2, idle: 3 };
+  return [...people].sort(
+    (a, b) =>
+      rank[a.mood] - rank[b.mood] || Number(b.online) - Number(a.online) || a.name.localeCompare(b.name, "ru"),
+  );
+}
+
+/** «09:05» по Ташкенту. */
+export function clockOf(iso: string): string {
+  const t = new Date(Date.parse(iso) + TASHKENT_OFFSET_MS);
+  return `${String(t.getUTCHours()).padStart(2, "0")}:${String(t.getUTCMinutes()).padStart(2, "0")}`;
+}
+
+/* ── «Требует внимания» ──────────────────────────────────────────────── */
+
+export type Attention =
+  | { kind: "sweep"; level: "red"; minutes: number | null }
+  | { kind: "autopilot"; level: "red"; error: string }
+  | { kind: "model"; level: "red"; error: string }
+  | { kind: "ban"; level: "red"; account: string; until: string }
+  | { kind: "circle"; level: "gold"; accounts: string[]; lang: "ru" | "uz" }
+  | { kind: "circleFallback"; level: "gold"; n: number }
+  | { kind: "unowned"; level: "red"; n: number; first: string }
+  | { kind: "burned"; level: "gold"; n: number }
+  | { kind: "overdue"; level: "red"; n: number }
+  | { kind: "stale"; level: "gold"; n: number }
+  | { kind: "transfers"; level: "gold"; n: number }
+  | { kind: "contracts"; level: "gold"; n: number }
+  | { kind: "ending"; level: "gold"; n: number }
+  | { kind: "firecrawl"; level: "gold"; remaining: number };
+
+export type AttentionKind = Attention["kind"];
+
+/** Куда ведёт строка «Требует внимания» — туда, где за ней подробности. */
+export const ATTENTION_HREF: Record<AttentionKind, string> = {
+  sweep: "/admin/help#leads-banner",
+  autopilot: "/admin/prospect",
+  model: "/admin/prospect",
+  ban: "/admin/accounts",
+  circle: "/admin/accounts",
+  circleFallback: "/admin/accounts",
+  unowned: "/admin?owner=free",
+  burned: "/admin/hq#people",
+  overdue: "/admin/tasks",
+  stale: "/admin?status=taken",
+  transfers: "/admin",
+  contracts: "/admin/contracts",
+  ending: "/admin/mockups",
+  firecrawl: "/admin/prospect",
+};
+
+/** Свип ходит раз в 5 минут; полчаса тишины — авария (как плашка в components/admin/sweep-banner.tsx). */
+export const SWEEP_STALE_MIN = 30;
+
+/** Firecrawl: меньше стольких кредитов — пора думать о пополнении. */
+export const FIRECRAWL_LOW = 300;
+
+export type AttentionInput = {
+  role: Role;
+  now: Date;
+  sweep: { last_ok_at: string | null; alerted: boolean } | null;
+  /** Сбой автопрогона за сегодня (stats_snapshots «autopilot-trouble»). */
+  autopilotTrouble: { error: string; at: string } | null;
+  /** Ограничения Telegram: подпись аккаунта и до какого момента. */
+  bans: readonly { account: string; until: number }[];
+  /** Рабочие аккаунты без кружка в «Избранном» (только те, о ком скаут уже знает). */
+  circlesMissing: { ru: string[]; uz: string[] };
+  /** Сегодня вместо кружка ушло письмо: кружка не было в «Избранном». */
+  circleFallback: number;
+  leads: LeadsPulse;
+  burnedToday: number;
+  overdue: number;
+  stale: number;
+  transfers: number;
+  contracts: number;
+  mockups: MockupsPulse;
+  firecrawlRemaining: number | null;
+};
+
+/**
+ * Что горит прямо сейчас — только то, что видно в базе. Красное — первым:
+ * авария или клиент, которого никто не держит; жёлтое — то, что сгорит,
+ * если не заняться сегодня. Пусто — значит, тушить нечего.
+ */
+export function attentionOf(input: AttentionInput): Attention[] {
+  const out: Attention[] = [];
+  const now = input.now.getTime();
+  const today = dayStartOf(input.now);
+
+  if (input.sweep) {
+    const last = input.sweep.last_ok_at ? Date.parse(input.sweep.last_ok_at) : Number.NaN;
+    const minutes = Number.isFinite(last) ? Math.round((now - last) / 60_000) : null;
+    if (minutes === null || minutes > SWEEP_STALE_MIN || input.sweep.alerted) out.push({ kind: "sweep", level: "red", minutes });
+  }
+
+  if (input.autopilotTrouble && Date.parse(input.autopilotTrouble.at) >= today) {
+    const pieces = input.autopilotTrouble.error.split(/;\s*/).filter(Boolean);
+    const model = pieces.find((p) => isModelTroubleSays(p) || isModelTroubleSays(p.replace(/^[^:]{1,60}:\s*/, "")));
+    if (model) out.push({ kind: "model", level: "red", error: model });
+    else out.push({ kind: "autopilot", level: "red", error: input.autopilotTrouble.error });
+  }
+
+  for (const ban of input.bans) {
+    if (ban.until > now) out.push({ kind: "ban", level: "red", account: ban.account, until: new Date(ban.until).toISOString() });
+  }
+
+  if (input.leads.unowned.length) {
+    out.push({ kind: "unowned", level: "red", n: input.leads.unowned.length, first: input.leads.unowned[0].label });
+  }
+  if (input.overdue) out.push({ kind: "overdue", level: "red", n: input.overdue });
+
+  if (input.circlesMissing.ru.length) out.push({ kind: "circle", level: "gold", accounts: input.circlesMissing.ru, lang: "ru" });
+  if (input.circlesMissing.uz.length) out.push({ kind: "circle", level: "gold", accounts: input.circlesMissing.uz, lang: "uz" });
+  if (input.circleFallback) out.push({ kind: "circleFallback", level: "gold", n: input.circleFallback });
+  if (input.burnedToday) out.push({ kind: "burned", level: "gold", n: input.burnedToday });
+  if (input.transfers) out.push({ kind: "transfers", level: "gold", n: input.transfers });
+  if (input.mockups.endingSoon) out.push({ kind: "ending", level: "gold", n: input.mockups.endingSoon });
+  if (input.stale) out.push({ kind: "stale", level: "gold", n: input.stale });
+  if (input.contracts && seesHqMoney(input.role)) out.push({ kind: "contracts", level: "gold", n: input.contracts });
+  if (input.firecrawlRemaining !== null && input.firecrawlRemaining < FIRECRAWL_LOW) {
+    out.push({ kind: "firecrawl", level: "gold", remaining: Math.max(0, Math.floor(input.firecrawlRemaining)) });
+  }
+
+  return out.sort((a, b) => Number(b.level === "red") - Number(a.level === "red"));
+}

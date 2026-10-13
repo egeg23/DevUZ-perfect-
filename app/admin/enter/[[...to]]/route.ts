@@ -10,6 +10,7 @@ import {
 } from "@/lib/admin/session";
 import { PANEL_LANG_COOKIE } from "@/lib/admin/i18n";
 import { AUTH_FRESH_SECONDS, checkTelegramAuth, destinationFrom } from "@/lib/admin/tg-auth";
+import { homeOf } from "@/lib/admin/roles";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
 import { absoluteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
@@ -55,7 +56,7 @@ export async function GET(
 ) {
   const ip = ipFromHeaders(request.headers);
   const { to } = await context.params;
-  const destination = destinationFrom(to);
+  const asked = destinationFrom(to);
 
   const fail = (code: string) => {
     const response = NextResponse.redirect(absoluteUrl(`admin/login?e=${code}`));
@@ -89,6 +90,10 @@ export async function GET(
     await record("login.failed", { ip, meta: { via: "telegram_button", why: "not_staff" } });
     return fail("1");
   }
+
+  // Ссылка без адреса — «открыть панель»: владельцу и руководителю это
+  // «Главная», остальным — «Лиды», как раньше (homeOf).
+  const destination = asked === "/admin" ? homeOf(staff) : asked;
 
   const db = serviceClient();
   if (!db) return fail("2");

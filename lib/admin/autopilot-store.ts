@@ -421,7 +421,7 @@ async function searchStats(db: Db, since: Date, now: Date): Promise<SearchStats 
   };
 }
 
-const TROUBLE_KEY = "autopilot-trouble";
+export const TROUBLE_KEY = "autopilot-trouble";
 
 /**
  * Сбой прохода — в базу, чтобы отчёт в 18:00 назвал его, а не гадал «в нише

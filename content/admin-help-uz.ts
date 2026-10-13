@@ -67,6 +67,51 @@ export const uz: HelpCopy = {
   },
 
   sections: {
+    /* ── Bosh sahifa ───────────────────────────────────────────────────── */
+    "/admin/hq": {
+      what: "Egasi va rahbar uchun boshqaruv markazi: bitta ekranda kompaniyada bugun va 7 kunda nima bo‘layotgani, hozir nima yonayotgani va jamoadagi har bir kishi nima bilan bandligi. Panelga kirgandan keyin va «DevUz» logotipi bosilganda shu yerga tushasiz. Sahifa ochiq va ko‘rinib turgan paytda raqamlar bir yarim daqiqada bir marta o‘zi yangilanadi.",
+      items: [
+        {
+          id: "pulse",
+          title: "Kompaniya holati: lidlar, aloqalar, maketlar, vazifalar",
+          body: {
+            head: [
+              "To‘rtta kartochka. Katta raqam — kartochkadagi asosiy narsa, ostidagi qatorlar — tafsilotlar. Istalgan raqamni bosing — uning ortidagi narsa ochiladi: kerakli filtrli lidlar ro‘yxati, [Aloqalar](/admin/prospect), [Maketlar](/admin/mockups), vazifalar tarixi.",
+              "«Lidlar»: katta raqam — butun jamoada «ishda» turgan lidlar soni. Ostida — bugun va 7 kunda yangilari, hozir navbat bo‘yicha kimgadir taklif qilinayotgan issiq lidlar (olish uchun 30 daqiqa bor), egasiz issiq lidlar (ularni hech kim ushlab turmaydi — bu aralashish uchun sabab), 7 kunda yutilgan va yutqazilganlar. «Yutildi» va «yutqazildi» holatni o‘zgartirish bosilgani bo‘yicha hisoblanadi, «yutqazildi»ga 21 kun harakatsiz qolgani uchun bot o‘zi yopganlari ham kiradi.",
+              "«Aloqalar»: katta raqam — bugun nechta kompaniya aloqa olgani, xodimlar va avtoyurish birga, kunlik me’yorga nisbatan. Me’yor — barcha xodimlarning kunlik porsiyasi va yoqilgan bo‘lsa avtoyurish me’yori. Chiziq qancha bajarilganini ko‘rsatadi. Ostida — xodimlar porsiyasi va avtoyurish alohida, bugun va 7 kunda nechta mijoz javob bergani.",
+              "«Maketlar»: katta raqam — 48 soatlik aksiya davom etayotgan paytda mijozlardagi maketlar soni, ostida — kimda aksiya hammadan oldin tugaydi. Yana — 7 kunda nechta maket yuborilgani va tasdiqlangani. «Vazifalar»: butun jamoaning ochiq, muddati o‘tgan va 7 kunda bajarilgan vazifalari.",
+              "7 kunlik raqamlar yonida — oldingi 7 kun bilan solishtirish: «▲ +3» — ko‘paydi, «▼ −2» — kamaydi. Yashil — yaxshi, sariq — qarab chiqish kerak. Bu kalendar haftasi emas, siljuvchi 7 kun: dushanba ertalab solishtirish nolga tushmaydi. Rahbarda bu sahifada pul yo‘q — boshqa bo‘limlardagidek.",
+            ],
+            admin: [
+              "Beshta kartochka: lidlar, aloqalar, maketlar, vazifalar va pul. Katta raqam — asosiysi, ostidagi qatorlar — tafsilotlar. Har bir raqam bosiladi va uning ortidagi narsani ochadi: filtrli lidlar ro‘yxati, [Aloqalar](/admin/prospect), [Maketlar](/admin/mockups), [Moliya](/admin/finance), [Shartnomalar](/admin/contracts).",
+              "«Lidlar»: katta raqam — butun jamoada «ishda» turgan lidlar. Ostida — bugun va 7 kunda yangilari, hozir navbat bo‘yicha taklif qilinayotgan issiq lidlar (olish uchun 30 daqiqa), egasiz issiq lidlar, 7 kunda yutilgan va yutqazilganlar — holat o‘zgarishi jurnali bo‘yicha, 21 kun harakatsizlikdan keyin bot o‘zi yopganlari bilan birga.",
+              "«Aloqalar»: bugun nechta kompaniya aloqa olgani, xodimlar va avtoyurish birga, kunlik me’yorga nisbatan (barcha xodimlar porsiyasi va yoqilgan bo‘lsa avtoyurish me’yori). Ostida — porsiyalar va avtoyurish alohida, bugungi va 7 kunlik javoblar. «Maketlar»: 48 soatlik aksiyada mijozlarda nechta, kimda aksiya hammadan oldin tugaydi, 7 kunda yuborilgan va tasdiqlangan. «Vazifalar»: ochiq, muddati o‘tgan, 7 kunda bajarilgan.",
+              "«Pul»ni faqat siz ko‘rasiz: 7 kunda qancha tushgani (loyihalardagi to‘lov sanasi bo‘yicha) va oy boshidan, hamda nechta shartnoma imzo kutayotgani. Rahbar bu kartochkani ko‘rmaydi.",
+              "7 kunlik raqamlar yonida — oldingi 7 kun bilan solishtirish: «▲ +3» — ko‘proq, «▼ −2» — kamroq; yashil — yaxshi, sariq — qarab chiqish kerak. Bu kalendar haftasi emas, siljuvchi 7 kun: dushanba ertalab solishtirish nolga tushmaydi.",
+            ],
+          },
+        },
+        {
+          id: "attention",
+          title: "«E’tibor talab qiladi»",
+          body: [
+            "Hozir yonayotgan narsalarning qisqa ro‘yxati. Qizil nuqta — nosozlik yoki hech kim ushlab turmagan mijoz; sariq — bugun shug‘ullanilmasa kuyib ketadigan narsa. Qatorni bosing — u tuzatiladigan joy ochiladi.",
+            "Bu yerga nima tushadi: svip 30 daqiqadan ortiq jim (eslatmalar va xabarlar ketmayapti); bugun avtoyurish yoki model nosozligi; Telegram ishchi akkauntni cheklagan (undan xabar ketmaydi — [Akkauntlar](/admin/accounts)ga qarang); «Saqlanganlar»da ruscha yoki o‘zbekcha dumaloq video yo‘q va bugun necha marta video o‘rniga xat ketgani; egasiz issiq lidlar; bugun kuyib ketgan issiq lid takliflari; muddati o‘tgan vazifalar; 7+ kun harakatsiz «ishda» lidlar; lidni o‘tkazish so‘rovlari; tugashiga 6 soatdan kam qolgan 48 soatlik aksiyalar; Firecrawl qoldig‘i 300 kreditdan kam.",
+            "Ro‘yxat bo‘sh bo‘lsa — o‘chiradigan narsa yo‘q: shunday deb yozilgan. Hammasi sahifa ochilgan paytda bazadan olinadi, hech narsa o‘ylab topilmaydi.",
+          ],
+        },
+        {
+          id: "people",
+          title: "«Bugun jamoa» — jamoa kartochkalari",
+          body: [
+            "Har bir menejer va rahbarga kartochka. Bosh harflar yonidagi yashil nuqta — kishi «onlayn»: oxirgi 30 daqiqada panelda bo‘lgan, biror ish qilgan yoki botda tugma bosgan. Aks holda — oxirgi marta qachon bo‘lgani. Kunduzi issiq lidlar avval joyida bo‘lganlarga taklif qilinadigan o‘lchov ham shu.",
+            "Uchta raqam: bugungi aloqalar (va kunlik porsiya — belgilangandan qanchasi bajarilgan), «ishda» lidlar, ochiq vazifalar. Ostida — belgilar: muddati o‘tgan, kuyib ketgan takliflar, 7+ kun harakatsiz lidlar, «porsiya bajarildi» yoki «bugun jim». Avval xavotirli belgili kartochkalar, keyin onlayn bo‘lganlar turadi.",
+            "Kartochkani bosing — tafsilotlar ochiladi: kishi bugun panelga birinchi marta soat nechada kirgani va unda qancha bo‘lgani, hamda «Vazifa qo‘yish» va «Uning lidlarini ochish» tugmalari.",
+          ],
+        },
+      ],
+    },
+
     /* ── Лиды ─────────────────────────────────────────────────────────── */
     "/admin": {
       what: "Panelning bosh sahifasi va mijozlarning barcha murojaatlari: saytdagi chat, forma, Telegram-bot, vitrina, «Qidiruv» va sizning aloqalaringizdan. Bu yerda kim yozgani, unga nima kerakligi, qanchalik shoshilinchligi va u bilan kim ishlayotgani ko‘rinadi. Lid bilan har bir harakat — olish, kontaktni ochish, holatni o‘zgartirish — jurnalga ism va vaqt bilan yoziladi.",

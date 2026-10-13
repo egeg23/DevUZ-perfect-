@@ -66,6 +66,51 @@ export const head: Pick<
 };
 
 export const leadsSections: Record<string, HelpEntry> = {
+  /* ── Pulpit ──────────────────────────────────────────────────────────── */
+  "/admin/hq": {
+    what: "Centrum dowodzenia właściciela i kierownika: na jednym ekranie — co dzieje się w firmie dziś i w ostatnich 7 dniach, co płonie w tej chwili i czym zajmuje się każda osoba w zespole. Po zalogowaniu i po kliknięciu logo «DevUz» trafiasz właśnie tutaj. Liczby odświeżają się same co półtorej minuty, dopóki strona jest otwarta i widoczna.",
+    items: [
+      {
+        id: "pulse",
+        title: "Puls firmy: leady, kontakty, makiety, zadania",
+        body: {
+          head: [
+            "Cztery karty. Duża liczba — najważniejsza w karcie, wiersze pod nią — szczegóły. Kliknij dowolną liczbę — otworzy się to, co za nią stoi: lista leadów z odpowiednim filtrem, [Kontakty](/admin/prospect), [Makiety](/admin/mockups), historia zadań.",
+            "«Leady»: duża liczba — ile leadów jest «w toku» w całym zespole. Niżej — nowe dziś i w 7 dni, ciepłe, które właśnie są komuś oferowane po kolei (osoba ma 30 minut, żeby przejąć), ciepłe bez opiekuna (nikt ich nie trzyma — to powód, żeby wkroczyć), wygrane i przegrane w 7 dni. Wygrane i przegrane liczą się według zmiany statusu, a przegrane — także te, które bot zamknął sam po 21 dniach bez ruchu.",
+            "«Kontakty»: duża liczba — ile firm dostało dziś kontakt, od ludzi i autopilota razem, wobec normy dnia. Norma to porcje dnia wszystkich osób plus norma autopilota, jeśli jest włączony. Pasek pokazuje, ile już zrobiono. Niżej — porcje ludzi i autopilot osobno, ilu klientów odpowiedziało dziś i w 7 dni.",
+            "«Makiety»: duża liczba — ile makiet jest teraz u klientów, dopóki trwa promocja 48 godzin, a niżej — u kogo promocja skończy się najwcześniej. Do tego — ile makiet wysłano i zatwierdzono w 7 dni. «Zadania»: otwarte zadania całego zespołu, po terminie i zrobione w 7 dni.",
+            "Obok liczb z 7 dni — porównanie z 7 dniami przed nimi: «▲ +3» — więcej, «▼ −2» — mniej. Zielony — dobrze, żółty — warto zajrzeć. To kroczące 7 dni, a nie tydzień kalendarzowy: w poniedziałek rano porównanie się nie zeruje. Kierownik nie widzi na tej stronie pieniędzy — tak samo jak w innych sekcjach.",
+          ],
+          admin: [
+            "Pięć kart: leady, kontakty, makiety, zadania i finanse. Duża liczba — najważniejsza, wiersze pod nią — szczegóły. Każdą liczbę można kliknąć i otworzyć to, co za nią stoi: listę leadów z filtrem, [Kontakty](/admin/prospect), [Makiety](/admin/mockups), [Finanse](/admin/finance), [Umowy](/admin/contracts).",
+            "«Leady»: duża liczba — leady «w toku» w całym zespole. Niżej — nowe dziś i w 7 dni, ciepłe oferowane teraz po kolei (30 minut na przejęcie), ciepłe bez opiekuna, wygrane i przegrane w 7 dni — według dziennika zmian statusu, razem z tymi, które bot zamknął sam po 21 dniach bez ruchu.",
+            "«Kontakty»: ile firm dostało dziś kontakt, od ludzi i autopilota razem, wobec normy dnia (porcje wszystkich osób plus norma autopilota, jeśli jest włączony). Niżej — porcje i autopilot osobno, odpowiedzi dziś i w 7 dni. «Makiety»: ile jest u klientów w promocji 48 godzin, u kogo skończy się najwcześniej, wysłane i zatwierdzone w 7 dni. «Zadania»: otwarte, po terminie, zrobione w 7 dni.",
+            "«Finanse» widzisz tylko Ty: ile wpłynęło w 7 dni (według daty płatności w projektach) i od początku miesiąca oraz ile umów czeka na podpis. Kierownik tej karty nie widzi.",
+            "Obok liczb z 7 dni — porównanie z 7 dniami przed nimi: «▲ +3» — więcej, «▼ −2» — mniej; zielony — dobrze, żółty — warto zajrzeć. To kroczące 7 dni, a nie tydzień kalendarzowy: w poniedziałek rano porównanie się nie zeruje.",
+          ],
+        },
+      },
+      {
+        id: "attention",
+        title: "«Wymaga uwagi»",
+        body: [
+          "Krótka lista tego, co płonie w tej chwili. Czerwona kropka — awaria albo klient, którego nikt nie trzyma; żółta — coś, co przepadnie, jeśli nie zająć się tym dziś. Kliknij wiersz — otworzy się miejsce, w którym to się naprawia.",
+          "Co tu trafia: sweep milczy ponad 30 minut (przypomnienia i wysyłki nie wychodzą); awaria autopilota albo modelu dziś; Telegram ograniczył konto robocze (wiadomości z niego nie wychodzą — zob. [Konta](/admin/accounts)); brak rosyjskiego albo uzbeckiego kółka w „Zapisanych” i ile razy dziś zamiast kółka poszedł list; ciepłe leady bez opiekuna; dzisiejsze przepadłe oferty ciepłych leadów; zadania po terminie; leady «w toku» bez ruchu od 7+ dni; prośby o przekazanie leada; promocje 48 godzin, którym zostało mniej niż 6 godzin; saldo Firecrawl poniżej 300 kredytów.",
+          "Pusta lista oznacza, że nie ma czego gasić: tak też jest napisane. Wszystko pochodzi z bazy w chwili otwarcia strony, nic nie jest zgadywane.",
+        ],
+      },
+      {
+        id: "people",
+        title: "«Zespół dziś» — karty zespołu",
+        body: [
+          "Karta dla każdego menedżera i kierownika. Zielona kropka przy inicjałach — osoba jest «online»: w ostatnich 30 minutach była w panelu, coś zrobiła albo kliknęła przycisk w bocie. W przeciwnym razie — kiedy była ostatnio. To ta sama miara, według której ciepłe leady w dzień trafiają najpierw do osób na miejscu.",
+          "Trzy liczby: kontakty dziś (i porcja dnia — ile zrobiono z należnych), leady «w toku», otwarte zadania. Pod nimi — etykiety: po terminie, przepadłe oferty, leady bez ruchu 7+ dni, «porcja zrobiona» albo «dziś cisza». Najpierw stoją karty z niepokojącymi etykietami, potem osoby online.",
+          "Kliknij kartę — rozwiną się szczegóły: o której osoba po raz pierwszy weszła dziś do panelu i ile w nim była, oraz przyciski «Zleć zadanie» i «Otwórz jego leady».",
+        ],
+      },
+    ],
+  },
+
   /* ── Лиды ─────────────────────────────────────────────────────────── */
   "/admin": {
     what: "Strona główna panelu i wszystkie zgłoszenia klientów: z czatu na stronie, formularza, bota w Telegramie, witryny, «Wyszukiwania» i Twoich kontaktów. Widać tu, kto napisał, czego potrzebuje, jak pilna jest sprawa i kto się nią zajmuje. Każde działanie na leadzie — przejęcie, otwarcie danych kontaktowych, zmiana statusu — trafia do dziennika z imieniem i godziną.",
