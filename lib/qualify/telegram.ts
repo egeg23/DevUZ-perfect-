@@ -413,12 +413,46 @@ export async function setMyProfilePhoto(jpeg: Uint8Array<ArrayBuffer>): Promise<
 }
 
 /**
- * Картинка с подписью — например, скриншот в объявлении команде
- * (lib/admin/team-news.ts). По адресу, а не загрузкой: картинка лежит в
- * public/ и открыта и так. Подпись — до 1024 знаков (предел Telegram).
+ * Картинка с подписью по адресу. Подпись — до 1024 знаков (предел Telegram).
+ *
+ * Адрес Telegram скачивает сам, со своих серверов, — до нашего сервера в
+ * России он доходит не всегда: 13.10.2026 скриншот меню команде так и не
+ * ушёл. Картинку со своего сервера слать загрузкой — sendPhotoFile.
  */
 export async function sendPhoto(chatId: number | string, photoUrl: string, caption: string): Promise<boolean> {
   return call("sendPhoto", { chat_id: chatId, photo: photoUrl, caption, parse_mode: "HTML" });
+}
+
+/**
+ * Картинка с подписью загрузкой — например, скриншот в объявлении команде
+ * (lib/admin/team-news.ts). Файл уходит той же дорогой, что и всё к
+ * Telegram (roadFetch), и Telegram не нужно ничего у нас скачивать.
+ */
+export async function sendPhotoFile(
+  chatId: number | string,
+  file: Uint8Array<ArrayBuffer>,
+  filename: string,
+  caption: string,
+): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return false;
+  const form = new FormData();
+  form.append("chat_id", String(chatId));
+  form.append("photo", new Blob([file], { type: filename.endsWith(".png") ? "image/png" : "image/jpeg" }), filename);
+  form.append("caption", caption);
+  form.append("parse_mode", "HTML");
+  try {
+    const response = await roadFetch(`${API}${token}/sendPhoto`, {
+      method: "POST",
+      body: form,
+      signal: AbortSignal.timeout(CALL_TIMEOUT_MS * 4),
+    });
+    if (!response.ok) console.error("telegram", "sendPhoto", response.status, await response.text());
+    return response.ok;
+  } catch (error) {
+    console.error("telegram", "sendPhoto", error);
+    return false;
+  }
 }
 
 export async function sendMessage(chatId: number | string, text: string): Promise<boolean> {
