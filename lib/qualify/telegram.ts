@@ -455,6 +455,22 @@ export async function sendPhotoFile(
   }
 }
 
+/**
+ * Сообщение рассылки — с исходом, а не да/нет: «blocked» (403 — человек
+ * заблокировал бота или удалил аккаунт) больше не повторяем, «failed» —
+ * повторим следующим проходом (lib/admin/bot-users.ts).
+ */
+export async function sendBroadcastMessage(chatId: number, text: string): Promise<"sent" | "blocked" | "failed"> {
+  const result = await callRaw("sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+  });
+  if (result.ok) return "sent";
+  return /"error_code"\s*:\s*403/.test(result.description ?? "") ? "blocked" : "failed";
+}
+
 export async function sendMessage(chatId: number | string, text: string): Promise<boolean> {
   return call("sendMessage", {
     chat_id: chatId,

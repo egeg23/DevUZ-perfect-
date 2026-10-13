@@ -52,6 +52,7 @@ import {
   takeLead,
 } from "@/lib/admin/ownership";
 import { noteBotSeen } from "@/lib/admin/lead-queue-store";
+import { noteBotUser } from "@/lib/admin/bot-users-store";
 import { TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
 import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
@@ -207,6 +208,15 @@ export async function POST(request: Request) {
   }
 
   after(() => route(update));
+  // Кто сам пишет боту в личку — для рассылки «Пользователям бота» с «Главной».
+  after(() =>
+    noteBotUser(
+      update.message?.from ?? update.callback_query?.from,
+      // У кнопки тип чата не приходит: личка — это чат с id самого человека.
+      update.message?.chat.type ??
+        (update.callback_query?.message?.chat.id === update.callback_query?.from?.id ? "private" : undefined),
+    ).catch((error) => console.error("пользователи бота:", error)),
+  );
 
   return new Response("ok");
 }

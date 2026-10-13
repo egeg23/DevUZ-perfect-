@@ -13,6 +13,8 @@ import {
   type BroadcastRow,
   type TextProblem,
 } from "@/lib/admin/broadcast";
+import type { UserTally } from "@/lib/admin/bot-users";
+import { userTallies } from "@/lib/admin/bot-users-store";
 import type { Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 import { sendMessage } from "@/lib/qualify/telegram";
@@ -28,7 +30,8 @@ import { serviceClient } from "@/lib/supabase";
  * дошло — отметка снимается, и следующий проход попробует снова.
  */
 
-const COLUMNS = "id, created_at, author_id, text, audience, roles, recipients, send_at, night_ok, cancelled_at, done_at";
+const COLUMNS =
+  "id, created_at, kind, segment, chats, author_id, text, audience, roles, recipients, send_at, night_ok, cancelled_at, done_at";
 
 /** Кому можно разослать: все активные, с отметкой, есть ли у человека Telegram. */
 export async function broadcastPeople(): Promise<BroadcastPerson[]> {
@@ -151,25 +154,32 @@ export async function deliveredCounts(ids: readonly string[]): Promise<Map<strin
   return out;
 }
 
-export type HistoryItem = BroadcastRow & { authorName: string; delivered: number };
+export type HistoryItem = BroadcastRow & { authorName: string; delivered: number; tally: UserTally | null };
 
-/** Последние рассылки: когда, кто, кому, сколько дошло. */
-export async function broadcastHistory(limit = 10): Promise<HistoryItem[]> {
+/** Последние рассылки одного вида: когда, кто, кому, сколько дошло. */
+export async function broadcastHistory(kind: "staff" | "users", limit = 10): Promise<HistoryItem[]> {
   const db = serviceClient();
   if (!db) return [];
-  const { data } = await db.from("staff_broadcasts").select(COLUMNS).order("created_at", { ascending: false }).limit(limit);
+  const { data } = await db
+    .from("staff_broadcasts")
+    .select(COLUMNS)
+    .eq("kind", kind)
+    .order("created_at", { ascending: false })
+    .limit(limit);
   const rows = (data ?? []) as BroadcastRow[];
   if (!rows.length) return [];
   const authors = [...new Set(rows.map((r) => r.author_id).filter((x): x is string => Boolean(x)))];
-  const [delivered, { data: names }] = await Promise.all([
-    deliveredCounts(rows.map((r) => r.id)),
+  const [delivered, tallies, { data: names }] = await Promise.all([
+    kind === "staff" ? deliveredCounts(rows.map((r) => r.id)) : Promise.resolve(new Map<string, number>()),
+    kind === "users" ? userTallies(rows.map((r) => ({ id: r.id, total: r.chats.length }))) : Promise.resolve(new Map<string, UserTally>()),
     authors.length ? db.from("staff").select("id, display_name").in("id", authors) : Promise.resolve({ data: [] }),
   ]);
   const nameOf = new Map(((names ?? []) as { id: string; display_name: string }[]).map((n) => [n.id, n.display_name]));
   return rows.map((r) => ({
     ...r,
     authorName: (r.author_id && nameOf.get(r.author_id)) || "—",
-    delivered: delivered.get(r.id) ?? 0,
+    delivered: kind === "staff" ? (delivered.get(r.id) ?? 0) : (tallies.get(r.id)?.sent ?? 0),
+    tally: tallies.get(r.id) ?? null,
   }));
 }
 
@@ -184,6 +194,8 @@ export async function sendBroadcasts(now: Date = new Date(), onlyId?: string): P
   let query = db
     .from("staff_broadcasts")
     .select(COLUMNS)
+    // Пользователям бота — своя доставка (lib/admin/bot-users-store.ts).
+    .eq("kind", "staff")
     .is("cancelled_at", null)
     .is("done_at", null)
     .lte("send_at", now.toISOString())

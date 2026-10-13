@@ -100,6 +100,14 @@ export const leadsSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "feed",
+        title: "«Ostatnia doba»",
+        body: [
+          "Pod «Wymaga uwagi» — co wydarzyło się w ostatnich 24 godzinach, najnowsze na górze: nowy lead, makieta wysłana do klienta, makieta zatwierdzona, zadanie zrobione, lead wygrany albo przegrany (i kto to oznaczył). Nie więcej niż dwanaście wierszy.",
+          "Każdy wiersz się otwiera: lead — w jego karcie, makieta — w [Makiety](/admin/mockups), zadanie — w historii zadań. Lista powstaje z tych samych danych co puls, więc liczby i wiersze się zgadzają.",
+        ],
+      },
+      {
         id: "people",
         title: "«Zespół dziś» — karty zespołu",
         body: [
@@ -121,10 +129,12 @@ export const leadsSections: Record<string, HelpEntry> = {
         id: "broadcast",
         title: "«Wiadomość do zespołu przez bota»",
         body: [
-          "Wiadomość do całego zespołu albo jego części — od bota studia w Telegramie. Na przykład zaproszenie na spotkanie. Wysyłać mogą tylko właściciel i kierownik.",
+          "Własna wiadomość od bota studia w Telegramie — dwie zakładki. «Pracownikom» — do całego zespołu albo jego części, na przykład zaproszenie na spotkanie. «Użytkownikom bota» — do osób, które same pisały do bota: klientów i leadów z czatu, partnerów, kupujących w sklepie. Wysyłać mogą tylko właściciel i kierownik.",
           "Napisz treść, wybierz, do kogo: «Wszystkim», «Według ról» (właściciel, kierownicy, menedżerowie) albo «Wybierz osoby». Kiedy: «Teraz» albo «O wybranej godzinie» — czas taszkencki. Bot wysyła przy przebiegu co pięć minut, więc na spotkanie o 15:00 ustaw 14:50. Od 23:00 do 07:00 bot milczy: nocna wiadomość wyjdzie o 07:00, jeśli nie zaznaczysz «Wyślij także w nocy».",
           "Przed wysłaniem — «Podgląd»: jak wiadomość będzie wyglądać, ile osób ją dostanie i kto dokładnie. Osoby bez Telegramu jej nie dostaną — są pokazane osobno. Ty jej nie dostaniesz — jesteś autorem. Jeśli w czasie czytania podglądu skład zespołu się zmienił, panel poprosi o ponowne otwarcie podglądu, zamiast wysłać do innej liczby osób.",
           "Każdy dostaje wiadomość jeden raz: jeśli nie dotarła (Telegram nie odpowiedział), bot dośle ją przy kolejnym przebiegu, w ciągu doby. Na dole — «Ostatnie wysyłki»: kiedy, kto, do kogo i do ilu dotarło. Dopóki nic nie wyszło, wysyłkę może «Anuluj» jej autor albo właściciel. Każda wysyłka i anulowanie trafiają do dziennika.",
+          "«Użytkownikom bota»: wybierz, do kogo — «Wszystkim», «Partnerom», «Kupującym w sklepie» albo «Klientom i leadom»; obok każdej opcji — ile to osób. Pracowników na tej liście nie ma nigdy. Wychodzi dokładnie Twój tekst, bez podpisu. Piszemy tylko do osób, które same zaczęły rozmowę z botem; do tych, którzy zablokowali bota, nie piszemy — Telegram odmawia, a osoba zostaje oznaczona, dopóki sama znów nie napisze do bota. Wiadomości wychodzą porcjami, nie szybciej niż 25 na sekundę. W «Ostatnie wysyłki» tej zakładki widać, ile dotarło, ile nie dotarło i ile osób zablokowało bota.",
+          "Wysyłka nie zależy od AI: Twój tekst idzie z panelu przez naszą bazę i bota prosto do Telegramu. Gdy model jest niedostępny, wysyłka działa normalnie.",
         ],
       },
     ],

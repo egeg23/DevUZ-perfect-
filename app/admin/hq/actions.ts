@@ -5,6 +5,8 @@ import { after } from "next/server";
 
 import { audienceFrom, canCancel, sendAtFrom, sendableNow, sendsBroadcasts } from "@/lib/admin/broadcast";
 import { broadcastById, cancelBroadcast, createBroadcast, deliveredCounts, sendBroadcasts } from "@/lib/admin/broadcast-store";
+import { isSegment } from "@/lib/admin/bot-users";
+import { createUserBroadcast, sendUserBroadcasts } from "@/lib/admin/bot-users-store";
 import { currentStaff, requestIp } from "@/lib/admin/guard";
 import { opens } from "@/lib/admin/roles";
 import { createTasks, deliverAssignment } from "@/lib/admin/task-store";
@@ -86,15 +88,37 @@ export async function broadcastAction(_prev: BroadcastState, formData: FormData)
   const staff = await currentStaff();
   if (!staff || !opens(staff, HREF) || !sendsBroadcasts(staff.role)) return { ok: false, error: "forbidden", at };
   const now = new Date();
+  const sendAtUsers = sendAtFrom(String(formData.get("when") ?? "now"), String(formData.get("send_at") ?? ""), now);
+  const nightUsers = formData.get("night") === "on";
+
+  // Пользователям бота — своя ветка: сегмент вместо ролей, доставка порциями
+  // (lib/admin/bot-users-store.ts). Модели нет ни там, ни здесь.
+  if (formData.get("kind") === "users") {
+    const segment = String(formData.get("segment") ?? "");
+    if (!isSegment(segment)) return { ok: false, error: "audience", at };
+    if (!(sendAtUsers instanceof Date)) return { ok: false, error: sendAtUsers, at };
+    const result = await createUserBroadcast(
+      { text: String(formData.get("text") ?? ""), segment, sendAt: sendAtUsers, nightOk: nightUsers, expected: Number(formData.get("expected") ?? -1) },
+      staff,
+      await requestIp(),
+    );
+    if (!result.ok) return { ok: false, error: result.reason, at };
+    const scheduled = sendAtUsers.getTime() > now.getTime();
+    const night = !scheduled && !sendableNow(now, nightUsers);
+    if (!scheduled && !night) after(() => sendUserBroadcasts(new Date(), result.id).then(() => undefined));
+    revalidatePath(HREF);
+    return { ok: true, n: result.recipients, scheduled, night, at };
+  }
+
   const audience = audienceFrom(
     String(formData.get("audience") ?? ""),
     formData.getAll("role").map(String),
     formData.getAll("person").map(String),
   );
   if (!audience) return { ok: false, error: "audience", at };
-  const sendAt = sendAtFrom(String(formData.get("when") ?? "now"), String(formData.get("send_at") ?? ""), now);
+  const sendAt = sendAtUsers;
   if (!(sendAt instanceof Date)) return { ok: false, error: sendAt, at };
-  const nightOk = formData.get("night") === "on";
+  const nightOk = nightUsers;
 
   const result = await createBroadcast(
     {

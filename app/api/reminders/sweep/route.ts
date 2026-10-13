@@ -3,6 +3,7 @@ import { after } from "next/server";
 
 import { record } from "@/lib/admin/audit";
 import { sendBroadcasts } from "@/lib/admin/broadcast-store";
+import { sendUserBroadcasts } from "@/lib/admin/bot-users-store";
 import { preparePortionsInBackground, runPortions } from "@/lib/admin/portion-store";
 import { feedStreams } from "@/lib/admin/stream-store";
 import { broadcastDuePrototypes } from "@/lib/admin/prototype-claim-store";
@@ -317,6 +318,8 @@ async function sweep(): Promise<Response> {
   // прохода — каждому один раз, ночью только с галочкой (lib/admin/broadcast-store).
   after(async () => {
     await sendBroadcasts(new Date()).catch((error) => console.error("рассылка:", error));
+    // Пользователям бота — порциями, не быстрее 25 в секунду.
+    await sendUserBroadcasts(new Date()).catch((error) => console.error("рассылка пользователям:", error));
   });
   // «Доброе утро» сотрудникам по имени — каждый день с 09:00, каждому один
   // раз (lib/admin/morning-store).

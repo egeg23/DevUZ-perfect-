@@ -262,4 +262,33 @@ export const hqDict = defineDict({
     uz: (n: number) => `7+ kun harakatsiz «ishda» lidlar: ${n}`,
     pl: (n: number) => `Leady „w toku” bez ruchu 7+ dni: ${n}`,
   },
+  // Лента за сутки.
+  feedTitle: { ru: "Лента за сутки", uz: "So‘nggi sutka", pl: "Ostatnia doba" },
+  feedNone: {
+    ru: "За сутки ничего нового: ни лидов, ни макетов, ни закрытых задач.",
+    uz: "Bir sutkada yangilik yo‘q: lid ham, maket ham, yopilgan vazifa ham.",
+    pl: "W ciągu doby nic nowego: ani leadów, ani makiet, ani zamkniętych zadań.",
+  },
+  feedLead: { ru: (x: string) => `Новый лид: ${x}`, uz: (x: string) => `Yangi lid: ${x}`, pl: (x: string) => `Nowy lead: ${x}` },
+  feedWon: {
+    ru: (x: string, who: string) => `Выиграли: ${x}${who ? ` · ${who}` : ""}`,
+    uz: (x: string, who: string) => `Yutildi: ${x}${who ? ` · ${who}` : ""}`,
+    pl: (x: string, who: string) => `Wygrany: ${x}${who ? ` · ${who}` : ""}`,
+  },
+  feedLost: {
+    ru: (x: string, who: string) => `Проиграли: ${x}${who ? ` · ${who}` : ""}`,
+    uz: (x: string, who: string) => `Yutqazildi: ${x}${who ? ` · ${who}` : ""}`,
+    pl: (x: string, who: string) => `Przegrany: ${x}${who ? ` · ${who}` : ""}`,
+  },
+  feedMockupSent: { ru: (x: string) => `Макет ушёл: ${x}`, uz: (x: string) => `Maket yuborildi: ${x}`, pl: (x: string) => `Makieta wysłana: ${x}` },
+  feedMockupApproved: {
+    ru: (x: string) => `Макет утверждён: ${x}`,
+    uz: (x: string) => `Maket tasdiqlandi: ${x}`,
+    pl: (x: string) => `Makieta zatwierdzona: ${x}`,
+  },
+  feedTaskDone: {
+    ru: (x: string, who: string) => `Задача сделана: ${x}${who ? ` · ${who}` : ""}`,
+    uz: (x: string, who: string) => `Vazifa bajarildi: ${x}${who ? ` · ${who}` : ""}`,
+    pl: (x: string, who: string) => `Zadanie zrobione: ${x}${who ? ` · ${who}` : ""}`,
+  },
 });

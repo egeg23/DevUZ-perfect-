@@ -13,7 +13,9 @@ import {
   tasksPulse,
   touchesPulse,
   OPEN_TASK,
+  feedOf,
   type Attention,
+  type FeedItem,
   type HqEvent,
   type HqLead,
   type HqMockup,
@@ -61,6 +63,7 @@ export type Hq = {
   money: MoneyPulse | null;
   attention: Attention[];
   people: HqPerson[];
+  feed: FeedItem[];
 };
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);
@@ -100,6 +103,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     money: null,
     attention: [],
     people: [],
+    feed: [],
   };
   if (!db) return empty;
 
@@ -347,5 +351,6 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     money: moneyNow,
     attention,
     people,
+    feed: feedOf({ leads, events, mockups, tasks, names: new Map(staffRows.map((s) => [s.id, s.display_name])) }, now),
   };
 }

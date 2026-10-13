@@ -8,6 +8,7 @@ import { HqView } from "@/components/admin/hq";
 import {
   attentionOf,
   deltaOf,
+  feedOf,
   initials,
   leadsPulse,
   mockupsPulse,
@@ -308,6 +309,26 @@ test("карточка человека: в сети за 30 минут, пор�
   );
 });
 
+test("лента за сутки: новые лиды, макеты, задачи, выигрыши — свежее сверху, старое не попадает", () => {
+  const fresh = lead({ created_at: ago(2), label: "Кафе" });
+  const feed = feedOf(
+    {
+      leads: [fresh, lead({ created_at: ago(30), label: "Старый" })],
+      events: [{ action: "lead.status_changed", created_at: ago(1), actor_staff_id: "s1", target_id: fresh.id, meta: { to: "won" } }],
+      mockups: [{ id: "m", client: "Салон", mockup_name: "", status: "approved", sent_at: ago(20), expires_at: ahead(28), approved_at: ago(0.5) }],
+      tasks: [task({ status: "done", closed_at: ago(3), title: "Позвонить" }), task({ status: "failed", closed_at: ago(3) })],
+      names: new Map([["s1", "Данил"]]),
+    },
+    NOW,
+  );
+  assert.deepEqual(
+    feed.map((f) => f.kind),
+    ["mockupApproved", "won", "lead", "taskDone", "mockupSent"],
+  );
+  assert.deepEqual(feed[1], { kind: "won", at: ago(1), label: "Кафе", who: "Данил", href: `/admin/leads/${fresh.id}` });
+  assert.ok(!feed.some((f) => f.label === "Старый"));
+});
+
 /** Тестовые данные, как их отдаёт loadHq. */
 function sampleHq(withMoney: boolean): Hq {
   const leads = [lead({ status: "new", priority: "hot", assigned_staff_id: null, created_at: ago(1), label: "Кафе «Ромашка»" }), lead({})];
@@ -324,6 +345,7 @@ function sampleHq(withMoney: boolean): Hq {
     tasks: tasksPulse([task({ due_at: ago(1) })], NOW),
     money: withMoney ? moneyPulse([{ amount_usd: 1500, paid_on: "2026-10-13" }], 1, NOW) : null,
     attention: attentionOf(baseAttention({ leads: lp, overdue: 1, mockups })),
+    feed: [{ kind: "lead", at: ago(1), label: "Кафе", href: "/admin/leads/x" }],
     people: [
       personOf(
         {

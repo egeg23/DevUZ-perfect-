@@ -164,4 +164,41 @@ export const broadcastDict = defineDict({
   stDone: { ru: "ушло", uz: "ketdi", pl: "wysłane" },
   stCancelled: { ru: "отменено", uz: "bekor qilindi", pl: "anulowane" },
   cancel: { ru: "Отменить", uz: "Bekor qilish", pl: "Anuluj" },
+  // Два вида получателей (владелец, 13.10.2026: «раздели их»).
+  tabStaff: { ru: "Сотрудникам", uz: "Xodimlarga", pl: "Pracownikom" },
+  tabUsers: { ru: "Пользователям бота", uz: "Bot foydalanuvchilariga", pl: "Użytkownikom bota" },
+  usersIntro: {
+    ru: "Тем, кто сам писал боту студии: клиенты и лиды из чата, партнёры, покупатели. Сотрудников здесь нет. Уходит ровно ваш текст, без подписи.",
+    uz: "Studiya botiga o‘zi yozganlarga: chatdagi mijozlar va lidlar, hamkorlar, xaridorlar. Bu yerda xodimlar yo‘q. Aynan sizning matningiz imzosiz ketadi.",
+    pl: "Do osób, które same pisały do bota studia: klienci i leady z czatu, partnerzy, kupujący. Pracowników tu nie ma. Wychodzi dokładnie Twój tekst, bez podpisu.",
+  },
+  segment: { ru: "Кому из пользователей", uz: "Qaysi foydalanuvchilarga", pl: "Do których użytkowników" },
+  segAll: { ru: "Всем", uz: "Hammaga", pl: "Wszystkim" },
+  segPartners: { ru: "Партнёрам", uz: "Hamkorlarga", pl: "Partnerom" },
+  segBuyers: { ru: "Покупателям магазина", uz: "Do‘kon xaridorlariga", pl: "Kupującym w sklepie" },
+  segClients: { ru: "Клиентам и лидам", uz: "Mijozlar va lidlarga", pl: "Klientom i leadom" },
+  willGetUsers: {
+    ru: (n: number) => `Получат: ${ru(n, "пользователь", "пользователя", "пользователей")} бота`,
+    uz: (n: number) => `Oladi: ${n} ta bot foydalanuvchisi`,
+    pl: (n: number) => `Otrzyma: ${pl(n, "użytkownik", "użytkowników", "użytkowników")} bota`,
+  },
+  usersNote: {
+    ru: "Шлём только тем, кто сам начинал разговор с ботом. Кто заблокировал бота — не получит и будет отмечен. Уходит порциями, не быстрее 25 сообщений в секунду.",
+    uz: "Faqat bot bilan o‘zi suhbat boshlaganlarga yuboramiz. Botni bloklaganlar olmaydi va belgilanadi. Porsiyalab, soniyasiga 25 tadan tez emas ketadi.",
+    pl: "Wysyłamy tylko do osób, które same zaczęły rozmowę z botem. Kto zablokował bota — nie dostanie i zostanie oznaczony. Wychodzi porcjami, nie szybciej niż 25 wiadomości na sekundę.",
+  },
+  noModel: {
+    ru: "Рассылка не зависит от ИИ: свой текст уходит через бот напрямую, даже если модель недоступна.",
+    uz: "Xabar yuborish SIga bog‘liq emas: matningiz bot orqali to‘g‘ridan-to‘g‘ri ketadi, model ishlamasa ham.",
+    pl: "Wysyłka nie zależy od AI: Twój tekst idzie przez bota bezpośrednio, nawet gdy model jest niedostępny.",
+  },
+  usersHistoryLine: {
+    ru: (who: string, sent: number, failed: number, blocked: number, total: number) =>
+      `${who} · из ${total}: дошло ${sent}, не дошло ${failed}, заблокировали бота ${blocked}`,
+    uz: (who: string, sent: number, failed: number, blocked: number, total: number) =>
+      `${who} · ${total} dan: yetdi ${sent}, yetmadi ${failed}, botni blokladi ${blocked}`,
+    pl: (who: string, sent: number, failed: number, blocked: number, total: number) =>
+      `${who} · z ${total}: dotarło ${sent}, nie dotarło ${failed}, zablokowało bota ${blocked}`,
+  },
+  usersNone: { ru: "Пока никто не писал боту.", uz: "Hali hech kim botga yozmagan.", pl: "Nikt jeszcze nie pisał do bota." },
 });
