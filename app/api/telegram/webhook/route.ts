@@ -51,6 +51,7 @@ import {
   snoozeReminder,
   takeLead,
 } from "@/lib/admin/ownership";
+import { noteBotSeen } from "@/lib/admin/lead-queue-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
@@ -301,6 +302,9 @@ async function route(update: Update): Promise<void> {
     }
 
     if (update.callback_query) {
+      // Нажал кнопку — значит, на месте: очередь тёплых лидов днём зовёт
+      // сначала таких (lib/admin/lead-queue.ts). Сбой метки кнопку не ломает.
+      if (update.callback_query.from?.id) await noteBotSeen(update.callback_query.from.id).catch(() => undefined);
       await handleButton(update.callback_query);
     }
   } catch (error) {

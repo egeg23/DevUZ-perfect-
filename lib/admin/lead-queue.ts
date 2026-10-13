@@ -83,7 +83,77 @@ export type Candidate = {
   missed: number;
   /** Когда ему последний раз предлагали лид; null — ни разу. */
   lastOfferAt: string | null;
+  /**
+   * Последний признак, что человек на месте: панель, действие в журнале,
+   * нажатие в боте. null — неизвестно (тогда он не «на месте», но в очереди).
+   */
+  activeAt?: string | null;
+  /** Сколько предложений подряд сгорело у него сегодня (missStreak). */
+  streak?: number;
 };
+
+/**
+ * Тёплые лиды — тем, кто на месте.
+ *
+ * Владелец, 13.10.2026, «Делаем»: за 30 дней из 79 предложений 56 сгорели за
+ * полчаса, у двоих — 8 из 8. Лид полчаса ждал того, кто не у панели и не у
+ * телефона. Днём лид теперь предлагается сначала тем, кто был активен за
+ * последние ACTIVE_MINUTES, и уже внутри них — прежнее правило честности.
+ * Никого на месте — как раньше, всем по очереди.
+ */
+export const ACTIVE_MINUTES = 30;
+
+export function activeNow(activeAt: string | null | undefined, now: Date): boolean {
+  if (!activeAt) return false;
+  const at = Date.parse(activeAt);
+  return Number.isFinite(at) && now.getTime() - at <= ACTIVE_MINUTES * 60_000 && at <= now.getTime() + 60_000;
+}
+
+/** Самая поздняя из меток; пустые и битые — мимо. */
+export function latest(...marks: (string | null | undefined)[]): string | null {
+  let best: string | null = null;
+  for (const m of marks) {
+    if (!m || !Number.isFinite(Date.parse(m))) continue;
+    if (!best || Date.parse(m) > Date.parse(best)) best = m;
+  }
+  return best;
+}
+
+/**
+ * Три сгоревших предложения подряд за день — человек до конца дня выпадает
+ * из очереди: четвёртый лид ждал бы его те же полчаса впустую.
+ */
+export const STREAK_OUT = 3;
+
+/**
+ * Сколько предложений подряд сгорело — с конца дня назад. Взял — счёт
+ * обнуляется. «cancelled» (лид забрал владелец, передача) — не шанс и не
+ * пропуск, мимо. Действующее предложение — ещё не сгорело, мимо.
+ * `outcomes` — сегодняшние, по времени предложения, от раннего к позднему.
+ */
+export function missStreak(outcomes: readonly (string | null)[]): number {
+  let n = 0;
+  for (let i = outcomes.length - 1; i >= 0; i--) {
+    const o = outcomes[i];
+    if (o === "expired") n += 1;
+    else if (o === "taken") break;
+  }
+  return n;
+}
+
+export function benched(c: Pick<Candidate, "streak">): boolean {
+  return (c.streak ?? 0) >= STREAK_OUT;
+}
+
+/** Строка руководителям, когда человек выпал из очереди. Имя уже экранировано. */
+export function benchedNotice(name: string): string {
+  return `🧊 У ${name} сгорели ${STREAK_OUT} предложения тёплых лидов подряд — до конца дня очередь его пропускает. Завтра он снова в ней.`;
+}
+
+/** То же — самому человеку. */
+export function benchedSelfNotice(): string {
+  return `🧊 ${STREAK_OUT} лида подряд сгорели без ответа — до конца дня очередь вас пропускает, лиды идут тем, кто на месте. Завтра вы снова в очереди.`;
+}
 
 /**
  * Кому предложить лид.
@@ -99,9 +169,19 @@ export type Candidate = {
  * два прохода с одними данными давали один ответ.
  *
  * `skip` — кому этот лид уже предлагали: второй раз за круг его не дают.
+ *
+ * С `now` (днём, 13.10.2026): сначала те, кто на месте (`activeNow`), и
+ * никогда — выпавшие за день (`benched`).
  */
-export function pickNext(candidates: readonly Candidate[], skip: ReadonlySet<string>): Candidate | null {
-  const pool = candidates.filter((c) => !skip.has(c.id));
+export function pickNext(
+  candidates: readonly Candidate[],
+  skip: ReadonlySet<string>,
+  now?: Date,
+): Candidate | null {
+  const open = candidates.filter((c) => !skip.has(c.id) && !benched(c));
+  // Сначала — кто на месте; нет таких — все, как раньше.
+  const here = now ? open.filter((c) => activeNow(c.activeAt, now)) : [];
+  const pool = here.length ? here : open;
   pool.sort((a, b) => {
     const load = a.taken + a.missed - (b.taken + b.missed);
     if (load) return load;
