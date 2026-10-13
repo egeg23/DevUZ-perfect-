@@ -299,3 +299,71 @@ test("контакт свободного лида открывает тольк
   assert.equal(canReveal(managers, who("manager", "m2")), false, "чужой лид");
   assert.equal(canReveal(managers, who("head")), true, "руководитель по взятому лиду");
 });
+
+/* ── 13.10.2026: тёплые лиды — тем, кто на месте; три сгоревших подряд ── */
+
+test("днём лид — сначала тем, кто был активен за 30 минут", async () => {
+  const { pickNext, activeNow } = await import("@/lib/admin/lead-queue");
+  const now = new Date("2026-10-13T07:00:00Z");
+  const fresh = "2026-10-13T06:45:00Z";
+  const stale = "2026-10-13T06:00:00Z";
+  const cands = [
+    { id: "спит", taken: 0, missed: 0, lastOfferAt: null, activeAt: stale },
+    { id: "на месте", taken: 5, missed: 2, lastOfferAt: null, activeAt: fresh },
+  ];
+  assert.equal(activeNow(fresh, now), true);
+  assert.equal(activeNow(stale, now), false);
+  assert.equal(activeNow(null, now), false);
+  assert.equal(pickNext(cands, new Set(), now)?.id, "на месте", "активный — первым, хоть у него и больше");
+  assert.equal(pickNext(cands, new Set())?.id, "спит", "без now — прежнее правило");
+  // Внутри активных — прежнее правило честности.
+  const two = [
+    { id: "a", taken: 4, missed: 0, lastOfferAt: null, activeAt: fresh },
+    { id: "b", taken: 1, missed: 1, lastOfferAt: null, activeAt: fresh },
+    { id: "c", taken: 0, missed: 0, lastOfferAt: null, activeAt: null },
+  ];
+  assert.equal(pickNext(two, new Set(), now)?.id, "b");
+  // Активный уже пропустил этот лид — дальше активных нет, идём ко всем.
+  assert.equal(pickNext(two, new Set(["a", "b"]), now)?.id, "c");
+});
+
+test("никого на месте — как раньше", async () => {
+  const { pickNext } = await import("@/lib/admin/lead-queue");
+  const now = new Date("2026-10-13T07:00:00Z");
+  const all = [
+    { id: "x", taken: 3, missed: 0, lastOfferAt: null, activeAt: null },
+    { id: "y", taken: 1, missed: 0, lastOfferAt: null },
+  ];
+  assert.equal(pickNext(all, new Set(), now)?.id, "y");
+});
+
+test("три сгоревших подряд за день — до конца дня из очереди", async () => {
+  const { missStreak, benched, pickNext, STREAK_OUT } = await import("@/lib/admin/lead-queue");
+  assert.equal(STREAK_OUT, 3);
+  assert.equal(missStreak([]), 0);
+  assert.equal(missStreak(["expired", "expired", "expired"]), 3);
+  assert.equal(missStreak(["expired", "expired", "taken", "expired"]), 1, "взял — счёт с нуля");
+  assert.equal(missStreak(["expired", "cancelled", "expired", null]), 2, "забрал владелец и действующее — мимо");
+  assert.equal(benched({ streak: 2 }), false);
+  assert.equal(benched({ streak: 3 }), true);
+  const now = new Date("2026-10-13T07:00:00Z");
+  const cands = [
+    { id: "выпал", taken: 0, missed: 3, lastOfferAt: null, streak: 3, activeAt: "2026-10-13T06:59:00Z" },
+    { id: "другой", taken: 9, missed: 0, lastOfferAt: null, streak: 0 },
+  ];
+  assert.equal(pickNext(cands, new Set(), now)?.id, "другой", "выпавший не получает, даже если на месте");
+  assert.equal(pickNext([cands[0]], new Set(), now), null, "одни выпавшие — лид откроется всем");
+});
+
+test("очередь читает присутствие и сгоревшие за день; ночное правило не тронуто", () => {
+  const store = readFileSync(new URL("../lib/admin/lead-queue-store.ts", import.meta.url), "utf8");
+  assert.match(store, /pickNext\(candidates, new Set\(\), now\)/);
+  assert.match(store, /pickNext\(candidates, tried, now\)/);
+  for (const t of ["panel_presence", "panel_usage", "bot_seen_at"]) assert.ok(store.includes(t), t);
+  assert.match(store, /streak === STREAK_OUT\) await noteBenched/);
+  assert.match(store, /wants\(r\.notify_off as string\[\] \| null, "reports"\)/);
+  assert.match(
+    readFileSync(new URL("../app/api/telegram/webhook/route.ts", import.meta.url), "utf8"),
+    /await noteBotSeen\(update\.callback_query\.from\.id\)/,
+  );
+});

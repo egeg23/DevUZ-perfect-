@@ -1,5 +1,11 @@
 import {
+  ACTIVE_MINUTES,
   NIGHT_HEADING,
+  STREAK_OUT,
+  benchedNotice,
+  benchedSelfNotice,
+  latest,
+  missStreak,
   OFFER_MINUTES,
   OPEN_HEADING,
   QUEUE_ROLES,
@@ -17,10 +23,12 @@ import {
   type Share,
 } from "@/lib/admin/lead-queue";
 import { wants } from "@/lib/admin/notify-prefs";
+import { dayStartUtc } from "@/lib/admin/portion";
+import { todayInTashkent } from "@/lib/admin/pulse";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { noticesOf } from "@/lib/qualify/notices";
 import type { LeadOrigin } from "@/lib/qualify/origin";
-import { editLeadCards, sendLead, sendMessage, telegramReachable } from "@/lib/qualify/telegram";
+import { editLeadCards, esc, sendLead, sendMessage, telegramReachable } from "@/lib/qualify/telegram";
 import type { ScoredLead } from "@/lib/qualify/types";
 import { serviceClient } from "@/lib/supabase";
 
@@ -34,6 +42,8 @@ import { serviceClient } from "@/lib/supabase";
 type Person = {
   id: string;
   name: string;
+  /** Имя из «Команды» — для строки руководителям. */
+  display: string;
   chat: string | null;
   role: string;
   /** Галочка «Новые заявки по очереди» (lib/admin/notify-prefs.ts). Снята — из очереди выходит. */
@@ -54,6 +64,7 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
   const people: Person[] = ((staff as Record<string, unknown>[] | null) ?? []).map((row) => ({
     id: String(row.id),
     name: String(row.username ? `@${row.username}` : row.display_name ?? "—"),
+    display: String(row.display_name ?? row.username ?? "—"),
     chat: typeof row.telegram_user_id === "number" ? String(row.telegram_user_id) : null,
     role: String(row.role),
     queue: wants(row.notify_off as string[] | null, "queue"),
@@ -63,7 +74,20 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
   const ids = people.map((p) => p.id);
   const since = monthStartOf(now).toISOString();
 
-  const [{ data: taken }, { data: missed }, { data: recent }] = await Promise.all([
+  const day = todayInTashkent(now);
+  const dayFrom = dayStartUtc(day).toISOString();
+  const activeFrom = new Date(now.getTime() - ACTIVE_MINUTES * 60_000).toISOString();
+
+  const [
+    { data: taken },
+    { data: missed },
+    { data: recent },
+    { data: today },
+    { data: presence },
+    { data: views },
+    { data: acts },
+    { data: seen },
+  ] = await Promise.all([
     // Взятые — из журнала, а не по полю лида: поле переписывается при
     // передаче, а журнал помнит, кто нажал «Взять».
     db
@@ -86,6 +110,24 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
       .in("staff_id", ids)
       .order("offered_at", { ascending: false })
       .limit(500),
+    // Сегодняшние предложения — для «трёх сгоревших подряд».
+    db
+      .from("lead_offers")
+      .select("staff_id, outcome, offered_at")
+      .in("staff_id", ids)
+      .gte("offered_at", dayFrom)
+      .order("offered_at", { ascending: true })
+      .limit(1000),
+    // На месте ли: панель (минуты и просмотры), журнал, нажатия в боте.
+    db.from("panel_presence").select("staff_id, last_at").eq("day", day).in("staff_id", ids),
+    db.from("panel_usage").select("staff_id, last_at").eq("day", day).in("staff_id", ids),
+    db
+      .from("audit_events")
+      .select("actor_staff_id, created_at")
+      .in("actor_staff_id", ids)
+      .gte("created_at", activeFrom)
+      .limit(1000),
+    db.from("staff").select("id, bot_seen_at").in("id", ids),
   ]);
 
   const count = (rows: unknown, key: string) => {
@@ -103,6 +145,20 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
     if (!lastBy.has(row.staff_id)) lastBy.set(row.staff_id, row.offered_at);
   }
 
+  const outcomesBy = new Map<string, (string | null)[]>();
+  for (const row of (today as { staff_id: string; outcome: string | null }[] | null) ?? []) {
+    outcomesBy.set(row.staff_id, [...(outcomesBy.get(row.staff_id) ?? []), row.outcome]);
+  }
+  const activeBy = new Map<string, string | null>();
+  const mark = (id: unknown, at: unknown) => {
+    if (typeof at !== "string") return;
+    activeBy.set(String(id), latest(activeBy.get(String(id)), at));
+  };
+  for (const r of (presence as Record<string, unknown>[] | null) ?? []) mark(r.staff_id, r.last_at);
+  for (const r of (views as Record<string, unknown>[] | null) ?? []) mark(r.staff_id, r.last_at);
+  for (const r of (acts as Record<string, unknown>[] | null) ?? []) mark(r.actor_staff_id, r.created_at);
+  for (const r of (seen as Record<string, unknown>[] | null) ?? []) mark(r.id, r.bot_seen_at);
+
   return {
     people,
     candidates: people
@@ -116,6 +172,8 @@ async function queueCandidates(now: Date): Promise<{ people: Person[]; candidate
         taken: takenBy.get(p.id) ?? 0,
         missed: missedBy.get(p.id) ?? 0,
         lastOfferAt: lastBy.get(p.id) ?? null,
+        activeAt: activeBy.get(p.id) ?? null,
+        streak: missStreak(outcomesBy.get(p.id) ?? []),
       })),
   };
 }
@@ -295,7 +353,7 @@ export async function startQueue(card: Card, now: Date = new Date()): Promise<bo
   }
 
   const { people, candidates } = await queueCandidates(now);
-  const first = pickNext(candidates, new Set());
+  const first = pickNext(candidates, new Set(), now);
   const person = first ? people.find((p) => p.id === first.id) : null;
   if (!person) return false;
 
@@ -510,6 +568,11 @@ export async function advanceQueues(now: Date = new Date()): Promise<AdvanceRepo
         await editLeadCards(mine, offer.lead_id, "⌛ Время вышло — лид у следующего");
       }
 
+      // Третье сгоревшее подряд за день — человек выпал из очереди до
+      // завтра: ему и руководителям по строке, каждому один раз.
+      const streak = candidates.find((c) => c.id === offer.staff_id)?.streak ?? 0;
+      if (missedBy && streak === STREAK_OUT) await noteBenched(missedBy, now);
+
       // Полчаса вышли уже вечером — следующему не передаём: он, скорее всего,
       // тоже не у телефона. Лид открывается всем по равной доле.
       if (!isWorkingHours(now)) {
@@ -519,7 +582,7 @@ export async function advanceQueues(now: Date = new Date()): Promise<AdvanceRepo
       }
 
       const tried = new Set((await offersOf(offer.lead_id)).map((o) => o.staffId));
-      const next = pickNext(candidates, tried);
+      const next = pickNext(candidates, tried, now);
       const person = next ? people.find((p) => p.id === next.id) : null;
 
       if (person && (await offerTo(person, card, now, false))) {
@@ -608,4 +671,54 @@ export async function routeNewLead(
     heading: card.heading,
     origin: card.origin,
   });
+}
+
+/**
+ * Выпал из очереди за день (три сгоревших подряд) — сказать ему и
+ * руководителям с владельцем (галочка «Отчёты»). Отметка — team_news_sent,
+ * ключ «queue-bench:день:кто», по читателю: два прохода свипа не повторят.
+ */
+async function noteBenched(person: Person, now: Date): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const key = `queue-bench:${todayInTashkent(now)}:${person.id}`;
+  const claim = async (staffId: string) => {
+    const { data } = await db
+      .from("team_news_sent")
+      .upsert({ news_id: key, staff_id: staffId }, { onConflict: "news_id,staff_id", ignoreDuplicates: true })
+      .select("staff_id");
+    return Boolean(data?.length);
+  };
+  if (person.chat && (await claim(person.id))) await sendMessage(person.chat, benchedSelfNotice());
+
+  const { data: readers } = await db
+    .from("staff")
+    .select("id, telegram_user_id, notify_off")
+    .eq("is_active", true)
+    .in("role", ["admin", "head"]);
+  const name = esc(person.display);
+  for (const r of readers ?? []) {
+    if (r.id === person.id || !Number(r.telegram_user_id)) continue;
+    if (!wants(r.notify_off as string[] | null, "reports")) continue;
+    if (!(await claim(r.id as string))) continue;
+    if (!(await sendMessage(Number(r.telegram_user_id), benchedNotice(name)))) {
+      await db.from("team_news_sent").delete().eq("news_id", key).eq("staff_id", r.id);
+    }
+  }
+}
+
+/**
+ * Нажатие кнопки в боте — метка «на месте» (staff.bot_seen_at). Не чаще раза
+ * в минуту: кнопки жмут пачками, а точнее минуты очереди не нужно.
+ */
+export async function noteBotSeen(telegramId: number, now: Date = new Date()): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const minuteAgo = new Date(now.getTime() - 60_000).toISOString();
+  await db
+    .from("staff")
+    .update({ bot_seen_at: now.toISOString() })
+    .eq("telegram_user_id", telegramId)
+    .eq("is_active", true)
+    .or(`bot_seen_at.is.null,bot_seen_at.lt.${minuteAgo}`);
 }
