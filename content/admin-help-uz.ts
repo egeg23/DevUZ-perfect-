@@ -2056,6 +2056,14 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "crash",
+          title: "Sahifa yuklanmadi",
+          body: [
+            "Ba’zan sahifa o‘rniga bir soniyaga «Sahifa yangilanmoqda…» chiqadi: bu server bilan aloqa qisqa uzilganda bo‘ladi, o‘tish yoki tugmaga javob yetib kelmagan. Panel sahifani o‘zi qayta so‘raydi, xuddi brauzerda yangilashni bosgandek; saqlaganlaringiz joyida. Nosozlik yozib olinadi, dasturchi uning sababini topib tuzatishi uchun.",
+            "Sahifa ikkinchi marta ham ochilmasa, «Sahifa yuklanmadi» va «Yangilash» tugmasi chiqadi. Uni bosing; tez-tez takrorlansa, rahbarga qaysi sahifada va soat nechada bo‘lganini yozing: nosozlik yozuvi bo‘yicha sabab tezroq topiladi.",
+          ],
+        },
+        {
           id: "menu",
           title: "Menyu: bo‘lim guruhlari va «Bo‘limni topish»",
           body: {
