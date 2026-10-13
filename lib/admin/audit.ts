@@ -171,6 +171,9 @@ export const AUDIT_ACTIONS = [
   "task.moved",
   "task.cancelled",
   "task.edited",
+  // Рассылка в бот всей команде с «Главной» (lib/admin/broadcast-store.ts).
+  "broadcast.created",
+  "broadcast.cancelled",
   // Обучение: владелец включил или выключил раздел для команды, добавил или
   // убрал материал курса (app/admin/learn/actions.ts).
   "learn.switched",

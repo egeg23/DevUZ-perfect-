@@ -108,6 +108,25 @@ export const leadsSections: Record<string, HelpEntry> = {
           "Kliknij kartę — rozwiną się szczegóły: o której osoba po raz pierwszy weszła dziś do panelu i ile w nim była, oraz przyciski «Zleć zadanie» i «Otwórz jego leady».",
         ],
       },
+      {
+        id: "task",
+        title: "«Szybkie zadanie»",
+        body: [
+          "Zlecenie zadania bez wychodzenia z «Pulpit». Zaznacz, komu — możesz kilka osób naraz, każda dostanie własne zadanie. Napisz, co zrobić, i wybierz termin: «dziś do 18:00», «jutro» (do 18:00) albo «własna data» — czas taszkencki. Kliknij «Zleć zadanie».",
+          "Dalej wszystko jak przy zwykłym zadaniu: bot od razu pisze do wykonawcy w Telegramie z przyciskiem przyjęcia zadania, a do Ciebie — o każdym kroku. W nocy (od 23:00 do 07:00) bot milczy i wiadomość przyjdzie o 07:00 — pod przyciskiem będzie to napisane. Po 18:00 «dziś do 18:00» to już przeszłość: wybierz «jutro» albo własną datę.",
+          "Z karty osoby w «Zespół dziś» przycisk «Zleć zadanie» otwiera ten formularz z tą osobą już zaznaczoną.",
+        ],
+      },
+      {
+        id: "broadcast",
+        title: "«Wiadomość do zespołu przez bota»",
+        body: [
+          "Wiadomość do całego zespołu albo jego części — od bota studia w Telegramie. Na przykład zaproszenie na spotkanie. Wysyłać mogą tylko właściciel i kierownik.",
+          "Napisz treść, wybierz, do kogo: «Wszystkim», «Według ról» (właściciel, kierownicy, menedżerowie) albo «Wybierz osoby». Kiedy: «Teraz» albo «O wybranej godzinie» — czas taszkencki. Bot wysyła przy przebiegu co pięć minut, więc na spotkanie o 15:00 ustaw 14:50. Od 23:00 do 07:00 bot milczy: nocna wiadomość wyjdzie o 07:00, jeśli nie zaznaczysz «Wyślij także w nocy».",
+          "Przed wysłaniem — «Podgląd»: jak wiadomość będzie wyglądać, ile osób ją dostanie i kto dokładnie. Osoby bez Telegramu jej nie dostaną — są pokazane osobno. Ty jej nie dostaniesz — jesteś autorem. Jeśli w czasie czytania podglądu skład zespołu się zmienił, panel poprosi o ponowne otwarcie podglądu, zamiast wysłać do innej liczby osób.",
+          "Każdy dostaje wiadomość jeden raz: jeśli nie dotarła (Telegram nie odpowiedział), bot dośle ją przy kolejnym przebiegu, w ciągu doby. Na dole — «Ostatnie wysyłki»: kiedy, kto, do kogo i do ilu dotarło. Dopóki nic nie wyszło, wysyłkę może «Anuluj» jej autor albo właściciel. Każda wysyłka i anulowanie trafiają do dziennika.",
+        ],
+      },
     ],
   },
 

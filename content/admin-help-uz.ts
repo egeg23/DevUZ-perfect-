@@ -109,6 +109,25 @@ export const uz: HelpCopy = {
             "Kartochkani bosing — tafsilotlar ochiladi: kishi bugun panelga birinchi marta soat nechada kirgani va unda qancha bo‘lgani, hamda «Vazifa qo‘yish» va «Uning lidlarini ochish» tugmalari.",
           ],
         },
+        {
+          id: "task",
+          title: "«Tezkor vazifa»",
+          body: [
+            "«Bosh sahifa»dan chiqmasdan vazifa qo‘yish. Kimga ekanini belgilang — bir nechta kishini birdan tanlash mumkin, har biriga o‘z vazifasi keladi. Nima qilish kerakligini yozing va muddatni tanlang: «bugun 18:00 gacha», «ertaga» (18:00 gacha) yoki «boshqa sana» — vaqt Toshkent vaqti. «Vazifa qo‘yish» tugmasini bosing.",
+            "Keyin hammasi oddiy vazifadagidek: bot darhol ijrochiga Telegramda vazifani ishga olish tugmasi bilan yozadi, sizga esa har bir qadam haqida. Tunda (23:00 dan 07:00 gacha) bot jim, xabar 07:00 da keladi — tugma ostida shunday yoziladi. 18:00 dan keyin «bugun 18:00 gacha» o‘tib ketgan bo‘ladi: «ertaga» yoki boshqa sanani tanlang.",
+            "«Bugun jamoa»dagi kishi kartochkasidan «Vazifa qo‘yish» tugmasi bu shaklni shu kishi belgilangan holda ochadi.",
+          ],
+        },
+        {
+          id: "broadcast",
+          title: "«Jamoaga botda xabar»",
+          body: [
+            "Butun jamoaga yoki uning bir qismiga studiya botidan Telegramda xabar. Masalan, qo‘ng‘iroqqa chaqirish. Faqat egasi va rahbar yubora oladi.",
+            "Matnni yozing, kimga ekanini tanlang: «Hammaga», «Rollar bo‘yicha» (egasi, rahbarlar, menejerlar) yoki «Odamlarni tanlash». Qachon: «Hozir» yoki «Belgilangan vaqtda» — vaqt Toshkent vaqti. Bot har besh daqiqada bir aylanib yuboradi, shuning uchun 15:00 dagi qo‘ng‘iroq uchun 14:50 ni qo‘ying. 23:00 dan 07:00 gacha bot jim: «Tunda ham yuborish» belgilanmasa, tungi xabar 07:00 da ketadi.",
+            "Yuborishdan oldin — «Oldindan ko‘rish»: xabar qanday ko‘rinishi, uni necha kishi va aynan kim olishi. Telegrami yo‘qlarga xabar kelmaydi — ular alohida ko‘rsatiladi. O‘zingizga kelmaydi — siz muallifsiz. Oldindan ko‘rishni o‘qiyotganingizda jamoa tarkibi o‘zgarsa, panel uni boshqa sondagi odamlarga yubormaydi, balki qayta ochishni so‘raydi.",
+            "Har kimga xabar bir marta keladi: yetib bormasa (Telegram javob bermasa) — bot keyingi aylanishda, bir sutka ichida qayta yuboradi. Pastda — «Oxirgi xabarlar»: qachon, kim, kimga va nechtasiga yetgani. Hali hech kimga ketmagan bo‘lsa, xabarni muallif yoki egasi «Bekor qilish» mumkin. Har bir yuborish va bekor qilish jurnalga yoziladi.",
+          ],
+        },
       ],
     },
 
