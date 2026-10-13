@@ -65,6 +65,7 @@ function textOf(t: Picked<typeof tasksDict>, item: Item): string {
   if (item.kind === "done") return t.feedDone(item.actorName, item.title);
   if (item.kind === "failed") return t.feedFailed(item.actorName, item.title);
   if (item.kind === "cancelled") return t.feedCancelled(item.actorName, item.title);
+  if (item.kind === "edited") return t.feedEdited(item.actorName, item.title);
   return t.feedMoved(item.actorName, item.title);
 }
 

@@ -123,13 +123,18 @@ export const PAGE_TOPICS: readonly { prefix: string; section: string; item: stri
   { prefix: "/admin/prospect/", section: "/admin/prospect", item: "texts" },
   { prefix: "/admin/ai-staff/", section: "/admin/ai-staff", item: "bloggers-agent" },
   { prefix: "/admin/learn/", section: "/admin/learn", item: "courses" },
+  // «История задач» — своя страница блока «Задачи» на главной.
+  { prefix: "/admin/tasks", section: "/admin", item: "tasks-history" },
 ];
 
 /** Куда ведёт «Как пользоваться разделом» с этой страницы. null — страница без инструкции. */
 export function helpTopicFor(pathname: string): string | null {
   const path = pathname.split(/[?#]/)[0].replace(/\/+$/, "") || "/admin";
   if (path === "/admin/help") return null;
-  const page = PAGE_TOPICS.find((t) => path.startsWith(t.prefix) && path.length > t.prefix.length);
+  // «/admin/leads/» — только карточки, не сам список; «/admin/tasks» — сама страница.
+  const page = PAGE_TOPICS.find(
+    (t) => path.startsWith(t.prefix) && (path.length > t.prefix.length || !t.prefix.endsWith("/")),
+  );
   if (page) return helpHref(page.section, page.item);
   const section = sectionOfHref(path);
   return section ? helpHref(section) : null;

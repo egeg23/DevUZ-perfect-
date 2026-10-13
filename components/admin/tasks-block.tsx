@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { taskAction, createTaskAction } from "@/app/admin/tasks/actions";
+import { createTaskAction, editTaskAction, taskAction } from "@/app/admin/tasks/actions";
 import { HelpHint } from "@/components/admin/help-link";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { TaskAlertsButton } from "@/components/admin/task-alerts";
@@ -14,13 +14,16 @@ import {
   dueBucket,
   formatDue,
   groupTasks,
+  hasHistory,
   isOpen,
   isOverdue,
   localInputValue,
+  movesOf,
   taskGroup,
   type DueBucket,
   type Task,
   type TaskGroup,
+  type TaskStep,
 } from "@/lib/admin/tasks";
 
 /**
@@ -57,6 +60,11 @@ type RowContext = {
   keep: Record<string, string>;
   /** Не подписывать проект — ряд и так в карточке проекта. */
   hideProject?: boolean;
+  /** История каждой задачи; нет — блока «История» у ряда нет. */
+  steps?: Map<string, TaskStep[]>;
+  /** Для формы «Изменить»: кому можно передать и к каким проектам отнести. */
+  people?: { id: string; display_name: string }[];
+  projectOptions?: { id: string; label: string }[];
 };
 
 function statusLabel(t: T, task: Task, now: Date): { text: string; tone: string } {
@@ -97,10 +105,13 @@ function TaskRow({ task, ctx }: { task: Task; ctx: RowContext }) {
   const creator = task.creator_id === me;
   const project = !ctx.hideProject && task.project_id ? projects.get(task.project_id) : null;
 
+  const steps = ctx.steps?.get(task.id);
+  const moves = movesOf(steps);
   const meta = [
     task.creator_id !== me ? t.from(names.get(task.creator_id) ?? "—") : null,
     task.assignee_id !== me ? t.to(names.get(task.assignee_id) ?? "—") : null,
     task.due_at ? t.due(formatDue(task.due_at)) : t.noDue,
+    moves ? t.movedTimes(moves) : null,
   ].filter(Boolean);
 
   return (
@@ -182,7 +193,125 @@ function TaskRow({ task, ctx }: { task: Task; ctx: RowContext }) {
           ) : null}
         </form>
       ) : null}
+      {open && creator && ctx.people ? <EditForm task={task} ctx={ctx} /> : null}
+      {hasHistory(steps) ? (
+        <details className="mt-2">
+          <summary className="cursor-pointer list-none text-xs text-muted hover:text-text">
+            {t.history(steps!.length)} ▾
+          </summary>
+          <TaskStepList t={t} steps={steps!} names={names} projects={projects} />
+        </details>
+      ) : null}
     </li>
+  );
+}
+
+/**
+ * «Изменить» — тому, кто поставил, у открытой задачи: название, описание,
+ * проект и исполнитель. Срок — не здесь: у него «Перенести срок» и своя
+ * история переносов.
+ */
+function EditForm({ task, ctx }: { task: Task; ctx: RowContext }) {
+  const { t, names, projects } = ctx;
+  const people = ctx.people ?? [];
+  // Отключённый исполнитель или закрытый проект — всё равно в списке, иначе
+  // форма молча подменила бы их первым вариантом.
+  const assignees = people.some((p) => p.id === task.assignee_id)
+    ? people
+    : [{ id: task.assignee_id, display_name: names.get(task.assignee_id) ?? "—" }, ...people];
+  const options = ctx.projectOptions ?? [];
+  const projectList =
+    task.project_id && !options.some((p) => p.id === task.project_id)
+      ? [{ id: task.project_id, label: projects.get(task.project_id) ?? "—" }, ...options]
+      : options;
+  return (
+    <details className="mt-2">
+      <summary className="cursor-pointer list-none text-xs text-muted hover:text-text">{t.edit} ▾</summary>
+      <form action={editTaskAction} className="mt-2 grid grid-cols-1 gap-2 sm:max-w-xl">
+        <Hidden ctx={ctx} task={task} />
+        <label className="grid min-w-0 gap-1 text-xs text-muted">
+          {t.fieldTitle}
+          <input name="title" required maxLength={200} defaultValue={task.title} className={FIELD} />
+        </label>
+        <label className="grid min-w-0 gap-1 text-xs text-muted">
+          {t.fieldBody}
+          <textarea name="body" rows={2} maxLength={2000} defaultValue={task.body} className={FIELD} />
+        </label>
+        <label className="grid min-w-0 gap-1 text-xs text-muted">
+          {t.fieldAssignee}
+          <select name="assignee" defaultValue={task.assignee_id} className={FIELD}>
+            {assignees.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.id === ctx.me ? t.self(p.display_name) : p.display_name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid min-w-0 gap-1 text-xs text-muted">
+          {t.fieldProject}
+          <select name="project" defaultValue={task.project_id ?? ""} className={FIELD}>
+            <option value="">{t.projectNone}</option>
+            {projectList.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="text-xs text-faint">{t.editHint}</p>
+        <div>
+          <SubmitButton base={BUTTON} pendingLabel={t.editSave}>
+            {t.editSave}
+          </SubmitButton>
+        </div>
+      </form>
+    </details>
+  );
+}
+
+/**
+ * История задачи по шагам: кто поставил, взял, перенёс срок (с какого на
+ * какой), изменил (что было → что стало), закрыл. Время — ташкентское.
+ */
+export function TaskStepList({
+  t,
+  steps,
+  names,
+  projects,
+}: {
+  t: T;
+  steps: readonly TaskStep[];
+  names: Map<string, string>;
+  projects: Map<string, string>;
+}) {
+  const who = (id: string | null) => (id ? (names.get(id) ?? "—") : "—");
+  const due = (at: string | null) => (at ? formatDue(at) : t.noDue);
+  const project = (id: string | null) => (id ? (projects.get(id) ?? "—") : t.groupNoProject);
+  const line = (step: TaskStep): string => {
+    const actor = who(step.actor_id);
+    if (step.kind === "created") return t.stepCreated(actor, step.new_due ? t.due(formatDue(step.new_due)) : t.noDue);
+    if (step.kind === "taken") return t.stepTaken(actor);
+    if (step.kind === "done") return t.stepDone(actor);
+    if (step.kind === "failed") return t.stepFailed(actor);
+    if (step.kind === "cancelled") return t.stepCancelled(actor);
+    if (step.kind === "moved") return t.stepMoved(actor, due(step.old_due), due(step.new_due));
+    const c = step.changes ?? {};
+    const parts = [
+      c.title ? t.changeTitle(c.title.from ?? "", c.title.to ?? "") : null,
+      c.body ? t.changeBody : null,
+      c.project ? t.changeProject(project(c.project.from), project(c.project.to)) : null,
+      c.assignee ? t.changeAssignee(who(c.assignee.from), who(c.assignee.to)) : null,
+    ].filter(Boolean);
+    return parts.length ? `${t.stepEdited(actor)}: ${parts.join("; ")}` : t.stepEdited(actor);
+  };
+  return (
+    <ol className="mt-2 flex flex-col gap-1 border-l border-line pl-3 text-xs text-muted">
+      {steps.map((step) => (
+        <li key={step.id}>
+          <span className="font-mono text-faint">{formatDue(step.at)}</span> {line(step)}
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -262,6 +391,9 @@ const OK_NOTICES: ReadonlySet<string> = new Set([
   "failed",
   "moved",
   "cancelled",
+  "edited",
+  "editedNew",
+  "editedNewLater",
 ]);
 
 function Notice({ code, locale }: { code?: string; locale: PanelLocale }) {
@@ -312,7 +444,18 @@ export function TasksView({
   const keep: Record<string, string> = {};
   if (group !== "none") keep.tg = group;
   if (projectFilter) keep.tf = projectFilter;
-  const ctx: RowContext = { t, me: staff.id, names: board.names, projects: labels, now, back: "/admin", keep };
+  const ctx: RowContext = {
+    t,
+    me: staff.id,
+    names: board.names,
+    projects: labels,
+    now,
+    back: "/admin",
+    keep,
+    steps: board.steps,
+    people,
+    projectOptions: projects,
+  };
 
   const byProject = (task: Task) =>
     !projectFilter || (projectFilter === "none" ? !task.project_id : task.project_id === projectFilter);
@@ -328,7 +471,10 @@ export function TasksView({
           {t.title}
           <HelpHint topic={helpAnchor("/admin", "tasks")} />
         </h2>
-        <div className="ml-auto">
+        <div className="ml-auto flex flex-wrap items-center gap-3">
+          <Link href="/admin/tasks" className="text-xs text-green hover:underline">
+            {t.historyLink} →
+          </Link>
           <TaskAlertsButton />
         </div>
       </div>
@@ -513,6 +659,10 @@ export function ProjectTasksView({
   names,
   notice,
   now,
+  steps,
+  projects,
+  people,
+  projectOptions,
 }: {
   staff: Pick<Staff, "id">;
   locale: PanelLocale;
@@ -521,17 +671,25 @@ export function ProjectTasksView({
   names: Map<string, string>;
   notice?: string;
   now: Date;
+  steps?: Map<string, TaskStep[]>;
+  /** Подписи проектов — для истории правок и формы «Изменить». */
+  projects?: Map<string, string>;
+  people?: { id: string; display_name: string }[];
+  projectOptions?: { id: string; label: string }[];
 }) {
   const t = pick(tasksDict, locale);
   const ctx: RowContext = {
     t,
     me: staff.id,
     names,
-    projects: new Map(),
+    projects: projects ?? new Map(),
     now,
     back: `/admin/projects/${projectId}`,
     keep: {},
     hideProject: true,
+    steps,
+    people,
+    projectOptions,
   };
   return (
     <section id="tasks" className="scroll-mt-28 rounded-xl border border-line bg-surface px-4 py-4 sm:px-5">
@@ -553,7 +711,11 @@ export function ProjectTasksView({
 }
 
 export async function ProjectTasksBlock({ staff, projectId, notice }: { staff: Staff; projectId: string; notice?: string }) {
-  const { tasks, names } = await projectTasks(projectId);
+  const [{ tasks, names, projects, steps }, people, projectOptions] = await Promise.all([
+    projectTasks(projectId),
+    taskPeople(),
+    taskProjects(),
+  ]);
   return (
     <ProjectTasksView
       staff={staff}
@@ -563,6 +725,10 @@ export async function ProjectTasksBlock({ staff, projectId, notice }: { staff: S
       names={names}
       notice={notice}
       now={new Date()}
+      steps={steps}
+      projects={projects}
+      people={people}
+      projectOptions={projectOptions}
     />
   );
 }
