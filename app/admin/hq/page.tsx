@@ -4,6 +4,8 @@ import { HqView } from "@/components/admin/hq";
 import { AdminShell } from "@/components/admin/shell";
 import { sendsBroadcasts } from "@/lib/admin/broadcast";
 import { broadcastHistory, broadcastPeople } from "@/lib/admin/broadcast-store";
+import { segmentCounts } from "@/lib/admin/bot-users";
+import { loadBotAudience } from "@/lib/admin/bot-users-store";
 import { requireSection } from "@/lib/admin/guard";
 import { HQ_REFRESH_MS } from "@/lib/admin/hq";
 import { loadHq } from "@/lib/admin/hq-store";
@@ -22,10 +24,12 @@ export default async function HqPage({ searchParams }: { searchParams: Promise<{
   const { to } = await searchParams;
   const now = new Date();
   const broadcasts = sendsBroadcasts(staff.role);
-  const [hq, people, history] = await Promise.all([
+  const [hq, people, history, usersHistory, audience] = await Promise.all([
     loadHq(staff, now),
     broadcastPeople(),
-    broadcasts ? broadcastHistory(10) : Promise.resolve([]),
+    broadcasts ? broadcastHistory("staff", 10) : Promise.resolve([]),
+    broadcasts ? broadcastHistory("users", 10) : Promise.resolve([]),
+    broadcasts ? loadBotAudience() : Promise.resolve(null),
   ]);
   // Себе тоже можно — последним: обычно задачу ставят другим.
   const taskPeople = [
@@ -47,7 +51,11 @@ export default async function HqPage({ searchParams }: { searchParams: Promise<{
             viewer={staff}
             taskPeople={taskPeople}
             preselect={to && /^[0-9a-f-]{36}$/.test(to) ? to : null}
-            broadcast={broadcasts ? { people, history } : null}
+            broadcast={
+              broadcasts && audience
+                ? { people, history, usersHistory, userCounts: segmentCounts(audience.users, audience.marks) }
+                : null
+            }
             now={now}
           />
         }

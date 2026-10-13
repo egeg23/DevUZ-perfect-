@@ -102,9 +102,15 @@ export function sendAtFrom(kind: string, local: string, now: Date): Date | WhenP
 export type BroadcastRow = {
   id: string;
   created_at: string;
+  /** Сотрудникам или пользователям бота. */
+  kind: "staff" | "users";
+  /** Сегмент пользователей бота (lib/admin/bot-users.ts). */
+  segment: string | null;
+  /** Пользователи — chat id, замороженные при отправке. */
+  chats: number[];
   author_id: string | null;
   text: string;
-  audience: "all" | "roles" | "pick";
+  audience: "all" | "roles" | "pick" | "users";
   roles: string[];
   recipients: string[];
   send_at: string;

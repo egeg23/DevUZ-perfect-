@@ -4,10 +4,11 @@ import { HqBroadcast } from "@/components/admin/hq-broadcast";
 import { HqTask } from "@/components/admin/hq-task";
 import { broadcastDict, hqTaskDict } from "@/content/admin-panel/hq-actions";
 import { canCancel, statusOf, type BroadcastPerson } from "@/lib/admin/broadcast";
+import type { Segment } from "@/lib/admin/bot-users";
 import type { HistoryItem } from "@/lib/admin/broadcast-store";
 import { helpAnchor } from "@/lib/admin/help";
 import { clockOf } from "@/lib/admin/hq";
-import { pick, type PanelLocale } from "@/lib/admin/i18n";
+import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import type { Role } from "@/lib/admin/roles";
 
 /**
@@ -29,46 +30,30 @@ function stamp(iso: string): string {
   return `${String(d.getUTCDate()).padStart(2, "0")}.${String(d.getUTCMonth() + 1).padStart(2, "0")} ${clockOf(iso)}`;
 }
 
-export function HqSide({
-  locale,
+const SEGMENT_WORD: Record<string, "segAll" | "segPartners" | "segBuyers" | "segClients"> = {
+  all: "segAll",
+  partners: "segPartners",
+  buyers: "segBuyers",
+  clients: "segClients",
+};
+
+/** История одного вида рассылок: сотрудникам — «дошло N из M», пользователям — ещё «не дошло» и «заблокировали бота». */
+function History({
+  items,
+  tb,
   viewer,
-  taskPeople,
-  preselect,
-  broadcast,
   now,
 }: {
-  locale: PanelLocale;
+  items: HistoryItem[];
+  tb: Picked<typeof broadcastDict>;
   viewer: { id: string; role: Role };
-  taskPeople: { id: string; name: string }[];
-  preselect?: string | null;
-  /** null — рассылка этому человеку не положена (не владелец и не руководитель). */
-  broadcast: { people: BroadcastPerson[]; history: HistoryItem[] } | null;
   now: Date;
 }) {
-  const tt = pick(hqTaskDict, locale);
-  const tb = pick(broadcastDict, locale);
   return (
     <>
-      <section id="task" className={`${CARD} scroll-mt-24`} aria-labelledby="hq-task">
-        <h2 id="hq-task" className="mb-4 flex items-center gap-2 text-sm font-semibold">
-          {tt.title}
-          <HelpHint topic={helpAnchor("/admin/hq", "task")} />
-        </h2>
-        <HqTask people={taskPeople} preselect={preselect} />
-      </section>
-
-      {broadcast ? (
-        <section id="broadcast" className={`${CARD} scroll-mt-24`} aria-labelledby="hq-broadcast">
-          <h2 id="hq-broadcast" className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            {tb.title}
-            <HelpHint topic={helpAnchor("/admin/hq", "broadcast")} />
-          </h2>
-          <HqBroadcast people={broadcast.people} selfId={viewer.id} />
-
-          <h3 className="mt-6 text-xs font-medium uppercase tracking-wider text-faint">{tb.historyTitle}</h3>
-          {broadcast.history.length ? (
+          {items.length ? (
             <ul className="mt-2 flex flex-col divide-y divide-line/60">
-              {broadcast.history.map((b) => {
+              {items.map((b) => {
                 const status = statusOf(b, now);
                 const to =
                   b.audience === "all"
@@ -101,7 +86,17 @@ export function HqSide({
                     </div>
                     <p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-sm text-text">{b.text}</p>
                     <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-xs text-muted">{tb.historyLine(b.authorName, to, b.delivered, b.recipients.length)}</p>
+                      <p className="text-xs text-muted">
+                        {b.kind === "users" && b.tally
+                          ? tb.usersHistoryLine(
+                              `${b.authorName} → ${tb[SEGMENT_WORD[b.segment ?? "all"] ?? "segAll"]}`,
+                              b.tally.sent,
+                              b.tally.failed,
+                              b.tally.blocked,
+                              b.chats.length,
+                            )
+                          : tb.historyLine(b.authorName, to, b.delivered, b.recipients.length)}
+                      </p>
                       {canCancel(b, b.delivered, viewer, now) ? (
                         <form action={cancelBroadcastAction}>
                           <input type="hidden" name="id" value={b.id} />
@@ -118,6 +113,57 @@ export function HqSide({
           ) : (
             <p className="mt-2 text-sm text-faint">{tb.historyNone}</p>
           )}
+    </>
+  );
+}
+
+export function HqSide({
+  locale,
+  viewer,
+  taskPeople,
+  preselect,
+  broadcast,
+  now,
+}: {
+  locale: PanelLocale;
+  viewer: { id: string; role: Role };
+  taskPeople: { id: string; name: string }[];
+  preselect?: string | null;
+  /** null — рассылка этому человеку не положена (не владелец и не руководитель). */
+  broadcast: {
+    people: BroadcastPerson[];
+    history: HistoryItem[];
+    usersHistory: HistoryItem[];
+    userCounts: Record<Segment, number>;
+  } | null;
+  now: Date;
+}) {
+  const tt = pick(hqTaskDict, locale);
+  const tb = pick(broadcastDict, locale);
+  return (
+    <>
+      <section id="task" className={`${CARD} scroll-mt-24`} aria-labelledby="hq-task">
+        <h2 id="hq-task" className="mb-4 flex items-center gap-2 text-sm font-semibold">
+          {tt.title}
+          <HelpHint topic={helpAnchor("/admin/hq", "task")} />
+        </h2>
+        <HqTask people={taskPeople} preselect={preselect} />
+      </section>
+
+      {broadcast ? (
+        <section id="broadcast" className={`${CARD} scroll-mt-24`} aria-labelledby="hq-broadcast">
+          <h2 id="hq-broadcast" className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            {tb.title}
+            <HelpHint topic={helpAnchor("/admin/hq", "broadcast")} />
+          </h2>
+          <HqBroadcast
+            people={broadcast.people}
+            selfId={viewer.id}
+            userCounts={broadcast.userCounts}
+            historyStaff={<History items={broadcast.history} tb={tb} viewer={viewer} now={now} />}
+            historyUsers={<History items={broadcast.usersHistory} tb={tb} viewer={viewer} now={now} />}
+          />
+
         </section>
       ) : null}
     </>

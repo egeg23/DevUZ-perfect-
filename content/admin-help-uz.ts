@@ -130,10 +130,12 @@ export const uz: HelpCopy = {
           id: "broadcast",
           title: "«Jamoaga botda xabar»",
           body: [
-            "Butun jamoaga yoki uning bir qismiga studiya botidan Telegramda xabar. Masalan, qo‘ng‘iroqqa chaqirish. Faqat egasi va rahbar yubora oladi.",
+            "Studiya botidan Telegramda o‘z xabaringiz — ikkita yorliq. «Xodimlarga» — butun jamoaga yoki uning bir qismiga, masalan, qo‘ng‘iroqqa chaqirish. «Bot foydalanuvchilariga» — botga o‘zi yozganlarga: chatdagi mijozlar va lidlar, hamkorlar, do‘kon xaridorlari. Faqat egasi va rahbar yubora oladi.",
             "Matnni yozing, kimga ekanini tanlang: «Hammaga», «Rollar bo‘yicha» (egasi, rahbarlar, menejerlar) yoki «Odamlarni tanlash». Qachon: «Hozir» yoki «Belgilangan vaqtda» — vaqt Toshkent vaqti. Bot har besh daqiqada bir aylanib yuboradi, shuning uchun 15:00 dagi qo‘ng‘iroq uchun 14:50 ni qo‘ying. 23:00 dan 07:00 gacha bot jim: «Tunda ham yuborish» belgilanmasa, tungi xabar 07:00 da ketadi.",
             "Yuborishdan oldin — «Oldindan ko‘rish»: xabar qanday ko‘rinishi, uni necha kishi va aynan kim olishi. Telegrami yo‘qlarga xabar kelmaydi — ular alohida ko‘rsatiladi. O‘zingizga kelmaydi — siz muallifsiz. Oldindan ko‘rishni o‘qiyotganingizda jamoa tarkibi o‘zgarsa, panel uni boshqa sondagi odamlarga yubormaydi, balki qayta ochishni so‘raydi.",
             "Har kimga xabar bir marta keladi: yetib bormasa (Telegram javob bermasa) — bot keyingi aylanishda, bir sutka ichida qayta yuboradi. Pastda — «Oxirgi xabarlar»: qachon, kim, kimga va nechtasiga yetgani. Hali hech kimga ketmagan bo‘lsa, xabarni muallif yoki egasi «Bekor qilish» mumkin. Har bir yuborish va bekor qilish jurnalga yoziladi.",
+            "«Bot foydalanuvchilariga»: kimga ekanini tanlang — «Hammaga», «Hamkorlarga», «Do‘kon xaridorlariga» yoki «Mijozlar va lidlarga»; har birining yonida ularning soni. Bu ro‘yxatda xodimlar hech qachon bo‘lmaydi. Aynan sizning matningiz imzosiz ketadi. Faqat bot bilan o‘zi suhbat boshlaganlarga yozamiz; botni bloklaganga yozmaymiz — Telegram rad etadi va kishi botga yana o‘zi yozmaguncha belgilanadi. Xabarlar porsiyalab, soniyasiga 25 tadan tez emas ketadi. Shu yorliqdagi «Oxirgi xabarlar»da nechtasi yetgani, nechtasi yetmagani va necha kishi botni bloklagani ko‘rinadi.",
+            "Xabar yuborish SIga bog‘liq emas: matningiz paneldan bazamiz va bot orqali to‘g‘ridan-to‘g‘ri Telegramga ketadi. Model ishlamasa ham, xabar yuborish odatdagidek ishlaydi.",
           ],
         },
       ],

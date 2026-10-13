@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
 
 import { broadcastAction, type BroadcastState } from "@/app/admin/hq/actions";
 import { CHIP, FIELD, PRIMARY } from "@/components/admin/hq-task";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { broadcastDict } from "@/content/admin-panel/hq-actions";
 import { reachable, recipientsOf, type Audience, type BroadcastPerson } from "@/lib/admin/broadcast";
+import { SEGMENTS, type Segment } from "@/lib/admin/bot-users";
 import type { Role } from "@/lib/admin/roles";
 
 /**
@@ -22,8 +23,32 @@ const ROLE_KEYS: readonly [Role, "roleAdmin" | "roleHead" | "roleManager"][] = [
   ["manager", "roleManager"],
 ];
 
-export function HqBroadcast({ people, selfId }: { people: BroadcastPerson[]; selfId: string }) {
+const SEGMENT_KEY: Record<Segment, "segAll" | "segPartners" | "segBuyers" | "segClients"> = {
+  all: "segAll",
+  partners: "segPartners",
+  buyers: "segBuyers",
+  clients: "segClients",
+};
+
+export function HqBroadcast({
+  people,
+  selfId,
+  userCounts,
+  historyStaff,
+  historyUsers,
+}: {
+  people: BroadcastPerson[];
+  selfId: string;
+  /** Сколько пользователей бота в каждом сегменте — без сотрудников и заблокировавших. */
+  userCounts: Record<Segment, number>;
+  historyStaff: ReactNode;
+  historyUsers: ReactNode;
+}) {
   const t = usePanelDict(broadcastDict);
+  // Владелец, 13.10.2026: «рассылка своего текста через бот сотрудникам или
+  // пользователям, раздели их» — две вкладки, у каждой своя история.
+  const [target, setTarget] = useState<"staff" | "users">("staff");
+  const [segment, setSegment] = useState<Segment>("all");
   const [state, action, pending] = useActionState<BroadcastState, FormData>(broadcastAction, null);
   const [text, setText] = useState("");
   const [kind, setKind] = useState<Audience["kind"]>("all");
@@ -46,7 +71,9 @@ export function HqBroadcast({ people, selfId }: { people: BroadcastPerson[]; sel
   const reach = reachable(listed);
   const missing = listed.filter((p) => !p.telegram);
   const others = people.filter((p) => p.id !== selfId);
-  const ready = text.trim().length > 0 && reach.length > 0 && (when === "now" || Boolean(sendAt));
+  const users = target === "users";
+  const count = users ? userCounts[segment] : reach.length;
+  const ready = text.trim().length > 0 && count > 0 && (when === "now" || Boolean(sendAt));
   const toggle = <T,>(list: T[], value: T) => (list.includes(value) ? list.filter((x) => x !== value) : [...list, value]);
 
   const message = !state
@@ -72,8 +99,11 @@ export function HqBroadcast({ people, selfId }: { people: BroadcastPerson[]; sel
         }[state.error];
 
   return (
+    <div className="flex flex-col gap-4">
     <form action={action} className="flex flex-col gap-4">
       {/* Всё, что выбрано, уходит на сервер и из предпросмотра: поля скрытые. */}
+      <input type="hidden" name="kind" value={target} />
+      {users ? <input type="hidden" name="segment" value={segment} /> : null}
       <input type="hidden" name="text" value={text} />
       <input type="hidden" name="audience" value={kind} />
       {kind === "roles" ? roles.map((r) => <input key={r} type="hidden" name="role" value={r} />) : null}
@@ -81,11 +111,34 @@ export function HqBroadcast({ people, selfId }: { people: BroadcastPerson[]; sel
       <input type="hidden" name="when" value={when} />
       <input type="hidden" name="send_at" value={sendAt} />
       {night ? <input type="hidden" name="night" value="on" /> : null}
-      <input type="hidden" name="expected" value={reach.length} />
+      <input type="hidden" name="expected" value={count} />
+
+      <div role="tablist" className="grid grid-cols-2 gap-1 rounded-2xl bg-surface-2/70 p-1">
+        {(
+          [
+            ["staff", t.tabStaff],
+            ["users", t.tabUsers],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={target === value}
+            onClick={() => {
+              setTarget(value);
+              setPreview(false);
+            }}
+            className={`min-h-11 rounded-xl px-3 text-sm transition ${target === value ? "bg-surface font-semibold text-text shadow" : "text-muted hover:text-text"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {!preview ? (
         <>
-          <p className="text-sm text-muted">{t.intro}</p>
+          <p className="text-sm text-muted">{users ? t.usersIntro : t.intro}</p>
           <label className="flex flex-col gap-2">
             <span className="text-xs font-medium uppercase tracking-wider text-faint">{t.text}</span>
             <textarea
@@ -98,6 +151,21 @@ export function HqBroadcast({ people, selfId }: { people: BroadcastPerson[]; sel
             />
           </label>
 
+          {users ? (
+            <fieldset>
+              <legend className="text-xs font-medium uppercase tracking-wider text-faint">{t.segment}</legend>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {SEGMENTS.map((value) => (
+                  <label key={value} className={CHIP}>
+                    <input type="radio" name="segment_ui" checked={segment === value} onChange={() => setSegment(value)} className="sr-only" />
+                    {t[SEGMENT_KEY[value]]}
+                    <span className="ml-2 font-mono text-xs opacity-70">{userCounts[value]}</span>
+                  </label>
+                ))}
+              </div>
+              {userCounts.all === 0 ? <p className="mt-2 text-xs text-gold">{t.usersNone}</p> : null}
+            </fieldset>
+          ) : (
           <fieldset>
             <legend className="text-xs font-medium uppercase tracking-wider text-faint">{t.audience}</legend>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -135,6 +203,7 @@ export function HqBroadcast({ people, selfId }: { people: BroadcastPerson[]; sel
               </div>
             ) : null}
           </fieldset>
+          )}
 
           <fieldset>
             <legend className="text-xs font-medium uppercase tracking-wider text-faint">{t.when}</legend>
@@ -175,18 +244,26 @@ export function HqBroadcast({ people, selfId }: { people: BroadcastPerson[]; sel
           <p className="text-xs font-medium uppercase tracking-wider text-faint">{t.previewTitle}</p>
           {/* Пузырь как в Telegram: так сообщение и придёт. */}
           <div className="max-w-md rounded-3xl rounded-bl-md bg-surface-2 px-4 py-3 text-sm leading-relaxed text-text">
-            <p className="font-semibold">📣 …</p>
-            <p className="mt-2 whitespace-pre-wrap break-words">{text.trim()}</p>
+            {users ? null : <p className="mb-2 font-semibold">📣 …</p>}
+            <p className="whitespace-pre-wrap break-words">{text.trim()}</p>
           </div>
-          <div className="rounded-2xl bg-green/5 px-4 py-3 text-sm">
-            <p className="font-semibold text-green">{t.willGet(reach.length)}</p>
-            <p className="mt-1 text-muted">{reach.map((p) => p.display_name).join(", ")}</p>
-            {missing.length ? <p className="mt-1 text-gold">{t.noTelegram(missing.map((p) => p.display_name).join(", "))}</p> : null}
-            <p className="mt-1 text-xs text-faint">{t.notYou}</p>
-          </div>
+          {users ? (
+            <div className="rounded-2xl bg-green/5 px-4 py-3 text-sm">
+              <p className="font-semibold text-green">{t.willGetUsers(count)}</p>
+              <p className="mt-1 text-muted">{t[SEGMENT_KEY[segment]]}</p>
+              <p className="mt-1 text-xs text-faint">{t.usersNote}</p>
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-green/5 px-4 py-3 text-sm">
+              <p className="font-semibold text-green">{t.willGet(reach.length)}</p>
+              <p className="mt-1 text-muted">{reach.map((p) => p.display_name).join(", ")}</p>
+              {missing.length ? <p className="mt-1 text-gold">{t.noTelegram(missing.map((p) => p.display_name).join(", "))}</p> : null}
+              <p className="mt-1 text-xs text-faint">{t.notYou}</p>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
             <button type="submit" disabled={pending || !ready} className={PRIMARY}>
-              {pending ? t.sending : when === "at" ? t.schedule(sendAt.replace("T", " ")) : t.sendNow(reach.length)}
+              {pending ? t.sending : when === "at" ? t.schedule(sendAt.replace("T", " ")) : t.sendNow(count)}
             </button>
             <button
               type="button"
@@ -204,6 +281,16 @@ export function HqBroadcast({ people, selfId }: { people: BroadcastPerson[]; sel
           {message}
         </p>
       ) : null}
+      <p className="text-xs text-faint">{t.noModel}</p>
     </form>
+
+    {/* История — вне формы: у неё свои формы «Отменить», а форма в форме не работает. */}
+    <div>
+      <h3 className="mt-2 text-xs font-medium uppercase tracking-wider text-faint">
+        {t.historyTitle} · {users ? t.tabUsers : t.tabStaff}
+      </h3>
+      {users ? historyUsers : historyStaff}
+    </div>
+    </div>
   );
 }
