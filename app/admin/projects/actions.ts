@@ -27,6 +27,8 @@ export async function addProject(formData: FormData) {
       // Ведущего выбирает владелец; у остальных поля нет, и ведут они сами.
       ownerStaffId: String(formData.get("owner") ?? "") || null,
       client: String(formData.get("client") ?? ""),
+      // Из лида («🏆 Выиграли» → «Завести проект»): ведущий — тот, у кого лид.
+      leadId: String(formData.get("lead") ?? "") || null,
       amountUsd: numberOrNull(formData.get("amount")),
       deadline: String(formData.get("deadline") ?? "") || null,
     },

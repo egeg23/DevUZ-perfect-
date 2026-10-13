@@ -63,6 +63,10 @@ export const AUDIT_ACTIONS = [
   "partner.client_claimed",
   "partner.client_lead",
   "lead.inn_set",
+  // Порядок в лидах (lib/admin/lead-tidy.ts): «⏳ Ещё в работе» под вопросом
+  // бота и лид, который бот сам закрыл «проиграли» после 21 дня без движения.
+  "lead.idle_snoozed",
+  "lead.auto_lost",
   "partner.client_cancelled",
   "partner.payout_auto",
   "partner.accumulate_set",

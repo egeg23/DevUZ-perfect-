@@ -90,6 +90,11 @@ export const projectsListDict = defineDict({
   emptyAll: { ru: "Проектов пока нет.", uz: "Hozircha loyihalar yo‘q.", pl: "Nie ma jeszcze projektów." },
   emptyActive: { ru: "Активных проектов нет.", uz: "Faol loyihalar yo‘q.", pl: "Brak aktywnych projektów." },
   newProject: { ru: "Новый проект", uz: "Yangi loyiha", pl: "Nowy projekt" },
+  fromLead: {
+    ru: (name: string) => `🏆 Проект из лида «${name}»: ведёт тот, у кого лид. Проверьте название и сумму и нажмите «Создать».`,
+    uz: (name: string) => `🏆 «${name}» lididan loyiha: lid kimda bo‘lsa, o‘sha olib boradi. Nom va summani tekshirib, «Yaratish»ni bosing.`,
+    pl: (name: string) => `🏆 Projekt z leada «${name}»: prowadzi go osoba, która ma leada. Sprawdź nazwę i kwotę i kliknij «Utwórz».`,
+  },
   ownerAria: { ru: "Ведёт", uz: "Olib boradi", pl: "Prowadzi" },
   ownerPick: {
     ru: "Кто ведёт — ему идёт начисление",

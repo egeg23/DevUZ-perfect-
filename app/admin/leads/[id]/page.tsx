@@ -448,6 +448,9 @@ export default async function LeadPage({
                 </button>
               </form>
             ))}
+            {lead.status === "lost" && lead.tidy_auto_lost_at ? (
+              <p className="w-full text-xs text-gold">{t.autoLost(cardWhen(lead.tidy_auto_lost_at, locale))}</p>
+            ) : null}
           </div>
         ) : null}
       </section>
