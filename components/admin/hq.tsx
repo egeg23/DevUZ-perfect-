@@ -362,7 +362,7 @@ export function HqView({
   /** Как обратиться к тому, кто смотрит. */
   name: string;
   now: Date;
-  /** Под «Требует внимания»: быстрая задача, рассылка (если есть). */
+  /** Строкой под пульсом: быстрая задача, рассылка (если есть). */
   side?: ReactNode;
   personTaskHref?: (id: string) => string;
 }) {
@@ -403,7 +403,6 @@ export function HqView({
             чисел за неделю. На большом экране — справа, рядом с пульсом. */}
         <div className="flex flex-col gap-5 sm:gap-6 lg:order-2">
           <AttentionList items={hq.attention} t={t} now={now} />
-          {side}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:order-1 lg:col-span-2">
@@ -478,6 +477,10 @@ export function HqView({
           ) : null}
         </div>
       </div>
+
+      {/* Быстрая задача и рассылка — своей строкой: в колонке справа они
+          вытягивали её вниз, и под пульсом оставалась пустота. */}
+      {side ? <div className="grid gap-5 sm:gap-6 lg:grid-cols-2 lg:items-start">{side}</div> : null}
 
       <section id="people" aria-labelledby="hq-people" className="scroll-mt-24">
         <div className="mb-3 flex items-center gap-3">

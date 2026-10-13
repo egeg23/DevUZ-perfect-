@@ -2,6 +2,7 @@ import { wants } from "@/lib/admin/notify-prefs";
 import { after } from "next/server";
 
 import { record } from "@/lib/admin/audit";
+import { sendBroadcasts } from "@/lib/admin/broadcast-store";
 import { preparePortionsInBackground, runPortions } from "@/lib/admin/portion-store";
 import { feedStreams } from "@/lib/admin/stream-store";
 import { broadcastDuePrototypes } from "@/lib/admin/prototype-claim-store";
@@ -311,6 +312,11 @@ async function sweep(): Promise<Response> {
   });
   after(async () => {
     await sendTeamNews(new Date()).catch((error) => console.error("объявления:", error));
+  });
+  // Рассылки с «Главной»: назначенные на время и недошедшие с прошлого
+  // прохода — каждому один раз, ночью только с галочкой (lib/admin/broadcast-store).
+  after(async () => {
+    await sendBroadcasts(new Date()).catch((error) => console.error("рассылка:", error));
   });
   // «Доброе утро» сотрудникам по имени — каждый день с 09:00, каждому один
   // раз (lib/admin/morning-store).
