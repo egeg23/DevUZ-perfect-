@@ -623,6 +623,14 @@ export const moreSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "crash",
+        title: "Strona się nie załadowała",
+        body: [
+          "Czasem zamiast strony na sekundę pojawia się «Odświeżamy stronę…»: tak bywa przy krótkiej przerwie w połączeniu z serwerem, gdy nie doszła odpowiedź na przejście lub przycisk. Panel sam ponownie pobiera stronę, jak po kliknięciu odświeżenia w przeglądarce; wszystko, co już zapisałeś, jest na miejscu. Błąd jest przy tym zapisywany, żeby programista znalazł i usunął jego przyczynę.",
+          "Jeśli strona nie wstanie także za drugim razem, pojawi się «Strona się nie załadowała» i przycisk «Odśwież». Kliknij go; jeśli powtarza się często, napisz do kierownika, na jakiej stronie i o której: po zapisie błędu przyczynę znajdzie się szybciej.",
+        ],
+      },
+      {
         id: "menu",
         title: "Menu: grupy sekcji i «Znajdź sekcję»",
         body: {
