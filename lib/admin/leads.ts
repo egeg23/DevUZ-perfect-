@@ -229,6 +229,10 @@ export async function listLeads(
     query = query.is("assigned_staff_id", null);
   } else if (filter.owner === "mine" && filter.ownerStaffId) {
     query = query.eq("assigned_staff_id", filter.ownerStaffId);
+  } else if (filter.owner && scope === "all" && /^[0-9a-f-]{36}$/.test(filter.owner)) {
+    // Лиды одного человека — из его карточки на «Главной». Только тем, кто
+    // и так видит всех: менеджеру чужой id в адресе ничего не открывает.
+    query = query.eq("assigned_staff_id", filter.owner);
   }
 
   const { data, count, error } = await query;

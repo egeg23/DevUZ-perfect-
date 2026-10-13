@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { signOut } from "@/app/admin/actions";
-import { ROLE_BADGE, navOf } from "@/lib/admin/roles";
+import { ROLE_BADGE, homeOf, navOf } from "@/lib/admin/roles";
 import { findable, menuOf } from "@/lib/admin/nav";
 import type { Staff } from "@/lib/admin/session";
 import { pick } from "@/lib/admin/i18n";
@@ -55,7 +55,7 @@ export function AdminShell({
             ради перехода в другой раздел — лишняя прокрутка в обе стороны. */}
         <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">
           <div className="mx-auto flex max-w-7xl items-center gap-x-3 px-4 py-3 sm:px-5">
-            <Link href="/admin" className="font-mono text-xs uppercase tracking-[0.2em] text-faint">
+            <Link href={homeOf(staff)} className="font-mono text-xs uppercase tracking-[0.2em] text-faint">
               DevUz<span className="hidden sm:inline"> · {t.panel}</span>
             </Link>
 
@@ -67,7 +67,9 @@ export function AdminShell({
               <LocaleSwitch />
               <span className="flex items-center gap-2 text-muted">
                 <span className="max-w-[7rem] truncate sm:max-w-none">{staff.display_name}</span>
-                <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint">
+                {/* На телефоне роль не влезала рядом с именем руководителя
+                    («рук. проектов») и сдвигала шапку вбок — с планшета она есть. */}
+                <span className="hidden rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-faint sm:inline">
                   {ROLE_BADGE[staff.role][locale]}
                 </span>
               </span>

@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin/session";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
 import { NEXT_COOKIE, returnTo } from "@/lib/admin/return-to";
+import { homeOf } from "@/lib/admin/roles";
 import { PANEL_LANG_COOKIE } from "@/lib/admin/i18n";
 
 /**
@@ -91,5 +92,7 @@ export async function signIn(formData: FormData) {
     meta: { role: staff.role, to: wanted ?? "/admin" },
   });
 
-  redirect(returnTo(wanted));
+  // Шёл никуда — домой: владельцу и руководителю «Главная» (homeOf).
+  const to = returnTo(wanted);
+  redirect(to === "/admin" ? homeOf(staff) : to);
 }
