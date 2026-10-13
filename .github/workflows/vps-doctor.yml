@@ -404,12 +404,12 @@ jobs:
               echo "· $GX не найден"
             fi
             echo "конфиги nginx с доменом витрины:"
-            grep -rls "globalex.maximov-tech.ru" /etc/nginx/ 2>/dev/null | sed 's/^/  /'
+            grep -rls "cases.devuz.studio" /etc/nginx/ 2>/dev/null | sed 's/^/  /'
             ls -l /etc/nginx/sites-enabled/ 2>/dev/null | tail -n +2 | awk '{print "  " $9, $10, $11}'
             echo "где в nginx стоит X-Robots-Tag:"
             grep -rn "X-Robots-Tag" /etc/nginx/ 2>/dev/null | sed 's/^/  /' || true
             echo "снаружи:"
-            curl -sS -o /dev/null -D - --max-time 10 --noproxy '*' https://globalex.maximov-tech.ru/mavera 2>/dev/null \
+            curl -sS -o /dev/null -D - --max-time 10 --noproxy '*' https://cases.devuz.studio/mavera 2>/dev/null \
               | grep -i -E "^(HTTP|x-robots)" | sed 's/^/  /'
             echo "выкатки витрины за 6 часов:"
             journalctl -u globalex-autodeploy --since "-6h" --no-pager -o cat 2>/dev/null \

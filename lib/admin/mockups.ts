@@ -27,7 +27,7 @@ import { mockupNicheDict } from "@/content/admin-panel/mockups";
 import type { PanelLocale, Tr } from "@/lib/admin/i18n";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 
-export const SHOWCASE_HOST = "https://globalex.maximov-tech.ru/";
+export const SHOWCASE_HOST = "https://cases.devuz.studio/";
 
 /**
  * Проекты витрины, закрытые кодом: проект в content/cases.ts → ключ в
