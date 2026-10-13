@@ -8,6 +8,7 @@ import { broadcastDuePrototypes } from "@/lib/admin/prototype-claim-store";
 import { runTaskSweep } from "@/lib/admin/task-store";
 import { sendTeamNews } from "@/lib/admin/team-news";
 import { sendMorningGreetings } from "@/lib/admin/morning-store";
+import { runLeadTidy } from "@/lib/admin/lead-tidy-store";
 import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { sendBloggerInvites, sendInviteSummary } from "@/lib/admin/blogger-invite-store";
@@ -306,6 +307,11 @@ async function sweep(): Promise<Response> {
   // раз (lib/admin/morning-store).
   after(async () => {
     await sendMorningGreetings(new Date()).catch((error) => console.error("доброе утро:", error));
+  });
+  // Порядок в лидах: в 10:00 — вопрос по лидам «в работе» без движения,
+  // забытые 21+ день — в «проиграли» (lib/admin/lead-tidy-store).
+  after(async () => {
+    await runLeadTidy(new Date()).catch((error) => console.error("порядок в лидах:", error));
   });
   // Сигнал о молчании: в 12:00 — тому, у кого за день ни касаний, ни
   // панели, в 15:00 — руководителям, кто молчит (lib/admin/silence-store).

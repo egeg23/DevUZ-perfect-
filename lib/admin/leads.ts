@@ -85,6 +85,8 @@ export const DETAIL_COLUMNS = [
   // партнёра (lib/partners/store.ts, attributeClientLead).
   "client_inn",
   "partner_client_id",
+  // Бот закрыл «проиграли» сам: 21 день без движения (lib/admin/lead-tidy.ts).
+  "tidy_auto_lost_at",
   "brief",
 ].join(", ");
 
@@ -138,6 +140,8 @@ export type LeadDetail = LeadRow & {
   contact_revealed_by: string | null;
   /** Бриф с витрины структурой — есть только у лидов с витрины. */
   brief: Brief | null;
+  /** Бот закрыл «проиграли» сам (lib/admin/lead-tidy.ts); null — нет. */
+  tidy_auto_lost_at?: string | null;
   /** ИНН (СТИР) компании клиента: 9–12 цифр. */
   client_inn: string | null;
   /** Клиент, которого партнёр закрепил вручную по ИНН. */

@@ -179,6 +179,16 @@ export const leadVoidDict = defineDict({
 export const leadCardDict = defineDict({
   back: { ru: "← к списку", uz: "← ro‘yxatga", pl: "← do listy" },
 
+  // ── Порядок в лидах (lib/admin/lead-tidy.ts) ──
+  autoLost: {
+    ru: (when: string) =>
+      `🗂 Бот закрыл лид как «проиграли» ${when}: 21 день без движения и без ответа на его вопрос. Если клиент ещё в работе — нажмите «в работе».`,
+    uz: (when: string) =>
+      `🗂 Bot lidni ${when} da «yutqazilgan» deb yopdi: 21 kun harakatsiz va savoliga javob yo‘q. Mijoz hali ishda bo‘lsa — «ishda»ni bosing.`,
+    pl: (when: string) =>
+      `🗂 Bot zamknął leada jako «przegrany» ${when}: 21 dni bez ruchu i bez odpowiedzi na jego pytanie. Jeśli klient jest nadal w toku, kliknij «w toku».`,
+  },
+
   // ── Очередь ──
   yourTurn: {
     ru: (until: string) => `⏳ Лид ваш до ${until}. Не возьмёте — он уйдёт следующему по очереди.`,

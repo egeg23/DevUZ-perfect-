@@ -7,6 +7,7 @@ import { money } from "@/lib/admin/finance";
 import { requireSection } from "@/lib/admin/guard";
 import { PANEL_INTL, pick, type PanelLocale } from "@/lib/admin/i18n";
 import { loadPeople } from "@/lib/admin/ledger";
+import { leadById } from "@/lib/admin/leads";
 import { daysOnStage, listProjects, stageProgress } from "@/lib/admin/projects";
 
 export const dynamic = "force-dynamic";
@@ -24,10 +25,13 @@ function shortDate(value: string | null, locale: PanelLocale): string {
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ all?: string; r?: string }>;
+  searchParams: Promise<{ all?: string; r?: string; lead?: string }>;
 }) {
   const staff = await requireSection("/admin/projects");
-  const { all, r } = await searchParams;
+  const { all, r, lead: leadParam } = await searchParams;
+  // «🏆 Выиграли» → «Завести проект»: форма заполнена из лида, ведущий —
+  // тот, у кого лид (lib/admin/projects.ts, createProject).
+  const fromLead = leadParam && /^[0-9a-f-]{36}$/i.test(leadParam) ? await leadById(leadParam) : null;
   const locale = staff.panel_locale;
   const t = pick(projectsListDict, locale);
 
@@ -128,7 +132,11 @@ export default async function ProjectsPage({
 
       <section className="mt-8 rounded-xl border border-line bg-surface px-5 py-4">
         <h2 className="text-xs uppercase tracking-wider text-faint">{t.newProject}</h2>
+        {fromLead ? (
+          <p className="mt-2 text-sm text-green">{t.fromLead(fromLead.company || fromLead.contact_name || "—")}</p>
+        ) : null}
         <form action={addProject} className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {fromLead ? <input type="hidden" name="lead" value={fromLead.id} /> : null}
           {/* Проект, который владелец заводит на себя, никому не даёт
               начислений: владелец в них не участвует. Поэтому у него выбор
               ведущего обязателен и стоит первым. */}
@@ -136,7 +144,7 @@ export default async function ProjectsPage({
             <select
               name="owner"
               required
-              defaultValue=""
+              defaultValue={fromLead?.assigned_staff_id ?? ""}
               aria-label={t.ownerAria}
               className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm sm:col-span-2 lg:col-span-4"
             >
@@ -156,12 +164,14 @@ export default async function ProjectsPage({
             name="title"
             required
             maxLength={200}
+            defaultValue={fromLead?.company ?? ""}
             placeholder={t.titlePh}
             className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm"
           />
           <input
             name="client"
             maxLength={200}
+            defaultValue={fromLead?.contact_name ?? ""}
             placeholder={t.clientPh}
             className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm"
           />

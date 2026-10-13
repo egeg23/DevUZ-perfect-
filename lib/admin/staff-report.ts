@@ -51,6 +51,10 @@ export type StaffDay = {
   actions: number;
   /** Сколько тёплых лидов взял за день. */
   leadsTaken: number;
+  /** Сколько предложений тёплых лидов у него сгорело за день (30 минут вышли). */
+  offersBurned?: number;
+  /** Сколько его лидов «в работе» без движения 7+ дней (lib/admin/lead-tidy.ts). */
+  staleLeads?: number;
 };
 
 /** «09:05» по Ташкенту. */
@@ -129,6 +133,8 @@ export function workLine(p: StaffDay): string {
   const parts: string[] = [];
   if (p.leadsTaken) parts.push(`🔥 взял ${p.leadsTaken} ${plural(p.leadsTaken, "лид", "лида", "лидов")}`);
   if (p.actions) parts.push(`🖱 ${p.actions} ${plural(p.actions, "действие", "действия", "действий")} в панели и боте`);
+  if (p.offersBurned) parts.push(`⌛ сгорело ${p.offersBurned} ${plural(p.offersBurned, "предложение", "предложения", "предложений")} лидов`);
+  if (p.staleLeads) parts.push(`🗂 ${p.staleLeads} ${plural(p.staleLeads, "лид", "лида", "лидов")} без движения 7+ дней`);
   return parts.join(" · ");
 }
 
@@ -147,6 +153,10 @@ export function adviceFor(p: StaffDay): string | null {
     return `${p.name}: ${duration(minutes)} в панели, а касаний меньше нормы — посмотреть, на что уходит время.`;
   if (p.panel.firstAt && startHour(p.panel.firstAt) >= LATE_START_HOUR)
     return `${p.name}: день начат в ${hhmm(p.panel.firstAt)} — порцию лучше начинать с утра.`;
+  if ((p.offersBurned ?? 0) >= 2)
+    return `${p.name}: сгорело ${p.offersBurned} предложения лидов — держать панель открытой или включить уведомления в Telegram.`;
+  if ((p.staleLeads ?? 0) >= 10)
+    return `${p.name}: ${p.staleLeads} лидов без движения 7+ дней — разобрать: выиграли, проиграли или ещё в работе.`;
   if (star(p)) return `${p.name}: порция сделана и сверху ${touchesOf(r) - r.target} — отметить при команде.`;
   return null;
 }
@@ -171,6 +181,11 @@ export function watchPoints(people: readonly StaffDay[]): string[] {
   if (skippedMany.length) points.push(`🙅 Много «Не подходит»: ${skippedMany.map((p) => `${p.name} (${p.report.skipped})`).join(", ")}.`);
   const short = people.reduce((s, p) => s + p.report.short, 0);
   if (short) points.push(`🕳 Без замены осталось ${short} — в пуле мало годных компаний.`);
+  const burned = people.filter((p) => (p.offersBurned ?? 0) > 0);
+  if (burned.length)
+    points.push(`⌛ Сгорели предложения тёплых лидов: ${burned.map((p) => `${p.name} (${p.offersBurned})`).join(", ")}.`);
+  const staleTotal = people.reduce((s, p) => s + (p.staleLeads ?? 0), 0);
+  if (staleTotal) points.push(`🗂 Лидов «в работе» без движения 7+ дней: ${staleTotal} — бот спрашивает о них по утрам.`);
   const leads = people.reduce((s, p) => s + p.leadsTaken, 0);
   if (leads) points.push(`🔥 Тёплых лидов взято: ${leads}.`);
   return points;

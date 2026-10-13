@@ -51,6 +51,8 @@ import {
   snoozeReminder,
   takeLead,
 } from "@/lib/admin/ownership";
+import { TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
+import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
@@ -1202,6 +1204,29 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     await answerCallback(
       query.id,
       result === "saved" ? (cb.answer === "yes" ? "Принято" : "Ответ записан") : result === "already" ? ALREADY_ANSWERED : "Недоступно",
+    );
+    return;
+  }
+
+  // «Порядок в лидах»: «Выиграли» / «Проиграли» / «Ещё в работе» под
+  // утренним вопросом бота (lib/admin/lead-tidy.ts). Только своя личка.
+  if (parts[0] === TIDY_CALLBACK) {
+    const cb = parseTidyCallback(parts);
+    const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+    if (!cb || !staff || chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    const result = await answerTidy(staff, cb.answer, cb.leadId, chatId, query.message?.message_id ?? null);
+    await answerCallback(
+      query.id,
+      result === "ok"
+        ? "Записал"
+        : result === "forbidden"
+          ? "Этот лид уже не у вас"
+          : result === "gone"
+            ? "Лида больше нет"
+            : "Не получилось — откройте карточку",
     );
     return;
   }

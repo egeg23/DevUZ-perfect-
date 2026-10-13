@@ -226,9 +226,17 @@ export async function createProject(
   if (fields.leadId) {
     const { data: lead } = await db
       .from("leads")
-      .select("partner_id, partner_void_reason, partner_model, partner_agency_id, partner_client_id")
+      .select("partner_id, partner_void_reason, partner_model, partner_agency_id, partner_client_id, assigned_staff_id")
       .eq("id", fields.leadId)
       .maybeSingle();
+    // Проект из лида ведёт тот, у кого лид, если ведущий не указан
+    // (владелец, 13.10.2026): так продажа записывается на того, кто её
+    // довёл, и продажи по людям наконец считаются.
+    const leadOwner = (lead?.assigned_staff_id as string | null) ?? null;
+    // Менеджер так проект на другого не запишет: ему — только на себя.
+    if (!fields.ownerStaffId && staff.role !== "manager" && leadOwner && leadOwner !== owner && (await activeStaff(leadOwner))) {
+      owner = leadOwner;
+    }
     if (lead?.partner_id && !lead.partner_void_reason) {
       partnerId = lead.partner_id as string;
       partnerModel = (lead.partner_model as string | null) ?? null;

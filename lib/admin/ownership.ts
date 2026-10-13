@@ -240,7 +240,9 @@ export async function setStatus(
   // это «Вернуть в очередь» (releaseLead), а не смена статуса.
   if (status === "new" && lead.assigned_staff_id) return { ok: false, reason: "failed" };
 
-  const { error } = await db.from("leads").update({ status }).eq("id", leadId);
+  // Любая смена статуса снимает пометку «бот закрыл сам» (lib/admin/lead-tidy.ts):
+  // вернули в работу — пометка больше не про этот лид.
+  const { error } = await db.from("leads").update({ status, tidy_auto_lost_at: null }).eq("id", leadId);
   if (error) return { ok: false, reason: "failed" };
 
   // Сделка закрыта в любую сторону — напоминать больше не о чем.
@@ -586,7 +588,7 @@ export async function setAutoReminder(
   return { ok: true };
 }
 
-async function cancelAutoReminders(leadId: string): Promise<void> {
+export async function cancelAutoReminders(leadId: string): Promise<void> {
   const db = serviceClient();
   if (!db) return;
 
