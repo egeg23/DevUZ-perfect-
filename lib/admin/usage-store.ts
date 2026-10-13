@@ -25,6 +25,18 @@ export async function bumpUsage(staffId: string, section: string, now: Date = ne
   if (error) console.error("usage: не записал просмотр", error.message);
 }
 
+/**
+ * Минута в панели (panel_presence): маячок шлёт её, пока вкладка открыта и
+ * человек в ней что-то делает. Две вкладки минуту не удваивают — это решает
+ * функция в базе. Никогда не бросает, как и просмотр.
+ */
+export async function tickPresence(staffId: string, now: Date = new Date()): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { error } = await db.rpc("tick_panel_presence", { p_staff: staffId, p_day: todayInTashkent(now) });
+  if (error) console.error("usage: не записал минуту", error.message);
+}
+
 const DAY_MS = 24 * 3600_000;
 
 /**

@@ -8,6 +8,7 @@ import { broadcastDuePrototypes } from "@/lib/admin/prototype-claim-store";
 import { runTaskSweep } from "@/lib/admin/task-store";
 import { sendTeamNews } from "@/lib/admin/team-news";
 import { sendMorningGreetings } from "@/lib/admin/morning-store";
+import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { sendBloggerInvites, sendInviteSummary } from "@/lib/admin/blogger-invite-store";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
@@ -274,6 +275,11 @@ async function sweep(): Promise<Response> {
 
   const maps = await runDailySearches(new Date());
   const portions = await runPortions(new Date());
+  // Вечерний отчёт по сотрудникам — владельцу и руководителям, после того
+  // как порция дня закрыта (lib/admin/staff-report-store).
+  after(async () => {
+    await sendStaffReport(new Date()).catch((error) => console.error("отчёт по сотрудникам:", error));
+  });
   after(async () => {
     // Дожим касаний — первым: он ограничен рабочими часами и тремя
     // сообщениями за проход, и ждать его за проверкой сайтов незачем.
