@@ -39,3 +39,14 @@ test("со скриншотом, подпись влезает в Telegram, на
   assert.match(text, /Ctrl\+K/);
   assert.match(text, /как раньше/);
 });
+
+test("скриншот уходит загрузкой, а не ссылкой; не принялся — уходит текст", async () => {
+  // 13.10.2026: по ссылке Telegram картинку с нашего сервера не забрал, и
+  // объявление в 08:00 не ушло никому.
+  const { readFileSync } = await import("node:fs");
+  const store = readFileSync(new URL("../lib/admin/team-news.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(store, /absoluteUrl\(news\.photo\)/);
+  const helper = store.slice(store.indexOf("async function sendWithPhoto("));
+  assert.match(helper, /readFile\(path\.join\(process\.cwd\(\), "public", photo\)\)/);
+  assert.match(helper, /await sendPhotoFile\(chat, file, path\.basename\(photo\), caption\)\)\) return true;\s*return sendMessage\(chat, caption\);/);
+});

@@ -1,10 +1,12 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { isWorkday, tashkentHour } from "@/lib/admin/portion";
 import type { Role } from "@/lib/admin/roles";
 import { periodReport } from "@/lib/admin/period-report-store";
 import { STREAM_ON } from "@/lib/admin/stream";
 import { messageWindow } from "@/lib/admin/tasks";
-import { sendKeyboard, sendMessage, sendPhoto } from "@/lib/qualify/telegram";
-import { absoluteUrl } from "@/lib/seo";
+import { sendKeyboard, sendMessage, sendPhotoFile } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -577,7 +579,7 @@ export async function sendTeamNews(now: Date = new Date(), list: readonly News[]
       const ok = !text
         ? false
         : news.photo
-          ? await sendPhoto(reader.chat, absoluteUrl(news.photo), text)
+          ? await sendWithPhoto(reader.chat, news.photo, text)
           : news.streamKey
           ? await sendKeyboard(reader.chat, text, [[STREAM_ON]])
           : await sendMessage(reader.chat, text);
@@ -600,13 +602,27 @@ export async function sendTeamNews(now: Date = new Date(), list: readonly News[]
       ].join("\n");
       const delivered =
         Boolean(head) &&
-        (news.photo ? await sendPhoto(owner.chat, absoluteUrl(news.photo), copy) : await sendMessage(owner.chat, copy));
+        (news.photo ? await sendWithPhoto(owner.chat, news.photo, copy) : await sendMessage(owner.chat, copy));
       if (!delivered) {
         await db.from("team_news_sent").delete().eq("news_id", news.id).eq("staff_id", owner.id);
       }
     }
   }
   return sent;
+}
+
+/**
+ * Объявление с картинкой из public/: загрузкой, а не ссылкой (sendPhotoFile).
+ * Картинка не прочиталась или Telegram её не принял — уходит хотя бы текст:
+ * 13.10.2026 скриншот меню полтора часа не уходил никому, и вместе с ним
+ * стояло само объявление.
+ */
+async function sendWithPhoto(chat: number, photo: string, caption: string): Promise<boolean> {
+  const file = await readFile(path.join(process.cwd(), "public", photo))
+    .then((buffer) => new Uint8Array(buffer))
+    .catch(() => null);
+  if (file && (await sendPhotoFile(chat, file, path.basename(photo), caption))) return true;
+  return sendMessage(chat, caption);
 }
 
 async function claim(newsId: string, staffId: string): Promise<boolean> {
