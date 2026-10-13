@@ -567,3 +567,64 @@ export function attentionOf(input: AttentionInput): Attention[] {
 
   return out.sort((a, b) => Number(b.level === "red") - Number(a.level === "red"));
 }
+
+/* ── Лента: что случилось за последние сутки ─────────────────────────── */
+
+export type FeedItem =
+  | { kind: "lead"; at: string; label: string; href: string }
+  | { kind: "won" | "lost"; at: string; label: string; who: string | null; href: string }
+  | { kind: "mockupSent" | "mockupApproved"; at: string; label: string; href: string }
+  | { kind: "taskDone"; at: string; label: string; who: string | null; href: string };
+
+export const FEED_HOURS = 24;
+export const FEED_LIMIT = 12;
+
+/**
+ * Лента собирается из тех же строк, что и пульс, — без отдельных запросов:
+ * новый лид, макет ушёл и утверждён, задача сделана, лид выигран или
+ * проигран. Свежее — сверху, за сутки, не больше FEED_LIMIT строк.
+ */
+export function feedOf(
+  input: {
+    leads: readonly HqLead[];
+    events: readonly HqEvent[];
+    mockups: readonly HqMockup[];
+    tasks: readonly HqTask[];
+    names: ReadonlyMap<string, string>;
+  },
+  now: Date,
+): FeedItem[] {
+  const from = now.getTime() - FEED_HOURS * 3600_000;
+  const fresh = (at: string | null | undefined): at is string =>
+    Boolean(at) && Date.parse(at as string) >= from && Date.parse(at as string) <= now.getTime() + 60_000;
+  const leadById = new Map(input.leads.map((l) => [l.id, l]));
+  const name = (id: string | null | undefined) => (id ? (input.names.get(id) ?? null) : null);
+  const items: FeedItem[] = [];
+
+  for (const l of input.leads) {
+    if (fresh(l.created_at)) items.push({ kind: "lead", at: l.created_at, label: l.label, href: `/admin/leads/${l.id}` });
+  }
+  for (const e of input.events) {
+    const outcome = outcomeOf(e);
+    if (!outcome || !fresh(e.created_at)) continue;
+    const lead = e.target_id ? leadById.get(e.target_id) : undefined;
+    items.push({
+      kind: outcome,
+      at: e.created_at,
+      label: lead?.label ?? "—",
+      who: name(e.actor_staff_id),
+      href: e.target_id ? `/admin/leads/${e.target_id}` : "/admin",
+    });
+  }
+  for (const m of input.mockups) {
+    const label = m.client || m.mockup_name;
+    if (fresh(m.sent_at)) items.push({ kind: "mockupSent", at: m.sent_at, label, href: "/admin/mockups" });
+    if (fresh(m.approved_at)) items.push({ kind: "mockupApproved", at: m.approved_at as string, label, href: "/admin/mockups" });
+  }
+  for (const t of input.tasks) {
+    if (t.status === "done" && fresh(t.closed_at)) {
+      items.push({ kind: "taskDone", at: t.closed_at as string, label: t.title, who: name(t.assignee_id), href: "/admin/tasks" });
+    }
+  }
+  return items.sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, FEED_LIMIT);
+}

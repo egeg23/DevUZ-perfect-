@@ -11,6 +11,7 @@ import {
   deltaOf,
   leftOf,
   type Attention,
+  type FeedItem,
   type HqPerson,
   type Trend,
 } from "@/lib/admin/hq";
@@ -242,6 +243,60 @@ export function AttentionList({ items, t, now }: { items: readonly Attention[]; 
   );
 }
 
+/* ── Лента за сутки ──────────────────────────────────────────────────── */
+
+const FEED_DOT: Record<FeedItem["kind"], string> = {
+  lead: "bg-blue-soft",
+  won: "bg-green",
+  lost: "bg-faint",
+  mockupSent: "bg-violet",
+  mockupApproved: "bg-green",
+  taskDone: "bg-gold",
+};
+
+function feedText(f: FeedItem, t: T): string {
+  switch (f.kind) {
+    case "lead":
+      return t.feedLead(f.label);
+    case "won":
+      return t.feedWon(f.label, f.who ?? "");
+    case "lost":
+      return t.feedLost(f.label, f.who ?? "");
+    case "mockupSent":
+      return t.feedMockupSent(f.label);
+    case "mockupApproved":
+      return t.feedMockupApproved(f.label);
+    case "taskDone":
+      return t.feedTaskDone(f.label, f.who ?? "");
+  }
+}
+
+export function FeedList({ items, t }: { items: readonly FeedItem[]; t: T }) {
+  return (
+    <section className={`${CARD} p-4 sm:p-5`} aria-labelledby="hq-feed">
+      <h2 id="hq-feed" className="flex items-center gap-2 text-sm font-semibold">
+        {t.feedTitle}
+        <HelpHint topic={helpAnchor("/admin/hq", "feed")} />
+      </h2>
+      {items.length ? (
+        <ol className="mt-3 flex flex-col">
+          {items.map((f, i) => (
+            <li key={`${f.kind}-${f.at}-${i}`}>
+              <Link href={f.href} className="-mx-2 flex min-h-11 items-start gap-3 rounded-2xl px-2 py-2 transition hover:bg-surface-2">
+                <span className="mt-0.5 w-10 shrink-0 font-mono text-xs tabular-nums text-faint">{clockOf(f.at)}</span>
+                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${FEED_DOT[f.kind]}`} aria-hidden="true" />
+                <span className="min-w-0 flex-1 break-words text-sm leading-snug text-muted">{feedText(f, t)}</span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-3 text-sm text-faint">{t.feedNone}</p>
+      )}
+    </section>
+  );
+}
+
 /* ── Люди ────────────────────────────────────────────────────────────── */
 
 const MOOD_RING: Record<HqPerson["mood"], string> = {
@@ -403,6 +458,7 @@ export function HqView({
             чисел за неделю. На большом экране — справа, рядом с пульсом. */}
         <div className="flex flex-col gap-5 sm:gap-6 lg:order-2">
           <AttentionList items={hq.attention} t={t} now={now} />
+          <FeedList items={hq.feed} t={t} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:order-1 lg:col-span-2">

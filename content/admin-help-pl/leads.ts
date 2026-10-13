@@ -100,6 +100,14 @@ export const leadsSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "feed",
+        title: "«Ostatnia doba»",
+        body: [
+          "Pod «Wymaga uwagi» — co wydarzyło się w ostatnich 24 godzinach, najnowsze na górze: nowy lead, makieta wysłana do klienta, makieta zatwierdzona, zadanie zrobione, lead wygrany albo przegrany (i kto to oznaczył). Nie więcej niż dwanaście wierszy.",
+          "Każdy wiersz się otwiera: lead — w jego karcie, makieta — w [Makiety](/admin/mockups), zadanie — w historii zadań. Lista powstaje z tych samych danych co puls, więc liczby i wiersze się zgadzają.",
+        ],
+      },
+      {
         id: "people",
         title: "«Zespół dziś» — karty zespołu",
         body: [

@@ -101,6 +101,14 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "feed",
+          title: "«So‘nggi sutka»",
+          body: [
+            "«E’tibor talab qiladi» ostida — oxirgi 24 soatda nima bo‘lgani, yangisi tepada: yangi lid, maket mijozga ketdi, maket tasdiqlandi, vazifa bajarildi, lid yutildi yoki yutqazildi (va kim belgilagani). O‘n ikki qatordan ko‘p emas.",
+            "Har bir qator ochiladi: lid — uning kartochkasida, maket — [Maketlar](/admin/mockups)da, vazifa — vazifalar tarixida. Lenta holat bilan bir xil ma’lumotlardan yig‘iladi, shuning uchun raqamlar va qatorlar bir-biriga mos keladi.",
+          ],
+        },
+        {
           id: "people",
           title: "«Bugun jamoa» — jamoa kartochkalari",
           body: [
