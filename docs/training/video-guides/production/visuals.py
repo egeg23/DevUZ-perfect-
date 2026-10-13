@@ -101,7 +101,7 @@ VISUALS = {
 
     # 6. Путь клиента 2
     (6, "1"): {"type": "flow", "steps": FLOW, "on": [4, 5, 6]},
-    (6, "2"): dict(vid("medacademy-scroll.mp4", C + "/medacademy", "medacademy-desk.png"), after_pan=0),
+    (6, "2"): img("medacademy-desk.png", C + "/medacademy", zoom=1.18, origin=(60, 45)),
     (6, "3"): card(["«Макеты» → «Сгенерировать пароль»", "5 цифр, живёт 24 часа", "У каждого клиента свой", "На макете: ссылка на условия"], "🔒"),
     (6, "4"): chat([me("Ссылка на ваш макет: devuz.studio/proto/…"),
                     me("Спецусловия по макету: 48 часов.\n• лендинг по макету + 3 допа: 500 $ вместо 1 700 $\n• корпоративный сайт: 1 000 $ вместо 2 500 $")],
@@ -182,7 +182,7 @@ VISUALS = {
     (12, "2"): img("comfort-vlezet-li.png", C + "/comfort/a", zoom=1.15, origin=(35, 45)),
     (12, "3"): img("akbar-door-constructor.png", C + "/akbar", zoom=1.12, origin=(50, 40)),
     (12, "4"): img("delta-rocket-sandbox.png", C + "/delta", zoom=1.35, origin=(78, 45)),
-    (12, "5"): vid("apollo-scroll.mp4", C + "/apollo", "apollo-full.png"),
+    (12, "5"): vid("apollo-scroll.mp4", C + "/apollo", "apollo-full.png", frm=9.5),
     (12, "6"): {"type": "flow", "steps": ["Кто покупатель?", "Когда и где ищет?", "Что делает на сайте?", "Что получает он?", "Что получает владелец?"]},
     (12, "Разбор"): card(["Кто: водитель, лампочка горит", "Когда: суббота вечером, с телефона", "Что делает: «диагностика», время",
                           "Получает: спокойствие", "Владелец: запись на воскресенье"], "🚗"),
