@@ -62,7 +62,7 @@
 
 ## 3. Эталон анимаций: Engelberg v2
 
-globalex.maximov-tech.ru/engelberg/v2 (пароль у владельца). Разобран
+cases.devuz.studio/engelberg/v2 (пароль у владельца). Разобран
 Playwright'ом 11.10.2026: вся главная — одна липкая сцена на ~72 экрана
 (`.eb-track` 64 800 px, `.eb-stage` sticky). Слои во весь экран (`.eb-layer`),
 у каждого своя камера (`.eb-cam`: translate + scale по снимку 3840 × 2160),

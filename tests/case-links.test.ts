@@ -10,7 +10,7 @@ import { cases } from "@/content/cases";
  * могли посмотреть, что было сделано. Но убери везде цены».
  */
 
-const SHOWCASE = "https://globalex.maximov-tech.ru";
+const SHOWCASE = "https://cases.devuz.studio";
 
 test("у каждого проекта витрины есть ссылка «Посмотреть проект»", () => {
   const expected: Record<string, string> = {

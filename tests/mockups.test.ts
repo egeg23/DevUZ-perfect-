@@ -127,7 +127,7 @@ test("витрина: все проекты globalex в списке, закры
   const showcase = showcaseCases();
   assert.ok(showcase.length >= 10);
   for (const item of cases) {
-    if (item.url?.includes("globalex.maximov-tech.ru")) assert.ok(showcase.includes(item), item.slug);
+    if (item.url?.includes("cases.devuz.studio")) assert.ok(showcase.includes(item), item.slug);
   }
   const migration = read("supabase/migrations/0094_mockup_codes.sql");
   for (const [slug, key] of Object.entries(SHOWCASE_LOCK)) {

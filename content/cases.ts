@@ -167,7 +167,7 @@ export const cases: Case[] = [
     name: "MAVERA",
     monogram: "MV",
     date: "2026-09-15",
-    url: "https://globalex.maximov-tech.ru/mavera",
+    url: "https://cases.devuz.studio/mavera",
     tier: 1,
     niches: ["застройщик", "недвижимость", "жилой комплекс", "продажа квартир", "подбор квартиры", "ипотечный калькулятор", "real estate", "property developer", "ko‘chmas mulk", "quruvchi kompaniya", "房地产", "开发商"],
     forNiches: ["nedvizhimost", "stroitelnaya-kompaniya"],
@@ -213,7 +213,7 @@ export const cases: Case[] = [
       parts: ["hero", "about", "catalog", "product", "production", "news", "team", "contacts"],
     },
     date: "2026-08-20",
-    url: "https://globalex.maximov-tech.ru/ru",
+    url: "https://cases.devuz.studio/ru",
     tier: 1,
     niches: ["экспорт", "производство", "сельское хозяйство", "B2B", "FMCG", "export", "eksport", "出口"],
     forNiches: [],
@@ -258,7 +258,7 @@ export const cases: Case[] = [
       parts: ["hero", "showcase", "catalog", "product", "themes", "clients", "about", "contacts"],
     },
     date: "2026-09-08",
-    url: "https://globalex.maximov-tech.ru/adar",
+    url: "https://cases.devuz.studio/adar",
     tier: 2,
     niches: ["подарочные наборы", "корпоративные подарки", "новогодние подарки", "кондитерские изделия", "интернет-магазин", "каталог", "e-commerce", "gift sets", "corporate gifts", "sovg‘a to‘plamlari", "礼品套装", "企业礼品"],
     forNiches: ["internet-magazin"],
@@ -348,7 +348,7 @@ export const cases: Case[] = [
     name: "Harvest in Motion",
     monogram: "HM",
     date: "2026-08-21",
-    url: "https://globalex.maximov-tech.ru/motion.html",
+    url: "https://cases.devuz.studio/motion.html",
     tier: 1,
     niches: ["экспорт", "производство", "сельское хозяйство", "промо-сайт", "презентация", "анимация", "прототип", "animation", "prototype", "animatsiya", "动效"],
     forNiches: [],
@@ -389,7 +389,7 @@ export const cases: Case[] = [
     name: "Apollo Travel",
     monogram: "AT",
     date: "2026-10-07",
-    url: "https://globalex.maximov-tech.ru/apollo",
+    url: "https://cases.devuz.studio/apollo",
     tier: 2,
     niches: ["турагентство", "туризм", "туроператор", "туры", "горящие туры", "подбор тура", "авиабилеты", "путешествия", "travel agency", "tours", "tour operator", "sayohat", "turagentlik", "turizm agentligi", "旅行社"],
     // Владелец, 07.10.2026: на этот кейс можно ссылаться, если ниша — туризм.
@@ -433,7 +433,7 @@ export const cases: Case[] = [
     date: "2026-10-06",
     // Вторая, фотореалистичная версия — её владелец выбрал кейсом (07.10.2026).
     // Макет закрыт паролем: ссылка ведёт на страницу ввода, пароль даёт менеджер.
-    url: "https://globalex.maximov-tech.ru/engelberg/v2",
+    url: "https://cases.devuz.studio/engelberg/v2",
     tier: 1,
     niches: ["окна", "окна и двери", "оконные системы", "алюминиевые окна", "раздвижные системы", "фасадное остекление", "фурнитура", "производитель окон", "windows", "window systems", "aluminium windows", "deraza", "derazalar", "门窗"],
     // Макет для конкретной компании: в письмах другим не показываем.
@@ -480,7 +480,7 @@ export const cases: Case[] = [
       parts: ["hero", "picker", "projects", "commerce", "mortgage", "news", "contacts"],
     },
     date: "2026-09-18",
-    url: "https://globalex.maximov-tech.ru/gh",
+    url: "https://cases.devuz.studio/gh",
     tier: 1,
     niches: ["застройщик", "недвижимость", "жилой комплекс", "продажа квартир", "подбор квартиры", "ипотечный калькулятор", "редизайн", "real estate", "property developer", "ko‘chmas mulk", "房地产"],
     // Макет для конкретной компании: примером ниши в письмах другим
@@ -528,7 +528,7 @@ export const cases: Case[] = [
       parts: ["hero", "calculator", "works", "production", "steps", "materials", "faq", "contacts"],
     },
     date: "2026-09-22",
-    url: "https://globalex.maximov-tech.ru/namuna",
+    url: "https://cases.devuz.studio/namuna",
     tier: 2,
     niches: ["мебель", "мебель на заказ", "кухни на заказ", "мебельная фабрика", "калькулятор", "редизайн", "furniture", "mebel", "家具"],
     // Пример для мебельщиков в письмах. Раньше макеты под конкретную
@@ -573,7 +573,7 @@ export const cases: Case[] = [
     name: "Comfort Mebel",
     monogram: "CM",
     date: "2026-09-29",
-    url: "https://globalex.maximov-tech.ru/comfort",
+    url: "https://cases.devuz.studio/comfort",
     tier: 2,
     niches: ["мебель", "мебельная фабрика", "мебельный магазин", "мягкая мебель", "диваны", "спальные гарнитуры", "шкафы", "мебель в рассрочку", "furniture", "furniture store", "mebel", "mebel do‘koni", "家具"],
     // Второй пример для мебели — фабрика с сетью магазинов. Первым в письма
@@ -616,7 +616,7 @@ export const cases: Case[] = [
     name: "MedAcademy",
     monogram: "MA",
     date: "2026-10-01",
-    url: "https://globalex.maximov-tech.ru/medacademy",
+    url: "https://cases.devuz.studio/medacademy",
     tier: 2,
     niches: ["учебный центр", "подготовка к поступлению", "курсы химии", "курсы биологии", "медвуз", "DTM", "o'quv markazi", "education", "培训中心"],
     // Пример для учебных центров в письмах: калькулятор балла и подбор курса
@@ -659,7 +659,7 @@ export const cases: Case[] = [
     name: "Delta IT-School",
     monogram: "DIT",
     date: "2026-09-23",
-    url: "https://globalex.maximov-tech.ru/delta",
+    url: "https://cases.devuz.studio/delta",
     tier: 2,
     niches: ["IT-школа", "детская IT-школа", "программирование для детей", "курсы программирования", "школа программирования", "учебный центр", "образование для детей", "kids coding", "coding school", "IT maktab", "dasturlash kurslari", "少儿编程"],
     // Второй пример для учебных центров. Первым в письма по-прежнему идёт
@@ -702,7 +702,7 @@ export const cases: Case[] = [
     name: "Arsenal D",
     monogram: "AD",
     date: "2026-10-02",
-    url: "https://globalex.maximov-tech.ru/webname",
+    url: "https://cases.devuz.studio/webname",
     tier: 2,
     niches: ["регистратор доменов", "домены .uz", "хостинг", "VPS", "SSL", "веб-студия", "domain registrar", "web hosting", "domen ro'yxatdan o'tkazish", "hosting", "域名注册"],
     // Ниши «хостинг и домены» в классификаторе нет — пример находится по
@@ -745,7 +745,7 @@ export const cases: Case[] = [
     name: "Akbar Rich",
     monogram: "AR",
     date: "2026-09-24",
-    url: "https://globalex.maximov-tech.ru/akbar",
+    url: "https://cases.devuz.studio/akbar",
     tier: 2,
     niches: ["двери", "межкомнатные двери", "межкомнатных дверей", "двери на заказ", "фабрика дверей", "стеновые панели", "погонаж", "конструктор двери", "interior doors", "doors", "eshiklar", "eshik", "门"],
     // Классификатор отдельной ниши для дверей не знает: пример находится по
@@ -788,7 +788,7 @@ export const cases: Case[] = [
     name: "Transtelecom",
     monogram: "TTC",
     date: "2026-09-25",
-    url: "https://globalex.maximov-tech.ru/ttc",
+    url: "https://cases.devuz.studio/ttc",
     tier: 2,
     niches: ["интернет-провайдер", "провайдер", "оператор связи", "телеком", "связь", "телефония", "дата-центр", "облако", "системный интегратор", "internet provider", "telecom", "provayder", "aloqa operatori", "电信"],
     // Пример для провайдеров и операторов связи в письмах. Владелец, 28.09:
@@ -832,7 +832,7 @@ export const cases: Case[] = [
     name: "Tranio",
     monogram: "TR",
     date: "2026-09-25",
-    url: "https://globalex.maximov-tech.ru/tranio",
+    url: "https://cases.devuz.studio/tranio",
     tier: 1,
     niches: ["зарубежная недвижимость", "недвижимость за рубежом", "агентство недвижимости", "инвестиции в недвижимость", "ВНЖ за инвестиции", "риелтор", "overseas property", "real estate agency", "property investment", "xorijda ko‘chmas mulk", "ko‘chmas mulk agentligi", "海外房产"],
     // Пример для агентств недвижимости в письмах. Застройщикам по-прежнему
@@ -881,7 +881,7 @@ export const cases: Case[] = [
       parts: ["hero", "quality", "catalog", "production", "clients", "about", "contacts"],
     },
     date: "2026-09-22",
-    url: "https://globalex.maximov-tech.ru/foodmaxx",
+    url: "https://cases.devuz.studio/foodmaxx",
     tier: 2,
     niches: ["производство", "консервы", "пищевое производство", "FMCG", "B2B", "дистрибуция", "food production", "oziq-ovqat", "食品"],
     forNiches: [],
@@ -922,7 +922,7 @@ export const cases: Case[] = [
     name: "USTA",
     monogram: "USTA",
     date: "2026-07",
-    url: "https://usta.maximov-tech.ru",
+    url: "https://usta.devuz.studio",
     tier: 2,
     niches: ["сфера услуг", "маркетплейс услуг", "ремонт", "бытовые услуги", "services", "xizmatlar"],
     // Мебели здесь больше нет. Владелец, 28.09: «скаут в мебельной нише

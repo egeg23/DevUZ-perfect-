@@ -12,7 +12,7 @@
 Владелец: «Вариант „Лаборатория“ просто ВАУ!!!! Запомни, какие цвета и скилы
 ты использовал».
 
-- **Живьём:** https://globalex.maximov-tech.ru/medacademy/b
+- **Живьём:** https://cases.devuz.studio/medacademy/b
 - **Код:** egeg23/Global-Export:
   - `components/medacademy/b/site.tsx`;
   - `app/medacademy.css` — блок `[data-ma="b"]`;
