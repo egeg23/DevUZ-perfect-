@@ -5,7 +5,7 @@ Bu scenarios.md faylining o‘zbekcha subtitr matni. Videodagi nutq rus tilida.
 1-bosqich: ssenariylar tasdiqlash uchun. Montajni faqat egasi «ha» degandan keyin boshlaymiz.
 
 - **Kim uchun:** saytlarni yaxshi tushunmaydigan DevUz menejerlari.
-- **Davomiyligi:** 11 ta blok, taxminan 64 daqiqa: 49 daqiqaga yaqin nutq va 15 daqiqa mashqlar uchun pauza. Har bir blok alohida video, ularni bittadan ko‘rsa bo‘ladi.
+- **Davomiyligi:** 13 ta blok, taxminan 77 daqiqa: 59 daqiqaga yaqin nutq va 18 daqiqa mashqlar uchun pauza. Har bir blok alohida video, ularni bittadan ko‘rsa bo‘ladi.
 - **Nutq:** rus tilida, neyro ovoz (namunalar `voice-samples/` papkasida). **Subtitrlar:** o‘zbekcha, lotin yozuvida, to‘liq tarjima `scenarios.uz.md` faylida.
 - **Ekranda:** cases.devuz.studio vitrinasidagi maketlarimiz, devuz.studio sahifalari, «Maketlar» bo‘limidagi maketlar va panel suratlari. Panel suratlarida mijozlarning kontaktlarini xira qilamiz. Videolar faqat jamoa uchun: mijozlarning maketlarini tashqariga chiqarmaymiz.
 - **Faktlar qayerdan:** narxlar, muddatlar va qoidalar sayt kodidan va egasining qoidalaridan olingan (CLAUDE.md, `content/services.ts`, `content/products.ts`, `content/marketing.ts`, `content/ai-staff/landing.ts`, `lib/admin/mockup-offer.ts`, `content/mockup-terms.ts`, «Ta’lim» bo‘limidagi kurslar). Koddagi narx o‘zgarsa, ovozdagi o‘sha joyni ham o‘zgartiramiz.
@@ -22,11 +22,13 @@ Vaqtni hisoblash uchun diktor tezligi: daqiqasiga 125 so‘zga yaqin, xotirjam, 
 | 5 | Mijoz yo‘li, 1-qism: «Здравствуйте» dan «+» gacha | 5 |
 | 6 | Mijoz yo‘li, 2-qism: maket, 48 soatlik aksiya, shartnoma | 6 |
 | 7 | Biznes egasi kim: empatiya | 6 |
-| 8 | Qo‘rquvlar va savollar, 1-qism: «qimmat», «saytim allaqachon bor», «menda Instagram bor», «vaqtim yo‘q» | 6 |
-| 9 | Qo‘rquvlar va savollar, 2-qism: «o‘zini oqlamaydi», «yoqmay qolsa-chi», «nega sizga ishonishim kerak» | 6 |
-| 10 | Tasavvur: maketlarimizda kelajak rasmini chizamiz | 6 |
-| 11 | Xulosa: shpargalka va biz hech qachon nimani va’da qilmaymiz | 2 |
-| | **Jami** (shundan 15 daqiqaga yaqini mashqlar uchun pauza) | **≈ 64** |
+| 8 | Qo‘rquvlar va savollar, 1-qism | 6 |
+| 9 | Qo‘rquvlar va savollar, 2-qism | 6 |
+| 10 | Ishonch bilan sotish: O‘zbekistonda qanday sotib olishadi | 7 |
+| 11 | Og‘izdan og‘izga: tavsiyalar va hamkorlar | 5 |
+| 12 | Tasavvur: maketlarimizda kelajak rasmini chizamiz | 6 |
+| 13 | Xulosa: shpargalka va biz hech qachon nimani va’da qilmaymiz | 2 |
+| | **Jami** (shundan 18 daqiqaga yaqini mashqlar uchun pauza) | **≈ 77** |
 
 Blokni qanday o‘qish kerak: «Maqsad» video ko‘rgandan keyin menejer nimani qila olishi kerakligini aytadi. «Sahnalar» ekranda nima borligini aytadi. «Diktor matni» so‘zma-so‘z o‘qiladi, kvadrat qavsdagi sahna raqami rasm qayerda almashishini ko‘rsatadi. Har bir blokda mashq bor: diktor topshiriq beradi, ekranda taymerli pauza, keyin diktor javob namunasini tahlil qiladi ([Mashq] va [Tahlil]). Oxirida uch banddan iborat «Nimani eslab qolish kerak». Sahnalar vaqti so‘zlar soniga qarab hisoblangan.
 
@@ -93,7 +95,7 @@ Blokni qanday o‘qish kerak: «Maqsad» video ko‘rgandan keyin menejer nimani
 | 7 | 2:43 | Shahar xaritasi va Google qidiruv qatori | «Qidiruv: do‘konni xaritada topishlari uchun» |
 | 8 | 3:12 | Bitta sayt kompyuterda va telefonda | «Telefonga moslangan» |
 | 9 | 3:34 | Saytni boshqarish paneli, odam narxni o‘zgartiryapti | «Admin panel = vitrinaning kalitlari» |
-| 10 | 3:54 | Engelberg maketi (cases.devuz.studio/engelberg/v2), aylantiriladi | «Maket = kiyib ko‘rish» |
+| 10 | 3:54 | Telefondagi Comfort Mebel maketi (cases.devuz.studio/comfort), aylantiriladi | «Maket = kiyib ko‘rish» |
 | 11 | 4:19 | Buyurtmalar daftari CRM ekraniga aylanadi; bot bilan chat | «CRM va bot» |
 | M | 4:50 | Topshiriq ekranda katta qilib, 2 daqiqalik pauza taymeri | «Pauza: sizning javobingiz» |
 | T | 7:06 | Tahlil: javob namunasi gapma-gap chiqadi | «Tahlil» |
@@ -149,14 +151,14 @@ Blokni qanday o‘qish kerak: «Maqsad» video ko‘rgandan keyin menejer nimani
 |---|---|---|---|
 | 1 | 0:00 | Blok zastavkasi, metafora sifatida kafe menyusi | «3-blok. Studiya menyusi» |
 | 2 | 0:25 | devuz.studio dagi «Landing sahifa» sahifasi: uchta variant 500, 1 500, 2 500 $ | «Lending: 500 dan 2 500 $ gacha» |
-| 3 | 1:05 | «Saytlar va portallar» xizmati sahifasi: 2 500 $ dan, 3-8 hafta. MAVERA va Golden House maketlari | «Korporativ sayt: 2 500 $ dan» |
-| 4 | 1:37 | Klinika maketidagi loyiha konstruktori: narxlari bilan qo‘shimchalar ro‘yxati | «Qo‘shimchalar: tugmacha kabi yoqiladi» |
-| 5 | 2:21 | «Sun’iy intellekt sotuv menejeri» sahifasi (devuz.studio/ru/ai-sotrudnik): uchta tarif | «AI sotuv menejeri» |
-| 6 | 2:54 | Kalkulyatorli «Marketing» sahifasi | «Marketing» |
-| 7 | 3:27 | Qolgan xizmatlar plitkasi: ilovalar, integratsiyalar, marketpleyslar va yetkazib berish, tenderlar | «Katta loyihalar» |
-| M | 4:12 | Topshiriq ekranda katta qilib, 2 daqiqalik pauza taymeri | «Pauza: sizning javobingiz» |
-| T | 6:26 | Tahlil: javob namunasi gapma-gap chiqadi | «Tahlil» |
-| 8 | 7:16 | «Nimani eslab qolish kerak» kartochkasi | |
+| 3 | 1:05 | «Saytlar va portallar» xizmati sahifasi: 2 500 $ dan, 3-8 hafta. Global Export (cases.devuz.studio/ru) va Akbar Rich maketlari | «Korporativ sayt: 2 500 $ dan» |
+| 4 | 1:42 | Klinika maketidagi loyiha konstruktori: narxlari bilan qo‘shimchalar ro‘yxati | «Qo‘shimchalar: tugmacha kabi yoqiladi» |
+| 5 | 2:27 | «Sun’iy intellekt sotuv menejeri» sahifasi (devuz.studio/ru/ai-sotrudnik): uchta tarif | «AI sotuv menejeri» |
+| 6 | 2:59 | Kalkulyatorli «Marketing» sahifasi | «Marketing» |
+| 7 | 3:32 | Qolgan xizmatlar plitkasi: ilovalar, integratsiyalar, marketpleyslar va yetkazib berish, tenderlar | «Katta loyihalar» |
+| M | 4:17 | Topshiriq ekranda katta qilib, 2 daqiqalik pauza taymeri | «Pauza: sizning javobingiz» |
+| T | 6:31 | Tahlil: javob namunasi gapma-gap chiqadi | «Tahlil» |
+| 8 | 7:21 | «Nimani eslab qolish kerak» kartochkasi | |
 
 **Diktor matni (subtitrlar)**
 
@@ -164,7 +166,7 @@ Blokni qanday o‘qish kerak: «Maqsad» video ko‘rgandan keyin menejer nimani
 
 [2] Birinchi taom, eng ko‘p so‘raladigani: lending, ya’ni bitta sahifali sayt. Bizda uchta variant bor. Oddiysi 500 dollar: bitta tilda bitta sahifa, mijoz brendi ranglariga bo‘yalgan tayyor dizayn, egasiga to‘g‘ridan to‘g‘ri Telegramga keladigan ariza formasi. Ikkinchi variant 1 500 dollar: to‘rttagacha til, mijozning mahsulotiga mos o‘z tuzilmasi va arizalarni uning CRM tizimiga uzatish. Uchinchisi 2 500: aynan mijoz uchun chizilgan dizayn, ichki sahifalar va u tovarlar va yangiliklarni o‘zi o‘zgartiradigan admin panel.
 
-[3] Ikkinchi taom: korporativ sayt, bo‘limlari bor do‘kon. Studiya saytida u 2 500 dollardan turadi, uchdan sakkiz haftagacha qilinadi. Aniq narx vazifaga qarab hisoblanadi: besh sahifali stomatologiya sayti va kvartira tanlash imkoniyati bor quruvchi kompaniya sayti har xil turadi. Mana, masalan, quruvchilar uchun ishlarimiz: MAVERA va Golden House. MAVERA saytida kvartira tanlash va ipotekani hisoblash to‘g‘ridan to‘g‘ri saytda bor.
+[3] Ikkinchi taom: korporativ sayt, bo‘limlari bor do‘kon. Studiya saytida u 2 500 dollardan turadi, uchdan sakkiz haftagacha qilinadi. Aniq narx vazifaga qarab hisoblanadi: besh sahifali stomatologiya sayti va kvartira tanlash imkoniyati bor quruvchi kompaniya sayti har xil turadi. Mana, masalan, quritilgan meva eksport qiladigan Global Export uchun qilgan korporativ saytimiz: bir nechta til va o‘z admin paneli. Mana bu esa Akbar Rich eshik fabrikasi uchun maket: 275 ta model bo‘limlarga terib qo‘yilgan va xaridor adashib qolmaydi.
 
 [4] Endi qo‘shimchalar. Bu taomga qo‘shimcha kabi: pishloq, sous, ikki hissa porsiya. Har bir qo‘shimcha xaridorning bitta vazifasini hal qiladi. Klinika maketidagi konstruktorga qarang. Saytning o‘zi bor, keyin tugmachalar: kerakli kun va vaqtga shifokorga onlayn yozilish, «kimga yozilish kerak» testi, narxi bilan davolash kalkulyatori, bemorga qabul haqida eslatadigan bot, xaritalardan sharhlar, inglizcha versiya. Qo‘shimchani yoqdingiz, jami qayta hisoblandi. Mijoz nima uchun to‘layotganini ko‘radi va saytni o‘z byudjetiga qarab o‘zi yig‘adi. Bunday konstruktor har bir maketimizda bor va oltinchi blokda u bizga yana kerak bo‘ladi.
 
@@ -464,7 +466,96 @@ Blokni qanday o‘qish kerak: «Maqsad» video ko‘rgandan keyin menejer nimani
 
 ---
 
-## Blok 10. Tasavvur: maketlarimizda kelajak rasmini chizamiz (6 daq)
+## Blok 10. Ishonch bilan sotish: O‘zbekistonda qanday sotib olishadi (7 daq)
+
+**Maqsad.** Menejer O‘zbekistonda nega «o‘zinikilardan» sotib olishlarini tushunadi va bitta yozishma ichida biznes egasi uchun ishonsa bo‘ladigan odamga aylana oladi. Sotuv haqidagi mashhur kitoblardan uchta usulni va ular bizda qanday eshitilishini biladi.
+
+**Sahnalar**
+
+| № | Vaqt | Ekranda nima | Ekrandagi yozuv |
+|---|---|---|---|
+| 1 | 0:00 | Blok zastavkasi, qo‘l berib ko‘rishish, stolda choynak va piyolalar | «10-blok. Ishonch bilan sotish» |
+| 2 | 0:22 | Chizilgan sxema: markazda biznes egasi, atrofida qarindoshlar, do‘stlar, bozordagi qo‘shnilar, buxgalter. «Tanishlardan so‘radi» strelkalari | «O‘zinikilardan sotib olishadi» |
+| 3 | 0:58 | Ishonch formulasi katta qilib: ishonchlilik + ishni bilish + yaqinlik, «faqat o‘zini o‘ylaydi»ga bo‘lingan | «Ishonch formulasi» |
+| 4 | 1:45 | Chat: «Rustam aka» deb murojaat, qisqa iliq javob, ovozli xabar | «Hurmat va ohang» |
+| 5 | 2:36 | Uchta kartochka: «Avval ber» (bepul maket), «Kichik ha» («+»), «O‘zinikilar allaqachon biz bilan» (uning sohasidagi loyihamiz) | «Uchta usul» |
+| 6 | 3:38 | Kalendar: juma tushlik payti, Ramazon va iftor, Navro‘z, kechqurun | «Qachon yozish va qo‘ng‘iroq qilish kerak» |
+| M | 4:06 | Topshiriq ekranda katta qilib, 2 daqiqalik pauza taymeri | «Pauza: sizning javobingiz» |
+| T | 6:20 | Tahlil: javob namunasi gapma-gap chiqadi | «Tahlil» |
+| 7 | 7:04 | «Nimani eslab qolish kerak» kartochkasi | |
+
+**Diktor matni (subtitrlar)**
+
+[1] Bu blokda bizda, O‘zbekistonda qanday sotib olishlari haqida gaplashamiz. Sotuv haqidagi kitoblar asosan Amerikada yozilgan va ulardagi ko‘p narsa bu yerda ham ishlaydi. Lekin kitoblarda yo‘q narsa bor: bizda kompaniyalardan emas, odamlardan sotib olishadi.
+
+[2] O‘zingiz ta’mirlash ustasini yoki shifokorni qanday tanlaganingizni eslang. Katta ehtimol bilan qarindoshlar yoki do‘stlardan so‘ragansiz: «kimga qildirgansizlar, kimga ishonasizlar?». Biznes egasi ham shunday qiladi. Studiyaga pul to‘lashdan oldin u akasidan, bozordagi qo‘shnisidan, o‘z buxgalteridan so‘raydi. Unga saytda nima yozilgani emas, biz uchun kim kafil bo‘lishi muhim. Shuning uchun notanishlardan kelgan sovuq xabar unga doim biroz shubhali. Bizning vazifamiz: bir-ikki xabarda notanish bo‘lmay qolish.
+
+[3] «Ishonchli maslahatchi» kitobida oddiy ishonch formulasi bor. Tepada uchta narsa: ishonchlilik, ishni bilish va yaqinlik. Pastda bitta: odam qanchalik faqat o‘zini o‘ylaydi. Ishonchlilik: aytgan ishingizni aytgan vaqtingizda qilasiz. Maketni ertalabgacha yuboraman dedingiz, ertalab u mijozda. Ishni bilish: uning xaridorlari va sayti haqida umumiy so‘zlar bilan emas, aniq gapirasiz. Yaqinlik: siz bilan oson va odamcha. Agar har bir xabarda sizga faqat sotish kerakligi ko‘rinib tursa, qolgani qancha bo‘lmasin, ishonch tushib ketadi. Shuning uchun biz haqimizda kamroq, u haqida ko‘proq.
+
+[4] Endi ohang haqida. O‘zbekistonda hurmat juda muhim. Yoshi kattaga hurmat bilan murojaat qilamiz: «Rustam aka», «Nodira opa», agar u o‘zi shunday yozilgan bo‘lsa yoki o‘zini shunday tanishtirgan bo‘lsa. «Siz» deb yozamiz. Shoshtirmaymiz va bosim qilmaymiz: bu yerda tazyiqni hurmatsizlik deb qabul qilishadi. Odam ovozli xabar yuborsa, ovozli xabar bilan qisqa va xotirjam javob berish normal. U o‘zbekcha yozsa, o‘zingiz unchalik yaxshi gapirmasangiz ham, o‘zbekcha javob beramiz. Harakatingizni u sezadi va qadrlaydi. Va esda tuting: ko‘pincha qarorni siz yozishayotgan odam emas, oiladagi katta yoki sherigi qabul qiladi. Shoshmang, maslahatlashishga vaqt bering. Yaxshi savol: «Maketni yana kim ko‘rsa qiziq bo‘ladi? Birga ko‘rsatishimiz mumkin».
+
+[5] Robert Chaldinining mashhur «Ta’sir psixologiyasi» kitobidan uchta usul, ular bizning ishimizga allaqachon qurilgan. Birinchisi: o‘zaro javob. Unga foydali narsa qilib berilgan odam xuddi shunday javob qaytargisi keladi. 12 soatda tayyor bo‘ladigan bepul maketimiz aynan shu haqda: biz avval beramiz, keyin taklif qilamiz. Ikkinchisi: kichik «ha». Kichik «ha» deb bo‘lgan odamga katta «ha» deyish osonroq. Shuning uchun biz «sayt sotib oling» demaymiz, «plyus yuboring» deymiz. Uchinchisi: ijtimoiy isbot. O‘ziga o‘xshaganlar bu tanlovni allaqachon qilgan bo‘lsa, odam xotirjamroq bo‘ladi. Shuning uchun uning sohasidan loyihamizni ko‘rsatamiz, agar u bizda rostdan bo‘lsa. O‘zbekiston uchun esa to‘rtinchisini, eng kuchlisini qo‘shamiz: jonli uchrashuv. Mijozni Shota Rustaveli ko‘chasi, 138 dagi ofisga choy ichib, maket haqida gaplashishga taklif qiling. Yuzma-yuz uchrashuv ko‘pincha bir haftalik yozishmadan ko‘ra ko‘proq narsani hal qiladi.
+
+[6] Va vaqt haqida ozgina. Juma kuni tushlik paytida yozmang, ko‘pchilik juma namoziga ketadi. Ramazonda iftordan oldin, kechqurun oila dasturxonga o‘tirganda qo‘ng‘iroq qilmang. Bayramlarda, masalan Navro‘zda, sotgandan ko‘ra shunchaki tabriklagan yaxshiroq. Bunday mayda narsalarni biznes egasi sezadi. Ular unga aytadi: bu odamlar o‘zimiznikilar, bu yerda qanday yashashlarini tushunishadi.
+
+[Mashq] Topshiriq. Mebel sexi egasi yozadi: «Подумаю, посоветуюсь с братом». Bosim qilmaslik va mijozni yo‘qotmaslik uchun qanday javob berasiz? Pauzaga qo‘ying va javobingizni yozing.
+
+[Tahlil] Yaxshi javob mana bunday. «Albatta, bunday qarorlarni birga qabul qilgan to‘g‘ri. Keling, maket havolasini yuboraman, akangiz ham ko‘rsin. Qulay bo‘lsa, ikkalangiz ofisimizga choyga keling, hammasini katta ekranda ko‘rsatamiz». Biz nima qildik? Oilani va kattani hurmat qildik. Foydali narsa berdik: aka uchun maket havolasi. Va jonli uchrashuvni taklif qildik, bu biz uchun eng kuchli qadam. Nima qilmadik: «aksiya tez orada tugaydi, tezroq hal qiling» deb yozmadik. Aksiya muddati halol va mijozga u haqida bot eslatadi. Bu paytda sizning vazifangiz ishonsa bo‘ladigan odam bo‘lish.
+
+**Bosma eslatma uchun topshiriq (pauza 2 daq).** Mebel sexi egasi javob berdi: «Подумаю, посоветуюсь с братом». Ishonchni saqlaydigan va eshikni ochiq qoldiradigan javob yozing.
+
+**Nimani eslab qolish kerak**
+
+1. O‘zbekistonda o‘zinikilardan sotib olishadi: kim uchun kafil bo‘lishgan bo‘lsa va kim bilan allaqachon munosabat bo‘lsa, o‘shalardan.
+2. Ishonch: aytganingizni qiling, uning ishi haqida aniq gapiring, odamcha bo‘ling va o‘zingiz haqingizda kamroq gapiring.
+3. Hurmat va vaqt: «aka» va «opa», bosimsiz, oilasi bilan maslahatlashishga vaqt berish, ofisga choyga taklif qilish.
+
+---
+
+## Blok 11. Og‘izdan og‘izga: tavsiyalar va hamkorlar (5 daq)
+
+**Maqsad.** Menejer har bir mamnun mijoz keyingilarni olib kelishi mumkinligini tushunadi, tavsiyani o‘z vaqtida va odamcha so‘ray oladi va hamkorlik dasturimiz qanday ishlashini biladi.
+
+**Sahnalar**
+
+| № | Vaqt | Ekranda nima | Ekrandagi yozuv |
+|---|---|---|---|
+| 1 | 0:00 | Blok zastavkasi, bitta toshdan suvda tarqalayotgan doiralar | «11-blok. Og‘izdan og‘izga» |
+| 2 | 0:18 | Sxema: bitta mamnun mijoz, undan uchta tanishiga strelkalar, ulardan yana nariga | «Bitta mijoz keyingilarni olib keladi» |
+| 3 | 0:50 | Chat: mijoz sayt uchun rahmat aytadi; menejer tavsiya so‘raydi | «Qachon so‘rash kerak» |
+| 4 | 1:36 | devuz.studio dagi «Hamkorlarga» sahifasi | «Hamkorlik dasturi» |
+| 5 | 2:14 | Paneldagi «mijozni hamkor olib keldi» sariq belgili lid | «Hamkordan kelgan lid: birinchi» |
+| M | 2:42 | Topshiriq ekranda katta qilib, pauza taymeri 1 daq | «Pauza: sizning javobingiz» |
+| T | 3:51 | Tahlil: javob namunasi gapma-gap chiqadi | «Tahlil» |
+| 6 | 4:25 | «Nimani eslab qolish kerak» kartochkasi | |
+
+**Diktor matni (subtitrlar)**
+
+[1] Og‘izdan og‘izga, yoki bizda aytilganidek, «tanishim maslahat berdi», O‘zbekistondagi biznes uchun asosiy sotuv kanali. Reklama odamlarni olib keladi, og‘izdan og‘izga esa allaqachon ishonadigan odamlarni olib keladi. Bunday mijozlar bilan gap qisqaroq, kelishuv esa xotirjamroq bo‘ladi.
+
+[2] Suvga tashlangan toshni tasavvur qiling. Undan doiralar tarqaladi. Bitta mamnun biznes egasi biz haqimizda akasiga, do‘stiga, bozordagi qo‘shnisiga aytib beradi. Ulardan kimdir ham sayt buyurtma qiladi va yana boshqalarga aytadi. Shuning uchun har bir mijoz biz uchun bitta kelishuv emas, zanjirning boshi. Va aksincha: bitta xafa bo‘lgan mijoz yomon tajribasi haqida yana ham ishtiyoq bilan gapiradi. Yaxshi ish va halollik bizning eng yaxshi reklamamiz.
+
+[3] Tavsiyani qachon so‘rash kerak? Eng yaxshi payt: mijozning o‘zi mamnun bo‘lganda. «Rahmat» dedi, maketni maqtadi, yangi saytdan birinchi arizaga xursand bo‘ldi. Shu paytda oddiy va odamcha so‘rang: «Sizga yoqqanidan xursandmiz. Tanishlaringizdan birining ham biznesi bo‘lsa va sayt qilish yoki yangilash kerak bo‘lsa, bizni tavsiya qilsangiz, minnatdor bo‘lamiz». «Hozirning o‘zida beshta kontakt» so‘ramang. To‘g‘ri paytda aytilgan bitta xotirjam gap yaxshiroq ishlaydi. Mijoz kimnidir aytsa, o‘sha odamga yozing va darrov sizni kim tavsiya qilganini ayting: «Assalomu alaykum, sizni bizga Rustam aka tavsiya qildi». Tanishning ismi eshikni ochadi.
+
+[4] Bizni tavsiya qilish foydali bo‘lishi uchun studiyada hamkorlik dasturi bor. Mijoz olib keladigan har qanday odam hamkor bo‘la oladi: mamnun mijoz, o‘nta firmani yuritadigan buxgalter, reklama agentligi, bloger. Hamkor o‘zi olib kelgan loyiha summasidan foiz oladi. Loyiha qancha katta bo‘lsa, foiz shuncha yuqori: summaga qarab aylanmadan 6 dan 20 foizgacha. Hamkor botimiz orqali o‘zi ro‘yxatdan o‘tadi, barcha tafsilotlar esa saytdagi «Hamkorlarga» sahifasida bor. Bitta qoida: studiya xodimi hamkor bo‘la olmaydi.
+
+[5] Bu siz uchun nimani anglatadi? Hamkordan kelgan lid panelga «mijozni hamkor olib keldi» belgisi bilan keladi va oddiy navbatni chetlab, darrov hammaga boradi. Uni birinchi oling va tez qo‘ng‘iroq qiling. Hamkor o‘z tanishi oldida biz uchun kafil bo‘ldi. Sekin javob bersak, mijozni ham, hamkorni ham uyaltirib qo‘yamiz va keyingi safar u hech kimni olib kelmaydi.
+
+[Mashq] Topshiriq. Mijoz yozadi: «Сайт отличный, уже две заявки за неделю, спасибо!». Javob bering va tavsiya so‘rang. Pauza.
+
+[Tahlil] Javob varianti. «Rahmat, siz uchun juda xursandmiz! Tanishlaringizdan biriga ham sayt kerak bo‘lsa, tavsiya qilsangiz, minnatdor bo‘lamiz. Buning uchun foiz olishni xohlasangiz, hamkorlik dasturimiz haqida aytib beraman». Qisqa, iliq, bosimsiz. Mijoz bilan birga xursand bo‘ldik, bir marta so‘radik va foyda taklif qildik. E’tibor bering, darrov hech narsa so‘ramadik. Tanishi saytni kim qilib berganini so‘raganda, odam bizni o‘zi eslaydi.
+
+**Bosma eslatma uchun topshiriq (pauza 1 daq).** Mijoz yozdi: «Сайт отличный, уже две заявки за неделю, спасибо!». Bir-ikki gapda tavsiya so‘ralgan javob yozing.
+
+**Nimani eslab qolish kerak**
+
+1. Og‘izdan og‘izga allaqachon ishonadigan odamlarni olib keladi. Har bir mamnun mijoz keyingilarni olib kelishi mumkin.
+2. Tavsiyani mijoz xursand bo‘lgan paytda, bitta xotirjam gap bilan so‘rang. Tavsiya bo‘yicha yozsangiz, sizni kim maslahat berganini darrov ayting.
+3. Hamkor loyihadan foiz oladi. Hamkordan kelgan lidni birinchi olamiz va tez javob beramiz.
+
+---
+
+## Blok 12. Tasavvur: maketlarimizda kelajak rasmini chizamiz (6 daq)
 
 **Maqsad.** Menejer biznes egasiga uning kelajakdagi xaridori haqida qisqa hikoya aytib bera oladi va uni bizning maketimizda ko‘rsatadi.
 
@@ -472,15 +563,15 @@ Blokni qanday o‘qish kerak: «Maqsad» video ko‘rgandan keyin menejer nimani
 
 | № | Vaqt | Ekranda nima | Ekrandagi yozuv |
 |---|---|---|---|
-| 1 | 0:00 | Blok zastavkasi | «Blok 10. Kelajak rasmi» |
+| 1 | 0:00 | Blok zastavkasi | «Blok 12. Kelajak rasmi» |
 | 2 | 0:18 | Comfort Mebel maketi (cases.devuz.studio/comfort): «Sig‘adimi» bloki, xona rejasi | «Divan haqida hikoya» |
 | 3 | 0:58 | Akbar Rich maketi (cases.devuz.studio/akbar): eshik konstruktori | «Eshik haqida hikoya» |
 | 4 | 1:21 | Delta IT-School maketi (cases.devuz.studio/delta): raketali o‘yin maydoni, uchta savolda tanlash | «Ona va o‘g‘il haqida hikoya» |
-| 5 | 1:58 | Engelberg maketi (cases.devuz.studio/engelberg/v2): aylantirish, poldan shiftgacha derazalar, oyna ortida bo‘ron | «Sayt o‘zi hikoya qilganda» |
-| 6 | 2:27 | Hikoya sxemasi: kim, qachon, qayerda, nima qildi, biznes egasi nima oldi | «Hikoyaning beshta savoli» |
-| M | 2:59 | Topshiriq ekranda katta qilib, 2 daqiqalik pauza taymeri | «Pauza: sizning javobingiz» |
-| T | 5:05 | Tahlil: javob namunasi gapma-gap chiqadi | «Tahlil» |
-| 7 | 5:53 | «Nimani eslab qolish kerak» kartochkasi | |
+| 5 | 1:58 | Apollo Travel maketi (cases.devuz.studio/apollo): tur qidirish, samolyot Toshkentdan kurortga yoy bo‘ylab uchadi | «Sayt o‘zi hikoya qilganda» |
+| 6 | 2:29 | Hikoya sxemasi: kim, qachon, qayerda, nima qildi, biznes egasi nima oldi | «Hikoyaning beshta savoli» |
+| M | 3:01 | Topshiriq ekranda katta qilib, 2 daqiqalik pauza taymeri | «Pauza: sizning javobingiz» |
+| T | 5:07 | Tahlil: javob namunasi gapma-gap chiqadi | «Tahlil» |
+| 7 | 5:55 | «Nimani eslab qolish kerak» kartochkasi | |
 
 **Diktor matni (subtitrlar)**
 
@@ -492,7 +583,7 @@ Blokni qanday o‘qish kerak: «Maqsad» video ko‘rgandan keyin menejer nimani
 
 [4] Uchinchi misol, kompaniyaning umuman o‘z sayti bo‘lmagan. Delta bolalar IT-maktabi, ularda faqat Telegram-kanal va Instagram bor edi. Hikoya: «Ona tushlik tanaffusida o‘g‘liga dasturlash yoqarmikan, deb o‘ylaydi. Saytda u o‘g‘li bilan birga bir daqiqada oddiy buyruqlar bilan raketa uchiradi. O‘g‘li xursand. Uchta savol, sayt mos guruhni aytib beradi, ariza esa allaqachon menejerda». Ko‘ryapsizmi, biz «interaktivli sayt» demaymiz. Biz ona, o‘g‘il va raketa haqida gapirib beramiz.
 
-[5] Shunday ham bo‘ladiki, sayt hikoyani o‘zi aytib beradi. Engelberg deraza ishlab chiqaruvchisi uchun maket: odam sahifani varaqlaydi, kamera tog‘dan uyga tushadi, bo‘sh uyda poldan shiftgacha derazalar paydo bo‘ladi, oyna ortida bo‘ron boshlanadi, xonada esa issiq. Xaridor issiqlik izolyatsiyasi haqida o‘qimaydi, uni his qiladi. Bunday maketlarni mahsuloti esda qolishi kerak bo‘lgan biznes egalariga ko‘rsating.
+[5] Shunday ham bo‘ladiki, sayt hikoyani o‘zi aytib beradi. Apollo Travel turagentligi uchun maket: odam qayerga uchmoqchi ekanini yozadi va qidiruv ketayotganda ekranda samolyot Toshkentdan dengizga yoy bo‘ylab uchadi, yonida esa topilgan turlar hisoblagichi o‘sib boradi. Kutish ta’tilni kutib yashashga aylanadi. Xaridor qulay qidiruv haqida o‘qimaydi, uni his qiladi. Bunday maketlarni esda qolishi kerak bo‘lgan biznes egalariga ko‘rsating.
 
 [6] O‘z hikoyangizni qanday o‘ylab topasiz? Beshta savolga javob bering. Xaridor kim? U qachon va qayerda qidiradi? Saytda nima qiladi? U nima oladi? Biznes egasi nima oladi: ariza, qo‘ng‘iroq, yozilish. Bitta muhim chegara bor: hikoya faqat maketda va mijoz saytida bor narsaga quriladi. O‘sish raqamlarini o‘ylab topmaymiz, «ikki barobar ko‘p mijoz» deb va’da qilmaymiz. Tasavvur kafolatni emas, rasmni chizadi.
 
@@ -510,7 +601,7 @@ Blokni qanday o‘qish kerak: «Maqsad» video ko‘rgandan keyin menejer nimani
 
 ---
 
-## Blok 11. Xulosa: shpargalka va biz hech qachon va’da qilmaydigan narsalar (2 daq)
+## Blok 13. Xulosa: shpargalka va biz hech qachon va’da qilmaydigan narsalar (2 daq)
 
 **Maqsad.** Menejer qisqa shpargalka bilan ketadi va taqiqlarni biladi.
 
@@ -518,18 +609,18 @@ Blokni qanday o‘qish kerak: «Maqsad» video ko‘rgandan keyin menejer nimani
 
 | № | Vaqt | Ekranda nima | Ekrandagi yozuv |
 |---|---|---|---|
-| 1 | 0:00 | Blok zastavkasi | «Blok 11. Shpargalka» |
-| 2 | 0:09 | Olti qatorli shpargalka, qatorlar birma-bir chiqadi | «Shpargalka» |
-| 3 | 0:38 | Qizil «Hech qachon» ro‘yxati | «Hech qachon» |
-| 4 | 1:09 | Panelning «Ta’lim» bo‘limi: kurslar va test | «Keyin nima» |
+| 1 | 0:00 | Blok zastavkasi | «Blok 13. Shpargalka» |
+| 2 | 0:09 | Yetti qatorli shpargalka, qatorlar birma-bir chiqadi | «Shpargalka» |
+| 3 | 0:48 | Qizil «Hech qachon» ro‘yxati | «Hech qachon» |
+| 4 | 1:24 | Panelning «Ta’lim» bo‘limi: kurslar va test | «Keyin nima» |
 
 **Diktor matni (subtitrlar)**
 
 [1] Siz butun kursni o‘tdingiz. Keling, asosiy narsalarni bitta shpargalkaga yig‘amiz, uni telefonga saqlab qo‘yish mumkin.
 
-[2] Birinchi: mijozga sayt emas, xaridorlar kerak. Ikkinchi: sayt vitrinaga o‘xshaydi, u kechasi ham sotadi. Uchinchi: texnik so‘zlarsiz, xaridorning so‘zlari bilan gapiramiz. To‘rtinchi: mijozning yo‘li: «Здравствуйте», dumaloq video, plyus, 12 soatda maket, 48 soatlik aksiya, shartnoma. Beshinchi: har qanday qo‘rquvga formula bo‘yicha javob beramiz: eshitish, rozi bo‘lish, foyda, bitta yengil qadam. Oltinchi: kelajak rasmini uning xaridori haqidagi hikoya bilan chizamiz.
+[2] Birinchi: mijozga sayt emas, xaridorlar kerak. Ikkinchi: sayt vitrinaga o‘xshaydi, u kechasi ham sotadi. Uchinchi: texnik so‘zlarsiz, xaridorning so‘zlari bilan gapiramiz. To‘rtinchi: mijozning yo‘li: «Здравствуйте», dumaloq video, plyus, 12 soatda maket, 48 soatlik aksiya, shartnoma. Beshinchi: har qanday qo‘rquvga formula bo‘yicha javob beramiz: eshitish, rozi bo‘lish, foyda, bitta yengil qadam. Oltinchi: kelajak rasmini uning xaridori haqidagi hikoya bilan chizamiz. Yettinchi: bizda o‘zinikilardan sotib olishadi. Ishonch hurmat, ortiqcha va’da bermaslik va jonli uchrashuv bilan quriladi, mamnun mijoz esa keyingilarni olib keladi.
 
-[3] Endi esa biz hech qachon qilmaydigan narsalar. «Topga chiqaramiz» deb va’da qilmaymiz va o‘sish foizlarini aytmaymiz. Maket uchun 12 soatdan boshqa muddat va’da qilmaymiz. Birinchi xabarda narx aytmaymiz va o‘zimizdan chegirma o‘ylab topmaymiz. Mijozning saytini yomonlamaymiz. «Не пишите» deganidan keyin yozmaymiz. Va agar uning sohasidan loyihamiz bo‘lmasa, shunday misol haqida gapirmaymiz.
+[3] Endi esa biz hech qachon qilmaydigan narsalar. «Topga chiqaramiz» deb va’da qilmaymiz va o‘sish foizlarini aytmaymiz. Maket uchun 12 soatdan boshqa muddat va’da qilmaymiz. Birinchi xabarda narx aytmaymiz va o‘zimizdan chegirma o‘ylab topmaymiz. Mijozning saytini yomonlamaymiz. «Не пишите» deganidan keyin yozmaymiz. Oilasi bilan maslahatlashishi kerak bo‘lgan odamga bosim qilmaymiz va uni shoshtirmaymiz. Va agar uning sohasidan loyihamiz bo‘lmasa, shunday misol haqida gapirmaymiz.
 
 [4] Keyin nima? Panelda «Ta’lim» bo‘limini oching. U yerda batafsil qoidalar bilan kurslar bor: ikki qadamli xabar yuborish, dumaloq video, plyus, E’tirozlar, xat matnlari va iliq lidlar. Har biridan keyin qisqa test bor. Ularni shu hafta o‘ting. Omad, har bir mijozingizning xaridori ko‘paysin!
 
