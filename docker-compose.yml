@@ -139,6 +139,7 @@ services:
       AI_STAFF_IG_VERIFY_TOKEN: ${AI_STAFF_IG_VERIFY_TOKEN:-}
       # ИИ на прототипах (lib/proto/ai.ts) — по умолчанию Haiku.
       PROTO_AI_MODEL: ${PROTO_AI_MODEL:-}
+      PROMO_MODEL: ${PROMO_MODEL:-}
       # Ключ Вордстата — API-ключ Яндекс Облака (AQVN…) или OAuth-токен:
       # запросы по Узбекистану перед каждой статьёй.
       WORDSTAT_TOKEN: ${WORDSTAT_TOKEN:-}

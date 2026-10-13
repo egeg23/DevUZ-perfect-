@@ -147,6 +147,8 @@ test("модель выбирается на каждый узел отдель�
     "статьи о маркетинге": ["lib/marketing/articles-run.ts", "ARTICLE_MODEL", "claude-haiku-4-5"],
     // ИИ на прототипах — открыт клиентам, значит самой дешёвой моделью.
     "ИИ на прототипах": ["lib/proto/ai.ts", "PROTO_AI_MODEL", "claude-haiku-4-5"],
+    // Напоминания об акции после макета — недорогой моделью (владелец, 13.10.2026).
+    "напоминания об акции": ["lib/admin/mockup-offer-run.ts", "PROMO_MODEL", "claude-haiku-4-5"],
   } as const;
 
   for (const [name, [file, variable, model]] of Object.entries(nodes)) {
