@@ -306,4 +306,25 @@ export const hqDict = defineDict({
     uz: (x: string, who: string) => `Vazifa bajarildi: ${x}${who ? ` · ${who}` : ""}`,
     pl: (x: string, who: string) => `Zadanie zrobione: ${x}${who ? ` · ${who}` : ""}`,
   },
+  // «Отдать» тёплого лида без хозяина — из «Требует внимания».
+  giveTitle: { ru: "Отдать тёплого лида человеку", uz: "Issiq lidni xodimga topshirish", pl: "Przekaż ciepłego leada osobie" },
+  giveTo: { ru: "Кому", uz: "Kimga", pl: "Komu" },
+  giveButton: { ru: "Отдать", uz: "Topshirish", pl: "Przekaż" },
+  giving: { ru: "Отдаю…", uz: "Topshirilmoqda…", pl: "Przekazuję…" },
+  givePerson: {
+    ru: (name: string, online: string) => (online ? `${name} · в сети` : name),
+    uz: (name: string, online: string) => (online ? `${name} · onlayn` : name),
+    pl: (name: string, online: string) => (online ? `${name} · online` : name),
+  },
+  // Касания по дням в карточке человека.
+  sparkTitle: {
+    ru: (list: string) => `Касания за 7 дней: ${list}`,
+    uz: (list: string) => `7 kundagi aloqalar: ${list}`,
+    pl: (list: string) => `Kontakty w 7 dni: ${list}`,
+  },
+  sparkDay: {
+    ru: (day: string, n: number) => `${day}: ${n}`,
+    uz: (day: string, n: number) => `${day}: ${n}`,
+    pl: (day: string, n: number) => `${day}: ${n}`,
+  },
 });

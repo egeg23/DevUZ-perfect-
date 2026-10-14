@@ -1,0 +1,23 @@
+const D='https://devuz.studio/ru',C='https://cases.devuz.studio';
+module.exports=[
+{name:'home',url:D},
+{name:'landing-product',url:D+'/products/landing',blocks:[{slug:'prices',find:['Что входит'],maxH:2400}]},
+{name:'web-service',url:D+'/services/web-development'},
+{name:'marketing',url:D+'/marketing',blocks:[{slug:'calculator',find:['Калькулятор маркетинга']}]},
+{name:'ai-staff',url:D+'/ai-sotrudnik',blocks:[{slug:'prices',find:['^\\s*Цены\\s*$']}]},
+{name:'razbor-list',url:D+'/razbor',after:async(p,res)=>{res.first=await p.$$eval('a[href*="/razbor/"]',as=>as.map(a=>a.href).filter(h=>/\/razbor\/[^/?#]+$/.test(h))[0])}},
+{name:'razbor-article',url:D+'/razbor/sayt-dlya-kozhevennogo-proizvodstva-tashkent',blocks:[{slug:'before-after',find:['^\\s*Было и стало','^\\s*КАК ЕСТЬ\\s*$'],viewport:1,offset:60}]},
+{name:'cases',url:D+'/cases'},
+{name:'contact',url:D+'/contact'},
+{name:'partners',url:D+'/partners'},
+{name:'mockup-terms',url:D+'/mockup-terms'},
+{name:'comfort',url:C+'/comfort',rec:1,blocks:[{slug:'vlezet-li',find:['Влезет ли']}]},
+{name:'medacademy',url:C+'/medacademy',rec:1},
+{name:'delta',url:C+'/delta',rec:1,blocks:[{slug:'rocket-sandbox',find:['Ему будет интересно','Звезда в трёх клетках']}]},
+{name:'akbar',url:C+'/akbar',rec:1,blocks:[{slug:'door-constructor',find:['Соберите свою дверь']}]},
+{name:'apollo',url:C+'/apollo',rec:1},
+{name:'namuna',url:C+'/namuna',blocks:[{slug:'calculator',find:['Соберите свою мебель']}]},
+{name:'global-export',url:C+'/ru'},
+{name:'adar',url:C+'/adar'},
+{name:'foodmaxx',url:C+'/foodmaxx',rec:1},
+];

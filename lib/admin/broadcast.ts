@@ -143,3 +143,29 @@ export function canCancel(
 
 /** Ключ отметок «ушло» в team_news_sent. */
 export const broadcastKey = (id: string) => `broadcast:${id}`;
+
+/**
+ * «Повторить» прошлую рассылку: что подставить в форму. Получатели — те же
+ * роли, люди или сегмент; число в предпросмотре считается заново по тем,
+ * кто в команде сейчас.
+ */
+export function repeatOf(b: BroadcastRow): {
+  id: string;
+  target: "staff" | "users";
+  text: string;
+  kind: Audience["kind"];
+  roles: Role[];
+  picked: string[];
+  segment: "all" | "partners" | "buyers" | "clients";
+} {
+  const segment = b.segment === "partners" || b.segment === "buyers" || b.segment === "clients" ? b.segment : "all";
+  return {
+    id: b.id,
+    target: b.kind === "users" ? "users" : "staff",
+    text: b.text,
+    kind: b.audience === "roles" ? "roles" : b.audience === "pick" ? "pick" : "all",
+    roles: ROLES.filter((r) => b.roles.includes(r)),
+    picked: b.audience === "pick" ? [...b.recipients] : [],
+    segment,
+  };
+}

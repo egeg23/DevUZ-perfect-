@@ -112,7 +112,11 @@ export function MockupList({ rows }: { rows: MockupView[] }) {
             const result = results[row.ref];
             const access = row.access === "closed" ? t.accessClosed : row.access === "open" ? t.accessOpen : t.accessPublic;
             return (
-              <li key={row.ref} className="rounded-xl border border-line bg-surface px-4 py-3">
+              <li
+                key={row.ref}
+                id={`mockup-${row.ref.replace(/[^a-z0-9-]/gi, "-")}`}
+                className="scroll-mt-24 rounded-xl border border-line bg-surface px-4 py-3 target:ring-2 target:ring-gold/50"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">

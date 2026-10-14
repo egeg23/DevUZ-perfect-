@@ -28,6 +28,14 @@ export function HqTask({ people, preselect }: { people: { id: string; name: stri
   const [state, action, pending] = useActionState<TaskState, FormData>(hqTaskAction, null);
   const [due, setDue] = useState<"today" | "tomorrow" | "custom">("today");
   const form = useRef<HTMLFormElement>(null);
+  const title = useRef<HTMLInputElement>(null);
+  // Пришли из карточки человека: форма — на экран, курсор — в «Что сделать».
+  useEffect(() => {
+    if (!preselect) return;
+    const section = document.getElementById("task");
+    section?.scrollIntoView({ behavior: "smooth", block: "start" });
+    title.current?.focus({ preventScroll: true });
+  }, [preselect]);
   const done = state?.ok ? state.at : 0;
   useEffect(() => {
     if (done) form.current?.reset();
@@ -65,7 +73,7 @@ export function HqTask({ people, preselect }: { people: { id: string; name: stri
 
       <label className="flex flex-col gap-2">
         <span className="text-xs font-medium uppercase tracking-wider text-faint">{t.what}</span>
-        <input name="title" required maxLength={200} placeholder={t.whatPlaceholder} className={FIELD} autoComplete="off" />
+        <input ref={title} name="title" required maxLength={200} placeholder={t.whatPlaceholder} className={FIELD} autoComplete="off" />
       </label>
 
       <fieldset>

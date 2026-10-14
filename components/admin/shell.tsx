@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { signOut } from "@/app/admin/actions";
 import { ROLE_BADGE, homeOf, navOf } from "@/lib/admin/roles";
@@ -14,6 +14,7 @@ import { LocaleSwitch } from "@/components/admin/locale-switch";
 import { PanelLocaleProvider } from "@/components/admin/panel-locale";
 import { UsageBeacon } from "@/components/admin/usage-beacon";
 import { TaskPulse } from "@/components/admin/task-alerts";
+import { NavProgress } from "@/components/admin/nav-progress";
 
 /**
  * Каркас панели.
@@ -51,6 +52,10 @@ export function AdminShell({
         {/* Задачи: пока панель открыта, новое приходит звуком и
             уведомлением браузера — в любом разделе, не только на главной. */}
         <TaskPulse />
+        {/* Полоса загрузки — с момента нажатия на ссылку до новой страницы. */}
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
         {/* Шапка липкая: на телефоне список лидов длинный, и уходить наверх
             ради перехода в другой раздел — лишняя прокрутка в обе стороны. */}
         <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">

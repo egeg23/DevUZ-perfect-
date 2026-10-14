@@ -225,26 +225,26 @@ test("«Главная»: без ответа боту у человека и с
     autopilotTrouble: null,
     bans: [],
     circlesMissing: { ru: [], uz: [] },
-    circleFallback: 0,
+    circleFallback: [],
     leads: { unowned: [] } as never,
-    burnedToday: 0,
-    overdue: 0,
-    stale: 0,
-    transfers: 0,
-    contracts: 0,
-    mockups: { endingSoon: 0 } as never,
+    burned: [],
+    overdue: [],
+    stale: [],
+    transfers: [],
+    contracts: [],
+    ending: [],
     firecrawlRemaining: null,
   };
   const items = attentionOf({
     ...base,
     botSilent: [
-      { staffId: "s1", name: "Камила", n: 12 },
-      { staffId: "s2", name: "Дина", n: 5 },
+      { id: "s1", label: "Камила", n: 12 },
+      { id: "s2", label: "Дина", n: 5 },
     ],
-  });
+  } as never);
   const silent = items.filter((a) => a.kind === "botSilent");
   assert.equal(silent.length, 1, "пять — ещё не повод, двенадцать — повод");
   assert.equal(attentionHref(silent[0]), "/admin?owner=s1&status=taken", "ссылка — в его лиды «в работе»");
   const store = read("lib/admin/hq-store.ts");
-  assert.match(store, /botSilent: tidy\.unanswered\.get\(s\.id\) \?\? 0/);
+  assert.match(store, /botSilent: silent\.get\(s\.id\) \?\? 0/);
 });

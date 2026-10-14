@@ -3,3 +3,5 @@ import { createElement } from "react";
 export default function Link({ href, prefetch: _prefetch, ...rest }) {
   return createElement("a", { href: typeof href === "string" ? href : String(href), ...rest });
 }
+// Статус перехода по ссылке: в тесте перехода нет — ссылка не «ждёт».
+export const useLinkStatus = () => ({ pending: false });

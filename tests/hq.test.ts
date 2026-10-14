@@ -218,14 +218,14 @@ const baseAttention = (over: Partial<AttentionInput> = {}): AttentionInput => ({
   autopilotTrouble: null,
   bans: [],
   circlesMissing: { ru: [], uz: [] },
-  circleFallback: 0,
+  circleFallback: [],
   leads: leadsPulse([], [], [], NOW),
-  burnedToday: 0,
-  overdue: 0,
-  stale: 0,
-  transfers: 0,
-  contracts: 0,
-  mockups: mockupsPulse([], NOW),
+  burned: [],
+  overdue: [],
+  stale: [],
+  transfers: [],
+  contracts: [],
+  ending: [],
   firecrawlRemaining: 5000,
   ...over,
 });
@@ -237,13 +237,13 @@ test("«Требует внимания»: пусто, когда всё спо�
       sweep: { last_ok_at: ago(1), alerted: false },
       autopilotTrouble: { error: "Модель не отвечает — до поставщика не достучаться. Повторите через несколько минут.", at: ago(1) },
       bans: [
-        { account: "Главный аккаунт", until: Date.parse(ahead(3)) },
-        { account: "Старый бан", until: Date.parse(ago(1)) },
+        { key: "main", account: "Главный аккаунт", until: Date.parse(ahead(3)) },
+        { key: "a2", account: "Старый бан", until: Date.parse(ago(1)) },
       ],
-      circlesMissing: { ru: [], uz: ["Рабочий 2"] },
-      burnedToday: 2,
-      stale: 5,
-      contracts: 3,
+      circlesMissing: { ru: [], uz: [{ id: "a2", label: "Рабочий 2" }] },
+      burned: [{ id: "l1", label: "Кафе · Данил" }, { id: "l2", label: "Салон · Камила" }],
+      stale: [{ id: "l3", label: "Отель" }],
+      contracts: [{ id: "c1", label: "№12" }],
       firecrawlRemaining: 120,
     }),
   );
@@ -252,7 +252,7 @@ test("«Требует внимания»: пусто, когда всё спо�
   assert.ok(kinds.includes("circle") && kinds.includes("burned") && kinds.includes("stale") && kinds.includes("firecrawl"));
   assert.ok(!kinds.includes("contracts"), "договоры — деньги, руководителю не показываем");
   assert.equal(kinds.filter((k) => k === "ban").length, 1, "снятое ограничение не горит");
-  assert.ok(attentionOf(baseAttention({ role: "admin", contracts: 3 })).some((a) => a.kind === "contracts"));
+  assert.ok(attentionOf(baseAttention({ role: "admin", contracts: [{ id: "c1", label: "№12" }] })).some((a) => a.kind === "contracts"));
   // Вчерашний сбой автопрогона сегодня не горит.
   assert.deepEqual(attentionOf(baseAttention({ autopilotTrouble: { error: "x", at: ago(24) } })), []);
   // Обычный сбой — «автопрогон», не «модель».
@@ -344,7 +344,7 @@ function sampleHq(withMoney: boolean): Hq {
     mockups,
     tasks: tasksPulse([task({ due_at: ago(1) })], NOW),
     money: withMoney ? moneyPulse([{ amount_usd: 1500, paid_on: "2026-10-13" }], 1, NOW) : null,
-    attention: attentionOf(baseAttention({ leads: lp, overdue: 1, mockups })),
+    attention: attentionOf(baseAttention({ leads: lp, overdue: [{ id: "t1", label: "Позвонить" }] })),
     feed: [{ kind: "lead", at: ago(1), label: "Кафе", href: "/admin/leads/x" }],
     people: [
       personOf(
@@ -377,12 +377,14 @@ const visible = (html: string) =>
 test("«Главная» рисуется на трёх языках: деньги — только у владельца, у uz и pl нет русского", () => {
   for (const locale of PANEL_LOCALES) {
     for (const withMoney of [true, false]) {
-      const html = renderToStaticMarkup(createElement(HqView, { hq: sampleHq(withMoney), locale, name: "Тест", now: NOW }));
+      const html = renderToStaticMarkup(createElement(HqView, { hq: sampleHq(withMoney), locale, name: "Тест", now: NOW, giveAction: async () => {} }));
       assert.ok(html.includes('href="/admin?status=taken"'), "число ведёт в подробности");
       assert.ok(html.includes('href="/admin/mockups"'));
       assert.ok(html.includes('id="people"'));
       assert.equal(html.includes('href="/admin/finance"'), withMoney, `${locale}: деньги ${withMoney ? "есть" : "нет"}`);
       assert.ok(html.includes("min-h-11"), "строки — под палец");
+      assert.ok(html.includes('name="lead"'), "«Отдать» у тёплого без хозяина");
+      assert.ok(html.includes('role="img"'), "касания за 7 дней в карточке");
       if (locale !== "ru") {
         const text = visible(html).replace(/Тест/g, "");
         assert.ok(!CYRILLIC.test(text), `${locale}: русское на странице: ${text.match(/\S*[а-яё]\S*/i)}`);

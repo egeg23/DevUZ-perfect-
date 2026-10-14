@@ -1,6 +1,8 @@
+import Link from "next/link";
+
 import { cancelBroadcastAction } from "@/app/admin/hq/actions";
 import { HelpHint } from "@/components/admin/help-link";
-import { HqBroadcast } from "@/components/admin/hq-broadcast";
+import { HqBroadcast, type RepeatOf } from "@/components/admin/hq-broadcast";
 import { HqTask } from "@/components/admin/hq-task";
 import { broadcastDict, hqTaskDict } from "@/content/admin-panel/hq-actions";
 import { canCancel, statusOf, type BroadcastPerson } from "@/lib/admin/broadcast";
@@ -97,6 +99,13 @@ function History({
                             )
                           : tb.historyLine(b.authorName, to, b.delivered, b.recipients.length)}
                       </p>
+                      <div className="flex items-center">
+                      <Link
+                        href={`/admin/hq?repeat=${b.id}#broadcast`}
+                        className="flex min-h-11 items-center rounded-2xl px-3 text-xs text-green transition hover:bg-surface-2"
+                      >
+                        {tb.repeat}
+                      </Link>
                       {canCancel(b, b.delivered, viewer, now) ? (
                         <form action={cancelBroadcastAction}>
                           <input type="hidden" name="id" value={b.id} />
@@ -105,6 +114,7 @@ function History({
                           </button>
                         </form>
                       ) : null}
+                      </div>
                     </div>
                   </li>
                 );
@@ -135,6 +145,8 @@ export function HqSide({
     history: HistoryItem[];
     usersHistory: HistoryItem[];
     userCounts: Record<Segment, number>;
+    /** «Повторить»: прошлая рассылка для формы. */
+    repeat?: RepeatOf | null;
   } | null;
   now: Date;
 }) {
@@ -147,7 +159,10 @@ export function HqSide({
           {tt.title}
           <HelpHint topic={helpAnchor("/admin/hq", "task")} />
         </h2>
-        <HqTask people={taskPeople} preselect={preselect} />
+        {/* Ключ — человек из «Поставить задачу» в карточке: форма уже на
+            странице, и без нового ключа отметка (defaultChecked) не
+            появилась бы — так и было у владельца на телефоне 14.10.2026. */}
+        <HqTask key={preselect ?? "none"} people={taskPeople} preselect={preselect} />
       </section>
 
       {broadcast ? (
@@ -156,12 +171,16 @@ export function HqSide({
             {tb.title}
             <HelpHint topic={helpAnchor("/admin/hq", "broadcast")} />
           </h2>
+          {/* Ключ — новая форма на каждое «Повторить»: иначе состояние формы
+              осталось бы прежним, и подстановка не случилась бы. */}
           <HqBroadcast
+            key={broadcast.repeat?.id ?? "new"}
             people={broadcast.people}
             selfId={viewer.id}
             userCounts={broadcast.userCounts}
             historyStaff={<History items={broadcast.history} tb={tb} viewer={viewer} now={now} />}
             historyUsers={<History items={broadcast.usersHistory} tb={tb} viewer={viewer} now={now} />}
+            initial={broadcast.repeat}
           />
 
         </section>

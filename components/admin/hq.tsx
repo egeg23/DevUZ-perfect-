@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { HelpHint } from "@/components/admin/help-link";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { MAIN_LABEL } from "@/lib/admin/account-ban-store";
 import { hqDict } from "@/content/admin-panel/hq";
 import { helpAnchor } from "@/lib/admin/help";
@@ -203,7 +204,14 @@ function dayMonth(iso: string): string {
   return `${String(d.getUTCDate()).padStart(2, "0")}.${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-export function AttentionList({ items, t, now }: { items: readonly Attention[]; t: T; now: Date }) {
+/** «Отдать» тёплого лида без хозяина: лиды, люди и действие формы (передаёт страница). */
+export type GiveBox = {
+  leads: readonly { id: string; label: string }[];
+  people: readonly { id: string; name: string; online: boolean }[];
+  action: (formData: FormData) => Promise<void>;
+};
+
+export function AttentionList({ items, t, now, give }: { items: readonly Attention[]; t: T; now: Date; give?: GiveBox | null }) {
   return (
     <section className={`${CARD} p-4 sm:p-5`} aria-labelledby="hq-attention">
       <div className="flex items-center gap-3">
@@ -218,23 +226,54 @@ export function AttentionList({ items, t, now }: { items: readonly Attention[]; 
       </div>
       {items.length ? (
         <ul className="mt-3 flex flex-col gap-1">
-          {items.map((a, i) => (
-            <li key={`${a.kind}-${i}`}>
-              <Link
-                href={attentionHref(a)}
-                className="-mx-2 flex min-h-11 items-start gap-3 rounded-2xl px-2 py-2.5 transition hover:bg-surface-2"
-              >
-                <span
-                  className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${a.level === "red" ? "bg-red-400" : "bg-gold"}`}
-                  aria-hidden="true"
-                />
-                <span className={`min-w-0 flex-1 text-sm leading-snug ${a.level === "red" ? "text-text" : "text-muted"}`}>
-                  {attentionText(a, t, now)}
-                </span>
-                <Icon name="chevron" className="mt-0.5 h-4 w-4 shrink-0 text-faint" />
-              </Link>
-            </li>
-          ))}
+          {items.map((a, i) => {
+            const href = attentionHref(a);
+            const dot = (
+              <span
+                className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${a.level === "red" ? "bg-red-400" : "bg-gold"}`}
+                aria-hidden="true"
+              />
+            );
+            const text = (
+              <span className={`min-w-0 flex-1 text-sm leading-snug ${a.level === "red" ? "text-text" : "text-muted"}`}>
+                {attentionText(a, t, now)}
+              </span>
+            );
+            const row = "-mx-2 flex min-h-11 items-start gap-3 rounded-2xl px-2 py-2.5 transition hover:bg-surface-2 active:bg-surface-2";
+            return (
+              <li key={`${a.kind}-${i}`}>
+                {href ? (
+                  <Link href={href} className={row}>
+                    {dot}
+                    {text}
+                    <Icon name="chevron" className="mt-0.5 h-4 w-4 shrink-0 text-faint" />
+                  </Link>
+                ) : (
+                  // Несколько штук — раскрывается списком, каждая ведёт в свою карточку.
+                  <details className="group/att">
+                    <summary className={`${row} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
+                      {dot}
+                      {text}
+                      <Icon name="chevron" className="mt-0.5 h-4 w-4 shrink-0 text-faint transition group-open/att:rotate-90" />
+                    </summary>
+                    <ul className="mb-1 ml-5 border-l border-line/70 pl-3">
+                      {a.links.map((link) => (
+                        <li key={link.href}>
+                          <Link
+                            href={link.href}
+                            className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm text-muted transition hover:bg-surface-2 hover:text-text active:bg-surface-2"
+                          >
+                            <span className="min-w-0 flex-1 truncate">{link.label}</span>
+                            <Icon name="chevron" className="h-4 w-4 shrink-0 text-faint" />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <p className="mt-3 flex items-start gap-3 rounded-2xl bg-green/5 px-3 py-3 text-sm leading-snug text-green">
@@ -242,6 +281,40 @@ export function AttentionList({ items, t, now }: { items: readonly Attention[]; 
           {t.attentionCalm}
         </p>
       )}
+      {/* Отдать тёплого лида без хозяина — тут же, не уходя в «Лиды». Без
+          скрипта: обычная форма, работает и на телефоне без загрузки. */}
+      {give && give.leads.length && give.people.length ? (
+        <div className="mt-3 rounded-2xl bg-surface-2/60 p-3">
+          <p className="text-xs font-medium uppercase tracking-wider text-faint">{t.giveTitle}</p>
+          {give.leads.slice(0, 3).map((lead) => (
+            <form key={lead.id} action={give.action} className="mt-2 flex flex-wrap items-center gap-2">
+              <input type="hidden" name="lead" value={lead.id} />
+              <Link href={`/admin/leads/${lead.id}`} className="min-w-0 flex-1 basis-full truncate text-sm text-text hover:text-green sm:basis-auto">
+                {lead.label}
+              </Link>
+              <select
+                name="to"
+                required
+                aria-label={t.giveTo}
+                defaultValue=""
+                className="min-h-11 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-text"
+              >
+                <option value="" disabled>
+                  {t.giveTo}
+                </option>
+                {give.people.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {t.givePerson(p.name, p.online ? "1" : "")}
+                  </option>
+                ))}
+              </select>
+              <SubmitButton base="min-h-11 rounded-xl px-4 text-sm font-semibold" pendingLabel={t.giving}>
+                {t.giveButton}
+              </SubmitButton>
+            </form>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -318,6 +391,48 @@ function Stat({ value, label }: { value: ReactNode; label: string }) {
   );
 }
 
+/**
+ * Касания по дням за неделю — тонкие столбики одного цвета от общей
+ * линии, сегодня — ярче. Подпись дней и чисел — во всплывающей подсказке
+ * и для чтения с экрана: цвет здесь ничего не кодирует, кроме «сегодня».
+ */
+function Spark({ days, t, locale, now }: { days: readonly number[]; t: T; locale: PanelLocale; now: Date }) {
+  const max = Math.max(1, ...days);
+  const fmt = new Intl.DateTimeFormat(PANEL_INTL[locale], { weekday: "short", timeZone: "Asia/Tashkent" });
+  const names = days.map((_, i) => fmt.format(new Date(now.getTime() - (days.length - 1 - i) * 86_400_000)));
+  const label = t.sparkTitle(days.map((n, i) => t.sparkDay(names[i], n)).join(", "));
+  const W = 10;
+  const GAP = 4;
+  const H = 28;
+  return (
+    <svg
+      viewBox={`0 0 ${days.length * (W + GAP) - GAP} ${H}`}
+      className="h-7 w-[94px] shrink-0"
+      role="img"
+      aria-label={label}
+    >
+      <title>{label}</title>
+      {days.map((n, i) => {
+        const h = n ? Math.max(3, Math.round((n / max) * H)) : 2;
+        const today = i === days.length - 1;
+        return (
+          <rect
+            key={i}
+            x={i * (W + GAP)}
+            y={H - h}
+            width={W}
+            height={h}
+            rx={2}
+            className={n ? (today ? "fill-green" : "fill-green-dim/70") : "fill-line"}
+          >
+            <title>{t.sparkDay(names[i], n)}</title>
+          </rect>
+        );
+      })}
+    </svg>
+  );
+}
+
 export function PersonCard({
   p,
   t,
@@ -360,6 +475,10 @@ export function PersonCard({
               </span>
             </span>
             <Icon name="chevron" className="h-4 w-4 shrink-0 text-faint transition group-open:rotate-90" />
+          </div>
+          <div className="flex items-end justify-between gap-3 px-1">
+            <span className="text-[11px] text-faint">{t.week}</span>
+            <Spark days={p.touchDays} t={t} locale={locale} now={now} />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <Stat value={p.touches} label={p.portionTarget ? t.statPortion(p.portionDone, p.portionTarget) : t.statNoPortion} />
@@ -416,6 +535,7 @@ export function HqView({
   now,
   side,
   personTaskHref,
+  giveAction,
 }: {
   hq: Hq;
   locale: PanelLocale;
@@ -425,6 +545,8 @@ export function HqView({
   /** Строкой под пульсом: быстрая задача, рассылка (если есть). */
   side?: ReactNode;
   personTaskHref?: (id: string) => string;
+  /** Действие «Отдать» для тёплых без хозяина; нет — блока нет. */
+  giveAction?: GiveBox["action"];
 }) {
   const t = pick(hqDict, locale);
   const { leads, touches, mockups, tasks, money } = hq;
@@ -462,7 +584,20 @@ export function HqView({
         {/* На телефоне «Требует внимания» — первым: то, что горит, важнее
             чисел за неделю. На большом экране — справа, рядом с пульсом. */}
         <div className="flex flex-col gap-5 sm:gap-6 lg:order-2">
-          <AttentionList items={hq.attention} t={t} now={now} />
+          <AttentionList
+            items={hq.attention}
+            t={t}
+            now={now}
+            give={
+              giveAction
+                ? {
+                    leads: hq.leads.unowned,
+                    people: [...hq.people].sort((a, b) => Number(b.online) - Number(a.online)),
+                    action: giveAction,
+                  }
+                : null
+            }
+          />
           <FeedList items={hq.feed} t={t} />
         </div>
 

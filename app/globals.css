@@ -820,3 +820,40 @@
     display: none;
   }
 }
+
+/* ── Отклик на нажатие в панели ────────────────────────────────────────────
+ *
+ * Владелец, 14.10.2026: «не понимаю, нажал ли я на кнопку или нет: кнопка
+ * начинает подсвечиваться только после перехода». Нажатие видно сразу —
+ * ссылка, кнопка, раскрывашка тускнеют под пальцем; серую вспышку Safari
+ * убираем, она выглядит как сбой. Полоса загрузки сверху —
+ * components/admin/nav-progress.tsx. Вне слоёв, как и правила выше:
+ * сильнее утилит.
+ */
+.admin-panel {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.admin-panel :is(a, button, summary, label):active {
+  opacity: 0.65;
+}
+
+@keyframes nav-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.nav-progress-bar {
+  animation: nav-progress 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress-bar {
+    width: 100%;
+    animation: none;
+  }
+}
