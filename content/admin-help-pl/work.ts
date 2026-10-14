@@ -149,6 +149,26 @@ export const workSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "scan",
+        title: "Skan makiet: co poszło bokiem",
+        body: {
+          manager: [
+            "Dwa razy dziennie, o 09:00 i 15:00 czasu Taszkentu, bot sam szuka naszych linków do makiet (devuz.studio/proto/… i cases.devuz.studio/…) w korespondencji z 14 dni: w wychodzących kontaktach, w korespondencji leadów w panelu i w dialogach każdego roboczego konta Telegram. Wszystko, co poszło do klienta, ale nie trafiło na listę (skaut się restartował, link wklejono ręcznie), dopisuje sam. Model w tym nie uczestniczy, tylko reguły.",
+            "Bot nie pisze do klienta wstecz: wysłane ponad 48 godzin temu — promocja u klienta już się skończyła, wiersz po prostu zostaje w historii; wysłane w ciągu 48 godzin, ale ponad 3 godziny temu — promocja trwa, ale klient nie dostanie ani warunków, ani przypomnień: w razie potrzeby powiedzcie mu sami. Świeże (do 3 godzin) — jak zwykle, z warunkami po 3 minutach. Linku z prywatnego konta bot nie widzi także po skanie.",
+          ],
+          head: [
+            "Dwa razy dziennie, o 09:00 i 15:00 czasu Taszkentu, bot sam szuka naszych linków do makiet (devuz.studio/proto/… i cases.devuz.studio/…) w korespondencji z 14 dni: w wychodzących kontaktach, w korespondencji leadów w panelu i w dialogach każdego roboczego konta Telegram. Wszystko, co poszło do klienta, ale nie trafiło na listę (skaut się restartował, link wklejono ręcznie), dopisuje sam. Model w tym nie uczestniczy, tylko reguły. Konto ograniczone przez Telegram skan pomija; dialogi czyta po jednym, z przerwami.",
+            "Bot nie pisze do klienta wstecz: wysłane ponad 48 godzin temu — promocja u klienta już się skończyła, wiersz po prostu zostaje w historii; wysłane w ciągu 48 godzin, ale ponad 3 godziny temu — promocja trwa, ale klient nie dostanie ani warunków, ani przypomnień, a do Ciebie przychodzi karta «🔎 Макет найден сканом»; świeże (do 3 godzin) — jak zwykle, z warunkami po 3 minutach. Ten sam link do tego samego klienta nie zapisuje się drugi raz i nie przedłuża terminu.",
+            "Jeśli skan coś znalazł, Ty i właściciel dostajecie jedną linijkę «🔎 Скан макетов» z listą znalezionych; nic nie znalazł — bot milczy. W «Макеты клиентов» takie makiety mają znak «🔎 найдено сканом», na [Stronie głównej](/admin/hq) — wiersz «znalezione skanem w 7 dni» w karcie makiet i «Skan znalazł makietę» w aktualnościach.",
+          ],
+          admin: [
+            "Dwa razy dziennie, o 09:00 i 15:00 czasu Taszkentu, bot sam szuka naszych linków do makiet (devuz.studio/proto/… i cases.devuz.studio/…) w korespondencji z 14 dni: w wychodzących kontaktach, w korespondencji leadów w panelu i w dialogach każdego roboczego konta Telegram. Wszystko, co poszło do klienta, ale nie trafiło na listę (skaut się restartował, link wklejono ręcznie), dopisuje sam. Model w tym nie uczestniczy, tylko reguły. Konto ograniczone przez Telegram skan pomija; dialogi czyta po jednym, z przerwami.",
+            "Bot nie pisze do klienta wstecz: wysłane ponad 48 godzin temu — promocja u klienta już się skończyła, wiersz po prostu zostaje w historii; wysłane w ciągu 48 godzin, ale ponad 3 godziny temu — promocja trwa, ale klient nie dostanie ani warunków, ani przypomnień, a do Ciebie przychodzi karta «🔎 Макет найден сканом»; świeże (do 3 godzin) — jak zwykle, z warunkami po 3 minutach. Ten sam link do tego samego klienta nie zapisuje się drugi raz i nie przedłuża terminu.",
+            "Jeśli skan coś znalazł, Ty i kierownik dostajecie jedną linijkę «🔎 Скан макетов» z listą znalezionych; nic nie znalazł — bot milczy. W «Макеты клиентов» takie makiety mają znak «🔎 найдено сканом», na [Stronie głównej](/admin/hq) — wiersz «znalezione skanem w 7 dni» w karcie makiet i «Skan znalazł makietę» w aktualnościach.",
+          ],
+        },
+      },
+      {
         id: "closed",
         title: "«otwarta przez link» i «na hasło»",
         body: {

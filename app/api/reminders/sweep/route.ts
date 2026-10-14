@@ -15,6 +15,7 @@ import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { runMockupOffers } from "@/lib/admin/mockup-offer-run";
 import { sendOfferDigest } from "@/lib/admin/mockup-offer-bot";
+import { noteScanFinds, scanDatabase } from "@/lib/admin/mockup-scan-store";
 import { sendBloggerInvites, sendInviteSummary } from "@/lib/admin/blogger-invite-store";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
 import { runFollowups } from "@/lib/admin/outreach-followup";
@@ -283,9 +284,13 @@ async function sweep(): Promise<Response> {
   const portions = await runPortions(new Date());
   // Акция 48 часов после макета: условия клиенту, напоминания в 13:00 и за
   // 2 часа, конец срока; в 13:00 — список макетов владельцу и руководителю
-  // (lib/admin/mockup-offer-run, mockup-offer-bot).
+  // (lib/admin/mockup-offer-run, mockup-offer-bot). В 09:00 и 15:00 — скан
+  // базы на ссылки макетов, которые прошли мимо записи, и итог скана
+  // владельцу, если что-то нашлось (lib/admin/mockup-scan-store).
   after(async () => {
+    await scanDatabase(new Date()).catch((error) => console.error("скан макетов:", error));
     await runMockupOffers(new Date()).catch((error) => console.error("акция по макету:", error));
+    await noteScanFinds(new Date()).catch((error) => console.error("скан макетов, итог:", error));
     await sendOfferDigest(new Date()).catch((error) => console.error("макеты клиентов, список:", error));
   });
   // Вечерний отчёт по сотрудникам — владельцу и руководителям, после того

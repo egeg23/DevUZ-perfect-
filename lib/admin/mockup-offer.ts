@@ -70,18 +70,21 @@ export type MockupLink = { kind: "proto"; token: string } | { kind: "showcase"; 
 
 /**
  * Ссылки на макеты в тексте: прототипы на devuz.studio/proto/<token> и
- * проекты витрины cases.devuz.studio/<проект> (и старый адрес витрины).
+ * проекты витрины cases.devuz.studio/<проект>. С https и без, с www и без,
+ * с хвостом пути (?key=…, /about) и со знаком препинания сразу за ссылкой.
+ * Чужой адрес, который только кончается на «devuz.studio» (mydevuz.studio),
+ * — не наш.
  */
 export function mockupLinks(text: string): MockupLink[] {
   const out: MockupLink[] = [];
   const seen = new Set<string>();
-  for (const m of text.matchAll(/devuz\.studio\/proto\/([A-Za-z0-9_-]{6,80})/g)) {
+  for (const m of text.matchAll(/(?<![A-Za-z0-9-])devuz\.studio\/proto\/([A-Za-z0-9_-]{6,80})/gi)) {
     const key = `p:${m[1]}`;
     if (!seen.has(key)) out.push({ kind: "proto", token: m[1] });
     seen.add(key);
   }
-  for (const m of text.matchAll(/cases\.devuz\.studio\/([A-Za-z0-9._\/-]{2,120})/g)) {
-    const path = m[1].replace(/[/.]+$/, "");
+  for (const m of text.matchAll(/(?<![A-Za-z0-9-])cases\.devuz\.studio\/([A-Za-z0-9._\/-]{2,120})/gi)) {
+    const path = m[1].replace(/[/.-]+$/, "");
     // Главная витрины («/ru») — не макет.
     if (/^(?:ru|uz|en)$/.test(path)) continue;
     const key = `s:${path}`;
