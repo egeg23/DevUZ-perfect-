@@ -639,6 +639,9 @@ test("DomTut: конструктор — сайт 1 000 $ вместо 4 800 $, 
   assert.equal(plan.APP.off, 60);
   assert.equal(Math.round(plan.APP.price * (1 - plan.APP.off / 100)), plan.APP.promo, "3 500 $ — это и есть минус 60%");
   assert.equal(plan.CASH_OFF, 10);
+  // Владелец, 14.10.2026: отсчёт 48 часов — с 14:00 по Москве (16:00 по Ташкенту), один для всех.
+  assert.equal(Date.parse(plan.OFFER_START), Date.parse("2026-10-14T14:00:00+03:00"));
+  assert.equal(plan.OFFER_HOURS, 48);
   assert.ok(plan.ADDONS.length >= 6, "допы, которые клиенту реально нужны");
   for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.uz.t && a.ru.who && a.uz.who, `${a.id}: цена и откуда доп`);
   assert.equal(plan.ALL, 4800 + plan.APP.price + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
@@ -648,5 +651,6 @@ test("DomTut: конструктор — сайт 1 000 $ вместо 4 800 $, 
     assert.match(html, /<s class="num">8\u202f750\u00a0\$<\/s><b class="num">3\u202f500\u00a0\$<\/b>/, "приложение: 3 500 $ вместо 8 750 $");
     assert.match(html, /"base":4800,"promo":1000,"app":8750,"appPromo":3500,"appName":"[^"]+","cash":10/, "скрипт считает от тех же цен");
     assert.match(html, /id="kit-cash"/, "тумблер «наличными −10%»");
+    assert.match(html, new RegExp(`"end":${Date.parse("2026-10-16T16:00:00+05:00")},`), "таймер кончается 16.10 в 16:00 по Ташкенту");
   }
 });

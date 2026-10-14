@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
 import { UI } from "./ui.mjs";
-import { ADDONS, ALL, APP, BASE as KIT, CASH_OFF } from "./plan.mjs";
+import { ADDONS, ALL, APP, BASE as KIT, CASH_OFF, OFFER_HOURS, OFFER_START } from "./plan.mjs";
 
 /*
  * Макет DomTut (domtut.uz): портал новостроек Ташкента. Два варианта в одном
@@ -368,7 +368,7 @@ ${ADDONS.map(row).join("")}
 </div>
 <div class="kit-side">
 <div class="kit-total beam" id="kit-total">
-<div class="timer" id="timer"><span>${t("Предложение действует", "Taklif amal qiladi")}</span><b class="num" id="tm">48:00:00</b></div>
+<div class="timer" id="timer"><span>${t("Предложение действует", "Taklif amal qiladi")}<small>${t("до 16.10, 16:00 по Ташкенту", "16.10, 16:00 gacha (Toshkent vaqti)")}</small></span><b class="num" id="tm">48:00:00</b></div>
 <div class="kt-line"><span>${t("Сайт", "Sayt")}</span><span class="num"><s>${usd(KIT.price)}</s> ${usd(KIT.promo)}</span></div>
 <div class="kt-line" id="kt-app"><span>${t("Приложение для iPhone", "iPhone uchun ilova")}</span><span class="num"><s>${usd(APP.price)}</s> ${usd(APP.promo)}</span></div>
 <div class="kt-line"><span>${t("Допы", "Qo‘shimchalar")} · <span id="kit-n">0</span></span><span class="num" id="kit-add">0 $</span></div>
@@ -387,7 +387,7 @@ function shell(l, body) {
   const t = T(l);
   const other = l === "ru" ? "uz" : "ru";
   const nav = [["#novostroyki", t("Новостройки", "Yangi binolar")], ["#ceny", t("Цены", "Narxlar")], ["#prilozhenie", t("Приложение", "Ilova")], ["#predlozhenie", t("Предложение", "Taklif")]];
-  const kit = { base: KIT.price, promo: KIT.promo, app: APP.price, appPromo: APP.promo, appName: APP[l].t, cash: CASH_OFF, cashName: t("Оплата наличными", "Naqd to‘lov"), lang: l, items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price })), copied: t("Скопировано", "Nusxalandi"), head: t("Состав сайта и приложения DomTut из конструктора:", "Konstruktordan DomTut sayti va ilovasi tarkibi:"), baseName: KIT[l].t, total: t("Итого по предложению", "Taklif bo‘yicha jami"), ended: t("Срок предложения прошёл", "Taklif muddati tugadi"), d: t("д", "k") };
+  const kit = { end: Date.parse(OFFER_START) + OFFER_HOURS * 3600_000, base: KIT.price, promo: KIT.promo, app: APP.price, appPromo: APP.promo, appName: APP[l].t, cash: CASH_OFF, cashName: t("Оплата наличными", "Naqd to‘lov"), lang: l, items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price })), copied: t("Скопировано", "Nusxalandi"), head: t("Состав сайта и приложения DomTut из конструктора:", "Konstruktordan DomTut sayti va ilovasi tarkibi:"), baseName: KIT[l].t, total: t("Итого по предложению", "Taklif bo‘yicha jami"), ended: t("Срок предложения прошёл", "Taklif muddati tugadi"), d: t("д", "k") };
   return `<!doctype html>
 <html lang="${l}">
 <head>

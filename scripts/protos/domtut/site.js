@@ -119,12 +119,11 @@ if(dev)dev.addEventListener('click',function(e){if(e.target===dev)close()});
 addEventListener('keydown',function(e){if(e.key==='Escape')close()});
 
 /* ── Конструктор и 48 часов ── */
-var K=JSON.parse($('#kit-data').textContent),KEY='dt-kit-1',OKEY='dt-offer-1';
+var K=JSON.parse($('#kit-data').textContent),KEY='dt-kit-1';
 var sel={};try{sel=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
-var start=0;try{start=+localStorage.getItem(OKEY)||0}catch(e){}
-if(!start){start=Date.now();try{localStorage.setItem(OKEY,String(start))}catch(e){}}
-var END=start+48*3600*1000;
-function left(){return END-Date.now()}
+/* Конец предложения — один для всех: 16.10.2026, 16:00 по Ташкенту (plan.mjs, OFFER_START). */
+var END=K.end;
+function left(){return Math.min(END-Date.now(),48*3600*1000)}
 var boxes=$$('#konstruktor input[data-k]');
 boxes.forEach(function(b){b.checked=!!sel[b.getAttribute('data-k')];b.addEventListener('change',function(){sel[b.getAttribute('data-k')]=b.checked;try{localStorage.setItem(KEY,JSON.stringify(sel))}catch(e){}sum()})});
 var shown=0,appBox=$('#kit-app'),cashBox=$('#kit-cash');

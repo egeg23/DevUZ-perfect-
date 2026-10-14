@@ -447,3 +447,4 @@ a.bc:hover .bc-i{transform:translate3d(0,-4px,0) rotate(-6deg)}
 .kit>*,.kit-list>*{min-width:0}
 .kit-base{overflow:hidden}
 .top{background:rgb(255 255 255 / .94)}
+.timer span small{display:block;font-size:12px;font-weight:400;opacity:.8}
