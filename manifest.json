@@ -1,0 +1,145 @@
+[
+ {
+  "section": "course-01",
+  "file": "videos/course-01.mp4",
+  "id": "123285c1-65eb-49bc-9b57-1c8051d36da0",
+  "path": "2026/10/37257e6e-822d-4e70-be78-c385e008a986.mp4",
+  "bytes": 29922647,
+  "sha256": "22f07592b9b8f4f2e55a76c9a791978bd8be10b2731b54f5c90642f01020d0f8",
+  "width": 1920,
+  "height": 1080,
+  "duration": 255.2
+ },
+ {
+  "section": "course-02",
+  "file": "videos/course-02.mp4",
+  "id": "290a6817-b425-42a5-b52c-17a6ecfbfee0",
+  "path": "2026/10/1a199150-0ce7-4182-8496-a17b53480596.mp4",
+  "bytes": 46567926,
+  "sha256": "cd0645dcdea8e1a82ce1c12af58a7ad92c6badd4be22454d6272a4a074ce3fbe",
+  "width": 1920,
+  "height": 1080,
+  "duration": 381.2
+ },
+ {
+  "section": "course-03",
+  "file": "videos/course-03.mp4",
+  "id": "5fa3eef8-05d8-4440-82fd-c360e4972b9c",
+  "path": "2026/10/2e4d92a6-ee3f-43fb-b927-5c50f74b675d.mp4",
+  "bytes": 60149699,
+  "sha256": "8bd75eac421257e36be6b26e7ad9cef26c589fd6b02e20037189d443f2353776",
+  "width": 1920,
+  "height": 1080,
+  "duration": 371.1
+ },
+ {
+  "section": "course-04",
+  "file": "videos/course-04.mp4",
+  "id": "9131b34e-a9c7-444b-b363-3dacf33330c3",
+  "path": "2026/10/c59d752d-a60f-4113-b187-0fbc2a6d8d2b.mp4",
+  "bytes": 37302518,
+  "sha256": "203f68d9b9109e9330a523f3dd08aaf3b7de04a964722d3e72c96e1d0b0fb98e",
+  "width": 1920,
+  "height": 1080,
+  "duration": 262.0
+ },
+ {
+  "section": "course-05",
+  "file": "videos/course-05.mp4",
+  "id": "dd7643ed-d724-4848-9dea-71de809f06e5",
+  "path": "2026/10/27b33fa3-24a8-45a6-932b-924e736d47e7.mp4",
+  "bytes": 13504238,
+  "sha256": "a7fa9e6ad92daf31040672ca5cde01643e4f33fdc43d19b29ac63ac4b2c84bf5",
+  "width": 1920,
+  "height": 1080,
+  "duration": 267.7
+ },
+ {
+  "section": "course-06",
+  "file": "videos/course-06.mp4",
+  "id": "ae2d32ae-5001-42c7-8466-ae95ceb8973d",
+  "path": "2026/10/0a3302ca-b332-4023-bc53-d2117a63d3ea.mp4",
+  "bytes": 28892903,
+  "sha256": "4101ff7194307191faba6f4542f54a7611063348791efa59d34901ef54b78037",
+  "width": 1920,
+  "height": 1080,
+  "duration": 284.7
+ },
+ {
+  "section": "course-07",
+  "file": "videos/course-07.mp4",
+  "id": "1565ad86-4b23-47dd-a90f-40cc5c679779",
+  "path": "2026/10/a1cb6f57-d76d-462d-9750-a66f610fa8f1.mp4",
+  "bytes": 15550266,
+  "sha256": "f6b4ebf85624698085bd8fad027b728063af54511ae1892a11105f95dfff4119",
+  "width": 1920,
+  "height": 1080,
+  "duration": 286.3
+ },
+ {
+  "section": "course-08",
+  "file": "videos/course-08.mp4",
+  "id": "d777c4bd-976a-45ee-ac52-7186f45b25ce",
+  "path": "2026/10/29a90631-487f-4119-b1d1-ddabf9244e2f.mp4",
+  "bytes": 13878534,
+  "sha256": "4da4fc68f1487d18d68db8bb4babff327dc9a761c9c53f0d12acfed94222ee0a",
+  "width": 1920,
+  "height": 1080,
+  "duration": 268.2
+ },
+ {
+  "section": "course-09",
+  "file": "videos/course-09.mp4",
+  "id": "01e99f66-fe4a-4f1f-8534-1ed169945d4b",
+  "path": "2026/10/b8a78620-00ba-4bbe-8577-340ec61840dd.mp4",
+  "bytes": 32833678,
+  "sha256": "b1fa36ba513ee32ea0dee019249bd58f9627fe8368c43163435cc892cbc50347",
+  "width": 1920,
+  "height": 1080,
+  "duration": 242.9
+ },
+ {
+  "section": "course-10",
+  "file": "videos/course-10.mp4",
+  "id": "e1606306-161c-455c-b082-ebbeb8824beb",
+  "path": "2026/10/69e5be9b-2a32-4aab-b2bb-4451d0a0af86.mp4",
+  "bytes": 16412079,
+  "sha256": "71eb5f9f48822ba2019b1134bd6538cda083eb52dfc1f13d4e13b7e04c9e9021",
+  "width": 1920,
+  "height": 1080,
+  "duration": 325.2
+ },
+ {
+  "section": "course-11",
+  "file": "videos/course-11.mp4",
+  "id": "27ee0e08-af3b-47fd-a98f-0599bc56540b",
+  "path": "2026/10/e053d9cd-c8a5-46eb-8b92-6e9852747869.mp4",
+  "bytes": 29613319,
+  "sha256": "96adda79641f19fa06037301ff4fa7496452334ae9bc98fd12b08d64dd3df090",
+  "width": 1920,
+  "height": 1080,
+  "duration": 233.9
+ },
+ {
+  "section": "course-12",
+  "file": "videos/course-12.mp4",
+  "id": "6a1e4abc-5b1b-4ed2-92f5-6fc019c89fd2",
+  "path": "2026/10/33f0ef65-c1f5-4046-8544-7e1aa91af0d3.mp4",
+  "bytes": 59560418,
+  "sha256": "01356d988ccd3ac2c634cd02d5e04d1bd8a0711fb824ca4440ef07b936120c35",
+  "width": 1920,
+  "height": 1080,
+  "duration": 266.4
+ },
+ {
+  "section": "course-13",
+  "file": "videos/course-13.mp4",
+  "id": "52490236-f1f1-4394-9f60-34ba4c91bdf8",
+  "path": "2026/10/6b5ec959-1e58-4efe-8b6e-4af8345b9fe5.mp4",
+  "bytes": 7069238,
+  "sha256": "c5125bf3aae86210c140b53a08fe5b98e9930bf2ef9d34e939590d567c03255e",
+  "width": 1920,
+  "height": 1080,
+  "duration": 133.0
+ }
+]

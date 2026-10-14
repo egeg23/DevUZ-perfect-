@@ -1,0 +1,101 @@
+name: Видеокурс — ролики на сервер (разово)
+
+# Временная ветка video-upload, не main: владелец, 14.10.2026, «Залей через
+# ветку». Ролики уже готовые mp4 из рабочего контейнера; сервер ничего не
+# перекодирует, только принимает файлы в ту же папку, что и видео к
+# инструкциям (MEDIA_HOST_DIR/promo/ГГГГ/ММ/<uuid>.mp4), как help-videos.yml.
+# mode.txt: copy — положить файлы; verify — проверить подписанные ссылки.
+# После проверки ветка удаляется.
+
+on:
+  push:
+    branches: [video-upload]
+
+concurrency:
+  group: course-upload
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Сверить файлы со списком
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, re
+          items = json.load(open("manifest.json"))
+          assert len(items) == 13
+          for it in items:
+              assert re.fullmatch(r"course-\d{2}", it["section"])
+              assert re.fullmatch(r"\d{4}/\d{2}/[0-9a-f-]{36}\.mp4", it["path"])
+              data = open(it["file"], "rb").read()
+              assert len(data) == it["bytes"], it["file"]
+              assert hashlib.sha256(data).hexdigest() == it["sha256"], it["file"]
+              assert data[4:8] == b"ftyp", it["file"]
+          print("список сходится:", len(items), "файлов,", sum(i["bytes"] for i in items), "байт")
+          PY
+
+      - name: Положить на сервер или проверить ссылки
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT || 22 }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          APP_DIR: ${{ secrets.VPS_APP_DIR || '/opt/devuz' }}
+        run: |
+          set -euo pipefail
+          MODE=$(tr -d '[:space:]' < mode.txt)
+          install -m 600 /dev/null key && printf '%s\n' "$VPS_SSH_KEY" > key
+          SSH="ssh -i key -p $VPS_PORT -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30"
+          MEDIA=$($SSH "$VPS_USER@$VPS_HOST" 'bash -s' <<EOF
+          v=\$(grep -E '^MEDIA_HOST_DIR=' "$APP_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d "\"'")
+          echo "\${v:-/var/lib/devuz/media}"
+          EOF
+          )
+          echo "медиа на сервере: $MEDIA"
+          if [ "$MODE" = copy ]; then
+            FREE=$($SSH "$VPS_USER@$VPS_HOST" "df -Pm '$MEDIA' | tail -1 | awk '{print \$4}'" < /dev/null)
+            echo "свободно: ${FREE} МБ"
+            [ "$FREE" -gt 2000 ] || { echo "мало места, не копирую"; exit 1; }
+            python3 -c "import json; [print(i['file'], i['path'], i['bytes']) for i in json.load(open('manifest.json'))]" | while read -r local path bytes; do
+              dir="$MEDIA/promo/$(dirname "$path")"
+              $SSH "$VPS_USER@$VPS_HOST" "mkdir -p '$dir'" < /dev/null
+              for try in 1 2 3; do
+                scp -i key -P "$VPS_PORT" -o StrictHostKeyChecking=accept-new "$local" "$VPS_USER@$VPS_HOST:$MEDIA/promo/$path.part" && break
+                sleep $((try * 5))
+              done
+              got=$($SSH "$VPS_USER@$VPS_HOST" "stat -c %s '$MEDIA/promo/$path.part'" < /dev/null)
+              [ "$got" = "$bytes" ] || { echo "размер не сошёлся: $local"; exit 1; }
+              $SSH "$VPS_USER@$VPS_HOST" "mv '$MEDIA/promo/$path.part' '$MEDIA/promo/$path' && chmod 644 '$MEDIA/promo/$path' && (chown 1001:1001 '$MEDIA/promo/$path' '$dir' 2>/dev/null || true)" < /dev/null
+              echo "положил: $local → $path ($bytes байт)"
+            done
+          else
+            # Подписанная ссылка — как lib/admin/help-video-link.ts. Ключ не
+            # покидает сервер: подпись считается там же.
+            scp -i key -P "$VPS_PORT" -o StrictHostKeyChecking=accept-new manifest.json "$VPS_USER@$VPS_HOST:/tmp/course-manifest.json"
+            $SSH "$VPS_USER@$VPS_HOST" "APP_DIR='$APP_DIR' python3 -" <<'PY'
+          import base64, hashlib, hmac, json, os, re, subprocess, time
+          env = open(os.environ["APP_DIR"] + "/.env").read()
+          base = re.search(r"^SUPABASE_SERVICE_ROLE_KEY=(.*)$", env, re.M).group(1).strip().strip("\"'")
+          k = hmac.new(b"devuz:help-video-link", base.encode(), hashlib.sha256).digest()
+          exp = (int(time.time() // 43200) + 2) * 43200
+          ok = 0
+          items = json.load(open("/tmp/course-manifest.json"))
+          for it in items:
+              sig = base64.urlsafe_b64encode(hmac.new(k, f"{it['id']}\n{it['path']}\n{exp}".encode(), hashlib.sha256).digest()).rstrip(b"=").decode()
+              url = f"https://devuz.studio/admin/help/video/{it['id']}?p={it['path']}&e={exp}&s={sig}"
+              out = subprocess.run(["curl", "-s", "-o", "/dev/null", "-D", "-", "-r", "0-0", "--max-time", "30", url], capture_output=True, text=True).stdout
+              code = re.search(r"^HTTP/\S+ (\d+)", out, re.M)
+              total = re.search(r"content-range: bytes 0-0/(\d+)", out, re.I)
+              good = bool(code and code.group(1) in ("200", "206") and total and int(total.group(1)) == it["bytes"])
+              ok += good
+              print(it["section"], code.group(1) if code else "нет ответа", total.group(1) if total else "-", "OK" if good else "ОШИБКА")
+          os.remove("/tmp/course-manifest.json")
+          print(f"итого: {ok} из {len(items)}")
+          raise SystemExit(0 if ok == len(items) else 1)
+          PY
+          fi
+          rm -f key
