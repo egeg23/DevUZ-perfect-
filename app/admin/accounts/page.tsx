@@ -190,7 +190,8 @@ export default async function AccountsPage({
       </section>
 
       <ul className="mt-6 space-y-3">
-        <li className={CARD}>
+        {/* Якоря — для «Требует внимания» на «Главной»: строка ведёт к своему аккаунту. */}
+        <li id={`account-${MAIN_ACCOUNT}`} className={`${CARD} scroll-mt-24 target:ring-2 target:ring-gold/50`}>
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="font-semibold">{t.mainTitle}</span>
             <span className="text-xs text-faint">{t.mainText(HOURLY_CAP)}</span>
@@ -206,7 +207,7 @@ export default async function AccountsPage({
           const failure = loginError(a.login_error);
           const flooded = a.status === "active" && !canSend(a, now) && a.flood_until;
           return (
-            <li key={a.id} className={CARD}>
+            <li key={a.id} id={`account-${a.id}`} className={`${CARD} scroll-mt-24 target:ring-2 target:ring-gold/50`}>
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="font-semibold">{a.label}</span>
                 <span className="text-xs text-faint">

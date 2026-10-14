@@ -295,6 +295,7 @@ export const hqDict = defineDict({
   giveTitle: { ru: "Отдать тёплого лида человеку", uz: "Issiq lidni xodimga topshirish", pl: "Przekaż ciepłego leada osobie" },
   giveTo: { ru: "Кому", uz: "Kimga", pl: "Komu" },
   giveButton: { ru: "Отдать", uz: "Topshirish", pl: "Przekaż" },
+  giving: { ru: "Отдаю…", uz: "Topshirilmoqda…", pl: "Przekazuję…" },
   givePerson: {
     ru: (name: string, online: string) => (online ? `${name} · в сети` : name),
     uz: (name: string, online: string) => (online ? `${name} · onlayn` : name),

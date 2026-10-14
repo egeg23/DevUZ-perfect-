@@ -2,11 +2,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { HelpHint } from "@/components/admin/help-link";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { MAIN_LABEL } from "@/lib/admin/account-ban-store";
 import { hqDict } from "@/content/admin-panel/hq";
 import { helpAnchor } from "@/lib/admin/help";
 import {
-  ATTENTION_HREF,
+  attentionHref,
   clockOf,
   deltaOf,
   leftOf,
@@ -222,23 +223,54 @@ export function AttentionList({ items, t, now, give }: { items: readonly Attenti
       </div>
       {items.length ? (
         <ul className="mt-3 flex flex-col gap-1">
-          {items.map((a, i) => (
-            <li key={`${a.kind}-${i}`}>
-              <Link
-                href={ATTENTION_HREF[a.kind]}
-                className="-mx-2 flex min-h-11 items-start gap-3 rounded-2xl px-2 py-2.5 transition hover:bg-surface-2"
-              >
-                <span
-                  className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${a.level === "red" ? "bg-red-400" : "bg-gold"}`}
-                  aria-hidden="true"
-                />
-                <span className={`min-w-0 flex-1 text-sm leading-snug ${a.level === "red" ? "text-text" : "text-muted"}`}>
-                  {attentionText(a, t, now)}
-                </span>
-                <Icon name="chevron" className="mt-0.5 h-4 w-4 shrink-0 text-faint" />
-              </Link>
-            </li>
-          ))}
+          {items.map((a, i) => {
+            const href = attentionHref(a);
+            const dot = (
+              <span
+                className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${a.level === "red" ? "bg-red-400" : "bg-gold"}`}
+                aria-hidden="true"
+              />
+            );
+            const text = (
+              <span className={`min-w-0 flex-1 text-sm leading-snug ${a.level === "red" ? "text-text" : "text-muted"}`}>
+                {attentionText(a, t, now)}
+              </span>
+            );
+            const row = "-mx-2 flex min-h-11 items-start gap-3 rounded-2xl px-2 py-2.5 transition hover:bg-surface-2 active:bg-surface-2";
+            return (
+              <li key={`${a.kind}-${i}`}>
+                {href ? (
+                  <Link href={href} className={row}>
+                    {dot}
+                    {text}
+                    <Icon name="chevron" className="mt-0.5 h-4 w-4 shrink-0 text-faint" />
+                  </Link>
+                ) : (
+                  // Несколько штук — раскрывается списком, каждая ведёт в свою карточку.
+                  <details className="group/att">
+                    <summary className={`${row} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
+                      {dot}
+                      {text}
+                      <Icon name="chevron" className="mt-0.5 h-4 w-4 shrink-0 text-faint transition group-open/att:rotate-90" />
+                    </summary>
+                    <ul className="mb-1 ml-5 border-l border-line/70 pl-3">
+                      {a.links.map((link) => (
+                        <li key={link.href}>
+                          <Link
+                            href={link.href}
+                            className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm text-muted transition hover:bg-surface-2 hover:text-text active:bg-surface-2"
+                          >
+                            <span className="min-w-0 flex-1 truncate">{link.label}</span>
+                            <Icon name="chevron" className="h-4 w-4 shrink-0 text-faint" />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <p className="mt-3 flex items-start gap-3 rounded-2xl bg-green/5 px-3 py-3 text-sm leading-snug text-green">
@@ -273,9 +305,9 @@ export function AttentionList({ items, t, now, give }: { items: readonly Attenti
                   </option>
                 ))}
               </select>
-              <button type="submit" className="min-h-11 rounded-xl bg-green px-4 text-sm font-semibold text-ink transition hover:bg-green-dim">
+              <SubmitButton base="min-h-11 rounded-xl px-4 text-sm font-semibold" pendingLabel={t.giving}>
                 {t.giveButton}
-              </button>
+              </SubmitButton>
             </form>
           ))}
         </div>

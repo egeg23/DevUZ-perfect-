@@ -377,3 +377,14 @@ export const taskHistoryDict = defineDict({
   },
   offline: { ru: "База недоступна — история сейчас не видна.", uz: "Baza ishlamayapti — tarix hozir ko‘rinmaydi.", pl: "Baza niedostępna — historia jest teraz niewidoczna." },
 });
+
+/** Карточка одной задачи — /admin/tasks/<id> (туда ведёт «просрочено» на «Главной»). */
+export const taskCardDict = defineDict({
+  back: { ru: "← История задач", uz: "← Vazifalar tarixi", pl: "← Historia zadań" },
+  notFound: {
+    ru: "Такой задачи нет или она вам не видна.",
+    uz: "Bunday vazifa yo‘q yoki u sizga ko‘rinmaydi.",
+    pl: "Nie ma takiego zadania albo nie jest dla Ciebie widoczne.",
+  },
+  history: { ru: "История", uz: "Tarix", pl: "Historia" },
+});

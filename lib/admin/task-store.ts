@@ -1002,3 +1002,32 @@ export async function taskFeed(staffId: string, since: Date, until: Date): Promi
   const people = await peopleById(items.map((i) => i.actorId ?? ""));
   return { items: items.map((i) => ({ ...i, actorName: people.get(i.actorId ?? "")?.display_name ?? "—" })) };
 }
+
+export type TaskCard = {
+  task: Task;
+  steps: TaskStep[];
+  names: Map<string, string>;
+  projects: Map<string, string>;
+};
+
+/**
+ * Одна задача с историей — карточка /admin/tasks/<id>. Туда ведёт строка
+ * «просрочено» в «Требует внимания» на «Главной». Видит её тот же, кто
+ * увидел бы её в «Истории задач» (seesTask); чужому — null, как нет.
+ */
+export async function taskCard(id: string, viewer: { id: string; role: Role }): Promise<TaskCard | null> {
+  const db = serviceClient();
+  if (!db || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const [task, { data: staffRows }] = await Promise.all([
+    taskById(id),
+    db.from("staff").select("id, display_name, role"),
+  ]);
+  if (!task) return null;
+  const staff = (staffRows as { id: string; display_name: string; role: Role }[] | null) ?? [];
+  const ownerIds = new Set(staff.filter((p) => p.role === "admin").map((p) => p.id));
+  if (!seesTask(task, viewer, ownerIds)) return null;
+  const steps = (await taskSteps([id])).get(id) ?? [];
+  const refs = stepRefs([steps]);
+  const projects = await projectLabels([task.project_id, ...refs.projects]);
+  return { task, steps, names: new Map(staff.map((p) => [p.id, p.display_name])), projects };
+}

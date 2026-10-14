@@ -3,6 +3,8 @@ import { TROUBLE_KEY, autopilotSettings } from "@/lib/admin/autopilot-store";
 import { circleStates } from "@/lib/admin/circle-store";
 import {
   attentionOf,
+  ENDING_SOON_H,
+  liveOffer,
   dailyCounts,
   dayStartOf,
   leadsPulse,
@@ -32,7 +34,8 @@ import {
   type TouchesPulse,
 } from "@/lib/admin/hq";
 import { ACTIVE_MINUTES, QUEUE_ROLES } from "@/lib/admin/lead-queue";
-import { staleCounts } from "@/lib/admin/lead-tidy-store";
+import { loadIdle } from "@/lib/admin/lead-tidy-store";
+import { stale as isStale, type IdleLead } from "@/lib/admin/lead-tidy";
 import { pendingContracts } from "@/lib/admin/pulse-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import type { Role } from "@/lib/admin/roles";
@@ -149,7 +152,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     db.from("lead_offers").select("lead_id, staff_id, expires_at").is("outcome", null).limit(500),
     db
       .from("lead_offers")
-      .select("staff_id")
+      .select("staff_id, lead_id")
       .eq("outcome", "expired")
       .gte("closed_at", dayFrom)
       .limit(1000),
@@ -172,7 +175,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
       .limit(2000),
     db
       .from("mockup_offers")
-      .select("id, client, mockup_name, status, sent_at, expires_at, approved_at")
+      .select("id, mockup_ref, client, mockup_name, status, sent_at, expires_at, approved_at")
       .or(`sent_at.gte."${from}",approved_at.gte."${from}",status.eq.active`)
       .limit(2000),
     db
@@ -193,10 +196,11 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     db.from("stats_snapshots").select("payload, computed_at").eq("key", TROUBLE_KEY).maybeSingle(),
     db
       .from("outreach_messages")
-      .select("id", { count: "exact", head: true })
+      .select("prospect_id")
       .eq("kind", "circle")
       .ilike("failure", "%нет кружка%")
-      .gte("created_at", dayFrom),
+      .gte("created_at", dayFrom)
+      .limit(200),
     autopilotSettings().catch(() => ({ enabled: false, target: 0 })),
     readHealth().catch(() => null),
     mainLimitUntil(now.getTime()).catch(() => null),
@@ -234,6 +238,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
   const tasks = [...((openTasksRes.data ?? []) as HqTask[]), ...((closedTasksRes.data ?? []) as HqTask[])];
   const mockups = ((mockupsRes.data ?? []) as Record<string, unknown>[]).map((r) => ({
     id: String(r.id),
+    mockup_ref: String(r.mockup_ref ?? ""),
     client: String(r.client ?? ""),
     mockup_name: String(r.mockup_name ?? ""),
     status: String(r.status),
@@ -252,10 +257,21 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
   // Люди — те, кто в очереди касаний и лидов: руководители и менеджеры.
   const team = staffRows.filter((s) => (QUEUE_ROLES as readonly string[]).includes(s.role));
   const ids = team.map((s) => s.id);
-  const [touchesBy, stale] = await Promise.all([
+  // Касания, где вместо кружка ушло письмо, — подписи компаний.
+  const fallbackIds = [...new Set(((circleFallbackRes.data ?? []) as { prospect_id: string }[]).map((r) => String(r.prospect_id)))];
+  const [touchesBy, idle, fallbackRes] = await Promise.all([
     touchesOnDay(ids, day).catch(() => new Map<string, number>()),
-    staleCounts(ids, now).catch(() => new Map<string, number>()),
+    loadIdle(ids).catch(() => [] as IdleLead[]),
+    fallbackIds.length
+      ? db.from("prospects").select("id, host, label").in("id", fallbackIds)
+      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
   ]);
+  const staleLeads = idle.filter((l) => isStale(l, now));
+  const stale = new Map<string, number>();
+  for (const l of staleLeads) stale.set(l.ownerId, (stale.get(l.ownerId) ?? 0) + 1);
+  const nameOf = new Map(staffRows.map((s) => [s.id, s.display_name]));
+  const leadLabelOf = new Map(leads.map((l) => [l.id, l.label]));
+  const withWho = (label: string, who: string | null | undefined) => (who ? `${label} · ${who}` : label);
   const count = <T>(rows: readonly T[], key: (r: T) => string | null) => {
     const out = new Map<string, number>();
     for (const r of rows) {
@@ -268,7 +284,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     leads.filter((l) => l.status === "taken"),
     (l) => l.assigned_staff_id,
   );
-  const burned = (burnedRes.data ?? []) as { staff_id: string }[];
+  const burned = (burnedRes.data ?? []) as { staff_id: string; lead_id: string }[];
   const burnedBy = count(burned, (r) => r.staff_id);
   const presence = (presenceRes.data ?? []) as { staff_id: string; minutes: number; first_at: string | null; last_at: string | null }[];
   const views = (viewsRes.data ?? []) as { staff_id: string; last_at: string | null }[];
@@ -306,9 +322,9 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
   const accounts = ((accountsRes.data ?? []) as Record<string, unknown>[]).filter((a) => a.status === "active");
   const labelOf = (a: Record<string, unknown>) => String(a.label || a.tg_name || a.id);
   const bans = [
-    ...(mainUntil ? [{ account: MAIN_LABEL, until: mainUntil }] : []),
+    ...(mainUntil ? [{ key: MAIN_ACCOUNT, account: MAIN_LABEL, until: mainUntil }] : []),
     ...accounts
-      .map((a) => ({ account: labelOf(a), until: a.flood_until ? Date.parse(String(a.flood_until)) : 0 }))
+      .map((a) => ({ key: String(a.id), account: labelOf(a), until: a.flood_until ? Date.parse(String(a.flood_until)) : 0 }))
       .filter((b) => b.until > now.getTime()),
   ];
   const known = [
@@ -316,8 +332,8 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     ...accounts.map((a) => ({ key: String(a.id), label: labelOf(a) })),
   ].filter((a) => circles.has(a.key));
   const circlesMissing = {
-    ru: known.filter((a) => !circles.get(a.key)?.savedAt).map((a) => a.label),
-    uz: known.filter((a) => !circles.get(a.key)?.uzSavedAt).map((a) => a.label),
+    ru: known.filter((a) => !circles.get(a.key)?.savedAt).map((a) => ({ id: a.key, label: a.label })),
+    uz: known.filter((a) => !circles.get(a.key)?.uzSavedAt).map((a) => ({ id: a.key, label: a.label })),
   };
 
   const trouble = troubleRes.data
@@ -336,14 +352,19 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     autopilotTrouble: trouble && trouble.error ? trouble : null,
     bans,
     circlesMissing,
-    circleFallback: circleFallbackRes.count ?? 0,
+    circleFallback: ((fallbackRes.data ?? []) as Record<string, unknown>[]).map((p) => ({
+      id: String(p.id),
+      label: String(p.host || p.label || String(p.id).slice(0, 8)),
+    })),
     leads: leadsNow,
-    burnedToday: burned.length,
-    overdue: tasksNow.overdue.length,
-    stale: [...stale.values()].reduce((s, n) => s + n, 0),
-    transfers: transfers.length,
-    contracts: contracts.length,
-    mockups: mockupsNow,
+    burned: burned.map((b) => ({ id: b.lead_id, label: withWho(leadLabelOf.get(b.lead_id) ?? "—", nameOf.get(b.staff_id)) })),
+    overdue: tasksNow.overdue.map((t) => ({ id: t.id, label: withWho(t.title, nameOf.get(t.assignee_id)) })),
+    stale: staleLeads.map((l) => ({ id: l.id, label: withWho(l.label, nameOf.get(l.ownerId)) })),
+    transfers: transfers.map((t) => ({ id: t.lead_id, label: String(t.request_no ?? t.company ?? t.lead_id.slice(0, 8)) })),
+    contracts: contracts.map((c) => ({ id: c.id, label: [c.number, c.client_name].filter(Boolean).join(" · ") })),
+    ending: mockups
+      .filter((m) => liveOffer(m, now) && Date.parse(m.expires_at) - now.getTime() <= ENDING_SOON_H * 3600_000 && m.mockup_ref)
+      .map((m) => ({ id: m.mockup_ref as string, label: m.client || m.mockup_name })),
     firecrawlRemaining: firecrawl,
   });
 

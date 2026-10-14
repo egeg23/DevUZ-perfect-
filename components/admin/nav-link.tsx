@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+
+import { LinkPending } from "@/components/admin/link-pending";
 
 import { sectionOfHref } from "@/lib/admin/help";
 
@@ -37,7 +39,12 @@ export function AdminNavLink({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const active = sectionOfHref(pathname ?? "") === href;
+  // Нажатый пункт подсвечен сразу, ещё до того, как страница открылась
+  // (владелец, 14.10.2026): иначе непонятно, нажалось ли. Сменился адрес —
+  // решает уже он.
+  const [pressedAt, setPressedAt] = useState<string | null>(null);
+  const pressed = pressedAt !== null && pressedAt === pathname;
+  const active = sectionOfHref(pathname ?? "") === href || pressed;
   const tone = quiet ? "text-faint" : "text-muted";
   const ref = useRef<HTMLAnchorElement>(null);
 
@@ -49,7 +56,10 @@ export function AdminNavLink({
     <Link
       ref={ref}
       href={href}
-      onClick={onClick}
+      onClick={() => {
+        setPressedAt(pathname);
+        onClick?.();
+      }}
       aria-current={active ? "page" : undefined}
       className={
         variant === "item"
@@ -62,6 +72,7 @@ export function AdminNavLink({
       }
     >
       {children}
+      <LinkPending />
     </Link>
   );
 }
