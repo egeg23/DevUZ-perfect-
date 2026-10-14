@@ -139,6 +139,15 @@ export const uz: HelpCopy = {
             "Xabar yuborish SIga bog‘liq emas: matningiz paneldan bazamiz va bot orqali to‘g‘ridan-to‘g‘ri Telegramga ketadi. Model ishlamasa ham, xabar yuborish odatdagidek ishlaydi.",
           ],
         },
+        {
+          id: "voice",
+          title: "Ovozli xabar → botda matn",
+          body: [
+            "Mijoz TZni ovozli xabar qilib yubordi, eshitishga vaqt yo‘q yoki matn jamoaga kerak — ovozli xabarni [studiya botiga](https://t.me/Devuz_studio_bot) shaxsiy chatda yuboring (forward). Ovozli xabar, audio fayl yoki diktofon yozuvi fayl ko‘rinishida (MP3, M4A, OGG) bo‘ladi. Bot darhol «🎙 Получил голосовое (4:12) — расшифровываю» deb javob beradi, 10–20 daqiqadan keyin esa o‘sha chatga «📝 Расшифровка голосового» — pauzalar bo‘yicha xatboshilarga bo‘lingan matnni yuboradi. Uzun matn ketma-ket bir nechta xabar bo‘lib keladi.",
+            "Nega darhol emas: ovozni bizning server emas, GitHubdagi vazifa matnga aylantiradi — u har 10 daqiqada yangi ovozli xabarlar bor-yo‘qligini tekshiradi. Server bundan yuklanmaydi: unda sayt, bot va yana o‘n beshtacha sayt ishlaydi. Matnga ochiq Whisper modeli aylantiradi: u bepul, pullik modelni sarflamaydi. Tilni o‘zi aniqlaydi, rus va o‘zbek tillarini ham, lekin ikki til aralash nutqni xato bilan yozishi mumkin — raqamlar, narxlar va nomlarni yozuv bilan solishtiring.",
+            "Egasi va rahbarda ishlaydi; menejerning ovozli xabarini bot matnga aylantirishga olmaydi. Dumaloq video bunga kirmaydi: botga yuborilgan dumaloq video — bu [murojaatlar uchun dumaloq video](#accounts-circle), bot uning tilini so‘raydi. 20 MB dan katta yoki bir soatdan uzun yozuvni bot olmaydi va shunday deb javob beradi — qismlarga bo‘lib yuboring. Uch urinishda matnga aylantirib bo‘lmasa — bot shu haqda yozadi — ovozli xabarni yana bir marta yuboring.",
+          ],
+        },
       ],
     },
 

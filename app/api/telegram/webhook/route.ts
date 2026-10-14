@@ -84,6 +84,8 @@ import {
   saveCircleFromBot,
   takeCircle,
 } from "@/lib/admin/circle-bot";
+import { problemText, receivedText, transcribesVoice, voiceFromMessage, voiceProblem } from "@/lib/admin/voice-notes";
+import { queueVoice } from "@/lib/admin/voice-notes-store";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
 import { actOnTask, afterAct, awaitDate, showTask, taskAwaitingDate, taskById, type ActResult } from "@/lib/admin/task-store";
 import { OWN_DATE_PROMPT, TASK_CALLBACK, dueText, looksLikeDue, moveRows, taskRows } from "@/lib/admin/task-bot";
@@ -148,6 +150,10 @@ type Update = {
     /** Кружок или видео — так владелец отдаёт кружок для касаний (lib/admin/circle-bot.ts). */
     video_note?: { file_id: string; length?: number; duration?: number; file_size?: number };
     video?: { file_id: string; width?: number; height?: number; duration?: number; mime_type?: string; file_size?: number };
+    /** Голосовое, аудио или запись файлом — владелец присылает на расшифровку (lib/admin/voice-notes.ts). */
+    voice?: { file_id: string; duration?: number; mime_type?: string; file_size?: number };
+    audio?: { file_id: string; duration?: number; mime_type?: string; file_size?: number; title?: string; file_name?: string };
+    document?: { file_id: string; mime_type?: string; file_size?: number; file_name?: string };
   };
   callback_query?: {
     id: string;
@@ -263,6 +269,13 @@ async function route(update: Update): Promise<void> {
         if (await handleCircleUpload(update.message)) return;
       }
 
+      // Голосовое на расшифровку: владелец или руководитель пересылает его
+      // боту, текст приходит сюда же (lib/admin/voice-notes.ts). Голос от
+      // остальных идёт дальше, как шёл.
+      if (chat.type === "private" && voiceFromMessage(update.message)) {
+        if (await handleVoice(update.message)) return;
+      }
+
       // «▶️ Получать лиды» / «⏸ Не получать лиды» и /leads — кнопки внизу
       // чата сотрудника. Незнакомцу эти слова ничего не включают: его
       // сообщение идёт дальше, в обычный разговор.
@@ -355,6 +368,25 @@ async function handleCircleUpload(message: NonNullable<Update["message"]>): Prom
     return true;
   }
   await sendWithButtons(message.chat.id, esc(circleLangQuestion), circleLangButtons(messageId));
+  return true;
+}
+
+/**
+ * Голосовое, присланное боту. true — разобрано: владелец или руководитель
+ * получил ответ, голос в очереди на расшифровку. Остальным — false: их
+ * сообщение идёт дальше, как шло.
+ */
+async function handleVoice(message: NonNullable<Update["message"]>): Promise<boolean> {
+  const staff = message.from?.id ? await staffByTelegramId(message.from.id) : null;
+  const voice = voiceFromMessage(message);
+  if (!staff || !voice || !transcribesVoice(staff)) return false;
+  const problem = voiceProblem(voice);
+  if (problem) {
+    await sendMessage(message.chat.id, esc(problemText(problem)));
+    return true;
+  }
+  const queued = message.message_id ? await queueVoice(staff, message.chat.id, message.message_id, voice) : false;
+  await sendMessage(message.chat.id, esc(queued ? receivedText(voice) : problemText("save")));
   return true;
 }
 
