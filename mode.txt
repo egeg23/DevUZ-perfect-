@@ -1,1 +1,1 @@
-copy
+verify
