@@ -2,11 +2,13 @@ import { HqRefresh } from "@/components/admin/hq-refresh";
 import { HqSide } from "@/components/admin/hq-side";
 import { HqView } from "@/components/admin/hq";
 import { AdminShell } from "@/components/admin/shell";
-import { sendsBroadcasts } from "@/lib/admin/broadcast";
-import { broadcastHistory, broadcastPeople } from "@/lib/admin/broadcast-store";
+import { repeatOf, sendsBroadcasts } from "@/lib/admin/broadcast";
+import { giveLeadAction } from "@/app/admin/hq/actions";
+import { broadcastById, broadcastHistory, broadcastPeople } from "@/lib/admin/broadcast-store";
 import { segmentCounts } from "@/lib/admin/bot-users";
 import { loadBotAudience } from "@/lib/admin/bot-users-store";
 import { requireSection } from "@/lib/admin/guard";
+import { seesEveryone } from "@/lib/admin/roles";
 import { HQ_REFRESH_MS } from "@/lib/admin/hq";
 import { loadHq } from "@/lib/admin/hq-store";
 
@@ -19,17 +21,18 @@ export const dynamic = "force-dynamic";
  * владельцу: их отбирает loadHq по роли. Рассылка — владельцу и
  * руководителю по роли (sendsBroadcasts), а не по галочке.
  */
-export default async function HqPage({ searchParams }: { searchParams: Promise<{ to?: string }> }) {
+export default async function HqPage({ searchParams }: { searchParams: Promise<{ to?: string; repeat?: string }> }) {
   const staff = await requireSection("/admin/hq");
-  const { to } = await searchParams;
+  const { to, repeat } = await searchParams;
   const now = new Date();
   const broadcasts = sendsBroadcasts(staff.role);
-  const [hq, people, history, usersHistory, audience] = await Promise.all([
+  const [hq, people, history, usersHistory, audience, again] = await Promise.all([
     loadHq(staff, now),
     broadcastPeople(),
     broadcasts ? broadcastHistory("staff", 10) : Promise.resolve([]),
     broadcasts ? broadcastHistory("users", 10) : Promise.resolve([]),
     broadcasts ? loadBotAudience() : Promise.resolve(null),
+    broadcasts && repeat ? broadcastById(repeat) : Promise.resolve(null),
   ]);
   // Себе тоже можно — последним: обычно задачу ставят другим.
   const taskPeople = [
@@ -45,6 +48,7 @@ export default async function HqPage({ searchParams }: { searchParams: Promise<{
         name={staff.display_name}
         now={now}
         personTaskHref={(id) => `/admin/hq?to=${id}#task`}
+        giveAction={seesEveryone(staff.role) ? giveLeadAction : undefined}
         side={
           <HqSide
             locale={staff.panel_locale}
@@ -53,7 +57,13 @@ export default async function HqPage({ searchParams }: { searchParams: Promise<{
             preselect={to && /^[0-9a-f-]{36}$/.test(to) ? to : null}
             broadcast={
               broadcasts && audience
-                ? { people, history, usersHistory, userCounts: segmentCounts(audience.users, audience.marks) }
+                ? {
+                    people,
+                    history,
+                    usersHistory,
+                    userCounts: segmentCounts(audience.users, audience.marks),
+                    repeat: again ? repeatOf(again) : null,
+                  }
                 : null
             }
             now={now}

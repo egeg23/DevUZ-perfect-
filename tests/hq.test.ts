@@ -377,12 +377,14 @@ const visible = (html: string) =>
 test("«Главная» рисуется на трёх языках: деньги — только у владельца, у uz и pl нет русского", () => {
   for (const locale of PANEL_LOCALES) {
     for (const withMoney of [true, false]) {
-      const html = renderToStaticMarkup(createElement(HqView, { hq: sampleHq(withMoney), locale, name: "Тест", now: NOW }));
+      const html = renderToStaticMarkup(createElement(HqView, { hq: sampleHq(withMoney), locale, name: "Тест", now: NOW, giveAction: async () => {} }));
       assert.ok(html.includes('href="/admin?status=taken"'), "число ведёт в подробности");
       assert.ok(html.includes('href="/admin/mockups"'));
       assert.ok(html.includes('id="people"'));
       assert.equal(html.includes('href="/admin/finance"'), withMoney, `${locale}: деньги ${withMoney ? "есть" : "нет"}`);
       assert.ok(html.includes("min-h-11"), "строки — под палец");
+      assert.ok(html.includes('name="lead"'), "«Отдать» у тёплого без хозяина");
+      assert.ok(html.includes('role="img"'), "касания за 7 дней в карточке");
       if (locale !== "ru") {
         const text = visible(html).replace(/Тест/g, "");
         assert.ok(!CYRILLIC.test(text), `${locale}: русское на странице: ${text.match(/\S*[а-яё]\S*/i)}`);

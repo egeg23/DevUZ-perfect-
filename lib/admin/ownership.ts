@@ -2,7 +2,8 @@ import { seesEveryone } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import { mayTake } from "@/lib/admin/lead-queue";
 import { closeOfferAfterTake, openQueue, queueState, shareOf } from "@/lib/admin/lead-queue-store";
-import type { Staff } from "@/lib/admin/session";
+import { staffById, type Staff } from "@/lib/admin/session";
+import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { talkFollowsLead } from "@/lib/admin/talk-follows-lead";
 import type { ChatMessage } from "@/lib/qualify/types";
 import { STATUSES } from "@/lib/admin/leads";
@@ -169,6 +170,61 @@ export async function takeLead(
   }
 
   return { ok: true };
+}
+
+/**
+ * Отдать свободного лида человеку — владелец и руководитель, с «Главной».
+ *
+ * Владелец, 13.10.2026: кнопка «Отдать» у строки «тёплый без хозяина» в
+ * «Требует внимания». Передача (transfers.ts) свободного лида не двигает —
+ * у него нет хозяина, у которого просить. Здесь, как в takeLead, условие
+ * «ничей» стоит в самом update: успел взять кто-то другой — честное
+ * «уже взят». Человеку — строка в Telegram, лид сразу его.
+ */
+export async function giveLead(
+  leadId: string,
+  targetId: string,
+  actor: Staff,
+  ip: string,
+): Promise<{ ok: true; target: Staff } | { ok: false; reason: "forbidden" | "gone" | "taken" | "offline" | "failed" }> {
+  if (!seesEveryone(actor.role)) return { ok: false, reason: "forbidden" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const target = await staffById(targetId);
+  if (!target) return { ok: false, reason: "gone" };
+
+  const { data, error } = await db
+    .from("leads")
+    .update({ assigned_staff_id: target.id, assigned_to: handleOf(target), assigned_at: new Date().toISOString(), status: "taken" })
+    .eq("id", leadId)
+    .is("assigned_staff_id", null)
+    .select("id, auto_reminder, request_no, company")
+    .maybeSingle();
+  if (error) {
+    console.error("admin: не отдал лида", error.message);
+    return { ok: false, reason: "failed" };
+  }
+  if (!data) return { ok: false, reason: "taken" };
+
+  const talk = await talkFollowsLead(leadId, target.id);
+  await record("lead.given", { actorStaffId: actor.id, targetType: "lead", targetId: leadId, ip, meta: { to: target.id, talk } });
+  await closeOfferAfterTake(leadId, target.id);
+  if (data.auto_reminder !== false) {
+    await createReminder(leadId, target, {
+      dueAt: new Date(Date.now() + AUTO_REMINDER_HOURS * 3600_000).toISOString(),
+      kind: "auto",
+      note: "Взят в работу — что дальше?",
+      ip,
+    });
+  }
+  const title = String(data.company || (data.request_no ? `№${data.request_no}` : "") || "лид");
+  if (target.telegram_user_id) {
+    await sendMessage(
+      target.telegram_user_id,
+      `🔥 <b>${esc(actor.display_name)}</b> отдал(а) вам тёплый лид <b>${esc(title)}</b>. Он уже ваш — откройте панель.`,
+    ).catch(() => false);
+  }
+  return { ok: true, target };
 }
 
 /** Отпустить лида обратно в общую очередь. */

@@ -356,6 +356,8 @@ export type HqPersonInput = {
   burnedToday: number;
   stale: number;
   tasks: readonly HqTask[];
+  /** Касания по дням за неделю, старший день первым (dailyCounts). */
+  touchDays?: readonly number[];
 };
 
 export type HqPerson = {
@@ -378,6 +380,8 @@ export type HqPerson = {
   overdue: number;
   /** Сводка для цвета карточки. */
   mood: Mood;
+  /** Касания по дням: 7 чисел, сегодня — последнее. */
+  touchDays: number[];
 };
 
 /**
@@ -437,7 +441,25 @@ export function personOf(input: HqPersonInput, now: Date): HqPerson {
     openTasks: open.length,
     overdue,
     mood,
+    touchDays: [...(input.touchDays ?? Array(7).fill(0))],
   };
+}
+
+/**
+ * Сколько меток пришлось на каждый из последних `days` дней по Ташкенту:
+ * старший день первым, сегодня — последним. Будущее и старше окна — мимо.
+ */
+export function dailyCounts(stamps: readonly (string | null | undefined)[], now: Date, days = 7): number[] {
+  const out = Array<number>(days).fill(0);
+  const today = dayStartOf(now);
+  for (const s of stamps) {
+    if (!s) continue;
+    const t = Date.parse(s);
+    if (!Number.isFinite(t) || t > now.getTime()) continue;
+    const back = t >= today ? 0 : Math.ceil((today - t) / DAY_MS);
+    if (back < days) out[days - 1 - back] += 1;
+  }
+  return out;
 }
 
 /** Порядок карточек: сначала тревожные, потом кто на месте, потом по имени. */

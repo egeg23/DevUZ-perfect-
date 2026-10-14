@@ -158,6 +158,8 @@ export const AUDIT_ACTIONS = [
   "lead.transfer_requested",
   "lead.transfer_decided",
   "lead.transferred",
+  // Свободного лида отдали человеку с «Главной» (giveLead).
+  "lead.given",
   // Вход владельца через Google для статистики GA: доступ к данным
   // Analytics сохраняется в хранилище секретов — кто и когда его дал, видно.
   "google.client_saved",
