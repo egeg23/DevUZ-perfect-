@@ -26,7 +26,9 @@ import {
   finalDue,
   leftText,
   mockupLinks,
+  ownPromo,
   reminderProblems,
+  reminderPrompt,
   untilText,
   type OfferState,
 } from "@/lib/admin/mockup-offer";
@@ -196,7 +198,76 @@ test("проводка: скаут, очередь бота, свип, вебх�
   // Напоминания — недорогой моделью, со своей переменной.
   const run = read("lib/admin/mockup-offer-run.ts");
   assert.match(run, /process\.env\.PROMO_MODEL \|\| "claude-haiku-4-5"/);
-  assert.match(run, /reminderProblems\(text, o\.expires_at, now, o\.lang\)/);
+  assert.match(run, /reminderProblems\(text, o\.expires_at, now, o\.lang, o\.own\)/);
   // Условия — готовым текстом, не моделью.
-  assert.match(run, /await queue\(o, announceText\(o\.lang, o\.expires_at\)\)/);
+  assert.match(run, /await queue\(o, announceText\(o\.lang, o\.expires_at, o\.own\)\)/);
+});
+
+test("своя цена макета (facts.promo): бот пишет клиенту её, а не общие цены", () => {
+  // Владелец, 14.10.2026: у DomTut на макете «1 000 $ вместо 4 800 $» за сайт и приложение.
+  const own = ownPromo({ promo: { price: 1000, regular: 4800, what: { ru: "сайт и мобильное приложение по этому макету", uz: "shu maket bo‘yicha sayt va mobil ilova" } } });
+  assert.ok(own);
+  const exp = "2026-10-15T06:00:00.000Z";
+  const ru = announceText("ru", exp, own);
+  assert.match(ru, /сайт и мобильное приложение по этому макету — 1000 \$ вместо 4800 \$/);
+  assert.doesNotMatch(ru, new RegExp(`лендинг|${PROMO.landing.regular}|${PROMO.corporate.regular}`), "общих цен в условиях нет");
+  const uz = announceText("uz", exp, own);
+  assert.match(uz, /shu maket bo‘yicha sayt va mobil ilova — 1000 \$ \(odatda 4800 \$\)/);
+  assert.doesNotMatch(uz, /[А-Яа-яЁё]/);
+
+  const now = at("2026-10-14T08:00:00.000Z");
+  for (const kind of ["daily", "final"] as const) {
+    for (const lang of ["ru", "uz"] as const) {
+      const text = fallbackReminder(kind, lang, exp, now, own);
+      assert.ok(text.includes("1000") && text.includes("4800"), `${kind}/${lang}: ${text}`);
+      assert.deepEqual(reminderProblems(text, exp, now, lang, own), [], `${kind}/${lang}: ${text}`);
+    }
+  }
+  // Модель назвала общую цену лендинга вместо своей — не пропускаем.
+  assert.match(reminderProblems("Лендинг 500 $, осталось 22 часа", exp, now, "ru", own).join(";"), /чужие числа: 500.*нет цены акции|нет цены акции/);
+  assert.match(reminderProblems("Сайт и приложение — 1000 $ вместо 4800 $, а лендинг 500 $", exp, now, "ru", own).join(";"), /чужие числа: 500/);
+  const prompt = reminderPrompt("daily", "ru", exp, now, "DomTut", own);
+  assert.match(prompt.user, /1000 \$ вместо 4800 \$/);
+  assert.doesNotMatch(prompt.user, /Лендинг|корпоративный/);
+  // Без своей цены — всё как раньше.
+  assert.equal(announceText("ru", exp, null), announceText("ru", exp));
+});
+
+test("своя цена: мусор в facts.promo — макет идёт по общим ценам", () => {
+  assert.equal(ownPromo(null), null);
+  assert.equal(ownPromo({}), null);
+  assert.equal(ownPromo({ promo: { price: 4800, regular: 1000 } }), null, "акция не дешевле обычной");
+  assert.equal(ownPromo({ promo: { price: "1000", regular: 4800.5 } }), null);
+  assert.equal(ownPromo({ promo: { price: 0, regular: 4800 } }), null);
+  // Без названия или с цифрами в нём — подставляется общее «сайт по этому макету».
+  assert.equal(ownPromo({ promo: { price: 1000, regular: 4800 } })?.what.ru, "сайт по этому макету");
+  assert.equal(ownPromo({ promo: { price: 1000, regular: 4800, what: { ru: "сайт за 3 дня", uz: "sayt" } } })?.what.ru, "сайт по этому макету");
+});
+
+test("своя цена: в карточке «Макеты клиентов» и в задаче Егору — она же", () => {
+  const card = offerCard(
+    {
+      id: "00000000-0000-4000-8000-000000000001",
+      mockup_ref: "p:00000000-0000-4000-8000-000000000002",
+      mockup_name: "DomTut",
+      mockup_url: "https://devuz.studio/proto/x",
+      prospect_id: null,
+      lead_id: null,
+      client: "DomTut",
+      peer: null,
+      status: "active",
+      sent_at: "2026-10-14T06:00:00.000Z",
+      expires_at: "2026-10-16T06:00:00.000Z",
+      password_at: null,
+      own: ownPromo({ promo: { price: 1000, regular: 4800, what: { ru: "сайт и приложение", uz: "sayt va ilova" } } }),
+    },
+    at("2026-10-14T08:00:00.000Z"),
+  );
+  assert.match(card.text, /Своя цена акции: сайт и приложение — 1000 \$ вместо 4800 \$/);
+  const bot = read("lib/admin/mockup-offer-bot.ts");
+  assert.match(bot, /offer\.own\s*\? `Утверждён в срок акции \(до \$\{untilText\(offer\.expires_at\)\}\): \$\{ownPromoLine\(offer\.own\)\}\.`/);
+  assert.match(read("lib/admin/mockup-offer-run.ts"), /const rows = await withOwnPromos\(data as Row\[\]\)/);
+  // Видно и в разделе «Макеты».
+  assert.match(read("lib/admin/mockups-store.ts"), /promo:facts->promo/);
+  assert.match(read("components/admin/mockup-list.tsx"), /t\.ownPromo\(row\.promo\.price, row\.promo\.regular\)/);
 });

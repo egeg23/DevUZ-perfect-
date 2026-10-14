@@ -1,4 +1,15 @@
-import { DAILY_HOUR, DAILY_LATEST_HOUR, PROMO, offerLine, tashkentDay, untilText } from "@/lib/admin/mockup-offer";
+import {
+  DAILY_HOUR,
+  DAILY_LATEST_HOUR,
+  PROMO,
+  offerLine,
+  ownPromo,
+  ownPromoLine,
+  tashkentDay,
+  untilText,
+  type OwnPromo,
+} from "@/lib/admin/mockup-offer";
+import { parseMockupRef } from "@/lib/admin/mockups";
 import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
 import { mockupCode } from "@/lib/admin/mockups-store";
 import type { Staff } from "@/lib/admin/session";
@@ -68,7 +79,33 @@ export type OfferRow = {
   source?: string | null;
   /** Ушёл давно: клиенту бот не пишет ни условий, ни напоминаний. */
   quiet?: boolean | null;
+  /** Своя цена акции макета (protos.facts.promo) — её и пишем клиенту. */
+  own?: OwnPromo | null;
 };
+
+/**
+ * Своя цена акции — из фактов прототипа, одним запросом на всю пачку.
+ * Читаем при каждом проходе, а не храним в строке акции: поправили цену в
+ * макете — следующее напоминание уже с новой.
+ */
+export async function withOwnPromos<T extends { mockup_ref: string }>(rows: T[]): Promise<(T & { own: OwnPromo | null })[]> {
+  const ids = [
+    ...new Set(
+      rows.map((r) => parseMockupRef(r.mockup_ref)).flatMap((ref) => (ref?.kind === "proto" ? [ref.id] : [])),
+    ),
+  ];
+  const promos = new Map<string, OwnPromo>();
+  const db = ids.length ? serviceClient() : null;
+  if (db) {
+    const { data, error } = await db.from("protos").select("id, facts").in("id", ids);
+    if (error) console.error("акция по макету: не прочитал свои цены", error.message);
+    for (const row of data ?? []) {
+      const own = ownPromo(row.facts);
+      if (own) promos.set(`p:${row.id}`, own);
+    }
+  }
+  return rows.map((r) => ({ ...r, own: promos.get(r.mockup_ref) ?? null }));
+}
 
 const OFFER_FIELDS =
   "id, mockup_ref, mockup_name, mockup_url, prospect_id, lead_id, client, peer, status, sent_at, expires_at, password_at, source, quiet";
@@ -78,6 +115,7 @@ export function offerCard(o: OfferRow, now: Date): { text: string; rows: Button[
   const lines = [
     offerLine({ client: esc(o.client), name: esc(o.mockup_name), status: o.status, expiresAt: o.expires_at, sentAt: o.sent_at, now }),
     `Макет: ${esc(o.mockup_name)} · ${esc(o.mockup_url)}`,
+    ...(o.own ? [`Своя цена акции: ${esc(ownPromoLine(o.own))}`] : []),
     `Ушёл: ${untilText(o.sent_at)}${o.source === "scan" ? " · 🔎 найдено сканом" : ""}${o.password_at ? " · 🔒 закрыт паролем" : ""}`,
     ...(o.lead_id ? [`Лид: ${siteUrl}/admin/leads/${o.lead_id}`] : []),
     ...(!o.prospect_id
@@ -109,7 +147,7 @@ export async function offerList(now: Date = new Date()): Promise<OfferRow[]> {
     .or(`status.eq.active,sent_at.gte.${since}`)
     .order("sent_at", { ascending: false })
     .limit(15);
-  return (data ?? []) as OfferRow[];
+  return withOwnPromos((data ?? []) as OfferRow[]);
 }
 
 /** Владелец и руководители с Telegram — им и список, и строки об акциях. */
@@ -159,7 +197,7 @@ export async function actOnOffer(cb: MockupCallback, staff: Staff, now: Date = n
   const db = serviceClient();
   if (!db) return { ok: false, why: "База недоступна" };
   const { data } = await db.from("mockup_offers").select(OFFER_FIELDS).eq("id", cb.offerId).maybeSingle();
-  const offer = data as OfferRow | null;
+  const offer = data ? (await withOwnPromos([data as OfferRow]))[0] : null;
   if (!offer) return { ok: false, why: "Макет не найден" };
 
   if (cb.kind === "password") {
@@ -198,7 +236,9 @@ export async function actOnOffer(cb: MockupCallback, staff: Staff, now: Date = n
           `Макет: ${offer.mockup_url}`,
           ...(offer.lead_id ? [`Лид и переписка: ${siteUrl}/admin/leads/${offer.lead_id}`] : []),
           inPromo
-            ? `Утверждён в срок акции (до ${untilText(offer.expires_at)}): лендинг по макету с ${PROMO.landing.addons} допами — ${PROMO.landing.price} $, корпоративный сайт — ${PROMO.corporate.price} $.`
+            ? offer.own
+              ? `Утверждён в срок акции (до ${untilText(offer.expires_at)}): ${ownPromoLine(offer.own)}.`
+              : `Утверждён в срок акции (до ${untilText(offer.expires_at)}): лендинг по макету с ${PROMO.landing.addons} допами — ${PROMO.landing.price} $, корпоративный сайт — ${PROMO.corporate.price} $.`
             : `Акция закончилась ${untilText(offer.expires_at)} — цены обычные.`,
           `Передал: ${staff.display_name}.`,
         ].join("\n"),

@@ -45,6 +45,11 @@ export const mockupsDict = defineDict({
     uz: (time: string) => `${time} dan parol bilan yopiq: 24 soat o‘tdi`,
     pl: (time: string) => `zamknięta na hasło od ${time}: minęły 24 godziny`,
   },
+  ownPromo: {
+    ru: (price: number, regular: number) => `акция 48 ч: ${price} $ вместо ${regular} $`,
+    uz: (price: number, regular: number) => `48 soatlik aksiya: ${price} $ (odatda ${regular} $)`,
+    pl: (price: number, regular: number) => `promocja 48 godz.: ${price} $ zamiast ${regular} $`,
+  },
   liveUntil: {
     ru: (time: string) => `пароль клиента до ${time}`,
     uz: (time: string) => `mijoz paroli ${time} gacha`,

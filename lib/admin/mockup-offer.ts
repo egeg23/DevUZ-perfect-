@@ -43,6 +43,40 @@ export const PROMO = {
   corporate: { price: 1000, regular: 2500 },
 } as const;
 
+/**
+ * Своя цена акции у макета — protos.facts.promo. Владелец, 14.10.2026: у
+ * DomTut на макете «1 000 $ вместо 4 800 $» за сайт и приложение, и бот
+ * должен написать клиенту те же цифры, что на макете, а не общие PROMO.
+ *
+ * `{ price, regular, what: { ru, uz } }`: одна цена вместо двух общих. Не
+ * сходится (не целые, акция не дешевле обычной, в названии цифры) — макет
+ * идёт по общим ценам, как будто своей нет.
+ */
+export type OwnPromo = { price: number; regular: number; what: { ru: string; uz: string } };
+
+const OWN_WHAT = { ru: "сайт по этому макету", uz: "shu maket bo‘yicha sayt" };
+
+export function ownPromo(facts: unknown): OwnPromo | null {
+  const raw = facts && typeof facts === "object" ? (facts as { promo?: unknown }).promo : null;
+  if (!raw || typeof raw !== "object") return null;
+  const p = raw as { price?: unknown; regular?: unknown; what?: unknown };
+  const price = Number(p.price);
+  const regular = Number(p.regular);
+  if (!Number.isInteger(price) || !Number.isInteger(regular) || price <= 0 || regular <= price) return null;
+  const what = (p.what && typeof p.what === "object" ? p.what : {}) as { ru?: unknown; uz?: unknown };
+  // Цифры в названии сломали бы проверку напоминаний: числа там — только цены и срок.
+  const text = (v: unknown, fallback: string) =>
+    typeof v === "string" && v.trim() && v.trim().length <= 120 && !/\d/.test(v) ? v.trim() : fallback;
+  return { price, regular, what: { ru: text(what.ru, OWN_WHAT.ru), uz: text(what.uz, OWN_WHAT.uz) } };
+}
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** «сайт и приложение — 1000 $ вместо 4800 $» — для карточек команде. */
+export function ownPromoLine(own: OwnPromo): string {
+  return `${own.what.ru} — ${own.price} $ вместо ${own.regular} $`;
+}
+
 /** Условия — пауза после макета: сначала человек открывает ссылку. */
 export const ANNOUNCE_AFTER_MS = 3 * 60_000;
 
@@ -216,8 +250,21 @@ export function expiredNow(o: OfferState, now: Date): boolean {
  * Условия акции — готовым текстом, без модели: в них цены и срок, и они
  * должны быть ровно такими, как решил владелец.
  */
-export function announceText(lang: OfferLang, expiresAt: string): string {
+export function announceText(lang: OfferLang, expiresAt: string, own: OwnPromo | null = null): string {
   const until = untilText(expiresAt);
+  if (own) {
+    return lang === "uz"
+      ? [
+          `Maket bo‘yicha maxsus taklif — ${OFFER_HOURS} soat, Toshkent vaqti bilan ${until} gacha:`,
+          `• ${own.what.uz} — ${own.price} $ (odatda ${own.regular} $).`,
+          `Shu muddatda shartnoma imzolasak, narx shunday qoladi. Keyin odatiy narx amal qiladi.`,
+        ].join("\n")
+      : [
+          `Спецусловия по макету — ${OFFER_HOURS} часа, до ${until} по Ташкенту:`,
+          `• ${own.what.ru} — ${own.price} $ вместо ${own.regular} $.`,
+          `Если подпишем договор до этого времени, цена останется такой. Потом — обычная цена.`,
+        ].join("\n");
+  }
   const l = PROMO.landing;
   const c = PROMO.corporate;
   if (lang === "uz") {
@@ -239,9 +286,19 @@ export function announceText(lang: OfferLang, expiresAt: string): string {
 export type ReminderKind = "daily" | "final";
 
 /** Готовое напоминание — если модель не ответила или ответ не прошёл проверку. */
-export function fallbackReminder(kind: ReminderKind, lang: OfferLang, expiresAt: string, now: Date): string {
+export function fallbackReminder(kind: ReminderKind, lang: OfferLang, expiresAt: string, now: Date, own: OwnPromo | null = null): string {
   const left = leftText(expiresAt, now, lang);
   const until = untilText(expiresAt);
+  if (own) {
+    if (lang === "uz") {
+      return kind === "final"
+        ? `Maxsus taklif tugashiga ${left} qoldi (${until} gacha): ${own.what.uz} — ${own.price} $ (odatda ${own.regular} $). Keyin odatiy narx. Boshlaymizmi?`
+        : `Eslatma: maket bo‘yicha maxsus taklif tugashiga ${left} qoldi (${until} gacha). ${cap(own.what.uz)} — ${own.price} $ (odatda ${own.regular} $). Savollar bo‘lsa, yozing.`;
+    }
+    return kind === "final"
+      ? `До конца спецусловий осталось ${left} (до ${until}): ${own.what.ru} — ${own.price} $ вместо ${own.regular} $. Потом — обычная цена. Начинаем?`
+      : `Напоминаем: до конца спецусловий по макету осталось ${left} (до ${until}). ${cap(own.what.ru)} — ${own.price} $ вместо ${own.regular} $. Если есть вопросы — пишите.`;
+  }
   const l = PROMO.landing;
   const c = PROMO.corporate;
   if (lang === "uz") {
@@ -255,12 +312,16 @@ export function fallbackReminder(kind: ReminderKind, lang: OfferLang, expiresAt:
 }
 
 /** Числа, которые напоминанию можно называть: цены, срок, сколько осталось. */
-export function allowedNumbers(expiresAt: string, now: Date, lang: OfferLang): Set<string> {
+export function allowedNumbers(expiresAt: string, now: Date, lang: OfferLang, own: OwnPromo | null = null): Set<string> {
   const nums = new Set<string>();
   const add = (text: string) => {
     for (const n of text.match(/\d+/g) ?? []) nums.add(String(Number(n)));
   };
-  add(`${PROMO.landing.price} ${PROMO.landing.regular} ${PROMO.landing.addons} ${PROMO.corporate.price} ${PROMO.corporate.regular} ${OFFER_HOURS}`);
+  add(
+    own
+      ? `${own.price} ${own.regular} ${OFFER_HOURS}`
+      : `${PROMO.landing.price} ${PROMO.landing.regular} ${PROMO.landing.addons} ${PROMO.corporate.price} ${PROMO.corporate.regular} ${OFFER_HOURS}`,
+  );
   add(untilText(expiresAt));
   add(leftText(expiresAt, now, lang));
   return nums;
@@ -272,35 +333,48 @@ export function allowedNumbers(expiresAt: string, now: Date, lang: OfferLang): S
  * Модель только подбирает слова: чисел, которых нет в фактах, ссылок,
  * обещаний «скидка навсегда» и длинных простыней быть не должно.
  */
-export function reminderProblems(text: string, expiresAt: string, now: Date, lang: OfferLang): string[] {
+export function reminderProblems(text: string, expiresAt: string, now: Date, lang: OfferLang, own: OwnPromo | null = null): string[] {
   const out: string[] = [];
   const t = text.trim();
   if (!t) return ["пусто"];
   if (t.length > 420) out.push("длинно");
   if (/https?:\/\/|www\./i.test(t)) out.push("ссылка");
-  const allowed = allowedNumbers(expiresAt, now, lang);
+  const allowed = allowedNumbers(expiresAt, now, lang, own);
   const extra = [...new Set((t.replace(/\d{1,2}:\d{2}/g, (m) => m.replace(":", " ")).match(/\d+/g) ?? []).map((n) => String(Number(n))))].filter(
     (n) => !allowed.has(n),
   );
   if (extra.length) out.push(`чужие числа: ${extra.join(", ")}`);
-  if (!t.includes(String(PROMO.landing.price))) out.push("нет цены лендинга");
+  if (own) {
+    if (!t.includes(String(own.price))) out.push("нет цены акции");
+  } else if (!t.includes(String(PROMO.landing.price))) out.push("нет цены лендинга");
   if (lang === "uz" && /[А-Яа-яЁё]/.test(t)) out.push("кириллица в узбекском");
   if (/навсегда|бессрочн|продлим|продлить/i.test(t)) out.push("обещание продлить");
   return out;
 }
 
 /** Задание модели: коротко, по-человечески, факты — только данные. */
-export function reminderPrompt(kind: ReminderKind, lang: OfferLang, expiresAt: string, now: Date, client: string): {
+export function reminderPrompt(
+  kind: ReminderKind,
+  lang: OfferLang,
+  expiresAt: string,
+  now: Date,
+  client: string,
+  own: OwnPromo | null = null,
+): {
   system: string;
   user: string;
 } {
   const facts = [
     `Клиент: ${client || "владелец бизнеса"}`,
-    `Мы прислали ему макет главной страницы его сайта.`,
+    own ? `Мы прислали ему макет.` : `Мы прислали ему макет главной страницы его сайта.`,
     `Спецусловия действуют до ${untilText(expiresAt)} по Ташкенту, осталось ${leftText(expiresAt, now, lang)}.`,
-    `Лендинг по макету со всем функционалом и ${PROMO.landing.addons} допами на выбор — ${PROMO.landing.price} $ вместо ${PROMO.landing.regular} $.`,
-    `Полноразмерный корпоративный сайт — ${PROMO.corporate.price} $ вместо ${PROMO.corporate.regular} $.`,
-    `После срока — обычные цены.`,
+    ...(own
+      ? [`${cap(own.what.ru)} — ${own.price} $ вместо ${own.regular} $.`, `После срока — обычная цена.`]
+      : [
+          `Лендинг по макету со всем функционалом и ${PROMO.landing.addons} допами на выбор — ${PROMO.landing.price} $ вместо ${PROMO.landing.regular} $.`,
+          `Полноразмерный корпоративный сайт — ${PROMO.corporate.price} $ вместо ${PROMO.corporate.regular} $.`,
+          `После срока — обычные цены.`,
+        ]),
   ].join("\n");
   const language = lang === "uz" ? "на узбекском (латиница), деловым языком" : "на русском";
   const goal =

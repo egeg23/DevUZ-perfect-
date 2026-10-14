@@ -15,7 +15,7 @@ import {
   type OfferState,
   type ReminderKind,
 } from "@/lib/admin/mockup-offer";
-import { offerCard, offerReaders, type OfferRow } from "@/lib/admin/mockup-offer-bot";
+import { offerCard, offerReaders, withOwnPromos, type OfferRow } from "@/lib/admin/mockup-offer-bot";
 import { effortFor } from "@/lib/model-limits";
 import { anthropic } from "@/lib/model-road";
 import { modelTroubleSays } from "@/lib/model-trouble";
@@ -51,8 +51,9 @@ export async function runMockupOffers(now: Date = new Date()): Promise<OfferRun>
   const db = serviceClient();
   if (!db) return run;
   const { data } = await db.from("mockup_offers").select(FIELDS).eq("status", "active").limit(200);
-  const rows = (data ?? []) as Row[];
-  if (!rows.length) return run;
+  if (!data?.length) return run;
+  // Своя цена макета (protos.facts.promo) — вместо общих PROMO во всех текстах клиенту.
+  const rows = await withOwnPromos(data as Row[]);
 
   for (const o of rows) {
     try {
@@ -126,7 +127,7 @@ async function announce(o: Row, now: Date): Promise<boolean> {
     .is("announced_at", null)
     .select("id");
   if (!claimed?.length) return false;
-  await queue(o, announceText(o.lang, o.expires_at));
+  await queue(o, announceText(o.lang, o.expires_at, o.own));
 
   // Владельцу и руководителю — сразу, с кнопками: макет ушёл, акция пошла.
   const card = offerCard(o, now);
@@ -176,10 +177,10 @@ async function remind(o: Row, kind: ReminderKind, now: Date): Promise<boolean> {
 
 /** Слова — от недорогой модели, числа — проверены; иначе готовый текст. */
 async function reminderText(o: Row, kind: ReminderKind, now: Date): Promise<string> {
-  const fallback = fallbackReminder(kind, o.lang, o.expires_at, now);
+  const fallback = fallbackReminder(kind, o.lang, o.expires_at, now, o.own);
   if (!process.env.ANTHROPIC_API_KEY) return fallback;
   try {
-    const prompt = reminderPrompt(kind, o.lang, o.expires_at, now, o.client);
+    const prompt = reminderPrompt(kind, o.lang, o.expires_at, now, o.client, o.own);
     const response = await anthropic("mockup-offer").beta.messages.create({
       model: MODEL,
       max_tokens: 300,
@@ -192,7 +193,7 @@ async function reminderText(o: Row, kind: ReminderKind, now: Date): Promise<stri
       .map((block) => block.text)
       .join("")
       .trim();
-    const problems = reminderProblems(text, o.expires_at, now, o.lang);
+    const problems = reminderProblems(text, o.expires_at, now, o.lang, o.own);
     if (!problems.length) return text;
     console.error(`акция по макету ${o.id}: напоминание модели не прошло (${problems.join("; ")}) — готовый текст`);
   } catch (error) {
