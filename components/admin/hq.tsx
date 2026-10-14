@@ -7,6 +7,7 @@ import { MAIN_LABEL } from "@/lib/admin/account-ban-store";
 import { hqDict } from "@/content/admin-panel/hq";
 import { helpAnchor } from "@/lib/admin/help";
 import {
+  BOT_SILENT_ALERT,
   attentionHref,
   clockOf,
   deltaOf,
@@ -184,6 +185,8 @@ function attentionText(a: Attention, t: T, now: Date): string {
       return t.attOverdue(a.n);
     case "stale":
       return t.attStale(a.n);
+    case "botSilent":
+      return t.attBotSilent(a.name, a.n);
     case "transfers":
       return t.attTransfers(a.n);
     case "contracts":
@@ -323,6 +326,7 @@ const FEED_DOT: Record<FeedItem["kind"], string> = {
   won: "bg-green",
   lost: "bg-faint",
   mockupSent: "bg-violet",
+  mockupFound: "bg-violet",
   mockupApproved: "bg-green",
   taskDone: "bg-gold",
 };
@@ -339,6 +343,8 @@ function feedText(f: FeedItem, t: T): string {
       return t.feedMockupSent(f.label);
     case "mockupApproved":
       return t.feedMockupApproved(f.label);
+    case "mockupFound":
+      return t.feedMockupFound(f.label);
     case "taskDone":
       return t.feedTaskDone(f.label, f.who ?? "");
   }
@@ -449,6 +455,7 @@ export function PersonCard({
     p.overdue ? { text: t.flagOverdue(p.overdue), warn: true } : null,
     p.burnedToday ? { text: t.flagBurned(p.burnedToday), warn: true } : null,
     p.stale ? { text: t.flagStale(p.stale), warn: false } : null,
+    p.botSilent ? { text: t.flagBotSilent(p.botSilent), warn: p.botSilent > BOT_SILENT_ALERT } : null,
     p.mood === "done" ? { text: t.moodDone, warn: false, good: true } : null,
     p.mood === "idle" ? { text: t.moodIdle, warn: false } : null,
   ].filter((f): f is { text: string; warn: boolean; good?: boolean } => Boolean(f));
@@ -501,6 +508,7 @@ export function PersonCard({
             <li>{t.detailOpenTasks(p.openTasks, p.overdue)}</li>
             <li>{t.detailBurned(p.burnedToday)}</li>
             <li>{t.detailStale(p.stale)}</li>
+            <li>{t.detailBotSilent(p.botSilent)}</li>
           </ul>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {taskHref ? (
@@ -650,6 +658,7 @@ export function HqView({
           >
             <Row href="/admin/mockups" label={t.mockupsSent7} value={mockups.sent7.now} sub={<Delta trend={mockups.sent7} t={t} />} />
             <Row href="/admin/mockups" label={t.mockupsApproved7} value={mockups.approved7.now} sub={<Delta trend={mockups.approved7} t={t} />} />
+            {mockups.scanned7 ? <Row href="/admin/mockups" label={t.mockupsScanned7} value={mockups.scanned7} /> : null}
           </PulseCard>
 
           <PulseCard icon="tasks" tone="gold" title={t.tasksTitle} href="/admin/tasks" big={tasks.open} caption={t.tasksOpen}>

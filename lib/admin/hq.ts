@@ -222,10 +222,16 @@ export type HqMockup = {
   sent_at: string;
   expires_at: string;
   approved_at: string | null;
+  /** «scan» — нашёл скан макетов дважды в день (lib/admin/mockup-scan.ts). */
+  source?: string | null;
+  /** Когда строка появилась: у найденного сканом это позже, чем ушёл макет. */
+  created_at?: string | null;
 };
 
 export type MockupsPulse = {
   sent7: Trend;
+  /** Найдено сканом за 7 дней: макеты, которые ушли мимо записи. */
+  scanned7: number;
   /** Акция 48 часов идёт: макет у клиента, ждём ответа. */
   waiting: number;
   /** Ближайшая к концу акция. */
@@ -248,6 +254,9 @@ export function mockupsPulse(mockups: readonly HqMockup[], now: Date): MockupsPu
       mockups.map((m) => m.sent_at),
       now,
     ),
+    scanned7: mockups.filter(
+      (m) => m.source === "scan" && m.created_at && now.getTime() - Date.parse(m.created_at) <= 7 * 24 * 3600_000,
+    ).length,
     waiting: live.length,
     soonest: live[0] ? { client: live[0].client || live[0].mockup_name, endsAt: live[0].expires_at } : null,
     endingSoon: live.filter((m) => Date.parse(m.expires_at) - now.getTime() <= ENDING_SOON_H * 3600_000).length,
@@ -357,6 +366,8 @@ export type HqPersonInput = {
   inWork: number;
   burnedToday: number;
   stale: number;
+  /** Лидов без ответа боту: спросил «чем кончилось» и ждёт (lib/admin/lead-tidy.ts). */
+  botSilent?: number;
   tasks: readonly HqTask[];
   /** Касания по дням за неделю, старший день первым (dailyCounts). */
   touchDays?: readonly number[];
@@ -378,6 +389,7 @@ export type HqPerson = {
   inWork: number;
   burnedToday: number;
   stale: number;
+  botSilent: number;
   openTasks: number;
   overdue: number;
   /** Сводка для цвета карточки. */
@@ -440,6 +452,7 @@ export function personOf(input: HqPersonInput, now: Date): HqPerson {
     inWork: input.inWork,
     burnedToday: input.burnedToday,
     stale: input.stale,
+    botSilent: input.botSilent ?? 0,
     openTasks: open.length,
     overdue,
     mood,
@@ -504,6 +517,7 @@ export type Attention = Base &
     | { kind: "burned"; n: number }
     | { kind: "overdue"; n: number }
     | { kind: "stale"; n: number }
+    | { kind: "botSilent"; name: string; n: number }
     | { kind: "transfers"; n: number }
     | { kind: "contracts"; n: number }
     | { kind: "ending"; n: number }
@@ -540,6 +554,12 @@ export const hrefTo = {
   prospect: (id: string) => `/admin/prospect?open=${id}#p-${id}`,
 };
 
+/** Больше стольких лидов без ответа боту — строка в «Требует внимания» (lib/admin/lead-tidy.ts). */
+export const BOT_SILENT_ALERT = 5;
+
+/** Лиды «в работе» этого человека — туда ведёт «без ответа боту». */
+export const ownerLeadsHref = (staffId: string) => `/admin?owner=${staffId}&status=taken`;
+
 /** Свип ходит раз в 5 минут; полчаса тишины — авария (как плашка в components/admin/sweep-banner.tsx). */
 export const SWEEP_STALE_MIN = 30;
 
@@ -569,6 +589,8 @@ export type AttentionInput = {
   overdue: readonly Named[];
   /** Лиды «в работе» без движения 7+ дней. */
   stale: readonly Named[];
+  /** У кого сколько лидов без ответа боту: id — сотрудник. */
+  botSilent?: readonly (Named & { n: number })[];
   /** Просьбы передать лид: id лида. */
   transfers: readonly Named[];
   contracts: readonly Named[];
@@ -636,6 +658,11 @@ export function attentionOf(input: AttentionInput): Attention[] {
   }
   if (input.ending.length) out.push({ kind: "ending", level: "gold", n: input.ending.length, links: linksOf(input.ending, hrefTo.mockup) });
   if (input.stale.length) out.push({ kind: "stale", level: "gold", n: input.stale.length, links: linksOf(input.stale, hrefTo.lead) });
+  for (const p of input.botSilent ?? []) {
+    if (p.n > BOT_SILENT_ALERT) {
+      out.push({ kind: "botSilent", level: "gold", name: p.label, n: p.n, links: [{ label: p.label, href: ownerLeadsHref(p.id) }] });
+    }
+  }
   if (input.contracts.length && seesHqMoney(input.role)) {
     out.push({ kind: "contracts", level: "gold", n: input.contracts.length, links: linksOf(input.contracts, hrefTo.contract) });
   }
@@ -651,7 +678,7 @@ export function attentionOf(input: AttentionInput): Attention[] {
 export type FeedItem =
   | { kind: "lead"; at: string; label: string; href: string }
   | { kind: "won" | "lost"; at: string; label: string; who: string | null; href: string }
-  | { kind: "mockupSent" | "mockupApproved"; at: string; label: string; href: string }
+  | { kind: "mockupSent" | "mockupApproved" | "mockupFound"; at: string; label: string; href: string }
   | { kind: "taskDone"; at: string; label: string; who: string | null; href: string };
 
 export const FEED_HOURS = 24;
@@ -697,6 +724,8 @@ export function feedOf(
   for (const m of input.mockups) {
     const label = m.client || m.mockup_name;
     if (fresh(m.sent_at)) items.push({ kind: "mockupSent", at: m.sent_at, label, href: "/admin/mockups" });
+    // Найдено сканом: в ленте — когда нашли; сам макет мог уйти неделю назад.
+    else if (m.source === "scan" && fresh(m.created_at)) items.push({ kind: "mockupFound", at: m.created_at, label, href: "/admin/mockups" });
     if (fresh(m.approved_at)) items.push({ kind: "mockupApproved", at: m.approved_at as string, label, href: "/admin/mockups" });
   }
   for (const t of input.tasks) {

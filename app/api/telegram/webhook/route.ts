@@ -53,7 +53,7 @@ import {
 } from "@/lib/admin/ownership";
 import { noteBotSeen } from "@/lib/admin/lead-queue-store";
 import { noteBotUser } from "@/lib/admin/bot-users-store";
-import { TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
+import { NO_MORE_WAIT, TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
 import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
@@ -152,7 +152,13 @@ type Update = {
   callback_query?: {
     id: string;
     data?: string;
-    message?: { message_id: number; chat: { id: number }; text?: string };
+    message?: {
+      message_id: number;
+      chat: { id: number };
+      text?: string;
+      /** Клавиатура сообщения — по ней «Порядок в лидах» гасит ряд нажатого лида. */
+      reply_markup?: { inline_keyboard?: { text: string; callback_data?: string }[][] };
+    };
     from?: TelegramUser;
   };
 };
@@ -1285,12 +1291,21 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
       await answerCallback(query.id, "Недоступно");
       return;
     }
-    const result = await answerTidy(staff, cb.answer, cb.leadId, chatId, query.message?.message_id ?? null);
+    const result = await answerTidy(
+      staff,
+      cb.answer,
+      cb.leadId,
+      chatId,
+      query.message?.message_id ?? null,
+      query.message?.reply_markup?.inline_keyboard ?? null,
+    );
     await answerCallback(
       query.id,
       result === "ok"
         ? "Записал"
-        : result === "forbidden"
+        : result === "nowait"
+          ? NO_MORE_WAIT
+          : result === "forbidden"
           ? "Этот лид уже не у вас"
           : result === "gone"
             ? "Лида больше нет"

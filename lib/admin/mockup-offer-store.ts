@@ -1,4 +1,5 @@
 import { OFFER_MS, mockupLinks, type MockupLink, type OfferLang } from "@/lib/admin/mockup-offer";
+import { scanFields } from "@/lib/admin/mockup-scan";
 import { SHOWCASE_HOST, showcaseCases } from "@/lib/admin/mockups";
 import { normalizeHandle } from "@/lib/admin/outreach-talk";
 import { siteUrl } from "@/lib/seo";
@@ -13,6 +14,10 @@ import { serviceClient } from "@/lib/supabase";
  *   зовёт markReplySent (outreach-talk-store);
  * - менеджер отправил ссылку руками с рабочего аккаунта в Telegram — скаут
  *   видит своё исходящее и зовёт recordMockupOut.
+ *
+ * Третий путь — скан дважды в день (lib/admin/mockup-scan.ts): то, что эти
+ * два пропустили. Найденное сканом помечено (source = scan), старое клиенту
+ * задним числом не пишется (quiet, или сразу «закончилась»).
  *
  * Повторная отправка той же ссылки тому же клиенту срок не продлевает:
  * строка одна на клиента и макет (уникальный индекс в базе).
@@ -58,16 +63,21 @@ export async function recordMockupSent(input: {
   leadId?: string | null;
   body: string;
   account?: string | null;
-  /** Кому ушло, если касания нет: id в Telegram или @адрес. */
+  /** Кому ушло, если касания нет: id в Telegram, @адрес или «lead:<id>». */
   peer?: string | null;
+  /** Как звать клиента, если касания нет. */
+  client?: string | null;
+  /** Когда ушло само сообщение. */
   at?: Date;
+  /** Найдено сканом: старое клиенту не пишется (scanFields). */
+  scan?: { now: Date };
 }): Promise<number> {
   const links = mockupLinks(input.body);
   if (!links.length) return 0;
   const db = serviceClient();
   if (!db) return 0;
 
-  let client = input.peer ?? "";
+  let client = input.client || input.peer || "";
   let leadId = input.leadId ?? null;
   let lang: OfferLang = "ru";
   if (input.prospectId) {
@@ -100,6 +110,7 @@ export async function recordMockupSent(input: {
       lang: mockup.lang ?? lang,
       sent_at: at.toISOString(),
       expires_at: new Date(at.getTime() + OFFER_MS).toISOString(),
+      ...(input.scan ? scanFields(at, input.scan.now) : {}),
     });
     // 23505 — по этому макету у клиента акция уже идёт: срок не продлеваем.
     if (error && error.code !== "23505") console.error("акция по макету: не записалась", error.message);
@@ -117,6 +128,9 @@ export async function recordMockupOut(input: {
   userId: string;
   handle: string;
   body: string;
+  /** Когда ушло сообщение — у скана это дата из Telegram, а не «сейчас». */
+  at?: Date;
+  scan?: { now: Date };
 }): Promise<number> {
   if (!mockupLinks(input.body).length) return 0;
   const db = serviceClient();
@@ -151,5 +165,34 @@ export async function recordMockupOut(input: {
     body: input.body,
     account: input.account,
     peer: prospect ? null : handle ? `@${handle}` : input.userId || null,
+    at: input.at,
+    scan: input.scan,
   });
+}
+
+/**
+ * Скан (lib/admin/mockup-scan.ts): взять слот для аккаунта или базы. Один раз
+ * на слот — второй проход свипа и перезапуск скаута того же не повторят.
+ */
+export async function claimMockupScan(account: string, slot: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { error } = await db.from("mockup_scans").insert({ account, slot });
+  if (error && error.code !== "23505") console.error("скан макетов: слот не взят", error.message);
+  return !error;
+}
+
+/** Скан прошёл: сколько диалогов или сообщений смотрели и сколько нашли. */
+export async function finishMockupScan(
+  account: string,
+  slot: string,
+  result: { seen: number; found: number; error?: string | null },
+): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  await db
+    .from("mockup_scans")
+    .update({ finished_at: new Date().toISOString(), seen: result.seen, found: result.found, error: result.error ?? null })
+    .eq("account", account)
+    .eq("slot", slot);
 }

@@ -42,7 +42,7 @@ const MODEL = process.env.PROMO_MODEL || "claude-haiku-4-5";
 type Row = OfferRow & OfferState & { lang: OfferLang };
 
 const FIELDS =
-  "id, mockup_ref, mockup_name, mockup_url, prospect_id, lead_id, client, peer, status, sent_at, expires_at, password_at, lang, announced_at, daily_on, final_at";
+  "id, mockup_ref, mockup_name, mockup_url, prospect_id, lead_id, client, peer, status, sent_at, expires_at, password_at, source, quiet, lang, announced_at, daily_on, final_at";
 
 export type OfferRun = { announced: number; reminded: number; expired: number; stopped: number };
 
@@ -66,8 +66,9 @@ export async function runMockupOffers(now: Date = new Date()): Promise<OfferRun>
         continue;
       }
       // Клиента нет среди касаний — писать ему нечем: акция только в списке,
-      // а владельцу и руководителю — карточка, как и у остальных.
-      if (!o.prospect_id) {
+      // а владельцу и руководителю — карточка, как и у остальных. Найденное
+      // сканом давно ушедшее (quiet) — так же: задним числом клиенту не пишем.
+      if (!o.prospect_id || o.quiet) {
         if (!o.announced_at && (await noteToTeam(o, now))) run.announced += 1;
         continue;
       }
@@ -147,8 +148,11 @@ async function noteToTeam(o: Row, now: Date): Promise<boolean> {
     .select("id");
   if (!claimed?.length) return false;
   const card = offerCard(o, now);
+  const head = o.quiet
+    ? "🔎 <b>Макет найден сканом</b> — ушёл давно, клиенту бот не пишет: условия и сроки скажите ему сами"
+    : "🎨 <b>Макет ушёл клиенту</b> — акция 48 часов, условия напишите ему сами";
   for (const reader of await offerReaders()) {
-    await sendWithRows(reader.chat, `🎨 <b>Макет ушёл клиенту</b> — акция 48 часов, условия напишите ему сами\n\n${card.text}`, card.rows);
+    await sendWithRows(reader.chat, `${head}\n\n${card.text}`, card.rows);
   }
   return true;
 }

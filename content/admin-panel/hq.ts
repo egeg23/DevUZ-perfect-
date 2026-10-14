@@ -83,6 +83,7 @@ export const hqDict = defineDict({
   mockupsWaiting: { ru: "у клиента, ждём ответа", uz: "mijozda, javob kutilmoqda", pl: "u klienta, czekamy na odpowiedź" },
   mockupsSent7: { ru: "отправлено за 7 дней", uz: "7 kunda yuborildi", pl: "wysłane w 7 dni" },
   mockupsApproved7: { ru: "утверждено за 7 дней", uz: "7 kunda tasdiqlandi", pl: "zatwierdzone w 7 dni" },
+  mockupsScanned7: { ru: "найдено сканом за 7 дней", uz: "7 kunda skan topdi", pl: "znalezione skanem w 7 dni" },
   mockupsSoonest: {
     ru: (client: string, left: string) => `ближе всех к концу акции: ${client} — ${left}`,
     uz: (client: string, left: string) => `aksiya tugashiga eng yaqini: ${client} — ${left}`,
@@ -171,6 +172,11 @@ export const hqDict = defineDict({
     uz: (n: number) => `${n} ta «ishda» lid 7+ kundan beri harakatsiz`,
     pl: (n: number) => `${pl(n, "lead", "leady", "leadów")} „w toku” bez ruchu od 7+ dni`,
   },
+  attBotSilent: {
+    ru: (name: string, n: number) => `${name}: ${ru(n, "лид", "лида", "лидов")} без ответа боту — не отмечает, чем кончилось`,
+    uz: (name: string, n: number) => `${name}: ${n} ta lid botga javobsiz — nima bilan tugaganini belgilamayapti`,
+    pl: (name: string, n: number) => `${name}: ${pl(n, "lead", "leady", "leadów")} bez odpowiedzi botowi — nie zaznacza, jak się skończyło`,
+  },
   attTransfers: {
     ru: (n: number) => `${ru(n, "просьба", "просьбы", "просьб")} передать лида ждут решения`,
     uz: (n: number) => `Lidni o‘tkazish bo‘yicha ${n} ta so‘rov qaror kutmoqda`,
@@ -232,6 +238,11 @@ export const hqDict = defineDict({
     uz: (n: number) => `${n} ta harakatsiz`,
     pl: (n: number) => `bez ruchu ${n}`,
   },
+  flagBotSilent: {
+    ru: (n: number) => `без ответа боту ${n}`,
+    uz: (n: number) => `botga javobsiz ${n}`,
+    pl: (n: number) => `bez odpowiedzi botowi ${n}`,
+  },
   flagOverdue: {
     ru: (n: number) => `просрочено ${n}`,
     uz: (n: number) => `${n} ta muddati o‘tgan`,
@@ -262,6 +273,11 @@ export const hqDict = defineDict({
     uz: (n: number) => `7+ kun harakatsiz «ishda» lidlar: ${n}`,
     pl: (n: number) => `Leady „w toku” bez ruchu 7+ dni: ${n}`,
   },
+  detailBotSilent: {
+    ru: (n: number) => `Без ответа боту (спросил и ждёт «выиграли / проиграли / ещё в работе»): ${n}`,
+    uz: (n: number) => `Botga javobsiz (so‘radi va «yutildi / yutqazildi / hali ishda»ni kutyapti): ${n}`,
+    pl: (n: number) => `Bez odpowiedzi botowi (zapytał i czeka na «wygrany / przegrany / nadal w toku»): ${n}`,
+  },
   // Лента за сутки.
   feedTitle: { ru: "Лента за сутки", uz: "So‘nggi sutka", pl: "Ostatnia doba" },
   feedNone: {
@@ -281,6 +297,11 @@ export const hqDict = defineDict({
     pl: (x: string, who: string) => `Przegrany: ${x}${who ? ` · ${who}` : ""}`,
   },
   feedMockupSent: { ru: (x: string) => `Макет ушёл: ${x}`, uz: (x: string) => `Maket yuborildi: ${x}`, pl: (x: string) => `Makieta wysłana: ${x}` },
+  feedMockupFound: {
+    ru: (x: string) => `Скан нашёл макет: ${x}`,
+    uz: (x: string) => `Skan maketni topdi: ${x}`,
+    pl: (x: string) => `Skan znalazł makietę: ${x}`,
+  },
   feedMockupApproved: {
     ru: (x: string) => `Макет утверждён: ${x}`,
     uz: (x: string) => `Maket tasdiqlandi: ${x}`,
