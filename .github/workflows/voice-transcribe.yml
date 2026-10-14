@@ -25,8 +25,12 @@ on:
   schedule:
     - cron: "*/10 * * * *"
 
+# id-token — пропуск GitHub (OIDC) к очереди: общий секрет смен в секретах
+# репозитория пуст, а переносить его с сервера в открытый репозиторий нельзя.
+# Сервер пускает только эту задачу с ветки main (lib/admin/voice-auth.ts).
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: voice-transcribe
@@ -38,8 +42,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      VOICE_SITE: ${{ secrets.SITE_URL || 'https://devuz.studio' }}
-      VOICE_SECRET: ${{ secrets.SHIFT_REPORT_SECRET }}
+      # Адрес — не секрет: в секрете SITE_URL он прячется в журнале за «***»,
+      # и по предупреждению не понять, куда задача ходила.
+      VOICE_SITE: https://devuz.studio
       VOICE_MODEL: ${{ inputs.model || 'large-v3-turbo' }}
       VOICE_LANGUAGE: ${{ inputs.language || '' }}
     steps:
@@ -50,10 +55,21 @@ jobs:
           site="${VOICE_SITE%/}"
           # Сайт не ответил (выкатка, перезапуск) — не красим задачу: через
           # 10 минут следующий проход, а красная каждые 10 минут — шум в почте.
-          if body=$(curl -fsS --max-time 30 -H "x-devuz-shift: $VOICE_SECRET" "$site/api/voice/queue"); then
-            n=$(printf '%s' "$body" | jq '.items | length')
+          # Пропуск живёт минуты — его просят заново перед каждым запросом
+          # (и скрипт расшифровки тоже). В журнал он не попадает.
+          token=$(curl -sS --max-time 20 -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=devuz-voice" | jq -r '.value // empty' || true)
+          [ -n "$token" ] && echo "::add-mask::$token"
+          # Код ответа — в предупреждение: журнал отсюда не скачать, а
+          # предупреждение видно в сводке задачи. 403 — пропуск не принят,
+          # 000 — сайт не ответил.
+          code=$(curl -sS --max-time 30 -o "$RUNNER_TEMP/queue.json" -w '%{http_code}' \
+            -H "Authorization: Bearer $token" "$site/api/voice/queue" || true)
+          if [ "$code" = "200" ]; then
+            n=$(jq '.items | length' "$RUNNER_TEMP/queue.json")
           else
-            echo "::warning::Очередь голосовых не ответила"
+            pass=$([ -n "$token" ] && echo "получен" || echo "не получен")
+            echo "::warning::Очередь голосовых не ответила: HTTP ${code:-000}, пропуск GitHub ${pass}"
             n=0
           fi
           echo "В очереди: $n"

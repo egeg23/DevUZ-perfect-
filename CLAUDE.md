@@ -614,8 +614,13 @@ https://devuz.studio/api/health.
 - Расшифровывает задача «Голосовые — расшифровка»
   (`.github/workflows/voice-transcribe.yml`, `scripts/voice-transcribe.py`):
   раз в 10 минут, открытая Whisper (faster-whisper), без платной модели.
-  Ходит в `app/api/voice/*` по `SHIFT_REPORT_SECRET`; текст бот присылает в
-  тот же чат. Сервер голос не слушает — см. «Сервер не собирает сайт».
+  Ходит в `app/api/voice/*` по пропуску GitHub (OIDC, `id-token: write`):
+  сервер проверяет подпись GitHub, номер репозитория и что это эта задача с
+  ветки main (`VOICE_OIDC`, `lib/admin/voice-auth.ts`,
+  `lib/admin/github-oidc.ts`). `SHIFT_REPORT_SECRET` в секретах репозитория
+  пуст, а секрет с боевого сервера в Actions не переносим. Текст бот
+  присылает в тот же чат. Сервер голос не слушает — см. «Сервер не
+  собирает сайт».
 - Репозиторий открытый: в журнал задачи — ни слова из расшифровки, только
   номер, длина и число знаков.
-- Держит тест `tests/voice-notes.test.ts`.
+- Держат тесты `tests/voice-notes.test.ts` и `tests/github-oidc.test.ts`.
