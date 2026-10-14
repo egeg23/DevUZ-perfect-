@@ -2147,6 +2147,24 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "video-course",
+          title: "Menejerlar uchun videokurs",
+          body: {
+            manager: [
+              "**«Menejerlar uchun videokurs»** bloki — 13 ta qisqa video, jami bir soatga yaqin: studiya nima sotadi, «lending» va «konversiya» so‘zlari oddiy tilda, mijozning salomdan shartnomagacha yo‘li, biznes egalarining qo‘rquvlari va ularga nima javob berish, ishonch bilan sotish va og‘izdan og‘izga tavsiya. Nutq rus tilida, subtitrlar o‘zbekcha, ekranda bizning haqiqiy maketlarimiz.",
+              "Tartib bilan, bir vaqtda bitta videodan ko‘ring. Har birida topshiriq bor: diktor pauzaga qo‘yishni so‘raydi, qo‘ying va o‘zingiz javob bering, keyin tahlilni ko‘ring. Videoda studiya va’da qilmaydigan narx va muddatlar yo‘q, u yuqoridagi kurslarga zid emas: kurslar batafsil qoidalar, video umumiy manzara. Video ostida «Video hali yuklanmagan.» yozilgan bo‘lsa, uni hali joylashmagan.",
+            ],
+            head: [
+              "**«Menejerlar uchun videokurs»** bloki — 13 ta qisqa video, jami bir soatga yaqin: studiya nima sotadi, mijoz yo‘li, egalarning qo‘rquvlari, ishonch bilan sotish va og‘izdan og‘izga tavsiya. Nutq rus tilida, subtitrlar o‘zbekcha. Videoni «Ta’lim» ochiq bo‘lgan har kim ko‘radi.",
+              "Har bir video ostida **«Videoni yuklash yoki almashtirish»** bloki yig‘ilgan: **«Video tili»**ni tanlang (kurs videolari ruscha, «Ruscha»ni qo‘ying) va MP4 faylni, **«Yuklash»**ni bosing. Fayl bo‘laklab ketadi va aloqa uzilsa o‘zi davom etadi. Yangi video shu tildagi eskisini almashtiradi, **«Olib tashlash»** uni o‘chiradi. Video fayllarini egasi alohida olgan, tartib ro‘yxatdagi raqam bo‘yicha.",
+            ],
+            admin: [
+              "**«Menejerlar uchun videokurs»** bloki — 13 ta qisqa video, jami bir soatga yaqin, siz 13.10.2026 da tasdiqlagan ssenariylar bo‘yicha (`docs/training/video-guides`). Nutq rus tilida Vosk ovozida, subtitrlar o‘zbekcha. Videoni «Ta’lim» ochiq bo‘lgan har kim ko‘radi: bo‘lim o‘chiq ekan, faqat siz.",
+              "Har bir video ostida **«Videoni yuklash yoki almashtirish»** bloki yig‘ilgan: **«Video tili»**ni («Ruscha») va shu raqamli MP4 faylni tanlang, **«Yuklash»**ni bosing. Rahbar ham yuklay oladi. Yangi video shu tildagi eskisini almashtiradi, **«Olib tashlash»** uni o‘chiradi; kim nima yuklagani [Jurnalda](/admin/audit). Video serverda yo‘riqnoma videolari yonida turadi.",
+            ],
+          },
+        },
+        {
           id: "materials",
           title: "Kurs materiallari",
           body: {

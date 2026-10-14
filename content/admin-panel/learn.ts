@@ -140,4 +140,24 @@ export const learnDict = defineDict({
     uz: "Siz uchun hozircha savol yo‘q: testdagi bo‘limlarning birortasi sizga ochiq emas.",
     pl: "Na razie nie ma tu pytań dla ciebie: nie masz otwartego żadnego działu z testu.",
   },
+  videoTitle: { ru: "Видеокурс для менеджеров", uz: "Menejerlar uchun videokurs", pl: "Kurs wideo dla menedżerów" },
+  videoIntro: {
+    ru: (n: number, min: number) =>
+      `${n} коротких видео, около ${min} минут: что мы продаём, как думает владелец бизнеса и что ему отвечать. Речь по-русски, субтитры на узбекском. Смотрите по порядку: в каждом видео есть задание, ставьте на паузу и отвечайте.`,
+    uz: (n: number, min: number) =>
+      `${n} ta qisqa video, taxminan ${min} daqiqa: biz nima sotamiz, biznes egasi qanday o‘ylaydi va unga nima javob berish kerak. Nutq rus tilida, subtitrlar o‘zbekcha. Tartib bilan ko‘ring: har bir videoda topshiriq bor, pauzaga qo‘yib javob bering.`,
+    pl: (n: number, min: number) =>
+      `${n} krótkich filmów, około ${min} minut: co sprzedajemy, jak myśli właściciel firmy i co mu odpowiadać. Mowa po rosyjsku, napisy po uzbecku. Oglądaj po kolei: w każdym filmie jest zadanie, zatrzymaj i odpowiedz.`,
+  },
+  videoMinutes: {
+    ru: (n: number) => `≈ ${n} мин`,
+    uz: (n: number) => `≈ ${n} daq`,
+    pl: (n: number) => `≈ ${n} min`,
+  },
+  videoMissing: {
+    ru: "Видео ещё не загружено.",
+    uz: "Video hali yuklanmagan.",
+    pl: "Film nie został jeszcze wgrany.",
+  },
+  videoManage: { ru: "Загрузить или заменить видео", uz: "Videoni yuklash yoki almashtirish", pl: "Wgraj lub podmień film" },
 });
