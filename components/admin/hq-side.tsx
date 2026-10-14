@@ -159,7 +159,10 @@ export function HqSide({
           {tt.title}
           <HelpHint topic={helpAnchor("/admin/hq", "task")} />
         </h2>
-        <HqTask people={taskPeople} preselect={preselect} />
+        {/* Ключ — человек из «Поставить задачу» в карточке: форма уже на
+            странице, и без нового ключа отметка (defaultChecked) не
+            появилась бы — так и было у владельца на телефоне 14.10.2026. */}
+        <HqTask key={preselect ?? "none"} people={taskPeople} preselect={preselect} />
       </section>
 
       {broadcast ? (

@@ -214,6 +214,8 @@ export function touchesPulse(
 
 export type HqMockup = {
   id: string;
+  /** «p:<id>» или «s:<проект>» — как в «Макетах»; ведёт к его строке. */
+  mockup_ref?: string;
   client: string;
   mockup_name: string;
   status: string;
@@ -479,40 +481,63 @@ export function clockOf(iso: string): string {
 
 /* ── «Требует внимания» ──────────────────────────────────────────────── */
 
-export type Attention =
-  | { kind: "sweep"; level: "red"; minutes: number | null }
-  | { kind: "autopilot"; level: "red"; error: string }
-  | { kind: "model"; level: "red"; error: string }
-  | { kind: "ban"; level: "red"; account: string; until: string }
-  | { kind: "circle"; level: "gold"; accounts: string[]; lang: "ru" | "uz" }
-  | { kind: "circleFallback"; level: "gold"; n: number }
-  | { kind: "unowned"; level: "red"; n: number; first: string }
-  | { kind: "burned"; level: "gold"; n: number }
-  | { kind: "overdue"; level: "red"; n: number }
-  | { kind: "stale"; level: "gold"; n: number }
-  | { kind: "transfers"; level: "gold"; n: number }
-  | { kind: "contracts"; level: "gold"; n: number }
-  | { kind: "ending"; level: "gold"; n: number }
-  | { kind: "firecrawl"; level: "gold"; remaining: number };
+/**
+ * Строка ведёт ровно в то, о чём она (владелец, 14.10.2026: «он переносит
+ * в общий пул, а не в конкретную, о которой идёт речь»): лид — в его
+ * карточку, задача — в её карточку, аккаунт — к его строке в «Аккаунтах»,
+ * макет — к его строке в «Макетах». Одна штука — строка и есть ссылка;
+ * несколько — строка раскрывается списком, и каждый пункт ведёт в свою.
+ */
+export type AttentionLink = { label: string; href: string };
+
+type Base = { level: "red" | "gold"; links: AttentionLink[] };
+
+export type Attention = Base &
+  (
+    | { kind: "sweep"; minutes: number | null }
+    | { kind: "autopilot"; error: string }
+    | { kind: "model"; error: string }
+    | { kind: "ban"; account: string; until: string }
+    | { kind: "circle"; accounts: string[]; lang: "ru" | "uz" }
+    | { kind: "circleFallback"; n: number }
+    | { kind: "unowned"; n: number; first: string }
+    | { kind: "burned"; n: number }
+    | { kind: "overdue"; n: number }
+    | { kind: "stale"; n: number }
+    | { kind: "transfers"; n: number }
+    | { kind: "contracts"; n: number }
+    | { kind: "ending"; n: number }
+    | { kind: "firecrawl"; remaining: number }
+  );
 
 export type AttentionKind = Attention["kind"];
 
-/** Куда ведёт строка «Требует внимания» — туда, где за ней подробности. */
-export const ATTENTION_HREF: Record<AttentionKind, string> = {
+/**
+ * Сигналы без своей сущности — авария, сбой, остаток на счёте: ссылка
+ * ведёт туда, где это чинится. У остальных — только конкретные ссылки.
+ */
+export const SYSTEM_HREF: Partial<Record<AttentionKind, string>> = {
   sweep: "/admin/help#leads-banner",
-  autopilot: "/admin/prospect",
-  model: "/admin/prospect",
-  ban: "/admin/accounts",
-  circle: "/admin/accounts",
-  circleFallback: "/admin/accounts",
-  unowned: "/admin?owner=free",
-  burned: "/admin/hq#people",
-  overdue: "/admin/tasks",
-  stale: "/admin?status=taken",
-  transfers: "/admin",
-  contracts: "/admin/contracts",
-  ending: "/admin/mockups",
-  firecrawl: "/admin/prospect",
+  autopilot: "/admin/prospect#autopilot",
+  model: "/admin/prospect#autopilot",
+  firecrawl: "/admin/prospect#autopilot",
+};
+
+/** Куда ведёт строка: системная — в своё место, одна сущность — в неё; несколько — null (раскрывается). */
+export function attentionHref(a: Attention): string | null {
+  const system = SYSTEM_HREF[a.kind];
+  if (system) return system;
+  return a.links.length === 1 ? a.links[0].href : null;
+}
+
+/** Адреса конкретных сущностей. */
+export const hrefTo = {
+  lead: (id: string) => `/admin/leads/${id}`,
+  task: (id: string) => `/admin/tasks/${id}`,
+  account: (key: string) => `/admin/accounts#account-${key}`,
+  mockup: (ref: string) => `/admin/mockups#mockup-${ref.replace(/[^a-z0-9-]/gi, "-")}`,
+  contract: (id: string) => `/admin/contracts/${id}`,
+  prospect: (id: string) => `/admin/prospect?open=${id}#p-${id}`,
 };
 
 /** Свип ходит раз в 5 минут; полчаса тишины — авария (как плашка в components/admin/sweep-banner.tsx). */
@@ -521,27 +546,39 @@ export const SWEEP_STALE_MIN = 30;
 /** Firecrawl: меньше стольких кредитов — пора думать о пополнении. */
 export const FIRECRAWL_LOW = 300;
 
+/** Сколько пунктов раскрывается под строкой — дальше «…» в разделе. */
+export const ATTENTION_LIST_MAX = 8;
+
+type Named = { id: string; label: string };
+
 export type AttentionInput = {
   role: Role;
   now: Date;
   sweep: { last_ok_at: string | null; alerted: boolean } | null;
   /** Сбой автопрогона за сегодня (stats_snapshots «autopilot-trouble»). */
   autopilotTrouble: { error: string; at: string } | null;
-  /** Ограничения Telegram: подпись аккаунта и до какого момента. */
-  bans: readonly { account: string; until: number }[];
+  /** Ограничения Telegram: аккаунт (ключ и подпись) и до какого момента. */
+  bans: readonly { key: string; account: string; until: number }[];
   /** Рабочие аккаунты без кружка в «Избранном» (только те, о ком скаут уже знает). */
-  circlesMissing: { ru: string[]; uz: string[] };
-  /** Сегодня вместо кружка ушло письмо: кружка не было в «Избранном». */
-  circleFallback: number;
+  circlesMissing: { ru: readonly Named[]; uz: readonly Named[] };
+  /** Касания, где сегодня вместо кружка ушло письмо: кружка не было. */
+  circleFallback: readonly Named[];
   leads: LeadsPulse;
-  burnedToday: number;
-  overdue: number;
-  stale: number;
-  transfers: number;
-  contracts: number;
-  mockups: MockupsPulse;
+  /** Сгоревшие сегодня предложения: лид и чьё было. */
+  burned: readonly Named[];
+  overdue: readonly Named[];
+  /** Лиды «в работе» без движения 7+ дней. */
+  stale: readonly Named[];
+  /** Просьбы передать лид: id лида. */
+  transfers: readonly Named[];
+  contracts: readonly Named[];
+  /** Макеты, у которых акция кончается: ссылка — ref макета. */
+  ending: readonly Named[];
   firecrawlRemaining: number | null;
 };
+
+const linksOf = (items: readonly Named[], to: (id: string) => string): AttentionLink[] =>
+  items.slice(0, ATTENTION_LIST_MAX).map((x) => ({ label: x.label, href: to(x.id) }));
 
 /**
  * Что горит прямо сейчас — только то, что видно в базе. Красное — первым:
@@ -556,35 +593,54 @@ export function attentionOf(input: AttentionInput): Attention[] {
   if (input.sweep) {
     const last = input.sweep.last_ok_at ? Date.parse(input.sweep.last_ok_at) : Number.NaN;
     const minutes = Number.isFinite(last) ? Math.round((now - last) / 60_000) : null;
-    if (minutes === null || minutes > SWEEP_STALE_MIN || input.sweep.alerted) out.push({ kind: "sweep", level: "red", minutes });
+    if (minutes === null || minutes > SWEEP_STALE_MIN || input.sweep.alerted) out.push({ kind: "sweep", level: "red", minutes, links: [] });
   }
 
   if (input.autopilotTrouble && Date.parse(input.autopilotTrouble.at) >= today) {
     const pieces = input.autopilotTrouble.error.split(/;\s*/).filter(Boolean);
     const model = pieces.find((p) => isModelTroubleSays(p) || isModelTroubleSays(p.replace(/^[^:]{1,60}:\s*/, "")));
-    if (model) out.push({ kind: "model", level: "red", error: model });
-    else out.push({ kind: "autopilot", level: "red", error: input.autopilotTrouble.error });
+    if (model) out.push({ kind: "model", level: "red", error: model, links: [] });
+    else out.push({ kind: "autopilot", level: "red", error: input.autopilotTrouble.error, links: [] });
   }
 
   for (const ban of input.bans) {
-    if (ban.until > now) out.push({ kind: "ban", level: "red", account: ban.account, until: new Date(ban.until).toISOString() });
+    if (ban.until > now) {
+      out.push({
+        kind: "ban",
+        level: "red",
+        account: ban.account,
+        until: new Date(ban.until).toISOString(),
+        links: [{ label: ban.account, href: hrefTo.account(ban.key) }],
+      });
+    }
   }
 
-  if (input.leads.unowned.length) {
-    out.push({ kind: "unowned", level: "red", n: input.leads.unowned.length, first: input.leads.unowned[0].label });
+  const unowned = input.leads.unowned;
+  if (unowned.length) {
+    out.push({ kind: "unowned", level: "red", n: unowned.length, first: unowned[0].label, links: linksOf(unowned, hrefTo.lead) });
   }
-  if (input.overdue) out.push({ kind: "overdue", level: "red", n: input.overdue });
+  if (input.overdue.length) out.push({ kind: "overdue", level: "red", n: input.overdue.length, links: linksOf(input.overdue, hrefTo.task) });
 
-  if (input.circlesMissing.ru.length) out.push({ kind: "circle", level: "gold", accounts: input.circlesMissing.ru, lang: "ru" });
-  if (input.circlesMissing.uz.length) out.push({ kind: "circle", level: "gold", accounts: input.circlesMissing.uz, lang: "uz" });
-  if (input.circleFallback) out.push({ kind: "circleFallback", level: "gold", n: input.circleFallback });
-  if (input.burnedToday) out.push({ kind: "burned", level: "gold", n: input.burnedToday });
-  if (input.transfers) out.push({ kind: "transfers", level: "gold", n: input.transfers });
-  if (input.mockups.endingSoon) out.push({ kind: "ending", level: "gold", n: input.mockups.endingSoon });
-  if (input.stale) out.push({ kind: "stale", level: "gold", n: input.stale });
-  if (input.contracts && seesHqMoney(input.role)) out.push({ kind: "contracts", level: "gold", n: input.contracts });
+  for (const lang of ["ru", "uz"] as const) {
+    const missing = input.circlesMissing[lang];
+    if (missing.length) {
+      out.push({ kind: "circle", level: "gold", lang, accounts: missing.map((a) => a.label), links: linksOf(missing, hrefTo.account) });
+    }
+  }
+  if (input.circleFallback.length) {
+    out.push({ kind: "circleFallback", level: "gold", n: input.circleFallback.length, links: linksOf(input.circleFallback, hrefTo.prospect) });
+  }
+  if (input.burned.length) out.push({ kind: "burned", level: "gold", n: input.burned.length, links: linksOf(input.burned, hrefTo.lead) });
+  if (input.transfers.length) {
+    out.push({ kind: "transfers", level: "gold", n: input.transfers.length, links: linksOf(input.transfers, hrefTo.lead) });
+  }
+  if (input.ending.length) out.push({ kind: "ending", level: "gold", n: input.ending.length, links: linksOf(input.ending, hrefTo.mockup) });
+  if (input.stale.length) out.push({ kind: "stale", level: "gold", n: input.stale.length, links: linksOf(input.stale, hrefTo.lead) });
+  if (input.contracts.length && seesHqMoney(input.role)) {
+    out.push({ kind: "contracts", level: "gold", n: input.contracts.length, links: linksOf(input.contracts, hrefTo.contract) });
+  }
   if (input.firecrawlRemaining !== null && input.firecrawlRemaining < FIRECRAWL_LOW) {
-    out.push({ kind: "firecrawl", level: "gold", remaining: Math.max(0, Math.floor(input.firecrawlRemaining)) });
+    out.push({ kind: "firecrawl", level: "gold", remaining: Math.max(0, Math.floor(input.firecrawlRemaining)), links: [] });
   }
 
   return out.sort((a, b) => Number(b.level === "red") - Number(a.level === "red"));
