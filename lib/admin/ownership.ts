@@ -297,8 +297,9 @@ export async function setStatus(
   if (status === "new" && lead.assigned_staff_id) return { ok: false, reason: "failed" };
 
   // Любая смена статуса снимает пометку «бот закрыл сам» (lib/admin/lead-tidy.ts):
-  // вернули в работу — пометка больше не про этот лид.
-  const { error } = await db.from("leads").update({ status, tidy_auto_lost_at: null }).eq("id", leadId);
+  // вернули в работу — пометка больше не про этот лид. И счёт бота с нуля:
+  // статус ответил на его вопрос, а «ещё в работе» подряд оборвалось.
+  const { error } = await db.from("leads").update({ status, tidy_auto_lost_at: null, tidy_first_asked_at: null, tidy_wait_streak: 0 }).eq("id", leadId);
   if (error) return { ok: false, reason: "failed" };
 
   // Сделка закрыта в любую сторону — напоминать больше не о чем.

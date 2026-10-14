@@ -35,7 +35,7 @@ import {
 } from "@/lib/admin/hq";
 import { ACTIVE_MINUTES, QUEUE_ROLES } from "@/lib/admin/lead-queue";
 import { loadIdle } from "@/lib/admin/lead-tidy-store";
-import { stale as isStale, type IdleLead } from "@/lib/admin/lead-tidy";
+import { stale as isStale, unanswered, type IdleLead } from "@/lib/admin/lead-tidy";
 import { pendingContracts } from "@/lib/admin/pulse-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import type { Role } from "@/lib/admin/roles";
@@ -269,6 +269,9 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
   const staleLeads = idle.filter((l) => isStale(l, now));
   const stale = new Map<string, number>();
   for (const l of staleLeads) stale.set(l.ownerId, (stale.get(l.ownerId) ?? 0) + 1);
+  // Без ответа боту: бот спросил «чем кончилось», ответа нет.
+  const silent = new Map<string, number>();
+  for (const l of idle) if (unanswered(l, now)) silent.set(l.ownerId, (silent.get(l.ownerId) ?? 0) + 1);
   const nameOf = new Map(staffRows.map((s) => [s.id, s.display_name]));
   const leadLabelOf = new Map(leads.map((l) => [l.id, l.label]));
   const withWho = (label: string, who: string | null | undefined) => (who ? `${label} · ${who}` : label);
@@ -311,6 +314,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
           inWork: inWorkBy.get(s.id) ?? 0,
           burnedToday: burnedBy.get(s.id) ?? 0,
           stale: stale.get(s.id) ?? 0,
+          botSilent: silent.get(s.id) ?? 0,
           tasks,
         },
         now,
@@ -360,6 +364,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     burned: burned.map((b) => ({ id: b.lead_id, label: withWho(leadLabelOf.get(b.lead_id) ?? "—", nameOf.get(b.staff_id)) })),
     overdue: tasksNow.overdue.map((t) => ({ id: t.id, label: withWho(t.title, nameOf.get(t.assignee_id)) })),
     stale: staleLeads.map((l) => ({ id: l.id, label: withWho(l.label, nameOf.get(l.ownerId)) })),
+    botSilent: team.map((s) => ({ id: s.id, label: s.display_name, n: silent.get(s.id) ?? 0 })),
     transfers: transfers.map((t) => ({ id: t.lead_id, label: String(t.request_no ?? t.company ?? t.lead_id.slice(0, 8)) })),
     contracts: contracts.map((c) => ({ id: c.id, label: [c.number, c.client_name].filter(Boolean).join(" · ") })),
     ending: mockups

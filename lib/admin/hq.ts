@@ -357,6 +357,8 @@ export type HqPersonInput = {
   inWork: number;
   burnedToday: number;
   stale: number;
+  /** Лидов без ответа боту: спросил «чем кончилось» и ждёт (lib/admin/lead-tidy.ts). */
+  botSilent?: number;
   tasks: readonly HqTask[];
   /** Касания по дням за неделю, старший день первым (dailyCounts). */
   touchDays?: readonly number[];
@@ -378,6 +380,7 @@ export type HqPerson = {
   inWork: number;
   burnedToday: number;
   stale: number;
+  botSilent: number;
   openTasks: number;
   overdue: number;
   /** Сводка для цвета карточки. */
@@ -440,6 +443,7 @@ export function personOf(input: HqPersonInput, now: Date): HqPerson {
     inWork: input.inWork,
     burnedToday: input.burnedToday,
     stale: input.stale,
+    botSilent: input.botSilent ?? 0,
     openTasks: open.length,
     overdue,
     mood,
@@ -504,6 +508,7 @@ export type Attention = Base &
     | { kind: "burned"; n: number }
     | { kind: "overdue"; n: number }
     | { kind: "stale"; n: number }
+    | { kind: "botSilent"; name: string; n: number }
     | { kind: "transfers"; n: number }
     | { kind: "contracts"; n: number }
     | { kind: "ending"; n: number }
@@ -540,6 +545,12 @@ export const hrefTo = {
   prospect: (id: string) => `/admin/prospect?open=${id}#p-${id}`,
 };
 
+/** Больше стольких лидов без ответа боту — строка в «Требует внимания» (lib/admin/lead-tidy.ts). */
+export const BOT_SILENT_ALERT = 5;
+
+/** Лиды «в работе» этого человека — туда ведёт «без ответа боту». */
+export const ownerLeadsHref = (staffId: string) => `/admin?owner=${staffId}&status=taken`;
+
 /** Свип ходит раз в 5 минут; полчаса тишины — авария (как плашка в components/admin/sweep-banner.tsx). */
 export const SWEEP_STALE_MIN = 30;
 
@@ -569,6 +580,8 @@ export type AttentionInput = {
   overdue: readonly Named[];
   /** Лиды «в работе» без движения 7+ дней. */
   stale: readonly Named[];
+  /** У кого сколько лидов без ответа боту: id — сотрудник. */
+  botSilent?: readonly (Named & { n: number })[];
   /** Просьбы передать лид: id лида. */
   transfers: readonly Named[];
   contracts: readonly Named[];
@@ -636,6 +649,11 @@ export function attentionOf(input: AttentionInput): Attention[] {
   }
   if (input.ending.length) out.push({ kind: "ending", level: "gold", n: input.ending.length, links: linksOf(input.ending, hrefTo.mockup) });
   if (input.stale.length) out.push({ kind: "stale", level: "gold", n: input.stale.length, links: linksOf(input.stale, hrefTo.lead) });
+  for (const p of input.botSilent ?? []) {
+    if (p.n > BOT_SILENT_ALERT) {
+      out.push({ kind: "botSilent", level: "gold", name: p.label, n: p.n, links: [{ label: p.label, href: ownerLeadsHref(p.id) }] });
+    }
+  }
   if (input.contracts.length && seesHqMoney(input.role)) {
     out.push({ kind: "contracts", level: "gold", n: input.contracts.length, links: linksOf(input.contracts, hrefTo.contract) });
   }
