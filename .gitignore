@@ -15,3 +15,6 @@ next-env.d.ts
 
 # Локальная база школы Дарьи (на сервере — /var/lib/devuz/maximova)
 /.data/
+
+# Python: кэш скрипта расшифровки голосовых
+__pycache__/

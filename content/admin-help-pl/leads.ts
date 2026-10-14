@@ -138,6 +138,15 @@ export const leadsSections: Record<string, HelpEntry> = {
           "Wysyłka nie zależy od AI: Twój tekst idzie z panelu przez naszą bazę i bota prosto do Telegramu. Gdy model jest niedostępny, wysyłka działa normalnie.",
         ],
       },
+      {
+        id: "voice",
+        title: "Wiadomość głosowa → tekst w bocie",
+        body: [
+          "Klient przysłał specyfikację wiadomością głosową, a nie ma czasu jej słuchać albo tekst jest potrzebny zespołowi — prześlij wiadomość głosową [botowi studia](https://t.me/Devuz_studio_bot) na czacie prywatnym. Działa wiadomość głosowa, plik audio albo nagranie z dyktafonu jako plik (MP3, M4A, OGG). Bot od razu odpowie «🎙 Получил голосовое (4:12) — расшифровываю», a po 10–20 minutach przyśle na ten sam czat «📝 Расшифровка голосового» — tekst podzielony na akapity według pauz. Długi tekst przyjdzie w kilku wiadomościach po kolei.",
+          "Dlaczego nie od razu: głos zamienia na tekst nie nasz serwer, tylko zadanie w GitHubie, które co 10 minut sprawdza, czy są nowe wiadomości głosowe. Serwer nie jest tym obciążony — działają na nim strona, bot i kilkanaście innych stron. Tekst robi otwarty model Whisper: jest darmowy i nie zużywa płatnego modelu. Język rozpoznaje sam, rosyjski i uzbecki też, ale mowę mieszaną z dwóch języków może zapisać z błędami — liczby, ceny i nazwy sprawdzaj z nagraniem.",
+          "Działa u właściciela i kierownika; wiadomości głosowej menedżera bot nie przyjmuje. Kółko się tu nie liczy: kółko wysłane botowi to [kółko do kontaktów](#accounts-circle), bot zapyta o jego język. Nagrania większego niż 20 MB albo dłuższego niż godzina bot nie przyjmie i tak odpowie — wysyłaj w częściach. Jeśli po trzech próbach nie udało się zamienić na tekst, bot o tym napisze — prześlij wiadomość jeszcze raz.",
+        ],
+      },
     ],
   },
 
