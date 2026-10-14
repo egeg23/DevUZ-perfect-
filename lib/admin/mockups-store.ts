@@ -14,6 +14,8 @@ import type { Staff } from "@/lib/admin/session";
 import { issueProtoCode, issueShowcaseCode, liveCodesUntil } from "@/lib/proto/code-store";
 import { protoUrl } from "@/lib/proto/store";
 import { activeLock } from "@/lib/proto/lock";
+import { closesAt } from "@/lib/proto/auto-close";
+import { firstSends, inputOf } from "@/lib/proto/auto-close-read";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -31,11 +33,17 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
     // Черновики не в списке: по их ссылке открывается 404 (lib/proto/serve).
     const { data, error } = await db
       .from("protos")
-      .select("id, token, niche, locale, name, source, created_at, opens, auto, closed_at, lock:facts->>lock, lockAt:facts->>lockAt")
+      .select(
+        "id, token, niche, locale, name, source, created_at, opens, opened_at, prospect_id, auto, closed_at, auto_closed_at, lock:facts->>lock, lockAt:facts->>lockAt",
+      )
       .neq("status", "draft")
       .order("created_at", { ascending: false })
       .limit(1000);
     if (error) console.error("макеты: не прочитал прототипы", error.message);
+    // Сколько макет ещё открыт без пароля: 24 часа с первой отправки клиенту
+    // (lib/proto/auto-close.ts).
+    const sends = await firstSends((data ?? []).filter((r) => r.auto !== true && !r.closed_at).map((r) => `p:${r.id}`));
+    const now = new Date();
     for (const row of data ?? []) {
       // Собранные ботом для касаний (lib/proto/auto) — не в списке. Владелец,
       // 09.10.2026: «Убери из макетов „для касаний“… чтобы менеджеры не
@@ -57,6 +65,7 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
         liveUntil: live.protos.get(id) ?? null,
         opens: Number(row.opens ?? 0),
         lang: row.locale === "uz" ? "uz" : "ru",
+        ...openState(row, sends.get(`p:${id}`), now),
       });
     }
   }
@@ -68,6 +77,30 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
 
   // Свежие сверху. У витрины дата без часов — она встаёт после прототипов того же дня.
   return rows.sort((a, b) => b.created.localeCompare(a.created));
+}
+
+function openState(
+  row: { closed_at?: unknown; auto_closed_at?: unknown; lock?: unknown; lockAt?: unknown } & Record<string, unknown>,
+  sent: Parameters<typeof inputOf>[1],
+  now: Date,
+): Pick<MockupRow, "openUntil" | "closedAt" | "autoClosed"> {
+  const input = inputOf(
+    {
+      id: String(row.id),
+      name: String(row.name ?? ""),
+      prospect_id: (row.prospect_id as string | null) ?? null,
+      auto: row.auto === true,
+      closed_at: (row.closed_at as string | null) ?? null,
+      opened_at: (row.opened_at as string | null) ?? null,
+      created_at: String(row.created_at),
+      lock: (row.lock as string | null) ?? null,
+      lockAt: (row.lockAt as string | null) ?? null,
+    },
+    sent,
+  );
+  if (input.closedAt) return { openUntil: null, closedAt: input.closedAt, autoClosed: Boolean(row.auto_closed_at) };
+  const until = closesAt(input, now);
+  return { openUntil: until !== null && until > now.getTime() ? new Date(until).toISOString() : null, closedAt: null, autoClosed: false };
 }
 
 export type CodeResult =

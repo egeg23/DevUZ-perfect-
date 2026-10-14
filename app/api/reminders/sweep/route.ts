@@ -15,6 +15,7 @@ import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { runMockupOffers } from "@/lib/admin/mockup-offer-run";
 import { sendOfferDigest } from "@/lib/admin/mockup-offer-bot";
+import { runProtoAutoClose } from "@/lib/proto/auto-close-store";
 import { noteScanFinds, scanDatabase } from "@/lib/admin/mockup-scan-store";
 import { sendBloggerInvites, sendInviteSummary } from "@/lib/admin/blogger-invite-store";
 import { processPlaces, runDailySearches } from "@/lib/maps/store";
@@ -292,6 +293,11 @@ async function sweep(): Promise<Response> {
     await runMockupOffers(new Date()).catch((error) => console.error("акция по макету:", error));
     await noteScanFinds(new Date()).catch((error) => console.error("скан макетов, итог:", error));
     await sendOfferDigest(new Date()).catch((error) => console.error("макеты клиентов, список:", error));
+  });
+  // Макет открыт 24 часа, потом — по паролю (lib/proto/auto-close): правилом,
+  // без модели; тому, кто отправлял, — строка с кнопкой пароля.
+  after(async () => {
+    await runProtoAutoClose(new Date()).catch((error) => console.error("макеты, 24 часа:", error));
   });
   // Вечерний отчёт по сотрудникам — владельцу и руководителям, после того
   // как порция дня закрыта (lib/admin/staff-report-store).

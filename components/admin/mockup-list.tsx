@@ -19,7 +19,14 @@ import type { CodeResult } from "@/lib/admin/mockups-store";
  * только хеш. Потерялся — новый пароль, старый доживёт до своего часа.
  */
 
-export type MockupView = MockupRow & { createdText: string; liveUntilText: string | null };
+export type MockupView = MockupRow & {
+  createdText: string;
+  liveUntilText: string | null;
+  /** Открыт ещё столько часов, потом — по паролю (lib/proto/auto-close). */
+  openHours: number | null;
+  /** Закрыт паролем с этой минуты (по Ташкенту). */
+  closedAtText: string | null;
+};
 
 type Filter = "all" | "hand" | "showcase";
 
@@ -133,6 +140,10 @@ export function MockupList({ rows }: { rows: MockupView[] }) {
                         {t.made}: {row.createdText}
                       </span>
                       <span className={`rounded-full border px-2 py-0.5 ${ACCESS_TONE[row.access]}`}>{access}</span>
+                      {row.access === "open" && row.openHours ? <span className="text-gold">{t.openFor(row.openHours)}</span> : null}
+                      {row.access === "closed" && row.closedAtText ? (
+                        <span className="text-faint">{row.autoClosed ? t.closedAuto(row.closedAtText) : t.closedSince(row.closedAtText)}</span>
+                      ) : null}
                       {row.liveUntilText ? <span className="text-green">{t.liveUntil(row.liveUntilText)}</span> : null}
                       {row.opens ? <span className="text-faint">{t.opens(row.opens)}</span> : null}
                     </p>
