@@ -702,7 +702,7 @@ test("Турагентство inapp.uz: страница и приложени�
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
 
-test("Турагентство: «Минимум» 5 900 $ за 8-10 недель, «Максимум» 7 900 $ за 11-13, допы по рынку, цены в одном месте", async () => {
+test("Турагентство: «Минимум» 5 900 $ за 8-10 недель, «Максимум» 7 900 $ за 11-13, допы по рынку, наличными −10%, цены в одном месте", async () => {
   // Владелец, 14.10.2026: предварительные цены из разговора; акцию не ставим.
   const plan = await import("../scripts/protos/inapp/plan.mjs");
   const [mn, mx] = plan.TIERS;
@@ -710,11 +710,15 @@ test("Турагентство: «Минимум» 5 900 $ за 8-10 недел�
   assert.deepEqual([mx.id, mx.price, mx.weeks], ["max", 7900, [11, 13]]);
   assert.ok(plan.ADDONS.length >= 6, "допы, которые агентству реально нужны");
   for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.ru.e && a.uz.t && a.uz.e, `${a.id}: цена и описание`);
+  assert.equal(plan.CASH_OFF, 10);
   assert.equal(plan.ALL, 7900 + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
   const site = bundlePages("inapp")!;
   for (const html of [site.html, site.pages.uz]) {
     assert.match(html, /data-p="5900" data-w="8-10"/, "«Минимум» на странице");
     assert.match(html, /data-p="7900" data-w="11-13" checked/, "«Максимум» выбран по умолчанию");
     assert.match(html, /"tiers":\[\{"id":"min"[^\]]*"p":5900/, "скрипт считает от тех же цен");
+    // Владелец, 14.10.2026: наличными минус 10% от цены.
+    assert.match(html, /id="kit-cash"/, "тумблер «наличными −10%»");
+    assert.match(html, /"cash":10,/, "скрипт считает скидку за наличные от тех же 10%");
   }
 });
