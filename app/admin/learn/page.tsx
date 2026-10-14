@@ -2,10 +2,16 @@ import Link from "next/link";
 
 import { AdminShell } from "@/components/admin/shell";
 import { HelpHint } from "@/components/admin/help-link";
+import { HelpVideoManager } from "@/components/admin/help-video";
+import { helpCopy } from "@/content/admin-help";
 import { learnDict } from "@/content/admin-panel/learn";
 import { COURSES, PANEL_QUIZ, learnCopy, type LearnKey } from "@/content/learn";
+import { VIDEO_COURSE_MINUTES, VIDEO_LESSONS } from "@/content/learn/video-course";
 import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
+import { signedHelpVideoUrl } from "@/lib/admin/help-video-link";
+import { canManageHelpVideos, isVideoCourseKey, pickHelpVideo } from "@/lib/admin/help-video-rules";
+import { listHelpVideos } from "@/lib/admin/help-videos";
 import { pick } from "@/lib/admin/i18n";
 import { ROLE_BADGE, seesTeamLearning } from "@/lib/admin/roles";
 import { sectionOn } from "@/lib/admin/section-switch";
@@ -55,6 +61,14 @@ export default async function LearnPage() {
     );
 
   const members = team ? await activeTeam() : [];
+
+  // Видеокурс: ролики лежат как видео к инструкциям (course-01 …), ссылка
+  // подписанная — куски видео идут без проверки входа, права проверены здесь.
+  const courseVideos = (await listHelpVideos())
+    .filter((video) => isVideoCourseKey(video.section))
+    .map((video) => ({ ...video, src: signedHelpVideoUrl(video) }));
+  const managesVideo = canManageHelpVideos(staff.role);
+  const videoCopy = helpCopy(locale).video;
   const tests: LearnKey[] = [...COURSES.map((c) => c.key), PANEL_QUIZ];
 
   return (
@@ -120,6 +134,45 @@ export default async function LearnPage() {
           </Link>
         ))}
       </div>
+
+      <h2 className="mt-8 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-faint">
+        {t.videoTitle} <HelpHint topic={helpAnchor("/admin/learn", "video-course")} />
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.videoIntro(VIDEO_LESSONS.length, VIDEO_COURSE_MINUTES)}</p>
+      <ol className="mt-3 grid gap-3 lg:grid-cols-2">
+        {VIDEO_LESSONS.map((lesson, index) => {
+          const video = pickHelpVideo(courseVideos, lesson.key, locale);
+          return (
+            <li key={lesson.key} id={lesson.key} className="rounded-xl border border-line bg-surface px-5 py-4">
+              <p className="font-medium">
+                <span className="mr-2 font-mono text-faint">{index + 1}.</span>
+                {lesson.title[locale]}
+                <span className="ml-2 text-xs font-normal text-faint">{t.videoMinutes(lesson.minutes)}</span>
+              </p>
+              {video ? (
+                <video
+                  controls
+                  preload="none"
+                  playsInline
+                  src={video.src}
+                  className="mt-3 aspect-video w-full rounded-lg border border-line bg-black"
+                />
+              ) : (
+                <p className="mt-2 text-sm text-faint">{t.videoMissing}</p>
+              )}
+              {managesVideo ? (
+                <HelpVideoManager
+                  section={lesson.key}
+                  title={t.videoManage}
+                  lang={locale}
+                  copy={videoCopy}
+                  have={courseVideos.filter((v) => v.section === lesson.key).map((v) => ({ id: v.id, locale: v.locale }))}
+                />
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
 
       <h2 className="mt-8 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-faint">
         {t.panelTitle} <HelpHint topic={helpAnchor("/admin/learn", "panel-quiz")} />

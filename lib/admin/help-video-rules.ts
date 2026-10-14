@@ -1,3 +1,4 @@
+import { VIDEO_LESSONS } from "@/content/learn/video-course";
 import { SECTIONS, canSee, opens, type Role, type Viewer } from "@/lib/admin/roles";
 
 /**
@@ -20,9 +21,20 @@ export function isHelpVideoLocale(value: string): value is HelpVideoLocale {
 /** Только ролики: картинка к разделу — это скриншот в тексте, а не видео. */
 export const HELP_VIDEO_MIME: readonly string[] = ["video/mp4", "video/quicktime", "video/webm"];
 
-/** Раздел из меню панели или вводный ролик — и ничего больше. */
+/**
+ * Ролики видеокурса в «Обучении» (content/learn/video-course.ts) лежат там же,
+ * где видео к инструкциям, с ключом course-01 … course-13. Смотрит их тот,
+ * кому открыто «Обучение».
+ */
+export const VIDEO_COURSE_SECTION = "/admin/learn";
+
+export function isVideoCourseKey(key: string): boolean {
+  return VIDEO_LESSONS.some((lesson) => lesson.key === key);
+}
+
+/** Раздел из меню панели, вводный ролик или ролик видеокурса — и ничего больше. */
 export function isHelpVideoSection(key: string): boolean {
-  return key === HELP_VIDEO_INTRO || SECTIONS.some((section) => section.href === key);
+  return key === HELP_VIDEO_INTRO || isVideoCourseKey(key) || SECTIONS.some((section) => section.href === key);
 }
 
 /** Загружают и убирают видео владелец и руководитель: команда видео смотрит. */
@@ -33,7 +45,8 @@ export function canManageHelpVideos(role: Role): boolean {
 /** Видео раздела видит тот, кому открыт раздел (с галочками владельца, если они переданы); вводное — все. */
 export function canWatchHelpVideo(who: Role | Viewer, section: string): boolean {
   if (section === HELP_VIDEO_INTRO) return true;
-  return typeof who === "string" ? canSee(who, section) : opens(who, section);
+  const href = isVideoCourseKey(section) ? VIDEO_COURSE_SECTION : section;
+  return typeof who === "string" ? canSee(who, href) : opens(who, href);
 }
 
 /** Адрес файла — под /admin, где живёт кука сессии панели. */
