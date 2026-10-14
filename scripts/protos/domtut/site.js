@@ -24,13 +24,12 @@ if('IntersectionObserver' in window&&!REDUCED){
 }else $$('.rv').forEach(function(el){el.classList.add('in')});
 
 /* ── Прокрутка: параллакс, шапка, смена цвета, лента ЖК — одним кадром ── */
-var par=$$('[data-par]'),top=$('#top'),dock=$('#dock'),lastY=scrollY,tick=false;
+/* Шапка с языками стоит на месте всегда: при прокрутке не прячется (владелец, 14.10.2026). */
+var par=$$('[data-par]'),dock=$('#dock'),tick=false;
 function frame(){
   tick=false;
-  var y=scrollY,h=innerHeight;
+  var h=innerHeight;
   if(!REDUCED)for(var i=0;i<par.length;i++){var el=par[i],r=el.parentNode.getBoundingClientRect();if(r.bottom<-200||r.top>h+200)continue;var k=+el.getAttribute('data-par');el.style.transform='translate3d(0,'+((r.top+r.height/2-h/2)*-k).toFixed(1)+'px,0)'}
-  if(top){top.classList.toggle('hide',y>lastY+4&&y>320);if(y<lastY-4)top.classList.remove('hide')}
-  lastY=y;
   for(var j=secs.length-1;j>=0;j--){var b=secs[j].getBoundingClientRect();if(b.top<h*.5){tone(secs[j].getAttribute('data-tone'));break}}
   if(j<0)tone('sky');
 }
@@ -126,17 +125,24 @@ var start=0;try{start=+localStorage.getItem(OKEY)||0}catch(e){}
 if(!start){start=Date.now();try{localStorage.setItem(OKEY,String(start))}catch(e){}}
 var END=start+48*3600*1000;
 function left(){return END-Date.now()}
-var boxes=$$('#konstruktor input[type=checkbox]');
+var boxes=$$('#konstruktor input[data-k]');
 boxes.forEach(function(b){b.checked=!!sel[b.getAttribute('data-k')];b.addEventListener('change',function(){sel[b.getAttribute('data-k')]=b.checked;try{localStorage.setItem(KEY,JSON.stringify(sel))}catch(e){}sum()})});
-var shown=0;
+var shown=0,appBox=$('#kit-app'),cashBox=$('#kit-cash');
+try{if(sel.__app===false)appBox.checked=false;if(sel.__cash)cashBox.checked=true}catch(e){}
+[appBox,cashBox].forEach(function(b){if(b)b.addEventListener('change',function(){sel.__app=appBox.checked;sel.__cash=cashBox.checked;try{localStorage.setItem(KEY,JSON.stringify(sel))}catch(e){}sum()})});
+/* Итог: сайт и приложение по цене 48 часов (потом — обычной), допы по обычной,
+   наличными — минус 10% от всего. */
 function sum(){
-  var add=0,n=0,live=left()>0;
+  var add=0,n=0,live=left()>0,app=!appBox||appBox.checked;
   boxes.forEach(function(b){if(b.checked){add+=+b.getAttribute('data-p');n++}});
-  var total=(live?K.promo:K.base)+add;
-  $('#kit-n').textContent=n;$('#kit-add').textContent=grp(add)+' $';
-  $('#kit-was').textContent=grp(K.base+add)+' $';
+  var full=(live?K.promo:K.base)+(app?(live?K.appPromo:K.app):0)+add;
+  var off=cashBox&&cashBox.checked?Math.round(full*K.cash/100):0,total=full-off;
+  $('#kit-n').textContent=n;$('#kit-add').textContent=grp(add)+'\u00a0$';
+  $('#kit-was').textContent=grp(K.base+(app?K.app:0)+add)+'\u00a0$';
+  $('#kit-cash-v').textContent=off?'−'+grp(off)+'\u00a0$':'';
+  var ka=$('#kt-app');if(ka)ka.classList.toggle('off',!app);
   roll($('#kit-sum'),shown,total);shown=total;
-  var ds=$('#dock-sum');if(ds)ds.textContent=grp(total)+' $';
+  var ds=$('#dock-sum');if(ds)ds.textContent=grp(total)+'\u00a0$';
 }
 function roll(el,a,b){if(REDUCED||a===b||!a){el.textContent=grp(b)+' $';return}var t0=0;function f(now){if(!t0)t0=now;var k=Math.min((now-t0)/500,1),e=1-Math.pow(1-k,3);el.textContent=grp(a+(b-a)*e)+' $';if(k<1)requestAnimationFrame(f)}requestAnimationFrame(f)}
 sum();
@@ -152,6 +158,8 @@ function clock(){
 clock();
 $('#kit-copy').addEventListener('click',function(){
   var lines=[K.head,'• '+K.baseName+': '+grp(K.promo)+' $ ('+grp(K.base)+' $)'];
+  if(!appBox||appBox.checked)lines.push('• '+K.appName+': '+grp(K.appPromo)+' $ ('+grp(K.app)+' $)');
+  if(cashBox&&cashBox.checked)lines.push('• '+K.cashName+': −'+K.cash+'%');
   K.items.forEach(function(a){if(sel[a.id])lines.push('• '+a.t+': '+grp(a.p)+' $')});
   lines.push(K.total+': '+$('#kit-sum').textContent);
   var txt=lines.join('\n'),b=this;

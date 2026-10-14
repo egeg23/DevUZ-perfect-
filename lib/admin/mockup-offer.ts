@@ -48,16 +48,19 @@ export const PROMO = {
  * DomTut на макете «1 000 $ вместо 4 800 $» за сайт и приложение, и бот
  * должен написать клиенту те же цифры, что на макете, а не общие PROMO.
  *
- * `{ price, regular, what: { ru, uz } }`: одна цена вместо двух общих. Не
- * сходится (не целые, акция не дешевле обычной, в названии цифры) — макет
- * идёт по общим ценам, как будто своей нет.
+ * `{ price, regular, what: { ru, uz } }`: одна цена вместо двух общих. Ещё
+ * строки — `more: [{ price, regular, what }]` (до трёх): у DomTut с 14.10.2026
+ * сайт 1 000 $ вместо 4 800 $ и приложение для iPhone 3 500 $ вместо 8 750 $.
+ * `cash` — скидка за оплату наличными в процентах от итога (1-50). Не
+ * сходится (не целые, акция не дешевле обычной, в названии цифры) — главная
+ * строка: макет идёт по общим ценам; лишняя строка или скидка — пропускается.
  */
-export type OwnPromo = { price: number; regular: number; what: { ru: string; uz: string } };
+export type OwnLine = { price: number; regular: number; what: { ru: string; uz: string } };
+export type OwnPromo = OwnLine & { more: OwnLine[]; cash: number };
 
 const OWN_WHAT = { ru: "сайт по этому макету", uz: "shu maket bo‘yicha sayt" };
 
-export function ownPromo(facts: unknown): OwnPromo | null {
-  const raw = facts && typeof facts === "object" ? (facts as { promo?: unknown }).promo : null;
+function ownLine(raw: unknown, fallback: { ru: string; uz: string } | null): OwnLine | null {
   if (!raw || typeof raw !== "object") return null;
   const p = raw as { price?: unknown; regular?: unknown; what?: unknown };
   const price = Number(p.price);
@@ -65,16 +68,39 @@ export function ownPromo(facts: unknown): OwnPromo | null {
   if (!Number.isInteger(price) || !Number.isInteger(regular) || price <= 0 || regular <= price) return null;
   const what = (p.what && typeof p.what === "object" ? p.what : {}) as { ru?: unknown; uz?: unknown };
   // Цифры в названии сломали бы проверку напоминаний: числа там — только цены и срок.
-  const text = (v: unknown, fallback: string) =>
-    typeof v === "string" && v.trim() && v.trim().length <= 120 && !/\d/.test(v) ? v.trim() : fallback;
-  return { price, regular, what: { ru: text(what.ru, OWN_WHAT.ru), uz: text(what.uz, OWN_WHAT.uz) } };
+  const ok = (v: unknown) => typeof v === "string" && v.trim() && v.trim().length <= 120 && !/\d/.test(v);
+  if (!fallback && !(ok(what.ru) && ok(what.uz))) return null;
+  return { price, regular, what: { ru: ok(what.ru) ? String(what.ru).trim() : fallback!.ru, uz: ok(what.uz) ? String(what.uz).trim() : fallback!.uz } };
+}
+
+export function ownPromo(facts: unknown): OwnPromo | null {
+  const raw = facts && typeof facts === "object" ? (facts as { promo?: unknown }).promo : null;
+  const main = ownLine(raw, OWN_WHAT);
+  if (!main) return null;
+  const p = raw as { more?: unknown; cash?: unknown };
+  const more = (Array.isArray(p.more) ? p.more : []).map((x) => ownLine(x, null)).filter((x): x is OwnLine => !!x).slice(0, 3);
+  const cash = Number(p.cash);
+  return { ...main, more, cash: Number.isInteger(cash) && cash >= 1 && cash <= 50 ? cash : 0 };
 }
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** «сайт и приложение — 1000 $ вместо 4800 $» — для карточек команде. */
+/** Все строки своей цены: «сайт по этому макету — 1000 $ вместо 4800 $». */
+export function ownLines(own: OwnPromo, lang: OfferLang): string[] {
+  return [own, ...own.more].map((x) =>
+    lang === "uz" ? `${x.what.uz} — ${x.price} $ (odatda ${x.regular} $)` : `${x.what.ru} — ${x.price} $ вместо ${x.regular} $`,
+  );
+}
+
+/** Скидка за наличные — строкой, если она есть. */
+export function cashLine(own: OwnPromo, lang: OfferLang): string | null {
+  if (!own.cash) return null;
+  return lang === "uz" ? `Naqd to‘lovda jamidan yana ${own.cash}% chegirma.` : `При оплате наличными — ещё минус ${own.cash}% от итога.`;
+}
+
+/** Для карточек команде: все строки через точку с запятой и наличные. */
 export function ownPromoLine(own: OwnPromo): string {
-  return `${own.what.ru} — ${own.price} $ вместо ${own.regular} $`;
+  return ownLines(own, "ru").join("; ") + (own.cash ? `; наличными −${own.cash}%` : "");
 }
 
 /** Условия — пауза после макета: сначала человек открывает ссылку. */
@@ -256,12 +282,14 @@ export function announceText(lang: OfferLang, expiresAt: string, own: OwnPromo |
     return lang === "uz"
       ? [
           `Maket bo‘yicha maxsus taklif — ${OFFER_HOURS} soat, Toshkent vaqti bilan ${until} gacha:`,
-          `• ${own.what.uz} — ${own.price} $ (odatda ${own.regular} $).`,
+          ...ownLines(own, "uz").map((x) => `• ${x}.`),
+          ...(own.cash ? [`• ${cashLine(own, "uz")}`] : []),
           `Shu muddatda shartnoma imzolasak, narx shunday qoladi. Keyin odatiy narx amal qiladi.`,
         ].join("\n")
       : [
           `Спецусловия по макету — ${OFFER_HOURS} часа, до ${until} по Ташкенту:`,
-          `• ${own.what.ru} — ${own.price} $ вместо ${own.regular} $.`,
+          ...ownLines(own, "ru").map((x) => `• ${x}.`),
+          ...(own.cash ? [`• ${cashLine(own, "ru")}`] : []),
           `Если подпишем договор до этого времени, цена останется такой. Потом — обычная цена.`,
         ].join("\n");
   }
@@ -292,12 +320,12 @@ export function fallbackReminder(kind: ReminderKind, lang: OfferLang, expiresAt:
   if (own) {
     if (lang === "uz") {
       return kind === "final"
-        ? `Maxsus taklif tugashiga ${left} qoldi (${until} gacha): ${own.what.uz} — ${own.price} $ (odatda ${own.regular} $). Keyin odatiy narx. Boshlaymizmi?`
-        : `Eslatma: maket bo‘yicha maxsus taklif tugashiga ${left} qoldi (${until} gacha). ${cap(own.what.uz)} — ${own.price} $ (odatda ${own.regular} $). Savollar bo‘lsa, yozing.`;
+        ? `Maxsus taklif tugashiga ${left} qoldi (${until} gacha): ${ownLines(own, "uz").join("; ")}. Keyin odatiy narx. Boshlaymizmi?`
+        : `Eslatma: maket bo‘yicha maxsus taklif tugashiga ${left} qoldi (${until} gacha). ${cap(ownLines(own, "uz").join("; "))}. Savollar bo‘lsa, yozing.`;
     }
     return kind === "final"
-      ? `До конца спецусловий осталось ${left} (до ${until}): ${own.what.ru} — ${own.price} $ вместо ${own.regular} $. Потом — обычная цена. Начинаем?`
-      : `Напоминаем: до конца спецусловий по макету осталось ${left} (до ${until}). ${cap(own.what.ru)} — ${own.price} $ вместо ${own.regular} $. Если есть вопросы — пишите.`;
+      ? `До конца спецусловий осталось ${left} (до ${until}): ${ownLines(own, "ru").join("; ")}. Потом — обычная цена. Начинаем?`
+      : `Напоминаем: до конца спецусловий по макету осталось ${left} (до ${until}). ${cap(ownLines(own, "ru").join("; "))}. Если есть вопросы — пишите.`;
   }
   const l = PROMO.landing;
   const c = PROMO.corporate;
@@ -319,7 +347,7 @@ export function allowedNumbers(expiresAt: string, now: Date, lang: OfferLang, ow
   };
   add(
     own
-      ? `${own.price} ${own.regular} ${OFFER_HOURS}`
+      ? `${[own, ...own.more].map((x) => `${x.price} ${x.regular}`).join(" ")} ${own.cash} ${OFFER_HOURS}`
       : `${PROMO.landing.price} ${PROMO.landing.regular} ${PROMO.landing.addons} ${PROMO.corporate.price} ${PROMO.corporate.regular} ${OFFER_HOURS}`,
   );
   add(untilText(expiresAt));
@@ -369,7 +397,7 @@ export function reminderPrompt(
     own ? `Мы прислали ему макет.` : `Мы прислали ему макет главной страницы его сайта.`,
     `Спецусловия действуют до ${untilText(expiresAt)} по Ташкенту, осталось ${leftText(expiresAt, now, lang)}.`,
     ...(own
-      ? [`${cap(own.what.ru)} — ${own.price} $ вместо ${own.regular} $.`, `После срока — обычная цена.`]
+      ? [...ownLines(own, "ru").map((x) => `${cap(x)}.`), ...(own.cash ? [cashLine(own, "ru")!] : []), `После срока — обычная цена.`]
       : [
           `Лендинг по макету со всем функционалом и ${PROMO.landing.addons} допами на выбор — ${PROMO.landing.price} $ вместо ${PROMO.landing.regular} $.`,
           `Полноразмерный корпоративный сайт — ${PROMO.corporate.price} $ вместо ${PROMO.corporate.regular} $.`,

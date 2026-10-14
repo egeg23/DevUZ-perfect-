@@ -1,33 +1,53 @@
-// Конструктор цены DomTut: «сайт + приложение» и допы тумблерами.
+// Конструктор цены DomTut: сайт, приложение для iOS и допы тумблерами.
 //
 // Владелец, 14.10.2026: «Сделай конструктор тарифов, цены по середине рынка.
 // Стоимость для клиента без допов — 1 000 $ вместо 4 800 $, предложение на 48
-// часов. Поставь в допы то, что клиенту реально будет нужно».
+// часов. Поставь в допы то, что клиенту реально будет нужно». И в тот же
+// день: «Цена за сайт 1000$, оставляем. Цена за приложение под iOS со скидкой
+// 60% - 3500$ будет стоить. А если оплата наличными - скидка 10%».
 //
-// 4 800 $ — обычная цена базового пакета: середина рынка Ташкента для
-// портала с приложением (docs/research/domtut.md, раздел «Цены»): приложение
-// iOS и Android у Innobek от 45 млн сум, сайт-каталог у самих Webnow от 17,5
-// млн, платформа с кабинетом у UzNeo от 40-50 млн за один сайт. По акции 48
-// часов — 1 000 $ за тот же пакет; допы по обычной цене, они честно видны.
+// Сайт — 1 000 $ вместо 4 800 $, приложение для iPhone — 3 500 $ вместо
+// 8 750 $ (скидка 60%), обе цены по предложению на 48 часов. Оплата
+// наличными — минус 10% от итога. Допы — по обычной цене, без скидки 48
+// часов. Рынок — docs/research/domtut.md, раздел «Цены»: приложение у
+// Innobek от 45 млн сум, с оплатой и интеграциями от 90 млн.
 //
 // Допы — то, чего у DomTut нет, а у конкурентов уже есть (Urbo, Uysot, Joymee,
 // Krisha): сохранённый поиск и пуши, вход по SMS, запись на показ с
 // календарём, CRM, оплата размещения, Telegram-бот, кабинет застройщика,
-// оценка квартиры, поддержка. Цены — от рыночных ставок того же раздела.
-// Держит tests/proto-bundles.test.ts.
+// оценка квартиры, поддержка. Держит tests/proto-bundles.test.ts.
 
+/** Сайт: цена оставлена владельцем. */
 export const BASE = {
   price: 4800,
   promo: 1000,
   ru: {
-    t: "Сайт и приложение для iPhone и Android",
-    d: "Новый сайт: главная, каталог ЖК с фильтрами, страница ЖК, карта, ипотека, статистика, бесплатный подбор. Приложение для iPhone и Android на вашей базе: всё то же плюс избранное, сравнение, запись на показ и профиль. Русский и узбекский, публикация в App Store и Google Play.",
+    t: "Сайт",
+    d: "Главная, каталог ЖК с фильтрами, страница ЖК, карта, ипотека, статистика цен по районам, бесплатный подбор. Русский и узбекский, управление в панели, сначала под телефон.",
   },
   uz: {
-    t: "iPhone va Android uchun sayt va ilova",
-    d: "Yangi sayt: bosh sahifa, filtrli TJM katalogi, TJM sahifasi, xarita, ipoteka, statistika, bepul tanlov. Bazangizdagi iPhone va Android ilovasi: shularning hammasi, ustiga sevimlilar, solishtirish, ko‘rishga yozilish va profil. Rus va o‘zbek tillari, App Store va Google Play’ga joylash.",
+    t: "Sayt",
+    d: "Bosh sahifa, filtrli TJM katalogi, TJM sahifasi, xarita, ipoteka, tumanlar bo‘yicha narx statistikasi, bepul tanlov. Rus va o‘zbek tillari, paneldan boshqaruv, avvalo telefon uchun.",
   },
 };
+
+/** Приложение для iPhone: скидка 60% по предложению на 48 часов. */
+export const APP = {
+  price: 8750,
+  promo: 3500,
+  off: 60,
+  ru: {
+    t: "Приложение для iPhone (iOS)",
+    d: "Новостройки и фильтры, карточка ЖК, схема планировки, запись на показ, бесплатный подбор, ипотека, карта, избранное и сравнение, уведомления, профиль. На вашей базе DomTut, публикация в App Store.",
+  },
+  uz: {
+    t: "iPhone (iOS) uchun ilova",
+    d: "Yangi binolar va filtrlar, TJM kartochkasi, reja sxemasi, ko‘rishga yozilish, bepul tanlov, ipoteka, xarita, sevimlilar va solishtirish, bildirishnomalar, profil. DomTut bazangizda, App Store’ga joylash.",
+  },
+};
+
+/** Оплата наличными — минус 10% от итога. */
+export const CASH_OFF = 10;
 
 /* why — чем доп полезен DomTut; who — у кого из конкурентов это уже есть. */
 export const ADDONS = [
@@ -78,4 +98,4 @@ export const ADDONS = [
   },
 ];
 
-export const ALL = BASE.price + ADDONS.reduce((s, a) => s + a.price, 0);
+export const ALL = BASE.price + APP.price + ADDONS.reduce((s, a) => s + a.price, 0);

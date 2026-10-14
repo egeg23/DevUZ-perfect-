@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
 import { UI } from "./ui.mjs";
-import { ADDONS, ALL, BASE as KIT } from "./plan.mjs";
+import { ADDONS, ALL, APP, BASE as KIT, CASH_OFF } from "./plan.mjs";
 
 /*
  * Макет DomTut (domtut.uz): портал новостроек Ташкента. Два варианта в одном
@@ -9,7 +9,8 @@ import { ADDONS, ALL, BASE as KIT } from "./plan.mjs";
  *  - сайт (`""`, `uz`): промо DevUz, влёт камеры в сердце их знака, первый
  *    экран с параллаксом и поиском на жидком стекле, путь покупателя по
  *    прокрутке, бенто, новостройки, цены по районам, приложение в айфоне,
- *    предложение DevUz с конструктором 4 800 $ → 1 000 $ на 48 часов;
+ *    предложение DevUz с конструктором: сайт 1 000 $ вместо 4 800 $,
+ *    приложение для iPhone 3 500 $ вместо 8 750 $ (48 часов), наличными −10%;
  *  - приложение (`app`, `uz/app`): на телефоне на весь экран, на ПК — айфон
  *    по центру; на сайте оно же в нарисованном айфоне (?embed=1).
  * Всё о компании — с domtut.uz, 14.10.2026 (data.mjs). Исследование и
@@ -148,11 +149,11 @@ function appPage(l) {
     [t("Человек возвращается сам", "Odam o‘zi qaytadi"), t("Избранное, сравнение и уведомления о новых ЖК и снижении цены.", "Sevimlilar, solishtirish va yangi TJM hamda narx tushishi haqida bildirishnomalar.")],
     [t("Ваши данные", "Sizning ma’lumotlaringiz"), t("Цены по районам и бесплатный подбор, которые уже есть на domtut.uz.", "domtut.uz’da allaqachon bor tuman narxlari va bepul tanlov.")],
   ];
-  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#f3f6fb"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><title>${t("Приложение DomTut · макет DevUz Studio", "DomTut ilovasi · DevUz Studio maketi")}</title><meta name="description" content="${t("Макет приложения DomTut для iPhone и Android: новостройки Ташкента, карта, ипотека, запись на показ.", "DomTut ilovasi maketi: Toshkent yangi binolari, xarita, ipoteka, ko‘rishga yozilish.")}"><link rel="icon" type="image/png" href="${IMG}/icon-192.png"><link rel="apple-touch-icon" href="${IMG}/apple-180.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${FONTS}">@@A@@</head><body>
+  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#f3f6fb"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><title>${t("Приложение DomTut · макет DevUz Studio", "DomTut ilovasi · DevUz Studio maketi")}</title><meta name="description" content="${t("Макет приложения DomTut для iPhone: новостройки Ташкента, карта, ипотека, запись на показ.", "DomTut ilovasi maketi: Toshkent yangi binolari, xarita, ipoteka, ko‘rishga yozilish.")}"><link rel="icon" type="image/png" href="${IMG}/icon-192.png"><link rel="apple-touch-icon" href="${IMG}/apple-180.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${FONTS}">@@A@@</head><body>
 <div class="stage">
 <aside class="side l">
 <div class="brand">${logo("", "DomTut")}</div>
-<h1>${t("Новое приложение DomTut для iPhone и Android", "iPhone va Android uchun yangi DomTut ilovasi")}</h1>
+<h1>${t("Новое приложение DomTut для iPhone", "iPhone uchun yangi DomTut ilovasi")}</h1>
 <p>${t("Макет от DevUz Studio. Всё нажимается: найдите ЖК, сравните цену с районом, посчитайте ипотеку и запишитесь на показ.", "DevUz Studio maketi. Hammasi bosiladi: TJM toping, narxni tuman bilan solishtiring, ipotekani hisoblang va ko‘rishga yoziling.")}</p>
 <div class="jump">${jump.map(([k, n]) => `<button type="button" data-jump="${k}">${n}</button>`).join("")}</div>
 <a class="back-site" href="${href(l)}#prilozhenie">${ic("back")}${t("К сайту", "Saytga")}</a>
@@ -220,7 +221,7 @@ function heroBlock(l) {
 <div class="wrap hero-in">
 <p class="kicker light"><i></i>${t("Единый портал новостроек Ташкента", "Toshkent yangi binolarining yagona portali")}</p>
 <h1 class="h-title">${t("Ваш дом <em>тут</em>", "Uyingiz <em>shu yerda</em>")}</h1>
-<p class="lead">${t("Все новостройки Ташкента с ценами за м², ипотекой и рассрочкой. Специалист DomTut бесплатно подберёт квартиру. Теперь и в приложении для iPhone и Android.", "Toshkentning barcha yangi binolari: m² narxi, ipoteka va muddatli to‘lov bilan. DomTut mutaxassisi kvartirani bepul tanlab beradi. Endi iPhone va Android ilovasida ham.")}</p>
+<p class="lead">${t("Все новостройки Ташкента с ценами за м², ипотекой и рассрочкой. Специалист DomTut бесплатно подберёт квартиру. Теперь и в приложении для iPhone.", "Toshkentning barcha yangi binolari: m² narxi, ipoteka va muddatli to‘lov bilan. DomTut mutaxassisi kvartirani bepul tanlab beradi. Endi iPhone ilovasida ham.")}</p>
 <form class="find glass" id="find" autocomplete="off">
 <div class="f-tabs" role="tablist"><button type="button" class="on" data-ft="buy">${t("Купить", "Sotib olish")}</button><button type="button" data-ft="new">${t("Новостройки", "Yangi binolar")}</button><button type="button" data-ft="rent">${t("Снять", "Ijaraga olish")}</button></div>
 <div class="f-row">
@@ -321,7 +322,7 @@ function appBlock(l) {
 ${head(t("Приложение DomTut", "DomTut ilovasi"), t("Пощупайте приложение прямо здесь", "Ilovani shu yerda sinab ko‘ring"), t("Это не картинка: внутри айфона работает макет приложения. Откройте ЖК, сравните, посчитайте ипотеку и дойдите до записи на показ.", "Bu rasm emas: iPhone ichida ilova maketi ishlaydi. TJMni oching, solishtiring, ipotekani hisoblang va ko‘rishga yozilishgacha boring."))}
 <div class="ap-jump">${jump.map(([k, i, n]) => `<button type="button" data-jump="${k}">${ic(i)}<span>${n}</span></button>`).join("")}</div>
 <div class="ap-act"><a class="btn btn-pri shim" id="ap-full" href="${href(l, "app")}" data-full>${ic("full")}<span>${t("Во весь экран", "To‘liq ekranda")}</span></a><span class="ap-note">${t("На телефоне откроется на весь экран, как настоящее приложение.", "Telefonda haqiqiy ilova kabi to‘liq ekranda ochiladi.")}</span></div>
-<div class="store-row"><span class="store">${ic("app")}<span><small>${t("сейчас", "hozir")}</small>Google Play · 4,1 ★</span></span><span class="store new">${ic("app")}<span><small>${t("будет", "bo‘ladi")}</small>App Store + Google Play</span></span></div>
+<div class="store-row"><span class="store">${ic("app")}<span><small>${t("сейчас", "hozir")}</small>Google Play · 4,1 ★</span></span><span class="store new">${ic("app")}<span><small>${t("будет", "bo‘ladi")}</small>App Store · iPhone</span></span></div>
 <p class="src">${t("Нынешнее приложение DomTut в Google Play: 4,1 ★, 19 отзывов, обновлено 31.01.2024. Для iPhone приложения нет.", "Hozirgi DomTut ilovasi Google Play’da: 4,1 ★, 19 ta sharh, 31.01.2024 da yangilangan. iPhone uchun ilova yo‘q.")}</p>
 </div>
 <div class="ap-dev" id="ap-dev">
@@ -360,20 +361,23 @@ ${head(ours(l), t("Почему приложение нужно сейчас", "
 
 <div class="kit" id="konstruktor">
 <div class="kit-list">
-<div class="kit-base"><div><span class="kb-tag">${t("Базовый пакет", "Asosiy paket")}</span><b>${KIT[l].t}</b><p>${KIT[l].d}</p></div><div class="kb-p"><s class="num">${usd(KIT.price)}</s><b class="num">${usd(KIT.promo)}</b><small>${t("48 часов", "48 soat")}</small></div></div>
+<div class="kit-base"><div><span class="kb-tag">${t("Входит всегда", "Har doim kiradi")}</span><b>${KIT[l].t}</b><p>${KIT[l].d}</p></div><div class="kb-p"><s class="num">${usd(KIT.price)}</s><b class="num">${usd(KIT.promo)}</b><small>${t("48 часов", "48 soat")}</small></div></div>
+<label class="kit-base kit-app"><input type="checkbox" id="kit-app" checked><div><span class="kb-tag"><span class="sw" aria-hidden="true"></span>${t("Приложение", "Ilova")}</span><b>${APP[l].t}</b><p>${APP[l].d}</p></div><div class="kb-p"><s class="num">${usd(APP.price)}</s><b class="num">${usd(APP.promo)}</b><small>${t(`скидка ${APP.off}% · 48 часов`, `${APP.off}% chegirma · 48 soat`)}</small></div></label>
 <h3 class="kit-g">${t("Допы: включайте то, что нужно", "Qo‘shimchalar: keraklisini yoqing")}</h3>
 ${ADDONS.map(row).join("")}
 </div>
 <div class="kit-side">
 <div class="kit-total beam" id="kit-total">
 <div class="timer" id="timer"><span>${t("Предложение действует", "Taklif amal qiladi")}</span><b class="num" id="tm">48:00:00</b></div>
-<div class="kt-line"><span>${t("Сайт и приложение", "Sayt va ilova")}</span><span class="num"><s>${usd(KIT.price)}</s> ${usd(KIT.promo)}</span></div>
+<div class="kt-line"><span>${t("Сайт", "Sayt")}</span><span class="num"><s>${usd(KIT.price)}</s> ${usd(KIT.promo)}</span></div>
+<div class="kt-line" id="kt-app"><span>${t("Приложение для iPhone", "iPhone uchun ilova")}</span><span class="num"><s>${usd(APP.price)}</s> ${usd(APP.promo)}</span></div>
 <div class="kt-line"><span>${t("Допы", "Qo‘shimchalar")} · <span id="kit-n">0</span></span><span class="num" id="kit-add">0 $</span></div>
-<div class="kt-sum"><small>${t("Итого по предложению", "Taklif bo‘yicha jami")}</small><b class="num" id="kit-sum">${usd(KIT.promo)}</b><small class="kt-was">${t("Обычная цена", "Odatiy narx")}: <span class="num" id="kit-was">${usd(KIT.price)}</span></small></div>
+<label class="kt-cash"><input type="checkbox" id="kit-cash"><span class="sw" aria-hidden="true"></span><span>${t(`Оплата наличными: минус ${CASH_OFF}%`, `Naqd to‘lov: ${CASH_OFF}% chegirma`)}</span><b class="num" id="kit-cash-v"></b></label>
+<div class="kt-sum"><small>${t("Итого по предложению", "Taklif bo‘yicha jami")}</small><b class="num" id="kit-sum">${usd(KIT.promo + APP.promo)}</b><small class="kt-was">${t("Обычная цена", "Odatiy narx")}: <span class="num" id="kit-was">${usd(KIT.price + APP.price)}</span></small></div>
 <a class="btn btn-white" id="kit-go" href="https://t.me/Devuz_studio_bot?start=domtut">${ic("tg")}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 <button type="button" class="copy" id="kit-copy">${t("Скопировать состав", "Tarkibni nusxalash")}</button>
 </div>
-<p class="src">${t(`Сайт и приложение без допов: 1 000 $ вместо 4 800 $, если договор подписан в течение 48 часов после того, как макет пришёл вам. Потом цена обычная. Допы по обычной цене, со всеми допами ${usd(ALL)} без предложения. 4 800 $: середина рынка Ташкента для портала с приложением: у студий приложение для iPhone и Android стоит от 45 млн сум, сайт-каталог от 17,5 млн.`, `Qo‘shimchalarsiz sayt va ilova: maket sizga kelganidan keyin 48 soat ichida shartnoma imzolansa, 4 800 $ o‘rniga 1 000 $. Keyin narx odatiy. Qo‘shimchalar odatiy narxda, barchasi bilan taklifsiz ${usd(ALL)}. 4 800 $: ilovali portal uchun Toshkent bozorining o‘rtasi: studiyalarda iPhone va Android ilovasi 45 mln so‘mdan, sayt-katalog 17,5 mln dan.`)}</p>
+<p class="src">${t(`Сайт: 1 000 $ вместо 4 800 $. Приложение для iPhone: 3 500 $ вместо 8 750 $, скидка 60%. Обе цены действуют, если договор подписан в течение 48 часов после того, как макет пришёл вам, потом цены обычные. Оплата наличными: ещё минус ${CASH_OFF}% от итога. Допы по обычной цене, со всеми допами без предложения ${usd(ALL)}. Для сравнения: приложение у студий Ташкента стоит от 45 млн сум, с оплатой и интеграциями от 90 млн.`, `Sayt: 4 800 $ o‘rniga 1 000 $. iPhone uchun ilova: 8 750 $ o‘rniga 3 500 $, 60% chegirma. Ikkala narx maket sizga kelganidan keyin 48 soat ichida shartnoma imzolansa amal qiladi, keyin narxlar odatiy. Naqd to‘lov: jamidan yana ${CASH_OFF}% chegirma. Qo‘shimchalar odatiy narxda, barchasi bilan taklifsiz ${usd(ALL)}. Taqqoslash uchun: Toshkent studiyalarida ilova 45 mln so‘mdan, to‘lov va integratsiyalar bilan 90 mln dan.`)}</p>
 </div>
 </div>
 </div></section>`;
@@ -383,7 +387,7 @@ function shell(l, body) {
   const t = T(l);
   const other = l === "ru" ? "uz" : "ru";
   const nav = [["#novostroyki", t("Новостройки", "Yangi binolar")], ["#ceny", t("Цены", "Narxlar")], ["#prilozhenie", t("Приложение", "Ilova")], ["#predlozhenie", t("Предложение", "Taklif")]];
-  const kit = { base: KIT.price, promo: KIT.promo, lang: l, items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price })), copied: t("Скопировано", "Nusxalandi"), head: t("Состав сайта и приложения DomTut из конструктора:", "Konstruktordan DomTut sayti va ilovasi tarkibi:"), baseName: KIT[l].t, total: t("Итого по предложению", "Taklif bo‘yicha jami"), ended: t("Срок предложения прошёл", "Taklif muddati tugadi"), d: t("д", "k") };
+  const kit = { base: KIT.price, promo: KIT.promo, app: APP.price, appPromo: APP.promo, appName: APP[l].t, cash: CASH_OFF, cashName: t("Оплата наличными", "Naqd to‘lov"), lang: l, items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price })), copied: t("Скопировано", "Nusxalandi"), head: t("Состав сайта и приложения DomTut из конструктора:", "Konstruktordan DomTut sayti va ilovasi tarkibi:"), baseName: KIT[l].t, total: t("Итого по предложению", "Taklif bo‘yicha jami"), ended: t("Срок предложения прошёл", "Taklif muddati tugadi"), d: t("д", "k") };
   return `<!doctype html>
 <html lang="${l}">
 <head>
@@ -426,7 +430,7 @@ ${body}
 </div>
 <div class="rights"><span>${t("Это макет: так могут выглядеть новый сайт и приложение DomTut. ЖК, цены, статистика, рендеры и контакты взяты с domtut.uz 14.10.2026. Блоки с пометкой «Предложение DevUz Studio» придумали мы. Откуда данные и снимки, сказано рядом с блоками.", "Bu maket: yangi DomTut sayti va ilovasi shunday ko‘rinishi mumkin. TJMlar, narxlar, statistika, renderlar va kontaktlar domtut.uz’dan 14.10.2026 da olingan. «DevUz Studio taklifi» belgili bloklarni biz o‘ylab topdik. Ma’lumot va suratlar qayerdan, bloklar yonida aytilgan.")}</span><span>${t("Макет принадлежит DevUz Studio. Использовать его можно только по договору:", "Maket DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin:")} <a href="${TERMS(l)}">${t("условия использования", "foydalanish shartlari")}</a></span></div>
 </div></footer>
-<div class="dock glass" id="dock"><a class="btn btn-pri" href="#prilozhenie" data-jump="home">${ic("app")}<span>${t("Открыть приложение", "Ilovani ochish")}</span></a><a class="btn btn-ghost dock-k" href="#konstruktor" aria-label="${t("Цена", "Narx")}"><b class="num" id="dock-sum">${usd(KIT.promo)}</b></a></div>
+<div class="dock glass" id="dock"><a class="btn btn-pri" href="#prilozhenie" data-jump="home">${ic("app")}<span>${t("Открыть приложение", "Ilovani ochish")}</span></a><a class="btn btn-ghost dock-k" href="#konstruktor" aria-label="${t("Цена", "Narx")}"><b class="num" id="dock-sum">${usd(KIT.promo + APP.promo)}</b></a></div>
 <script type="application/json" id="kit-data">${json(kit)}</script>
 <script>
 ${INTRO}</script>

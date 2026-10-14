@@ -630,17 +630,23 @@ test("DomTut: сайт и приложение на ru и uz — условия,
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
 
-test("DomTut: конструктор — сайт и приложение 4 800 $, по предложению 48 часов 1 000 $, допы видны честно", async () => {
-  // Владелец, 14.10.2026: «Стоимость для клиента без допов — 1 000 $ вместо 4 800 $, предложение на 48 часов».
+test("DomTut: конструктор — сайт 1 000 $ вместо 4 800 $, приложение для iPhone 3 500 $ (−60%), наличными −10%", async () => {
+  // Владелец, 14.10.2026: «Цена за сайт 1000$, оставляем. Цена за приложение под iOS со скидкой 60% - 3500$ будет стоить. А если оплата наличными - скидка 10%».
   const plan = await import("../scripts/protos/domtut/plan.mjs");
   assert.equal(plan.BASE.price, 4800);
   assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.APP.promo, 3500);
+  assert.equal(plan.APP.off, 60);
+  assert.equal(Math.round(plan.APP.price * (1 - plan.APP.off / 100)), plan.APP.promo, "3 500 $ — это и есть минус 60%");
+  assert.equal(plan.CASH_OFF, 10);
   assert.ok(plan.ADDONS.length >= 6, "допы, которые клиенту реально нужны");
   for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.uz.t && a.ru.who && a.uz.who, `${a.id}: цена и откуда доп`);
-  assert.equal(plan.ALL, 4800 + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
+  assert.equal(plan.ALL, 4800 + plan.APP.price + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
   const site = bundlePages("domtut")!;
   for (const html of [site.html, site.pages.uz]) {
     assert.match(html, /<s class="num">4 800 \$<\/s><b class="num">1 000 \$<\/b>/, "на макете 1 000 $ вместо 4 800 $ крупно");
-    assert.match(html, /"base":4800,"promo":1000/, "скрипт считает от тех же цен");
+    assert.match(html, /<s class="num">8\u202f750\u00a0\$<\/s><b class="num">3\u202f500\u00a0\$<\/b>/, "приложение: 3 500 $ вместо 8 750 $");
+    assert.match(html, /"base":4800,"promo":1000,"app":8750,"appPromo":3500,"appName":"[^"]+","cash":10/, "скрипт считает от тех же цен");
+    assert.match(html, /id="kit-cash"/, "тумблер «наличными −10%»");
   }
 });

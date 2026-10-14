@@ -75,6 +75,12 @@ img{display:block;max-width:100%}
 .v{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:0 16px calc(env(safe-area-inset-bottom) + 112px);overscroll-behavior:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:var(--bg);will-change:transform;contain:layout paint}
 .v::-webkit-scrollbar{display:none}
 .v.no-tabs{padding-bottom:calc(env(safe-area-inset-bottom) + 112px)}
+/* Экран с плашкой действий: нижний отступ прокрутки поднимал бы «липкую» плашку над краем экрана — у таких экранов его нет, плашка стоит вплотную к низу. */
+.v:has(.cta){padding-bottom:0}
+.v:has(.cta){display:flex;flex-direction:column}
+.v:has(.cta)>*{flex:none}
+.v:has(.cta)>.wz{flex:1 0 auto;display:flex;flex-direction:column}
+.v:has(.cta)>:nth-last-child(2),.wz-b{margin-bottom:24px}
 .v[hidden]{display:block;visibility:hidden}
 .v.push-in{animation:pushIn .4s var(--ease) both;z-index:3;box-shadow:-12px 0 32px rgb(11 20 36 / .12)}
 .v.under{animation:under .4s var(--ease) both}
@@ -280,7 +286,7 @@ button.card:active{transform:scale(.98)}
 .step small{font-size:14px;color:var(--ink3)}
 
 /* Нижняя кнопка действия: жидкое стекло над содержимым */
-.cta{position:sticky;bottom:0;z-index:15;display:flex;gap:8px;margin:24px -16px 0;padding:12px 16px calc(env(safe-area-inset-bottom) + 12px);background:rgb(243 246 251 / .72);-webkit-backdrop-filter:blur(20px) saturate(1.8);backdrop-filter:blur(20px) saturate(1.8);box-shadow:0 -1px 0 rgb(11 20 36 / .06)}
+.cta{position:sticky;bottom:0;z-index:15;display:flex;gap:8px;margin:auto -16px 0;padding:12px 16px calc(env(safe-area-inset-bottom) + 12px);background:rgb(243 246 251 / .72);-webkit-backdrop-filter:blur(20px) saturate(1.8);backdrop-filter:blur(20px) saturate(1.8);box-shadow:0 -1px 0 rgb(11 20 36 / .06)}
 .in-phone .cta{padding-bottom:28px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 20px;border-radius:16px;font-weight:700;font-size:16px;transition:transform .15s,opacity .2s,background .2s;white-space:nowrap}
 .btn:active{transform:scale(.96)}

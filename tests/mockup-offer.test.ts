@@ -271,3 +271,37 @@ test("своя цена: в карточке «Макеты клиентов» �
   assert.match(read("lib/admin/mockups-store.ts"), /promo:facts->promo/);
   assert.match(read("components/admin/mockup-list.tsx"), /t\.ownPromo\(row\.promo\.price, row\.promo\.regular\)/);
 });
+
+test("своя цена: несколько строк и наличные — сайт и приложение DomTut отдельно", () => {
+  // Владелец, 14.10.2026: «Цена за сайт 1000$, оставляем. Цена за приложение под iOS со скидкой 60% - 3500$… если оплата наличными - скидка 10%».
+  const own = ownPromo({
+    promo: {
+      price: 1000, regular: 4800, what: { ru: "сайт по этому макету", uz: "shu maket bo‘yicha sayt" },
+      more: [{ price: 3500, regular: 8750, what: { ru: "приложение для iPhone", uz: "iPhone uchun ilova" } }, { price: 5, regular: 1 }],
+      cash: 10,
+    },
+  });
+  assert.ok(own);
+  assert.equal(own.more.length, 1, "строка, где акция дороже обычной, пропускается");
+  assert.equal(own.cash, 10);
+  const exp = "2026-10-16T06:00:00.000Z";
+  const ru = announceText("ru", exp, own);
+  assert.match(ru, /сайт по этому макету — 1000 \$ вместо 4800 \$/);
+  assert.match(ru, /приложение для iPhone — 3500 \$ вместо 8750 \$/);
+  assert.match(ru, /наличными — ещё минус 10%/);
+  const uz = announceText("uz", exp, own);
+  assert.match(uz, /iPhone uchun ilova — 3500 \$ \(odatda 8750 \$\)/);
+  assert.doesNotMatch(uz, /[А-Яа-яЁё]/);
+  const now = at("2026-10-15T08:00:00.000Z");
+  for (const kind of ["daily", "final"] as const) {
+    for (const lang of ["ru", "uz"] as const) {
+      const text = fallbackReminder(kind, lang, exp, now, own);
+      assert.ok(text.includes("3500"), `${kind}/${lang}: ${text}`);
+      assert.deepEqual(reminderProblems(text, exp, now, lang, own), [], `${kind}/${lang}: ${text}`);
+    }
+  }
+  assert.deepEqual(reminderProblems("Сайт 1000 $, приложение 3500 $, наличными минус 10%, осталось 22 часа", exp, now, "ru", own), []);
+  assert.match(reminderPrompt("final", "ru", exp, now, "DomTut", own).user, /Приложение для iPhone — 3500 \$ вместо 8750 \$\.[\s\S]*наличными/);
+  // Без строк и наличных — как раньше.
+  assert.deepEqual(ownPromo({ promo: { price: 1000, regular: 4800 } })?.more, []);
+});
