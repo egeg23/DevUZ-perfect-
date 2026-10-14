@@ -201,4 +201,10 @@ export const broadcastDict = defineDict({
       `${who} · z ${total}: dotarło ${sent}, nie dotarło ${failed}, zablokowało bota ${blocked}`,
   },
   usersNone: { ru: "Пока никто не писал боту.", uz: "Hali hech kim botga yozmagan.", pl: "Nikt jeszcze nie pisał do bota." },
+  repeat: { ru: "Повторить", uz: "Takrorlash", pl: "Powtórz" },
+  repeatNote: {
+    ru: "Текст и получатели — как в прошлый раз. Проверьте и откройте предпросмотр.",
+    uz: "Matn va oluvchilar — o‘tgan safargidek. Tekshirib, oldindan ko‘rishni oching.",
+    pl: "Treść i odbiorcy jak poprzednio. Sprawdź i otwórz podgląd.",
+  },
 });

@@ -8,6 +8,7 @@ import { broadcastById, cancelBroadcast, createBroadcast, deliveredCounts, sendB
 import { isSegment } from "@/lib/admin/bot-users";
 import { createUserBroadcast, sendUserBroadcasts } from "@/lib/admin/bot-users-store";
 import { currentStaff, requestIp } from "@/lib/admin/guard";
+import { giveLead } from "@/lib/admin/ownership";
 import { opens } from "@/lib/admin/roles";
 import { createTasks, deliverAssignment } from "@/lib/admin/task-store";
 import { QUICK_DUES, messageWindow, parseLocalInput, quickDue, type QuickDue } from "@/lib/admin/tasks";
@@ -150,5 +151,20 @@ export async function cancelBroadcastAction(formData: FormData): Promise<void> {
   const delivered = (await deliveredCounts([id])).get(id) ?? 0;
   if (!canCancel(row, delivered, staff, new Date())) return;
   await cancelBroadcast(id, staff, await requestIp());
+  revalidatePath(HREF);
+}
+
+/**
+ * «Отдать» тёплого лида без хозяина — из «Требует внимания». Владелец и
+ * руководитель (giveLead проверяет роль ещё раз). Лид сразу у человека,
+ * бот пишет ему.
+ */
+export async function giveLeadAction(formData: FormData): Promise<void> {
+  const staff = await currentStaff();
+  if (!staff || !opens(staff, HREF)) return;
+  const lead = String(formData.get("lead") ?? "");
+  const to = String(formData.get("to") ?? "");
+  if (!/^[0-9a-f-]{36}$/.test(lead) || !/^[0-9a-f-]{36}$/.test(to)) return;
+  await giveLead(lead, to, staff, await requestIp());
   revalidatePath(HREF);
 }

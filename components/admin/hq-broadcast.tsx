@@ -30,12 +30,24 @@ const SEGMENT_KEY: Record<Segment, "segAll" | "segPartners" | "segBuyers" | "seg
   clients: "segClients",
 };
 
+/** Прошлая рассылка, которую повторяют: что подставить в форму. */
+export type RepeatOf = {
+  id: string;
+  target: "staff" | "users";
+  text: string;
+  kind: Audience["kind"];
+  roles: readonly Role[];
+  picked: readonly string[];
+  segment: Segment;
+};
+
 export function HqBroadcast({
   people,
   selfId,
   userCounts,
   historyStaff,
   historyUsers,
+  initial,
 }: {
   people: BroadcastPerson[];
   selfId: string;
@@ -43,17 +55,19 @@ export function HqBroadcast({
   userCounts: Record<Segment, number>;
   historyStaff: ReactNode;
   historyUsers: ReactNode;
+  /** «Повторить» прошлую рассылку: текст и получатели — как тогда. */
+  initial?: RepeatOf | null;
 }) {
   const t = usePanelDict(broadcastDict);
   // Владелец, 13.10.2026: «рассылка своего текста через бот сотрудникам или
   // пользователям, раздели их» — две вкладки, у каждой своя история.
-  const [target, setTarget] = useState<"staff" | "users">("staff");
-  const [segment, setSegment] = useState<Segment>("all");
+  const [target, setTarget] = useState<"staff" | "users">(initial?.target ?? "staff");
+  const [segment, setSegment] = useState<Segment>(initial?.segment ?? "all");
   const [state, action, pending] = useActionState<BroadcastState, FormData>(broadcastAction, null);
-  const [text, setText] = useState("");
-  const [kind, setKind] = useState<Audience["kind"]>("all");
-  const [roles, setRoles] = useState<Role[]>(["manager"]);
-  const [picked, setPicked] = useState<string[]>([]);
+  const [text, setText] = useState(initial?.text ?? "");
+  const [kind, setKind] = useState<Audience["kind"]>(initial?.kind ?? "all");
+  const [roles, setRoles] = useState<Role[]>(initial?.roles?.length ? [...initial.roles] : ["manager"]);
+  const [picked, setPicked] = useState<string[]>(initial?.picked ? [...initial.picked] : []);
   const [when, setWhen] = useState<"now" | "at">("now");
   const [sendAt, setSendAt] = useState("");
   const [night, setNight] = useState(false);
@@ -139,6 +153,7 @@ export function HqBroadcast({
       {!preview ? (
         <>
           <p className="text-sm text-muted">{users ? t.usersIntro : t.intro}</p>
+          {initial ? <p className="rounded-2xl bg-gold/10 px-3 py-2 text-xs text-gold">{t.repeatNote}</p> : null}
           <label className="flex flex-col gap-2">
             <span className="text-xs font-medium uppercase tracking-wider text-faint">{t.text}</span>
             <textarea

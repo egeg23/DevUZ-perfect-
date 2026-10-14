@@ -3,6 +3,7 @@ import { TROUBLE_KEY, autopilotSettings } from "@/lib/admin/autopilot-store";
 import { circleStates } from "@/lib/admin/circle-store";
 import {
   attentionOf,
+  dailyCounts,
   dayStartOf,
   leadsPulse,
   mockupsPulse,
@@ -286,6 +287,10 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
           lastView: lastOf(views.filter((v) => v.staff_id === s.id).map((v) => ({ at: v.last_at }))),
           lastAction: lastOf(acts.filter((a) => a.actor_staff_id === s.id).map((a) => ({ at: a.created_at }))),
           touches: touchesBy.get(s.id) ?? 0,
+          touchDays: dailyCounts(
+            prospects.filter((p) => p.touched_by === s.id && p.status !== "failed").map((p) => p.touched_at),
+            now,
+          ),
           portion: portions.filter((p) => p.staff_id === s.id),
           inWork: inWorkBy.get(s.id) ?? 0,
           burnedToday: burnedBy.get(s.id) ?? 0,
