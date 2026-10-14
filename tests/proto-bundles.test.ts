@@ -654,3 +654,65 @@ test("DomTut: конструктор — сайт 1 000 $ вместо 4 800 $, 
     assert.match(html, new RegExp(`"end":${Date.parse("2026-10-16T16:00:00+05:00")},`), "таймер кончается 16.10 в 16:00 по Ташкенту");
   }
 });
+
+test("Турагентство (TurBron): страница и приложение на ru и uz, условия, noindex, айфон, канбан, все экраны брони", () => {
+  const site = bundlePages("turbron");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "app", "uz", "uz/app"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("TurBron"), `${path}: нет рабочего названия агентства`);
+    // Данные туров демо, и это сказано на странице.
+    assert.match(page, lang === "ru" ? /демо/ : /demo/, `${path}: не сказано, что туры демо`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], new RegExp(`<iframe id="app-frame"[^>]*data-src="__PROTO_BASE__${path ? "/uz" : ""}/app\\?embed=1"`), `${path}: приложение не в айфоне`);
+    assert.match(all[path], /id="ap-full"/, `${path}: нет «Во весь экран»`);
+    for (const id of ["put", "prilozhenie", "menedzher", "shema", "otvet", "nuzhno", "predlozhenie", "konstruktor"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
+    assert.match(all[path], /id="bx-board"/, `${path}: нет канбана менеджера`);
+    // Акции 48 часов нет: её цену решает владелец.
+    assert.doesNotMatch(all[path], /id="timer"|48 (часов|soat)/, `${path}: таймер акции, которой нет`);
+  }
+  for (const path of ["app", "uz/app"]) {
+    assert.match(all[path], /<meta name="viewport" content="[^"]*maximum-scale=1,user-scalable=no,viewport-fit=cover"/, `${path}: viewport приближается`);
+    assert.match(all[path], /touch-action:pan-x pan-y/, `${path}: нет touch-action`);
+    assert.match(all[path], /gesturestart/, `${path}: жесты Safari не гасятся`);
+    assert.match(all[path], /safe-area-inset-bottom/, `${path}: не учтены безопасные зоны iOS`);
+    for (const v of ["home", "results", "hotel", "tour", "check", "book", "booked", "pay", "paid", "trips", "trip", "doc", "chat", "hot", "fav", "more", "tourists", "alerts"]) {
+      assert.match(all[path], new RegExp(`V\\.${v} = function`), `${path}: нет экрана ${v}`);
+    }
+    for (const pay of ["Click", "Payme", "Uzum Bank", "Uzcard / Humo", "Visa / Mastercard"]) assert.ok(all[path].includes(pay), `${path}: нет оплаты ${pay}`);
+  }
+  assert.ok(all.uz.includes("o‘") || all.uz.includes("O‘"), "узбекский — латиница с o‘");
+  assert.doesNotMatch(all.uz.replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, "кириллица в узбекской странице");
+  assert.doesNotMatch(all["uz/app"].split("window.TB=")[1].split("</script>")[0], /[А-Яа-яЁё]{3,}/, "в узбекском приложении русские подписи");
+  const stamped = stampedBundle("turbron", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Турагентство: «Минимум» 5 900 $ за 8-10 недель, «Максимум» 7 900 $ за 11-13, допы по рынку, цены в одном месте", async () => {
+  // Владелец, 14.10.2026: предварительные цены из разговора; акцию не ставим.
+  const plan = await import("../scripts/protos/turbron/plan.mjs");
+  const [mn, mx] = plan.TIERS;
+  assert.deepEqual([mn.id, mn.price, mn.weeks], ["min", 5900, [8, 10]]);
+  assert.deepEqual([mx.id, mx.price, mx.weeks], ["max", 7900, [11, 13]]);
+  assert.ok(plan.ADDONS.length >= 6, "допы, которые агентству реально нужны");
+  for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.ru.e && a.uz.t && a.uz.e, `${a.id}: цена и описание`);
+  assert.equal(plan.ALL, 7900 + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
+  const site = bundlePages("turbron")!;
+  for (const html of [site.html, site.pages.uz]) {
+    assert.match(html, /data-p="5900" data-w="8-10"/, "«Минимум» на странице");
+    assert.match(html, /data-p="7900" data-w="11-13" checked/, "«Максимум» выбран по умолчанию");
+    assert.match(html, /"tiers":\[\{"id":"min"[^\]]*"p":5900/, "скрипт считает от тех же цен");
+  }
+});
