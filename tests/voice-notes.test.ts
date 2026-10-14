@@ -125,6 +125,8 @@ test("расшифровка — в Actions, а не на сервере, и ж�
   // Пропуск — от GitHub (OIDC), а не секрет с сервера.
   assert.match(workflow, /id-token: write/);
   assert.doesNotMatch(workflow, /SHIFT_REPORT_SECRET|VPS_SSH_KEY/);
+  // Свежий PyAV не принимает metadata_errors от faster-whisper — версии закреплены.
+  assert.match(workflow, /"faster-whisper==[\d.]+" "av==[\d.]+"/);
   const script = read("scripts/voice-transcribe.py");
   // Печатается только длина и число знаков, сам текст — никогда.
   for (const line of script.split("\n").filter((l) => /\bprint\(/.test(l))) {

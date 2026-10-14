@@ -94,7 +94,10 @@ jobs:
 
       - name: Поставить faster-whisper
         if: steps.queue.outputs.count != '0'
-        run: pip install --quiet "faster-whisper==1.2.1"
+        # av — та версия, на которой расшифровка проверена: свежий PyAV упал
+        # TypeError в av.open — faster-whisper передаёт ему metadata_errors
+        # (первое голосовое, 14.10.2026).
+        run: pip install --quiet "faster-whisper==1.2.1" "av==18.1.0"
 
       - name: Расшифровать и отдать боту
         if: steps.queue.outputs.count != '0'
