@@ -1,4 +1,5 @@
-import { VOICE_SECRET_HEADER, isVoiceId, voiceSecretOk } from "@/lib/admin/voice-notes";
+import { voiceAuthorized } from "@/lib/admin/voice-auth";
+import { isVoiceId } from "@/lib/admin/voice-notes";
 import { takeVoiceAudio } from "@/lib/admin/voice-notes-store";
 
 export const runtime = "nodejs";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
  * Файл до 20 МБ (предел Bot API), обычное голосовое — сотни килобайт.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!voiceSecretOk(request.headers.get(VOICE_SECRET_HEADER), process.env.SHIFT_REPORT_SECRET)) {
+  if (!(await voiceAuthorized(request))) {
     return new Response("forbidden", { status: 403 });
   }
   const { id } = await params;

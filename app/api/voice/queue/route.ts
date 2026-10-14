@@ -1,4 +1,4 @@
-import { VOICE_SECRET_HEADER, voiceSecretOk } from "@/lib/admin/voice-notes";
+import { voiceAuthorized } from "@/lib/admin/voice-auth";
 import { voiceQueue } from "@/lib/admin/voice-notes-store";
 
 export const runtime = "nodejs";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
  * задачи в открытом репозитории виден всем.
  */
 export async function GET(request: Request) {
-  if (!voiceSecretOk(request.headers.get(VOICE_SECRET_HEADER), process.env.SHIFT_REPORT_SECRET)) {
+  if (!(await voiceAuthorized(request))) {
     return new Response("forbidden", { status: 403 });
   }
   const items = await voiceQueue();

@@ -1,4 +1,5 @@
-import { VOICE_SECRET_HEADER, cleanTranscript, isVoiceId, voiceSecretOk } from "@/lib/admin/voice-notes";
+import { voiceAuthorized } from "@/lib/admin/voice-auth";
+import { cleanTranscript, isVoiceId } from "@/lib/admin/voice-notes";
 import { saveVoiceResult } from "@/lib/admin/voice-notes-store";
 
 export const runtime = "nodejs";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
  * очереди, а после третьей неудачи человеку строка, что не вышло.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!voiceSecretOk(request.headers.get(VOICE_SECRET_HEADER), process.env.SHIFT_REPORT_SECRET)) {
+  if (!(await voiceAuthorized(request))) {
     return new Response("forbidden", { status: 403 });
   }
   const { id } = await params;

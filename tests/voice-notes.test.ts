@@ -105,7 +105,7 @@ test("вход задачи — только по секрету; секрета
   assert.equal(isVoiceId("0b9f3c1e-2d4a-4b6c-8e0f-1a2b3c4d5e6f"), true);
   assert.equal(isVoiceId("../../etc"), false);
   for (const path of ["app/api/voice/queue/route.ts", "app/api/voice/[id]/audio/route.ts", "app/api/voice/[id]/text/route.ts"]) {
-    assert.match(read(path), /voiceSecretOk\(request\.headers\.get\(VOICE_SECRET_HEADER\), process\.env\.SHIFT_REPORT_SECRET\)/, path);
+    assert.match(read(path), /if \(!\(await voiceAuthorized\(request\)\)\) \{\n\s+return new Response\("forbidden", \{ status: 403 \}\);/, path);
   }
 });
 
@@ -122,7 +122,9 @@ test("расшифровка — в Actions, а не на сервере, и ж�
   const workflow = read(".github/workflows/voice-transcribe.yml");
   assert.match(workflow, /runs-on: ubuntu-latest/);
   assert.doesNotMatch(workflow, /ssh-action|VPS_HOST/, "на сервер не ходим: Whisper тяжёлый");
-  assert.match(workflow, /secrets\.SHIFT_REPORT_SECRET/);
+  // Пропуск — от GitHub (OIDC), а не секрет с сервера.
+  assert.match(workflow, /id-token: write/);
+  assert.doesNotMatch(workflow, /SHIFT_REPORT_SECRET|VPS_SSH_KEY/);
   const script = read("scripts/voice-transcribe.py");
   // Печатается только длина и число знаков, сам текст — никогда.
   for (const line of script.split("\n").filter((l) => /\bprint\(/.test(l))) {
