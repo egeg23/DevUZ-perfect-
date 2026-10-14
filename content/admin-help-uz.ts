@@ -1097,6 +1097,15 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "auto-close",
+          title: "24 soat havola orqali, keyin parol bilan",
+          body: [
+            "Har bir maketimiz havola orqali 24 soat ochiq, keyin o‘zi yopiladi — xuddi birinchi parol berilgandek. Soatlar maket havolasi mijozga ishchi akkauntdan birinchi marta ketgan paytdan boshlanadi; yuborish haqida hech narsa ma’lum bo‘lmasa — biz emas, birinchi ochgan paytdan (paneldan ochishlarimiz hisobga olinmaydi); maketni hali hech kim ochmagan bo‘lsa — u ro‘yxatda paydo bo‘lgan daqiqadan. Bu model emas, qoida: uni kod har besh daqiqada hisoblaydi.",
+            "Maket qatorida u bilan nima bo‘lgani ko‘rinadi: «yana 5 soat ochiq, keyin parol bilan» — shuncha qoldi; «14.10 15:00 dan parol bilan yopiq: 24 soat o‘tdi» — qoida yopdi; «… dan parol bilan yopiq» — birinchi berilgan parol yopdi. Allaqachon yopilgan maketga qoida tegmaydi. Agar maketda o‘z yoqilish vaqti bor egasining doimiy paroli bo‘lsa, maket 24 soatdan keyin emas, o‘sha vaqtda yopiladi.",
+            "Maket yopilganda, uni yuborgan kishiga (lid egasi yoki aloqa muallifi) bot yozadi: «🔒 Макет … закрылся паролем: прошло 24 часа. Нужен клиенту — нажмите „Сгенерировать пароль“» — «🔑 Сгенерировать пароль» tugmasi bilan, u darhol bir sutkalik parol va mijoz uchun tayyor matnni beradi. Yuboruvchi noma’lum bo‘lsa — qator egasi va rahbarga ketadi. cases.devuz.studio vitrinasi loyihalarini qoida yopmaydi: bu studiya sayti uchun ishlarimiz.",
+          ],
+        },
+        {
           id: "open",
           title: "O‘zingiz ochish",
           body: [

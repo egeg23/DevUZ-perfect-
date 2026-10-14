@@ -167,6 +167,15 @@ export const workSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "auto-close",
+        title: "24 godziny przez link, potem na hasło",
+        body: [
+          "Każda nasza makieta jest otwarta przez link 24 godziny, potem zamyka się sama — tak, jakby wydano pierwsze hasło. Czas liczy się od chwili, gdy link do makiety pierwszy raz poszedł do klienta z konta roboczego; jeśli o wysłaniu nic nie wiadomo — od pierwszego otwarcia nie przez nas (nasze otwarcia z panelu się nie liczą); jeśli makiety jeszcze nikt nie otwierał — od minuty, gdy pojawiła się na liście. To reguła, nie model: liczy ją kod co pięć minut.",
+          "W wierszu makiety widać, co się z nią dzieje: «otwarta jeszcze 5 godz., potem na hasło» — tyle zostało; «zamknięta na hasło od 14.10 15:00: minęły 24 godziny» — zamknęła reguła; «zamknięta na hasło od …» — zamknęło pierwsze wydane hasło. Już zamkniętej makiety reguła nie rusza. Jeśli na makiecie jest stałe hasło właściciela z własną godziną włączenia, makieta zamyka się o tej godzinie, a nie po 24 godzinach.",
+          "Gdy makieta się zamknęła, osobie, która ją wysłała (właścicielowi leada albo autorowi kontaktu), bot pisze: «🔒 Макет … закрылся паролем: прошло 24 часа. Нужен клиенту — нажмите „Сгенерировать пароль“» — z przyciskiem «🔑 Сгенерировать пароль», który od razu wydaje hasło na dobę i gotowy tekst dla klienta. Nie znamy nadawcy — linijka idzie do właściciela i kierownika. Projektów witryny cases.devuz.studio reguła nie zamyka: to nasze prace dla strony studia.",
+        ],
+      },
+      {
         id: "open",
         title: "Otworzyć samemu",
         body: [

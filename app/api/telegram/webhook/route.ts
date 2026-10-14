@@ -106,6 +106,8 @@ import {
   resultText,
   testTitle,
 } from "@/lib/learn/bot";
+import { CODE_CALLBACK, parseCodeCallback } from "@/lib/proto/auto-close";
+import { mockupCode } from "@/lib/admin/mockups-store";
 import { MOCKUP_CALLBACK, OFFER_ROLES, actOnOffer, mockupsCommand, parseMockupCallback, sendOfferList } from "@/lib/admin/mockup-offer-bot";
 import { grade, isRight, questionsFor } from "@/lib/learn/quiz";
 import { saveAttempt } from "@/lib/learn/store";
@@ -1231,6 +1233,26 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
       query.id,
       result === "saved" ? (cb.answer === "yes" ? "Принято" : "Ответ записан") : result === "already" ? ALREADY_ANSWERED : "Недоступно",
     );
+    return;
+  }
+
+  // «🔑 Сгенерировать пароль» под строкой «Макет закрылся паролем» (lib/proto/
+  // auto-close): пароль на сутки, как в разделе «Макеты», — любому сотруднику,
+  // в своей личке.
+  if (parts[0] === CODE_CALLBACK) {
+    const cb = parseCodeCallback(parts);
+    const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+    if (!cb || !staff || chatId === undefined || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    const code = await mockupCode(`p:${cb.protoId}`, staff, null);
+    if (!code.ok) {
+      await answerCallback(query.id, code.reason === "not_found" ? "Макет не найден" : "Пароль не выдался");
+      return;
+    }
+    await answerCallback(query.id, "Пароль выдан");
+    await sendMessage(chatId, `🔑 Пароль ${code.code} — до ${code.until}. Текст для клиента:\n\n${esc(code.message)}`);
     return;
   }
 

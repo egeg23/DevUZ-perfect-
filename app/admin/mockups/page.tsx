@@ -1,5 +1,6 @@
 import { HelpHint } from "@/components/admin/help-link";
 import { MockupList, type MockupView } from "@/components/admin/mockup-list";
+import { hoursLeft } from "@/lib/proto/auto-close";
 import { AdminShell } from "@/components/admin/shell";
 import { mockupsDict } from "@/content/admin-panel/mockups";
 import { requireSection } from "@/lib/admin/guard";
@@ -31,10 +32,13 @@ export default async function MockupsPage() {
   const staff = await requireSection("/admin/mockups");
   const locale = staff.panel_locale;
   const t = pick(mockupsDict, locale);
+  const now = new Date();
   const rows: MockupView[] = (await mockupList(locale)).map((row) => ({
     ...row,
     createdText: made(row.created),
     liveUntilText: row.liveUntil ? tashkentTime(row.liveUntil) : null,
+    openHours: row.openUntil ? hoursLeft(Date.parse(row.openUntil), now) : null,
+    closedAtText: row.closedAt ? tashkentTime(row.closedAt) : null,
   }));
 
   return (

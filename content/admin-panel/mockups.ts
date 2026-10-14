@@ -30,6 +30,21 @@ export const mockupsDict = defineDict({
   accessOpen: { ru: "открыт по ссылке", uz: "havola orqali ochiq", pl: "otwarta przez link" },
   accessClosed: { ru: "по паролю", uz: "parol bilan", pl: "na hasło" },
   accessPublic: { ru: "открыт всем", uz: "hammaga ochiq", pl: "otwarta dla wszystkich" },
+  openFor: {
+    ru: (h: number) => `открыт ещё ${h} ч, потом по паролю`,
+    uz: (h: number) => `yana ${h} soat ochiq, keyin parol bilan`,
+    pl: (h: number) => `otwarta jeszcze ${h} godz., potem na hasło`,
+  },
+  closedSince: {
+    ru: (time: string) => `закрыт паролем с ${time}`,
+    uz: (time: string) => `${time} dan parol bilan yopiq`,
+    pl: (time: string) => `zamknięta na hasło od ${time}`,
+  },
+  closedAuto: {
+    ru: (time: string) => `закрыт паролем с ${time}: прошло 24 часа`,
+    uz: (time: string) => `${time} dan parol bilan yopiq: 24 soat o‘tdi`,
+    pl: (time: string) => `zamknięta na hasło od ${time}: minęły 24 godziny`,
+  },
   liveUntil: {
     ru: (time: string) => `пароль клиента до ${time}`,
     uz: (time: string) => `mijoz paroli ${time} gacha`,
