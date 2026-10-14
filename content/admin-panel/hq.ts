@@ -83,6 +83,7 @@ export const hqDict = defineDict({
   mockupsWaiting: { ru: "у клиента, ждём ответа", uz: "mijozda, javob kutilmoqda", pl: "u klienta, czekamy na odpowiedź" },
   mockupsSent7: { ru: "отправлено за 7 дней", uz: "7 kunda yuborildi", pl: "wysłane w 7 dni" },
   mockupsApproved7: { ru: "утверждено за 7 дней", uz: "7 kunda tasdiqlandi", pl: "zatwierdzone w 7 dni" },
+  mockupsScanned7: { ru: "найдено сканом за 7 дней", uz: "7 kunda skan topdi", pl: "znalezione skanem w 7 dni" },
   mockupsSoonest: {
     ru: (client: string, left: string) => `ближе всех к концу акции: ${client} — ${left}`,
     uz: (client: string, left: string) => `aksiya tugashiga eng yaqini: ${client} — ${left}`,
@@ -281,6 +282,11 @@ export const hqDict = defineDict({
     pl: (x: string, who: string) => `Przegrany: ${x}${who ? ` · ${who}` : ""}`,
   },
   feedMockupSent: { ru: (x: string) => `Макет ушёл: ${x}`, uz: (x: string) => `Maket yuborildi: ${x}`, pl: (x: string) => `Makieta wysłana: ${x}` },
+  feedMockupFound: {
+    ru: (x: string) => `Скан нашёл макет: ${x}`,
+    uz: (x: string) => `Skan maketni topdi: ${x}`,
+    pl: (x: string) => `Skan znalazł makietę: ${x}`,
+  },
   feedMockupApproved: {
     ru: (x: string) => `Макет утверждён: ${x}`,
     uz: (x: string) => `Maket tasdiqlandi: ${x}`,

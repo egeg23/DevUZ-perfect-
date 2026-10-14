@@ -64,18 +64,27 @@ export type OfferRow = {
   sent_at: string;
   expires_at: string;
   password_at: string | null;
+  /** Найдено сканом (lib/admin/mockup-scan.ts), а не записано в момент отправки. */
+  source?: string | null;
+  /** Ушёл давно: клиенту бот не пишет ни условий, ни напоминаний. */
+  quiet?: boolean | null;
 };
 
-const OFFER_FIELDS = "id, mockup_ref, mockup_name, mockup_url, prospect_id, lead_id, client, peer, status, sent_at, expires_at, password_at";
+const OFFER_FIELDS =
+  "id, mockup_ref, mockup_name, mockup_url, prospect_id, lead_id, client, peer, status, sent_at, expires_at, password_at, source, quiet";
 
 /** Карточка одного макета: текст и кнопки. Утверждённый — без кнопок. */
 export function offerCard(o: OfferRow, now: Date): { text: string; rows: Button[][] } {
   const lines = [
     offerLine({ client: esc(o.client), name: esc(o.mockup_name), status: o.status, expiresAt: o.expires_at, sentAt: o.sent_at, now }),
     `Макет: ${esc(o.mockup_name)} · ${esc(o.mockup_url)}`,
-    `Ушёл: ${untilText(o.sent_at)}${o.password_at ? " · 🔒 закрыт паролем" : ""}`,
+    `Ушёл: ${untilText(o.sent_at)}${o.source === "scan" ? " · 🔎 найдено сканом" : ""}${o.password_at ? " · 🔒 закрыт паролем" : ""}`,
     ...(o.lead_id ? [`Лид: ${siteUrl}/admin/leads/${o.lead_id}`] : []),
-    ...(!o.prospect_id ? ["Клиент не из касаний — напоминания ему бот не пишет."] : []),
+    ...(!o.prospect_id
+      ? ["Клиент не из касаний — напоминания ему бот не пишет."]
+      : o.quiet && o.status === "active"
+        ? ["Найден сканом, ушёл давно — напоминания клиенту бот не пишет."]
+        : []),
   ];
   const rows: Button[][] =
     o.status === "approved"

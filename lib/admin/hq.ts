@@ -222,10 +222,16 @@ export type HqMockup = {
   sent_at: string;
   expires_at: string;
   approved_at: string | null;
+  /** «scan» — нашёл скан макетов дважды в день (lib/admin/mockup-scan.ts). */
+  source?: string | null;
+  /** Когда строка появилась: у найденного сканом это позже, чем ушёл макет. */
+  created_at?: string | null;
 };
 
 export type MockupsPulse = {
   sent7: Trend;
+  /** Найдено сканом за 7 дней: макеты, которые ушли мимо записи. */
+  scanned7: number;
   /** Акция 48 часов идёт: макет у клиента, ждём ответа. */
   waiting: number;
   /** Ближайшая к концу акция. */
@@ -248,6 +254,9 @@ export function mockupsPulse(mockups: readonly HqMockup[], now: Date): MockupsPu
       mockups.map((m) => m.sent_at),
       now,
     ),
+    scanned7: mockups.filter(
+      (m) => m.source === "scan" && m.created_at && now.getTime() - Date.parse(m.created_at) <= 7 * 24 * 3600_000,
+    ).length,
     waiting: live.length,
     soonest: live[0] ? { client: live[0].client || live[0].mockup_name, endsAt: live[0].expires_at } : null,
     endingSoon: live.filter((m) => Date.parse(m.expires_at) - now.getTime() <= ENDING_SOON_H * 3600_000).length,
@@ -651,7 +660,7 @@ export function attentionOf(input: AttentionInput): Attention[] {
 export type FeedItem =
   | { kind: "lead"; at: string; label: string; href: string }
   | { kind: "won" | "lost"; at: string; label: string; who: string | null; href: string }
-  | { kind: "mockupSent" | "mockupApproved"; at: string; label: string; href: string }
+  | { kind: "mockupSent" | "mockupApproved" | "mockupFound"; at: string; label: string; href: string }
   | { kind: "taskDone"; at: string; label: string; who: string | null; href: string };
 
 export const FEED_HOURS = 24;
@@ -697,6 +706,8 @@ export function feedOf(
   for (const m of input.mockups) {
     const label = m.client || m.mockup_name;
     if (fresh(m.sent_at)) items.push({ kind: "mockupSent", at: m.sent_at, label, href: "/admin/mockups" });
+    // Найдено сканом: в ленте — когда нашли; сам макет мог уйти неделю назад.
+    else if (m.source === "scan" && fresh(m.created_at)) items.push({ kind: "mockupFound", at: m.created_at, label, href: "/admin/mockups" });
     if (fresh(m.approved_at)) items.push({ kind: "mockupApproved", at: m.approved_at as string, label, href: "/admin/mockups" });
   }
   for (const t of input.tasks) {

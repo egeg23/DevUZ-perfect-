@@ -1079,6 +1079,26 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "scan",
+          title: "Maketlar skani: e’tibordan chetda qolganlar",
+          body: {
+            manager: [
+              "Kuniga ikki marta, Toshkent vaqti bilan 09:00 va 15:00 da, bot 14 kunlik yozishmalardan maketlarimiz havolalarini (devuz.studio/proto/… va cases.devuz.studio/…) o‘zi qidiradi: aloqalarning chiquvchi xabarlarida, paneldagi lid yozishmalarida va har bir ishchi Telegram akkauntining dialoglarida. Mijozga ketgan, lekin ro‘yxatga tushmagan hamma narsani (skaut qayta ishga tushgan, havola qo‘lda qo‘yilgan) o‘zi kiritadi. Bunda model ishtirok etmaydi, faqat qoidalar.",
+              "Bot mijozga orqaga qarab yozmaydi: 48 soatdan oldin ketgan bo‘lsa — mijozda aksiya allaqachon tugagan, qator shunchaki tarixda qoladi; 48 soat ichida, lekin 3 soatdan oldin ketgan bo‘lsa — aksiya davom etadi, lekin mijozga na shartlar, na eslatmalar boradi: kerak bo‘lsa, o‘zingiz ayting. Yangisi (3 soatgacha) — odatdagidek, 3 daqiqadan keyin shartlar bilan. Shaxsiy akkauntdagi havolani bot skandan keyin ham ko‘rmaydi.",
+            ],
+            head: [
+              "Kuniga ikki marta, Toshkent vaqti bilan 09:00 va 15:00 da, bot 14 kunlik yozishmalardan maketlarimiz havolalarini (devuz.studio/proto/… va cases.devuz.studio/…) o‘zi qidiradi: aloqalarning chiquvchi xabarlarida, paneldagi lid yozishmalarida va har bir ishchi Telegram akkauntining dialoglarida. Mijozga ketgan, lekin ro‘yxatga tushmagan hamma narsani (skaut qayta ishga tushgan, havola qo‘lda qo‘yilgan) o‘zi kiritadi. Bunda model ishtirok etmaydi, faqat qoidalar. Telegram cheklagan akkauntni skan o‘tkazib yuboradi; dialoglar bittadan, pauzalar bilan o‘qiladi.",
+              "Bot mijozga orqaga qarab yozmaydi: 48 soatdan oldin ketgan bo‘lsa — mijozda aksiya allaqachon tugagan, qator shunchaki tarixda qoladi; 48 soat ichida, lekin 3 soatdan oldin ketgan bo‘lsa — aksiya davom etadi, lekin mijozga na shartlar, na eslatmalar boradi, sizga esa «🔎 Макет найден сканом» kartochkasi keladi; yangisi (3 soatgacha) — odatdagidek, 3 daqiqadan keyin shartlar bilan. Xuddi shu mijozga xuddi shu havola ikkinchi marta yozilmaydi va muddatni uzaytirmaydi.",
+              "Skan biror narsa topsa, sizga va egasiga topilganlar ro‘yxati bilan bitta «🔎 Скан макетов» qatori keladi; hech narsa topmasa — bot jim turadi. «Макеты клиентов» ro‘yxatida bunday maketlarda «🔎 найдено сканом» belgisi bor, [Bosh sahifa](/admin/hq)da — maketlar kartochkasida «7 kunda skan topdi» qatori va lentada «Skan maketni topdi».",
+            ],
+            admin: [
+              "Kuniga ikki marta, Toshkent vaqti bilan 09:00 va 15:00 da, bot 14 kunlik yozishmalardan maketlarimiz havolalarini (devuz.studio/proto/… va cases.devuz.studio/…) o‘zi qidiradi: aloqalarning chiquvchi xabarlarida, paneldagi lid yozishmalarida va har bir ishchi Telegram akkauntining dialoglarida. Mijozga ketgan, lekin ro‘yxatga tushmagan hamma narsani (skaut qayta ishga tushgan, havola qo‘lda qo‘yilgan) o‘zi kiritadi. Bunda model ishtirok etmaydi, faqat qoidalar. Telegram cheklagan akkauntni skan o‘tkazib yuboradi; dialoglar bittadan, pauzalar bilan o‘qiladi.",
+              "Bot mijozga orqaga qarab yozmaydi: 48 soatdan oldin ketgan bo‘lsa — mijozda aksiya allaqachon tugagan, qator shunchaki tarixda qoladi; 48 soat ichida, lekin 3 soatdan oldin ketgan bo‘lsa — aksiya davom etadi, lekin mijozga na shartlar, na eslatmalar boradi, sizga esa «🔎 Макет найден сканом» kartochkasi keladi; yangisi (3 soatgacha) — odatdagidek, 3 daqiqadan keyin shartlar bilan. Xuddi shu mijozga xuddi shu havola ikkinchi marta yozilmaydi va muddatni uzaytirmaydi.",
+              "Skan biror narsa topsa, sizga va rahbarga topilganlar ro‘yxati bilan bitta «🔎 Скан макетов» qatori keladi; hech narsa topmasa — bot jim turadi. «Макеты клиентов» ro‘yxatida bunday maketlarda «🔎 найдено сканом» belgisi bor, [Bosh sahifa](/admin/hq)da — maketlar kartochkasida «7 kunda skan topdi» qatori va lentada «Skan maketni topdi».",
+            ],
+          },
+        },
+        {
           id: "closed",
           title: "«havola orqali ochiq» va «parol bilan»",
           body: {

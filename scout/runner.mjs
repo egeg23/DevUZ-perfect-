@@ -27,7 +27,8 @@ import { unreachableText, verdictForHandle, verdictForPhone } from "@/lib/admin/
 import { markCircleSkipped, markReplyFailed, markReplySent, nextReply, recordInbound } from "@/lib/admin/outreach-talk-store";
 import { noCircle } from "@/lib/admin/hello-first";
 import { hasMockupLink } from "@/lib/admin/mockup-offer";
-import { recordMockupOut } from "@/lib/admin/mockup-offer-store";
+import { claimMockupScan, finishMockupScan, recordMockupOut } from "@/lib/admin/mockup-offer-store";
+import { SCAN_DIALOGS, SCAN_MS, SCAN_PAGE, SCAN_PAUSE_MS, inScan, scanSlot } from "@/lib/admin/mockup-scan";
 import {
   CIRCLE_CHECK_MS,
   CIRCLE_LANGS,
@@ -999,6 +1000,75 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
     }
   };
   client.addEventHandler(outbound, new NewMessage({ outgoing: true }));
+
+  // ── Скан макетов: в 09:00 и 15:00 по Ташкенту ─────────────────────────
+  //
+  // Владелец, 14.10.2026: «Идентифицируй макеты по нашей ссылке… пусть бот
+  // сканирует 2 раза в день и вносит туда эти данные». Обработчик выше не
+  // видит того, что ушло, пока скаут перезапускался, — скан проходит диалоги
+  // этого аккаунта за 14 дней и записывает свои исходящие со ссылкой на
+  // макет с датой самого сообщения. Старое клиенту задним числом не пишется
+  // (lib/admin/mockup-scan.ts). Бережно к Telegram: один список диалогов,
+  // дальше по одному диалогу с паузой, не больше SCAN_DIALOGS; ограниченный
+  // аккаунт не сканирует, любая ошибка (и FLOOD_WAIT) останавливает скан
+  // до следующего слота.
+  let scanning = false;
+  const scanMockups = async () => {
+    if (scanning || paused()) return;
+    const now = new Date();
+    const slot = scanSlot(now);
+    if (!slot) return;
+    scanning = true;
+    let seen = 0;
+    let found = 0;
+    let failure = null;
+    let claimed = false;
+    try {
+      claimed = await claimMockupScan(key, slot);
+      if (!claimed) return;
+      const since = now.getTime() - SCAN_MS;
+      const dialogs = await client.getDialogs({ limit: 100 });
+      const people = (dialogs ?? [])
+        .filter((d) => d?.isUser && !d.entity?.bot && !d.entity?.self && Number(d.date ?? 0) * 1000 >= since)
+        .slice(0, SCAN_DIALOGS);
+      for (const dialog of people) {
+        if (paused()) break;
+        await new Promise((resolve) => setTimeout(resolve, SCAN_PAUSE_MS));
+        const history = await client.getMessages(dialog.entity, { limit: SCAN_PAGE });
+        seen += 1;
+        const mine = (history ?? [])
+          .filter((m) => m?.out && m.message && hasMockupLink(String(m.message)) && inScan(new Date(Number(m.date) * 1000), now))
+          // Старые сначала: срок акции — от первой отправки.
+          .sort((a, b) => Number(a.date) - Number(b.date));
+        for (const m of mine) {
+          found += await recordMockupOut({
+            account: key,
+            userId: dialog.entity?.id === undefined || dialog.entity?.id === null ? "" : String(dialog.entity.id),
+            handle: dialog.entity?.username ? String(dialog.entity.username) : "",
+            body: String(m.message),
+            at: new Date(Number(m.date) * 1000),
+            scan: { now },
+          });
+        }
+      }
+      console.log(`скан макетов${tag}: ${seen} диалогов, новых макетов ${found}`);
+    } catch (error) {
+      failure = String(error?.errorMessage ?? error?.message ?? error);
+      // Лимит на чтение — не повод останавливать отправку: просто ждём
+      // следующего слота.
+      console.error(`скан макетов${tag}: остановлен —`, failure);
+    } finally {
+      scanning = false;
+    }
+    if (claimed) await finishMockupScan(key, slot, { seen, found, error: failure }).catch(() => {});
+  };
+  // Раз в 10 минут смотрим, не пора ли; со сдвигом, чтобы аккаунты не шли разом.
+  timers.push(
+    setTimeout(() => {
+      void scanMockups();
+      timers.push(setInterval(scanMockups, 10 * 60_000));
+    }, 3 * 60_000 + Math.floor(Math.random() * 4 * 60_000)),
+  );
 
   // ── Ограничен ли аккаунт: раз в час спрашиваем @SpamBot ──────────────
   //
