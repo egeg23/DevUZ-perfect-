@@ -68,7 +68,7 @@ main>section{background:transparent}
 /* ── Шапка ── */
 .top{position:fixed;left:12px;right:12px;top:12px;z-index:50;border-radius:22px;transition:transform .35s var(--ease),background .3s}
 .top .wrap{display:flex;align-items:center;gap:16px;height:60px;padding:0 12px 0 16px}
-.top.hide{transform:translate3d(0,-130%,0)}
+
 .logo{display:flex;color:var(--fg)}
 .lg{width:124px;height:38px}
 .nav{display:none;gap:4px;margin-left:16px}
@@ -422,3 +422,29 @@ a.bc:hover .bc-i{transform:translate3d(0,-4px,0) rotate(-6deg)}
 @media (min-width:1024px){.dock{display:none}}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}.intro{display:none}.js .rv{opacity:1}.js .rv.in{animation:none}.mq-row,.shim::after,.beam::before,.hero-scroll{animation:none}[data-par]{transform:none !important}}
+
+/* Приложение для iPhone — отдельной карточкой с тумблером; наличные — тумблер в итоге. */
+.kit-app{position:relative;margin-top:12px;cursor:pointer;background:linear-gradient(135deg,#0f2a5c,#0a1730);transition:opacity .25s,box-shadow .2s}
+.kit-app input,.kt-cash input{position:absolute;opacity:0;pointer-events:none}
+.kit-app .kb-tag{display:inline-flex;align-items:center;gap:8px}
+.kit-app .sw{width:36px;height:20px;margin:0;border-radius:10px;background:rgb(255 255 255 / .18)}
+.kit-app .sw::after{width:16px;height:16px}
+.kit-app:has(input:checked) .sw{background:var(--brand2)}
+.kit-app:has(input:checked) .sw::after{transform:translateX(16px)}
+.kit-app:not(:has(input:checked)){opacity:.55}
+.kit-app:has(input:focus-visible){outline:3px solid var(--brand2);outline-offset:2px}
+.kt-line.off{opacity:.4;text-decoration:line-through}
+.kt-cash{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:16px;padding:10px 12px;border-radius:14px;background:rgb(255 255 255 / .06);font-size:14px;cursor:pointer}
+.kt-cash .sw{width:36px;height:20px;margin:0;border-radius:10px;background:rgb(255 255 255 / .18)}
+.kt-cash .sw::after{width:16px;height:16px}
+.kt-cash input:checked+.sw{background:#22c55e}
+.kt-cash input:checked+.sw::after{transform:translateX(16px)}
+.kt-cash input:focus-visible+.sw{outline:3px solid var(--brand2);outline-offset:2px}
+.kt-cash b{color:#7ee2a8}
+.kb-p{margin-left:auto}
+/* Шапка с языками стоит на месте всегда, поэтому стекло у неё плотнее: текст блоков под ней не просвечивает. */
+.top{background:rgb(255 255 255 / .86)}
+.kit>*,.kit-list>*{min-width:0}
+.kit-base{overflow:hidden}
+.top{background:rgb(255 255 255 / .94)}
+.timer span small{display:block;font-size:12px;font-weight:400;opacity:.8}
