@@ -655,8 +655,8 @@ test("DomTut: конструктор — сайт 1 000 $ вместо 4 800 $, 
   }
 });
 
-test("Турагентство (TurBron): страница и приложение на ru и uz, условия, noindex, айфон, канбан, все экраны брони", () => {
-  const site = bundlePages("turbron");
+test("Турагентство inapp.uz: страница и приложение на ru и uz, условия, noindex, айфон, канбан, все экраны брони", () => {
+  const site = bundlePages("inapp");
   assert.ok(site);
   const all: Record<string, string> = { "": site.html, ...site.pages };
   assert.deepEqual(Object.keys(all).sort(), ["", "app", "uz", "uz/app"]);
@@ -670,7 +670,7 @@ test("Турагентство (TurBron): страница и приложени
     assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
     assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
     assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
-    assert.ok(page.includes("TurBron"), `${path}: нет рабочего названия агентства`);
+    assert.ok(page.includes("inapp.uz"), `${path}: нет названия агентства`);
     // Данные туров демо, и это сказано на странице.
     assert.match(page, lang === "ru" ? /демо/ : /demo/, `${path}: не сказано, что туры демо`);
   }
@@ -678,8 +678,10 @@ test("Турагентство (TurBron): страница и приложени
     assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
     assert.match(all[path], new RegExp(`<iframe id="app-frame"[^>]*data-src="__PROTO_BASE__${path ? "/uz" : ""}/app\\?embed=1"`), `${path}: приложение не в айфоне`);
     assert.match(all[path], /id="ap-full"/, `${path}: нет «Во весь экран»`);
-    for (const id of ["put", "prilozhenie", "menedzher", "shema", "otvet", "nuzhno", "predlozhenie", "konstruktor"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
+    for (const id of ["put", "prilozhenie", "menedzher", "shema", "otvet", "nuzhno", "keys", "predlozhenie", "konstruktor"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
     assert.match(all[path], /id="bx-board"/, `${path}: нет канбана менеджера`);
+    // Владелец, 14.10.2026: блок «Мы уже делали для турагентств» — только наш кейс Apollo Travel.
+    assert.ok(all[path].includes(`https://devuz.studio/${path || "ru"}/cases/apollo-travel`), `${path}: нет ссылки на кейс Apollo Travel`);
     // Акции 48 часов нет: её цену решает владелец.
     assert.doesNotMatch(all[path], /id="timer"|48 (часов|soat)/, `${path}: таймер акции, которой нет`);
   }
@@ -696,20 +698,20 @@ test("Турагентство (TurBron): страница и приложени
   assert.ok(all.uz.includes("o‘") || all.uz.includes("O‘"), "узбекский — латиница с o‘");
   assert.doesNotMatch(all.uz.replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, "кириллица в узбекской странице");
   assert.doesNotMatch(all["uz/app"].split("window.TB=")[1].split("</script>")[0], /[А-Яа-яЁё]{3,}/, "в узбекском приложении русские подписи");
-  const stamped = stampedBundle("turbron", SEED)!;
+  const stamped = stampedBundle("inapp", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
 
 test("Турагентство: «Минимум» 5 900 $ за 8-10 недель, «Максимум» 7 900 $ за 11-13, допы по рынку, цены в одном месте", async () => {
   // Владелец, 14.10.2026: предварительные цены из разговора; акцию не ставим.
-  const plan = await import("../scripts/protos/turbron/plan.mjs");
+  const plan = await import("../scripts/protos/inapp/plan.mjs");
   const [mn, mx] = plan.TIERS;
   assert.deepEqual([mn.id, mn.price, mn.weeks], ["min", 5900, [8, 10]]);
   assert.deepEqual([mx.id, mx.price, mx.weeks], ["max", 7900, [11, 13]]);
   assert.ok(plan.ADDONS.length >= 6, "допы, которые агентству реально нужны");
   for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.ru.e && a.uz.t && a.uz.e, `${a.id}: цена и описание`);
   assert.equal(plan.ALL, 7900 + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
-  const site = bundlePages("turbron")!;
+  const site = bundlePages("inapp")!;
   for (const html of [site.html, site.pages.uz]) {
     assert.match(html, /data-p="5900" data-w="8-10"/, "«Минимум» на странице");
     assert.match(html, /data-p="7900" data-w="11-13" checked/, "«Максимум» выбран по умолчанию");
