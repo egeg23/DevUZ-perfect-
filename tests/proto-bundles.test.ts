@@ -588,3 +588,59 @@ test("GAZMETPROD SERVIS: конструктор — сайт 1 700 $, все д�
   for (const id of ["booking", "calc", "test", "van", "bot", "seo", "maps"]) assert.ok(all.some((a) => a.id === id), `нет допа ${id}`);
   for (const a of all) assert.ok(a.ru.t && (a.ru.e || a.ru.why) && a.uz.t, `${a.id}: нет описания`);
 });
+
+test("DomTut: сайт и приложение на ru и uz — условия, noindex, заставка с влётом в сердце, приложение в айфоне без увеличения", () => {
+  const site = bundlePages("domtut");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "app", "uz", "uz/app"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("DomTut"), `${path}: нет названия компании`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], /class="dt-cv"[^>]*data-logo="[^"]*heart/, `${path}: нет влёта в сердце знака`);
+    assert.match(all[path], new RegExp(`<iframe id="app-frame"[^>]*data-src="__PROTO_BASE__${path ? "/uz" : ""}/app\\?embed=1"`), `${path}: приложение не в айфоне`);
+    assert.match(all[path], /id="ap-full"/, `${path}: нет «Во весь экран»`);
+    assert.match(all[path], /backdrop-filter/, `${path}: нет жидкого стекла`);
+    assert.match(all[path], /data-par=/, `${path}: нет параллакса`);
+  }
+  for (const path of ["app", "uz/app"]) {
+    // Двойной тап и щипок не приближают.
+    assert.match(all[path], /<meta name="viewport" content="[^"]*maximum-scale=1,user-scalable=no,viewport-fit=cover"/, `${path}: viewport приближается`);
+    assert.match(all[path], /touch-action:pan-x pan-y/, `${path}: нет touch-action`);
+    assert.match(all[path], /gesturestart/, `${path}: жесты Safari не гасятся`);
+    assert.match(all[path], /safe-area-inset-bottom/, `${path}: не учтены безопасные зоны iOS`);
+    for (const v of ["home", "catalog", "zk", "book", "done", "podbor", "mortgage", "map", "fav", "compare", "more", "alerts"]) {
+      assert.match(all[path], new RegExp(`V\\.${v} = function`), `${path}: нет экрана ${v}`);
+    }
+  }
+  assert.ok(all.uz.includes("o‘") || all.uz.includes("O‘"), "узбекский — латиница с o‘");
+  assert.doesNotMatch(all["uz/app"].split("window.DT=")[1].split("</script>")[0].replace(/"(zk|addr|dev|name|tg|ig|yt|site|terms|ruUrl|uzUrl|img|photo)":"[^"]*"/g, ""), /[А-Яа-яЁё]{3,}/, "в узбекском приложении русские подписи");
+  const stamped = stampedBundle("domtut", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("DomTut: конструктор — сайт и приложение 4 800 $, по предложению 48 часов 1 000 $, допы видны честно", async () => {
+  // Владелец, 14.10.2026: «Стоимость для клиента без допов — 1 000 $ вместо 4 800 $, предложение на 48 часов».
+  const plan = await import("../scripts/protos/domtut/plan.mjs");
+  assert.equal(plan.BASE.price, 4800);
+  assert.equal(plan.BASE.promo, 1000);
+  assert.ok(plan.ADDONS.length >= 6, "допы, которые клиенту реально нужны");
+  for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.uz.t && a.ru.who && a.uz.who, `${a.id}: цена и откуда доп`);
+  assert.equal(plan.ALL, 4800 + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
+  const site = bundlePages("domtut")!;
+  for (const html of [site.html, site.pages.uz]) {
+    assert.match(html, /<s class="num">4 800 \$<\/s><b class="num">1 000 \$<\/b>/, "на макете 1 000 $ вместо 4 800 $ крупно");
+    assert.match(html, /"base":4800,"promo":1000/, "скрипт считает от тех же цен");
+  }
+});
