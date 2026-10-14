@@ -110,4 +110,7 @@ export const COSTS = [
   { ru: ["SMS для входа", "по тарифу сервиса рассылки"], uz: ["Kirish uchun SMS", "xabar xizmati tarifi bo‘yicha"] },
 ];
 
+/* Владелец, 14.10.2026: при оплате наличными минус 10% от цены, от итога вместе с допами. */
+export const CASH_OFF = 10;
+
 export const ALL = TIERS[1].price + ADDONS.reduce((s, a) => s + a.price, 0);

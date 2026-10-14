@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
 import { UI } from "./ui.mjs";
-import { ADDONS, ALL, COSTS, TIERS } from "./plan.mjs";
+import { ADDONS, ALL, CASH_OFF, COSTS, TIERS } from "./plan.mjs";
 
 /*
  * Макет приложения турагентства (Ташкент), ru и uz:
@@ -419,11 +419,12 @@ ${ADDONS.map(row).join("")}
 <p class="kt-k">${t("Ваш расчёт", "Sizning hisobingiz")}</p>
 <div class="kt-line"><span id="kt-tier"></span><span class="num" id="kt-tp"></span></div>
 <div class="kt-line"><span>${t("Допы", "Qo‘shimchalar")} · <span id="kit-n">0</span></span><span class="num" id="kit-add">0 $</span></div>
+<label class="kt-cash"><input type="checkbox" id="kit-cash"><span class="sw" aria-hidden="true"></span><span>${t(`Оплата наличными: минус ${CASH_OFF}%`, `Naqd to‘lov: ${CASH_OFF}% chegirma`)}</span><b class="num" id="kit-cash-v"></b></label>
 <div class="kt-sum"><small>${t("Итого", "Jami")}</small><b class="num" id="kit-sum">${usd(TIERS[1].price)}</b><small class="kt-was">${t("Срок", "Muddat")}: <span class="num" id="kit-weeks"></span> ${t("недель", "hafta")}</small></div>
 <a class="btn btn-white" id="kit-go" href="https://t.me/Devuz_studio_bot?start=inapp">${ic("tg")}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 <button type="button" class="copy" id="kit-copy">${t("Скопировать состав", "Tarkibni nusxalash")}</button>
 </div>
-<p class="src">${t(`«Минимум» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} недель; «Максимум» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} недель. Допы по рыночным ставкам, со всеми допами ${usd(ALL)}. Расходы на Турвизор, магазины, платёжные системы и SMS агентство платит само, в цену они не входят. Оплата этапами: аванс, макет экранов, публикация.`, `«Minimum» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} hafta; «Maksimum» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} hafta. Qo‘shimchalar bozor narxida, barchasi bilan ${usd(ALL)}. Turvizor, do‘konlar, to‘lov tizimlari va SMS xarajatlarini agentlik o‘zi to‘laydi, ular narxga kirmaydi. To‘lov bosqichma-bosqich: avans, ekranlar maketi, joylash.`)}</p>
+<p class="src">${t(`«Минимум» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} недель; «Максимум» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} недель. Допы по рыночным ставкам, со всеми допами ${usd(ALL)}. При оплате наличными минус ${CASH_OFF}% от итога вместе с допами. Расходы на Турвизор, магазины, платёжные системы и SMS агентство платит само, в цену они не входят. Оплата этапами: аванс, макет экранов, публикация.`, `«Minimum» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} hafta; «Maksimum» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} hafta. Qo‘shimchalar bozor narxida, barchasi bilan ${usd(ALL)}. Naqd to‘lovda qo‘shimchalar bilan birga jamidan ${CASH_OFF}% chegirma. Turvizor, do‘konlar, to‘lov tizimlari va SMS xarajatlarini agentlik o‘zi to‘laydi, ular narxga kirmaydi. To‘lov bosqichma-bosqich: avans, ekranlar maketi, joylash.`)}</p>
 </div>
 </div>
 </div></section>`;
@@ -435,7 +436,7 @@ function shell(l, body) {
   const nav = [["#put", t("Путь клиента", "Mijoz yo‘li")], ["#prilozhenie", t("Приложение", "Ilova")], ["#menedzher", t("Менеджер", "Menejer")], ["#otvet", t("Ответ на ТЗ", "TZ’ga javob")], ["#predlozhenie", t("Цена", "Narx")]];
   const kit = {
     tiers: TIERS.map((x) => ({ id: x.id, t: x[l].t, p: x.price, w: x.weeks })), items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, w: a.weeks })),
-    copied: t("Скопировано", "Nusxalandi"), head: t(`Приложение турагентства (${B}), состав из конструктора:`, `Turagentlik ilovasi (${B}), konstruktordan tarkib:`), total: t("Итого", "Jami"), weeks: t("недель", "hafta"),
+    cash: CASH_OFF, cashName: t("Оплата наличными", "Naqd to‘lov"), copied: t("Скопировано", "Nusxalandi"), head: t(`Приложение турагентства (${B}), состав из конструктора:`, `Turagentlik ilovasi (${B}), konstruktordan tarkib:`), total: t("Итого", "Jami"), weeks: t("недель", "hafta"),
   };
   return `<!doctype html>
 <html lang="${l}">

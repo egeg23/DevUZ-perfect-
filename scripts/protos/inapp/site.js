@@ -148,13 +148,16 @@ var st={};try{st=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
 var boxes=$$('#konstruktor input[data-k]'),radios=$$('#konstruktor input[name="tier"]');
 boxes.forEach(function(b){b.checked=!!st[b.getAttribute('data-k')];b.addEventListener('change',function(){st[b.getAttribute('data-k')]=b.checked;keep();sum()})});
 radios.forEach(function(r){if(st.__tier)r.checked=r.value===st.__tier;r.addEventListener('change',function(){st.__tier=r.value;keep();sum()})});
+var cashBox=$('#kit-cash');
+if(cashBox){cashBox.checked=!!st.__cash;cashBox.addEventListener('change',function(){st.__cash=cashBox.checked;keep();sum()})}
 function keep(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
 var shown=0;
 function tierNow(){var r=radios.filter(function(x){return x.checked})[0]||radios[1];return K.tiers.filter(function(t){return t.id===r.value})[0]}
 function sum(){
   var tr=tierNow(),add=0,n=0,w=0;
   boxes.forEach(function(b){if(b.checked){add+=+b.getAttribute('data-p');w+=+b.getAttribute('data-w');n++}});
-  var total=tr.p+add;
+  var full=tr.p+add,off=cashBox&&cashBox.checked?Math.round(full*K.cash/100):0,total=full-off;
+  $('#kit-cash-v').textContent=off?'−'+grp(off)+'\u00a0$':'';
   $('#kt-tier').textContent=tr.t;$('#kt-tp').textContent=grp(tr.p)+' $';
   $('#kit-n').textContent=n;$('#kit-add').textContent=grp(add)+' $';
   $('#kit-weeks').textContent=(tr.w[0]+Math.ceil(w/2))+'-'+(tr.w[1]+w);
@@ -166,6 +169,7 @@ sum();
 $('#kit-copy').addEventListener('click',function(){
   var tr=tierNow(),lines=[K.head,'• '+tr.t+': '+grp(tr.p)+' $'];
   K.items.forEach(function(a){if(st[a.id])lines.push('• '+a.t+': '+grp(a.p)+' $')});
+  if(cashBox&&cashBox.checked)lines.push('• '+K.cashName+': −'+K.cash+'%');
   lines.push(K.total+': '+$('#kit-sum').textContent+', '+$('#kit-weeks').textContent+' '+K.weeks);
   var txt=lines.join('\n'),b=this;
   var done=function(){var o=b.textContent;b.textContent=K.copied;setTimeout(function(){b.textContent=o},1600)};
