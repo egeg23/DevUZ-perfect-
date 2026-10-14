@@ -97,6 +97,8 @@ export type MockupRow = {
   closedAt?: string | null;
   /** Закрыло правило 24 часов, а не первый пароль. */
   autoClosed?: boolean;
+  /** Своя цена акции 48 часов (protos.facts.promo): бот пишет клиенту её, а не общие цены. */
+  promo?: { price: number; regular: number } | null;
 };
 
 /** Ниша на языке панели. Неизвестная — как есть: лучше ключ, чем пусто. */

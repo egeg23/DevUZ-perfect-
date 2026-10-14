@@ -1,4 +1,5 @@
 import { record } from "@/lib/admin/audit";
+import { ownPromo } from "@/lib/admin/mockup-offer";
 import type { PanelLocale } from "@/lib/admin/i18n";
 import {
   SHOWCASE_LOCK,
@@ -34,7 +35,7 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
     const { data, error } = await db
       .from("protos")
       .select(
-        "id, token, niche, locale, name, source, created_at, opens, opened_at, prospect_id, auto, closed_at, auto_closed_at, lock:facts->>lock, lockAt:facts->>lockAt",
+        "id, token, niche, locale, name, source, created_at, opens, opened_at, prospect_id, auto, closed_at, auto_closed_at, lock:facts->>lock, lockAt:facts->>lockAt, promo:facts->promo",
       )
       .neq("status", "draft")
       .order("created_at", { ascending: false })
@@ -65,6 +66,7 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
         liveUntil: live.protos.get(id) ?? null,
         opens: Number(row.opens ?? 0),
         lang: row.locale === "uz" ? "uz" : "ru",
+        promo: promoOf(row.promo),
         ...openState(row, sends.get(`p:${id}`), now),
       });
     }
@@ -77,6 +79,12 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
 
   // Свежие сверху. У витрины дата без часов — она встаёт после прототипов того же дня.
   return rows.sort((a, b) => b.created.localeCompare(a.created));
+}
+
+/** Своя цена акции 48 часов — та, что на самом макете (lib/admin/mockup-offer.ts, ownPromo). */
+function promoOf(raw: unknown): MockupRow["promo"] {
+  const own = ownPromo({ promo: raw });
+  return own ? { price: own.price, regular: own.regular } : null;
 }
 
 function openState(

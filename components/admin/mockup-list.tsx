@@ -146,6 +146,7 @@ export function MockupList({ rows }: { rows: MockupView[] }) {
                       ) : null}
                       {row.liveUntilText ? <span className="text-green">{t.liveUntil(row.liveUntilText)}</span> : null}
                       {row.opens ? <span className="text-faint">{t.opens(row.opens)}</span> : null}
+                      {row.promo ? <span className="text-gold">{t.ownPromo(row.promo.price, row.promo.regular)}</span> : null}
                     </p>
                     <p className="mt-1 truncate font-mono text-xs text-faint">{row.url}</p>
                   </div>
