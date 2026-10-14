@@ -267,3 +267,22 @@ test("id серверных действий не меняются от выка
     assert.doesNotMatch(code, /Action\.bind\(/, `${file}: .bind у серверного действия`);
   }
 });
+
+/**
+ * Каждая выкатка — перезапуск контейнера и ~14 секунд 502 в панели
+ * (14.10.2026: три выкатки за полчаса, владелец увидел 502). Правки, которые
+ * не меняют работающий сайт, выкатку не запускают. Но и наоборот: в список
+ * не попадает ничего, что сайт или сервер читает — иначе слитое молча не
+ * доедет.
+ */
+test("выкатку не запускает то, что сайт не читает, и только это", () => {
+  const workflow = read(".github/workflows/deploy-vps.yml");
+  const block = /paths-ignore:\n((?:\s+(?:- .+|#.*)\n)+)/.exec(workflow)?.[1] ?? "";
+  const ignored = [...block.matchAll(/- "([^"]+)"/g)].map((m) => m[1]);
+  for (const path of ["docs/**", ".github/workflows/voice-transcribe.yml", "scripts/voice-transcribe.py"]) {
+    assert.ok(ignored.includes(path), `нет ${path}`);
+  }
+  for (const pattern of ignored) {
+    assert.doesNotMatch(pattern, /^(app|lib|components|content|public|scout|deploy|tests)\b|^scripts\/\*|^\*\*$|^\.github\/\*\*|deploy-vps|vps-deploy/, pattern);
+  }
+});
