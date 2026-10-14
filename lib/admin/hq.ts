@@ -355,6 +355,8 @@ export type HqPersonInput = {
   inWork: number;
   burnedToday: number;
   stale: number;
+  /** Лидов без ответа боту: спросил «чем кончилось» и ждёт (lib/admin/lead-tidy.ts). */
+  botSilent?: number;
   tasks: readonly HqTask[];
 };
 
@@ -374,6 +376,7 @@ export type HqPerson = {
   inWork: number;
   burnedToday: number;
   stale: number;
+  botSilent: number;
   openTasks: number;
   overdue: number;
   /** Сводка для цвета карточки. */
@@ -434,6 +437,7 @@ export function personOf(input: HqPersonInput, now: Date): HqPerson {
     inWork: input.inWork,
     burnedToday: input.burnedToday,
     stale: input.stale,
+    botSilent: input.botSilent ?? 0,
     openTasks: open.length,
     overdue,
     mood,
@@ -468,6 +472,7 @@ export type Attention =
   | { kind: "burned"; level: "gold"; n: number }
   | { kind: "overdue"; level: "red"; n: number }
   | { kind: "stale"; level: "gold"; n: number }
+  | { kind: "botSilent"; level: "gold"; staffId: string; name: string; n: number }
   | { kind: "transfers"; level: "gold"; n: number }
   | { kind: "contracts"; level: "gold"; n: number }
   | { kind: "ending"; level: "gold"; n: number }
@@ -487,11 +492,20 @@ export const ATTENTION_HREF: Record<AttentionKind, string> = {
   burned: "/admin/hq#people",
   overdue: "/admin/tasks",
   stale: "/admin?status=taken",
+  botSilent: "/admin?status=taken",
   transfers: "/admin",
   contracts: "/admin/contracts",
   ending: "/admin/mockups",
   firecrawl: "/admin/prospect",
 };
+
+/** Ссылка строки: у «без ответа боту» — лиды «в работе» этого человека. */
+export function attentionHref(a: Attention): string {
+  return a.kind === "botSilent" ? `/admin?owner=${a.staffId}&status=taken` : ATTENTION_HREF[a.kind];
+}
+
+/** Больше стольких лидов без ответа боту — строка в «Требует внимания». */
+export const BOT_SILENT_ALERT = 5;
 
 /** Свип ходит раз в 5 минут; полчаса тишины — авария (как плашка в components/admin/sweep-banner.tsx). */
 export const SWEEP_STALE_MIN = 30;
@@ -515,6 +529,8 @@ export type AttentionInput = {
   burnedToday: number;
   overdue: number;
   stale: number;
+  /** У кого сколько лидов без ответа боту. */
+  botSilent?: readonly { staffId: string; name: string; n: number }[];
   transfers: number;
   contracts: number;
   mockups: MockupsPulse;
@@ -560,6 +576,9 @@ export function attentionOf(input: AttentionInput): Attention[] {
   if (input.transfers) out.push({ kind: "transfers", level: "gold", n: input.transfers });
   if (input.mockups.endingSoon) out.push({ kind: "ending", level: "gold", n: input.mockups.endingSoon });
   if (input.stale) out.push({ kind: "stale", level: "gold", n: input.stale });
+  for (const p of input.botSilent ?? []) {
+    if (p.n > BOT_SILENT_ALERT) out.push({ kind: "botSilent", level: "gold", staffId: p.staffId, name: p.name, n: p.n });
+  }
   if (input.contracts && seesHqMoney(input.role)) out.push({ kind: "contracts", level: "gold", n: input.contracts });
   if (input.firecrawlRemaining !== null && input.firecrawlRemaining < FIRECRAWL_LOW) {
     out.push({ kind: "firecrawl", level: "gold", remaining: Math.max(0, Math.floor(input.firecrawlRemaining)) });

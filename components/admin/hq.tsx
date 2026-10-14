@@ -6,7 +6,8 @@ import { MAIN_LABEL } from "@/lib/admin/account-ban-store";
 import { hqDict } from "@/content/admin-panel/hq";
 import { helpAnchor } from "@/lib/admin/help";
 import {
-  ATTENTION_HREF,
+  BOT_SILENT_ALERT,
+  attentionHref,
   clockOf,
   deltaOf,
   leftOf,
@@ -183,6 +184,8 @@ function attentionText(a: Attention, t: T, now: Date): string {
       return t.attOverdue(a.n);
     case "stale":
       return t.attStale(a.n);
+    case "botSilent":
+      return t.attBotSilent(a.name, a.n);
     case "transfers":
       return t.attTransfers(a.n);
     case "contracts":
@@ -218,7 +221,7 @@ export function AttentionList({ items, t, now }: { items: readonly Attention[]; 
           {items.map((a, i) => (
             <li key={`${a.kind}-${i}`}>
               <Link
-                href={ATTENTION_HREF[a.kind]}
+                href={attentionHref(a)}
                 className="-mx-2 flex min-h-11 items-start gap-3 rounded-2xl px-2 py-2.5 transition hover:bg-surface-2"
               >
                 <span
@@ -334,6 +337,7 @@ export function PersonCard({
     p.overdue ? { text: t.flagOverdue(p.overdue), warn: true } : null,
     p.burnedToday ? { text: t.flagBurned(p.burnedToday), warn: true } : null,
     p.stale ? { text: t.flagStale(p.stale), warn: false } : null,
+    p.botSilent ? { text: t.flagBotSilent(p.botSilent), warn: p.botSilent > BOT_SILENT_ALERT } : null,
     p.mood === "done" ? { text: t.moodDone, warn: false, good: true } : null,
     p.mood === "idle" ? { text: t.moodIdle, warn: false } : null,
   ].filter((f): f is { text: string; warn: boolean; good?: boolean } => Boolean(f));
@@ -382,6 +386,7 @@ export function PersonCard({
             <li>{t.detailOpenTasks(p.openTasks, p.overdue)}</li>
             <li>{t.detailBurned(p.burnedToday)}</li>
             <li>{t.detailStale(p.stale)}</li>
+            <li>{t.detailBotSilent(p.botSilent)}</li>
           </ul>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {taskHref ? (

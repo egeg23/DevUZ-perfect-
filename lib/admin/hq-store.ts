@@ -31,7 +31,7 @@ import {
   type TouchesPulse,
 } from "@/lib/admin/hq";
 import { ACTIVE_MINUTES, QUEUE_ROLES } from "@/lib/admin/lead-queue";
-import { staleCounts } from "@/lib/admin/lead-tidy-store";
+import { tidyCounts } from "@/lib/admin/lead-tidy-store";
 import { pendingContracts } from "@/lib/admin/pulse-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import type { Role } from "@/lib/admin/roles";
@@ -251,10 +251,11 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
   // Люди — те, кто в очереди касаний и лидов: руководители и менеджеры.
   const team = staffRows.filter((s) => (QUEUE_ROLES as readonly string[]).includes(s.role));
   const ids = team.map((s) => s.id);
-  const [touchesBy, stale] = await Promise.all([
+  const [touchesBy, tidy] = await Promise.all([
     touchesOnDay(ids, day).catch(() => new Map<string, number>()),
-    staleCounts(ids, now).catch(() => new Map<string, number>()),
+    tidyCounts(ids, now).catch(() => ({ stale: new Map<string, number>(), unanswered: new Map<string, number>() })),
   ]);
+  const stale = tidy.stale;
   const count = <T>(rows: readonly T[], key: (r: T) => string | null) => {
     const out = new Map<string, number>();
     for (const r of rows) {
@@ -290,6 +291,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
           inWork: inWorkBy.get(s.id) ?? 0,
           burnedToday: burnedBy.get(s.id) ?? 0,
           stale: stale.get(s.id) ?? 0,
+          botSilent: tidy.unanswered.get(s.id) ?? 0,
           tasks,
         },
         now,
@@ -336,6 +338,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     burnedToday: burned.length,
     overdue: tasksNow.overdue.length,
     stale: [...stale.values()].reduce((s, n) => s + n, 0),
+    botSilent: team.map((s) => ({ staffId: s.id, name: s.display_name, n: tidy.unanswered.get(s.id) ?? 0 })),
     transfers: transfers.length,
     contracts: contracts.length,
     mockups: mockupsNow,

@@ -171,6 +171,11 @@ export const hqDict = defineDict({
     uz: (n: number) => `${n} ta «ishda» lid 7+ kundan beri harakatsiz`,
     pl: (n: number) => `${pl(n, "lead", "leady", "leadów")} „w toku” bez ruchu od 7+ dni`,
   },
+  attBotSilent: {
+    ru: (name: string, n: number) => `${name}: ${ru(n, "лид", "лида", "лидов")} без ответа боту — не отмечает, чем кончилось`,
+    uz: (name: string, n: number) => `${name}: ${n} ta lid botga javobsiz — nima bilan tugaganini belgilamayapti`,
+    pl: (name: string, n: number) => `${name}: ${pl(n, "lead", "leady", "leadów")} bez odpowiedzi botowi — nie zaznacza, jak się skończyło`,
+  },
   attTransfers: {
     ru: (n: number) => `${ru(n, "просьба", "просьбы", "просьб")} передать лида ждут решения`,
     uz: (n: number) => `Lidni o‘tkazish bo‘yicha ${n} ta so‘rov qaror kutmoqda`,
@@ -232,6 +237,11 @@ export const hqDict = defineDict({
     uz: (n: number) => `${n} ta harakatsiz`,
     pl: (n: number) => `bez ruchu ${n}`,
   },
+  flagBotSilent: {
+    ru: (n: number) => `без ответа боту ${n}`,
+    uz: (n: number) => `botga javobsiz ${n}`,
+    pl: (n: number) => `bez odpowiedzi botowi ${n}`,
+  },
   flagOverdue: {
     ru: (n: number) => `просрочено ${n}`,
     uz: (n: number) => `${n} ta muddati o‘tgan`,
@@ -261,6 +271,11 @@ export const hqDict = defineDict({
     ru: (n: number) => `Лидов «в работе» без движения 7+ дней: ${n}`,
     uz: (n: number) => `7+ kun harakatsiz «ishda» lidlar: ${n}`,
     pl: (n: number) => `Leady „w toku” bez ruchu 7+ dni: ${n}`,
+  },
+  detailBotSilent: {
+    ru: (n: number) => `Без ответа боту (спросил и ждёт «выиграли / проиграли / ещё в работе»): ${n}`,
+    uz: (n: number) => `Botga javobsiz (so‘radi va «yutildi / yutqazildi / hali ishda»ni kutyapti): ${n}`,
+    pl: (n: number) => `Bez odpowiedzi botowi (zapytał i czeka na «wygrany / przegrany / nadal w toku»): ${n}`,
   },
   // Лента за сутки.
   feedTitle: { ru: "Лента за сутки", uz: "So‘nggi sutka", pl: "Ostatnia doba" },
