@@ -916,7 +916,7 @@ test("Greenwell: магазин 1 000 $ вместо 4 900 $ на 48 часов,
 });
 
 test("SIA: главная и 14 проектов — условия, noindex, только с сайта бюро, чертёж в рендер, WhatsApp бюро", async () => {
-  const { existsSync, readFileSync } = await import("node:fs");
+  const { existsSync, readFileSync, statSync } = await import("node:fs");
   const site = bundlePages("sia");
   assert.ok(site);
   const all: Record<string, string> = { "": site.html, ...site.pages };
@@ -947,9 +947,10 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   // Пролёт по рендерам бюро, барабан, бегущая строка и папки.
   assert.equal((all[""].match(/<figure class="fl" /g) || []).length, 8, "в пролёте не 8 кадров");
   assert.match(all[""], /id="drum"/, "нет барабана");
-  // 3D-пролёт Blender — подписан как демонстрация, а не как проект бюро.
-  assert.match(all[""], /class="bfl"[^>]*data-n="180"/, "нет 3D-пролёта");
-  assert.match(all[""], /3D-пролёт · демонстрация/, "3D-пролёт не подписан как демонстрация");
+  // 3D-пролёт Blender в APx180.2606 — подписан как наша интерпретация по рендерам бюро.
+  assert.match(all[""], /class="bfl"[^>]*data-n="180"[^>]*data-d="\/protos\/sia\/f\/d\/"/, "нет 3D-пролёта");
+  assert.match(all[""], /Интерпретация DevUz Studio по рендерам бюро/, "3D-пролёт не подписан как интерпретация");
+  for (let f = 1; f <= 180; f++) for (const d of ["d", "m"]) statSync(`public/protos/sia/f/${d}/${String(f).padStart(4, "0")}.webp`);
   assert.match(all[""], /class="velo-row"/, "нет бегущей строки");
   assert.equal((all[""].match(/data-gf /g) || []).length, 4, "не 4 папки");
   for (const id of ["prolet", "arhitektura", "interery", "arhiv", "uslugi", "byuro", "kontakty"]) assert.match(all[""], new RegExp(`id="${id}"`), `нет блока ${id}`);
