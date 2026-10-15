@@ -156,7 +156,9 @@ export const config = {
   //
   // Шрифты тоже: макет IntalimStudents грузит свой Onest из
   // /protos/intalim/*.woff2, и с редиректом на /ru/… шрифт не доезжал.
+  // Скрипты и ролики — так же: макет архбюро грузит GSAP и видео первого
+  // экрана из /protos/arhbyuro/*.js и *.mp4.
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|html|webmanifest|woff2|woff|ttf)).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|html|webmanifest|woff2|woff|ttf|js|mp4|webm)).*)",
   ],
 };
