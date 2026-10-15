@@ -30,6 +30,7 @@ import europegas from "@/content/proto-bundles/europegas.json" with { type: "jso
 import domtut from "@/content/proto-bundles/domtut.json" with { type: "json" };
 import inapp from "@/content/proto-bundles/inapp.json" with { type: "json" };
 import invis from "@/content/proto-bundles/invis.json" with { type: "json" };
+import arhbyuro from "@/content/proto-bundles/arhbyuro.json" with { type: "json" };
 import greenwell from "@/content/proto-bundles/greenwell.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
@@ -52,6 +53,7 @@ const BUNDLES: Record<string, Bundle> = {
   domtut: domtut as Bundle,
   inapp: inapp as Bundle,
   invis: invis as Bundle,
+  arhbyuro: arhbyuro as Bundle,
   greenwell: greenwell as Bundle,
 };
 
