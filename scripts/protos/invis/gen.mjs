@@ -128,7 +128,7 @@ function heroBlock(l) {
   const zones = D.ZONES.map((z) => `<li style="--zc:${z.c}"><span>${L2(z.n, l)}</span><b class="num" data-hz="${z.id}">${z.seats.length}</b></li>`).join("");
   return `<section class="hero" id="hero">
 <div class="hero-bg" aria-hidden="true"><div class="hb-img" data-par="0.32"><img src="${IMG}/hero.webp" srcset="${IMG}/hero-s.webp 860w, ${IMG}/hero.webp 1600w" sizes="100vw" alt="" fetchpriority="high"></div><div class="hb-shade"></div><div class="hb-floor"><i></i></div></div>
-<div class="hero-gpu" aria-hidden="true" data-par="-0.22">${gpuSvg("hg")}</div>
+<div class="hero-gpu" aria-hidden="true" data-par="-0.22">${gpuLive("rg-hero")}</div>
 <div class="wrap hero-in">
 <div class="hero-txt">
 <p class="kicker light"><i></i>${t("Компьютерный клуб · Фидокор 32/1 · круглосуточно", "Kompyuter klubi · Fidokor 32/1 · kecha-kunduz")}</p>
@@ -147,35 +147,22 @@ function heroBlock(l) {
 </section>`;
 }
 
-/* ── Железо, нарисованное кодом: видеокарта, монитор, клавиатура, мышь, наушники ── */
-function gpuSvg(id) {
-  const fan = (x) => `<g transform="translate(${x} 70)"><circle r="44" fill="#0b0918" stroke="#2b2452" stroke-width="3"/><g class="fan">${Array.from({ length: 9 }, (_, i) => `<path d="M0 -6C12 -14 30 -20 38 -12C26 -12 14 -6 6 2Z" fill="url(#${id}b)" transform="rotate(${i * 40})"/>`).join("")}</g><circle r="11" fill="#14102e" stroke="url(#${id}r)" stroke-width="2.5"/></g>`;
-  return `<svg viewBox="0 0 420 160" class="gpu" role="presentation"><defs><linearGradient id="${id}r" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c8ff2e"/><stop offset=".5" stop-color="#2ee6ff"/><stop offset="1" stop-color="#ff064d"/></linearGradient><linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2350"/><stop offset="1" stop-color="#120e28"/></linearGradient><linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3270"/><stop offset="1" stop-color="#1b1640"/></linearGradient></defs>
-<rect x="6" y="14" width="408" height="118" rx="16" fill="url(#${id}s)" stroke="#3a3270" stroke-width="2"/><g class="pins"><rect x="14" y="132" width="200" height="16" rx="3" fill="#c9a43a"/><path d="M14 136h200" stroke="#8a6e1f" stroke-width="2" stroke-dasharray="4 3"/></g>
-<rect x="6" y="8" width="408" height="7" rx="3.5" fill="url(#${id}r)" class="rgb"/>${fan(84)}${fan(210)}${fan(336)}
-<text x="398" y="124" text-anchor="end" font-size="10" fill="#7d76a8" font-family="Unbounded, sans-serif" letter-spacing="2">INVIS</text></svg>`;
+/* ── Настоящее железо: фото Unsplash (gear.py), анимация поверх ──────────
+   Видеокарта вырезана из фона, каждый вентилятор — свой круглый слой: он
+   вращается, при раскрутке поверх проявляется смазанный слой. Вокруг —
+   ARGB-кольца и полоса подсветки. Остальное железо — фото, поверх которого
+   переливается подсветка (копии с другим оттенком, меняется только
+   прозрачность), бежит волна света и мерцает мышь. */
+const GEAR_META = JSON.parse(read("gear.json"));
+function gpuLive(cls = "") {
+  const g = GEAR_META.gpu;
+  return `<div class="rg ${cls}" style="aspect-ratio:${g.w}/${g.h}"><i class="rg-bar" aria-hidden="true"></i><img class="rg-b" src="${IMG}/gear-gpu.webp" alt="" width="${g.w}" height="${g.h}" loading="lazy">${g.fans
+    .map((f, k) => `<span class="rg-f" style="left:${f.x}%;top:${f.y}%;width:${f.d}%"><i class="rg-ring" aria-hidden="true"></i><i class="rg-ring rg-glow" aria-hidden="true"></i><span class="rg-rot"><img class="rg-s" src="${IMG}/gear-fan${k}.webp" alt="" loading="lazy"><img class="rg-m" src="${IMG}/gear-fan${k}b.webp" alt="" loading="lazy"></span></span>`)
+    .join("")}</div>`;
 }
-function monitorSvg() {
-  return `<svg viewBox="0 0 480 330" class="mon" role="presentation"><defs><linearGradient id="msk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a0f5c"/><stop offset=".55" stop-color="#7a1f7a"/><stop offset=".56" stop-color="#090616"/><stop offset="1" stop-color="#14102e"/></linearGradient><linearGradient id="msun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe14a"/><stop offset="1" stop-color="#ff064d"/></linearGradient><clipPath id="mclip"><rect x="16" y="14" width="448" height="252" rx="6"/></clipPath></defs>
-<rect x="4" y="2" width="472" height="276" rx="14" fill="#0b0918" stroke="#2b2452" stroke-width="3"/>
-<g clip-path="url(#mclip)"><rect x="16" y="14" width="448" height="252" fill="url(#msk)"/><circle cx="240" cy="150" r="58" fill="url(#msun)"/>${[0, 1, 2, 3, 4].map((i) => `<rect x="160" y="${118 + i * 11}" width="160" height="${3 + i}" fill="#2a0f5c"/>`).join("")}
-<rect x="16" y="152" width="448" height="114" fill="#090616"/>
-<g class="mgrid" stroke="#2ee6ff" stroke-opacity=".7" stroke-width="1.5">${Array.from({ length: 13 }, (_, i) => `<path d="M240 152L${-120 + i * 60} 266"/>`).join("")}${[158, 166, 178, 196, 222, 258].map((y) => `<path d="M16 ${y}H464"/>`).join("")}</g>
-<g class="mhud" font-family="Unbounded, sans-serif" font-size="11" fill="#c8ff2e"><text x="30" y="36">HP 100</text><text x="450" y="36" text-anchor="end">00:42</text></g></g>
-<path d="M204 278h72l14 34h-100z" fill="#1b1640"/><rect x="150" y="310" width="180" height="10" rx="5" fill="#2b2452"/></svg>`;
-}
-function kbSvg() {
-  const keys = [];
-  const rows = [[15, 0], [14, 9], [13, 14], [12, 22]];
-  rows.forEach(([n, off], r) => { for (let i = 0; i < n; i++) keys.push(`<rect x="${14 + off + i * 26}" y="${14 + r * 26}" width="22" height="22" rx="4"/>`); });
-  keys.push(`<rect x="100" y="118" width="180" height="22" rx="4"/>`);
-  return `<svg viewBox="0 0 420 156" class="kb" role="presentation"><defs><linearGradient id="kbr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c8ff2e"/><stop offset=".33" stop-color="#2ee6ff"/><stop offset=".66" stop-color="#8a5cff"/><stop offset="1" stop-color="#ff064d"/></linearGradient></defs><rect x="2" y="2" width="416" height="150" rx="14" fill="#0b0918" stroke="url(#kbr)" stroke-width="3" class="rgb"/><g fill="#1d1645" stroke="#3a3270" stroke-width="1.2">${keys.join("")}</g><g fill="url(#kbr)" opacity=".85"><rect x="14" y="40" width="22" height="22" rx="4"/><rect x="40" y="40" width="22" height="22" rx="4"/><rect x="31" y="14" width="22" height="22" rx="4" transform="translate(-4 0)"/></g></svg>`;
-}
-function mouseSvg() {
-  return `<svg viewBox="0 0 120 190" class="mouse" role="presentation"><defs><linearGradient id="msr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2ee6ff"/><stop offset="1" stop-color="#ff064d"/></linearGradient></defs><path d="M60 4C24 4 8 34 8 78v38c0 42 22 70 52 70s52-28 52-70V78C112 34 96 4 60 4z" fill="#14102e" stroke="#3a3270" stroke-width="3"/><path d="M60 6v64" stroke="#3a3270" stroke-width="3"/><rect x="54" y="26" width="12" height="26" rx="6" fill="url(#msr)" class="rgb"/><path d="M28 150c10 18 54 18 64 0" stroke="url(#msr)" stroke-width="4" fill="none" stroke-linecap="round" class="rgb"/></svg>`;
-}
-function headSvg() {
-  return `<svg viewBox="0 0 220 210" class="hs" role="presentation"><defs><linearGradient id="hsr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c8ff2e"/><stop offset="1" stop-color="#2ee6ff"/></linearGradient></defs><path d="M30 120V96a80 80 0 0 1 160 0v24" fill="none" stroke="#2b2452" stroke-width="16" stroke-linecap="round"/><path d="M30 104V96a80 80 0 0 1 160 0v8" fill="none" stroke="url(#hsr)" stroke-width="3" class="rgb"/><rect x="10" y="108" width="54" height="92" rx="24" fill="#14102e" stroke="#3a3270" stroke-width="3"/><rect x="156" y="108" width="54" height="92" rx="24" fill="#14102e" stroke="#3a3270" stroke-width="3"/><circle cx="37" cy="154" r="14" fill="none" stroke="url(#hsr)" stroke-width="3" class="rgb"/><circle cx="183" cy="154" r="14" fill="none" stroke="url(#hsr)" stroke-width="3" class="rgb"/><path d="M40 196c10 10 30 12 46 6" stroke="#3a3270" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`;
+const hue = (src, w, h, extra = "") => `<img class="ph-b" src="${src}" alt="" width="${w}" height="${h}" loading="lazy"><img class="hue h1" src="${src}" alt="" loading="lazy"><img class="hue h2" src="${src}" alt="" loading="lazy">${extra}`;
+function tile(cls, from, name, alt, inner) {
+  return `<figure class="su-p su-t ${cls}" data-from="${from}"><div class="ph" role="img" aria-label="${esc(alt)}">${inner}</div><figcaption>${name}</figcaption></figure>`;
 }
 
 function setupBlock(l) {
@@ -186,14 +173,13 @@ function setupBlock(l) {
 ${head(t("Сетап", "Setap"), t("Железо, за которым не стыдно катать", "Uyalmasdan o‘ynasa bo‘ladigan temir"), t("Листайте: сетап собирается деталь за деталью. Здесь будут ваши видеокарты, мониторы и периферия с настоящими характеристиками: пришлёте список, впишем.", "Varaqlang: setap detalma-detal yig‘iladi. Bu yerda sizning videokartalaringiz, monitorlaringiz va periferiyangiz haqiqiy xususiyatlari bilan bo‘ladi: ro‘yxatni yuborsangiz, yozib qo‘yamiz."))}
 <ol class="su-list">${parts}</ol>
 </div>
-<div class="su-stage" aria-hidden="true">
-<div class="su-desk"></div>
-<div class="su-p su-mon" data-from="0,-60,-14,.6">${monitorSvg()}</div>
-<div class="su-p su-gpu" data-from="120,40,24,.5">${gpuSvg("sg")}</div>
-<div class="su-p su-kb" data-from="-80,70,-18,.6">${kbSvg()}</div>
-<div class="su-p su-mouse" data-from="90,60,30,.4">${mouseSvg()}</div>
-<div class="su-p su-hs" data-from="-90,-40,22,.5">${headSvg()}</div>
-<div class="su-glow"></div>
+<div class="su-stage">
+<figure class="su-p su-gpu" data-from="0,-40,-8,.7"><div class="ph-g" role="img" aria-label="${esc(t("Видеокарта с тремя вентиляторами", "Uchta ventilyatorli videokarta"))}">${gpuLive("rg-su")}</div><figcaption>${L2(D.GEAR[0].t, l)}</figcaption></figure>
+${tile("su-kb", "-70,50,-10,.7", L2(D.GEAR[1].t, l), t("Клавиатура с радужной подсветкой", "Kamalak yoritgichli klaviatura"), hue(`${IMG}/gear-kb.webp`, GEAR_META.kb[0], GEAR_META.kb[1], '<i class="sweep" aria-hidden="true"></i>'))}
+${tile("su-mouse", "70,50,12,.6", L2(D.GEAR[2].t, l), t("Игровая мышь с подсветкой", "Yoritgichli o‘yin sichqonchasi"), hue(`${IMG}/gear-mouse.webp`, GEAR_META.mouse[0], GEAR_META.mouse[1], `<img class="flk" src="${IMG}/gear-mouse.webp" alt="" loading="lazy">`))}
+${tile("su-desk", "-70,70,8,.6", L2(D.GEAR[3].t, l), t("Монитор и игровой ПК в тёмной комнате", "Qorong‘i xonada monitor va o‘yin kompyuteri"), `<img class="ph-b" src="${IMG}/gear-desk.webp" alt="" width="${GEAR_META.desk[0]}" height="${GEAR_META.desk[1]}" loading="lazy"><img class="hue h1 scr" src="${IMG}/gear-desk.webp" alt="" loading="lazy"><img class="hue h2 scr" src="${IMG}/gear-desk.webp" alt="" loading="lazy"><i class="pcglow" aria-hidden="true"></i>`)}
+${tile("su-hs", "70,70,-12,.6", L2(D.GEAR[4].t, l), t("Игровые наушники с микрофоном", "Mikrofonli o‘yin quloqchinlari"), hue(`${IMG}/gear-hs.webp`, GEAR_META.hs[0], GEAR_META.hs[1]))}
+<div class="su-glow" aria-hidden="true"></div>
 </div>
 </div></div></section>`;
 }
@@ -336,7 +322,7 @@ ${body}
 <div class="cols">
 <div>${logo("f-logo")}<ul class="f-c">${contacts.map(([i, v]) => `<li>${i}<span>${v}</span></li>`).join("")}</ul></div>
 <div><b>DevUz Studio</b><ul><li><a href="https://devuz.studio">devuz.studio</a></li><li><a href="https://t.me/Devuz_studio_bot?start=invis">Telegram</a></li></ul></div>
-<div><b>${t("Данные макета", "Maket ma’lumotlari")}</b><ul><li>${t("Места, брони, клиенты и смены: демо", "Joylar, bronlar, mijozlar va smenalar: demo")}</li><li>${t("Цены: середина рынка Ташкента", "Narxlar: Toshkent bozori o‘rtachasi")}</li><li>${t(`Фото: ${D.PHOTO_CREDIT[0]}`, `Suratlar: ${D.PHOTO_CREDIT[1]}`)}</li><li>${t("Железо нарисовано кодом", "Temir kod bilan chizilgan")}</li></ul></div>
+<div><b>${t("Данные макета", "Maket ma’lumotlari")}</b><ul><li>${t("Места, брони, клиенты и смены: демо", "Joylar, bronlar, mijozlar va smenalar: demo")}</li><li>${t("Цены: середина рынка Ташкента", "Narxlar: Toshkent bozori o‘rtachasi")}</li><li>${t(`Фото: ${D.PHOTO_CREDIT[0]}`, `Suratlar: ${D.PHOTO_CREDIT[1]}`)}</li><li>${t("Железо: фото Unsplash, подсветка и вентиляторы оживлены кодом", "Temir: Unsplash suratlari, yoritgich va ventilyatorlar kod bilan jonlantirilgan")}</li></ul></div>
 </div>
 <div class="rights"><span>${t(`Это макет: так может выглядеть сайт клуба ${B}. Знак временный: пришлёте логотип, и он встанет везде. Места, брони, клиенты, смены и характеристики железа придуманы для показа, в работе их отдаёт система управления клубом.`, `Bu maket: ${B} klubi sayti shunday ko‘rinishi mumkin. Belgi vaqtincha: logotipni yuborsangiz, hamma joyga qo‘yiladi. Joylar, bronlar, mijozlar, smenalar va temir xususiyatlari ko‘rsatish uchun o‘ylab topilgan, ishda ularni klubni boshqarish tizimi beradi.`)}</span><span>${t("Макет принадлежит DevUz Studio. Использовать его можно только по договору:", "Maket DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin:")} <a href="${TERMS(l)}">${t("условия использования", "foydalanish shartlari")}</a></span></div>
 </div></footer>

@@ -86,10 +86,10 @@ export const HOOKS = [
 
 /* Сетап: что собирается по прокрутке. Характеристики — после списка от клуба. */
 export const GEAR = [
+  { i: "bolt", t: ["Видеокарта", "Videokarta"], e: ["Тянет новые игры на высоких настройках, вентиляторы с подсветкой.", "Yangi o‘yinlarni yuqori sozlamalarda tortadi, ventilyatorlar yoritilgan."] },
+  { i: "pc", t: ["Клавиатура", "Klaviatura"], e: ["Подсветка клавиш: видно и в тёмном зале.", "Tugmalar yoritilgan: qorong‘i zalda ham ko‘rinadi."] },
+  { i: "target", t: ["Мышь", "Sichqoncha"], e: ["Лёгкая игровая мышь с подсветкой и большой коврик.", "Yoritgichli yengil o‘yin sichqonchasi va katta gilamcha."] },
   { i: "pc", t: ["Монитор", "Monitor"], e: ["Высокая частота: картинка плавная, прицел не дёргается.", "Yuqori chastota: tasvir silliq, nishon titramaydi."] },
-  { i: "bolt", t: ["Видеокарта", "Videokarta"], e: ["Тянет новые игры на высоких настройках.", "Yangi o‘yinlarni yuqori sozlamalarda tortadi."] },
-  { i: "pc", t: ["Клавиатура", "Klaviatura"], e: ["Механика с подсветкой.", "Yoritilgan mexanik klaviatura."] },
-  { i: "target", t: ["Мышь", "Sichqoncha"], e: ["Лёгкая игровая мышь и большой коврик.", "Yengil o‘yin sichqonchasi va katta gilamcha."] },
   { i: "head", t: ["Наушники", "Quloqchinlar"], e: ["Слышно шаги, микрофон для команды.", "Qadam tovushlari eshitiladi, jamoa uchun mikrofon."] },
 ];
 

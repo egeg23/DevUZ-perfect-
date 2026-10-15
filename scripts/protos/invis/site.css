@@ -109,14 +109,9 @@ section{position:relative;padding:72px 0}
 .hb-floor{position:absolute;left:-20%;right:-20%;bottom:0;height:42%;perspective:420px;-webkit-mask-image:linear-gradient(to top,#000 20%,transparent);mask-image:linear-gradient(to top,#000 20%,transparent);opacity:.55}
 .hb-floor i{position:absolute;inset:-100% 0 0;transform:rotateX(62deg);transform-origin:50% 100%;background-image:linear-gradient(to right,rgb(255 6 77 / .45) 1px,transparent 1px),linear-gradient(to bottom,rgb(138 92 255 / .45) 1px,transparent 1px);background-size:64px 64px;animation:floor 3.2s linear infinite}
 @keyframes floor{to{transform:rotateX(62deg) translate3d(0,64px,0)}}
-.hero-gpu{position:absolute;right:-6%;top:12%;width:min(56vw,620px);z-index:-1;opacity:.9;filter:drop-shadow(0 30px 40px rgb(0 0 0 / .6));pointer-events:none}
-.hero-gpu .gpu{transform:rotate(-12deg)}
-.hero-gpu .pins{display:none}
+.hero-gpu{position:absolute;right:-6%;top:5%;width:min(44vw,580px);z-index:-1;pointer-events:none;filter:drop-shadow(0 30px 40px rgb(0 0 0 / .7))}
+.hero-gpu .rg{transform:rotate(-10deg)}
 @media (max-width:899px){.hero-gpu{width:86vw;right:-30%;top:auto;bottom:18%;opacity:.35}}
-.gpu .fan{transform-origin:0 0;animation:fan 1.4s linear infinite}
-@keyframes fan{to{transform:rotate(360deg)}}
-.rgb{animation:rgb 4s linear infinite}
-@keyframes rgb{50%{opacity:.55}}
 .hero-in{display:grid;gap:32px;align-items:end;flex:1;padding-bottom:40px}
 @media (min-width:1000px){.hero-in{grid-template-columns:1.25fr .9fr;align-items:center}}
 .hero-txt{opacity:0;transform:translateY(24px);transition:opacity .9s var(--ease) .1s,transform .9s var(--ease) .1s}
@@ -164,18 +159,45 @@ h1{margin-top:16px}
 .su-li b .ic{color:var(--redt)}
 .su-li span{display:block;font-size:14px;color:var(--fg2);margin-top:2px}
 @media (max-width:999px){.su-sticky{align-items:flex-start;padding-top:88px}.setup .sub{display:none}.su-li span{display:none}.su-list{grid-template-columns:repeat(2,1fr)}.su-li{padding:8px 12px}.su-li.on{transform:none}.setup h2{font-size:24px}}
-.su-stage{position:relative;aspect-ratio:1.25;width:100%;max-width:640px;justify-self:center}
-@media (max-width:999px){.su-stage{max-width:440px;margin-top:8px}}
-.su-desk{position:absolute;left:4%;right:4%;bottom:10%;height:4%;border-radius:999px;background:linear-gradient(90deg,transparent,rgb(46 230 255 / .5),rgb(255 63 164 / .5),transparent);opacity:.7}
-.su-p{position:absolute;will-change:transform,opacity}
-.su-p svg{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 24px rgb(0 0 0 / .55))}
-.su-mon{left:16%;width:68%;top:4%}
-.su-gpu{left:54%;width:42%;top:52%}
-.su-kb{left:14%;width:48%;top:70%}
-.su-mouse{left:66%;width:9%;top:74%}
-.su-hs{left:0;width:20%;top:44%}
-.mon .mgrid{animation:mg 1.6s linear infinite}
-@keyframes mg{to{transform:translateY(6px)}}
+.su-stage{position:relative;aspect-ratio:1.12;width:100%;max-width:660px;justify-self:center}
+@media (max-width:999px){.su-stage{max-width:460px;margin-top:8px}}
+.su-p{position:absolute;margin:0;will-change:transform,opacity}
+.su-gpu{left:4%;top:0;width:92%}
+.su-t{width:49%;height:25%;border-radius:18px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 1px var(--line),0 18px 40px -18px rgb(0 0 0 / .9)}
+.su-kb{left:0;top:48%}.su-mouse{left:51%;top:48%}.su-desk{left:0;top:75%}.su-hs{left:51%;top:75%}
+.su-p figcaption{position:absolute;left:10px;bottom:8px;z-index:3;padding:4px 10px;border-radius:999px;background:rgb(9 6 22 / .72);font-size:12px;font-weight:700;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.su-gpu figcaption{left:7%;bottom:auto;top:12%}
+.ph{position:absolute;inset:0}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph-g{filter:drop-shadow(0 26px 30px rgb(0 0 0 / .7))}
+/* Подсветка переливается: две копии фото с другим оттенком сменяют друг
+   друга прозрачностью, сам оттенок задан один раз и не анимируется. */
+.hue{opacity:0}
+.h1{filter:hue-rotate(120deg) saturate(1.15);animation:hueA 6s linear infinite}
+.h2{filter:hue-rotate(240deg) saturate(1.15);animation:hueB 6s linear infinite}
+@keyframes hueA{0%,100%{opacity:0}33%{opacity:1}66%{opacity:0}}
+@keyframes hueB{0%,33%{opacity:0}66%{opacity:1}100%{opacity:0}}
+.su-hs .hue{animation-duration:9s}
+.sweep{position:absolute;inset:0;z-index:2;background:linear-gradient(100deg,transparent 38%,rgb(255 255 255 / .55) 50%,transparent 62%);mix-blend-mode:overlay;transform:translateX(-100%);animation:sweep 3.2s cubic-bezier(.5,0,.5,1) infinite}
+@keyframes sweep{to{transform:translateX(100%)}}
+.flk{filter:brightness(1.9) saturate(1.4);opacity:0;animation:flk 3.4s linear infinite}
+@keyframes flk{0%,8%{opacity:0}9%{opacity:.85}11%{opacity:.1}13%{opacity:.9}16%{opacity:.25}40%{opacity:.6}55%{opacity:.15}62%{opacity:.75}63%{opacity:0}100%{opacity:0}}
+.scr{clip-path:inset(14% 49% 42% 7% round 4px)}
+.pcglow{position:absolute;left:66%;top:28%;width:24%;height:40%;background:radial-gradient(closest-side,rgb(255 30 60 / .55),transparent);mix-blend-mode:screen;animation:pcg 2.4s ease-in-out infinite}
+@keyframes pcg{50%{opacity:.25}}
+/* Видеокарта: вентиляторы, ARGB-кольца, полоса подсветки. */
+.rg{position:relative;width:100%}
+.rg-b{position:absolute;inset:0;width:100%;height:100%}
+.rg-f{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%)}
+.rg-rot{position:absolute;inset:0;will-change:transform}
+.rg-rot img{position:absolute;inset:0;width:100%;height:100%;transition:opacity 1.4s ease}
+.rg-m{opacity:0}
+.run .rg-m{opacity:.95}.run .rg-s{opacity:.35}
+.rg-ring{position:absolute;inset:-3.5%;border-radius:50%;background:conic-gradient(#ff064d,#ff9a00,#ffe600,#3dff6e,#2ee6ff,#4a5bff,#c13dff,#ff064d);-webkit-mask:radial-gradient(closest-side,transparent 90%,#000 92%,#000 97%,transparent 100%);mask:radial-gradient(closest-side,transparent 90%,#000 92%,#000 97%,transparent 100%);mix-blend-mode:screen;animation:spin 2.6s linear infinite}
+.rg-glow{inset:-9%;filter:blur(10px);opacity:.75;-webkit-mask:radial-gradient(closest-side,transparent 74%,#000 86%,#000 90%,transparent 100%);mask:radial-gradient(closest-side,transparent 74%,#000 86%,#000 90%,transparent 100%)}
+.rg-bar{position:absolute;left:8%;right:8%;top:4.5%;height:1.6%;border-radius:99px;overflow:hidden;z-index:2;box-shadow:0 0 18px 2px rgb(255 6 77 / .45)}
+.rg-bar::before{content:"";position:absolute;top:0;bottom:0;left:0;width:300%;background:linear-gradient(90deg,#ff064d,#ff9a00,#ffe600,#3dff6e,#2ee6ff,#4a5bff,#c13dff,#ff064d,#ff9a00,#ffe600,#3dff6e,#2ee6ff,#4a5bff,#c13dff,#ff064d);animation:bar 4s linear infinite}
+@keyframes bar{to{transform:translateX(-50%)}}
 .su-glow{position:absolute;inset:20% 10%;z-index:-1;background:radial-gradient(closest-side,rgb(138 92 255 / .35),transparent);opacity:var(--su-g,0)}
 
 /* Зоны: карточки с фото, пятно света за курсором (Magic Card, MIT) и наклон. */
@@ -316,6 +338,6 @@ input:focus-visible+.sw{outline:3px solid #5a3fd6;outline-offset:2px}
 @keyframes rvSpin{from{opacity:0;transform:rotate(-120deg) scale(.6)}to{opacity:1;transform:none}}
 .zc.rv.in{animation-fill-mode:backwards}
 
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}.intro{display:none}.js .rv{opacity:1}.js .rv.in{animation:none}.mq-row,.shim::after,.beam::before,.hb-floor i,.gpu .fan,.rgb{animation:none}[data-par]{transform:none !important}.setup{height:auto}.su-sticky{position:relative;height:auto;padding:72px 0}.su-p{transform:none !important;opacity:1 !important}.su-li{opacity:1}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}.intro{display:none}.js .rv{opacity:1}.js .rv.in{animation:none}.mq-row,.shim::after,.beam::before,.hb-floor i,.rg-ring,.rg-bar::before,.hue,.sweep,.flk,.pcglow{animation:none}.hue,.flk,.sweep{display:none}[data-par]{transform:none !important}.setup{height:auto}.su-sticky{position:relative;height:auto;padding:72px 0}.su-p{transform:none !important;opacity:1 !important}.su-li{opacity:1}}
 
 .dz-code{opacity:calc(1 - var(--en-slit,0))}

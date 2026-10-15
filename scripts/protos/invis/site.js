@@ -45,6 +45,21 @@ function onScroll(){if(!tick){tick=true;requestAnimationFrame(frame)}}
 addEventListener('scroll',onScroll,{passive:true});addEventListener('resize',onScroll);frame();
 if(REDUCED)items.forEach(function(li){li.classList.add('on')});
 
+/* Вентиляторы видеокарты: в кадре раскручиваются с нуля (скорость растёт
+   плавно, поверх проявляется смазанный слой), вне кадра стоят. Крутится
+   только transform. */
+function fans(rg){
+  var rots=$$('.rg-rot',rg),an=[],ramp=0,t0=0,on=false;
+  if(REDUCED||!rots.length||!rots[0].animate)return;
+  rots.forEach(function(r,i){var a=r.animate([{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],{duration:640+i*37,iterations:Infinity});a.playbackRate=0;an.push(a)});
+  function step(now){if(!on)return;if(!t0)t0=now;var k=Math.min(1,(now-t0)/2200),v=k*k*(3-2*k);an.forEach(function(a){a.playbackRate=Math.max(.02,v)});rg.classList.toggle('run',v>.55);if(k<1)ramp=requestAnimationFrame(step)}
+  if('IntersectionObserver' in window)new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){on=true;t0=0;an.forEach(function(a){a.playbackRate=.02;a.play()});cancelAnimationFrame(ramp);ramp=requestAnimationFrame(step)}
+    else{on=false;cancelAnimationFrame(ramp);an.forEach(function(a){a.pause()});rg.classList.remove('run')}
+  })},{threshold:.15}).observe(rg);
+}
+$$('.rg').forEach(fans);
+
 /* Пятно света за курсором и лёгкий наклон карточек зон (только мышь). */
 var fine=matchMedia('(hover: hover) and (pointer: fine)').matches;
 $$('.spot').forEach(function(c){

@@ -750,6 +750,10 @@ test("Компьютерный клуб Invis: страница и кабине�
     for (const id of ["hero", "setup", "zony", "bron", "koleso", "kabinety", "predlozhenie", "konstruktor"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
     assert.match(all[path], /backdrop-filter:url\(#lq\)/, `${path}: нет жидкого стекла`);
     assert.match(all[path], /data-par=/, `${path}: нет параллакса`);
+    // Железо — настоящие фото, вентиляторы видеокарты — отдельные слои, которые крутятся.
+    for (const f of ["gear-gpu", "gear-fan0", "gear-fan1", "gear-fan2", "gear-kb", "gear-mouse", "gear-hs", "gear-desk"]) assert.ok(all[path].includes(`/protos/invis/${f}.webp`), `${path}: нет фото ${f}`);
+    assert.match(all[path], /class="rg-rot"/, `${path}: вентиляторы не крутятся`);
+    assert.doesNotMatch(all[path], /class="gpu"|class="kb"|class="mouse"/, `${path}: осталось железо, нарисованное кодом`);
     assert.match(all[path], new RegExp(`data-src="__PROTO_BASE__${path ? "/uz" : ""}/kabinet\\?embed=1"`), `${path}: кабинет не в айфоне`);
     assert.match(all[path], new RegExp(`data-src="__PROTO_BASE__${path ? "/uz" : ""}/admin\\?embed=1"`), `${path}: пульт не в рамке`);
     for (const s of ["Langame", "SENET", "SmartShell", "iCafeCloud"]) assert.ok(all[path].includes(s), `${path}: нет системы ${s}`);
