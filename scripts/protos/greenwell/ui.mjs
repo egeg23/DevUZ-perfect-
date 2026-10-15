@@ -285,6 +285,7 @@ export const PANEL_UI = {
   alStock: ["{p} кончится через {n} дн.", "{p} {n} kunda tugaydi"],
   revenue: ["Выручка", "Tushum"],
   gp: ["Валовая прибыль", "Yalpi foyda"],
+  gpShort: ["Прибыль", "Foyda"],
   margin: ["маржа", "marja"],
   orders: ["Заказы", "Buyurtmalar"],
   avg: ["Средний чек", "O‘rtacha chek"],

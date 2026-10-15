@@ -3,7 +3,7 @@
 import { chromium } from "playwright-core";
 const [path, w, h, out, full] = process.argv.slice(2);
 const B = `http://localhost:4811/proto/${"a".repeat(43)}`;
-const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", ...(process.env.HTTPS_PROXY ? { proxy: { server: process.env.HTTPS_PROXY, bypass: "localhost" } } : {}) });
 const ctx = await b.newContext({ viewport: { width: +w, height: +h }, deviceScaleFactor: 2, isMobile: +w < 800, hasTouch: +w < 800 });
 const p = await ctx.newPage();
 const errs = [];
