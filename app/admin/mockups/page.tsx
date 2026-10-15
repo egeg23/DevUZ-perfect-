@@ -6,8 +6,8 @@ import { mockupsDict } from "@/content/admin-panel/mockups";
 import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick } from "@/lib/admin/i18n";
-import { tashkentTime } from "@/lib/admin/mockups";
-import { mockupList } from "@/lib/admin/mockups-store";
+import { assignsMockups, tashkentTime } from "@/lib/admin/mockups";
+import { mockupList, mockupStaffOptions } from "@/lib/admin/mockups-store";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +33,15 @@ export default async function MockupsPage() {
   const locale = staff.panel_locale;
   const t = pick(mockupsDict, locale);
   const now = new Date();
-  const rows: MockupView[] = (await mockupList(locale)).map((row) => ({
+  const assigns = assignsMockups(staff.role);
+  const [list, team] = await Promise.all([mockupList(locale), assigns ? mockupStaffOptions() : Promise.resolve([])]);
+  const rows: MockupView[] = list.map((row) => ({
     ...row,
     createdText: made(row.created),
     liveUntilText: row.liveUntil ? tashkentTime(row.liveUntil) : null,
     openHours: row.openUntil ? hoursLeft(Date.parse(row.openUntil), now) : null,
     closedAtText: row.closedAt ? tashkentTime(row.closedAt) : null,
+    sentAtText: row.sentAt ? tashkentTime(row.sentAt) : null,
   }));
 
   return (
@@ -49,7 +52,7 @@ export default async function MockupsPage() {
       </h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro}</p>
       <p className="mt-2 text-xs text-faint">{t.total(rows.length)}</p>
-      <MockupList rows={rows} />
+      <MockupList rows={rows} team={team} />
     </AdminShell>
   );
 }

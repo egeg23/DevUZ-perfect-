@@ -129,6 +129,8 @@ export const AUDIT_ACTIONS = [
   // кто выдал и к какому макету. Сам пароль в журнал не пишется.
   "mockup.code",
   "mockup.auto_closed",
+  // Ответственный за макет, назначенный руками (руководитель или владелец).
+  "mockup.owner",
   // Рабочие аккаунты Telegram: кто подключил номер, кто остановил и снял.
   "work_account.add",
   "work_account.pause",
