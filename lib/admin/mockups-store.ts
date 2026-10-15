@@ -3,8 +3,10 @@ import { ownPromo } from "@/lib/admin/mockup-offer";
 import type { PanelLocale } from "@/lib/admin/i18n";
 import {
   SHOWCASE_LOCK,
+  assignsMockups,
   clientMessage,
   mockupNiche,
+  mockupOwner,
   parseMockupRef,
   showcaseCases,
   showcaseRow,
@@ -16,7 +18,7 @@ import { issueProtoCode, issueShowcaseCode, liveCodesUntil } from "@/lib/proto/c
 import { protoUrl } from "@/lib/proto/store";
 import { activeLock } from "@/lib/proto/lock";
 import { closesAt } from "@/lib/proto/auto-close";
-import { firstSends, inputOf } from "@/lib/proto/auto-close-read";
+import { firstSends, inputOf, type FirstSend } from "@/lib/proto/auto-close-read";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -35,15 +37,17 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
     const { data, error } = await db
       .from("protos")
       .select(
-        "id, token, niche, locale, name, source, created_at, opens, opened_at, prospect_id, auto, closed_at, auto_closed_at, lock:facts->>lock, lockAt:facts->>lockAt, promo:facts->promo",
+        "id, token, niche, locale, name, source, created_at, opens, opened_at, prospect_id, auto, closed_at, auto_closed_at, owner_staff_id, created_by, lock:facts->>lock, lockAt:facts->>lockAt, promo:facts->promo",
       )
       .neq("status", "draft")
       .order("created_at", { ascending: false })
       .limit(1000);
     if (error) console.error("макеты: не прочитал прототипы", error.message);
-    // Сколько макет ещё открыт без пароля: 24 часа с первой отправки клиенту
-    // (lib/proto/auto-close.ts).
-    const sends = await firstSends((data ?? []).filter((r) => r.auto !== true && !r.closed_at).map((r) => `p:${r.id}`));
+    // Первая отправка клиенту — у каждого макета: по ней «отправлен клиенту»,
+    // ответственный (хозяин лида) и сколько открытый ещё живёт без пароля
+    // (24 часа, lib/proto/auto-close.ts).
+    const sends = await firstSends((data ?? []).filter((r) => r.auto !== true).map((r) => `p:${r.id}`));
+    const owners = await ownerIds(data ?? [], sends);
     const now = new Date();
     for (const row of data ?? []) {
       // Собранные ботом для касаний (lib/proto/auto) — не в списке. Владелец,
@@ -67,6 +71,8 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
         opens: Number(row.opens ?? 0),
         lang: row.locale === "uz" ? "uz" : "ru",
         promo: promoOf(row.promo),
+        owner: mockupOwner(owners.ids.get(id) ?? { set: null, lead: null, touch: null, made: null }, owners.names),
+        sentAt: sends.get(`p:${id}`)?.sent_at ?? null,
         ...openState(row, sends.get(`p:${id}`), now),
       });
     }
@@ -79,6 +85,116 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
 
   // Свежие сверху. У витрины дата без часов — она встаёт после прототипов того же дня.
   return rows.sort((a, b) => b.created.localeCompare(a.created));
+}
+
+type OwnerIds = Parameters<typeof mockupOwner>[0];
+
+/**
+ * Кандидаты в ответственные у каждого прототипа и имена сотрудников. Три
+ * запроса на весь список, а не на строку: лиды первой отправки, касания и
+ * сотрудники.
+ */
+async function ownerIds(
+  rows: readonly Record<string, unknown>[],
+  sends: Map<string, FirstSend>,
+): Promise<{ ids: Map<string, OwnerIds>; names: Map<string, string> }> {
+  const ids = new Map<string, OwnerIds>();
+  const names = new Map<string, string>();
+  const db = serviceClient();
+  if (!db) return { ids, names };
+  const str = (v: unknown) => (typeof v === "string" && v ? v : null);
+
+  const leadIds = new Set<string>();
+  const prospectIds = new Set<string>();
+  for (const row of rows) {
+    const sent = sends.get(`p:${String(row.id)}`);
+    if (sent?.lead_id) leadIds.add(sent.lead_id);
+    const prospect = sent?.prospect_id ?? str(row.prospect_id);
+    if (prospect) prospectIds.add(prospect);
+  }
+  const [leads, prospects] = await Promise.all([
+    leadIds.size
+      ? db.from("leads").select("id, assigned_staff_id").in("id", [...leadIds])
+      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+    prospectIds.size
+      ? db.from("prospects").select("id, touched_by").in("id", [...prospectIds])
+      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+  ]);
+  const leadOwner = new Map((leads.data ?? []).map((l) => [String(l.id), str(l.assigned_staff_id)]));
+  const toucher = new Map((prospects.data ?? []).map((p) => [String(p.id), str(p.touched_by)]));
+
+  const staffIds = new Set<string>();
+  for (const row of rows) {
+    const id = String(row.id);
+    const sent = sends.get(`p:${id}`);
+    const prospect = sent?.prospect_id ?? str(row.prospect_id);
+    const entry: OwnerIds = {
+      set: str(row.owner_staff_id),
+      lead: sent?.lead_id ? (leadOwner.get(sent.lead_id) ?? null) : null,
+      touch: prospect ? (toucher.get(prospect) ?? null) : null,
+      made: str(row.created_by),
+    };
+    ids.set(id, entry);
+    for (const v of Object.values(entry)) if (v) staffIds.add(v);
+  }
+  if (staffIds.size) {
+    const { data } = await db.from("staff").select("id, display_name").in("id", [...staffIds]);
+    for (const s of data ?? []) if (s.display_name) names.set(String(s.id), String(s.display_name));
+  }
+  return { ids, names };
+}
+
+/** Кого можно назначить ответственным: все, кто работает сейчас. */
+export async function mockupStaffOptions(): Promise<{ id: string; name: string }[]> {
+  const db = serviceClient();
+  if (!db) return [];
+  const { data } = await db.from("staff").select("id, display_name").eq("is_active", true).order("display_name").limit(200);
+  return (data ?? []).filter((s) => s.display_name).map((s) => ({ id: String(s.id), name: String(s.display_name) }));
+}
+
+export type OwnerResult = { ok: true } | { ok: false; reason: "forbidden" | "not_found" | "offline" };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Назначить ответственного за прототип. Руководитель и владелец
+ * (assignsMockups); пустой staffId — снять назначение, и ответственный снова
+ * берётся по лиду и касанию. У витрины ответственного нет.
+ */
+export async function setMockupOwner(ref: string, staffId: string, staff: Staff, ip: string | null): Promise<OwnerResult> {
+  if (!assignsMockups(staff.role)) return { ok: false, reason: "forbidden" };
+  const target = parseMockupRef(ref);
+  if (!target || target.kind !== "proto") return { ok: false, reason: "not_found" };
+  if (staffId && !UUID.test(staffId)) return { ok: false, reason: "not_found" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+
+  let ownerName: string | null = null;
+  if (staffId) {
+    const { data: who } = await db.from("staff").select("id, display_name, is_active").eq("id", staffId).maybeSingle();
+    if (!who?.is_active) return { ok: false, reason: "not_found" };
+    ownerName = String(who.display_name ?? "");
+  }
+  const { data: proto, error } = await db
+    .from("protos")
+    .update({ owner_staff_id: staffId || null })
+    .eq("id", target.id)
+    .neq("status", "draft")
+    .select("id, name")
+    .maybeSingle();
+  if (error) {
+    console.error("макеты: не сохранил ответственного", error.message);
+    return { ok: false, reason: "offline" };
+  }
+  if (!proto) return { ok: false, reason: "not_found" };
+  await record("mockup.owner", {
+    actorStaffId: staff.id,
+    targetType: "proto",
+    targetId: String(proto.id),
+    meta: { name: String(proto.name), owner: ownerName },
+    ip,
+  });
+  return { ok: true };
 }
 
 /** Своя цена акции 48 часов — та, что на самом макете (lib/admin/mockup-offer.ts, ownPromo). */

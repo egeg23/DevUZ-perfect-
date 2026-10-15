@@ -15,8 +15,10 @@ import { mockupsDict, mockupNicheDict } from "@/content/admin-panel/mockups";
 import {
   SHOWCASE_LOCK,
   SHOWCASE_NICHE,
+  assignsMockups,
   clientMessage,
   mockupNiche,
+  mockupOwner,
   parseMockupRef,
   showcaseCases,
   showcaseRow,
@@ -179,4 +181,57 @@ test("кнопка пароля зовёт макет понятной ссыл�
   for (const bad of ["", "p:1", "x:mavera", "s:../../etc", `p:${ID};drop`]) assert.equal(parseMockupRef(bad), null, bad);
   // Ошибка из сервера — у каждой причины своя строка на панели.
   for (const reason of ["not_found", "no_lock", "offline"] as const) assert.ok(mockupsDict[`fail_${reason}`]);
+});
+
+test("ответственный: назначенный руками, потом хозяин лида, автор касания, кто собрал", () => {
+  // Руководитель (Александр), 15.10.2026: «Добавить в раздел макеты
+  // ответственного за макет менеджера и дату, когда макет был отправлен / не
+  // отправлен клиенту».
+  const names = new Map([
+    ["a", "Александр"],
+    ["b", "Арсений"],
+    ["c", "Эльдар"],
+    ["d", "Егор"],
+  ]);
+  const none = { set: null, lead: null, touch: null, made: null };
+  assert.deepEqual(mockupOwner({ set: "a", lead: "b", touch: "c", made: "d" }, names), { id: "a", name: "Александр", source: "set" });
+  assert.deepEqual(mockupOwner({ ...none, lead: "b", touch: "c", made: "d" }, names), { id: "b", name: "Арсений", source: "lead" });
+  assert.deepEqual(mockupOwner({ ...none, touch: "c", made: "d" }, names), { id: "c", name: "Эльдар", source: "touch" });
+  assert.deepEqual(mockupOwner({ ...none, made: "d" }, names), { id: "d", name: "Егор", source: "made" });
+  assert.equal(mockupOwner(none, names), null, "никого — «не назначен»");
+  // Сотрудника без имени (удалён из базы) пропускаем — берём следующего.
+  assert.deepEqual(mockupOwner({ ...none, set: "x", lead: "b" }, names)?.name, "Арсений");
+});
+
+test("ответственного назначают руководитель и владелец; менеджер видит, но не меняет", () => {
+  assert.equal(assignsMockups("admin"), true);
+  assert.equal(assignsMockups("head"), true);
+  assert.equal(assignsMockups("manager"), false);
+  const store = read("lib/admin/mockups-store.ts");
+  const set = between(store, "export async function setMockupOwner(", "/** Своя цена акции");
+  // Роль — первой строкой, до базы: галочка раздела даёт только просмотр.
+  assert.ok(set.indexOf("assignsMockups(staff.role)") < set.indexOf("serviceClient()"));
+  assert.match(set, /is_active/, "назначить можно только того, кто работает");
+  assert.match(set, /record\("mockup\.owner"/, "назначение — в журнал");
+  assert.match(read("app/admin/mockups/actions.ts"), /setMockupOwner\(/);
+  // Список людей — только тем, кто назначает.
+  assert.match(read("app/admin/mockups/page.tsx"), /assigns \? mockupStaffOptions\(\)/);
+  assert.match(read("supabase/migrations/0166_mockup_owner.sql"), /add column if not exists owner_staff_id uuid references public\.staff/);
+});
+
+test("отправка клиенту — первая из mockup_offers у каждого макета, не только у открытых", () => {
+  const store = read("lib/admin/mockups-store.ts");
+  assert.match(store, /firstSends\(\(data \?\? \[\]\)\.filter\(\(r\) => r\.auto !== true\)/);
+  assert.match(store, /sentAt: sends\.get\(`p:\$\{id\}`\)\?\.sent_at \?\? null/);
+  const list = read("components/admin/mockup-list.tsx");
+  assert.match(list, /t\.sentAt\(row\.sentAtText\)/);
+  assert.match(list, /t\.notSent/);
+  assert.match(list, /filter === "unsent"/);
+});
+
+test("«макет закрылся паролем» — сначала ответственному из «Макетов»", () => {
+  const close = read("lib/proto/auto-close-store.ts");
+  assert.match(close, /senderChat\(sent, p\.prospect_id, p\.owner_staff_id \?\? null\)/);
+  const sender = between(close, "async function senderChat(", "export type AutoCloseRun");
+  assert.ok(sender.indexOf("let staffId: string | null = owner;") < sender.indexOf("sent?.lead_id"));
 });

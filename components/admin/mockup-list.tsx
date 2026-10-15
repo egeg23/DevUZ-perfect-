@@ -3,12 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import { mockupCodeAction } from "@/app/admin/mockups/actions";
+import { mockupCodeAction, mockupOwnerAction } from "@/app/admin/mockups/actions";
 import { CopyMessage } from "@/components/admin/copy-message";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { mockupsDict } from "@/content/admin-panel/mockups";
 import type { MockupRow } from "@/lib/admin/mockups";
-import type { CodeResult } from "@/lib/admin/mockups-store";
+import type { CodeResult, OwnerResult } from "@/lib/admin/mockups-store";
 
 /**
  * Список макетов с поиском и кнопкой пароля (раздел «Макеты»).
@@ -26,9 +26,14 @@ export type MockupView = MockupRow & {
   openHours: number | null;
   /** Закрыт паролем с этой минуты (по Ташкенту). */
   closedAtText: string | null;
+  /** Ушёл клиенту в эту минуту (по Ташкенту); null — не отправлен. */
+  sentAtText: string | null;
 };
 
-type Filter = "all" | "hand" | "showcase";
+/** Кого можно назначить ответственным. Пусто — назначать нельзя (менеджер). */
+export type MockupTeam = { id: string; name: string }[];
+
+type Filter = "all" | "hand" | "unsent" | "showcase";
 
 const INPUT = "w-full min-w-0 rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
 const BUTTON =
@@ -43,31 +48,52 @@ const ACCESS_TONE = {
 function matches(row: MockupView, filter: Filter): boolean {
   if (filter === "showcase") return row.kind === "showcase";
   if (filter === "hand") return row.kind === "proto";
+  if (filter === "unsent") return row.kind === "proto" && !row.sentAt;
   return true;
 }
 
-export function MockupList({ rows }: { rows: MockupView[] }) {
+export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTeam }) {
   const t = usePanelDict(mockupsDict);
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, CodeResult>>({});
+  const [ownerFails, setOwnerFails] = useState<Record<string, Extract<OwnerResult, { ok: false }>["reason"]>>({});
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter(
       (row) =>
         matches(row, filter) &&
-        (!q || [row.name, row.site ?? "", row.niche, row.url].some((text) => text.toLowerCase().includes(q))),
+        (!q || [row.name, row.site ?? "", row.niche, row.url, row.owner?.name ?? ""].some((text) => text.toLowerCase().includes(q))),
     );
   }, [rows, query, filter]);
 
   const filters: [Filter, string][] = [
     ["all", t.filterAll],
     ["hand", t.filterHand],
+    ["unsent", t.filterUnsent],
     ["showcase", t.filterShowcase],
   ];
+
+  async function assign(row: MockupView, staffId: string) {
+    setBusy(row.ref);
+    setOwnerFails((prev) => {
+      const next = { ...prev };
+      delete next[row.ref];
+      return next;
+    });
+    try {
+      const result = await mockupOwnerAction(row.ref, staffId);
+      if (result.ok) router.refresh();
+      else setOwnerFails((prev) => ({ ...prev, [row.ref]: result.reason }));
+    } catch {
+      setOwnerFails((prev) => ({ ...prev, [row.ref]: "offline" }));
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function generate(row: MockupView) {
     if (row.access === "open" && !window.confirm(t.confirmClose(row.name))) return;
@@ -148,6 +174,45 @@ export function MockupList({ rows }: { rows: MockupView[] }) {
                       {row.opens ? <span className="text-faint">{t.opens(row.opens)}</span> : null}
                       {row.promo ? <span className="text-gold">{t.ownPromo(row.promo.price, row.promo.regular)}</span> : null}
                     </p>
+                    {row.kind === "proto" ? (
+                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" data-mockup-owner>
+                        <span className="text-muted">{t.owner}:</span>
+                        {team.length ? (
+                          <select
+                            value={row.owner?.source === "set" ? row.owner.id : ""}
+                            onChange={(event) => assign(row, event.target.value)}
+                            disabled={busy !== null}
+                            aria-label={t.owner}
+                            className="max-w-[16rem] rounded-md border border-line bg-ink px-2 py-0.5 text-xs text-text outline-none focus:border-green/50 disabled:opacity-50"
+                          >
+                            <option value="">
+                              {row.owner && row.owner.source !== "set" ? t.ownerAuto(row.owner.name, t[`ownerFrom_${row.owner.source}`]) : t.ownerNone}
+                            </option>
+                            {row.owner?.source === "set" && !team.some((person) => person.id === row.owner?.id) ? (
+                              <option value={row.owner.id}>{row.owner.name}</option>
+                            ) : null}
+                            {team.map((person) => (
+                              <option key={person.id} value={person.id}>
+                                {person.name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : row.owner ? (
+                          <span className="text-text">
+                            {row.owner.name} <span className="text-faint">({t[`ownerFrom_${row.owner.source}`]})</span>
+                          </span>
+                        ) : (
+                          <span className="text-gold">{t.ownerNone}</span>
+                        )}
+                        <span className="text-faint">·</span>
+                        {row.sentAtText ? (
+                          <span className="text-green">{t.sentAt(row.sentAtText)}</span>
+                        ) : (
+                          <span className="text-gold">{t.notSent}</span>
+                        )}
+                        {ownerFails[row.ref] ? <span className="text-gold">{t[`ownerFail_${ownerFails[row.ref]}`]}</span> : null}
+                      </p>
+                    ) : null}
                     <p className="mt-1 truncate font-mono text-xs text-faint">{row.url}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">

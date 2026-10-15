@@ -105,6 +105,11 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
     uz: "maket 24 soatdan keyin parol bilan yopildi",
     pl: "makieta zamknęła się na hasło po 24 godzinach",
   },
+  "mockup.owner": {
+    ru: "назначил ответственного за макет",
+    uz: "maket uchun mas’ul xodimni tayinladi",
+    pl: "wyznaczył osobę odpowiedzialną za makietę",
+  },
   "work_account.add": { ru: "подключил рабочий аккаунт Telegram", uz: "Telegram ishchi akkauntini uladi", pl: "podłączył konto robocze Telegrama" },
   "work_account.pause": { ru: "остановил рабочий аккаунт", uz: "ishchi akkauntni to‘xtatdi", pl: "wstrzymał konto robocze" },
   "work_account.resume": { ru: "вернул рабочий аккаунт в работу", uz: "ishchi akkauntni ishga qaytardi", pl: "przywrócił konto robocze do pracy" },

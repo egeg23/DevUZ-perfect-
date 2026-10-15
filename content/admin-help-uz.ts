@@ -1051,8 +1051,28 @@ export const uz: HelpCopy = {
             "devuz.studio’dagi prototiplar, aniq mijoz uchun qo‘lda yig‘ilganlari. Yangi prototip tayyor bo‘lishi bilan shu yerda o‘zi paydo bo‘ladi. Bot 07.10.2026 gacha [aloqalar](/admin/prospect) uchun o‘zi yig‘gan prototiplar bu yerda yo‘q, ular biznikilar bilan adashtirilmasin (egasi, 09.10.2026); mijoz bunday havolani oldinroq olgan bo‘lsa, u ochilaveradi. Qoralamalar ro‘yxatda yo‘q: ularning havolasida mijoz hech narsa ko‘rmaydi.",
             "globalex vitrinasidagi loyihalar, «vitrina» belgisi bilan. Ularning ko‘pchiligi hammaga, qidiruv tizimlariga ham ochiq: buni egasi hal qilgan, ularga parol qo‘yilmaydi va tugma o‘rniga «parol kerak emas» deb yozilgan. MAVERA, Golden House va Engelberg parol bilan yopilgan.",
             "Har bir maketda: nomi (kim uchun qilingan) va mijoz sayti, «Nisha», «Yaratilgan», kirish holati va mijozga yuboriladigan havola. «mijoz ochgan: 3 marta» maketni biz emas, boshqalar necha marta ochganini ko‘rsatadi: paneldan o‘zimiz ochganimiz va messenjerlardagi havola prevyusi hisoblanmaydi.",
-            "Yangi maketlar tepada. Qidiruv maydoni nom, sayt va nisha bo‘yicha qidiradi, «Hammasi», «Qo‘lda yig‘ilgan» va «Vitrina» tugmalari ro‘yxatda faqat o‘z maketlarini qoldiradi. Tugmadagi son u yerda nechta maket borligini bildiradi.",
+            "Yangi maketlar tepada. Qidiruv maydoni nom, sayt, nisha va mas’ul bo‘yicha qidiradi, «Hammasi», «Qo‘lda yig‘ilgan», «Yuborilmagan» va «Vitrina» tugmalari ro‘yxatda faqat o‘z maketlarini qoldiradi. Tugmadagi son u yerda nechta maket borligini bildiradi.",
           ],
+        },
+        {
+          id: "owner",
+          title: "Mas’ul va mijozga yuborish",
+          body: {
+            manager: [
+              "Har bir prototip ostida «Mas’ul» qatori va mijozga yuborilgani bor. Mas’ulni panel o‘zi topadi, tartib bilan: qo‘lda tayinlangan («tayinlangan»), keyin maket birinchi ketgan lid egasi («lid bo‘yicha»), keyin aloqa muallifi («aloqa bo‘yicha»), keyin maketni panelda yig‘gan kishi («yig‘gan»). Ulardan hech kim bo‘lmasa — «tayinlanmagan». Vitrina loyihalarida bu qator yo‘q: bular mijoz uchun maket emas, bizning ishlarimiz. Mas’ulni rahbar va egasi tayinlaydi yoki almashtiradi.",
+              "«mijozga 14.10 17:27 da yuborilgan» — maket havolasi mijozga ishchi akkauntdan birinchi marta ketgan payt: lid kartochkasidan, model javobi bilan, Telegramda qo‘lda yoki 09:00 va 15:00 dagi [skan](#mockups-scan) topgan. «mijozga yuborilmagan» — bunday yuborish yo‘q. Shaxsiy akkauntdan ketgan havolani bot ko‘rmaydi va maket «yuborilmagan» bo‘lib qolaveradi: ishchi akkauntdan yuboring. «Yuborilmagan» tugmasi ro‘yxatda faqat shunday maketlarni qoldiradi.",
+            ],
+            head: [
+              "Har bir prototip ostida «Mas’ul» qatori va mijozga yuborilgani bor. Mas’ulni panel o‘zi topadi, tartib bilan: qo‘lda tayinlangan («tayinlangan»), keyin maket birinchi ketgan lid egasi («lid bo‘yicha»), keyin aloqa muallifi («aloqa bo‘yicha»), keyin maketni panelda yig‘gan kishi («yig‘gan»). Ulardan hech kim bo‘lmasa — «tayinlanmagan». Vitrina loyihalarida bu qator yo‘q: bular mijoz uchun maket emas, bizning ishlarimiz.",
+              "Mas’ulni siz va egasi almashtira olasiz: «Mas’ul» qatorida ro‘yxatdan odamni tanlang. Ro‘yxatning birinchi bandi — panel o‘zi topgan kishi (masalan, «Арсений (lid bo‘yicha)») yoki «tayinlanmagan»: tayinlashni olib tashlash uchun uni tanlang. Har bir tayinlash jurnalga yoziladi. Maket [24 soatdan keyin parol bilan yopilganda](#mockups-auto-close) bot mas’ulga yozadi. Menejer mas’ulni ko‘radi, lekin almashtirmaydi.",
+              "«mijozga 14.10 17:27 da yuborilgan» — maket havolasi mijozga ishchi akkauntdan birinchi marta ketgan payt: lid kartochkasidan, model javobi bilan, Telegramda qo‘lda yoki 09:00 va 15:00 dagi [skan](#mockups-scan) topgan. «mijozga yuborilmagan» — bunday yuborish yo‘q. Shaxsiy akkauntdan ketgan havolani bot ko‘rmaydi va maket «yuborilmagan» bo‘lib qolaveradi: ishchi akkauntdan yuboring. «Yuborilmagan» tugmasi ro‘yxatda faqat shunday maketlarni qoldiradi.",
+            ],
+            admin: [
+              "Har bir prototip ostida «Mas’ul» qatori va mijozga yuborilgani bor. Mas’ulni panel o‘zi topadi, tartib bilan: qo‘lda tayinlangan («tayinlangan»), keyin maket birinchi ketgan lid egasi («lid bo‘yicha»), keyin aloqa muallifi («aloqa bo‘yicha»), keyin maketni panelda yig‘gan kishi («yig‘gan»). Ulardan hech kim bo‘lmasa — «tayinlanmagan». Vitrina loyihalarida bu qator yo‘q: bular mijoz uchun maket emas, bizning ishlarimiz.",
+              "Mas’ulni siz va rahbar almashtira olasiz: «Mas’ul» qatorida ro‘yxatdan odamni tanlang. Ro‘yxatning birinchi bandi — panel o‘zi topgan kishi (masalan, «Арсений (lid bo‘yicha)») yoki «tayinlanmagan»: tayinlashni olib tashlash uchun uni tanlang. Har bir tayinlash jurnalga yoziladi. Maket [24 soatdan keyin parol bilan yopilganda](#mockups-auto-close) bot mas’ulga yozadi. Menejer mas’ulni ko‘radi, lekin almashtirmaydi.",
+              "«mijozga 14.10 17:27 da yuborilgan» — maket havolasi mijozga ishchi akkauntdan birinchi marta ketgan payt: lid kartochkasidan, model javobi bilan, Telegramda qo‘lda yoki 09:00 va 15:00 dagi [skan](#mockups-scan) topgan. «mijozga yuborilmagan» — bunday yuborish yo‘q. Shaxsiy akkauntdan ketgan havolani bot ko‘rmaydi va maket «yuborilmagan» bo‘lib qolaveradi: ishchi akkauntdan yuboring. «Yuborilmagan» tugmasi ro‘yxatda faqat shunday maketlarni qoldiradi.",
+            ],
+          },
         },
         {
           id: "password",
@@ -1134,7 +1154,7 @@ export const uz: HelpCopy = {
           body: [
             "Har bir maketimiz havola orqali 24 soat ochiq, keyin o‘zi yopiladi — xuddi birinchi parol berilgandek. Soatlar maket havolasi mijozga ishchi akkauntdan birinchi marta ketgan paytdan boshlanadi; yuborish haqida hech narsa ma’lum bo‘lmasa — biz emas, birinchi ochgan paytdan (paneldan ochishlarimiz hisobga olinmaydi); maketni hali hech kim ochmagan bo‘lsa — u ro‘yxatda paydo bo‘lgan daqiqadan. Bu model emas, qoida: uni kod har besh daqiqada hisoblaydi.",
             "Maket qatorida u bilan nima bo‘lgani ko‘rinadi: «yana 5 soat ochiq, keyin parol bilan» — shuncha qoldi; «14.10 15:00 dan parol bilan yopiq: 24 soat o‘tdi» — qoida yopdi; «… dan parol bilan yopiq» — birinchi berilgan parol yopdi. Allaqachon yopilgan maketga qoida tegmaydi. Agar maketda o‘z yoqilish vaqti bor egasining doimiy paroli bo‘lsa, maket 24 soatdan keyin emas, o‘sha vaqtda yopiladi.",
-            "Maket yopilganda, uni yuborgan kishiga (lid egasi yoki aloqa muallifi) bot yozadi: «🔒 Макет … закрылся паролем: прошло 24 часа. Нужен клиенту — нажмите „Сгенерировать пароль“» — «🔑 Сгенерировать пароль» tugmasi bilan, u darhol bir sutkalik parol va mijoz uchun tayyor matnni beradi. Yuboruvchi noma’lum bo‘lsa — qator egasi va rahbarga ketadi. cases.devuz.studio vitrinasi loyihalarini qoida yopmaydi: bu studiya sayti uchun ishlarimiz.",
+            "Maket yopilganda, [mas’ulga](#mockups-owner) (qo‘lda tayinlangan, bo‘lmasa lid egasi yoki aloqa muallifi) bot yozadi: «🔒 Макет … закрылся паролем: прошло 24 часа. Нужен клиенту — нажмите „Сгенерировать пароль“» — «🔑 Сгенерировать пароль» tugmasi bilan, u darhol bir sutkalik parol va mijoz uchun tayyor matnni beradi. Mas’ul noma’lum bo‘lsa — qator egasi va rahbarga ketadi. cases.devuz.studio vitrinasi loyihalarini qoida yopmaydi: bu studiya sayti uchun ishlarimiz.",
           ],
         },
         {
