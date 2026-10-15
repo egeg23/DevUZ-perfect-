@@ -1,0 +1,321 @@
+/* Сайт клуба Invis. Их красный #ff064d (знак в Telegram), тёмная ночь #090616,
+   кислотный лайм #c8ff2e для свободных мест, циан #2ee6ff, фиолетовый #8a5cff: ярко для подростков, текст на фоне
+   не ниже 4,5:1. Шрифты Unbounded (заголовки) и Manrope (текст), веса 400 и
+   700, размеры из шкалы 12-14-16-18-20-24-32-40-56-72. Анимации только
+   transform и opacity; prefers-reduced-motion всё выключает. */
+:root{--bg:#090616;--bg2:#100b26;--s1:#151032;--s2:#1d1645;--fg:#f3f1ff;--fg2:#cdc8ef;--mut:#a29cca;--line:rgb(243 241 255 / .12);--red:#ff064d;--red2:#e8003f;--redt:#ff3d72;--lime:#c8ff2e;--cyan:#2ee6ff;--pink:#ff3fa4;--vio:#8a5cff;--sun:#ffd23f;--r:24px;--text:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--disp:"Unbounded","Manrope",system-ui,sans-serif;--ease:cubic-bezier(.2,.7,.2,1);--spring:cubic-bezier(.34,1.4,.64,1);--sh1:0 1px 2px rgb(0 0 0 / .3),0 10px 24px -12px rgb(0 0 0 / .6);--sh2:0 2px 4px rgb(0 0 0 / .3),0 32px 64px -28px rgb(0 0 0 / .8)}
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0;padding:0}
+html,body{overflow-x:clip}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.6 var(--text);-webkit-font-smoothing:antialiased;touch-action:manipulation}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--redt);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.ic{width:20px;height:20px;flex:none}
+.wrap{width:100%;max-width:1240px;margin:0 auto;padding:0 16px}
+@media (min-width:768px){.wrap{padding:0 32px}}
+.skip{position:absolute;left:-9999px;top:8px;z-index:200;background:var(--red2);color:#fff;padding:8px 16px;border-radius:8px}
+.skip:focus{left:8px}
+.lq-defs{position:absolute;width:0;height:0;overflow:hidden}
+h1,h2{font-family:var(--disp);font-weight:700;letter-spacing:-.02em;line-height:1.08;overflow-wrap:break-word;hyphens:auto}
+h2{font-size:32px}
+@media (min-width:1024px){h2{font-size:40px}}
+h3{font-family:var(--disp);font-size:20px;line-height:1.25;font-weight:700}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--redt)}
+.kicker i{width:24px;height:2px;border-radius:2px;background:currentColor}
+.kicker.light{color:var(--cyan)}
+.lead{font-size:18px;color:var(--fg2);max-width:32em;margin-top:16px}
+.sub{color:var(--fg2);max-width:42em;margin-top:12px;font-size:18px}
+.src{font-size:12px;color:var(--mut);margin-top:16px}
+section{position:relative;padding:72px 0}
+@media (min-width:1024px){section{padding:112px 0}}
+.sec-head{margin-bottom:40px;max-width:820px}
+.sec-head h2{margin-top:12px}
+.ours{display:inline-flex;align-items:center;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:999px;background:#ffe9a8;color:#5a3a00}
+
+/* Кнопки. Блик — по мотивам Shimmer Button (Magic UI, MIT). */
+.btn{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 24px;border-radius:999px;font:700 16px/1.2 var(--text);text-decoration:none;cursor:pointer;transition:transform .16s var(--ease),background-color .16s,box-shadow .16s;white-space:nowrap;overflow:hidden}
+.btn:active{transform:scale(.96)}
+.btn-pri{background:var(--red2);color:#fff;box-shadow:0 10px 30px -10px rgb(255 6 77 / .8)}
+.btn-pri:hover{background:#ff0a4f}
+.btn-white{background:#fff;color:#090616}
+.btn-ghost{box-shadow:inset 0 0 0 1.5px var(--line);color:var(--fg)}
+.btn-glass{background:rgb(255 255 255 / .1);color:var(--fg);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .22);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.btn-sm{min-height:40px;padding:8px 16px;font-size:14px}
+.shim::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 30%,rgb(255 255 255 / .55) 46%,transparent 62%);transform:translateX(-120%);animation:shim 3.6s var(--ease) infinite 1.2s}
+@keyframes shim{0%{transform:translateX(-120%)}55%,100%{transform:translateX(120%)}}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+
+/* Жидкое стекло: размытие и насыщение того, что под ним, блик по кромке; в
+   Chromium ещё и преломление шумом (#lq). */
+.glass{position:relative;background:linear-gradient(140deg,rgb(255 255 255 / .12),rgb(255 255 255 / .04));-webkit-backdrop-filter:blur(20px) saturate(1.7);backdrop-filter:blur(20px) saturate(1.7);box-shadow:inset 0 1px 0 rgb(255 255 255 / .3),inset 0 0 0 1px rgb(255 255 255 / .1),inset 0 -1px 0 rgb(0 0 0 / .2),0 20px 48px -20px rgb(0 0 0 / .7)}
+@supports (backdrop-filter:url(#lq)) and (not (-webkit-touch-callout:none)){.glass.lq{backdrop-filter:url(#lq) blur(16px) saturate(1.8)}}
+
+/* Заставка: промо DevUz, затем знак Invis и влёт в треугольник. */
+.intro{position:fixed;inset:0;z-index:2147483000;overflow:hidden;isolation:isolate;cursor:pointer;touch-action:none;animation:bail .4s linear 14s forwards}
+@keyframes bail{to{opacity:0;visibility:hidden}}
+.intro-off .intro{display:none}
+.intro.done{opacity:0;pointer-events:none;transition:opacity 420ms var(--ease)}
+.dz-void{position:absolute;inset:-2px;background:hsl(218 38% 3%);opacity:calc(1 - var(--en-on,0))}
+.dz-grid{position:absolute;inset:-20%;background-image:linear-gradient(to right,rgb(91 155 255 / .16) 1px,transparent 1px),linear-gradient(to bottom,rgb(91 155 255 / .16) 1px,transparent 1px);background-size:64px 64px;-webkit-mask-image:radial-gradient(52% 46% at 50% 45%,#000 0%,transparent 78%);mask-image:radial-gradient(52% 46% at 50% 45%,#000 0%,transparent 78%);opacity:calc(var(--dz-grid,0) * .8);transform:scale(var(--dz-grid-s,1.3));will-change:transform,opacity}
+.dz-glow{position:absolute;left:50%;top:50%;width:min(120vmin,1100px);aspect-ratio:1;margin:calc(min(120vmin,1100px) / -2) 0 0 calc(min(120vmin,1100px) / -2);background:radial-gradient(closest-side,rgb(34 240 160 / .22) 0%,rgb(59 130 246 / .16) 34%,transparent 70%);opacity:var(--dz-glow,0);transform:scale(var(--dz-glow-s,.6));will-change:transform,opacity}
+.dz-ring{position:absolute;left:50%;top:50%;width:22vmin;aspect-ratio:1;margin:-11vmin 0 0 -11vmin;border-radius:50%;border:2px solid rgb(34 240 160 / .55);opacity:calc((1 - var(--dz-ring,0)) * var(--dz-ring-on,0));transform:scale(calc(.2 + var(--dz-ring,0) * 9))}
+.dz-flash{position:absolute;left:50%;top:50%;width:min(95vmax,1500px);aspect-ratio:1;margin:calc(min(95vmax,1500px) / -2) 0 0 calc(min(95vmax,1500px) / -2);background:radial-gradient(closest-side,rgb(246 255 251 / .95) 0%,rgb(34 240 160 / .28) 18%,transparent 52%);opacity:calc(var(--dz-flash,0) * .8)}
+.dz-stage{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:0 24px;text-align:center}
+.dz-sign{width:clamp(96px,21vmin,150px);height:auto;opacity:var(--dz-sg,0);transform:scale(var(--dz-sg-s,.9));will-change:transform,opacity}
+.dz-stroke{stroke-dasharray:1000;stroke-dashoffset:calc((1 - var(--dz-draw,0)) * 1000)}
+.dz-caret{opacity:var(--dz-caret,0)}
+.dz-name{opacity:var(--dz-name,1)}
+.dz-word{display:flex;justify-content:center;font:700 36px/1 var(--text);letter-spacing:-0.03em;color:#eaf0f7}
+@media (min-width:640px){.dz-word{font-size:48px}}
+.dz-word span{display:inline-block;opacity:clamp(0,calc(var(--dz-type,0) - var(--i)),1);transform:translateY(calc((1 - clamp(0,calc(var(--dz-type,0) - var(--i)),1)) * .42em))}
+.dz-word span.a{color:#22f0a0}
+.dz-domain{margin-top:12px;font-size:12px;letter-spacing:.44em;text-indent:.44em;text-transform:uppercase;color:#8b97a8;opacity:var(--dz-domain,0)}
+.dz-bar{position:relative;width:clamp(128px,20vmin,208px);height:2px;border-radius:2px;background:rgb(234 240 247 / .12);opacity:calc(var(--dz-domain,0) * .9);overflow:hidden}
+.dz-bar::after{content:"";position:absolute;inset:0;transform-origin:left center;transform:scaleX(var(--dz-bar,0));background:linear-gradient(to right,#5b9bff,#22f0a0)}
+.dz-code{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.dz-for{font-size:12px;color:#8b97a8;letter-spacing:.08em;opacity:var(--dz-domain,0)}
+.in-skip{position:absolute;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:5;padding:8px 16px;min-height:44px;border:1px solid rgb(234 240 247 / .24);border-radius:999px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgb(234 240 247 / .78);background:rgb(17 18 21 / .4);cursor:pointer;opacity:var(--in-skip,0)}
+.iv-cv{position:absolute;inset:0;width:100%;height:100%;opacity:var(--en-on,0)}
+
+/* Шапка на стекле. */
+.top{position:fixed;top:12px;left:12px;right:12px;z-index:50;border-radius:999px;transition:transform .4s var(--ease)}
+.top .wrap{display:flex;align-items:center;gap:16px;min-height:60px;padding:0 8px 0 16px}
+.top.hide{transform:translateY(-140%)}
+.logo{text-decoration:none;display:flex}
+.logo-w{display:inline-flex;align-items:center;gap:8px;font:700 18px/1 var(--disp);letter-spacing:.06em}
+.logo-w svg{width:48px;height:28px}
+.nav{display:none;gap:4px;margin-left:auto}
+.nav a{padding:8px 12px;border-radius:999px;text-decoration:none;font-size:14px;font-weight:700;color:var(--fg2);transition:background-color .2s,color .2s}
+.nav a:hover{background:rgb(255 255 255 / .08);color:var(--fg)}
+@media (min-width:1100px){.nav{display:flex}}
+.top-r{display:flex;align-items:center;gap:8px;margin-left:auto}
+@media (min-width:1100px){.top-r{margin-left:0}}
+.lang{display:flex;padding:3px;border-radius:999px;background:rgb(0 0 0 / .25)}
+.lang a{min-width:40px;min-height:34px;display:grid;place-items:center;border-radius:999px;font-size:12px;font-weight:700;text-decoration:none;color:var(--mut)}
+.lang a[aria-current]{background:var(--fg);color:var(--bg)}
+
+/* Первый экран: фото клуба с параллаксом, неоновый пол, видеокарта, живой зал на стекле. */
+.hero{min-height:100svh;padding:112px 0 0;display:flex;flex-direction:column;overflow:hidden;isolation:isolate}
+.hero-bg{position:absolute;inset:0;z-index:-1;overflow:hidden}
+.hb-img{position:absolute;inset:-12% 0;will-change:transform}
+.hb-img img{width:100%;height:100%;object-fit:cover;transform:scale(1.12);opacity:0;transition:transform 1.6s var(--ease),opacity 1s}
+.hero-on .hb-img img,.intro-off .hb-img img{transform:scale(1);opacity:1}
+.hb-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgb(9 6 22 / .55) 0%,rgb(9 6 22 / .35) 35%,rgb(9 6 22 / .85) 78%,var(--bg) 100%),linear-gradient(90deg,rgb(9 6 22 / .85) 0%,rgb(9 6 22 / .2) 60%)}
+.hb-floor{position:absolute;left:-20%;right:-20%;bottom:0;height:42%;perspective:420px;-webkit-mask-image:linear-gradient(to top,#000 20%,transparent);mask-image:linear-gradient(to top,#000 20%,transparent);opacity:.55}
+.hb-floor i{position:absolute;inset:-100% 0 0;transform:rotateX(62deg);transform-origin:50% 100%;background-image:linear-gradient(to right,rgb(255 6 77 / .45) 1px,transparent 1px),linear-gradient(to bottom,rgb(138 92 255 / .45) 1px,transparent 1px);background-size:64px 64px;animation:floor 3.2s linear infinite}
+@keyframes floor{to{transform:rotateX(62deg) translate3d(0,64px,0)}}
+.hero-gpu{position:absolute;right:-6%;top:12%;width:min(56vw,620px);z-index:-1;opacity:.9;filter:drop-shadow(0 30px 40px rgb(0 0 0 / .6));pointer-events:none}
+.hero-gpu .gpu{transform:rotate(-12deg)}
+.hero-gpu .pins{display:none}
+@media (max-width:899px){.hero-gpu{width:86vw;right:-30%;top:auto;bottom:18%;opacity:.35}}
+.gpu .fan{transform-origin:0 0;animation:fan 1.4s linear infinite}
+@keyframes fan{to{transform:rotate(360deg)}}
+.rgb{animation:rgb 4s linear infinite}
+@keyframes rgb{50%{opacity:.55}}
+.hero-in{display:grid;gap:32px;align-items:end;flex:1;padding-bottom:40px}
+@media (min-width:1000px){.hero-in{grid-template-columns:1.25fr .9fr;align-items:center}}
+.hero-txt{opacity:0;transform:translateY(24px);transition:opacity .9s var(--ease) .1s,transform .9s var(--ease) .1s}
+.hero-on .hero-txt,.intro-off .hero-txt{opacity:1;transform:none}
+h1{margin-top:16px}
+.h1-brand{display:block;font-size:72px;line-height:.92;letter-spacing:.02em;color:transparent;background:linear-gradient(100deg,var(--red) 10%,#ff5f8f 45%,#ffd0dd 75%,#fff 95%);-webkit-background-clip:text;background-clip:text}
+@media (min-width:768px){.h1-brand{font-size:96px}}
+@media (min-width:1280px){.h1-brand{font-size:144px}}
+.h1-l{display:block;margin-top:16px;font-size:24px;line-height:1.2;max-width:16em}
+@media (min-width:768px){.h1-l{font-size:32px}}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.hero-card{border-radius:28px;padding:24px;max-width:460px;justify-self:end;width:100%}
+.hc-k{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--fg2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 0 rgb(200 255 46 / .6);animation:ping 1.8s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 10px rgb(200 255 46 / 0)}100%{box-shadow:0 0 0 0 rgb(200 255 46 / 0)}}
+.hc-n{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:8px}
+.hc-n b{font:700 56px/1 var(--disp);color:var(--lime)}
+.hc-n span{color:var(--fg2)}
+.hc-z{list-style:none;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:16px}
+.hc-z li{display:flex;justify-content:space-between;gap:8px;padding:10px 14px;border-radius:14px;background:rgb(0 0 0 / .25);box-shadow:inset 3px 0 0 var(--zc);font-size:14px}
+.hc-z b{font-family:var(--disp)}
+.hc-s{display:flex;gap:8px;margin-top:16px;font-size:12px;color:var(--fg2)}
+.hc-s .ic{width:16px;height:16px;color:var(--cyan)}
+
+/* Бегущая строка — по мотивам Marquee (Magic UI, MIT). */
+.mq{overflow:hidden;padding:18px 0;border-top:1px solid var(--line);background:rgb(9 6 22 / .6);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.mq-row{display:flex;width:max-content;animation:mq 36s linear infinite}
+.mq:hover .mq-row{animation-play-state:paused}
+.mq-set{display:flex;gap:12px;padding-right:12px}
+.mq-set span{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line);font-size:14px;font-weight:700;white-space:nowrap}
+.mq-set .ic{width:16px;height:16px;color:var(--redt)}
+@keyframes mq{to{transform:translate3d(-50%,0,0)}}
+
+/* Сетап: сцена липнет, детали собираются по прокрутке (скрипт пишет transform). */
+.setup{padding:0;height:260vh;background:radial-gradient(120% 60% at 70% 40%,#1a1145 0%,var(--bg) 60%)}
+.su-sticky{position:sticky;top:0;height:100svh;display:flex;align-items:center;overflow:hidden}
+.su-grid{display:grid;gap:24px;align-items:center}
+@media (min-width:1000px){.su-grid{grid-template-columns:.9fr 1.1fr}}
+.setup .sec-head{margin-bottom:20px}
+.setup .sub{font-size:16px}
+.su-list{list-style:none;display:grid;gap:8px;counter-reset:su}
+.su-li{padding:10px 14px;border-radius:16px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line);opacity:.45;transform:translateX(0);transition:opacity .35s,transform .35s var(--ease),box-shadow .35s}
+.su-li.on{opacity:1;transform:translateX(8px);box-shadow:inset 0 0 0 1px var(--redt),0 10px 30px -14px rgb(255 6 77 / .6)}
+.su-li b{display:flex;align-items:center;gap:8px;font-size:16px}
+.su-li b .ic{color:var(--redt)}
+.su-li span{display:block;font-size:14px;color:var(--fg2);margin-top:2px}
+@media (max-width:999px){.su-sticky{align-items:flex-start;padding-top:88px}.setup .sub{display:none}.su-li span{display:none}.su-list{grid-template-columns:repeat(2,1fr)}.su-li{padding:8px 12px}.su-li.on{transform:none}.setup h2{font-size:24px}}
+.su-stage{position:relative;aspect-ratio:1.25;width:100%;max-width:640px;justify-self:center}
+@media (max-width:999px){.su-stage{max-width:440px;margin-top:8px}}
+.su-desk{position:absolute;left:4%;right:4%;bottom:10%;height:4%;border-radius:999px;background:linear-gradient(90deg,transparent,rgb(46 230 255 / .5),rgb(255 63 164 / .5),transparent);opacity:.7}
+.su-p{position:absolute;will-change:transform,opacity}
+.su-p svg{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 24px rgb(0 0 0 / .55))}
+.su-mon{left:16%;width:68%;top:4%}
+.su-gpu{left:54%;width:42%;top:52%}
+.su-kb{left:14%;width:48%;top:70%}
+.su-mouse{left:66%;width:9%;top:74%}
+.su-hs{left:0;width:20%;top:44%}
+.mon .mgrid{animation:mg 1.6s linear infinite}
+@keyframes mg{to{transform:translateY(6px)}}
+.su-glow{position:absolute;inset:20% 10%;z-index:-1;background:radial-gradient(closest-side,rgb(138 92 255 / .35),transparent);opacity:var(--su-g,0)}
+
+/* Зоны: карточки с фото, пятно света за курсором (Magic Card, MIT) и наклон. */
+.zones{background:linear-gradient(180deg,var(--bg),var(--bg2))}
+.zc-grid{display:grid;gap:16px}
+@media (min-width:640px){.zc-grid{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:1100px){.zc-grid{grid-template-columns:repeat(4,1fr)}}
+.zc{position:relative;isolation:isolate;border-radius:var(--r);background:var(--s1);box-shadow:inset 0 0 0 1px var(--line),var(--sh1);overflow:hidden;transform-style:preserve-3d;transition:transform .5s var(--ease)}
+.zc::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1.5px var(--zc);opacity:.5;pointer-events:none}
+.spot::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(300px circle at var(--mx,-400px) var(--my,-400px),rgb(255 255 255 / .12),transparent 60%);opacity:0;transition:opacity .3s}
+.spot:hover::before{opacity:1}
+.zc-ph{position:relative;aspect-ratio:4/3;overflow:hidden}
+.zc-img{position:absolute;inset:-12% 0;will-change:transform}
+.zc-img img{width:100%;height:100%;object-fit:cover}
+.zc-ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,var(--s1))}
+.zc-tag{position:absolute;left:12px;top:12px;z-index:1;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgb(9 6 22 / .7);font-size:12px;font-weight:700;color:var(--zc);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.zc-tag .ic{width:16px;height:16px}
+.zc-b{position:relative;z-index:1;padding:4px 20px 20px}
+.zc-b h3{color:var(--zc)}
+.zc-b p{font-size:14px;color:var(--fg2);margin-top:8px}
+.zc-p{display:flex;align-items:baseline;gap:6px;margin-top:16px !important}
+.zc-p b{font:700 24px/1 var(--disp);color:var(--fg)}
+.zc-p small{font-size:12px;color:var(--mut)}
+.zc[data-beam]{box-shadow:0 0 0 1.5px var(--zc),0 20px 50px -20px var(--zc)}
+.price{margin-top:24px;border-radius:var(--r);padding:20px;overflow-x:auto}
+.price table{width:100%;border-collapse:collapse;min-width:560px;font-size:14px}
+.price caption{text-align:left;font-weight:700;font-size:16px;padding-bottom:12px}
+.price th,.price td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line)}
+.price th:first-child{text-align:left}
+.price thead th{color:var(--zc,var(--fg2));font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.price tbody th{font-weight:700}
+.price tbody th small{display:block;font-weight:400;font-size:12px;color:var(--mut)}
+.price tr:hover td{color:var(--lime)}
+
+/* Бронь. */
+.book{background:var(--bg2)}
+.hall{border-radius:28px;padding:16px}
+@media (min-width:768px){.hall{padding:24px}}
+
+/* Колесо. */
+.whs{background:radial-gradient(90% 70% at 30% 50%,#24104a 0%,var(--bg2) 70%)}
+.wh-grid{display:grid;gap:40px;align-items:center}
+@media (min-width:1000px){.wh-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:999px){.wh-box{order:2}}
+.wh-odds-l{list-style:none;display:grid;gap:8px}
+.wh-odds-l li{display:flex;align-items:center;gap:16px;padding:12px 16px;border-radius:16px;background:var(--s1);box-shadow:inset 4px 0 0 var(--oc)}
+.wh-odds-l b{font:700 20px/1 var(--disp);min-width:3.4em}
+
+/* Кабинеты: игрок в айфоне, админ в окне браузера. */
+.cab-grid{display:grid;gap:40px}
+@media (min-width:1100px){.cab-grid{grid-template-columns:380px 1fr;align-items:start}}
+.cab-ph{display:grid;gap:20px;justify-items:center}
+.iph{position:relative;container-type:inline-size;width:min(340px,86vw)}
+.iph-in{position:relative;aspect-ratio:.4865;border-radius:16.6cqw;padding:1.15cqw;background:linear-gradient(140deg,#3a3270 0%,#8a5cff 18%,#241c4d 40%,#14102e 62%,#2ee6ff 86%,#241c4d 100%);box-shadow:inset 0 0 0 .25cqw #090616,0 6cqw 12cqw -2cqw rgb(0 0 0 / .7)}
+.ibz{position:absolute;inset:1.15cqw;border-radius:15.5cqw;background:#000;padding:3.4cqw}
+.iscr{position:relative;width:100%;height:100%;border-radius:12.4cqw;overflow:hidden;background:var(--bg)}
+.iscr iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.iisl{position:absolute;top:2.6cqw;left:50%;width:30cqw;height:8.6cqw;margin-left:-15cqw;border-radius:99px;background:#000;pointer-events:none}
+.cab-f{list-style:none;display:grid;gap:8px;width:100%}
+.cab-f li,.cab-a li{display:flex;gap:12px;align-items:flex-start;padding:10px 14px;border-radius:16px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line)}
+.cab-f .ic,.cab-a .ic{color:var(--redt);margin-top:2px}
+.cab-f b{display:block;font-size:14px}
+.cab-f small{display:block;font-size:12px;color:var(--fg2)}
+.cab-ad{display:grid;gap:20px;min-width:0}
+.brw{border-radius:20px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 1px var(--line),var(--sh2)}
+.brw-bar{display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;background:#151032}
+.brw-bar i{width:10px;height:10px;border-radius:50%;background:#ff5f57}
+.brw-bar i:nth-child(2){background:#febc2e}.brw-bar i:nth-child(3){background:#28c840}
+.brw-bar span{margin-left:12px;font-size:12px;color:var(--mut)}
+.brw iframe{display:block;width:100%;height:640px;border:0;background:var(--bg)}
+@media (max-width:767px){.brw iframe{height:560px}}
+.cab-a{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.cab-a li{font-size:14px;font-weight:700;align-items:center}
+.cab-ad .btn{justify-self:start}
+
+/* Предложение DevUz: светлый лист, чтобы цена читалась отдельно от клуба. */
+.offer{background:#f4f2ff;color:#120d2b}
+.offer .kicker{color:#5a3fd6}
+.offer .sub,.offer .src{color:#4b4670}
+.kit{display:grid;gap:24px}
+@media (min-width:1000px){.kit{grid-template-columns:1.3fr .9fr;align-items:start}}
+.kit-base,.kit-row{display:flex;align-items:center;gap:16px;padding:16px;border-radius:18px;background:#fff;box-shadow:0 1px 2px rgb(18 13 43 / .06),0 8px 20px -12px rgb(18 13 43 / .2)}
+.kit-base{justify-content:space-between;box-shadow:inset 0 0 0 2px #5a3fd6}
+.kit-base b{display:block;font-family:var(--disp)}
+.kit-base small{display:block;font-size:14px;color:#4b4670}
+.kit-base .num{font:700 24px/1 var(--disp);white-space:nowrap}
+.kit-g{margin:24px 0 12px;font-size:16px}
+.kit-row{cursor:pointer;margin-bottom:8px;transition:box-shadow .2s}
+.kit-row:has(input:checked){box-shadow:inset 0 0 0 2px #5a3fd6}
+.kit-row input{position:absolute;opacity:0;width:1px;height:1px}
+.sw{flex:none;width:44px;height:26px;border-radius:999px;background:#d9d4f5;position:relative;transition:background-color .2s}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0 / .25);transition:transform .25s var(--spring)}
+input:checked+.sw{background:#5a3fd6}
+input:checked+.sw::after{transform:translateX(18px)}
+input:focus-visible+.sw{outline:3px solid #5a3fd6;outline-offset:2px}
+.kit-t{flex:1;min-width:0}
+.kit-t b{display:block;font-size:16px}
+.kit-t small{display:block;font-size:14px;color:#4b4670;margin-top:2px}
+.star{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;background:#e8ffb3;color:#2f4200;font-size:12px;font-style:normal;vertical-align:middle}
+.kit-p{font-weight:700;white-space:nowrap}
+.kit-side{position:sticky;top:96px}
+.kit-total{position:relative;isolation:isolate;border-radius:28px;padding:24px;color:var(--fg);overflow:hidden;display:grid;gap:12px}
+.beam::before{content:"";position:absolute;inset:-60%;z-index:-2;background:conic-gradient(from 0deg,transparent 0 70%,var(--red) 80%,#ff9db8 86%,transparent 92%);animation:spin 5s linear infinite}
+.beam::after{content:"";position:absolute;inset:2px;z-index:-1;border-radius:26px;background:#120d2b}
+@keyframes spin{to{transform:rotate(360deg)}}
+.kt-k{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.kt-line{display:flex;justify-content:space-between;gap:12px;color:var(--fg2)}
+.kt-sum{display:grid;gap:4px;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.kt-sum b{font:700 40px/1 var(--disp);color:var(--lime)}
+.kt-sum small{color:var(--mut);font-size:14px}
+.copy{color:var(--fg2);font-size:14px;text-decoration:underline;min-height:44px}
+
+/* Подвал и нижняя плашка. */
+.foot{padding:56px 0 120px;background:#06040f;color:var(--fg2);font-size:14px}
+.foot .cols{display:grid;gap:32px}
+@media (min-width:900px){.foot .cols{grid-template-columns:1.4fr 1fr 1fr}}
+.foot b{color:var(--fg)}
+.foot ul{list-style:none;display:grid;gap:8px;margin-top:12px}
+.f-c li{display:flex;gap:8px;align-items:flex-start}
+.f-c .ic{width:18px;height:18px;color:var(--redt);margin-top:2px}
+.f-logo{margin-bottom:4px}
+.rights{display:grid;gap:8px;margin-top:40px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
+.dock{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:40;display:flex;gap:8px;padding:8px;border-radius:999px;transition:transform .4s var(--ease),opacity .4s}
+.dock .btn{flex:1}
+.dock.hide{transform:translateY(160%);opacity:0}
+@media (min-width:1000px){.dock{display:none}}
+
+/* Появление: у каждого блока своё движение. */
+.js .rv{opacity:0}
+.js .rv.in{opacity:1;animation:var(--anim,rvUp) .9s var(--ease) var(--d,0ms) both}
+.a-up{--anim:rvUp}.a-rise{--anim:rvRise}.a-left{--anim:rvLeft}.a-pop{--anim:rvPop}.a-tiltl{--anim:rvTiltL}.a-tiltr{--anim:rvTiltR}.a-spin{--anim:rvSpin}
+@keyframes rvUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes rvRise{from{opacity:0;transform:translateY(60px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes rvLeft{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+@keyframes rvPop{from{opacity:0;transform:scale(.86)}60%{opacity:1;transform:scale(1.03)}to{opacity:1;transform:none}}
+@keyframes rvTiltL{from{opacity:0;transform:perspective(900px) rotateY(24deg) translateX(-30px)}to{opacity:1;transform:none}}
+@keyframes rvTiltR{from{opacity:0;transform:perspective(900px) rotateY(-24deg) translateX(30px)}to{opacity:1;transform:none}}
+@keyframes rvSpin{from{opacity:0;transform:rotate(-120deg) scale(.6)}to{opacity:1;transform:none}}
+.zc.rv.in{animation-fill-mode:backwards}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}.intro{display:none}.js .rv{opacity:1}.js .rv.in{animation:none}.mq-row,.shim::after,.beam::before,.hb-floor i,.gpu .fan,.rgb{animation:none}[data-par]{transform:none !important}.setup{height:auto}.su-sticky{position:relative;height:auto;padding:72px 0}.su-p{transform:none !important;opacity:1 !important}.su-li{opacity:1}}
+
+.dz-code{opacity:calc(1 - var(--en-slit,0))}

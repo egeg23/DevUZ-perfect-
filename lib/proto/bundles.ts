@@ -29,6 +29,7 @@ import asmo from "@/content/proto-bundles/asmo.json" with { type: "json" };
 import europegas from "@/content/proto-bundles/europegas.json" with { type: "json" };
 import domtut from "@/content/proto-bundles/domtut.json" with { type: "json" };
 import inapp from "@/content/proto-bundles/inapp.json" with { type: "json" };
+import invis from "@/content/proto-bundles/invis.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -49,6 +50,7 @@ const BUNDLES: Record<string, Bundle> = {
   europegas: europegas as Bundle,
   domtut: domtut as Bundle,
   inapp: inapp as Bundle,
+  invis: invis as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */
