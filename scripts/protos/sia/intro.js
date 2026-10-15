@@ -18,12 +18,43 @@ var set=function(n,v){box.style.setProperty(n,typeof v==='number'?v.toFixed(4):v
 
 /* Промо DevUz Studio: хронометраж как на devuz.studio. */
 var BURST=2500,OPEN=3050;
-/* Знак бюро: от конца промо. */
-var B_DRAW=1300,B_WORD=900,B_FLY=2300,B_END=3300;
+/* Знак бюро: от конца промо. Буквы проявляются, затем каждая ферма букв
+   летит на своё место в каркасе виллы APx180.2606 с первого экрана, лист
+   светлеет до бумаги, каркас дорисовывается, и сквозь него проступает
+   чертёж того же дома: заставка кончается ровно на первом экране. */
+var B_DRAW=1100,B_WORD=700,B_LINES=1400,B_MOVE=1500,B_FLY=1500,B_LAG=700,B_PAPER=1900,B_GROW=2900,B_SEE=3800,B_END=4600;
+var LN=window.SIA_LINES,bcv=box.querySelector('.br-cv'),bcx=bcv&&bcv.getContext('2d'),pairs=null,extra=null;
+function bResize(){if(!bcx)return;bcv.width=Math.round(innerWidth*dpr);bcv.height=Math.round(innerHeight*dpr);bcx.setTransform(dpr,0,0,dpr,0,0)}
+function build(){
+  bResize();
+  var lg=box.querySelector('.br-wipe img').getBoundingClientRect(),hd=d.querySelector('.hero-d');if(!LN||!hd)return false;
+  var hb=hd.getBoundingClientRect(),hs=LN.houseSize,k=Math.max(hb.width/hs[0],hb.height/hs[1]),ox=hb.left+(hb.width-hs[0]*k)/2,oy=hb.top+(hb.height-hs[1]*k)/2;
+  var lk=lg.width/(LN.logoSize[0]*2),L=[],H=[],i;
+  for(i=0;i<LN.logo.length;i+=4)L.push([lg.left+LN.logo[i]*lk,lg.top+LN.logo[i+1]*lk,lg.left+LN.logo[i+2]*lk,lg.top+LN.logo[i+3]*lk]);
+  for(i=0;i<LN.house.length;i+=4){var h=[ox+LN.house[i]*k,oy+LN.house[i+1]*k,ox+LN.house[i+2]*k,oy+LN.house[i+3]*k],mx=(h[0]+h[2])/2,my=(h[1]+h[3])/2;if(mx>-10&&mx<innerWidth+10&&my>-10&&my<innerHeight+10)H.push(h)}
+  if(!H.length)return false;
+  var mid=function(a){return(a[0]+a[2])/2},take=H.slice(0,Math.min(L.length,H.length));
+  L.sort(function(a,b){return mid(a)-mid(b)});take.sort(function(a,b){return mid(a)-mid(b)});
+  pairs=L.map(function(a,j){var b=take[Math.floor(j*take.length/L.length)];return{a:a,b:b,lag:j/L.length*B_LAG+Math.random()*160,up:40+Math.random()*120,dx:(Math.random()-.5)*80}});
+  extra=H.slice(take.length,take.length+520);return true;
+}
+function mix(a,b,t){return Math.round(a+(b-a)*t)}
+function lines(m){
+  if(!bcx)return;bcx.clearRect(0,0,bcv.width/dpr,bcv.height/dpr);
+  if(m<B_LINES)return;if(!pairs&&!build()){bcx=null;return}
+  var paper=span(m,B_PAPER,B_PAPER+1200),fade=1-span(m,B_SEE+200,B_END-100);if(fade<=0)return;
+  bcx.strokeStyle='rgb('+mix(236,58,paper)+','+mix(231,50,paper)+','+mix(222,42,paper)+')';bcx.lineWidth=1;bcx.globalAlpha=fade*(.55+.45*span(m,B_LINES,B_LINES+200));
+  bcx.beginPath();
+  for(var i=0;i<pairs.length;i++){var p=pairs[i],t=ease(span(m,B_MOVE+p.lag,B_MOVE+p.lag+B_FLY)),arc=Math.sin(Math.PI*t),a=p.a,b=p.b;
+    var lx=arc*p.dx,ly=-arc*p.up;
+    bcx.moveTo(a[0]+(b[0]-a[0])*t+lx,a[1]+(b[1]-a[1])*t+ly);bcx.lineTo(a[2]+(b[2]-a[2])*t+lx,a[3]+(b[3]-a[3])*t+ly)}
+  for(var j=0;j<extra.length;j++){var g=ease(span(m,B_GROW+j*1.6,B_GROW+j*1.6+500));if(g<=0)break;var e=extra[j],cx=(e[0]+e[2])/2,cy=(e[1]+e[3])/2,hx=(e[2]-e[0])/2*g,hy=(e[3]-e[1])/2*g;bcx.moveTo(cx-hx,cy-hy);bcx.lineTo(cx+hx,cy+hy)}
+  bcx.stroke();
+}
 
 var cv=box.querySelector('.dz-code'),cx=cv&&cv.getContext('2d'),dpr=1,bits=[],bitsDone=false;
 function resize(){if(!cx)return;dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(innerWidth*dpr);cv.height=Math.round(innerHeight*dpr);cx.setTransform(dpr,0,0,dpr,0,0)}
-resize();addEventListener('resize',resize);
+resize();addEventListener('resize',function(){resize();if(pairs){pairs=null;extra=null;bResize()}});
 var GL=['</>','{ }','=>','( )','[ ]','&&','::','01','10','#',';','|','$','~','!=','++','·'],SPARK=['#22f0a0','#5b9bff','#e8b14c'],INK=['#eaf0f7','#22f0a0','#5b9bff','#8b97a8','#e8b14c'];
 function makeBits(x,y){
   var n=Math.round(Math.min(190,Math.max(84,innerWidth/8))),reach=Math.hypot(innerWidth,innerHeight)/2,o=[];
@@ -77,11 +108,14 @@ function frame(now){
   /* Знак бюро: линии, слово, влёт в проём. */
   var m=t-(OPEN-200);
   if(m>=0){
-    set('--en-on',span(m,0,300));set('--br-on',span(m,0,240));
+    set('--en-on',span(m,260,420));set('--br-on',span(m,0,240));
     set('--br-draw',ease(span(m,100,B_DRAW)));
-    set('--br-word',ease(span(m,B_WORD,B_WORD+600)));
-    var open=ease(span(m,B_FLY,B_END));set('--br-open',open);
-    if(m>=B_FLY+300)heroOn();
+    set('--br-word',ease(span(m,B_WORD,B_WORD+500))*(1-span(m,B_LINES,B_LINES+300)));
+    set('--br-png',1-span(m,B_LINES,B_LINES+220));
+    set('--br-paper',ease(span(m,B_PAPER,B_PAPER+1200)));
+    set('--br-see',ease(span(m,B_SEE,B_END-200)));
+    lines(m);
+    if(m>=B_END-300)heroOn();
     if(m>=B_END+60){finish();return}
   }
   raf=requestAnimationFrame(frame);
@@ -91,6 +125,6 @@ box.addEventListener('click',function(e){if(e.target&&e.target.id==='in-skip'){f
 addEventListener('wheel',finish,{passive:true});addEventListener('touchmove',finish,{passive:true});addEventListener('keydown',onKey);
 
 /* Страховка: что бы ни случилось, через 12 секунд страница открыта. */
-setTimeout(finish,12000);
+setTimeout(finish,14000);
 raf=requestAnimationFrame(frame);
 })();

@@ -91,7 +91,7 @@ function introHtml() {
 <div class="dz-void"></div><div class="dz-grid"></div><div class="dz-glow"></div><div class="dz-ring"></div><div class="dz-flash"></div>
 <div class="dz-stage">${DZSIGN}<div class="dz-name"><p class="dz-word" aria-hidden="true">${word.map(([c, a], i) => `<span${a ? ' class="a"' : ""} style="--i:${i}">${c}</span>`).join("")}</p><p class="dz-domain" aria-hidden="true">devuz.studio</p></div><div class="dz-bar" aria-hidden="true"></div><p class="dz-for">макет нового сайта архитектурного бюро</p></div>
 <canvas class="dz-code" aria-hidden="true"></canvas>
-<div class="br-stage" aria-hidden="true"><div class="br-logo"><span class="br-wipe"><img src="${IMG}/logo-w.png" alt="" width="400" height="178"></span></div><p class="br-kind">архитектурное бюро · Таганская площадь, 88</p></div>
+<div class="br-stage" aria-hidden="true"><div class="br-pp"></div><div class="br-dk"></div><canvas class="br-cv"></canvas><div class="br-logo"><span class="br-wipe"><img src="${IMG}/logo-w.png" alt="" width="400" height="178"></span></div><p class="br-kind">архитектурное бюро · Таганская площадь, 88</p></div>
 <button type="button" class="in-skip" id="in-skip">Пропустить</button>
 </div>`;
 }
@@ -160,7 +160,7 @@ ${opts.body}
 <a class="dock" href="${WA(ASK)}" target="_blank" rel="noopener">${ICON.wa}<span>Обсудить проект в WhatsApp</span></a>
 <div class="peek" id="peek" aria-hidden="true"><img alt=""></div>
 <div class="cursor" id="cursor" aria-hidden="true"><span></span></div>
-${opts.intro ? `<script>\n${strip(read("intro.js"))}</script>` : ""}
+${opts.intro ? `<script>\nvar SIA_LINES=${read("lines.json").trim()};\n${strip(read("intro.js"))}</script>` : ""}
 @@J@@
 </body>
 </html>`;

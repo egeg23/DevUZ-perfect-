@@ -15,7 +15,7 @@
 
 | Блок | Движение |
 |---|---|
-| Заставка | промо DevUz, затем стальные буквы SIA проявляются слева направо и раскрываются на первый экран |
+| Заставка | промо DevUz, затем стальные буквы SIA: фермы букв разлетаются и собираются в каркас виллы APx180.2606, лист светлеет до бумаги, каркас дорисовывается, сквозь него проступает чертёж того же дома, и чертёж стирается в рендер первого экрана |
 | Первый экран | чертёж стирается в рендер; прокрутка сводит кадр в арку, по бокам «Архитектура и интерьер»; на ПК под курсором линза с чертежом |
 | Цифры | разряды прокатываются, как счётчик |
 | О бюро | слова бюро проявляются прокруткой |
@@ -40,10 +40,11 @@
    → `tags.json`; обложки, снимки избранных и команды, логотипы — с
    `wp-content/uploads`.
 2. `python3 -I extract.py <папка выгрузки>` → `data.json`.
-3. `python3 -I assets.py <src> <cov> <logo>` → `public/protos/sia` (WebP, чертежи).
-4. `node gen.mjs` → `content/proto-bundles/sia.json`.
-5. Проверка: `node --import ./tests/alias-hook.mjs --import ./tests/tsx-hook.mjs scripts/proto-plain.mjs sia` — «Чисто».
-6. Снимки: `node serve.mjs`, затем `node shots.mjs <папка>`.
+3. `python3 -I lines.py <logo_footer.png> <apx180-2606-0.jpg>` → `lines.json`: фермы логотипа и каркас дома для заставки (нужен `opencv-python-headless`, только для сборки).
+4. `python3 -I assets.py <src> <cov> <logo>` → `public/protos/sia` (WebP, чертежи).
+5. `node gen.mjs` → `content/proto-bundles/sia.json`.
+6. Проверка: `node --import ./tests/alias-hook.mjs --import ./tests/tsx-hook.mjs scripts/proto-plain.mjs sia` — «Чисто».
+7. Снимки: `node serve.mjs`, затем `node shots.mjs <папка>`.
 
 Штампы в текстах бюро, которые не пропускает проверка («уникальный», «не
 просто …, а …»), поправлены словом в `FIX` (`gen.mjs`), смысл тот же.

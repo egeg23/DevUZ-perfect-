@@ -939,6 +939,11 @@ test("SIA: главная и 14 проектов — условия, noindex, т
     for (const src of page.match(/\/protos\/sia\/[\w./-]+\.(?:webp|png)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
   }
   assert.match(all[""], /id="intro"[\s\S]*DevUz Studio/, "нет промо DevUz Studio");
+  // Заставка: фермы логотипа собираются в каркас дома с первого экрана.
+  assert.match(all[""], /class="br-cv"/, "нет холста заставки");
+  const lines = JSON.parse(readFileSync("scripts/protos/sia/lines.json", "utf8"));
+  assert.ok(lines.logo.length >= 4 * 200 && lines.house.length >= 4 * 400, "мало линий логотипа или дома");
+  assert.ok(all[""].includes("var SIA_LINES={"), "линии заставки не попали на страницу");
   for (const id of ["arhitektura", "interery", "arhiv", "uslugi", "byuro", "kontakty"]) assert.match(all[""], new RegExp(`id="${id}"`), `нет блока ${id}`);
   assert.equal((all[""].match(/class="ix-row"/g) || []).length, 65, "в архиве не 65 строк");
   for (const p of data.featured) {
