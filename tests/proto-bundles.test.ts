@@ -791,3 +791,47 @@ test("Invis: конструктор — сайт 1 700 $, все допы вме
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
 });
+
+test("Архбюро (RU и EN): главная и 4 проекта, условия, noindex, заставка, пролёт, меню, форма справа", async () => {
+  const { statSync, readdirSync } = await import("node:fs");
+  const site = bundlePages("arhbyuro");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  const slugs = ["dom-s-konsolyu", "gostinaya-vo-dvor", "bashnya-s-rebrami", "pavilon-v-parke"];
+  assert.deepEqual(Object.keys(all).sort(), ["", "en", ...slugs.flatMap((s) => [`proekt/${s}`, `en/proekt/${s}`])].sort());
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("en") ? "en" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}"`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark|mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("LINIA"), `${path}: нет рабочего названия бюро`);
+    // Скрипты только свои: GSAP лежит у нас, со стороны ничего не грузится, кроме шрифтов.
+    for (const m of page.matchAll(/<script[^>]+src="([^"]+)"/g)) assert.equal(m[1], "/protos/arhbyuro/gsap.min.js", `${path}: чужой скрипт ${m[1]}`);
+    // Одна форма на весь сайт, выезжает справа; меню с фоном у каждого пункта.
+    assert.match(page, /id="panel"[\s\S]*id="pn-form"/, `${path}: нет формы справа`);
+    assert.equal((page.match(/class="mn-bg/g) || []).length, 5, `${path}: у пунктов меню нет фонов`);
+    // Шапка прячется при прокрутке и возвращается через 3 секунды (правило владельца, 15.10.2026).
+    assert.match(page, /IDLE=3000/, `${path}: шапка не по правилу`);
+    if (lang === "en") assert.doesNotMatch(page.replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица в английской странице`);
+  }
+  for (const home of [all[""], all.en]) {
+    assert.match(home, /id="intro"[\s\S]*DevUz/, "нет заставки DevUz Studio");
+    assert.match(home, /class="fly" id="prolet"[^>]*data-n="180"/, "нет пролёта на 180 кадров");
+    assert.match(home, /class="hero-v"[\s\S]*hero-m\.webp|hero-m\.webp[\s\S]*class="hero-v"/, "нет видео с картинкой для телефона");
+    assert.match(home, /class="map"/, "нет карты проектов");
+  }
+  // Всё, на что ссылаются страницы, лежит в public/ и не тяжелее разумного.
+  const pub = "public/protos/arhbyuro";
+  for (const page of Object.values(all)) for (const m of page.matchAll(/\/protos\/arhbyuro\/([\w./-]+\.(?:webp|png|mp4|js))/g)) statSync(`${pub}/${m[1]}`);
+  for (const set of ["d", "m"]) assert.equal(readdirSync(`${pub}/f/${set}`).filter((f) => f.endsWith(".webp")).length, 180, `пролёт ${set}: не 180 кадров`);
+  const total = (dir: string): number => readdirSync(dir, { withFileTypes: true }).reduce((s, e) => s + (e.isDirectory() ? total(`${dir}/${e.name}`) : statSync(`${dir}/${e.name}`).size), 0);
+  assert.ok(total(pub) < 40_000_000, "кадры и ролики тяжелее 40 МБ");
+  const stamped = stampedBundle("arhbyuro", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages["en/proekt/pavilon-v-parke"], site.pages["en/proekt/pavilon-v-parke"], "отпечаток не поставился на странице проекта");
+});
