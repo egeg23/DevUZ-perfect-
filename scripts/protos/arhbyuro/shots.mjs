@@ -16,13 +16,23 @@ for (const [w, h] of [[1440, 900], [390, 844]]) {
   await p.goto(base, { waitUntil: "networkidle" });
   await p.waitForTimeout(1800);
   await snap("hero");
+  // Первый экран: кадры сменяют друг друга прокруткой.
+  for (const k of [0.4, 0.9]) {
+    await p.evaluate((k) => { const f = document.querySelector(".hero"); window.scrollTo(0, f.offsetTop + (f.offsetHeight - innerHeight) * k); }, k);
+    await p.waitForTimeout(1600);
+    await snap(`hero-${Math.round(k * 100)}`);
+  }
+  // Заявление: слова проявляются прокруткой.
+  await p.evaluate(() => { const f = document.querySelector(".stmt"); window.scrollTo(0, f.offsetTop + (f.offsetHeight - innerHeight) * 0.5); });
+  await p.waitForTimeout(1000);
+  await snap("stmt");
   // Пролёт: прокрутка в долю секции, ждём, пока кадр догонит.
   for (const k of [0.05, 0.35, 0.62, 0.97]) {
     await p.evaluate((k) => { const f = document.querySelector(".fly"); window.scrollTo(0, f.offsetTop + (f.offsetHeight - innerHeight) * k); }, k);
     await p.waitForTimeout(2600);
     await snap(`fly-${Math.round(k * 100)}`);
   }
-  for (const [sel, name, dy] of [[".pj", "projects", 0], [".pj-txt", "project-text", -200], ["#geo .geo-map", "geo", -120], ["#uslugi .sec-h", "services", 0], ["#sayt .sec-h", "spec", 0]]) {
+  for (const [sel, name, dy] of [[".pj", "projects", 0], [".pj-2", "projects-2", -160], [".velo", "velo", -200], ["#geo .geo-top", "geo-top", -40], ["#geo .geo-map", "geo", -120], ["#uslugi .sec-h", "services", 0], ["#sayt .sec-h", "spec", 0]]) {
     await p.evaluate(([s, dy]) => { const el = document.querySelector(s); window.scrollTo(0, el.getBoundingClientRect().top + scrollY + dy); }, [sel, dy]);
     await p.waitForTimeout(1600);
     await snap(name);

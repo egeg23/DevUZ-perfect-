@@ -102,3 +102,28 @@ export const SPEC = [
   { n: ["RU и EN", "RU and EN"], d: ["Два языка сразу, третий добавляется в CMS без программиста.", "Two languages from day one; a third is added in the CMS without a developer."] },
   { n: ["Сервер и сдача", "Server and handover"], d: ["VPS на Ubuntu, Nginx, PostgreSQL, Let's Encrypt, автодеплой. Тестовый сервер, код и доступы вам, видеоинструкция по CMS, гарантия 2 месяца.", "Ubuntu VPS, Nginx, PostgreSQL, Let's Encrypt, automatic deploys. A staging server, code and access handed over, a CMS video guide, a 2-month warranty."] },
 ];
+
+/* Первый экран, как у референса: закреплённая сцена, кадры сменяют друг
+   друга прокруткой. Первый кадр — видео (на телефоне картинка), дальше
+   кадры галереи. Подпись внизу слева меняется вместе с кадром. */
+export const HERO_SLIDES = [
+  { video: true, p: "dom-s-konsolyu" },
+  { still: 4, p: "dom-s-konsolyu" },
+  { still: 7, p: "bashnya-s-rebrami" },
+  { still: 10, p: "pavilon-v-parke" },
+];
+
+/* Заявление бюро: слова проявляются прокруткой (Text Reveal, Magic UI). */
+export const STATEMENT = [
+  "{B} проектирует дома, интерьеры и общественные здания. Начинаем с участка и света, заканчиваем рабочими чертежами и авторским надзором. Заказчик видит дом до стройки: в рендерах, пролёте и материалах.",
+  "{B} designs houses, interiors and public buildings. We start with the site and the light and finish with working drawings and site supervision. The client sees the house before it is built: in renders, fly-throughs and materials.",
+];
+
+/* Бегущая строка, скорость зависит от прокрутки (Scroll Based Velocity, Magic UI). */
+export const MARQUEE = [
+  ["Архитектура", "Интерьеры", "Генпланы", "Благоустройство"],
+  ["Architecture", "Interiors", "Master plans", "Landscape"],
+];
+
+/* География: заголовок в три строки, как у референса. */
+export const GEO_HEAD = [["Где", "стоят наши", "проекты"], ["Where", "our projects", "stand"]];
