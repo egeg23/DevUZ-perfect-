@@ -128,4 +128,5 @@ export const mockupNicheDict = defineDict({
   svyaz: { ru: "Связь и интернет", uz: "Aloqa va internet", pl: "Telekomunikacja" },
   "agentstvo-nedvizhimosti": { ru: "Зарубежная недвижимость", uz: "Xorijdagi ko‘chmas mulk", pl: "Nieruchomości za granicą" },
   konservy: { ru: "Консервы", uz: "Konservalar", pl: "Konserwy" },
+  bady: { ru: "Биодобавки", uz: "Bioqo‘shimchalar", pl: "Suplementy diety" },
 });
