@@ -791,3 +791,80 @@ test("Invis: конструктор — сайт 1 700 $, все допы вме
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
 });
+
+test("Магазин Greenwell: страница, магазин и панель на ru и uz, условия, noindex, полный цикл заказа, рассрочка, отзывы за баллы", () => {
+  const site = bundlePages("greenwell");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "shop", "uz", "uz/panel", "uz/shop"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("Greenwell"), `${path}: нет названия магазина`);
+    assert.match(page, lang === "ru" ? /демо/ : /demo/, `${path}: не сказано, что данные демо`);
+    // Владелец, 15.10.2026: систему посещаемости в макете не называем.
+    assert.doesNotMatch(page, /метрик|metrik|metrica/i, `${path}: названа система посещаемости`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], /class="gw-cv"[^>]*data-logo=/, `${path}: нет знака Greenwell в заставке`);
+    for (const id of ["hero", "seychas", "put", "rassrochka", "otzyvy", "panel", "cena", "konstruktor", "timer"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
+    assert.match(all[path], new RegExp(`data-src="__PROTO_BASE__${path ? "/uz" : ""}/shop\\?embed=1`), `${path}: магазин не в айфоне`);
+    assert.match(all[path], new RegExp(`data-src="__PROTO_BASE__${path ? "/uz" : ""}/panel\\?embed=1"`), `${path}: панель не в окне`);
+    // Владелец, 15.10.2026: шапка при прокрутке прячется и возвращается через 3 с после остановки.
+    assert.match(all[path], /var IDLE=3000,idleT=0;/, `${path}: нет правила шапки`);
+    assert.match(all[path], /function onScroll\(\)\{headIdle\(\);/, `${path}: шапка не прячется при прокрутке`);
+    assert.doesNotMatch(all[path], /y<lastY-4/, `${path}: шапка снова показывается при прокрутке вверх`);
+  }
+  for (const path of ["shop", "uz/shop"]) {
+    for (const v of ["home", "catalog", "product", "cart", "checkout", "nasiya", "order", "review", "me", "orders", "plans", "addrs", "fav", "points"]) assert.match(all[path], new RegExp(`V\\.${v}=function`), `${path}: нет экрана ${v}`);
+    for (const pay of ["Click", "Payme", "Uzum Bank", "Uzcard / Humo", "Uzum Nasiya", "Alif Nasiya", "Anorbank"]) assert.ok(all[path].includes(pay), `${path}: нет оплаты ${pay}`);
+    assert.match(all[path], /class="tabbar"/, `${path}: нет нижней панели`);
+    assert.match(all[path], /var IDLE=3000,idleT=0;/, `${path}: нет правила шапки`);
+    // Фото — их собственные, из сборки, не хотлинком.
+    assert.doesNotMatch(all[path], /images\.uzum\.uz|tildacdn/, `${path}: фото хотлинком`);
+    for (const id of ["mgc", "mgb", "sleep", "se", "q10", "om", "multi", "zinc", "glu", "wl", "d3", "vc", "nails"]) assert.ok(all[path].includes(`"id":"${id}"`), `${path}: нет товара ${id}`);
+  }
+  for (const path of ["panel", "uz/panel"]) {
+    for (const v of ["dash", "orders", "reviews", "goods", "logistics", "nasiya", "traffic", "log"]) assert.match(all[path], new RegExp(`V\\.${v}=function`), `${path}: нет раздела ${v}`);
+  }
+  assert.ok(all.uz.includes("o‘") || all.uz.includes("O‘"), "узбекский — латиница с o‘");
+  for (const path of ["uz", "uz/shop", "uz/panel"]) {
+    assert.doesNotMatch(all[path].replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица в узбекской странице`);
+    for (const id of ["gw-data", "gp-data", "kit-data"]) {
+      const m = all[path].match(new RegExp(`id="${id}">([\\s\\S]*?)</script>`));
+      if (!m) continue;
+      const data = JSON.parse(m[1]);
+      // Отзывы покупателей — как есть, на их языке; синонимы поиска — на обоих.
+      delete data.products; delete data.syn;
+      assert.doesNotMatch(JSON.stringify(data), /[А-Яа-яЁё]{3,}/, `${path}: русские подписи в ${id}`);
+    }
+  }
+  const stamped = stampedBundle("greenwell", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Greenwell: магазин 1 000 $ вместо 4 900 $ на 48 часов, 10-20 допов с ценой и пользой, цены в одном месте", async () => {
+  // Владелец, 15.10.2026: «Цена такого счастья без допов по акции - 1000$. Допы считаются отдельно, придумай 10-20 допов».
+  const plan = await import("../scripts/protos/greenwell/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.ok(plan.BASE.price > plan.BASE.promo);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
+  for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.ru.e && a.uz.t && a.uz.e, `${a.id}: цена и описание`);
+  assert.equal(plan.ALL, 1000 + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
+  const site = bundlePages("greenwell")!;
+  for (const html of [site.html, site.pages.uz]) {
+    assert.match(html, /<s>4 900 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 4 900 $ крупно");
+    assert.match(html, /"base":1000,"regular":4900,/, "скрипт считает от тех же цен");
+    assert.match(html, /"hours":48,/, "отсчёт 48 часов");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});
