@@ -249,9 +249,9 @@ html:not(.js) .ln>span,html:not(.js) [data-lines-p]{transform:none;opacity:1}
 .kd-list b{font-weight:400;color:var(--bronze);font-variant-numeric:tabular-nums}
 .drum{position:relative;height:320px;overflow:hidden;perspective:1100px;-webkit-mask-image:linear-gradient(180deg,transparent,#000 28%,#000 72%,transparent);mask-image:linear-gradient(180deg,transparent,#000 28%,#000 72%,transparent)}
 .drum-track{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(var(--r,0deg));will-change:transform}
-.drum-track span{position:absolute;left:0;right:0;top:50%;margin-top:-.5em;font:400 40px/1 var(--disp);letter-spacing:-.01em;text-align:center;white-space:nowrap;backface-visibility:hidden;transform:rotateX(var(--a)) translateZ(170px)}
+.drum-track span{position:absolute;left:0;right:0;top:50%;margin-top:-.5em;font:400 28px/1 var(--disp);letter-spacing:-.01em;text-align:center;white-space:nowrap;backface-visibility:hidden;transform:rotateX(var(--a)) translateZ(150px)}
 .drum-track sup{font:400 14px/1 var(--text);color:var(--bronze);margin-left:8px;vertical-align:super}
-@media (min-width:720px){.drum{height:460px}.drum-track span{font-size:56px;transform:rotateX(var(--a)) translateZ(280px)}}
+@media (min-width:720px){.drum{height:460px}.drum-track span{font-size:48px;transform:rotateX(var(--a)) translateZ(250px)}}
 
 /* ── Папки по типам (Glass Folder Cards, kedhareswer, 21st.dev, MIT) ─── */
 .folders{position:relative;padding:96px var(--g) 128px;background-color:var(--paper2);background-image:radial-gradient(rgb(28 25 21 / .22) 1px,transparent 1.4px);background-size:22px 22px}
