@@ -944,7 +944,12 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   const lines = JSON.parse(readFileSync("scripts/protos/sia/lines.json", "utf8"));
   assert.ok(lines.logo.length >= 4 * 200 && lines.house.length >= 4 * 400, "мало линий логотипа или дома");
   assert.ok(all[""].includes("var SIA_LINES={"), "линии заставки не попали на страницу");
-  for (const id of ["arhitektura", "interery", "arhiv", "uslugi", "byuro", "kontakty"]) assert.match(all[""], new RegExp(`id="${id}"`), `нет блока ${id}`);
+  // Пролёт по рендерам бюро, барабан, бегущая строка и папки.
+  assert.equal((all[""].match(/<figure class="fl" /g) || []).length, 8, "в пролёте не 8 кадров");
+  assert.match(all[""], /id="drum"/, "нет барабана");
+  assert.match(all[""], /class="velo-row"/, "нет бегущей строки");
+  assert.equal((all[""].match(/data-gf /g) || []).length, 4, "не 4 папки");
+  for (const id of ["prolet", "arhitektura", "interery", "arhiv", "uslugi", "byuro", "kontakty"]) assert.match(all[""], new RegExp(`id="${id}"`), `нет блока ${id}`);
   assert.equal((all[""].match(/class="ix-row"/g) || []).length, 65, "в архиве не 65 строк");
   for (const p of data.featured) {
     const page = all["proekt/" + p.slug];

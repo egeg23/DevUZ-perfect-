@@ -61,8 +61,51 @@ var stmt=$('.stmt'),words=stmt?$$('.w',stmt):[];
 var pp=$('.pp-hero'),ppStick=pp&&$('.pp-stick',pp),ppAuto=0;
 if(pp&&!REDUCED){var t0=performance.now();(function grow(now){ppAuto=Math.min((now-t0)/1600,1)*.22;tickNow();if(ppAuto<.22)requestAnimationFrame(grow)})(t0)}
 
+
+/* Пролёт: кадры грузятся, когда до пролёта осталось полтора экрана. */
+var fly=$('.fly'),fls=$$('.fl'),flcs=$$('.flc'),flCode=$('#fl-code'),flN=$('#fl-n'),flStick=fly&&$('.fly-stick',fly),flOn=-1;
+if(fly&&!REDUCED){var flIo=new IntersectionObserver(function(es){if(!es[0].isIntersecting)return;$$('img[data-src]',fly).forEach(function(im){im.srcset=im.getAttribute('data-srcset');im.src=im.getAttribute('data-src');im.removeAttribute('data-src')});flIo.disconnect()},{rootMargin:'150% 0px'});flIo.observe(fly)}
+function flyFx(){if(!fly||REDUCED)return;var r=fly.getBoundingClientRect(),len=fly.offsetHeight-vh,p=clamp(-r.top/len,0,1),N=fls.length,seg=p*N*.999;
+  flStick.style.setProperty('--fp',p.toFixed(4));
+  fls.forEach(function(f,i){var u=seg-i,o,s;
+    if(u<-.3||u>1.35&&i<N-1){f.style.opacity=0;return}
+    if(u<0){o=(u+.3)/.3;s=1+.06*o}else{o=1;var e=Math.min(u,1.3);s=f.hasAttribute('data-deep')?1.06+2.6*e*e:1.06+.5*(e*e*(3-2*e))}
+    f.style.opacity=o.toFixed(3);f.style.setProperty('--s',s.toFixed(4));
+    if(f.querySelector('.fl-d'))f.style.setProperty('--ro',clamp((u+.05)/.45,0,1).toFixed(3))});
+  var on=clamp(Math.floor(seg+.12),0,N-1);
+  if(on!==flOn){flOn=on;flcs.forEach(function(c,k){c.classList.toggle('on',k===on)});if(flCode)flCode.textContent=fls[on].getAttribute('data-c');if(flN)flN.textContent=(on<9?'0':'')+(on+1)}
+  var tk=flcs[on]&&flcs[on].querySelector('.flc-ticks i.on');if(tk)tk.style.setProperty('--t',clamp(seg-on,0,1).toFixed(3));
+}
+
+/* Барабан типов объектов крутится прокруткой. */
+var kd=$('.kd'),drum=$('#drum');
+function drumFx(){if(!kd||!drum)return;var r=kd.getBoundingClientRect(),q=(vh-r.top)/(vh+r.height);drum.style.setProperty('--r',(-q*360).toFixed(2)+'deg')}
+
+/* Бегущая строка: своя скорость, прокрутка разгоняет и разворачивает (Scroll Based Velocity). */
+var velo=$$('.velo-row'),vk=0,vRun=false,vX=velo.map(function(){return 0});
+function velBoost(dy){vk=clamp(vk+dy*.06,-14,14)}
+function veloStep(){if(!vRun)return;vk*=.92;velo.forEach(function(row,i){var t=row.firstElementChild,w=t.scrollWidth/3,dir=+row.getAttribute('data-velo'),sp=(1+Math.abs(vk))*dir*(vk<0?-1:1);
+  vX[i]-=sp;if(vX[i]<=-w)vX[i]+=w;if(vX[i]>0)vX[i]-=w;t.style.setProperty('--x',vX[i].toFixed(1)+'px')});requestAnimationFrame(veloStep)}
+if(velo.length&&!REDUCED)new IntersectionObserver(function(es){var on=es.some(function(e){return e.isIntersecting});if(on&&!vRun){vRun=true;requestAnimationFrame(veloStep)}else if(!on)vRun=false}).observe($('.velo'));
+
+/* Стеклянные папки (Glass Folder Cards): размер по ячейке, сборка при
+   появлении по очереди, стекло ловит свет за курсором, нажатие открывает
+   веер файлов, Escape и нажатие мимо закрывают. Закрытые файлы вне Tab. */
+var gfs=$$('[data-gf]');
+function gfSize(){gfs.forEach(function(g){var w=g.parentNode.clientWidth;g.style.setProperty('--k',Math.min(1,w/340).toFixed(4))})}
+function gfOpen(g,on){if(on)gfs.forEach(function(o){if(o!==g)gfOpen(o,false)});on?g.setAttribute('data-open',''):g.removeAttribute('data-open');var b=$('.gf-hit',g),f=$('.gf-files',g);b.setAttribute('aria-expanded',on?'true':'false');if(on)f.removeAttribute('inert');else f.setAttribute('inert','')}
+if(gfs.length){gfSize();addEventListener('resize',gfSize);
+  gfs.forEach(function(g){gfOpen(g,false);$('.gf-hit',g).addEventListener('click',function(){gfOpen(g,!g.hasAttribute('data-open'))});
+    var raf=0,px=0,py=0;function write(){raf=0;g.style.setProperty('--px',px.toFixed(3));g.style.setProperty('--py',py.toFixed(3))}
+    g.addEventListener('pointermove',function(e){if(e.pointerType==='touch'||REDUCED)return;var r=g.getBoundingClientRect();px=(e.clientX-r.left)/r.width*2-1;py=(e.clientY-r.top)/r.height*2-1;if(!raf)raf=requestAnimationFrame(write)});
+    g.addEventListener('pointerleave',function(){px=0;py=0;if(!raf)raf=requestAnimationFrame(write)})});
+  d.addEventListener('keydown',function(e){if(e.key!=='Escape')return;gfs.forEach(function(g){if(g.hasAttribute('data-open')){gfOpen(g,false);$('.gf-hit',g).focus()}})});
+  d.addEventListener('pointerdown',function(e){gfs.forEach(function(g){if(g.hasAttribute('data-open')&&!g.contains(e.target))gfOpen(g,false)})});
+  if('IntersectionObserver' in window&&!REDUCED){var gio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.setAttribute('data-in','');gio.unobserve(e.target)}})},{threshold:.25});gfs.forEach(function(g){gio.observe(g)})}
+  else gfs.forEach(function(g){g.setAttribute('data-in','')})}
+
 function prog(el,start,len){var r=el.getBoundingClientRect();return clamp((-r.top-start)/len,0,1)}
-function frame(){tick=false;
+function frame(){tick=false;flyFx();drumFx();
   if(hero){var len=hero.offsetHeight-vh;var p=clamp(-hero.getBoundingClientRect().top/len,0,1);hArch=clamp(p/.7,0,1);var e=hArch<.5?2*hArch*hArch:1-Math.pow(-2*hArch+2,2)/2;hStick.style.setProperty('--ha',e.toFixed(4));if(hArch>.15&&hPic)hPic.style.setProperty('--ls',0)}
   if(stmt){var sp=prog(stmt,-vh*.2,stmt.offsetHeight-vh*.6),n=words.length;words.forEach(function(w,i){w.style.setProperty('--o',clamp(sp*n*1.15-i,0,1).toFixed(3))})}
   if(arh&&track){
@@ -76,7 +119,7 @@ function frame(){tick=false;
 }
 var tick=false,lastY=scrollY;
 function tickNow(){if(!tick){tick=true;requestAnimationFrame(frame)}}
-function onScroll(){if(Math.abs(scrollY-lastY)>2)headIdle();lastY=scrollY;if(!REDUCED)tickNow()}
+function onScroll(){if(Math.abs(scrollY-lastY)>2)headIdle();velBoost(scrollY-lastY);lastY=scrollY;if(!REDUCED)tickNow()}
 addEventListener('scroll',onScroll,{passive:true});
 addEventListener('resize',function(){vh=innerHeight;vw=innerWidth;sizeArh();tickNow()});
 sizeArh();
