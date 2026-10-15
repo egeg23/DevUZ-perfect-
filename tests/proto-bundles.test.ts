@@ -750,6 +750,10 @@ test("Компьютерный клуб Invis: страница и кабине�
     for (const id of ["hero", "setup", "zony", "bron", "koleso", "kabinety", "predlozhenie", "konstruktor"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
     assert.match(all[path], /backdrop-filter:url\(#lq\)/, `${path}: нет жидкого стекла`);
     assert.match(all[path], /data-par=/, `${path}: нет параллакса`);
+    // Владелец, 15.10.2026: шапка при прокрутке прячется и возвращается через 3 с после остановки.
+    assert.match(all[path], /var IDLE=3000,idleT=0;/, `${path}: нет правила шапки`);
+    assert.match(all[path], /function onScroll\(\)\{headIdle\(\);/, `${path}: шапка не прячется при прокрутке`);
+    assert.doesNotMatch(all[path], /y<lastY-4/, `${path}: шапка снова показывается при прокрутке вверх`);
     // Железо — настоящие фото, вентиляторы видеокарты — отдельные слои, которые крутятся.
     for (const f of ["gear-gpu", "gear-fan0", "gear-fan1", "gear-fan2", "gear-kb", "gear-mouse", "gear-hs", "gear-desk"]) assert.ok(all[path].includes(`/protos/invis/${f}.webp`), `${path}: нет фото ${f}`);
     assert.match(all[path], /class="rg-rot"/, `${path}: вентиляторы не крутятся`);
