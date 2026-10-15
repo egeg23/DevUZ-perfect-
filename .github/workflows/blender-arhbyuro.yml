@@ -1,0 +1,193 @@
+# Макет архбюро: пролёт по прокрутке, фон первого экрана и кадры галереи —
+# 3D-сцена в Blender, вся кодом (scripts/blender/arhbyuro).
+#
+# Рендер тяжёлый, поэтому здесь, а не на сервере (CLAUDE.md, «Сервер не
+# собирает сайт»). Сначала одна задача качает ассеты Poly Haven в кэш, потом
+# 20 задач рендерят кадры через один (задача k берёт кадры k+1, k+21, …),
+# Cycles на процессоре + OpenImageDenoise. Последний шаг жмёт кадры в WebP и
+# ролик в MP4 и коммитит их в ветку renders/arhbyuro — её забирают обычным
+# git fetch. Ветка на сайт не выкатывается: выкатка слушает только main.
+name: Макет архбюро — рендер Blender
+
+on:
+  workflow_dispatch:
+    inputs:
+      shot:
+        description: "Что рендерить: flight — пролёт, hero — фон первого экрана, stills — галерея"
+        type: choice
+        options: [flight, hero, stills]
+        default: flight
+      format:
+        description: Формат кадра
+        type: choice
+        options: [horizontal, vertical]
+        default: horizontal
+      samples:
+        description: Сэмплов на пиксель (дальше чистит OpenImageDenoise)
+        default: "64"
+      percent:
+        description: Процент разрешения (25 — быстрая проба)
+        default: "100"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blender-arhbyuro-${{ inputs.shot }}-${{ inputs.format }}
+  cancel-in-progress: false
+
+env:
+  # Blender 4.5 LTS, как у ролика студии (.github/workflows/blender-render.yml).
+  BLENDER_VERSION: "4.5.14"
+  BLENDER_SERIES: "4.5"
+  BLENDER_SHA256: "9ba871ff2ecd36526b77432745980b7e6664ecd0c7ca11c48849073dcfe06da3"
+  CHUNKS: "20"
+  SCENE: scripts/blender/arhbyuro
+  SHOT: ${{ inputs.shot }}
+  FORMAT: ${{ inputs.format }}
+  SAMPLES: ${{ inputs.samples }}
+  PERCENT: ${{ inputs.percent }}
+
+jobs:
+  assets:
+    name: Ассеты Poly Haven
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ассеты из кэша
+        id: ph
+        uses: actions/cache@v4
+        with:
+          path: ~/ph
+          key: arhbyuro-ph-${{ hashFiles('scripts/blender/arhbyuro/assets.py') }}
+      - name: Скачать с Poly Haven (CC0), сверить md5
+        if: steps.ph.outputs.cache-hit != 'true'
+        run: python3 "$SCENE/assets.py" ~/ph
+
+  render:
+    name: Кадры ${{ matrix.chunk }}
+    needs: assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - name: Сколько кадров у этой задачи
+        id: plan
+        run: |
+          case "$SAMPLES$PERCENT" in *[!0-9]*) echo "сэмплы и процент — числа"; exit 1;; esac
+          case "$SHOT" in flight) total=180;; hero) total=192;; stills) total=12;; *) exit 1;; esac
+          first=$(( ${{ matrix.chunk }} + 1 ))
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "first=$first" >> "$GITHUB_OUTPUT"
+          if [ "$first" -le "$total" ]; then echo "run=1" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        if: steps.plan.outputs.run
+
+      - name: Ассеты из кэша
+        if: steps.plan.outputs.run
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/ph
+          key: arhbyuro-ph-${{ hashFiles('scripts/blender/arhbyuro/assets.py') }}
+          fail-on-cache-miss: true
+
+      - name: Blender из кэша
+        if: steps.plan.outputs.run
+        id: blender-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/blender
+          key: blender-${{ env.BLENDER_VERSION }}-linux-x64
+
+      - name: Скачать Blender с download.blender.org
+        if: steps.plan.outputs.run && steps.blender-cache.outputs.cache-hit != 'true'
+        run: |
+          name="blender-${BLENDER_VERSION}-linux-x64"
+          curl -fsSL --retry 4 -o /tmp/blender.tar.xz \
+            "https://download.blender.org/release/Blender${BLENDER_SERIES}/${name}.tar.xz"
+          echo "${BLENDER_SHA256}  /tmp/blender.tar.xz" | sha256sum -c -
+          mkdir -p ~/blender
+          tar -xf /tmp/blender.tar.xz -C ~/blender --strip-components=1
+
+      - name: Библиотеки для Blender без экрана
+        if: steps.plan.outputs.run
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libxi6 libxkbcommon0 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libsm6
+
+      - name: Рендер
+        if: steps.plan.outputs.run
+        run: |
+          args=()
+          if [ "$FORMAT" = vertical ]; then args+=(--vertical); fi
+          mkdir -p /tmp/frames
+          start=$(date +%s)
+          ~/blender/blender -b --factory-startup -noaudio -P "$SCENE/scene.py" -- \
+            --assets ~/ph --shot "$SHOT" --out /tmp/frames/f_ \
+            --start ${{ steps.plan.outputs.first }} --end ${{ steps.plan.outputs.total }} --step "$CHUNKS" \
+            --samples "$SAMPLES" --percent "$PERCENT" "${args[@]}" \
+            | grep -E "^Saved [0-9]|сцена|солнце|Error|Traceback" || true
+          echo $(( $(date +%s) - start )) > /tmp/frames/seconds-${{ matrix.chunk }}.txt
+          want=$(( (${{ steps.plan.outputs.total }} - ${{ steps.plan.outputs.first }}) / CHUNKS + 1 ))
+          n=$(ls /tmp/frames/*.png | wc -l)
+          echo "кадров: $n из $want, секунд: $(cat /tmp/frames/seconds-${{ matrix.chunk }}.txt)"
+          test "$n" -eq "$want"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.plan.outputs.run
+        with:
+          name: frames-${{ inputs.shot }}-${{ inputs.format }}-${{ matrix.chunk }}
+          path: /tmp/frames
+          retention-days: 3
+
+  assemble:
+    name: WebP, MP4 и ветка renders/arhbyuro
+    needs: render
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: frames-${{ inputs.shot }}-${{ inputs.format }}-*
+          path: frames
+          merge-multiple: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Сжать кадры
+        id: pack
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          pip install --quiet "pillow==11.3.0"
+          python3 "$SCENE/pack.py" frames out "$SHOT" "$FORMAT"
+          total=$(awk '{s+=$1} END {print s}' frames/seconds-*.txt)
+          echo "cpu_minutes=$(( total / 60 ))" >> "$GITHUB_OUTPUT"
+          du -sh out/*
+
+      - name: Закоммитить в ветку renders/arhbyuro
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          mkdir pub && cd pub
+          git init -q -b renders/arhbyuro
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth 1 origin renders/arhbyuro; then git checkout -q -B renders/arhbyuro FETCH_HEAD; fi
+          dir="renders/arhbyuro/${SHOT}-${FORMAT}"
+          rm -rf "$dir" && mkdir -p "$dir"
+          cp -r ../out/* "$dir/"
+          cat > "$dir/README.txt" <<EOF
+          Кадры: ${SHOT}, ${FORMAT}
+          Сцена: ${GITHUB_SHA} (scripts/blender/arhbyuro)
+          Blender ${BLENDER_VERSION}, Cycles CPU, ${SAMPLES} сэмплов + OpenImageDenoise, ${PERCENT}% разрешения
+          Рендер: ${{ steps.pack.outputs.cpu_minutes }} минут процессора в 20 задачах
+          Запуск: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          EOF
+          git add renders
+          git commit -q -m "Архбюро ${SHOT} ${FORMAT}: рендер ${GITHUB_SHA::7}"
+          for i in 1 2 3 4; do git push -q origin renders/arhbyuro && break; git fetch -q --depth 1 origin renders/arhbyuro && git rebase -q FETCH_HEAD || true; sleep $(( i * 5 )); done
