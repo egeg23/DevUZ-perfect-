@@ -17,6 +17,8 @@ on:
       - ".github/workflows/blender-render.yml"
       # Макет архбюро: пролёт рендерится там же; кадры едут на сайт отдельным PR в public/.
       - ".github/workflows/blender-arhbyuro.yml"
+      # Макет SIA: пролёт в виллу рендерится там же, кадры — отдельным PR в public/.
+      - ".github/workflows/blender-sia.yml"
       - "scripts/blender/**"
   # Тот же набор проверок на pull request. Без этого PR мержится вслепую:
   # сборка и тесты прогонялись только после слияния, то есть на боевой ветке,
