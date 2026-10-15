@@ -97,7 +97,7 @@ function introHtml() {
 }
 
 /* ── Общие части ─────────────────────────────────────────────────────── */
-const NAV = [["arhitektura", "Архитектура", ARH[0]], ["interery", "Интерьеры", INT[0]], ["arhiv", "Архив", ARH[4]], ["uslugi", "Услуги", ARH[2]], ["byuro", "Бюро", INT[3]], ["kontakty", "Контакты", ARH[5]]];
+const NAV = [["arhitektura", "Архитектура", ARH[0]], ["prolet", "Пролёт", HERO], ["interery", "Интерьеры", INT[0]], ["arhiv", "Архив", ARH[4]], ["uslugi", "Услуги", ARH[2]], ["byuro", "Бюро", INT[3]], ["kontakty", "Контакты", ARH[5]]];
 
 function menuHtml(onHome) {
   const to = (id) => (onHome ? "#" + id : href() + "#" + id);
@@ -139,7 +139,7 @@ ${SHUTTER}
 <a class="skip" href="#main">К содержанию</a>
 <header class="top" id="top">
 <a class="top-logo" href="${href()}" aria-label="SIA, архитектурное бюро, на главную"><img src="${IMG}/logo-k.png" alt="" width="400" height="178"></a>
-<nav class="top-nav" aria-label="Разделы">${NAV.slice(0, 4).map(([id, n]) => `<a href="${to(id)}">${roll(n)}</a>`).join("")}</nav>
+<nav class="top-nav" aria-label="Разделы">${NAV.filter((x) => x[0] !== "prolet").slice(0, 4).map(([id, n]) => `<a href="${to(id)}">${roll(n)}</a>`).join("")}</nav>
 <div class="top-r">
 <a class="top-tel" href="${PHONE_TEL}">${roll(PHONE)}</a>
 <button type="button" class="burger" id="burger" aria-expanded="false" aria-controls="menu"><span class="bg-l" aria-hidden="true"><i></i><i></i></span><span class="bg-t">Меню</span></button>
@@ -232,6 +232,103 @@ function intBlock() {
 <span class="ic-tx"><span class="ic-n">${pad(i + 1)} / ${pad(INT.length)}</span><span class="code">${p.code}</span><span class="ic-t">${esc(p.sub)}</span><span class="ic-d">${esc(p.lead[0].split(". ").slice(0, 2).join(". ").replace(/\.?$/, "."))}</span><span class="cap">${esc(kindOf(p))}${facts(p) ? " · " + facts(p) : ""}</span></span>
 </a>
 </article>`).join("")}</div>
+</section>`;
+}
+
+/* ── Пролёт: камера летит по рендерам бюро ───────────────────────────────
+   Вилла APx180.2606 снаружи: участок, фасад, верхние уровни, бассейн, спа;
+   у спа камера уходит в стекло, и за ним интерьер виллы ИНт238.2606:
+   зал с бассейном, спальня, галерея-сад. Каждый кадр — рендер бюро; между
+   кадрами камера наезжает в точку (fx, fy), следующий кадр проступает на
+   том же движении. Подписи — слова бюро из описаний этих проектов. */
+const FLY = [
+  { c: "APx180.2606", src: ["apx180-2606", 1], f: [0.55, 0.5], k: "Участок", t: "Дом как продолжение ландшафта", d: "Террасы, панорамные окна и плавные линии фасада связывают помещения с участком и бассейном." },
+  { c: "APx180.2606", src: ["apx180-2606", 0], f: [0.58, 0.45], k: "Фасад", t: "Линии горных склонов", d: "Фасады повторяют изгибы склонов: тёплый травертин, живое дерево, матовый камень." },
+  { c: "APx180.2606", src: ["apx180-2606", 2], f: [0.6, 0.42], k: "Верхние уровни", t: "Приватные террасы", d: "Балконы и террасы дают комнатам свои открытые зоны, навесы и зелень закрывают от солнца." },
+  { c: "APx180.2606", src: ["apx180-2606", 4], f: [0.45, 0.72], k: "Бассейн", t: "Центр зоны отдыха", d: "Бассейн встроен в террасу, каскадные ступени связывают дом с водой и ландшафтом." },
+  { c: "APx180.2606", src: ["apx180-2606", 3], f: [0.6, 0.84], k: "Спа", t: "Сквозь стекло, внутрь", d: "Спа-зона встроена в первый этаж и смотрит на бассейн и сад.", deep: true },
+  { c: "ИНт238.2606", src: ["int238-2606", 0], f: [0.6, 0.55], k: "Зал с бассейном", t: "Сердце дома", d: "Двусветный зал с крытым бассейном свободной формы, кессонный потолок и панно с соколами.", drawing: true },
+  { c: "ИНт238.2606", src: ["int238-2606", 3], f: [0.5, 0.55], k: "Спальня", t: "Тише и глубже по тону", d: "Двойная высота, вид на сад, панно с соколом и люстра из стеклянных перьев." },
+  { c: "ИНт238.2606", src: ["int238-2606", 4], f: [0.5, 0.47], k: "Галерея-сад", t: "Вода ведёт во дворик", d: "Водный канал с галечным дном ведёт через анфиладу к внутреннему дворику с зеленью." },
+];
+function flyBlock() {
+  const n = FLY.length;
+  return `<section class="fly" id="prolet" aria-label="Пролёт по проекту">
+<div class="fly-stick">
+${FLY.map((f, i) => `<figure class="fl" data-i="${i}" data-c="${f.c}"${f.deep ? " data-deep" : ""} style="--fx:${f.f[0] * 100}%;--fy:${f.f[1] * 100}%">${f.drawing ? `<img class="fl-d" data-src="${drw(f.src[0], true)}" data-srcset="${drw(f.src[0], true)} 800w, ${drw(f.src[0])} 1500w" sizes="100vw" alt="">` : ""}<img class="fl-r" data-src="${pic(f.src[0], f.src[1], true)}" data-srcset="${pic(f.src[0], f.src[1], true)} 800w, ${pic(f.src[0], f.src[1])} 1500w" sizes="100vw" alt="${esc(`${f.c}: ${f.k.toLowerCase()}`)}"></figure>`).join("")}
+<div class="fl-shade" aria-hidden="true"></div>
+<div class="fl-top"><p class="cap">Пролёт по проекту</p><p class="fl-code code" id="fl-code">${FLY[0].c}</p><p class="cap fl-n"><span id="fl-n">01</span> / ${pad(n)}</p></div>
+<div class="fl-cards">${FLY.map((f, i) => `<article class="flc" data-i="${i}"><p class="flc-k cap">${pad(i + 1)} · ${f.k}</p><h3 class="flc-t">${f.t}</h3><p class="flc-d">${f.d}</p><p class="flc-ticks" aria-hidden="true">${FLY.map((_, k) => `<i${k < i ? ' class="done"' : k === i ? ' class="on"' : ""}></i>`).join("")}</p></article>`).join("")}</div>
+<p class="cap fl-hint" aria-hidden="true">Листайте: камера пройдёт сквозь стекло</p>
+</div>
+<div class="fly-still">${FLY.map((f) => `<figure>${img(f.src[0], f.src[1], `${f.c}: ${f.k}`)}<figcaption><span class="code">${f.c}</span> · ${f.k}. ${f.d}</figcaption></figure>`).join("")}</div>
+</section>`;
+}
+
+/* Бегущая строка: коды всех проектов и услуги, скорость от прокрутки
+   (Scroll Based Velocity, Magic UI). */
+function veloBlock() {
+  const codes = DATA.index.map((p) => p.code);
+  const row = (items, dir) => `<div class="velo-row" data-velo="${dir}"><div class="velo-t">${[0, 1, 2].map(() => items.map((x) => `<span>${esc(x)}</span><i></i>`).join("")).join("")}</div></div>`;
+  return `<section class="velo" aria-hidden="true">${row(codes.slice(0, 22), 1)}${row(["Проектирование", "Дизайн-проект", "3D-визуализация", "Авторский надзор", "Согласование", "Комплексное управление"], -1)}</section>`;
+}
+
+/* Что проектируем: барабан типов объектов крутится прокруткой, рядом
+   число проектов этого типа в архиве бюро. */
+function kindsBlock() {
+  const cnt = {};
+  DATA.index.forEach((p) => p.kinds.forEach((k) => { cnt[k] = (cnt[k] || 0) + 1; }));
+  const kinds = Object.entries(cnt).sort((a, b) => b[1] - a[1]);
+  const ring = [...kinds, ...kinds];
+  const step = 360 / ring.length;
+  return `<section class="kd" aria-label="Что проектирует бюро">
+<div class="kd-l"><p class="cap">Что проектируем</p><h2 class="big" data-lines>${lines(["Десять типов", "<em>объектов</em>"])}</h2><ul class="kd-list">${kinds.map(([k, n]) => `<li><span>${esc(k)}</span><b>${n}</b></li>`).join("")}</ul></div>
+<div class="drum" aria-hidden="true"><div class="drum-track" id="drum">${ring.map(([k, n], i) => `<span style="--a:${(i * step).toFixed(1)}deg">${esc(k)}<sup>${n}</sup></span>`).join("")}</div></div>
+</section>`;
+}
+
+/* Папки по типам (Glass Folder Cards, kedhareswer, 21st.dev, MIT): проекты
+   архива, сгруппированные бюро по типам объектов, выходят из папки веером. */
+const GF_BACK = "M0 56A22 22 0 0 1 22 34L146 34C170 34 172 0 198 0L318 0A22 22 0 0 1 340 22L340 250A22 22 0 0 1 318 272L22 272A22 22 0 0 1 0 250Z";
+const GF_FH = 198;
+const GF_FRONT = `M0 22A22 22 0 0 1 22 0L118 0C144 0 146 32 172 32L318 32A22 22 0 0 1 340 54L340 ${GF_FH - 22}A22 22 0 0 1 318 ${GF_FH}L22 ${GF_FH}A22 22 0 0 1 0 ${GF_FH - 22}Z`;
+const plural = (n) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? "проект" : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? "проекта" : "проектов"}`;
+const FOLDERS = [
+  { n: "Загородные дома", k: ["Загородный дом"] },
+  { n: "Жилые и клубные дома", k: ["Клубный дом", "Жилой дом", "Жилой комплекс"] },
+  { n: "Квартиры", k: ["Жилая квартира", "Пентхаус"] },
+  { n: "Общественные", k: ["Общественное пространство", "Клиника", "Офисное здание", "Образовательное учреждение"] },
+];
+function folderHtml(s, i) {
+  const ps = DATA.index.filter((p) => p.kinds.some((k) => s.k.includes(k)));
+  const pick = [...ps.filter((p) => BYCODE[p.code]), ...ps.filter((p) => !BYCODE[p.code])].slice(0, 4);
+  const sheets = pick.map((p, v, arr) => {
+    const slot = arr.length <= 1 ? 0 : (v / (arr.length - 1)) * 2 - 1;
+    const h = [...p.slug].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7 + i);
+    const st = `--slot:${slot.toFixed(2)};--depth:${arr.length - 1 - v};--jx:${((((h % 100) / 100) - 0.5) * 10).toFixed(2)}px;--jr:${(((((h >> 8) % 100) / 100) - 0.5) * 3.2).toFixed(2)}deg;z-index:${v + 1}`;
+    const inner = `<img class="gf-sheet-art" src="${thumb(p.slug)}" alt="" loading="lazy" decoding="async"><span class="gf-sheet-head"><span class="gf-sheet-name">${p.code}</span><span class="gf-sheet-meta">${esc(p.kinds[0] || "")}</span></span>`;
+    const f = BYCODE[p.code];
+    return `<div role="listitem" class="gf-slot">${f ? `<a class="gf-sheet" href="${pHref(f)}" data-tr="${esc(p.code)}" style="${st}">${inner}</a>` : `<span class="gf-sheet" style="${st}">${inner}</span>`}</div>`;
+  }).join("");
+  return `<div class="gf-cell"><div class="gf" data-gf style="--d:${i * 140}ms">
+<div class="gf-stage"><div class="gf-tilt">
+<div class="gf-shadow" aria-hidden="true"></div>
+<div class="gf-back" style="clip-path:path('${GF_BACK}')" aria-hidden="true"><img class="gf-art" src="${thumb(pick[0].slug)}" alt="" loading="lazy" decoding="async"><div class="gf-sheen"></div></div>
+<svg class="gf-rim gf-back-rim" viewBox="0 0 340 272" aria-hidden="true"><path d="${GF_BACK}"/></svg>
+<div class="gf-front" style="clip-path:path('${GF_FRONT}')">
+<div class="gf-tint" aria-hidden="true"></div><div class="gf-spec" aria-hidden="true"></div>
+<svg class="gf-rim gf-front-rim" viewBox="0 0 340 ${GF_FH}" aria-hidden="true"><defs><linearGradient id="gfr${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient></defs><path d="${GF_FRONT}" stroke="url(#gfr${i})"/></svg>
+<button type="button" class="gf-hit" aria-expanded="false" aria-label="${esc(`Открыть папку ${s.n}, ${plural(ps.length)}`)}"></button>
+<div class="gf-label"><span class="cap">${pad(i + 1)}</span><span class="gf-title">${s.n}</span><span class="gf-meta">${plural(ps.length)}</span></div>
+</div>
+<div class="gf-files" role="list" aria-label="${esc(s.n)}">${sheets}</div>
+</div></div>
+</div></div>`;
+}
+function foldersBlock() {
+  return `<section class="folders" aria-label="Проекты по типам">
+<div class="fd-h"><p class="cap">Архив по типам</p><h2 class="big" data-lines>${lines(["Папки", "<em>бюро</em>"])}</h2><p class="cap fd-hint"><span class="fd-ptr">Наведите на папку, нажмите, чтобы открыть</span><span class="fd-tap">Нажмите на папку, чтобы открыть</span></p></div>
+<div class="fd-grid">${FOLDERS.map(folderHtml).join("")}</div>
 </section>`;
 }
 
@@ -337,7 +434,7 @@ function home() {
     title: "SIA · архитектурное бюро в Москве · макет DevUz Studio",
     desc: "Проектирование, дизайн интерьеров и экстерьеров, 3D-визуализация, авторский надзор и согласование. Москва, Таганская площадь, 88.",
     preload: `<link rel="preload" as="image" href="${drw(HERO.slug, true)}" media="(max-width: 800px)"><link rel="preload" as="image" href="${drw(HERO.slug)}" media="(min-width: 801px)">`,
-    body: [heroBlock(), statsBlock(), statementBlock(), archBlock(), intBlock(), indexBlock(), servicesBlock(), processBlock(), eventsBlock(), teamBlock(), contactBlock()].join("\n"),
+    body: [heroBlock(), statsBlock(), statementBlock(), archBlock(), flyBlock(), intBlock(), veloBlock(), kindsBlock(), foldersBlock(), indexBlock(), servicesBlock(), processBlock(), eventsBlock(), teamBlock(), contactBlock()].join("\n"),
   });
 }
 
