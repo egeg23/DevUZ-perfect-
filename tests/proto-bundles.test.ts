@@ -914,3 +914,66 @@ test("Greenwell: магазин 1 000 $ вместо 4 900 $ на 48 часов,
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
 });
+
+test("Магазин Medikor: страница, магазин и панель, условия, noindex, счёт по ИНН, КП, пульс в знак и сканер", async () => {
+  const { statSync } = await import("node:fs");
+  const site = bundlePages("medikor");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "shop"]);
+  for (const [path, page] of Object.entries(all)) {
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes('<html lang="ru">'), `${path}: язык страницы`);
+    assert.ok(page.includes("https://devuz.studio/ru/mockup-terms"), `${path}: нет условий`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("Medikor"), `${path}: нет названия магазина`);
+    assert.match(page, /демо/, `${path}: не сказано, что данные демо`);
+    // Фото — их собственные, из сборки, не хотлинком.
+    assert.doesNotMatch(page, /medikor\.ru\/(assets|images)/, `${path}: фото хотлинком`);
+    for (const m of page.matchAll(/\/protos\/medikor\/([\w.-]+\.(?:webp|png))/g)) statSync(`public/protos/medikor/${m[1]}`);
+  }
+  const home = all[""];
+  assert.match(home, /id="intro"[\s\S]*DevUz Studio/, "нет промо DevUz Studio");
+  assert.match(home, /class="mk-cv"[^>]*data-logo=/, "нет знака Medikor в заставке");
+  for (const id of ["hero", "seychas", "skaner", "sc-box", "put", "schet", "panel", "cena", "konstruktor", "timer"]) assert.match(home, new RegExp(`id="${id}"`), `нет блока ${id}`);
+  assert.match(home, /data-src="__PROTO_BASE__\/shop\?embed=1/, "магазин не в айфоне");
+  assert.match(home, /data-src="__PROTO_BASE__\/panel\?embed=1"/, "панель не в окне");
+  // Владелец, 15.10.2026: шапка при прокрутке прячется и возвращается через 3 с после остановки.
+  for (const path of ["", "shop"]) {
+    assert.match(all[path], /var IDLE=3000,idleT=0;/, `${path}: нет правила шапки`);
+    assert.match(all[path], /function onScroll\(\)\{headIdle\(\)/, `${path}: шапка не прячется при прокрутке`);
+  }
+  // Сканер и знак двигаются только transform: ни left, ни width в анимации.
+  assert.match(home, /\.sc-beam\{[^}]*transform:translate3d/, "луч сканера не на transform");
+  const shop = all.shop;
+  for (const v of ["home", "catalog", "product", "cart", "checkout", "invoice", "order", "orders", "kp", "kps", "kpview", "me", "docs", "fav"]) assert.match(shop, new RegExp(`V\\.${v}=function`), `магазин: нет экрана ${v}`);
+  for (const s of ["По счёту", "По QR через СБП", "Картой онлайн", "СДЭК", "ПЭК", "Деловые линии", "Запросить КП", "Счёт на организацию"]) assert.ok(shop.includes(s), `магазин: нет «${s}»`);
+  assert.match(shop, /class="tabbar"/, "нет нижней панели");
+  for (const v of ["dash", "orders", "kp", "invoices", "clients", "goods", "log"]) assert.match(all.panel, new RegExp(`V\\.${v}=function`), `панель: нет раздела ${v}`);
+  // Таблицы в карточках не растягивают страницу: своя прокрутка и спрятанные колонки.
+  assert.match(all.panel, /\.tw\{overflow-x:auto/, "таблицы панели без своей прокрутки");
+  assert.match(all.panel, /@media \(max-width:719px\)\{\.c-m\{display:none\}\}/, "панель не прячет колонки на телефоне");
+  const stamped = stampedBundle("medikor", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages.shop, site.pages.shop, "отпечаток не поставился в магазине");
+});
+
+test("Medikor: магазин 1 000 $ вместо 8 900 $ на 48 часов, 10-20 допов с ценой и пользой, цены в одном месте", async () => {
+  // Владелец, 15.10.2026: «По аналогии как тут» (Greenwell): без допов по акции 1 000 $, допы отдельно.
+  const plan = await import("../scripts/protos/medikor/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 8900);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
+  for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.ru.e, `${a.id}: цена и описание`);
+  assert.equal(plan.ALL, 1000 + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
+  const html = bundlePages("medikor")!.html;
+  assert.match(html, /<s>8 900 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 8 900 $ крупно");
+  assert.match(html, /"base":1000,"regular":8900,/, "скрипт считает от тех же цен");
+  assert.match(html, /"hours":48,/, "отсчёт 48 часов");
+  for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+});

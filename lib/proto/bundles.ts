@@ -32,6 +32,7 @@ import inapp from "@/content/proto-bundles/inapp.json" with { type: "json" };
 import invis from "@/content/proto-bundles/invis.json" with { type: "json" };
 import arhbyuro from "@/content/proto-bundles/arhbyuro.json" with { type: "json" };
 import greenwell from "@/content/proto-bundles/greenwell.json" with { type: "json" };
+import medikor from "@/content/proto-bundles/medikor.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -55,6 +56,7 @@ const BUNDLES: Record<string, Bundle> = {
   invis: invis as Bundle,
   arhbyuro: arhbyuro as Bundle,
   greenwell: greenwell as Bundle,
+  medikor: medikor as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */
