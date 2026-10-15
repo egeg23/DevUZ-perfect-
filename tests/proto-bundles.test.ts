@@ -1007,18 +1007,21 @@ test("Магазин Medikor: страница, магазин и панель, 
   assert.notEqual(stamped.pages.shop, site.pages.shop, "отпечаток не поставился в магазине");
 });
 
-test("Medikor: магазин 1 000 $ вместо 8 900 $ на 48 часов, 10-20 допов с ценой и пользой, цены в одном месте", async () => {
-  // Владелец, 15.10.2026: «По аналогии как тут» (Greenwell): без допов по акции 1 000 $, допы отдельно.
+test("Medikor: цены в рублях, скидка 30% на магазин и допы на 48 часов с первого открытия, цены в одном месте", async () => {
+  // Владелец, 16.10.2026: «скинь таймер до первого открытия + переведи цены в рубли и сделай скидку 30%».
   const plan = await import("../scripts/protos/medikor/plan.mjs");
-  assert.equal(plan.BASE.promo, 1000);
-  assert.equal(plan.BASE.price, 8900);
+  assert.equal(plan.DISCOUNT, 30);
+  assert.equal(plan.BASE.price, 745000);
+  assert.equal(plan.BASE.promo, plan.sale(plan.BASE.price), "акция магазина — минус 30%");
   assert.equal(plan.OFFER_HOURS, 48);
   assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
-  for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.ru.e, `${a.id}: цена и описание`);
-  assert.equal(plan.ALL, 1000 + plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
+  for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.price % 1000 === 0 && a.ru.t && a.ru.e, `${a.id}: цена в рублях и описание`);
+  assert.equal(plan.ALL, plan.BASE.promo + plan.ADDONS.reduce((s: number, a: { price: number }) => s + plan.sale(a.price), 0));
   const html = bundlePages("medikor")!.html;
-  assert.match(html, /<s>8 900 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 8 900 $ крупно");
-  assert.match(html, /"base":1000,"regular":8900,/, "скрипт считает от тех же цен");
+  assert.doesNotMatch(html.replace(/<script[\s\S]*?<\/script>/g, ""), /\d \$/, "на странице остались доллары");
+  assert.match(html, /<s>745 000 ₽<\/s><b>521 500 ₽<\/b>/, "на макете 521 500 ₽ вместо 745 000 ₽ крупно");
+  assert.match(html, /"base":521500,"regular":745000,"cur":"₽",/, "скрипт считает от тех же цен в рублях");
   assert.match(html, /"hours":48,/, "отсчёт 48 часов");
-  for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  assert.match(html, /mk-offer-2/, "отсчёт заново с первого открытия после смены цен");
+  for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${plan.sale(a.price)}"`), `${a.id}: цена со скидкой на странице`);
 });
