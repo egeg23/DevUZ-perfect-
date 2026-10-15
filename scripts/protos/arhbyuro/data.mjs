@@ -78,10 +78,10 @@ export const PROJECTS = [
 
 /* Пролёт: что подписано на каком отрезке прокрутки (доля 0…1). */
 export const FLIGHT_STAGES = [
-  { from: 0, to: 0.2, k: ["01 · Генплан", "01 · Master plan"], t: ["Участок сверху: дом, бассейн, сад", "The site from above: house, pool, garden"] },
-  { from: 0.22, to: 0.46, k: ["02 · Объём", "02 · Massing"], t: ["Бетонная консоль над стеклянной гостиной", "A concrete cantilever over a glass living room"] },
-  { from: 0.48, to: 0.78, k: ["03 · Терраса", "03 · Terrace"], t: ["Камень, вода и открытая створка", "Stone, water and an open glass panel"] },
-  { from: 0.8, to: 1, k: ["04 · Интерьер", "04 · Interior"], t: ["Гостиная выходит во двор с деревом", "The living room opens to a courtyard tree"] },
+  { from: 0, to: 0.22, k: ["Генплан", "Master plan"], t: ["Участок сверху", "The site from above"], d: ["Дом, бассейн, газон и деревья по краю. Генплан и благоустройство сделаны вместе с домом.", "House, pool, lawn and trees along the edge. The master plan and landscape were designed with the house."] },
+  { from: 0.22, to: 0.48, k: ["Объём", "Massing"], t: ["Консоль над гостиной", "A cantilever over the living room"], d: ["Бетонный второй этаж развёрнут поперёк первого и нависает над террасой.", "The concrete upper floor turns across the ground floor and hangs over the terrace."] },
+  { from: 0.48, to: 0.78, k: ["Терраса", "Terrace"], t: ["Камень и вода", "Stone and water"], d: ["Стекло от пола до потолка, одна створка откатана: гостиная выходит к бассейну.", "Floor-to-ceiling glass with one panel slid away: the living room opens onto the pool."] },
+  { from: 0.78, to: 1.01, k: ["Интерьер", "Interior"], t: ["Гостиная во двор", "Living room to the courtyard"], d: ["Дуб, бетон и лён. С севера двор с деревом, свет приходит с двух сторон.", "Oak, concrete and linen. A courtyard tree to the north, daylight from both sides."] },
 ];
 
 /* Меню: пункт, куда ведёт, фон пункта (кадр stills или кадр пролёта). */

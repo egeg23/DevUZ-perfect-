@@ -104,14 +104,14 @@ if(velo.length&&!REDUCED&&'IntersectionObserver' in window)new IntersectionObser
    Кадры грузятся очередью по четыре: сначала каждый 16-й, потом гуще. */
 var fly=$('.fly');
 if(fly&&!REDUCED){(function(){
-  var N=+fly.dataset.n,cv=$('.fly-cv',fly),cx=cv.getContext('2d',{alpha:false}),fcaps=$$('.fly-cap',fly),rail=$('.fly-rail',fly),note=$('#fly-load'),fnum=$('#fly-f');
+  var N=+fly.dataset.n,cv=$('.fly-cv',fly),cx=cv.getContext('2d',{alpha:false}),cards=$$('.fsh-card',fly),rail=$('.fly-rail',fly),fnum=$('#fly-f'),pct=$('#fly-pct'),fill=$('#fly-fill'),eager=Math.ceil(N/4);
   var portrait=function(){return innerHeight>innerWidth*1.1};
   var set=portrait()?fly.dataset.m:fly.dataset.d,imgs=new Array(N),got=0,want=0,started=false,cur=0,target=0,drawn=-1,raf=0;
   var step=SLOW?3:1;
   function order(){var o=[],seen={};[16,8,4,2,1].forEach(function(s){if(s<step&&s!==1)return;for(var i=0;i<N;i+=Math.max(s,step)){if(!seen[i]){seen[i]=1;o.push(i)}}});if(!seen[N-1])o.push(N-1);return o}
   function url(i){var n=String(i+1);while(n.length<4)n='0'+n;return set+n+'.webp'}
   function load(){if(started)return;started=true;var q=order();want=q.length;
-    function next(){if(!q.length)return;var i=q.shift(),im=new Image();im.decoding='async';im.onload=function(){var done=function(b){imgs[i]=b||im;got++;if(got===1||i===0)fly.classList.add('ready');paintSoon();if(note)note.textContent=got<want?(EN?'· loading ':'· загрузка ')+Math.round(got/want*100)+'%':'';next()};
+    function next(){if(!q.length)return;var i=q.shift(),im=new Image();im.decoding='async';im.onload=function(){var done=function(b){imgs[i]=b||im;got++;if(got===1||i===0)fly.classList.add('ready');paintSoon();var lp=Math.min(1,got/eager);if(pct)pct.textContent=Math.round(lp*100);if(fill)fill.style.setProperty('--l',lp.toFixed(3));if(got>=eager)fly.classList.add('loaded');next()};
       if(window.createImageBitmap)createImageBitmap(im).then(done,function(){done(null)});else done(null)};im.onerror=function(){next()};im.src=url(i)}
     for(var k=0;k<4;k++)next()}
   function size(){var r=Math.min(devicePixelRatio||1,2);cv.width=Math.round(cv.clientWidth*r);cv.height=Math.round(cv.clientHeight*r);drawn=-1;paintSoon()}
@@ -119,7 +119,11 @@ if(fly&&!REDUCED){(function(){
   function draw(i){var j=nearest(i);if(j<0||j===drawn)return;var im=imgs[j],W=cv.width,H=cv.height,iw=im.width,ih=im.height,s=Math.max(W/iw,H/ih),dw=iw*s,dh=ih*s;cx.drawImage(im,(W-dw)/2,(H-dh)/2,dw,dh);drawn=j}
   function tickF(){raf=0;var p=pass(fly);target=p*(N-1);cur+=(target-cur)*.22;if(Math.abs(target-cur)<.05)cur=target;var k=Math.round(cur);draw(k);
     if(fnum)fnum.textContent=('00'+(k+1)).slice(-3);rail.style.setProperty('--p',p.toFixed(4));
-    fcaps.forEach(function(c){var on=p>=+c.dataset.from&&p<=+c.dataset.to;if(on!==c.hasAttribute('data-on'))on?c.setAttribute('data-on',''):c.removeAttribute('data-on')});
+    /* Карточки шагов: активная на месте, прошлые ушли вверх, отметки заполняются. */
+    var act=-1,loc=0;cards.forEach(function(c,i){var f=+c.dataset.from,t=+c.dataset.to;if(p>=f&&p<t){act=i;loc=(p-f)/(t-f)}});
+    cards.forEach(function(c,i){var on=i===act;if(on!==c.hasAttribute('data-on'))on?c.setAttribute('data-on',''):c.removeAttribute('data-on');c.classList.toggle('prev',act>=0&&i<act);
+      $$('.fsh-ticks span',c).forEach(function(sp,j){sp.style.setProperty('--t',j<act?1:j===act?loc.toFixed(3):0)})});
+    fly.classList.toggle('moved',p>.02);
     if(Math.abs(target-cur)>.05)paintSoon()}
   function paintSoon(){if(!raf)raf=requestAnimationFrame(tickF)}
   addEventListener('scroll',paintSoon,{passive:true});addEventListener('resize',function(){var s=portrait()?fly.dataset.m:fly.dataset.d;if(s!==set){set=s;imgs=new Array(N);got=0;started=false;load()}size()});
@@ -145,6 +149,22 @@ $$('.sv-h').forEach(function(b){b.addEventListener('click',function(){var open=b
 $$('[data-pt]').forEach(function(a){var pts=$$('.mp-pt[data-tr="'+a.dataset.pt+'"]');
   ['pointerenter','focus'].forEach(function(ev){a.addEventListener(ev,function(){pts.forEach(function(p){p.classList.add('on')})})});
   ['pointerleave','blur'].forEach(function(ev){a.addEventListener(ev,function(){pts.forEach(function(p){p.classList.remove('on')})})})});
+
+/* Стеклянные папки (Glass Folder Cards): размер по ячейке, сборка при
+   появлении по очереди, стекло ловит свет за курсором, нажатие открывает
+   веер файлов, Escape и нажатие мимо закрывают. Закрытые файлы вне Tab. */
+var gfs=$$('[data-gf]');
+function gfSize(){gfs.forEach(function(g){var w=g.parentNode.clientWidth;g.style.setProperty('--k',Math.min(1,w/340).toFixed(4))})}
+function gfOpen(g,on){if(on)gfs.forEach(function(o){if(o!==g)gfOpen(o,false)});on?g.setAttribute('data-open',''):g.removeAttribute('data-open');var b=$('.gf-hit',g),f=$('.gf-files',g);b.setAttribute('aria-expanded',on?'true':'false');if(on)f.removeAttribute('inert');else f.setAttribute('inert','')}
+if(gfs.length){gfSize();addEventListener('resize',gfSize);
+  gfs.forEach(function(g){gfOpen(g,false);$('.gf-hit',g).addEventListener('click',function(){gfOpen(g,!g.hasAttribute('data-open'))});
+    var raf=0,px=0,py=0;function write(){raf=0;g.style.setProperty('--px',px.toFixed(3));g.style.setProperty('--py',py.toFixed(3))}
+    g.addEventListener('pointermove',function(e){if(e.pointerType==='touch'||REDUCED)return;var r=g.getBoundingClientRect();px=(e.clientX-r.left)/r.width*2-1;py=(e.clientY-r.top)/r.height*2-1;if(!raf)raf=requestAnimationFrame(write)});
+    g.addEventListener('pointerleave',function(){px=0;py=0;if(!raf)raf=requestAnimationFrame(write)})});
+  d.addEventListener('keydown',function(e){if(e.key!=='Escape')return;gfs.forEach(function(g){if(g.hasAttribute('data-open')){gfOpen(g,false);$('.gf-hit',g).focus()}})});
+  d.addEventListener('pointerdown',function(e){gfs.forEach(function(g){if(g.hasAttribute('data-open')&&!g.contains(e.target))gfOpen(g,false)})});
+  if('IntersectionObserver' in window&&!REDUCED){var gio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.setAttribute('data-in','');gio.unobserve(e.target)}})},{threshold:.25});gfs.forEach(function(g){gio.observe(g)})}
+  else gfs.forEach(function(g){g.setAttribute('data-in','')})}
 
 /* Видео на странице проекта: грузится, когда до него долистали. */
 $$('.pp-v').forEach(function(v){if(REDUCED||SLOW||!('IntersectionObserver' in window))return;new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){if(!v.src)v.src=v.dataset.src;var p=v.play();if(p&&p.catch)p.catch(function(){})}else if(v.src)v.pause()})},{rootMargin:'200px'}).observe(v)});

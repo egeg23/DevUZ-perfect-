@@ -32,11 +32,18 @@ for (const [w, h] of [[1440, 900], [390, 844]]) {
     await p.waitForTimeout(2600);
     await snap(`fly-${Math.round(k * 100)}`);
   }
-  for (const [sel, name, dy] of [[".pj", "projects", 0], [".pj-2", "projects-2", -160], [".velo", "velo", -200], ["#geo .geo-top", "geo-top", -40], ["#geo .geo-map", "geo", -120], ["#uslugi .sec-h", "services", 0], ["#sayt .sec-h", "spec", 0]]) {
+  for (const [sel, name, dy] of [[".pj", "projects", 0], [".pj-2", "projects-2", -160], [".folders", "folders", 40], [".velo", "velo", -200], ["#geo .geo-top", "geo-top", -40], ["#geo .geo-map", "geo", -120], ["#uslugi .sec-h", "services", 0], ["#sayt .sec-h", "spec", 0]]) {
     await p.evaluate(([s, dy]) => { const el = document.querySelector(s); window.scrollTo(0, el.getBoundingClientRect().top + scrollY + dy); }, [sel, dy]);
     await p.waitForTimeout(1600);
     await snap(name);
   }
+  // Папка открыта: проекты веером.
+  await p.evaluate(() => { const el = document.querySelector(".folders"); window.scrollTo(0, el.getBoundingClientRect().top + scrollY + 40); });
+  await p.waitForTimeout(1200);
+  await p.click(".gf-cell .gf-hit");
+  await p.waitForTimeout(1400);
+  await snap("folders-open");
+  await p.keyboard.press("Escape");
   const ow = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   if (ow > 0) bad.push(`${w}: горизонтальная прокрутка ${ow}px`);
   await p.evaluate(() => window.scrollTo(0, 0));
