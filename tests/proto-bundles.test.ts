@@ -722,3 +722,68 @@ test("Турагентство: «Минимум» 5 900 $ за 8-10 недел�
     assert.match(html, /"cash":10,/, "скрипт считает скидку за наличные от тех же 10%");
   }
 });
+
+test("Компьютерный клуб Invis: страница и кабинеты на ru и uz, условия, noindex, влёт в знак, бронь, колесо", () => {
+  const site = bundlePages("invis");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "admin", "kabinet", "uz", "uz/admin", "uz/kabinet"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(/Invis|INVIS/.test(page), `${path}: нет названия клуба`);
+    assert.match(page, lang === "ru" ? /демо/ : /demo/, `${path}: не сказано, что данные демо`);
+    // Колесо: шансы строго 65 / 25 / 10, выбор до анимации, видны мелким текстом.
+    assert.match(page, /"odds":\[\{"id":"none","p":65,"hours":0[^\]]*"id":"h1","p":25,"hours":1[^\]]*"id":"h2","p":10,"hours":2/, `${path}: шансы колеса`);
+    assert.match(page, /crypto\.getRandomValues/, `${path}: исход колеса не из криптослучайности`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], /class="iv-cv"/, `${path}: нет влёта в знак Invis`);
+    for (const id of ["hero", "setup", "zony", "bron", "koleso", "kabinety", "predlozhenie", "konstruktor"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
+    assert.match(all[path], /backdrop-filter:url\(#lq\)/, `${path}: нет жидкого стекла`);
+    assert.match(all[path], /data-par=/, `${path}: нет параллакса`);
+    // Железо — настоящие фото, вентиляторы видеокарты — отдельные слои, которые крутятся.
+    for (const f of ["gear-gpu", "gear-fan0", "gear-fan1", "gear-fan2", "gear-kb", "gear-mouse", "gear-hs", "gear-desk"]) assert.ok(all[path].includes(`/protos/invis/${f}.webp`), `${path}: нет фото ${f}`);
+    assert.match(all[path], /class="rg-rot"/, `${path}: вентиляторы не крутятся`);
+    assert.doesNotMatch(all[path], /class="gpu"|class="kb"|class="mouse"/, `${path}: осталось железо, нарисованное кодом`);
+    assert.match(all[path], new RegExp(`data-src="__PROTO_BASE__${path ? "/uz" : ""}/kabinet\\?embed=1"`), `${path}: кабинет не в айфоне`);
+    assert.match(all[path], new RegExp(`data-src="__PROTO_BASE__${path ? "/uz" : ""}/admin\\?embed=1"`), `${path}: пульт не в рамке`);
+    for (const s of ["Langame", "SENET", "SmartShell", "iCafeCloud"]) assert.ok(all[path].includes(s), `${path}: нет системы ${s}`);
+    // Акции 48 часов нет: её цену решает владелец.
+    assert.doesNotMatch(all[path], /id="timer"|48 (часов|soat)/, `${path}: таймер акции, которой нет`);
+  }
+  assert.ok(all.uz.includes("o‘") || all.uz.includes("O‘"), "узбекский — латиница с o‘");
+  for (const path of ["uz", "uz/kabinet", "uz/admin"]) {
+    assert.doesNotMatch(all[path].replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица в узбекской странице`);
+    for (const id of ["iv-data", "cab-data", "kit-data"]) {
+      const m = all[path].match(new RegExp(`id="${id}">([\\s\\S]*?)</script>`));
+      if (m) assert.doesNotMatch(m[1].replace(/"(other|site)":"[^"]*"/g, ""), /[А-Яа-яЁё]{3,}/, `${path}: русские подписи в ${id}`);
+    }
+  }
+  const stamped = stampedBundle("invis", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Invis: конструктор — сайт 1 700 $, все допы вместе 1 300 $, итог не больше 3 000 $, без акции", async () => {
+  // Владелец, 15.10.2026: «сайт без допов 1 700 $; с допами не больше 3 000 $ в сумме за всё».
+  const plan = await import("../scripts/protos/invis/plan.mjs");
+  assert.equal(plan.BASE.price, 1700);
+  const sum = plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0);
+  assert.equal(plan.ALL, 1700 + sum);
+  assert.ok(plan.ALL <= 3000, "со всеми допами не больше 3 000 $");
+  for (const id of ["booking", "cabinet", "admin", "pay", "wheel", "bot"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
+  for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.ru.e && a.uz.t && a.uz.e, `${a.id}: цена и описание`);
+  const site = bundlePages("invis")!;
+  for (const html of [site.html, site.pages.uz]) {
+    assert.match(html, /"base":1700,/, "скрипт считает от той же цены сайта");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});
