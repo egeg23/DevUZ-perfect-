@@ -265,6 +265,33 @@ ${FLY.map((f, i) => `<figure class="fl" data-i="${i}" data-c="${f.c}"${f.deep ? 
 </section>`;
 }
 
+/* 3D-пролёт: 180 кадров Blender по прокрутке (тот же, что в макете архбюро,
+   кадры лежат в /protos/arhbyuro/f). Дом собран нами, это не проект бюро,
+   и блок так и подписан: показывает, какой пролёт сайт сделает по 3D-модели
+   их собственного проекта. */
+const BFLY = [
+  { from: 0, to: 0.22, k: "Генплан", t: "Участок сверху", d: "Дом, бассейн и сад целиком, как на генплане." },
+  { from: 0.22, to: 0.48, k: "Объём", t: "Облёт дома", d: "Камера опускается и обходит дом: видно, как объёмы стоят друг на друге." },
+  { from: 0.48, to: 0.78, k: "Терраса", t: "Камень и вода", d: "Камера идёт к стеклу гостиной вдоль бассейна." },
+  { from: 0.78, to: 1.01, k: "Интерьер", t: "Внутрь", d: "Через открытую створку в гостиную: материалы и свет внутри." },
+];
+function bflyBlock() {
+  const n = BFLY.length;
+  const F = "/protos/arhbyuro/f";
+  return `<section class="bfl" id="prolet-3d" aria-label="3D-пролёт, демонстрация" data-n="180" data-d="${F}/d/" data-m="${F}/m/">
+<div class="bfl-stick">
+<img class="bfl-poster" src="${F}/d/0001.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">
+<canvas class="bfl-cv" aria-hidden="true"></canvas>
+<div class="fl-shade" aria-hidden="true"></div>
+<div class="fl-top"><p class="cap">3D-пролёт · демонстрация</p><p class="bfl-h">Так сайт пройдёт<br><em>по вашему дому</em></p><p class="cap fl-n"><span id="bfl-f">001</span> / 180</p></div>
+<div class="bfl-loader" id="bfl-loader" aria-hidden="true"><p class="cap">Загрузка · <b id="bfl-pct">0</b>%</p><span class="bfl-track"><i id="bfl-fill"></i></span></div>
+<div class="fl-cards">${BFLY.map((s, i) => `<article class="flc bfc" data-from="${s.from}" data-to="${s.to}"><p class="flc-k cap">${pad(i + 1)} · ${s.k}</p><h3 class="flc-t">${s.t}</h3><p class="flc-d">${s.d}</p><p class="flc-ticks" aria-hidden="true">${BFLY.map(() => "<i><b></b></i>").join("")}</p></article>`).join("")}</div>
+<p class="cap bfl-note">Демо DevUz Studio: дом собран нами в Blender, 180 кадров идут за прокруткой. По 3D-модели вашего проекта соберём такой же пролёт.</p>
+</div>
+<div class="bfl-still">${[1, 60, 120, 180].map((f, i) => `<figure><img src="${F}/d/${String(f).padStart(4, "0")}.webp" alt="" loading="lazy" decoding="async"><figcaption class="cap">3D-пролёт, демонстрация · ${BFLY[i].k}</figcaption></figure>`).join("")}</div>
+</section>`;
+}
+
 /* Бегущая строка: коды всех проектов и услуги, скорость от прокрутки
    (Scroll Based Velocity, Magic UI). */
 function veloBlock() {
@@ -434,7 +461,7 @@ function home() {
     title: "SIA · архитектурное бюро в Москве · макет DevUz Studio",
     desc: "Проектирование, дизайн интерьеров и экстерьеров, 3D-визуализация, авторский надзор и согласование. Москва, Таганская площадь, 88.",
     preload: `<link rel="preload" as="image" href="${drw(HERO.slug, true)}" media="(max-width: 800px)"><link rel="preload" as="image" href="${drw(HERO.slug)}" media="(min-width: 801px)">`,
-    body: [heroBlock(), statsBlock(), statementBlock(), archBlock(), flyBlock(), intBlock(), veloBlock(), kindsBlock(), foldersBlock(), indexBlock(), servicesBlock(), processBlock(), eventsBlock(), teamBlock(), contactBlock()].join("\n"),
+    body: [heroBlock(), statsBlock(), statementBlock(), archBlock(), flyBlock(), bflyBlock(), intBlock(), veloBlock(), kindsBlock(), foldersBlock(), indexBlock(), servicesBlock(), processBlock(), eventsBlock(), teamBlock(), contactBlock()].join("\n"),
   });
 }
 

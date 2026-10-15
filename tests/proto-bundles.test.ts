@@ -947,6 +947,9 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   // Пролёт по рендерам бюро, барабан, бегущая строка и папки.
   assert.equal((all[""].match(/<figure class="fl" /g) || []).length, 8, "в пролёте не 8 кадров");
   assert.match(all[""], /id="drum"/, "нет барабана");
+  // 3D-пролёт Blender — подписан как демонстрация, а не как проект бюро.
+  assert.match(all[""], /class="bfl"[^>]*data-n="180"/, "нет 3D-пролёта");
+  assert.match(all[""], /3D-пролёт · демонстрация/, "3D-пролёт не подписан как демонстрация");
   assert.match(all[""], /class="velo-row"/, "нет бегущей строки");
   assert.equal((all[""].match(/data-gf /g) || []).length, 4, "не 4 папки");
   for (const id of ["prolet", "arhitektura", "interery", "arhiv", "uslugi", "byuro", "kontakty"]) assert.match(all[""], new RegExp(`id="${id}"`), `нет блока ${id}`);
