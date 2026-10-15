@@ -17,6 +17,8 @@ export type ProtoRow = {
   created_at: string;
   lock: string | null;
   lockAt: string | null;
+  /** Ответственный, назначенный руками в «Макетах» (protos.owner_staff_id). */
+  owner_staff_id?: string | null;
 };
 
 export type FirstSend = { sent_at: string; lead_id: string | null; prospect_id: string | null };

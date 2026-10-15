@@ -13,12 +13,16 @@ import { serviceClient } from "@/lib/supabase";
  * макет второй раз не закроет и строку второй раз не пришлёт.
  */
 
-/** Кто отправлял: хозяин лида, потом автор касания. Не знаем — null. */
-async function senderChat(sent: FirstSend | undefined, protoProspect: string | null): Promise<number | null> {
+/**
+ * Кому сказать, что макет закрылся: ответственный, назначенный в «Макетах»,
+ * потом хозяин лида, потом автор касания (тот же порядок, что mockupOwner в
+ * lib/admin/mockups.ts). Не знаем — null.
+ */
+async function senderChat(sent: FirstSend | undefined, protoProspect: string | null, owner: string | null = null): Promise<number | null> {
   const db = serviceClient();
   if (!db) return null;
-  let staffId: string | null = null;
-  if (sent?.lead_id) {
+  let staffId: string | null = owner;
+  if (!staffId && sent?.lead_id) {
     const { data } = await db.from("leads").select("assigned_staff_id").eq("id", sent.lead_id).maybeSingle();
     staffId = (data?.assigned_staff_id as string | null) ?? null;
   }
@@ -41,7 +45,7 @@ export async function runProtoAutoClose(now: Date = new Date()): Promise<AutoClo
   if (!db) return run;
   const { data, error } = await db
     .from("protos")
-    .select("id, name, prospect_id, auto, closed_at, opened_at, created_at, lock:facts->>lock, lockAt:facts->>lockAt")
+    .select("id, name, prospect_id, auto, closed_at, opened_at, created_at, owner_staff_id, lock:facts->>lock, lockAt:facts->>lockAt")
     .neq("status", "draft")
     .is("closed_at", null)
     .or("auto.is.null,auto.eq.false")
@@ -82,7 +86,7 @@ export async function runProtoAutoClose(now: Date = new Date()): Promise<AutoClo
       continue;
     }
     const rowsBtn = [[{ text: "🔑 Сгенерировать пароль", callback_data: `${CODE_CALLBACK}:${p.id}` }]];
-    const chat = await senderChat(sent, p.prospect_id);
+    const chat = await senderChat(sent, p.prospect_id, p.owner_staff_id ?? null);
     const chats = chat ? [chat] : (await offerReaders()).map((r) => r.chat);
     for (const c of chats) await sendWithRows(c, closedText(esc(p.name)), rowsBtn);
     run.told += chats.length;

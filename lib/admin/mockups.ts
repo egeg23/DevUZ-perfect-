@@ -25,6 +25,7 @@ import { protoNicheByKey } from "@/content/proto/models";
 import { protoNichePl } from "@/content/admin-panel/proto";
 import { mockupNicheDict } from "@/content/admin-panel/mockups";
 import type { PanelLocale, Tr } from "@/lib/admin/i18n";
+import type { Role } from "@/lib/admin/roles";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 
 export const SHOWCASE_HOST = "https://cases.devuz.studio/";
@@ -99,7 +100,51 @@ export type MockupRow = {
   autoClosed?: boolean;
   /** Своя цена акции 48 часов (protos.facts.promo): бот пишет клиенту её, а не общие цены. */
   promo?: { price: number; regular: number } | null;
+  /** Ответственный за макет (mockupOwner). null — не нашли; у витрины поля нет. */
+  owner?: MockupOwner | null;
+  /** Первая отправка клиенту с рабочего аккаунта (mockup_offers.sent_at). null — не отправлен. */
+  sentAt?: string | null;
 };
+
+/**
+ * Откуда взят ответственный: назначен руками, хозяин лида, которому ушёл
+ * макет, автор касания или тот, кто собрал макет в панели.
+ */
+export type OwnerSource = "set" | "lead" | "touch" | "made";
+
+export type MockupOwner = { id: string; name: string; source: OwnerSource };
+
+/**
+ * Ответственный за макет. Руководитель (Александр), 15.10.2026: «Добавить в
+ * раздел макеты ответственного за макет менеджера».
+ *
+ * Назначенный руками (protos.owner_staff_id) главнее всего. Дальше — хозяин
+ * лида, которому макет ушёл первым, потом автор касания, потом тот, кто
+ * собрал макет в панели. Тот же порядок у строки «макет закрылся паролем»
+ * (lib/proto/auto-close-store.ts). Сотрудника, которого нет в списке имён,
+ * пропускаем: лучше «не назначен», чем пустое имя.
+ */
+export function mockupOwner(
+  ids: { set: string | null; lead: string | null; touch: string | null; made: string | null },
+  names: ReadonlyMap<string, string>,
+): MockupOwner | null {
+  const order: [OwnerSource, string | null][] = [
+    ["set", ids.set],
+    ["lead", ids.lead],
+    ["touch", ids.touch],
+    ["made", ids.made],
+  ];
+  for (const [source, id] of order) {
+    const name = id ? names.get(id) : undefined;
+    if (id && name) return { id, name, source };
+  }
+  return null;
+}
+
+/** Кто назначает ответственного: руководитель и владелец. Менеджер видит, но не меняет. */
+export function assignsMockups(role: Role): boolean {
+  return role === "admin" || role === "head";
+}
 
 /** Ниша на языке панели. Неизвестная — как есть: лучше ключ, чем пусто. */
 export function mockupNiche(key: string, locale: PanelLocale): string {

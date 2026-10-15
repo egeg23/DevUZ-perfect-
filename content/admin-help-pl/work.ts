@@ -112,8 +112,28 @@ export const workSections: Record<string, HelpEntry> = {
           "Prototypy na devuz.studio, zbudowane ręcznie pod konkretnego klienta. Nowy prototyp pojawia się tu sam, gdy tylko jest gotowy. Prototypów, które bot budował sam do [kontaktów](/admin/prospect) do 07.10.2026, tu nie ma, żeby nie myliły się z naszymi (właściciel, 09.10.2026); jeśli klient dostał taki link wcześniej, nadal mu się otwiera. Szkiców na liście nie ma: pod ich linkiem klient niczego nie zobaczy.",
           "Projekty witryny globalex, z oznaczeniem «witryna». Większość z nich jest otwarta dla wszystkich, także dla wyszukiwarek: tak zdecydował właściciel, nie ustawia się im hasła, a zamiast przycisku jest napis «hasło niepotrzebne». Hasłem zamknięte są MAVERA, Golden House i Engelberg.",
           "Przy każdej makiecie: nazwa (dla kogo ją zrobiono) i strona klienta, «Branża», «Zrobiona», dostęp i link, który trafia do klienta. «otwarcia klienta: 3» to liczba otwarć makiety przez kogoś innego niż my: nasze otwarcia z panelu i podglądy linku w komunikatorach się nie liczą.",
-          "Najnowsze makiety są na górze. Pole wyszukiwania szuka po nazwie, stronie i branży, a przyciski «Wszystkie», «Zrobione ręcznie» i «Witryna» zostawiają na liście tylko swoje. Liczba na przycisku to liczba makiet w tej grupie.",
+          "Najnowsze makiety są na górze. Pole wyszukiwania szuka po nazwie, stronie, branży i osobie odpowiedzialnej, a przyciski «Wszystkie», «Zrobione ręcznie», «Niewysłane» i «Witryna» zostawiają na liście tylko swoje. Liczba na przycisku to liczba makiet w tej grupie.",
         ],
+      },
+      {
+        id: "owner",
+        title: "Osoba odpowiedzialna i wysyłka do klienta",
+        body: {
+          manager: [
+            "Pod każdym prototypem jest wiersz «Odpowiedzialny» i wysyłka do klienta. Osobę odpowiedzialną panel znajduje sam, po kolei: wyznaczona ręcznie («wyznaczony»), potem właściciel leada, do którego makieta poszła najpierw («według leada»), potem autor kontaktu («według kontaktu»), potem ten, kto zbudował makietę w panelu («zbudował»). Nikogo z nich nie ma — «nie wyznaczono». Projekty witryny nie mają tego wiersza: to nasze prace, a nie makiety pod klienta. Wyznaczyć lub zmienić osobę odpowiedzialną mogą kierownik i właściciel.",
+            "«wysłana klientowi 14.10 17:27» — kiedy link do makiety pierwszy raz poszedł do klienta z konta roboczego: z karty leada, odpowiedzią modelu, ręcznie w Telegramie albo znalazł go [skan](#mockups-scan) o 09:00 i 15:00. «nie wysłano klientowi» — takiej wysyłki nie ma. Linku z konta prywatnego bot nie widzi i makieta zostanie «nie wysłano»: wysyłaj z konta roboczego. Przycisk «Niewysłane» zostawia na liście tylko takie makiety.",
+          ],
+          head: [
+            "Pod każdym prototypem jest wiersz «Odpowiedzialny» i wysyłka do klienta. Osobę odpowiedzialną panel znajduje sam, po kolei: wyznaczona ręcznie («wyznaczony»), potem właściciel leada, do którego makieta poszła najpierw («według leada»), potem autor kontaktu («według kontaktu»), potem ten, kto zbudował makietę w panelu («zbudował»). Nikogo z nich nie ma — «nie wyznaczono». Projekty witryny nie mają tego wiersza: to nasze prace, a nie makiety pod klienta.",
+            "Zmienić osobę odpowiedzialną możesz ty i właściciel: w wierszu «Odpowiedzialny» wybierz osobę z listy. Pierwsza pozycja listy to osoba znaleziona przez panel (na przykład «Арсений (według leada)») albo «nie wyznaczono»: wybierz ją, żeby zdjąć wyznaczenie. Każde wyznaczenie trafia do dziennika. Do osoby odpowiedzialnej bot pisze, gdy makieta [zamknęła się na hasło po 24 godzinach](#mockups-auto-close). Menedżer widzi osobę odpowiedzialną, ale jej nie zmienia.",
+            "«wysłana klientowi 14.10 17:27» — kiedy link do makiety pierwszy raz poszedł do klienta z konta roboczego: z karty leada, odpowiedzią modelu, ręcznie w Telegramie albo znalazł go [skan](#mockups-scan) o 09:00 i 15:00. «nie wysłano klientowi» — takiej wysyłki nie ma. Linku z konta prywatnego bot nie widzi i makieta zostanie «nie wysłano»: wysyłaj z konta roboczego. Przycisk «Niewysłane» zostawia na liście tylko takie makiety.",
+          ],
+          admin: [
+            "Pod każdym prototypem jest wiersz «Odpowiedzialny» i wysyłka do klienta. Osobę odpowiedzialną panel znajduje sam, po kolei: wyznaczona ręcznie («wyznaczony»), potem właściciel leada, do którego makieta poszła najpierw («według leada»), potem autor kontaktu («według kontaktu»), potem ten, kto zbudował makietę w panelu («zbudował»). Nikogo z nich nie ma — «nie wyznaczono». Projekty witryny nie mają tego wiersza: to nasze prace, a nie makiety pod klienta.",
+            "Zmienić osobę odpowiedzialną możesz ty i kierownik: w wierszu «Odpowiedzialny» wybierz osobę z listy. Pierwsza pozycja listy to osoba znaleziona przez panel (na przykład «Арсений (według leada)») albo «nie wyznaczono»: wybierz ją, żeby zdjąć wyznaczenie. Każde wyznaczenie trafia do dziennika. Do osoby odpowiedzialnej bot pisze, gdy makieta [zamknęła się na hasło po 24 godzinach](#mockups-auto-close). Menedżer widzi osobę odpowiedzialną, ale jej nie zmienia.",
+            "«wysłana klientowi 14.10 17:27» — kiedy link do makiety pierwszy raz poszedł do klienta z konta roboczego: z karty leada, odpowiedzią modelu, ręcznie w Telegramie albo znalazł go [skan](#mockups-scan) o 09:00 i 15:00. «nie wysłano klientowi» — takiej wysyłki nie ma. Linku z konta prywatnego bot nie widzi i makieta zostanie «nie wysłano»: wysyłaj z konta roboczego. Przycisk «Niewysłane» zostawia na liście tylko takie makiety.",
+          ],
+        },
       },
       {
         id: "password",
@@ -195,7 +215,7 @@ export const workSections: Record<string, HelpEntry> = {
         body: [
           "Każda nasza makieta jest otwarta przez link 24 godziny, potem zamyka się sama — tak, jakby wydano pierwsze hasło. Czas liczy się od chwili, gdy link do makiety pierwszy raz poszedł do klienta z konta roboczego; jeśli o wysłaniu nic nie wiadomo — od pierwszego otwarcia nie przez nas (nasze otwarcia z panelu się nie liczą); jeśli makiety jeszcze nikt nie otwierał — od minuty, gdy pojawiła się na liście. To reguła, nie model: liczy ją kod co pięć minut.",
           "W wierszu makiety widać, co się z nią dzieje: «otwarta jeszcze 5 godz., potem na hasło» — tyle zostało; «zamknięta na hasło od 14.10 15:00: minęły 24 godziny» — zamknęła reguła; «zamknięta na hasło od …» — zamknęło pierwsze wydane hasło. Już zamkniętej makiety reguła nie rusza. Jeśli na makiecie jest stałe hasło właściciela z własną godziną włączenia, makieta zamyka się o tej godzinie, a nie po 24 godzinach.",
-          "Gdy makieta się zamknęła, osobie, która ją wysłała (właścicielowi leada albo autorowi kontaktu), bot pisze: «🔒 Макет … закрылся паролем: прошло 24 часа. Нужен клиенту — нажмите „Сгенерировать пароль“» — z przyciskiem «🔑 Сгенерировать пароль», który od razu wydaje hasło na dobę i gotowy tekst dla klienta. Nie znamy nadawcy — linijka idzie do właściciela i kierownika. Projektów witryny cases.devuz.studio reguła nie zamyka: to nasze prace dla strony studia.",
+          "Gdy makieta się zamknęła, [osobie odpowiedzialnej](#mockups-owner) (wyznaczonej ręcznie, inaczej właścicielowi leada albo autorowi kontaktu) bot pisze: «🔒 Макет … закрылся паролем: прошло 24 часа. Нужен клиенту — нажмите „Сгенерировать пароль“» — z przyciskiem «🔑 Сгенерировать пароль», który od razu wydaje hasło na dobę i gotowy tekst dla klienta. Nie znamy osoby odpowiedzialnej — linijka idzie do właściciela i kierownika. Projektów witryny cases.devuz.studio reguła nie zamyka: to nasze prace dla strony studia.",
         ],
       },
       {
