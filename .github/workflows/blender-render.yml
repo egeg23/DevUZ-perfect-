@@ -1,0 +1,168 @@
+# Ролик «Вечерняя студия DevUz»: 3D-сцена в Blender, вся — кодом
+# (scripts/blender/devuz-studio). Пролёт по офису, вылет в окно, разгон к
+# солнцу, логотип; 14 секунд, 30 к/с.
+#
+# Рендер тяжёлый, поэтому здесь, а не на сервере: на боевом VPS живут сайт,
+# бот и ещё полтора десятка сайтов (CLAUDE.md, «Сервер не собирает сайт»).
+# 420 кадров делятся на 20 задач через один (задача k берёт кадры k+1,
+# k+21, …): офис считается дольше города и логотипа, и так все задачи
+# заканчиваются примерно вместе. Cycles на процессоре + шумодав
+# OpenImageDenoise. Последний шаг собирает кадры ffmpeg-ом в MP4 и
+# коммитит ролик и превью в ветку renders/devuz-studio — её забирают
+# обычным git fetch (скачивание артефактов Actions из сессий закрыто).
+# Ветка на сайт не выкатывается: выкатка слушает только main.
+name: Ролик студии — рендер Blender
+
+on:
+  workflow_dispatch:
+    inputs:
+      format:
+        description: Формат кадра
+        type: choice
+        options: [horizontal, vertical]
+        default: horizontal
+      samples:
+        description: Сэмплов на пиксель (дальше чистит OpenImageDenoise)
+        default: "32"
+      percent:
+        description: Процент разрешения (25 — быстрая проба)
+        default: "100"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blender-render-${{ inputs.format }}
+  cancel-in-progress: false
+
+env:
+  # Blender 4.5 LTS. Версию меняют здесь и в scripts/blender/devuz-studio/README.md;
+  # сумма — из https://download.blender.org/release/Blender4.5/blender-4.5.14.sha256
+  BLENDER_VERSION: "4.5.14"
+  BLENDER_SERIES: "4.5"
+  BLENDER_SHA256: "9ba871ff2ecd36526b77432745980b7e6664ecd0c7ca11c48849073dcfe06da3"
+  CHUNKS: "20"
+  SCENE: scripts/blender/devuz-studio
+  # Ввод запуска — через переменные, не подстановкой в текст команд.
+  FORMAT: ${{ inputs.format }}
+  SAMPLES: ${{ inputs.samples }}
+  PERCENT: ${{ inputs.percent }}
+
+jobs:
+  render:
+    name: Кадры ${{ matrix.chunk }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Blender из кэша
+        id: blender-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/blender
+          key: blender-${{ env.BLENDER_VERSION }}-linux-x64
+
+      - name: Скачать Blender с download.blender.org
+        if: steps.blender-cache.outputs.cache-hit != 'true'
+        run: |
+          name="blender-${BLENDER_VERSION}-linux-x64"
+          curl -fsSL --retry 4 -o /tmp/blender.tar.xz \
+            "https://download.blender.org/release/Blender${BLENDER_SERIES}/${name}.tar.xz"
+          echo "${BLENDER_SHA256}  /tmp/blender.tar.xz" | sha256sum -c -
+          mkdir -p ~/blender
+          tar -xf /tmp/blender.tar.xz -C ~/blender --strip-components=1
+
+      - name: Библиотеки для Blender без экрана
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libxi6 libxkbcommon0 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libsm6
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Кадры экранов с кодом
+        run: |
+          pip install --quiet "pillow==11.3.0"
+          python "$SCENE/screens.py" /tmp/screens
+
+      - name: Рендер
+        run: |
+          case "$SAMPLES$PERCENT" in *[!0-9]*) echo "сэмплы и процент — числа"; exit 1;; esac
+          args=()
+          if [ "$FORMAT" = vertical ]; then args+=(--vertical); fi
+          mkdir -p /tmp/frames
+          start=$(date +%s)
+          ~/blender/blender -b --factory-startup -noaudio -P "$SCENE/scene.py" -- \
+            --screens /tmp/screens --out /tmp/frames/f_ \
+            --start $(( ${{ matrix.chunk }} + 1 )) --end 420 --step "$CHUNKS" \
+            --samples "$SAMPLES" --percent "$PERCENT" "${args[@]}" \
+            | grep -E "^Saved|сцена|Error|Traceback" || true
+          echo $(( $(date +%s) - start )) > /tmp/frames/seconds-${{ matrix.chunk }}.txt
+          n=$(ls /tmp/frames/*.png | wc -l)
+          echo "кадров: $n, секунд: $(cat /tmp/frames/seconds-${{ matrix.chunk }}.txt)"
+          test "$n" -eq $(( 420 / CHUNKS ))
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frames-${{ inputs.format }}-${{ matrix.chunk }}
+          path: /tmp/frames
+          retention-days: 3
+
+  assemble:
+    name: Сборка MP4 и ветка renders/devuz-studio
+    needs: render
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: frames-${{ inputs.format }}-*
+          path: frames
+          merge-multiple: true
+
+      - name: Собрать MP4 (H.264, 30 к/с) и превью
+        id: mp4
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          test "$(ls frames/f_*.png | wc -l)" -eq 420
+          if [ "$FORMAT" = vertical ]; then size=1080x1920; else size=1920x1080; fi
+          mkdir -p out
+          ffmpeg -loglevel error -framerate 30 -i frames/f_%04d.png \
+            -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -movflags +faststart \
+            "out/devuz-studio-${size}.mp4"
+          suffix=""
+          if [ "$FORMAT" = vertical ]; then suffix="-vertical"; fi
+          for f in 0090 0230 0300 0405; do
+            ffmpeg -loglevel error -i "frames/f_${f}.png" -q:v 3 "out/preview${suffix}-${f}.jpg"
+          done
+          total=$(awk '{s+=$1} END {print s}' frames/seconds-*.txt)
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          echo "cpu_minutes=$(( total / 60 ))" >> "$GITHUB_OUTPUT"
+          ls -la out
+
+      - name: Закоммитить в ветку renders/devuz-studio
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          mkdir pub && cd pub
+          git init -q -b renders/devuz-studio
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth 1 origin renders/devuz-studio; then git checkout -q -B renders/devuz-studio FETCH_HEAD; fi
+          mkdir -p renders/devuz-studio
+          cp ../out/* renders/devuz-studio/
+          cat > "renders/devuz-studio/${{ steps.mp4.outputs.size }}.txt" <<EOF
+          Ролик: devuz-studio-${{ steps.mp4.outputs.size }}.mp4
+          Сцена: ${GITHUB_SHA} (scripts/blender/devuz-studio)
+          Blender ${BLENDER_VERSION}, Cycles CPU, ${SAMPLES} сэмплов + OpenImageDenoise, ${PERCENT}% разрешения
+          Рендер: ${{ steps.mp4.outputs.cpu_minutes }} минут процессора в 20 задачах
+          Запуск: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          EOF
+          git add renders
+          git commit -q -m "Ролик студии ${{ steps.mp4.outputs.size }}: рендер ${GITHUB_SHA::7}"
+          git push -q origin renders/devuz-studio

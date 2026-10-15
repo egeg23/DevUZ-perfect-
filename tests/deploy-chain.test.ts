@@ -279,7 +279,13 @@ test("выкатку не запускает то, что сайт не чита
   const workflow = read(".github/workflows/deploy-vps.yml");
   const block = /paths-ignore:\n((?:\s+(?:- .+|#.*)\n)+)/.exec(workflow)?.[1] ?? "";
   const ignored = [...block.matchAll(/- "([^"]+)"/g)].map((m) => m[1]);
-  for (const path of ["docs/**", ".github/workflows/voice-transcribe.yml", "scripts/voice-transcribe.py"]) {
+  for (const path of [
+    "docs/**",
+    ".github/workflows/voice-transcribe.yml",
+    "scripts/voice-transcribe.py",
+    ".github/workflows/blender-render.yml",
+    "scripts/blender/**",
+  ]) {
     assert.ok(ignored.includes(path), `нет ${path}`);
   }
   for (const pattern of ignored) {
