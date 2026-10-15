@@ -66,15 +66,17 @@ if(inn){inn.addEventListener('input',innRun);$$('[data-inn]').forEach(function(b
 
 /* Конструктор: магазин по акции и допы тумблерами. */
 var rows=$$('#konstruktor input[data-k]'),sumEl=$('#kit-sum'),addEl=$('#kit-add'),nEl=$('#kit-n'),shown=K.base,raf=0;
-function roll(to){var from=shown,st=performance.now();cancelAnimationFrame(raf);if(REDUCED){shown=to;sumEl.textContent=fmt(to)+' $';return}(function f(now){var k=Math.min(1,(now-st)/500);shown=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));sumEl.textContent=fmt(shown)+' $';if(k<1)raf=requestAnimationFrame(f)})(st)}
-function kit(){var add=0,n=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');n++}});addEl.textContent=fmt(add)+' $';nEl.textContent=n;roll(K.base+add)}
+function roll(to){var from=shown,st=performance.now();cancelAnimationFrame(raf);if(REDUCED){shown=to;sumEl.textContent=fmt(to)+' '+K.cur;return}(function f(now){var k=Math.min(1,(now-st)/500);shown=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));sumEl.textContent=fmt(shown)+' '+K.cur;if(k<1)raf=requestAnimationFrame(f)})(st)}
+function kit(){var add=0,n=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');n++}});addEl.textContent=fmt(add)+' '+K.cur;nEl.textContent=n;roll(K.base+add)}
 rows.forEach(function(r){r.addEventListener('change',kit)});
 var all=$('#kit-all');if(all)all.onclick=function(){var on=rows.some(function(r){return !r.checked});rows.forEach(function(r){r.checked=on});kit()};
-var cp2=$('#kit-copy');if(cp2)cp2.onclick=function(){var lines=[K.head,'• '+K.baseName+': '+fmt(K.base)+' $'];rows.forEach(function(r){if(r.checked){var it=K.items.filter(function(x){return x.id===r.getAttribute('data-k')})[0];lines.push('• '+it.t+': '+fmt(it.p)+' $')}});lines.push(K.total+': '+sumEl.textContent);
+var cp2=$('#kit-copy');if(cp2)cp2.onclick=function(){var lines=[K.head,'• '+K.baseName+': '+fmt(K.base)+' '+K.cur];rows.forEach(function(r){if(r.checked){var it=K.items.filter(function(x){return x.id===r.getAttribute('data-k')})[0];lines.push('• '+it.t+': '+fmt(it.p)+' '+K.cur)}});lines.push(K.total+': '+sumEl.textContent);
   var txt=lines.join('\n');try{navigator.clipboard.writeText(txt).then(function(){cp2.textContent=K.copied})}catch(e){cp2.textContent=K.copied}};
 
-/* Отсчёт 48 часов: с первого открытия макета на этом устройстве. */
-var tm=$('#tm'),start=Date.now();try{var s=+localStorage.getItem('mk-offer');if(s&&s<=Date.now())start=s;else localStorage.setItem('mk-offer',String(start))}catch(e){}
+/* Отсчёт 48 часов: с первого открытия макета на этом устройстве. Ключ
+   mk-offer-2: владелец, 16.10.2026, «скинь таймер до первого открытия»,
+   старый отсчёт после рублей и скидки 30% не продолжается. */
+var tm=$('#tm'),start=Date.now();try{var s=+localStorage.getItem('mk-offer-2');if(s&&s<=Date.now())start=s;else localStorage.setItem('mk-offer-2',String(start))}catch(e){}
 var end=start+K.hours*36e5;
 function pad(n){return (n<10?'0':'')+n}
 function tickT(){var left=Math.max(0,end-Date.now());if(!left){$('#timer').classList.add('over');tm.textContent='00:00:00';$('#timer span').firstChild.textContent=K.ended;return}var hh=Math.floor(left/36e5),mm=Math.floor(left%36e5/6e4),ss=Math.floor(left%6e4/1e3);tm.textContent=pad(hh)+':'+pad(mm)+':'+pad(ss);setTimeout(tickT,1000)}

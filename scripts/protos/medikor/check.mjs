@@ -180,7 +180,7 @@ for (const [w, h] of [[360, 780], [390, 844], [428, 926], [768, 1024], [1440, 90
   await p.click("#kit-all");
   await p.waitForTimeout(700);
   const sum = await p.$eval("#kit-sum", (e) => e.textContent);
-  if (!/\d/.test(sum) || sum === "1 000 $") fail(`site ${w}: конструктор не считает (${sum})`);
+  if (!/\d/.test(sum) || sum === "521 500 ₽") fail(`site ${w}: конструктор не считает (${sum})`);
   if (!/^\d\d:\d\d:\d\d$/.test(await p.$eval("#tm", (e) => e.textContent))) fail(`site ${w}: нет отсчёта`);
   await p.click('[data-inn="7700000034"]');
   if (!(await p.$("#inn-doc.on"))) fail(`site ${w}: счёт по ИНН не собрался`);

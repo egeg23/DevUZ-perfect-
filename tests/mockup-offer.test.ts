@@ -244,6 +244,20 @@ test("своя цена: мусор в facts.promo — макет идёт по 
   assert.equal(ownPromo({ promo: { price: 1000, regular: 4800, what: { ru: "сайт за 3 дня", uz: "sayt" } } })?.what.ru, "сайт по этому макету");
 });
 
+test("своя цена в рублях: бот пишет те же ₽, что на макете (Medikor, 16.10.2026)", () => {
+  const own = ownPromo({ promo: { price: 521500, regular: 745000, cur: "₽", what: { ru: "интернет-магазин по этому макету", uz: "shu maket bo‘yicha internet-do‘kon" } } });
+  assert.ok(own);
+  assert.equal(own.cur, "₽");
+  const exp = new Date(Date.now() + 40 * 3600_000).toISOString();
+  assert.match(announceText("ru", exp, own), /521500 ₽ вместо 745000 ₽/);
+  assert.doesNotMatch(announceText("ru", exp, own), /\$/);
+  const probs = reminderProblems("Магазин 521500 ₽ вместо 745000 ₽, скидка ещё действует.", exp, new Date(), "ru", own);
+  assert.ok(!probs.includes("нет цены акции"), probs.join("; "));
+  assert.ok(!probs.some((x) => /521500|745000/.test(x)), probs.join("; "));
+  // Неизвестная валюта — доллары, как раньше.
+  assert.equal(ownPromo({ promo: { price: 1000, regular: 4800, cur: "€" } })?.cur, "$");
+});
+
 test("своя цена: в карточке «Макеты клиентов» и в задаче Егору — она же", () => {
   const card = offerCard(
     {

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
-import { BASE, ADDONS, ALL, OFFER_HOURS } from "./plan.mjs";
+import { BASE, ADDONS, ALL, ALL_REGULAR, OFFER_HOURS, DISCOUNT, sale } from "./plan.mjs";
 
 /*
  * Макет интернет-магазина Medikor (медоборудование из Кореи, Москва), ru:
@@ -30,7 +30,6 @@ const FONTS = "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&famil
 const read = (f) => readFileSync(DIR + f, "utf8");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const grp = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-const usd = (n) => grp(n) + " $";
 const rub = (n) => grp(n) + " ₽";
 const href = (path = "") => BASEP + (path ? "/" + path : "");
 const json = (v) => JSON.stringify(v).replace(/</g, "\\u003c");
@@ -376,21 +375,21 @@ ${head("Панель менеджеров", "Запрос КП не теряет
 }
 
 function offerBlock() {
-  const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"><span class="sw" aria-hidden="true"></span><span class="kit-t"><b>${a.ru.t}${a.star ? `<em class="star">берут первым</em>` : ""}</b><small>${a.ru.e}</small></span><span class="kit-p">+${usd(a.price)}</span></label>`;
+  const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${sale(a.price)}"><span class="sw" aria-hidden="true"></span><span class="kit-t"><b>${a.ru.t}${a.star ? `<em class="star">берут первым</em>` : ""}</b><small>${a.ru.e}</small></span><span class="kit-p">+${rub(sale(a.price))} <s>${rub(a.price)}</s></span></label>`;
   return `<section class="offer" id="cena" data-tone="mist"><div class="wrap">
-${head(`<span class="ours">Предложение DevUz Studio</span>`, "Стоимость", `Магазин целиком, как в этом макете, без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем в течение 48 часов. Допы считаются отдельно: включайте тумблерами, итог пересчитается.`)}
+${head(`<span class="ours">Предложение DevUz Studio</span>`, "Стоимость", `Магазин целиком, как в этом макете, без допов: ${rub(BASE.promo)} вместо ${rub(BASE.price)}. Скидка ${DISCOUNT}% на магазин и на каждый доп, если начинаем в течение 48 часов с первого открытия макета. Допы включайте тумблерами, итог пересчитается.`)}
 <div class="kit" id="konstruktor">
 <div class="kit-list">
-<div class="kit-base"><div><span class="kb-tag">Входит всегда</span><b>${BASE.ru.t}</b><p>${BASE.ru.d}</p><p class="kb-w">Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>48 часов</small></div></div>
+<div class="kit-base"><div><span class="kb-tag">Входит всегда</span><b>${BASE.ru.t}</b><p>${BASE.ru.d}</p><p class="kb-w">Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель</p></div><div class="kb-p"><s>${rub(BASE.price)}</s><b>${rub(BASE.promo)}</b><small>−${DISCOUNT}% · 48 часов</small></div></div>
 <h3 class="kit-g">Допы: включайте то, что нужно магазину</h3>
 ${ADDONS.map(row).join("")}
 </div>
 <div class="kit-side">
 <div class="kit-total" id="kit-total">
-<div class="timer" id="timer"><span>Цена ${usd(BASE.promo)} действует<small>48 часов с первого открытия макета</small></span><b id="tm">48:00:00</b></div>
-<div class="kt-line"><span>Магазин</span><span><s>${usd(BASE.price)}</s> ${usd(BASE.promo)}</span></div>
-<div class="kt-line"><span>Допы · <span id="kit-n">0</span></span><span id="kit-add">0 $</span></div>
-<div class="kt-sum"><small>Итого</small><b id="kit-sum">${usd(BASE.promo)}</b><small>со всеми допами ${usd(ALL)}</small></div>
+<div class="timer" id="timer"><span>Скидка ${DISCOUNT}% действует<small>48 часов с первого открытия макета</small></span><b id="tm">48:00:00</b></div>
+<div class="kt-line"><span>Магазин</span><span><s>${rub(BASE.price)}</s> ${rub(BASE.promo)}</span></div>
+<div class="kt-line"><span>Допы · <span id="kit-n">0</span></span><span id="kit-add">0 ₽</span></div>
+<div class="kt-sum"><small>Итого</small><b id="kit-sum">${rub(BASE.promo)}</b><small>со всеми допами ${rub(ALL)} вместо ${rub(ALL_REGULAR)}</small></div>
 <button type="button" class="btn btn-white" id="kit-all">Включить всё</button>
 <a class="btn btn-b" id="kit-go" href="https://t.me/Devuz_studio_bot?start=medikor">${ic("tg")}<span>Обсудить с DevUz Studio</span></a>
 <button type="button" class="copy" id="kit-copy">Скопировать состав</button>
@@ -404,7 +403,7 @@ ${ADDONS.map(row).join("")}
 function sitePage() {
   const nav = [["#seychas", "Что меняем"], ["#skaner", "Карточка"], ["#put", "Путь закупщика"], ["#schet", "Счёт по ИНН"], ["#panel", "Панель"], ["#cena", "Стоимость"]];
   const kit = {
-    items: ADDONS.map((a) => ({ id: a.id, t: a.ru.t, p: a.price })), base: BASE.promo, regular: BASE.price, baseName: BASE.ru.t, hours: OFFER_HOURS,
+    items: ADDONS.map((a) => ({ id: a.id, t: a.ru.t, p: sale(a.price) })), base: BASE.promo, regular: BASE.price, cur: "₽", baseName: BASE.ru.t, hours: OFFER_HOURS,
     copied: "Скопировано", head: `Интернет-магазин ${B}, состав из конструктора:`, total: "Итого", ended: "Срок акции вышел: цена по договорённости",
     orgs: ORGS.map((o) => ({ inn: o.inn, n: o.n, kpp: o.kpp, a: o.a })), anyOrg: "Организация по вашему ИНН (демо: название подставится из ЕГРЮЛ)", anyAddr: "адрес подставится из ЕГРЮЛ",
     innL: "ИНН", kppL: "КПП", innOk: "Реквизиты подставлены, счёт готов", innHint: "Нажмите на организацию ниже или введите свой ИНН", innWait: "Ещё цифр: {n}",

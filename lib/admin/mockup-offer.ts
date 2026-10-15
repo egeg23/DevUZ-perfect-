@@ -51,16 +51,19 @@ export const PROMO = {
  * `{ price, regular, what: { ru, uz } }`: одна цена вместо двух общих. Ещё
  * строки — `more: [{ price, regular, what }]` (до трёх): у DomTut с 14.10.2026
  * сайт 1 000 $ вместо 4 800 $ и приложение для iPhone 3 500 $ вместо 8 750 $.
- * `cash` — скидка за оплату наличными в процентах от итога (1-50). Не
+ * `cash` — скидка за оплату наличными в процентах от итога (1-50). `cur` —
+ * валюта: «$» (по умолчанию) или «₽» (владелец, 16.10.2026: у Medikor из
+ * России цены на макете в рублях), одна на все строки. Не
  * сходится (не целые, акция не дешевле обычной, в названии цифры) — главная
  * строка: макет идёт по общим ценам; лишняя строка или скидка — пропускается.
  */
-export type OwnLine = { price: number; regular: number; what: { ru: string; uz: string } };
+export type OwnLine = { price: number; regular: number; what: { ru: string; uz: string }; cur: OwnCurrency };
+export type OwnCurrency = "$" | "₽";
 export type OwnPromo = OwnLine & { more: OwnLine[]; cash: number };
 
 const OWN_WHAT = { ru: "сайт по этому макету", uz: "shu maket bo‘yicha sayt" };
 
-function ownLine(raw: unknown, fallback: { ru: string; uz: string } | null): OwnLine | null {
+function ownLine(raw: unknown, fallback: { ru: string; uz: string } | null, cur: OwnCurrency): OwnLine | null {
   if (!raw || typeof raw !== "object") return null;
   const p = raw as { price?: unknown; regular?: unknown; what?: unknown };
   const price = Number(p.price);
@@ -70,15 +73,16 @@ function ownLine(raw: unknown, fallback: { ru: string; uz: string } | null): Own
   // Цифры в названии сломали бы проверку напоминаний: числа там — только цены и срок.
   const ok = (v: unknown) => typeof v === "string" && v.trim() && v.trim().length <= 120 && !/\d/.test(v);
   if (!fallback && !(ok(what.ru) && ok(what.uz))) return null;
-  return { price, regular, what: { ru: ok(what.ru) ? String(what.ru).trim() : fallback!.ru, uz: ok(what.uz) ? String(what.uz).trim() : fallback!.uz } };
+  return { price, regular, what: { ru: ok(what.ru) ? String(what.ru).trim() : fallback!.ru, uz: ok(what.uz) ? String(what.uz).trim() : fallback!.uz }, cur };
 }
 
 export function ownPromo(facts: unknown): OwnPromo | null {
   const raw = facts && typeof facts === "object" ? (facts as { promo?: unknown }).promo : null;
-  const main = ownLine(raw, OWN_WHAT);
+  const cur: OwnCurrency = raw && typeof raw === "object" && (raw as { cur?: unknown }).cur === "₽" ? "₽" : "$";
+  const main = ownLine(raw, OWN_WHAT, cur);
   if (!main) return null;
   const p = raw as { more?: unknown; cash?: unknown };
-  const more = (Array.isArray(p.more) ? p.more : []).map((x) => ownLine(x, null)).filter((x): x is OwnLine => !!x).slice(0, 3);
+  const more = (Array.isArray(p.more) ? p.more : []).map((x) => ownLine(x, null, cur)).filter((x): x is OwnLine => !!x).slice(0, 3);
   const cash = Number(p.cash);
   return { ...main, more, cash: Number.isInteger(cash) && cash >= 1 && cash <= 50 ? cash : 0 };
 }
@@ -88,7 +92,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 /** Все строки своей цены: «сайт по этому макету — 1000 $ вместо 4800 $». */
 export function ownLines(own: OwnPromo, lang: OfferLang): string[] {
   return [own, ...own.more].map((x) =>
-    lang === "uz" ? `${x.what.uz} — ${x.price} $ (odatda ${x.regular} $)` : `${x.what.ru} — ${x.price} $ вместо ${x.regular} $`,
+    lang === "uz" ? `${x.what.uz} — ${x.price} ${x.cur} (odatda ${x.regular} ${x.cur})` : `${x.what.ru} — ${x.price} ${x.cur} вместо ${x.regular} ${x.cur}`,
   );
 }
 
