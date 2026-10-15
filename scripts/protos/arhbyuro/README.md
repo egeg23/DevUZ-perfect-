@@ -61,16 +61,19 @@ GreenSock) лежит у нас: со стороны макет грузит т�
 
 ```sh
 git fetch origin renders/arhbyuro
-R=renders/arhbyuro; P=public/protos/arhbyuro
-git checkout origin/renders/arhbyuro -- $R/flight-horizontal/d $R/flight-vertical/m $R/hero-horizontal $R/stills-horizontal
-mkdir -p $P/f && mv $R/flight-horizontal/d $P/f/d && mv $R/flight-vertical/m $P/f/m
+mkdir -p /tmp/r && git archive origin/renders/arhbyuro renders/arhbyuro | tar -x -C /tmp/r
+R=/tmp/r/renders/arhbyuro; P=public/protos/arhbyuro
+rm -rf $P/f && mkdir -p $P/f && cp -r $R/flight-horizontal/d $R/flight-vertical/m $P/f/
 cp $R/hero-horizontal/hero-*.mp4 $R/hero-horizontal/poster-*.webp $P/
-cp $R/stills-horizontal/s-*.webp $P/ && rm $P/s-*-full.webp
-cp $P/f/m/0085.webp ... # hero-m.webp — кадр 85 вертикального пролёта, см. ниже
+for i in $(seq 1 12); do cp $R/stills-horizontal/s-$i.webp $R/stills-horizontal/s-$i-960.webp $P/; done
+python3 -c "from PIL import Image; Image.open('$R/flight-vertical/mhq/0110.webp').save('$P/hero-m.webp','WEBP',quality=80,method=6)"
 ```
 
-`hero-m.webp` — кадр 85 из `flight-vertical/mhq` (1080×1920): фасад через
-бассейн, картинка первого экрана на телефоне.
+`hero-m.webp` — кадр 110 вертикального пролёта в полном размере (1080×1920):
+фасад через бассейн, картинка первого экрана на телефоне. Всё в `public/`
+весит около 29 МБ: пролёт для ПК 13 МБ, для телефона 7 МБ, ролики 6,7 МБ.
+
+Снимки для PR — `docs/screens/arhbyuro/` (`node shots.mjs <папка> ru|en`).
 
 Перед сдачей: `node --import ./tests/alias-hook.mjs --import
 ./tests/tsx-hook.mjs scripts/proto-plain.mjs arhbyuro` — «Чисто».

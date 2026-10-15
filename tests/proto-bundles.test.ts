@@ -814,7 +814,7 @@ test("Архбюро (RU и EN): главная и 4 проекта, услов�
     for (const m of page.matchAll(/<script[^>]+src="([^"]+)"/g)) assert.equal(m[1], "/protos/arhbyuro/gsap.min.js", `${path}: чужой скрипт ${m[1]}`);
     // Одна форма на весь сайт, выезжает справа; меню с фоном у каждого пункта.
     assert.match(page, /id="panel"[\s\S]*id="pn-form"/, `${path}: нет формы справа`);
-    assert.equal((page.match(/class="mn-bg/g) || []).length, 5, `${path}: у пунктов меню нет фонов`);
+    assert.equal((page.match(/class="mn-bg[ "]/g) || []).length, 5, `${path}: у пунктов меню нет фонов`);
     // Шапка прячется при прокрутке и возвращается через 3 секунды (правило владельца, 15.10.2026).
     assert.match(page, /IDLE=3000/, `${path}: шапка не по правилу`);
     if (lang === "en") assert.doesNotMatch(page.replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица в английской странице`);
