@@ -1,0 +1,5 @@
+Ролик: devuz-studio-1920x1080.mp4
+Сцена: f6049b43374b082b9e96c19e422be9b8b3205530 (scripts/blender/devuz-studio)
+Blender 4.5.14, Cycles CPU, 32 сэмплов + OpenImageDenoise, 100% разрешения
+Рендер: 1022 минут процессора в 20 задачах
+Запуск: https://github.com/egeg23/DevUZ-perfect-/actions/runs/38705549658
