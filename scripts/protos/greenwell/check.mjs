@@ -5,7 +5,8 @@
 // консоли и без горизонтальной прокрутки, у каждой кнопки шага есть экран.
 import { chromium } from "playwright-core";
 const B = `http://localhost:4811/proto/${"a".repeat(43)}`;
-const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+// Шрифты Google через прокси: с запасным шрифтом таблицы уже и ошибку не видно.
+const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", ...(process.env.HTTPS_PROXY ? { proxy: { server: process.env.HTTPS_PROXY, bypass: "localhost" } } : {}) });
 let bad = 0;
 const fail = (m) => { bad++; console.log("✗", m); };
 const ok = (m) => console.log("✓", m);
@@ -19,8 +20,24 @@ async function page(w, h) {
   return p;
 }
 async function noScroll(p, label) {
-  const [sw, iw] = await p.evaluate(() => [document.documentElement.scrollWidth, innerWidth]);
-  if (sw > iw + 1) fail(`${label}: горизонтальная прокрутка ${sw} > ${iw}`);
+  // Не только ширина документа: html и body обрезают лишнее, а Safari на
+  // телефоне всё равно даёт листать вбок. Ищем любой блок, который вылез за
+  // экран и не сидит внутри своей прокрутки (лента, таблица в карточке).
+  const out = await p.evaluate((W) => {
+    const bad = [];
+    const scroller = (el) => { for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) { const o = getComputedStyle(a).overflowX; if (o === "auto" || o === "scroll" || o === "hidden" || o === "clip") return true; } return false; };
+    for (const el of document.querySelectorAll("body *")) {
+      if (!el.offsetParent && getComputedStyle(el).position !== "fixed") continue;
+      const r = el.getBoundingClientRect();
+      if (!r.width || r.right <= W + 1 || r.left >= W) continue;
+      if (getComputedStyle(el).visibility === "hidden" || scroller(el)) continue;
+      bad.push((el.id ? "#" + el.id : el.tagName.toLowerCase() + "." + String(el.className).split(" ")[0]) + ":" + Math.round(r.right));
+      if (bad.length > 4) break;
+    }
+    return [document.documentElement.scrollWidth, W, bad];
+  }, p.viewportSize().width);
+  if (out[0] > out[1] + 1) fail(`${label}: горизонтальная прокрутка ${out[0]} > ${out[1]}`);
+  if (out[2].length) fail(`${label}: вылезло за экран ${out[2].join(", ")}`);
 }
 const S = (p) => p.evaluate(() => JSON.parse(localStorage.getItem("gw-demo-1") || "{}"));
 const hash = async (p, h) => { await p.evaluate((x) => { location.hash = x; }, h); await p.waitForTimeout(450); };
@@ -141,7 +158,7 @@ for (const lang of ["", "uz/"]) {
 }
 
 // Все страницы и вкладки на трёх ширинах.
-for (const [w, h] of [[390, 844], [768, 1024], [1440, 900]]) {
+for (const [w, h] of [[360, 780], [390, 844], [428, 926], [768, 1024], [1440, 900]]) {
   for (const lang of ["", "uz/"]) {
     const p = await page(w, h);
     await p.goto(`${B}/${lang}`, { waitUntil: "networkidle" });

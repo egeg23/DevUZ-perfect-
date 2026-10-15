@@ -6,7 +6,7 @@ import { mkdirSync } from "node:fs";
 const OUT = process.argv[2] || new URL("../../../docs/screens/greenwell/", import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 const B = `http://localhost:4811/proto/${"a".repeat(43)}`;
-const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", ...(process.env.HTTPS_PROXY ? { proxy: { server: process.env.HTTPS_PROXY, bypass: "localhost" } } : {}) });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function ctx(w, h) {
   const c = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: w < 800 ? 2 : 1, isMobile: w < 800, hasTouch: w < 800 });
