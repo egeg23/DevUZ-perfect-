@@ -23,6 +23,7 @@ for (const [w, h] of [[1440, 900], [390, 844]]) {
   await at(".stmt", 0.6, "stmt");
   for (const k of [0.05, 0.4, 0.8]) await at(".arh", k, `arh-${Math.round(k * 100)}`);
   for (const k of [0.02, 0.2, 0.45, 0.6, 0.66, 0.72, 0.85, 0.99]) await at(".fly", k, `fly-${Math.round(k * 100)}`, 1500);
+  for (const k of [0.03, 0.35, 0.62, 0.95]) await at(".bfl", k, `bfl-${Math.round(k * 100)}`, 2600);
   await to(".int", 0, "int"); await to(".ic:nth-child(3)", -200, "int-3");
   await to(".velo", -200, "velo", 1200); await to(".kd", -60, "kd", 1200); await to(".folders", 40, "folders", 2200);
   await p.click(".gf-cell .gf-hit"); await p.waitForTimeout(1400); await snap("folders-open"); await p.keyboard.press("Escape");
