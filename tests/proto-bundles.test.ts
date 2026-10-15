@@ -485,6 +485,8 @@ test("шрифты макетов из public не уезжают в языко�
   const re = new RegExp(`^${config.matcher[0]}$`);
   assert.equal(re.test("/protos/intalim/onest-cyr.woff2"), false, "woff2 попадает под языковой редирект");
   assert.equal(re.test("/protos/giftora/atlas.webp"), false);
+  assert.equal(re.test("/protos/arhbyuro/gsap.min.js"), false, "скрипт макета уходит в языковой редирект");
+  assert.equal(re.test("/protos/arhbyuro/hero-1920.mp4"), false, "видео первого экрана уходит в языковой редирект");
   assert.equal(re.test("/razbory"), true, "страницы сайта по-прежнему идут через языки");
 });
 
