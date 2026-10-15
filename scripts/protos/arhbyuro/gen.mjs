@@ -1,16 +1,18 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { BRAND, SERVICES, PROJECTS, FLIGHT_STAGES, MENU, SPEC } from "./data.mjs";
+import { BRAND, SERVICES, PROJECTS, FLIGHT_STAGES, MENU, SPEC, HERO_SLIDES, STATEMENT, MARQUEE, GEO_HEAD } from "./data.mjs";
 
 /*
  * Макет имиджевого сайта архбюро (ТЗ клиента, референс yodezeen.com).
- * Демо DevUz Studio: четыре сильных блока по ТЗ.
- *   1. Первый экран: промо DevUz, затем «видео» бюро во весь экран
- *      (рендер Blender), на телефоне и медленной сети картинка.
- *   2. Пролёт по прокрутке: 180 кадров Blender на canvas, генплан → фасад →
- *      вода → интерьер (scripts/blender/arhbyuro).
- *   3. Проекты: полноэкранные кадры с текстом через один, фильтр по
- *      услугам, карта мира с точками, страница проекта с переходом.
- *   4. Большое меню с фоном у пунктов и форма «Связаться», выезжает справа.
+ * Минимализм как у референса: светло-серый фон, гротеск, крупные заголовки
+ * капсом, мелкие подписи, тонкие линии. У каждого блока своё движение от
+ * прокрутки (скролл не перехватывается, всё на transform и opacity):
+ *   первый экран     закреплённая сцена, кадры сменяют друг друга (референс)
+ *   заявление        слова проявляются прокруткой (Text Reveal, Magic UI)
+ *   пролёт           180 кадров Blender на canvas (референс, Stillstone)
+ *   проекты          кадр приближается к рамке, строки поднимаются
+ *   бегущая строка   скорость от прокрутки (Scroll Based Velocity, Magic UI)
+ *   география        барабан городов крутится прокруткой (референс)
+ *   ссылки           буквы перекатываются при наведении (Text Roll, Motion Primitives)
  * Языки RU и EN (так в ТЗ): "" и "en", страницы проектов proekt/<адрес>.
  *
  * Сборка: node gen.mjs → content/proto-bundles/arhbyuro.json и out/pages.json.
@@ -27,7 +29,7 @@ const IMG = "/protos/arhbyuro";
 const BASE = "__PROTO_BASE__";
 const B = BRAND.name;
 const TERMS = (l) => `https://devuz.studio/${l}/mockup-terms`;
-const FONTS = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400&family=Inter+Tight:wght@400;700&display=swap";
+const FONTS = "https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;700&display=swap";
 const MAP = JSON.parse(read("worldmap.json"));
 const FRAMES = 180;
 
@@ -35,29 +37,30 @@ const L2 = (pair, l) => (l === "ru" ? pair[0] : pair[1]);
 const T = (l) => (ru, en) => (l === "ru" ? ru : en);
 const href = (l, path = "") => BASE + (l === "en" ? "/en" : "") + (path ? "/" + path : "");
 const pHref = (l, p) => href(l, "proekt/" + p.slug);
+const PBY = Object.fromEntries(PROJECTS.map((p) => [p.slug, p]));
 const still = (n, w) => `${IMG}/s-${n}${w ? "-" + w : ""}.webp`;
 const frame = (set, i) => `${IMG}/f/${set}/${String(i).padStart(4, "0")}.webp`;
 const bgOf = (key) => (key.startsWith("s-") ? still(key.slice(2), 960) : frame("d", +key.slice(2)));
+const catsOf = (l, p) => p.cats.map((c) => L2(SERVICES.find((s) => s.id === c).n, l));
+const pad = (n) => String(n).padStart(2, "0");
 
 /* Карта: долгота и широта → единицы viewBox карты (worldmap.py). */
 const geo = ([lat, lon]) => [+(lon + 180).toFixed(1), +(80 - lat).toFixed(1)];
 
-/* Иконки — контур 24×24. */
+/* Текст, буквы которого перекатываются при наведении (Text Roll). */
+const roll = (s) => `<span class="roll" data-t="${esc(s)}"><span>${esc(s)}</span></span>`;
+/* Заголовок, строки которого поднимаются из-под маски при появлении. */
+const lines = (arr) => arr.map((s) => `<span class="ln"><span>${s}</span></span>`).join("");
+
 const I = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${d}</svg>`;
 const ICON = {
   arrow: I('<path d="M5 12h14M13 6l6 6-6 6"/>'),
   close: I('<path d="M6 6l12 12M18 6 6 18"/>'),
-  down: I('<path d="M12 5v14M6 13l6 6 6-6"/>'),
-  pin: I('<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>'),
-  play: I('<path d="M8 5v14l11-7z"/>'),
 };
 
 /* Знак DevUz Studio для заставки — тот же, что в промо на devuz.studio. */
 const STAR = "M0 -100 L29.29 -70.71 L70.71 -70.71 L70.71 -29.29 L100 0 L70.71 29.29 L70.71 70.71 L29.29 70.71 L0 100 L-29.29 70.71 L-70.71 70.71 L-70.71 29.29 L-100 0 L-70.71 -29.29 L-70.71 -70.71 L-29.29 -70.71 Z";
 const DZSIGN = `<svg class="dz-sign" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><defs><linearGradient id="dzg" x1="0" y1="-1" x2="1" y2="1"><stop offset="0" stop-color="#5B9BFF"/><stop offset=".55" stop-color="#3B82F6"/><stop offset="1" stop-color="#22F0A0"/></linearGradient><mask id="dzc"><rect x="-112" y="-112" width="224" height="224" fill="#fff"/><path d="M-22 -34 L-58 0 L-22 34M22 -34 L58 0 L22 34" stroke="#000" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/></mask></defs><path d="${STAR}" fill="url(#dzg)" mask="url(#dzc)" style="opacity:var(--dz-fill,0)"/><path class="dz-stroke" d="${STAR}" pathLength="1000" fill="none" stroke="url(#dzg)" stroke-width="4" stroke-linejoin="round" mask="url(#dzc)"/><rect class="dz-caret" x="-5" y="-27" width="10" height="54" rx="5" fill="#E8B14C"/></svg>`;
-
-/* Знак бюро: слово и линия под ним. Временный, пока бюро не прислало свой. */
-const logo = (cls = "") => `<span class="logo ${cls}"><b>${B}</b><i aria-hidden="true"></i></span>`;
 
 function introHtml(l) {
   const t = T(l);
@@ -79,11 +82,11 @@ function menuHtml(l, onHome) {
   return `<div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="${t("Меню", "Menu")}" hidden>
 <div class="mn-bgs" aria-hidden="true">${bgs}<div class="mn-shade"></div></div>
 <div class="mn-in">
-<nav class="mn-list" aria-label="${t("Разделы", "Sections")}">${MENU.map((m, i) => `<a class="mn-i" href="${to(m.id)}" data-i="${i}"><span class="mn-n">0${i + 1}</span><span class="mn-t">${L2(m.n, l)}</span></a>`).join("")}</nav>
+<nav class="mn-list" aria-label="${t("Разделы", "Sections")}">${MENU.map((m, i) => `<a class="mn-i" href="${to(m.id)}" data-i="${i}"><span class="mn-n">${pad(i + 1)}</span><span class="mn-t">${L2(m.n, l)}</span></a>`).join("")}</nav>
 <div class="mn-side">
-<p class="mn-k">${t("Проекты", "Projects")}</p>
-<ul>${PROJECTS.map((p) => `<li><a href="${pHref(l, p)}" data-tr="${p.slug}">${L2(p.n, l)}</a><span>${L2(p.city, l)}</span></li>`).join("")}</ul>
-<button type="button" class="btn btn-line" data-contact>${t("Связаться", "Get in touch")}${ICON.arrow}</button>
+<p class="cap">${t("Проекты", "Projects")}</p>
+<ul>${PROJECTS.map((p) => `<li><a href="${pHref(l, p)}" data-tr="${p.slug}">${roll(L2(p.n, l))}</a><span>${L2(p.city, l)}</span></li>`).join("")}</ul>
+<button type="button" class="lnk" data-contact>${roll(t("Связаться", "Get in touch"))}</button>
 </div>
 </div>
 </div>`;
@@ -98,16 +101,16 @@ function panelHtml(l) {
 <label class="fld"><span>${t("Как к вам обращаться", "Your name")}</span><input name="name" autocomplete="name" required></label>
 <label class="fld"><span>${t("Телефон или почта", "Phone or email")}</span><input name="contact" autocomplete="email" required></label>
 <fieldset class="fld-chips"><legend>${t("Что проектируем", "What are we designing")}</legend>${SERVICES.map((s, i) => `<label><input type="radio" name="kind" value="${s.id}"${i === 0 ? " checked" : ""}><span>${L2(s.n, l)}</span></label>`).join("")}</fieldset>
-<label class="fld"><span>${t("Пара слов о задаче", "A few words about the brief")}</span><textarea name="msg" rows="4"></textarea></label>
+<label class="fld"><span>${t("Пара слов о задаче", "A few words about the brief")}</span><textarea name="msg" rows="3"></textarea></label>
 <p class="pn-err" id="pn-err" role="alert" hidden>${t("Напишите имя и телефон или почту.", "Please add your name and a phone or email.")}</p>
-<button type="submit" class="btn btn-ink">${t("Отправить", "Send")}${ICON.arrow}</button>
+<button type="submit" class="btn">${roll(t("Отправить", "Send"))}${ICON.arrow}</button>
 <p class="pn-note">${t("Форма одна на весь сайт: открывается справа с любой страницы, без перезагрузки. Тексты формы правятся в CMS.", "One form for the whole site: it slides in from any page without a reload. Its wording is edited in the CMS.")}</p>
 </form>
 <div class="pn-ok" id="pn-ok" hidden>
 <p class="pn-ok-h">${t("Заявка собрана", "Request ready")}</p>
 <p>${t("Это макет, поэтому заявка никуда не ушла. На рабочем сайте её получит бюро: на почту и в раздел заявок Strapi.", "This is a mock-up, so nothing was sent. On the live site the studio receives it by email and in the Strapi requests section.")}</p>
 <dl id="pn-sum"></dl>
-<button type="button" class="btn btn-line" data-close>${t("Закрыть", "Close")}</button>
+<button type="button" class="lnk" data-close>${roll(t("Закрыть", "Close"))}</button>
 </div>
 </aside>`;
 }
@@ -115,7 +118,8 @@ function panelHtml(l) {
 function shell(l, opts) {
   const t = T(l);
   const other = l === "ru" ? "en" : "ru";
-  const otherHref = href(other, opts.path || "");
+  const nav = [["proekty", t("Проекты", "Projects")], ["uslugi", t("Услуги", "Services")], ["geo", t("География", "Map")]];
+  const to = (id) => (opts.home ? "#" + id : href(l) + "#" + id);
   return `<!doctype html>
 <html lang="${l}">
 <head>
@@ -124,10 +128,10 @@ function shell(l, opts) {
 <title>${esc(opts.title)}</title>
 <meta name="description" content="${esc(opts.desc)}">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<meta name="theme-color" content="#14110e">
+<meta name="theme-color" content="#f2f0f0">
 <link rel="icon" type="image/png" sizes="192x192" href="${IMG}/icon-192.png">
 <link rel="apple-touch-icon" href="${IMG}/apple-180.png">
-<link rel="alternate" hreflang="${other}" href="${otherHref}">
+<link rel="alternate" hreflang="${other}" href="${href(other, opts.path || "")}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTS}">
@@ -139,10 +143,11 @@ ${opts.preload || ""}
 ${opts.intro ? introHtml(l) : ""}
 <a class="skip" href="#main">${t("К содержанию", "Skip to content")}</a>
 <header class="top" id="top">
-<a class="top-logo" href="${href(l)}" aria-label="${B}">${logo()}</a>
+<nav class="top-nav" aria-label="${t("Разделы", "Sections")}">${nav.map(([id, n]) => `<a href="${to(id)}">${roll(n)}</a>`).join("")}</nav>
+<a class="top-logo" href="${href(l)}" aria-label="${B}">${B}</a>
 <div class="top-r">
 <div class="lang"><a href="${href("ru", opts.path || "")}" hreflang="ru"${l === "ru" ? ' aria-current="true"' : ""}>RU</a><a href="${href("en", opts.path || "")}" hreflang="en"${l === "en" ? ' aria-current="true"' : ""}>EN</a></div>
-<button type="button" class="btn btn-ghost top-c" data-contact>${t("Связаться", "Get in touch")}</button>
+<button type="button" class="top-c" data-contact>${roll(t("Связаться", "Let's talk"))}</button>
 <button type="button" class="burger" id="burger" aria-expanded="false" aria-controls="menu"><span class="bg-l" aria-hidden="true"><i></i><i></i></span><span class="bg-t">${t("Меню", "Menu")}</span></button>
 </div>
 </header>
@@ -152,18 +157,20 @@ ${panelHtml(l)}
 ${opts.body}
 </main>
 <footer class="foot">
-<div class="ft-top">
-<div>${logo("ft-logo")}<p class="ft-kind">${L2(BRAND.kind, l)}</p></div>
-<nav aria-label="${t("Проекты", "Projects")}"><p class="ft-k">${t("Проекты", "Projects")}</p><ul>${PROJECTS.map((p) => `<li><a href="${pHref(l, p)}" data-tr="${p.slug}">${L2(p.n, l)}</a></li>`).join("")}</ul></nav>
-<div><p class="ft-k">DevUz Studio</p><ul><li><a href="https://devuz.studio">devuz.studio</a></li><li><a href="https://t.me/Devuz_studio_bot?start=arhbyuro">Telegram</a></li></ul></div>
+<p class="ft-word" aria-hidden="true">${B}</p>
+<div class="ft-grid">
+<div><p class="cap">${L2(BRAND.kind, l)}</p><button type="button" class="lnk" data-contact>${roll(t("Обсудить проект", "Discuss a project"))}</button></div>
+<nav aria-label="${t("Проекты", "Projects")}"><p class="cap">${t("Проекты", "Projects")}</p><ul>${PROJECTS.map((p) => `<li><a href="${pHref(l, p)}" data-tr="${p.slug}">${roll(L2(p.n, l))}</a></li>`).join("")}</ul></nav>
+<div><p class="cap">DevUz Studio</p><ul><li><a href="https://devuz.studio">${roll("devuz.studio")}</a></li><li><a href="https://t.me/Devuz_studio_bot?start=arhbyuro">${roll("Telegram")}</a></li></ul></div>
 </div>
 <div class="ft-legal">
 <p>${t(`Это макет: так может выглядеть сайт бюро. ${B}: рабочее название, пришлёте своё название и логотип, и они встанут везде. Проекты демо: дом, интерьер, башня и павильон построены нами в Blender, в рабочем сайте здесь ваши проекты из CMS.`, `This is a mock-up of how the studio website could look. ${B} is a working name: send us your name and logo and they will appear everywhere. The projects are demos: the house, interior, tower and pavilion were built by us in Blender; on the live site this is your work from the CMS.`)}</p>
-<p>${t("Материалы, небо, мебель и деревья в рендерах: Poly Haven, CC0. Карта: Natural Earth.", "Materials, skies, furniture and trees in the renders: Poly Haven, CC0. Map: Natural Earth.")}</p>
+<p>${t("Материалы, небо, мебель и деревья в рендерах: Poly Haven, CC0. Карта: Natural Earth. Приёмы 21st.dev: Text Reveal, Scroll Based Velocity, Blur Fade (Magic UI), Text Roll (Motion Primitives), MIT.", "Materials, skies, furniture and trees in the renders: Poly Haven, CC0. Map: Natural Earth. 21st.dev patterns: Text Reveal, Scroll Based Velocity, Blur Fade (Magic UI), Text Roll (Motion Primitives), MIT.")}</p>
 <p>${t("Макет принадлежит DevUz Studio. Использовать его можно только по договору:", "This mock-up belongs to DevUz Studio and may be used only under a contract:")} <a href="${TERMS(l)}">${t("условия использования", "terms of use")}</a></p>
 </div>
 </footer>
-<div class="dock"><button type="button" class="btn btn-ink" data-contact>${t("Связаться с бюро", "Contact the studio")}${ICON.arrow}</button></div>
+<div class="dock"><button type="button" class="btn" data-contact>${t("Связаться с бюро", "Contact the studio")}${ICON.arrow}</button></div>
+<div class="cursor" id="cursor" aria-hidden="true"><span></span></div>
 <div class="veil" id="veil" aria-hidden="true"></div>
 <script type="application/json" id="arh-data">${json(opts.data || {})}</script>
 ${opts.intro ? `<script>\n${strip(read("intro.js"))}</script>` : ""}
@@ -176,21 +183,32 @@ ${opts.intro ? `<script>\n${strip(read("intro.js"))}</script>` : ""}
 /* ── Главная ─────────────────────────────────────────────────────────── */
 function heroBlock(l) {
   const t = T(l);
-  return `<section class="hero" id="hero" data-tone="dark">
-<div class="hero-media" aria-hidden="true">
-<picture><source media="(max-width: 760px) and (orientation: portrait)" srcset="${IMG}/hero-m.webp"><img class="hero-img" src="${IMG}/poster-1920.webp" srcset="${IMG}/poster-1280.webp 1280w, ${IMG}/poster-1920.webp 1920w" sizes="100vw" alt="" fetchpriority="high"></picture>
-<video class="hero-v" id="hero-v" muted playsinline loop preload="none" data-src="${IMG}/hero-1920.mp4" data-src-s="${IMG}/hero-1280.mp4"></video>
-<div class="hero-shade"></div>
+  const n = HERO_SLIDES.length;
+  const slides = HERO_SLIDES.map((s, i) => {
+    const media = s.video
+      ? `<picture><source media="(max-width: 760px) and (orientation: portrait)" srcset="${IMG}/hero-m.webp"><img class="hs-img" src="${IMG}/poster-1920.webp" srcset="${IMG}/poster-1280.webp 1280w, ${IMG}/poster-1920.webp 1920w" sizes="100vw" alt="" fetchpriority="high"></picture><video class="hero-v" id="hero-v" muted playsinline loop preload="none" data-src="${IMG}/hero-1920.mp4" data-src-s="${IMG}/hero-1280.mp4"></video>`
+      : `<img class="hs-img" src="${still(s.still)}" srcset="${still(s.still, 960)} 960w, ${still(s.still)} 1920w" sizes="100vw" alt="" loading="lazy" decoding="async">`;
+    return `<div class="hs" data-i="${i}"${i === 0 ? ' data-on=""' : ""}>${media}</div>`;
+  }).join("");
+  const caps = HERO_SLIDES.map((s, i) => {
+    const p = PBY[s.p];
+    return `<a class="hc" href="${pHref(l, p)}" data-tr="${p.slug}" data-i="${i}"${i === 0 ? ' data-on=""' : ""}><span class="cap">${L2(p.city, l)}</span><span class="hc-n">${L2(p.n, l)}</span><span class="cap hc-go">${t("смотреть проект", "view project")}</span></a>`;
+  }).join("");
+  return `<section class="hero" id="hero" data-tone="dark" style="--n:${n}">
+<div class="hero-stick">
+<div class="hero-media" aria-hidden="true">${slides}<div class="hero-shade"></div></div>
+<div class="hero-top"><p class="cap">${L2(BRAND.kind, l)}</p><h1 class="hero-h">${t("Проектируем дома, интерьеры и общественные здания", "We design houses, interiors and public buildings")}</h1></div>
+<div class="hero-caps">${caps}</div>
+<p class="hero-count cap" aria-hidden="true"><b id="hero-i">01</b> / ${pad(n)}</p>
+<p class="hero-word" aria-hidden="true">${B}</p>
+<p class="hero-note cap">${t("Рендер Blender, DevUz Studio", "Blender render, DevUz Studio")}</p>
 </div>
-<div class="hero-in">
-<p class="kicker">${L2(BRAND.kind, l)}</p>
-<h1 class="hero-h"><span class="ln"><span>${t("Дома, интерьеры", "Houses, interiors")}</span></span><span class="ln"><span>${t("и общественные здания", "and public buildings")}</span></span></h1>
-<p class="hero-lead">${t("Проектируем от посадки на участке до рабочих чертежей и показываем дом до стройки: рендер, пролёт, каждый материал.", "We design from siting to working drawings and show the house before it is built: renders, fly-throughs, every material.")}</p>
-<div class="hero-cta"><a class="btn btn-light" href="#proekty">${t("Смотреть проекты", "See the projects")}${ICON.arrow}</a><button type="button" class="btn btn-glass" data-contact>${t("Связаться", "Get in touch")}</button></div>
-</div>
-<a class="hero-down" href="#prolet">${ICON.down}<span>${t("Листайте: пролёт по дому", "Scroll: fly through the house")}</span></a>
-<p class="hero-note">${t("Фон: рендер Blender, DevUz Studio", "Background: Blender render, DevUz Studio")}</p>
 </section>`;
+}
+
+function statementBlock(l) {
+  const words = L2(STATEMENT, l).replace("{B}", B).split(" ").map((w, i) => `<span class="w" style="--i:${i}">${w}</span>`).join(" ");
+  return `<section class="stmt" id="byuro"><div class="stmt-stick"><p class="cap">${T(l)("О бюро", "About")}</p><p class="stmt-t" data-words>${words}</p></div></section>`;
 }
 
 function flyBlock(l) {
@@ -200,34 +218,39 @@ function flyBlock(l) {
 <div class="fly-stick">
 <img class="fly-poster" src="${frame("d", 1)}" alt="" aria-hidden="true">
 <canvas class="fly-cv" aria-hidden="true"></canvas>
-<div class="fly-head"><p class="kicker">${t("Пролёт по проекту", "Project fly-through")}</p><h2 class="fly-h">${t("От генплана до гостиной за одну прокрутку", "From site plan to living room in one scroll")}</h2></div>
-<ol class="fly-caps">${FLIGHT_STAGES.map((s, i) => `<li class="fly-cap" data-from="${s.from}" data-to="${s.to}"${i === 0 ? ' data-on=""' : ""}><span class="fc-k">${L2(s.k, l)}</span><span class="fc-t">${L2(s.t, l)}</span></li>`).join("")}</ol>
-<div class="fly-rail" aria-hidden="true"><i class="fr-fill"></i>${FLIGHT_STAGES.map((s) => `<b style="--at:${s.from}"></b>`).join("")}</div>
-<p class="fly-note">${t(`Рендер Blender: ${FRAMES} кадров листаются вашей прокруткой, скорость задаёте вы`, `Blender render: ${FRAMES} frames follow your scroll, at your speed`)} <span class="fly-load" id="fly-load"></span></p>
+<div class="fly-head"><p class="cap">${t("Пролёт по проекту", "Project fly-through")}</p><h2 class="fly-h">${t("Дом с консолью", "Cantilever House")}</h2></div>
+<p class="fly-frame cap" aria-hidden="true"><b id="fly-f">001</b> / ${FRAMES}</p>
+<ol class="fly-caps">${FLIGHT_STAGES.map((s, i) => `<li class="fly-cap" data-from="${s.from}" data-to="${s.to}"${i === 0 ? ' data-on=""' : ""}><span class="cap">${L2(s.k, l)}</span><span class="fc-t">${L2(s.t, l)}</span></li>`).join("")}</ol>
+<div class="fly-rail" aria-hidden="true"><i class="fr-fill"></i></div>
+<p class="fly-note cap">${t(`Рендер Blender, ${FRAMES} кадров идут за вашей прокруткой`, `Blender render, ${FRAMES} frames follow your scroll`)} <span class="fly-load" id="fly-load"></span></p>
 </div>
-<div class="fly-still">${stills.map((n, i) => `<figure><img src="${frame("d", n)}" alt="${esc(L2(FLIGHT_STAGES[i].t, l))}" loading="lazy" decoding="async"><figcaption>${L2(FLIGHT_STAGES[i].k, l)}</figcaption></figure>`).join("")}</div>
+<div class="fly-still">${stills.map((n, i) => `<figure><img src="${frame("d", n)}" alt="${esc(L2(FLIGHT_STAGES[i].t, l))}" loading="lazy" decoding="async"><figcaption class="cap">${L2(FLIGHT_STAGES[i].k, l)}</figcaption></figure>`).join("")}</div>
 </section>`;
 }
 
 function projectsBlock(l) {
   const t = T(l);
-  const chips = [`<button type="button" class="chip" data-f="all" aria-pressed="true">${t("Все", "All")} <span>${PROJECTS.length}</span></button>`]
-    .concat(SERVICES.map((s) => `<button type="button" class="chip" data-f="${s.id}" aria-pressed="false">${L2(s.n, l)} <span>${PROJECTS.filter((p) => p.cats.includes(s.id)).length}</span></button>`)).join("");
-  const rows = PROJECTS.map((p, i) => `<article class="pj${i % 2 ? " pj-r" : ""}" data-cats="${p.cats.join(" ")}">
-<a class="pj-fig" href="${pHref(l, p)}" data-tr="${p.slug}" aria-label="${esc(L2(p.n, l))}"><span class="pj-img"><img data-tr-img src="${still(p.cover)}" srcset="${still(p.cover, 960)} 960w, ${still(p.cover)} 1920w" sizes="100vw" alt="" loading="lazy" decoding="async"></span><span class="pj-cur" aria-hidden="true"></span></a>
-<div class="pj-txt"><p class="pj-n">0${i + 1}</p><h3><a href="${pHref(l, p)}" data-tr="${p.slug}">${L2(p.n, l)}</a></h3><p class="pj-meta">${ICON.pin}<span>${L2(p.city, l)}</span><span>${p.cats.map((c) => L2(SERVICES.find((s) => s.id === c).n, l)).join(" · ")}</span></p><p class="pj-short">${L2(p.short, l)}</p><a class="lnk" href="${pHref(l, p)}" data-tr="${p.slug}">${t("Открыть проект", "Open the project")}${ICON.arrow}</a></div>
+  const chips = [`<button type="button" class="chip" data-f="all" aria-pressed="true">${t("Все", "All")}<sup>${PROJECTS.length}</sup></button>`]
+    .concat(SERVICES.map((s) => `<button type="button" class="chip" data-f="${s.id}" aria-pressed="false">${L2(s.n, l)}<sup>${PROJECTS.filter((p) => p.cats.includes(s.id)).length}</sup></button>`)).join("");
+  const rows = PROJECTS.map((p, i) => `<article class="pj pj-${i % 4}" data-cats="${p.cats.join(" ")}">
+<a class="pj-fig" href="${pHref(l, p)}" data-tr="${p.slug}" data-cur="${esc(t("Смотреть", "View"))}" aria-label="${esc(L2(p.n, l))}"><span class="pj-img" data-zoom><img data-tr-img src="${still(p.cover)}" srcset="${still(p.cover, 960)} 960w, ${still(p.cover)} 1920w" sizes="(min-width: 768px) 70vw, 100vw" alt="" loading="lazy" decoding="async"></span></a>
+<div class="pj-txt"><p class="cap pj-n">${pad(i + 1)}</p><h3><a href="${pHref(l, p)}" data-tr="${p.slug}">${L2(p.n, l)}</a></h3><p class="cap pj-meta">${L2(p.city, l)} · ${catsOf(l, p).join(" · ")}</p></div>
 </article>`).join("");
   return `<section class="projects" id="proekty">
-<div class="sec-h wrap"><p class="kicker">${t("Проекты", "Projects")}</p><h2>${t("Полноэкранные кадры, текст через один", "Full-screen images, text in between")}</h2><p class="sub">${t("Каждый проект в CMS: название, описание, услуги, город и координаты, галерея и видео. Фильтр по услугам собирается сам.", "Every project lives in the CMS: name, description, services, city and coordinates, gallery and video. The service filter builds itself.")}</p></div>
-<div class="chips wrap" role="group" aria-label="${t("Фильтр по услугам", "Filter by service")}">${chips}</div>
+<div class="sec-h"><h2 class="big" data-lines>${lines([t("Избранные", "Selected"), t("проекты", "projects")])}</h2><div class="sec-side"><p class="cap">${t("Мы делаем", "We do")}</p><div class="chips" role="group" aria-label="${t("Фильтр по услугам", "Filter by service")}">${chips}</div></div></div>
 <div class="pj-list">${rows}</div>
 </section>`;
+}
+
+function marqueeBlock(l) {
+  const words = L2(MARQUEE, l).map((w) => `<span>${w}</span><i aria-hidden="true"></i>`).join("");
+  return `<div class="velo" aria-hidden="true"><div class="velo-row" data-velo="1"><div class="velo-t">${words}${words}${words}</div></div><div class="velo-row" data-velo="-1"><div class="velo-t">${words}${words}${words}</div></div></div>`;
 }
 
 function mapSvg(l, points, cls, view) {
   const pts = points.map(([p, lat, lon, label]) => {
     const [x, y] = geo([lat, lon]);
-    return `<a class="mp-pt" href="${pHref(l, p)}" data-tr="${p.slug}" data-city="${esc(L2(p.city, l))}" transform="translate(${x} ${y})" aria-label="${esc(label)}"><circle class="mp-ring" r="3.2"/><circle class="mp-dot" r="1.6"/></a>`;
+    return `<a class="mp-pt" href="${pHref(l, p)}" data-tr="${p.slug}" transform="translate(${x} ${y})" aria-label="${esc(label)}"><circle class="mp-ring" r="3.2"/><circle class="mp-dot" r="1.4"/></a>`;
   }).join("");
   return `<svg class="${cls}" viewBox="${view || MAP.viewBox}" role="img" aria-label="${T(l)("Карта мира с проектами бюро", "World map of the studio projects")}"><path class="mp-land" d="${MAP.d}"/>${pts}</svg>`;
 }
@@ -239,39 +262,39 @@ function geoBlock(l) {
     const c = cities.find((x) => x.at.join() === p.at.join());
     if (c) c.ps.push(p); else cities.push({ at: p.at, name: p.city, ps: [p] });
   }
-  return `<section class="geo" id="geo" data-tone="dark">
-<div class="wrap geo-in">
-<div class="sec-h"><p class="kicker">${t("География", "Map")}</p><h2>${t("Где стоят проекты", "Where the projects stand")}</h2><p class="sub">${t("Точка встаёт на карту сама: в CMS у проекта город и координаты. Нажмите на точку, чтобы открыть проект.", "A point appears by itself: each project has a city and coordinates in the CMS. Tap a point to open the project.")}</p></div>
-<div class="geo-map">${mapSvg(l, PROJECTS.map((p) => [p, p.at[0], p.at[1], `${L2(p.n, l)}, ${L2(p.city, l)}`]), "map")}</div>
-<ul class="geo-list">${cities.map((c) => `<li><p class="gl-c">${ICON.pin}<span>${L2(c.name, l)}</span><small>${c.at[0].toFixed(2)}°, ${c.at[1].toFixed(2)}°</small></p>${c.ps.map((p) => `<a href="${pHref(l, p)}" data-tr="${p.slug}" data-pt="${p.slug}">${L2(p.n, l)}</a>`).join("")}</li>`).join("")}</ul>
-</div>
+  /* Барабан: города по кругу, повторяем, чтобы обод был полным. */
+  const ring = [];
+  while (ring.length < 12) for (const c of cities) ring.push(L2(c.name, l));
+  const degrees = ["180°", "120°", "60°", "0°", "60°", "120°", "180°"];
+  return `<section class="geo" id="geo">
+<div class="geo-top"><h2 class="big" data-lines>${lines(L2(GEO_HEAD, l))}</h2>
+<div class="drum" aria-hidden="true"><div class="drum-track" id="drum">${ring.slice(0, 12).map((c, i) => `<span style="--a:${i * 30}deg">${c}</span>`).join("")}</div></div></div>
+<div class="geo-map">${mapSvg(l, PROJECTS.map((p) => [p, p.at[0], p.at[1], `${L2(p.n, l)}, ${L2(p.city, l)}`]), "map")}<div class="map-deg cap" aria-hidden="true">${degrees.map((d) => `<span>${d}</span>`).join("")}</div></div>
+<ul class="geo-list">${cities.map((c) => `<li><p class="cap">${L2(c.name, l)}<span>${c.at[0].toFixed(2)}°, ${c.at[1].toFixed(2)}°</span></p>${c.ps.map((p) => `<a href="${pHref(l, p)}" data-tr="${p.slug}" data-pt="${p.slug}">${roll(L2(p.n, l))}</a>`).join("")}</li>`).join("")}</ul>
+<p class="cap geo-note">${t("Точка встаёт на карту сама: у проекта в CMS город и координаты.", "Each point appears by itself: a project has a city and coordinates in the CMS.")}</p>
 </section>`;
 }
 
 function servicesBlock(l) {
   const t = T(l);
   return `<section class="services" id="uslugi">
-<div class="wrap">
-<div class="sec-h"><p class="kicker">${t("Услуги", "Services")}</p><h2>${t("Услуга показывает свои проекты сама", "Each service lists its own projects")}</h2></div>
+<div class="sec-h"><h2 class="big" data-lines>${lines([t("Услуги", "Services")])}</h2><p class="cap sec-side">${t("Проекты услуги подгружаются сами", "Each service lists its own projects")}</p></div>
 <ul class="sv-list">${SERVICES.map((s, i) => {
     const ps = PROJECTS.filter((p) => p.cats.includes(s.id));
-    return `<li class="sv"><span class="sv-n">0${i + 1}</span><div class="sv-t"><h3>${L2(s.n, l)}</h3><p>${L2(s.d, l)}</p></div><div class="sv-ps">${ps.map((p) => `<a href="${pHref(l, p)}" data-tr="${p.slug}"><img src="${still(p.cover, 960)}" alt="" loading="lazy" decoding="async"><span>${L2(p.n, l)}</span></a>`).join("")}</div></li>`;
+    return `<li class="sv"><button type="button" class="sv-h" aria-expanded="${i === 0}"><span class="cap">${pad(i + 1)}</span><span class="sv-n">${L2(s.n, l)}</span><span class="cap">${ps.length}</span><i aria-hidden="true"></i></button><div class="sv-b"${i === 0 ? "" : " hidden"}><p>${L2(s.d, l)}</p><div class="sv-ps">${ps.map((p) => `<a href="${pHref(l, p)}" data-tr="${p.slug}"><img src="${still(p.cover, 960)}" alt="" loading="lazy" decoding="async"><span class="cap">${L2(p.n, l)}</span></a>`).join("")}</div></div></li>`;
   }).join("")}</ul>
-</div>
 </section>`;
 }
 
 function specBlock(l) {
   const t = T(l);
   return `<section class="spec" id="sayt">
-<div class="wrap">
-<div class="sec-h"><p class="kicker">${t("Предложение DevUz Studio", "DevUz Studio proposal")}</p><h2>${t("Что будет на рабочем сайте", "What the live site gets")}</h2><p class="sub">${t("Всё из вашего ТЗ. Этот макет показывает, как сайт выглядит и двигается; ниже то, на чём он будет работать.", "Everything from your brief. This mock-up shows how the site looks and moves; below is what it will run on.")}</p></div>
-<ul class="sp-grid">${SPEC.map((s, i) => `<li class="sp"><span class="sp-n">0${i + 1}</span><h3>${L2(s.n, l)}</h3><p>${L2(s.d, l)}</p></li>`).join("")}</ul>
-</div>
+<div class="sec-h"><h2 class="big" data-lines>${lines([t("Что будет", "What the"), t("на сайте", "site gets")])}</h2><p class="cap sec-side">${t("Предложение DevUz Studio по вашему ТЗ", "DevUz Studio proposal for your brief")}</p></div>
+<ol class="toc">${SPEC.map((s, i) => `<li><span class="cap">${pad(i + 1)}</span><b>${L2(s.n, l)}</b><p>${L2(s.d, l)}</p></li>`).join("")}</ol>
 </section>
 <section class="cta" data-tone="dark">
-<img class="cta-bg" src="${still(11, 960)}" srcset="${still(11, 960)} 960w, ${still(11)} 1920w" sizes="100vw" alt="" loading="lazy" decoding="async" aria-hidden="true">
-<div class="wrap cta-in"><h2>${t("Расскажите об участке или здании", "Tell us about your site or building")}</h2><button type="button" class="btn btn-light" data-contact>${t("Обсудить проект", "Discuss a project")}${ICON.arrow}</button></div>
+<span class="cta-img" data-zoom aria-hidden="true"><img src="${still(11)}" srcset="${still(11, 960)} 960w, ${still(11)} 1920w" sizes="100vw" alt="" loading="lazy" decoding="async"></span>
+<div class="cta-in"><p class="cap">${t("Новый проект", "New project")}</p><button type="button" class="cta-b" data-contact>${roll(t("Обсудить проект", "Let's talk"))}</button></div>
 </section>`;
 }
 
@@ -282,7 +305,7 @@ function home(l) {
     title: `${B} · ${L2(BRAND.kind, l)} · ${t("макет DevUz Studio", "DevUz Studio mock-up")}`,
     desc: t("Макет имиджевого сайта архитектурного бюро: видео на первом экране, пролёт по дому по прокрутке, проекты во весь экран, карта, меню с фонами и форма справа.", "A mock-up of an architecture studio website: home video, a scroll-driven fly-through, full-screen projects, a map, an image menu and a slide-in form."),
     preload: `<link rel="preload" as="image" href="${IMG}/hero-m.webp" media="(max-width: 760px) and (orientation: portrait)"><link rel="preload" as="image" href="${IMG}/poster-1920.webp" media="(min-width: 761px), (orientation: landscape)">`,
-    body: [heroBlock(l), flyBlock(l), projectsBlock(l), geoBlock(l), servicesBlock(l), specBlock(l)].join("\n"),
+    body: [heroBlock(l), statementBlock(l), flyBlock(l), projectsBlock(l), marqueeBlock(l), geoBlock(l), servicesBlock(l), specBlock(l)].join("\n"),
     data: { lang: l, frames: FRAMES },
   });
 }
@@ -291,34 +314,34 @@ function home(l) {
 function projectPage(l, p, i) {
   const t = T(l);
   const next = PROJECTS[(i + 1) % PROJECTS.length];
-  const cats = p.cats.map((c) => L2(SERVICES.find((s) => s.id === c).n, l));
+  const cats = catsOf(l, p);
   const blocks = [];
   const shots = p.shots.filter((n) => n !== p.cover);
   const n = Math.max(shots.length, p.text.length);
   for (let k = 0; k < n; k++) {
-    if (p.text[k]) blocks.push(`<div class="pp-text wrap${k % 2 ? " pp-text-r" : ""}"><p>${L2(p.text[k], l)}</p></div>`);
-    if (shots[k]) blocks.push(`<figure class="pp-full"><span class="pp-img"><img src="${still(shots[k])}" srcset="${still(shots[k], 960)} 960w, ${still(shots[k])} 1920w" sizes="100vw" alt="${esc(L2(p.n, l))}" loading="lazy" decoding="async"></span></figure>`);
-    if (k === 0 && p.video) blocks.push(`<figure class="pp-video wrap"><video class="pp-v" muted playsinline loop preload="none" poster="${IMG}/poster-1280.webp" data-src="${IMG}/hero-1280.mp4"></video><figcaption>${ICON.play}<span>${t("Видео проекта: загружается в CMS вместе с галереей", "Project video: uploaded to the CMS with the gallery")}</span></figcaption></figure>`);
+    if (p.text[k]) blocks.push(`<div class="pp-text${k % 2 ? " pp-text-r" : ""}"><span class="cap">${pad(k + 1)}</span><p data-lines>${L2(p.text[k], l)}</p></div>`);
+    if (shots[k]) blocks.push(`<figure class="pp-full${k % 2 ? " pp-inset" : ""}"><span class="pp-img" data-zoom><img src="${still(shots[k])}" srcset="${still(shots[k], 960)} 960w, ${still(shots[k])} 1920w" sizes="100vw" alt="${esc(L2(p.n, l))}" loading="lazy" decoding="async"></span></figure>`);
+    if (k === 0 && p.video) blocks.push(`<figure class="pp-video"><video class="pp-v" muted playsinline loop preload="none" poster="${IMG}/poster-1280.webp" data-src="${IMG}/hero-1280.mp4"></video><figcaption class="cap">${t("Видео проекта: загружается в CMS вместе с галереей", "Project video: uploaded to the CMS with the gallery")}</figcaption></figure>`);
   }
   const [x, y] = geo(p.at);
   const view = `${(x - 60).toFixed(1)} ${Math.max(0, y - 25).toFixed(1)} 120 50`;
   const body = `<section class="pp-hero" data-tone="dark">
 <div class="pp-cover"><img data-tr-img src="${still(p.cover)}" srcset="${still(p.cover, 960)} 960w, ${still(p.cover)} 1920w" sizes="100vw" alt="" fetchpriority="high"></div>
 <div class="pp-shade" aria-hidden="true"></div>
-<div class="pp-h wrap"><a class="pp-back" href="${href(l)}#proekty">${t("Все проекты", "All projects")}</a><h1>${L2(p.n, l)}</h1><p class="pp-meta">${ICON.pin}<span>${L2(p.city, l)}</span><span>${cats.join(" · ")}</span></p></div>
+<div class="pp-h"><a class="cap pp-back" href="${href(l)}#proekty">${t("Все проекты", "All projects")}</a><h1>${L2(p.n, l)}</h1><p class="cap">${L2(p.city, l)} · ${cats.join(" · ")}</p></div>
 </section>
-<section class="pp-lead wrap">
-<p class="pp-short">${L2(p.short, l)}</p>
-<dl class="pp-facts"><div><dt>${t("Город", "City")}</dt><dd>${L2(p.city, l)}</dd></div><div><dt>${t("Услуги", "Services")}</dt><dd>${cats.join(", ")}</dd></div><div><dt>${t("Визуализация", "Visualisation")}</dt><dd>${t("Blender, DevUz Studio", "Blender, DevUz Studio")}</dd></div></dl>
+<section class="pp-lead">
+<p class="pp-short" data-lines>${L2(p.short, l)}</p>
+<dl class="pp-facts"><div><dt class="cap">${t("Город", "City")}</dt><dd>${L2(p.city, l)}</dd></div><div><dt class="cap">${t("Услуги", "Services")}</dt><dd>${cats.join(", ")}</dd></div><div><dt class="cap">${t("Визуализация", "Visualisation")}</dt><dd>Blender, DevUz Studio</dd></div></dl>
 </section>
 ${blocks.join("\n")}
-<section class="pp-geo wrap" data-tone="dark">
-<div><p class="kicker">${t("Расположение проекта", "Project location")}</p><h2>${L2(p.city, l)}</h2><p class="pp-coord">${p.at[0].toFixed(2)}° N, ${p.at[1].toFixed(2)}° E</p></div>
+<section class="pp-geo">
+<div><p class="cap">${t("Расположение проекта", "Project location")}</p><h2 class="big">${L2(p.city, l)}</h2><p class="cap pp-coord">${p.at[0].toFixed(2)}° N, ${p.at[1].toFixed(2)}° E</p></div>
 ${mapSvg(l, [[p, p.at[0], p.at[1], L2(p.city, l)]], "map map-sm", view)}
 </section>
-<a class="pp-next" href="${pHref(l, next)}" data-tr="${next.slug}">
+<a class="pp-next" href="${pHref(l, next)}" data-tr="${next.slug}" data-cur="${esc(t("Дальше", "Next"))}">
 <span class="pp-next-img"><img data-tr-img src="${still(next.cover, 960)}" srcset="${still(next.cover, 960)} 960w, ${still(next.cover)} 1920w" sizes="100vw" alt="" loading="lazy" decoding="async"></span>
-<span class="pp-next-t"><span class="kicker">${t("Следующий проект", "Next project")}</span><b>${L2(next.n, l)}</b></span>
+<span class="pp-next-t"><span class="cap">${t("Следующий проект", "Next project")}</span><b>${L2(next.n, l)}</b></span>
 </a>`;
   return shell(l, {
     path: "proekt/" + p.slug, cls: "project",
