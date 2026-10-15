@@ -13,6 +13,9 @@ on:
       - "docs/**"
       - ".github/workflows/voice-transcribe.yml"
       - "scripts/voice-transcribe.py"
+      # Ролик студии: сцена Blender и её рендер живут в Actions (scripts/blender).
+      - ".github/workflows/blender-render.yml"
+      - "scripts/blender/**"
   # Тот же набор проверок на pull request. Без этого PR мержится вслепую:
   # сборка и тесты прогонялись только после слияния, то есть на боевой ветке,
   # и сломанный код обнаруживался там, где чинить его дороже всего.
