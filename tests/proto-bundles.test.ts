@@ -914,3 +914,38 @@ test("Greenwell: магазин 1 000 $ вместо 4 900 $ на 48 часов,
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
 });
+
+test("SIA: главная и 14 проектов — условия, noindex, только с сайта бюро, чертёж в рендер, WhatsApp бюро", async () => {
+  const { existsSync, readFileSync } = await import("node:fs");
+  const site = bundlePages("sia");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  const data = JSON.parse(readFileSync("scripts/protos/sia/data.json", "utf8"));
+  assert.equal(data.index.length, 65, "в архиве не все проекты бюро");
+  assert.equal(Object.keys(all).length, 1 + data.featured.length);
+  for (const [path, page] of Object.entries(all)) {
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes('<html lang="ru">'), `${path}: язык страницы`);
+    assert.ok(page.includes("https://devuz.studio/ru/mockup-terms"), `${path}: нет условий`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("IDLE=3000"), `${path}: шапка не по правилу трёх секунд`);
+    // Главное действие — WhatsApp и телефон бюро, оба с их сайта.
+    assert.ok(page.includes('href="https://wa.me/79150103671?text='), `${path}: нет WhatsApp бюро`);
+    assert.ok(page.includes('href="tel:+74950980493"'), `${path}: нет телефона бюро`);
+    assert.ok(page.includes("/protos/sia/logo-k.png"), `${path}: нет логотипа бюро`);
+    for (const src of page.match(/\/protos\/sia\/[\w./-]+\.(?:webp|png)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+  }
+  assert.match(all[""], /id="intro"[\s\S]*DevUz Studio/, "нет промо DevUz Studio");
+  for (const id of ["arhitektura", "interery", "arhiv", "uslugi", "byuro", "kontakty"]) assert.match(all[""], new RegExp(`id="${id}"`), `нет блока ${id}`);
+  assert.equal((all[""].match(/class="ix-row"/g) || []).length, 65, "в архиве не 65 строк");
+  for (const p of data.featured) {
+    const page = all["proekt/" + p.slug];
+    assert.ok(page, `нет страницы ${p.code}`);
+    assert.ok(page.includes(`/protos/sia/d/${p.slug}.webp`) && page.includes(`/protos/sia/p/${p.slug}-0.webp`), `${p.code}: нет чертежа и рендера`);
+  }
+  const stamped = stampedBundle("sia", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
