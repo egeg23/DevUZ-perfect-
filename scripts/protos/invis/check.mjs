@@ -28,6 +28,22 @@ for (const path of ["", "uz", "kabinet", "uz/kabinet", "admin", "uz/admin"]) {
   }
   console.log("✓", `/${path || "(ru)"}`);
 }
+// Шапка: при прокрутке прячется, возвращается через 3 с после полной остановки.
+for (const [w, h] of [[390, 844], [1440, 900]]) {
+  const p = await page(w, h);
+  await p.goto(`${B}/`, { waitUntil: "networkidle" });
+  const hidden = () => p.evaluate(() => document.getElementById("top").classList.contains("hide"));
+  if (await hidden()) fail(`шапка ${w}: скрыта до прокрутки`);
+  for (let i = 1; i <= 10; i++) { await p.evaluate((y) => scrollTo(0, y), i * 300); await p.waitForTimeout(250); if (!(await hidden())) fail(`шапка ${w}: видна во время прокрутки`); }
+  await p.waitForTimeout(1500);
+  if (!(await hidden())) fail(`шапка ${w}: вернулась раньше 3 секунд`);
+  await p.waitForTimeout(1800);
+  if (await hidden()) fail(`шапка ${w}: не вернулась через 3 секунды после остановки`);
+  await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(100);
+  if (!(await hidden())) fail(`шапка ${w}: видна при прокрутке вверх`);
+  await p.context().close();
+}
+console.log("✓ шапка: прячется при прокрутке, возвращается через 3 с после остановки");
 // Бронь со страницы видна в кабинете и пульте.
 {
   const p = await page(1440, 900);

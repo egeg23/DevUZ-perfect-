@@ -37,11 +37,17 @@ function frame(){
   tick=false;var h=innerHeight,y=scrollY;
   if(!REDUCED)for(var i=0;i<par.length;i++){var el=par[i],r=el.parentNode.getBoundingClientRect();if(r.bottom<-200||r.top>h+200)continue;var k=+el.getAttribute('data-par');el.style.transform='translate3d(0,'+((r.top+r.height/2-h/2)*-k).toFixed(1)+'px,0)'}
   if(!REDUCED)scene();
-  if(top)top.classList.toggle('hide',y>lastY+4&&y>400);
-  if(y<lastY-4||y<400)top&&top.classList.remove('hide');
   lastY=y;
 }
-function onScroll(){if(!tick){tick=true;requestAnimationFrame(frame)}}
+/* Шапка (правило владельца, 15.10.2026): при любой прокрутке прячется и
+   возвращается только через 3 секунды после полной остановки. Инерция
+   прокрутки на телефоне тоже шлёт scroll, так что таймер ждёт её конца.
+   Пока фокус с клавиатуры внутри шапки, она не прячется. */
+var IDLE=3000,idleT=0;
+function headIdle(){if(!top)return;clearTimeout(idleT);
+  if(!top.contains(d.activeElement))top.classList.add('hide');
+  idleT=setTimeout(function(){top.classList.remove('hide')},IDLE)}
+function onScroll(){headIdle();if(!tick){tick=true;requestAnimationFrame(frame)}}
 addEventListener('scroll',onScroll,{passive:true});addEventListener('resize',onScroll);frame();
 if(REDUCED)items.forEach(function(li){li.classList.add('on')});
 
