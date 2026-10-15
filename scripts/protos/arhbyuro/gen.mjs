@@ -211,34 +211,88 @@ function statementBlock(l) {
   return `<section class="stmt" id="byuro"><div class="stmt-stick"><p class="cap">${T(l)("О бюро", "About")}</p><p class="stmt-t" data-words>${words}</p></div></section>`;
 }
 
+/* Значки шагов пролёта — контур 24×24. */
+const STEP_ICON = [
+  I('<rect x="4" y="4" width="16" height="16"/><path d="M4 12h16M12 4v16"/>'),
+  I('<path d="M3 20h18M5 20v-8h9v8M9 12V6h11v8h-6"/>'),
+  I('<path d="M3 15c3-2 6 2 9 0s6 2 9 0M3 19c3-2 6 2 9 0s6 2 9 0"/><path d="M6 11V5h12v6"/>'),
+  I('<path d="M4 18v-5h16v5M6 13V9h12v4M5 18v2M19 18v2"/>'),
+];
+
 function flyBlock(l) {
   const t = T(l);
   const stills = [1, 40, 120, 180];
+  const n = FLIGHT_STAGES.length;
+  const cards = FLIGHT_STAGES.map((s, i) => `<article class="fsh-card" data-from="${s.from}" data-to="${s.to}"${i === 0 ? ' data-on=""' : ""}>
+<div class="fsh-head"><span class="cap"><b>${pad(i + 1)}</b> / ${pad(n)}</span><span class="fsh-icon">${STEP_ICON[i]}</span></div>
+<h3 class="fsh-title">${L2(s.t, l)}</h3>
+<p class="fsh-desc">${L2(s.d, l)}</p>
+<div class="fsh-foot"><span class="fsh-ticks" aria-hidden="true">${FLIGHT_STAGES.map(() => "<i><span></span></i>").join("")}</span><span class="cap">${L2(s.k, l)}</span></div>
+</article>`).join("");
   return `<section class="fly" id="prolet" data-tone="dark" data-n="${FRAMES}" data-d="${IMG}/f/d/" data-m="${IMG}/f/m/">
 <div class="fly-stick">
 <img class="fly-poster" src="${frame("d", 1)}" alt="" aria-hidden="true">
 <canvas class="fly-cv" aria-hidden="true"></canvas>
-<div class="fly-head"><p class="cap">${t("Пролёт по проекту", "Project fly-through")}</p><h2 class="fly-h">${t("Дом с консолью", "Cantilever House")}</h2></div>
+<div class="fly-head"><p class="cap">${t("Пролёт по проекту", "Project fly-through")}</p><h2 class="fly-h">${t("Дом с консолью", "Cantilever House")}</h2><p class="cap fly-sub">${t("Листайте, чтобы пройти по дому", "Scroll to walk through the house")}</p></div>
 <p class="fly-frame cap" aria-hidden="true"><b id="fly-f">001</b> / ${FRAMES}</p>
-<ol class="fly-caps">${FLIGHT_STAGES.map((s, i) => `<li class="fly-cap" data-from="${s.from}" data-to="${s.to}"${i === 0 ? ' data-on=""' : ""}><span class="cap">${L2(s.k, l)}</span><span class="fc-t">${L2(s.t, l)}</span></li>`).join("")}</ol>
+<div class="fsh-loader" id="fly-loader" aria-hidden="true"><p class="cap">${t("Загрузка", "Loading")} · <b id="fly-pct">0</b>%</p><span class="fsh-track"><i id="fly-fill"></i></span></div>
+<div class="fsh-cards">${cards}</div>
 <div class="fly-rail" aria-hidden="true"><i class="fr-fill"></i></div>
-<p class="fly-note cap">${t(`Рендер Blender, ${FRAMES} кадров идут за вашей прокруткой`, `Blender render, ${FRAMES} frames follow your scroll`)} <span class="fly-load" id="fly-load"></span></p>
+<p class="fly-note cap">${t(`Рендер Blender, ${FRAMES} кадров идут за вашей прокруткой`, `Blender render, ${FRAMES} frames follow your scroll`)}</p>
 </div>
 <div class="fly-still">${stills.map((n, i) => `<figure><img src="${frame("d", n)}" alt="${esc(L2(FLIGHT_STAGES[i].t, l))}" loading="lazy" decoding="async"><figcaption class="cap">${L2(FLIGHT_STAGES[i].k, l)}</figcaption></figure>`).join("")}</div>
 </section>`;
 }
 
+/* Стеклянные папки (Glass Folder Cards, kedhareswer, 21st.dev, MIT): объекты
+   заказчика сгруппированы по направлениям. Задняя стенка с кадром, внутри
+   файлы-проекты, спереди матовое стекло на петле. Собираются при появлении,
+   при наведении стекло наклоняется, по нажатию файлы выходят веером. */
+const GF_BACK = "M0 56A22 22 0 0 1 22 34L146 34C170 34 172 0 198 0L318 0A22 22 0 0 1 340 22L340 250A22 22 0 0 1 318 272L22 272A22 22 0 0 1 0 250Z";
+const GF_FH = 198;
+const GF_FRONT = `M0 22A22 22 0 0 1 22 0L118 0C144 0 146 32 172 32L318 32A22 22 0 0 1 340 54L340 ${GF_FH - 22}A22 22 0 0 1 318 ${GF_FH}L22 ${GF_FH}A22 22 0 0 1 0 ${GF_FH - 22}Z`;
+const plural = (l, n) => (l === "en" ? `${n} project${n === 1 ? "" : "s"}` : `${n} ${n % 10 === 1 && n % 100 !== 11 ? "проект" : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? "проекта" : "проектов"}`);
+
+function folderHtml(l, s, i) {
+  const t = T(l);
+  const ps = PROJECTS.filter((p) => p.cats.includes(s.id));
+  const back = ps[0];
+  const sheets = ps.slice(-4).map((p, v, arr) => {
+    const slot = arr.length <= 1 ? 0 : (v / (arr.length - 1)) * 2 - 1;
+    const h = [...p.slug].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7 + i);
+    const jx = (((h % 100) / 100) - 0.5) * 10;
+    const jr = ((((h >> 8) % 100) / 100) - 0.5) * 3.2;
+    return `<div role="listitem" class="gf-slot"><a class="gf-sheet" href="${pHref(l, p)}" data-tr="${p.slug}" style="--slot:${slot.toFixed(2)};--depth:${arr.length - 1 - v};--jx:${jx.toFixed(2)}px;--jr:${jr.toFixed(2)}deg;z-index:${v + 1}"><img class="gf-sheet-art" src="${still(p.cover, 960)}" alt="" loading="lazy" decoding="async"><span class="gf-sheet-head"><span class="gf-sheet-name">${L2(p.n, l)}</span><span class="gf-sheet-meta">${L2(p.city, l)}</span></span></a></div>`;
+  }).join("");
+  return `<div class="gf-cell"><div class="gf" data-gf style="--d:${i * 140}ms">
+<div class="gf-stage"><div class="gf-tilt">
+<div class="gf-shadow" aria-hidden="true"></div>
+<div class="gf-back" style="clip-path:path('${GF_BACK}')" aria-hidden="true"><img class="gf-art" src="${still(back.cover, 960)}" alt="" loading="lazy" decoding="async"><div class="gf-sheen"></div></div>
+<svg class="gf-rim gf-back-rim" viewBox="0 0 340 272" aria-hidden="true"><path d="${GF_BACK}"/></svg>
+<div class="gf-front" style="clip-path:path('${GF_FRONT}')">
+<div class="gf-tint" aria-hidden="true"></div><div class="gf-spec" aria-hidden="true"></div>
+<svg class="gf-rim gf-front-rim" viewBox="0 0 340 ${GF_FH}" aria-hidden="true"><defs><linearGradient id="gfr${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient></defs><path d="${GF_FRONT}" stroke="url(#gfr${i})"/></svg>
+<button type="button" class="gf-hit" aria-expanded="false" aria-label="${esc(`${t("Открыть папку", "Open folder")} ${L2(s.n, l)}, ${plural(l, ps.length)}`)}"></button>
+<div class="gf-label"><span class="cap">${pad(i + 1)}</span><span class="gf-title">${L2(s.n, l)}</span><span class="gf-meta">${plural(l, ps.length)}</span></div>
+</div>
+<div class="gf-files" role="list" aria-label="${esc(L2(s.n, l))}">${sheets}</div>
+</div></div>
+</div></div>`;
+}
+
 function projectsBlock(l) {
   const t = T(l);
-  const chips = [`<button type="button" class="chip" data-f="all" aria-pressed="true">${t("Все", "All")}<sup>${PROJECTS.length}</sup></button>`]
-    .concat(SERVICES.map((s) => `<button type="button" class="chip" data-f="${s.id}" aria-pressed="false">${L2(s.n, l)}<sup>${PROJECTS.filter((p) => p.cats.includes(s.id)).length}</sup></button>`)).join("");
-  const rows = PROJECTS.map((p, i) => `<article class="pj pj-${i % 4}" data-cats="${p.cats.join(" ")}">
+  const rows = PROJECTS.map((p, i) => `<article class="pj pj-${i % 4}">
 <a class="pj-fig" href="${pHref(l, p)}" data-tr="${p.slug}" data-cur="${esc(t("Смотреть", "View"))}" aria-label="${esc(L2(p.n, l))}"><span class="pj-img" data-zoom><img data-tr-img src="${still(p.cover)}" srcset="${still(p.cover, 960)} 960w, ${still(p.cover)} 1920w" sizes="(min-width: 768px) 70vw, 100vw" alt="" loading="lazy" decoding="async"></span></a>
 <div class="pj-txt"><p class="cap pj-n">${pad(i + 1)}</p><h3><a href="${pHref(l, p)}" data-tr="${p.slug}">${L2(p.n, l)}</a></h3><p class="cap pj-meta">${L2(p.city, l)} · ${catsOf(l, p).join(" · ")}</p></div>
 </article>`).join("");
   return `<section class="projects" id="proekty">
-<div class="sec-h"><h2 class="big" data-lines>${lines([t("Избранные", "Selected"), t("проекты", "projects")])}</h2><div class="sec-side"><p class="cap">${t("Мы делаем", "We do")}</p><div class="chips" role="group" aria-label="${t("Фильтр по услугам", "Filter by service")}">${chips}</div></div></div>
+<div class="sec-h"><h2 class="big" data-lines>${lines([t("Избранные", "Selected"), t("проекты", "projects")])}</h2><p class="cap sec-side">${t("Объекты в работе бюро: дома, интерьеры, общественные здания", "Projects of the studio: houses, interiors, public buildings")}</p></div>
 <div class="pj-list">${rows}</div>
+<div class="folders">
+<div class="fd-h"><p class="cap">${t("Мы делаем", "We do")}</p><h2 class="big" data-lines>${lines([t("По направлениям", "By discipline")])}</h2><p class="cap fd-hint"><span class="fd-ptr">${t("Наведите на папку, нажмите, чтобы открыть", "Hover a folder, click to open it")}</span><span class="fd-tap">${t("Нажмите на папку, чтобы открыть", "Tap a folder to open it")}</span></p></div>
+<div class="fd-grid">${SERVICES.map((s, i) => folderHtml(l, s, i)).join("")}</div>
+</div>
 </section>`;
 }
 
