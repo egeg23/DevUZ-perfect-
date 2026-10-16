@@ -306,7 +306,7 @@ export const uz: LearnCopy = {
           paras: [
             "Sayt haqidagi xat matndan yig‘iladi: o‘z matningiz (ikkitagacha — bu A/B) → jamoaning umumiy matnlari → avtoaloqa yondashuvlari. Sayt haqidagi faktlar tezis bo‘lib o‘zi qo‘yiladi: nima noto‘g‘ri, bu nimaga olib keladi va, bo‘lsa, uning sohasidagi loyihamiz.",
             "O‘rniga qo‘yiladiganlar: {kim} — «Bu DevUz studiyasidan [ism]», {sayt}, {tezislar}, {prototip} — 12 soatda bepul prototip haqidagi ibora.",
-            "Tekshiruv qoidalari: 12 dan 100 so‘zgacha, boshida salomsiz, texnik so‘zlarsiz, foizlarsiz va «topga»siz. Raqamlar — faqat tezislardan va «12 soat». Uning sohasidan bo‘lmagan boshqa loyihani aytish mumkin emas.",
+            "Tekshiruv qoidalari: 12 dan 100 so‘zgacha (lotin yozuvida — 130 gacha), boshida salomsiz, texnik so‘zlarsiz, foizlarsiz va «topga»siz. Raqamlar — faqat tezislardan va «12 soat». Uning sohasidan bo‘lmagan boshqa loyihani aytish mumkin emas.",
           ],
         },
         pas: {

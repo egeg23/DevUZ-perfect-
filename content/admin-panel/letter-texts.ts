@@ -65,9 +65,9 @@ export const letterTextsDict = defineDict({
     pl: "Przykład wariantu uzbeckiego",
   },
   rules: {
-    ru: "Без «Здравствуйте» в начале — оно уже ушло. Без технических слов, процентов, обещаний «в топ» и чисел от себя: числа — только из тезисов и «12 часов». До 100 слов вместе с тезисами.",
-    uz: "Boshida salomlashmang — u allaqachon ketgan. Texnik so‘zlarsiz, foizlarsiz, «topga chiqaramiz» va’dalarisiz hamda o‘zingizdan raqamlarsiz: raqamlar faqat tezislardan va «12 soat». Tezislar bilan birga 100 so‘zgacha.",
-    pl: "Bez powitania na początku — już poszło. Bez słów technicznych, procentów, obietnic «do topu» i liczb od siebie: liczby tylko z tez i «12 godzin». Do 100 słów razem z tezami.",
+    ru: "Без «Здравствуйте» в начале — оно уже ушло. Без технических слов, процентов, обещаний «в топ» и чисел от себя: числа — только из тезисов и «12 часов». До 100 слов вместе с тезисами (латиницей — до 130: по-английски слов больше).",
+    uz: "Boshida salomlashmang — u allaqachon ketgan. Texnik so‘zlarsiz, foizlarsiz, «topga chiqaramiz» va’dalarisiz hamda o‘zingizdan raqamlarsiz: raqamlar faqat tezislardan va «12 soat». Tezislar bilan birga 100 so‘zgacha (lotin yozuvida — 130 gacha: inglizchada so‘z ko‘proq).",
+    pl: "Bez powitania na początku — już poszło. Bez słów technicznych, procentów, obietnic «do topu» i liczb od siebie: liczby tylko z tez i «12 godzin». Do 100 słów razem z tezami (alfabetem łacińskim — do 130: po angielsku słów jest więcej).",
   },
   mine: { ru: "Мои тексты", uz: "Mening matnlarim", pl: "Moje teksty" },
   mineEmpty: {
