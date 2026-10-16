@@ -950,6 +950,12 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   // 3D-пролёт Blender в APx180.2606 — подписан как наша интерпретация по рендерам бюро.
   assert.match(all[""], /class="bfl"[^>]*data-n="300"[^>]*data-d="\/protos\/sia\/f\/d\/"/, "нет 3D-пролёта");
   assert.match(all[""], /Интерпретация DevUz Studio по рендерам бюро/, "3D-пролёт не подписан как интерпретация");
+  // 300 раскрытых кадров — полтора гигабайта памяти, страница дёргается при прокрутке:
+  // кадры держим сжатыми, раскрываем вне главного потока и не больше KEEP за раз.
+  const siaJs = readFileSync("scripts/protos/sia/site.js", "utf8");
+  assert.match(siaJs, /KEEP=\d+/, "у 3D-пролёта нет предела раскрытых кадров");
+  assert.match(siaJs, /createImageBitmap\(src\[i\]\)/, "кадры раскрываются не из сжатого файла");
+  assert.match(siaJs, /\.close\(\)/, "лишние кадры не закрываются");
   for (let f = 1; f <= 300; f++) for (const d of ["d", "m"]) statSync(`public/protos/sia/f/${d}/${String(f).padStart(4, "0")}.webp`);
   assert.match(all[""], /class="velo-row"/, "нет бегущей строки");
   assert.equal((all[""].match(/data-gf /g) || []).length, 4, "не 4 папки");

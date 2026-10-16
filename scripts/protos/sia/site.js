@@ -105,29 +105,48 @@ if(gfs.length){gfSize();addEventListener('resize',gfSize);
   else gfs.forEach(function(g){g.setAttribute('data-in','')})}
 
 /* 3D-пролёт: кадры Blender по прокрутке, кадр плавно догоняет прокрутку.
-   Кадры грузятся очередью по четыре: сначала каждый 16-й, потом гуще. */
+   Кадры качаются сжатыми (WebP, очередью по четыре: сначала каждый 16-й,
+   потом гуще), а раскладываются в картинку только рядом с текущим и не
+   больше KEEP за раз, вне главного потока. 300 раскрытых кадров — это
+   полтора гигабайта памяти, и страница на них дёргается. */
 var bfl=$('.bfl');
 if(bfl&&!REDUCED){(function(){
   var NET=navigator.connection||{},SLOW=!!NET.saveData||/(^|-)2g|3g/.test(NET.effectiveType||'');
   var N=+bfl.getAttribute('data-n'),cv=$('.bfl-cv',bfl),cx=cv.getContext('2d',{alpha:false}),cards=$$('.bfc',bfl),fnum=$('#bfl-f'),pct=$('#bfl-pct'),fill=$('#bfl-fill'),eager=Math.ceil(N/4);
+  var ticks=cards.map(function(c){return $$('.flc-ticks b',c)});
+  var BMP=!!(window.createImageBitmap&&window.fetch),KEEP=24,AHEAD=3;
   var portrait=function(){return innerHeight>innerWidth*1.1};
-  var set=portrait()?bfl.getAttribute('data-m'):bfl.getAttribute('data-d'),imgs=new Array(N),got=0,started=false,cur=0,target=0,drawn=-1,raf=0,step=SLOW?3:1;
+  var set,src,bmp,busy,got,gen=0,started=false,cur=0,target=0,drawn=-1,shown=-1,raf=0,step=SLOW?3:1,act0=-2,loc0=-1;
+  function reset(){set=portrait()?bfl.getAttribute('data-m'):bfl.getAttribute('data-d');src=new Array(N);bmp={};busy={};got=0;drawn=-1;gen++}
+  reset();
   function order(){var o=[],seen={};[16,8,4,2,1].forEach(function(s){if(s<step&&s!==1)return;for(var i=0;i<N;i+=Math.max(s,step)){if(!seen[i]){seen[i]=1;o.push(i)}}});if(!seen[N-1])o.push(N-1);return o}
   function url(i){var n=String(i+1);while(n.length<4)n='0'+n;return set+n+'.webp'}
-  function load(){if(started)return;started=true;var q=order();
-    function next(){if(!q.length)return;var i=q.shift(),im=new Image();im.decoding='async';im.onload=function(){var done=function(b){imgs[i]=b||im;got++;if(got===1||i===0)bfl.classList.add('ready');soon();var lp=Math.min(1,got/eager);if(pct)pct.textContent=Math.round(lp*100);if(fill)fill.style.setProperty('--l',lp.toFixed(3));if(got>=eager)bfl.classList.add('loaded');next()};
-      if(window.createImageBitmap)createImageBitmap(im).then(done,function(){done(null)});else done(null)};im.onerror=function(){next()};im.src=url(i)}
+  function arrived(i,g){if(g!==gen)return;got++;if(got===1)bfl.classList.add('ready');var lp=Math.min(1,got/eager);if(pct)pct.textContent=Math.round(lp*100);if(fill)fill.style.setProperty('--l',lp.toFixed(3));if(got>=eager)bfl.classList.add('loaded');want(Math.round(cur));soon()}
+  function load(){if(started)return;started=true;var q=order(),g=gen;
+    function next(){if(g!==gen||!q.length)return;var i=q.shift(),u=url(i);
+      if(BMP){fetch(u).then(function(r){if(!r.ok)throw r.status;return r.blob()}).then(function(b){if(g!==gen)return;src[i]=b;arrived(i,g);next()},function(){next()})}
+      else{var im=new Image();im.decoding='async';im.onload=function(){if(g!==gen)return;src[i]=im;bmp[i]=im;arrived(i,g);next()};im.onerror=next;im.src=u}}
     for(var k=0;k<4;k++)next()}
-  function size(){var r=Math.min(devicePixelRatio||1,2);cv.width=Math.round(cv.clientWidth*r);cv.height=Math.round(cv.clientHeight*r);drawn=-1;soon()}
-  function nearest(i){if(imgs[i])return i;for(var k=1;k<N;k++){if(i-k>=0&&imgs[i-k])return i-k;if(i+k<N&&imgs[i+k])return i+k}return -1}
-  function draw(i){var j=nearest(i);if(j<0||j===drawn)return;var im=imgs[j],W=cv.width,H=cv.height,s=Math.max(W/im.width,H/im.height),dw=im.width*s,dh=im.height*s;cx.drawImage(im,(W-dw)/2,(H-dh)/2,dw,dh);drawn=j}
-  function tick(){raf=0;var r=bfl.getBoundingClientRect(),p=clamp(-r.top/(r.height-innerHeight),0,1);target=p*(N-1);cur+=(target-cur)*.22;if(Math.abs(target-cur)<.05)cur=target;var k=Math.round(cur);draw(k);
+  /* Раскрыть кадр в картинку вне главного потока; лишние — закрыть. */
+  function open(i){if(!BMP||i<0||i>=N||bmp[i]||busy[i]||!src[i])return;var g=gen;busy[i]=1;
+    createImageBitmap(src[i]).then(function(b){delete busy[i];if(g!==gen){b.close();return}bmp[i]=b;trim();soon()},function(){delete busy[i]})}
+  function trim(){var ks=Object.keys(bmp);if(ks.length<=KEEP)return;var c=Math.round(cur);ks.sort(function(a,b){return Math.abs(b-c)-Math.abs(a-c)});
+    for(var j=0;j<ks.length-KEEP;j++){var k=+ks[j];if(k===drawn)continue;if(bmp[k].close)bmp[k].close();delete bmp[k]}}
+  function want(k){var dir=target>=cur?1:-1;open(k);for(var d=1;d<=AHEAD;d++){open(k+d*dir);open(k-d*dir)}
+    if(!bmp[k]&&!src[k]){var s=16;while(s>1&&!src[k-k%s])s/=2;open(k-k%s)}}
+  function size(){var r=Math.min(devicePixelRatio||1,2);cv.width=Math.round(cv.clientWidth*r);cv.height=Math.round(cv.clientHeight*r);shown=-1;soon()}
+  function nearest(i){if(bmp[i])return i;for(var k=1;k<N;k++){if(i-k>=0&&bmp[i-k])return i-k;if(i+k<N&&bmp[i+k])return i+k}return -1}
+  function draw(i){var j=nearest(i);if(j<0||j===shown)return;var im=bmp[j],W=cv.width,H=cv.height,s=Math.max(W/im.width,H/im.height),dw=im.width*s,dh=im.height*s;cx.drawImage(im,(W-dw)/2,(H-dh)/2,dw,dh);shown=drawn=j}
+  function tick(){raf=0;var r=bfl.getBoundingClientRect();if(r.bottom<-innerHeight||r.top>innerHeight*2)return;var p=clamp(-r.top/(r.height-innerHeight),0,1);target=p*(N-1);cur+=(target-cur)*.22;if(Math.abs(target-cur)<.05)cur=target;var k=Math.round(cur);want(k);draw(k);
     if(fnum)fnum.textContent=('00'+(k+1)).slice(-3);
     var act=-1,loc=0;cards.forEach(function(c,i){var f=+c.getAttribute('data-from'),t=+c.getAttribute('data-to');if(p>=f&&p<t){act=i;loc=(p-f)/(t-f)}});
-    cards.forEach(function(c,i){c.classList.toggle('on',i===act);c.classList.toggle('prev',act>=0&&i<act);$$('.flc-ticks b',c).forEach(function(b,j){b.style.setProperty('--t',j<act?1:j===act?loc.toFixed(3):0)})});
+    if(act!==act0||Math.abs(loc-loc0)>.004){act0=act;loc0=loc;cards.forEach(function(c,i){c.classList.toggle('on',i===act);c.classList.toggle('prev',act>=0&&i<act);ticks[i].forEach(function(b,j){b.style.setProperty('--t',j<act?1:j===act?loc.toFixed(3):0)})})}
     if(Math.abs(target-cur)>.05)soon()}
   function soon(){if(!raf)raf=requestAnimationFrame(tick)}
-  addEventListener('scroll',soon,{passive:true});addEventListener('resize',function(){var s=portrait()?bfl.getAttribute('data-m'):bfl.getAttribute('data-d');if(s!==set){set=s;imgs=new Array(N);got=0;started=false;load()}size()});
+  addEventListener('scroll',soon,{passive:true});
+  /* На телефоне resize приходит при каждом показе и скрытии адресной строки:
+     кадры перекачиваем, только если сменилась ориентация. */
+  addEventListener('resize',function(){var s=portrait()?bfl.getAttribute('data-m'):bfl.getAttribute('data-d');if(s!==set){Object.keys(bmp).forEach(function(k){if(bmp[k].close)bmp[k].close()});reset();started=false;load()}size()});
   size();
   new IntersectionObserver(function(es){if(es[0].isIntersecting)load()},{rootMargin:'150% 0px'}).observe(bfl);
 })()}
