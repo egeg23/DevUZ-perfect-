@@ -74,7 +74,7 @@ jobs:
         id: plan
         run: |
           case "$SAMPLES$PERCENT" in *[!0-9]*) echo "сэмплы и процент — числа"; exit 1;; esac
-          total=180
+          total=300
           first=$(( ${{ matrix.chunk }} + 1 ))
           echo "total=$total" >> "$GITHUB_OUTPUT"
           echo "first=$first" >> "$GITHUB_OUTPUT"
