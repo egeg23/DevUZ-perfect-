@@ -73,7 +73,8 @@ var cp2=$('#kit-copy');if(cp2)cp2.onclick=function(){var lines=[K.head,'• '+K.
    gw-offer-2: 16.10.2026 владелец сбросил таймер, на всех устройствах
    отсчёт пошёл заново с первого открытия. */
 var tm=$('#tm'),start=Date.now();try{var s=+localStorage.getItem('gw-offer-2');if(s&&s<=Date.now())start=s;else localStorage.setItem('gw-offer-2',String(start))}catch(e){}
-var end=start+K.hours*36e5;
+/* Владелец, 16.10.2026: срок продлён до вторника 17:00, отсчёт до K.until. */
+var end=K.until?Date.parse(K.until):start+K.hours*36e5;
 function pad(n){return (n<10?'0':'')+n}
 function tickT(){var left=Math.max(0,end-Date.now());if(!left){$('#timer').classList.add('over');tm.textContent='00:00:00';$('#timer span').firstChild.textContent=K.ended;return}var hh=Math.floor(left/36e5),mm=Math.floor(left%36e5/6e4),ss=Math.floor(left%6e4/1e3);tm.textContent=pad(hh)+':'+pad(mm)+':'+pad(ss);setTimeout(tickT,1000)}
 if(tm)tickT();

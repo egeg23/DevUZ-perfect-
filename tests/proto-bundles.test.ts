@@ -911,6 +911,8 @@ test("Greenwell: магазин 1 000 $ вместо 4 900 $ на 48 часов,
     assert.match(html, /<s>4 900 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 4 900 $ крупно");
     assert.match(html, /"base":1000,"regular":4900,/, "скрипт считает от тех же цен");
     assert.match(html, /"hours":48,/, "отсчёт 48 часов");
+    // Владелец, 16.10.2026: «Продли таймер до вторника 17:00 на следующей неделе».
+    assert.ok(html.includes(`"until":"${plan.OFFER_UNTIL}"`), "отсчёт до продлённого срока");
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
 });
