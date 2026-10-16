@@ -9,7 +9,7 @@
 [hidden]{display:none !important}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{overflow-x:clip}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;padding-bottom:calc(var(--tab) + var(--safe))}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--text);-webkit-font-smoothing:antialiased;padding-bottom:calc(var(--tab) + var(--safe))}
 .locked body{overflow:hidden}
 img{display:block;max-width:100%}
 a{color:inherit;text-decoration:none}

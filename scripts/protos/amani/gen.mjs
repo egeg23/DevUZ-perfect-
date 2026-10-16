@@ -549,7 +549,7 @@ ${ADDONS.map(row).join("")}
 <a class="btn btn-ivory shim" href="https://t.me/Devuz_studio_bot?start=amani">${ic("tg")}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 <button type="button" class="copy" id="kit-copy">${t("Скопировать состав", "Tarkibni nusxalash")}</button>
 </div>
-<p class="src">${t("Цены допов: середина рынка веб-студий Ташкента и СНГ, как в нашем макете для Greenwell. Комиссии Click, Payme, Uzum Bank и партнёров рассрочки, хостинг, SMS и курьерские службы магазин оплачивает сам.", "Qo‘shimchalar narxi: Toshkent va MDH veb-studiyalari bozor o‘rtachasi, Greenwell maketimizdagidek. Click, Payme, Uzum Bank va muddatli to‘lov hamkorlari komissiyalari, xosting, SMS va kuryerlik xizmatlarini do‘kon o‘zi to‘laydi.")}</p>
+<p class="src">${t("Цены допов: середина рынка веб-студий Ташкента и СНГ. Комиссии Click, Payme, Uzum Bank и партнёров рассрочки, хостинг, SMS и курьерские службы магазин оплачивает сам.", "Qo‘shimchalar narxi: Toshkent va MDH veb-studiyalari bozor o‘rtachasi. Click, Payme, Uzum Bank va muddatli to‘lov hamkorlari komissiyalari, xosting, SMS va kuryerlik xizmatlarini do‘kon o‘zi to‘laydi.")}</p>
 </div>
 </div></section>`;
 }
