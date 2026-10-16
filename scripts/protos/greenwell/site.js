@@ -57,10 +57,16 @@ if(cr){cr.addEventListener('input',calc);$$('.cl-m button').forEach(function(b){
 /* Конструктор: магазин по акции и допы тумблерами. */
 var rows=$$('#konstruktor input[data-k]'),sumEl=$('#kit-sum'),addEl=$('#kit-add'),nEl=$('#kit-n'),shown=K.base,raf=0;
 function roll(to){var from=shown,st=performance.now();cancelAnimationFrame(raf);if(REDUCED){shown=to;sumEl.textContent=fmt(to)+' $';return}(function f(now){var k=Math.min(1,(now-st)/500);shown=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));sumEl.textContent=fmt(shown)+' $';if(k<1)raf=requestAnimationFrame(f)})(st)}
-function kit(){var add=0,n=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');n++}});addEl.textContent=fmt(add)+' $';nEl.textContent=n;roll(K.base+add)}
+/* AI Seller: разовый код прибавляется к итогу, подписка идёт отдельной строкой в месяц. */
+function aiSel(){var r=$('input[name=ais]:checked');return r?r.value:'none'}
+function kit(){var add=0,n=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');n++}});addEl.textContent=fmt(add)+' $';nEl.textContent=n;
+  var ai=aiSel(),ln=$('#kit-ai'),mo=$('#kit-month');if(ln){ln.hidden=ai==='none';$('#kit-ai-v').textContent=ai==='code'?fmt(K.ai.code.p)+' $':ai==='sub'?K.ai.sub.m+' $ '+K.perMonth:''}
+  if(mo){mo.hidden=ai!=='sub';mo.textContent=K.plusMonth.replace('{n}',K.ai.sub.m)}
+  roll(K.base+add+(ai==='code'?K.ai.code.p:0))}
+$$('input[name=ais]').forEach(function(r){r.addEventListener('change',kit)});
 rows.forEach(function(r){r.addEventListener('change',kit)});
 var all=$('#kit-all');if(all)all.onclick=function(){var on=rows.some(function(r){return !r.checked});rows.forEach(function(r){r.checked=on});kit()};
-var cp2=$('#kit-copy');if(cp2)cp2.onclick=function(){var lines=[K.head,'• '+K.baseName+': '+fmt(K.base)+' $'];rows.forEach(function(r){if(r.checked){var it=K.items.filter(function(x){return x.id===r.getAttribute('data-k')})[0];lines.push('• '+it.t+': '+fmt(it.p)+' $')}});lines.push(K.total+': '+sumEl.textContent);
+var cp2=$('#kit-copy');if(cp2)cp2.onclick=function(){var lines=[K.head,'• '+K.baseName+': '+fmt(K.base)+' $'];rows.forEach(function(r){if(r.checked){var it=K.items.filter(function(x){return x.id===r.getAttribute('data-k')})[0];lines.push('• '+it.t+': '+fmt(it.p)+' $')}});var ai=aiSel();if(ai==='code')lines.push('• '+K.ai.code.t+': '+fmt(K.ai.code.p)+' $');if(ai==='sub')lines.push('• '+K.ai.sub.t+': '+K.ai.sub.m+' $ '+K.perMonth);lines.push(K.total+': '+sumEl.textContent);
   var txt=lines.join('\n');try{navigator.clipboard.writeText(txt).then(function(){cp2.textContent=K.copied})}catch(e){cp2.textContent=K.copied}};
 
 /* Отсчёт 48 часов: с первого открытия макета на этом устройстве. Ключ

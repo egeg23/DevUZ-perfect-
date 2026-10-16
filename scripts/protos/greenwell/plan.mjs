@@ -86,4 +86,19 @@ export const ADDONS = [
     uz: { t: "iPhone va Android uchun ilova", e: "O‘sha do‘kon App Store va Google Play’da: chegirmalar va kurs tugayotgani haqida push-xabarlar" } },
 ];
 
+/**
+ * AI Seller: агенты нашего Seller AI ведут магазины на маркетплейсах.
+ * Владелец DevUz, 16.10.2026: «2 формата: автоматизация одного маркетплейса
+ * через их дашборд - 5000$ и код на их стороне, либо подписка 500$ в месяц».
+ * В «Всё вместе» (ALL) не входит: это отдельный выбор, а не доп-тумблер.
+ */
+export const SELLER = {
+  code: { price: 5000,
+    ru: { t: "Seller AI: один маркетплейс, код у вас", e: "Агенты ведут цены, отзывы, поставки, карточки и рекламу одной площадки из раздела «AI Seller» вашей панели. Код ставим на вашей стороне, оплата разовая; каждая следующая площадка считается отдельно" },
+    uz: { t: "Seller AI: bitta marketpleys, kod sizda", e: "Agentlar panelingizdagi «AI Seller» bo‘limidan bitta maydonchaning narxlari, sharhlari, ta’minoti, kartochkalari va reklamasini boshqaradi. Kod sizning tomoningizga o‘rnatiladi, to‘lov bir martalik; har bir keyingi maydoncha alohida hisoblanadi" } },
+  sub: { month: 500,
+    ru: { t: "Seller AI: подписка", e: "Агенты работают на нашей стороне, вы видите и решаете всё в разделе «AI Seller» своей панели. Без разовой оплаты за код" },
+    uz: { t: "Seller AI: obuna", e: "Agentlar bizning tomonda ishlaydi, siz hammasini panelingizdagi «AI Seller» bo‘limida ko‘rasiz va hal qilasiz. Kod uchun bir martalik to‘lovsiz" } },
+};
+
 export const ALL = BASE.promo + ADDONS.reduce((s, a) => s + a.price, 0);

@@ -170,7 +170,7 @@ for (const [w, h] of [[360, 780], [390, 844], [428, 926], [768, 1024], [1440, 90
     if (!/\d/.test(sum) || sum === "1 000 $") fail(`${lang}site ${w}: конструктор не считает (${sum})`);
     if (!/^\d\d:\d\d:\d\d$/.test(await p.$eval("#tm", (e) => e.textContent))) fail(`${lang}site ${w}: нет отсчёта`);
     await p.goto(`${B}/${lang}panel`, { waitUntil: "networkidle" });
-    for (const t of ["dash", "orders", "reviews", "goods", "logistics", "nasiya", "traffic", "log"]) {
+    for (const t of ["dash", "orders", "reviews", "goods", "logistics", "nasiya", "traffic", "seller", "log"]) {
       await p.evaluate((x) => { location.hash = x; }, "#" + t);
       await p.waitForTimeout(250);
       await noScroll(p, `${lang}panel#${t} ${w}`);
