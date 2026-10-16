@@ -34,6 +34,7 @@ import arhbyuro from "@/content/proto-bundles/arhbyuro.json" with { type: "json"
 import greenwell from "@/content/proto-bundles/greenwell.json" with { type: "json" };
 import medikor from "@/content/proto-bundles/medikor.json" with { type: "json" };
 import sia from "@/content/proto-bundles/sia.json" with { type: "json" };
+import amani from "@/content/proto-bundles/amani.json" with { type: "json" };
 import vtashkente from "@/content/proto-bundles/vtashkente.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
@@ -60,6 +61,7 @@ const BUNDLES: Record<string, Bundle> = {
   greenwell: greenwell as Bundle,
   medikor: medikor as Bundle,
   sia: sia as Bundle,
+  amani: amani as Bundle,
   vtashkente: vtashkente as Bundle,
 };
 

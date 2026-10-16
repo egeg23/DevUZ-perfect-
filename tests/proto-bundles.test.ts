@@ -1053,6 +1053,63 @@ test("Medikor: цены в рублях, скидка 30% на магазин и
   for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${plan.sale(a.price)}"`), `${a.id}: цена со скидкой на странице`);
 });
 
+test("Amani: 6 страниц на uz и ru — условия, noindex, заставка DevUz, шёлк, только данные канала", async () => {
+  const { existsSync } = await import("node:fs");
+  const site = bundlePages("amani");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "panel", "ru", "ru/panel", "ru/shop", "shop"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("ru") ? "ru" : "uz";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /Greenwell paneli|Панель Greenwell|gw-logo/, `${path}: остался чужой макет`);
+    assert.ok(page.includes("AMÁNI"), `${path}: нет названия магазина`);
+    for (const src of page.match(/\/protos\/amani\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+  }
+  for (const path of ["", "ru"]) {
+    const page = all[path];
+    assert.match(page, /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.ok(page.includes('id="silk"') && page.includes("IDLE=3000"), `${path}: нет шёлка или шапка не по правилу трёх секунд`);
+    assert.ok(page.includes("https://t.me/Amani_uzadmin"), `${path}: заказ не ведёт к их админу`);
+    assert.ok(page.includes("ScrollTrigger.min.js"), `${path}: нет ScrollTrigger`);
+  }
+  const stamped = stampedBundle("amani", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Amani: цены товаров — из канала, магазин 1 000 $ вместо 4 900 $ на 48 часов, допы в одном месте", async () => {
+  const { readFileSync } = await import("node:fs");
+  const D = await import("../scripts/protos/amani/data.mjs");
+  const ch = JSON.parse(readFileSync("scripts/protos/amani/channel.json", "utf8"));
+  const byPost = new Map(ch.products.map((p: { post: string; text: string }) => [Number(String(p.post).split("/").pop()), p]));
+  // Цена — числом из текста поста: «Narxi:780.000», «1.200.000 1.000.000», «Baza kòylak:580.000».
+  const dots = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  for (const p of D.PRODUCTS) {
+    const c = byPost.get(p.post) as { text: string } | undefined;
+    assert.ok(c, `${p.id}: нет поста ${p.post} в разборе канала`);
+    const text = c.text.replace(/\s+/g, " ");
+    assert.ok(text.includes(dots(p.price)) || text.includes(String(p.price)), `${p.id}: цены ${p.price} нет в посте ${p.post}`);
+    if (p.old) assert.ok(text.includes(dots(p.old)), `${p.id}: старой цены нет в посте`);
+  }
+  const plan = await import("../scripts/protos/amani/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 4900);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
+  const site = bundlePages("amani")!;
+  for (const html of [site.html, site.pages.ru]) {
+    assert.match(html, /<s>4 900 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 4 900 $ крупно");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});
+
 test("vTashkente (ru и uz): главная из полноэкранных секций, условия, noindex, заставка, сборка кухни, примерка, заявка справа", async () => {
   const { statSync, readdirSync } = await import("node:fs");
   const site = bundlePages("vtashkente");
