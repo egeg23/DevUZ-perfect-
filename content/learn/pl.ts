@@ -306,7 +306,7 @@ export const pl: LearnCopy = {
           paras: [
             "Wiadomość o stronie składa się z tekstu: twój własny (do dwóch — to A/B) → wspólne teksty zespołu → podejścia autoprzebiegu. Fakty o stronie wstawiają się same, jako tezy: co jest nie tak, czym to grozi i, jeśli jest, nasz projekt z jego branży.",
             "Wstawki: {kim} — „Tu [imię] ze studia DevUz”, {strona}, {tezy}, {prototyp} — zdanie o darmowym prototypie w 12 godzin.",
-            "Zasady sprawdzania: od 12 do 100 słów, bez powitania na początku, bez technicznych słów, bez procentów i „na szczyt”. Liczby — tylko z tez i „12 godzin”. Nie wolno wymieniać naszego projektu spoza jego branży.",
+            "Zasady sprawdzania: od 12 do 100 słów (alfabetem łacińskim — do 130), bez powitania na początku, bez technicznych słów, bez procentów i „na szczyt”. Liczby — tylko z tez i „12 godzin”. Nie wolno wymieniać naszego projektu spoza jego branży.",
           ],
         },
         pas: {

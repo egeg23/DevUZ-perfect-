@@ -14,11 +14,14 @@ import {
   AUTO_ARMS,
   EXAMPLE,
   LETTER_TEXTS,
+  MAX_WORDS,
+  MAX_WORDS_LATIN,
   MIN_SENT,
   PROTOTYPE_LINE_UZ,
   candidates,
   chanceBetter,
   letterProblems,
+  maxWordsFor,
   pickVariant,
   renderLetter,
   textProblems,
@@ -215,4 +218,25 @@ test("узбекский вариант текста собирается без
   const store = readFileSync(new URL("../lib/admin/outreach-store.ts", import.meta.url), "utf8");
   assert.match(store, /renderLetter\(variant\.body_uz, \{ \.\.\.ctx, theses: lines \}, "uz"\)/, "узбекский текст собирается с русскими фразами");
   assert.match(readFileSync(new URL("../app/admin/prospect/texts/actions.ts", import.meta.url), "utf8"), /textProblems\(uz, staff\.display_name, "uz"\)/);
+});
+
+test("письмо латиницей — до 130 слов: английский перевод длиннее по словам", () => {
+  // Менеджер, 16.10.2026: бот не отправлял английские письма — «Сообщение
+  // длиннее 100 слов». Тот же текст по-английски в полтора раза длиннее по словам.
+  const ctx = { host: "example.uz", label: "Example", sender: "", theses: [], reference: null };
+  const words = (n: number, w: string) => Array.from({ length: n }, () => w).join(" ");
+  const long = (text: string) => letterProblems(text, ctx).some((p) => p.code === "long");
+  assert.equal(MAX_WORDS, 100);
+  assert.equal(MAX_WORDS_LATIN, 130);
+  assert.equal(maxWordsFor("Посмотрели ваш сайт"), MAX_WORDS);
+  assert.equal(maxWordsFor("We checked your site"), MAX_WORDS_LATIN);
+  assert.equal(maxWordsFor("Saytingizni ko‘rib chiqdik"), MAX_WORDS_LATIN);
+  // Английское письмо с русским названием компании — всё равно латиница.
+  assert.equal(maxWordsFor(`${words(40, "visitors")} «Мебель»`), MAX_WORDS_LATIN);
+  assert.equal(long(words(111, "visitors")), false, "111 слов по-английски уходят");
+  assert.equal(long(words(131, "visitors")), true);
+  assert.equal(long(words(101, "клиенты")), true, "русский предел прежний");
+  assert.equal(long(words(100, "клиенты")), false);
+  const problem = letterProblems(words(140, "visitors"), ctx).find((p) => p.code === "long");
+  assert.deepEqual(problem?.args, [MAX_WORDS_LATIN], "в тексте ошибки — тот предел, что сработал");
 });
