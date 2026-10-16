@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
 import { SHOP_UI, PANEL_UI } from "./ui.mjs";
-import { BASE, ADDONS, ALL, OFFER_HOURS, SELLER } from "./plan.mjs";
+import { BASE, ADDONS, ALL, OFFER_HOURS, OFFER_UNTIL, SELLER } from "./plan.mjs";
 
 /*
  * Макет интернет-магазина Greenwell (биодобавки, ООО «Inso Farm Deluxe»), ru и uz:
@@ -454,10 +454,10 @@ function offerBlock(l) {
   const t = T(l);
   const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"><span class="sw" aria-hidden="true"></span><span class="kit-t"><b>${a[l].t}${a.star ? `<em class="star">${t("магазины берут первым", "do‘konlar birinchi oladi")}</em>` : ""}</b><small>${a[l].e}</small></span><span class="kit-p">+${usd(a.price)}</span></label>`;
   return `<section class="offer" id="cena" data-tone="paper"><div class="wrap">
-${head(`<span class="ours">${t("Предложение DevUz Studio", "DevUz Studio taklifi")}</span>`, t("Стоимость", "Narxi"), t("Магазин целиком, как в этом макете, без допов: 1 000 $ вместо 4 900 $, если начинаем в течение 48 часов. Допы считаются отдельно: включайте тумблерами, итог пересчитается.", "Do‘kon to‘liq, bu maketdagidek, qo‘shimchasiz: 48 soat ichida boshlasak, 4 900 $ o‘rniga 1 000 $. Qo‘shimchalar alohida hisoblanadi: tugmalar bilan yoqing, jami qayta hisoblanadi."))}
+${head(`<span class="ours">${t("Предложение DevUz Studio", "DevUz Studio taklifi")}</span>`, t("Стоимость", "Narxi"), t("Магазин целиком, как в этом макете, без допов: 1 000 $ вместо 4 900 $, если начинаем до вторника, 20 октября, 17:00. Допы считаются отдельно: включайте тумблерами, итог пересчитается.", "Do‘kon to‘liq, bu maketdagidek, qo‘shimchasiz: 20-oktabr, seshanba, soat 17:00 gacha boshlasak, 4 900 $ o‘rniga 1 000 $. Qo‘shimchalar alohida hisoblanadi: tugmalar bilan yoqing, jami qayta hisoblanadi."))}
 <div class="kit" id="konstruktor">
 <div class="kit-list">
-<div class="kit-base"><div><span class="kb-tag">${t("Входит всегда", "Har doim kiradi")}</span><b>${BASE[l].t}</b><p>${BASE[l].d}</p><p class="kb-w">${t(`Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель`, `Muddat: ${BASE.weeks[0]}-${BASE.weeks[1]} hafta`)}</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>${t("48 часов", "48 soat")}</small></div></div>
+<div class="kit-base"><div><span class="kb-tag">${t("Входит всегда", "Har doim kiradi")}</span><b>${BASE[l].t}</b><p>${BASE[l].d}</p><p class="kb-w">${t(`Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель`, `Muddat: ${BASE.weeks[0]}-${BASE.weeks[1]} hafta`)}</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>${t("до 20 октября", "20-oktabrgacha")}</small></div></div>
 <h3 class="kit-g">${t("Допы: включайте то, что нужно магазину", "Qo‘shimchalar: do‘konga keraklisini yoqing")}</h3>
 ${ADDONS.map(row).join("")}
 <h3 class="kit-g" id="ai-seller">${t("AI Seller: агенты на маркетплейсах", "AI Seller: marketpleyslarda agentlar")}</h3>
@@ -470,7 +470,7 @@ ${ADDONS.map(row).join("")}
 </div>
 <div class="kit-side">
 <div class="kit-total" id="kit-total">
-<div class="timer" id="timer"><span>${t("Цена 1 000 $ действует", "1 000 $ narxi amal qiladi")}<small>${t("48 часов с первого открытия макета", "maket birinchi ochilgandan 48 soat")}</small></span><b id="tm">48:00:00</b></div>
+<div class="timer" id="timer"><span>${t("Цена 1 000 $ действует", "1 000 $ narxi amal qiladi")}<small>${t("до вторника, 20 октября, 17:00 по Ташкенту", "20-oktabr, seshanba, Toshkent vaqti bilan 17:00 gacha")}</small></span><b id="tm">48:00:00</b></div>
 <div class="kt-line"><span>${t("Магазин", "Do‘kon")}</span><span><s>${usd(BASE.price)}</s> ${usd(BASE.promo)}</span></div>
 <div class="kt-line"><span>${t("Допы", "Qo‘shimchalar")} · <span id="kit-n">0</span></span><span id="kit-add">0 $</span></div>
 <div class="kt-line" id="kit-ai" hidden><span>AI Seller</span><span id="kit-ai-v"></span></div>
@@ -489,7 +489,7 @@ function sitePage(l) {
   const t = T(l);
   const other = l === "ru" ? "uz" : "ru";
   const nav = [["#seychas", t("Что меняем", "Nima o‘zgaradi")], ["#put", t("Путь покупателя", "Xaridor yo‘li")], ["#rassrochka", t("Рассрочка", "Muddatli to‘lov")], ["#panel", t("Панель", "Panel")], ["#cena", t("Стоимость", "Narxi")]];
-  const kit = { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price })), base: BASE.promo, regular: BASE.price, baseName: BASE[l].t, hours: OFFER_HOURS, nasiya: D.NASIYA, sum: t("сум", "so‘m"), mo: t("в месяц", "oyiga"), over: t("переплата", "ortiqcha to‘lov"), noOver: t("без переплаты", "ortiqcha to‘lovsiz"), copied: t("Скопировано", "Nusxalandi"), ai: { code: { t: SELLER.code[l].t, p: SELLER.code.price }, sub: { t: SELLER.sub[l].t, m: SELLER.sub.month } }, perMonth: t("в месяц", "oyiga"), plusMonth: t("и {n} $ в месяц за Seller AI", "va Seller AI uchun oyiga {n} $"), head: t(`Интернет-магазин ${B}, состав из конструктора:`, `${B} internet-do‘koni, konstruktordan tarkib:`), total: t("Итого", "Jami"), ended: t("Срок акции вышел: цена по договорённости", "Aksiya muddati tugadi: narx kelishuv bo‘yicha") };
+  const kit = { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price })), base: BASE.promo, regular: BASE.price, baseName: BASE[l].t, hours: OFFER_HOURS, until: OFFER_UNTIL, nasiya: D.NASIYA, sum: t("сум", "so‘m"), mo: t("в месяц", "oyiga"), over: t("переплата", "ortiqcha to‘lov"), noOver: t("без переплаты", "ortiqcha to‘lovsiz"), copied: t("Скопировано", "Nusxalandi"), ai: { code: { t: SELLER.code[l].t, p: SELLER.code.price }, sub: { t: SELLER.sub[l].t, m: SELLER.sub.month } }, perMonth: t("в месяц", "oyiga"), plusMonth: t("и {n} $ в месяц за Seller AI", "va Seller AI uchun oyiga {n} $"), head: t(`Интернет-магазин ${B}, состав из конструктора:`, `${B} internet-do‘koni, konstruktordan tarkib:`), total: t("Итого", "Jami"), ended: t("Срок акции вышел: цена по договорённости", "Aksiya muddati tugadi: narx kelishuv bo‘yicha") };
   return `<!doctype html>
 <html lang="${l}">
 <head>
