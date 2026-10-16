@@ -615,6 +615,27 @@ export async function sendRowsForId(
   return postRows(chatId, text, rows);
 }
 
+/**
+ * Просьба ответить: Telegram сам открывает ответ на это сообщение
+ * (force_reply), и по номеру просьбы бот потом узнаёт, к чему ответ, —
+ * «✏️ Изменить текст» под карточкой касания (lib/admin/bot-text-edit.ts).
+ * Номер сообщения или null — не дошло.
+ */
+export async function sendForceReply(
+  chatId: number | string,
+  text: string,
+  placeholder: string,
+): Promise<number | null> {
+  const result = await callRaw("sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+    reply_markup: { force_reply: true, input_field_placeholder: placeholder.slice(0, 64) },
+  });
+  return result.ok ? (result.messageId ?? 0) : null;
+}
+
 /** Сообщение с несколькими рядами кнопок — например, позиция порции дня. */
 export async function sendWithRows(
   chatId: number | string,

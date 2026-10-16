@@ -34,6 +34,7 @@ import {
   markLeadCards,
   esc,
   markBriefHandled,
+  sendForceReply,
   sendMessage,
   sendPlain,
   sendWithButtons,
@@ -58,7 +59,10 @@ import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
-import { closeRows, deliverReplacement, portionSource, topUpPortion } from "@/lib/admin/portion-store";
+import { helloTexts } from "@/lib/admin/hello-text-store";
+import { closeRows, deliverReplacement, itemButtons, itemText, portionSource, topUpPortion } from "@/lib/admin/portion-store";
+import { ASK_PLACEHOLDER, REFUSAL, askText, problemsReply } from "@/lib/admin/bot-text-edit";
+import { applyBotEdit, askFor, editAllowed, rememberAsk } from "@/lib/admin/bot-text-edit-store";
 import { approves, decideTransfer } from "@/lib/admin/transfers";
 import { closeTouch, markSelfContacted, prospectById, queueOutreach, skipProspect } from "@/lib/admin/outreach-store";
 import { loadQueueEtas } from "@/lib/admin/outreach-queue";
@@ -143,6 +147,8 @@ type Update = {
     /** Номер сообщения в чате: по нему кружок ждёт кнопки языка (circle-bot, holdCircle). */
     message_id?: number;
     text?: string;
+    /** На что ответили — по нему «✏️ Изменить текст» узнаёт карточку (bot-text-edit). */
+    reply_to_message?: { message_id: number };
     /** Когда человек отправил, по часам Telegram — по нему видно, сколько шло обновление. */
     date?: number;
     chat: TelegramChat;
@@ -298,6 +304,12 @@ async function route(update: Update): Promise<void> {
       // сотруднику; незнакомцу эти слова ничего не открывают.
       if (chat.type === "private" && learnCommand(update.message.text)) {
         if (await handleLearnCommand(update.message)) return;
+      }
+
+      // Исправленный текст касания — ответом на просьбу «✏️ Изменить
+      // текст». Не на нашу просьбу — текст идёт дальше, как шёл.
+      if (chat.type === "private" && update.message.reply_to_message && update.message.text) {
+        if (await handleTextEditReply(update.message)) return;
       }
 
       // «Своя дата» для переноса срока задачи: сотрудник нажал кнопку, и бот
@@ -1642,6 +1654,12 @@ async function handlePortionButton(
     await writeMyselfFromBot(query, staff, prospectId);
     return;
   }
+  // «✏️ Изменить текст» — тоже не только сегодня: письмо в очереди и
+  // отправленное правятся и завтра. Право проверяет editAllowed.
+  if (staff && prospectId && action === "edit") {
+    await askTextEdit(query, staff, prospectId);
+    return;
+  }
   const source = staff && prospectId ? await portionSource(staff.id, prospectId) : null;
   if (!staff || !source) {
     await answerCallback(query.id, "Это не ваша порция на сегодня");
@@ -1779,6 +1797,84 @@ async function writeMyselfFromBot(
     console.error("telegram webhook: напишу сам", error);
     await answerCallback(query.id, "Не получилось — откройте карточку в панели");
   }
+}
+
+/**
+ * «✏️ Изменить текст» (lib/admin/bot-text-edit.ts): бот присылает текущий
+ * текст и просит прислать исправленный ответом на это сообщение. Номер
+ * просьбы запоминается — по нему ответ найдёт карточку.
+ */
+async function askTextEdit(query: NonNullable<Update["callback_query"]>, staff: Staff, prospectId: string) {
+  try {
+    const allowed = await editAllowed(prospectId, staff);
+    if (!allowed.ok) {
+      await answerCallback(query.id, allowed.why.slice(0, 190));
+      return;
+    }
+    const chat = query.message?.chat.id ?? query.from?.id;
+    if (chat === undefined) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    const id = await sendForceReply(chat, askText(allowed.prospect, esc), ASK_PLACEHOLDER);
+    if (!id || !(await rememberAsk(chat, id, prospectId, staff.id))) {
+      await answerCallback(query.id, REFUSAL.offline.slice(0, 190));
+      return;
+    }
+    await answerCallback(query.id, "Пришлите исправленный текст ответом");
+  } catch (error) {
+    console.error("telegram webhook: изменить текст", error);
+    await answerCallback(query.id, "Не получилось — откройте карточку в панели");
+  }
+}
+
+/**
+ * Ответ на просьбу «✏️ Изменить текст». true — это была наша просьба и
+ * ответ разобран здесь (сохранён или отказ словами); false — ответ на
+ * другое сообщение, и текст идёт дальше обычным путём.
+ */
+async function handleTextEditReply(message: NonNullable<Update["message"]>): Promise<boolean> {
+  const replyTo = message.reply_to_message?.message_id;
+  if (!replyTo) return false;
+  const ask = await askFor(message.chat.id, replyTo);
+  if (!ask) return false;
+  const staff = message.from?.id ? await staffByTelegramId(message.from.id) : null;
+  if (!staff) {
+    await sendMessage(message.chat.id, REFUSAL.notYours);
+    return true;
+  }
+  try {
+    const result = await applyBotEdit(ask, staff, message.text ?? "");
+    if (!result.ok) {
+      await sendMessage(message.chat.id, result.problems?.length ? problemsReply(result.problems, esc) : esc(result.why));
+      return true;
+    }
+    const p = result.prospect;
+    if (result.stage === "card") {
+      await sendWithRows(
+        message.chat.id,
+        ["✏️ <b>Текст исправлен.</b> Карточка с новым текстом — кнопки те же.", "", itemText(p, "Исправлено", await helloTexts())].join("\n"),
+        itemButtons(p),
+      );
+    } else if (result.stage === "queued") {
+      await sendWithRows(
+        message.chat.id,
+        `✏️ <b>Письмо в очереди исправлено.</b> Бот отправит уже новый текст.\n\n<code>${esc(p.message ?? "")}</code>`,
+        closeRows(p.id, "✏️ Исправлено · в очереди", true),
+      );
+    } else {
+      await sendMessage(
+        message.chat.id,
+        result.waiting
+          ? "✏️ <b>Исправление ждёт бота.</b> Письмо уже у клиента — бот поправит его с того же рабочего аккаунта, обычно за минуту. Чем кончилось — видно в карточке в панели."
+          : `✏️ <b>Письмо исправлено.</b> Клиенту уйдёт уже новый текст.\n\n<code>${esc(p.message ?? "")}</code>`,
+      );
+    }
+  } catch (error) {
+    console.error("telegram webhook: исправленный текст", error);
+    await sendMessage(message.chat.id, REFUSAL.offline);
+  }
+  return true;
 }
 
 /**
