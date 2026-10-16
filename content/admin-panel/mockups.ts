@@ -167,5 +167,6 @@ export const mockupNicheDict = defineDict({
   konservy: { ru: "Консервы", uz: "Konservalar", pl: "Konserwy" },
   bady: { ru: "Биодобавки", uz: "Bioqo‘shimchalar", pl: "Suplementy diety" },
   odezhda: { ru: "Закрытая женская одежда", uz: "Yopiq ayollar kiyimi", pl: "Skromna odzież damska" },
+  restoran: { ru: "Ресторан", uz: "Restoran", pl: "Restauracja" },
   medoborudovanie: { ru: "Медицинское оборудование", uz: "Tibbiy uskunalar", pl: "Sprzęt medyczny" },
 });
