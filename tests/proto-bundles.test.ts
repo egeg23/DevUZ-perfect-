@@ -1109,3 +1109,42 @@ test("Amani: цены товаров — из канала, магазин 1 000
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
 });
+
+test("vTashkente (ru и uz): главная из полноэкранных секций, условия, noindex, заставка, сборка кухни, примерка, заявка справа", async () => {
+  const { statSync, readdirSync } = await import("node:fs");
+  const site = bundlePages("vtashkente");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "uz"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path === "uz" ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}"`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark|mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /<script[^>]+src=/, `${path}: чужой скрипт`);
+    assert.match(page, /id="intro"[\s\S]*DevUz/, `${path}: нет заставки DevUz Studio`);
+    // Секции во весь экран, у каждой свой приём.
+    for (const id of ["hero", "sborka", "primerka", "raboty", "zakaz", "doverie", "cena", "zamer"]) assert.match(page, new RegExp(`class="hs [a-z]+" id="${id}"`), `${path}: нет секции ${id}`);
+    assert.match(page, /class="asm-cv"/, `${path}: нет сборки кухни`);
+    assert.equal((page.match(/class="sw[ "]/g) || []).length, 10, `${path}: не все образцы примерки`);
+    assert.match(page, /id="panel"[\s\S]*data-form/, `${path}: нет формы справа`);
+    assert.match(page, /IDLE=3000/, `${path}: шапка не по правилу`);
+    // Связь — их Telegram; цены сайта — по общей акции 48 часов (PROMO).
+    assert.ok(page.includes("https://t.me/vTashkenteuz_IrinaTsoy"), `${path}: нет их Telegram`);
+    assert.match(page, /500 \$[\s\S]*1 700 \$[\s\S]*1 000 \$[\s\S]*2 500 \$/, `${path}: цены не по PROMO`);
+    assert.ok(page.includes("vTashkente"), `${path}: нет названия компании`);
+    if (lang === "uz") assert.doesNotMatch(page.replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица в узбекской странице`);
+  }
+  const pub = "public/protos/vtashkente";
+  for (const page of Object.values(all)) for (const m of page.matchAll(/\/protos\/vtashkente\/([\w./-]+\.(?:webp|png))/g)) statSync(`${pub}/${m[1]}`);
+  const total = readdirSync(pub).reduce((s, f) => s + statSync(`${pub}/${f}`).size, 0);
+  assert.ok(total < 8_000_000, "снимки тяжелее 8 МБ");
+  const stamped = stampedBundle("vtashkente", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages.uz, site.pages.uz, "отпечаток не поставился на узбекской странице");
+});
