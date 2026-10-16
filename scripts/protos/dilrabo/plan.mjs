@@ -13,7 +13,7 @@ export const TIERS = [
     id: "min", price: 5900, weeks: [8, 10],
     ru: {
       t: "Минимум",
-      d: "То, что вы просили в первую очередь.",
+      d: "Приложение с вашими турами: поиск, бронь и оплата.",
       items: [
         "Приложение для iPhone и Android, публикация в App Store и Google Play",
         "Ваши туры из каталога в Битрикс24: поиск по городу, датам, дням и гостям, дешёвые сверху, ближайшие выезды",
@@ -26,7 +26,7 @@ export const TIERS = [
     },
     uz: {
       t: "Minimum",
-      d: "Birinchi navbatda so‘raganingiz.",
+      d: "Turlaringiz bilan ilova: qidiruv, bron va to‘lov.",
       items: [
         "iPhone va Android uchun ilova, App Store va Google Play’ga joylash",
         "Bitrix24’dagi katalogdan turlaringiz: shahar, sana, kun va mehmonlar bo‘yicha qidiruv, arzonlari tepada, yaqin jo‘nashlar",
@@ -67,6 +67,85 @@ export const TIERS = [
   },
 ];
 
+/*
+ * Сайт (владелец, 16.10.2026: «Сделай ещё сайт за 1000$ и допы на 2000$
+ * раскидай на 10-15 позиций, а то только приложение сейчас за 5900
+ * минимум»). Отдельный вариант рядом с приложением, со своими допами:
+ * со всеми допами сайт стоит 3 000 $.
+ */
+export const SITE = {
+  id: "site", price: 1000, weeks: [3, 4], g: "site",
+  ru: {
+    t: "Сайт",
+    d: "Новый dilrabotravel.com: ваши туры, цена видна сразу, заявка в один шаг.",
+    items: [
+      "Дизайн в вашем стиле: знак, цвета, шрифт Tilda Sans",
+      "Каталог туров: фильтр по городу и числу дней, фото",
+      "Страница тура: программа по дням, что входит, переезды, форматы",
+      "Заявка на тур в один шаг и кнопки WhatsApp и Telegram",
+      "Сначала для телефона, быстрая загрузка",
+      "Панель, где менеджер сам правит туры, фото и цены",
+      "Русский и узбекский",
+    ],
+  },
+  uz: {
+    t: "Sayt",
+    d: "Yangi dilrabotravel.com: turlaringiz, narx darhol ko‘rinadi, ariza bir qadamda.",
+    items: [
+      "Uslubingizdagi dizayn: belgi, ranglar, Tilda Sans shrifti",
+      "Turlar katalogi: shahar va kunlar soni bo‘yicha filtr, suratlar",
+      "Tur sahifasi: kunlar bo‘yicha dastur, nima kiradi, ko‘chishlar, formatlar",
+      "Bir qadamda turga ariza va WhatsApp hamda Telegram tugmalari",
+      "Avval telefon uchun, tez yuklanish",
+      "Menejer turlar, suratlar va narxlarni o‘zi o‘zgartiradigan panel",
+      "Rus va o‘zbek tillari",
+    ],
+  },
+};
+
+/* Допы к сайту: 13 позиций, вместе ровно 2 000 $. Недели — сколько добавляют к сроку. */
+export const SITE_ADDONS = [
+  { id: "s-book", price: 300, weeks: 1, star: true,
+    ru: { t: "Онлайн-бронь с проверкой мест", e: "Гость выбирает даты и формат, сайт сверяет места и цену, бронь сразу. Вместо «подтвердим в течение 24 часов»" },
+    uz: { t: "Joylarni tekshirib onlayn bron", e: "Mehmon sana va formatni tanlaydi, sayt joy va narxni tekshiradi, bron darhol. «24 soat ichida tasdiqlaymiz» o‘rniga" } },
+  { id: "s-pay", price: 250, weeks: 1, star: true,
+    ru: { t: "Оплата на сайте", e: "Visa и Mastercard любой страны, Click, Payme. Полностью или предоплатой, процент задаёте вы" },
+    uz: { t: "Saytda to‘lov", e: "Istalgan davlatning Visa va Mastercard kartalari, Click, Payme. To‘liq yoki oldindan, foizni siz belgilaysiz" } },
+  { id: "s-crm", price: 150, weeks: 0,
+    ru: { t: "Заявки и брони в Битрикс24", e: "Каждая заявка с сайта сразу сделкой в нужной колонке: контакт, тур, даты, сумма" },
+    uz: { t: "Ariza va bronlar Bitrix24’ga", e: "Saytdagi har bir ariza darhol kerakli ustunda bitim: kontakt, tur, sanalar, summa" } },
+  { id: "s-calc", price: 150, weeks: 0,
+    ru: { t: "Калькулятор: в группе или своей машиной", e: "Гость видит цену за всех на свои даты: группа, Gentra, H1 или Staria" },
+    uz: { t: "Kalkulyator: guruhda yoki o‘z mashinasida", e: "Mehmon o‘z sanalariga hamma uchun narxni ko‘radi: guruh, Gentra, H1 yoki Staria" } },
+  { id: "s-cal", price: 150, weeks: 1,
+    ru: { t: "Календарь групповых выездов", e: "Ближайшие даты групп и сколько мест осталось. Менеджер ведёт его в панели" },
+    uz: { t: "Guruh jo‘nashlari taqvimi", e: "Guruhlarning yaqin sanalari va qancha joy qolgani. Menejer uni panelda yuritadi" } },
+  { id: "s-cabinet", price: 250, weeks: 1,
+    ru: { t: "Кабинет гостя", e: "Статус брони, ваучер, билеты и программа по дням в одном месте, без писем" },
+    uz: { t: "Mehmon kabineti", e: "Bron holati, vaucher, chiptalar va kunlar bo‘yicha dastur bir joyda, xatlarsiz" } },
+  { id: "s-en", price: 120, weeks: 0,
+    ru: { t: "Английская версия", e: "Для гостей из-за рубежа: все туры, страницы и заявка на английском" },
+    uz: { t: "Inglizcha versiya", e: "Chet ellik mehmonlar uchun: barcha turlar, sahifalar va ariza ingliz tilida" } },
+  { id: "s-lang", price: 100, weeks: 0,
+    ru: { t: "Ещё один язык", e: "Например, малайский или индонезийский для гостей туров Ziarah" },
+    uz: { t: "Yana bir til", e: "Masalan, Ziarah turlari mehmonlari uchun malay yoki indonez tili" } },
+  { id: "s-seo", price: 150, weeks: 1,
+    ru: { t: "Страницы под поисковые запросы", e: "«Туры в Самарканд», «тур в Бухару», «экскурсии в Фергане»: отдельные страницы, чтобы находили в Google и Яндексе" },
+    uz: { t: "Qidiruv so‘rovlari uchun sahifalar", e: "«Samarqandga turlar», «Buxoroga tur», «Farg‘onada ekskursiyalar»: Google va Yandexda topishlari uchun alohida sahifalar" } },
+  { id: "s-reviews", price: 60, weeks: 0,
+    ru: { t: "Отзывы с Яндекс Карт и Google", e: "Ваши настоящие отзывы на сайте, подтягиваются сами" },
+    uz: { t: "Yandex Xaritalar va Google sharhlari", e: "Haqiqiy sharhlaringiz saytda, o‘zi yangilanadi" } },
+  { id: "s-move", price: 100, weeks: 0,
+    ru: { t: "Перенос со старого сайта", e: "Туры, программы, фото и тексты переносим сами, старые адреса ведут на новые страницы" },
+    uz: { t: "Eski saytdan ko‘chirish", e: "Turlar, dasturlar, suratlar va matnlarni o‘zimiz ko‘chiramiz, eski manzillar yangi sahifalarga olib boradi" } },
+  { id: "s-stats", price: 70, weeks: 0,
+    ru: { t: "Аналитика", e: "Яндекс Метрика и Google Analytics: сколько смотрели, оставили заявку и оплатили" },
+    uz: { t: "Analitika", e: "Yandex Metrika va Google Analytics: qancha ko‘rildi, ariza qoldirildi va to‘landi" } },
+  { id: "s-care", price: 150, weeks: 0,
+    ru: { t: "Поддержка 3 месяца после запуска", e: "Правки, новые туры и сезонные цены, помощь менеджерам с панелью" },
+    uz: { t: "Ishga tushirilgandan keyin 3 oy qo‘llab-quvvatlash", e: "Tuzatishlar, yangi turlar va mavsumiy narxlar, menejerlarga panel bo‘yicha yordam" } },
+];
+
 /* Допы: цена по середине рынка Ташкента, недели — сколько добавляют к сроку. */
 export const ADDONS = [
   { id: "watch", price: 450, weeks: 1, star: true,
@@ -103,6 +182,7 @@ export const ADDONS = [
  * их Битрикс24.
  */
 export const COSTS = [
+  { ru: ["Домен и хостинг сайта", "по тарифу хостинга"], uz: ["Sayt domeni va xostingi", "xosting tarifi bo‘yicha"] },
   { ru: ["Битрикс24", "ваш тариф, отдельно не нужен"], uz: ["Bitrix24", "tarifingiz, alohida kerak emas"] },
   { ru: ["Приём карт Visa и Mastercard", "комиссия банка по договору"], uz: ["Visa va Mastercard kartalarini qabul qilish", "shartnoma bo‘yicha bank komissiyasi"] },
   { ru: ["Apple Developer", "99 $ в год"], uz: ["Apple Developer", "yiliga 99 $"] },
@@ -114,4 +194,5 @@ export const COSTS = [
 /* Владелец, 14.10.2026: при оплате наличными минус 10% от цены, от итога вместе с допами. */
 export const CASH_OFF = 10;
 
+export const SITE_ALL = SITE.price + SITE_ADDONS.reduce((s, a) => s + a.price, 0);
 export const ALL = TIERS[1].price + ADDONS.reduce((s, a) => s + a.price, 0);

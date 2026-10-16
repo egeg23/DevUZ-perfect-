@@ -480,6 +480,7 @@ h2{font-size:30px;line-height:1.12}
 .kit>*,.kit-list>*{min-width:0}
 .tiers{display:grid;gap:12px}
 @media (min-width:700px){.tiers{grid-template-columns:1fr 1fr}}
+.kit-grp[hidden]{display:none}
 .tier{position:relative;display:block;padding:24px;border-radius:var(--r);background:#fff;box-shadow:var(--sh1);cursor:pointer;transition:box-shadow .2s,transform .15s}
 .tier:active{transform:scale(.99)}
 .tier input{position:absolute;opacity:0;pointer-events:none}

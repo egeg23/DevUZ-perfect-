@@ -152,8 +152,8 @@ addEventListener('message',function(e){
 });
 draw();
 
-/* ── Конструктор: «Минимум» или «Максимум», допы, срок ── */
-var K=JSON.parse($('#kit-data').textContent),KEY='dt-kit-1';
+/* ── Конструктор: сайт, «Минимум» или «Максимум», у сайта и приложения свои допы, срок ── */
+var K=JSON.parse($('#kit-data').textContent),KEY='dt-kit-2';
 var st={};try{st=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
 var boxes=$$('#konstruktor input[data-k]'),radios=$$('#konstruktor input[name="tier"]');
 boxes.forEach(function(b){b.checked=!!st[b.getAttribute('data-k')];b.addEventListener('change',function(){st[b.getAttribute('data-k')]=b.checked;keep();sum()})});
@@ -162,10 +162,13 @@ var cashBox=$('#kit-cash');
 if(cashBox){cashBox.checked=!!st.__cash;cashBox.addEventListener('change',function(){st.__cash=cashBox.checked;keep();sum()})}
 function keep(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
 var shown=0;
-function tierNow(){var r=radios.filter(function(x){return x.checked})[0]||radios[1];return K.tiers.filter(function(t){return t.id===r.value})[0]}
+function tierNow(){var r=radios.filter(function(x){return x.checked})[0]||radios[0];return K.tiers.filter(function(t){return t.id===r.value})[0]}
+/* Видны и считаются только допы выбранного варианта: к сайту или к приложению. */
+function mine(b,g){return b.getAttribute('data-g')===g}
 function sum(){
   var tr=tierNow(),add=0,n=0,w=0;
-  boxes.forEach(function(b){if(b.checked){add+=+b.getAttribute('data-p');w+=+b.getAttribute('data-w');n++}});
+  $$('#konstruktor .kit-grp').forEach(function(g){g.hidden=g.getAttribute('data-g')!==tr.g});
+  boxes.forEach(function(b){if(b.checked&&mine(b,tr.g)){add+=+b.getAttribute('data-p');w+=+b.getAttribute('data-w');n++}});
   var full=tr.p+add,off=cashBox&&cashBox.checked?Math.round(full*K.cash/100):0,total=full-off;
   $('#kit-cash-v').textContent=off?'−'+grp(off)+'\u00a0$':'';
   $('#kt-tier').textContent=tr.t;$('#kt-tp').textContent=grp(tr.p)+' $';
@@ -178,7 +181,7 @@ function roll(el,a,b){if(REDUCED||a===b||!a){el.textContent=grp(b)+' $';return}v
 sum();
 $('#kit-copy').addEventListener('click',function(){
   var tr=tierNow(),lines=[K.head,'• '+tr.t+': '+grp(tr.p)+' $'];
-  K.items.forEach(function(a){if(st[a.id])lines.push('• '+a.t+': '+grp(a.p)+' $')});
+  K.items.forEach(function(a){if(st[a.id]&&a.g===tr.g)lines.push('• '+a.t+': '+grp(a.p)+' $')});
   if(cashBox&&cashBox.checked)lines.push('• '+K.cashName+': −'+K.cash+'%');
   lines.push(K.total+': '+$('#kit-sum').textContent+', '+$('#kit-weeks').textContent+' '+K.weeks);
   var txt=lines.join('\n'),b=this;
@@ -186,5 +189,5 @@ $('#kit-copy').addEventListener('click',function(){
   if(navigator.clipboard)navigator.clipboard.writeText(txt).then(done,done);else done();
 });
 var kg=$('#kit-go');
-if(kg)kg.addEventListener('click',function(){var tr=tierNow(),lines=[K.head,'• '+tr.t];K.items.forEach(function(a){if(st[a.id])lines.push('• '+a.t)});try{navigator.clipboard.writeText(lines.join('\n'))}catch(e){}});
+if(kg)kg.addEventListener('click',function(){var tr=tierNow(),lines=[K.head,'• '+tr.t];K.items.forEach(function(a){if(st[a.id]&&a.g===tr.g)lines.push('• '+a.t)});try{navigator.clipboard.writeText(lines.join('\n'))}catch(e){}});
 })();

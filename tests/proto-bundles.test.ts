@@ -1200,7 +1200,7 @@ test("Dilrabo Travel: переодетый inapp — их знак, туры и 
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
 
-test("Dilrabo Travel: цены и допы как у inapp — 5 900 $ / 7 900 $, те же допы, наличными −10%", async () => {
+test("Dilrabo Travel: сайт 1 000 $ и допы к нему на 2 000 $ в 10-15 позициях; приложение и его допы как у inapp, наличными −10%", async () => {
   const plan = await import("../scripts/protos/dilrabo/plan.mjs");
   const base = await import("../scripts/protos/inapp/plan.mjs");
   assert.deepEqual(plan.TIERS.map((x: { id: string; price: number; weeks: number[] }) => [x.id, x.price, x.weeks]), base.TIERS.map((x: { id: string; price: number; weeks: number[] }) => [x.id, x.price, x.weeks]));
@@ -1208,9 +1208,18 @@ test("Dilrabo Travel: цены и допы как у inapp — 5 900 $ / 7 900 $
   assert.equal(plan.CASH_OFF, base.CASH_OFF);
   assert.equal(plan.ALL, base.ALL);
   const site = bundlePages("dilrabo")!;
+  // Владелец, 16.10.2026: «Сделай ещё сайт за 1000$ и допы на 2000$ раскидай на 10-15 позиций».
+  assert.equal(plan.SITE.price, 1000);
+  assert.ok(plan.SITE_ADDONS.length >= 10 && plan.SITE_ADDONS.length <= 15, "у сайта 10-15 допов");
+  assert.equal(plan.SITE_ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0), 2000, "допы к сайту вместе 2 000 $");
+  assert.equal(plan.SITE_ALL, 3000);
   for (const html of [site.html, site.pages.uz]) {
-    assert.match(html, /data-p="5900" data-w="8-10"/, "«Минимум» на странице");
-    assert.match(html, /data-p="7900" data-w="11-13" checked/, "«Максимум» выбран по умолчанию");
+    assert.match(html, /value="site" data-g="site" data-p="1000" data-w="3-4" checked/, "сайт на странице и выбран по умолчанию");
+    assert.match(html, /data-g="app" data-p="5900" data-w="8-10"/, "«Минимум» на странице");
+    assert.match(html, /data-g="app" data-p="7900" data-w="11-13"/, "«Максимум» на странице");
+    for (const a of plan.SITE_ADDONS) assert.ok(html.includes(`data-g="site" data-k="${a.id}" data-p="${a.price}"`), `${a.id}: доп к сайту на странице`);
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-g="app" data-k="${a.id}" data-p="${a.price}"`), `${a.id}: доп к приложению на странице`);
+    assert.match(html, /<div class="kit-grp" data-g="app" hidden>/, "допы приложения спрятаны, пока выбран сайт");
     assert.match(html, /id="kit-cash"/, "тумблер «наличными −10%»");
     assert.match(html, /"cash":10,/, "скрипт считает скидку за наличные от тех же 10%");
   }

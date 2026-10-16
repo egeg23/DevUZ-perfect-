@@ -1,7 +1,9 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
 import { UI } from "./ui.mjs";
-import { ADDONS, ALL, CASH_OFF, COSTS, TIERS } from "./plan.mjs";
+import { ADDONS, ALL, CASH_OFF, COSTS, SITE, SITE_ADDONS, SITE_ALL, TIERS } from "./plan.mjs";
+/* Варианты в конструкторе: сайт и два объёма приложения; у сайта и приложения свои допы (g). */
+const OPTS = [SITE, ...TIERS.map((x) => ({ ...x, g: "app" }))];
 
 /*
  * Макет приложения Dilrabo Travel (Фергана, туры по Узбекистану), ru и uz.
@@ -441,15 +443,17 @@ ${head(t("Мы уже делали для турагентств", "Turagentlikl
 /* Предложение DevUz: «Минимум» или «Максимум», допы, срок и итог. */
 function offerBlock(l) {
   const t = T(l);
-  const tier = (x, i) => `<label class="tier${x.star ? " star" : ""}"><input type="radio" name="tier" value="${x.id}" data-p="${x.price}" data-w="${x.weeks.join("-")}"${i === 1 ? " checked" : ""}><div class="tr-h"><span class="rd2" aria-hidden="true"></span><b>${x[l].t}</b>${x.star ? `<em class="star-t">${t("путь без писем", "xatlarsiz yo‘l")}</em>` : ""}</div><p class="tr-d">${x[l].d}</p><p class="tr-p num">${usd(x.price)}</p><p class="tr-w">${x.weeks.join("-")} ${t("недель", "hafta")}</p><ul>${x[l].items.map((it) => `<li>${ic("check")}<span>${it}</span></li>`).join("")}</ul></label>`;
-  const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}" data-w="${a.weeks}"><span class="sw" aria-hidden="true"></span><span class="kit-t"><b>${a[l].t}${a.star ? `<em class="star">${t("часто берут", "ko‘p olishadi")}</em>` : ""}</b><small>${a[l].e}</small></span><span class="kit-p num">+${usd(a.price)}</span></label>`;
+  const tier = (x, i) => `<label class="tier${x.star ? " star" : ""}"><input type="radio" name="tier" value="${x.id}" data-g="${x.g}" data-p="${x.price}" data-w="${x.weeks.join("-")}"${i === 0 ? " checked" : ""}><div class="tr-h"><span class="rd2" aria-hidden="true"></span><b>${x[l].t}</b>${x.star ? `<em class="star-t">${t("путь без писем", "xatlarsiz yo‘l")}</em>` : x.g === "site" ? `<em class="star-t">${t("быстрый старт", "tez boshlash")}</em>` : ""}</div><p class="tr-d">${x[l].d}</p><p class="tr-p num">${usd(x.price)}</p><p class="tr-w">${x.weeks.join("-")} ${t(x.weeks[1] < 5 ? "недели" : "недель", "hafta")}</p><ul>${x[l].items.map((it) => `<li>${ic("check")}<span>${it}</span></li>`).join("")}</ul></label>`;
+  const row = (a, g) => `<label class="kit-row"><input type="checkbox" data-g="${g}" data-k="${a.id}" data-p="${a.price}" data-w="${a.weeks}"><span class="sw" aria-hidden="true"></span><span class="kit-t"><b>${a[l].t}${a.star ? `<em class="star">${t("часто берут", "ko‘p olishadi")}</em>` : ""}</b><small>${a[l].e}</small></span><span class="kit-p num">+${usd(a.price)}</span></label>`;
   return `<section id="predlozhenie" data-tone="paper" class="offer"><div class="wrap">
-${head(ours(l), t("Сколько стоит и за сколько сделаем", "Qancha turadi va qancha vaqtda qilamiz"), t("Выберите объём и включите допы: итог и срок пересчитаются сразу. Цены предварительные, точные после созвона и доступа к Битрикс24.", "Hajmni tanlang va qo‘shimchalarni yoqing: jami va muddat darhol qayta hisoblanadi. Narxlar dastlabki, aniq narx qo‘ng‘iroq va Bitrix24’ga kirishdan keyin."))}
+${head(ours(l), t("Сколько стоит и за сколько сделаем", "Qancha turadi va qancha vaqtda qilamiz"), t("Начать можно с сайта за 1 000 $, приложение добавить потом. Выберите вариант и включите допы: итог и срок пересчитаются сразу. Цены предварительные, точные после созвона и доступа к Битрикс24.", "Saytdan 1 000 $ ga boshlash mumkin, ilovani keyin qo‘shasiz. Variantni tanlang va qo‘shimchalarni yoqing: jami va muddat darhol qayta hisoblanadi. Narxlar dastlabki, aniq narx qo‘ng‘iroq va Bitrix24’ga kirishdan keyin."))}
 <div class="kit" id="konstruktor">
 <div class="kit-list">
-<div class="tiers">${TIERS.map(tier).join("")}</div>
-<h3 class="kit-g">${t("Допы: включайте то, что нужно", "Qo‘shimchalar: keraklisini yoqing")}</h3>
-${ADDONS.map(row).join("")}
+<div class="tiers">${OPTS.map(tier).join("")}</div>
+<div class="kit-grp" data-g="site"><h3 class="kit-g">${t("Допы к сайту: включайте то, что нужно", "Saytga qo‘shimchalar: keraklisini yoqing")}</h3>
+${SITE_ADDONS.map((a) => row(a, "site")).join("")}</div>
+<div class="kit-grp" data-g="app" hidden><h3 class="kit-g">${t("Допы к приложению: включайте то, что нужно", "Ilovaga qo‘shimchalar: keraklisini yoqing")}</h3>
+${ADDONS.map((a) => row(a, "app")).join("")}</div>
 <h3 class="kit-g">${t("Расходы агентства мимо нас", "Bizdan tashqari agentlik xarajatlari")}</h3>
 <div class="costs">${COSTS.map((c) => `<p><span>${c[l][0]}</span><b>${c[l][1]}</b></p>`).join("")}</div>
 </div>
@@ -459,11 +463,11 @@ ${ADDONS.map(row).join("")}
 <div class="kt-line"><span id="kt-tier"></span><span class="num" id="kt-tp"></span></div>
 <div class="kt-line"><span>${t("Допы", "Qo‘shimchalar")} · <span id="kit-n">0</span></span><span class="num" id="kit-add">0 $</span></div>
 <label class="kt-cash"><input type="checkbox" id="kit-cash"><span class="sw" aria-hidden="true"></span><span>${t(`Оплата наличными: минус ${CASH_OFF}%`, `Naqd to‘lov: ${CASH_OFF}% chegirma`)}</span><b class="num" id="kit-cash-v"></b></label>
-<div class="kt-sum"><small>${t("Итого", "Jami")}</small><b class="num" id="kit-sum">${usd(TIERS[1].price)}</b><small class="kt-was">${t("Срок", "Muddat")}: <span class="num" id="kit-weeks"></span> ${t("недель", "hafta")}</small></div>
+<div class="kt-sum"><small>${t("Итого", "Jami")}</small><b class="num" id="kit-sum">${usd(SITE.price)}</b><small class="kt-was">${t("Срок, недель", "Muddat, hafta")}: <span class="num" id="kit-weeks"></span></small></div>
 <a class="btn btn-white" id="kit-go" href="https://t.me/Devuz_studio_bot?start=dilrabo">${ic("tg")}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 <button type="button" class="copy" id="kit-copy">${t("Скопировать состав", "Tarkibni nusxalash")}</button>
 </div>
-<p class="src">${t(`«Минимум» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} недель; «Максимум» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} недель. Допы по рыночным ставкам, со всеми допами ${usd(ALL)}. При оплате наличными минус ${CASH_OFF}% от итога вместе с допами. Расходы на магазины, банк, платёжные системы и SMS агентство платит само, в цену они не входят. Оплата этапами: аванс, макет экранов, публикация.`, `«Minimum» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} hafta; «Maksimum» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} hafta. Qo‘shimchalar bozor narxida, barchasi bilan ${usd(ALL)}. Naqd to‘lovda qo‘shimchalar bilan birga jamidan ${CASH_OFF}% chegirma. Do‘konlar, bank, to‘lov tizimlari va SMS xarajatlarini agentlik o‘zi to‘laydi, ular narxga kirmaydi. To‘lov bosqichma-bosqich: avans, ekranlar maketi, joylash.`)}</p>
+<p class="src">${t(`Сайт ${usd(SITE.price)}, ${SITE.weeks.join("-")} недели, со всеми допами к сайту ${usd(SITE_ALL)}. Приложение: «Минимум» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} недель; «Максимум» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} недель. Допы по рыночным ставкам, со всеми допами ${usd(ALL)}. При оплате наличными минус ${CASH_OFF}% от итога вместе с допами. Расходы на магазины, банк, платёжные системы и SMS агентство платит само, в цену они не входят. Оплата этапами: аванс, макет экранов, публикация.`, `Sayt ${usd(SITE.price)}, ${SITE.weeks.join("-")} hafta, saytga barcha qo‘shimchalar bilan ${usd(SITE_ALL)}. Ilova: «Minimum» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} hafta; «Maksimum» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} hafta. Qo‘shimchalar bozor narxida, barchasi bilan ${usd(ALL)}. Naqd to‘lovda qo‘shimchalar bilan birga jamidan ${CASH_OFF}% chegirma. Do‘konlar, bank, to‘lov tizimlari va SMS xarajatlarini agentlik o‘zi to‘laydi, ular narxga kirmaydi. To‘lov bosqichma-bosqich: avans, ekranlar maketi, joylash.`)}</p>
 </div>
 </div>
 </div></section>`;
@@ -474,8 +478,8 @@ function shell(l, body) {
   const other = l === "ru" ? "uz" : "ru";
   const nav = [["#put", t("Путь гостя", "Mehmon yo‘li")], ["#prilozhenie", t("Приложение", "Ilova")], ["#menedzher", t("Менеджер", "Menejer")], ["#otvet", t("Ваша бронь", "Broningiz")], ["#predlozhenie", t("Цена", "Narx")]];
   const kit = {
-    tiers: TIERS.map((x) => ({ id: x.id, t: x[l].t, p: x.price, w: x.weeks })), items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, w: a.weeks })),
-    cash: CASH_OFF, cashName: t("Оплата наличными", "Naqd to‘lov"), copied: t("Скопировано", "Nusxalandi"), head: t(`Приложение турагентства (${B}), состав из конструктора:`, `Turagentlik ilovasi (${B}), konstruktordan tarkib:`), total: t("Итого", "Jami"), weeks: t("недель", "hafta"),
+    tiers: OPTS.map((x) => ({ id: x.id, g: x.g, t: x[l].t, p: x.price, w: x.weeks })), items: [...SITE_ADDONS.map((a) => ({ id: a.id, g: "site", t: a[l].t, p: a.price, w: a.weeks })), ...ADDONS.map((a) => ({ id: a.id, g: "app", t: a[l].t, p: a.price, w: a.weeks }))],
+    cash: CASH_OFF, cashName: t("Оплата наличными", "Naqd to‘lov"), copied: t("Скопировано", "Nusxalandi"), head: t(`${B}: сайт и приложение, состав из конструктора:`, `${B}: sayt va ilova, konstruktordan tarkib:`), total: t("Итого", "Jami"), weeks: t("недель", "hafta"),
   };
   return `<!doctype html>
 <html lang="${l}">
@@ -518,7 +522,7 @@ ${body}
 </div>
 <div class="rights"><span>${t("Это макет: так может выглядеть приложение вашего агентства. Туры, программы, машины и фото взяты с вашего сайта, цены туров и даты выездов придуманы для показа: в работе их отдаёт ваш каталог в Битрикс24. Канбан нарисован по устройству Битрикс24.", "Bu maket: agentligingiz ilovasi shunday ko‘rinishi mumkin. Turlar, dasturlar, mashinalar va suratlar saytingizdan olindi, tur narxlari va jo‘nash sanalari ko‘rsatish uchun o‘ylab topilgan: ishda ularni Bitrix24’dagi katalogingiz beradi. Kanban Bitrix24 tuzilishi bo‘yicha chizilgan.")}</span><span>${t("Макет принадлежит DevUz Studio. Использовать его можно только по договору:", "Maket DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin:")} <a href="${TERMS(l)}">${t("условия использования", "foydalanish shartlari")}</a></span></div>
 </div></footer>
-<div class="dock glass" id="dock"><a class="btn btn-pri" href="#prilozhenie" data-jump="home">${ic("app")}<span>${t("Открыть приложение", "Ilovani ochish")}</span></a><a class="btn btn-ghost dock-k" href="#konstruktor" aria-label="${t("Цена", "Narx")}"><b class="num" id="dock-sum">${usd(TIERS[1].price)}</b></a></div>
+<div class="dock glass" id="dock"><a class="btn btn-pri" href="#prilozhenie" data-jump="home">${ic("app")}<span>${t("Открыть приложение", "Ilovani ochish")}</span></a><a class="btn btn-ghost dock-k" href="#konstruktor" aria-label="${t("Цена", "Narx")}"><b class="num" id="dock-sum">${usd(SITE.price)}</b></a></div>
 <script type="application/json" id="kit-data">${json(kit)}</script>
 <script>
 ${INTRO}</script>
