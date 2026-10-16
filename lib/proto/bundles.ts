@@ -35,6 +35,7 @@ import greenwell from "@/content/proto-bundles/greenwell.json" with { type: "jso
 import medikor from "@/content/proto-bundles/medikor.json" with { type: "json" };
 import sia from "@/content/proto-bundles/sia.json" with { type: "json" };
 import dilrabo from "@/content/proto-bundles/dilrabo.json" with { type: "json" };
+import vtashkente from "@/content/proto-bundles/vtashkente.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -61,6 +62,7 @@ const BUNDLES: Record<string, Bundle> = {
   medikor: medikor as Bundle,
   sia: sia as Bundle,
   dilrabo: dilrabo as Bundle,
+  vtashkente: vtashkente as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */
