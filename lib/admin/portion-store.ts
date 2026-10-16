@@ -1,3 +1,4 @@
+import { EDIT_BUTTON, editCallback } from "@/lib/admin/bot-text-edit";
 import { wants } from "@/lib/admin/notify-prefs";
 import { QUEUE_ROLES } from "@/lib/admin/lead-queue";
 import { canContact, routeFor, whatsappLink } from "@/lib/admin/outreach";
@@ -356,6 +357,8 @@ export function itemButtons(p: Prospect): Button[][] {
       { text: `✋ ${BOT_BUTTON.self}`, callback_data: `tp:self:${p.id}` },
       { text: `✖ ${BOT_BUTTON.skip}`, callback_data: `tp:skip:${p.id}` },
     ],
+    // Поправить текст, не открывая панель (lib/admin/bot-text-edit.ts).
+    ...(p.message ? [[{ text: EDIT_BUTTON, callback_data: editCallback(p.id) }]] : []),
     [{ text: "Открыть в панели", panel: `/admin/prospect?open=${p.id}#p-${p.id}` }],
   ];
 }
@@ -367,12 +370,19 @@ export function itemButtons(p: Prospect): Button[][] {
  *
  * Письмо ушло в очередь (`queued`) — между ними ещё «✋ Напишу сам — не
  * отправлять»: снять его с очереди и написать клиенту самому
- * (lib/admin/write-myself.ts).
+ * (lib/admin/write-myself.ts), — и «✏️ Изменить текст»: письмо ещё у бота,
+ * его можно поправить (lib/admin/bot-text-edit.ts).
  */
 export function closeRows(prospectId: string, label: string, queued = false): Button[][] {
   return [
     [{ text: label, callback_data: "noop" }],
-    ...(queued ? [[{ text: WRITE_MYSELF_BUTTON, callback_data: writeMyselfCallback(prospectId) }]] : []),
+    ...(queued
+      ? [
+          [{ text: WRITE_MYSELF_BUTTON, callback_data: writeMyselfCallback(prospectId) }],
+          // Письмо ещё у бота — поправить его можно тем же путём, что «Исправить» в панели.
+          [{ text: EDIT_BUTTON, callback_data: editCallback(prospectId) }],
+        ]
+      : []),
     CLOSE_REASONS.map((reason) => ({ text: CLOSE_TEXT[reason].button, callback_data: closeCallback(reason, prospectId) })),
   ];
 }

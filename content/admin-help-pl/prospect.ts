@@ -372,6 +372,30 @@ export const prospectSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "bot-edit",
+        title: "«✏️ Изменить текст»: poprawić wiadomość prosto w bocie",
+        body: {
+          manager: [
+            "Pod kartą firmy w Telegramie — w [porcji dnia](#prospect-portion) i w [strumieniu](#prospect-stream) — jest przycisk **«✏️ Изменить текст»**, gdy karta ma już tekst wiadomości. Kliknij — bot przyśle obecny tekst (kliknij go — skopiuje się) i otworzy odpowiedź na tę wiadomość. Popraw kopię i wyślij ją **jako odpowiedź na wiadomość bota** — nie osobną wiadomością: po odpowiedzi bot wie, do której karty jest tekst. Prośba działa dobę, potem kliknij przycisk jeszcze raz.",
+            "Bot sprawdza tekst tak samo jak panel przed wysłaniem: wiadomość o stronie — według zasad [pierwszej wiadomości](#prospect-send) (od 12 do 100 słów, alfabetem łacińskim — do 130, bez powitania, bez słów technicznych i liczb spoza sprawdzenia strony), wiadomość do firmy bez strony — według jej zasad. Przeszło — tekst zapisuje się w karcie, a bot przysyła ją ponownie z tymi samymi przyciskami: «📤 Отправить через бота» wyśle już nowy tekst. Nie przeszło — bot wymieni, co poprawić, a karta zostanie bez zmian.",
+            "Przycisk jest też po «📤 Отправить через бота», dopóki wiadomość czeka na odpowiedź klienta na «Здравствуйте»: poprawiona wyjdzie już nowa. Jeśli wiadomość jest już u klienta — bot poprawi ją z tego samego konta roboczego, jak [«Popraw» w panelu](#prospect-edit-sent). Samego «Здравствуйте» się nie poprawia.",
+            "Poprawiać można swoją kartę — z dzisiejszej porcji albo strumienia — i swoją wiadomość w kolejce. Odpowiedzi na cudzą prośbę albo do karty, której wiadomość już wyszła lub jest zamknięta, bot uprzejmie nie przyjmie. Kto i co poprawił — w dzienniku.",
+          ],
+          head: [
+            "Pod kartą firmy w Telegramie — w [porcji dnia](#prospect-portion) i w [strumieniu](#prospect-stream) — jest przycisk **«✏️ Изменить текст»**, gdy karta ma już tekst wiadomości. Kliknij — bot przyśle obecny tekst (kliknij go — skopiuje się) i otworzy odpowiedź na tę wiadomość. Popraw kopię i wyślij ją **jako odpowiedź na wiadomość bota** — nie osobną wiadomością: po odpowiedzi bot wie, do której karty jest tekst. Prośba działa dobę, potem kliknij przycisk jeszcze raz.",
+            "Bot sprawdza tekst tak samo jak panel przed wysłaniem: wiadomość o stronie — według zasad [pierwszej wiadomości](#prospect-send) (od 12 do 100 słów, alfabetem łacińskim — do 130, bez powitania, bez słów technicznych i liczb spoza sprawdzenia strony), wiadomość do firmy bez strony — według jej zasad. Przeszło — tekst zapisuje się w karcie, a bot przysyła ją ponownie z tymi samymi przyciskami: «📤 Отправить через бота» wyśle już nowy tekst. Nie przeszło — bot wymieni, co poprawić, a karta zostanie bez zmian.",
+            "Przycisk jest też po «📤 Отправить через бота», dopóki wiadomość czeka na odpowiedź klienta na «Здравствуйте»: poprawiona wyjdzie już nowa. Jeśli wiadomość jest już u klienta — bot poprawi ją z tego samego konta roboczego, jak [«Popraw» w panelu](#prospect-edit-sent). Samego «Здравствуйте» się nie poprawia.",
+            "Poprawiać można każdą kartę i każdą wiadomość w kolejce — swoją, menedżerów i automatycznych kontaktów, tak jak zdjąć ją z kolejki. Odpowiedzi na cudzą prośbę albo do karty, której wiadomość już wyszła lub jest zamknięta, bot uprzejmie nie przyjmie. Kto i co poprawił — w dzienniku: poprzedni i nowy tekst są zapisane przy karcie.",
+          ],
+          admin: [
+            "Pod kartą firmy w Telegramie — w [porcji dnia](#prospect-portion) i w strumieniu — jest przycisk **«✏️ Изменить текст»**, gdy karta ma już tekst wiadomości. Kliknij — bot przyśle obecny tekst (kliknij go — skopiuje się) i otworzy odpowiedź na tę wiadomość. Popraw kopię i wyślij ją **jako odpowiedź na wiadomość bota** — nie osobną wiadomością: po odpowiedzi bot wie, do której karty jest tekst. Prośba działa dobę, potem kliknij przycisk jeszcze raz.",
+            "Bot sprawdza tekst tak samo jak panel przed wysłaniem: wiadomość o stronie — według zasad [pierwszej wiadomości](#prospect-send) (od 12 do 100 słów, alfabetem łacińskim — do 130, bez powitania, bez słów technicznych i liczb spoza sprawdzenia strony), wiadomość do firmy bez strony — według jej zasad. Przeszło — tekst zapisuje się w karcie, a bot przysyła ją ponownie z tymi samymi przyciskami: «📤 Отправить через бота» wyśle już nowy tekst. Nie przeszło — bot wymieni, co poprawić, a karta zostanie bez zmian.",
+            "Przycisk jest też po «📤 Отправить через бота», dopóki wiadomość czeka na odpowiedź klienta na «Здравствуйте»: poprawiona wyjdzie już nowa. Jeśli wiadomość jest już u klienta — bot poprawi ją z tego samego konta roboczego, jak [«Popraw» w panelu](#prospect-edit-sent). Samego «Здравствуйте» się nie poprawia.",
+            "Poprawiać można każdą kartę i każdą wiadomość w kolejce — swoją, menedżerów i automatycznych kontaktów, tak jak zdjąć ją z kolejki. Odpowiedzi na cudzą prośbę albo do karty, której wiadomość już wyszła lub jest zamknięta, bot uprzejmie nie przyjmie. Kto i co poprawił — w dzienniku: poprzedni i nowy tekst są zapisane przy karcie.",
+          ],
+        },
+      },
+      {
         id: "manual",
         title: "«Napisz ręcznie»: telefon bez Telegrama",
         body: [

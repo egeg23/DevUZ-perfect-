@@ -858,6 +858,30 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "bot-edit",
+          title: "«✏️ Изменить текст»: xatni to‘g‘ridan-to‘g‘ri botda tuzatish",
+          body: {
+            manager: [
+              "Telegramdagi kompaniya kartochkasi ostida — [kunlik ulush](#prospect-portion)da ham, [oqim](#prospect-stream)da ham — kartochkada xat matni bo‘lsa, **«✏️ Изменить текст»** tugmasi bor. Bosing — bot hozirgi matnni yuboradi (ustiga bosing — nusxalanadi) va shu xabarga javob oynasini ochadi. Nusxani tuzating va uni **bot xabariga javob qilib** yuboring — alohida xabar emas: bot matn qaysi kartochkaga tegishli ekanini javobdan biladi. So‘rov bir sutka amal qiladi, keyin tugmani yana bosing.",
+              "Bot matnni panel yuborishdan oldin tekshirgandek tekshiradi: sayt haqidagi xat — [birinchi xat](#prospect-send) qoidalari bo‘yicha (12 dan 100 tagacha so‘z, lotin yozuvida — 130 gacha, salomlashuvsiz, texnik so‘zlarsiz va sayt tekshiruvida bo‘lmagan raqamlarsiz), sayti yo‘q kompaniya xati — o‘z qoidalari bo‘yicha. O‘tdi — matn kartochkada saqlanadi va bot uni o‘sha tugmalar bilan qaytadan yuboradi: «📤 Отправить через бота» endi yangi matnni yuboradi. O‘tmadi — bot nimani tuzatish kerakligini sanab beradi, kartochka esa avvalgidek qoladi.",
+              "Tugma «📤 Отправить через бота»dan keyin ham bor, xat mijozning «Здравствуйте»ga javobini kutib turganda: tuzatilgani endi yangi holda ketadi. Xat allaqachon mijozda bo‘lsa — bot uni o‘sha ishchi akkauntdan tuzatadi, [paneldagi «Tuzatish»](#prospect-edit-sent) kabi. «Здравствуйте»ning o‘zi tuzatilmaydi.",
+              "O‘z kartochkangizni — bugungi ulush yoki oqimingizdagisini — va navbatdagi o‘z xatingizni tuzatish mumkin. Boshqa odamning so‘roviga yoki xati allaqachon ketgan yoki yopilgan kartochkaga javobni bot xushmuomalalik bilan qabul qilmaydi. Kim nimani tuzatgani — jurnalda.",
+            ],
+            head: [
+              "Telegramdagi kompaniya kartochkasi ostida — [kunlik ulush](#prospect-portion)da ham, [oqim](#prospect-stream)da ham — kartochkada xat matni bo‘lsa, **«✏️ Изменить текст»** tugmasi bor. Bosing — bot hozirgi matnni yuboradi (ustiga bosing — nusxalanadi) va shu xabarga javob oynasini ochadi. Nusxani tuzating va uni **bot xabariga javob qilib** yuboring — alohida xabar emas: bot matn qaysi kartochkaga tegishli ekanini javobdan biladi. So‘rov bir sutka amal qiladi, keyin tugmani yana bosing.",
+              "Bot matnni panel yuborishdan oldin tekshirgandek tekshiradi: sayt haqidagi xat — [birinchi xat](#prospect-send) qoidalari bo‘yicha (12 dan 100 tagacha so‘z, lotin yozuvida — 130 gacha, salomlashuvsiz, texnik so‘zlarsiz va sayt tekshiruvida bo‘lmagan raqamlarsiz), sayti yo‘q kompaniya xati — o‘z qoidalari bo‘yicha. O‘tdi — matn kartochkada saqlanadi va bot uni o‘sha tugmalar bilan qaytadan yuboradi: «📤 Отправить через бота» endi yangi matnni yuboradi. O‘tmadi — bot nimani tuzatish kerakligini sanab beradi, kartochka esa avvalgidek qoladi.",
+              "Tugma «📤 Отправить через бота»dan keyin ham bor, xat mijozning «Здравствуйте»ga javobini kutib turganda: tuzatilgani endi yangi holda ketadi. Xat allaqachon mijozda bo‘lsa — bot uni o‘sha ishchi akkauntdan tuzatadi, [paneldagi «Tuzatish»](#prospect-edit-sent) kabi. «Здравствуйте»ning o‘zi tuzatilmaydi.",
+              "Istalgan kartochkani va navbatdagi istalgan xatni — o‘zingiznikini, menejerlarnikini va avtomatik aloqalarnikini — tuzatish mumkin, xuddi uni navbatdan olish kabi. Boshqa odamning so‘roviga yoki xati allaqachon ketgan yoki yopilgan kartochkaga javobni bot xushmuomalalik bilan qabul qilmaydi. Kim nimani tuzatgani — jurnalda: avvalgi va yangi matn kartochkada saqlanadi.",
+            ],
+            admin: [
+              "Telegramdagi kompaniya kartochkasi ostida — [kunlik ulush](#prospect-portion)da ham, oqimda ham — kartochkada xat matni bo‘lsa, **«✏️ Изменить текст»** tugmasi bor. Bosing — bot hozirgi matnni yuboradi (ustiga bosing — nusxalanadi) va shu xabarga javob oynasini ochadi. Nusxani tuzating va uni **bot xabariga javob qilib** yuboring — alohida xabar emas: bot matn qaysi kartochkaga tegishli ekanini javobdan biladi. So‘rov bir sutka amal qiladi, keyin tugmani yana bosing.",
+              "Bot matnni panel yuborishdan oldin tekshirgandek tekshiradi: sayt haqidagi xat — [birinchi xat](#prospect-send) qoidalari bo‘yicha (12 dan 100 tagacha so‘z, lotin yozuvida — 130 gacha, salomlashuvsiz, texnik so‘zlarsiz va sayt tekshiruvida bo‘lmagan raqamlarsiz), sayti yo‘q kompaniya xati — o‘z qoidalari bo‘yicha. O‘tdi — matn kartochkada saqlanadi va bot uni o‘sha tugmalar bilan qaytadan yuboradi: «📤 Отправить через бота» endi yangi matnni yuboradi. O‘tmadi — bot nimani tuzatish kerakligini sanab beradi, kartochka esa avvalgidek qoladi.",
+              "Tugma «📤 Отправить через бота»dan keyin ham bor, xat mijozning «Здравствуйте»ga javobini kutib turganda: tuzatilgani endi yangi holda ketadi. Xat allaqachon mijozda bo‘lsa — bot uni o‘sha ishchi akkauntdan tuzatadi, [paneldagi «Tuzatish»](#prospect-edit-sent) kabi. «Здравствуйте»ning o‘zi tuzatilmaydi.",
+              "Istalgan kartochkani va navbatdagi istalgan xatni — o‘zingiznikini, menejerlarnikini va avtomatik aloqalarnikini — tuzatish mumkin, xuddi uni navbatdan olish kabi. Boshqa odamning so‘roviga yoki xati allaqachon ketgan yoki yopilgan kartochkaga javobni bot xushmuomalalik bilan qabul qilmaydi. Kim nimani tuzatgani — jurnalda: avvalgi va yangi matn kartochkada saqlanadi.",
+            ],
+          },
+        },
+        {
           id: "manual",
           title: "«Qo‘lda yozish»: Telegramsiz telefon",
           body: [
