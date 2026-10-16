@@ -222,6 +222,7 @@ V.log=function(){var list=PS.log.concat(LOG0).sort(function(a,b){return b.ts-a.t
   return '<div class="ph"><div><h1>'+t('logH2')+'</h1><p class="muted">'+t('logS2')+'</p></div></div>'+
   '<div class="cols">'+card(t('journal'),'<ul class="lg2">'+list.slice(0,40).map(logRow).join('')+'</ul>','w2')+card(t('team'),'<ul class="team">'+Object.keys(who).sort(function(a,b){return who[b]-who[a]}).map(function(n){var r=G.roles[n]||'';return '<li><span class="av">'+h(n.charAt(0))+'</span><span><b>'+h(n)+'</b><small>'+h(r)+'</small></span><em>'+who[n]+'</em></li>'}).join('')+'</ul>')+'</div><p class="demo">'+t('demoNote')+'</p>'};
 
+/*SELLER*/
 /* ── Навигация ────────────────────────────────────────────────────────── */
 function draw(){var hs=location.hash.replace(/^#/,''),q={},i=hs.indexOf('?');if(i>=0){hs.slice(i+1).split('&').forEach(function(kv){var p=kv.split('=');q[p[0]]=p[1]});hs=hs.slice(0,i)}
   R.tab=V[hs]?hs:'dash';main.innerHTML=V[R.tab](q);main.classList.remove('in');requestAnimationFrame(function(){main.classList.add('in')});
