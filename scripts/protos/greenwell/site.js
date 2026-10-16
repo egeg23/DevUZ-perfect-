@@ -63,8 +63,10 @@ var all=$('#kit-all');if(all)all.onclick=function(){var on=rows.some(function(r)
 var cp2=$('#kit-copy');if(cp2)cp2.onclick=function(){var lines=[K.head,'• '+K.baseName+': '+fmt(K.base)+' $'];rows.forEach(function(r){if(r.checked){var it=K.items.filter(function(x){return x.id===r.getAttribute('data-k')})[0];lines.push('• '+it.t+': '+fmt(it.p)+' $')}});lines.push(K.total+': '+sumEl.textContent);
   var txt=lines.join('\n');try{navigator.clipboard.writeText(txt).then(function(){cp2.textContent=K.copied})}catch(e){cp2.textContent=K.copied}};
 
-/* Отсчёт 48 часов: с первого открытия макета на этом устройстве. */
-var tm=$('#tm'),start=Date.now();try{var s=+localStorage.getItem('gw-offer');if(s&&s<=Date.now())start=s;else localStorage.setItem('gw-offer',String(start))}catch(e){}
+/* Отсчёт 48 часов: с первого открытия макета на этом устройстве. Ключ
+   gw-offer-2: 16.10.2026 владелец сбросил таймер, на всех устройствах
+   отсчёт пошёл заново с первого открытия. */
+var tm=$('#tm'),start=Date.now();try{var s=+localStorage.getItem('gw-offer-2');if(s&&s<=Date.now())start=s;else localStorage.setItem('gw-offer-2',String(start))}catch(e){}
 var end=start+K.hours*36e5;
 function pad(n){return (n<10?'0':'')+n}
 function tickT(){var left=Math.max(0,end-Date.now());if(!left){$('#timer').classList.add('over');tm.textContent='00:00:00';$('#timer span').firstChild.textContent=K.ended;return}var hh=Math.floor(left/36e5),mm=Math.floor(left%36e5/6e4),ss=Math.floor(left%6e4/1e3);tm.textContent=pad(hh)+':'+pad(mm)+':'+pad(ss);setTimeout(tickT,1000)}
