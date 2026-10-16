@@ -1052,3 +1052,70 @@ test("Medikor: цены в рублях, скидка 30% на магазин и
   assert.match(html, /mk-offer-2/, "отсчёт заново с первого открытия после смены цен");
   for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${plan.sale(a.price)}"`), `${a.id}: цена со скидкой на странице`);
 });
+
+test("Dilrabo Travel: переодетый inapp — их знак, туры и машины, страница и приложение на ru и uz, условия, noindex, шапка", () => {
+  const site = bundlePages("dilrabo");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "app", "uz", "uz/app"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.ok(page.includes("Dilrabo Travel"), `${path}: нет названия агентства`);
+    assert.ok(page.includes("/protos/dilrabo/tilda-700.woff2"), `${path}: не их шрифт Tilda Sans`);
+    assert.match(page, /<symbol id="tb-mark" viewBox="0 0 90\.99 90\.9">/, `${path}: не их знак`);
+    assert.doesNotMatch(page, /inapp|Lara Sun|Turvizordan barcha|Туры всех туроператоров/, `${path}: остаток inapp`);
+    assert.match(page, lang === "ru" ? /демо/ : /demo/, `${path}: не сказано, что цены демо`);
+  }
+  for (const path of ["", "uz"]) {
+    assert.match(all[path], /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(all[path], new RegExp(`<iframe id="app-frame"[^>]*data-src="__PROTO_BASE__${path ? "/uz" : ""}/app\\?embed=1"`), `${path}: приложение не в айфоне`);
+    for (const id of ["put", "sayt", "prilozhenie", "menedzher", "shema", "otvet", "nuzhno", "keys", "predlozhenie", "konstruktor"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
+    assert.match(all[path], /id="bx-board"/, `${path}: нет канбана менеджера`);
+    assert.ok(all[path].includes(`https://devuz.studio/${path || "ru"}/cases/apollo-travel`), `${path}: нет ссылки на кейс Apollo Travel`);
+    // Как у inapp: акции 48 часов нет, её цену решает владелец.
+    assert.doesNotMatch(all[path], /id="timer"|48 (часов|soat)/, `${path}: таймер акции, которой нет`);
+    // Правило владельца, 15.10.2026: шапка прячется при прокрутке и возвращается через 3 секунды.
+    assert.match(all[path], /var IDLE=3000,idleT=0;/, `${path}: нет правила шапки`);
+    assert.match(all[path], /function onScroll\(\)\{headIdle\(\);/, `${path}: шапка не прячется при прокрутке`);
+    assert.match(all[path], /\.top\.hide\{/, `${path}: нет стиля спрятанной шапки`);
+  }
+  for (const path of ["app", "uz/app"]) {
+    assert.match(all[path], /<meta name="viewport" content="[^"]*maximum-scale=1,user-scalable=no,viewport-fit=cover"/, `${path}: viewport приближается`);
+    assert.match(all[path], /safe-area-inset-bottom/, `${path}: не учтены безопасные зоны iOS`);
+    for (const v of ["home", "results", "hotel", "tour", "check", "book", "booked", "pay", "paid", "trips", "trip", "doc", "chat", "hot", "fav", "more", "tourists", "alerts"]) {
+      assert.match(all[path], new RegExp(`V\\.${v} = function`), `${path}: нет экрана ${v}`);
+    }
+    for (const pay of ["Visa / Mastercard", "Click", "Payme", "Uzum Bank", "Uzcard / Humo"]) assert.ok(all[path].includes(pay), `${path}: нет оплаты ${pay}`);
+    // Их машины и цена за день из «Нашего автопарка».
+    for (const car of ['"add":50', '"add":100', '"add":120', "Chevrolet Gentra", "Hyundai H1", "Hyundai Staria"]) assert.ok(all[path].includes(car), `${path}: нет машины ${car}`);
+  }
+  assert.ok(all.uz.includes("o‘") || all.uz.includes("O‘"), "узбекский — латиница с o‘");
+  assert.doesNotMatch(all.uz.replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, "кириллица в узбекской странице");
+  assert.doesNotMatch(all["uz/app"].split("window.TB=")[1].split("</script>")[0], /[А-Яа-яЁё]{3,}/, "в узбекском приложении русские подписи");
+  const stamped = stampedBundle("dilrabo", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Dilrabo Travel: цены и допы как у inapp — 5 900 $ / 7 900 $, те же допы, наличными −10%", async () => {
+  const plan = await import("../scripts/protos/dilrabo/plan.mjs");
+  const base = await import("../scripts/protos/inapp/plan.mjs");
+  assert.deepEqual(plan.TIERS.map((x: { id: string; price: number; weeks: number[] }) => [x.id, x.price, x.weeks]), base.TIERS.map((x: { id: string; price: number; weeks: number[] }) => [x.id, x.price, x.weeks]));
+  assert.deepEqual(plan.ADDONS.map((a: { id: string; price: number; weeks: number }) => [a.id, a.price, a.weeks]), base.ADDONS.map((a: { id: string; price: number; weeks: number }) => [a.id, a.price, a.weeks]));
+  assert.equal(plan.CASH_OFF, base.CASH_OFF);
+  assert.equal(plan.ALL, base.ALL);
+  const site = bundlePages("dilrabo")!;
+  for (const html of [site.html, site.pages.uz]) {
+    assert.match(html, /data-p="5900" data-w="8-10"/, "«Минимум» на странице");
+    assert.match(html, /data-p="7900" data-w="11-13" checked/, "«Максимум» выбран по умолчанию");
+    assert.match(html, /id="kit-cash"/, "тумблер «наличными −10%»");
+    assert.match(html, /"cash":10,/, "скрипт считает скидку за наличные от тех же 10%");
+  }
+});
