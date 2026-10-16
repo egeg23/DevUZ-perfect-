@@ -262,9 +262,86 @@ export type TidyResult = "ok" | "forbidden" | "gone" | "failed" | "nowait";
 
 type Keyboard = readonly (readonly { text: string; callback_data?: string }[])[];
 
+/** Чем кончилось решение по лиду — для бота и для «Главной» менеджера. */
+export type TidyDecision =
+  | { result: Exclude<TidyResult, "ok"> }
+  | { result: "ok"; answer: "won" | "lost"; label: string }
+  | { result: "ok"; answer: "wait"; label: string }
+  | { result: "ok"; answer: "term"; label: string; due: Date };
+
+/**
+ * Решение по лиду «в работе» — одно на бота и панель: «🏆», «❌» — смена
+ * статуса тем же setStatus, что в карточке (журнал, сброс счётчиков бота);
+ * «⏳» — только проверка, что откладывать ещё можно; срок — задача
+ * «Связаться» через createTasks и тишина про лид до неё. Решает только
+ * тот, за кем лид: менеджер — свои, как и в боте. Telegram здесь не
+ * трогается — им занимается answerTidy.
+ */
+export async function decideTidy(
+  staff: Staff,
+  answer: TidyAnswer,
+  leadId: string,
+  via: "telegram" | "panel",
+  now: Date = new Date(),
+  ip = "",
+): Promise<TidyDecision> {
+  const db = serviceClient();
+  if (!db) return { result: "failed" };
+  const { data: lead } = await db
+    .from("leads")
+    .select("id, status, assigned_staff_id, company, contact_name, request_no, tidy_wait_streak")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (!lead) return { result: "gone" };
+  if (lead.assigned_staff_id !== staff.id) return { result: "forbidden" };
+  if (lead.status !== "taken") return { result: "gone" };
+  const label = String(lead.company || lead.contact_name || (lead.request_no ? `заявка ${lead.request_no}` : "лид без имени"));
+  const streak = Number(lead.tidy_wait_streak ?? 0);
+
+  // «⏳» — сначала спросить, когда следующий шаг.
+  if (answer === "wait") {
+    if (!canWait({ waitStreak: streak })) return { result: "nowait" };
+    return { result: "ok", answer: "wait", label };
+  }
+
+  // Срок выбран — задача «Связаться» и тишина про лид до неё.
+  if (isTerm(answer)) {
+    if (!canWait({ waitStreak: streak })) return { result: "nowait" };
+    const due = dueFor(answer, now);
+    const made = await createTasks(
+      { title: taskTitle(String(lead.company || lead.contact_name || "клиент")), body: taskBody(`${siteUrl}/admin/leads/${leadId}`), assigneeIds: [staff.id], due, projectId: null },
+      staff,
+      ip,
+      now,
+    );
+    const next = streak + 1;
+    const { error } = await db
+      .from("leads")
+      .update({ tidy_snoozed_until: due.toISOString(), tidy_wait_streak: next, tidy_first_asked_at: null })
+      .eq("id", leadId);
+    if (error) return { result: "failed" };
+    await record("lead.idle_snoozed", {
+      actorStaffId: staff.id,
+      targetType: "lead",
+      targetId: leadId,
+      meta: { until: due.toISOString(), streak: next, task: made.ok ? made.tasks[0]?.id ?? null : null, via },
+    });
+    if (next === WAIT_LIMIT) {
+      const { data: team } = await db.from("staff").select("id, role, display_name, telegram_user_id, notify_off").eq("is_active", true);
+      await tellReaders((team ?? []) as Row[], staff.id, `lead-wait3:${leadId}:${next}`, thirdWaitNotice(esc(staff.display_name ?? "—"), esc(label)));
+    }
+    return { result: "ok", answer: "term", label, due };
+  }
+
+  const done = await setStatus(leadId, answer, staff, ip, via);
+  if (!done.ok) return { result: done.reason === "forbidden" ? "forbidden" : done.reason === "gone" ? "gone" : "failed" };
+  return { result: "ok", answer, label };
+}
+
 /**
  * Нажатие под вопросом бота: «🏆», «❌», «⏳» у лида в порции или срок
- * следующего шага под вопросом «когда?».
+ * следующего шага под вопросом «когда?». Решает decideTidy; здесь —
+ * только Telegram: кнопки и ответы в чат.
  */
 export async function answerTidy(
   staff: Staff,
@@ -275,66 +352,25 @@ export async function answerTidy(
   keyboard: Keyboard | null = null,
   now: Date = new Date(),
 ): Promise<TidyResult> {
-  const db = serviceClient();
-  if (!db) return "failed";
-  const { data: lead } = await db
-    .from("leads")
-    .select("id, status, assigned_staff_id, company, contact_name, request_no, tidy_wait_streak")
-    .eq("id", leadId)
-    .maybeSingle();
-  if (!lead) return "gone";
-  if (lead.assigned_staff_id !== staff.id) return "forbidden";
-  if (lead.status !== "taken") return "gone";
-  const label = esc(String(lead.company || lead.contact_name || (lead.request_no ? `заявка ${lead.request_no}` : "лид без имени")));
-  const streak = Number(lead.tidy_wait_streak ?? 0);
+  const decision = await decideTidy(staff, answer, leadId, "telegram", now);
+  if (decision.result !== "ok") return decision.result;
+  const label = esc(decision.label);
   const edit = async (a: "won" | "lost" | "wait") => {
     if (messageId && keyboard) await setButtons(chatId, messageId, afterPress(keyboard, leadId, a));
   };
-
-  // «⏳» в порции — сначала спросить, когда следующий шаг.
-  if (answer === "wait") {
-    if (!canWait({ waitStreak: streak })) return "nowait";
+  if (decision.answer === "wait") {
     await edit("wait");
     await sendWithRows(chatId, whenText(label), [
       (Object.keys(TERMS) as (keyof typeof TERMS)[]).map((t) => ({ text: TERM_BUTTONS[t], callback_data: tidyCallback(t, leadId) })),
     ]);
     return "ok";
   }
-
-  // Срок выбран — задача «Связаться» и тишина про лид до неё.
-  if (isTerm(answer)) {
-    if (!canWait({ waitStreak: streak })) return "nowait";
-    const due = dueFor(answer, now);
-    const made = await createTasks(
-      { title: taskTitle(String(lead.company || lead.contact_name || "клиент")), body: taskBody(`${siteUrl}/admin/leads/${leadId}`), assigneeIds: [staff.id], due, projectId: null },
-      staff,
-      "",
-      now,
-    );
-    const next = streak + 1;
-    const { error } = await db
-      .from("leads")
-      .update({ tidy_snoozed_until: due.toISOString(), tidy_wait_streak: next, tidy_first_asked_at: null })
-      .eq("id", leadId);
-    if (error) return "failed";
-    await record("lead.idle_snoozed", {
-      actorStaffId: staff.id,
-      targetType: "lead",
-      targetId: leadId,
-      meta: { until: due.toISOString(), streak: next, task: made.ok ? made.tasks[0]?.id ?? null : null },
-    });
-    if (messageId) await setButtons(chatId, messageId, [[{ text: taskSetText(label, due), callback_data: "noop" }]]);
-    if (next === WAIT_LIMIT) {
-      const { data: team } = await db.from("staff").select("id, role, display_name, telegram_user_id, notify_off").eq("is_active", true);
-      await tellReaders((team ?? []) as Row[], staff.id, `lead-wait3:${leadId}:${next}`, thirdWaitNotice(esc(staff.display_name ?? "—"), label));
-    }
+  if (decision.answer === "term") {
+    if (messageId) await setButtons(chatId, messageId, [[{ text: taskSetText(label, decision.due), callback_data: "noop" }]]);
     return "ok";
   }
-
-  const done = await setStatus(leadId, answer, staff, "", "telegram");
-  if (!done.ok) return done.reason === "forbidden" ? "forbidden" : done.reason === "gone" ? "gone" : "failed";
-  await edit(answer);
-  if (answer === "won") {
+  await edit(decision.answer);
+  if (decision.answer === "won") {
     await sendWithButtons(chatId, WON_HINT, [{ text: "Завести проект", panel: `/admin/projects?lead=${leadId}` }]);
   }
   return "ok";

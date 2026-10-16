@@ -203,7 +203,7 @@ function promoOf(raw: unknown): MockupRow["promo"] {
   return own ? { price: own.price, regular: own.regular } : null;
 }
 
-function openState(
+export function openState(
   row: { closed_at?: unknown; auto_closed_at?: unknown; lock?: unknown; lockAt?: unknown } & Record<string, unknown>,
   sent: Parameters<typeof inputOf>[1],
   now: Date,

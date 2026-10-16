@@ -857,3 +857,104 @@
     animation: none;
   }
 }
+
+/*
+ * «Главная» менеджера: горящее и просроченное — движением, а не только
+ * цветом (владелец, 16.10.2026: «подсвечивай анимацией горящие задачи и
+ * просрочки»). Двигаются только transform и opacity — свечение рисует
+ * псевдоэлемент поверх строки, вёрстка не дёргается. Горит — мягко дышит
+ * золотом; просрочено — красная полоса слева раз в пару секунд «толкает».
+ * При «уменьшить движение» всё стоит: остаются цвет и значок.
+ */
+@keyframes hq-breathe {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.012);
+  }
+}
+
+@keyframes hq-alarm {
+  0%,
+  70%,
+  100% {
+    opacity: 0.25;
+    transform: scaleY(0.6);
+  }
+  80% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes hq-nudge {
+  0%,
+  86%,
+  100% {
+    transform: translateX(0);
+  }
+  90% {
+    transform: translateX(3px);
+  }
+  95% {
+    transform: translateX(-2px);
+  }
+}
+
+.hq-hot,
+.hq-late {
+  position: relative;
+  isolation: isolate;
+}
+
+.hq-hot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px rgb(232 177 76 / 0.55), 0 0 22px rgb(232 177 76 / 0.35);
+  animation: hq-breathe 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hq-hot[data-red]::before {
+  box-shadow: 0 0 0 1px rgb(248 113 113 / 0.6), 0 0 24px rgb(248 113 113 / 0.35);
+  animation-duration: 1.6s;
+}
+
+.hq-late::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 3px;
+  border-radius: 3px;
+  background: rgb(248 113 113);
+  animation: hq-alarm 2.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hq-late .hq-late-icon {
+  animation: hq-nudge 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hq-hot::before,
+  .hq-late::before,
+  .hq-late .hq-late-icon {
+    animation: none;
+  }
+  .hq-hot::before {
+    opacity: 0.6;
+  }
+  .hq-late::before {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -68,7 +68,7 @@ export const head: Pick<
 export const leadsSections: Record<string, HelpEntry> = {
   /* ── Pulpit ──────────────────────────────────────────────────────────── */
   "/admin/hq": {
-    what: "Centrum dowodzenia właściciela i kierownika: na jednym ekranie — co dzieje się w firmie dziś i w ostatnich 7 dniach, co płonie w tej chwili i czym zajmuje się każda osoba w zespole. Po zalogowaniu i po kliknięciu logo «DevUz» trafiasz właśnie tutaj. Liczby odświeżają się same co półtorej minuty, dopóki strona jest otwarta i widoczna.",
+    what: "Centrum dowodzenia właściciela i kierownika: na jednym ekranie — co dzieje się w firmie dziś i w ostatnich 7 dniach, co płonie w tej chwili i czym zajmuje się każda osoba w zespole. Po zalogowaniu i po kliknięciu logo «DevUz» trafiasz właśnie tutaj. Liczby odświeżają się same co półtorej minuty, dopóki strona jest otwarta i widoczna. Menedżer widzi tu puls swojego dnia pracy: co się pali, co jest zaległe, z kim się skontaktować, swoje makiety i swoją pracę.",
     items: [
       {
         id: "pulse",
@@ -92,6 +92,7 @@ export const leadsSections: Record<string, HelpEntry> = {
       },
       {
         id: "attention",
+        roles: ["admin", "head"],
         title: "«Wymaga uwagi»",
         body: [
           "Krótka lista tego, co płonie w tej chwili. Czerwona kropka — awaria albo klient, którego nikt nie trzyma; żółta — coś, co przepadnie, jeśli nie zająć się tym dziś. Wiersz prowadzi dokładnie do tego, czego dotyczy: lead — do jego karty, zadanie po terminie — do jego karty z historią, konto robocze — do jego wiersza w «Konta», makieta — do jej wiersza w «Makiety». Jeśli za wierszem stoi kilka rzeczy („3 ciepłe leady bez opiekuna”), kliknięcie rozwija listę, a każdy punkt prowadzi do swojej karty. Awaria prowadzi tam, gdzie się ją naprawia.",
@@ -102,6 +103,7 @@ export const leadsSections: Record<string, HelpEntry> = {
       },
       {
         id: "feed",
+        roles: ["admin", "head"],
         title: "«Ostatnia doba»",
         body: [
           "Pod «Wymaga uwagi» — co wydarzyło się w ostatnich 24 godzinach, najnowsze na górze: nowy lead, makieta wysłana do klienta, makieta zatwierdzona, zadanie zrobione, lead wygrany albo przegrany (i kto to oznaczył). Nie więcej niż dwanaście wierszy.",
@@ -110,6 +112,7 @@ export const leadsSections: Record<string, HelpEntry> = {
       },
       {
         id: "people",
+        roles: ["admin", "head"],
         title: "«Zespół dziś» — karty zespołu",
         body: [
           "Karta dla każdego menedżera i kierownika. Zielona kropka przy inicjałach — osoba jest «online»: w ostatnich 30 minutach była w panelu, coś zrobiła albo kliknęła przycisk w bocie. W przeciwnym razie — kiedy była ostatnio. To ta sama miara, według której ciepłe leady w dzień trafiają najpierw do osób na miejscu.",
@@ -119,6 +122,7 @@ export const leadsSections: Record<string, HelpEntry> = {
       },
       {
         id: "task",
+        roles: ["admin", "head"],
         title: "«Szybkie zadanie»",
         body: [
           "Zlecenie zadania bez wychodzenia z «Pulpit». Zaznacz, komu — możesz kilka osób naraz, każda dostanie własne zadanie. Napisz, co zrobić, i wybierz termin: «dziś do 18:00», «jutro» (do 18:00) albo «własna data» — czas taszkencki. Kliknij «Zleć zadanie».",
@@ -128,6 +132,7 @@ export const leadsSections: Record<string, HelpEntry> = {
       },
       {
         id: "broadcast",
+        roles: ["admin", "head"],
         title: "«Wiadomość do zespołu przez bota»",
         body: [
           "Własna wiadomość od bota studia w Telegramie — dwie zakładki. «Pracownikom» — do całego zespołu albo jego części, na przykład zaproszenie na spotkanie. «Użytkownikom bota» — do osób, które same pisały do bota: klientów i leadów z czatu, partnerów, kupujących w sklepie. Wysyłać mogą tylko właściciel i kierownik.",
@@ -140,11 +145,82 @@ export const leadsSections: Record<string, HelpEntry> = {
       },
       {
         id: "voice",
+        roles: ["admin", "head"],
         title: "Wiadomość głosowa → tekst w bocie",
         body: [
           "Klient przysłał specyfikację wiadomością głosową, a nie ma czasu jej słuchać albo tekst jest potrzebny zespołowi — prześlij wiadomość głosową [botowi studia](https://t.me/Devuz_studio_bot) na czacie prywatnym. Działa wiadomość głosowa, plik audio albo nagranie z dyktafonu jako plik (MP3, M4A, OGG). Bot od razu odpowie «🎙 Получил голосовое (4:12) — расшифровываю», a po 10–20 minutach przyśle na ten sam czat «📝 Расшифровка голосового» — tekst podzielony na akapity według pauz. Długi tekst przyjdzie w kilku wiadomościach po kolei.",
           "Dlaczego nie od razu: głos zamienia na tekst nie nasz serwer, tylko zadanie w GitHubie, które co 10 minut sprawdza, czy są nowe wiadomości głosowe. Serwer nie jest tym obciążony — działają na nim strona, bot i kilkanaście innych stron. Tekst robi otwarty model Whisper: jest darmowy i nie zużywa płatnego modelu. Język rozpoznaje sam, rosyjski i uzbecki też, ale mowę mieszaną z dwóch języków może zapisać z błędami — liczby, ceny i nazwy sprawdzaj z nagraniem.",
           "Działa u właściciela i kierownika; wiadomości głosowej menedżera bot nie przyjmuje. Kółko się tu nie liczy: kółko wysłane botowi to [kółko do kontaktów](#accounts-circle), bot zapyta o jego język. Nagrania większego niż 20 MB albo dłuższego niż godzina bot nie przyjmie i tak odpowie — wysyłaj w częściach. Jeśli po trzech próbach nie udało się zamienić na tekst, bot o tym napisze — prześlij wiadomość jeszcze raz.",
+        ],
+      },
+      {
+        id: "my-day",
+        title: "Twój «Pulpit»: puls dnia pracy",
+        roles: ["manager"],
+        body: [
+          "Po wejściu do panelu i po kliknięciu logo «DevUz» trafiasz tutaj. To Twój dzień pracy na jednym ekranie: co pali się w tej chwili, co jest już zaległe, z kim skontaktować się dziś, Twoje makiety i ile zrobiłeś. Tu jest tylko Twoje — Twoje leady, kontakty, makiety i zadania; cudzych spraw i pieniędzy studia tu nie ma.",
+          "Strona odświeża się sama co półtorej minuty, dopóki karta jest otwarta i widoczna — nie trzeba odświeżać ręcznie. Każdy wiersz jest klikalny i otwiera to, czego dotyczy: lead — w jego karcie, zadanie — w jego karcie, makietę — w [Makietach](/admin/mockups). Gdy po kliknięciu ładuje się strona, obok tekstu miga zielona kropka — kliknięcie dotarło.",
+          "Liczby liczy kod na podstawie bazy, bez sieci neuronowej: te same dane zawsze dają ten sam wynik. Na telefonie najważniejsze jest na górze, przyciski są duże, pod palec.",
+        ],
+      },
+      {
+        id: "my-hot",
+        title: "«Pali się teraz»",
+        roles: ["manager"],
+        body: [
+          "To, co przepadnie, jeśli nie zajmiesz się tym w najbliższej godzinie. Wiersze delikatnie świecą na złoto; na czerwono — to, co pali się mocniej: klient czeka ponad godzinę, do końca propozycji mniej niż 10 minut, do końca promocji mniej niż 2 godziny, zadanie w ciągu godziny. Jeśli w telefonie włączone jest „ogranicz ruch”, światło stoi w miejscu — zostają kolor i ikona.",
+          "Kolejność — według pilności: 🔥 ciepły lead, którego kolejka zaproponowała Tobie, z odliczaniem i przyciskiem «Weź» (masz 30 minut — jeśli go nie weźmiesz, lead trafi do następnej osoby, a Tobie zapisze się „przepadł”); 💬 klient odpisał, model oddała rozmowę i klient czeka na Twoją odpowiedź — widać, jak długo czeka; 👀 klient otworzył Twój prototyp w ostatniej godzinie — najlepszy moment, żeby napisać; ⏰ promocja 48 godzin dla Twojej makiety kończy się dziś; 📌 zadanie z terminem na dziś.",
+          "«Weź» działa tak samo jak wzięcie leada w jego karcie: lead staje się Twój i otwiera się jego karta. Pod wierszami z leadem „w pracy” są przyciski statusu, zobacz [szybką zmianę statusu](#hq-my-status). Pusto — nic się nie pali: czas na [porcję kontaktów](/admin/prospect).",
+        ],
+      },
+      {
+        id: "my-overdue",
+        title: "«Zaległe»",
+        roles: ["manager"],
+        body: [
+          "Czerwony pasek po lewej i drgająca ikona — to, co już się spóźniło: zadania po terminie; leady, dla których nadszedł dzień kolejnego kroku wyznaczonego przez Ciebie przyciskiem «⏳ Czekamy» (albo «⏳ Ещё в работе» w bocie), a od tego czasu nic się przy leadzie nie działo; leady „w pracy” bez ruchu od 7 dni i dłużej.",
+          "„Bez ruchu” liczy się tak samo jak u bota o 10:00 i 16:00: korespondencja, zmiana statusu, każde działanie przy leadzie. Otwarcie karty i «⏳» ruchem nie są. Jeśli lead leży nieruszany 21 dni, a bot przez trzy dni nie dostaje odpowiedzi, lead sam przejdzie do „przegranych”.",
+          "Lead, który ma już zaległe zadanie «Связаться: …», nie powtarza się drugim wierszem. Pod każdym leadem — «🏆 Wygrana», «❌ Przegrana», «⏳ Czekamy»: po oznaczeniu wiersz zniknie przy następnym odświeżeniu.",
+        ],
+      },
+      {
+        id: "my-status",
+        title: "Szybka zmiana statusu: «🏆 Wygrana», «❌ Przegrana», «⏳ Czekamy»",
+        roles: ["manager"],
+        body: [
+          "Te same przyciski, które bot wysyła o 10:00 i 16:00 przy leadach bez ruchu, i ten sam kod za nimi. Zmieniać można tylko swojego leada — przy cudzym pojawi się „To nie Twój lead”. Każde kliknięcie trafia do dziennika, a licznik bota dla leada się zeruje: bot nie zapyta o ten lead, dopóki znów nie zawiśnie.",
+          "«🏆 Wygrana» — lead zamknięty sprzedażą i od razu otwiera się zakładanie projektu w [Projektach](/admin/projects): załóż go, wtedy sprzedaż zapisze się na Ciebie. «❌ Przegrana» — lead znika z „w pracy”, przypomnienia o nim są anulowane.",
+          "«⏳ Czekamy» najpierw pyta, kiedy kolejny krok: «Jutro», «Za 3 dni» albo «Za tydzień». Po wyborze dostajesz zadanie «Связаться: …» na ten dzień, na 10:00 (sobota i niedziela przechodzą na poniedziałek), i do tego dnia ani bot, ani «Pulpit» nie pytają o ten lead. Trzecie z rzędu «⏳» bez zmiany statusu jest ostatnie: potem zostają tylko «🏆» i «❌», a kierownik dostaje wiadomość.",
+        ],
+      },
+      {
+        id: "my-contacts",
+        title: "«Z kim skontaktować się dziś»",
+        roles: ["manager"],
+        body: [
+          "Lista osób, do których trzeba dziś napisać lub zadzwonić: z zadania «Связаться: …» z terminem na dziś (i zaległego); z leada, który ma dziś kolejny krok; oraz klienci, którzy odpisali Ci i czekają albo odpowiedzieli dziś na Twój kontakt. Jeden klient — jeden wiersz; na górze — ci, którzy odpisali.",
+          "Przycisk «Napisz» (Telegram), «Zadzwoń» (telefon) lub «E-mail» otwiera kontakt klienta jednym kliknięciem. Kontakt otwiera się tą samą drogą co pokazanie kontaktu w [karcie leada](#leads-card): tylko dla Twojego leada, a każde otwarcie trafia do dziennika — dlatego klikaj, gdy naprawdę się kontaktujesz. Jeśli kontakt zapisano w niezrozumiałym formacie, zamiast przejścia pokaże się jako tekst.",
+          "Przy kontakcie bez leada przycisk prowadzi pod adres, na który pisałeś — Telegram lub telefon. «Karta» otwiera leada albo kontakt. Pod leadami „w pracy” — te same przyciski statusu.",
+        ],
+      },
+      {
+        id: "my-mockups",
+        title: "«Moje makiety»",
+        roles: ["manager"],
+        body: [
+          "Makiety, które w ciągu 14 dni trafiły do Twoich klientów, i wszystkie, dla których wciąż trwa promocja. Twoja — ta, za którą odpowiadasz: wyznaczono Cię w «Makietach», prowadzisz leada klienta albo pisałeś do niego kontakt (ta sama kolejność co w [Makietach](/admin/mockups)). Na górze — promocje, które kończą się najwcześniej.",
+          "Przy każdej: kiedy link trafił do klienta (od tej minuty liczą się promocja 48 godzin i doba bez hasła); czy klient otwierał, kiedy ostatnio i ile razy; ile zostało do końca promocji; czy jest jeszcze otwarta przez link i przez ile godzin, czy już zamknięta hasłem. Otwierał w ostatniej godzinie — wiersz świeci: czas napisać.",
+          "«Wygeneruj hasło» — to samo hasło na 24 godziny co w «Makietach»: pokazuje się raz, obok — «Kopiuj dla klienta» i «Kopiuj hasło». Jeśli makieta jest jeszcze otwarta przez link, pierwsze hasło ją zamknie — panel zapyta wcześniej.",
+        ],
+      },
+      {
+        id: "my-work",
+        title: "«Moja praca»",
+        roles: ["manager"],
+        body: [
+          "Na górze — porcja dnia: ile kontaktów z należnych zrobiono, z paskiem; kliknij — otworzą się [Kontakty](/admin/prospect). Jeśli porcji jeszcze nie pobrano — tak jest napisane.",
+          "«Dziś»: kontakty, odpowiedzi klientów na Twoje kontakty i ile leadów masz „w pracy”. «7 dni» — ostatnie 7 × 24 godziny wobec 7 dni przed nimi, strzałka pokazuje różnicę: kontakty, odpowiedzi, ciepłe leady, które wziąłeś, i te, które Ci przepadły (niewzięte w 30 minut), makiety wysłane klientom i wygrane leady.",
+          "Każda liczba jest klikalna: kontakty — do «Kontaktów», odpowiedzi — do [Nadzoru](/admin/talks), leady — do listy leadów, makiety — do «Makiet». Liczby są te same, które kierownik i właściciel widzą w kartach zespołu.",
         ],
       },
     ],

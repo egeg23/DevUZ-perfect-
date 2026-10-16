@@ -1,6 +1,7 @@
 import { HqRefresh } from "@/components/admin/hq-refresh";
 import { HqSide } from "@/components/admin/hq-side";
 import { HqView } from "@/components/admin/hq";
+import { MyHqView } from "@/components/admin/hq-my";
 import { AdminShell } from "@/components/admin/shell";
 import { repeatOf, sendsBroadcasts } from "@/lib/admin/broadcast";
 import { giveLeadAction } from "@/app/admin/hq/actions";
@@ -11,6 +12,7 @@ import { requireSection } from "@/lib/admin/guard";
 import { seesEveryone } from "@/lib/admin/roles";
 import { HQ_REFRESH_MS } from "@/lib/admin/hq";
 import { loadHq } from "@/lib/admin/hq-store";
+import { loadMyHq } from "@/lib/admin/hq-my-store";
 
 // Пульс — состояние базы прямо сейчас: кэш здесь показал бы вчерашний пожар.
 export const dynamic = "force-dynamic";
@@ -20,11 +22,33 @@ export const dynamic = "force-dynamic";
  * Доступ — роль и галочки владельца (requireSection), деньги — только
  * владельцу: их отбирает loadHq по роли. Рассылка — владельцу и
  * руководителю по роли (sendsBroadcasts), а не по галочке.
+ *
+ * Менеджер видит не компанию, а свой день: только свои лиды, касания,
+ * макеты и задачи (loadMyHq, lib/admin/hq-my-store.ts), без денег студии.
  */
-export default async function HqPage({ searchParams }: { searchParams: Promise<{ to?: string; repeat?: string }> }) {
+export default async function HqPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ to?: string; repeat?: string; st?: string; due?: string }>;
+}) {
   const staff = await requireSection("/admin/hq");
-  const { to, repeat } = await searchParams;
+  const { to, repeat, st, due } = await searchParams;
   const now = new Date();
+  if (!seesEveryone(staff.role)) {
+    const my = await loadMyHq(staff, now);
+    return (
+      <AdminShell staff={staff}>
+        <HqRefresh everyMs={HQ_REFRESH_MS} />
+        <MyHqView
+          my={my}
+          locale={staff.panel_locale}
+          name={staff.display_name}
+          now={now}
+          result={st ? { st, due: due && !Number.isNaN(Date.parse(due)) ? due : null } : null}
+        />
+      </AdminShell>
+    );
+  }
   const broadcasts = sendsBroadcasts(staff.role);
   const [hq, people, history, usersHistory, audience, again] = await Promise.all([
     loadHq(staff, now),
