@@ -334,6 +334,23 @@ export function pickVariant(list: readonly Variant[], random: () => number = Mat
 export const MAX_WORDS = 100;
 export const MIN_WORDS = 12;
 
+/**
+ * Письмо латиницей — до 130 слов. Тот же текст по-английски выходит в
+ * полтора раза длиннее по словам, а на экране не длиннее: слова короче. За
+ * 14 дней до 16.10.2026 русские письма — до 92 слов, английские переводы —
+ * медиана 98, максимум 111, и 23 из 55 упирались в 100 и не уходили из бота
+ * («Не отправлено: Сообщение длиннее 100 слов»). Узбекские — до 77, им
+ * запас не нужен, но и не мешает.
+ */
+export const MAX_WORDS_LATIN = 130;
+
+/** Предел слов по алфавиту письма: кириллицы больше — русский предел. */
+export function maxWordsFor(message: string): number {
+  const cyrillic = (message.match(/\p{Script=Cyrillic}/gu) ?? []).length;
+  const latin = (message.match(/\p{Script=Latin}/gu) ?? []).length;
+  return cyrillic >= latin ? MAX_WORDS : MAX_WORDS_LATIN;
+}
+
 const caseNames = () => cases.filter((c) => c.slug !== "devuz").map((c) => c.name);
 
 /**
@@ -351,8 +368,9 @@ export function letterProblems(
   const problems: MessageProblem[] = [];
   const words = message.trim().split(/\s+/).filter(Boolean).length;
   if (words < MIN_WORDS) problems.push({ code: "short", text: `Сообщение короче ${MIN_WORDS} слов.`, args: [MIN_WORDS] });
-  if (words > MAX_WORDS) {
-    problems.push({ code: "long", text: `Сообщение длиннее ${MAX_WORDS} слов — на телефоне такое не дочитывают.`, args: [MAX_WORDS] });
+  const maxWords = maxWordsFor(message);
+  if (words > maxWords) {
+    problems.push({ code: "long", text: `Сообщение длиннее ${maxWords} слов — на телефоне такое не дочитывают.`, args: [maxWords] });
   }
   if (withoutGreeting(message) !== message.trim()) {
     problems.push({ code: "greeting", text: "Письмо начинается с приветствия, а «Здравствуйте» уже ушло отдельным сообщением." });
