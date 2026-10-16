@@ -15,11 +15,11 @@
     blender -b --factory-startup -P scripts/blender/sia/scene.py -- \\
         --assets /tmp/ph-sia --out /tmp/frames/f_ --start 1 --end 180
 
-Кадры пролёта (180, листаются прокруткой):
-  1–45     над оливковой рощей: вилла на склоне, горы за ней
-  45–90    спуск к террасе, над краем бассейна
-  90–142   низко над водой к открытой створке гостиной
-  142–180  внутри: гостиная, разворот над диваном к окну на долину
+Кадры пролёта (300, листаются прокруткой):
+  1–80     с высоты над долиной пике к оливковой роще
+  80–150   облёт виллы слева: уровни, кипарисы, терраса
+  150–205  над самой водой бассейна к открытой створке
+  205–300  через гостиную и разворот над диваном к окну на долину
 """
 
 import argparse
@@ -37,7 +37,7 @@ sys.path.insert(0, str(HERE.parent / "arhbyuro"))
 import scene as base  # noqa: E402  материалы, брусья, модели
 
 rnd = random.Random(20261016)
-FLIGHT = 180
+FLIGHT = 300
 M = base.M
 box, rounded, place, link, pbr, plain, glass, hexc, new_mat = base.box, base.rounded, base.place, base.link, base.pbr, base.plain, base.glass, base.hexc, base.new_mat
 
@@ -436,7 +436,7 @@ def terrace():
         box(f"Step{k}", 9.0, 13.0, y, y + 0.42, z - 0.3, z, M["pavers"], bevel=0.004)
         box(f"StepLed{k}", 9.05, 12.95, y + 0.4, y + 0.42, z - 0.06, z - 0.03, M["led_soft"], bevel=0, shadow=False)
     # Шезлонги и зона у воды.
-    for x in (-12.0, -9.6, -7.2, -4.8):
+    for x in (-14.0, -11.8, -9.6, -7.4):
         box(f"Lounger{x}", x - 0.38, x + 0.38, -7.9, -5.8, 0.0, 0.28, M["oak"], bevel=0.008)
         rounded(f"Pad{x}", x - 0.35, x + 0.35, -7.85, -6.3, 0.28, 0.36, M["linen"], r=0.03)
         rounded(f"Back{x}", x - 0.35, x + 0.35, -6.3, -5.85, 0.28, 0.66, M["linen"], r=0.04)
@@ -537,7 +537,7 @@ CYPRESS = []
 
 
 def cypress_mesh():
-    """Кипарис кодом: веретено из комков листвы (~20 тыс. треугольников).
+    """Кипарис кодом: веретено из мелких комков листвы (~170 тыс. треугольников, экземплярами).
 
     Сосна Poly Haven — 17 млн треугольников и 0,9 ГБ: на раннере GitHub
     сцена с ней не помещается в память, а кипарис издали — это силуэт."""
@@ -545,20 +545,19 @@ def cypress_mesh():
         return CYPRESS[0]
     r = random.Random(7)
     bm = bmesh.new()
-    n = 220
+    n = 520
     for k in range(n):
         t = r.random()
         z = 0.7 + t * 9.6
         w = 0.95 * math.sin(math.pi * min(1.0, 0.1 + t * 0.92)) ** 0.7 * (1 - t * 0.45)
         a = r.uniform(0, 6.28)
-        d = w * r.uniform(0.35, 0.95)
-        m = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=max(0.12, w * r.uniform(0.3, 0.5)))
+        d = w * r.uniform(0.55, 1.0)
+        m = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=max(0.1, w * r.uniform(0.2, 0.34)))
         for v in m["verts"]:
             v.co.x = v.co.x * 1.0 + math.cos(a) * d
             v.co.y = v.co.y * 1.0 + math.sin(a) * d
             v.co.z = v.co.z * 2.2 + z
-            j = r.uniform(-0.07, 0.07)
-            v.co += v.normal * j
+            v.co += v.normal * r.uniform(-0.06, 0.06)
     trunk = bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.12, radius2=0.08, depth=1.4)
     for v in trunk["verts"]:
         v.co.z += 0.7
@@ -577,7 +576,7 @@ def cypress_mesh():
 
 
 def leaf_mat():
-    """Тёмная хвоя кипариса: шум по цвету, просвет на солнце."""
+    """Тёмная хвоя кипариса: шум по цвету, мелкий рельеф, тень в складках."""
     m, nt, out = new_mat("CypressLeaf")
     L = nt.links.new
     tc = nt.nodes.new("ShaderNodeTexCoord")
@@ -589,16 +588,25 @@ def leaf_mat():
     ramp.color_ramp.elements[0].color = hexc("#1C2814")
     ramp.color_ramp.elements[1].color = hexc("#4A5A2A")
     L(nz.outputs["Fac"], ramp.inputs["Fac"])
+    # Складки между комками темнее: листва читается густой, а не гладкой.
+    ao = nt.nodes.new("ShaderNodeAmbientOcclusion")
+    ao.inputs["Distance"].default_value = 0.6
+    dark = nt.nodes.new("ShaderNodeMix")
+    dark.data_type = "RGBA"
+    dark.blend_type = "MULTIPLY"
+    dark.inputs["Factor"].default_value = 1.0
+    L(ramp.outputs["Color"], dark.inputs[6])
+    L(ao.outputs["AO"], dark.inputs[7])
     b = nt.nodes.new("ShaderNodeBsdfPrincipled")
-    L(ramp.outputs["Color"], b.inputs["Base Color"])
+    L(dark.outputs[2], b.inputs["Base Color"])
     b.inputs["Roughness"].default_value = 0.85
-    b.inputs["Subsurface Weight"].default_value = 0.15
-    b.inputs["Subsurface Radius"].default_value = (0.2, 0.4, 0.1)
     bp = nt.nodes.new("ShaderNodeBump")
-    bp.inputs["Strength"].default_value = 0.9
+    bp.inputs["Strength"].default_value = 1.0
+    bp.inputs["Distance"].default_value = 0.08
     nz2 = nt.nodes.new("ShaderNodeTexNoise")
-    nz2.inputs["Scale"].default_value = 28.0
-    nz2.inputs["Detail"].default_value = 6.0
+    nz2.inputs["Scale"].default_value = 70.0
+    nz2.inputs["Detail"].default_value = 10.0
+    nz2.inputs["Roughness"].default_value = 0.7
     L(tc.outputs["Object"], nz2.inputs["Vector"])
     L(nz2.outputs["Fac"], bp.inputs["Height"])
     L(bp.outputs["Normal"], b.inputs["Normal"])
@@ -684,7 +692,8 @@ def garden():
     # Кипарисы группами у виллы, как на рендерах бюро.
     for (x, y, h) in ((-25, -9, 1.25), (-27.5, -5, 1.45), (-24, 2, 1.1), (-27, 7, 1.35), (24, -10, 1.3), (27, -6, 1.1),
                       (25, 3, 1.45), (-30, 16, 1.2), (30, 18, 1.1), (-14, 22, 1.3), (12, 24, 1.2), (2, 28, 1.1)):
-        cypress(x, y, h)
+        if off_path(x, y, 16.0):
+            cypress(x, y, h)
     # Оливковая роща по склону к долине и за домом.
     for k in range(900):
         x = rnd.uniform(-220, 220)
@@ -692,7 +701,7 @@ def garden():
         if (abs(x) < 24 and y > -30) or not off_path(x, y):
             continue
         olive(x, y, rnd.uniform(1.15, 1.6))
-        if k % 5 == 0 and off_path(x + 5, y):
+        if k % 5 == 0 and off_path(x + 5, y, 16.0):
             cypress(x + rnd.uniform(3, 6), y + rnd.uniform(-3, 3), rnd.uniform(0.9, 1.4))
     for k in range(320):
         x, y = rnd.uniform(-240, 240), rnd.uniform(16, 260)
@@ -747,7 +756,7 @@ def garden():
         if not off_path(x, y, 3.0):
             continue
         c = k % 6
-        if c == 0:
+        if c == 0 and off_path(x, y, 6.0):
             olive(x, y, rnd.uniform(1.1, 1.5))
         elif c in (1, 2):
             place(rnd.choice(["shrub_02", "shrub_01"]), x, y, ground_z(x, y) - 0.1, rnd.uniform(0, 6.28), rnd.uniform(1.0, 1.6))
@@ -770,28 +779,28 @@ def garden():
 
 
 def backdrop():
-    """Горы с задника: две дуги радиусом 1800 м — за домом (север) и над долиной (юг).
+    """Горы с задника: кольцо радиусом 1800 м вокруг всей сцены.
 
-    Южная дуга зеркальна, чтобы закат на ней тоже был справа, с запада."""
-    for name, a_left, a_right, flip in (("BackdropN", 172, 8, False), ("BackdropS", 352, 188, True)):
-        R, z0, z1, n = 1800.0, -640.0, 800.0, 64
-        me = bpy.data.meshes.new(name)
-        verts, faces = [], []
-        for i in range(n + 1):
-            a = math.radians(a_left + (a_right - a_left) * i / n)
-            for z in (z0, z1):
-                verts.append((math.cos(a) * R, math.sin(a) * R, z))
-        for i in range(n):
-            faces.append((2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1))
-        me.from_pydata(verts, [], faces)
-        uvl = me.uv_layers.new(name="UVMap")
-        for lp in me.loops:
-            k = lp.vertex_index
-            u = (k // 2) / n
-            uvl.data[lp.index].uv = (1 - u if flip else u, k % 2)
-        me.materials.append(M["backdrop"])
-        ob = link(bpy.data.objects.new(name, me))
-        ob.visible_shadow = False
+    Картинка идёт с запада через север на восток и зеркально обратно через юг:
+    шва нет ни с одной стороны, а закат на ней везде с запада, как солнце."""
+    R, z0, z1, n = 1800.0, -640.0, 800.0, 128
+    me = bpy.data.meshes.new("Backdrop")
+    verts, faces = [], []
+    for i in range(n + 1):
+        a = math.radians(180.0 - 360.0 * i / n)
+        for z in (z0, z1):
+            verts.append((math.cos(a) * R, math.sin(a) * R, z))
+    for i in range(n):
+        faces.append((2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1))
+    me.from_pydata(verts, [], faces)
+    uvl = me.uv_layers.new(name="UVMap")
+    for lp in me.loops:
+        k = lp.vertex_index
+        t = (k // 2) / n * 2.0
+        uvl.data[lp.index].uv = (t if t <= 1.0 else 2.0 - t, k % 2)
+    me.materials.append(M["backdrop"])
+    ob = link(bpy.data.objects.new("Backdrop", me))
+    ob.visible_shadow = False
 
 
 # ───────────────────────── свет и небо ─────────────────────────
@@ -850,13 +859,18 @@ def sky():
 # ───────────────────────── камера ─────────────────────────
 
 FLIGHT_KEYS = [
-    (1, (-74.0, -100.0, 17.0), (0.0, 1.0, 8.0), 34),
-    (45, (-42.0, -62.0, 9.5), (-2.0, 1.0, 5.5), 30),
-    (90, (-17.0, -36.0, 3.2), (-4.0, 3.0, 3.0), 28),
-    (120, (-5.0, -15.0, 0.95), (-5.0, 6.0, 1.7), 26),
-    (142, (-5.0, -3.6, 1.55), (-5.6, 8.0, 1.6), 24),
-    (162, (-4.4, 3.0, 1.65), (-13.0, 6.0, 1.3), 22),
-    (180, (-7.8, 8.6, 1.9), (-10.5, -24.0, -1.2), 22),
+    # Быстрый пролёт: с высоты над долиной пике к оливам, облёт виллы слева,
+    # над самой водой в створку, через гостиную и разворот к окну.
+    (1, (-150.0, -210.0, 55.0), (0.0, 0.0, 6.0), 40),
+    (40, (-82.0, -116.0, 22.0), (-2.0, 0.0, 6.0), 32),
+    (80, (-50.0, -54.0, 9.0), (-2.0, 0.0, 5.0), 26),
+    (115, (-37.0, -15.0, 6.5), (-4.0, 2.0, 4.5), 24),
+    (150, (-21.0, -25.0, 2.6), (-3.0, -6.0, 1.2), 22),
+    (180, (-5.0, -15.0, 0.7), (-5.0, 6.0, 1.5), 22),
+    (205, (-4.9, -3.8, 1.5), (-5.5, 8.0, 1.6), 22),
+    (230, (-4.6, 2.2, 1.65), (-13.0, 5.0, 1.3), 22),
+    (265, (-2.6, 6.6, 1.8), (-12.0, 2.0, 1.0), 22),
+    (300, (-7.8, 8.6, 1.9), (-10.5, -24.0, -1.2), 22),
 ]
 
 
@@ -888,7 +902,7 @@ def camera(vertical):
         for fc in ob.animation_data.action.fcurves:
             for kp in fc.keyframe_points:
                 kp.interpolation = "BEZIER"
-                kp.handle_left_type = kp.handle_right_type = "AUTO_CLAMPED"
+                kp.handle_left_type = kp.handle_right_type = "AUTO"
     return cam
 
 
@@ -922,7 +936,7 @@ def setup_render(args):
     sc.view_settings.look = "AgX - Medium High Contrast"
     sc.render.fps = 24
     # Внутри экспозиция поднимается, как у камеры.
-    for f, ev in ((1, 0.55), (115, 0.55), (142, 0.6), (160, 0.7), (180, 0.45)):
+    for f, ev in ((1, 0.55), (190, 0.55), (205, 0.6), (235, 0.7), (270, 0.6), (300, 0.45)):
         sc.view_settings.exposure = ev
         sc.view_settings.keyframe_insert("exposure", frame=f)
 

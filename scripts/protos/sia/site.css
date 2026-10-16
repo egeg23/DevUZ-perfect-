@@ -232,7 +232,7 @@ html:not(.js) .ln>span,html:not(.js) [data-lines-p]{transform:none;opacity:1}
 .fly-still{display:none}
 
 /* ── 3D-пролёт: кадры Blender на холсте ───────────────────────────────── */
-.bfl{position:relative;height:480vh;background:var(--dark);color:var(--on)}
+.bfl{position:relative;height:560vh;background:var(--dark);color:var(--on)}
 .bfl-stick{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
 .bfl-poster,.bfl-cv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .bfl-cv{opacity:0;transition:opacity .6s var(--ease)}

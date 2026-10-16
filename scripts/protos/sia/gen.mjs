@@ -265,28 +265,28 @@ ${FLY.map((f, i) => `<figure class="fl" data-i="${i}" data-c="${f.c}"${f.deep ? 
 </section>`;
 }
 
-/* 3D-пролёт: 180 кадров Blender по прокрутке — в виллу APx180.2606. Модель
+/* 3D-пролёт: 300 кадров Blender по прокрутке — в виллу APx180.2606. Модель
    собрана нами по пяти рендерам бюро (scripts/blender/sia), это не рабочая
    модель бюро, и блок так и подписан. Кадры — /protos/sia/f. */
 const BFLY = [
-  { from: 0, to: 0.26, k: "Склон", t: "Над оливами", d: "Вилла на склоне, за ней горы на закате." },
-  { from: 0.26, to: 0.52, k: "Объём", t: "Три уровня", d: "Плиты уступами, тёплая линия света под каждой, стекло от пола." },
-  { from: 0.52, to: 0.8, k: "Вода", t: "Над бассейном", d: "Низко над водой к открытой створке гостиной." },
-  { from: 0.8, to: 1.01, k: "Гостиная", t: "Внутри", d: "Дуб, лён, травертин и вид на долину из гостиной." },
+  { from: 0, to: 0.27, k: "Долина", t: "Пике к оливам", d: "С высоты над долиной вниз, к роще на склоне." },
+  { from: 0.27, to: 0.5, k: "Облёт", t: "Вокруг виллы", d: "Три уровня, тёплая линия света под каждой плитой, стекло от пола." },
+  { from: 0.5, to: 0.68, k: "Вода", t: "Над бассейном", d: "Над самой водой к открытой створке гостиной." },
+  { from: 0.68, to: 1.01, k: "Гостиная", t: "Внутри", d: "Дуб, лён, травертин и вид на долину из гостиной." },
 ];
 function bflyBlock() {
   const F = "/protos/sia/f";
-  return `<section class="bfl" id="prolet-3d" aria-label="3D-пролёт в APx180.2606" data-n="180" data-d="${F}/d/" data-m="${F}/m/">
+  return `<section class="bfl" id="prolet-3d" aria-label="3D-пролёт в APx180.2606" data-n="300" data-d="${F}/d/" data-m="${F}/m/">
 <div class="bfl-stick">
 <img class="bfl-poster" src="${F}/d/0001.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">
 <canvas class="bfl-cv" aria-hidden="true"></canvas>
 <div class="fl-shade" aria-hidden="true"></div>
-<div class="fl-top"><p class="cap">3D-пролёт · APx180.2606</p><p class="bfl-h">Залетаем<br><em>в виллу на склоне</em></p><p class="cap fl-n"><span id="bfl-f">001</span> / 180</p></div>
+<div class="fl-top"><p class="cap">3D-пролёт · APx180.2606</p><p class="bfl-h">Залетаем<br><em>в виллу на склоне</em></p><p class="cap fl-n"><span id="bfl-f">001</span> / 300</p></div>
 <div class="bfl-loader" id="bfl-loader" aria-hidden="true"><p class="cap">Загрузка · <b id="bfl-pct">0</b>%</p><span class="bfl-track"><i id="bfl-fill"></i></span></div>
 <div class="fl-cards">${BFLY.map((s, i) => `<article class="flc bfc" data-from="${s.from}" data-to="${s.to}"><p class="flc-k cap">${pad(i + 1)} · ${s.k}</p><h3 class="flc-t">${s.t}</h3><p class="flc-d">${s.d}</p><p class="flc-ticks" aria-hidden="true">${BFLY.map(() => "<i><b></b></i>").join("")}</p></article>`).join("")}</div>
-<p class="cap bfl-note">Интерпретация DevUz Studio по рендерам бюро: модель APx180.2606 собрана нами в Blender, это не рабочая модель проекта. 180 кадров идут за прокруткой.</p>
+<p class="cap bfl-note">Интерпретация DevUz Studio по рендерам бюро: модель APx180.2606 собрана нами в Blender, это не рабочая модель проекта. 300 кадров идут за прокруткой.</p>
 </div>
-<div class="bfl-still">${[1, 60, 120, 180].map((f, i) => `<figure><img src="${F}/d/${String(f).padStart(4, "0")}.webp" alt="" loading="lazy" decoding="async"><figcaption class="cap">3D-пролёт по рендерам APx180.2606 · ${BFLY[i].k}</figcaption></figure>`).join("")}</div>
+<div class="bfl-still">${[1, 100, 200, 300].map((f, i) => `<figure><img src="${F}/d/${String(f).padStart(4, "0")}.webp" alt="" loading="lazy" decoding="async"><figcaption class="cap">3D-пролёт по рендерам APx180.2606 · ${BFLY[i].k}</figcaption></figure>`).join("")}</div>
 </section>`;
 }
 

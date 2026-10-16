@@ -948,9 +948,9 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   assert.equal((all[""].match(/<figure class="fl" /g) || []).length, 8, "в пролёте не 8 кадров");
   assert.match(all[""], /id="drum"/, "нет барабана");
   // 3D-пролёт Blender в APx180.2606 — подписан как наша интерпретация по рендерам бюро.
-  assert.match(all[""], /class="bfl"[^>]*data-n="180"[^>]*data-d="\/protos\/sia\/f\/d\/"/, "нет 3D-пролёта");
+  assert.match(all[""], /class="bfl"[^>]*data-n="300"[^>]*data-d="\/protos\/sia\/f\/d\/"/, "нет 3D-пролёта");
   assert.match(all[""], /Интерпретация DevUz Studio по рендерам бюро/, "3D-пролёт не подписан как интерпретация");
-  for (let f = 1; f <= 180; f++) for (const d of ["d", "m"]) statSync(`public/protos/sia/f/${d}/${String(f).padStart(4, "0")}.webp`);
+  for (let f = 1; f <= 300; f++) for (const d of ["d", "m"]) statSync(`public/protos/sia/f/${d}/${String(f).padStart(4, "0")}.webp`);
   assert.match(all[""], /class="velo-row"/, "нет бегущей строки");
   assert.equal((all[""].match(/data-gf /g) || []).length, 4, "не 4 папки");
   for (const id of ["prolet", "arhitektura", "interery", "arhiv", "uslugi", "byuro", "kontakty"]) assert.match(all[""], new RegExp(`id="${id}"`), `нет блока ${id}`);
