@@ -218,6 +218,11 @@ section{position:relative;padding:64px 0}
 .kit-t b{display:block;font-size:16px}
 .kit-t small{display:block;font-size:14px;color:var(--ink2);margin-top:2px;line-height:1.45}
 .star{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:var(--goldl);color:#6b4d12;font-size:12px;font-style:normal;font-weight:700;vertical-align:2px}
+.kit-n{font-size:14px;color:var(--ink2);margin:-2px 0 4px}
+.kit-n a{color:var(--g);font-weight:700}
+.ai-opts{display:grid;gap:10px}
+.ai-o .rd{position:relative;width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 2px #cfd9d2;flex:none;margin-top:2px;transition:box-shadow .2s}
+.ai-o input:checked+.rd{box-shadow:inset 0 0 0 7px var(--g3)}
 .kit-p{grid-column:2;font:700 16px var(--head);color:var(--g)}
 .kit-side{position:sticky;top:76px}
 .kit-total{position:relative;display:grid;gap:12px;padding:22px;border-radius:var(--r);background:var(--ink);color:#fff;overflow:hidden;isolation:isolate}

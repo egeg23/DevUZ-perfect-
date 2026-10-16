@@ -879,7 +879,7 @@ test("Магазин Greenwell: страница, магазин и панель
     for (const id of ["mgc", "mgb", "sleep", "se", "q10", "om", "multi", "zinc", "glu", "wl", "d3", "vc", "nails"]) assert.ok(all[path].includes(`"id":"${id}"`), `${path}: нет товара ${id}`);
   }
   for (const path of ["panel", "uz/panel"]) {
-    for (const v of ["dash", "orders", "reviews", "goods", "logistics", "nasiya", "traffic", "log"]) assert.match(all[path], new RegExp(`V\\.${v}=function`), `${path}: нет раздела ${v}`);
+    for (const v of ["dash", "orders", "reviews", "goods", "logistics", "nasiya", "traffic", "seller", "log"]) assert.match(all[path], new RegExp(`V\\.${v}=function`), `${path}: нет раздела ${v}`);
   }
   assert.ok(all.uz.includes("o‘") || all.uz.includes("O‘"), "узбекский — латиница с o‘");
   for (const path of ["uz", "uz/shop", "uz/panel"]) {
@@ -912,6 +912,23 @@ test("Greenwell: магазин 1 000 $ вместо 4 900 $ на 48 часов,
     assert.match(html, /"base":1000,"regular":4900,/, "скрипт считает от тех же цен");
     assert.match(html, /"hours":48,/, "отсчёт 48 часов");
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});
+
+test("Greenwell: AI Seller — четыре площадки, анимация агентов, 5 000 $ за код или 500 $ в месяц", async () => {
+  // Владелец, 16.10.2026: «2 формата: автоматизация одного маркетплейса через их дашборд - 5000$ и код на их стороне, либо подписка 500$ в месяц».
+  const plan = await import("../scripts/protos/greenwell/plan.mjs");
+  assert.equal(plan.SELLER.code.price, 5000);
+  assert.equal(plan.SELLER.sub.month, 500);
+  const site = bundlePages("greenwell")!;
+  for (const html of [site.html, site.pages.uz]) {
+    assert.ok(html.includes('name="ais"'), "выбор Seller AI в конструкторе");
+    assert.ok(html.includes('data-p="5000"') && html.includes('data-m="500"'), "цены Seller AI из plan.mjs");
+  }
+  for (const path of ["panel", "uz/panel"]) {
+    const page = site.pages[path];
+    for (const mk of ["Uzum", "Wildberries", "Amazon"]) assert.ok(page.includes(mk), `${path}: нет ${mk}`);
+    for (const a of ["rivals", "price", "reviews", "supply", "content", "ads"]) assert.ok(page.includes(`"${a}"`), `${path}: нет агента ${a}`);
   }
 });
 

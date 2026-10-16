@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
 import { SHOP_UI, PANEL_UI } from "./ui.mjs";
-import { BASE, ADDONS, ALL, OFFER_HOURS } from "./plan.mjs";
+import { BASE, ADDONS, ALL, OFFER_HOURS, SELLER } from "./plan.mjs";
 
 /*
  * Макет интернет-магазина Greenwell (биодобавки, ООО «Inso Farm Deluxe»), ru и uz:
@@ -40,16 +40,16 @@ const json = (v) => JSON.stringify(v).replace(/</g, "\\u003c");
 function dict(src, js, name) {
   const keys = new Set([...js.matchAll(/\bt\('([A-Za-z0-9_]+)'/g)].map((m) => m[1]));
   const dyn = { shop: ["sort_pop", "sort_cheap", "sort_dear", "sort_off", "sort_rate", "form_caps", "form_tab", "form_soft", "unit_caps", "unit_tab", "unit_soft", "tag_halal", "tag_vegan", "st0", "st1", "st2", "st3", "pw_welcome", "pw_spent", "pw_buy", "pw_review"],
-    panel: ["d7", "d30", "d90", "st0", "st1", "st2", "st3", "toSt1", "toSt2", "toSt3", "b0", "b1", "b2", "b3", "b4", "b5", "loseTip1", "loseTip2", "loseTip3", "loseTip4", "f1", "f2", "f3", "f4", "f5", "f6", "dev1", "dev2", "dev3", "log_st", "log_cour", "log_note", "log_ret", "log_rvok", "log_rvno", "log_reply", "log_cmp", "log_cost", "log_call", "log_price", "log_pts"] }[name];
+    panel: ["d7", "d30", "d90", "st0", "st1", "st2", "st3", "toSt1", "toSt2", "toSt3", "b0", "b1", "b2", "b3", "b4", "b5", "loseTip1", "loseTip2", "loseTip3", "loseTip4", "f1", "f2", "f3", "f4", "f5", "f6", "dev1", "dev2", "dev3", "log_st", "log_cour", "log_note", "log_ret", "log_rvok", "log_rvno", "log_reply", "log_cmp", "log_cost", "log_call", "log_price", "log_pts", "aiM_off", "aiM_ask", "aiM_auto"] }[name];
   for (const k of dyn) keys.add(k);
-  for (const k of ["form_", "unit_", "sort_", "tag_", "pw_", "st", "b", "d", "f", "log_", "toSt", "loseTip", "dev"]) keys.delete(k);
+  for (const k of ["form_", "unit_", "sort_", "tag_", "pw_", "st", "b", "d", "f", "log_", "toSt", "loseTip", "dev", "aiM_"]) keys.delete(k);
   for (const k of keys) {
     const v = src[k];
     if (!v || v.length !== 2 || !v[0] || !v[1]) throw new Error(`${name}: нет подписи «${k}» на двух языках`);
   }
   return (l) => Object.fromEntries(Object.entries(src).map(([k, v]) => [k, L2(v, l)]));
 }
-const SHOP_JS = read("shop.js"), PANEL_JS = read("panel.js");
+const SHOP_JS = read("shop.js"), PANEL_JS = read("panel.js").replace("/*SELLER*/", () => read("seller.js"));
 const shopUi = dict(SHOP_UI, SHOP_JS, "shop"), panelUi = dict(PANEL_UI, PANEL_JS, "panel");
 
 /* ── Знак: их вектор с greenwell.uz (Vector.svg), буквы красятся цветом ── */
@@ -204,7 +204,50 @@ function panelData(l) {
     cmpReply: t("Извините за это. Новую банку отправили бесплатно, курьер привезёт завтра.", "Buning uchun uzr. Yangi bankani bepul yubordik, kuryer ertaga olib keladi."),
     geo: t("Ташкент|Самарканд|Фергана|Наманган|Андижан|Бухара|Другие", "Toshkent|Samarqand|Farg‘ona|Namangan|Andijon|Buxoro|Boshqalar").split("|").map((n, i) => [n, [61, 9, 6, 5, 5, 4, 10][i]]),
     topPages: [[t("Главная", "Bosh sahifa"), 64], [pn("mgc"), 21], [t("Каталог", "Katalog"), 19], [pn("om"), 11], [t("Корзина", "Savat"), 9], [pn("multi"), 7]],
+    seller: sellerData(l, pn),
     searches: t("магний|омега|витамин д|для сна|коллаген|детские витамины", "magniy|omega|vitamin d|uyqu uchun|kollagen|bolalar vitaminlari").split("|").map((s, i) => [s, [42, 31, 24, 18, 11, 7][i]]),
+  };
+}
+
+/* AI Seller: площадки, агенты и сценарий их работы (демо). Агенты и режимы —
+   как в нашем Seller AI (content/products.ts, seller-ai). */
+function sellerData(l, pn) {
+  const t = T(l);
+  return {
+    markets: [
+      { id: "uzum", n: "Uzum Market", c: "#7000ff", k: 100, margin: 57.6, floor: 35, wh: t("склад Uzum, Ташкент", "Uzum ombori, Toshkent"), status: t("ваш магазин", "do‘koningiz") },
+      { id: "wb", n: "Wildberries", c: "#cb11ab", k: 104, margin: 55.1, floor: 35, wh: t("склад Wildberries, Ташкент", "Wildberries ombori, Toshkent"), status: t("новый канал", "yangi kanal") },
+      { id: "ym", n: t("Яндекс Маркет", "Yandex Market"), c: "#d9a400", k: 102, margin: 56.2, floor: 35, wh: t("склад Маркета, Ташкент", "Market ombori, Toshkent"), status: t("новый канал", "yangi kanal") },
+      { id: "amz", n: "Amazon", c: "#ff9900", k: 118, usd: true, rate: 12800, margin: 48.3, floor: 30, wh: "Amazon FBA", status: t("новый канал", "yangi kanal") },
+    ],
+    agents: [
+      { id: "rivals", i: "search", def: "auto", n: t("Конкуренты", "Raqobatchilar"), w: t("цены и карточки в категории", "toifadagi narx va kartochkalar") },
+      { id: "price", i: "tag", def: "ask", n: t("Цены", "Narxlar"), w: t("переоценка, маржа не ниже порога", "narxni o‘zgartirish, marja chegaradan past emas") },
+      { id: "reviews", i: "star", def: "auto", n: t("Отзывы", "Sharhlar"), w: t("ответ на каждый, претензии отдельно", "har biriga javob, e’tirozlar alohida") },
+      { id: "supply", i: "truck", def: "ask", n: t("Поставки", "Ta’minot"), w: t("остатки и поставки на склады", "qoldiq va omborlarga jo‘natma") },
+      { id: "content", i: "pen", def: "auto", n: t("Карточки", "Kartochkalar"), w: t("заголовки и описания под поиск", "qidiruv uchun sarlavha va tavsif") },
+      { id: "ads", i: "chart", def: "auto", n: t("Реклама", "Reklama"), w: t("ставки и бюджет кампаний", "kampaniya stavkasi va byudjeti") },
+    ],
+    steps: [
+      { a: "rivals", p: "mgc", rival: "NOW Foods, Magnesium Citrate" },
+      { a: "price", p: "mgc" },
+      { a: "reviews", p: "d3", who: t("Покупатель", "Xaridor"), text: t("Крышка пришла треснутой, капсулы целые.", "Qopqoq yorilgan holda keldi, kapsulalar butun."), reply: t("Извините, что так вышло. Заменим банку бесплатно: новую привезут завтра, старую возвращать не нужно.", "Shunday bo‘lgani uchun uzr. Bankani bepul almashtiramiz: yangisini ertaga olib kelishadi, eskisini qaytarish shart emas.") },
+      { a: "supply", p: "sleep", qty: 120, slot: "18.10" },
+      { a: "content", p: "om", before: t("Омега-3 1000 мг 60 капсул", "Omega-3 1000 mg 60 kapsula"), after: t("Омега-3 1000 мг, |рыбий жир| для сердца и сосудов, 60 капсул, |курс на месяц|", "Omega-3 1000 mg, |baliq yog‘i| yurak va qon tomirlari uchun, 60 kapsula, |bir oylik kurs|") },
+      { a: "ads", p: "multi", bid0: 1400, bid1: 1100, drr0: 18, drr1: 12 },
+    ],
+    start: { price: 148, reviews: 312, supply: 9, hours: 126 },
+    how: [
+      t("Подключаем кабинет продавца по API площадки: Uzum Market, Wildberries, Яндекс Маркет, Amazon Seller Central.", "Sotuvchi kabinetini maydoncha API orqali ulaymiz: Uzum Market, Wildberries, Yandex Market, Amazon Seller Central."),
+      t("Две недели агенты работают в тени: считают и предлагают, но ничего не меняют. Видно, как бы они поступили.", "Ikki hafta agentlar soyada ishlaydi: hisoblaydi va taklif qiladi, lekin hech narsani o‘zgartirmaydi. Ular qanday yo‘l tutishi ko‘rinadi."),
+      t("Месяц обучения: менеджер подтверждает, правит или отклоняет, агент запоминает, как вы решаете.", "Bir oy o‘qitish: menejer tasdiqlaydi, tuzatadi yoki rad etadi, agent siz qanday qaror qilishingizni eslab qoladi."),
+      t("Потом режим «Сам» включается по каждому товару отдельно и только в рамках правил: минимальная маржа, лимит скидки, бюджет рекламы.", "Keyin «O‘zi» rejimi har bir mahsulot uchun alohida va faqat qoidalar doirasida yoqiladi: minimal marja, chegirma limiti, reklama byudjeti."),
+      t("Всё, что сделал агент, видно в журнале этого раздела и в истории менеджеров.", "Agent qilgan hamma narsa shu bo‘lim jurnalida va menejerlar tarixida ko‘rinadi."),
+    ],
+    formats: [
+      { p: `${grp(SELLER.code.price)} $`, t: SELLER.code[l].t, e: SELLER.code[l].e },
+      { p: t(`${SELLER.sub.month} $ в месяц`, `oyiga ${SELLER.sub.month} $`), t: SELLER.sub[l].t, e: SELLER.sub[l].e },
+    ],
   };
 }
 
@@ -261,7 +304,7 @@ ${sprite(CITY)}
 /* ── Панель ─────────────────────────────────────────────────────────── */
 function panelPage(l) {
   const t = T(l);
-  const nav = [["dash", "grid", t("Сводка", "Umumiy")], ["orders", "box", t("Заказы", "Buyurtmalar"), "orders"], ["reviews", "star", t("Отзывы", "Sharhlar"), "reviews"], ["goods", "tag", t("Товары и прибыль", "Mahsulotlar va foyda")], ["logistics", "truck", t("Доставка", "Yetkazish")], ["nasiya", "cal", t("Рассрочка", "Muddatli to‘lov")], ["traffic", "chart", t("Посещаемость", "Tashriflar")], ["log", "list", t("История менеджеров", "Menejerlar tarixi")]];
+  const nav = [["dash", "grid", t("Сводка", "Umumiy")], ["orders", "box", t("Заказы", "Buyurtmalar"), "orders"], ["reviews", "star", t("Отзывы", "Sharhlar"), "reviews"], ["goods", "tag", t("Товары и прибыль", "Mahsulotlar va foyda")], ["logistics", "truck", t("Доставка", "Yetkazish")], ["nasiya", "cal", t("Рассрочка", "Muddatli to‘lov")], ["traffic", "chart", t("Посещаемость", "Tashriflar")], ["seller", "spark", "AI Seller"], ["log", "list", t("История менеджеров", "Menejerlar tarixi")]];
   return `<!doctype html>
 <html lang="${l}">
 <head>
@@ -396,6 +439,7 @@ function panelBlock(l) {
     ["tag", t("Прибыль", "Foyda"), t("выручка, себестоимость, валовая прибыль и маржа по товарам", "mahsulotlar bo‘yicha tushum, tannarx, yalpi foyda va marja")],
     ["truck", t("Доставка", "Yetkazish"), t("от заказа до сборки и до вручения, опоздания, курьеры", "buyurtmadan yig‘ish va topshirishgacha, kechikishlar, kuryerlar")],
     ["chart", t("Посещаемость", "Tashriflar"), t("откуда пришли, сколько пробыли, воронка и где теряем", "qayerdan kelishdi, qancha qolishdi, voronka va qayerda yo‘qotamiz")],
+    ["spark", "AI Seller", t("агенты ведут цены, отзывы и поставки на Uzum, Wildberries, Яндекс Маркете и Amazon", "agentlar Uzum, Wildberries, Yandex Market va Amazon’da narx, sharh va ta’minotni boshqaradi")],
     ["list", t("История менеджеров", "Menejerlar tarixi"), t("кто что сделал и когда", "kim nima qildi va qachon")],
   ];
   return `<section class="pnl" id="panel" data-tone="mint"><div class="wrap">
@@ -416,13 +460,21 @@ ${head(`<span class="ours">${t("Предложение DevUz Studio", "DevUz Stu
 <div class="kit-base"><div><span class="kb-tag">${t("Входит всегда", "Har doim kiradi")}</span><b>${BASE[l].t}</b><p>${BASE[l].d}</p><p class="kb-w">${t(`Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель`, `Muddat: ${BASE.weeks[0]}-${BASE.weeks[1]} hafta`)}</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>${t("48 часов", "48 soat")}</small></div></div>
 <h3 class="kit-g">${t("Допы: включайте то, что нужно магазину", "Qo‘shimchalar: do‘konga keraklisini yoqing")}</h3>
 ${ADDONS.map(row).join("")}
+<h3 class="kit-g" id="ai-seller">${t("AI Seller: агенты на маркетплейсах", "AI Seller: marketpleyslarda agentlar")}</h3>
+<p class="kit-n">${t("Наш Seller AI: агенты ведут цены, отзывы, поставки, карточки и рекламу на Uzum, Wildberries, Яндекс Маркете и Amazon. Как они работают, видно в панели, раздел «AI Seller».", "Bizning Seller AI: agentlar Uzum, Wildberries, Yandex Market va Amazon’da narxlar, sharhlar, ta’minot, kartochka va reklamani boshqaradi. Ular qanday ishlashini panelning «AI Seller» bo‘limida ko‘rish mumkin.")} <a href="${href(l, "panel")}#seller">${t("Открыть «AI Seller»", "«AI Seller»ni ochish")}</a></p>
+<div class="ai-opts" role="radiogroup" aria-label="AI Seller">
+<label class="kit-row ai-o"><input type="radio" name="ais" value="none" checked><span class="rd" aria-hidden="true"></span><span class="kit-t"><b>${t("Пока не нужно", "Hozircha kerak emas")}</b><small>${t("Можно подключить позже, когда магазин заработает", "Do‘kon ishlay boshlagach, keyinroq ulash mumkin")}</small></span><span class="kit-p">0 $</span></label>
+<label class="kit-row ai-o"><input type="radio" name="ais" value="code" data-p="${SELLER.code.price}"><span class="rd" aria-hidden="true"></span><span class="kit-t"><b>${SELLER.code[l].t}</b><small>${SELLER.code[l].e}</small></span><span class="kit-p">+${usd(SELLER.code.price)}</span></label>
+<label class="kit-row ai-o"><input type="radio" name="ais" value="sub" data-m="${SELLER.sub.month}"><span class="rd" aria-hidden="true"></span><span class="kit-t"><b>${SELLER.sub[l].t}</b><small>${SELLER.sub[l].e}</small></span><span class="kit-p">${t(`${SELLER.sub.month} $ в месяц`, `oyiga ${SELLER.sub.month} $`)}</span></label>
+</div>
 </div>
 <div class="kit-side">
 <div class="kit-total" id="kit-total">
 <div class="timer" id="timer"><span>${t("Цена 1 000 $ действует", "1 000 $ narxi amal qiladi")}<small>${t("48 часов с первого открытия макета", "maket birinchi ochilgandan 48 soat")}</small></span><b id="tm">48:00:00</b></div>
 <div class="kt-line"><span>${t("Магазин", "Do‘kon")}</span><span><s>${usd(BASE.price)}</s> ${usd(BASE.promo)}</span></div>
 <div class="kt-line"><span>${t("Допы", "Qo‘shimchalar")} · <span id="kit-n">0</span></span><span id="kit-add">0 $</span></div>
-<div class="kt-sum"><small>${t("Итого", "Jami")}</small><b id="kit-sum">${usd(BASE.promo)}</b><small>${t(`со всеми допами ${usd(ALL)}`, `barcha qo‘shimchalar bilan ${usd(ALL)}`)}</small></div>
+<div class="kt-line" id="kit-ai" hidden><span>AI Seller</span><span id="kit-ai-v"></span></div>
+<div class="kt-sum"><small>${t("Итого", "Jami")}</small><b id="kit-sum">${usd(BASE.promo)}</b><small id="kit-month" hidden></small><small>${t(`со всеми допами ${usd(ALL)}`, `barcha qo‘shimchalar bilan ${usd(ALL)}`)}</small></div>
 <button type="button" class="btn btn-white" id="kit-all">${t("Включить всё", "Hammasini yoqish")}</button>
 <a class="btn btn-g" id="kit-go" href="https://t.me/Devuz_studio_bot?start=greenwell">${ic("tg")}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 <button type="button" class="copy" id="kit-copy">${t("Скопировать состав", "Tarkibni nusxalash")}</button>
@@ -437,7 +489,7 @@ function sitePage(l) {
   const t = T(l);
   const other = l === "ru" ? "uz" : "ru";
   const nav = [["#seychas", t("Что меняем", "Nima o‘zgaradi")], ["#put", t("Путь покупателя", "Xaridor yo‘li")], ["#rassrochka", t("Рассрочка", "Muddatli to‘lov")], ["#panel", t("Панель", "Panel")], ["#cena", t("Стоимость", "Narxi")]];
-  const kit = { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price })), base: BASE.promo, regular: BASE.price, baseName: BASE[l].t, hours: OFFER_HOURS, nasiya: D.NASIYA, sum: t("сум", "so‘m"), mo: t("в месяц", "oyiga"), over: t("переплата", "ortiqcha to‘lov"), noOver: t("без переплаты", "ortiqcha to‘lovsiz"), copied: t("Скопировано", "Nusxalandi"), head: t(`Интернет-магазин ${B}, состав из конструктора:`, `${B} internet-do‘koni, konstruktordan tarkib:`), total: t("Итого", "Jami"), ended: t("Срок акции вышел: цена по договорённости", "Aksiya muddati tugadi: narx kelishuv bo‘yicha") };
+  const kit = { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price })), base: BASE.promo, regular: BASE.price, baseName: BASE[l].t, hours: OFFER_HOURS, nasiya: D.NASIYA, sum: t("сум", "so‘m"), mo: t("в месяц", "oyiga"), over: t("переплата", "ortiqcha to‘lov"), noOver: t("без переплаты", "ortiqcha to‘lovsiz"), copied: t("Скопировано", "Nusxalandi"), ai: { code: { t: SELLER.code[l].t, p: SELLER.code.price }, sub: { t: SELLER.sub[l].t, m: SELLER.sub.month } }, perMonth: t("в месяц", "oyiga"), plusMonth: t("и {n} $ в месяц за Seller AI", "va Seller AI uchun oyiga {n} $"), head: t(`Интернет-магазин ${B}, состав из конструктора:`, `${B} internet-do‘koni, konstruktordan tarkib:`), total: t("Итого", "Jami"), ended: t("Срок акции вышел: цена по договорённости", "Aksiya muddati tugadi: narx kelishuv bo‘yicha") };
   return `<!doctype html>
 <html lang="${l}">
 <head>
