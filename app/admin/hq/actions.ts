@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { after } from "next/server";
 
 import { audienceFrom, canCancel, sendAtFrom, sendableNow, sendsBroadcasts } from "@/lib/admin/broadcast";
@@ -8,7 +9,11 @@ import { broadcastById, cancelBroadcast, createBroadcast, deliveredCounts, sendB
 import { isSegment } from "@/lib/admin/bot-users";
 import { createUserBroadcast, sendUserBroadcasts } from "@/lib/admin/bot-users-store";
 import { currentStaff, requestIp } from "@/lib/admin/guard";
-import { giveLead } from "@/lib/admin/ownership";
+import { myHref } from "@/lib/admin/hq-my";
+import { parseTidyCallback } from "@/lib/admin/lead-tidy";
+import { decideTidy } from "@/lib/admin/lead-tidy-store";
+import { giveLead, revealContact } from "@/lib/admin/ownership";
+import { contactLink } from "@/lib/contact";
 import { opens } from "@/lib/admin/roles";
 import { createTasks, deliverAssignment } from "@/lib/admin/task-store";
 import { QUICK_DUES, messageWindow, parseLocalInput, quickDue, type QuickDue } from "@/lib/admin/tasks";
@@ -167,4 +172,43 @@ export async function giveLeadAction(formData: FormData): Promise<void> {
   if (!/^[0-9a-f-]{36}$/.test(lead) || !/^[0-9a-f-]{36}$/.test(to)) return;
   await giveLead(lead, to, staff, await requestIp());
   revalidatePath(HREF);
+}
+
+/* ── «Главная» менеджера ─────────────────────────────────────────────── */
+
+/**
+ * «🏆 / ❌ / ⏳» прямо в строке — тем же decideTidy, что у бота в «Порядке
+ * в лидах» (lib/admin/lead-tidy-store.ts): смена статуса через setStatus
+ * (журнал, сброс счётчиков бота), «⏳» со сроком — задача «Связаться»
+ * через createTasks. Менять можно только свой лид — это проверяет
+ * decideTidy. «Выиграли» ведёт сразу в «Завести проект».
+ */
+export async function myStatusAction(formData: FormData): Promise<void> {
+  const staff = await currentStaff();
+  if (!staff || !opens(staff, HREF)) redirect("/admin");
+  const parsed = parseTidyCallback(["lt", String(formData.get("answer") ?? ""), String(formData.get("lead") ?? "")]);
+  // «⏳» без срока панель не присылает: срок выбирается в той же строке.
+  if (!parsed || parsed.answer === "wait") redirect(`${HREF}?st=failed`);
+  const decision = await decideTidy(staff, parsed.answer, parsed.leadId, "panel", new Date(), await requestIp());
+  revalidatePath(HREF);
+  if (decision.result !== "ok") redirect(`${HREF}?st=${decision.result}`);
+  if (decision.answer === "won") redirect(myHref.project(parsed.leadId));
+  if (decision.answer === "term") redirect(`${HREF}?st=term&due=${encodeURIComponent(decision.due.toISOString())}`);
+  redirect(`${HREF}?st=${decision.answer}`);
+}
+
+export type ContactOpen = { url: string | null; label: string } | null;
+
+/**
+ * «Связаться» в одно нажатие: контакт клиента открывается тем же
+ * revealContact, что «Показать контакт» в карточке, — с записью в журнал
+ * и только своему лиду. Ссылка (Telegram, звонок, почта) — contactLink.
+ */
+export async function myContactAction(leadId: string): Promise<ContactOpen> {
+  const staff = await currentStaff();
+  if (!staff || !opens(staff, HREF) || !/^[0-9a-f-]{36}$/i.test(String(leadId))) return null;
+  const contact = await revealContact(String(leadId), staff, await requestIp());
+  if (!contact) return null;
+  const view = contactLink({ contact_handle: contact.handle, contact_kind: contact.kind });
+  return { url: view.url, label: view.label };
 }

@@ -69,7 +69,7 @@ export const uz: HelpCopy = {
   sections: {
     /* ── Bosh sahifa ───────────────────────────────────────────────────── */
     "/admin/hq": {
-      what: "Egasi va rahbar uchun boshqaruv markazi: bitta ekranda kompaniyada bugun va 7 kunda nima bo‘layotgani, hozir nima yonayotgani va jamoadagi har bir kishi nima bilan bandligi. Panelga kirgandan keyin va «DevUz» logotipi bosilganda shu yerga tushasiz. Sahifa ochiq va ko‘rinib turgan paytda raqamlar bir yarim daqiqada bir marta o‘zi yangilanadi.",
+      what: "Egasi va rahbar uchun boshqaruv markazi: bitta ekranda kompaniyada bugun va 7 kunda nima bo‘layotgani, hozir nima yonayotgani va jamoadagi har bir kishi nima bilan bandligi. Panelga kirgandan keyin va «DevUz» logotipi bosilganda shu yerga tushasiz. Sahifa ochiq va ko‘rinib turgan paytda raqamlar bir yarim daqiqada bir marta o‘zi yangilanadi. Menejer bu yerda o‘z ish kunining holatini ko‘radi: nima yonmoqda, nimaning muddati o‘tgan, kim bilan bog‘lanish kerak, o‘z maketlari va o‘z ishi.",
       items: [
         {
           id: "pulse",
@@ -93,6 +93,7 @@ export const uz: HelpCopy = {
         },
         {
           id: "attention",
+          roles: ["admin", "head"],
           title: "«E’tibor talab qiladi»",
           body: [
             "Hozir yonayotgan narsalarning qisqa ro‘yxati. Qizil nuqta — nosozlik yoki hech kim ushlab turmagan mijoz; sariq — bugun shug‘ullanilmasa kuyib ketadigan narsa. Qator aynan o‘zi haqida bo‘lgan narsaga olib boradi: lid — uning kartochkasiga, muddati o‘tgan vazifa — tarixi bilan uning kartochkasiga, ishchi akkaunt — «Akkauntlar»dagi o‘z qatoriga, maket — «Maketlar»dagi o‘z qatoriga. Agar qator ortida bir nechtasi bo‘lsa («3 ta issiq lid egasiz»), bosilganda ro‘yxat ochiladi va har bir band o‘z kartochkasiga olib boradi. Nosozlik esa u tuzatiladigan joyga olib boradi.",
@@ -103,6 +104,7 @@ export const uz: HelpCopy = {
         },
         {
           id: "feed",
+          roles: ["admin", "head"],
           title: "«So‘nggi sutka»",
           body: [
             "«E’tibor talab qiladi» ostida — oxirgi 24 soatda nima bo‘lgani, yangisi tepada: yangi lid, maket mijozga ketdi, maket tasdiqlandi, vazifa bajarildi, lid yutildi yoki yutqazildi (va kim belgilagani). O‘n ikki qatordan ko‘p emas.",
@@ -111,6 +113,7 @@ export const uz: HelpCopy = {
         },
         {
           id: "people",
+          roles: ["admin", "head"],
           title: "«Bugun jamoa» — jamoa kartochkalari",
           body: [
             "Har bir menejer va rahbarga kartochka. Bosh harflar yonidagi yashil nuqta — kishi «onlayn»: oxirgi 30 daqiqada panelda bo‘lgan, biror ish qilgan yoki botda tugma bosgan. Aks holda — oxirgi marta qachon bo‘lgani. Kunduzi issiq lidlar avval joyida bo‘lganlarga taklif qilinadigan o‘lchov ham shu.",
@@ -120,6 +123,7 @@ export const uz: HelpCopy = {
         },
         {
           id: "task",
+          roles: ["admin", "head"],
           title: "«Tezkor vazifa»",
           body: [
             "«Bosh sahifa»dan chiqmasdan vazifa qo‘yish. Kimga ekanini belgilang — bir nechta kishini birdan tanlash mumkin, har biriga o‘z vazifasi keladi. Nima qilish kerakligini yozing va muddatni tanlang: «bugun 18:00 gacha», «ertaga» (18:00 gacha) yoki «boshqa sana» — vaqt Toshkent vaqti. «Vazifa qo‘yish» tugmasini bosing.",
@@ -129,6 +133,7 @@ export const uz: HelpCopy = {
         },
         {
           id: "broadcast",
+          roles: ["admin", "head"],
           title: "«Jamoaga botda xabar»",
           body: [
             "Studiya botidan Telegramda o‘z xabaringiz — ikkita yorliq. «Xodimlarga» — butun jamoaga yoki uning bir qismiga, masalan, qo‘ng‘iroqqa chaqirish. «Bot foydalanuvchilariga» — botga o‘zi yozganlarga: chatdagi mijozlar va lidlar, hamkorlar, do‘kon xaridorlari. Faqat egasi va rahbar yubora oladi.",
@@ -141,11 +146,82 @@ export const uz: HelpCopy = {
         },
         {
           id: "voice",
+          roles: ["admin", "head"],
           title: "Ovozli xabar → botda matn",
           body: [
             "Mijoz TZni ovozli xabar qilib yubordi, eshitishga vaqt yo‘q yoki matn jamoaga kerak — ovozli xabarni [studiya botiga](https://t.me/Devuz_studio_bot) shaxsiy chatda yuboring (forward). Ovozli xabar, audio fayl yoki diktofon yozuvi fayl ko‘rinishida (MP3, M4A, OGG) bo‘ladi. Bot darhol «🎙 Получил голосовое (4:12) — расшифровываю» deb javob beradi, 10–20 daqiqadan keyin esa o‘sha chatga «📝 Расшифровка голосового» — pauzalar bo‘yicha xatboshilarga bo‘lingan matnni yuboradi. Uzun matn ketma-ket bir nechta xabar bo‘lib keladi.",
             "Nega darhol emas: ovozni bizning server emas, GitHubdagi vazifa matnga aylantiradi — u har 10 daqiqada yangi ovozli xabarlar bor-yo‘qligini tekshiradi. Server bundan yuklanmaydi: unda sayt, bot va yana o‘n beshtacha sayt ishlaydi. Matnga ochiq Whisper modeli aylantiradi: u bepul, pullik modelni sarflamaydi. Tilni o‘zi aniqlaydi, rus va o‘zbek tillarini ham, lekin ikki til aralash nutqni xato bilan yozishi mumkin — raqamlar, narxlar va nomlarni yozuv bilan solishtiring.",
             "Egasi va rahbarda ishlaydi; menejerning ovozli xabarini bot matnga aylantirishga olmaydi. Dumaloq video bunga kirmaydi: botga yuborilgan dumaloq video — bu [murojaatlar uchun dumaloq video](#accounts-circle), bot uning tilini so‘raydi. 20 MB dan katta yoki bir soatdan uzun yozuvni bot olmaydi va shunday deb javob beradi — qismlarga bo‘lib yuboring. Uch urinishda matnga aylantirib bo‘lmasa — bot shu haqda yozadi — ovozli xabarni yana bir marta yuboring.",
+          ],
+        },
+        {
+          id: "my-day",
+          title: "Sizning «Bosh sahifa»ngiz: ish kuningiz holati",
+          roles: ["manager"],
+          body: [
+            "Panelga kirgandan keyin va «DevUz» logotipi bosilganda shu yerga tushasiz. Bu bitta ekrandagi ish kuningiz: hozir nima yonmoqda, nimaning muddati o‘tib ketgan, bugun kim bilan bog‘lanish kerak, maketlaringiz va qancha ish qildingiz. Bu yerda faqat siznikilar — lidlaringiz, aloqalaringiz, maketlaringiz va vazifalaringiz; boshqalarniki va studiya pullari bu yerda yo‘q.",
+            "Sahifa ochiq va ko‘rinib turgan paytda o‘zi bir yarim daqiqada bir marta yangilanadi — qo‘lda yangilash shart emas. Har bir qator bosiladi va o‘zi haqidagi narsani ochadi: lid — uning kartasida, vazifa — uning kartasida, maket — [Maketlar](/admin/mockups) bo‘limida. Bosgandan keyin sahifa yuklanayotganda matn yonida yashil nuqta miltillaydi — bosish yetib bordi.",
+            "Raqamlarni kod bazadan neyrotarmoqsiz hisoblaydi: bir xil ma’lumot har doim bir xil natija beradi. Telefonda eng muhimi — tepada, tugmalar katta, barmoqqa qulay.",
+          ],
+        },
+        {
+          id: "my-hot",
+          title: "«Hozir yonmoqda»",
+          roles: ["manager"],
+          body: [
+            "Yaqin bir soat ichida shug‘ullanilmasa yonib ketadigan narsalar. Qatorlar oltin rangda yumshoq yonadi; qizg‘ishroq — kuchliroq yonayotganlari: mijoz bir soatdan ortiq kutmoqda, taklif tugashiga 10 daqiqadan kam, aksiya tugashiga 2 soatdan kam, vazifa muddati bir soat ichida. Telefonda «harakatni kamaytirish» yoqilgan bo‘lsa, yorug‘lik qimirlamaydi — rang va belgi qoladi.",
+            "Tartib — shoshilinchlik bo‘yicha: 🔥 navbat sizga taklif qilgan iliq lid, teskari hisob va «Olish» tugmasi bilan (sizda 30 daqiqa bor — olmasangiz, lid keyingisiga o‘tadi, sizga esa «yonib ketdi» yoziladi); 💬 mijoz javob berdi, model suhbatni qo‘yib yubordi va u javobingizni kutmoqda — qancha kutayotgani ko‘rinadi; 👀 mijoz oxirgi bir soatda prototipingizni ochdi — yozish uchun eng yaxshi payt; ⏰ maketingiz bo‘yicha 48 soatlik aksiya bugun tugaydi; 📌 muddati bugun bo‘lgan vazifa.",
+            "«Olish» lid kartasida lidni olish bilan bir xil ishlaydi: lid sizniki bo‘ladi va uning kartasi ochiladi. «Ishda»gi lid qatorlari ostida holat tugmalari bor, qarang: [holatni tez o‘zgartirish](#hq-my-status). Ro‘yxat bo‘sh bo‘lsa — hech narsa yonmayapti: [aloqalar ulushi](/admin/prospect) uchun vaqt.",
+          ],
+        },
+        {
+          id: "my-overdue",
+          title: "«Muddati o‘tgan»",
+          roles: ["manager"],
+          body: [
+            "Chap tomonda qizil chiziq va qimirlab turgan belgi — allaqachon kechikkan narsalar: muddati o‘tgan vazifalar; o‘zingiz «⏳ Kutamiz» tugmasi bilan (yoki botdagi «⏳ Ещё в работе» bilan) belgilagan keyingi qadam kuni kelgan, lekin shundan beri lid bo‘yicha harakat bo‘lmagan lidlar; 7 kun va undan ko‘p harakatsiz «ishda»gi lidlar.",
+            "«Harakatsiz» bot 10:00 va 16:00 da qanday hisoblasa, shunday hisoblanadi: yozishma, holatni o‘zgartirish, lid bo‘yicha har qanday harakat. Kartani ko‘rish va «⏳» harakat hisoblanmaydi. Lidga 21 kun tegilmasa va botga uch kun javob berilmasa, u o‘zi «yutqazildi»ga o‘tadi.",
+            "Muddati o‘tgan «Связаться: …» vazifasi bor lid ikkinchi qator bo‘lib takrorlanmaydi. Har bir lid ostida — «🏆 Yutdik», «❌ Yutqazdik», «⏳ Kutamiz»: belgiladingiz — qator keyingi yangilanishda yo‘qoladi.",
+          ],
+        },
+        {
+          id: "my-status",
+          title: "Holatni tez o‘zgartirish: «🏆 Yutdik», «❌ Yutqazdik», «⏳ Kutamiz»",
+          roles: ["manager"],
+          body: [
+            "Bot 10:00 va 16:00 da harakatsiz lidlar bo‘yicha yuboradigan tugmalarning o‘zi va ular ortidagi kod ham o‘sha. Faqat o‘z lidingizni o‘zgartirasiz — boshqanikida «Bu sizning lidingiz emas» chiqadi. Har bir bosish jurnalga yoziladi, botning shu lid bo‘yicha hisobi esa nolga tushadi: lid yana osilib qolmaguncha u bu lid haqida so‘ramaydi.",
+            "«🏆 Yutdik» — lid sotuv bilan yopildi va darhol [Loyihalar](/admin/projects) bo‘limida loyiha ochish sahifasi ochiladi: loyihani oching, shunda sotuv sizga yoziladi. «❌ Yutqazdik» — lid «ishda»dan chiqadi, u bo‘yicha eslatmalar bekor qilinadi.",
+            "«⏳ Kutamiz» avval keyingi qadam qachonligini so‘raydi: «Ertaga», «3 kundan keyin» yoki «Bir haftadan keyin». Tanladingiz — sizga shu kunga, soat 10:00 ga «Связаться: …» vazifasi qo‘yiladi (shanba va yakshanba dushanbaga ko‘chadi), va shu kungacha na bot, na «Bosh sahifa» bu lid haqida so‘ramaydi. Holatni o‘zgartirmasdan ketma-ket uchinchi «⏳» — oxirgisi: keyin faqat «🏆» va «❌» qoladi, rahbarga esa xabar boradi.",
+          ],
+        },
+        {
+          id: "my-contacts",
+          title: "«Bugun kim bilan bog‘lanish kerak»",
+          roles: ["manager"],
+          body: [
+            "Bugun yozish yoki qo‘ng‘iroq qilish kerak bo‘lganlar ro‘yxati: muddati bugun bo‘lgan (yoki o‘tib ketgan) «Связаться: …» vazifasi bo‘yicha; keyingi qadami bugun bo‘lgan lid bo‘yicha; sizga javob berib kutayotgan yoki bugun aloqangizga javob bergan mijozlar. Bitta mijoz — bitta qator; tepada — javob berganlar.",
+            "«Yozish» (Telegram), «Qo‘ng‘iroq qilish» (telefon) yoki «Xat» tugmasi mijoz kontaktini bir bosishda ochadi. Kontakt [lid kartasi](#leads-card)da kontaktni ko‘rsatish bilan bir xil yo‘l bilan ochiladi: faqat sizning lidingiz bo‘yicha va har bir ochilish jurnalga yoziladi, — shuning uchun haqiqatan bog‘lanayotganda bosing. Kontakt tushunarli formatsiz yozilgan bo‘lsa, o‘tish o‘rniga u matn sifatida ko‘rsatiladi.",
+            "Lidsiz aloqada tugma siz yozgan manzilga olib boradi — Telegram yoki qo‘ng‘iroq. «Karta» lid yoki aloqani ochadi. «Ishda»gi lidlar ostida — o‘sha holat tugmalari.",
+          ],
+        },
+        {
+          id: "my-mockups",
+          title: "«Mening maketlarim»",
+          roles: ["manager"],
+          body: [
+            "14 kun ichida mijozlaringizga ketgan maketlar va aksiyasi hali davom etayotganlarning hammasi. Sizniki — siz mas’ul bo‘lgan maket: sizni «Maketlar»da tayinlashgan, mijozning lidini olib borasiz yoki unga aloqa yozgansiz ([Maketlar](/admin/mockups) bo‘limidagi tartib bilan bir xil). Tepada — eng oldin tugaydigan aksiyalar.",
+            "Har biri bo‘yicha: havola mijozga qachon ketgan (shu daqiqadan 48 soatlik aksiya va parolsiz bir sutka boshlanadi); mijoz ochganmi, oxirgi marta qachon va necha marta; aksiya tugashiga qancha qolgan; hali havola orqali ochiqmi va necha soat, yoki allaqachon parol bilan yopilgan. Oxirgi bir soatda ochgan bo‘lsa — qator yonadi: yozish payti.",
+            "«Parol yaratish» — «Maketlar»dagi kabi 24 soatlik parol: bir marta ko‘rsatiladi, yonida — «Mijoz uchun nusxalash» va «Parolni nusxalash». Maket hali havola orqali ochiq bo‘lsa, birinchi parol uni yopadi — panel oldin so‘raydi.",
+          ],
+        },
+        {
+          id: "my-work",
+          title: "«Mening ishim»",
+          roles: ["manager"],
+          body: [
+            "Tepada — kunlik ulush: belgilanganlardan nechta aloqa qilingani, chiziq bilan; bosing — [Aloqalar](/admin/prospect) ochiladi. Ulush hali olinmagan bo‘lsa — shunday yoziladi.",
+            "«Bugun»: aloqalar, mijozlarning aloqalaringizga javoblari va sizda «ishda» nechta lid borligi. «7 kun» — oxirgi 7 × 24 soat oldingi 7 kunga nisbatan, strelka farqni ko‘rsatadi: aloqalar, javoblar, siz olgan va sizda yonib ketgan (30 daqiqada olinmagan) iliq lidlar, mijozlarga yuborilgan maketlar va yutilgan lidlar.",
+            "Har bir raqam bosiladi: aloqalar — «Aloqalar»ga, javoblar — [Nazorat](/admin/talks)ga, lidlar — lidlar ro‘yxatiga, maketlar — «Maketlar»ga. Raqamlar rahbar va ega jamoa kartalarida ko‘radigan raqamlar bilan bir xil.",
           ],
         },
       ],

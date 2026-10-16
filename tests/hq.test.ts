@@ -43,26 +43,27 @@ const NOW = new Date("2026-10-14T10:00:00Z");
 const ago = (h: number) => new Date(NOW.getTime() - h * 3600_000).toISOString();
 const ahead = (h: number) => new Date(NOW.getTime() + h * 3600_000).toISOString();
 
-test("раздел: владельцу и руководителю, первым в меню; менеджеру — только галочкой", () => {
+test("раздел: всем ролям, первым в меню; галочка владельца закрывает", () => {
   const hq = SECTIONS.find((s) => s.href === "/admin/hq");
-  assert.deepEqual(hq?.roles, ["admin", "head"]);
+  // Владелец, 16.10.2026: «Менеджерам тоже теперь админку как у нас».
+  assert.deepEqual(hq?.roles, ["admin", "head", "manager"]);
   assert.equal(SECTIONS[0].href, "/admin/hq", "первым пунктом");
-  for (const role of ["admin", "head"] as const) {
+  for (const role of ["admin", "head", "manager"] as const) {
     assert.equal(menuOf({ role })[0].sections[0].href, "/admin/hq", `${role}: в меню первым`);
     assert.equal(navOf({ role })[0].href, "/admin/hq");
   }
-  assert.ok(!opens({ role: "manager" }, "/admin/hq"));
-  assert.ok(opens({ role: "manager", section_access: { "/admin/hq": true } }, "/admin/hq"), "галочка владельца открывает");
-  assert.ok(!opens({ role: "head", section_access: { "/admin/hq": false } }, "/admin/hq"), "и закрывает");
+  assert.ok(opens({ role: "manager" }, "/admin/hq"));
+  assert.ok(!opens({ role: "manager", section_access: { "/admin/hq": false } }, "/admin/hq"), "галочка владельца закрывает менеджеру");
+  assert.ok(!opens({ role: "head", section_access: { "/admin/hq": false } }, "/admin/hq"), "и руководителю");
   assert.match(read("app/admin/hq/page.tsx"), /const staff = await requireSection\("\/admin\/hq"\)/);
   assert.match(read("app/admin/hq/page.tsx"), /export const dynamic = "force-dynamic"/);
 });
 
-test("после входа и по логотипу: владелец и руководитель — на «Главную», менеджер — как раньше", () => {
+test("после входа и по логотипу: все — на «Главную», закрытую галочкой — в «Лиды»", () => {
   assert.equal(homeOf({ role: "admin" }), "/admin/hq");
   assert.equal(homeOf({ role: "head" }), "/admin/hq");
-  assert.equal(homeOf({ role: "manager" }), "/admin");
-  assert.equal(homeOf({ role: "manager", section_access: { "/admin/hq": true } }), "/admin", "менеджер с галочкой начинает со своих лидов");
+  assert.equal(homeOf({ role: "manager" }), "/admin/hq", "менеджер — на пульс своего дня");
+  assert.equal(homeOf({ role: "manager", section_access: { "/admin/hq": false } }), "/admin", "закрыли — в лиды");
   assert.equal(homeOf({ role: "head", section_access: { "/admin/hq": false } }), "/admin", "закрыли — домой в лиды");
   assert.match(read("components/admin/shell.tsx"), /href=\{homeOf\(staff\)\}/);
   assert.match(read("app/admin/login/actions.ts"), /redirect\(to === "\/admin" \? homeOf\(staff\) : to\)/);

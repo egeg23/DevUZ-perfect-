@@ -90,9 +90,11 @@ export const SECTIONS: readonly Section[] = [
   // Главная — командный центр владельца и руководителя: пульс компании,
   // что горит, люди, быстрая задача и рассылка в бот (app/admin/hq).
   // Владелец, 13.10.2026: «это командный центр с самыми важными пунктами,
-  // что может понадобиться мне или руководителю». Первым пунктом меню и
+  // что может понадобиться мне или руководителю». Менеджеру — пульс его
+  // дня (владелец, 16.10.2026: «Менеджерам тоже теперь админку как у нас,
+  // страница „главная“ с пульсом их работы»). Первым пунктом меню и
   // отдельной группой: группа из одного раздела — просто ссылка.
-  { href: "/admin/hq", label: { ru: "Главная", uz: "Bosh sahifa", pl: "Pulpit" }, roles: WITH_HEAD, group: "home" },
+  { href: "/admin/hq", label: { ru: "Главная", uz: "Bosh sahifa", pl: "Pulpit" }, roles: EVERYONE, group: "home" },
   { href: "/admin", label: { ru: "Лиды", uz: "Lidlar", pl: "Leady" }, roles: EVERYONE, group: "sales" },
   { href: "/admin/orders", label: { ru: "Заявки", uz: "Buyurtmalar", pl: "Zamówienia" }, roles: EVERYONE, group: "sales" },
   { href: "/admin/scout", label: { ru: "Поиск", uz: "Qidiruv", pl: "Wyszukiwanie" }, roles: EVERYONE, group: "sales" },
@@ -253,13 +255,12 @@ export function opens(who: Viewer, href: string): boolean {
 }
 
 /**
- * Куда вести после входа и по логотипу: владельцу и руководителю —
- * «Главная» (если владелец не закрыл её галочкой), остальным — «Лиды», как
- * раньше. Менеджер, которому галочкой открыли «Главную», заходит в неё из
- * меню: его рабочий день начинается со своих лидов.
+ * Куда вести после входа и по логотипу: всем — «Главная» (владельцу и
+ * руководителю — командный центр, менеджеру — пульс его дня), если
+ * владелец не закрыл её галочкой; закрыли — в «Лиды», как раньше.
  */
 export function homeOf(who: Viewer): string {
-  return (who.role === "admin" || who.role === "head") && opens(who, "/admin/hq") ? "/admin/hq" : "/admin";
+  return opens(who, "/admin/hq") ? "/admin/hq" : "/admin";
 }
 
 /** Меню этого человека — с галочками владельца. */
