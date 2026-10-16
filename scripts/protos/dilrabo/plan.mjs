@@ -1,39 +1,52 @@
-// Конструктор цены Dilrabo Travel: «Минимум» или «Максимум» и допы тумблерами.
+// Конструктор цены Dilrabo Travel: сайт, «Приложение: минимум» или
+// «Приложение: максимум» и допы тумблерами.
 //
 // Владелец, 16.10.2026: «все механики и допы возьми с реализованных макетов».
-// Цены, сроки, допы и «наличными −10%» — как у inapp (владелец, 14.10.2026):
-// «Минимум» 5 900 $, 8-10 недель; «Максимум» 7 900 $, 11-13 недель. Вместо
-// Турвизора — каталог их собственных туров в Битрикс24: они продают свои
-// программы по Узбекистану, а не туры чужих операторов. Акции 48 часов нет,
-// как у inapp: её цену решает владелец.
+// Цены, сроки, допы приложения и «наличными −10%» — как у inapp (владелец,
+// 14.10.2026): 5 900 $, 8-10 недель; 7 900 $, 11-13 недель. Вместо Турвизора —
+// каталог их собственных туров в Битрикс24. Тот же день: «убери упоминания в
+// ценах за 5900, что они это просили. Просто назови: приложение минимум и
+// распили подробно» — названия и состав ниже.
 // Все цены макета живут здесь, и только здесь. Держит tests/proto-bundles.test.ts.
 
 export const TIERS = [
   {
     id: "min", price: 5900, weeks: [8, 10],
     ru: {
-      t: "Минимум",
-      d: "Приложение с вашими турами: поиск, бронь и оплата.",
+      t: "Приложение: минимум",
+      d: "Гость сам находит тур, проверяет места, бронирует и платит.",
       items: [
-        "Приложение для iPhone и Android, публикация в App Store и Google Play",
-        "Ваши туры из каталога в Битрикс24: поиск по городу, датам, дням и гостям, дешёвые сверху, ближайшие выезды",
-        "Тур: фото, программа по дням, проживание, переезды, цена в группе и своей машиной",
-        "Проверка мест и цены перед бронью: отели, поезд, гид и машина",
-        "Бронь: гости латиницей, контакты, согласие; сделка в нужной колонке Битрикс24",
-        "Оплата картами Visa и Mastercard любой страны, Click, Payme, Uzum Bank на счёт агентства",
+        "Одно приложение для iPhone и Android, публикуем в App Store и Google Play на аккаунты агентства",
+        "Каталог туров из Битрикс24: туры, даты групп, цены и места ведёт менеджер, приложение берёт их оттуда",
+        "Поиск: город, даты, сколько дней, взрослые и дети с возрастом, питание, класс отелей",
+        "Выдача: дешёвые сверху, сортировка по цене и длительности, ближайшие выезды отдельным списком",
+        "Страница тура: фото, программа по дням, проживание, питание, переезды поездом и машиной",
+        "Как поехать: цена за всех в группе и на своей машине, Gentra, H1 или Staria",
+        "Проверка мест и цены перед бронью: отели, билеты на поезд, гид и машина",
+        "Бронь: гости латиницей как в паспорте, проверка полей, контакты, согласие с договором",
+        "Сделка сама встаёт в нужную колонку Битрикс24: контакт, гости, тур, формат, сумма",
+        "Оплата на счёт агентства: Visa и Mastercard любой страны, Click, Payme, Uzum Bank",
+        "Полностью или предоплатой, чек об оплате, сделка сама переходит в «Оплачено»",
+        "Избранное: гость сохраняет туры и возвращается к ним",
         "Русский и узбекский",
       ],
     },
     uz: {
-      t: "Minimum",
-      d: "Turlaringiz bilan ilova: qidiruv, bron va to‘lov.",
+      t: "Ilova: minimum",
+      d: "Mehmon turni o‘zi topadi, joylarni tekshiradi, bron qiladi va to‘laydi.",
       items: [
-        "iPhone va Android uchun ilova, App Store va Google Play’ga joylash",
-        "Bitrix24’dagi katalogdan turlaringiz: shahar, sana, kun va mehmonlar bo‘yicha qidiruv, arzonlari tepada, yaqin jo‘nashlar",
-        "Tur: suratlar, kunlar bo‘yicha dastur, turar joy, ko‘chishlar, guruhda va o‘z mashinangizda narx",
-        "Bron oldidan joy va narxni tekshirish: mehmonxona, poyezd, gid va mashina",
-        "Bron: lotincha mehmonlar, kontaktlar, rozilik; Bitrix24’ning kerakli ustunida bitim",
-        "Istalgan davlatning Visa va Mastercard kartalari, Click, Payme, Uzum Bank orqali agentlik hisobiga to‘lov",
+        "iPhone va Android uchun bitta ilova, agentlik akkauntlariga App Store va Google Play’ga joylaymiz",
+        "Bitrix24’dan turlar katalogi: turlar, guruh sanalari, narxlar va joylarni menejer yuritadi, ilova ularni o‘sha yerdan oladi",
+        "Qidiruv: shahar, sanalar, necha kun, kattalar va yoshi bilan bolalar, ovqat, mehmonxona darajasi",
+        "Natijalar: arzonlari tepada, narx va davomiylik bo‘yicha saralash, yaqin jo‘nashlar alohida ro‘yxatda",
+        "Tur sahifasi: suratlar, kunlar bo‘yicha dastur, turar joy, ovqat, poyezd va mashinada ko‘chishlar",
+        "Qanday borish: guruhda va o‘z mashinasida hamma uchun narx, Gentra, H1 yoki Staria",
+        "Bron oldidan joy va narxni tekshirish: mehmonxonalar, poyezd chiptalari, gid va mashina",
+        "Bron: mehmonlar lotincha pasportdagidek, maydonlarni tekshirish, kontaktlar, shartnomaga rozilik",
+        "Bitim o‘zi Bitrix24’ning kerakli ustuniga tushadi: kontakt, mehmonlar, tur, format, summa",
+        "Agentlik hisobiga to‘lov: istalgan davlatning Visa va Mastercard kartalari, Click, Payme, Uzum Bank",
+        "To‘liq yoki oldindan to‘lov, to‘lov cheki, bitim o‘zi «To‘landi»ga o‘tadi",
+        "Sevimlilar: mehmon turlarni saqlaydi va ularga qaytadi",
         "Rus va o‘zbek tillari",
       ],
     },
@@ -41,27 +54,33 @@ export const TIERS = [
   {
     id: "max", price: 7900, weeks: [11, 13], star: true,
     ru: {
-      t: "Максимум",
-      d: "Всё из «Минимума» и путь без звонков до документов.",
+      t: "Приложение: максимум",
+      d: "Всё из минимума, и от брони до документов гостю не нужно ни писать, ни звонить.",
       items: [
-        "Всё из «Минимума»",
-        "Статус брони в приложении: колонка сделки в Битрикс24 = шаг у клиента",
-        "Документы из сделки в приложении: ваучер, билеты, страховка, программа по дням; открываются без интернета",
-        "Уведомления на каждом шаге брони",
-        "Вход по номеру телефона с кодом по SMS, мои поездки, сохранённые туристы",
-        "Предоплата и доплата остатка в приложении, отказ и возврат с понятным статусом",
+        "Всё из «Приложение: минимум»",
+        "Статус брони в приложении: колонка сделки в Битрикс24 и есть шаг у гостя",
+        "Лента статусов: заявка принята, бронируем отели и билеты, подтверждено, оплачено, документы готовы, в поездке",
+        "Уведомления на каждом шаге и напоминание перед выездом",
+        "Документы из сделки: ваучер, билеты, страховка, программа по дням; открываются без интернета",
+        "Вход по номеру телефона с кодом из SMS, «Мои поездки»",
+        "Сохранённые туристы: паспорта семьи вносятся один раз, бронь заполняется в одно касание",
+        "Предоплата и доплата остатка прямо в приложении",
+        "Если мест нет: понятный статус и возврат на ту же карту, похожие туры рядом",
       ],
     },
     uz: {
-      t: "Maksimum",
-      d: "«Minimum»dagi hammasi va hujjatlargacha qo‘ng‘iroqsiz yo‘l.",
+      t: "Ilova: maksimum",
+      d: "Minimumdagi hammasi va brondan hujjatlargacha mehmon yozishi ham, qo‘ng‘iroq qilishi ham shart emas.",
       items: [
-        "«Minimum»dagi hammasi",
-        "Ilovada bron holati: Bitrix24’dagi bitim ustuni = mijozdagi qadam",
-        "Bitimdan hujjatlar ilovada: vaucher, chiptalar, sug‘urta, kunlar bo‘yicha dastur; internetsiz ochiladi",
-        "Bronning har bir qadamida bildirishnoma",
-        "Telefon raqami va SMS kod bilan kirish, sayohatlarim, saqlangan turistlar",
-        "Ilovada oldindan to‘lov va qolganini to‘lash, tushunarli holat bilan rad etish va qaytarish",
+        "«Ilova: minimum»dagi hammasi",
+        "Ilovada bron holati: Bitrix24’dagi bitim ustuni mehmondagi qadamning o‘zi",
+        "Holatlar lentasi: ariza qabul qilindi, mehmonxona va chiptalarni bron qilyapmiz, tasdiqlandi, to‘landi, hujjatlar tayyor, sayohatda",
+        "Har bir qadamda bildirishnoma va jo‘nashdan oldin eslatma",
+        "Bitimdan hujjatlar: vaucher, chiptalar, sug‘urta, kunlar bo‘yicha dastur; internetsiz ochiladi",
+        "Telefon raqami va SMS kod bilan kirish, «Sayohatlarim»",
+        "Saqlangan turistlar: oila pasportlari bir marta kiritiladi, bron bir bosishda to‘ldiriladi",
+        "Oldindan to‘lov va qolganini to‘lash ilovaning o‘zida",
+        "Joy bo‘lmasa: tushunarli holat va o‘sha kartaga qaytarish, yonida o‘xshash turlar",
       ],
     },
   },
@@ -71,10 +90,16 @@ export const TIERS = [
  * Сайт (владелец, 16.10.2026: «Сделай ещё сайт за 1000$ и допы на 2000$
  * раскидай на 10-15 позиций, а то только приложение сейчас за 5900
  * минимум»). Отдельный вариант рядом с приложением, со своими допами:
- * со всеми допами сайт стоит 3 000 $.
+ * со всеми допами сайт стоит 3 000 $. Тот же день: «цена имеет 48 часов на
+ * принятие оффера в 1000$… Поставь таймер 48 часов». Обычная цена — 2 500 $,
+ * как у корпоративного сайта в общей акции (PROMO.corporate в
+ * lib/admin/mockup-offer.ts); боту те же цифры дают protos.facts.promo.
+ * Отсчёт — с первого открытия макета на этом устройстве, как у greenwell;
+ * вышел срок — сайт по обычной цене. Допы к сайту — без скидки.
  */
+export const OFFER_HOURS = 48;
 export const SITE = {
-  id: "site", price: 1000, weeks: [3, 4], g: "site",
+  id: "site", price: 1000, regular: 2500, weeks: [3, 4], g: "site",
   ru: {
     t: "Сайт",
     d: "Новый dilrabotravel.com: ваши туры, цена видна сразу, заявка в один шаг.",

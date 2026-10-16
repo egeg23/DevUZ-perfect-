@@ -1176,8 +1176,12 @@ test("Dilrabo Travel: переодетый inapp — их знак, туры и 
     for (const id of ["put", "sayt", "prilozhenie", "menedzher", "shema", "otvet", "nuzhno", "keys", "predlozhenie", "konstruktor"]) assert.match(all[path], new RegExp(`id="${id}"`), `${path}: нет блока ${id}`);
     assert.match(all[path], /id="bx-board"/, `${path}: нет канбана менеджера`);
     assert.ok(all[path].includes(`https://devuz.studio/${path || "ru"}/cases/apollo-travel`), `${path}: нет ссылки на кейс Apollo Travel`);
-    // Как у inapp: акции 48 часов нет, её цену решает владелец.
-    assert.doesNotMatch(all[path], /id="timer"|48 (часов|soat)/, `${path}: таймер акции, которой нет`);
+    // Владелец, 16.10.2026: сайт за 1 000 $ — 48 часов на принятие, таймер на странице.
+    assert.match(all[path], /<div class="timer" id="timer">/, `${path}: нет таймера акции`);
+    assert.match(all[path], /<b class="num" id="tm">48:00:00<\/b>/, `${path}: таймер не на 48 часов`);
+    assert.match(all[path], /localStorage\.getItem\('dt-offer-1'\)/, `${path}: отсчёт не с первого открытия`);
+    // «Убери упоминания в ценах за 5900, что они это просили».
+    assert.doesNotMatch(all[path], /вы просили|so‘ragan|ТЗ|TZ/, `${path}: «вы просили» в ценах`);
     // Правило владельца, 15.10.2026: шапка прячется при прокрутке и возвращается через 3 секунды.
     assert.match(all[path], /var IDLE=3000,idleT=0;/, `${path}: нет правила шапки`);
     assert.match(all[path], /function onScroll\(\)\{headIdle\(\);/, `${path}: шапка не прячется при прокрутке`);
@@ -1213,9 +1217,15 @@ test("Dilrabo Travel: сайт 1 000 $ и допы к нему на 2 000 $ в 1
   assert.ok(plan.SITE_ADDONS.length >= 10 && plan.SITE_ADDONS.length <= 15, "у сайта 10-15 допов");
   assert.equal(plan.SITE_ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0), 2000, "допы к сайту вместе 2 000 $");
   assert.equal(plan.SITE_ALL, 3000);
+  assert.equal(plan.SITE.regular, 2500, "после 48 часов сайт по обычной цене");
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.TIERS[0].ru.items.length >= 10, "приложение: минимум расписано подробно");
   for (const html of [site.html, site.pages.uz]) {
     assert.match(html, /value="site" data-g="site" data-p="1000" data-w="3-4" checked/, "сайт на странице и выбран по умолчанию");
-    assert.match(html, /data-g="app" data-p="5900" data-w="8-10"/, "«Минимум» на странице");
+    assert.match(html, /<s class="tr-was">2 500 \$<\/s> <span class="tr-now">1 000 \$<\/span>/, "сайт 1 000 $ вместо 2 500 $");
+    assert.match(html, /"promo":\{"id":"site","price":1000,"regular":2500,"hours":48\}/, "скрипт считает акцию от тех же цен");
+    assert.ok(html.includes(">Приложение: минимум<") || html.includes(">Ilova: minimum<"), "приложение называется «Приложение: минимум»");
+    assert.match(html, /data-g="app" data-p="5900" data-w="8-10"/, "«Приложение: минимум» на странице");
     assert.match(html, /data-g="app" data-p="7900" data-w="11-13"/, "«Максимум» на странице");
     for (const a of plan.SITE_ADDONS) assert.ok(html.includes(`data-g="site" data-k="${a.id}" data-p="${a.price}"`), `${a.id}: доп к сайту на странице`);
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-g="app" data-k="${a.id}" data-p="${a.price}"`), `${a.id}: доп к приложению на странице`);

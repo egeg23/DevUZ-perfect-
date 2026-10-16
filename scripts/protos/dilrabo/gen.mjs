@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
 import { UI } from "./ui.mjs";
-import { ADDONS, ALL, CASH_OFF, COSTS, SITE, SITE_ADDONS, SITE_ALL, TIERS } from "./plan.mjs";
+import { ADDONS, ALL, CASH_OFF, COSTS, OFFER_HOURS, SITE, SITE_ADDONS, SITE_ALL, TIERS } from "./plan.mjs";
 /* Варианты в конструкторе: сайт и два объёма приложения; у сайта и приложения свои допы (g). */
 const OPTS = [SITE, ...TIERS.map((x) => ({ ...x, g: "app" }))];
 
@@ -404,8 +404,8 @@ function answerBlock(l) {
     t("Договор с туристом и политика персональных данных: тексты покажем в приложении перед бронью.", "Turist bilan shartnoma va shaxsiy ma’lumotlar siyosati: matnlarni ilovada bron oldidan ko‘rsatamiz."),
   ];
   return `<section id="otvet" data-tone="paper"><div class="wrap">
-${head(t("Ваша бронь сейчас и в приложении", "Broningiz hozir va ilovada"), t("Пять шагов с вашего сайта, и что с ними станет", "Saytingizdagi besh qadam va ular bilan nima bo‘ladi"), t("Цитаты из раздела «Как забронировать тур» на dilrabotravel.com. «Минимум» и «Максимум» как в предложении ниже.", "dilrabotravel.com’dagi «Turni qanday bron qilish» bo‘limidan iqtiboslar. «Minimum» va «Maksimum» quyidagi taklifdagidek."))}
-<div class="ans">${rows.map(([q, tier, a], i) => `<div class="an rv a-up" style="--d:${(i % 3) * 60}ms"><span class="an-n num">${i + 1}</span><div><p class="an-q">${q}</p><p class="an-a">${a}</p></div><span class="an-t ${tier}">${ic("check")}${tier === "min" ? t("Минимум", "Minimum") : t("Максимум", "Maksimum")}</span></div>`).join("")}</div>
+${head(t("Ваша бронь сейчас и в приложении", "Broningiz hozir va ilovada"), t("Пять шагов с вашего сайта, и что с ними станет", "Saytingizdagi besh qadam va ular bilan nima bo‘ladi"), t("Цитаты из раздела «Как забронировать тур» на dilrabotravel.com. «Приложение: минимум» и «Приложение: максимум» как в предложении ниже.", "dilrabotravel.com’dagi «Turni qanday bron qilish» bo‘limidan iqtiboslar. «Ilova: minimum» va «Ilova: maksimum» quyidagi taklifdagidek."))}
+<div class="ans">${rows.map(([q, tier, a], i) => `<div class="an rv a-up" style="--d:${(i % 3) * 60}ms"><span class="an-n num">${i + 1}</span><div><p class="an-q">${q}</p><p class="an-a">${a}</p></div><span class="an-t ${tier}">${ic("check")}${tier === "min" ? t("Приложение: минимум", "Ilova: minimum") : t("Приложение: максимум", "Ilova: maksimum")}</span></div>`).join("")}</div>
 <div class="ask rv a-up"><h3>${t("Что уточним у вас", "Sizdan nimani aniqlaymiz")}</h3><ul>${ask.map((x) => `<li>${ic("info")}<span>${x}</span></li>`).join("")}</ul></div>
 </div></section>`;
 }
@@ -440,10 +440,10 @@ ${head(t("Мы уже делали для турагентств", "Turagentlikl
 </div></section>`;
 }
 
-/* Предложение DevUz: «Минимум» или «Максимум», допы, срок и итог. */
+/* Предложение DevUz: сайт по акции 48 часов или приложение (минимум, максимум), допы, срок и итог. */
 function offerBlock(l) {
   const t = T(l);
-  const tier = (x, i) => `<label class="tier${x.star ? " star" : ""}"><input type="radio" name="tier" value="${x.id}" data-g="${x.g}" data-p="${x.price}" data-w="${x.weeks.join("-")}"${i === 0 ? " checked" : ""}><div class="tr-h"><span class="rd2" aria-hidden="true"></span><b>${x[l].t}</b>${x.star ? `<em class="star-t">${t("путь без писем", "xatlarsiz yo‘l")}</em>` : x.g === "site" ? `<em class="star-t">${t("быстрый старт", "tez boshlash")}</em>` : ""}</div><p class="tr-d">${x[l].d}</p><p class="tr-p num">${usd(x.price)}</p><p class="tr-w">${x.weeks.join("-")} ${t(x.weeks[1] < 5 ? "недели" : "недель", "hafta")}</p><ul>${x[l].items.map((it) => `<li>${ic("check")}<span>${it}</span></li>`).join("")}</ul></label>`;
+  const tier = (x, i) => `<label class="tier${x.star ? " star" : ""}"><input type="radio" name="tier" value="${x.id}" data-g="${x.g}" data-p="${x.price}" data-w="${x.weeks.join("-")}"${i === 0 ? " checked" : ""}><div class="tr-h"><span class="rd2" aria-hidden="true"></span><b>${x[l].t}</b>${x.star ? `<em class="star-t">${t("путь без писем", "xatlarsiz yo‘l")}</em>` : x.g === "site" ? `<em class="star-t">${t("акция 48 часов", "48 soatlik aksiya")}</em>` : ""}</div><p class="tr-d">${x[l].d}</p><p class="tr-p num">${x.regular ? `<s class="tr-was">${usd(x.regular)}</s> ` : ""}<span class="tr-now">${usd(x.price)}</span></p>${x.regular ? `<p class="tr-48">${t(`Цена ${usd(x.price)} действует ${OFFER_HOURS} часов с первого открытия макета, потом ${usd(x.regular)}`, `${usd(x.price)} narxi maket birinchi ochilgandan ${OFFER_HOURS} soat amal qiladi, keyin ${usd(x.regular)}`)}</p>` : ""}<p class="tr-w">${x.weeks.join("-")} ${t(x.weeks[1] < 5 ? "недели" : "недель", "hafta")}</p><ul>${x[l].items.map((it) => `<li>${ic("check")}<span>${it}</span></li>`).join("")}</ul></label>`;
   const row = (a, g) => `<label class="kit-row"><input type="checkbox" data-g="${g}" data-k="${a.id}" data-p="${a.price}" data-w="${a.weeks}"><span class="sw" aria-hidden="true"></span><span class="kit-t"><b>${a[l].t}${a.star ? `<em class="star">${t("часто берут", "ko‘p olishadi")}</em>` : ""}</b><small>${a[l].e}</small></span><span class="kit-p num">+${usd(a.price)}</span></label>`;
   return `<section id="predlozhenie" data-tone="paper" class="offer"><div class="wrap">
 ${head(ours(l), t("Сколько стоит и за сколько сделаем", "Qancha turadi va qancha vaqtda qilamiz"), t("Начать можно с сайта за 1 000 $, приложение добавить потом. Выберите вариант и включите допы: итог и срок пересчитаются сразу. Цены предварительные, точные после созвона и доступа к Битрикс24.", "Saytdan 1 000 $ ga boshlash mumkin, ilovani keyin qo‘shasiz. Variantni tanlang va qo‘shimchalarni yoqing: jami va muddat darhol qayta hisoblanadi. Narxlar dastlabki, aniq narx qo‘ng‘iroq va Bitrix24’ga kirishdan keyin."))}
@@ -460,6 +460,7 @@ ${ADDONS.map((a) => row(a, "app")).join("")}</div>
 <div class="kit-side">
 <div class="kit-total beam" id="kit-total">
 <p class="kt-k">${t("Ваш расчёт", "Sizning hisobingiz")}</p>
+<div class="timer" id="timer"><span><b class="tm-t">${t(`Сайт за ${usd(SITE.price)} вместо ${usd(SITE.regular)}`, `Sayt ${usd(SITE.regular)} o‘rniga ${usd(SITE.price)}`)}</b><small class="tm-s">${t(`осталось из ${OFFER_HOURS} часов с первого открытия макета`, `maket birinchi ochilgandan ${OFFER_HOURS} soatdan qoldi`)}</small></span><b class="num" id="tm">${OFFER_HOURS}:00:00</b></div>
 <div class="kt-line"><span id="kt-tier"></span><span class="num" id="kt-tp"></span></div>
 <div class="kt-line"><span>${t("Допы", "Qo‘shimchalar")} · <span id="kit-n">0</span></span><span class="num" id="kit-add">0 $</span></div>
 <label class="kt-cash"><input type="checkbox" id="kit-cash"><span class="sw" aria-hidden="true"></span><span>${t(`Оплата наличными: минус ${CASH_OFF}%`, `Naqd to‘lov: ${CASH_OFF}% chegirma`)}</span><b class="num" id="kit-cash-v"></b></label>
@@ -467,7 +468,7 @@ ${ADDONS.map((a) => row(a, "app")).join("")}</div>
 <a class="btn btn-white" id="kit-go" href="https://t.me/Devuz_studio_bot?start=dilrabo">${ic("tg")}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 <button type="button" class="copy" id="kit-copy">${t("Скопировать состав", "Tarkibni nusxalash")}</button>
 </div>
-<p class="src">${t(`Сайт ${usd(SITE.price)}, ${SITE.weeks.join("-")} недели, со всеми допами к сайту ${usd(SITE_ALL)}. Приложение: «Минимум» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} недель; «Максимум» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} недель. Допы по рыночным ставкам, со всеми допами ${usd(ALL)}. При оплате наличными минус ${CASH_OFF}% от итога вместе с допами. Расходы на магазины, банк, платёжные системы и SMS агентство платит само, в цену они не входят. Оплата этапами: аванс, макет экранов, публикация.`, `Sayt ${usd(SITE.price)}, ${SITE.weeks.join("-")} hafta, saytga barcha qo‘shimchalar bilan ${usd(SITE_ALL)}. Ilova: «Minimum» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} hafta; «Maksimum» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} hafta. Qo‘shimchalar bozor narxida, barchasi bilan ${usd(ALL)}. Naqd to‘lovda qo‘shimchalar bilan birga jamidan ${CASH_OFF}% chegirma. Do‘konlar, bank, to‘lov tizimlari va SMS xarajatlarini agentlik o‘zi to‘laydi, ular narxga kirmaydi. To‘lov bosqichma-bosqich: avans, ekranlar maketi, joylash.`)}</p>
+<p class="src">${t(`Сайт ${usd(SITE.price)}, ${SITE.weeks.join("-")} недели, со всеми допами к сайту ${usd(SITE_ALL)}. Цена сайта ${usd(SITE.price)} вместо ${usd(SITE.regular)} действует ${OFFER_HOURS} часов с первого открытия макета, потом ${usd(SITE.regular)}; допы к сайту без скидки. «Приложение: минимум» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} недель; «Приложение: максимум» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} недель. Допы по рыночным ставкам, со всеми допами ${usd(ALL)}. При оплате наличными минус ${CASH_OFF}% от итога вместе с допами. Расходы на магазины, банк, платёжные системы и SMS агентство платит само, в цену они не входят. Оплата этапами: аванс, макет экранов, публикация.`, `Sayt ${usd(SITE.price)}, ${SITE.weeks.join("-")} hafta, saytga barcha qo‘shimchalar bilan ${usd(SITE_ALL)}. Sayt narxi ${usd(SITE.regular)} o‘rniga ${usd(SITE.price)} maket birinchi ochilgandan ${OFFER_HOURS} soat amal qiladi, keyin ${usd(SITE.regular)}; saytga qo‘shimchalar chegirmasiz. «Ilova: minimum» ${usd(TIERS[0].price)}, ${TIERS[0].weeks.join("-")} hafta; «Ilova: maksimum» ${usd(TIERS[1].price)}, ${TIERS[1].weeks.join("-")} hafta. Qo‘shimchalar bozor narxida, barchasi bilan ${usd(ALL)}. Naqd to‘lovda qo‘shimchalar bilan birga jamidan ${CASH_OFF}% chegirma. Do‘konlar, bank, to‘lov tizimlari va SMS xarajatlarini agentlik o‘zi to‘laydi, ular narxga kirmaydi. To‘lov bosqichma-bosqich: avans, ekranlar maketi, joylash.`)}</p>
 </div>
 </div>
 </div></section>`;
@@ -479,6 +480,7 @@ function shell(l, body) {
   const nav = [["#put", t("Путь гостя", "Mehmon yo‘li")], ["#prilozhenie", t("Приложение", "Ilova")], ["#menedzher", t("Менеджер", "Menejer")], ["#otvet", t("Ваша бронь", "Broningiz")], ["#predlozhenie", t("Цена", "Narx")]];
   const kit = {
     tiers: OPTS.map((x) => ({ id: x.id, g: x.g, t: x[l].t, p: x.price, w: x.weeks })), items: [...SITE_ADDONS.map((a) => ({ id: a.id, g: "site", t: a[l].t, p: a.price, w: a.weeks })), ...ADDONS.map((a) => ({ id: a.id, g: "app", t: a[l].t, p: a.price, w: a.weeks }))],
+    promo: { id: SITE.id, price: SITE.price, regular: SITE.regular, hours: OFFER_HOURS }, ended: t(`Срок акции вышел: сайт по обычной цене ${usd(SITE.regular)}`, `Aksiya muddati tugadi: sayt odatiy narxda, ${usd(SITE.regular)}`), endedS: t("цена до акции", "aksiyadan oldingi narx"),
     cash: CASH_OFF, cashName: t("Оплата наличными", "Naqd to‘lov"), copied: t("Скопировано", "Nusxalandi"), head: t(`${B}: сайт и приложение, состав из конструктора:`, `${B}: sayt va ilova, konstruktordan tarkib:`), total: t("Итого", "Jami"), weeks: t("недель", "hafta"),
   };
   return `<!doctype html>

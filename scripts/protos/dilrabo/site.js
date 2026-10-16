@@ -161,6 +161,18 @@ radios.forEach(function(r){if(st.__tier)r.checked=r.value===st.__tier;r.addEvent
 var cashBox=$('#kit-cash');
 if(cashBox){cashBox.checked=!!st.__cash;cashBox.addEventListener('change',function(){st.__cash=cashBox.checked;keep();sum()})}
 function keep(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+/* Акция на сайт: 1 000 $ вместо 2 500 $ — 48 часов с первого открытия макета
+   на этом устройстве (как у greenwell). Вышел срок: сайт считается по обычной
+   цене, в карточке и в расчёте. */
+var P=K.promo,tm=$('#tm'),pStart=Date.now();
+try{var ps=+localStorage.getItem('dt-offer-1');if(ps&&ps<=Date.now())pStart=ps;else localStorage.setItem('dt-offer-1',String(pStart))}catch(e){}
+var pEnd=pStart+P.hours*36e5,over=false;
+function pad(n){return (n<10?'0':'')+n}
+function expire(){over=true;$('#timer').classList.add('over');tm.textContent='00:00:00';$('#timer .tm-t').textContent=K.ended;$('#timer .tm-s').textContent=K.endedS;
+  K.tiers.forEach(function(t){if(t.id===P.id)t.p=P.regular});
+  var r=$('#konstruktor input[name="tier"][value="'+P.id+'"]');if(r){r.setAttribute('data-p',P.regular);var c=r.closest('.tier');var now=$('.tr-now',c),was=$('.tr-was',c),n48=$('.tr-48',c);if(now)now.textContent=grp(P.regular)+' $';if(was)was.remove();if(n48)n48.remove()}
+  sum()}
+function tickT(){var left=pEnd-Date.now();if(left<=0){if(!over)expire();return}var hh=Math.floor(left/36e5),mm=Math.floor(left%36e5/6e4),ss=Math.floor(left%6e4/1e3);tm.textContent=pad(hh)+':'+pad(mm)+':'+pad(ss);setTimeout(tickT,1000)}
 var shown=0;
 function tierNow(){var r=radios.filter(function(x){return x.checked})[0]||radios[0];return K.tiers.filter(function(t){return t.id===r.value})[0]}
 /* Видны и считаются только допы выбранного варианта: к сайту или к приложению. */
@@ -179,6 +191,7 @@ function sum(){
 }
 function roll(el,a,b){if(REDUCED||a===b||!a){el.textContent=grp(b)+' $';return}var t0=0;function f(now){if(!t0)t0=now;var k=Math.min((now-t0)/500,1),e=1-Math.pow(1-k,3);el.textContent=grp(a+(b-a)*e)+' $';if(k<1)requestAnimationFrame(f)}requestAnimationFrame(f)}
 sum();
+if(tm)tickT();
 $('#kit-copy').addEventListener('click',function(){
   var tr=tierNow(),lines=[K.head,'• '+tr.t+': '+grp(tr.p)+' $'];
   K.items.forEach(function(a){if(st[a.id]&&a.g===tr.g)lines.push('• '+a.t+': '+grp(a.p)+' $')});
