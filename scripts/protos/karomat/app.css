@@ -32,6 +32,8 @@ p{margin:0}
 .demo-strip{margin:0;padding:4px 16px;font-size:12px;text-align:center;background:var(--gold);color:var(--on-gold)}
 .demo-strip a{font-weight:700}
 .embed .demo-strip{display:none}
+/* В айфоне на странице сверху вырез экрана: шапка опускается под него. */
+.embed .top{padding-top:40px}
 .hd-in{display:flex;align-items:center;gap:12px;max-width:1180px;margin:0 auto;padding:8px 16px;min-height:56px}
 .logo{text-decoration:none}
 .lg{display:inline-flex;align-items:center;gap:8px}
