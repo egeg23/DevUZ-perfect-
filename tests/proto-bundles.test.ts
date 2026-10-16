@@ -1236,3 +1236,61 @@ test("Dilrabo Travel: сайт 1 000 $ и допы к нему на 2 000 $ в 1
     assert.match(html, /"cash":10,/, "скрипт считает скидку за наличные от тех же 10%");
   }
 });
+
+test("Karomat: 6 страниц uz и ru — условия, noindex, заставка DevUz, дастархан, шапка по правилу, только их фото", async () => {
+  const { existsSync } = await import("node:fs");
+  const site = bundlePages("karomat");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "menu", "panel", "ru", "ru/menu", "ru/panel"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("ru") ? "ru" : "uz";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /body\{[^}]*overflow-x:hidden/, `${path}: overflow-x:hidden у body ломает sticky`);
+    assert.match(page, /IDLE=3000/, `${path}: шапка не по правилу трёх секунд`);
+    assert.ok(page.includes("KAROMAT"), `${path}: нет названия ресторана`);
+    for (const src of page.match(/\/protos\/karomat\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+  }
+  for (const path of ["", "ru"]) {
+    const page = all[path];
+    assert.match(page, /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.equal((page.match(/class="pl pl-\d"/g) ?? []).length, 9, `${path}: на столе не девять блюд`);
+    assert.ok(page.includes('id="steam"') && page.includes("ScrollTrigger.min.js"), `${path}: нет пара или ScrollTrigger`);
+    assert.ok(page.includes("tel:+998712715052"), `${path}: нет звонка в ресторан`);
+    assert.ok(page.includes('id="hall"') && page.includes('id="bq-list"'), `${path}: нет брони на схеме или банкета`);
+  }
+  const stamped = stampedBundle("karomat", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Karomat: блюда и цены — из их меню, сайт 1 000 $ вместо 2 500 $ на 48 часов, допы в одном месте", async () => {
+  const { readFileSync } = await import("node:fs");
+  const D = await import("../scripts/protos/karomat/data.mjs");
+  const src = JSON.parse(readFileSync("scripts/protos/karomat/menu-src.json", "utf8"));
+  const byId = new Map(src.items.map((x: { id: number }) => [x.id, x]));
+  for (const m of D.MENU) {
+    const s = byId.get(m.id) as { price: number; v: [string, number][] } | undefined;
+    assert.ok(s, `${m.id}: блюда нет в их меню`);
+    const prices = s.v.length ? s.v.map((v) => v[1]) : [s.price];
+    assert.ok(prices.includes(m.price), `${m.id}: цены ${m.price} нет в их меню`);
+    for (const v of m.v) assert.ok(prices.includes(v.p), `${m.id}: варианта ${v.p} нет в их меню`);
+  }
+  assert.equal(D.BRAND.service, 15, "обслуживание — как в их системе меню");
+  const plan = await import("../scripts/protos/karomat/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 2500);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
+  const site = bundlePages("karomat")!;
+  for (const html of [site.html, site.pages.ru]) {
+    assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});
