@@ -1,0 +1,397 @@
+# Проверка сервера на взлом, по кнопке.
+#
+# Владелец, 17.10.2026: «проверь web shell, нет ли у нас дыр по
+# безопасности». Осмотр ТОЛЬКО читает: ничего не удаляет, не правит, не
+# перезапускает и не ставит. Каждая команда — с nice/ionice и timeout, find —
+# только по веб-корням и каталогам приложений, весь осмотр — до 10 минут:
+# на сервере живут ещё полтора десятка сайтов.
+#
+# Репозиторий открытый, и лог Actions видят все. Поэтому в лог уходит одна
+# строка: «осмотр прошёл, находок: N». Подробный отчёт сервер сам шлёт
+# владельцу и руководителю ботом студии (токен и чаты — из .env приложения и
+# из базы, как у deploy/watchdog.sh). В отчёте нет ключей, паролей и полных
+# адресов посторонних: длинные строки похожие на ключи и IP маскируются.
+#
+# Запускается со вкладки Actions → «Проверка сервера на взлом» → Run workflow.
+name: Проверка сервера на взлом
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vps-security
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    name: Осмотр сервера
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Осмотреть сервер по SSH (только чтение)
+        uses: appleboy/ssh-action@v1
+        env:
+          VPS_APP_DIR_IN: ${{ secrets.VPS_APP_DIR }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: VPS_APP_DIR_IN
+          command_timeout: 12m
+          script: |
+            set -uo pipefail
+            umask 077
+            # Всё, что команды напечатают, — мимо публичного лога. В лог —
+            # только итоговая строка через дескриптор 3.
+            exec 3>&1 1>/dev/null 2>&1
+
+            APP_DIR="${VPS_APP_DIR_IN:-/opt/devuz}"
+            W="$(mktemp -d /tmp/devuz-sec.XXXXXX)" || { echo "осмотр не начался: нет места во /tmp" >&3; exit 1; }
+            trap 'rm -rf "$W"' EXIT
+            R="$W/report"; : > "$R"
+            FINDINGS=0
+            DEADLINE=540
+
+            SUDO=""
+            if [ "$(id -u)" != 0 ]; then
+              if sudo -n true 2>/dev/null; then SUDO="sudo -n"; fi
+            fi
+            # Тихо, с низким приоритетом и с пределом по времени.
+            low() { local t="$1"; shift; $SUDO timeout "$t" nice -n 19 ionice -c3 "$@" 2>/dev/null; }
+            late() { [ "$SECONDS" -ge "$DEADLINE" ]; }
+            sec() { printf '\n▪️ %s\n' "$1" >> "$R"; }
+            line() { printf '%s\n' "$*" >> "$R"; }
+            ok() { printf '✓ %s\n' "$*" >> "$R"; }
+            alarm() { FINDINGS=$((FINDINGS + 1)); printf '⚠️ %s\n' "$*" >> "$R"; }
+            # Чужие адреса — только до /16, длинные строки, похожие на ключи, — звёздами.
+            redact() {
+              sed -E \
+                -e 's/([0-9]{1,3})\.([0-9]{1,3})\.[0-9]{1,3}\.[0-9]{1,3}/\1.\2.x.x/g' \
+                -e 's/[0-9]{8,10}:[A-Za-z0-9_-]{30,}/***/g' \
+                -e 's/eyJ[A-Za-z0-9_.-]{10,}/***/g' \
+                -e 's/sk-[A-Za-z0-9_-]{10,}/***/g' \
+                -e 's/[A-Za-z0-9+\/_-]{40,}/***/g' \
+                -e 's/((pass(word)?|passwd|token|secret|key|pwd)[=:][[:space:]]*)[^[:space:]"]+/\1***/Ig'
+            }
+            envval() {
+              grep -m1 "^$1=" "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"
+            }
+
+            line "🛡 Проверка сервера на взлом — $(hostname 2>/dev/null), $(date '+%d.%m.%Y %H:%M %Z')"
+            if [ "$(id -u)" != 0 ] && [ -z "$SUDO" ]; then
+              line "· осмотр без root: часть проверок (чужие crontab, ключи, sshd -T) может быть неполной"
+            fi
+
+            # ─── Веб-корни ───────────────────────────────────────────────
+            sec "Веб-корни"
+            ROOTS="$W/roots"; : > "$ROOTS"
+            {
+              low 30 grep -rhoE '^[[:space:]]*(root|alias)[[:space:]]+[^;]+' /etc/nginx 2>/dev/null | awk '{print $2}'
+              low 30 grep -rhoiE '^[[:space:]]*DocumentRoot[[:space:]]+[^[:space:]]+' /etc/apache2 /etc/httpd 2>/dev/null | awk '{print $2}'
+              ls -d /var/www /opt/* /home/*/public_html /srv/* 2>/dev/null
+              # Тома контейнеров, которые смотрят в веб-каталоги.
+              for c in $(low 20 docker ps -q); do
+                low 10 docker inspect --format '{{range .Mounts}}{{.Source}}|{{.Destination}}{{"\n"}}{{end}}' "$c"
+              done | grep -iE '\|.*(www|html|public|upload|wp-content|htdocs|site)' | cut -d'|' -f1
+            } | tr -d '"'"'" | sed 's:/*$::' | grep -E '^/' | sort -u > "$ROOTS.all"
+            while read -r d; do [ -d "$d" ] && echo "$d"; done < "$ROOTS.all" > "$ROOTS"
+            # Вложенные пути выбрасываем: родитель уже покрывает их.
+            awk 'NR==1{p=$0; print; next} index($0, p"/")==1{next} {p=$0; print}' "$ROOTS" > "$ROOTS.top"
+            line "каталогов осмотра: $(wc -l < "$ROOTS.top")"
+            sed 's/^/  · /' "$ROOTS.top" >> "$R"
+
+            FILES="$W/files"; : > "$FILES"
+            while read -r d; do
+              late && break
+              low 120 find "$d" -xdev -maxdepth 10 \
+                \( -name node_modules -o -name .git -o -name .next -o -name .cache -o -name proc \) -prune -o \
+                -type f -print >> "$FILES"
+            done < "$ROOTS.top"
+            SCRIPTS="$W/scripts"
+            grep -iE '\.(php[0-9]?|phtml|phar|inc|jsp|jspx|asp|aspx|ashx|cgi|pl|sh)$' "$FILES" > "$SCRIPTS"
+            line "файлов: $(wc -l < "$FILES"), из них серверных скриптов (php, jsp, aspx, cgi, pl, sh…): $(wc -l < "$SCRIPTS")"
+
+            UP="$(grep -iE '/(uploads?|upload_files|files|media|images|tmp|cache)/' "$SCRIPTS" | grep -iE '\.(php[0-9]?|phtml|phar|jsp|aspx?|cgi|pl)$')"
+            if [ -n "$UP" ]; then
+              alarm "скрипты в каталогах загрузок ($(printf '%s\n' "$UP" | wc -l)) — там их быть не должно:"
+              printf '%s\n' "$UP" | head -20 | sed 's/^/  · /' >> "$R"
+            else
+              ok "в каталогах загрузок скриптов нет"
+            fi
+
+            RECENT="$(while read -r f; do low 5 find "$f" -maxdepth 0 -mtime -30; done < "$SCRIPTS" | grep -v "^$APP_DIR/")"
+            if [ -n "$RECENT" ]; then
+              line "· серверные скрипты, изменённые за 30 дней (кроме $APP_DIR): $(printf '%s\n' "$RECENT" | wc -l)"
+              printf '%s\n' "$RECENT" | head -15 | sed 's/^/  · /' >> "$R"
+            else
+              ok "серверных скриптов, изменённых за 30 дней, нет (кроме $APP_DIR)"
+            fi
+
+            STRONG='eval[[:space:]]*\([[:space:]]*(base64_decode|gzinflate|gzuncompress|str_rot13|\$_(GET|POST|REQUEST|COOKIE))|assert[[:space:]]*\([[:space:]]*\$_|(system|passthru|shell_exec|exec|popen|proc_open)[[:space:]]*\([[:space:]]*\$_(GET|POST|REQUEST|COOKIE|SERVER)|preg_replace[[:space:]]*\([[:space:]]*["'"'"'][^"'"'"']*/e["'"'"']|FilesMan|b374k|r57shell|c99shell|c99_|wso_version|Web Shell by|eval[[:space:]]*\([^)]*\$_REQUEST'
+            HITS="$W/hits"; : > "$HITS"
+            if [ -s "$SCRIPTS" ] && ! late; then
+              tr '\n' '\0' < "$SCRIPTS" | low 180 xargs -0 -r grep -lIE "$STRONG" > "$HITS"
+              # «Uname:» вместе с формой загрузки файла — подпись типовых шеллов.
+              tr '\n' '\0' < "$SCRIPTS" | low 120 xargs -0 -r grep -lI 'Uname:' | while read -r f; do
+                low 5 grep -qiE 'type=.?file' "$f" && echo "$f"
+              done >> "$HITS"
+              sort -u -o "$HITS" "$HITS"
+            fi
+            if [ -s "$HITS" ]; then
+              alarm "сигнатуры веб-шеллов в файлах ($(wc -l < "$HITS")):"
+              while read -r f; do
+                printf '  · %s (изменён %s)\n' "$f" "$(date -r "$f" '+%d.%m.%Y' 2>/dev/null)" >> "$R"
+              done < <(head -25 "$HITS")
+            else
+              ok "сигнатур веб-шеллов (eval(base64…), assert(\$_…), system(\$_…), c99/r57/WSO/b374k/FilesMan) не найдено"
+            fi
+            WEAK="$(tr '\n' '\0' < "$SCRIPTS" | low 120 xargs -0 -r grep -lIE 'passthru[[:space:]]*\(|shell_exec[[:space:]]*\(|create_function[[:space:]]*\(' | head -15)"
+            ROT="$(tr '\n' '\0' < "$SCRIPTS" | low 120 xargs -0 -r grep -lI 'str_rot13' | while read -r f; do low 5 grep -qE 'eval[[:space:]]*\(' "$f" && echo "$f"; done | head -10)"
+            if [ -n "$WEAK" ] || [ -n "$ROT" ]; then
+              line "· слабые признаки (бывают и в обычных плагинах — посмотреть глазами):"
+              printf '%s\n' $WEAK $ROT | sort -u | sed 's/^/  · /' >> "$R"
+            fi
+
+            HT="$(grep -E '/\.htaccess$' "$FILES" | while read -r f; do low 5 grep -qiE 'auto_prepend_file|auto_append_file' "$f" && echo "$f"; done)"
+            HTUP="$(grep -E '/\.htaccess$' "$FILES" | grep -iE '/uploads?/' | while read -r f; do low 5 grep -qiE 'AddHandler.*php|SetHandler.*php|AddType.*php' "$f" && echo "$f"; done)"
+            if [ -n "$HT$HTUP" ]; then
+              alarm ".htaccess с подменой обработчика или auto_prepend_file:"
+              printf '%s\n' $HT $HTUP | sort -u | sed 's/^/  · /' >> "$R"
+            else
+              ok ".htaccess с auto_prepend_file / AddHandler php в загрузках нет"
+            fi
+            UINI="$(grep -E '/\.user\.ini$' "$FILES")"
+            if [ -n "$UINI" ]; then
+              alarm ".user.ini найдены ($(printf '%s\n' "$UINI" | wc -l)) — частый способ подцепить шелл к каждой странице:"
+              printf '%s\n' "$UINI" | head -10 | sed 's/^/  · /' >> "$R"
+            else
+              ok ".user.ini нет"
+            fi
+            late && line "· время осмотра веб-корней вышло — часть каталогов не просмотрена"
+
+            # ─── Процессы и сеть ─────────────────────────────────────────
+            sec "Процессы и сеть"
+            MINERS="$(low 20 ps -eo pid=,user=,comm=,args= | grep -iE 'xmrig|kdevtmpfsi|kinsing|minerd|cpuminer|xmr-stak|stratum\+tcp|nicehash|\bxmr\b' | grep -v grep | cut -c1-160)"
+            if [ -n "$MINERS" ]; then
+              alarm "похоже на майнер или известную заразу:"
+              printf '%s\n' "$MINERS" | sed 's/^/  · /' >> "$R"
+            else
+              ok "майнеров (xmrig, kinsing, kdevtmpfsi…) среди процессов нет"
+            fi
+            TMPEXE=""; DELEXE=""
+            for p in /proc/[0-9]*; do
+              exe="$($SUDO readlink "$p/exe" 2>/dev/null)" || continue
+              case "$exe" in
+                /tmp/*|/dev/shm/*|/var/tmp/*) TMPEXE="$TMPEXE${p#/proc/} $(cat "$p/comm" 2>/dev/null) $exe"$'\n' ;;
+              esac
+              case "$exe" in
+                *" (deleted)") DELEXE="$DELEXE$(cat "$p/comm" 2>/dev/null)"$'\n' ;;
+              esac
+            done
+            if [ -n "$TMPEXE" ]; then
+              alarm "процессы запущены из /tmp, /dev/shm или /var/tmp:"
+              printf '%s' "$TMPEXE" | head -15 | sed 's/^/  · /' >> "$R"
+            else
+              ok "процессов из /tmp, /dev/shm, /var/tmp нет"
+            fi
+            if [ -n "$DELEXE" ]; then
+              line "· процессы с удалённым бинарником (после обновления пакетов так бывает, до перезапуска службы): $(printf '%s' "$DELEXE" | sort | uniq -c | sort -rn | awk '{printf "%s×%s ", $2, $1}' | cut -c1-400)"
+            else
+              ok "процессов с удалённым бинарником нет"
+            fi
+
+            line "Слушают снаружи (не только 127.0.0.1):"
+            low 20 ss -Htlnup | awk '{print $1, $5, $7}' | grep -vE ' (127\.[0-9.]+|\[::1\]|::1):' \
+              | sed -E 's/users:\(\("([^"]+)".*/\1/' | sort -u | head -40 | sed 's/^/  · /' >> "$R"
+            DBPORTS="$(low 20 ss -Htln | awk '{print $4}' | grep -vE '^(127\.|\[::1\]|::1)' | grep -E ':(3306|5432|6379|27017|9200|11211|5984|2375|2376)$')"
+            if [ -n "$DBPORTS" ]; then
+              alarm "наружу открыт порт базы или Docker API: $(printf '%s ' $DBPORTS) — проверить, закрыт ли он файрволом"
+            fi
+            OUT="$(low 20 ss -Htnp state established | awk '{print $4, $5}' | grep -E ':(3333|4444|5555|7777|14444|45700)( |$)')"
+            if [ -n "$OUT" ]; then
+              alarm "соединения на порты майнинг-пулов и обратных шеллов (3333/4444/5555/7777/14444/45700):"
+              printf '%s\n' "$OUT" | head -10 | sed 's/^/  · /' >> "$R"
+            else
+              ok "соединений на 3333/4444/5555/7777/14444/45700 нет"
+            fi
+
+            # ─── Автозапуск ──────────────────────────────────────────────
+            sec "Автозапуск"
+            SUSP='(curl|wget)[^|;]*\|[[:space:]]*(ba|z|da)?sh|base64[[:space:]]+(-d|--decode)|/dev/tcp/|/dev/shm/|nc[[:space:]]+-e|python[0-9.]*[[:space:]]+-c|xmrig|kinsing'
+            CRON="$W/cron"; : > "$CRON"
+            for u in $(cut -d: -f1 /etc/passwd); do
+              c="$(low 5 crontab -l -u "$u" | grep -vE '^[[:space:]]*(#|$)')"
+              [ -n "$c" ] && printf '%s\n' "$c" | sed "s/^/[$u] /" >> "$CRON"
+            done
+            for f in /etc/crontab /etc/cron.d/*; do
+              [ -f "$f" ] && low 5 grep -vE '^[[:space:]]*(#|$|[A-Z_]+=)' "$f" | sed "s|^|[$f] |" >> "$CRON"
+            done
+            line "задач cron: $(wc -l < "$CRON")"
+            cut -c1-200 "$CRON" | head -40 | sed 's/^/  · /' >> "$R"
+            BADCRON="$(grep -iE "$SUSP" "$CRON")"
+            [ -n "$BADCRON" ] && alarm "подозрительные строки cron (скачать и выполнить, base64, /dev/tcp): $(printf '%s\n' "$BADCRON" | wc -l)"
+            NEWCRON="$(low 10 find /etc/cron.d /etc/cron.daily /etc/cron.hourly /etc/cron.weekly /etc/cron.monthly /var/spool/cron -type f -mtime -30)"
+            [ -n "$NEWCRON" ] && { line "· файлы cron, изменённые за 30 дней:"; printf '%s\n' "$NEWCRON" | sed 's/^/  · /' >> "$R"; }
+            BADCRONF="$(for f in /etc/cron.daily/* /etc/cron.hourly/* /etc/cron.weekly/* /etc/cron.monthly/*; do [ -f "$f" ] && low 5 grep -lE "$SUSP" "$f"; done)"
+            [ -n "$BADCRONF" ] && { alarm "подозрительное в /etc/cron.*:"; printf '%s\n' "$BADCRONF" | sed 's/^/  · /' >> "$R"; }
+
+            UNITS="$(low 20 find /etc/systemd/system /lib/systemd/system /usr/lib/systemd/system -maxdepth 2 -type f \( -name '*.service' -o -name '*.timer' \) -mtime -30)"
+            if [ -n "$UNITS" ]; then
+              line "· systemd-юниты, появившиеся или изменённые за 30 дней:"
+              for u in $UNITS; do
+                printf '  · %s → %s\n' "$u" "$(grep -m1 -E '^ExecStart=' "$u" 2>/dev/null | cut -c11-150)" >> "$R"
+              done
+              BADU="$(for u in $UNITS; do low 5 grep -lE "$SUSP|ExecStart=/(tmp|dev/shm|var/tmp)/" "$u"; done)"
+              [ -n "$BADU" ] && alarm "подозрительный запуск в юнитах: $(printf '%s ' $BADU)"
+            else
+              ok "новых systemd-юнитов за 30 дней нет"
+            fi
+            if [ -f /etc/rc.local ] && grep -vqE '^[[:space:]]*(#|$|exit 0)' /etc/rc.local 2>/dev/null; then
+              line "· /etc/rc.local не пуст:"
+              grep -vE '^[[:space:]]*(#|$)' /etc/rc.local | head -10 | cut -c1-160 | sed 's/^/  · /' >> "$R"
+              grep -qE "$SUSP" /etc/rc.local && alarm "/etc/rc.local скачивает или запускает что-то подозрительное"
+            else
+              ok "/etc/rc.local пуст или его нет"
+            fi
+            if [ -s /etc/ld.so.preload ]; then
+              alarm "/etc/ld.so.preload НЕ пуст — так прячутся руткиты: $(head -3 /etc/ld.so.preload | tr '\n' ' ')"
+            else
+              ok "/etc/ld.so.preload пуст"
+            fi
+            PROF="$(for f in /etc/profile /etc/profile.d/* /etc/bash.bashrc /etc/environment /root/.bashrc /root/.profile /root/.bash_profile /home/*/.bashrc /home/*/.profile /home/*/.bash_profile; do
+              [ -f "$f" ] && low 5 grep -lE "$SUSP" "$f"; done)"
+            if [ -n "$PROF" ]; then
+              alarm "профили шелла скачивают и запускают код:"
+              printf '%s\n' "$PROF" | sed 's/^/  · /' >> "$R"
+            else
+              ok "в профилях шелла нет curl|bash, base64 -d, /dev/tcp"
+            fi
+
+            # ─── Доступ ──────────────────────────────────────────────────
+            sec "Доступ"
+            UID0="$(awk -F: '$3==0 && $1!="root"{print $1}' /etc/passwd)"
+            if [ -n "$UID0" ]; then alarm "пользователи с UID 0 кроме root: $UID0"; else ok "UID 0 только у root"; fi
+            SHELLS="$(awk -F: '$7 !~ /(nologin|false|sync|halt|shutdown)$/ {print $1"("$3")"}' /etc/passwd | tr '\n' ' ')"
+            line "· с входом в шелл: $SHELLS"
+            NEWU="$(low 20 zgrep -hE 'useradd.*new user|new user: name=' /var/log/auth.log* | grep -oE 'name=[^,]+' | sort -u | tr '\n' ' ')"
+            [ -z "$NEWU" ] && NEWU="$(low 20 journalctl --since '30 days ago' -t useradd --no-pager -q | grep -oE 'name=[^,]+' | sort -u | tr '\n' ' ')"
+            if [ -n "$NEWU" ]; then alarm "новые пользователи за 30 дней (по журналу): $NEWU"; else ok "новых пользователей за 30 дней в журнале нет"; fi
+
+            line "Ключи SSH (authorized_keys):"
+            for h in /root $(awk -F: '$3>=1000 && $3<65534 {print $6}' /etc/passwd); do
+              for k in "$h/.ssh/authorized_keys" "$h/.ssh/authorized_keys2"; do
+                $SUDO test -f "$k" || continue
+                n="$($SUDO grep -cE '(ssh-|ecdsa-|sk-)' "$k" 2>/dev/null)"
+                cm="$($SUDO awk '/(ssh-|ecdsa-|sk-)/{print $NF}' "$k" 2>/dev/null | sed -E 's/^AAAA.*/(без подписи)/' | tr '\n' ',' | cut -c1-200)"
+                printf '  · %s: %s ключ(ей), изменён %s; подписи: %s\n' "$k" "$n" "$($SUDO date -r "$k" '+%d.%m.%Y' 2>/dev/null)" "$cm" >> "$R"
+                $SUDO find "$k" -mtime -30 2>/dev/null | grep -q . && alarm "$k менялся за последние 30 дней — убедиться, что новый ключ наш"
+              done
+            done
+
+            SSHD="$(low 10 sshd -T)"
+            PRL="$(printf '%s\n' "$SSHD" | awk '$1=="permitrootlogin"{print $2}')"
+            PWA="$(printf '%s\n' "$SSHD" | awk '$1=="passwordauthentication"{print $2}')"
+            if [ -z "$PRL$PWA" ]; then
+              PRL="$(grep -hiE '^[[:space:]]*PermitRootLogin' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null | head -1 | awk '{print $2}')"
+              PWA="$(grep -hiE '^[[:space:]]*PasswordAuthentication' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null | head -1 | awk '{print $2}')"
+            fi
+            line "· sshd: PermitRootLogin=${PRL:-?}, PasswordAuthentication=${PWA:-?}"
+            [ "${PWA:-}" = "yes" ] && alarm "вход по паролю по SSH включён — перебор паролей возможен"
+            [ "${PRL:-}" = "yes" ] && alarm "root может входить по паролю (PermitRootLogin yes)"
+
+            if command -v fail2ban-client >/dev/null 2>&1; then
+              if low 5 systemctl is-active --quiet fail2ban; then
+                J="$(low 10 fail2ban-client status | grep -i 'jail list' | cut -d: -f2- | tr -d '\t')"
+                B="$(low 10 fail2ban-client status sshd | grep -i 'currently banned' | awk '{print $NF}')"
+                ok "fail2ban работает; jail: ${J:-?}; сейчас забанено в sshd: ${B:-?}"
+              else
+                alarm "fail2ban установлен, но не работает"
+              fi
+            else
+              alarm "fail2ban не установлен — перебор паролей SSH ничем не тормозится"
+            fi
+
+            AUTH="$W/auth"
+            low 60 journalctl --since '24 hours ago' --no-pager -q _COMM=sshd > "$AUTH"
+            [ -s "$AUTH" ] || low 30 grep -h sshd /var/log/auth.log > "$AUTH"
+            FAILS="$(grep -cE 'Failed password|Invalid user|authentication failure' "$AUTH")"
+            line "· неудачных попыток входа по SSH за сутки: ${FAILS:-0}"
+            WEEK="$W/acc"
+            low 60 journalctl --since '7 days ago' --no-pager -q _COMM=sshd | grep -E 'Accepted ' > "$WEEK"
+            [ -s "$WEEK" ] || low 30 zgrep -h 'Accepted ' /var/log/auth.log* > "$WEEK"
+            line "· успешных входов за 7 дней: $(wc -l < "$WEEK"), по способу и пользователю: $(grep -oE 'Accepted [a-z-]+ for [^ ]+' "$WEEK" | awk '{print $2"/"$4}' | sort | uniq -c | awk '{printf "%s×%s ", $2, $1}')"
+            line "  подсети: $(grep -oE 'from [0-9.]+' "$WEEK" | awk '{split($2,a,"."); print a[1]"."a[2]".x.x"}' | sort | uniq -c | sort -rn | head -8 | awk '{printf "%s×%s ", $2, $1}')"
+            grep -q 'Accepted password' "$WEEK" && alarm "были входы по ПАРОЛЮ за неделю — проверить, чьи"
+
+            # ─── Docker ──────────────────────────────────────────────────
+            sec "Docker"
+            if command -v docker >/dev/null 2>&1; then
+              low 20 docker ps --format '{{.Names}} ← {{.Image}} ({{.Status}})' | head -50 | sed 's/^/  · /' >> "$R"
+              for c in $(low 20 docker ps -q); do
+                info="$(low 10 docker inspect --format '{{.Name}}|{{.HostConfig.Privileged}}|{{range .Mounts}}{{.Source}} {{end}}' "$c")"
+                name="${info%%|*}"; rest="${info#*|}"; priv="${rest%%|*}"; mounts="${rest#*|}"
+                [ "$priv" = "true" ] && alarm "контейнер ${name#/} запущен с --privileged — изнутри он владеет сервером"
+                case "$mounts" in *docker.sock*) alarm "контейнеру ${name#/} смонтирован docker.sock — изнутри он владеет сервером (бывает законно у watchtower/traefik/portainer)";; esac
+              done
+            else
+              line "· docker не найден"
+            fi
+
+            # ─── Обновления ──────────────────────────────────────────────
+            sec "Обновления"
+            if command -v apt >/dev/null 2>&1; then
+              SECN="$(low 60 apt list --upgradable | grep -ci security)"
+              ALLN="$(low 60 apt list --upgradable | grep -c upgradable)"
+              line "· ждут обновления: ${ALLN:-0}, из них безопасности: ${SECN:-0} (по спискам от $(date -r /var/lib/apt/lists '+%d.%m.%Y' 2>/dev/null))"
+              [ "${SECN:-0}" -gt 0 ] && alarm "не установлено обновлений безопасности: $SECN"
+            fi
+            [ -f /var/run/reboot-required ] && line "· сервер просит перезагрузку после обновлений"
+
+            line ""
+            line "Итого находок: $FINDINGS. Осмотр только читал: на сервере ничего не изменено. Время: ${SECONDS} с."
+
+            # ─── Отправка в Telegram ─────────────────────────────────────
+            redact < "$R" > "$R.safe"
+            TOKEN="$(envval TELEGRAM_BOT_TOKEN)"
+            CHATS="$(envval TELEGRAM_OWNER_CHAT_ID)"
+            SB_URL="$(envval NEXT_PUBLIC_SUPABASE_URL)"; SB_KEY="$(envval SUPABASE_SERVICE_ROLE_KEY)"
+            if [ -n "$SB_URL" ] && [ -n "$SB_KEY" ]; then
+              # Владелец и руководители с Telegram — из базы, ключ через stdin, не в ps.
+              HEADS="$(printf 'url = "%s/rest/v1/staff?select=telegram_user_id&is_active=eq.true&role=in.(admin,head)&telegram_user_id=not.is.null"\nheader = "apikey: %s"\nheader = "Authorization: Bearer %s"\n' "$SB_URL" "$SB_KEY" "$SB_KEY" \
+                | timeout 20 curl -sS --max-time 15 -K - | grep -oE '"telegram_user_id":"?[0-9]+' | grep -oE '[0-9]+$')"
+              CHATS="$CHATS $HEADS"
+            fi
+            CHATS="$(printf '%s\n' $CHATS | grep -E '^-?[0-9]+$' | sort -u)"
+            PROXY="$(envval HTTPS_PROXY)"
+            LC_ALL=C awk -v dir="$W" 'BEGIN{n=1; s=0} { l=length($0)+1; if (s+l > 3500 && s > 0) { n++; s=0 } print > (dir "/part" n); s+=l }' "$R.safe"
+            PARTS="$(ls "$W"/part* 2>/dev/null | sort -V)"
+            SENT=0; TO=0
+            send() {
+              local chat="$1" file="$2" road
+              for road in direct proxy; do
+                if [ "$road" = proxy ]; then [ -n "$PROXY" ] || continue; via=(--proxy "$PROXY"); else via=(--noproxy '*'); fi
+                if printf 'url = "https://api.telegram.org/bot%s/sendMessage"\n' "$TOKEN" \
+                  | timeout 25 curl -fsS --max-time 20 "${via[@]}" -K - --data-urlencode "chat_id=$chat" --data-urlencode "text@$file" -d disable_web_page_preview=true >/dev/null; then
+                  return 0
+                fi
+              done
+              return 1
+            }
+            if [ -n "$TOKEN" ]; then
+              for chat in $CHATS; do
+                okc=1
+                for p in $PARTS; do send "$chat" "$p" && SENT=$((SENT + 1)) || okc=0; sleep 1; done
+                [ "$okc" = 1 ] && TO=$((TO + 1))
+              done
+            fi
+
+            if [ "$TO" -gt 0 ]; then
+              echo "осмотр прошёл, находок: $FINDINGS, отчёт ушёл владельцу и руководителю в Telegram (получателей: $TO, сообщений: $SENT)" >&3
+            else
+              echo "осмотр прошёл, находок: $FINDINGS, но отчёт в Telegram НЕ ушёл (нет токена, чатов или дороги до Telegram)" >&3
+              exit 1
+            fi
