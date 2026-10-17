@@ -2,6 +2,7 @@ import { isCircleLang, type CircleLang } from "@/lib/admin/circle-store";
 import { circleStart, saveCircle } from "@/lib/admin/circle-upload";
 import { CIRCLE_MAX_BYTES, circleProblem, type CircleProblem } from "@/lib/admin/circle-rules";
 import type { Staff } from "@/lib/admin/session";
+import { CIRCLE_NICHES, CIRCLE_NICHE_RU, isCircleNiche, type CircleNiche } from "@/lib/admin/sales-after-reply";
 import { serviceClient } from "@/lib/supabase";
 import { appendChunk, discardUpload } from "@/lib/partners/promo-files";
 import { PROMO_CHUNK_BYTES } from "@/lib/partners/promo-rules";
@@ -66,7 +67,12 @@ export function circleFromMessage(message: { video_note?: VideoNote; video?: Vid
 
 export type CircleBotResult = { ok: true } | { ok: false; reason: CircleProblem | "bot_limit" | "download" | "save" };
 
-export async function saveCircleFromBot(circle: TgCircle, staff: Staff, lang: CircleLang = "ru"): Promise<CircleBotResult> {
+export async function saveCircleFromBot(
+  circle: TgCircle,
+  staff: Staff,
+  lang: CircleLang = "ru",
+  niche: CircleNiche = "general",
+): Promise<CircleBotResult> {
   // Сначала то, что видно без скачивания: формат, длина, форма.
   const early = circleProblem({ ...circle, bytes: circle.bytes ?? 1 });
   if (early) return { ok: false, reason: early };
@@ -89,6 +95,7 @@ export async function saveCircleFromBot(circle: TgCircle, staff: Staff, lang: Ci
     staff,
     null,
     lang,
+    niche,
   );
   return saved.ok ? { ok: true } : { ok: false, reason: "save" };
 }
@@ -111,6 +118,29 @@ export function circleChoice(parts: readonly string[]): { lang: CircleLang; mess
   if (parts[0] !== CIRCLE_CALLBACK || !isCircleLang(parts[1])) return null;
   const messageId = Number(parts[2]);
   return Number.isInteger(messageId) && messageId > 0 ? { lang: parts[1], messageId } : null;
+}
+
+/**
+ * После языка — ниша (владелец, 17.10.2026: кружок на нишу × язык).
+ * «cl:n:<язык>:<ниша>:<номер сообщения с кружком>» — до 40 байт, в предел
+ * Telegram (64) влезает. «Общий» — тот кружок, что уходит всем, у кого
+ * своего кружка ниши нет.
+ */
+export const circleNicheQuestion =
+  "Для какой ниши этот кружок? Кружок ниши уходит компаниям этой ниши, «Общий» — всем остальным и тем нишам, для которых своего кружка нет.";
+
+export function circleNicheButtons(lang: CircleLang, messageId: number): { text: string; callback_data: string }[][] {
+  const buttons = CIRCLE_NICHES.map((niche) => ({ text: CIRCLE_NICHE_RU[niche], callback_data: `${CIRCLE_CALLBACK}:n:${lang}:${niche}:${messageId}` }));
+  const rows: { text: string; callback_data: string }[][] = [];
+  for (let i = 0; i < buttons.length; i += 3) rows.push(buttons.slice(i, i + 3));
+  return rows;
+}
+
+/** Нажатие кнопки ниши: язык, ниша и номер сообщения с кружком. Чужое — null. */
+export function circleNicheChoice(parts: readonly string[]): { lang: CircleLang; niche: CircleNiche; messageId: number } | null {
+  if (parts[0] !== CIRCLE_CALLBACK || parts[1] !== "n" || !isCircleLang(parts[2]) || !isCircleNiche(parts[3])) return null;
+  const messageId = Number(parts[4]);
+  return Number.isInteger(messageId) && messageId > 0 ? { lang: parts[2], niche: parts[3], messageId } : null;
 }
 
 /** Кружок, который ждёт выбора языка: чат и номер сообщения с ним. */
@@ -145,11 +175,13 @@ export async function takeCircle(chatId: number | string, messageId: number, now
 }
 
 /** Что ответить в боте. Бот пишет по-русски (CLAUDE.md, «Инструкции к панели»). */
-export function circleBotReply(result: CircleBotResult, lang: CircleLang = "ru"): string {
+export function circleBotReply(result: CircleBotResult, lang: CircleLang = "ru", niche: CircleNiche = "general"): string {
   if (result.ok) {
     const who = lang === "uz" ? "по-узбекски" : "по-русски";
     const which = lang === "uz" ? "Узбекский кружок" : "Русский кружок";
-    return `✅ ${which} сохранён для касаний. В течение 10 минут бот положит его в «Избранное» всех рабочих аккаунтов, и дальше он уходит тем, кто ответил ${who} на «Здравствуйте». Проверить — в панели, «Аккаунты» → «Кружок для касаний».`;
+    const whom = niche === "general" ? "" : ` в нише «${CIRCLE_NICHE_RU[niche]}»`;
+    const kind = niche === "general" ? "" : ` ниши «${CIRCLE_NICHE_RU[niche]}»`;
+    return `✅ ${which}${kind} сохранён для касаний. В течение 10 минут бот положит его в «Избранное» всех рабочих аккаунтов, и дальше он уходит тем, кто${whom} ответил ${who} на «Здравствуйте». Проверить — в панели, «Аккаунты» → «Кружок для касаний».`;
   }
   const why: Record<Exclude<CircleBotResult, { ok: true }>["reason"], string> = {
     type: "это не видео MP4",
