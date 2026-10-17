@@ -4,7 +4,7 @@
  * Устройство пароля и куки — lib/proto/codes.ts, таблицы — миграция 0094
  * (proto_codes) и 0091 (showcase_codes, витрина globalex).
  */
-import { CODE_TTL_MS, TEAM_TTL_MS, codeCookieMatches, isCode, newCode, protoCodeHash, showcaseCodeHash, type CodeKind } from "@/lib/proto/codes";
+import { CODE_LIMIT, CODE_TTL_MS, TEAM_TTL_MS, codeCookieMatches, isCode, newCode, protoCodeHash, showcaseCodeHash, type CodeKind } from "@/lib/proto/codes";
 import { serviceClient } from "@/lib/supabase";
 
 export type IssuedCode = { id: string; code: string; codeHash: string; expiresAt: string };
@@ -133,4 +133,43 @@ export async function liveCodesUntil(): Promise<{ protos: Map<string, string>; s
   for (const row of p.data ?? []) later(protos, String(row.proto_id), String(row.expires_at));
   for (const row of s.data ?? []) later(showcases, String(row.showcase), String(row.expires_at));
   return { protos, showcases };
+}
+
+/**
+ * Предел неверных паролей на макет — по базе (proto_pin_failures, миграция
+ * 0170): в памяти процесса он обнулялся с каждой выкаткой. За час — как
+ * раньше (CODE_LIMIT), за сутки — PIN_DAY_LIMIT: постоянный PIN владельца
+ * не истекает, и без суточного предела его перебирали бы неделями по 30 в час.
+ *
+ * База не ответила (или таблицы ещё нет) — null: решает предел в памяти,
+ * как до миграции. Вход клиента из-за сбоя базы не закрываем.
+ */
+export const PIN_DAY_LIMIT = 100;
+
+export async function protoPinBlocked(protoId: string, now = Date.now()): Promise<boolean | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const since = (ms: number) => new Date(now - ms).toISOString();
+  const count = async (ms: number) => {
+    const { count: n, error } = await db
+      .from("proto_pin_failures")
+      .select("id", { count: "exact", head: true })
+      .eq("proto_id", protoId)
+      .gt("at", since(ms));
+    return error ? null : (n ?? 0);
+  };
+  const [hour, day] = await Promise.all([count(CODE_LIMIT.windowMs), count(24 * 60 * 60_000)]);
+  if (hour === null || day === null) return null;
+  return pinOverLimit(hour, day);
+}
+
+export function pinOverLimit(hour: number, day: number): boolean {
+  return hour >= CODE_LIMIT.limit || day >= PIN_DAY_LIMIT;
+}
+
+export async function noteProtoPinFailure(protoId: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { error } = await db.from("proto_pin_failures").insert({ proto_id: protoId });
+  if (error) console.error("proto: не записал неверный пароль", error.message);
 }
