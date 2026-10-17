@@ -1,5 +1,6 @@
 import { SHIFT_TITLE } from "@/lib/admin/shift-reports";
 import { serviceClient } from "@/lib/supabase";
+import { secretOk } from "@/lib/secret-ok";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +35,7 @@ const MAX_BODY = 2000;
 export async function POST(request: Request) {
   const expected = process.env.SHIFT_REPORT_SECRET;
   const provided = request.headers.get("x-devuz-shift");
-  if (!expected || provided !== expected) {
+  if (!secretOk(provided, expected)) {
     return new Response("forbidden", { status: 403 });
   }
 

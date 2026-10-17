@@ -1,4 +1,5 @@
 import { currentStaff } from "@/lib/admin/guard";
+import { opens } from "@/lib/admin/roles";
 import { contractById, contractFile } from "@/lib/admin/contract-store";
 import { signedFileName } from "@/lib/admin/contracts";
 
@@ -17,7 +18,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const staff = await currentStaff();
-  if (!staff) return new Response(null, { status: 404 });
+  // Галочка владельца закрывает «Договоры» и файлам — не только странице.
+  if (!staff || !opens(staff, "/admin/contracts")) return new Response(null, { status: 404 });
 
   const { id } = await params;
   const contract = await contractById(id);

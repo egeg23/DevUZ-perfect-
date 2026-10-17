@@ -1,4 +1,5 @@
 import { currentStaff } from "@/lib/admin/guard";
+import { opens } from "@/lib/admin/roles";
 import { signatureVisible } from "@/lib/admin/contracts";
 import { contractById } from "@/lib/admin/contract-store";
 import { signatureBytes } from "@/lib/admin/signature";
@@ -22,7 +23,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const staff = await currentStaff();
-  if (!staff) return new Response(null, { status: 404 });
+  if (!staff || !opens(staff, "/admin/contracts")) return new Response(null, { status: 404 });
 
   const { id } = await params;
   const contract = await contractById(id);

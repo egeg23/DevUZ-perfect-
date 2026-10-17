@@ -123,6 +123,7 @@ import { MOCKUP_CALLBACK, OFFER_ROLES, actOnOffer, mockupsCommand, parseMockupCa
 import { grade, isRight, questionsFor } from "@/lib/learn/quiz";
 import { saveAttempt } from "@/lib/learn/store";
 import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
+import { secretOk } from "@/lib/secret-ok";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -215,7 +216,7 @@ export async function POST(request: Request) {
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
   const provided = request.headers.get("x-telegram-bot-api-secret-token");
 
-  if (!expected || provided !== expected) {
+  if (!secretOk(provided, expected)) {
     return new Response("forbidden", { status: 403 });
   }
 

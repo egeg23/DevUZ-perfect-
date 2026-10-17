@@ -21,6 +21,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (audio === "busy") return new Response("busy", { status: 409 });
   if (audio === "download") return new Response("telegram did not give the file", { status: 502 });
   return new Response(Buffer.from(audio.data), {
-    headers: { "content-type": audio.mime, "cache-control": "no-store" },
+    // Тип файла пришёл из Telegram: отдаём как звук или как байты, но
+    // никогда как страницу, которую браузер исполнит.
+    headers: {
+      "content-type": /^audio\/[a-z0-9.+-]+$/i.test(audio.mime) ? audio.mime : "application/octet-stream",
+      "content-disposition": "attachment",
+      "cache-control": "no-store",
+    },
   });
 }
