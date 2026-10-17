@@ -75,7 +75,7 @@ function toLead(r: Record<string, unknown>): StageLead {
 }
 
 /** Все сделки, у которых за STAGES_DAYS дней была хоть одна ступень. */
-export async function loadDeals(now: Date = new Date(), days = STAGES_DAYS): Promise<Deal[]> {
+export async function loadDeals(now: Date = new Date(), days = STAGES_DAYS, limit = LIMIT): Promise<Deal[]> {
   const db = serviceClient();
   if (!db) return [];
   const from = new Date(now.getTime() - days * 24 * 3600_000).toISOString();
@@ -88,10 +88,10 @@ export async function loadDeals(now: Date = new Date(), days = STAGES_DAYS): Pro
       .or(
         [`hello_at.gte."${from}"`, `sent_at.gte."${from}"`, `touched_at.gte."${from}"`, `replied_at.gte."${from}"`, `proto_requested_at.gte."${from}"`].join(","),
       )
-      .limit(LIMIT),
-    db.from("leads").select(LEAD_FIELDS).gte("created_at", from).limit(LIMIT),
-    db.from("mockup_offers").select("lead_id, prospect_id, sent_at, client, mockup_ref").gte("sent_at", from).limit(LIMIT),
-    db.from("sales_marks").select("kind, lead_id, prospect_id, staff_id, created_at, via, amount_usd").gte("created_at", from).limit(LIMIT),
+      .limit(limit),
+    db.from("leads").select(LEAD_FIELDS).gte("created_at", from).limit(limit),
+    db.from("mockup_offers").select("lead_id, prospect_id, sent_at, client, mockup_ref").gte("sent_at", from).limit(limit),
+    db.from("sales_marks").select("kind, lead_id, prospect_id, staff_id, created_at, via, amount_usd").gte("created_at", from).limit(limit),
     db
       .from("outreach_messages")
       .select("lead_id, prospect_id, created_at, sent_at")
@@ -99,14 +99,14 @@ export async function loadDeals(now: Date = new Date(), days = STAGES_DAYS): Pro
       .eq("direction", "out")
       .in("status", ["sent", "done"])
       .gte("created_at", from)
-      .limit(LIMIT),
-    db.from("project_payments").select("project_id, paid_on, amount_usd").gte("paid_on", fromDay).limit(LIMIT),
+      .limit(limit),
+    db.from("project_payments").select("project_id, paid_on, amount_usd").gte("paid_on", fromDay).limit(limit),
     db
       .from("audit_events")
       .select("target_id, created_at, actor_staff_id, meta")
       .eq("action", "lead.status_changed")
       .gte("created_at", from)
-      .limit(LIMIT),
+      .limit(limit),
   ]);
 
   const prospects = rows(prospectsRes).map(toProspect);

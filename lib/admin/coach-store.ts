@@ -1,3 +1,4 @@
+import { bonusesOf, gradeBook } from "@/lib/admin/grade-month";
 import { wants, type NoticeKind } from "@/lib/admin/notify-prefs";
 import {
   askCoach,
@@ -147,7 +148,9 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
 
   const people = ledger.people.filter((p) => p.is_active && (!opts.only || opts.only.includes(p.id)));
   const earners = earnersOf(ledger.people);
-  const accruals = ledger.projects.flatMap((p) => accrualsOf(p, ledger.payments, earners, sharesOf(p.id, ledger.shares)));
+  const book = gradeBook(ledger.projects, ledger.payments, now);
+  const bonuses = bonusesOf(book);
+  const accruals = ledger.projects.flatMap((p) => accrualsOf(p, ledger.payments, earners, sharesOf(p.id, ledger.shares), book));
   const plans = await loadPlans(
     [
       { period: "week", period_start: weekStart },
@@ -171,7 +174,7 @@ export async function runCoach(now: Date, opts: { force?: boolean; only?: readon
           const pf = planFact(p, p.period === "week" ? w : pulseOf(id, rows, month, now));
           return { period: pf.period, metric: pf.metric, target: pf.target, fact: pf.fact, percent: pf.percent };
         }),
-      due: balanceOf(id, accruals, ledger.payouts).due,
+      due: balanceOf(id, accruals, ledger.payouts, bonuses).due,
     };
   };
 

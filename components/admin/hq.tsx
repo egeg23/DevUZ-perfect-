@@ -2,10 +2,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { HelpHint } from "@/components/admin/help-link";
+import { LevelBadge } from "@/components/admin/growth";
 import { StagesCard } from "@/components/admin/sales-stages";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { MAIN_LABEL } from "@/lib/admin/account-ban-store";
 import { hqDict } from "@/content/admin-panel/hq";
+import { levelsDict } from "@/content/admin-panel/levels";
 import { salesStagesDict } from "@/content/admin-panel/sales-stages";
 import { helpAnchor } from "@/lib/admin/help";
 import {
@@ -454,6 +456,7 @@ export function PersonCard({
   taskHref?: string;
 }) {
   const st = pick(salesStagesDict, locale);
+  const lv = pick(levelsDict, locale);
   const seen = p.online ? t.online : p.activeAt && Date.parse(p.activeAt) >= now.getTime() - 24 * 3600_000 ? t.seenAt(clockOf(p.activeAt)) : t.notToday;
   const flags = [
     p.overdue ? { text: t.flagOverdue(p.overdue), warn: true } : null,
@@ -461,6 +464,9 @@ export function PersonCard({
     p.stale ? { text: t.flagStale(p.stale), warn: false } : null,
     p.botSilent ? { text: t.flagBotSilent(p.botSilent), warn: p.botSilent > BOT_SILENT_ALERT } : null,
     { text: st.personShown(p.sales.week.shown, SHOW_NORM), warn: false, good: p.sales.week.shown >= SHOW_NORM },
+    p.growth?.grade
+      ? { text: lv.personDeals(p.growth.grade.deals, p.growth.grade.target), warn: false, good: p.growth.grade.deals >= p.growth.grade.target }
+      : null,
     p.mood === "done" ? { text: t.moodDone, warn: false, good: true } : null,
     p.mood === "idle" ? { text: t.moodIdle, warn: false } : null,
   ].filter((f): f is { text: string; warn: boolean; good?: boolean } => Boolean(f));
@@ -484,6 +490,7 @@ export function PersonCard({
             </span>
             <Icon name="chevron" className="h-4 w-4 shrink-0 text-faint transition group-open:rotate-90" />
           </div>
+          {p.growth ? <LevelBadge g={p.growth} locale={locale} /> : null}
           <div className="flex items-end justify-between gap-3 px-1">
             <span className="text-[11px] text-faint">{t.week}</span>
             <Spark days={p.touchDays} t={t} locale={locale} now={now} />
@@ -516,6 +523,17 @@ export function PersonCard({
             <li>{t.detailBotSilent(p.botSilent)}</li>
             <li>{st.personToday(p.sales.today.shown, p.sales.today.priced, p.sales.today.paid)}</li>
             <li>{st.personSales(p.sales.week.shown, p.sales.week.priced, p.sales.week.paid)}</li>
+            {p.growth ? (
+              <li>
+                {lv.level(p.growth.level.level)} · {lv.total(p.growth.level.xp)} · {lv.week(p.growth.week)}
+              </li>
+            ) : null}
+            {p.growth?.grade ? (
+              <li>
+                {lv.deals(p.growth.grade.deals, p.growth.grade.target)} ·{" "}
+                {p.growth.grade.rateNow === null ? lv.personRateOld : lv.personRate(p.growth.grade.rateNow)}
+              </li>
+            ) : null}
           </ul>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {taskHref ? (

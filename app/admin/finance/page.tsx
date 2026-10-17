@@ -1,3 +1,4 @@
+import { bonusesOf, gradeBook } from "@/lib/admin/grade-month";
 import Link from "next/link";
 
 import { deleteExpense, deletePayout, saveExpense, savePayout } from "./actions";
@@ -101,8 +102,12 @@ export default async function FinancePage({
   const ownerMoney = seesOwnerMoney(staff.role);
 
   const earners = earnersOf(ledger.people);
+  // Сделки по месяцам: с 01.11.2026 ставка 10% или 15% и премия 200 $ за
+  // каждые 3 сделки (lib/admin/grade-month.ts).
+  const book = gradeBook(ledger.projects, ledger.payments, new Date());
+  const bonuses = bonusesOf(book);
   const accruals = ledger.projects.flatMap((p) =>
-    accrualsOf(p, ledger.payments, earners, sharesOf(p.id, ledger.shares)),
+    accrualsOf(p, ledger.payments, earners, sharesOf(p.id, ledger.shares), book),
   );
   const byProject = new Map<string, Accrual[]>();
   for (const a of accruals) byProject.set(a.project_id, [...(byProject.get(a.project_id) ?? []), a]);
@@ -125,7 +130,7 @@ export default async function FinancePage({
     ? ledger.people.filter((p) => p.is_active && isFounder(p))
     : [];
   const pool = ownerMoney
-    ? foundersPool(ledger.projects, ledger.payments, accruals, expenses)
+    ? foundersPool(ledger.projects, ledger.payments, accruals, expenses, bonuses)
     : null;
   const shares = pool ? founderShares(pool.pool, founders) : [];
 
@@ -145,7 +150,7 @@ export default async function FinancePage({
   });
   const rows = people.map((person) => ({
     person,
-    balance: balanceOf(person.id, accruals, ledger.payouts),
+    balance: balanceOf(person.id, accruals, ledger.payouts, bonuses),
     projects: new Set(accruals.filter((a) => a.staff_id === person.id).map((a) => a.project_id)).size,
   }));
 
@@ -154,11 +159,13 @@ export default async function FinancePage({
     contracted: sum(live.map((p) => p.amount_usd ?? 0)),
     paid: sum(ledger.payments.map((p) => p.amount_usd)),
     profit: sum(live.map((p) => profitOf(p) ?? 0)),
-    accrued: sum(accruals.map((a) => a.amount_usd)) + partnerTotal,
+    accrued: sum(accruals.map((a) => a.amount_usd)) + partnerTotal + sum(bonuses.map((b) => b.amount_usd)),
     frozen: sum(accruals.filter((a) => a.state === "frozen").map((a) => a.amount_usd)),
     paidOut: sum(ledger.payouts.map((p) => p.amount_usd)),
   };
-  const mine = balanceOf(staff.id, accruals, ledger.payouts);
+  const mine = balanceOf(staff.id, accruals, ledger.payouts, bonuses);
+  // Премии видно тем же, кому видны начисления: владельцу все, остальным — свой круг.
+  const shownBonuses = bonuses.filter((b) => scope === "all" || scope.includes(b.staff_id));
   const withoutCost = live.filter((p) => p.amount_usd !== null && p.dev_cost_usd === null).length;
 
   return (
@@ -210,6 +217,23 @@ export default async function FinancePage({
           <Card label={t.cardDue} value={money(mine.due)} warn={mine.due < 0} note={mine.due < 0 ? t.cardDueAhead : undefined} />
         </div>
       )}
+
+      {/* ── Премии за сделки месяца (lib/admin/grade-month.ts) ─────────── */}
+      {shownBonuses.length ? (
+        <section className="mt-4 rounded-xl border border-green/30 bg-green/5 px-4 py-3 text-sm">
+          <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+            {t.bonusTitle}
+            <HelpHint topic={helpAnchor("/admin/finance", "grade")} label={t.bonusTitle} />
+          </p>
+          <ul className="mt-2 flex flex-col gap-1">
+            {shownBonuses.map((b) => (
+              <li key={`${b.staff_id}-${b.month}`} className="text-text">
+                {t.bonusLine(nameOf(b.staff_id), b.month.split("-").reverse().join("."), b.deals, money(b.amount_usd))}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {/* ── По людям ──────────────────────────────────────────────────── */}
       {staff.role !== "manager" ? (

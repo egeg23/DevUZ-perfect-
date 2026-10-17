@@ -19,6 +19,7 @@ import { activeNow, latest } from "@/lib/admin/lead-queue";
 import { tallyPortion, type PortionOutcome } from "@/lib/admin/portion";
 import { TASHKENT_OFFSET_MS, tashkentMidnight, todayInTashkent } from "@/lib/admin/pulse";
 import type { Role } from "@/lib/admin/roles";
+import type { Growth } from "@/lib/admin/levels";
 import { isModelTroubleSays } from "@/lib/model-trouble";
 
 export const HQ_HREF = "/admin/hq";
@@ -373,6 +374,8 @@ export type HqPersonInput = {
   touchDays?: readonly number[];
   /** Показы, названные цены и оплаты — сегодня и с понедельника (lib/admin/sales-stages.ts). */
   sales?: { today: PersonSalesCount; week: PersonSalesCount };
+  /** Уровень и грейд по сделкам месяца (lib/admin/levels.ts, grade-month.ts). */
+  growth?: Growth | null;
 };
 
 /** То же, что PersonSales в lib/admin/sales-stages.ts: здесь без импорта, чтобы не было круга. */
@@ -403,6 +406,7 @@ export type HqPerson = {
   touchDays: number[];
   /** Показы, цены, оплаты — сегодня и с понедельника. */
   sales: { today: PersonSalesCount; week: PersonSalesCount };
+  growth: Growth | null;
 };
 
 /**
@@ -465,6 +469,7 @@ export function personOf(input: HqPersonInput, now: Date): HqPerson {
     mood,
     touchDays: [...(input.touchDays ?? Array(7).fill(0))],
     sales: input.sales ?? { today: { shown: 0, priced: 0, paid: 0 }, week: { shown: 0, priced: 0, paid: 0 } },
+    growth: input.growth ?? null,
   };
 }
 

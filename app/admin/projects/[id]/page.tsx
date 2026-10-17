@@ -45,7 +45,7 @@ import { pick, tr, type Msg, type Tr } from "@/lib/admin/i18n";
 import { categoryChoices, quoteFor } from "@/lib/admin/quote";
 import { t as siteText } from "@/lib/i18n";
 import { seesOwnerMoney } from "@/lib/admin/roles";
-import { loadPeople, paymentsFor, sharesFor, sharesOf } from "@/lib/admin/ledger";
+import { gradeBookFor, loadPeople, paymentsFor, sharesFor, sharesOf } from "@/lib/admin/ledger";
 import {
   ALL_STAGES,
   STAGES,
@@ -154,7 +154,9 @@ export default async function ProjectPage({
     : [];
   const projectAgency = partnerAgencies.find((a) => a.id === project.partner_agency_id) ?? null;
   const paid = paidOf(project.id, payments);
-  const lines = accrualsOf(project, payments, earnersOf(people), sharesOf(project.id, shares));
+  // Ставка ведущего с 01.11.2026 зависит от его сделок прошлого месяца (lib/admin/grade-month.ts).
+  const book = await gradeBookFor(project.owner_staff_id);
+  const lines = accrualsOf(project, payments, earnersOf(people), sharesOf(project.id, shares), book);
   const state = accrualState(project, paid);
   const profit = profitOf(project);
   const seesMoney = canSeeMoney(staff, project, team);

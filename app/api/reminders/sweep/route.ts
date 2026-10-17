@@ -12,6 +12,7 @@ import { sendTeamNews } from "@/lib/admin/team-news";
 import { sendMorningGreetings } from "@/lib/admin/morning-store";
 import { runLeadTidy } from "@/lib/admin/lead-tidy-store";
 import { runNoShowWeek } from "@/lib/admin/sales-stages-store";
+import { refreshXp } from "@/lib/admin/levels-store";
 import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { runMockupOffers } from "@/lib/admin/mockup-offer-run";
@@ -353,6 +354,11 @@ async function sweep(): Promise<Response> {
   // показал клиенту ни одного макета (lib/admin/sales-stages-store).
   after(async () => {
     await runNoShowWeek(new Date()).catch((error) => console.error("показы макетов, неделя:", error));
+  });
+  // Уровни менеджеров — снимок очков раз в час (lib/admin/levels-store):
+  // «Главная» читает одну строку, а не всю историю.
+  after(async () => {
+    await refreshXp(new Date()).catch((error) => console.error("уровни:", error));
   });
   // Приглашение «Работа с блогерами» с кнопками и итог владельцу в 18:00
   // (lib/admin/blogger-invite-store). Каждому — один раз, не ночью.

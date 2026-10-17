@@ -46,6 +46,11 @@ import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
 import { readHealth } from "@/lib/admin/sweep-health";
 import { periodRange, personSales, stagesPulse, type Deal, type StagesPulse } from "@/lib/admin/sales-stages";
 import { loadDeals } from "@/lib/admin/sales-stages-store";
+import { gradeStatus, type GradeBook } from "@/lib/admin/grade-month";
+import { gradeBookAll } from "@/lib/admin/ledger";
+import { growthOf, type XpSnapshot } from "@/lib/admin/levels";
+import { readXp } from "@/lib/admin/levels-store";
+import type { Grade } from "@/lib/admin/finance";
 import { firecrawlBalance, firecrawlKey } from "@/lib/firecrawl";
 import { serviceClient } from "@/lib/supabase";
 
@@ -148,8 +153,10 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     paymentsRes,
     firecrawl,
     deals,
+    xp,
+    book,
   ] = await Promise.all([
-    db.from("staff").select("id, display_name, role, bot_seen_at").eq("is_active", true).limit(200),
+    db.from("staff").select("id, display_name, role, bot_seen_at, grade, rate_percent").eq("is_active", true).limit(200),
     db
       .from("leads")
       .select("id, created_at, status, priority, assigned_staff_id, company, contact_name, request_no")
@@ -218,6 +225,8 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
       : Promise.resolve({ data: [] as HqPayment[] }),
     firecrawlRemaining(now).catch(() => null),
     loadDeals(now).catch(() => [] as Deal[]),
+    readXp().catch(() => null as XpSnapshot | null),
+    gradeBookAll(now).catch(() => null as GradeBook | null),
   ]);
 
   if (staffRes.error && leadsRes.error) return empty;
@@ -227,6 +236,8 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     display_name: String(r.display_name ?? "—"),
     role: r.role as Role,
     bot_seen_at: str(r.bot_seen_at),
+    grade: (str(r.grade) ?? "manager") as Grade,
+    rate_percent: r.rate_percent == null ? null : Number(r.rate_percent),
   }));
   const leads: HqLead[] = ((leadsRes.data ?? []) as Record<string, unknown>[]).map((r) => ({
     id: String(r.id),
@@ -323,6 +334,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
           stale: stale.get(s.id) ?? 0,
           botSilent: silent.get(s.id) ?? 0,
           tasks,
+          growth: growthOf(s.id, xp, book ? gradeStatus(s, book) : null),
           sales: {
             today: personSales(deals, s.id, dayStartOf(now), now.getTime() + 1),
             week: personSales(deals, s.id, periodRange("week", now).from, now.getTime() + 1),

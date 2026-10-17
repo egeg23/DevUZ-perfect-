@@ -155,6 +155,16 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "levels",
+          title: "Jamoa darajalari va grade",
+          roles: ["admin", "head"],
+          body: [
+            "«Bugun jamoa»dagi har bir kartochkada — unvonli daraja belgisi va keyingi darajagacha chiziq, shu oy uchun «bitimlar N/3» belgisi, ochilgan kartochkada esa — jami va 7 kundagi ballar, bitimlar soni va odamning hozirgi foizi.",
+            "Ballar pulga olib boradigan ish uchun: aloqa 1, uning aloqasiga javob 2, qiziqish 5, maket 10, ko‘rsatish 15, narx 20, to‘lovli bitim 100; panel — 15 daqiqaga 1 (kuniga 8 tagacha), holatni o‘zgartirish, bajarilgan vazifa va botga javob — 2 tadan (kuniga 20 tagacha). L-daraja 25·L·(L−1) balldan boshlanadi: 2-daraja 50 dan, 5-daraja 500 dan, 10-daraja 2 250 dan. Kod soatiga bir marta, neyrotarmoqsiz hisoblaydi. Bitimsiz yuqori daraja — kuch nimaga ketayotganini ko‘rish uchun sabab.",
+            "Bitimlar bo‘yicha grade: bitim — menejerning birinchi to‘lovli loyihasi, shu to‘lov oyiga hisoblanadi. 2026-yil 1-noyabrdan asos 10%, oyda 3 ta bitim uchun — keyingi oyga 15% va foizdan tashqari har 3 ta bitim uchun $200. Qoida rahbarga taalluqli emas, egasi bitim bo‘yicha qo‘lda qo‘ygan foizlar kuchliroq. Mukofotlar [Moliya](/admin/finance)da, «Bitimlar uchun mukofot» blokida.",
+          ],
+        },
+        {
           id: "task",
           roles: ["admin", "head"],
           title: "«Tezkor vazifa»",
@@ -245,6 +255,26 @@ export const uz: HelpCopy = {
             "14 kun ichida mijozlaringizga ketgan maketlar va aksiyasi hali davom etayotganlarning hammasi. Sizniki — siz mas’ul bo‘lgan maket: sizni «Maketlar»da tayinlashgan, mijozning lidini olib borasiz yoki unga aloqa yozgansiz ([Maketlar](/admin/mockups) bo‘limidagi tartib bilan bir xil). Tepada — eng oldin tugaydigan aksiyalar.",
             "Har biri bo‘yicha: havola mijozga qachon ketgan (shu daqiqadan 48 soatlik aksiya va parolsiz bir sutka boshlanadi); mijoz ochganmi, oxirgi marta qachon va necha marta; aksiya tugashiga qancha qolgan; hali havola orqali ochiqmi va necha soat, yoki allaqachon parol bilan yopilgan. Oxirgi bir soatda ochgan bo‘lsa — qator yonadi: yozish payti.",
             "«Parol yaratish» — «Maketlar»dagi kabi 24 soatlik parol: bir marta ko‘rsatiladi, yonida — «Mijoz uchun nusxalash» va «Parolni nusxalash». Maket hali havola orqali ochiq bo‘lsa, birinchi parol uni yopadi — panel oldin so‘raydi.",
+          ],
+        },
+        {
+          id: "my-growth",
+          title: "«Mening o‘sishim»: daraja va ballar",
+          roles: ["manager"],
+          body: [
+            "O‘ngdagi blok, «Haftalik bosqichlarim» ustida. Daraja ballardan o‘sadi, xuddi o‘yindagidek: pulga olib boradigan har bir ish ball beradi, to‘lovga qanchalik yaqin bo‘lsa, shuncha ko‘p. Aloqa — 1, aloqangizga mijoz javobi — 2, qiziqish — 5, maket yuborildi — 10, maketni ko‘rsatish — 15, narx aytildi — 20, to‘lovli bitim — 100. Panelda ishlash — har 15 daqiqa uchun 1 ball, kuniga 8 tadan oshmaydi; lid holatini o‘zgartirish, bajarilgan vazifa va «Lidlarda tartib» botiga javob — 2 balldan, kuniga 20 balldan oshmaydi: mijozlar bilan ishlamay darajani «o‘tirib» olib bo‘lmaydi.",
+            "2-daraja 50 balldan, 3-daraja 150 dan, 5-daraja 500 dan, 10-daraja 2 250 dan boshlanadi: har keyingisi qimmatroq, uzoq darajalar faqat bitimlar bilan olinadi. Darajaning unvoni bor — «Yangi boshlovchi»dan «Afsona»gacha. Raqam ostida — jami ballar, 7 kundagisi va keyingi darajagacha qolgani; «Ballar nima uchun» ro‘yxatni ochadi, unda har biridan sizda nechta borligi ko‘rinadi.",
+            "Ballarni kod bazadan, neyrotarmoqsiz, soatiga bir marta hisoblaydi — shuning uchun yangi aloqa hisobda bir soat ichida ko‘rinadi. Darajani rahbar va egasi «Bosh sahifa»dagi kartochkangizda ko‘radi: u kunlik aloqalar sonini emas, kompaniya uchun qancha ish qilayotganingizni ko‘rsatadi.",
+          ],
+        },
+        {
+          id: "grade",
+          title: "«Bitimlar bo‘yicha grade»: 15% va $200 mukofot",
+          roles: ["manager"],
+          body: [
+            "Bitim — birinchi to‘lov kelgan loyihangiz ([Loyihalar](/admin/projects)da siz yetakchi). U shu to‘lov oyiga, Toshkent vaqti bilan, hisoblanadi. Bekor qilingan loyiha bitim hisoblanmaydi.",
+            "2026-yil 1-noyabrdan yangi mijozdan foizingiz — 10%. Kalendar oyida 3 ta bitim yopsangiz — keyingi oyda 15%. Egasi bergan shaxsiy stavka asos bo‘lib qoladi, 15% uni pasaytirmaydi. Qo‘shimcha sotuvlar avvalgidek hisoblanadi. 1-noyabrgacha foiz avvalgidek, gradingiz bo‘yicha; oktyabr bitimlari ham hisobga kiradi: oktyabrda uchta — noyabrda 15%.",
+            "Foizdan tashqari — oyning har 3 ta bitimi uchun $200 mukofot: 3 ta bitim — $200, 6 ta — $400. Mukofot 1-noyabrdan boshlab bitimlar uchun hisoblanadi, uchinchi bitim to‘lovi kelishi bilan topilgan bo‘ladi va darhol [Moliya](/admin/finance)da «topilgan»ga qo‘shiladi. Blokda — nechta bitim bor, hozirgi va keyingi oydagi foiz, mukofotgacha nechta qolgani.",
           ],
         },
         {
@@ -1791,6 +1821,14 @@ export const uz: HelpCopy = {
             "Daraja bo‘yicha stavkalar: **kichik menejer** — yangi mijozdan 10% va qo‘shimcha sotuvdan 0; **menejer** — 15% va 5%; **rahbar** — 30% va 30%. Daraja va shaxsiy stavkani egasi «Jamoa» bo‘limida qo‘yadi. Shaxsiy stavka darajani faqat yangi mijozlar uchun almashtiradi.",
             "Rahbar qo‘shimcha ravishda o‘z jamoasi menejerlarining har bir bitimidan 5% oladi — ustiga, ularning ulushidan emas. Muassis-rahbarda bu qator 0: u baribir qolgan hamma narsadan ulush oladi.",
             "Egasi aniq bitim uchun foiz belgilashi mumkin — u daraja va shaxsiy stavkadan muhimroq. Hisoblanma loyihada summa va mas’ul bo‘lganda paydo bo‘ladi. Bitim minusga ketdi — hisoblanma 0: minus — egasining tashvishi.",
+          ],
+        },
+        {
+          id: "grade",
+          title: "Bitimlar bo‘yicha grade va «Bitimlar uchun mukofot»",
+          body: [
+            "2026-yil 1-noyabrdan menejerning yangi mijozdan foizi o‘tgan oy bitimlariga bog‘liq: 10%, o‘tgan kalendar oyida 3 ta va undan ko‘p bitim bo‘lsa — 15%. Bitim — birinchi to‘lovli loyiha, shu to‘lov oyiga hisoblanadi. Shaxsiy stavka asos bo‘lib qoladi, bitim bo‘yicha qo‘lda qo‘yilgan foizlar qoidadan kuchliroq, qo‘shimcha sotuvlar va rahbar — avvalgidek. 1-noyabrgacha hammasi grade bo‘yicha hisoblanadi.",
+            "Foizdan tashqari — oyning har 3 ta bitimi uchun $200 mukofot (1-noyabrdan boshlab bitimlar uchun). U darhol topilgan va to‘lanadigan summaga kiradi, «Bitimlar uchun mukofot» bloki esa kimga, qaysi oy uchun va nechta bitim ekanini ko‘rsatadi. Mukofotni odamning hisob-kitoblarini ko‘radiganlar ko‘radi.",
           ],
         },
         {

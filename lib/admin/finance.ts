@@ -1,5 +1,6 @@
 import { PANEL_INTL, type PanelLocale, type Tr } from "@/lib/admin/i18n";
 import type { Role } from "@/lib/admin/roles";
+import { gradeRate, type Bonus, type GradeBook } from "@/lib/admin/grade-month";
 
 /**
  * Финансы: ставки, прибыль, начисления.
@@ -228,6 +229,12 @@ export function accrualsOf(
   payments: PaymentMoney[],
   earners: ReadonlyMap<string, Earner>,
   shares: ReadonlyMap<string, number> = new Map(),
+  /**
+   * Сделки ведущего по месяцам (lib/admin/grade-month.ts): с 01.11.2026
+   * ставка с нового клиента — 10% или 15% за 3 сделки в прошлом месяце.
+   * Нет — ставка по грейду, как раньше.
+   */
+  book?: GradeBook,
 ): Accrual[] {
   const owner = project.owner_staff_id ? earners.get(project.owner_staff_id) : undefined;
   const profit = profitOf(project);
@@ -249,7 +256,10 @@ export function accrualsOf(
     };
   };
 
-  const out = [line(owner.id, "owner", ratePercent(owner, project.kind))];
+  // Месяц сделки — месяц первой оплаты; без оплаты — сегодняшний: так видно,
+  // сколько выйдет, если клиент заплатит в этом месяце.
+  const monthRate = book ? gradeRate(owner, project.kind, book.dealMonth.get(project.id) ?? book.now, book) : null;
+  const out = [line(owner.id, "owner", monthRate ?? ratePercent(owner, project.kind))];
   const headId = owner.head_staff_id;
   const head = headId ? earners.get(headId) : undefined;
   if (headId && head) {
@@ -339,6 +349,8 @@ export function foundersPool(
   payments: PaymentMoney[],
   accruals: readonly Accrual[],
   expenses: readonly Expense[],
+  /** Премии за сделки месяца — тоже уходят из того, что остаётся студии. */
+  bonuses: readonly Bonus[] = [],
 ): FoundersPool {
   let earned = 0;
   let frozen = 0;
@@ -354,6 +366,7 @@ export function foundersPool(
     else frozen += remainder;
   }
 
+  earned -= bonuses.reduce((sum, b) => sum + b.amount_usd, 0);
   const spent = expenses.reduce((sum, e) => sum + e.amount_usd, 0);
   return { earned, frozen, expenses: spent, pool: earned - spent };
 }
@@ -404,13 +417,20 @@ export type Balance = {
   due: number;
 };
 
-export function balanceOf(staffId: string, accruals: Accrual[], payouts: PayoutMoney[]): Balance {
+export function balanceOf(
+  staffId: string,
+  accruals: Accrual[],
+  payouts: PayoutMoney[],
+  /** Премии за сделки месяца (lib/admin/grade-month.ts): заработаны, как только пришла оплата. */
+  bonuses: readonly Bonus[] = [],
+): Balance {
   const b: Balance = { earned: 0, frozen: 0, paid_out: 0, due: 0 };
   for (const a of accruals) {
     if (a.staff_id !== staffId) continue;
     if (a.state === "earned") b.earned += a.amount_usd;
     if (a.state === "frozen") b.frozen += a.amount_usd;
   }
+  for (const bonus of bonuses) if (bonus.staff_id === staffId) b.earned += bonus.amount_usd;
   for (const p of payouts) {
     if (p.staff_id === staffId) b.paid_out += p.amount_usd;
   }
