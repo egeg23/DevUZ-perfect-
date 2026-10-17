@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { sans, mono } from "@/app/fonts";
 import type { ReactNode } from "react";
 
 import { shellDict } from "@/content/admin-panel/shell";
 import { PANEL_HTML_LANG, PANEL_LANG_COOKIE, panelLocale } from "@/lib/admin/i18n";
+import { PWA_BACKGROUND, PWA_MANIFEST } from "@/lib/admin/pwa";
 
 import "../globals.css";
 
@@ -18,8 +19,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: shellDict.pageTitle[locale],
     robots: { index: false, follow: false, nocache: true },
+    // Панель — приложение на телефоне (lib/admin/pwa.ts): манифест и иконка
+    // для «На экран „Домой“» — только здесь, публичный сайт их не получает.
+    manifest: PWA_MANIFEST,
+    appleWebApp: { capable: true, title: "DevUz", statusBarStyle: "black" },
+    icons: { apple: [{ url: "/pwa/apple-touch-icon.png", sizes: "180x180" }] },
   };
 }
+
+export const viewport: Viewport = { themeColor: PWA_BACKGROUND };
 
 /**
  * Свои html и body: корневой layout только пробрасывает children, а

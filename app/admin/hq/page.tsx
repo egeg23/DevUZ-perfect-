@@ -1,3 +1,4 @@
+import { AppPush } from "@/components/admin/app-push";
 import { HqRefresh } from "@/components/admin/hq-refresh";
 import { HqSide } from "@/components/admin/hq-side";
 import { HqView } from "@/components/admin/hq";
@@ -39,6 +40,8 @@ export default async function HqPage({
     return (
       <AdminShell staff={staff}>
         <HqRefresh everyMs={HQ_REFRESH_MS} />
+        {/* Приложение на телефоне и пуш: карточка, пока не поставлено или не включено. */}
+        <AppPush variant="card" />
         <MyHqView
           my={my}
           locale={staff.panel_locale}
@@ -66,6 +69,7 @@ export default async function HqPage({
   return (
     <AdminShell staff={staff}>
       <HqRefresh everyMs={HQ_REFRESH_MS} />
+      <AppPush variant="card" />
       <HqView
         hq={hq}
         locale={staff.panel_locale}
