@@ -864,6 +864,12 @@ export const autopilotDict = defineDict({
     pl: (sent: number, target: number, waiting: number) =>
       `Dziś wysłano w Telegramie: ${sent} z ${target}${waiting ? ` · czeka na wysłanie: ${waiting}` : ""}`,
   },
+  /** Норма выходных — WEEKEND_TARGET в lib/admin/autopilot.ts. */
+  weekend: {
+    ru: (n: number) => `По субботам и воскресеньям — не меньше ${n}: письма готовятся до 20:00, отчёт в боте — в 20:30`,
+    uz: (n: number) => `Shanba va yakshanba kunlari — kamida ${n} ta: xabarlar 20:00 gacha tayyorlanadi, botdagi hisobot — 20:30 da`,
+    pl: (n: number) => `W soboty i niedziele — co najmniej ${n}: wiadomości przygotowywane do 20:00, raport w bocie — o 20:30`,
+  },
   byAccount: {
     ru: (list: string) => `По аккаунтам: ${list}`,
     uz: (list: string) => `Akkauntlar bo‘yicha: ${list}`,

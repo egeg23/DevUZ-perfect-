@@ -92,6 +92,29 @@ export function weekOf(now: Date): string {
 export const DAILY_TARGET = 20;
 
 /**
+ * Норма по субботам и воскресеньям — не меньше шестидесяти.
+ *
+ * Владелец, 17.10.2026: «Давай делать автоматические касания через наши
+ * рабочие аккаунты и в выходные, больше шанс на ответ руководителя и они не
+ * на работе. Начинаем с сегодня!» По будням аккаунты делят менеджеры и
+ * автопрогон; в выходные менеджеры не пишут, и автопрогон берёт их долю.
+ * Шестьдесят — по 15 на каждый из четырёх рабочих аккаунтов: в пределе
+ * «три в час» за день их уходит до 39 с каждого, так что запас остаётся.
+ */
+export const WEEKEND_TARGET = 60;
+
+/** Суббота или воскресенье по Ташкенту. */
+export function weekendInTashkent(now: Date): boolean {
+  const day = new Date(now.getTime() + TASHKENT_OFFSET_MS).getUTCDay();
+  return day === 0 || day === 6;
+}
+
+/** Норма на этот день: в выходные — не меньше WEEKEND_TARGET. */
+export function targetFor(now: Date, target: number): number {
+  return weekendInTashkent(now) ? Math.max(target, WEEKEND_TARGET) : target;
+}
+
+/**
  * Сколько писем автопрогона может одновременно ждать отправки.
  *
  * Очередь у скаута общая и идёт по времени постановки: двадцать писем
@@ -122,29 +145,55 @@ export const ATTEMPTS_PER_TARGET = 10;
  * готовы. Заканчиваем за полчаса до конца рабочего дня: последние письма
  * успевают уйти до 18:00, ответы на них приходят, пока менеджеры на месте,
  * а отчёт в 18:00 видит день целиком.
+ *
+ * В выходные рабочего дня нет: письма готовятся до 20:00 — последние уходят
+ * до конца окна отправки в 20:30, — и отчёт приходит в 20:30.
  */
 export const PREPARE_FROM_MINUTE = 7 * 60;
 export const PREPARE_TO_MINUTE = 17 * 60 + 30;
+export const WEEKEND_PREPARE_TO_MINUTE = 20 * 60;
 
-export function prepareWindow(now: Date): boolean {
+function tashkentMinute(now: Date): number {
   const shifted = new Date(now.getTime() + TASHKENT_OFFSET_MS);
-  const minute = shifted.getUTCHours() * 60 + shifted.getUTCMinutes();
-  return minute >= PREPARE_FROM_MINUTE && minute < PREPARE_TO_MINUTE;
+  return shifted.getUTCHours() * 60 + shifted.getUTCMinutes();
 }
 
-/** Отчёт — в 18:00, в конце рабочего дня. */
-export const REPORT_MINUTE = 18 * 60;
+export function prepareWindow(now: Date): boolean {
+  const minute = tashkentMinute(now);
+  const to = weekendInTashkent(now) ? WEEKEND_PREPARE_TO_MINUTE : PREPARE_TO_MINUTE;
+  return minute >= PREPARE_FROM_MINUTE && minute < to;
+}
 
-/**
- * За какой срок отчёт: сутки до него, то есть с прошлого отчёта. Не с
- * полуночи — иначе ответы, пришедшие вечером и ночью, не попали бы ни в
- * один отчёт: сегодняшний уже ушёл, а завтрашний считал бы с полуночи.
- */
-export const REPORT_SPAN_MS = 24 * 3600_000;
+/** Отчёт — в 18:00, в конце рабочего дня; в выходные — в 20:30. */
+export const REPORT_MINUTE = 18 * 60;
+export const WEEKEND_REPORT_MINUTE = 20 * 60 + 30;
+
+export function reportMinute(now: Date): number {
+  return weekendInTashkent(now) ? WEEKEND_REPORT_MINUTE : REPORT_MINUTE;
+}
 
 export function reportDue(now: Date): boolean {
-  const shifted = new Date(now.getTime() + TASHKENT_OFFSET_MS);
-  return shifted.getUTCHours() * 60 + shifted.getUTCMinutes() >= REPORT_MINUTE;
+  return tashkentMinute(now) >= reportMinute(now);
+}
+
+/**
+ * С какого времени считать отчёт: с прошлого — вчера в его час. Не с
+ * полуночи — иначе ответы, пришедшие вечером и ночью, не попали бы ни в
+ * один отчёт: сегодняшний уже ушёл, а завтрашний считал бы с полуночи. И не
+ * ровно сутки назад: отчёт субботы в 20:30 начинается с пятничного в 18:00,
+ * а понедельничный — с воскресного в 20:30, без дыр между ними.
+ */
+export function reportSince(now: Date): Date {
+  const yesterday = new Date(now.getTime() - 24 * 3600_000);
+  const shifted = new Date(yesterday.getTime() + TASHKENT_OFFSET_MS);
+  const midnight = Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()) - TASHKENT_OFFSET_MS;
+  return new Date(midnight + reportMinute(yesterday) * 60_000);
+}
+
+/** «18:00» или «20:30» — во сколько отчёт за этот день (YYYY-MM-DD по Ташкенту). */
+export function reportClock(day: string): string {
+  const minute = reportMinute(new Date(`${day}T12:00:00+05:00`));
+  return `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
 }
 
 /**
@@ -285,14 +334,16 @@ export function reportText(s: DayStats, escape: (t: string) => string): string {
   // null — строки нет; "" — пустая строка между блоками.
   const lines: (string | null)[] = [
     `🤖 <b>Автопрогон касаний — отчёт за ${shortDay(s.day)}</b>`,
-    "<i>За сутки до 18:00 — с прошлого отчёта.</i>",
+    `<i>За сутки до ${reportClock(s.day)} — с прошлого отчёта.</i>`,
     s.enabled ? null : "⏸ Автопрогон выключен в разделе «Касания».",
     "",
     `✉️ Написали — ушло в Telegram: <b>${s.sent}</b> из ${s.target}${mark}${accounts}`,
     s.trouble && s.sent < s.target
       ? `❗ Автопрогон сбоил — письма не готовились. Для разработчика: <code>${escape(s.trouble)}</code>`
       : null,
-    s.inFlight ? `Ждут отправки: ${s.inFlight} — уйдут сегодня до 20:30 или завтра с 07:30` : null,
+    s.inFlight
+      ? `Ждут отправки: ${s.inFlight} — уйдут ${reportClock(s.day) === "18:00" ? "сегодня до 20:30 или " : ""}завтра с 07:30`
+      : null,
     s.manual ? `Не нашлись в Telegram — карточки ушли на звонок: ${s.manual}` : null,
     s.dropped ? `Не написали — проверка по факту ничего не подтвердила или сайт не открылся: ${s.dropped}` : null,
     s.search ? searchLine(s.search) : null,

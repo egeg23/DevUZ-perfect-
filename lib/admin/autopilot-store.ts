@@ -4,9 +4,10 @@ import {
   DAILY_TARGET,
   LETTER_AFTER_REPLY,
   prepareWindow,
-  REPORT_SPAN_MS,
   reportDue,
+  reportSince,
   reportText,
+  targetFor,
   toPrepare,
   weekOf,
   type DayStats,
@@ -30,14 +31,15 @@ type Db = NonNullable<ReturnType<typeof serviceClient>>;
 
 export type AutopilotSettings = { enabled: boolean; target: number };
 
-export async function autopilotSettings(): Promise<AutopilotSettings> {
+/** Включён ли и норма на этот день: в выходные — не меньше WEEKEND_TARGET (targetFor). */
+export async function autopilotSettings(now: Date = new Date()): Promise<AutopilotSettings> {
   const db = serviceClient();
   if (!db) return { enabled: false, target: DAILY_TARGET };
   const { data } = await db.from("autopilot_settings").select("enabled, daily_target").eq("id", true).maybeSingle();
   // Строки нет (миграция ещё не дошла) — автопрогон молчит: включённым его
   // делает строка, которую кладёт миграция, а не отсутствие строки.
   if (!data) return { enabled: false, target: DAILY_TARGET };
-  return { enabled: Boolean(data.enabled), target: Number(data.daily_target ?? DAILY_TARGET) };
+  return { enabled: Boolean(data.enabled), target: targetFor(now, Number(data.daily_target ?? DAILY_TARGET)) };
 }
 
 /** Включить или выключить. Только владелец — проверка в действии панели. */
@@ -186,7 +188,7 @@ export async function runAutopilot(now: Date = new Date()): Promise<AutopilotRun
   const db = serviceClient();
   if (!db) return { ...run, skipped: "offline" };
 
-  const settings = await autopilotSettings();
+  const settings = await autopilotSettings(now);
   if (!settings.enabled) return { ...run, skipped: "off" };
   // Кампании заводятся и вне часов отправки: автопоиск по картам ищет с 06:00.
   await ensureCampaigns(db);
@@ -310,9 +312,9 @@ async function accountNames(db: Db): Promise<Map<string, string>> {
 }
 
 /**
- * Цифры автопрогона: панель — с полуночи («сегодня»), отчёт в 18:00 — за
- * сутки до него (REPORT_SPAN_MS), чтобы вечерние и ночные ответы не
- * выпадали ни из одного отчёта.
+ * Цифры автопрогона: панель — с полуночи («сегодня»), отчёт — с прошлого
+ * отчёта (reportSince), чтобы вечерние и ночные ответы не выпадали ни из
+ * одного отчёта.
  */
 export async function dayStats(now: Date = new Date(), since?: Date): Promise<DayStats | null> {
   const db = serviceClient();
@@ -324,7 +326,7 @@ export async function dayStats(now: Date = new Date(), since?: Date): Promise<Da
   const from = new Date(Math.min(start, weekStart)).toISOString();
 
   const [settings, search, names, { data }, { data: trouble }, { count: circleMissing }] = await Promise.all([
-    autopilotSettings(),
+    autopilotSettings(now),
     searchStats(db, new Date(start), now),
     accountNames(db),
     db
@@ -456,7 +458,7 @@ export async function sendAutopilotReport(now: Date = new Date()): Promise<numbe
   const { data: done } = await db.from("daily_claims").select("job").eq("job", REPORT_JOB).eq("day", day).maybeSingle();
   if (done) return 0;
 
-  const stats = await dayStats(now, new Date(now.getTime() - REPORT_SPAN_MS));
+  const stats = await dayStats(now, reportSince(now));
   if (!stats || (!stats.enabled && !stats.attempts && !stats.replies)) return 0;
 
   // Отметка — условно: два прохода свипа не пришлют отчёт дважды.
