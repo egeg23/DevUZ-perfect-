@@ -26,6 +26,7 @@ import { protoNichePl } from "@/content/admin-panel/proto";
 import { mockupNicheDict } from "@/content/admin-panel/mockups";
 import type { PanelLocale, Tr } from "@/lib/admin/i18n";
 import type { Role } from "@/lib/admin/roles";
+import { MAIN_ACCOUNT, type AccountTag } from "@/lib/admin/work-accounts";
 import { mockupTermsUrl } from "@/lib/proto/booking";
 
 export const SHOWCASE_HOST = "https://cases.devuz.studio/";
@@ -104,7 +105,72 @@ export type MockupRow = {
   owner?: MockupOwner | null;
   /** Первая отправка клиенту с рабочего аккаунта (mockup_offers.sent_at). null — не отправлен. */
   sentAt?: string | null;
+  /** Кому и с какого аккаунта ушёл — все отправки по времени (mockupSends). */
+  sends?: MockupSend[];
 };
+
+/**
+ * С какого аккаунта ушла ссылка — как подпись у касаний (sentFrom в
+ * lib/admin/work-accounts.ts): `label: null` — главный аккаунт, пустой
+ * `label` — аккаунта в базе уже нет. "unknown" — ранние отправки (06–07.10),
+ * когда аккаунт у отправки ещё не записывался.
+ */
+export type MockupSendFrom = AccountTag | { label: null; handle: null } | "unknown";
+
+/** Одна отправка макета клиенту (строка mockup_offers). */
+export type MockupSend = {
+  /** Кому: компания касания, имя или @ник в Telegram. */
+  to: string;
+  /** @ник, если он не совпадает с «кому». */
+  handle: string | null;
+  from: MockupSendFrom;
+  at: string;
+  leadId: string | null;
+};
+
+type SendRow = {
+  mockup_ref: unknown;
+  client: unknown;
+  peer: unknown;
+  account: unknown;
+  sent_at: unknown;
+  lead_id: unknown;
+};
+
+/**
+ * Кому и с какого аккаунта ушёл каждый макет.
+ *
+ * Владелец, 17.10.2026: «В макетах указывай с какого аккаунта ушло и кому».
+ * Один макет уходит многим (Invis — нескольким клубам), поэтому — все
+ * отправки, по времени: строка mockup_offers одна на клиента и макет
+ * (lib/admin/mockup-offer.ts).
+ */
+export function mockupSends(rows: readonly SendRow[], tags: ReadonlyMap<string, AccountTag>): Map<string, MockupSend[]> {
+  const out = new Map<string, MockupSend[]>();
+  const sorted = [...rows].sort((a, b) => String(a.sent_at).localeCompare(String(b.sent_at)));
+  for (const row of sorted) {
+    const ref = String(row.mockup_ref ?? "");
+    if (!ref || !row.sent_at) continue;
+    const peer = typeof row.peer === "string" && row.peer.trim() ? row.peer.trim() : null;
+    const to = (typeof row.client === "string" && row.client.trim()) || peer || "—";
+    const account = typeof row.account === "string" && row.account.trim() ? row.account.trim() : null;
+    const from: MockupSendFrom = !account
+      ? "unknown"
+      : account === MAIN_ACCOUNT
+        ? { label: null, handle: null }
+        : (tags.get(account) ?? { label: "", handle: null });
+    const list = out.get(ref) ?? [];
+    list.push({
+      to,
+      handle: peer && peer !== to ? peer : null,
+      from,
+      at: String(row.sent_at),
+      leadId: typeof row.lead_id === "string" ? row.lead_id : null,
+    });
+    out.set(ref, list);
+  }
+  return out;
+}
 
 /**
  * Откуда взят ответственный: назначен руками, хозяин лида, которому ушёл

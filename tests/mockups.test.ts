@@ -19,6 +19,7 @@ import {
   clientMessage,
   mockupNiche,
   mockupOwner,
+  mockupSends,
   parseMockupRef,
   showcaseCases,
   showcaseRow,
@@ -221,7 +222,8 @@ test("ответственного назначают руководитель �
 
 test("отправка клиенту — первая из mockup_offers у каждого макета, не только у открытых", () => {
   const store = read("lib/admin/mockups-store.ts");
-  assert.match(store, /firstSends\(\(data \?\? \[\]\)\.filter\(\(r\) => r\.auto !== true\)/);
+  assert.match(store, /const refs = \(data \?\? \[\]\)\.filter\(\(r\) => r\.auto !== true\)\.map\(\(r\) => `p:\$\{r\.id\}`\);/);
+  assert.match(store, /firstSends\(refs\)/);
   assert.match(store, /sentAt: sends\.get\(`p:\$\{id\}`\)\?\.sent_at \?\? null/);
   const list = read("components/admin/mockup-list.tsx");
   assert.match(list, /t\.sentAt\(row\.sentAtText\)/);
@@ -234,4 +236,46 @@ test("«макет закрылся паролем» — сначала отве
   assert.match(close, /senderChat\(sent, p\.prospect_id, p\.owner_staff_id \?\? null\)/);
   const sender = between(close, "async function senderChat(", "export type AutoCloseRun");
   assert.ok(sender.indexOf("let staffId: string | null = owner;") < sender.indexOf("sent?.lead_id"));
+});
+
+test("кому и с какого аккаунта ушёл макет — все отправки по времени", () => {
+  const tags = new Map([["acc-2", { label: "Аккаунт 2", handle: "@devuz_two" }]]);
+  const sends = mockupSends(
+    [
+      { mockup_ref: "p:1", client: "@armadaazia", peer: "@armadaazia", account: "acc-2", sent_at: "2026-10-16T05:00:00Z", lead_id: null },
+      { mockup_ref: "p:1", client: "Клуб Invis", peer: null, account: "main", sent_at: "2026-10-15T05:00:00Z", lead_id: "lead-1" },
+      { mockup_ref: "p:1", client: "Старый клиент", peer: null, account: null, sent_at: "2026-10-06T05:00:00Z", lead_id: null },
+      { mockup_ref: "p:2", client: "Компания", peer: "@boss", account: "gone", sent_at: "2026-10-16T06:00:00Z", lead_id: null },
+      { mockup_ref: "p:3", client: null, peer: null, account: "main", sent_at: null, lead_id: null },
+    ],
+    tags,
+  );
+  const one = sends.get("p:1") ?? [];
+  assert.deepEqual(
+    one.map((s) => s.to),
+    ["Старый клиент", "Клуб Invis", "@armadaazia"],
+    "по времени, первая отправка первой",
+  );
+  assert.equal(one[0].from, "unknown", "аккаунт не записан — ранняя отправка");
+  assert.deepEqual(one[1].from, { label: null, handle: null }, "main — главный аккаунт");
+  assert.equal(one[1].leadId, "lead-1");
+  assert.deepEqual(one[2].from, { label: "Аккаунт 2", handle: "@devuz_two" });
+  assert.equal(one[2].handle, null, "ник, совпадающий с «кому», второй раз не пишем");
+  const two = sends.get("p:2") ?? [];
+  assert.deepEqual(two[0].from, { label: "", handle: null }, "аккаунта в базе уже нет");
+  assert.equal(two[0].handle, "@boss");
+  assert.equal(sends.has("p:3"), false, "без времени отправки — не отправка");
+
+  // Подписи — как у касаний, на трёх языках.
+  assert.equal(mockupsDict.sendFrom.ru(null, null), "с главного аккаунта");
+  assert.equal(mockupsDict.sendFrom.ru("Аккаунт 2", "@devuz_two"), "с аккаунта «Аккаунт 2» @devuz_two");
+  assert.equal(mockupsDict.sendFrom.ru("", null), "с рабочего аккаунта");
+  for (const lang of ["ru", "uz", "pl"] as const) assert.ok(mockupsDict.moreSends[lang](4).includes("4"));
+
+  const store = read("lib/admin/mockups-store.ts");
+  assert.match(store, /mockupSends\(every, tags\)/);
+  assert.match(store, /sends: sendsByRef\.get\(`p:\$\{id\}`\) \?\? \[\]/);
+  const list = read("components/admin/mockup-list.tsx");
+  assert.match(list, /<SendList sends=\{row\.sendsText\}/);
+  assert.match(list, /t\.sendFromUnknown/);
 });
