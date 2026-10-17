@@ -37,6 +37,10 @@ export class BlockedAddress extends Error {
 /** Порты, кроме которых у публичного сайта делать нечего. */
 const ALLOWED_PORTS = new Set(["", "80", "443", "8080", "8443"]);
 
+export function portAllowed(port: string): boolean {
+  return ALLOWED_PORTS.has(port);
+}
+
 /**
  * Приводит то, что ввёл человек, к адресу.
  *

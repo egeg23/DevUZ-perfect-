@@ -13,8 +13,7 @@
  * спрашивает, и там они верные.
  */
 import { extractContacts, contactsPagePath, mergeContacts } from "@/lib/audit/contacts";
-import { decodeEntities, enrich, probe } from "@/lib/audit/fetch";
-import { resolveSafely } from "@/lib/audit/guard";
+import { decodeEntities, enrich, probe, safeBytes } from "@/lib/audit/fetch";
 import type { ProtoLocale } from "@/content/proto/models";
 import { PHOTO_MIN_WIDTH, emptyFacts, type ProtoFacts, type ProtoImage } from "@/lib/proto/facts";
 import { imageSize } from "@/lib/proto/photo";
@@ -58,14 +57,11 @@ const WIDE = 2.5;
  */
 export async function measureImage(url: string): Promise<ProtoImage | null> {
   try {
-    const parsed = new URL(url);
-    await resolveSafely(parsed);
-    const response = await fetch(parsed, {
-      headers: { range: "bytes=0-4095" },
-      signal: AbortSignal.timeout(6000),
-    });
-    if (!response.ok && response.status !== 206) return null;
-    const size = imageSize(new Uint8Array(await response.arrayBuffer()));
+    // Адрес картинки берётся со страницы чужого сайта — только безопасной
+    // дорогой аудита, с проверкой каждого редиректа (lib/audit/fetch.ts).
+    const response = await safeBytes(url, { maxBytes: 4096, accept: "image/*" });
+    if (response.status !== 200 && response.status !== 206) return null;
+    const size = imageSize(new Uint8Array(response.bytes));
     return size ? { url, width: size.width, height: size.height } : null;
   } catch {
     return null;

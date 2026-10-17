@@ -140,6 +140,7 @@ function once(
   status: number;
   headers: Record<string, string>;
   body: string;
+  bytes: Buffer;
   truncated: boolean;
   ttfbMs: number;
   certDaysLeft: number | null;
@@ -186,25 +187,32 @@ function once(
         let truncated = false;
 
         response.on("data", (chunk: Buffer) => {
+          const limit = opts.maxBytes ?? MAX_BYTES;
           size += chunk.length;
-          if (size > (opts.maxBytes ?? MAX_BYTES)) {
+          if (size > limit) {
+            // Начало оставляем: размер картинки читается по первым байтам.
+            const room = limit - (size - chunk.length);
+            if (room > 0) chunks.push(chunk.subarray(0, room));
             truncated = true;
             response.destroy();
             return;
           }
           chunks.push(chunk);
         });
-        const done = () =>
+        const done = () => {
+          const bytes = Buffer.concat(chunks);
           resolve({
             status: response.statusCode ?? 0,
             headers: Object.fromEntries(
               Object.entries(response.headers).map(([k, v]) => [k, headerValue(v)]),
             ),
-            body: Buffer.concat(chunks).toString("utf8"),
+            body: bytes.toString("utf8"),
+            bytes,
             truncated,
             ttfbMs,
             certDaysLeft,
           });
+        };
         response.on("end", done);
         response.on("close", done);
         response.on("error", reject);
@@ -215,6 +223,27 @@ function once(
     request.on("error", reject);
     request.end();
   });
+}
+
+/**
+ * Первые байты файла по чужому адресу — картинка со страницы клиента, логотип.
+ *
+ * Той же дорогой, что аудит: подключение к проверенному адресу и проверка
+ * каждого редиректа заново. Глобальный fetch для этого не годится: он сам
+ * идёт по редиректам (картинка отвечает 302 на 127.0.0.1 — и мы там), а имя
+ * резолвит заново, уже после нашей проверки.
+ */
+export async function safeBytes(raw: string, opts: { maxBytes: number; accept?: string }): Promise<{ status: number; bytes: Buffer }> {
+  let url = normalizeUrl(raw);
+  for (let hop = 0; ; hop++) {
+    const result = await once(url, await resolveSafely(url), { maxBytes: opts.maxBytes, accept: opts.accept ?? "*/*" });
+    const location = result.headers.location;
+    if (result.status >= 300 && result.status < 400 && location && hop < MAX_REDIRECTS) {
+      url = normalizeUrl(new URL(location, url).href);
+      continue;
+    }
+    return { status: result.status, bytes: result.bytes };
+  }
 }
 
 /** Идёт по адресу, перепроверяя каждый редирект. */
@@ -438,7 +467,9 @@ function sitemapFromRobots(robots: string | null, base: URL): URL | null {
     const url = new URL(line[1], base);
     // Чужой хост не проверяем: запрос по адресу из чужого файла — это уже
     // не разбор сайта, а поход туда, куда нас послали.
-    return url.hostname === base.hostname ? url : null;
+    // host, а не hostname: порт тоже должен совпасть, иначе robots.txt
+    // выбирал бы нам любую службу на том же адресе.
+    return url.host === base.host ? url : null;
   } catch {
     return null;
   }
@@ -606,7 +637,7 @@ export async function recheck(urls: readonly string[]): Promise<(number | null)[
   const out: (number | null)[] = [];
   for (const href of urls) {
     try {
-      const url = new URL(href);
+      const url = normalizeUrl(href);
       const r = await once(url, await resolveSafely(url), { maxBytes: PEEK_MAX_BYTES, accept: "*/*", browser: true });
       out.push(rateLimited(r.status, r.body) ? null : r.status);
     } catch {
