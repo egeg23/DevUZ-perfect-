@@ -181,6 +181,42 @@ export const letterTextsDict = defineDict({
     uz: "Salom saqlandi — keyingi aloqalar u bilan boshlanadi.",
     pl: "Powitanie zapisane — kolejne kontakty zaczną się od niego.",
   },
+  // Блок «Новый заход после ответа» (lib/admin/sales-after-reply.ts, 17.10.2026).
+  abTitle: { ru: "Новый заход после ответа", uz: "Javobdan keyingi yangi yondashuv", pl: "Nowe podejście po odpowiedzi" },
+  abIntro: {
+    ru: "Касания делятся поровну и случайно, в момент «Здравствуйте». «Как было» — общий кружок и прежняя переписка. «Новый заход» — перед кружком строка «Это про ваш сайт …», кружок ниши, цена одной строкой после «+», готовые ответы на возражения в переписке ИИ, через 2 дня вопрос тем, кто обещал передать руководству, и «Покажу за 15 минут» рядом с макетом. Автоответчики («отвечаем в рабочее время») не считаются ответом у обеих половин.",
+    uz: "Aloqalar birinchi salom paytida teng va tasodifiy bo‘linadi. «Avvalgidek» — umumiy dumaloq video va avvalgi yozishma. «Yangi yondashuv» — videodan oldin «Bu sizning saytingiz … haqida» qatori, soha videosi, «+» dan keyin bitta qatorda narx, sun’iy intellekt yozishmasida e’tirozlarga tayyor javoblar, rahbarga yetkazaman deganlarga 2 kundan keyin savol va maket yonida «15 daqiqada ko‘rsatib beraman». Avtojavoblar («ish vaqtida javob beramiz») ikkala yarmida ham javob hisoblanmaydi.",
+    pl: "Kontakty dzielą się po równo i losowo w chwili pierwszego powitania. «Jak było» to ogólne kółko i dotychczasowa rozmowa. «Nowe podejście» to linijka «To o Państwa stronie …» przed kółkiem, kółko branży, cena w jednej linijce po «+», gotowe odpowiedzi na zastrzeżenia w rozmowie AI, po 2 dniach pytanie do tych, którzy obiecali przekazać szefowi, i «Pokażę w 15 minut» obok makiety. Autoodpowiedzi («odpowiadamy w godzinach pracy») nie liczą się jako odpowiedź w obu połowach.",
+  },
+  abOld: { ru: "Как было", uz: "Avvalgidek", pl: "Jak było" },
+  abNew: { ru: "Новый заход", uz: "Yangi yondashuv", pl: "Nowe podejście" },
+  abHello: { ru: "«Здравствуйте»", uz: "salom", pl: "powitania" },
+  abLive: { ru: "ответили живые", uz: "tirik javob berdi", pl: "odpowiedzieli ludzie" },
+  abAfterCircle: { ru: "ответили после кружка", uz: "videodan keyin javob berdi", pl: "odpowiedzieli po kółku" },
+  abPlus: { ru: "«+»", uz: "«+»", pl: "«+»" },
+  abMockup: { ru: "макет ушёл", uz: "maket ketdi", pl: "makieta wysłana" },
+  abPaid: { ru: "оплата (лид «выиграли»)", uz: "to‘lov (lid «yutdik»)", pl: "płatność (lead «wygrany»)" },
+  abEarly: {
+    ru: (need: number) => `Победителя рано называть: нужно ещё ${need} «Здравствуйте» на меньшей половине (не меньше 100 на каждую).`,
+    uz: (need: number) => `G‘olibni aytishga erta: kichik yarmida yana ${need} ta salom kerak (har biriga kamida 100 ta).`,
+    pl: (need: number) => `Za wcześnie na zwycięzcę: potrzeba jeszcze ${need} powitań w mniejszej połowie (co najmniej 100 na każdą).`,
+  },
+  abEven: { ru: "По доле «+» разницы пока не видно.", uz: "«+» ulushi bo‘yicha hozircha farq yo‘q.", pl: "W udziale «+» na razie nie widać różnicy." },
+  abLeader: {
+    ru: (name: string, pct: number) => `«${name}» чаще доводит до «+», уверенность ${pct}%.`,
+    uz: (name: string, pct: number) => `«${name}» «+» gacha ko‘proq olib boradi, ishonch ${pct}%.`,
+    pl: (name: string, pct: number) => `«${name}» częściej prowadzi do «+», pewność ${pct}%.`,
+  },
+  abOff: {
+    ru: "Новый заход выключен в коде: обе половины сейчас идут как было.",
+    uz: "Yangi yondashuv kodda o‘chirilgan: ikkala yarmi hozir avvalgidek ishlaydi.",
+    pl: "Nowe podejście jest wyłączone w kodzie: obie połowy idą teraz jak dotąd.",
+  },
+  abNone: {
+    ru: "Данных пока нет: половины ставятся с первых «Здравствуйте» после выкатки.",
+    uz: "Hozircha ma’lumot yo‘q: yarmilar chiqarilgandan keyingi birinchi salomlardan qo‘yiladi.",
+    pl: "Na razie brak danych: połowy przypisują się od pierwszych powitań po wdrożeniu.",
+  },
 });
 
 /** Почему текст не сохранился — по коду проверки (lib/admin/letter-texts.ts). */
