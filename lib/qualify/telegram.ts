@@ -6,6 +6,7 @@ import { localeLabel } from "@/lib/i18n";
 import { noticesOf, rememberNotices, type Notice } from "@/lib/qualify/notices";
 import { siteUrl } from "@/lib/seo";
 import { roadFetch } from "@/lib/egress.mjs";
+import { mirrorToPush } from "@/lib/admin/push-mirror";
 
 /**
  * Адрес Bot API.
@@ -420,6 +421,7 @@ export async function setMyProfilePhoto(jpeg: Uint8Array<ArrayBuffer>): Promise<
  * ушёл. Картинку со своего сервера слать загрузкой — sendPhotoFile.
  */
 export async function sendPhoto(chatId: number | string, photoUrl: string, caption: string): Promise<boolean> {
+  mirrorToPush(chatId, caption);
   return call("sendPhoto", { chat_id: chatId, photo: photoUrl, caption, parse_mode: "HTML" });
 }
 
@@ -434,6 +436,8 @@ export async function sendPhotoFile(
   filename: string,
   caption: string,
 ): Promise<boolean> {
+  // Пушем — только подпись: картинку человек откроет в Telegram.
+  mirrorToPush(chatId, caption);
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return false;
   const form = new FormData();
@@ -471,7 +475,17 @@ export async function sendBroadcastMessage(chatId: number, text: string): Promis
   return /"error_code"\s*:\s*403/.test(result.description ?? "") ? "blocked" : "failed";
 }
 
-export async function sendMessage(chatId: number | string, text: string): Promise<boolean> {
+/**
+ * Сообщение сотруднику уходит ещё и пушем в приложение панели
+ * (lib/admin/push-mirror.ts) — в фоне, Telegram его не ждёт. `mirror: false`
+ * — то, чему в пуше не место: код входа в само приложение.
+ */
+export async function sendMessage(
+  chatId: number | string,
+  text: string,
+  options: { mirror?: boolean } = {},
+): Promise<boolean> {
+  if (options.mirror !== false) mirrorToPush(chatId, text);
   return call("sendMessage", {
     chat_id: chatId,
     text,
@@ -567,6 +581,9 @@ async function postRows(
   rows: Button[][],
   extra: Record<string, unknown> = {},
 ): Promise<number | null> {
+  // Пушем — один раз на сообщение, до отправки и без ожидания: повтор без
+  // кнопки входа ниже — это то же сообщение.
+  mirrorToPush(chatId, text, rows, { silent: extra.disable_notification === true });
   const payload = () => ({
     chat_id: chatId,
     text,
@@ -971,6 +988,7 @@ export async function editMessage(
  * «⏸ Не получать лиды».
  */
 export async function sendKeyboard(chatId: number | string, text: string, keys: string[][]): Promise<boolean> {
+  mirrorToPush(chatId, text);
   return call("sendMessage", {
     chat_id: chatId,
     text,

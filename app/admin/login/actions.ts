@@ -9,7 +9,18 @@ import {
   SESSION_COOKIE,
   consumeLoginToken,
   createSession,
+  staffById,
+  type Staff,
 } from "@/lib/admin/session";
+import {
+  APP_CODE_TRIES,
+  APP_LOGIN_COOKIE,
+  APP_REQUEST_TTL_MS,
+  appStartPayload,
+  normalizeCode,
+} from "@/lib/admin/app-login";
+import { startAppRequest, tryAppCode } from "@/lib/admin/app-login-store";
+import { company } from "@/content/company";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
 import { NEXT_COOKIE, returnTo } from "@/lib/admin/return-to";
 import { homeOf } from "@/lib/admin/roles";
@@ -51,6 +62,14 @@ export async function signIn(formData: FormData) {
     redirect("/admin/login?e=1");
   }
 
+  await openSession(staff, ip, { via: "link" });
+}
+
+/**
+ * Сессия вошедшему: кука сессии, зеркало языка, журнал и дорога туда, куда
+ * он шёл. Общая у входа по ссылке и входа кодом в приложении.
+ */
+async function openSession(staff: Staff, ip: string, how: { via: "link" | "app_code" }): Promise<never> {
   const session = await createSession(
     staff.id,
     ip,
@@ -89,10 +108,70 @@ export async function signIn(formData: FormData) {
   await record("login.succeeded", {
     actorStaffId: staff.id,
     ip,
-    meta: { role: staff.role, to: wanted ?? "/admin" },
+    meta: how.via === "link" ? { role: staff.role, to: wanted ?? "/admin" } : { role: staff.role, via: how.via, to: wanted ?? "/admin" },
   });
 
   // Шёл никуда — домой: владельцу и руководителю «Главная» (homeOf).
   const to = returnTo(wanted);
   redirect(to === "/admin" ? homeOf(staff) : to);
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Вход кодом в установленном приложении (lib/admin/app-login.ts)
+// ───────────────────────────────────────────────────────────────────────────
+
+export type AppLoginState = { error: string | null; tries?: number };
+
+/**
+ * «Получить код в боте»: заводит попытку входа, кладёт её ключ в куку
+ * приложения и отдаёт ссылку в бота с тем же ключом.
+ */
+export async function startAppLogin(): Promise<{ link: string } | { error: "offline" | "too_many" }> {
+  const ip = ipFromHeaders(await headers());
+  if (!rateLimit(`admin-app-start:${ip}`, { limit: 10, windowMs: 10 * 60 * 1000 }).ok) return { error: "too_many" };
+  const id = await startAppRequest();
+  if (!id) return { error: "offline" };
+  (await cookies()).set(APP_LOGIN_COOKIE, id, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/admin",
+    maxAge: APP_REQUEST_TTL_MS / 1000,
+  });
+  return { link: `https://t.me/${company.telegram}?start=${appStartPayload(id)}` };
+}
+
+/**
+ * Ввод кода. Каждая неудача — в журнал (как и у входа по ссылке), пятая
+ * неверная гасит код: дальше только новый из бота.
+ */
+export async function signInWithCode(_prev: AppLoginState, formData: FormData): Promise<AppLoginState> {
+  const ip = ipFromHeaders(await headers());
+  if (!rateLimit(`admin-app-code:${ip}`, { limit: 20, windowMs: 10 * 60 * 1000 }).ok) return { error: "too_many" };
+
+  const code = normalizeCode(String(formData.get("code") ?? ""));
+  if (!code) return { error: "format" };
+  const jar = await cookies();
+  const requestId = jar.get(APP_LOGIN_COOKIE)?.value;
+  if (!requestId) return { error: "no_request" };
+
+  const result = await tryAppCode(requestId, code);
+  if (result.check === "offline") return { error: "offline" };
+  if (result.check !== "ok" || !result.staffId) {
+    await record("login.failed", {
+      actorStaffId: result.staffId ?? undefined,
+      ip,
+      meta: { via: "app_code", why: result.check, attempts: result.attempts },
+    });
+    if (result.check === "wrong") {
+      const left = APP_CODE_TRIES - result.attempts;
+      return left > 0 ? { error: "wrong", tries: left } : { error: "spent" };
+    }
+    return { error: result.check };
+  }
+
+  const staff = await staffById(result.staffId);
+  if (!staff) return { error: "none" };
+  jar.delete({ name: APP_LOGIN_COOKIE, path: "/admin" });
+  return openSession(staff, ip, { via: "app_code" });
 }

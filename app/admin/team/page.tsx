@@ -1,5 +1,8 @@
 import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveDetails, saveNotices, saveSections, setGrade, setPlan } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
+import { AppPush } from "@/components/admin/app-push";
+import { appDict } from "@/content/admin-panel/app";
+import { pushDevicesByStaff } from "@/lib/admin/push-store";
 import { HelpHint } from "@/components/admin/help-link";
 import { when } from "@/components/admin/lead-table";
 import { requireSection } from "@/lib/admin/guard";
@@ -94,7 +97,10 @@ export default async function TeamPage({
   const { r, i, o, t: detachedRaw } = await searchParams;
   const locale = viewer.panel_locale;
   const t = pick(teamDict, locale);
-  const team = await listTeam();
+  const [team, devices] = await Promise.all([listTeam(), pushDevicesByStaff()]);
+  // У кого приложение с уведомлениями — владельцу и руководителю.
+  const seesDevices = viewer.role === "admin" || viewer.role === "head";
+  const ta = pick(appDict, locale);
 
   const nameById = new Map(team.map((m) => [m.id, m.display_name]));
   const active = team.filter((m) => m.is_active);
@@ -210,6 +216,14 @@ export default async function TeamPage({
                     <span className="ml-2 text-xs text-faint">{t.itsYou}</span>
                   ) : null}
                   {member.full_name ? <span className="block text-xs text-faint">{member.full_name}</span> : null}
+                  {seesDevices ? (
+                    <span
+                      className={`mt-1 block text-xs ${devices.get(member.id) ? "text-green" : "text-faint"}`}
+                      title={devices.get(member.id)?.devices.join(", ")}
+                    >
+                      {devices.get(member.id) ? ta.devices(devices.get(member.id)!.count) : ta.noDevices}
+                    </span>
+                  ) : null}
                 </td>
                 <td data-label={t.colTelegram} className="px-4 py-3 font-mono text-xs text-muted">
                   {member.username ? `@${member.username}` : "—"}
@@ -383,6 +397,9 @@ export default async function TeamPage({
                     {tunesNotices(viewer.role, member.role, member.id === viewer.id) ? (
                       <NoticesBlock member={member} t={t} locale={locale} />
                     ) : null}
+                    {/* Пуш на этом устройстве — только у себя: включают на
+                        своём телефоне, чужой отсюда не включишь. */}
+                    {member.id === viewer.id ? <AppPush variant="row" /> : null}
                     {viewer.role === "admin" && member.role !== "admin" ? (
                       <SectionsBlock member={member} t={t} locale={locale} />
                     ) : null}
