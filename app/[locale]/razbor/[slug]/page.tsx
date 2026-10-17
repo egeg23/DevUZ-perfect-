@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { jsonLdText } from "@/lib/schema";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -269,7 +270,7 @@ export default async function RazborPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: jsonLdText({
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [
@@ -293,7 +294,7 @@ export default async function RazborPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: jsonLdText({
             "@context": "https://schema.org",
             "@type": "Article",
             headline: item.title,

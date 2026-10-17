@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { announceRazbors } from "@/lib/razbor/announce";
+import { secretOk } from "@/lib/secret-ok";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   const expected = process.env.REMINDER_SWEEP_SECRET;
   const provided = request.headers.get("x-devuz-sweep");
-  if (!expected || provided !== expected) {
+  if (!secretOk(provided, expected)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

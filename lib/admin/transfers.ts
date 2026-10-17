@@ -327,7 +327,7 @@ export async function requestTransfer(
     if (!moved) return { ok: false, reason: "failed" };
     await tell(
       target?.telegram_user_id,
-      `<b>${staff.display_name}</b> передал вам лид <b>${title}</b>. Он уже ваш — откройте панель.`,
+      `<b>${esc(staff.display_name)}</b> передал вам лид <b>${esc(title)}</b>. Он уже ваш — откройте панель.`,
     );
     return { ok: true, moved: true };
   }
@@ -505,7 +505,7 @@ export async function decideTransfer(
   await closeNotices(data.notices, `✅ Подтвердил ${staff.display_name} — лид у ${target?.display_name ?? "коллеги"}`);
   await tell(target?.telegram_user_id, `Вам передали лид <b>${title}</b>. Он уже ваш — откройте панель.`);
   if (asker && asker.id !== toId) {
-    await tell(asker.telegram_user_id, `Передачу лида <b>${title}</b> подтвердили. Теперь он у ${target?.display_name ?? "коллеги"}.`);
+    await tell(asker.telegram_user_id, `Передачу лида <b>${esc(title)}</b> подтвердили. Теперь он у ${esc(target?.display_name ?? "коллеги")}.`);
   }
 
   return { ok: true, moved: true };

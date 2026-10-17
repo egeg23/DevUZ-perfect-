@@ -1,5 +1,6 @@
 import { currentRoads } from "@/lib/egress.mjs";
 import { currentModelRoad, modelFetch } from "@/lib/model-road";
+import { secretOk } from "@/lib/secret-ok";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,11 @@ export const dynamic = "force-dynamic";
  * без такой проверки причину ищут в коде.
  */
 export async function GET(request: Request) {
-  const deep = new URL(request.url).searchParams.get("deep") === "1";
+  // Глубокая проба зовёт модель, а это деньги: только со свип-секретом в
+  // заголовке x-devuz-sweep. Без него — обычная проба, как будто deep нет.
+  const deep =
+    new URL(request.url).searchParams.get("deep") === "1" &&
+    secretOk(request.headers.get("x-devuz-sweep"), process.env.REMINDER_SWEEP_SECRET);
 
   const body: Record<string, unknown> = {
     ok: true,

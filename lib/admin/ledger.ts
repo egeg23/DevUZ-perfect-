@@ -10,6 +10,7 @@ import {
 } from "@/lib/admin/finance";
 import { projectsOwnedBy, type Project } from "@/lib/admin/projects";
 import { settleTurnover } from "@/lib/partners/autopay";
+import { esc } from "@/lib/qualify/telegram";
 import { notifyPartner, partnerById, partnersById, summarize, type Partner } from "@/lib/partners/store";
 import { keepsExpenses, type Role } from "@/lib/admin/roles";
 import { belowFloor, parseQuote, quoteFor } from "@/lib/admin/quote";
@@ -747,7 +748,8 @@ async function notifyPartnerIfPaid(project: Record<string, unknown>, projectId: 
     return;
   }
 
-  const client = (project.client as string | null)?.trim();
+  // Имя клиента вписывает человек, а сообщение уходит с HTML-разметкой.
+  const client = esc((project.client as string | null)?.trim() ?? "");
   const sum = line.amount_usd.toLocaleString("ru-RU");
   const pool = summary.accruals.filter(
     (a) => a.state === "earned" && !summary.projects.find((p) => p.id === a.project_id)?.partner_payout_id,

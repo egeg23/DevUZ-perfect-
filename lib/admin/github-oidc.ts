@@ -76,8 +76,20 @@ export function claimsProblem(claims: OidcClaims, expect: OidcExpect, nowS: numb
 
 let cache: { keys: (JsonWebKey & { kid?: string })[]; at: number } | null = null;
 
+/**
+ * Внеочередной запрос ключей — не чаще раза в минуту: номер ключа в токене
+ * пишет тот, кто прислал токен, и выдуманный номер иначе заставлял бы сервер
+ * ходить в GitHub на каждый запрос.
+ */
+const FORCE_GAP_MS = 60_000;
+let forcedAt = -Infinity;
+
 async function githubKeys(force: boolean, now: number): Promise<(JsonWebKey & { kid?: string })[]> {
   if (!force && cache && now - cache.at < JWKS_TTL_MS) return cache.keys;
+  if (force) {
+    if (now - forcedAt < FORCE_GAP_MS) return cache?.keys ?? [];
+    forcedAt = now;
+  }
   try {
     const response = await fetch(JWKS_URL, { signal: AbortSignal.timeout(10_000) });
     if (!response.ok) return cache?.keys ?? [];

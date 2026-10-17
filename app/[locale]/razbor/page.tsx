@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { jsonLdText } from "@/lib/schema";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -122,7 +123,7 @@ export default async function RazborIndex({
         // Список разборов для поиска. Пустой раздел разметку не отдаёт:
         // ItemList без элементов — обещание, которого страница не держит.
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
+          __html: jsonLdText(
             items.length
               ? {
                   "@context": "https://schema.org",

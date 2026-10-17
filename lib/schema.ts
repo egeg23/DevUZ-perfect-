@@ -214,5 +214,18 @@ export function breadcrumbSchema(
  * на друга по @id, и поисковик видит связную картину, а не набор обрывков.
  */
 export function jsonLdGraph(...nodes: Json[]): string {
-  return JSON.stringify({ "@context": "https://schema.org", "@graph": nodes });
+  return jsonLdText({ "@context": "https://schema.org", "@graph": nodes });
+}
+
+/**
+ * JSON для <script type="application/ld+json">. JSON.stringify оставляет
+ * «</script>» как есть, а заголовки разборов и статей пишет модель по чужим
+ * сайтам: такая строка закрыла бы тег и дальше шла бы как разметка.
+ * «<» в \u003c — тот же JSON для поисковика, но тег им не закрыть.
+ */
+export function jsonLdText(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }

@@ -255,7 +255,7 @@ test("подпись не отдаётся, пока договор не под�
   // недостаточно: скрытое изображение достают через «сохранить как».
   const route = read("app/admin/contracts/[id]/signature/route.ts");
   assert.match(route, /signatureVisible\(contract\)/);
-  assert.match(route, /if \(!staff\) return new Response\(null, \{ status: 404 \}\)/);
+  assert.match(route, /if \(!staff \|\| !opens\(staff, "\/admin\/contracts"\)\) return new Response\(null, \{ status: 404 \}\)/);
   // 404, а не 403: 403 сообщает, что файл существует. Проверяем код, а не
   // комментарий — в комментарии число как раз упомянуто, и поиск подстрокой
   // ловил его, то есть проверял не то.

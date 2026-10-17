@@ -1,4 +1,5 @@
 import type { Staff } from "@/lib/admin/session";
+import { secretOk } from "@/lib/secret-ok";
 
 /**
  * Голосовое → текст в боте студии.
@@ -169,7 +170,7 @@ export function isGivenUp(row: { status: string; tries: number; taken_at: string
 export const VOICE_SECRET_HEADER = "x-devuz-shift";
 
 export function voiceSecretOk(provided: string | null, expected: string | undefined): boolean {
-  return Boolean(expected) && provided === expected;
+  return secretOk(provided, expected);
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

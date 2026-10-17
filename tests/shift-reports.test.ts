@@ -178,7 +178,7 @@ test("отчёт смены принимается по curl, и адрес за
 
   // Нет секрета в окружении — отказ всем, включая своих. Обратный порядок
   // открывает адрес наружу в тот день, когда переменная не доедет.
-  assert.match(route, /if \(!expected \|\| provided !== expected\) \{\s*\n\s+return new Response\("forbidden", \{ status: 403 \}\)/);
+  assert.match(route, /if \(!secretOk\(provided, expected\)\) \{\s*\n\s+return new Response\("forbidden", \{ status: 403 \}\)/);
   assert.match(route, /request\.headers\.get\("x-devuz-shift"\)/);
 
   // Вид смены — из словаря сторожа, а не любой присланный: опечатка в

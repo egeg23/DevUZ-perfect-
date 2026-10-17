@@ -1,4 +1,5 @@
 import { currentStaff } from "@/lib/admin/guard";
+import { opens } from "@/lib/admin/roles";
 import { codeCookieHeader } from "@/lib/proto/codes";
 import { teamAccess } from "@/lib/proto/code-store";
 import { protoById } from "@/lib/proto/store";
@@ -18,6 +19,7 @@ export const dynamic = "force-dynamic";
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const staff = await currentStaff();
   if (!staff) return new Response(null, { status: 303, headers: { Location: "/admin/login" } });
+  if (!opens(staff, "/admin/mockups")) return new Response(null, { status: 404 });
 
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return new Response(null, { status: 404 });
