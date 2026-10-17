@@ -172,6 +172,16 @@ export const moreSections: Record<string, HelpEntry> = {
           ],
         },
       },
+      {
+        id: "app-devices",
+        title: "Aplikacja i powiadomienia: kto ma włączone",
+        roles: ["admin", "head"],
+        body: [
+          "Pod imieniem każdego pracownika — wiersz «📱 Aplikacja: N urządzeń» albo «📱 Aplikacja: niewłączona». To liczba telefonów i komputerów, na których ta osoba włączyła powiadomienia panelu; najedź myszą — zobaczysz, które («iPhone · app», «Android · Chrome», «Windows · Chrome»). Jak zainstalować aplikację i włączyć powiadomienia — w [instrukcji do «Strony głównej»](/admin/help#hq-app).",
+          "Powiadomienia powtarzają wiadomości bota, więc zaznaczenia powyżej działają też dla nich: odznaczysz — nie przyjdzie ani do Telegrama, ani do aplikacji. Twoje ogłoszenie w karcie «Pracownikom» na [Stronie głównej](/admin/hq) też przychodzi do aplikacji; ogłoszenie «Użytkownikom bota» — nie, pracowników tam nie ma.",
+          "U siebie w ostatniej kolumnie — «To urządzenie: powiadomienia włączone» albo «wyłączone», z przyciskami «Włącz powiadomienia», «Sprawdź» i «Wyłącz». Chodzi o telefon albo komputer, z którego teraz patrzysz: innej osobie nie włączysz stąd powiadomień — tylko ona sama na swoim urządzeniu. Urządzenie, które się wypisało albo usunęło aplikację, samo znika z licznika przy pierwszym powiadomieniu.",
+        ],
+      },
     ],
   },
 

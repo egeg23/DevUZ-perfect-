@@ -267,6 +267,19 @@ export const uz: HelpCopy = {
             "Har bir raqam bosiladi: aloqalar — «Aloqalar»ga, javoblar — [Nazorat](/admin/talks)ga, lidlar — lidlar ro‘yxatiga, maketlar — «Maketlar»ga. Raqamlar rahbar va ega jamoa kartalarida ko‘radigan raqamlar bilan bir xil.",
           ],
         },
+        {
+          id: "app",
+          title: "Telefondagi DevUz ilovasi va bildirishnomalar",
+          body: [
+            "Panelni telefonga oddiy ilova kabi belgi bilan o‘rnatish mumkin: u butun ekranda, manzil satrisiz, darhol «Bosh sahifa»da ochiladi va unga bildirishnomalar keladi — bot Telegramda sizga yuboradigan xabarlarning aynan o‘zi: issiq lid, mijoz javob berdi, mijoz maketni ochdi, vazifalar va muddati o‘tganlar, aksiya tugayapti, jamoaga xabar. Bildirishnomani bosdingiz — panelning kerakli sahifasi ochiladi: lid kartasi, vazifa, maket; bot xabarida panelga havola bo‘lmasa — «Bosh sahifa».",
+            "**iPhone.** iOS 16.4 yoki yangisi kerak, va faqat **Safari**dan o‘rnatiladi (iPhone’dagi Chrome va Telegramdan bo‘lmaydi). devuz.studio/admin’ni Safari’da oching → pastdagi «Ulashish» tugmasi (rus tilida — «Поделиться», tepaga strelkali kvadrat) → «Asosiy ekranga» («На экран „Домой“») → «Qo‘shish» («Добавить»). Ekranda DevUz belgisi paydo bo‘ladi. iPhone’da bildirishnomalar **faqat belgidagi ilovada** keladi, Safari vkladkasida — yo‘q.",
+            "**Android.** devuz.studio/admin’ni Chrome’da oching. «Bosh sahifa»da «Ilovani o‘rnatish» tugmali karta bo‘ladi — bosing va tasdiqlang. Tugma bo‘lmasa — Chrome menyusi (o‘ng yuqoridagi uchta nuqta) → «Ilovani o‘rnatish» yoki «Bosh ekranga qo‘shish».",
+            "**Ilovaga kirish — kod bilan.** Ekrandagi ilovaning brauzerdan alohida o‘z cookie’lari bor, shuning uchun botdagi kirish havolasi brauzerda ochiladi, ilova esa kirish ekranida qoladi. Ilovada «Botdan kod olish» tugmasini bosing — bot ochiladi va 6 ta raqam yuboradi. Ilovaga qayting, ularni kiriting va «Kirish» tugmasini bosing. Kod 5 daqiqa amal qiladi va bir marta ishlaydi; beshta noto‘g‘ri urinishdan keyin u kuyadi — «Yangi kod olish» tugmasini bosing. Kodni hech kimga yubormang: u bilan sizning nomingizdan kiriladi. Barcha urinishlar jurnalga yoziladi. Kirish 7 kun saqlanadi, keyin — yana kod.",
+            "**Bildirishnomalarni yoqish.** Ilovada «Bosh sahifa»da «Bildirishnomalarni yoqish» tugmasini bosing, telefon ruxsat so‘raydi — «Ruxsat berish»ni bosing. Faqat bosilganda so‘raymiz: iPhone’da boshqacha bo‘lmaydi. Yoqilgan bo‘lsa — «Bosh sahifa»da «Shu qurilma: bildirishnomalar yoqilgan» qatori, yonida «Tekshirish» (sinov bildirishnomasini yuboradi) va «O‘chirish». «Taqiqlash»ni bosgan bo‘lsangiz — faqat telefon sozlamalarida yoqish mumkin: Sozlamalar → Bildirishnomalar → DevUz.",
+            "**Aynan bot yuboradigan narsa va o‘sha belgilar bo‘yicha** keladi: rahbar yoki egasi bot xabarlaridan sizga o‘chirgani bu yerga ham kelmaydi. Bot avvalgidek qoladi va unda hech narsa o‘chirilmaydi: Telegramda xabarlar ostidagi tugmalar va botga javoblar bor — ilova ularni almashtirmaydi, bildirishnoma esa tez bilib, panelni darhol ochish usuli. Guruhlardagi bot xabarlari va kirish kodlari bildirishnoma bo‘lib kelmaydi.",
+            "**Kompyuterda** ham mumkin: «Bosh sahifa» tepasida «Shu kompyuterda bildirishnomalar — yoqish» qatori, Chrome, Edge, Firefox yoki Safari’da. Kerak bo‘lmasa — «Yashirish»ni bosing. Telefondagi kartani ham yashirish mumkin; brauzer ma’lumotlari tozalansa, u qaytadi.",
+          ],
+        },
       ],
     },
 
@@ -1939,6 +1952,16 @@ export const uz: HelpCopy = {
               "O‘chirilganlar butunlay yo‘q qilinmaydi — ular «O‘chirilganlar» ro‘yxatida. Qaytarish — o‘sha id bilan qaytadan qo‘shish.",
             ],
           },
+        },
+        {
+          id: "app-devices",
+          title: "Ilova va bildirishnomalar: kimda yoqilgan",
+          roles: ["admin", "head"],
+          body: [
+            "Har bir xodim ismi ostida — «📱 Ilova: N ta qurilma» yoki «📱 Ilova: yoqilmagan» qatori. Bu odam panel bildirishnomalarini yoqqan telefon va kompyuterlar soni; sichqonchani olib boring — qaysilari ekanini ko‘rasiz («iPhone · app», «Android · Chrome», «Windows · Chrome»). Ilovani qanday o‘rnatish va bildirishnomalarni yoqish — [«Bosh sahifa» yo‘riqnomasida](/admin/help#hq-app).",
+            "Bildirishnomalar bot xabarlarini takrorlaydi, shuning uchun yuqoridagi belgilar ham ularga ta’sir qiladi: belgini olib tashladingiz — na Telegramga, na ilovaga keladi. [Bosh sahifa](/admin/hq)dagi «Xodimlarga» yorlig‘idagi xabaringiz ham ilovaga keladi; «Bot foydalanuvchilariga» xabari — yo‘q, u yerda xodimlar yo‘q.",
+            "O‘zingizda oxirgi ustunda — «Shu qurilma: bildirishnomalar yoqilgan» yoki «o‘chirilgan», «Bildirishnomalarni yoqish», «Tekshirish» va «O‘chirish» tugmalari bilan. Bu siz hozir qarab turgan telefon yoki kompyuter haqida: boshqa odamga bu yerdan bildirishnomalarni yoqib bo‘lmaydi — faqat u o‘zi, o‘z qurilmasida. Obunani bekor qilgan yoki ilovani o‘chirgan qurilma birinchi bildirishnomadayoq hisobdan o‘zi chiqib ketadi.",
+          ],
         },
       ],
     },

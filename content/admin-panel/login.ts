@@ -46,4 +46,58 @@ export const loginDict = defineDict({
     pl: "Otworzy się czat z botem — wyśle link ważny 15 minut. Jeśli czat jest już otwarty, wyślij",
   },
   hintAfter: { ru: ".", uz: " buyrug‘ini yuboring.", pl: "." },
+
+  // ── Вход кодом в установленном приложении (components/admin/app-login.tsx) ──
+  appTitle: { ru: "Вход в приложение", uz: "Ilovaga kirish", pl: "Logowanie do aplikacji" },
+  appIntro: {
+    ru: "У приложения на экране свой вход: ссылка из бота откроется в браузере, а не здесь. Поэтому сюда входят кодом.",
+    uz: "Ekrandagi ilovaning o‘z kirishi bor: botdagi havola bu yerda emas, brauzerda ochiladi. Shuning uchun bu yerga kod bilan kiriladi.",
+    pl: "Aplikacja na ekranie ma własne logowanie: link od bota otworzy się w przeglądarce, a nie tutaj. Dlatego tu logujesz się kodem.",
+  },
+  appGetCode: { ru: "Получить код в боте", uz: "Botdan kod olish", pl: "Odbierz kod w bocie" },
+  appGetCodeAgain: { ru: "Получить новый код", uz: "Yangi kod olish", pl: "Odbierz nowy kod" },
+  appOpening: { ru: "Открываю бота…", uz: "Bot ochilmoqda…", pl: "Otwieram bota…" },
+  appStep: {
+    ru: "Бот пришлёт 6 цифр. Вернитесь сюда и введите их — код живёт 5 минут и подходит один раз.",
+    uz: "Bot 6 ta raqam yuboradi. Bu yerga qayting va ularni kiriting — kod 5 daqiqa amal qiladi va bir marta ishlaydi.",
+    pl: "Bot wyśle 6 cyfr. Wróć tutaj i wpisz je — kod jest ważny 5 minut i działa jeden raz.",
+  },
+  appCodeLabel: { ru: "Код из бота", uz: "Botdan kelgan kod", pl: "Kod od bota" },
+  appSignIn: { ru: "Войти", uz: "Kirish", pl: "Zaloguj się" },
+  appErrFormat: {
+    ru: "Нужно 6 цифр — как в сообщении бота.",
+    uz: "6 ta raqam kerak — bot xabaridagidek.",
+    pl: "Potrzeba 6 cyfr — jak w wiadomości od bota.",
+  },
+  appErrWrong: {
+    ru: (left: number) => `Код не тот. Осталось попыток: ${left}.`,
+    uz: (left: number) => `Kod noto‘g‘ri. Qolgan urinishlar: ${left}.`,
+    pl: (left: number) => `Kod jest błędny. Pozostało prób: ${left}.`,
+  },
+  appErrSpent: {
+    ru: "Пять неверных попыток — этот код больше не подходит. Получите новый.",
+    uz: "Beshta noto‘g‘ri urinish — bu kod endi ishlamaydi. Yangisini oling.",
+    pl: "Pięć błędnych prób — ten kod już nie zadziała. Odbierz nowy.",
+  },
+  appErrExpired: {
+    ru: "Код просрочен: он живёт 5 минут. Получите новый.",
+    uz: "Kodning muddati o‘tgan: u 5 daqiqa amal qiladi. Yangisini oling.",
+    pl: "Kod wygasł: jest ważny 5 minut. Odbierz nowy.",
+  },
+  appErrUsed: {
+    ru: "Этим кодом уже вошли. Получите новый.",
+    uz: "Bu kod bilan allaqachon kirilgan. Yangisini oling.",
+    pl: "Ten kod został już użyty. Odbierz nowy.",
+  },
+  appErrNone: {
+    ru: "Бот ещё не присылал код для этого входа. Нажмите «Получить код в боте» и откройте бота.",
+    uz: "Bot bu kirish uchun hali kod yubormagan. «Botdan kod olish» tugmasini bosing va botni oching.",
+    pl: "Bot nie wysłał jeszcze kodu dla tego logowania. Naciśnij «Odbierz kod w bocie» i otwórz bota.",
+  },
+  appErrNoRequest: {
+    ru: "Сначала нажмите «Получить код в боте» — код подходит только к входу, начатому здесь.",
+    uz: "Avval «Botdan kod olish» tugmasini bosing — kod faqat shu yerda boshlangan kirishga mos keladi.",
+    pl: "Najpierw naciśnij «Odbierz kod w bocie» — kod pasuje tylko do logowania rozpoczętego tutaj.",
+  },
+  appUseCode: { ru: "Войти кодом из бота", uz: "Botdagi kod bilan kirish", pl: "Zaloguj się kodem od bota" },
 });
