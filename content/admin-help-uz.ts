@@ -845,6 +845,38 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "after-reply",
+          title: "Javobdan keyin nima ketadi: u haqida, narx oldinroq, e’tirozlarga javoblar",
+          body: [
+            "Egasi, 17.10.2026, sotuvlar tahlili bo‘yicha: dumaloq video olgan 188 kishidan 63 tasi javob berdi, qolganlari jim bo‘ldi; «+» ni 5 kishi yubordi; 30 kunda 41 ta maket, to‘lov 0. Videodan keyin «Какой сайт?», «Что значит прототип?» deb yozishdi, maketdan keyin «дорого», ko‘pincha esa «передам руководству». Shuning uchun «Здравствуйте» ga javobdan keyin aloqalarning yarmida yangi yondashuv, ikkinchi yarmida avvalgidek: yordam beradimi, shunda ko‘rinadi ([A/B](#prospect-sales-ab)).",
+            "**Avtojavob javob emas.** «Мы отвечаем в рабочее время», «Ваше сообщение передано менеджеру», «Xabaringiz qabul qilindi» ni panel so‘zlardan taniydi: dumaloq video, xat va sun’iy intellekt ularga jim turadi, sizga qator kelmaydi, aloqa tirik javobni kutadi. Yozishmada bunday xabar ko‘rinadi, lekin «javob berdi» hisoblanmaydi. Bu yangi yarmigagina emas, barcha aloqalarga.",
+            "**Videodan oldingi qator va soha videosi.** Dumaloq videodan bir necha soniya oldin bitta qator ketadi: «Это про ваш сайт clinic.uz, 40 секунд», o‘zbekchasi «Bu sizning saytingiz … haqida, 40 soniya». Manzil havolasiz va sayt rasmisiz, matn bilan. Sayt bo‘lmasa, bizda nima borligiga qarab xaritadagi kartochka yoki Instagramdagi sahifa haqida. Stomatologiyaga stomatologiya haqidagi video, mebelchiga mebel haqidagi video ketadi; soha videosi bo‘lmasa, umumiysi ketadi. Soha videolarini egasi va rahbar yozadi.",
+            "**Narx oldinroq.** «+» dan so‘ng darhol, maket shartlari havolasi bilan birga bitta qator ketadi: «Maket bepul. Yoqsa, lending 500 $ dan, qismlarga bo‘lib to‘lash mumkin: yarmi boshlashda, yarmi ishga tushgandan keyin, hammasi ishlayotganda». Narx maketdan keyingi aksiyadagi bilan bir xil va faqat o‘sha yerda o‘zgaradi.",
+            "**Sun’iy intellekt yozishmasida tayyor javoblar.** «Какой сайт?», «Бесплатно?», «Не перехожу по ссылкам», «Передам руководству», «Продаём через Инстаграм», «Сайт уже есть», «Дорого» ga sun’iy intellekt o‘zidan yozmaydi: tayyor matn ketadi. Shu matnlar sizda tugmalar bilan ham bor ([e’tirozlarga javoblar](#prospect-objections)).",
+            "**2 kundan keyin savol.** «Передам руководству» deb yozib jim bo‘lishsa, ikki kundan keyin ish vaqtida (ish kunlari, 10:00–18:00) roppa-rosa bitta savol ketadi: «Rahbaringiz ko‘rib chiqishga ulgurdimi?». Mijoz javob bergan bo‘lsa yoki o‘zingiz yozgan bo‘lsangiz, savol ketmaydi. Bu «javob bermadi — hech narsa» qoidasidan yagona istisno: javobni odamning o‘zi va’da qilgan.",
+            "**Sun’iy intellekt odamdek yozadi.** Uning javobi mijoz xabaridan kamida 40–120 soniyadan keyin ketadi, odam yozgandek. Maketgacha u bir-ikki qisqa gap, boshida «Отлично!» va «Конечно!» siz, ro‘yxatlarsiz. Bu tekshiruvdan o‘tmasa, ketmaydi va suhbat sizga o‘tadi. Bu barcha aloqalarga.",
+            "**Havola o‘rniga ko‘rsatish.** Maket ketganda yangi yarmida aksiya shartlarida «15 daqiqada ko‘rsatib beraman: video orqali yoki oldingizga boraman» qatori bor. Rozi bo‘lsa, vaqtni siz kelishasiz.",
+          ],
+        },
+        {
+          id: "objections",
+          title: "Lid kartochkasidagi «E’tirozlarga javoblar» tugmalari",
+          body: [
+            "Lid kartochkasi yozishmasidagi javob maydoni ostida **«E’tirozlarga javoblar»** bloki: «Qanday sayt? Bu nima?», «Bepulmi? Qayerda hiyla?», «Havola ochmayman», «Rahbarga yetkazaman», «Instagram orqali sotamiz», «Sayt bor», «Qimmat». Bosganingizda tayyor matn mijoz tilida (o‘zbekcha suhbatda o‘zbekcha), uning sayti manzili va sohasi so‘zlari bilan maydonga tushadi. Suhbatga moslab tuzating va «Yuborish» ni bosing. Tugmalar barcha aloqalarda bor.",
+            "Matnlarda nima bor. «Дорого» ga: «Nima bilan solishtiryapsiz?» savoli, uning sohasida saytni nechta mijoz qoplashi va narxlar zinapoyasi: saytdagi 3 ta xatoni 2 kunda 150 $ ga tuzatamiz, sayt-vizitka 250 $, lending 500 $, korporativ sayt 1 000 $, to‘lov qismlarga: yarmi boshlashda, yarmi ishga tushgandan keyin. «Сайт уже есть» ga: 3 ta xatoni 150 $ ga tuzatish. «Передам руководству» ga: «Rahmat! Iltimos, unga yuborib qo‘ying» va yuborish qulay bo‘lgan uch qator. «Бесплатно?» ga: bu bizga nima uchun kerakligini ochiq aytamiz, ishni puldan oldin ko‘rsatish.",
+            "Aloqalarning yangi yarmida yana **«Maket tayyor + ko‘rsatish»** tugmasi bor: «Maket tayyor:» (havolani qo‘ying) va «15 daqiqada ko‘rsatib beraman: video orqali yoki oldingizga boraman».",
+          ],
+        },
+        {
+          id: "sales-ab",
+          title: "«Javobdan keyingi yangi yondashuv» bloki: A/B",
+          body: [
+            "«Xat matnlari va A/B» da **«Javobdan keyingi yangi yondashuv»** bloki aloqalarning ikki yarmini solishtiradi. Yarmi aloqaga birinchi salom paytida tasodifiy va teng beriladi: **«Avvalgidek»** — umumiy dumaloq video va avvalgi yozishma, **«Yangi yondashuv»** — [javobdan keyin nima ketadi](#prospect-after-reply) da yozilganlarning hammasi.",
+            "Yarmilar bo‘yicha qatorlar: salom (nechta ketdi), tirik javob berdi (avtojavoblarsiz), videodan keyin javob berdi, «+», maket ketdi, to‘lov (lid «yutdik»). 17.10.2026 dan boshlab aloqalar hisoblanadi, oldingilari hisobga kirmaydi.",
+            "Panel g‘olibni har bir yarmida kamida 100 ta salomdan keyin, «+» ulushi bo‘yicha aytadi: masalan, «Yangi yondashuv» «+» gacha ko‘proq olib boradi, ishonch 92%. Ungacha: aytishga erta. Yangi yondashuvni faqat kodda, bitta qator bilan o‘chirish mumkin; shunda blokda shunday yoziladi.",
+          ],
+        },
+        {
           id: "fact-check",
           title: "Saytni fakt bo‘yicha tekshirish va oddiy til",
           body: [
@@ -1086,6 +1118,15 @@ export const uz: HelpCopy = {
             "Salomga ruscha javob berganlarga ruscha dumaloq video, o‘zbekcha javob berganlarga o‘zbekchasi ketadi — taklifli studiyadan qisqa video: 12 soatda bosh sahifaning bepul maketi va «+» yuborish so‘rovi ([ikki bosqichli aloqa](#prospect-hello)). Boshqa tilda javob berganlarga dumaloq videosiz, ularning tilidagi xat ketadi. Bot aloqa ketgan ishchi akkauntning «Saqlangan xabarlar»idan kerakli tildagi dumaloq videoni oladi va «uzatildi» belgisisiz nusxasini yuboradi.",
             "Dumaloq videolarni har bir akkauntning «Saqlangan xabarlar»iga qo‘lda qo‘yish shart emas: shu sahifaning tepasidagi **«Aloqalar uchun dumaloq video»** blokida ikki joy bor — **«Ruscha dumaloq video»** va **«O‘zbekcha dumaloq video»**. Har biriga fayl yuklang — MP4, bir daqiqagacha kvadrat video (Telegramdan saqlangan dumaloq video shundayligicha mos keladi) — va **«Dumaloq videoni yuklash»** tugmasini bosing. O‘n daqiqa ichida bot uni asosiy va har bir ulangan akkauntning «Saqlangan xabarlar»iga o‘zi saqlaydi. U yerda har bir tilda hozir qaysi dumaloq video ketayotgani, qachon va kim yuklagani ham ko‘rinadi; yangisi barcha akkauntlarda shu tildagi oldingisining o‘rnini oladi, boshqa tildagisi qoladi. Kim yuklagani — harakatlar jurnalida. Faylsiz ham bo‘ladi: dumaloq videoni studiya botiga shaxsiy chatda yuboring — bot tilni so‘raydi, «🇷🇺 Русский» yoki «🇺🇿 O‘zbekcha» ni bosing, u esa, masalan, «Узбекский кружок сохранён для касаний» deb javob beradi. Dumaloq videolarni egasi va rahbar almashtira oladi.",
             "Bu yerda har bir akkauntda ikki qator bor — ruscha dumaloq video haqida («Ruscha dumaloq video: bor, … da saqlangan» yoki «Ruscha dumaloq video yo‘q») va o‘zbekchasi haqida. Kerakligi bo‘lmasa — dumaloq video o‘rniga javob tilida xat ketadi. Bot «Saqlangan xabarlar»ga o‘n daqiqada bir marta qaraydi, shuning uchun qatorlar darhol yangilanmaydi. Ruscha dumaloq videoni «Saqlangan xabarlar»ga qo‘lda ham saqlash mumkin — bot oxirgisini oladi. O‘zbekchasini — faqat shu blok yoki bot orqali: videodan tilni bilib bo‘lmaydi va qo‘lda saqlanganini bot ruscha deb hisoblaydi. Dumaloq video yo‘qligi sababli ketmagan bo‘lsa, bu haqda soat 18:00 dagi avtoprogon hisobotida ham qator bor.",
+          ],
+        },
+        {
+          id: "circle-niches",
+          title: "Sohalar bo‘yicha dumaloq videolar",
+          body: [
+            "Umumiy videolar ostida **«Sohalar bo‘yicha dumaloq videolar»**: soha va til uchun video. Sohalar: tibbiyot markazi, stomatologiya, mebel, restoran, go‘zallik saloni, turagentlik, o‘quv markazi, ko‘chmas mulk. Soha videosi aloqalarning yangi yarmida shu sohadagi kompaniyalarga ketadi ([A/B](/admin/prospect/texts#sales-ab)); kerakli tilda soha videosi bo‘lmasa, avvalgidek umumiysi ketadi. Kompaniya sohasini panel uning kartochkasidan, bo‘lmasa nomi va sayt manzilidan oladi.",
+            "**«Yetishmaydi: …»** qatori: qaysi soha videolari na yuklanganlar orasida, na akkauntlarning «Saqlangan xabarlar»ida bor. Pastda har bir soha va til bo‘yicha: yuklangan sanasi bilan «bor» yoki «yo‘q, umumiysi ketadi».",
+            "Yuklash: **«Soha»** va **«Video tili»** ni tanlang, fayl (MP4, kvadrat, bir daqiqagacha) va **«Soha videosini yuklash»** ni bosing. 10 daqiqa ichida bot uni har bir akkauntning «Saqlangan xabarlar»iga qo‘yadi. Yoki videoni studiya botiga yuboring: u avval tilni, keyin sohani tugmalar bilan so‘raydi.",
           ],
         },
         {

@@ -50,6 +50,15 @@ export const workSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "circle-niches",
+        title: "Kółka według branż",
+        body: [
+          "Pod ogólnymi kółkami są **«Kółka według branż»**: kółko na branżę i język. Branże: centrum medyczne, stomatologia, meble, restauracja, salon urody, biuro podróży, centrum szkoleniowe, nieruchomości. Kółko branży wychodzi do firm z tej branży w nowej połowie kontaktów ([A/B](/admin/prospect/texts#sales-ab)); nie ma kółka branży w potrzebnym języku, wychodzi ogólne, jak dotąd. Branżę firmy panel bierze z jej karty, a jeśli jej nie ma, z nazwy i adresu strony.",
+          "Wiersz **«Brakuje: …»** pokazuje, których kółek branż nie ma ani wśród wgranych, ani w «Zapisanych» kont. Niżej dla każdej branży i języka: «jest» z datą wgrania albo «brak, wychodzi ogólne».",
+          "Wgrywanie: wybierz **«Branża»** i **«Język kółka»**, plik (MP4, kwadrat, do minuty) i kliknij **«Wgraj kółko branży»**. W ciągu 10 minut bot zapisze je w «Zapisanych» każdego konta. Albo przekaż kółko botowi studia: zapyta o język, potem przyciskami o branżę.",
+        ],
+      },
+      {
         id: "stop",
         title: "Wstrzymanie, ograniczenie i odłączenie",
         body: [
