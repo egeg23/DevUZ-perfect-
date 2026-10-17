@@ -109,7 +109,7 @@ export type Inbound = {
 
 /**
  * Половина A/B касания (prospects.sales_arm). Отдельным запросом: пока
- * миграция 0168 не применена, колонки нет — тогда null, и касание идёт как
+ * миграция 0169 не применена, колонки нет — тогда null, и касание идёт как
  * раньше, а остальные запросы не падают вместе с ней.
  */
 export async function salesArmOf(prospectId: string): Promise<SalesArm | null> {
@@ -554,7 +554,7 @@ async function answerHello(
     // Половина «new»: за несколько секунд до кружка — строка, что он про его
     // сайт (sales-after-reply → introLine). Скаут шлёт её, ждёт
     // INTRO_BEFORE_MS и шлёт кружок (nextReply → intro). Строка ложится
-    // первой: в ленте она перед кружком. Миграция 0168 не применена — kind
+    // первой: в ленте она перед кружком. Миграция 0169 не применена — kind
     // 'intro' база не примет, и кружок уйдёт без строки, как раньше.
     if (salesNew({ sales_arm: await salesArmOf(id) })) {
       const { data: full } = await db.from("prospects").select("host, label, place_id, contacts").eq("id", id).maybeSingle();
@@ -837,7 +837,7 @@ export async function queueReply(input: {
     ...(input.sendAfter ? { send_after: input.sendAfter } : {}),
   };
   const { error } = await db.from("outreach_messages").insert({ ...row, kind: input.kind ?? "text" });
-  // Миграция 0168 не применена — 'price' база не примет: строка уходит
+  // Миграция 0169 не применена — 'price' база не примет: строка уходит
   // обычным текстом, клиенту всё равно.
   if (error && input.kind && input.kind !== "text") await db.from("outreach_messages").insert(row);
 }

@@ -27,7 +27,7 @@ export async function runBossAsks(now = Date.now()): Promise<number> {
     .is("closed_reason", null)
     .lte("boss_promised_at", new Date(now - 2 * 24 * 3600_000).toISOString())
     .limit(30);
-  // Миграция 0168 не применена — колонок нет: спрашивать некого.
+  // Миграция 0169 не применена — колонок нет: спрашивать некого.
   if (error || !data?.length) return 0;
 
   let asked = 0;

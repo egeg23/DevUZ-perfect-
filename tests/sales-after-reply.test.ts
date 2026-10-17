@@ -186,7 +186,7 @@ test("4. цена после «+» — из PROMO, kind 'price', вместе с
   assert.ok(announced.indexOf("protoTermsText(lang)") < announced.indexOf("priceLine(lang)"), "сначала условия, потом цена");
   assert.match(announced, /kind: PRICE_KIND/);
   assert.match(src, /export const PRICE_KIND = "price";/);
-  assert.match(read("supabase/migrations/0168_sales_after_reply.sql"), /'text', 'circle', 'intro', 'price', 'auto'/);
+  assert.match(read("supabase/migrations/0169_sales_after_reply.sql"), /'text', 'circle', 'intro', 'price', 'auto'/);
 });
 
 test("5. лесенка — одно место для цен, оплата частями", () => {
