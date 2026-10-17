@@ -8,7 +8,7 @@ import { isQuietProtoPath, protoContentType } from "@/lib/proto/pages";
 import { logView, markOpened, protoPage } from "@/lib/proto/store";
 import { PIN_LIMIT, hasPinCookie, pinCookieHeader, pinMatches, pinPage, type PinState } from "@/lib/proto/lock";
 import { CODE_LIMIT, codeCookieHeader, readCodeCookie, type CodeKind } from "@/lib/proto/codes";
-import { codeAccess, liveProtoCode } from "@/lib/proto/code-store";
+import { codeAccess, liveProtoCode, noteProtoPinFailure, protoPinBlocked } from "@/lib/proto/code-store";
 import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
 
 /**
@@ -126,6 +126,8 @@ export async function unlockProto(request: Request, token: string, path = ""): P
   // Пароль на сутки — пять цифр, и перебирать их можно с разных адресов:
   // поэтому ещё и предел на сам макет (lib/proto/codes).
   if (!rateLimit(`proto-pin-all:${page.id}`, CODE_LIMIT).ok) return pinResponse("limit");
+  // И по базе: память обнуляется с каждой выкаткой (миграция 0170).
+  if (await protoPinBlocked(page.id)) return pinResponse("limit");
 
   let pin = "";
   try {
@@ -143,7 +145,10 @@ export async function unlockProto(request: Request, token: string, path = ""): P
 
   // Пароль на сутки: доступ кончается вместе с ним — кука живёт до той же минуты.
   const live = await liveProtoCode(page.id, pin);
-  if (!live) return pinResponse("wrong");
+  if (!live) {
+    await noteProtoPinFailure(page.id);
+    return pinResponse("wrong");
+  }
   const set = codeCookieHeader({ protoId: page.id, token, codeId: live.id, codeHash: live.codeHash, expiresAt: live.expiresAt });
   return new Response(null, { status: 303, headers: { Location: self, "Set-Cookie": set, "Cache-Control": "no-store" } });
 }
