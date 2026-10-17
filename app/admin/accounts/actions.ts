@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { isCircleLang } from "@/lib/admin/circle-store";
+import { isCircleNiche } from "@/lib/admin/sales-after-reply";
 import { circleDiscard, circleStart, saveCircle } from "@/lib/admin/circle-upload";
 import { requestIp, requireRole } from "@/lib/admin/guard";
 import { promoChunk, type PromoFail, type StartResult } from "@/lib/partners/promo";
@@ -118,6 +119,8 @@ export async function circleSaveAction(input: {
   duration: number | null;
   /** Русский или узбекский кружок; что-то другое — русский, как до узбекского. */
   lang?: string;
+  /** Ниша кружка (17.10.2026); что-то другое — общий. */
+  niche?: string;
 }): Promise<{ ok: true } | PromoFail> {
   const staff = await manage();
   const result = await saveCircle(
@@ -125,6 +128,7 @@ export async function circleSaveAction(input: {
     staff,
     await requestIp(),
     isCircleLang(input?.lang) ? input.lang : "ru",
+    isCircleNiche(input?.niche) ? input.niche : "general",
   );
   if (result.ok) revalidatePath("/admin/accounts");
   return result;

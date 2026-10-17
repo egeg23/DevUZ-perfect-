@@ -271,3 +271,44 @@ export const circleUploadDict = defineDict({
     pl: "Nie udało się odczytać długości i rozmiaru wideo — spróbuj innego pliku.",
   },
 });
+
+/**
+ * «Кружки по нишам» в «Аккаунтах» (владелец, 17.10.2026, разбор продаж:
+ * кружок общий, и человек не понимает, что он про него). Кружок на нишу ×
+ * язык; нет кружка ниши — уходит общий, как раньше. Ниши кружков —
+ * CIRCLE_NICHES в lib/admin/sales-after-reply.ts.
+ */
+export const circleNicheDict = defineDict({
+  title: { ru: "Кружки по нишам", uz: "Sohalar bo‘yicha dumaloq videolar", pl: "Kółka według branż" },
+  intro: {
+    ru: "Кружок, записанный под нишу, уходит компаниям этой ниши: стоматологии — про стоматологию, мебельщику — про мебель. Это работает у половины касаний (новый заход, см. «Касания» → «Тексты писем и A/B»). Нет кружка ниши на нужном языке — уходит общий кружок, как раньше. Записывают владелец и руководитель: загрузите здесь или перешлите боту, он спросит язык и нишу кнопками.",
+    uz: "Soha uchun yozilgan dumaloq video shu sohadagi kompaniyalarga ketadi: stomatologiyaga stomatologiya haqida, mebelchiga mebel haqida. Bu aloqalarning yarmida ishlaydi (yangi yondashuv, «Aloqalar» → «Xat matnlari va A/B» ga qarang). Kerakli tilda soha videosi bo‘lmasa, avvalgidek umumiy dumaloq video ketadi. Egasi va rahbar yozadi: shu yerga yuklang yoki botga yuboring, u tugmalar bilan til va sohani so‘raydi.",
+    pl: "Kółko nagrane pod branżę wychodzi do firm z tej branży: do stomatologii o stomatologii, do producenta mebli o meblach. Działa to w połowie kontaktów (nowe podejście, zobacz «Kontakty» → «Teksty wiadomości i A/B»). Gdy nie ma kółka branży w potrzebnym języku, wychodzi ogólne kółko, jak dotąd. Nagrywają właściciel i kierownik: wgraj tutaj albo przekaż botowi, zapyta przyciskami o język i branżę.",
+  },
+  missing: {
+    ru: (list: string) => `Не хватает: ${list}.`,
+    uz: (list: string) => `Yetishmaydi: ${list}.`,
+    pl: (list: string) => `Brakuje: ${list}.`,
+  },
+  allHere: { ru: "Кружки всех ниш на обоих языках есть.", uz: "Barcha sohalar videolari ikkala tilda bor.", pl: "Kółka wszystkich branż w obu językach są." },
+  have: { ru: (when: string) => `есть, ${when}`, uz: (when: string) => `bor, ${when}`, pl: (when: string) => `jest, ${when}` },
+  no: { ru: "нет, уходит общий", uz: "yo‘q, umumiysi ketadi", pl: "brak, wychodzi ogólne" },
+  langRu: { ru: "Русский", uz: "Ruscha", pl: "Rosyjski" },
+  langUz: { ru: "Узбекский", uz: "O‘zbekcha", pl: "Uzbecki" },
+  pickLang: { ru: "Язык кружка", uz: "Video tili", pl: "Język kółka" },
+  pickNiche: { ru: "Ниша", uz: "Soha", pl: "Branża" },
+  upload: { ru: "Загрузить кружок ниши", uz: "Soha videosini yuklash", pl: "Wgraj kółko branży" },
+});
+
+/** Названия ниш кружков — на языке панели. Бот пишет по-русски (CIRCLE_NICHE_RU). */
+export const circleNicheNames = defineDict({
+  general: { ru: "Общий", uz: "Umumiy", pl: "Ogólne" },
+  medcentr: { ru: "Медцентр", uz: "Tibbiyot markazi", pl: "Centrum medyczne" },
+  stomatologiya: { ru: "Стоматология", uz: "Stomatologiya", pl: "Stomatologia" },
+  mebel: { ru: "Мебель", uz: "Mebel", pl: "Meble" },
+  restoran: { ru: "Ресторан", uz: "Restoran", pl: "Restauracja" },
+  "salon-krasoty": { ru: "Салон красоты", uz: "Go‘zallik saloni", pl: "Salon urody" },
+  turagentstvo: { ru: "Турагентство", uz: "Turagentlik", pl: "Biuro podróży" },
+  "uchebnyy-centr": { ru: "Учебный центр", uz: "O‘quv markazi", pl: "Centrum szkoleniowe" },
+  nedvizhimost: { ru: "Недвижимость", uz: "Ko‘chmas mulk", pl: "Nieruchomości" },
+});

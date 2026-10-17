@@ -6,9 +6,10 @@ import { useState } from "react";
 import { circleChunkAction, circleDiscardAction, circleSaveAction, circleStartAction } from "@/app/admin/accounts/actions";
 import { usePanelDict, usePanelLocale } from "@/components/admin/panel-locale";
 import { readMeta, sendChunks } from "@/components/admin/promo-upload";
-import { circleUploadDict } from "@/content/admin-panel/accounts";
+import { circleNicheDict, circleNicheNames, circleUploadDict } from "@/content/admin-panel/accounts";
 import { promoFailText } from "@/content/admin-panel/partners";
 import { CIRCLE_MIME, circleProblem } from "@/lib/admin/circle-rules";
+import { CIRCLE_NICHES } from "@/lib/admin/sales-after-reply";
 
 /**
  * «Кружок для касаний» в «Аккаунтах» — владельцу и руководителю.
@@ -17,7 +18,8 @@ import { CIRCLE_MIME, circleProblem } from "@/lib/admin/circle-rules";
  * загрузка, после которой сервер скажет «не квадрат», — потерянные минуты.
  * Дальше — кусками, как видео к инструкциям, и докачивается сам, если связь
  * мигнула. Скаут кладёт загруженный кружок в «Избранное» каждого аккаунта.
- * Форм две — для русского и для узбекского кружка (`lang`).
+ * Форм две — для русского и для узбекского кружка (`lang`). Третья — кружок
+ * ниши (`chooser`): язык и ниша выбираются в самой форме.
  */
 
 type Phase =
@@ -28,10 +30,12 @@ type Phase =
 
 const INPUT = "w-full min-w-0 rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
 
-export function CircleUpload({ have, lang }: { have: boolean; lang: "ru" | "uz" }) {
+export function CircleUpload({ have, lang, chooser = false }: { have: boolean; lang: "ru" | "uz"; chooser?: boolean }) {
   const router = useRouter();
   const locale = usePanelLocale();
   const t = usePanelDict(circleUploadDict);
+  const n = usePanelDict(circleNicheDict);
+  const names = usePanelDict(circleNicheNames);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const busy = phase.kind === "busy";
 
@@ -39,7 +43,10 @@ export function CircleUpload({ have, lang }: { have: boolean; lang: "ru" | "uz" 
     event.preventDefault();
     // Форму — сразу: после первого await React уже обнулит currentTarget.
     const form = event.currentTarget;
-    const file = new FormData(form).get("file");
+    const data = new FormData(form);
+    const file = data.get("file");
+    const pickedLang = chooser && data.get("lang") === "uz" ? "uz" : chooser ? "ru" : lang;
+    const niche = chooser ? String(data.get("niche") ?? "general") : "general";
     if (!(file instanceof File) || !file.size) return setPhase({ kind: "error", text: t.chooseFile });
 
     setPhase({ kind: "busy", progress: null });
@@ -58,7 +65,7 @@ export function CircleUpload({ have, lang }: { have: boolean; lang: "ru" | "uz" 
     }
 
     setPhase({ kind: "busy", progress: 1 });
-    const saved = await circleSaveAction({ uploadId: slot.uploadId, ...meta, lang });
+    const saved = await circleSaveAction({ uploadId: slot.uploadId, ...meta, lang: pickedLang, niche });
     if (!saved.ok) return setPhase({ kind: "error", text: promoFailText(saved, locale) });
     form.reset();
     setPhase({ kind: "done" });
@@ -66,7 +73,28 @@ export function CircleUpload({ have, lang }: { have: boolean; lang: "ru" | "uz" 
   }
 
   return (
-    <form onSubmit={submit} className="mt-3 space-y-2" data-circle-upload={lang}>
+    <form onSubmit={submit} className="mt-3 space-y-2" data-circle-upload={chooser ? "niche" : lang}>
+      {chooser ? (
+        <div className="flex flex-wrap gap-3">
+          <label className="block min-w-[9rem] flex-1 text-xs text-faint">
+            {n.pickNiche}
+            <select name="niche" disabled={busy} className={`mt-1 ${INPUT}`} defaultValue={CIRCLE_NICHES[1]}>
+              {CIRCLE_NICHES.filter((x) => x !== "general").map((x) => (
+                <option key={x} value={x}>
+                  {names[x]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block min-w-[9rem] flex-1 text-xs text-faint">
+            {n.pickLang}
+            <select name="lang" disabled={busy} className={`mt-1 ${INPUT}`} defaultValue="ru">
+              <option value="ru">{n.langRu}</option>
+              <option value="uz">{n.langUz}</option>
+            </select>
+          </label>
+        </div>
+      ) : null}
       <label className="block text-xs text-faint">
         {t.file}
         <input name="file" type="file" accept={CIRCLE_MIME.join(",")} required disabled={busy} className={`mt-1 ${INPUT}`} />
@@ -77,7 +105,7 @@ export function CircleUpload({ have, lang }: { have: boolean; lang: "ru" | "uz" 
           disabled={busy}
           className="rounded-lg border border-green/40 px-4 py-2 text-sm text-green transition hover:bg-green/10 disabled:cursor-progress disabled:opacity-50"
         >
-          {busy ? t.busy : t.upload}
+          {busy ? t.busy : chooser ? n.upload : t.upload}
         </button>
         {have && !busy ? <span className="text-xs text-faint">{t.replaceNote}</span> : null}
         {phase.kind === "busy" && phase.progress !== null ? (
