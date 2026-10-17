@@ -1,4 +1,4 @@
-import { LADDER, PROMO } from "@/lib/admin/mockup-offer";
+import { LADDER, PROMO, SHOW_RU, SHOW_UZ } from "@/lib/admin/mockup-offer";
 import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
 
 /**
@@ -377,9 +377,7 @@ export function withoutOpener(text: string): string {
 // ── 9. Показ вместо ссылки ───────────────────────────────────────────────
 
 export function showLine(lang: IntroLang): string {
-  return lang === "uz"
-    ? "15 daqiqada ko‘rsatib beraman: video orqali yoki oldingizga boraman."
-    : "Покажу за 15 минут: по видео или подъеду к вам.";
+  return lang === "uz" ? SHOW_UZ : SHOW_RU;
 }
 
 // ── 10. A/B «Новый заход после ответа» ───────────────────────────────────

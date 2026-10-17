@@ -32,6 +32,7 @@ import { recordFailure, recordSuccess } from "@/lib/admin/sweep-health";
 import { runCoach } from "@/lib/admin/coach-store";
 import { sweepOrders } from "@/lib/admin/order-sweep-run";
 import { runTalks } from "@/lib/admin/outreach-talk-run";
+import { runBossAsks } from "@/lib/admin/sales-after-reply-store";
 import { runReviews } from "@/lib/talk/review-run";
 import { runRazborShift } from "@/lib/razbor/shift-run";
 import { runTenderShift } from "@/lib/razbor/tender-run";
@@ -458,6 +459,10 @@ async function sweep(): Promise<Response> {
   // задержки ему только на пользу, а лишний процесс на сервере — нет.
   const talks = await runTalks();
   if (talks.errors.length) console.error("касания:", talks.errors.join("; "));
+
+  // «Руководитель успел посмотреть?» — один раз, через 2 дня после «передам
+  // руководству», в рабочее время (lib/admin/sales-after-reply-store.ts).
+  await runBossAsks().catch((error) => console.error("вопрос про руководителя:", error));
 
   // Надзиратель: разбор переписок, которые успокоились час назад и дольше.
   // После ответов, а не до: разговор, которому свип только что написал,

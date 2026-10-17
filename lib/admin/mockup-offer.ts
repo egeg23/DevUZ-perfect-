@@ -294,7 +294,20 @@ export function expiredNow(o: OfferState, now: Date): boolean {
  * Условия акции — готовым текстом, без модели: в них цены и срок, и они
  * должны быть ровно такими, как решил владелец.
  */
-export function announceText(lang: OfferLang, expiresAt: string, own: OwnPromo | null = null): string {
+export function announceText(lang: OfferLang, expiresAt: string, own: OwnPromo | null = null, show = false): string {
+  const text = promoAnnounce(lang, expiresAt, own);
+  // Половина «new» (sales-after-reply, 17.10.2026): рядом с макетом —
+  // предложение показать его живьём. Число 15 — только здесь, в проверку
+  // напоминаний (reminderProblems) оно не идёт: это не напоминание.
+  if (!show) return text;
+  return `${text}\n\n${lang === "uz" ? SHOW_UZ : SHOW_RU}`;
+}
+
+/** «Покажу за 15 минут» — showLine в sales-after-reply.ts берёт отсюда. */
+export const SHOW_RU = "Покажу за 15 минут: по видео или подъеду к вам.";
+export const SHOW_UZ = "15 daqiqada ko‘rsatib beraman: video orqali yoki oldingizga boraman.";
+
+function promoAnnounce(lang: OfferLang, expiresAt: string, own: OwnPromo | null): string {
   const until = untilText(expiresAt);
   if (own) {
     return lang === "uz"
