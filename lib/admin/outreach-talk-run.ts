@@ -13,6 +13,8 @@ import {
   threadFor,
   type Inbound,
 } from "@/lib/admin/outreach-talk-store";
+import { objectionOf, objectionReply } from "@/lib/admin/objections";
+import { aiStyleProblems, humanSendAfter, plainHost, withoutOpener } from "@/lib/admin/sales-after-reply";
 import { runQualifyTurn } from "@/lib/qualify/engine";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { talkLang } from "@/lib/talk/language";
@@ -106,6 +108,21 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
    */
   const locale = talkLang(thread);
 
+  // Возражение до макета у половины «new» (lib/admin/objections.ts): уходит
+  // готовый текст, модель в эту минуту молчит — как на «да?» после
+  // «Здравствуйте». Не узнали или язык не русский и не узбекский — модель.
+  const objection = inbound.untilMockup && inbound.salesNew ? objectionOf(inbound.body) : null;
+  if (objection && (locale === "ru" || locale === "uz")) {
+    await markAnswered(inbound.messageId);
+    await queueReply({
+      prospectId: inbound.prospectId,
+      leadId: inbound.leadId,
+      body: objectionReply(objection, { lang: locale, host: inbound.siteHost ? plainHost(inbound.siteHost) : null, niche: inbound.niche }),
+      sendAfter: humanSendAfter(inbound.createdAt, Date.now()),
+    });
+    return "replied";
+  }
+
   const history = asTranscript(thread);
   if (!history.length) {
     // Входящее без ленты — значит первое сообщение не записалось. Ответить
@@ -150,7 +167,10 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
 
   await markAnswered(inbound.messageId);
 
-  const problems = replyProblems(text, facts);
+  // До макета ответ модели не выдаёт робота (sales-after-reply): «Отлично!»
+  // в начале снимаем сами, список и длинный ответ — не отправляем.
+  if (inbound.untilMockup) text = withoutOpener(text);
+  const problems = [...replyProblems(text, facts), ...(inbound.untilMockup ? aiStyleProblems(text) : [])];
   if (problems.length) {
     // Плохой ответ не отправляем и не исправляем на ходу: вторая попытка
     // той же моделью с той же историей даёт ту же выдумку. Разговор
@@ -164,7 +184,14 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
     return "handed";
   }
 
-  await queueReply({ prospectId: inbound.prospectId, leadId: inbound.leadId, body: text.trim() });
+  // Пауза, как человек набирает: 40–120 секунд от сообщения клиента. Свип
+  // ходит раз в пять минут, и часто пауза уже есть — тогда сразу.
+  await queueReply({
+    prospectId: inbound.prospectId,
+    leadId: inbound.leadId,
+    body: text.trim(),
+    sendAfter: humanSendAfter(inbound.createdAt, Date.now()),
+  });
 
   if (qualified) {
     // Прощальную фразу модели отправляем — обрывать разговор на полуслове
