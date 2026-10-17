@@ -42,6 +42,7 @@ export default async function MockupsPage() {
     openHours: row.openUntil ? hoursLeft(Date.parse(row.openUntil), now) : null,
     closedAtText: row.closedAt ? tashkentTime(row.closedAt) : null,
     sentAtText: row.sentAt ? tashkentTime(row.sentAt) : null,
+    sendsText: (row.sends ?? []).map((send) => ({ ...send, atText: tashkentTime(send.at) })),
   }));
 
   return (

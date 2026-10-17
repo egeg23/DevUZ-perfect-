@@ -7,6 +7,7 @@ import {
   clientMessage,
   mockupNiche,
   mockupOwner,
+  mockupSends,
   parseMockupRef,
   showcaseCases,
   showcaseRow,
@@ -14,6 +15,7 @@ import {
   type MockupRow,
 } from "@/lib/admin/mockups";
 import type { Staff } from "@/lib/admin/session";
+import { accountTags } from "@/lib/admin/work-accounts-store";
 import { issueProtoCode, issueShowcaseCode, liveCodesUntil } from "@/lib/proto/code-store";
 import { protoUrl } from "@/lib/proto/store";
 import { activeLock } from "@/lib/proto/lock";
@@ -26,6 +28,23 @@ import { serviceClient } from "@/lib/supabase";
  *
  * Что такое макет и откуда список — lib/admin/mockups.ts.
  */
+
+/**
+ * Все отправки макетов клиентам: кому и с какого аккаунта (mockupSends).
+ * Строка mockup_offers одна на клиента и макет, поэтому их немного.
+ */
+async function allSends(refs: readonly string[]) {
+  const db = serviceClient();
+  if (!db || !refs.length) return [];
+  const { data, error } = await db
+    .from("mockup_offers")
+    .select("mockup_ref, client, peer, account, sent_at, lead_id")
+    .in("mockup_ref", [...refs])
+    .order("sent_at", { ascending: true })
+    .limit(3000);
+  if (error) console.error("макеты: не прочитал отправки", error.message);
+  return data ?? [];
+}
 
 export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
   const db = serviceClient();
@@ -46,7 +65,9 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
     // Первая отправка клиенту — у каждого макета: по ней «отправлен клиенту»,
     // ответственный (хозяин лида) и сколько открытый ещё живёт без пароля
     // (24 часа, lib/proto/auto-close.ts).
-    const sends = await firstSends((data ?? []).filter((r) => r.auto !== true).map((r) => `p:${r.id}`));
+    const refs = (data ?? []).filter((r) => r.auto !== true).map((r) => `p:${r.id}`);
+    const [sends, every, tags] = await Promise.all([firstSends(refs), allSends(refs), accountTags()]);
+    const sendsByRef = mockupSends(every, tags);
     const owners = await ownerIds(data ?? [], sends);
     const now = new Date();
     for (const row of data ?? []) {
@@ -73,6 +94,7 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
         promo: promoOf(row.promo),
         owner: mockupOwner(owners.ids.get(id) ?? { set: null, lead: null, touch: null, made: null }, owners.names),
         sentAt: sends.get(`p:${id}`)?.sent_at ?? null,
+        sends: sendsByRef.get(`p:${id}`) ?? [],
         ...openState(row, sends.get(`p:${id}`), now),
       });
     }

@@ -7,7 +7,8 @@ import { mockupCodeAction, mockupOwnerAction } from "@/app/admin/mockups/actions
 import { CopyMessage } from "@/components/admin/copy-message";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { mockupsDict } from "@/content/admin-panel/mockups";
-import type { MockupRow } from "@/lib/admin/mockups";
+import type { Picked } from "@/lib/admin/i18n";
+import type { MockupRow, MockupSend } from "@/lib/admin/mockups";
 import type { CodeResult, OwnerResult } from "@/lib/admin/mockups-store";
 
 /**
@@ -28,7 +29,12 @@ export type MockupView = MockupRow & {
   closedAtText: string | null;
   /** Ушёл клиенту в эту минуту (по Ташкенту); null — не отправлен. */
   sentAtText: string | null;
+  /** Кому и с какого аккаунта — все отправки, время по Ташкенту. */
+  sendsText: (MockupSend & { atText: string })[];
 };
+
+/** Сколько отправок видно сразу; остальные — под «ещё N». */
+const SENDS_SHOWN = 3;
 
 /** Кого можно назначить ответственным. Пусто — назначать нельзя (менеджер). */
 export type MockupTeam = { id: string; name: string }[];
@@ -66,7 +72,15 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
     return rows.filter(
       (row) =>
         matches(row, filter) &&
-        (!q || [row.name, row.site ?? "", row.niche, row.url, row.owner?.name ?? ""].some((text) => text.toLowerCase().includes(q))),
+        (!q ||
+          [
+            row.name,
+            row.site ?? "",
+            row.niche,
+            row.url,
+            row.owner?.name ?? "",
+            ...row.sendsText.flatMap((send) => [send.to, send.handle ?? "", typeof send.from === "string" ? "" : (send.from.label ?? "")]),
+          ].some((text) => text.toLowerCase().includes(q))),
     );
   }, [rows, query, filter]);
 
@@ -213,6 +227,7 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
                         {ownerFails[row.ref] ? <span className="text-gold">{t[`ownerFail_${ownerFails[row.ref]}`]}</span> : null}
                       </p>
                     ) : null}
+                    {row.sendsText.length ? <SendList sends={row.sendsText} t={t} /> : null}
                     <p className="mt-1 truncate font-mono text-xs text-faint">{row.url}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -252,6 +267,46 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
           })}
         </ul>
       )}
+    </div>
+  );
+}
+
+type MockupsDict = Picked<typeof mockupsDict>;
+
+/**
+ * Кому и с какого аккаунта ушёл макет: каждая отправка строкой, первые
+ * SENDS_SHOWN сразу, остальные — под «ещё N». Клиент с лидом — ссылка на
+ * карточку лида (её откроет тот, кому лид виден).
+ */
+function SendList({ sends, t }: { sends: MockupView["sendsText"]; t: MockupsDict }) {
+  const line = (send: MockupView["sendsText"][number], i: number) => (
+    <li key={`${send.at}-${i}`} className="flex flex-wrap items-baseline gap-x-1.5">
+      <span aria-hidden>→</span>
+      {send.leadId ? (
+        <a href={`/admin/leads/${send.leadId}`} className="text-text hover:text-green">
+          {send.to}
+        </a>
+      ) : (
+        <span className="text-text">{send.to}</span>
+      )}
+      {send.handle ? <span className="text-faint">{send.handle}</span> : null}
+      <span className="text-faint">·</span>
+      <span>{send.from === "unknown" ? t.sendFromUnknown : t.sendFrom(send.from.label, send.from.handle)}</span>
+      <span className="text-faint">·</span>
+      <span className="text-faint">{send.atText}</span>
+    </li>
+  );
+  const rest = sends.slice(SENDS_SHOWN);
+  return (
+    <div className="mt-1 text-xs text-muted" data-mockup-sends>
+      <p className="text-faint">{t.sendsTitle}</p>
+      <ul className="mt-0.5 space-y-0.5">{sends.slice(0, SENDS_SHOWN).map(line)}</ul>
+      {rest.length ? (
+        <details className="mt-0.5">
+          <summary className="cursor-pointer text-faint hover:text-green">{t.moreSends(rest.length)}</summary>
+          <ul className="mt-0.5 space-y-0.5">{rest.map((send, i) => line(send, i + SENDS_SHOWN))}</ul>
+        </details>
+      ) : null}
     </div>
   );
 }

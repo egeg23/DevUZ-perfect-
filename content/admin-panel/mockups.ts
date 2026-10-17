@@ -20,9 +20,9 @@ export const mockupsDict = defineDict({
     pl: (n: number) => `Makiet: ${n}`,
   },
   search: {
-    ru: "Найти: название, сайт, ниша или ответственный",
-    uz: "Qidirish: nom, sayt, nisha yoki mas’ul",
-    pl: "Szukaj: nazwa, strona, branża lub odpowiedzialny",
+    ru: "Найти: название, сайт, ниша, ответственный или клиент",
+    uz: "Qidirish: nom, sayt, nisha, mas’ul yoki mijoz",
+    pl: "Szukaj: nazwa, strona, branża, odpowiedzialny lub klient",
   },
   filterAll: { ru: "Все", uz: "Hammasi", pl: "Wszystkie" },
   filterHand: { ru: "Сделаны вручную", uz: "Qo‘lda yig‘ilgan", pl: "Zrobione ręcznie" },
@@ -82,6 +82,26 @@ export const mockupsDict = defineDict({
     pl: (time: string) => `wysłana klientowi ${time}`,
   },
   notSent: { ru: "клиенту не отправлен", uz: "mijozga yuborilmagan", pl: "nie wysłano klientowi" },
+  /** Кому и с какого аккаунта ушёл (mockupSends): каждая отправка строкой. */
+  sendsTitle: { ru: "Кому ушёл", uz: "Kimga yuborilgan", pl: "Do kogo wysłano" },
+  /**
+   * С какого рабочего аккаунта: `null` — главный, пусто — аккаунта в базе
+   * уже нет. Название и ник — как в «Аккаунтах», не переводятся.
+   */
+  sendFrom: {
+    ru: (label: string | null, handle: string | null) =>
+      label === null ? "с главного аккаунта" : label ? `с аккаунта «${label}»${handle ? ` ${handle}` : ""}` : "с рабочего аккаунта",
+    uz: (label: string | null, handle: string | null) =>
+      label === null ? "asosiy akkauntdan" : label ? `«${label}» akkauntidan${handle ? ` (${handle})` : ""}` : "ish akkauntidan",
+    pl: (label: string | null, handle: string | null) =>
+      label === null ? "z konta głównego" : label ? `z konta «${label}»${handle ? ` ${handle}` : ""}` : "z konta firmowego",
+  },
+  sendFromUnknown: { ru: "аккаунт не записан", uz: "akkaunt yozilmagan", pl: "konto nie zapisane" },
+  moreSends: {
+    ru: (n: number) => `ещё ${n}`,
+    uz: (n: number) => `yana ${n} ta`,
+    pl: (n: number) => `jeszcze ${n}`,
+  },
   ownerFail_forbidden: {
     ru: "Ответственного назначают руководитель и владелец.",
     uz: "Mas’ulni rahbar va egasi tayinlaydi.",
