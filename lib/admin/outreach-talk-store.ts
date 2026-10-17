@@ -20,12 +20,12 @@ import { MAIN_ACCOUNT, accountOf, sentFrom, sentFromText } from "@/lib/admin/wor
 import { accountTags } from "@/lib/admin/work-accounts-store";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
-import { detectLang } from "@/lib/talk/language";
+import { detectLang, talkLang } from "@/lib/talk/language";
 import { checkFresh } from "@/lib/admin/check-fresh";
 import { LETTER_AFTER_REPLY } from "@/lib/admin/autopilot";
 import { lastEdits, lineEditable, type EditState } from "@/lib/admin/outreach-edit";
 import type { CircleLang } from "@/lib/admin/circle-store";
-import { objectionOf } from "@/lib/admin/objections";
+import { OBJECTIONS, objectionOf, objectionReply, type Objection } from "@/lib/admin/objections";
 import {
   INTRO_BEFORE_MS,
   PRICE_KIND,
@@ -33,8 +33,10 @@ import {
   introLine,
   introTargetOf,
   isAutoReply,
+  plainHost,
   priceLine,
   salesNew,
+  showLine,
   type CircleNiche,
   type SalesArm,
 } from "@/lib/admin/sales-after-reply";
@@ -1220,6 +1222,13 @@ export type TalkView = {
   /** С какого аккаунта идёт разговор (sentFrom); null — «Написал сам». */
   from: { label: string | null; handle: string | null } | null;
   lines: TalkLine[];
+  /**
+   * «Ответы на возражения» (lib/admin/objections.ts) — готовые тексты на языке
+   * клиента: кнопка вставляет текст в поле ответа, менеджер правит и
+   * отправляет. Для всех. «mockup» — «Макет готов» с «Покажу за 15 минут»,
+   * только половине «new» A/B.
+   */
+  quick: { kind: Objection | "mockup"; text: string }[];
 };
 
 /**
@@ -1255,7 +1264,7 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
 
   const { data: p } = await db
     .from("prospects")
-    .select("id, host, target, ai_handling, handover_reason, sent_via, target_kind, hello_at, pitch_at")
+    .select("id, host, label, niche, target, ai_handling, handover_reason, sent_via, target_kind, hello_at, pitch_at")
     .eq("lead_id", leadId)
     .maybeSingle();
   if (!p) return null;
@@ -1273,6 +1282,14 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
   const touch = { hello_at: (p.hello_at as string | null) ?? null, pitch_at: (p.pitch_at as string | null) ?? null };
   const now = Date.now();
 
+  // Готовые ответы — на языке клиента: узбекский разговор — узбекские тексты.
+  const lang = talkLang((data ?? []).map((row) => ({ direction: row.direction as "in" | "out", body: String(row.body) }))) === "uz" ? "uz" : "ru";
+  const ctx = { lang, host: p.host ? plainHost(String(p.host)) : null, niche: circleNicheOf(p) } as const;
+  const quick: TalkView["quick"] = OBJECTIONS.map((kind) => ({ kind, text: objectionReply(kind, ctx) }));
+  if (salesNew({ sales_arm: await salesArmOf(String(p.id)) })) {
+    quick.push({ kind: "mockup", text: `${lang === "uz" ? "Maket tayyor:" : "Макет готов:"} \n\n${showLine(lang)}` });
+  }
+
   return {
     prospectId: String(p.id),
     host: String(p.host),
@@ -1280,6 +1297,7 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
     handoverReason: (p.handover_reason as string | null) ?? null,
     target: (p.target as string | null) ?? null,
     from: sentFrom({ sent_via: p.sent_via as string | null, target_kind: p.target_kind as string | null }, tags),
+    quick,
     lines: (data ?? [])
       // Снятое до отправки клиент не видел — и в ленте его нет
       // (HAND_REPLY_LEFT, STAFF_TOOK_OVER).
