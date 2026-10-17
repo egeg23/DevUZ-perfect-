@@ -69,31 +69,51 @@ export async function issueAppCode(requestId: string, staffId: string, now = Dat
 
 export type AppCodeResult = { check: CodeCheck | "offline"; staffId: string | null; attempts: number };
 
-/** Ввод кода в приложении. */
+/**
+ * Ввод кода в приложении.
+ *
+ * Попытка засчитывается в базе ДО того, как человек узнает ответ: сначала
+ * attempts + 1 (условно, по прежнему значению), и только если запись легла —
+ * «верно» или «неверно». Иначе параллельные запросы проверяли бы код каждый,
+ * а засчитывался бы только один, и пять попыток превращались бы в сотни.
+ * Не удалось записать попытку за три круга — ответ «неверно», код не сверяли.
+ */
 export async function tryAppCode(requestId: string, code: string, now = Date.now()): Promise<AppCodeResult> {
   const db = serviceClient();
   if (!db) return { check: "offline", staffId: null, attempts: 0 };
   const reqHash = requestHash(requestId);
-  const { data, error } = await db
-    .from("app_login_codes")
-    .select("staff_id, code_hash, attempts, expires_at, used_at")
-    .eq("request_hash", reqHash)
-    .maybeSingle();
-  if (error) return { check: "offline", staffId: null, attempts: 0 };
-  const row = (data ?? null) as CodeRow | null;
-  const check = checkCode(row, reqHash, code, now);
-  if (!row || (check !== "ok" && check !== "wrong")) return { check, staffId: row?.staff_id ?? null, attempts: row?.attempts ?? 0 };
+  for (let round = 0; round < 3; round++) {
+    const { data, error } = await db
+      .from("app_login_codes")
+      .select("staff_id, code_hash, attempts, expires_at, used_at")
+      .eq("request_hash", reqHash)
+      .maybeSingle();
+    if (error) return { check: "offline", staffId: null, attempts: 0 };
+    const row = (data ?? null) as CodeRow | null;
+    const check = checkCode(row, reqHash, code, now);
+    if (!row || (check !== "ok" && check !== "wrong")) return { check, staffId: row?.staff_id ?? null, attempts: row?.attempts ?? 0 };
 
-  const patch = check === "ok" ? { used_at: new Date(now).toISOString() } : { attempts: row.attempts + 1 };
-  const { data: changed } = await db
-    .from("app_login_codes")
-    .update(patch)
-    .eq("request_hash", reqHash)
-    .eq("attempts", row.attempts)
-    .is("used_at", null)
-    .select("id")
-    .maybeSingle();
-  // Обновление не легло — параллельный ввод успел раньше: этот не в счёт.
-  if (!changed) return { check: check === "ok" ? "used" : "wrong", staffId: row.staff_id, attempts: row.attempts };
-  return { check, staffId: row.staff_id, attempts: check === "wrong" ? row.attempts + 1 : row.attempts };
+    const { data: counted } = await db
+      .from("app_login_codes")
+      .update({ attempts: row.attempts + 1 })
+      .eq("request_hash", reqHash)
+      .eq("attempts", row.attempts)
+      .is("used_at", null)
+      .select("id")
+      .maybeSingle();
+    // Параллельный ввод успел раньше — перечитываем и пробуем записать снова.
+    if (!counted) continue;
+    const attempts = row.attempts + 1;
+    if (check === "wrong") return { check, staffId: row.staff_id, attempts };
+
+    const { data: used } = await db
+      .from("app_login_codes")
+      .update({ used_at: new Date(now).toISOString() })
+      .eq("request_hash", reqHash)
+      .is("used_at", null)
+      .select("id")
+      .maybeSingle();
+    return { check: used ? "ok" : "used", staffId: row.staff_id, attempts };
+  }
+  return { check: "wrong", staffId: null, attempts: 0 };
 }

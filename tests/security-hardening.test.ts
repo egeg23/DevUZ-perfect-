@@ -62,3 +62,15 @@ test("файлы договоров и «Открыть» в «Макетах» 
     assert.match(readFileSync(file, "utf8"), new RegExp(`opens\\(staff, "${href}"\\)`), file);
   }
 });
+
+test("код входа в приложение: попытка засчитана до ответа «верно/неверно»", () => {
+  const src = readFileSync("lib/admin/app-login-store.ts", "utf8");
+  const fn = src.slice(src.indexOf("export async function tryAppCode"));
+  const counted = fn.indexOf("update({ attempts: row.attempts + 1 })");
+  const answered = fn.indexOf('if (check === "wrong") return');
+  assert.ok(counted > 0 && answered > counted, "попытка пишется в базу раньше, чем человек узнаёт ответ");
+  // Запись не легла — ответа нет, перечитываем.
+  assert.match(fn, /if \(!counted\) continue;/);
+  // Круги кончились — «неверно», код не сверяли.
+  assert.match(fn, /return \{ check: "wrong", staffId: null, attempts: 0 \};\s*\n\}/);
+});
