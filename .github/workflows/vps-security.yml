@@ -74,7 +74,7 @@ jobs:
                 -e 's/[0-9]{8,10}:[A-Za-z0-9_-]{30,}/***/g' \
                 -e 's/eyJ[A-Za-z0-9_.-]{10,}/***/g' \
                 -e 's/sk-[A-Za-z0-9_-]{10,}/***/g' \
-                -e 's/[A-Za-z0-9+\/_-]{40,}/***/g' \
+                -e 's/[A-Za-z0-9+_-]{40,}/***/g' \
                 -e 's/((pass(word)?|passwd|token|secret|key|pwd)[=:][[:space:]]*)[^[:space:]"]+/\1***/Ig'
             }
             envval() {
@@ -104,13 +104,14 @@ jobs:
             line "каталогов осмотра: $(wc -l < "$ROOTS.top")"
             sed 's/^/  · /' "$ROOTS.top" >> "$R"
 
-            FILES="$W/files"; : > "$FILES"
+            FILES="$W/files"; : > "$FILES.m"
             while read -r d; do
               late && break
               low 120 find "$d" -xdev -maxdepth 10 \
                 \( -name node_modules -o -name .git -o -name .next -o -name .cache -o -name proc \) -prune -o \
-                -type f -print >> "$FILES"
+                -type f -printf '%T@\t%p\n' >> "$FILES.m"
             done < "$ROOTS.top"
+            cut -f2- "$FILES.m" > "$FILES"
             SCRIPTS="$W/scripts"
             grep -iE '\.(php[0-9]?|phtml|phar|inc|jsp|jspx|asp|aspx|ashx|cgi|pl|sh)$' "$FILES" > "$SCRIPTS"
             line "файлов: $(wc -l < "$FILES"), из них серверных скриптов (php, jsp, aspx, cgi, pl, sh…): $(wc -l < "$SCRIPTS")"
@@ -123,7 +124,9 @@ jobs:
               ok "в каталогах загрузок скриптов нет"
             fi
 
-            RECENT="$(while read -r f; do low 5 find "$f" -maxdepth 0 -mtime -30; done < "$SCRIPTS" | grep -v "^$APP_DIR/")"
+            SINCE=$(( $(date +%s) - 30 * 86400 ))
+            RECENT="$(awk -F'\t' -v s="$SINCE" '$1 >= s {print $2}' "$FILES.m" \
+              | grep -iE '\.(php[0-9]?|phtml|phar|inc|jsp|jspx|asp|aspx|ashx|cgi|pl|sh)$' | grep -v "^$APP_DIR/")"
             if [ -n "$RECENT" ]; then
               line "· серверные скрипты, изменённые за 30 дней (кроме $APP_DIR): $(printf '%s\n' "$RECENT" | wc -l)"
               printf '%s\n' "$RECENT" | head -15 | sed 's/^/  · /' >> "$R"
@@ -189,7 +192,7 @@ jobs:
                 /tmp/*|/dev/shm/*|/var/tmp/*) TMPEXE="$TMPEXE${p#/proc/} $(cat "$p/comm" 2>/dev/null) $exe"$'\n' ;;
               esac
               case "$exe" in
-                *" (deleted)") DELEXE="$DELEXE$(cat "$p/comm" 2>/dev/null)"$'\n' ;;
+                *" (deleted)") DELEXE="$DELEXE$(cat "$p/comm" 2>/dev/null) ← ${exe% (deleted)}"$'\n' ;;
               esac
             done
             if [ -n "$TMPEXE" ]; then
@@ -199,19 +202,23 @@ jobs:
               ok "процессов из /tmp, /dev/shm, /var/tmp нет"
             fi
             if [ -n "$DELEXE" ]; then
-              line "· процессы с удалённым бинарником (после обновления пакетов так бывает, до перезапуска службы): $(printf '%s' "$DELEXE" | sort | uniq -c | sort -rn | awk '{printf "%s×%s ", $2, $1}' | cut -c1-400)"
+              # После обновления пакетов так бывает до перезапуска службы. Запуск
+              # из памяти (/memfd:) — приём «бесфайловой» заразы, но так же
+              # работает и runc у Docker: смотреть глазами.
+              line "· процессы с удалённым бинарником (после обновления пакетов так бывает, до перезапуска службы):"
+              printf '%s' "$DELEXE" | sort | uniq -c | sort -rn | head -15 | sed 's/^ */  · ×/' >> "$R"
             else
               ok "процессов с удалённым бинарником нет"
             fi
 
             line "Слушают снаружи (не только 127.0.0.1):"
-            low 20 ss -Htlnup | awk '{print $1, $5, $7}' | grep -vE ' (127\.[0-9.]+|\[::1\]|::1):' \
+            low 20 ss -Htlnup | awk '{print $1, $5, $7}' | grep -vE ' (127\.|\[::1\]|::1)' \
               | sed -E 's/users:\(\("([^"]+)".*/\1/' | sort -u | head -40 | sed 's/^/  · /' >> "$R"
             DBPORTS="$(low 20 ss -Htln | awk '{print $4}' | grep -vE '^(127\.|\[::1\]|::1)' | grep -E ':(3306|5432|6379|27017|9200|11211|5984|2375|2376)$')"
             if [ -n "$DBPORTS" ]; then
               alarm "наружу открыт порт базы или Docker API: $(printf '%s ' $DBPORTS) — проверить, закрыт ли он файрволом"
             fi
-            OUT="$(low 20 ss -Htnp state established | awk '{print $4, $5}' | grep -E ':(3333|4444|5555|7777|14444|45700)( |$)')"
+            OUT="$(low 20 ss -Htn state established | awk '{print $4}' | grep -E ':(3333|4444|5555|7777|14444|45700)$')"
             if [ -n "$OUT" ]; then
               alarm "соединения на порты майнинг-пулов и обратных шеллов (3333/4444/5555/7777/14444/45700):"
               printf '%s\n' "$OUT" | head -10 | sed 's/^/  · /' >> "$R"
@@ -316,12 +323,12 @@ jobs:
             fi
 
             AUTH="$W/auth"
-            low 60 journalctl --since '24 hours ago' --no-pager -q _COMM=sshd > "$AUTH"
+            low 60 journalctl --since '24 hours ago' --no-pager -q _COMM=sshd _COMM=sshd-session > "$AUTH"
             [ -s "$AUTH" ] || low 30 grep -h sshd /var/log/auth.log > "$AUTH"
             FAILS="$(grep -cE 'Failed password|Invalid user|authentication failure' "$AUTH")"
             line "· неудачных попыток входа по SSH за сутки: ${FAILS:-0}"
             WEEK="$W/acc"
-            low 60 journalctl --since '7 days ago' --no-pager -q _COMM=sshd | grep -E 'Accepted ' > "$WEEK"
+            low 60 journalctl --since '7 days ago' --no-pager -q _COMM=sshd _COMM=sshd-session | grep -E 'Accepted ' > "$WEEK"
             [ -s "$WEEK" ] || low 30 zgrep -h 'Accepted ' /var/log/auth.log* > "$WEEK"
             line "· успешных входов за 7 дней: $(wc -l < "$WEEK"), по способу и пользователю: $(grep -oE 'Accepted [a-z-]+ for [^ ]+' "$WEEK" | awk '{print $2"/"$4}' | sort | uniq -c | awk '{printf "%s×%s ", $2, $1}')"
             line "  подсети: $(grep -oE 'from [0-9.]+' "$WEEK" | awk '{split($2,a,"."); print a[1]"."a[2]".x.x"}' | sort | uniq -c | sort -rn | head -8 | awk '{printf "%s×%s ", $2, $1}')"
