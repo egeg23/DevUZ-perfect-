@@ -57,6 +57,8 @@ import { noteBotUser } from "@/lib/admin/bot-users-store";
 import { NO_MORE_WAIT, TIDY_CALLBACK, parseTidyCallback } from "@/lib/admin/lead-tidy";
 import { answerTidy } from "@/lib/admin/lead-tidy-store";
 import { findStaffByTelegram, issueLoginToken, staffByTelegramId, type Staff } from "@/lib/admin/session";
+import { APP_START_NO_REQUEST, APP_START_STALE, codeMessage, isAppStart, requestFromStart } from "@/lib/admin/app-login";
+import { issueAppCode } from "@/lib/admin/app-login-store";
 import { siteUrl } from "@/lib/seo";
 import { linkSignalsToLead, signalsByAuthor } from "@/lib/scout/store";
 import { helloTexts } from "@/lib/admin/hello-text-store";
@@ -533,6 +535,39 @@ async function handleStaffLogin(message: NonNullable<Update["message"]>) {
   );
 }
 
+/**
+ * Код входа в приложение панели (lib/admin/app-login.ts). Ссылку с ключом
+ * попытки открывает приложение; код получает тот, кто её нажал, если он
+ * сотрудник. Постороннему — тот же ответ, что на неизвестную команду.
+ * Сообщение с кодом в пуш не зеркалится: код на экране блокировки — это
+ * вход для любого, кто держит телефон.
+ */
+async function handleAppCode(message: NonNullable<Update["message"]>, payload: string) {
+  const chat = message.chat;
+  if (chat.type !== "private") return;
+  const { staff, offline } = await findStaffByTelegram(message.from?.id ?? chat.id);
+  if (offline) {
+    await sendMessage(chat.id, "Не смог проверить вход: база сейчас не отвечает. Попробуйте через минуту.");
+    return;
+  }
+  if (!staff) {
+    await sendMessage(chat.id, botCopy(localeOf(message.from)).unknown);
+    return;
+  }
+  const requestId = requestFromStart(payload);
+  if (!requestId) {
+    await sendMessage(chat.id, APP_START_NO_REQUEST);
+    return;
+  }
+  const code = await issueAppCode(requestId, staff.id);
+  if (!code) {
+    await sendMessage(chat.id, APP_START_STALE);
+    return;
+  }
+  await record("login.requested", { actorStaffId: staff.id, meta: { via: "app_code" } });
+  await sendMessage(chat.id, codeMessage(code), { mirror: false });
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 // Поток «Получать лиды»
 // ───────────────────────────────────────────────────────────────────────────
@@ -723,6 +758,13 @@ async function handleClient(message: NonNullable<Update["message"]>) {
     // проверять по боту, кто работает в студии, нельзя.
     if (payload === "login") {
       await handleStaffLogin(message);
+      return;
+    }
+
+    // «Получить код в боте» из установленного приложения панели: код
+    // приходит сотруднику, нажавшему ссылку, — и только в личку.
+    if (isAppStart(payload)) {
+      await handleAppCode(message, payload);
       return;
     }
 
