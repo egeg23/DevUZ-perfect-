@@ -24,6 +24,14 @@ test("приватные и служебные диапазоны закрыты
     "::1", "fe80::1", "fc00::1",
     "::ffff:127.0.0.1",           // v4, завёрнутый в v6 — готовый обход
     "::ffff:10.0.0.1",
+    "::ffff:7f00:1",              // тот же 127.0.0.1, но шестнадцатеричной записью
+    "0:0:0:0:0:ffff:a9fe:a9fe",   // 169.254.169.254 полной записью
+    "::127.0.0.1",                // устаревшая «v4-совместимая» запись
+    "64:ff9b::a00:1",             // NAT64: шлюз пойдёт за нас на 10.0.0.1
+    "2002:7f00:1::1",             // 6to4 с 127.0.0.1 внутри
+    "2001:0:4136:e378::1",        // Teredo
+    "198.18.0.1",                 // стенды замеров
+    "fe80::1%eth0",
   ]) {
     assert.equal(isPrivateAddress(ip), true, `должен быть закрыт: ${ip}`);
   }
@@ -79,4 +87,19 @@ test("учётные данные из адреса вычищаются", () =>
   assert.equal(url.username, "");
   assert.equal(url.password, "");
   assert.equal(url.hostname, "mysite.uz");
+});
+
+import { resolveSafely } from "@/lib/audit/guard";
+
+test("resolveSafely сам отказывает в чужом порту, схеме и литерале в скобках", async () => {
+  // Сюда приходят адреса со страниц и из robots.txt, не прошедшие
+  // normalizeUrl: тот же хост на другом порту — это другая служба.
+  await assert.rejects(resolveSafely(new URL("https://8.8.8.8:3310/")), BlockedAddress);
+  await assert.rejects(resolveSafely(new URL("http://8.8.8.8:6379/")), BlockedAddress);
+  await assert.rejects(resolveSafely(new URL("ftp://8.8.8.8/")), BlockedAddress);
+  await assert.rejects(resolveSafely(new URL("http://[::1]/")), BlockedAddress);
+  await assert.rejects(resolveSafely(new URL("http://[::ffff:7f00:1]/")), BlockedAddress);
+  await assert.rejects(resolveSafely(new URL("http://127.0.0.1:3310/")), BlockedAddress);
+  assert.equal(await resolveSafely(new URL("https://8.8.8.8/")), "8.8.8.8");
+  assert.equal(await resolveSafely(new URL("http://[2606:4700::1111]/")), "2606:4700::1111");
 });

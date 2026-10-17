@@ -48,7 +48,7 @@ const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.ur
 const SITE = "https://devuz.studio";
 
 /** Настоящая подписка браузера: ключ P-256 и 16 байт auth — web-push их проверяет. */
-function browserSub(id = "s1", endpoint = "https://push.example/send/abc"): StoredSubscription {
+function browserSub(id = "s1", endpoint = "https://fcm.googleapis.com/fcm/send/send/abc"): StoredSubscription {
   const ecdh = createECDH("prime256v1");
   ecdh.generateKeys();
   return {
@@ -250,7 +250,7 @@ test("пуш шифруется и подписывается VAPID; 404 и 410 
 
 test("рассылка по устройствам: мёртвую удаляет, сбой записывает, удачную отмечает", async () => {
   const keys = webpush.generateVAPIDKeys();
-  const subs = [browserSub("live", "https://push.example/live"), browserSub("dead", "https://push.example/dead"), browserSub("sick", "https://push.example/sick")];
+  const subs = [browserSub("live", "https://fcm.googleapis.com/fcm/send/live"), browserSub("dead", "https://fcm.googleapis.com/fcm/send/dead"), browserSub("sick", "https://fcm.googleapis.com/fcm/send/sick")];
   const removed: string[] = [];
   const noted: Record<string, boolean> = {};
   const result = await deliverAll(subs, { title: "T", body: "", url: "/admin/hq" }, {
@@ -275,9 +275,24 @@ test("рассылка по устройствам: мёртвую удаляе�
 test("подписку принимаем только настоящую: https и ключи браузера", () => {
   const sub = browserSub();
   assert.deepEqual(parseSubscription({ endpoint: sub.endpoint, keys: sub.keys }), { endpoint: sub.endpoint, keys: sub.keys });
-  assert.equal(parseSubscription({ endpoint: "http://push.example/x", keys: sub.keys }), null);
+  assert.equal(parseSubscription({ endpoint: "http://fcm.googleapis.com/x", keys: sub.keys }), null);
   assert.equal(parseSubscription({ endpoint: sub.endpoint, keys: { p256dh: "<script>", auth: sub.keys.auth } }), null);
   assert.equal(parseSubscription(null), null);
+  // Адрес подписки — только служба пуша браузера: сервер сам шлёт на него
+  // POST, и чужой адрес сделал бы из отправки запрос во внутреннюю сеть.
+  for (const bad of [
+    "https://127.0.0.1/x", "https://169.254.169.254/latest", "https://localhost:3310/api",
+    "https://evil.example/fcm.googleapis.com", "https://fcm.googleapis.com.evil.example/x",
+    "https://fcm.googleapis.com:8443/x", "https://user@fcm.googleapis.com/x",
+  ]) {
+    assert.equal(parseSubscription({ endpoint: bad, keys: sub.keys }), null, bad);
+  }
+  for (const good of [
+    "https://fcm.googleapis.com/fcm/send/abc", "https://updates.push.services.mozilla.com/wpush/v2/abc",
+    "https://web.push.apple.com/abc", "https://wns2-db5p.notify.windows.com/w/?token=abc",
+  ]) {
+    assert.ok(parseSubscription({ endpoint: good, keys: sub.keys }), good);
+  }
   assert.equal(deviceLabel("Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit Safari/604.1", true), "iPhone · app");
   assert.equal(deviceLabel("Mozilla/5.0 (Linux; Android 14) Chrome/130 Mobile Safari/537.36", false), "Android · Chrome");
 });

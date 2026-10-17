@@ -184,11 +184,32 @@ export function subscriptionGone(status: number): boolean {
 /** Подписка от браузера — то, что приходит из `PushSubscription.toJSON()`. */
 export type BrowserSubscription = { endpoint: string; keys: { p256dh: string; auth: string } };
 
-/** Проверка того, что прислал браузер: адрес службы — только https. */
+/**
+ * Службы пуша браузеров: Chrome и Edge на Android — Google, Firefox — Mozilla,
+ * Safari и iPhone — Apple, Edge на Windows — Microsoft. Адрес подписки
+ * присылает браузер, и сервер потом сам шлёт на него POST: без этого списка
+ * подписка с адресом внутренней службы превращала бы отправку пуша в запрос
+ * туда, куда нам ходить нельзя.
+ */
+const PUSH_HOSTS = ["fcm.googleapis.com", "push.services.mozilla.com", "push.apple.com", "notify.windows.com"];
+
+export function pushHostAllowed(endpoint: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" || url.port || url.username || url.password) return false;
+  const host = url.hostname.toLowerCase();
+  return PUSH_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+}
+
+/** Проверка того, что прислал браузер: адрес службы — только https и только служба пуша. */
 export function parseSubscription(raw: unknown): BrowserSubscription | null {
   if (!raw || typeof raw !== "object") return null;
   const { endpoint, keys } = raw as { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } };
-  if (typeof endpoint !== "string" || endpoint.length > 1000 || !/^https:\/\//.test(endpoint)) return null;
+  if (typeof endpoint !== "string" || endpoint.length > 1000 || !pushHostAllowed(endpoint)) return null;
   const p256dh = keys?.p256dh;
   const auth = keys?.auth;
   if (typeof p256dh !== "string" || typeof auth !== "string") return null;

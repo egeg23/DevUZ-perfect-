@@ -38,6 +38,7 @@ import { chromium } from "playwright-core";
 
 import { cityByKey, nicheByKey } from "@/content/razbor/catalog";
 import { redactions } from "@/lib/razbor/anonymize";
+import { resolveSafely } from "@/lib/audit/guard";
 import { evidenceFor } from "@/lib/razbor/evidence";
 import { huntInPage, redactInPage } from "@/lib/razbor/in-page";
 import { mockupHtml } from "@/lib/razbor/mockup";
@@ -334,6 +335,22 @@ async function shootSite(browser, row, wanted) {
       // знать, кто к нему пришёл.
       userAgent: "DevUzRazbor/1.0 (+https://devuz.studio)",
       locale: "ru-RU",
+    });
+    // Снимок идёт с самого сервера, рядом с приложением и чужими сайтами.
+    // Каждый запрос страницы — и редирект, и картинка, и iframe — проходит
+    // ту же проверку адреса, что аудит: во внутреннюю сеть браузер не ходит.
+    await context.route("**/*", async (route) => {
+      const url = new URL(route.request().url());
+      if (url.protocol === "http:" || url.protocol === "https:") {
+        try {
+          await resolveSafely(url);
+        } catch {
+          return route.abort("blockedbyclient");
+        }
+      } else if (url.protocol !== "data:" && url.protocol !== "blob:") {
+        return route.abort("blockedbyclient");
+      }
+      return route.continue();
     });
     const page = await context.newPage();
 
