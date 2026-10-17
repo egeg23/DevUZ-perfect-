@@ -207,7 +207,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
       .ilike("failure", "%нет кружка%")
       .gte("created_at", dayFrom)
       .limit(200),
-    autopilotSettings().catch(() => ({ enabled: false, target: 0 })),
+    autopilotSettings(now).catch(() => ({ enabled: false, target: 0 })),
     readHealth().catch(() => null),
     mainLimitUntil(now.getTime()).catch(() => null),
     circleStates().catch(() => new Map()),

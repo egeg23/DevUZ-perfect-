@@ -11,15 +11,19 @@ import {
   PREPARE_PER_PASS,
   REPLIED_SHOWN,
   REPLY_MARK,
-  REPORT_SPAN_MS,
   nicheLabel,
   prepareWindow,
   replyHeading,
+  reportClock,
   reportDue,
+  reportSince,
   reportText,
+  targetFor,
   searchLine,
   toPrepare,
+  WEEKEND_TARGET,
   weekOf,
+  weekendInTashkent,
   type DayStats,
 } from "@/lib/admin/autopilot";
 import { EMPTY_CONTACTS } from "@/lib/audit/contacts";
@@ -71,12 +75,51 @@ test("готовит с 07:00 до 17:30, отчёт — в 18:00, в конце
   assert.ok(!prepareWindow(at("17:30")));
   assert.ok(!reportDue(at("17:59")));
   assert.ok(reportDue(at("18:00")));
-  // Отчёт — за сутки до него, а не с полуночи: ответ, пришедший в 19:00,
+  // Отчёт — с прошлого отчёта, а не с полуночи: ответ, пришедший в 19:00,
   // иначе не попал бы ни в один отчёт.
-  assert.equal(REPORT_SPAN_MS, 24 * 3600_000);
+  assert.equal(reportSince(at("18:07")).toISOString(), new Date("2026-10-05T18:00:00+05:00").toISOString(), "вторник — с понедельника 18:00");
   const store = read("lib/admin/autopilot-store.ts");
-  assert.match(store, /dayStats\(now, new Date\(now\.getTime\(\) - REPORT_SPAN_MS\)\)/);
+  assert.match(store, /dayStats\(now, reportSince\(now\)\)/);
   assert.match(store, /\.in\("role", \["admin", "head"\]\)/, "владельцу и руководителю");
+});
+
+test("в выходные — не меньше 60, письма до 20:00, отчёт в 20:30 без дыр", () => {
+  // Владелец, 17.10.2026: «Давай делать автоматические касания через наши
+  // рабочие аккаунты и в выходные… Начинаем с сегодня!»
+  const at = (iso: string) => new Date(`${iso}+05:00`);
+  const saturday = at("2026-10-17T17:45:00");
+  assert.ok(weekendInTashkent(saturday));
+  assert.ok(weekendInTashkent(at("2026-10-18T23:59:00")), "воскресенье");
+  assert.ok(!weekendInTashkent(at("2026-10-19T00:00:00")), "понедельник с полуночи по Ташкенту");
+  assert.ok(!weekendInTashkent(at("2026-10-16T23:59:00")), "пятница");
+
+  assert.equal(WEEKEND_TARGET, 60);
+  assert.equal(targetFor(saturday, 20), 60);
+  assert.equal(targetFor(saturday, 80), 80, "своя норма выше — она и остаётся");
+  assert.equal(targetFor(at("2026-10-16T12:00:00"), 20), 20, "будни не трогаем");
+
+  assert.ok(prepareWindow(saturday), "в субботу 17:45 ещё готовит");
+  assert.ok(prepareWindow(at("2026-10-18T19:59:00")));
+  assert.ok(!prepareWindow(at("2026-10-18T20:00:00")));
+  assert.ok(!prepareWindow(at("2026-10-16T17:45:00")), "в пятницу — до 17:30, как раньше");
+
+  assert.ok(!reportDue(at("2026-10-17T18:00:00")), "в субботу не в 18:00");
+  assert.ok(!reportDue(at("2026-10-17T20:29:00")));
+  assert.ok(reportDue(at("2026-10-17T20:30:00")));
+  assert.ok(reportDue(at("2026-10-16T18:00:00")), "в пятницу — в 18:00");
+
+  // Отчёты встык: суббота с пятницы 18:00, понедельник — с воскресенья 20:30.
+  assert.equal(reportSince(at("2026-10-17T20:30:00")).getTime(), at("2026-10-16T18:00:00").getTime());
+  assert.equal(reportSince(at("2026-10-18T20:31:00")).getTime(), at("2026-10-17T20:30:00").getTime());
+  assert.equal(reportSince(at("2026-10-19T18:00:00")).getTime(), at("2026-10-18T20:30:00").getTime());
+  assert.equal(reportClock("2026-10-17"), "20:30");
+  assert.equal(reportClock("2026-10-19"), "18:00");
+
+  // Норма на день берётся в одном месте — и для прохода, и для панели, и для «Главной».
+  const store = read("lib/admin/autopilot-store.ts");
+  assert.match(store, /target: targetFor\(now, Number\(data\.daily_target \?\? DAILY_TARGET\)\)/);
+  assert.match(store, /await autopilotSettings\(now\)/);
+  assert.match(read("lib/admin/hq-store.ts"), /autopilotSettings\(now\)/);
 });
 
 test("норма: не меньше 20 ушедших, не больше четырёх в очереди, не больше двух за проход", () => {

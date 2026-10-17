@@ -1,7 +1,7 @@
 import { HelpHint } from "@/components/admin/help-link";
 import { toggleAutopilotAction } from "@/app/admin/prospect/actions";
 import { autopilotDict } from "@/content/admin-panel/prospect";
-import { REPLY_MARK, type DayStats } from "@/lib/admin/autopilot";
+import { REPLY_MARK, WEEKEND_TARGET, type DayStats } from "@/lib/admin/autopilot";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
 
@@ -26,6 +26,7 @@ export function AutopilotPanel({ stats, canToggle, locale }: { stats: DayStats; 
       </p>
       <ul className="mt-3 flex flex-col gap-1 text-sm">
         <li className={stats.sent >= stats.target ? "text-green" : "text-text"}>{t.today(stats.sent, stats.target, stats.inFlight)}</li>
+        <li className="text-xs text-muted">{t.weekend(WEEKEND_TARGET)}</li>
         {accounts ? <li className="text-xs text-muted">{t.byAccount(accounts)}</li> : null}
         <li>{t.replies(stats.replies, stats.taken)}</li>
         {stats.manual || stats.dropped ? <li className="text-xs text-muted">{t.dropped(stats.manual, stats.dropped)}</li> : null}
