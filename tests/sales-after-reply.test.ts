@@ -301,7 +301,7 @@ test("8. ответ модели: пауза 40–120 секунд и корот
 
   const run = read("lib/admin/outreach-talk-run.ts");
   assert.match(run, /if \(inbound\.untilMockup\) text = withoutOpener\(text\);/);
-  assert.match(run, /\.\.\.\(inbound\.untilMockup \? aiStyleProblems\(text\) : \[\]\)/);
+  assert.match(run, /if \(inbound\.untilMockup\) problems\.push\(\.\.\.aiStyleProblems\(text\)\);/);
   assert.match(run, /sendAfter: humanSendAfter\(inbound\.createdAt, Date\.now\(\)\)/);
 });
 

@@ -170,7 +170,8 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
   // До макета ответ модели не выдаёт робота (sales-after-reply): «Отлично!»
   // в начале снимаем сами, список и длинный ответ — не отправляем.
   if (inbound.untilMockup) text = withoutOpener(text);
-  const problems = [...replyProblems(text, facts), ...(inbound.untilMockup ? aiStyleProblems(text) : [])];
+  const problems = replyProblems(text, facts);
+  if (inbound.untilMockup) problems.push(...aiStyleProblems(text));
   if (problems.length) {
     // Плохой ответ не отправляем и не исправляем на ходу: вторая попытка
     // той же моделью с той же историей даёт ту же выдумку. Разговор

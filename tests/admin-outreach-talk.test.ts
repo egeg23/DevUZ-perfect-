@@ -163,7 +163,8 @@ test("ответ, не прошедший проверку, не отправл�
   const run = read("lib/admin/outreach-talk-run.ts");
   const problems = run.indexOf("const problems = replyProblems(");
   const handover = run.indexOf('handOver(\n      inbound.prospectId,\n      "bad_reply"');
-  const queue = run.indexOf("await queueReply(");
+  // Первая отправка после проверки: готовый ответ на возражение (выше) модель не пишет.
+  const queue = run.indexOf("await queueReply(", problems);
   assert.ok(problems > 0 && handover > problems, "плохой ответ должен вести к передаче человеку");
   assert.ok(queue > handover, "отправка должна стоять после проверки, а не до неё");
 });

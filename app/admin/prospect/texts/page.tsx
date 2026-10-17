@@ -259,7 +259,7 @@ export default async function LetterTextsPage({
         {ab && ab.some((a) => a.hello > 0) ? (
           <>
             <div className="mt-3 overflow-x-auto">
-              <table className="w-full min-w-[22rem] text-left text-xs">
+              <table className="w-full text-left text-xs">
                 <thead className="text-faint">
                   <tr>
                     <th className="py-1 pr-3 font-normal" />

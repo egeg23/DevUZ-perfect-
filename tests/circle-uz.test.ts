@@ -122,7 +122,9 @@ test("вебхук: кружок ждёт кнопки, кнопка — тол�
   const lang = route.slice(route.indexOf("async function handleCircleLang("), route.indexOf("/** Личность для партнёрской программы"));
   assert.match(lang, /!changesCircle\(staff\)/);
   assert.match(lang, /const circle = await takeCircle\(chatId, choice\.messageId\);/);
-  assert.match(lang, /await saveCircleFromBot\(circle, staff, choice\.lang\)/);
+  // После языка — ниша кнопками (17.10.2026), сохраняет кнопка ниши.
+  assert.match(lang, /circleNicheButtons\(langOnly\.lang, langOnly\.messageId\)/);
+  assert.match(lang, /await saveCircleFromBot\(circle, staff, choice\.lang, choice\.niche\)/);
 
   const button = route.slice(route.indexOf("async function handleButton("));
   assert.match(button, /if \(parts\[0\] === CIRCLE_CALLBACK\) \{\s*if \(chatId === undefined \|\| chatId !== query\.from\?\.id\)/);
@@ -135,14 +137,14 @@ test("вебхук: кружок ждёт кнопки, кнопка — тол�
 test("скаут кладёт узбекский кружок в «Избранное», помнит его номер и убирает прежний", () => {
   const runner = read("scout/runner.mjs");
   const place = runner.slice(runner.indexOf("const placeCircle = async"), runner.indexOf("const checkCircle = async"));
-  assert.match(place, /const file = await circleFile\(lang\);/);
+  assert.match(place, /const file = files \? files\.get\(slotKey\(slot\)\) \?\? null : await circleFile\(lang\);/);
   assert.match(place, /uzIds = \[Number\(sent\.id\), \.\.\.old\]/);
   assert.match(place, /client\.deleteMessages\("me", old, \{ revoke: true \}\)/);
   const check = runner.slice(runner.indexOf("const checkCircle = async"));
-  assert.match(check, /for \(const lang of CIRCLE_LANGS\)/);
+  assert.match(check, /for \(const slot of CIRCLE_SLOTS\)/);
   // Номера переживают перезапуск: скаут читает их из базы.
   assert.match(runner, /uzIds = states\.get\(key\)\?\.uzIds \?\? \[\];/);
-  assert.match(runner, /return pickCircles\(notes, uzIds, uzFile\?\.bytes \?\? null\);/);
+  assert.match(runner, /const general = pickCircles\(notes, uzIds, files\.get\("uz:general"\)\?\.bytes \?\? null, \{/);
   assert.match(runner, /bytes: Number\(m\.media\?\.document\?\.size \?\? 0\) \|\| null/);
 });
 
@@ -153,5 +155,5 @@ test("«Аккаунты»: место для каждого языка и ст�
   assert.match(page, /t\.circleUzNo/);
   assert.match(page, /\/admin\/accounts\/circle\?lang=\$\{slot\.lang\}/);
   assert.match(read("app/admin/accounts/actions.ts"), /isCircleLang\(input\?\.lang\) \? input\.lang : "ru"/);
-  assert.match(read("app/admin/accounts/circle/route.ts"), /circleFile\(isCircleLang\(lang\) \? lang : "ru"\)/);
+  assert.match(read("app/admin/accounts/circle/route.ts"), /circleFile\(isCircleLang\(lang\) \? lang : "ru", isCircleNiche\(niche\) \? niche : "general"\)/);
 });
