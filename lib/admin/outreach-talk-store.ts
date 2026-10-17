@@ -20,11 +20,26 @@ import { MAIN_ACCOUNT, accountOf, sentFrom, sentFromText } from "@/lib/admin/wor
 import { accountTags } from "@/lib/admin/work-accounts-store";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
-import { detectLang } from "@/lib/talk/language";
+import { detectLang, talkLang } from "@/lib/talk/language";
 import { checkFresh } from "@/lib/admin/check-fresh";
 import { LETTER_AFTER_REPLY } from "@/lib/admin/autopilot";
 import { lastEdits, lineEditable, type EditState } from "@/lib/admin/outreach-edit";
 import type { CircleLang } from "@/lib/admin/circle-store";
+import { OBJECTIONS, objectionOf, objectionReply, type Objection } from "@/lib/admin/objections";
+import {
+  INTRO_BEFORE_MS,
+  PRICE_KIND,
+  circleNicheOf,
+  introLine,
+  introTargetOf,
+  isAutoReply,
+  plainHost,
+  priceLine,
+  salesNew,
+  showLine,
+  type CircleNiche,
+  type SalesArm,
+} from "@/lib/admin/sales-after-reply";
 import {
   CIRCLE_AFTER_MS,
   CIRCLE_LANG,
@@ -84,7 +99,27 @@ export type Inbound = {
    * макет, а не к созвону (untilMockup).
    */
   untilMockup: boolean;
+  /** Половина «new» A/B (sales-after-reply): готовые ответы на возражения до макета. */
+  salesNew: boolean;
+  /** Ниша для слов окупаемости в ответе на «дорого». */
+  niche: CircleNiche;
+  /** Хост сайта текстом; null — сайта нет. */
+  siteHost: string | null;
 };
+
+/**
+ * Половина A/B касания (prospects.sales_arm). Отдельным запросом: пока
+ * миграция 0169 не применена, колонки нет — тогда null, и касание идёт как
+ * раньше, а остальные запросы не падают вместе с ней.
+ */
+export async function salesArmOf(prospectId: string): Promise<SalesArm | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const { data, error } = await db.from("prospects").select("sales_arm").eq("id", prospectId).maybeSingle();
+  if (error || !data) return null;
+  const arm = (data as { sales_arm?: unknown }).sales_arm;
+  return arm === "old" || arm === "new" ? arm : null;
+}
 
 /**
  * Входящее от проспекта.
@@ -331,6 +366,25 @@ async function saveInbound(
   const body = raw.trim().slice(0, 4000);
   if (!body) return { matched: false };
 
+  // Автоответчик компании («Мы отвечаем в рабочее время», «Ваше сообщение
+  // передано менеджеру») — не ответ (lib/admin/sales-after-reply.ts): ни
+  // кружка, ни письма, ни модели, ни строки менеджеру. Ждём живого ответа.
+  // Для обеих половин A/B: это исправление ошибки.
+  if (isAutoReply(body)) {
+    await saveAutoReply(prospect, body);
+    return { matched: true, host: String(prospect.host), verdict: "auto" };
+  }
+
+  // «Передам руководству» — у половины «new» через 2 дня один вопрос
+  // «Руководитель успел посмотреть?» (sales-after-reply-store → runBossAsks).
+  if (objectionOf(body) === "boss" && salesNew({ sales_arm: await salesArmOf(String(prospect.id)) })) {
+    await db
+      .from("prospects")
+      .update({ boss_promised_at: new Date().toISOString() })
+      .eq("id", prospect.id)
+      .is("boss_promised_at", null);
+  }
+
   // Ответ на «Здравствуйте»: письма о сайте клиент ещё не видел
   // (lib/admin/hello-first.ts). Отказ и просьба позвать человека идут
   // обычным путём — к человеку, письмо не уходит.
@@ -408,11 +462,22 @@ async function saveInbound(
   // клиента после неё. Один раз на клиента — как и рассылка команде. По
   // ручному маршруту сообщение ждёт в карточке, отправляет человек.
   if (announced) {
+    const lang = detectLang(body);
     await queueReply({
       prospectId: String(prospect.id),
       leadId: (prospect.lead_id as string | null) ?? null,
-      body: protoTermsText(detectLang(body)),
+      body: protoTermsText(lang),
     });
+    // Половина «new»: цена одной строкой сразу, до макета (владелец,
+    // 17.10.2026) — kind 'price', по нему считается ступень «цена названа».
+    if (lang !== "en" && salesNew({ sales_arm: await salesArmOf(String(prospect.id)) })) {
+      await queueReply({
+        prospectId: String(prospect.id),
+        leadId: (prospect.lead_id as string | null) ?? null,
+        body: priceLine(lang),
+        kind: PRICE_KIND,
+      });
+    }
   }
 
   if (verdict !== "talk" && !announced) {
@@ -485,6 +550,25 @@ async function answerHello(
 
   const circle = circleLangFor(lang);
   if (circle) {
+    const sendAfter = new Date(now + CIRCLE_AFTER_MS).toISOString();
+    // Половина «new»: за несколько секунд до кружка — строка, что он про его
+    // сайт (sales-after-reply → introLine). Скаут шлёт её, ждёт
+    // INTRO_BEFORE_MS и шлёт кружок (nextReply → intro). Строка ложится
+    // первой: в ленте она перед кружком. Миграция 0169 не применена — kind
+    // 'intro' база не примет, и кружок уйдёт без строки, как раньше.
+    if (salesNew({ sales_arm: await salesArmOf(id) })) {
+      const { data: full } = await db.from("prospects").select("host, label, place_id, contacts").eq("id", id).maybeSingle();
+      await db.from("outreach_messages").insert({
+        prospect_id: id,
+        lead_id: prospect.lead_id,
+        direction: "out",
+        author: "staff",
+        kind: "intro",
+        body: introLine(circle, introTargetOf(full ?? { host: prospect.host })),
+        status: "queued",
+        send_after: sendAfter,
+      });
+    }
     await db.from("outreach_messages").insert({
       prospect_id: id,
       lead_id: prospect.lead_id,
@@ -493,7 +577,7 @@ async function answerHello(
       kind: "circle",
       body: circleBody(circle),
       status: "queued",
-      send_after: new Date(now + CIRCLE_AFTER_MS).toISOString(),
+      send_after: sendAfter,
     });
     return { matched: true, host, verdict: "hello" };
   }
@@ -611,7 +695,8 @@ async function circleWasPitch(prospectId: string, pitchAt: string): Promise<bool
     .eq("direction", "out")
     .gte("created_at", pitchAt);
   const rows = data ?? [];
-  return rows.some((r) => r.kind === "circle" && r.status === "sent") && !rows.some((r) => r.kind !== "circle" && r.status === "sent");
+  // Строка перед кружком (intro) — не письмо: «да» на кружок с ней — то же согласие.
+  return rows.some((r) => r.kind === "circle" && r.status === "sent") && !rows.some((r) => (r.kind ?? "text") === "text" && r.status === "sent");
 }
 
 /** Письмо после «Здравствуйте» ещё ждёт отправки. */
@@ -645,7 +730,7 @@ export async function pendingTalks(limit = 5): Promise<Inbound[]> {
   for (const row of data ?? []) {
     const { data: p } = await db
       .from("prospects")
-      .select("id, host, label, target, message, findings, lead_id, ai_handling, request_no, claimed_by, autopilot_at")
+      .select("id, host, label, niche, target, message, findings, lead_id, ai_handling, request_no, claimed_by, autopilot_at")
       .eq("id", row.prospect_id)
       .maybeSingle();
     if (!p) continue;
@@ -693,6 +778,9 @@ export async function pendingTalks(limit = 5): Promise<Inbound[]> {
       managerChatId: Number(staff?.telegram_user_id) || null,
       repliesSoFar: count ?? 0,
       untilMockup: untilMockup(p),
+      salesNew: salesNew({ sales_arm: await salesArmOf(String(p.id)) }),
+      niche: circleNicheOf(p),
+      siteHost: typeof p.host === "string" && p.host ? String(p.host) : null,
     });
   }
   return out;
@@ -732,17 +820,47 @@ export async function queueReply(input: {
   prospectId: string;
   leadId: string | null;
   body: string;
+  /** Не раньше: ответ модели — через 40–120 секунд, как человек набирает (humanSendAfter). */
+  sendAfter?: string | null;
+  /** 'price' — строка о цене после «+» (sales-after-reply, PRICE_KIND). */
+  kind?: "text" | typeof PRICE_KIND;
 }): Promise<void> {
   const db = serviceClient();
   if (!db) return;
-  await db.from("outreach_messages").insert({
+  const row = {
     prospect_id: input.prospectId,
     lead_id: input.leadId,
     direction: "out",
     author: "ai",
     body: input.body.slice(0, 4000),
     status: "queued",
-  });
+    ...(input.sendAfter ? { send_after: input.sendAfter } : {}),
+  };
+  const { error } = await db.from("outreach_messages").insert({ ...row, kind: input.kind ?? "text" });
+  // Миграция 0169 не применена — 'price' база не примет: строка уходит
+  // обычным текстом, клиенту всё равно.
+  if (error && input.kind && input.kind !== "text") await db.from("outreach_messages").insert(row);
+}
+
+/**
+ * Автоответчик компании — в ленту, чтобы менеджер видел, что пришло, но
+ * отвеченным и с kind 'auto': ни модель, ни счёт «ответили» его не берут.
+ * Касание не трогаем — ни replied_at, ни pitch_at: ждём живого ответа.
+ */
+async function saveAutoReply(prospect: { id: unknown; lead_id: unknown }, body: string): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const row = {
+    prospect_id: prospect.id,
+    lead_id: prospect.lead_id,
+    direction: "in",
+    author: "staff",
+    body,
+    status: "done",
+    answered_at: new Date().toISOString(),
+  };
+  const { error } = await db.from("outreach_messages").insert({ ...row, kind: "auto" });
+  if (error) await db.from("outreach_messages").insert(row);
 }
 
 export async function markAnswered(messageId: string): Promise<void> {
@@ -830,6 +948,32 @@ export async function tellManager(
   return sendMessage(chat, body);
 }
 
+/**
+ * Строка перед кружком и ниша кружка — только у половины «new»
+ * (sales-after-reply). У «old» — общий кружок без строки, как раньше.
+ */
+async function circleExtras(prospectId: string): Promise<{ niche: CircleNiche; intro: { id: string; body: string } | null }> {
+  const db = serviceClient();
+  if (!db || !salesNew({ sales_arm: await salesArmOf(prospectId) })) return { niche: "general", intro: null };
+  const [{ data: p }, { data: intro }] = await Promise.all([
+    db.from("prospects").select("niche, label, host").eq("id", prospectId).maybeSingle(),
+    db
+      .from("outreach_messages")
+      .select("id, body")
+      .eq("prospect_id", prospectId)
+      .eq("direction", "out")
+      .eq("kind", "intro")
+      .eq("status", "queued")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  return {
+    niche: p ? circleNicheOf(p) : "general",
+    intro: intro ? { id: String(intro.id), body: String(intro.body) } : null,
+  };
+}
+
 /** Следующий ответ на отправку — для скаута. */
 export async function nextReply(
   /** Чей разговор: отвечаем с того аккаунта, с которого ушло первое письмо. */
@@ -844,6 +988,11 @@ export async function nextReply(
   kind: "text" | "circle";
   /** Язык кружка: какой из «Избранного» отправить (circle-store, pickCircles). */
   lang: CircleLang;
+  /** Ниша кружка (половина «new»): нет кружка ниши — общий. */
+  niche: CircleNiche;
+  /** Строка перед кружком: скаут шлёт её, ждёт `introGapMs` и шлёт кружок. */
+  intro?: { id: string; body: string };
+  introGapMs?: number;
 } | null> {
   const db = serviceClient();
   if (!db) return null;
@@ -886,6 +1035,8 @@ export async function nextReply(
   // Письмо одного разговора не обгоняет его же кружок, который ещё ждёт.
   const waiting = new Set<string>();
   for (const row of queued) {
+    // Строка перед кружком сама не уходит: её шлёт скаут вместе с кружком.
+    if (row.kind === "intro") continue;
     if (row.send_after && Date.parse(String(row.send_after)) > now) {
       waiting.add(String(row.prospect_id));
       continue;
@@ -924,7 +1075,11 @@ export async function nextReply(
     // Номер пользователя Telegram находит только по кэшу сессии, а кэш живёт
     // в памяти скаута и пропадает с перезапуском. @адрес находится всегда.
     const handle = String(p.target);
+    const circle = row.kind === "circle";
+    const extras = circle ? await circleExtras(String(row.prospect_id)) : null;
     return {
+      ...(extras?.intro ? { intro: extras.intro, introGapMs: INTRO_BEFORE_MS } : {}),
+      niche: extras?.niche ?? "general",
       id: String(row.id),
       target: to,
       fallback: handle !== to && handle.startsWith("@") ? handle : undefined,
@@ -982,6 +1137,15 @@ export async function markCircleSkipped(id: string, reason: string): Promise<voi
     .select("prospect_id, created_at")
     .maybeSingle();
   if (!row?.prospect_id) return;
+
+  // Строка «это про ваш сайт» без кружка ни к чему: снимаем, если не ушла.
+  await db
+    .from("outreach_messages")
+    .update({ status: "done", failure: "не отправлено: кружок не ушёл" })
+    .eq("prospect_id", row.prospect_id)
+    .eq("direction", "out")
+    .eq("kind", "intro")
+    .eq("status", "queued");
 
   // Кружок был предложением сам по себе — тогда вместо него уходит письмо
   // на языке ответа клиента. Письмо уже стоит или ушло — второго не
@@ -1058,6 +1222,13 @@ export type TalkView = {
   /** С какого аккаунта идёт разговор (sentFrom); null — «Написал сам». */
   from: { label: string | null; handle: string | null } | null;
   lines: TalkLine[];
+  /**
+   * «Ответы на возражения» (lib/admin/objections.ts) — готовые тексты на языке
+   * клиента: кнопка вставляет текст в поле ответа, менеджер правит и
+   * отправляет. Для всех. «mockup» — «Макет готов» с «Покажу за 15 минут»,
+   * только половине «new» A/B.
+   */
+  quick: { kind: Objection | "mockup"; text: string }[];
 };
 
 /**
@@ -1093,7 +1264,7 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
 
   const { data: p } = await db
     .from("prospects")
-    .select("id, host, target, ai_handling, handover_reason, sent_via, target_kind, hello_at, pitch_at")
+    .select("id, host, label, niche, target, ai_handling, handover_reason, sent_via, target_kind, hello_at, pitch_at")
     .eq("lead_id", leadId)
     .maybeSingle();
   if (!p) return null;
@@ -1111,6 +1282,14 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
   const touch = { hello_at: (p.hello_at as string | null) ?? null, pitch_at: (p.pitch_at as string | null) ?? null };
   const now = Date.now();
 
+  // Готовые ответы — на языке клиента: узбекский разговор — узбекские тексты.
+  const lang = talkLang((data ?? []).map((row) => ({ direction: row.direction as "in" | "out", body: String(row.body) }))) === "uz" ? "uz" : "ru";
+  const ctx = { lang, host: p.host ? plainHost(String(p.host)) : null, niche: circleNicheOf(p) } as const;
+  const quick: TalkView["quick"] = OBJECTIONS.map((kind) => ({ kind, text: objectionReply(kind, ctx) }));
+  if (salesNew({ sales_arm: await salesArmOf(String(p.id)) })) {
+    quick.push({ kind: "mockup", text: `${lang === "uz" ? "Maket tayyor:" : "Макет готов:"} \n\n${showLine(lang)}` });
+  }
+
   return {
     prospectId: String(p.id),
     host: String(p.host),
@@ -1118,6 +1297,7 @@ export async function talkForLead(leadId: string): Promise<TalkView | null> {
     handoverReason: (p.handover_reason as string | null) ?? null,
     target: (p.target as string | null) ?? null,
     from: sentFrom({ sent_via: p.sent_via as string | null, target_kind: p.target_kind as string | null }, tags),
+    quick,
     lines: (data ?? [])
       // Снятое до отправки клиент не видел — и в ленте его нет
       // (HAND_REPLY_LEFT, STAFF_TOOK_OVER).

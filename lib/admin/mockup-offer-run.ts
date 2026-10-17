@@ -16,6 +16,8 @@ import {
   type ReminderKind,
 } from "@/lib/admin/mockup-offer";
 import { offerCard, offerReaders, withOwnPromos, type OfferRow } from "@/lib/admin/mockup-offer-bot";
+import { salesArmOf } from "@/lib/admin/outreach-talk-store";
+import { salesNew } from "@/lib/admin/sales-after-reply";
 import { effortFor } from "@/lib/model-limits";
 import { anthropic } from "@/lib/model-road";
 import { modelTroubleSays } from "@/lib/model-trouble";
@@ -127,7 +129,9 @@ async function announce(o: Row, now: Date): Promise<boolean> {
     .is("announced_at", null)
     .select("id");
   if (!claimed?.length) return false;
-  await queue(o, announceText(o.lang, o.expires_at, o.own));
+  // «Покажу за 15 минут» — половине «new» A/B (lib/admin/sales-after-reply.ts).
+  const show = o.prospect_id ? salesNew({ sales_arm: await salesArmOf(String(o.prospect_id)) }) : false;
+  await queue(o, announceText(o.lang, o.expires_at, o.own, show));
 
   // Владельцу и руководителю — сразу, с кнопками: макет ушёл, акция пошла.
   const card = offerCard(o, now);

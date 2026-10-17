@@ -578,6 +578,7 @@ export default async function LeadPage({
             from={talk.from ? t.from(talk.from.label, talk.from.handle) : null}
             aiHandling={talk.aiHandling}
             emptyText={t.talkEmpty}
+            quick={talk.quick}
           />
 
           <div className="mt-3 flex flex-wrap items-center gap-3">

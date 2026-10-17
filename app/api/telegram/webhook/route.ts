@@ -84,6 +84,9 @@ import {
   circleBotReply,
   circleChoice,
   circleFromMessage,
+  circleNicheButtons,
+  circleNicheChoice,
+  circleNicheQuestion,
   circleLangButtons,
   circleLangQuestion,
   holdCircle,
@@ -119,6 +122,7 @@ import { mockupCode } from "@/lib/admin/mockups-store";
 import { MOCKUP_CALLBACK, OFFER_ROLES, actOnOffer, mockupsCommand, parseMockupCallback, sendOfferList } from "@/lib/admin/mockup-offer-bot";
 import { grade, isRight, questionsFor } from "@/lib/learn/quiz";
 import { saveAttempt } from "@/lib/learn/store";
+import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -416,29 +420,40 @@ async function handleCircleLang(query: NonNullable<Update["callback_query"]>, pa
     await answerCallback(query.id, "Кружок уже сохранён");
     return;
   }
-  const choice = circleChoice(parts);
+  const langOnly = circleChoice(parts);
+  const choice = circleNicheChoice(parts);
   const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
-  if (chatId === undefined || !choice || !staff || !changesCircle(staff)) {
+  if (chatId === undefined || !(choice || langOnly) || !staff || !changesCircle(staff)) {
     await answerCallback(query.id, "Недоступно");
     return;
   }
+  // Язык выбран — теперь ниша (17.10.2026): кружок ждёт в базе дальше.
+  if (!choice && langOnly) {
+    await answerCallback(query.id, "Теперь ниша");
+    if (query.message?.message_id) {
+      await setButtons(chatId, query.message.message_id, circleNicheButtons(langOnly.lang, langOnly.messageId));
+    }
+    await sendMessage(chatId, esc(circleNicheQuestion));
+    return;
+  }
+  if (!choice) return;
   const circle = await takeCircle(chatId, choice.messageId);
   if (!circle) {
     await answerCallback(query.id, "Этот кружок уже сохранён или устарел — перешлите его ещё раз");
     return;
   }
   await answerCallback(query.id, "Сохраняю…");
-  const label = choice.lang === "uz" ? "🇺🇿 O‘zbekcha" : "🇷🇺 Русский";
+  const label = `${choice.lang === "uz" ? "🇺🇿 O‘zbekcha" : "🇷🇺 Русский"} · ${CIRCLE_NICHE_RU[choice.niche]}`;
   if (query.message?.message_id) {
     await setButtons(chatId, query.message.message_id, [[{ text: `${label} — сохраняю…`, callback_data: `${CIRCLE_CALLBACK}:done` }]]);
   }
-  const result = await saveCircleFromBot(circle, staff, choice.lang);
+  const result = await saveCircleFromBot(circle, staff, choice.lang, choice.niche);
   if (query.message?.message_id) {
     await setButtons(chatId, query.message.message_id, [
       [{ text: result.ok ? `✅ ${label}` : `⚠️ ${label} — не сохранён`, callback_data: `${CIRCLE_CALLBACK}:done` }],
     ]);
   }
-  await sendMessage(chatId, esc(circleBotReply(result, choice.lang)));
+  await sendMessage(chatId, esc(circleBotReply(result, choice.lang, choice.niche)));
 }
 
 /** Личность для партнёрской программы: без числового id её нет. */

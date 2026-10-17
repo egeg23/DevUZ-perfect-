@@ -44,6 +44,20 @@ export const PROMO = {
 } as const;
 
 /**
+ * Лесенка на «дорого» (владелец, 17.10.2026, по разбору продаж): не только
+ * лендинг и корпоративный, а шаг поменьше — исправим 3 ошибки на сайте за 2
+ * дня. Оплата частями: половина при старте, половина после запуска. Одно
+ * место для цен: тексты возражений (lib/admin/objections.ts) берут их
+ * отсюда, лендинг и корпоративный — те же, что в PROMO.
+ */
+export const LADDER = {
+  fixes: { price: 150, days: 2, count: 3 },
+  card: { price: 250 },
+  landing: { price: PROMO.landing.price },
+  corporate: { price: PROMO.corporate.price },
+} as const;
+
+/**
  * Своя цена акции у макета — protos.facts.promo. Владелец, 14.10.2026: у
  * DomTut на макете «1 000 $ вместо 4 800 $» за сайт и приложение, и бот
  * должен написать клиенту те же цифры, что на макете, а не общие PROMO.
@@ -280,7 +294,20 @@ export function expiredNow(o: OfferState, now: Date): boolean {
  * Условия акции — готовым текстом, без модели: в них цены и срок, и они
  * должны быть ровно такими, как решил владелец.
  */
-export function announceText(lang: OfferLang, expiresAt: string, own: OwnPromo | null = null): string {
+export function announceText(lang: OfferLang, expiresAt: string, own: OwnPromo | null = null, show = false): string {
+  const text = promoAnnounce(lang, expiresAt, own);
+  // Половина «new» (sales-after-reply, 17.10.2026): рядом с макетом —
+  // предложение показать его живьём. Число 15 — только здесь, в проверку
+  // напоминаний (reminderProblems) оно не идёт: это не напоминание.
+  if (!show) return text;
+  return `${text}\n\n${lang === "uz" ? SHOW_UZ : SHOW_RU}`;
+}
+
+/** «Покажу за 15 минут» — showLine в sales-after-reply.ts берёт отсюда. */
+export const SHOW_RU = "Покажу за 15 минут: по видео или подъеду к вам.";
+export const SHOW_UZ = "15 daqiqada ko‘rsatib beraman: video orqali yoki oldingizga boraman.";
+
+function promoAnnounce(lang: OfferLang, expiresAt: string, own: OwnPromo | null): string {
   const until = untilText(expiresAt);
   if (own) {
     return lang === "uz"

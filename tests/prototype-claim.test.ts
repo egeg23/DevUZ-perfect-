@@ -136,7 +136,7 @@ test("клиенту после «да» — сразу условия маке�
   const store = read("lib/admin/outreach-talk-store.ts");
   assert.match(
     store,
-    /if \(announced\) \{\s*await queueReply\(\{[\s\S]*?body: protoTermsText\(detectLang\(body\)\),\s*\}\);\s*\}/,
+    /if \(announced\) \{\s*const lang = detectLang\(body\);\s*await queueReply\(\{[\s\S]*?body: protoTermsText\(lang\),\s*\}\);/,
   );
   // Команда знает, что ссылка ушла, и не шлёт её второй раз.
   const asked = new Date("2026-10-02T13:00:00Z");

@@ -1,6 +1,7 @@
 import { record } from "@/lib/admin/audit";
 import { circleFile, recordCircleFile, type CircleLang } from "@/lib/admin/circle-store";
 import { CIRCLE_MAX_BYTES, CIRCLE_MIME, circleProblem } from "@/lib/admin/circle-rules";
+import type { CircleNiche } from "@/lib/admin/sales-after-reply";
 import type { Staff } from "@/lib/admin/session";
 import { promoStart, type StartResult } from "@/lib/partners/promo";
 import { discardUpload, finishUpload, removePromoFile, type PromoFail } from "@/lib/partners/promo-files";
@@ -26,6 +27,8 @@ export async function saveCircle(
   actor: Staff,
   ip: string | null,
   lang: CircleLang = "ru",
+  /** Ниша кружка (17.10.2026); «general» — общий, как до ниш. */
+  niche: CircleNiche = "general",
 ): Promise<{ ok: true } | PromoFail> {
   const finished = await finishUpload(input.uploadId);
   if (!finished.ok) return finished;
@@ -42,7 +45,7 @@ export async function saveCircle(
     return { ok: false, reason: problem === "type" ? "bad_type" : problem === "size" ? "too_big" : "bad_size", detail: problem };
   }
 
-  const before = await circleFile(lang);
+  const before = await circleFile(lang, niche);
   const saved = await recordCircleFile(
     {
       path: finished.path,
@@ -54,6 +57,7 @@ export async function saveCircle(
       by: actor.display_name,
     },
     lang,
+    niche,
   );
   if (!saved) {
     await removePromoFile(finished.path);
@@ -65,7 +69,7 @@ export async function saveCircle(
     actorStaffId: actor.id,
     targetType: "tg_circle",
     targetId: null,
-    meta: { bytes: finished.bytes, duration: Math.round(input.duration!), replaced: Boolean(before), lang },
+    meta: { bytes: finished.bytes, duration: Math.round(input.duration!), replaced: Boolean(before), lang, niche },
     ip,
   });
   return { ok: true };

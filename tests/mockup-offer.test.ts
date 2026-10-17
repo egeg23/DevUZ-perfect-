@@ -200,7 +200,7 @@ test("проводка: скаут, очередь бота, свип, вебх�
   assert.match(run, /process\.env\.PROMO_MODEL \|\| "claude-haiku-4-5"/);
   assert.match(run, /reminderProblems\(text, o\.expires_at, now, o\.lang, o\.own\)/);
   // Условия — готовым текстом, не моделью.
-  assert.match(run, /await queue\(o, announceText\(o\.lang, o\.expires_at, o\.own\)\)/);
+  assert.match(run, /await queue\(o, announceText\(o\.lang, o\.expires_at, o\.own, show\)\)/);
 });
 
 test("своя цена макета (facts.promo): бот пишет клиенту её, а не общие цены", () => {

@@ -31,12 +31,16 @@ import { claimMockupScan, finishMockupScan, recordMockupOut } from "@/lib/admin/
 import { SCAN_DIALOGS, SCAN_MS, SCAN_PAGE, SCAN_PAUSE_MS, inScan, scanSlot } from "@/lib/admin/mockup-scan";
 import {
   CIRCLE_CHECK_MS,
-  CIRCLE_LANGS,
+  CIRCLE_SLOTS,
   circleDue,
   circleFile,
+  circleFiles,
+  circleFor,
   circleStates,
   pickCircles,
+  pickNicheCircles,
   recordCircle,
+  slotKey,
 } from "@/lib/admin/circle-store";
 import { isPromoPath } from "@/lib/partners/promo-rules";
 import path from "node:path";
@@ -426,23 +430,36 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
    * Помнятся в базе — переживают перезапуск скаута.
    */
   let uzIds = [];
+  /** То же для кружков ниш (17.10.2026): `<язык>:<ниша>` → номера, новые первыми. */
+  let nicheIds = {};
   const uzReady = circleStates()
     .then((states) => {
       uzIds = states.get(key)?.uzIds ?? [];
+      nicheIds = states.get(key)?.nicheIds ?? {};
     })
     .catch(() => {});
 
-  /** Кружки «Избранного» этого аккаунта по языкам: { ru, uz }, каждого может не быть. */
+  /**
+   * Кружки «Избранного» этого аккаунта: общие по языкам { ru, uz } и кружки
+   * ниш { "ru:mebel": … }, каждого может не быть. Ниш девять на два языка —
+   * поэтому смотрим 60 последних, а не 30.
+   */
   const savedCircles = async () => {
     await uzReady;
-    const [found, uzFile] = await Promise.all([
-      client.getMessages("me", { limit: 30, filter: new Api.InputMessagesFilterRoundVideo() }),
-      circleFile("uz").catch(() => null),
+    const [found, files] = await Promise.all([
+      client.getMessages("me", { limit: 60, filter: new Api.InputMessagesFilterRoundVideo() }),
+      circleFiles().catch(() => new Map()),
     ]);
     const notes = (found ?? [])
       .filter((m) => m?.media)
       .map((m) => ({ id: Number(m.id), date: Number(m.date), media: m.media, bytes: Number(m.media?.document?.size ?? 0) || null }));
-    return pickCircles(notes, uzIds, uzFile?.bytes ?? null);
+    const nicheBytes = {};
+    for (const [slot, file] of files) if (!slot.endsWith(":general")) nicheBytes[slot] = file.bytes ?? null;
+    const general = pickCircles(notes, uzIds, files.get("uz:general")?.bytes ?? null, {
+      ids: Object.values(nicheIds).flat(),
+      bytes: Object.values(nicheBytes).filter(Boolean),
+    });
+    return { ...general, niche: pickNicheCircles(notes, nicheIds, nicheBytes), files };
   };
 
   /**
@@ -760,15 +777,25 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
         // ответа из «Избранного» этого аккаунта, не пересылка: у пересланного
         // стояло бы «переслано от». Не ушёл — вместо него встаёт письмо
         // (markCircleSkipped).
-        const circle = (await savedCircles())[reply.lang];
+        // Кружок ниши компании (половина «new», sales-after-reply), нет его —
+        // общий на языке ответа.
+        const saved = await savedCircles();
+        const circle = circleFor(saved, saved.niche, { lang: reply.lang, niche: reply.niche ?? "general" });
         if (!circle) {
           await markCircleSkipped(reply.id, noCircle(reply.lang));
           console.log(`переписка${tag}: кружка (${reply.lang}) в «Избранном» нет — ${reply.target} уйдёт письмо`);
           return;
         }
+        // Строка перед кружком: «Это про ваш сайт …, 40 секунд». Хост текстом,
+        // без превью страницы. Через несколько секунд — сам кружок.
+        if (reply.intro) {
+          const sentIntro = await toPeer(reply, (to) => client.sendMessage(to, { message: reply.intro.body, linkPreview: false }));
+          await markReplySent(reply.intro.id, sentIntro?.id ?? null);
+          await new Promise((resolve) => setTimeout(resolve, reply.introGapMs ?? 7_000));
+        }
         const sentCircle = await toPeer(reply, (to) => client.sendFile(to, { file: circle.media }));
         await markReplySent(reply.id, sentCircle?.id ?? null);
-        console.log(`переписка${tag}: кружок (${reply.lang}) ${reply.target} по сайту ${reply.host}`);
+        console.log(`переписка${tag}: кружок (${reply.lang}${reply.niche && reply.niche !== "general" ? `, ${reply.niche}` : ""}) ${reply.target} по сайту ${reply.host}`);
         return;
       }
       // Номер ушедшего — для «Исправить» (lib/admin/outreach-edit.ts).
@@ -800,10 +827,11 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
   // его не приняли за русский. Атрибут видео — только наш: флаг videoNote в
   // teleproto добавляет ещё и «голосовое», и сообщение превращается в аудио.
   const posted = new Set();
-  const placeCircle = async (lang, current) => {
-    const file = await circleFile(lang);
+  const placeCircle = async (slot, current, files) => {
+    const { lang, niche } = slot;
+    const file = files ? files.get(slotKey(slot)) ?? null : await circleFile(lang);
     const savedAt = current ? Number(current.date) * 1000 : null;
-    const mark = `${lang}:${file?.uploadedAt}`;
+    const mark = `${slotKey(slot)}:${file?.uploadedAt}`;
     if (!file || !circleDue(file, savedAt) || posted.has(mark) || !isPromoPath(file.path)) return false;
     const media = process.env.MEDIA_HOST_DIR || "/var/lib/devuz/media";
     const sent = await client.sendFile("me", {
@@ -822,28 +850,39 @@ function startWorker({ client, Api, NewMessage, key, label, cap, paused, othersA
     // ушёл — второй раз не кладём, даже если Telegram ещё не отдал его в
     // «Избранном» (дата сообщения — по часам Telegram, не по нашим).
     posted.add(mark);
-    if (lang === "uz" && sent?.id !== undefined) {
+    // Кружок ниши запоминается по номеру, как узбекский: по виду не узнать.
+    if (niche !== "general" && sent?.id !== undefined) {
+      const k = slotKey(slot);
+      const old = nicheIds[k] ?? [];
+      nicheIds = { ...nicheIds, [k]: [Number(sent.id), ...old].slice(0, 20) };
+      if (old.length) await client.deleteMessages("me", old, { revoke: true }).catch(() => {});
+    } else if (lang === "uz" && sent?.id !== undefined) {
       const old = uzIds;
       uzIds = [Number(sent.id), ...old].slice(0, 20);
       // Прежний узбекский — из «Избранного» долой. Не удалился — он всё
       // равно в списке и за русский не сойдёт.
       if (old.length) await client.deleteMessages("me", old, { revoke: true }).catch(() => {});
     }
-    console.log(`кружок${tag}: загруженный кружок (${lang}) положил в «Избранное»`);
+    console.log(`кружок${tag}: загруженный кружок (${slotKey(slot)}) положил в «Избранное»`);
     return true;
   };
   const checkCircle = async () => {
     try {
       let circles = await savedCircles();
-      for (const lang of CIRCLE_LANGS) {
-        const placed = await placeCircle(lang, circles[lang]).catch((error) => {
-          console.error(`кружок${tag}: не положил кружок (${lang}) в «Избранное» —`, error?.errorMessage ?? error?.message ?? error);
+      // Общие — первыми, как до ниш; кружки ниш — только те, что загружены.
+      for (const slot of CIRCLE_SLOTS) {
+        if (slot.niche !== "general" && !circles.files.has(slotKey(slot))) continue;
+        const current = slot.niche === "general" ? circles[slot.lang] : circles.niche[slotKey(slot)];
+        const placed = await placeCircle(slot, current, circles.files).catch((error) => {
+          console.error(`кружок${tag}: не положил кружок (${slotKey(slot)}) в «Избранное» —`, error?.errorMessage ?? error?.message ?? error);
           return false;
         });
         if (placed) circles = await savedCircles();
       }
       const at = (circle) => (circle ? Number(circle.date) * 1000 : null);
-      await recordCircle(key, { savedAt: at(circles.ru), uzSavedAt: at(circles.uz), uzIds });
+      const nicheSavedAt = {};
+      for (const [k, circle] of Object.entries(circles.niche)) if (circle) nicheSavedAt[k] = at(circle);
+      await recordCircle(key, { savedAt: at(circles.ru), uzSavedAt: at(circles.uz), uzIds, nicheIds, nicheSavedAt });
     } catch (error) {
       console.error(`кружок${tag}: «Избранное» не прочиталось —`, error?.errorMessage ?? error?.message ?? error);
     }

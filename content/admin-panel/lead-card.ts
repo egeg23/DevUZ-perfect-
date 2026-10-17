@@ -350,6 +350,22 @@ export const leadCardDict = defineDict({
       `Wyjdzie ${from} — od tego samego rozmówcy, z którym klient już pisze. Gdy tylko odpowiesz, AI milknie: dalej rozmowa jest Twoja. Ctrl+Enter — wyślij.`,
   },
   lineQueued: { ru: "отправляется…", uz: "yuborilmoqda…", pl: "wysyłanie…" },
+  // «Ответы на возражения» под полем ответа (lib/admin/objections.ts): кнопка
+  // вставляет готовый текст, менеджер правит и отправляет.
+  quickTitle: { ru: "Ответы на возражения", uz: "E’tirozlarga javoblar", pl: "Odpowiedzi na zastrzeżenia" },
+  quickHint: {
+    ru: "Нажмите — текст встанет в поле на языке клиента. Поправьте под разговор и отправьте.",
+    uz: "Bosing: matn mijoz tilida maydonga tushadi. Suhbatga moslab tuzating va yuboring.",
+    pl: "Kliknij: tekst trafi do pola w języku klienta. Popraw pod rozmowę i wyślij.",
+  },
+  quick_what: { ru: "Какой сайт, что это", uz: "Qanday sayt? Bu nima?", pl: "Jaka strona? Co to?" },
+  quick_free: { ru: "Бесплатно, в чём подвох", uz: "Bepulmi? Qayerda hiyla?", pl: "Za darmo? Gdzie haczyk?" },
+  quick_no_links: { ru: "Не открывает ссылки", uz: "Havola ochmayman", pl: "Nie otwieram linków" },
+  quick_boss: { ru: "Передаст руководству", uz: "Rahbarga yetkazaman", pl: "Przekażę szefowi" },
+  quick_social: { ru: "Продают через Инстаграм", uz: "Instagram orqali sotamiz", pl: "Sprzedajemy przez Instagram" },
+  quick_have_site: { ru: "Уже есть сайт", uz: "Sayt bor", pl: "Strona już jest" },
+  quick_expensive: { ru: "Дорого, есть дешевле", uz: "Qimmat", pl: "Drogo" },
+  quick_mockup: { ru: "Макет готов + показ", uz: "Maket tayyor + ko‘rsatish", pl: "Makieta gotowa + pokaz" },
   /** Причина — как её записал скаут или Telegram, не переводится. */
   lineFailed: {
     ru: (why: string) => `не ушло${why ? `: ${why}` : ""}`,

@@ -7,7 +7,7 @@ import { replyInTalkAction } from "@/app/admin/leads/[id]/actions";
 import { EditSent } from "@/components/admin/edit-sent";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { leadCardDict } from "@/content/admin-panel/lead-card";
-import type { TalkLine } from "@/lib/admin/outreach-talk-store";
+import type { TalkLine, TalkView } from "@/lib/admin/outreach-talk-store";
 
 /** Как часто чат спрашивает свежую переписку, пока вкладка открыта. */
 const POLL_MS = 10_000;
@@ -30,6 +30,7 @@ export function TalkChat({
   from,
   aiHandling,
   emptyText,
+  quick = [],
 }: {
   leadId: string;
   prospectId: string;
@@ -38,6 +39,8 @@ export function TalkChat({
   from: string | null;
   aiHandling: boolean;
   emptyText: string;
+  /** «Ответы на возражения»: готовые тексты на языке клиента (talkForLead). */
+  quick?: TalkView["quick"];
 }) {
   const t = usePanelDict(leadCardDict);
   const router = useRouter();
@@ -165,6 +168,24 @@ export function TalkChat({
             {error ? <span className="text-xs text-red-300">{error}</span> : null}
           </div>
           <p className="mt-2 text-xs leading-snug text-faint">{t.replyHint(from)}</p>
+          {quick.length ? (
+            <div className="mt-3" data-quick-replies>
+              <p className="text-xs font-semibold text-muted">{t.quickTitle}</p>
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {quick.map((q) => (
+                  <button
+                    key={q.kind}
+                    type="button"
+                    onClick={() => setText(q.text)}
+                    className="rounded-full border border-line px-3 py-1 text-xs text-text transition hover:border-green/50 hover:text-green active:scale-[0.98]"
+                  >
+                    {t[`quick_${q.kind}`]}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[11px] leading-snug text-faint">{t.quickHint}</p>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </>

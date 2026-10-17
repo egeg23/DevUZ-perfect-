@@ -153,7 +153,8 @@ test("ответ на приветствие: по-русски — кружок
   assert.match(ru, /if \(circle\) \{/);
   assert.match(ru, /kind: "circle"/);
   assert.match(ru, /body: circleBody\(circle\)/);
-  assert.match(ru, /send_after: new Date\(now \+ CIRCLE_AFTER_MS\)/);
+  assert.match(ru, /const sendAfter = new Date\(now \+ CIRCLE_AFTER_MS\)/);
+  assert.match(ru, /send_after: sendAfter/);
   assert.match(ru, /return \{ matched: true, host, verdict: "hello" \};/);
   assert.doesNotMatch(ru, /kind: "text"/);
   assert.match(hello, /await queueHelloLetter\(prospect, lang, now \+ PITCH_AFTER_MS, body\)/);
@@ -245,11 +246,12 @@ test("очередь ответов: пауза, кружок раньше пи�
   assert.match(runner, /await toPeer\(reply, \(to\) => client\.sendFile\(to, \{ file: circle\.media \}\)\)/);
   assert.match(runner, /await toPeer\(reply, \(to\) => client\.sendMessage\(to, \{ message: reply\.body \}\)\)/);
   // Нет кружка или он не ушёл — вместо него письмо, разговор человеку не передаётся.
-  assert.match(runner, /const circle = \(await savedCircles\(\)\)\[reply\.lang\];/);
+  // Кружок ниши (половина «new», sales-after-reply), нет его — общий на языке ответа.
+  assert.match(runner, /const circle = circleFor\(saved, saved\.niche, \{ lang: reply\.lang, niche: reply\.niche \?\? "general" \}\);/);
   assert.match(runner, /await markCircleSkipped\(reply\.id, noCircle\(reply\.lang\)\)/);
   assert.match(runner, /if \(reply\.kind === "circle"\) await markCircleSkipped\(reply\.id, `Кружок не ушёл: \$\{why\}`\);/);
   // Панель видит, есть ли кружок в «Избранном».
-  assert.match(runner, /await recordCircle\(key, \{ savedAt: at\(circles\.ru\), uzSavedAt: at\(circles\.uz\), uzIds \}\)/);
+  assert.match(runner, /await recordCircle\(key, \{ savedAt: at\(circles\.ru\), uzSavedAt: at\(circles\.uz\), uzIds, nicheIds, nicheSavedAt \}\)/);
   assert.match(read("app/admin/accounts/page.tsx"), /circleStates\(\)/);
 });
 

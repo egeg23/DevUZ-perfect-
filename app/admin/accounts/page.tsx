@@ -11,7 +11,14 @@ import { AdminShell } from "@/components/admin/shell";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { CircleUpload } from "@/components/admin/circle-upload";
 import { HelpHint } from "@/components/admin/help-link";
-import { accountsDict, accountsResultDict, circleUploadDict, loginErrorDict } from "@/content/admin-panel/accounts";
+import {
+  accountsDict,
+  accountsResultDict,
+  circleNicheDict,
+  circleNicheNames,
+  circleUploadDict,
+  loginErrorDict,
+} from "@/content/admin-panel/accounts";
 import { helpAnchor } from "@/lib/admin/help";
 import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
@@ -29,7 +36,7 @@ import {
   type WorkAccount,
 } from "@/lib/admin/work-accounts";
 import { accountPeople, accountStaff, accountsActivity, listAccounts } from "@/lib/admin/work-accounts-store";
-import { circleFile, circleStates, type CircleState } from "@/lib/admin/circle-store";
+import { CIRCLE_SLOTS, circleFile, circleFiles, circleStates, missingNicheSlots, slotKey, type CircleState } from "@/lib/admin/circle-store";
 
 export const dynamic = "force-dynamic";
 
@@ -105,7 +112,9 @@ export default async function AccountsPage({
   const notice = r && Object.hasOwn(results, r) ? results[r as keyof typeof results] : null;
 
   const c = pick(circleUploadDict, locale);
-  const [accounts, activity, onAccount, people, circles, uploadedRu, uploadedUz] = await Promise.all([
+  const cn = pick(circleNicheDict, locale);
+  const nicheNames = pick(circleNicheNames, locale);
+  const [accounts, activity, onAccount, people, circles, uploadedRu, uploadedUz, files] = await Promise.all([
     listAccounts(),
     accountsActivity(),
     accountStaff(),
@@ -113,7 +122,13 @@ export default async function AccountsPage({
     circleStates(),
     circleFile("ru"),
     circleFile("uz"),
+    circleFiles(),
   ]);
+  // Кружки ниш (17.10.2026): каких не хватает — ни файла, ни кружка в
+  // «Избранном» хоть одного аккаунта.
+  const missing = missingNicheSlots(files, circles.values());
+  const slotName = (s: { lang: "ru" | "uz"; niche: keyof typeof nicheNames }) => `${nicheNames[s.niche]} (${s.lang === "uz" ? cn.langUz : cn.langRu})`;
+  const nicheRows = CIRCLE_SLOTS.filter((s) => s.niche !== "general");
   // Кружки для писем после «Здравствуйте» (lib/admin/hello-first.ts):
   // русский и узбекский, у каждого аккаунта свой.
   const circleLine = (key: string) => {
@@ -187,6 +202,32 @@ export default async function AccountsPage({
             <CircleUpload have={Boolean(slot.file)} lang={slot.lang} />
           </div>
         ))}
+
+        {/* Кружки по нишам: кружок ниши уходит её компаниям, нет — общий. */}
+        <div className="mt-4 border-t border-line pt-4" id="circle-niches">
+          <h3 className="flex items-center gap-2 text-xs font-semibold text-text">
+            {cn.title}
+            <HelpHint topic={helpAnchor("/admin/accounts", "circle-niches")} />
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-muted">{cn.intro}</p>
+          <p className={`mt-2 text-xs ${missing.length ? "text-gold" : "text-green"}`}>
+            {missing.length ? cn.missing(missing.map(slotName).join(", ")) : cn.allHere}
+          </p>
+          <ul className="mt-3 grid gap-1 text-xs sm:grid-cols-2">
+            {nicheRows.map((s) => {
+              const file = files.get(slotKey(s));
+              return (
+                <li key={slotKey(s)} className="flex min-w-0 items-baseline justify-between gap-2 border-b border-line/50 py-1">
+                  <span className="truncate text-text">{slotName(s)}</span>
+                  <span className={`shrink-0 ${file ? "text-green" : "text-faint"}`}>
+                    {file ? cn.have(tashkentClock(new Date(file.uploadedAt))) : cn.no}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <CircleUpload have={false} lang="ru" chooser />
+        </div>
       </section>
 
       <ul className="mt-6 space-y-3">

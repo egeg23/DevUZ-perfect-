@@ -6,6 +6,8 @@ import { SubmitButton } from "@/components/admin/submit-button";
 import { letterTextsDict, textProblemDict } from "@/content/admin-panel/letter-texts";
 import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
+import { SALES_NEW, abVerdict } from "@/lib/admin/sales-after-reply";
+import { abCounts } from "@/lib/admin/sales-after-reply-store";
 import { pick, type Picked } from "@/lib/admin/i18n";
 import {
   AUTO_ARMS,
@@ -52,11 +54,12 @@ export default async function LetterTextsPage({
   // панели {кто}, в узбекской и польской {kim}.
   const example = staff.panel_locale === "ru" ? EXAMPLE.ru : EXAMPLE.latin;
 
-  const [texts, stats, people, hello] = await Promise.all([
+  const [texts, stats, people, hello, ab] = await Promise.all([
     liveTexts(),
     variantStats(),
     lead ? activeStaff() : Promise.resolve([]),
     savedHello(),
+    abCounts().catch(() => null),
   ]);
   const helloNow = effectiveHello(hello);
   const helloErrors = parseProblems(he).map((p) => problemText(p, tp));
@@ -243,6 +246,60 @@ export default async function LetterTextsPage({
           </ul>
         </section>
       ) : null}
+
+      {/* A/B «Новый заход после ответа» (lib/admin/sales-after-reply.ts): по
+          половинам, победитель — не раньше 100 «Здравствуйте» на каждую. */}
+      <section id="sales-ab" className={BOX}>
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          {t.abTitle}
+          <HelpHint topic={helpAnchor("/admin/prospect", "sales-ab")} />
+        </h2>
+        <p className="mt-1 text-xs leading-relaxed text-faint">{t.abIntro}</p>
+        {!SALES_NEW ? <p className="mt-2 text-xs text-gold">{t.abOff}</p> : null}
+        {ab && ab.some((a) => a.hello > 0) ? (
+          <>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="text-faint">
+                  <tr>
+                    <th className="py-1 pr-3 font-normal" />
+                    <th className="py-1 pr-3 font-normal">{t.abOld}</th>
+                    <th className="py-1 font-normal">{t.abNew}</th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono text-text">
+                  {(
+                    [
+                      [t.abHello, "hello"],
+                      [t.abLive, "live"],
+                      [t.abAfterCircle, "afterCircle"],
+                      [t.abPlus, "plus"],
+                      [t.abMockup, "mockup"],
+                      [t.abPaid, "paid"],
+                    ] as const
+                  ).map(([label, key]) => (
+                    <tr key={key} className="border-t border-line/60">
+                      <td className="py-1 pr-3 font-sans text-muted">{label}</td>
+                      <td className="py-1 pr-3">{ab[0][key]}</td>
+                      <td className="py-1">{ab[1][key]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-xs text-muted">
+              {(() => {
+                const v = abVerdict(ab[0], ab[1]);
+                if (v.kind === "early") return t.abEarly(v.need);
+                if (v.kind === "even") return t.abEven;
+                return t.abLeader(v.arm === "new" ? t.abNew : t.abOld, Math.round(v.chance * 100));
+              })()}
+            </p>
+          </>
+        ) : (
+          <p className="mt-2 text-xs text-faint">{t.abNone}</p>
+        )}
+      </section>
 
       {lead ? (
         <section className={BOX}>

@@ -194,7 +194,8 @@ export function letterSentAt(
   if (!r.pitch_at) return null;
   const pitch = Date.parse(r.pitch_at);
   const letter = thread.find(
-    (m) => m.direction === "out" && m.kind !== "circle" && m.status === "sent" && Date.parse(m.created_at) >= pitch,
+    // Письмо — текст: кружок, строка перед ним (intro) и цена после «+» (price) — не письмо.
+    (m) => m.direction === "out" && (m.kind ?? "text") === "text" && m.status === "sent" && Date.parse(m.created_at) >= pitch,
   );
   return letter ? Date.parse(letter.sent_at ?? letter.created_at) : null;
 }

@@ -14,6 +14,7 @@ import { queueEtas, type Eta, type EtaAccount } from "@/lib/admin/queue-eta";
 import { mainLimitUntil } from "@/lib/admin/account-ban-store";
 import { HELLO_TEXT, helloFor, type HelloTexts } from "@/lib/admin/hello-first";
 import { helloTexts } from "@/lib/admin/hello-text-store";
+import { pickArm } from "@/lib/admin/sales-after-reply";
 import { bloggerSendsLastHour, lastBloggerSendAt } from "@/lib/bloggers/tg-sent";
 import { serviceClient } from "@/lib/supabase";
 
@@ -384,6 +385,12 @@ export async function markSent(
     .eq("id", id)
     .select("message, lead_id, walked, autopilot_at")
     .maybeSingle();
+
+  // Половина A/B «Новый заход после ответа» (lib/admin/sales-after-reply.ts)
+  // — при «Здравствуйте», случайно и поровну, один раз. Отдельным запросом:
+  // пока миграция 0169 не применена, колонки нет, и отметка «ушло» не должна
+  // падать вместе с ней (ошибку база возвращает, а не бросает).
+  await db.from("prospects").update({ sales_arm: pickArm() }).eq("id", id).is("sales_arm", null);
 
   // Прототип, собранный заранее, ушёл вместе с письмом (lib/proto/auto).
   // Запрос прямой, а не через lib/proto/store: тот тянет за собой сборку

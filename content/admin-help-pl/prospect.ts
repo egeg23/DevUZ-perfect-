@@ -285,6 +285,38 @@ export const prospectSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "after-reply",
+        title: "Co wychodzi po odpowiedzi: o nim, cena wcześniej, odpowiedzi na zastrzeżenia",
+        body: [
+          "Właściciel, 17.10.2026, po analizie sprzedaży: ze 188 osób, które dostały kółko, odpowiedziało 63, reszta zamilkła; «+» przysłało 5; makiet w 30 dni 41, płatności 0. Po kółku pisali «Какой сайт?», «Что значит прототип?», po makiecie «дорого», a często «передам руководству». Dlatego w połowie kontaktów po odpowiedzi na «Здравствуйте» idzie nowe podejście, a w drugiej jak było: tak widać, czy pomaga ([A/B](#prospect-sales-ab)).",
+          "**Autoodpowiedź to nie odpowiedź.** «Мы отвечаем в рабочее время», «Ваше сообщение передано менеджеру», «Xabaringiz qabul qilindi» panel rozpoznaje po słowach: kółko, wiadomość i AI na nie milczą, ty nie dostajesz wiersza, kontakt czeka na żywą odpowiedź. W rozmowie taka wiadomość jest widoczna, ale nie liczy się jako «odpowiedzieli». To dla wszystkich kontaktów, nie tylko dla nowej połowy.",
+          "**Linijka przed kółkiem i kółko branży.** Kilka sekund przed kółkiem wychodzi jedna linijka: «Это про ваш сайт clinic.uz, 40 секунд», po uzbecku «Bu sizning saytingiz … haqida, 40 soniya». Adres tekstem, bez linku i obrazka strony. Nie ma strony: o wizytówce na mapach albo profilu na Instagramie, zależnie od tego, co mamy. Do stomatologii wychodzi kółko o stomatologii, do producenta mebli o meblach; nie ma kółka branży, wychodzi ogólne. Kółka branż nagrywają właściciel i kierownik.",
+          "**Cena wcześniej.** Zaraz po «+», razem z linkiem do warunków makiety, wychodzi jedna linijka: «Макет бесплатно. Понравится, лендинг от 500 $, можно частями: половина при старте, половина после запуска, когда всё работает». Cena jest ta sama co w promocji po makiecie i zmienia się tylko tam.",
+          "**Gotowe odpowiedzi w rozmowie AI.** Na «Какой сайт?», «Бесплатно?», «Не перехожу по ссылкам», «Передам руководству», «Продаём через Инстаграм», «Сайт уже есть», «Дорого» AI nie pisze od siebie: wychodzi gotowy tekst. Te same teksty masz jako przyciski ([odpowiedzi na zastrzeżenia](#prospect-objections)).",
+          "**Pytanie po 2 dniach.** Napisali «передам руководству» i zamilkli: po dwóch dobach, w godzinach pracy (dni robocze, 10:00–18:00), wychodzi dokładnie jedno pytanie: «Руководитель успел посмотреть?». Klient odpowiedział albo sam do niego napisałeś: pytania nie ma. To jedyny wyjątek od zasady «nie odpowiedział, nic nie wysyłamy»: odpowiedź człowiek obiecał sam.",
+          "**AI pisze jak człowiek.** Odpowiedź AI wychodzi nie wcześniej niż 40–120 sekund po wiadomości klienta, jak gdy człowiek pisze. Przed makietą to jedno-dwa krótkie zdania, bez «Отлично!» i «Конечно!» na początku i bez list. Nie przeszła tej kontroli: nie wychodzi, a rozmowa trafia do ciebie. To dla wszystkich kontaktów.",
+          "**Pokaz zamiast linku.** Gdy makieta wyszła, w warunkach promocji nowej połowy jest linijka «Покажу за 15 минут: по видео или подъеду к вам». Zgodził się: termin ustalasz ty.",
+        ],
+      },
+      {
+        id: "objections",
+        title: "Przyciski «Odpowiedzi na zastrzeżenia» w karcie leada",
+        body: [
+          "Pod polem odpowiedzi w rozmowie karty leada jest blok **«Odpowiedzi na zastrzeżenia»**: «Jaka strona? Co to?», «Za darmo? Gdzie haczyk?», «Nie otwieram linków», «Przekażę szefowi», «Sprzedajemy przez Instagram», «Strona już jest», «Drogo». Kliknięcie wstawia gotowy tekst do pola w języku klienta (rozmowa po uzbecku: po uzbecku), z adresem jego strony i słowami jego branży. Popraw pod rozmowę i kliknij «Wyślij». Przyciski są przy wszystkich kontaktach.",
+          "Co jest w tekstach. Na «дорого»: pytanie «С чем сравниваете?», ilu klientów w jego branży zwraca koszt strony, i drabinka: naprawimy 3 błędy na stronie w 2 dni za 150 $, strona-wizytówka 250 $, landing 500 $, strona firmowa 1 000 $, płatność w częściach: połowa na start, połowa po uruchomieniu. Na «сайт уже есть»: naprawa 3 błędów za 150 $. Na «передам руководству»: «Спасибо! Перешлите ему» i trzy linijki, które wygodnie przesłać dalej. Na «бесплатно?»: szczerze, po co nam to: pokazać pracę przed pieniędzmi.",
+          "W nowej połowie kontaktów jest jeszcze przycisk **«Makieta gotowa + pokaz»**: «Макет готов:» (wstaw link) i «Покажу за 15 минут: по видео или подъеду к вам».",
+        ],
+      },
+      {
+        id: "sales-ab",
+        title: "Blok «Nowe podejście po odpowiedzi»: A/B",
+        body: [
+          "W «Teksty wiadomości i A/B» blok **«Nowe podejście po odpowiedzi»** porównuje dwie połowy kontaktów. Połowa przypada kontaktowi losowo i po równo w chwili pierwszego powitania: **«Jak było»** to ogólne kółko i dotychczasowa rozmowa, **«Nowe podejście»** to wszystko z [co wychodzi po odpowiedzi](#prospect-after-reply).",
+          "Wiersze według połów: powitania (ile wyszło), odpowiedzieli ludzie (bez autoodpowiedzi), odpowiedzieli po kółku, «+», makieta wysłana, płatność (lead «wygrany»). Liczą się kontakty od 17.10.2026, wcześniejsze nie wchodzą.",
+          "Zwycięzcę panel podaje nie wcześniej niż po 100 powitaniach na każdą połowę, według udziału «+»: na przykład «Nowe podejście» częściej prowadzi do «+», pewność 92%. Wcześniej: za wcześnie. Nowe podejście można wyłączyć tylko w kodzie, jedną linijką; wtedy blok o tym mówi.",
+        ],
+      },
+      {
         id: "fact-check",
         title: "Sprawdzenie strony na faktach i ludzki język",
         body: [
