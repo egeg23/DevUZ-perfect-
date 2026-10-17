@@ -371,7 +371,12 @@ export type HqPersonInput = {
   tasks: readonly HqTask[];
   /** Касания по дням за неделю, старший день первым (dailyCounts). */
   touchDays?: readonly number[];
+  /** Показы, названные цены и оплаты — сегодня и с понедельника (lib/admin/sales-stages.ts). */
+  sales?: { today: PersonSalesCount; week: PersonSalesCount };
 };
+
+/** То же, что PersonSales в lib/admin/sales-stages.ts: здесь без импорта, чтобы не было круга. */
+export type PersonSalesCount = { shown: number; priced: number; paid: number };
 
 export type HqPerson = {
   id: string;
@@ -396,6 +401,8 @@ export type HqPerson = {
   mood: Mood;
   /** Касания по дням: 7 чисел, сегодня — последнее. */
   touchDays: number[];
+  /** Показы, цены, оплаты — сегодня и с понедельника. */
+  sales: { today: PersonSalesCount; week: PersonSalesCount };
 };
 
 /**
@@ -457,6 +464,7 @@ export function personOf(input: HqPersonInput, now: Date): HqPerson {
     overdue,
     mood,
     touchDays: [...(input.touchDays ?? Array(7).fill(0))],
+    sales: input.sales ?? { today: { shown: 0, priced: 0, paid: 0 }, week: { shown: 0, priced: 0, paid: 0 } },
   };
 }
 

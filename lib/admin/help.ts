@@ -125,6 +125,8 @@ export const PAGE_TOPICS: readonly { prefix: string; section: string; item: stri
   { prefix: "/admin/learn/", section: "/admin/learn", item: "courses" },
   // «История задач» — своя страница блока «Задачи» на главной.
   { prefix: "/admin/tasks", section: "/admin", item: "tasks-history" },
+  // Список компаний одной ступени продажи — сюда ведут числа блока на «Главной».
+  { prefix: "/admin/hq/stages", section: "/admin/hq", item: "stages" },
 ];
 
 /** Куда ведёт «Как пользоваться разделом» с этой страницы. null — страница без инструкции. */

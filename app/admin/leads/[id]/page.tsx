@@ -69,6 +69,10 @@ import {
   type LeadOrigin,
 } from "@/lib/qualify/origin";
 import { activeStaff } from "@/lib/admin/team";
+import { InterestButton, PricedButton, ShownButton, markResultText } from "@/components/admin/sales-stages";
+import { salesStagesDict } from "@/content/admin-panel/sales-stages";
+import { STAGES, seesStagesMoney } from "@/lib/admin/sales-stages";
+import { dealForLead } from "@/lib/admin/sales-stages-store";
 import { approves, openTransferFor } from "@/lib/admin/transfers";
 
 export const dynamic = "force-dynamic";
@@ -118,7 +122,7 @@ export default async function LeadPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ r?: string; contact?: string; transcript?: string; inn?: string }>;
+  searchParams: Promise<{ r?: string; contact?: string; transcript?: string; inn?: string; mk?: string }>;
 }) {
   const staff = await requireStaff();
   const locale = staff.panel_locale;
@@ -130,6 +134,7 @@ export default async function LeadPage({
     contact: wantsContact,
     transcript: wantsTranscript,
     inn: innResult,
+    mk: markResult,
   } = await searchParams;
 
   const lead = await leadById(id);
@@ -233,13 +238,17 @@ export default async function LeadPage({
   const transcript =
     wantsTranscript === "1" ? await revealTranscript(lead.id, staff, ip) : null;
 
-  const [reminders, messages, talk] = await Promise.all([
+  const [reminders, messages, talk, deal] = await Promise.all([
     remindersFor(lead.id),
     messagesFor(lead.id),
     // Первичка по касанию: есть только у лидов, которые мы завели сами,
     // написав владельцу сайта первыми.
     talkForLead(lead.id),
+    // Ступени продажи — те же правила, что на «Главной» (lib/admin/sales-stages).
+    dealForLead(lead.id).catch(() => null),
   ]);
+  const ss = pick(salesStagesDict, locale);
+  const marked = markResultText(markResult, ss);
   const open = reminders.filter((item) => !item.done_at);
 
   return (
@@ -508,6 +517,37 @@ export default async function LeadPage({
               : t.heldByOther}
           </p>
         )}
+      </section>
+
+      {/* ── Ступени продажи ─────────────────────────────────────────── */}
+      <section id="stages" className="mt-4 scroll-mt-24 rounded-xl border border-line bg-surface px-5 py-4">
+        <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-faint">
+          {ss.marksTitle}
+          <HelpHint topic={helpAnchor("/admin", "sales-marks")} label={ss.marksTitle} />
+        </p>
+        {marked ? (
+          <p role="status" className={`mt-2 text-sm ${marked.ok ? "text-green" : "text-gold"}`}>
+            {marked.text}
+          </p>
+        ) : null}
+        <ol className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
+          {STAGES.map((st) => (
+            <li key={st} className={deal?.at[st] ? "text-text" : "text-faint"}>
+              {deal?.at[st] ? "✓" : "·"} {ss[st]}
+              {deal?.at[st] ? <span className="text-xs text-faint"> — {when(deal.at[st] as string)}</span> : null}
+              {st === "priced" && deal?.priceUsd && seesStagesMoney(staff.role) ? (
+                <span className="text-xs text-gold"> · ${deal.priceUsd}</span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+        {mine ? (
+          <div className="mt-3 flex flex-wrap items-start gap-2">
+            {!deal?.at.interest ? <InterestButton leadId={lead.id} prospectId={null} back={`/admin/leads/${lead.id}`} s={ss} /> : null}
+            <ShownButton leadId={lead.id} prospectId={null} back={`/admin/leads/${lead.id}`} s={ss} />
+            <PricedButton leadId={lead.id} prospectId={null} back={`/admin/leads/${lead.id}`} s={ss} />
+          </div>
+        ) : null}
       </section>
 
       {/* ── Первичка по касанию ─────────────────────────────────────── */}

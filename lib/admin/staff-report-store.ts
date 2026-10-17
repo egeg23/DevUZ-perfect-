@@ -11,6 +11,8 @@ import {
   type StaffDay,
 } from "@/lib/admin/staff-report";
 import { staleCounts } from "@/lib/admin/lead-tidy-store";
+import { personSales, weekStartOf } from "@/lib/admin/sales-stages";
+import { loadDeals } from "@/lib/admin/sales-stages-store";
 import { touchesOnDay } from "@/lib/admin/touch-store";
 import { TRACKED } from "@/lib/admin/usage";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
@@ -83,7 +85,7 @@ export async function loadStaffDay(day: string): Promise<StaffDay[]> {
   const from = dayStartUtc(day);
   const to = new Date(from.getTime() + 24 * 3600_000);
 
-  const [{ data: rows }, touches, { data: views }, { data: presence }, { data: audit }, { data: burned }, stale] = await Promise.all([
+  const [{ data: rows }, touches, { data: views }, { data: presence }, { data: audit }, { data: burned }, stale, deals] = await Promise.all([
     db.from("touch_portions").select("staff_id, outcome, replaces, source").eq("day", day),
     touchesOnDay(ids, day),
     db.from("panel_usage").select("staff_id, section, views, last_at").eq("day", day).in("staff_id", ids),
@@ -104,7 +106,9 @@ export async function loadStaffDay(day: string): Promise<StaffDay[]> {
       .lt("closed_at", to.toISOString())
       .limit(5000),
     staleCounts(ids, new Date(Math.min(Date.now(), to.getTime()))).catch(() => new Map<string, number>()),
+    loadDeals(new Date(Math.min(Date.now(), to.getTime())), 14).catch(() => null),
   ]);
+  const weekFrom = weekStartOf(new Date(from.getTime() + 12 * 3600_000));
   const burnedBy = new Map<string, number>();
   for (const b of burned ?? []) burnedBy.set(b.staff_id as string, (burnedBy.get(b.staff_id as string) ?? 0) + 1);
 
@@ -165,6 +169,12 @@ export async function loadStaffDay(day: string): Promise<StaffDay[]> {
       leadsTaken: taken.get(person.id) ?? 0,
       offersBurned: burnedBy.get(person.id) ?? 0,
       staleLeads: stale.get(person.id) ?? 0,
+      sales: deals
+        ? {
+            day: personSales(deals, person.id, from.getTime(), to.getTime()),
+            week: personSales(deals, person.id, weekFrom, to.getTime()),
+          }
+        : undefined,
     };
   });
 }

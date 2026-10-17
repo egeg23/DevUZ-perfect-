@@ -7,9 +7,11 @@ import { take as takeAction } from "@/app/admin/leads/[id]/actions";
 import { HelpHint } from "@/components/admin/help-link";
 import { ContactButton, Countdown, MockupPassword } from "@/components/admin/hq-my-client";
 import { LinkPending } from "@/components/admin/link-pending";
+import { MyStagesCard, ShownButton, markResultText } from "@/components/admin/sales-stages";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { hqDict } from "@/content/admin-panel/hq";
 import { hqMyDict } from "@/content/admin-panel/hq-my";
+import { salesStagesDict } from "@/content/admin-panel/sales-stages";
 import { helpAnchor } from "@/lib/admin/help";
 import { clockOf, deltaOf, type Trend } from "@/lib/admin/hq";
 import { MY_LIST_MAX, sinceOf, untilOf, type ContactRow, type Hot, type MockupLine, type Overdue, type StatusTarget } from "@/lib/admin/hq-my";
@@ -284,7 +286,7 @@ function ContactItem({ c, t, now }: { c: ContactRow; t: T; now: Date }) {
 
 /* ── Мои макеты ──────────────────────────────────────────────────────── */
 
-function MockupItem({ m, t, h, now }: { m: MockupLine; t: T; h: H; now: Date }) {
+function MockupItem({ m, t, h, s, now }: { m: MockupLine; t: T; h: H; s: Picked<typeof salesStagesDict>; now: Date }) {
   const openH = m.openUntil ? Math.max(1, Math.ceil((Date.parse(m.openUntil) - now.getTime()) / 3600_000)) : null;
   const access = m.ref.startsWith("s:") ? t.mockPublic : m.closedAt ? t.mockClosed(whenOf(m.closedAt, now)) : openH ? t.mockOpenFor(openH) : null;
   const promo = m.status === "approved" ? t.mockApproved : m.promoLive ? t.mockPromo(span(untilOf(m.expiresAt, now), h)) : t.mockPromoOver;
@@ -304,6 +306,14 @@ function MockupItem({ m, t, h, now }: { m: MockupLine; t: T; h: H; now: Date }) 
         <li className={m.promoLive ? "text-gold" : "text-faint"}>⏳ {promo}</li>
         {access ? <li className={m.closedAt ? "text-green" : "text-gold"}>🔒 {access}</li> : null}
       </ul>
+      {/* Показ макета — ступень продажи, которую база сама не узнает. */}
+      <div className="mt-2.5" data-shown={m.shownAt ? "yes" : "no"}>
+        {m.shownAt ? (
+          <p className="text-xs text-green">🎬 {s.shownOn(whenOf(m.shownAt, now))}</p>
+        ) : m.leadId || m.prospectId ? (
+          <ShownButton leadId={m.leadId} prospectId={m.leadId ? null : m.prospectId} back="/admin/hq" s={s} />
+        ) : null}
+      </div>
       <div className="mt-2.5">
         <MockupPassword mockupRef={m.ref} name={m.client || m.name} open={!m.closedAt && !m.ref.startsWith("s:")} />
       </div>
@@ -340,6 +350,7 @@ export function MyHqView({
   name,
   now,
   result,
+  mark,
 }: {
   my: MyHq;
   locale: PanelLocale;
@@ -347,8 +358,12 @@ export function MyHqView({
   now: Date;
   /** Чем кончилось нажатие статуса: из адреса после действия (?st=…&due=…). */
   result?: { st: string; due?: string | null } | null;
+  /** Чем кончилась отметка ступени продажи (?mk=…). */
+  mark?: string;
 }) {
   const t = pick(hqMyDict, locale);
+  const s = pick(salesStagesDict, locale);
+  const marked = markResultText(mark, s);
   const h = pick(hqDict, locale);
   const w = my.work;
   // Кнопки статуса у лида — один раз на странице, у первого упоминания
@@ -410,6 +425,12 @@ export function MyHqView({
         </p>
       ) : null}
 
+      {marked ? (
+        <p role="status" className={`rounded-2xl border px-4 py-3 text-sm ${marked.ok ? "border-green/30 bg-green/10 text-green" : "border-red-400/30 bg-red-500/10 text-red-200"}`}>
+          {marked.text}
+        </p>
+      ) : null}
+
       <div className="grid gap-5 sm:gap-6 lg:grid-cols-3 lg:items-start">
         <div className="flex flex-col gap-5 sm:gap-6 lg:col-span-2">
           <section className={`${CARD} p-4 sm:p-5`} aria-labelledby="my-hot" data-block="hot">
@@ -456,6 +477,7 @@ export function MyHqView({
         </div>
 
         <div className="flex flex-col gap-5 sm:gap-6">
+          {my.stages ? <MyStagesCard stages={my.stages} locale={locale} /> : null}
           <section className={`${CARD} p-4 sm:p-5`} aria-labelledby="my-work" data-block="work">
             <SectionHead id="my-work" title={t.workTitle} hint={<HelpHint topic={helpAnchor("/admin/hq", "my-work")} />} tone="blue" />
             <Link href="/admin/prospect" className="mt-3 block rounded-2xl bg-surface-2/70 px-3 py-2.5 transition hover:bg-line">
@@ -488,7 +510,7 @@ export function MyHqView({
             {my.mockups.length ? (
               <ul className="mt-3 flex flex-col gap-2.5">
                 {mockups.map((m) => (
-                  <MockupItem key={m.id} m={m} t={t} h={h} now={now} />
+                  <MockupItem key={m.id} m={m} t={t} h={h} s={s} now={now} />
                 ))}
               </ul>
             ) : (

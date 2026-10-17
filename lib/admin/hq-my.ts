@@ -418,6 +418,8 @@ export function contactsOf(input: MyInput & { prospects: readonly MyProspect[] }
 /* ── «Мои макеты» ────────────────────────────────────────────────────── */
 
 export type MockupLine = MyMockup & {
+  /** Отмечен показ макета клиенту (lib/admin/sales-stages.ts); null — ещё нет. */
+  shownAt?: string | null;
   /** Акция 48 часов идёт. */
   promoLive: boolean;
   /** Открыт за последний час — «смотрит прямо сейчас». */

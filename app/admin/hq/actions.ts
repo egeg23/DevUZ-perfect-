@@ -15,6 +15,8 @@ import { decideTidy } from "@/lib/admin/lead-tidy-store";
 import { giveLead, revealContact } from "@/lib/admin/ownership";
 import { contactLink } from "@/lib/contact";
 import { opens } from "@/lib/admin/roles";
+import { MARK_KINDS, SHOWN_VIA, parseAmount, type MarkKind, type ShownVia } from "@/lib/admin/sales-stages";
+import { markStage } from "@/lib/admin/sales-stages-store";
 import { createTasks, deliverAssignment } from "@/lib/admin/task-store";
 import { QUICK_DUES, messageWindow, parseLocalInput, quickDue, type QuickDue } from "@/lib/admin/tasks";
 
@@ -211,4 +213,40 @@ export async function myContactAction(leadId: string): Promise<ContactOpen> {
   if (!contact) return null;
   const view = contactLink({ contact_handle: contact.handle, contact_kind: contact.kind });
   return { url: view.url, label: view.label };
+}
+
+/* ── Ступени продажи: «Есть интерес», «Показал макет», «Назвал цену» ── */
+
+/** Куда вернуться после отметки: только страница панели, не чужой адрес. */
+function backOf(raw: unknown): string {
+  const back = String(raw ?? "");
+  return /^\/admin(\/[A-Za-z0-9/_-]*)?$/.test(back) ? back : HREF;
+}
+
+/**
+ * Отметить ступень продажи — из карточки лида и из «Моих макетов» на
+ * «Главной». Кто может — решает markStage (canMark): менеджер — только по
+ * своему, руководитель и владелец — по любому. Отметка — в sales_marks и в
+ * журнал (lead.sales_marked). Модели здесь нет.
+ */
+export async function markStageAction(formData: FormData): Promise<void> {
+  const staff = await currentStaff();
+  const back = backOf(formData.get("back"));
+  if (!staff) redirect("/admin");
+  const kind = String(formData.get("kind") ?? "");
+  const id = (name: string) => {
+    const v = String(formData.get(name) ?? "");
+    return /^[0-9a-f-]{36}$/i.test(v) ? v : null;
+  };
+  const viaRaw = String(formData.get("via") ?? "");
+  const via = (SHOWN_VIA as readonly string[]).includes(viaRaw) ? (viaRaw as ShownVia) : null;
+  const result = (MARK_KINDS as readonly string[]).includes(kind)
+    ? await markStage(
+        { kind: kind as MarkKind, leadId: id("lead"), prospectId: id("prospect"), via, amountUsd: parseAmount(formData.get("amount")) },
+        staff,
+        await requestIp(),
+      )
+    : "bad";
+  revalidatePath(back);
+  redirect(`${back}?mk=${result}${back.startsWith("/admin/leads/") ? "#stages" : ""}`);
 }

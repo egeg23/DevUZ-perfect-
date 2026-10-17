@@ -30,10 +30,10 @@ export const dynamic = "force-dynamic";
 export default async function HqPage({
   searchParams,
 }: {
-  searchParams: Promise<{ to?: string; repeat?: string; st?: string; due?: string }>;
+  searchParams: Promise<{ to?: string; repeat?: string; st?: string; due?: string; mk?: string }>;
 }) {
   const staff = await requireSection("/admin/hq");
-  const { to, repeat, st, due } = await searchParams;
+  const { to, repeat, st, due, mk } = await searchParams;
   const now = new Date();
   if (!seesEveryone(staff.role)) {
     const my = await loadMyHq(staff, now);
@@ -48,6 +48,7 @@ export default async function HqPage({
           name={staff.display_name}
           now={now}
           result={st ? { st, due: due && !Number.isNaN(Date.parse(due)) ? due : null } : null}
+          mark={mk}
         />
       </AdminShell>
     );

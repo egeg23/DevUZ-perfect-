@@ -92,6 +92,29 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "stages",
+          title: "«Sotuv bosqichlari»",
+          body: {
+            admin: [
+              "«Sotuv bosqichlari» bloki pulsda birinchi turadi. U urinishlarni emas, pulgacha bo‘lgan yo‘lni ko‘rsatadi: nechta kompaniya va lid har bir bosqichga yetdi — «yozdik», «javob berdi», «qiziqish», «maket yuborildi», «maket ko‘rsatildi», «narx aytildi», «to‘lov». «7 kun» ustuni — oxirgi 7 × 24 soat, raqam ostida — undan oldingi 7 kun bilan solishtirish; «30 kun» — bir oy, chapdagi chiziq uni ko‘z bilan ko‘rsatadi. Har bir raqam shu kompaniya va lidlar ro‘yxatini ochadi: kimniki, bosqichga qachon yetdi va keyingisiga yetdimi. U yerda bosqich va davr ham almashtiriladi.",
+              "Raqamlar qayerdan. «yozdik» — salomlashish xabari yoki xodimning aloqasi ketdi; o‘zi kelgan mijozlar bu yerga kirmaydi. «javob berdi» — mijozning jonli javobi, saytdan, chatdan yoki botdan kelgan ariza esa allaqachon javob. «qiziqish» — «+» yoki prototip so‘rash, avtoprogon lidi rozilik bilan, «qo‘ng‘iroq qiling» yoki «yuboring», mijoz o‘zi qoldirgan yoki menejer qo‘lda ochgan ariza yoki [lid kartochkasidagi](#leads-sales-marks) «Qiziqish bor» tugmasi. «maket yuborildi» — maket havolasining birinchi yuborilishi. «maket ko‘rsatildi» — faqat «Maketni ko‘rsatdim» belgisi: video orqali yoki yuzma-yuz ko‘rsatishni baza o‘zi ko‘rmaydi. «narx aytildi» — «+» dan keyin mijozga ketgan narx qatori yoki summa bilan «Narxni aytdim» belgisi. «to‘lov» — liddan ochilgan loyiha bo‘yicha to‘lov yoki «Yutdik» holati. Keyingi bosqichga yetgan oldingilarida ham hisoblanadi. Hammasini kod hisoblaydi, neyrotarmoqsiz.",
+              "Pastda — «Qayerda tushib qoladi — 30 kunda»: so‘z bilan, bir bosqichdagilardan nechtasi keyingisiga yetdi va nechtasi tushib qoldi, masalan «javob bergan 188 tadan 12 tasi qiziqish bildirdi». Eng ko‘p tushib qoladigan joy — sotuv tiqilib qoladigan joy. Menejerlar ko‘rsatishni belgilamasa, «maket ko‘rsatildi» bosqichi nol bo‘ladi va undan keyingi hammasi aslidan yomonroq ko‘rinadi — shuning uchun har bir ko‘rsatishni belgilash kerak.",
+              "30 kunda to‘lovgacha yetgan bitimlar bo‘yicha tushgan summani faqat siz ko‘rasiz — rahbar uni ko‘rmaydi. Pastdagi «Lidlar» kartochkasidagi katta raqam halol yozilgan: «ishda» — bu asosan biz yozgan kompaniyalar, chunki ilgari deyarli har bir aloqa lidga aylanardi.",
+            ],
+            head: [
+              "«Sotuv bosqichlari» bloki pulsda birinchi turadi. U urinishlarni emas, pulgacha bo‘lgan yo‘lni ko‘rsatadi: nechta kompaniya va lid har bir bosqichga yetdi — «yozdik», «javob berdi», «qiziqish», «maket yuborildi», «maket ko‘rsatildi», «narx aytildi», «to‘lov». «7 kun» ustuni — oxirgi 7 × 24 soat, raqam ostida — undan oldingi 7 kun bilan solishtirish; «30 kun» — bir oy, chapdagi chiziq uni ko‘z bilan ko‘rsatadi. Har bir raqam shu kompaniya va lidlar ro‘yxatini ochadi: kimniki, bosqichga qachon yetdi va keyingisiga yetdimi. U yerda bosqich va davr ham almashtiriladi.",
+              "Raqamlar qayerdan. «yozdik» — salomlashish xabari yoki xodimning aloqasi ketdi; o‘zi kelgan mijozlar bu yerga kirmaydi. «javob berdi» — mijozning jonli javobi, saytdan, chatdan yoki botdan kelgan ariza esa allaqachon javob. «qiziqish» — «+» yoki prototip so‘rash, avtoprogon lidi rozilik bilan, «qo‘ng‘iroq qiling» yoki «yuboring», mijoz o‘zi qoldirgan yoki menejer qo‘lda ochgan ariza yoki [lid kartochkasidagi](#leads-sales-marks) «Qiziqish bor» tugmasi. «maket yuborildi» — maket havolasining birinchi yuborilishi. «maket ko‘rsatildi» — faqat «Maketni ko‘rsatdim» belgisi: video orqali yoki yuzma-yuz ko‘rsatishni baza o‘zi ko‘rmaydi. «narx aytildi» — «+» dan keyin mijozga ketgan narx qatori yoki summa bilan «Narxni aytdim» belgisi. «to‘lov» — liddan ochilgan loyiha bo‘yicha to‘lov yoki «Yutdik» holati. Keyingi bosqichga yetgan oldingilarida ham hisoblanadi. Hammasini kod hisoblaydi, neyrotarmoqsiz.",
+              "Pastda — «Qayerda tushib qoladi — 30 kunda»: so‘z bilan, bir bosqichdagilardan nechtasi keyingisiga yetdi va nechtasi tushib qoldi, masalan «javob bergan 188 tadan 12 tasi qiziqish bildirdi». Eng ko‘p tushib qoladigan joy — sotuv tiqilib qoladigan joy. Menejerlar ko‘rsatishni belgilamasa, «maket ko‘rsatildi» bosqichi nol bo‘ladi va undan keyingi hammasi aslidan yomonroq ko‘rinadi — shuning uchun har bir ko‘rsatishni belgilash kerak.",
+              "Bu blokda rahbarga pul ko‘rinmaydi: tushumlar summasi faqat egasida. Pastdagi «Lidlar» kartochkasidagi katta raqam halol yozilgan: «ishda» — bu asosan biz yozgan kompaniyalar, chunki ilgari deyarli har bir aloqa lidga aylanardi.",
+            ],
+            manager: [
+              "Sotuv bosqichlari — mijozning birinchi xabardan to‘lovgacha yo‘li: «yozdik», «javob berdi», «qiziqish», «maket yuborildi», «maket ko‘rsatildi», «narx aytildi», «to‘lov». «Haftalik bosqichlarim» blokida va bosqich ro‘yxatida — faqat sizning kompaniya va lidlaringiz: siz yuritayotganlar va ko‘rsatish yoki narxni siz belgilaganlar. Har bir plitka ro‘yxatni ochadi: kim, bosqichga qachon yetdi va keyingisiga yetdimi.",
+              "Raqamlar qayerdan. «javob berdi» — mijozning jonli javobi; «qiziqish» — «+», prototip so‘rash, «qo‘ng‘iroq qiling», «yuboring» yoki sizning «Qiziqish bor» tugmangiz; «maket yuborildi» — maket havolasining birinchi yuborilishi; «maket ko‘rsatildi» — faqat sizning «Maketni ko‘rsatdim» belgingiz; «narx aytildi» — «+» dan keyingi narx qatori yoki «Narxni aytdim» belgisi; «to‘lov» — loyiha bo‘yicha to‘lov yoki «Yutdik» holati. Kod hisoblaydi, neyrotarmoqsiz.",
+              "Ko‘rsatishni belgilamasangiz, u hech qayerda bo‘lmaydi: na me’yoringizda, na rahbarda, na soat 18:00 dagi hisobotda. Hammaga go‘yo maket ketgan-u, mijoz yo‘qolgandek ko‘rinadi.",
+            ],
+          },
+        },
+        {
           id: "attention",
           roles: ["admin", "head"],
           title: "«E’tibor talab qiladi»",
@@ -119,6 +142,16 @@ export const uz: HelpCopy = {
             "Har bir menejer va rahbarga kartochka. Bosh harflar yonidagi yashil nuqta — kishi «onlayn»: oxirgi 30 daqiqada panelda bo‘lgan, biror ish qilgan yoki botda tugma bosgan. Aks holda — oxirgi marta qachon bo‘lgani. Kunduzi issiq lidlar avval joyida bo‘lganlarga taklif qilinadigan o‘lchov ham shu.",
             "Uchta raqam: bugungi aloqalar (va kunlik porsiya — belgilangandan qanchasi bajarilgan), «ishda» lidlar, ochiq vazifalar. Ostida — belgilar: muddati o‘tgan, kuyib ketgan takliflar, 7+ kun harakatsiz lidlar, «porsiya bajarildi» yoki «bugun jim». Avval xavotirli belgili kartochkalar, keyin onlayn bo‘lganlar turadi. Raqamlar ustida — «7 kunda» ustunchalari: kishi oxirgi yetti kunning har birida nechta aloqa qilgani, bugungisi yorqinroq. Ustunchaga sichqonchani olib boring — kun va son ko‘rinadi. **«botga javobsiz N»** belgisi — bot uning nechta lidini so‘ragani va «🏆 / ❌ / ⏳»ni kutayotgani; beshtadan ko‘p bo‘lsa — belgi sariq va «E’tibor talab qiladi»da qator.",
             "Kartochkani bosing — tafsilotlar ochiladi: kishi bugun panelga birinchi marta soat nechada kirgani va unda qancha bo‘lgani, hamda «Vazifa qo‘yish» va «Uning lidlarini ochish» tugmalari.",
+          ],
+        },
+        {
+          id: "show-norm",
+          title: "Me’yor — haftada 2 ta maket ko‘rsatish",
+          roles: ["admin", "head"],
+          body: [
+            "Menejer me’yori — haftada mijozlarga 2 ta maket ko‘rsatish, Toshkent vaqti bilan dushanbadan. «Bugun jamoa»dagi har bir kartochkada hafta bo‘yicha «ko‘rsatish N / 2» belgisi bor, me’yor bajarilganda yashil. Kartochkani oching — u yerda bugun va dushanbadan beri ko‘rsatishlar, aytilgan narxlar va to‘lovlar. Aloqalar — urinishlar, bu uch raqam esa pulga olib boradigan narsa.",
+            "Soat 18:00 dagi xodimlar hisobotida har birida 🎯 qatori bor: kun va hafta bo‘yicha ko‘rsatish, narx va to‘lovlar, «nimaga qarash kerak» qismida esa jamoa bo‘yicha kunlik jami.",
+            "Har dushanba soat 10:00 da bot qator yuboradi: o‘tgan hafta kim birorta ham ko‘rsatish qilmagan, garchi uning mijozlariga maketlar ketgan bo‘lsa ham (o‘tgan yoki undan oldingi haftada). Qator haftada bir marta va faqat «Hisobotlar» belgisi bilan keladi; bunday odam bo‘lmasa — qator yo‘q. O‘zingizni ro‘yxatda ko‘rmaysiz.",
           ],
         },
         {
@@ -212,6 +245,16 @@ export const uz: HelpCopy = {
             "14 kun ichida mijozlaringizga ketgan maketlar va aksiyasi hali davom etayotganlarning hammasi. Sizniki — siz mas’ul bo‘lgan maket: sizni «Maketlar»da tayinlashgan, mijozning lidini olib borasiz yoki unga aloqa yozgansiz ([Maketlar](/admin/mockups) bo‘limidagi tartib bilan bir xil). Tepada — eng oldin tugaydigan aksiyalar.",
             "Har biri bo‘yicha: havola mijozga qachon ketgan (shu daqiqadan 48 soatlik aksiya va parolsiz bir sutka boshlanadi); mijoz ochganmi, oxirgi marta qachon va necha marta; aksiya tugashiga qancha qolgan; hali havola orqali ochiqmi va necha soat, yoki allaqachon parol bilan yopilgan. Oxirgi bir soatda ochgan bo‘lsa — qator yonadi: yozish payti.",
             "«Parol yaratish» — «Maketlar»dagi kabi 24 soatlik parol: bir marta ko‘rsatiladi, yonida — «Mijoz uchun nusxalash» va «Parolni nusxalash». Maket hali havola orqali ochiq bo‘lsa, birinchi parol uni yopadi — panel oldin so‘raydi.",
+          ],
+        },
+        {
+          id: "my-stages",
+          title: "«Haftalik bosqichlarim» va ko‘rsatish me’yori",
+          roles: ["manager"],
+          body: [
+            "O‘ngdagi blok, «Mening ishim» ustida, Toshkent vaqti bilan dushanba 00:00 dan hisoblanadi. Tepada — me’yor: haftada 2 ta maket ko‘rsatish, nechtasi bajarilgani va chiziq. Jumadan boshlab, agar hali ko‘rsatish bo‘lmasa, qator yumshoq yonadi va maketni kamida bitta mijozga ko‘rsatishni eslatadi; telefon sozlamalarida harakatni kamaytirish yoqilgan bo‘lsa, faqat rang qoladi. Pastda — dushanbadan beri bitimlaringiz bosqichlari plitkalari.",
+            "Ko‘rsatish — mijoz maketni siz bilan birga ko‘rgani: maket bilan video yozib yubordingiz yoki yuzma-yuz, uchrashuvda yoki ekran ulashgan qo‘ng‘iroqda ko‘rsatdingiz. Belgilash — «Mening maketlarim»dagi maket qatorida yoki [lid kartochkasida](#leads-sales-marks) «Maketni ko‘rsatdim» tugmasi bilan, «video orqali» yoki «yuzma-yuz»ni tanlab. Belgi sana va ismingiz bilan qo‘yiladi va jurnalga yoziladi.",
+            "Ko‘rsatishlar, aytilgan narxlar va to‘lovlarni rahbar va egasi soat 18:00 dagi hisobotda va «Bosh sahifa»dagi kartochkangizda ko‘radi. Har dushanba soat 10:00 da ularga o‘tgan hafta kamida bitta maketi bo‘lib, birorta ham ko‘rsatishi bo‘lmaganlar haqida qator keladi.",
           ],
         },
         {
@@ -456,6 +499,15 @@ export const uz: HelpCopy = {
               "**«Kompaniya STIRi»** → **«STIRni saqlash»** — istalgan lidda. STIR bo‘yicha lid [hamkor biriktirgan mijoz](#partners-claims) sifatida taniladi: «Hamkor» maydonida — «… hamkorining mijozi (… biriktirilgan)», hamkorga xabar ketadi, liddan ochilgan loyiha hamkorni meros oladi.",
             ],
           },
+        },
+        {
+          id: "sales-marks",
+          title: "Kartochkadagi sotuv bosqichlari: «Qiziqish bor», «Maketni ko‘rsatdim», «Narxni aytdim»",
+          body: [
+            "Lid kartochkasida — «Sotuv bosqichlari» bloki: mijoz qaysi bosqichlarga va qachon yetdi, [Bosh sahifa](/admin/hq)dagi qoidalar bilan. Uchta tugma — baza o‘zi bilmaydigan narsalar uchun: «Qiziqish bor» (mijoz «+» yozmagan bo‘lsa ham qiziqmoqda, masalan telefonda aytdi), «Maketni ko‘rsatdim» («video orqali» yoki «yuzma-yuz»ni tanlang) va «Narxni aytdim» (summani dollarda yozing).",
+            "Tugmalarni lid kimda bo‘lsa o‘sha xodim, shuningdek rahbar va egasi ko‘radi; menejer faqat o‘z lidlarini belgilaydi. Har bir belgi jurnalga sana va ism bilan yoziladi va lid bo‘yicha harakat hisoblanadi: «Lidlarda tartib» boti bu safar u haqda so‘ramaydi.",
+            "Ko‘rsatishni belgilamadingiz — hamma uchun u bo‘lmagan: na «Sotuv bosqichlari»da, na «haftada 2 ta ko‘rsatish» me’yorida, na soat 18:00 dagi hisobotda. Aytilgan narx summasini kartochkada faqat egasi ko‘radi.",
+          ],
         },
         {
           id: "reminders",

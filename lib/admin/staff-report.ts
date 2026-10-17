@@ -1,5 +1,6 @@
 import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
 import { touchesOf, touchesText, type PersonReport } from "@/lib/admin/portion";
+import { SHOW_NORM, type PersonSales } from "@/lib/admin/sales-stages";
 
 /**
  * Вечерний отчёт по сотрудникам — владельцу и руководителям, в 18:00 по
@@ -55,6 +56,11 @@ export type StaffDay = {
   offersBurned?: number;
   /** Сколько его лидов «в работе» без движения 7+ дней (lib/admin/lead-tidy.ts). */
   staleLeads?: number;
+  /**
+   * Ступени продажи, которые человек сделал сам (lib/admin/sales-stages.ts):
+   * показы макета, названные цены, оплаты — за день и с понедельника.
+   */
+  sales?: { day: PersonSales; week: PersonSales };
 };
 
 /** «09:05» по Ташкенту. */
@@ -138,6 +144,17 @@ export function workLine(p: StaffDay): string {
   return parts.join(" · ");
 }
 
+/**
+ * Строка про ступени продажи: показы, названные цены, оплаты за день и
+ * за неделю (с понедельника). Касания — это попытки, а эти три — то, что
+ * ведёт к деньгам.
+ */
+export function salesLine(p: StaffDay): string {
+  const s = p.sales ?? { day: { shown: 0, priced: 0, paid: 0 }, week: { shown: 0, priced: 0, paid: 0 } };
+  const { day, week } = s;
+  return `🎯 показы ${day.shown} · цены ${day.priced} · оплаты ${day.paid} — за неделю ${week.shown} из ${SHOW_NORM} показов, цен ${week.priced}, оплат ${week.paid}`;
+}
+
 /** Совет человеку — одной строкой, или null, если всё в порядке. */
 export function adviceFor(p: StaffDay): string | null {
   const r = p.report;
@@ -188,6 +205,10 @@ export function watchPoints(people: readonly StaffDay[]): string[] {
   if (staleTotal) points.push(`🗂 Лидов «в работе» без движения 7+ дней: ${staleTotal} — бот спрашивает о них по утрам.`);
   const leads = people.reduce((s, p) => s + p.leadsTaken, 0);
   if (leads) points.push(`🔥 Тёплых лидов взято: ${leads}.`);
+  const shown = people.reduce((s, p) => s + (p.sales?.day.shown ?? 0), 0);
+  const priced = people.reduce((s, p) => s + (p.sales?.day.priced ?? 0), 0);
+  const paid = people.reduce((s, p) => s + (p.sales?.day.paid ?? 0), 0);
+  if (people.some((p) => p.sales)) points.push(`🎯 За день по команде: показов макета ${shown}, названо цен ${priced}, оплат ${paid}.`);
   return points;
 }
 
@@ -219,6 +240,7 @@ export function staffReportText(day: string, people: readonly StaffDay[]): strin
     lines.push(`${mark(p)} <b>${p.name}</b>`);
     lines.push(`  ${touchLine(p)}`);
     lines.push(`  ${panelLine(p)}`);
+    lines.push(`  ${salesLine(p)}`);
     const work = workLine(p);
     if (work) lines.push(`  ${work}`);
   }
@@ -231,6 +253,7 @@ export function staffReportText(day: string, people: readonly StaffDay[]): strin
     "",
     [
       "Касания — все, кому человек написал за день: порция, поток «Получать лиды» и панель. Порция — сколько из утренней раздачи сделано; несделанное вернулось в пул.",
+      `🎯 — ступени продажи: показ макета (отметка «Показал макет»), названная цена (строка цены после «+» или «Назвал цену») и оплата; норма — ${SHOW_NORM} показа в неделю.`,
       minutesKnown
         ? "Время в панели — минуты, когда вкладка открыта и человек в ней что-то делает."
         : `Время в панели считаем с ${PRESENCE_FROM.split("-").reverse().join(".")}; сегодня — только просмотры разделов.`,
