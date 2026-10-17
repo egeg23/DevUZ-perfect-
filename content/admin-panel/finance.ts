@@ -14,6 +14,13 @@ import { defineDict, plural } from "@/lib/admin/i18n";
  * EXPENSE_TR): ими пользуются и «Проекты», и «Расходы».
  */
 export const financeDict = defineDict({
+  // Премии за сделки месяца (lib/admin/grade-month.ts).
+  bonusTitle: { ru: "Премии за сделки", uz: "Bitimlar uchun mukofot", pl: "Premie za transakcje" },
+  bonusLine: {
+    ru: (who: string, month: string, deals: number, usd: string) => `${who} — ${month}: сделок ${deals}, премия ${usd}`,
+    uz: (who: string, month: string, deals: number, usd: string) => `${who} — ${month}: bitimlar ${deals}, mukofot ${usd}`,
+    pl: (who: string, month: string, deals: number, usd: string) => `${who} — ${month}: transakcji ${deals}, premia ${usd}`,
+  },
   title: { ru: "Финансы", uz: "Moliya", pl: "Finanse" },
   introAdmin: {
     ru: "По всей студии. Начисления считаются от чистой прибыли проекта и лежат в заморозке, пока клиент не заплатил целиком.",

@@ -1,3 +1,4 @@
+import { bonusesOf, gradeBook } from "@/lib/admin/grade-month";
 import {
   BestOfWeek,
   CashChart,
@@ -92,8 +93,10 @@ export async function DashboardHome({
 
   const names = new Map(ledger.people.map((p) => [p.id, p.display_name]));
   const earners = earnersOf(ledger.people);
-  const accruals = ledger.projects.flatMap((p) => accrualsOf(p, ledger.payments, earners, sharesOf(p.id, ledger.shares)));
-  const balance = (id: string) => balanceOf(id, accruals, ledger.payouts);
+  const book = gradeBook(ledger.projects, ledger.payments, now);
+  const bonuses = bonusesOf(book);
+  const accruals = ledger.projects.flatMap((p) => accrualsOf(p, ledger.payments, earners, sharesOf(p.id, ledger.shares), book));
+  const balance = (id: string) => balanceOf(id, accruals, ledger.payouts, bonuses);
 
   // Чьи цифры показываем рядами: команда руководителя или все живые люди.
   const peopleIds =

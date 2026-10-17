@@ -25,6 +25,11 @@ import { openState } from "@/lib/admin/mockups-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { myStagesOf, shownAtOf, type Deal, type MyStages } from "@/lib/admin/sales-stages";
 import { loadDeals } from "@/lib/admin/sales-stages-store";
+import type { Grade } from "@/lib/admin/finance";
+import { gradeStatus } from "@/lib/admin/grade-month";
+import { gradeBookFor } from "@/lib/admin/ledger";
+import { growthOf, type Growth } from "@/lib/admin/levels";
+import { readXp } from "@/lib/admin/levels-store";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
 
@@ -49,6 +54,8 @@ export type MyHq = {
   work: MyWork;
   /** Мои ступени продажи с понедельника и норма «2 показа в неделю». */
   stages?: MyStages;
+  /** Мой уровень и грейд по сделкам месяца. */
+  growth?: Growth;
 };
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : null);
@@ -78,7 +85,7 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
   const day = todayInTashkent(now);
   const nowIso = now.toISOString();
 
-  const [leadsRes, idle, offersRes, closedOffersRes, tasksRes, prospectsRes, inboxRes, mockupsRes, portionRes, winsRes, staffRes, deals] =
+  const [leadsRes, idle, offersRes, closedOffersRes, tasksRes, prospectsRes, inboxRes, mockupsRes, portionRes, winsRes, staffRes, deals, xp, book, meRes] =
     await Promise.all([
       db
         .from("leads")
@@ -121,6 +128,9 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
         .limit(LIMIT),
       db.from("staff").select("id").eq("is_active", true).limit(500),
       loadDeals(now, 21).catch(() => [] as Deal[]),
+      readXp().catch(() => null),
+      gradeBookFor(me, now).catch(() => null),
+      db.from("staff").select("grade, rate_percent").eq("id", me).maybeSingle(),
     ]);
 
   if (leadsRes.error && tasksRes.error) return emptyMyHq(now);
@@ -278,5 +288,19 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
       inWork: leads.length,
     }),
     stages: myStagesOf(deals, me, now),
+    growth: growthOf(
+      me,
+      xp,
+      book
+        ? gradeStatus(
+            {
+              id: me,
+              grade: ((meRes.data?.grade as string | null) ?? "manager") as Grade,
+              rate_percent: meRes.data?.rate_percent == null ? null : Number(meRes.data.rate_percent),
+            },
+            book,
+          )
+        : null,
+    ),
   };
 }

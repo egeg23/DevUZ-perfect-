@@ -656,6 +656,14 @@ export const workSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "grade",
+        title: "Grade za transakcje i «Premie za transakcje»",
+        body: [
+          "Od 1 listopada 2026 procent menedżera od nowego klienta zależy od transakcji z poprzedniego miesiąca: 10%, a jeśli w poprzednim miesiącu kalendarzowym były 3 transakcje lub więcej — 15%. Transakcja — projekt z pierwszą płatnością, liczy się w miesiącu tej płatności. Stawka osobista zostaje bazą, procenty ustawione ręcznie przy transakcji są silniejsze od zasady, dosprzedaże i kierownik — jak dotąd. Do 1 listopada wszystko liczy się według grade.",
+          "Ponad procent — premia $200 za każde 3 transakcje miesiąca (od transakcji od 1 listopada). Od razu wchodzi do zarobionego i do wypłaty, a blok «Premie za transakcje» pokazuje, komu, za który miesiąc i ile transakcji. Premię widzą ci sami, którzy widzą naliczenia danej osoby.",
+        ],
+      },
+      {
         id: "freeze",
         title: "Zamrożone, zarobione, do wypłaty",
         body: [

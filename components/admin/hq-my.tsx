@@ -7,6 +7,7 @@ import { take as takeAction } from "@/app/admin/leads/[id]/actions";
 import { HelpHint } from "@/components/admin/help-link";
 import { ContactButton, Countdown, MockupPassword } from "@/components/admin/hq-my-client";
 import { LinkPending } from "@/components/admin/link-pending";
+import { GrowthCard } from "@/components/admin/growth";
 import { MyStagesCard, ShownButton, markResultText } from "@/components/admin/sales-stages";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { hqDict } from "@/content/admin-panel/hq";
@@ -477,6 +478,7 @@ export function MyHqView({
         </div>
 
         <div className="flex flex-col gap-5 sm:gap-6">
+          {my.growth ? <GrowthCard g={my.growth} locale={locale} /> : null}
           {my.stages ? <MyStagesCard stages={my.stages} locale={locale} /> : null}
           <section className={`${CARD} p-4 sm:p-5`} aria-labelledby="my-work" data-block="work">
             <SectionHead id="my-work" title={t.workTitle} hint={<HelpHint topic={helpAnchor("/admin/hq", "my-work")} />} tone="blue" />

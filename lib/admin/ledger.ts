@@ -15,6 +15,7 @@ import { keepsExpenses, type Role } from "@/lib/admin/roles";
 import { belowFloor, parseQuote, quoteFor } from "@/lib/admin/quote";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
+import { gradeBook, type GradeBook } from "@/lib/admin/grade-month";
 
 /**
  * Книга: чтение денег из базы и записи, которые их меняют.
@@ -204,6 +205,43 @@ export function sharesOf(projectId: string, shares: readonly Share[]): Map<strin
   const out = new Map<string, number>();
   for (const s of shares) if (s.project_id === projectId) out.set(s.staff_id, s.percent);
   return out;
+}
+
+/**
+ * Сделки одного ведущего по месяцам — для ставки и премии по новому правилу
+ * (lib/admin/grade-month.ts), когда в руках один проект, а не весь круг.
+ */
+export async function gradeBookFor(ownerId: string | null, now: Date = new Date()): Promise<GradeBook> {
+  if (!ownerId) return gradeBook([], [], now);
+  const projects = await projectsOwnedBy([ownerId]);
+  const payments = await paymentsFor(projects.map((p) => p.id));
+  return gradeBook(projects, payments, now);
+}
+
+/**
+ * Сделки всех по месяцам — для «Главной»: только три поля проекта и платежа,
+ * без имён и сумм договоров.
+ */
+export async function gradeBookAll(now: Date = new Date()): Promise<GradeBook> {
+  const db = serviceClient();
+  if (!db) return gradeBook([], [], now);
+  const [projects, payments] = await Promise.all([
+    db.from("projects").select("id, owner_staff_id, stage").not("owner_staff_id", "is", null).limit(5000),
+    db.from("project_payments").select("project_id, amount_usd, paid_on").limit(20000),
+  ]);
+  return gradeBook(
+    ((projects.data ?? []) as Record<string, unknown>[]).map((r) => ({
+      id: String(r.id),
+      owner_staff_id: (r.owner_staff_id as string | null) ?? null,
+      stage: String(r.stage ?? ""),
+    })),
+    ((payments.data ?? []) as Record<string, unknown>[]).map((r) => ({
+      project_id: String(r.project_id),
+      amount_usd: Number(r.amount_usd ?? 0),
+      paid_on: String(r.paid_on ?? ""),
+    })),
+    now,
+  );
 }
 
 /**

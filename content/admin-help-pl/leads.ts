@@ -154,6 +154,16 @@ export const leadsSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "levels",
+        title: "Poziomy i grade zespołu",
+        roles: ["admin", "head"],
+        body: [
+          "W karcie każdego w «Zespół dziś» jest odznaka poziomu z tytułem i paskiem do następnego, znacznik „transakcje N/3” za ten miesiąc, a w rozwiniętej karcie — ile punktów łącznie i w 7 dni, ile transakcji i jaki procent ma teraz ta osoba.",
+          "Punkty — za to, co prowadzi do pieniędzy: kontakt 1, odpowiedź na jego kontakt 2, zainteresowanie 5, makieta 10, pokaz 15, cena 20, transakcja z płatnością 100; panel — 1 za 15 minut (do 8 dziennie), zmiana statusu, wykonane zadanie i odpowiedź botowi — po 2 (do 20 dziennie). Poziom L zaczyna się od 25·L·(L−1) punktów: 2. od 50, 5. od 500, 10. od 2 250. Liczy kod raz na godzinę, bez sieci neuronowej. Wysoki poziom przy zerze transakcji to powód, by sprawdzić, na co idą siły.",
+          "Grade za transakcje: transakcja — projekt menedżera z pierwszą płatnością, w miesiącu tej płatności. Od 1 listopada 2026 baza 10%, za 3 transakcje w miesiącu — 15% na następny miesiąc i $200 za każde 3 transakcje ponad procent. Kierownika zasada nie dotyczy, procenty ustawione przez właściciela ręcznie przy transakcji są silniejsze. Premie widać w [Finansach](/admin/finance), w bloku «Premie za transakcje».",
+        ],
+      },
+      {
         id: "task",
         roles: ["admin", "head"],
         title: "«Szybkie zadanie»",
@@ -244,6 +254,26 @@ export const leadsSections: Record<string, HelpEntry> = {
           "Makiety, które w ciągu 14 dni trafiły do Twoich klientów, i wszystkie, dla których wciąż trwa promocja. Twoja — ta, za którą odpowiadasz: wyznaczono Cię w «Makietach», prowadzisz leada klienta albo pisałeś do niego kontakt (ta sama kolejność co w [Makietach](/admin/mockups)). Na górze — promocje, które kończą się najwcześniej.",
           "Przy każdej: kiedy link trafił do klienta (od tej minuty liczą się promocja 48 godzin i doba bez hasła); czy klient otwierał, kiedy ostatnio i ile razy; ile zostało do końca promocji; czy jest jeszcze otwarta przez link i przez ile godzin, czy już zamknięta hasłem. Otwierał w ostatniej godzinie — wiersz świeci: czas napisać.",
           "«Wygeneruj hasło» — to samo hasło na 24 godziny co w «Makietach»: pokazuje się raz, obok — «Kopiuj dla klienta» i «Kopiuj hasło». Jeśli makieta jest jeszcze otwarta przez link, pierwsze hasło ją zamknie — panel zapyta wcześniej.",
+        ],
+      },
+      {
+        id: "my-growth",
+        title: "«Mój rozwój»: poziom i punkty",
+        roles: ["manager"],
+        body: [
+          "Blok po prawej, nad «Moje etapy w tym tygodniu». Poziom rośnie od punktów, jak w grze: każda czynność prowadząca do pieniędzy daje punkty, a im bliżej płatności, tym więcej. Kontakt — 1, odpowiedź klienta na Twój kontakt — 2, zainteresowanie — 5, makieta wysłana — 10, pokaz makiety — 15, cena podana — 20, transakcja z płatnością — 100. Praca w panelu — 1 punkt za każde 15 minut, nie więcej niż 8 dziennie; zmiana statusu leada, wykonane zadanie i odpowiedź botowi porządku w leadach — po 2 punkty, nie więcej niż 20 dziennie: poziomu nie da się „wysiedzieć” bez pracy z klientami.",
+          "Poziom 2 zaczyna się od 50 punktów, 3 — od 150, 5 — od 500, 10 — od 2 250: każdy kolejny jest droższy, a dalekie poziomy zdobywa się tylko transakcjami. Poziom ma tytuł — od „Nowicjusza” do „Legendy”. Pod numerem — ile punktów łącznie, ile w 7 dni i ile zostało do następnego poziomu; «Za co punkty» rozwija listę z tym, ile masz każdego.",
+          "Punkty liczy kod z bazy, bez sieci neuronowej, raz na godzinę — nowy kontakt pojawi się w wyniku w ciągu godziny. Poziom widzą kierownik i właściciel w Twojej karcie na «Pulpit»: pokazuje, ile robisz dla firmy, a nie tylko ile kontaktów dziennie.",
+        ],
+      },
+      {
+        id: "grade",
+        title: "«Grade za transakcje»: 15% i premia $200",
+        roles: ["manager"],
+        body: [
+          "Transakcja — Twój projekt (jesteś prowadzącym w [Projektach](/admin/projects)), za który wpłynęła pierwsza płatność. Liczy się w miesiącu tej płatności, czasu taszkenckiego. Anulowany projekt nie jest transakcją.",
+          "Od 1 listopada 2026 Twój procent od nowego klienta to 10%. Zamknąłeś 3 transakcje w miesiącu kalendarzowym — w następnym miesiącu 15%. Stawka osobista, jeśli ustawił ją właściciel, zostaje bazą, a 15% jej nie obniża. Dosprzedaże liczą się jak dotąd. Do 1 listopada procent jak wcześniej, według Twojego grade; transakcje z października już się liczą: trzy w październiku — 15% w listopadzie.",
+          "Ponad procent — premia $200 za każde 3 transakcje miesiąca: 3 transakcje — $200, 6 — $400. Premia liczy się od transakcji od 1 listopada, jest zarobiona, gdy tylko wpłynie płatność za trzecią transakcję, i od razu widać ją w [Finansach](/admin/finance) w zarobionych. W bloku — ile transakcji już jest, jaki procent teraz i jaki będzie w przyszłym miesiącu, ile zostało do premii.",
         ],
       },
       {
