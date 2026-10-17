@@ -91,6 +91,29 @@ export const leadsSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "stages",
+        title: "«Etapy sprzedaży»",
+        body: {
+          admin: [
+            "Blok „Etapy sprzedaży” stoi w pulsie jako pierwszy. Pokazuje nie próby, a drogę do pieniędzy: ile firm i leadów doszło do każdego etapu — «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność». Kolumna «7 dni» — ostatnie 7 × 24 godziny, pod liczbą — porównanie z 7 dniami wcześniej; «30 dni» — miesiąc, pasek po lewej pokazuje go na oko. Każda liczba otwiera listę tych firm i leadów: czyj, kiedy doszedł do etapu i czy doszedł do następnego. Tam też przełącza się etap i okres.",
+            "Skąd liczby. «napisaliśmy» — poszło powitanie albo kontakt człowieka; klienci, którzy przyszli sami, tu nie wchodzą. «odpisali» — żywa odpowiedź klienta, a zgłoszenie ze strony, czatu lub bota — to już odpowiedź. «zainteresowanie» — „+” albo prośba o prototyp, lead autopilota za zgodą, „zadzwońcie” albo „przyślijcie”, zgłoszenie zostawione przez klienta lub dodane ręcznie przez menedżera, albo przycisk «Jest zainteresowanie» w [karcie leada](#leads-sales-marks). «makieta wysłana» — pierwsza wysyłka linku do makiety. «makieta pokazana» — tylko znacznik «Pokazałem makietę»: pokazu na wideo lub na żywo baza sama nie widzi. «cena podana» — wiersz z ceną wysłany klientowi po „+” albo znacznik «Podałem cenę» z kwotą. «płatność» — wpłata za projekt z leada albo status «Wygrane». Kto doszedł do późniejszego etapu, liczy się też we wcześniejszych. Wszystko liczy kod, bez sieci neuronowej.",
+            "Niżej — «Gdzie odpadają — w 30 dni»: słowami, ilu z jednego etapu doszło do następnego i ilu odpadło, np. «z 188, którzy odpisali, zainteresowanie wyraziło 12». Gdzie odpada najwięcej — tam utyka sprzedaż. Jeśli menedżerowie nie zaznaczają pokazów, etap «makieta pokazana» będzie zerem i wszystko za nim wyda się gorsze, niż jest — dlatego każdy pokaz trzeba zaznaczać.",
+            "Kwotę, która wpłynęła z transakcji doprowadzonych do płatności w 30 dni, widzisz tylko Ty — kierownik jej nie widzi. Duża liczba w karcie «Leady» niżej jest podpisana uczciwie: «w toku» to głównie firmy, do których napisaliśmy, bo wcześniej leadem stawał się prawie każdy kontakt.",
+          ],
+          head: [
+            "Blok „Etapy sprzedaży” stoi w pulsie jako pierwszy. Pokazuje nie próby, a drogę do pieniędzy: ile firm i leadów doszło do każdego etapu — «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność». Kolumna «7 dni» — ostatnie 7 × 24 godziny, pod liczbą — porównanie z 7 dniami wcześniej; «30 dni» — miesiąc, pasek po lewej pokazuje go na oko. Każda liczba otwiera listę tych firm i leadów: czyj, kiedy doszedł do etapu i czy doszedł do następnego. Tam też przełącza się etap i okres.",
+            "Skąd liczby. «napisaliśmy» — poszło powitanie albo kontakt człowieka; klienci, którzy przyszli sami, tu nie wchodzą. «odpisali» — żywa odpowiedź klienta, a zgłoszenie ze strony, czatu lub bota — to już odpowiedź. «zainteresowanie» — „+” albo prośba o prototyp, lead autopilota za zgodą, „zadzwońcie” albo „przyślijcie”, zgłoszenie zostawione przez klienta lub dodane ręcznie przez menedżera, albo przycisk «Jest zainteresowanie» w [karcie leada](#leads-sales-marks). «makieta wysłana» — pierwsza wysyłka linku do makiety. «makieta pokazana» — tylko znacznik «Pokazałem makietę»: pokazu na wideo lub na żywo baza sama nie widzi. «cena podana» — wiersz z ceną wysłany klientowi po „+” albo znacznik «Podałem cenę» z kwotą. «płatność» — wpłata za projekt z leada albo status «Wygrane». Kto doszedł do późniejszego etapu, liczy się też we wcześniejszych. Wszystko liczy kod, bez sieci neuronowej.",
+            "Niżej — «Gdzie odpadają — w 30 dni»: słowami, ilu z jednego etapu doszło do następnego i ilu odpadło, np. «z 188, którzy odpisali, zainteresowanie wyraziło 12». Gdzie odpada najwięcej — tam utyka sprzedaż. Jeśli menedżerowie nie zaznaczają pokazów, etap «makieta pokazana» będzie zerem i wszystko za nim wyda się gorsze, niż jest — dlatego każdy pokaz trzeba zaznaczać.",
+            "W tym bloku kierownik nie widzi pieniędzy: suma wpłat jest tylko u właściciela. Duża liczba w karcie «Leady» niżej jest podpisana uczciwie: «w toku» to głównie firmy, do których napisaliśmy, bo wcześniej leadem stawał się prawie każdy kontakt.",
+          ],
+          manager: [
+            "Etapy sprzedaży — droga klienta od pierwszej wiadomości do płatności: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność». W bloku «Moje etapy w tym tygodniu» i na liście etapu są tylko Twoje firmy i leady: te, które prowadzisz, i te, w których pokaz lub cenę zaznaczyłeś Ty. Każdy kafelek otwiera listę: kto, kiedy doszedł do etapu i czy doszedł do następnego.",
+            "Skąd liczby. «odpisali» — żywa odpowiedź klienta; «zainteresowanie» — „+”, prośba o prototyp, „zadzwońcie”, „przyślijcie” albo Twój przycisk «Jest zainteresowanie»; «makieta wysłana» — pierwsza wysyłka linku do makiety; «makieta pokazana» — tylko Twój znacznik «Pokazałem makietę»; «cena podana» — wiersz z ceną po „+” albo znacznik «Podałem cenę»; «płatność» — wpłata za projekt albo status «Wygrane». Liczy kod, bez sieci neuronowej.",
+            "Nie zaznaczysz pokazu — nie będzie go nigdzie: ani w Twojej normie, ani u kierownika, ani w raporcie o 18:00. Dla wszystkich wygląda to tak, jakby makieta poszła, a klient zniknął.",
+          ],
+        },
+      },
+      {
         id: "attention",
         roles: ["admin", "head"],
         title: "«Wymaga uwagi»",
@@ -118,6 +141,16 @@ export const leadsSections: Record<string, HelpEntry> = {
           "Karta dla każdego menedżera i kierownika. Zielona kropka przy inicjałach — osoba jest «online»: w ostatnich 30 minutach była w panelu, coś zrobiła albo kliknęła przycisk w bocie. W przeciwnym razie — kiedy była ostatnio. To ta sama miara, według której ciepłe leady w dzień trafiają najpierw do osób na miejscu.",
           "Trzy liczby: kontakty dziś (i porcja dnia — ile zrobiono z należnych), leady «w toku», otwarte zadania. Pod nimi — etykiety: po terminie, przepadłe oferty, leady bez ruchu 7+ dni, «porcja zrobiona» albo «dziś cisza». Najpierw stoją karty z niepokojącymi etykietami, potem osoby online. Nad liczbami — słupki «w 7 dni»: ile kontaktów osoba robiła w każdym z ostatnich siedmiu dni, dzisiejszy jest jaśniejszy. Najedź na słupek — zobaczysz dzień i liczbę. Etykieta **«bez odpowiedzi botowi N»** — o ile jej leadów bot już zapytał i czeka na «🏆 / ❌ / ⏳»; powyżej pięciu etykieta jest żółta, a w «Wymaga uwagi» pojawia się wiersz.",
           "Kliknij kartę — rozwiną się szczegóły: o której osoba po raz pierwszy weszła dziś do panelu i ile w nim była, oraz przyciski «Zleć zadanie» i «Otwórz jego leady».",
+        ],
+      },
+      {
+        id: "show-norm",
+        title: "Norma — 2 pokazy makiety w tygodniu",
+        roles: ["admin", "head"],
+        body: [
+          "Norma menedżera — 2 pokazy makiety klientom w tygodniu, od poniedziałku czasu taszkenckiego. W karcie każdego w «Zespół dziś» jest znacznik «pokazy N z 2» za tydzień, zielony, gdy norma wykonana. Rozwiń kartę — tam pokazy, podane ceny i płatności dziś i od poniedziałku. Kontakty to próby, a te trzy liczby prowadzą do pieniędzy.",
+          "W raporcie o pracownikach o 18:00 każdy ma wiersz 🎯: pokazy, ceny i płatności za dzień i tydzień, a w części o tym, na co patrzeć — podsumowanie zespołu za dzień.",
+          "W poniedziałki o 10:00 bot przysyła wiersz: kto w zeszłym tygodniu nie zrobił ani jednego pokazu, choć makiety do jego klientów wychodziły (w zeszłym lub poprzednim tygodniu). Wiersz przychodzi raz w tygodniu i tylko z polem «Raporty»; jeśli takich osób nie ma — nie ma wiersza. Siebie na liście nie widzisz.",
         ],
       },
       {
@@ -211,6 +244,16 @@ export const leadsSections: Record<string, HelpEntry> = {
           "Makiety, które w ciągu 14 dni trafiły do Twoich klientów, i wszystkie, dla których wciąż trwa promocja. Twoja — ta, za którą odpowiadasz: wyznaczono Cię w «Makietach», prowadzisz leada klienta albo pisałeś do niego kontakt (ta sama kolejność co w [Makietach](/admin/mockups)). Na górze — promocje, które kończą się najwcześniej.",
           "Przy każdej: kiedy link trafił do klienta (od tej minuty liczą się promocja 48 godzin i doba bez hasła); czy klient otwierał, kiedy ostatnio i ile razy; ile zostało do końca promocji; czy jest jeszcze otwarta przez link i przez ile godzin, czy już zamknięta hasłem. Otwierał w ostatniej godzinie — wiersz świeci: czas napisać.",
           "«Wygeneruj hasło» — to samo hasło na 24 godziny co w «Makietach»: pokazuje się raz, obok — «Kopiuj dla klienta» i «Kopiuj hasło». Jeśli makieta jest jeszcze otwarta przez link, pierwsze hasło ją zamknie — panel zapyta wcześniej.",
+        ],
+      },
+      {
+        id: "my-stages",
+        title: "«Moje etapy w tym tygodniu» i norma pokazów",
+        roles: ["manager"],
+        body: [
+          "Blok po prawej, nad «Moja praca», liczy się od poniedziałku 00:00 czasu taszkenckiego. Na górze — norma: 2 pokazy makiety w tygodniu, ile zrobiono i pasek. Od piątku, jeśli pokazów jeszcze nie ma, wiersz delikatnie świeci i podpowiada, by pokazać makietę choć jednemu klientowi; przy ograniczeniu ruchu w ustawieniach telefonu zostaje tylko kolor. Niżej — kafelki etapów Twoich transakcji od poniedziałku.",
+          "Pokaz to sytuacja, gdy klient widział makietę razem z Tobą: nagrałeś wideo z makietą i je wysłałeś albo pokazałeś na żywo, na spotkaniu lub w rozmowie z udostępnionym ekranem. Zaznacz przyciskiem «Pokazałem makietę» w wierszu makiety w «Moje makiety» albo w [karcie leada](#leads-sales-marks), wybierając «na wideo» lub «na żywo». Znacznik zapisuje się z datą i Twoim imieniem oraz trafia do dziennika.",
+          "Pokazy, podane ceny i płatności kierownik i właściciel widzą w raporcie o 18:00 i w Twojej karcie na «Pulpit». W poniedziałki o 10:00 dostają wiersz o tych, którzy w zeszłym tygodniu mieli co najmniej jedną makietę i ani jednego pokazu.",
         ],
       },
       {
@@ -442,6 +485,15 @@ export const leadsSections: Record<string, HelpEntry> = {
             "**«NIP/INN firmy»** → **«Zapisz NIP/INN»** — w każdym leadzie. Po NIP/INN lead jest rozpoznawany jako [klient przypisany przez partnera](#partners-claims): w polu «Partner» — «Klient partnera … (przypisany DD.MM)», partner dostaje wiadomość, a projekt utworzony z leada dziedziczy partnera.",
           ],
         },
+      },
+      {
+        id: "sales-marks",
+        title: "Etapy sprzedaży w karcie: «Jest zainteresowanie», «Pokazałem makietę», «Podałem cenę»",
+        body: [
+          "W karcie leada jest blok «Etapy sprzedaży»: do których etapów i kiedy doszedł klient, według tych samych zasad co na [Pulpicie](/admin/hq). Trzy przyciski — na to, czego baza sama nie wie: «Jest zainteresowanie» (klient jest zainteresowany, choć nie napisał „+”, np. powiedział przez telefon), «Pokazałem makietę» (wybierz «na wideo» lub «na żywo») i «Podałem cenę» (wpisz kwotę w dolarach).",
+          "Przyciski widzi opiekun leada, a także kierownik i właściciel; menedżer zaznacza tylko swoje leady. Każdy znacznik trafia do dziennika z datą i imieniem i liczy się jako ruch w leadzie: bot porządku w leadach tym razem o niego nie zapyta.",
+          "Nie zaznaczysz pokazu — dla wszystkich go nie było: ani w «Etapy sprzedaży», ani w normie 2 pokazów w tygodniu, ani w raporcie o 18:00. Kwotę podanej ceny w karcie widzi tylko właściciel.",
+        ],
       },
       {
         id: "reminders",

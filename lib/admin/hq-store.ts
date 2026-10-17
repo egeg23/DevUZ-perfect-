@@ -44,6 +44,8 @@ import { touchesOnDay } from "@/lib/admin/touch-store";
 import { approves, pendingTransfers } from "@/lib/admin/transfers";
 import { MAIN_ACCOUNT } from "@/lib/admin/work-accounts";
 import { readHealth } from "@/lib/admin/sweep-health";
+import { periodRange, personSales, stagesPulse, type Deal, type StagesPulse } from "@/lib/admin/sales-stages";
+import { loadDeals } from "@/lib/admin/sales-stages-store";
 import { firecrawlBalance, firecrawlKey } from "@/lib/firecrawl";
 import { serviceClient } from "@/lib/supabase";
 
@@ -65,6 +67,8 @@ export type Hq = {
   mockups: MockupsPulse;
   tasks: TasksPulse;
   money: MoneyPulse | null;
+  /** Ступени продажи: 7 против 7 до них и 30 дней (lib/admin/sales-stages.ts). */
+  stages?: StagesPulse;
   attention: Attention[];
   people: HqPerson[];
   feed: FeedItem[];
@@ -105,6 +109,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     mockups: mockupsPulse([], now),
     tasks: tasksPulse([], now),
     money: null,
+    stages: stagesPulse([], role, now),
     attention: [],
     people: [],
     feed: [],
@@ -142,6 +147,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     contracts,
     paymentsRes,
     firecrawl,
+    deals,
   ] = await Promise.all([
     db.from("staff").select("id, display_name, role, bot_seen_at").eq("is_active", true).limit(200),
     db
@@ -211,6 +217,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
       ? db.from("project_payments").select("amount_usd, paid_on").gte("paid_on", from.slice(0, 10)).limit(LIMIT)
       : Promise.resolve({ data: [] as HqPayment[] }),
     firecrawlRemaining(now).catch(() => null),
+    loadDeals(now).catch(() => [] as Deal[]),
   ]);
 
   if (staffRes.error && leadsRes.error) return empty;
@@ -316,6 +323,10 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
           stale: stale.get(s.id) ?? 0,
           botSilent: silent.get(s.id) ?? 0,
           tasks,
+          sales: {
+            today: personSales(deals, s.id, dayStartOf(now), now.getTime() + 1),
+            week: personSales(deals, s.id, periodRange("week", now).from, now.getTime() + 1),
+          },
         },
         now,
       ),
@@ -380,6 +391,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     mockups: mockupsNow,
     tasks: tasksNow,
     money: moneyNow,
+    stages: stagesPulse(deals, role, now),
     attention,
     people,
     feed: feedOf({ leads, events, mockups, tasks, names: new Map(staffRows.map((s) => [s.id, s.display_name])) }, now),

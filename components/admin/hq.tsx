@@ -2,9 +2,11 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { HelpHint } from "@/components/admin/help-link";
+import { StagesCard } from "@/components/admin/sales-stages";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { MAIN_LABEL } from "@/lib/admin/account-ban-store";
 import { hqDict } from "@/content/admin-panel/hq";
+import { salesStagesDict } from "@/content/admin-panel/sales-stages";
 import { helpAnchor } from "@/lib/admin/help";
 import {
   BOT_SILENT_ALERT,
@@ -20,6 +22,7 @@ import {
 import type { Hq } from "@/lib/admin/hq-store";
 import { PANEL_INTL, pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import { ROLE_BADGE } from "@/lib/admin/roles";
+import { SHOW_NORM } from "@/lib/admin/sales-stages";
 
 /**
  * «Главная» — вёрстка. Только отрисовка готовых чисел (lib/admin/hq-store):
@@ -450,12 +453,14 @@ export function PersonCard({
   /** Куда ведёт «Поставить задачу»: форма быстрой задачи с этим человеком. */
   taskHref?: string;
 }) {
+  const st = pick(salesStagesDict, locale);
   const seen = p.online ? t.online : p.activeAt && Date.parse(p.activeAt) >= now.getTime() - 24 * 3600_000 ? t.seenAt(clockOf(p.activeAt)) : t.notToday;
   const flags = [
     p.overdue ? { text: t.flagOverdue(p.overdue), warn: true } : null,
     p.burnedToday ? { text: t.flagBurned(p.burnedToday), warn: true } : null,
     p.stale ? { text: t.flagStale(p.stale), warn: false } : null,
     p.botSilent ? { text: t.flagBotSilent(p.botSilent), warn: p.botSilent > BOT_SILENT_ALERT } : null,
+    { text: st.personShown(p.sales.week.shown, SHOW_NORM), warn: false, good: p.sales.week.shown >= SHOW_NORM },
     p.mood === "done" ? { text: t.moodDone, warn: false, good: true } : null,
     p.mood === "idle" ? { text: t.moodIdle, warn: false } : null,
   ].filter((f): f is { text: string; warn: boolean; good?: boolean } => Boolean(f));
@@ -509,6 +514,8 @@ export function PersonCard({
             <li>{t.detailBurned(p.burnedToday)}</li>
             <li>{t.detailStale(p.stale)}</li>
             <li>{t.detailBotSilent(p.botSilent)}</li>
+            <li>{st.personToday(p.sales.today.shown, p.sales.today.priced, p.sales.today.paid)}</li>
+            <li>{st.personSales(p.sales.week.shown, p.sales.week.priced, p.sales.week.paid)}</li>
           </ul>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {taskHref ? (
@@ -552,6 +559,7 @@ export function HqView({
   giveAction?: GiveBox["action"];
 }) {
   const t = pick(hqDict, locale);
+  const st = pick(salesStagesDict, locale);
   const { leads, touches, mockups, tasks, money } = hq;
   const left = mockups.soonest ? leftOf(mockups.soonest.endsAt, now) : null;
   const date = new Intl.DateTimeFormat(PANEL_INTL[locale], {
@@ -605,7 +613,20 @@ export function HqView({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:order-1 lg:col-span-2">
-          <PulseCard icon="leads" tone="green" title={t.leadsTitle} href="/admin?status=taken" big={leads.inWork} caption={t.leadsInWork}>
+          {/* Ступени продажи — первыми: то, что ведёт к деньгам, а не попытки. */}
+          {hq.stages ? <StagesCard stages={hq.stages} locale={locale} /> : null}
+
+          {/* «Лиды в работе» — по большей части компании, которым написали:
+              подписано честно, сколько дошли до продажи — в ступенях выше. */}
+          <PulseCard
+            icon="leads"
+            tone="green"
+            title={t.leadsTitle}
+            href="/admin?status=taken"
+            big={leads.inWork}
+            caption={hq.stages ? st.leadsCaption : t.leadsInWork}
+            extra={hq.stages ? <p className="mt-2 text-xs leading-snug text-faint">{st.honest}</p> : null}
+          >
             <Row href="/admin?status=new" label={t.leadsNewToday} value={leads.newToday} />
             <Row href="/admin" label={t.leadsNew7} value={leads.new7.now} sub={<Delta trend={leads.new7} t={t} />} />
             <Row href="/admin?status=new" label={t.leadsOffered} value={leads.offered} />

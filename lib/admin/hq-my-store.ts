@@ -23,6 +23,8 @@ import { loadIdle } from "@/lib/admin/lead-tidy-store";
 import { parseMockupRef } from "@/lib/admin/mockups";
 import { openState } from "@/lib/admin/mockups-store";
 import { todayInTashkent } from "@/lib/admin/pulse";
+import { myStagesOf, shownAtOf, type Deal, type MyStages } from "@/lib/admin/sales-stages";
+import { loadDeals } from "@/lib/admin/sales-stages-store";
 import type { Staff } from "@/lib/admin/session";
 import { serviceClient } from "@/lib/supabase";
 
@@ -45,6 +47,8 @@ export type MyHq = {
   contacts: ContactRow[];
   mockups: MockupLine[];
   work: MyWork;
+  /** Мои ступени продажи с понедельника и норма «2 показа в неделю». */
+  stages?: MyStages;
 };
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : null);
@@ -62,6 +66,7 @@ export function emptyMyHq(now: Date): MyHq {
     contacts: [],
     mockups: [],
     work: workOf({ me: "", now, portion: [], prospects: [], offersClosed: [], mockups: [], wins: [], inWork: 0 }),
+    stages: myStagesOf([], "", now),
   };
 }
 
@@ -73,7 +78,7 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
   const day = todayInTashkent(now);
   const nowIso = now.toISOString();
 
-  const [leadsRes, idle, offersRes, closedOffersRes, tasksRes, prospectsRes, inboxRes, mockupsRes, portionRes, winsRes, staffRes] =
+  const [leadsRes, idle, offersRes, closedOffersRes, tasksRes, prospectsRes, inboxRes, mockupsRes, portionRes, winsRes, staffRes, deals] =
     await Promise.all([
       db
         .from("leads")
@@ -115,6 +120,7 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
         .gte("created_at", from)
         .limit(LIMIT),
       db.from("staff").select("id").eq("is_active", true).limit(500),
+      loadDeals(now, 21).catch(() => [] as Deal[]),
     ]);
 
   if (leadsRes.error && tasksRes.error) return emptyMyHq(now);
@@ -260,7 +266,7 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
     hot: hotOf(input),
     overdue: overdueOf(input),
     contacts: contactsOf({ ...input, prospects }),
-    mockups: mockupLines(input),
+    mockups: mockupLines(input).map((m) => ({ ...m, shownAt: shownAtOf(deals, { leadId: m.leadId, prospectId: m.prospectId }) })),
     work: workOf({
       me,
       now,
@@ -271,5 +277,6 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
       wins,
       inWork: leads.length,
     }),
+    stages: myStagesOf(deals, me, now),
   };
 }
