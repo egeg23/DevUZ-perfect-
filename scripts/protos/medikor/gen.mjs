@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
 import { BASE, ADDONS, ALL, ALL_REGULAR, OFFER_HOURS, DISCOUNT, sale } from "./plan.mjs";
+import { DZ_VIDEO } from "../dz-video.mjs";
 
 /*
  * Макет интернет-магазина Medikor (медоборудование из Кореи, Москва), ru:
@@ -240,6 +241,7 @@ const DZSIGN = `<svg class="dz-sign" viewBox="-112 -112 224 224" aria-hidden="tr
 function introHtml() {
   const word = [["D", 0], ["e", 0], ["v", 0], ["U", 1], ["z", 1]];
   return `<div class="intro" id="intro" role="presentation">
+${DZ_VIDEO}
 <div class="dz-void"></div><div class="dz-grid"></div><div class="dz-glow"></div><div class="dz-ring"></div><div class="dz-flash"></div>
 <div class="dz-stage">${DZSIGN}<div class="dz-name"><p class="dz-word" aria-hidden="true">${word.map(([c, a], i) => `<span${a ? ' class="a"' : ""} style="--i:${i}">${c}</span>`).join("")}</p><p class="dz-domain" aria-hidden="true">devuz.studio</p></div><div class="dz-bar" aria-hidden="true"></div><p class="dz-for">макет интернет-магазина для ${B}</p></div>
 <canvas class="dz-code" aria-hidden="true"></canvas>

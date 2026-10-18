@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
 import { UI } from "./ui.mjs";
 import { ADDONS, ALL, CASH_OFF, COSTS, TIERS } from "./plan.mjs";
+import { DZ_VIDEO } from "../dz-video.mjs";
 
 /*
  * Макет приложения турагентства (Ташкент), ru и uz:
@@ -192,6 +193,7 @@ function introHtml(l) {
   const t = T(l);
   const word = [["D", 0], ["e", 0], ["v", 0], ["U", 1], ["z", 1]];
   return `<div class="intro" id="intro" role="presentation">
+${DZ_VIDEO}
 <div class="dz-void"></div><div class="dz-grid"></div><div class="dz-glow"></div><div class="dz-ring"></div><div class="dz-flash"></div>
 <div class="dz-stage">${DZSIGN}<div class="dz-name"><p class="dz-word" aria-hidden="true">${word.map(([c, a], i) => `<span${a ? ' class="a"' : ""} style="--i:${i}">${c}</span>`).join("")}</p><p class="dz-domain" aria-hidden="true">devuz.studio</p></div><div class="dz-bar" aria-hidden="true"></div><p class="dz-for">${t(`макет приложения для ${B}`, `${B} uchun ilova maketi`)}</p></div>
 <canvas class="dz-code" aria-hidden="true"></canvas>

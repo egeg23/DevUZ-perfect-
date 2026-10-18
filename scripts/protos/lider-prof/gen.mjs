@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { ADDONS, BASE as KIT_BASE, BLOCKS } from "./plan.mjs";
 import { LOGO, EYE, HOLE, HOLE_PATH, logoSvg } from "./logo.mjs";
+import { DZ_VIDEO } from "../dz-video.mjs";
 
 /*
  * Прототип LIDER PROF PROEKT (lider-prof.uz): архитектурная студия из
@@ -222,6 +223,7 @@ function introHtml(l) {
   const word = [["D", 0], ["e", 0], ["v", 0], ["U", 1], ["z", 1]];
   const paths = { g: LOGO.parts.map((p) => p.d), line: LOGO.parts.map((p) => (p.y > 0 ? 1 : 0)), hole: HOLE_PATH, w: LOGO.width, h: LOGO.height, eye: EYE, r: HOLE };
   return `<div class="intro" id="intro" role="presentation" data-addon="intro">
+${DZ_VIDEO}
 <div class="dz-void"></div><div class="dz-grid"></div><div class="dz-glow"></div><div class="dz-ring"></div><div class="dz-flash"></div>
 <div class="dz-stage">${DZMARK}<div class="dz-name"><p class="dz-word" aria-hidden="true">${word.map(([c, a], i) => `<span${a ? ' class="a"' : ""} style="--i:${i}">${c}</span>`).join("")}</p><p class="dz-domain" aria-hidden="true">devuz.studio</p></div><div class="dz-bar" aria-hidden="true"></div><p class="dz-for">${t("прототип для LIDER PROF PROEKT", "LIDER PROF PROEKT uchun prototip")}</p></div>
 <canvas class="dz-code" aria-hidden="true"></canvas>
