@@ -1348,6 +1348,10 @@ test("tovar.uz: товары и цены — с их сайта, новый об
   assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
   assert.ok(plan.ADDONS.filter((a: { new?: boolean }) => a.new).length >= 5, "механик, которых нет в УЗ, меньше пяти");
   assert.equal(plan.TURNKEY.price, 30000, "маркетплейс под ключ — 30 000 $, цена владельца");
+  /* Цены допов — часы × ставка Ташкента; «Сейчас и станет» продаёт те же допы. */
+  for (const a of plan.ADDONS) assert.equal(a.price, a.h * plan.RATE, `${a.id}: цена не по часам`);
+  const dm = await import("../scripts/protos/tovar/data.mjs");
+  for (const r of dm.NOW) for (const k of r.buy) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === k), `«Сейчас и станет»: нет допа ${k}`);
   const site = bundlePages("tovar")!;
   for (const html of [site.html, site.pages.uz]) {
     assert.match(html, /<s>2\u00a0500\u00a0\$<\/s><b>1\u00a0000\u00a0\$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");

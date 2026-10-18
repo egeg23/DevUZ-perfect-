@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
-import { BASE, ADDONS, ALL, OFFER_HOURS, TURNKEY } from "./plan.mjs";
+import { BASE, ADDONS, ALL, OFFER_HOURS, TURNKEY, RATE } from "./plan.mjs";
 
 /*
  * Макет торговой платформы tovar.uz, ru (главный, как у них) и uz:
@@ -362,7 +362,8 @@ function nowBlock(l) {
   const t = T(l);
   return `<section id="seychas"><div class="wrap">
 ${head(t("Сейчас и станет", "Hozir va keyin"), t("Что мы увидели <em>на tovar.uz</em>", "tovar.uz’da <em>nimani ko‘rdik</em>"), t("Мы открыли tovar.uz с телефона, как покупатель, который ищет смартфон, и как компания, которая хочет продавать.", "tovar.uz’ni telefondan smartfon qidirayotgan xaridor va sotmoqchi bo‘lgan kompaniya kabi ochdik."))}
-<ol class="nw">${D.NOW.map((r, i) => `<li class="rv a-flip" style="--d:${i * 60}ms"><span class="nw-n">${i + 1}</span><p class="nw-was">${L2(r.now, l)}</p>${ic("arrow", "nw-ar")}<p class="nw-is">${L2(r.next, l)}</p></li>`).join("")}</ol>
+<ol class="nw">${D.NOW.map((r, i) => { const a = r.buy.map((k) => ADDONS.find((x) => x.id === k)), p = a.reduce((s, x) => s + x.price, 0), h = a.reduce((s, x) => s + x.h, 0); return `<li class="rv a-flip" style="--d:${i * 60}ms"><span class="nw-n">${i + 1}</span><p class="nw-was">${L2(r.now, l)}</p>${ic("arrow", "nw-ar")}<p class="nw-is">${L2(r.next, l)}</p><div class="nw-buy"><span><b>+${usd(p)}</b><small>${t(`≈ ${h} ч работы`, `≈ ${h} soat ish`)}</small></span><button type="button" class="btn btn-glass btn-sm" data-buy="${r.buy.join(",")}" aria-pressed="false">${ic("plus")}<span>${t("В стоимость", "Narxga qo‘shish")}</span></button></div></li>`; }).join("")}</ol>
+<p class="nw-sum">${t(`Все шесть доработок: ${usd(D.NOW.flatMap((r) => r.buy).reduce((s, k) => s + ADDONS.find((x) => x.id === k).price, 0))}, по ${RATE} $ за час работы.`, `Oltita yaxshilanishning hammasi: ${usd(D.NOW.flatMap((r) => r.buy).reduce((s, k) => s + ADDONS.find((x) => x.id === k).price, 0))}, bir soat ish uchun ${RATE} $.`)} <a href="#cena">${t("Стоимость", "Narxi")}</a></p>
 </div></section>`;
 }
 
@@ -447,7 +448,7 @@ ${head(t("Разбор рынка", "Bozor tahlili"), t("Что взяли <em>�
 
 function offerBlock(l) {
   const t = T(l);
-  const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"><span class="sw" aria-hidden="true"></span><span class="kit-t2"><b>${a[l].t}${a.new ? `<em class="star new">${t("нет в УЗ", "UZ’da yo‘q")}</em>` : a.star ? `<em class="star">${t("нужно первым", "birinchi kerak")}</em>` : ""}</b><small>${a[l].e}</small></span><span class="kit-pr">+${usd(a.price)}</span></label>`;
+  const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"><span class="sw" aria-hidden="true"></span><span class="kit-t2"><b>${a[l].t}${a.new ? `<em class="star new">${t("нет в УЗ", "UZ’da yo‘q")}</em>` : a.star ? `<em class="star">${t("нужно первым", "birinchi kerak")}</em>` : ""}</b><small>${a[l].e}</small></span><span class="kit-pr">+${usd(a.price)}<small>${t(`≈ ${a.h} ч`, `≈ ${a.h} soat`)}</small></span></label>`;
   return `<section class="offer" id="cena"><div class="wrap">
 ${head(`<span class="ours">${t("Предложение DevUz Studio", "DevUz Studio taklifi")}</span>`, t("Стоимость", "Narxi"), t(`Два пути. Полноценный маркетплейс под ключ: покупка, оплата, рассрочка, чеки налоговой, склад, доставка, продавцы и документы под закон Узбекистана, ${usd(TURNKEY.price)}. Или новый облик tovar.uz без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем в течение 48 часов, а механики и кабинет продавца допами.`, `Ikki yo‘l. Kalit topshiriladigan to‘liq marketpleys: xarid, to‘lov, muddatli to‘lov, soliq cheklari, ombor, yetkazish, sotuvchilar va O‘zbekiston qonuniga mos hujjatlar, ${usd(TURNKEY.price)}. Yoki qo‘shimchalarsiz tovar.uz’ning yangi ko‘rinishi: 48 soat ichida boshlasak, ${usd(BASE.price)} o‘rniga ${usd(BASE.promo)}, mexanikalar va sotuvchi kabineti esa qo‘shimcha.`))}
 <article class="tk glass rv a-rise" id="pod-klyuch"><div class="tk-h"><div><span class="kb-tag tk-tag">${t("Полноценный маркетплейс", "To‘liq marketpleys")}</span><h3>${TURNKEY[l].t}</h3><p>${TURNKEY[l].d}</p></div><div class="tk-p"><b>${usd(TURNKEY.price)}</b><small>${t("всё в одной цене", "hammasi bitta narxda")}</small><a class="btn btn-red" href="https://t.me/Devuz_studio_bot?start=tovar-mp">${ic("tg")}<span>${t("Обсудить маркетплейс", "Marketpleysni muhokama qilish")}</span></a></div></div>
@@ -470,7 +471,7 @@ ${ADDONS.map(row).join("")}
 <a class="btn btn-red" href="https://t.me/Devuz_studio_bot?start=tovar">${ic("tg")}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish")}</span></a>
 <button type="button" class="copy" id="kit-copy">${t("Скопировать состав", "Tarkibni nusxalash")}</button>
 </div>
-<p class="src">${t("Цены допов: вдвое ниже середины рынка веб-студий Ташкента и СНГ. Комиссии Click, Payme, Uzum Bank, SMS, хостинг и публикацию в App Store и Google Play площадка оплачивает сама.", "Qo‘shimchalar narxi: Toshkent va MDH veb-studiyalari bozor o‘rtachasidan ikki baravar past. Click, Payme, Uzum Bank komissiyalari, SMS, xosting va App Store hamda Google Play’ga joylashni sayt o‘zi to‘laydi.")}</p>
+<p class="src">${t(`Цены допов: по часам работы, ${RATE} $ за час, как у веб-студий Ташкента. Комиссии Click, Payme, Uzum Bank, SMS, хостинг и публикацию в App Store и Google Play площадка оплачивает сама.`, `Qo‘shimchalar narxi: ish soatlari bo‘yicha, soatiga ${RATE} $, Toshkent veb-studiyalaridagidek. Click, Payme, Uzum Bank komissiyalari, SMS, xosting va App Store hamda Google Play’ga joylashni sayt o‘zi to‘laydi.`)}</p>
 </div>
 </div></section>`;
 }
@@ -488,7 +489,7 @@ function siteData(l) {
       boYes: t("SHOP-IT: «1 200 000 и забирайте сегодня до 18:00». Встречная цена ушла вам в Telegram.", "SHOP-IT: «1 200 000 va bugun 18:00 gacha olib keting». Qarshi narx sizga Telegramga ketdi."), boLow: t("Слишком низко: продавец видит предложения от {p}.", "Juda past: sotuvchi {p} dan takliflarni ko‘radi."),
       frOk: t("Подтверждена сегодня", "Bugun tasdiqlandi"), cheap: t("дешевле всех", "eng arzon"), per: t("за шт.", "donasi"), total: t("итого", "jami"),
     },
-    offer: { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, n: !!a.new })), base: BASE.promo, baseName: BASE[l].t, hours: OFFER_HOURS, head: t("tovar.uz, состав:", "tovar.uz, tarkibi:"), totalW: t("Итого", "Jami"), copied: t("Скопировано", "Nusxalandi"), ended: t("Акция закончилась, цена обычная", "Aksiya tugadi, narx odatiy") },
+    offer: { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, n: !!a.new })), base: BASE.promo, baseName: BASE[l].t, hours: OFFER_HOURS, head: t("tovar.uz, состав:", "tovar.uz, tarkibi:"), totalW: t("Итого", "Jami"), copied: t("Скопировано", "Nusxalandi"), toBuy: t("В стоимость", "Narxga qo‘shish"), inBuy: t("В стоимости", "Narxda"), ended: t("Акция закончилась, цена обычная", "Aksiya tugadi, narx odatiy") },
   };
 }
 
