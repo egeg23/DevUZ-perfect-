@@ -18,3 +18,6 @@ next-env.d.ts
 
 # Python: кэш скрипта расшифровки голосовых
 __pycache__/
+
+# Скриншоты check.mjs макета dilrabo (пишет в текущую папку)
+scripts/protos/dilrabo/*.png
