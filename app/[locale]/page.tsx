@@ -12,6 +12,7 @@ import { ProcessSection } from "@/components/sections/process";
 import { ScaleSection } from "@/components/sections/scale";
 import { ServicesSection } from "@/components/sections/services";
 import { StackSection } from "@/components/sections/stack";
+import { StudioFilm } from "@/components/sections/studio-film";
 import { company } from "@/content/company";
 import { getDictionary } from "@/content/dictionaries";
 import { isLocale, t, type Locale } from "@/lib/i18n";
@@ -49,6 +50,7 @@ export default async function HomePage({
     <>
       <CompileScene locale={locale} dict={dict} />
       <ScaleSection locale={locale} />
+      <StudioFilm locale={locale} />
       <ServicesSection locale={locale} dict={dict} />
       <CalculatorSection locale={locale} dict={dict} />
       <MarketingSection locale={locale} />
