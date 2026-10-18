@@ -1294,3 +1294,62 @@ test("Karomat: блюда и цены — из их меню, сайт 1 000 $ �
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
 });
+
+test("tovar.uz: 6 страниц ru и uz — условия, noindex, заставка DevUz, стекло, шапка по правилу, только их товары", async () => {
+  const { existsSync } = await import("node:fs");
+  const site = bundlePages("tovar");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "app", "panel", "uz", "uz/app", "uz/panel"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /body\{[^}]*overflow-x:hidden/, `${path}: overflow-x:hidden у body ломает sticky`);
+    assert.match(page, /IDLE=3000/, `${path}: шапка не по правилу трёх секунд`);
+    assert.ok(page.includes("tovar.uz"), `${path}: нет названия площадки`);
+    /* Русское слово в «ёлочках» на узбекской странице — пример поиска на двух языках. */
+    if (lang === "uz") assert.doesNotMatch((page.split('"ui":')[1] ?? "").replace(/«[^»]*»/g, ""), /"[a-zA-Z]+":"[^"]*[А-Яа-яЁё]{3,}/, `${path}: в узбекских подписях кириллица`);
+    for (const src of page.match(/\/protos\/tovar\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+  }
+  for (const path of ["", "uz"]) {
+    const page = all[path];
+    assert.match(page, /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.equal((page.match(/class="pr[ "]/g) ?? []).length, 11, `${path}: в витрине не 11 товаров`);
+    assert.ok(page.includes('class="lens"') && page.includes("backdrop-filter") && page.includes("ScrollTrigger.min.js"), `${path}: нет линзы, стекла или ScrollTrigger`);
+    for (const id of ["mehaniki", "put", "prodavec", "cena", "rq-go", "bo-go", "ld", "fr-go"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
+  }
+  const stamped = stampedBundle("tovar", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("tovar.uz: товары и цены — с их сайта, новый облик 1 000 $ вместо 2 500 $ на 48 часов, допы в одном месте", async () => {
+  const D = await import("../scripts/protos/tovar/data.mjs");
+  /* Снято с tovar.uz 18.10.2026: id → цена, продавец, «Цена обновлена». */
+  const SITE: Record<number, [number, string, string]> = {
+    113945: [11350000, "elso", "2023-09-18"], 113947: [11350000, "elso", "2023-09-18"], 113844: [3970000, "elso", "2023-09-16"], 127572: [2737900, "shopit", "2025-09-17"],
+    113918: [2450000, "elso", "2023-09-18"], 113916: [1850000, "elso", "2023-09-18"], 127578: [1606550, "shopit", "2025-09-17"], 127558: [1282490, "shopit", "2025-09-16"],
+    130426: [36410000, "shopit", "2026-06-08"], 129337: [11760000, "shopit", "2025-12-23"], 118414: [10910778, "laptop", "2023-12-23"], 130703: [12650000, "shopit", "2026-07-22"],
+    113755: [13910000, "elso", "2023-09-16"], 113670: [5370000, "elso", "2023-09-16"], 130576: [1274000, "shopit", "2026-07-22"], 79478: [2310000, "macbro", "2022-01-08"],
+    79476: [1485000, "macbro", "2022-01-08"], 79479: [5500000, "macbro", "2022-01-08"], 119467: [846000, "sandal", "2024-02-10"], 130583: [527800, "shopit", "2026-05-05"], 53664: [1600000, "sayina", "2023-05-12"],
+  };
+  assert.equal(D.GOODS.length, Object.keys(SITE).length);
+  for (const g of D.GOODS) assert.deepEqual([g.p, g.s, g.upd], SITE[g.id], `${g.id}: цена, продавец или дата не как на tovar.uz`);
+  const plan = await import("../scripts/protos/tovar/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 2500);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
+  assert.ok(plan.ADDONS.filter((a: { new?: boolean }) => a.new).length >= 5, "механик, которых нет в УЗ, меньше пяти");
+  const site = bundlePages("tovar")!;
+  for (const html of [site.html, site.pages.uz]) {
+    assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});
