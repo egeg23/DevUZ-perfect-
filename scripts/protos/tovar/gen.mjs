@@ -502,7 +502,7 @@ function sitePage(l) {
 ${headTags(l, t("tovar.uz · торговая платформа · макет DevUz Studio", "tovar.uz · savdo platformasi · DevUz Studio maketi"), t("Макет tovar.uz: жидкое стекло и ваши товары, поиск на двух языках, цены разных продавцов на одной карточке, свежесть цены, торг, опт лесенкой, запрос цены, кабинет продавца.", "tovar.uz maketi: suyuq shisha va tovarlaringiz, ikki tilda qidiruv, bitta kartochkada turli sotuvchilar narxi, narx yangiligi, savdolashish, zinapoya ulgurji, narx so‘rovi, sotuvchi kabineti."))}
 <link rel="alternate" hreflang="${other}" href="${href(other)}">
 <link rel="preload" as="image" href="${IMG}/c-113945.webp">
-<script>(function(){var r=document.documentElement;r.classList.add('js');if(navigator.userAgentData&&innerWidth>900)r.classList.add('lq');var off=false;try{if(sessionStorage.getItem('tv-intro'))off=true}catch(e){}try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)off=true}catch(e){}if(/[?&]nointro/.test(location.search))off=true;if(off)r.classList.add('intro-off');else r.style.overflow='hidden'})()</script>
+<script>(function(){var r=document.documentElement;r.classList.add('js');try{history.scrollRestoration='manual';if(location.hash)history.replaceState(null,'',location.pathname+location.search)}catch(e){}if(navigator.userAgentData&&innerWidth>900)r.classList.add('lq');var off=false;try{if(sessionStorage.getItem('tv-intro'))off=true}catch(e){}try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)off=true}catch(e){}if(/[?&]nointro/.test(location.search))off=true;if(off)r.classList.add('intro-off');else r.style.overflow='hidden'})()</script>
 @@S@@
 </head>
 <body class="site" data-lang="${l}">
