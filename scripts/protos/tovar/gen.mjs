@@ -326,7 +326,7 @@ function heroBlock(l) {
   };
   const trio = TRIO.map((id) => G[id]).sort((a, b) => a.p - b.p);
   return `<section class="hero" id="hero"><div class="stage">
-<div class="world" aria-hidden="true"><i class="w1"></i><i class="w2"></i><i class="w3"></i><i class="w4"></i></div>
+<div class="world" aria-hidden="true"><img class="w-img" src="${IMG}/hero-glass-m.webp" srcset="${IMG}/hero-glass-m.webp 960w, ${IMG}/hero-glass.webp 1920w" sizes="100vw" alt="" fetchpriority="high" decoding="async"><video class="w-vid" muted loop playsinline preload="none" data-src="${IMG}/hero-glass.mp4"></video></div>
 <div class="shelf" aria-hidden="true">${ORBIT.map((id, k) => card(G[id], k)).join("")}${trio.filter((g) => g.id !== 113918).map((g, k) => card(g, 9 + k, "pr-x")).join("")}</div>
 <div class="lens" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${tagPath}"/></svg><span class="lens-hole"></span></div>
 <div class="hero-word" aria-hidden="true"><svg viewBox="0 0 1000 300" focusable="false"><text x="500" y="228" text-anchor="middle"><tspan>to</tspan><tspan class="v">v</tspan><tspan>ar</tspan></text><text class="dot" x="912" y="290" text-anchor="end">.uz</text></svg></div>
@@ -387,7 +387,7 @@ function mechBlock(l) {
   ];
   return `<section id="mehaniki" class="mech"><div class="wrap">
 ${head(`<span class="ours">${t("Чего нет у Uzum, OLX, Asaxiy, Texnomart", "Uzum, OLX, Asaxiy, Texnomart’da yo‘q")}</span>`, t("Шесть механик, <em>которые tovar.uz сделает первым</em>", "tovar.uz <em>birinchi qiladigan</em> olti mexanika"), t("Мы прошли узбекские площадки, Ozon, Wildberries, Яндекс Маркет, Авито, Amazon, eBay, Etsy, Faire и Alibaba. Рассрочка, доставка за день, чат и отзывы в Узбекистане уже есть. Вот то, чего нет ни у кого. Каждую можно потрогать.", "O‘zbek saytlari, Ozon, Wildberries, Yandex Market, Avito, Amazon, eBay, Etsy, Faire va Alibaba’ni ko‘rib chiqdik. Muddatli to‘lov, bir kunda yetkazish, chat va sharhlar O‘zbekistonda allaqachon bor. Mana hech kimda yo‘q narsalar. Har birini sinab ko‘rish mumkin."))}
-<div class="bento">${m.map(([k, i, h, p, w], n) => `<article class="mc glass rv a-${["rise", "side", "flip", "pop", "rise", "side"][n]}" data-m="${k}" style="--d:${(n % 3) * 70}ms"><header><span class="mc-i">${ic(i)}</span><h3>${h}</h3></header><p>${p}</p><div class="mc-w">${w}</div></article>`).join("")}</div>
+<div class="bento">${m.map(([k, i, h, p, w], n) => `<article class="mc glass rv a-${["rise", "side", "flip", "pop", "rise", "side"][n]}" data-m="${k}" style="--d:${(n % 3) * 70}ms"><header><img class="mc-g" src="${IMG}/g-${k}.webp" alt="" width="96" height="96" loading="lazy" decoding="async"><h3>${h}</h3></header><p>${p}</p><div class="mc-w">${w}</div></article>`).join("")}</div>
 <p class="mech-more">${ic("building")}<span>${t("Седьмая, не первыми, но обязательно: счёт на компанию по ИНН с реквизитами из справочника Golden Pages. Частично это есть у Prom.uz и Texnomart.", "Yettinchisi, birinchi emas, lekin albatta: Golden Pages ma’lumotnomasidan rekvizitlar bilan STIR bo‘yicha kompaniyaga hisob. Qisman bu Prom.uz va Texnomart’da bor.")}</span></p>
 </div></section>`;
 }

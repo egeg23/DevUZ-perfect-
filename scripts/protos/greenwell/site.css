@@ -99,6 +99,10 @@ section{position:relative;padding:64px 0}
 .hero{background:var(--g);color:#fff;padding:96px 0 56px;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:auto -20% -40% 30%;height:90%;border-radius:50%;background:var(--g3);opacity:.45;pointer-events:none}
 .hero-bg{position:absolute;inset:0;pointer-events:none}
+.hv-img,.hv-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:78% 50%}
+.hv-vid{opacity:0;transition:opacity .9s ease}
+.hv-vid.on{opacity:1}
+.hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--g) 0%,rgb(0 87 58 / .86) 38%,rgb(0 87 58 / .25) 70%,rgb(0 87 58 / .45) 100%)}
 .hj{position:absolute;width:auto;opacity:.22;filter:blur(1px)}
 .hj1{height:220px;left:-30px;top:120px;transform:rotate(-14deg)}
 .hj2{height:180px;right:-20px;top:70px}

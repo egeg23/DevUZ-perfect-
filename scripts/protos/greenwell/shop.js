@@ -102,7 +102,7 @@ V.home=function(){V.title=t('tagline');
   return '<div class="home">'+
   '<section class="hero"><div class="hero-t"><p class="kick">'+ic('leaf')+t('heroKick')+'</p><h1>'+t('heroH')+'</h1><p>'+h(G.brand.made)+'</p><div class="hero-cta"><a class="btn btn-w" href="#/c/all">'+t('toCatalog')+ic('arrow')+'</a></div></div>'+
   '<div class="hero-j" aria-hidden="true">'+jars.map(function(id,i){return '<img class="j j'+i+'" src="'+IMG+'/p-'+id+'-s.webp" alt="" width="220" height="420">'}).join('')+'</div></section>'+
-  '<nav class="goals" aria-label="'+t('cats')+'">'+G.cats.map(function(c){return '<a href="#/c/'+c.id+'" class="goal">'+ic(c.i)+'<span>'+h(c.n)+'</span></a>'}).join('')+'</nav>'+
+  '<nav class="goals" aria-label="'+t('cats')+'">'+G.cats.map(function(c){return '<a href="#/c/'+c.id+'" class="goal"><img src="'+G.img+'/goal-'+c.id+'.webp" alt="" loading="lazy" decoding="async"><span>'+h(c.n)+'</span></a>'}).join('')+'</nav>'+
   '<a class="nas-ban" href="#/c/all?sort=pop"><span class="nb-ic">'+ic('cal')+'</span><span><b>'+t('nasBanH')+'</b><small>'+t('nasBanS')+'</small></span><span class="nb-logos">'+G.nasiya.map(function(n){return '<i style="--c:'+n.c+'">'+h(n.n.split(' ')[0])+'</i>'}).join('')+'</span></a>'+
   sec(t('hits'),'<a class="more" href="#/c/all?sort=pop">'+t('all')+ic('arrow')+'</a>','<div class="rail">'+hits.map(function(p){return card(p,'rl')}).join('')+'</div>')+
   '<section class="trust">'+[['globe',t('tr1h'),t('tr1s')],['star',t('tr2h',{n:'4,9'}),t('tr2s',{n:fmt(total)})],['shield',t('tr3h'),t('tr3s')],['gift',t('tr4h'),t('tr4s',{n:fmt(G.shop.reviewPhotoPts)})]].map(function(x){return '<div class="tr">'+ic(x[0])+'<b>'+x[1]+'</b><small>'+x[2]+'</small></div>'}).join('')+'</section>'+

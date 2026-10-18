@@ -356,7 +356,7 @@ const phone = (l, path, id) => `<div class="iph" id="${id}"><div class="iph-in">
 function heroBlock(l) {
   const t = T(l);
   return `<section class="hero" id="hero" data-tone="green">
-<div class="hero-bg" aria-hidden="true"><img class="hj hj1" data-par="0.18" src="${IMG}/p-om-s.webp" alt=""><img class="hj hj2" data-par="-0.12" src="${IMG}/p-d3-s.webp" alt=""><img class="hj hj3" data-par="0.26" src="${IMG}/p-nails-s.webp" alt=""></div>
+<div class="hero-bg" aria-hidden="true"><img class="hv-img" src="${IMG}/hero-caps-m.webp" srcset="${IMG}/hero-caps-m.webp 960w, ${IMG}/hero-caps.webp 1920w" sizes="100vw" alt="" fetchpriority="high" decoding="async"><video class="hv-vid" muted loop playsinline preload="none" data-src="${IMG}/hero-caps.mp4"></video></div>
 <div class="wrap hero-in">
 <div class="hero-txt">
 <p class="kicker light">${t("Макет интернет-магазина для Greenwell", "Greenwell uchun internet-do‘kon maketi")}</p>
