@@ -34,6 +34,7 @@ import { flingVars, motionCss, motionsFor } from "@/lib/proto/motion";
 import { trick } from "@/lib/proto/tricks";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { siteUrl } from "@/lib/seo";
+import { dzIntroSolo } from "@/lib/proto/dz-video.mjs";
 
 /** Условия на макеты — на языке прототипа. */
 export const mockupTermsUrl = (locale: "ru" | "uz") => `${siteUrl}/${locale}/${MOCKUP_TERMS_PATH}`;
@@ -559,6 +560,7 @@ export function bookingHtml(input: { facts: ProtoFacts; niche: ProtoNiche }): st
 <script>if(!(window.CSS&&CSS.supports&&CSS.supports("animation-timeline:view()")))document.documentElement.className="no-sdt"</script>
 </head>
 <body>
+${dzIntroSolo(facts.locale)}
 <header class="top">
   <div class="wrap">
     <span class="brand">${logo}</span>

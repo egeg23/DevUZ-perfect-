@@ -1360,28 +1360,43 @@ test("tovar.uz: товары и цены — с их сайта, новый об
   }
 });
 
-test("заставка DevUz: видео из /protos/_dz во всех макетах с промо, промо кодом осталось запасным", async () => {
+test("заставка DevUz: видео в каждом макете, кроме пяти старых, промо кодом осталось запасным", async () => {
   const { readdirSync, existsSync, statSync } = await import("node:fs");
   for (const f of ["dz-intro-16.mp4", "dz-intro-9.mp4", "dz-intro-16.webp", "dz-intro-9.webp"]) {
     assert.ok(existsSync(`public/protos/_dz/${f}`) && statSync(`public/protos/_dz/${f}`).size > 1000, `нет ${f}`);
   }
-  const names = readdirSync("scripts/protos").filter((n) => existsSync(`scripts/protos/${n}/intro.js`));
-  assert.equal(names.length, 20, "двадцать макетов с промо DevUz");
+  /*
+   * Владелец, 18.10.2026: видео — в каждом новом макете, само, без
+   * согласований. Новый макет без него сюда не попадёт: тест берёт все
+   * сборки. Исключения — пять старых, сданных до правила (у трёх своя
+   * заставка id="dz"); список только сокращается.
+   */
+  const BEFORE_VIDEO = ["automechanic", "bloger-agency", "giftora", "intalim", "shox-hospital"];
+  const names = readdirSync("content/proto-bundles").map((f) => f.replace(/\.json$/, "")).filter((n) => !BEFORE_VIDEO.includes(n));
+  assert.ok(names.length >= 20, "макетов с видео меньше двадцати");
   for (const n of names) {
-    assert.equal(readdirSync(`public/protos/${n}`).filter((f) => /^dz-intro/.test(f)).length, 0, `${n}: видео скопировано в макет, а должно быть одно`);
-    const site = bundlePages(n)!;
+    if (existsSync(`public/protos/${n}`)) assert.equal(readdirSync(`public/protos/${n}`).filter((f) => /^dz-intro/.test(f)).length, 0, `${n}: видео скопировано в макет, а должно быть одно`);
+    const site = bundlePages(n);
+    assert.ok(site, `${n}: сборка не подключена в lib/proto/bundles.ts`);
     const all = { "": site.html, ...site.pages };
-    const intros = Object.entries(all).filter(([, html]) => html.includes('id="intro"'));
-    assert.ok(intros.length > 0, `${n}: нет заставки`);
+    /* Видео — на главной: заставка со знаком клиента (#intro) или своя поверх страницы (#dzi). */
+    const intros = Object.entries(all).filter(([, html]) => html.includes('id="intro"') || html.includes('id="dzi"'));
+    assert.ok(intros.length > 0, `${n}: нет заставки с видео DevUz (lib/proto/dz-video.mjs)`);
     for (const [path, html] of intros) {
       const at = `${n} /${path}`;
-      const intro = html.slice(html.indexOf('id="intro"'));
-      assert.match(intro, /^id="intro"[^>]*>\n<div class="dz-vid" aria-hidden="true"><picture><source media="\(orientation: portrait\)" srcset="\/protos\/_dz\/dz-intro-9\.webp"><img src="\/protos\/_dz\/dz-intro-16\.webp" alt="" fetchpriority="high"><\/picture><video muted playsinline/, `${at}: видео не первым слоем заставки`);
+      const solo = !html.includes('id="intro"');
+      const intro = html.slice(html.indexOf(solo ? 'id="dzi"' : 'id="intro"'));
+      assert.match(intro, /^id="(intro|dzi)"[^>]*>\n?<div class="dz-vid" aria-hidden="true"><picture><source media="\(orientation: portrait\)" srcset="\/protos\/_dz\/dz-intro-9\.webp"><img src="\/protos\/_dz\/dz-intro-16\.webp" alt="" fetchpriority="high"><\/picture><video muted playsinline/, `${at}: видео не первым слоем заставки`);
       assert.ok(html.includes("'/protos/_dz/dz-intro-'+(tall?'9':'16')+'.mp4'"), `${at}: нет видео по ориентации`);
       assert.match(html, /prefers-reduced-motion: reduce\)'\)\.matches\)off=true/, `${at}: видео не уступает reduced motion`);
       assert.match(html, /c&&c\.saveData\)off=true/, `${at}: видео не уступает экономии трафика`);
       assert.match(html, /if\(!played\)code\(\)\},1200\)/, `${at}: нет запасного пути через 1,2 с`);
       assert.match(html, /playbackRate=1\.2/, `${at}: видео не 1.2x`);
+      if (solo) {
+        assert.match(html, /dzVideo\(b,close\)/, `${at}: заставка не зовёт видео`);
+        assert.ok(html.includes('class="dzi-skip"'), `${at}: нет «Пропустить»`);
+        continue;
+      }
       assert.match(html, /if\(typeof dzVideo==='function'\)dzv=dzVideo\(box,go\);else go\(false\)/, `${at}: intro.js не зовёт видео`);
       assert.match(html, /if\(dzv&&dzv\.on\(\)\)\{dzv\.end\(\);return\}/, `${at}: нажатие во время видео не ведёт дальше`);
       assert.match(html, /start=performance\.now\(\)-\(video\?OPEN-300:0\)/, `${at}: после видео не к знаку клиента`);
