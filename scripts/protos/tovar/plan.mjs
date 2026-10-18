@@ -88,31 +88,35 @@ export const ALL = BASE.promo + ADDONS.reduce((s, a) => s + a.price, 0);
 /* Маркетплейс под ключ. Владелец DevUz, 18.10.2026: «выведи туда прям
    полноценный маркетплейс на покупку, у нас же есть код… Стоимость: 30000 со
    всеми микросервисами, логикой, юридической документацией под Узбекистан и
-   т. д., в общем под ключ». Цена владельца, не акция 48 часов. */
+   т. д., в общем под ключ». Цена владельца, не акция 48 часов.
+   Состав — по коду ядра (egeg23/FlyMart, бренд lbmgo): что в нём есть, то и
+   написано как есть; приложение для iPhone и Android, Payme, удержание денег
+   до получения заказа и кешбэк в коде ядра не готовы, их делаем в рамках
+   цены. */
 export const TURNKEY = {
   price: 30000,
   ru: {
     t: "Маркетплейс под ключ",
-    d: "Не новый облик, а площадка, на которой покупают: деньги, склад, доставка, продавцы, споры и документы. На нашем готовом ядре маркетплейса, под tovar.uz и ваших продавцов.",
+    d: "Не новый облик, а площадка, на которой покупают: деньги, налоговая, склад, доставка, продавцы, споры и документы. На нашем готовом ядре маркетплейса: 18 сервисов, уже связанных с платёжными системами, налоговой и службами доставки Узбекистана. Переносим под tovar.uz и ваших продавцов и доводим до запуска.",
     groups: [
-      ["Площадка", ["Сайт и приложение покупателя для iPhone и Android", "Кабинет продавца и кабинет оператора площадки", "Модерация товаров, жалобы и споры", "Перенос ваших компаний и товаров с tovar.uz"]],
-      ["Микросервисы и логика", ["Каталог и поиск на русском и узбекском", "Корзина и заказы у нескольких продавцов сразу", "Запрос цены, торг, опт лесенкой, «цена свежая»", "Чат, отзывы, рейтинг и время ответа продавца", "Уведомления: SMS, Telegram, пуши", "Аналитика для площадки и продавцов"]],
-      ["Деньги", ["Оплата Click, Payme, Uzum, Uzcard и Humo", "Деньги держит площадка и отдаёт продавцу, когда покупатель получил заказ", "Комиссия площадки, счета и выплаты продавцам", "Фискальные чеки через ОФД и чек покупателю в PDF", "Отмены и возврат денег"]],
-      ["Склад и доставка", ["Склад: приёмка, хранение, сборка заказов, инвентаризация", "Отдельное приложение для склада", "Курьеры и самовывоз, маршруты и статус заказа у покупателя", "Бот продавца и бот доставки в Telegram"]],
-      ["Маркетинг", ["Бонусы и кешбэк покупателям", "Баннеры, подборки и страницы акций без программиста", "Группы покупателей и рассылки по ним", "Платное поднятие товаров в выдаче для продавцов"]],
-      ["Закон Узбекистана", ["Публичная оферта для покупателей", "Договор с продавцами и правила площадки", "Политика персональных данных по закону «О персональных данных», базы на серверах в Узбекистане", "Правила возврата по закону «О защите прав потребителей»"]],
+      ["Площадка", ["Сайт покупателя и приложение для iPhone и Android", "Кабинет продавца: товары, склад, продажи, финансы, отзывы", "Панель оператора: модерация товаров, жалобы и споры", "Telegram-бот продавца: вход и новые заказы", "Перенос ваших компаний и товаров с tovar.uz"]],
+      ["18 сервисов и логика", ["Каталог и поиск на русском и узбекском, фильтры и подсказки", "Корзина и заказы у нескольких продавцов сразу, промокоды", "Отзывы, избранное, адреса покупателя", "Уведомления: SMS, почта, пуши, Telegram", "Связь с Billz, WooCommerce и API для продавцов", "Сверху механики макета: запрос цены, торг, опт лесенкой, «цена свежая»"]],
+      ["Деньги", ["Оплата Click, Uzum Bank и Via, наличные и терминал, Payme подключаем", "Рассрочка Uzum Nasiya и Intend", "Деньги продавцу после того, как покупатель получил заказ", "Комиссия площадки, счета и выплаты продавцам на банковский счёт", "Фискальные чеки через ОФД налоговой с кодами ИКПУ, чек в PDF, счета-фактуры через Didox", "Отмены и возврат денег"]],
+      ["Склад и доставка", ["Склад: остатки, ячейки, сборка, упаковка, возвраты", "Панель склада и печать этикеток", "Доставка Yandex Cargo, BTS и Fargo", "Пункты выдачи и постаматы, статус заказа у покупателя"]],
+      ["Маркетинг", ["Бонусы и кешбэк покупателям", "Баннеры, подборки и страницы акций без программиста", "Группы покупателей и рассылки: брошенная корзина, просьба об отзыве", "Рекомендации товаров и поднятие в выдаче"]],
+      ["Закон и запуск", ["Оферта для продавцов, договор с покупателем, пользовательское соглашение: готовые тексты, переписываем под tovar.uz", "Политика персональных данных по закону «О персональных данных», базы на серверах в Узбекистане", "Правила возврата по закону «О защите прав потребителей», правила отзывов и общения", "Проверка безопасности и нагрузки перед запуском"]],
     ],
   },
   uz: {
     t: "Kalit topshiriladigan marketpleys",
-    d: "Yangi ko‘rinish emas, balki xarid qilinadigan maydoncha: pul, ombor, yetkazish, sotuvchilar, nizolar va hujjatlar. Tayyor marketpleys yadromiz asosida, tovar.uz va sotuvchilaringiz uchun.",
+    d: "Yangi ko‘rinish emas, balki xarid qilinadigan maydoncha: pul, soliq, ombor, yetkazish, sotuvchilar, nizolar va hujjatlar. Tayyor marketpleys yadromiz asosida: O‘zbekiston to‘lov tizimlari, soliq va yetkazib berish xizmatlari bilan allaqachon bog‘langan 18 ta servis. tovar.uz va sotuvchilaringiz uchun ko‘chiramiz va ishga tushiramiz.",
     groups: [
-      ["Maydoncha", ["iPhone va Android uchun xaridor sayti va ilovasi", "Sotuvchi kabineti va maydoncha operatori kabineti", "Tovarlar moderatsiyasi, shikoyatlar va nizolar", "Kompaniya va tovarlaringizni tovar.uz’dan ko‘chirish"]],
-      ["Mikroservislar va mantiq", ["Rus va o‘zbek tilida katalog va qidiruv", "Bir nechta sotuvchidan bir vaqtda savat va buyurtma", "Narx so‘rovi, savdolashish, zinapoya ulgurji, «narx yangi»", "Chat, sharhlar, reyting va sotuvchi javob vaqti", "Xabarnomalar: SMS, Telegram, push", "Maydoncha va sotuvchilar uchun tahlil"]],
-      ["Pul", ["Click, Payme, Uzum, Uzcard va Humo orqali to‘lov", "Pulni maydoncha ushlab turadi va xaridor buyurtmani olgach sotuvchiga beradi", "Maydoncha komissiyasi, hisoblar va sotuvchilarga to‘lovlar", "OFD orqali fiskal cheklar va xaridorga PDF chek", "Bekor qilish va pulni qaytarish"]],
-      ["Ombor va yetkazish", ["Ombor: qabul, saqlash, buyurtmalarni yig‘ish, inventarizatsiya", "Ombor uchun alohida ilova", "Kuryerlar va olib ketish, marshrutlar va xaridorda buyurtma holati", "Telegramda sotuvchi boti va yetkazish boti"]],
-      ["Marketing", ["Xaridorlarga bonus va keshbek", "Dasturchisiz bannerlar, to‘plamlar va aksiya sahifalari", "Xaridor guruhlari va ularga xabarlar", "Sotuvchilar uchun qidiruvda pullik ko‘tarish"]],
-      ["O‘zbekiston qonuni", ["Xaridorlar uchun ommaviy oferta", "Sotuvchilar bilan shartnoma va maydoncha qoidalari", "«Shaxsga doir ma’lumotlar to‘g‘risida»gi qonun bo‘yicha shaxsiy ma’lumotlar siyosati, bazalar O‘zbekistondagi serverlarda", "«Iste’molchilarning huquqlarini himoya qilish to‘g‘risida»gi qonun bo‘yicha qaytarish qoidalari"]],
+      ["Maydoncha", ["Xaridor sayti va iPhone hamda Android uchun ilova", "Sotuvchi kabineti: tovarlar, ombor, sotuvlar, moliya, sharhlar", "Operator paneli: tovarlar moderatsiyasi, shikoyatlar va nizolar", "Sotuvchi uchun Telegram-bot: kirish va yangi buyurtmalar", "Kompaniya va tovarlaringizni tovar.uz’dan ko‘chirish"]],
+      ["18 ta servis va mantiq", ["Rus va o‘zbek tilida katalog va qidiruv, filtrlar va maslahatlar", "Bir nechta sotuvchidan bir vaqtda savat va buyurtmalar, promokodlar", "Sharhlar, sevimlilar, xaridor manzillari", "Xabarnomalar: SMS, pochta, push, Telegram", "Billz, WooCommerce bilan bog‘lanish va sotuvchilar uchun API", "Ustiga maket mexanikalari: narx so‘rovi, savdolashish, zinapoya ulgurji, «narx yangi»"]],
+      ["Pul", ["Click, Uzum Bank va Via orqali to‘lov, naqd va terminal, Payme’ni ulaymiz", "Uzum Nasiya va Intend orqali muddatli to‘lov", "Xaridor buyurtmani olgandan keyin pul sotuvchiga", "Maydoncha komissiyasi, hisoblar va sotuvchilarga bank hisobiga to‘lovlar", "Soliq OFD orqali IKPU kodli fiskal cheklar, PDF chek, Didox orqali hisob-fakturalar", "Bekor qilish va pulni qaytarish"]],
+      ["Ombor va yetkazish", ["Ombor: qoldiqlar, yacheykalar, yig‘ish, qadoqlash, qaytarishlar", "Ombor paneli va yorliqlarni chop etish", "Yandex Cargo, BTS va Fargo orqali yetkazish", "Topshirish punktlari va postamatlar, xaridorda buyurtma holati"]],
+      ["Marketing", ["Xaridorlarga bonus va keshbek", "Dasturchisiz bannerlar, to‘plamlar va aksiya sahifalari", "Xaridor guruhlari va xabarlar: tashlab ketilgan savat, sharh so‘rovi", "Tovar tavsiyalari va qidiruvda ko‘tarish"]],
+      ["Qonun va ishga tushirish", ["Sotuvchilar uchun oferta, xaridor bilan shartnoma, foydalanuvchi kelishuvi: tayyor matnlar, tovar.uz uchun qayta yozamiz", "«Shaxsga doir ma’lumotlar to‘g‘risida»gi qonun bo‘yicha shaxsiy ma’lumotlar siyosati, bazalar O‘zbekistondagi serverlarda", "«Iste’molchilarning huquqlarini himoya qilish to‘g‘risida»gi qonun bo‘yicha qaytarish qoidalari, sharhlar va muloqot qoidalari", "Ishga tushirishdan oldin xavfsizlik va yuklama tekshiruvi"]],
     ],
   },
 };
