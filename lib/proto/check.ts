@@ -249,6 +249,12 @@ export function protoProblems(input: {
     out.push({ code: "action", text: "На странице есть ссылка в никуда." });
   }
 
+  // 10б. Заставка DevUz — видео (владелец, 18.10.2026: в каждом новом
+  // макете, само, без согласований). Шаблон без неё не сдаётся.
+  if (!html.includes('class="dz-vid"') || !html.includes("/protos/_dz/dz-intro-") || !/dzVideo\(/.test(js)) {
+    out.push({ code: "intro", text: "Нет заставки DevUz: видео из /protos/_dz (lib/proto/dz-video.mjs)." });
+  }
+
   // 11. Страница не индексируется.
   if (!/<meta\s+name="robots"[^>]*noindex/i.test(html)) {
     out.push({ code: "index", text: "Нет noindex. Чужой бизнес в выдаче Google — чужой бизнес, продвигаемый без спроса." });

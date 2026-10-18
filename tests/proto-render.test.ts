@@ -151,7 +151,9 @@ test("анимацию есть чем выключить, и она не тро
   const html = build().html;
   assert.ok(html.includes("prefers-reduced-motion"), "нет выключателя анимации");
   // Ни одного обработчика прокрутки: плавность делает браузер, а не мы.
-  assert.equal(/addEventListener/.test(html), false, "на странице слушают события");
+  // События у страницы есть только у заставки DevUz: видео, нажатие, Esc.
+  assert.equal(/addEventListener\(\s*["'](?:scroll|wheel|touchmove)/.test(html), false, "на странице слушают прокрутку");
+  assert.equal(/scrollTo\(|scrollIntoView\(/.test(html), false, "страница двигает прокрутку сама");
   assert.equal(/scroll-behavior\s*:\s*smooth/.test(html), false);
 
   const css = html.slice(html.indexOf("<style>"), html.indexOf("</style>"));
@@ -165,13 +167,29 @@ test("проверка ловит подделки, которые выгляд�
   const good = build().html;
   const broken = (html: string) => protoProblems({ html, facts: facts(), niche }).map((problem) => problem.code);
 
-  assert.ok(broken(good.replace(/@media \(prefers-reduced-motion:reduce\)/, "@media all")).includes("motion"));
+  assert.ok(broken(good.replace(/@media \(prefers-reduced-motion:reduce\)/g, "@media all")).includes("motion"));
+  assert.ok(broken(good.replace('class="dz-vid"', 'class="v"')).includes("intro"), "прототип без видео DevUz прошёл");
   assert.ok(broken(good.replace("@keyframes rise{from{opacity:0", "@keyframes rise{from{top:0;opacity:0")).includes("repaint"));
   assert.ok(broken(good.replace("<script>", '<script>window.addEventListener("scroll",()=>{});')).includes("hijack"));
   assert.ok(broken(good.replace(".wrap{width:100%", ".wrap{width:100vw")).includes("overflow"));
   assert.ok(broken(good.replace(/noindex,nofollow,noarchive/, "index,follow")).includes("index"));
   assert.ok(broken(good.replace('<span class="brand">', '<a class="brand" href="#">')).includes("action"));
   assert.deepEqual(broken(good), []);
+});
+
+test("заставка DevUz: видео в каждом прототипе из панели, само", () => {
+  for (const locale of ["ru", "uz"] as const) {
+    const html = build({ locale }).html;
+    const body = html.slice(html.indexOf("<body>"));
+    assert.match(body, /^<body>\n<div class="dzi" id="dzi" role="presentation"><div class="dz-vid" aria-hidden="true"><picture>/, "видео не первым в странице");
+    assert.ok(html.includes('srcset="/protos/_dz/dz-intro-9.webp"') && html.includes('src="/protos/_dz/dz-intro-16.webp"'), "нет первого кадра");
+    assert.ok(html.includes("'/protos/_dz/dz-intro-'+(tall?'9':'16')+'.mp4'"), "нет видео по ориентации");
+    assert.match(html, /<video muted playsinline/, "видео со звуком");
+    assert.match(html, /if\(!played\)code\(\)\},1200\)/, "нет ухода на сайт, если видео не заиграло");
+    assert.match(html, /sessionStorage\.getItem\('dz-intro'\)/, "заставка не раз за визит");
+    assert.ok(body.includes(locale === "uz" ? "O‘tkazib yuborish" : "Пропустить"), "нет «Пропустить» на языке прототипа");
+    assert.doesNotMatch(html, /watermark|fingerprint|stamp|seed|data-mark/i, "слово, по которому находят отпечаток");
+  }
 });
 
 test("сцена берёт шесть услуг, остальные уходят списком", () => {
