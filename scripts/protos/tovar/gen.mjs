@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
-import { BASE, ADDONS, ALL, OFFER_HOURS } from "./plan.mjs";
+import { BASE, ADDONS, ALL, OFFER_HOURS, TURNKEY } from "./plan.mjs";
 
 /*
  * Макет торговой платформы tovar.uz, ru (главный, как у них) и uz:
@@ -449,7 +449,10 @@ function offerBlock(l) {
   const t = T(l);
   const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"><span class="sw" aria-hidden="true"></span><span class="kit-t2"><b>${a[l].t}${a.new ? `<em class="star new">${t("нет в УЗ", "UZ’da yo‘q")}</em>` : a.star ? `<em class="star">${t("нужно первым", "birinchi kerak")}</em>` : ""}</b><small>${a[l].e}</small></span><span class="kit-pr">+${usd(a.price)}</span></label>`;
   return `<section class="offer" id="cena"><div class="wrap">
-${head(`<span class="ours">${t("Предложение DevUz Studio", "DevUz Studio taklifi")}</span>`, t("Стоимость", "Narxi"), t(`Новый облик tovar.uz без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем в течение 48 часов. Механики из этого макета и кабинет продавца идут допами: включайте тумблерами, итог пересчитается.`, `Qo‘shimchalarsiz tovar.uz’ning yangi ko‘rinishi: 48 soat ichida boshlasak, ${usd(BASE.price)} o‘rniga ${usd(BASE.promo)}. Ushbu maketdagi mexanikalar va sotuvchi kabineti qo‘shimchalar: tumblerlar bilan yoqing, jami qayta hisoblanadi.`))}
+${head(`<span class="ours">${t("Предложение DevUz Studio", "DevUz Studio taklifi")}</span>`, t("Стоимость", "Narxi"), t(`Два пути. Полноценный маркетплейс под ключ: покупка, оплата, доставка, продавцы и документы под закон Узбекистана, ${usd(TURNKEY.price)}. Или новый облик tovar.uz без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем в течение 48 часов, а механики и кабинет продавца допами.`, `Ikki yo‘l. Kalit topshiriladigan to‘liq marketpleys: xarid, to‘lov, yetkazish, sotuvchilar va O‘zbekiston qonuniga mos hujjatlar, ${usd(TURNKEY.price)}. Yoki qo‘shimchalarsiz tovar.uz’ning yangi ko‘rinishi: 48 soat ichida boshlasak, ${usd(BASE.price)} o‘rniga ${usd(BASE.promo)}, mexanikalar va sotuvchi kabineti esa qo‘shimcha.`))}
+<article class="tk glass rv a-rise" id="pod-klyuch"><div class="tk-h"><div><span class="kb-tag tk-tag">${t("Полноценный маркетплейс", "To‘liq marketpleys")}</span><h3>${TURNKEY[l].t}</h3><p>${TURNKEY[l].d}</p></div><div class="tk-p"><b>${usd(TURNKEY.price)}</b><small>${t("всё в одной цене", "hammasi bitta narxda")}</small><a class="btn btn-red" href="https://t.me/Devuz_studio_bot?start=tovar-mp">${ic("tg")}<span>${t("Обсудить маркетплейс", "Marketpleysni muhokama qilish")}</span></a></div></div>
+<div class="tk-g">${TURNKEY[l].groups.map(([g, items]) => `<section><h4>${g}</h4><ul>${items.map((x) => `<li>${ic("check")}<span>${x}</span></li>`).join("")}</ul></section>`).join("")}</div></article>
+<h3 class="kit-g tk-or">${t("Или начать с нового облика: собрать нужное тумблерами", "Yoki yangi ko‘rinishdan boshlash: keraklisini tumblerlar bilan yig‘ish")}</h3>
 <div class="kit" id="konstruktor">
 <div class="kit-l">
 <div class="kit-base glass"><div><span class="kb-tag">${t("Входит всегда", "Har doim kiradi")}</span><b>${BASE[l].t}</b><p>${BASE[l].d}</p><p class="kb-w">${t(`Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель`, `Muddat: ${BASE.weeks[0]}-${BASE.weeks[1]} hafta`)}</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>${t("48 часов", "48 soat")}</small></div></div>

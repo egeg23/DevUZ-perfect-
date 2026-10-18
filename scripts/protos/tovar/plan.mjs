@@ -82,4 +82,33 @@ export const ADDONS = [
     uz: { t: "iPhone va Android uchun ilova", e: "Qidiruv, kartochkalar, savat, buyurtmalar va chat App Store va Google Play’da, qarshi narx haqida push" } },
 ];
 
+
 export const ALL = BASE.promo + ADDONS.reduce((s, a) => s + a.price, 0);
+
+/* Маркетплейс под ключ. Владелец DevUz, 18.10.2026: «выведи туда прям
+   полноценный маркетплейс на покупку, у нас же есть код… Стоимость: 30000 со
+   всеми микросервисами, логикой, юридической документацией под Узбекистан и
+   т. д., в общем под ключ». Цена владельца, не акция 48 часов. */
+export const TURNKEY = {
+  price: 30000,
+  ru: {
+    t: "Маркетплейс под ключ",
+    d: "Не новый облик, а площадка, на которой покупают: деньги, доставка, продавцы, споры и документы. На нашем готовом ядре маркетплейса, под tovar.uz и ваших продавцов.",
+    groups: [
+      ["Площадка", ["Сайт и приложение покупателя для iPhone и Android", "Кабинет продавца и кабинет оператора площадки", "Модерация товаров, жалобы и споры", "Перенос ваших компаний и товаров с tovar.uz"]],
+      ["Микросервисы и логика", ["Каталог и поиск на русском и узбекском", "Корзина и заказы у нескольких продавцов сразу", "Запрос цены, торг, опт лесенкой, «цена свежая»", "Чат, отзывы, рейтинг и время ответа продавца", "Уведомления: SMS, Telegram, пуши", "Аналитика для площадки и продавцов"]],
+      ["Деньги и доставка", ["Оплата Click, Payme, Uzum, Uzcard и Humo", "Комиссия площадки и выплаты продавцам", "Чеки покупателю через платёжные системы", "Курьеры и самовывоз, статус заказа"]],
+      ["Закон Узбекистана", ["Публичная оферта для покупателей", "Договор с продавцами и правила площадки", "Политика персональных данных по закону «О персональных данных», базы на серверах в Узбекистане", "Правила возврата по закону «О защите прав потребителей»"]],
+    ],
+  },
+  uz: {
+    t: "Kalit topshiriladigan marketpleys",
+    d: "Yangi ko‘rinish emas, balki xarid qilinadigan maydoncha: pul, yetkazish, sotuvchilar, nizolar va hujjatlar. Tayyor marketpleys yadromiz asosida, tovar.uz va sotuvchilaringiz uchun.",
+    groups: [
+      ["Maydoncha", ["iPhone va Android uchun xaridor sayti va ilovasi", "Sotuvchi kabineti va maydoncha operatori kabineti", "Tovarlar moderatsiyasi, shikoyatlar va nizolar", "Kompaniya va tovarlaringizni tovar.uz’dan ko‘chirish"]],
+      ["Mikroservislar va mantiq", ["Rus va o‘zbek tilida katalog va qidiruv", "Bir nechta sotuvchidan bir vaqtda savat va buyurtma", "Narx so‘rovi, savdolashish, zinapoya ulgurji, «narx yangi»", "Chat, sharhlar, reyting va sotuvchi javob vaqti", "Xabarnomalar: SMS, Telegram, push", "Maydoncha va sotuvchilar uchun tahlil"]],
+      ["Pul va yetkazish", ["Click, Payme, Uzum, Uzcard va Humo orqali to‘lov", "Maydoncha komissiyasi va sotuvchilarga to‘lovlar", "To‘lov tizimlari orqali xaridorga chek", "Kuryerlar va olib ketish, buyurtma holati"]],
+      ["O‘zbekiston qonuni", ["Xaridorlar uchun ommaviy oferta", "Sotuvchilar bilan shartnoma va maydoncha qoidalari", "«Shaxsga doir ma’lumotlar to‘g‘risida»gi qonun bo‘yicha shaxsiy ma’lumotlar siyosati, bazalar O‘zbekistondagi serverlarda", "«Iste’molchilarning huquqlarini himoya qilish to‘g‘risida»gi qonun bo‘yicha qaytarish qoidalari"]],
+    ],
+  },
+};

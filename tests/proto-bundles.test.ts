@@ -1347,9 +1347,11 @@ test("tovar.uz: товары и цены — с их сайта, новый об
   assert.equal(plan.OFFER_HOURS, 48);
   assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
   assert.ok(plan.ADDONS.filter((a: { new?: boolean }) => a.new).length >= 5, "механик, которых нет в УЗ, меньше пяти");
+  assert.equal(plan.TURNKEY.price, 30000, "маркетплейс под ключ — 30 000 $, цена владельца");
   const site = bundlePages("tovar")!;
   for (const html of [site.html, site.pages.uz]) {
     assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+    assert.ok(html.includes('id="pod-klyuch"') && html.includes("<b>30 000 $</b>"), "нет маркетплейса под ключ за 30 000 $");
   }
 });
