@@ -78,6 +78,6 @@ var end=K.until?Date.parse(K.until):start+K.hours*36e5;
 function pad(n){return (n<10?'0':'')+n}
 function tickT(){var left=Math.max(0,end-Date.now());if(!left){$('#timer').classList.add('over');tm.textContent='00:00:00';$('#timer span').firstChild.textContent=K.ended;return}var hh=Math.floor(left/36e5),mm=Math.floor(left%36e5/6e4),ss=Math.floor(left%6e4/1e3);tm.textContent=pad(hh)+':'+pad(mm)+':'+pad(ss);setTimeout(tickT,1000)}
 if(tm)tickT();
-/* Капсулы первого экрана живут видео только на компьютере: на телефоне, при «меньше движения» и экономии трафика стоит кадр. */
-var hv=$('.hv-vid');if(hv&&!REDUCED&&window.matchMedia&&matchMedia('(min-width:1024px)').matches&&!(navigator.connection&&navigator.connection.saveData)){hv.src=hv.getAttribute('data-src');var hp=hv.play();if(hp&&hp.then)hp.then(function(){hv.classList.add('on')},function(){})}
+/* Капсулы первого экрана живут видео и на телефоне: клиенты открывают макет из Telegram. При «меньше движения» и экономии трафика стоит кадр. */
+var hv=$('.hv-vid');if(hv&&!REDUCED&&!(navigator.connection&&navigator.connection.saveData)){hv.src=hv.getAttribute('data-src');var hp=hv.play();if(hp&&hp.then)hp.then(function(){hv.classList.add('on')},function(){})}
 })();
