@@ -32,7 +32,7 @@ const FONTS = "https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&f
 const read = (f) => readFileSync(DIR + f, "utf8");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const grp = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-const usd = (n) => grp(n) + " $";
+const usd = (n) => grp(n).replace(/ /g, "\u00a0") + "\u00a0$";
 const T = (l) => (ru, uz) => (l === "ru" ? ru : uz);
 const L2 = (p, l) => (Array.isArray(p) ? (l === "ru" ? p[0] : p[1]) : p);
 const href = (l, path = "") => BASEP + (l === "uz" ? "/uz" : "") + (path ? "/" + path : "");
