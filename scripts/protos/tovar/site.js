@@ -150,8 +150,8 @@ addEventListener('scroll',function(){headIdle();if(!tick){tick=true;requestAnima
 
 /* ── Конструктор цены: новый облик по акции и допы тумблерами ─────────── */
 var rows=$$('#konstruktor input[data-k]'),sumEl=$('#kit-total-sum'),addEl=$('#kit-add'),nEl=$('#kit-cnt'),shown=K.offer.base,r2=0;
-function rollK(to){var from=shown,st=performance.now();cancelAnimationFrame(r2);if(REDUCED){shown=to;sumEl.textContent=fmt(to)+' $';return}(function f(now){var k=Math.min(1,(now-st)/500);shown=Math.round(from+(to-from)*out3(k));sumEl.textContent=fmt(shown)+' $';if(k<1)r2=requestAnimationFrame(f)})(st)}
-function kitPrice(){var add=0,c=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');c++}});addEl.textContent=fmt(add)+' $';nEl.textContent=c;rollK(K.offer.base+add)}
+function rollK(to){var from=shown,st=performance.now();cancelAnimationFrame(r2);if(REDUCED){shown=to;sumEl.textContent=fmt(to)+'\u00a0$';return}(function f(now){var k=Math.min(1,(now-st)/500);shown=Math.round(from+(to-from)*out3(k));sumEl.textContent=fmt(shown)+'\u00a0$';if(k<1)r2=requestAnimationFrame(f)})(st)}
+function kitPrice(){var add=0,c=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');c++}});addEl.textContent=fmt(add)+'\u00a0$';nEl.textContent=c;rollK(K.offer.base+add)}
 rows.forEach(function(r){r.onchange=kitPrice});
 var all=$('#kit-all');if(all)all.onclick=function(){var on=rows.some(function(r){return !r.checked});rows.forEach(function(r){r.checked=on});kitPrice()};
 var nw=$('#kit-new');if(nw)nw.onclick=function(){var isNew={};K.offer.items.forEach(function(x){if(x.n)isNew[x.id]=1});rows.forEach(function(r){r.checked=!!isNew[r.getAttribute('data-k')]});kitPrice()};
