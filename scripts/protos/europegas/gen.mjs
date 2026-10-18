@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { ADDONS, BASE as KIT_BASE, BLOCKS } from "./plan.mjs";
 import { LOGO, logoSvg, logoSprite, signSvg } from "./logo.mjs";
 import { carSvg, cylSvg, vanSvg, CAR, CAR_SPOTS, GAS_LINE } from "./art.mjs";
+import { DZ_VIDEO } from "../dz-video.mjs";
 
 /*
  * Прототип GAZMETPROD SERVIS (europegas.uz): установка газобаллонного
@@ -149,6 +150,7 @@ function introHtml(l) {
   const word = [["D", 0], ["e", 0], ["v", 0], ["U", 1], ["z", 1]];
   const data = { rh: LOGO.rh, flame: LOGO.flame, inner: LOGO.inner, letters: LOGO.letters.map((x) => x.d), w: LOGO.w, h: LOGO.h, eye: LOGO.eye };
   return `<div class="intro" id="intro" role="presentation" data-addon="intro">
+${DZ_VIDEO}
 <div class="dz-void"></div><div class="dz-grid"></div><div class="dz-glow"></div><div class="dz-ring"></div><div class="dz-flash"></div>
 <div class="dz-stage">${DZSIGN}<div class="dz-name"><p class="dz-word" aria-hidden="true">${word.map(([c, a], i) => `<span${a ? ' class="a"' : ""} style="--i:${i}">${c}</span>`).join("")}</p><p class="dz-domain" aria-hidden="true">devuz.studio</p></div><div class="dz-bar" aria-hidden="true"></div><p class="dz-for">${t("прототип для GAZMETPROD SERVIS", "GAZMETPROD SERVIS uchun prototip")}</p></div>
 <canvas class="dz-code" aria-hidden="true"></canvas>

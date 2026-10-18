@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { ADDONS, BASE as KIT_BASE, BLOCKS, GROUPS } from "./plan.mjs";
+import { DZ_VIDEO } from "../dz-video.mjs";
 
 /*
  * Прототип ShahaR.Uz (shahar.uz) — портал недвижимости по всему Узбекистану.
@@ -190,6 +191,7 @@ function introHtml(l) {
   const t = T(l);
   const word = [["D", 0], ["e", 0], ["v", 0], ["U", 1], ["z", 1]];
   return `<div class="intro" id="intro" role="presentation">
+${DZ_VIDEO}
 <div class="dz-void"></div><div class="dz-grid"></div><div class="dz-glow"></div><div class="dz-ring"></div><div class="dz-flash"></div>
 <div class="gp-field" aria-hidden="true"></div>
 <svg class="gp-art" aria-hidden="true" focusable="false"><defs><clipPath id="gp-clip" clipPathUnits="userSpaceOnUse">${"SHAHAR".split("").map(() => '<text font-family="Unbounded, sans-serif" font-weight="700" font-size="100"></text>').join("")}</clipPath></defs><g id="gp-line" fill="none" stroke="#E8B24C" stroke-width="1.2">${"SHAHAR".split("").map(() => '<text font-family="Unbounded, sans-serif" font-weight="700" font-size="100"></text>').join("")}</g></svg>

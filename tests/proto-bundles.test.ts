@@ -1359,3 +1359,37 @@ test("tovar.uz: товары и цены — с их сайта, новый об
     assert.ok(html.includes('id="pod-klyuch"') && html.includes("<b>30\u00a0000\u00a0$</b>"), "нет маркетплейса под ключ за 30 000 $");
   }
 });
+
+test("заставка DevUz: видео из /protos/_dz во всех макетах с промо, промо кодом осталось запасным", async () => {
+  const { readdirSync, existsSync, statSync } = await import("node:fs");
+  for (const f of ["dz-intro-16.mp4", "dz-intro-9.mp4", "dz-intro-16.webp", "dz-intro-9.webp"]) {
+    assert.ok(existsSync(`public/protos/_dz/${f}`) && statSync(`public/protos/_dz/${f}`).size > 1000, `нет ${f}`);
+  }
+  const names = readdirSync("scripts/protos").filter((n) => existsSync(`scripts/protos/${n}/intro.js`));
+  assert.equal(names.length, 20, "двадцать макетов с промо DevUz");
+  for (const n of names) {
+    assert.equal(readdirSync(`public/protos/${n}`).filter((f) => /^dz-intro/.test(f)).length, 0, `${n}: видео скопировано в макет, а должно быть одно`);
+    const site = bundlePages(n)!;
+    const all = { "": site.html, ...site.pages };
+    const intros = Object.entries(all).filter(([, html]) => html.includes('id="intro"'));
+    assert.ok(intros.length > 0, `${n}: нет заставки`);
+    for (const [path, html] of intros) {
+      const at = `${n} /${path}`;
+      const intro = html.slice(html.indexOf('id="intro"'));
+      assert.match(intro, /^id="intro"[^>]*>\n<div class="dz-vid" aria-hidden="true"><picture><source media="\(orientation: portrait\)" srcset="\/protos\/_dz\/dz-intro-9\.webp"><img src="\/protos\/_dz\/dz-intro-16\.webp" alt="" fetchpriority="high"><\/picture><video muted playsinline/, `${at}: видео не первым слоем заставки`);
+      assert.ok(html.includes("'/protos/_dz/dz-intro-'+(tall?'9':'16')+'.mp4'"), `${at}: нет видео по ориентации`);
+      assert.match(html, /prefers-reduced-motion: reduce\)'\)\.matches\)off=true/, `${at}: видео не уступает reduced motion`);
+      assert.match(html, /c&&c\.saveData\)off=true/, `${at}: видео не уступает экономии трафика`);
+      assert.match(html, /if\(!played\)code\(\)\},1200\)/, `${at}: нет запасного пути через 1,2 с`);
+      assert.match(html, /playbackRate=1\.2/, `${at}: видео не 1.2x`);
+      assert.match(html, /if\(typeof dzVideo==='function'\)dzv=dzVideo\(box,go\);else go\(false\)/, `${at}: intro.js не зовёт видео`);
+      assert.match(html, /if\(dzv&&dzv\.on\(\)\)\{dzv\.end\(\);return\}/, `${at}: нажатие во время видео не ведёт дальше`);
+      assert.match(html, /start=performance\.now\(\)-\(video\?OPEN-300:0\)/, `${at}: после видео не к знаку клиента`);
+      /* Запасное промо кодом на месте: знак, слово, искры, тайминги. */
+      assert.match(html, /class="dz-(sign|mark)"/, `${at}: нет знака DevUz для запасного пути`);
+      assert.match(html, /class="dz-code"/, `${at}: нет искр кода для запасного пути`);
+      assert.match(html, /BURST=2500,OPEN=3050/, `${at}: тайминги промо кодом изменились`);
+      assert.ok(html.includes('id="in-skip"'), `${at}: нет «Пропустить»`);
+    }
+  }
+});

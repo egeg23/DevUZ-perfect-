@@ -146,10 +146,14 @@ function frame(now){
   raf=requestAnimationFrame(frame);
 }
 /* Тап: во время промо сразу к ENOT, во время ENOT на первый экран. */
-box.addEventListener('click',function(e){if(e.target&&e.target.id==='in-skip'){finish();return}var t=performance.now()-start;if(t<OPEN-250)toMark();else finish()});
+box.addEventListener('click',function(e){if(e.target&&e.target.id==='in-skip'){finish();return}if(dzv&&dzv.on()){dzv.end();return}var t=performance.now()-start;if(t<OPEN-250)toMark();else finish()});
 addEventListener('wheel',finish,{passive:true});addEventListener('touchmove',finish,{passive:true});addEventListener('keydown',onKey);
 
 /* Страховка: что бы ни случилось, через 12 секунд страница открыта. */
 setTimeout(finish,12000);
-raf=requestAnimationFrame(frame);
+/* Промо DevUz: сначала видео (dz-video.mjs), после него знак с OPEN-300.
+   Видео не заиграло: промо кодом выше, с нуля. */
+var dzv=null;
+function go(video){if(ended)return;start=performance.now()-(video?OPEN-300:0);last=performance.now();raf=requestAnimationFrame(frame)}
+if(typeof dzVideo==='function')dzv=dzVideo(box,go);else go(false);
 })();
