@@ -152,9 +152,12 @@ addEventListener('scroll',function(){headIdle();if(!tick){tick=true;requestAnima
 var rows=$$('#konstruktor input[data-k]'),sumEl=$('#kit-total-sum'),addEl=$('#kit-add'),nEl=$('#kit-cnt'),shown=K.offer.base,r2=0;
 function rollK(to){var from=shown,st=performance.now();cancelAnimationFrame(r2);if(REDUCED){shown=to;sumEl.textContent=fmt(to)+'\u00a0$';return}(function f(now){var k=Math.min(1,(now-st)/500);shown=Math.round(from+(to-from)*out3(k));sumEl.textContent=fmt(shown)+'\u00a0$';if(k<1)r2=requestAnimationFrame(f)})(st)}
 function kitPrice(){var add=0,c=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');c++}});addEl.textContent=fmt(add)+'\u00a0$';nEl.textContent=c;rollK(K.offer.base+add)}
-rows.forEach(function(r){r.onchange=kitPrice});
-var all=$('#kit-all');if(all)all.onclick=function(){var on=rows.some(function(r){return !r.checked});rows.forEach(function(r){r.checked=on});kitPrice()};
-var nw=$('#kit-new');if(nw)nw.onclick=function(){var isNew={};K.offer.items.forEach(function(x){if(x.n)isNew[x.id]=1});rows.forEach(function(r){r.checked=!!isNew[r.getAttribute('data-k')]});kitPrice()};
+function syncBuy(){$$('[data-buy]').forEach(function(b){var ks=b.getAttribute('data-buy').split(','),on=ks.every(function(k){var r=$('#konstruktor input[data-k="'+k+'"]');return r&&r.checked});b.setAttribute('aria-pressed',on);b.querySelector('span').textContent=on?K.offer.inBuy:K.offer.toBuy})}
+rows.forEach(function(r){r.onchange=function(){kitPrice();syncBuy()}});
+/* «Сейчас и станет»: кнопка включает в стоимость допы, которые чинят строку. */
+$$('[data-buy]').forEach(function(b){b.onclick=function(){var ks=b.getAttribute('data-buy').split(','),on=b.getAttribute('aria-pressed')!=='true';ks.forEach(function(k){var r=$('#konstruktor input[data-k="'+k+'"]');if(r)r.checked=on});kitPrice();syncBuy()}});
+var all=$('#kit-all');if(all)all.onclick=function(){var on=rows.some(function(r){return !r.checked});rows.forEach(function(r){r.checked=on});kitPrice();syncBuy()};
+var nw=$('#kit-new');if(nw)nw.onclick=function(){var isNew={};K.offer.items.forEach(function(x){if(x.n)isNew[x.id]=1});rows.forEach(function(r){r.checked=!!isNew[r.getAttribute('data-k')]});kitPrice();syncBuy()};
 var cp=$('#kit-copy');if(cp)cp.onclick=function(){var lines=[K.offer.head,'• '+K.offer.baseName+': '+fmt(K.offer.base)+' $'];rows.forEach(function(r){if(r.checked){var it=K.offer.items.filter(function(x){return x.id===r.getAttribute('data-k')})[0];lines.push('• '+it.t+': '+fmt(it.p)+' $')}});lines.push(K.offer.totalW+': '+sumEl.textContent);
   var txt=lines.join('\n');try{navigator.clipboard.writeText(txt).then(function(){cp.textContent=K.offer.copied})}catch(e){cp.textContent=K.offer.copied}};
 /* Отсчёт 48 часов с первого открытия на этом устройстве. */

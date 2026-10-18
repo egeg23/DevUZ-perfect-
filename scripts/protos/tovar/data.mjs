@@ -104,18 +104,19 @@ export const SYN = {
   heat: ["водонагреватель", "бойлер", "suv isitgich", "qozon", "ariston"],
 };
 
-/* «Сейчас и станет»: что видно на tovar.uz сегодня. */
+/* «Сейчас и станет»: что видно на tovar.uz сегодня. buy — допы из plan.mjs,
+   которые это чинят: цена строки — их сумма, кнопка включает их в стоимость. */
 export const NOW = [
-  { now: ["У AirPods Pro написано «Цена обновлена 08.01.2022», у Ariston 30 L «03.12.2020». Покупатель не знает, правда ли столько стоит, и звонит.", "AirPods Pro’da «Narx yangilangan 08.01.2022», Ariston 30 L’da «03.12.2020». Xaridor shu narxmi bilmaydi va qo‘ng‘iroq qiladi."],
+  { buy: ["fresh"], now: ["У AirPods Pro написано «Цена обновлена 08.01.2022», у Ariston 30 L «03.12.2020». Покупатель не знает, правда ли столько стоит, и звонит.", "AirPods Pro’da «Narx yangilangan 08.01.2022», Ariston 30 L’da «03.12.2020». Xaridor shu narxmi bilmaydi va qo‘ng‘iroq qiladi."],
     next: ["«Цена свежая» на карточке: видно, когда продавец подтвердил цену. Старые цены уходят вниз выдачи, продавцу напоминание.", "Kartochkada «Narx yangi»: sotuvchi narxni qachon tasdiqlagani ko‘rinadi. Eski narxlar pastga tushadi, sotuvchiga eslatma."] },
-  { now: ["«Корзина доступна в режиме просмотра! Чтобы заказать товар или услугу, необходима авторизация». Регистрация: почта, пароль, письмо.", "«Savat ko‘rish rejimida! Buyurtma berish uchun avtorizatsiya kerak». Ro‘yxatdan o‘tish: pochta, parol, xat."],
+  { buy: ["otp"], now: ["«Корзина доступна в режиме просмотра! Чтобы заказать товар или услугу, необходима авторизация». Регистрация: почта, пароль, письмо.", "«Savat ko‘rish rejimida! Buyurtma berish uchun avtorizatsiya kerak». Ro‘yxatdan o‘tish: pochta, parol, xat."],
     next: ["Заказ по номеру телефона и коду из SMS, без почты и пароля. Кабинет заводится сам после первого заказа.", "Telefon raqami va SMS kod bilan buyurtma, pochta va parolsiz. Kabinet birinchi buyurtmadan keyin o‘zi ochiladi."] },
-  { now: ["Телефон продавца спрятан за «Показать телефон». Переписка, как сказано в вашей справке, «не является полноценным чатом»: новое сообщение видно после обновления страницы.", "Sotuvchi telefoni «Telefonni ko‘rsatish» ortida. Yozishma, ma’lumotnomangizda aytilganidek, «to‘liq chat emas»: yangi xabar sahifa yangilangandan keyin ko‘rinadi."],
+  { buy: ["chat"], now: ["Телефон продавца спрятан за «Показать телефон». Переписка, как сказано в вашей справке, «не является полноценным чатом»: новое сообщение видно после обновления страницы.", "Sotuvchi telefoni «Telefonni ko‘rsatish» ortida. Yozishma, ma’lumotnomangizda aytilganidek, «to‘liq chat emas»: yangi xabar sahifa yangilangandan keyin ko‘rinadi."],
     next: ["Чат с продавцом прямо на карточке и отметка, за сколько он обычно отвечает: её считает площадка по настоящим ответам, а не продавец.", "Kartochkada sotuvchi bilan chat va u odatda qancha vaqtda javob berishi belgisi: uni sotuvchi emas, sayt haqiqiy javoblar bo‘yicha hisoblaydi."] },
-  { now: ["В узбекской версии подсказки поиска по-русски: «Смартфон», «samsung», «холодильник».", "O‘zbekcha versiyada qidiruv maslahatlari ruscha: «Смартфон», «samsung», «холодильник»."],
+  { buy: ["search"], now: ["В узбекской версии подсказки поиска по-русски: «Смартфон», «samsung», «холодильник».", "O‘zbekcha versiyada qidiruv maslahatlari ruscha: «Смартфон», «samsung», «холодильник»."],
     next: ["Поиск понимает оба языка: «muzlatgich» и «холодильник», «quloqchin» и «наушники» ведут в один раздел.", "Qidiruv ikki tilni tushunadi: «muzlatgich» va «холодильник», «quloqchin» va «наушники» bitta bo‘limga olib boradi."] },
-  { now: ["Между товарами чужая реклама: блоки Яндекса и Google. Покупатель уходит с площадки по чужому баннеру.", "Tovarlar orasida begona reklama: Yandex va Google bloklari. Xaridor begona banner orqali saytdan chiqib ketadi."],
+  { buy: ["promo"], now: ["Между товарами чужая реклама: блоки Яндекса и Google. Покупатель уходит с площадки по чужому баннеру.", "Tovarlar orasida begona reklama: Yandex va Google bloklari. Xaridor begona banner orqali saytdan chiqib ketadi."],
     next: ["Место рекламы занимают ваши продавцы: поднятие товара в выдаче оплачивается вам, а покупатель остаётся на tovar.uz.", "Reklama o‘rnini sotuvchilaringiz egallaydi: tovarni ko‘tarish sizga to‘lanadi, xaridor tovar.uz’da qoladi."] },
-  { now: ["Продавец заводит компанию формой из десятка полей и ждёт модератора на каждый товар. Оптовых цен до четырёх, но покупатель их считает сам.", "Sotuvchi o‘nlab maydonli forma bilan kompaniya ochadi va har tovarga moderatorni kutadi. Ulgurji narx to‘rttagacha, lekin xaridor ularni o‘zi hisoblaydi."],
+  { buy: ["start", "excel", "ladder"], now: ["Продавец заводит компанию формой из десятка полей и ждёт модератора на каждый товар. Оптовых цен до четырёх, но покупатель их считает сам.", "Sotuvchi o‘nlab maydonli forma bilan kompaniya ochadi va har tovarga moderatorni kutadi. Ulgurji narx to‘rttagacha, lekin xaridor ularni o‘zi hisoblaydi."],
     next: ["Компания за минуту по ИНН, товары списком из Excel. В корзине опт лесенкой: взял больше, цена за штуку падает сама.", "STIR bo‘yicha bir daqiqada kompaniya, tovarlar Excel ro‘yxati bilan. Savatda zinapoya ulgurji: ko‘proq olsangiz, dona narxi o‘zi tushadi."] },
 ];

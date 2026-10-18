@@ -234,6 +234,14 @@ section>.wrap{padding-top:64px;padding-bottom:64px}
 .nw-ar{stroke:var(--tag2);transform:rotate(90deg)}
 .nw-is{color:var(--ink);font-weight:700}
 @media (min-width:900px){.nw li{grid-template-columns:32px 1fr 24px 1fr;align-items:center;padding:20px 24px}.nw-n{grid-row:auto}.nw-ar{transform:none}}
+.nw-buy{grid-column:2/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin-top:8px;padding-top:12px;border-top:1px solid var(--line)}
+.nw-buy span{display:flex;align-items:baseline;gap:8px}
+.nw-buy b{font-size:18px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nw-buy small{font-size:12px;color:var(--mut)}
+.nw-buy .btn[aria-pressed="true"]{border-color:var(--ok);color:var(--ok)}
+.nw-sum{margin-top:16px;color:var(--ink2);font-size:14px}
+.nw-sum a{color:var(--tag2)}
+.kit-pr small{display:block;font-size:12px;font-weight:400;color:var(--mut);text-align:right}
 
 /* Механики: стеклянная мозаика над полем цвета */
 .mech{background:var(--bg2);overflow:hidden}
