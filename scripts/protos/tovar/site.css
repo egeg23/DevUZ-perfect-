@@ -398,7 +398,7 @@ section>.wrap{padding-top:64px;padding-bottom:64px}
 .tk-p .btn{margin-top:8px}
 .tk-g{display:grid;gap:16px;margin-top:24px}
 @media (min-width:768px){.tk-g{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (min-width:1100px){.tk-g{grid-template-columns:repeat(4,minmax(0,1fr))}.tk h3{font-size:36px}.tk-p{align-items:flex-end}.tk-p b{font-size:60px}}
+@media (min-width:1100px){.tk-g{grid-template-columns:repeat(3,minmax(0,1fr))}.tk h3{font-size:36px}.tk-p{align-items:flex-end}.tk-p b{font-size:60px}}
 .tk-g section{padding:16px;border-radius:18px;background:rgb(10 12 22 / .5);border:1px solid var(--line)}
 .tk-g h4{margin:0 0 12px;font:400 16px/1.3 var(--disp);color:var(--tag2)}
 .tk-g ul{display:grid;gap:8px}
