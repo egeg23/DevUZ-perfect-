@@ -103,7 +103,7 @@ ${DZ_VIDEO}
 }
 
 /* ── Общие части ─────────────────────────────────────────────────────── */
-const NAV = [["arhitektura", "Архитектура", ARH[0]], ["prolet", "Пролёт", HERO], ["interery", "Интерьеры", INT[0]], ["arhiv", "Архив", ARH[4]], ["uslugi", "Услуги", ARH[2]], ["byuro", "Бюро", INT[3]], ["kontakty", "Контакты", ARH[5]]];
+const NAV = [["arhitektura", "Архитектура", ARH[0]], ["prolet", "Пролёт", HERO], ["interery", "Интерьеры", INT[0]], ["arhiv", "Архив", ARH[4]], ["uslugi", "Услуги", ARH[2]], ["byuro", "Бюро", INT[3]], ["promo", "Наше промо", HERO], ["kontakty", "Контакты", ARH[5]]];
 
 function menuHtml(onHome) {
   const to = (id) => (onHome ? "#" + id : href() + "#" + id);
@@ -449,6 +449,23 @@ function teamBlock() {
 </section>`;
 }
 
+/* Наше промо: фильм «Сначала линия» о вилле APx180.2606 (владелец,
+   19.10.2026). Ролик не файлом: зашифрованные куски HLS, ключ даёт только
+   наш сервер тому, кому открыт макет (lib/proto/promo). Без панели
+   управления, без «скачать», без меню по правой кнопке. */
+function promoBlock() {
+  return `<section class="pm" id="promo" aria-label="Наше промо">
+<div class="sec-h"><p class="cap">Наше промо</p><h2 class="big" data-lines>${lines(["Сначала линия.", "<em>Потом дом.</em>"])}</h2>
+<p class="pm-note">36 секунд о вилле APx180.2606: от первой линии на кальке ночью в бюро до вечера на террасе готового дома.</p></div>
+<div class="pm-frame" data-src="${BASE}/promo/index.m3u8" data-lib="/protos/_lib/hls.light.min.js">
+<video class="pm-v" playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate noremoteplayback" preload="none" poster="${IMG}/promo/poster.webp" aria-label="Промо-фильм бюро SIA"></video>
+<button type="button" class="pm-play" aria-label="Смотреть промо"><span class="pm-ic" aria-hidden="true"></span><span class="pm-t">Смотреть</span></button>
+<button type="button" class="pm-snd" aria-pressed="true" hidden><span class="pm-snd-on">Звук включён</span><span class="pm-snd-off">Без звука</span></button>
+<span class="pm-bar" aria-hidden="true"><i></i></span>
+</div>
+</section>`;
+}
+
 function contactBlock() {
   return `<section class="ct" id="kontakty" aria-label="Контакты">
 <p class="cap">08 · Офис с шоурумом в центре Москвы</p>
@@ -553,7 +570,7 @@ function home() {
     title: "SIA · архитектурное бюро в Москве · макет DevUz Studio",
     desc: "Проектирование, дизайн интерьеров и экстерьеров, 3D-визуализация, авторский надзор и согласование. Москва, Таганская площадь, 88.",
     preload: `<link rel="preload" as="image" href="${drw(HERO.slug, true)}" media="(max-width: 800px)"><link rel="preload" as="image" href="${drw(HERO.slug)}" media="(min-width: 801px)">`,
-    body: [heroBlock(), statsBlock(), statementBlock(), archBlock(), flyBlock(), bflyBlock(), intBlock(), veloBlock(), kindsBlock(), foldersBlock(), indexBlock(), servicesBlock(), processBlock(), eventsBlock(), teamBlock(), panelBlock(), contactBlock()].join("\n") + secsJson(),
+    body: [heroBlock(), statsBlock(), statementBlock(), archBlock(), flyBlock(), bflyBlock(), intBlock(), veloBlock(), kindsBlock(), foldersBlock(), indexBlock(), servicesBlock(), processBlock(), eventsBlock(), teamBlock(), promoBlock(), panelBlock(), contactBlock()].join("\n") + secsJson(),
   });
 }
 
