@@ -507,6 +507,14 @@ li[hidden]{display:none}
 @media (min-width:720px){.pp-next-t .code{font-size:128px}}
 .pp-next-t b{font-weight:400;font-size:18px}
 
+/* Тумблер «Вариант 1 / Вариант 2» (второй вариант — страница v2). */
+.vt{position:fixed;z-index:55;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));display:inline-grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:999px;background:rgb(28 25 21 / .88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--on);font-size:13px;letter-spacing:.04em;transform:translateX(-50%);box-shadow:0 12px 24px -12px rgb(0 0 0 / .45);transition:opacity .6s var(--ease)}
+.vt a{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;min-height:36px;padding:0 14px;white-space:nowrap;transition:color .45s var(--ease)}
+.vt-k{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:999px;background:var(--paper);transition:transform .45s var(--ease)}
+.vt[data-cur="2"] .vt-k{transform:translateX(100%)}
+.vt[data-cur="1"] a[data-v="1"],.vt[data-cur="2"] a[data-v="2"]{color:var(--ink)}
+.menu-on .vt{opacity:0;pointer-events:none}
+@media (min-width:900px){.vt{left:var(--g);bottom:24px;transform:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important;transition-delay:0s !important}.intro{display:none}.hero{height:auto}.hero-stick{height:100svh}.arch,.lens,.hero-ink{display:none}.hero .wipe,.hero .wipe-in{transform:none}.hero-tx,.hero-tx .cap,.hero-sub{opacity:1 !important;transform:none !important}.hero-cap{display:none}.ln>span,[data-lines-p],.ix-row,.pr-list li,.pg-in{opacity:1 !important;transform:none !important}.stmt{height:auto}.stmt-stick{position:relative;height:auto;padding:96px var(--g)}.stmt-t .w{--o:1}.arh{height:auto !important}.arh-stick{position:relative;height:auto}.arh-track{transform:none !important;flex-wrap:wrap;width:auto}.ac{--c:1 !important}.ic{position:relative;top:auto}.ic-in{transform:none !important}.lam{display:none}.sv-pic img,.tm-pic img{transform:none !important}.od>span{transform:translateY(calc(var(--d) * -10%)) !important}.pp-hero{height:auto}.pp-stick{height:100svh}.pp-wipe,.pp-wipe .wipe-in{transform:none !important}.ev-e,.peek,.cursor,.shut{display:none}.fly,.bfl{height:auto;padding:96px var(--g)}.bfl-stick{display:none}.bfl-still{display:grid;gap:24px}.bfl-still img{width:100%;aspect-ratio:16 / 9;object-fit:cover}.fly-stick{display:none}.fly-still{display:grid;gap:24px}.fly-still img{width:100%;aspect-ratio:16 / 9;object-fit:cover}.fly-still figcaption{color:var(--on2);padding-top:8px}.velo-t,.drum-track{transform:none !important}.gf *{translate:none !important;opacity:1 !important}.gf-tilt{transform:none !important}}
 
 /* Блок «Панель сайта»: панель в окне браузера, грузится, когда до неё долистали. */
