@@ -185,7 +185,7 @@ test("заставка DevUz: видео в каждом прототипе из
     assert.ok(html.includes('srcset="/protos/_dz/dz-intro-9.webp"') && html.includes('src="/protos/_dz/dz-intro-16.webp"'), "нет первого кадра");
     assert.ok(html.includes("'/protos/_dz/dz-intro-'+(tall?'9':'16')+'.mp4'"), "нет видео по ориентации");
     assert.match(html, /<video muted playsinline/, "видео со звуком");
-    assert.match(html, /if\(!played\)code\(\)\},2500\)/, "нет ухода на сайт, если видео не заиграло за 2,5 с");
+    assert.match(html, /if\(now-t0>=4500\|\|\(now-t0>=2500&&now-fed>=2500\)\)code\(\)/, "нет ухода на сайт, если видео не грузится");
     assert.match(html, /sessionStorage\.getItem\('dz-intro'\)/, "заставка не раз за визит");
     assert.ok(body.includes(locale === "uz" ? "O‘tkazib yuborish" : "Пропустить"), "нет «Пропустить» на языке прототипа");
     assert.doesNotMatch(html, /watermark|fingerprint|stamp|seed|data-mark/i, "слово, по которому находят отпечаток");

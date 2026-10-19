@@ -1405,11 +1405,12 @@ test("заставка DevUz: видео в каждом макете, бывш�
       const at = `${n} /${path}`;
       const solo = !html.includes('id="intro"');
       const intro = html.slice(html.indexOf(solo ? 'id="dzi"' : 'id="intro"'));
+      if (!solo) assert.match(html, /\(function\(\)\{var s=document\.currentScript,b=s&&s\.parentNode;if\(b&&!document\.documentElement\.classList\.contains\('intro-off'\)\)dzStart\(b\)\}\)\(\)/, `${at}: видео не запускается сразу после разметки`);
       assert.match(intro, /^id="(intro|dzi)"[^>]*>\n?<div class="dz-vid" aria-hidden="true"><picture><source media="\(orientation: portrait\)" srcset="\/protos\/_dz\/dz-intro-9\.webp"><img src="\/protos\/_dz\/dz-intro-16\.webp" alt="" fetchpriority="high"><\/picture><video muted playsinline/, `${at}: видео не первым слоем заставки`);
       assert.ok(html.includes("'/protos/_dz/dz-intro-'+(tall?'9':'16')+'.mp4'"), `${at}: нет видео по ориентации`);
       assert.match(html, /prefers-reduced-motion: reduce\)'\)\.matches\)off=true/, `${at}: видео не уступает reduced motion`);
       assert.match(html, /c&&c\.saveData\)off=true/, `${at}: видео не уступает экономии трафика`);
-      assert.match(html, /if\(!played\)code\(\)\},2500\)/, `${at}: нет запасного пути через 2,5 с`);
+      assert.match(html, /if\(now-t0>=4500\|\|\(now-t0>=2500&&now-fed>=2500\)\)code\(\)/, `${at}: нет запасного пути, если видео не грузится`);
       assert.match(html, /playbackRate=1\.2/, `${at}: видео не 1.2x`);
       if (solo) {
         assert.match(html, /dzVideo\(b,close\)/, `${at}: заставка не зовёт видео`);
