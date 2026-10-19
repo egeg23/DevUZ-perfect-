@@ -1597,8 +1597,8 @@ test("Магазин Baldinini Tashkent: страница, магазин и п�
   assert.notEqual(stamped.pages["en/shop"], site.pages["en/shop"], "отпечаток не поставился на английском магазине");
 });
 
-test("Baldinini: товары с официального сайта, магазин 1 000 $ без админки, админка +300 $ или +500 $, допы на 4 000-6 000 $", async () => {
-  // Владелец, 19.10.2026: «Допов добавь на 4-6 тысяч $, база 1000$ без админки, админка +300$, расширенная админка 500$».
+test("Baldinini: товары с официального сайта, магазин 1 000 $ без админки, админка +300 $ или +500 $, допы на 40% дешевле", async () => {
+  // Владелец, 19.10.2026: «Допов добавь на 4-6 тысяч $, база 1000$ без админки, админка +300$, расширенная админка 500$»; затем: «Цены на допы порежь на 40%».
   const D = await import("../scripts/protos/baldinini/data.mjs");
   assert.ok(D.PRODUCTS.length >= 24, "меньше 24 моделей");
   for (const p of D.PRODUCTS) {
@@ -1618,7 +1618,9 @@ test("Baldinini: товары с официального сайта, магаз
   assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 18, "от 10 до 18 допов");
   for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.ru.e && a.uz.t && a.uz.e && a.en.t && a.en.e, `${a.id}: цена и описание на трёх языках`);
   assert.equal(plan.ADDONS_SUM, plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
-  assert.ok(plan.ADDONS_SUM >= 4000 && plan.ADDONS_SUM <= 6000, `сумма допов ${plan.ADDONS_SUM} вне 4 000-6 000 $`);
+  assert.equal(plan.ADDON_CUT, 0.4);
+  for (const a of plan.ADDONS) assert.equal(a.price, Math.round((a.full * 0.6) / 10) * 10, `${a.id}: цена не на 40% ниже обычной`);
+  assert.equal(plan.ADDONS_SUM, 3450, "все допы: 5 750 $ минус 40%");
   /* У каждого раздела панели — один уровень, и он совпадает с panel.js. */
   const secs = [...plan.PANELS.std.sections, ...plan.PANELS.pro.sections];
   assert.equal(new Set(secs).size, secs.length, "раздел в двух уровнях");

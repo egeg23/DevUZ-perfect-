@@ -4,11 +4,11 @@
 // кодом, курьером и оплатой картой, заказ в панели первой строкой, статус и
 // подтверждение брони из панели видны покупателю, закрытая распродажа.
 // Панель: «Панель / Расширенная», продавец не видит себестоимость и прибыль.
-// Конструктор: сумма допов 4 000-6 000 $. Все страницы на 390, 768 и 1440:
+// Конструктор: допы на 40% дешевле обычных (3 450 $ за все). Все страницы на 390, 768 и 1440:
 // без ошибок в консоли и прокрутки вбок; шапка прячется при прокрутке и
 // возвращается через 3 секунды.
 import { chromium } from "playwright-core";
-import { PANELS, ADDONS_SUM, BASE } from "./plan.mjs";
+import { PANELS, ADDONS, ADDONS_SUM, BASE } from "./plan.mjs";
 const B = `http://localhost:4812/proto/${"a".repeat(43)}`;
 const b = await chromium.launch({
   executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
@@ -51,7 +51,7 @@ const hash = async (p, h) => { await p.evaluate((x) => { location.hash = x; }, h
 async function code(p, sel, digits) { const ins = await p.$$(sel + " input"); for (let i = 0; i < ins.length; i++) await ins[i].fill(String(digits[i] ?? 1)); }
 
 /* Конструктор: суммы из plan.mjs. */
-if (ADDONS_SUM < 4000 || ADDONS_SUM > 6000) fail(`сумма допов ${ADDONS_SUM} $ вне 4 000-6 000 $`); else ok(`сумма допов ${ADDONS_SUM} $`);
+if (ADDONS_SUM !== 3450 || ADDONS.some((a) => a.price !== Math.round(a.full * 0.6 / 10) * 10)) fail(`допы не на 40% дешевле: ${ADDONS_SUM} $`); else ok(`сумма допов ${ADDONS_SUM} $ (−40%)`);
 if (BASE.promo !== 1000 || PANELS.std.price !== 300 || PANELS.pro.price !== 500) fail("база и админки не 1000 / 300 / 500");
 
 for (const lang of ["", "uz/", "en/"]) {
