@@ -42,6 +42,11 @@
     "<span><b>ИП MAKSIMOV EGOR ANDREEVICH</b> · Республика Узбекистан, г. Ташкент, " +
     "улица Шота Руставели, 138</span><span>devuz.studio</span>";
 
+  /* Черновик без юрлица (body data-no-legal): в подвале только сайт, пока
+     стороны не решили, от какого лица подписывается договор. */
+  if (document.body.hasAttribute("data-no-legal"))
+    foot = "<span>DevUz Studio</span><span>devuz.studio</span>";
+
   var sheets = document.querySelectorAll(".sheet");
   for (var i = 0; i < sheets.length; i++) {
     var top = document.createElement("header");

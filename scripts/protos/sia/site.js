@@ -7,6 +7,46 @@ var d=document,root=d.documentElement,body=d.body,$=function(s,c){return(c||d).q
 var REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches,FINE=matchMedia('(hover: hover) and (pointer: fine)').matches;
 var clamp=function(v,a,b){return Math.min(Math.max(v,a),b)};
 var vh=innerHeight,vw=innerWidth;
+
+/* Правки из панели сайта (panel, localStorage sia-panel-1): заголовки,
+   тексты, фото, порядок и видимость блоков, новости, архив, коллектив,
+   контакты. Накладываются до того, как остальной код считает блоки.
+   Загруженные фото лежат в IndexedDB sia-media. */
+(function(){var S;try{S=JSON.parse(localStorage.getItem('sia-panel-1'))}catch(e){}if(!S||S.v!==1)return;
+  var esc=function(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')};
+  var lns=function(t){return String(t).split('\n').filter(function(x){return x.trim()}).map(function(l,i){return '<span class="ln"><span>'+(i?'<em>'+esc(l)+'</em>':esc(l))+'</span></span>'}).join('')};
+  var later=[];function img(im,ref){if(!im||!ref)return;im.removeAttribute('srcset');if(ref.indexOf('m:')===0)later.push([im,ref]);else im.src=ref}
+  var cfg=$('#sia-secs'),SECS=cfg?JSON.parse(cfg.textContent):[];
+  SECS.forEach(function(c){var o=S.sec&&S.sec[c.id],el=$(c.sel);if(!o||!el)return;
+    if(o.hidden&&!c.fixed)el.style.display='none';
+    if(c.title&&o.title){var t=$(c.titleSel||'h2.big',el);if(t)t.innerHTML=lns(o.title)}
+    if(c.textSel&&o.text!=null){var x=$(c.textSel,el);if(x){if(c.words)x.innerHTML=o.text.split(' ').map(function(w,i){return '<span class="w" style="--i:'+i+'">'+esc(w)+'</span>'}).join(' ');else x.textContent=o.text}}
+    if(c.imgSel&&o.photos)$$(c.imgSel,el).forEach(function(im,i){img(im,o.photos[i])})});
+  if(S.order&&SECS.length){var anchor=$('#panel')||$('#kontakty');if(anchor)S.order.forEach(function(id){var c=SECS.filter(function(x){return x.id===id})[0],el=c&&!c.fixed&&$(c.sel);if(el)anchor.parentNode.insertBefore(el,anchor)})}
+  var ev=$('.ev-list');if(ev&&S.news)ev.innerHTML=S.news.filter(function(n){return n.on}).map(function(n,i){return '<li class="ev-i" style="--i:'+i+'"><p class="ev-d">'+esc(n.date)+'</p><h3>'+esc(n.title)+'</h3><p class="ev-w cap">'+esc(n.place)+'</p><p class="ev-t">'+esc(n.text)+'</p>'+(n.photo?'<img class="ev-ph" alt="" data-ref="'+esc(n.photo)+'">':'')+'<span class="ev-e" aria-hidden="true">'+esc(n.kind)+'</span></li>'}).join('');
+  $$('.ev-ph[data-ref]').forEach(function(im){img(im,im.getAttribute('data-ref'))});
+  var tm=$('.tm-list');if(tm&&S.team)tm.innerHTML=S.team.map(function(m,i){return '<li class="tm-i" style="--i:'+i+'"><span class="tm-pic"><img alt="" width="480" height="480" data-ref="'+esc(m.photo)+'"></span><p class="tm-n">'+esc(m.n)+'</p><p class="cap">'+esc(m.r)+'</p></li>'}).join('');
+  $$('.tm-pic img[data-ref]').forEach(function(im){img(im,im.getAttribute('data-ref'))});
+  var ix=$('#ix-list');if(ix){var P=S.proj||{};
+    $$('li',ix).forEach(function(li){var c=$('.ix-c',li),o=c&&P[c.textContent];if(!o)return;if(o.st==='draft'){li.parentNode.removeChild(li);return}
+      var set=function(sel,v){var e=$(sel,li);if(e&&v!=null)e.textContent=v};set('.ix-t',o.title);set('.ix-k',o.kinds);set('.ix-a',o.area?o.area+' м²':'');set('.ix-y',o.year);li.firstElementChild.setAttribute('data-cat',o.cat)});
+    (S.newProj||[]).filter(function(o){return o.st!=='draft'}).reverse().forEach(function(o){var li=d.createElement('li');li.innerHTML='<div class="'+'ix-row" data-cat="'+esc(o.cat)+'"'+(o.photos&&o.photos[0]&&o.photos[0].indexOf('m:')<0?' data-peek="'+esc(o.photos[0])+'"':'')+'><span class="ix-c">'+esc(o.code)+'</span><span class="ix-t">'+esc(o.title)+'</span><span class="ix-k">'+esc(o.kinds)+'</span><span class="ix-a">'+(o.area?esc(o.area)+' м²':'')+'</span><span class="ix-y">'+esc(o.year)+'</span><span class="ix-go"></span></div>';ix.insertBefore(li,ix.firstChild)});
+    var rows=$$('.ix-row',ix),cnt=function(k){return rows.filter(function(r){return k==='all'||r.getAttribute('data-cat')===k}).length};
+    $$('.ix-f button').forEach(function(b){var sup=$('sup',b);if(sup)sup.textContent=cnt(b.getAttribute('data-f'))});
+    var n=rows.length,m=n%10,k=n%100,first=$('#arhiv h2 .ln > span');if(first)first.textContent=n+' '+(m===1&&k!==11?'проект':m>=2&&m<=4&&(k<12||k>14)?'проекта':'проектов')}
+  var C=S.set;if(C){var digits=String(C.phone||'').replace(/\D/g,'');
+    $$('[data-k]').forEach(function(e){var v=C[e.getAttribute('data-k')];if(v)e.textContent=v});
+    $$('[data-kr="phone"]').forEach(function(e){if(C.phone)e.innerHTML='<span class="roll" data-t="'+esc(C.phone)+'"><span>'+esc(C.phone)+'</span></span>'});
+    if(digits)$$('a[href^="tel:"]').forEach(function(a){a.href='tel:+'+digits});
+    if(C.mail)$$('a[href^="mailto:"]').forEach(function(a){a.href='mailto:'+C.mail});
+    var wa=String(C.wa||'').replace(/\D/g,'');if(wa)$$('a[href^="https://wa.me/"]').forEach(function(a){a.href=a.href.replace(/wa\.me\/\d+/,'wa.me/'+wa)});
+    if(C.tg)$$('a[href^="https://t.me/+"]').forEach(function(a){a.href=C.tg});
+    if(C.seoT&&root.classList.contains('js')&&$('#sia-secs'))d.title=C.seoT}
+  if(later.length&&window.indexedDB){var rq=indexedDB.open('sia-media',1);rq.onupgradeneeded=function(){rq.result.createObjectStore('f')};rq.onsuccess=function(){var db=rq.result;later.forEach(function(x){try{var g=db.transaction('f').objectStore('f').get(x[1]);g.onsuccess=function(){if(g.result)x[0].src=URL.createObjectURL(g.result)}}catch(e){}})}}
+})();
+
+/* Блок «Панель сайта»: панель в окне подгружается, только когда до неё долистали. */
+(function(){var f=$('.pn-frame iframe');if(!f)return;new IntersectionObserver(function(es,o){if(es[0].isIntersecting){f.src=f.getAttribute('data-src');o.disconnect()}},{rootMargin:'100% 0px'}).observe(f)})();
 if(root.classList.contains('intro-off')||!$('#intro')){$$('.hero .wipe,.hero .wipe-in').forEach(function(w){void getComputedStyle(w).transform});requestAnimationFrame(function(){body.classList.add('hero-on')})}
 
 /* Шапка прячется при любой прокрутке и возвращается через 3 секунды покоя. */

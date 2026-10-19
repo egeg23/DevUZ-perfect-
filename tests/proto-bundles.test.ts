@@ -941,7 +941,7 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   const all: Record<string, string> = { "": site.html, ...site.pages };
   const data = JSON.parse(readFileSync("scripts/protos/sia/data.json", "utf8"));
   assert.equal(data.index.length, 65, "в архиве не все проекты бюро");
-  assert.equal(Object.keys(all).length, 1 + data.featured.length);
+  assert.equal(Object.keys(all).length, 2 + data.featured.length, "главная, панель и страницы проектов");
   for (const [path, page] of Object.entries(all)) {
     assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
     assert.ok(page.includes('<html lang="ru">'), `${path}: язык страницы`);
@@ -950,16 +950,33 @@ test("SIA: главная и 14 проектов — условия, noindex, т
     assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
     assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
     assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
-    assert.ok(page.includes("IDLE=3000"), `${path}: шапка не по правилу трёх секунд`);
-    // Главное действие — WhatsApp и телефон бюро, оба с их сайта.
-    assert.ok(page.includes('href="https://wa.me/79150103671?text='), `${path}: нет WhatsApp бюро`);
-    assert.ok(page.includes('href="tel:+74950980493"'), `${path}: нет телефона бюро`);
+    if (path !== "panel") {
+      assert.ok(page.includes("IDLE=3000"), `${path}: шапка не по правилу трёх секунд`);
+      // Главное действие — WhatsApp и телефон бюро, оба с их сайта.
+      assert.ok(page.includes('href="https://wa.me/79150103671?text='), `${path}: нет WhatsApp бюро`);
+      assert.ok(page.includes('href="tel:+74950980493"'), `${path}: нет телефона бюро`);
+    }
     assert.ok(page.includes("/protos/sia/logo-k.png"), `${path}: нет логотипа бюро`);
     for (const src of page.match(/\/protos\/sia\/[\w./-]+\.(?:webp|png)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
   }
   assert.match(all[""], /id="intro"[\s\S]*DevUz Studio/, "нет промо DevUz Studio");
   // Заставка: фермы логотипа собираются в каркас дома с первого экрана.
   assert.match(all[""], /class="br-cv"/, "нет холста заставки");
+  // Панель сайта, как у Greenwell, под архитектурное бюро (владелец, 19.10.2026): пользователи
+  // и роли с правами по разделам, проекты, новости, коллектив и фото в каждый раздел сайта.
+  const panel = all["panel"];
+  const pd = JSON.parse(panel.match(/<script type="application\/json" id="sp-data">([\s\S]*?)<\/script>/)![1]);
+  assert.equal(pd.projects.length, data.index.length, "в панели не все проекты архива");
+  assert.ok(pd.projects.every((p: { photos: string[] }) => p.photos.length > 0), "у проекта в панели нет фото");
+  assert.equal(pd.team.length, 12, "в панели не весь коллектив");
+  for (const role of ["Владелец", "Администратор", "Редактор", "Медиа", "Менеджер заявок"]) assert.ok(panel.includes(`n:'${role}'`), `нет роли ${role}`);
+  for (const area of ["Проекты", "Разделы сайта", "Новости и выставки", "Коллектив", "Медиатека", "Заявки", "Пользователи и роли", "Журнал", "Настройки"]) assert.ok(panel.includes(`'${area}'`), `нет раздела ${area}`);
+  assert.ok(panel.includes("indexedDB.open('sia-media'"), "фото не сохраняются");
+  assert.ok(pd.sections.some((x: { canPhotos: boolean }) => x.canPhotos), "в разделы сайта нельзя загрузить фото");
+  // Главная подхватывает правки панели и показывает саму панель.
+  assert.ok(all[""].includes("localStorage.getItem('sia-panel-1')"), "главная не читает правки панели");
+  assert.match(all[""], /id="sia-secs"/, "главная без списка блоков для панели");
+  assert.match(all[""], /class="pn-frame"[\s\S]*data-src="[^"]*\/panel\?embed=1"/, "на главной нет блока с панелью");
   const lines = JSON.parse(readFileSync("scripts/protos/sia/lines.json", "utf8"));
   assert.ok(lines.logo.length >= 4 * 200 && lines.house.length >= 4 * 400, "мало линий логотипа или дома");
   assert.ok(all[""].includes("var SIA_LINES={"), "линии заставки не попали на страницу");

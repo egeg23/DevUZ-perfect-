@@ -47,6 +47,9 @@ const WA = (text) => `https://wa.me/${MOBILE}?text=${encodeURIComponent(text)}`;
 const TG = `https://t.me/+${MOBILE}`;
 const SOCIAL = [["Telegram-канал", "https://t.me/sia_conception"], ["VK", "https://vk.com/siaa88"], ["Pinterest", "https://ru.pinterest.com/siaconception/"]];
 const ASK = "Здравствуйте! Хочу обсудить проект с бюро SIA.";
+const ADDR = "Москва, Таганская площадь, 88, этаж 2";
+const METRO = "Таганская (кольцевая), Таганская (Таганско-Краснопресненская), Марксистская";
+const HOURS = "Понедельник-пятница, 10:00-18:00";
 
 /* Тире в текстах бюро: на макете длинных тире нет (правило макетов). */
 /* Штампы в текстах бюро, которые проверка макета не пропускает: правим
@@ -143,7 +146,7 @@ ${SHUTTER}
 <a class="top-logo" href="${href()}" aria-label="SIA, архитектурное бюро, на главную"><img src="${IMG}/logo-k.png" alt="" width="400" height="178"></a>
 <nav class="top-nav" aria-label="Разделы">${NAV.filter((x) => x[0] !== "prolet").slice(0, 4).map(([id, n]) => `<a href="${to(id)}">${roll(n)}</a>`).join("")}</nav>
 <div class="top-r">
-<a class="top-tel" href="${PHONE_TEL}">${roll(PHONE)}</a>
+<a class="top-tel" href="${PHONE_TEL}" data-kr="phone">${roll(PHONE)}</a>
 <button type="button" class="burger" id="burger" aria-expanded="false" aria-controls="menu"><span class="bg-l" aria-hidden="true"><i></i><i></i></span><span class="bg-t">Меню</span></button>
 </div>
 </header>
@@ -154,10 +157,10 @@ ${opts.body}
 <footer class="foot">
 <div class="foot-top">
 <div><p class="cap">Обсудить проект</p><a class="foot-big" href="${WA(ASK)}" target="_blank" rel="noopener">${roll("WhatsApp")}</a><a class="foot-big" href="${TG}" target="_blank" rel="noopener">${roll("Telegram")}</a></div>
-<div class="foot-c"><p>Москва, Таганская площадь, 88, этаж 2</p><p><a href="${PHONE_TEL}">${PHONE}</a></p><p><a href="mailto:${MAIL}">${MAIL}</a></p><p class="foot-s">${SOCIAL.map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${roll(n)}</a>`).join("")}</p></div>
+<div class="foot-c"><p data-k="addr">${ADDR}</p><p><a href="${PHONE_TEL}" data-k="phone">${PHONE}</a></p><p><a href="mailto:${MAIL}" data-k="mail">${MAIL}</a></p><p class="foot-s">${SOCIAL.map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${roll(n)}</a>`).join("")}</p></div>
 </div>
 <img class="foot-logo" src="${IMG}/logo-k.png" alt="SIA" width="400" height="178" loading="lazy" decoding="async">
-<div class="foot-b"><p>SIA · архитектурное бюро · Москва</p><p>Макет нового сайта: DevUz Studio · <a href="${TERMS}" target="_blank" rel="noopener">Условия макета</a></p></div>
+<div class="foot-b"><p>SIA · архитектурное бюро · Москва</p><p>Макет нового сайта: DevUz Studio · <a href="${href("panel")}">Панель сайта</a> · <a href="${TERMS}" target="_blank" rel="noopener">Условия макета</a></p></div>
 </footer>
 <a class="dock" href="${WA(ASK)}" target="_blank" rel="noopener">${ICON.wa}<span>Обсудить проект в WhatsApp</span></a>
 <div class="peek" id="peek" aria-hidden="true"><img alt=""></div>
@@ -172,6 +175,7 @@ ${opts.intro ? `<script>\nvar SIA_LINES=${read("lines.json").trim()};\n${strip(r
 /* Арка: лист бумаги с проёмом, прокрутка сводит его с огромного к окну. */
 const ARCH = `<svg class="arch arch-d" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><path fill-rule="evenodd" d="M-4000 -4000H5600V5000H-4000Z M590 880V400A210 210 0 0 1 1010 400V880Z"/></svg><svg class="arch arch-m" viewBox="0 0 1000 1600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><path fill-rule="evenodd" d="M-4000 -4000H5000V5600H-4000Z M320 1230V560A180 180 0 0 1 680 560V1230Z"/></svg>`;
 
+const HERO_SUB = "Архитектура, дизайн интерьеров и экстерьеров, авторский надзор и сопровождение.";
 function heroBlock() {
   const h = HERO;
   return `<section class="hero" aria-label="Первый экран">
@@ -185,7 +189,7 @@ ${ARCH}
 <div class="hero-tx">
 <p class="cap hero-k">Архитектурное бюро · Москва</p>
 <h1 class="hero-h"><span class="hh hh-1">${lines(["Проектируем,"])}</span><span class="hh hh-2">${lines(["<em>визуализируем,</em>"])}</span><span class="hh hh-3">${lines(["сопровождаем"])}</span></h1>
-<p class="hero-sub">Архитектура, дизайн интерьеров и экстерьеров, авторский надзор и сопровождение.</p>
+<p class="hero-sub">${HERO_SUB}</p>
 </div>
 <p class="hero-ink" aria-hidden="true"><span class="hi-l">Архитектура</span><span class="hi-r"><em>и интерьер</em></span></p>
 <a class="hero-cap" href="${pHref(h)}" data-tr="${esc(h.code)}"><span class="code">${h.code}</span><span>${esc(h.title)}</span></a>
@@ -434,10 +438,11 @@ const TEAM = [
   ["gordiushkina", "Маргарита Гордюшкина", "Дизайнер-визуализатор"], ["sokolova", "Светлана Соколова", "Архитектор"], ["morozov", "Андрей Морозов", "Архитектор"],
   ["ianyshev", "Сергей Янышев", "Инженер ПТО"], ["petrovskaia", "Мария Петровская", "Ведущий графический дизайнер"], ["mironova", "Наталья Миронова", "Контент-менеджер"],
 ];
+const TM_NOTE = "Комплексное управление проектом начинается с детального плана и бюджета и идёт до сопровождения реализации: бюро решает вопросы с согласованиями и экспертизами и устраняет отклонения от графика.";
 function teamBlock() {
   return `<section class="tm" id="byuro" aria-label="Коллектив">
 <div class="sec-h tm-h"><p class="cap">07 · Коллектив</p><h2 class="big" data-lines>${lines(["Архитекторы, дизайнеры,", "<em>визуализаторы, инженер</em>"])}</h2>
-<p class="tm-note">Комплексное управление проектом начинается с детального плана и бюджета и идёт до сопровождения реализации: бюро решает вопросы с согласованиями и экспертизами и устраняет отклонения от графика.</p></div>
+<p class="tm-note">${TM_NOTE}</p></div>
 <ul class="tm-list">${TEAM.map(([f, n, r], i) => `<li class="tm-i" style="--i:${i}"><span class="tm-pic"><img src="${IMG}/team/${f}.webp" alt="" loading="lazy" decoding="async" width="480" height="480"></span><p class="tm-n">${n}</p><p class="cap">${r}</p></li>`).join("")}</ul>
 </section>`;
 }
@@ -447,12 +452,97 @@ function contactBlock() {
 <p class="cap">08 · Офис с шоурумом в центре Москвы</p>
 <h2 class="ct-big" data-lines>${lines(["Таганская", "площадь, <em>88</em>"])}</h2>
 <div class="ct-grid">
-<div><p class="cap">Метро</p><p>Таганская (кольцевая), Таганская (Таганско-Краснопресненская), Марксистская</p></div>
-<div><p class="cap">Время работы</p><p>Понедельник-пятница, 10:00-18:00</p><p>Суббота и воскресенье: выходной</p></div>
-<div><p class="cap">Связаться</p><p><a href="${PHONE_TEL}">${PHONE}</a></p><p><a href="mailto:${MAIL}">${MAIL}</a></p></div>
+<div><p class="cap">Метро</p><p data-k="metro">${METRO}</p></div>
+<div><p class="cap">Время работы</p><p data-k="hours">${HOURS}</p><p>Суббота и воскресенье: выходной</p></div>
+<div><p class="cap">Связаться</p><p><a href="${PHONE_TEL}" data-k="phone">${PHONE}</a></p><p><a href="mailto:${MAIL}" data-k="mail">${MAIL}</a></p></div>
 </div>
 <div class="ct-act"><a class="btn btn-l" href="${WA(ASK)}" target="_blank" rel="noopener">${ICON.wa}<span>Обсудить проект в WhatsApp</span></a><a class="btn btn-o" href="${TG}" target="_blank" rel="noopener">${ICON.tg}<span>Telegram</span></a><a class="btn btn-o" href="${PHONE_TEL}">${ICON.phone}<span>Позвонить</span></a></div>
 </section>`;
+}
+
+/* ── Панель сайта ─────────────────────────────────────────────────────
+   Блоки главной, которые бюро меняет из панели: заголовок, текст, фото,
+   порядок и видимость. Тот же список читает site.js (sia-secs) и
+   накладывает правки из панели на страницу. */
+const SECS = [
+  { id: "hero", n: "Первый экран", sel: ".hero", fixed: 1, text: HERO_SUB, textSel: ".hero-sub" },
+  { id: "stats", n: "Цифры бюро", sel: ".stats" },
+  { id: "stmt", n: "Позиция бюро", sel: ".stmt", text: STMT, textSel: ".stmt-t", words: 1 },
+  { id: "arh", n: "Архитектура", sel: "#arhitektura", title: "От эскиза\nдо рабочих чертежей", text: "Каждый проект появляется чертежом и проявляется в рендер, пока вы листаете.", textSel: ".arh-note", imgSel: ".ac-r-img", photos: ARH.map((p) => pic(p.slug, 0, true)), where: "по одному на карточку галереи" },
+  { id: "fly", n: "Пролёт по рендерам", sel: "#prolet" },
+  { id: "bfl", n: "3D-пролёт", sel: "#prolet-3d" },
+  { id: "int", n: "Интерьеры", sel: "#interery", title: "От планировки\nдо подбора материалов", imgSel: ".ic-pic img", photos: INT.map((p) => pic(p.slug, 0, true)), where: "по одному на карточку стопки" },
+  { id: "velo", n: "Бегущая строка", sel: ".velo" },
+  { id: "kd", n: "Виды работ", sel: ".kd" },
+  { id: "folders", n: "Папки направлений", sel: ".folders" },
+  { id: "ix", n: "Архив проектов", sel: "#arhiv" },
+  { id: "sv", n: "Услуги", sel: "#uslugi", title: "Полный цикл\nот участка до ключей", imgSel: ".sv-pic img", photos: SERVICES.map((x) => pic(BYCODE[x.p[0]].slug, x.p[1], true)), where: "по одному на услугу" },
+  { id: "pr", n: "Этапы работы", sel: ".pr", title: "Пять шагов\nдо разрешения на стройку" },
+  { id: "ev", n: "Выставки и новости", sel: ".ev", title: "Где нас\nвстречали" },
+  { id: "tm", n: "Коллектив", sel: "#byuro", title: "Архитекторы, дизайнеры,\nвизуализаторы, инженер", text: TM_NOTE, textSel: ".tm-note" },
+  { id: "ct", n: "Контакты", sel: "#kontakty", fixed: 1, title: "Таганская\nплощадь, 88", titleSel: ".ct-big" },
+];
+const secsJson = () => `<script type="application/json" id="sia-secs">${JSON.stringify(SECS.map(({ id, sel, fixed, title, titleSel, textSel, words, imgSel }) => ({ id, sel, fixed, title: title != null, titleSel, textSel, words, imgSel })))}</script>`;
+
+function panelBlock() {
+  return `<section class="pn" id="panel" aria-label="Панель сайта">
+<div class="sec-h"><p class="cap">Панель сайта</p><h2 class="big" data-lines>${lines(["Сайт меняете", "<em>сами, без разработчика</em>"])}</h2>
+<p class="pn-note">Проекты с фото, новости и выставки, коллектив, тексты и фото каждого блока, контакты. Пользователи с ролями: редактор, медиа, менеджер заявок. Это рабочий макет: добавьте новость в панели, и она появится в блоке «Выставки» на этой странице.</p></div>
+<div class="pn-frame"><div class="pn-bar" aria-hidden="true"><i></i><i></i><i></i><span>sia88.ru/admin</span></div><iframe title="Панель сайта SIA" data-src="${href("panel")}?embed=1" loading="lazy"></iframe></div>
+<div class="pn-act"><a class="btn btn-l" href="${href("panel")}">Открыть панель во весь экран</a></div>
+</section>`;
+}
+
+const PANEL_ICONS = {
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>', grid: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>',
+  layers: '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>', news: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>',
+  team: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14c2.8 0 5 2.2 5 5"/>', photo: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 8"/>',
+  inbox: '<path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/>', key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>', menu: '<path d="M4 7h16M4 12h16M4 17h16"/>', out: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v6H4V6h6"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>', trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>', plus: '<path d="M12 5v14M5 12h14"/>', left: '<path d="M15 6l-6 6 6 6"/>', right: '<path d="M9 6l6 6-6 6"/>',
+  up: '<path d="M6 15l6-6 6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', pen: '<path d="M4 20h4L20 8l-4-4L4 16z"/>',
+};
+function panelData() {
+  const byCode = Object.fromEntries(DATA.featured.map((p) => [p.code, p]));
+  return {
+    img: IMG, logo: IMG + "/logo-k.png", home: href(), terms: TERMS,
+    contacts: { phone: PHONE, mail: MAIL, wa: MOBILE, tg: TG, addr: ADDR, metro: METRO, hours: HOURS, seoT: "SIA · архитектурное бюро в Москве", seoD: "Проектирование, дизайн интерьеров и экстерьеров, 3D-визуализация, авторский надзор и согласование. Москва, Таганская площадь, 88." },
+    projects: DATA.index.map((p) => {
+      const f = byCode[p.code];
+      return { code: p.code, slug: p.slug, cat: p.cat, title: plain(p.title), sub: plain(p.sub), kinds: p.kinds, area: p.area, term: p.term, date: p.date, feat: !!f, text: f ? plain(f.lead[0]) : "", photos: f ? f.imgs.map((_, i) => pic(p.slug, i, true)) : [thumb(p.slug)] };
+    }),
+    team: TEAM.map(([f, n, r]) => ({ n, r, photo: `${IMG}/team/${f}.webp` })),
+    events: EVENTS.map(({ n, d, w, t }) => ({ n, d, w, t })),
+    sections: SECS.map(({ id, n, title, text, photos, where, fixed, imgSel }) => ({ id, n, title, text, photos: photos || [], where, fixed: !!fixed, canPhotos: !!imgSel })),
+  };
+}
+function panelPage() {
+  return `<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Панель сайта SIA · макет DevUz Studio</title>
+<meta name="description" content="Панель сайта архитектурного бюро SIA: проекты с фото, разделы сайта, новости, коллектив, медиатека, заявки, пользователи и роли.">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#14110e">
+<link rel="icon" type="image/png" sizes="192x192" href="${IMG}/icon-192.png">
+<link rel="license" href="${TERMS}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="${FONTS}">
+@@K@@
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>${Object.entries(PANEL_ICONS).map(([k, v]) => `<symbol id="i-${k}" viewBox="0 0 24 24">${v}</symbol>`).join("")}</defs></svg>
+<div class="app" id="app"><p class="lock">Панель загружается. <img src="${IMG}/logo-k.png" alt="SIA" width="120" height="53"></p></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Редактор"></aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<noscript><p class="lock">Для панели нужен JavaScript. <a href="${TERMS}">Условия макета</a></p></noscript>
+<script type="application/json" id="sp-data">${JSON.stringify(panelData()).replace(/</g, "\\u003c")}</script>
+@@Q@@
+</body>
+</html>`;
 }
 
 function home() {
@@ -461,7 +551,7 @@ function home() {
     title: "SIA · архитектурное бюро в Москве · макет DevUz Studio",
     desc: "Проектирование, дизайн интерьеров и экстерьеров, 3D-визуализация, авторский надзор и согласование. Москва, Таганская площадь, 88.",
     preload: `<link rel="preload" as="image" href="${drw(HERO.slug, true)}" media="(max-width: 800px)"><link rel="preload" as="image" href="${drw(HERO.slug)}" media="(min-width: 801px)">`,
-    body: [heroBlock(), statsBlock(), statementBlock(), archBlock(), flyBlock(), bflyBlock(), intBlock(), veloBlock(), kindsBlock(), foldersBlock(), indexBlock(), servicesBlock(), processBlock(), eventsBlock(), teamBlock(), contactBlock()].join("\n"),
+    body: [heroBlock(), statsBlock(), statementBlock(), archBlock(), flyBlock(), bflyBlock(), intBlock(), veloBlock(), kindsBlock(), foldersBlock(), indexBlock(), servicesBlock(), processBlock(), eventsBlock(), teamBlock(), panelBlock(), contactBlock()].join("\n") + secsJson(),
   });
 }
 
@@ -508,11 +598,13 @@ ${gal}
 }
 
 /* ── Сборка ───────────────────────────────────────────────────────────── */
-const out = { "": home() };
+const out = { "": home(), panel: panelPage() };
 FEAT.forEach((p, i) => { out["proekt/" + p.slug] = projectPage(p, i); });
 const parts = {
   S: `<style>${min(read("site.css") + read("intro.css"))}</style>`,
   J: `<script>\n${strip(read("site.js"))}</script>`,
+  K: `<style>${min(read("panel.css"))}</style>`,
+  Q: `<script>\n${strip(read("panel.js"))}</script>`,
 };
 const fill = (page) => Object.entries(parts).reduce((pg, [k, part]) => pg.split(`@@${k}@@`).join(part), page);
 
