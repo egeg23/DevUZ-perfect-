@@ -1010,6 +1010,8 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   assert.match(v2, /hover: hover/, "цвет не по наведению");
   assert.match(v2, /rootMargin:'-34% 0px -34% 0px'/, "на телефоне цвет не у середины экрана");
   assert.equal((v2.match(/class="pl" /g) || []).length, 8, "во втором варианте не 8 проектов");
+  assert.doesNotMatch(v2, /✳/, "звёздочка-эмодзи: на iPhone она зелёная");
+  assert.ok((v2.match(/class="tf-s[ "]/g) || []).length >= 6 && v2.includes("},1000)"), "таблетка не сменяет проекты раз в секунду");
   for (const id of ["proekty", "napravleniya", "byuro", "kontakty"]) assert.match(v2, new RegExp(`id="${id}"`), `вариант 2: нет блока ${id}`);
   for (const p of data.featured) {
     const page = all["proekt/" + p.slug];
