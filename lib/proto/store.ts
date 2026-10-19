@@ -6,6 +6,7 @@
  * по-новому», а записать новый html поверх старого. Пока мы этого не сделали,
  * человек по своей ссылке видит ровно то, что ему отправили.
  */
+import { withDzIntro } from "@/lib/proto/dz-video.mjs";
 import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
 import { newAccessToken } from "@/lib/store/access";
@@ -206,7 +207,9 @@ export async function protoPage(
   const lock = activeLock(data.facts as { lock?: unknown; lockAt?: unknown } | null);
   return typeof page === "string"
     ? {
-        html: withBase(page, token),
+        // Видео DevUz — и в макетах, собранных до правила (lib/proto/dz-video):
+        // на главной, внутренние страницы без заставки.
+        html: withBase(path ? page : withDzIntro(page), token),
         id,
         lock,
         closed: Boolean(data.closed_at),

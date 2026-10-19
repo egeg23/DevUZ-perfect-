@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
+import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 
 /*
  * Прототип IntalimStudents: приложение ученика автошколы в экране айфона.
@@ -114,6 +115,7 @@ function page(l) {
   const tabs = [["home", "home", ui.tabHome], ["lessons", "book", ui.tabLessons], ["tests", "test", ui.tabTests], ["schedule", "cal", ui.tabSchedule], ["profile", "user", ui.tabProfile]];
   const ic = (k) => `<svg class="ic" aria-hidden="true"><use href="#i-${k}"/></svg>`;
   return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#eef2f8"><title>${t("IntalimStudents · прототип нового приложения", "IntalimStudents · yangi ilova prototipi")}</title><meta name="description" content="${t("Прототип приложения для учеников автошколы: занятия, уроки, тесты как в ГАИ, знаки, штрафы.", "Avtomaktab o‘quvchilari uchun ilova prototipi: mashg‘ulotlar, darslar, imtihon testlari, belgilar, jarimalar.")}"><link rel="preload" href="/protos/intalim/onest-${l === "ru" ? "cyr" : "latx"}.woff2" as="font" type="font/woff2" crossorigin>@@S@@</head><body>
+${dzIntroSolo(l)}
 <div class="stage"><div class="road" aria-hidden="true"></div>
 <aside class="side l">
 <div class="brand-row">${LOGO("logo")}<div><b>IntalimStudents</b><small>${t("прототип новой версии", "yangi versiya prototipi")}</small></div></div>

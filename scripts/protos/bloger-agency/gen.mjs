@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { I18N, nicheNames, nicheKeys } from "./i18n.mjs";
 import { ADDONS, BASE as KIT_BASE, BLOCKS, GROUPS } from "./plan.mjs";
+import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 
 const DIR = new URL(".", import.meta.url).pathname;
 const CSS = readFileSync(DIR + "style.css", "utf8").replace(/\n/g, "");
@@ -97,11 +98,12 @@ function shell(l, path, meta, body, { portal = false } = {}) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;700&family=Unbounded:wght@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;700&family=Unbounded:wght@700&display=swap"></noscript>
-<script>try{history.scrollRestoration='manual'}catch(e){}document.documentElement.classList.add('js');try{if(sessionStorage.getItem('dz'))document.documentElement.classList.add('dz-off')}catch(e){}</script>
+<script>try{history.scrollRestoration='manual'}catch(e){}document.documentElement.classList.add('js');document.documentElement.classList.add('dz-off');try{if(sessionStorage.getItem('dz'))document.documentElement.classList.add('dz-off')}catch(e){}</script>
 <style>${CSS}</style>
 <script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": ["Organization", "LocalBusiness"], name: "Bloger Agency", url: SITE, logo: `${SITE}/assets/img/logo/logo.png`, telephone: "+998977087867", address: { "@type": "PostalAddress", streetAddress: "Nukus ko‘chasi, 81", postalCode: "100207", addressLocality: "Toshkent", addressCountry: "UZ" }, sameAs: ["https://www.instagram.com/bloger.agency/", "https://www.youtube.com/@baluev_george", "https://t.me/baluevgeorge"] })}</script>
 </head>
 <body data-page="${path}">
+${dzIntroSolo(l)}
 <div class="dz" id="dz" role="presentation">
 <div class="dz-in">${DZLOGO}<div class="dz-word">DevUz Studio</div><div class="dz-sub">${t("прототип для Bloger Agency", "Bloger Agency uchun prototip")}</div></div>
 <div class="dz-skip">${t("Нажмите, чтобы пропустить", "O‘tkazib yuborish uchun bosing")}</div>
