@@ -1,7 +1,9 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 import { F, DISTRICTS, TYPES, BC, METRO, LOGOS, REVIEWS, NOW, MECH, FAQ } from "./data.mjs";
-import { BASE, ADDONS, ALL, OFFER_HOURS, RATE } from "./plan.mjs";
+import { BASE, ADDONS, ALL, OFFER_HOURS, RATE, GROUPS, PANEL_ALL } from "./plan.mjs";
+import { UNITS, inventory, OWNERS, TEAM, TENANT_ROOTS, TENANT_KINDS, MARKET, TARIFF } from "./panel-data.mjs";
+import { PANEL_UI, PANEL_DYN } from "./panel-ui.mjs";
 
 /*
  * Макет главной Soffice (soffice.uz): аренда офисов в 18 бизнес-центрах
@@ -21,7 +23,13 @@ import { BASE, ADDONS, ALL, OFFER_HOURS, RATE } from "./plan.mjs";
  *   7. просмотр в два нажатия: день и время, сообщение менеджеру готово;
  *   8. доверие: цифры, отзывы, вопросы;
  *   9. «Сейчас и станет» по их сайту и механики, которых нет в Ташкенте;
- *  10. стоимость сайта с допами и отсчётом 48 часов (plan.mjs).
+ *  10. панель управляющей компании в окне браузера (страница panel);
+ *  11. стоимость сайта с допами и отсчётом 48 часов (plan.mjs).
+ *
+ * Панель (panel, uz/panel, en/panel): panel.js, panel.css, подписи —
+ * panel-ui.mjs, демо-данные — panel-data.mjs. Сайт и панель связаны
+ * памятью браузера: заявки и спрос пишет сайт, статусы блоков и ставки —
+ * панель.
  *
  * Всё о компании — с soffice.uz (data.mjs). Модель макет не вызывает.
  */
@@ -89,6 +97,8 @@ const ICON = {
   shield: I('<path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6Z"/><path d="m9 12 2 2 4-4"/>'),
   copy: I('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'),
   bolt: I('<path d="M13 3 5 13h6l-1 8 8-10h-6Z"/>'),
+  lock: I('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+  full: I('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),
 };
 
 const HERO = ["nestone", "trilliant", "forum", "sapphire"];
@@ -114,6 +124,7 @@ function headerHtml(l) {
 <a class="logo" href="${href(l)}" aria-label="Soffice"><img src="${IMG}/logo.webp" alt="Soffice" width="574" height="127"></a>
 <nav class="nav" aria-label="${t("Разделы", "Bo‘limlar", "Sections")}">${NAV.map(([id, n]) => `<a href="#${id}">${navName(n, l)}</a>`).join("")}</nav>
 <div class="top-r"><div class="lang">${LANGS.map((x) => `<a href="${href(x)}" hreflang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
+<a class="top-pn" href="${href(l)}panel">${ICON.lock}<span>${t("Для управляющей компании", "Boshqaruv kompaniyasi uchun", "For the management team")}</span></a>
 <a class="top-ph" href="tel:${F.phone}">${F.phoneT}</a>
 ${findBtn(l, "btn-sm top-cta")}
 <button type="button" class="ic-btn" id="menu-btn" aria-expanded="false" aria-controls="menu" aria-label="${t("Меню", "Menyu", "Menu")}">${ICON.menu}</button></div>
@@ -127,6 +138,7 @@ function menuHtml(l) {
 <nav class="mn-list" aria-label="${t("Разделы", "Bo‘limlar", "Sections")}">${NAV.map(([id, n], i) => `<a class="mn-i" href="#${id}"><span class="mn-n">0${i + 1}</span><span class="mn-t">${navName(n, l)}</span></a>`).join("")}</nav>
 <div class="mn-side"><div class="lang">${LANGS.map((x) => `<a href="${href(x)}" hreflang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
 <a class="btn btn-line" href="tel:${F.phone}">${ICON.phone}<span>${F.phoneT}</span></a>
+<a class="btn btn-line" href="${href(l)}panel">${ICON.lock}<span>${t("Панель управляющей компании", "Boshqaruv kompaniyasi paneli", "Management panel")}</span></a>
 <a class="btn btn-line" href="${F.tg}" data-tg="${esc(hello(l))}" target="_blank" rel="noopener">${ICON.tg}<span>${t("Менеджер в Telegram", "Telegramda menejer", "Manager on Telegram")}</span></a></div>
 </div>`;
 }
@@ -155,7 +167,7 @@ function heroBlock(l) {
 <p class="fd-res" aria-live="polite"><b class="num" id="fd-n">9</b> <span id="fd-n-w">${t("бизнес-центров подходят", "ta biznes-markaz mos", "buildings match")}</span><small id="fd-min"></small></p>
 <div class="fd-dots" id="fd-dots" aria-hidden="true">${BC.map((b) => `<i data-id="${b.id}"></i>`).join("")}</div>
 ${findBtn(l, "btn-lg fd-go")}
-<p class="fd-note">${t("или позвоните:", "yoki qo‘ng‘iroq qiling:", "or call:")} <a href="tel:${F.phone}">${F.phoneT}</a></p>
+<p class="fd-note"><a id="fd-wa" href="${waHref(hello(l))}" target="_blank" rel="noopener">${t("Прислать подборку в WhatsApp", "Tanlovni WhatsApp’ga yuborish", "Get the shortlist on WhatsApp")}</a> ${t("или позвоните:", "yoki qo‘ng‘iroq qiling:", "or call:")} <a href="tel:${F.phone}">${F.phoneT}</a></p>
 </form>
 </div>
 <div class="hr-now" aria-hidden="true"><span class="hr-num"><b id="hr-i">01</b> / 0${HERO.length}</span><span class="hr-name" id="hr-name">${byId[HERO[0]].n} · ${t("класс", "sinf", "class")} ${byId[HERO[0]].cls}</span><span class="hr-bars">${HERO.map((_, i) => `<i${i === 0 ? ' class="on"' : ""}></i>`).join("")}</span></div>
@@ -211,7 +223,7 @@ function catalogBlock(l) {
 <p class="bc-a">${ICON.pin}<span>${b.a[l]} · ${DISTRICTS[b.d][l]}</span></p>
 <ul class="bc-f"><li>${ICON.metro}${b.m[l]}</li><li>${ICON.area}${areaTxt(b, l)}</li><li>${ICON.car}${b.p[l]}</li></ul>
 <p class="bc-x">${b.x[l]}</p>
-<div class="bc-pr"><p class="bc-m"><b class="num" data-month></b><span data-month-w></span></p><p class="bc-r">${rateTxt(b.rate, l)}</p></div>
+<div class="bc-pr"><p class="bc-m"><b class="num" data-month></b><span data-month-w></span></p><p class="bc-r" data-rate>${rateTxt(b.rate, l)}</p><p class="bc-free" data-free></p></div>
 <div class="bc-btns"><button type="button" class="btn btn-or btn-sm" data-view="${b.id}">${ICON.eye}<span>${t("На просмотр", "Ko‘rishga", "Book a viewing")}</span></button><a class="lnk" href="${F.site}/${l === "ru" ? "" : l + "/"}${b.id}" target="_blank" rel="noopener">${t("Страница БЦ", "BM sahifasi", "Building page")}${ICON.ext}</a></div>
 </div>
 </article>`;
@@ -264,13 +276,8 @@ function calcBlock(l) {
 }
 
 /* ── 6. Схема этажа Platform ───────────────────────────────────────── */
-/* Блоки условные: x, y, ш, в в сетке 100×60, площадь, окна, свободен на 3/4 этаже. */
-const UNITS = [
-  { n: "01", r: [2, 2, 18, 22], a: 64, w: "n", f: [1, 0] }, { n: "02", r: [20, 2, 14, 22], a: 42, w: "n", f: [0, 1] }, { n: "03", r: [34, 2, 22, 22], a: 96, w: "n", f: [1, 1] },
-  { n: "04", r: [56, 2, 14, 22], a: 35, w: "n", f: [1, 0] }, { n: "05", r: [70, 2, 28, 22], a: 150, w: "ne", f: [0, 1] },
-  { n: "06", r: [2, 36, 26, 22], a: 120, w: "s", f: [0, 1] }, { n: "07", r: [28, 36, 16, 22], a: 56, w: "s", f: [1, 0] },
-  { n: "08", r: [58, 36, 40, 22], a: 210, w: "se", f: [1, 1] },
-];
+/* Блоки этажа — UNITS из panel-data.mjs: та же планировка в панели. */
+const INV = inventory();
 function floorBlock(l) {
   const t = T(l);
   const W = { n: t("на север", "shimolga", "north"), ne: t("на север и восток", "shimol va sharqqa", "north and east"), s: t("на юг", "janubga", "south"), se: t("на юг и восток", "janub va sharqqa", "south and east") };
@@ -289,11 +296,11 @@ ${UNITS.map((u) => `<g class="fl-u" data-u="${u.n}"><rect x="${u.r[0] + 0.4}" y=
 <div class="fl-plan rv a-zoom">
 <div class="fl-tabs" role="tablist" aria-label="${t("Этаж", "Qavat", "Floor")}"><button type="button" role="tab" class="on" aria-selected="true" data-fl="0">${t("3 этаж", "3-qavat", "Floor 3")}</button><button type="button" role="tab" aria-selected="false" data-fl="1">${t("4 этаж", "4-qavat", "Floor 4")}</button></div>
 ${svg}
-<ul class="fl-legend"><li><i class="free"></i>${t("свободен", "bo‘sh", "free")}</li><li><i class="busy"></i>${t("занят", "band", "taken")}</li><li><i class="pick"></i>${t("выбран", "tanlangan", "selected")}</li></ul>
+<ul class="fl-legend"><li><i class="free"></i>${t("свободен", "bo‘sh", "free")}</li><li><i class="hold"></i>${t("бронь", "bron", "on hold")}</li><li><i class="busy"></i>${t("занят", "band", "taken")}</li><li><i class="pick"></i>${t("выбран", "tanlangan", "selected")}</li></ul>
 </div>
 <aside class="fl-info rv a-right" id="fl-info" aria-live="polite"><p class="fl-hint">${t("Нажмите на оранжевый блок", "To‘q sariq blokni bosing", "Tap an orange unit")}</p></aside>
 </div>
-<p class="note">${t("Планировка и свободные блоки условные: схемы всех этажей нарисуем по вашим поэтажным планам, а свободное будет отмечать менеджер.", "Reja va bo‘sh bloklar shartli: barcha qavatlar sxemasini qavat rejalaringiz bo‘yicha chizamiz, bo‘shini esa menejer belgilaydi.", "The layout and free units are illustrative: we draw every floor from your plans, and managers mark what is free.")}</p>
+<p class="note">${t("Планировка и свободные блоки условные: схемы всех этажей нарисуем по вашим поэтажным планам, а свободное отмечает менеджер в", "Reja va bo‘sh bloklar shartli: barcha qavatlar sxemasini qavat rejalaringiz bo‘yicha chizamiz, bo‘shini esa menejer belgilaydi:", "The layout and free units are illustrative: we draw every floor from your plans, and managers mark what is free in the")} <a href="${href(l)}panel#objects?bc=platform">${t("панели", "panelda", "panel")}</a>.</p>
 </div>
 <script type="application/json" id="fl-data">${JSON.stringify(UNITS.map((u) => ({ n: u.n, a: u.a, w: W[u.w], f: u.f })))}</script>
 </section>`;
@@ -355,7 +362,26 @@ function nowBlock(l) {
 </section>`;
 }
 
-/* ── 10. Стоимость сайта ───────────────────────────────────────────── */
+/* ── 10. Панель в окне браузера ────────────────────────────────────── */
+function panelBlock(l) {
+  const t = T(l);
+  const f = [
+    [t("Заявки и сделки", "Arizalar va bitimlar", "Requests and deals"), t("заявка с сайта первой строкой, доска по этапам, предложение одной ссылкой", "saytdan ariza birinchi qatorda, bosqichlar doskasi, bitta havolada taklif", "website requests on top, stage board, one-link proposals")],
+    [t("Объекты", "Obyektlar", "Buildings"), t("18 БЦ, этажи и блоки: статус и ставка сразу на сайте", "18 BM, qavatlar va bloklar: holat va stavka darhol saytda", "18 buildings, floors and units: status and rate live on the site")],
+    [t("Договоры и счета", "Shartnomalar va hisoblar", "Leases and invoices"), t("документы из шаблона, оплата Click и Payme, долги по возрасту", "shablondan hujjatlar, Click va Payme to‘lovi, qarz muddati", "template documents, Click and Payme, arrears by age")],
+    [t("Собственникам", "Egalarga", "For owners"), t("отчёт по их зданиям и спрос с сайта: что ищут и сколько свободно", "ularning binolari bo‘yicha hisobot va saytdagi talab: nima qidirishadi, qancha bo‘sh", "a report on their buildings and website demand: what people look for and what is vacant")],
+  ];
+  return `<section class="sec sec-paper pnl" id="panel" aria-label="${t("Панель управляющей компании", "Boshqaruv kompaniyasi paneli", "Management panel")}">
+<div class="wrap">
+<div class="sec-h rv a-up"><p class="kicker">${t("Панель", "Panel", "Panel")} ${ours(l)}</p><h2>${t("Панель управляющей компании", "Boshqaruv kompaniyasi paneli", "The management panel")}</h2><p class="sub">${t("Это работающий макет. Запишитесь на просмотр выше, и заявка появится в панели первой строкой. Отметьте блок в панели «сдан», и на схеме этажа сайта он перестанет быть свободным. Роли «Брокер», «Бухгалтер», «Собственник БЦ» видят каждая своё.", "Bu ishlaydigan maket. Yuqorida ko‘rishga yoziling, ariza panelda birinchi qatorda chiqadi. Panelda blokni «ijarada» deb belgilang, saytdagi qavat sxemasida u bo‘sh bo‘lmay qoladi. «Broker», «Buxgalter», «BM egasi» rollari har biri o‘zinikini ko‘radi.", "This mockup works. Book a viewing above and the request appears at the top of the panel. Mark a unit as let in the panel and it stops being free on the site’s floor plan. Broker, accountant and building owner roles each see their own part.")}</p></div>
+<div class="brw rv a-zoom"><div class="brw-bar" aria-hidden="true"><i></i><i></i><i></i><span>soffice.uz/panel</span></div><iframe class="pnl-frame" title="${t("Панель управляющей компании", "Boshqaruv kompaniyasi paneli", "Management panel")}" data-src="${href(l)}panel?embed=1" loading="lazy"></iframe></div>
+<ul class="pnl-f">${f.map(([a, b], i) => `<li class="rv ${["a-up", "a-drop", "a-up", "a-drop"][i]}"><b>${a}</b><small>${b}</small></li>`).join("")}</ul>
+<div class="pnl-cta"><a class="btn btn-or" href="${href(l)}panel">${ICON.full}<span>${t("Панель во весь экран", "Panel to‘liq ekranda", "Open the panel full screen")}</span></a></div>
+</div>
+</section>`;
+}
+
+/* ── 11. Стоимость сайта ───────────────────────────────────────────── */
 function priceBlock(l) {
   const t = T(l);
   const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"${a.star ? " checked" : ""}><span class="sw" aria-hidden="true"></span><span class="kit-t"><b>${a[l].t}${a.new ? `<em class="star new">${t("нет в Ташкенте", "Toshkentda yo‘q", "not in Tashkent")}</em>` : ""}</b><small>${a[l].e}</small></span><span class="kit-pr num">+${usd(a.price)}</span></label>`;
@@ -365,13 +391,15 @@ function priceBlock(l) {
 <div class="kit" id="kit">
 <div class="kit-l">
 <div class="kit-base rv a-up"><div><span class="tag">${t("Входит всегда", "Har doim kiradi", "Always included")}</span><b>${BASE[l].t}</b><p>${BASE[l].d}</p><p class="kb-w">${t(`Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель`, `Muddat: ${BASE.weeks[0]}-${BASE.weeks[1]} hafta`, `Timeline: ${BASE.weeks[0]}-${BASE.weeks[1]} weeks`)}</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b></div></div>
-${ADDONS.map(row).join("")}
+${ADDONS.filter((a) => !a.grp).map(row).join("")}
+${Object.entries(GROUPS).map(([g, G]) => `<div class="kit-grp" id="kit-${g}"><div><b>${G[l].t}</b><small>${G[l].e}</small></div><span class="kit-grp-r"><span class="num">${usd(PANEL_ALL)}</span><a class="lnk" href="${href(l)}panel">${t("Открыть панель", "Panelni ochish", "Open the panel")}${ICON.arrow}</a></span></div>${ADDONS.filter((a) => a.grp === g).map(row).join("")}`).join("")}
 </div>
 <div class="kit-side"><div class="kit-total" id="kit-total">
 <div class="timer" id="timer"><span>${t(`Цена ${usd(BASE.promo)} действует`, `${usd(BASE.promo)} narxi amal qiladi`, `The ${usd(BASE.promo)} price holds`)}<small>${t("48 часов с первого открытия макета", "maket birinchi ochilgandan 48 soat", "48 hours from first opening")}</small></span><b class="num" id="tm">48:00:00</b></div>
 <div class="kt-line"><span>${BASE[l].t}</span><span><s>${usd(BASE.price)}</s> ${usd(BASE.promo)}</span></div>
 <div class="kt-line"><span>${t("Допы", "Qo‘shimchalar", "Add-ons")} · <span id="kit-cnt">0</span></span><span class="num" id="kit-add">0 $</span></div>
 <div class="kt-sum"><small>${t("Итого", "Jami", "Total")}</small><b class="num" id="kit-sum">${usd(BASE.promo)}</b><small>${t(`со всеми допами ${usd(ALL)}`, `barcha qo‘shimchalar bilan ${usd(ALL)}`, `with every add-on ${usd(ALL)}`)}</small></div>
+<button type="button" class="btn btn-ghost" id="kit-pnl">${t("Сайт и вся панель", "Sayt va butun panel", "Site and the whole panel")}</button>
 <button type="button" class="btn btn-ghost" id="kit-new">${t("Только то, чего нет в Ташкенте", "Faqat Toshkentda yo‘q narsalar", "Only what Tashkent lacks")}</button>
 <a class="btn btn-or" href="https://t.me/Devuz_studio_bot?start=soffice" target="_blank" rel="noopener">${ICON.tg}<span>${t("Обсудить с DevUz Studio", "DevUz Studio bilan muhokama qilish", "Discuss with DevUz Studio")}</span></a>
 <button type="button" class="copy" id="kit-copy">${ICON.copy}<span>${t("Скопировать состав", "Tarkibni nusxalash", "Copy the list")}</span></button>
@@ -389,7 +417,7 @@ function footHtml(l) {
 <div class="ft-cols">
 <div><img class="ft-logo" src="${IMG}/logo.webp" alt="Soffice" width="574" height="127" loading="lazy"><p>${t("Аренда офисов в бизнес-центрах Ташкента. Soffice входит в Global Property Group.", "Toshkentdagi biznes-markazlarda ofis ijarasi. Soffice Global Property Group tarkibiga kiradi.", "Office rental in Tashkent business centres. Soffice is part of Global Property Group.")}</p></div>
 <div><b>${t("На связи", "Aloqada", "Contact")}</b><ul><li><a href="tel:${F.phone}">${F.phoneT}</a></li><li><a href="mailto:${F.mail}">${F.mail}</a></li><li><a href="${F.tg}" target="_blank" rel="noopener">${t("Менеджер в Telegram", "Telegramda menejer", "Manager on Telegram")}</a> · <a href="${waHref(hello(l))}" target="_blank" rel="noopener">WhatsApp</a></li><li><a href="${F.news}" target="_blank" rel="noopener">${t("Новости в Telegram", "Telegramda yangiliklar", "News on Telegram")}</a> · <a href="${F.ig}" target="_blank" rel="noopener">Instagram</a></li></ul></div>
-<div><b>${t("Офис Soffice", "Soffice ofisi", "Soffice office")}</b><ul><li>${F.office[l]}</li></ul></div>
+<div><b>${t("Офис Soffice", "Soffice ofisi", "Soffice office")}</b><ul><li>${F.office[l]}</li><li><a href="${href(l)}panel">${t("Вход для управляющей компании", "Boshqaruv kompaniyasi uchun kirish", "Management team sign-in")}</a></li></ul></div>
 </div>
 <div class="rights"><p>${t("Это макет: так может выглядеть главная страница Soffice. Бизнес-центры, адреса, классы, ставки, площади, парковки, фото, отзывы, цифры и контакты взяты с soffice.uz (19.10.2026). Положение на карте примерное, схема этажа и свободные блоки условные. Блоки с пометкой «Предложение DevUz Studio» придумали мы, на сайте их пока нет.", "Bu maket: Soffice bosh sahifasi shunday ko‘rinishi mumkin. Biznes-markazlar, manzillar, sinflar, stavkalar, maydonlar, avtoturargohlar, suratlar, fikrlar, raqamlar va kontaktlar soffice.uz’dan olingan (19.10.2026). Xaritadagi joylashuv taxminiy, qavat sxemasi va bo‘sh bloklar shartli. «DevUz Studio taklifi» belgisi bor bloklarni biz o‘ylab topdik, ular hozircha saytda yo‘q.", "This is a mockup of how the Soffice home page could look. Buildings, addresses, classes, rates, sizes, parking, photos, reviews, figures and contacts come from soffice.uz (19.10.2026). Map positions are approximate; the floor plan and free units are illustrative. Blocks marked “DevUz Studio proposal” are our ideas and are not on the site yet.")}</p><p>${t("Макет принадлежит DevUz Studio. Использовать его можно только по договору:", "Maket DevUz Studio’ga tegishli. Undan faqat shartnoma asosida foydalanish mumkin:", "The mockup belongs to DevUz Studio and may be used only under contract:")} <a href="${TERMS(l)}">${t("условия использования", "foydalanish shartlari", "terms of use")}</a></p></div>
 </div></footer>`;
@@ -450,7 +478,19 @@ function Ls(l) {
     windows: t("Окна", "Derazalar", "Windows"),
     busy: t("Этот блок занят. Свободные отмечены оранжевым.", "Bu blok band. Bo‘shlari to‘q sariq rangda.", "This unit is taken. Free ones are orange."),
     unitView: t("На просмотр этого блока", "Shu blokni ko‘rishga", "View this unit"),
-    offer: { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, n: !!a.new })), base: BASE.promo, baseName: BASE[l].t, hours: OFFER_HOURS, head: t("Сайт Soffice, состав:", "Soffice sayti, tarkibi:", "Soffice website, scope:"), totalW: t("Итого", "Jami", "Total"), copied: t("Скопировано", "Nusxalandi", "Copied"), ended: t("Акция закончилась, цена обычная", "Aksiya tugadi, narx odatiy", "The offer has ended, regular price applies") },
+    hold: t("Этот блок в брони: на него уже отправлено предложение.", "Bu blok bronda: unga taklif yuborilgan.", "This unit is on hold: a proposal has been sent for it."),
+    tapFree: t("Статус блоков обновился из панели. Нажмите на оранжевый блок.", "Bloklar holati paneldan yangilandi. To‘q sariq blokni bosing.", "Unit statuses were updated from the panel. Tap an orange unit."),
+    inv: INV,
+    ua: UNITS.map((u) => u.a),
+    rateTpl: rateTxt(0, l).replace("0", "{r}"),
+    freeTpl: t("Свободно сейчас: {n} блоков, от {a} м²", "Hozir bo‘sh: {n} ta blok, {a} m² dan", "Vacant now: {n} units, from {a} m²"),
+    freeNone: t("Свободных блоков нет: напишите, освободится", "Bo‘sh blok yo‘q: yozing, bo‘shasa xabar beramiz", "No vacant units: message us to hear when one frees up"),
+    panel: href(l) + "panel",
+    toPanel: t("Открыть в панели", "Panelda ochish", "Open in the panel"),
+    leadSent: t("Заявка ушла менеджеру и уже в панели.", "Ariza menejerga ketdi va panelda turibdi.", "The request went to a manager and is in the panel."),
+    pickMsg: t("Здравствуйте! Подберите офис.\nПлощадь: около {a} м²\nГде: {w}\nБюджет: до {b} млн сум в месяц\nС сайта Soffice", "Assalomu alaykum! Ofis tanlab bering.\nMaydon: taxminan {a} m²\nQayerda: {w}\nByudjet: oyiga {b} mln so‘mgacha\nSoffice saytidan", "Hello! Please shortlist an office.\nSize: about {a} m²\nWhere: {w}\nBudget: up to {b}m UZS a month\nFrom the Soffice website"),
+    dist: Object.fromEntries(Object.entries(DISTRICTS).map(([k, d]) => [k, t(`${d.ru} район`, `${d.uz} tumani`, `${d.en} district`)])),
+    offer: { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, n: !!a.new, g: a.grp || "" })), base: BASE.promo, baseName: BASE[l].t, hours: OFFER_HOURS, head: t("Сайт Soffice, состав:", "Soffice sayti, tarkibi:", "Soffice website, scope:"), totalW: t("Итого", "Jami", "Total"), copied: t("Скопировано", "Nusxalandi", "Copied"), ended: t("Акция закончилась, цена обычная", "Aksiya tugadi, narx odatiy", "The offer has ended, regular price applies") },
   };
 }
 
@@ -464,7 +504,7 @@ function ld(l) {
 function page(l) {
   const t = T(l);
   const dz = dzIntroSolo(l === "en" ? "ru" : l).replace(">Пропустить<", l === "en" ? ">Skip<" : ">Пропустить<");
-  const body = [heroBlock, logosBlock, mapBlock, catalogBlock, calcBlock, floorBlock, viewBlock, trustBlock, nowBlock, priceBlock].map((f) => f(l)).join("\n");
+  const body = [heroBlock, logosBlock, mapBlock, catalogBlock, calcBlock, floorBlock, viewBlock, trustBlock, nowBlock, panelBlock, priceBlock].map((f) => f(l)).join("\n");
   return `<!doctype html>
 <html lang="${l}">
 <head>
@@ -507,13 +547,111 @@ ${JS}</script>
 </html>`;
 }
 
-const out = Object.fromEntries(LANGS.map((l) => [KEY[l], page(l)]));
+/* ── Панель ─────────────────────────────────────────────────────────── */
+const PANEL_JS = strip(readFileSync(DIR + "panel.js", "utf8")).replace(/\n\s*\n/g, "\n");
+const PANEL_CSS = strip(readFileSync(DIR + "panel.css", "utf8")).replace(/\n\s*/g, "");
+/* Каждая подпись, которую зовёт panel.js, — на трёх языках, иначе сборка падает. */
+(function checkDict() {
+  const keys = new Set([...PANEL_JS.matchAll(/\bt\('([A-Za-z0-9_]+)'/g)].map((m) => m[1]).concat(PANEL_DYN));
+  for (const k of ["role_", "rd_", "n_", "fn_", "st_", "nextS_", "src_", "f_", "res_", "u_", "b_", "bf_", "cf_", "sf_", "ts_", "tk_", "tx_", "how_", "age", "bud", "doc_", "v_", "q_", "lg_"]) keys.delete(k);
+  for (const k of keys) {
+    const v = PANEL_UI[k];
+    if (!v || v.length !== 3 || v.some((x) => !x || (Array.isArray(x) && !x.length))) throw new Error(`panel: нет подписи «${k}» на трёх языках`);
+    if (/[А-Яа-яЁё]/.test(JSON.stringify([v[1], v[2]]))) throw new Error(`panel: кириллица в узбекской или английской подписи «${k}»`);
+  }
+  if (/[А-Яа-яЁё]/.test(PANEL_JS + PANEL_CSS)) throw new Error("panel: кириллица в коде панели");
+})();
+const SP = (d) => `<path d="${d}"/>`;
+const SPRITE = {
+  dash: SP("M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z"), leads: SP("M4 13h4l2 3h4l2-3h4M4 13l2.5-8h11L20 13v6H4z"), views: SP("M4 6h16v14H4zM4 10h16M9 3v4M15 3v4") + SP("m9 15 2 2 4-4"),
+  objects: SP("M4 20V8l6-4v16M10 20V4l10 4v12M3 20h18M13 10h4M13 14h4"), leases: SP("M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5"), bills: SP("M3 6h18v12H3zM3 10h18M7 15h4"),
+  service: SP("M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5L15 12l-3-3z"), owners: SP("M5 20V10M12 20V4M19 20v-7M3 20h18"), demand: SP("M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM20 20l-4.8-4.8"),
+  team: SP("M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14a5.5 5.5 0 0 1 3.5 6"),
+  bolt: SP("M13 3 5 13h6l-1 8 8-10h-6Z"), alert: SP("M12 4 2.5 20h19zM12 10v4M12 17v.5"), cal: SP("M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"), user: SP("M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"),
+  chev: SP("m9 6 6 6-6 6"), chevl: SP("m15 6-6 6 6 6"), plus: SP("M12 5v14M5 12h14"), x: SP("M6 6l12 12M18 6 6 18"), menu: SP("M4 7h16M4 12h16M4 17h16"), check: SP("m5 12.5 4.5 4.5L19 7"),
+  search: SP("M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM20 20l-4.8-4.8"), doc: SP("M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5"), key: SP("M8 15a4 4 0 1 1 3.5-6H21v3h-2v3h-3v-3h-4.5A4 4 0 0 1 8 15z"),
+  play: SP("M7 4.5v15l12-7.5z"), wa: SP("M4 20l1.3-4A8 8 0 1 1 8 18.7Z") + SP("M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-1.8-1.8l.8-1-1-2Z"), tg: SP("M21 4 3 11l6 2 2 6 3-4 5 4 2-15Z") + SP("m9 13 9-6"),
+  link: SP("M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"), print: SP("M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z"), bell: SP("M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"),
+  eye: SP("M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z") + '<circle cx="12" cy="12" r="2.8"/>', tool: SP("M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5L15 12l-3-3z"),
+  spark: SP("M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"), car: SP("M4 16v-4l2-5h12l2 5v4M3 16h18v3H3z"), ext: SP("M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"),
+};
+const sprite = () => `<svg width="0" height="0" style="position:absolute" aria-hidden="true">${Object.entries(SPRITE).map(([k, d]) => `<symbol id="i-${k}" viewBox="0 0 24 24">${d}</symbol>`).join("")}</svg>`;
+const NAMES = {
+  first: { ru: ["Алишер", "Нигора", "Сардор", "Камила", "Бобур", "Лола", "Рустам", "Гульноза", "Ильхом", "Севара", "Дмитрий", "Анна"], uz: ["Alisher", "Nigora", "Sardor", "Kamila", "Bobur", "Lola", "Rustam", "Gulnoza", "Ilhom", "Sevara", "Dmitriy", "Anna"], en: ["Alisher", "Nigora", "Sardor", "Kamila", "Bobur", "Lola", "Rustam", "Gulnoza", "Ilkhom", "Sevara", "Dmitry", "Anna"] },
+  lastI: { ru: ["К.", "Р.", "М.", "А.", "Т.", "Ш.", "Ю."], uz: ["K.", "R.", "M.", "A.", "T.", "Sh.", "Yu."], en: ["K.", "R.", "M.", "A.", "T.", "Sh.", "Yu."] },
+};
+function panelData(l) {
+  const t = T(l);
+  const i = LANGS.indexOf(l);
+  return {
+    lang: l,
+    ui: Object.fromEntries(Object.entries(PANEL_UI).map(([k, v]) => [k, v[i]])),
+    bc: BC.map((b) => ({ id: b.id, n: b.n, cls: b.cls, d: b.d, dn: DISTRICTS[b.d][l], rate: b.rate, a: b.a[l], m: b.m[l] })),
+    inv: INV,
+    units: UNITS.map((u) => ({ n: u.n, r: u.r, a: u.a, w: { n: t("на север", "shimolga", "north"), ne: t("на север и восток", "shimol va sharqqa", "north and east"), s: t("на юг", "janubga", "south"), se: t("на юг и восток", "janub va sharqqa", "south and east") }[u.w] })),
+    owners: OWNERS, team: TEAM.map((p) => ({ id: p.id, role: p.role, n: p.n[l] })), market: MARKET, tariff: TARIFF,
+    roots: TENANT_ROOTS, kinds: TENANT_KINDS, first: NAMES.first[l], lastI: NAMES.lastI[l],
+    dist: Object.fromEntries(Object.entries(DISTRICTS).map(([k, d]) => [k, d[l]])),
+    site: href(l),
+  };
+}
+function panelPage(l) {
+  const t = T(l);
+  const nav = ["dash", "leads", "views", "objects", "leases", "bills", "service", "owners", "demand", "team"];
+  const names = { team: t("Команда и роли", "Jamoa va rollar", "Team and roles") };
+  const cnt = { leads: "leads", bills: "bills", service: "service" };
+  const roles = ["owner", "head", "broker", "acc", "ops", "own"];
+  const pick = (k) => PANEL_UI[k][LANGS.indexOf(l)];
+  return `<!doctype html>
+<html lang="${l}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${t("Панель Soffice · макет DevUz Studio", "Soffice paneli · DevUz Studio maketi", "Soffice panel · DevUz Studio mockup")}</title>
+<meta name="description" content="${t("Панель управляющей компании Soffice: заявки и сделки, просмотры, 18 бизнес-центров с этажами и блоками, договоры, счета, эксплуатация, отчёт собственнику, спрос с сайта, роли.", "Soffice boshqaruv kompaniyasi paneli: arizalar va bitimlar, ko‘rishlar, qavat va bloklari bilan 18 ta biznes-markaz, shartnomalar, hisoblar, ekspluatatsiya, egaga hisobot, saytdagi talab, rollar.", "Soffice management panel: requests and deals, viewings, 18 buildings with floors and units, leases, invoices, facilities, owner reports, website demand, roles.")}">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#0f1012">
+<link rel="icon" type="image/png" sizes="192x192" href="${IMG}/icon-192.png">
+<link rel="apple-touch-icon" href="${IMG}/apple-180.png">
+${LANGS.filter((x) => x !== l).map((x) => `<link rel="alternate" hreflang="${x}" href="${href(x)}panel">`).join("\n")}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="${FONTS}">
+@@K@@
+</head>
+<body class="panel" data-lang="${l}">
+${sprite()}
+<div class="app">
+<div class="nav-back" data-navclose onclick="document.body.classList.remove('nav-on')"></div>
+<aside class="side-nav" aria-label="${t("Разделы панели", "Panel bo‘limlari", "Panel sections")}">
+<a class="brand" href="${href(l)}" aria-label="Soffice"><img src="${IMG}/logo.webp" alt="Soffice" width="574" height="127"><small>${t("Панель управляющей компании", "Boshqaruv kompaniyasi paneli", "Management panel")}</small></a>
+<nav class="nav">${nav.map((k) => `<a href="#${k}"><svg class="ic" aria-hidden="true"><use href="#i-${k}"/></svg><span>${names[k] || pick("n_" + k)}</span>${cnt[k] ? `<i data-cnt="${cnt[k]}" hidden>0</i>` : ""}</a>`).join("")}</nav>
+<div class="role"><label><span>${t("Смотреть как", "Kim sifatida ko‘rish", "View as")}</span><select id="role">${roles.map((r) => `<option value="${r}">${pick("role_" + r)}</option>`).join("")}</select></label>
+<label id="own-w" hidden><span>${t("Собственник", "Ega", "Owner")}</span><select id="own">${OWNERS.map((o) => `<option value="${o.id}">${o.n} (${t("демо", "demo", "demo")})</option>`).join("")}</select></label>
+<a class="to-site" href="${href(l)}"><svg class="ic" aria-hidden="true"><use href="#i-ext"/></svg><span>${t("Открыть сайт Soffice", "Soffice saytini ochish", "Open the Soffice website")}</span></a></div>
+</aside>
+<div class="main">
+<header class="topbar"><button type="button" class="ib" id="menu-b" aria-label="${t("Меню", "Menyu", "Menu")}"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button><img class="lw" src="${IMG}/logo.webp" alt="Soffice" width="574" height="127"><span class="sp"></span><div class="lang-s">${LANGS.map((x) => `<a href="${href(x)}panel" hreflang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div><span class="me"><span class="av" aria-hidden="true">S</span><span id="me-n"></span></span></header>
+<main id="pv" tabindex="-1"></main>
+<p class="demo">${t("Макет DevUz Studio: данные панели демо, бизнес-центры и ставки с soffice.uz.", "DevUz Studio maketi: panel ma’lumotlari demo, biznes-markazlar va stavkalar soffice.uz’dan.", "A DevUz Studio mockup: panel data is demo; buildings and rates come from soffice.uz.")} <a href="${TERMS(l)}">${t("Условия использования", "Foydalanish shartlari", "Terms of use")}</a></p>
+</div></div>
+<div id="side" hidden></div>
+<div id="mdl" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="sp-data">${JSON.stringify(panelData(l)).replace(/</g, "\\u003c")}</script>
+@@Q@@
+</body>
+</html>`;
+}
+
+const out = Object.fromEntries(LANGS.flatMap((l) => [[KEY[l], page(l)], [(KEY[l] ? KEY[l] + "/" : "") + "panel", panelPage(l)]]));
 mkdirSync(DIR + "out", { recursive: true });
-writeFileSync(DIR + "out/pages.json", JSON.stringify(out));
+const filled = Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.split("@@K@@").join(`<style>${PANEL_CSS}</style>`).split("@@Q@@").join(`<script>\n${PANEL_JS}</script>`)]));
+writeFileSync(DIR + "out/pages.json", JSON.stringify(filled));
 
 /* Сборка для сервера (lib/proto/bundles): стили и скрипт один раз, в
    страницах вместо них метка @@имя@@. */
-const parts = { S: `<style>${CSS}</style>`, J: `<script>\n${JS}</script>` };
+const parts = { S: `<style>${CSS}</style>`, J: `<script>\n${JS}</script>`, K: `<style>${PANEL_CSS}</style>`, Q: `<script>\n${PANEL_JS}</script>` };
 const pages = {};
 for (const [key, html] of Object.entries(out)) {
   let p = html;
