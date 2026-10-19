@@ -20,6 +20,7 @@
 | `seo-audit` | [AgriciDaniel/claude-seo](https://github.com/AgriciDaniel/claude-seo) | взгляд айтишного агентства: техническое SEO, что и в каком порядке смотрят |
 | `yt-*` (11 навыков) | [Jakeschincariol/youtube-agent-skill](https://github.com/Jakeschincariol/youtube-agent-skill) `a2feb21` | ведение YouTube-канала, см. ниже |
 | `ig-*` (13 навыков) | [Jakeschincariol/instagram-agent-skill](https://github.com/Jakeschincariol/instagram-agent-skill) `d03c56b` | ведение Instagram, см. ниже |
+| `tt-*` (12 навыков) | [solutionsystempro/tiktok-agent-skill](https://github.com/solutionsystempro/tiktok-agent-skill) `29c7920` | ведение TikTok, см. ниже |
 
 ## YouTube: `yt-*`
 
@@ -73,6 +74,34 @@
 - Формулы и словарь штампов `/ig-human` — английские: на русском и узбекском
   тире и невидимые символы он ловит, штампы — нет; их держит наш
   `lib/proto/plain-text.ts`.
+
+## TikTok: `tt-*`
+
+Владелец, 19.10.2026: «И для тик ток погнали тоже, под разные аудитории
+планирую выпускать видосы, чтобы как-то продвигать студию». Набор Ian Ryan
+Kirk по образцу `ig-*` (часть инструментов взята оттуда, обе лицензии MIT —
+в `LICENSE`). Двенадцать навыков, инструменты на чистом Python, без сбора с
+TikTok и без публикации.
+
+| Команда | Что делает |
+|---|---|
+| `/tt-hook` | первые 1-3 секунды в три слоя: что сказать, что написать на экране, что показать; 20 формул с оценкой (`hookscore.py`) |
+| `/tt-script` | сценарий и раскадровка по секундам: зацепка до 3 с, длина, петля (`beats.py`) |
+| `/tt-trends` | что растёт, что на пике, что уходит: по выгрузке трендов, которую вставляем сами (`trends.py`) |
+| `/tt-viral` | что заходит в нише по кратности к медиане аккаунта (`swipe.py`, берёт `../tt-hook`) |
+| `/tt-caption`, `/tt-seo` | подпись и надпись на экране (`caption.py`, перенос в Shorts и Reels — `crosspost.py`); поисковые слова и вопросы зрителей (`kwmap.py`, `questions.py`) |
+| `/tt-plan` | месяц роликов, снятых за один-два часа съёмки |
+| `/tt-retention`, `/tt-profile`, `/tt-comment`, `/tt-repurpose`, `/tt-human` | удержание, профиль, комментарии, перенос длинного в короткое, чистка текста |
+
+- Голос — `~/.claude/tiktok/voice.md`, шаблон — `tt-script/voice-template.md`.
+  Шаблон месяца, который `/tt-plan` зовёт `templates/month.md`, лежит в
+  `tt-plan/month-template.md`.
+- Все двенадцать папок ставятся вместе: `/tt-viral` читает соседний
+  `tt-hook`.
+- Монтаж — не здесь, а HyperFrames (`/hyperframes:hyperframes`,
+  `talking-head-recut`, `embedded-captions`) и FFmpeg. Навык
+  `Yuvalkesh/viral-tiktok-editor` смотрели и не взяли: он под macOS, иврит и
+  CapCut.
 
 Последние два взяты под задачу «сделай первое касание таким, как у топовых
 студий». Из них взята **рамка** — что вообще смотрят и в каком порядке, — а
