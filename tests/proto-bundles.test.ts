@@ -1425,3 +1425,60 @@ test("заставка DevUz: видео в каждом макете, кром�
     }
   }
 });
+
+test("Soffice: главная на ru, uz, en — условия, noindex, видео DevUz, шапка, uz и en без кириллицы, 18 БЦ с их сайта", async () => {
+  const { existsSync, readdirSync, statSync } = await import("node:fs");
+  const site = bundlePages("soffice");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "en", "uz"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path || "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.ok(page.includes('id="dzi"') && page.includes("dzVideo(b,close)"), `${path}: нет видео DevUz`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не по правилу трёх секунд`);
+    assert.doesNotMatch(page, /overflow-x:hidden/, `${path}: overflow-x:hidden ломает sticky`);
+    assert.ok(page.includes("https://t.me/Soffice_cc") && page.includes("wa.me/998997307007") && page.includes("tel:+998997307007"), `${path}: нет менеджера в Telegram, WhatsApp или звонка`);
+    assert.ok(page.includes('"@type":"LocalBusiness"') && page.includes('"@type":"Organization"'), `${path}: нет разметки компании и БЦ`);
+    for (const id of ["finder", "karta", "katalog", "raschet", "etazh", "prosmotr", "otzyvy", "seychas", "cena"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
+    assert.equal((page.match(/<article class="bc /g) ?? []).length, 18, `${path}: в каталоге не 18 БЦ`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt: ${img.slice(0, 80)}`);
+    for (const src of page.match(/\/protos\/soffice\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    if (lang !== "ru") assert.doesNotMatch(page, /[А-Яа-яЁё]/, `${path}: кириллица на странице ${lang}`);
+  }
+  const pub = "public/protos/soffice";
+  assert.ok(readdirSync(pub).reduce((s, f) => s + statSync(`${pub}/${f}`).size, 0) < 8_000_000, "снимки тяжелее 8 МБ");
+  const stamped = stampedBundle("soffice", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages.en, site.pages.en, "отпечаток не поставился на английской странице");
+});
+
+test("Soffice: ставки 18 БЦ как на soffice.uz, сайт 1 000 $ вместо 2 500 $ на 48 часов, допы по часам", async () => {
+  const D = await import("../scripts/protos/soffice/data.mjs");
+  /* Снято с soffice.uz 19.10.2026: «от … сум/м²» на карточке и класс. */
+  const SITE: Record<string, [number, string]> = {
+    grossplaza: [420000, "A"], sapphire: [420000, "A"], forum: [480000, "A+"], trilliant: [540000, "A+"], dream: [430000, "B"], nestone: [490000, "A+"],
+    modera: [456000, "A+"], infinity: [420000, "A"], orient: [360000, "A"], platform: [300000, "A"], kayan: [360000, "A"], novaplaza: [360000, "A"],
+    businesspark: [240000, "B+"], solidpremium: [420000, "B+"], newera: [360000, "A"], panoramic: [240000, "B"], ventumplaza: [300000, "B"], novaminor: [300000, "B"],
+  };
+  assert.equal(D.BC.length, 18);
+  for (const b of D.BC) assert.deepEqual([b.rate, b.cls], SITE[b.id], `${b.id}: ставка или класс не как на soffice.uz`);
+  assert.equal(D.F.tg, "https://t.me/Soffice_cc", "Telegram — менеджер, а не канал новостей");
+  const plan = await import("../scripts/protos/soffice/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 2500);
+  assert.equal(plan.OFFER_HOURS, 48);
+  for (const a of plan.ADDONS) assert.equal(a.price, a.h * plan.RATE, `${a.id}: цена не по часам`);
+  for (const id of ["catalog", "floors", "booking", "crm", "tgbot", "tours", "panel", "en", "maps"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
+  const site = bundlePages("soffice")!;
+  for (const html of [site.html, site.pages.uz, site.pages.en]) {
+    assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});
