@@ -288,6 +288,7 @@ test("выкатку не запускает то, что сайт не чита
     ".github/workflows/blender-sia.yml",
     "scripts/blender/**",
     "scripts/rea/**",
+    ".claude/skills/**",
   ]) {
     assert.ok(ignored.includes(path), `нет ${path}`);
   }
