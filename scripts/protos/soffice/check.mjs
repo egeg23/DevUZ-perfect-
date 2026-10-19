@@ -92,11 +92,26 @@ for (const path of LANGS) {
     await p.mouse.wheel(0, 500 * dir); await p.waitForTimeout(300);
     await p.mouse.wheel(0, 300 * dir); await p.waitForTimeout(400);
     const hid = await p.$eval("#top", (e) => e.classList.contains("hide"));
-    await p.waitForTimeout(1900);
+    await p.waitForTimeout(1100);
     const still = await p.$eval("#top", (e) => e.classList.contains("hide"));
-    await p.waitForTimeout(1200);
+    await p.waitForTimeout(1000);
     const back = await p.$eval("#top", (e) => !e.classList.contains("hide"));
-    okIf(hid && still && back, `/${path}: шапка прячется при прокрутке ${dir > 0 ? "вниз" : "вверх"} и возвращается через 3 с`, `/${path} ${dir}: шапка ${hid} ${still} ${back}`);
+    okIf(hid && still && back, `/${path}: на телефоне шапка прячется при прокрутке ${dir > 0 ? "вниз" : "вверх"} и возвращается через 2 с`, `/${path} ${dir}: шапка ${hid} ${still} ${back}`);
+    await ctx.close();
+  }
+  // Владелец, 19.10.2026: на компьютере шапка стоит всегда, пункты в одну строку.
+  for (const w of [1100, 1280, 1440, 1920]) {
+    const { p, ctx } = await open(path, w, 900);
+    await p.mouse.wheel(0, 900); await p.waitForTimeout(300);
+    await p.mouse.wheel(0, -300); await p.waitForTimeout(300);
+    const r = await p.evaluate(() => {
+      const top = document.getElementById("top"), bar = top.querySelector(".top-in");
+      const items = [...top.querySelectorAll(".nav a, .top-r > *")].filter((e) => e.offsetParent);
+      const tall = items.filter((e) => e.getBoundingClientRect().height > 48).map((e) => e.textContent.trim());
+      const cy = items.map((e) => { const b = e.getBoundingClientRect(); return Math.round(b.top + b.height / 2); });
+      return { hid: top.classList.contains("hide"), h: Math.round(bar.getBoundingClientRect().height), tall, skew: Math.max(...cy) - Math.min(...cy), over: bar.scrollWidth - bar.clientWidth };
+    });
+    okIf(!r.hid && !r.tall.length && r.skew <= 2 && r.over <= 0, `/${path} @${w}: шапка стоит при прокрутке, пункты в одну строку и по одной линии`, `/${path} @${w}: шапка ${JSON.stringify(r)}`);
     await ctx.close();
   }
 }

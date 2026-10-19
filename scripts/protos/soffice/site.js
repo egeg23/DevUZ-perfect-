@@ -35,8 +35,10 @@ function toast(t){var el=$('#toast');el.textContent=t;el.hidden=false;clearTimeo
 function copy(t){try{if(navigator.clipboard)navigator.clipboard.writeText(t)}catch(e){}}
 
 /* ── Шапка: прячется при любой прокрутке, возвращается через 3 с ─── */
-var top=$('#top'),IDLE=3000,idleT=0;
-function headIdle(){if(!top)return;clearTimeout(idleT);
+/* Владелец, 19.10.2026: на компьютере шапка стоит всегда, на телефоне
+   прячется при прокрутке и возвращается через 2 секунды. */
+var top=$('#top'),IDLE=2000,idleT=0,DESK=null;try{DESK=matchMedia('(min-width: 1000px)')}catch(e){}
+function headIdle(){if(!top)return;clearTimeout(idleT);if(DESK&&DESK.matches){top.classList.remove('hide');return}
   if(!top.contains(d.activeElement))top.classList.add('hide');
   idleT=setTimeout(function(){top.classList.remove('hide')},IDLE)}
 addEventListener('scroll',headIdle,{passive:true});
