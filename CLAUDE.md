@@ -729,6 +729,10 @@ https://devuz.studio/api/health.
 - Касается всех новых макетов и тех, что правим. Образец — `headIdle` в
   `scripts/protos/invis/site.js`; проверка — `scripts/protos/invis/check.mjs`
   и `tests/proto-bundles.test.ts`.
+- Исключение — Soffice (владелец, 19.10.2026: «на пк можно оставить её,
+  чтобы всегда была сверху», на телефоне — 2 секунды): от 1000 px шапка не
+  прячется, на телефоне возвращается через 2 с (`IDLE=2000`, `DESK` в
+  `scripts/protos/soffice/site.js`). Другим макетам — общее правило.
 
 ## Заставка макета — видео DevUz, в каждом макете само
 

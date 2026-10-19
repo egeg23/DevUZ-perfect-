@@ -124,7 +124,7 @@ function headerHtml(l) {
 <a class="logo" href="${href(l)}" aria-label="Soffice"><img src="${IMG}/logo.webp" alt="Soffice" width="574" height="127"></a>
 <nav class="nav" aria-label="${t("Разделы", "Bo‘limlar", "Sections")}">${NAV.map(([id, n]) => `<a href="#${id}">${navName(n, l)}</a>`).join("")}</nav>
 <div class="top-r"><div class="lang">${LANGS.map((x) => `<a href="${href(x)}" hreflang="${x}"${x === l ? ' aria-current="true"' : ""}>${x.toUpperCase()}</a>`).join("")}</div>
-<a class="top-pn" href="${href(l)}panel">${ICON.lock}<span>${t("Для управляющей компании", "Boshqaruv kompaniyasi uchun", "For the management team")}</span></a>
+<a class="top-pn" href="${href(l)}panel" title="${t("Панель управляющей компании", "Boshqaruv kompaniyasi paneli", "Management panel")}">${ICON.lock}<span>${t("Панель", "Panel", "Panel")}</span></a>
 <a class="top-ph" href="tel:${F.phone}">${F.phoneT}</a>
 ${findBtn(l, "btn-sm top-cta")}
 <button type="button" class="ic-btn" id="menu-btn" aria-expanded="false" aria-controls="menu" aria-label="${t("Меню", "Menyu", "Menu")}">${ICON.menu}</button></div>

@@ -1449,7 +1449,9 @@ test("Soffice: главная и панель на ru, uz, en — условия
     if (lang !== "ru") assert.doesNotMatch(page, /[А-Яа-яЁё]/, `${path}: кириллица на странице ${lang}`);
     if (path.endsWith("panel")) continue;
     assert.ok(page.includes('id="dzi"') && page.includes("dzVideo(b,close)"), `${path}: нет видео DevUz`);
-    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не по правилу трёх секунд`);
+    // Владелец, 19.10.2026: на компьютере шапка стоит всегда, на телефоне возвращается через 2 с.
+    assert.ok(page.includes("IDLE=2000") && page.includes("matchMedia('(min-width: 1000px)')") && /DESK\.matches\)\{top\.classList\.remove\('hide'\);return\}/.test(page), `${path}: шапка не по правилу Soffice`);
+    assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка на телефоне не прячется`);
     assert.doesNotMatch(page, /overflow-x:hidden/, `${path}: overflow-x:hidden ломает sticky`);
     assert.ok(page.includes("https://t.me/Soffice_cc") && page.includes("wa.me/998997307007") && page.includes("tel:+998997307007"), `${path}: нет менеджера в Telegram, WhatsApp или звонка`);
     assert.ok(page.includes('"@type":"LocalBusiness"') && page.includes('"@type":"Organization"'), `${path}: нет разметки компании и БЦ`);
