@@ -2203,7 +2203,7 @@ export const uz: HelpCopy = {
           id: "shift",
           title: "Tahlillar smenasi",
           body: [
-            "Har kuni Toshkent vaqti bilan 08:03 da smena «Aloqalar» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha — va ularni darhol e’lon qiladi. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi, chiqqan sahifalarga havolalar va qolgan saytlar nega olinmadi.",
+            "Har kuni Toshkent vaqti bilan 08:03 da smena «Aloqalar» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha — va ularni darhol e’lon qiladi. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi, chiqqan sahifalarga havolalar, ular sayt xaritasida bormi (smena uni qidiruv tizimi kabi ochadi va har bir tahlilning ikkala sahifasini qidiradi) va qolgan saytlar nega olinmadi.",
             "Rad etish sabablari: sayt ochilmadi, sayt joyida yoki topilmalar kam, nisha yoki shahar aniqlanmadi, nishani tahlil qilmaymiz (tibbiyot va boshqa taqiqlanganlar), so‘rov band (bunday tahlil allaqachon bor — bu model maqola yozishidan oldin tekshiriladi), maqola tekshiruvdan o‘tmadi. 11:03 gacha hisobot bo‘lmasa — «Смена разборов — молчит» keladi.",
           ],
         },
@@ -2220,7 +2220,7 @@ export const uz: HelpCopy = {
           title: "Marketing haqida maqolalar",
           body: [
             "Saytdagi «Marketing» sahifasi ostida (devuz.studio/ru/marketing va devuz.studio/uz/marketing) har kuni ikkita qisqa maqola chiqadi — Toshkent vaqti bilan 10:00 va 16:00 da, birdaniga rus va o‘zbek tillarida. Ularni arzon model `content/marketing-topics.ts` dagi mavzular ro‘yxati bo‘yicha yozadi: O‘zbekistonda qidiriladigan narsa bo‘yicha tushuntirish («что такое SMM», «SMM nima», «Toshkentda reklama» — so‘rovlar Google Trends’dan olingan; har bir maqoladan oldin smena Google Trends va Vordstatdan uning so‘rovi O‘zbekistonda nima bilan birga qidirilishini yana so‘raydi va mosini matnga qo‘shadi; Vordstat serverda uning `WORDSTAT_TOKEN` tokeni bo‘lganda javob beradi), mashhur reklama keysi, keng tarqalgan xato, nishani kanalda targ‘ib qilish — navbat bilan. So‘rov sarlavhada, tavsifda va birinchi xatboshida turadi — busiz maqola chiqmaydi. Ular «Tekshiruvda»ga tushmaydi: o‘zi chiqadi, darhol sayt xaritasiga qo‘shiladi, Bing va Yandex esa signal oladi. Nima uchun: har bir maqola — bizni Google va Yandexda topadigan yana bitta sahifa, har birining oxirida esa «sayt + marketing» taklifi va kalkulyator.",
-            "Inson tekshiruvi o‘rnida kod turadi: keys tahlilida mavzu faktlarida yo‘q birorta ham raqam bo‘lishi mumkin emas, qolgan maqolalarda — foizlar, summalar va yillar yo‘q, o‘zbekcha versiya — faqat lotin yozuvida. Tekshiruvdan ikki marta o‘tmasa — bu safar maqola chiqmaydi, Telegramga esa sababi bilan «Статьи о маркетинге» qatori keladi. Mavzular tugaganda ham (taxminan ikki oydan keyin) shu qator xabar beradi — ro‘yxat kodda to‘ldiriladi. Chiqqan maqolani paneldan olib tashlab bo‘lmaydi: dasturchilar chatiga yozing, uni bazada yashirishadi.",
+            "Inson tekshiruvi o‘rnida kod turadi: keys tahlilida mavzu faktlarida yo‘q birorta ham raqam bo‘lishi mumkin emas, qolgan maqolalarda — foizlar, summalar va yillar yo‘q, o‘zbekcha versiya — faqat lotin yozuvida. Tekshiruvdan ikki marta o‘tmasa — bu safar maqola chiqmaydi, Telegramga esa sababi bilan «Статьи о маркетинге» qatori keladi. Chiqqan maqola sayt xaritasida bo‘lmasa ham shu qator keladi: chiqqandan keyin server buni o‘zi tekshiradi. Mavzular tugaganda ham (taxminan ikki oydan keyin) shu qator xabar beradi — ro‘yxat kodda to‘ldiriladi. Chiqqan maqolani paneldan olib tashlab bo‘lmaydi: dasturchilar chatiga yozing, uni bazada yashirishadi.",
           ],
         },
         {
@@ -2235,7 +2235,7 @@ export const uz: HelpCopy = {
           id: "publish",
           title: "Chop etish, olib tashlash, rad etish",
           body: [
-            "**«E’londan olish»** tahlilni saytdan olib, «Tekshiruvda»ga qo‘yadi — endi u yerda faqat siz olib qo‘ygan tahlillar turadi, smena ularni qaytarib chiqarmaydi. Saytga qaytarish — **«E’lon qilish»**: ikkala maqola kerak, sahifa darhol ochiladi, sayt xaritasi yangilanadi, Bing va Yandex signal oladi.",
+            "**«E’londan olish»** tahlilni saytdan olib, «Tekshiruvda»ga qo‘yadi — endi u yerda faqat siz olib qo‘ygan tahlillar turadi, smena ularni qaytarib chiqarmaydi. Saytga qaytarish — **«E’lon qilish»**: ikkala maqola kerak, sahifa darhol ochiladi, sayt xaritasi yangilanadi, Bing va Yandex signal oladi. Panel shu zahoti jonli sayt xaritasini ochadi va unda ikkala sahifa topildimi, yozadi; topilmasa — dasturchilar chatiga yozing.",
             "**«E’lon qilmaymiz»** — olib qo‘yilgan tahlil uchun, sabab bilan yoki sababsiz. Smena bu saytga boshqa qaytmaydi. Saytni smena navbatiga qaytarish — faqat **«O‘chirish»** (maydonga «o‘chirish» deb yozing).",
           ],
         },

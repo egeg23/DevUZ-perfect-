@@ -20,6 +20,7 @@ import { forbiddenNiche } from "@/lib/razbor/niche-words";
 import { announceRazbors } from "@/lib/razbor/announce";
 import { AUTO_PUBLISH, coveredHashes, razborTaken, saveDraft, sourceHash, storedNiche, type RazborArticle } from "@/lib/razbor/store";
 import { siteUrl } from "@/lib/seo";
+import { checkSitemap, sitemapLine, type SitemapCheck } from "@/lib/seo/sitemap-check";
 import { serviceClient } from "@/lib/supabase";
 import type { AuditReport } from "@/lib/audit/checks";
 import type { City, Niche } from "@/content/razbor/catalog";
@@ -51,11 +52,15 @@ export type ShiftRun = {
   drafted: number;
   /** Русские адреса вышедших разборов — в отчёт владельцу. */
   pages: string[];
+  /** Оба адреса каждого вышедшего — их ищем в карте сайта. */
+  paths: string[];
+  /** Есть ли вышедшие в живой карте сайта. */
+  sitemap?: SitemapCheck;
   skipped: Record<string, number>;
   errors: string[];
 };
 
-const EMPTY: ShiftRun = { ran: false, looked: 0, drafted: 0, pages: [], skipped: {}, errors: [] };
+const EMPTY: ShiftRun = { ran: false, looked: 0, drafted: 0, pages: [], paths: [], skipped: {}, errors: [] };
 
 async function lastShiftAt(): Promise<string | null> {
   const db = serviceClient();
@@ -104,7 +109,7 @@ export async function runRazborShift(now = new Date(), force = false): Promise<S
     if (claim !== "ok") return { ...EMPTY, errors: [claim] };
   }
 
-  const run: ShiftRun = { ran: true, looked: 0, drafted: 0, pages: [], skipped: {}, errors: [] };
+  const run: ShiftRun = { ran: true, looked: 0, drafted: 0, pages: [], paths: [], skipped: {}, errors: [] };
   const skip = (why: string) => {
     run.skipped[why] = (run.skipped[why] ?? 0) + 1;
   };
@@ -141,7 +146,8 @@ export async function runRazborShift(now = new Date(), force = false): Promise<S
       const drafted = await draftOne(url);
       if (typeof drafted === "object") {
         run.drafted += 1;
-        run.pages.push(drafted.page);
+        run.pages.push(drafted.ru);
+        run.paths.push(drafted.ru, drafted.uz);
         covered.add(sourceHash(url));
       } else {
         skip(drafted);
@@ -156,14 +162,17 @@ export async function runRazborShift(now = new Date(), force = false): Promise<S
   if (AUTO_PUBLISH && run.drafted > 0) {
     const sent = await announceRazbors().catch((error) => ({ state: "bad-input" as const, why: String(error) }));
     if (sent.state === "bad-input") run.errors.push(`IndexNow: ${sent.why}`);
+    // И убедиться, что обе страницы каждого разбора уже в карте сайта, —
+    // правило владельца, 19.10.2026. Ответ идёт строкой в отчёт смены.
+    run.sitemap = await checkSitemap(run.paths);
   }
 
   await report(run);
   return run;
 }
 
-/** `{ page }` — разбор лёг (русский адрес); строка — почему сайт не взяли. */
-async function draftOne(url: string): Promise<{ page: string } | string> {
+/** `{ ru, uz }` — разбор лёг (адреса страниц); строка — почему сайт не взяли. */
+async function draftOne(url: string): Promise<{ ru: string; uz: string } | string> {
   // Тот же обход, что у касания, а не быстрый разбор одной главной.
   //
   // Даёт три вещи разом и за один проход: находки внутренних страниц (с
@@ -243,7 +252,9 @@ async function draftOne(url: string): Promise<{ page: string } | string> {
       (invented ? ` Ниша «${niche.ruLabel}» новая — смена назвала её сама.` : ""),
   });
 
-  return id ? { page: `/ru/razbor/${slugFor(niche, city, "ru")}` } : "не записался (скорее всего, такой запрос уже занят)";
+  return id
+    ? { ru: `/ru/razbor/${slugFor(niche, city, "ru")}`, uz: `/uz/razbor/${slugFor(niche, city, "uz")}` }
+    : "не записался (скорее всего, такой запрос уже занят)";
 }
 
 /**
@@ -486,7 +497,8 @@ async function report(run: ShiftRun): Promise<void> {
       ? `Вышло ${run.drafted} из ${PER_SHIFT}. Посмотрено сайтов: ${run.looked}.` +
         (why ? ` Не взяли: ${why}.` : "") +
         (AUTO_PUBLISH
-          ? ` Уже на сайте: ${run.pages.map((page) => siteUrl + page).join(" ")} — поправить или снять можно в панели, раздел «Разборы».`
+          ? ` Уже на сайте: ${run.pages.map((page) => siteUrl + page).join(" ")} — поправить или снять можно в панели, раздел «Разборы».` +
+            (run.sitemap ? ` ${sitemapLine(run.sitemap)}` : "")
           : " Ждут проверки в панели, разделе «Разборы».")
       : `Ни одного разбора. Посмотрено сайтов: ${run.looked}.` +
         (why ? ` Причины: ${why}.` : " Смотреть было нечего: в касаниях не осталось неразобранных сайтов.");

@@ -35,7 +35,7 @@ test("после выхода — сигнал Bing и Яндексу и ссы�
   assert.match(run, /if \(AUTO_PUBLISH && run\.drafted > 0\) \{\s*const sent = await announceRazbors\(\)/);
   assert.ok(run.indexOf("announceRazbors()") < run.indexOf("await report(run);"), "отчёт уходит раньше сигнала");
   assert.match(run, /Уже на сайте: \$\{run\.pages\.map\(\(page\) => siteUrl \+ page\)/);
-  assert.match(run, /return id \? \{ page: `\/ru\/razbor\/\$\{slugFor\(niche, city, "ru"\)\}` \}/);
+  assert.match(run, /\? \{ ru: `\/ru\/razbor\/\$\{slugFor\(niche, city, "ru"\)\}`, uz: `\/uz\/razbor\/\$\{slugFor\(niche, city, "uz"\)\}` \}/);
 
   const tender = read("lib/razbor/tender-run.ts");
   assert.match(tender, /if \(id && AUTO_PUBLISH\) \{[\s\S]{0,200}?await announceRazbors\(\)/);
