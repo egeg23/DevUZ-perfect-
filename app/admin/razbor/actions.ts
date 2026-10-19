@@ -8,6 +8,7 @@ import { isDeleteWord } from "@/content/admin-panel/razbor";
 import { record } from "@/lib/admin/audit";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { announceRazbors } from "@/lib/razbor/announce";
+import { checkSitemap } from "@/lib/seo/sitemap-check";
 import { shootableCodes } from "@/lib/razbor/evidence";
 import {
   publish,
@@ -108,7 +109,16 @@ export async function publishAction(formData: FormData) {
   if (result.ok) announce();
   // В адрес — код; текст на языке панели подбирает страница
   // (content/admin-panel/razbor.ts).
-  redirect(result.ok ? "/admin/razbor?r=ok" : `/admin/razbor?r=${result.why}`);
+  if (!result.ok) redirect(`/admin/razbor?r=${result.why}`);
+
+  // Убедиться, что обе страницы уже в живой карте сайта (правило владельца,
+  // 19.10.2026), — до ответа: владелец видит итог сразу, а не в логе. Две
+  // попытки с паузой в три секунды, а не три по двадцать, как у смены:
+  // здесь человек ждёт ответа кнопки.
+  const map = await checkSitemap([result.paths.ru, result.paths.uz], 2, 3000);
+  if (map.ok === true) redirect("/admin/razbor?r=ok");
+  const detail = map.ok === false ? map.missing.join(" ") : map.why;
+  redirect(`/admin/razbor?r=${map.ok === false ? "nomap" : "nomapcheck"}&d=${encodeURIComponent(detail.slice(0, 300))}`);
 }
 
 export async function rejectAction(formData: FormData) {

@@ -341,7 +341,7 @@ export const moreSections: Record<string, HelpEntry> = {
         id: "shift",
         title: "Zmiana analiz",
         body: [
-          "Codziennie o 08:03 czasu taszkenckiego zmiana bierze z «Kontaktów» strony, do których jeszcze nie pisaliśmy, przegląda do 12 i pisze do 3 analiz — po rosyjsku i po uzbecku — i od razu je publikuje. Raport «Смена разборов» przychodzi w Telegramie: ile wyszło, linki do opublikowanych stron i dlaczego pozostałych stron nie wzięto.",
+          "Codziennie o 08:03 czasu taszkenckiego zmiana bierze z «Kontaktów» strony, do których jeszcze nie pisaliśmy, przegląda do 12 i pisze do 3 analiz — po rosyjsku i po uzbecku — i od razu je publikuje. Raport «Смена разборов» przychodzi w Telegramie: ile wyszło, linki do opublikowanych stron, czy są już w mapie strony (zmiana otwiera ją tak jak wyszukiwarka i szuka obu stron każdej analizy) i dlaczego pozostałych stron nie wzięto.",
           "Powody odrzucenia: strona się nie otworzyła, strona jest w porządku albo ma za mało ustaleń, nie udało się ustalić branży lub miasta, branży nie analizujemy (medycyna i inne zakazane), zapytanie zajęte (taka analiza już istnieje — sprawdza się to, zanim model napisze artykuły), artykuł nie przeszedł kontroli. Jeśli do 11:03 raportu nie ma — przyjdzie «Смена разборов — молчит».",
         ],
       },
@@ -358,7 +358,7 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Artykuły o marketingu",
         body: [
           "Pod stroną «Marketing» na stronie studia (devuz.studio/ru/marketing i devuz.studio/uz/marketing) codziennie wychodzą dwa krótkie artykuły — o 10:00 i o 16:00 czasu taszkenckiego, od razu po rosyjsku i po uzbecku. Pisze je tani model według listy tematów w `content/marketing-topics.ts`: wyjaśnienie pod to, czego szuka się w Uzbekistanie («что такое SMM», «SMM nima», «реклама в Ташкенте» — frazy z Google Trends; przed każdym artykułem zmiana jeszcze raz pyta Google Trends i Wordstat, z czym w Uzbekistanie wyszukuje się jego frazę, i wstawia pasujące frazy do tekstu; Wordstat odpowiada, gdy na serwerze jest jego token `WORDSTAT_TOKEN`), znana kampania reklamowa, częsty błąd, promocja branży w danym kanale — po kolei. Fraza stoi w tytule, opisie i pierwszym akapicie — bez tego artykuł nie wychodzi. Nie trafiają na listę «Do sprawdzenia»: wychodzą same, od razu trafiają do mapy strony, a Bing i Yandex dostają sygnał. Po co: każdy artykuł to kolejna strona, po której znajdują nas w Google i Yandex, a na końcu każdego jest oferta «strona + marketing» i kalkulator.",
-          "Zamiast człowieka sprawdza je kod: w omówieniu kampanii nie może być żadnej liczby, której nie ma w faktach tematu, w pozostałych artykułach — ani procentów, ani kwot, ani lat, wersja uzbecka — tylko alfabetem łacińskim. Jeśli artykuł dwa razy nie przejdzie kontroli, tym razem go nie będzie, a w Telegramie przyjdzie linijka «Статьи о маркетинге» z powodem. Ta sama linijka powie, gdy tematy się skończą (mniej więcej za dwa miesiące) — listę uzupełnia się w kodzie. Opublikowanego artykułu nie da się zdjąć z panelu: napisz na czat programistów, ukryją go w bazie.",
+          "Zamiast człowieka sprawdza je kod: w omówieniu kampanii nie może być żadnej liczby, której nie ma w faktach tematu, w pozostałych artykułach — ani procentów, ani kwot, ani lat, wersja uzbecka — tylko alfabetem łacińskim. Jeśli artykuł dwa razy nie przejdzie kontroli, tym razem go nie będzie, a w Telegramie przyjdzie linijka «Статьи о маркетинге» z powodem. Ta sama linijka przyjdzie, jeśli opublikowanego artykułu nie ma w mapie strony: po publikacji serwer sprawdza to sam. Ta sama linijka powie, gdy tematy się skończą (mniej więcej za dwa miesiące) — listę uzupełnia się w kodzie. Opublikowanego artykułu nie da się zdjąć z panelu: napisz na czat programistów, ukryją go w bazie.",
         ],
       },
       {
@@ -373,7 +373,7 @@ export const moreSections: Record<string, HelpEntry> = {
         id: "publish",
         title: "Opublikuj, zdejmij, odrzuć",
         body: [
-          "**«Zdejmij z publikacji»** zdejmuje analizę z witryny i odkłada ją na listę «Do sprawdzenia» — trafia tam teraz tylko to, co zostało zdjęte z publikacji, a zmiana nie publikuje tego z powrotem. Przywrócić na witrynę — **«Opublikuj»**: potrzebne są oba artykuły, strona od razu się otwiera, mapa strony się aktualizuje, Bing i Yandex dostają sygnał.",
+          "**«Zdejmij z publikacji»** zdejmuje analizę z witryny i odkłada ją na listę «Do sprawdzenia» — trafia tam teraz tylko to, co zostało zdjęte z publikacji, a zmiana nie publikuje tego z powrotem. Przywrócić na witrynę — **«Opublikuj»**: potrzebne są oba artykuły, strona od razu się otwiera, mapa strony się aktualizuje, Bing i Yandex dostają sygnał. Panel od razu otwiera żywą mapę strony i pisze, czy znalazły się w niej obie strony; jeśli nie — napisz na czat programistów.",
           "**«Nie publikujemy»** — dla zdjętej analizy, z powodem albo bez. Zmiana nie wróci już do tej strony. Przywrócić stronę do kolejki zmiany można tylko przez **«Usuń»** (wpisz «usuń»).",
         ],
       },

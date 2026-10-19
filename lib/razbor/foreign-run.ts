@@ -18,6 +18,7 @@ import type { RazborArticle } from "@/lib/razbor/store";
 import { serviceClient } from "@/lib/supabase";
 import { anthropic } from "@/lib/model-road";
 import { keywordResearch } from "@/lib/seo/keywords";
+import { checkSitemap, sitemapLine } from "@/lib/seo/sitemap-check";
 
 // Статья — той же моделью, что русские разборы: Sonnet, не Opus
 // (владелец, 04.10.2026: «не используй сильно дорогую модель»). Короткий
@@ -52,6 +53,12 @@ export async function runForeignPass(now = new Date(), limit = 1): Promise<Forei
     run.translated.push(...one.translated);
     run.failed.push(...one.failed);
     run.errors.push(...one.errors);
+  }
+  // Вышедшая версия — в живой карте сайта (правило владельца, 19.10.2026).
+  // Не нашлась — строка в лог свипа рядом с остальными сбоями прохода.
+  if (run.translated.length) {
+    const map = await checkSitemap(run.translated);
+    if (map.ok !== true) run.errors.push(sitemapLine(map));
   }
   return run;
 }

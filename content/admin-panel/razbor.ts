@@ -18,9 +18,19 @@ import { defineDict } from "@/lib/admin/i18n";
  */
 export const razborResultDict = defineDict({
   ok: {
-    ru: () => "Опубликовано. Страница уже открывается на сайте.",
-    uz: () => "E’lon qilindi. Sahifa saytda allaqachon ochiladi.",
-    pl: () => "Opublikowano. Strona już otwiera się na witrynie.",
+    ru: () => "Опубликовано. Страница уже открывается на сайте, обе страницы — в карте сайта.",
+    uz: () => "E’lon qilindi. Sahifa saytda allaqachon ochiladi, ikkala sahifa sayt xaritasida.",
+    pl: () => "Opublikowano. Strona już otwiera się na witrynie, obie strony są w mapie strony.",
+  },
+  nomap: {
+    ru: (paths: string) => `Опубликовано, но в карте сайта этих страниц нет: ${paths}. Напишите в чат разработки.`,
+    uz: (paths: string) => `E’lon qilindi, lekin bu sahifalar sayt xaritasida yo‘q: ${paths}. Dasturchilar chatiga yozing.`,
+    pl: (paths: string) => `Opublikowano, ale tych stron nie ma w mapie strony: ${paths}. Napisz na czat programistów.`,
+  },
+  nomapcheck: {
+    ru: (why: string) => `Опубликовано, но карту сайта проверить не удалось: ${why}.`,
+    uz: (why: string) => `E’lon qilindi, lekin sayt xaritasini tekshirib bo‘lmadi: ${why}.`,
+    pl: (why: string) => `Opublikowano, ale nie udało się sprawdzić mapy strony: ${why}.`,
   },
   unpublished: { ru: () => "Снят с публикации.", uz: () => "E’londan olindi.", pl: () => "Zdjęto z publikacji." },
   deleted: { ru: () => "Удалён.", uz: () => "O‘chirildi.", pl: () => "Usunięto." },

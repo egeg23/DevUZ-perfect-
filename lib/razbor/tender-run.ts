@@ -18,6 +18,7 @@ import {
 import { announceRazbors } from "@/lib/razbor/announce";
 import { AUTO_PUBLISH, coveredHashes, saveDraft, sourceHash, type RazborArticle } from "@/lib/razbor/store";
 import { siteUrl } from "@/lib/seo";
+import { checkSitemap, sitemapLine, type SitemapCheck } from "@/lib/seo/sitemap-check";
 import { serviceClient } from "@/lib/supabase";
 
 // Sonnet, а не Opus чата на сайте: владелец, 04.10.2026 — «не используй
@@ -85,6 +86,7 @@ export async function runTenderShift(now = new Date(), force = false): Promise<T
   }
 
   const run: TenderRun = { ran: true, topic: null, drafted: false, errors: [] };
+  let sitemap: SitemapCheck | null = null;
   const covered = await coveredHashes();
   const topic = nextTopic((source) => covered.has(sourceHash(source)));
   if (!topic) {
@@ -123,6 +125,8 @@ export async function runTenderShift(now = new Date(), force = false): Promise<T
         // следующей выкатки.
         const sent = await announceRazbors().catch((error) => ({ state: "bad-input" as const, why: String(error) }));
         if (sent.state === "bad-input") run.errors.push(`IndexNow: ${sent.why}`);
+        // Обе страницы — в живой карте сайта (правило владельца, 19.10.2026).
+        sitemap = await checkSitemap([`/ru/razbor/${topic.ru.slug}`, `/uz/razbor/${topic.uz.slug}`]);
       }
     }
   } catch (error) {
@@ -133,7 +137,8 @@ export async function runTenderShift(now = new Date(), force = false): Promise<T
     run,
     run.drafted
       ? AUTO_PUBLISH
-        ? `Тема «${topic.ru.query}» — статья на двух языках уже на сайте: ${siteUrl}/ru/razbor/${topic.ru.slug} — поправить или снять можно в панели, раздел «Разборы».`
+        ? `Тема «${topic.ru.query}» — статья на двух языках уже на сайте: ${siteUrl}/ru/razbor/${topic.ru.slug} — поправить или снять можно в панели, раздел «Разборы».` +
+          (sitemap ? ` ${sitemapLine(sitemap)}` : "")
         : `Тема «${topic.ru.query}» — статья на двух языках ждёт проверки в панели, раздел «Разборы».`
       : `Статья по теме «${topic.ru.query}» не вышла.`,
   );

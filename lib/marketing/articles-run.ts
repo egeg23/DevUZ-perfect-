@@ -16,6 +16,7 @@ import {
 } from "@/lib/marketing/articles-store";
 import { anthropic } from "@/lib/model-road";
 import { keywordResearch, type KeywordResearch } from "@/lib/seo/keywords";
+import { checkSitemap, sitemapLine } from "@/lib/seo/sitemap-check";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -130,6 +131,10 @@ export async function runMarketingArticles(now = new Date()): Promise<ArticleRun
       else {
         run.published = topic.slug;
         await announce(topic.slug);
+        // Обе версии — в живой карте сайта (правило владельца, 19.10.2026).
+        // Вышла без сбоев — отчёта нет, как и раньше; карта подвела — строка.
+        const map = await checkSitemap(ARTICLE_LOCALES.map((locale) => articleHref(locale, topic.slug)));
+        if (map.ok !== true) await report(run, `Статья по теме «${topic.brief}» вышла. ${sitemapLine(map)}`);
       }
     }
   } catch (error) {
