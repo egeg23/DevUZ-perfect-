@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { DZ_VIDEO } from "../dz-video.mjs";
+import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 
 /*
  * Макет нового сайта архитектурного бюро SIA (sia88.ru, Москва).
@@ -163,6 +164,7 @@ ${opts.body}
 <div class="foot-b"><p>SIA · архитектурное бюро · Москва</p><p>Макет нового сайта: DevUz Studio · <a href="${href("panel")}">Панель сайта</a> · <a href="${TERMS}" target="_blank" rel="noopener">Условия макета</a></p></div>
 </footer>
 <a class="dock" href="${WA(ASK)}" target="_blank" rel="noopener">${ICON.wa}<span>Обсудить проект в WhatsApp</span></a>
+${opts.home ? vToggle(1) : ""}
 <div class="peek" id="peek" aria-hidden="true"><img alt=""></div>
 <div class="cursor" id="cursor" aria-hidden="true"><span></span></div>
 ${opts.intro ? `<script>\nvar SIA_LINES=${read("lines.json").trim()};\n${strip(read("intro.js"))}</script>` : ""}
@@ -555,6 +557,121 @@ function home() {
   });
 }
 
+/* ── Вариант 2: тёмный, по мотивам textura.agency ─────────────────────────
+   Владелец, 19.10.2026: вторая страница рядом с первым вариантом, чтобы
+   бюро сравнило. Главная и три блока: проекты списком, направления,
+   коллектив. Снимки чёрно-белые; под курсором (на телефоне — у середины
+   экрана) цвет расплывается из точки и медленно заливает кадр. Тумблер
+   «Вариант 1 / Вариант 2» — на обеих страницах. */
+const FONTS2 = "https://fonts.googleapis.com/css2?family=Forum&family=Carlito:wght@400;700&display=swap";
+const TRUSS = `<svg class="v-truss" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M3 3H97V97H3ZM3 3L97 97M97 3L3 97M50 3V97M3 50H97"/></svg>`;
+/* Снимок: чёрно-белый, поверх — размытый цвет из точки и чёткий цвет. */
+const ph = (src, alt, cls = "", sizes = "100vw") => {
+  const big = src.replace(/-m\.webp$/, ".webp");
+  const set = big !== src ? ` srcset="${src} 800w, ${big} 1500w" sizes="${sizes}"` : "";
+  return `<span class="ph${cls ? " " + cls : ""}"><img class="ph-g" src="${src}"${set} alt="${esc(alt)}" loading="lazy" decoding="async"><img class="ph-b" src="${src}"${set} alt="" aria-hidden="true" loading="lazy" decoding="async"><img class="ph-c" src="${src}"${set} alt="" aria-hidden="true" loading="lazy" decoding="async"></span>`;
+};
+/* Названия — из заголовков и описаний проектов на sia88.ru. */
+const V2_LIST = [
+  ["APx180.2606", "Горный спа-курорт"], ["APx182.1208", "Вилла с плоской кровлей"], ["ИНт238.2606", "Вилла с крытым бассейном"],
+  ["APx178.2509", "Архитектурный ансамбль"], ["ИНт219.2409", "Ресторан в стиле ар-нуво"], ["APx183.2504", "Офисное здание"],
+  ["ИНт222.2410", "Пентхаус в золотистых тонах"], ["APx181.2607", "Вилла с панорамным остеклением"],
+];
+const V2_DIR = [0, 1, 2].map((i) => SERVICES[i]);
+const vToggle = (cur) => `<nav class="vt" aria-label="Вариант макета" data-cur="${cur}"><i class="vt-k" aria-hidden="true"></i><a href="${href()}" data-v="1"${cur === 1 ? ' aria-current="page"' : ""}>Вариант 1</a><a href="${href("v2")}" data-v="2"${cur === 2 ? ' aria-current="page"' : ""}>Вариант 2</a></nav>`;
+const wordsOf = (s) => s.split(" ").map((w, i) => `<span class="vw" style="--i:${i}"><span>${esc(w)}</span></span>`).join(" ");
+
+/* Звёздочка линиями, как у textura: символ ✳ на iPhone рисуется зелёным эмодзи. */
+const STAR8 = `<svg class="v-star" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9 4.9 19.1"/></svg>`;
+/* Таблетка в фразе о коллективе: проекты бюро сменяют друг друга раз в секунду. */
+const PILL = ["ИНт238.2606", "APx180.2606", "ИНт219.2409", "APx182.1208", "ИНт222.2410", "APx178.2509", "ИНт230.2502", "APx183.2504"].map((c) => BYCODE[c]);
+
+function v2Page() {
+  const P = (code) => BYCODE[code];
+  const hero = `<section class="v-hero" aria-label="Первый экран">
+<h1 class="v-mark"><span class="v-up" style="--i:0"><span>${TRUSS}</span></span><span class="v-up" style="--i:1"><span>SIA</span></span> <span class="v-up v-thin" style="--i:2"><span>бюро</span></span><span class="sr">: архитектурное бюро в Москве</span></h1>
+<div class="v-lead">
+<p class="v-fade" style="--i:3">Проектируем, визуализируем и сопровождаем. ${esc(HERO_SUB)} Офис с шоурумом на Таганской площади.</p>
+<a class="v-pill v-fade" style="--i:4" href="${WA(ASK)}" target="_blank" rel="noopener"><span>Обсудить проект</span>${ICON.arrow}</a>
+<a class="v-ul v-fade" style="--i:5" href="${PHONE_TEL}">Позвонить: ${PHONE}</a>
+<p class="v-chips v-fade" style="--i:6"><a href="#proekty">Архитектура</a><i></i><a href="#proekty">Интерьеры</a><i></i><a href="#napravleniya">3D-визуализация</a><i></i><a href="#napravleniya">Надзор</a></p>
+</div>
+<a class="v-band" href="${pHref(HERO)}" aria-label="${esc(HERO.code)}: ${esc(HERO.title)}">${ph(pic(HERO.slug, 1, true), HERO.title, "ph-band")}<span class="v-band-c"><span class="code">${HERO.code}</span> · Горный спа-курорт</span></a>
+</section>`;
+
+  const rows = V2_LIST.map(([c, n], i) => {
+    const p = P(c);
+    return `<li><a class="pl" href="${pHref(p)}" style="--i:${i}" data-i="${i}"><span class="pl-c">${p.code}</span><span class="pl-n">${esc(n)}</span><span class="pl-ar">${ICON.arrow}</span><span class="pl-pv" aria-hidden="true">${ph(pic(p.slug, 0, true), "", "", "320px")}</span></a></li>`;
+  }).join("");
+  const projects = `<section class="v-pr" id="proekty" aria-label="Избранные проекты">
+<h2 class="v-h2" data-rv>Избранные проекты</h2>
+<div class="pl-stick" aria-hidden="true">${V2_LIST.map(([c], i) => `<span class="pl-sp" data-i="${i}">${ph(pic(P(c).slug, 0, true), "", "", "90vw")}</span>`).join("")}</div>
+<ul class="pl-list">${rows}</ul>
+<p class="v-all"><a class="v-ul" href="${href()}#arhiv">Весь архив: ${DATA.index.length} проектов</a></p>
+</section>`;
+
+  const dir = `<section class="v-dir" id="napravleniya" aria-label="Направления" style="--n:${V2_DIR.length}">
+<div class="vd-stick">
+<div class="vd-titles">${V2_DIR.map((s, i) => `<h2 class="vd-t" data-i="${i}">${s.n}</h2>`).join("")}</div>
+<div class="vd-pics">${V2_DIR.map((s, i) => `<span class="vd-p" data-i="${i}">${ph(pic(P(s.p[0]).slug, s.p[1], true), s.n, "", "(max-width: 900px) 70vw, 28vw")}</span>`).join("")}</div>
+<div class="vd-texts">${V2_DIR.map((s, i) => `<p class="vd-x" data-i="${i}">${wordsOf(s.d)}</p>`).join("")}</div>
+<ol class="vd-idx">${V2_DIR.map((s, i) => `<li data-i="${i}">${s.n}</li>`).join("")}</ol>
+<div class="vd-subs">${V2_DIR.map((s, i) => `<p class="vd-s" data-i="${i}">${s.s.split(/,\s*|\s+или\s+|\s+и\s+/i).filter(Boolean).map((x) => `<span>${esc(x.charAt(0).toUpperCase() + x.slice(1))}</span>`).join("")}<span class="vd-f">${esc(s.f)}</span></p>`).join("")}</div>
+</div>
+<div class="vd-still">${V2_DIR.map((s) => `<article><h2 class="vd-t">${s.n}</h2>${ph(pic(P(s.p[0]).slug, s.p[1], true), s.n)}<p>${esc(s.d)}</p><p class="vd-f">${esc(s.f)}</p></article>`).join("")}</div>
+</section>`;
+
+  const faces = TEAM.slice(0, 4).map(([f, n]) => `<span class="tf">${ph(`${IMG}/team/${f}.webp`, n, "ph-face")}</span>`).join("");
+  const team = `<section class="v-tm" id="byuro" aria-label="Коллектив">
+<p class="v-tm-t" data-rv>Мы <span class="tf-row">${faces}</span> архитекторы, дизайнеры, визуализаторы и инженер ${ICON.arrow} ведём проект от участка ${STAR8} <span class="tf-pill" aria-hidden="true">${PILL.map((p, i) => `<span class="tf-s${i ? "" : " act"}">${ph(pic(p.slug, 0, true), "", "", "240px")}</span>`).join("")}</span> до ключей <span class="v-br">{ в центре Москвы }</span></p>
+<ul class="v-people">${TEAM.map(([f, n, r], i) => `<li style="--i:${i}">${ph(`${IMG}/team/${f}.webp`, n, "ph-face")}<p class="vp-n">${n}</p><p class="vp-r">${r}</p></li>`).join("")}</ul>
+</section>`;
+
+  const foot = `<footer class="v-foot" id="kontakty">
+<p class="v-cap">Таганская площадь, 88, этаж 2</p>
+<a class="v-big" href="${WA(ASK)}" target="_blank" rel="noopener">Обсудить проект ${ICON.arrow}</a>
+<div class="v-fgrid"><p><a class="v-ul" href="${PHONE_TEL}">${PHONE}</a></p><p><a class="v-ul" href="mailto:${MAIL}">${MAIL}</a></p><p><a class="v-ul" href="${TG}" target="_blank" rel="noopener">Telegram</a></p><p>${HOURS}</p></div>
+<p class="v-fine">SIA · архитектурное бюро · Москва · Макет нового сайта: DevUz Studio · <a href="${href()}">Вариант 1</a> · <a href="${href("panel")}">Панель сайта</a> · <a href="${TERMS}" target="_blank" rel="noopener">Условия макета</a></p>
+</footer>`;
+
+  return `<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SIA · архитектурное бюро · вариант 2 · макет DevUz Studio</title>
+<meta name="description" content="Второй вариант нового сайта SIA: тёмный, со снимками, которые наливаются цветом под курсором.">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#050505">
+<link rel="icon" type="image/png" sizes="192x192" href="${IMG}/icon-192.png">
+<link rel="license" href="${TERMS}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="${FONTS2}">
+<script>document.documentElement.classList.add('js')</script>
+@@V@@
+</head>
+<body class="v2">
+${dzIntroSolo("ru")}
+<a class="skip" href="#main">К содержанию</a>
+<header class="v-top" id="top">
+<a href="#proekty">Проекты</a><a href="#napravleniya">Направления</a>
+<a class="v-logo" href="${href("v2")}" aria-label="SIA, архитектурное бюро"><img src="${IMG}/logo-k.png" alt="" width="400" height="178"></a>
+<a href="#byuro">Бюро</a><a href="${PHONE_TEL}">${PHONE}</a>
+</header>
+<main id="main">
+${hero}
+${projects}
+${dir}
+${team}
+</main>
+${foot}
+<div class="v-dock">${vToggle(2)}<a class="v-talk" href="${WA(ASK)}" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Обсудить проект</span></a></div>
+@@W@@
+</body>
+</html>`;
+}
+
 /* ── Страница проекта ─────────────────────────────────────────────────── */
 function projectPage(p, i) {
   const next = FEAT[(i + 1) % FEAT.length];
@@ -598,13 +715,15 @@ ${gal}
 }
 
 /* ── Сборка ───────────────────────────────────────────────────────────── */
-const out = { "": home(), panel: panelPage() };
+const out = { "": home(), panel: panelPage(), v2: v2Page() };
 FEAT.forEach((p, i) => { out["proekt/" + p.slug] = projectPage(p, i); });
 const parts = {
   S: `<style>${min(read("site.css") + read("intro.css"))}</style>`,
   J: `<script>\n${strip(read("site.js"))}</script>`,
   K: `<style>${min(read("panel.css"))}</style>`,
   Q: `<script>\n${strip(read("panel.js"))}</script>`,
+  V: `<style>${min(read("v2.css"))}</style>`,
+  W: `<script>\n${strip(read("v2.js"))}</script>`,
 };
 const fill = (page) => Object.entries(parts).reduce((pg, [k, part]) => pg.split(`@@${k}@@`).join(part), page);
 

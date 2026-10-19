@@ -941,7 +941,7 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   const all: Record<string, string> = { "": site.html, ...site.pages };
   const data = JSON.parse(readFileSync("scripts/protos/sia/data.json", "utf8"));
   assert.equal(data.index.length, 65, "в архиве не все проекты бюро");
-  assert.equal(Object.keys(all).length, 2 + data.featured.length, "главная, панель и страницы проектов");
+  assert.equal(Object.keys(all).length, 3 + data.featured.length, "главная, вариант 2, панель и страницы проектов");
   for (const [path, page] of Object.entries(all)) {
     assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
     assert.ok(page.includes('<html lang="ru">'), `${path}: язык страницы`);
@@ -997,6 +997,23 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   assert.equal((all[""].match(/data-gf /g) || []).length, 4, "не 4 папки");
   for (const id of ["prolet", "arhitektura", "interery", "arhiv", "uslugi", "byuro", "kontakty"]) assert.match(all[""], new RegExp(`id="${id}"`), `нет блока ${id}`);
   assert.equal((all[""].match(/class="ix-row"/g) || []).length, 65, "в архиве не 65 строк");
+  // Вариант 2 по мотивам textura.agency (владелец, 19.10.2026): тёмный, снимки ч/б и наливаются
+  // цветом под курсором или у середины экрана; тумблер вариантов на обеих страницах.
+  const v2 = all["v2"];
+  assert.ok(v2.startsWith("<!doctype html>") && v2.includes('id="dzi"'), "у варианта 2 нет заставки DevUz");
+  assert.match(all[""], /class="vt" [^>]*data-cur="1"[\s\S]*href="[^"]*\/v2" data-v="2"/, "на главной нет тумблера вариантов");
+  assert.match(v2, /class="vt" [^>]*data-cur="2"/, "во втором варианте нет тумблера");
+  const phs = v2.match(/<span class="ph[ "]/g) || [];
+  assert.ok(phs.length >= 30, "мало снимков во втором варианте");
+  assert.equal((v2.match(/class="ph-g"/g) || []).length, phs.length, "у снимка нет ч/б слоя");
+  assert.match(v2, /\.ph-g\{filter:grayscale\(1\)/, "снимки не ч/б");
+  assert.match(v2, /hover: hover/, "цвет не по наведению");
+  assert.match(v2, /rootMargin:'-34% 0px -34% 0px'/, "на телефоне цвет не у середины экрана");
+  assert.equal((v2.match(/class="pl" /g) || []).length, 8, "во втором варианте не 8 проектов");
+  assert.doesNotMatch(v2, /✳/, "звёздочка-эмодзи: на iPhone она зелёная");
+  for (const [path, page] of [["", all[""]], ["v2", v2]]) assert.match(page, /html\{[^}]*overflow-x:clip/, `${path}: страница уезжает вбок на телефоне`);
+  assert.ok((v2.match(/class="tf-s[ "]/g) || []).length >= 6 && v2.includes("},1000)"), "таблетка не сменяет проекты раз в секунду");
+  for (const id of ["proekty", "napravleniya", "byuro", "kontakty"]) assert.match(v2, new RegExp(`id="${id}"`), `вариант 2: нет блока ${id}`);
   for (const p of data.featured) {
     const page = all["proekt/" + p.slug];
     assert.ok(page, `нет страницы ${p.code}`);

@@ -239,4 +239,10 @@ if(shut){
   if(!REDUCED)d.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[data-tr]');if(!a||e.metaKey||e.ctrlKey||e.shiftKey||e.button)return;e.preventDefault();var to=a.href;shutT.textContent=a.getAttribute('data-tr');shut.classList.remove('out');shut.classList.add('on');try{sessionStorage.setItem('sia-tr',a.getAttribute('data-tr'))}catch(x){}setTimeout(function(){location.href=to},820)});
   addEventListener('pageshow',function(e){if(e.persisted){shut.classList.remove('on');root.classList.remove('tr-in')}});
 }
+/* Тумблер вариантов: ползунок едет, потом переход; заставки второй раз не показываем. */
+[].forEach.call(document.querySelectorAll('.vt'),function(vt){[].forEach.call(vt.querySelectorAll('a'),function(a){a.addEventListener('click',function(e){
+  var v=a.getAttribute('data-v');if(v===vt.getAttribute('data-cur')){e.preventDefault();return}
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.button)return;e.preventDefault();vt.setAttribute('data-cur',v);
+  try{sessionStorage.setItem('dz-intro','1');sessionStorage.setItem('sia-intro','1')}catch(x){}
+  setTimeout(function(){location.href=a.href},420)})})});
 })();
