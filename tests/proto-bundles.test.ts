@@ -1430,14 +1430,14 @@ test("заставка DevUz: видео в каждом макете, кром�
   }
 });
 
-test("Soffice: главная на ru, uz, en — условия, noindex, видео DevUz, шапка, uz и en без кириллицы, 18 БЦ с их сайта", async () => {
+test("Soffice: главная и панель на ru, uz, en — условия, noindex, видео DevUz, шапка, uz и en без кириллицы, 18 БЦ с их сайта", async () => {
   const { existsSync, readdirSync, statSync } = await import("node:fs");
   const site = bundlePages("soffice");
   assert.ok(site);
   const all: Record<string, string> = { "": site.html, ...site.pages };
-  assert.deepEqual(Object.keys(all).sort(), ["", "en", "uz"]);
+  assert.deepEqual(Object.keys(all).sort(), ["", "en", "en/panel", "panel", "uz", "uz/panel"]);
   for (const [path, page] of Object.entries(all)) {
-    const lang = path || "ru";
+    const lang = path.startsWith("uz") ? "uz" : path.startsWith("en") ? "en" : "ru";
     assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
     assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
     assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
@@ -1445,6 +1445,11 @@ test("Soffice: главная на ru, uz, en — условия, noindex, ви�
     assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
     assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
     assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt: ${img.slice(0, 80)}`);
+    for (const src of page.match(/\/protos\/soffice\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    if (lang !== "ru") assert.doesNotMatch(page, /[А-Яа-яЁё]/, `${path}: кириллица на странице ${lang}`);
+    if (path.endsWith("panel")) continue;
     assert.ok(page.includes('id="dzi"') && page.includes("dzVideo(b,close)"), `${path}: нет видео DevUz`);
     assert.match(page, /classList\.add\('hide'\)[\s\S]*IDLE\)/, `${path}: шапка не по правилу трёх секунд`);
     assert.doesNotMatch(page, /overflow-x:hidden/, `${path}: overflow-x:hidden ломает sticky`);
@@ -1452,9 +1457,10 @@ test("Soffice: главная на ru, uz, en — условия, noindex, ви�
     assert.ok(page.includes('"@type":"LocalBusiness"') && page.includes('"@type":"Organization"'), `${path}: нет разметки компании и БЦ`);
     for (const id of ["finder", "karta", "katalog", "raschet", "etazh", "prosmotr", "otzyvy", "seychas", "cena"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
     assert.equal((page.match(/<article class="bc /g) ?? []).length, 18, `${path}: в каталоге не 18 БЦ`);
-    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt: ${img.slice(0, 80)}`);
-    for (const src of page.match(/\/protos\/soffice\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
-    if (lang !== "ru") assert.doesNotMatch(page, /[А-Яа-яЁё]/, `${path}: кириллица на странице ${lang}`);
+    // Панель в окне браузера и вход для управляющей компании.
+    assert.match(page, new RegExp(`id="panel"[\\s\\S]*data-src="__PROTO_BASE__/${path ? path + "/" : ""}panel\\?embed=1"`), `${path}: нет панели в окне`);
+    assert.ok(page.includes(`href="__PROTO_BASE__/${path ? path + "/" : ""}panel"`), `${path}: нет входа в панель`);
+    assert.ok(page.includes("localStorage.getItem(k)") && page.includes("'so-panel-1'") && page.includes("'so-leads-1'"), `${path}: сайт не связан с панелью`);
   }
   const pub = "public/protos/soffice";
   assert.ok(readdirSync(pub).reduce((s, f) => s + statSync(`${pub}/${f}`).size, 0) < 8_000_000, "снимки тяжелее 8 МБ");
@@ -1485,4 +1491,33 @@ test("Soffice: ставки 18 БЦ как на soffice.uz, сайт 1 000 $ в�
     assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $");
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
+});
+
+test("Soffice: панель — разделы, роли, связь с сайтом, подписи на трёх языках, пакет допов", async () => {
+  const site = bundlePages("soffice")!;
+  for (const path of ["panel", "uz/panel", "en/panel"]) {
+    const page = site.pages[path];
+    for (const v of ["dash", "leads", "views", "objects", "leases", "bills", "service", "owners", "demand", "team"]) assert.match(page, new RegExp(`V\\.${v}=function`), `${path}: нет раздела ${v}`);
+    for (const r of ["owner", "head", "broker", "acc", "ops", "own"]) assert.ok(page.includes(`<option value="${r}">`), `${path}: нет роли ${r}`);
+    assert.ok(page.includes("'so-panel-1'") && page.includes("'so-leads-1'") && page.includes("'so-demand-1'"), `${path}: панель не связана с сайтом`);
+    assert.match(page, /\.tw\{overflow-x:auto/, `${path}: таблицы без своей прокрутки`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    const data = JSON.parse(page.match(/<script type="application\/json" id="sp-data">([\s\S]*?)<\/script>/)![1]);
+    assert.equal(data.bc.length, 18);
+    assert.equal(Object.keys(data.inv).length, 18);
+    assert.ok(Object.values(data.ui).every((v) => v !== "" && v != null), `${path}: пустая подпись`);
+  }
+  // Инвентарь один на сайт и панель: Platform 3 и 4 этаж — как на схеме этажа сайта.
+  const inv = (p: string) => JSON.parse(p.match(/"inv":(\{[^]*?\}\}),/)![1]);
+  assert.deepEqual(inv(site.html), inv(site.pages.panel));
+  const ui = (await import("../scripts/protos/soffice/panel-ui.mjs")).PANEL_UI as Record<string, unknown[]>;
+  for (const [k, v] of Object.entries(ui)) {
+    assert.equal(v.length, 3, `${k}: не три языка`);
+    assert.doesNotMatch(JSON.stringify(v.slice(1)), /[А-Яа-яЁё]/, `${k}: кириллица в uz или en`);
+  }
+  const plan = await import("../scripts/protos/soffice/plan.mjs");
+  const pkg = plan.ADDONS.filter((a: { grp?: string }) => a.grp === "panel");
+  assert.deepEqual(pkg.map((a: { id: string }) => a.id), ["panel", "leases", "billing", "service", "owners", "demand"]);
+  assert.equal(plan.PANEL_ALL, pkg.reduce((s: number, a: { price: number }) => s + a.price, 0));
+  for (const html of [site.html, site.pages.uz, site.pages.en]) assert.ok(html.includes('id="kit-panel"'), "нет пакета «Панель» в стоимости");
 });

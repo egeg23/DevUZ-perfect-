@@ -69,10 +69,34 @@ export const ADDONS = [
     ru: { t: "3D-туры по офисам", e: "Встраиваем ваши туры в страницы БЦ и блоков; съёмку туров считаем отдельно" },
     uz: { t: "Ofislar bo‘ylab 3D-turlar", e: "Turlaringizni BM va blok sahifalariga joylaymiz; turlarni suratga olish alohida" },
     en: { t: "3D office tours", e: "Your tours embedded in building and unit pages; filming is priced separately" } },
-  { id: "panel", h: 40, star: true,
-    ru: { t: "Панель для менеджеров", e: "Свободные блоки, ставки, фото и заявки меняются без программиста, сразу на сайте" },
-    uz: { t: "Menejerlar uchun panel", e: "Bo‘sh bloklar, stavkalar, suratlar va arizalar dasturchisiz o‘zgaradi, darhol saytda" },
-    en: { t: "Manager panel", e: "Free units, rates, photos and requests updated without a developer, live on the site" } },
+  /* Пакет «Панель управляющей компании» (grp: "panel"): то, что работает в
+     панели макета. Цена — по часам, середина рынка Ташкента и СНГ для
+     CRM аренды с ролями, как у greenwell; в отчёте «цены — по образцу,
+     подтвердите». Брать можно всё или по частям, основа — «panel». */
+  { id: "panel", h: 60, star: true, grp: "panel",
+    ru: { t: "Панель: объекты, сделки, просмотры", e: "18 БЦ, этажи и блоки: статус и ставка сразу на сайте. Заявки с сайта первой строкой, доска сделок, предложение одной ссылкой, календарь просмотров, роли и история" },
+    uz: { t: "Panel: obyektlar, bitimlar, ko‘rishlar", e: "18 BM, qavatlar va bloklar: holat va stavka darhol saytda. Saytdan arizalar birinchi qatorda, bitimlar doskasi, bitta havolada taklif, ko‘rishlar taqvimi, rollar va tarix" },
+    en: { t: "Panel: buildings, deals, viewings", e: "18 buildings, floors and units: status and rate live on the site. Website requests on top, deal board, one-link proposals, viewing calendar, roles and history" } },
+  { id: "leases", h: 30, grp: "panel",
+    ru: { t: "Договоры и документы из шаблона", e: "Срок, ставка, индексация, депозит, продление; договор, допсоглашение и акт в один клик; напоминание за 90 дней до конца" },
+    uz: { t: "Shartnomalar va shablondan hujjatlar", e: "Muddat, stavka, indeksatsiya, depozit, uzaytirish; shartnoma, qo‘shimcha kelishuv va dalolatnoma bir bosishda; tugashidan 90 kun oldin eslatma" },
+    en: { t: "Leases and template documents", e: "Term, rate, indexation, deposit, renewal; lease, addendum and handover certificate in one click; reminder 90 days before the end" } },
+  { id: "billing", h: 36, grp: "panel",
+    ru: { t: "Счета, оплаты и долги", e: "Ежемесячные счета: аренда, коммунальные, парковка; оплата Click, Payme, переводом; возраст долга и напоминание арендатору" },
+    uz: { t: "Hisoblar, to‘lovlar va qarzlar", e: "Oylik hisoblar: ijara, kommunal, avtoturargoh; Click, Payme, o‘tkazma orqali to‘lov; qarz muddati va ijarachiga eslatma" },
+    en: { t: "Invoices, payments and arrears", e: "Monthly invoices for rent, utilities and parking; Click, Payme or transfer; arrears by age and tenant reminders" } },
+  { id: "service", h: 20, grp: "panel",
+    ru: { t: "Заявки арендаторов", e: "Ремонт, уборка, пропуск гостя, парковка: исполнитель, срок, закрытие с фото" },
+    uz: { t: "Ijarachilar arizalari", e: "Ta’mir, tozalash, mehmon ruxsatnomasi, avtoturargoh: ijrochi, muddat, surat bilan yopish" },
+    en: { t: "Tenant requests", e: "Repairs, cleaning, guest passes, parking: assignee, deadline, closed with a photo" } },
+  { id: "owners", h: 24, grp: "panel",
+    ru: { t: "Отчёт и кабинет собственника", e: "Заполняемость, доход, расходы и вознаграждение по его зданиям, PDF за месяц, вход только для чтения" },
+    uz: { t: "Ega hisoboti va kabineti", e: "Uning binolari bo‘yicha bandlik, daromad, xarajat va mukofot, oylik PDF, faqat ko‘rish uchun kirish" },
+    en: { t: "Owner report and account", e: "Occupancy, income, expenses and fee for their buildings, monthly PDF, read-only access" } },
+  { id: "demand", h: 10, grp: "panel",
+    ru: { t: "Спрос с сайта", e: "Что ищут на подборе: площадь, бюджет, район, формат, какие БЦ смотрят; спрос к свободным блокам" },
+    uz: { t: "Saytdagi talab", e: "Tanlashda nima qidirishadi: maydon, byudjet, tuman, format, qaysi BM ko‘riladi; talabning bo‘sh bloklarga nisbati" },
+    en: { t: "Website demand", e: "What the finder is used for: size, budget, district, format, most viewed buildings; demand against vacant units" } },
   { id: "en", h: 8,
     ru: { t: "Английская версия", e: "Для представительств иностранных компаний: весь сайт на английском" },
     uz: { t: "Inglizcha versiya", e: "Xorijiy kompaniyalar vakolatxonalari uchun: butun sayt inglizcha" },
@@ -82,5 +106,17 @@ export const ADDONS = [
     uz: { t: "Google va Yandex Xaritalar uchun ma’lumotlar", e: "Soffice va har bir BM qidiruvda manzil, telefon va ish vaqti bilan, barcha suratlarda izoh" },
     en: { t: "Data for Google and Yandex Maps", e: "Soffice and every building in search with address, phone and hours; all photos captioned" } },
 ].map((a) => ({ ...a, price: a.h * RATE }));
+
+/* Группы допов: заголовок над ними в «Стоимости». */
+export const GROUPS = {
+  panel: {
+    ru: { t: "Панель управляющей компании", e: "Работает в макете: откройте «Панель» и пройдите сделку от заявки до оплаты" },
+    uz: { t: "Boshqaruv kompaniyasi paneli", e: "Maketda ishlaydi: «Panel»ni oching va bitimni arizadan to‘lovgacha o‘tkazing" },
+    en: { t: "Management panel", e: "Works in the mockup: open the panel and take a deal from request to payment" },
+  },
+};
+
+/** Пакет панели целиком, $. */
+export const PANEL_ALL = ADDONS.filter((a) => a.grp === "panel").reduce((s, a) => s + a.price, 0);
 
 export const ALL = BASE.promo + ADDONS.reduce((s, a) => s + a.price, 0);
