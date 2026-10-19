@@ -9,12 +9,14 @@ import { MetrikaHits } from "@/components/layout/metrika-hits";
  * Яндекс.Метрика распространена в местных отделах маркетинга и её отчёты
  * заказчики часто требуют отдельно.
  *
- * Скрипты подключаются стратегией afterInteractive, то есть уже после того,
- * как страница стала интерактивной. Яндекс просит ставить счётчик «как можно
- * ближе к началу страницы», и это разумно для обычной вёрстки; здесь у
- * стратегии есть цена в обе стороны, и Next для аналитики рекомендует именно
- * afterInteractive. Аналитика не должна отодвигать LCP — иначе она портит
- * ровно тот показатель, который призвана измерять.
+ * Скрипты подключаются стратегией lazyOnload — когда страница уже
+ * загрузилась и браузер свободен. Раньше стояла afterInteractive, и на
+ * телефоне 194 КБ Google и 64 КБ Метрики грузились вместе с первым экраном:
+ * PageSpeed на мобильном 45, отрисовка главного блока 8,9 секунды
+ * (sitechecker, 19.10.2026). Яндекс просит ставить счётчик «как можно ближе
+ * к началу страницы» — цена переноса: не посчитаются те, кто закрыл
+ * страницу, не дождавшись загрузки. Аналитика не должна отодвигать первый
+ * экран — иначе она портит ровно тот показатель, который призвана измерять.
  *
  * Если идентификаторы не заданы, не рендерится вообще ничего: на локальной
  * разработке лишние запросы никому не нужны.
@@ -34,7 +36,7 @@ export function Analytics() {
     <>
       {ym ? (
         <>
-          <Script id="yandex-metrika" strategy="afterInteractive">
+          <Script id="yandex-metrika" strategy="lazyOnload">
             {`(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
             m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
             k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
@@ -57,9 +59,9 @@ export function Analytics() {
         <>
           <Script
             src={`https://www.googletagmanager.com/gtag/js?id=${ga}`}
-            strategy="afterInteractive"
+            strategy="lazyOnload"
           />
-          <Script id="ga4" strategy="afterInteractive">
+          <Script id="ga4" strategy="lazyOnload">
             {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
             gtag('js',new Date());gtag('config',${JSON.stringify(ga)});`}
           </Script>

@@ -10,6 +10,36 @@ const COOKIE = "NEXT_LOCALE";
 export const LOCALE_HEADER = "x-devuz-locale";
 
 /**
+ * Разделы сайта под языком — папки `app/[locale]`. Только адрес без языка,
+ * который ведёт в один из них (или главная), уезжает на языковой. Любой
+ * другой — сразу 404 со своим кодом: раньше `/что-угодно` отвечал 307 на
+ * `/ru/что-угодно` и только там 404, и проверки сайта видели «страница
+ * ошибки отвечает редиректом» (sitechecker, 19.10.2026). Новый раздел —
+ * строка здесь; тест сверяет список с папками.
+ */
+export const LOCALE_SECTIONS = [
+  "about",
+  "ai-sotrudnik",
+  "audit",
+  "calculator",
+  "cases",
+  "contact",
+  "contract",
+  "licence",
+  "marketing",
+  "mockup-terms",
+  "offer",
+  "order",
+  "partners",
+  "privacy",
+  "products",
+  "razbor",
+  "services",
+] as const;
+
+const SECTION_SET = new Set<string>(LOCALE_SECTIONS);
+
+/**
  * Панель: ничего не решаем про доступ — это делает guard на самой странице,
  * с проверкой сессии в базе. Здесь запоминаем только намерение.
  *
@@ -134,6 +164,20 @@ export function middleware(request: NextRequest) {
     : isAdClick(request.nextUrl.searchParams)
       ? adLocale(accept)
       : matchLocale(accept);
+
+  // Адрес не из разделов сайта — 404 здесь же, на языке посетителя, без
+  // редиректа в 404 под языком. Подмена, а не пропуск: пропущенный
+  // `/что-угодно` попадал в `[locale]` как язык «что-угодно», и вместо нашей
+  // страницы 404 Next отдавал голую страницу ошибки. Под языком маршрута для
+  // него нет — и отвечает наша страница «не найдено» с кодом 404.
+  if (pathname !== "/" && !SECTION_SET.has(pathname.split("/")[1] ?? "")) {
+    const target = locale ?? defaultLocale;
+    const headers = new Headers(request.headers);
+    headers.set(LOCALE_HEADER, target);
+    const missing = request.nextUrl.clone();
+    missing.pathname = `/${target}${pathname}`;
+    return NextResponse.rewrite(missing, { request: { headers } });
+  }
 
   const url = request.nextUrl.clone();
   url.pathname = `/${locale ?? defaultLocale}${pathname === "/" ? "" : pathname}`;

@@ -13,24 +13,32 @@ import localFont from "next/font/local";
  * сайта: русский, узбекский (oʻ, g‘) и английский. У Inter закреплён
  * оптический размер 14 — ровно то, что раньше отдавал Google. Китайский
  * текст, как и прежде, рисуют системные шрифты.
+ *
+ * 19.10.2026 урезаны ещё раз — под скорость на телефоне (PageSpeed 45, до
+ * первой картинки страница тянула 396 КБ шрифтов): толщины только те, что
+ * есть в вёрстке (заголовки 500–800, текст 400–800, код 400–700), без
+ * хинтинга, знаки — латиница с расширениями (узбекский, польский),
+ * кириллица (и украинская), пунктуация, валюты, стрелки. Вышло 260 КБ.
+ * Моноширинный — без preload: им набраны подписи и код, не первый экран.
  */
 export const display = localFont({
   src: "./fonts/unbounded.woff2",
-  weight: "200 900",
+  weight: "500 800",
   variable: "--font-unbounded",
   display: "swap",
 });
 
 export const sans = localFont({
   src: "./fonts/inter.woff2",
-  weight: "100 900",
+  weight: "400 800",
   variable: "--font-inter",
   display: "swap",
 });
 
 export const mono = localFont({
   src: "./fonts/jetbrains-mono.woff2",
-  weight: "100 800",
+  weight: "400 700",
   variable: "--font-jetbrains",
   display: "swap",
+  preload: false,
 });
