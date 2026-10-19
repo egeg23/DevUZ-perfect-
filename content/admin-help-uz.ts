@@ -2197,13 +2197,13 @@ export const uz: HelpCopy = {
 
     /* ── Разборы ──────────────────────────────────────────────────────── */
     "/admin/razbor": {
-      what: "Saytimiz uchun begona saytlar tahlili maqolalari: smena ularni har kuni ertalab o‘zi yozadi va sizga tekshirishga qoldiradi. Chop etilgan tahlil darhol saytda va qidiruvda chiqadi — u studiya nomidan begona saytni yomon deydi, shuning uchun faqat siz hal qilasiz.",
+      what: "Saytimiz uchun begona saytlar tahlili maqolalari: smena ularni har kuni ertalab o‘zi yozadi va darhol e’lon qiladi — sizning tasdig‘ingizsiz, matnni odam o‘rniga kod tekshiradi. Chiqqan tahlil darhol saytda va qidiruvda. Bu yerda chiqqanlarning hammasi ko‘rinadi va istalgan tahlilni tuzatish, e’londan olish yoki o‘chirish mumkin.",
       items: [
         {
           id: "shift",
           title: "Tahlillar smenasi",
           body: [
-            "Har kuni Toshkent vaqti bilan 08:03 da smena «Aloqalar» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi va qolganlari nega olinmadi.",
+            "Har kuni Toshkent vaqti bilan 08:03 da smena «Aloqalar» bo‘limidagi hali yozilmagan saytlarni oladi, 12 tagachasini ko‘radi va 3 tagacha tahlil yozadi — ruscha va o‘zbekcha — va ularni darhol e’lon qiladi. «Смена разборов» hisoboti Telegramga keladi: nechtasi chiqdi, chiqqan sahifalarga havolalar va qolgan saytlar nega olinmadi.",
             "Rad etish sabablari: sayt ochilmadi, sayt joyida yoki topilmalar kam, nisha yoki shahar aniqlanmadi, nishani tahlil qilmaymiz (tibbiyot va boshqa taqiqlanganlar), so‘rov band (bunday tahlil allaqachon bor — bu model maqola yozishidan oldin tekshiriladi), maqola tekshiruvdan o‘tmadi. 11:03 gacha hisobot bo‘lmasa — «Смена разборов — молчит» keladi.",
           ],
         },
@@ -2212,7 +2212,7 @@ export const uz: HelpCopy = {
           title: "Haftaning tender tahlili",
           body: [
             "Haftada bir marta, haftaning birinchi kuni Toshkent vaqti bilan 08:33 dan keyin, alohida smena tender tahlilini yozadi: begona saytni emas, IT-xaridning odatiy texnik topshirig‘ini — davlat tashkiloti sayti, CRM, elektron hujjat aylanishi, chat-bot va hokazo. Bunday texnik topshiriqda odatda nima e’tibordan chetda qoladi, qabulda bu nimaga olib keladi va qanday to‘g‘ri yozish kerak. Mavzu `content/razbor/tenders.ts` dagi ro‘yxatdan navbatdagisi olinadi; maqola buyurtmachilar, xaridlar va shartnoma summalarini nomlamaydi. Agar dushanba kuni server ishlamagan bo‘lsa, maqola u ko‘tarilgan kuni chiqadi.",
-            "Maqola shu yerga, «Tekshiruvda»ga «tenderlar va davlat shartnomalari» belgisi bilan tushadi — uning suratlari yo‘q va bo‘lmaydi, shunday rejalashtirilgan. Sayt tahlili kabi tekshirasiz va nashr qilasiz; saytda u «Тендеры и госконтракты» xizmatiga va «Контакты» ga olib boradi. Hisobot Telegramga alohida «Тендерный разбор недели» qatori bilan keladi. Rad etilgan mavzu ikkinchi marta yozilmaydi; mavzular tugaganda hisobot shuni aytadi — ro‘yxat kodda to‘ldiriladi.",
+            "Maqola sayt tahlili kabi darhol chiqadi, «tenderlar va davlat shartnomalari» belgisi bilan — uning suratlari yo‘q va bo‘lmaydi, shunday rejalashtirilgan. Saytda u «Тендеры и госконтракты» xizmatiga va «Контакты» ga olib boradi. Hisobot Telegramga alohida «Тендерный разбор недели» qatori bilan, maqolaga havola bilan keladi. Rad etilgan mavzu ikkinchi marta yozilmaydi; mavzular tugaganda hisobot shuni aytadi — ro‘yxat kodda to‘ldiriladi.",
           ],
         },
         {
@@ -2225,25 +2225,25 @@ export const uz: HelpCopy = {
         },
         {
           id: "review",
-          title: "Tahlilni tekshirish",
+          title: "Kod nimani tekshiradi",
           body: [
-            "«Tekshiruvda» blokida — ikkala maqola to‘liq. Ikkalasini o‘qing: ular bir-birining tarjimasi emas, turli so‘rovlar uchun turli sahifalar. Manba-sayt manzili faqat sizga ko‘rinadi — saytda u yo‘q.",
-            "Kompaniya hech qayerda nomlanmaganini tekshiring — na nomi, na manzili, na rasmda, va har bir raqam topilmalarda borligini. «Tahrirlash» faqat matnni o‘zgartiradi: sarlavha, tavsif, kirish, topilmalar va xulosa; manzil va so‘rov o‘zgarmaydi.",
+            "Chiqishdan oldin tahlilni endi odam o‘qimaydi (sizning qaroringiz, 19.10.2026): har bir maqolani kod tekshiradi, tekshiruvdan o‘tmagani chiqmaydi. Kompaniya nomlanmagan — na nomi, na manzili, na sayti sarlavhasidagi so‘z bilan; har bir raqam audit topilmalarida bor; o‘sish foizlari va «topga chiqaramiz» va’dalari yo‘q; topilmalar auditdan so‘zma-so‘z ko‘chirilmagan; tibbiyot va boshqa taqiqlangan nishalarni smena tahlil qilmaydi.",
+            "Saytda xato ko‘rsangiz — tahlilni «E’lon qilingan» ro‘yxatidan toping: ikkala maqola u yerda to‘liq, manba-sayt manzili faqat sizga ko‘rinadi. **«Tahrirlash»** faqat matnni o‘zgartiradi: sarlavha, tavsif, kirish, topilmalar va xulosa; manzil va so‘rov o‘zgarmaydi.",
           ],
         },
         {
           id: "publish",
           title: "Chop etish, olib tashlash, rad etish",
           body: [
-            "**«E’lon qilish»** — ikkala maqola kerak. Sahifa saytda darhol ochiladi, sayt xaritasi yangilanadi, Bing va Yandex signal oladi. **«E’londan olish»** tahlilni «Tekshiruvda»ga qaytaradi.",
-            "**«E’lon qilmaymiz»** — sabab bilan yoki sababsiz. Smena bu saytga boshqa qaytmaydi. Saytni smena navbatiga qaytarish — faqat **«O‘chirish»** (maydonga «o‘chirish» deb yozing).",
+            "**«E’londan olish»** tahlilni saytdan olib, «Tekshiruvda»ga qo‘yadi — endi u yerda faqat siz olib qo‘ygan tahlillar turadi, smena ularni qaytarib chiqarmaydi. Saytga qaytarish — **«E’lon qilish»**: ikkala maqola kerak, sahifa darhol ochiladi, sayt xaritasi yangilanadi, Bing va Yandex signal oladi.",
+            "**«E’lon qilmaymiz»** — olib qo‘yilgan tahlil uchun, sabab bilan yoki sababsiz. Smena bu saytga boshqa qaytmaydi. Saytni smena navbatiga qaytarish — faqat **«O‘chirish»** (maydonga «o‘chirish» deb yozing).",
           ],
         },
         {
           id: "english",
           title: "Inglizcha va polyakcha versiyalar",
           body: [
-            "E’lon qilingan tahlil bir soat ichida yana ikkita sahifa oladi — ingliz tilida (devuz.studio/en/razbor) va polyak tilida (devuz.studio/pl/razbor). Ularni server o‘zi yozadi, panelda tekshiruvsiz: siz tekshirgan ruscha maqolani olib, shu tildagi so‘rov ostiga o‘tkazadi — «restaurant website in Tashkent», «strona internetowa dla restauracji w Taszkencie», — so‘rovni Google Trends va Wordstat bilan solishtirib. Topilmalar, raqamlar va skrinshotlar o‘sha-o‘sha; yangi raqam, foiz va topilmalarni kod o‘tkazmaydi, bu versiyalarda kirill harflari bo‘lishi mumkin emas.",
+            "E’lon qilingan tahlil bir soat ichida yana ikkita sahifa oladi — ingliz tilida (devuz.studio/en/razbor) va polyak tilida (devuz.studio/pl/razbor). Ularni server o‘zi yozadi, panelda tekshiruvsiz: chiqqan ruscha maqolani olib, shu tildagi so‘rov ostiga o‘tkazadi — «restaurant website in Tashkent», «strona internetowa dla restauracji w Taszkencie», — so‘rovni Google Trends va Wordstat bilan solishtirib. Topilmalar, raqamlar va skrinshotlar o‘sha-o‘sha; yangi raqam, foiz va topilmalarni kod o‘tkazmaydi, bu versiyalarda kirill harflari bo‘lishi mumkin emas.",
             "Ikki marta tekshiruvdan o‘tmasa — server olti soatdan keyin yana urinadi, hozircha tahlilning shu tildagi sahifasi yo‘q: til almashtirgich undan shu tildagi tahlillar ro‘yxatiga olib boradi. **«Tahrirlash»** ikkala versiyani o‘chiradi: ular eski matndan yozilgan, server ularni tuzatilgan matn bo‘yicha qaytadan yozadi — sahifa manzillari o‘zgarmaydi. **«E’londan olish»** va **«O‘chirish»** ularni ham saytdan olib tashlaydi.",
           ],
         },

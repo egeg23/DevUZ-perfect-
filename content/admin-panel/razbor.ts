@@ -57,9 +57,9 @@ export const razborResultDict = defineDict({
 export const razborDict = defineDict({
   title: { ru: "Разборы", uz: "Tahlillar", pl: "Analizy" },
   intro: {
-    ru: "Ночная смена разбирает сайты из касаний, до которых не дошли руки, и кладёт статьи сюда. Опубликованное уходит в раздел на сайте и в карту сайта сразу, без выкатки. Компания в тексте не называется — ни именем, ни адресом.",
-    uz: "Tungi smena aloqalardan qo‘l yetmagan saytlarni tahlil qiladi va maqolalarni shu yerga qo‘yadi. E’lon qilingani darhol saytdagi bo‘limga va sayt xaritasiga tushadi, deploysiz. Matnda kompaniya nomi ham, manzili ham aytilmaydi.",
-    pl: "Nocna zmiana analizuje strony z kontaktów, do których nie dotarliśmy, i odkłada tu artykuły. Opublikowane od razu trafia do działu na stronie i do mapy strony, bez wdrożenia. Firma nie jest w tekście nazwana — ani nazwą, ani adresem.",
+    ru: "Ночная смена разбирает сайты из касаний, до которых не дошли руки, и сразу публикует статьи: проверяет их код, а не человек. Вышедшее сразу в разделе на сайте и в карте сайта, без выкатки. Компания в тексте не называется — ни именем, ни адресом. Здесь любой разбор можно поправить, снять с публикации или удалить.",
+    uz: "Tungi smena aloqalardan qo‘l yetmagan saytlarni tahlil qiladi va maqolalarni darhol e’lon qiladi: ularni odam emas, kod tekshiradi. Chiqqani darhol saytdagi bo‘limda va sayt xaritasida, deploysiz. Matnda kompaniya nomi ham, manzili ham aytilmaydi. Bu yerda istalgan tahlilni tuzatish, e’londan olish yoki o‘chirish mumkin.",
+    pl: "Nocna zmiana analizuje strony z kontaktów, do których nie dotarliśmy, i od razu publikuje artykuły: sprawdza je kod, a nie człowiek. Opublikowane od razu jest w dziale na stronie i w mapie strony, bez wdrożenia. Firma nie jest w tekście nazwana — ani nazwą, ani adresem. Tu każdą analizę można poprawić, zdjąć z publikacji albo usunąć.",
   },
   onReview: {
     ru: (n: number) => `На проверке · ${n}`,
@@ -67,9 +67,9 @@ export const razborDict = defineDict({
     pl: (n: number) => `Do sprawdzenia · ${n}`,
   },
   reviewEmpty: {
-    ru: "Пусто. Смена ещё не приносила разборов — или все уже разобраны.",
-    uz: "Bo‘sh. Smena hali tahlil keltirmagan — yoki hammasi ko‘rib chiqilgan.",
-    pl: "Pusto. Zmiana nie przyniosła jeszcze analiz — albo wszystkie są już przejrzane.",
+    ru: "Пусто. Разборы выходят сами; сюда попадает только то, что вы сняли с публикации.",
+    uz: "Bo‘sh. Tahlillar o‘zi chiqadi; bu yerga faqat siz e’londan olgan tahlillar tushadi.",
+    pl: "Pusto. Analizy wychodzą same; trafia tu tylko to, co zostało zdjęte z publikacji.",
   },
   tenderNote: {
     ru: "тендерный разбор недели: типовое ТЗ, а не чей-то сайт — снимков у него нет",
