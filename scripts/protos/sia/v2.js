@@ -23,9 +23,9 @@ $$('[data-rv]').forEach(function(el){rv.observe(el)});
 
 /* Цвет: на ПК — под курсором, из точки входа; на телефоне — у середины экрана. */
 function at(ph,e){var r=ph.getBoundingClientRect();ph.style.setProperty('--x',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');ph.style.setProperty('--y',((e.clientY-r.top)/r.height*100).toFixed(1)+'%')}
-var own=function(ph){return ph.closest('.pl-pv,.pl-sp,.vd-p,.vd-still')};
+var own=function(ph){return ph.closest('.pl-pv,.pl-sp,.vd-p,.vd-still,.tf-pill')};
 if(HOVER){
-  $$('.ph').forEach(function(ph){if(ph.closest('.pl-pv,.pl-sp'))return;var raf=0;
+  $$('.ph').forEach(function(ph){if(ph.closest('.pl-pv,.pl-sp,.tf-pill'))return;var raf=0;
     ph.addEventListener('pointerenter',function(e){at(ph,e);ph.classList.add('on')});
     ph.addEventListener('pointermove',function(e){if(raf)return;raf=requestAnimationFrame(function(){raf=0;at(ph,e)})});
     ph.addEventListener('pointerleave',function(){ph.classList.remove('on')})});
@@ -33,6 +33,14 @@ if(HOVER){
   var mid=new IntersectionObserver(function(es){es.forEach(function(e){e.target.classList.toggle('on',e.isIntersecting)})},{rootMargin:'-34% 0px -34% 0px'});
   $$('.ph').forEach(function(ph){if(!own(ph)||ph.closest('.vd-still'))mid.observe(ph)});
 }
+
+/* Таблетка с проектами: кадр сменяется раз в секунду, пока фраза на экране; цвет — как у остальных снимков. */
+$$('.tf-pill').forEach(function(pill){var ss=$$('.tf-s',pill),k=0,tm=0,phs=$$('.ph',pill);
+  var color=function(on){phs.forEach(function(p){p.classList.toggle('on',on)})};
+  var run=function(on){clearInterval(tm);if(on&&!REDUCED)tm=setInterval(function(){ss[k].classList.remove('act');k=(k+1)%ss.length;ss[k].classList.add('act')},1000)};
+  new IntersectionObserver(function(es){run(es[0].isIntersecting)}).observe(pill);
+  if(HOVER){pill.addEventListener('pointerenter',function(){color(true)});pill.addEventListener('pointerleave',function(){color(false)})}
+  else new IntersectionObserver(function(es){color(es[0].isIntersecting)},{rootMargin:'-34% 0px -34% 0px'}).observe(pill)});
 
 /* Избранные проекты. */
 var list=$('.pl-list'),rows=$$('.pl'),sps=$$('.pl-sp');

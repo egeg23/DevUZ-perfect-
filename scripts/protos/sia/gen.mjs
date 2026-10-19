@@ -581,6 +581,11 @@ const V2_DIR = [0, 1, 2].map((i) => SERVICES[i]);
 const vToggle = (cur) => `<nav class="vt" aria-label="Вариант макета" data-cur="${cur}"><i class="vt-k" aria-hidden="true"></i><a href="${href()}" data-v="1"${cur === 1 ? ' aria-current="page"' : ""}>Вариант 1</a><a href="${href("v2")}" data-v="2"${cur === 2 ? ' aria-current="page"' : ""}>Вариант 2</a></nav>`;
 const wordsOf = (s) => s.split(" ").map((w, i) => `<span class="vw" style="--i:${i}"><span>${esc(w)}</span></span>`).join(" ");
 
+/* Звёздочка линиями, как у textura: символ ✳ на iPhone рисуется зелёным эмодзи. */
+const STAR8 = `<svg class="v-star" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9 4.9 19.1"/></svg>`;
+/* Таблетка в фразе о коллективе: проекты бюро сменяют друг друга раз в секунду. */
+const PILL = ["ИНт238.2606", "APx180.2606", "ИНт219.2409", "APx182.1208", "ИНт222.2410", "APx178.2509", "ИНт230.2502", "APx183.2504"].map((c) => BYCODE[c]);
+
 function v2Page() {
   const P = (code) => BYCODE[code];
   const hero = `<section class="v-hero" aria-label="Первый экран">
@@ -618,7 +623,7 @@ function v2Page() {
 
   const faces = TEAM.slice(0, 4).map(([f, n]) => `<span class="tf">${ph(`${IMG}/team/${f}.webp`, n, "ph-face")}</span>`).join("");
   const team = `<section class="v-tm" id="byuro" aria-label="Коллектив">
-<p class="v-tm-t" data-rv>Мы <span class="tf-row">${faces}</span> архитекторы, дизайнеры, визуализаторы и инженер ${ICON.arrow} ведём проект от участка ✳ <span class="tf-pill">${ph(pic(INT[0].slug, 0, true), "", "", "240px")}</span> до ключей <span class="v-br">{ в центре Москвы }</span></p>
+<p class="v-tm-t" data-rv>Мы <span class="tf-row">${faces}</span> архитекторы, дизайнеры, визуализаторы и инженер ${ICON.arrow} ведём проект от участка ${STAR8} <span class="tf-pill" aria-hidden="true">${PILL.map((p, i) => `<span class="tf-s${i ? "" : " act"}">${ph(pic(p.slug, 0, true), "", "", "240px")}</span>`).join("")}</span> до ключей <span class="v-br">{ в центре Москвы }</span></p>
 <ul class="v-people">${TEAM.map(([f, n, r], i) => `<li style="--i:${i}">${ph(`${IMG}/team/${f}.webp`, n, "ph-face")}<p class="vp-n">${n}</p><p class="vp-r">${r}</p></li>`).join("")}</ul>
 </section>`;
 
