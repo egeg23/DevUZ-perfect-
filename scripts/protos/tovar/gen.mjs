@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import * as D from "./data.mjs";
-import { BASE, ADDONS, ALL, OFFER_HOURS, TURNKEY, RATE } from "./plan.mjs";
+import { BASE, ADDONS, ALL, OFFER_HOURS, OFFER_UNTIL, TURNKEY, RATE } from "./plan.mjs";
 import { DZ_VIDEO } from "../dz-video.mjs";
 
 /*
@@ -11,7 +11,7 @@ import { DZ_VIDEO } from "../dz-video.mjs";
  *    одной карточке встают три продавца, дешевле всех отмечен. Дальше поиск
  *    на двух языках, разделы, «сейчас и станет», шесть механик, которых нет у
  *    узбекских площадок, путь покупателя в айфоне, кабинет продавца в окне,
- *    что взяли у лучших, стоимость с допами и отсчётом 48 часов;
+ *    что взяли у лучших, стоимость с допами и отсчётом до 29 октября, 20:00;
  *  - приложение покупателя (`app`, `uz/app`);
  *  - кабинет продавца (`panel`, `uz/panel`).
  * Разделы, товары, цены, продавцы, даты «Цена обновлена» — с tovar.uz
@@ -452,19 +452,19 @@ function offerBlock(l) {
   const t = T(l);
   const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"><span class="sw" aria-hidden="true"></span><span class="kit-t2"><b>${a[l].t}${a.new ? `<em class="star new">${t("нет в УЗ", "UZ’da yo‘q")}</em>` : a.star ? `<em class="star">${t("нужно первым", "birinchi kerak")}</em>` : ""}</b><small>${a[l].e}</small></span><span class="kit-pr">+${usd(a.price)}<small>${t(`≈ ${a.h} ч`, `≈ ${a.h} soat`)}</small></span></label>`;
   return `<section class="offer" id="cena"><div class="wrap">
-${head(`<span class="ours">${t("Предложение DevUz Studio", "DevUz Studio taklifi")}</span>`, t("Стоимость", "Narxi"), t(`Два пути. Полноценный маркетплейс под ключ: покупка, оплата, рассрочка, чеки налоговой, склад, доставка, продавцы и документы под закон Узбекистана, ${usd(TURNKEY.price)}. Или новый облик tovar.uz без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем в течение 48 часов, а механики и кабинет продавца допами.`, `Ikki yo‘l. Kalit topshiriladigan to‘liq marketpleys: xarid, to‘lov, muddatli to‘lov, soliq cheklari, ombor, yetkazish, sotuvchilar va O‘zbekiston qonuniga mos hujjatlar, ${usd(TURNKEY.price)}. Yoki qo‘shimchalarsiz tovar.uz’ning yangi ko‘rinishi: 48 soat ichida boshlasak, ${usd(BASE.price)} o‘rniga ${usd(BASE.promo)}, mexanikalar va sotuvchi kabineti esa qo‘shimcha.`))}
+${head(`<span class="ours">${t("Предложение DevUz Studio", "DevUz Studio taklifi")}</span>`, t("Стоимость", "Narxi"), t(`Два пути. Полноценный маркетплейс под ключ: покупка, оплата, рассрочка, чеки налоговой, склад, доставка, продавцы и документы под закон Узбекистана, ${usd(TURNKEY.price)}. Или новый облик tovar.uz без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем до 29 октября, 20:00 по Ташкенту, а механики и кабинет продавца допами.`, `Ikki yo‘l. Kalit topshiriladigan to‘liq marketpleys: xarid, to‘lov, muddatli to‘lov, soliq cheklari, ombor, yetkazish, sotuvchilar va O‘zbekiston qonuniga mos hujjatlar, ${usd(TURNKEY.price)}. Yoki qo‘shimchalarsiz tovar.uz’ning yangi ko‘rinishi: 29-oktabr, Toshkent vaqti bilan 20:00 gacha boshlasak, ${usd(BASE.price)} o‘rniga ${usd(BASE.promo)}, mexanikalar va sotuvchi kabineti esa qo‘shimcha.`))}
 <article class="tk glass rv a-rise" id="pod-klyuch"><div class="tk-h"><div><span class="kb-tag tk-tag">${t("Полноценный маркетплейс", "To‘liq marketpleys")}</span><h3>${TURNKEY[l].t}</h3><p>${TURNKEY[l].d}</p></div><div class="tk-p"><b>${usd(TURNKEY.price)}</b><small>${t("всё в одной цене", "hammasi bitta narxda")}</small><a class="btn btn-red" href="https://t.me/Devuz_studio_bot?start=tovar-mp">${ic("tg")}<span>${t("Обсудить маркетплейс", "Marketpleysni muhokama qilish")}</span></a></div></div>
 <div class="tk-g">${TURNKEY[l].groups.map(([g, items]) => `<section><h4>${g}</h4><ul>${items.map((x) => `<li>${ic("check")}<span>${x}</span></li>`).join("")}</ul></section>`).join("")}</div></article>
 <h3 class="kit-g tk-or">${t("Или начать с нового облика: собрать нужное тумблерами", "Yoki yangi ko‘rinishdan boshlash: keraklisini tumblerlar bilan yig‘ish")}</h3>
 <div class="kit" id="konstruktor">
 <div class="kit-l">
-<div class="kit-base glass"><div><span class="kb-tag">${t("Входит всегда", "Har doim kiradi")}</span><b>${BASE[l].t}</b><p>${BASE[l].d}</p><p class="kb-w">${t(`Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель`, `Muddat: ${BASE.weeks[0]}-${BASE.weeks[1]} hafta`)}</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>${t("48 часов", "48 soat")}</small></div></div>
+<div class="kit-base glass"><div><span class="kb-tag">${t("Входит всегда", "Har doim kiradi")}</span><b>${BASE[l].t}</b><p>${BASE[l].d}</p><p class="kb-w">${t(`Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель`, `Muddat: ${BASE.weeks[0]}-${BASE.weeks[1]} hafta`)}</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>${t("до 29 октября", "29-oktabrgacha")}</small></div></div>
 <h3 class="kit-g">${t("Допы: включайте то, что нужно площадке", "Qo‘shimchalar: saytga keraklisini yoqing")}</h3>
 ${ADDONS.map(row).join("")}
 </div>
 <div class="kit-side">
 <div class="kit-total glass" id="kit-total">
-<div class="timer" id="timer"><span>${t(`Цена ${usd(BASE.promo)} действует`, `${usd(BASE.promo)} narxi amal qiladi`)}<small>${t("48 часов с первого открытия макета", "maket birinchi ochilgandan 48 soat")}</small></span><b id="tm">48:00:00</b></div>
+<div class="timer" id="timer"><span>${t(`Цена ${usd(BASE.promo)} действует`, `${usd(BASE.promo)} narxi amal qiladi`)}<small>${t("до 29 октября, 20:00 по Ташкенту", "29-oktabr, Toshkent vaqti bilan 20:00 gacha")}</small></span><b id="tm"></b></div>
 <div class="kt-line"><span>${t("Новый облик", "Yangi ko‘rinish")}</span><span><s>${usd(BASE.price)}</s> ${usd(BASE.promo)}</span></div>
 <div class="kt-line"><span>${t("Допы", "Qo‘shimchalar")} · <span id="kit-cnt">0</span></span><span id="kit-add">0 $</span></div>
 <div class="kt-sum"><small>${t("Итого", "Jami")}</small><b id="kit-total-sum">${usd(BASE.promo)}</b><small>${t(`со всеми допами ${usd(ALL)}`, `barcha qo‘shimchalar bilan ${usd(ALL)}`)}</small></div>
@@ -491,7 +491,7 @@ function siteData(l) {
       boYes: t("SHOP-IT: «1 200 000 и забирайте сегодня до 18:00». Встречная цена ушла вам в Telegram.", "SHOP-IT: «1 200 000 va bugun 18:00 gacha olib keting». Qarshi narx sizga Telegramga ketdi."), boLow: t("Слишком низко: продавец видит предложения от {p}.", "Juda past: sotuvchi {p} dan takliflarni ko‘radi."),
       frOk: t("Подтверждена сегодня", "Bugun tasdiqlandi"), cheap: t("дешевле всех", "eng arzon"), per: t("за шт.", "donasi"), total: t("итого", "jami"),
     },
-    offer: { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, n: !!a.new })), base: BASE.promo, baseName: BASE[l].t, hours: OFFER_HOURS, head: t("tovar.uz, состав:", "tovar.uz, tarkibi:"), totalW: t("Итого", "Jami"), copied: t("Скопировано", "Nusxalandi"), toBuy: t("В стоимость", "Narxga qo‘shish"), inBuy: t("В стоимости", "Narxda"), ended: t("Акция закончилась, цена обычная", "Aksiya tugadi, narx odatiy") },
+    offer: { items: ADDONS.map((a) => ({ id: a.id, t: a[l].t, p: a.price, n: !!a.new })), base: BASE.promo, baseName: BASE[l].t, hours: OFFER_HOURS, until: OFFER_UNTIL, dd: t("д", "kun"), head: t("tovar.uz, состав:", "tovar.uz, tarkibi:"), totalW: t("Итого", "Jami"), copied: t("Скопировано", "Nusxalandi"), toBuy: t("В стоимость", "Narxga qo‘shish"), inBuy: t("В стоимости", "Narxda"), ended: t("Акция закончилась, цена обычная", "Aksiya tugadi, narx odatiy") },
   };
 }
 

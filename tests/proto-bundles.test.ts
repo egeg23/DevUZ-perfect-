@@ -1362,6 +1362,8 @@ test("tovar.uz: товары и цены — с их сайта, новый об
   assert.equal(plan.BASE.promo, 1000);
   assert.equal(plan.BASE.price, 2500);
   assert.equal(plan.OFFER_HOURS, 48);
+  // Владелец, 19.10.2026: спец условия до 29 октября, 20:00 по Ташкенту, таймер до этой минуты.
+  assert.equal(Date.parse(plan.OFFER_UNTIL), Date.parse("2026-10-29T15:00:00Z"));
   assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
   assert.ok(plan.ADDONS.filter((a: { new?: boolean }) => a.new).length >= 5, "механик, которых нет в УЗ, меньше пяти");
   assert.equal(plan.TURNKEY.price, 30000, "маркетплейс под ключ — 30 000 $, цена владельца");
@@ -1374,6 +1376,8 @@ test("tovar.uz: товары и цены — с их сайта, новый об
     assert.match(html, /<s>2\u00a0500\u00a0\$<\/s><b>1\u00a0000\u00a0\$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
     assert.ok(html.includes('id="pod-klyuch"') && html.includes("<b>30\u00a0000\u00a0$</b>"), "нет маркетплейса под ключ за 30 000 $");
+    assert.ok(html.includes(`"until":"${plan.OFFER_UNTIL}"`), "отсчёт до 29 октября, 20:00");
+    assert.doesNotMatch(html, /48 (часов|soat)/, "срок акции уже не 48 часов");
   }
 });
 

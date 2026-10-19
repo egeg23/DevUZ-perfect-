@@ -160,10 +160,10 @@ var all=$('#kit-all');if(all)all.onclick=function(){var on=rows.some(function(r)
 var nw=$('#kit-new');if(nw)nw.onclick=function(){var isNew={};K.offer.items.forEach(function(x){if(x.n)isNew[x.id]=1});rows.forEach(function(r){r.checked=!!isNew[r.getAttribute('data-k')]});kitPrice();syncBuy()};
 var cp=$('#kit-copy');if(cp)cp.onclick=function(){var lines=[K.offer.head,'• '+K.offer.baseName+': '+fmt(K.offer.base)+' $'];rows.forEach(function(r){if(r.checked){var it=K.offer.items.filter(function(x){return x.id===r.getAttribute('data-k')})[0];lines.push('• '+it.t+': '+fmt(it.p)+' $')}});lines.push(K.offer.totalW+': '+sumEl.textContent);
   var txt=lines.join('\n');try{navigator.clipboard.writeText(txt).then(function(){cp.textContent=K.offer.copied})}catch(e){cp.textContent=K.offer.copied}};
-/* Отсчёт 48 часов с первого открытия на этом устройстве. */
+/* Отсчёт до K.offer.until (владелец, 19.10.2026: до 29 октября, 20:00 по Ташкенту); без него — 48 часов с первого открытия на этом устройстве. */
 var tm=$('#tm'),start=Date.now();try{var s0=+localStorage.getItem('tv-offer-1');if(s0&&s0<=Date.now())start=s0;else localStorage.setItem('tv-offer-1',String(start))}catch(e){}
-var end=start+K.offer.hours*36e5;
-function tickT(){var left=Math.max(0,end-Date.now());if(!left){$('#timer').classList.add('over');tm.textContent='00:00:00';$('#timer span').firstChild.textContent=K.offer.ended;return}var hh=Math.floor(left/36e5),mm=Math.floor(left%36e5/6e4),ss=Math.floor(left%6e4/1e3);tm.textContent=pad(hh)+':'+pad(mm)+':'+pad(ss);setTimeout(tickT,1000)}
+var end=K.offer.until?Date.parse(K.offer.until):start+K.offer.hours*36e5;
+function tickT(){var left=Math.max(0,end-Date.now());if(!left){$('#timer').classList.add('over');tm.textContent='00:00:00';$('#timer span').firstChild.textContent=K.offer.ended;return}var dd=Math.floor(left/864e5),hh=Math.floor(left%864e5/36e5),mm=Math.floor(left%36e5/6e4),ss=Math.floor(left%6e4/1e3);tm.textContent=(dd?dd+'\u00a0'+K.offer.dd+' ':'')+pad(hh)+':'+pad(mm)+':'+pad(ss);setTimeout(tickT,1000)}
 if(tm)tickT();
 /* Стекло первого экрана живёт видео и на телефоне: клиенты открывают макет из Telegram. При «меньше движения» и экономии трафика стоит кадр. */
 var wv=$('.w-vid');if(wv&&!REDUCED&&!(navigator.connection&&navigator.connection.saveData)){wv.src=wv.getAttribute('data-src');var pl=wv.play();if(pl&&pl.then)pl.then(function(){wv.classList.add('on')},function(){})}
