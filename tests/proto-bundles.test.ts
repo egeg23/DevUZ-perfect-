@@ -1521,3 +1521,116 @@ test("Soffice: панель — разделы, роли, связь с сайт
   assert.equal(plan.PANEL_ALL, pkg.reduce((s: number, a: { price: number }) => s + a.price, 0));
   for (const html of [site.html, site.pages.uz, site.pages.en]) assert.ok(html.includes('id="kit-panel"'), "нет пакета «Панель» в стоимости");
 });
+
+test("Магазин Baldinini Tashkent: страница, магазин и панель на ru, uz, en — условия, noindex, видео DevUz, знак, шапка, полный цикл, только их фото", async () => {
+  const { existsSync, readdirSync, statSync } = await import("node:fs");
+  const site = bundlePages("baldinini");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "en", "en/panel", "en/shop", "panel", "shop", "uz", "uz/panel", "uz/shop"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path.startsWith("uz") ? "uz" : path.startsWith("en") ? "en" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /overflow-x:hidden/, `${path}: overflow-x:hidden ломает sticky`);
+    assert.ok(page.includes("Baldinini"), `${path}: нет названия бренда`);
+    assert.match(page, /демо|demo/, `${path}: не сказано, что данные демо`);
+    // Владелец, 15.10.2026: систему посещаемости в макете не называем.
+    assert.doesNotMatch(page, /метрик|metrik|metrica/i, `${path}: названа система посещаемости`);
+    // Шрифт: Futura PT у бренда платный, файла в репозитории нет; на макете свободный Jost.
+    assert.ok(page.includes("family=Jost:wght@400;500"), `${path}: нет шрифта Jost`);
+    assert.doesNotMatch(page, /FuturaPT|Futura-PT|futura.*\.(woff2?|ttf|otf)/i, `${path}: платный шрифт бренда в макете`);
+    assert.ok(page.includes('<symbol id="bd-logo" viewBox="0 0 153 30">'), `${path}: нет знака Baldinini`);
+    for (const img of page.match(/<img [^>]+>/g) ?? []) assert.match(img, /alt="/, `${path}: картинка без alt: ${img.slice(0, 80)}`);
+    for (const src of page.match(/\/protos\/baldinini\/[\w./-]+\.webp/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    // Фото — локально в сборке, не хотлинком с сайта бренда.
+    assert.doesNotMatch(page, /commercetools|bloomreach|baldinini-shop\.com\/[^"]*\.(jpe?g|png|webp)/i, `${path}: фото хотлинком`);
+    if (lang !== "ru") assert.doesNotMatch(page.replace(/<style>[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/g, ""), /[А-Яа-яЁё]/, `${path}: кириллица на странице ${lang}`);
+  }
+  for (const path of ["", "uz", "en"]) {
+    const page = all[path], p = path ? path + "/" : "";
+    assert.match(page, /id="intro"[\s\S]*DevUz Studio/, `${path}: нет промо DevUz Studio`);
+    assert.match(page, /class="bd-cv"[^>]*data-logo=/, `${path}: нет знака Baldinini в заставке`);
+    for (const id of ["hero", "seychas", "pokupatel", "put", "lyuks", "italiya", "panel", "cena", "konstruktor", "kit-panel", "timer"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
+    assert.ok(page.includes(`data-src="__PROTO_BASE__/${p}shop?embed=1#/"`), `${path}: магазин не в айфоне`);
+    assert.ok(page.includes(`data-src="__PROTO_BASE__/${p}panel?embed=1"`), `${path}: панель не в окне браузера`);
+    // Владелец, 15.10.2026: шапка при любой прокрутке прячется и возвращается через 3 с.
+    assert.match(page, /var IDLE=3000,idleT=0;/, `${path}: нет правила шапки`);
+    assert.match(page, /function onScroll\(\)\{headIdle\(\);/, `${path}: шапка не прячется при прокрутке`);
+    // Владелец: «не переборщи с параллаксами» — один слой на странице.
+    assert.equal((page.match(/<picture data-par>/g) ?? []).length, 1, `${path}: параллакс не в одном месте`);
+  }
+  for (const path of ["shop", "uz/shop", "en/shop"]) {
+    const page = all[path];
+    for (const v of ["home", "catalog", "product", "cart", "checkout", "order", "me", "private", "boutique"]) assert.match(page, new RegExp(`V\\.${v}=function`), `${path}: нет экрана ${v}`);
+    for (const pay of ["Click", "Payme", "Uzum Bank", "Uzcard / Humo", "Visa / Mastercard", "Uzum Nasiya", "Alif Nasiya"]) assert.ok(page.includes(pay), `${path}: нет оплаты ${pay}`);
+    assert.ok(page.includes("'bd-demo-1'"), `${path}: состояние демо не общее с панелью`);
+    assert.match(page, /var top=\$\('#top'\),IDLE=3000,idleT=0;/, `${path}: шапка магазина не по правилу трёх секунд`);
+    assert.ok(page.includes("https://ig.me/m/baldininitashkent"), `${path}: консультант не ведёт в Instagram бутика`);
+    assert.ok(page.includes('"hours":["10:00-23:00","10:00-00:00"]'), `${path}: часы бутика не как на tcmall.uz`);
+  }
+  for (const path of ["panel", "uz/panel", "en/panel"]) {
+    const page = all[path];
+    for (const v of ["dash", "orders", "tryon", "goods", "clients", "gifts", "returns", "team", "traffic", "vip", "private", "restock", "sellers"]) assert.match(page, new RegExp(`V\\.${v}=function`), `${path}: нет раздела ${v}`);
+    for (const r of ["owner", "head", "seller"]) assert.ok(page.includes(`<option value="${r}">`), `${path}: нет роли ${r}`);
+    assert.ok(page.includes('data-tier="std"') && page.includes('data-tier="pro"'), `${path}: нет переключателя «Панель / Расширенная»`);
+    assert.ok(page.includes("'bd-demo-1'") && page.includes("'bd-panel-1'"), `${path}: панель не связана с магазином`);
+    assert.match(page, /\.tw\{overflow-x:auto/, `${path}: таблицы без своей прокрутки`);
+    const data = JSON.parse(page.match(/<script type="application\/json" id="bp-data">([\s\S]*?)<\/script>/)![1]);
+    assert.ok(Object.values(data.ui).every((v) => v !== "" && v != null), `${path}: пустая подпись`);
+  }
+  const ui = await import("../scripts/protos/baldinini/ui.mjs");
+  for (const dict of [ui.SHOP_UI, ui.PANEL_UI] as Record<string, unknown[]>[]) for (const [k, v] of Object.entries(dict)) {
+    assert.equal(v.length, 3, `${k}: не три языка`);
+    assert.doesNotMatch(JSON.stringify(v.slice(1)), /[А-Яа-яЁё]/, `${k}: кириллица в uz или en`);
+  }
+  const pub = "public/protos/baldinini";
+  assert.ok(readdirSync(pub).reduce((s, f) => s + statSync(`${pub}/${f}`).size, 0) < 8_000_000, "фото тяжелее 8 МБ");
+  const stamped = stampedBundle("baldinini", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+  assert.notEqual(stamped.pages["en/shop"], site.pages["en/shop"], "отпечаток не поставился на английском магазине");
+});
+
+test("Baldinini: товары с официального сайта, магазин 1 000 $ без админки, админка +300 $ или +500 $, допы на 4 000-6 000 $", async () => {
+  // Владелец, 19.10.2026: «Допов добавь на 4-6 тысяч $, база 1000$ без админки, админка +300$, расширенная админка 500$».
+  const D = await import("../scripts/protos/baldinini/data.mjs");
+  assert.ok(D.PRODUCTS.length >= 24, "меньше 24 моделей");
+  for (const p of D.PRODUCTS) {
+    assert.match(p.art, /^[A-Z0-9]{16}$/, `${p.id}: артикул не как у бренда`);
+    assert.ok(p.eur || p.rub, `${p.id}: нет цены с официального сайта`);
+    for (let i = 0; i < (p.im ?? 3); i++) for (const w of [600, 1000]) assert.ok((await import("node:fs")).existsSync(`public/protos/baldinini/p-${p.id}-${i}-${w}.webp`), `${p.id}: нет фото ${i} ${w}`);
+  }
+  for (const c of ["w", "m", "bag", "acc"]) assert.ok(D.PRODUCTS.some((p: { cat: string }) => p.cat === c), `нет раздела ${c}`);
+  /* Цвета — с CSS baldinini-shop.com (docs/research/baldinini.md). */
+  assert.deepEqual([D.COLORS.ink, D.COLORS.mute, D.COLORS.mist, D.COLORS.sand], ["#000000", "#858585", "#f8f8f8", "#d8aa8a"]);
+  const plan = await import("../scripts/protos/baldinini/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.ok(plan.BASE.price > plan.BASE.promo);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.equal(plan.PANELS.std.price, 300);
+  assert.equal(plan.PANELS.pro.price, 500);
+  assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 18, "от 10 до 18 допов");
+  for (const a of plan.ADDONS) assert.ok(a.price > 0 && a.ru.t && a.ru.e && a.uz.t && a.uz.e && a.en.t && a.en.e, `${a.id}: цена и описание на трёх языках`);
+  assert.equal(plan.ADDONS_SUM, plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0));
+  assert.ok(plan.ADDONS_SUM >= 4000 && plan.ADDONS_SUM <= 6000, `сумма допов ${plan.ADDONS_SUM} вне 4 000-6 000 $`);
+  /* У каждого раздела панели — один уровень, и он совпадает с panel.js. */
+  const secs = [...plan.PANELS.std.sections, ...plan.PANELS.pro.sections];
+  assert.equal(new Set(secs).size, secs.length, "раздел в двух уровнях");
+  const site = bundlePages("baldinini")!;
+  for (const html of [site.html, site.pages.uz, site.pages.en]) {
+    assert.ok(html.includes(`<s>${String(plan.BASE.price).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} $</s><b>1 000 $</b>`), "на макете 1 000 $ вместо обычной цены");
+    assert.ok(html.includes('name="pnl" value="std" checked data-p="300"') && html.includes('name="pnl" value="pro" data-p="500"'), "админка не одним выбором 300 / 500 $");
+    assert.match(html, /"hours":48,/, "отсчёт 48 часов");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+  for (const path of ["panel", "uz/panel", "en/panel"]) {
+    const data = JSON.parse(site.pages[path].match(/id="bp-data">([\s\S]*?)<\/script>/)![1]);
+    assert.deepEqual(data.tiers, { std: plan.PANELS.std.sections, pro: plan.PANELS.pro.sections }, `${path}: уровни разделов не как в plan.mjs`);
+  }
+});
