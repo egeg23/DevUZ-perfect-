@@ -15,7 +15,7 @@ import { ipFromHeaders, rateLimit } from "@/lib/qualify/limiter";
  * Чем этот браузер открывает макет: постоянный пароль владельца, пароль
  * клиента на сутки или «Открыть» из панели. null — ничем.
  */
-async function accessBy(
+export async function accessBy(
   cookie: string | null,
   page: { id: string; lock: string | null; closed: boolean },
 ): Promise<"pin" | CodeKind | null> {

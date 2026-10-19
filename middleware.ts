@@ -128,6 +128,10 @@ export function middleware(request: NextRequest) {
   // менеджер отправил клиенту, уезжала редиректом на /ru/proto/… — в 404.
   if (pathname.startsWith("/proto/")) return NextResponse.next();
 
+  // Файлы макетов из public (/protos/…) — тоже: куски промо-ролика .ts
+  // (lib/proto/promo) иначе уезжали редиректом на /ru/protos/….
+  if (pathname.startsWith("/protos/")) return NextResponse.next();
+
   // Сайт клиента, который временно живёт у нас (app/maximova). Он русский
   // и уедет на свой домен целиком — языковой префикс студии ему не нужен.
   if (pathname === "/maximova" || pathname.startsWith("/maximova/")) return NextResponse.next();

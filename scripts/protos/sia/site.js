@@ -246,3 +246,24 @@ if(shut){
   try{sessionStorage.setItem('dz-intro','1');sessionStorage.setItem('sia-intro','1')}catch(x){}
   setTimeout(function(){location.href=a.href},420)})})});
 })();
+
+/* Наше промо: зашифрованный HLS (lib/proto/promo). Safari играет плейлист
+   сам, остальным — hls.js, который грузится только по нажатию. */
+(function(){var d=document,f=d.querySelector('.pm-frame');if(!f)return;
+  var v=f.querySelector('video'),btn=f.querySelector('.pm-play'),snd=f.querySelector('.pm-snd'),bar=f.querySelector('.pm-bar i'),ready=false,h;
+  ['contextmenu','dragstart','selectstart'].forEach(function(t){f.addEventListener(t,function(e){e.preventDefault()})});
+  function go(){f.classList.remove('wait');var p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;snd.setAttribute('aria-pressed','false');v.play().catch(function(){})})}
+  function load(){f.classList.add('wait');var src=f.getAttribute('data-src');
+    if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=src;go();return}
+    var s=d.createElement('script');s.src=f.getAttribute('data-lib');s.onload=function(){if(!window.Hls||!Hls.isSupported()){f.classList.remove('wait');return}
+      h=new Hls({maxBufferLength:12});h.loadSource(src);h.attachMedia(v);h.on(Hls.Events.MANIFEST_PARSED,go)};
+    s.onerror=function(){f.classList.remove('wait')};d.head.appendChild(s)}
+  btn.addEventListener('click',function(){if(!ready){ready=true;f.classList.add('on');snd.hidden=false;load();return}
+    if(v.paused){f.classList.remove('paused');if(v.ended)v.currentTime=0;go()}else{v.pause()}});
+  v.addEventListener('click',function(){btn.click()});
+  v.addEventListener('pause',function(){f.classList.add('paused')});
+  v.addEventListener('play',function(){f.classList.remove('paused')});
+  v.addEventListener('timeupdate',function(){if(v.duration)bar.style.setProperty('--p',v.currentTime/v.duration)});
+  snd.addEventListener('click',function(){v.muted=!v.muted;snd.setAttribute('aria-pressed',String(!v.muted))});
+  new IntersectionObserver(function(es){if(!es[0].isIntersecting&&!v.paused)v.pause()},{threshold:.25}).observe(f);
+})();
