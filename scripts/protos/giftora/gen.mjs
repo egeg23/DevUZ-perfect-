@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 
 /*
  * Демо-макет Giftora: мини-приложение Telegram с игрой на подарках.
@@ -122,6 +123,7 @@ function page(l) {
     ["profile", "user", t("Профиль", "Profile")],
   ];
   return `<!doctype html><html lang="${l}" data-base="${BASE}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0c0b16"><title>${t("Giftora · демо мини-приложения Telegram", "Giftora · Telegram mini app demo")}</title><meta name="description" content="${t("Демо-макет мини-приложения: боксы, Rocket, Dice, Upgrade, PvP на игровой валюте.", "Mini app demo: boxes, Rocket, Dice, Upgrade, PvP on play money.")}">@@S@@</head><body>
+${dzIntroSolo(l)}
 <div class="stage">
 <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
 <aside class="side">

@@ -185,11 +185,23 @@ test("заставка DevUz: видео в каждом прототипе из
     assert.ok(html.includes('srcset="/protos/_dz/dz-intro-9.webp"') && html.includes('src="/protos/_dz/dz-intro-16.webp"'), "нет первого кадра");
     assert.ok(html.includes("'/protos/_dz/dz-intro-'+(tall?'9':'16')+'.mp4'"), "нет видео по ориентации");
     assert.match(html, /<video muted playsinline/, "видео со звуком");
-    assert.match(html, /if\(!played\)code\(\)\},1200\)/, "нет ухода на сайт, если видео не заиграло");
+    assert.match(html, /if\(!played\)code\(\)\},2500\)/, "нет ухода на сайт, если видео не заиграло за 2,5 с");
     assert.match(html, /sessionStorage\.getItem\('dz-intro'\)/, "заставка не раз за визит");
     assert.ok(body.includes(locale === "uz" ? "O‘tkazib yuborish" : "Пропустить"), "нет «Пропустить» на языке прототипа");
     assert.doesNotMatch(html, /watermark|fingerprint|stamp|seed|data-mark/i, "слово, по которому находят отпечаток");
   }
+});
+
+test("заставка DevUz: прототип, собранный до правила, получает видео при отдаче", async () => {
+  const { withDzIntro } = await import("@/lib/proto/dz-video.mjs");
+  const old = '<!doctype html><html lang="uz"><head><title>x</title></head><body class="p">\n<main>Shina</main></body></html>';
+  const html = withDzIntro(old);
+  assert.match(html, /<body class="p">\n<div class="dzi" id="dzi" role="presentation"><div class="dz-vid"/, "видео не первым в странице");
+  assert.ok(html.includes("O‘tkazib yuborish"), "«Пропустить» не на языке прототипа");
+  assert.ok(html.endsWith("<main>Shina</main></body></html>"), "страница после заставки изменилась");
+  assert.equal(withDzIntro(html), html, "видео подставилось второй раз");
+  assert.equal(withDzIntro(build().html), build().html, "новому прототипу видео подставилось второй раз");
+  assert.equal(withDzIntro('{"name":"app"}'), '{"name":"app"}', "в манифест подставилось видео");
 });
 
 test("сцена берёт шесть услуг, остальные уходят списком", () => {
