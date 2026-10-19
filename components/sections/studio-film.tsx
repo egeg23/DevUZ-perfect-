@@ -91,7 +91,7 @@ export function StudioFilm({ locale }: { locale: Locale }) {
   return (
     <section ref={attach} className="border-t border-line bg-black py-5 md:py-10">
       <div className="relative mx-auto aspect-[1280/536] w-full max-w-[1600px] overflow-hidden">
-        <div role="img" aria-label={t(label, locale)} className="absolute inset-0">
+        <div className="absolute inset-0">
           <video
             ref={video}
             src={src}
@@ -110,9 +110,12 @@ export function StudioFilm({ locale }: { locale: Locale }) {
           {/* Обложка — готовый webp из сборки фильма: оптимизатор картинок
               на сервере ей не нужен. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* Подпись — на обложке, а не на обёртке: её читают и поисковик, и
+              проверки сайта (sitechecker, 19.10.2026: «Alt [Missed]»), и
+              читалка экрана; видео под ней скрыто от читалки. */}
           <img
             src={POSTER}
-            alt=""
+            alt={t(label, locale)}
             width={1280}
             height={536}
             loading="lazy"

@@ -52,6 +52,13 @@ const config: NextConfig = {
   },
   reactStrictMode: true,
   poweredByHeader: false,
+  // Метаданные — в <head> всем, а не потоком в <body>. По умолчанию Next
+  // ставит их в head только ботам из своего списка, остальным дописывает
+  // в body по ходу ответа. Проверки сайта (sitechecker, 19.10.2026) и не
+  // все поисковики и мессенджеры читают body: Open Graph «не находился»,
+  // хотя был на странице. Метаданные у нас из словарей и одной строки
+  // базы — ждать их нечего.
+  htmlLimitedBots: /.*/,
   images: { formats: ["image/avif", "image/webp"], remotePatterns: shotHost() },
 
   experimental: {
@@ -63,6 +70,16 @@ const config: NextConfig = {
       // и заголовки multipart, они добавляют к телу свои килобайты.
       bodySizeLimit: "22mb",
     },
+  },
+  // Старые адреса главной (`/index.html`, `/index.php`, и под языком) —
+  // постоянным 301 на главную, а не 404 и не 307 в языковой редирект. Их
+  // проверяют проверки сайта и до сих пор держат в закладках и каталогах.
+  // Здесь, а не в middleware: адреса с .html он не видит (matcher).
+  async redirects() {
+    return [
+      { source: "/index.:ext(html|htm|php)", destination: "/", statusCode: 301 },
+      { source: "/:locale(ru|en|uz|zh|uk|pl)/index.:ext(html|htm|php)", destination: "/:locale", statusCode: 301 },
+    ];
   },
   async rewrites() {
     const key = process.env.INDEXNOW_KEY;
