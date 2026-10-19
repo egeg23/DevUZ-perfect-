@@ -1006,3 +1006,19 @@ https://devuz.studio/api/health.
   (`.github/workflows/vps-security.yml`): только чтение, отчёт — ботом
   владельцу и руководителю, в публичный лог — одна строка.
 - Держит `tests/security-hardening.test.ts`.
+
+## Обратная разработка — REA в сессиях разработки
+
+Владелец, 19.10.2026: «Установи для работы REA с гит, нам пригодится чтобы
+делать обратные разработки» (github.com/morluto/rea).
+
+- REA (Reverse Engineer Anything) — MCP-сервер `rea` и навык
+  `reverse-engineer-anything`: программы через Ghidra, JavaScript/Electron,
+  .NET, Android, прошивки, сайты, записи трафика; каждый вывод — с
+  доказательствами. Ставит `bash scripts/rea/install.sh` — в контейнер
+  сессии, не на боевой сервер; повторный запуск пропускает готовое. Как и
+  зачем — `scripts/rea/README.md`.
+- Инструменты появляются в сессии, которая началась после установки:
+  постоянно — строкой в Setup script отдельного окружения для разбора.
+- Версии закреплены: REA 6.7.0, Ghidra 12.1.3 (REA принимает 12.1.x).
+  Меняя версию — `claude mcp get rea` (`Connected`) и `rea doctor --json`.
