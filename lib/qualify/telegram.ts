@@ -486,12 +486,69 @@ export async function sendMessage(
   options: { mirror?: boolean } = {},
 ): Promise<boolean> {
   if (options.mirror !== false) mirrorToPush(chatId, text);
-  return call("sendMessage", {
-    chat_id: chatId,
-    text,
-    parse_mode: "HTML",
-    link_preview_options: { is_disabled: true },
-  });
+  // Длиннее предела Telegram отклоняет сообщение целиком: 19.10.2026 так
+  // молча не дошёл отчёт «Сотрудники за день» — 13 человек и новая строка
+  // ступеней продажи дали больше 4096 знаков. Длинное уходит частями.
+  const [first, ...rest] = splitHtmlMessage(text);
+  const send = (part: string) =>
+    call("sendMessage", {
+      chat_id: chatId,
+      text: part,
+      parse_mode: "HTML",
+      link_preview_options: { is_disabled: true },
+    });
+  if (!(await send(first))) return false;
+  // Первая часть дошла — сообщение доставлено: вызывающий не пошлёт его
+  // заново и не повторит уже ушедшее. Сбой хвоста — в лог.
+  for (const part of rest) {
+    if (!(await send(part))) console.error("telegram sendMessage: часть длинного сообщения не ушла", chatId);
+  }
+  return true;
+}
+
+/** С запасом от 4096: предел считается по тексту без разметки, а мы режем вместе с ней. */
+export const MESSAGE_PART_LIMIT = 4000;
+
+/**
+ * Длинный HTML — на части не длиннее `limit`, по переводам строки.
+ *
+ * Рез не разрывает тег: точка реза — только там, где все открытые теги
+ * закрыты. Из таких — сначала перед строкой без отступа (начало блока:
+ * человек в отчёте, раздел), потом любая. Негде резать — текст как был:
+ * Telegram откажет, как и раньше, но разметку мы не сломаем.
+ */
+export function splitHtmlMessage(text: string, limit = MESSAGE_PART_LIMIT): string[] {
+  const parts: string[] = [];
+  let rest = text;
+  while (rest.length > limit) {
+    const cut = cutAt(rest, limit);
+    if (cut <= 0) break;
+    parts.push(rest.slice(0, cut).trimEnd());
+    rest = rest.slice(cut + 1).replace(/^\n+/, "");
+  }
+  if (rest.trim() || !parts.length) parts.push(rest);
+  return parts;
+}
+
+const TAG = /<(\/?)([a-z][a-z-]*)\b[^>]*>/gi;
+
+function tagsClosed(html: string): boolean {
+  let depth = 0;
+  for (const match of html.matchAll(TAG)) depth += match[1] ? -1 : 1;
+  return depth === 0;
+}
+
+function cutAt(text: string, limit: number): number {
+  let any = -1;
+  for (let i = text.lastIndexOf("\n", limit); i > 0; i = text.lastIndexOf("\n", i - 1)) {
+    if (!tagsClosed(text.slice(0, i))) continue;
+    if (any < 0) any = i;
+    // Начало блока — если до него набралось хотя бы полчасти: иначе
+    // крошечная первая часть и всё остальное следом.
+    if (i < limit / 2) break;
+    if (!/^[ \t]/.test(text.slice(i + 1, i + 2))) return i;
+  }
+  return any;
 }
 
 /**
