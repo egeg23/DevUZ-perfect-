@@ -166,11 +166,17 @@ export function middleware(request: NextRequest) {
       : matchLocale(accept);
 
   // Адрес не из разделов сайта — 404 здесь же, на языке посетителя, без
-  // редиректа в 404 под языком.
+  // редиректа в 404 под языком. Подмена, а не пропуск: пропущенный
+  // `/что-угодно` попадал в `[locale]` как язык «что-угодно», и вместо нашей
+  // страницы 404 Next отдавал голую страницу ошибки. Под языком маршрута для
+  // него нет — и отвечает наша страница «не найдено» с кодом 404.
   if (pathname !== "/" && !SECTION_SET.has(pathname.split("/")[1] ?? "")) {
+    const target = locale ?? defaultLocale;
     const headers = new Headers(request.headers);
-    headers.set(LOCALE_HEADER, locale ?? defaultLocale);
-    return NextResponse.next({ request: { headers } });
+    headers.set(LOCALE_HEADER, target);
+    const missing = request.nextUrl.clone();
+    missing.pathname = `/${target}${pathname}`;
+    return NextResponse.rewrite(missing, { request: { headers } });
   }
 
   const url = request.nextUrl.clone();

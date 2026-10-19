@@ -27,7 +27,12 @@ test("незнакомый адрес без языка — 404 сразу, бе
   assert.ok(pass > 0, "проверка раздела пропала");
   assert.ok(pass < mw.indexOf("return NextResponse.redirect(url, 307);"), "проверка стоит после редиректа");
   // Язык посетителя доезжает до страницы 404.
-  assert.match(mw.slice(pass, pass + 300), /headers\.set\(LOCALE_HEADER, locale \?\? defaultLocale\);/);
+  const branch = mw.slice(pass, pass + 400);
+  assert.match(branch, /headers\.set\(LOCALE_HEADER, target\);/);
+  // Подмена на адрес под языком, где маршрута нет, — наша страница 404, а не
+  // голая страница ошибки Next.
+  assert.match(branch, /return NextResponse\.rewrite\(missing, \{ request: \{ headers \} \}\);/);
+  assert.doesNotMatch(branch, /NextResponse\.redirect/);
 });
 
 test("старые адреса главной — 301 на главную", () => {
