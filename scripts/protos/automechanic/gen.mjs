@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { ADDONS, BASE as KIT_BASE, BLOCKS, GROUPS } from "./plan.mjs";
+import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 
 /*
  * Прототип AUTOMECHANIC (automechanic.uz): пять страниц на двух языках,
@@ -171,11 +172,12 @@ ${path === "" ? `<link rel="preload" as="image" href="${IMG}/garage-far.webp"><l
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTS}" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="${FONTS}"></noscript>
-<script>document.documentElement.classList.add('js');try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('is-app','dz-off')}catch(e){}try{if(sessionStorage.getItem('dz'))document.documentElement.classList.add('dz-off')}catch(e){}</script>
+<script>document.documentElement.classList.add('js');document.documentElement.classList.add('dz-off');try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('is-app','dz-off')}catch(e){}try{if(sessionStorage.getItem('dz'))document.documentElement.classList.add('dz-off')}catch(e){}</script>
 <style>${CSS}</style>
 <script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "AutoRepair", name: "AUTOMECHANIC", telephone: ["+998909656131", "+998712764431"], email: F.mail, foundingDate: "1991", address: { "@type": "PostalAddress", streetAddress: F.addr[l], addressLocality: l === "ru" ? "Ташкент" : "Toshkent", addressCountry: "UZ" }, openingHours: "Mo-Sa 09:00-18:00" })}</script>
 </head>
 <body data-page="${path}" data-lang="${l}">
+${path === "offline" ? "" : dzIntroSolo(l)}
 ${path === "offline" ? "" : `<div class="dz" id="dz" role="presentation">
 <div class="dz-in">${DZLOGO}<div class="dz-word">DevUz Studio</div><div class="dz-sub">${t("прототип для AUTOMECHANIC", "AUTOMECHANIC uchun prototip")}</div></div>
 <div class="dz-skip">${t("Нажмите, чтобы пропустить", "O‘tkazib yuborish uchun bosing")}</div>

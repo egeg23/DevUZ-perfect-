@@ -4,6 +4,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { DIRS, DOCS, BRANCHES, ROBOT_OPS, ROBOT_PLUS, SOCIAL, BOT } from "./data.mjs";
 import { BASE as KIT, EXTRAS, GROUPS } from "./plan.mjs";
+import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 
 const DIR = new URL(".", import.meta.url).pathname;
 const CSS = readFileSync(DIR + "style.css", "utf8").replace(/\n/g, "");
@@ -118,11 +119,12 @@ ${LANGS.filter((x) => x !== l).map((x) => `<link rel="alternate" hreflang="${x}"
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap&subset=cyrillic,latin-ext" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap&subset=cyrillic,latin-ext"></noscript>
-<script>document.documentElement.classList.add('js');try{if(sessionStorage.getItem('dz'))document.documentElement.classList.add('dz-off')}catch(e){}</script>
+<script>document.documentElement.classList.add('js');document.documentElement.classList.add('dz-off');try{if(sessionStorage.getItem('dz'))document.documentElement.classList.add('dz-off')}catch(e){}</script>
 <style>${CSS}</style>
 <script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": ["MedicalOrganization", "Hospital"], name: "Shox International Hospital", url: "https://shox.hospital", telephone: "+998712070017", email: "info@shox.hospital", openingHours: "Mo-Su 00:00-23:59", address: { "@type": "PostalAddress", streetAddress: "Kichik xalqa yo‘li, 70A", addressLocality: "Toshkent", addressCountry: "UZ" }, sameAs: SOCIAL.map((s) => s[1]) })}</script>
 </head>
 <body data-page="${path}" data-base="${KIT.price}">
+${dzIntroSolo(l)}
 <div class="dz" id="dz" role="presentation">
 <div class="dz-in">${DZLOGO}<div class="dz-word">DevUz Studio</div><div class="dz-sub">${t("прототип для Shox International Hospital", "Shox International Hospital uchun prototip", "a prototype for Shox International Hospital")}</div></div>
 <div class="dz-skip">${t("Нажмите, чтобы пропустить", "O‘tkazib yuborish uchun bosing", "Tap to skip")}</div>
