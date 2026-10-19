@@ -15,7 +15,9 @@ import {
   tenderProblems,
   tenderSource,
 } from "@/lib/razbor/tender";
-import { coveredHashes, saveDraft, sourceHash, type RazborArticle } from "@/lib/razbor/store";
+import { announceRazbors } from "@/lib/razbor/announce";
+import { AUTO_PUBLISH, coveredHashes, saveDraft, sourceHash, type RazborArticle } from "@/lib/razbor/store";
+import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
 // Sonnet, а не Opus чата на сайте: владелец, 04.10.2026 — «не используй
@@ -29,8 +31,8 @@ const MODEL = process.env.RAZBOR_MODEL || "claude-sonnet-5";
  *
  * Ходит тем же свипом раз в пять минут, раз в неделю работает: берёт
  * следующую тему из content/razbor/tenders.ts, пишет статью на двух языках
- * и кладёт её на проверку во вкладку «Разборы». Публикует человек — как и
- * разбор сайта.
+ * и публикует её сразу, как и разбор сайта (`AUTO_PUBLISH`, владелец,
+ * 19.10.2026). Снять или поправить — во вкладке «Разборы».
  *
  * Отметки у смены свои: отчёт с `shift: "razbor-tender"` и неделя в
  * daily_claims. Возьми она имя «razbor», ежедневная смена прочитала бы её
@@ -116,6 +118,12 @@ export async function runTenderShift(now = new Date(), force = false): Promise<T
       });
       if (id) run.drafted = true;
       else run.errors.push("черновик не лёг: дубль запроса или слага, или база не ответила");
+      if (id && AUTO_PUBLISH) {
+        // Статья уже на сайте: Bing и Яндекс узнают о ней сейчас, а не со
+        // следующей выкатки.
+        const sent = await announceRazbors().catch((error) => ({ state: "bad-input" as const, why: String(error) }));
+        if (sent.state === "bad-input") run.errors.push(`IndexNow: ${sent.why}`);
+      }
     }
   } catch (error) {
     run.errors.push(error instanceof Error ? error.message : String(error));
@@ -124,7 +132,9 @@ export async function runTenderShift(now = new Date(), force = false): Promise<T
   await report(
     run,
     run.drafted
-      ? `Тема «${topic.ru.query}» — статья на двух языках ждёт проверки в панели, раздел «Разборы».`
+      ? AUTO_PUBLISH
+        ? `Тема «${topic.ru.query}» — статья на двух языках уже на сайте: ${siteUrl}/ru/razbor/${topic.ru.slug} — поправить или снять можно в панели, раздел «Разборы».`
+        : `Тема «${topic.ru.query}» — статья на двух языках ждёт проверки в панели, раздел «Разборы».`
       : `Статья по теме «${topic.ru.query}» не вышла.`,
   );
   return run;

@@ -17,7 +17,9 @@ import {
 import { todayInTashkent } from "@/lib/admin/pulse";
 import { inventNiche } from "@/lib/razbor/niche-ask";
 import { forbiddenNiche } from "@/lib/razbor/niche-words";
-import { coveredHashes, razborTaken, saveDraft, sourceHash, storedNiche, type RazborArticle } from "@/lib/razbor/store";
+import { announceRazbors } from "@/lib/razbor/announce";
+import { AUTO_PUBLISH, coveredHashes, razborTaken, saveDraft, sourceHash, storedNiche, type RazborArticle } from "@/lib/razbor/store";
+import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 import type { AuditReport } from "@/lib/audit/checks";
 import type { City, Niche } from "@/content/razbor/catalog";
@@ -47,11 +49,13 @@ export type ShiftRun = {
   ran: boolean;
   looked: number;
   drafted: number;
+  /** Русские адреса вышедших разборов — в отчёт владельцу. */
+  pages: string[];
   skipped: Record<string, number>;
   errors: string[];
 };
 
-const EMPTY: ShiftRun = { ran: false, looked: 0, drafted: 0, skipped: {}, errors: [] };
+const EMPTY: ShiftRun = { ran: false, looked: 0, drafted: 0, pages: [], skipped: {}, errors: [] };
 
 async function lastShiftAt(): Promise<string | null> {
   const db = serviceClient();
@@ -100,7 +104,7 @@ export async function runRazborShift(now = new Date(), force = false): Promise<S
     if (claim !== "ok") return { ...EMPTY, errors: [claim] };
   }
 
-  const run: ShiftRun = { ran: true, looked: 0, drafted: 0, skipped: {}, errors: [] };
+  const run: ShiftRun = { ran: true, looked: 0, drafted: 0, pages: [], skipped: {}, errors: [] };
   const skip = (why: string) => {
     run.skipped[why] = (run.skipped[why] ?? 0) + 1;
   };
@@ -110,12 +114,16 @@ export async function runRazborShift(now = new Date(), force = false): Promise<S
   // Касания, до которых не дошли руки: писать им мы не собираемся, а
   // разобрать анонимно — можем. Те, кому уже написали, не берём: человек,
   // получивший от нас письмо, узнает свой сайт в разборе.
+  //
+  // Строк берём с большим запасом: разобранные отсеиваются уже здесь, по
+  // отпечатку. При запасе в 48 строк к 19.10 из них разобранными были 44 —
+  // смена смотрела четыре сайта вместо двенадцати и выпускала один разбор.
   const { data: rows } = await db
     .from("prospects")
     .select("url, host, label")
     .in("status", ["new", "skipped"])
     .order("created_at", { ascending: false })
-    .limit(LOOK_AT * 4);
+    .limit(LOOK_AT * 50);
 
   for (const row of rows ?? []) {
     if (run.drafted >= PER_SHIFT || run.looked >= LOOK_AT) break;
@@ -131,8 +139,9 @@ export async function runRazborShift(now = new Date(), force = false): Promise<S
     run.looked += 1;
     try {
       const drafted = await draftOne(url);
-      if (drafted === true) {
+      if (typeof drafted === "object") {
         run.drafted += 1;
+        run.pages.push(drafted.page);
         covered.add(sourceHash(url));
       } else {
         skip(drafted);
@@ -142,12 +151,19 @@ export async function runRazborShift(now = new Date(), force = false): Promise<S
     }
   }
 
+  // Разбор уже на сайте и в карте сайта; Bing и Яндекс узнают о нём сейчас,
+  // а не со следующей выкатки — как после кнопки «Опубликовать».
+  if (AUTO_PUBLISH && run.drafted > 0) {
+    const sent = await announceRazbors().catch((error) => ({ state: "bad-input" as const, why: String(error) }));
+    if (sent.state === "bad-input") run.errors.push(`IndexNow: ${sent.why}`);
+  }
+
   await report(run);
   return run;
 }
 
-/** `true` — черновик лёг; строка — почему сайт не взяли. */
-async function draftOne(url: string): Promise<true | string> {
+/** `{ page }` — разбор лёг (русский адрес); строка — почему сайт не взяли. */
+async function draftOne(url: string): Promise<{ page: string } | string> {
   // Тот же обход, что у касания, а не быстрый разбор одной главной.
   //
   // Даёт три вещи разом и за один проход: находки внутренних страниц (с
@@ -224,10 +240,10 @@ async function draftOne(url: string): Promise<true | string> {
       `Сайт взят из касаний. Находок: ${report.findings.length}, в статью вошло ${pickFindings(report).length}.` +
       // Проверяющему это первое, на что смотреть: формы слова попадают в
       // заголовок и в адрес страницы, а адрес потом не переименовать.
-      (invented ? ` Ниша «${niche.ruLabel}» новая — смена назвала её сама, проверьте запрос и адрес.` : ""),
+      (invented ? ` Ниша «${niche.ruLabel}» новая — смена назвала её сама.` : ""),
   });
 
-  return id ? true : "не записался (скорее всего, такой запрос уже занят)";
+  return id ? { page: `/ru/razbor/${slugFor(niche, city, "ru")}` } : "не записался (скорее всего, такой запрос уже занят)";
 }
 
 /**
@@ -469,7 +485,9 @@ async function report(run: ShiftRun): Promise<void> {
     run.drafted > 0
       ? `Вышло ${run.drafted} из ${PER_SHIFT}. Посмотрено сайтов: ${run.looked}.` +
         (why ? ` Не взяли: ${why}.` : "") +
-        " Ждут проверки в панели, разделе «Разборы»."
+        (AUTO_PUBLISH
+          ? ` Уже на сайте: ${run.pages.map((page) => siteUrl + page).join(" ")} — поправить или снять можно в панели, раздел «Разборы».`
+          : " Ждут проверки в панели, разделе «Разборы».")
       : `Ни одного разбора. Посмотрено сайтов: ${run.looked}.` +
         (why ? ` Причины: ${why}.` : " Смотреть было нечего: в касаниях не осталось неразобранных сайтов.");
 

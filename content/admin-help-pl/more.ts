@@ -335,13 +335,13 @@ export const moreSections: Record<string, HelpEntry> = {
 
   /* ── Разборы ──────────────────────────────────────────────────────── */
   "/admin/razbor": {
-    what: "Artykuły z analizami cudzych stron na naszą stronę: zmiana sama pisze je każdego ranka i zostawia Ci do sprawdzenia. Opublikowana analiza od razu pojawia się na stronie i w wyszukiwarce — w imieniu studia nazywa cudzą stronę słabą, dlatego decydujesz tylko Ty.",
+    what: "Artykuły z analizami cudzych stron na naszą stronę: zmiana sama pisze je każdego ranka i od razu publikuje — bez Twojej akceptacji, tekst zamiast człowieka sprawdza kod. Opublikowana analiza od razu jest na stronie i w wyszukiwarce. Tu widać wszystko, co wyszło, i każdą analizę można poprawić, zdjąć z publikacji albo usunąć.",
     items: [
       {
         id: "shift",
         title: "Zmiana analiz",
         body: [
-          "Codziennie o 08:03 czasu taszkenckiego zmiana bierze z «Kontaktów» strony, do których jeszcze nie pisaliśmy, przegląda do 12 i pisze do 3 analiz — po rosyjsku i po uzbecku. Raport «Смена разборов» przychodzi w Telegramie: ile wyszło i dlaczego pozostałych nie wzięto.",
+          "Codziennie o 08:03 czasu taszkenckiego zmiana bierze z «Kontaktów» strony, do których jeszcze nie pisaliśmy, przegląda do 12 i pisze do 3 analiz — po rosyjsku i po uzbecku — i od razu je publikuje. Raport «Смена разборов» przychodzi w Telegramie: ile wyszło, linki do opublikowanych stron i dlaczego pozostałych stron nie wzięto.",
           "Powody odrzucenia: strona się nie otworzyła, strona jest w porządku albo ma za mało ustaleń, nie udało się ustalić branży lub miasta, branży nie analizujemy (medycyna i inne zakazane), zapytanie zajęte (taka analiza już istnieje — sprawdza się to, zanim model napisze artykuły), artykuł nie przeszedł kontroli. Jeśli do 11:03 raportu nie ma — przyjdzie «Смена разборов — молчит».",
         ],
       },
@@ -350,7 +350,7 @@ export const moreSections: Record<string, HelpEntry> = {
         title: "Przetargowa analiza tygodnia",
         body: [
           "Raz w tygodniu, w pierwszy dzień tygodnia po 08:33 czasu taszkenckiego, osobna zmiana pisze analizę przetargową: nie cudzą stronę, tylko typową specyfikację techniczną zamówienia IT — strona urzędu, CRM, system obiegu dokumentów, chatbot i tak dalej. Co w takiej specyfikacji zwykle się pomija, czym to się kończy przy odbiorze i jak napisać ją dobrze. Temat to kolejny z listy w `content/razbor/tenders.ts`; artykuł nie wymienia zamawiających, przetargów ani kwot kontraktów. Jeśli w poniedziałek serwer nie działał, artykuł wyjdzie w ten dzień tygodnia, w którym serwer wróci.",
-          "Artykuł trafia tutaj, na listę «Do sprawdzenia», z oznaczeniem «przetargi i zamówienia publiczne» — nie ma zrzutów i nie będzie miał, tak ma być. Sprawdzasz i publikujesz go tak samo jak analizę strony; na stronie prowadzi do usługi «Тендеры и госконтракты» i do strony «Контакты». Raport przychodzi w Telegramie osobną linijką «Тендерный разбор недели». Odrzucony temat nie jest pisany drugi raz; gdy tematy się skończą, raport to powie — listę uzupełnia się w kodzie.",
+          "Artykuł wychodzi od razu, tak jak analiza strony, z oznaczeniem «przetargi i zamówienia publiczne» — nie ma zrzutów i nie będzie miał, tak ma być. Na stronie prowadzi do usługi «Тендеры и госконтракты» i do strony «Контакты». Raport przychodzi w Telegramie osobną linijką «Тендерный разбор недели», z linkiem do artykułu. Odrzucony temat nie jest pisany drugi raz; gdy tematy się skończą, raport to powie — listę uzupełnia się w kodzie.",
         ],
       },
       {
@@ -363,25 +363,25 @@ export const moreSections: Record<string, HelpEntry> = {
       },
       {
         id: "review",
-        title: "Sprawdź analizę",
+        title: "Co sprawdza kod",
         body: [
-          "Na liście «Do sprawdzenia» są oba artykuły w całości. Przeczytaj oba: to nie są wzajemne tłumaczenia, tylko różne strony pod różne zapytania. Adres strony źródłowej widzisz tylko Ty — na stronie go nie ma.",
-          "Sprawdź, że firma nie jest nigdzie wymieniona — ani nazwą, ani adresem, ani na grafice — i że każda liczba jest w ustaleniach. «Edytuj» zmienia tylko tekst: tytuł, opis, wstęp, ustalenia i podsumowanie; adres i zapytanie się nie zmieniają.",
+          "Przed publikacją analizy nie czyta już człowiek (Twoja decyzja, 19.10.2026): każdy artykuł sprawdza kod, a ten, który nie przejdzie kontroli, nie wychodzi. Firma nie jest wymieniona — ani nazwą, ani adresem, ani słowem z tytułu jej strony; każda liczba jest w ustaleniach audytu; nie ma procentów wzrostu ani obietnic «w topie»; ustalenia nie są skopiowane z audytu słowo w słowo; medycyny i innych zakazanych branż zmiana nie analizuje.",
+          "Widzisz błąd na stronie — znajdź analizę na liście «Opublikowane»: oba artykuły są tam w całości, a adres strony źródłowej widzisz tylko Ty. **«Edytuj»** zmienia tylko tekst: tytuł, opis, wstęp, ustalenia i podsumowanie; adres i zapytanie się nie zmieniają.",
         ],
       },
       {
         id: "publish",
         title: "Opublikuj, zdejmij, odrzuć",
         body: [
-          "**«Opublikuj»** — potrzebne są oba artykuły. Strona od razu otwiera się na witrynie, mapa strony się aktualizuje, Bing i Yandex dostają sygnał. **«Zdejmij z publikacji»** przywraca analizę na listę «Do sprawdzenia».",
-          "**«Nie publikujemy»** — z powodem albo bez. Zmiana nie wróci już do tej strony. Przywrócić stronę do kolejki zmiany można tylko przez **«Usuń»** (wpisz «usuń»).",
+          "**«Zdejmij z publikacji»** zdejmuje analizę z witryny i odkłada ją na listę «Do sprawdzenia» — trafia tam teraz tylko to, co zostało zdjęte z publikacji, a zmiana nie publikuje tego z powrotem. Przywrócić na witrynę — **«Opublikuj»**: potrzebne są oba artykuły, strona od razu się otwiera, mapa strony się aktualizuje, Bing i Yandex dostają sygnał.",
+          "**«Nie publikujemy»** — dla zdjętej analizy, z powodem albo bez. Zmiana nie wróci już do tej strony. Przywrócić stronę do kolejki zmiany można tylko przez **«Usuń»** (wpisz «usuń»).",
         ],
       },
       {
         id: "english",
         title: "Wersja angielska i polska",
         body: [
-          "Opublikowana analiza w ciągu godziny dostaje jeszcze dwie strony — po angielsku (devuz.studio/en/razbor) i po polsku (devuz.studio/pl/razbor). Pisze je sam serwer, bez sprawdzania w panelu: bierze sprawdzony już przez Ciebie artykuł rosyjski i przenosi go pod zapytanie w tym języku — «restaurant website in Tashkent», «strona internetowa dla restauracji w Taszkencie» — sprawdzone w Google Trends i Wordstat. Ustalenia, liczby i zrzuty ekranu — te same; nowych liczb, procentów i ustaleń kod nie przepuszcza, a cyrylicy w tych wersjach być nie może.",
+          "Opublikowana analiza w ciągu godziny dostaje jeszcze dwie strony — po angielsku (devuz.studio/en/razbor) i po polsku (devuz.studio/pl/razbor). Pisze je sam serwer, bez sprawdzania w panelu: bierze opublikowany artykuł rosyjski i przenosi go pod zapytanie w tym języku — «restaurant website in Tashkent», «strona internetowa dla restauracji w Taszkencie» — sprawdzone w Google Trends i Wordstat. Ustalenia, liczby i zrzuty ekranu — te same; nowych liczb, procentów i ustaleń kod nie przepuszcza, a cyrylicy w tych wersjach być nie może.",
           "Dwa razy nie przeszła sprawdzenia — serwer spróbuje ponownie za sześć godzin, a na razie analiza nie ma strony w tym języku: przełącznik języka prowadzi z niej do listy analiz w tym języku. **«Edytuj»** kasuje obie wersje: napisano je z poprzedniego tekstu, a serwer napisze je od nowa według poprawionego — adresy stron zostają te same. **«Zdejmij z publikacji»** i **«Usuń»** zdejmują z witryny także je.",
         ],
       },
