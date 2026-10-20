@@ -112,7 +112,7 @@ for (const [w, h] of [[390, 844], [768, 1024], [1440, 900]]) {
   await p.evaluate(() => document.getElementById("stoimost").scrollIntoView());
   await p.locator("#kit-all").click(); await p.waitForTimeout(800);
   const sum = await p.$eval("#kit-sum", (e) => e.textContent);
-  if (/5 010 \$/.test(sum)) ok("конструктор: все допы 5 010 $"); else fail("конструктор " + sum);
+  if (/200 000 ₽/.test(sum)) ok("конструктор: всё вместе 200 000 ₽"); else fail("конструктор " + sum);
   if (errs.length) fail("ошибки: " + errs.join(" | "));
   await ctx.close();
 }

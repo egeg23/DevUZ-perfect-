@@ -1685,16 +1685,20 @@ test("Сияние Севера: страница на русском — усл
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
 
-test("Сияние Севера: цены клиники — с их сайта, сайт 1 000 $ вместо 2 500 $ на 48 часов, допы в одном месте", async () => {
+test("Сияние Севера: цены клиники — с их сайта, сайт 100 000 ₽ на 48 часов, админка 25 000 ₽, всё вместе не больше 200 000 ₽", async () => {
   const D = await import("../scripts/protos/syanie/data.mjs");
   assert.deepEqual(D.PRICES.map((p: { price: number }) => p.price), [179900, 259900]);
   assert.equal(D.IMPLANT.brand, "", "марку имплантов не выдумываем");
   const plan = await import("../scripts/protos/syanie/plan.mjs");
-  assert.equal(plan.BASE.promo, 1000);
-  assert.equal(plan.BASE.price, 2500);
+  /* Владелец, 20.10.2026: «Базовая версия 100000 + админка 25000 … совокупно не больше 200000 рублей». */
+  assert.equal(plan.CUR, "₽");
+  assert.equal(plan.BASE.promo, 100000);
   assert.equal(plan.OFFER_HOURS, 48);
+  assert.equal(plan.ADDONS.find((a: { id: string }) => a.id === "admin")?.price, 25000, "админка 25 000 ₽");
+  assert.ok(plan.ALL <= 200000, "всё вместе больше 200 000 ₽");
   assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
   const html = bundlePages("syanie")!.html;
-  assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
+  assert.match(html, /<s>250 000 ₽<\/s><b>100 000 ₽<\/b>/, "на макете 100 000 ₽ вместо 250 000 ₽ крупно");
+  assert.doesNotMatch(html.replace(/<script[\s\S]*?<\/script>/g, ""), /\d \$/, "на макете остались доллары");
   for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
 });

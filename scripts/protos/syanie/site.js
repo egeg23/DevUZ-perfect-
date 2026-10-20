@@ -184,11 +184,11 @@ $$('.fq-q').forEach(function(b){b.onclick=function(){var it=b.closest('.fq-i'),o
 
 /* ── Конструктор цены и отсчёт 48 часов ───────────────────────────── */
 var rows=$$('#konstruktor input[data-k]'),sumEl=$('#kit-sum'),addEl=$('#kit-add'),nEl=$('#kit-cnt'),shown=K.offer.base,rq=0;
-function roll(to){cancelAnimationFrame(rq);var from=shown,t0=0;function s(t){if(!t0)t0=t;var k=clamp((t-t0)/500),e=1-Math.pow(1-k,3);shown=from+(to-from)*e;sumEl.textContent=fmt(shown)+' $';if(k<1)rq=requestAnimationFrame(s)}rq=requestAnimationFrame(s)}
-function kit(){var add=0,n=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');n++}});addEl.textContent=fmt(add)+' $';nEl.textContent=n;roll(K.offer.base+add)}
+function roll(to){cancelAnimationFrame(rq);var from=shown,t0=0;function s(t){if(!t0)t0=t;var k=clamp((t-t0)/500),e=1-Math.pow(1-k,3);shown=from+(to-from)*e;sumEl.textContent=fmt(shown)+' '+K.offer.cur;if(k<1)rq=requestAnimationFrame(s)}rq=requestAnimationFrame(s)}
+function kit(){var add=0,n=0;rows.forEach(function(r){if(r.checked){add+=+r.getAttribute('data-p');n++}});addEl.textContent=fmt(add)+' '+K.offer.cur;nEl.textContent=n;roll(K.offer.base+add)}
 rows.forEach(function(r){r.onchange=kit});
 var all=$('#kit-all');if(all)all.onclick=function(){var on=rows.some(function(r){return!r.checked});rows.forEach(function(r){r.checked=on});kit()};
-var cp=$('#kit-copy');if(cp)cp.onclick=function(){var lines=[K.offer.head,'• '+K.offer.baseName+': '+fmt(K.offer.base)+' $'];rows.forEach(function(r){if(r.checked){var it=K.offer.items.filter(function(x){return x.id===r.getAttribute('data-k')})[0];lines.push('• '+it.t+': '+fmt(it.p)+' $')}});lines.push(K.offer.totalW+': '+sumEl.textContent);
+var cp=$('#kit-copy');if(cp)cp.onclick=function(){var lines=[K.offer.head,'• '+K.offer.baseName+': '+fmt(K.offer.base)+' '+K.offer.cur];rows.forEach(function(r){if(r.checked){var it=K.offer.items.filter(function(x){return x.id===r.getAttribute('data-k')})[0];lines.push('• '+it.t+': '+fmt(it.p)+' '+K.offer.cur)}});lines.push(K.offer.totalW+': '+sumEl.textContent);
   var txt=lines.join('\n');try{navigator.clipboard.writeText(txt).then(function(){cp.lastChild.textContent=K.offer.copied},function(){})}catch(e){}cp.lastChild.textContent=K.offer.copied};
 var tm=$('#tm');
 if(tm){var start=Date.now();try{var s0=+localStorage.getItem('sy-offer-1');if(s0&&s0<=Date.now())start=s0;else localStorage.setItem('sy-offer-1',String(start))}catch(e){}

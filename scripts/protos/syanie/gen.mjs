@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import * as D from "./data.mjs";
-import { BASE, ADDONS, ALL, OFFER_HOURS } from "./plan.mjs";
+import { BASE, ADDONS, ALL, OFFER_HOURS, CUR } from "./plan.mjs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
 
 /*
@@ -34,7 +34,7 @@ const read = (f) => readFileSync(DIR + f, "utf8");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const grp = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 const rub = (n) => grp(n) + " ₽";
-const usd = (n) => grp(n) + " $";
+const usd = (n) => grp(n) + " " + CUR;
 const json = (v) => JSON.stringify(v).replace(/</g, "\\u003c");
 const MEDIA = JSON.parse(read("media.json"));
 const IMPL = D.IMPLANT.adj + " импланты";
@@ -312,7 +312,7 @@ ${head("Ждём на консультации", "Как доехать", `${B.n
 function offerBlock() {
   const row = (a) => `<label class="kit-row"><input type="checkbox" data-k="${a.id}" data-p="${a.price}"><span class="sw" aria-hidden="true"></span><span class="kit-t2"><b>${a.ru.t}${a.star ? `<em class="star">берут первым</em>` : ""}${a.new ? `<em class="nw-t">нет у клиник Томска</em>` : ""}</b><small>${a.ru.e}</small></span><span class="kit-pr">+${usd(a.price)}</span></label>`;
   return `<section class="offer" id="stoimost"><div class="wrap">
-${head(`<span class="ours">Предложение DevUz Studio</span>`, "Стоимость", `Сайт клиники без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем в течение 48 часов. Кино на первом экране, сцены по прокрутке, квиз и связь с CRM идут допами: включайте тумблерами, итог пересчитается.`)}
+${head(`<span class="ours">Предложение DevUz Studio</span>`, "Стоимость", `Сайт клиники без допов: ${usd(BASE.promo)} вместо ${usd(BASE.price)}, если начинаем в течение 48 часов. Админка с записью и напоминаниями в Telegram, кино на первом экране, сцены по прокрутке и квиз идут допами: включайте тумблерами, итог пересчитается. Всё вместе: ${usd(ALL)}.`)}
 <div class="kit" id="konstruktor">
 <div class="kit-l">
 <div class="kit-base"><div><span class="kb-tag">Входит всегда</span><b>${BASE.ru.t}</b><p>${BASE.ru.d}</p><p class="kb-w">Срок: ${BASE.weeks[0]}-${BASE.weeks[1]} недель</p></div><div class="kb-p"><s>${usd(BASE.price)}</s><b>${usd(BASE.promo)}</b><small>48 часов</small></div></div>
@@ -323,13 +323,13 @@ ${ADDONS.map(row).join("")}
 <div class="kit-total" id="kit-total">
 <div class="timer" id="timer"><span>Цена ${usd(BASE.promo)} действует<small>48 часов с первого открытия макета</small></span><b id="tm">48:00:00</b></div>
 <div class="kt-line"><span>Сайт</span><span><s>${usd(BASE.price)}</s> ${usd(BASE.promo)}</span></div>
-<div class="kt-line"><span>Допы · <span id="kit-cnt">0</span></span><span id="kit-add">0 $</span></div>
+<div class="kt-line"><span>Допы · <span id="kit-cnt">0</span></span><span id="kit-add">0 ${CUR}</span></div>
 <div class="kt-sum"><small>Итого</small><b id="kit-sum">${usd(BASE.promo)}</b><small>со всеми допами ${usd(ALL)}</small></div>
 <button type="button" class="btn btn-line" id="kit-all">Включить всё</button>
 <a class="btn btn-onyx" href="https://t.me/Devuz_studio_bot?start=syanie">${ic("tg")}<span>Обсудить с DevUz Studio</span></a>
 <button type="button" class="copy" id="kit-copy">${ic("copy")}<span>Скопировать состав</span></button>
 </div>
-<p class="src">Цены допов: середина рынка веб-студий России и СНГ. Тарифы CRM, телефонии, SMS и хостинга клиника оплачивает сама.</p>
+<p class="src">Цены в рублях. Тарифы CRM, телефонии, SMS и хостинга клиника оплачивает сама.</p>
 </div>
 </div>
 </div></section>`;
@@ -365,7 +365,7 @@ function siteData() {
   return {
     img: IMG, frames: MEDIA, chapters: CH.map((c) => ({ id: c.id, a: c.a, b: c.b })), phone: B.phoneRaw, smsHi: SMS_HI,
     quiz: D.QUIZ.map((q) => q.q),
-    offer: { items: ADDONS.map((a) => ({ id: a.id, t: a.ru.t, p: a.price })), base: BASE.promo, baseName: BASE.ru.t, hours: OFFER_HOURS, head: "Сайт клиники «Сияние Севера», состав:", totalW: "Итого", copied: "Скопировано", ended: "Акция закончилась, цена обычная" },
+    offer: { cur: CUR, items: ADDONS.map((a) => ({ id: a.id, t: a.ru.t, p: a.price })), base: BASE.promo, baseName: BASE.ru.t, hours: OFFER_HOURS, head: "Сайт клиники «Сияние Севера», состав:", totalW: "Итого", copied: "Скопировано", ended: "Акция закончилась, цена обычная" },
   };
 }
 
