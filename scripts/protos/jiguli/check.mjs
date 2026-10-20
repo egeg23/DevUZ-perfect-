@@ -89,12 +89,15 @@ for (const path of ["", "uz"]) for (const [w, h] of [[390, 844], [768, 1024], [1
   const steps = seen.slice(1).map((v, i) => (v - seen[i]) * (N - 1));
   const back = steps.filter((x) => x < -0.01).length, big = Math.max(...steps);
   if (!back && big < 1.5) ok(`медленно: кадр идёт мелкими шагами, наибольший шаг ${big.toFixed(2)} кадра`); else fail(`медленно: назад ${back}, шаг ${big}`);
+  const before = await prog();
   await p.evaluate((y) => window.scrollTo(0, y), Math.round(total * .5));
   await p.waitForTimeout(600);
   const early = await prog();
-  await p.waitForTimeout(9000);
+  await p.waitForTimeout(6000);
   const late = await prog();
-  if (early < .25 && late > .48) ok(`резко: фильм не прыгает, догоняет со своей скоростью (${early.toFixed(2)} → ${late.toFixed(2)})`); else fail(`резко: ${early} → ${late}`);
+  /* Предел — 60 кадров в секунду (MAXF): за 0,6 с не больше ~40 кадров. */
+  const ran = (early - before) * (N - 1);
+  if (ran > 8 && ran < 44 && late > .48) ok(`резко: фильм не прыгает, за 0,6 с прошёл ${ran.toFixed(0)} кадров и догнал (${late.toFixed(2)})`); else fail(`резко: ${ran} кадров, потом ${late}`);
   await ctx.close();
 }
 

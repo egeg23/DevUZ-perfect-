@@ -94,15 +94,16 @@ function initStory(){
      скрола… как фильм, который ты смотришь скроллом»). Прокрутка страницы
      родная и ничем не тормозится; ScrollTrigger только читает, где сейчас
      палец, — это цель. Кадр сам идёт к цели на каждом кадре экрана: мягко
-     разгоняется и тормозит, но не быстрее MAXF кадров в секунду. Листнули
+     разгоняется и тормозит, но не быстрее MAXF кадров в секунду (владелец,
+     20.10.2026: «чуть быстрее… иначе выглядит с фризами» — 60, как видео). Листнули
      резко — фильм догоняет со своей скоростью; остановились — доезжает и
      замирает. Ушли за конец сцены — догоняет быстро, чтобы не отставать. */
-  var MAXF=26,target=0,raf=0,last=0;
+  var MAXF=60,target=0,raf=0,last=0;
   var tick=function(now){var dt=Math.min(.05,(now-(last||now))/1000);last=now;
     var d=target-st.f,ad=Math.abs(d);
     if(ad<.002){st.f=target;render();raf=0;last=0;return}
-    var out=story.getBoundingClientRect().bottom<innerHeight*.98,cap=(out?MAXF*4:MAXF)*dt,k=1-Math.exp(-dt*7);
-    var step=d*k;if(Math.abs(step)<Math.min(ad,dt*2.5))step=Math.sign(d)*Math.min(ad,dt*2.5);
+    var out=story.getBoundingClientRect().bottom<innerHeight*.98,cap=(out?MAXF*4:MAXF)*dt,k=1-Math.exp(-dt*11);
+    var step=d*k;if(Math.abs(step)<Math.min(ad,dt*8))step=Math.sign(d)*Math.min(ad,dt*8);
     if(Math.abs(step)>cap)step=Math.sign(d)*cap;
     st.f+=step;render();raf=requestAnimationFrame(tick)};
   var aim=function(p){target=clamp(p)*(N-1);if(!raf)raf=requestAnimationFrame(tick)};
