@@ -84,6 +84,21 @@ section:not(.story){padding:96px 0}
 .cap span.on{opacity:.88;transform:none}
 .cap span::before{content:"";display:inline-block;width:24px;height:1px;background:var(--onyx);vertical-align:middle;margin-right:12px}
 .hero h1,.hero .lead,.hero .kick,.ch-h,.ch-p{text-shadow:0 2px 24px rgb(13 14 15 / .7),0 1px 2px rgb(13 14 15 / .5)}
+/* Сборка заголовка из имплантов: после кино фон темнеет, импланты летят
+   из глубины и садятся в буквы, потом проявляется настоящий текст. */
+.shade{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(120% 90% at 50% 70%,rgb(13 14 15 / .78),rgb(13 14 15 / .93));opacity:0;transition:opacity 1.1s var(--ease)}
+.dark .shade,.calm .shade{opacity:1}
+.iv{position:absolute;inset:0;z-index:4;width:100%;height:100%;object-fit:cover;opacity:0;pointer-events:none;transition:opacity .9s var(--ease)}
+.iv.on{opacity:1}
+#asm{position:absolute;inset:0;z-index:5;width:100%;height:100%;pointer-events:none;transition:opacity .8s var(--ease)}
+#asm.out{opacity:0}
+.hero .kick,.hero .lead,.hero-b,.cue,.hero h1{transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.hero.asm{opacity:1;transform:none;transition:none;pointer-events:none}
+.hero.asm h1{opacity:0;transition:none}
+.hero.asm .kick,.hero.asm .lead,.hero.asm .hero-b,.hero.asm .cue{opacity:0;transform:translateY(16px);transition:none}
+.hero.on:not(.asm) .lead{transition-delay:.25s}
+.hero.on:not(.asm) .hero-b{transition-delay:.45s}
+.hero.on:not(.asm) .cue{transition-delay:.8s}
 .hero{position:absolute;z-index:5;left:0;right:0;bottom:0;padding:0 var(--gut) calc(104px + env(safe-area-inset-bottom));opacity:0;transform:translateY(24px);transition:opacity .9s var(--ease),transform .9s var(--ease);pointer-events:none}
 .hero.on{opacity:1;transform:none;pointer-events:auto}
 .hero h1{font:400 44px/1 var(--f-d);letter-spacing:-.02em;margin:12px 0 16px;max-width:12ch}
@@ -118,7 +133,7 @@ section:not(.story){padding:96px 0}
 /* Спокойная версия: reduced motion или экономия трафика */
 .calm .story{height:auto;padding:0}
 .calm .stage{height:100svh;position:relative;contain:none}
-.calm .film,.calm .ch,.calm .bar,.calm .skipf,.calm .replay,.calm .cap{display:none}
+.calm .iv,.calm .film,.calm .ch,.calm .bar,.calm .skipf,.calm .replay,.calm .cap{display:none}
 .calm .hero{opacity:1;transform:none;pointer-events:auto}
 .calm .stage canvas{display:none}
 .calm .stage{background:var(--ink) url(/protos/syanie/film-9.webp) center/cover}

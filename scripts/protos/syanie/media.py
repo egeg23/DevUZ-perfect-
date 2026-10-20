@@ -81,6 +81,19 @@ def film(fmt):
     Image.open(tmp).convert("RGB").save(os.path.join(OUT, f"film-{fmt}.webp"), "WEBP", quality=70, method=6)
 
 
+def implant_shot(fmt):
+    """Видео перед сборкой заголовка: имплант, макро, рой (imp/h|v/1-2.mp4)."""
+    w, h = SIZES[fmt]
+    d = "h" if fmt == "16" else "v"
+    parts = [os.path.join(SRC, "imp", d, f"{i}.mp4") for i in (1, 2)]
+    filt = [f"[0:v]setpts=PTS-STARTPTS,scale={w}:{h}:flags=lanczos,fps=24[v0]",
+            f"[1:v]trim=start_frame=1,setpts=PTS-STARTPTS,scale={w}:{h}:flags=lanczos,fps=24[v1]",
+            "[v0][v1]concat=n=2:v=1:a=0,setpts=PTS/1.35[out]"]
+    run("ffmpeg", "-v", "error", "-y", "-i", parts[0], "-i", parts[1], "-filter_complex", ";".join(filt), "-map", "[out]",
+        "-c:v", "libx264", "-preset", "slow", "-crf", "27", "-pix_fmt", "yuv420p", "-profile:v", "high", "-g", "48",
+        "-an", "-movflags", "+faststart", os.path.join(OUT, f"imp-{fmt}.mp4"))
+
+
 def story(fmt):
     d = "h" if fmt == "16" else "v"
     dst = os.path.join(OUT, "s" + fmt)
@@ -119,8 +132,14 @@ def main():
         with open(os.path.join(HERE, "media.json"), "w") as f:
             json.dump({"s16": n, "s9": n, "seg16": seg, "seg9": seg, "screens": 8}, f)
         return
+    if len(sys.argv) > 2 and sys.argv[2] == "imp":
+        implant_shot("16")
+        implant_shot("9")
+        return
     film("16")
     film("9")
+    implant_shot("16")
+    implant_shot("9")
     n16, seg16 = story("16")
     n9, seg9 = story("9")
     k = os.path.join(SRC, "k")
