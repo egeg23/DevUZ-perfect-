@@ -1398,6 +1398,64 @@ test("tovar.uz: товары и цены — с их сайта, новый об
   }
 });
 
+test("Юсем Тау: главная и каталог — условия, noindex, видео DevUz первым, шапка по правилу, только их позиции и фото", async () => {
+  const { existsSync } = await import("node:fs");
+  const site = bundlePages("usemtau");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "katalog"]);
+  for (const [path, page] of Object.entries(all)) {
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes('<html lang="ru">'), `${path}: язык страницы`);
+    assert.ok(page.includes("https://devuz.studio/ru/mockup-terms"), `${path}: нет условий`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: макет не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /body\{[^}]*overflow-x:hidden/, `${path}: overflow-x:hidden у body ломает sticky`);
+    assert.match(page, /IDLE=3000/, `${path}: шапка не по правилу трёх секунд`);
+    assert.ok(page.includes("ЮСЕМ") && page.includes("Юсем Тау"), `${path}: нет названия компании`);
+    assert.ok(page.includes("tel:+77055040023") && page.includes("wa.me/77014015624"), `${path}: нет звонка и WhatsApp компании`);
+    assert.ok(page.includes('"@type":"Store"') && page.includes("Бурундайское шоссе"), `${path}: нет разметки магазина с адресом`);
+    assert.ok(page.includes("Fira+Sans+Condensed") && page.includes("Golos+Text"), `${path}: шрифты не те`);
+    for (const src of page.match(/\/protos\/usemtau\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+  }
+  const home = all[""];
+  assert.match(home, /<body class="site">\s*<div class="dzi" id="dzi"/, "видео DevUz не первым в body");
+  for (const id of ["ends", "find", "katalog", "kalk", "snab", "dostavka", "stroyka", "asm-cv", "obekty", "gofro", "paneli", "angar", "sklad", "sosedi", "cena", "konstruktor", "dr"]) assert.ok(home.includes(`id="${id}"`), `нет блока ${id}`);
+  assert.ok(home.includes("ScrollTrigger.min.js"), "нет ScrollTrigger");
+  assert.ok(all.katalog.includes('id="kt-list"') && all.katalog.includes('id="dr"'), "в каталоге нет списка или заявки");
+  const stamped = stampedBundle("usemtau", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Юсем Тау: позиции и цены за тонну — с usemtau.kz, вес по ГОСТ, сайт 1 000 $ вместо 2 500 $ на 48 часов, допы в одном месте", async () => {
+  const { readFileSync } = await import("node:fs");
+  const D = await import("../scripts/protos/usemtau/data.mjs");
+  const src = JSON.parse(readFileSync("scripts/protos/usemtau/items-src.json", "utf8"));
+  assert.equal(D.ITEMS.length, 268);
+  const prices = new Map(src.items.map((x: { n: string; p: number }) => [x.n.replace(/\s+/g, " ").replace(/ЛИСТ/, "Лист").replace(/\s*\*\s*/g, "×").replace(/(\d)\s*[хx]\s*(?=\d)/g, "$1×"), x.p]));
+  for (const x of D.ITEMS) assert.equal(prices.get(x.n.replace(/\s+/g, " ")), x.p, `${x.n}: цены нет на их сайте`);
+  /* Вес метра: справочные значения ГОСТ. */
+  const kg = (n: string) => D.ITEMS.find((x: { n: string }) => x.n === n)!;
+  assert.equal(kg("Арматура 12").kgm, 0.888);
+  assert.equal(kg("Швеллер 16").kgm, 14.2);
+  assert.equal(kg("Балка 20Б1").kgm, 22.4);
+  assert.equal(kg("Лист г/к 3,0").kgm2, 23.55);
+  assert.ok(Math.abs(kg("Уголок 50×5").kgm - 3.77) < 0.05, "уголок 50×5 по ГОСТ 3,77 кг/м");
+  for (const x of D.ITEMS) if (!/Электроды|Профнастил|просечно|рифл|Полоса 280/i.test(x.n)) assert.ok(x.kgm || x.kgm2, `${x.n}: нет веса`);
+  const plan = await import("../scripts/protos/usemtau/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 2500);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
+  for (const r of D.NOW) for (const k of r.buy) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === k), `«Сейчас и станет»: нет допа ${k}`);
+  const html = bundlePages("usemtau")!.html;
+  assert.match(html, /<s>2\u00a0500\u00a0\$<\/s><b>1\u00a0000\u00a0\$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
+  for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+});
+
 test("заставка DevUz: видео в каждом макете, бывшем и новом, промо кодом осталось запасным", async () => {
   const { readdirSync, existsSync, statSync } = await import("node:fs");
   for (const f of ["dz-intro-16.mp4", "dz-intro-9.mp4", "dz-intro-16.webp", "dz-intro-9.webp"]) {

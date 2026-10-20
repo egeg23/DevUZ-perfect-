@@ -44,6 +44,7 @@ import baldinini from "@/content/proto-bundles/baldinini.json" with { type: "jso
 import ighub from "@/content/proto-bundles/ighub.json" with { type: "json" };
 import syanie from "@/content/proto-bundles/syanie.json" with { type: "json" };
 import jiguli from "@/content/proto-bundles/jiguli.json" with { type: "json" };
+import usemtau from "@/content/proto-bundles/usemtau.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -79,6 +80,7 @@ const BUNDLES: Record<string, Bundle> = {
   ighub: ighub as Bundle,
   syanie: syanie as Bundle,
   jiguli: jiguli as Bundle,
+  usemtau: usemtau as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */
