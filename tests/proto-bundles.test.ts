@@ -1817,3 +1817,64 @@ test("Сияние Севера: цены клиники — с их сайта,
   assert.doesNotMatch(html.replace(/<script[\s\S]*?<\/script>/g, ""), /\d \$/, "на макете остались доллары");
   for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
 });
+
+test("Жигули Рестобар: ru и uz — условия, noindex, видео DevUz, кино по прокрутке, их буквы, 18+, шапка по правилу, uz без кириллицы", async () => {
+  const { existsSync, readFileSync } = await import("node:fs");
+  const site = bundlePages("jiguli");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "uz"]);
+  const media = JSON.parse(readFileSync("scripts/protos/jiguli/media.json", "utf8"));
+  assert.ok(existsSync(`public/protos/jiguli/s/${String(media.s - 1).padStart(3, "0")}.webp`), "кадров меньше, чем в media.json");
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path === "uz" ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /body\{[^}]*overflow-x:hidden/, `${path}: overflow-x:hidden у body ломает sticky`);
+    assert.match(page, /IDLE=3000/, `${path}: шапка не по правилу трёх секунд`);
+    assert.ok(page.includes('id="dzi"'), `${path}: нет видео DevUz`);
+    assert.ok(page.includes('<symbol id="jg-word"'), `${path}: нет их букв «Жигули» вектором`);
+    assert.ok(page.includes('id="cv"') && page.includes("ScrollTrigger.min.js"), `${path}: нет кино по прокрутке`);
+    assert.equal((page.match(/<article class="fz /g) ?? []).length, 4, `${path}: не два напитка и два блюда`);
+    assert.ok(page.includes('id="age"') && page.includes('id="full"') && page.includes('id="zapis"'), `${path}: нет 18+, всего меню или брони`);
+    assert.ok(page.includes("tel:+998998271003") && page.includes("sms:+998998271003"), `${path}: нет звонка и брони в бар`);
+    assert.ok(page.includes('"@type":["BarOrPub","Restaurant"]'), `${path}: нет разметки бара`);
+    for (const src of page.match(/\/protos\/jiguli\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    if (lang === "uz") {
+      const text = page.replace(/<path[^>]*>/g, "");
+      assert.doesNotMatch(text, /[А-Яа-яЁё]/, "uz: кириллица на узбекской странице");
+    }
+  }
+  const stamped = stampedBundle("jiguli", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Жигули: напитки и блюда — из их меню, сайт 1 000 $ вместо 2 500 $ на 48 часов, допы в одном месте", async () => {
+  const { readFileSync } = await import("node:fs");
+  const D = await import("../scripts/protos/jiguli/data.mjs");
+  const menu = JSON.parse(readFileSync("scripts/protos/jiguli/menu-src.json", "utf8"));
+  const items = [...menu.food, ...menu.drinks].flatMap((c: { items: { ru: string; p: number[] }[] }) => c.items);
+  const want: Record<string, string> = { beer: "Жатецкое живое", sour: "Sarti Sour", raki: "Раки к пиву", lamb: "Баранья лопатка" };
+  for (const h of D.HEROES) {
+    const it = items.find((x: { ru: string }) => x.ru.startsWith(want[h.id]));
+    assert.ok(it, `${h.id}: позиции нет в их меню`);
+    assert.ok(it.p.includes(Number(h.price.replace(/\s/g, ""))), `${h.id}: цены ${h.price} нет в их меню`);
+  }
+  const plan = await import("../scripts/protos/jiguli/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 2500);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 8 && plan.ADDONS.length <= 20, "от 8 до 20 допов");
+  for (const id of ["booking", "qr", "delivery", "loyalty", "tgbot", "afisha", "en", "maps"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
+  const site = bundlePages("jiguli")!;
+  for (const html of [site.html, site.pages.uz]) {
+    assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});

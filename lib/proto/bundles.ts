@@ -43,6 +43,7 @@ import soffice from "@/content/proto-bundles/soffice.json" with { type: "json" }
 import baldinini from "@/content/proto-bundles/baldinini.json" with { type: "json" };
 import ighub from "@/content/proto-bundles/ighub.json" with { type: "json" };
 import syanie from "@/content/proto-bundles/syanie.json" with { type: "json" };
+import jiguli from "@/content/proto-bundles/jiguli.json" with { type: "json" };
 import usemtau from "@/content/proto-bundles/usemtau.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
@@ -78,6 +79,7 @@ const BUNDLES: Record<string, Bundle> = {
   baldinini: baldinini as Bundle,
   ighub: ighub as Bundle,
   syanie: syanie as Bundle,
+  jiguli: jiguli as Bundle,
   usemtau: usemtau as Bundle,
 };
 
