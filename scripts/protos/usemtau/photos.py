@@ -11,15 +11,13 @@ SRC = Path(sys.argv[1])
 OUT = Path(__file__).resolve().parents[3] / "public/protos/usemtau"
 OUT.mkdir(parents=True, exist_ok=True)
 
-# Знак (гора «А») и надпись «ЮСЕМ ТАУ»: их логотип, без изменений.
+# Знак (гора «А»): их логотип, без изменений.
 mark = Image.open(SRC / "2023_07_cropped-icon.png").convert("RGBA")
 mark.resize((128, 128), Image.LANCZOS).save(OUT / "mark.webp", "WEBP", quality=90, method=6)
 mark.resize((192, 192), Image.LANCZOS).save(OUT / "icon-192.png")
 bg = Image.new("RGBA", (180, 180), (255, 255, 255, 255))
 bg.alpha_composite(mark.resize((150, 150), Image.LANCZOS), (15, 15))
 bg.convert("RGB").save(OUT / "apple-180.png")
-word = Image.open(SRC / "2020_04_1-1-600x567.png").convert("RGBA")
-word.crop(word.getbbox()).resize((300, 284), Image.LANCZOS).save(OUT / "word.webp", "WEBP", quality=90, method=6)
 
 # Фото услуг: ширина как есть (до 1088), WebP, имена по смыслу.
 PHOTOS = {
@@ -29,7 +27,6 @@ PHOTOS = {
     "2023_07_stroitelstvo-sportivnyh-sooruzhenij.jpg": "sport",
     "2023_07_proizvodstvo-gofrobalok.jpg": "gofro",
     "2023_07_montazh-sendvich-panelej.jpg": "sendvich",
-    "2020_03_fgbgbfgbf.jpg": "karkas",
 }
 for src, name in PHOTOS.items():
     im = Image.open(SRC / src).convert("RGB")
