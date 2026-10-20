@@ -42,15 +42,16 @@ tall("k8.png", "poster")
 band("k8.png", "poster", .62, w=1280, q=60)
 
 # Кино по прокрутке: v1a и v1b (бармен у шахматной стойки, наезд на кран,
-# рисунок; каждый третий кадр: рисунок тяжелее) → vt (рисунок перетекает в
+# рисунок) → vt (рисунок перетекает в
 # настоящую струю, фон уходит в черноту) → v2 (струя на чёрном,
-# к бокалу). Кроме рисунка — каждый второй кадр, 720 px по ширине.
+# к бокалу). Каждый второй кадр, 720 px по ширине: шаг мелкий, медленная
+# прокрутка не дёргается.
 tmp = tempfile.mkdtemp()
 def frames(src, tag, step=2):
     d = os.path.join(tmp, tag); os.makedirs(d)
     subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(SRC, src), "-vf", f"select=not(mod(n\\,{step})),scale=720:-2", "-vsync", "vfr", os.path.join(d, "%04d.png")], check=True)
     return sorted(os.path.join(d, f) for f in os.listdir(d))
-a = frames("v1a.mp4", "a", 3) + frames("v1b.mp4", "a2", 3)[1:]
+a = frames("v1a.mp4", "a") + frames("v1b.mp4", "a2")[1:]
 t = frames("vt.mp4", "t")
 b = frames("v2.mp4", "b")
 seq = [Image.open(f).convert("RGB") for f in a]
