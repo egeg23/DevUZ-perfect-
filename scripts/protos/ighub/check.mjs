@@ -108,6 +108,12 @@ for (const [name, vp] of [["m", { width: 390, height: 844 }], ["d", { width: 144
         /\d+:\d\d:\d\d/.test(await p.locator("#offt").innerText()) ? ok(tag, "отсчёт акции") : fail(tag, "нет отсчёта акции");
         await p.locator("#price").scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await shot("9-price");
         await p.locator("#schemes").scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await shot("9-schemes");
+        // «Показать на телефоне» в блоке схем: схема переключилась и телефоны снова на экране.
+        await p.click('.sch [data-act="scheme"][data-a="C"]'); await p.waitForTimeout(1200);
+        const seen = await p.evaluate(() => { const r = document.querySelector(innerWidth <= 860 ? ".side-sw" : "#stage").getBoundingClientRect(); return r.top >= -2 && r.top < innerHeight / 2; });
+        const onC = await p.locator('.ctrl [data-act="scheme"][data-a="C"].on').count();
+        seen && onC ? ok(tag, "«Показать на телефоне» ведёт к телефонам") : fail(tag, "«Показать на телефоне» не видно", seen, onC);
+        await p.click('.ctrl [data-act="scheme"][data-a="B"]'); await p.waitForTimeout(300);
         await wide("секции");
         // Шапка: прячется при прокрутке, возвращается через 3 секунды.
         await p.mouse.wheel(0, 400); await p.waitForTimeout(300);
