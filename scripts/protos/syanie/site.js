@@ -85,6 +85,7 @@ function endFilm(){if(filmDone)return;filmDone=true;filmOn=false;stage.classList
   film.classList.add('off');setTimeout(function(){try{film.pause()}catch(e){}},700);
   hero.classList.toggle('on',scrollY-story.offsetTop<innerHeight*.2);if(dock)dock.classList.remove('away');startPump()}
 function playFilm(){
+  if(film.error){endFilm();return}
   filmDone=false;filmOn=true;stage.classList.remove('done');stage.classList.add('playing');hero.classList.remove('on');film.classList.remove('off');
   if(dock)dock.classList.add('away');
   try{film.currentTime=0}catch(e){}

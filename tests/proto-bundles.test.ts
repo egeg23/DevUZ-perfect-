@@ -1654,3 +1654,47 @@ test("Baldinini: товары с официального сайта, магаз
     assert.deepEqual(data.tiers, { std: plan.PANELS.std.sections, pro: plan.PANELS.pro.sections }, `${path}: уровни разделов не как в plan.mjs`);
   }
 });
+
+test("Сияние Севера: страница на русском — условия, noindex, видео DevUz, кино и сцены по прокрутке, предупреждение, шапка по правилу", async () => {
+  const { existsSync } = await import("node:fs");
+  const site = bundlePages("syanie");
+  assert.ok(site);
+  const page = site.html;
+  assert.deepEqual(Object.keys(site.pages), [], "страница одна");
+  assert.doesNotMatch(page, /@@[A-Z]+@@/, "метка сборки осталась");
+  assert.ok(page.includes('<html lang="ru">'), "язык страницы");
+  assert.ok(page.includes("https://devuz.studio/ru/mockup-terms"), "нет условий");
+  assert.match(page, /<meta name="robots" content="noindex/, "нет noindex");
+  assert.match(page, /prefers-reduced-motion/, "анимацию нечем выключить");
+  assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, "слово, по которому находят отпечаток");
+  assert.doesNotMatch(page, /proto-ai|proxyapi/i, "прототип не зовёт модель");
+  assert.doesNotMatch(page, /href="#"/, "ссылка в никуда");
+  assert.doesNotMatch(page, /body\{[^}]*overflow-x:hidden/, "overflow-x:hidden у body ломает sticky");
+  assert.match(page, /IDLE=3000/, "шапка не по правилу трёх секунд");
+  assert.ok(page.includes("Сияние Севера"), "нет названия клиники");
+  assert.ok(page.includes("ИМЕЮТСЯ ПРОТИВОПОКАЗАНИЯ, НЕОБХОДИМА КОНСУЛЬТАЦИЯ СПЕЦИАЛИСТА"), "нет предупреждения");
+  assert.ok(page.includes("Л041-01043-70/03947806"), "нет лицензии");
+  assert.ok(page.includes("tel:+73822270077"), "нет звонка в клинику");
+  assert.ok(page.includes('id="film"') && page.includes('id="cv"') && page.includes("ScrollTrigger.min.js"), "нет кино или сцен по прокрутке");
+  assert.ok(page.includes('"@type":["Dentist","MedicalClinic"]'), "нет разметки клиники");
+  assert.ok((page.match(/class="fq-i/g) ?? []).length >= 12, "вопросов меньше двенадцати");
+  for (const src of page.match(/\/protos\/syanie\/[\w./-]+\.(?:webp|png|js|mp4)/g) ?? []) assert.ok(existsSync("public" + src), `нет файла ${src}`);
+  const media = JSON.parse((await import("node:fs")).readFileSync("scripts/protos/syanie/media.json", "utf8"));
+  for (const f of ["16", "9"]) assert.ok(existsSync(`public/protos/syanie/s${f}/${String(media["s" + f] - 1).padStart(3, "0")}.webp`), `кадров s${f} меньше, чем в media.json`);
+  const stamped = stampedBundle("syanie", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Сияние Севера: цены клиники — с их сайта, сайт 1 000 $ вместо 2 500 $ на 48 часов, допы в одном месте", async () => {
+  const D = await import("../scripts/protos/syanie/data.mjs");
+  assert.deepEqual(D.PRICES.map((p: { price: number }) => p.price), [179900, 259900]);
+  assert.equal(D.IMPLANT.brand, "", "марку имплантов не выдумываем");
+  const plan = await import("../scripts/protos/syanie/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 2500);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 10 && plan.ADDONS.length <= 20, "от 10 до 20 допов");
+  const html = bundlePages("syanie")!.html;
+  assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
+  for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+});

@@ -102,13 +102,15 @@ const head = (kick, h, p = "", cls = "") => `<div class="sh ${cls}"><span class=
 const pic = (name, alt, w, h, cls = "", eager = false) => `<img class="${cls}" src="${IMG}/${name}.webp" alt="${esc(alt)}" width="${w}" height="${h}"${eager ? "" : ' loading="lazy" decoding="async"'}>`;
 
 /* ── Первый экран: кино и сцены по прокрутке ───────────────────────── */
-/* Главы поверх кадров: [от, до] — доли всей сцены (кадр 0 = конец кино). */
+/* Главы поверх кадров: [от, до] — доли всей сцены (кадр 0 = конец кино).
+   Сцен семь, каждая — седьмая часть: пациент, растворение, импланты, к руке,
+   за рукой, к протезу, посадка. */
 const CH = [
-  { id: "c1", a: 0.04, b: 0.25, kick: "Главная услуга клиники", h: `All-on-6`, p: "Все зубы на шести имплантатах. За один день, без искусственной десны.", cls: "ch-big" },
-  { id: "c2", a: 0.36, b: 0.47, kick: "Шаг 1 · план", h: "Сначала КТ челюсти", p: "Врач видит кость в объёме и до операции решает, куда встанет каждый имплант. КТ для вас бесплатно." },
-  { id: "c3", a: 0.47, b: 0.58, kick: "Шаг 2 · шесть опор", h: `${D.IMPLANT.adj[0].toUpperCase() + D.IMPLANT.adj.slice(1)} импланты встают по плану`, p: "Шесть опор вместо четырёх: протез держится крепче, жевать можно жёсткое мясо, яблоки, орехи.", count: true },
-  { id: "c4", a: 0.62, b: 0.8, kick: `Шаг 3 · имплант`, h: `Сделано в ${D.IMPLANT.country === "Германия" ? "Германии" : D.IMPLANT.country}`, p: "Пожизненная гарантия клиники на импланты записана в договоре. От производителя на каждый имплант: 100 лет.", cls: "ch-r" },
-  { id: "c5", a: 0.84, b: 1.01, kick: "Шаг 4 · протез", h: "Новые зубы в тот же день", p: "Протез делает своя лаборатория: без искусственной десны, с точной посадкой. Не натирает и не меняет дикцию.", cta: true },
+  { id: "c1", a: 0.06, b: 0.2, kick: "Главная услуга клиники", h: `All-on-6`, p: "Все зубы на шести имплантатах. За один день, без искусственной десны.", cls: "ch-big" },
+  { id: "c2", a: 0.21, b: 0.3, kick: "Шаг 1 · план", h: "Сначала КТ челюсти", p: "Врач видит кость в объёме и до операции решает, куда встанет каждый имплант. КТ для вас бесплатно." },
+  { id: "c3", a: 0.3, b: 0.44, kick: "Шаг 2 · шесть опор", h: `${D.IMPLANT.adj[0].toUpperCase() + D.IMPLANT.adj.slice(1)} импланты встают по плану`, p: "Шесть опор вместо четырёх: протез держится крепче, жевать можно жёсткое мясо, яблоки, орехи.", count: true },
+  { id: "c4", a: 0.5, b: 0.7, kick: `Шаг 3 · имплант`, h: `Сделано в ${D.IMPLANT.country === "Германия" ? "Германии" : D.IMPLANT.country}`, p: "Пожизненная гарантия клиники на импланты записана в договоре. От производителя на каждый имплант: 100 лет.", cls: "ch-r" },
+  { id: "c5", a: 0.8, b: 1.01, kick: "Шаг 4 · протез", h: "Новые зубы в тот же день", p: "Протез делает своя лаборатория: без искусственной десны, с точной посадкой. Не натирает и не меняет дикцию.", cta: true },
 ];
 
 function storyBlock() {
@@ -173,8 +175,9 @@ ${D.VS.map((r) => `<div class="vs-row"><span>${r.k}</span><b>${r.six}</b><em>${r
 /* ── Цены ─────────────────────────────────────────────────────────── */
 function priceBlock() {
   const gift = (g) => `<li><span>${ic(g.sale ? "card" : "gift")}${g.t}</span><span class="gf-p"><s>${rub(g.was)}</s><b>${g.sale ? "в подарок" : "0 ₽"}</b></span></li>`;
-  return `<section class="price" id="ceny"><div class="wrap">
+  return `<section class="price" id="ceny">
 <picture class="price-bg" aria-hidden="true"><source media="(max-aspect-ratio: 4/5)" srcset="${IMG}/bg-onyx-9.webp"><img src="${IMG}/bg-onyx-16.webp" alt="" width="1600" height="900" loading="lazy" decoding="async"></picture>
+<div class="wrap">
 ${head("Цены", "Сколько стоит All-on-6", "Цена на сайте клиники. Точную сумму назовёт главный врач после КТ, а КТ сейчас бесплатно.")}
 <div class="pr-grid">
 ${D.PRICES.map((p, i) => `<article class="pr rv${p.star ? " pr-star" : ""}" style="--d:${i * 90}ms"><span class="kick">${p.star ? "Чаще выбирают" : "Методика"}</span><h3>${p.t}</h3><p>${p.d}</p><b class="pr-n" data-n="${p.price}">${rub(p.price)}</b><a class="btn ${p.star ? "btn-onyx" : "btn-line"}" href="#kviz">${ic("arrow")}<span>Рассчитать свой случай</span></a></article>`).join("")}
@@ -213,7 +216,7 @@ function doctorsBlock() {
   return `<section class="docs" id="vrachi"><div class="wrap">
 ${head("Врачи", "Кто будет вас лечить", "Имплантологи и ортопеды с опытом более 10 000 операций. Имплантация: основная специализация клиники.")}
 <div class="dr-grid">
-${D.DOCTORS.map((d, i) => `<article class="dr rv" style="--d:${i * 120}ms"><div class="dr-ph">${pic(d.img, d.name, 640, 800)}</div><div class="dr-t"><span class="kick">${d.role}</span><h3>${d.name}</h3><ul>${d.facts.map((f) => `<li>${f}</li>`).join("")}</ul><p class="dr-q">«${d.quote}»</p></div></article>`).join("")}
+${D.DOCTORS.map((d, i) => `<article class="dr rv" style="--d:${i * 120}ms"><div class="dr-ph">${pic(d.img, d.name, 600, 600)}</div><div class="dr-t"><span class="kick">${d.role}</span><h3>${d.name}</h3><ul>${d.facts.map((f) => `<li>${f}</li>`).join("")}</ul><p class="dr-q">«${d.quote}»</p></div></article>`).join("")}
 </div>
 </div></section>`;
 }
@@ -254,7 +257,7 @@ function reviewsBlock() {
 
 /* ── Интерьер: их фото ────────────────────────────────────────────── */
 function roomsBlock() {
-  const ph = [["p-rec", "Ресепшен клиники «Сияние Севера» с названием на стене", 900, 1232], ["p-cor", "Коридор клиники со световыми линиями", 900, 1232], ["p-cab", "Кабинет имплантолога", 900, 1232], ["p-cab2", "Кабинет с монитором для снимков", 900, 1232], ["p-xray", "Врач показывает пациенту снимок на экране", 1000, 1000]];
+  const ph = [["p-rec", "Ресепшен клиники «Сияние Севера» с названием на стене", 520, 712], ["p-cor", "Коридор клиники со световыми линиями", 520, 712], ["p-cab", "Кабинет имплантолога", 520, 712], ["p-cab2", "Кабинет с монитором для снимков", 520, 712], ["p-xray", "Врач показывает пациенту снимок на экране", 1000, 1000]];
   return `<section class="rooms" id="klinika" data-tone="ink"><div class="wrap">
 ${head("Клиника", `Белинского, 63`, `${B.near}. ${B.parking}.`)}
 <div class="rm-grid">${ph.map(([n, alt, w, h], i) => `<figure class="rm rm-${i} rv" style="--d:${i * 70}ms">${pic(n, alt, w, h)}</figure>`).join("")}</div>
