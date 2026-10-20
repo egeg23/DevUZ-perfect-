@@ -16,6 +16,8 @@ function tg(n){return grp(Math.round(n))+NB+'₸'}
 function tons(t){return t<1?num(t*1000,0)+NB+'кг':num(t,t<10?2:1)+NB+'т'}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function sec(k,c){return '<svg class="sec'+(c?' '+c:'')+'" viewBox="0 0 64 64" aria-hidden="true"><use href="#s-'+k+'"/></svg>'}
+/* Снимок вида проката, если он есть, иначе сечение тушью. */
+function pic(x){var c=CAT[x.c];return c.shot?'<img src="'+c.shot+'" alt="" width="480" height="480" loading="lazy" decoding="async">':sec(c.sec)}
 
 /* ── Позиции ── */
 var CAT={};D.cats.forEach(function(c){CAT[c.id]=c});
@@ -87,7 +89,7 @@ function pl(n,a,b,c){var m=n%100,k=n%10;return m>10&&m<20?c:k===1?a:k>1&&k<5?b:c
 function renderDr(){
   if(!dr)return;var list=$('#dr-list'),empty=$('#dr-empty'),more=$('#dr-more');
   list.innerHTML=Z.lines.map(function(l,i){var x=BY[l.id],w=lineT(l),m=metersOf(x,l.q,l.u);
-    return '<div class="dl-row" data-i="'+i+'"><div class="dl-h">'+sec(CAT[x.c].sec)+'<span><b>'+esc(x.n)+'</b><small>'+tg(x.p)+' за т'+(x.kgm?' · 1 м = '+num(x.kgm,3)+' кг':x.kgm2?' · 1 м² = '+num(x.kgm2,2)+' кг':'')+'</small></span><button type="button" class="ib" data-del aria-label="Убрать '+esc(x.n)+'"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>'+
+    return '<div class="dl-row" data-i="'+i+'"><div class="dl-h">'+pic(x)+'<span><b>'+esc(x.n)+'</b><small>'+tg(x.p)+' за т'+(x.kgm?' · 1 м = '+num(x.kgm,3)+' кг':x.kgm2?' · 1 м² = '+num(x.kgm2,2)+' кг':'')+'</small></span><button type="button" class="ib" data-del aria-label="Убрать '+esc(x.n)+'"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>'+
     '<div class="dl-q"><input type="number" inputmode="decimal" min="0" step="any" value="'+l.q+'" aria-label="Количество" data-q><select data-u aria-label="Единица">'+unitsOf(x).map(function(u){return '<option value="'+u+'"'+(u===l.u?' selected':'')+'>'+UNITS[u]+'</option>'}).join('')+'</select></div>'+
     '<div class="dl-out"><span>'+(m!=null&&l.u!=='m'?'≈ '+num(m,0)+' м · ':'')+tons(w)+'</span><b>'+tg(w*x.p)+'</b></div>'+
     (x.bar&&x.kgm?'<div class="dl-cut"><label><input type="checkbox" data-cutt'+(l.cut?' checked':'')+'>Резка в размер</label>'+(l.cut?'<div class="dl-cutf"><span>Резать по, м</span><input type="number" inputmode="decimal" min="0.1" step="0.1" value="'+l.cut+'" data-cut aria-label="Длина куска, м"></div><p class="dl-cutr">'+cutText(l)+'</p>':'')+'</div>':'')+
@@ -133,14 +135,14 @@ badges();
 
 /* Черновик счёта на главной: строки из заявки. */
 function renderDoc(){var rows=$('#sd-rows');if(!rows)return;var T=totals();
-  rows.innerHTML=Z.lines.slice(0,6).map(function(l,i){var x=BY[l.id],w=lineT(l);return '<div class="sd-row'+(i===Z.lines.length-1?' new':'')+'"><span>'+esc(x.n)+'<small>'+num(+l.q,2)+' '+UNITS[l.u]+(l.u!=='t'?' · '+tons(w):'')+(l.cut?' · резка по '+num(l.cut,2)+' м':'')+'</small></span><b>'+tg(w*x.p)+'</b></div>'}).join('')||'<div class="sd-row"><span>Пока пусто<small>добавьте позиции поиском или калькулятором</small></span><b>0'+NB+'₸</b></div>';
-  $('#sd-tot').textContent=tg(T.s);var n=Z.lines.length;$('#sd-cnt').textContent=n+' '+pl(n,'позиция','позиции','позиций')}
+  rows.innerHTML=Z.lines.slice(0,6).map(function(l,i){var x=BY[l.id],w=lineT(l);return '<div class="doc-row'+(i===Z.lines.length-1?' new':'')+'"><span>'+esc(x.n)+(l.cut?'<small>резка по '+num(l.cut,2)+' м</small>':'')+'</span><span>'+num(+l.q,2)+' '+UNITS[l.u]+(l.u!=='t'?'<small>'+tons(w)+'</small>':'')+'</span><span>'+tg(w*x.p)+'</span></div>'}).join('')||'<div class="doc-row"><span>Пока пусто<small>добавьте позиции поиском или калькулятором</small></span><span></span><span>0'+NB+'₸</span></div>';
+  $('#sd-tot').textContent=tg(T.s);var n=Z.lines.length;$('#sd-cnt').textContent=n}
 renderDoc();
 var fillB=$('#sd-fill');if(fillB)fillB.onclick=function(){[[/^Арматура 12$/,1200,'m',3.8],[/^Труба профильная 40×20×1,5$/,300,'m',0],[/^Лист г\/к 3,0$/,30,'m2',0],[/^Швеллер 16$/,1,'t',0]].forEach(function(r){var x=ITEMS.filter(function(i){return r[0].test(i.n)})[0];if(x){add(x.id,r[1],r[2],true);if(r[3])Z.lines[Z.lines.length-1].cut=r[3]}});save();renderDr();renderDoc();toast('Пример в заявке: откройте её')};
 
 /* ── Поиск на первом экране ── */
 var fq=$('#q'),fres=$('#find-res');
-function rowHtml(x){var dq=defQ(x);return '<div class="fr" role="option">'+sec(CAT[x.c].sec)+'<span><b>'+esc(x.n)+'</b><small>'+tg(x.p)+' за т'+(x.kgm?' · 1 м = '+num(x.kgm,3)+' кг':'')+'</small></span><button type="button" class="ib" data-add="'+x.id+'" data-q="'+dq.q+'" data-u="'+dq.u+'" aria-label="В заявку: '+esc(x.n)+'"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button></div>'}
+function rowHtml(x){var dq=defQ(x);return '<div class="fr" role="option">'+pic(x)+'<span><b>'+esc(x.n)+'</b><small>'+tg(x.p)+' за т'+(x.kgm?' · 1 м = '+num(x.kgm,3)+' кг':'')+'</small></span><button type="button" class="ib" data-add="'+x.id+'" data-q="'+dq.q+'" data-u="'+dq.u+'" aria-label="В заявку: '+esc(x.n)+'"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button></div>'}
 function findShow(){var v=fq.value.trim();if(!v){fres.hidden=true;return}var r=match(v);
   fres.innerHTML=r.length?r.slice(0,5).map(rowHtml).join('')+'<a class="fr-all" href="'+D.katalog+'?q='+encodeURIComponent(v)+'">Все '+r.length+' в каталоге</a>':'<p class="fr-none">Не нашли «'+esc(v)+'». Напишите в WhatsApp: подберём.</p>';fres.hidden=false}
 if(fq){fq.addEventListener('input',findShow);fq.addEventListener('focus',findShow);
@@ -160,7 +162,7 @@ if(fq){fq.addEventListener('input',findShow);fq.addEventListener('focus',findSho
     md.innerHTML=us.map(function(u){return '<button type="button" role="radio" aria-checked="'+(u===mode)+'" data-u="'+u+'">'+({m:'Метры',sh:'Хлысты',m2:'Площадь',t:'Тонны',kg:'Килограммы'})[u]+'</button>'}).join('');calc()}
   function calc(){var x=item,qq=Math.max(0,+q.value||0),w=toT(x,qq,mode),m=metersOf(x,qq,mode);
     $('#cc-ql').textContent=({m:'Сколько метров',sh:'Сколько хлыстов по '+num(x.bar||0,1)+' м',m2:'Сколько квадратных метров',t:'Сколько тонн',kg:'Сколько килограммов'})[mode];
-    $('#cc-sec').innerHTML=sec(CAT[x.c].sec)+'<span><b>'+esc(x.n)+'</b><small>'+tg(x.p)+' за тонну'+(x.mark?' · '+x.mark:'')+'</small></span>';
+    $('#cc-sec').innerHTML='<span class="ph">'+pic(x)+'</span><span><b>'+esc(x.n)+'</b><small>'+tg(x.p)+' за тонну'+(x.mark?' · '+x.mark:'')+'</small></span>';
     roll($('#cc-w'),w,tons);roll($('#cc-len'),m==null?(x.kgm2&&mode!=='m2'?w*1000/x.kgm2:mode==='m2'?qq:0):m,function(v){return x.kgm2?num(v,1)+NB+'м²':m==null?'по весу':num(v,0)+NB+'м'});roll($('#cc-sum'),w*x.p,tg);
     $('#cc-note').textContent=x.kgm?'1 м = '+num(x.kgm,3)+' кг · в 1 т ≈ '+num(1000/x.kgm,0)+' м'+(x.bar?' · хлыст '+num(x.bar,1)+' м = '+num(x.kgm*x.bar,1)+' кг':''):x.kgm2?'1 м² = '+num(x.kgm2,2)+' кг · в 1 т ≈ '+num(1000/x.kgm2,1)+' м²':'Эта позиция продаётся по весу: метры и площадь скажет менеджер.'}
   box.onclick=function(e){var b=e.target.closest('button');if(b)setCat(b.getAttribute('data-c'))};
@@ -182,7 +184,7 @@ function roll(el,to,f){if(!el)return;var from=+el.getAttribute('data-v')||0;el.s
   function go(anim){var t=+tt.value,dv=deliv(t,len,+ci.value);$('#dv-tv').textContent=num(t,1);$('#dv-tn').textContent=dv.tr.n;$('#dv-trips').textContent=dv.trips;
     roll($('#dv-cost'),dv.cost,function(v){return dv.free?'бесплатно':tg(v)});
     $('#dv-note').textContent=(dv.km?dv.city+': '+dv.km+' км от склада, '+num(dv.km*2/60,0)+'-'+num(dv.km*2/50,0)+' ч в пути туда и обратно. ':'По Алматы. ')+(dv.free?'От '+D.free+' т по Алматы и рядом доставка бесплатная: так у вас и написано про большие объёмы.':'Для '+tons(t)+' металла длиной '+num(len,1)+' м нужна машина «'+dv.tr.n+'» (кузов '+num(dv.tr.len,1)+' м).');
-    var fill=Math.min(1,t/dv.trips/dv.tr.t),n=Math.max(1,Math.round(fill*6)),bw=Math.min(196,len/dv.tr.len*196),g='';for(var i=0;i<n;i++)g+='<rect x="'+(10+(196-bw))+'" y="'+(82-(i+1)*7)+'" width="'+bw.toFixed(0)+'" height="6" rx="1"/>';$('#dv-load').innerHTML=g;
+    var fill=Math.min(1,t/dv.trips/dv.tr.t),n=Math.max(1,Math.round(fill*6)),bw=Math.min(196,len/dv.tr.len*196),g='';for(var i=0;i<n;i++)g+='<rect x="'+(10+(196-bw))+'" y="'+(82-(i+1)*7)+'" width="'+bw.toFixed(0)+'" height="6"/>';$('#dv-load').innerHTML=g;$('#dv-blen').textContent='кузов '+num(dv.tr.len,1)+' м';
     if(anim){var tr=$('#dv-truck');tr.classList.remove('go');void tr.offsetWidth;tr.classList.add('go')}}
   ci.onchange=function(){go(true)};tt.oninput=function(){go(false)};
   lenB.onclick=function(e){var b=e.target.closest('button');if(!b)return;len=+b.getAttribute('data-l');$$('button',lenB).forEach(function(x){x.setAttribute('aria-checked',String(x===b))});go(true)};
@@ -197,16 +199,19 @@ function roll(el,to,f){if(!el)return;var from=+el.getAttribute('data-v')||0;el.s
     if(type==='rect'){var rise=W*0.1;hh=H+rise;V=W*L*(H+rise/2);ws=2*L*H+2*(W*H+W*rise/2)-G*gate;rs=2*L*Math.hypot(W/2,rise)}
     else{hh=W*0.45;var a=W/2,b=hh,arc=Math.PI*(3*(a+b)-Math.sqrt((3*a+b)*(a+3*b)))/2;V=Math.PI*W*hh/4*L;ws=2*Math.PI*W*hh/4-G*gate;rs=arc*L}
     roll($('#hg-a'),A,function(v){return num(v,0)+NB+'м²'});roll($('#hg-v'),V,function(v){return num(v,0)+NB+'м³'});roll($('#hg-ws'),ws,function(v){return num(v,0)+NB+'м²'});roll($('#hg-rs'),rs,function(v){return num(v,0)+NB+'м²'});
-    /* Рисунок: торец слева, план справа, масштаб общий. */
-    var sc=Math.min(150/W,150/Math.max(hh,6)),x0=20,y0=190,fw=W*sc,s='<path class="g" d="M10 '+y0+'H390"/>';
+    /* Чертёж: торец слева, план справа, общий масштаб, размерные линии. */
+    $('#hg-name').textContent='Ангар '+(type==='rect'?'прямостенный':'арочный')+' '+W+'×'+L+' м';
+    var sc=Math.min(140/W,130/Math.max(hh,6)),x0=34,y0=176,fw=W*sc,s='<path class="dim" d="M8 '+y0+'H392"/>';
     if(type==='rect'){var rr=W*0.1*sc;s+='<path class="sk" d="M'+x0+' '+y0+'V'+(y0-H*sc)+'L'+(x0+fw/2)+' '+(y0-H*sc-rr)+'L'+(x0+fw)+' '+(y0-H*sc)+'V'+y0+'Z"/>'}
     else{s+='<path class="sk" d="M'+x0+' '+y0+'A'+(fw/2)+' '+(hh*sc)+' 0 0 1 '+(x0+fw)+' '+y0+'Z"/>'}
     var gw=Math.min(fw*.3,4*sc);s+='<rect class="gt" x="'+(x0+fw/2-gw/2)+'" y="'+(y0-4.5*sc)+'" width="'+gw+'" height="'+(4.5*sc)+'"/>';
-    s+='<text x="'+(x0+fw/2)+'" y="'+(y0+18)+'" text-anchor="middle">'+W+' м</text>';
-    var px=220,pw=160,ph=Math.min(170,pw*L/W*0.5),py=y0-ph;s+='<rect class="sk" x="'+px+'" y="'+py+'" width="'+pw+'" height="'+ph+'"/>';
+    var yd=y0+16;s+='<path class="dim" d="M'+x0+' '+yd+'H'+(x0+fw)+'M'+x0+' '+(yd-4)+'v8M'+(x0+fw)+' '+(yd-4)+'v8"/><text x="'+(x0+fw/2)+'" y="'+(yd+16)+'" text-anchor="middle">'+W+' м</text>';
+    var xh=x0-14;s+='<path class="dim" d="M'+xh+' '+y0+'V'+(y0-hh*sc)+'M'+(xh-4)+' '+y0+'h8M'+(xh-4)+' '+(y0-hh*sc)+'h8"/><text x="'+(xh-4)+'" y="'+(y0-hh*sc/2)+'" text-anchor="middle" transform="rotate(-90 '+(xh-4)+' '+(y0-hh*sc/2)+')">'+num(hh,1)+' м</text>';
+    var px=224,pw=150,ph=Math.min(150,pw*L/W*0.5),py=y0-ph;s+='<rect class="sk" x="'+px+'" y="'+py+'" width="'+pw+'" height="'+ph+'"/>';
     var fr=Math.round(L/6);for(var i=1;i<fr;i++){var yy=py+ph*i/fr;s+='<path class="hf" d="M'+px+' '+yy+'H'+(px+pw)+'"/>'}
-    for(var k=0;k<G;k++){var side=k%2,pos=Math.floor(k/2)+1,n=Math.ceil(G/2)+1;s+=side?'<rect class="gt" x="'+(px+pw*pos/n-8)+'" y="'+(py+ph-3)+'" width="16" height="6"/>':'<rect class="gt" x="'+(px+pw*pos/n-8)+'" y="'+(py-3)+'" width="16" height="6"/>'}
-    s+='<text x="'+(px+pw/2)+'" y="'+(y0+18)+'" text-anchor="middle">план '+W+' × '+L+' м</text>';svg.innerHTML=s;
+    for(var k=0;k<G;k++){var side=k%2,pos=Math.floor(k/2)+1,n=Math.ceil(G/2)+1;s+='<rect class="gt" x="'+(px+pw*pos/n-8)+'" y="'+(side?py+ph-3:py-3)+'" width="16" height="6"/>'}
+    s+='<path class="dim" d="M'+(px+pw+12)+' '+py+'V'+(py+ph)+'M'+(px+pw+8)+' '+py+'h8M'+(px+pw+8)+' '+(py+ph)+'h8"/><text x="'+(px+pw+24)+'" y="'+(py+ph/2)+'" text-anchor="middle" transform="rotate(90 '+(px+pw+24)+' '+(py+ph/2)+')">'+L+' м</text>';
+    s+='<text x="'+(px+pw/2)+'" y="'+(yd+16)+'" text-anchor="middle">план</text><text x="'+(x0+fw/2)+'" y="18" text-anchor="middle">торец</text>';svg.innerHTML=s;
     var msg='Здравствуйте! Расчёт ангара с сайта usemtau.kz\nТип: '+(type==='rect'?'прямостенный, стены '+num(H,1)+' м':'арочный')+'\nРазмер: '+W+' × '+L+' м, площадь '+num(A,0)+' м²\nВорот: '+G+'\nСтены и кровля: '+(warm?'сэндвич-панели':'профнастил, холодный')+'\nПанелей: стены '+num(ws,0)+' м², кровля '+num(rs,0)+' м²\nПрошу посчитать стоимость и сроки.';
     $('#hg-go').href='https://wa.me/'+D.brand.wa+'?text='+encodeURIComponent(msg)}
   [w,l,h,g].forEach(function(el){el.oninput=go});go()})();
@@ -231,10 +236,10 @@ function roll(el,to,f){if(!el)return;var from=+el.getAttribute('data-v')||0;el.s
   var kq=$('#kq');kq.value=S.q;
   function units(x,u){return unitsOf(x).map(function(k){return '<option value="'+k+'"'+(k===u?' selected':'')+'>'+UNITS[k]+'</option>'}).join('')}
   function line(x){var dq=defQ(x),w=toT(x,dq.q,dq.u);
-    return '<article class="it" data-id="'+x.id+'">'+sec(CAT[x.c].sec)+'<div class="it-n"><b>'+esc(x.n)+'</b><small>'+esc(CAT[x.c].n)+(x.mark?' · '+x.mark:'')+(x.gost?' · '+esc(x.gost):'')+(x.bar?' · хлыст '+num(x.bar,1)+' м':'')+'</small></div>'+
+    return '<article class="it" data-id="'+x.id+'"><span class="im">'+pic(x)+'</span><div class="it-n"><b>'+esc(x.n)+'</b><small>'+esc(CAT[x.c].n)+(x.mark?' · '+x.mark:'')+(x.gost?' · '+esc(x.gost):'')+(x.bar?' · хлыст '+num(x.bar,1)+' м':'')+'</small></div>'+
     '<div class="it-w">'+(x.kgm?'<span>1 м: <b>'+num(x.kgm,3)+' кг</b></span><span>в 1 т: <b>≈'+num(1000/x.kgm,0)+' м</b></span>':x.kgm2?'<span>1 м²: <b>'+num(x.kgm2,2)+' кг</b></span><span>в 1 т: <b>≈'+num(1000/x.kgm2,1)+' м²</b></span>':'<span>продаётся по весу</span>')+'</div>'+
     '<div class="it-p">'+tg(x.p)+'<small> за тонну</small></div>'+
-    '<div class="it-q"><input type="number" inputmode="decimal" min="0" step="any" value="'+dq.q+'" aria-label="Количество: '+esc(x.n)+'"><select aria-label="Единица">'+units(x,dq.u)+'</select><button type="button" class="btn btn-blue" data-add>В заявку</button></div>'+
+    '<div class="it-q"><input type="number" inputmode="decimal" min="0" step="any" value="'+dq.q+'" aria-label="Количество: '+esc(x.n)+'"><select aria-label="Единица">'+units(x,dq.u)+'</select><button type="button" data-add>В заявку</button></div>'+
     '<p class="it-s">= '+tons(w)+' · <b>'+tg(w*x.p)+'</b></p></article>'}
   function filt(){var r=S.q?match(S.q):ITEMS.slice();
     if(S.c)r=r.filter(function(x){return x.c===S.c});if(S.mark)r=r.filter(function(x){return x.mark===S.mark});
@@ -242,13 +247,13 @@ function roll(el,to,f){if(!el)return;var from=+el.getAttribute('data-v')||0;el.s
     if(S.bar!=='')r=r.filter(function(x){return S.bar==='0'?!x.bar:x.bar===+S.bar});
     if(S.sort==='p')r.sort(function(a,b){return a.p-b.p});if(S.sort==='s')r.sort(function(a,b){return (a.dims[0]||0)-(b.dims[0]||0)});return r}
   function render(){var r=filt();$('#kt-cnt').textContent=r.length?'Найдено: '+r.length+' '+pl(r.length,'позиция','позиции','позиций')+(S.c?' в разделе «'+CAT[S.c].n+'»':''):'Ничего не нашли. Уберите фильтр или напишите в WhatsApp: подберём.';
-    list.innerHTML=r.slice(0,shown).map(line).join('')+(r.length>shown?'<button type="button" class="btn btn-line kt-more" id="kt-more">Показать ещё '+Math.min(LIM,r.length-shown)+'</button>':'');
+    list.innerHTML=r.slice(0,shown).map(line).join('')+(r.length>shown?'<button type="button" class="bt bt-line kt-more" id="kt-more"><span>Показать ещё '+Math.min(LIM,r.length-shown)+'</span><i><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></i></button>':'');
     $$('#kt-cats button').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-c')===S.c))})}
   $('#kt-cats').onclick=function(e){var b=e.target.closest('button');if(!b)return;S.c=b.getAttribute('data-c');shown=LIM;try{history.replaceState(null,'',S.c?'#c='+S.c:location.pathname+location.search)}catch(er){}render()};
   kq.oninput=function(){S.q=kq.value.trim();shown=LIM;render()};
   $('#kt-mark').onclick=function(e){var b=e.target.closest('button');if(!b)return;S.mark=b.getAttribute('data-v');$$('#kt-mark button').forEach(function(x){x.setAttribute('aria-checked',String(x===b))});render()};
   [['kt-min','min'],['kt-max','max'],['kt-bar','bar'],['kt-sort','sort']].forEach(function(p){var el=$('#'+p[0]);el.addEventListener(el.tagName==='SELECT'?'change':'input',function(){S[p[1]]=el.value;shown=LIM;render()})});
-  list.addEventListener('click',function(e){if(e.target.id==='kt-more'){shown+=LIM;render();return}var b=e.target.closest('[data-add]');if(!b)return;var row=b.closest('.it'),x=BY[+row.getAttribute('data-id')];add(x.id,+$('input',row).value||0,$('select',row).value);row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash')});
+  list.addEventListener('click',function(e){if(e.target.closest('#kt-more')){shown+=LIM;render();return}var b=e.target.closest('[data-add]');if(!b)return;var row=b.closest('.it'),x=BY[+row.getAttribute('data-id')];add(x.id,+$('input',row).value||0,$('select',row).value);row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash')});
   function upd(e){var row=e.target.closest('.it');if(!row)return;var x=BY[+row.getAttribute('data-id')],w=toT(x,+$('input',row).value||0,$('select',row).value);$('.it-s',row).innerHTML='= '+tons(w)+' · <b>'+tg(w*x.p)+'</b>'}
   list.addEventListener('input',upd);list.addEventListener('change',upd);
   render()})();
@@ -267,45 +272,34 @@ var rvs=$$('.rv');
 if(REDUCED||!('IntersectionObserver' in window))rvs.forEach(function(e){e.classList.add('in')});
 else{var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target)}})},{rootMargin:'0px 0px -8% 0px'});rvs.forEach(function(e){io.observe(e)})}
 
-/* ── GSAP: заголовок первого экрана, волна гофробалки, слои панели ── */
+/* ── Строки заголовков и линии секций: появляются, когда дошли ── */
+var lns=$$('.ln, .sh');
+if(REDUCED||!('IntersectionObserver' in window))lns.forEach(function(e){e.classList.add('in')});
+else{var io2=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io2.unobserve(en.target)}})},{rootMargin:'0px 0px -6% 0px'});lns.forEach(function(e){io2.observe(e)})}
+
+/* ── Первый экран: кадр склада приближается при прокрутке, подпись печатается ── */
+(function(){var hero=$('#hero');if(!hero)return;var img=$('.hero-ph img',hero),tick=false;
+  function fr(){tick=false;var k=Math.min(1,Math.max(0,scrollY/Math.max(1,hero.offsetHeight)));hero.style.setProperty('--hs',(1.06+k*0.1).toFixed(4));img.style.transform='scale('+(1.06+k*0.1).toFixed(4)+') translateY('+(k*6).toFixed(2)+'%)'}
+  if(!REDUCED)addEventListener('scroll',function(){if(!tick){tick=true;requestAnimationFrame(fr)}},{passive:true});
+  var ty=$('#hero-type');if(ty&&!REDUCED){var full=ty.getAttribute('data-text'),i=0;ty.textContent='';var cur=d.createElement('span');cur.className='cur';
+    function step(){i++;ty.textContent=full.slice(0,i);ty.appendChild(cur);if(i<full.length)setTimeout(step,i<4?120:28)}setTimeout(step,900)}
+})();
+
+/* ── Каталог индексом: снимок проката идёт за курсором ── */
+(function(){var pv=$('#ix-pv');if(!pv||REDUCED||!matchMedia('(hover: hover) and (min-width: 1000px)').matches)return;var im=$('img',pv),raf=0,x=0,y=0;
+  $$('#ix .ix-r').forEach(function(r){var src=r.getAttribute('data-shot');
+    r.addEventListener('pointerenter',function(){if(!src){pv.classList.remove('on');return}if(im.getAttribute('src')!==src)im.setAttribute('src',src);pv.classList.add('on')});
+    r.addEventListener('pointerleave',function(){pv.classList.remove('on')});
+    r.addEventListener('pointermove',function(e){x=e.clientX+32;y=e.clientY-160;if(!raf)raf=requestAnimationFrame(function(){raf=0;pv.style.setProperty('--x',Math.min(x,innerWidth-340)+'px');pv.style.setProperty('--y',Math.max(16,Math.min(y,innerHeight-336))+'px')})})})})();
+
+/* ── Объекты: наведение меняет фото справа ── */
+(function(){var f=$('#ob-f');if(!f)return;var img=$('img',f),cap=$('#ob-c');
+  $$('.ob-r').forEach(function(r){r.addEventListener('pointerenter',function(){var ph=r.getAttribute('data-ph');if(!ph)return;var t=$('b',r).textContent;if(img.getAttribute('src')!==ph){img.style.opacity=0;setTimeout(function(){img.src=ph;img.alt=t+': фото с usemtau.kz';img.style.opacity=1},150)}cap.textContent=t+' · фото с usemtau.kz'})})})();
+
+/* ── GSAP: волна гофробалки и слои панели по прокрутке (только читает положение) ── */
 var G=window.gsap;
 if(G&&!REDUCED&&window.ScrollTrigger){G.registerPlugin(window.ScrollTrigger);
-  var hs=$$('.hero h1 span, .find, .hero-cta, .hero-facts');if(hs.length)G.from(hs,{y:32,opacity:0,duration:.9,ease:'power3.out',stagger:.09,delay:.15});
-  var web=$('.gf-web');if(web)G.fromTo(web,{'--gw':1000},{'--gw':0,ease:'none',scrollTrigger:{trigger:'.gf-beam',start:'top 85%',end:'top 35%',scrub:.6}});
-  var sp=$('#sp-v');if(sp)G.fromTo($$('.sp-l',sp),{'--x':.08},{'--x':1,ease:'none',scrollTrigger:{trigger:sp,start:'top 80%',end:'center 45%',scrub:.6}});
+  var web=$('.gf-web');if(web)G.fromTo(web,{'--gw':1000},{'--gw':0,ease:'none',scrollTrigger:{trigger:'.gf-svg',start:'top 85%',end:'top 30%',scrub:.6}});
+  var sp=$('#sp-v');if(sp)G.fromTo($$('.sp-l',sp),{'--x':.06},{'--x':1,ease:'none',scrollTrigger:{trigger:sp,start:'top 80%',end:'center 45%',scrub:.6}});
 }else{$$('.sp-l').forEach(function(e){e.style.setProperty('--x',1)})}
-
-/* ── Первый экран: торцы пакета труб, круга и арматуры на canvas. Пакет
-   собирается из центра, свет скользит за пальцем или курсором. Перерисовка
-   только когда что-то сдвинулось; вне экрана стоит. ── */
-(function(){var cv=$('#ends');if(!cv||!cv.getContext)return;var cx=cv.getContext('2d'),hero=$('#hero');
-  var dpr=1,W=0,H=0,cells=[],lx=.7,ly=.3,tx=.7,ty=.3,t0=0,raf=0,on=true,sprites={};
-  function rnd(i){var x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
-  function sprite(kind,r,paint){var k=kind+r+paint;if(sprites[k])return sprites[k];var c=d.createElement('canvas'),s=Math.ceil(r*2+4)*dpr;c.width=c.height=s;var g=c.getContext('2d');g.scale(dpr,dpr);var m=r+2;
-    var gr=g.createRadialGradient(m-r*.35,m-r*.4,r*.1,m,m,r);gr.addColorStop(0,'#C9D2DC');gr.addColorStop(.6,'#8C98A6');gr.addColorStop(1,'#4C5764');
-    g.fillStyle=paint||gr;g.beginPath();g.arc(m,m,r,0,Math.PI*2);g.fill();
-    if(kind==='pipe'){g.fillStyle='#07090C';g.beginPath();g.arc(m,m,r*.72,0,Math.PI*2);g.fill();g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=1;g.beginPath();g.arc(m,m,r*.72,Math.PI*.9,Math.PI*1.7);g.stroke()}
-    else{g.strokeStyle='rgba(20,26,34,.25)';g.lineWidth=.7;for(var i=1;i<5;i++){g.beginPath();g.arc(m-r*1.4,m+r*.2,r*(.6+i*.35),-.5,.6);g.stroke()}
-      if(kind==='rebar'){g.strokeStyle='rgba(20,26,34,.55)';g.lineWidth=Math.max(1.5,r*.12);g.beginPath();g.arc(m,m,r-1,0,Math.PI*2);g.setLineDash([r*.35,r*.25]);g.stroke();g.setLineDash([])}}
-    g.strokeStyle='rgba(0,0,0,.5)';g.lineWidth=1;g.beginPath();g.arc(m,m,r,0,Math.PI*2);g.stroke();
-    sprites[k]=c;return c}
-  function fit(){var r=cv.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);sprites={};
-    var R=W<700?20:28,dx=R*2+2,dy=dx*Math.sqrt(3)/2,cxp=W<1080?W*.5:W*.72,cyp=W<1080?H*.15:H*.5,rad=W<1080?Math.min(W*.66,H*.26):Math.min(W*.34,H*.62);cells=[];var n=0;
-    for(var y=-dy;y<H+dy;y+=dy){var row=Math.round(y/dy);for(var x=-dx+(row%2?dx/2:0);x<W+dx;x+=dx){n++;var dd=Math.hypot(x-cxp,(y-cyp)*1.05);if(dd>rad+R*.5*rnd(n))continue;
-      var u=rnd(n*3.7),kind=u<.4?'pipe':u<.75?'round':'rebar',rr=R*(kind==='rebar'?.82:kind==='round'?.9:1),paint=rnd(n*9.1)<.07?'#1A6BDB':rnd(n*5.3)<.03?'#F26A1F':null;
-      cells.push({x:x,y:y,r:rr,k:kind,p:paint,dd:dd/rad,z:rnd(n*2.2)})}}
-    draw(performance.now())}
-  function draw(now){cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);var age=REDUCED?9:(now-t0)/1000;
-    for(var i=0;i<cells.length;i++){var c=cells[i],k=Math.min(1,Math.max(0,(age-c.dd*.9-c.z*.15)/.5));if(k<=0)continue;var e=1-Math.pow(1-k,3),s=sprite(c.k,c.r,c.p),sz=s.width/dpr*e;
-      cx.globalAlpha=e;cx.drawImage(s,c.x-sz/2,c.y-sz/2,sz,sz)}
-    cx.globalAlpha=1;cx.globalCompositeOperation='source-atop';var L=cx.createRadialGradient(lx*W,ly*H,0,lx*W,ly*H,Math.max(W,H)*.45);L.addColorStop(0,'rgba(255,255,255,.28)');L.addColorStop(1,'rgba(255,255,255,0)');cx.fillStyle=L;cx.fillRect(0,0,W,H);cx.globalCompositeOperation='source-over'}
-  function loop(now){raf=0;if(!on)return;lx+=(tx-lx)*.08;ly+=(ty-ly)*.08;draw(now);var age=(now-t0)/1000;if(age<2.6||Math.abs(tx-lx)+Math.abs(ty-ly)>.002)raf=requestAnimationFrame(loop)}
-  function kick(){if(!raf&&on&&!REDUCED)raf=requestAnimationFrame(loop)}
-  hero.addEventListener('pointermove',function(e){var r=cv.getBoundingClientRect();tx=(e.clientX-r.left)/r.width;ty=(e.clientY-r.top)/r.height;kick()},{passive:true});
-  addEventListener('scroll',function(){if(!on)return;var k=Math.min(1,scrollY/Math.max(1,innerHeight));tx=.3+.5*k;ty=.2+.3*k;kick()},{passive:true});
-  if('IntersectionObserver' in window)new IntersectionObserver(function(es){on=es[0].isIntersecting;kick()}).observe(hero);
-  var rt=0;addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(fit,150)});
-  t0=performance.now();fit();kick();
-  if(d.fonts&&d.fonts.ready)d.fonts.ready.then(function(){draw(performance.now())});
-})();
 })();

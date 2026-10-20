@@ -1418,13 +1418,17 @@ test("Юсем Тау: главная и каталог — условия, noin
     assert.ok(page.includes("ЮСЕМ") && page.includes("Юсем Тау"), `${path}: нет названия компании`);
     assert.ok(page.includes("tel:+77055040023") && page.includes("wa.me/77014015624"), `${path}: нет звонка и WhatsApp компании`);
     assert.ok(page.includes('"@type":"Store"') && page.includes("Бурундайское шоссе"), `${path}: нет разметки магазина с адресом`);
-    assert.ok(page.includes("Fira+Sans+Condensed") && page.includes("Golos+Text"), `${path}: шрифты не те`);
+    assert.ok(page.includes("Inter+Tight") && page.includes("JetBrains+Mono"), `${path}: шрифты не те`);
     for (const src of page.match(/\/protos\/usemtau\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
   }
   const home = all[""];
   assert.match(home, /<body class="site">\s*<div class="dzi" id="dzi"/, "видео DevUz не первым в body");
-  for (const id of ["ends", "find", "katalog", "kalk", "snab", "dostavka", "stroyka", "asm-cv", "obekty", "gofro", "paneli", "angar", "sklad", "sosedi", "cena", "konstruktor", "dr"]) assert.ok(home.includes(`id="${id}"`), `нет блока ${id}`);
+  for (const id of ["hero", "poisk", "find", "kompaniya", "ix", "katalog", "kalk", "snab", "dostavka", "stroyka", "asm-cv", "obekty", "gofro", "paneli", "angar", "sklad", "sosedi", "cena", "konstruktor", "dr"]) assert.ok(home.includes(`id="${id}"`), `нет блока ${id}`);
   assert.ok(home.includes("ScrollTrigger.min.js"), "нет ScrollTrigger");
+  /* Вторая редакция (20.10.2026): кадр склада и снимки проката из Blender, подписанные как визуализация. */
+  assert.ok(home.includes("/protos/usemtau/sklad-h-1920.webp") && home.includes("/protos/usemtau/sklad-v-1080.webp"), "нет кадра склада");
+  assert.match(home, /Визуализация/, "кадр не подписан как визуализация");
+  for (const k of ["armatura", "balka", "truba", "profil", "shveller", "ugolok", "list", "krug"]) assert.ok(home.includes(`/protos/usemtau/p-${k}-480.webp`), `нет снимка ${k}`);
   assert.ok(all.katalog.includes('id="kt-list"') && all.katalog.includes('id="dr"'), "в каталоге нет списка или заявки");
   const stamped = stampedBundle("usemtau", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
