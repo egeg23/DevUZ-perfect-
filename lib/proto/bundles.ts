@@ -42,6 +42,7 @@ import tovar from "@/content/proto-bundles/tovar.json" with { type: "json" };
 import soffice from "@/content/proto-bundles/soffice.json" with { type: "json" };
 import baldinini from "@/content/proto-bundles/baldinini.json" with { type: "json" };
 import ighub from "@/content/proto-bundles/ighub.json" with { type: "json" };
+import syanie from "@/content/proto-bundles/syanie.json" with { type: "json" };
 import { stampPages } from "@/lib/proto/stamp";
 
 type Bundle = { parts: Record<string, string>; pages: Record<string, string> };
@@ -75,6 +76,7 @@ const BUNDLES: Record<string, Bundle> = {
   soffice: soffice as Bundle,
   baldinini: baldinini as Bundle,
   ighub: ighub as Bundle,
+  syanie: syanie as Bundle,
 };
 
 /** Имена всех сборок — для проверок, которые идут по каждой (tests/proto-plain-text). */
