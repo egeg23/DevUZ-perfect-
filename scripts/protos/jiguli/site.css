@@ -58,7 +58,7 @@ h1,h2,h3,h4,p{margin:0}
 .top .btn-sm{display:none}
 
 /* ── Кино по прокрутке ─────────────────────────────────────────────── */
-.story{position:relative;height:760svh;background:var(--ink)}
+.story{position:relative;height:520svh;background:var(--ink)}
 .stage{position:sticky;top:0;height:100svh;overflow:hidden;background:#000}
 .st-bg{position:absolute;inset:0;display:none}
 .st-fr{position:absolute;inset:0}
