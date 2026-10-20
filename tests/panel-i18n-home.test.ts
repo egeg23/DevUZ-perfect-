@@ -260,10 +260,12 @@ test("дата в списке лидов — по Ташкенту и в фор
   }
 });
 
-test("строка плана касаний: русский текст прежний, у поляков — формы слова", () => {
+test("строка плана касаний: сверх плана — «при плане», у поляков — формы слова", () => {
   assert.equal(planLine(touchProgress(30, 18)), "До плана осталось 12 — сделано 18 из 30 за эту неделю.");
-  assert.equal(planLine(touchProgress(30, 41)), "План на неделю закрыт: 41 касаний из 30.");
-  assert.equal(planLine(touchProgress(1, 2), "pl"), "Plan na tydzień wykonany: 2 kontakty z 1.");
+  // 20.10.2026 «499 касаний из 25» читалось как ошибка счёта: сверх плана — «при плане».
+  assert.equal(planLine(touchProgress(30, 41)), "План на неделю закрыт: 41 касание при плане 30.");
+  assert.equal(planLine(touchProgress(25, 499)), "План на неделю закрыт: 499 касаний при плане 25.");
+  assert.equal(planLine(touchProgress(1, 2), "pl"), "Plan na tydzień wykonany: 2 kontakty przy planie 1.");
   assert.equal(planLine(touchProgress(0, 0), "uz"), "Bu haftaga reja yo‘q.");
   assert.equal(planLine(touchProgress(null, 3), "pl"), null);
 });

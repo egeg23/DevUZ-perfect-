@@ -139,10 +139,10 @@ export const touchPlanDict = defineDict({
     pl: "Brak planu na ten tydzień.",
   },
   closedOver: {
-    ru: (done: number, plan: number) => `План на неделю закрыт: ${done} касаний из ${plan}.`,
+    ru: (done: number, plan: number) => `План на неделю закрыт: ${done} ${plural("ru", done, "касание", "касания", "касаний")} при плане ${plan}.`,
     uz: (done: number, plan: number) => `Haftalik reja bajarildi: ${done} ta aloqa, reja — ${plan} ta.`,
     pl: (done: number, plan: number) =>
-      `Plan na tydzień wykonany: ${done} ${plural("pl", done, "kontakt", "kontakty", "kontaktów")} z ${plan}.`,
+      `Plan na tydzień wykonany: ${done} ${plural("pl", done, "kontakt", "kontakty", "kontaktów")} przy planie ${plan}.`,
   },
   closed: {
     ru: (done: number, plan: number) => `План на неделю закрыт: ${done} из ${plan}.`,

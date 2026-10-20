@@ -353,13 +353,29 @@ export async function listProspects(limit = 200): Promise<Prospect[]> {
   return (data ?? []).map((row) => shape(row as Record<string, unknown>));
 }
 
-/** Несколько карточек разом — для порции дня: одним запросом, а не по одной. */
+/**
+ * Сколько id в одном запросе. База повторяет весь адрес запроса в заголовке
+ * ответа (Content-Location), а Node не принимает заголовок длиннее 16 КБ:
+ * 20.10.2026 у Дины в потоке за день набралось 405 компаний, ответ на
+ * `id=in.(…)` обрывался целиком — и «Касания» писали «сегодня касаний 0»,
+ * поток перестал присылать карточки, а закрытие дня в 18:00 засчитало бы
+ * всем ноль. 150 id — около 6 КБ адреса.
+ */
+export const IDS_PER_QUERY = 150;
+
+/** Несколько карточек разом — для порции дня: частями по IDS_PER_QUERY, а не по одной. */
 export async function prospectsByIds(ids: readonly string[]): Promise<Prospect[]> {
   if (!ids.length) return [];
   const db = serviceClient();
   if (!db) return [];
-  const { data } = await db.from("prospects").select(COLUMNS).in("id", [...ids]);
-  return (data ?? []).map((row) => shape(row as Record<string, unknown>));
+  const unique = [...new Set(ids)];
+  const parts: string[][] = [];
+  for (let i = 0; i < unique.length; i += IDS_PER_QUERY) parts.push(unique.slice(i, i + IDS_PER_QUERY));
+  const answers = await Promise.all(parts.map((part) => db.from("prospects").select(COLUMNS).in("id", part)));
+  return answers.flatMap(({ data, error }) => {
+    if (error) console.error("касания: не прочитал карточки", error.message);
+    return (data ?? []).map((row) => shape(row as Record<string, unknown>));
+  });
 }
 
 export async function prospectById(id: string): Promise<Prospect | null> {
