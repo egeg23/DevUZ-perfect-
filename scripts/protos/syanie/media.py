@@ -88,7 +88,7 @@ def implant_shot(fmt):
     parts = [os.path.join(SRC, "imp", d, f"{i}.mp4") for i in (1, 2)]
     filt = [f"[0:v]setpts=PTS-STARTPTS,scale={w}:{h}:flags=lanczos,fps=24[v0]",
             f"[1:v]trim=start_frame=1,setpts=PTS-STARTPTS,scale={w}:{h}:flags=lanczos,fps=24[v1]",
-            "[v0][v1]concat=n=2:v=1:a=0,setpts=PTS/1.1[out]"]
+            "[v0][v1]concat=n=2:v=1:a=0,setpts=PTS/1.35[out]"]
     run("ffmpeg", "-v", "error", "-y", "-i", parts[0], "-i", parts[1], "-filter_complex", ";".join(filt), "-map", "[out]",
         "-c:v", "libx264", "-preset", "slow", "-crf", "27", "-pix_fmt", "yuv420p", "-profile:v", "high", "-g", "48",
         "-an", "-movflags", "+faststart", os.path.join(OUT, f"imp-{fmt}.mp4"))
