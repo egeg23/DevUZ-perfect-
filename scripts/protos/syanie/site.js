@@ -111,7 +111,9 @@ function spriteGold(){if(spGold)return spGold;var c=d.createElement('canvas');c.
   x.drawImage(spImg,0,0);x.globalCompositeOperation='multiply';x.fillStyle='#e8b571';x.fillRect(0,0,c.width,c.height);
   x.globalCompositeOperation='destination-in';x.drawImage(spImg,0,0);return spGold=c}
 function asmStop(){cancelAnimationFrame(asmRaf);asmRun=false;if(asmCv){asmCv.classList.add('out')}hero.classList.remove('asm')}
-function asmFinish(){if(!asmRun)return;asmRun=false;asmDone=true;cancelAnimationFrame(asmRaf);hero.classList.remove('asm');asmCv.classList.add('out');setTimeout(function(){if(!asmRun)asmX.clearRect(0,0,asmCv.width,asmCv.height)},900);render()}
+/* Переход внахлёст: настоящий текст проявляется, пока последние импланты
+   ещё долетают; слой с имплантами гаснет за то же время. */
+function asmFinish(){if(!asmRun)return;asmRun=false;asmDone=true;hero.classList.remove('asm');asmCv.classList.add('out');setTimeout(function(){cancelAnimationFrame(asmRaf);if(!asmRun)asmX.clearRect(0,0,asmCv.width,asmCv.height)},700);render()}
 /* Перед сборкой — видео: один имплант медленно уплывает, камера догоняет
    его и снимает макро, потом импланты разгоняются и уходят роем вглубь.
    Из этого роя в центре и вылетают импланты, которые садятся в буквы. */
@@ -140,15 +142,15 @@ function assemble(){
     for(;;){pts=[];for(var y=0;y<off.height;y+=step)for(var x=0;x<off.width;x+=step){var k=(y*off.width+x)*4;if(px[k+3]>140)pts.push([x,y,px[k+1]<80])}if(pts.length<=(W<700?1700:2600)||step>9)break;step++}
     var sp0=spImg,sp1=spriteGold(),cx=W/2,cy=H*.5,P=pts.map(function(q){var a=Math.random()*6.283,rr=.6+Math.random()*1.4;
       return{tx:q[0],ty:q[1],g:q[2],x0:cx+Math.cos(a)*W*.16*rr,y0:cy+Math.sin(a)*H*.12*rr,s0:.2+Math.random()*.35,r0:(Math.random()-.5)*6,
-        dl:Math.random()*900,du:1900+Math.random()*900}});
+        dl:Math.random()*600,du:1800+Math.random()*500}});
     var hh=step*2.7,ww=hh*.3,t0=performance.now();
-    function frame(now){if(!asmRun)return;var t=now-t0,all=true;asmX.setTransform(dp,0,0,dp,0,0);asmX.clearRect(0,0,W,H);
-      for(var i=0;i<P.length;i++){var q=P[i],k=clamp((t-q.dl)/q.du);if(k<1)all=false;if(k<=0)continue;
+    function frame(now){if(!asmRun&&!asmCv.classList.contains('out'))return;var t=now-t0,all=true,got=0;asmX.setTransform(dp,0,0,dp,0,0);asmX.clearRect(0,0,W,H);
+      for(var i=0;i<P.length;i++){var q=P[i],k=clamp((t-q.dl)/q.du);if(k<1)all=false;if(k>.92)got++;if(k<=0)continue;
         var e=1-Math.pow(1-k,4),s=q.s0+(1-q.s0)*e,x=q.x0+(q.tx-q.x0)*e,y=q.y0+(q.ty-q.y0)*e;
         asmX.globalAlpha=Math.min(1,.35+k*3);asmX.save();asmX.translate(x,y);asmX.rotate(q.r0*(1-e));
         asmX.drawImage(q.g?sp1:sp0,-ww*s/2,-hh*s/2,ww*s,hh*s);asmX.restore()}
       asmX.globalAlpha=1;
-      if(all){if(!asmT)asmT=now;if(now-asmT>700){asmT=0;asmFinish();return}}
+      if(asmRun&&(all||got>P.length*.85))asmFinish();
       asmRaf=requestAnimationFrame(frame)}
     asmRaf=requestAnimationFrame(frame)};
   var f=d.fonts&&d.fonts.ready,sp=new Promise(function(ok){if(spImg.complete&&spImg.naturalWidth)ok();else{spImg.onload=ok;spImg.onerror=function(){asmFinish()}}});
