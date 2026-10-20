@@ -151,7 +151,7 @@ test("ниша — словами на каждом языке панели, у 
     assert.ok(SHOWCASE_NICHE[item.slug], `${item.slug}: впишите нишу в SHOWCASE_NICHE`);
   }
   // Ниши прототипов, собранных руками (scripts/protos), — на 08.10.2026.
-  const keys = [...Object.values(SHOWCASE_NICHE), "influence-agentstvo", "bystrovozvodimye-zdaniya", "kursy", "doska-obyavleniy", "marketpleys", "it-shkola", "avtoservis", "medcentr", "stomatologiya"];
+  const keys = [...Object.values(SHOWCASE_NICHE), "influence-agentstvo", "bystrovozvodimye-zdaniya", "kursy", "doska-obyavleniy", "marketpleys", "metalloprokat", "it-shkola", "avtoservis", "medcentr", "stomatologiya"];
   for (const key of keys) {
     for (const locale of ["ru", "uz", "pl"] as const) {
       const label = mockupNiche(key, locale);
