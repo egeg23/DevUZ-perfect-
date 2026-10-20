@@ -131,12 +131,15 @@ function fzFrame(now){var dt=Math.min(.05,(now-(fzT||now))/1000);fzT=now;var any
     if(z.x)drawFx(z)}
   fzRaf=any?requestAnimationFrame(fzFrame):0;if(!any)fzT=0}
 function fzKick(){if(!fzRaf)fzRaf=requestAnimationFrame(fzFrame)}
-function fzScroll(dy){var vh=innerHeight;
+function fzScroll(dy){var vh=innerHeight,pin=false;
   for(var i=0;i<FZ.length;i++){var z=FZ[i],r=z.el.getBoundingClientRect();
+    if(r.top<vh*.15&&r.bottom>vh*.85)pin=true;
     if(r.bottom<-vh*.2||r.top>vh*1.2)continue;
     var t=clamp(-r.top/Math.max(1,r.height-vh));z.fr.style.setProperty('--t',t.toFixed(4));
     z.t.style.setProperty('--o',clamp(Math.min((t+.08)/.2,(1.04-t)/.14)).toFixed(3));
-    if(z.on)z.T+=Math.min(.9,Math.abs(dy)*.0035)}}
+    if(z.on)z.T+=Math.min(.9,Math.abs(dy)*.0035)}
+  /* Кнопка брони внизу не закрывает тарелку, пока на экране сцена меню. */
+  if(dock)dock.classList.toggle('fzon',pin)}
 function initFz(){
   if(CALM||!FZ.length)return;
   var io=new IntersectionObserver(function(es){es.forEach(function(e){var z=FZ.filter(function(q){return q.el===e.target})[0];if(!z)return;
