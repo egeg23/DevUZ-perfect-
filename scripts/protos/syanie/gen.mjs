@@ -216,7 +216,7 @@ function doctorsBlock() {
   return `<section class="docs" id="vrachi"><div class="wrap">
 ${head("Врачи", "Кто будет вас лечить", "Имплантологи и ортопеды с опытом более 10 000 операций. Имплантация: основная специализация клиники.")}
 <div class="dr-grid">
-${D.DOCTORS.map((d, i) => `<article class="dr rv" style="--d:${i * 120}ms"><div class="dr-ph">${pic(d.img, d.name, 600, 600)}</div><div class="dr-t"><span class="kick">${d.role}</span><h3>${d.name}</h3><ul>${d.facts.map((f) => `<li>${f}</li>`).join("")}</ul><p class="dr-q">«${d.quote}»</p></div></article>`).join("")}
+${D.DOCTORS.map((d, i) => `<article class="dr rv" style="--d:${i * 120}ms"><div class="dr-ph">${pic(d.img, d.name, 900, 900)}</div><div class="dr-t"><span class="kick">${d.role}</span><h3>${d.name}</h3><ul>${d.facts.map((f) => `<li>${f}</li>`).join("")}</ul><p class="dr-q">«${d.quote}»</p></div></article>`).join("")}
 </div>
 </div></section>`;
 }

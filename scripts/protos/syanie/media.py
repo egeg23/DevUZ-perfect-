@@ -136,12 +136,12 @@ def main():
     for src, name in (("rec.png", "p-rec"), ("cor.png", "p-cor"), ("cab.png", "p-cab"), ("cab2.png", "p-cab2"), ("xray.jpg", "p-xray")):
         im = Image.open(os.path.join(site, src)).convert("RGB")
         im.save(os.path.join(OUT, name + ".webp"), "WEBP", quality=80, method=6)
-    # Врачи: круглые портреты с их сайта на чёрном, квадратом.
+    # Врачи: их фото с сайта, переснятые Nano Banana в 2K с их же снимками
+    # опорой (владелец, 20.10.2026: «размытые… качество должно быть высокое»).
+    # Оригиналы — dr/*.png, ID задач в SOURCES.md.
     for src, name in (("reutov.png", "dr-reutov"), ("savin.png", "dr-savin")):
-        im = Image.open(os.path.join(site, src)).convert("RGB")
-        s = min(im.size)
-        im.crop(((im.width - s) // 2, (im.height - s) // 2, (im.width + s) // 2, (im.height + s) // 2)).save(
-            os.path.join(OUT, name + ".webp"), "WEBP", quality=82, method=6)
+        im = Image.open(os.path.join(SRC, "dr", src)).convert("RGB").resize((900, 900), Image.LANCZOS)
+        im.save(os.path.join(OUT, name + ".webp"), "WEBP", quality=82, method=6)
     # Значок вкладки: их зуб на графите.
     for px, name in ((192, "icon-192.png"), (180, "apple-180.png")):
         im = Image.new("RGB", (px, px), (13, 14, 15))
