@@ -127,7 +127,8 @@ function storyBlock() {
 <video id="film" class="film" muted playsinline preload="auto" disablepictureinpicture aria-hidden="true" poster="${IMG}/film-16.webp" data-p16="${IMG}/film-16.webp" data-p9="${IMG}/film-9.webp" data-v16="${IMG}/film-16.mp4" data-v9="${IMG}/film-9.mp4"></video>
 <div class="veil" aria-hidden="true"></div>
 <div class="shade" aria-hidden="true"></div>
-<canvas id="asm" aria-hidden="true"></canvas>
+${existsSync(PUB + IMG + "/imp-16.mp4") ? `<video id="iv" class="iv" muted playsinline preload="none" disablepictureinpicture aria-hidden="true" data-v16="${IMG}/imp-16.mp4" data-v9="${IMG}/imp-9.mp4"></video>` : ""}
+<canvas id="asm" aria-hidden="true" data-sprite="${IMG}/implant.png"></canvas>
 <div class="glow" aria-hidden="true"></div>
 <div class="cap" id="cap" aria-hidden="true"><span data-t="0">Томск, ${B.street}</span><span data-t="0.42">Центр имплантации и протезирования</span><span data-t="0.74">Кабинет имплантолога</span></div>
 <div class="hero" id="hero">

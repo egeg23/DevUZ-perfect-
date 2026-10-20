@@ -66,7 +66,7 @@ function seg(k,f){var a=SEG[k],b=SEG[k+1];return clamp((f-a)/Math.max(1,b-a))}
 function render(){
   if(!N)return;var p=st.f/(N-1);paint(false);
   if(barEl)barEl.style.transform='scaleX('+p.toFixed(4)+')';
-  if(filmDone){hero.classList.toggle('on',p<.025||asmRun);stage.classList.toggle('dark',p<.03||asmRun)}
+  if(filmDone){hero.classList.toggle('on',p<.025||asmRun||ivOn);stage.classList.toggle('dark',p<.03||asmRun||ivOn)}
   stage.classList.toggle('lamp',st.f>SEG[0]&&st.f<SEG[2]);
   for(var j=0;j<chs.length;j++){var c=chs[j],e=c.el;if(!e)continue;
     var o=Math.min(clamp((p-c.a)/.03),clamp((c.b-p)/.03));
@@ -84,10 +84,10 @@ function endFilm(){if(filmDone)return;filmDone=true;filmOn=false;stage.classList
   caps.forEach(function(c){c.classList.remove('on')});paint(true);
   film.classList.add('off');setTimeout(function(){try{film.pause()}catch(e){}},700);
   var atTop=scrollY-story.offsetTop<innerHeight*.2;hero.classList.toggle('on',atTop);stage.classList.toggle('dark',atTop);
-  if(atTop&&!asmDone)assemble();else asmDone=true;if(dock)dock.classList.remove('away');startPump()}
+  if(atTop&&!asmDone)implantShot();else asmDone=true;if(dock)dock.classList.remove('away');startPump()}
 function playFilm(){
   if(film.error){endFilm();return}
-  filmDone=false;filmOn=true;asmDone=false;asmStop();stage.classList.remove('done','dark');stage.classList.add('playing');hero.classList.remove('on');film.classList.remove('off');
+  filmDone=false;filmOn=true;asmDone=false;asmStop();ivOn=false;if(ivEl){ivEl.classList.remove('on');try{ivEl.pause()}catch(e){}}stage.classList.remove('done','dark');stage.classList.add('playing');hero.classList.remove('on');film.classList.remove('off');
   if(dock)dock.classList.add('away');
   try{film.currentTime=0}catch(e){}
   var t0=Date.now(),seen=-1,still=0,watch=setInterval(function(){
@@ -103,17 +103,27 @@ function playFilm(){
    встаёт вертикально. «За один день» — импланты цвета оникса. Потом слой
    растворяется в настоящий текст, следом подзаголовок, кнопки, «Листайте».
    Прокрутка во время сборки сразу показывает текст. */
-var asmCv=$('#asm'),asmX=asmCv&&asmCv.getContext('2d'),asmRun=false,asmDone=false,asmRaf=0,asmT=0;
-function sprite(gold){var c=d.createElement('canvas');c.width=24;c.height=72;var x=c.getContext('2d');
-  var g=x.createLinearGradient(0,0,24,0);
-  if(gold){g.addColorStop(0,'#7a5226');g.addColorStop(.35,'#f3d39c');g.addColorStop(.6,'#c9965a');g.addColorStop(1,'#5e3d1b')}
-  else{g.addColorStop(0,'#5f666d');g.addColorStop(.35,'#f1f4f6');g.addColorStop(.6,'#aeb5bb');g.addColorStop(1,'#4b5157')}
-  x.fillStyle=g;x.fillRect(5,0,14,10);x.fillRect(7,10,10,4);
-  x.beginPath();x.moveTo(6,14);x.lineTo(18,14);x.lineTo(16,64);x.lineTo(12,72);x.lineTo(8,64);x.closePath();x.fill();
-  x.strokeStyle='rgba(20,22,25,.55)';x.lineWidth=1.6;for(var y=19;y<64;y+=5){x.beginPath();x.moveTo(6.5,y);x.lineTo(17.5,y+2.2);x.stroke()}
-  return c}
+var ivEl=$('#iv'),ivOn=false,asmCv=$('#asm'),asmX=asmCv&&asmCv.getContext('2d'),asmRun=false,asmDone=false,asmRaf=0,asmT=0;
+/* Имплант для роя: фотореалистичный спрайт (Nano Banana, вырезан с
+   чёрного фона). Золотой — тот же, тонированный под оникс. */
+var spImg=new Image(),spGold=null;
+function spriteGold(){if(spGold)return spGold;var c=d.createElement('canvas');c.width=spImg.naturalWidth;c.height=spImg.naturalHeight;var x=c.getContext('2d');
+  x.drawImage(spImg,0,0);x.globalCompositeOperation='multiply';x.fillStyle='#e8b571';x.fillRect(0,0,c.width,c.height);
+  x.globalCompositeOperation='destination-in';x.drawImage(spImg,0,0);return spGold=c}
 function asmStop(){cancelAnimationFrame(asmRaf);asmRun=false;if(asmCv){asmCv.classList.add('out')}hero.classList.remove('asm')}
 function asmFinish(){if(!asmRun)return;asmRun=false;asmDone=true;cancelAnimationFrame(asmRaf);hero.classList.remove('asm');asmCv.classList.add('out');setTimeout(function(){if(!asmRun)asmX.clearRect(0,0,asmCv.width,asmCv.height)},900);render()}
+/* Перед сборкой — видео: один имплант медленно уплывает, камера догоняет
+   его и снимает макро, потом импланты разгоняются и уходят роем вглубь.
+   Из этого роя в центре и вылетают импланты, которые садятся в буквы. */
+function implantShot(){
+  if(!ivEl||!ivEl.src){assemble();return}
+  ivOn=true;hero.classList.add('asm','on');stage.classList.add('dark');
+  var done=false,fin=function(){if(done)return;done=true;ivOn=false;ivEl.classList.remove('on');setTimeout(function(){try{ivEl.pause()}catch(e){}},900);assemble()};
+  var t=setTimeout(fin,11000),seen=-1,still=0,w=setInterval(function(){if(done){clearInterval(w);return}if(ivEl.currentTime===seen){if((still+=250)>=(seen>0?1200:3500)){clearInterval(w);fin()}}else{seen=ivEl.currentTime;still=0}},250);
+  ivEl.onended=function(){clearTimeout(t);fin()};ivEl.onerror=function(){clearTimeout(t);fin()};
+  ivEl.ontimeupdate=function(){if(ivEl.duration&&ivEl.currentTime>ivEl.duration-.9&&!done)fin()};
+  try{ivEl.currentTime=0;ivEl.classList.add('on');var p=ivEl.play();if(p&&p.catch)p.catch(function(){clearTimeout(t);fin()})}catch(e){fin()}
+}
 function assemble(){
   var h1=$('#h1');if(!asmX||!h1){asmDone=true;return}
   asmRun=true;hero.classList.add('asm','on');stage.classList.add('dark');
@@ -128,26 +138,29 @@ function assemble(){
       o.fillText(sp.textContent,b.left-r.left,b.top-r.top+(b.height+m.actualBoundingBoxAscent-m.actualBoundingBoxDescent)/2)});
     var px=o.getImageData(0,0,off.width,off.height).data,step=W<700?3:4,pts=[];
     for(;;){pts=[];for(var y=0;y<off.height;y+=step)for(var x=0;x<off.width;x+=step){var k=(y*off.width+x)*4;if(px[k+3]>140)pts.push([x,y,px[k+1]<80])}if(pts.length<=(W<700?1700:2600)||step>9)break;step++}
-    var sp0=sprite(false),sp1=sprite(true),cx=W/2,cy=H*.55,P=pts.map(function(q){var a=Math.random()*6.283,rr=.6+Math.random()*1.4;
-      return{tx:q[0],ty:q[1],g:q[2],x0:cx+(q[0]-cx)*3.2+Math.cos(a)*W*.45*rr,y0:cy+(q[1]-cy)*3.2+Math.sin(a)*H*.45*rr,s0:8+Math.random()*8,r0:(Math.random()-.5)*2.4,
-        dl:(q[0]/W)*1100+Math.random()*700,du:2600+Math.random()*900}});
-    var hh=step*2.1,ww=hh*.46,t0=performance.now();
+    var sp0=spImg,sp1=spriteGold(),cx=W/2,cy=H*.5,P=pts.map(function(q){var a=Math.random()*6.283,rr=.6+Math.random()*1.4;
+      return{tx:q[0],ty:q[1],g:q[2],x0:cx+Math.cos(a)*W*.16*rr,y0:cy+Math.sin(a)*H*.12*rr,s0:.2+Math.random()*.35,r0:(Math.random()-.5)*6,
+        dl:Math.random()*900,du:1900+Math.random()*900}});
+    var hh=step*2.7,ww=hh*.3,t0=performance.now();
     function frame(now){if(!asmRun)return;var t=now-t0,all=true;asmX.setTransform(dp,0,0,dp,0,0);asmX.clearRect(0,0,W,H);
       for(var i=0;i<P.length;i++){var q=P[i],k=clamp((t-q.dl)/q.du);if(k<1)all=false;if(k<=0)continue;
         var e=1-Math.pow(1-k,4),s=q.s0+(1-q.s0)*e,x=q.x0+(q.tx-q.x0)*e,y=q.y0+(q.ty-q.y0)*e;
-        asmX.globalAlpha=Math.min(1,k*5)*(s>3?.55:1);asmX.save();asmX.translate(x,y);asmX.rotate(q.r0*(1-e));
+        asmX.globalAlpha=Math.min(1,.35+k*3);asmX.save();asmX.translate(x,y);asmX.rotate(q.r0*(1-e));
         asmX.drawImage(q.g?sp1:sp0,-ww*s/2,-hh*s/2,ww*s,hh*s);asmX.restore()}
       asmX.globalAlpha=1;
       if(all){if(!asmT)asmT=now;if(now-asmT>700){asmT=0;asmFinish();return}}
       asmRaf=requestAnimationFrame(frame)}
     asmRaf=requestAnimationFrame(frame)};
-  var f=d.fonts&&d.fonts.ready;if(f&&f.then)f.then(function(){requestAnimationFrame(go)});else requestAnimationFrame(go);
+  var f=d.fonts&&d.fonts.ready,sp=new Promise(function(ok){if(spImg.complete&&spImg.naturalWidth)ok();else{spImg.onload=ok;spImg.onerror=function(){asmFinish()}}});
+  Promise.all([f||1,sp]).then(function(){requestAnimationFrame(go)});
   setTimeout(asmFinish,9000);
 }
 function initStory(){
   if(!story||CALM||!ctx)return;
   setFmt();size();
   film.src=film.getAttribute('data-v'+fmtK);
+  if(ivEl){ivEl.preload='auto';ivEl.src=ivEl.getAttribute('data-v'+fmtK)}
+  if(asmCv)spImg.src=asmCv.getAttribute('data-sprite');
   film.addEventListener('timeupdate',captions);
   film.addEventListener('ended',endFilm);
   film.addEventListener('error',endFilm);
@@ -171,7 +184,7 @@ addEventListener('scroll',function(){
   headIdle();
   var y=scrollY;
   if(filmOn&&!filmDone&&story&&y-story.offsetTop>40)endFilm();
-  if(asmRun&&story&&y-story.offsetTop>40)asmFinish();
+  if((asmRun||ivOn)&&story&&y-story.offsetTop>40){if(ivOn){ivOn=false;ivEl.classList.remove('on');try{ivEl.pause()}catch(e){}asmDone=true;hero.classList.remove('asm')}asmFinish()}
   if(top)top.classList.toggle('solid',story?y>story.offsetTop+story.offsetHeight-80:y>40);
   lastY=y;
 },{passive:true});
