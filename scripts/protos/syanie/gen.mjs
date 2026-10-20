@@ -126,11 +126,13 @@ function storyBlock() {
 <canvas id="cv" aria-hidden="true"></canvas>
 <video id="film" class="film" muted playsinline preload="auto" disablepictureinpicture aria-hidden="true" poster="${IMG}/film-16.webp" data-p16="${IMG}/film-16.webp" data-p9="${IMG}/film-9.webp" data-v16="${IMG}/film-16.mp4" data-v9="${IMG}/film-9.mp4"></video>
 <div class="veil" aria-hidden="true"></div>
+<div class="shade" aria-hidden="true"></div>
+<canvas id="asm" aria-hidden="true"></canvas>
 <div class="glow" aria-hidden="true"></div>
 <div class="cap" id="cap" aria-hidden="true"><span data-t="0">Томск, ${B.street}</span><span data-t="0.42">Центр имплантации и протезирования</span><span data-t="0.74">Кабинет имплантолога</span></div>
 <div class="hero" id="hero">
 <span class="kick">${B.what} · ${B.city}</span>
-<h1>Все зубы на 6 имплантатах <em>за один день</em></h1>
+<h1 id="h1"><span class="w">Все</span> <span class="w">зубы</span> <span class="w">на</span> <span class="w">6</span> <span class="w">имплантатах</span> <em><span class="w">за</span> <span class="w">один</span> <span class="w">день</span></em></h1>
 <p class="lead">Методика All-on-6, ${IMPL}, свой зубной техник. Листайте: покажем, как это происходит, шаг за шагом.</p>
 <div class="hero-b"><a class="btn btn-onyx" href="#zapis" data-book>${ic("msg")}<span>Записаться на консультацию</span></a><a class="btn btn-ghost" href="${tel}">${ic("phone")}<span>${B.phone}</span></a></div>
 <span class="cue" aria-hidden="true">${ic("down")}<span>Листайте</span></span>
