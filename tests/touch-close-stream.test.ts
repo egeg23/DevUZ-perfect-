@@ -213,6 +213,10 @@ test("порция считает только свои строки, поток
   assert.match(stream, /if \(!mark\?\.assigned_at \|\| mark\.reported_at\) return 0;/);
   // Только тем, кто получает порцию.
   assert.match(stream, /if \(!inQueue\(staff\.role\)\) return \{ ok: false, why: "role" \}/);
+  // В чате не больше STREAM_BUFFER неразобранных карточек — даже если строк
+  // набралось больше (20.10.2026: 40 строк, залп в чат).
+  assert.match(stream, /const room = STREAM_BUFFER - open;/);
+  assert.match(stream, /if \(sent >= room\) continue;/);
 });
 
 test("бот: кнопка потока — до клиентского разговора, «Не подходит» в потоке без замены", () => {

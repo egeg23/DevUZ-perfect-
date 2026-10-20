@@ -225,6 +225,15 @@ async function deliver(
   const pending = rows
     .filter((r) => !r.delivered_at)
     .sort((a, b) => Number(ready(byId.get(b.prospect_id))) - Number(ready(byId.get(a.prospect_id))));
+  // В чате — не больше STREAM_BUFFER неразобранных карточек. Обычно
+  // невыданных и так не больше: их добирает streamNeed. Но 20.10.2026 поток
+  // час не видел своих карточек (prospectsByIds) и набрал Дине 40 строк —
+  // без предела все они ушли бы в чат одним залпом.
+  const open = rows.filter((r) => {
+    const p = r.delivered_at ? byId.get(r.prospect_id) : undefined;
+    return p ? streamWaiting(p, who.id, day) : false;
+  }).length;
+  const room = STREAM_BUFFER - open;
 
   let sent = 0;
   for (const row of pending) {
@@ -235,6 +244,7 @@ async function deliver(
       await claimDelivery([row.id], new Date());
       continue;
     }
+    if (sent >= room) continue;
     if (!ready(p)) {
       const { data: claimed } = await db
         .from("touch_portions")
