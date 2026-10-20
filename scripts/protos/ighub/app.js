@@ -534,6 +534,8 @@ document.addEventListener('click', function (e) {
   e.preventDefault();
   if (playing && !/^(play|reset)$/.test(b.getAttribute('data-act')) && e.isTrusted) stopPlay();
   act(b.getAttribute('data-act'), b.getAttribute('data-a'), +(b.getAttribute('data-i') || 0));
+  /* кнопка ниже телефонов: показать, что поменялось */
+  if (b.hasAttribute('data-scroll')) scrollDemo();
 });
 document.addEventListener('submit', function (e) {
   var f = e.target.closest('[data-form="send"]'); if (!f) return;
