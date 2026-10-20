@@ -61,7 +61,7 @@ const T = {
     heroCue: "Листайте",
     ch: [
       { a: .14, b: .34, k: "Шахматная стойка, витраж, «копейка» на антресоли", t: "Узнаёте? Это наш зал." },
-      { a: .44, b: .6, k: "Дальше только пиво", t: "Листайте медленно. Пиво не любит спешки." },
+      { a: .52, b: .7, k: "Дальше только пиво", t: "Листайте медленно. Пиво не любит спешки." },
       { a: .86, b: 1.4, k: "Жатецкое живое · 0,5 л", t: "Налито. Теперь к столу." },
     ],
     film: "Кадры нарисованы и сняты нейросетью по фото вашего зала",
@@ -103,7 +103,7 @@ const T = {
     heroCue: "Aylantiring",
     ch: [
       { a: .14, b: .34, k: "Shaxmat peshtaxta, vitraj, antresoldagi «kopeyka»", t: "Tanidingizmi? Bu bizning zal." },
-      { a: .44, b: .6, k: "Endi faqat pivo", t: "Sekin aylantiring. Pivo shoshilishni yoqtirmaydi." },
+      { a: .52, b: .7, k: "Endi faqat pivo", t: "Sekin aylantiring. Pivo shoshilishni yoqtirmaydi." },
       { a: .86, b: 1.4, k: "Jatetskoe jivoe · 0,5 l", t: "Quyildi. Endi stolga." },
     ],
     film: "Kadrlar zalingiz rasmlari bo‘yicha chizilgan va neyrotarmoqda olingan",

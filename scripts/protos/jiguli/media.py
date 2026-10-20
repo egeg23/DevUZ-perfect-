@@ -2,7 +2,7 @@
 
 python3 -I scripts/protos/jiguli/media.py <папка с оригиналами>
 
-В папке: k0..k10.png (Nano Banana 4K, 9:16), v1a.mp4, v1b.mp4 и v2.mp4
+В папке: k0..k10.png (Nano Banana 4K, 9:16), v1a.mp4, v1b.mp4, vt.mp4 и v2.mp4
 (MiniMax H3 2K),
 logo.png (их логотип с сайта). Пишет public/protos/jiguli и media.json рядом.
 Генерировали только вертикаль (слово владельца): версия для ПК вырезается из
@@ -42,22 +42,34 @@ tall("k8.png", "poster")
 band("k8.png", "poster", .62, w=1280, q=60)
 
 # Кино по прокрутке: v1a и v1b (бармен у шахматной стойки, наезд на кран,
-# рисунок; каждый третий кадр: рисунок тяжелее) → затемнение → v2 (струя на
-# чёрном, к бокалу; каждый второй). Каждый второй кадр, 720 px по ширине.
+# рисунок) → vt (рисунок перетекает в
+# настоящую струю, фон уходит в черноту) → v2 (струя на чёрном,
+# к бокалу). Каждый второй кадр, 720 px по ширине: шаг мелкий, медленная
+# прокрутка не дёргается.
 tmp = tempfile.mkdtemp()
 def frames(src, tag, step=2):
     d = os.path.join(tmp, tag); os.makedirs(d)
     subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(SRC, src), "-vf", f"select=not(mod(n\\,{step})),scale=720:-2", "-vsync", "vfr", os.path.join(d, "%04d.png")], check=True)
     return sorted(os.path.join(d, f) for f in os.listdir(d))
-a = frames("v1a.mp4", "a", 3) + frames("v1b.mp4", "a2", 3)[1:]
+a = frames("v1a.mp4", "a") + frames("v1b.mp4", "a2")[1:]
+t = frames("vt.mp4", "t")
 b = frames("v2.mp4", "b")
 seq = [Image.open(f).convert("RGB") for f in a]
-black = Image.new("RGB", seq[-1].size, (0, 0, 0))
-DIP = 10
-last, first = seq[-1], Image.open(b[0]).convert("RGB").resize(seq[-1].size)
-seq += [Image.blend(last, black, (i + 1) / DIP) for i in range(DIP)]
-seq += [Image.blend(black, first, (i + 1) / DIP) for i in range(DIP)]
-seq += [Image.open(f).convert("RGB").resize(seq[0].size) for f in b[1:]]
+size = seq[0].size
+# Переход (vt.mp4) снят от последнего кадра рисунка к первому кадру струи:
+# рисунок сам становится настоящим пивом, без затемнения и паузы. На стыках
+# по три кадра смешиваются, чтобы не было даже полутона скачка.
+def glue(prev, nxt, n=3):
+    for i in range(n):
+        k = (i + 1) / (n + 1)
+        prev[-n + i] = Image.blend(prev[-n + i], nxt[i], k)
+mid = [Image.open(f).convert("RGB").resize(size) for f in t]
+glue(seq, mid)
+seq += mid[3:]
+tail = [Image.open(f).convert("RGB").resize(size) for f in b]
+glue(seq, tail)
+CUT = [len(a), len(seq)]
+seq += tail[3:]
 sd = os.path.join(OUT, "s")
 shutil.rmtree(sd, ignore_errors=True); os.makedirs(sd)
 for i, im in enumerate(seq):
@@ -74,5 +86,5 @@ for size, name in ((192, "icon-192"), (180, "apple-180")):
     ic.paste(w, ((size - w.width) // 2, (size - w.height) // 2), w)
     ic.save(os.path.join(OUT, name + ".png"))
 
-json.dump({"s": len(seq), "cut": [len(a), len(a) + 2 * DIP]}, open(os.path.join(HERE, "media.json"), "w"))
-print("кадров", len(seq), "склейка", len(a), len(a) + 2 * DIP)
+json.dump({"s": len(seq), "cut": CUT}, open(os.path.join(HERE, "media.json"), "w"))
+print("кадров", len(seq), "переход", *CUT)

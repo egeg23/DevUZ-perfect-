@@ -77,6 +77,27 @@ for (const path of ["", "uz"]) for (const [w, h] of [[390, 844], [768, 1024], [1
   await ctx.close();
 }
 
+// Фильм, а не перемотка: медленно — мелкими шагами, резко — не быстрее предела
+{
+  const { p, ctx } = await open(390, 844, { skipIntro: true });
+  await p.waitForTimeout(2500);
+  const prog = () => p.$eval("#bar", (e) => +(/scaleX\(([\d.]+)\)/.exec(e.style.transform)?.[1] ?? 0));
+  const total = await p.evaluate(() => document.getElementById("story").offsetHeight - innerHeight);
+  const N = await p.evaluate(() => JSON.parse(document.getElementById("jg-site").textContent).frames.s);
+  const seen = [];
+  for (let i = 1; i <= 40; i++) { await p.evaluate((y) => window.scrollTo(0, y), i * 12); await p.waitForTimeout(60); seen.push(await prog()); }
+  const steps = seen.slice(1).map((v, i) => (v - seen[i]) * (N - 1));
+  const back = steps.filter((x) => x < -0.01).length, big = Math.max(...steps);
+  if (!back && big < 1.5) ok(`медленно: кадр идёт мелкими шагами, наибольший шаг ${big.toFixed(2)} кадра`); else fail(`медленно: назад ${back}, шаг ${big}`);
+  await p.evaluate((y) => window.scrollTo(0, y), Math.round(total * .5));
+  await p.waitForTimeout(600);
+  const early = await prog();
+  await p.waitForTimeout(9000);
+  const late = await prog();
+  if (early < .25 && late > .48) ok(`резко: фильм не прыгает, догоняет со своей скоростью (${early.toFixed(2)} → ${late.toFixed(2)})`); else fail(`резко: ${early} → ${late}`);
+  await ctx.close();
+}
+
 // Шапка: правило трёх секунд
 {
   const { p, ctx } = await open(390, 844, { skipIntro: true });

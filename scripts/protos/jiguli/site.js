@@ -30,8 +30,10 @@ var ctx=cv&&cv.getContext('2d'),N=K.frames.s,CUT=K.frames.cut,imgs=new Array(N),
 var st={f:0},shownF=-1,pumping=false,dark=0,lastP=-1;
 var chs=K.chapters.map(function(c){return{el:d.getElementById(c.id),a:c.a,b:c.b}});
 function src(i){return K.img+'/s/'+(i<10?'00':i<100?'0':'')+i+'.webp'}
+/* Кадр считается готовым после decode(): тогда первый показ не ждёт
+   распаковки картинки, и медленная прокрутка не спотыкается. */
 function load(i){if(imgs[i])return;var im=new Image();im.decoding='async';imgs[i]=im;active++;
-  im.onload=function(){ready[i]=1;active--;if(Math.abs(i-st.f)<3)paint(true);pump()};
+  im.onload=function(){var ok=function(){ready[i]=1;active--;if(Math.abs(i-st.f)<3)paint(true);pump()};if(im.decode)im.decode().then(ok,ok);else ok()};
   im.onerror=function(){active--;pump()};im.src=src(i)}
 /* Догружаем по очереди, ближние к текущему кадру первыми; шесть сразу. */
 function pump(){if(!pumping)return;
@@ -88,11 +90,27 @@ function initStory(){
   /* Первые кадры — сразу, остальные — пока смотрят заставку. */
   for(var j=1;j<8;j++)load(j);
   setTimeout(startPump,900);
+  /* Фильм, а не перемотка (владелец, 20.10.2026: «ограничение по скорости
+     скрола… как фильм, который ты смотришь скроллом»). Прокрутка страницы
+     родная и ничем не тормозится; ScrollTrigger только читает, где сейчас
+     палец, — это цель. Кадр сам идёт к цели на каждом кадре экрана: мягко
+     разгоняется и тормозит, но не быстрее MAXF кадров в секунду. Листнули
+     резко — фильм догоняет со своей скоростью; остановились — доезжает и
+     замирает. Ушли за конец сцены — догоняет быстро, чтобы не отставать. */
+  var MAXF=26,target=0,raf=0,last=0;
+  var tick=function(now){var dt=Math.min(.05,(now-(last||now))/1000);last=now;
+    var d=target-st.f,ad=Math.abs(d);
+    if(ad<.002){st.f=target;render();raf=0;last=0;return}
+    var out=story.getBoundingClientRect().bottom<innerHeight*.98,cap=(out?MAXF*4:MAXF)*dt,k=1-Math.exp(-dt*7);
+    var step=d*k;if(Math.abs(step)<Math.min(ad,dt*2.5))step=Math.sign(d)*Math.min(ad,dt*2.5);
+    if(Math.abs(step)>cap)step=Math.sign(d)*cap;
+    st.f+=step;render();raf=requestAnimationFrame(tick)};
+  var aim=function(p){target=clamp(p)*(N-1);if(!raf)raf=requestAnimationFrame(tick)};
   if(window.gsap&&window.ScrollTrigger){
     gsap.registerPlugin(ScrollTrigger);
-    gsap.to(st,{f:function(){return N-1},ease:'none',scrollTrigger:{trigger:story,start:'top top',end:'bottom bottom',scrub:.6,invalidateOnRefresh:true},onUpdate:render});
+    ScrollTrigger.create({trigger:story,start:'top top',end:'bottom bottom',invalidateOnRefresh:true,onUpdate:function(t){aim(t.progress)}});
   }else{
-    var lerp=function(){var r=story.getBoundingClientRect(),p=clamp(-r.top/Math.max(1,r.height-innerHeight));st.f+=(p*(N-1)-st.f)*.18;render();requestAnimationFrame(lerp)};lerp();
+    addEventListener('scroll',function(){var r=story.getBoundingClientRect();aim(-r.top/Math.max(1,r.height-innerHeight))},{passive:true});
   }
   addEventListener('resize',function(){size();render()});
   render();
