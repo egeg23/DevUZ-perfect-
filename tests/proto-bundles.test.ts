@@ -1654,3 +1654,59 @@ test("Baldinini: товары с официального сайта, магаз
     assert.deepEqual(data.tiers, { std: plan.PANELS.std.sections, pro: plan.PANELS.pro.sections }, `${path}: уровни разделов не как в plan.mjs`);
   }
 });
+
+test("Хаб Instagram → Telegram: ru и uz — условия, noindex, видео DevUz, шапка, два телефона, три схемы, uz без кириллицы", () => {
+  const site = bundlePages("ighub");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "uz"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path === "uz" ? "uz" : "ru";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась в странице`);
+    assert.ok(page.includes(`<html lang="${lang}"`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /<script[^>]+src=|<link[^>]+stylesheet|<img[^>]+src="https?:|url\(https?:/i, `${path}: внешняя загрузка`);
+    assert.ok(page.includes('id="dzi"'), `${path}: нет видео DevUz`);
+    // Владелец, 15.10.2026: шапка при прокрутке прячется и возвращается через 3 с после остановки.
+    assert.match(page, /var IDLE=3000,idleT=0;/, `${path}: нет правила шапки`);
+    assert.match(page, /function onScroll\(\)\{headIdle\(\);/, `${path}: шапка не прячется при прокрутке`);
+    // Задание 20.10.2026: Instagram клиента и Telegram менеджера рядом, схемы А, Б, В, вид руководителя.
+    assert.match(page, /class="iphone"[\s\S]*id="ig"[\s\S]*class="android"[\s\S]*id="tg"/, `${path}: нет двух телефонов`);
+    for (const a of ["A", "B", "C"]) assert.ok(page.includes(`data-act="scheme" data-a="${a}"`), `${path}: нет схемы ${a}`);
+    assert.ok(page.includes('data-act="role" data-a="head"'), `${path}: нет вида руководителя`);
+    for (const k of ["ff10", "ff22", "igManual", "play"]) assert.ok(page.includes(`data-act="${k}"`), `${path}: нет «${k}»`);
+    const data = page.match(/window\.HB=(\{[\s\S]*?\});<\/script>/)?.[1] ?? "";
+    assert.ok(data.length > 1000, `${path}: нет данных хаба`);
+    const hb = JSON.parse(data);
+    // Демо-компания одним фактом; имён из присланного видео нет.
+    assert.equal(hb.company.name, "Usta Mebel");
+    assert.doesNotMatch(page, /jamco|Захро|Zahro|Abdulaziz/i, `${path}: имя из присланного видео`);
+    if (lang === "uz") {
+      assert.doesNotMatch(data, /[А-Яа-яЁё]/, "uz: кириллица в данных");
+      const text = page.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, " ");
+      assert.doesNotMatch(text, /[А-Яа-яЁё]/, "uz: кириллица в тексте страницы");
+    }
+    // Ответ на языке клиента: каждый готовый ответ есть на каждом языке клиента.
+    for (const q of hb.quick) for (const l of hb.langs) assert.ok(q[l], `${path}: готовый ответ ${q.id} без ${l}`);
+  }
+  const stamped = stampedBundle("ighub", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("Хаб: 900 $ вместо 1 800 $ на 48 часов, допы в одном месте и на странице", async () => {
+  const plan = await import("../scripts/protos/ighub/plan.mjs");
+  assert.equal(plan.BASE.promo, 900);
+  assert.equal(plan.BASE.price, 1800);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 8 && plan.ADDONS.length <= 15, "от 8 до 15 допов");
+  for (const id of ["crm", "head", "ads", "multi", "wa", "fb"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
+  const site = bundlePages("ighub")!;
+  for (const html of [site.html, site.pages.uz]) {
+    assert.match(html, /<s id="preg">1 800 \$<\/s><b id="pbase">900 \$<\/b>/, "на макете 900 $ вместо 1 800 $");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-add="${a.id}" data-price="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});
