@@ -82,7 +82,7 @@ h1,h2,h3,h4,p{margin:0}
 .ch{position:absolute;left:var(--gut);right:var(--gut);bottom:calc(104px + env(safe-area-inset-bottom));z-index:5;display:grid;gap:8px;padding:20px;border-radius:var(--r2);background:rgb(18 12 8 / .62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);visibility:hidden;opacity:0;will-change:transform,opacity;pointer-events:none;transform:translate3d(0,var(--y,0px),0)}
 .ch-t{font:700 28px/1.1 var(--f-d);text-transform:uppercase}
 .st-note{position:absolute;left:var(--gut);right:var(--gut);bottom:calc(76px + env(safe-area-inset-bottom));z-index:5;font-size:12px;color:rgb(246 234 210 / .55);text-align:center;opacity:var(--dark,0)}
-.bar{position:absolute;left:0;right:0;bottom:0;height:3px;z-index:6;background:rgb(246 234 210 / .1)}
+.bar{position:absolute;left:0;right:0;top:0;height:3px;z-index:6;background:rgb(246 234 210 / .1)}
 .bar i{display:block;height:100%;background:var(--amber);transform-origin:0 50%;transform:scaleX(0)}
 .calm .story{height:auto}
 .calm .stage{position:relative;height:100svh}
@@ -228,6 +228,12 @@ h1,h2,h3,h4,p{margin:0}
 .dock{position:fixed;left:var(--gut);right:var(--gut);bottom:calc(12px + env(safe-area-inset-bottom));z-index:30;display:flex;gap:8px;transition:transform .45s var(--ease),opacity .45s,visibility 0s}
 .dock .btn-amber{flex:1;box-shadow:var(--sh2)}
 .dock.fzon,.dock.away{transform:translateY(140%);opacity:0;pointer-events:none;visibility:hidden;transition:transform .45s var(--ease),opacity .45s,visibility 0s .45s}
+.dock.gone{display:none}
+/* Внизу экрана ничего янтарного: браузер iPhone (Safari и встроенный в
+   Telegram) красит свою нижнюю панель в цвет кнопки у нижнего края.
+   Кнопки дока тёмные, «стеклом», янтарь — только в надписи и рамке. */
+.dock .btn-amber,.dock .btn-call{background:rgb(18 12 8 / .82);color:var(--amber);border:1px solid rgb(233 162 59 / .7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--sh2),inset 0 0 0 1px rgb(233 162 59 / .12)}
+.dock .btn-amber::after{background:linear-gradient(105deg,transparent 30%,rgb(233 162 59 / .22) 50%,transparent 70%)}
 .btn-call{width:52px;padding:0;background:var(--foam);color:var(--ink);box-shadow:var(--sh2)}
 .sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:rgb(10 6 4 / .66);opacity:0;transition:opacity .35s}
 .sheet.on{opacity:1}

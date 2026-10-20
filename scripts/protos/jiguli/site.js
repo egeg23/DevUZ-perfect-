@@ -158,7 +158,11 @@ function fzScroll(dy){var vh=innerHeight,pin=false;
     z.t.style.setProperty('--o',clamp(Math.min((t+.08)/.2,(1.04-t)/.14)).toFixed(3));
     if(z.on)z.T+=Math.min(.9,Math.abs(dy)*.0035)}
   /* Кнопка брони внизу не закрывает тарелку, пока на экране сцена меню. */
-  if(dock)dock.classList.toggle('fzon',pin)}
+  if(dock&&pin!==dockPin){dockPin=pin;clearTimeout(dockT);
+    /* Сначала уезжает анимацией, потом убирается со страницы совсем. */
+    if(pin){dock.classList.add('fzon');dockT=setTimeout(function(){dock.classList.add('gone')},460)}
+    else{dock.classList.remove('gone');requestAnimationFrame(function(){dock.classList.remove('fzon')})}}}
+var dockPin=false,dockT=0;
 function initFz(){
   if(CALM||!FZ.length)return;
   var io=new IntersectionObserver(function(es){es.forEach(function(e){var z=FZ.filter(function(q){return q.el===e.target})[0];if(!z)return;
