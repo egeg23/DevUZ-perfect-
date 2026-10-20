@@ -311,7 +311,7 @@ h1{margin:8px 0 12px;font-size:clamp(28px,4vw,40px);line-height:1.12;font-weight
 .need{margin-top:24px;padding:20px 22px;border-radius:var(--r);border:1px dashed var(--ink3);max-width:900px}
 .need h3{font-size:18px}
 .need ul{margin-top:8px;padding-left:20px;display:grid;gap:6px;color:var(--ink2)}
-.price{display:grid;grid-template-columns:1fr 1.3fr;gap:16px;margin-top:28px}
+.price{display:grid;grid-template-columns:1fr 1.3fr;grid-template-rows:auto 1fr;gap:16px;margin-top:28px;align-items:start}
 .pbase,.padds,.ptotal{padding:22px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh1)}
 .pbase{display:flex;flex-direction:column;gap:10px}
 .pbase h3{font-size:22px}.pbase p{color:var(--ink2)}
@@ -331,7 +331,7 @@ h1{margin:8px 0 12px;font-size:clamp(28px,4vw,40px);line-height:1.12;font-weight
 .add-t small{display:block;font-size:14px;color:var(--ink2);line-height:1.4}
 .add-p{font-weight:700;white-space:nowrap}
 .ptotal{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
-.ptotal span{color:var(--ink2)}.ptotal b{font-size:28px;margin-right:auto}
+.ptotal>span{color:var(--ink2)}.ptotal b{font-size:28px;margin-right:auto}
 .foot{max-width:1240px;margin:72px auto 0;padding:24px 16px 40px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;font-size:14px;color:var(--ink2)}
 .rv{animation:pop .6s cubic-bezier(.2,.8,.2,1) both}
 

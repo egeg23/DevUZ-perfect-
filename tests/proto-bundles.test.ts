@@ -1697,16 +1697,17 @@ test("Хаб Instagram → Telegram: ru и uz — условия, noindex, ви�
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });
 
-test("Хаб: 900 $ вместо 1 800 $ на 48 часов, допы в одном месте и на странице", async () => {
+test("Хаб: 500 $ вместо 1 800 $ (владелец, 20.10.2026), допы вдвое дешевле, на 48 часов, допы в одном месте и на странице", async () => {
   const plan = await import("../scripts/protos/ighub/plan.mjs");
-  assert.equal(plan.BASE.promo, 900);
+  assert.equal(plan.BASE.promo, 500);
   assert.equal(plan.BASE.price, 1800);
   assert.equal(plan.OFFER_HOURS, 48);
   assert.ok(plan.ADDONS.length >= 8 && plan.ADDONS.length <= 15, "от 8 до 15 допов");
+  assert.equal(plan.ADDONS.reduce((s: number, a: { price: number }) => s + a.price, 0), 1200, "допы со скидкой 50%: вместе 1 200 $ вместо 2 400 $");
   for (const id of ["crm", "head", "ads", "multi", "wa", "fb"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
   const site = bundlePages("ighub")!;
   for (const html of [site.html, site.pages.uz]) {
-    assert.match(html, /<s id="preg">1 800 \$<\/s><b id="pbase">900 \$<\/b>/, "на макете 900 $ вместо 1 800 $");
+    assert.match(html, /<s id="preg">1 800 \$<\/s><b id="pbase">500 \$<\/b>/, "на макете 500 $ вместо 1 800 $");
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-add="${a.id}" data-price="${a.price}"`), `${a.id}: цена на странице`);
   }
 });
