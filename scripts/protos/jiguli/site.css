@@ -223,10 +223,11 @@ h1,h2,h3,h4,p{margin:0}
 .f-c .ic{width:18px;height:18px;color:var(--amber)}
 .warn{margin-top:40px;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font:400 14px/1.4 var(--f-d);letter-spacing:.06em;text-transform:uppercase;color:var(--foam2)}
 .rights{display:grid;gap:8px;margin-top:24px;font-size:12px}
-.dock{position:fixed;left:var(--gut);right:var(--gut);bottom:calc(12px + env(safe-area-inset-bottom));z-index:30;display:flex;gap:8px;transition:transform .45s var(--ease),opacity .45s}
+/* Спрятанная кнопка ещё и уходит из отрисовки (visibility после анимации):
+   иначе Safari на iPhone красит свою нижнюю панель в её янтарный цвет. */
+.dock{position:fixed;left:var(--gut);right:var(--gut);bottom:calc(12px + env(safe-area-inset-bottom));z-index:30;display:flex;gap:8px;transition:transform .45s var(--ease),opacity .45s,visibility 0s}
 .dock .btn-amber{flex:1;box-shadow:var(--sh2)}
-.dock.fzon{transform:translateY(140%);opacity:0;pointer-events:none}
-.dock.away{transform:translateY(140%);opacity:0;pointer-events:none}
+.dock.fzon,.dock.away{transform:translateY(140%);opacity:0;pointer-events:none;visibility:hidden;transition:transform .45s var(--ease),opacity .45s,visibility 0s .45s}
 .btn-call{width:52px;padding:0;background:var(--foam);color:var(--ink);box-shadow:var(--sh2)}
 .sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:rgb(10 6 4 / .66);opacity:0;transition:opacity .35s}
 .sheet.on{opacity:1}
