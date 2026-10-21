@@ -48,7 +48,7 @@ const last = (c) => `${c}-${String(SEQ.d.find(([n]) => n === c)[1] - 1).padStart
 /* Где в прокрутке что: доля = номер кадра / число кадров. */
 const T = {
   hold: (ORDER.indexOf(last("t4")) + SEQ.hold / 2) / (N - 1),
-  light: ORDER.indexOf(last("t5")) / (N - 1),
+  light: ORDER.indexOf(last("t5b")) / (N - 1),
   side: ORDER.indexOf(last("t6")) / (N - 1),
   /* финальный текст — когда D-MAX ушёл к горизонту (последняя четверть t8) */
   away: (ORDER.indexOf(last("t8")) - SEQ.d.find(([n]) => n === "t8")[1] / 4) / (N - 1),
