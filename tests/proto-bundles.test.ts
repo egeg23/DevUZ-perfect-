@@ -1882,3 +1882,56 @@ test("Жигули: напитки и блюда — из их меню, сай�
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
 });
+
+test("SEM Travel: uz и ru — условия, noindex, видео DevUz первым, шапка по правилу, поиск, подбор, карта, ваучер, бронь в их Telegram, uz без кириллицы", async () => {
+  const { existsSync } = await import("node:fs");
+  const site = bundlePages("semtravel");
+  assert.ok(site);
+  const all: Record<string, string> = { "": site.html, ...site.pages };
+  assert.deepEqual(Object.keys(all).sort(), ["", "ru"]);
+  for (const [path, page] of Object.entries(all)) {
+    const lang = path === "ru" ? "ru" : "uz";
+    assert.doesNotMatch(page, /@@[A-Z]+@@/, `${path}: метка сборки осталась`);
+    assert.ok(page.includes(`<html lang="${lang}">`), `${path}: язык страницы`);
+    assert.ok(page.includes(`https://devuz.studio/${lang}/mockup-terms`), `${path}: нет условий на языке страницы`);
+    assert.match(page, /<meta name="robots" content="noindex/, `${path}: нет noindex`);
+    assert.match(page, /prefers-reduced-motion/, `${path}: анимацию нечем выключить`);
+    assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, `${path}: слово, по которому находят отпечаток`);
+    assert.doesNotMatch(page, /proto-ai|proxyapi/i, `${path}: прототип не зовёт модель`);
+    assert.doesNotMatch(page, /href="#"/, `${path}: ссылка в никуда`);
+    assert.doesNotMatch(page, /body\{[^}]*overflow-x:hidden/, `${path}: overflow-x:hidden у body ломает sticky`);
+    assert.match(page, /IDLE=3000/, `${path}: шапка не по правилу трёх секунд`);
+    assert.ok(page.indexOf('id="dzi"') > 0 && page.indexOf('id="dzi"') < page.indexOf('id="top"'), `${path}: видео DevUz не первым`);
+    for (const id of ["poisk", "pn-pick", "rez", "karta", "cal", "garantii", "tur", "tu-vf", "bron", "stat", "club", "otzyvy", "kontakty", "seychas", "stoimost"]) assert.ok(page.includes(`id="${id}"`), `${path}: нет блока ${id}`);
+    assert.ok(page.includes("tel:+998712755555") && page.includes("https://t.me/prosem_bot") && page.includes("https://t.me/semtravel"), `${path}: нет звонка и их Telegram`);
+    assert.ok(page.includes('"@type":"TravelAgency"') && page.includes("Katta Xirmontepa") === (lang === "uz"), `${path}: нет разметки агентства с адресом`);
+    for (const src of page.match(/\/protos\/semtravel\/[\w./-]+\.(?:webp|png|js)/g) ?? []) assert.ok(existsSync("public" + src), `${path}: нет файла ${src}`);
+    if (lang === "uz") {
+      const text = page.replace(/<path[^>]*>/g, "");
+      assert.doesNotMatch(text, /[А-Яа-яЁё]/, "uz: кириллица на узбекской странице");
+    }
+  }
+  const stamped = stampedBundle("semtravel", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
+});
+
+test("SEM Travel: цены направлений — с их сайта на 21.10.2026, фото на месте, сайт 1 000 $ вместо 2 500 $ на 48 часов, допы в одном месте", async () => {
+  const { existsSync } = await import("node:fs");
+  const D = await import("../scripts/protos/semtravel/data.mjs");
+  // Блок «Куда сейчас дешевле?» на semtravel.uz, 21.10.2026: от $ за одного.
+  const theirs: Record<string, number> = { dubai: 461, azer: 467, georgia: 576, china: 608, lanka: 617, egypt: 618, vietnam: 626, turkey: 658, qatar: 689, thai: 730 };
+  assert.deepEqual(Object.fromEntries(D.DEST.map((d: { id: string; price: number }) => [d.id, d.price])), theirs);
+  for (const d of D.DEST) assert.ok(existsSync(`public/protos/semtravel/${d.img}-s.webp`), `${d.id}: нет фото`);
+  for (const h of ["h-pool", "h-room", "h-sea"]) assert.ok(existsSync(`public/protos/semtravel/${h}-s.webp`), `${h}: нет фото`);
+  const plan = await import("../scripts/protos/semtravel/plan.mjs");
+  assert.equal(plan.BASE.promo, 1000);
+  assert.equal(plan.BASE.price, 2500);
+  assert.equal(plan.OFFER_HOURS, 48);
+  assert.ok(plan.ADDONS.length >= 8 && plan.ADDONS.length <= 20, "от 8 до 20 допов");
+  for (const id of ["tourvisor", "pick", "cabinet", "crm", "tgbot", "pay", "app", "en", "maps"]) assert.ok(plan.ADDONS.some((a: { id: string }) => a.id === id), `нет допа ${id}`);
+  const site = bundlePages("semtravel")!;
+  for (const html of [site.html, site.pages.ru]) {
+    assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
+    for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
+  }
+});
