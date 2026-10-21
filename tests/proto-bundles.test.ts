@@ -1961,7 +1961,7 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   const allowed = new Set(["4", "3", "2", "999", "190", "140", "670", "800", "5", "285", "1", "870", "790", "998", "78", "80", "00", "21", "10", "2026", "66", "6", "0", "9"]);
   for (const n of text.match(/\d+/g) ?? []) assert.ok(allowed.has(n) || /^\d,\d$/.test(n), `число ${n} не из фактов`);
   /* Сцена: кадры для компьютера и телефона, по одному счёту, все на месте. */
-  const seq = JSON.parse(readFileSync("scripts/protos/samauto/seq.json", "utf8")) as Record<"d" | "m", [string, number][]>;
+  const seq = JSON.parse(readFileSync("scripts/protos/samauto/seq.json", "utf8")) as Record<"d" | "m", [string, number][]> & { order: string[] };
   assert.deepEqual(seq.d, seq.m, "у телефона и компьютера разный счёт кадров");
   const frames = JSON.parse(page.match(/<script type="application\/json" id="sa-site">([\s\S]*?)<\/script>/)![1]).frames as string[];
   for (const set of ["d", "m"] as const) {
@@ -1986,10 +1986,18 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   /* iPhone: 300 распакованных кадров по ~8 МБ Safari не держит и встаёт на ~38%
      (владелец, 21.10.2026). Качаем сжатыми, файл — один раз, с таймаутом;
      распакованных — не больше MAXB. */
-  assert.match(page, /MAXB=\d+/, "распакованные кадры копятся без предела — iPhone встанет");
+  assert.match(page, /MAXB=(?:portrait\?\d+:)?\d+/, "распакованные кадры копятся без предела — iPhone встанет");
   assert.match(page, /\.close\(\)/, "выброшенные кадры не освобождают память");
   assert.match(page, /WAIT=\d+/, "молчащий файл держит загрузку вечно");
   assert.doesNotMatch(page, /new Image\(\);im\.decoding/, "кадры снова грузятся картинками целиком в память");
+  /* Телефон — одно видео, каждый кадр ключевой: кадры по одному iPhone на
+     разлёте не успевал распаковывать (владелец, 21.10.2026). */
+  assert.ok(existsSync("public/protos/samauto/seq/m.mp4"), "нет видео сцены для телефона");
+  assert.ok(statSync("public/protos/samauto/seq/m.mp4").size < 20 * 1048576, "видео сцены для телефона тяжелее 20 МБ");
+  assert.match(page, /<video id="vd" muted playsinline/, "видео сцены без muted playsinline — iPhone его не покажет");
+  assert.match(page, /codecs="avc1/, "телефон не проверяет, умеет ли он H.264");
+  assert.match(page, /'seeked'/, "перемотка не ждёт прошлую — Safari отстаёт");
+  assert.deepEqual(seq.order, frames, "порядок кадров на странице и в видео разный");
   assert.match(page, /class="still"/, "нет запасного пути кадрами");
   const stamped = stampedBundle("samauto", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");

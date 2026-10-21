@@ -39,6 +39,9 @@ h1,h2,.h2{font-family:var(--hf);font-weight:700;letter-spacing:-.01em;margin:0}
 .poster,.poster img,#cv{position:absolute;inset:0;width:100%;height:100%}
 .poster img{object-fit:cover}
 #cv{display:block}
+#vd{position:absolute;display:none;object-fit:fill;pointer-events:none}
+.vid #vd{display:block}
+.calm #vd{display:none}
 .lock,.lock body{overflow:hidden}
 /* Загрузка: пока не придут все кадры, на первом кадре счёт до 100%. */
 .boot{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:12px;background:rgba(7,8,10,.55);transition:opacity .6s ease,visibility .6s;z-index:2}
