@@ -73,7 +73,7 @@ function sceneBlock() {
 <ul class="chips" id="chips" aria-hidden="true">${LABELS.filter(([part]) => !["tom", "kuzov"].includes(part)).map(([, k, v]) => `<li><small>${k}</small><b>${v}</b></li>`).join("")}</ul>
 <div class="load" id="load" aria-hidden="true"><span>3D model yuklanmoqda</span><i><b id="load-b"></b></i></div>
 <div class="copy c0" id="c0"><p class="kick">${B.model}</p><h1 id="c0-h">Yangi D-MAX bilan tanishing</h1><p class="lead">Pastga aylantiring: mashina detallarga ajraladi va yana yig‘iladi.</p><a class="hint" href="#raqamlar">${ic("down")}<span>Pastga aylantiring</span></a></div>
-<div class="copy c1" id="c1" aria-hidden="true"><p class="kick">Ichidan</p><p class="h2">Mashinani detallarga ajratdik</p><p class="lead">Aylantirishda davom eting, D-MAX qayta yig‘iladi.</p></div>
+<div class="copy c1" id="c1" aria-hidden="true"><p class="kick">Ichidan</p><p class="h2" id="c1-h">Mashinani detallarga ajratdik</p><p class="lead">Aylantirishda davom eting, D-MAX qayta yig‘iladi.</p></div>
 <div class="copy c2" id="c2"><p class="kick">${B.model}</p><p class="h2">Test-drayvga yoziling</p><a class="btn btn-red" href="${tel}">${ic("phone")}<span>Qo‘ng‘iroq qilish</span></a><p class="ph">${B.phone}</p></div>
 <div class="bar" aria-hidden="true"><i id="bar"></i></div>
 </div>

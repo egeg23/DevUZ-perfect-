@@ -1981,6 +1981,9 @@ test("SamAuto: D-MAX разлетается по прокрутке — усло
   assert.match(src, /0\.7 \+ rand\(\) \* 0\.6/, "нет множителя 0.7…1.3");
   assert.match(src, /rand\(\) \* 0\.6;/, "нет поворота до 0.6 рад");
   assert.match(src, /MathUtils\.damp/, "прокрутка не сглажена");
+  assert.match(src, /power2InOut/, "доля прокрутки не через power2.inOut");
+  assert.match(src, /car\.traverse\(\(m\) => \{ if \(m\.isMesh\) meshes \+= 1; \}\)/, "число деталей не из scene.traverse");
+  assert.ok(page.includes("ta detalga ajratdik"), "число деталей не выводится на страницу");
   const stamped = stampedBundle("samauto", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });

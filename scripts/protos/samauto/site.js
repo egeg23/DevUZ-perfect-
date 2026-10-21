@@ -44,6 +44,7 @@ function boot(){
     scene=SamScene.start({canvas:$('#gl'),src:site.img+(phone?'/dmax-m.glb':'/dmax.glb'),labels:tags,progress:progress,
       onProgress:function(k){if(lb)lb.style.transform='scaleX('+k.toFixed(3)+')'},
       onFrame:function(p,e){if(chips)chips.style.opacity=sm(.55,.9,e).toFixed(3)},
+      onReady:function(n){var h=$('#c1-h');if(h&&n)h.textContent='Mashinani '+n+' ta detalga ajratdik'},
       onFirst:function(){stage.classList.add('live')},
       onError:calm});
   }catch(e){calm();return}

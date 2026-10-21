@@ -12,7 +12,10 @@
  *  - мелкие детали летят дальше: · clamp(1 / size, 0.5, 2), size — размер
  *    детали к размеру машины;
  *  - поворот до 0.6 рад · explode;
- *  - прокрутка сглажена (damp), детали не дёргаются.
+ *  - доля прокрутки проходит через power2.inOut: у 0 и у 1 детали стоят;
+ *  - сборка — та же формула, explode идёт от 1 к 0;
+ *  - прокрутка сглажена (damp), детали не дёргаются;
+ *  - деталей на странице столько, сколько мешей насчитал scene.traverse.
  * Шаг 1.5 из рецепта рассчитан на машину в метрах, наша модель длиной ~1,
  * поэтому шаг 0.3: при 1.5 мелкие детали улетают за край телефона.
  *
@@ -48,9 +51,13 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
 
-/* Доля прокрутки → разлёт: стоит, разлетается, держится, собирается. */
+/* power2.inOut (как в GSAP): у 0 и у 1 скорость нулевая. */
+export const power2InOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+const ramp = (a, b, v) => power2InOut(clamp((v - a) / (b - a), 0, 1));
+
+/* Доля прокрутки → разлёт: стоит, разлетается, держится, собирается той же формулой. */
 export function explodeAt(p) {
-  return smooth(0.12, 0.42, p) * (1 - smooth(0.62, 0.9, p));
+  return ramp(0.12, 0.42, p) * (1 - ramp(0.62, 0.9, p));
 }
 
 /* Доля прокрутки → камера: справа спереди, вдоль борта, сзади справа. */
@@ -233,7 +240,10 @@ export function start(o) {
     }
     ready = true;
     dirty = true;
-    o.onReady && o.onReady();
+    /* Настоящее число деталей — мешей в машине, а не придуманное. */
+    let meshes = 0;
+    car.traverse((m) => { if (m.isMesh) meshes += 1; });
+    o.onReady && o.onReady(meshes);
   }, (ev) => { if (ev.total && o.onProgress) o.onProgress(ev.loaded / ev.total); }, (err) => { o.onError && o.onError(err); });
 
   const q = new Quaternion();
@@ -309,4 +319,4 @@ export function start(o) {
   };
 }
 
-window.SamScene = { start, explodeAt };
+window.SamScene = { start, explodeAt, power2InOut };
