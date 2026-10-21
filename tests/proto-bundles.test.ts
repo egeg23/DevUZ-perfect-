@@ -1983,6 +1983,13 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   assert.match(page, /id="boot-n"/, "нет счёта загрузки");
   assert.match(page, /root\.classList\.add\('lock'\)/, "прокрутка не ждёт загрузки");
   assert.match(page, /LIMIT=\d+/, "загрузка без предела — сайт может встать");
+  /* iPhone: 300 распакованных кадров по ~8 МБ Safari не держит и встаёт на ~38%
+     (владелец, 21.10.2026). Качаем сжатыми, файл — один раз, с таймаутом;
+     распакованных — не больше MAXB. */
+  assert.match(page, /MAXB=\d+/, "распакованные кадры копятся без предела — iPhone встанет");
+  assert.match(page, /\.close\(\)/, "выброшенные кадры не освобождают память");
+  assert.match(page, /WAIT=\d+/, "молчащий файл держит загрузку вечно");
+  assert.doesNotMatch(page, /new Image\(\);im\.decoding/, "кадры снова грузятся картинками целиком в память");
   assert.match(page, /class="still"/, "нет запасного пути кадрами");
   const stamped = stampedBundle("samauto", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
