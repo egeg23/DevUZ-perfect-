@@ -84,25 +84,34 @@ function poke(){var p=progress();if(p!==want)dir=p>want?1:-1;want=p;if(!raf)raf=
 /* Загрузка до 100%: прокрутка держится, пока не придут все файлы, но не
    дольше LIMIT. Файл, который молчит дольше WAIT, качается заново (TRY раз),
    потом пропускается: сцена возьмёт соседний. */
+/* Кадры и видео лежат зашифрованными (seal.py): ключ — у макета по его
+   ссылке, расшифровка — в браузере. Файл = 12 байт nonce + AES-GCM. */
+var KEY=null;
+function key(){return KEY||(KEY=fetch(site.base+'/promo/scene',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+  .then(function(b){return crypto.subtle.importKey('raw',b,'AES-GCM',false,['decrypt'])}))}
+function unseal(buf,type){return key().then(function(k){return crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf,0,12)},k,new Uint8Array(buf,12))})
+  .then(function(x){return new Blob([x],{type:type})})}
 var boot=$('#boot'),bn=$('#boot-n'),bb=$('#boot-b'),done=0,LIMIT=30000,WAIT=15000,TRY=2;
 function unlock(){if(ready)return;ready=true;root.classList.remove('lock');stage.classList.add('live');poke()}
 function count(){done++;var k=done/F;if(bn)bn.textContent=Math.floor(k*100);if(bb)bb.style.transform='scaleX('+k.toFixed(3)+')';if(done===1||!ready)poke();if(done>=F)setTimeout(unlock,250)}
 function get(u,left,cb){
   var ctl=window.AbortController?new AbortController():null,t=setTimeout(function(){if(ctl)ctl.abort()},WAIT);
-  fetch(site.img+'/seq/'+set+'/'+files[u]+'.webp',ctl?{signal:ctl.signal}:{}).then(function(r){if(!r.ok)throw 0;return r.blob()})
+  fetch(site.img+'/seq/'+set+'/'+files[u]+'.bin',ctl?{signal:ctl.signal}:{}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+    .then(function(b){return unseal(b,'image/webp')})
     .then(function(b){clearTimeout(t);blob[u]=b;cb()},function(){clearTimeout(t);if(left>1)get(u,left-1,cb);else cb()})}
 /* Видео — одним файлом с ходом загрузки; потом в <video> из памяти, чтобы
    перемотка не ждала сеть. */
 function loadVid(){
   root.classList.add('lock');setTimeout(unlock,LIMIT);stage.classList.add('vid');
-  var url=site.img+'/seq/m.mp4',fail=function(){if(ready&&vd.src)return;VID=false;stage.classList.remove('vid');F=files.length;done=0;load(true)};
+  var url=site.img+'/seq/m.bin',fail=function(){if(ready&&vd.src)return;VID=false;stage.classList.remove('vid');F=files.length;done=0;load(true)};
   var show=function(k){if(bn)bn.textContent=Math.floor(k*100);if(bb)bb.style.transform='scaleX('+k.toFixed(3)+')'};
   /* Не обрываем по LIMIT: на медленной сети видео докачается после того, как
      прокрутка откроется, а начинать заново кадрами — вдвое дольше. */
   fetch(url).then(function(r){if(!r.ok)throw 0;var len=+r.headers.get('content-length')||0;
     if(!r.body||!r.body.getReader||!len)return r.blob();
     var rd=r.body.getReader(),parts=[],got=0;
-    return(function pump(){return rd.read().then(function(x){if(x.done)return new Blob(parts,{type:'video/mp4'});parts.push(x.value);got+=x.value.length;show(got/len*.98);return pump()})})()})
+    return(function pump(){return rd.read().then(function(x){if(x.done)return new Blob(parts);parts.push(x.value);got+=x.value.length;show(got/len*.98);return pump()})})()})
+  .then(function(b){return b.arrayBuffer()}).then(function(b){return unseal(b,'video/mp4')})
   .then(function(b){vd.addEventListener('loadeddata',function(){show(1);vplace();
       /* iOS рисует кадры перемотки только после первого play(); в режиме
          энергосбережения play() откажет — тогда по первому касанию. */
@@ -126,7 +135,10 @@ else if(cx){fit();copy(progress());load()}
 
 /* Техника: по нажатию машина вылетает из карточки на середину, за ней
    проявляется живая сцена (видео кольцом), цифры — полосками по шкале. */
-var fv=$('#fv'),fleet=JSON.parse(($('#sa-fleet')||{}).textContent||'{}'),last=null,fvT=[];
+var fv=$('#fv'),fleet=JSON.parse(($('#sa-fleet')||{}).textContent||'{}'),last=null,fvT=[],fvU={};
+/* живая сцена — расшифрованной, один раз на файл */
+function fvVid(f){return fvU[f]||(fvU[f]=fetch(f).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+  .then(function(b){return unseal(b,'video/mp4')}).then(function(b){return URL.createObjectURL(b)},function(e){delete fvU[f];throw e}))}
 function fvClear(){fvT.forEach(clearTimeout);fvT=[]}
 function fvOpen(btn){
   var f=fleet[btn.getAttribute('data-k')];if(!f||!fv)return;last=btn;fvClear();
@@ -134,14 +146,16 @@ function fvOpen(btn){
   $('#fv-k').textContent=f.cat;$('#fv-h').textContent=f.name;$('#fv-w').textContent=f.where;
   $('#fv-b').innerHTML=f.bars.map(function(b,i){return'<li style="--i:'+i+'"><small>'+b[0]+'</small><b data-n="'+b[1]+'" data-u="'+b[3].replace(/^[\d ]+/,'')+'">'+b[3]+'</b><i style="--v:0%" data-v="'+Math.min(100,b[1]/b[2]*100).toFixed(1)+'%"></i></li>'}).join('');
   $('#fv-t').innerHTML=f.tags.map(function(t){return'<li>'+t+'</li>'}).join('');
-  v.poster=base+(tall?'-9.webp':'-16.webp');v.src=base+(tall?'-9.mp4':'-16.mp4');
+  v.poster=base+(tall?'-9.webp':'-16.webp');v.removeAttribute('src');
+  var go=function(){if(!v.src||!fv.classList.contains('live'))return;var p=v.play();if(p&&p.catch)p.catch(function(){})};
+  fvVid(base+(tall?'-9.bin':'-16.bin')).then(function(u){if(last!==btn||fv.hidden)return;v.src=u;go()},function(){});
   fv.classList.remove('live','show');fv.hidden=false;root.classList.add('lock-fv');
   /* машина: с места карточки — на середину, крупно */
   car.src=img.currentSrc||img.src;car.style.transition='none';car.style.opacity='1';car.style.width=r.width+'px';car.style.height=r.height+'px';
   car.style.transform='translate('+r.left+'px,'+r.top+'px)';car.getBoundingClientRect();car.style.transition='';
   var W=Math.min(innerWidth*.9,innerHeight*1.2),k=W/r.width,x=(innerWidth-W)/2,y=(innerHeight-r.height*k)/2-(tall?innerHeight*.12:0);
   car.style.transform='translate('+x+'px,'+y+'px) scale('+k+')';
-  fvT.push(setTimeout(function(){var p=v.play();if(p&&p.catch)p.catch(function(){});fv.classList.add('live')},650));
+  fvT.push(setTimeout(function(){fv.classList.add('live');go()},650));
   fvT.push(setTimeout(function(){car.style.opacity='0';fv.classList.add('show');count()},1100));
   function count(){$$('#fv-b i').forEach(function(i){i.style.setProperty('--v',i.getAttribute('data-v'))});
     $$('#fv-b b').forEach(function(b){var n=+b.getAttribute('data-n');if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;var t0=performance.now(),D=1200;

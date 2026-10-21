@@ -66,3 +66,18 @@ export function playlist(promo: Promo, base: string, sign: { e: number; s: strin
 
 /** Ключ в хранилище — 32 знака hex; иное за ключ не считаем. */
 export const keyOk = (key: string | null): key is string => typeof key === "string" && /^[0-9a-f]{32}$/i.test(key);
+
+/**
+ * Сцена макета, зашифрованная целиком (владелец, 21.10.2026, про SamAuto:
+ * «защити его, я не хочу, чтобы через консоль кто-то смог вытащить код и
+ * украсть то, что тут есть»): кадры и видео в public — AES-256-GCM, файл =
+ * 12 байт nonce + шифр (scripts/protos/samauto/seal.py). Ключ — секрет в
+ * хранилище, отдаёт его app/proto/[token]/promo/scene тому, кому открыт
+ * макет. Честно: пока макет открыт, расшифрованные кадры живут в памяти
+ * браузера, и человек с инструментами разработчика может их собрать. Защита —
+ * от скачивания файлов с сервера и из репозитория.
+ */
+export const SCENES: Record<string, string> = { samauto: "SCENE_KEY_SAMAUTO" };
+
+/** Ключ сцены — 64 знака hex (32 байта). */
+export const sceneKeyOk = (key: string | null): key is string => typeof key === "string" && /^[0-9a-f]{64}$/i.test(key);

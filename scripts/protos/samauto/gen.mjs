@@ -203,7 +203,7 @@ ${fleetView()}
 <div class="rights"><span>Bu maket: SamAuto sayti shunday ko‘rinishi mumkin. Sayt ma’lumot uchun va ommaviy oferta emas.</span><a href="https://devuz.studio/uz/mockup-terms">Maketdan foydalanish shartlari</a></div>
 </div></footer>
 <div class="dock" id="dock"><a class="btn btn-red" href="${tel}">${ic("phone")}<span>Test-drayvga yozilish</span></a></div>
-<script type="application/json" id="sa-site">${JSON.stringify({ img: IMG, frames: ORDER, fps: SEQ.fps })}</script>
+<script type="application/json" id="sa-site">${JSON.stringify({ img: IMG, base: "__PROTO_BASE__", frames: ORDER, fps: SEQ.fps })}</script>
 @@J@@
 </body>
 </html>`;
@@ -216,7 +216,7 @@ const parts = {
 };
 const fill = (p) => Object.entries(parts).reduce((s, [n, part]) => s.split(`@@${n}@@`).join(part), p);
 
-for (const v of Object.values(out)) for (const m of fill(v).matchAll(/\/protos\/samauto\/[\w./-]+\.(?:webp|png|js)/g)) if (!existsSync(PUB + m[0])) console.warn("нет файла", m[0]);
+for (const v of Object.values(out)) for (const m of fill(v).matchAll(/\/protos\/samauto\/[\w./-]+\.(?:webp|png|js|bin)/g)) if (!existsSync(PUB + m[0])) console.warn("нет файла", m[0]);
 mkdirSync(DIR + "out", { recursive: true });
 writeFileSync(DIR + "out/pages.json", JSON.stringify(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, fill(v)]))));
 const bundleDir = new URL("../../../content/proto-bundles/", import.meta.url).pathname;

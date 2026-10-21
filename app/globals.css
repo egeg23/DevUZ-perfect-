@@ -958,3 +958,49 @@
     transform: none;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Кейс с живым прототипом (SamAuto): по рамке карточки бежит свет.
+   Крутится только transform у квадрата втрое шире карточки — его хватает
+   на всю диагональ, углы не оголяются.
+   ─────────────────────────────────────────────────────────────────────── */
+.proto-glow {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  box-shadow: 0 0 40px -12px rgb(255 122 26 / 0.55);
+}
+.proto-glow::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: 300%;
+  aspect-ratio: 1;
+  background: conic-gradient(from 0deg, transparent 0 55%, rgb(255 122 26 / 0.9) 72%, #ffe1bf 80%, rgb(255 122 26 / 0.9) 86%, transparent 96%);
+  transform: translate(-50%, -50%) rotate(0turn);
+  animation: proto-spin 3.6s linear infinite;
+}
+.proto-badge {
+  animation: proto-pulse 2.4s ease-in-out infinite;
+}
+@keyframes proto-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+@keyframes proto-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .proto-glow::before,
+  .proto-badge {
+    animation: none;
+  }
+  .proto-glow::before {
+    background: rgb(255 122 26 / 0.6);
+  }
+}

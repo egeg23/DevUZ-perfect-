@@ -29,8 +29,9 @@ test("на сайте новые сверху; на главной — шест�
   // идут: там проекты клиентов. В списке /cases они стоят по дате, как все.
   // Макеты из «Макетов» вошли в кейсы 20.10.2026, каждый со своей датой.
   const home = casesByDate.filter((c) => c.slug !== showcaseSlug && !c.demo).slice(0, 6).map((c) => c.slug);
-  assert.deepEqual(home, ["usemtau", "jiguli", "semtravel", "syanie-severa", "soffice", "baldinini"]);
-  assert.deepEqual(casesByDate.slice(0, 4).map((c) => c.slug), ["usemtau", "jiguli", "semtravel", "syanie-severa"]);
+  // SamAuto — первым: кейс с живым прототипом (владелец, 21.10.2026).
+  assert.deepEqual(home, ["samauto", "usemtau", "jiguli", "semtravel", "syanie-severa", "soffice"]);
+  assert.deepEqual(casesByDate.slice(0, 4).map((c) => c.slug), ["samauto", "usemtau", "jiguli", "semtravel"]);
   assert.ok(casesByDate.find((c) => c.slug === "ig-hub")?.demo, "хаб — демо, не клиент");
   // Главная, список, «следующий проект» и презентация студии берут один порядок.
   assert.match(read("components/sections/cases.tsx"), /casesByDate\.filter\(\(item\) => item\.slug !== showcaseSlug && !item\.demo\)\.slice\(0, 6\)/);

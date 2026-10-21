@@ -8,11 +8,13 @@ import { ContactSection } from "@/components/sections/contact";
 import { DevuzShowcase } from "@/components/sections/devuz-showcase";
 import { FaqSection } from "@/components/sections/faq";
 import { MarketingSection } from "@/components/sections/marketing";
+import { ProtoReel } from "@/components/sections/proto-reel";
 import { ProcessSection } from "@/components/sections/process";
 import { ScaleSection } from "@/components/sections/scale";
 import { ServicesSection } from "@/components/sections/services";
 import { StackSection } from "@/components/sections/stack";
 import { StudioFilm } from "@/components/sections/studio-film";
+import { cases } from "@/content/cases";
 import { company } from "@/content/company";
 import { getDictionary } from "@/content/dictionaries";
 import { isLocale, t, type Locale } from "@/lib/i18n";
@@ -49,6 +51,7 @@ export default async function HomePage({
   return (
     <>
       <CompileScene locale={locale} dict={dict} />
+      <ProtoReel locale={locale} proto={cases.find((c) => c.slug === "samauto")?.prototype} />
       <ScaleSection locale={locale} />
       <StudioFilm locale={locale} />
       <ServicesSection locale={locale} dict={dict} />
