@@ -1937,8 +1937,8 @@ test("SEM Travel: цены направлений — с их сайта на 21
   }
 });
 
-test("SamAuto: D-MAX разлетается по прокрутке — условия, noindex, видео DevUz, шапка, узбекский, только цифры с их сайта, запасной путь", async () => {
-  const { existsSync, readFileSync, statSync } = await import("node:fs");
+test("SamAuto: D-MAX из-под покрывала, разлёт, фара, проезд — кадры по прокрутке, загрузка до 100%, условия, noindex, видео DevUz, шапка, узбекский, только цифры с их сайта, запасной путь", async () => {
+  const { existsSync, readFileSync, readdirSync, statSync } = await import("node:fs");
   const site = bundlePages("samauto");
   assert.ok(site);
   assert.deepEqual(Object.keys(site.pages), [], "у макета одна страница");
@@ -1960,30 +1960,30 @@ test("SamAuto: D-MAX разлетается по прокрутке — усло
   const text = page.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<[^>]+>/g, " ");
   const allowed = new Set(["4", "3", "2", "999", "190", "140", "670", "800", "5", "285", "1", "870", "790", "998", "78", "80", "00", "21", "10", "2026", "66", "6", "0", "9"]);
   for (const n of text.match(/\d+/g) ?? []) assert.ok(allowed.has(n) || /^\d,\d$/.test(n), `число ${n} не из фактов`);
-  /* Сцена: модель в двух весах, детали с именами, кадры для запасного пути. */
-  for (const f of ["scene.js", "dmax.glb", "dmax-m.glb", "logo.webp", "poster-a-16.webp", "poster-a-9.webp", "poster-e-16.webp", "poster-e-9.webp"]) assert.ok(existsSync(`public/protos/samauto/${f}`), `нет ${f}`);
-  assert.ok(statSync("public/protos/samauto/dmax-m.glb").size < 2.5 * 1048576, "модель для телефона тяжелее 2,5 МБ");
-  assert.ok(statSync("public/protos/samauto/dmax.glb").size < 4 * 1048576, "модель для компьютера тяжелее 4 МБ");
-  for (const f of ["dmax.glb", "dmax-m.glb"]) {
-    const glb = readFileSync(`public/protos/samauto/${f}`);
-    const json = JSON.parse(glb.subarray(20, 20 + glb.readUInt32LE(12)).toString("utf8"));
-    const names = (json.nodes as { name?: string }[]).map((n) => n.name);
-    for (const part of ["kapot", "kuzov", "tom", "yuk_kuzov", "orqa_bort", "old_bamper", "gildirak_old_ong", "gildirak_orqa_ong", "eshik_old_ong", "oyna_ong"]) assert.ok(names.includes(part), `${f}: нет детали ${part}`);
-    assert.ok(json.extensionsUsed.includes("EXT_meshopt_compression"), `${f}: не сжата`);
+  /* Сцена: кадры для компьютера и телефона, по одному счёту, все на месте. */
+  const seq = JSON.parse(readFileSync("scripts/protos/samauto/seq.json", "utf8")) as Record<"d" | "m", [string, number][]>;
+  assert.deepEqual(seq.d, seq.m, "у телефона и компьютера разный счёт кадров");
+  const frames = JSON.parse(page.match(/<script type="application\/json" id="sa-site">([\s\S]*?)<\/script>/)![1]).frames as string[];
+  for (const set of ["d", "m"] as const) {
+    const files = readdirSync(`public/protos/samauto/seq/${set}`);
+    assert.equal(files.length, seq[set].reduce((n, [, k]) => n + k, 0), `${set}: лишние или потерянные кадры`);
+    for (const f of new Set(frames)) assert.ok(files.includes(`${f}.webp`), `${set}: нет кадра ${f}`);
+    const mb = files.reduce((n, f) => n + statSync(`public/protos/samauto/seq/${set}/${f}`).size, 0) / 1048576;
+    assert.ok(mb < 20, `${set}: кадры весят ${mb.toFixed(1)} МБ, больше 20`);
   }
-  for (const part of ["kapot", "gildirak_old_ong", "yuk_kuzov", "old_bamper"]) assert.ok(page.includes(`data-part="${part}"`), `нет подписи у ${part}`);
+  /* Порядок: покрывало, разлёт, пауза, сборка — тот же разлёт задом наперёд, фара, борт, проезд. */
+  assert.equal(frames[0], "t1-00", "сцена начинается не с покрывала");
+  assert.equal(frames[frames.length - 1], `t7-${String(seq.d.at(-1)![1] - 1).padStart(2, "0")}`, "сцена кончается не проездом");
+  const ex = frames.slice(frames.indexOf("t3-00"), frames.indexOf("t5-00")).filter((f, i, a) => f !== a[i - 1]);
+  assert.ok(ex.length > 2, "нет разлёта");
+  assert.deepEqual(ex.slice().reverse(), ex, "сборка — не разлёт задом наперёд");
+  for (const f of ["poster-a-16.webp", "poster-a-9.webp", "poster-e-16.webp", "poster-e-9.webp", "logo.webp"]) assert.ok(existsSync(`public/protos/samauto/${f}`), `нет ${f}`);
+  assert.ok(!existsSync("public/protos/samauto/dmax.glb"), "3D-модель осталась в public — её никто не грузит");
+  /* Загрузка до 100%: прокрутка ждёт все кадры, но не вечно. */
+  assert.match(page, /id="boot-n"/, "нет счёта загрузки");
+  assert.match(page, /root\.classList\.add\('lock'\)/, "прокрутка не ждёт загрузки");
+  assert.match(page, /LIMIT=\d+/, "загрузка без предела — сайт может встать");
   assert.match(page, /class="still"/, "нет запасного пути кадрами");
-  assert.match(page, /getContext\('webgl2'\)\|\|t\.getContext\('webgl'\)/, "без WebGL нет запасного пути");
-  const scene = readFileSync("public/protos/samauto/scene.js", "utf8");
-  assert.doesNotMatch(scene, /https?:\/\/(?!www\.w3\.org)/, "сцена грузит что-то со стороны");
-  const src = readFileSync("scripts/protos/samauto/scene.src.js", "utf8");
-  assert.match(src, /clamp\(1 \/ sz, 0\.5, 2\)/, "мелкие детали не летят дальше");
-  assert.match(src, /0\.7 \+ rand\(\) \* 0\.6/, "нет множителя 0.7…1.3");
-  assert.match(src, /rand\(\) \* 0\.6;/, "нет поворота до 0.6 рад");
-  assert.match(src, /MathUtils\.damp/, "прокрутка не сглажена");
-  assert.match(src, /power2InOut/, "доля прокрутки не через power2.inOut");
-  assert.match(src, /car\.traverse\(\(m\) => \{ if \(m\.isMesh\) meshes \+= 1; \}\)/, "число деталей не из scene.traverse");
-  assert.ok(page.includes("ta detalga ajratdik"), "число деталей не выводится на страницу");
   const stamped = stampedBundle("samauto", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });

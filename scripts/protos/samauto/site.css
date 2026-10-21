@@ -33,75 +33,69 @@ h1,h2,.h2{font-family:var(--hf);font-weight:700;letter-spacing:-.01em;margin:0}
 .top-ph span{display:none}
 @media(min-width:900px){.nav{display:flex}.top-ph{margin-left:24px}.top-ph span{display:inline}}
 
-/* Сцена: высокая дорожка, сцена прилипает к экрану. Прокрутка своя. */
-.track{position:relative;height:560vh}
+/* Сцена: высокая дорожка, сцена прилипает к экрану, прокрутка листает кадры. */
+.track{position:relative;height:1100vh}
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:var(--bg)}
-.poster,.poster img,#gl{position:absolute;inset:0;width:100%;height:100%}
+.poster,.poster img,#cv{position:absolute;inset:0;width:100%;height:100%}
 .poster img{object-fit:cover}
-#gl{display:block;opacity:0;transition:opacity .8s ease}
-.live #gl{opacity:1}
-.live .poster{opacity:0;transition:opacity .8s ease .2s}
-.tags{position:absolute;inset:0;pointer-events:none}
-.tag{position:absolute;left:0;top:0;opacity:0;will-change:transform,opacity}
-.tag i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px rgba(227,30,36,.25)}
-.tag span{position:absolute;left:12px;top:-40px;display:block;white-space:nowrap;padding:8px 12px;border-radius:10px;background:rgba(14,16,19,.82);border:1px solid var(--ln);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.tag small{display:block;font-size:12px;line-height:1.3;color:var(--mu)}
-.tag b{display:block;font:700 16px/1.3 var(--hf)}
-.tag::before{content:"";position:absolute;left:0;top:-14px;width:12px;height:1px;background:var(--red);transform:rotate(-50deg);transform-origin:left center}
-.tag.l span{left:auto;right:12px}
-.tag.l::before{left:auto;right:0;transform:rotate(50deg);transform-origin:right center}
-/* Телефон: подписи у деталей наезжают друг на друга, поэтому плашками снизу. */
-.chips{display:none}
-@media(max-width:599px){
-  .tags{display:none}
-  .chips{position:absolute;left:16px;right:16px;bottom:48px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0;padding:0;list-style:none;opacity:0;pointer-events:none}
-  .chips li{padding:8px 12px;border-radius:10px;background:rgba(14,16,19,.82);border:1px solid var(--ln)}
-  .chips small{display:block;font-size:12px;line-height:1.3;color:var(--mu)}
-  .chips b{display:block;font:700 16px/1.3 var(--hf)}
-}
-.load{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);display:grid;gap:8px;justify-items:center;font-size:12px;color:var(--mu);transition:opacity .4s ease}
-.load i{display:block;width:160px;height:2px;background:var(--ln);border-radius:2px;overflow:hidden}
-.load b{display:block;height:100%;background:var(--red);transform-origin:left center;transform:scaleX(0)}
-.live .load,.calm .load{opacity:0}
-.copy{position:absolute;left:0;right:0;padding:0 16px;max-width:640px;text-shadow:0 2px 24px rgba(0,0,0,.65);pointer-events:none;transition:opacity .45s ease,transform .45s ease}
+#cv{display:block}
+.lock,.lock body{overflow:hidden}
+/* Загрузка: пока не придут все кадры, на первом кадре счёт до 100%. */
+.boot{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:12px;background:rgba(7,8,10,.55);transition:opacity .6s ease,visibility .6s;z-index:2}
+.boot-n{margin:0;font:700 48px/1 var(--hf);letter-spacing:-.02em}
+.boot-n b{font-weight:700}
+.boot i{display:block;width:200px;height:2px;background:var(--ln);border-radius:2px;overflow:hidden}
+.boot i b{display:block;height:100%;background:var(--red);transform-origin:left center;transform:scaleX(0)}
+.boot span{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mu)}
+.live .boot{opacity:0;visibility:hidden}
+.copy{position:absolute;left:0;right:0;padding:0 16px;max-width:640px;text-shadow:0 2px 24px rgba(0,0,0,.65);pointer-events:none;opacity:0;transform:translateY(16px);z-index:1}
 .copy a,.copy .btn{pointer-events:auto}
-.c0{top:88px}
+.c0{top:88px;opacity:1;transform:none}
 .c0 h1{font-size:30px;line-height:1.12}
 .lead{margin:12px 0 0;color:var(--mu);font-size:16px;max-width:30em}
 .hint{display:inline-flex;align-items:center;gap:8px;margin-top:24px;font-size:14px;color:var(--tx);text-decoration:none}
 .hint .i{animation:nudge 1.8s ease-in-out infinite}
 @keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
-.c1{top:88px;opacity:0;transform:translateY(16px)}
-.c1 .h2,.c2 .h2{font-size:24px;line-height:1.2}
-.c2{bottom:96px;opacity:0;transform:translateY(16px)}
-.c2 .btn{margin-top:16px}
+.c1,.c2,.c3{top:88px}
+.h2{font-size:24px;line-height:1.2}
+.c4{bottom:96px}
+.c4 .btn{margin-top:16px}
 .ph{margin:8px 0 0;font-size:14px;color:var(--mu)}
-.bar{position:absolute;left:16px;right:16px;bottom:24px;height:2px;background:var(--ln);border-radius:2px;overflow:hidden}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:16px 0 0;padding:0;list-style:none;text-shadow:none}
+.chips li{padding:8px 12px;border-radius:10px;background:rgba(14,16,19,.78);border:1px solid var(--ln);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.chips small{display:block;font-size:12px;line-height:1.3;color:var(--mu)}
+.chips b{display:block;font:700 16px/1.3 var(--hf)}
+/* Телефон: фото вертикальное, машина внизу кадра — подписи сверху, а над
+   ними светлый потолок зала: тень под текстом, иначе его не прочитать. */
+@media(max-width:767px){.stage::before{content:"";position:absolute;inset:0 0 auto;height:50%;background:linear-gradient(rgba(7,8,10,.88),rgba(7,8,10,.6) 55%,rgba(7,8,10,0));z-index:1;pointer-events:none}.calm .stage::before{display:none}}
+.bar{position:absolute;left:16px;right:16px;bottom:24px;height:2px;background:var(--ln);border-radius:2px;overflow:hidden;z-index:1}
 .bar i{display:block;height:100%;background:var(--red);transform-origin:left center;transform:scaleX(0)}
 @media(min-width:768px){
   .copy{padding:0 32px}
   .c0{top:auto;bottom:96px}.c0 h1{font-size:48px}
-  .c1{top:104px}.c1 .h2,.c2 .h2{font-size:36px}
-  .c2{left:auto;right:0;bottom:96px;text-align:right}
+  .c1,.c2,.c3{top:104px}.h2{font-size:36px}
+  .c3{left:auto;right:0;text-align:right}.c3 .chips{justify-items:end}
+  .c4{left:auto;right:0;text-align:right}
   .lead{font-size:18px}
   .bar{left:32px;right:32px;bottom:32px}
 }
 @media(min-width:1200px){.c0 h1{font-size:60px}}
 
-/* Без движения, без WebGL, слабое устройство: два кадра той же сцены. */
+/* Без движения, экономия трафика, слабое устройство: два кадра той же сцены. */
 .still{display:none}
 .calm .track{height:auto}
 .calm .stage{position:relative;height:auto;min-height:0;display:flex;flex-direction:column}
 .calm .poster{position:relative;inset:auto;height:auto;aspect-ratio:16/9}
 @media(orientation:portrait){.calm .poster{aspect-ratio:9/16;max-height:80svh}}
 .calm .poster img{position:static;height:100%}
-.calm #gl,.calm .tags,.calm .c1,.calm .bar{display:none}
+.calm #cv,.calm .boot,.calm .c1,.calm .c2,.calm .c3,.calm .bar{display:none}
 .calm .copy{position:relative;inset:auto;opacity:1;transform:none;padding-top:24px;padding-bottom:24px}
 .calm .c0{order:-1;padding-top:96px}
-.calm .c2{text-align:left;left:auto;right:auto}
+.calm .c4{text-align:left;left:auto;right:auto}
 .calm .hint .i{animation:none}
 .calm .still{display:block;padding:48px 0}
 .still picture img{width:100%;border-radius:var(--r)}
+.still picture+picture{margin-top:16px}
 .still-l{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .still-l li{padding:12px 16px;border:1px solid var(--ln);border-radius:var(--r);background:var(--bg2)}
 .still-l small{display:block;font-size:12px;color:var(--mu)}
