@@ -5,7 +5,6 @@ const TYPE={".png":"image/png",".js":"text/javascript",".mp4":"video/mp4",".glb"
 http.createServer((req,res)=>{
   const u=new URL(req.url,"http://x");
   if(u.pathname.startsWith("/protos/")&&existsSync(PUB+u.pathname)){res.setHeader("content-type",TYPE[u.pathname.slice(u.pathname.lastIndexOf("."))]||"application/octet-stream");res.end(readFileSync(PUB+u.pathname));return}
-  if(u.pathname==="/still"){res.setHeader("content-type",TYPE[".html"]);res.end(readFileSync(D+"still.html"));return}
   const pages=JSON.parse(readFileSync(D+"out/pages.json"));
   const m=u.pathname.match(/^\/proto\/([A-Za-z0-9_-]{43})(?:\/(.*))?$/);
   const key=m?(m[2]||"").replace(/\/$/,""):null;
