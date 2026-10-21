@@ -50,6 +50,8 @@ const T = {
   hold: (ORDER.indexOf(last("t4")) + SEQ.hold / 2) / (N - 1),
   light: ORDER.indexOf(last("t5")) / (N - 1),
   side: ORDER.indexOf(last("t6")) / (N - 1),
+  /* финальный текст — когда D-MAX ушёл к горизонту (последняя четверть t8) */
+  away: (ORDER.indexOf(last("t8")) - SEQ.d.find(([n]) => n === "t8")[1] / 4) / (N - 1),
 };
 /* Окно текста: [появляется, виден, гаснет, исчез], доли прокрутки. */
 const win = (c, w = 0.035) => [c - w, c - w / 3, c + w / 3, c + w].map((x) => Math.max(0, Math.min(1, x)).toFixed(4)).join(",");
@@ -73,10 +75,25 @@ const SPECS = [
   ["2 800", "kg", "to‘liq massa"],
 ];
 
+/* Техника под финальным текстом — разделы их сайта. По нажатию машина
+   крупно, за ней живая сцена (Kling 4K, кольцом) и цифры полосками, как в
+   Need for Speed. Цифры — только с samauto.uz; шкала полосы — max. */
+const FLEET = [
+  { key: "pikap", cat: "Pikaplar", name: "ISUZU D-MAX IRBIS LSE", where: "Tog‘ va dala yo‘llari",
+    bars: [["Quvvat", 190, 300, "190 ot kuchi"], ["Dvigatel hajmi", 2999, 8000, "2 999 sm³"], ["Yuk ko‘tarish", 670, 10000, "670 kg"]], tags: ["4x4", "ISUZU 4JJ3, dizel"] },
+  { key: "yuk", cat: "Yuk avtomobillari", name: "ISUZU FVR34K", where: "Qurilish maydoni, samosval",
+    bars: [["Quvvat", 240, 300, "240 ot kuchi"], ["Dvigatel hajmi", 7790, 8000, "7 790 sm³"], ["Yuk ko‘tarish", 9300, 10000, "9 300 kg"]], tags: ["To‘liq massa 18 t"] },
+  { key: "avtobus", cat: "Avtobuslar", name: "SAZ LE60", where: "Shahar yo‘nalishlari",
+    bars: [["Yo‘lovchilar", 56, 60, "56 o‘rin"]], tags: ["Past pol", "Bekatda kuzov pastga tushadi", "Aparel", "Evro-5", "2012-yildan konveyerda"] },
+  { key: "vishka", cat: "Maxsus texnikalar", name: "Avtovishka", where: "Shahar xo‘jaligi, yoritish",
+    bars: [["Ko‘tarish balandligi", 18, 25, "18 m"], ["Ko‘tarish balandligi", 22, 25, "22 m"]], tags: ["Ikki xil: 18 va 22 m"] },
+];
+
 const ic = (n) => `<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const sprite = () => `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
 <symbol id="i-phone" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
 <symbol id="i-down" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M6 13l6 6 6-6"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
 <symbol id="i-cube" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3 4 7.5v9L12 21l8-4.5v-9zM4 7.5 12 12l8-4.5M12 12v9"/></symbol>
 </svg>`;
 
@@ -96,7 +113,9 @@ function sceneBlock() {
 <div class="copy c1" data-w="${win(T.hold, 0.05)}" aria-hidden="true"><p class="kick">Ichidan</p><p class="h2">D-MAX qanday yig‘ilgan</p>${chips(EXPLODE)}</div>
 <div class="copy c2" data-w="${win(T.light)}" aria-hidden="true"><p class="kick">Old tomondan</p><p class="h2">Yaqinroq qarang</p></div>
 <div class="copy c3" data-w="${win(T.side)}" aria-hidden="true"><p class="kick">Yon tomondan</p><p class="h2">D-MAX IRBIS LSE</p>${chips(SIDE)}</div>
-<div class="copy c4" id="c4" data-w="0.9600,0.9900,2,2"><p class="kick">${B.model}</p><p class="h2">Test-drayvga yoziling</p><a class="btn btn-red" href="${tel}">${ic("phone")}<span>Qo‘ng‘iroq qilish</span></a><p class="ph">${B.phone}</p></div>
+<div class="copy c4" id="c4" data-w="${(T.away - 0.006).toFixed(4)},${(T.away + 0.012).toFixed(4)},2,2"><p class="kick">SamAuto</p><p class="h2 draw" id="c4-h">${"Har bir ish uchun o‘z texnikasi".split(" ").map((w, i) => `<span style="--i:${i}">${w}</span>`).join(" ")}</p><p class="lead">Pikap, yuk avtomobili, avtobus yoki maxsus texnika: birini tanlang va u qayerda ishlashini ko‘ring.</p>
+<ul class="fleet">${FLEET.map((f, i) => `<li style="--i:${i}"><button type="button" class="car" data-k="${f.key}" aria-haspopup="dialog"><img src="${IMG}/fleet/${f.key}-card.webp" width="800" height="600" alt="${f.name}" loading="lazy"><small>${f.cat}</small><b>${f.name}</b></button></li>`).join("")}</ul>
+<a class="ph-l" href="${tel}">${ic("phone")}<span>${B.phone}</span></a></div>
 <div class="bar" aria-hidden="true"><i id="bar"></i></div>
 </div>
 </div>
@@ -128,6 +147,18 @@ function mockBlock() {
 <p class="note">Kadrlar samauto.uz’dagi fotosurat va prezentatsiya asosida sun’iy intellekt bilan chizilgan, mashinaning ichki qismlari taxminiy. Tayyor saytda studiya suratlari yoki zavod ma’lumotlari asosida xuddi shunday sahna har bir modelga qo‘yiladi.</p>
 <a class="btn btn-line" href="https://t.me/Devuz_studio_bot?start=samauto">DevUz Studio bilan muhokama</a>
 </div></section>`;
+}
+
+/* Окно техники: живая сцена на весь экран, машина из карточки, цифры. */
+function fleetView() {
+  return `<div class="fv" id="fv" role="dialog" aria-modal="true" aria-labelledby="fv-h" hidden>
+<video class="fv-v" id="fv-v" muted playsinline loop preload="none" disablepictureinpicture aria-hidden="true"></video>
+<img class="fv-car" id="fv-car" alt="" aria-hidden="true">
+<div class="fv-p"><p class="kick" id="fv-k"></p><p class="h2" id="fv-h"></p><p class="fv-w" id="fv-w"></p><ul class="nfs" id="fv-b"></ul><ul class="fv-t" id="fv-t"></ul>
+<a class="btn btn-red" href="${tel}">${ic("phone")}<span>Narxini bilish</span></a></div>
+<button type="button" class="fv-x" id="fv-x" aria-label="Yopish">${ic("x")}</button>
+</div>
+<script type="application/json" id="sa-fleet">${JSON.stringify(Object.fromEntries(FLEET.map((f) => [f.key, f])))}</script>`;
 }
 
 function page() {
@@ -162,6 +193,7 @@ ${sceneBlock()}
 ${specsBlock()}
 ${mockBlock()}
 </main>
+${fleetView()}
 <footer class="foot"><div class="wrap">
 <div class="cols">
 <div>${logo("f-logo")}<p><a href="${tel}">${B.phone}</a></p><p><a href="${B.site}">samauto.uz</a></p></div>

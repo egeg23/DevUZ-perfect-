@@ -18,7 +18,7 @@ var sm=function(a,b,v){if(b<=a)return v>=b?1:0;var t=Math.min(1,Math.max(0,(v-a)
 function show(el,k){el.style.opacity=k.toFixed(3);el.style.transform='translateY('+((1-k)*16).toFixed(1)+'px)';el.setAttribute('aria-hidden',k<.5?'true':'false');
   $$('a',el).forEach(function(a){a.tabIndex=k<.5?-1:0})}
 function copy(p){
-  copies.forEach(function(c){var w=c.w;show(c.el,sm(w[0],w[1],p)*(1-sm(w[2],w[3],p)))});
+  copies.forEach(function(c){var w=c.w,k=sm(w[0],w[1],p)*(1-sm(w[2],w[3],p));show(c.el,k);c.el.classList.toggle('on',k>.6);if(c.el.id==='c4')stage.style.setProperty('--end',k.toFixed(3))});
   if(bar)bar.style.transform='scaleX('+p.toFixed(4)+')';
   if(dock)dock.classList.toggle('off',track.getBoundingClientRect().bottom>innerHeight*.4)}
 
@@ -78,7 +78,7 @@ function draw(){if(VID){if(vd.readyState>=1){if(!vbox)vplace();vgo(Math.round(cu
   var a=bmp[fi[i]]?fi[i]:ready_(i),A=a>=0?bmp[a]:shown;if(!A)return;shown=A;
   put(A,1);var B=bmp[fi[j]];if(blend&&a===fi[i]&&B&&B!==A&&t>.02)put(B,t);cx.globalAlpha=1;feather()}
 /* Плавно к нужному кадру: шаг прокрутки колесом не дёргает картинку. */
-function loop(){raf=0;var dlt=want-cur;cur=Math.abs(dlt)<.0004?want:cur+dlt*.22;draw();if(cur!==want)raf=requestAnimationFrame(loop)}
+function loop(){raf=0;var dlt=want-cur;cur=Math.abs(dlt)<.0002?want:cur+dlt*.14;draw();if(cur!==want)raf=requestAnimationFrame(loop)}
 function poke(){var p=progress();if(p!==want)dir=p>want?1:-1;want=p;if(!raf)raf=requestAnimationFrame(loop)}
 
 /* Загрузка до 100%: прокрутка держится, пока не придут все файлы, но не
@@ -123,6 +123,34 @@ addEventListener('scroll',onScroll,{passive:true});
 addEventListener('resize',function(){fit();onScroll();poke();draw()});
 if(CALM){$$('.copy').forEach(function(el){show(el,1)});if(dock)dock.classList.remove('off')}
 else if(cx){fit();copy(progress());load()}
+
+/* Техника: по нажатию машина вылетает из карточки на середину, за ней
+   проявляется живая сцена (видео кольцом), цифры — полосками по шкале. */
+var fv=$('#fv'),fleet=JSON.parse(($('#sa-fleet')||{}).textContent||'{}'),last=null,fvT=[];
+function fvClear(){fvT.forEach(clearTimeout);fvT=[]}
+function fvOpen(btn){
+  var f=fleet[btn.getAttribute('data-k')];if(!f||!fv)return;last=btn;fvClear();
+  var v=$('#fv-v'),car=$('#fv-car'),img=$('img',btn),r=img.getBoundingClientRect(),tall=innerHeight>innerWidth,base=site.img+'/fleet/'+f.key;
+  $('#fv-k').textContent=f.cat;$('#fv-h').textContent=f.name;$('#fv-w').textContent=f.where;
+  $('#fv-b').innerHTML=f.bars.map(function(b,i){return'<li style="--i:'+i+'"><small>'+b[0]+'</small><b data-n="'+b[1]+'" data-u="'+b[3].replace(/^[\d ]+/,'')+'">'+b[3]+'</b><i style="--v:0%" data-v="'+Math.min(100,b[1]/b[2]*100).toFixed(1)+'%"></i></li>'}).join('');
+  $('#fv-t').innerHTML=f.tags.map(function(t){return'<li>'+t+'</li>'}).join('');
+  v.poster=base+(tall?'-9.webp':'-16.webp');v.src=base+(tall?'-9.mp4':'-16.mp4');
+  fv.classList.remove('live','show');fv.hidden=false;root.classList.add('lock-fv');
+  /* машина: с места карточки — на середину, крупно */
+  car.src=img.currentSrc||img.src;car.style.transition='none';car.style.opacity='1';car.style.width=r.width+'px';car.style.height=r.height+'px';
+  car.style.transform='translate('+r.left+'px,'+r.top+'px)';car.getBoundingClientRect();car.style.transition='';
+  var W=Math.min(innerWidth*.9,innerHeight*1.2),k=W/r.width,x=(innerWidth-W)/2,y=(innerHeight-r.height*k)/2-(tall?innerHeight*.12:0);
+  car.style.transform='translate('+x+'px,'+y+'px) scale('+k+')';
+  fvT.push(setTimeout(function(){var p=v.play();if(p&&p.catch)p.catch(function(){});fv.classList.add('live')},650));
+  fvT.push(setTimeout(function(){car.style.opacity='0';fv.classList.add('show');count()},1100));
+  function count(){$$('#fv-b i').forEach(function(i){i.style.setProperty('--v',i.getAttribute('data-v'))});
+    $$('#fv-b b').forEach(function(b){var n=+b.getAttribute('data-n');if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;var t0=performance.now(),D=1200;
+      (function tick(t){var k=Math.min(1,(t-t0)/D);k=1-Math.pow(1-k,3);b.textContent=String(Math.round(n*k)).replace(/\B(?=(\d{3})+$)/g,' ')+' '+b.getAttribute('data-u');if(k<1)requestAnimationFrame(tick)})(t0)})}
+  $('#fv-x').focus({preventScroll:true})}
+function fvClose(){if(!fv||fv.hidden)return;fvClear();var v=$('#fv-v');fv.classList.remove('show','live');
+  fvT.push(setTimeout(function(){fv.hidden=true;v.pause();v.removeAttribute('src');v.load();root.classList.remove('lock-fv');if(last)last.focus({preventScroll:true})},450))}
+$$('.car').forEach(function(b){b.addEventListener('click',function(){fvOpen(b)})});
+if(fv){$('#fv-x').addEventListener('click',fvClose);addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()})}
 
 /* Появление блоков ниже сцены. */
 if('IntersectionObserver' in window&&!CALM){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -10% 0px'});$$('.rv').forEach(function(el){io.observe(el)})}

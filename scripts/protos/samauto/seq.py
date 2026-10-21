@@ -7,8 +7,8 @@ public/protos/samauto/seq/<d|m>/, а число кадров — в seq.json р�
 Сборка (обратно после разлёта) — те же кадры задом наперёд, файлов не
 прибавляет.
 
-Телефону ещё m.mp4: те же кадры в порядке сцены (с паузой и сборкой), каждый
-кадр ключевой. Телефон перематывает такое видео аппаратно, без распаковки
+Телефону ещё m.mp4: те же кадры в порядке сцены (с паузой и сборкой), ключевой
+каждый третий. Телефон перематывает такое видео аппаратно, без распаковки
 картинок: кадры по одному на iPhone на разлёте пропадали (владелец,
 21.10.2026). Порядок сцены — order(), его же берёт gen.mjs из seq.json.
 """
@@ -19,20 +19,22 @@ SRC = sys.argv[1]
 HERE = os.path.dirname(os.path.abspath(__file__))
 PUB = os.path.join(HERE, "../../../public/protos/samauto/seq")
 # ролик → кадров; порядок — порядок сцены
-CLIPS = [("t1", 64), ("t3", 56), ("t4", 56), ("t5", 48), ("t6", 56), ("t7", 72)]
+# Около 10 кадров на секунду ролика (владелец, 21.10.2026: «ещё более плавные
+# переходы»); t8 — D-MAX уезжает в пустыню, камера стоит.
+CLIPS = [("t1", 96), ("t3", 72), ("t4", 72), ("t5", 64), ("t6", 80), ("t7", 96), ("t8", 96)]
 # ширина, качество WebP. Телефону 828: холст сцены не больше 2 точек на пиксель
 # (414 × 2), шире — лишний вес и долгая распаковка на iPhone.
-FMT = {"d": (1920, 62), "m": (828, 64)}
+FMT = {"d": (1920, 58), "m": (828, 64)}
 HOLD = 14  # столько кадров разлёт стоит на месте, пока читают подписи
 FPS = 24
 
 
 def order(clips):
-    """Покрывало, разлёт, пауза, сборка (разлёт задом наперёд), фара, борт, проезд."""
+    """Покрывало, разлёт, пауза, сборка (разлёт задом наперёд), фара, борт, выезд, пустыня."""
     n = dict(clips)
     run = lambda c: [f"{c}-{i:02d}" for i in range(n[c])]
     ex = run("t3") + run("t4")
-    return run("t1") + ex + [ex[-1]] * HOLD + ex[::-1] + run("t5") + run("t6") + run("t7")
+    return run("t1") + ex + [ex[-1]] * HOLD + ex[::-1] + run("t5") + run("t6") + run("t7") + run("t8")
 
 
 def frames(path):
@@ -68,14 +70,16 @@ for fmt, (w, q) in FMT.items():
     size = sum(os.path.getsize(os.path.join(d, f)) for f in os.listdir(d))
     print(fmt, total, "кадров", round(size / 1048576, 1), "МБ")
 
-# Видео телефона: кадры в порядке сцены, каждый ключевой (-g 1), без звука.
+# Видео телефона: кадры в порядке сцены, ключевой — каждый третий, без
+# B-кадров: перемотка декодирует не больше двух лишних, а вес почти вдвое
+# меньше, чем с каждым ключевым.
 seq = order(counts["m"])
 lst = tempfile.mkdtemp()
 for i, name in enumerate(seq):
     os.symlink(os.path.join(png, name + ".png"), os.path.join(lst, f"{i:05d}.png"))
 mp4 = os.path.join(PUB, "m.mp4")
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(lst, "%05d.png"), "-c:v", "libx264", "-preset", "slow", "-tune", "film", "-crf", "25",
-                "-g", "1", "-keyint_min", "1", "-pix_fmt", "yuv420p", "-profile:v", "high", "-movflags", "+faststart", "-an", mp4], check=True)
+                "-g", "3", "-keyint_min", "1", "-bf", "0", "-pix_fmt", "yuv420p", "-profile:v", "high", "-movflags", "+faststart", "-an", mp4], check=True)
 shutil.rmtree(lst)
 shutil.rmtree(png)
 print("m.mp4", len(seq), "кадров", round(os.path.getsize(mp4) / 1048576, 1), "МБ")
