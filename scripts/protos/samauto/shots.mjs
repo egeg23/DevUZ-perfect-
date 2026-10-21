@@ -11,7 +11,7 @@ const OUT = new URL("../../../docs/screens/samauto/", import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-certificate-errors-spki-list=PS48cX347wDVcRynzq+DFqswl2PLNE1sG6uQvxMCOS0="], proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: "<-loopback>,localhost,127.0.0.1" } : undefined });
 // [имя, доля сцены или блок]
-const PLAN = [["1-pokryvalo", 0], ["2-sobrana", 0.165], ["3-razlet", 0.385], ["4-fara", 0.71], ["5-bort", 0.835], ["6-proezd", 1], ["7-raqamlar", "#raqamlar"], ["8-maket", "#maket"]];
+const PLAN = [["1-pokryvalo", 0], ["2-sobrana", 0.165], ["3-razlet", 0.385], ["4-fara", 0.71], ["5-bort", 0.835], ["6-proezd", 0.9], ["7-final", 1], ["8-raqamlar", "#raqamlar"], ["9-maket", "#maket"]];
 let n = 0;
 for (const [w, h] of [[390, 844], [768, 1024], [1440, 900]]) {
   for (const calm of [false, true]) {

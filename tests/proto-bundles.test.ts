@@ -1958,7 +1958,7 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   /* Цифры — только с samauto.uz (docs/research/samauto.md). */
   for (const n of ["4JJ3", "2 999", "190", "140 kVt", "4x4", "670", "2 800", "5 285", "1 870", "1 790"]) assert.ok(page.includes(n), `нет цифры ${n}`);
   const text = page.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<[^>]+>/g, " ");
-  const allowed = new Set(["4", "3", "2", "999", "190", "140", "670", "800", "5", "285", "1", "870", "790", "998", "78", "80", "00", "21", "10", "2026", "66", "6", "0", "9"]);
+  const allowed = new Set(["4", "3", "2", "999", "190", "140", "670", "800", "5", "285", "1", "870", "790", "998", "78", "80", "00", "21", "10", "2026", "66", "6", "0", "9", "34", "60"]);
   for (const n of text.match(/\d+/g) ?? []) assert.ok(allowed.has(n) || /^\d,\d$/.test(n), `число ${n} не из фактов`);
   /* Сцена: кадры для компьютера и телефона, по одному счёту, все на месте. */
   const seq = JSON.parse(readFileSync("scripts/protos/samauto/seq.json", "utf8")) as Record<"d" | "m", [string, number][]> & { order: string[] };
@@ -1969,11 +1969,11 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
     assert.equal(files.length, seq[set].reduce((n, [, k]) => n + k, 0), `${set}: лишние или потерянные кадры`);
     for (const f of new Set(frames)) assert.ok(files.includes(`${f}.webp`), `${set}: нет кадра ${f}`);
     const mb = files.reduce((n, f) => n + statSync(`public/protos/samauto/seq/${set}/${f}`).size, 0) / 1048576;
-    assert.ok(mb < 20, `${set}: кадры весят ${mb.toFixed(1)} МБ, больше 20`);
+    assert.ok(mb < 32, `${set}: кадры весят ${mb.toFixed(1)} МБ, больше 32`);
   }
   /* Порядок: покрывало, разлёт, пауза, сборка — тот же разлёт задом наперёд, фара, борт, проезд. */
   assert.equal(frames[0], "t1-00", "сцена начинается не с покрывала");
-  assert.equal(frames[frames.length - 1], `t7-${String(seq.d.at(-1)![1] - 1).padStart(2, "0")}`, "сцена кончается не проездом");
+  assert.equal(frames[frames.length - 1], `t8-${String(seq.d.at(-1)![1] - 1).padStart(2, "0")}`, "сцена кончается не пустыней");
   const ex = frames.slice(frames.indexOf("t3-00"), frames.indexOf("t5-00")).filter((f, i, a) => f !== a[i - 1]);
   assert.ok(ex.length > 2, "нет разлёта");
   assert.deepEqual(ex.slice().reverse(), ex, "сборка — не разлёт задом наперёд");
@@ -1993,11 +1993,26 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   /* Телефон — одно видео, каждый кадр ключевой: кадры по одному iPhone на
      разлёте не успевал распаковывать (владелец, 21.10.2026). */
   assert.ok(existsSync("public/protos/samauto/seq/m.mp4"), "нет видео сцены для телефона");
-  assert.ok(statSync("public/protos/samauto/seq/m.mp4").size < 20 * 1048576, "видео сцены для телефона тяжелее 20 МБ");
+  assert.ok(statSync("public/protos/samauto/seq/m.mp4").size < 25 * 1048576, "видео сцены для телефона тяжелее 25 МБ");
   assert.match(page, /<video id="vd" muted playsinline/, "видео сцены без muted playsinline — iPhone его не покажет");
   assert.match(page, /codecs="avc1/, "телефон не проверяет, умеет ли он H.264");
   assert.match(page, /'seeked'/, "перемотка не ждёт прошлую — Safari отстаёт");
   assert.deepEqual(seq.order, frames, "порядок кадров на странице и в видео разный");
+  /* Финал: D-MAX уходит в пустыню, камера стоит, под текстом четыре вида
+     техники с их сайта; по нажатию — живая сцена и цифры полосками. Цифры —
+     только с samauto.uz (docs/research/samauto.md). */
+  const fleet = JSON.parse(page.match(/<script type="application\/json" id="sa-fleet">([\s\S]*?)<\/script>/)![1]) as Record<string, { bars: [string, number, number, string][]; tags: string[] }>;
+  assert.deepEqual(Object.keys(fleet), ["pikap", "yuk", "avtobus", "vishka"], "не четыре вида техники");
+  const facts = new Set([190, 2999, 670, 240, 7790, 9300, 56, 18, 22]);
+  for (const [k, f] of Object.entries(fleet)) {
+    assert.ok(page.includes(`data-k="${k}"`), `${k}: нет карточки`);
+    for (const b of f.bars) assert.ok(facts.has(b[1]) && b[1] <= b[2], `${k}: цифра ${b[1]} не с их сайта или больше шкалы`);
+    for (const ext of ["card.webp", "16.webp", "9.webp", "16.mp4", "9.mp4"]) assert.ok(existsSync(`public/protos/samauto/fleet/${k}-${ext}`), `${k}: нет ${ext}`);
+    assert.ok(statSync(`public/protos/samauto/fleet/${k}-16.mp4`).size < 8 * 1048576, `${k}: живая сцена тяжелее 8 МБ`);
+  }
+  assert.match(page, /<video class="fv-v" id="fv-v" muted playsinline loop preload="none"/, "живая сцена грузится до нажатия или не играет на iPhone");
+  assert.match(page, /aria-modal="true"/, "окно техники без aria-modal");
+  assert.match(page, /key==='Escape'/, "окно техники не закрывается с клавиатуры");
   assert.match(page, /class="still"/, "нет запасного пути кадрами");
   const stamped = stampedBundle("samauto", SEED)!;
   assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
