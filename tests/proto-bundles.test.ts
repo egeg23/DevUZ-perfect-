@@ -1967,7 +1967,10 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   for (const set of ["d", "m"] as const) {
     const files = readdirSync(`public/protos/samauto/seq/${set}`);
     assert.equal(files.length, seq[set].reduce((n, [, k]) => n + k, 0), `${set}: лишние или потерянные кадры`);
-    for (const f of new Set(frames)) assert.ok(files.includes(`${f}.webp`), `${set}: нет кадра ${f}`);
+    for (const f of new Set(frames)) assert.ok(files.includes(`${f}.bin`) || (f === "t1-00" && files.includes("t1-00.webp")), `${set}: нет кадра ${f}`);
+    /* Защита (владелец, 21.10.2026: «защити его… чтобы через консоль никто не
+       смог вытащить»): открытым лежит только первый кадр — постер. */
+    assert.deepEqual(files.filter((f) => !f.endsWith(".bin")), ["t1-00.webp"], `${set}: кадры сцены лежат незашифрованными`);
     const mb = files.reduce((n, f) => n + statSync(`public/protos/samauto/seq/${set}/${f}`).size, 0) / 1048576;
     assert.ok(mb < 32, `${set}: кадры весят ${mb.toFixed(1)} МБ, больше 32`);
   }
@@ -1992,8 +1995,15 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   assert.doesNotMatch(page, /new Image\(\);im\.decoding/, "кадры снова грузятся картинками целиком в память");
   /* Телефон — одно видео, каждый кадр ключевой: кадры по одному iPhone на
      разлёте не успевал распаковывать (владелец, 21.10.2026). */
-  assert.ok(existsSync("public/protos/samauto/seq/m.mp4"), "нет видео сцены для телефона");
-  assert.ok(statSync("public/protos/samauto/seq/m.mp4").size < 25 * 1048576, "видео сцены для телефона тяжелее 25 МБ");
+  assert.ok(existsSync("public/protos/samauto/seq/m.bin"), "нет видео сцены для телефона");
+  assert.ok(!existsSync("public/protos/samauto/seq/m.mp4"), "видео сцены лежит незашифрованным");
+  assert.ok(statSync("public/protos/samauto/seq/m.bin").size < 25 * 1048576, "видео сцены для телефона тяжелее 25 МБ");
+  /* Кадры и видео — AES-GCM, ключ спрашивается у маршрута макета и
+     расшифровывается в браузере; в репозитории и в разметке ключа нет. */
+  assert.match(page, /'\/promo\/scene'/, "сцена не спрашивает ключ у макета");
+  assert.match(page, /crypto\.subtle\.decrypt\(\{name:'AES-GCM'/, "сцена не расшифровывает кадры");
+  assert.match(page, /"base":"__PROTO_BASE__"/, "сцене неоткуда взять адрес своего макета");
+  assert.doesNotMatch(page, /[0-9a-f]{64}/, "в разметке похоже на ключ сцены");
   assert.match(page, /<video id="vd" muted playsinline/, "видео сцены без muted playsinline — iPhone его не покажет");
   assert.match(page, /codecs="avc1/, "телефон не проверяет, умеет ли он H.264");
   assert.match(page, /'seeked'/, "перемотка не ждёт прошлую — Safari отстаёт");
@@ -2007,8 +2017,9 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   for (const [k, f] of Object.entries(fleet)) {
     assert.ok(page.includes(`data-k="${k}"`), `${k}: нет карточки`);
     for (const b of f.bars) assert.ok(facts.has(b[1]) && b[1] <= b[2], `${k}: цифра ${b[1]} не с их сайта или больше шкалы`);
-    for (const ext of ["card.webp", "16.webp", "9.webp", "16.mp4", "9.mp4"]) assert.ok(existsSync(`public/protos/samauto/fleet/${k}-${ext}`), `${k}: нет ${ext}`);
-    assert.ok(statSync(`public/protos/samauto/fleet/${k}-16.mp4`).size < 8 * 1048576, `${k}: живая сцена тяжелее 8 МБ`);
+    for (const ext of ["card.webp", "16.webp", "9.webp", "16.bin", "9.bin"]) assert.ok(existsSync(`public/protos/samauto/fleet/${k}-${ext}`), `${k}: нет ${ext}`);
+    for (const ext of ["16.mp4", "9.mp4"]) assert.ok(!existsSync(`public/protos/samauto/fleet/${k}-${ext}`), `${k}: живая сцена лежит незашифрованной`);
+    assert.ok(statSync(`public/protos/samauto/fleet/${k}-16.bin`).size < 8 * 1048576, `${k}: живая сцена тяжелее 8 МБ`);
   }
   assert.match(page, /<video class="fv-v" id="fv-v" muted playsinline loop preload="none"/, "живая сцена грузится до нажатия или не играет на iPhone");
   assert.match(page, /aria-modal="true"/, "окно техники без aria-modal");

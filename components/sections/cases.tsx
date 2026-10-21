@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { LogoMark } from "@/components/brand/logo";
 import { CodeBoot } from "@/components/ui/code-boot";
@@ -47,10 +48,12 @@ export function CaseCard({
   featured?: boolean;
 }) {
   const accent = ACCENTS[item.accent];
+  const proto = item.prototype;
 
-  return (
-    <Link
-      href={localeHref(locale, `cases/${item.slug}`)}
+  const card = (
+    <Shell
+      item={item}
+      locale={locale}
       className={cn(
         // sm:col-span-2 здесь стоял и не работал: элемент сетки — обёртка
         // Reveal, а класс висел на ссылке внутри неё. Убран, а не перенесён
@@ -58,15 +61,36 @@ export function CaseCard({
         // первая оставила бы в последнем ряду дыру. featured по-прежнему
         // значим — он делает превью выше.
         "group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-all duration-500 hover:-translate-y-1 hover:border-green/35",
+        proto && "border-transparent hover:translate-y-0 hover:border-transparent",
       )}
     >
       <div
         className={cn(
           "relative flex items-center justify-center overflow-hidden bg-gradient-to-br to-ink",
           accent.from,
-          featured ? "h-56" : "h-44",
+          featured || proto ? "h-56" : "h-44",
         )}
       >
+        {/* Кейс с живым прототипом: вместо типографики — ролик сцены 60 к/с.
+            Без звука и по кругу; при «меньше движения» — только постер. */}
+        {proto ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`${proto.teaser.replace(/teaser$/, "poster")}-16.webp`} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+            <video
+              src={`${proto.teaser}-16.mp4`}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              disablePictureInPicture
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04] motion-reduce:hidden"
+            />
+            <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
+          </>
+        ) : null}
         {/* Превью — типографика, а не скриншот и не чужой логотип.
             Скриншотов у нас нет, а рисовать клиенту фирменный знак, которого
             у него не существует, значит выдавать выдумку за его брендинг.
@@ -81,6 +105,7 @@ export function CaseCard({
             "pointer-events-none absolute -left-4 top-1/2 -translate-y-1/2 select-none font-display font-extrabold leading-none tracking-tighter",
             featured ? "text-[11rem]" : "text-[8.5rem]",
             accent.ghost,
+            proto && "hidden",
           )}
         >
           {item.monogram}
@@ -148,6 +173,12 @@ export function CaseCard({
           </span>
         ) : null}
 
+        {proto ? (
+          <span className={cn("proto-badge absolute left-4 top-4 rounded-md border bg-ink/60 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] backdrop-blur-sm", accent.ring, accent.text)}>
+            ▶ {dict.cases.protoBadge} ↗
+          </span>
+        ) : null}
+
         {/* В кейс с игрой заходят, чтобы сыграть, — это и сказать. */}
         {item.playable ? (
           <span className={cn("absolute left-4 top-4 rounded-md border bg-ink/50 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] backdrop-blur-sm", accent.ring, accent.text)}>
@@ -174,6 +205,29 @@ export function CaseCard({
           ))}
         </div>
       </div>
+    </Shell>
+  );
+
+  // Прототип выделен рамкой, по которой бежит свет (.proto-glow).
+  return proto ? <div className="proto-glow h-full rounded-2xl p-[1.5px]">{card}</div> : card;
+}
+
+/**
+ * Карточка ведёт на страницу кейса, а кейс с живым прототипом — прямо в
+ * прототип, в новой вкладке (владелец, 21.10.2026, про SamAuto: «не просто
+ * кейс, а чтобы после нажатия открывался этот прототип»).
+ */
+function Shell({ item, locale, className, children }: { item: Case; locale: Locale; className: string; children: ReactNode }) {
+  if (item.prototype) {
+    return (
+      <a href={item.prototype.href} target="_blank" rel="noopener" className={className}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={localeHref(locale, `cases/${item.slug}`)} className={className}>
+      {children}
     </Link>
   );
 }

@@ -87,6 +87,13 @@ export type Case = {
    * перенаправление на язык.
    */
   playable?: { src: `/playables/${string}/index.html` };
+  /**
+   * Живой прототип, который открывается прямо с карточки, а не со страницы
+   * кейса (владелец, 21.10.2026, про SamAuto). `teaser` — ролик 60 к/с без
+   * расширения: рядом лежат `-16.mp4` и `-9.mp4` (горизонтальный и
+   * вертикальный) и постеры `poster-16.webp`, `poster-9.webp` в той же папке.
+   */
+  prototype?: { href: `/proto/${string}`; teaser: `/cases/${string}/teaser` };
 };
 
 /**
@@ -2463,6 +2470,52 @@ export const cases: Case[] = [
       { value: "5", label: { ru: "шагов пути заявки: от рекламы до лида", en: "steps of a lead's path: from the ad to the CRM", uz: "qadam ariza yo‘li: reklamadan lidgacha", zh: "步线索流程：从广告到 CRM", uk: "кроків шляху заявки: від реклами до ліда", pl: "kroków ścieżki zgłoszenia: od reklamy do leada" } },
       { value: "3", label: { ru: "схемы ответа клиентам из одного окна", en: "layouts for answering clients from one window", uz: "mijozlarga bitta oynadan javob berish sxemasi", zh: "种在同一窗口回复客户的方案", uk: "схеми відповіді клієнтам з одного вікна", pl: "schematy odpowiadania klientom z jednego okna" } },
       { value: "2", label: { ru: "телефона рядом: клиент в Instagram, менеджер в Telegram", en: "phones side by side: client in Instagram, manager in Telegram", uz: "telefon yonma-yon: mijoz Instagram’da, menejer Telegram’da", zh: "部手机并排：客户用 Instagram，经理用 Telegram", uk: "телефони поруч: клієнт в Instagram, менеджер у Telegram", pl: "telefony obok siebie: klient na Instagramie, menedżer w Telegramie" } },
+    ],
+  },
+  {
+    slug: "samauto",
+    name: "SamAuto",
+    monogram: "SA",
+    date: "2026-10-21",
+    // Прототип открывается прямо с карточки (владелец, 21.10.2026: «не просто
+    // кейс, а чтобы после нажатия открывался этот прототип»). Макет без пароля
+    // (facts.open), сцена зашифрована: ключ отдаёт только сам макет.
+    url: "https://devuz.studio/proto/01nM7k5zLyQWcrikcaoIvihCuzy4-vct7wAzCjqo8Rs",
+    prototype: { href: "/proto/01nM7k5zLyQWcrikcaoIvihCuzy4-vct7wAzCjqo8Rs", teaser: "/cases/samauto/teaser" },
+    tier: 2,
+    niches: ["автодилер", "автосалон", "грузовики", "коммерческий транспорт", "автобусы", "спецтехника", "автозавод", "car dealer", "commercial vehicles", "trucks", "avtosalon", "yuk mashinalari", "汽车经销商"],
+    // Ниши «автосалон» в классификаторе нет, а автосервису завод — не пример.
+    forNiches: [],
+    accent: "gold",
+    category: {
+      ru: "Прототип главной автозавода: машина разбирается по прокрутке",
+      en: "Car maker home page prototype: the truck comes apart as you scroll",
+      uz: "Avtozavod bosh sahifasi prototipi: mashina aylantirganda qismlarga ajraladi",
+      zh: "汽车厂首页原型：随滚动拆解整车",
+      uk: "Прототип головної автозаводу: машина розбирається під час прокрутки",
+      pl: "Prototyp strony głównej fabryki aut: auto rozkłada się na części przy przewijaniu",
+    },
+    summary: {
+      ru: "Самаркандский завод ISUZU и SAZ: пикапы, грузовики, автобусы и спецтехника. Первый экран — тёмный шоурум: с оранжевого D-MAX слетает покрывало, машина разлетается на детали и собирается, загорается фара, и D-MAX уезжает в пустыню. Под ним четыре вида техники: нажали, и машина выходит в живую сцену, где работает, с характеристиками полосками.",
+      en: "The Samarkand plant behind ISUZU and SAZ vehicles: pickups, trucks, buses and special machinery. The first screen is a dark showroom: the cover flies off an orange D-MAX, the truck explodes into parts and reassembles, the headlight ignites and the D-MAX drives off into the desert. Below are four kinds of vehicles: tap one and it rolls into a live scene of the work it does, with its specs as bars.",
+      uz: "ISUZU va SAZ texnikasini chiqaradigan Samarqand zavodi: pikaplar, yuk mashinalari, avtobuslar va maxsus texnika. Birinchi ekran — qorong‘i shourum: to‘q sariq D-MAX ustidan parda uchib ketadi, mashina detallarga ajraladi va qayta yig‘iladi, fara yonadi va D-MAX cho‘lga yo‘l oladi. Pastda to‘rt xil texnika: bosasiz, mashina o‘zi ishlaydigan jonli sahnaga chiqadi, xususiyatlari chiziqlarda.",
+      zh: "撒马尔罕的 ISUZU 与 SAZ 整车厂：皮卡、卡车、客车和专用车辆。首屏是一个暗色展厅：橙色 D-MAX 上的罩布飞起，整车拆解成零件再重新组装，大灯亮起，D-MAX 驶向沙漠。下方是四类车型：点击后车辆进入它真实工作的动态场景，参数以条形显示。",
+      uk: "Самаркандський завод ISUZU та SAZ: пікапи, вантажівки, автобуси й спецтехніка. Перший екран — темний шоурум: з помаранчевого D-MAX злітає покривало, машина розлітається на деталі й збирається, спалахує фара, і D-MAX їде в пустелю. Під ним чотири види техніки: натиснули, і машина виходить у живу сцену, де вона працює, з характеристиками смугами.",
+      pl: "Zakład w Samarkandzie produkujący ISUZU i SAZ: pikapy, ciężarówki, autobusy i sprzęt specjalny. Pierwszy ekran to ciemny salon: z pomarańczowego D-MAX zlatuje pokrowiec, auto rozpada się na części i składa z powrotem, zapala się reflektor, a D-MAX odjeżdża na pustynię. Pod spodem cztery rodzaje pojazdów: kliknij, a auto wjeżdża w żywą scenę swojej pracy, z parametrami na paskach.",
+    },
+    description: {
+      ru: "Сцена сделана как кино, а не как 3D-игра: ключевые кадры нарисованы в 4K по фото с samauto.uz и презентации, переходы между ними сняты видеомоделью в 4K, и прокрутка сама выбирает кадр, на компьютере соседние кадры смешиваются. Пока сцена не загружена, идёт счёт до 100%, чтобы ничего не дёргалось. Телефон листает ту же сцену одним видео с аппаратной перемоткой: так iPhone не теряет кадры на разлёте. Цифры только с сайта завода: 190 л. с., 2 999 см³, 670 кг у D-MAX, 240 л. с. и 9 300 кг у грузовика FVR34K, 56 мест у автобуса SAZ LE60, 18 и 22 м у автовышек. Кадры и видео сцены лежат зашифрованными, ключ получает только открытый макет. Весь текст на узбекском, как просил клиент.",
+      en: "The scene is built like a film, not a 3D game: key frames are painted in 4K from photos on samauto.uz and the company deck, the transitions between them are shot by a video model in 4K, and scrolling picks the frame, with neighbouring frames blended on desktop. Until the scene is loaded a counter runs to 100%, so nothing stutters. A phone scrubs the same scene as one video with hardware seeking, so an iPhone does not drop frames during the explosion. Numbers come only from the maker's site: 190 hp, 2,999 cm³ and 670 kg for the D-MAX, 240 hp and 9,300 kg for the FVR34K truck, 56 seats in the SAZ LE60 bus, 18 and 22 m for the aerial platforms. The scene's frames and video are stored encrypted, and only the open mock-up receives the key. All copy is in Uzbek, as the client asked.",
+      uz: "Sahna 3D o‘yin kabi emas, kino kabi qilingan: asosiy kadrlar samauto.uz’dagi suratlar va prezentatsiya bo‘yicha 4K’da chizilgan, ular orasidagi o‘tishlar videomodel bilan 4K’da olingan, aylantirish kadrni o‘zi tanlaydi, kompyuterda qo‘shni kadrlar aralashadi. Sahna yuklanmaguncha 100% gacha hisob boradi, hech narsa qotmaydi. Telefon o‘sha sahnani bitta video bilan apparat orqali o‘tkazadi: iPhone ajralish paytida kadr yo‘qotmaydi. Raqamlar faqat zavod saytidan: D-MAX’da 190 ot kuchi, 2 999 sm³, 670 kg, FVR34K yuk mashinasida 240 ot kuchi va 9 300 kg, SAZ LE60 avtobusida 56 o‘rin, avtovishkalarda 18 va 22 m. Sahna kadrlari va videosi shifrlangan holda turadi, kalitni faqat ochiq maket oladi. Barcha matn mijoz so‘ragandek o‘zbek tilida.",
+      zh: "这个场景按电影而不是 3D 游戏的方式制作：关键帧依据 samauto.uz 上的照片和公司演示文稿以 4K 绘制，帧与帧之间的过渡由视频模型以 4K 拍成，滚动决定显示哪一帧，电脑上相邻帧会平滑混合。场景加载完成前显示到 100% 的计数，因此不会卡顿。手机用一段视频的硬件定位来播放同一场景，iPhone 在拆解时也不丢帧。数字全部来自厂家官网：D-MAX 190 马力、2 999 cm³、670 kg，FVR34K 卡车 240 马力、9 300 kg，SAZ LE60 客车 56 个座位，高空作业车 18 米和 22 米。场景的画面和视频以加密形式存放，只有打开的样稿才能拿到密钥。按客户要求，全部文字为乌兹别克语。",
+      uk: "Сцену зроблено як кіно, а не як 3D-гру: ключові кадри намальовано в 4K за фото з samauto.uz і презентації, переходи між ними знято відеомоделлю в 4K, і прокрутка сама вибирає кадр, на комп'ютері сусідні кадри змішуються. Доки сцена не завантажилася, йде відлік до 100%, щоб нічого не смикалося. Телефон гортає ту саму сцену одним відео з апаратним перемотуванням: так iPhone не втрачає кадрів під час розльоту. Цифри лише із сайту заводу: 190 к. с., 2 999 см³, 670 кг у D-MAX, 240 к. с. і 9 300 кг у вантажівки FVR34K, 56 місць в автобусі SAZ LE60, 18 і 22 м в автовишок. Кадри й відео сцени зберігаються зашифрованими, ключ отримує лише відкритий макет. Увесь текст узбецькою, як просив клієнт.",
+      pl: "Scena jest zrobiona jak film, a nie gra 3D: klatki kluczowe namalowano w 4K na podstawie zdjęć z samauto.uz i prezentacji firmy, przejścia między nimi nakręcił model wideo w 4K, a przewijanie samo wybiera klatkę, na komputerze sąsiednie klatki się przenikają. Dopóki scena się nie wczyta, licznik idzie do 100%, więc nic się nie zacina. Telefon przewija tę samą scenę jednym wideo ze sprzętowym przewijaniem: dzięki temu iPhone nie gubi klatek przy rozkładaniu auta. Liczby wyłącznie ze strony producenta: 190 KM, 2 999 cm³ i 670 kg w D-MAX, 240 KM i 9 300 kg w ciężarówce FVR34K, 56 miejsc w autobusie SAZ LE60, 18 i 22 m w podnośnikach koszowych. Klatki i wideo sceny są przechowywane zaszyfrowane, klucz dostaje tylko otwarta makieta. Cały tekst po uzbecku, tak jak prosił klient.",
+    },
+    tech: ["HTML", "Canvas", "WebCrypto", "H.264", "WebP", "nano banana", "Kling 3.0"],
+    metrics: [
+      { value: "680", label: { ru: "кадров сцены по прокрутке", en: "scene frames driven by scrolling", uz: "aylantirish bilan boshqariladigan sahna kadri", zh: "帧随滚动播放的场景画面", uk: "кадрів сцени за прокруткою", pl: "klatek sceny sterowanych przewijaniem" } },
+      { value: "4K", label: { ru: "ключевые кадры и переходы", en: "key frames and transitions", uz: "asosiy kadrlar va o‘tishlar", zh: "关键帧与过渡", uk: "ключові кадри й переходи", pl: "klatki kluczowe i przejścia" } },
+      { value: "4", label: { ru: "вида техники в живых сценах", en: "kinds of vehicles in live scenes", uz: "xil texnika jonli sahnalarda", zh: "类车型的动态场景", uk: "види техніки в живих сценах", pl: "rodzaje pojazdów w żywych scenach" } },
     ],
   },
   {
