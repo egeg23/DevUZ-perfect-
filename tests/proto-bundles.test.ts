@@ -1962,7 +1962,7 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
      catalog.json, samauto.uz, 21.10.2026); сверх него — то, что сказано
      рядом: LE60 с 2012 года, 24 месяца рассрочки, 360°, Automechanic CV 13
      лет, поездка клуба 2025, демо-строки кабинета (12, 3, 20). */
-  const catalogNums = readFileSync("scripts/protos/samauto/catalog.json", "utf8").match(/\d+/g) ?? [];
+  const catalogNums: string[] = readFileSync("scripts/protos/samauto/catalog.json", "utf8").match(/\d+/g) ?? [];
   const allowed = new Set(["4", "3", "2", "999", "190", "140", "670", "800", "5", "285", "1", "870", "790", "998", "78", "80", "00", "21", "10", "2026", "66", "6", "0", "9", "34", "60",
     "2012", "2025", "24", "360", "13", "12", "20", ...catalogNums]);
   for (const n of text.match(/\d+/g) ?? []) assert.ok(allowed.has(n) || /^\d,\d$/.test(n), `число ${n} не из фактов`);
