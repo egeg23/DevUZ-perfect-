@@ -58,7 +58,7 @@ function cameraAt(p, e, tall) {
   /* Телефон стоя: в разлёте смотрим спереди сбоку, иначе длина не влезает. */
   const deg = tall ? (p < 0.5 ? lerp(24, 48, smooth(0, 0.5, p)) : lerp(48, 150, smooth(0.5, 0.98, p))) : lerp(26, 150, smooth(0.02, 0.98, p));
   const az = deg * (Math.PI / 180);
-  const el = (8 + 12 * e) * (Math.PI / 180);
+  const el = (3 + 15 * e + 4 * smooth(0.9, 1, p)) * (Math.PI / 180);
   return { az, el };
 }
 
@@ -78,16 +78,26 @@ function blob(inner, outer, rgb) {
 }
 
 /*
- * Изнанка деталей (её видно, когда деталь отлетела) — тёмная, а не копия
- * лицевой стороны.
+ * Краска — фотография: цвет и свет запечены из снимков (photo/, README),
+ * поэтому основное — свечение текстурой, без тонкомпрессии, а поверх — немного
+ * живого света и отражения зала, чтобы при повороте по лаку шли блики.
+ * Альфа текстуры — доля фото: где снимков нет (внутренности, изнанка), там
+ * ни бликов, ни света, детали отлетают тёмными.
  */
 function paint(m) {
-  m.side = DoubleSide;
-  m.envMapIntensity = 1.2;
-  m.onBeforeCompile = (s) => {
-    s.fragmentShader = s.fragmentShader.replace("#include <color_fragment>", "#include <color_fragment>\nif (!gl_FrontFacing) diffuseColor.rgb = vec3(0.035);");
+  const p = new MeshStandardMaterial({
+    map: m.map, color: 0x2a2a2a, emissive: 0xffffff, emissiveMap: m.map, emissiveIntensity: 1.0,
+    roughnessMap: m.roughnessMap || m.metalnessMap, roughness: 0.9, metalness: 0, normalMap: m.normalMap,
+    envMapIntensity: 0.22, side: DoubleSide, toneMapped: false,
+  });
+  if (m.normalScale) p.normalScale.copy(m.normalScale).multiplyScalar(0.6);
+  p.onBeforeCompile = (s) => {
+    s.fragmentShader = s.fragmentShader
+      .replace("#include <color_fragment>", "#include <color_fragment>\nif (!gl_FrontFacing) diffuseColor.rgb = vec3(0.03);")
+      .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\nif (!gl_FrontFacing) totalEmissiveRadiance = vec3(0.0);")
+      .replace("#include <aomap_fragment>", "#include <aomap_fragment>\nfloat dzK = gl_FrontFacing ? texture2D(map, vMapUv).a : 0.05;\nreflectedLight.directSpecular *= dzK; reflectedLight.indirectSpecular *= dzK; reflectedLight.directDiffuse *= dzK; reflectedLight.indirectDiffuse *= dzK;");
   };
-  return m;
+  return p;
 }
 
 export function start(o) {
@@ -131,7 +141,7 @@ export function start(o) {
   const podium = new Mesh(new CylinderGeometry(0.78, 0.8, 0.03, 96, 1, true), new MeshStandardMaterial({ color: 0x0d0e11, roughness: 0.35, metalness: 0.3, envMapIntensity: 0.2 }));
   podium.position.y = 0.0;
   scene.add(podium);
-  const top = new Mesh(new CircleGeometry(0.78, 96), new MeshStandardMaterial({ color: 0x040405, roughness: 0.6, metalness: 0.05, envMapIntensity: 0.1, transparent: true, opacity: 0.84 }));
+  const top = new Mesh(new CircleGeometry(0.78, 96), new MeshStandardMaterial({ color: 0x020203, roughness: 0.7, metalness: 0.05, envMapIntensity: 0.08, transparent: true, opacity: 0.86 }));
   top.rotation.x = -Math.PI / 2;
   top.position.y = 0.0155;
   top.renderOrder = 3;
@@ -200,6 +210,7 @@ export function start(o) {
     for (const node of list) {
       node.traverse((m) => {
         if (!m.isMesh) return;
+        if (!m.geometry.attributes.normal) m.geometry.computeVertexNormals();
         if (!mats.has(m.material)) mats.set(m.material, paint(m.material));
         m.material = mats.get(m.material);
       });

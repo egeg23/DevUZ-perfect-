@@ -7,7 +7,14 @@
 правый борт +z. Каждая деталь — свой узел с именем, центр узла в центре
 детали, чтобы она вращалась вокруг себя.
 
-python3 -I segment.py <вход.glb> <выход.glb>
+python3 -I segment.py <вход.glb> <выход.glb>          — детали
+python3 -I segment.py <вход.glb> <выход.glb> --whole  — только растяжка, одной сеткой
+
+Модель из Tripo короче настоящей: колёса верного размера (Ø ~0.18 при высоте
+0.407, у D-MAX 775 мм при 1 790), а база и свесы на ~22% короче. Поэтому
+длина растягивается по участкам: колёса жёсткие, база — до 3 125 мм,
+свесы — до 5 285 мм общей длины (docs/research/samauto.md). Иначе снимки
+презентации на модель не ложатся.
 """
 import sys
 
@@ -16,13 +23,31 @@ import trimesh
 
 src, dst = sys.argv[1], sys.argv[2]
 mesh = trimesh.load(src, force="mesh")
+
+FW, RW, WY, WR = 0.300, -0.257, -0.127, 0.092  # центры колёс по x, высота оси, радиус
+HEIGHT, MM = 0.407, 1790.0  # высота модели без антенны и настоящая, мм
+K = HEIGHT / MM
+
+
+def stretch(x):
+    """x → x по настоящим размерам: колёса жёсткие, между ними и свесы тянутся."""
+    R = 0.095
+    mid = (FW + RW) / 2
+    fw, rw = mid + 3125 * K / 2, mid - 3125 * K / 2
+    front, rear = 0.492, -0.490
+    over = (5285 - 3125) * K  # оба свеса вместе
+    share = (front - FW) / ((front - FW) + (RW - rear))
+    nfront, nrear = fw + over * share, rw - over * (1 - share)
+    old = [rear - 0.01, RW - R, RW + R, FW - R, FW + R, front + 0.01]
+    new = [nrear - 0.01, rw - R, rw + R, fw - R, fw + R, nfront + 0.01]
+    return np.interp(x, old, new, left=None, right=None) + np.where(x < old[0], x - old[0], 0) + np.where(x > old[-1], x - old[-1], 0)
+
 c = mesh.triangles_center
 n = mesh.face_normals
 x, y, z = c[:, 0], c[:, 1], c[:, 2]
 az = np.abs(z)
 side = n[:, 2] * np.sign(z)  # наружу по борту
 
-FW, RW, WY, WR = 0.300, -0.257, -0.127, 0.092  # центры колёс по x, высота оси, радиус
 BELT = 0.069  # нижний край стёкол
 part = np.full(len(c), "kuzov", dtype=object)
 
@@ -67,6 +92,14 @@ put("orqa_bamper", (x < -0.43) & (y <= -0.04) & (y > -0.2))
 
 # Грузовая платформа: всё позади кабины выше рамы.
 put("yuk_kuzov", (x < -0.183) & (y > -0.07))
+
+# Растяжка — после разметки: границы деталей заданы в координатах исходной модели.
+v = mesh.vertices.copy()
+v[:, 0] = stretch(v[:, 0])
+mesh.vertices = v
+if "--whole" in sys.argv:
+    mesh.export(dst)
+    sys.exit(0)
 
 parts = {}
 for name in sorted(set(part)):
