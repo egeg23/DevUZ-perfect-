@@ -37,27 +37,19 @@ const B = {
 };
 const tel = B.tel;
 
-/* Кадры сцены (seq.py): ролик → число кадров, 16:9 (d) и 9:16 (m). */
+/* Кадры сцены (seq.py): ролик → число кадров, 16:9 (d) и 9:16 (m), и
+   порядок сцены — покрывало, разлёт, пауза, сборка (разлёт задом наперёд),
+   фара, борт, проезд. Телефону тот же порядок одним видео m.mp4. */
 const SEQ = JSON.parse(read("seq.json"));
-const HOLD = 14; // столько кадров разлёт стоит на месте, пока читают подписи
-
-/* Порядок кадров: покрывало, разлёт, пауза, сборка (разлёт задом наперёд),
-   фара, борт, проезд. Индекс — номер ролика и кадра в нём. */
-function order(set) {
-  const clip = (name) => set.findIndex(([c]) => c === name);
-  const run = (name, rev) => { const k = clip(name), n = set[k][1]; return Array.from({ length: n }, (_, i) => [k, rev ? n - 1 - i : i]); };
-  const ex = [...run("t3"), ...run("t4")];
-  return [...run("t1"), ...ex, ...Array(HOLD).fill(ex[ex.length - 1]), ...ex.slice().reverse(), ...run("t5"), ...run("t6"), ...run("t7")];
-}
 if (JSON.stringify(SEQ.d) !== JSON.stringify(SEQ.m)) throw new Error("у телефона и компьютера разный счёт кадров");
-const ORDER = order(SEQ.d);
+const ORDER = SEQ.order;
 const N = ORDER.length;
+const last = (c) => `${c}-${String(SEQ.d.find(([n]) => n === c)[1] - 1).padStart(2, "0")}`;
 /* Где в прокрутке что: доля = номер кадра / число кадров. */
-const at = (name, end) => { const k = SEQ.d.findIndex(([c]) => c === name); let i = 0; for (const f of ORDER) { if (f[0] === k && f[1] === (end ? SEQ.d[k][1] - 1 : 0)) break; i++; } return i / (N - 1); };
 const T = {
-  hold: (SEQ.d[0][1] + SEQ.d[1][1] + SEQ.d[2][1]) / (N - 1),
-  light: at("t5", true),
-  side: at("t6", true),
+  hold: (ORDER.indexOf(last("t4")) + SEQ.hold / 2) / (N - 1),
+  light: ORDER.indexOf(last("t5")) / (N - 1),
+  side: ORDER.indexOf(last("t6")) / (N - 1),
 };
 /* Окно текста: [появляется, виден, гаснет, исчез], доли прокрутки. */
 const win = (c, w = 0.035) => [c - w, c - w / 3, c + w / 3, c + w].map((x) => Math.max(0, Math.min(1, x)).toFixed(4)).join(",");
@@ -97,6 +89,7 @@ function sceneBlock() {
 <div class="track" id="track">
 <div class="stage" id="stage">
 <picture class="poster" id="poster"><source media="(orientation: portrait)" srcset="${IMG}/seq/m/t1-00.webp"><img src="${IMG}/seq/d/t1-00.webp" alt="${B.model} kulrang parda ostida, podiumda" fetchpriority="high"></picture>
+<video id="vd" muted playsinline preload="none" disablepictureinpicture aria-hidden="true"></video>
 <canvas id="cv" aria-hidden="true"></canvas>
 <div class="boot" id="boot" aria-hidden="true"><p class="boot-n"><b id="boot-n">0</b>%</p><i><b id="boot-b"></b></i><span>Sahna yuklanmoqda</span></div>
 <div class="copy c0" id="c0" data-w="0,0,0.0300,0.0800"><p class="kick">${B.model}</p><h1 id="c0-h">Yangi D-MAX bilan tanishing</h1><p class="lead">Pastga aylantiring: parda ochiladi, mashina detallarga ajraladi va yo‘lga chiqadi.</p><a class="hint" href="#raqamlar">${ic("down")}<span>Pastga aylantiring</span></a></div>
@@ -178,7 +171,7 @@ ${mockBlock()}
 <div class="rights"><span>Bu maket: SamAuto sayti shunday ko‘rinishi mumkin. Sayt ma’lumot uchun va ommaviy oferta emas.</span><a href="https://devuz.studio/uz/mockup-terms">Maketdan foydalanish shartlari</a></div>
 </div></footer>
 <div class="dock" id="dock"><a class="btn btn-red" href="${tel}">${ic("phone")}<span>Test-drayvga yozilish</span></a></div>
-<script type="application/json" id="sa-site">${JSON.stringify({ img: IMG, frames: ORDER.map(([k, i]) => `${SEQ.d[k][0]}-${String(i).padStart(2, "0")}`) })}</script>
+<script type="application/json" id="sa-site">${JSON.stringify({ img: IMG, frames: ORDER, fps: SEQ.fps })}</script>
 @@J@@
 </body>
 </html>`;
