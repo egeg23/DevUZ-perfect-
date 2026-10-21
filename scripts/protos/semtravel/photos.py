@@ -28,7 +28,7 @@ PHOTOS = {
     "h-room": U.format("1576675784201-0e142b423952"),
     "h-sea": U.format("1584132967334-10e028bd69f7"),
     "d-georgia": C("d/d4/Tbilisi%2C_Old_town%2C_Georgia.jpg"),
-    "d-azer": C("e/ee/Baku_Flame_Towers.jpg"),
+    "d-azer": C("e/e2/Ichery_Sheher_from_Maiden_Tower_Baku.jpg"),
     "d-qatar": C("8/86/Doha_skyline_in_the_morning_%2812544910974%29.jpg"),
 }
 def save(im, name, w):

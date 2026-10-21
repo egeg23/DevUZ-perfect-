@@ -36,7 +36,7 @@
 | `d-lanka` | Unsplash, photo-1566296314736-6eaac1ca0cb9 (мост Девяти арок) | лицензия Unsplash |
 | `h-pool`, `h-room`, `h-sea` | Unsplash, 1566073771259-6a8506099945, 1576675784201-0e142b423952, 1584132967334-10e028bd69f7 | лицензия Unsplash |
 | `d-georgia` | Commons, «Tbilisi, Old town, Georgia» | CC BY, Vyacheslav Argenberg |
-| `d-azer` | Commons, «Baku Flame Towers» | CC BY, miketnorton |
+| `d-azer` | Commons, «Ichery Sheher from Maiden Tower Baku» (Старый город и Пламенные башни) | CC BY, Radosław Botev |
 | `d-qatar` | Commons, «Doha skyline in the morning (12544910974)» | CC BY, Francisco Anzola |
 
 Авторы CC BY подписаны в подвале макета. Карта перелётов, схема города,

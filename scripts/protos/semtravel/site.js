@@ -117,7 +117,7 @@ function forW(){return N===1?L.forOne:N===2?L.forTwo:L.forFam}
 function priceN(p){return N===1?p:r10(p*N)}
 function calendar(x){var dd=x.date.split('-').map(Number),base=new Date(Date.UTC(dd[0],dd[1]-1,dd[2]));var cells=[],mx=0,mn=1e9;
   for(var i=-6;i<8;i++){var t=new Date(base.getTime()+i*864e5),p=i===0?x.price:r10(x.price*(1+.08+.3*hash(x.id+i)));cells.push({d:t.getUTCDate(),m:t.getUTCMonth()+1,p:p,low:i===0});if(p>mx)mx=p;if(p<mn)mn=p}
-  var cal=$('#cal');cal.innerHTML=cells.map(function(c){return '<button type="button" role="listitem" class="'+(c.low?'low':'')+'" aria-pressed="'+c.low+'" data-p="'+c.p+'" style="--h:'+(.2+.8*(c.p-mn)/Math.max(1,mx-mn)).toFixed(3)+'"><i></i><span>'+c.d+'</span><b>'+usd(priceN(c.p))+'</b></button>'}).join('');
+  var cal=$('#cal');cal.innerHTML=cells.map(function(c){return '<button type="button" role="listitem" class="'+(c.low?'low':'')+'" aria-pressed="'+c.low+'" data-p="'+c.p+'" style="--h:'+(.2+.8*(c.p-mn)/Math.max(1,mx-mn)).toFixed(3)+'"><i></i><span>'+c.d+'</span><b>'+(priceN(c.p)>=1000?fmt(priceN(c.p)):usd(priceN(c.p)))+'</b></button>'}).join('');
   var lo=cells[6];$('#cal-k').textContent=L.cheapest+': '+dayStr({d:lo.d,m:lo.m})+', '+usd(priceN(lo.p));
   $$('button',cal).forEach(function(b){b.onclick=function(){$$('button',cal).forEach(function(z){z.setAttribute('aria-pressed',String(z===b))});roll($('#dc-pr'),priceN(+b.getAttribute('data-p')),'$')}})}
 function selDest(id,fly){var x=byId(id);if(!x)return;cur=x;
