@@ -25,11 +25,13 @@ test("на сайте новые сверху; на главной — шест�
   for (let i = 1; i < casesByDate.length; i += 1) {
     assert.ok(casesByDate[i - 1].date >= casesByDate[i].date, `${casesByDate[i - 1].slug} ниже ${casesByDate[i].slug}`);
   }
-  // Демо студии (игры для рекламы, 09.10.2026) — свежие, но на главную не
+  // Демо студии (игры для рекламы, хаб Instagram → Telegram) на главную не
   // идут: там проекты клиентов. В списке /cases они стоят по дате, как все.
+  // Макеты из «Макетов» вошли в кейсы 20.10.2026, каждый со своей датой.
   const home = casesByDate.filter((c) => c.slug !== showcaseSlug && !c.demo).slice(0, 6).map((c) => c.slug);
-  assert.deepEqual(home, ["apollo-travel", "engelberg", "arsenal-d", "medacademy", "comfort-mebel", "transtelecom"]);
-  assert.deepEqual(casesByDate.slice(0, 2).map((c) => c.slug), ["karvon-run", "gift-rush"]);
+  assert.deepEqual(home, ["usemtau", "jiguli", "syanie-severa", "soffice", "baldinini", "tovar"]);
+  assert.deepEqual(casesByDate.slice(0, 4).map((c) => c.slug), ["usemtau", "jiguli", "syanie-severa", "ig-hub"]);
+  assert.ok(casesByDate.find((c) => c.slug === "ig-hub")?.demo, "хаб — демо, не клиент");
   // Главная, список, «следующий проект» и презентация студии берут один порядок.
   assert.match(read("components/sections/cases.tsx"), /casesByDate\.filter\(\(item\) => item\.slug !== showcaseSlug && !item\.demo\)\.slice\(0, 6\)/);
   assert.match(read("app/[locale]/cases/page.tsx"), /\{casesByDate\.map\(/);

@@ -55,13 +55,14 @@ test("в письма идёт проект из ниши адресата, да
   // ставились вовсе — и мебельщикам уезжал маркетплейс мастеров.
   const forNiche = (niche: string) => cases.filter((c) => c.forNiches.includes(niche)).map((c) => c.slug);
   // Первый в списке и уходит в письмо: Comfort Mebel — второй пример мебели,
-  // Delta — второй пример учебного центра.
-  assert.deepEqual(forNiche("mebel"), ["namuna", "comfort-mebel"]);
-  assert.deepEqual(forNiche("uchebnyy-centr"), ["medacademy", "delta"]);
+  // Delta — второй пример учебного центра. Макеты из «Макетов» (20.10.2026)
+  // встали в конец: пример в письме для этих ниш прежний.
+  assert.deepEqual(forNiche("mebel"), ["namuna", "comfort-mebel", "enotmebel", "vtashkente"]);
+  assert.deepEqual(forNiche("uchebnyy-centr"), ["medacademy", "delta", "it-academy", "aipply", "intalim"]);
   assert.deepEqual(forNiche("svyaz"), ["transtelecom"]);
-  assert.deepEqual(forNiche("agentstvo-nedvizhimosti"), ["tranio"]);
+  assert.deepEqual(forNiche("agentstvo-nedvizhimosti"), ["tranio", "shahar", "domtut", "soffice"]);
   // Владелец, 07.10.2026: на Apollo Travel можно ссылаться, если ниша —
   // туризм. Он первый и уходит в письмо; LBM Rentals — второй пример.
-  assert.deepEqual(forNiche("turagentstvo"), ["apollo-travel", "lbm-rentals"]);
+  assert.deepEqual(forNiche("turagentstvo"), ["apollo-travel", "lbm-rentals", "inapp", "dilrabo-travel"]);
   assert.ok(!cases.find((c) => c.slug === "usta")?.forNiches.includes("mebel"), "USTA снова пример для мебели");
 });

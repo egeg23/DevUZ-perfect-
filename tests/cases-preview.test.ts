@@ -32,9 +32,10 @@ test("у каждого кейса есть монограмма, и она вл
 test("монограмма родом из названия, а не выдумана", () => {
   // Не строгая проверка первых букв — «TezKetKaz» даёт «TKK», а «USTA»
   // остаётся собой. Но каждая буква монограммы обязана встречаться в
-  // названии: иначе это уже не сокращение, а новое имя.
+  // названии: иначе это уже не сокращение, а новое имя. Имя кириллицей
+  // («Сияние Севера», «Жигули») — и монограмма кириллицей.
   for (const item of cases) {
-    const letters = new Set(item.name.toUpperCase().replace(/[^A-Z]/g, ""));
+    const letters = new Set(item.name.toUpperCase().replace(/[^A-ZА-ЯЁ]/g, ""));
     for (const ch of item.monogram) {
       assert.ok(letters.has(ch), `${item.slug}: буквы «${ch}» нет в названии «${item.name}»`);
     }
