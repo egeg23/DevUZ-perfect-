@@ -1,0 +1,9 @@
+<!doctype html>
+<!-- Кадр сцены для запасного пути (posters.mjs): ?p=доля прокрутки&m=1 — модель для телефона. -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#07080a}canvas{display:block;width:100vw;height:100vh}</style></head>
+<body><canvas id="gl"></canvas>
+<script>window.NOHACK=!!new URLSearchParams(location.search).get('nohack')</script><script src="/protos/samauto/scene.js"></script>
+<script>
+var q=new URLSearchParams(location.search),p=+q.get('p')||0;
+SamScene.start({canvas:document.getElementById('gl'),src:'/protos/samauto/'+(q.get('m')?'dmax-m.glb':'dmax.glb'),still:true,raw:!!q.get('raw'),progress:function(){return p},onFirst:function(){setTimeout(function(){window.done=1},300)}});
+</script></body></html>

@@ -45,7 +45,7 @@ export async function runProtoAutoClose(now: Date = new Date()): Promise<AutoClo
   if (!db) return run;
   const { data, error } = await db
     .from("protos")
-    .select("id, name, prospect_id, auto, closed_at, opened_at, created_at, owner_staff_id, lock:facts->>lock, lockAt:facts->>lockAt")
+    .select("id, name, prospect_id, auto, closed_at, opened_at, created_at, owner_staff_id, lock:facts->>lock, lockAt:facts->>lockAt, open:facts->>open")
     .neq("status", "draft")
     .is("closed_at", null)
     .or("auto.is.null,auto.eq.false")

@@ -74,6 +74,23 @@ test("уже закрытый, собранный ботом и с ручным 
   assert.equal(closesAt(proto({ closedAt: "2026-10-11T00:00:00.000Z" }), now), null);
 });
 
+test("facts.open — макет без пароля по слову владельца: свип его не закрывает", async () => {
+  // Владелец, 21.10.2026, макет SamAuto: «сделаем в виде макета без пароля».
+  const now = new Date("2026-10-30T00:00:00.000Z");
+  const open = proto({ open: true, sentAt: "2026-10-21T10:00:00.000Z" });
+  assert.equal(autoCloseAt(open), null);
+  assert.equal(closeDue(open, now), false);
+  assert.equal(closesAt(open, now), null);
+  // Из базы приходит строкой (facts->>open), и читают её все три места.
+  const { inputOf } = await import("@/lib/proto/auto-close-read");
+  const row = { id: "x", name: "SamAuto", prospect_id: null, auto: false, closed_at: null, opened_at: null, created_at: "2026-10-21T10:00:00.000Z", lock: null, lockAt: null };
+  assert.equal(inputOf({ ...row, open: "true" }, undefined).open, true);
+  assert.equal(inputOf({ ...row, open: null }, undefined).open, false);
+  for (const file of ["lib/proto/auto-close-store.ts", "lib/admin/mockups-store.ts", "lib/admin/hq-my-store.ts"]) {
+    assert.ok(read(file).includes("open:facts->>open"), `${file}: не читает facts.open`);
+  }
+});
+
 test("свип закрывает условно и один раз, без модели", () => {
   const store = read("lib/proto/auto-close-store.ts");
   assert.match(store, /\.update\(\{ closed_at: now\.toISOString\(\), auto_closed_at: now\.toISOString\(\) \}\)/);

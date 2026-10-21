@@ -17,6 +17,8 @@ export type ProtoRow = {
   created_at: string;
   lock: string | null;
   lockAt: string | null;
+  /** facts.open: "true" — открыт без пароля по слову владельца (lib/proto/auto-close.ts). */
+  open?: string | boolean | null;
   /** Ответственный, назначенный руками в «Макетах» (protos.owner_staff_id). */
   owner_staff_id?: string | null;
 };
@@ -56,6 +58,7 @@ export function inputOf(p: ProtoRow, sent: FirstSend | undefined): AutoCloseInpu
     sentAt: sent?.sent_at ?? null,
     openedAt: p.opened_at,
     createdAt: p.created_at,
+    open: p.open === true || p.open === "true",
   };
 }
 

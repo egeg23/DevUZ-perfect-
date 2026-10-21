@@ -14,7 +14,10 @@
  * - через 24 часа свип закрывает макет так же, как первый пароль из
  *   «Сгенерировать пароль»: protos.closed_at. Дальше — пароли на сутки;
  * - уже закрытый не трогаем; постоянный пароль владельца (facts.lock) —
- *   главнее: с lockAt макет закрывается в свой час, без него он и так закрыт.
+ *   главнее: с lockAt макет закрывается в свой час, без него он и так закрыт;
+ * - facts.open — владелец велел держать макет открытым без пароля (SamAuto,
+ *   21.10.2026: «сделаем в виде макета без пароля»). Ручная настройка главнее
+ *   правила: свип его не закрывает. «Сгенерировать пароль» закроет и его.
  *
  * Витрина cases.devuz.studio сюда не входит: это наши работы для сайта
  * студии, открытые нарочно (SHOWCASE_LOCK — только по решению владельца).
@@ -43,6 +46,8 @@ export type AutoCloseInput = {
   /** Первое открытие не нами. */
   openedAt: string | null;
   createdAt: string;
+  /** facts.open — открыт без пароля по слову владельца. */
+  open?: boolean;
 };
 
 const time = (iso: string | null | undefined): number | null => {
@@ -62,10 +67,11 @@ export function openFrom(i: Pick<AutoCloseInput, "sentAt" | "openedAt" | "create
 
 /**
  * Когда правило закроет макет. null — правило его не касается: собран ботом,
- * уже закрыт или на нём постоянный пароль владельца.
+ * уже закрыт, на нём постоянный пароль владельца или владелец велел держать
+ * его открытым.
  */
 export function autoCloseAt(i: AutoCloseInput): number | null {
-  if (i.auto === true || i.closedAt || i.lock) return null;
+  if (i.auto === true || i.closedAt || i.lock || i.open) return null;
   return openFrom(i).at + OPEN_MS;
 }
 

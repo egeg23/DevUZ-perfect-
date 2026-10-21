@@ -207,6 +207,6 @@ export const config = {
   // Скрипты и ролики — так же: макет архбюро грузит GSAP и видео первого
   // экрана из /protos/arhbyuro/*.js и *.mp4.
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|html|webmanifest|woff2|woff|ttf|js|mp4|webm)).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|html|webmanifest|woff2|woff|ttf|js|mp4|webm|glb)).*)",
   ],
 };

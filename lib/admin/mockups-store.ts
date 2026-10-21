@@ -56,7 +56,7 @@ export async function mockupList(locale: PanelLocale): Promise<MockupRow[]> {
     const { data, error } = await db
       .from("protos")
       .select(
-        "id, token, niche, locale, name, source, created_at, opens, opened_at, prospect_id, auto, closed_at, auto_closed_at, owner_staff_id, created_by, lock:facts->>lock, lockAt:facts->>lockAt, promo:facts->promo",
+        "id, token, niche, locale, name, source, created_at, opens, opened_at, prospect_id, auto, closed_at, auto_closed_at, owner_staff_id, created_by, lock:facts->>lock, lockAt:facts->>lockAt, open:facts->>open, promo:facts->promo",
       )
       .neq("status", "draft")
       .order("created_at", { ascending: false })
@@ -226,7 +226,7 @@ function promoOf(raw: unknown): MockupRow["promo"] {
 }
 
 export function openState(
-  row: { closed_at?: unknown; auto_closed_at?: unknown; lock?: unknown; lockAt?: unknown } & Record<string, unknown>,
+  row: { closed_at?: unknown; auto_closed_at?: unknown; lock?: unknown; lockAt?: unknown; open?: unknown } & Record<string, unknown>,
   sent: Parameters<typeof inputOf>[1],
   now: Date,
 ): Pick<MockupRow, "openUntil" | "closedAt" | "autoClosed"> {
@@ -241,6 +241,7 @@ export function openState(
       created_at: String(row.created_at),
       lock: (row.lock as string | null) ?? null,
       lockAt: (row.lockAt as string | null) ?? null,
+      open: (row.open as string | null) ?? null,
     },
     sent,
   );

@@ -487,6 +487,7 @@ test("шрифты макетов из public не уезжают в языко�
   assert.equal(re.test("/protos/giftora/atlas.webp"), false);
   assert.equal(re.test("/protos/arhbyuro/gsap.min.js"), false, "скрипт макета уходит в языковой редирект");
   assert.equal(re.test("/protos/arhbyuro/hero-1920.mp4"), false, "видео первого экрана уходит в языковой редирект");
+  assert.equal(re.test("/protos/samauto/dmax-m.glb"), false, "3D-модель макета уходит в языковой редирект");
   assert.equal(re.test("/razbory"), true, "страницы сайта по-прежнему идут через языки");
 });
 
@@ -1934,4 +1935,52 @@ test("SEM Travel: цены направлений — с их сайта на 21
     assert.match(html, /<s>2 500 \$<\/s><b>1 000 \$<\/b>/, "на макете 1 000 $ вместо 2 500 $ крупно");
     for (const a of plan.ADDONS) assert.ok(html.includes(`data-k="${a.id}" data-p="${a.price}"`), `${a.id}: цена на странице`);
   }
+});
+
+test("SamAuto: D-MAX разлетается по прокрутке — условия, noindex, видео DevUz, шапка, узбекский, только цифры с их сайта, запасной путь", async () => {
+  const { existsSync, readFileSync, statSync } = await import("node:fs");
+  const site = bundlePages("samauto");
+  assert.ok(site);
+  assert.deepEqual(Object.keys(site.pages), [], "у макета одна страница");
+  const page = site.html;
+  assert.doesNotMatch(page, /@@[A-Z]+@@/, "метка сборки осталась в странице");
+  assert.ok(page.includes('<html lang="uz">'), "страница не на узбекском");
+  assert.doesNotMatch(page.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ""), /[А-Яа-яЁё]/, "в узбекской странице кириллица");
+  assert.ok(page.includes("https://devuz.studio/uz/mockup-terms"), "нет условий");
+  assert.match(page, /<meta name="robots" content="noindex/, "нет noindex");
+  assert.match(page, /<body class="site">\s*<div class="dzi" id="dzi"/, "видео DevUz не первым в body");
+  assert.match(page, /IDLE=3000/, "шапка не по правилу трёх секунд");
+  assert.match(page, /prefers-reduced-motion/, "анимацию нечем выключить");
+  assert.doesNotMatch(page, /stamp|watermark|fingerprint|отпечат|seed|data-mark/i, "слово, по которому находят отпечаток");
+  assert.doesNotMatch(page, /href="#"/, "ссылка в никуда");
+  assert.doesNotMatch(page, /body\{[^}]*overflow-x:hidden/, "overflow-x:hidden у body ломает sticky");
+  assert.ok(page.includes("tel:+998781408000"), "главное действие не ведёт на их телефон");
+  /* Цифры — только с samauto.uz (docs/research/samauto.md). */
+  for (const n of ["4JJ3", "2 999", "190", "140 kVt", "4x4", "670", "2 800", "5 285", "1 870", "1 790"]) assert.ok(page.includes(n), `нет цифры ${n}`);
+  const text = page.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<[^>]+>/g, " ");
+  const allowed = new Set(["4", "3", "2", "999", "190", "140", "670", "800", "5", "285", "1", "870", "790", "998", "78", "80", "00", "21", "10", "2026", "66", "6", "0", "9"]);
+  for (const n of text.match(/\d+/g) ?? []) assert.ok(allowed.has(n) || /^\d,\d$/.test(n), `число ${n} не из фактов`);
+  /* Сцена: модель в двух весах, детали с именами, кадры для запасного пути. */
+  for (const f of ["scene.js", "dmax.glb", "dmax-m.glb", "logo.webp", "poster-a-16.webp", "poster-a-9.webp", "poster-e-16.webp", "poster-e-9.webp"]) assert.ok(existsSync(`public/protos/samauto/${f}`), `нет ${f}`);
+  assert.ok(statSync("public/protos/samauto/dmax-m.glb").size < 2.5 * 1048576, "модель для телефона тяжелее 2,5 МБ");
+  assert.ok(statSync("public/protos/samauto/dmax.glb").size < 4 * 1048576, "модель для компьютера тяжелее 4 МБ");
+  for (const f of ["dmax.glb", "dmax-m.glb"]) {
+    const glb = readFileSync(`public/protos/samauto/${f}`);
+    const json = JSON.parse(glb.subarray(20, 20 + glb.readUInt32LE(12)).toString("utf8"));
+    const names = (json.nodes as { name?: string }[]).map((n) => n.name);
+    for (const part of ["kapot", "kuzov", "tom", "yuk_kuzov", "orqa_bort", "old_bamper", "gildirak_old_ong", "gildirak_orqa_ong", "eshik_old_ong", "oyna_ong"]) assert.ok(names.includes(part), `${f}: нет детали ${part}`);
+    assert.ok(json.extensionsUsed.includes("EXT_meshopt_compression"), `${f}: не сжата`);
+  }
+  for (const part of ["kapot", "gildirak_old_ong", "yuk_kuzov", "old_bamper"]) assert.ok(page.includes(`data-part="${part}"`), `нет подписи у ${part}`);
+  assert.match(page, /class="still"/, "нет запасного пути кадрами");
+  assert.match(page, /getContext\('webgl2'\)\|\|t\.getContext\('webgl'\)/, "без WebGL нет запасного пути");
+  const scene = readFileSync("public/protos/samauto/scene.js", "utf8");
+  assert.doesNotMatch(scene, /https?:\/\/(?!www\.w3\.org)/, "сцена грузит что-то со стороны");
+  const src = readFileSync("scripts/protos/samauto/scene.src.js", "utf8");
+  assert.match(src, /clamp\(1 \/ sz, 0\.5, 2\)/, "мелкие детали не летят дальше");
+  assert.match(src, /0\.7 \+ rand\(\) \* 0\.6/, "нет множителя 0.7…1.3");
+  assert.match(src, /rand\(\) \* 0\.6;/, "нет поворота до 0.6 рад");
+  assert.match(src, /MathUtils\.damp/, "прокрутка не сглажена");
+  const stamped = stampedBundle("samauto", SEED)!;
+  assert.notEqual(stamped.html, site.html, "отпечаток не поставился");
 });

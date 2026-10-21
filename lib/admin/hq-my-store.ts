@@ -164,7 +164,7 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
     protoIds.length
       ? db
           .from("protos")
-          .select("id, name, prospect_id, auto, closed_at, auto_closed_at, opened_at, opens, created_at, owner_staff_id, created_by, lock:facts->>lock, lockAt:facts->>lockAt")
+          .select("id, name, prospect_id, auto, closed_at, auto_closed_at, opened_at, opens, created_at, owner_staff_id, created_by, lock:facts->>lock, lockAt:facts->>lockAt, open:facts->>open")
           .in("id", chunk(protoIds))
       : none,
     offerLeadIds.length ? db.from("leads").select("id, assigned_staff_id").in("id", chunk(offerLeadIds)) : none,
