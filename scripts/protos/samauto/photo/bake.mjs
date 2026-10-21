@@ -1,0 +1,12 @@
+import { createRequire } from "node:module"; import { writeFileSync, readFileSync, existsSync } from "node:fs"; import http from "node:http";
+const require = createRequire("/opt/node22/lib/node_modules/playwright/package.json");
+const { chromium } = require("playwright");
+const [,, cfg, out] = process.argv; const root = process.cwd();
+const srv = http.createServer((q, s) => { const u = decodeURIComponent(new URL(q.url, "http://x").pathname); const p = u.startsWith("/abs/") ? u.slice(4) : root + u; if (!existsSync(p)) { s.statusCode = 404; return s.end(); } s.setHeader("content-type", p.endsWith(".js") ? "text/javascript" : p.endsWith(".html") ? "text/html" : p.endsWith(".json") ? "application/json" : p.endsWith(".png") ? "image/png" : "application/octet-stream"); s.end(readFileSync(p)); }).listen(4902);
+const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+const p = await b.newPage({ viewport: { width: 400, height: 400 } });
+p.on("console", (m) => console.log("console", m.text())); p.on("pageerror", (e) => console.log("err", e.message));
+await p.goto(`http://localhost:4902/bake.html?cfg=${cfg}`);
+await p.waitForFunction(() => window.done, null, { timeout: 900000 });
+for (const k of ["color", "cover", "island"]) writeFileSync(`${out}-${k}.png`, Buffer.from((await p.evaluate((k) => window[k], k)).split(",")[1], "base64"));
+await b.close(); srv.close();

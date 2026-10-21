@@ -1,0 +1,100 @@
+<!doctype html>
+<!-- Запекание снимков в текстуру (bake.mjs): глубина с камеры снимка, развёртка, взвешенное среднее. --><html><body style="margin:0;background:#000">
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const cfg = await (await fetch('/abs' + new URLSearchParams(location.search).get('cfg'))).json();
+const N = cfg.size;
+const r = new THREE.WebGLRenderer({preserveDrawingBuffer: true, alpha: true, premultipliedAlpha: false});
+r.setSize(N, N, false); r.setPixelRatio(1); document.body.appendChild(r.domElement);
+r.outputColorSpace = THREE.LinearSRGBColorSpace; r.autoClear = false;
+const g = await new GLTFLoader().loadAsync('/abs' + cfg.glb);
+let mesh; g.scene.traverse(o => { if (o.isMesh) mesh = o; });
+g.scene.updateMatrixWorld(true);
+const orig = mesh.material.map; orig.colorSpace = THREE.NoColorSpace;
+const tl = new THREE.TextureLoader();
+const load = (u) => new Promise((res) => tl.load('/abs' + u, (t) => { t.colorSpace = THREE.NoColorSpace; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; res(t); }));
+const accum = new THREE.WebGLRenderTarget(N, N, {type: THREE.FloatType, depthBuffer: false});
+r.setRenderTarget(accum); r.setClearColor(0x000000, 0); r.clear();
+const geo = mesh.geometry; if (!geo.attributes.normal) geo.computeVertexNormals();
+for (const ph of cfg.photos) {
+  const img = await load(ph.img), mask = await load(ph.mask);
+  const cam = new THREE.PerspectiveCamera(ph.fov, ph.W / ph.H, 0.05, 50);
+  cam.position.fromArray(ph.pos);
+  cam.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(...ph.x), new THREE.Vector3(...ph.y), new THREE.Vector3(...ph.z)));
+  cam.updateMatrixWorld(true); cam.updateProjectionMatrix();
+  /* Глубина с камеры снимка: что видно, а что закрыто. */
+  const dt = new THREE.WebGLRenderTarget(ph.W, ph.H, {type: THREE.FloatType});
+  const dmat = new THREE.ShaderMaterial({side: THREE.DoubleSide,
+    vertexShader: 'varying float vd; void main(){ vec4 v = modelViewMatrix*vec4(position,1.); vd = -v.z; gl_Position = projectionMatrix*v; }',
+    fragmentShader: 'varying float vd; void main(){ gl_FragColor = vec4(vd/100.,0.,0.,1.); }'});
+  const ds = new THREE.Scene(); const dm = new THREE.Mesh(geo, dmat); dm.matrixAutoUpdate = false; dm.matrix.copy(mesh.matrixWorld); ds.add(dm);
+  r.setRenderTarget(dt); r.setClearColor(0xffffff, 1); r.clear(); r.render(ds, cam);
+  /* Развёртка: каждый тексель берёт цвет снимка, если точка видна. */
+  const bmat = new THREE.ShaderMaterial({side: THREE.DoubleSide, depthTest: false, transparent: true, blending: THREE.CustomBlending,
+    blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor,
+    uniforms: {pv: {value: new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse)}, view: {value: cam.matrixWorldInverse}, cpos: {value: cam.position},
+      depth: {value: dt.texture}, photo: {value: img}, mask: {value: mask}, bias: {value: ph.bias || 0.006}, gain: {value: ph.gain || 1}, pw: {value: ph.power || 3}, mir: {value: ph.mirror ? 1 : 0}},
+    vertexShader: `varying vec3 vw; varying vec3 vn; void main(){ vw = (modelMatrix*vec4(position,1.)).xyz; vn = normalize(mat3(modelMatrix)*normal); gl_Position = vec4(uv*2.-1., 0., 1.); }`,
+    fragmentShader: `uniform mat4 pv; uniform mat4 view; uniform vec3 cpos; uniform sampler2D depth, photo, mask; uniform float bias, gain, pw, mir;
+      varying vec3 vw; varying vec3 vn;
+      void main(){
+        vec4 p = pv*vec4(vw,1.); vec2 q = p.xy/p.w*0.5+0.5;
+        float inside = step(0.,q.x)*step(q.x,1.)*step(0.,q.y)*step(q.y,1.)*step(0.,p.w);
+        float vd = -(view*vec4(vw,1.)).z;
+        float d = texture2D(depth, q).r*100.;
+        float vis = step(vd, d*(1.+bias)+bias*0.2);
+        float fac = abs(dot(normalize(vn), normalize(cpos-vw)));
+        float side = mir > 0.5 ? 1. - smoothstep(-0.12, -0.04, vw.z) : 1.;
+        float w = inside*vis*side*texture2D(mask,q).r*pow(smoothstep(0.08,1.,fac),pw)*gain;
+        gl_FragColor = vec4(texture2D(photo,q).rgb*w, w);
+      }`});
+  const bs = new THREE.Scene(); const bm = new THREE.Mesh(geo, bmat); bm.frustumCulled = false; bm.matrixAutoUpdate = false; bm.matrix.copy(mesh.matrixWorld); bs.add(bm);
+  r.setRenderTarget(accum); r.render(bs, new THREE.Camera());
+}
+/* Снаружи ли точка: видна ли хоть с одной из камер вокруг машины. Внутренности — нет. */
+const ext = new THREE.WebGLRenderTarget(N, N, {type: THREE.FloatType, depthBuffer: false});
+r.setRenderTarget(ext); r.setClearColor(0x000000, 0); r.clear();
+for (let i = 0; i < 26; i++) {
+  const a = (i % 13) / 13 * Math.PI * 2, e = i < 13 ? 0.12 : 0.75;
+  const cam = new THREE.PerspectiveCamera(32, 1, 0.05, 50);
+  cam.position.set(Math.cos(a) * Math.cos(e) * 3, Math.sin(e) * 3, Math.sin(a) * Math.cos(e) * 3); cam.lookAt(0, 0, 0); cam.updateMatrixWorld(true);
+  const dt = new THREE.WebGLRenderTarget(1024, 1024, {type: THREE.FloatType});
+  const dmat = new THREE.ShaderMaterial({side: THREE.DoubleSide,
+    vertexShader: 'varying float vd; void main(){ vec4 v = modelViewMatrix*vec4(position,1.); vd = -v.z; gl_Position = projectionMatrix*v; }',
+    fragmentShader: 'varying float vd; void main(){ gl_FragColor = vec4(vd/100.,0.,0.,1.); }'});
+  const ds = new THREE.Scene(); const dm = new THREE.Mesh(geo, dmat); dm.matrixAutoUpdate = false; dm.matrix.copy(mesh.matrixWorld); ds.add(dm);
+  r.setRenderTarget(dt); r.setClearColor(0xffffff, 1); r.clear(); r.render(ds, cam);
+  const vmat = new THREE.ShaderMaterial({side: THREE.DoubleSide, depthTest: false, transparent: true, blending: THREE.CustomBlending,
+    blendEquation: THREE.MaxEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor,
+    uniforms: {pv: {value: new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse)}, view: {value: cam.matrixWorldInverse}, depth: {value: dt.texture}},
+    vertexShader: 'varying vec3 vw; void main(){ vw = (modelMatrix*vec4(position,1.)).xyz; gl_Position = vec4(uv*2.-1., 0., 1.); }',
+    fragmentShader: `uniform mat4 pv; uniform mat4 view; uniform sampler2D depth; varying vec3 vw;
+      void main(){ vec4 p = pv*vec4(vw,1.); vec2 q = p.xy/p.w*0.5+0.5; float vd = -(view*vec4(vw,1.)).z;
+        float v = step(vd, texture2D(depth,q).r*100.*1.006+0.002); gl_FragColor = vec4(v); }`});
+  const vs = new THREE.Scene(); const vm = new THREE.Mesh(geo, vmat); vm.matrixAutoUpdate = false; vm.matrix.copy(mesh.matrixWorld); vm.frustumCulled = false; vs.add(vm);
+  r.setRenderTarget(ext); r.render(vs, new THREE.Camera());
+}
+/* Сводка: среднее по снимкам; без снимка снаружи — исходная краска модели, внутри — темно. */
+const fin = new THREE.ShaderMaterial({uniforms: {acc: {value: accum.texture}, ext: {value: ext.texture}, orig: {value: orig}, lo: {value: cfg.lo}, hi: {value: cfg.hi}},
+  vertexShader: 'varying vec2 vu; void main(){ vu = uv; gl_Position = vec4(position.xy,0.,1.); }',
+  fragmentShader: `uniform sampler2D acc, ext, orig; uniform float lo, hi; varying vec2 vu;
+    void main(){ vec4 a = texture2D(acc, vu); vec3 o = texture2D(orig, vec2(vu.x, vu.y)).rgb; vec3 c = a.a > 1e-4 ? a.rgb/a.a : o;
+      float k = smoothstep(lo, hi, a.a); float out_ = texture2D(ext, vu).r;
+      vec3 base = mix(o*0.22, o, out_); gl_FragColor = vec4(mix(base, c, k), max(max(k, out_), 0.004)); }`});
+const fs = new THREE.Scene(); fs.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), fin));
+r.setRenderTarget(null); r.setClearColor(0, 1); r.clear(); r.render(fs, new THREE.Camera());
+/* Покрытие — отдельной картинкой, для проверки. */
+const cov = new THREE.ShaderMaterial({uniforms: {acc: {value: accum.texture}}, vertexShader: fin.vertexShader,
+  fragmentShader: 'uniform sampler2D acc; varying vec2 vu; void main(){ gl_FragColor = vec4(vec3(clamp(texture2D(acc,vu).a,0.,1.)),1.); }'});
+window.color = r.domElement.toDataURL('image/png');
+fs.children[0].material = cov; r.render(fs, new THREE.Camera());
+window.cover = r.domElement.toDataURL('image/png');
+/* Острова развёртки: где вообще есть треугольники (для набивки швов). */
+const isl = new THREE.Scene(); const im2 = new THREE.Mesh(geo, new THREE.ShaderMaterial({side: THREE.DoubleSide, depthTest: false,
+  vertexShader: 'void main(){ gl_Position = vec4(uv*2.-1.,0.,1.); }', fragmentShader: 'void main(){ gl_FragColor = vec4(1.); }'})); im2.frustumCulled = false; isl.add(im2);
+r.setClearColor(0, 1); r.clear(); r.render(isl, new THREE.Camera());
+window.island = r.domElement.toDataURL('image/png');
+window.done = 1;
+</script></body></html>
