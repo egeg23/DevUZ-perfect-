@@ -90,3 +90,14 @@ test("входящее рабочему аккаунту: касание ище�
   }
   assert.equal(body.match(/\.select\(MATCH_FIELDS\)/g)?.length, 3);
 });
+
+test("разборы на сайте: статья целиком — только на языке страницы", async () => {
+  // 22.10.2026: список читал все четыре статьи — ~800 КБ за раз.
+  const { columnsFor } = await import("@/lib/razbor/store");
+  const ru = columnsFor("ru");
+  assert.match(ru, /(^|, )article_ru(,|$)/);
+  for (const l of ["uz", "en", "pl"]) assert.match(ru, new RegExp(`article_${l}:article_${l}->>title`));
+  assert.doesNotMatch(ru, /(^|, )article_(uz|en|pl)(,|$)/);
+  const store = read("lib/razbor/store.ts");
+  assert.doesNotMatch(store, /\.select\(COLUMNS\)/);
+});
