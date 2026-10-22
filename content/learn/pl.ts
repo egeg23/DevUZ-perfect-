@@ -88,8 +88,8 @@ export const pl: LearnCopy = {
         what: {
           title: "Czym jest kółko",
           paras: [
-            "Kółko to krótkie wideo od studia w Telegramie. Przedstawiamy się i proponujemy, że w 12 godzin za darmo zrobimy działającą makietę strony głównej ich witryny. Do niczego nie zobowiązuje. Na końcu prośba: jeśli to ciekawe, wyślij «+».",
-            "Kółko samo w sobie jest propozycją. Po nim nie idzie wiadomość. Klient odpowiada «+» albo „tak” i robimy makietę.",
+            "Kółko to krótkie wideo od studia w Telegramie. Przedstawiamy się i mówimy, że obejrzeliśmy ich stronę i znaleźliśmy kilka błędów, przez które odchodzą klienci. Na końcu: odpowiedz, a je rozpiszemy.",
+            "Na odpowiedź na kółko bot sam wysyła analizę: wiadomość ze sprawdzenia strony, co jest nie tak i czym to grozi dla kupujących, a na końcu propozycję, że w 12 godzin za darmo zrobimy makietę strony głównej. Tak zdecydował właściciel 22.10.2026. Klient odpowiada «+» albo „tak” już na analizę i robimy makietę.",
             "Właściciel, 07.10.2026: po odpowiedzi — kółko i krótki tekst. Żywa twarz i głos budzą więcej zaufania niż tekst od nieznajomego.",
           ],
         },
@@ -113,16 +113,16 @@ export const pl: LearnCopy = {
           title: "Jak nagrać dobre kółko",
           paras: [
             "Do minuty. Twarz w kadrze, jasno, cicho. Mów spokojnie, jak do kolegi z biura, a nie jak lektor.",
-            "Jedna myśl: kim jesteś, że obejrzałeś ich stronę i że za darmo w 12 godzin zrobisz makietę strony głównej. Jedna prośba na końcu: jeśli to ciekawe, wyślij plus.",
+            "Jedna myśl: kim jesteś, że obejrzałeś ich stronę i znalazłeś kilka błędów, przez które odchodzą klienci. Jedna prośba na końcu: „odpowiedz, a je rozpiszę”. Analizę i propozycję makiety bot wyśle sam.",
             "Bez cen, bez „gwarantujemy”, bez „wypromujemy na szczyt”, bez technicznych słów. Żadnych terminów poza 12 godzinami: innych studio nie obiecywało.",
           ],
         },
       },
       quiz: {
         offer: {
-          q: "Co proponuje kółko?",
-          options: ["Darmową działającą makietę strony głównej w 12 godzin i prośbę o «+»", "Rabat na stronę", "Rozmowę z menedżerem"],
-          why: "Kółko to jedna propozycja i jedna prośba: makieta w 12 godzin, «+» w odpowiedzi.",
+          q: "Co mówi kółko?",
+          options: ["Że na ich stronie znaleźliśmy kilka błędów i rozpiszemy je, jeśli odpowiedzą", "Rabat na stronę", "Rozmowę z menedżerem"],
+          why: "Kółko to jedna myśl i jedna prośba: znaleźliśmy błędy, odpowiedz, a je rozpiszemy. Analiza z propozycją makiety przychodzi po odpowiedzi.",
         },
         uz: {
           q: "Klient odpowiedział «Assalomu alaykum». Co wyjdzie?",
@@ -140,9 +140,9 @@ export const pl: LearnCopy = {
           why: "Kółko nie przeszło — zamiast niego wiadomość w języku klienta.",
         },
         letter: {
-          q: "Czy po kółku trzeba wysłać wiadomość?",
-          options: ["Nie: kółko samo w sobie jest propozycją", "Tak, zawsze wiadomość z tezami", "Tak, po dobie"],
-          why: "Po kółku wiadomość nie wychodzi — klient odpowiada «+» albo zadaje pytanie.",
+          q: "Klient odpowiedział na kółko „tak”. Co wyjdzie?",
+          options: ["Analiza strony z propozycją darmowej makiety na końcu", "„Przyjęte, przygotowujemy makietę” z linkiem do warunków", "Nic, rozmowa przechodzi do człowieka"],
+          why: "„Tak” na kółko znaczy „rozpiszcie”. Najpierw analiza, makieta po «+» albo „tak” już na analizę.",
         },
         upload: {
           q: "Jak uzbeckie kółko trafia do pracy?",
@@ -160,7 +160,7 @@ export const pl: LearnCopy = {
         yes: {
           title: "Co jest zgodą",
           paras: [
-            "«+», „plus” — zawsze tak. W odpowiedzi na kółko „tak” znaczy to samo: «да», «давайте», «делайте», «хорошо, жду», «хочу», «ок», «ha», «mayli», «qiling».",
+            "«+», „plus” na wiadomość z analizą — zawsze tak. „Tak” na analizę znaczy to samo: «да», «давайте», «делайте», «хорошо, жду», «хочу», «ок», «ha», «mayli», «qiling». Na samo kółko „tak” i «+» znaczą „rozpiszcie”: bot wysyła analizę, a nie makietę.",
             "Każda wzmianka o makiecie albo prototypie to też zgoda: «да, соберите», «хочу макет», «prototip yig‘ib bering».",
             "«да?» ze znakiem zapytania to nie zgoda, tylko pytanie. Zajmuje się nim człowiek. Krótkiej, niejasnej odpowiedzi model też nie rusza — woła ciebie.",
           ],
@@ -193,8 +193,8 @@ export const pl: LearnCopy = {
       quiz: {
         go: {
           q: "Klient odpowiedział na kółko: «давайте». Co to jest?",
-          options: ["Zgoda na makietę: bot odpowiada, że przygotowujemy makietę, i wysyła link do warunków", "Niejasna odpowiedź, zajmuje się nią człowiek", "Odmowa"],
-          why: "«давайте», «да», «делайте» w odpowiedzi na kółko to to samo co «+».",
+          options: ["Prośba o rozpisanie błędów: bot wysyła analizę strony z propozycją makiety na końcu", "Zgoda na makietę: bot od razu odpowiada, że przygotowujemy makietę", "Odmowa"],
+          why: "Kółko obiecuje rozpisać błędy, więc «давайте» na nie znaczy „rozpiszcie”. Zgoda na makietę to «+» albo „tak” już na analizę.",
         },
         agree: {
           q: "Czy trzeba pytać klienta „zgadza się pan z warunkami?”",

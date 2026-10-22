@@ -7,6 +7,7 @@ import {
   normalizeHandle,
   readInbound,
   type HandTouch,
+  type PitchStage,
   type TalkRow,
 } from "@/lib/admin/outreach-talk";
 import { protoTermsText } from "@/lib/admin/prototype-claim";
@@ -396,6 +397,15 @@ async function saveInbound(
   // поверх него вышел бы перебивающим.
   const pitching = Boolean(prospect.pitch_at) && (await pitchQueued(String(prospect.id)));
 
+  // Что уже ушло после «Здравствуйте». Кружок обещает расписать ошибки на
+  // сайте, и ответ на него получает разбор, а не «готовим макет» (владелец,
+  // 22.10.2026); «да» на письмо с разбором — согласие на макет.
+  const pitched = !pitching && prospect.pitch_at ? await pitchStage(String(prospect.id), String(prospect.pitch_at)) : null;
+  const read = readInbound(body, { stage: pitched?.stage ?? null });
+  // Разбор шлёт код, пока разговор у бота. Забрал человек — разбор пишет он
+  // (verdict "breakdown" ниже, строка ему).
+  const breakdown = read === "breakdown" && prospect.ai_handling !== false;
+
   await db.from("outreach_messages").insert({
     prospect_id: prospect.id,
     lead_id: prospect.lead_id,
@@ -403,14 +413,12 @@ async function saveInbound(
     author: "staff",
     body,
     status: "done",
-    ...(pitching ? { answered_at: new Date().toISOString() } : {}),
+    ...(pitching || breakdown ? { answered_at: new Date().toISOString() } : {}),
   });
   if (pitching) return { matched: true, host: String(prospect.host), verdict: "hello" };
+  if (breakdown) return answerCircle(prospect, body, pitched?.circleLang ?? CIRCLE_LANG);
 
   const patch: Record<string, unknown> = { replied_at: new Date().toISOString() };
-  // Кружок спрашивает одно — хотите ли макет, — и «да» на него — согласие.
-  const afterCircle = prospect.pitch_at ? await circleWasPitch(String(prospect.id), String(prospect.pitch_at)) : false;
-  const read = readInbound(body, { afterCircle });
   // Прототип в письме уже был (lib/proto/auto) — «прототип» в ответе значит
   // не «соберите», а «посмотрел»: правки, цена, сроки. Это разговор для
   // человека, а не рассылка «нужен прототип» всей команде. «Был» — значит
@@ -587,8 +595,37 @@ async function answerHello(
 }
 
 /**
+ * Клиент ответил на кружок (lib/admin/outreach-talk.ts → afterCircle).
+ *
+ * Кружок обещает: нашли на сайте пару ошибок, сейчас распишем. Поэтому в
+ * ответ уходит разбор — то же письмо, что уходит вместо кружка, когда он не
+ * дошёл: тезисы по проверке сайта по факту и предложение бесплатного макета
+ * в конце (queueHelloLetter). Условий макета и «готовим макет» здесь нет:
+ * клиент о макете ещё не просил. Лид автопрогона тоже не заводится — он
+ * заведётся на «+» или «да» уже на разбор (LEAD_ON).
+ *
+ * Модель на этот ответ не отвечает — за неё ответит разбор, поэтому входящее
+ * уже помечено отвеченным. Проверке сайта больше трёх дней или письма нет —
+ * разговор человеку, и это видно в строке ему.
+ */
+async function answerCircle(
+  prospect: Parameters<typeof saveInbound>[0],
+  body: string,
+  circleLang: HelloLang,
+): Promise<{ matched: boolean; host?: string; verdict?: string }> {
+  const db = serviceClient();
+  if (!db) return { matched: false };
+  const id = String(prospect.id);
+  await db.from("prospects").update({ replied_at: new Date().toISOString() }).eq("id", id);
+  const lang = replyLang(body, circleLang);
+  const queued = await queueHelloLetter(prospect, lang, Date.now() + PITCH_AFTER_MS, body, { after: "circle" });
+  return { matched: true, host: String(prospect.host), verdict: queued ? "breakdown" : "breakdown_stale" };
+}
+
+/**
  * Письмо тем, кто ответил на «Здравствуйте» не по-русски или кому не ушёл
- * кружок: без приветствия, на языке ответа. Письма нет, проверка сайта
+ * кружок, — и разбор тем, кто ответил на кружок: без приветствия, на языке
+ * ответа. Письма нет, проверка сайта
  * старше трёх дней или перевод не вышел — разговор человеку, и это видно в
  * строке менеджеру. true — письмо в очереди.
  */
@@ -597,8 +634,13 @@ async function queueHelloLetter(
   lang: HelloLang,
   sendAt: number,
   inbound: string,
-  /** false — письмо уже пытались дописать (letter-later): откладывать снова нельзя. */
-  options: { defer?: boolean } = {},
+  /**
+   * defer: false — письмо уже пытались дописать (letter-later): откладывать
+   * снова нельзя. after — на что ответили: на «Здравствуйте» или на кружок
+   * (тогда письмо и есть обещанный разбор); от этого только слова в строке
+   * менеджеру.
+   */
+  options: { defer?: boolean; after?: "hello" | "circle" } = {},
 ): Promise<boolean> {
   const db = serviceClient();
   if (!db) return false;
@@ -613,7 +655,8 @@ async function queueHelloLetter(
     await tellManager(id, `Ответ по ${host}: ${reason}.\n\n${inbound.slice(0, 500)}`, { refuse: true });
     return false;
   };
-  if (!fresh) return handOverHello("ответил на «Здравствуйте», но проверке сайта больше трёх дней — письмо не ушло: проверьте сайт и напишите сами");
+  const onWhat = options.after === "circle" ? "ответил на кружок и ждёт разбор" : "ответил на «Здравствуйте»";
+  if (!fresh) return handOverHello(`${onWhat}, но проверке сайта больше трёх дней — письмо не ушло: проверьте сайт и напишите сами`);
   // Автопрогон пишет письмо после ответа (LETTER_AFTER_REPLY): скаут только
   // отмечает, на каком языке ответили, письмо напишет и поставит свип
   // (lib/admin/letter-later.ts) — модель процессу скаута не грузим.
@@ -621,10 +664,13 @@ async function queueHelloLetter(
     await db
       .from("prospects")
       .update({ letter_wanted: lang, letter_wanted_at: new Date(sendAt).toISOString() })
-      .eq("id", id);
+      .eq("id", id)
+      // Клиент дописал, пока письмо не готово: отметку не переставляем, иначе
+      // каждое его сообщение отодвигало бы разбор ещё на три минуты.
+      .is("letter_wanted", null);
     return true;
   }
-  if (!letter) return handOverHello("ответил на «Здравствуйте», а письма о сайте нет — напишите сами");
+  if (!letter) return handOverHello(`${onWhat}, а письма о сайте нет — напишите сами`);
 
   // Письмо на языке сайта, а ответили на другом — перевод того же письма,
   // уже прошедшего проверку. Модель грузится только здесь: этот файл читает
@@ -633,7 +679,7 @@ async function queueHelloLetter(
   if (lang !== sentLang) {
     const { translateLetter } = await import("@/lib/admin/letter-translate");
     const translated = await translateLetter(letter, lang, host);
-    if (!translated) return handOverHello(`ответил на «Здравствуйте» на другом языке (${LANG_LABEL[lang]}), а письмо перевести не вышло — напишите сами`);
+    if (!translated) return handOverHello(`${onWhat} на другом языке (${LANG_LABEL[lang]}), а письмо перевести не вышло — напишите сами`);
     text = translated;
   }
 
@@ -681,22 +727,45 @@ export async function queueLaterLetter(prospectId: string, lang: HelloLang): Pro
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  return queueHelloLetter(prospect as unknown as ProspectRow, lang, Date.now(), String(inbound?.body ?? ""), { defer: false });
+  // Письмо дописывали к ответу на кружок — тогда оно и есть разбор, и строка
+  // менеджеру, если не вышло, говорит об этом.
+  const pitchAt = (prospect as { pitch_at?: unknown }).pitch_at;
+  const circled = pitchAt ? (await pitchStage(prospectId, String(pitchAt))).circleSent : false;
+  return queueHelloLetter(prospect as unknown as ProspectRow, lang, Date.now(), String(inbound?.body ?? ""), {
+    defer: false,
+    after: circled ? "circle" : "hello",
+  });
 }
 
-/** Предложением был кружок: после «Здравствуйте» ушёл он, а письма не было. */
-async function circleWasPitch(prospectId: string, pitchAt: string): Promise<boolean> {
+/**
+ * Что ушло после ответа на «Здравствуйте»: только кружок — разбор впереди;
+ * письмо (разбор или письмо вместо кружка) — дальше «да» на него согласие на
+ * макет. Письмо — это наше сообщение от студии (author 'staff'), а не ответ
+ * модели: модель могла ответить на возражение до разбора. Строка перед
+ * кружком (intro) — не письмо. Язык кружка — из его строки в ленте.
+ */
+async function pitchStage(
+  prospectId: string,
+  pitchAt: string,
+): Promise<{ stage: PitchStage | null; circleSent: boolean; circleLang: HelloLang }> {
   const db = serviceClient();
-  if (!db) return false;
+  if (!db) return { stage: null, circleSent: false, circleLang: CIRCLE_LANG };
   const { data } = await db
     .from("outreach_messages")
-    .select("kind, status")
+    .select("kind, status, author, body")
     .eq("prospect_id", prospectId)
     .eq("direction", "out")
     .gte("created_at", pitchAt);
   const rows = data ?? [];
-  // Строка перед кружком (intro) — не письмо: «да» на кружок с ней — то же согласие.
-  return rows.some((r) => r.kind === "circle" && r.status === "sent") && !rows.some((r) => (r.kind ?? "text") === "text" && r.status === "sent");
+  const circle = rows.find((r) => r.kind === "circle" && r.status === "sent");
+  const letter = rows.some(
+    (r) => (r.kind ?? "text") === "text" && r.author === "staff" && (r.status === "sent" || r.status === "queued"),
+  );
+  return {
+    stage: letter ? "letter" : circle ? "circle" : null,
+    circleSent: Boolean(circle),
+    circleLang: circle ? circleLangOf(String(circle.body)) : CIRCLE_LANG,
+  };
 }
 
 /** Письмо после «Здравствуйте» ещё ждёт отправки. */

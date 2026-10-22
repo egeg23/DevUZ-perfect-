@@ -248,7 +248,9 @@ test("6. возражения ru и uz: распознавание и текст
   assert.match(objectionReply("have_site", { lang: "ru", host: "smile.uz", niche: "general" }), /150 \$/);
 
   // «Что значит прототип?» — вопрос, а не согласие.
-  assert.equal(readInbound("Что значит прототип?", { afterCircle: true }), "talk");
+  assert.equal(readInbound("Что значит прототип?", { stage: "letter" }), "talk");
+  // На кружок тот же вопрос — разбор: в нём и сказано, о чём речь.
+  assert.equal(readInbound("Что значит прототип?", { stage: "circle" }), "breakdown");
   assert.equal(readInbound("Хочу макет"), "proto");
 
   // В переписке модели до макета у «new» — готовый текст, модель молчит.
