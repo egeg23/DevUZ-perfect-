@@ -1,0 +1,27 @@
+{
+  "collectionName": "components_block_gallery",
+  "info": {
+    "displayName": "Галерея",
+    "icon": "images"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "text"
+    },
+    "text": {
+      "type": "text"
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false
+    },
+    "photos": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    }
+  }
+}

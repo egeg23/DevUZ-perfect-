@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_block_stat",
+  "info": {
+    "displayName": "Цифра",
+    "icon": "hashtag"
+  },
+  "options": {},
+  "attributes": {
+    "value": {
+      "type": "string",
+      "required": true
+    },
+    "label": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

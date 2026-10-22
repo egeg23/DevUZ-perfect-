@@ -503,12 +503,26 @@ const SECS = [
 ];
 const secsJson = () => `<script type="application/json" id="sia-secs">${JSON.stringify(SECS.map(({ id, sel, fixed, title, titleSel, textSel, words, imgSel }) => ({ id, sel, fixed, title: title != null, titleSel, textSel, words, imgSel })))}</script>`;
 
+/* Панель — Strapi (владелец, 22.10.2026): снимки настоящей панели бюро,
+   собранной в strapi/ и наполненной их проектами. Ниже — демонстрация в
+   браузере, как правка ложится на сайт. */
+const STRAPI = [
+  ["projects", "Проекты: 65 из архива бюро, с обложками"],
+  ["project-photos", "Карточка проекта: описание, этапы, обложка, чертёж, фото"],
+  ["home", "Главная: блоки по порядку, перетаскиванием"],
+  ["media", "Медиатека: все снимки сайта"],
+  ["role", "Роль «Медиа»: только фото, тексты не меняет"],
+  ["leads", "Заявки с сайта: статус и заметки"],
+  ["log", "Журнал: кто, что и когда изменил"],
+];
 function panelBlock() {
   return `<section class="pn" id="panel" aria-label="Панель сайта">
-<div class="sec-h"><p class="cap">Панель сайта</p><h2 class="big" data-lines>${lines(["Сайт меняете", "<em>сами, без разработчика</em>"])}</h2>
-<p class="pn-note">Проекты с фото, новости и выставки, коллектив, тексты и фото каждого блока, контакты. Пользователи с ролями: редактор, медиа, менеджер заявок. Это рабочий макет: добавьте новость в панели, и она появится в блоке «Выставки» на этой странице.</p></div>
-<div class="pn-frame"><div class="pn-bar" aria-hidden="true"><i></i><i></i><i></i><span>sia88.ru/admin</span></div><iframe title="Панель сайта SIA" data-src="${href("panel")}?embed=1" loading="lazy"></iframe></div>
-<div class="pn-act"><a class="btn btn-l" href="${href("panel")}">Открыть панель во весь экран</a></div>
+<div class="sec-h"><p class="cap">Панель сайта · Strapi</p><h2 class="big" data-lines>${lines(["Сайт меняете", "<em>сами, без разработчика</em>"])}</h2>
+<p class="pn-note">Панель на Strapi, бесплатной открытой системе: стоит на вашем сервере, платы за неё нет. Проекты с фото и чертежами, главная по блокам, услуги, новости и выставки, коллектив, контакты, заявки с сайта. Пользователи с ролями: редактор сайта, медиа, менеджер заявок; журнал действий. Ниже снимки панели, уже наполненной проектами бюро.</p></div>
+<ul class="pn-shots">${STRAPI.map(([f, t]) => `<li><a href="${IMG}/strapi/${f}.webp" target="_blank" rel="noopener"><img src="${IMG}/strapi/${f}-m.webp" srcset="${IMG}/strapi/${f}-m.webp 720w, ${IMG}/strapi/${f}.webp 1440w" sizes="(max-width: 800px) 86vw, 42vw" alt="${esc(t)}" loading="lazy" decoding="async" width="1440" height="900"></a><p class="cap">${esc(t)}</p></li>`).join("")}</ul>
+<div class="sec-h pn-demo-h"><p class="cap">Попробовать в браузере</p><p class="pn-note">Как правка ложится на сайт: добавьте новость здесь, и она появится в блоке «Выставки» на этой странице. Это демонстрация, она хранит правки только в вашем браузере.</p></div>
+<div class="pn-frame"><div class="pn-bar" aria-hidden="true"><i></i><i></i><i></i><span>sia88.ru/admin</span></div><iframe title="Демонстрация панели SIA" data-src="${href("panel")}?embed=1" loading="lazy"></iframe></div>
+<div class="pn-act"><a class="btn btn-l" href="${href("panel")}">Открыть демонстрацию во весь экран</a></div>
 </section>`;
 }
 
@@ -535,6 +549,42 @@ function panelData() {
     sections: SECS.map(({ id, n, title, text, photos, where, fixed, imgSel }) => ({ id, n, title, text, photos: photos || [], where, fixed: !!fixed, canPhotos: !!imgSel })),
   };
 }
+/* ── Данные для Strapi ────────────────────────────────────────────────
+   Та же правда, что на макете: проекты архива, услуги, коллектив,
+   выставки, контакты и блоки главной. strapi/scripts/seed.js кладёт их
+   в Strapi вместе с фото из public/protos/sia (пути — от этой папки). */
+function strapiSeed() {
+  const num = (s) => (s ? Number(String(s).replace(/\s/g, "").replace(",", ".")) || null : null);
+  return {
+    projects: DATA.index.map((p, i) => {
+      const f = DATA.featured.find((x) => x.code === p.code);
+      return {
+        code: p.code, slug: p.slug, category: p.cat === "arh" ? "Архитектура" : "Интерьер", title: plain(p.title), subtitle: plain(p.sub), objectTypes: p.kinds,
+        area: num(p.area), termMonths: num(p.term), date: p.date || null, featured: !!f, order: i,
+        lead: f ? [...f.lead, ...f.more].map(plain).join("\n\n") : "", steps: f ? f.steps.map(plain) : [],
+        cover: f ? `p/${p.slug}-0.webp` : `t/${p.slug}.webp`, drawing: f ? `d/${p.slug}.webp` : null,
+        gallery: f ? f.imgs.map((_, k) => `p/${p.slug}-${k}.webp`) : [],
+      };
+    }),
+    services: SERVICES.map((s, i) => ({ name: s.n, subtitle: s.s, description: s.d, facts: s.f, photo: `p/${BYCODE[s.p[0]].slug}-${s.p[1]}.webp`, order: i })),
+    team: TEAM.map(([f, n, r], i) => ({ name: n, role: r, photo: `team/${f}.webp`, order: i })),
+    news: EVENTS.map((e) => ({ title: e.n, kind: "Выставка", dates: e.d, place: e.w, text: e.t })),
+    contact: { phone: PHONE, mobile: "+" + MOBILE, email: MAIL, address: ADDR, metro: METRO, hours: HOURS, whatsapp: MOBILE, telegram: TG, social: SOCIAL.map(([label, url]) => ({ label, url })) },
+    home: [
+      { __component: "block.hero", title: "Проектируем, визуализируем, сопровождаем", text: HERO_SUB, photos: [`p/${HERO.slug}-0.webp`] },
+      { __component: "block.stats", items: STATS.map(([n, plus, t]) => ({ value: n + plus, label: t })) },
+      { __component: "block.text", title: "Бюро SIA", text: STMT },
+      { __component: "block.projects", title: "От эскиза до рабочих чертежей", text: "Архитектура", category: "Архитектура", photos: ARH.map((p) => `p/${p.slug}-0.webp`) },
+      { __component: "block.projects", title: "От планировки до подбора материалов", text: "Интерьеры", category: "Интерьер", photos: INT.map((p) => `p/${p.slug}-0.webp`) },
+      { __component: "block.services", title: "Полный цикл от участка до ключей" },
+      { __component: "block.process", title: "Пять шагов до разрешения на стройку", steps: STEPS.map(([t, d]) => `${t}. ${d}`) },
+      { __component: "block.news", title: "Где нас встречали" },
+      { __component: "block.team", title: "Архитекторы, дизайнеры, визуализаторы, инженер", text: TM_NOTE },
+      { __component: "block.contacts", title: "Таганская площадь, 88" },
+    ],
+  };
+}
+
 function panelPage() {
   return `<!doctype html>
 <html lang="ru">
@@ -745,6 +795,8 @@ const parts = {
 const fill = (page) => Object.entries(parts).reduce((pg, [k, part]) => pg.split(`@@${k}@@`).join(part), page);
 
 mkdirSync(DIR + "out", { recursive: true });
+mkdirSync(DIR + "strapi/seed", { recursive: true });
+writeFileSync(DIR + "strapi/seed/data.json", JSON.stringify(strapiSeed(), null, 1) + "\n");
 writeFileSync(DIR + "out/pages.json", JSON.stringify(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, fill(v)]))));
 const bundleDir = new URL("../../../content/proto-bundles/", import.meta.url).pathname;
 writeFileSync(bundleDir + "sia.json", JSON.stringify({ parts, pages: out }));

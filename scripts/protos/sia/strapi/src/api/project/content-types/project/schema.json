@@ -1,0 +1,101 @@
+{
+  "kind": "collectionType",
+  "collectionName": "projects",
+  "info": {
+    "singularName": "project",
+    "pluralName": "projects",
+    "displayName": "Проекты",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "code": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "code"
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "Архитектура",
+        "Интерьер"
+      ],
+      "required": true,
+      "default": "Архитектура"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "text"
+    },
+    "objectTypes": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::object-type.object-type",
+      "inversedBy": "projects"
+    },
+    "area": {
+      "type": "decimal",
+      "min": 0
+    },
+    "termMonths": {
+      "type": "decimal",
+      "min": 0
+    },
+    "date": {
+      "type": "date"
+    },
+    "lead": {
+      "type": "richtext"
+    },
+    "steps": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.step"
+    },
+    "cover": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ],
+      "required": false
+    },
+    "drawing": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "gallery": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+}

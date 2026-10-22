@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_block_stats",
+  "info": {
+    "displayName": "Цифры бюро",
+    "icon": "chartBubble"
+  },
+  "options": {},
+  "attributes": {
+    "hidden": {
+      "type": "boolean",
+      "default": false
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "block.stat"
+    }
+  }
+}

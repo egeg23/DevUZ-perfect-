@@ -1,0 +1,14 @@
+{
+  "collectionName": "components_shared_step",
+  "info": {
+    "displayName": "Этап",
+    "icon": "check"
+  },
+  "options": {},
+  "attributes": {
+    "text": {
+      "type": "text",
+      "required": true
+    }
+  }
+}

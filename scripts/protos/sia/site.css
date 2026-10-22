@@ -521,6 +521,12 @@ li[hidden]{display:none}
 /* Блок «Панель сайта»: панель в окне браузера, грузится, когда до неё долистали. */
 .pn{padding:96px 0 112px;background:var(--paper2)}
 .pn-note{max-width:62ch;margin-top:16px;color:var(--ink2)}
+.pn-shots{list-style:none;margin:40px 0 0;padding:0 var(--g);display:grid;grid-template-columns:1fr;gap:24px}
+.pn-shots img{display:block;width:100%;height:auto;aspect-ratio:16 / 10;object-fit:cover;object-position:top left;border:1px solid var(--line);border-radius:12px;background:#fff}
+.pn-shots .cap{margin-top:8px}
+@media (min-width:800px){.pn-shots{grid-template-columns:repeat(2,1fr);gap:32px 24px}}
+@media (min-width:1200px){.pn-shots{grid-template-columns:repeat(3,1fr)}}
+.pn-demo-h{margin-top:72px}
 .pn-frame{margin:40px var(--g) 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper)}
 .pn-bar{display:flex;align-items:center;gap:6px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;color:var(--mut)}
 .pn-bar i{width:10px;height:10px;border-radius:50%;background:var(--line)}

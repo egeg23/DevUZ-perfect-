@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_shared_link",
+  "info": {
+    "displayName": "Ссылка",
+    "icon": "link"
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "url": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

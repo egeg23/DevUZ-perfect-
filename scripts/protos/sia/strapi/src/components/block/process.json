@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_block_process",
+  "info": {
+    "displayName": "Этапы работы",
+    "icon": "stack"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "text"
+    },
+    "text": {
+      "type": "text"
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false
+    },
+    "steps": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.step"
+    }
+  }
+}

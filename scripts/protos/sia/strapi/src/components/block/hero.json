@@ -1,0 +1,27 @@
+{
+  "collectionName": "components_block_hero",
+  "info": {
+    "displayName": "Первый экран",
+    "icon": "house"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "text"
+    },
+    "text": {
+      "type": "text"
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false
+    },
+    "photos": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    }
+  }
+}

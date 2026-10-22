@@ -978,6 +978,20 @@ test("SIA: главная и 14 проектов — условия, noindex, т
   assert.ok(all[""].includes("localStorage.getItem('sia-panel-1')"), "главная не читает правки панели");
   assert.match(all[""], /id="sia-secs"/, "главная без списка блоков для панели");
   assert.match(all[""], /class="pn-frame"[\s\S]*data-src="[^"]*\/panel\?embed=1"/, "на главной нет блока с панелью");
+  // Панель — Strapi (владелец, 22.10.2026): настоящий проект в scripts/protos/sia/strapi,
+  // на главной снимки этой панели, наполненной проектами бюро.
+  assert.equal((all[""].match(/<img src="\/protos\/sia\/strapi\/[\w-]+-m\.webp"/g) || []).length, 7, "на главной нет снимков панели Strapi");
+  const ST = "scripts/protos/sia/strapi/";
+  const stPkg = JSON.parse(readFileSync(ST + "package.json", "utf8"));
+  assert.match(stPkg.dependencies["@strapi/strapi"], /^5\./, "панель не на Strapi 5");
+  for (const t of ["project", "service", "news-item", "team-member", "lead", "log-entry", "home", "contact", "object-type"]) statSync(`${ST}src/api/${t}/content-types/${t}/schema.json`);
+  const stIndex = readFileSync(ST + "src/index.js", "utf8");
+  for (const role of ["Редактор сайта", "Медиа", "Менеджер заявок"]) assert.ok(stIndex.includes(`name: '${role}'`), `в Strapi нет роли ${role}`);
+  assert.match(stIndex, /strapi\.documents\.use\(logMiddleware/, "журнал действий не пишется");
+  assert.match(readFileSync(ST + "src/api/lead/controllers/lead.js", "utf8"), /stage: 'Новая'/, "заявка с сайта сама ставит себе статус");
+  const stSeed = JSON.parse(readFileSync(ST + "seed/data.json", "utf8"));
+  assert.equal(stSeed.projects.length, data.index.length, "в Strapi уходят не все проекты");
+  for (const p of stSeed.projects) for (const f of [p.cover, p.drawing, ...p.gallery].filter(Boolean)) assert.ok(existsSync("public/protos/sia/" + f), `нет фото ${f} для Strapi`);
   const lines = JSON.parse(readFileSync("scripts/protos/sia/lines.json", "utf8"));
   assert.ok(lines.logo.length >= 4 * 200 && lines.house.length >= 4 * 400, "мало линий логотипа или дома");
   assert.ok(all[""].includes("var SIA_LINES={"), "линии заставки не попали на страницу");
