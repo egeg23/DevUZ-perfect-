@@ -32,6 +32,24 @@ https://devuz.studio/api/health.
   Actions), выкатку не запускают — `paths-ignore` в `deploy-vps.yml`.
 - Держат `tests/deploy-chain.test.ts` и `tests/sweep-health.test.ts`.
 
+
+## Панель SIA на Strapi — на нашем сервере, собирается в GitHub
+
+Решение владельца, 22.10.2026: «Давай на нашем сервере развернём, не демо
+вариант». Настоящий Strapi бюро SIA (`scripts/protos/sia/strapi/`) — на
+https://devuz.studio/sia-cms/admin.
+
+- Образ собирает «Панель SIA (Strapi)» (`.github/workflows/sia-cms.yml`) в
+  `ghcr.io/egeg23/sia-cms`; сервер только скачивает и запускает: контейнер
+  `sia-cms`, 700 МБ памяти, одно ядро, только `127.0.0.1:1338`. Не поднялся —
+  прошлый образ обратно. Выкатка — при правке папки панели или кнопкой.
+- Данные — `/opt/sia-cms` (SQLite `data/`, фото `uploads/`, ключи `.env`
+  создаются на сервере и в журнал не попадают). Пустая база наполняется
+  проектами бюро сама (`scripts/start.sh`, метка `.seeded`).
+- Наружу — nginx сайта: `include /etc/nginx/snippets/devuz-extra/*.conf` в
+  блоке devuz.studio, файл `sia-cms.conf` кладёт выкатка панели,
+  `location ^~ /sia-cms/`, `noindex`. Поддомена нет: в DNS нет «*».
+- Держит `tests/deploy-chain.test.ts` («панель SIA…»).
 ## Статьи — под живые запросы и недорогой моделью
 
 Решение владельца, 04.10.2026: «При составлении статей и их выкатке всегда
