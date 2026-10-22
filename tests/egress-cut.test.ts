@@ -144,3 +144,9 @@ test("уровни: вся история — раз в сутки, каждый
   assert.match(store, /loadDeals\(now, days, ROWS\)/);
   assert.match(store, /const snap = await computeXp\(now, current\);/);
 });
+
+test("счёт трафика: у каждого запуска своя строка, выкатка не стирает счёт", () => {
+  const egress = read("lib/egress.mjs");
+  assert.match(egress, /const RUN = `\$\{process\.pid\}-\$\{Date\.now\(\)\.toString\(36\)\}`;/);
+  assert.match(egress, /key: `egress-tally:\$\{snap\.day\}:\$\{processName\(\)\}:\$\{RUN\}`/);
+});
