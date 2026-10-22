@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Greenwell: сайт, реклама и Uzum одним планом · DevUz Studio</title>
+<link rel="stylesheet" href="letterhead.css">
+<!--
+  Единое КП Greenwell (greenwell.uz, ООО «Inso Farm Deluxe»), 22.10.2026.
+  Владелец: сайт 1 000 $, допы отдельно по перечню (2 650 $); клиент хочет видеть
+  по блокам, что и куда идёт и сколько платит, рекламный бюджет по каналам,
+  прирост от бюджета и график долей площадок. Без iMe Ads (это чужое КП).
+
+  Цифры рекламы, банок и выручки: наш медиаплан «5 000 банок в месяц» от
+  20.10.2026 (ноябрь, декабрь, январь, март), до сума. Январь Meta 43 440 000
+  (в медиаплане «43,4 млн»), чтобы итоги месяцев совпали с медиапланом:
+  83,2 / 106,3 / 154,6 / 221,2 млн. Работа: прайс content/marketing.ts
+  (SMM 35 856 000 первый месяц и 23 256 000 дальше, таргет 9 000 000 / 7 200 000,
+  поиск Google 9 135 000 / 6 615 000), ведение Uzum 6 000 000, карточки
+  5 850 000 разово. Комиссия 10% с бюджетов Uzum, Meta, Google; 20% с блогеров;
+  НДС 12% на Meta и Google. Банка 190 000 сум, сейчас 680 банок в месяц на Uzum.
+  Комиссия и логистика Uzum 41 920 сум за банку, сайт 18 234 сум за банку.
+  Сайт 1 000 $ и допы отдельно по перечню владельца (scripts/protos/greenwell/plan.mjs): 2 650 $.
+  Курс ЦБ на 20.10.2026: 12 044,72 сум за 1 $.
+  Таблицы собраны скриптом расчёта, суммы сходятся до сума.
+
+  PDF: node scripts/kp-pdf.mjs kp/greenwell.html kp/greenwell.pdf
+-->
+<style>
+  tr.tot td { font-weight: 600; background: #f2f3f5; }
+  tr.tot td .small { font-weight: 400; }
+  table.tight td, table.tight th { padding: 1.2mm 1.8mm; }
+  table.m4 { table-layout: fixed; }
+  table.m4 { font-size: 8.6pt; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5mm; margin: 3mm 0; }
+  .kpis div { border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 2mm; padding: 2.2mm 2.6mm; font-size: 8.4pt; line-height: 1.35; }
+  .kpis div.on { border: 2px solid #000; }
+  .kpis b { display: block; font-size: 13.5pt; line-height: 1.15; margin: 0.5mm 0 0.8mm; }
+  .chart { width: 100%; height: auto; display: block; margin: 2mm 0 1mm; }
+  .legend { display: flex; flex-wrap: wrap; gap: 2mm 6mm; font-size: 8.8pt; margin: 2mm 0 1mm; color: #0b0b0b; }
+  .legend i { display: inline-block; width: 3.2mm; height: 3.2mm; border-radius: 0.8mm; margin-right: 1.6mm; vertical-align: -0.4mm; }
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 2mm 0 3mm; }
+  .steps li { counter-increment: s; position: relative; padding: 1.4mm 0 1.4mm 9mm; border-bottom: 1px solid rgba(0, 0, 0, 0.12); margin: 0; }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: 1.3mm; width: 6mm; height: 6mm; border-radius: 50%; background: #000; color: #fff; font-size: 8pt; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<section class="sheet">
+  <h1>Greenwell: сайт, реклама и Uzum одним планом</h1>
+  <p class="subtitle">единое коммерческое предложение DevUz Studio</p>
+  <div class="place"><span>г. Ташкент</span><span>22 октября 2026 г.</span></div>
+
+  <h2>Коротко</h2>
+  <p>Сейчас вы продаёте на Uzum около <b>680 банок в месяц</b>. Цель плана: <b>5&nbsp;000 банок к марту</b>. Один Uzum столько не даст: по главным запросам там стоят магазины с ценой в 1,5-4 раза ниже, а первые места заняты рекламой. Поэтому 5&nbsp;000 это Uzum плюс ваш сайт: в марте около 1&nbsp;900 банок на Uzum и 3&nbsp;100 на сайте.</p>
+
+  <div class="kpis">
+    <div class="on">Банок в месяц к марту<b>5&nbsp;000</b>сейчас 680, рост в 7,4 раза</div>
+    <div>Выручка в марте<b>950&nbsp;млн</b>сейчас около 129 млн сум</div>
+    <div>Маркетинг в марте<b>221,2&nbsp;млн</b>23% выручки</div>
+    <div>Сайт, разово<b>1&nbsp;000&nbsp;$</b>допы отдельно: 2&nbsp;650 $</div>
+  </div>
+
+  <h2>Сколько вы платите по месяцам, сум</h2>
+  <table class='m4'><colgroup><col style='width:36%'><col><col><col><col></colgroup><tr><th></th><th class='num'>Ноябрь<br><span class='small muted' style='font-weight:400'>сайт делаем</span></th><th class='num'>Декабрь<br><span class='small muted' style='font-weight:400'>пик сезона</span></th><th class='num'>Январь<br><span class='small muted' style='font-weight:400'>сайт работает</span></th><th class='num'>Март<br><span class='small muted' style='font-weight:400'>выход на 5&nbsp;000</span></th></tr><tr class=''><td><b>Рекламные бюджеты</b>: площадкам и блогерам, напрямую</td><td class='num'>15&nbsp;656&nbsp;000</td><td class='num'>56&nbsp;612&nbsp;000</td><td class='num'>99&nbsp;536&nbsp;800</td><td class='num'>158&nbsp;892&nbsp;000</td></tr><tr class=''><td><b>Наши услуги</b>: работа DevUz Studio</td><td class='num'>67&nbsp;551&nbsp;000</td><td class='num'>49&nbsp;691&nbsp;000</td><td class='num'>55&nbsp;025&nbsp;000</td><td class='num'>62&nbsp;291&nbsp;000</td></tr><tr class='tot'><td>Всего маркетинг</td><td class='num'>83&nbsp;207&nbsp;000</td><td class='num'>106&nbsp;303&nbsp;000</td><td class='num'>154&nbsp;561&nbsp;800</td><td class='num'>221&nbsp;183&nbsp;000</td></tr><tr><td>Банок в месяц</td><td class='num'><b>1&nbsp;200</b></td><td class='num'><b>2&nbsp;300</b></td><td class='num'><b>3&nbsp;500</b></td><td class='num'><b>5&nbsp;000</b></td></tr><tr><td>Выручка в месяц</td><td class='num'>228&nbsp;000&nbsp;000</td><td class='num'>437&nbsp;000&nbsp;000</td><td class='num'>665&nbsp;000&nbsp;000</td><td class='num'>950&nbsp;000&nbsp;000</td></tr><tr><td>Маркетинг от выручки</td><td class='num'>36,5%</td><td class='num'>24,3%</td><td class='num'>23,2%</td><td class='num'>23,3%</td></tr></table>
+  <p class="small muted">Сайт 1&nbsp;000 $ и допы 2&nbsp;650 $ оплачиваются отдельно, разово. Февраль планируем по итогам января.</p>
+
+  <h2>Что куда идёт</h2>
+  <ul>
+    <li><b>Рекламные бюджеты</b> вы платите напрямую: Uzum (Бусты списываются с баланса продавца), Meta, Google, блогерам по договорам. К нам эти деньги не идут.</li>
+    <li><b>Наши услуги</b>: контент, таргет, поиск, ведение магазина на Uzum, карточки, работа с блогерами и комиссия за ведение бюджетов.</li>
+    <li><b>Сайт</b>: магазин 1&nbsp;000 $ и допы по перечню отдельно, разово; 50% в начале и 50% перед публикацией.</li>
+  </ul>
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">Где продаются банки: доля каждой площадки</h2>
+  <p>Каждая полоса это все продажи месяца. Uzum не уменьшается: его банки растут от 680 до 1&nbsp;900. Сайт добавляет сверху, и к марту на него приходится больше половины продаж.</p>
+  <div class='legend'><span><i style='background:#2a78d6'></i>Uzum: что продаётся сейчас, 680 банок</span><span><i style='background:#eb6834'></i>Uzum: прирост от рекламы</span><span><i style='background:#1baf7a'></i>Свой сайт</span></div>
+  <svg viewBox='0 0 680 266' class='chart' role='img' aria-label='Доля площадок в продажах по месяцам'><style>.m{font:600 12px Inter,sans-serif;fill:#0b0b0b}.s{font:400 10px Inter,sans-serif;fill:#52514e}.v{font:600 12px Inter,sans-serif}.vs{font:400 9.5px Inter,sans-serif}.t{font:400 9px Inter,sans-serif;fill:#898781}.g{stroke:#e6e5e0;stroke-width:1}</style><line x1='128.0' y1='0' x2='128.0' y2='236' class='g'/><text x='128.0' y='260' class='t' text-anchor='middle'>0%</text><line x1='263.0' y1='0' x2='263.0' y2='236' class='g'/><text x='263.0' y='260' class='t' text-anchor='middle'>25%</text><line x1='398.0' y1='0' x2='398.0' y2='236' class='g'/><text x='398.0' y='260' class='t' text-anchor='middle'>50%</text><line x1='533.0' y1='0' x2='533.0' y2='236' class='g'/><text x='533.0' y='260' class='t' text-anchor='middle'>75%</text><line x1='668.0' y1='0' x2='668.0' y2='236' class='g'/><text x='668.0' y='260' class='t' text-anchor='middle'>100%</text><text x='0' y='23' class='m'>Ноябрь</text><text x='0' y='40' class='s'>1 200 банок</text><rect x='128.0' y='6' width='304.0' height='40' rx='3' fill='#2a78d6'/><text x='136.0' y='23' class='v' fill='#ffffff'>57%</text><text x='136.0' y='38' class='vs' fill='#ffffff'>680 б.</text><rect x='434.0' y='6' width='232.0' height='40' rx='3' fill='#eb6834'/><text x='442.0' y='23' class='v' fill='#0b0b0b'>43%</text><text x='442.0' y='38' class='vs' fill='#0b0b0b'>520 б.</text><text x='0' y='85' class='m'>Декабрь</text><text x='0' y='102' class='s'>2 300 банок</text><rect x='128.0' y='68' width='157.7' height='40' rx='3' fill='#2a78d6'/><text x='136.0' y='85' class='v' fill='#ffffff'>29%</text><text x='136.0' y='100' class='vs' fill='#ffffff'>680 б.</text><rect x='287.7' y='68' width='185.8' height='40' rx='3' fill='#eb6834'/><text x='295.7' y='85' class='v' fill='#0b0b0b'>35%</text><text x='295.7' y='100' class='vs' fill='#0b0b0b'>800 б.</text><rect x='475.5' y='68' width='190.5' height='40' rx='3' fill='#1baf7a'/><text x='483.5' y='85' class='v' fill='#0b0b0b'>36%</text><text x='483.5' y='100' class='vs' fill='#0b0b0b'>820 б.</text><text x='0' y='147' class='m'>Январь</text><text x='0' y='164' class='s'>3 500 банок</text><rect x='128.0' y='130' width='102.9' height='40' rx='3' fill='#2a78d6'/><text x='136.0' y='147' class='v' fill='#ffffff'>19%</text><text x='136.0' y='162' class='vs' fill='#ffffff'>680 б.</text><rect x='232.9' y='130' width='181.6' height='40' rx='3' fill='#eb6834'/><text x='240.9' y='147' class='v' fill='#0b0b0b'>34%</text><text x='240.9' y='162' class='vs' fill='#0b0b0b'>1 190 б.</text><rect x='416.5' y='130' width='249.5' height='40' rx='3' fill='#1baf7a'/><text x='424.5' y='147' class='v' fill='#0b0b0b'>47%</text><text x='424.5' y='162' class='vs' fill='#0b0b0b'>1 630 б.</text><text x='0' y='209' class='m'>Март</text><text x='0' y='226' class='s'>5 000 банок</text><rect x='128.0' y='192' width='71.4' height='40' rx='3' fill='#2a78d6'/><text x='136.0' y='209' class='v' fill='#ffffff'>14%</text><text x='136.0' y='224' class='vs' fill='#ffffff'>680 б.</text><rect x='201.4' y='192' width='129.8' height='40' rx='3' fill='#eb6834'/><text x='209.4' y='209' class='v' fill='#0b0b0b'>24%</text><text x='209.4' y='224' class='vs' fill='#0b0b0b'>1 220 б.</text><rect x='333.2' y='192' width='332.8' height='40' rx='3' fill='#1baf7a'/><text x='341.2' y='209' class='v' fill='#0b0b0b'>62%</text><text x='341.2' y='224' class='vs' fill='#0b0b0b'>3 100 б.</text></svg>
+  <table class="tight m4">
+    <colgroup><col style='width:36%'><col><col><col><col></colgroup><tr><th>Банок в месяц</th><th class='num'>Ноябрь</th><th class='num'>Декабрь</th><th class='num'>Январь</th><th class='num'>Март</th></tr>
+    <tr><td>Uzum: нынешние продажи</td><td class='num'>680</td><td class='num'>680</td><td class='num'>680</td><td class='num'>680</td></tr>
+    <tr><td>Uzum: прирост от рекламы</td><td class='num'>520</td><td class='num'>800</td><td class='num'>1&nbsp;190</td><td class='num'>1&nbsp;220</td></tr>
+    <tr><td>Свой сайт</td><td class='num'>0</td><td class='num'>820</td><td class='num'>1&nbsp;630</td><td class='num'>3&nbsp;100</td></tr>
+    <tr class="tot"><td>Всего</td><td class='num'>1&nbsp;200</td><td class='num'>2&nbsp;300</td><td class='num'>3&nbsp;500</td><td class='num'>5&nbsp;000</td></tr>
+    <tr><td>Доля Uzum / сайта</td><td class='num'>100% / 0%</td><td class='num'>64% / 36%</td><td class='num'>53% / 47%</td><td class='num'>38% / 62%</td></tr>
+  </table>
+
+  <h3>Почему доля сайта растёт</h3>
+  <ul>
+    <li>Ноябрь целиком на Uzum: сайт делаем 5-7 недель, внешняя реклама пока ведёт на карточку Uzum.</li>
+    <li>С запуска сайта Instagram, блогеры и Google ведут на сайт: там нет комиссии Uzum 19,3% и рядом нет чужих банок дешевле.</li>
+    <li>Каждый покупатель сайта приходит за следующим курсом сам: подписка, бот и напоминания. В марте это 700 банок без новой рекламы.</li>
+    <li>С каждой банки через сайт у вас остаётся на <b>23&nbsp;685 сум больше</b>, чем через Uzum, до рекламы.</li>
+  </ul>
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">Куда идут деньги: по блокам, сум</h2>
+  <p>В каждом блоке вместе рекламный бюджет и наша работа по этому каналу. На листе «Рекламные бюджеты по каналам» то же самое разделено: что платите площадкам, а что нам.</p>
+  <table class='tight m4'><colgroup><col style='width:36%'><col><col><col><col></colgroup><tr><th></th><th class='num'>Ноябрь<br><span class='small muted' style='font-weight:400'>сайт делаем</span></th><th class='num'>Декабрь<br><span class='small muted' style='font-weight:400'>пик сезона</span></th><th class='num'>Январь<br><span class='small muted' style='font-weight:400'>сайт работает</span></th><th class='num'>Март<br><span class='small muted' style='font-weight:400'>выход на 5&nbsp;000</span></th></tr><tr class=''><td><b>1. Uzum</b>: Буст в ТОП, Буст заказов, ведение магазина<br><span class='small muted'>бюджет Uzum + наша работа; в ноябре карточки 13 товаров</span></td><td class='num'>18&nbsp;890&nbsp;000</td><td class='num'>18&nbsp;540&nbsp;000</td><td class='num'>19&nbsp;310&nbsp;000</td><td class='num'>20&nbsp;190&nbsp;000</td></tr><tr class=''><td><b>2. Instagram и Facebook</b>: таргет<br><span class='small muted'>бюджет Meta с НДС 12% + наша работа</span></td><td class='num'>15&nbsp;710&nbsp;000</td><td class='num'>35&nbsp;992&nbsp;000</td><td class='num'>60&nbsp;196&nbsp;800</td><td class='num'>93&nbsp;820&nbsp;000</td></tr><tr class=''><td><b>3. Блогеры</b> с промокодом<br><span class='small muted'>оплата блогерам + 20% наша работа</span></td><td class='num'>2&nbsp;640&nbsp;000</td><td class='num'>16&nbsp;320&nbsp;000</td><td class='num'>33&nbsp;480&nbsp;000</td><td class='num'>57&nbsp;120&nbsp;000</td></tr><tr class=''><td><b>4. Поиск Google</b><br><span class='small muted'>бюджет Google с НДС 12% + наша работа</span></td><td class='num'>10&nbsp;111&nbsp;000</td><td class='num'>11&nbsp;495&nbsp;000</td><td class='num'>16&nbsp;619&nbsp;000</td><td class='num'>22&nbsp;597&nbsp;000</td></tr><tr class=''><td><b>5. Повтор курса</b>: напоминания и скидка<br><span class='small muted'>рассылка ботом и SMS, скидка 3%</span></td><td class='num'>0</td><td class='num'>700&nbsp;000</td><td class='num'>1&nbsp;700&nbsp;000</td><td class='num'>4&nbsp;200&nbsp;000</td></tr><tr class=''><td><b>6. Контент</b>: Instagram, Facebook, Telegram-канал<br><span class='small muted'>SMM: съёмки, рилс, посты, сторис</span></td><td class='num'>35&nbsp;856&nbsp;000</td><td class='num'>23&nbsp;256&nbsp;000</td><td class='num'>23&nbsp;256&nbsp;000</td><td class='num'>23&nbsp;256&nbsp;000</td></tr><tr class='tot'><td>Всего в месяц</td><td class='num'>83&nbsp;207&nbsp;000</td><td class='num'>106&nbsp;303&nbsp;000</td><td class='num'>154&nbsp;561&nbsp;800</td><td class='num'>221&nbsp;183&nbsp;000</td></tr></table>
+
+  <h3>Март: из чего складываются 221,2 млн</h3>
+  <div class='legend'><span><i style='background:#2a78d6'></i>Рекламный бюджет: площадкам и блогерам</span><span><i style='background:#eb6834'></i>Наша работа</span></div>
+  <svg viewBox='0 0 680 204' class='chart' role='img' aria-label='Деньги по блокам в марте'><style>.m2{font:600 11px Inter,sans-serif;fill:#0b0b0b}.s2{font:400 10px Inter,sans-serif;fill:#52514e}</style><text x='0' y='15' class='m2'>Uzum</text><rect x='150.0' y='0' width='58.5' height='22' rx='3' fill='#2a78d6'/><rect x='210.5' y='0' width='32.2' height='22' rx='3' fill='#eb6834'/><text x='250.7' y='15' class='s2'>20,2 млн</text><text x='0' y='49' class='m2'>Instagram и Facebook</text><rect x='150.0' y='34' width='370.9' height='22' rx='3' fill='#2a78d6'/><rect x='522.9' y='34' width='65.1' height='22' rx='3' fill='#eb6834'/><text x='596.0' y='49' class='s2'>93,8 млн</text><text x='0' y='83' class='m2'>Блогеры</text><rect x='150.0' y='68' width='221.2' height='22' rx='3' fill='#2a78d6'/><rect x='373.2' y='68' width='42.6' height='22' rx='3' fill='#eb6834'/><text x='423.9' y='83' class='s2'>57,1 млн</text><text x='0' y='117' class='m2'>Поиск Google</text><rect x='150.0' y='102' width='66.8' height='22' rx='3' fill='#2a78d6'/><rect x='218.8' y='102' width='35.2' height='22' rx='3' fill='#eb6834'/><text x='262.0' y='117' class='s2'>22,6 млн</text><text x='0' y='151' class='m2'>Повтор курса</text><rect x='150.0' y='136' width='17.7' height='22' rx='3' fill='#2a78d6'/><text x='175.7' y='151' class='s2'>4,2 млн</text><text x='0' y='185' class='m2'>Контент</text><rect x='150.0' y='170' width='107.1' height='22' rx='3' fill='#eb6834'/><text x='265.1' y='185' class='s2'>23,3 млн</text></svg>
+
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">Блок «Сайт», разово</h2>
+  <table class="tight">
+    <tr><th>Сайт</th><th class="num">Цена</th></tr>
+    <tr><td><b>Интернет-магазин Greenwell</b><br><span class="small muted">Под телефон, на русском и узбекском: каталог с поиском и фильтрами, карточка с отзывами, корзина с промокодом и баллами, оформление в один экран, оплата Click, Payme, Uzum Bank, рассрочка, кабинет покупателя. Панель: заказы, отзывы, прибыль по себестоимости, остатки, посещаемость.</span></td><td class="num">1&nbsp;000 $</td></tr>
+  </table>
+  <table class="tight">
+    <tr><th>Допы, отдельно, по утверждённому перечню</th><th class="num">Цена</th></tr>
+    <tr><td>Подписка на курс</td><td class='num'>450 $</td></tr><tr><td>Telegram-бот магазина</td><td class='num'>450 $</td></tr><tr><td>Связка с 1С или МойСклад</td><td class='num'>600 $</td></tr><tr><td>Выгрузка на Uzum Market</td><td class='num'>400 $</td></tr><tr><td>Промокоды и акции из панели</td><td class='num'>300 $</td></tr><tr><td>Самовывоз из аптек и мультисклад</td><td class='num'>450 $</td></tr>
+    <tr class="tot"><td>Допы</td><td class="num">2&nbsp;650 $</td></tr>
+  </table>
+  <p class="small muted">Сайт 1&nbsp;000 $ (12&nbsp;044&nbsp;720 сум) и допы 2&nbsp;650 $ (31&nbsp;918&nbsp;508 сум) по курсу ЦБ на 20.10.2026. Срок 5-7 недель от оплаты и материалов. Хостинг и домен 5-15 $ в месяц, по счёту провайдера. Код и права на магазин переходят Greenwell после полной оплаты.</p>
+
+  <h2>Почему сайт выгоднее Uzum: что остаётся с одной банки, сум</h2>
+  <table class="tight">
+    <tr><th>Банка за 190&nbsp;000 сум</th><th class="num">Uzum Market</th><th class="num">Свой сайт</th><th class="num">Разница</th></tr>
+    <tr><td>Комиссия площадки</td><td class="num">−36&nbsp;670</td><td class="num">0</td><td></td></tr>
+    <tr><td>Доставка</td><td class="num">−5&nbsp;250</td><td class="num">−11&nbsp;538</td><td></td></tr>
+    <tr><td>Оплата картой</td><td class="num">в комиссии</td><td class="num">−2&nbsp;850</td><td></td></tr>
+    <tr><td>Сборка и оператор</td><td class="num">в комиссии</td><td class="num">−3&nbsp;846</td><td></td></tr>
+    <tr class="tot"><td>Остаётся до рекламы</td><td class="num">148&nbsp;080</td><td class="num">171&nbsp;765</td><td class="num">+23&nbsp;685</td></tr>
+    <tr><td>Реклама новой покупки</td><td class="num">−40&nbsp;000</td><td class="num">−50&nbsp;000</td><td></td></tr>
+    <tr class="tot"><td>Новый покупатель</td><td class="num">108&nbsp;080</td><td class="num">121&nbsp;765</td><td class="num">+13&nbsp;685</td></tr>
+    <tr><td>Повтор курса через месяц</td><td class="num">0</td><td class="num">−6&nbsp;000</td><td></td></tr>
+    <tr class="tot"><td>Повторная банка</td><td class="num">148&nbsp;080</td><td class="num">165&nbsp;765</td><td class="num">+17&nbsp;685</td></tr>
+  </table>
+  <p class="small muted">Комиссия Uzum в «Витамины и БАДы» 19,3%. На сайте свой курьер 15&nbsp;000 сум за заказ, оплата картой около 1,5%, сборка 5&nbsp;000 за заказ; в заказе 1,3 банки. Реклама на сайт дороже: новый сайт продаёт хуже знакомого Uzum. Зато покупатель и его повторные заказы остаются у вас, а рядом нет чужих банок дешевле.</p>
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">Рекламные бюджеты по каналам, сум</h2>
+  <p>Эти деньги идут площадкам и блогерам, не нам: Бусты Uzum списывает с баланса продавца, Meta и Google с вашей карты, блогерам по договорам. Мы распределяем бюджет и каждую неделю показываем, сколько банок принёс каждый канал.</p>
+  <table class='tight m4'><colgroup><col style='width:36%'><col><col><col><col></colgroup><tr><th></th><th class='num'>Ноябрь<br><span class='small muted' style='font-weight:400'>сайт делаем</span></th><th class='num'>Декабрь<br><span class='small muted' style='font-weight:400'>пик сезона</span></th><th class='num'>Январь<br><span class='small muted' style='font-weight:400'>сайт работает</span></th><th class='num'>Март<br><span class='small muted' style='font-weight:400'>выход на 5&nbsp;000</span></th></tr><tr class=''><td><b>Uzum: Буст в ТОП</b><br><span class='small muted'>показы в поиске и каталоге</span></td><td class='num'>3&nbsp;000&nbsp;000</td><td class='num'>4&nbsp;500&nbsp;000</td><td class='num'>4&nbsp;800&nbsp;000</td><td class='num'>5&nbsp;100&nbsp;000</td></tr><tr class=''><td><b>Uzum: Буст заказов</b><br><span class='small muted'>только за полученный заказ</span></td><td class='num'>3&nbsp;400&nbsp;000</td><td class='num'>6&nbsp;900&nbsp;000</td><td class='num'>7&nbsp;300&nbsp;000</td><td class='num'>7&nbsp;800&nbsp;000</td></tr><tr class=''><td><b>Instagram и Facebook</b></td><td class='num'>5&nbsp;500&nbsp;000</td><td class='num'>23&nbsp;600&nbsp;000</td><td class='num'>43&nbsp;440&nbsp;000</td><td class='num'>71&nbsp;000&nbsp;000</td></tr><tr class=''><td><b>Блогеры</b></td><td class='num'>2&nbsp;200&nbsp;000</td><td class='num'>13&nbsp;600&nbsp;000</td><td class='num'>27&nbsp;900&nbsp;000</td><td class='num'>47&nbsp;600&nbsp;000</td></tr><tr class=''><td><b>Поиск Google</b></td><td class='num'>800&nbsp;000</td><td class='num'>4&nbsp;000&nbsp;000</td><td class='num'>8&nbsp;200&nbsp;000</td><td class='num'>13&nbsp;100&nbsp;000</td></tr><tr class=''><td><b>Повтор курса</b>: SMS и скидка 3%</td><td class='num'>0</td><td class='num'>700&nbsp;000</td><td class='num'>1&nbsp;700&nbsp;000</td><td class='num'>4&nbsp;200&nbsp;000</td></tr><tr class=''><td>НДС 12% на бюджет Meta и Google</td><td class='num'>756&nbsp;000</td><td class='num'>3&nbsp;312&nbsp;000</td><td class='num'>6&nbsp;196&nbsp;800</td><td class='num'>10&nbsp;092&nbsp;000</td></tr><tr class='tot'><td>Рекламные бюджеты в месяц</td><td class='num'>15&nbsp;656&nbsp;000</td><td class='num'>56&nbsp;612&nbsp;000</td><td class='num'>99&nbsp;536&nbsp;800</td><td class='num'>158&nbsp;892&nbsp;000</td></tr></table>
+
+  <h2>Наши услуги, сум</h2>
+  <p>Это то, за что вы платите DevUz Studio, по нашему прайсу. В ноябре дороже: старт SMM, кабинеты, карточки Uzum.</p>
+  <table class='tight m4'><colgroup><col style='width:36%'><col><col><col><col></colgroup><tr><th></th><th class='num'>Ноябрь<br><span class='small muted' style='font-weight:400'>сайт делаем</span></th><th class='num'>Декабрь<br><span class='small muted' style='font-weight:400'>пик сезона</span></th><th class='num'>Январь<br><span class='small muted' style='font-weight:400'>сайт работает</span></th><th class='num'>Март<br><span class='small muted' style='font-weight:400'>выход на 5&nbsp;000</span></th></tr><tr class=''><td><b>SMM</b>: Instagram, Facebook, Telegram-канал</td><td class='num'>35&nbsp;856&nbsp;000</td><td class='num'>23&nbsp;256&nbsp;000</td><td class='num'>23&nbsp;256&nbsp;000</td><td class='num'>23&nbsp;256&nbsp;000</td></tr><tr class=''><td><b>Таргет</b> в Instagram и Facebook</td><td class='num'>9&nbsp;000&nbsp;000</td><td class='num'>7&nbsp;200&nbsp;000</td><td class='num'>7&nbsp;200&nbsp;000</td><td class='num'>7&nbsp;200&nbsp;000</td></tr><tr class=''><td><b>Поиск Google</b></td><td class='num'>9&nbsp;135&nbsp;000</td><td class='num'>6&nbsp;615&nbsp;000</td><td class='num'>6&nbsp;615&nbsp;000</td><td class='num'>6&nbsp;615&nbsp;000</td></tr><tr class=''><td><b>Ведение магазина на Uzum</b><br><span class='small muted'>ставки, акции, отзывы, остатки, отчёт</span></td><td class='num'>6&nbsp;000&nbsp;000</td><td class='num'>6&nbsp;000&nbsp;000</td><td class='num'>6&nbsp;000&nbsp;000</td><td class='num'>6&nbsp;000&nbsp;000</td></tr><tr class=''><td><b>Карточки Uzum</b>: 13 товаров, разово</td><td class='num'>5&nbsp;850&nbsp;000</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td></tr><tr class=''><td>Комиссия 10% с бюджета Uzum, Meta и Google</td><td class='num'>1&nbsp;270&nbsp;000</td><td class='num'>3&nbsp;900&nbsp;000</td><td class='num'>6&nbsp;374&nbsp;000</td><td class='num'>9&nbsp;700&nbsp;000</td></tr><tr class=''><td>Комиссия 20% с бюджета блогеров</td><td class='num'>440&nbsp;000</td><td class='num'>2&nbsp;720&nbsp;000</td><td class='num'>5&nbsp;580&nbsp;000</td><td class='num'>9&nbsp;520&nbsp;000</td></tr><tr class='tot'><td>Наши услуги в месяц</td><td class='num'>67&nbsp;551&nbsp;000</td><td class='num'>49&nbsp;691&nbsp;000</td><td class='num'>55&nbsp;025&nbsp;000</td><td class='num'>62&nbsp;291&nbsp;000</td></tr></table>
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">Что даёт вложенный бюджет</h2>
+  <table class='m4'><colgroup><col style='width:36%'><col><col><col><col></colgroup><tr><th>Сейчас: 680 банок, 129&nbsp;200&nbsp;000 сум</th><th class='num'>Ноябрь<br><span class='small muted' style='font-weight:400'>сайт делаем</span></th><th class='num'>Декабрь<br><span class='small muted' style='font-weight:400'>пик сезона</span></th><th class='num'>Январь<br><span class='small muted' style='font-weight:400'>сайт работает</span></th><th class='num'>Март<br><span class='small muted' style='font-weight:400'>выход на 5&nbsp;000</span></th></tr><tr><td>Банок сверх нынешних</td><td class='num'><b>+520</b></td><td class='num'><b>+1&nbsp;620</b></td><td class='num'><b>+2&nbsp;820</b></td><td class='num'><b>+4&nbsp;320</b></td></tr><tr><td>Прирост выручки</td><td class='num'>+98&nbsp;800&nbsp;000</td><td class='num'>+307&nbsp;800&nbsp;000</td><td class='num'>+535&nbsp;800&nbsp;000</td><td class='num'>+820&nbsp;800&nbsp;000</td></tr><tr class=''><td>Маркетинг в месяц</td><td class='num'>83&nbsp;207&nbsp;000</td><td class='num'>106&nbsp;303&nbsp;000</td><td class='num'>154&nbsp;561&nbsp;800</td><td class='num'>221&nbsp;183&nbsp;000</td></tr><tr><td>Прирост выручки на 1 сум маркетинга</td><td class='num'>1,2 сума</td><td class='num'>2,9 сума</td><td class='num'>3,5 сума</td><td class='num'>3,7 сума</td></tr><tr class=''><td>Комиссия и логистика Uzum</td><td class='num'>50&nbsp;304&nbsp;000</td><td class='num'>62&nbsp;042&nbsp;000</td><td class='num'>78&nbsp;390&nbsp;000</td><td class='num'>79&nbsp;648&nbsp;000</td></tr><tr class=''><td>Сайт: доставка, оплата картой, сборка</td><td class='num'>0</td><td class='num'>14&nbsp;952&nbsp;000</td><td class='num'>29&nbsp;721&nbsp;000</td><td class='num'>56&nbsp;525&nbsp;000</td></tr><tr class='tot'><td>Остаётся у Greenwell до себестоимости<br><span class='small muted'>выручка минус Uzum, расходы сайта и весь маркетинг, округлено до тысяч</span></td><td class='num'>94&nbsp;489&nbsp;000</td><td class='num'>253&nbsp;704&nbsp;000</td><td class='num'>402&nbsp;326&nbsp;000</td><td class='num'>592&nbsp;644&nbsp;000</td></tr></table>
+  <p class="small muted">Банка в среднем 190&nbsp;000 сум, в заказе 1,3 банки. Комиссия Uzum 19,3% и логистика 5&nbsp;250 сум за банку; на сайте свой курьер 15&nbsp;000 за заказ, оплата картой около 1,5% и сборка 5&nbsp;000 за заказ.</p>
+
+  <h3>Март по каналам: откуда 4&nbsp;320 банок сверх нынешних</h3>
+  <table class='tight'><tr><th>Канал, март</th><th class='num'>Бюджет</th><th class='num'>Банок сверх 680</th><th>Где продажа</th><th class='num'>Выручка</th></tr><tr><td>Uzum: Буст в ТОП</td><td class='num'>5&nbsp;100&nbsp;000</td><td class='num'>440</td><td>Uzum 440</td><td class='num'>83&nbsp;600&nbsp;000</td></tr><tr><td>Uzum: Буст заказов</td><td class='num'>7&nbsp;800&nbsp;000</td><td class='num'>510</td><td>Uzum 510</td><td class='num'>96&nbsp;900&nbsp;000</td></tr><tr><td>Instagram и Facebook</td><td class='num'>71&nbsp;000&nbsp;000</td><td class='num'>1&nbsp;450</td><td>Uzum 150 · сайт 1&nbsp;300</td><td class='num'>275&nbsp;500&nbsp;000</td></tr><tr><td>Блогеры</td><td class='num'>47&nbsp;600&nbsp;000</td><td class='num'>860</td><td>Uzum 70 · сайт 790</td><td class='num'>163&nbsp;400&nbsp;000</td></tr><tr><td>Поиск Google</td><td class='num'>13&nbsp;100&nbsp;000</td><td class='num'>360</td><td>Uzum 50 · сайт 310</td><td class='num'>68&nbsp;400&nbsp;000</td></tr><tr><td>Повтор курса</td><td class='num'>4&nbsp;200&nbsp;000</td><td class='num'>700</td><td>сайт 700</td><td class='num'>133&nbsp;000&nbsp;000</td></tr><tr><td>Нынешние продажи на Uzum</td><td class='num'>0</td><td class='num'>680</td><td>Uzum 680</td><td class='num'>129&nbsp;200&nbsp;000</td></tr><tr class='tot'><td>Всего в марте</td><td class='num'>148&nbsp;800&nbsp;000</td><td class='num'>4&nbsp;320</td><td>Uzum 1&nbsp;900 · сайт 3&nbsp;100</td><td class='num'>950&nbsp;000&nbsp;000</td></tr></table>
+  <p class="small muted">Цена банки в канале: Буст в ТОП 11&nbsp;500 сум, Буст заказов 15&nbsp;200, Instagram и Facebook 40&nbsp;000 (на сайте 50&nbsp;000: новый сайт продаёт хуже знакомого Uzum), блогеры 45&nbsp;000, поиск Google 30&nbsp;000, повтор курса 6&nbsp;000. В ноябре и декабре на Uzum на 30% дороже: сезон. Это оценка по ставкам рынка; после первого месяца заменяем её вашими цифрами.</p>
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">Как запускаем</h2>
+  <ol class="steps">
+    <li><b>Неделя 1.</b> Доступы к кабинетам. Названия карточек по-русски и по-узбекски, запас на складе Uzum на месяц, Бусты по главным товарам. Начинаем сайт.</li>
+    <li><b>Ноябрь.</b> Всё на Uzum: Бусты, наборы «курс на 2 месяца», акции 11.11 и Чёрной пятницы. Instagram, блогеры и Google ведут на карточку Uzum.</li>
+    <li><b>Декабрь, запуск сайта.</b> Внешняя реклама переходит на сайт, Бусты остаются на Uzum. Наборы в подарок, свой курьер, промокод на первый заказ.</li>
+    <li><b>Январь и дальше.</b> Повтор курса: подписка, бот и напоминания тем, кто купил в декабре. Бюджет растёт туда, где банка дешевле.</li>
+  </ol>
+
+  <h2>Правила, по которым двигаем деньги</h2>
+  <ul>
+    <li>Отчёт каждую неделю: банки и цена банки по каждому каналу, отдельно Uzum и сайт.</li>
+    <li>Канал, где банка две недели подряд дороже плана в 1,5 раза, урезаем; деньги идут туда, где банка дешевле.</li>
+    <li>Первый месяц это проба: аудитории, креативы, ставки Uzum. Цена банки в нём выше, и это заложено.</li>
+  </ul>
+
+  <h2>Оплата</h2>
+  <ul>
+    <li>Работаем по публичной оферте на <b>devuz.studio/ru/offer</b>, исполнитель <b>ИП MAKSIMOV EGOR ANDREEVICH (DevUz Studio)</b>, Ташкент.</li>
+    <li><b>Сайт:</b> 50% запускают работу, 50% перед публикацией на вашем домене.</li>
+    <li><b>Наши услуги:</b> за месяц вперёд; за три месяца вперёд минус 5% на работу.</li>
+    <li>Счета в сумах по курсу ЦБ РУз на день выставления, банковским переводом.</li>
+  </ul>
+
+  <h2>Что нужно от вас</h2>
+  <ul>
+    <li>Расход на рекламу Uzum и продажи по товарам за сентябрь и октябрь: заменим оценки вашими цифрами.</li>
+    <li>Себестоимость и маржа: проверим, что 23% выручки на маркетинг окупаются.</li>
+    <li>Роль сотрудника в кабинете Uzum, доступы к Instagram, Telegram-каналу и рекламным кабинетам.</li>
+  </ul>
+  <div class="note">Telegram: <b>t.me/Devuz_studio_bot</b> · <b>+998 90&nbsp;912-05-78</b> (Узбекистан, Александр) · <b>+7&nbsp;923&nbsp;233-00-37</b> (Егор)</div>
+  <p class="small muted">План продаж это оценка по ставкам рынка на октябрь 2026, а не обещание объёма продаж. Состав работ и цена фиксируются счётом по оферте.</p>
+</section>
+
+<script src="letterhead.js"></script>
+</body>
+</html>
