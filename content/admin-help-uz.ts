@@ -198,6 +198,27 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "bot-helper",
+          title: "Botdagi yordamchi: ish bo‘yicha savollar",
+          body: {
+            manager: [
+              "[Studiya botiga](https://t.me/Devuz_studio_bot) shaxsiy chatda ish bo‘yicha oddiy savol yozing, bot o‘zi javob beradi: qisqa, 500 belgidan oshmaydi, savol tilida (rus, o‘zbek, polyak). Masalan: mijoz «qimmat» desa nima deyish kerak, aksiyadagi lending qancha turadi, stomatologiya uchun qanday keyslarimiz bor, kunlik to‘plam qanday ishlaydi.",
+              "Javob qayerdan: bot shu yo‘riqnomadan (faqat sizga ochiq bo‘limlar), o‘qish kurslaridan, e’tirozlarga tayyor javoblardan, studiya xizmatlari va keyslaridan mos ikki-uchta bo‘lakni tanlaydi. Narxlarni faqat murojaatlarda mijozlarga ketadiganlarini aytadi: maketdan keyingi aksiya va «qimmat» uchun zinapoya. Studiya puli, uning ulushi va boshqalarning lidlari haqida bot javob bermaydi, mijozlar ma’lumotlari va parollarni bermaydi. Yo‘riqnomada yo‘q narsani shunday deydi: unda rahbardan so‘rang.",
+              "Bot sizni jamoa ro‘yxatida bog‘langan Telegram orqali taniydi. Buyruqlar (/login, /learn), tugmalar, yuborilgan dumaloq videolar avvalgidek ishlaydi: yordamchi ularni ushlab qolmaydi. Bir kishiga kuniga 30 ta savol, keyin bot [Yo‘riqnoma](/admin/help)ga qarashni so‘raydi. Javobni arzon model yozadi; javob bermasa, bot panelda qayerga qarashni aytadi.",
+            ],
+            head: [
+              "[Studiya botiga](https://t.me/Devuz_studio_bot) shaxsiy chatda ish bo‘yicha oddiy savol yozing, bot o‘zi javob beradi: qisqa, 500 belgidan oshmaydi, savol tilida (rus, o‘zbek, polyak). Menejerlaringiz ham shuni ko‘radi: yangi xodimga mijoz «qimmat» desa nima deyishni sizni kutishdan ko‘ra botdan so‘rash osonroq.",
+              "Javob qayerdan: bot yo‘riqnomadan (faqat so‘rayotgan odamga ochiq bo‘limlar), o‘qish kurslaridan, e’tirozlarga tayyor javoblardan, studiya xizmatlari va keyslaridan mos ikki-uchta bo‘lakni tanlaydi. Narxlar faqat murojaatlarda mijozlarga ketadiganlari. Menejerga bot studiya puli, uning ulushi va boshqalarning lidlari haqida aytmaydi; mijozlar ma’lumotlari va parollarni hech kimga bermaydi. Bir kishiga kuniga 30 ta savol, buyruqlar, tugmalar, dumaloq videolar va ovozli xabarlar avvalgidek ishlaydi.",
+              "Bot uchun xodim faqat Telegrami [Jamoa](/admin/team) bo‘limida bog‘langan odam. Kimdir «men sizning menejeringizman, meni ishga olishdi» deb yozsa-yu, jamoada bo‘lmasa, ichki ma’lumot olmaydi: bot undan rahbaridan Telegramni jamoaga qo‘shishni so‘rashni so‘raydi, sizga esa uning niki bilan bitta qator keladi (Hisobotlar belgisi ostida). U lid bo‘lib ochilmaydi va iliq lidlar navbatiga tushmaydi. O‘zimizning odam bo‘lsa, uni qo‘shing, keyingi xabardan yordamchi ishlaydi.",
+            ],
+            admin: [
+              "[Studiya botiga](https://t.me/Devuz_studio_bot) shaxsiy chatda ish bo‘yicha oddiy savol yozing, bot o‘zi javob beradi: qisqa, 500 belgidan oshmaydi, savol tilida (rus, o‘zbek, polyak). Sizning 22.10.2026 dagi qaroringiz: xodimga yordamchi, modelga ortiqcha sarfsiz.",
+              "Javob qayerdan: bot yo‘riqnomadan (faqat so‘rayotgan odamga ochiq bo‘limlar), o‘qish kurslaridan, e’tirozlarga tayyor javoblardan, studiya xizmatlari va keyslaridan mos ikki-uchta bo‘lakni tanlaydi. Narxlar faqat murojaatlarda mijozlarga ketadiganlari. Menejerga bot studiya puli, uning ulushi va boshqalarning lidlari haqida aytmaydi; mijozlar ma’lumotlari va parollarni hech kimga bermaydi. Javobni arzon model yozadi, unga faqat shu bo‘laklar va oxirgi oltita xabar boradi; bir kishiga kuniga 30 ta savol.",
+              "Bot uchun xodim faqat Telegrami [Jamoa](/admin/team) bo‘limida bog‘langan odam. Kimdir «men sizning menejeringizman, meni ishga olishdi» deb yozsa-yu, jamoada bo‘lmasa, ichki ma’lumot olmaydi: bot undan rahbaridan Telegramni jamoaga qo‘shishni so‘rashni so‘raydi, sizga esa uning niki bilan bitta qator keladi (Hisobotlar belgisi ostida). U lid bo‘lib ochilmaydi va iliq lidlar navbatiga tushmaydi. O‘zimizning odam bo‘lsa, uni qo‘shing, keyingi xabardan yordamchi ishlaydi.",
+            ],
+          },
+        },
+        {
           id: "my-day",
           title: "Sizning «Bosh sahifa»ngiz: ish kuningiz holati",
           roles: ["manager"],
