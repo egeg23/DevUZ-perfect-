@@ -70,18 +70,27 @@ function secName(id){var s=G.sections.filter(function(x){return x.id===id})[0];r
 
 /* ── Каркас ──────────────────────────────────────────────────────────── */
 var view='dash',app=$('#app');
+/* Каркас как у панели Strapi: узкая полоса значков, рядом «Контент» с
+   типами коллекций и одиночными типами, справа рабочее поле. */
+var RAIL=[['dash','home','Главная панели'],['proj','layers','Контент'],['media','photo','Медиатека'],['users','gear','Настройки']];
+var GROUPS=[['Типы коллекций',['proj','news','team','leads','log']],['Одиночные типы',['sec','set']],['Администрирование',['users']]];
+var STRAPI_N={sec:'Главная',set:'Контакты и SEO',users:'Пользователи и роли',dash:'Здравствуйте'};
+var inContent=function(v){return ['proj','news','team','leads','log','sec','set'].indexOf(v)>=0};
 function shell(){
-  var nav=AREAS.filter(function(a){return can(a[0])}).map(function(a){var badge=a[0]==='leads'?S.leads.filter(function(l){return l.st==='new'}).length:0;return '<button type="button" data-go="'+a[0]+'"'+(view===a[0]?' aria-current="page"':'')+'>'+ic(a[2])+'<span>'+a[1]+'</span>'+(badge?'<span class="badge">'+badge+'</span>':'')+'</button>'}).join('');
   var u=me(),opts=S.users.filter(function(x){return x.on}).map(function(x){return '<option value="'+x.id+'"'+(x.id===u.id?' selected':'')+'>'+h(x.n)+' · '+h((S.roles[x.role]||{}).n||'')+'</option>'}).join('');
-  app.innerHTML='<aside class="side" id="side"><div class="side-logo"><img src="'+G.img+'/logo-k.png" alt="SIA" width="400" height="178"><small>Панель сайта</small></div><nav class="nav" aria-label="Разделы панели">'+nav+'</nav><div class="side-foot"><a href="'+G.home+'" target="_top">'+ic('out')+' Открыть сайт</a><p>Макет DevUz Studio, данные демо</p></div></aside><div class="veil" id="veil"></div>'+
-    '<div class="main"><header class="top"><button type="button" class="burger" id="burger" aria-label="Разделы">'+ic('menu')+'</button><h1>'+h(title())+'</h1><span class="sp"></span><div class="as"><label for="as">Вы смотрите как</label><select id="as" aria-label="Смотреть панель как пользователь">'+opts+'</select></div></header><div class="view" id="view"></div><p class="demo">Макет панели от DevUz Studio: всё, что вы меняете, хранится в этом браузере и сразу видно на <a href="'+G.home+'" target="_top">главной макета</a>. <a href="'+G.terms+'" target="_blank" rel="noopener">Условия макета</a></p></div>';
+  var rail=RAIL.filter(function(r){return r[0]==='proj'?['proj','news','team','leads','log','sec','set'].some(function(a){return can(a)}):can(r[0])}).map(function(r){var on=r[0]==='proj'?inContent(view):view===r[0];return '<button type="button" class="rl" data-go="'+(r[0]==='proj'&&!can('proj')?['news','team','leads','log','sec','set'].filter(function(a){return can(a)})[0]:r[0])+'"'+(on?' aria-current="page"':'')+' title="'+r[2]+'" aria-label="'+r[2]+'">'+ic(r[1])+'</button>'}).join('');
+  var groups=GROUPS.map(function(g){var items=g[1].filter(function(a){return can(a)});if(!items.length)return '';return '<p class="sn-g">'+g[0]+' <span>'+items.length+'</span></p>'+items.map(function(a){var A=AREAS.filter(function(x){return x[0]===a})[0],badge=a==='leads'?S.leads.filter(function(l){return l.st==='new'}).length:0;return '<button type="button" data-go="'+a+'"'+(view===a?' aria-current="page"':'')+'><i></i><span>'+h(STRAPI_N[a]&&a!=='dash'?STRAPI_N[a]:A[1])+'</span>'+(badge?'<span class="badge">'+badge+'</span>':'')+'</button>'}).join('')}).join('');
+  var ini=(u.n||'?').split(' ').map(function(w){return w.charAt(0)}).join('').slice(0,2).toUpperCase();
+  app.innerHTML='<aside class="side" id="side"><nav class="rail" aria-label="Разделы панели"><span class="rail-logo" title="SIA">SIA</span>'+rail+'<span class="rail-sp"></span><a class="rl" href="'+G.home+'" target="_top" title="Открыть сайт" aria-label="Открыть сайт">'+ic('out')+'</a><span class="rail-av" title="'+h(u.n)+'">'+h(ini)+'</span></nav><div class="subnav"><p class="sn-h">Контент</p><nav class="nav" aria-label="Типы контента">'+groups+'</nav><p class="sn-foot">Strapi · макет DevUz Studio, данные демо</p></div></aside><div class="veil" id="veil"></div>'+
+    '<div class="main"><header class="top"><button type="button" class="burger" id="burger" aria-label="Разделы">'+ic('menu')+'</button><span class="sp"></span><div class="as"><label for="as">Вы смотрите как</label><select id="as" aria-label="Смотреть панель как пользователь">'+opts+'</select></div></header><div class="ph-head"><p class="back">'+(view==='dash'?'':'← Назад')+'</p><h1>'+h(title())+'</h1></div><div class="view" id="view"></div><p class="demo">Макет панели сайта на Strapi от DevUz Studio. Всё, что вы меняете, хранится в этом браузере и сразу видно на <a href="'+G.home+'" target="_top">главной макета</a>. В работе панель ставится на ваш сервер. <a href="'+G.terms+'" target="_blank" rel="noopener">Условия макета</a></p></div>';
   $('#burger').onclick=function(){$('#side').classList.add('on');$('#veil').classList.add('on')};
   $('#veil').onclick=closeSide;
-  $$('[data-go]').forEach(function(b){b.onclick=function(){go(b.getAttribute('data-go'))}});
+  $$('[data-go]').forEach(function(b){b.onclick=function(){closeSide();go(b.getAttribute('data-go'))}});
+  var back=$('.back');if(back&&view!=='dash')back.onclick=function(){go('dash')};
   $('#as').onchange=function(e){S.me=e.target.value;save();if(!can(view))view='dash';render();toast('Панель глазами: '+me().n)};
   draw()}
 function closeSide(){var s=$('#side'),v=$('#veil');if(s)s.classList.remove('on');if(v)v.classList.remove('on')}
-function title(){var a=AREAS.filter(function(x){return x[0]===view})[0];return a?a[1]:''}
+function title(){if(view==='dash'){var fn=String(me().n).split(' ')[0];return fn==='Вы'?'Здравствуйте':'Здравствуйте, '+fn}var a=AREAS.filter(function(x){return x[0]===view})[0];return STRAPI_N[view]||(a?a[1]:'')}
 function go(v){view=v;try{history.replaceState(null,'','#'+v)}catch(e){}render();window.scrollTo(0,0)}
 function render(){shell()}
 function draw(){var el=$('#view');if(!can(view)){el.innerHTML='<div class="lock">'+ic('key')+'<p>У роли «'+h(S.roles[me().role].n)+'» нет доступа к этому разделу.</p></div>';return}
