@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dzIntroSolo } from "../../../lib/proto/dz-video.mjs";
-import { CAT, KINDS, PAINT, RIMS, catalogJson, lineupBlock, pickerBlock, fvrBlock, dmaxBlock, payBlock, bizBlock, cityBlock, dealerBlock, worldBlock, factoryBlock, arizaView } from "./sections.mjs";
+import { CAT, KINDS, PAINT, RIMS, catalogJson, lineupBlock, pickerBlock, fvrBlock, dmaxBlock, payBlock, warrantyBlock, faqBlock, newsBlock, bizBlock, cityBlock, dealerBlock, worldBlock, factoryBlock, arizaView } from "./sections.mjs";
 
 /*
  * Макет SamAuto (samauto.uz): первый экран — шоурум из презентации. По
@@ -143,6 +143,18 @@ function fleetView() {
 `;
 }
 
+/* Сравнение моделей: полоса внизу и окно с таблицей (page.js). */
+function compareView() {
+  return `<div class="cmp" id="cmp" aria-live="polite"><span>Solishtirish: <b id="cmp-n">0</b> / 3</span><button type="button" class="btn btn-red" id="cmp-go" disabled>Solishtirish</button><button type="button" class="cmp-c" id="cmp-c" aria-label="Tanlovni tozalash">${ic("x")}</button></div>
+<div class="az cmp-d" id="cmp-d" role="dialog" aria-modal="true" aria-labelledby="cmp-h" hidden><div class="az-c cmp-c2">
+<button type="button" class="fv-x az-x" id="cmp-x" aria-label="Yopish">${ic("x")}</button>
+<p class="kick">Modellarni solishtirish</p><p class="h2" id="cmp-h">Yonma-yon</p><p class="note">Farq qiladigan qatorlar ajratilgan. Raqamlar samauto.uz kataloglaridan.</p>
+<div class="cmp-w"><table id="cmp-t"></table></div>
+<div class="az-b"><button type="button" class="btn btn-red" id="cmp-a">Narx va mavjudligini so‘rash</button></div>
+</div></div>
+`;
+}
+
 function page() {
   return `<!doctype html>
 <html lang="uz">
@@ -167,7 +179,7 @@ ${sprite()}
 <a class="skip" href="#qator">Mazmunga o‘tish</a>
 <header class="top" id="top"><div class="wrap">
 <a class="logo" href="__PROTO_BASE__" aria-label="SamAuto, bosh sahifaga">${logo()}</a>
-<nav class="nav" aria-label="Bo‘limlar"><a href="#qator">Mahsulotlar</a><a href="#tanlash">Tanlash</a><a href="#dmax">D-MAX 360°</a><a href="#dilerlar">Dilerlar</a><a href="#tolov">Muddatli to‘lov</a></nav>
+<nav class="nav" aria-label="Bo‘limlar"><a href="#qator">Mahsulotlar</a><a href="#tanlash">Tanlash</a><a href="#dmax">D-MAX 360°</a><a href="#tolov">Muddatli to‘lov</a><a href="#dilerlar">Dilerlar</a><a href="#savollar">Savollar</a></nav>
 <a class="top-ph" href="${tel}">${ic("phone")}<span>${B.phone}</span></a><button type="button" class="btn btn-red btn-s top-cta" data-ariza="umumiy">Ariza qoldirish</button>
 </div></header>
 <main id="main">
@@ -177,19 +189,23 @@ ${pickerBlock(ic)}
 ${fvrBlock(IMG)}
 ${dmaxBlock(IMG, ic)}
 ${payBlock()}
+${warrantyBlock()}
 ${bizBlock(IMG)}
 ${cityBlock(IMG)}
 ${dealerBlock(IMG, ic)}
 ${worldBlock(IMG)}
 ${factoryBlock(IMG)}
+${newsBlock(IMG)}
+${faqBlock()}
 ${mockBlock()}
 </main>
 ${fleetView()}
+${compareView()}
 <footer class="foot"><div class="wrap">
 <div class="cols">
 <div>${logo("f-logo")}<p><a href="${tel}">${B.phone}</a></p><p><a href="${B.site}">samauto.uz</a></p><p><a href="${B.tg}" target="_blank" rel="noopener">Telegram</a></p></div>
 <div><b>Modellar qatori</b><ul>${KINDS.map((k) => `<li><a href="#qator">${k.title}</a></li>`).join("")}</ul></div>
-<div><b>Xizmat</b><ul><li><a href="#dilerlar">Diler topish</a></li><li><a href="#dilerlar">Servisga yozilish</a></li><li><a href="#tolov">Muddatli to‘lov</a></li><li><a href="#zavod">Mahalliylashtirish</a></li></ul></div>
+<div><b>Xizmat</b><ul><li><a href="#dilerlar">Diler topish</a></li><li><a href="#dilerlar">Servisga yozilish</a></li><li><a href="#dilerlar">Ehtiyot jihozlar</a></li><li><a href="#tolov">Kredit kalkulyatori</a></li><li><a href="#kafolat">Kafolat</a></li><li><a href="#savollar">Savollar</a></li><li><a href="#yangiliklar">Yangiliklar</a></li><li><a href="#zavod">Mahalliylashtirish</a></li></ul></div>
 <div><b>Maket ma’lumotlari</b><ul><li>Modellar, raqamlar, dilerlar va telefon: samauto.uz, 21.10.2026</li><li>Sahna: samauto.uz’dagi fotosurat va prezentatsiya asosida, DevUz Studio</li></ul></div>
 <div><b>DevUz Studio</b><ul><li><a href="https://devuz.studio">devuz.studio</a></li><li><a href="https://t.me/Devuz_studio_bot?start=samauto">Telegram</a></li></ul></div>
 </div>

@@ -59,13 +59,22 @@ def hsv(c):
     return h, d / (mx + 1e-6), mx
 
 
-def paint_mask(c, static):
+def paint_mask(c, ring):
+    """Краска — тёплый цвет, кроме видимого кольца подиума (ring). Владелец, 22.10.2026:
+    «когда у машины меняется цвет, некоторые области другого цвета при
+    вращении» — пятна давали задние фонари (красились вместе с кузовом) и
+    кромка бампера с бликом капота (их съедало вычитание кольца подиума)."""
     h, s, v = hsv(c)
     hw = (h + 0.08) % 1.0  # краска: от красного в тени до оранжевого на свету
-    m = ss(0.0, 0.03, hw) * (1 - ss(0.2, 0.24, hw)) * ss(0.12, 0.25, s) * ss(0.025, 0.06, v)
-    red = (hw < 0.1)
-    m = m * (1 - (red & (v > 0.9) & (s < 0.7)))  # белая серединка стоп-сигналов
-    return m * (1 - static)
+    warm = ss(0.0, 0.03, hw) * (1 - ss(0.2, 0.24, hw))
+    m = warm * ss(0.12, 0.25, s) * ss(0.012, 0.04, v)
+    # блик на краске: светлый, почти белый, но с тёплым оттенком
+    m = np.maximum(m, warm * ss(0.04, 0.1, s) * ss(0.55, 0.7, v))
+    # стоп-сигналы светятся: насыщенный красный, ярче любой краски в тени
+    red = (h > 0.95) | (h < 0.012)
+    lamp = red & (v > 0.68) & (s > 0.5)
+    lamp = np.asarray(Image.fromarray((lamp * 255).astype("uint8")).filter(ImageFilter.MaxFilter(5)), dtype=np.float32) / 255
+    return m * (1 - ring) * (1 - lamp)
 
 
 # источники поворотом подряд — один круг
@@ -109,6 +118,19 @@ band = (np.abs(np.sqrt(r) - 1) < 0.035) & (fq > 0.15)
 print("кольцо:", round(x0), round(y0), round(a_), round(b_))
 ring = Image.fromarray((band * 255).astype("uint8")).filter(ImageFilter.MaxFilter(5)).resize((1920, 1070))
 static = np.asarray(ring, dtype=np.float32) / 255
+# Кольцо вычитаем, только где его видно: там кадр совпадает с пустым залом
+# (медиана кадров). Где кольцо закрыто бампером, маска остаётся — иначе по
+# низу бампера шла неперекрашенная полоса.
+small = np.stack([np.asarray(Image.open(f).convert("RGB").resize((960, 535)), dtype=np.uint8) for _, f in src])
+bg = np.median(small, axis=0).astype(np.float32)
+del small
+band9 = np.asarray(Image.fromarray((static * 255).astype("uint8")).resize((960, 535)), dtype=np.float32) / 255
+
+
+def ring_of(full):
+    a = np.asarray(full.resize((960, 535)), dtype=np.float32)
+    seen = (np.abs(a - bg).max(-1) < 75).astype(np.float32) * band9
+    return np.asarray(Image.fromarray((seen * 255).astype("uint8")).filter(ImageFilter.MaxFilter(5)).resize(full.size, Image.BILINEAR), dtype=np.float32) / 255
 
 wheels = {"d": [], "m": []}
 yp, yr, cp, cr = 0.0, 0.0, 0.0, 0.0
@@ -120,7 +142,7 @@ for fmt, (W, H, crop, q) in FMT.items():
 for i, (clip, f) in enumerate(src):
     full = Image.open(f).convert("RGB")
     c = np.asarray(full, dtype=np.float32) / 255
-    mp = paint_mask(c, static)
+    mp = paint_mask(c, ring_of(full))
     h, s, v = hsv(c)
     mr = ss(0.2, 0.26, h) * (1 - ss(0.42, 0.5, h)) * ss(0.25, 0.45, s) * ss(0.05, 0.12, v)
     lin = c ** 2.2
@@ -137,7 +159,12 @@ for i, (clip, f) in enumerate(src):
         ys, xs = np.nonzero(g[:, big])
         wx, wy = (big[0] + xs.mean()) / c.shape[1], ys.mean() / c.shape[0]
     # мелкие дыры (блик, шум) закрываем, край смягчаем
-    mask = Image.fromarray((np.clip(mp, 0, 1) * 255).astype("uint8")).filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.MinFilter(7)).filter(ImageFilter.GaussianBlur(1.2))
+    mask = Image.fromarray((np.clip(mp, 0, 1) * 255).astype("uint8")).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(9)).filter(ImageFilter.GaussianBlur(1.2))
+    # Отражение в полу тусклое и рваное: там маску закрываем шире и мягче,
+    # иначе при светлом цвете отражение выходит пятнами.
+    y0 = int(full.size[1] * 0.7)
+    low = mask.crop((0, y0, full.size[0], full.size[1])).filter(ImageFilter.MaxFilter(17)).filter(ImageFilter.MinFilter(17)).filter(ImageFilter.GaussianBlur(4))
+    mask.paste(low, (0, y0))
     for fmt, (W, H, crop, q) in FMT.items():
         im, mk = full, mask
         x0 = 0

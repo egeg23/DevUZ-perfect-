@@ -20,7 +20,7 @@ function arizaText(kind){
   if(kind==='tanlash')return HI+'Model: '+$('#pk-sel').textContent+'\n'+$('#pk-pay').textContent+'\nSoni: '+(($('#pk-q').qty||{}).value==='99'?'20 dan ko‘p':({1:'1',5:'2-5',20:'6-20'})[($('#pk-q').qty||{}).value]||'1');
   if(kind==='narx')return HI+'ISUZU D-MAX IRBIS LSE narxini bilmoqchiman.\nRang: '+paintName+', disklar: '+rimName+'.';
   if(kind==='testdrayv')return HI+'ISUZU D-MAX IRBIS LSE test-drayviga yozilmoqchiman.\nRang: '+paintName+'.';
-  if(kind==='kredit')return HI+'Muddatli to‘lov (24 oygacha, 0%, Mikrokreditbank) bo‘yicha ariza.';
+  if(kind==='kredit')return HI+'MKBANK bilan muddatli to‘lov (ustama 0%) bo‘yicha ariza.'+calcLine;
   return HI+'Texnika bo‘yicha maslahat kerak.'}
 d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-ariza]');if(!b)return;e.preventDefault();var k=b.getAttribute('data-ariza');azOpen(k.indexOf('m:')===0?HI+'Model: '+k.slice(2):arizaText(k),b)});
 if(az){$('#az-x').addEventListener('click',azClose);az.addEventListener('click',function(e){if(e.target===az)azClose()});
@@ -38,7 +38,8 @@ function fvOpen(k,from){var K=kindOf(k);if(!K||!fv)return;fvLast=from;fvClear();
   $('#fv-t').innerHTML=K.tags.map(function(t){return'<li>'+t+'</li>'}).join('');
   var list=CAT.items.filter(function(i){return i.cat===k});
   $('#fv-mh').textContent=list.length+' ta model';
-  $('#fv-ml').innerHTML=list.map(function(it,i){return'<li style="--i:'+i+'"><button type="button" data-ariza="m:'+it.title.replace(/"/g,'')+'"><img src="'+site.img+'/cat/'+it.n+'.webp" alt="" loading="lazy" width="320" height="200"><span><b>'+it.title.replace(/ shassisi (negizidagi|negizida|asosidagi) /,' · ')+'</b><small>'+specOf(it)+'</small></span></button></li>'}).join('');
+  $('#fv-ml').innerHTML=list.map(function(it,i){return'<li style="--i:'+i+'"><button type="button" data-ariza="m:'+it.title.replace(/"/g,'')+'"><img src="'+site.img+'/cat/'+it.n+'.webp" alt="" loading="lazy" width="320" height="200"><span><b>'+it.title.replace(/ shassisi (negizidagi|negizida|asosidagi) /,' · ')+'</b><small>'+specOf(it)+'</small></span></button>'+
+    '<p class="fv-ma"><button type="button" data-cmp="'+it.n+'" aria-pressed="false"><i aria-hidden="true"></i><span>Solishtirish</span></button>'+(it.pdf?'<a href="'+it.pdf+'" target="_blank" rel="noopener">Xususiyatlar, PDF</a>':'')+'</p></li>'}).join('');cmpSync();
   v.poster=base+(tall?'-9.webp':'-16.webp');v.removeAttribute('src');
   var go=function(){if(!v.src||!fv.classList.contains('live'))return;var p=v.play();if(p&&p.catch)p.catch(function(){})};
   fvVid(base+(tall?'-9.bin':'-16.bin')).then(function(u){if(fvLast!==from||fv.hidden)return;v.src=u;go()},function(){});
@@ -52,7 +53,7 @@ function fvOpen(k,from){var K=kindOf(k);if(!K||!fv)return;fvLast=from;fvClear();
 function fvClose(){if(!fv||fv.hidden)return;fvClear();var v=$('#fv-v');fv.classList.remove('show','live');lnBack();
   fvT.push(setTimeout(function(){fv.hidden=true;v.pause();v.removeAttribute('src');v.load();root.classList.remove('lock-fv');if(fvLast)fvLast.focus({preventScroll:true})},420))}
 if(fv){$('#fv-x').addEventListener('click',fvClose)}
-addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(az&&!az.hidden)azClose();else fvClose()});
+addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(az&&!az.hidden)azClose();else if(cmpD&&!cmpD.hidden)cmpClose();else fvClose()});
 
 /* Линейка: наведение высвечивает машину, нажатие — камера «ныряет» к ней,
    и открывается её окно. */
@@ -146,8 +147,48 @@ var geo=$('#dl-geo');if(geo)geo.addEventListener('click',function(){var s=$('spa
   navigator.geolocation.getCurrentPosition(function(p){var la=p.coords.latitude,lo=p.coords.longitude,best=-1,bd=1e9;
     CAT.dealers.forEach(function(x,i){if(!x.lat)return;var r=Math.PI/180,a=Math.sin((x.lat-la)*r/2),b=Math.sin((x.lng-lo)*r/2),k=2*6371*Math.asin(Math.sqrt(a*a+Math.cos(la*r)*Math.cos(x.lat*r)*b*b));if(k<bd){bd=k;best=i}});
     s.textContent='Eng yaqinini topish';if(best>=0)dlPick(best,'Sizdan '+Math.round(bd)+' km')},function(){s.textContent='Ruxsat berilmadi'},{timeout:8000,maximumAge:6e5})});
-var svf=$('#sv-f');if(svf)svf.addEventListener('submit',function(e){e.preventDefault();var f=svf;
-  azOpen(HI+'Servisga yozilish.\nModel: '+f.model.value+'\nXizmat: '+f.xizmat.value+'\nDiler: '+f.diler.value+'\nSana: '+f.sana.value,svf.querySelector('button'))});
+/* Сервис и запчасти — одна форма, вкладка меняет поля. */
+var svf=$('#sv-f'),svT='sv';
+if(svf){$$('.sv-t button').forEach(function(b){b.addEventListener('click',function(){svT=b.getAttribute('data-t');
+    $$('.sv-t button').forEach(function(x){x.setAttribute('aria-selected',x===b?'true':'false')});
+    $$('[data-g]',svf).forEach(function(x){x.hidden=x.getAttribute('data-g')!==svT});
+    $('#sv-b').textContent=svT==='ej'?'Qism so‘rash':'Yozilish'})});
+  svf.addEventListener('submit',function(e){e.preventDefault();var f=svf;
+    azOpen(svT==='ej'?HI+'Ehtiyot jihoz kerak.\nModel: '+f.model.value+(f.vin.value?'\nVIN: '+f.vin.value.toUpperCase():'')+'\nQism: '+(f.qism.value||'aniqlashtiraman')+'\nDiler: '+f.diler.value
+      :HI+'Servisga yozilish.\nModel: '+f.model.value+'\nXizmat: '+f.xizmat.value+'\nDiler: '+f.diler.value+(f.sana.value?'\nSana: '+f.sana.value:''),$('#sv-b'))})}
+
+/* Калькулятор MKBANK: ustama 0%, значит оплата = (цена − взнос) / месяцы. */
+var cp=$('#calc-p'),cP=20,cM=12,calcLine='';
+function calc(){var v=+String(cp.value).replace(/\D/g,'')||0,a=Math.round(v*cP/100),o=v?Math.round((v-a)/cM):0;
+  $('#calc-a').textContent=v?nf(a)+' so‘m':'…';$('#calc-m').textContent=cM+' oy';$('#calc-o').textContent=v?nf(o)+' so‘m':'…';
+  calcLine=v?'\nNarx: '+nf(v)+' so‘m, boshlang‘ich '+cP+'% ('+nf(a)+' so‘m), '+cM+' oy, oyiga '+nf(o)+' so‘m.':'\nBoshlang‘ich to‘lov '+cP+'%, '+cM+' oy.'}
+if(cp){cp.addEventListener('input',function(){var v=cp.value.replace(/\D/g,'').slice(0,12);cp.value=v?nf(+v):'';calc()});
+  $$('#calc .seg button').forEach(function(b){b.addEventListener('click',function(){cP=+b.getAttribute('data-p');cM=+b.getAttribute('data-m');
+    $$('#calc .seg button').forEach(function(x){x.setAttribute('aria-checked',x===b?'true':'false')});calc()})});
+  $('#calc').addEventListener('submit',function(e){e.preventDefault()});calc()}
+
+/* Сравнение: до трёх моделей из окна техники, таблица по их паспорту. */
+var cmp=[],cmpBar=$('#cmp'),cmpD=$('#cmp-d'),cmpLast=null;
+var itemOf=function(n){for(var i=0;i<CAT.items.length;i++)if(CAT.items[i].n===n)return CAT.items[i];return null};
+var shortT=function(it){return it.title.replace(/ shassisi (negizidagi|negizida|asosidagi) /,' · ')};
+function cmpSync(){$$('[data-cmp]').forEach(function(b){var on=cmp.indexOf(+b.getAttribute('data-cmp'))>=0;b.setAttribute('aria-pressed',on?'true':'false');b.querySelector('span').textContent=on?'Tanlandi':'Solishtirish'});
+  if(!cmpBar)return;$('#cmp-n').textContent=cmp.length;cmpBar.classList.toggle('on',cmp.length>0);$('#cmp-go').disabled=cmp.length<2}
+d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-cmp]');if(!b)return;var n=+b.getAttribute('data-cmp'),i=cmp.indexOf(n);
+  if(i>=0)cmp.splice(i,1);else{if(cmp.length>=3)cmp.shift();cmp.push(n)}cmpSync()});
+var ROWS=[['Kuzov',function(it){return it.body}],['Shassi',function(it){return it.chassis}],['Dvigatel',function(it){return it.engine}],['Quvvat',function(it){return it.power}],
+  ['Dvigatel hajmi, sm³',function(it){return it.volume}],['Yuk ko‘tarish, kg',function(it){return it.load}],['To‘liq massa, kg',function(it){return it.weight?nf(it.weight):''}],
+  ['G‘ildirak formulasi',function(it){return it.wheels}],['Yoqilg‘i',function(it){return it.fuel}],['O‘rinlar',function(it){return it.seats}],['Gabarit, mm',function(it){return it.dims}],['Baza',function(it){return it.base}]];
+function cmpOpen(from){if(!cmpD||cmp.length<2)return;cmpLast=from;var L=cmp.map(itemOf).filter(Boolean);
+  var head='<tr><th scope="col"><span class="sr">Ko‘rsatkich</span></th>'+L.map(function(it){return'<th scope="col"><img src="'+site.img+'/cat/'+it.n+'.webp" alt="" width="320" height="200" loading="lazy"><b>'+shortT(it)+'</b></th>'}).join('')+'</tr>';
+  var body=ROWS.map(function(r){var v=L.map(function(it){return r[1](it)||''});if(!v.some(Boolean))return'';var same=v.every(function(x){return x===v[0]});
+    return'<tr'+(same?'':' class="df"')+'><th scope="row">'+r[0]+'</th>'+v.map(function(x){return'<td>'+(x||'·')+'</td>'}).join('')+'</tr>'}).join('');
+  var pdf='<tr><th scope="row">Hujjat</th>'+L.map(function(it){return'<td>'+(it.pdf?'<a href="'+it.pdf+'" target="_blank" rel="noopener">PDF</a>':'·')+'</td>'}).join('')+'</tr>';
+  $('#cmp-t').innerHTML='<thead>'+head+'</thead><tbody>'+body+pdf+'</tbody>';
+  cmpD.hidden=false;root.classList.add('lock-fv');requestAnimationFrame(function(){cmpD.classList.add('show')});$('#cmp-x').focus({preventScroll:true})}
+function cmpClose(){if(!cmpD||cmpD.hidden)return;cmpD.classList.remove('show');setTimeout(function(){cmpD.hidden=true;if(!fv||fv.hidden)root.classList.remove('lock-fv');if(cmpLast)cmpLast.focus({preventScroll:true})},280)}
+if(cmpBar){$('#cmp-go').addEventListener('click',function(){cmpOpen(this)});$('#cmp-c').addEventListener('click',function(){cmp=[];cmpSync()});
+  $('#cmp-x').addEventListener('click',cmpClose);cmpD.addEventListener('click',function(e){if(e.target===cmpD)cmpClose()});
+  $('#cmp-a').addEventListener('click',function(){azOpen(HI+'Modellarni solishtiryapman, narx va mavjudligini bilmoqchiman:\n'+cmp.map(itemOf).map(shortT).join('\n'),this)})}
 
 /* D-MAX 360°: кадры стенда (turn.py) листаются пальцем; цвет кузова и
    дисков перекрашивает шейдер, новый цвет проходит по машине волной. */
@@ -167,6 +208,8 @@ if(dm&&dcv&&TT&&!CALM)(function(){
     'float mr=smoothstep(.2,.26,h.x)*(1.-smoothstep(.42,.5,h.x))*smoothstep(.25,.45,h.y)*smoothstep(.05,.12,h.z);'+
     'float ep=edge(pk),er=edge(rk);vec3 tp=mix(pa,pb,ep),tr=mix(ra,rb,er);'+
     'vec3 o=mix(l,mix(l,paint(l,tp,lr),mix(qa,qb,ep)),mp);o=mix(o,paint(l,tr,lg),mr);'+
+    /* отражение в полу тусклее машины: ниже подиума перекраска гаснет */
+    'o*=1.-.45*smoothstep(.74,.9,v.y)*clamp(mix(qa,qb,ep)*mp+mr,0.,1.);'+
     'float sh=exp(-pow((v.x-(pk*1.5-.25))/.035,2.))*mp*step(.001,pk)*step(pk,.999)+exp(-pow((v.x-(rk*1.5-.25))/.035,2.))*mr*step(.001,rk)*step(rk,.999);'+
     'gl_FragColor=vec4(srgb(o+sh*.35),1.);}';
   function sh(type,src){var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s}

@@ -57,7 +57,9 @@ for n, p in enumerate(sorted(json.load(open(os.path.join(SRC, "products.json")))
           "engine": fix(p.get("engine_model")), "power": fix(p.get("engine_power_uz")), "volume": fix(vol),
           "load": fix(str(p.get("load_capacity") or "")), "weight": p.get("weight") or None, "seats": p.get("passengers") or None,
           "wheels": fix((p.get("wheel_formula_id_data") or {}).get("text")), "fuel": fix((p.get("fuel_types_id_data") or {}).get("title_uz")),
-          "dims": fix((p.get("dimensions") or "").replace("х", "×").replace("x", "×")), "base": fix(p.get("wheelbase_uz"))}
+          "dims": fix((p.get("dimensions") or "").replace("х", "×").replace("x", "×")), "base": fix(p.get("wheelbase_uz")),
+          # PDF характеристик лежит у них на CDN (кнопка «Xususiyatlarni yuklab olish»)
+          "pdf": ("https://ncdn.samauto.uz" + p["catalog_file_uz"]) if p.get("catalog_file_uz") else ""}
     photo(p["photo"], n)
     items.append({k: v for k, v in it.items() if v not in ("", None)})
 
@@ -73,5 +75,28 @@ for d in json.load(open(os.path.join(SRC, "dealers.json")))["data"]:
                     "address": fix(d.get("address_uz")), "phone": fix(d.get("phone")),
                     "lat": float(d["latitude"]) if d.get("latitude") else None, "lng": float(d["longitude"]) if d.get("longitude") else None})
 
-json.dump({"source": "samauto.uz, 21.10.2026", "items": items, "dealers": dealers}, open(os.path.join(HERE, "catalog.json"), "w"), ensure_ascii=False, indent=1)
+# Вопросы и ответы — их раздел «Ko‘p so‘raladigan savollar» (faqs), новости —
+# четыре свежих (news), фото новостей сжаты в public/protos/samauto/news/.
+strip = lambda h: re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", (h or "").replace("&nbsp;", " "))).strip()
+faq, seen = [], set()
+for f in json.load(open(os.path.join(SRC, "api-faqs.json")))["data"]["data"]["response"]:
+    q = fix(f["question_uz"]).replace("o zidan", "o‘zidan")
+    key = re.sub(r"\W", "", q.lower())[:40]
+    if key in seen:
+        continue
+    seen.add(key)
+    faq.append({"q": q, "a": fix(strip(f.get("answer_uz")))})
+# Значки и тире из их текста макету нельзя (правило «без длинных тире»).
+plain = lambda t: re.sub(r"\s+", " ", re.sub(r"\s*[—–]\s*", ": ", re.sub(r"[\u2600-\u27bf\u25aa-\u25ff\ufe0f\U0001F300-\U0001FAFF]", " ", t))).strip()
+NEWS = os.path.join(HERE, "../../../public/protos/samauto/news")
+os.makedirs(NEWS, exist_ok=True)
+news = []
+for i, x in enumerate(sorted(json.load(open(os.path.join(SRC, "api-news.json")))["data"], key=lambda x: x.get("publish_date") or x.get("createdAt") or "", reverse=True)[:4]):
+    raw = subprocess.run(["curl", "-sSL", "--retry", "4", "--retry-all-errors", "-A", "Mozilla/5.0", "--max-time", "120", x["photo"] or x["image"]], capture_output=True, check=True).stdout
+    im = Image.open(io.BytesIO(raw)).convert("RGB")
+    im.thumbnail((960, 960), Image.LANCZOS)
+    im.save(os.path.join(NEWS, f"{i}.webp"), "WEBP", quality=76, method=6)
+    news.append({"t": fix(x["title_uz"]), "d": (x.get("publish_date") or x.get("createdAt") or "")[:10], "s": plain(fix(strip(x.get("shortContent_uz") or x.get("description_uz"))))[:220]})
+
+json.dump({"source": "samauto.uz, 21.10.2026", "items": items, "dealers": dealers, "faq": faq, "news": news}, open(os.path.join(HERE, "catalog.json"), "w"), ensure_ascii=False, indent=1)
 print(len(items), "моделей,", len(dealers), "дилеров")
