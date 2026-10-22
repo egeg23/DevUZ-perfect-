@@ -77,6 +77,7 @@ export const hqDict = defineDict({
   touchesReplies: { ru: "ответили сегодня", uz: "bugun javob berdi", pl: "odpowiedzi dziś" },
   touches7: { ru: "касаний за 7 дней", uz: "7 kunda aloqalar", pl: "kontakty w 7 dni" },
   replies7: { ru: "ответов за 7 дней", uz: "7 kunda javoblar", pl: "odpowiedzi w 7 dni" },
+  refused7: { ru: "отказов за 7 дней", uz: "7 kunda rad etishlar", pl: "odmów w 7 dni" },
 
   // Макеты.
   mockupsTitle: { ru: "Макеты", uz: "Maketlar", pl: "Makiety" },

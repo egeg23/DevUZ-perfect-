@@ -10,6 +10,7 @@ import {
   OPEN_HEADING,
   QUEUE_ROLES,
   LOST_WINDOW_HOURS,
+  heldHeading,
   isLostCard,
   isWorkingHours,
   lostHeading,
@@ -25,6 +26,7 @@ import {
 import { wants } from "@/lib/admin/notify-prefs";
 import { dayStartUtc } from "@/lib/admin/portion";
 import { todayInTashkent } from "@/lib/admin/pulse";
+import { messageWindow } from "@/lib/admin/tasks";
 import { salesRecipients } from "@/lib/qualify/brief";
 import { noticesOf } from "@/lib/qualify/notices";
 import type { LeadOrigin } from "@/lib/qualify/origin";
@@ -345,6 +347,17 @@ type Card = {
 export async function startQueue(card: Card, now: Date = new Date()): Promise<boolean> {
   if (!card.leadId || card.leadId === "unsaved") return false;
 
+  // С 21:00 до 08:00 карточек нет никому: лид ждёт утра. Отметка
+  // queue_opened_at — чтобы утром его дослал redeliverLostCards (карточек у
+  // лида нет — значит «не дошла»), уже по дневной очереди и с шапкой
+  // «пришёл ночью» (владелец, 23.10.2026: «ночью уведомления не уходят»).
+  if (!messageWindow(now)) {
+    const db = serviceClient();
+    if (!db) return false;
+    await db.from("leads").update({ queue_opened_at: now.toISOString(), fair_share: false }).eq("id", card.leadId);
+    return true;
+  }
+
   // Ночью — сразу всем, с потолком равной доли. Предлагать по очереди
   // некому: полчаса у каждого спящего — это часы, за которые клиент уйдёт.
   if (!isWorkingHours(now)) {
@@ -411,6 +424,8 @@ export async function redeliverLostCards(
   now: Date = new Date(),
 ): Promise<{ resent: string[]; errors: string[] }> {
   const report = { resent: [] as string[], errors: [] as string[] };
+  // Ночью не досылаем: ночной лид и потерянная карточка ждут 08:00.
+  if (!messageWindow(now)) return report;
   const db = serviceClient();
   if (!db) return report;
 
@@ -456,7 +471,10 @@ export async function redeliverLostCards(
 
   for (const lead of lost) {
     try {
-      if (await requeueLead(lead.id as string, lostHeading(lead.created_at as string), now)) {
+      // Пустили в очередь ночью — карточку держали до утра, а не потеряли.
+      const heldAtNight = !messageWindow(new Date(lead.queue_opened_at as string));
+      const heading = heldAtNight ? heldHeading(lead.created_at as string) : lostHeading(lead.created_at as string);
+      if (await requeueLead(lead.id as string, heading, now)) {
         report.resent.push((lead.request_no as string | null) ?? (lead.id as string));
         console.log(`очередь: дослал карточку ${lead.request_no ?? lead.id} — она не дошла ни до кого`);
       }
@@ -530,6 +548,8 @@ export type AdvanceReport = { expired: number; offered: number; opened: number; 
  */
 export async function advanceQueues(now: Date = new Date()): Promise<AdvanceReport> {
   const report: AdvanceReport = { expired: 0, offered: 0, opened: 0, errors: [] };
+  // Ночью очередь стоит: «время вышло» и «лид открыт всем» — утром.
+  if (!messageWindow(now)) return report;
   const db = serviceClient();
   if (!db) return report;
 

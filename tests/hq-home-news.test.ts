@@ -17,14 +17,15 @@ const plain = (s: string) => s.replace(/<\/?[bi]>/g, "");
 // Telegram считает подпись в UTF-16, как String.length.
 const CAPTION_MAX = 1024;
 
-test("уходит руководителю и менеджерам 17.10 с 07:00 по Ташкенту, ночью — нет", () => {
+test("уходит руководителю и менеджерам 17.10 с утра по Ташкенту, ночью — нет", () => {
   assert.ok(news?.window);
   assert.deepEqual([...news.roles].sort(), ["head", "manager"]);
   const at = (iso: string) => new Date(iso);
   assert.equal(newsActive(news, at("2026-10-16T20:00:00Z")), false, "16.10 — ещё рано");
   assert.equal(news.window(at("2026-10-17T01:59:00Z")), false, "06:59 по Ташкенту — ждём");
-  assert.equal(news.window(at("2026-10-17T02:00:00Z")), true, "07:00 по Ташкенту, суббота");
-  assert.equal(newsActive(news, at("2026-10-17T02:00:00Z")), true);
+  // С 23.10.2026 окно бота — с 08:00 (было с 07:00).
+  assert.equal(news.window(at("2026-10-17T03:00:00Z")), true, "08:00 по Ташкенту, суббота");
+  assert.equal(newsActive(news, at("2026-10-17T03:00:00Z")), true);
   assert.equal(news.window(at("2026-10-17T18:30:00Z")), false, "23:30 — ночь");
   assert.equal(newsActive(news, at("2026-10-20T03:00:00Z")), false, "через три дня — устарело");
 });

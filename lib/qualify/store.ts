@@ -73,7 +73,9 @@ export async function saveLead(
       already_told: lead.already_told ?? [],
       avoid_asking: lead.avoid_asking ?? [],
       transcript,
-      status: "new",
+      // Отказ — сразу закрытым: в очередь и в «новые» не попадает, но
+      // считается (владелец, 23.10.2026: «веди статистику отказов»).
+      status: lead.priority === "archive" ? "lost" : "new",
     })
     .select("id")
     .single();

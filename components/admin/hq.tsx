@@ -680,6 +680,7 @@ export function HqView({
             <Row href="/admin/talks" label={t.touchesReplies} value={touches.repliesToday} />
             <Row href="/admin/stats" label={t.touches7} value={touches.sent7.now} sub={<Delta trend={touches.sent7} t={t} />} />
             <Row href="/admin/talks" label={t.replies7} value={touches.replies7.now} sub={<Delta trend={touches.replies7} t={t} />} />
+            <Row href="/admin/prospect" label={t.refused7} value={touches.refused7.now} sub={<Delta trend={touches.refused7} t={t} goodUp={false} />} />
           </PulseCard>
 
           <PulseCard

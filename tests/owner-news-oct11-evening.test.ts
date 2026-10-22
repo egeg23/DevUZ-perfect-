@@ -20,7 +20,8 @@ test("уходит менеджерам и руководителю сегодн
   assert.ok(news);
   assert.deepEqual([...news.roles].sort(), ["head", "manager"]);
   assert.ok(news.window);
-  const evening = new Date("2026-10-11T16:30:00Z"); // 21:30 по Ташкенту
+  // С 23.10.2026 бот молчит с 21:00 (было с 23:00): «вечер» — 20:30.
+  const evening = new Date("2026-10-11T15:30:00Z"); // 20:30 по Ташкенту
   assert.equal(newsActive(news, evening), true);
   assert.equal(news.window(evening), true);
   assert.equal(news.window(new Date("2026-10-11T19:00:00Z")), false, "00:00 по Ташкенту — ночь");

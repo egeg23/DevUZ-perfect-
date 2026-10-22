@@ -172,12 +172,15 @@ test("без срока — только «ещё не взяли», напом�
   assert.equal(movedDue("1h", null, tk("2026-10-01T10:00:00")).toISOString(), tk("2026-10-01T11:00:00").toISOString());
 });
 
-test("сообщения о действиях — сразу, кроме ночи 23:00–07:00, и в выходной тоже", () => {
+// Владелец, 23.10.2026: «ночью уведомления не уходят!!!! Только с 8 до 21:00
+// по ташкенту» (до этого — с 07:00 до 23:00).
+test("сообщения о действиях — сразу, кроме ночи 21:00–08:00, и в выходной тоже", () => {
   assert.equal(messageWindow(tk("2026-10-01T20:30:00")), true);
   assert.equal(messageWindow(tk("2026-10-04T12:00:00")), true); // воскресенье
+  assert.equal(messageWindow(tk("2026-10-01T21:00:00")), false);
   assert.equal(messageWindow(tk("2026-10-01T23:00:00")), false);
-  assert.equal(messageWindow(tk("2026-10-02T06:59:00")), false);
-  assert.equal(messageWindow(tk("2026-10-02T07:00:00")), true);
+  assert.equal(messageWindow(tk("2026-10-02T07:59:00")), false);
+  assert.equal(messageWindow(tk("2026-10-02T08:00:00")), true);
   const action = read("app/admin/tasks/actions.ts");
   assert.match(action, /if \(messageWindow\(now\)\) \{\s+after\(\(\) => deliverAll\(others\)\);/);
   assert.match(action, /async function deliverAll[\s\S]*?await deliverAssignment\(task\.id\)/);

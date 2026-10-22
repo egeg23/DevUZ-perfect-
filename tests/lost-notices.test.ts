@@ -105,5 +105,7 @@ test("свип: досылает потерянные карточки и не �
   const store = read("lib/admin/lead-queue-store.ts");
   // Досылка — только когда Telegram отвечает, и по правилам очереди.
   assert.match(store, /if \(!lost\.length \|\| !\(await telegramReachable\(\)\)\) return report;/);
-  assert.match(store, /await requeueLead\(lead\.id as string, lostHeading\(lead\.created_at as string\), now\)/);
+  // Шапка — «не дошла из-за сбоя», а лид, придержанный ночью, — «пришёл ночью» (night-quiet).
+  assert.match(store, /heldAtNight \? heldHeading\(lead\.created_at as string\) : lostHeading\(lead\.created_at as string\)/);
+  assert.match(store, /await requeueLead\(lead\.id as string, heading, now\)/);
 });

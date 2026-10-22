@@ -71,6 +71,8 @@ export type HqLead = {
   assigned_staff_id: string | null;
   /** Номер заявки, компания или имя — как звать лида в списке. */
   label: string;
+  /** Откуда лид: «outreach» — из касания, его отказ считается по касанию. */
+  source?: string | null;
 };
 
 export type HqOffer = { lead_id: string; staff_id: string; expires_at: string };
@@ -146,6 +148,9 @@ export type HqProspect = {
   sent_at: string | null;
   autopilot_at: string | null;
   replied_at: string | null;
+  /** «refused» — клиент отказался, касание закрыто (кнопкой или само). */
+  closed_reason?: string | null;
+  closed_at?: string | null;
 };
 
 export type HqPortionRow = { staff_id: string; replaces: string | null; outcome: string | null; source: string | null };
@@ -163,7 +168,25 @@ export type TouchesPulse = {
   repliesToday: number;
   sent7: Trend;
   replies7: Trend;
+  /**
+   * Отказы за 7 дней против 7 до них. Владелец, 23.10.2026: «Ты просто веди
+   * статистику отказов, мы ее увидим в дашборде. Не спамь отказами» —
+   * карточек отказов в боте нет, отказы видны здесь.
+   */
+  refused7: Trend;
 };
+
+/**
+ * Когда случились отказы: касания, закрытые «клиент отказался», и отказы в
+ * чате сайта и боте (лид «не интересно» не из касания — у касания он
+ * считается по самому касанию, второй раз не считаем).
+ */
+export function refusalStamps(prospects: readonly HqProspect[], leads: readonly HqLead[]): (string | null)[] {
+  return [
+    ...prospects.filter((p) => p.closed_reason === "refused").map((p) => p.closed_at ?? null),
+    ...leads.filter((l) => l.priority === "archive" && l.source !== "outreach").map((l) => l.created_at),
+  ];
+}
 
 /** Касание человека — как в touch-store: по тому, кто написал, неудавшиеся не в счёте. */
 function personTouchAt(p: HqProspect): string | null {
@@ -185,6 +208,7 @@ export function touchesPulse(
   portions: readonly HqPortionRow[],
   autopilot: { enabled: boolean; target: number },
   now: Date,
+  refusedAt: readonly (string | null | undefined)[] = [],
 ): TouchesPulse {
   const today = dayStartOf(now);
   const real = portions
@@ -208,6 +232,7 @@ export function touchesPulse(
       prospects.map((p) => p.replied_at),
       now,
     ),
+    refused7: trendOf(refusedAt, now),
   };
 }
 

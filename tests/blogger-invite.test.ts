@@ -89,7 +89,8 @@ test("не ночью, каждому один раз, итог владельц
   assert.match(store, /messageWindow\(now\)/);
   assert.match(store, /onConflict: "invite_id,staff_id", ignoreDuplicates: true/);
   assert.equal(messageWindow(new Date("2026-10-12T21:00:00Z")), false, "02:00 по Ташкенту — ночь");
-  assert.equal(messageWindow(new Date("2026-10-13T02:30:00Z")), true, "07:30 по Ташкенту — можно");
+  assert.equal(messageWindow(new Date("2026-10-13T02:30:00Z")), false, "07:30 по Ташкенту — ещё ночь (окно с 08:00, владелец, 23.10.2026)");
+  assert.equal(messageWindow(new Date("2026-10-13T03:30:00Z")), true, "08:30 по Ташкенту — можно");
   const text = tallyText({ yes: ["Аня"], no: [], silent: ["Борис", "Вера"] });
   assert.match(text, /Приняли \(1\): Аня/);
   assert.match(text, /Отказались \(0\): —/);

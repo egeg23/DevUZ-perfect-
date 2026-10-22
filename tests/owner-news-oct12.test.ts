@@ -35,7 +35,8 @@ test("после «Отправляй» — руководителю и мене
   assert.deepEqual([...team.roles].sort(), ["head", "manager"]);
   assert.ok(team.window);
   assert.equal(team.window(new Date("2026-10-12T19:45:00Z")), false, "00:45 по Ташкенту — ночь");
-  const morning = new Date("2026-10-13T02:30:00Z"); // 07:30 по Ташкенту
+  // С 23.10.2026 бот пишет с 08:00 (было с 07:00).
+  const morning = new Date("2026-10-13T03:30:00Z"); // 08:30 по Ташкенту
   assert.equal(newsActive(team, morning), true);
   assert.equal(team.window(morning), true);
   assert.equal(newsActive(team, new Date("2026-10-15T01:00:00Z")), false, "через три дня — устарело");
