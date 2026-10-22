@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { company } from "@/content/company";
 import type { Locale } from "@/lib/i18n";
 import type { DiscountReason } from "@/lib/promise-terms";
-import { closingText, type ClosingOutcome } from "@/lib/qualify/closing";
+import { closingText, refusedText, type ClosingOutcome } from "@/lib/qualify/closing";
 import { withTalkContact } from "@/lib/qualify/contact";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
 import { scoreLead } from "@/lib/qualify/scoring";
@@ -402,9 +402,16 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
     }
   }
 
+  // Отказ («не интересно») — никому не рассылаем: владелец, 23.10.2026,
+  // «Не спамь отказами. Только заинтересованные рассылкой же отправляются».
+  // Лид сохраняется (saveLead кладёт его закрытым), отказ считается на
+  // «Главной»; касание закрывает outreach-talk-run (closeRefused).
+  const refused = lead.priority === "archive";
   let delivered = false;
   try {
-    if (options.existing) {
+    if (refused) {
+      // ни карточки, ни очереди
+    } else if (options.existing) {
       delivered = await sendLead(lead, leadId ?? "unsaved", requestNo, {
         to: options.existing.notify,
         heading: options.existing.heading,
@@ -447,7 +454,7 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
 
   // Лид потерян, только если не сработало ни одно из двух: в базе его
   // найдут даже без уведомления, а уведомление дойдёт даже без базы.
-  const lost = !delivered && !leadId;
+  const lost = !refused && !delivered && !leadId;
   if (lost) {
     console.error("lead lost: neither stored nor delivered", {
       grade: lead.grade,
@@ -462,7 +469,7 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
   // Исход фактический: «передал менеджеру», когда доставка не удалась, —
   // это отпустить клиента в уверенности, что им займутся, и потерять молча.
   const outcome: ClosingOutcome = lost ? "lost" : delivered ? "delivered" : "saved";
-  continuation()(closingText({ locale, source, outcome, requestNo, telegram: SUPPORT_TELEGRAM }));
+  continuation()(refused ? refusedText(locale) : closingText({ locale, source, outcome, requestNo, telegram: SUPPORT_TELEGRAM }));
 
   return { qualified: true, lead, requestNo, delivered: !lost };
 }

@@ -5,6 +5,7 @@ import {
   asTranscript,
 } from "@/lib/admin/outreach-talk";
 import {
+  closeRefused,
   handOver,
   laterInbound,
   markAnswered,
@@ -14,6 +15,7 @@ import {
   threadFor,
   type Inbound,
 } from "@/lib/admin/outreach-talk-store";
+import { messageWindow } from "@/lib/admin/tasks";
 import { objectionOf, objectionReply } from "@/lib/admin/objections";
 import { heldUntil } from "@/lib/admin/reply-heads-up";
 import { aiStyleProblems, humanSendAfter, plainHost, withoutOpener } from "@/lib/admin/sales-after-reply";
@@ -41,8 +43,12 @@ import { talkLang } from "@/lib/talk/language";
 
 export type TalkRun = { handled: number; replied: number; handed: number; errors: string[] };
 
-export async function runTalks(limit = 5): Promise<TalkRun> {
+export async function runTalks(limit = 5, now: Date = new Date()): Promise<TalkRun> {
   const run: TalkRun = { handled: 0, replied: 0, handed: 0, errors: [] };
+  // Ночью модель клиентам не пишет, а команде не уходят ни карточки, ни
+  // «Ваш лид ответил» (владелец, 23.10.2026: «ночью уведомления не уходят!!!!
+  // Только с 8 до 21:00 по ташкенту»). Ответы клиентов ждут утра.
+  if (!messageWindow(now)) return run;
 
   let pending: Inbound[];
   try {
@@ -145,6 +151,7 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
 
   let text = "";
   let qualified = false;
+  let refused = false;
 
   await runQualifyTurn({
     history,
@@ -163,11 +170,22 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
       text += chunk;
     },
     onEvent: (event) => {
-      if (event.type === "qualified") qualified = true;
+      if (event.type === "qualified") {
+        qualified = true;
+        refused = event.lead.priority === "archive";
+      }
     },
   });
 
   await markAnswered(inbound.messageId);
+
+  // Отказ: касание закрывается само, клиенту больше ничего не пишем, команде
+  // — ни карточки, ни строки (владелец, 23.10.2026: «Не спамь отказами»).
+  // Отказ считается на «Главной» по closed_reason.
+  if (refused) {
+    await closeRefused(inbound.prospectId, inbound.body);
+    return "handed";
+  }
 
   // До макета ответ модели не выдаёт робота (sales-after-reply): «Отлично!»
   // в начале снимаем сами, список и длинный ответ — не отправляем.

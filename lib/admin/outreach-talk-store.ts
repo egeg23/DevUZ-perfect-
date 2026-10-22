@@ -15,10 +15,11 @@ import { announcePrototype } from "@/lib/admin/prototype-claim-store";
 import { leadOnHandover, offerLead, routeAutopilotReply } from "@/lib/admin/autopilot-reply";
 import { hasMockupLink } from "@/lib/admin/mockup-offer";
 import { recordMockupSent } from "@/lib/admin/mockup-offer-store";
-import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
+import { CLOSE_TEXT, canClose, closeCallback, closesLead, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
 import { TAKE_OVER_BUTTON, headsUpText, saidShort, takeOverCallback } from "@/lib/admin/reply-heads-up";
 import { record } from "@/lib/admin/audit";
+import { messageWindow } from "@/lib/admin/tasks";
 import { MAIN_ACCOUNT, accountOf, sentFrom, sentFromText } from "@/lib/admin/work-accounts";
 import { accountTags } from "@/lib/admin/work-accounts-store";
 import { siteUrl } from "@/lib/seo";
@@ -516,6 +517,13 @@ async function saveInbound(
     }
   }
 
+  // Отказ — касание закрывается само, никому ничего не уходит (владелец,
+  // 23.10.2026: «Не спамь отказами»); отказ виден в счёте на «Главной».
+  if (verdict === "stop") {
+    await closeRefused(String(prospect.id), body);
+    return { matched: true, host: String(prospect.host), verdict };
+  }
+
   if (verdict !== "talk" && !announced) {
     // Ответили на «Здравствуйте» — письма о сайте клиент не видел, и
     // менеджер, открыв переписку, должен это знать до того, как напишет.
@@ -811,6 +819,9 @@ async function pitchQueued(prospectId: string): Promise<boolean> {
 }
 
 /** Входящие, на которые ещё не отвечали и по которым модель ещё ведёт. */
+/** Сколько входящее ждёт ответа модели: дальше — человеку. */
+export const TALK_FRESH_MS = 24 * 3600_000;
+
 export async function pendingTalks(limit = 5): Promise<Inbound[]> {
   const db = serviceClient();
   if (!db) return [];
@@ -825,6 +836,10 @@ export async function pendingTalks(limit = 5): Promise<Inbound[]> {
     .eq("direction", "in")
     .is("answered_at", null)
     .eq("prospects.ai_handling", true)
+    // Только свежее. 22–23.10.2026 очередь, которую неделю ничто не
+    // разбирало, разом выплеснулась ночью: модель отвечала на «Нет, спасибо»
+    // недельной давности. Старше суток отвечает человек — оно в «Надзоре».
+    .gte("created_at", new Date(Date.now() - TALK_FRESH_MS).toISOString())
     .order("created_at", { ascending: true })
     .limit(limit);
 
@@ -978,6 +993,66 @@ export async function markAnswered(messageId: string): Promise<void> {
  * ответа, для клиента выглядит так же, как если бы им перестали
  * заниматься, — а он, в отличие от нас, об этом не узнает.
  */
+/**
+ * Клиент отказался — касание закрывается само, тихо: никому ничего не уходит.
+ *
+ * Владелец, 23.10.2026, на карточку «📁 Не интересно» в боте: «Ты прямо
+ * написал — не интересно. Ты просто веди статистику отказов, мы ее увидим в
+ * дашборде. Не спамь отказами. Только заинтересованные рассылкой же
+ * отправляются». То же, что кнопка «🙅 Клиент отказался» (closeTouch), но без
+ * человека: closed_reason «refused» — по нему считаются отказы на «Главной»,
+ * модель больше не отвечает, неушедшие наши сообщения снимаются (следующее
+ * после отказа — ровно то, за что блокируют рабочий аккаунт), лид «в работе»
+ * закрывается «проиграли». Клиент напишет снова — его ответ придёт как
+ * обычно (saveInbound → writesAgain).
+ */
+export async function closeRefused(prospectId: string, words: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const now = new Date().toISOString();
+  const { data: closed } = await db
+    .from("prospects")
+    .update({
+      closed_reason: "refused",
+      closed_at: now,
+      closed_by: null,
+      ai_handling: false,
+      handover_reason: CLOSE_TEXT.refused.handover,
+    })
+    .eq("id", prospectId)
+    .is("closed_reason", null)
+    .select("id, host, lead_id");
+  const p = closed?.[0];
+  if (!p) return false;
+  await db
+    .from("outreach_messages")
+    .update({ status: "failed", failure: `не отправлено: ${CLOSE_TEXT.refused.label}` })
+    .eq("prospect_id", prospectId)
+    .eq("direction", "out")
+    .eq("status", "queued");
+  const leadId = (p.lead_id as string | null) ?? null;
+  let leadClosed = false;
+  if (leadId) {
+    const { data: lead } = await db.from("leads").select("status").eq("id", leadId).maybeSingle();
+    if (closesLead(lead?.status as string | undefined)) {
+      const { data: done } = await db
+        .from("leads")
+        .update({ status: "lost" })
+        .eq("id", leadId)
+        .in("status", ["new", "taken"])
+        .select("id");
+      leadClosed = Boolean(done?.length);
+    }
+  }
+  await record("prospect.closed", {
+    actorStaffId: null,
+    targetType: "prospect",
+    targetId: prospectId,
+    meta: { host: p.host, reason: "refused", via: "auto", lead: leadId, lead_closed: leadClosed, words: words.slice(0, 200) },
+  });
+  return true;
+}
+
 export async function handOver(prospectId: string, reason: string, note: string): Promise<void> {
   const db = serviceClient();
   if (!db) return;
@@ -1013,6 +1088,10 @@ export async function tellManager(
   text: string,
   options: { refuse?: boolean } = {},
 ): Promise<boolean> {
+  // Ночью (21:00–08:00) строк нет: ответы клиентов за ночь приходят утром
+  // одной сводкой (lib/admin/night-replies-store.ts). Владелец, 23.10.2026:
+  // «ночью уведомления не уходят!!!! Только с 8 до 21:00 по ташкенту».
+  if (!messageWindow(new Date())) return false;
   const db = serviceClient();
   if (!db) return false;
 

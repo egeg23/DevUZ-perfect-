@@ -14,6 +14,7 @@ import {
   seesHqMoney,
   sortPeople,
   tasksPulse,
+  refusalStamps,
   touchesPulse,
   OPEN_TASK,
   feedOf,
@@ -160,7 +161,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     db.from("staff").select("id, display_name, role, bot_seen_at, grade, rate_percent").eq("is_active", true).limit(200),
     db
       .from("leads")
-      .select("id, created_at, status, priority, assigned_staff_id, company, contact_name, request_no")
+      .select("id, created_at, status, priority, assigned_staff_id, company, contact_name, request_no, source")
       .order("created_at", { ascending: false })
       .limit(LIMIT),
     db.from("lead_offers").select("lead_id, staff_id, expires_at").is("outcome", null).limit(500),
@@ -194,8 +195,8 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
       .limit(2000),
     db
       .from("prospects")
-      .select("id, status, touched_by, touched_at, sent_at, autopilot_at, replied_at")
-      .or(`touched_at.gte."${from}",sent_at.gte."${from}",replied_at.gte."${from}"`)
+      .select("id, status, touched_by, touched_at, sent_at, autopilot_at, replied_at, closed_reason, closed_at")
+      .or(`touched_at.gte."${from}",sent_at.gte."${from}",replied_at.gte."${from}",closed_at.gte."${from}"`)
       .limit(LIMIT),
     db.from("touch_portions").select("staff_id, replaces, outcome, source").eq("day", day).limit(2000),
     db.from("panel_presence").select("staff_id, minutes, first_at, last_at").eq("day", day).limit(500),
@@ -250,6 +251,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
     priority: String(r.priority),
     assigned_staff_id: str(r.assigned_staff_id),
     label: leadLabel(r),
+    source: str(r.source),
   }));
   const offers = ((offersRes.data ?? []) as Record<string, unknown>[]).map((r) => ({
     lead_id: String(r.lead_id),
@@ -272,7 +274,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
   const portions = (portionsRes.data ?? []) as HqPortionRow[];
 
   const leadsNow = leadsPulse(leads, offers, events, now);
-  const touches = touchesPulse(prospects, portions, autopilot, now);
+  const touches = touchesPulse(prospects, portions, autopilot, now, refusalStamps(prospects, leads));
   const mockupsNow = mockupsPulse(mockups, now);
   const tasksNow = tasksPulse(tasks, now);
 

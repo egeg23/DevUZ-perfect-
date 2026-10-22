@@ -74,7 +74,8 @@ test("в касании — без номера заявки и без «нап�
 
 test("движок не зовёт модель ради прощальной фразы", () => {
   const engine = read("lib/qualify/engine.ts");
-  assert.match(engine, /continuation\(\)\(closingText\(\{ locale, source, outcome, requestNo, telegram: SUPPORT_TELEGRAM \}\)\)/);
+  // Отказ — своя короткая фраза, тоже готовым текстом (refusals-quiet).
+  assert.match(engine, /continuation\(\)\(refused \? refusedText\(locale\) : closingText\(\{ locale, source, outcome, requestNo, telegram: SUPPORT_TELEGRAM \}\)\)/);
   assert.equal(engine.match(/await secondPass\(/g)?.length, 1, "второй проход остаётся только для повторного вызова");
   assert.match(engine, /const outcome: ClosingOutcome = lost \? "lost" : delivered \? "delivered" : "saved";/);
   assert.doesNotMatch(read("lib/qualify/prompt.ts"), /После вызова инструмента напиши/, "промпт всё ещё просит прощаться после вызова");

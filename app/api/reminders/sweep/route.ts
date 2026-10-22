@@ -16,6 +16,7 @@ import { refreshXp } from "@/lib/admin/levels-store";
 import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { sendStaffWeek } from "@/lib/admin/staff-week-store";
+import { sendNightReplies } from "@/lib/admin/night-replies-store";
 import { runMockupOffers } from "@/lib/admin/mockup-offer-run";
 import { sendOfferDigest } from "@/lib/admin/mockup-offer-bot";
 import { runProtoAutoClose } from "@/lib/proto/auto-close-store";
@@ -356,6 +357,11 @@ async function sweep(): Promise<Response> {
   // показал клиенту ни одного макета (lib/admin/sales-stages-store).
   after(async () => {
     await runNoShowWeek(new Date()).catch((error) => console.error("показы макетов, неделя:", error));
+  });
+  // С 08:00 — ответы клиентов за ночь одной сводкой тому, кто ведёт касание:
+  // ночью строк нет (lib/admin/night-replies-store).
+  after(async () => {
+    await sendNightReplies(new Date()).catch((error) => console.error("ответы за ночь:", error));
   });
   // Понедельник 10:00 — владельцу и руководителю недельный отчёт по
   // сотрудникам с рекомендациями (lib/admin/staff-week-store).

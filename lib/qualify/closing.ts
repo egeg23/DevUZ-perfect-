@@ -80,3 +80,22 @@ export function closingText(input: {
   const copy = CLOSING[input.locale] ?? CLOSING.ru;
   return copy[input.outcome].replaceAll("{no}", input.requestNo).replaceAll("{tg}", input.telegram);
 }
+
+/**
+ * Клиент отказался («не интересно»). Карточки команде нет (владелец,
+ * 23.10.2026: «Не спамь отказами»), и обещать «передал менеджеру» нельзя:
+ * никто не напишет. Коротко и без нажима — дверь открыта. В касании эта фраза
+ * не уходит вовсе: после отказа рабочий аккаунт молчит (closeRefused).
+ */
+const REFUSED: Record<Locale, string> = {
+  ru: "Понял, спасибо за ответ. Если станет актуально, пишите сюда.",
+  en: "Got it, thanks for letting us know. If it becomes relevant, just write here.",
+  uz: "Tushundim, javobingiz uchun rahmat. Kerak bo‘lib qolsa, shu yerga yozing.",
+  zh: "明白了，谢谢您的回复。如果以后有需要，请随时在这里留言。",
+  uk: "Зрозумів, дякую за відповідь. Якщо стане актуально, пишіть сюди.",
+  pl: "Rozumiem, dziękuję za odpowiedź. Jeśli temat wróci, proszę pisać tutaj.",
+};
+
+export function refusedText(locale: Locale): string {
+  return REFUSED[locale] ?? REFUSED.ru;
+}

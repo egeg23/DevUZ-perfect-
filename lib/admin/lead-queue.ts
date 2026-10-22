@@ -338,6 +338,22 @@ export function lostHeading(createdAt: string): string {
   return `⚠️ <b>Досылка: карточка не дошла из-за сбоя связи.</b> Лид пришёл ${when} и до сих пор ничей.`;
 }
 
+/**
+ * Шапка утренней карточки ночного лида. Ночью (21:00–08:00) бот команде
+ * карточек не шлёт — владелец, 23.10.2026: «ночью уведомления не уходят!!!!
+ * Только с 8 до 21:00 по ташкенту», — лид ждёт утра и приходит этой шапкой.
+ */
+export function heldHeading(createdAt: string): string {
+  const when = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Asia/Tashkent",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(createdAt));
+  return `🌙 <b>Лид пришёл ночью, ${when}.</b> Ночью бот уведомлений не шлёт — карточка пришла утром.`;
+}
+
 export function missedNotice(label: string): string {
   return `⌛ ${OFFER_MINUTES} минут на лид «${html(label)}» вышли — он передан следующему по очереди.`;
 }
