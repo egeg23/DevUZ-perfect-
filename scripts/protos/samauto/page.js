@@ -63,12 +63,36 @@ $$('.ln-hs').forEach(function(b){var x=b.style.getPropertyValue('--x');
   b.addEventListener('pointerleave',function(){lnSt.classList.remove('hl')});
   b.addEventListener('focus',function(){lnSt.style.setProperty('--sx',x);lnSt.classList.add('hl')});
   b.addEventListener('blur',function(){lnSt.classList.remove('hl')});
-  b.addEventListener('click',function(){var k=b.getAttribute('data-k');if(RM){fvOpen(k,b);return}
+  b.addEventListener('click',function(e){var k=b.getAttribute('data-k');if(lnMq.matches)return;if(RM){fvOpen(k,b);return}
     lnIn.style.transformOrigin=x+' '+b.style.getPropertyValue('--y');lnIn.classList.add('dive');setTimeout(function(){fvOpen(k,b)},380)})});
 $$('.ln-cat').forEach(function(b){b.addEventListener('click',function(){fvOpen(b.getAttribute('data-k'),b)})});
 /* Телефон листает панораму вбок: начинаем с D-MAX, подсказка гаснет после
    первого сдвига. */
-if(lnSt){lnSt.addEventListener('scroll',function(){lnSt.classList.add('moved')},{passive:true,once:true})}
+/* Телефон: кадр не листается вбок. «Камера» подъезжает к одной машине,
+   под кадром — переключатель разделов и карточка; свайп — соседняя машина,
+   нажатие на кадр — её окно. */
+var lnI=0,lnMq=matchMedia('(max-width: 767px)');
+function lnGo(i){lnI=(i+CAT.kinds.length)%CAT.kinds.length;var K=CAT.kinds[lnI];
+  if(lnMq.matches){var W=lnSt.clientWidth,H=lnSt.clientHeight,iw=Math.max(W*3,W*.9/((K.box[1]-K.box[0])/100)),ih=iw*1018/2400,cx=(K.box[0]+K.box[1])/200,cy=.55;
+    /* .ln-in в стилях шириной 360%: нужную ширину даёт scale от левого верхнего угла */
+    lnIn.style.transformOrigin='0 0';
+    lnIn.style.transform='translate3d('+Math.min(0,Math.max(W-iw,W/2-cx*iw)).toFixed(1)+'px,'+Math.min(0,Math.max(H-ih,H/2-cy*ih)).toFixed(1)+'px,0) scale('+(iw/(W*3.6)).toFixed(4)+')'}
+  else{lnIn.style.transform='';lnIn.style.transformOrigin=''}
+  $$('.ln-tabs button').forEach(function(b,j){b.setAttribute('aria-selected',j===lnI?'true':'false')});
+  var tl=$('.ln-tabs .rl');if(tl)tl.style.transform='translateX('+(lnI*100)+'%)';
+  $('#ln-mk').textContent=K.title;$('#ln-mh').textContent=K.lead;$('#ln-ml').textContent=K.line;
+  $('#ln-mn').textContent=CAT.items.filter(function(it){return it.cat===K.cat}).length;
+  var c=$('.ln-card');if(c&&!RM){c.classList.remove('in');void c.offsetWidth;c.classList.add('in')}}
+if(lnSt&&$('#ln-m')){
+  $$('.ln-tabs button').forEach(function(b){b.addEventListener('click',function(){lnGo(+b.getAttribute('data-i'))})});
+  $$('.ln-ar').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();lnGo(lnI+ +b.getAttribute('data-d'))})});
+  $('#ln-mb').addEventListener('click',function(){fvOpen(CAT.kinds[lnI].cat,this)});
+  var tx0=null,ty0=0,swiped=false;
+  lnSt.addEventListener('touchstart',function(e){var t=e.touches[0];tx0=t.clientX;ty0=t.clientY;swiped=false},{passive:true});
+  lnSt.addEventListener('touchend',function(e){if(tx0===null||!lnMq.matches)return;var t=e.changedTouches[0],dx=t.clientX-tx0,dy=t.clientY-ty0;tx0=null;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.3){swiped=true;lnGo(lnI+(dx<0?1:-1))}},{passive:true});
+  lnSt.addEventListener('click',function(e){if(!lnMq.matches||swiped||e.target.closest('.ln-ar'))return;fvOpen(CAT.kinds[lnI].cat,$('#ln-mb'))});
+  addEventListener('resize',function(){lnGo(lnI)});lnGo(0)}
 
 /* Подбор по задаче: правила по их каталогу, без модели. */
 var pq=$('#pk-q');
