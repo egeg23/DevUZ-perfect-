@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SamAuto uchun yangi sayt · DevUz Studio</title>
+<link rel="stylesheet" href="letterhead.css">
+<!--
+  КП заводу SamAuto (samauto.uz), 22.10.2026, на узбекском. Клиенту
+  понравился макет (scripts/protos/samauto, devuz.studio/proto/01nM7k…).
+  Владелец, 22.10.2026: сайт как в макете 6 000 $; сайт с шестью такими
+  сценами (D-MAX, автобус, автовышка, поливалка и т.д.), админ-панелью для
+  самостоятельной работы и допами 9 000 $; срок 10-14 дней; в подарок заявки
+  в Telegram и 10 SEO-статей; сверх суммы — блок «Qo‘shimcha qila olamiz»
+  по ценам рынка Узбекистана. Цифры о SamAuto — только с samauto.uz
+  (scripts/protos/samauto/catalog.json). Обложка — кадр сцены макета.
+  PDF: node scripts/kp-pdf.mjs kp/samauto.html kp/samauto.pdf
+-->
+<style>
+  :root { --red: #e31e24; }
+  h2 { padding-left: 3mm; border-left: 1.2mm solid var(--red); }
+  .cover { padding: 0; background: #07080a; color: #f3f2ef; }
+  .cover img.hero { display: block; width: 100%; height: 150mm; object-fit: cover; }
+  .cover .in { padding: 0 18mm; }
+  .cover .kick { margin: 8mm 0 0; font-size: 8.5pt; letter-spacing: 0.22em; text-transform: uppercase; color: #ff3a3f; font-weight: 600; }
+  .cover h1 { margin: 3mm 0 0; text-align: left; font-size: 30pt; line-height: 1.05; letter-spacing: -0.02em; }
+  .cover .lead { margin: 4mm 0 0; max-width: 150mm; font-size: 11pt; color: rgba(243, 242, 239, 0.75); }
+  .cover .rl { height: 0.6mm; margin: 7mm 0 6mm; background: linear-gradient(90deg, var(--red), rgba(227, 30, 36, 0.15)); }
+  .cover .offer { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .cover .offer div { padding: 4mm 5mm; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 2.5mm; }
+  .cover .offer div.on { border-color: var(--red); background: rgba(227, 30, 36, 0.1); }
+  .cover .offer b { display: block; font-size: 22pt; line-height: 1.1; color: #fff; }
+  .cover .offer span { display: block; margin-top: 1.5mm; font-size: 9.5pt; color: rgba(243, 242, 239, 0.75); }
+  .cover .meta { display: flex; justify-content: space-between; margin-top: 6mm; font-size: 9.5pt; color: rgba(243, 242, 239, 0.75); }
+  .cover .meta b { color: #fff; }
+  .cover .gift { margin-top: 4mm; padding: 3mm 4mm; border-left: 1mm solid var(--red); background: rgba(255, 255, 255, 0.05); font-size: 9.5pt; }
+  .cover .brand { position: absolute; left: 18mm; right: 18mm; bottom: 9mm; display: flex; justify-content: space-between; font-size: 8.5pt; color: rgba(243, 242, 239, 0.5); }
+
+  .pack { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 2mm 0 3mm; }
+  .pack div { border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 2mm; padding: 3mm 4mm; font-size: 9pt; }
+  .pack div.on { border: 2px solid var(--red); }
+  .pack b { display: block; font-size: 10.5pt; }
+  .pack .sum { display: block; margin: 1mm 0; font-size: 18pt; font-weight: 600; }
+  td.grp { background: #f6f7f8; font-weight: 600; }
+  td.yes { text-align: center; width: 24mm; }
+  .ok { color: var(--red); font-weight: 600; }
+  .gift { margin: 3mm 0; padding: 3mm 4mm; border: 2px solid var(--red); border-radius: 2mm; }
+  .tight li { margin-bottom: 0.6mm; }
+  img.wide { display: block; width: 100%; height: 44mm; object-fit: cover; border-radius: 2mm; margin: 2mm 0 3mm; }
+</style>
+</head>
+<body>
+
+<section class="sheet cover">
+  <img class="hero" src="../public/protos/samauto/poster-e-16.webp" alt="ISUZU D-MAX detallarga ajralgan: maketdagi sahna">
+  <div class="in">
+    <p class="kick">Tijorat taklifi · DevUz Studio</p>
+    <h1>SamAuto uchun yangi sayt</h1>
+    <p class="lead">Siz ko‘rgan maket asosida: aylantirganda jonlanadigan texnika, 360° stend, kredit kalkulyatori, dilerlar va arizalar bir joyda.</p>
+    <div class="rl"></div>
+    <div class="offer">
+      <div><b>6 000 $</b><span>Maketdagi kabi sayt: bitta D-MAX sahnasi va barcha bo‘limlar</span></div>
+      <div class="on"><b>9 000 $</b><span>Premium: 6 ta shunday sahna, o‘z admin panelingiz va qo‘shimchalar</span></div>
+    </div>
+    <div class="meta"><span>Muddat: <b>10-14 kun</b></span><span>Toshkent, 2026-yil 22-oktabr</span></div>
+    <div class="gift"><b>Sovg‘a:</b> saytdan arizalar Telegram’ga va 10 ta SEO maqola</div>
+  </div>
+  <div class="brand"><span>DevUz Studio · devuz.studio</span><span>t.me/Devuz_studio_bot</span></div>
+</section>
+
+<section class="sheet">
+  <h1>Siz ko‘rgan maket va undan keyingi sayt</h1>
+  <p class="subtitle">SamAuto · samauto.uz</p>
+
+  <h2>Maket</h2>
+  <p>Maketni sizning saytingiz va prezentatsiyangiz bo‘yicha bepul yig‘dik: <b>devuz.studio/proto/01nM7k5zLyQWcrikcaoIvihCuzy4-vct7wAzCjqo8Rs</b>. Modellar, raqamlar, dilerlar, savollar va yangiliklar samauto.uz’dan olingan.</p>
+  <img class="wide" src="../public/protos/samauto/s/lineup-2400.webp" alt="SamAuto texnikasi bitta podiumda">
+
+  <h2>Bu sayt sizga nima beradi</h2>
+  <ul>
+    <li><b>Xaridor texnikani saytda ko‘radi:</b> aylantiradi, rang va diskni tanlaydi, modellarni solishtiradi, PDF xususiyatlarni yuklab oladi. Dilerga tayyor holda keladi.</li>
+    <li><b>Ariza to‘liq keladi:</b> model, rang, diler, kredit shartlari va oylik to‘lov bilan. Menejer qayta so‘ramaydi.</li>
+    <li><b>Telefonda tez:</b> hozirgi bosh sahifa telefonda 66 MB yuklaydi, banner 5,6 soniyada chiqadi (21.10.2026 o‘lchovimiz). Yangi saytda har bir kadr telefon uchun alohida tayyorlanadi.</li>
+    <li><b>Har bir bo‘lim sotadi:</b> vazifaga qarab tanlash, MKBANK kalkulyatori, eng yaqin diler, servis va ehtiyot qism so‘rovi.</li>
+    <li><b>Kadrlar himoyalangan:</b> sahnalar serverda shifrlangan holda turadi, havola orqali yuklab bo‘lmaydi.</li>
+  </ul>
+
+  <h2>Qanday ishlaymiz</h2>
+  <ul class="tight">
+    <li>Sahnalar 4K sifatda, sizning suratlaringiz va prezentatsiyangiz asosida chiziladi. Mashinaning ranglari aynan sizdagidek.</li>
+    <li>Og‘ir ish oldindan hisoblanadi: sayt tez ochiladi, server yuklanmaydi.</li>
+    <li>Har bir sahifa telefon (390 px), planshet va kompyuterda tekshiriladi.</li>
+  </ul>
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">1-paket · Maketdagi kabi sayt · 6 000 $ · 10 kun</h2>
+  <table>
+    <tr><th>Nima kiradi</th></tr>
+    <tr><td><b>Bosh sahna:</b> D-MAX parda ostidan chiqadi, detallarga ajraladi va yig‘iladi, fara yonadi, mashina cho‘lga yo‘l oladi. 4K kadrlar, telefonga alohida vertikal versiya, 100% gacha yuklanish hisobi.</td></tr>
+    <tr><td><b>Model qatori:</b> barcha texnika bitta podiumda. Bosilganda kamera mashinaga yaqinlashadi, jonli sahna, raqamlar va bo‘limdagi barcha modellar ochiladi (pikaplar, yuk, avtobuslar, maxsus texnika).</td></tr>
+    <tr><td><b>Vazifaga qarab tanlash:</b> besh savol, katalogdan uchta mos model.</td></tr>
+    <tr><td><b>ISUZU FVR:</b> bitta shassi, uch xil kuzov: samosval, tentli bort, furgon.</td></tr>
+    <tr><td><b>D-MAX 360°:</b> barmoq bilan aylantirish, rang va diskni tanlash (rang to‘lqin bo‘lib o‘zgaradi), birinchi teginishgacha barmoq ko‘rsatmasi.</td></tr>
+    <tr><td><b>Muddatli to‘lov kalkulyatori</b> MKBANK shartlari bo‘yicha: boshlang‘ich to‘lov, muddat, oylik to‘lov; raqamlar arizaga tushadi.</td></tr>
+    <tr><td><b>Modellarni solishtirish</b> (3 tagacha) va har bir modelning PDF xususiyatlari.</td></tr>
+    <tr><td><b>Dilerlar:</b> xarita, viloyat bo‘yicha filtr, eng yaqin diler, servisga yozilish va ehtiyot qism so‘rovi (VIN bilan).</td></tr>
+    <tr><td><b>Kafolat, savol-javob, yangiliklar, zavod va SamAuto dunyosi</b> bo‘limlari.</td></tr>
+    <tr><td><b>Katalog va dilerlar samauto.uz bazasidan:</b> hozirgi tizimingizda o‘zgartirsangiz, saytda ham o‘zgaradi.</td></tr>
+    <tr><td><b>O‘zbek va rus tillari.</b> Texnik SEO: sayt xaritasi, sahifa tavsiflari, tuzilgan ma’lumotlar, tezlik. Google Analytics va Yandex Metrika.</td></tr>
+    <tr><td><b>Ishga tushirish:</b> domeningizga joylash, ishga tushgandan keyin 30 kun xatolarni bepul tuzatish.</td></tr>
+  </table>
+
+  <div class="gift"><b>Ikkala paketga sovg‘a:</b>
+    <ul class="tight" style="margin:1.5mm 0 0">
+      <li><b>Arizalar Telegram’ga:</b> saytdagi har bir ariza (narx, test-drayv, kredit, servis, ehtiyot qism) darhol guruhingizga, model va diler bilan.</li>
+      <li><b>10 ta SEO maqola</b> o‘zbek va rus tillarida: mavzular Google Trends va Yandex Wordstat bo‘yicha O‘zbekistondagi haqiqiy so‘rovlardan olinadi.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">2-paket · Premium · 9 000 $ · 14 kun</h2>
+  <p>1-paketdagi hammasi va quyidagilar:</p>
+  <table>
+    <tr><td class="grp">6 ta jonli sahna, D-MAX’dagi kabi</td></tr>
+    <tr><td>Har bir texnika uchun o‘z sahnasi: <b>ISUZU D-MAX</b>, <b>SAZ LE60 avtobusi</b>, <b>teleskopik minora</b>, <b>sepib-yuvuvchi avtomobil</b>, <b>ISUZU FVR o‘zi ag‘dargichi</b>, <b>NPR82L sovutgich qurilmali furgoni</b>. Aylantirganda detallarga ajraladi, ishini ko‘rsatadi (minora ko‘tariladi, kuzov ag‘dariladi, suv sepiladi), 4K, telefonga alohida. Ro‘yxatni siz bilan kelishamiz.</td></tr>
+    <tr><td class="grp">O‘z admin panelingiz: bizsiz boshqarasiz</td></tr>
+    <tr><td><b>Modellar:</b> qo‘shish va tahrirlash, suratlar, xususiyatlar, PDF, bo‘lim. Saqlangan zahoti saytda.</td></tr>
+    <tr><td><b>Narxlar:</b> ko‘rsatish yoki yashirish, har bir model uchun alohida.</td></tr>
+    <tr><td><b>Dilerlar:</b> manzil, telefon, ish vaqti, xaritadagi nuqta.</td></tr>
+    <tr><td><b>Kontent:</b> yangiliklar, savol-javoblar, aksiyalar, bannerlar, kredit shartlari (kalkulyator foizlari va muddatlari).</td></tr>
+    <tr><td><b>Arizalar:</b> ro‘yxat, holat (yangi, ishlanmoqda, sotildi, rad etildi), diler bo‘yicha, Excel’ga eksport.</td></tr>
+    <tr><td><b>Rollar va tarix:</b> administrator, kontent menejeri, diler (faqat o‘z arizalari). Kim, nimani, qachon o‘zgartirgani ko‘rinadi.</td></tr>
+    <tr><td class="grp">Qo‘shimchalar</td></tr>
+    <tr><td><b>Test-drayvga yozilish:</b> diler va vaqt tanlanadi, diler Telegram’da xabar oladi.</td></tr>
+    <tr><td><b>Trade-in:</b> eski mashinani topshirish arizasi (model, yil, yurgan masofa, surat).</td></tr>
+    <tr><td><b>Korporativ va tender arizalari:</b> avtopark uchun bir nechta model, soni, hujjat yuklash.</td></tr>
+    <tr><td><b>Arizalar hudud bo‘yicha:</b> Samarqanddan kelgan ariza Samarqand dileriga, Toshkentdan Toshkentga.</td></tr>
+    <tr><td><b>Tahlil paneli:</b> qaysi model ko‘p ko‘rilmoqda, qaysi bo‘limdan ariza keladi, dilerlar bo‘yicha arizalar.</td></tr>
+    <tr><td><b>Ingliz tili:</b> xorijdagi 5 ta diler va xaridorlar uchun (Mo‘g‘uliston, Rossiya, Ozarbayjon, Qozog‘iston, Qirg‘iziston).</td></tr>
+    <tr><td><b>Admin panel bo‘yicha o‘qitish</b> va qo‘llanma: jamoangiz birinchi kundan o‘zi ishlaydi.</td></tr>
+  </table>
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">Ikki paket yonma-yon</h2>
+  <table>
+    <tr><th>Nima</th><th class="num" style="width:24mm">1-paket</th><th class="num" style="width:24mm">2-paket</th></tr>
+    <tr><td>Bosh sahna, model qatori, 360° stend, tanlash, FVR, kalkulyator, solishtirish, dilerlar</td><td class="yes ok">bor</td><td class="yes ok">bor</td></tr>
+    <tr><td>Jonli sahnalar soni</td><td class="yes">1 (D-MAX)</td><td class="yes ok">6</td></tr>
+    <tr><td>O‘z admin panelingiz, rollar, arizalar holati</td><td class="yes">·</td><td class="yes ok">bor</td></tr>
+    <tr><td>Test-drayv, trade-in, korporativ arizalar, hudud bo‘yicha taqsimlash</td><td class="yes">·</td><td class="yes ok">bor</td></tr>
+    <tr><td>Tahlil paneli</td><td class="yes">·</td><td class="yes ok">bor</td></tr>
+    <tr><td>Tillar</td><td class="yes">uz, ru</td><td class="yes ok">uz, ru, en</td></tr>
+    <tr><td>Arizalar Telegram’ga va 10 ta SEO maqola</td><td class="yes ok">sovg‘a</td><td class="yes ok">sovg‘a</td></tr>
+    <tr><td><b>Narx</b></td><td class="yes"><b>6 000 $</b></td><td class="yes"><b>9 000 $</b></td></tr>
+    <tr><td><b>Muddat</b></td><td class="yes">10 kun</td><td class="yes">14 kun</td></tr>
+  </table>
+
+  <h2>Ish tartibi</h2>
+  <table>
+    <tr><td style="width:26mm"><b>1-2 kun</b></td><td>Tuzilma va dizaynni tasdiqlash, kirishlar: domen, hosting, Telegram guruh, suratlar.</td></tr>
+    <tr><td><b>3-7 kun</b></td><td>Sahnalar: 4K kadrlar, telefon versiyasi. Katalog, dilerlar, kalkulyator.</td></tr>
+    <tr><td><b>8-11 kun</b></td><td>Formalar va arizalar Telegram’ga; 2-paketda admin panel va qo‘shimchalar.</td></tr>
+    <tr><td><b>12-13 kun</b></td><td>Tezlik, SEO, telefon, planshet va kompyuterda sinov. Siz bilan ko‘rib chiqish va tuzatishlar.</td></tr>
+    <tr><td><b>14-kun</b></td><td>Ishga tushirish, o‘qitish. SEO maqolalar ishga tushgandan keyin bir oy ichida chiqadi.</td></tr>
+  </table>
+  <p class="small muted">1-paket bir xil tartibda, admin panelsiz, 10 kunda. Muddat to‘lov va kirishlar olingan kundan hisoblanadi.</p>
+
+  <h2>Sizdan kerak</h2>
+  <ul class="tight">
+    <li>Logotip va brend fayllari, texnika suratlari yoki prezentatsiyalari (bor bo‘lsa, studiya suratlari).</li>
+    <li>Domen va hostingga kirish yoki serverni biz tanlaymiz.</li>
+    <li>Arizalar uchun Telegram guruh, dilerlar ro‘yxati va ularning Telegram’lari.</li>
+    <li>MKBANK va boshqa banklar bilan joriy kredit shartlarini tasdiqlash.</li>
+  </ul>
+
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">Qo‘shimcha qila olamiz</h2>
+  <p>Paket narxiga kirmaydi. O‘zbekiston bozoridagi narxlar, aniq summa topshiriq bo‘yicha hisoblanadi.</p>
+  <table>
+    <tr><th>Nima</th><th class="num" style="width:30mm">Narx</th></tr>
+    <tr><td class="grp" colspan="2">Zavod uchun dasturlar</td></tr>
+    <tr><td><b>Ishlab chiqarish monitoringi:</b> konveyer rejasi va fakti, smena hisobotlari, nuqsonlar hisobi, QR kod bilan uzellarni kuzatish, rahbar uchun ekran.</td><td class="num">15 000 $ dan</td></tr>
+    <tr><td><b>Ombor va ehtiyot qismlar hisobi</b> shtrix-kod bilan: kirim, chiqim, qoldiq, kam qolganda ogohlantirish.</td><td class="num">8 000 $ dan</td></tr>
+    <tr><td><b>Yetkazib beruvchilar portali:</b> mahalliylashtirish bo‘yicha so‘rovlar va tenderlar, hujjatlar, yetkazib beruvchilar reytingi.</td><td class="num">6 000 $ dan</td></tr>
+    <tr><td class="grp" colspan="2">Dilerlar va mijozlar</td></tr>
+    <tr><td><b>Dilerlar portali:</b> buyurtmalar, ombordagi texnika, narxlar, savdo rejasi va hisobotlar.</td><td class="num">7 000 $ dan</td></tr>
+    <tr><td><b>Servis markazlari tizimi:</b> navbat, ish buyurtmasi, VIN bo‘yicha ta’mir tarixi, kafolat da’volari.</td><td class="num">8 000 $ dan</td></tr>
+    <tr><td><b>Korporativ mijozlar kabineti:</b> avtopark, servis muddatlari, hujjatlar, tender arizalari.</td><td class="num">5 000 $ dan</td></tr>
+    <tr><td><b>SamAuto mobil ilovasi</b> (iPhone va Android): katalog, 360° stend, servisga yozilish, VIN bo‘yicha servis va kafolat, bildirishnomalar.</td><td class="num">9 000 $ dan</td></tr>
+    <tr><td class="grp" colspan="2">Sotuvni avtomatlashtirish</td></tr>
+    <tr><td><b>CRM bilan ulash</b> (Bitrix24 yoki amoCRM): arizalar diler voronkasida, menejer vazifalari.</td><td class="num">1 500 $ dan</td></tr>
+    <tr><td><b>Telegram-bot:</b> katalog, kredit hisobi, servisga yozilish, ehtiyot qism so‘rovi, ariza holati.</td><td class="num">1 200 $ dan</td></tr>
+    <tr><td><b>Sun’iy intellekt maslahatchi</b> saytda va Telegram’da: kecha-kunduz model tanlashga yordam beradi, savollarga javob beradi, arizani to‘ldiradi.</td><td class="num">2 500 $ dan</td></tr>
+    <tr><td class="grp" colspan="2">Shourum va marketing</td></tr>
+    <tr><td><b>Shourum uchun sensorli ekran:</b> saytdagi sahnalar va rang tanlash katta ekranda, ariza joyida.</td><td class="num">2 500 $ dan</td></tr>
+    <tr><td><b>AR:</b> mashinani telefon kamerasi orqali hovlida yoki ofisda ko‘rish.</td><td class="num">4 000 $ dan</td></tr>
+    <tr><td><b>Yangi model uchun sahna va 360° stend</b></td><td class="num">700 $</td></tr>
+    <tr><td><b>Reklama roliklari</b> saytdagi sahnalardan: Instagram, YouTube, ko‘rgazmalar uchun.</td><td class="num">300 $ dan</td></tr>
+    <tr><td><b>SEO har oy:</b> 8 ta maqola, texnik nazorat, hisobot.</td><td class="num">800 $ / oy</td></tr>
+    <tr><td><b>Reklama</b> Google, Yandex, Telegram va Instagram’da: sozlash va boshqarish.</td><td class="num">500 $ / oy dan</td></tr>
+  </table>
+  <p class="small muted">Reklama byudjeti alohida to‘lanadi. Har bir yo‘nalish bo‘yicha qisqa taqdimot va aniq hisobni bir kunda tayyorlaymiz.</p>
+
+</section>
+
+<section class="sheet">
+  <h2 style="margin-top:6mm">To‘lov</h2>
+  <ul class="tight">
+    <li>Ommaviy oferta bo‘yicha ishlaymiz: <b>devuz.studio/uz/offer</b>. To‘lov qilingan paytdan shartnoma tuzilgan hisoblanadi. Kerak bo‘lsa, alohida shartnoma ham imzolaymiz.</li>
+    <li>Ijrochi: <b>YaTT MAKSIMOV EGOR ANDREEVICH (DevUz Studio)</b>, Toshkent.</li>
+    <li><b>50% ishni boshlaydi, 50% ishga tushirishdan oldin.</b> Hisob so‘mda, O‘zbekiston Markaziy banki kursi bo‘yicha.</li>
+    <li>Sayt va kodga mutlaq huquqlar to‘liq to‘lovdan keyin SamAuto’ga o‘tadi.</li>
+  </ul>
+  <h2>Keyingi qadam</h2>
+  <ol class="tight">
+    <li>Paketni tanlang yoki qaysi sahnalar kerakligini yozing.</li>
+    <li>Hisob yuboramiz, 50% to‘lovdan keyin ishni boshlaymiz.</li>
+  </ol>
+  <div class="note">Telegram: <b>t.me/Devuz_studio_bot</b> · <b>+998 90 912-05-78</b> (Aleksandr) · <b>+7 923 233-00-37</b> (Egor)</div>
+</section>
+
+<script src="letterhead.js"></script>
+</body>
+</html>
