@@ -110,37 +110,74 @@ test("язык ответа: по-русски — кружок, на друго
   assert.equal(letterLang("Пишу из DevUz Studio — открыл ваш сайт almazmed.uz."), "ru");
 });
 
-test("«+» и «да» на кружок — согласие на макет, «макет не нужен» — отказ", () => {
-  for (const reply of ["+", "++", "+ ", "➕", "Плюс"]) assert.equal(readInbound(reply), "proto", reply);
-  for (const reply of ["Да", "Давайте", "Ha", "Хочу", "Интересно, давайте"]) {
-    assert.equal(readInbound(reply, { afterCircle: true }), "proto", reply);
+test("ответ на кружок — разбор, «+» и «да» на разбор — согласие на макет", () => {
+  // Владелец, 22.10.2026: кружок обещает расписать ошибки на сайте, и «да»
+  // на него — «распишите», а не «готовьте макет».
+  const circle = { stage: "circle" } as const;
+  const letter = { stage: "letter" } as const;
+  for (const reply of ["+", "++", "Плюс", "👍", "Да", "Давайте", "Ha", "Хочу", "Интересно, давайте", "Ок", "Слушаю", "Расскажите"]) {
+    assert.equal(readInbound(reply, circle), "breakdown", reply);
   }
+  for (const reply of ["Какие ошибки?", "Что за ошибки", "Сколько стоит?", "Что это?", "Пришлите", "Передам руководству", "Xatolarni yozing", "Сайт делали в 2019, давно хотим переделать"]) {
+    assert.equal(readInbound(reply, circle), "breakdown", reply);
+  }
+  // Макет словами — сразу макет; отказ, звонок, почта — как всегда.
+  assert.equal(readInbound("Хочу макет", circle), "proto");
+  assert.equal(readInbound("Не надо", circle), "stop");
+  assert.equal(readInbound("Позвоните мне", circle), "human");
+  assert.equal(readInbound("Напишите на почту info@smile.uz", circle), "send");
+  // Возражение — разговор, короткое непонятное — не разбор.
+  assert.equal(readInbound("Бесплатно?", circle), "talk");
+  for (const reply of ["Нет", "Спасибо", "Позже", "Делайте что хотите"]) assert.equal(readInbound(reply, circle), "unclear", reply);
+
+  // Письмо с разбором кончается вопросом «собрать?» — «да» на него согласие.
+  for (const reply of ["+", "➕", "Да", "Давайте", "Ha", "Хочу", "Интересно, давайте"]) assert.equal(readInbound(reply, letter), "proto", reply);
   // enotmebel.uz, 11.10.2026: «Делайте» ушло человеку как «непонятно».
   for (const reply of ["Делайте", "Сделайте, пожалуйста", "Да, делайте", "Хорошо, жду", "Можно", "Qiling", "Mayli, tayyorlang", "Керак"]) {
-    assert.equal(readInbound(reply, { afterCircle: true }), "proto", reply);
+    assert.equal(readInbound(reply, letter), "proto", reply);
   }
   // Отказ и вопрос словами согласия не становятся.
-  assert.equal(readInbound("Не надо", { afterCircle: true }), "stop");
-  assert.equal(readInbound("Делайте что хотите", { afterCircle: true }), "unclear");
-  assert.equal(readInbound("Можно?", { afterCircle: true }), "talk");
-  // Без кружка короткое «да» по-прежнему разбирает человек, вопрос — модель.
+  assert.equal(readInbound("Не надо", letter), "stop");
+  assert.equal(readInbound("Делайте что хотите", letter), "unclear");
+  assert.equal(readInbound("Можно?", letter), "talk");
+  assert.equal(readInbound("да?", letter), "talk");
+  // Без кружка и письма короткое «да» по-прежнему разбирает человек.
+  for (const reply of ["+", "++", "+ ", "➕", "Плюс"]) assert.equal(readInbound(reply), "proto", reply);
   assert.equal(readInbound("Да"), "unclear");
-  assert.equal(readInbound("да?", { afterCircle: true }), "talk");
   assert.equal(readInbound("Хочу макет"), "proto");
   assert.equal(readInbound("Макет не нужен"), "stop");
   assert.equal(readInbound("Нам не нужен сайт"), "stop");
   // Номер телефона с «+» — не согласие.
   assert.notEqual(readInbound("+998901234567"), "proto");
+  assert.notEqual(readInbound("+998901234567", letter), "proto");
   // Модель знает, что было в кружке: видео она не видит.
-  assert.match(CIRCLE_BODY, /бесплатно за 12 часов/);
-  assert.match(CIRCLE_BODY, /«\+»/);
+  assert.match(CIRCLE_BODY, /нашли пару ошибок/);
+  assert.match(CIRCLE_BODY, /распишем/);
+});
+
+test("ответ на кружок: уходит разбор по проверке сайта, а не «готовим макет»", () => {
+  const talk = read("lib/admin/outreach-talk-store.ts");
+  const save = between(talk, "async function saveInbound(", "/** Входящие, на которые ещё не отвечали");
+  // Разбор — раньше рассылки «Нужен прототип» и условий макета.
+  const turn = save.indexOf("if (breakdown) return answerCircle(");
+  assert.ok(turn > 0 && turn < save.indexOf("announcePrototype("), "разбор решается до макета");
+  assert.match(save, /const breakdown = read === "breakdown" && prospect\.ai_handling !== false;/);
+  // Входящее отвечено сразу — модель поверх разбора не пишет.
+  assert.match(save, /\.\.\.\(pitching \|\| breakdown \? \{ answered_at:/);
+  const answer = between(talk, "async function answerCircle(", "/**\n * Письмо тем, кто ответил");
+  // Разбор — то же письмо по проверке сайта по факту, что и вместо кружка.
+  assert.match(answer, /queueHelloLetter\(prospect, lang, Date\.now\(\) \+ PITCH_AFTER_MS, body, \{ after: "circle" \}\)/);
+  assert.doesNotMatch(answer, /protoTermsText|announcePrototype|priceLine/);
+  // Письмо — только наше от студии: ответ модели на возражение разбором не считается.
+  const stage = between(talk, "async function pitchStage(", "/** Письмо после «Здравствуйте» ещё ждёт отправки. */");
+  assert.match(stage, /r\.author === "staff"/);
 });
 
 test("ответ на приветствие: по-русски — кружок без письма, иначе — письмо на языке ответа", () => {
   const talk = read("lib/admin/outreach-talk-store.ts");
   const save = between(talk, "async function saveInbound(", "/** Входящие, на которые ещё не отвечали");
   assert.match(save, /if \(hello && pitchAfter\(readInbound\(body\)\)\) return answerHello\(prospect, body\);/);
-  assert.match(save, /const afterCircle = prospect\.pitch_at \? await circleWasPitch\(/);
+  assert.match(save, /const pitched = !pitching && prospect\.pitch_at \? await pitchStage\(/);
   const hello = between(talk, "async function answerHello(", "/** Письмо после «Здравствуйте» ещё ждёт отправки. */");
   // Входящее сразу отвечено — pendingTalks его не возьмёт.
   assert.match(hello, /answered_at: at/);

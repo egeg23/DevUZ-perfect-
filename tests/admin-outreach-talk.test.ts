@@ -173,7 +173,7 @@ test("вердикт по входящему не остаётся в чисто
   // Правило можно верно посчитать и не применить — тогда модель ответит
   // тому, кто попросил не писать, и аккаунт студии отправится в блокировку.
   const store = read("lib/admin/outreach-talk-store.ts");
-  assert.match(store, /const read = readInbound\(body, \{ afterCircle \}\);/);
+  assert.match(store, /const read = readInbound\(body, \{ stage: pitched\?\.stage \?\? null \}\);/);
   // Прототип уже ушёл в письме (lib/proto/auto) — «прототип» в ответе зовёт
   // человека, а не запускает рассылку «нужен прототип».
   assert.match(store, /const verdict = read === "proto" && protoSent \? "proto_ready" : aiLeads && read === "unclear" \? "talk" : read;/);

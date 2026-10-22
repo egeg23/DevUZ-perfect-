@@ -88,8 +88,8 @@ export const uz: LearnCopy = {
         what: {
           title: "Dumaloq video nima",
           paras: [
-            "Dumaloq video — studiyadan Telegramdagi qisqa video. Unda o‘zimizni tanishtiramiz va 12 soat ichida ularning sayti bosh sahifasining ishlaydigan maketini bepul tayyorlashni taklif qilamiz. Bu hech narsaga majburlamaydi. Oxirida iltimos: qiziq bo‘lsa, «+» yuboring.",
-            "Dumaloq videoning o‘zi taklif. Uning ketidan xat ketmaydi. Mijoz «+» yoki «ha» deb javob beradi — biz maket tayyorlaymiz.",
+            "Dumaloq video — studiyadan Telegramdagi qisqa video. Unda o‘zimizni tanishtiramiz va ularning saytini ko‘rib, mijozlar ketib qoladigan bir nechta xatoni topganimizni aytamiz. Oxirida: javob bering, ularni yozib beramiz.",
+            "Dumaloq videoga javob kelsa, bot o‘zi tahlil yuboradi: sayt tekshiruvi bo‘yicha xat, nima noto‘g‘ri va bu xaridorlar uchun nimaga olib keladi, oxirida esa 12 soatda bosh sahifa maketini bepul tayyorlash taklifi. Buni egasi 22.10.2026 da hal qildi. Mijoz tahlilga «+» yoki «ha» deb javob beradi, biz maket tayyorlaymiz.",
             "Egasi, 07.10.2026: javobdan keyin — dumaloq video va qisqa matn. Tirik yuz va ovoz notanish odamning matnidan ko‘ra ko‘proq ishonch uyg‘otadi.",
           ],
         },
@@ -113,16 +113,16 @@ export const uz: LearnCopy = {
           title: "Yaxshi dumaloq videoni qanday yozish kerak",
           paras: [
             "Bir daqiqagacha. Yuz kadrda, yorug‘, jim joy. Diktor kabi emas, ofisdagi hamkasb bilan gaplashgandek xotirjam gapiring.",
-            "Bitta fikr: kimsiz, ularning saytini ko‘rganingiz va 12 soatda bosh sahifa maketini bepul tayyorlashingiz. Oxirida bitta iltimos: qiziq bo‘lsa, plyus yuboring.",
+            "Bitta fikr: kimsiz, ularning saytini ko‘rganingiz va mijozlar ketib qoladigan bir nechta xatoni topganingiz. Oxirida bitta iltimos: «javob bering, ularni yozib beraman». Tahlil va maket taklifini bot o‘zi yuboradi.",
             "Narxsiz, «kafolat beramiz»siz, «topga chiqaramiz»siz, texnik so‘zlarsiz. 12 soatdan boshqa muddat aytmang: studiya boshqasini va’da qilmagan.",
           ],
         },
       },
       quiz: {
         offer: {
-          q: "Dumaloq video nimani taklif qiladi?",
-          options: ["12 soatda bosh sahifaning bepul ishlaydigan maketi va «+» yuborish iltimosi", "Saytga chegirma", "Menejer bilan qo‘ng‘iroq"],
-          why: "Dumaloq video — bitta taklif va bitta iltimos: 12 soatda maket, javobga «+».",
+          q: "Dumaloq video nima deydi?",
+          options: ["Ularning saytida bir nechta xato topilgani va javob berishsa, ularni yozib berishimiz", "Saytga chegirma", "Menejer bilan qo‘ng‘iroq"],
+          why: "Dumaloq video — bitta fikr va bitta iltimos: xato topdik, javob bering, yozib beramiz. Maket taklifi bilan tahlil javobga keladi.",
         },
         uz: {
           q: "Mijoz «Assalomu alaykum» deb javob berdi. Nima ketadi?",
@@ -140,9 +140,9 @@ export const uz: LearnCopy = {
           why: "Dumaloq video o‘tmadi — o‘rniga mijoz tilida xat.",
         },
         letter: {
-          q: "Dumaloq videodan keyin xat yuborish kerakmi?",
-          options: ["Yo‘q: dumaloq videoning o‘zi taklif", "Ha, har doim tezislar bilan xat", "Ha, bir kundan keyin"],
-          why: "Dumaloq videodan keyin xat ketmaydi — mijoz «+» yuboradi yoki savol beradi.",
+          q: "Mijoz dumaloq videoga «ha» deb javob berdi. Nima ketadi?",
+          options: ["Oxirida bepul maket taklifi bilan sayt tahlili", "Shartlar havolasi bilan «maket tayyorlayapmiz»", "Hech narsa, suhbat odamga o‘tadi"],
+          why: "Dumaloq videoga «ha» — «yozib bering» degani. Avval tahlil, maket esa tahlilga «+» yoki «ha» kelganda.",
         },
         upload: {
           q: "O‘zbekcha dumaloq video ishga qanday tushadi?",
@@ -160,7 +160,7 @@ export const uz: LearnCopy = {
         yes: {
           title: "Nima rozilik hisoblanadi",
           paras: [
-            "«+», «plyus» — har doim ha. Dumaloq videoga javoban «ha» ham shu ma’noda: «да», «давайте», «делайте», «хорошо, жду», «хочу», «ок», «ha», «mayli», «qiling».",
+            "Tahlilli xatga «+», «plyus» — har doim ha. Tahlilga «ha» ham shu ma’noda: «да», «давайте», «делайте», «хорошо, жду», «хочу», «ок», «ha», «mayli», «qiling». Dumaloq videoning o‘ziga «ha» va «+» — «yozib bering» degani: bot maket emas, tahlil yuboradi.",
             "Maket yoki prototip haqida har qanday gap ham rozilik: «да, соберите», «хочу макет», «prototip yig‘ib bering».",
             "Savol belgisi bilan «да?» — rozilik emas, savol. Uni odam ko‘rib chiqadi. Qisqa va tushunarsiz javobga model ham tegmaydi — sizni chaqiradi.",
           ],
@@ -193,8 +193,8 @@ export const uz: LearnCopy = {
       quiz: {
         go: {
           q: "Mijoz dumaloq videoga «давайте» deb javob berdi. Bu nima?",
-          options: ["Maketga rozilik: bot shartlarga havola bilan «maket tayyorlayapmiz» deb javob beradi", "Tushunarsiz javob, uni odam ko‘radi", "Rad javobi"],
-          why: "Dumaloq videoga «давайте», «да», «делайте» — «+» bilan bir xil.",
+          options: ["Xatolarni yozib berish iltimosi: bot oxirida maket taklifi bilan sayt tahlilini yuboradi", "Maketga rozilik: bot darhol «maket tayyorlayapmiz» deb javob beradi", "Rad javobi"],
+          why: "Dumaloq video xatolarni yozib berishni va’da qiladi, unga «давайте» — «yozib bering». Maketga rozilik — tahlilga «+» yoki «ha».",
         },
         agree: {
           q: "Mijozdan «shartlarga rozimisiz?» deb so‘rash kerakmi?",

@@ -25,11 +25,13 @@ const between = (text: string, from: string, to: string) => {
 test("лид — только на ясный ответ: макет, позвоните, пришлите", () => {
   assert.deepEqual([...LEAD_ON].sort(), ["human", "proto", "proto_ready", "send"]);
   // Что именно сегодня завело лид, — и что заведёт теперь.
-  assert.equal(readInbound("Добрый вечер", { afterCircle: true }), "unclear");
-  assert.equal(readInbound("Какие идеи?", { afterCircle: true }), "talk");
-  assert.ok(!LEAD_ON.has("unclear") && !LEAD_ON.has("talk"), "приветствие и вопрос лида не заводят");
-  assert.equal(readInbound("+", { afterCircle: true }), "proto");
-  assert.equal(readInbound("Давайте", { afterCircle: true }), "proto");
+  assert.equal(readInbound("Добрый вечер", { stage: "circle" }), "unclear");
+  assert.equal(readInbound("Какие идеи?", { stage: "letter" }), "talk");
+  // Ответ на кружок — разбор, лида ещё нет: он заведётся на «+» к разбору.
+  assert.equal(readInbound("+", { stage: "circle" }), "breakdown");
+  assert.ok(!LEAD_ON.has("unclear") && !LEAD_ON.has("talk") && !LEAD_ON.has("breakdown"), "приветствие, вопрос и разбор лида не заводят");
+  assert.equal(readInbound("+", { stage: "letter" }), "proto");
+  assert.equal(readInbound("Давайте", { stage: "letter" }), "proto");
   assert.equal(readInbound("Позвоните мне завтра"), "human");
 });
 
@@ -87,7 +89,10 @@ test("заметка модели до макета: цель — «+», без 
   assert.match(note, /отправьте «\+»/);
   assert.match(note, /Цен не называй/);
   assert.match(note, /Нет кнопки записи/);
-  assert.match(note, /Письма не было: «Здравствуйте» и видеокружок/);
+  // Кружок обещает расписать ошибки (владелец, 22.10.2026): модель знает это
+  // и на «какие ошибки?» отвечает находками, а не обещанием макета.
+  assert.match(note, /Разбора ещё не было: «Здравствуйте» и видеокружок, где мы обещали расписать ошибки/);
+  assert.match(note, /нашли пару ошибок/);
   assert.doesNotMatch(note, /созвон/, "следующий шаг — макет, а не созвон");
   // Обычная заметка менеджерского касания — как раньше.
   assert.match(talkNote(base), /короткий созвон/);
