@@ -278,12 +278,14 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
     };
   };
 
-  const systemText = [
-    buildSystemPrompt(locale),
-    options.channelNote,
-    discountNote(options.discount),
-    briefNote(options.brief),
-  ]
+  // Общая часть промпта — одна на всех клиентов этого языка, приписка —
+  // своя у каждого разговора (касание, скидка, бриф). Раньше обе шли одним
+  // блоком с кэшем на конце: приписка у каждого клиента своя, и кэш каждый
+  // раз записывался заново (дороже обычного входа на четверть) и ни разу не
+  // читался. 22–23.10.2026 так ушло $5,74 из $6,19 переписки касаний за
+  // сутки. Теперь кэш стоит на общей части — её читают все разговоры.
+  const baseText = buildSystemPrompt(locale);
+  const noteText = [options.channelNote, discountNote(options.discount), briefNote(options.brief)]
     .filter(Boolean)
     .join("\n\n");
 
@@ -295,15 +297,16 @@ async function qualifyTurn(options: TurnOptions): Promise<TurnResult> {
   const shared = {
     model: MODEL,
     max_tokens: MAX_TOKENS,
-    // Системный промпт неизменен между репликами, поэтому кэшируется:
-    // это самая тяжёлая часть запроса, и платить за неё на каждой
-    // реплике диалога незачем.
+    // Общий системный промпт неизменен между разговорами, поэтому
+    // кэшируется: это самая тяжёлая часть запроса. Приписка разговора — после
+    // него и без кэша.
     system: [
       {
         type: "text" as const,
-        text: systemText,
+        text: baseText,
         cache_control: { type: "ephemeral" as const },
       },
+      ...(noteText ? [{ type: "text" as const, text: noteText }] : []),
     ],
     tools: [qualifyLeadTool as unknown as Anthropic.Beta.BetaToolUnion],
     // Разговор с посетителем не требует глубоких размышлений, а вот
