@@ -15,6 +15,7 @@ import { runNoShowWeek } from "@/lib/admin/sales-stages-store";
 import { refreshXp } from "@/lib/admin/levels-store";
 import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
+import { sendStaffWeek } from "@/lib/admin/staff-week-store";
 import { runMockupOffers } from "@/lib/admin/mockup-offer-run";
 import { sendOfferDigest } from "@/lib/admin/mockup-offer-bot";
 import { runProtoAutoClose } from "@/lib/proto/auto-close-store";
@@ -355,6 +356,11 @@ async function sweep(): Promise<Response> {
   // показал клиенту ни одного макета (lib/admin/sales-stages-store).
   after(async () => {
     await runNoShowWeek(new Date()).catch((error) => console.error("показы макетов, неделя:", error));
+  });
+  // Понедельник 10:00 — владельцу и руководителю недельный отчёт по
+  // сотрудникам с рекомендациями (lib/admin/staff-week-store).
+  after(async () => {
+    await sendStaffWeek(new Date()).catch((error) => console.error("сотрудники за неделю:", error));
   });
   // Уровни менеджеров — снимок очков раз в час (lib/admin/levels-store):
   // «Главная» читает одну строку, а не всю историю.
