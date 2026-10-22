@@ -112,3 +112,35 @@ test("копия базы: вся — раз в неделю, журнал и п
   // Старые копии чистятся обе: и полные, и журнальные.
   assert.match(sh, /find "\$DEST" -name 'devuz-\*\.sql\.gz' -mtime "\+\$KEEP_DAYS" -delete/);
 });
+
+test("уровни: вся история — раз в сутки, каждый час — сегодняшнее поверх base", async () => {
+  // 22.10.2026: пересчёт за 400 дней — ~1,75 МБ, раз в час ~1,2 ГБ в месяц.
+  const { partsFor, tashkentDay } = await import("@/lib/admin/levels-store");
+  const { dealsOf } = await import("@/lib/admin/sales-stages");
+  const { XP_KINDS } = await import("@/lib/admin/levels");
+  const ME = "me";
+  const p = (id: string, at: string, replied: string | null) => ({
+    id, label: id, status: "sent", touched_by: ME, touched_at: at, sent_at: null, hello_at: at,
+    replied_at: replied, proto_requested_at: null, autopilot_replied_at: null, lead_id: null,
+  });
+  const deals = dealsOf({
+    prospects: [p("a", "2026-10-01T08:00:00Z", "2026-10-22T05:00:00Z"), p("b", "2026-10-22T04:00:00Z", null)],
+    leads: [], mockups: [], marks: [], prices: [], payments: [], wins: [],
+  });
+  const presence = [{ staff_id: ME, day: "2026-10-21", minutes: 200 }, { staff_id: ME, day: "2026-10-22", minutes: 30 }];
+  const acts = [{ actor_staff_id: ME, created_at: "2026-10-21T10:00:00Z" }, { actor_staff_id: ME, created_at: "2026-10-22T06:00:00Z" }];
+  // 22.10 по Ташкенту начинается 21.10 в 19:00 UTC.
+  const today = tashkentDay(new Date("2026-10-22T10:00:00Z"));
+  assert.deepEqual(today, { day: "2026-10-22", start: Date.parse("2026-10-21T19:00:00Z") });
+  const full = partsFor(ME, deals, presence, acts);
+  const todays = partsFor(ME, deals, presence, acts, today.start);
+  const base = Object.fromEntries(XP_KINDS.map((k) => [k, full[k] - todays[k]]));
+  for (const k of XP_KINDS) assert.equal(base[k] + todays[k], full[k], k);
+  assert.equal(todays.touch, 1);
+  assert.equal(todays.reply, 1);
+
+  const store = read("lib/admin/levels-store.ts");
+  assert.match(store, /const days = base \? RECENT_DAYS : HISTORY_DAYS;/);
+  assert.match(store, /loadDeals\(now, days, ROWS\)/);
+  assert.match(store, /const snap = await computeXp\(now, current\);/);
+});
