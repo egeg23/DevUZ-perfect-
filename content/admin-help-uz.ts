@@ -475,6 +475,23 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "trash",
+          roles: ["admin", "head"],
+          title: "«🗑 Мусор»: lid bo‘lmagan lidni o‘chirish",
+          body: [
+            "Botning shaxsiy chatiga keladigan lid kartochkasi ostida **«🗑 Мусор»** tugmasi bor. U lid bo‘lmagan arizalar uchun: xodim botga yozgan, spam, sinov, tasodifiy odam. Bosdingiz — lid bazadan butunlay o‘chadi, navbatdan chiqadi (endi hech kimga taklif qilinmaydi), kartochkaning barcha nusxalarida tugmalar o‘rniga «🗑 Удалён как мусор — @ник» chiqadi. Sizning 22.10.2026 dagi qaroringiz.",
+            "Tugmani faqat egasi va rahbar ko‘radi, menejerlarga u kelmaydi, boshqaning bosishini bot qabul qilmaydi. O‘chirilgan lidni qaytarib bo‘lmaydi: jurnalda ariza raqami va kim bosgani bilan «lidni axlat sifatida o‘chirdi» qatori qoladi. Bizga kerak bo‘lmagan, lekin haqiqiy mijoz — bu axlat emas, **«🗄 Отклонить»**: unda lid bazada va hisobotlarda qoladi.",
+          ],
+        },
+        {
+          id: "bot-card",
+          title: "Telegramdagi lid kartochkasi: qisqa",
+          body: [
+            "Botdagi yangi lid kartochkasi qisqa: lid qanchalik iliq ekani oddiy so‘zlar bilan («🔥 Горячий», «🟡 Тёплый», «👤 Просит живого человека»), ariza raqami, kim va qayerdan yozgani, **«Что хочет»** (nima xohlaydi), mijoz aytgan bo‘lsa byudjet va muddat, hamda **«Можно начать так»**: bir bosishda nusxalanadigan birinchi xabar.",
+            "Ballar, BANT bo‘yicha tahlil, «mijozga nima aytilgan» va «nimani qayta so‘ramaslik» Telegramdan olib tashlandi (egasi, 22.10.2026: menejerlarga bu tushunarsiz). Butun yozishma va tafsilotlar paneldagi lid kartochkasida, «🔓 Открыть карточку» tugmasi orqali.",
+          ],
+        },
+        {
           id: "list",
           title: "Lidlar ro‘yxati: filtrlar va ustunlar",
           body: {
@@ -1127,6 +1144,7 @@ export const uz: HelpCopy = {
             "**Mijozga to‘g‘ridan-to‘g‘ri lid kartochkasidan javob berish mumkin** — telefonsiz va akkauntlarni almashtirmasdan. «Aloqa bo‘yicha birlamchi suhbat» dagi yozishma ostida javob maydoni va **«Yuborish»** tugmasi bor (yoki Ctrl+Enter). Xabar mijozga yozilgan o‘sha ish akkauntidan ketadi — qaysi akkaunt ekani maydon ostida yozilgan. Bot uni yarim daqiqa ichida yuboradi, ungacha ostida «yuborilmoqda…» ko‘rinadi; ketmasa — sababi bilan «yuborilmadi», sizga esa Telegramda xabar keladi. Siz javob berishingiz bilan SI jim bo‘ladi, uning yuborilmagan javoblari olib tashlanadi: suhbat endi sizniki, xuddi «O‘zim javob beraman» dan keyingidek. Kartochkadagi yozishma sahifa ochiq turganda har 10 soniyada o‘zi yangilanadi. Agar mijozga o‘z telefoningizdan yozgan bo‘lsangiz va u hali ish akkauntiga javob bermagan bo‘lsa, maydon bo‘lmaydi — u holda o‘sha yerda javob bering. Rasm, ovozli xabar va fayllar hozircha faqat Telegramdan ketadi — yozishma ostidagi «Yozishmani Telegramda ochish» tugmasi.",
             "Model vazifa, byudjet va muddatlarni aniqlab olgach, xayrlashadi, sizga esa «Первичка по касанию · сайт» brifi keladi. Keyingi suhbat sizniki.",
             "⚠️ O‘zingiz javob berayotgan bo‘lsangiz, mijozning yangi oddiy xabarlari Telegramda sizga kelmaydi — yozishmaga o‘zingiz qarab turing.",
+            "**«💬 Ваш лид ответил»** (22.10.2026 dan): model sizning aloqangiz bo‘yicha yozishmani olib borayotganda, mijozning har bir javobiga bot sizga uning so‘zlarini va «model 5 daqiqadan keyin o‘zi javob beradi» degan qatorni yuboradi. Ma’qul bo‘lsa, hech narsa bosmang: model javob beradi, siz esa ma’lumot ko‘paygach qo‘shilasiz, mijoz maketga yetganda yoki suhbat sizga kerak bo‘lganda bot o‘zi yozadi. O‘zingiz javob bermoqchi bo‘lsangiz, shu 5 daqiqada **«✋ Отвечу сам»** tugmasini bosing: model jim bo‘ladi, uning hali ketmagan javobi ketmaydi, javobni lid kartochkasida yozish mumkin. Avtoprogon aloqalari maketgacha hech kimniki emas, ular bo‘yicha bunday qator kelmaydi. «Mijozlarning aloqalarga javoblari» belgisi olib tashlangan bo‘lsa ham qator kelmaydi.",
           ],
         },
         {

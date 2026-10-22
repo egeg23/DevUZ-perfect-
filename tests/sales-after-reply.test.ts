@@ -304,7 +304,10 @@ test("8. ответ модели: пауза 40–120 секунд и корот
   const run = read("lib/admin/outreach-talk-run.ts");
   assert.match(run, /if \(inbound\.untilMockup\) text = withoutOpener\(text\);/);
   assert.match(run, /if \(inbound\.untilMockup\) problems\.push\(\.\.\.aiStyleProblems\(text\)\);/);
-  assert.match(run, /sendAfter: humanSendAfter\(inbound\.createdAt, Date\.now\(\)\)/);
+  // Пауза «как человек» — всегда; у касания с хозяином ещё окно на «✋ Отвечу
+  // сам» (lib/admin/reply-heads-up.ts, heldUntil).
+  assert.match(run, /humanSendAfter\(inbound\.createdAt, (?:Date\.now\(\)|now)\)/);
+  assert.match(run, /heldUntil\(human, now, told\)/);
 });
 
 test("9. показ вместо ссылки: «Покажу за 15 минут» — в акции у «new», не ломая её", () => {

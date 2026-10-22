@@ -166,6 +166,8 @@ export const AUDIT_ACTIONS = [
   "lead.transferred",
   // Свободного лида отдали человеку с «Главной» (giveLead).
   "lead.given",
+  // Лид удалён кнопкой «🗑 Мусор» в боте (lib/admin/lead-trash-store.ts).
+  "lead.trashed",
   // Вход владельца через Google для статистики GA: доступ к данным
   // Analytics сохраняется в хранилище секретов — кто и когда его дал, видно.
   "google.client_saved",

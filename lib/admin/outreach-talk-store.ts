@@ -17,6 +17,8 @@ import { hasMockupLink } from "@/lib/admin/mockup-offer";
 import { recordMockupSent } from "@/lib/admin/mockup-offer-store";
 import { CLOSE_TEXT, canClose, closeCallback, isCloseReason } from "@/lib/admin/touch-close";
 import { esc, sendMessage, sendWithRows } from "@/lib/qualify/telegram";
+import { TAKE_OVER_BUTTON, headsUpText, saidShort, takeOverCallback } from "@/lib/admin/reply-heads-up";
+import { record } from "@/lib/admin/audit";
 import { MAIN_ACCOUNT, accountOf, sentFrom, sentFromText } from "@/lib/admin/work-accounts";
 import { accountTags } from "@/lib/admin/work-accounts-store";
 import { siteUrl } from "@/lib/seo";
@@ -1527,3 +1529,66 @@ export async function takeOverTalk(prospectId: string, staffId: string): Promise
     .update({ ai_handling: false, handover_reason: "менеджер отвечает сам", handled_by: staffId })
     .eq("id", prospectId);
 }
+
+/**
+ * «Ваш лид ответил» тому, за кем касание (lib/admin/reply-heads-up.ts):
+ * что сказал клиент, что модель ответит сама через несколько минут, и
+ * «✋ Отвечу сам». Галочка «Ответы клиентов на касания» снята или писать
+ * некому — false: модель отвечает с обычной паузой.
+ */
+export async function tellReply(prospectId: string, body: string): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { data: p } = await db.from("prospects").select("claimed_by, handled_by, lead_id, host").eq("id", prospectId).maybeSingle();
+  const to = p?.handled_by ?? p?.claimed_by;
+  if (!p || !to) return false;
+  const { data: staff } = await db
+    .from("staff")
+    .select("telegram_user_id, notify_off")
+    .eq("id", to)
+    .eq("is_active", true)
+    .maybeSingle();
+  const chat = Number(staff?.telegram_user_id);
+  if (!Number.isFinite(chat) || chat === 0) return false;
+  if (!wants(staff?.notify_off as string[] | null, "talks")) return false;
+  const text = headsUpText({ host: esc(String(p.host)), said: esc(saidShort(body)) });
+  const rows = [
+    [{ text: TAKE_OVER_BUTTON, callback_data: takeOverCallback(prospectId) }],
+    ...(p.lead_id ? [[{ text: "Открыть переписку", panel: `/admin/leads/${p.lead_id}#talk` }]] : []),
+  ];
+  return sendWithRows(chat, text, rows);
+}
+
+/**
+ * «✋ Отвечу сам» из бота: разговор забирает тот, за кем касание (или
+ * владелец, руководитель), модель молчит, а её ещё не ушедший ответ
+ * снимается — как в карточке лида.
+ */
+export async function takeOverFromBot(
+  prospectId: string,
+  staff: { id: string; role: string },
+): Promise<{ ok: true; leadId: string | null; host: string } | { ok: false; reason: "gone" | "not_yours" }> {
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "gone" };
+  const { data: p } = await db.from("prospects").select("id, host, lead_id, claimed_by, handled_by").eq("id", prospectId).maybeSingle();
+  if (!p) return { ok: false, reason: "gone" };
+  const mine = p.claimed_by === staff.id || p.handled_by === staff.id || staff.role === "admin" || staff.role === "head";
+  if (!mine) return { ok: false, reason: "not_yours" };
+  await takeOverTalk(prospectId, staff.id);
+  await db
+    .from("outreach_messages")
+    .update({ status: "done", failure: STAFF_TOOK_OVER_BOT })
+    .eq("prospect_id", prospectId)
+    .eq("direction", "out")
+    .eq("author", "ai")
+    .eq("status", "queued");
+  await record("prospect.taken_over", {
+    actorStaffId: staff.id,
+    targetType: "prospect",
+    targetId: prospectId,
+    meta: { lead: p.lead_id ?? null, via: "telegram" },
+  });
+  return { ok: true, leadId: (p.lead_id as string | null) ?? null, host: String(p.host) };
+}
+
+const STAFF_TOOK_OVER_BOT = "не отправлено: менеджер нажал «Отвечу сам» в боте";

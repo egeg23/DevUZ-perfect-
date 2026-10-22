@@ -1,9 +1,9 @@
 import { channelLabel, contactLink } from "@/lib/contact";
 import { originLines, usernameOf, type LeadOrigin } from "@/lib/qualify/origin";
-import { priorityBadge } from "@/lib/qualify/scoring";
 import type { ScoredLead } from "@/lib/qualify/types";
 import { localeLabel } from "@/lib/i18n";
-import { noticesOf, rememberNotices, type Notice } from "@/lib/qualify/notices";
+import { noticesOf, rememberNotices, trashChats, type Notice } from "@/lib/qualify/notices";
+import { TRASH_BUTTON, trashCallback } from "@/lib/admin/lead-trash";
 import { siteUrl } from "@/lib/seo";
 import { roadFetch } from "@/lib/egress.mjs";
 import { mirrorToPush } from "@/lib/admin/push-mirror";
@@ -45,11 +45,6 @@ function tgFromContact(lead: {
   return view.label.startsWith("@") ? view.label.slice(1) : null;
 }
 
-function block(title: string, lines: string[]): string | null {
-  const body = lines.filter((l) => l && l.trim()).map((l) => `• ${esc(l)}`);
-  return body.length ? `\n<b>${title}</b>\n${body.join("\n")}` : null;
-}
-
 /** Telegram отклоняет сообщения длиннее 4096 символов. */
 const TELEGRAM_LIMIT = 4096;
 
@@ -67,6 +62,37 @@ function clampHtml(text: string, limit = TELEGRAM_LIMIT): string {
   const cut = text.slice(0, limit - notice.length);
   const boundary = cut.lastIndexOf("\n");
   return (boundary > 0 ? cut.slice(0, boundary) : cut) + notice;
+}
+
+/**
+ * Насколько лид тёплый — словами, а не грейдом и баллами: «D · 25/100»
+ * менеджеру ничего не говорит.
+ */
+export function plainPriority(lead: ScoredLead): string {
+  if (lead.intent === "needs_human") return "👤 <b>Просит живого человека</b> — ответьте сами";
+  if (lead.intent === "wants_discount") return "💰 <b>Просит скидку</b>";
+  switch (lead.priority) {
+    case "hot":
+      return "🔥 <b>Горячий</b>: готов обсуждать сейчас";
+    case "warm":
+      return "🟡 <b>Тёплый</b>: интерес есть, нужно дожать";
+    case "nurture":
+      return "🌱 <b>Присматривается</b>: не торопится";
+    default:
+      return "📁 <b>Не интересно</b>";
+  }
+}
+
+/** Ответ модели одной строкой и не длиннее 200 знаков: в карточке — суть. */
+function oneLine(text: string | null | undefined, max = 200): string {
+  const flat = String(text ?? "").replace(/\s+/g, " ").trim();
+  return flat.length > max ? `${flat.slice(0, max - 1).trimEnd()}…` : flat;
+}
+
+/** Модель пишет «не назван», «неизвестно» — такую строку не показываем. */
+function known(text: string | null | undefined): boolean {
+  const flat = oneLine(text).toLowerCase();
+  return Boolean(flat) && !/^(?:не\s+(?:назван|указан|известн|обсужда|сказа|выяснен|понятн|ясно)|неизвестн|нет\s+данных|—|-|n\/a|unknown)/u.test(flat);
 }
 
 /**
@@ -105,72 +131,36 @@ export function formatLeadBrief(
   const place: LeadOrigin = { ...origin, tgUsername: origin?.tgUsername ?? tgFromContact(lead) };
   const handle = usernameOf(place);
 
+  // Коротко и простыми словами (владелец, 22.10.2026): «не надо так длинно
+  // расписывать — что сказали, BANT и тд. Квалификация лидов не понятна
+  // менеджерам». Грейд, баллы, «уже сказано», «не переспрашивать» и разбор
+  // по BANT — в карточке лида, здесь только то, что нужно решить: писать ли
+  // и с чего начать.
+  const s = lead.summary;
   const parts: string[] = [
     ...(heading ? [heading, ""] : []),
-    `${priorityBadge(lead)}  ·  <b>${lead.grade}</b>  ·  ${lead.score}/100`,
-    // Номер заявки клиент уже услышал в чате. Он же в шапке брифа: когда
-    // человек напишет «я по заявке DZ-0821-K4M7», менеджер должен найти её
-    // поиском по чату, а не листать ленту.
+    plainPriority(lead),
+    // Номер заявки клиент уже услышал в чате: когда он напишет «я по заявке
+    // DZ-0821-K4M7», менеджер найдёт её поиском по чату.
     ...(requestNo ? [`🧾 Заявка <code>${esc(requestNo)}</code>`] : []),
     "",
     `👤 ${who || "имя не названо"}`,
-    // Канал — да, сам контакт — нет. Общий чат отдела продаж читают все, кто
-    // в нём состоит, и читают навсегда: Telegram помнит историю, а вышедший
-    // из компании человек уносит её в своём клиенте. Раскрытие контакта
-    // должно оставлять след с именем и временем, а в чате следа не остаётся.
-    // Поэтому здесь только то, что менеджеру нужно для решения, — писать
-    // или звонить, — а ник и номер лежат в карточке за кнопкой.
-    // Ник — да, телефон и почта — по-прежнему нет.
-    //
-    // Владелец: «указывай юзернейм, если он есть». Это осознанное
-    // послабление к правилу «контакт только в карточке», а не отмена
-    // правила: ник в Telegram человек и так показывает каждому, кому
-    // пишет, а номер телефона — нет. Всё остальное открывается в
-    // карточке, где остаётся след, кто и когда его посмотрел.
+    // Канал и ник — да, телефон и почта — нет: общий чат читают все и
+    // навсегда, а раскрытие контакта в карточке оставляет след в журнале.
+    // Ник в Telegram человек и так показывает каждому, кому пишет.
     `💬 ${esc(channelLabel(lead))}${handle ? ` · ${esc(handle)}` : ""} · контакт открывается в карточке`,
-    // Когда, откуда и где — три вопроса владельца одной строкой каждый.
     ...originLines(place, origin?.at ?? Date.now()).map((line, i) => `${i === 0 ? "🕒" : "📍"} ${esc(line)}`),
-    // Это язык версии сайта, а не обязательно язык переписки: человек мог
-    // открыть русскую страницу и писать по-узбекски. Формулировка честная,
-    // чтобы менеджер не начал отвечать не на том языке, решив, что здесь
-    // указан язык разговора.
-    `🌐 Язык сайта: ${localeLabel[lead.locale]} · отвечайте на языке заготовки ниже`,
-    ...(cardUrl
-      ? ["", `🔗 <a href="${esc(cardUrl)}">Карточка: контакт и переписка</a>`]
-      : []),
+    ...(cardUrl ? [`🔗 <a href="${esc(cardUrl)}">Карточка: контакт и переписка</a>`] : []),
     "",
-    `<b>ЧТО ХОЧЕТ</b>`,
-    esc(lead.summary.request || "не сформулировано"),
+    `<b>Что хочет:</b> ${esc(oneLine(s.request) || "не сказал")}`,
+    ...(known(s.budget) ? [`<b>Бюджет:</b> ${esc(oneLine(s.budget))}`] : []),
+    ...(known(s.timing) ? [`<b>Когда нужно:</b> ${esc(oneLine(s.timing))}`] : []),
   ];
 
   if (lead.opening_line?.trim()) {
-    // Отдельным блоком с моноширинным начертанием: в Telegram такой текст
-    // копируется одним нажатием, и менеджеру остаётся только отправить.
-    parts.push("", "<b>С ЧЕГО НАЧАТЬ</b>", `<code>${esc(lead.opening_line.trim())}</code>`);
+    // Моноширинным: в Telegram такой текст копируется одним нажатием.
+    parts.push("", "<b>Можно начать так:</b>", `<code>${esc(lead.opening_line.trim())}</code>`);
   }
-
-  const told = block("УЖЕ СКАЗАНО КЛИЕНТУ — не противоречить", lead.already_told ?? []);
-  if (told) parts.push(told);
-  const avoid = block("НЕ ПЕРЕСПРАШИВАТЬ", lead.avoid_asking ?? []);
-  if (avoid) parts.push(avoid);
-
-  if (lead.notes?.trim()) {
-    parts.push("", `<b>НА ЧТО ОБРАТИТЬ ВНИМАНИЕ</b>`, esc(lead.notes.trim()));
-  }
-
-  const s = lead.summary;
-  parts.push(
-    "",
-    "<b>КВАЛИФИКАЦИЯ</b>",
-    `<b>Ниша:</b> ${esc(s.niche)}`,
-    `<b>Экспертность:</b> ${esc(s.expertise)}`,
-    `<b>Бюджет:</b> ${esc(s.budget)}`,
-    `<b>ЛПР:</b> ${esc(s.authority)}`,
-    `<b>Потребность:</b> ${esc(s.need)}`,
-    `<b>Срочность:</b> ${esc(s.timing)}`,
-    "",
-    `<code>ICP: Tier ${lead.niche_tier} · ${lead.expertise}   BANT: ${lead.budget} · ${lead.authority} · ${lead.need} · ${lead.timing}</code>`,
-  );
 
   return clampHtml(parts.join("\n"));
 }
@@ -771,7 +761,8 @@ export async function sendLead(
 
   const text = formatLeadBrief(lead, requestNo, cardUrl, options.heading, options.origin);
 
-  const rows = leadRows(leadId, Boolean(cardUrl));
+  // «🗑 Мусор» — только в личке владельца и руководителя (lead-trash.ts).
+  const trash = cardUrl ? await trashChats(targets) : new Set<string>();
 
   /**
    * Всем сразу, а не по очереди.
@@ -786,7 +777,11 @@ export async function sendLead(
    * кнопки сама повторяется в запасном виде.
    */
   const results = await Promise.all(
-    targets.map((chatId) => postRows(chatId, text, rows, { disable_notification: silent })),
+    targets.map((chatId) =>
+      postRows(chatId, text, leadRows(leadId, Boolean(cardUrl), trash.has(String(chatId))), {
+        disable_notification: silent,
+      }),
+    ),
   );
   const sent = results.some((id) => id !== null);
 
@@ -886,13 +881,14 @@ export async function answerCallback(id: string, text: string): Promise<void> {
  * Отдельной функцией, потому что собирают её двое: отправка карточки и
  * возврат кнопок, когда лида отпустили обратно.
  */
-function leadRows(leadId: string, withCard: boolean): Button[][] {
+function leadRows(leadId: string, withCard: boolean, trash = false): Button[][] {
   return [
     ...(withCard ? [[{ text: "🔓 Открыть карточку", panel: `/admin/leads/${leadId}` }]] : []),
     [
       { text: "✅ Взять в работу", callback_data: `take:${leadId}` },
       { text: "🗄 Отклонить", callback_data: `drop:${leadId}` },
     ],
+    ...(trash ? [[{ text: TRASH_BUTTON, callback_data: trashCallback(leadId) }]] : []),
   ];
 }
 
@@ -945,9 +941,10 @@ export async function editLeadCards(
   status: string | null,
   except?: { chatId: number | string; messageId: number },
 ): Promise<void> {
-  const keyboard = status
-    ? [[{ text: status, callback_data: "noop" }]]
-    : forTelegram(leadRows(leadId, true));
+  const done = status ? [[{ text: status, callback_data: "noop" }]] : null;
+  // Кнопки вернулись (лида отпустили) — «🗑 Мусор» снова только у владельца
+  // и руководителя.
+  const trash = done ? new Set<string>() : await trashChats(notices.map((n) => n.chatId));
 
   await Promise.all(
     notices
@@ -956,7 +953,7 @@ export async function editLeadCards(
         call("editMessageReplyMarkup", {
           chat_id: n.chatId,
           message_id: n.messageId,
-          reply_markup: { inline_keyboard: keyboard },
+          reply_markup: { inline_keyboard: done ?? forTelegram(leadRows(leadId, true, trash.has(n.chatId))) },
         }),
       ),
   );
