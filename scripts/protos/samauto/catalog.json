@@ -15,7 +15,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "7 390 × 2 375 × 3 190",
-   "base": "3 815 mm"
+   "base": "3 815 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPR75L-K_TELESKOPIK_MINORA__18M_-1769604790970-239915509.pdf"
   },
   {
    "n": 1,
@@ -30,7 +31,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "8 066 × 2 466 × 2 782",
-   "base": "4 625 mm"
+   "base": "4 625 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/SAZ_LE60-1769605183005-760046627.pdf"
   },
   {
    "n": 2,
@@ -46,7 +48,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "5285 × 1870 × 1790",
-   "base": "3 125 mm"
+   "base": "3 125 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_D-MAX_IRBIS_LSE__uz_-1769605955228-876797290.pdf"
   },
   {
    "n": 3,
@@ -62,7 +65,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "7 870 × 2 340 × 3 180",
-   "base": "3 815 mm"
+   "base": "3 815 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPR75L-K_TELESKOPIK_MINORA__22M_-1770101017142-160222378.pdf"
   },
   {
    "n": 4,
@@ -94,7 +98,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "5285 × 1870 × 1790",
-   "base": "3 125 mm"
+   "base": "3 125 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_D-MAX_IRBIS_LS__uz_-1770112892984-767977230.pdf"
   },
   {
    "n": 6,
@@ -126,7 +131,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "7 430 × 2 240 × 3 060",
-   "base": "4 175 mm"
+   "base": "4 175 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NQR90L-L_FURGON-1770117108895-63285447.pdf"
   },
   {
    "n": 8,
@@ -141,7 +147,8 @@
    "wheels": "4x2",
    "fuel": "Siqilgan tabiiy gaz",
    "dims": "7 035 × 2 230 × 2 830",
-   "base": "3 845 mm"
+   "base": "3 845 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/SAZ_HC45__uz_-1770117576598-988476522.pdf"
   },
   {
    "n": 9,
@@ -157,7 +164,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "5 285 × 1 870 × 1 790",
-   "base": "3 125 mm"
+   "base": "3 125 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_D-MAX_OKSUS_LS__uz_-1770117847587-1799789.pdf"
   },
   {
    "n": 10,
@@ -173,7 +181,8 @@
    "wheels": "4x2",
    "fuel": "Siqilgan tabiiy gaz",
    "dims": "6 775 × 2 235 × 3 000",
-   "base": "3 845 mm"
+   "base": "3 845 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPR82L__CNG__FURGON-1770121219129-5766208.pdf"
   },
   {
    "n": 11,
@@ -188,7 +197,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "8 010 × 2 320 × 2 820",
-   "base": "4 475 mm"
+   "base": "4 475 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/SAZ_HD50__uz_-1770199124845-145429409.pdf"
   },
   {
    "n": 12,
@@ -204,7 +214,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "5 285 × 1 870 × 1 790",
-   "base": "3 125 mm"
+   "base": "3 125 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_D-MAX_OKSUS__uz_-1770199570962-321724993.pdf"
   },
   {
    "n": 13,
@@ -220,7 +231,8 @@
    "wheels": "4x2",
    "fuel": "Siqilgan tabiiy gaz",
    "dims": "6 770 × 2 295 × 3 000",
-   "base": "3 845 mm"
+   "base": "3 845 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPR82L__CNG__BORTLI_TENTLI_KUZOV-1770199880325-534467287.pdf"
   },
   {
    "n": 14,
@@ -236,7 +248,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "6 670 × 2 300 × 2 980",
-   "base": "3 395 mm"
+   "base": "3 395 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPS75H_AVARIYA-QUTQARUV_AVTOMOBILI-1770200421005-955664574.pdf"
   },
   {
    "n": 15,
@@ -252,7 +265,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "5 000 × 1 840 × 1 770",
-   "base": "3 125 mm"
+   "base": "3 125 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_D-MAX_SAHAR__uz_-1770200897906-782381267.pdf"
   },
   {
    "n": 16,
@@ -268,7 +282,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "6 800 × 2 240 × 3060",
-   "base": "3 815 mm"
+   "base": "3 815 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPR75L-K_FURGON-1770201780093-448089496.pdf"
   },
   {
    "n": 17,
@@ -285,7 +300,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "5 500 × 1 875 × 2 400",
-   "base": "3 125 mm"
+   "base": "3 125 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/SAHAR-TEZ_TIBBIY_YORDAM_AVTOMOBILI-1770202355887-540363087.pdf"
   },
   {
    "n": 18,
@@ -301,7 +317,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "6 780 × 2 290 × 3 030",
-   "base": "3 815 mm"
+   "base": "3 815 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPR75L-K_BORTLI_TENTLI_KUZOV-1770205405476-532841226.pdf"
   },
   {
    "n": 19,
@@ -317,7 +334,8 @@
    "wheels": "4x2",
    "fuel": "Siqilgan tabiiy gaz",
    "dims": "6 425 × 2 235 × 2 365",
-   "base": "3 845 mm"
+   "base": "3 845 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPR82L__CNG__OZI_AGDARUVCHI-1770205654923-215904246.pdf"
   },
   {
    "n": 20,
@@ -333,7 +351,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "6 330 × 2 150 × 2 360",
-   "base": "3 815 mm"
+   "base": "3 815 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NQR90L-K_OZI_AGDARUVCHI_AVTOMOBIL-1770205861962-987309479.pdf"
   },
   {
    "n": 21,
@@ -349,7 +368,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "9 470 × 2 480 × 3 400",
-   "base": "5 550 mm"
+   "base": "5 550 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_FVR34Q_BORTLI_TENTLI_KUZOV-1770206171377-675786957.pdf"
   },
   {
    "n": 22,
@@ -365,7 +385,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "9 250 × 2 515 × 3 530",
-   "base": "5 550 mm"
+   "base": "5 550 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_FVR34Q_FURGON-1770206514722-173545089.pdf"
   },
   {
    "n": 23,
@@ -381,7 +402,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "6 850 × 2 500 × 3 140",
-   "base": "3 900 mm"
+   "base": "3 900 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_FVR34K_OZI_AGDARUVCHI_AVTOMOBIL-1770206763686-553233726.pdf"
   },
   {
    "n": 24,
@@ -396,7 +418,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "6 150 × 2 030 × 2 800",
-   "base": "3 345 mm"
+   "base": "3 345 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NMR77H_light_FURGON-1769144804989-898679113.pdf"
   },
   {
    "n": 25,
@@ -412,7 +435,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "6 900 × 2 195 × 2 475",
-   "base": "3 815 mm"
+   "base": "3 815 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NQR90L-K_SUV_TASHUVCHI_AVTOMOBIL-1769145311240-759035601.pdf"
   },
   {
    "n": 26,
@@ -428,7 +452,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "6 900 × 2 195 × 2 475",
-   "base": "3 815 mm"
+   "base": "3 815 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NQR90L-K_SUV_TASHUVCHI_AVTOMOBIL-1769160701875-354499625.pdf"
   },
   {
    "n": 27,
@@ -444,7 +469,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "7 020 × 2 500 × 3 120",
-   "base": "3 900 mm"
+   "base": "3 900 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_FVR34K_YOQILGI_TASHUIVCHI_AVTOMOBIL-1769161243825-248783375.pdf"
   },
   {
    "n": 28,
@@ -492,7 +518,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "9 400 × 2 550 × 4 000",
-   "base": "5 550 mm"
+   "base": "5 550 mm",
+   "pdf": "https://ncdn.samauto.uzNcерияшасси(RUS).pdf"
   },
   {
    "n": 32,
@@ -508,7 +535,8 @@
    "wheels": "4x2",
    "fuel": "Siqilgan tabiiy gaz",
    "dims": "6 775 × 2 235 × 3 000",
-   "base": "3 845 mm"
+   "base": "3 845 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPR82L__CNG__REFRIJERATOR-1769515646498-604996011.pdf"
   },
   {
    "n": 33,
@@ -524,7 +552,8 @@
    "wheels": "4x2",
    "fuel": "Siqilgan tabiiy gaz",
    "dims": "6 775 × 2 235 × 3 000",
-   "base": "3 845 mm"
+   "base": "3 845 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPR82L__CNG__REFRIJERATOR-1769578840784-298039030.pdf"
   },
   {
    "n": 34,
@@ -588,7 +617,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "7 020 × 2 500 × 3 120",
-   "base": "3 900 mm"
+   "base": "3 900 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_FVR34K_YOQILGI_TASHUIVCHI_AVTOMOBIL-1769595579307-933070926.pdf"
   },
   {
    "n": 38,
@@ -604,7 +634,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "6 725 × 2 300 × 2 820",
-   "base": "3 395 mm"
+   "base": "3 395 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPS75H_AVARIYA-QUTQARUV_AVTOMOBILI-1769596157513-123742557.pdf"
   },
   {
    "n": 39,
@@ -620,7 +651,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "6 725 × 2 300 × 2 820",
-   "base": "3 395 mm"
+   "base": "3 395 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NPS75H_AVARIYA-QUTQARUV_AVTOMOBILI-1769602720962-760285738.pdf"
   },
   {
    "n": 40,
@@ -635,7 +667,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "7 389 × 2 472 × 3 680",
-   "base": "3 900 mm"
+   "base": "3 900 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_FVR34K_SEPIB_YUVUVCHI_AVTOMOBIL-1769603353640-166520487.pdf"
   },
   {
    "n": 41,
@@ -651,7 +684,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "6 640 × 2 176 × 2 570",
-   "base": "3 815 mm"
+   "base": "3 815 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_NQR90L-K_SEPIB_YUVUVCHI_AVTOMOBIL-1769603641240-634463323.pdf"
   },
   {
    "n": 42,
@@ -667,7 +701,8 @@
    "wheels": "4x4",
    "fuel": "Dizel",
    "dims": "5 500 × 1 875 × 2 400",
-   "base": "3 125 mm"
+   "base": "3 125 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/SAHAR-TEZ_TIBBIY_YORDAM_AVTOMOBILI-1769603954513-285879415.pdf"
   },
   {
    "n": 43,
@@ -683,7 +718,8 @@
    "wheels": "4x2",
    "fuel": "Dizel",
    "dims": "8 500 × 3 080 × 3 516",
-   "base": "3 900 mm"
+   "base": "3 900 mm",
+   "pdf": "https://ncdn.samauto.uz/documents/pdfs/ISUZU_FVR34K_KOMBINATSIYALANGAN_YUVIB_SUPURUVCHI_AVTOMOBIL-1769604372172-487107099.pdf"
   }
  ],
  "dealers": [
@@ -881,6 +917,90 @@
    "phone": "+998787703080",
    "lat": 40.07976,
    "lng": 65.383635
+  }
+ ],
+ "faq": [
+  {
+   "q": "Zavoddan gaz bilan jihozlangan avtomobilni sotib olsa bo‘ladimi?",
+   "a": "Zavod ikki turdagi transport vositalarini ishlab chiqaradi: dizel yoki siqilgan tabiiy gaz (metan, CNG). Samarqand avtomobil zavodi yoqilg‘i tizimining dizeldan gazga qayta jihozlash bilan shug‘ullanmaydi."
+  },
+  {
+   "q": "Maxsus buyurtma asosida mahsulot harid qilishim uchun kimga murojaat qilishim kerak?",
+   "a": "Maxsus buyurtma bo‘yicha mahsulot harid qilib olish uchun hududingizda joylashgan dilerlik markazlariga xat bilan murojaat qilishingiz mumkin."
+  },
+  {
+   "q": "Zavod o‘z mahsulotiga qanday kafolat beradi?",
+   "a": "Zavod o‘z mahsulotlariga 50 000 km yoki 1 yil va faqatgina D-MAX uchun 100 000 km yoki 2 yilgacha kafolat beradi, qaysi biri birinchi kelishiga qarab."
+  },
+  {
+   "q": "Mahsulot narxi Samarqanddagi dilerlik markazlarida va boshqa hududlarda joylashgan dilerlik markazlaridagi narxlar bilan farq qiladimi?",
+   "a": "\"Samauto\" MChJ QK tayyor mahsulotining narxi Ozbekistonning barcha hududlarida bir xil."
+  },
+  {
+   "q": "Men O‘zbekistondan emasman, sizning mahsulotingizni harid qilmoqchiman. Kimga murojaat qilishim mumkin?",
+   "a": "O‘z murojaatingizni korxonamizning tashqi savdo bo‘limining: export@samauto.uz elektron pochta manziliga yuborishingiz mumkin."
+  },
+  {
+   "q": "Bugungi vaqtda mahsulotni yetkazib berish muddati qancha?",
+   "a": "Avtomobilni yetkazib berish muddati: rusum, kuzov turi va ushbu turdagi avtomobillarning buyurtmalar soniga bog‘liq."
+  },
+  {
+   "q": "Boshqa hududda joylashgan dilerdan avtomobil sotib olish mumkinmi?",
+   "a": "\"SamAuto\" MChJ QK mahsulotini istalgan rasmiy dilerlik markazidan harid qilishingiz mumkin. Biroq, ishlab chiqaruvchi-zavod tomonidan kafolat davrida xizmat ko‘rsatish qulay bo‘lishi uchun hududingizdagi dilerlik markazlaridan harid qilishingizni tavsiya qilamiz."
+  },
+  {
+   "q": "Mahsulotlarni lizing yoki kreditga sotib olish mumkinmi?",
+   "a": "\"SamAuto\" MChJ QK mahsulotini ham lizingga, ham kreditga harid qilishingiz mumkin. Buning uchun sizga eng qulay shartlarni taklif qilgan bank yoki lizing kompaniyasini tanlash orqali amalga oshirishingiz mumkin."
+  },
+  {
+   "q": "Nima uchun avtomobillarga texnik xizmat ko‘rsatish dilerlik markazlarida amalga oshirilishi kerak?",
+   "a": "SamAuto\" MChJ QK dilerlik markazlari tarmoglida ishlaydigan ustalar (mexaniklar, etektriklar va boshqalar) ISUZU standartlariga muvofiq mahsulotlar bo’yicha maxsus tayyorgartikdan o’tadilar, muntazam ravishda o’z malakalarini zavodda oshiradilar. Avtomobillarni diaqnostika qilish va ta’mirtashda ular maxsus asbob-uskunalar hamda iihozlardan foydalanadilar."
+  },
+  {
+   "q": "Zavod qanday mahsulot ishlab chiqaradi?",
+   "a": "Samarqand avtomobil zavodi ISUZU shassisi negizida shahar va shaharlararo avtobuslari, yuk (yuk koʻtarish qobiliati 2,5 tonnadan 20 tonnagacha), maxsus avtomobillarni (yong’in oʻchirish, kommunal xo’jaliklar uchun, tez tibbiy yordam avtomobillari va boshqalar) hamda pikaplar ishlab chiqaradi."
+  },
+  {
+   "q": "Mahsulotni zavodning o‘zidan to‘g‘ridan-to‘g‘ri sotib olsa boʻladimi?",
+   "a": "Zavod mahsutotini faqat hududiy dilerik markazlaridan sotib olishingiz mumkin. SamAutoning dilerlik markazlari 0 zbekistonning barcha viloyatlarida va chet ellarda mavjud."
+  },
+  {
+   "q": "ISUZU dvigatelining resursi nima?",
+   "a": "ISUZU dvigatelining resursi kamida 1 million kilometrni tashkil etadi."
+  },
+  {
+   "q": "Avtomobillarning texnik xususiyatlari haqida qayerdan ko‘proq ma‘lumot olsam bo‘ladi?",
+   "a": "Sizni qiziqtirgan avtobus/yuk mashinasini tanlab, batafsil texnik xususiyatlarni veb-saytda topishingiz mumkin."
+  },
+  {
+   "q": "Mahsulotlarni mahalliylashtirish darajasi qanday?",
+   "a": "Mahsulotlarni mahalliylashtirish 20 foizdan ortiq (GPL va Iqtisodiyot vazirligi usuli bo‘yicha 21,8 foiz avtobus va 21 foiz yuk avtomobillari; 30,1 foiz avtobus va 26,7 foiz yuk avtomobillari ST-1 usuli bo‘yicha)"
+  },
+  {
+   "q": "BVP ehtiyot qismlari nima?",
+   "a": "BVP (eng yaxshi qiymatli qismlarning qisqartmasi) Isuzu Motors sifat sertifikatidan o‘tgan zavodlarda ishlab chiqarilgan Isuzu asl qismlari. Ularning Yaponiyadagi zavodlarda yaratilgan qismlardan asosiy farqi bir xil sifat darajasida past narxda."
+  }
+ ],
+ "news": [
+  {
+   "t": "SamAuto va Eurasian Machinery hamkorlik memorandumini imzoladi",
+   "d": "2026-10-20",
+   "s": "2026-yil 19-oktabr kuni Samarqand shahrida bo‘lib o‘tgan SamAuto Supplier Day xalqaro biznes uchrashuvi doirasida SamAuto va Eurasian Machinery kompaniyalari o‘rtasida o‘zaro anglashuv memorandumi imzolandi. Memorandum H"
+  },
+  {
+   "t": "Samarqandda SamAuto Supplier Day xalqaro biznes uchrashuvi bo‘lib o‘tdi",
+   "d": "2026-10-19",
+   "s": "2026-yil 19-oktabr kuni Samarqand shahridagi SamAuto avtomobil zavodida O‘zbekiston va Turkiya kompaniyalari o‘rtasida sanoat kooperatsiyasini rivojlantirish va mahalliylashtirishni kengaytirishga bag‘ishlangan SamAuto S"
+  },
+  {
+   "t": "SamAuto va MKBANK dan maxsus taklif!",
+   "d": "2026-09-09",
+   "s": "ISUZUning istalgan modellari qulay shartlar asosida: Ustama: 0% Boshlang‘ich to‘lov va muddat: 20%: 12 oygacha 35%: 15 oygacha 45%: 18 oygacha 60%: 24 oygacha ISUZU avtomobillarini SamAuto rasmiy d"
+  },
+  {
+   "t": "SamAuto va MKBANK o‘rtasida hamkorlik Memorandumi imzolandi.",
+   "d": "2026-09-04",
+   "s": "Hamkorlik doirasida ISUZU avtomobillarini xarid qilish uchun yangi va manfaatli moliyaviy imkoniyat taqdim etiladi. Maqsad oddiy: biznesingiz kerakli avtomobilni tezroq olsin va undan daromad olishni boshlasin."
   }
  ]
 }

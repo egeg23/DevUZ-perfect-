@@ -20,13 +20,13 @@ const kg = (v) => Number(String(v || "").replace(/\s/g, "")) || 0;
 
 /* Разделы их сайта; ключ — для живой сцены (fleet/<ключ>-16|9.bin). */
 export const KINDS = [
-  { cat: "pikap", short: "Pikap", key: "pikap", title: "Pikaplar", line: "D-MAX IRBIS LSE, OKSUS, SAHAR, tez yordam", lead: "ISUZU D-MAX IRBIS LSE", where: "Tog‘ va dala yo‘llari",
+  { cat: "pikap", hd: [4.781, 33.358, 24.438, 43.225], short: "Pikap", key: "pikap", title: "Pikaplar", line: "D-MAX IRBIS LSE, OKSUS, SAHAR, tez yordam", lead: "ISUZU D-MAX IRBIS LSE", where: "Tog‘ va dala yo‘llari",
     bars: [["Quvvat", 190, 300, "190 o.k."], ["Dvigatel hajmi", 2999, 8000, "2 999 sm³"], ["Yuk ko‘tarish", 670, 10000, "670 kg"]], tags: ["4x4", "ISUZU 4JJ3, dizel", "5 o‘rin"], pin: [17, 47], box: [6, 28] },
-  { cat: "yuk", short: "Yuk", key: "yuk", title: "Yuk avtomobillari", line: "NMR, NPR, NQR, FVR, CYZ shassilari: furgon, refrijerator, samosval, bortli, kran", lead: "ISUZU FVR34K", where: "Qurilish maydoni, samosval",
+  { cat: "yuk", hd: [27.281, 33.358, 24.438, 43.225], short: "Yuk", key: "yuk", title: "Yuk avtomobillari", line: "NMR, NPR, NQR, FVR, CYZ shassilari: furgon, refrijerator, samosval, bortli, kran", lead: "ISUZU FVR34K", where: "Qurilish maydoni, samosval",
     bars: [["Quvvat", 240, 400, "240 o.k."], ["Dvigatel hajmi", 7790, 15000, "7 790 sm³"], ["Yuk ko‘tarish", 9300, 16000, "9 300 kg"]], tags: ["To‘liq massa 18 t", "6HK1"], pin: [40, 36], box: [28.5, 50.5] },
-  { cat: "avtobus", short: "Avtobus", key: "avtobus", title: "Avtobuslar", line: "SAZ LE60, gazda yuradigan HC45, HD50", lead: "SAZ LE60", where: "Shahar yo‘nalishlari",
+  { cat: "avtobus", hd: [49.156, 31.443, 26.688, 47.128], short: "Avtobus", key: "avtobus", title: "Avtobuslar", line: "SAZ LE60, gazda yuradigan HC45, HD50", lead: "SAZ LE60", where: "Shahar yo‘nalishlari",
     bars: [["Yo‘lovchilar", 56, 60, "56 o‘rin"], ["Quvvat", 190, 300, "190 o.k."]], tags: ["Past pol", "Evro-5", "2012-yildan konveyerda"], pin: [62, 36], box: [50.5, 74.5] },
-  { cat: "maxsus", short: "Maxsus", key: "vishka", title: "Maxsus texnika", line: "suv tashuvchilar, benzovozlar, sug‘orish-yuvish, avtominoralar, qutqaruvchilar", lead: "ISUZU NQR90L-K", where: "Shahar xo‘jaligi",
+  { cat: "maxsus", hd: [73.406, 35.862, 21.688, 38.292], short: "Maxsus", key: "vishka", title: "Maxsus texnika", line: "suv tashuvchilar, benzovozlar, sug‘orish-yuvish, avtominoralar, qutqaruvchilar", lead: "ISUZU NQR90L-K", where: "Shahar xo‘jaligi",
     bars: [["Yuk ko‘tarish", 5000, 10000, "5 000 kg"], ["Quvvat", 155, 300, "155 o.k."]], tags: ["Avtominora 18 va 22 m", "Avariya-qutqaruv"], pin: [84, 41], box: [74.5, 94] },
 ];
 
@@ -40,7 +40,8 @@ export function lineupBlock(IMG, ic) {
   return `<section class="ln" id="qator" aria-labelledby="ln-h">
 <div class="wrap"><div class="sh rv"><p class="kick">Model qatori</p><h2 id="ln-h">SamAuto’ning barcha texnikasi bitta podiumda</h2><p class="sub">Mashinaga bosing: qayerda ishlashi, raqamlari va barcha modellari.</p></div></div>
 <div class="ln-st" id="ln-st"><div class="ln-in" id="ln-in">
-<picture><source media="(max-width: 767px)" srcset="${IMG}/s/lineup-1400.webp"><img src="${IMG}/s/lineup-2400.webp" width="2400" height="1018" alt="SamAuto texnikasi bitta podiumda: to‘q sariq ISUZU D-MAX, ISUZU FVR samosval, SAZ avtobusi va ISUZU suv tashuvchi" loading="lazy" decoding="async"></picture>
+<img src="${IMG}/s/lineup-2400.webp" srcset="${IMG}/s/lineup-1400.webp 1400w, ${IMG}/s/lineup-2400.webp 2400w, ${IMG}/s/lineup-3200.webp 3200w" sizes="(max-width: 767px) 400vw, 100vw" width="2400" height="1018" alt="SamAuto texnikasi bitta podiumda: to‘q sariq ISUZU D-MAX, ISUZU FVR samosval, SAZ avtobusi va ISUZU suv tashuvchi" loading="lazy" decoding="async">
+${KINDS.map((k) => `<img class="ln-hd" src="${IMG}/s/hd-${k.cat}.webp" width="1200" height="900" alt="" aria-hidden="true" loading="lazy" decoding="async" style="left:${k.hd[0]}%;top:${k.hd[1]}%;width:${k.hd[2]}%;height:${k.hd[3]}%">`).join("")}
 <span class="ln-sp" aria-hidden="true"></span>
 <i class="rl ghost ln-floor" aria-hidden="true"></i>
 ${KINDS.map((k) => `<button type="button" class="ln-hs${k.pin[0] > 70 ? " flip" : ""}" data-k="${k.cat}" style="--x:${k.pin[0]}%;--y:${k.pin[1]}%;--l:${k.box[0]}%;--r:${k.box[1]}%" aria-haspopup="dialog"><span class="ln-pin"><i></i><small>${k.title}</small><b>${esc(k.lead)}</b></span></button>`).join("")}
@@ -87,7 +88,7 @@ export const FVR = [
 export function fvrBlock(IMG) {
   const f = FVR[0];
   return `<section class="fv2" id="fvr" aria-labelledby="fvr-h">
-<div class="fv2-st" aria-hidden="true">${FVR.map((x, i) => `<picture class="fv2-im${i ? "" : " on"}" data-k="${x.k}"><source media="(max-width: 767px)" srcset="${IMG}/s/fvr-${x.k}-900.webp"><img src="${IMG}/s/fvr-${x.k}-1600.webp" alt="" loading="lazy" decoding="async"></picture>`).join("")}<i class="fv2-sw"></i><i class="rl ghost fv2-floor"></i></div>
+<div class="fv2-st" aria-hidden="true">${FVR.map((x, i) => `<picture class="fv2-im${i ? "" : " on"}" data-k="${x.k}"><img src="${IMG}/s/fvr-${x.k}-1600.webp" srcset="${IMG}/s/fvr-${x.k}-900.webp 900w, ${IMG}/s/fvr-${x.k}-1600.webp 1600w, ${IMG}/s/fvr-${x.k}-2400.webp 2400w" sizes="100vw" alt="" loading="lazy" decoding="async"></picture>`).join("")}<i class="fv2-sw"></i><i class="rl ghost fv2-floor"></i></div>
 <div class="wrap fv2-t">
 <p class="kick">Yuk avtomobillari · ISUZU FVR</p><h2 id="fvr-h">Bitta shassi, uch xil ish</h2>
 <p class="sub">Bitta FVR shassisida samosval, tentli bort va furgon yig‘iladi. Kuzovni tanlang, podiumdagi mashina ko‘z oldingizda o‘zgaradi.</p>
@@ -141,17 +142,51 @@ export function dmaxBlock(IMG, ic) {
 </div></div></div></section>`;
 }
 
+/* Рассрочка: условия — их новость «SamAuto va MKBANK dan maxsus taklif!»
+   (09.09.2026): ustama 0%, первый взнос 20/35/45/60% — до 12/15/18/24 мес.
+   Цену вводит сам клиент со слов дилера: своих цен на сайте нет. */
+export const PLAN = [[20, 12], [35, 15], [45, 18], [60, 24]];
 export function payBlock() {
   return `<section class="py" id="tolov" aria-labelledby="py-h"><div class="wrap py-g">
-<div class="rv"><p class="kick">Muddatli to‘lov</p><h2 id="py-h">ISUZU foizsiz kreditga</h2><p class="sub">Mikrokreditbank bilan: ustama yo‘q, to‘lov 24 oygacha bo‘linadi. Ariza tanlangan model va muddat bilan darhol dilerga boradi.</p>
-<button type="button" class="btn btn-red" data-ariza="kredit">Muddatli to‘lovga ariza</button></div>
-<ul class="py-n">${[["0%", "ustama"], ["24", "oygacha"], ["MKBANK", "hamkor bank"]].map(([n, l], i) => `<li class="rv"><i class="rl" aria-hidden="true" style="--d:${i * 0.6}s"></i><b>${n}</b><span>${l}</span></li>`).join("")}</ul>
+<div class="rv"><p class="kick">Muddatli to‘lov · MKBANK</p><h2 id="py-h">ISUZU foizsiz kreditga</h2><p class="sub">Ustama 0%. Boshlang‘ich to‘lov qancha katta bo‘lsa, muddat shuncha uzun: 20% bilan 12 oygacha, 60% bilan 24 oygacha.</p>
+<ul class="py-n">${[["0%", "ustama"], ["24", "oygacha"], ["MKBANK", "hamkor bank"]].map(([n, l], i) => `<li><i class="rl" aria-hidden="true" style="--d:${i * 0.6}s"></i><b>${n}</b><span>${l}</span></li>`).join("")}</ul></div>
+<form class="calc rv" id="calc" autocomplete="off"><p class="h3">Oylik to‘lovni hisoblang</p>
+<label><span>Diler aytgan narx, so‘m</span><input id="calc-p" inputmode="numeric" placeholder="Narxni kiriting" aria-describedby="calc-n"></label>
+<fieldset><legend>Boshlang‘ich to‘lov</legend><div class="seg" role="radiogroup">${PLAN.map(([p, m], i) => `<button type="button" role="radio" aria-checked="${i ? "false" : "true"}" data-p="${p}" data-m="${m}">${p}%</button>`).join("")}</div></fieldset>
+<dl class="calc-r"><div><dt>Boshlang‘ich to‘lov</dt><dd id="calc-a">…</dd></div><div><dt>Muddat</dt><dd id="calc-m">12 oy</dd></div><div class="big"><dt>Oyiga</dt><dd id="calc-o">…</dd></div></dl>
+<button type="button" class="btn btn-red" data-ariza="kredit">Shu shartlar bilan ariza</button>
+<p class="note" id="calc-n">SamAuto va MKBANK maxsus taklifi, 09.09.2026. Narxni rasmiy diler aytadi, hisob taxminiy.</p></form>
+</div></section>`;
+}
+
+/* Гарантия и цифры — их «Ko‘p so‘raladigan savollar». */
+export function warrantyBlock() {
+  const L = [["1 yil", "yoki 50 000 km: zavod kafolati, qaysi biri oldin kelsa"], ["2 yil", "yoki 100 000 km: D-MAX uchun kafolat"], ["1 mln km", "ISUZU dvigatelining resursi, kamida"], ["20%+", "mahalliylashtirish: avtobuslarda 21,8%, yuk avtomobillarida 21%"]];
+  return `<section class="kf" id="kafolat" aria-labelledby="kf-h"><div class="wrap">
+<div class="sh rv"><p class="kick">Kafolat va servis</p><h2 id="kf-h">Zavod kafolati va ISUZU resursi</h2><p class="sub">Narx O‘zbekistonning barcha hududlarida bir xil. Texnik xizmat dilerlik markazlarida, ISUZU standartlari bo‘yicha o‘qitilgan ustalar qo‘lida.</p></div>
+<ul class="kf-l">${L.map(([n, t], i) => `<li class="rv"><i class="rl" aria-hidden="true" style="--d:${i * 0.5}s"></i><b>${n}</b><span>${t}</span></li>`).join("")}</ul>
+</div></section>`;
+}
+
+export function faqBlock() {
+  return `<section class="fq" id="savollar" aria-labelledby="fq-h"><div class="wrap fq-g">
+<div class="sh rv"><p class="kick">Ko‘p so‘raladigan savollar</p><h2 id="fq-h">Xaridorlar nimani so‘raydi</h2><p class="sub">Javoblar SamAuto saytidan. Qolgan savollarni dilerga yoki Telegram’ga yozing.</p></div>
+<div class="fq-l">${CAT.faq.map((f) => `<details class="rv"><summary><span>${esc(f.q)}</span><i aria-hidden="true"></i></summary><p>${esc(f.a)}</p></details>`).join("")}</div>
+</div></section>`;
+}
+
+export function newsBlock(IMG) {
+  const mon = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
+  const day = (d) => `${+d.slice(8, 10)}-${mon[+d.slice(5, 7) - 1]}, ${d.slice(0, 4)}`;
+  return `<section class="nw" id="yangiliklar" aria-labelledby="nw-h"><div class="wrap">
+<div class="nw-h rv"><div class="sh"><p class="kick">Yangiliklar</p><h2 id="nw-h">SamAuto’da nima bo‘lyapti</h2></div><a class="btn btn-line" href="https://samauto.uz/uz/news" target="_blank" rel="noopener">Barcha yangiliklar</a></div>
+<ul class="nw-l">${CAT.news.map((n, i) => `<li class="rv" style="--i:${i}"><a href="https://samauto.uz/uz/news" target="_blank" rel="noopener"><span class="nw-im"><img src="${IMG}/news/${i}.webp" alt="" loading="lazy" decoding="async"></span><time datetime="${n.d}">${day(n.d)}</time><b>${esc(n.t)}</b><span>${esc(n.s.split(/(?<=[.!?])\s/)[0])}</span></a></li>`).join("")}</ul>
 </div></section>`;
 }
 
 export function bizBlock(IMG) {
   return `<section class="bz" id="biznes" aria-labelledby="bz-h">
-<picture class="bz-bg" aria-hidden="true"><source media="(max-width: 767px)" srcset="${IMG}/s/road-900.webp"><img src="${IMG}/s/road-1600.webp" alt="" loading="lazy" decoding="async"></picture>
+<picture class="bz-bg" aria-hidden="true"><img src="${IMG}/s/road-1600.webp" srcset="${IMG}/s/road-900.webp 900w, ${IMG}/s/road-1600.webp 1600w, ${IMG}/s/road-2400.webp 2400w" sizes="100vw" alt="" loading="lazy" decoding="async"></picture>
 <div class="wrap bz-g"><div class="rv"><p class="kick">Biznes uchun</p><h2 id="bz-h">Kompaniya kabineti: avtopark, tenderlar, muddatli to‘lov</h2>
 <p class="sub">Logistlar, quruvchilar va hokimliklar uchun: o‘z avtoparki, hujjatlar, servis muddatlari, tender va auksionda ishtirok, muddatli to‘lov arizalari bir joyda.</p></div>
 <div class="bz-c rv"><p class="bz-h"><b>Korporativ kabinet</b><span>Avtopark · Tenderlar · Auksion · Muddatli to‘lov</span></p>
@@ -161,7 +196,7 @@ export function bizBlock(IMG) {
 
 export function cityBlock(IMG) {
   const bus = CAT.items.filter((i) => i.cat === "avtobus");
-  const card = (img, alt, h, p, list) => `<article class="ct rv"><picture><source media="(max-width: 767px)" srcset="${IMG}/s/${img}-900.webp"><img src="${IMG}/s/${img}-1600.webp" alt="${alt}" loading="lazy" decoding="async"></picture><h3>${h}</h3><p>${p}</p>${list}</article>`;
+  const card = (img, alt, h, p, list) => `<article class="ct rv"><picture><img src="${IMG}/s/${img}-1600.webp" srcset="${IMG}/s/${img}-900.webp 900w, ${IMG}/s/${img}-1600.webp 1600w, ${IMG}/s/${img}-2400.webp 2400w" sizes="(max-width: 767px) 100vw, 50vw" alt="${alt}" loading="lazy" decoding="async"></picture><h3>${h}</h3><p>${p}</p>${list}</article>`;
   return `<section class="cy" id="shahar" aria-labelledby="cy-h"><div class="wrap">
 <div class="sh rv"><p class="kick">Avtobuslar va maxsus texnika</p><h2 id="cy-h">Har kuni shahringizda ko‘rinadigan texnika</h2></div>
 <div class="cy-g">
@@ -184,27 +219,30 @@ export function dealerBlock(IMG, ic) {
 <div class="dl-r rv"><label class="dl-f"><span>Viloyat</span><select id="dl-reg"><option value="">Barcha viloyatlar</option>${regions.map((r) => `<option>${r}</option>`).join("")}</select></label>
 <ul class="dl-l" id="dl-l"></ul></div>
 </div>
-<div class="sv rv"><picture><source media="(max-width: 767px)" srcset="${IMG}/s/service-900.webp"><img src="${IMG}/s/service-1600.webp" alt="ISUZU yuk mashinasi servisda, kabina ko‘tarilgan, usta diagnostika qilmoqda" loading="lazy" decoding="async"></picture>
-<form class="sv-f" id="sv-f"><p class="h3">Servisga yozilish</p>
+<div class="sv rv"><picture><img src="${IMG}/s/service-1600.webp" srcset="${IMG}/s/service-900.webp 900w, ${IMG}/s/service-1600.webp 1600w, ${IMG}/s/service-2400.webp 2400w" sizes="100vw" alt="ISUZU yuk mashinasi servisda, kabina ko‘tarilgan, usta diagnostika qilmoqda" loading="lazy" decoding="async"></picture>
+<form class="sv-f" id="sv-f"><div class="sv-t" role="tablist" aria-label="Murojaat turi"><button type="button" role="tab" aria-selected="true" data-t="sv">Servisga yozilish</button><button type="button" role="tab" aria-selected="false" data-t="ej">Ehtiyot jihoz</button></div>
 <label><span>Model</span><select name="model">${[...new Set(CAT.items.map((i) => i.chassis).filter(Boolean))].map((c) => `<option>${/^(LE60|HD50|HC45)$/.test(c) ? "SAZ" : "ISUZU"} ${c}</option>`).join("")}</select></label>
-<label><span>Xizmat</span><select name="xizmat"><option>Rejali texnik xizmat</option><option>Ta’mirlash</option><option>Kafolat bo‘yicha</option><option>Ehtiyot jihozlar</option></select></label>
+<label data-g="ej" hidden><span>VIN yoki shassi raqami</span><input name="vin" maxlength="17" placeholder="Masalan, JAA… (17 belgi)"></label>
+<label data-g="ej" hidden><span>Qaysi qism kerak</span><input name="qism" placeholder="Tormoz kolodkasi, filtr…"></label>
+<p class="note" data-g="ej" hidden>Asl ISUZU va BVP qismlari: BVP Isuzu Motors sertifikatidan o‘tgan zavodlarda chiqariladi, sifati bir xil, narxi pastroq.</p>
+<label data-g="sv"><span>Xizmat</span><select name="xizmat"><option>Rejali texnik xizmat</option><option>Ta’mirlash</option><option>Kafolat bo‘yicha</option><option>Ehtiyot jihozlar</option></select></label>
 <label><span>Diler</span><select name="diler" id="sv-d">${uz.map((d) => `<option>${esc(d.name)}, ${d.region}</option>`).join("")}</select></label>
-<label><span>Sana</span><input type="date" name="sana" required></label>
-<button type="submit" class="btn btn-red">Yozilish</button></form></div>
+<label data-g="sv"><span>Sana</span><input type="date" name="sana"></label>
+<button type="submit" class="btn btn-red" id="sv-b">Yozilish</button></form></div>
 </div></section>`;
 }
 
 export function worldBlock(IMG) {
   const W = [["D-MAX klubi", "egalarining sayohatlari, 2025-yilda Qirg‘izistonga"], ["D-MAX quest", "televizor va YouTube’dagi sayohat-kvest va shou"], ["Automechanic CV", "mexaniklar musobaqasi, 13 yildan beri"], ["Aral Tour", "Orol dengiziga ekspeditsiya"]];
   return `<section class="wd" id="dunyo" aria-labelledby="wd-h">
-<picture class="wd-bg" aria-hidden="true"><source media="(max-width: 767px)" srcset="${IMG}/s/club-900.webp"><img src="${IMG}/s/club-1600.webp" alt="" loading="lazy" decoding="async"></picture>
+<picture class="wd-bg" aria-hidden="true"><img src="${IMG}/s/club-1600.webp" srcset="${IMG}/s/club-900.webp 900w, ${IMG}/s/club-1600.webp 1600w, ${IMG}/s/club-2400.webp 2400w" sizes="100vw" alt="" loading="lazy" decoding="async"></picture>
 <div class="wrap wd-t"><p class="kick">SamAuto dunyosi</p><h2 id="wd-h">Mashina atrofidagi odamlar har qanday reklamadan kuchli</h2>
 <ul class="wd-l">${W.map(([h, p], i) => `<li class="rv"><i class="rl" aria-hidden="true" style="--d:${i * 0.5}s"></i><b>${h}</b><span>${p}</span></li>`).join("")}</ul></div></section>`;
 }
 
 export function factoryBlock(IMG) {
   return `<section class="fc" id="zavod" aria-labelledby="fc-h">
-<picture class="fc-bg" aria-hidden="true"><source media="(max-width: 767px)" srcset="${IMG}/s/factory-900.webp"><img src="${IMG}/s/factory-1600.webp" alt="" loading="lazy" decoding="async"></picture>
+<picture class="fc-bg" aria-hidden="true"><img src="${IMG}/s/factory-1600.webp" srcset="${IMG}/s/factory-900.webp 900w, ${IMG}/s/factory-1600.webp 1600w, ${IMG}/s/factory-2400.webp 2400w" sizes="100vw" alt="" loading="lazy" decoding="async"></picture>
 <div class="wrap fc-t rv"><p class="kick">Mahalliylashtirish va zavod</p><h2 id="fc-h">Samarqandda ishlab chiqarilgan</h2>
 <p class="sub">Avtobus va yuk mashinalari qanday yig‘iladi, joyida nima ishlab chiqariladi, qanday qilib yetkazib beruvchi bo‘lish mumkin: mahalliylashtirish, hamkorlik, karyera. SamAuto endi Anadolu ISUZU tarkibida.</p>
 <ul class="fc-l">${["Mahalliylashtirish", "Kafolat", "Ehtiyot jihozlar", "Karyera"].map((t) => `<li>${t}</li>`).join("")}</ul></div></section>`;

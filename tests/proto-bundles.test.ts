@@ -2031,7 +2031,12 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
     assert.ok(statSync(`public/protos/samauto/fleet/${k.key}-16.bin`).size < 8 * 1048576, `${k.key}: живая сцена тяжелее 8 МБ`);
   }
   for (const it of cat.items) assert.ok(existsSync(`public/protos/samauto/cat/${(it as unknown as { n: number }).n}.webp`), `нет фото ${it.title}`);
-  assert.doesNotMatch(page, /narx[^<]{0,20}\d|so‘m/i, "цены в макете: на их сайте цены скрыты");
+  assert.doesNotMatch(page, /narx[^<]{0,20}\d|\d[\d ]*\s?so‘m/i, "цены в макете: на их сайте цены скрыты");
+  /* Полезное с их сайта (22.10.2026): калькулятор MKBANK — цену вводит сам
+     клиент; гарантия, вопросы, новости; сравнение моделей с PDF. */
+  for (const id of ["calc", "kafolat", "savollar", "yangiliklar", "cmp-d"]) assert.match(page, new RegExp(`id="${id}"`), `нет блока #${id}`);
+  assert.ok(cat.items.filter((i) => (i as unknown as { pdf?: string }).pdf?.startsWith("https://ncdn.samauto.uz/")).length >= 30, "нет PDF характеристик");
+  for (const k of ["pikap", "yuk", "avtobus", "maxsus"]) assert.ok(existsSync(`public/protos/samauto/s/hd-${k}.webp`), `нет чёткого кадра ${k}`);
   /* D-MAX 360°: стенд листается пальцем, цвет и диски — шейдером, подсказка
      с рукой до первого касания (владелец, 21.10.2026). */
   const tt = JSON.parse(readFileSync("scripts/protos/samauto/tt.json", "utf8")) as { n: number; wheel: Record<"d" | "m", unknown[]> };
