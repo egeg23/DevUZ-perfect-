@@ -44,6 +44,12 @@ export type BotSession = {
    * боте, а бот о ссылке ничего не знал.
    */
   ref?: string;
+  /**
+   * Пишет, что он наш сотрудник, а в «Команде» его нет (владелец,
+   * 22.10.2026): первичка с ним не говорит и лидом его не заводит —
+   * lib/admin/staff-helper.ts.
+   */
+  staffClaim?: boolean;
   updatedAt: number;
 };
 

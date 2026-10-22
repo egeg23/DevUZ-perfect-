@@ -147,14 +147,6 @@ export async function recordInbound(input: {
   const phone = (input.phone ?? "").trim();
   if (!handle && !userId && !phone) return { matched: false };
 
-  // Сравниваем в общем виде: в проспекте адрес мог остаться ссылкой.
-  const { data: rows } = await db
-    .from("prospects")
-    .select(PROSPECT_FIELDS)
-    .eq("status", "sent")
-    .order("sent_at", { ascending: false })
-    .limit(500);
-
   /**
    * Сначала по id, и только потом по адресу.
    *
@@ -165,12 +157,37 @@ export async function recordInbound(input: {
    *
    * Обратный порядок был бы хуже и по другой причине: адрес человек меняет,
    * id — нет.
+   *
+   * Трафик базы (22.10.2026): каждое входящее рабочему аккаунту — и от
+   * посторонних тоже — читало 500 касаний целиком, с письмом и обходом
+   * сайта, ~600 КБ за раз. Теперь по id — одна строка, а сверка по адресу и
+   * номеру — по лёгким колонкам (MATCH_FIELDS); целиком читается только
+   * найденное касание.
    */
-  const sent = (rows ?? []) as unknown as ProspectRow[];
-  let prospect: ProspectRow | null =
-    (userId ? sent.find((row) => String(row.target_user_id ?? "") === userId) : undefined) ??
-    (handle ? sent.find((row) => normalizeHandle(row.target) === handle) : undefined) ??
-    null;
+  let prospect: ProspectRow | null = null;
+  if (/^\d+$/.test(userId)) {
+    const { data } = await db
+      .from("prospects")
+      .select(PROSPECT_FIELDS)
+      .eq("status", "sent")
+      .eq("target_user_id", userId)
+      .order("sent_at", { ascending: false })
+      .limit(1);
+    prospect = ((data ?? [])[0] as unknown as ProspectRow | undefined) ?? null;
+  }
+
+  // Сравниваем в общем виде: в проспекте адрес мог остаться ссылкой.
+  let matchId: string | null = null;
+  if (!prospect && handle) {
+    const { data: rows } = await db
+      .from("prospects")
+      .select(MATCH_FIELDS)
+      .eq("status", "sent")
+      .order("sent_at", { ascending: false })
+      .limit(500);
+    const sent = (rows ?? []) as unknown as MatchRow[];
+    matchId = sent.find((row) => normalizeHandle(row.target) === handle)?.id ?? null;
+  }
 
   /**
    * Не нашли среди отправленных ботом — ищем среди написанных руками.
@@ -181,26 +198,30 @@ export async function recordInbound(input: {
    * карточки (findHandTouch). Сюда же попадает письмо, которое ещё стоит в
    * очереди бота: менеджер написал раньше бота, клиент уже ответил.
    */
-  if (!prospect) {
+  if (!prospect && !matchId) {
     // Отмеченные «Связался сам» — первыми: про них менеджер уже сказал, что
     // написал. Потом те, что он отметить не успел.
     const [marked, unmarked] = await Promise.all([
       db
         .from("prospects")
-        .select(PROSPECT_FIELDS)
+        .select(MATCH_FIELDS)
         .eq("status", "sent")
         .eq("target_kind", "manual")
         .order("touched_at", { ascending: false, nullsFirst: false })
         .limit(300),
       db
         .from("prospects")
-        .select(PROSPECT_FIELDS)
+        .select(MATCH_FIELDS)
         .in("status", ["manual", "sending"])
         .order("claimed_at", { ascending: false, nullsFirst: false })
         .limit(300),
     ]);
-    const hand = [...(marked.data ?? []), ...(unmarked.data ?? [])] as unknown as ProspectRow[];
-    prospect = findHandTouch(hand, { handle, phone });
+    const hand = [...(marked.data ?? []), ...(unmarked.data ?? [])] as unknown as MatchRow[];
+    matchId = findHandTouch(hand, { handle, phone })?.id ?? null;
+  }
+  if (!prospect && matchId) {
+    const { data } = await db.from("prospects").select(PROSPECT_FIELDS).eq("id", matchId).maybeSingle();
+    prospect = (data as unknown as ProspectRow | null) ?? null;
   }
   if (!prospect) return { matched: false };
 
@@ -227,6 +248,11 @@ export async function recordInbound(input: {
 
 const PROSPECT_FIELDS =
   "id, host, status, target, target_kind, target_user_id, contacts, message, claimed_by, touched_by, lead_id, ai_handling, closed_reason, proto_url, hello_at, pitch_at, checked_at, walked, autopilot_at";
+
+/** Чем узнаётся касание по входящему: id, @адрес, номер. Без письма и обхода сайта. */
+const MATCH_FIELDS = "id, status, target, target_kind, target_user_id, contacts";
+
+type MatchRow = HandTouch & { id: string; target_user_id: string | number | null };
 
 /** Строка касания из PROSPECT_FIELDS. Лид и закрепление здесь только читаются. */
 type ProspectRow = HandTouch &
