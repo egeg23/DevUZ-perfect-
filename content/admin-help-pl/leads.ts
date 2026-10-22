@@ -474,6 +474,23 @@ export const leadsSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "trash",
+        roles: ["admin", "head"],
+        title: "«🗑 Мусор»: usuń leada, który nie jest leadem",
+        body: [
+          "Pod kartą leada, która przychodzi Ci na prywatny czat bota, jest przycisk **«🗑 Мусор»** (śmieci). Jest dla zgłoszeń, które leadami nie były: pracownik napisał do bota, spam, test, przypadkowa osoba. Po kliknięciu lead znika z bazy w całości, wypada z kolejki (nikt go już nie dostanie), a we wszystkich kopiach karty zamiast przycisków pojawia się «🗑 Удалён как мусор — @ник». Twoja decyzja z 22.10.2026.",
+          "Przycisk widzą tylko właściciel i kierownik, menedżerom nie przychodzi, a cudzego kliknięcia bot nie przyjmie. Usuniętego leada nie da się przywrócić: w dzienniku zostaje wpis «usunął leada jako śmieci» z numerem zgłoszenia i osobą, która kliknęła. Prawdziwy klient, którego nie potrzebujemy, to **«🗄 Отклонить»** (odrzuć), a nie śmieci: wtedy lead zostaje w bazie i w raportach.",
+        ],
+      },
+      {
+        id: "bot-card",
+        title: "Karta leada w Telegramie: krótko",
+        body: [
+          "Karta nowego leada w bocie jest krótka: jak ciepły jest lead, prostymi słowami («🔥 Горячий» gorący, «🟡 Тёплый» ciepły, «👤 Просит живого человека» prosi o człowieka), numer zgłoszenia, kto i skąd pisał, **«Что хочет»** (czego chce), budżet i termin, jeśli klient je podał, oraz **«Можно начать так»**: pierwsza wiadomość, którą kopiujesz jednym kliknięciem.",
+          "Punkty, rozbiór według BANT, «co już powiedziano klientowi» i «o co nie pytać ponownie» zniknęły z Telegrama (właściciel, 22.10.2026: menedżerowie tego nie rozumieli). Cała rozmowa i szczegóły są w karcie leada w panelu, przycisk «🔓 Открыть карточку».",
+        ],
+      },
+      {
         id: "list",
         title: "Lista leadów: filtry i kolumny",
         body: {

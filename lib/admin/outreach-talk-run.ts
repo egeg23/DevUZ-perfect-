@@ -10,10 +10,12 @@ import {
   markAnswered,
   pendingTalks,
   queueReply,
+  tellReply,
   threadFor,
   type Inbound,
 } from "@/lib/admin/outreach-talk-store";
 import { objectionOf, objectionReply } from "@/lib/admin/objections";
+import { heldUntil } from "@/lib/admin/reply-heads-up";
 import { aiStyleProblems, humanSendAfter, plainHost, withoutOpener } from "@/lib/admin/sales-after-reply";
 import { runQualifyTurn } from "@/lib/qualify/engine";
 import { buildSystemPrompt } from "@/lib/qualify/prompt";
@@ -118,7 +120,7 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
       prospectId: inbound.prospectId,
       leadId: inbound.leadId,
       body: objectionReply(objection, { lang: locale, host: inbound.siteHost ? plainHost(inbound.siteHost) : null, niche: inbound.niche }),
-      sendAfter: humanSendAfter(inbound.createdAt, Date.now()),
+      sendAfter: await replyAfter(inbound),
     });
     return "replied";
   }
@@ -187,11 +189,13 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
 
   // Пауза, как человек набирает: 40–120 секунд от сообщения клиента. Свип
   // ходит раз в пять минут, и часто пауза уже есть — тогда сразу.
+  // Квалификация закрыта — разговор и так уходит человеку, строку «модель
+  // ответит сама» ему не шлём.
   await queueReply({
     prospectId: inbound.prospectId,
     leadId: inbound.leadId,
     body: text.trim(),
-    sendAfter: humanSendAfter(inbound.createdAt, Date.now()),
+    sendAfter: qualified ? humanSendAfter(inbound.createdAt, Date.now()) : await replyAfter(inbound),
   });
 
   if (qualified) {
@@ -202,6 +206,19 @@ async function answerOne(inbound: Inbound): Promise<Outcome> {
   }
 
   return "replied";
+}
+
+/**
+ * Когда уходит ответ модели. У касания есть хозяин — ему «Ваш лид ответил»
+ * с «✋ Отвечу сам», и ответ ждёт окна (lib/admin/reply-heads-up.ts). Ничьё
+ * (автопрогон до макета) или строка не ушла — обычная пауза «как человек».
+ */
+async function replyAfter(inbound: Inbound): Promise<string | null> {
+  const now = Date.now();
+  const human = humanSendAfter(inbound.createdAt, now);
+  if (inbound.untilMockup || !inbound.managerChatId) return human;
+  const told = await tellReply(inbound.prospectId, inbound.body).catch(() => false);
+  return heldUntil(human, now, told);
 }
 
 function message(error: unknown): string {

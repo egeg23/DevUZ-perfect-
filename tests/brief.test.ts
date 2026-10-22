@@ -172,8 +172,10 @@ test("подписка, «от» и «по запросу» не смешива�
   assert.equal(json.ownerOnly, true, "«от $26 000» входит в разовую сумму целиком");
   const text = String(calls.find((call) => call.method === "sendMessage")?.body.text);
   assert.match(text, /от \$34 900 \+ \$550\/мес/);
-  assert.match(text, /подписка/);
-  assert.match(text, /по запросу, цену назовёт менеджер/);
+  // Подписка и «по запросу» — в шапке брифа (briefHeading); блок «уже
+  // сказано клиенту» из карточки убран (владелец, 22.10.2026: короче).
+  assert.match(text, /\$550\/мес/);
+  assert.match(text, /— по запросу/);
   const session = claimHandoff(new URL(json.botUrl).searchParams.get("start") ?? "", 43);
   assert.equal(session?.brief?.monthlyUsd, 550);
   assert.equal(session?.brief?.fromPrice, true);

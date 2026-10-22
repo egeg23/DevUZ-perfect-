@@ -93,6 +93,9 @@ import {
   saveCircleFromBot,
   takeCircle,
 } from "@/lib/admin/circle-bot";
+import { canTrash, trashedLabel } from "@/lib/admin/lead-trash";
+import { trashLead } from "@/lib/admin/lead-trash-store";
+import { takeOverFromBot } from "@/lib/admin/outreach-talk-store";
 import { answerStaff, claimsStaff, helperLang, notStaffText } from "@/lib/admin/staff-helper";
 import { alertStaffClaim, claimedBefore } from "@/lib/admin/staff-helper-store";
 import { problemText, receivedText, transcribesVoice, voiceFromMessage, voiceProblem } from "@/lib/admin/voice-notes";
@@ -1537,6 +1540,32 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     return;
   }
 
+  // «✋ Отвечу сам» под «Ваш лид ответил» (lib/admin/reply-heads-up.ts):
+  // модель молчит, её ещё не ушедший ответ снимается. Только в личке.
+  if (parts[0] === "tk") {
+    const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+    if (!staff || !parts[1] || chatId !== query.from?.id) {
+      await answerCallback(query.id, "Недоступно");
+      return;
+    }
+    const taken = await takeOverFromBot(parts[1], staff);
+    if (!taken.ok) {
+      await answerCallback(query.id, taken.reason === "gone" ? "Касания уже нет" : "Это касание ведёт другой человек");
+      return;
+    }
+    await answerCallback(query.id, "Разговор ваш, модель молчит");
+    if (query.message) {
+      await markBriefHandled(query.message.chat.id, query.message.message_id, "✋ Отвечаете сами");
+      const said = `Модель больше не отвечает ${esc(taken.host)}. Ответить клиенту можно прямо в карточке лида — уйдёт с того же аккаунта.`;
+      if (taken.leadId) {
+        await sendWithButtons(query.message.chat.id, said, [{ text: "Открыть переписку", panel: `/admin/leads/${taken.leadId}#talk` }]);
+      } else {
+        await sendMessage(query.message.chat.id, said);
+      }
+    }
+    return;
+  }
+
   // Порция дня: тоже личка сотрудника, и тоже только своя.
   if (parts[0] === "tp") {
     if (chatId !== undefined && isSalesChat(chatId)) {
@@ -1566,6 +1595,27 @@ async function handleButton(query: NonNullable<Update["callback_query"]>) {
     // Кнопка-статус под разобранным брифом: нажатие ничего не меняет, но
     // Telegram ждёт ответа, иначе у нажавшего висит «часики».
     await answerCallback(query.id, "Этот лид уже разобран");
+    return;
+  }
+
+  // «🗑 Мусор» — владелец и руководитель удаляют лид, и он уходит из
+  // очереди (lib/admin/lead-trash.ts). Права решает trashLead по роли, а не
+  // то, что кнопка нарисована: колбэк можно прислать и руками.
+  if (action === "trash") {
+    const staff = query.from?.id ? await staffByTelegramId(query.from.id) : null;
+    if (!staff || !canTrash(staff.role) || !leadId) {
+      await answerCallback(query.id, "Только владелец и руководитель");
+      return;
+    }
+    const here = query.message ? { chatId: query.message.chat.id, messageId: query.message.message_id } : undefined;
+    const trashed = await trashLead(leadId, staff, here);
+    if (!trashed.ok) {
+      await answerCallback(query.id, trashed.reason === "gone" ? "Лида уже нет" : "Не удалось удалить — откройте карточку");
+      if (trashed.reason === "gone" && here) await markBriefHandled(here.chatId, here.messageId, "Лида уже нет");
+      return;
+    }
+    await answerCallback(query.id, "Удалён, из очереди убран");
+    if (here) await markBriefHandled(here.chatId, here.messageId, trashedLabel(staff));
     return;
   }
 
