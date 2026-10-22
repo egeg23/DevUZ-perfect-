@@ -90,3 +90,9 @@ test("входящее рабочему аккаунту: касание ище�
   }
   assert.equal(body.match(/\.select\(MATCH_FIELDS\)/g)?.length, 3);
 });
+
+test("счёт трафика: у каждого запуска своя строка, выкатка не стирает счёт", () => {
+  const egress = read("lib/egress.mjs");
+  assert.match(egress, /const RUN = `\$\{process\.pid\}-\$\{Date\.now\(\)\.toString\(36\)\}`;/);
+  assert.match(egress, /key: `egress-tally:\$\{snap\.day\}:\$\{processName\(\)\}:\$\{RUN\}`/);
+});
