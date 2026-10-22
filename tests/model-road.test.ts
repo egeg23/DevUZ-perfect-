@@ -337,5 +337,5 @@ test("у каждого вызова модели своя метка — по �
   assert.deepEqual(unlabeled, [], "вызов без метки — его расход не с чем сравнить");
   const road = readFileSync(new URL("lib/model-road.ts", root), "utf8");
   assert.match(road, /from\("model_usage"\)\.insert/);
-  assert.match(road, /meter\(site, url, response\.clone\(\)\)\.catch/, "учёт не должен ронять ответ");
+  assert.match(road, /meter\(site, url, response\.clone\(\)[^)]*\)\.catch/, "учёт не должен ронять ответ");
 });

@@ -128,6 +128,10 @@ const PRICES: Array<{ match: RegExp; input: number; output: number }> = [
   { match: /sonnet/i, input: 2, output: 10 },
   { match: /haiku-4/i, input: 1, output: 5 },
   { match: /haiku/i, input: 0.1, output: 0.5 },
+  // Qwen по API у облачного провайдера; на своём сервере за токен не
+  // платим, платим за сервер в месяц (docs/ai-staff/qwen.md). Цена своего
+  // провайдера — QWEN_PRICE_IN / QWEN_PRICE_OUT в .env.
+  { match: /qwen/i, input: Number(process.env.QWEN_PRICE_IN) || 0.4, output: Number(process.env.QWEN_PRICE_OUT) || 1.6 },
 ];
 
 export type UsageRow = {
