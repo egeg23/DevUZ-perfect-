@@ -1,0 +1,44 @@
+# Claude против Qwen на одних разговорах и одних проверках — по кнопке.
+#
+# Задание владельца 22.10.2026: прежде чем переводить живой разговор с
+# клиентом с Opus на Qwen, нужны цифры — какая доля ответов прошла бы наши
+# же проверки перед отправкой, сколько стоит ответ, как пишет по-узбекски
+# (docs/ai-staff/qwen.md). Скрипт — scripts/llm-compare.mjs, проверки —
+# lib/llm/compare.ts. Разговоры выдуманные, в базу ничего не пишется.
+#
+# Стоит денег: каждый запуск платит за все вызовы и печатает, сколько.
+# Нагрузки на сервер нет — только сетевые вызовы моделей, как у замера.
+name: Сравнение Claude и Qwen
+
+on:
+  workflow_dispatch:
+    inputs:
+      set:
+        description: Набор — all, talk (наша переписка до макета) или saas (ИИ-менеджер клиента)
+        default: all
+      repeat:
+        description: Сколько раз прогнать каждый разговор (1-5)
+        default: "1"
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Сравнение на сервере
+    runs-on: ubuntu-latest
+    steps:
+      - name: Прогнать по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 20m
+          script: |
+            set -uo pipefail
+            cd "${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
+            set -a; . ./.env; set +a
+            export NODE_OPTIONS=--use-env-proxy
+            node --import ./tests/alias-hook.mjs scripts/llm-compare.mjs "${{ inputs.set }}" "${{ inputs.repeat }}"

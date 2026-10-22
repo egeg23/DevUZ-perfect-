@@ -186,6 +186,17 @@ services:
       # Supabase (app.PROXYAPI_KEY) — тогда строка здесь пустая.
       PROXYAPI_KEY: ${PROXYAPI_KEY:-}
 
+      # Qwen рядом с Claude (lib/llm/route.ts, docs/ai-staff/qwen.md). Пусто —
+      # всё на Claude; удобнее держать в хранилище секретов.
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-}
+      QWEN_API_KEY: ${QWEN_API_KEY:-}
+      QWEN_MODEL: ${QWEN_MODEL:-}
+      QWEN_EXTRA: ${QWEN_EXTRA:-}
+      QWEN_SITES: ${QWEN_SITES:-}
+      QWEN_LIVE: ${QWEN_LIVE:-}
+      QWEN_PRICE_IN: ${QWEN_PRICE_IN:-}
+      QWEN_PRICE_OUT: ${QWEN_PRICE_OUT:-}
+
       # Прокси для исходящих запросов. Нужен, если сервер стоит в стране,
       # которую Anthropic не обслуживает: запрос оттуда отвергается на
       # границе с 403, не доходя до API. Пусто — идём напрямую.

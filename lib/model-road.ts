@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { directDispatcher } from "@/lib/egress.mjs";
+import { qwenFetch, qwenFor } from "@/lib/llm/route";
 import { appSecret } from "@/lib/secrets";
 import { serviceClient } from "@/lib/supabase";
 
@@ -353,7 +354,7 @@ export function usageFromSse(text: string): ModelUsage | null {
  * оценкой по коду. Пишется в фоне, по копии ответа: ни чат на сайте, ни
  * смена не ждут записи, и сбой записи их не роняет.
  */
-async function meter(site: string, url: string, response: Response): Promise<void> {
+async function meter(site: string, url: string, response: Response, road: string = shared.state().road): Promise<void> {
   // Только сами сообщения: подсчёт токенов и пакеты — не расход ответа.
   if (!/\/v1\/messages$/.test(new URL(url).pathname)) return;
   const type = response.headers.get("content-type") ?? "";
@@ -365,7 +366,7 @@ async function meter(site: string, url: string, response: Response): Promise<voi
   await db.from("model_usage").insert({
     site,
     model: usage.model,
-    road: shared.state().road,
+    road,
     input_tokens: usage.input,
     output_tokens: usage.output,
     cache_write_tokens: usage.cacheWrite,
@@ -375,10 +376,13 @@ async function meter(site: string, url: string, response: Response): Promise<voi
 
 function meteredFetch(site: string) {
   return async (input: string | URL | Request, init: RequestInit = {}): Promise<Response> => {
-    const response = await shared.modelFetch(input, init);
+    // Место переведено на Qwen (lib/llm/route.ts) — запрос туда, дорога
+    // в model_usage — «qwen». Нет настройки — Claude, как всегда.
+    const qwen = await qwenFor(site).catch(() => null);
+    const response = qwen ? await qwenFetch(qwen)(input, init) : await shared.modelFetch(input, init);
     if (response.ok) {
       const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-      meter(site, url, response.clone()).catch((error) => console.error("model-road: учёт расхода", error));
+      meter(site, url, response.clone(), qwen ? "qwen" : undefined).catch((error) => console.error("model-road: учёт расхода", error));
     }
     return response;
   };
