@@ -49,6 +49,8 @@ const config: NextConfig = {
   // без этой строки файла в образе нет и памятка молча не доходит.
   outputFileTracingIncludes: {
     "/api/telegram/webhook": ["./kp/managers-bloggers.pdf"],
+    // Файлы клиенту от бота (lib/admin/client-outbox) — с диска, из kp/send/.
+    "/api/reminders/sweep": ["./kp/send/**/*"],
   },
   reactStrictMode: true,
   poweredByHeader: false,

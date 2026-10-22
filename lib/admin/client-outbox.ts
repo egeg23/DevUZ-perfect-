@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { esc, sendDocument, sendPhotoFile } from "@/lib/qualify/telegram";
 import { serviceClient } from "@/lib/supabase";
 
@@ -9,8 +12,10 @@ import { serviceClient } from "@/lib/supabase";
  * фирменном бланке». Рассылка «Пользователям бота» шлёт только текст, а
  * класть документ клиента в открытый репозиторий ради ссылки нельзя. Поэтому
  * файлы лежат в базе: строка stats_snapshots с ключом
- * `client-outbox:<имя>` и payload `{ chat, items: [{ kind, name, b64,
- * caption? }] }`, а свип отправляет их по порядку от бота студии.
+ * `client-outbox:<имя>` и payload `{ chat, items: [{ kind, name, b64 | file,
+ * caption? }] }`, а свип отправляет их по порядку от бота студии. Файл —
+ * либо сам в base64, либо путь в `kp/send/` (он едет в образ свипа, на сайте
+ * не открывается): большой документ через запрос к базе не передать.
  *
  * Строку берёт один проход: ключ переименовывается в `client-outbox-sending:`
  * условно, до отправки. После — `client-outbox-sent:` (или `-failed:`) и
@@ -21,7 +26,16 @@ import { serviceClient } from "@/lib/supabase";
 
 export const OUTBOX_PREFIX = "client-outbox:";
 
-export type OutboxItem = { kind: "photo" | "document"; name: string; b64: string; caption?: string };
+export type OutboxItem = { kind: "photo" | "document"; name: string; b64?: string; file?: string; caption?: string };
+
+/** Файл с диска — только из kp/send/, без выхода наверх. */
+export const OUTBOX_DIR = "kp/send/";
+
+export function outboxFile(file: string): string | null {
+  const clean = path.posix.normalize(file);
+  if (!clean.startsWith(OUTBOX_DIR) || clean.includes("..")) return null;
+  return clean;
+}
 export type OutboxPayload = { chat: number; items: OutboxItem[]; note?: string };
 
 export function isOutboxPayload(value: unknown): value is OutboxPayload {
@@ -33,7 +47,8 @@ export function isOutboxPayload(value: unknown): value is OutboxPayload {
     v.items.length > 0 &&
     v.items.every((i) => {
       const it = i as Record<string, unknown>;
-      return (it.kind === "photo" || it.kind === "document") && typeof it.name === "string" && typeof it.b64 === "string";
+      const body = typeof it.b64 === "string" || (typeof it.file === "string" && outboxFile(it.file) !== null);
+      return (it.kind === "photo" || it.kind === "document") && typeof it.name === "string" && body;
     })
   );
 }
@@ -56,7 +71,15 @@ export async function sendClientOutbox(): Promise<number> {
     }
     const done: { name: string; ok: boolean }[] = [];
     for (const item of payload.items) {
-      const bytes = new Uint8Array(Buffer.from(item.b64, "base64"));
+      const file = item.file ? outboxFile(item.file) : null;
+      const raw = file
+        ? await readFile(path.join(process.cwd(), file)).catch(() => null)
+        : Buffer.from(item.b64 ?? "", "base64");
+      if (!raw?.length) {
+        done.push({ name: item.name, ok: false });
+        continue;
+      }
+      const bytes = new Uint8Array(raw);
       const caption = item.caption ? esc(item.caption) : "";
       const ok =
         item.kind === "photo"
