@@ -68,7 +68,7 @@ export const head: Pick<
 export const leadsSections: Record<string, HelpEntry> = {
   /* ── Pulpit ──────────────────────────────────────────────────────────── */
   "/admin/hq": {
-    what: "Centrum dowodzenia właściciela i kierownika: na jednym ekranie — co dzieje się w firmie dziś i w ostatnich 7 dniach, co płonie w tej chwili i czym zajmuje się każda osoba w zespole. Po zalogowaniu i po kliknięciu logo «DevUz» trafiasz właśnie tutaj. Liczby odświeżają się same co półtorej minuty, dopóki strona jest otwarta i widoczna. Menedżer widzi tu puls swojego dnia pracy: co się pali, co jest zaległe, z kim się skontaktować, swoje makiety i swoją pracę.",
+    what: "Centrum dowodzenia właściciela i kierownika: na jednym ekranie — co dzieje się w firmie dziś i w ostatnich 7 dniach, co płonie w tej chwili i czym zajmuje się każda osoba w zespole. Po zalogowaniu i po kliknięciu logo «DevUz» trafiasz właśnie tutaj. Liczby odświeżają się same co półtorej minuty, dopóki strona jest otwarta i widoczna. «Etapy sprzedaży», leady bez ruchu, poziomy i historia wysyłek zmieniają się rzadko i odświeżają się co pięć minut: tak panel zużywa mniej darmowego ruchu bazy. Własne oznaczenie etapu i nowa wysyłka widać od razu. Menedżer widzi tu puls swojego dnia pracy: co się pali, co jest zaległe, z kim się skontaktować, swoje makiety i swoją pracę.",
     items: [
       {
         id: "pulse",

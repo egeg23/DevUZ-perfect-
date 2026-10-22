@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin/bot-users";
 import type { Staff } from "@/lib/admin/session";
 import { sendBroadcastMessage } from "@/lib/qualify/telegram";
+import { forget } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -84,7 +85,11 @@ export async function createUserBroadcast(
   const { users, marks } = await loadBotAudience();
   const chats = audienceOf(users, marks, input.segment).map((u) => u.chat_id);
   if (!chats.length) return { ok: false, reason: "nobody" };
-  if (chats.length !== input.expected) return { ok: false, reason: "changed" };
+  if (chats.length !== input.expected) {
+    // Предпросмотр считался по запомненной аудитории (lib/memo.ts): забываем.
+    forget("hq:audience");
+    return { ok: false, reason: "changed" };
+  }
 
   const { data, error } = await db
     .from("staff_broadcasts")
@@ -112,6 +117,7 @@ export async function createUserBroadcast(
     ip,
     meta: { kind: "users", segment: input.segment, recipients: chats.length, send_at: input.sendAt.toISOString(), text: input.text.trim().slice(0, 200) },
   });
+  forget("hq:broadcast:");
   return { ok: true, id, recipients: chats.length };
 }
 

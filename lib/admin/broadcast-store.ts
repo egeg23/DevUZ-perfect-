@@ -18,6 +18,7 @@ import { userTallies } from "@/lib/admin/bot-users-store";
 import type { Role } from "@/lib/admin/roles";
 import type { Staff } from "@/lib/admin/session";
 import { sendMessage } from "@/lib/qualify/telegram";
+import { forget } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -74,7 +75,12 @@ export async function createBroadcast(
   const people = recipientsOf(input.audience, await broadcastPeople(), actor.id);
   const reach = reachable(people);
   if (!reach.length) return { ok: false, reason: "nobody" };
-  if (reach.length !== input.expected) return { ok: false, reason: "changed" };
+  if (reach.length !== input.expected) {
+    // Предпросмотр на «Главной» считался по запомненному составу (lib/memo.ts):
+    // забываем, чтобы следующий показал верное число.
+    forget("hq:people");
+    return { ok: false, reason: "changed" };
+  }
 
   const { data, error } = await db
     .from("staff_broadcasts")
@@ -108,6 +114,8 @@ export async function createBroadcast(
       text: input.text.trim().slice(0, 200),
     },
   });
+  // История рассылок на «Главной» — из памяти: новая видна сразу.
+  forget("hq:broadcast:");
   return { ok: true, id, recipients: reach.length, sendAt: input.sendAt.toISOString() };
 }
 
@@ -124,6 +132,7 @@ export async function cancelBroadcast(id: string, actor: Staff, ip: string, now:
     .select("id");
   if (!data?.length) return false;
   await record("broadcast.cancelled", { actorStaffId: actor.id, targetType: "broadcast", targetId: id, ip });
+  forget("hq:broadcast:");
   return true;
 }
 
