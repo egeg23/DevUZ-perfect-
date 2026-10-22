@@ -17,6 +17,7 @@ import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { sendStaffWeek } from "@/lib/admin/staff-week-store";
 import { sendNightReplies } from "@/lib/admin/night-replies-store";
+import { sendClientOutbox } from "@/lib/admin/client-outbox";
 import { runMockupOffers } from "@/lib/admin/mockup-offer-run";
 import { sendOfferDigest } from "@/lib/admin/mockup-offer-bot";
 import { runProtoAutoClose } from "@/lib/proto/auto-close-store";
@@ -357,6 +358,11 @@ async function sweep(): Promise<Response> {
   // показал клиенту ни одного макета (lib/admin/sales-stages-store).
   after(async () => {
     await runNoShowWeek(new Date()).catch((error) => console.error("показы макетов, неделя:", error));
+  });
+  // Файлы клиенту от бота студии (смета, КП картинками и PDF) — из базы, по
+  // слову человека, без ночного окна (lib/admin/client-outbox).
+  after(async () => {
+    await sendClientOutbox().catch((error) => console.error("файлы клиенту:", error));
   });
   // С 08:00 — ответы клиентов за ночь одной сводкой тому, кто ведёт касание:
   // ночью строк нет (lib/admin/night-replies-store).
