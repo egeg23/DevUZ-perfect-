@@ -83,12 +83,30 @@ fi
 
 mkdir -p "$DEST"
 STAMP="$(date -u +%Y%m%d-%H%M)"
-OUT="$DEST/devuz-$STAMP.sql.gz"
 
-# --no-owner и --no-acl: восстанавливать будем в другой проект, где ролей с
-# теми же именами нет, и падение на GRANT сделало бы копию бесполезной.
-dump --no-owner --no-acl --schema=public \
-  | gzip -9 > "$OUT.part"
+# Вся база — раз в неделю, журнал и переписка — каждую ночь.
+#
+# Трафик из базы на Supabase Free — 5 ГБ в месяц (22.10.2026 вышли за
+# него). Полная копия — 30–40 МБ трафика, каждую ночь это ~1 ГБ в месяц,
+# пятая часть лимита. Доказательство в споре, ради которого копия и
+# делается, — журнал аудита и переписка: они весят пару мегабайт и
+# копируются каждую ночь отдельным файлом devuz-log-*. Полная — если за
+# последние 7 дней её не было (или BACKUP_FULL=1).
+FULL_EVERY_MIN=$(( 7 * 24 * 60 - 60 ))
+LOG_TABLES=(audit_events lead_messages outreach_messages)
+if [[ "${BACKUP_FULL:-}" == "1" ]] || [[ -z "$(find "$DEST" -name 'devuz-2*.sql.gz' -mmin "-$FULL_EVERY_MIN" -print -quit)" ]]; then
+  OUT="$DEST/devuz-$STAMP.sql.gz"
+  # --no-owner и --no-acl: восстанавливать будем в другой проект, где ролей с
+  # теми же именами нет, и падение на GRANT сделало бы копию бесполезной.
+  dump --no-owner --no-acl --schema=public \
+    | gzip -9 > "$OUT.part"
+else
+  OUT="$DEST/devuz-log-$STAMP.sql.gz"
+  # Только данные: таблицы уже есть в полной копии, на которую этот файл
+  # накатывается.
+  dump --no-owner --no-acl --data-only "${LOG_TABLES[@]/#/--table=public.}" \
+    | gzip -9 > "$OUT.part"
+fi
 mv "$OUT.part" "$OUT"
 
 # Проверяем, что получилось не пусто: gzip от упавшего pg_dump — это 20 байт

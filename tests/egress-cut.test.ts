@@ -91,6 +91,28 @@ test("входящее рабочему аккаунту: касание ище�
   assert.equal(body.match(/\.select\(MATCH_FIELDS\)/g)?.length, 3);
 });
 
+test("разборы на сайте: статья целиком — только на языке страницы", async () => {
+  // 22.10.2026: список читал все четыре статьи — ~800 КБ за раз.
+  const { columnsFor } = await import("@/lib/razbor/store");
+  const ru = columnsFor("ru");
+  assert.match(ru, /(^|, )article_ru(,|$)/);
+  for (const l of ["uz", "en", "pl"]) assert.match(ru, new RegExp(`article_${l}:article_${l}->>title`));
+  assert.doesNotMatch(ru, /(^|, )article_(uz|en|pl)(,|$)/);
+  const store = read("lib/razbor/store.ts");
+  assert.doesNotMatch(store, /\.select\(COLUMNS\)/);
+});
+
+test("копия базы: вся — раз в неделю, журнал и переписка — каждую ночь", () => {
+  // Полная копия — 30–40 МБ трафика; каждую ночь это ~1 ГБ из 5 ГБ в месяц.
+  const sh = read("deploy/backup-db.sh");
+  assert.match(sh, /FULL_EVERY_MIN=\$\(\( 7 \* 24 \* 60 - 60 \)\)/);
+  assert.match(sh, /LOG_TABLES=\(audit_events lead_messages outreach_messages\)/);
+  assert.match(sh, /find "\$DEST" -name 'devuz-2\*\.sql\.gz' -mmin "-\$FULL_EVERY_MIN"/);
+  assert.match(sh, /--data-only "\$\{LOG_TABLES\[@\]\/#\/--table=public\.\}"/);
+  // Старые копии чистятся обе: и полные, и журнальные.
+  assert.match(sh, /find "\$DEST" -name 'devuz-\*\.sql\.gz' -mtime "\+\$KEEP_DAYS" -delete/);
+});
+
 test("счёт трафика: у каждого запуска своя строка, выкатка не стирает счёт", () => {
   const egress = read("lib/egress.mjs");
   assert.match(egress, /const RUN = `\$\{process\.pid\}-\$\{Date\.now\(\)\.toString\(36\)\}`;/);

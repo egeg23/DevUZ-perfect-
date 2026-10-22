@@ -161,10 +161,23 @@ export function toItem(row: Record<string, unknown>, locale: RazborReadLocale): 
   };
 }
 
-const COLUMNS =
+const BASE_COLUMNS =
   "category, city, country, published_at, created_at, shot_taken_at, shot_before, shot_before_mobile, " +
   "shot_after, shot_after_mobile, shot_findings, slug_ru, slug_uz, title_ru, title_uz, description_ru, description_uz, " +
-  "label_ru, label_uz, query_ru, query_uz, article_ru, article_uz, slug_en, article_en, slug_pl, article_pl, lost_per_100";
+  "label_ru, label_uz, query_ru, query_uz, slug_en, slug_pl, lost_per_100";
+
+/**
+ * Колонки разбора на одном языке.
+ *
+ * Статья нужна целиком только на языке страницы; про остальные языки
+ * versionsOf хочет знать одно — есть ли статья, и для этого хватает её
+ * заголовка. Трафик базы (22.10.2026): список разборов читал все четыре
+ * статьи 29 разборов — ~800 КБ за раз, вторая по тяжести выборка сайта.
+ */
+export function columnsFor(locale: RazborReadLocale): string {
+  const others = READ.filter((l) => l !== locale).map((l) => `article_${l}:article_${l}->>title`);
+  return [BASE_COLUMNS, `article_${locale}`, ...others].join(", ");
+}
 
 /**
  * Версии разбора, которые открываются: адрес есть и статья на этом языке
@@ -191,7 +204,7 @@ export async function listRazbors(locale: RazborReadLocale): Promise<RazborItem[
 
   const { data, error } = await db
     .from("razbors")
-    .select(COLUMNS)
+    .select(columnsFor(locale))
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(200);
@@ -217,7 +230,7 @@ export async function razborBySlug(locale: RazborReadLocale, slug: string): Prom
 
   const { data } = await db
     .from("razbors")
-    .select(COLUMNS)
+    .select(columnsFor(locale))
     .eq("status", "published")
     .eq(`slug_${locale}`, slug)
     .maybeSingle();
