@@ -86,7 +86,7 @@ test("ответ клиента на рабочий аккаунт перево�
   // Не нашли среди отправленных ботом — ищем среди сделанных руками.
   assert.match(store, /\.eq\("status", "sent"\)\s*\.eq\("target_kind", "manual"\)/);
   assert.match(store, /\.in\("status", \["manual", "sending"\]\)/);
-  assert.match(store, /prospect = findHandTouch\(/);
+  assert.match(store, /matchId = findHandTouch\(hand, \{ handle, phone \}\)\?\.id \?\? null;/);
   assert.match(store, /if \(input\.account && needsBinding\(prospect\)\) \{\s*bound = await bindToAccount\(/);
   // Перевод — только из того состояния, в котором прочитали.
   assert.match(store, /\.update\(bindingPatch\(prospect, prospect\.touched_by \?\? prospect\.claimed_by, who, now\)\)\s*\.eq\("id", prospect\.id\)\s*\.eq\("status", prospect\.status\)/);
