@@ -3,7 +3,7 @@ import { CopyBox } from "@/components/cabinet/copy-box";
 import { CabinetShell, Card, Notice, button, ghost, input } from "@/components/cabinet/shell";
 import type { CabKey } from "@/content/ai-staff/cabinet";
 import { serviceBotUsername } from "@/lib/ai-staff/channels";
-import { igConfig } from "@/lib/ai-staff/instagram";
+import { igConfigFor } from "@/lib/ai-staff/instagram";
 import { cabinetPage } from "@/lib/ai-staff/page";
 import * as store from "@/lib/ai-staff/store";
 import { siteUrl } from "@/lib/seo";
@@ -16,7 +16,7 @@ export default async function CabinetChannels({ searchParams }: { searchParams: 
   const cab = await cabinetPage({ owner: true });
   const { tenant, t, locale } = cab;
   const { n } = await searchParams;
-  const [list, bot, ig] = await Promise.all([store.channels(tenant.id), serviceBotUsername(), igConfig()]);
+  const [list, bot, ig] = await Promise.all([store.channels(tenant.id), serviceBotUsername(), igConfigFor(tenant.id)]);
   const insta = list.filter((c) => c.kind === "instagram");
   const business = list.filter((c) => c.kind === "tg_business");
   const bots = list.filter((c) => c.kind === "tg_bot");

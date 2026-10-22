@@ -7,6 +7,7 @@ import { aiStaffDict } from "@/content/admin-panel/ai-staff";
 import { requireSection } from "@/lib/admin/guard";
 import { pick } from "@/lib/admin/i18n";
 import { PLANS, PLAN_IDS, PLAN_TITLE, formatUzs, monthKey, monthStart, usageCostUsd, uzsPerUsd } from "@/lib/ai-staff/plans";
+import { loadReadiness, type ReadyKey } from "@/lib/ai-staff/readiness";
 import { overview } from "@/lib/ai-staff/stats";
 import * as store from "@/lib/ai-staff/store";
 
@@ -54,9 +55,19 @@ export default async function AiStaffPage({ searchParams }: { searchParams: Prom
         costUsd: usageCostUsd(usage),
         channels: channels.filter((c) => c.status === "active").map((c) => c.kind),
         demo: channels.some((c) => c.widget_key && c.widget_key === showcase),
+        undelivered: leads.filter((l) => !l.delivered).length,
       };
     }),
   );
+  const ready = await loadReadiness(rows.reduce((s, r) => s + r.undelivered, 0));
+  const READY_TITLE: Record<ReadyKey, string> = {
+    botToken: t.readyBotToken,
+    webhookSecret: t.readyWebhookSecret,
+    cipherKey: t.readyCipherKey,
+    instagram: t.readyInstagram,
+    cards: t.readyCards,
+    delivery: t.readyDelivery,
+  };
   const totalCost = rows.reduce((s, r) => s + r.costUsd, 0);
   const revenue = rows
     .filter((r) => r.tenant.paid_until && Date.parse(r.tenant.paid_until) > now.getTime())
@@ -89,6 +100,24 @@ export default async function AiStaffPage({ searchParams }: { searchParams: Prom
           <span className="ml-auto text-sm text-muted">
             {t.month}: {t.totalCost} ${totalCost.toFixed(2)} (≈{formatUzs(totalCost * rate)}) · {t.revenue} {formatUzs(revenue)}
           </span>
+        </section>
+
+        <section className={CARD}>
+          <h2 className={`${H2} mb-3`}>{t.ready}</h2>
+          <ul className="space-y-1.5 text-sm">
+            {ready.map((row) => (
+              <li key={row.key} className="flex items-baseline gap-2">
+                <span className={row.state === "ok" ? "text-green" : row.state === "waiting" ? "text-muted" : "text-gold"}>
+                  {row.state === "ok" ? "✓" : row.state === "waiting" ? "…" : "✗"}
+                </span>
+                <span className="text-muted">
+                  {READY_TITLE[row.key]}
+                  {row.key === "delivery" && row.count ? `: ${row.count}` : ""} ·{" "}
+                  {row.state === "ok" ? t.readyOk : row.state === "waiting" ? t.readyWaiting : t.readyMissing}
+                </span>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className={CARD}>

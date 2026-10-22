@@ -728,6 +728,23 @@ export async function createLead(
   return data as Lead;
 }
 
+/** Дописать контакт в заявку, которая ушла без него. */
+export async function updateLeadContact(
+  tenantId: string,
+  id: string,
+  patch: Pick<Lead, "contact" | "name" | "need" | "summary">,
+): Promise<Lead> {
+  const { data, error } = await db()
+    .from("ai_leads")
+    .update(patch)
+    .eq("tenant_id", tenantId)
+    .eq("id", id)
+    .select(LEAD_COLUMNS)
+    .single();
+  if (error || !data) throw new Error(`ai-staff: заявка не обновлена — ${error?.message}`);
+  return data as Lead;
+}
+
 export async function markLeadDelivered(tenantId: string, id: string): Promise<void> {
   await db().from("ai_leads").update({ delivered: true }).eq("tenant_id", tenantId).eq("id", id);
 }
