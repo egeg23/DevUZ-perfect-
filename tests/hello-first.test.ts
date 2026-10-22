@@ -129,6 +129,14 @@ test("ответ на кружок — разбор, «+» и «да» на ра
   // Возражение — разговор, короткое непонятное — не разбор.
   assert.equal(readInbound("Бесплатно?", circle), "talk");
   for (const reply of ["Нет", "Спасибо", "Позже", "Делайте что хотите"]) assert.equal(readInbound(reply, circle), "unclear", reply);
+  // Разбор кружков 20–22.10.2026: «мне интересно» — не «не интересно»,
+  // вежливый отказ любой длины — отказ, а не разбор сайта.
+  assert.equal(readInbound("Да, мне интересно. Буду рада обсудить ваши идеи и узнать подробнее!", circle), "breakdown");
+  assert.equal(readInbound("Мне надо подумать, расскажите подробнее", circle), "breakdown");
+  for (const reply of ["Нет, спасибо", "Нет спасибо, у нас нет проблем с клиентами", "Неактуально , спасибо)", "Не актуально"]) {
+    assert.equal(readInbound(reply, circle), "stop", reply);
+  }
+  assert.equal(readInbound("Не интересно"), "stop");
 
   // Письмо с разбором кончается вопросом «собрать?» — «да» на него согласие.
   for (const reply of ["+", "➕", "Да", "Давайте", "Ha", "Хочу", "Интересно, давайте"]) assert.equal(readInbound(reply, letter), "proto", reply);
