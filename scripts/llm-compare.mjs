@@ -6,11 +6,12 @@
 // «Сравнение Claude и Qwen» (.github/workflows/llm-compare.yml), или руками:
 //
 //   cd /opt/devuz && set -a && . .env && set +a
-//   node --import ./tests/alias-hook.mjs scripts/llm-compare.mjs [набор] [повторов]
+//   node --import ./tests/alias-hook.mjs scripts/llm-compare.mjs [набор] [повторов] [модели]
 //
 // набор — all, talk (наша переписка до макета) или saas (ИИ-менеджер
 // клиента); повторов — сколько раз прогнать каждый разговор (модель
-// отвечает по-разному, один прогон — не цифра). Qwen берётся из QWEN_BASE_URL,
+// отвечает по-разному, один прогон — не цифра); модели — Claude через
+// запятую, тогда меряются они друг против друга, без Qwen. Qwen берётся из QWEN_BASE_URL,
 // QWEN_MODEL, QWEN_API_KEY, QWEN_EXTRA (.env или хранилище). В базу не пишет,
 // разговоры выдуманные: в публичный журнал задачи не попадает ничего чужого.
 //
@@ -53,7 +54,18 @@ const providers = [
     modelFor: (c) => (c.kind === "talk" ? process.env.ANTHROPIC_MODEL || "claude-opus-5" : modelFor("standard")),
   },
 ];
-const qwen = await qwenConfig();
+// Claude против Claude: «claude-haiku-4-5,claude-sonnet-5» — каждая модель
+// отвечает на все разговоры сама (владелец, 22.10.2026: «пока оставим haiku
+// или sonnet», Qwen — на своём компьютере позже). Пусто — как в бою.
+const MODELS = (process.argv[4] || process.env.COMPARE_MODELS || "")
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+if (MODELS.length) {
+  providers.length = 0;
+  for (const model of MODELS) providers.push({ label: model, call: (p) => claude.beta.messages.create(p), modelFor: () => model });
+}
+const qwen = MODELS.length ? null : await qwenConfig();
 if (qwen) {
   const client = new Anthropic({ apiKey: "qwen", fetch: qwenFetch(qwen) });
   providers.push({ label: `Qwen (${qwen.model})`, call: (p) => client.beta.messages.create(p), modelFor: () => qwen.model });
