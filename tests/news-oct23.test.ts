@@ -91,9 +91,12 @@ test("менеджерам — только их работа: ни мусора
 test("владельцу и руководителю — всё, с «зачем», без доли студии", () => {
   const text = headNewsOct23();
   assert.match(read("lib/admin/lead-trash.ts"), /export const TRASH_BUTTON = "🗑 Мусор";/);
-  for (const part of ["«🗑 Мусор»", "«🗄 Отклонить»", "«Новый заход после ответа»", "«Ступени продажи»", "Davlat", "5 ГБ"]) {
+  for (const part of ["«🗑 Мусор»", "«🗄 Отклонить»", "«Новый заход после ответа»", "«Ступени продажи»", "Davlat", "5 ГБ", "«📅 Сотрудники за неделю»"]) {
     assert.ok(text.includes(part), `нет ${part}`);
   }
   assert.ok((text.match(/Зачем: /g) ?? []).length >= 8, "у доработок — зачем");
   assert.doesNotMatch(text, /доля студии|котёл|соучредител/i);
+  // Владелец, 23.10.2026: «Убери… название Claude / Qwen».
+  assert.doesNotMatch(text, /Claude|Qwen|Haiku|Sonnet|Opus/i);
+  assert.ok(text.includes("Своя LLM — этап аудита текущих требований к запуску."));
 });
