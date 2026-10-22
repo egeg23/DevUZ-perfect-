@@ -69,7 +69,7 @@ export const uz: HelpCopy = {
   sections: {
     /* ── Bosh sahifa ───────────────────────────────────────────────────── */
     "/admin/hq": {
-      what: "Egasi va rahbar uchun boshqaruv markazi: bitta ekranda kompaniyada bugun va 7 kunda nima bo‘layotgani, hozir nima yonayotgani va jamoadagi har bir kishi nima bilan bandligi. Panelga kirgandan keyin va «DevUz» logotipi bosilganda shu yerga tushasiz. Sahifa ochiq va ko‘rinib turgan paytda raqamlar bir yarim daqiqada bir marta o‘zi yangilanadi. Menejer bu yerda o‘z ish kunining holatini ko‘radi: nima yonmoqda, nimaning muddati o‘tgan, kim bilan bog‘lanish kerak, o‘z maketlari va o‘z ishi.",
+      what: "Egasi va rahbar uchun boshqaruv markazi: bitta ekranda kompaniyada bugun va 7 kunda nima bo‘layotgani, hozir nima yonayotgani va jamoadagi har bir kishi nima bilan bandligi. Panelga kirgandan keyin va «DevUz» logotipi bosilganda shu yerga tushasiz. Sahifa ochiq va ko‘rinib turgan paytda raqamlar bir yarim daqiqada bir marta o‘zi yangilanadi. «Sotuv bosqichlari», harakatsiz lidlar, darajalar va xabarnomalar tarixi kam o‘zgaradi va besh daqiqada bir marta yangilanadi: shunda panel bazaning bepul trafigini kamroq sarflaydi. O‘zingiz qo‘ygan bosqich belgisi va yangi xabarnoma darhol ko‘rinadi. Menejer bu yerda o‘z ish kunining holatini ko‘radi: nima yonmoqda, nimaning muddati o‘tgan, kim bilan bog‘lanish kerak, o‘z maketlari va o‘z ishi.",
       items: [
         {
           id: "pulse",

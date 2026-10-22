@@ -19,6 +19,7 @@ import {
 } from "@/lib/admin/sales-stages";
 import type { Staff } from "@/lib/admin/session";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
+import { forget } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -240,6 +241,9 @@ export async function markStage(
     meta: { kind: input.kind, via: input.via ?? null, amount_usd: input.amountUsd ?? null },
     ip,
   });
+  // Ступени на «Главной» живут в памяти несколько минут (lib/memo.ts): своя
+  // отметка должна быть видна сразу.
+  forget("hq:deals:");
   return "ok";
 }
 

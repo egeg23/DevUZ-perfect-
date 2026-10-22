@@ -122,7 +122,8 @@ test("доставка: отметка до сообщения, каждому �
   assert.match(send, /GIVE_UP_H \* 3600_000/);
   assert.match(read("app/api/reminders/sweep/route.ts"), /await sendBroadcasts\(new Date\(\)\)/);
   // Получатели замораживаются при отправке, а число из предпросмотра сверяется.
-  assert.match(store, /if \(reach\.length !== input\.expected\) return \{ ok: false, reason: "changed" \}/);
+  // Число разошлось — «changed», и запомненный состав на «Главной» снимается (lib/memo.ts).
+  assert.match(store, /if \(reach\.length !== input\.expected\) \{[\s\S]{0,200}?forget\("hq:people"\);\n {4}return \{ ok: false, reason: "changed" \};/);
   assert.match(store, /recipients: reach\.map\(\(p\) => p\.id\)/);
   // Запись в журнал.
   assert.match(store, /await record\("broadcast\.created"/);

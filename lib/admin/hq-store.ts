@@ -52,6 +52,7 @@ import { growthOf, type XpSnapshot } from "@/lib/admin/levels";
 import { readXp } from "@/lib/admin/levels-store";
 import type { Grade } from "@/lib/admin/finance";
 import { firecrawlBalance, firecrawlKey } from "@/lib/firecrawl";
+import { SLOW_MS, memo } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -224,9 +225,12 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
       ? db.from("project_payments").select("amount_usd, paid_on").gte("paid_on", from.slice(0, 10)).limit(LIMIT)
       : Promise.resolve({ data: [] as HqPayment[] }),
     firecrawlRemaining(now).catch(() => null),
-    loadDeals(now).catch(() => [] as Deal[]),
-    readXp().catch(() => null as XpSnapshot | null),
-    gradeBookAll(now).catch(() => null as GradeBook | null),
+    // Меняется раз в час и реже — из памяти (lib/memo.ts): «Главная»
+    // обновляется раз в 90 секунд, и каждый раз читать это заново — главный
+    // расход трафика базы (22.10.2026: 6,69 ГБ при 5 ГБ бесплатных).
+    memo("hq:deals:30", SLOW_MS, () => loadDeals(now)).catch(() => [] as Deal[]),
+    memo("hq:xp", SLOW_MS, () => readXp()).catch(() => null as XpSnapshot | null),
+    memo("hq:grade", SLOW_MS, () => gradeBookAll(now)).catch(() => null as GradeBook | null),
   ]);
 
   if (staffRes.error && leadsRes.error) return empty;
@@ -279,7 +283,7 @@ export async function loadHq(viewer: Pick<Staff, "role">, now: Date = new Date()
   const fallbackIds = [...new Set(((circleFallbackRes.data ?? []) as { prospect_id: string }[]).map((r) => String(r.prospect_id)))];
   const [touchesBy, idle, fallbackRes] = await Promise.all([
     touchesOnDay(ids, day).catch(() => new Map<string, number>()),
-    loadIdle(ids).catch(() => [] as IdleLead[]),
+    memo(`hq:idle:${ids.join(",")}`, SLOW_MS, () => loadIdle(ids)).catch(() => [] as IdleLead[]),
     fallbackIds.length
       ? db.from("prospects").select("id, host, label").in("id", fallbackIds)
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),

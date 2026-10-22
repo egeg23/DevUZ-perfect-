@@ -31,6 +31,7 @@ import { gradeBookFor } from "@/lib/admin/ledger";
 import { growthOf, type Growth } from "@/lib/admin/levels";
 import { readXp } from "@/lib/admin/levels-store";
 import type { Staff } from "@/lib/admin/session";
+import { SLOW_MS, memo } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
 
 /**
@@ -127,8 +128,11 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
         .gte("created_at", from)
         .limit(LIMIT),
       db.from("staff").select("id").eq("is_active", true).limit(500),
-      loadDeals(now, 21).catch(() => [] as Deal[]),
-      readXp().catch(() => null),
+      // Ступени всей команды за 21 день и уровни — из памяти (lib/memo.ts):
+      // одинаковы для всех менеджеров и меняются редко; отметка ступени
+      // снимает запомненное сразу (markStage → forget).
+      memo("hq:deals:21", SLOW_MS, () => loadDeals(now, 21)).catch(() => [] as Deal[]),
+      memo("hq:xp", SLOW_MS, () => readXp()).catch(() => null),
       gradeBookFor(me, now).catch(() => null),
       db.from("staff").select("grade, rate_percent").eq("id", me).maybeSingle(),
     ]);

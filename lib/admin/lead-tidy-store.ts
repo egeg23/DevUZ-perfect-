@@ -94,6 +94,8 @@ export async function loadIdle(ownerIds?: readonly string[]): Promise<IdleLead[]
         .eq("target_type", "lead")
         .in("target_id", part)
         .not("actor_staff_id", "is", null)
+        // Просмотры движением не считаются — и не читаются: их больше всего.
+        .not("action", "in", `(${NOT_MOVES.join(",")})`)
         .limit(20000),
     ]);
     for (const m of msgs ?? []) bump(m.lead_id as string, m.created_at);

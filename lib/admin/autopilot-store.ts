@@ -71,9 +71,21 @@ async function ensureCampaigns(db: Db): Promise<void> {
   if (error) console.error("автопрогон: не завёл кампании", missing.map((n) => n.maps).join(", "), error.message);
 }
 
-const POOL_COLUMNS = "id, host, findings, contacts, score, niche";
+/**
+ * Для выбора нужно только, есть ли у карточки находки, а не они сами: код
+ * первой (f0) вместо всего разбора. 600 карточек с находками — около 3 МБ
+ * за проход свипа, и так каждые пять минут весь день (трафик базы,
+ * 22.10.2026: 6,69 ГБ при 5 ГБ бесплатных).
+ */
+const POOL_COLUMNS = "id, host, contacts, score, niche, f0:findings->0->>code";
 
 type PoolRow = Pick<Prospect, "id" | "host" | "findings" | "contacts" | "score" | "niche">;
+
+/** Строка пула без разбора: находки — одна заглушка, если они есть. */
+function poolRow(r: Record<string, unknown>): PoolRow {
+  const { f0, ...rest } = r;
+  return { ...(rest as Omit<PoolRow, "findings">), findings: f0 ? ([{ code: String(f0) }] as unknown as PoolRow["findings"]) : [] };
+}
 
 /**
  * Кому писать: свободные карточки пула — любой ниши (владелец, 06.10.2026:
@@ -98,7 +110,7 @@ export async function candidates(limit: number, now: Date = new Date()): Promise
     .order("score", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true })
     .limit(600);
-  return rank((data ?? []) as PoolRow[], busy).slice(0, limit);
+  return rank(((data ?? []) as Record<string, unknown>[]).map(poolRow), busy).slice(0, limit);
 }
 
 /** Годные — по порядку: @адрес, сайт, без сайта; внутри — как пришли (худший сайт первым). */

@@ -787,11 +787,16 @@ export async function pendingTalks(limit = 5): Promise<Inbound[]> {
   const db = serviceClient();
   if (!db) return [];
 
+  // Только разговоры, которые ведёт модель. Входящее отпущенного разговора
+  // остаётся неотвеченным намеренно (ниже), и раньше пять таких самых старых
+  // занимали всю выборку: до свежих ответов клиентов модель не доходила, а
+  // свип каждые пять минут перечитывал одни и те же строки.
   const { data } = await db
     .from("outreach_messages")
-    .select("id, prospect_id, lead_id, body, created_at")
+    .select("id, prospect_id, lead_id, body, created_at, prospects!inner(ai_handling)")
     .eq("direction", "in")
     .is("answered_at", null)
+    .eq("prospects.ai_handling", true)
     .order("created_at", { ascending: true })
     .limit(limit);
 

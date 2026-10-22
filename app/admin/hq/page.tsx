@@ -14,6 +14,10 @@ import { seesEveryone } from "@/lib/admin/roles";
 import { HQ_REFRESH_MS } from "@/lib/admin/hq";
 import { loadHq } from "@/lib/admin/hq-store";
 import { loadMyHq } from "@/lib/admin/hq-my-store";
+import { SLOW_MS, memo } from "@/lib/memo";
+
+/** История рассылок: «дошло N» обновляется не реже, чем раз в две минуты. */
+const HISTORY_MS = 2 * 60_000;
 
 // Пульс — состояние базы прямо сейчас: кэш здесь показал бы вчерашний пожар.
 export const dynamic = "force-dynamic";
@@ -54,12 +58,15 @@ export default async function HqPage({
     );
   }
   const broadcasts = sendsBroadcasts(staff.role);
+  // Состав команды, история рассылок и аудитория бота меняются редко, а
+  // страница обновляется раз в 90 секунд: из памяти (lib/memo.ts). Новая
+  // рассылка и «число изменилось» снимают запомненное сразу.
   const [hq, people, history, usersHistory, audience, again] = await Promise.all([
     loadHq(staff, now),
-    broadcastPeople(),
-    broadcasts ? broadcastHistory("staff", 10) : Promise.resolve([]),
-    broadcasts ? broadcastHistory("users", 10) : Promise.resolve([]),
-    broadcasts ? loadBotAudience() : Promise.resolve(null),
+    memo("hq:people", SLOW_MS, () => broadcastPeople()),
+    broadcasts ? memo("hq:broadcast:staff", HISTORY_MS, () => broadcastHistory("staff", 10)) : Promise.resolve([]),
+    broadcasts ? memo("hq:broadcast:users", HISTORY_MS, () => broadcastHistory("users", 10)) : Promise.resolve([]),
+    broadcasts ? memo("hq:audience", SLOW_MS, () => loadBotAudience()) : Promise.resolve(null),
     broadcasts && repeat ? broadcastById(repeat) : Promise.resolve(null),
   ]);
   // Себе тоже можно — последним: обычно задачу ставят другим.
