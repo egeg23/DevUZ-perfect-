@@ -1,4 +1,5 @@
 import { QUEUE_ROLES } from "@/lib/admin/lead-queue";
+import { TASHKENT_OFFSET_MS } from "@/lib/admin/pulse";
 import {
   XP_KEY,
   noParts,
@@ -6,6 +7,7 @@ import {
   panelUnits,
   snapshotStale,
   xpOf,
+  XP_KINDS,
   type XpParts,
   type XpPerson,
   type XpSnapshot,
@@ -52,13 +54,43 @@ export function partsFor(id: string, deals: readonly Deal[], presence: readonly 
   return parts;
 }
 
-export async function computeXp(now: Date = new Date()): Promise<XpSnapshot | null> {
+/**
+ * Вся история — раз в сутки, каждый час — только свежее.
+ *
+ * Трафик базы (22.10.2026): пересчёт за 400 дней читал ~1,75 МБ (касания,
+ * лиды, журнал) — раз в час это ~1,2 ГБ в месяц из 5 ГБ. Очки до начала
+ * дня по Ташкенту не меняются, поэтому первый пересчёт дня читает всю
+ * историю и запоминает её итог без сегодняшнего (`base`), а следующие —
+ * только RECENT_DAYS дней: сегодняшнее поверх base, неделя — из них же.
+ * Пределы в день (панель, порядок) считаются по дням — от склейки по
+ * началу дня они не меняются.
+ */
+const RECENT_DAYS = 8;
+
+type XpBase = { day: string; people: Record<string, XpParts> };
+type StoredXp = XpSnapshot & { base?: XpBase };
+
+const add = (a: XpParts, b: XpParts): XpParts =>
+  Object.fromEntries(XP_KINDS.map((k) => [k, (a[k] ?? 0) + (b[k] ?? 0)])) as XpParts;
+const minus = (a: XpParts, b: XpParts): XpParts =>
+  Object.fromEntries(XP_KINDS.map((k) => [k, Math.max(0, (a[k] ?? 0) - (b[k] ?? 0))])) as XpParts;
+
+/** День по Ташкенту и его начало в мс. */
+export function tashkentDay(now: Date): { day: string; start: number } {
+  const day = new Date(now.getTime() + TASHKENT_OFFSET_MS).toISOString().slice(0, 10);
+  return { day, start: Date.parse(`${day}T00:00:00Z`) - TASHKENT_OFFSET_MS };
+}
+
+export async function computeXp(now: Date = new Date(), prev: StoredXp | null = null): Promise<StoredXp | null> {
   const db = serviceClient();
   if (!db) return null;
-  const from = new Date(now.getTime() - HISTORY_DAYS * 24 * 3600_000).toISOString();
+  const today = tashkentDay(now);
+  const base = prev?.base?.day === today.day ? prev.base : null;
+  const days = base ? RECENT_DAYS : HISTORY_DAYS;
+  const from = new Date(now.getTime() - days * 24 * 3600_000).toISOString();
   const [staffRes, deals, presenceRes, actsRes] = await Promise.all([
     db.from("staff").select("id, role").eq("is_active", true).in("role", [...QUEUE_ROLES]).limit(200),
-    loadDeals(now, HISTORY_DAYS, ROWS),
+    loadDeals(now, days, ROWS),
     db.from("panel_presence").select("staff_id, day, minutes").gte("day", from.slice(0, 10)).limit(ROWS),
     db
       .from("audit_events")
@@ -73,22 +105,30 @@ export async function computeXp(now: Date = new Date()): Promise<XpSnapshot | nu
   const acts = (actsRes.data ?? []) as Act[];
   const weekFrom = now.getTime() - WEEK_MS;
   const people: Record<string, XpPerson> = {};
+  const nextBase: XpBase = base ?? { day: today.day, people: {} };
   for (const s of staffRes.data ?? []) {
     const id = String(s.id);
-    const parts = partsFor(id, deals, presence, acts);
+    const todays = partsFor(id, deals, presence, acts, today.start);
+    let parts: XpParts;
+    if (base) {
+      parts = add(base.people[id] ?? noParts(), todays);
+    } else {
+      parts = partsFor(id, deals, presence, acts);
+      nextBase.people[id] = minus(parts, todays);
+    }
     people[id] = { parts, xp: xpOf(parts), week: xpOf(partsFor(id, deals, presence, acts, weekFrom)) };
   }
-  return { computedAt: now.toISOString(), people };
+  return { computedAt: now.toISOString(), people, base: nextBase };
 }
 
 /** Снимок, как он есть (null — ещё не считали или база молчит). */
-export async function readXp(): Promise<XpSnapshot | null> {
+export async function readXp(): Promise<StoredXp | null> {
   const db = serviceClient();
   if (!db) return null;
   const { data } = await db.from("stats_snapshots").select("payload, computed_at").eq("key", XP_KEY).maybeSingle();
   if (!data?.payload) return null;
-  const payload = data.payload as Partial<XpSnapshot>;
-  return { computedAt: String(payload.computedAt ?? data.computed_at), people: payload.people ?? {} };
+  const payload = data.payload as Partial<StoredXp>;
+  return { computedAt: String(payload.computedAt ?? data.computed_at), people: payload.people ?? {}, base: payload.base };
 }
 
 /** Свип: пересчитать снимок, если ему час и больше. */
@@ -97,7 +137,7 @@ export async function refreshXp(now: Date = new Date()): Promise<boolean> {
   if (!db) return false;
   const current = await readXp();
   if (!snapshotStale(current?.computedAt, now)) return false;
-  const snap = await computeXp(now);
+  const snap = await computeXp(now, current);
   if (!snap) return false;
   const { error } = await db
     .from("stats_snapshots")
