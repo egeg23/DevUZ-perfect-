@@ -389,28 +389,12 @@ export async function prospectById(id: string): Promise<Prospect | null> {
 /* ── Подготовка сообщения ──────────────────────────────────────────────── */
 
 /**
- * Письмо компании, у которой сайта нет.
- *
- * Отдельной функцией, а не ветками внутри общей: общая держится на разборе
- * сайта — обход, находки, балл видимости, проверка чисел по анализу. Здесь
- * нет ничего из этого, и попытка провести такую карточку тем же путём
- * кончилась бы письмом про находки, которых никто не находил.
- *
- * Зацепка одна и она проверяемая: человек ищет нишу в Google и попадает к
- * конкурентам. Адресат проверяет это со своего телефона за минуту — то же
- * правило, что и в обычном касании.
+ * Письмо компании без сайта моделью: первая попытка и, если не прошла
+ * проверку, вторая с замечаниями; берётся та, у которой замечаний меньше.
+ * null — модель не вернула текст. Ошибка модели — исключением.
  */
-async function prepareNoSite(prospect: Prospect, staff: Writer): Promise<PrepareResult> {
-  const db = serviceClient();
-  if (!db) return { ok: false, why: "База недоступна.", code: "db" };
-
-  const niche = (prospect.niche ?? "").trim();
-  // Ниша — единственное, от чего здесь можно писать. Без неё письмо вышло бы
-  // про «ваш бизнес», то есть про никого.
-  if (!niche) return { ok: false, why: "Не записана ниша — писать не от чего.", code: "no_niche" };
-
-  const prompt = nositePrompt({ label: prospect.label, niche, sender: staff.display_name });
-
+async function writeNoSite(label: string | null, niche: string, sender: string): Promise<string | null> {
+  const prompt = nositePrompt({ label, niche, sender });
   const write = async (notes: string | null): Promise<string | null> => {
     const response = await anthropic("outreach-nosite").beta.messages.create({
       model: MODEL,
@@ -433,16 +417,64 @@ async function prepareNoSite(prospect: Prospect, staff: Writer): Promise<Prepare
     return typeof raw === "string" && raw.trim() ? raw.trim() : null;
   };
 
+  const first = await write(null);
+  if (!first) return null;
+  // Вторая попытка и выбор лучшей — как в обычном касании: менеджер нажал
+  // и должен получить письмо, а не отказ проверки на пустом поле.
+  const missed = nositeProblems(first, prompt);
+  const second = missed.length ? await write(missed.map((p) => p.text).join(" ")) : null;
+  const secondMissed = second ? nositeProblems(second, prompt) : null;
+  return second && secondMissed && secondMissed.length <= missed.length ? second : first;
+}
+
+/**
+ * Письмо компании, у которой сайта нет.
+ *
+ * Отдельной функцией, а не ветками внутри общей: общая держится на разборе
+ * сайта — обход, находки, балл видимости, проверка чисел по анализу. Здесь
+ * нет ничего из этого, и попытка провести такую карточку тем же путём
+ * кончилась бы письмом про находки, которых никто не находил.
+ *
+ * Зацепка одна и она проверяемая: человек ищет нишу в Google и попадает к
+ * конкурентам. Адресат проверяет это со своего телефона за минуту — то же
+ * правило, что и в обычном касании.
+ */
+async function prepareNoSite(prospect: Prospect, staff: Writer, options: { letter?: boolean } = {}): Promise<PrepareResult> {
+  const db = serviceClient();
+  if (!db) return { ok: false, why: "База недоступна.", code: "db" };
+
+  const niche = (prospect.niche ?? "").trim();
+  // Ниша — единственное, от чего здесь можно писать. Без неё письмо вышло бы
+  // про «ваш бизнес», то есть про никого.
+  if (!niche) return { ok: false, why: "Не записана ниша — писать не от чего.", code: "no_niche" };
+
+  // Автопрогон пишет письмо после ответа (LETTER_AFTER_REPLY), как у
+  // компаний с сайтом: до 23.10.2026 эта ветка письмо писала всегда — две
+  // попытки модели на каждую компанию без сайта, 1322 вызова за неделю, а
+  // нужно оно единицам (по-русски ответившим уходит кружок). Напишет его
+  // writeLetterLater, когда клиент ответит не по-русски.
+  if (options.letter === false) {
+    let kept = db
+      .from("prospects")
+      .update({
+        message: null,
+        niche,
+        status: "contacting",
+        claimed_by: prospect.claimed_by ?? ownerId(staff),
+        claimed_at: new Date().toISOString(),
+      })
+      .eq("id", prospect.id);
+    if (isAutopilot(staff)) kept = kept.is("claimed_by", null);
+    const { data: saved } = await kept.select("id");
+    if (isAutopilot(staff) && !saved?.length) return { ok: false, why: "Карточку уже взял сотрудник.", code: "gone" };
+    return { ok: true, message: "" };
+  }
+
   let message: string;
   try {
-    const first = await write(null);
-    if (!first) return { ok: false, why: "Модель не вернула сообщение.", code: "model_empty" };
-    // Вторая попытка и выбор лучшей — как в обычном касании: менеджер нажал
-    // и должен получить письмо, а не отказ проверки на пустом поле.
-    const missed = nositeProblems(first, prompt);
-    const second = missed.length ? await write(missed.map((p) => p.text).join(" ")) : null;
-    const secondMissed = second ? nositeProblems(second, prompt) : null;
-    message = second && secondMissed && secondMissed.length <= missed.length ? second : first;
+    const written = await writeNoSite(prospect.label, niche, staff.display_name);
+    if (!written) return { ok: false, why: "Модель не вернула сообщение.", code: "model_empty" };
+    message = written;
   } catch (error) {
     return { ok: false, why: modelTroubleSays(error), ...modelFail(error) };
   }
@@ -513,7 +545,7 @@ export async function prepareOutreach(
    * которых здесь не будет никогда, и отказала бы всем таким карточкам
    * разом.
    */
-  if (!prospect.host || !prospect.url) return prepareNoSite(prospect, staff);
+  if (!prospect.host || !prospect.url) return prepareNoSite(prospect, staff, options);
 
   const reason = canContact({
     contacts: prospect.contacts,
@@ -823,8 +855,21 @@ export async function writeLetterLater(id: string): Promise<{ ok: true; message:
   const db = serviceClient();
   if (!db) return { ok: false, retry: true };
   const prospect = await prospectById(id);
-  if (!prospect?.host || !prospect.url) return { ok: false, retry: false };
+  if (!prospect) return { ok: false, retry: false };
   if (prospect.message?.trim()) return { ok: true, message: prospect.message };
+  // Компания без сайта: письмо от ниши — тем же writeNoSite, что у кнопки.
+  if (!prospect.host || !prospect.url) {
+    const niche = (prospect.niche ?? "").trim();
+    if (!niche) return { ok: false, retry: false };
+    try {
+      const message = await writeNoSite(prospect.label, niche, AUTOPILOT.display_name);
+      if (!message) return { ok: false, retry: true };
+      await db.from("prospects").update({ message }).eq("id", id);
+      return { ok: true, message };
+    } catch {
+      return { ok: false, retry: true };
+    }
+  }
   if (!checkFresh(prospect.checked_at, Date.now())) return { ok: false, retry: false };
   const findings = prospect.findings ?? [];
   if (!outreachFindings(findings).length) return { ok: false, retry: false };
