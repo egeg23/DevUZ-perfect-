@@ -447,6 +447,15 @@ export const moreSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "ready",
+        title: "Gotowość do pilotażu",
+        roles: ["admin"],
+        body: [
+          "Blok **«Gotowość do pilotażu»** pokazuje to, co serwer i tak sprawdza w trakcie pracy: czy jest token bota usługi, sekret webhooka i klucz szyfrowania, czy Instagram jest otwarty, czy podłączona jest płatność kartą. Wartości sekretów nie są tu widoczne, tylko «gotowe» albo «brak». Bez tokena bota zgłoszenia klientów nie docierają do ich menedżerów, raporty nie wychodzą, a do panelu nie da się zalogować, więc ten punkt jest ważniejszy od pozostałych.",
+          "Instagram «czeka», dopóki Meta nie zweryfikuje naszej aplikacji: do tego czasu przycisk «Подключить Instagram» widzą tylko panele z `AI_STAFF_IG_TESTERS` (id po przecinku), pozostali klienci widzą komunikat, że wkrótce się otworzy. Po weryfikacji ustaw `AI_STAFF_IG_PUBLIC=1`. Ostatni wiersz liczy zgłoszenia z tego miesiąca, które nie dotarły do ludzi klienta w Telegramie: brak tokena albo u klienta nikt nie ma zaznaczonego «получает заявки». Liczba większa od zera oznacza, że klient traci kupujących, sprawdź listę jego ludzi w panelu klienta.",
+        ],
+      },
+      {
         id: "clients",
         title: "Klienci i skąd liczby",
         roles: ["admin"],

@@ -164,7 +164,21 @@ async function handle(input: Incoming, deps: Deps): Promise<Outcome> {
 
     if (result.handoff) {
       const existing = conv.lead_id ? await store.leadById(tenant.id, conv.lead_id) : null;
-      if (existing) {
+      if (existing && !existing.contact.trim() && result.handoff.contact) {
+        // Первая передача ушла без контакта («уточню у менеджера»), теперь
+        // покупатель оставил телефон. Та же заявка, с контактом, и карточка
+        // людям клиента заново: без контакта им некуда было звонить.
+        const updated = await store.updateLeadContact(tenant.id, existing.id, {
+          contact: result.handoff.contact,
+          name: existing.name || result.handoff.name || conv.customer_name,
+          need: existing.need || result.handoff.need,
+          summary: result.handoff.summary || existing.summary,
+        });
+        const delivered = await deliver(tenant, updated, { ...conv, off_hours: !workTime }, deps);
+        if (delivered) await store.markLeadDelivered(tenant.id, updated.id);
+        lead = { ...updated, delivered: delivered || updated.delivered };
+        text = [text, handedOff(lang, updated.request_no, delivered)].filter(Boolean).join("\n\n");
+      } else if (existing) {
         if (!text) text = handedOff(lang, existing.request_no, existing.delivered);
       } else {
         const created = await store.createLead(tenant.id, {

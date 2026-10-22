@@ -2309,6 +2309,15 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "ready",
+          title: "Pilotga tayyorlik",
+          roles: ["admin"],
+          body: [
+            "**«Pilotga tayyorlik»** bloki server ishlayotganda o‘zi tekshiradigan narsalarni ko‘rsatadi: xizmat boti tokeni, vebhuk siri va shifrlash kaliti bormi, Instagram ochiqmi, karta orqali to‘lov ulanganmi. Sirlarning qiymati bu yerda ko‘rinmaydi, faqat «tayyor» yoki «yo‘q». Bot tokenisiz mijozlarning arizalari ularning menejerlariga yetib bormaydi, hisobotlar ketmaydi, kabinetga kirib bo‘lmaydi, shuning uchun bu band boshqalaridan muhimroq.",
+            "Meta ilovamizni tekshirmaguncha Instagram «kutilmoqda»: shungacha «Instagramni ulash» tugmasi faqat `AI_STAFF_IG_TESTERS` dagi kabinetlarga ko‘rinadi (id vergul bilan), boshqa mijozlarga ulash tez orada ochilishi yoziladi. Tekshiruvdan keyin `AI_STAFF_IG_PUBLIC=1` qo‘ying. Oxirgi qator bu oyda mijoz xodimlariga Telegramda yetib bormagan arizalarni sanaydi: token yo‘q yoki mijozda hech kimda «arizalarni oladi» belgisi yo‘q. Noldan katta son mijoz xaridorlarni yo‘qotayotganini bildiradi, mijoz kabinetidagi odamlari ro‘yxatini tekshiring.",
+          ],
+        },
+            {
           id: "clients",
           title: "Mijozlar va raqamlar qayerdan",
           roles: ["admin"],

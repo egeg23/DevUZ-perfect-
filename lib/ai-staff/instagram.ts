@@ -40,6 +40,28 @@ export async function igConfig(): Promise<IgConfig | null> {
   return appId && secret && verify ? { appId, appSecret: secret, verifyToken: verify } : null;
 }
 
+/**
+ * Открыт ли Instagram этому клиенту. Пока Meta не проверила приложение
+ * (разрешение instagram_business_manage_messages, docs/ai-staff/pilot.md),
+ * оно отвечает только аккаунтам-тестерам, и кнопка у обычного клиента
+ * кончилась бы ошибкой. Поэтому одних ключей мало: после проверки —
+ * `AI_STAFF_IG_PUBLIC=1`, до неё — кабинеты из `AI_STAFF_IG_TESTERS`
+ * (id через запятую), остальным «скоро откроется».
+ */
+export function igOpenFor(tenantId: string, flags: { public: string | null; testers: string | null }): boolean {
+  if (flags.public === "1") return true;
+  return (flags.testers ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .includes(tenantId);
+}
+
+/** Настройка Instagram для этого клиента — или null, если ему он ещё закрыт. */
+export async function igConfigFor(tenantId: string): Promise<IgConfig | null> {
+  const [cfg, pub, testers] = await Promise.all([igConfig(), appSecret("AI_STAFF_IG_PUBLIC"), appSecret("AI_STAFF_IG_TESTERS")]);
+  return cfg && igOpenFor(tenantId, { public: pub, testers }) ? cfg : null;
+}
+
 /* ── Вход: state подписан ключом сервиса и живёт 15 минут ── */
 
 const STATE_TTL_MS = 15 * 60_000;

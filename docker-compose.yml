@@ -137,6 +137,8 @@ services:
       AI_STAFF_IG_APP_ID: ${AI_STAFF_IG_APP_ID:-}
       AI_STAFF_IG_APP_SECRET: ${AI_STAFF_IG_APP_SECRET:-}
       AI_STAFF_IG_VERIFY_TOKEN: ${AI_STAFF_IG_VERIFY_TOKEN:-}
+      AI_STAFF_IG_PUBLIC: ${AI_STAFF_IG_PUBLIC:-}
+      AI_STAFF_IG_TESTERS: ${AI_STAFF_IG_TESTERS:-}
       # ИИ на прототипах (lib/proto/ai.ts) — по умолчанию Haiku.
       PROTO_AI_MODEL: ${PROTO_AI_MODEL:-}
       PROMO_MODEL: ${PROMO_MODEL:-}

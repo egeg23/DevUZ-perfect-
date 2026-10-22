@@ -1,3 +1,4 @@
+import { aiMarkers } from "@/lib/proto/plain-text";
 import { findSelfTalk } from "@/lib/qualify/self-talk";
 
 /**
@@ -58,7 +59,7 @@ export function inventedNumbers(reply: string, facts: string): string[] {
   return [...new Set(out)];
 }
 
-export type ReplyProblem = { code: "empty" | "invented" | "self_talk"; text: string };
+export type ReplyProblem = { code: "empty" | "invented" | "self_talk" | "ai_stamp"; text: string };
 
 export function replyProblems(reply: string, facts: string): ReplyProblem[] {
   const body = reply.trim();
@@ -73,6 +74,11 @@ export function replyProblems(reply: string, facts: string): ReplyProblem[] {
   }
   const self = findSelfTalk(body);
   if (self) problems.push({ code: "self_talk", text: `о себе лишнее (${self.what})` });
+  // Штампы ИИ («уникальный», «индивидуальный подход»): по ним покупатель
+  // узнаёт робота, как владелец бизнеса — по макету. Слова самой компании
+  // из базы знаний — её слова, их можно (то же правило, что у макетов).
+  const stamps = aiMarkers(body, facts);
+  if (stamps.length) problems.push({ code: "ai_stamp", text: `штампы, по которым узнают робота: ${stamps.join(", ")}` });
   return problems;
 }
 
@@ -87,6 +93,10 @@ export function tidyReply(reply: string): string {
     .replace(/__(.+?)__/g, "$1")
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/\s+[—–]\s+/g, ", ")
+    // Тире дефисом с пробелами — то же тире: «9:00 - 19:00» → «9:00-19:00»,
+    // «доставка - бесплатно» → «доставка, бесплатно».
+    .replace(/(\d)[ \t]+-[ \t]+(?=\d)/g, "$1-")
+    .replace(/(?<=\S)[ \t]+-[ \t]+(?=\S)/g, ", ")
     .replace(/[—–]/g, "-")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
