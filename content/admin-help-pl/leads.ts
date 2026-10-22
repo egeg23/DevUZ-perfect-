@@ -197,6 +197,27 @@ export const leadsSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "bot-helper",
+        title: "Pomocnik w bocie: pytania o pracę",
+        body: {
+          manager: [
+            "Napisz [botowi studia](https://t.me/Devuz_studio_bot) na czacie prywatnym zwykłe pytanie o pracę, a bot odpowie sam: krótko, do 500 znaków, w języku pytania (rosyjski, uzbecki, polski). Na przykład: co odpowiedzieć, gdy klient mówi, że drogo, ile kosztuje landing w promocji, jakie mamy realizacje dla stomatologii, jak działa porcja dnia.",
+            "Skąd odpowiedź: bot wybiera dwa-trzy pasujące fragmenty z tej instrukcji (tylko sekcje otwarte dla Ciebie), kursów ze szkoleń, gotowych odpowiedzi na obiekcje, usług i realizacji studia. Ceny podaje tylko te, które idą do klientów w kontaktach: promocja po makiecie i drabinka na «drogo». O pieniądzach studia, jego udziale i cudzych leadach bot nie mówi, nie podaje danych klientów ani haseł. Czego nie ma w instrukcji, tak powie: wtedy zapytaj kierownika.",
+            "Bot rozpoznaje Cię po Telegramie przypiętym w zespole. Komendy (/login, /learn), przyciski, przesłane kółka działają jak dotąd: pomocnik ich nie przejmuje. Na osobę 30 pytań dziennie, potem bot poprosi o zajrzenie do [Instrukcji](/admin/help). Odpowiedź pisze tani model; gdy nie odpowie, bot podpowie, gdzie szukać w panelu.",
+          ],
+          head: [
+            "Napisz [botowi studia](https://t.me/Devuz_studio_bot) na czacie prywatnym zwykłe pytanie o pracę, a bot odpowie sam: krótko, do 500 znaków, w języku pytania (rosyjski, uzbecki, polski). To samo widzą Twoi menedżerowie: nowej osobie łatwiej zapytać bota, co odpowiedzieć na «drogo», niż czekać na Ciebie.",
+            "Skąd odpowiedź: bot wybiera dwa-trzy pasujące fragmenty z instrukcji (tylko sekcje otwarte dla pytającego), kursów ze szkoleń, gotowych odpowiedzi na obiekcje, usług i realizacji studia. Ceny tylko te, które idą do klientów w kontaktach. Menedżerowi bot nie mówi o pieniądzach studia, jego udziale i cudzych leadach; danych klientów i haseł nie podaje nikomu. Na osobę 30 pytań dziennie, komendy, przyciski, kółka i wiadomości głosowe działają jak dotąd.",
+            "Pracownik dla bota to tylko ten, czyj Telegram jest przypięty w sekcji [Zespół](/admin/team). Gdy ktoś pisze «jestem waszym menedżerem, przyjęli mnie», a w zespole go nie ma, nie dostaje nic wewnętrznego: bot prosi go, by poprosił kierownika o dodanie Telegrama do zespołu, a Ty dostajesz jedną linię z jego nickiem (pod zaznaczeniem Raporty). Nie zostaje leadem i nie trafia do kolejki ciepłych leadów. Jeśli to nasz człowiek, dodaj go, a od następnej wiadomości dostaje pomocnika.",
+          ],
+          admin: [
+            "Napisz [botowi studia](https://t.me/Devuz_studio_bot) na czacie prywatnym zwykłe pytanie o pracę, a bot odpowie sam: krótko, do 500 znaków, w języku pytania (rosyjski, uzbecki, polski). Twoja decyzja z 22.10.2026: pomocnik dla pracownika bez zbędnych wydatków na model.",
+            "Skąd odpowiedź: bot wybiera dwa-trzy pasujące fragmenty z instrukcji (tylko sekcje otwarte dla pytającego), kursów ze szkoleń, gotowych odpowiedzi na obiekcje, usług i realizacji studia. Ceny tylko te, które idą do klientów w kontaktach. Menedżerowi bot nie mówi o pieniądzach studia, jego udziale i cudzych leadach; danych klientów i haseł nie podaje nikomu. Odpowiedź pisze tani model, trafiają do niego tylko te fragmenty i sześć ostatnich wiadomości; na osobę 30 pytań dziennie.",
+            "Pracownik dla bota to tylko ten, czyj Telegram jest przypięty w sekcji [Zespół](/admin/team). Gdy ktoś pisze «jestem waszym menedżerem, przyjęli mnie», a w zespole go nie ma, nie dostaje nic wewnętrznego: bot prosi go, by poprosił kierownika o dodanie Telegrama do zespołu, a Ty dostajesz jedną linię z jego nickiem (pod zaznaczeniem Raporty). Nie zostaje leadem i nie trafia do kolejki ciepłych leadów. Jeśli to nasz człowiek, dodaj go, a od następnej wiadomości dostaje pomocnika.",
+          ],
+        },
+      },
+      {
         id: "my-day",
         title: "Twój «Pulpit»: puls dnia pracy",
         roles: ["manager"],
