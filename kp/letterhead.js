@@ -42,6 +42,17 @@
     "<span><b>ИП MAKSIMOV EGOR ANDREEVICH</b> · Республика Узбекистан, г. Ташкент, " +
     "улица Шота Руставели, 138</span><span>devuz.studio</span>";
 
+  /* Документ на узбекском (html lang="uz"): шапка и подвал тоже на нём —
+     клиент читает бланк целиком, а не только текст. */
+  if (document.documentElement.lang === "uz") {
+    head = head
+      .replace("Разработка сайтов, приложений и ИИ-продуктов · Ташкент", "Saytlar, ilovalar va sun’iy intellekt mahsulotlari · Toshkent")
+      .replace("Ташкент, улица Шота Руставели, 138", "Toshkent, Shota Rustaveli ko‘chasi, 138");
+    foot =
+      "<span><b>YaTT MAKSIMOV EGOR ANDREEVICH</b> · O‘zbekiston Respublikasi, Toshkent sh., " +
+      "Shota Rustaveli ko‘chasi, 138</span><span>devuz.studio</span>";
+  }
+
   /* Черновик без юрлица (body data-no-legal): в подвале только сайт, пока
      стороны не решили, от какого лица подписывается договор. */
   if (document.body.hasAttribute("data-no-legal"))
@@ -49,6 +60,8 @@
 
   var sheets = document.querySelectorAll(".sheet");
   for (var i = 0; i < sheets.length; i++) {
+    /* Обложка (.sheet.cover) — без бланка: она в регистре заказчика. */
+    if (sheets[i].classList.contains("cover")) continue;
     var top = document.createElement("header");
     top.className = "lh-head";
     top.innerHTML = head.replace("{logo}", logo(i));
