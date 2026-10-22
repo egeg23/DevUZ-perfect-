@@ -20,13 +20,13 @@ const kg = (v) => Number(String(v || "").replace(/\s/g, "")) || 0;
 
 /* Разделы их сайта; ключ — для живой сцены (fleet/<ключ>-16|9.bin). */
 export const KINDS = [
-  { cat: "pikap", key: "pikap", title: "Pikaplar", line: "D-MAX IRBIS LSE, OKSUS, SAHAR, tez yordam", lead: "ISUZU D-MAX IRBIS LSE", where: "Tog‘ va dala yo‘llari",
+  { cat: "pikap", short: "Pikap", key: "pikap", title: "Pikaplar", line: "D-MAX IRBIS LSE, OKSUS, SAHAR, tez yordam", lead: "ISUZU D-MAX IRBIS LSE", where: "Tog‘ va dala yo‘llari",
     bars: [["Quvvat", 190, 300, "190 o.k."], ["Dvigatel hajmi", 2999, 8000, "2 999 sm³"], ["Yuk ko‘tarish", 670, 10000, "670 kg"]], tags: ["4x4", "ISUZU 4JJ3, dizel", "5 o‘rin"], pin: [17, 47], box: [6, 28] },
-  { cat: "yuk", key: "yuk", title: "Yuk avtomobillari", line: "NMR, NPR, NQR, FVR, CYZ shassilari: furgon, refrijerator, samosval, bortli, kran", lead: "ISUZU FVR34K", where: "Qurilish maydoni, samosval",
+  { cat: "yuk", short: "Yuk", key: "yuk", title: "Yuk avtomobillari", line: "NMR, NPR, NQR, FVR, CYZ shassilari: furgon, refrijerator, samosval, bortli, kran", lead: "ISUZU FVR34K", where: "Qurilish maydoni, samosval",
     bars: [["Quvvat", 240, 400, "240 o.k."], ["Dvigatel hajmi", 7790, 15000, "7 790 sm³"], ["Yuk ko‘tarish", 9300, 16000, "9 300 kg"]], tags: ["To‘liq massa 18 t", "6HK1"], pin: [40, 36], box: [28.5, 50.5] },
-  { cat: "avtobus", key: "avtobus", title: "Avtobuslar", line: "SAZ LE60, gazda yuradigan HC45, HD50", lead: "SAZ LE60", where: "Shahar yo‘nalishlari",
+  { cat: "avtobus", short: "Avtobus", key: "avtobus", title: "Avtobuslar", line: "SAZ LE60, gazda yuradigan HC45, HD50", lead: "SAZ LE60", where: "Shahar yo‘nalishlari",
     bars: [["Yo‘lovchilar", 56, 60, "56 o‘rin"], ["Quvvat", 190, 300, "190 o.k."]], tags: ["Past pol", "Evro-5", "2012-yildan konveyerda"], pin: [62, 36], box: [50.5, 74.5] },
-  { cat: "maxsus", key: "vishka", title: "Maxsus texnika", line: "suv tashuvchilar, benzovozlar, sug‘orish-yuvish, avtominoralar, qutqaruvchilar", lead: "ISUZU NQR90L-K", where: "Shahar xo‘jaligi",
+  { cat: "maxsus", short: "Maxsus", key: "vishka", title: "Maxsus texnika", line: "suv tashuvchilar, benzovozlar, sug‘orish-yuvish, avtominoralar, qutqaruvchilar", lead: "ISUZU NQR90L-K", where: "Shahar xo‘jaligi",
     bars: [["Yuk ko‘tarish", 5000, 10000, "5 000 kg"], ["Quvvat", 155, 300, "155 o.k."]], tags: ["Avtominora 18 va 22 m", "Avariya-qutqaruv"], pin: [84, 41], box: [74.5, 94] },
 ];
 
@@ -44,8 +44,14 @@ export function lineupBlock(IMG, ic) {
 <span class="ln-sp" aria-hidden="true"></span>
 <i class="rl ghost ln-floor" aria-hidden="true"></i>
 ${KINDS.map((k) => `<button type="button" class="ln-hs${k.pin[0] > 70 ? " flip" : ""}" data-k="${k.cat}" style="--x:${k.pin[0]}%;--y:${k.pin[1]}%;--l:${k.box[0]}%;--r:${k.box[1]}%" aria-haspopup="dialog"><span class="ln-pin"><i></i><small>${k.title}</small><b>${esc(k.lead)}</b></span></button>`).join("")}
-</div></div>
-<p class="ln-swipe" aria-hidden="true">${ic("swipe")}<span>Surib ko‘ring</span></p>
+</div>
+<button type="button" class="ln-ar ln-prev" data-d="-1" aria-label="Oldingi texnika">${ic("left")}</button><button type="button" class="ln-ar ln-next" data-d="1" aria-label="Keyingi texnika">${ic("right")}</button>
+</div>
+<div class="wrap ln-m" id="ln-m">
+<div class="ln-tabs" role="tablist" aria-label="Texnika turi">${KINDS.map((k, i) => `<button type="button" role="tab" aria-selected="${i ? "false" : "true"}" data-i="${i}">${k.short}</button>`).join("")}<i class="rl" aria-hidden="true"></i></div>
+<div class="ln-card" aria-live="polite"><small id="ln-mk">${KINDS[0].title}</small><b id="ln-mh">${esc(KINDS[0].lead)}</b><span id="ln-ml">${esc(KINDS[0].line)}</span>
+<button type="button" class="btn btn-red" id="ln-mb" aria-haspopup="dialog"><span>Batafsil · <em id="ln-mn">${count(KINDS[0].cat)}</em> ta model</span>${ic("arrow")}</button></div>
+</div>
 <ul class="wrap ln-cats">${KINDS.map((k, i) => `<li class="rv" style="--d:${i * 0.45}s"><i class="rl" aria-hidden="true"></i><button type="button" class="ln-cat" data-k="${k.cat}" aria-haspopup="dialog"><b>${k.title}</b><span>${esc(k.line)}</span><em>${count(k.cat)} ta model ${ic("arrow")}</em></button></li>`).join("")}</ul>
 </section>`;
 }
