@@ -1,0 +1,36 @@
+{
+  "collectionName": "components_block_projects",
+  "info": {
+    "displayName": "Проекты",
+    "icon": "apps"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "text"
+    },
+    "text": {
+      "type": "text"
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "Все",
+        "Архитектура",
+        "Интерьер"
+      ],
+      "default": "Все"
+    },
+    "photos": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "collectionName": "components_block_news",
+  "info": {
+    "displayName": "Выставки и новости",
+    "icon": "calendar"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "text"
+    },
+    "text": {
+      "type": "text"
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

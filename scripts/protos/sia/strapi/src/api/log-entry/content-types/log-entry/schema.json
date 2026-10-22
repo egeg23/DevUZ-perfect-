@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "log_entries",
+  "info": {
+    "singularName": "log-entry",
+    "pluralName": "log-entries",
+    "displayName": "Журнал",
+    "description": "Пишется само: кто, что и когда изменил"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "action": {
+      "type": "enumeration",
+      "enum": [
+        "Создано",
+        "Изменено",
+        "Удалено",
+        "Опубликовано",
+        "Снято с публикации"
+      ]
+    },
+    "model": {
+      "type": "string"
+    },
+    "recordId": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "user": {
+      "type": "string"
+    }
+  }
+}

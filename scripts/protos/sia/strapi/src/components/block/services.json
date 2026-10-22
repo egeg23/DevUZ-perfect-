@@ -1,0 +1,27 @@
+{
+  "collectionName": "components_block_services",
+  "info": {
+    "displayName": "Услуги",
+    "icon": "briefcase"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "text"
+    },
+    "text": {
+      "type": "text"
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false
+    },
+    "photos": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    }
+  }
+}

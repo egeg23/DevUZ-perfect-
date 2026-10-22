@@ -1,0 +1,45 @@
+{
+  "kind": "singleType",
+  "collectionName": "contacts",
+  "info": {
+    "singularName": "contact",
+    "pluralName": "contacts",
+    "displayName": "Контакты",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "phone": {
+      "type": "string"
+    },
+    "mobile": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email"
+    },
+    "address": {
+      "type": "string"
+    },
+    "metro": {
+      "type": "string"
+    },
+    "hours": {
+      "type": "string"
+    },
+    "whatsapp": {
+      "type": "string"
+    },
+    "telegram": {
+      "type": "string"
+    },
+    "social": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.link"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "kind": "collectionType",
+  "collectionName": "leads",
+  "info": {
+    "singularName": "lead",
+    "pluralName": "leads",
+    "displayName": "Заявки",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email"
+    },
+    "message": {
+      "type": "text"
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": [
+        "Сайт",
+        "WhatsApp",
+        "Telegram",
+        "Телефон",
+        "Почта"
+      ],
+      "default": "Сайт"
+    },
+    "stage": {
+      "type": "enumeration",
+      "enum": [
+        "Новая",
+        "В работе",
+        "Договор",
+        "Отказ"
+      ],
+      "default": "Новая"
+    },
+    "projectType": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "text"
+    }
+  }
+}
