@@ -520,8 +520,8 @@ function panelBlock() {
 <div class="sec-h"><p class="cap">Панель сайта · Strapi</p><h2 class="big" data-lines>${lines(["Сайт меняете", "<em>сами, без разработчика</em>"])}</h2>
 <p class="pn-note">Панель на Strapi, бесплатной открытой системе: стоит на вашем сервере, платы за неё нет. Проекты с фото и чертежами, главная по блокам, услуги, новости и выставки, коллектив, контакты, заявки с сайта. Пользователи с ролями: редактор сайта, медиа, менеджер заявок; журнал действий. Ниже снимки панели, уже наполненной проектами бюро.</p></div>
 <ul class="pn-shots">${STRAPI.map(([f, t]) => `<li><a href="${IMG}/strapi/${f}.webp" target="_blank" rel="noopener"><img src="${IMG}/strapi/${f}-m.webp" srcset="${IMG}/strapi/${f}-m.webp 720w, ${IMG}/strapi/${f}.webp 1440w" sizes="(max-width: 800px) 86vw, 42vw" alt="${esc(t)}" loading="lazy" decoding="async" width="1440" height="900"></a><p class="cap">${esc(t)}</p></li>`).join("")}</ul>
-<div class="sec-h pn-demo-h"><p class="cap">Попробовать в браузере</p><p class="pn-note">Как правка ложится на сайт: добавьте новость здесь, и она появится в блоке «Выставки» на этой странице. Это демонстрация, она хранит правки только в вашем браузере.</p></div>
-<div class="pn-frame"><div class="pn-bar" aria-hidden="true"><i></i><i></i><i></i><span>sia88.ru/admin</span></div><iframe title="Демонстрация панели SIA" data-src="${href("panel")}?embed=1" loading="lazy"></iframe></div>
+<div class="sec-h pn-demo-h"><p class="cap">Попробовать панель</p><p class="pn-note">Та же панель Strapi, разделы и роли, прямо в браузере: добавьте новость, и она появится в блоке «Выставки» на этой странице. Демонстрация хранит правки только в вашем браузере, в работе панель стоит на вашем сервере.</p></div>
+<div class="pn-frame"><div class="pn-bar" aria-hidden="true"><i></i><i></i><i></i><span>sia88.ru/admin</span></div><iframe title="Панель сайта SIA на Strapi" data-src="${href("panel")}?embed=1" loading="lazy"></iframe></div>
 <div class="pn-act"><a class="btn btn-l" href="${href("panel")}">Открыть демонстрацию во весь экран</a></div>
 </section>`;
 }
@@ -591,7 +591,7 @@ function panelPage() {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Панель сайта SIA · макет DevUz Studio</title>
+<title>Панель сайта SIA · Strapi · макет DevUz Studio</title>
 <meta name="description" content="Панель сайта архитектурного бюро SIA: проекты с фото, разделы сайта, новости, коллектив, медиатека, заявки, пользователи и роли.">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="theme-color" content="#14110e">
