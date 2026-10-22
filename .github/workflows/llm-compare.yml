@@ -19,6 +19,9 @@ on:
       repeat:
         description: Сколько раз прогнать каждый разговор (1-5)
         default: "1"
+      models:
+        description: Модели Claude через запятую (claude-haiku-4-5,claude-sonnet-5) — сравнить их между собой; пусто — как в бою против Qwen
+        default: ""
 
 permissions:
   contents: read
@@ -41,4 +44,4 @@ jobs:
             cd "${{ secrets.VPS_APP_DIR || '/opt/devuz' }}"
             set -a; . ./.env; set +a
             export NODE_OPTIONS=--use-env-proxy
-            node --import ./tests/alias-hook.mjs scripts/llm-compare.mjs "${{ inputs.set }}" "${{ inputs.repeat }}"
+            node --import ./tests/alias-hook.mjs scripts/llm-compare.mjs "${{ inputs.set }}" "${{ inputs.repeat }}" "${{ inputs.models }}"
