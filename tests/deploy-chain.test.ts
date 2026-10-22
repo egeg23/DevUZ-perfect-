@@ -297,3 +297,20 @@ test("выкатку не запускает то, что сайт не чита
     assert.doesNotMatch(pattern, /^(app|lib|components|content|public|scout|deploy|tests)\b|^scripts\/\*|^\*\*$|^\.github\/\*\*|deploy-vps|vps-deploy/, pattern);
   }
 });
+
+/*
+ * Панель SIA на Strapi живёт на нашем сервере (владелец, 22.10.2026), но
+ * собирается в GitHub: сервер только скачивает образ и запускает его с
+ * потолком памяти, наружу — только через nginx по /sia-cms/.
+ */
+test("панель SIA: образ из GitHub, на сервере только запуск с потолком памяти", () => {
+  const wf = read(".github/workflows/sia-cms.yml");
+  assert.match(wf, /docker\/build-push-action/, "образ не собирается в Actions");
+  const script = wf.slice(wf.indexOf("script: |"));
+  assert.doesNotMatch(script, /docker build|npm (ci|install|run build)|strapi build/, "сборка на сервере");
+  assert.match(script, /--memory 700m/, "у контейнера нет потолка памяти");
+  assert.match(script, /-p 127\.0\.0\.1:1338:1337/, "контейнер слушает не только локальный адрес");
+  assert.match(script, /location \^~ \/sia-cms\//, "путь /sia-cms/ не закреплён за панелью");
+  assert.doesNotMatch(script, /cat "\$D\/\.env"|echo "\$\(k\)"/, "ключи панели попадают в журнал");
+  assert.match(read("deploy/nginx-devuz.conf"), /include \/etc\/nginx\/snippets\/devuz-extra\/\*\.conf;/, "nginx сайта не подключает дополнительные пути");
+});

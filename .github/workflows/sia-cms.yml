@@ -1,0 +1,215 @@
+# Панель сайта бюро SIA на Strapi — на нашем сервере, по адресу
+# https://devuz.studio/sia-cms/admin (владелец, 22.10.2026: «Давай на нашем
+# сервере развернём, не демо вариант»).
+#
+# Правило «Сервер не собирает сайт» соблюдено: образ собирает GitHub и кладёт
+# в ghcr.io/egeg23/sia-cms, сервер его только скачивает и запускает. Контейнер
+# ограничен (700 МБ памяти, одно ядро), слушает только 127.0.0.1:1338, наружу
+# его отдаёт nginx сайта по пути /sia-cms/. Своего поддомена нет: DNS
+# devuz.studio без записи «*».
+#
+# Данные на сервере в /opt/sia-cms: база SQLite (data/), загруженные фото
+# (uploads/) и ключи Strapi (.env, создаются на сервере при первой выкатке и
+# в журнал не попадают — репозиторий открытый). Обновление образа данных не
+# трогает. Пустая база при первом запуске наполняется проектами бюро
+# (scripts/start.sh). Первого владельца панели заводит человек сам на
+# /sia-cms/admin сразу после первой выкатки.
+name: Панель SIA (Strapi)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/protos/sia/strapi/**"
+      - ".github/workflows/sia-cms.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sia-cms
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/sia-cms
+
+jobs:
+  build:
+    name: Сборка образа Strapi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: scripts/protos/sia/strapi/Dockerfile
+          push: true
+          build-args: |
+            PUBLIC_URL=https://devuz.studio/sia-cms
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:main
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=sia-cms
+          cache-to: type=gha,mode=max,scope=sia-cms
+
+  deploy:
+    name: Запуск на сервере
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Запуск по SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          DEPLOY_TOKEN: ${{ github.token }}
+          DEPLOY_ACTOR: ${{ github.actor }}
+          DEPLOY_IMAGE: ${{ env.IMAGE }}:${{ github.sha }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: DEPLOY_TOKEN,DEPLOY_ACTOR,DEPLOY_IMAGE
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+            unset HTTPS_PROXY HTTP_PROXY ALL_PROXY https_proxy http_proxy all_proxy
+            [ "$(id -u)" -eq 0 ] || { echo "✗ нужен root (nginx и /opt)"; exit 1; }
+            D=/opt/sia-cms
+
+            echo "════ Место и память ════"
+            free -m | sed -n 1,2p
+            FREE_MB="$(df -Pm /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}')"
+            echo "свободно на диске: ${FREE_MB:-?} МБ"
+            if [ -n "$FREE_MB" ] && [ "$FREE_MB" -lt 3000 ]; then
+              echo "✗ меньше 3 ГБ свободного места — образ не кладу (Actions → «Место на сервере»)"
+              exit 1
+            fi
+
+            echo "════ Каталог и ключи ════"
+            mkdir -p "$D/data" "$D/uploads"
+            chown -R 1000:1000 "$D/data" "$D/uploads"
+            if [ ! -s "$D/.env" ]; then
+              k() { openssl rand -base64 32 | tr -d '\n=+/'; }
+              umask 077
+              {
+                echo "APP_KEYS=$(k),$(k),$(k),$(k)"
+                echo "API_TOKEN_SALT=$(k)"
+                echo "ADMIN_JWT_SECRET=$(k)"
+                echo "JWT_SECRET=$(k)"
+                echo "TRANSFER_TOKEN_SALT=$(k)"
+                echo "ENCRYPTION_KEY=$(k)"
+              } > "$D/.env"
+              echo "✓ ключи созданы на сервере (в журнал не выводятся)"
+            else
+              echo "✓ ключи на месте"
+            fi
+
+            echo "════ Образ ════"
+            echo "$DEPLOY_TOKEN" | docker login ghcr.io -u "$DEPLOY_ACTOR" --password-stdin >/dev/null
+            docker pull -q "$DEPLOY_IMAGE"
+            docker logout ghcr.io >/dev/null 2>&1 || true
+
+            echo "════ Контейнер ════"
+            OLD="$(docker inspect -f '{{.Config.Image}}' sia-cms 2>/dev/null || true)"
+            docker rm -f sia-cms >/dev/null 2>&1 || true
+            run() {
+              docker run -d --name sia-cms --restart unless-stopped \
+                --memory 700m --memory-swap 700m --cpus 1 \
+                -p 127.0.0.1:1338:1337 --env-file "$D/.env" \
+                -v "$D/data:/app/.tmp" -v "$D/uploads:/app/public/uploads" \
+                --log-opt max-size=20m --log-opt max-file=3 \
+                "$1" >/dev/null
+            }
+            run "$DEPLOY_IMAGE"
+            OK=0
+            for i in $(seq 1 60); do
+              if [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:1338/_health || true)" = "204" ]; then OK=1; break; fi
+              sleep 5
+            done
+            if [ "$OK" != "1" ]; then
+              echo "✗ Strapi не поднялся за 5 минут, последние строки:"
+              docker logs --tail 60 sia-cms 2>&1 | sed 's/^/  /'
+              if [ -n "$OLD" ] && [ "$OLD" != "$DEPLOY_IMAGE" ]; then
+                docker rm -f sia-cms >/dev/null 2>&1 || true
+                run "$OLD" && echo "↩ вернул прошлый образ"
+              fi
+              exit 1
+            fi
+            echo "✓ Strapi поднялся"
+            docker logs --tail 15 sia-cms 2>&1 | grep -E "Первый запуск|Готово|started" | sed 's/^/  /' || true
+
+            echo "════ nginx: путь /sia-cms/ ════"
+            F=/etc/nginx/sites-available/devuz.studio
+            SN=/etc/nginx/snippets/devuz-extra
+            mkdir -p "$SN"
+            cat > "$SN/sia-cms.conf" <<'NGX'
+            # Панель SIA на Strapi: контейнер sia-cms на 127.0.0.1:1338 (.github/workflows/sia-cms.yml).
+            location = /sia-cms { return 301 /sia-cms/admin; }
+            location = /sia-cms/ { return 301 /sia-cms/admin; }
+            location ^~ /sia-cms/ {
+                client_max_body_size 50m;
+                add_header X-Robots-Tag "noindex, nofollow" always;
+                proxy_pass http://127.0.0.1:1338/;
+                proxy_http_version 1.1;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_read_timeout 120s;
+            }
+            NGX
+            BAK=""
+            if ! grep -q 'snippets/devuz-extra' "$F"; then
+              BAK="$F.bak.sia-cms.$(date +%Y%m%d-%H%M%S)"
+              cp "$F" "$BAK"
+              python3 - "$F" <<'PY'
+            import io, sys
+            p = sys.argv[1]
+            s = io.open(p, encoding="utf-8").read()
+            i = s.find("server_name devuz.studio;")
+            j = s.find("\n    location ", i)
+            if i < 0 or j < 0:
+                sys.exit("не нашёл блок devuz.studio")
+            line = "\n    # Дополнительные пути сайта (панель SIA на Strapi и т. п.).\n    include /etc/nginx/snippets/devuz-extra/*.conf;\n"
+            io.open(p, "w", encoding="utf-8").write(s[:j] + line + s[j:])
+            PY
+              echo "· строка include добавлена (копия: $BAK)"
+            fi
+            if nginx -t >/dev/null 2>&1; then
+              systemctl reload nginx
+              echo "✓ nginx перечитан"
+            else
+              echo "✗ nginx -t не прошёл — возвращаю как было"
+              [ -n "$BAK" ] && cp "$BAK" "$F"
+              rm -f "$SN/sia-cms.conf"
+              nginx -t && systemctl reload nginx
+              exit 1
+            fi
+
+            echo "════ Проверка снаружи ════"
+            sleep 2
+            echo "health: $(curl -s -o /dev/null -w '%{http_code}' https://devuz.studio/sia-cms/_health)"
+            echo "admin:  $(curl -s -o /dev/null -w '%{http_code}' https://devuz.studio/sia-cms/admin)"
+            echo "сайт:   $(curl -s -o /dev/null -w '%{http_code}' https://devuz.studio/)"
+
+            echo "════ Уборка старых образов sia-cms ════"
+            docker images ghcr.io/egeg23/sia-cms --format '{{.Repository}}:{{.Tag}}' \
+              | grep -v -e ":${DEPLOY_IMAGE##*:}$" -e ':main$' | tail -n +2 \
+              | xargs -r docker rmi >/dev/null 2>&1 || true
+            docker stats --no-stream --format '{{.Name}} {{.MemUsage}} {{.CPUPerc}}' sia-cms
