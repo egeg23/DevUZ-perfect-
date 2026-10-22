@@ -96,4 +96,7 @@ test("владельцу и руководителю — всё, с «зачем
   }
   assert.ok((text.match(/Зачем: /g) ?? []).length >= 8, "у доработок — зачем");
   assert.doesNotMatch(text, /доля студии|котёл|соучредител/i);
+  // Владелец, 23.10.2026: «Убери… название Claude / Qwen».
+  assert.doesNotMatch(text, /Claude|Qwen|Haiku|Sonnet|Opus/i);
+  assert.ok(text.includes("Своя LLM — этап аудита текущих требований к запуску."));
 });
