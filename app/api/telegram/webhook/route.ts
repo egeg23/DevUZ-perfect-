@@ -93,6 +93,8 @@ import {
   saveCircleFromBot,
   takeCircle,
 } from "@/lib/admin/circle-bot";
+import { answerStaff, claimsStaff, helperLang, notStaffText } from "@/lib/admin/staff-helper";
+import { alertStaffClaim, claimedBefore } from "@/lib/admin/staff-helper-store";
 import { problemText, receivedText, transcribesVoice, voiceFromMessage, voiceProblem } from "@/lib/admin/voice-notes";
 import { queueVoice } from "@/lib/admin/voice-notes-store";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
@@ -856,6 +858,12 @@ async function handleClient(message: NonNullable<Update["message"]>) {
 
   if (!text) return;
 
+  // Сотрудник пишет боту обычный текст — помощник, а не первичка; называет
+  // себя сотрудником, а в «Команде» его нет — короткий ответ и строка
+  // владельцу, но не лид (lib/admin/staff-helper.ts). Команды, кнопки,
+  // кружки и голосовые разобраны выше и сюда не доходят.
+  if (await handleStaffText(message, text)) return;
+
   const session = sessionFor(chat.id) ?? startSession(chat.id, locale);
 
   // Скидка за первую минуту лежит в базе за чатом. Сессия в памяти могла
@@ -874,6 +882,52 @@ async function handleClient(message: NonNullable<Update["message"]>) {
     session.transcript.length === 0 ? await scoutContext(message.from?.id) : null;
 
   await respond(chat.id, session, message.from, text, { scoutNote });
+}
+
+/**
+ * Помощник сотруднику и «я ваш сотрудник» (владелец, 22.10.2026).
+ *
+ * Сотрудник — только по базе: активный, с привязанным Telegram. Ему —
+ * ответ помощника о работе. Не сотрудник, который пишет «я ваш менеджер,
+ * меня взяли», внутреннего не получает: просьба добавить его в «Команду» и
+ * строка владельцу и руководителю. Первичку с ним не ведём: он не клиент, и
+ * в очередь тёплых лидов он не идёт. База не ответила — как было: первичка.
+ */
+async function handleStaffText(message: NonNullable<Update["message"]>, text: string): Promise<boolean> {
+  const from = message.from;
+  const chatId = message.chat.id;
+  if (!from?.id) return false;
+
+  const { staff, offline } = await findStaffByTelegram(from.id);
+  if (staff) {
+    const stopTyping = typingIndicator(chatId);
+    try {
+      const answer = await answerStaff({ staff, text });
+      stopTyping();
+      // Пушем не дублируем: человек сам сидит в этом чате и ждёт ответа.
+      await sendMessage(chatId, esc(answer.text), { mirror: false });
+    } catch (error) {
+      stopTyping();
+      console.error("staff-helper", error);
+    }
+    return true;
+  }
+  if (offline) return false;
+
+  const claims = claimsStaff(text);
+  const existing = sessionFor(chatId);
+  const known =
+    claims ||
+    existing?.staffClaim === true ||
+    (!existing?.transcript.length && (await claimedBefore(from.id).catch(() => false)));
+  if (!known) return false;
+
+  const session = existing ?? startSession(chatId, localeOf(from));
+  session.staffClaim = true;
+  saveSession(chatId, session);
+  await sendMessage(chatId, esc(notStaffText(helperLang(text))));
+  if (claims) await alertStaffClaim({ id: from.id, username: from.username, first_name: from.first_name }).catch((error) => console.error("staff-helper: строка владельцу", error));
+  return true;
 }
 
 /**

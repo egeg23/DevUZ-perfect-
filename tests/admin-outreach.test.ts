@@ -356,7 +356,8 @@ test("ответ находится по id отправителя, а не то
   // сверялись только по адресу, их ответы уходили в никуда, и снаружи это
   // выглядело как «клиент не отвечает».
   assert.match(store, /target_user_id/, "id адресата не участвует в поиске разговора");
-  const byId = store.indexOf("String(row.target_user_id ?? \"\") === userId");
+  // По id — одной строкой из базы (трафик, 22.10.2026), по адресу — из списка.
+  const byId = store.indexOf('.eq("target_user_id", userId)');
   const byHandle = store.indexOf("normalizeHandle(row.target) === handle");
   assert.ok(byId > 0 && byHandle > 0, "нет обоих способов");
   assert.ok(byId < byHandle, "адрес человек меняет, id — нет: сверять надо сперва по id");

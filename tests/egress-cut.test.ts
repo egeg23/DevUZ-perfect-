@@ -76,6 +76,21 @@ test("лиды без движения: просмотры не читаются
   assert.match(tidy, /\.not\("action", "in", `\(\$\{NOT_MOVES\.join\(","\)\}\)`\)/);
 });
 
+test("входящее рабочему аккаунту: касание ищется по лёгким колонкам, целиком — одно", () => {
+  // 22.10.2026: каждое входящее, и от посторонних тоже, читало 500 касаний
+  // с письмом и обходом сайта — ~600 КБ за раз, 92% трафика скаута.
+  const talk = read("lib/admin/outreach-talk-store.ts");
+  const start = talk.indexOf("export async function recordInbound(");
+  const body = talk.slice(start, talk.indexOf("if (!prospect) return { matched: false };", start));
+  assert.match(talk, /const MATCH_FIELDS = "id, status, target, target_kind, target_user_id, contacts";/);
+  assert.doesNotMatch(talk.slice(talk.indexOf("const MATCH_FIELDS"), talk.indexOf("const MATCH_FIELDS") + 90), /message|walked/);
+  // Списки — только MATCH_FIELDS; PROSPECT_FIELDS — по id клиента (одна строка) или по найденному id.
+  for (const m of body.matchAll(/\.select\(PROSPECT_FIELDS\)([\s\S]*?);/g)) {
+    assert.match(m[1], /\.limit\(1\)|\.eq\("id", matchId\)\.maybeSingle\(\)/, "целиком — только одна строка");
+  }
+  assert.equal(body.match(/\.select\(MATCH_FIELDS\)/g)?.length, 3);
+});
+
 test("разборы на сайте: статья целиком — только на языке страницы", async () => {
   // 22.10.2026: список читал все четыре статьи — ~800 КБ за раз.
   const { columnsFor } = await import("@/lib/razbor/store");
