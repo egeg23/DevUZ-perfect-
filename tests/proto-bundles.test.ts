@@ -1958,7 +1958,13 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   /* Цифры — только с samauto.uz (docs/research/samauto.md). */
   for (const n of ["4JJ3", "2 999", "190", "140 kVt", "4x4", "670", "2 800", "5 285", "1 870", "1 790"]) assert.ok(page.includes(n), `нет цифры ${n}`);
   const text = page.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>|<[^>]+>/g, " ");
-  const allowed = new Set(["4", "3", "2", "999", "190", "140", "670", "800", "5", "285", "1", "870", "790", "998", "78", "80", "00", "21", "10", "2026", "66", "6", "0", "9", "34", "60"]);
+  /* Модели, характеристики и дилеры — их открытый каталог (catalog.py →
+     catalog.json, samauto.uz, 21.10.2026); сверх него — то, что сказано
+     рядом: LE60 с 2012 года, 24 месяца рассрочки, 360°, Automechanic CV 13
+     лет, поездка клуба 2025, демо-строки кабинета (12, 3, 20). */
+  const catalogNums: string[] = readFileSync("scripts/protos/samauto/catalog.json", "utf8").match(/\d+/g) ?? [];
+  const allowed = new Set(["4", "3", "2", "999", "190", "140", "670", "800", "5", "285", "1", "870", "790", "998", "78", "80", "00", "21", "10", "2026", "66", "6", "0", "9", "34", "60",
+    "2012", "2025", "24", "360", "13", "12", "20", ...catalogNums]);
   for (const n of text.match(/\d+/g) ?? []) assert.ok(allowed.has(n) || /^\d,\d$/.test(n), `число ${n} не из фактов`);
   /* Сцена: кадры для компьютера и телефона, по одному счёту, все на месте. */
   const seq = JSON.parse(readFileSync("scripts/protos/samauto/seq.json", "utf8")) as Record<"d" | "m", [string, number][]> & { order: string[] };
@@ -2008,19 +2014,45 @@ test("SamAuto: D-MAX из-под покрывала, разлёт, фара, п�
   assert.match(page, /codecs="avc1/, "телефон не проверяет, умеет ли он H.264");
   assert.match(page, /'seeked'/, "перемотка не ждёт прошлую — Safari отстаёт");
   assert.deepEqual(seq.order, frames, "порядок кадров на странице и в видео разный");
-  /* Финал: D-MAX уходит в пустыню, камера стоит, под текстом четыре вида
-     техники с их сайта; по нажатию — живая сцена и цифры полосками. Цифры —
-     только с samauto.uz (docs/research/samauto.md). */
-  const fleet = JSON.parse(page.match(/<script type="application\/json" id="sa-fleet">([\s\S]*?)<\/script>/)![1]) as Record<string, { bars: [string, number, number, string][]; tags: string[] }>;
-  assert.deepEqual(Object.keys(fleet), ["pikap", "yuk", "avtobus", "vishka"], "не четыре вида техники");
-  const facts = new Set([190, 2999, 670, 240, 7790, 9300, 56, 18, 22]);
-  for (const [k, f] of Object.entries(fleet)) {
-    assert.ok(page.includes(`data-k="${k}"`), `${k}: нет карточки`);
-    for (const b of f.bars) assert.ok(facts.has(b[1]) && b[1] <= b[2], `${k}: цифра ${b[1]} не с их сайта или больше шкалы`);
-    for (const ext of ["card.webp", "16.webp", "9.webp", "16.bin", "9.bin"]) assert.ok(existsSync(`public/protos/samauto/fleet/${k}-${ext}`), `${k}: нет ${ext}`);
-    for (const ext of ["16.mp4", "9.mp4"]) assert.ok(!existsSync(`public/protos/samauto/fleet/${k}-${ext}`), `${k}: живая сцена лежит незашифрованной`);
-    assert.ok(statSync(`public/protos/samauto/fleet/${k}-16.bin`).size < 8 * 1048576, `${k}: живая сцена тяжелее 8 МБ`);
+  /* Финал: D-MAX уходит в пустыню, дальше линейка на одном подиуме (владелец,
+     21.10.2026: «возьми кадр где все их машины стоят в ряд… после нажатия
+     уже открывается инфа о них»): четыре раздела их сайта, по нажатию —
+     живая сцена, цифры полосками и все модели раздела из их каталога. */
+  const cat = JSON.parse(page.match(/<script type="application\/json" id="sa-cat">([\s\S]*?)<\/script>/)![1]) as { items: { cat: string; title: string }[]; kinds: { cat: string; key: string; bars: [string, number, number, string][] }[]; dealers: { name?: string }[] };
+  assert.deepEqual(cat.kinds.map((k) => k.cat), ["pikap", "yuk", "avtobus", "maxsus"], "не четыре вида техники");
+  assert.ok(cat.items.length >= 40, "каталог моделей не перенесён с их сайта");
+  assert.ok(cat.dealers.filter((x) => x.name).length >= 20, "дилеры не перенесены с их сайта");
+  for (const k of cat.kinds) {
+    assert.ok(page.includes(`class="ln-hs`) && page.includes(`data-k="${k.cat}"`), `${k.cat}: машину на линейке не нажать`);
+    assert.ok(cat.items.some((i) => i.cat === k.cat), `${k.cat}: нет моделей`);
+    for (const b of k.bars) assert.ok(catalogNums.includes(String(b[1])) || ["2999", "7790", "9300", "5000"].includes(String(b[1])), `${k.cat}: цифра ${b[1]} не с их сайта`);
+    for (const ext of ["16.webp", "9.webp", "16.bin", "9.bin"]) assert.ok(existsSync(`public/protos/samauto/fleet/${k.key}-${ext}`), `${k.key}: нет ${ext}`);
+    for (const ext of ["16.mp4", "9.mp4"]) assert.ok(!existsSync(`public/protos/samauto/fleet/${k.key}-${ext}`), `${k.key}: живая сцена лежит незашифрованной`);
+    assert.ok(statSync(`public/protos/samauto/fleet/${k.key}-16.bin`).size < 8 * 1048576, `${k.key}: живая сцена тяжелее 8 МБ`);
   }
+  for (const it of cat.items) assert.ok(existsSync(`public/protos/samauto/cat/${(it as unknown as { n: number }).n}.webp`), `нет фото ${it.title}`);
+  assert.doesNotMatch(page, /narx[^<]{0,20}\d|so‘m/i, "цены в макете: на их сайте цены скрыты");
+  /* D-MAX 360°: стенд листается пальцем, цвет и диски — шейдером, подсказка
+     с рукой до первого касания (владелец, 21.10.2026). */
+  const tt = JSON.parse(readFileSync("scripts/protos/samauto/tt.json", "utf8")) as { n: number; wheel: Record<"d" | "m", unknown[]> };
+  for (const set of ["d", "m"] as const) {
+    const files = readdirSync(`public/protos/samauto/tt/${set}`);
+    assert.equal(files.filter((f) => f.endsWith(".bin")).length, tt.n, `стенд ${set}: не все кадры`);
+    assert.deepEqual(files.filter((f) => !f.endsWith(".bin")), [], `стенд ${set}: кадры лежат незашифрованными`);
+    assert.equal(tt.wheel[set].length, tt.n, `стенд ${set}: нет колёс для приближения`);
+  }
+  assert.match(page, /id="dm-hint"/, "нет подсказки, что D-MAX можно крутить");
+  assert.match(page, /touch-action:pan-y/, "стенд перехватывает прокрутку страницы пальцем");
+  assert.match(page, /setPointerCapture/, "стенд не крутится перетаскиванием");
+  assert.match(page, /data-paint="white"/, "нет выбора цвета");
+  assert.match(page, /data-rim="silver"/, "нет выбора дисков");
+  assert.match(page, /tw=tw\.filter/, "цвет меняется скачком, а не плавно");
+  /* Красные линии с волной — бегут только на экране и стоят при reduced motion. */
+  assert.match(page, /\.rl\.run::after\{animation:rl-wave/, "волны по красной линии нет");
+  assert.match(page, /prefers-reduced-motion: reduce\)\{\s*\.rl::after/, "волна не стоит при reduced motion");
+  /* Ариза не отправляет форму ни им, ни нам: телефон или их бот с готовым текстом. */
+  assert.doesNotMatch(page, /<form[^>]*action=/, "форма куда-то отправляет");
+  assert.ok(page.includes("https://t.me/samautobot"), "ариза не ведёт в их Telegram");
   assert.match(page, /<video class="fv-v" id="fv-v" muted playsinline loop preload="none"/, "живая сцена грузится до нажатия или не играет на iPhone");
   assert.match(page, /aria-modal="true"/, "окно техники без aria-modal");
   assert.match(page, /key==='Escape'/, "окно техники не закрывается с клавиатуры");

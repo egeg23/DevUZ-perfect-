@@ -2,7 +2,7 @@
 
 Владелец, 21.10.2026: «защити его, я не хочу, чтобы через консоль кто-то
 смог вытащить код и украсть то, что тут есть». Кадры сцены (seq/d, seq/m),
-видео телефона (seq/m.mp4) и живые сцены техники (fleet/*.mp4) лежат в
+видео телефона (seq/m.mp4) и живые сцены техники (fleet/*.mp4) и кадры стенда D-MAX (tt/<d|m>) лежат в
 public только зашифрованными: AES-256-GCM, файл = 12 байт nonce + шифр.
 Ключ — в хранилище секретов (`SCENE_KEY_SAMAUTO`), в репозитории его нет; макет
 получает его маршрутом app/proto/[token]/promo/scene, только когда открыт
@@ -29,7 +29,7 @@ def seal(path):
 
 
 n = 0
-for sub, ext in (("seq/d", ".webp"), ("seq/m", ".webp"), ("seq", ".mp4"), ("fleet", ".mp4")):
+for sub, ext in (("seq/d", ".webp"), ("seq/m", ".webp"), ("seq", ".mp4"), ("fleet", ".mp4"), ("tt/d", ".webp"), ("tt/m", ".webp")):
     d = os.path.join(PUB, sub)
     for f in sorted(os.listdir(d)):
         if f.endswith(ext) and f not in KEEP:
