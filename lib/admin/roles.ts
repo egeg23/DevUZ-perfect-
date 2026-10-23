@@ -60,7 +60,7 @@ export const ROLE_BADGE: Record<Role, Tr> = {
  * (lib/admin/nav.ts, components/admin/nav-menu.tsx). Названия групп — в
  * словаре content/admin-panel/shell.ts (`navGroupDict`).
  */
-export const NAV_GROUPS = ["home", "sales", "money", "marketing", "team", "reports", "help"] as const;
+export const NAV_GROUPS = ["home", "tasks", "sales", "money", "marketing", "team", "reports", "help"] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 export type Section = {
@@ -95,6 +95,12 @@ export const SECTIONS: readonly Section[] = [
   // страница „главная“ с пульсом их работы»). Первым пунктом меню и
   // отдельной группой: группа из одного раздела — просто ссылка.
   { href: "/admin/hq", label: { ru: "Главная", uz: "Bosh sahifa", pl: "Pulpit" }, roles: EVERYONE, group: "home" },
+  // Задачи — наша внутренняя CRM, своей кнопкой в шапке сразу за «Главной».
+  // Владелец, 23.10.2026: «Давай вынесем CRM нашу отдельной кнопкой в наше
+  // меню, чтобы она не была в лидах». Раньше задачи были блоком на «Лидах»,
+  // а «История задач» — страницей без пункта меню. Группа из одного раздела —
+  // просто ссылка (isSingle в lib/admin/nav.ts).
+  { href: "/admin/tasks", label: { ru: "Задачи", uz: "Vazifalar", pl: "Zadania" }, roles: EVERYONE, group: "tasks" },
   { href: "/admin", label: { ru: "Лиды", uz: "Lidlar", pl: "Leady" }, roles: EVERYONE, group: "sales" },
   { href: "/admin/orders", label: { ru: "Заявки", uz: "Buyurtmalar", pl: "Zamówienia" }, roles: EVERYONE, group: "sales" },
   { href: "/admin/scout", label: { ru: "Поиск", uz: "Qidiruv", pl: "Wyszukiwanie" }, roles: EVERYONE, group: "sales" },
@@ -210,8 +216,12 @@ export function canSee(role: Role, href: string): boolean {
  */
 export type SectionAccess = Readonly<Record<string, boolean>>;
 
-/** Разделы, которые не закрываются никому: «Лиды» — главная панели, «Инструкции» — справка. */
-export const ALWAYS_OPEN: readonly string[] = ["/admin", "/admin/help"];
+/**
+ * Разделы, которые не закрываются никому: «Лиды» — главная панели,
+ * «Задачи» — задачу может получить любой, и кнопка бота у неё ведёт сюда,
+ * «Инструкции» — справка.
+ */
+export const ALWAYS_OPEN: readonly string[] = ["/admin", "/admin/tasks", "/admin/help"];
 
 /** Строка из базы — в галочки: только известные разделы и только да/нет. */
 export function sectionAccess(raw: unknown): SectionAccess {

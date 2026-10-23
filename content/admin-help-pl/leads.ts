@@ -333,6 +333,76 @@ export const leadsSections: Record<string, HelpEntry> = {
     ],
   },
 
+  /* ── Zadania ─────────────────────────────────────────────────────── */
+  "/admin/tasks": {
+    what: "Nasz wewnętrzny CRM: wszystko, co obiecujemy klientom i sobie nawzajem, jest zadaniem z terminem i osobą odpowiedzialną. Na górze — zadania dla ciebie («Dla mnie»), zadania zlecone przez ciebie («Zleciłem») i formularz «Zleć zadanie». Niżej na tej samej stronie — «Historia zadań»: co zrobione, niezrobione, anulowane i ile razy przesuwano termin. Sekcja jest otwarta dla wszystkich i nie zamyka się znacznikami: zadanie może dostać każdy, a przycisk bota przy zadaniu prowadzi tutaj.",
+    items: [
+      {
+        id: "board",
+        title: "Zadania: zlecanie, przyjmowanie, zamykanie",
+        body: [
+          "Zadania to osobna sekcja: przycisk **«Zadania»** w menu, zaraz za «Pulpit». Blok **«Zadania»** jest na górze strony, pod nim — «Historia zadań». Zadanie może zlecić każdy pracownik każdemu, także sobie: menedżer — kierownikowi, kierownik — właścicielowi, ktokolwiek — komukolwiek. Zadanie widzą zlecający i wykonawca; jeśli dotyczy projektu — także wszyscy, którzy otwierają kartę tego projektu.",
+          "**«Dla mnie»** — zadania dla Ciebie: na górze najbliższy termin, niżej dalsze, zadania bez terminu — na samym końcu. Nowe jest oznaczone «nowe» i czeka na przycisk **«Przyjmij do realizacji»**: dzięki temu zlecający widzi, że zadanie zobaczyłeś i przyjąłeś. Przyjęte jest «w toku», a pod nim są **«Zrobione»** i **«Niezrobione»**. Zadanie, którego termin minął, jest podświetlone na czerwono i oznaczone «po terminie».",
+          "**«Przesuń termin»** otwiera warianty: «+1 godz.», «Jutro 18:00», «+3 dni», «Tydzień» — albo własna data i godzina z przyciskiem «Przesuń na». «+1 godz.», «+3 dni» i «Tydzień» liczą się od terminu, a jeśli już minął albo terminu nie było — od bieżącej chwili, żeby nowy termin nie wypadł w przeszłości. Zadanie bez terminu ma w tym miejscu **«Ustal termin»** z tymi samymi wariantami. Termin przesuwa i wykonawca, i zlecający — drugiej stronie bot od razu pisze nowy termin. Każde przesunięcie zostaje w historii zadania: stary termin, nowy i kto przesunął.",
+          "**«Zleciłem»** — zadania, które zleciłeś innym, i co się z nimi teraz dzieje: «nowe» (jeszcze nieprzyjęte), «w toku», «zrobione», «niezrobione», «po terminie». Zamknięte są tu widoczne jeszcze przez tydzień. «Zrobione» i «Niezrobione» klika tylko wykonawca — dlatego «zrobione» zawsze znaczy, że zrobił to sam wykonawca. Możesz przesunąć termin albo kliknąć **«Anuluj zadanie»**, jeśli zlecono je przez pomyłkę albo nie jest już potrzebne: zadanie stanie się «anulowane», wykonawca dostanie wiadomość, a przyciski w jego Telegramie zmienią się na «🚫 Задача отменена» (zadanie anulowane).",
+          "**«Zleć zadanie»** — na dole bloku: «Komu» (pola wyboru: jedna osoba albo kilka), «Co zrobić», «Szczegóły (opcjonalnie)», «Projekt (opcjonalnie)» i «Termin» — «dziś do 18:00», «jutro» i «za 3 dni» (oba do 18:00), «bez terminu» albo «własna data». Czas wszędzie taszkencki. Projekt wybiera się z otwartych projektów sekcji [«Projekty»](/admin/projects): najpierw zakłada się tam projekt klienta, potem można przypisywać do niego zadania. Ani projekt, ani termin nie są obowiązkowe. Jeśli zaznaczysz kilka osób, każda dostaje własne zadanie z tym samym tekstem, terminem i projektem: każdy sam je przyjmuje i zamyka, termin przesuwa się każdemu osobno, a w «Zleciłem» widać, kto już zaczął, a kto jeszcze nie. Ty sam jesteś na liście zaznaczony od razu — odznacz się, jeśli zadanie nie jest dla ciebie. Gdy tylko zadanie zostanie zlecone, bot od razu pisze do wykonawcy na Telegramie — do każdej zaznaczonej osoby. Zadanie dla siebie od razu jest «w toku» — nie trzeba go przyjmować i bot o nim nie pisze. Kto co zlecił, przyjął, zamknął, przesunął i anulował, zapisuje się w dzienniku działań.",
+        ],
+      },
+      {
+        id: "history",
+        title: "Edycja zadania i historia zadań",
+        body: {
+          manager: [
+            "**«Edytuj»** — pod zadaniem, które zleciłeś, dopóki jest otwarte. Możesz poprawić «Co zrobić», «Szczegóły», «Wykonawca» i projekt, potem **«Zapisz»**. Termin się tu nie zmienia: służy do tego «Przesuń termin», który ma własną historię przesunięć. Zadania zleconego tobie nie edytujesz: jeśli się nie zgadzasz — «Niezrobione» albo przesunięcie terminu, a resztę ustal ze zlecającym.",
+            "Zmieniłeś wykonawcę — u nowego zadanie zacznie się od nowa: «nowe», bot wyśle mu je jako nowe, przypomnienia od zera. Poprzedniemu zadanie zostanie zdjęte i dostanie o tym wiadomość. Zmieniłeś tekst albo projekt — bot napisze wykonawcy, co dokładnie się zmieniło, a wiadomość o zadaniu w jego Telegramie się zaktualizuje.",
+            "Zadanie, z którym coś się działo, ma na dole **«Historia»**: kto zlecił, kto przyjął, kiedy i z jakiego terminu na jaki przesuwano, co zmieniano (było → jest), jak się skończyło. Czas taszkencki. Obok terminu widać, ile razy go przesuwano.",
+            "**«Historia zadań»** — niżej na tej samej stronie (link «Historia zadań ↓» w nagłówku bloku przewija do niej). Są tam twoje zadania — zlecone przez ciebie i dla ciebie — z którymi w danym okresie coś się działo: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. «Co» zostawia jeden rodzaj kroków, «Za» — 7, 30 albo 90 dni. Na górze — ile jest każdego rodzaju. To tylko podgląd: zadania zmienia się wyżej, w bloku «Zadania».",
+          ],
+          head: [
+            "**«Edytuj»** — pod zadaniem, które zleciłeś, dopóki jest otwarte: «Co zrobić», «Szczegóły», «Wykonawca», projekt, potem **«Zapisz»**. Termin — przyciskiem «Przesuń termin», ma własną historię. Cudze zadania edytuje tylko ten, kto je zlecił: dzięki temu w historii zawsze widać, kto co zlecił.",
+            "Zmieniłeś wykonawcę — u nowego zadanie zacznie się od nowa: «nowe», bot wyśle je jako nowe, przypomnienia od zera; poprzedni dostanie wiadomość, że zadanie mu zdjęto. Zmieniłeś tekst albo projekt — bot napisze wykonawcy, co dokładnie się zmieniło, i zaktualizuje wiadomość o zadaniu.",
+            "Zadanie, z którym coś się działo, ma na dole **«Historia»**: kto zlecił, przyjął, przesuwał termin (z jakiego na jaki), co zmieniano (było → jest), jak się skończyło. Obok terminu — ile razy go przesuwano.",
+            "**«Historia zadań»** — niżej na tej samej stronie (link «Historia zadań ↓» w nagłówku bloku przewija do niej). Są tam zadania całego zespołu, z którymi w danym okresie coś się działo: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. Filtry: «Co» — rodzaj kroków, «Czyje» — jedna osoba (jej zadania i zlecone przez nią), «Za» — 7, 30 albo 90 dni. Na górze — podsumowanie, niżej — **«Według osób»**: ile zadań kto zrobił, nie zrobił, ile anulowano i ile razy przesuwano ich termin; liczone według wykonawcy, imię otwiera jego zadania. Częste przesunięcia i «niezrobione» u jednej osoby — powód do rozmowy. Zadań, które właściciel zlecił sam sobie, tu nie ma.",
+          ],
+          admin: [
+            "**«Edytuj»** — pod zadaniem, które zleciłeś, dopóki jest otwarte: «Co zrobić», «Szczegóły», «Wykonawca», projekt, potem **«Zapisz»**. Termin — przyciskiem «Przesuń termin», ma własną historię. Cudze zadania edytuje tylko ten, kto je zlecił: dzięki temu w historii zawsze widać, kto co zlecił.",
+            "Zmieniłeś wykonawcę — u nowego zadanie zacznie się od nowa: «nowe», bot wyśle je jako nowe, przypomnienia od zera; poprzedni dostanie wiadomość, że zadanie mu zdjęto. Zmieniłeś tekst albo projekt — bot napisze wykonawcy, co dokładnie się zmieniło, i zaktualizuje wiadomość o zadaniu.",
+            "Zadanie, z którym coś się działo, ma na dole **«Historia»**: kto zlecił, przyjął, przesuwał termin (z jakiego na jaki), co zmieniano (było → jest), jak się skończyło. Obok terminu — ile razy go przesuwano.",
+            "**«Historia zadań»** — niżej na tej samej stronie (link «Historia zadań ↓» w nagłówku bloku przewija do niej). Są tam wszystkie zadania studia, z którymi w danym okresie coś się działo: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. Filtry: «Co» — rodzaj kroków, «Czyje» — jedna osoba (jej zadania i zlecone przez nią), «Za» — 7, 30 albo 90 dni. Na górze — podsumowanie, niżej — **«Według osób»**: ile zadań kto zrobił, nie zrobił, ile anulowano i ile razy przesuwano ich termin; liczone według wykonawcy, imię otwiera jego zadania. Kierownik widzi to samo, poza zadaniami, które zleciłeś sam sobie.",
+          ],
+        },
+      },
+      {
+        id: "filter",
+        title: "Kolejność, grupy i projekty w zadaniach",
+        body: [
+          "Domyślnie zadania idą od najbliższego terminu do najdalszego: co się pali, jest na górze. Zadania bez terminu — na końcu, najnowsze pierwsze. W «Zleciłem» najpierw są otwarte, niżej — zamknięte w ciągu tygodnia.",
+          "Nad listami jest filtr. **«Grupuj»**: «bez grupowania» (po prostu według terminu), «według terminu» — grupy «Po terminie», «Termin dziś», «Termin jutro», «W ciągu 7 dni», «Później», «Bez terminu»; «według projektu» — zadania każdego projektu razem, «Bez projektu» na końcu; «według osoby» — w «Dla mnie» według zlecającego, w «Zleciłem» — według wykonawcy. Wewnątrz grupy kolejność jest ta sama — od najbliższego terminu.",
+          "**«Projekt»** zostawia zadania jednego projektu albo «Bez projektu». Wybierz i kliknij **«Pokaż»**. Wybór zapisuje się w adresie strony: nie resetuje się po kliknięciu przycisków w zadaniach, a stronę z nim możesz dodać do zakładek przeglądarki.",
+          "Zadanie z projektem ma w wierszu jego nazwę — kliknij, a otworzy się karta projektu. W karcie projektu są wszystkie jego zadania i link «Zleć zadanie»: otwiera sekcję [«Zadania»](/admin/tasks) z tym projektem już wybranym w formularzu.",
+        ],
+      },
+      {
+        id: "bot",
+        title: "Zadania w Telegramie i przypomnienia",
+        body: {
+          manager: [...TASKS_BOT, "Jeśli nie potrzebujesz wiadomości o zadaniach w Telegramie, wyłącza je kierownik albo właściciel — polem «Zadania» w Twoich powiadomieniach. Zadania zostają przy tym w sekcji «Zadania», a dźwięk w przeglądarce działa jak wcześniej."],
+          head: [...TASKS_BOT, "Wiadomości o zadaniach wyłącza się polem «Zadania» w [powiadomieniach](#team-notices) danej osoby — u siebie i u swoich menedżerów zmieniasz je w sekcji «Zespół». Zadania zostają przy tym w sekcji «Zadania», a dźwięk w przeglądarce działa."],
+          admin: [...TASKS_BOT, "Wiadomości o zadaniach wyłącza się polem «Zadania» w [powiadomieniach](#team-notices) — u każdego pracownika, w sekcji «Zespół». Zadania zostają przy tym w sekcji «Zadania», a dźwięk w przeglądarce działa."],
+        },
+      },
+      {
+        id: "alerts",
+        title: "Dźwięk i powiadomienia w przeglądarce",
+        body: [
+          "Dopóki panel jest otwarty — w dowolnej sekcji — co 45 sekund pyta serwer, czy jest coś nowego: zadanie zlecone Tobie, przesunięcie terminu albo anulowanie Twojego zadania przez zlecającego lub krok w zadaniu, które Ty zleciłeś (przyjęte, zrobione, niezrobione, przesunięty termin). Jeśli tak — rozlega się krótkie «ding-dong», w prawym dolnym rogu pojawia się okienko z przyciskiem «Otwórz zadania», a sekcja «Zadania», jeśli jest otwarta, odświeża się sama.",
+          "Żeby dodatkowo wyskakiwało powiadomienie systemowe — nawet gdy karta przeglądarki jest zwinięta — kliknij **«Włącz powiadomienia»** w bloku zadań i zezwól na nie w oknie przeglądarki. Przeglądarka pyta o zgodę dopiero po kliknięciu — dlatego jest przycisk. Po wyrażeniu zgody w jego miejscu pojawia się «Powiadomienia włączone».",
+          "Jeśli przeglądarka odmówiła, zamiast przycisku zobaczysz podpowiedź: na powiadomienia można zezwolić w ustawieniach strony (ikona po lewej stronie adresu). Dźwięk przeglądarka włącza po pierwszym kliknięciu w panelu — wcześniej strona nie może odtwarzać dźwięku, tak działają wszystkie przeglądarki. Twoje własne działania nie są oznaczane dźwiękiem. Panel zamknięty — w przeglądarce nic się nie pojawia, zostaje Telegram.",
+        ],
+      },
+    ],
+  },
+
   /* ── Лиды ─────────────────────────────────────────────────────────── */
   "/admin": {
     what: "Strona główna panelu i wszystkie zgłoszenia klientów: z czatu na stronie, formularza, bota w Telegramie, witryny, «Wyszukiwania» i Twoich kontaktów. Widać tu, kto napisał, czego potrzebuje, jak pilna jest sprawa i kto się nią zajmuje. Każde działanie na leadzie — przejęcie, otwarcie danych kontaktowych, zmiana statusu — trafia do dziennika z imieniem i godziną.",
@@ -342,19 +412,19 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "Co jest na stronie głównej",
         body: {
           manager: [
-            "Na samym początku strony głównej jest blok [«Zadania»](#leads-tasks): co zlecono Tobie, co Ty zleciłeś i formularz «Zleć zadanie». Niżej są kafelki: **«do wypłaty»** — ile już zarobiłeś, a jeszcze nie dostałeś (niżej drobnym drukiem — ile czeka, aż klient dopłaci), **«leady w toku»**, **«pilny kontakt»** i **«wpływy w miesiącu»** z Twoich projektów.",
+            "Zadań tu nie ma — są w osobnej sekcji [«Zadania»](#tasks-board) w menu. Na górze są kafelki: **«do wypłaty»** — ile już zarobiłeś, a jeszcze nie dostałeś (niżej drobnym drukiem — ile czeka, aż klient dopłaci), **«leady w toku»**, **«pilny kontakt»** i **«wpływy w miesiącu»** z Twoich projektów.",
             "Jeśli kierownik ustalił Ci plan kontaktów, nad kafelkami zobaczysz wiersz w rodzaju «Do planu zostało 12 — w tym tygodniu 18 z 30». Szczegóły — w punkcie [plan kontaktów](#prospect-plan).",
             "Niżej: [«Pilny kontakt»](#leads-urgent) — Twoje leady, które od dawna stoją w miejscu; «Rekomendacje na tydzień» — co poprawić (zob. [rekomendacje](#leads-coach)); [«Plan i wykonanie»](#leads-plan-fact) — cele, które Ci wyznaczono; a na samym dole — [lista leadów](#leads-list).",
           ],
           head: [
-            "Na początku — **«Czeka na Twoją decyzję»**: prośby menedżerów o przekazanie leada koledze. Decydujesz Ty albo właściciel — szczegóły w punkcie [przekazanie leada](#leads-transfer). Pod nimi — blok [«Zadania»](#leads-tasks): co zlecono Tobie i co Ty zleciłeś.",
+            "Na początku — **«Czeka na Twoją decyzję»**: prośby menedżerów o przekazanie leada koledze. Decydujesz Ty albo właściciel — szczegóły w punkcie [przekazanie leada](#leads-transfer). Zadania — w osobnej sekcji [«Zadania»](#tasks-board) w menu.",
             "Kafelki liczą Ciebie i Twój zespół razem: **«do wypłaty»** — tylko Twoje saldo, **«leady zespołu w toku»**, **«pilny kontakt»**, **«wpływy w tygodniu»**.",
             "Dalej: «Na dziś» — poranne wskazówki do Twoich leadów, [«Pilny kontakt»](#leads-urgent) dla Ciebie i zespołu z imionami, [«Zespół w tym tygodniu»](#leads-team-week), rekomendacje dla zespołu i dla Ciebie, «Najlepsi w tygodniu», [«Plan i wykonanie»](#leads-plan-fact) i [lista leadów](#leads-list).",
             "Zespół to menedżerowie przypisani do Ciebie w sekcji [«Zespół»](/admin/team). Dopóki nie masz zespołu, jego bloków na stronie głównej nie ma.",
           ],
           admin: [
             "Twoja strona główna jest podzielona na zakładki, żeby nie przewijać jednej długiej listy. Zakładka zapisuje się w adresie — możesz ją dodać do zakładek przeglądarki.",
-            "**«Dziś»** — od czego zacząć dzień: «Czeka na Twoją decyzję» (prośby o przekazanie leada), blok [«Zadania»](#leads-tasks), «Umowy do podpisu», kafelki z pieniędzmi, wskazówki «Na dziś» (przycisk «wygeneruj ponownie» zużywa jedno wywołanie modelu), «Pilny kontakt» dla całego studia i terminy podatkowe na dwa tygodnie.",
+            "**«Dziś»** — od czego zacząć dzień: «Czeka na Twoją decyzję» (prośby o przekazanie leada), linia z linkiem do sekcji [«Zadania»](#tasks-board), «Umowy do podpisu», kafelki z pieniędzmi, wskazówki «Na dziś» (przycisk «wygeneruj ponownie» zużywa jedno wywołanie modelu), «Pilny kontakt» dla całego studia i terminy podatkowe na dwa tygodnie.",
             "**«Leady»** — [lista leadów](#leads-list) ze wszystkimi filtrami. Złota liczba na zakładce — ile leadów jest teraz wolnych.",
             "**«Finanse»** — «Kasa w podziale na miesiące» (wpływy i wydatki z pół roku, pod każdym miesiącem — różnica) i «Oczekiwane płatności»: ile jeszcze klienci mają zapłacić w aktywnych projektach.",
             "**«Zespół»** — [tabela tygodnia](#leads-team-week), najlepsi, rekomendacje dla każdego i [«Plan i wykonanie»](#leads-plan-fact), gdzie ustalasz i zmieniasz cele.",
@@ -364,66 +434,8 @@ export const leadsSections: Record<string, HelpEntry> = {
       },
       {
         id: "tasks",
-        title: "Zadania: zlecanie, przyjmowanie, zamykanie",
-        body: [
-          "Blok **«Zadania»** stoi na stronie głównej nad wszystkim innym (u właściciela — na zakładce «Dziś»). Zadanie może zlecić każdy pracownik każdemu, także sobie: menedżer — kierownikowi, kierownik — właścicielowi, ktokolwiek — komukolwiek. Zadanie widzą zlecający i wykonawca; jeśli dotyczy projektu — także wszyscy, którzy otwierają kartę tego projektu.",
-          "**«Dla mnie»** — zadania dla Ciebie: na górze najbliższy termin, niżej dalsze, zadania bez terminu — na samym końcu. Nowe jest oznaczone «nowe» i czeka na przycisk **«Przyjmij do realizacji»**: dzięki temu zlecający widzi, że zadanie zobaczyłeś i przyjąłeś. Przyjęte jest «w toku», a pod nim są **«Zrobione»** i **«Niezrobione»**. Zadanie, którego termin minął, jest podświetlone na czerwono i oznaczone «po terminie».",
-          "**«Przesuń termin»** otwiera warianty: «+1 godz.», «Jutro 18:00», «+3 dni», «Tydzień» — albo własna data i godzina z przyciskiem «Przesuń na». «+1 godz.», «+3 dni» i «Tydzień» liczą się od terminu, a jeśli już minął albo terminu nie było — od bieżącej chwili, żeby nowy termin nie wypadł w przeszłości. Zadanie bez terminu ma w tym miejscu **«Ustal termin»** z tymi samymi wariantami. Termin przesuwa i wykonawca, i zlecający — drugiej stronie bot od razu pisze nowy termin. Każde przesunięcie zostaje w historii zadania: stary termin, nowy i kto przesunął.",
-          "**«Zleciłem»** — zadania, które zleciłeś innym, i co się z nimi teraz dzieje: «nowe» (jeszcze nieprzyjęte), «w toku», «zrobione», «niezrobione», «po terminie». Zamknięte są tu widoczne jeszcze przez tydzień. «Zrobione» i «Niezrobione» klika tylko wykonawca — dlatego «zrobione» zawsze znaczy, że zrobił to sam wykonawca. Możesz przesunąć termin albo kliknąć **«Anuluj zadanie»**, jeśli zlecono je przez pomyłkę albo nie jest już potrzebne: zadanie stanie się «anulowane», wykonawca dostanie wiadomość, a przyciski w jego Telegramie zmienią się na «🚫 Задача отменена» (zadanie anulowane).",
-          "**«Zleć zadanie»** — na dole bloku: «Komu» (pola wyboru: jedna osoba albo kilka), «Co zrobić», «Szczegóły (opcjonalnie)», «Projekt (opcjonalnie)» i «Termin» — «dziś do 18:00», «jutro» i «za 3 dni» (oba do 18:00), «bez terminu» albo «własna data». Czas wszędzie taszkencki. Projekt wybiera się z otwartych projektów sekcji [«Projekty»](/admin/projects): najpierw zakłada się tam projekt klienta, potem można przypisywać do niego zadania. Ani projekt, ani termin nie są obowiązkowe. Jeśli zaznaczysz kilka osób, każda dostaje własne zadanie z tym samym tekstem, terminem i projektem: każdy sam je przyjmuje i zamyka, termin przesuwa się każdemu osobno, a w «Zleciłem» widać, kto już zaczął, a kto jeszcze nie. Ty sam jesteś na liście zaznaczony od razu — odznacz się, jeśli zadanie nie jest dla ciebie. Gdy tylko zadanie zostanie zlecone, bot od razu pisze do wykonawcy na Telegramie — do każdej zaznaczonej osoby. Zadanie dla siebie od razu jest «w toku» — nie trzeba go przyjmować i bot o nim nie pisze. Kto co zlecił, przyjął, zamknął, przesunął i anulował, zapisuje się w dzienniku działań.",
-        ],
-      },
-      {
-        id: "tasks-history",
-        title: "Edycja zadania i historia zadań",
-        body: {
-          manager: [
-            "**«Edytuj»** — pod zadaniem, które zleciłeś, dopóki jest otwarte. Możesz poprawić «Co zrobić», «Szczegóły», «Wykonawca» i projekt, potem **«Zapisz»**. Termin się tu nie zmienia: służy do tego «Przesuń termin», który ma własną historię przesunięć. Zadania zleconego tobie nie edytujesz: jeśli się nie zgadzasz — «Niezrobione» albo przesunięcie terminu, a resztę ustal ze zlecającym.",
-            "Zmieniłeś wykonawcę — u nowego zadanie zacznie się od nowa: «nowe», bot wyśle mu je jako nowe, przypomnienia od zera. Poprzedniemu zadanie zostanie zdjęte i dostanie o tym wiadomość. Zmieniłeś tekst albo projekt — bot napisze wykonawcy, co dokładnie się zmieniło, a wiadomość o zadaniu w jego Telegramie się zaktualizuje.",
-            "Zadanie, z którym coś się działo, ma na dole **«Historia»**: kto zlecił, kto przyjął, kiedy i z jakiego terminu na jaki przesuwano, co zmieniano (było → jest), jak się skończyło. Czas taszkencki. Obok terminu widać, ile razy go przesuwano.",
-            "**«Historia zadań»** — link po prawej w nagłówku bloku. Są tam twoje zadania — zlecone przez ciebie i dla ciebie — z którymi w danym okresie coś się działo: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. «Co» zostawia jeden rodzaj kroków, «Za» — 7, 30 albo 90 dni. Na górze — ile jest każdego rodzaju. To tylko podgląd: zadania zmienia się tutaj, na stronie głównej.",
-          ],
-          head: [
-            "**«Edytuj»** — pod zadaniem, które zleciłeś, dopóki jest otwarte: «Co zrobić», «Szczegóły», «Wykonawca», projekt, potem **«Zapisz»**. Termin — przyciskiem «Przesuń termin», ma własną historię. Cudze zadania edytuje tylko ten, kto je zlecił: dzięki temu w historii zawsze widać, kto co zlecił.",
-            "Zmieniłeś wykonawcę — u nowego zadanie zacznie się od nowa: «nowe», bot wyśle je jako nowe, przypomnienia od zera; poprzedni dostanie wiadomość, że zadanie mu zdjęto. Zmieniłeś tekst albo projekt — bot napisze wykonawcy, co dokładnie się zmieniło, i zaktualizuje wiadomość o zadaniu.",
-            "Zadanie, z którym coś się działo, ma na dole **«Historia»**: kto zlecił, przyjął, przesuwał termin (z jakiego na jaki), co zmieniano (było → jest), jak się skończyło. Obok terminu — ile razy go przesuwano.",
-            "**«Historia zadań»** — link po prawej w nagłówku bloku. Są tam zadania całego zespołu, z którymi w danym okresie coś się działo: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. Filtry: «Co» — rodzaj kroków, «Czyje» — jedna osoba (jej zadania i zlecone przez nią), «Za» — 7, 30 albo 90 dni. Na górze — podsumowanie, niżej — **«Według osób»**: ile zadań kto zrobił, nie zrobił, ile anulowano i ile razy przesuwano ich termin; liczone według wykonawcy, imię otwiera jego zadania. Częste przesunięcia i «niezrobione» u jednej osoby — powód do rozmowy. Zadań, które właściciel zlecił sam sobie, tu nie ma.",
-          ],
-          admin: [
-            "**«Edytuj»** — pod zadaniem, które zleciłeś, dopóki jest otwarte: «Co zrobić», «Szczegóły», «Wykonawca», projekt, potem **«Zapisz»**. Termin — przyciskiem «Przesuń termin», ma własną historię. Cudze zadania edytuje tylko ten, kto je zlecił: dzięki temu w historii zawsze widać, kto co zlecił.",
-            "Zmieniłeś wykonawcę — u nowego zadanie zacznie się od nowa: «nowe», bot wyśle je jako nowe, przypomnienia od zera; poprzedni dostanie wiadomość, że zadanie mu zdjęto. Zmieniłeś tekst albo projekt — bot napisze wykonawcy, co dokładnie się zmieniło, i zaktualizuje wiadomość o zadaniu.",
-            "Zadanie, z którym coś się działo, ma na dole **«Historia»**: kto zlecił, przyjął, przesuwał termin (z jakiego na jaki), co zmieniano (było → jest), jak się skończyło. Obok terminu — ile razy go przesuwano.",
-            "**«Historia zadań»** — link po prawej w nagłówku bloku. Są tam wszystkie zadania studia, z którymi w danym okresie coś się działo: zrobione, niezrobione, anulowane, przesunięty termin, zmienione. Filtry: «Co» — rodzaj kroków, «Czyje» — jedna osoba (jej zadania i zlecone przez nią), «Za» — 7, 30 albo 90 dni. Na górze — podsumowanie, niżej — **«Według osób»**: ile zadań kto zrobił, nie zrobił, ile anulowano i ile razy przesuwano ich termin; liczone według wykonawcy, imię otwiera jego zadania. Kierownik widzi to samo, poza zadaniami, które zleciłeś sam sobie.",
-          ],
-        },
-      },
-      {
-        id: "tasks-filter",
-        title: "Kolejność, grupy i projekty w zadaniach",
-        body: [
-          "Domyślnie zadania idą od najbliższego terminu do najdalszego: co się pali, jest na górze. Zadania bez terminu — na końcu, najnowsze pierwsze. W «Zleciłem» najpierw są otwarte, niżej — zamknięte w ciągu tygodnia.",
-          "Nad listami jest filtr. **«Grupuj»**: «bez grupowania» (po prostu według terminu), «według terminu» — grupy «Po terminie», «Termin dziś», «Termin jutro», «W ciągu 7 dni», «Później», «Bez terminu»; «według projektu» — zadania każdego projektu razem, «Bez projektu» na końcu; «według osoby» — w «Dla mnie» według zlecającego, w «Zleciłem» — według wykonawcy. Wewnątrz grupy kolejność jest ta sama — od najbliższego terminu.",
-          "**«Projekt»** zostawia zadania jednego projektu albo «Bez projektu». Wybierz i kliknij **«Pokaż»**. Wybór zapisuje się w adresie strony: nie resetuje się po kliknięciu przycisków w zadaniach, a stronę z nim możesz dodać do zakładek przeglądarki.",
-          "Zadanie z projektem ma w wierszu jego nazwę — kliknij, a otworzy się karta projektu. W karcie projektu są wszystkie jego zadania i link «Zleć zadanie»: prowadzi na stronę główną z tym projektem już wybranym w formularzu.",
-        ],
-      },
-      {
-        id: "tasks-bot",
-        title: "Zadania w Telegramie i przypomnienia",
-        body: {
-          manager: [...TASKS_BOT, "Jeśli nie potrzebujesz wiadomości o zadaniach w Telegramie, wyłącza je kierownik albo właściciel — polem «Zadania» w Twoich powiadomieniach. Zadania zostają przy tym na stronie głównej panelu, a dźwięk w przeglądarce działa jak wcześniej."],
-          head: [...TASKS_BOT, "Wiadomości o zadaniach wyłącza się polem «Zadania» w [powiadomieniach](#team-notices) danej osoby — u siebie i u swoich menedżerów zmieniasz je w sekcji «Zespół». Zadania zostają przy tym na stronie głównej, a dźwięk w przeglądarce działa."],
-          admin: [...TASKS_BOT, "Wiadomości o zadaniach wyłącza się polem «Zadania» w [powiadomieniach](#team-notices) — u każdego pracownika, w sekcji «Zespół». Zadania zostają przy tym na stronie głównej, a dźwięk w przeglądarce działa."],
-        },
-      },
-      {
-        id: "tasks-alerts",
-        title: "Dźwięk i powiadomienia w przeglądarce",
-        body: [
-          "Dopóki panel jest otwarty — w dowolnej sekcji — co 45 sekund pyta serwer, czy jest coś nowego: zadanie zlecone Tobie, przesunięcie terminu albo anulowanie Twojego zadania przez zlecającego lub krok w zadaniu, które Ty zleciłeś (przyjęte, zrobione, niezrobione, przesunięty termin). Jeśli tak — rozlega się krótkie «ding-dong», w prawym dolnym rogu pojawia się okienko z przyciskiem «Otwórz zadania», a strona główna odświeża się sama.",
-          "Żeby dodatkowo wyskakiwało powiadomienie systemowe — nawet gdy karta przeglądarki jest zwinięta — kliknij **«Włącz powiadomienia»** w bloku zadań i zezwól na nie w oknie przeglądarki. Przeglądarka pyta o zgodę dopiero po kliknięciu — dlatego jest przycisk. Po wyrażeniu zgody w jego miejscu pojawia się «Powiadomienia włączone».",
-          "Jeśli przeglądarka odmówiła, zamiast przycisku zobaczysz podpowiedź: na powiadomienia można zezwolić w ustawieniach strony (ikona po lewej stronie adresu). Dźwięk przeglądarka włącza po pierwszym kliknięciu w panelu — wcześniej strona nie może odtwarzać dźwięku, tak działają wszystkie przeglądarki. Twoje własne działania nie są oznaczane dźwiękiem. Panel zamknięty — w przeglądarce nic się nie pojawia, zostaje Telegram.",
-        ],
+        title: "Zadania — teraz osobna sekcja",
+        body: ["Zadań nie ma już na stronie «Leady»: to osobny przycisk [«Zadania»](/admin/tasks) w menu, zaraz za «Pulpit». Tam są «Dla mnie», «Zleciłem», «Zleć zadanie» i «Historia zadań» — szczegóły w punkcie [zadania](#tasks-board). Na «Leady» w ich miejscu została jedna linia z linkiem do nowej sekcji, żeby nikt nie szukał zadań po staremu."],
       },
       {
         id: "queue",

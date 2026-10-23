@@ -107,14 +107,14 @@ export function TaskPulse() {
             const note = new Notification(dict.notifTitle, { body: item.text, tag: `task-${item.id}-${item.kind}` });
             note.onclick = () => {
               window.focus();
-              window.location.assign("/admin#tasks");
+              window.location.assign("/admin/tasks#tasks");
               note.close();
             };
           }
         }
         setItems((prev) => [...shown, ...prev].slice(0, 4));
-        // На главной блок задач перерисовывается сам — новое видно сразу.
-        if (path === "/admin") nav.refresh();
+        // В разделе «Задачи» блок перерисовывается сам — новое видно сразу.
+        if (path === "/admin/tasks") nav.refresh();
       } catch {
         // Сеть моргнула — спросим в следующий раз.
       } finally {
@@ -140,7 +140,7 @@ export function TaskPulse() {
         >
           <p>{item.text}</p>
           <div className="mt-2 flex gap-3 text-xs">
-            <Link href="/admin#tasks" className="text-green hover:underline" onClick={() => setItems([])}>
+            <Link href="/admin/tasks#tasks" className="text-green hover:underline" onClick={() => setItems([])}>
               {t.openTasks}
             </Link>
             <button

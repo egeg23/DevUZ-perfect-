@@ -19,26 +19,28 @@ import {
 import type { taskNoticeDict } from "@/content/admin-panel/tasks";
 
 /**
- * Действия блока «Задачи» на главной и на карточке проекта.
+ * Действия блока «Задачи» в разделе «Задачи» и на карточке проекта.
  *
  * Итог едет обратно кодом `?t=` в адресе, как у остальных действий панели:
  * после редиректа состояние в памяти теряется, а параметр переживает и
  * перезагрузку. Текст по коду — в словаре (content/admin-panel/tasks.ts).
- * Куда вернуться — поле `back`: главная или карточка проекта.
+ * Куда вернуться — поле `back`: раздел «Задачи» или карточка проекта.
  */
 
 type NoticeCode = keyof typeof taskNoticeDict;
 
-/** Вернуться можно только в панель: на главную или в карточку проекта. */
+const TASKS = "/admin/tasks";
+
+/** Вернуться можно только в панель: в раздел «Задачи» или в карточку проекта. */
 function backPath(formData: FormData): string {
   const raw = String(formData.get("back") ?? "");
-  return /^\/admin\/projects\/[0-9a-f-]{36}$/i.test(raw) ? raw : "/admin";
+  return /^\/admin\/projects\/[0-9a-f-]{36}$/i.test(raw) ? raw : TASKS;
 }
 
 function back(formData: FormData, code: NoticeCode): never {
   const path = backPath(formData);
   revalidatePath(path);
-  const keep = path === "/admin" ? keepFilters(formData) : "";
+  const keep = path === TASKS ? keepFilters(formData) : "";
   redirect(`${path}?t=${code}${keep}#tasks`);
 }
 

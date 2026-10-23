@@ -24,6 +24,13 @@ export const homeDict = defineDict({
     pl: (n: number) => `Czeka na Twoją decyzję: ${n}`,
   },
 
+  // Указатель на раздел «Задачи» — там, где раньше стоял блок задач.
+  tasksMoved: {
+    ru: "Задачи теперь — отдельной кнопкой «Задачи» в меню →",
+    uz: "Vazifalar endi menyuda alohida «Vazifalar» tugmasida →",
+    pl: "Zadania są teraz pod osobnym przyciskiem «Zadania» w menu →",
+  },
+
   // Счётчики над списком.
   statTotal: { ru: "всего", uz: "jami", pl: "łącznie" },
   statFree: { ru: "свободных", uz: "bo‘sh", pl: "wolne" },
