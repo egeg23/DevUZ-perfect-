@@ -321,7 +321,7 @@ test("блок «Задачи» рисуется на каждом языке, �
   assert.match(ru, /Взять в работу/);
   assert.match(ru, /просрочена/);
   assert.match(ru, /Задача поставлена/);
-  assert.match(ru, /href="\/admin\/help#leads-tasks"/);
+  assert.match(ru, /href="\/admin\/help#tasks-board"/);
   assert.match(ru, /без срока/);
   assert.match(ru, /проект: Ivanov — Site/);
   // Порядок: ближайший срок выше, задача без срока — последней.
@@ -350,7 +350,7 @@ test("блок «Задачи» рисуется на каждом языке, �
       }),
     );
     assert.ok(!/[а-яё]/i.test(card.replace(/<[^>]+>/g, " ")), `${locale}: русское в карточке проекта`);
-    assert.match(card, /href="\/admin\?tp=p1#tasks"/);
+    assert.match(card, /href="\/admin\/tasks\?tp=p1#tasks"/);
   }
 });
 

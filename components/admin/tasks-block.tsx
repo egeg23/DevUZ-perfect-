@@ -27,7 +27,9 @@ import {
 } from "@/lib/admin/tasks";
 
 /**
- * Блок «Задачи» на главной панели — у всех ролей одинаковый.
+ * Блок «Задачи» наверху раздела «Задачи» (/admin/tasks) — у всех ролей
+ * одинаковый. До 23.10.2026 стоял на «Лидах»; владелец: «Давай вынесем CRM
+ * нашу отдельной кнопкой в наше меню, чтобы она не была в лидах».
  *
  * Владелец, 01.10: «На главной странице показываются задачи, которые
  * поставили, срок выполнения… Все могут ставить задачи на всех». Затем:
@@ -450,7 +452,7 @@ export function TasksView({
     names: board.names,
     projects: labels,
     now,
-    back: "/admin",
+    back: "/admin/tasks",
     keep,
     steps: board.steps,
     people,
@@ -469,11 +471,11 @@ export function TasksView({
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h2 className="flex items-center gap-2 text-sm uppercase tracking-wider text-faint">
           {t.title}
-          <HelpHint topic={helpAnchor("/admin", "tasks")} />
+          <HelpHint topic={helpAnchor("/admin/tasks", "board")} />
         </h2>
         <div className="ml-auto flex flex-wrap items-center gap-3">
-          <Link href="/admin/tasks" className="text-xs text-green hover:underline">
-            {t.historyLink} →
+          <Link href="#history" className="text-xs text-green hover:underline">
+            {t.historyLink} ↓
           </Link>
           <TaskAlertsButton />
         </div>
@@ -484,7 +486,7 @@ export function TasksView({
 
       {/* Фильтр — обычной формой в адрес: выбор переживает перезагрузку и
           нажатия кнопок в задачах. */}
-      <form action="/admin" className="mt-3 flex flex-wrap items-end gap-2 text-xs text-muted">
+      <form action="/admin/tasks" className="mt-3 flex flex-wrap items-end gap-2 text-xs text-muted">
         <label className="grid min-w-0 gap-1">
           {t.groupBy}
           <select name="tg" defaultValue={group} className="rounded-lg border border-line bg-ink px-2 py-1.5 text-xs text-text">
@@ -535,7 +537,7 @@ export function TasksView({
       >
         <summary className="cursor-pointer text-sm text-green hover:underline">{t.newTask}</summary>
         <form action={createTaskAction} className="mt-3 grid grid-cols-1 gap-3 sm:max-w-xl">
-          <input type="hidden" name="back" value="/admin" />
+          <input type="hidden" name="back" value="/admin/tasks" />
           {Object.entries(keep).map(([key, value]) => (
             <input key={key} type="hidden" name={key} value={value} />
           ))}
@@ -698,7 +700,7 @@ export function ProjectTasksView({
           {t.projectTasks}
           <HelpHint topic={helpAnchor("/admin/projects", "tasks")} />
         </h2>
-        <Link href={`/admin?tp=${projectId}#tasks`} className="ml-auto text-sm text-green hover:underline">
+        <Link href={`/admin/tasks?tp=${projectId}#tasks`} className="ml-auto text-sm text-green hover:underline">
           {t.newTask}
         </Link>
       </div>

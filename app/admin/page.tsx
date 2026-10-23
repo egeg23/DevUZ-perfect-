@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { DashboardHome } from "@/components/admin/dashboard-home";
 import { AdminShell } from "@/components/admin/shell";
 import { SweepBanner } from "@/components/admin/sweep-banner";
-import { TasksBlock } from "@/components/admin/tasks-block";
 import { LeadAdd } from "@/components/admin/lead-add";
 import { LeadTable } from "@/components/admin/lead-table";
 import { TouchPlanLine } from "@/components/admin/touch-plan-line";
@@ -112,6 +111,17 @@ export default async function AdminHome({
     const query = keep.toString();
     redirect(query ? `/admin/traffic?${query}` : "/admin/traffic");
   }
+  // Старые адреса блока задач (?t=, ?tg=, ?tf=, ?tp= — итог нажатия,
+  // фильтр, «Поставить задачу» из проекта) — в раздел «Задачи» с теми же
+  // параметрами.
+  if (params.t || params.tg || params.tf || params.tp) {
+    const keep = new URLSearchParams();
+    for (const key of ["t", "tg", "tf", "tp"] as const) {
+      const value = params[key];
+      if (value) keep.set(key, value);
+    }
+    redirect(`/admin/tasks?${keep.toString()}`);
+  }
   const ownerTab = staff.role === "admin" ? ownerTabOf(params.tab) : null;
 
   const page = Math.max(Number.parseInt(params.page ?? "1", 10) || 1, 1);
@@ -138,7 +148,7 @@ export default async function AdminHome({
 
   const base = (patch: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    const merged = { ...params, ...patch, page: undefined, p: undefined, d: undefined, t: undefined, tg: undefined, tf: undefined, tp: undefined };
+    const merged = { ...params, ...patch, page: undefined, p: undefined, d: undefined };
     for (const [key, value] of Object.entries(merged)) {
       if (value) next.set(key, value);
     }
@@ -173,6 +183,18 @@ export default async function AdminHome({
         </section>
       ) : null}
     </>
+  );
+
+  // Задачи переехали в свой раздел (владелец, 23.10.2026: «вынесем CRM
+  // нашу отдельной кнопкой в наше меню, чтобы она не была в лидах»). Здесь —
+  // одна строка-указатель без запросов: кто привык искать задачи на «Лидах»,
+  // не потеряется, а список лидов не стоит под чужим блоком.
+  const tasksLink = (
+    <p className="mb-6 text-xs text-muted">
+      <Link href="/admin/tasks" className="text-green hover:underline">
+        {t.tasksMoved}
+      </Link>
+    </p>
   );
 
   // Кому можно отдать лид, добавленный вручную, — только руководителю и
@@ -299,13 +321,7 @@ export default async function AdminHome({
           {ownerTab === "today" ? (
             <>
               {pendingBlock}
-              <TasksBlock
-            staff={staff}
-            notice={params.t}
-            group={params.tg}
-            projectFilter={params.tf}
-            prefillProject={params.tp}
-          />
+              {tasksLink}
               <DashboardHome staff={staff} planNotice={params.p} section="today" />
             </>
           ) : null}
@@ -316,15 +332,7 @@ export default async function AdminHome({
       ) : (
         <>
           {pendingBlock}
-          {/* Задачи — до дашборда: поручение с утренним сроком важнее
-              недельных цифр. */}
-          <TasksBlock
-            staff={staff}
-            notice={params.t}
-            group={params.tg}
-            projectFilter={params.tf}
-            prefillProject={params.tp}
-          />
+          {tasksLink}
           {/* Личный дашборд: у каждой роли свой. Стоит выше общего списка —
               сначала то, что требует действия сегодня, потом всё остальное. */}
           <DashboardHome staff={staff} planNotice={params.p} />

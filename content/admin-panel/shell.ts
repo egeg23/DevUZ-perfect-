@@ -45,6 +45,7 @@ export const shellDict = defineDict({
 /** Группы меню (NAV_GROUPS в lib/admin/roles.ts) на языке панели. */
 export const navGroupDict = defineDict({
   home: { ru: "Главная", uz: "Bosh sahifa", pl: "Pulpit" },
+  tasks: { ru: "Задачи", uz: "Vazifalar", pl: "Zadania" },
   sales: { ru: "Продажи", uz: "Sotuv", pl: "Sprzedaż" },
   money: { ru: "Проекты и деньги", uz: "Loyihalar va pul", pl: "Projekty i finanse" },
   marketing: { ru: "Маркетинг", uz: "Marketing", pl: "Marketing" },

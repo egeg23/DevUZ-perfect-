@@ -318,7 +318,6 @@ export const taskNoticeDict = defineDict({
 /** Страница «История задач» (/admin/tasks). */
 export const taskHistoryDict = defineDict({
   title: { ru: "История задач", uz: "Vazifalar tarixi", pl: "Historia zadań" },
-  back: { ru: "← Задачи", uz: "← Vazifalar", pl: "← Zadania" },
   leadMine: {
     ru: "Что случилось с вашими задачами — теми, что поставили вы, и теми, что поставили вам: сделано, не сделано, отменено, перенесён срок, изменено.",
     uz: "Vazifalaringiz bilan nima bo‘ldi — siz qo‘yganlar va sizga qo‘yilganlar: bajarildi, bajarilmadi, bekor qilindi, muddat ko‘chirildi, o‘zgartirildi.",
@@ -380,7 +379,7 @@ export const taskHistoryDict = defineDict({
 
 /** Карточка одной задачи — /admin/tasks/<id> (туда ведёт «просрочено» на «Главной»). */
 export const taskCardDict = defineDict({
-  back: { ru: "← История задач", uz: "← Vazifalar tarixi", pl: "← Historia zadań" },
+  back: { ru: "← Задачи", uz: "← Vazifalar", pl: "← Zadania" },
   notFound: {
     ru: "Такой задачи нет или она вам не видна.",
     uz: "Bunday vazifa yo‘q yoki u sizga ko‘rinmaydi.",
