@@ -37,6 +37,7 @@ export const NOTICE_KINDS = [
   "tasks",
   "morning",
   "silence",
+  "bot",
 ] as const;
 export type NoticeKind = (typeof NOTICE_KINDS)[number];
 
@@ -188,6 +189,17 @@ export const NOTICES: Record<NoticeKind, { title: Tr; off: Tr; roles: readonly R
       pl: "w południe bot nie przypomni o porcji, nawet gdy nie ma jeszcze kontaktów; kierownik i tak dowie się o 15:00",
     },
     roles: IN_QUEUE,
+  },
+  // Владелец, 23.10.2026: «и я и руководитель могли видеть и отвечать на
+  // такие заявки, которые приходят в бота» (lib/qualify/bot-inbox-store.ts).
+  bot: {
+    title: { ru: "Обращения в бота", uz: "Botga murojaatlar", pl: "Wiadomości do bota" },
+    off: {
+      ru: "сообщения клиентов боту студии не приходят — ответить из Telegram на них тогда нельзя",
+      uz: "mijozlarning studiya botiga xabarlari kelmaydi — ularga Telegramdan javob berib bo‘lmaydi",
+      pl: "wiadomości klientów do bota studia nie przychodzą — nie da się wtedy odpowiedzieć na nie z Telegrama",
+    },
+    roles: ["admin", "head"],
   },
 };
 

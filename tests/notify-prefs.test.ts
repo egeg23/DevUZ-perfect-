@@ -80,6 +80,8 @@ test("каждая галочка проверяется там, где бот �
     morning: [["lib/admin/morning-store.ts", /wants\(row\.notify_off as string\[\] \| null, "morning"\)/]],
     // Напоминание в 12:00, если день не начат (владелец, 13.10.2026).
     silence: [["lib/admin/silence-store.ts", /wants\(row\.notify_off as string\[\] \| null, "silence"\)/]],
+    // Обращения клиентов в бота — владельцу и руководителю (владелец, 23.10.2026).
+    bot: [["lib/qualify/bot-inbox-store.ts", /wants\(\(r\.notify_off as string\[\] \| null\) \?\? \[\], "bot"\)/]],
   };
   for (const kind of NOTICE_KINDS) {
     assert.ok(where[kind], `галочка ${kind} нигде не проверяется`);

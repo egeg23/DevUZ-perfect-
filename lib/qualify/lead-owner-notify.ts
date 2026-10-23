@@ -35,7 +35,13 @@ export function ownerNotice(input: { label: string; requestNo: string | null; le
 }
 
 export async function tellLeadOwner(
-  input: { username: string | null | undefined; text: string; history: readonly ChatMessage[] },
+  input: {
+    username: string | null | undefined;
+    text: string;
+    history: readonly ChatMessage[];
+    /** Кому слова клиента уже ушли «📩 Обращением в бота» — второй строки нет. */
+    skipChats?: ReadonlySet<number>;
+  },
   now: Date = new Date(),
 ): Promise<boolean> {
   const username = (input.username ?? "").replace(/^@/, "").trim();
@@ -68,6 +74,7 @@ export async function tellLeadOwner(
     .maybeSingle();
   const chat = Number(staff?.telegram_user_id);
   if (!Number.isFinite(chat) || chat === 0) return false;
+  if (input.skipChats?.has(chat)) return false;
   if (!wants((staff?.notify_off as string[] | null) ?? [], "talks")) return false;
 
   return sendMessage(
