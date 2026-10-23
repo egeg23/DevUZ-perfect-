@@ -82,6 +82,8 @@ export const mockupsDict = defineDict({
     pl: (time: string) => `wysłana klientowi ${time}`,
   },
   notSent: { ru: "клиенту не отправлен", uz: "mijozga yuborilmagan", pl: "nie wysłano klientowi" },
+  // Витрина открыта всем — «не отправлен» у неё не тревога, а просто факт.
+  notSentShowcase: { ru: "с рабочих аккаунтов не отправляли", uz: "ish akkauntlaridan yuborilmagan", pl: "nie wysyłano z kont roboczych" },
   /** Кому и с какого аккаунта ушёл (mockupSends): каждая отправка строкой. */
   sendsTitle: { ru: "Кому ушёл", uz: "Kimga yuborilgan", pl: "Do kogo wysłano" },
   /**

@@ -191,45 +191,45 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
                       {row.opens ? <span className="text-faint">{t.opens(row.opens)}</span> : null}
                       {row.promo ? <span className="text-gold">{t.ownPromo(row.promo.price, row.promo.regular)}</span> : null}
                     </p>
-                    {row.kind === "proto" ? (
-                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" data-mockup-owner>
-                        <span className="text-muted">{t.owner}:</span>
-                        {team.length ? (
-                          <select
-                            value={row.owner?.source === "set" ? row.owner.id : ""}
-                            onChange={(event) => assign(row, event.target.value)}
-                            disabled={busy !== null}
-                            aria-label={t.owner}
-                            className="max-w-[16rem] rounded-md border border-line bg-ink px-2 py-0.5 text-xs text-text outline-none focus:border-green/50 disabled:opacity-50"
-                          >
-                            <option value="">
-                              {row.owner && row.owner.source !== "set" ? t.ownerAuto(row.owner.name, t[`ownerFrom_${row.owner.source}`]) : t.ownerNone}
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" data-mockup-owner>
+                      <span className="text-muted">{t.owner}:</span>
+                      {team.length ? (
+                        <select
+                          value={row.owner?.source === "set" ? row.owner.id : ""}
+                          onChange={(event) => assign(row, event.target.value)}
+                          disabled={busy !== null}
+                          aria-label={t.owner}
+                          className="max-w-[16rem] rounded-md border border-line bg-ink px-2 py-0.5 text-xs text-text outline-none focus:border-green/50 disabled:opacity-50"
+                        >
+                          <option value="">
+                            {row.owner && row.owner.source !== "set" ? t.ownerAuto(row.owner.name, t[`ownerFrom_${row.owner.source}`]) : t.ownerNone}
+                          </option>
+                          {row.owner?.source === "set" && !team.some((person) => person.id === row.owner?.id) ? (
+                            <option value={row.owner.id}>{row.owner.name}</option>
+                          ) : null}
+                          {team.map((person) => (
+                            <option key={person.id} value={person.id}>
+                              {person.name}
                             </option>
-                            {row.owner?.source === "set" && !team.some((person) => person.id === row.owner?.id) ? (
-                              <option value={row.owner.id}>{row.owner.name}</option>
-                            ) : null}
-                            {team.map((person) => (
-                              <option key={person.id} value={person.id}>
-                                {person.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : row.owner ? (
-                          <span className="text-text">
-                            {row.owner.name} <span className="text-faint">({t[`ownerFrom_${row.owner.source}`]})</span>
-                          </span>
-                        ) : (
-                          <span className="text-gold">{t.ownerNone}</span>
-                        )}
-                        <span className="text-faint">·</span>
-                        {row.sentAtText ? (
-                          <span className="text-green">{t.sentAt(row.sentAtText)}</span>
-                        ) : (
-                          <span className="text-gold">{t.notSent}</span>
-                        )}
-                        {ownerFails[row.ref] ? <span className="text-gold">{t[`ownerFail_${ownerFails[row.ref]}`]}</span> : null}
-                      </p>
-                    ) : null}
+                          ))}
+                        </select>
+                      ) : row.owner ? (
+                        <span className="font-medium text-text">
+                          {row.owner.name} <span className="text-faint">({t[`ownerFrom_${row.owner.source}`]})</span>
+                        </span>
+                      ) : (
+                        <span className="text-gold">{t.ownerNone}</span>
+                      )}
+                      <span className="text-faint">·</span>
+                      {row.sentAtText ? (
+                        <span className="text-green">{t.sentAt(row.sentAtText)}</span>
+                      ) : row.kind === "proto" ? (
+                        <span className="text-gold">{t.notSent}</span>
+                      ) : (
+                        <span className="text-faint">{t.notSentShowcase}</span>
+                      )}
+                      {ownerFails[row.ref] ? <span className="text-gold">{t[`ownerFail_${ownerFails[row.ref]}`]}</span> : null}
+                    </p>
                     {row.sendsText.length ? <SendList sends={row.sendsText} t={t} /> : null}
                     <p className="mt-1 truncate font-mono text-xs text-faint">{row.url}</p>
                   </div>
