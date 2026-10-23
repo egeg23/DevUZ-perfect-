@@ -4,6 +4,7 @@ import {
   STREAK_OUT,
   benchedNotice,
   benchedSelfNotice,
+  capsShare,
   latest,
   missStreak,
   OFFER_MINUTES,
@@ -23,6 +24,7 @@ import {
   type Offer,
   type Share,
 } from "@/lib/admin/lead-queue";
+import type { Role } from "@/lib/admin/roles";
 import { wants } from "@/lib/admin/notify-prefs";
 import { dayStartUtc } from "@/lib/admin/portion";
 import { todayInTashkent } from "@/lib/admin/pulse";
@@ -228,6 +230,19 @@ export async function shareOf(staffId: string, now: Date = new Date()): Promise<
     total: candidates.reduce((sum, c) => sum + c.taken, 0),
     people: candidates.length,
   };
+}
+
+/**
+ * Счёт равной доли для ночного лида — или null, если потолка у человека нет:
+ * владелец или «Без лимита лидов» (capsShare). База не ответила про отметку —
+ * потолок как раньше.
+ */
+export async function nightShareFor(staff: { id: string; role: Role }, now: Date = new Date()): Promise<Share | null> {
+  if (staff.role === "admin") return null;
+  const db = serviceClient();
+  const { data } = db ? await db.from("staff").select("lead_unlimited").eq("id", staff.id).maybeSingle() : { data: null };
+  if (!capsShare({ role: staff.role, lead_unlimited: data?.lead_unlimited === true })) return null;
+  return shareOf(staff.id, now);
 }
 
 /**

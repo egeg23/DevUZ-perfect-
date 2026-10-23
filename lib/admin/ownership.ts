@@ -1,7 +1,7 @@
 import { seesEveryone } from "@/lib/admin/roles";
 import { record } from "@/lib/admin/audit";
 import { mayTake } from "@/lib/admin/lead-queue";
-import { closeOfferAfterTake, openQueue, queueState, shareOf } from "@/lib/admin/lead-queue-store";
+import { closeOfferAfterTake, nightShareFor, openQueue, queueState } from "@/lib/admin/lead-queue-store";
 import { staffById, type Staff } from "@/lib/admin/session";
 import { esc, sendMessage } from "@/lib/qualify/telegram";
 import { talkFollowsLead } from "@/lib/admin/talk-follows-lead";
@@ -110,8 +110,8 @@ export async function takeLead(
   // из панели, и запрет, живущий в одном из них, обходился бы другим.
   const queue = await queueState(leadId);
   // Ночной лид — по равной доле: счёт за месяц нужен только ему, и только
-  // тем, кто в очереди. Владелец вне её, и считать ему нечего.
-  const share = queue.fairShare && staff.role !== "admin" ? await shareOf(staff.id) : null;
+  // тем, кто в очереди. Владелец вне её, у «Без лимита лидов» потолка нет.
+  const share = queue.fairShare ? await nightShareFor(staff) : null;
   const verdict = mayTake({
     role: staff.role,
     staffId: staff.id,

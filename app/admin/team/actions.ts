@@ -16,6 +16,7 @@ import {
   resendInvite,
   setStaffGrade,
   setStaffHead,
+  setLeadUnlimited,
   setSections,
   setStaffRole,
   setTouchPlan,
@@ -258,6 +259,19 @@ export async function saveSections(formData: FormData) {
 
   const access = accessFromForm(target.role, formData.getAll("on").map(String));
   const result = await setSections(id, access, actor, await requestIp());
+  revalidatePath("/admin/team");
+  back(result);
+}
+
+/**
+ * «Без лимита лидов» — снять или вернуть ночной потолок равной доли
+ * (владелец, 23.10.2026). Только владелец: это его решение, кому сколько.
+ */
+export async function setUnlimited(formData: FormData) {
+  const actor = await requireAdmin();
+  const id = String(formData.get("staff") ?? "");
+  const on = String(formData.get("on") ?? "") === "1";
+  const result = await setLeadUnlimited(id, on, actor, await requestIp());
   revalidatePath("/admin/team");
   back(result);
 }

@@ -198,10 +198,31 @@ export async function relayInboxReply(message: {
     return true;
   }
 
-  const now = new Date().toISOString();
-  await db.from("bot_users").update({ human_at: now, human_by: staff.id }).eq("chat_id", clientChat);
   const words = (message.text ?? message.caption ?? "").trim();
-  // Ответ человека — в разговор бота: когда модель снова заговорит, она его видит.
+  await afterHuman({ clientChat, staff, words, kind: message.text ? "text" : "file", via: "bot", fromChat: message.chat.id });
+  await sendMessage(message.chat.id, "✅ Ушло клиенту от бота студии. Модель в этом разговоре молчит, дальше отвечаете вы.");
+  return true;
+}
+
+/**
+ * Человек написал клиенту от бота — что после этого всегда: модель молчит
+ * HUMAN_HOLD_DAYS, слова — в разговор бота и в карточку заявки, журнал,
+ * остальным читателям строка, чтобы не отвечали вдвоём.
+ */
+async function afterHuman(input: {
+  clientChat: number;
+  staff: { id: string; display_name: string };
+  words: string;
+  kind: "text" | "file";
+  via: "bot" | "panel";
+  /** Чат, откуда написали (в боте), — ему строки «✍️ …» не нужно. */
+  fromChat: number | null;
+}): Promise<void> {
+  const db = serviceClient();
+  if (!db) return;
+  const { clientChat, staff, words } = input;
+  await db.from("bot_users").update({ human_at: new Date().toISOString(), human_by: staff.id }).eq("chat_id", clientChat);
+  // Слова человека — в разговор бота: когда модель снова заговорит, она их видит.
   const session = sessionFor(clientChat);
   if (session) {
     session.transcript = [...session.transcript, { role: "assistant", content: words || "(файл)" }];
@@ -211,7 +232,7 @@ export async function relayInboxReply(message: {
     actorStaffId: staff.id,
     targetType: "bot_user",
     targetId: String(clientChat),
-    meta: { text: words.slice(0, 200), kind: message.text ? "text" : "file" },
+    meta: { text: words.slice(0, 200), kind: input.kind, via: input.via },
   });
 
   // Переписка — в карточку заявки, если она есть.
@@ -226,14 +247,53 @@ export async function relayInboxReply(message: {
       .eq("id", lead.id);
   }
 
-  await sendMessage(message.chat.id, "✅ Ушло клиенту от бота студии. Модель в этом разговоре молчит, дальше отвечаете вы.");
-  // Остальным — кто ответил, чтобы не отвечали вдвоём.
   const name = `${esc(String(user?.first_name || "клиент"))}${user?.username ? ` (@${esc(String(user.username))})` : ""}`;
   for (const reader of await readers()) {
-    if (reader.chat === message.chat.id) continue;
+    if (reader.chat === input.fromChat || reader.id === staff.id) continue;
     await sendMessage(reader.chat, `✍️ ${esc(staff.display_name)} ответил в боте ${name}: «${quote(words || "файл", 300)}»`);
   }
-  return true;
+}
+
+/** Самое длинное, что уходит клиенту из панели: Telegram берёт до 4096 знаков. */
+export const BOT_WRITE_MAX = 3500;
+
+/** Чат клиента в боте по нику заявки — только если он сам писал боту и не заблокировал его. */
+export async function botChatOf(username: string | null | undefined): Promise<number | null> {
+  const nick = (username ?? "").replace(/^@/, "").trim();
+  const db = serviceClient();
+  if (!db || !nick) return null;
+  const { data, error } = await db
+    .from("bot_users")
+    .select("chat_id")
+    .ilike("username", nick)
+    .is("blocked_at", null)
+    .order("last_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return error || !data ? null : Number(data.chat_id);
+}
+
+export type BotWriteResult = "bot_sent" | "bot_empty" | "bot_no_chat" | "bot_failed";
+
+/**
+ * «Написать клиенту в бот» из карточки лида (владелец, 23.10.2026): первым,
+ * без сообщения клиента, на которое отвечают. Уходит от бота студии, не с
+ * личного аккаунта; дальше — как ответ из «📩 Обращение в бота».
+ * Кто вправе — решает действие (canReveal): тот, за кем лид, руководитель и
+ * владелец.
+ */
+export async function writeToClient(input: {
+  tgUsername: string | null;
+  staff: { id: string; display_name: string };
+  text: string;
+}): Promise<BotWriteResult> {
+  const words = input.text.replace(/\r\n/g, "\n").trim().slice(0, BOT_WRITE_MAX);
+  if (!words) return "bot_empty";
+  const chat = await botChatOf(input.tgUsername);
+  if (!chat) return "bot_no_chat";
+  if (!(await sendMessage(chat, esc(words)))) return "bot_failed";
+  await afterHuman({ clientChat: chat, staff: input.staff, words, kind: "text", via: "panel", fromChat: null });
+  return "bot_sent";
 }
 
 /**

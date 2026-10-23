@@ -65,13 +65,12 @@ test("ответ сотрудника уходит клиенту копией �
   assert.equal(humanHolds(null, now), false);
 
   const store = read("lib/qualify/bot-inbox-store.ts");
-  const relay = store.slice(store.indexOf("export async function relayInboxReply"), store.indexOf("export async function sendNightInbox"));
+  const relay = store.slice(store.indexOf("export async function relayInboxReply"), store.indexOf("async function afterHuman"));
   assert.match(relay, /\.from\("bot_inbox_notices"\)[\s\S]*\.eq\("staff_chat", message\.chat\.id\)[\s\S]*\.eq\("message_id", replyTo\)/);
   assert.match(relay, /await staffByTelegramId\(message\.from\.id\)/, "отвечает только сотрудник");
   assert.match(relay, /copyMessage\(clientChat, message\.chat\.id, message\.message_id\)/, "от бота, не с личного аккаунта");
-  assert.match(relay, /human_at: now, human_by: staff\.id/);
-  assert.match(relay, /record\("bot\.replied"/);
-  assert.ok(relay.indexOf("copyMessage(") < relay.indexOf("human_at: now"), "не ушло — модель не глушим");
+  assert.match(relay, /await afterHuman\(\{ clientChat, staff, words, kind: message\.text \? "text" : "file", via: "bot", fromChat: message\.chat\.id \}\)/);
+  assert.ok(relay.indexOf("copyMessage(") < relay.indexOf("afterHuman("), "не ушло — модель не глушим");
 
   const hook = read("app/api/telegram/webhook/route.ts");
   const route = hook.slice(hook.indexOf("async function route"), hook.indexOf("async function handleCircleUpload"));
@@ -88,4 +87,25 @@ test("таблица номеров уведомлений — только се
   assert.match(sql, /primary key \(staff_chat, message_id\)/);
   assert.match(sql, /enable row level security/);
   assert.match(sql, /revoke all on public\.bot_inbox_notices from anon, authenticated/);
+});
+
+test("«Написать клиенту в бот»: первым, от бота, только тем, кому открыт контакт", () => {
+  const store = read("lib/qualify/bot-inbox-store.ts");
+  const write = store.slice(store.indexOf("export async function writeToClient"));
+  assert.match(write, /if \(!words\) return "bot_empty";/);
+  assert.match(write, /if \(!chat\) return "bot_no_chat";/, "клиенту, который боту не писал, бот первым не напишет");
+  assert.match(write, /sendMessage\(chat, esc\(words\)\)/, "текст экранируется");
+  assert.match(write, /afterHuman\(\{ clientChat: chat, staff: input\.staff, words, kind: "text", via: "panel", fromChat: null \}\)/, "дальше — как ответ из бота: модель молчит, журнал, карточка");
+  const chatOf = store.slice(store.indexOf("export async function botChatOf"), store.indexOf("export type BotWriteResult"));
+  assert.match(chatOf, /\.is\("blocked_at", null\)/);
+  const after = store.slice(store.indexOf("async function afterHuman"), store.indexOf("export const BOT_WRITE_MAX"));
+  assert.match(after, /human_at: new Date\(\)\.toISOString\(\), human_by: staff\.id/);
+  assert.match(after, /record\("bot\.replied"/);
+
+  const actions = read("app/admin/leads/[id]/actions.ts");
+  const action = actions.slice(actions.indexOf("export async function writeToClientAction"));
+  assert.match(action, /if \(!lead \|\| !canReveal\(lead, staff\)\) redirect/, "свободный лид — только владельцу, чужой — не менеджеру");
+  const page = read("app/admin/leads/[id]/page.tsx");
+  assert.match(page, /const botChat = reveals && lead\.tg_username \? await botChatOf\(lead\.tg_username\)/);
+  assert.match(page, /\{botChat \? \(\s*<details id="botwrite"/);
 });

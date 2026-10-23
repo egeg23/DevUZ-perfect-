@@ -1126,7 +1126,9 @@ async function respond(
     session.transcript = history;
     saveSession(chatId, session);
     const notified = await notifyInbox({ client, text, botReply: null, human }).catch(() => new Set<number>());
-    void tellLeadOwner({ username: from?.username ?? null, text, history, skipChats: notified }).catch(() => undefined);
+    void tellLeadOwner({ username: from?.username ?? null, text, turns: [{ role: "user", content: text }], skipChats: notified }).catch(
+      () => undefined,
+    );
     return;
   }
 
@@ -1207,9 +1209,11 @@ async function respond(
   // (lib/qualify/bot-inbox-store.ts). Лид уже взят — слова клиента его
   // хозяину, переписка — в карточку (lib/qualify/lead-owner-notify.ts);
   // кому уже ушло обращение, второй строки не шлём. Клиенту уже ответили.
+  // Новое — до того, как сессия получит всю историю: в карточку только дописываем.
+  const fresh = history.slice(session.transcript.length);
   void notifyInbox({ client, text, botReply: reply.trim() || null, human: null })
     .catch(() => new Set<number>())
-    .then((notified) => tellLeadOwner({ username: from?.username ?? null, text, history, skipChats: notified }))
+    .then((notified) => tellLeadOwner({ username: from?.username ?? null, text, turns: fresh, skipChats: notified }))
     .catch((error: unknown) => {
       console.error("бот: хозяину лида не ушло", error instanceof Error ? error.message : error);
     });

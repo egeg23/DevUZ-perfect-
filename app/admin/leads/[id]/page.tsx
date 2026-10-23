@@ -14,6 +14,7 @@ import {
   takeOverTalkAction,
   take,
   toggleAutoReminder,
+  writeToClientAction,
 } from "./actions";
 import { QuoteCard } from "@/components/admin/quote-card";
 import { AdminShell } from "@/components/admin/shell";
@@ -44,7 +45,8 @@ import {
 } from "@/content/admin-panel/lead-card";
 import { record } from "@/lib/admin/audit";
 import { clock, mayTake } from "@/lib/admin/lead-queue";
-import { queueState, shareOf } from "@/lib/admin/lead-queue-store";
+import { nightShareFor, queueState } from "@/lib/admin/lead-queue-store";
+import { BOT_WRITE_MAX, botChatOf } from "@/lib/qualify/bot-inbox-store";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { quoteForLead } from "@/lib/admin/quote";
 import { STATUSES, leadById } from "@/lib/admin/leads";
@@ -196,8 +198,9 @@ export default async function LeadPage({
     free ? queueState(lead.id) : Promise.resolve({ offers: [], openedAt: null, fairShare: false }),
   ]);
   // Ночной лид — с потолком равной доли: тот, кто свою долю уже взял, не
-  // должен видеть ник и писать клиенту в обход кнопки.
-  const share = free && queue.fairShare && staff.role !== "admin" ? await shareOf(staff.id) : null;
+  // должен видеть ник и писать клиенту в обход кнопки. Владельцу и «Без
+  // лимита лидов» потолка нет (nightShareFor).
+  const share = free && queue.fairShare ? await nightShareFor(staff) : null;
 
   /**
    * Очередь по свободному лиду — с точки зрения того, кто смотрит.
@@ -238,6 +241,10 @@ export default async function LeadPage({
   const transcript =
     wantsTranscript === "1" ? await revealTranscript(lead.id, staff, ip) : null;
 
+  // «Написать клиенту в бот» — только если клиент сам писал боту студии и
+  // контакт этому человеку открыт (lib/qualify/bot-inbox-store.ts).
+  const botChat = reveals && lead.tg_username ? await botChatOf(lead.tg_username).catch(() => null) : null;
+
   const [reminders, messages, talk, deal] = await Promise.all([
     remindersFor(lead.id),
     messagesFor(lead.id),
@@ -260,7 +267,7 @@ export default async function LeadPage({
       {result ? (
         <p
           className={`mt-4 rounded-xl border px-4 py-2.5 text-sm ${
-            result === "ok"
+            result === "ok" || result === "bot_sent"
               ? "border-green/30 bg-green/10 text-green"
               : "border-gold/30 bg-gold/10 text-gold"
           }`}
@@ -669,6 +676,34 @@ export default async function LeadPage({
               : t.heldByOther}
           </p>
         )}
+
+        {/* Первым написать клиенту, который писал боту студии: от бота, не с
+            личного аккаунта. Дальше — как ответ из «📩 Обращение в бота». */}
+        {botChat ? (
+          <details id="botwrite" className="mt-4 scroll-mt-24">
+            <summary className={`${BUTTON} inline-flex cursor-pointer list-none items-center gap-2`}>
+              ✍️ {t.botWrite}
+            </summary>
+            <form action={writeToClientAction} className="mt-3 flex max-w-xl flex-col gap-2">
+              <input type="hidden" name="lead" value={lead.id} />
+              <textarea
+                name="text"
+                required
+                rows={4}
+                maxLength={BOT_WRITE_MAX}
+                placeholder={t.botWritePlaceholder}
+                className="rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50"
+              />
+              <p className="flex items-center gap-2 text-xs leading-snug text-faint">
+                {t.botWriteHint}
+                <HelpHint topic={helpAnchor("/admin", "bot-write")} label={t.botWriteHelp} />
+              </p>
+              <button type="submit" className={`${BUTTON} self-start`}>
+                {t.botWriteSend}
+              </button>
+            </form>
+          </details>
+        ) : null}
       </section>
 
       {/* ── Напоминания ─────────────────────────────────────────────── */}

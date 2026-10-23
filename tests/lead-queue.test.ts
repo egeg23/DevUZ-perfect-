@@ -278,7 +278,7 @@ test("ночью очередь не начинается и дальше не �
   assert.match(store, /update\(\{ fair_share: true, queue_opened_at: now\.toISOString\(\) \}\)/);
 
   const ownership = read("lib/admin/ownership.ts");
-  assert.match(ownership, /queue\.fairShare && staff\.role !== "admin" \? await shareOf\(staff\.id\) : null/);
+  assert.match(ownership, /queue\.fairShare \? await nightShareFor\(staff\) : null/);
   assert.match(read("app/api/telegram/webhook/route.ts"), /taken\.reason === "share"/);
   assert.match(read("content/admin-panel/lead-card.ts"), /share: \{\s*ru: "Вы уже взяли свою равную долю/);
   assert.match(read("app/admin/leads/[id]/page.tsx"), /leadResultDict\[result as keyof typeof leadResultDict\]/);

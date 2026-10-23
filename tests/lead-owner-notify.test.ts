@@ -23,9 +23,12 @@ test("ищет взятый лид по нику, пишет только днё
   const store = read("lib/qualify/lead-owner-notify.ts");
   assert.match(store, /\.ilike\("tg_username", username\)/);
   assert.match(store, /\.not\("assigned_staff_id", "is", null\)/);
-  assert.ok(store.indexOf('update({ transcript: input.history })') < store.indexOf("if (!messageWindow(now)) return false;"), "переписка — и ночью");
+  assert.match(store, /update\(\{ transcript: \[\.\.\.stored, \.\.\.input\.turns\] \}\)/, "переписка дописывается, а не заменяется сессией бота");
+  assert.ok(store.indexOf("...input.turns]") < store.indexOf("if (!messageWindow(now)) return false;"), "переписка — и ночью");
   assert.match(store, /wants\(.*"talks"\)/);
   const hook = read("app/api/telegram/webhook/route.ts");
-  assert.match(hook, /tellLeadOwner\(\{ username: from\?\.username \?\? null, text, history, skipChats: notified \}\)/);
+  assert.match(hook, /const fresh = history\.slice\(session\.transcript\.length\);/);
+  assert.match(hook, /tellLeadOwner\(\{ username: from\?\.username \?\? null, text, turns: fresh, skipChats: notified \}\)/);
+  assert.doesNotMatch(hook, /tellLeadOwner\(\{[^}]*\bhistory\b/, "всю сессию в карточку не пишем");
   assert.match(store, /if \(input\.skipChats\?\.has\(chat\)\) return false;/, "кому ушло обращение в бота — второй строки нет");
 });

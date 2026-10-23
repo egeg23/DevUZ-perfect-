@@ -70,6 +70,19 @@ export function withinShare(s: Share): boolean {
   return s.mine + 1 <= Math.ceil((s.total + 1) / s.people);
 }
 
+/**
+ * Держит ли человека потолок равной доли.
+ *
+ * Владелец вне очереди — ему считать нечего. «Без лимита лидов»
+ * (`staff.lead_unlimited`, ставит владелец в «Команде») — тоже без потолка:
+ * владелец, 23.10.2026, «Сотрудникам Дина и Александр руководителю — им
+ * делаем безлимит по количеству лидов которые могут брать». Дневную очередь
+ * отметка не трогает: полчаса у того, чья очередь, остаются.
+ */
+export function capsShare(who: { role: Role; lead_unlimited?: boolean | null }): boolean {
+  return who.role !== "admin" && who.lead_unlimited !== true;
+}
+
 /** Начало текущего месяца по Ташкенту — с него считается, у кого сколько. */
 export function monthStartOf(now: Date): Date {
   return tashkentMidnight(periodStart("month", now));

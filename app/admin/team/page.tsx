@@ -1,4 +1,4 @@
-import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveDetails, saveNotices, saveSections, setGrade, setPlan } from "./actions";
+import { addStaff, assignHead, changeRole, claim, disable, refreshMenu, resend, saveDetails, saveNotices, saveSections, setGrade, setPlan, setUnlimited } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
 import { AppPush } from "@/components/admin/app-push";
 import { appDict } from "@/content/admin-panel/app";
@@ -34,6 +34,7 @@ function resultOf(code: string, t: T): { text: string; tone: Tone } | null {
     claimed: t.r_claimed,
     details: t.r_details,
     sections: t.r_sections,
+    unlimited: t.r_unlimited,
   };
   const warn: Record<string, string> = {
     menu_failed: t.r_menu_failed,
@@ -403,6 +404,9 @@ export default async function TeamPage({
                     {viewer.role === "admin" && member.role !== "admin" ? (
                       <SectionsBlock member={member} t={t} locale={locale} />
                     ) : null}
+                    {viewer.role === "admin" && (member.role === "manager" || member.role === "head") ? (
+                      <UnlimitedBlock member={member} t={t} />
+                    ) : null}
                     {member.id === viewer.id || !disables(viewer.role, member.role) ? null : (
                       <DisableBlock
                         id={member.id}
@@ -570,6 +574,27 @@ function NoticesBlock({ member, t, locale }: { member: TeamMember; t: T; locale:
  * Галочка стоит у того, что человек видит сейчас; «не как у роли» — где
  * владелец уже поменял. «Лиды» и «Инструкции» не выключаются — их в списке нет.
  */
+/**
+ * «Без лимита лидов» — только владельцу: ночной лид человек берёт сверх
+ * равной доли за месяц (lib/admin/lead-queue.ts, capsShare). Дневная очередь
+ * не меняется.
+ */
+function UnlimitedBlock({ member, t }: { member: TeamMember; t: T }) {
+  return (
+    <form action={setUnlimited} className="flex flex-wrap items-center gap-2">
+      <input type="hidden" name="staff" value={member.id} />
+      <input type="hidden" name="on" value={member.lead_unlimited ? "0" : "1"} />
+      <span className={`text-xs ${member.lead_unlimited ? "text-gold" : "text-muted"}`}>
+        {member.lead_unlimited ? t.unlimitedOn : t.unlimitedOff}
+      </span>
+      <button type="submit" className="text-xs text-faint hover:text-green">
+        {member.lead_unlimited ? t.unlimitedRemove : t.unlimitedSet}
+      </button>
+      <HelpHint topic={helpAnchor("/admin/team", "unlimited")} label={t.unlimitedHelp} />
+    </form>
+  );
+}
+
 function SectionsBlock({ member, t, locale }: { member: TeamMember; t: T; locale: PanelLocale }) {
   const who = { role: member.role, section_access: member.section_access };
   const list = SECTIONS.filter((s) => !ALWAYS_OPEN.includes(s.href));

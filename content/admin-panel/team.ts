@@ -328,6 +328,17 @@ export const teamDict = defineDict({
     uz: "Belgi bo‘limni ko‘rish uchun ochadi. Unda nimani o‘zgartira olishini rol hal qiladi. «Lidlar» va «Yo‘riqnoma» hammaga doim ochiq.",
     pl: "Zaznaczenie otwiera dział do podglądu. Co można w nim zmieniać, decyduje rola. «Leady» i «Instrukcje» są zawsze otwarte dla wszystkich.",
   },
+  // «Без лимита лидов» (владелец, 23.10.2026): ночной потолок равной доли.
+  unlimitedOn: { ru: "Лиды: без лимита", uz: "Lidlar: cheklovsiz", pl: "Leady: bez limitu" },
+  unlimitedOff: { ru: "Лиды: ночью по равной доле", uz: "Lidlar: kechasi teng ulush bo‘yicha", pl: "Leady: w nocy po równym udziale" },
+  unlimitedSet: { ru: "Снять лимит", uz: "Cheklovni olib tashlash", pl: "Zdejmij limit" },
+  unlimitedRemove: { ru: "Вернуть лимит", uz: "Cheklovni qaytarish", pl: "Przywróć limit" },
+  unlimitedHelp: { ru: "Как работает лимит лидов", uz: "Lidlar cheklovi qanday ishlaydi", pl: "Jak działa limit leadów" },
+  r_unlimited: {
+    ru: "Сохранено: лимит лидов у сотрудника уже поменялся.",
+    uz: "Saqlandi: xodimning lidlar cheklovi allaqachon o‘zgardi.",
+    pl: "Zapisano: limit leadów pracownika już się zmienił.",
+  },
   r_sections: {
     ru: "Сохранено: меню и доступ к разделам у сотрудника уже поменялись.",
     uz: "Saqlandi: xodimning menyusi va bo‘limlarga kirishi allaqachon o‘zgardi.",
