@@ -9,6 +9,7 @@ import { requireSection } from "@/lib/admin/guard";
 import { helpAnchor } from "@/lib/admin/help";
 import { pick } from "@/lib/admin/i18n";
 import { assignsMockups, tashkentTime } from "@/lib/admin/mockups";
+import { openMockupOrders } from "@/lib/admin/mockup-order-store";
 import { mockupList, mockupStaffOptions } from "@/lib/admin/mockups-store";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +40,14 @@ export default async function MockupsPage({ searchParams }: { searchParams: Prom
   const t = pick(mockupsDict, locale);
   const now = new Date();
   const assigns = assignsMockups(staff.role);
-  const [list, team] = await Promise.all([mockupList(locale), assigns ? mockupStaffOptions() : Promise.resolve([])]);
+  const [list, team, openOrders] = await Promise.all([
+    mockupList(locale),
+    assigns ? mockupStaffOptions() : Promise.resolve([]),
+    openMockupOrders(staff),
+  ]);
+  // Открытые заказы макетов из задач: привязать готовый макет — заказавший
+  // станет ответственным (lib/admin/mockup-order.ts).
+  const orders = openOrders.map((o) => ({ taskId: o.taskId, label: t.orderOption(o.title, o.client, o.creatorName), site: o.site }));
   const rows: MockupView[] = list.map((row) => ({
     ...row,
     createdText: made(row.created),
@@ -63,7 +71,7 @@ export default async function MockupsPage({ searchParams }: { searchParams: Prom
         </p>
       ) : null}
       <p className="mt-2 text-xs text-faint">{t.total(rows.length)}</p>
-      <MockupList rows={rows} team={team} />
+      <MockupList rows={rows} team={team} orders={orders} />
     </AdminShell>
   );
 }

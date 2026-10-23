@@ -235,7 +235,9 @@ test("отправка клиенту — первая из mockup_offers у к�
 
 test("«макет закрылся паролем» — сначала ответственному из «Макетов»", () => {
   const close = read("lib/proto/auto-close-store.ts");
-  assert.match(close, /senderChat\(sent, p\.prospect_id, p\.owner_staff_id \?\? null\)/);
+  assert.match(close, /senderChat\(sent, p\.prospect_id, p\.owner_staff_id \?\? ordered\)/);
+  // Не назначен руками — тот, кто заказал макет задачей (lib/admin/mockup-order.ts).
+  assert.match(close, /const ordered = p\.owner_staff_id \? null : \(\(await orderOwners\(\[`p:\$\{p\.id\}`\]\)\)/);
   const sender = between(close, "async function senderChat(", "export type AutoCloseRun");
   assert.ok(sender.indexOf("let staffId: string | null = owner;") < sender.indexOf("sent?.lead_id"));
 });

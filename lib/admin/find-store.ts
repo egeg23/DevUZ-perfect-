@@ -61,6 +61,7 @@ export async function findAll(who: Who, q: string): Promise<FindHit[]> {
     const owner = owners.get(String(r.assigned_staff_id ?? "")) ?? null;
     return {
       kind: "lead",
+      id: String(r.id),
       href: `/admin/leads/${String(r.id)}`,
       label: str(r.company) ?? str(r.contact_name) ?? str(r.request_no) ?? String(r.id).slice(0, 8),
       meta: leadScopeLabel(who.panel_locale, String(r.status ?? ""), str(r.request_no), owner),
@@ -68,6 +69,8 @@ export async function findAll(who: Who, q: string): Promise<FindHit[]> {
   };
   const prospect = (r: Row): FindHit => ({
     kind: "prospect",
+    id: String(r.id),
+    site: hostOf(str(r.url)) ?? str(r.host),
     // Касание, из которого вырос лид, открываем лидом: там переписка и кнопки.
     href: r.lead_id ? `/admin/leads/${String(r.lead_id)}` : `/admin/prospect?open=${String(r.id)}#p-${String(r.id)}`,
     label: str(r.label) ?? hostOf(str(r.url)) ?? str(r.host) ?? String(r.id).slice(0, 8),
@@ -75,6 +78,7 @@ export async function findAll(who: Who, q: string): Promise<FindHit[]> {
   });
   const project = (r: Row): FindHit => ({
     kind: "project",
+    id: String(r.id),
     href: `/admin/projects/${String(r.id)}`,
     label: str(r.title) ?? String(r.id).slice(0, 8),
     meta: str(r.client),

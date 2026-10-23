@@ -17,6 +17,7 @@ import { contactLink } from "@/lib/contact";
 import { opens } from "@/lib/admin/roles";
 import { MARK_KINDS, SHOWN_VIA, parseAmount, type MarkKind, type ShownVia } from "@/lib/admin/sales-stages";
 import { markStage } from "@/lib/admin/sales-stages-store";
+import { orderFromForm, type OrderProblem } from "@/lib/admin/mockup-order";
 import { createTasks, deliverAssignment } from "@/lib/admin/task-store";
 import { QUICK_DUES, messageWindow, parseLocalInput, quickDue, type QuickDue } from "@/lib/admin/tasks";
 
@@ -31,7 +32,7 @@ const HREF = "/admin/hq";
 
 export type TaskState =
   | { ok: true; n: number; later: boolean; at: number }
-  | { ok: false; error: "assignee" | "title" | "past" | "far" | "failed" | "forbidden"; at: number }
+  | { ok: false; error: "assignee" | "title" | "past" | "far" | "failed" | "forbidden" | OrderProblem; at: number }
   | null;
 
 /** Быстрая задача: кому (несколько сразу), что, срок — тем же путём, что «Поставить задачу» на «Лидах». */
@@ -53,6 +54,7 @@ export async function hqTaskAction(_prev: TaskState, formData: FormData): Promis
       assigneeIds: formData.getAll("assignee").map(String),
       due,
       projectId: null,
+      order: orderFromForm((name) => (formData.get(name) === null ? null : String(formData.get(name)))),
     },
     staff,
     await requestIp(),
@@ -64,7 +66,7 @@ export async function hqTaskAction(_prev: TaskState, formData: FormData): Promis
         ? "assignee"
         : result.reason === "title" || result.reason === "body"
           ? "title"
-          : result.reason === "past" || result.reason === "far"
+          : result.reason === "past" || result.reason === "far" || result.reason === "mockup" || result.reason === "mockup_client" || result.reason === "mockup_site"
             ? result.reason
             : "failed";
     return { ok: false, error, at };

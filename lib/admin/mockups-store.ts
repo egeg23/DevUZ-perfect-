@@ -16,6 +16,7 @@ import {
   type MockupRow,
 } from "@/lib/admin/mockups";
 import type { Staff } from "@/lib/admin/session";
+import { orderOwners } from "@/lib/admin/mockup-order-store";
 import { accountTags } from "@/lib/admin/work-accounts-store";
 import { issueProtoCode, issueShowcaseCode, liveCodesUntil } from "@/lib/proto/code-store";
 import { protoUrl } from "@/lib/proto/store";
@@ -133,9 +134,9 @@ type OwnerIds = Parameters<typeof mockupOwner>[0];
 type OwnerSeed = { ref: string; set: string | null; prospect: string | null; made: string | null };
 
 /**
- * Кандидаты в ответственные у каждого макета и имена сотрудников. Три
- * запроса на весь список, а не на строку: лиды первой отправки, касания и
- * сотрудники. У витрины «собрал» нет: её собирают в репозитории.
+ * Кандидаты в ответственные у каждого макета и имена сотрудников. Четыре
+ * запроса на весь список, а не на строку: лиды первой отправки, касания,
+ * заказы из задач (orderOwners) и сотрудники. У витрины «собрал» нет: её собирают в репозитории.
  */
 async function ownerIds(
   seeds: readonly OwnerSeed[],
@@ -154,13 +155,14 @@ async function ownerIds(
     const prospect = sent?.prospect_id ?? seed.prospect;
     if (prospect) prospectIds.add(prospect);
   }
-  const [leads, prospects] = await Promise.all([
+  const [leads, prospects, ordered] = await Promise.all([
     leadIds.size
       ? db.from("leads").select("id, assigned_staff_id").in("id", [...leadIds])
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
     prospectIds.size
       ? db.from("prospects").select("id, touched_by").in("id", [...prospectIds])
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+    orderOwners(seeds.map((seed) => seed.ref)),
   ]);
   const leadOwner = new Map((leads.data ?? []).map((l) => [String(l.id), str(l.assigned_staff_id)]));
   const toucher = new Map((prospects.data ?? []).map((p) => [String(p.id), str(p.touched_by)]));
@@ -171,6 +173,7 @@ async function ownerIds(
     const prospect = sent?.prospect_id ?? seed.prospect;
     const entry: OwnerIds = {
       set: seed.set,
+      order: ordered.get(seed.ref) ?? null,
       lead: sent?.lead_id ? (leadOwner.get(sent.lead_id) ?? null) : null,
       touch: prospect ? (toucher.get(prospect) ?? null) : null,
       made: seed.made,

@@ -2,10 +2,12 @@ import Link from "next/link";
 
 import { createTaskAction, editTaskAction, taskAction } from "@/app/admin/tasks/actions";
 import { HelpHint } from "@/components/admin/help-link";
+import { MockupOrderFields } from "@/components/admin/mockup-order-fields";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { TaskAlertsButton } from "@/components/admin/task-alerts";
 import { taskNoticeDict, tasksDict } from "@/content/admin-panel/tasks";
 import { helpAnchor } from "@/lib/admin/help";
+import { makesMockups, protoHrefFor } from "@/lib/admin/mockup-order";
 import { pick, type PanelLocale, type Picked } from "@/lib/admin/i18n";
 import type { Staff } from "@/lib/admin/session";
 import { projectTasks, taskBoard, taskPeople, taskProjects, type TaskBoard } from "@/lib/admin/task-store";
@@ -67,6 +69,10 @@ type RowContext = {
   /** Для формы «Изменить»: кому можно передать и к каким проектам отнести. */
   people?: { id: string; display_name: string }[];
   projectOptions?: { id: string; label: string }[];
+  /** Клиенты заказов макета: id лида или касания → подпись. */
+  clients?: Map<string, string>;
+  /** Смотрящий собирает макеты — у его заказа кнопка «Собрать прототип». */
+  builds?: boolean;
 };
 
 function statusLabel(t: T, task: Task, now: Date): { text: string; tone: string } {
@@ -138,6 +144,7 @@ function TaskRow({ task, ctx }: { task: Task; ctx: RowContext }) {
           </>
         ) : null}
       </p>
+      {task.mockup ? <OrderLine task={task} ctx={ctx} /> : null}
       {open && (assignee || creator) ? (
         <form action={taskAction} className="mt-2 flex flex-wrap items-center gap-2">
           <Hidden ctx={ctx} task={task} />
@@ -213,6 +220,53 @@ function TaskRow({ task, ctx }: { task: Task; ctx: RowContext }) {
  * проект и исполнитель. Срок — не здесь: у него «Перенести срок» и своя
  * история переносов.
  */
+/**
+ * Заказ макета у задачи (lib/admin/mockup-order.ts): для кого, сайт и что с
+ * макетом — готов (ссылка в «Макеты») или ждёт: исполнителю, который
+ * собирает макеты, — «Собрать прототип» с уже заполненной формой.
+ */
+function OrderLine({ task, ctx }: { task: Task; ctx: RowContext }) {
+  const { t } = ctx;
+  const clientId = task.mockup_lead_id ?? task.mockup_prospect_id ?? null;
+  const client = clientId ? ctx.clients?.get(clientId) : undefined;
+  const clientHref = task.mockup_lead_id
+    ? `/admin/leads/${task.mockup_lead_id}`
+    : task.mockup_prospect_id
+      ? `/admin/prospect?open=${task.mockup_prospect_id}#p-${task.mockup_prospect_id}`
+      : null;
+  const waiting = !task.mockup_ref && isOpen(task.status) && task.assignee_id === ctx.me;
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" data-task-order>
+      <span className="rounded-full border border-gold/40 px-2 py-0.5 text-gold">{t.mockupChip}</span>
+      {client && clientHref ? (
+        <Link href={clientHref} className="text-muted hover:text-green">
+          {t.mockupFor(client)}
+        </Link>
+      ) : null}
+      {task.mockup_site ? <span className="font-mono text-blue-soft">{task.mockup_site}</span> : null}
+      {task.mockup_ref ? (
+        <Link href={`/admin/mockups#mockup-${task.mockup_ref.replace(/[^a-z0-9-]/gi, "-")}`} className="text-green hover:underline">
+          {t.mockupReady}
+        </Link>
+      ) : waiting ? (
+        <>
+          {ctx.builds ? (
+            <Link
+              href={protoHrefFor({ taskId: task.id, site: task.mockup_site ?? null, prospectId: task.mockup_prospect_id ?? null })}
+              className="rounded-lg border border-green/40 px-2 py-0.5 text-green hover:bg-green/10"
+            >
+              {t.mockupBuild}
+            </Link>
+          ) : null}
+          <Link href="/admin/mockups" className="text-faint hover:text-green">
+            {t.mockupLinkHint}
+          </Link>
+        </>
+      ) : null}
+    </p>
+  );
+}
+
 function EditForm({ task, ctx }: { task: Task; ctx: RowContext }) {
   const { t, names, projects } = ctx;
   const people = ctx.people ?? [];
@@ -425,10 +479,10 @@ export function TasksView({
   projectFilter = "",
   prefillProject = "",
 }: {
-  staff: Pick<Staff, "id">;
+  staff: Pick<Staff, "id"> & Partial<Pick<Staff, "role">>;
   locale: PanelLocale;
   board: TaskBoard;
-  people: { id: string; display_name: string }[];
+  people: { id: string; display_name: string; role?: string }[];
   /** Открытые проекты — для формы и фильтра. */
   projects: { id: string; label: string }[];
   notice?: string;
@@ -457,7 +511,11 @@ export function TasksView({
     steps: board.steps,
     people,
     projectOptions: projects,
+    clients: board.clients,
+    builds: makesMockups(staff.role),
   };
+  // Кто собирает макеты: отмечен в «Кому» — «Заказ макета» обязателен.
+  const makerIds = people.filter((p) => makesMockups(p.role)).map((p) => p.id);
 
   const byProject = (task: Task) =>
     !projectFilter || (projectFilter === "none" ? !task.project_id : task.project_id === projectFilter);
@@ -567,6 +625,7 @@ export function TasksView({
             {t.fieldBody}
             <textarea name="body" rows={2} maxLength={2000} className={FIELD} />
           </label>
+          <MockupOrderFields makerIds={makerIds} locale={locale} />
           <label className="grid min-w-0 gap-1 text-xs text-muted">
             {t.fieldProject}
             <select name="project" defaultValue={prefillProject} className={FIELD}>

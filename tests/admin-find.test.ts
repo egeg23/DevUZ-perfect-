@@ -59,7 +59,10 @@ test("права: круг лидов как в «Лидах», контакт �
   assert.match(route, /status: 401/);
   assert.match(route, /cleanQuery\(/);
   // Окно поиска спрашивает сервер, а не держит списки у себя.
+  // Запрос — в общем useFindHits: его зовут Ctrl+K и выбор клиента в заказе макета.
   const menu = read("components/admin/nav-menu.tsx");
-  assert.match(menu, /fetch\(`\/admin\/find\?q=\$\{encodeURIComponent\(q\)\}`/);
-  assert.doesNotMatch(menu, /from\("leads"\)|serviceClient/);
+  assert.match(menu, /useFindHits\(query\)/);
+  const hook = read("components/admin/use-find-hits.ts");
+  assert.match(hook, /fetch\(`\/admin\/find\?q=\$\{encodeURIComponent\(q\)\}`/);
+  for (const file of [menu, hook]) assert.doesNotMatch(file, /from\("leads"\)|serviceClient/);
 });

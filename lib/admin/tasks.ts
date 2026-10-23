@@ -49,6 +49,16 @@ export type Task = {
   soon_nudged_at: string | null;
   overdue_sent_at: string | null;
   awaiting_date_at: string | null;
+  /**
+   * Заказ макета (lib/admin/mockup-order.ts): null — не спрашивали, false —
+   * «нет», true — заказ; клиент — лид или касание, сайт — хост; mockup_ref —
+   * макет, собранный по заказу («p:…» / «s:…»).
+   */
+  mockup?: boolean | null;
+  mockup_lead_id?: string | null;
+  mockup_prospect_id?: string | null;
+  mockup_site?: string | null;
+  mockup_ref?: string | null;
 };
 
 export function isOpen(status: TaskStatus): boolean {

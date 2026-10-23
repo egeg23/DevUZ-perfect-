@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { protoNicheByKey } from "@/content/proto/models";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requestIp, requireAdmin } from "@/lib/admin/guard";
+import { linkMockupOrder } from "@/lib/admin/mockup-order-store";
 import { collectFacts, measureImage } from "@/lib/proto/collect";
 import { wheelToken } from "@/content/admin-panel/proto";
 import { wheelIssues } from "@/lib/proto/facts";
@@ -91,11 +92,19 @@ export async function buildAction(formData: FormData) {
   const saved = await saveProto({ facts, by: staff, prospectId: field(formData, "prospect") });
   if (!saved.ok) back(saved.why, saved.detail);
 
+  // Собран по заказу из задачи — привязываем: ответственный — заказавший.
+  // Черновик привязывается, но задача остаётся открытой: макета клиенту ещё нет.
+  const order = field(formData, "order");
+  const linked = order
+    ? await linkMockupOrder(order, `p:${saved.proto.id}`, staff, await requestIp(), { close: !saved.problems.length })
+    : null;
+
   revalidatePath("/admin/proto");
+  if (linked?.ok) revalidatePath("/admin/tasks");
   // Что именно не так, видно у прототипа в списке: претензии проверки
   // лежат в базе вместе с ним.
   if (saved.problems.length) back("draft");
-  redirect("/admin/proto?r=ok");
+  redirect(`/admin/proto?r=${linked?.ok && linked.closed ? "order" : "ok"}`);
 }
 
 /** Прототип ушёл клиенту. Отмечает тот, кто отправил, — по нему и считаем. */

@@ -131,6 +131,7 @@ export function HqSide({
   locale,
   viewer,
   taskPeople,
+  makerIds = [],
   preselect,
   broadcast,
   now,
@@ -138,6 +139,8 @@ export function HqSide({
   locale: PanelLocale;
   viewer: { id: string; role: Role };
   taskPeople: { id: string; name: string }[];
+  /** Кто собирает макеты — «Заказ макета» в быстрой задаче. */
+  makerIds?: string[];
   preselect?: string | null;
   /** null — рассылка этому человеку не положена (не владелец и не руководитель). */
   broadcast: {
@@ -162,7 +165,7 @@ export function HqSide({
         {/* Ключ — человек из «Поставить задачу» в карточке: форма уже на
             странице, и без нового ключа отметка (defaultChecked) не
             появилась бы — так и было у владельца на телефоне 14.10.2026. */}
-        <HqTask key={preselect ?? "none"} people={taskPeople} preselect={preselect} />
+        <HqTask key={preselect ?? "none"} people={taskPeople} preselect={preselect} makerIds={makerIds} />
       </section>
 
       {broadcast ? (
