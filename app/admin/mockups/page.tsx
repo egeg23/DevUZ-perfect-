@@ -1,5 +1,7 @@
 import { HelpHint } from "@/components/admin/help-link";
 import { MockupList, type MockupView } from "@/components/admin/mockup-list";
+import { markResultText } from "@/components/admin/sales-stages";
+import { salesStagesDict } from "@/content/admin-panel/sales-stages";
 import { hoursLeft } from "@/lib/proto/auto-close";
 import { AdminShell } from "@/components/admin/shell";
 import { mockupsDict } from "@/content/admin-panel/mockups";
@@ -28,8 +30,11 @@ function made(value: string): string {
  * в них». Откуда список и как живёт пароль — lib/admin/mockups.ts и
  * lib/proto/codes.ts.
  */
-export default async function MockupsPage() {
+export default async function MockupsPage({ searchParams }: { searchParams: Promise<{ mk?: string }> }) {
   const staff = await requireSection("/admin/mockups");
+  const { mk } = await searchParams;
+  // Чем кончилась отметка «Показал макет» (?mk=… из markStageAction).
+  const marked = markResultText(mk, pick(salesStagesDict, staff.panel_locale));
   const locale = staff.panel_locale;
   const t = pick(mockupsDict, locale);
   const now = new Date();
@@ -52,6 +57,11 @@ export default async function MockupsPage() {
         <HelpHint topic={helpAnchor("/admin/mockups", "password")} />
       </h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro}</p>
+      {marked ? (
+        <p className={`mt-3 rounded-xl border px-4 py-2 text-sm ${marked.ok ? "border-green/30 bg-green/5 text-green" : "border-gold/30 bg-gold/10 text-gold"}`}>
+          {marked.text}
+        </p>
+      ) : null}
       <p className="mt-2 text-xs text-faint">{t.total(rows.length)}</p>
       <MockupList rows={rows} team={team} />
     </AdminShell>

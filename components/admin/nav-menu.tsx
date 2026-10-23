@@ -132,7 +132,8 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
                 }`}
               >
                 {group.label}
-                {here ? <span className="font-normal text-green/70">· {here.label}</span> : null}
+                {/* Открытый раздел рядом с группой — с самых широких экранов: на 1440 подпись выталкивала поиск во вторую строку. Группа и так зелёная, раздел — в её списке. */}
+                {here ? <span className="hidden font-normal text-green/70 2xl:inline">· {here.label}</span> : null}
                 <Chevron up={shown} />
               </button>
               <div

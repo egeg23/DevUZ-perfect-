@@ -125,6 +125,14 @@ export const workSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "shown",
+        title: "«Pokazałem makietę» — prosto na liście",
+        body: [
+          "Przy każdej wysyłce w «Do kogo wysłano» jest przycisk **«Pokazałem makietę»**: kliknij i wybierz «na wideo» (nagrałeś wideo z makietą i je wysłałeś) albo «na żywo» (pokazałeś na spotkaniu lub rozmowie z ekranem). Zaznaczenie zapisuje się z datą i twoim imieniem, trafia do dziennika i od razu do [etapów sprzedaży](/admin/stages) oraz do normy — 2 pokazy w tygodniu.",
+          "Zaznaczyć możesz pokaz dla swojego klienta; kierownik i właściciel — dla dowolnego. Przycisku nie ma, jeśli wysyłka nie jest powiązana ani z leadem, ani z kontaktem (np. makieta poszła ręcznie z prywatnego konta) — wtedy zaznacz pokaz w [karcie leada](#leads-sales-marks). Ten sam przycisk jest w «Moje makiety» na «Pulpit».",
+        ],
+      },
+      {
         id: "owner",
         title: "Osoba odpowiedzialna i wysyłka do klienta",
         body: {
@@ -424,7 +432,7 @@ export const workSections: Record<string, HelpEntry> = {
         id: "marks",
         title: "Dlaczego etap jest pusty",
         body: [
-          "«Makieta pokazana» i «cena podana» baza sama nie widzi: prezentację przez wideo lub na żywo zaznacza człowiek przyciskiem «Pokazałem makietę» — w «Moje makiety» na «Pulpit» albo w [karcie leada](#leads-sales-marks). Bez zaznaczenia etap zostanie zerem, a wszystko po nim wyda się gorsze, niż jest.",
+          "«Makieta pokazana» i «cena podana» baza sama nie widzi: prezentację przez wideo lub na żywo zaznacza człowiek przyciskiem «Pokazałem makietę» — w [«Makiety»](/admin/mockups), w «Moje makiety» na «Pulpit» albo w [karcie leada](#leads-sales-marks). Bez zaznaczenia etap zostanie zerem, a wszystko po nim wyda się gorsze, niż jest.",
           "Jeśli wierszy jest ponad 200 — pokazujemy pierwsze 200 i linię «jeszcze N»: zawęź okres do 7 dni. Firmy, które przyszły same (zgłoszenie ze strony, czatu lub bota), nie wchodzą do «napisaliśmy» — od razu są «odpisali».",
         ],
       },
@@ -561,6 +569,15 @@ export const workSections: Record<string, HelpEntry> = {
           "Otwórz [projekt](/admin/projects) → blok «Umowa». Wypełnij: datę, kwotę, pełną nazwę zamawiającego, adres i kontakt, INN lub PINFL, bank, numer rachunku (20 cyfr), MFO (5 cyfr), przedmiot umowy i etapy. **Udziały etapów muszą dać razem dokładnie 100%**. Kliknij **«Przygotuj umowę»**.",
           "Powstanie szkic z numerem w rodzaju DU-2026-07. Szkic fizycznie nie ma podpisu w dokumencie — nie da się go wydrukować i przedstawić jako podpisanego.",
           "Umowy z kwotą poniżej progu kosztorysu nie da się przygotować — o tym decyduje tylko właściciel. Jeśli po kliknięciu nic się nie pojawiło, sprawdź pola: panel na razie nie pisze, które z nich jest nie tak.",
+        ],
+      },
+      {
+        id: "to-sign",
+        title: "«Umowy do podpisu»",
+        roles: ["admin"],
+        body: [
+          "Pierwszy blok na stronie — umowy, które menedżerowie wysłali ci do podpisu: numer, projekt i kwota. Kliknij wiersz — otworzy się umowa z przyciskami «Zatwierdź i podpisz» i «Zwróć do poprawy». Pusto — «Nic nie czeka na podpis».",
+          "Wcześniej ta lista była na zakładce «Dziś» na «Leady». Teraz sekcja, jak pozostałe, ma nagłówek z menu; bez nagłówka zostały tylko strony samej umowy i faktury — to dokumenty do druku i linki dla zamawiającego.",
         ],
       },
       {

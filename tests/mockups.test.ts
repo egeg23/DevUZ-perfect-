@@ -279,3 +279,19 @@ test("кому и с какого аккаунта ушёл макет — вс�
   assert.match(list, /<SendList sends=\{row\.sendsText\}/);
   assert.match(list, /t\.sendFromUnknown/);
 });
+
+/**
+ * Владелец, 23.10.2026, на разбор удобства: «Делаем все сразу». «Показал
+ * макет» — в «Макетах», у каждой отправки, тем же путём, что в карточке лида.
+ */
+test("«Показал макет» — у отправки в «Макетах», тем же markStageAction", () => {
+  const list = readFileSync(new URL("../components/admin/mockup-list.tsx", import.meta.url), "utf8");
+  assert.match(list, /send\.leadId \|\| send\.prospectId \? <ShownMark leadId=\{send\.leadId\} prospectId=\{send\.prospectId\} \/> : null/);
+  assert.match(list, /<form key=\{via\} action=\{markStageAction\}>/);
+  assert.match(list, /name="back" value="\/admin\/mockups"/);
+  const sends = mockupSends(
+    [{ mockup_ref: "r1", client: "Демо", peer: null, account: null, sent_at: "2026-10-23T10:00:00Z", lead_id: null, prospect_id: "p1" }],
+    new Map(),
+  );
+  assert.equal(sends.get("r1")?.[0].prospectId, "p1");
+});
