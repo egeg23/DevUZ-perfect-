@@ -495,6 +495,14 @@ export const uz: HelpCopy = {
           ],
         },
         {
+          id: "bot-write",
+          title: "«Mijozga botda yozish»: birinchi bo‘lib, studiya botidan",
+          body: [
+            "Agar mijoz studiya botiga o‘zi yozgan bo‘lsa, lid kartochkasida «Mijoz bilan yozishma» blokida **«✍️ Mijozga botda yozish»** tugmasi bor. Bosing, matnni yozing va **«Yuborish»** ni bosing: xabar mijozga shaxsiy akkauntingizdan emas, studiya botidan ketadi. Shunday qilib mijozni kutmasdan birinchi bo‘lib yozish mumkin: smetani olganini so‘rash, muddatni eslatish, savol berish. Egasining 23.10.2026 dagi qarori.",
+            "Tugma lid kimda bo‘lsa, o‘sha xodimda, rahbar va egada bor; bo‘sh lidda — faqat egada, aks holda bu [navbat](#leads-queue) ni chetlab o‘tish bo‘ladi. Botga yozmagan yoki uni bloklagan mijozga bot birinchi bo‘lib yoza olmaydi va tugma chiqmaydi. Yuborgandan keyin model bu suhbatda 7 kun jim turadi: suhbatni siz olib borasiz. Matn kartochkadagi yozishmaga va jurnalga qo‘shiladi, rahbar va egaga «✍️ … ответил в боте» keladi. Mijozning javobi botga keladi: ega va rahbarga — «📩 Обращение в бота», lid kimda bo‘lsa, unga — «💬 Клиент написал в бот».",
+          ],
+        },
+        {
           id: "bot-card",
           title: "Telegramdagi lid kartochkasi: qisqa",
           body: [

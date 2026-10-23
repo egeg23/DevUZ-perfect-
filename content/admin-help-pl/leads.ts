@@ -494,6 +494,14 @@ export const leadsSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "bot-write",
+        title: "«Napisz klientowi w bocie»: pierwszym, od bota studia",
+        body: [
+          "Jeśli klient sam pisał do bota studia, w karcie leada w bloku «Korespondencja z klientem» jest przycisk **«✍️ Napisz klientowi w bocie»**. Kliknij, napisz tekst i **«Wyślij»**: wiadomość pójdzie do klienta od bota studia, a nie z Twojego prywatnego konta. Tak można napisać pierwszym, nie czekając na klienta: zapytać, czy dostał kosztorys, przypomnieć o terminie, zadać pytanie. Decyzja właściciela z 23.10.2026.",
+          "Przycisk ma osoba, u której jest lead, kierownik i właściciel; przy wolnym leadzie — tylko właściciel, inaczej to obejście [kolejki](#leads-queue). Do klienta, który nie pisał do bota albo go zablokował, bot nie może napisać pierwszy i przycisku nie ma. Po wysłaniu model milczy w tej rozmowie 7 dni: rozmowę prowadzisz Ty. Tekst dopisuje się do korespondencji w karcie i do dziennika, kierownik i właściciel dostają «✍️ … ответил в боте». Odpowiedź klienta przyjdzie w bocie: właścicielowi i kierownikowi — «📩 Обращение в бота», osobie, u której jest lead — «💬 Клиент написал в бот».",
+        ],
+      },
+      {
         id: "bot-card",
         title: "Karta leada w Telegramie: krótko",
         body: [

@@ -16,13 +16,14 @@ import {
   type OwnershipResult,
 } from "@/lib/admin/ownership";
 import { leadById } from "@/lib/admin/leads";
-import { canEdit } from "@/lib/admin/ownership";
+import { canEdit, canReveal } from "@/lib/admin/ownership";
 import { queueStaffReply, takeOverTalk, type StaffReplyError } from "@/lib/admin/outreach-talk-store";
 import { record } from "@/lib/admin/audit";
 import { decideTransfer, requestTransfer } from "@/lib/admin/transfers";
 import { handledLabel, markLeadCards } from "@/lib/qualify/telegram";
 import { attributeClientAndNotify } from "@/lib/partners/attribute";
 import { setLeadInn } from "@/lib/partners/store";
+import { writeToClient } from "@/lib/qualify/bot-inbox-store";
 
 /**
  * Переписать карточки лида в Telegram у всей команды.
@@ -309,4 +310,24 @@ export async function saveInnAction(formData: FormData) {
   }
   revalidatePath(`/admin/leads/${leadId}`);
   redirect(`/admin/leads/${leadId}?inn=${claimed ? "client" : "saved"}#inn`);
+}
+
+/**
+ * «Написать клиенту в бот» — первым, от бота студии (владелец, 23.10.2026:
+ * «С личного писать аккаунта мы не будем»). Вправе тот, кому открыт контакт
+ * лида (canReveal): за кем лид, руководитель и владелец; свободный лид —
+ * только владелец, иначе это обход очереди.
+ */
+export async function writeToClientAction(formData: FormData) {
+  const staff = await requireStaff();
+  const leadId = leadIdFrom(formData);
+  const lead = await leadById(leadId);
+  if (!lead || !canReveal(lead, staff)) redirect(`/admin/leads/${leadId}?r=forbidden`);
+  const result = await writeToClient({
+    tgUsername: lead.tg_username,
+    staff,
+    text: String(formData.get("text") ?? ""),
+  });
+  revalidatePath(`/admin/leads/${leadId}`);
+  redirect(`/admin/leads/${leadId}?r=${result}#botwrite`);
 }

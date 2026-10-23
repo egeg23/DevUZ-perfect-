@@ -98,6 +98,23 @@ export const leadResultDict = defineDict({
     uz: "Bu lid bo‘yicha boshqa so‘rov allaqachon qarorni kutmoqda.",
     pl: "Dla tego leada inna prośba czeka już na decyzję.",
   },
+  // «Написать клиенту в бот» (владелец, 23.10.2026, lib/qualify/bot-inbox-store.ts).
+  bot_sent: {
+    ru: "Ушло клиенту от бота студии. Модель в этом разговоре молчит 7 дней, дальше отвечаете вы.",
+    uz: "Mijozga studiya botidan ketdi. Model bu suhbatda 7 kun jim turadi, endi siz javob berasiz.",
+    pl: "Wysłano klientowi od bota studia. Model milczy w tej rozmowie 7 dni, dalej odpowiadasz Ty.",
+  },
+  bot_empty: { ru: "Пустое сообщение не отправляется.", uz: "Bo‘sh xabar yuborilmaydi.", pl: "Pustej wiadomości nie wysyłamy." },
+  bot_no_chat: {
+    ru: "Клиент не писал боту студии или заблокировал его: бот первым написать не может.",
+    uz: "Mijoz studiya botiga yozmagan yoki uni bloklagan: bot birinchi bo‘lib yoza olmaydi.",
+    pl: "Klient nie pisał do bota studia albo go zablokował: bot nie może napisać pierwszy.",
+  },
+  bot_failed: {
+    ru: "Не ушло: Telegram не принял сообщение. Попробуйте ещё раз через минуту.",
+    uz: "Ketmadi: Telegram xabarni qabul qilmadi. Bir daqiqadan keyin yana urinib ko‘ring.",
+    pl: "Nie wysłano: Telegram nie przyjął wiadomości. Spróbuj ponownie za minutę.",
+  },
 });
 
 /**
@@ -413,6 +430,15 @@ export const leadCardDict = defineDict({
     pl: "Brak korespondencji — zgłoszenie przyszło przez formularz, a nie z czatu.",
   },
   showTranscript: { ru: "Показать переписку", uz: "Yozishmani ko‘rsatish", pl: "Pokaż korespondencję" },
+  botWrite: { ru: "Написать клиенту в бот", uz: "Mijozga botda yozish", pl: "Napisz klientowi w bocie" },
+  botWriteSend: { ru: "Отправить", uz: "Yuborish", pl: "Wyślij" },
+  botWritePlaceholder: { ru: "Текст клиенту", uz: "Mijozga matn", pl: "Tekst do klienta" },
+  botWriteHint: {
+    ru: "Уйдёт от бота студии, не с вашего аккаунта. После этого модель 7 дней молчит: разговор ведёте вы. Ответ клиента придёт вам в бот.",
+    uz: "Sizning akkauntingizdan emas, studiya botidan ketadi. Shundan keyin model 7 kun jim turadi: suhbatni siz olib borasiz. Mijozning javobi sizga botga keladi.",
+    pl: "Pójdzie od bota studia, nie z Twojego konta. Potem model milczy 7 dni: rozmowę prowadzisz Ty. Odpowiedź klienta przyjdzie do Ciebie w bocie.",
+  },
+  botWriteHelp: { ru: "Как писать клиенту в бот", uz: "Mijozga botda qanday yoziladi", pl: "Jak pisać do klienta w bocie" },
   transcriptHint: {
     ru: "всё, что клиент рассказал о деньгах и сроках",
     uz: "mijoz pul va muddatlar haqida aytgan hamma narsa",
