@@ -77,14 +77,14 @@ export const leadsSections: Record<string, HelpEntry> = {
           head: [
             "Cztery karty. Duża liczba — najważniejsza w karcie, wiersze pod nią — szczegóły. Kliknij dowolną liczbę — otworzy się to, co za nią stoi: lista leadów z odpowiednim filtrem, [Kontakty](/admin/prospect), [Makiety](/admin/mockups), historia zadań.",
             "«Leady»: duża liczba — ile leadów jest «w toku» w całym zespole. Niżej — nowe dziś i w 7 dni, ciepłe, które właśnie są komuś oferowane po kolei (osoba ma 30 minut, żeby przejąć), ciepłe bez opiekuna (nikt ich nie trzyma — to powód, żeby wkroczyć), wygrane i przegrane w 7 dni. Wygrane i przegrane liczą się według zmiany statusu, a przegrane — także te, które bot zamknął sam po 21 dniach bez ruchu.",
-            "«Kontakty»: duża liczba — ile firm dostało dziś kontakt, od ludzi i autopilota razem, wobec normy dnia. Norma to porcje dnia wszystkich osób plus norma autopilota, jeśli jest włączony. Pasek pokazuje, ile już zrobiono. Niżej — porcje ludzi i autopilot osobno, ilu klientów odpowiedziało dziś i w 7 dni. Wiersz «odmów w 7 dni» — ilu klientów odmówiło: kontakty zamknięte jako „klient odmówił” (przyciskiem albo przez bota samodzielnie) i „nie interesuje” na czacie strony i w bocie. Bot nie wysyła nikomu kart odmów — odmowy widać tylko tutaj.",
+            "«Zimne kontakty»: duża liczba — ile firm dostało dziś kontakt, od ludzi i autopilota razem, wobec normy dnia. Norma to porcje dnia wszystkich osób plus norma autopilota, jeśli jest włączony. Pasek pokazuje, ile już zrobiono. Niżej — porcje ludzi i autopilot osobno, ilu klientów odpowiedziało dziś i w 7 dni. Wiersz «odmów w 7 dni» — ilu klientów odmówiło: kontakty zamknięte jako „klient odmówił” (przyciskiem albo przez bota samodzielnie) i „nie interesuje” na czacie strony i w bocie. Bot nie wysyła nikomu kart odmów — odmowy widać tylko tutaj.",
             "«Makiety»: duża liczba — ile makiet jest teraz u klientów, dopóki trwa promocja 48 godzin, a niżej — u kogo promocja skończy się najwcześniej. Do tego — ile makiet wysłano i zatwierdzono w 7 dni. «Zadania»: otwarte zadania całego zespołu, po terminie i zrobione w 7 dni.",
             "Obok liczb z 7 dni — porównanie z 7 dniami przed nimi: «▲ +3» — więcej, «▼ −2» — mniej. Zielony — dobrze, żółty — warto zajrzeć. To kroczące 7 dni, a nie tydzień kalendarzowy: w poniedziałek rano porównanie się nie zeruje. Kierownik nie widzi na tej stronie pieniędzy — tak samo jak w innych sekcjach.",
           ],
           admin: [
             "Pięć kart: leady, kontakty, makiety, zadania i finanse. Duża liczba — najważniejsza, wiersze pod nią — szczegóły. Każdą liczbę można kliknąć i otworzyć to, co za nią stoi: listę leadów z filtrem, [Kontakty](/admin/prospect), [Makiety](/admin/mockups), [Finanse](/admin/finance), [Umowy](/admin/contracts).",
             "«Leady»: duża liczba — leady «w toku» w całym zespole. Niżej — nowe dziś i w 7 dni, ciepłe oferowane teraz po kolei (30 minut na przejęcie), ciepłe bez opiekuna, wygrane i przegrane w 7 dni — według dziennika zmian statusu, razem z tymi, które bot zamknął sam po 21 dniach bez ruchu.",
-            "«Kontakty»: ile firm dostało dziś kontakt, od ludzi i autopilota razem, wobec normy dnia (porcje wszystkich osób plus norma autopilota, jeśli jest włączony). Niżej — porcje i autopilot osobno, odpowiedzi dziś i w 7 dni. Wiersz «odmów w 7 dni» — ilu klientów odmówiło: kontakty zamknięte jako „klient odmówił” (przyciskiem albo przez bota samodzielnie) i „nie interesuje” na czacie strony i w bocie. Bot nie wysyła nikomu kart odmów — odmowy widać tylko tutaj. «Makiety»: ile jest u klientów w promocji 48 godzin, u kogo skończy się najwcześniej, wysłane i zatwierdzone w 7 dni. «Zadania»: otwarte, po terminie, zrobione w 7 dni.",
+            "«Zimne kontakty»: ile firm dostało dziś kontakt, od ludzi i autopilota razem, wobec normy dnia (porcje wszystkich osób plus norma autopilota, jeśli jest włączony). Niżej — porcje i autopilot osobno, odpowiedzi dziś i w 7 dni. Wiersz «odmów w 7 dni» — ilu klientów odmówiło: kontakty zamknięte jako „klient odmówił” (przyciskiem albo przez bota samodzielnie) i „nie interesuje” na czacie strony i w bocie. Bot nie wysyła nikomu kart odmów — odmowy widać tylko tutaj. «Makiety»: ile jest u klientów w promocji 48 godzin, u kogo skończy się najwcześniej, wysłane i zatwierdzone w 7 dni. «Zadania»: otwarte, po terminie, zrobione w 7 dni.",
             "«Finanse» widzisz tylko Ty: ile wpłynęło w 7 dni (według daty płatności w projektach) i od początku miesiąca oraz ile umów czeka na podpis. Kierownik tej karty nie widzi.",
             "Obok liczb z 7 dni — porównanie z 7 dniami przed nimi: «▲ +3» — więcej, «▼ −2» — mniej; zielony — dobrze, żółty — warto zajrzeć. To kroczące 7 dni, a nie tydzień kalendarzowy: w poniedziałek rano porównanie się nie zeruje.",
           ],
@@ -314,7 +314,7 @@ export const leadsSections: Record<string, HelpEntry> = {
         body: [
           "Na górze — porcja dnia: ile kontaktów z należnych zrobiono, z paskiem; kliknij — otworzą się [Kontakty](/admin/prospect). Jeśli porcji jeszcze nie pobrano — tak jest napisane.",
           "«Dziś»: kontakty, odpowiedzi klientów na Twoje kontakty i ile leadów masz „w pracy”. «7 dni» — ostatnie 7 × 24 godziny wobec 7 dni przed nimi, strzałka pokazuje różnicę: kontakty, odpowiedzi, ciepłe leady, które wziąłeś, i te, które Ci przepadły (niewzięte w 30 minut), makiety wysłane klientom i wygrane leady.",
-          "Każda liczba jest klikalna: kontakty — do «Kontaktów», odpowiedzi — do [Nadzoru](/admin/talks), leady — do listy leadów, makiety — do «Makiet». Liczby są te same, które kierownik i właściciel widzą w kartach zespołu.",
+          "Każda liczba jest klikalna: kontakty — do «Zimnych kontaktów», odpowiedzi — do [Analizy rozmów](/admin/talks), leady — do listy leadów, makiety — do «Makiet». Liczby są te same, które kierownik i właściciel widzą w kartach zespołu.",
         ],
       },
       {
@@ -405,7 +405,7 @@ export const leadsSections: Record<string, HelpEntry> = {
 
   /* ── Лиды ─────────────────────────────────────────────────────────── */
   "/admin": {
-    what: "Strona główna panelu i wszystkie zgłoszenia klientów: z czatu na stronie, formularza, bota w Telegramie, witryny, «Wyszukiwania» i Twoich kontaktów. Widać tu, kto napisał, czego potrzebuje, jak pilna jest sprawa i kto się nią zajmuje. Każde działanie na leadzie — przejęcie, otwarcie danych kontaktowych, zmiana statusu — trafia do dziennika z imieniem i godziną.",
+    what: "Strona główna panelu i wszystkie zgłoszenia klientów: z czatu na stronie, formularza, bota w Telegramie, witryny, «Sygnałów skauta» i Twoich kontaktów. Widać tu, kto napisał, czego potrzebuje, jak pilna jest sprawa i kto się nią zajmuje. Każde działanie na leadzie — przejęcie, otwarcie danych kontaktowych, zmiana statusu — trafia do dziennika z imieniem i godziną.",
     items: [
       {
         id: "home",
@@ -706,7 +706,7 @@ export const leadsSections: Record<string, HelpEntry> = {
         body: {
           head: [
             "Tabela dla Ciebie i Twojego zespołu, strzałka — w porównaniu z poprzednim tygodniem.",
-            "**«W toku»** — leady ze statusem «w toku». **«Pilne»** — ile z nich [od dawna stoi w miejscu](#leads-urgent). **«Kontakty»** — wszystkie działania osoby na leadach w tygodniu: otwarcie karty, danych kontaktowych, przypomnienie, status, wiadomość w dyskusji. To praca z leadami, a nie zimne kontakty z sekcji «Kontakty». **«Pierwsze kontakty»** — kliknięcia «Pokaż dane kontaktowe». **«Wygrane»**, **«Wpływy»** — pieniądze z jej projektów w tygodniu. **«Plan kontaktów»** — zimne kontakty wobec planu, który ustalasz w sekcji [«Zespół»](/admin/team).",
+            "**«W toku»** — leady ze statusem «w toku». **«Pilne»** — ile z nich [od dawna stoi w miejscu](#leads-urgent). **«Kontakty»** — wszystkie działania osoby na leadach w tygodniu: otwarcie karty, danych kontaktowych, przypomnienie, status, wiadomość w dyskusji. To praca z leadami, a nie zimne kontakty z sekcji «Zimne kontakty». **«Pierwsze kontakty»** — kliknięcia «Pokaż dane kontaktowe». **«Wygrane»**, **«Wpływy»** — pieniądze z jej projektów w tygodniu. **«Plan kontaktów»** — zimne kontakty wobec planu, który ustalasz w sekcji [«Zespół»](/admin/team).",
             "«Najlepsi w tygodniu» pojawiają się, gdy w zespole są co najmniej dwie osoby.",
           ],
           admin: [

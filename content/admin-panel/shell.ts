@@ -9,6 +9,17 @@ import { defineDict } from "@/lib/admin/i18n";
 export const shellDict = defineDict({
   panel: { ru: "панель", uz: "panel", pl: "panel" },
   signOut: { ru: "Выйти", uz: "Chiqish", pl: "Wyloguj" },
+  // Число на кнопке «Задачи» (components/admin/task-count.tsx) — подсказка при наведении.
+  tasksCount: {
+    ru: (n: number) => `Открытых задач на вас: ${n}`,
+    uz: (n: number) => `Sizdagi ochiq vazifalar: ${n}`,
+    pl: (n: number) => `Otwarte zadania dla ciebie: ${n}`,
+  },
+  tasksCountLate: {
+    ru: (n: number, late: number) => `Открытых задач на вас: ${n}, просрочено: ${late}`,
+    uz: (n: number, late: number) => `Sizdagi ochiq vazifalar: ${n}, muddati o‘tgan: ${late}`,
+    pl: (n: number, late: number) => `Otwarte zadania dla ciebie: ${n}, po terminie: ${late}`,
+  },
   language: { ru: "Язык панели", uz: "Panel tili", pl: "Język panelu" },
   sectionHelp: {
     ru: "Как пользоваться разделом",
@@ -46,8 +57,11 @@ export const shellDict = defineDict({
 export const navGroupDict = defineDict({
   home: { ru: "Главная", uz: "Bosh sahifa", pl: "Pulpit" },
   tasks: { ru: "Задачи", uz: "Vazifalar", pl: "Zadania" },
+  leads: { ru: "Лиды", uz: "Lidlar", pl: "Leady" },
+  prospect: { ru: "Холодные касания", uz: "Sovuq aloqalar", pl: "Zimne kontakty" },
+  mockups: { ru: "Макеты", uz: "Maketlar", pl: "Makiety" },
   sales: { ru: "Продажи", uz: "Sotuv", pl: "Sprzedaż" },
-  money: { ru: "Проекты и деньги", uz: "Loyihalar va pul", pl: "Projekty i finanse" },
+  money: { ru: "Деньги", uz: "Pul", pl: "Pieniądze" },
   marketing: { ru: "Маркетинг", uz: "Marketing", pl: "Marketing" },
   team: { ru: "Команда", uz: "Jamoa", pl: "Zespół" },
   reports: { ru: "Отчёты", uz: "Hisobotlar", pl: "Raporty" },

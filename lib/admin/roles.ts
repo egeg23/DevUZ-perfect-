@@ -54,13 +54,30 @@ export const ROLE_BADGE: Record<Role, Tr> = {
 /**
  * Группы меню — в порядке шапки.
  *
+ * Владелец, 23.10.2026, на разбор удобства панели: «Делаем все сразу».
+ * То, что открывают каждый день, — прямой кнопкой: «Главная», «Задачи»,
+ * «Лиды», «Холодные касания», «Макеты» (каждая — своя группа из одного
+ * раздела, а такая группа рисуется ссылкой). Редкое — в группах.
+ *
  * Владелец, 12.10.2026: «вкладок куча, пока в каждую задаешь — с ума
  * пойдешь». Двадцать с лишним пунктов в одну строку не читаются, поэтому
  * шапка показывает группы, а разделы — в выпадающем списке группы
  * (lib/admin/nav.ts, components/admin/nav-menu.tsx). Названия групп — в
  * словаре content/admin-panel/shell.ts (`navGroupDict`).
  */
-export const NAV_GROUPS = ["home", "tasks", "sales", "money", "marketing", "team", "reports", "help"] as const;
+export const NAV_GROUPS = [
+  "home",
+  "tasks",
+  "leads",
+  "prospect",
+  "mockups",
+  "sales",
+  "money",
+  "marketing",
+  "team",
+  "reports",
+  "help",
+] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 export type Section = {
@@ -101,18 +118,21 @@ export const SECTIONS: readonly Section[] = [
   // а «История задач» — страницей без пункта меню. Группа из одного раздела —
   // просто ссылка (isSingle в lib/admin/nav.ts).
   { href: "/admin/tasks", label: { ru: "Задачи", uz: "Vazifalar", pl: "Zadania" }, roles: EVERYONE, group: "tasks" },
-  { href: "/admin", label: { ru: "Лиды", uz: "Lidlar", pl: "Leady" }, roles: EVERYONE, group: "sales" },
-  { href: "/admin/orders", label: { ru: "Заявки", uz: "Buyurtmalar", pl: "Zamówienia" }, roles: EVERYONE, group: "sales" },
-  { href: "/admin/scout", label: { ru: "Поиск", uz: "Qidiruv", pl: "Wyszukiwanie" }, roles: EVERYONE, group: "sales" },
-  { href: "/admin/prospect", label: { ru: "Касания", uz: "Aloqalar", pl: "Kontakty" }, roles: EVERYONE, group: "sales" },
-  // Надзор — рядом с касаниями: это разбор тех же разговоров. Всем, а не
-  // только владельцу: урок нужен тому, кто пишет следующее письмо.
-  { href: "/admin/talks", label: { ru: "Надзор", uz: "Nazorat", pl: "Nadzór" }, roles: EVERYONE, group: "sales" },
+  { href: "/admin", label: { ru: "Лиды", uz: "Lidlar", pl: "Leady" }, roles: EVERYONE, group: "leads" },
+  // Названия — как заголовки страниц (владелец, 23.10.2026): «Касания»
+  // было «Холодными касаниями» только на странице, «Поиск» новичок путал с
+  // поиском по базе, «Надзор» звучал как контроль сотрудников, а «Заявки» —
+  // это заказы магазина, не заявки клиентов.
+  { href: "/admin/prospect", label: { ru: "Холодные касания", uz: "Sovuq aloqalar", pl: "Zimne kontakty" }, roles: EVERYONE, group: "prospect" },
+  { href: "/admin/scout", label: { ru: "Сигналы скаута", uz: "Skaut signallari", pl: "Sygnały skauta" }, roles: EVERYONE, group: "sales" },
+  // Разбор переписки — уроки из разговоров касаний. Всем, а не только
+  // владельцу: урок нужен тому, кто пишет следующее письмо.
+  { href: "/admin/talks", label: { ru: "Разбор переписки", uz: "Yozishmalar tahlili", pl: "Analiza rozmów" }, roles: EVERYONE, group: "sales" },
   // Макеты — всем. Владелец, 08.10.2026: «Надо сделать вкладку
   // дополнительную у всех: макеты… Там же генерируется пароль на 24 часа для
   // доступа клиента». Пароль клиенту выдаёт тот, кто с ним говорит, — а это
   // любой из команды. Собирать прототипы по-прежнему владелец («Прототипы»).
-  { href: "/admin/mockups", label: { ru: "Макеты", uz: "Maketlar", pl: "Makiety" }, roles: EVERYONE, group: "sales" },
+  { href: "/admin/mockups", label: { ru: "Макеты", uz: "Maketlar", pl: "Makiety" }, roles: EVERYONE, group: "mockups" },
   // Рабочие аккаунты Telegram — владельцу и руководителю. Подключить аккаунт
   // значит дать студии писать от чужого номера, и сессия равна доступу к
   // нему, — поэтому не всем. Владелец, 04.10.2026: «дай доступ к разделу
@@ -125,6 +145,9 @@ export const SECTIONS: readonly Section[] = [
   { href: "/admin/candidates", label: { ru: "Кандидаты", uz: "Nomzodlar", pl: "Kandydaci" }, roles: ["admin", "head"], group: "team" },
   { href: "/admin/projects", label: { ru: "Проекты", uz: "Loyihalar", pl: "Projekty" }, roles: EVERYONE, group: "money" },
   { href: "/admin/stats", label: { ru: "Статистика", uz: "Statistika", pl: "Statystyki" }, roles: EVERYONE, group: "reports" },
+  // Ступени продажи — список компаний по ступеням. Раньше открывался только
+  // по числу на «Главной» (/admin/hq/stages); теперь — пунктом «Отчётов».
+  { href: "/admin/stages", label: { ru: "Ступени продажи", uz: "Sotuv bosqichlari", pl: "Etapy sprzedaży" }, roles: EVERYONE, group: "reports" },
   // Трафик сайта — владельцу и руководителям. Владелец: «чтобы Александр и
   // руководители имели доступ». Реклама — их работа, и без посещаемости её
   // не оценить. Смотреть — да; подключать Метрику и Google остаётся
@@ -141,9 +164,11 @@ export const SECTIONS: readonly Section[] = [
   // это не его деньги и не его решения.
   { href: "/admin/expenses", label: { ru: "Расходы", uz: "Xarajatlar", pl: "Wydatki" }, roles: ["admin", "head"], group: "money" },
   { href: "/admin/finance", label: { ru: "Финансы", uz: "Moliya", pl: "Finanse" }, roles: EVERYONE, group: "money" },
+  // Заказы готовых продуктов из магазина — деньги, а не продажи по лидам.
+  { href: "/admin/orders", label: { ru: "Заказы магазина", uz: "Do‘kon buyurtmalari", pl: "Zamówienia sklepu" }, roles: EVERYONE, group: "money" },
   // Релизы — только у админа: выложить файл значит решить, что именно
   // получит каждый, кто уже заплатил.
-  { href: "/admin/releases", label: { ru: "Релизы", uz: "Relizlar", pl: "Wydania" }, roles: ADMIN_ONLY, group: "reports" },
+  { href: "/admin/releases", label: { ru: "Релизы", uz: "Relizlar", pl: "Wydania" }, roles: ADMIN_ONLY, group: "money" },
   // Команда — владельцу и руководителю проектов. Но видят они разное:
   // руководитель заводит менеджеров и смотрит состав, а роли, грейды и
   // отключение остаются за владельцем — см. hiresStaff и managesStaff.

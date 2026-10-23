@@ -231,6 +231,21 @@ export async function taskBoard(staffId: string, now: Date = new Date()): Promis
   };
 }
 
+/**
+ * Сколько открытых задач на человеке и сколько из них просрочено — для
+ * числа на кнопке «Задачи» в меню (владелец, 23.10.2026, на разбор
+ * удобства: «Делаем все сразу»). Два счёта базы без строк: число в шапке
+ * не должно тянуть сами задачи на каждой странице. null — базы нет.
+ */
+export async function myTaskCounts(staffId: string, now: Date = new Date()): Promise<{ open: number; overdue: number } | null> {
+  const db = serviceClient();
+  if (!db) return null;
+  const open = () => db.from("staff_tasks").select("id", { count: "exact", head: true }).eq("assignee_id", staffId).in("status", ["new", "in_work"]);
+  const [all, late] = await Promise.all([open(), open().lt("due_at", now.toISOString())]);
+  if (all.error || late.error) return null;
+  return { open: all.count ?? 0, overdue: late.count ?? 0 };
+}
+
 /** Открытые — сверху, от ближайшего срока; закрытые — ниже, свежие первыми. */
 function openFirst(a: Task, b: Task): number {
   const ao = a.closed_at ? 1 : 0;

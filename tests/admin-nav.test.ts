@@ -57,10 +57,14 @@ test("группы не меняют, что кому открыто: те же 
 
 test("группа, где у человека один раздел, — просто ссылка; закрытый раздел группу не рисует", () => {
   const manager = menuOf({ role: "manager" });
-  // Менеджеру из «Отчётов» открыта только «Статистика», из «Маркетинга» — ничего.
-  const reports = manager.find((g) => g.group === "reports")!;
-  assert.ok(isSingle(reports));
-  assert.equal(reports.sections[0].href, "/admin/stats");
+  // Ежедневное — прямой кнопкой: «Лиды», «Холодные касания», «Макеты» —
+  // группы из одного раздела. Из «Маркетинга» менеджеру — ничего.
+  for (const [group, href] of [["leads", "/admin"], ["prospect", "/admin/prospect"], ["mockups", "/admin/mockups"]] as const) {
+    const g = manager.find((m) => m.group === group)!;
+    assert.ok(isSingle(g), `${group}: не просто ссылка`);
+    assert.equal(g.sections[0].href, href);
+  }
+  assert.deepEqual(manager.find((g) => g.group === "reports")?.sections.map((s) => s.href), ["/admin/stats", "/admin/stages"]);
   assert.equal(manager.find((g) => g.group === "marketing"), undefined);
   // Обучение выключено для команды — «Команда» у менеджера пропадает целиком.
   const off = menuOf({ role: "manager", sections_off: ["/admin/learn"] });
@@ -105,9 +109,9 @@ test("поиск: сначала начало названия, потом сл�
   const ru = items("ru");
   assert.equal(findSections("", ru).length, SECTIONS.length);
   assert.deepEqual(findSections("сотр", ru).map((i) => i.href), ["/admin/ai-staff"]);
-  // «Продажи» — группа: находятся её разделы.
+  // «Продажи» — группа: находятся её разделы и «Ступени продажи».
   const sales = findSections("продаж", ru).map((i) => i.href);
-  assert.ok(sales.includes("/admin/prospect") && sales.includes("/admin"));
+  assert.ok(sales.includes("/admin/scout") && sales.includes("/admin/talks") && sales.includes("/admin/stages"));
   // Набрал на другом языке — тоже найдётся, но после своих.
   assert.equal(findSections("umowy", ru)[0]?.href, "/admin/contracts");
   assert.deepEqual(findSections("щщщ", ru), []);
@@ -127,11 +131,15 @@ const staff = (locale: PanelLocale, role: Role): Staff => ({
 test("шапка владельца: шесть групп вместо двадцати пунктов, открытая группа подсвечена", () => {
   globalThis.__pathname = "/admin/contracts/42";
   const html = renderToStaticMarkup(createElement(AdminShell, { staff: staff("ru", "admin"), children: "x" }));
-  for (const group of ["Продажи", "Проекты и деньги", "Маркетинг", "Команда", "Отчёты"]) {
+  for (const group of ["Продажи", "Деньги", "Маркетинг", "Команда", "Отчёты"]) {
     assert.match(html, new RegExp(`aria-haspopup="true"[^>]*>${group}`), `нет группы «${group}»`);
   }
   // Открытая группа — зелёная, рядом — открытый раздел.
-  assert.match(html, /border-green font-medium text-green[^"]*">Проекты и деньги<span[^>]*>· Договоры/);
+  assert.match(html, /border-green font-medium text-green[^"]*">Деньги<span[^>]*>· Договоры/);
+  // Ежедневное — ссылками без списка, сразу за «Главной» и «Задачами».
+  for (const [href, name] of [["/admin", "Лиды"], ["/admin/prospect", "Холодные касания"], ["/admin/mockups", "Макеты"]]) {
+    assert.match(html, new RegExp(`href="${href}"[^>]*>${name}<`), `${name}: не прямая кнопка`);
+  }
   assert.match(html, /aria-current="page"[^>]*>Договоры</);
   // Инструкции — ссылкой, без списка.
   assert.match(html, /href="\/admin\/help"[^>]*>Инструкции</);
@@ -198,4 +206,28 @@ test("меню как раньше на телефоне прокручивае�
   // строку на пиксель — теперь у строки запас и запрет вертикальной прокрутки.
   const shell = read("components/admin/shell.tsx");
   assert.match(shell, /className="no-scrollbar min-w-0 flex-1 overflow-x-auto overflow-y-hidden pb-px"/);
+});
+
+/**
+ * Владелец, 23.10.2026, на разбор удобства панели: «Делаем все сразу».
+ * Число на кнопке «Задачи» — свои открытые задачи, счётом базы без строк,
+ * кто спрашивает — из куки.
+ */
+test("число на кнопке «Задачи»: свои открытые задачи, из куки, счётом базы", () => {
+  const menu = read("components/admin/nav-menu.tsx");
+  assert.match(menu, /only\.href === TASKS_HREF \? <TaskCount \/> : null/);
+  const route = read("app/admin/tasks/count/route.ts");
+  assert.match(route, /const staff = await currentStaff\(\);/);
+  assert.match(route, /myTaskCounts\(staff\.id\)/);
+  assert.doesNotMatch(route, /searchParams|request\.url/, "чужой id в запросе не принимается");
+  const store = read("lib/admin/task-store.ts");
+  const fn = store.slice(store.indexOf("export async function myTaskCounts"));
+  assert.match(fn.slice(0, fn.indexOf("\n}\n")), /count: "exact", head: true/);
+  assert.match(read("components/admin/task-count.tsx"), /fetch\("\/admin\/tasks\/count"/);
+});
+
+test("«Ступени продажи» — раздел в «Отчётах», старый адрес уводит туда", () => {
+  assert.equal(SECTIONS.find((s) => s.href === "/admin/stages")?.group, "reports");
+  assert.match(read("app/admin/stages/page.tsx"), /requireSection\("\/admin\/stages"\)/);
+  assert.match(read("next.config.ts"), /source: "\/admin\/hq\/stages", destination: "\/admin\/stages"/);
 });

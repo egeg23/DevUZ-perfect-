@@ -64,7 +64,7 @@ export const workSections: Record<string, HelpEntry> = {
         body: [
           "**«Wstrzymaj»** — konto przestaje pisać pierwsze wiadomości, ale odpowiada w już rozpoczętych rozmowach. **«Przywróć do pracy»** — znowu pisze.",
           "Jeśli Telegram ograniczy konto za masową wysyłkę, samo staje na dobę: pierwsze wiadomości wychodzą z pozostałych, korespondencja trwa, a przy koncie widać, do kiedy stoi. Wiadomość, przy której to się stało, wraca do kolejki i wyjdzie z innego konta. Jeśli nie ma już kto pisać, kolejka jest zdejmowana w całości, jak wcześniej. Co godzinę każde konto, także główne, samo pyta @SpamBot, czy nie jest ograniczone. Jeśli Telegram podał termin dłuższy niż doba, konto stoi do tego terminu. O ograniczeniu bot pisze do całego zespołu: które konto i do której godziny stoi, ile i czyich wiadomości czeka właśnie na nie i co robić — pisać do klientów z prywatnego konta albo z innego konta roboczego. Gdy ograniczenie zniknie, bot napisze, że konto znowu pisze. Żeby wiadomości menedżera nie czekały na ograniczone konto, przypisz go jeszcze do jednego — punkt [kto pracuje na koncie](#accounts-staff).",
-          "**«Odłącz»** — skaut zamyka sesję w Telegramie (zniknie z urządzeń na telefonie) i usuwa ją u nas. Rozmowy rozpoczęte z tego konta zostają w «Kontaktach», ale dalej odpowiadasz w nich sam: z tego numeru nie ma już kto pisać.",
+          "**«Odłącz»** — skaut zamyka sesję w Telegramie (zniknie z urządzeń na telefonie) i usuwa ją u nas. Rozmowy rozpoczęte z tego konta zostają w «Zimnych kontaktach», ale dalej odpowiadasz w nich sam: z tego numeru nie ma już kto pisać.",
         ],
       },
     ],
@@ -399,6 +399,38 @@ export const workSections: Record<string, HelpEntry> = {
   },
 
   /* ── Трафик ───────────────────────────────────────────────────────── */
+  "/admin/stages": {
+    what: "Lista firm i leadów według etapów sprzedaży: do kogo napisaliśmy, kto odpowiedział, wykazał zainteresowanie, dostał makietę, widział prezentację, usłyszał cenę i zapłacił. Tu widać, gdzie dokładnie utyka sprzedaż i kogo trzeba popchnąć dalej. Wcześniej lista otwierała się tylko z liczby na «Pulpit», teraz to punkt w «Raporty». Liczy kod z bazy, bez sieci neuronowej.",
+    items: [
+      {
+        id: "list",
+        title: "Lista etapu: jak czytać",
+        body: {
+          manager: [
+            "Na górze — etapy: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność» — i okres: 7 lub 30 dni. Kliknij etap — niżej pojawią się firmy i leady, które do niego doszły w tym okresie: czyje, kiedy doszły i czy doszły do następnego etapu (na zielono — doszły).",
+            "Widzisz tylko swoje firmy i leady: te, które prowadzisz, i te, gdzie prezentację lub cenę zaznaczyłeś ty. Kliknij wiersz — otworzy się karta leada lub kontaktu. Te same liczby za tydzień — w bloku [«Moje etapy w tym tygodniu»](#hq-my-stages) na «Pulpit».",
+          ],
+          head: [
+            "Na górze — etapy: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność» — i okres: 7 lub 30 dni. Kliknij etap — niżej pojawią się firmy i leady, które do niego doszły w tym okresie: czyje, kiedy doszły i czy doszły do następnego etapu (na zielono — doszły).",
+            "Widzisz transakcje całego zespołu, w każdym wierszu — czyj to lead. Te same liczby za 7 i 30 dni — w bloku [«Etapy sprzedaży»](#hq-stages) na «Pulpit». Pieniędzy tu nie ma nikt: sumy wpływów widzi tylko właściciel na «Pulpit».",
+          ],
+          admin: [
+            "Na górze — etapy: «napisaliśmy», «odpisali», «zainteresowanie», «makieta wysłana», «makieta pokazana», «cena podana», «płatność» — i okres: 7 lub 30 dni. Kliknij etap — niżej pojawią się firmy i leady, które do niego doszły w tym okresie: czyje, kiedy doszły i czy doszły do następnego etapu (na zielono — doszły).",
+            "Widzisz transakcje całego zespołu, w każdym wierszu — czyj to lead. Te same liczby za 7 i 30 dni — w bloku [«Etapy sprzedaży»](#hq-stages) na «Pulpit». Na liście nie ma pieniędzy: sumy transakcji — w tym samym bloku, tylko u ciebie.",
+          ],
+        },
+      },
+      {
+        id: "marks",
+        title: "Dlaczego etap jest pusty",
+        body: [
+          "«Makieta pokazana» i «cena podana» baza sama nie widzi: prezentację przez wideo lub na żywo zaznacza człowiek przyciskiem «Pokazałem makietę» — w «Moje makiety» na «Pulpit» albo w [karcie leada](#leads-sales-marks). Bez zaznaczenia etap zostanie zerem, a wszystko po nim wyda się gorsze, niż jest.",
+          "Jeśli wierszy jest ponad 200 — pokazujemy pierwsze 200 i linię «jeszcze N»: zawęź okres do 7 dni. Firmy, które przyszły same (zgłoszenie ze strony, czatu lub bota), nie wchodzą do «napisaliśmy» — od razu są «odpisali».",
+        ],
+      },
+    ],
+  },
+
   "/admin/traffic": {
     what: "Ile osób wchodzi na stronę devuz.studio, skąd przychodzą i od której strony zaczynają — według Yandex Metryki i Google Analytics. Przydaje się, żeby widzieć, czy działają reklama i publikacje: leady przychodzą ze strony, a jeśli ludzie przestali na nią wchodzić, leadów będzie mniej za tydzień lub dwa. Widzą to właściciel i kierownicy, menedżerowie — nie.",
     items: [

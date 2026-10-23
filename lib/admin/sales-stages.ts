@@ -346,7 +346,7 @@ export function periodRange(period: StagesPeriod, now: Date): { from: number; to
 
 /** Куда ведёт число ступени: список компаний и лидов этой ступени за период. */
 export function stageHref(stage: Stage, period: StagesPeriod, owner?: string | null): string {
-  return `/admin/hq/stages?stage=${stage}&period=${period}${owner ? `&owner=${owner}` : ""}`;
+  return `/admin/stages?stage=${stage}&period=${period}${owner ? `&owner=${owner}` : ""}`;
 }
 
 /** Где открыть сделку: лид — его карточка, касание — его строка. */

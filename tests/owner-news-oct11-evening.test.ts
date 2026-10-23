@@ -40,6 +40,7 @@ test("коротко, от первого лица, названия — как 
   assert.ok(text.includes(`«${leadCardDict.replySend.ru}»`), "кнопка ответа названа не так, как в панели");
   assert.ok(text.includes("«Первичке по касанию»") && leadCardDict.talk.ru === "Первичка по касанию");
   const touches = SECTIONS.find((s) => s.href === "/admin/prospect");
-  assert.equal(touches?.label.ru, "Касания");
+  // Ушло 11.10, когда раздел звался «Касания»; с 23.10 — «Холодные касания».
+  assert.match(touches?.label.ru ?? "", /касания/i);
   assert.equal(await news.text("head"), text, "руководителю тот же текст");
 });

@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 
 import { setNavClassic } from "@/app/admin/actions";
 import { AdminNavLink } from "@/components/admin/nav-link";
+import { TaskCount } from "@/components/admin/task-count";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { shellDict } from "@/content/admin-panel/shell";
 import { sectionOfHref } from "@/lib/admin/help";
@@ -27,6 +28,9 @@ import { findSections, type Findable } from "@/lib/admin/nav";
  */
 
 export type NavMenuItem = Findable & { quiet: boolean };
+
+/** У этого пункта — число открытых задач (components/admin/task-count.tsx). */
+const TASKS_HREF = "/admin/tasks";
 export type NavMenuGroup = { id: string; label: string; items: NavMenuItem[] };
 
 /** Что сейчас открыто и на какой странице. Перешёл на другую — всё закрыто само, без эффекта. */
@@ -102,13 +106,14 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
   return (
     <div ref={rootRef} className="mx-auto max-w-7xl px-4 pb-2.5 sm:px-5 sm:pb-3">
       {/* Компьютер: строка групп. */}
-      <nav aria-label={t.nav} className="hidden items-center gap-x-4 text-sm md:flex lg:gap-x-5">
+      <nav aria-label={t.nav} className="hidden flex-wrap items-center gap-x-4 gap-y-2 text-sm md:flex lg:gap-x-5">
         {groups.map((group) => {
           if (group.items.length === 1) {
             const only = group.items[0];
             return (
               <AdminNavLink key={only.href} href={only.href} quiet={only.quiet}>
                 {only.label}
+                {only.href === TASKS_HREF ? <TaskCount /> : null}
               </AdminNavLink>
             );
           }
@@ -146,7 +151,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
             </div>
           );
         })}
-        <NavToggle classic={false} className="ml-auto" />
+        <NavToggle classic={false} compact className="ml-auto" />
         {/* На узком экране — только значок: длинные названия групп по-польски
             и по-узбекски иначе выталкивают кнопку за край. */}
         <button
@@ -156,8 +161,8 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
           className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-line px-2.5 py-1.5 text-faint transition hover:border-muted hover:text-text lg:py-1"
         >
           <SearchIcon />
-          <span className="hidden lg:inline">{t.findSection}</span>
-          <kbd className="hidden rounded bg-surface-2 px-1.5 font-mono text-[11px] text-faint lg:inline">Ctrl K</kbd>
+          <span className="hidden 2xl:inline">{t.findSection}</span>
+          <kbd className="hidden rounded bg-surface-2 px-1.5 font-mono text-[11px] text-faint xl:inline">Ctrl K</kbd>
         </button>
       </nav>
 
@@ -194,6 +199,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
                   {group.items.map((item) => (
                     <AdminNavLink key={item.href} href={item.href} quiet={item.quiet} variant="item" onClick={close}>
                       {item.label}
+                      {item.href === TASKS_HREF ? <TaskCount /> : null}
                     </AdminNavLink>
                   ))}
                 </section>
@@ -211,7 +217,7 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
  * сделай возможность оставить как сейчас тумблером». Выбор пишется в
  * `staff.nav_classic` — один на человека, на всех его устройствах.
  */
-export function NavToggle({ classic, className = "" }: { classic: boolean; className?: string }) {
+export function NavToggle({ classic, compact = false, className = "" }: { classic: boolean; compact?: boolean; className?: string }) {
   const t = usePanelDict(shellDict);
   return (
     <form action={setNavClassic} className={`shrink-0 ${className}`}>
@@ -223,7 +229,8 @@ export function NavToggle({ classic, className = "" }: { classic: boolean; class
         title={t.navNewHint}
         className="flex items-center gap-2 whitespace-nowrap text-xs text-faint transition hover:text-text"
       >
-        <span>{t.navNew}</span>
+        {/* В строке нового меню место занимают кнопки разделов: подпись — с самых широких экранов, смысл — в подсказке. */}
+        <span className={compact ? "hidden 2xl:inline" : ""}>{t.navNew}</span>
         <span
           aria-hidden
           className={`relative inline-block h-4 w-7 rounded-full transition-colors ${classic ? "bg-line" : "bg-green/70"}`}

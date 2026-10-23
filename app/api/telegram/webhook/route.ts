@@ -2310,7 +2310,7 @@ async function handlePrototypeButton(query: NonNullable<Update["callback_query"]
         ? `Прототип уже взяли${taken.by ? ` — ${taken.by}` : ""}`
         : taken.reason === "early"
           ? `Первые ${PROTO_FIRST_MINUTES} минут прототип у автора касания`
-          : "Не удалось — откройте «Касания» в панели",
+          : "Не удалось — откройте «Холодные касания» в панели",
     );
     return;
   }
