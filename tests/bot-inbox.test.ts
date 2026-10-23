@@ -109,3 +109,24 @@ test("«Написать клиенту в бот»: первым, от бота
   assert.match(page, /const botChat = reveals && lead\.tg_username \? await botChatOf\(lead\.tg_username\)/);
   assert.match(page, /\{botChat \? \(\s*<details id="botwrite"/);
 });
+
+test("не текст от клиента — голосовое, фото, файл — владельцу и руководителю копией, не мимо", async () => {
+  const { mediaOf, mediaLine } = await import("@/lib/qualify/bot-inbox-store");
+  assert.equal(mediaOf({ voice: { file_id: "x" } }), "voice");
+  assert.equal(mediaOf({ photo: [{ file_id: "x" }] }), "photo");
+  assert.equal(mediaOf({ document: { file_id: "x" } }), "document");
+  assert.equal(mediaOf({}), null);
+  assert.equal(mediaLine("voice"), "[голосовое]");
+  assert.equal(mediaLine("photo", " Mana rasm "), "[фото] Mana rasm");
+
+  const store = read("lib/qualify/bot-inbox-store.ts");
+  const relay = store.slice(store.indexOf("export async function relayClientMedia"), store.indexOf("export async function relayInboxReply"));
+  assert.ok(relay.indexOf("noteClientText(") < relay.indexOf("if (!messageWindow(now)) return 0;"), "ночью — в утреннюю сводку, не в тишину");
+  assert.match(relay, /copyMessageForId\(reader\.chat, input\.client\.chatId, input\.messageId\)/, "сама вещь — копией от бота");
+  assert.match(relay, /bot_inbox_notices"\)\.insert\(\{ staff_chat: reader\.chat, message_id: copy/, "ответ на копию тоже уходит клиенту");
+
+  const hook = read("app/api/telegram/webhook/route.ts");
+  assert.match(hook, /else if \(!\(update\.message\.text \?\? ""\)\.trim\(\) && mediaOf\(update\.message\)\) \{\s*\/\/[^\n]*\n\s*await handleClientMedia\(update\.message\);/);
+  const handler = hook.slice(hook.indexOf("async function handleClientMedia"), hook.indexOf("async function handleClientMedia") + 700);
+  assert.match(handler, /if \(await staffByTelegramId\(message\.from\.id\)\.catch\(\(\) => null\)\) return;/, "сотрудник — не клиент");
+});

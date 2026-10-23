@@ -129,7 +129,7 @@ import { grade, isRight, questionsFor } from "@/lib/learn/quiz";
 import { saveAttempt } from "@/lib/learn/store";
 import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
 import { secretOk } from "@/lib/secret-ok";
-import { humanOf, noteClientText, notifyInbox, relayInboxReply } from "@/lib/qualify/bot-inbox-store";
+import { humanOf, mediaOf, noteClientText, notifyInbox, relayClientMedia, relayInboxReply } from "@/lib/qualify/bot-inbox-store";
 import { tellLeadOwner } from "@/lib/qualify/lead-owner-notify";
 
 export const runtime = "nodejs";
@@ -176,6 +176,9 @@ type Update = {
     voice?: { file_id: string; duration?: number; mime_type?: string; file_size?: number };
     audio?: { file_id: string; duration?: number; mime_type?: string; file_size?: number; title?: string; file_name?: string };
     document?: { file_id: string; mime_type?: string; file_size?: number; file_name?: string };
+    /** Фото и стикер от клиента — уходят владельцу и руководителю копией (bot-inbox-store). */
+    photo?: { file_id: string }[];
+    sticker?: { file_id: string; emoji?: string };
   };
   callback_query?: {
     id: string;
@@ -364,6 +367,9 @@ async function route(update: Update): Promise<void> {
         // руками, случайно туда не попадают. Разговор с клиентом в группе
         // не ведём никогда.
         await handleGroup(update.message);
+      } else if (!(update.message.text ?? "").trim() && mediaOf(update.message)) {
+        // Не текст от клиента — владельцу и руководителю копией, не молча мимо.
+        await handleClientMedia(update.message);
       } else {
         await handleClient(update.message);
       }
@@ -381,6 +387,24 @@ async function route(update: Update): Promise<void> {
     // единственный след случившегося.
     console.error("telegram webhook", error);
   }
+}
+
+/**
+ * Голосовое, фото, файл, кружок или стикер от клиента. Первичка такое не
+ * разбирает, поэтому раньше оно пропадало молча; теперь — владельцу и
+ * руководителю копией (lib/qualify/bot-inbox-store.ts, relayClientMedia).
+ * Сотруднику, приславшему не текст мимо своих путей, — как раньше, ничего.
+ */
+async function handleClientMedia(message: NonNullable<Update["message"]>) {
+  const media = mediaOf(message);
+  if (!media || !message.message_id || !message.from?.id) return;
+  if (await staffByTelegramId(message.from.id).catch(() => null)) return;
+  await relayClientMedia({
+    client: { chatId: message.chat.id, name: message.from.first_name ?? "", username: message.from.username ?? null },
+    messageId: message.message_id,
+    media,
+    caption: message.caption ?? null,
+  }).catch((error: unknown) => console.error("бот: не текст от клиента не переслан", error instanceof Error ? error.message : error));
 }
 
 /**

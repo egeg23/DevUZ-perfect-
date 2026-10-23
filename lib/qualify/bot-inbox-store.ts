@@ -5,7 +5,8 @@ import { dayStartUtc } from "@/lib/admin/portion";
 import { staffByTelegramId } from "@/lib/admin/session";
 import { QUIET_FROM_HOUR, QUIET_TO_HOUR, messageWindow } from "@/lib/admin/tasks";
 import { saveSession, sessionFor } from "@/lib/qualify/handoff";
-import { copyMessage, esc, sendForId, sendMessage } from "@/lib/qualify/telegram";
+import { copyMessage, copyMessageForId, esc, sendForId, sendMessage } from "@/lib/qualify/telegram";
+import { tellLeadOwner } from "@/lib/qualify/lead-owner-notify";
 import { siteUrl } from "@/lib/seo";
 import { serviceClient } from "@/lib/supabase";
 
@@ -161,6 +162,65 @@ export async function notifyInbox(
     if (reader.chat === input.client.chatId) continue;
     if (await sendNotice(reader, input.client.chatId, text)) sent.add(reader.chat);
   }
+  return sent;
+}
+
+/**
+ * Не текст от клиента — голосовое, фото, файл, видео, кружок, стикер.
+ *
+ * 23.10.2026 клиент FloraEdu в 14:09 прислал боту что-то не текстом, и бот
+ * выбросил это молча: первичка отвечает только на текст, а обращение в бота
+ * приходило только по тексту. Теперь такое сообщение уходит владельцу и
+ * руководителю копией (без «переслано»), с той же строкой «📩 Обращение в
+ * бота» и тем же «Ответить» — и на строку, и на саму копию.
+ */
+export type ClientMedia = "voice" | "audio" | "photo" | "video" | "video_note" | "document" | "sticker";
+
+const MEDIA_WORD: Record<ClientMedia, string> = {
+  voice: "голосовое",
+  audio: "аудио",
+  photo: "фото",
+  video: "видео",
+  video_note: "кружок",
+  document: "файл",
+  sticker: "стикер",
+};
+
+export function mediaOf(message: Partial<Record<ClientMedia, unknown>>): ClientMedia | null {
+  for (const kind of Object.keys(MEDIA_WORD) as ClientMedia[]) if (message[kind]) return kind;
+  return null;
+}
+
+export function mediaLine(media: ClientMedia, caption?: string | null): string {
+  const words = (caption ?? "").trim();
+  return `[${MEDIA_WORD[media]}]${words ? ` ${words}` : ""}`;
+}
+
+export async function relayClientMedia(
+  input: { client: InboxClient; messageId: number; media: ClientMedia; caption?: string | null },
+  now: Date = new Date(),
+): Promise<number> {
+  const line = mediaLine(input.media, input.caption);
+  // Последнее слово клиента — и для утренней сводки тех, кто писал ночью.
+  await noteClientText(input.client.chatId, line).catch(() => undefined);
+  if (!messageWindow(now)) return 0;
+  const db = serviceClient();
+  const human = await humanOf(input.client.chatId, now).catch(() => null);
+  const text = inboxNotice({ client: input.client, text: `Клиент прислал ${line}`, botReply: null, lead: await leadOf(input.client.username), human });
+  let sent = 0;
+  const notified = new Set<number>();
+  for (const reader of await readers()) {
+    if (reader.chat === input.client.chatId) continue;
+    if (!(await sendNotice(reader, input.client.chatId, text))) continue;
+    notified.add(reader.chat);
+    sent += 1;
+    const copy = await copyMessageForId(reader.chat, input.client.chatId, input.messageId);
+    if (copy && db) await db.from("bot_inbox_notices").insert({ staff_chat: reader.chat, message_id: copy, client_chat: input.client.chatId });
+  }
+  // Лид взят менеджером — ему та же строка, переписка — в карточку.
+  void tellLeadOwner({ username: input.client.username, text: line, turns: [{ role: "user", content: line }], skipChats: notified }).catch(
+    () => undefined,
+  );
   return sent;
 }
 
