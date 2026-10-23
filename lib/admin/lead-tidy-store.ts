@@ -34,7 +34,7 @@ import {
 import { wants } from "@/lib/admin/notify-prefs";
 import { cancelAutoReminders, setStatus } from "@/lib/admin/ownership";
 import { isWorkday } from "@/lib/admin/portion";
-import { todayInTashkent } from "@/lib/admin/pulse";
+import { NOT_MOVES as PULSE_NOT_MOVES, todayInTashkent } from "@/lib/admin/pulse";
 import type { Staff } from "@/lib/admin/session";
 import { createTasks } from "@/lib/admin/task-store";
 import { enterUrl, esc, sendMessage, sendWithButtons, sendWithRows, setButtons } from "@/lib/qualify/telegram";
@@ -53,7 +53,8 @@ import { serviceClient } from "@/lib/supabase";
  * «⏳» снова прятало бы лид на неделю, а 21 день до «проиграли» начинался
  * заново.
  */
-const NOT_MOVES = ["lead.viewed", "lead.transcript_viewed", "lead.idle_snoozed"];
+// Что не движение — то же, что у «Главной» и команды за неделю (lib/admin/pulse.ts).
+const NOT_MOVES = [...PULSE_NOT_MOVES];
 
 /** Все лиды «в работе» действующих сотрудников — с последним движением. */
 export async function loadIdle(ownerIds?: readonly string[]): Promise<IdleLead[]> {

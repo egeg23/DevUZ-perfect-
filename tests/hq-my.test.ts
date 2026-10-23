@@ -84,7 +84,7 @@ const input = (over: Partial<MyInput> = {}): MyInput => ({
 test("раздел и доступ: менеджеру — свой пульс, без денег и чужого", () => {
   const page = read("app/admin/hq/page.tsx");
   assert.match(page, /const staff = await requireSection\("\/admin\/hq"\)/, "страница начинается с requireSection");
-  assert.match(page, /if \(!seesEveryone\(staff\.role\)\) \{\s*const my = await loadMyHq\(staff, now\)/, "менеджеру — loadMyHq, а не командный центр");
+  assert.match(page, /if \(!seesEveryone\(staff\.role\)\) \{\s*const \[my, plan\] = await Promise\.all\(\[loadMyHq\(staff, now\)/, "менеджеру — loadMyHq, а не командный центр");
   const store = read("lib/admin/hq-my-store.ts");
   // Каждый запрос по своему — фильтр по этому человеку прямо в запросе.
   assert.match(store, /from\("leads"\)\s*\.select\("id, status, contact_kind"\)\s*\.eq\("assigned_staff_id", me\)/);

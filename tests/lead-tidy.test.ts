@@ -140,7 +140,8 @@ test("«ещё в работе» — срок шага и задача; трет
   assert.match(store, /createTasks\(/, "задача — через createTasks");
   assert.match(store, /tidy_snoozed_until: due\.toISOString\(\), tidy_wait_streak: next/);
   assert.match(store, /if \(next === WAIT_LIMIT\)/);
-  assert.match(store, /"lead\.idle_snoozed"\]/, "«ещё в работе» не считается движением");
+  assert.match(read("lib/admin/pulse.ts"), /NOT_MOVES[^\n]*"lead\.idle_snoozed"\]/, "«ещё в работе» не считается движением");
+  assert.match(store, /const NOT_MOVES = \[\.\.\.PULSE_NOT_MOVES\]/, "у бота то же правило, что у «Главной»");
   assert.match(thirdWaitNotice("Камила", "X"), /Камила третий раз откладывает лид «X»/);
 });
 

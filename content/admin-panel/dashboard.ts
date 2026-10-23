@@ -13,6 +13,8 @@ const ruDays = (n: number) => `${n} ${plural("ru", n, "день", "дня", "д�
 const plDays = (n: number) => `${n} ${plural("pl", n, "dzień", "dni", "dni")}`;
 
 export const dashboardDict = defineDict({
+  // Заголовок недельных блоков внизу «Главной» (components/admin/dashboard-home.tsx).
+  weekTitle: { ru: "Неделя: рекомендации, команда, план", uz: "Hafta: tavsiyalar, jamoa, reja", pl: "Tydzień: rekomendacje, zespół, plan" },
   // Плитки.
   tileDue: { ru: "к выплате", uz: "to‘lanadi", pl: "do wypłaty" },
   tileFrozen: {
@@ -96,7 +98,8 @@ export const dashboardDict = defineDict({
   },
   colStaff: { ru: "Сотрудник", uz: "Xodim", pl: "Pracownik" },
   colInWork: { ru: "В работе", uz: "Ishda", pl: "W toku" },
-  colUrgent: { ru: "Срочно", uz: "Shoshilinch", pl: "Pilne" },
+  // Столбец — лиды «в работе» 7+ дней без шага: одно правило с «Главной» и ботом (IDLE_DAYS).
+  colUrgent: { ru: "Без движения", uz: "Harakatsiz", pl: "Bez ruchu" },
   colTouches: { ru: "Касаний", uz: "Aloqalar", pl: "Kontakty" },
   colContacts: { ru: "Контактов", uz: "Bog‘lanishlar", pl: "Pierwsze kontakty" },
   colWon: { ru: "Выиграно", uz: "Yutilgan", pl: "Wygrane" },

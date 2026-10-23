@@ -75,14 +75,14 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "Puls firmy: leady, kontakty, makiety, zadania",
         body: {
           head: [
-            "Cztery karty. Duża liczba — najważniejsza w karcie, wiersze pod nią — szczegóły. Kliknij dowolną liczbę — otworzy się to, co za nią stoi: lista leadów z odpowiednim filtrem, [Kontakty](/admin/prospect), [Makiety](/admin/mockups), historia zadań.",
+            "Cztery karty. Duża liczba — najważniejsza w karcie, wiersze pod nią — szczegóły. Kliknij dowolną liczbę — otworzy się to, co za nią stoi: lista leadów z odpowiednim filtrem, [Zimne kontakty](/admin/prospect), [Makiety](/admin/mockups), historia zadań.",
             "«Leady»: duża liczba — ile leadów jest «w toku» w całym zespole. Niżej — nowe dziś i w 7 dni, ciepłe, które właśnie są komuś oferowane po kolei (osoba ma 30 minut, żeby przejąć), ciepłe bez opiekuna (nikt ich nie trzyma — to powód, żeby wkroczyć), wygrane i przegrane w 7 dni. Wygrane i przegrane liczą się według zmiany statusu, a przegrane — także te, które bot zamknął sam po 21 dniach bez ruchu.",
             "«Zimne kontakty»: duża liczba — ile firm dostało dziś kontakt, od ludzi i autopilota razem, wobec normy dnia. Norma to porcje dnia wszystkich osób plus norma autopilota, jeśli jest włączony. Pasek pokazuje, ile już zrobiono. Niżej — porcje ludzi i autopilot osobno, ilu klientów odpowiedziało dziś i w 7 dni. Wiersz «odmów w 7 dni» — ilu klientów odmówiło: kontakty zamknięte jako „klient odmówił” (przyciskiem albo przez bota samodzielnie) i „nie interesuje” na czacie strony i w bocie. Bot nie wysyła nikomu kart odmów — odmowy widać tylko tutaj.",
             "«Makiety»: duża liczba — ile makiet jest teraz u klientów, dopóki trwa promocja 48 godzin, a niżej — u kogo promocja skończy się najwcześniej. Do tego — ile makiet wysłano i zatwierdzono w 7 dni. «Zadania»: otwarte zadania całego zespołu, po terminie i zrobione w 7 dni.",
             "Obok liczb z 7 dni — porównanie z 7 dniami przed nimi: «▲ +3» — więcej, «▼ −2» — mniej. Zielony — dobrze, żółty — warto zajrzeć. To kroczące 7 dni, a nie tydzień kalendarzowy: w poniedziałek rano porównanie się nie zeruje. Kierownik nie widzi na tej stronie pieniędzy — tak samo jak w innych sekcjach.",
           ],
           admin: [
-            "Pięć kart: leady, kontakty, makiety, zadania i finanse. Duża liczba — najważniejsza, wiersze pod nią — szczegóły. Każdą liczbę można kliknąć i otworzyć to, co za nią stoi: listę leadów z filtrem, [Kontakty](/admin/prospect), [Makiety](/admin/mockups), [Finanse](/admin/finance), [Umowy](/admin/contracts).",
+            "Pięć kart: leady, kontakty, makiety, zadania i finanse. Duża liczba — najważniejsza, wiersze pod nią — szczegóły. Każdą liczbę można kliknąć i otworzyć to, co za nią stoi: listę leadów z filtrem, [Zimne kontakty](/admin/prospect), [Makiety](/admin/mockups), [Finanse](/admin/finance), [Umowy](/admin/contracts).",
             "«Leady»: duża liczba — leady «w toku» w całym zespole. Niżej — nowe dziś i w 7 dni, ciepłe oferowane teraz po kolei (30 minut na przejęcie), ciepłe bez opiekuna, wygrane i przegrane w 7 dni — według dziennika zmian statusu, razem z tymi, które bot zamknął sam po 21 dniach bez ruchu.",
             "«Zimne kontakty»: ile firm dostało dziś kontakt, od ludzi i autopilota razem, wobec normy dnia (porcje wszystkich osób plus norma autopilota, jeśli jest włączony). Niżej — porcje i autopilot osobno, odpowiedzi dziś i w 7 dni. Wiersz «odmów w 7 dni» — ilu klientów odmówiło: kontakty zamknięte jako „klient odmówił” (przyciskiem albo przez bota samodzielnie) i „nie interesuje” na czacie strony i w bocie. Bot nie wysyła nikomu kart odmów — odmowy widać tylko tutaj. «Makiety»: ile jest u klientów w promocji 48 godzin, u kogo skończy się najwcześniej, wysłane i zatwierdzone w 7 dni. «Zadania»: otwarte, po terminie, zrobione w 7 dni.",
             "«Finanse» widzisz tylko Ty: ile wpłynęło w 7 dni (według daty płatności w projektach) i od początku miesiąca oraz ile umów czeka na podpis. Kierownik tej karty nie widzi.",
@@ -312,10 +312,28 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "«Moja praca»",
         roles: ["manager"],
         body: [
-          "Na górze — porcja dnia: ile kontaktów z należnych zrobiono, z paskiem; kliknij — otworzą się [Kontakty](/admin/prospect). Jeśli porcji jeszcze nie pobrano — tak jest napisane.",
+          "Na górze — porcja dnia: ile kontaktów z należnych zrobiono, z paskiem; kliknij — otworzą się [Zimne kontakty](/admin/prospect). Jeśli porcji jeszcze nie pobrano — tak jest napisane.",
           "«Dziś»: kontakty, odpowiedzi klientów na Twoje kontakty i ile leadów masz „w pracy”. «7 dni» — ostatnie 7 × 24 godziny wobec 7 dni przed nimi, strzałka pokazuje różnicę: kontakty, odpowiedzi, ciepłe leady, które wziąłeś, i te, które Ci przepadły (niewzięte w 30 minut), makiety wysłane klientom i wygrane leady.",
           "Każda liczba jest klikalna: kontakty — do «Zimnych kontaktów», odpowiedzi — do [Analizy rozmów](/admin/talks), leady — do listy leadów, makiety — do «Makiet». Liczby są te same, które kierownik i właściciel widzą w kartach zespołu.",
         ],
+      },
+      {
+        id: "week",
+        title: "«Tydzień: rekomendacje, zespół, plan»",
+        body: {
+          manager: [
+            "Na dole «Pulpit» — blok «Tydzień: rekomendacje, zespół, plan»: «Rekomendacje na tydzień» według twoich liczb (szczegóły — [rekomendacje](#leads-coach)) i [«Plan i wykonanie»](#leads-plan-fact) — cele, które ci ustawiono. Wcześniej stały na «Leady» nad listą.",
+            "Pieniędzy tu nie ma: ile zarobiłeś i co czeka na wypłatę — w [Finansach](/admin/finance).",
+          ],
+          head: [
+            "Na dole «Pulpit» — blok «Tydzień: rekomendacje, zespół, plan»: «Na dziś» i «Rekomendacje na tydzień», [«Zespół w tym tygodniu»](#leads-team-week), «Najlepsi w tygodniu», «Rekomendacje dla zespołu na tydzień» i [«Plan i wykonanie»](#leads-plan-fact), gdzie ustawiasz plan swojemu menedżerowi. Wcześniej wszystko to stało na «Leady» nad listą.",
+            "Po ustawieniu planu strona wraca tutaj, do tego bloku, z odpowiedzią, czy się udało.",
+          ],
+          admin: [
+            "Na dole «Pulpit» — blok «Tydzień: rekomendacje, zespół, plan»: «Na dziś» z przyciskiem «wygeneruj ponownie», [«Zespół w tym tygodniu»](#leads-team-week) z «do wypłaty», «Najlepsi w tygodniu», «Rekomendacje dla zespołu na tydzień» i [«Plan i wykonanie»](#leads-plan-fact), gdzie ustawiasz, zmieniasz i usuwasz plany. Wcześniej to była zakładka «Zespół» na «Leady».",
+            "«Kasa w podziale na miesiące», «Oczekiwane płatności» i terminy podatkowe — na dole [Finansów](/admin/finance), umowy do podpisu — w «Wymaga uwagi».",
+          ],
+        },
       },
       {
         id: "app",
@@ -409,26 +427,26 @@ export const leadsSections: Record<string, HelpEntry> = {
     items: [
       {
         id: "home",
-        title: "Co jest na stronie głównej",
+        title: "Co jest na stronie «Leady»",
         body: {
           manager: [
-            "Zadań tu nie ma — są w osobnej sekcji [«Zadania»](#tasks-board) w menu. Na górze są kafelki: **«do wypłaty»** — ile już zarobiłeś, a jeszcze nie dostałeś (niżej drobnym drukiem — ile czeka, aż klient dopłaci), **«leady w toku»**, **«pilny kontakt»** i **«wpływy w miesiącu»** z Twoich projektów.",
-            "Jeśli kierownik ustalił Ci plan kontaktów, nad kafelkami zobaczysz wiersz w rodzaju «Do planu zostało 12 — w tym tygodniu 18 z 30». Szczegóły — w punkcie [plan kontaktów](#prospect-plan).",
-            "Niżej: [«Pilny kontakt»](#leads-urgent) — Twoje leady, które od dawna stoją w miejscu; «Rekomendacje na tydzień» — co poprawić (zob. [rekomendacje](#leads-coach)); [«Plan i wykonanie»](#leads-plan-fact) — cele, które Ci wyznaczono; a na samym dole — [lista leadów](#leads-list).",
+            "«Leady» to tylko lista: wyszukiwanie, filtry i tabela. Wszystko inne, co wcześniej stało tu nad listą, przeniosło się: rekomendacje i «Plan i wykonanie» — na dół [«Pulpit»](/admin/hq), pieniądze — do [Finansów](/admin/finance), zadania — do sekcji [«Zadania»](#tasks-board).",
+            "Na górze — **«Znajdź leada»**: wpisz część nazwy firmy, imienia, numer zgłoszenia lub branżę i kliknij «Szukaj». Szukamy wśród leadów, które widzisz: wolnych i twoich. Niżej — chipy «wszystkie leady / wolne / moje leady» z liczbą obok, priorytet i status, potem sama [lista](#leads-list). «Wyczyść» usuwa wyszukiwanie.",
+            "Pod listą — zwinięty przycisk [«Dodaj leada ręcznie»](#leads-add): klient przyszedł z pominięciem strony i bota.",
           ],
           head: [
-            "Na początku — **«Czeka na Twoją decyzję»**: prośby menedżerów o przekazanie leada koledze. Decydujesz Ty albo właściciel — szczegóły w punkcie [przekazanie leada](#leads-transfer). Zadania — w osobnej sekcji [«Zadania»](#tasks-board) w menu.",
-            "Kafelki liczą Ciebie i Twój zespół razem: **«do wypłaty»** — tylko Twoje saldo, **«leady zespołu w toku»**, **«pilny kontakt»**, **«wpływy w tygodniu»**.",
-            "Dalej: «Na dziś» — poranne wskazówki do Twoich leadów, [«Pilny kontakt»](#leads-urgent) dla Ciebie i zespołu z imionami, [«Zespół w tym tygodniu»](#leads-team-week), rekomendacje dla zespołu i dla Ciebie, «Najlepsi w tygodniu», [«Plan i wykonanie»](#leads-plan-fact) i [lista leadów](#leads-list).",
-            "Zespół to menedżerowie przypisani do Ciebie w sekcji [«Zespół»](/admin/team). Dopóki nie masz zespołu, jego bloków na stronie głównej nie ma.",
+            "«Leady» to tylko lista: wyszukiwanie, filtry i tabela. Bloki tygodniowe, które wcześniej stały tu nad listą — «Na dziś», zespół w tym tygodniu, rekomendacje, «Najlepsi w tygodniu», «Plan i wykonanie» — są teraz na dole [«Pulpit»](/admin/hq), zadania — w sekcji [«Zadania»](#tasks-board).",
+            "Na początku — **«Czeka na Twoją decyzję»**: prośby menedżerów o przekazanie leada koledze (szczegóły — [przekazanie leada](#leads-transfer)). Niżej — **«Znajdź leada»**: część nazwy firmy, imienia, numer zgłoszenia lub branża. Obok — **«Czyje»**: «wszystkie», «wolne», «moje leady» albo konkretny pracownik — tak ogląda się leady jednego menedżera.",
+            "Pod wyszukiwaniem — chipy «wszystkie leady / wolne / moje leady» z liczbą obok, priorytet i status, potem [lista](#leads-list). «Wyczyść» usuwa wyszukiwanie i wybór osoby. Pod listą — zwinięte [«Dodaj leada ręcznie»](#leads-add).",
+            "Zespół to menedżerowie przypisani do ciebie w sekcji [Zespół](/admin/team): ich tygodniowe liczby są w tabeli na dole «Pulpit».",
           ],
           admin: [
-            "Twoja strona główna jest podzielona na zakładki, żeby nie przewijać jednej długiej listy. Zakładka zapisuje się w adresie — możesz ją dodać do zakładek przeglądarki.",
-            "**«Dziś»** — od czego zacząć dzień: «Czeka na Twoją decyzję» (prośby o przekazanie leada), linia z linkiem do sekcji [«Zadania»](#tasks-board), «Umowy do podpisu», kafelki z pieniędzmi, wskazówki «Na dziś» (przycisk «wygeneruj ponownie» zużywa jedno wywołanie modelu), «Pilny kontakt» dla całego studia i terminy podatkowe na dwa tygodnie.",
-            "**«Leady»** — [lista leadów](#leads-list) ze wszystkimi filtrami. Złota liczba na zakładce — ile leadów jest teraz wolnych.",
-            "**«Finanse»** — «Kasa w podziale na miesiące» (wpływy i wydatki z pół roku, pod każdym miesiącem — różnica) i «Oczekiwane płatności»: ile jeszcze klienci mają zapłacić w aktywnych projektach.",
-            "**«Zespół»** — [tabela tygodnia](#leads-team-week), najlepsi, rekomendacje dla każdego i [«Plan i wykonanie»](#leads-plan-fact), gdzie ustalasz i zmieniasz cele.",
-            "Ruch na stronie z Metryki (Yandex Metrica) i Google Analytics to nie zakładka, tylko osobna sekcja [«Ruch»](/admin/traffic): widzisz ją Ty i kierownicy. Stare zakładki przeglądarki do dawnej zakładki prowadzą tam samo.",
+            "«Leady» to tylko lista: wyszukiwanie, filtry i tabela. Zakładek tu już nie ma: «Dziś» powtarzało «Pulpit», a «Finanse» — sekcję «Finanse». «Kasa w podziale na miesiące», «Oczekiwane płatności» i terminy podatkowe — w [Finansach](/admin/finance); wskazówki «Na dziś», zespół w tym tygodniu, najlepsi, rekomendacje i «Plan i wykonanie» — na dole [«Pulpit»](/admin/hq); umowy do podpisu — w «Wymaga uwagi» na «Pulpit».",
+            "Na początku — **«Czeka na Twoją decyzję»**: prośby o przekazanie leada koledze. Niżej — **«Znajdź leada»** (część nazwy firmy, imienia, numer zgłoszenia lub branża) i **«Czyje»**: «wszystkie», «wolne», «moje leady» albo konkretny pracownik.",
+            "Pod wyszukiwaniem — chipy «wszystkie leady / wolne / moje leady» z liczbą, priorytet i status, potem [lista](#leads-list); pod listą — zwinięte [«Dodaj leada ręcznie»](#leads-add). Stare zakładki w przeglądarce prowadzą tam, gdzie to jest teraz: «Dziś» — na «Pulpit», «Finanse» — do «Finanse», «Zespół» — na dół «Pulpit».",
+            "Odwiedziny strony z Metriki i Google Analytics — osobna sekcja [Ruch](/admin/traffic): widzisz ją ty i kierownicy.",
+            "Zadania — w sekcji [«Zadania»](#tasks-board), na «Leady» jest o nich jedna linia z linkiem.",
+            "Nic z zakładki «Dziś» nie zginęło: wiersze «Wymaga uwagi» na «Pulpit» — umowy do podpisu, leady bez ruchu, przepadłe propozycje — to właśnie lista spraw na dzień.",
           ],
         },
       },
@@ -526,7 +544,7 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "Lista leadów: filtry i kolumny",
         body: {
           manager: [
-            "Widzisz **wolne leady i swoje**. Lead przejęty przez kolegę nie jest Ci pokazywany ani na liście, ani pod bezpośrednim linkiem — tak zdecydował właściciel. Dlatego kafelek «łącznie» to u Ciebie wolne plus Twoje.",
+            "Widzisz **wolne leady i swoje**. Lead przejęty przez kolegę nie jest Ci pokazywany ani na liście, ani pod bezpośrednim linkiem — tak zdecydował właściciel. Dlatego liczba przy chipie «wszystkie leady» to u Ciebie wolne plus Twoje.",
             "Filtry na górze: «wszystkie leady / wolne / moje leady», priorytet i status. Na liście jest 50 leadów na stronę.",
             "**«Kiedy»** — czas taszkencki. **«Budżet»** — to nie kwota, tylko to, jak klient mówi o pieniądzach: «podany i zatwierdzony», «jest, porównuje oferty» albo «nie podany». W zgłoszeniach z formularza i z kontaktów budżet prawie zawsze jest «nie podany» — rozmowy o pieniądzach jeszcze nie było.",
             "**«Ocena»** — ocena leada od 0 do 100 i litera: A — od 75, B — od 55, C — od 35, D — poniżej. **«Priorytet»**: «gorący» — ocena A albo klient prosił o żywego człowieka; «ciepły» — B; «do dojrzenia» — pozostałe; «archiwum» — klient odmówił.",
@@ -540,7 +558,7 @@ export const leadsSections: Record<string, HelpEntry> = {
             "Leady «od partnera» są wyróżnione na żółto. Dopóki niczyj — stoi pierwszy na liście z dopiskiem «priorytet — weź jako pierwszy»; po wzięciu wraca na miejsce według czasu, podświetlenie zostaje.",
           ],
           admin: [
-            "Lista jest na zakładce «Leady». Widzisz wszystkie leady. Filtry: «wszystkie leady / wolne / moje leady», priorytet i status; 50 na stronę.",
+            "Widzisz wszystkie leady. Wyszukiwanie, «Czyje» i filtry: «wszystkie leady / wolne / moje leady», priorytet i status; 50 na stronę.",
             "**«Budżet»** — jak klient mówi o pieniądzach («podany i zatwierdzony», «jest, porównuje oferty», «nie podany»), a nie kwota. **«Ocena»**: A — od 75, B — od 55, C — od 35, D — poniżej. **«Priorytet»**: «gorący» — A albo prosił o człowieka, «ciepły» — B, «do dojrzenia» — pozostałe, «archiwum» — odmówił.",
             "Danych kontaktowych na liście celowo nie ma: inaczej «kto widział kontakty» znaczyłoby «wszyscy, którzy otworzyli panel». W karcie każde otwarcie danych kontaktowych to wiersz w [dzienniku](/admin/audit).",
             "Leady «od partnera» są wyróżnione na żółto; niczyj stoi pierwszy na liście z dopiskiem «priorytet — weź jako pierwszy». W karcie takiego leada jest wszystko, co podał partner (nazwa, NIP/INN, kontakt, strona, czego potrzebuje), a «Skąd pisał» — «klienta przypisał partner w swoim panelu».",
@@ -552,15 +570,15 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "«Dodaj leada ręcznie»: klient przyszedł z pominięciem strony i bota",
         body: {
           manager: [
-            "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście — zapisz go przyciskiem **«Dodaj leada ręcznie»** nad listą. Potrzebne są «Imię klienta» i «Telefon, Telegram lub e-mail»; «Firma», «Czego potrzebuje klient» i «Skąd jest klient» są opcjonalne, ale wszystko, co zapiszesz, będzie potem widać w [karcie](#leads-card). Bez kontaktu lead się nie doda: inaczej nie da się skontaktować z klientem.",
+            "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście — zapisz go przyciskiem **«Dodaj leada ręcznie»** pod listą. Potrzebne są «Imię klienta» i «Telefon, Telegram lub e-mail»; «Firma», «Czego potrzebuje klient» i «Skąd jest klient» są opcjonalne, ale wszystko, co zapiszesz, będzie potem widać w [karcie](#leads-card). Bez kontaktu lead się nie doda: inaczej nie da się skontaktować z klientem.",
             "Lead od razu jest Twój, bez kolejki: status «w toku», numer zgłoszenia, a po 4 godzinach przypomnienie «Взят в работу — что дальше?». W karcie w «Skąd pisał» będzie «dodany ręcznie w panelu». Przekazanie go koledze — jak każdego leada: [«Poproś o przekazanie»](#leads-transfer).",
           ],
           head: [
-            "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście — zapisz go przyciskiem **«Dodaj leada ręcznie»** nad listą. Potrzebne są «Imię klienta» i «Telefon, Telegram lub e-mail»; «Firma», «Czego potrzebuje klient» i «Skąd jest klient» są opcjonalne, ale wszystko, co zapiszesz, będzie potem widać w [karcie](#leads-card).",
+            "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście — zapisz go przyciskiem **«Dodaj leada ręcznie»** pod listą. Potrzebne są «Imię klienta» i «Telefon, Telegram lub e-mail»; «Firma», «Czego potrzebuje klient» i «Skąd jest klient» są opcjonalne, ale wszystko, co zapiszesz, będzie potem widać w [karcie](#leads-card).",
             "W formularzu masz **«Komu lead»**: «Sobie» albo dowolny pracownik. Lead od razu jest «w toku» u wybranej osoby, bez kolejki, z numerem zgłoszenia i przypomnieniem po 4 godzinach «Взят в работу — что дальше?»; jeśli przekażesz go komuś innemu, ta osoba od razu dostanie w Telegramie «Вам добавили лид» z linkiem do karty. Menedżerowie nie wybierają: dodają leada tylko sobie.",
           ],
           admin: [
-            "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście — zapisz go przyciskiem **«Dodaj leada ręcznie»** nad listą w zakładce «Leady». Potrzebne są «Imię klienta» i «Telefon, Telegram lub e-mail»; «Firma», «Czego potrzebuje klient» i «Skąd jest klient» są opcjonalne, ale wszystko, co zapiszesz, będzie potem widać w [karcie](#leads-card).",
+            "Klient zadzwonił, przyszedł z polecenia albo spotkaliście się osobiście — zapisz go przyciskiem **«Dodaj leada ręcznie»** pod listą. Potrzebne są «Imię klienta» i «Telefon, Telegram lub e-mail»; «Firma», «Czego potrzebuje klient» i «Skąd jest klient» są opcjonalne, ale wszystko, co zapiszesz, będzie potem widać w [karcie](#leads-card).",
             "W formularzu jest **«Komu lead»**: «Sobie» albo dowolny pracownik. Lead od razu jest «w toku» u wybranej osoby, bez kolejki, z numerem zgłoszenia i przypomnieniem po 4 godzinach «Взят в работу — что дальше?»; jeśli przekażesz go komuś innemu, ta osoba od razu dostanie w Telegramie «Вам добавили лид» z linkiem. Kto dodał — w [dzienniku](/admin/audit). Menedżerowie dodają leada tylko sobie, kierownik — tak jak Ty.",
           ],
         },
@@ -570,9 +588,9 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "Karta leada",
         body: {
           manager: [
-            "Otwiera się z listy, z «Pilny kontakt» i przyciskiem «🔓 Открыть карточку» (otwórz kartę) w Telegramie — ten przycisk sam loguje Cię do panelu. Każde otwarcie jest zapisywane.",
+            "Otwiera się z listy, z wierszy «Pulpit» i przyciskiem «🔓 Открыть карточку» (otwórz kartę) w Telegramie — ten przycisk sam loguje Cię do panelu. Każde otwarcie jest zapisywane.",
             "**«Prowadzi»** — do kogo lead jest przypisany. Tu są przyciski [«Przejmij» i «Zwróć do kolejki»](#leads-take) oraz [«Poproś o przekazanie»](#leads-transfer).",
-            "**«Status»** — «nowy», «w toku», «odłożony», «wygrany», «przegrany». Zmieniaj go po każdej rozmowie: na podstawie statusów liczone są [statystyki](/admin/stats) i «Pilny kontakt». «Wygrany», «przegrany» i «odłożony» anulują automatyczne przypomnienia. «Nowy» ma tylko wolny lead: Twój go nie ma, a żeby zwolnić leada, użyj «Zwróć do kolejki». **Bot dopomina się odpowiedzi w sprawie zapomnianych leadów.** W dni robocze dwa razy — **o 10:00 i o 16:00** — przysyła podsumowanie «Masz N leadów «w toku» bez ruchu od 7+ dni», a pod nim wszystkie takie Twoje leady po osiem w wiadomości: każdy z numerem i przyciskami «🏆 1», «❌ 1», «⏳ 1» (cyfra to numer leada na liście). Bez ruchu znaczy: od 7+ dni ani korespondencji, ani zmiany statusu, ani innych działań przy leadzie. Zaznaczony lead już nie wróci; niezaznaczone bot przysyła ponownie, dopóki nie odpowiesz. **«⏳ Ещё в работе»** — bot zapyta, kiedy następny krok z klientem: «Завтра», «Через 3 дня» albo «Через неделю» — i założy Ci zadanie «Связаться: …» na ten dzień o 10:00 (sobota i niedziela przechodzą na poniedziałek). Do tego dnia nie pyta o leada. Trzeci raz z rzędu «nadal w toku» bez zmiany statusu jest ostatni: potem lead ma tylko «🏆» i «❌», a kierownik dowie się, że lead jest odkładany. Nie odpowiadasz botowi przez dwa dni robocze — kierownik też się dowie. Leada bez ruchu od 21+ dni, przy którym nie odpowiedziałeś przez trzy dni, bot sam przenosi do «przegrany» z adnotacją w karcie — przywrócić go można przyciskiem «w toku». Po «🏆» bot zaproponuje **«Завести проект»**: formularz w [Projektach](/admin/projects) wypełni się z leada, a projekt zapisze się na Ciebie — wtedy sprzedaż trafi do Twoich naliczeń.",
+            "**«Status»** — «nowy», «w toku», «odłożony», «wygrany», «przegrany». Zmieniaj go po każdej rozmowie: na podstawie statusów liczone są [statystyki](/admin/stats) i licznik [leadów bez ruchu](#leads-urgent). «Wygrany», «przegrany» i «odłożony» anulują automatyczne przypomnienia. «Nowy» ma tylko wolny lead: Twój go nie ma, a żeby zwolnić leada, użyj «Zwróć do kolejki». **Bot dopomina się odpowiedzi w sprawie zapomnianych leadów.** W dni robocze dwa razy — **o 10:00 i o 16:00** — przysyła podsumowanie «Masz N leadów «w toku» bez ruchu od 7+ dni», a pod nim wszystkie takie Twoje leady po osiem w wiadomości: każdy z numerem i przyciskami «🏆 1», «❌ 1», «⏳ 1» (cyfra to numer leada na liście). Bez ruchu znaczy: od 7+ dni ani korespondencji, ani zmiany statusu, ani innych działań przy leadzie. Zaznaczony lead już nie wróci; niezaznaczone bot przysyła ponownie, dopóki nie odpowiesz. **«⏳ Ещё в работе»** — bot zapyta, kiedy następny krok z klientem: «Завтра», «Через 3 дня» albo «Через неделю» — i założy Ci zadanie «Связаться: …» na ten dzień o 10:00 (sobota i niedziela przechodzą na poniedziałek). Do tego dnia nie pyta o leada. Trzeci raz z rzędu «nadal w toku» bez zmiany statusu jest ostatni: potem lead ma tylko «🏆» i «❌», a kierownik dowie się, że lead jest odkładany. Nie odpowiadasz botowi przez dwa dni robocze — kierownik też się dowie. Leada bez ruchu od 21+ dni, przy którym nie odpowiedziałeś przez trzy dni, bot sam przenosi do «przegrany» z adnotacją w karcie — przywrócić go można przyciskiem «w toku». Po «🏆» bot zaproponuje **«Завести проект»**: formularz w [Projektach](/admin/projects) wypełni się z leada, a projekt zapisze się na Ciebie — wtedy sprzedaż trafi do Twoich naliczeń.",
             "**«Dane kontaktowe klienta»** → «Pokaż dane kontaktowe». Otwierają się tylko dla przejętego leada: najpierw «Przejmij». Każde otwarcie trafia do dziennika, więc otwieraj je wtedy, gdy zamierzasz napisać.",
             "**«Korespondencja z klientem»** → «Pokaż korespondencję»: wszystko, co klient powiedział asystentowi na stronie albo w bocie o zadaniu, pieniądzach i terminach. Też tylko po przejęciu i też jest zapisywane. Zgłoszenia z formularza nie mają korespondencji.",
             "**«Dyskusja»** — notatki o kliencie dla całego zespołu; osoba prowadząca leada dostaje wiadomość w Telegramie. Nie wklejaj tam danych kontaktowych klienta. Niżej — brief, kosztorys ze strony i notatki. O leadach z kontaktów — punkt [pierwsza rozmowa po kontakcie](#prospect-replies).",
@@ -643,22 +661,22 @@ export const leadsSections: Record<string, HelpEntry> = {
           ],
           head: [
             "Twój przycisk to **«Przekaż»**: lead od razu trafia do wybranej osoby, która dostaje wiadomość «…передал вам лид. Он уже ваш» (…przekazał Ci leada, jest już Twój).",
-            "Prośby menedżerów z Twojego zespołu («Poproś o przekazanie») przychodzą do Ciebie w Telegramie z przyciskami **«✅ Подтвердить»** (zatwierdź) i **«✖ Отклонить»** (odrzuć) — decyduj od razu w wiadomości; «Открыть лид» (otwórz leada) prowadzi do karty, jeśli najpierw chcesz zajrzeć. Te same prośby są na stronie głównej w «Czeka na Twoją decyzję» i w karcie leada. Gdy zdecyduje jedna osoba, u pozostałych przyciski zmienią się na «Подтвердил …» (zatwierdził) albo «Отклонил …» (odrzucił). Możesz decydować o każdej prośbie w studiu, nie tylko ze swojego zespołu.",
+            "Prośby menedżerów z Twojego zespołu («Poproś o przekazanie») przychodzą do Ciebie w Telegramie z przyciskami **«✅ Подтвердить»** (zatwierdź) i **«✖ Отклонить»** (odrzuć) — decyduj od razu w wiadomości; «Открыть лид» (otwórz leada) prowadzi do karty, jeśli najpierw chcesz zajrzeć. Te same prośby są na «Leady» w «Czeka na Twoją decyzję» i w karcie leada. Gdy zdecyduje jedna osoba, u pozostałych przyciski zmienią się na «Подтвердил …» (zatwierdził) albo «Отклонил …» (odrzucił). Możesz decydować o każdej prośbie w studiu, nie tylko ze swojego zespołu.",
             "Zatwierdzony lead dostaje nowe przypomnienie za 4 godziny. Lead z kontaktu przechodzi razem z korespondencją: wiadomości klienta, ponawianie i podpis modelu — do nowej osoby prowadzącej. Dawne przypomnienia poprzedniej osoby nie zamykają się same — w razie potrzeby zamknij je.",
           ],
           admin: [
-            "Twój przycisk to **«Przekaż»**: lead przechodzi od razu. Prośby menedżerów przychodzą do Ciebie w Telegramie z przyciskami **«✅ Подтвердить»** (zatwierdź) i **«✖ Отклонить»** (odrzuć) — decydujesz od razu w wiadomości — a także na zakładkę «Dziś» do «Czeka na Twoją decyzję» i do karty leada. Może je rozstrzygnąć także kierownik: dostaje prośby swojego zespołu z tymi samymi przyciskami. Kto zdecyduje pierwszy — u pozostałych przyciski zmienią się na wynik i ponownie kliknąć rozstrzygniętej prośby się nie da.",
+            "Twój przycisk to **«Przekaż»**: lead przechodzi od razu. Prośby menedżerów przychodzą do Ciebie w Telegramie z przyciskami **«✅ Подтвердить»** (zatwierdź) i **«✖ Отклонить»** (odrzuć) — decydujesz od razu w wiadomości — a także na «Leady» do «Czeka na Twoją decyzję» i do karty leada. Może je rozstrzygnąć także kierownik: dostaje prośby swojego zespołu z tymi samymi przyciskami. Kto zdecyduje pierwszy — u pozostałych przyciski zmienią się na wynik i ponownie kliknąć rozstrzygniętej prośby się nie da.",
             "Tak działa to według Twojej zasady: lead przechodzi za zatwierdzeniem kierownika albo Twoim i do decyzji zostaje u dotychczasowej osoby prowadzącej. Lead z kontaktu przechodzi razem z korespondencją — u kogo lead, u tego rozmowa z klientem.",
           ],
         },
       },
       {
         id: "urgent",
-        title: "«Pilny kontakt»",
+        title: "Leady bez ruchu: jedna reguła",
         body: [
-          "Tu są leady ze statusem «w toku», które zbyt długo stoją w miejscu: «gorący» — 2 dni i dłużej, «ciepły» — 3, «do dojrzenia» — 5, «archiwum» — 14.",
-          "Ruch to każde działanie na leadzie w panelu (nawet samo otwarcie karty) albo wiadomość w «Dyskusji». Dlatego lead znika z listy, gdy tylko ktoś się nim zajmie. Ale uczciwiej jest zrobić krok: napisać do klienta, zmienić status, ustawić przypomnienie.",
-          "Na górze — najstarsze. Pusto — «Wszystkie leady w toku miały niedawno ruch».",
+          "Lead «bez ruchu» — ze statusem «w toku» i 7 dni lub dłużej bez kroku: nikt go nie brał, nie pisał w korespondencji ani w «Dyskusji», nie zmieniał statusu i nie ustawiał przypomnienia. Obejrzenie karty i odpowiedź botowi «⏳ Ещё в работе» krokiem nie są: otworzyć i zamknąć to nie to samo, co się zająć.",
+          "Reguła jest jedna dla całego panelu i bota: «Wymaga uwagi» na «Pulpit» u kierownika i właściciela, «Zaległe» u menedżera, kolumna «Bez ruchu» w tabeli zespołu i pytania bota o zapomniane leady o 10:00 i 16:00 liczą tak samo. Wcześniej «pilny kontakt» liczył się własnymi progami według priorytetu i ten sam lead w jednym miejscu się palił, a w innym nie.",
+          "Żeby lead wypadł z tego licznika, zrób prawdziwy krok: napisz do klienta, zmień status, ustaw przypomnienie lub zadanie «Skontaktuj się».",
         ],
       },
       {
@@ -676,7 +694,7 @@ export const leadsSections: Record<string, HelpEntry> = {
             "Pasek: od 100% — zielony, poniżej 50% — złoty.",
           ],
           admin: [
-            "Na zakładce «Zespół». Ustalasz plan komukolwiek, a do tego przyciskami «zmień» i «usuń» możesz zmienić albo usunąć dowolny plan. Kierownik może tylko dodać plan swojemu menedżerowi — tak zdecydowałeś.",
+            "Na dole [«Pulpit»](/admin/hq#hq-week), w bloku «Tydzień: rekomendacje, zespół, plan». Ustalasz plan komukolwiek, a do tego przyciskami «zmień» i «usuń» możesz zmienić albo usunąć dowolny plan. Kierownik może tylko dodać plan swojemu menedżerowi — tak zdecydowałeś.",
             "Wskaźniki: «wpływy, $», «wygrane leady», «pierwsze kontakty» (to kliknięcia «Pokaż dane kontaktowe»). Okresy: bieżący tydzień od poniedziałku i bieżący miesiąc.",
           ],
         },
@@ -706,7 +724,7 @@ export const leadsSections: Record<string, HelpEntry> = {
         body: {
           head: [
             "Tabela dla Ciebie i Twojego zespołu, strzałka — w porównaniu z poprzednim tygodniem.",
-            "**«W toku»** — leady ze statusem «w toku». **«Pilne»** — ile z nich [od dawna stoi w miejscu](#leads-urgent). **«Kontakty»** — wszystkie działania osoby na leadach w tygodniu: otwarcie karty, danych kontaktowych, przypomnienie, status, wiadomość w dyskusji. To praca z leadami, a nie zimne kontakty z sekcji «Zimne kontakty». **«Pierwsze kontakty»** — kliknięcia «Pokaż dane kontaktowe». **«Wygrane»**, **«Wpływy»** — pieniądze z jej projektów w tygodniu. **«Plan kontaktów»** — zimne kontakty wobec planu, który ustalasz w sekcji [«Zespół»](/admin/team).",
+            "**«W toku»** — leady ze statusem «w toku». **«Bez ruchu»** — ile z nich stoi 7+ dni [bez kroku](#leads-urgent). **«Kontakty»** — wszystkie działania osoby na leadach w tygodniu: otwarcie karty, danych kontaktowych, przypomnienie, status, wiadomość w dyskusji. To praca z leadami, a nie zimne kontakty z sekcji «Zimne kontakty». **«Pierwsze kontakty»** — kliknięcia «Pokaż dane kontaktowe». **«Wygrane»**, **«Wpływy»** — pieniądze z jej projektów w tygodniu. **«Plan kontaktów»** — zimne kontakty wobec planu, który ustalasz w sekcji [«Zespół»](/admin/team).",
             "«Najlepsi w tygodniu» pojawiają się, gdy w zespole są co najmniej dwie osoby.",
           ],
           admin: [
@@ -720,7 +738,7 @@ export const leadsSections: Record<string, HelpEntry> = {
         title: "Czerwony pasek «Przypomnienia nie są dostarczane»",
         body: {
           manager: [
-            "Pojawia się na górze strony głównej, jeśli od ponad pół godziny nikt nie rozsyłał przypomnień. Od razu powiedz właścicielowi: dopóki pasek wisi, przypomnienia do Twoich leadów nie przychodzą — sprawdzaj je sam w kartach.",
+            "Pojawia się na górze «Pulpit» i «Leady», jeśli od ponad pół godziny nikt nie rozsyłał przypomnień. Od razu powiedz właścicielowi: dopóki pasek wisi, przypomnienia do Twoich leadów nie przychodzą — sprawdzaj je sam w kartach.",
           ],
           head: [
             "Pojawia się, jeśli sweep — przebieg według harmonogramu co pięć minut — nie przeszedł od ponad pół godziny. Dopóki pasek wisi, przypomnienia nie przychodzą do nikogo. Powiedz właścicielowi.",

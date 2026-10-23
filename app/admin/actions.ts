@@ -86,6 +86,5 @@ export async function addLead(formData: FormData) {
     revalidatePath("/admin");
     redirect(`/admin/leads/${result.id}`);
   }
-  // У владельца список лидов — на вкладке «Лиды».
-  redirect(`/admin?${staff.role === "admin" ? "tab=leads&" : ""}add=${result.reason}#add-lead`);
+  redirect(`/admin?add=${result.reason}#add-lead`);
 }

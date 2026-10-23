@@ -116,16 +116,28 @@ export type ExpenseLite = { amount_usd: number; spent_on: string };
 /* ── Движение по лиду ──────────────────────────────────────────────────── */
 
 /**
- * Сколько дней лид ждёт, чтобы им занялись. Считается от последнего
- * движения — взятия, записи в переписке, любого действия в журнале.
- * Горячему лиду двух дней тишины уже много; остальным — чуть больше.
+ * Лид «в работе» — статус «в работе», и только он. Одно правило на все
+ * экраны: «Главная», «Моя работа», команда за неделю, карточки людей
+ * (владелец, 23.10.2026, на разбор удобства: три экрана считали по-своему).
  */
-export const STALE_DAYS: Record<string, number> = { hot: 2, warm: 3, nurture: 5, archive: 14 };
+export function isInWork(lead: { status: string }): boolean {
+  return lead.status === "taken";
+}
+
+/**
+ * «Без движения» — 7 дней и больше от последнего движения: взятия, записи в
+ * переписке, действия в журнале, кроме просмотра и «ещё в работе». Одно
+ * правило с ботом порядка в лидах (lib/admin/lead-tidy.ts) и с «Главной»:
+ * раньше «срочно связаться» считалось своими порогами по приоритету (2, 3,
+ * 5, 14 дней), и в разных местах один и тот же лид то горел, то нет.
+ */
+export const IDLE_DAYS = 7;
+export const NOT_MOVES: readonly string[] = ["lead.viewed", "lead.transcript_viewed", "lead.idle_snoozed"];
 
 export function lastActivity(lead: LeadLite, events: readonly EventLite[], messages: readonly MessageLite[]): number {
   let last = Math.max(Date.parse(lead.created_at), lead.assigned_at ? Date.parse(lead.assigned_at) : 0);
   for (const e of events) {
-    if (e.target_type === "lead" && e.target_id === lead.id) last = Math.max(last, Date.parse(e.created_at));
+    if (e.target_type === "lead" && e.target_id === lead.id && !NOT_MOVES.includes(e.action)) last = Math.max(last, Date.parse(e.created_at));
   }
   for (const m of messages) {
     if (m.lead_id === lead.id) last = Math.max(last, Date.parse(m.created_at));
@@ -147,10 +159,9 @@ export function stuckLeads(
 ): StuckLead[] {
   const out: StuckLead[] = [];
   for (const lead of leads) {
-    if (lead.status !== "taken") continue;
+    if (!isInWork(lead)) continue;
     const days = Math.floor((now.getTime() - lastActivity(lead, events, messages)) / 86_400_000);
-    const limit = STALE_DAYS[lead.priority] ?? STALE_DAYS.nurture;
-    if (days >= limit) {
+    if (days >= IDLE_DAYS) {
       out.push({ id: lead.id, label: leadLabel(lead), priority: lead.priority, days, staffId: lead.assigned_staff_id });
     }
   }
@@ -192,7 +203,7 @@ export function pulseOf(staffId: string, input: PulseInput, window: Window, now:
 
   return {
     staffId,
-    inWork: mine.filter((l) => l.status === "taken").length,
+    inWork: mine.filter(isInWork).length,
     taken: myEvents.filter((e) => e.action === "lead.taken").length,
     won: statusTo("won"),
     lost: statusTo("lost"),

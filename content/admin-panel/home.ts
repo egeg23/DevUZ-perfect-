@@ -11,11 +11,17 @@ import { defineDict, plural } from "@/lib/admin/i18n";
  * польский — как в польских CRM.
  */
 export const homeDict = defineDict({
-  // Вкладки владельца.
-  tabToday: { ru: "Сегодня", uz: "Bugun", pl: "Dziś" },
-  tabLeads: { ru: "Лиды", uz: "Lidlar", pl: "Leady" },
-  tabMoney: { ru: "Деньги", uz: "Pul", pl: "Finanse" },
-  tabTeam: { ru: "Команда", uz: "Jamoa", pl: "Zespół" },
+  // Поиск и «чьи лиды» над списком.
+  searchLabel: { ru: "Найти лид", uz: "Lidni topish", pl: "Znajdź leada" },
+  searchPlaceholder: {
+    ru: "Компания, имя, номер заявки или ниша",
+    uz: "Kompaniya, ism, ariza raqami yoki soha",
+    pl: "Firma, imię, numer zgłoszenia lub branża",
+  },
+  searchGo: { ru: "Найти", uz: "Topish", pl: "Szukaj" },
+  searchReset: { ru: "Сбросить", uz: "Tozalash", pl: "Wyczyść" },
+  ownerLabel: { ru: "Чьи", uz: "Kimniki", pl: "Czyje" },
+  ownerAnyone: { ru: "все", uz: "hammasi", pl: "wszystkie" },
 
   // Просьбы передать лида.
   pendingTitle: {
@@ -30,11 +36,6 @@ export const homeDict = defineDict({
     uz: "Vazifalar endi menyuda alohida «Vazifalar» tugmasida →",
     pl: "Zadania są teraz pod osobnym przyciskiem «Zadania» w menu →",
   },
-
-  // Счётчики над списком.
-  statTotal: { ru: "всего", uz: "jami", pl: "łącznie" },
-  statFree: { ru: "свободных", uz: "bo‘sh", pl: "wolne" },
-  statMine: { ru: "на мне", uz: "menda", pl: "moje" },
 
   // Фильтры.
   allLeads: { ru: "все лиды", uz: "barcha lidlar", pl: "wszystkie leady" },
