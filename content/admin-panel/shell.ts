@@ -32,19 +32,25 @@ export const shellDict = defineDict({
   nav: { ru: "Разделы панели", uz: "Panel bo‘limlari", pl: "Sekcje panelu" },
   menu: { ru: "Меню", uz: "Menyu", pl: "Menu" },
   closeMenu: { ru: "Закрыть меню", uz: "Menyuni yopish", pl: "Zamknij menu" },
-  findSection: { ru: "Найти раздел", uz: "Bo‘limni topish", pl: "Znajdź sekcję" },
+  findSection: { ru: "Найти раздел или компанию", uz: "Bo‘lim yoki kompaniyani topish", pl: "Znajdź sekcję lub firmę" },
   findPlaceholder: {
-    ru: "Начните писать: «дог» — «Договоры»",
-    uz: "Yozishni boshlang: «shar» — «Shartnomalar»",
-    pl: "Zacznij pisać: «umo» — «Umowy»",
+    ru: "Раздел, компания, лид, телефон или @ник",
+    uz: "Bo‘lim, kompaniya, lid, telefon yoki @nik",
+    pl: "Sekcja, firma, lead, telefon lub @nick",
   },
-  findNothing: { ru: "Такого раздела нет", uz: "Bunday bo‘lim yo‘q", pl: "Nie ma takiej sekcji" },
+  findNothing: { ru: "Ничего не нашлось", uz: "Hech narsa topilmadi", pl: "Nic nie znaleziono" },
+  // Компании и лиды в том же окне (app/admin/find, lib/admin/find-store.ts).
+  findHits: { ru: "Компании и лиды", uz: "Kompaniyalar va lidlar", pl: "Firmy i leady" },
+  findSearching: { ru: "Ищу компании и лиды…", uz: "Kompaniya va lidlarni qidiryapman…", pl: "Szukam firm i leadów…" },
+  findKindLead: { ru: "лид", uz: "lid", pl: "lead" },
+  findKindProspect: { ru: "касание", uz: "aloqa", pl: "kontakt" },
+  findKindProject: { ru: "проект", uz: "loyiha", pl: "projekt" },
   // Тумблер «Новое меню»: выключил — меню как раньше, одной строкой.
   navNew: { ru: "Новое меню", uz: "Yangi menyu", pl: "Nowe menu" },
   navNewHint: {
-    ru: "Включено — разделы группами и «Найти раздел». Выключите — меню будет как раньше, одной строкой.",
-    uz: "Yoqilgan — bo‘limlar guruhlarda va «Bo‘limni topish». O‘chirsangiz — menyu avvalgidek, bitta qatorda bo‘ladi.",
-    pl: "Włączone — sekcje w grupach i «Znajdź sekcję». Wyłącz — menu będzie jak dawniej, w jednym rzędzie.",
+    ru: "Включено — разделы группами и «Найти раздел или компанию». Выключите — меню будет как раньше, одной строкой.",
+    uz: "Yoqilgan — bo‘limlar guruhlarda va «Bo‘lim yoki kompaniyani topish». O‘chirsangiz — menyu avvalgidek, bitta qatorda bo‘ladi.",
+    pl: "Włączone — sekcje w grupach i «Znajdź sekcję lub firmę». Wyłącz — menu będzie jak dawniej, w jednym rzędzie.",
   },
   findKeys: {
     ru: "↑ ↓ — выбрать, Enter — открыть, Esc — закрыть",

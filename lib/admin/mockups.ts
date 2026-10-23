@@ -126,6 +126,8 @@ export type MockupSend = {
   from: MockupSendFrom;
   at: string;
   leadId: string | null;
+  /** Касание, из которого ушёл макет, — для «Показал макет» без лида. */
+  prospectId: string | null;
 };
 
 type SendRow = {
@@ -135,6 +137,7 @@ type SendRow = {
   account: unknown;
   sent_at: unknown;
   lead_id: unknown;
+  prospect_id?: unknown;
 };
 
 /**
@@ -166,6 +169,7 @@ export function mockupSends(rows: readonly SendRow[], tags: ReadonlyMap<string, 
       from,
       at: String(row.sent_at),
       leadId: typeof row.lead_id === "string" ? row.lead_id : null,
+      prospectId: typeof row.prospect_id === "string" ? row.prospect_id : null,
     });
     out.set(ref, list);
   }

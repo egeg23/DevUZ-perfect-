@@ -3,10 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { markStageAction } from "@/app/admin/hq/actions";
 import { mockupCodeAction, mockupOwnerAction } from "@/app/admin/mockups/actions";
 import { CopyMessage } from "@/components/admin/copy-message";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { mockupsDict } from "@/content/admin-panel/mockups";
+import { salesStagesDict } from "@/content/admin-panel/sales-stages";
 import type { Picked } from "@/lib/admin/i18n";
 import type { MockupRow, MockupSend } from "@/lib/admin/mockups";
 import type { CodeResult, OwnerResult } from "@/lib/admin/mockups-store";
@@ -294,6 +297,7 @@ function SendList({ sends, t }: { sends: MockupView["sendsText"]; t: MockupsDict
       <span>{send.from === "unknown" ? t.sendFromUnknown : t.sendFrom(send.from.label, send.from.handle)}</span>
       <span className="text-faint">·</span>
       <span className="text-faint">{send.atText}</span>
+      {send.leadId || send.prospectId ? <ShownMark leadId={send.leadId} prospectId={send.prospectId} /> : null}
     </li>
   );
   const rest = sends.slice(SENDS_SHOWN);
@@ -308,5 +312,36 @@ function SendList({ sends, t }: { sends: MockupView["sendsText"]; t: MockupsDict
         </details>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * «Показал макет» — у каждой отправки, рядом с паролем: показ отмечают там же,
+ * где выдают доступ (владелец, 23.10.2026, на разбор удобства: раньше кнопка
+ * была только на «Главной» и в карточке лида). Тот же markStageAction, что в
+ * карточке лида: кто может отметить — решает canMark (менеджер — по своему).
+ */
+function ShownMark({ leadId, prospectId }: { leadId: string | null; prospectId: string | null }) {
+  const s = usePanelDict(salesStagesDict);
+  return (
+    <details className="w-full sm:w-auto">
+      <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 rounded-lg border border-green/40 px-2 py-0.5 text-green hover:bg-green/10 [&::-webkit-details-marker]:hidden">
+        🎬 {s.markShown}
+      </summary>
+      <div className="mt-1 flex flex-wrap gap-2">
+        {(["video", "live"] as const).map((via) => (
+          <form key={via} action={markStageAction}>
+            {leadId ? <input type="hidden" name="lead" value={leadId} /> : null}
+            {prospectId ? <input type="hidden" name="prospect" value={prospectId} /> : null}
+            <input type="hidden" name="back" value="/admin/mockups" />
+            <input type="hidden" name="kind" value="shown" />
+            <input type="hidden" name="via" value={via} />
+            <SubmitButton base="rounded-lg px-2.5 py-1 text-xs" tone="quiet" pendingLabel={s.saving}>
+              {via === "video" ? s.viaVideo : s.viaLive}
+            </SubmitButton>
+          </form>
+        ))}
+      </div>
+    </details>
   );
 }

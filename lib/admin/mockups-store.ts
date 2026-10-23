@@ -38,7 +38,7 @@ async function allSends(refs: readonly string[]) {
   if (!db || !refs.length) return [];
   const { data, error } = await db
     .from("mockup_offers")
-    .select("mockup_ref, client, peer, account, sent_at, lead_id")
+    .select("mockup_ref, client, peer, account, sent_at, lead_id, prospect_id")
     .in("mockup_ref", [...refs])
     .order("sent_at", { ascending: true })
     .limit(3000);

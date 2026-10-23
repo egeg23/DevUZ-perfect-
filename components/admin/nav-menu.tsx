@@ -132,7 +132,8 @@ export function NavMenu({ groups }: { groups: NavMenuGroup[] }) {
                 }`}
               >
                 {group.label}
-                {here ? <span className="font-normal text-green/70">· {here.label}</span> : null}
+                {/* Открытый раздел рядом с группой — с самых широких экранов: на 1440 подпись выталкивала поиск во вторую строку. Группа и так зелёная, раздел — в её списке. */}
+                {here ? <span className="hidden font-normal text-green/70 2xl:inline">· {here.label}</span> : null}
                 <Chevron up={shown} />
               </button>
               <div
@@ -297,7 +298,10 @@ function FindBox({
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
+  const hits = useFindHits(query);
   const found = findSections(query, items);
+  // Разделы и найденные компании — одним списком для стрелок и Enter.
+  const all: { href: string }[] = [...found, ...hits.list];
   const go = (href: string) => {
     onGo();
     router.push(href);
@@ -305,15 +309,16 @@ function FindBox({
   const onKey = (e: ReactKeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setIndex((i) => Math.min(i + 1, found.length - 1));
+      setIndex((i) => Math.min(i + 1, all.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && found[index]) {
+    } else if (e.key === "Enter" && all[index]) {
       e.preventDefault();
-      go(found[index].href);
+      go(all[index].href);
     }
   };
+  const kindLabel = { lead: t.findKindLead, prospect: t.findKindProspect, project: t.findKindProject };
   return (
     <>
       <div className="flex items-center gap-2 border-b border-line px-4 py-2">
@@ -337,32 +342,90 @@ function FindBox({
       <div className="overflow-y-auto overscroll-contain p-1.5">
         {!query.trim() && children ? (
           children
-        ) : found.length ? (
-          <ul>
-            {found.map((item, i) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={onGo}
-                  onMouseMove={() => setIndex(i)}
-                  aria-current={item.href === current ? "page" : undefined}
-                  className={`flex items-baseline justify-between gap-3 rounded-md px-3 py-2 ${i === index ? "bg-surface-2" : ""} ${
-                    item.href === current ? "font-medium text-green" : "text-text"
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  <span className="text-xs text-faint">{item.group}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
         ) : (
-          <p className="px-3 py-4 text-sm text-faint">{t.findNothing}</p>
+          <>
+            {found.length ? (
+              <ul>
+                {found.map((item, i) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onGo}
+                      onMouseMove={() => setIndex(i)}
+                      aria-current={item.href === current ? "page" : undefined}
+                      className={`flex items-baseline justify-between gap-3 rounded-md px-3 py-2 ${i === index ? "bg-surface-2" : ""} ${
+                        item.href === current ? "font-medium text-green" : "text-text"
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      <span className="text-xs text-faint">{item.group}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {hits.list.length ? (
+              <section className={found.length ? "mt-2 border-t border-line pt-2" : ""}>
+                <h2 className="px-3 pb-1 font-mono text-[11px] uppercase tracking-[0.15em] text-faint">{t.findHits}</h2>
+                <ul>
+                  {hits.list.map((hit, j) => {
+                    const i = found.length + j;
+                    return (
+                      <li key={hit.href}>
+                        <Link
+                          href={hit.href}
+                          onClick={onGo}
+                          onMouseMove={() => setIndex(i)}
+                          className={`flex items-baseline justify-between gap-3 rounded-md px-3 py-2 text-text ${i === index ? "bg-surface-2" : ""}`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate">{hit.label}</span>
+                            {hit.meta ? <span className="block truncate text-xs text-faint">{hit.meta}</span> : null}
+                          </span>
+                          <span className="shrink-0 text-xs text-faint">{kindLabel[hit.kind]}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null}
+            {hits.loading ? <p className="px-3 py-2 text-xs text-faint">{t.findSearching}</p> : null}
+            {!found.length && !hits.list.length && !hits.loading ? <p className="px-3 py-4 text-sm text-faint">{t.findNothing}</p> : null}
+          </>
         )}
       </div>
       <p className="hidden border-t border-line px-4 py-2 text-[11px] text-faint md:block">{t.findKeys}</p>
     </>
   );
+}
+
+type FindHit = { kind: "lead" | "prospect" | "project"; href: string; label: string; meta: string | null };
+
+/**
+ * Компании и лиды под набранное — с сервера (app/admin/find), через 250 мс
+ * после последней буквы, чтобы не спрашивать базу на каждую. Короче двух
+ * знаков — не ищем; ответ на старую строку не перебивает новую.
+ */
+function useFindHits(query: string): { list: FindHit[]; loading: boolean } {
+  const q = query.trim();
+  const [state, setState] = useState<{ q: string; list: FindHit[] }>({ q: "", list: [] });
+  useEffect(() => {
+    if (q.length < 2) return;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/admin/find?q=${encodeURIComponent(q)}`, { cache: "no-store", signal: ctrl.signal })
+        .then((r) => (r.ok ? r.json() : { hits: [] }))
+        .then((body: { hits?: FindHit[] }) => setState({ q, list: Array.isArray(body.hits) ? body.hits : [] }))
+        .catch(() => {});
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+  }, [q]);
+  if (q.length < 2) return { list: [], loading: false };
+  return state.q === q ? { list: state.list, loading: false } : { list: [], loading: true };
 }
 
 function Chevron({ up }: { up: boolean }) {
