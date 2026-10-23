@@ -98,6 +98,7 @@ import { trashLead } from "@/lib/admin/lead-trash-store";
 import { takeOverFromBot } from "@/lib/admin/outreach-talk-store";
 import { answerStaff, claimsStaff, helperLang, notStaffText } from "@/lib/admin/staff-helper";
 import { alertStaffClaim, claimedBefore } from "@/lib/admin/staff-helper-store";
+import { noteHelperAsk } from "@/lib/admin/helper-stats-store";
 import { problemText, receivedText, transcribesVoice, voiceFromMessage, voiceProblem } from "@/lib/admin/voice-notes";
 import { queueVoice } from "@/lib/admin/voice-notes-store";
 import { answerStream, feedStream, setStream, streamState } from "@/lib/admin/stream-store";
@@ -943,6 +944,9 @@ async function handleStaffText(message: NonNullable<Update["message"]>, text: st
     try {
       const answer = await answerStaff({ staff, text });
       stopTyping();
+      // Счёт вопросов — в вечернюю сводку владельцу и руководителю
+      // (lib/admin/helper-stats.ts). Без ожидания: ответ важнее счёта.
+      void noteHelperAsk(staff.id).catch((error) => console.error("помощник: счёт", error));
       // Пушем не дублируем: человек сам сидит в этом чате и ждёт ответа.
       await sendMessage(chatId, esc(answer.text), { mirror: false });
     } catch (error) {
