@@ -84,7 +84,8 @@ test("отдать лид другому может только руковод�
   const action = read("app/admin/actions.ts");
   assert.match(action, /export async function addLead\(formData: FormData\) \{\s*const staff = await requireStaff\(\);/);
   const page = read("app/admin/page.tsx");
-  assert.match(page, /const assignees = approves\(staff\.role\) \? await activeStaff\(\) : \[\];/);
+  assert.match(page, /const assignees = approves\(staff\.role\) \? people : \[\];/);
+  assert.match(page, /everyone \|\| approves\(staff\.role\) \? activeStaff\(\) : Promise\.resolve\(\[\]\)/);
   assert.match(page, /<LeadAdd locale=\{locale\} selfId=\{staff\.id\} assignees=\{assignees\} notice=\{params\.add\} \/>/);
 });
 

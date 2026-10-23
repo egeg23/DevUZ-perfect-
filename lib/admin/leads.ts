@@ -177,7 +177,31 @@ export function scopeFilter(scope: LeadScope): string | null {
   return scope === "all" ? null : `assigned_staff_id.is.null,assigned_staff_id.eq.${scope.staffId}`;
 }
 
+/**
+ * Поиск в списке лидов (владелец, 23.10.2026, на разбор удобства: компанию
+ * нельзя было найти по названию — только листать по 50). Ищем по названию
+ * компании, имени, номеру заявки и нише — по тому, что и так видно в
+ * списке; телефон и @ник открываются только в карточке и здесь не ищутся.
+ *
+ * Строка приходит из адреса, то есть из чьих угодно рук: всё, чем PostgREST
+ * режет условия (запятые, скобки, кавычки, звёздочки, обратный слэш), —
+ * выбрасываем, длину режем. Пусто после чистки — фильтра нет.
+ */
+export const LEAD_SEARCH_MAX = 60;
+
+export function leadSearchFilter(raw: string | undefined): string | null {
+  const q = (raw ?? "")
+    .replace(/[,()*%\\"'`:]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, LEAD_SEARCH_MAX);
+  if (q.length < 2) return null;
+  return ["company", "contact_name", "request_no", "niche"].map((c) => `${c}.ilike.*${q}*`).join(",");
+}
+
 export type LeadFilter = {
+  /** Строка поиска — см. leadSearchFilter. */
+  q?: string;
   priority?: string;
   status?: string;
   /** "mine" — закреплённые за этим сотрудником, "free" — ничьи. */
@@ -223,7 +247,12 @@ export async function listLeads(
   // Круг — первым делом: он не фильтр, который человек выбрал, а граница,
   // за которую ему нельзя, и снять её переключателем в адресе нельзя тоже.
   const inScope = scopeFilter(scope);
-  if (inScope) query = query.or(inScope);
+  const search = leadSearchFilter(filter.q);
+  // Два «или» сразу — только вложенными в одно «и»: второй параметр or
+  // PostgREST не складывает с первым.
+  if (inScope && search) query = query.or(`and(or(${inScope}),or(${search}))`);
+  else if (inScope) query = query.or(inScope);
+  else if (search) query = query.or(search);
 
   if (filter.owner === "free") {
     query = query.is("assigned_staff_id", null);

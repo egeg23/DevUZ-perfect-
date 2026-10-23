@@ -27,7 +27,7 @@ export const workSections: Record<string, HelpEntry> = {
         id: "limits",
         title: "Ile wiadomości i z którego konta",
         body: [
-          "Każde konto ma własny limit pierwszych wiadomości do nowych osób na godzinę: główne — 3, nowe — też 3. Świeżemu numerowi przez pierwszy tydzień lepiej ustawić 1–2 w polu «Wiadomości na godzinę»: nowe konto Telegram ogranicza szybciej. Pierwsze wiadomości wychodzą codziennie od 07:30 do 20:30 czasu taszkenckiego — dodane w nocy czekają i wychodzą rano; korespondencja z tymi, którzy już odpisali, toczy się o każdej porze i bez limitu. Na górze sekcji — ile wychodzi ze wszystkich razem; ta sama liczba stoi nad listą w [Kontaktach](/admin/prospect).",
+          "Każde konto ma własny limit pierwszych wiadomości do nowych osób na godzinę: główne — 3, nowe — też 3. Świeżemu numerowi przez pierwszy tydzień lepiej ustawić 1–2 w polu «Wiadomości na godzinę»: nowe konto Telegram ogranicza szybciej. Pierwsze wiadomości wychodzą codziennie od 07:30 do 20:30 czasu taszkenckiego — dodane w nocy czekają i wychodzą rano; korespondencja z tymi, którzy już odpisali, toczy się o każdej porze i bez limitu. Na górze sekcji — ile wychodzi ze wszystkich razem; ta sama liczba stoi nad listą w [Zimnych kontaktach](/admin/prospect).",
           "Kolejka kontaktów jest jedna: wiadomość wychodzi z konta, na którym wcześniej zwolniło się miejsce — menedżer niczego nie wybiera; jeśli ktoś jest przypisany do kont (punkt [kto pracuje na koncie](#accounts-staff)), — tylko z jego kont. Odpowiedzi do klienta, odpowiedzi modelu i poprawka wiadomości idą z tego samego konta, z którego wyszła pierwsza wiadomość: napisać do człowieka z innego numeru to pojawić się w jego rozmowie jako nieznajomy.",
           "Pod każdym kontem — ile pierwszych wiadomości wyszło w ostatniej godzinie i dziś, oraz «połączone», jeśli skaut trzyma je podłączone (znacznik co minutę). Brak znacznika dłużej niż trzy minuty — skaut nie pracuje tym kontem: sprawdź serwer albo podłącz konto ponownie.",
         ],
@@ -370,7 +370,7 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Tabela według osób",
         body: {
           manager: [
-            "Tabeli według osób nie widzisz — widzą ją kierownik i właściciel. Publiczny ranking obok nazwiska kolegi zmienia zachowanie szybciej niż wynik: leady zaczyna się brać według łatwości, a nie ważności. Swoje liczby sprawdzaj na [stronie głównej](/admin): kafelki i «Plan i wykonanie».",
+            "Tabeli według osób nie widzisz — widzą ją kierownik i właściciel. Publiczny ranking obok nazwiska kolegi zmienia zachowanie szybciej niż wynik: leady zaczyna się brać według łatwości, a nie ważności. Swoje liczby sprawdzaj na «Pulpit»: «Moja praca», «Moje etapy w tym tygodniu» i [«Plan i wykonanie»](#hq-week).",
           ],
           head: [
             "«Mój zespół» — Ty i Twoi menedżerowie: «W toku», «Wygrane», «Przegrane», «Łącznie» — za cały czas, według tego, kto teraz prowadzi leada. Menedżerowie tej tabeli nie widzą.",
@@ -385,13 +385,13 @@ export const workSections: Record<string, HelpEntry> = {
         title: "Gdzie są plany",
         body: {
           manager: [
-            "Planów tu nie ma. «Plan i wykonanie» jest na [stronie głównej](/admin), plan kontaktów — w [Kontaktach](/admin/prospect).",
+            "Planów tu nie ma. «Plan i wykonanie» jest na dole [«Pulpit»](/admin/hq), plan kontaktów — w [Zimnych kontaktach](/admin/prospect).",
           ],
           head: [
-            "Planów tu nie ma. «Plan i wykonanie» jest na [stronie głównej](/admin), plan kontaktów dla zespołu ustawia się w [Zespole](/admin/team).",
+            "Planów tu nie ma. «Plan i wykonanie» jest na dole [«Pulpit»](/admin/hq), plan kontaktów dla zespołu ustawia się w [Zespole](/admin/team).",
           ],
           admin: [
-            "Planów tu nie ma. «Plan i wykonanie» jest na zakładce «Zespół» [strony głównej](/admin), plan kontaktów — w [Zespole](/admin/team).",
+            "Planów tu nie ma. «Plan i wykonanie» jest na dole [«Pulpit»](/admin/hq), plan kontaktów — w [Zespole](/admin/team).",
           ],
         },
       },
@@ -577,7 +577,7 @@ export const workSections: Record<string, HelpEntry> = {
             "Robisz to samo co menedżer: kosztorys (Excel, CSV, PDF z tekstem albo wiersze ręcznie — bez wierszy nie da się wysłać), «Termin», «Wyślij do podpisu», «Wgraj podpisaną», faktury i link dla zamawiającego. Zatwierdza, zwraca i anuluje umowę tylko właściciel — zatwierdzenie to właśnie jego podpis.",
           ],
           admin: [
-            "Umowa do podpisu przychodzi do Ciebie w Telegramie i jest widoczna na zakładce «Dziś» — «Umowy do podpisu». Przyciski: **«Zatwierdź i podpisz»** albo **«Zwróć do poprawy»**. Zwrot to normalna część pracy, nie błąd.",
+            "Umowa do podpisu przychodzi do Ciebie w Telegramie i jest widoczna w «Wymaga uwagi» na «Pulpit» i w sekcji [Umowy](/admin/contracts). Przyciski: **«Zatwierdź i podpisz»** albo **«Zwróć do poprawy»**. Zwrot to normalna część pracy, nie błąd.",
             "Zatwierdzenie składa Twój podpis i **od razu wystawia fakturę za pierwszy etap**. Anulowanie zatwierdzonej umowy — «Powód anulowania» i «Anuluj»: umowy się nie usuwa, tylko oznacza. Zatwierdzonej nie da się edytować — jeśli potrzebna jest zmiana, przygotowuje się nową.",
             "Po wgraniu skanu z podpisami Twojego podpisu nie widać już na ekranie umowy — jest już na skanie.",
           ],
@@ -736,6 +736,15 @@ export const workSections: Record<string, HelpEntry> = {
             "«Wypłaty» → «Komu», «Kwota, $», «Data» (puste — dziś), «Notatka» («za sierpień») → «Zapisz wypłatę». Najpierw przelej pieniądze, potem zapisz. Wypłaty dla siebie nie da się zapisać: Tobie zostaje reszta.",
           ],
         },
+      },
+      {
+        id: "cash",
+        title: "Kasa, oczekiwane płatności i podatki",
+        roles: ["admin"],
+        body: [
+          "Na dole sekcji — «Kasa w podziale na miesiące»: wpływy i wydatki z pół roku, pod każdym miesiącem — różnica. Obok — «Oczekiwane płatności»: ile jeszcze mają zapłacić za aktywne projekty i kto je prowadzi, oraz «Podatki i sprawozdania w ciągu najbliższych dwóch tygodni». Wcześniej to była zakładka «Finanse» na «Leady».",
+          "Liczby pochodzą z tych samych zapisów co pozostałe bloki «Finanse»: wpływy — płatności klientów za projekty, wydatki — zapisy sekcji [Wydatki](/admin/expenses). Widzisz je tylko ty.",
+        ],
       },
     ],
   },

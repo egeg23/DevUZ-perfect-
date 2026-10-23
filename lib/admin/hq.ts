@@ -17,7 +17,7 @@
 
 import { activeNow, latest } from "@/lib/admin/lead-queue";
 import { tallyPortion, type PortionOutcome } from "@/lib/admin/portion";
-import { TASHKENT_OFFSET_MS, tashkentMidnight, todayInTashkent } from "@/lib/admin/pulse";
+import { TASHKENT_OFFSET_MS, isInWork, tashkentMidnight, todayInTashkent } from "@/lib/admin/pulse";
 import type { Role } from "@/lib/admin/roles";
 import type { Growth } from "@/lib/admin/levels";
 import { isModelTroubleSays } from "@/lib/model-trouble";
@@ -122,7 +122,7 @@ export function leadsPulse(leads: readonly HqLead[], offers: readonly HqOffer[],
       leads.map((l) => l.created_at),
       now,
     ),
-    inWork: leads.filter((l) => l.status === "taken").length,
+    inWork: leads.filter(isInWork).length,
     offered: offeredIds.size,
     unowned: leads
       .filter((l) => !l.assigned_staff_id && l.status === "new" && WARM_PRIORITIES.includes(l.priority) && !offeredIds.has(l.id))

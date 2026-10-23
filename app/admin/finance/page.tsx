@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { deleteExpense, deletePayout, saveExpense, savePayout } from "./actions";
 import { AdminShell } from "@/components/admin/shell";
+import { DashboardHome } from "@/components/admin/dashboard-home";
 import { HelpHint } from "@/components/admin/help-link";
 import { helpAnchor } from "@/lib/admin/help";
 import { financeDict } from "@/content/admin-panel/finance";
@@ -599,6 +600,9 @@ export default async function FinancePage({
           </div>
         </section>
       ) : null}
+
+      {/* Владельцу — касса по месяцам, ожидаем оплат и налоговые сроки: раньше вкладка «Деньги» на «Лидах». */}
+      <DashboardHome staff={staff} where="finance" />
 
       <div className="mt-8 max-w-2xl space-y-3 text-xs leading-relaxed text-faint">
         <p>

@@ -34,15 +34,15 @@ export async function savePlan(formData: FormData) {
     await requestIp(),
   );
 
-  revalidatePath("/admin");
-  redirect(`/admin?p=${result.ok ? "ok" : result.reason}&tab=team`);
+  revalidatePath("/admin/hq");
+  redirect(`/admin/hq?p=${result.ok ? "ok" : result.reason}#week`);
 }
 
 export async function deletePlan(formData: FormData) {
   const staff = await requireStaff();
   const result = await removePlan(String(formData.get("plan") ?? ""), staff, await requestIp());
-  revalidatePath("/admin");
-  redirect(`/admin?p=${result.ok ? "ok" : result.reason}&tab=team`);
+  revalidatePath("/admin/hq");
+  redirect(`/admin/hq?p=${result.ok ? "ok" : result.reason}#week`);
 }
 
 /**
@@ -52,6 +52,6 @@ export async function deletePlan(formData: FormData) {
 export async function refreshReviews() {
   await requireAdmin();
   const run = await runCoach(new Date(), { force: true });
-  revalidatePath("/admin");
-  redirect(`/admin?p=${run.errors.length && !run.weekly && !run.daily ? "coach_failed" : "coach_ok"}`);
+  revalidatePath("/admin/hq");
+  redirect(`/admin/hq?p=${run.errors.length && !run.weekly && !run.daily ? "coach_failed" : "coach_ok"}#week`);
 }
