@@ -34,7 +34,7 @@ test("со скриншотом, подпись влезает в Telegram, на
   const plain = text.replace(/<\/?b>/g, "");
   assert.ok(plain.length < 900, `подпись длиннее предела Telegram: ${plain.length}`);
   // Объявление ушло 13.10 с тогдашними названиями групп: «Проекты и деньги» с 23.10 зовётся «Деньги».
-  for (const name of [shellDict.navNew.ru, shellDict.findSection.ru, shellDict.menu.ru, navGroupDict.sales.ru, "Проекты и деньги"]) {
+  for (const name of [shellDict.navNew.ru, "Найти раздел", shellDict.menu.ru, navGroupDict.sales.ru, "Проекты и деньги"]) {
     assert.ok(text.includes(`«${name}»`), `в тексте нет «${name}»`);
   }
   assert.match(text, /Ctrl\+K/);
