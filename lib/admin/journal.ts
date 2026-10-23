@@ -54,6 +54,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "order.nudged": { ru: "свип напомнил о заявке", uz: "tizim buyurtma haqida eslatdi", pl: "system przypomniał o zamówieniu" },
   "staff.touch_plan_set": { ru: "изменил недельный план касаний", uz: "haftalik aloqalar rejasini o‘zgartirdi", pl: "zmienił tygodniowy plan kontaktów" },
   "staff.notices": { ru: "изменил, какие сообщения бота приходят сотруднику", uz: "xodimga botdan qaysi xabarlar kelishini o‘zgartirdi", pl: "zmienił, jakie wiadomości bota dostaje pracownik" },
+  "staff.lead_unlimited": { ru: "снял или вернул сотруднику лимит лидов", uz: "xodimga lidlar cheklovini olib tashladi yoki qaytardi", pl: "zdjął lub przywrócił pracownikowi limit leadów" },
   "staff.sections": { ru: "изменил, какие разделы панели открыты сотруднику", uz: "xodimga panelning qaysi bo‘limlari ochiqligini o‘zgartirdi", pl: "zmienił, które działy panelu są otwarte dla pracownika" },
   "staff.updated": { ru: "изменил данные сотрудника", uz: "xodim ma’lumotlarini o‘zgartirdi", pl: "zmienił dane pracownika" },
   "partner.model_changed": { ru: "партнёр сменил модель дохода", uz: "hamkor daromad modelini o‘zgartirdi", pl: "partner zmienił model przychodu" },

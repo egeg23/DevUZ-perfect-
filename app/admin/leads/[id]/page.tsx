@@ -44,7 +44,7 @@ import {
 } from "@/content/admin-panel/lead-card";
 import { record } from "@/lib/admin/audit";
 import { clock, mayTake } from "@/lib/admin/lead-queue";
-import { queueState, shareOf } from "@/lib/admin/lead-queue-store";
+import { nightShareFor, queueState } from "@/lib/admin/lead-queue-store";
 import { requestIp, requireStaff } from "@/lib/admin/guard";
 import { quoteForLead } from "@/lib/admin/quote";
 import { STATUSES, leadById } from "@/lib/admin/leads";
@@ -196,8 +196,9 @@ export default async function LeadPage({
     free ? queueState(lead.id) : Promise.resolve({ offers: [], openedAt: null, fairShare: false }),
   ]);
   // Ночной лид — с потолком равной доли: тот, кто свою долю уже взял, не
-  // должен видеть ник и писать клиенту в обход кнопки.
-  const share = free && queue.fairShare && staff.role !== "admin" ? await shareOf(staff.id) : null;
+  // должен видеть ник и писать клиенту в обход кнопки. Владельцу и «Без
+  // лимита лидов» потолка нет (nightShareFor).
+  const share = free && queue.fairShare ? await nightShareFor(staff) : null;
 
   /**
    * Очередь по свободному лиду — с точки зрения того, кто смотрит.

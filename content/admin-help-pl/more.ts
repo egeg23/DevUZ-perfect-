@@ -139,6 +139,15 @@ export const moreSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "unlimited",
+        title: "Limit leadów: komu nie potrzeba nocnego udziału",
+        roles: ["admin"],
+        body: [
+          "Przy menedżerach i kierownikach w ostatniej kolumnie jest wiersz **«Leady: w nocy po równym udziale»** z przyciskiem **«Zdejmij limit»**. W nocy, od 18:00 do 08:00, lead jest otwarty dla wszystkich w kolejce, ale każdy bierze nie więcej niż równą część na miesiąc: tak jedna niespiąca osoba nie zabiera wszystkiego. Po kliknięciu «Zdejmij limit» wiersz zmienia się na **«Leady: bez limitu»** i ta osoba w nocy bierze leady bez ograniczeń. **«Przywróć limit»** przywraca udział. Twoja decyzja z 23.10.2026: bez limitu pracują Dina i Aleksander.",
+          "W dzień nic się nie zmienia: lead nadal trafia na 30 minut do tego, czyja kolej, i cudzego leada w te pół godziny nie da się wziąć. Leady wzięte bez limitu wchodzą do wspólnego licznika miesiąca, więc udział pozostałych od tego tylko rośnie. Zmiana działa od razu, każde kliknięcie trafia do [dziennika](/admin/audit) jako «zdjął lub przywrócił pracownikowi limit leadów». Przycisk widzisz tylko Ty.",
+        ],
+      },
+      {
         id: "details",
         title: "Dane pracownika: imię i nazwisko, imię w panelu, username, telefon",
         roles: ["admin", "head"],

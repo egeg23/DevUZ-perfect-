@@ -46,15 +46,17 @@ export type TeamMember = {
   phone: string | null;
   /** Галочки владельца по разделам поверх роли (roles.ts, opens). */
   section_access: SectionAccess | null;
+  /** «Без лимита лидов»: ночной потолок равной доли на него не действует (lead-queue.ts, capsShare). */
+  lead_unlimited: boolean;
 };
 
 const COLUMNS =
-  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent, touch_plan, notify_off, full_name, phone, section_access";
+  "id, created_at, telegram_user_id, username, display_name, role, is_active, disabled_at, head_staff_id, grade, rate_percent, touch_plan, notify_off, full_name, phone, section_access, lead_unlimited";
 
 export type TeamResult =
   | {
       ok: true;
-      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed" | "notices" | "details" | "sections";
+      note?: "reactivated" | "menu_ok" | "menu_failed" | "claimed" | "notices" | "details" | "sections" | "unlimited";
       /**
        * Дошло ли до человека приглашение.
        *
@@ -138,6 +140,30 @@ export async function setSections(staffId: string, access: SectionAccess, actor:
   if (!data) return { ok: false, reason: "gone" };
   await record("staff.sections", { actorStaffId: actor.id, targetType: "staff", targetId: staffId, ip, meta: { access } });
   return { ok: true, note: "sections" };
+}
+
+/**
+ * «Без лимита лидов» — ночной лид человек берёт сверх равной доли за месяц.
+ * Владелец, 23.10.2026: «Сотрудникам Дина и Александр руководителю — им
+ * делаем безлимит по количеству лидов которые могут брать». Только владелец
+ * и только тем, кто стоит в очереди (менеджер, руководитель).
+ */
+export async function setLeadUnlimited(staffId: string, on: boolean, actor: Staff, ip: string): Promise<TeamResult> {
+  if (actor.role !== "admin") return { ok: false, reason: "forbidden" };
+  const db = serviceClient();
+  if (!db) return { ok: false, reason: "offline" };
+  const { data, error } = await db
+    .from("staff")
+    .update({ lead_unlimited: on })
+    .eq("id", staffId)
+    .eq("is_active", true)
+    .in("role", ["manager", "head"])
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false, reason: "failed" };
+  if (!data) return { ok: false, reason: "gone" };
+  await record("staff.lead_unlimited", { actorStaffId: actor.id, targetType: "staff", targetId: staffId, ip, meta: { on } });
+  return { ok: true, note: "unlimited" };
 }
 
 /** Сколько админов сейчас работает. Нужно, чтобы не остаться без единого. */
