@@ -159,6 +159,7 @@ export const ACTION_LABEL: Record<AuditAction, Tr> = {
   "task.cancelled": { ru: "отменил задачу", uz: "vazifani bekor qildi", pl: "anulował zadanie" },
   "lead.given": { ru: "отдал свободного лида", uz: "bo‘sh lidni topshirdi", pl: "przekazał wolnego leada" },
   "lead.trashed": { ru: "удалил лид как мусор", uz: "lidni axlat sifatida o‘chirdi", pl: "usunął leada jako śmieci" },
+  "bot.replied": { ru: "ответил клиенту в боте студии", uz: "studiya botida mijozga javob berdi", pl: "odpowiedział klientowi przez bota studia" },
   "task.edited": { ru: "изменил задачу", uz: "vazifani o‘zgartirdi", pl: "zmienił zadanie" },
   "broadcast.created": { ru: "разослал сообщение команде в бот", uz: "jamoaga botda xabar yubordi", pl: "wysłał wiadomość do zespołu przez bota" },
   "broadcast.cancelled": { ru: "отменил рассылку команде", uz: "jamoaga xabar yuborishni bekor qildi", pl: "anulował wysyłkę do zespołu" },

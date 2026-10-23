@@ -680,6 +680,30 @@ export async function sendRowsForId(
 }
 
 /**
+ * Сообщение с номером, без кнопок: по номеру бот потом узнаёт, на что ему
+ * ответили (обращения в бота, lib/qualify/bot-inbox-store.ts). null — не дошло.
+ */
+export async function sendForId(chatId: number | string, text: string): Promise<number | null> {
+  mirrorToPush(chatId, text);
+  const result = await callRaw("sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+  });
+  return result.ok ? (result.messageId ?? 0) : null;
+}
+
+/**
+ * Копия сообщения из одного чата в другой — от имени бота, без «переслано
+ * от»: текст, фото, файл, голосовое как есть. Ответ сотрудника клиенту
+ * (lib/qualify/bot-inbox-store.ts).
+ */
+export async function copyMessage(toChat: number | string, fromChat: number | string, messageId: number): Promise<boolean> {
+  return call("copyMessage", { chat_id: toChat, from_chat_id: fromChat, message_id: messageId });
+}
+
+/**
  * Просьба ответить: Telegram сам открывает ответ на это сообщение
  * (force_reply), и по номеру просьбы бот потом узнаёт, к чему ответ, —
  * «✏️ Изменить текст» под карточкой касания (lib/admin/bot-text-edit.ts).

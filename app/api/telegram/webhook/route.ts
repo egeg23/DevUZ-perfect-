@@ -129,6 +129,7 @@ import { grade, isRight, questionsFor } from "@/lib/learn/quiz";
 import { saveAttempt } from "@/lib/learn/store";
 import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
 import { secretOk } from "@/lib/secret-ok";
+import { humanOf, noteClientText, notifyInbox, relayInboxReply } from "@/lib/qualify/bot-inbox-store";
 import { tellLeadOwner } from "@/lib/qualify/lead-owner-notify";
 
 export const runtime = "nodejs";
@@ -160,6 +161,8 @@ type Update = {
     /** Номер сообщения в чате: по нему кружок ждёт кнопки языка (circle-bot, holdCircle). */
     message_id?: number;
     text?: string;
+    /** Подпись к фото или файлу — ответ клиенту из «📩 Обращение в бота» (bot-inbox-store). */
+    caption?: string;
     /** На что ответили — по нему «✏️ Изменить текст» узнаёт карточку (bot-text-edit). */
     reply_to_message?: { message_id: number };
     /** Когда человек отправил, по часам Telegram — по нему видно, сколько шло обновление. */
@@ -280,6 +283,14 @@ async function route(update: Update): Promise<void> {
       if (chat.type === "private" && loginCommand(update.message.text)) {
         await handleStaffLogin(update.message);
         return;
+      }
+
+      // Ответ владельца или руководителя на «📩 Обращение в бота» — клиенту
+      // от бота студии копией (lib/qualify/bot-inbox-store.ts). Раньше
+      // кружка и голосового: ответить клиенту можно и ими. Ответ на другое
+      // сообщение бота идёт дальше, как шёл.
+      if (chat.type === "private" && update.message.reply_to_message && update.message.message_id) {
+        if (await relayInboxReply({ ...update.message, message_id: update.message.message_id })) return;
       }
 
       // Кружок для касаний: владелец или руководитель пересылает его боту
@@ -1104,6 +1115,20 @@ async function respond(
 ) {
   const copy = botCopy(session.locale);
   const history = [...session.transcript, { role: "user" as const, content: text }];
+  const client = { chatId, name: from?.first_name ?? "", username: from?.username ?? null };
+  void noteClientText(chatId, text).catch(() => undefined);
+
+  // Разговор ведёт человек: он ответил клиенту из «📩 Обращение в бота».
+  // Модель молчит, слова клиента — владельцу и руководителю
+  // (lib/qualify/bot-inbox-store.ts).
+  const human = await humanOf(chatId).catch(() => null);
+  if (human) {
+    session.transcript = history;
+    saveSession(chatId, session);
+    const notified = await notifyInbox({ client, text, botReply: null, human }).catch(() => new Set<number>());
+    void tellLeadOwner({ username: from?.username ?? null, text, history, skipChats: notified }).catch(() => undefined);
+    return;
+  }
 
   // Гарантия двадцати секунд действует и здесь, но только на первой реплике
   // холодного разговора: продолжение с сайта уже получило свой отсчёт там.
@@ -1178,11 +1203,16 @@ async function respond(
     await sendMessage(chatId, copy.error);
   }
 
-  // Лид уже взят — слова клиента его хозяину, переписка — в карточку
-  // (lib/qualify/lead-owner-notify.ts). Не ждём: клиенту уже ответили.
-  void tellLeadOwner({ username: from?.username ?? null, text, history }).catch((error: unknown) => {
-    console.error("бот: хозяину лида не ушло", error instanceof Error ? error.message : error);
-  });
+  // Каждое обращение — владельцу и руководителю, с ответом из Telegram
+  // (lib/qualify/bot-inbox-store.ts). Лид уже взят — слова клиента его
+  // хозяину, переписка — в карточку (lib/qualify/lead-owner-notify.ts);
+  // кому уже ушло обращение, второй строки не шлём. Клиенту уже ответили.
+  void notifyInbox({ client, text, botReply: reply.trim() || null, human: null })
+    .catch(() => new Set<number>())
+    .then((notified) => tellLeadOwner({ username: from?.username ?? null, text, history, skipChats: notified }))
+    .catch((error: unknown) => {
+      console.error("бот: хозяину лида не ушло", error instanceof Error ? error.message : error);
+    });
 
   session.transcript = history;
   session.resumed = true;

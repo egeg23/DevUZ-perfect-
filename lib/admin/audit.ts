@@ -168,6 +168,9 @@ export const AUDIT_ACTIONS = [
   "lead.given",
   // Лид удалён кнопкой «🗑 Мусор» в боте (lib/admin/lead-trash-store.ts).
   "lead.trashed",
+  // Сотрудник ответил клиенту в боте на «📩 Обращение в бота»
+  // (lib/qualify/bot-inbox-store.ts): ответ ушёл копией от бота студии.
+  "bot.replied",
   // Вход владельца через Google для статистики GA: доступ к данным
   // Analytics сохраняется в хранилище секретов — кто и когда его дал, видно.
   "google.client_saved",

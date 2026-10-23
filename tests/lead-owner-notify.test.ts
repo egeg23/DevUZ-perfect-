@@ -26,5 +26,6 @@ test("ищет взятый лид по нику, пишет только днё
   assert.ok(store.indexOf('update({ transcript: input.history })') < store.indexOf("if (!messageWindow(now)) return false;"), "переписка — и ночью");
   assert.match(store, /wants\(.*"talks"\)/);
   const hook = read("app/api/telegram/webhook/route.ts");
-  assert.match(hook, /void tellLeadOwner\(\{ username: from\?\.username \?\? null, text, history \}\)/);
+  assert.match(hook, /tellLeadOwner\(\{ username: from\?\.username \?\? null, text, history, skipChats: notified \}\)/);
+  assert.match(store, /if \(input\.skipChats\?\.has\(chat\)\) return false;/, "кому ушло обращение в бота — второй строки нет");
 });

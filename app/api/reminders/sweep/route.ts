@@ -17,6 +17,7 @@ import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
 import { sendStaffWeek } from "@/lib/admin/staff-week-store";
 import { sendNightReplies } from "@/lib/admin/night-replies-store";
+import { sendNightInbox } from "@/lib/qualify/bot-inbox-store";
 import { sendClientOutbox } from "@/lib/admin/client-outbox";
 import { runMockupOffers } from "@/lib/admin/mockup-offer-run";
 import { sendOfferDigest } from "@/lib/admin/mockup-offer-bot";
@@ -368,6 +369,9 @@ async function sweep(): Promise<Response> {
   // ночью строк нет (lib/admin/night-replies-store).
   after(async () => {
     await sendNightReplies(new Date()).catch((error) => console.error("ответы за ночь:", error));
+    // Кто писал боту ночью — владельцу и руководителю, с «Ответить»
+    // (lib/qualify/bot-inbox-store).
+    await sendNightInbox(new Date()).catch((error) => console.error("обращения в бота за ночь:", error));
   });
   // Понедельник 10:00 — владельцу и руководителю недельный отчёт по
   // сотрудникам с рекомендациями (lib/admin/staff-week-store).
