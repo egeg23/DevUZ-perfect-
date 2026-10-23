@@ -703,6 +703,16 @@ export async function copyMessage(toChat: number | string, fromChat: number | st
   return call("copyMessage", { chat_id: toChat, from_chat_id: fromChat, message_id: messageId });
 }
 
+/** То же, но с номером копии: по нему бот потом узнаёт, на что сотрудник ответил. null — не дошло. */
+export async function copyMessageForId(
+  toChat: number | string,
+  fromChat: number | string,
+  messageId: number,
+): Promise<number | null> {
+  const result = await callRaw("copyMessage", { chat_id: toChat, from_chat_id: fromChat, message_id: messageId });
+  return result.ok ? (result.messageId ?? 0) : null;
+}
+
 /**
  * Просьба ответить: Telegram сам открывает ответ на это сообщение
  * (force_reply), и по номеру просьбы бот потом узнаёт, к чему ответ, —
