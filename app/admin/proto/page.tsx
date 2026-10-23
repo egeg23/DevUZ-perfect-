@@ -7,6 +7,8 @@ import { protoDict, protoNichePl, protoResultDict, protoWhen } from "@/content/a
 import { PROTO_NICHES, protoNicheByKey, type ProtoNiche } from "@/content/proto/models";
 import { requireSection } from "@/lib/admin/guard";
 import { pick, type PanelLocale } from "@/lib/admin/i18n";
+import { orderForSite } from "@/lib/admin/mockup-order";
+import { openMockupOrders } from "@/lib/admin/mockup-order-store";
 import { protosList, upgradeAllProtos } from "@/lib/proto/store";
 import { traceSite } from "@/lib/proto/trace-store";
 import { absoluteUrl } from "@/lib/seo";
@@ -65,7 +67,7 @@ export default async function ProtoPage({
   const t = pick(protoDict, locale);
   const results = pick(protoResultDict, locale);
   const notice = r ? (Object.hasOwn(results, r) ? results[r as keyof typeof results](d ?? "") : r) : null;
-  const rows = await protosList();
+  const [rows, orders] = await Promise.all([protosList(), openMockupOrders(staff)]);
   // Прототипы, собранные до отпечатков и ссылки на условия, перерисовываются
   // фоном — правило владельца для всех макетов, и сделанных раньше тоже.
   after(() => upgradeAllProtos(50).catch(() => 0));
@@ -88,10 +90,10 @@ export default async function ProtoPage({
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro1}</p>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t.intro2}</p>
 
-      {r && r !== "ok" ? (
+      {r && r !== "ok" && r !== "order" ? (
         <p className="mt-4 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">{notice}</p>
       ) : null}
-      {r === "ok" ? (
+      {r === "ok" || r === "order" ? (
         <p className="mt-4 rounded-lg border border-green/40 bg-green/10 px-4 py-3 text-sm text-green">
           {notice}
         </p>
@@ -146,7 +148,7 @@ export default async function ProtoPage({
         ) : null}
       </section>
 
-      <form action={buildAction} className="mt-6 rounded-xl border border-line bg-surface p-4 sm:p-5">
+      <form id="build" action={buildAction} className="mt-6 scroll-mt-24 rounded-xl border border-line bg-surface p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="sm:col-span-2">
             <span className={LABEL}>{t.site}</span>
@@ -177,6 +179,25 @@ export default async function ProtoPage({
               <option value="uz">{t.langUz}</option>
             </select>
           </label>
+
+          {orders.length ? (
+            <label className="sm:col-span-2" data-proto-order>
+              <span className={LABEL}>{t.order}</span>
+              <select
+                name="order"
+                defaultValue={orders.some((o) => o.taskId === prefill("order")) ? prefill("order") : (orderForSite(orders, prefill("url"))?.taskId ?? "")}
+                className={`${INPUT} mt-1`}
+              >
+                <option value="">{t.orderNone}</option>
+                {orders.map((o) => (
+                  <option key={o.taskId} value={o.taskId}>
+                    {t.orderOption(o.title, o.client, o.creatorName)}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 block text-xs text-faint">{t.orderHint}</span>
+            </label>
+          ) : null}
 
           <label className="sm:col-span-2">
             <span className={LABEL}>{t.services}</span>

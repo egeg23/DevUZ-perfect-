@@ -136,6 +136,9 @@ export const AUDIT_ACTIONS = [
   "mockup.auto_closed",
   // Ответственный за макет, назначенный руками (руководитель или владелец).
   "mockup.owner",
+  // Макет привязан к заказу из задачи (lib/admin/mockup-order-store.ts):
+  // кто привязал, какой макет, к какой задаче.
+  "mockup.order",
   // Рабочие аккаунты Telegram: кто подключил номер, кто остановил и снял.
   "work_account.add",
   "work_account.pause",

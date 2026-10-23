@@ -64,6 +64,47 @@ export const tasksDict = defineDict({
     uz: "Vaqt — Toshkent vaqti. «Ertaga» va «3 kundan keyin» — 18:00 gacha. Muddatsiz vazifa haqida bot muddat bo‘yicha eslatmaydi.",
     pl: "Czas taszkencki. „Jutro” i „za 3 dni” — do 18:00. Bez terminu bot nie przypomina o terminie.",
   },
+  // Заказ макета (lib/admin/mockup-order.ts, components/admin/mockup-order-fields.tsx).
+  mockupQ: { ru: "Заказ макета", uz: "Maket buyurtmasi", pl: "Zlecenie makiety" },
+  mockupRequired: {
+    ru: "обязательно: задача тому, кто собирает макеты",
+    uz: "majburiy: vazifa maket yig‘uvchiga",
+    pl: "obowiązkowo: zadanie dla osoby, która buduje makiety",
+  },
+  mockupOptional: { ru: "необязательно", uz: "ixtiyoriy", pl: "opcjonalnie" },
+  mockupYes: { ru: "Да", uz: "Ha", pl: "Tak" },
+  mockupNo: { ru: "Нет", uz: "Yo‘q", pl: "Nie" },
+  mockupClient: { ru: "Для какого клиента", uz: "Qaysi mijoz uchun", pl: "Dla jakiego klienta" },
+  mockupClientPh: {
+    ru: "Компания, номер заявки, сайт или @ник",
+    uz: "Kompaniya, ariza raqami, sayt yoki @nik",
+    pl: "Firma, numer zgłoszenia, strona lub @nick",
+  },
+  mockupSearching: { ru: "Ищу…", uz: "Qidiryapman…", pl: "Szukam…" },
+  mockupNothing: {
+    ru: "Не нашлось. Лид или касание заводят в «Лидах» и «Холодных касаниях».",
+    uz: "Topilmadi. Lid yoki aloqa «Lidlar» va «Sovuq aloqalar» da qo‘shiladi.",
+    pl: "Nie znaleziono. Lead lub kontakt dodaje się w «Leady» i «Zimne kontakty».",
+  },
+  mockupChange: { ru: "Сменить", uz: "Almashtirish", pl: "Zmień" },
+  mockupKindLead: { ru: "лид", uz: "lid", pl: "lead" },
+  mockupKindProspect: { ru: "касание", uz: "aloqa", pl: "kontakt" },
+  mockupSite: { ru: "Сайт клиента", uz: "Mijoz sayti", pl: "Strona klienta" },
+  mockupHint: {
+    ru: "«Да» — вы заказываете макет: когда его соберут, ответственным за макет и работу с клиентом по нему станете вы.",
+    uz: "«Ha» — siz maket buyurtma qilasiz: u yig‘ilgach, maket va u bo‘yicha mijoz bilan ish uchun mas’ul siz bo‘lasiz.",
+    pl: "«Tak» — zlecasz makietę: gdy powstanie, to ty odpowiadasz za nią i za pracę z klientem.",
+  },
+  // В ряду задачи.
+  mockupChip: { ru: "Заказ макета", uz: "Maket buyurtmasi", pl: "Zlecenie makiety" },
+  mockupFor: { ru: (client: string) => `для ${client}`, uz: (client: string) => `${client} uchun`, pl: (client: string) => `dla ${client}` },
+  mockupBuild: { ru: "Собрать прототип", uz: "Prototipni yig‘ish", pl: "Zbuduj prototyp" },
+  mockupLinkHint: {
+    ru: "Собранный руками — привяжите в «Макетах»",
+    uz: "Qo‘lda yig‘ilganini «Maketlar» da bog‘lang",
+    pl: "Zbudowaną ręcznie powiąż w «Makiety»",
+  },
+  mockupReady: { ru: "Макет готов", uz: "Maket tayyor", pl: "Makieta gotowa" },
   noProjects: {
     ru: "Открытых проектов нет — их заводят в разделе «Проекты».",
     uz: "Ochiq loyihalar yo‘q — ular «Loyihalar» bo‘limida qo‘shiladi.",
@@ -242,6 +283,21 @@ export const taskNoticeDict = defineDict({
     ru: "Поставлено не всем: база не ответила. Проверьте «Я поставил» и поставьте остальным ещё раз.",
     uz: "Hammaga qo‘yilmadi: baza javob bermadi. «Men qo‘yganlar» ni tekshiring va qolganlarga yana qo‘ying.",
     pl: "Nie wszystkim zlecono: baza nie odpowiedziała. Sprawdź «Zleciłem» i zleć pozostałym jeszcze raz.",
+  },
+  mockup: {
+    ru: "Ответьте на «Заказ макета»: да или нет. Задача тому, кто собирает макеты, без ответа не ставится.",
+    uz: "«Maket buyurtmasi» ga javob bering: ha yoki yo‘q. Maket yig‘uvchiga vazifa javobsiz qo‘yilmaydi.",
+    pl: "Odpowiedz na «Zlecenie makiety»: tak lub nie. Bez odpowiedzi zadanie dla osoby budującej makiety nie zostanie zlecone.",
+  },
+  mockupClientBad: {
+    ru: "Выберите клиента заказа из поиска: лид или касание.",
+    uz: "Buyurtma mijozini qidiruvdan tanlang: lid yoki aloqa.",
+    pl: "Wybierz klienta zlecenia z wyszukiwania: lead lub kontakt.",
+  },
+  mockupSiteBad: {
+    ru: "Укажите сайт клиента, например tirex.uz.",
+    uz: "Mijoz saytini ko‘rsating, masalan tirex.uz.",
+    pl: "Podaj stronę klienta, na przykład tirex.uz.",
   },
   noAssignee: {
     ru: "Отметьте, кому поставить задачу.",

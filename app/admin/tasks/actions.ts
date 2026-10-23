@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 
 import { requestIp, requireStaff } from "@/lib/admin/guard";
+import { orderFromForm } from "@/lib/admin/mockup-order";
 import { actOnTask, afterAct, afterEdit, createTasks, deliverAssignment, editTask, taskById } from "@/lib/admin/task-store";
 import {
   QUICK_DUES,
@@ -71,6 +72,9 @@ const REASON: Record<string, NoticeCode> = {
   offline: "offline",
   failed: "failedTry",
   unchanged: "unchanged",
+  mockup: "mockup",
+  mockup_client: "mockupClientBad",
+  mockup_site: "mockupSiteBad",
 };
 
 /** Срок из формы: быстрый вариант, своя дата (по Ташкенту) или без срока. */
@@ -96,6 +100,7 @@ export async function createTaskAction(formData: FormData) {
       assigneeIds: formData.getAll("assignee").map(String),
       due,
       projectId: project || null,
+      order: orderFromForm((name) => (formData.get(name) === null ? null : String(formData.get(name)))),
     },
     staff,
     await requestIp(),

@@ -1,4 +1,5 @@
 import { record } from "@/lib/admin/audit";
+import { orderOwners } from "@/lib/admin/mockup-order-store";
 import { offerReaders } from "@/lib/admin/mockup-offer-bot";
 import { LATE_MS, autoCloseAt, closeDue, closedDigest, closedText, CODE_CALLBACK } from "@/lib/proto/auto-close";
 import { firstSends, inputOf, type FirstSend, type ProtoRow } from "@/lib/proto/auto-close-read";
@@ -86,7 +87,10 @@ export async function runProtoAutoClose(now: Date = new Date()): Promise<AutoClo
       continue;
     }
     const rowsBtn = [[{ text: "🔑 Сгенерировать пароль", callback_data: `${CODE_CALLBACK}:${p.id}` }]];
-    const chat = await senderChat(sent, p.prospect_id, p.owner_staff_id ?? null);
+    // Ответственный — тем же порядком, что в «Макетах»: назначенный руками,
+    // потом заказавший макет задачей, потом хозяин лида и автор касания.
+    const ordered = p.owner_staff_id ? null : ((await orderOwners([`p:${p.id}`])).get(`p:${p.id}`) ?? null);
+    const chat = await senderChat(sent, p.prospect_id, p.owner_staff_id ?? ordered);
     const chats = chat ? [chat] : (await offerReaders()).map((r) => r.chat);
     for (const c of chats) await sendWithRows(c, closedText(esc(p.name)), rowsBtn);
     run.told += chats.length;

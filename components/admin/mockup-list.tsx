@@ -4,13 +4,15 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { markStageAction } from "@/app/admin/hq/actions";
-import { mockupCodeAction, mockupOwnerAction } from "@/app/admin/mockups/actions";
+import { mockupCodeAction, mockupOrderAction, mockupOwnerAction } from "@/app/admin/mockups/actions";
 import { CopyMessage } from "@/components/admin/copy-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { usePanelDict } from "@/components/admin/panel-locale";
 import { mockupsDict } from "@/content/admin-panel/mockups";
 import { salesStagesDict } from "@/content/admin-panel/sales-stages";
 import type { Picked } from "@/lib/admin/i18n";
+import type { LinkResult } from "@/lib/admin/mockup-order-store";
+import { siteHost } from "@/lib/admin/mockup-order";
 import type { MockupRow, MockupSend } from "@/lib/admin/mockups";
 import type { CodeResult, OwnerResult } from "@/lib/admin/mockups-store";
 
@@ -42,6 +44,9 @@ const SENDS_SHOWN = 3;
 /** Кого можно назначить ответственным. Пусто — назначать нельзя (менеджер). */
 export type MockupTeam = { id: string; name: string }[];
 
+/** Открытый заказ макета из задачи: подпись и сайт клиента (для подсказки). */
+export type MockupOrderOption = { taskId: string; label: string; site: string | null };
+
 type Filter = "all" | "hand" | "unsent" | "showcase";
 
 const INPUT = "w-full min-w-0 rounded-lg border border-line bg-ink px-3 py-2 text-sm text-text outline-none focus:border-green/50";
@@ -61,7 +66,7 @@ function matches(row: MockupView, filter: Filter): boolean {
   return true;
 }
 
-export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTeam }) {
+export function MockupList({ rows, team, orders = [] }: { rows: MockupView[]; team: MockupTeam; orders?: MockupOrderOption[] }) {
   const t = usePanelDict(mockupsDict);
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -69,6 +74,7 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, CodeResult>>({});
   const [ownerFails, setOwnerFails] = useState<Record<string, Extract<OwnerResult, { ok: false }>["reason"]>>({});
+  const [linked, setLinked] = useState<Record<string, LinkResult>>({});
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -107,6 +113,20 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
       else setOwnerFails((prev) => ({ ...prev, [row.ref]: result.reason }));
     } catch {
       setOwnerFails((prev) => ({ ...prev, [row.ref]: "offline" }));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function linkOrder(row: MockupView, taskId: string) {
+    if (!taskId) return;
+    setBusy(row.ref);
+    try {
+      const result = await mockupOrderAction(row.ref, taskId);
+      setLinked((prev) => ({ ...prev, [row.ref]: result }));
+      if (result.ok) router.refresh();
+    } catch {
+      setLinked((prev) => ({ ...prev, [row.ref]: { ok: false, reason: "offline" } }));
     } finally {
       setBusy(null);
     }
@@ -230,6 +250,17 @@ export function MockupList({ rows, team }: { rows: MockupView[]; team: MockupTea
                       )}
                       {ownerFails[row.ref] ? <span className="text-gold">{t[`ownerFail_${ownerFails[row.ref]}`]}</span> : null}
                     </p>
+                    {orders.length && row.owner?.source !== "order" ? (
+                      <OrderPicker row={row} orders={orders} busy={busy !== null} onLink={(taskId) => linkOrder(row, taskId)} t={t} />
+                    ) : null}
+                    {linked[row.ref] ? (
+                      <p className={`mt-1 text-xs ${linked[row.ref].ok ? "text-green" : "text-gold"}`}>
+                        {(() => {
+                          const result = linked[row.ref];
+                          return result.ok ? (result.closed ? t.orderDoneClosed : t.orderDone) : t[`orderFail_${result.reason}`];
+                        })()}
+                      </p>
+                    ) : null}
                     {row.sendsText.length ? <SendList sends={row.sendsText} t={t} /> : null}
                     <p className="mt-1 truncate font-mono text-xs text-faint">{row.url}</p>
                   </div>
@@ -343,5 +374,50 @@ function ShownMark({ leadId, prospectId }: { leadId: string | null; prospectId: 
         ))}
       </div>
     </details>
+  );
+}
+
+/**
+ * «Заказ: привязать к заказу…» — открытые заказы макетов из задач. Заказ,
+ * чей сайт совпадает с сайтом макета, выбран сразу (orderForSite).
+ */
+function OrderPicker({
+  row,
+  orders,
+  busy,
+  onLink,
+  t,
+}: {
+  row: MockupView;
+  orders: MockupOrderOption[];
+  busy: boolean;
+  onLink: (taskId: string) => void;
+  t: Picked<typeof mockupsDict>;
+}) {
+  const host = siteHost(row.site);
+  const suggested = host ? (orders.find((o) => siteHost(o.site) === host)?.taskId ?? "") : "";
+  const [taskId, setTaskId] = useState(suggested);
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" data-mockup-order>
+      <span className="text-muted">{t.orderLabel}:</span>
+      <select
+        value={taskId}
+        onChange={(event) => setTaskId(event.target.value)}
+        disabled={busy}
+        aria-label={t.orderLabel}
+        className="max-w-[20rem] rounded-md border border-line bg-ink px-2 py-0.5 text-xs text-text outline-none focus:border-green/50 disabled:opacity-50"
+      >
+        <option value="">{t.orderPick}</option>
+        {orders.map((o) => (
+          <option key={o.taskId} value={o.taskId}>
+            {o.label}
+            {o.taskId === suggested ? ` (${t.orderSuggested})` : ""}
+          </option>
+        ))}
+      </select>
+      <button type="button" onClick={() => onLink(taskId)} disabled={busy || !taskId} className={BUTTON}>
+        {t.orderLink}
+      </button>
+    </p>
   );
 }

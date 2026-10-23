@@ -367,6 +367,27 @@ export const leadsSections: Record<string, HelpEntry> = {
         ],
       },
       {
+        id: "mockup-order",
+        title: "«Zlecenie makiety» w zadaniu",
+        body: {
+          manager: [
+            "**«Zlecenie makiety»** — pytanie w formularzu «Zleć zadanie»: «Tak» lub «Nie». Jeśli w «Komu» zaznaczona jest osoba, która buduje makiety (właściciel), odpowiedź jest obowiązkowa — obok pytania pojawi się «obowiązkowo», a bez odpowiedzi zadanie nie zostanie zlecone. W zadaniach dla innych osób pytanie nie jest potrzebne i można je pominąć.",
+            "«Tak» oznacza, że zlecasz makietę. W polu «Dla jakiego klienta» zacznij wpisywać firmę, numer zgłoszenia, stronę lub @nick i wybierz lead albo kontakt z listy — wyszukiwanie jest takie samo jak w «Znajdź sekcję lub firmę» i pokazuje tylko tych, których widzisz. «Strona klienta» przy kontakcie wpisze się sama, przy leadzie wpisz ją, na przykład tirex.uz. Wykonawca zobaczy pod zadaniem «Zlecenie makiety», dla kogo i stronę, a bot poda mu stronę w wiadomości o zadaniu.",
+            "Gdy makieta powstanie i zostanie powiązana ze zleceniem, osobą odpowiedzialną za nią w [Makietach](/admin/mockups) zostaniesz ty — z dopiskiem «według zlecenia»: prowadzisz klienta przy tej makiecie, bot pisze do ciebie, gdy makieta zamyka się na hasło, i jest ona w twoich makietach na «Pulpicie». Zadanie zamknie się jako «Zrobione», pojawi się przy nim link «Makieta gotowa». Jeśli kierownik lub właściciel wyznaczył osobę odpowiedzialną ręcznie, ważniejsza jest osoba wyznaczona.",
+          ],
+          head: [
+            "**«Zlecenie makiety»** — pytanie w formularzu «Zleć zadanie» i w [szybkim zadaniu](#hq-task) na «Pulpicie»: «Tak» lub «Nie». Jeśli zaznaczona jest osoba, która buduje makiety (właściciel), odpowiedź jest obowiązkowa — bez niej zadanie nie zostanie zlecone. W zadaniach dla innych osób pytanie nie jest potrzebne.",
+            "«Tak» — zlecenie makiety: w «Dla jakiego klienta» wybierz lead lub kontakt wyszukiwaniem (tym samym co w «Znajdź sekcję lub firmę»), w «Strona klienta» — stronę, przy kontakcie wpisze się sama. Wykonawca widzi pod zadaniem «Zlecenie makiety», dla kogo i stronę; bot podaje mu stronę w wiadomości o zadaniu.",
+            "Makieta zbudowana i powiązana ze zleceniem dostaje osobę odpowiedzialną «według zlecenia» — tego, kto zlecił zadanie; zadanie zamyka się jako «Zrobione», pojawia się przy nim «Makieta gotowa». Gotową makietę możesz sam powiązać z dowolnym otwartym zleceniem w [Makietach](/admin/mockups): wiersz «Zlecenie» przy makiecie, wybór zlecenia i «Powiąż». Osoba wyznaczona przez ciebie ręcznie jest ważniejsza niż zlecenie.",
+          ],
+          admin: [
+            "**«Zlecenie makiety»** — pytanie w formularzu «Zleć zadanie» i w [szybkim zadaniu](#hq-task) na «Pulpicie»: «Tak» lub «Nie». Jeśli w «Komu» jesteś ty (budujesz makiety), odpowiedź jest obowiązkowa — bez niej zadanie nie zostanie ci zlecone. Dzięki temu każde zlecenie makiety przychodzi do ciebie z klientem i stroną, a nie jako prośba w czacie.",
+            "Zlecenie widać pod zadaniem w «Dla mnie»: «Zlecenie makiety», dla kogo (link do leada lub kontaktu) i strona. **«Zbuduj prototyp»** otwiera [Prototypy](/admin/proto) z wpisaną stroną i wybranym zleceniem w polu «Według zlecenia z zadania». Zbudowany prototyp jest powiązany ze zleceniem, zadanie zamknięte jako «Zrobione», bot napisał do zlecającego. Szkic wiąże się ze zleceniem, ale zadanie zostaje otwarte: makiety dla klienta jeszcze nie ma.",
+            "Makietę zbudowaną ręcznie (witryna) powiąż w [Makietach](/admin/mockups): przy makiecie jest wiersz «Zlecenie» — wybierz zlecenie (zlecenie z tą samą stroną jest wybrane od razu) i naciśnij «Powiąż». Osobą odpowiedzialną za makietę zostanie ten, kto ją zlecił, z dopiskiem «według zlecenia». Osoba wyznaczona ręcznie jest ważniejsza niż zlecenie.",
+          ],
+        },
+      },
+      {
         id: "history",
         title: "Edycja zadania i historia zadań",
         body: {

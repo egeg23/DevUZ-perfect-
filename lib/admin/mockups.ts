@@ -177,10 +177,11 @@ export function mockupSends(rows: readonly SendRow[], tags: ReadonlyMap<string, 
 }
 
 /**
- * Откуда взят ответственный: назначен руками, хозяин лида, которому ушёл
- * макет, автор касания или тот, кто собрал макет в панели.
+ * Откуда взят ответственный: назначен руками, заказал макет задачей
+ * (lib/admin/mockup-order.ts), хозяин лида, которому ушёл макет, автор
+ * касания или тот, кто собрал макет в панели.
  */
-export type OwnerSource = "set" | "lead" | "touch" | "made";
+export type OwnerSource = "set" | "order" | "lead" | "touch" | "made";
 
 export type MockupOwner = { id: string; name: string; source: OwnerSource };
 
@@ -188,18 +189,21 @@ export type MockupOwner = { id: string; name: string; source: OwnerSource };
  * Ответственный за макет. Руководитель (Александр), 15.10.2026: «Добавить в
  * раздел макеты ответственного за макет менеджера».
  *
- * Назначенный руками (protos.owner_staff_id) главнее всего. Дальше — хозяин
+ * Назначенный руками (protos.owner_staff_id) главнее всего. Дальше — тот,
+ * кто заказал макет задачей (владелец, 23.10.2026: «Если нажимает — да,
+ * значит он ответственный за работу по этому макету с клиентом»), хозяин
  * лида, которому макет ушёл первым, потом автор касания, потом тот, кто
  * собрал макет в панели. Тот же порядок у строки «макет закрылся паролем»
  * (lib/proto/auto-close-store.ts). Сотрудника, которого нет в списке имён,
  * пропускаем: лучше «не назначен», чем пустое имя.
  */
 export function mockupOwner(
-  ids: { set: string | null; lead: string | null; touch: string | null; made: string | null },
+  ids: { set: string | null; order?: string | null; lead: string | null; touch: string | null; made: string | null },
   names: ReadonlyMap<string, string>,
 ): MockupOwner | null {
   const order: [OwnerSource, string | null][] = [
     ["set", ids.set],
+    ["order", ids.order ?? null],
     ["lead", ids.lead],
     ["touch", ids.touch],
     ["made", ids.made],

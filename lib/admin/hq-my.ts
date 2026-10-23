@@ -120,15 +120,15 @@ export function mineReply(
 
 /**
  * Ответственный за макет — тем же порядком, что в «Макетах»
- * (lib/admin/mockups.ts, mockupOwner): назначенный руками, хозяин лида,
- * автор касания, кто собрал. Уволенный пропускается — макет переходит к
+ * (lib/admin/mockups.ts, mockupOwner): назначенный руками, заказавший
+ * задачей, хозяин лида, автор касания, кто собрал. Уволенный пропускается — макет переходит к
  * следующему в очереди.
  */
 export function mockupOwnerId(
-  ids: { set: string | null; lead: string | null; touch: string | null; made: string | null },
+  ids: { set: string | null; order?: string | null; lead: string | null; touch: string | null; made: string | null },
   active: ReadonlySet<string>,
 ): string | null {
-  for (const id of [ids.set, ids.lead, ids.touch, ids.made]) if (id && active.has(id)) return id;
+  for (const id of [ids.set, ids.order ?? null, ids.lead, ids.touch, ids.made]) if (id && active.has(id)) return id;
   return null;
 }
 

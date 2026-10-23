@@ -13,6 +13,7 @@ import { giveLeadAction } from "@/app/admin/hq/actions";
 import { broadcastById, broadcastHistory, broadcastPeople } from "@/lib/admin/broadcast-store";
 import { segmentCounts } from "@/lib/admin/bot-users";
 import { loadBotAudience } from "@/lib/admin/bot-users-store";
+import { makesMockups } from "@/lib/admin/mockup-order";
 import { requireSection } from "@/lib/admin/guard";
 import { seesEveryone } from "@/lib/admin/roles";
 import { HQ_REFRESH_MS } from "@/lib/admin/hq";
@@ -85,6 +86,7 @@ export default async function HqPage({
     ...people.filter((p) => p.id !== staff.id),
     ...people.filter((p) => p.id === staff.id),
   ].map((p) => ({ id: p.id, name: p.display_name }));
+  const makerIds = people.filter((p) => makesMockups(p.role)).map((p) => p.id);
   return (
     <AdminShell staff={staff}>
       <HqRefresh everyMs={HQ_REFRESH_MS} />
@@ -102,6 +104,7 @@ export default async function HqPage({
             locale={staff.panel_locale}
             viewer={staff}
             taskPeople={taskPeople}
+            makerIds={makerIds}
             preselect={to && /^[0-9a-f-]{36}$/.test(to) ? to : null}
             broadcast={
               broadcasts && audience

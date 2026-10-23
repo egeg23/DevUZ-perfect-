@@ -1,4 +1,6 @@
 import { record, type AuditAction } from "@/lib/admin/audit";
+import { orderClients } from "@/lib/admin/mockup-order-clients";
+import { NO_ORDER, makesMockups, orderColumns, orderProblem, type MockupOrderInput, type OrderProblem } from "@/lib/admin/mockup-order";
 import { wants } from "@/lib/admin/notify-prefs";
 import type { Staff } from "@/lib/admin/session";
 import {
@@ -61,11 +63,12 @@ import { serviceClient } from "@/lib/supabase";
  */
 
 const COLUMNS =
-  "id, title, body, creator_id, assignee_id, due_at, project_id, status, created_at, taken_at, closed_at, updated_at, last_event, last_actor_id, tg_chat, tg_message_id, notified_at, take_nudged_at, soon_nudged_at, overdue_sent_at, awaiting_date_at";
+  "id, title, body, creator_id, assignee_id, due_at, project_id, status, created_at, taken_at, closed_at, updated_at, last_event, last_actor_id, tg_chat, tg_message_id, notified_at, take_nudged_at, soon_nudged_at, overdue_sent_at, awaiting_date_at, mockup, mockup_lead_id, mockup_prospect_id, mockup_site, mockup_ref";
 
 type Person = {
   id: string;
   display_name: string;
+  role: string;
   telegram_user_id: number | null;
   notify_off: string[] | null;
   is_active: boolean;
@@ -78,22 +81,22 @@ async function peopleById(ids: readonly string[]): Promise<Map<string, Person>> 
   if (!db || !unique.length) return out;
   const { data } = await db
     .from("staff")
-    .select("id, display_name, telegram_user_id, notify_off, is_active")
+    .select("id, display_name, role, telegram_user_id, notify_off, is_active")
     .in("id", unique);
   for (const row of (data as Person[] | null) ?? []) out.set(row.id, row);
   return out;
 }
 
 /** Кому можно поставить задачу: все, кто работает, — и себе тоже. */
-export async function taskPeople(): Promise<{ id: string; display_name: string }[]> {
+export async function taskPeople(): Promise<{ id: string; display_name: string; role?: string }[]> {
   const db = serviceClient();
   if (!db) return [];
   const { data } = await db
     .from("staff")
-    .select("id, display_name")
+    .select("id, display_name, role")
     .eq("is_active", true)
     .order("display_name", { ascending: true });
-  return (data as { id: string; display_name: string }[] | null) ?? [];
+  return (data as { id: string; display_name: string; role?: string }[] | null) ?? [];
 }
 
 /** Проекты, к которым можно отнести задачу: все, что не закрыты. */
@@ -145,6 +148,8 @@ export type TaskBoard = {
   projects: Map<string, string>;
   /** История каждой задачи: шаги по времени. */
   steps: Map<string, TaskStep[]>;
+  /** Клиенты заказов макета: id лида или касания → подпись. */
+  clients?: Map<string, string>;
 };
 
 const STEP_COLUMNS = "id, task_id, actor_id, kind, old_due, new_due, at, changes";
@@ -217,9 +222,10 @@ export async function taskBoard(staffId: string, now: Date = new Date()): Promis
   const all = [...mineRows, ...givenRows];
   const steps = await taskSteps(all.map((t) => t.id));
   const refs = stepRefs(steps.values());
-  const [people, projects] = await Promise.all([
+  const [people, projects, clients] = await Promise.all([
     peopleById([...all.flatMap((t) => [t.creator_id, t.assignee_id]), ...refs.people]),
     projectLabels([...all.map((t) => t.project_id), ...refs.projects]),
+    orderClients(all.filter((t) => t.mockup).map((t) => ({ leadId: t.mockup_lead_id ?? null, prospectId: t.mockup_prospect_id ?? null }))),
   ]);
   return {
     offline: false,
@@ -228,6 +234,7 @@ export async function taskBoard(staffId: string, now: Date = new Date()): Promis
     names: new Map([...people.values()].map((p) => [p.id, p.display_name])),
     projects,
     steps,
+    clients,
   };
 }
 
@@ -283,11 +290,11 @@ export async function projectTasks(projectId: string): Promise<ProjectTasks> {
 
 /* ── Поставить ─────────────────────────────────────────────────────────── */
 
-export type CreateRefusal = "offline" | "title" | "body" | "assignee" | "project" | DueProblem | "failed";
+export type CreateRefusal = "offline" | "title" | "body" | "assignee" | "project" | DueProblem | OrderProblem | "failed";
 export type CreateResult = { ok: true; task: Task } | { ok: false; reason: CreateRefusal };
 
 export async function createTask(
-  input: { title: string; body: string; assigneeId: string; due: Date | null; projectId: string | null },
+  input: { title: string; body: string; assigneeId: string; due: Date | null; projectId: string | null; order?: MockupOrderInput },
   actor: Staff,
   ip: string,
   now: Date = new Date(),
@@ -307,6 +314,10 @@ export async function createTask(
   if (input.projectId && !(await projectLabels([input.projectId])).has(input.projectId)) {
     return { ok: false, reason: "project" };
   }
+  const order = input.order ?? NO_ORDER;
+  const orderBad = orderProblem(order, makesMockups(assignee.role));
+  if (orderBad) return { ok: false, reason: orderBad };
+  if (order.mockup && !(await orderClientExists(order))) return { ok: false, reason: "mockup_client" };
 
   const self = assignee.id === actor.id;
   const at = now.toISOString();
@@ -327,6 +338,7 @@ export async function createTask(
       last_actor_id: actor.id,
       // Себе бот о новой задаче не пишет: человек только что её поставил.
       notified_at: self ? at : null,
+      ...orderColumns(order),
     })
     .select(COLUMNS)
     .single();
@@ -342,9 +354,19 @@ export async function createTask(
     targetType: "task",
     targetId: task.id,
     ip,
-    meta: { assignee: assignee.id, due_at: task.due_at, project: task.project_id },
+    meta: { assignee: assignee.id, due_at: task.due_at, project: task.project_id, ...(task.mockup ? { mockup: true } : {}) },
   });
   return { ok: true, task };
+}
+
+/** Клиент заказа есть в базе: лид или касание по id из поиска. */
+async function orderClientExists(order: MockupOrderInput): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const { data } = order.leadId
+    ? await db.from("leads").select("id").eq("id", order.leadId).maybeSingle()
+    : await db.from("prospects").select("id").eq("id", order.prospectId ?? "").maybeSingle();
+  return Boolean(data);
 }
 
 /** Сколько человек можно отметить в одной постановке. */
@@ -368,7 +390,7 @@ export type CreateManyResult =
  * середине честно возвращает, сколько не записалось.
  */
 export async function createTasks(
-  input: { title: string; body: string; assigneeIds: readonly string[]; due: Date | null; projectId: string | null },
+  input: { title: string; body: string; assigneeIds: readonly string[]; due: Date | null; projectId: string | null; order?: MockupOrderInput },
   actor: Staff,
   ip: string,
   now: Date = new Date(),
@@ -379,6 +401,10 @@ export async function createTasks(
   if (ids.length > 1) {
     const people = await peopleById(ids);
     if (ids.some((id) => !people.get(id)?.is_active)) return { ok: false, reason: "assignee" };
+    // Заказ макета — до первой записи: иначе одному задача ушла бы, а
+    // владельцу в той же постановке — нет.
+    const bad = orderProblem(input.order ?? NO_ORDER, ids.some((id) => makesMockups(people.get(id)?.role)));
+    if (bad) return { ok: false, reason: bad };
   }
 
   const tasks: Task[] = [];

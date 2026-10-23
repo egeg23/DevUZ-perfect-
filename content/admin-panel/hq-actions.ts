@@ -49,6 +49,17 @@ export const hqTaskDict = defineDict({
   errFar: { ru: "Срок дальше года — проверьте дату.", uz: "Muddat bir yildan uzoq — sanani tekshiring.", pl: "Termin dalej niż za rok — sprawdź datę." },
   errFailed: { ru: "Не записалось — попробуйте ещё раз.", uz: "Saqlanmadi — qayta urinib ko‘ring.", pl: "Nie zapisano — spróbuj ponownie." },
   errForbidden: { ru: "Нет доступа.", uz: "Ruxsat yo‘q.", pl: "Brak dostępu." },
+  errMockup: {
+    ru: "Ответьте на «Заказ макета»: да или нет.",
+    uz: "«Maket buyurtmasi» ga javob bering: ha yoki yo‘q.",
+    pl: "Odpowiedz na «Zlecenie makiety»: tak lub nie.",
+  },
+  errMockupClient: {
+    ru: "Выберите клиента заказа из поиска.",
+    uz: "Buyurtma mijozini qidiruvdan tanlang.",
+    pl: "Wybierz klienta zlecenia z wyszukiwania.",
+  },
+  errMockupSite: { ru: "Укажите сайт клиента.", uz: "Mijoz saytini ko‘rsating.", pl: "Podaj stronę klienta." },
 });
 
 export const broadcastDict = defineDict({
