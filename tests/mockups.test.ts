@@ -14,6 +14,7 @@ import { cases } from "@/content/cases";
 import { mockupsDict, mockupNicheDict } from "@/content/admin-panel/mockups";
 import {
   SHOWCASE_LOCK,
+  SHOWCASE_OWNER_KEY,
   SHOWCASE_NICHE,
   assignsMockups,
   clientMessage,
@@ -117,7 +118,8 @@ test("раздел видят все роли; пароль выдаёт люб�
 test("собранных ботом для касаний в списке нет; фильтра и пометки «для касания» тоже", () => {
   // Владелец, 09.10.2026: «Убери из макетов „для касаний“… чтобы менеджеры не путались».
   const store = read("lib/admin/mockups-store.ts");
-  assert.match(store, /if \(row\.auto === true\) continue;/);
+  assert.match(store, /const protoRows = \(data \?\? \[\]\)\.filter\(\(r\) => r\.auto !== true\);/);
+  assert.match(store, /for \(const row of protoRows\)/);
   const list = read("components/admin/mockup-list.tsx");
   assert.doesNotMatch(list, /"auto"|tagAuto|filterAuto/);
   assert.doesNotMatch(read("content/admin-panel/mockups.ts"), /filterAuto|tagAuto/);
@@ -222,7 +224,7 @@ test("ответственного назначают руководитель �
 
 test("отправка клиенту — первая из mockup_offers у каждого макета, не только у открытых", () => {
   const store = read("lib/admin/mockups-store.ts");
-  assert.match(store, /const refs = \(data \?\? \[\]\)\.filter\(\(r\) => r\.auto !== true\)\.map\(\(r\) => `p:\$\{r\.id\}`\);/);
+  assert.match(store, /const refs = \[\.\.\.protoRows\.map\(\(r\) => `p:\$\{r\.id\}`\), \.\.\.showcaseRefs\];/);
   assert.match(store, /firstSends\(refs\)/);
   assert.match(store, /sentAt: sends\.get\(`p:\$\{id\}`\)\?\.sent_at \?\? null/);
   const list = read("components/admin/mockup-list.tsx");
@@ -294,4 +296,31 @@ test("«Показал макет» — у отправки в «Макетах�
     new Map(),
   );
   assert.equal(sends.get("r1")?.[0].prospectId, "p1");
+});
+
+/**
+ * Владелец, 23.10.2026: «Нужно добавить в панели в раздел макеты
+ * ответственного за макет менеджера». У прототипов строка уже была (Александр,
+ * 15.10.2026), у макетов витрины, собранных руками, — нет.
+ */
+test("ответственный и «Кому ушёл» — у макетов витрины тоже", () => {
+  const store = read("lib/admin/mockups-store.ts");
+  // Отправки витрины читаются тем же запросом, что у прототипов.
+  assert.match(store, /const showcaseRefs = showcaseCases\(\)\.map\(\(item\) => `s:\$\{item\.slug\}`\);/);
+  assert.match(store, /owner: ownerOf\(ref\),\n\s+sentAt: sends\.get\(ref\)\?\.sent_at \?\? null,\n\s+sends: sendsByRef\.get\(ref\) \?\? \[\],/);
+  // Назначенный руками у витрины — строка stats_snapshots, своей строки в базе у неё нет.
+  assert.equal(SHOWCASE_OWNER_KEY, "showcase-owner:");
+  const set = between(store, "export async function setMockupOwner(", "/** Своя цена акции");
+  const showcase = between(set, 'if (target.kind === "showcase") {', 'const { data: proto, error }');
+  assert.ok(set.indexOf("assignsMockups(staff.role)") < set.indexOf('target.kind === "showcase"'), "роль — до витрины");
+  assert.ok(set.indexOf("is_active") < set.indexOf('target.kind === "showcase"'), "работающий — до витрины");
+  assert.match(showcase, /showcaseCases\(\)\.find/, "только проект витрины, а не любой ключ");
+  assert.match(showcase, /record\("mockup\.owner"/);
+  assert.match(showcase, /\.delete\(\)\.eq\("key", key\)/, "пустой — снять назначение");
+  // Строка ответственного — у каждого макета, а не только у прототипа.
+  const list = read("components/admin/mockup-list.tsx");
+  assert.doesNotMatch(list, /row\.kind === "proto" \? \(\s*<p[^>]*data-mockup-owner/);
+  assert.match(list, /t\.notSentShowcase/);
+  // «Мои макеты» на «Главной» менеджера — по тому же назначению.
+  assert.match(read("lib/admin/hq-my-store.ts"), /target\?\.kind === "showcase" \? \(showcaseSet\.get\(target\.slug\) \?\? null\)/);
 });

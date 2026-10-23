@@ -101,7 +101,7 @@ export type MockupRow = {
   autoClosed?: boolean;
   /** Своя цена акции 48 часов (protos.facts.promo): бот пишет клиенту её, а не общие цены. */
   promo?: { price: number; regular: number } | null;
-  /** Ответственный за макет (mockupOwner). null — не нашли; у витрины поля нет. */
+  /** Ответственный за макет (mockupOwner). null — не нашли. */
   owner?: MockupOwner | null;
   /** Первая отправка клиенту с рабочего аккаунта (mockup_offers.sent_at). null — не отправлен. */
   sentAt?: string | null;
@@ -210,6 +210,12 @@ export function mockupOwner(
   }
   return null;
 }
+
+/**
+ * Ответственный витрины, назначенный руками: stats_snapshots
+ * «showcase-owner:<проект>», payload { staffId }. У прототипа — protos.owner_staff_id.
+ */
+export const SHOWCASE_OWNER_KEY = "showcase-owner:";
 
 /** Кто назначает ответственного: руководитель и владелец. Менеджер видит, но не меняет. */
 export function assignsMockups(role: Role): boolean {

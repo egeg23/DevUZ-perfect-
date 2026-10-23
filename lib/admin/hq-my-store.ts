@@ -1,4 +1,5 @@
 import { OPEN_TASK, type HqProspect } from "@/lib/admin/hq";
+import { showcaseOwners } from "@/lib/admin/mockups-store";
 import {
   contactsOf,
   hotOf,
@@ -157,7 +158,7 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
   const none = Promise.resolve({ data: [] as Record<string, unknown>[] });
   const chunk = <T>(ids: readonly T[]) => ids.slice(0, 300);
 
-  const [offerLeadsRes, talkRes, protosRes, mockLeadsRes, mockProspectsRes] = await Promise.all([
+  const [offerLeadsRes, talkRes, protosRes, mockLeadsRes, mockProspectsRes, showcaseSet] = await Promise.all([
     offerIds.length ? db.from("leads").select("id, company, contact_name, request_no").in("id", offerIds) : none,
     inboxProspects.length
       ? db
@@ -173,6 +174,7 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
       : none,
     offerLeadIds.length ? db.from("leads").select("id, assigned_staff_id").in("id", chunk(offerLeadIds)) : none,
     offerProspectIds.length ? db.from("prospects").select("id, touched_by").in("id", chunk(offerProspectIds)) : none,
+    offerRows.some((r) => String(r.mockup_ref).startsWith("s:")) ? showcaseOwners() : Promise.resolve(new Map<string, string>()),
   ]);
 
   // Тёплые, предложенные ему.
@@ -215,7 +217,7 @@ export async function loadMyHq(viewer: Pick<Staff, "id">, now: Date = new Date()
     const prospectId = str(r.prospect_id) ?? (proto ? str(proto.prospect_id) : null);
     const owner = mockupOwnerId(
       {
-        set: proto ? str(proto.owner_staff_id) : null,
+        set: proto ? str(proto.owner_staff_id) : target?.kind === "showcase" ? (showcaseSet.get(target.slug) ?? null) : null,
         lead: leadId ? (mockLeadOwner.get(leadId) ?? null) : null,
         touch: prospectId ? (toucher.get(prospectId) ?? null) : null,
         made: proto ? str(proto.created_by) : null,
