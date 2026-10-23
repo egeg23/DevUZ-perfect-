@@ -38,7 +38,12 @@ export async function tellLeadOwner(
   input: {
     username: string | null | undefined;
     text: string;
-    history: readonly ChatMessage[];
+    /**
+     * Новые реплики разговора — дописываются в карточку, а не заменяют её:
+     * сессия бота живёт в памяти и после перезапуска знает только последнее.
+     * 23.10.2026 так стёрлась переписка FloraEdu — 7 реплик стали одной.
+     */
+    turns: readonly ChatMessage[];
     /** Кому слова клиента уже ушли «📩 Обращением в бота» — второй строки нет. */
     skipChats?: ReadonlySet<number>;
   },
@@ -52,7 +57,7 @@ export async function tellLeadOwner(
   const since = new Date(now.getTime() - OWNER_LEAD_DAYS * 24 * 3600_000).toISOString();
   const { data: lead } = await db
     .from("leads")
-    .select("id, request_no, company, contact_name, assigned_staff_id, status")
+    .select("id, request_no, company, contact_name, assigned_staff_id, status, transcript")
     .ilike("tg_username", username)
     .not("assigned_staff_id", "is", null)
     .in("status", ["taken", "new"])
@@ -62,8 +67,11 @@ export async function tellLeadOwner(
     .maybeSingle();
   if (!lead?.assigned_staff_id) return false;
 
-  // Переписка — в карточку: хозяин лида читает её в панели.
-  await db.from("leads").update({ transcript: input.history }).eq("id", lead.id);
+  // Переписка — в карточку: хозяин лида читает её в панели. Только дописать.
+  if (input.turns.length) {
+    const stored = Array.isArray(lead.transcript) ? (lead.transcript as ChatMessage[]) : [];
+    await db.from("leads").update({ transcript: [...stored, ...input.turns] }).eq("id", lead.id);
+  }
 
   if (!messageWindow(now)) return false;
   const { data: staff } = await db
