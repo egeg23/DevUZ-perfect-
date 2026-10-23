@@ -15,6 +15,7 @@ import { runNoShowWeek } from "@/lib/admin/sales-stages-store";
 import { refreshXp } from "@/lib/admin/levels-store";
 import { runSilence } from "@/lib/admin/silence-store";
 import { sendStaffReport } from "@/lib/admin/staff-report-store";
+import { sendHelperStats } from "@/lib/admin/helper-stats-store";
 import { sendStaffWeek } from "@/lib/admin/staff-week-store";
 import { sendNightReplies } from "@/lib/admin/night-replies-store";
 import { sendNightInbox } from "@/lib/qualify/bot-inbox-store";
@@ -311,6 +312,9 @@ async function sweep(): Promise<Response> {
   // как порция дня закрыта (lib/admin/staff-report-store).
   after(async () => {
     await sendStaffReport(new Date()).catch((error) => console.error("отчёт по сотрудникам:", error));
+    // Кто сколько спросил помощника в боте — каждый день с 18:00
+    // (lib/admin/helper-stats-store).
+    await sendHelperStats(new Date()).catch((error) => console.error("помощник, сводка:", error));
   });
   after(async () => {
     // Дожим касаний — первым: он ограничен рабочими часами и тремя
