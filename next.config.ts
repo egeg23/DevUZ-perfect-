@@ -80,6 +80,9 @@ const config: NextConfig = {
   async redirects() {
     return [
       { source: "/index.:ext(html|htm|php)", destination: "/", statusCode: 301 },
+      // Список ступеней продажи стал разделом «Ступени продажи» в «Отчётах»
+      // (23.10.2026). Запрос с ?stage=&period= Next переносит сам.
+      { source: "/admin/hq/stages", destination: "/admin/stages", permanent: false },
       { source: "/:locale(ru|en|uz|zh|uk|pl)/index.:ext(html|htm|php)", destination: "/:locale", statusCode: 301 },
     ];
   },

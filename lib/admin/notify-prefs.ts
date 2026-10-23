@@ -114,18 +114,18 @@ export const NOTICES: Record<NoticeKind, { title: Tr; off: Tr; roles: readonly R
   talks: {
     title: { ru: "Ответы клиентов на касания", uz: "Mijozlarning aloqalarga javoblari", pl: "Odpowiedzi klientów na kontakty" },
     off: {
-      ru: "ответ клиента на касание и то, что он открыл прототип из письма, видны только в «Касаниях» — бот не позовёт",
-      uz: "mijozning aloqaga javobi va xatdagi prototipni ochgani faqat «Aloqalar»da ko‘rinadi — bot chaqirmaydi",
-      pl: "odpowiedź klienta na kontakt i to, że otworzył prototyp z wiadomości, widać tylko w «Kontaktach» — bot nie zawoła",
+      ru: "ответ клиента на касание и то, что он открыл прототип из письма, видны только в «Холодных касаниях» — бот не позовёт",
+      uz: "mijozning aloqaga javobi va xatdagi prototipni ochgani faqat «Sovuq aloqalar»da ko‘rinadi — bot chaqirmaydi",
+      pl: "odpowiedź klienta na kontakt i to, że otworzył prototyp z wiadomości, widać tylko w «Zimnych kontaktach» — bot nie zawoła",
     },
     roles: EVERYONE,
   },
   portion: {
     title: { ru: "Порция касаний на день", uz: "Aloqalarning kunlik to‘plami", pl: "Porcja kontaktów na dzień" },
     off: {
-      ru: "порция утром не приходит в Telegram, но остаётся в «Касаниях»",
-      uz: "kunlik to‘plam ertalab Telegram’ga kelmaydi, lekin «Aloqalar»da qoladi",
-      pl: "porcja nie przychodzi rano w Telegramie, ale zostaje w «Kontaktach»",
+      ru: "порция утром не приходит в Telegram, но остаётся в «Холодных касаниях»",
+      uz: "kunlik to‘plam ertalab Telegram’ga kelmaydi, lekin «Sovuq aloqalar»da qoladi",
+      pl: "porcja nie przychodzi rano w Telegramie, ale zostaje w «Zimnych kontaktach»",
     },
     roles: IN_QUEUE,
   },

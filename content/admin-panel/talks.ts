@@ -9,7 +9,7 @@ import { defineDict, plural } from "@/lib/admin/i18n";
  * их подписи на панели. Язык разговора — leadLocaleDict из stats.ts.
  */
 export const talksDict = defineDict({
-  title: { ru: "Надзор за перепиской", uz: "Yozishmalar nazorati", pl: "Nadzór nad korespondencją" },
+  title: { ru: "Разбор переписки", uz: "Yozishmalar tahlili", pl: "Analiza rozmów" },
   intro: {
     ru: "Каждый разговор, который затих больше часа назад, читает вторая модель — не та, что его вела. Она отвечает на четыре вопроса: что в нашем письме зацепило, какое возражение прозвучало, где разговор сломался и какой отсюда урок.",
     uz: "Bir soatdan ko‘proq oldin tinib qolgan har bir suhbatni ikkinchi model o‘qiydi — uni olib borgan model emas. U to‘rt savolga javob beradi: xatimizda nima e’tiborni tortdi, qanday e’tiroz bildirildi, suhbat qayerda buzildi va bundan qanday saboq olinadi.",

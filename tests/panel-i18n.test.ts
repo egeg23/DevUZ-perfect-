@@ -174,7 +174,7 @@ test("каркас панели рисуется на каждом языке, �
   for (const role of ROLES) {
     const ru = renderToStaticMarkup(createElement(AdminShell, { staff: staff("ru", role), children: "x" }));
     assert.match(ru, /Выйти/);
-    assert.match(ru, />Касания</);
+    assert.match(ru, />Холодные касания</);
     for (const locale of ["uz", "pl"] as const) {
       const html = renderToStaticMarkup(createElement(AdminShell, { staff: staff(locale, role), children: "x" }));
       // Названия языков в переключателе — каждое на самом себе.
@@ -184,7 +184,7 @@ test("каркас панели рисуется на каждом языке, �
         assert.ok(!CYRILLIC.test(label), `${locale} ${role}: русская подпись «${label}»`);
       }
       assert.match(html, locale === "uz" ? />Chiqish</ : />Wyloguj</);
-      assert.match(html, locale === "uz" ? />Aloqalar</ : />Kontakty</);
+      assert.match(html, locale === "uz" ? />Sovuq aloqalar</ : />Zimne kontakty</);
     }
   }
 });
