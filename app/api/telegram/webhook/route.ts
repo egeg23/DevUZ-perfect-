@@ -129,6 +129,7 @@ import { grade, isRight, questionsFor } from "@/lib/learn/quiz";
 import { saveAttempt } from "@/lib/learn/store";
 import { CIRCLE_NICHE_RU } from "@/lib/admin/sales-after-reply";
 import { secretOk } from "@/lib/secret-ok";
+import { tellLeadOwner } from "@/lib/qualify/lead-owner-notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -1176,6 +1177,12 @@ async function respond(
   } else {
     await sendMessage(chatId, copy.error);
   }
+
+  // Лид уже взят — слова клиента его хозяину, переписка — в карточку
+  // (lib/qualify/lead-owner-notify.ts). Не ждём: клиенту уже ответили.
+  void tellLeadOwner({ username: from?.username ?? null, text, history }).catch((error: unknown) => {
+    console.error("бот: хозяину лида не ушло", error instanceof Error ? error.message : error);
+  });
 
   session.transcript = history;
   session.resumed = true;
