@@ -8,7 +8,7 @@ import { CaseShots } from "@/components/cases/shots";
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { caseBySlug, caseDate, cases, casesByDate, type Case } from "@/content/cases";
+import { caseBySlug, caseDate, cases, casesOnSite, type Case } from "@/content/cases";
 import { getDictionary } from "@/content/dictionaries";
 import { company } from "@/content/company";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
@@ -69,8 +69,8 @@ export default async function CasePage({
     </nav>
   );
 
-  // «Следующий» — в том же порядке, что и список: от новых к старым.
-  const next = casesByDate[(casesByDate.findIndex((c) => c.slug === slug) + 1) % casesByDate.length];
+  // «Следующий» — в том же порядке, что и список (casesOnSite).
+  const next = casesOnSite[(casesOnSite.findIndex((c) => c.slug === slug) + 1) % casesOnSite.length];
 
   return (
     <>
