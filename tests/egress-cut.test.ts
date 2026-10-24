@@ -150,3 +150,20 @@ test("счёт трафика: у каждого запуска своя стр�
   assert.match(egress, /const RUN = `\$\{process\.pid\}-\$\{Date\.now\(\)\.toString\(36\)\}`;/);
   assert.match(egress, /key: `egress-tally:\$\{snap\.day\}:\$\{processName\(\)\}:\$\{RUN\}`/);
 });
+
+test("разборы: список и страница — из памяти, любая правка снимает сразу", () => {
+  // 23.10.2026: 1 626 чтений разборов за день — 100 МБ.
+  const store = read("lib/razbor/store.ts");
+  assert.match(store, /export const RAZBOR_MS = 10 \* 60_000;/);
+  assert.match(store, /memo\(`razbor:list:\$\{locale\}`, RAZBOR_MS/);
+  assert.match(store, /memo\(`razbor:slug:\$\{locale\}:\$\{slug\}`, RAZBOR_MS/);
+  // После записи — не до: иначе чтение посередине запомнит старое, и
+  // проверка карты сайта после публикации не найдёт новый разбор.
+  for (const fn of ["saveDraft", "publish", "unpublish", "remove", "saveArticles", "reject"]) {
+    const start = store.indexOf(`export async function ${fn}(`);
+    const body = store.slice(start, store.indexOf("\n}\n", start));
+    const forgot = body.lastIndexOf("forgetRazbors();");
+    assert.ok(forgot > body.lastIndexOf('from("razbors")'), `${fn}: память снимается после записи`);
+  }
+  assert.match(read("lib/razbor/foreign-run.ts"), /if \(!error\) \{\n\s+forgetRazbors\(\);/);
+});

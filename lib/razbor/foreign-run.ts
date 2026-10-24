@@ -14,7 +14,7 @@ import {
 } from "@/lib/razbor/foreign";
 import type { ForeignLocale } from "@/lib/razbor/model";
 import { isTender } from "@/lib/razbor/tender";
-import type { RazborArticle } from "@/lib/razbor/store";
+import { forgetRazbors, type RazborArticle } from "@/lib/razbor/store";
 import { serviceClient } from "@/lib/supabase";
 import { anthropic } from "@/lib/model-road";
 import { keywordResearch } from "@/lib/seo/keywords";
@@ -171,7 +171,10 @@ async function save(locale: ForeignLocale, row: Row, version: RazborArticle): Pr
       .from("razbors")
       .update({ [`slug_${locale}`]: slug, [`article_${locale}`]: version, [`${locale}_note`]: null })
       .eq("id", row.id);
-    if (!error) return { path: `/${locale}/razbor/${slug}` };
+    if (!error) {
+      forgetRazbors();
+      return { path: `/${locale}/razbor/${slug}` };
+    }
     if (error.code !== "23505" || row.slug) return `не записалась: ${error.message}`;
   }
   return "все адреса заняты";
