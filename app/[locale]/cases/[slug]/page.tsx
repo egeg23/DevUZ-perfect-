@@ -5,6 +5,8 @@ import { notFound, redirect } from "next/navigation";
 import { BeforeAfter } from "@/components/cases/before-after";
 import { PlayablePhone } from "@/components/cases/playable-phone";
 import { CaseShots } from "@/components/cases/shots";
+import { PrefillButton } from "@/components/chat/prefill-button";
+import { CaseTeaser } from "@/components/sections/case-teaser";
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
@@ -72,6 +74,21 @@ export default async function CasePage({
   // «Следующий» — в том же порядке, что и список (casesOnSite).
   const next = casesOnSite[(casesOnSite.findIndex((c) => c.slug === slug) + 1) % casesOnSite.length];
 
+  // Ролик сцены — тот же, что играет на карточке: сначала человек видит
+  // проект, а выбор «посмотреть вживую или хочу так же» — ниже.
+  const teaser = item.prototype?.teaser ?? item.teaser;
+  // Живой макет: прототип или витрина под паролем. Открытый (SamAuto) —
+  // одной кнопкой, остальные — «Запросить прототип» у менеджера и «У меня
+  // есть пароль» (владелец, 24.10.2026: «открывалась карточка проекта, а
+  // потом уже выбор»).
+  const live = item.prototype
+    ? { open: Boolean(item.prototype.open), href: caseProtoHref(item.prototype) }
+    : item.locked && item.url
+      ? { open: false, href: item.url }
+      : null;
+  const askUrl = `${company.salesTelegramUrl}?text=${encodeURIComponent(dict.cases.protoRequestText.replace("{name}", item.name))}`;
+  const button = "inline-flex items-center gap-2 rounded-xl bg-green px-5 py-3 font-semibold text-ink transition-colors hover:bg-white";
+
   return (
     <>
       <Container className={item.playable ? "pt-24" : "pt-36"}>
@@ -133,40 +150,9 @@ export default async function CasePage({
           </>
         )}
 
-        {/* Прототип — по паролю: войти или попросить пароль у менеджера в
-            Telegram. SamAuto владелец держит открытым — у него одна кнопка,
-            и пароль, выданный клиенту, её не закрывает (lib/proto/case-link). */}
-        {item.prototype ? (
-          <div className="mt-7">
-            <div className="flex flex-wrap gap-3">
-              <a
-                href={caseProtoHref(item.prototype)}
-                target="_blank"
-                rel="noopener"
-                className="inline-flex items-center gap-2 rounded-xl bg-green px-5 py-3 font-semibold text-ink transition-colors hover:bg-white"
-              >
-                {item.prototype.open ? dict.cases.protoBadge : dict.cases.protoEnter}
-                <span aria-hidden="true">↗</span>
-              </a>
-              {item.prototype.open ? null : (
-                <a
-                  href={company.salesTelegramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl border border-line px-5 py-3 font-semibold text-text transition-colors hover:border-green hover:text-green"
-                >
-                  {dict.cases.protoAsk}
-                  <span aria-hidden="true">↗</span>
-                </a>
-              )}
-            </div>
-            {item.prototype.open ? null : (
-              <p className="mt-3 max-w-xl text-[0.85rem] leading-relaxed text-faint">{dict.cases.protoHint}</p>
-            )}
-          </div>
-        ) : null}
-
-        {item.url ? (
+        {/* Витрина под паролем — не здесь: её ссылка ведёт на поле пароля,
+            она в «Что дальше» как «У меня есть пароль». */}
+        {item.url && !item.locked ? (
           <a
             href={item.url}
             target="_blank"
@@ -176,6 +162,21 @@ export default async function CasePage({
             {dict.cases.liveSite}
             <span aria-hidden="true">↗</span>
           </a>
+        ) : null}
+
+        {teaser ? (
+          <div className="mt-10 overflow-hidden rounded-2xl border border-line bg-ink">
+            <CaseTeaser
+              src={`${teaser}-16.mp4`}
+              poster={`${teaser.replace(/teaser$/, "poster")}-16.webp`}
+              className="hidden aspect-video w-full object-cover sm:block"
+            />
+            <CaseTeaser
+              src={`${teaser}-9.mp4`}
+              poster={`${teaser.replace(/teaser$/, "poster")}-9.webp`}
+              className="block aspect-[9/16] max-h-[78svh] w-full object-cover sm:hidden"
+            />
+          </div>
         ) : null}
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
@@ -237,6 +238,54 @@ export default async function CasePage({
             </div>
           </section>
         ) : null}
+
+        <section className="mt-14" aria-labelledby="case-next">
+          <h2 id="case-next" className="text-2xl font-bold">{dict.cases.nextTitle}</h2>
+          <div className={live ? "mt-6 grid gap-4 md:grid-cols-2" : "mt-6 grid gap-4"}>
+            {live ? (
+              <div className="flex flex-col rounded-2xl border border-line bg-surface p-6">
+                <h3 className="text-[1.15rem] font-semibold">{dict.cases.protoCardTitle}</h3>
+                <p className="mt-3 flex-1 text-[0.95rem] leading-relaxed text-muted">
+                  {live.open ? dict.cases.protoCardOpen : dict.cases.protoCardText}
+                </p>
+                <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+                  {live.open ? (
+                    <a href={live.href} target="_blank" rel="noopener" className={button}>
+                      {dict.cases.protoBadge}
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  ) : (
+                    <>
+                      <a href={askUrl} target="_blank" rel="noopener noreferrer" className={button}>
+                        {dict.cases.protoRequest}
+                        <span aria-hidden="true">↗</span>
+                      </a>
+                      <a
+                        href={live.href}
+                        target="_blank"
+                        rel="noopener"
+                        className="text-[0.92rem] text-muted underline decoration-line underline-offset-4 transition-colors hover:text-green"
+                      >
+                        {dict.cases.protoHave}
+                      </a>
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : null}
+            <div className="flex flex-col rounded-2xl border border-green/30 bg-surface p-6">
+              <h3 className="text-[1.15rem] font-semibold">{dict.cases.sameTitle}</h3>
+              <p className="mt-3 flex-1 text-[0.95rem] leading-relaxed text-muted">{dict.cases.sameText}</p>
+              <div className="mt-6">
+                <PrefillButton
+                  label={dict.cases.sameButton}
+                  message={dict.cases.sameMessage.replace("{name}", item.name)}
+                  className={button}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div className="mt-14 grid gap-10 lg:grid-cols-[1.7fr_1fr]">
           <div>
