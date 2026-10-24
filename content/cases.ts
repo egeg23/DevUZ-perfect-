@@ -93,7 +93,12 @@ export type Case = {
    * расширения: рядом лежат `-16.mp4` и `-9.mp4` (горизонтальный и
    * вертикальный) и постеры `poster-16.webp`, `poster-9.webp` в той же папке.
    */
-  prototype?: { href: `/proto/${string}`; teaser: `/cases/${string}/teaser` };
+  prototype?: {
+    href: `/proto/${string}`;
+    teaser: `/cases/${string}/teaser`;
+    /** Открыт без пароля по слову владельца (facts.open): одна кнопка «Открыть прототип». */
+    open?: true;
+  };
   /**
    * Ролик сцены без прототипа с карточки — у витрины под паролем (Engelberg):
    * карточка играет ролик, а ведёт, как обычно, на страницу кейса. Файлы те
@@ -2551,7 +2556,7 @@ export const cases: Case[] = [
     // кейс, а чтобы после нажатия открывался этот прототип»). Макет без пароля
     // (facts.open), сцена зашифрована: ключ отдаёт только сам макет.
     url: "https://devuz.studio/proto/01nM7k5zLyQWcrikcaoIvihCuzy4-vct7wAzCjqo8Rs",
-    prototype: { href: "/proto/01nM7k5zLyQWcrikcaoIvihCuzy4-vct7wAzCjqo8Rs", teaser: "/cases/samauto/teaser" },
+    prototype: { href: "/proto/01nM7k5zLyQWcrikcaoIvihCuzy4-vct7wAzCjqo8Rs", teaser: "/cases/samauto/teaser", open: true },
     tier: 2,
     niches: ["автодилер", "автосалон", "грузовики", "коммерческий транспорт", "автобусы", "спецтехника", "автозавод", "car dealer", "commercial vehicles", "trucks", "avtosalon", "yuk mashinalari", "汽车经销商"],
     // Ниши «автосалон» в классификаторе нет, а автосервису завод — не пример.

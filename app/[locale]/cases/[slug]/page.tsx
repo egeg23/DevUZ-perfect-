@@ -10,6 +10,7 @@ import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { caseBySlug, caseDate, cases, casesByDate, type Case } from "@/content/cases";
 import { getDictionary } from "@/content/dictionaries";
+import { company } from "@/content/company";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { isLocale, locales, localeHref, t, type Locale } from "@/lib/i18n";
 import { breadcrumbSchema, caseSchema, jsonLdGraph } from "@/lib/schema";
@@ -130,6 +131,38 @@ export default async function CasePage({
             </p>
           </>
         )}
+
+        {/* Прототип — по паролю: войти или попросить пароль у менеджера в
+            Telegram. SamAuto владелец держит открытым — у него одна кнопка. */}
+        {item.prototype ? (
+          <div className="mt-7">
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={item.prototype.href}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center gap-2 rounded-xl bg-green px-5 py-3 font-semibold text-ink transition-colors hover:bg-white"
+              >
+                {item.prototype.open ? dict.cases.protoBadge : dict.cases.protoEnter}
+                <span aria-hidden="true">↗</span>
+              </a>
+              {item.prototype.open ? null : (
+                <a
+                  href={company.salesTelegramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-line px-5 py-3 font-semibold text-text transition-colors hover:border-green hover:text-green"
+                >
+                  {dict.cases.protoAsk}
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )}
+            </div>
+            {item.prototype.open ? null : (
+              <p className="mt-3 max-w-xl text-[0.85rem] leading-relaxed text-faint">{dict.cases.protoHint}</p>
+            )}
+          </div>
+        ) : null}
 
         {item.url ? (
           <a
