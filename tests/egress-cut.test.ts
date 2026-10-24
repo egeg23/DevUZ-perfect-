@@ -50,7 +50,7 @@ test("«Главная»: медленное — из памяти, отметк
   const page = read("app/admin/hq/page.tsx");
   assert.match(page, /memo\("hq:broadcast:staff", HISTORY_MS/);
   assert.match(page, /memo\("hq:audience", SLOW_MS/);
-  assert.match(read("lib/admin/sales-stages-store.ts"), /forget\("hq:deals:"\);\n {2}return "ok";/);
+  assert.match(read("lib/admin/sales-stages-store.ts"), /forget\("hq:deals:"\);\n {2}forget\("deals:"\);\n {2}return "ok";/);
   assert.match(read("lib/admin/broadcast-store.ts"), /forget\("hq:broadcast:"\);/);
   assert.match(read("lib/admin/bot-users-store.ts"), /forget\("hq:audience"\);/);
   assert.ok(SLOW_MS <= 5 * 60_000, "медленное — не дольше пяти минут");
@@ -166,4 +166,20 @@ test("разборы: список и страница — из памяти, л
     assert.ok(forgot > body.lastIndexOf('from("razbors")'), `${fn}: память снимается после записи`);
   }
   assert.match(read("lib/razbor/foreign-run.ts"), /if \(!error\) \{\n\s+forgetRazbors\(\);/);
+});
+
+test("сделки — одно чтение на 10 минут для всех, отметка ступени снимает", () => {
+  // 23.10.2026: 274 чтения сделок за день — ~70 МБ.
+  const store = read("lib/admin/sales-stages-store.ts");
+  assert.match(store, /export const DEALS_MS = 10 \* 60_000;/);
+  assert.match(store, /if \(Math\.abs\(Date\.now\(\) - now\.getTime\(\)\) < 60_000\) \{\n\s+return memo\(`deals:\$\{days\}:\$\{limit\}`, DEALS_MS, \(\) => readDeals\(now, days, limit\)\);/);
+  assert.match(store, /forget\("hq:deals:"\);\n\s+forget\("deals:"\);/);
+});
+
+test("пул порции: находки — только «есть или нет»", () => {
+  // 23.10.2026: 84 чтения пула с полным разбором — 29 МБ за день.
+  const store = read("lib/admin/portion-store.ts");
+  const pool = store.slice(store.indexOf("export async function pool("), store.indexOf("export type PortionAssign"));
+  assert.match(pool, /\.select\("id, host, contacts, status, f0:findings->0->>code"\)/);
+  assert.doesNotMatch(pool, /select\("[^"]*(^|, )findings(,|")/);
 });
