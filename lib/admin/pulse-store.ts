@@ -1,5 +1,6 @@
 import { record } from "@/lib/admin/audit";
 import type { Staff } from "@/lib/admin/session";
+import { SLOW_MS, memo } from "@/lib/memo";
 import { serviceClient } from "@/lib/supabase";
 import {
   canSetPlan,
@@ -35,7 +36,26 @@ export type PulseRows = {
   expenses: ExpenseLite[];
 };
 
+/**
+ * Строки пульса за 90 дней — из памяти на 5 минут.
+ *
+ * Трафик базы, 23.10.2026: недельные блоки внизу «Главной» и «Финансов»
+ * (`DashboardHome`) читали все лиды с хозяином и журнал за 90 дней на
+ * каждый показ страницы — 44 раза за день, ~25 МБ. Цифры недели за пять
+ * минут не меняются; ошибка не запоминается.
+ */
 export async function loadPulseRows(now: Date): Promise<PulseRows> {
+  if (Math.abs(Date.now() - now.getTime()) < 60_000) {
+    return memo("pulse:rows", SLOW_MS, async () => {
+      const rows = await readPulseRows(now);
+      if (rows.offline) throw new Error("пульс не собрался");
+      return rows;
+    }).catch(() => readPulseRows(now));
+  }
+  return readPulseRows(now);
+}
+
+async function readPulseRows(now: Date): Promise<PulseRows> {
   const db = serviceClient();
   const empty: PulseRows = { offline: true, leads: [], events: [], messages: [], projects: [], payments: [], expenses: [] };
   if (!db) return empty;
