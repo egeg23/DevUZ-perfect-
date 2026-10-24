@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { LogoMark } from "@/components/brand/logo";
+import { CaseTeaser } from "@/components/sections/case-teaser";
 import { CodeBoot } from "@/components/ui/code-boot";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
@@ -77,15 +78,9 @@ export function CaseCard({
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`${proto.teaser.replace(/teaser$/, "poster")}-16.webp`} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
-            <video
+            <CaseTeaser
               src={`${proto.teaser}-16.mp4`}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              disablePictureInPicture
-              aria-hidden="true"
+              poster={`${proto.teaser.replace(/teaser$/, "poster")}-16.webp`}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04] motion-reduce:hidden"
             />
             <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
