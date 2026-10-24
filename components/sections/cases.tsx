@@ -50,6 +50,11 @@ export function CaseCard({
 }) {
   const accent = ACCENTS[item.accent];
   const proto = item.prototype;
+  // Ролик — у прототипа или у витрины под паролем; без ролика — первый
+  // снимок экрана макета, если он есть, а не одна типографика.
+  const teaser = proto?.teaser ?? item.teaser;
+  const cover = !teaser && item.shots ? `/cases/${item.slug}/shot-1-desktop.webp` : null;
+  const media = Boolean(teaser || cover);
 
   const card = (
     <Shell
@@ -69,21 +74,28 @@ export function CaseCard({
         className={cn(
           "relative flex items-center justify-center overflow-hidden bg-gradient-to-br to-ink",
           accent.from,
-          featured || proto ? "h-56" : "h-44",
+          featured || media ? "h-56" : "h-44",
         )}
       >
         {/* Кейс с живым прототипом: вместо типографики — ролик сцены 60 к/с.
             Без звука и по кругу; при «меньше движения» — только постер. */}
-        {proto ? (
+        {teaser ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${proto.teaser.replace(/teaser$/, "poster")}-16.webp`} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={`${teaser.replace(/teaser$/, "poster")}-16.webp`} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
             <CaseTeaser
-              src={`${proto.teaser}-16.mp4`}
-              poster={`${proto.teaser.replace(/teaser$/, "poster")}-16.webp`}
+              src={`${teaser}-16.mp4`}
+              poster={`${teaser.replace(/teaser$/, "poster")}-16.webp`}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04] motion-reduce:hidden"
             />
             <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
+          </>
+        ) : null}
+        {cover ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cover} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]" />
+            <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/40" />
           </>
         ) : null}
         {/* Превью — типографика, а не скриншот и не чужой логотип.
@@ -100,7 +112,7 @@ export function CaseCard({
             "pointer-events-none absolute -left-4 top-1/2 -translate-y-1/2 select-none font-display font-extrabold leading-none tracking-tighter",
             featured ? "text-[11rem]" : "text-[8.5rem]",
             accent.ghost,
-            proto && "hidden",
+            media && "hidden",
           )}
         >
           {item.monogram}

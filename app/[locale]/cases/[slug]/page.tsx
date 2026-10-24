@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { BeforeAfter } from "@/components/cases/before-after";
 import { PlayablePhone } from "@/components/cases/playable-phone";
+import { CaseShots } from "@/components/cases/shots";
 import { ContactSection } from "@/components/sections/contact";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
@@ -183,6 +184,22 @@ export default async function CasePage({
                 .replace("{date}", monthOf(item.compare.taken, locale))
                 .replace("{site}", item.compare.site)}
             </p>
+          </section>
+        ) : null}
+
+        {/* Снимки экранов макета: посмотреть, что сделано, не открывая его. */}
+        {item.shots ? (
+          <section className="mt-14">
+            <h2 className="text-2xl font-bold">{dict.cases.shotsTitle}</h2>
+            <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-muted">{dict.cases.shotsHint}</p>
+            <div className="mt-6">
+              <CaseShots
+                slug={item.slug}
+                count={item.shots}
+                alt={dict.cases.shotsAlt.replace("{name}", item.name)}
+                labels={{ desktop: dict.cases.compareDesktop, mobile: dict.cases.compareMobile }}
+              />
+            </div>
           </section>
         ) : null}
 
