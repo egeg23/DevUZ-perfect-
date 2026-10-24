@@ -13,6 +13,7 @@ import { getDictionary } from "@/content/dictionaries";
 import { company } from "@/content/company";
 import { MOCKUP_TERMS_PATH } from "@/content/mockup-terms";
 import { isLocale, locales, localeHref, t, type Locale } from "@/lib/i18n";
+import { caseProtoHref } from "@/lib/proto/case-link";
 import { breadcrumbSchema, caseSchema, jsonLdGraph } from "@/lib/schema";
 import { buildMetadata } from "@/lib/seo";
 
@@ -133,12 +134,13 @@ export default async function CasePage({
         )}
 
         {/* Прототип — по паролю: войти или попросить пароль у менеджера в
-            Telegram. SamAuto владелец держит открытым — у него одна кнопка. */}
+            Telegram. SamAuto владелец держит открытым — у него одна кнопка,
+            и пароль, выданный клиенту, её не закрывает (lib/proto/case-link). */}
         {item.prototype ? (
           <div className="mt-7">
             <div className="flex flex-wrap gap-3">
               <a
-                href={item.prototype.href}
+                href={caseProtoHref(item.prototype)}
                 target="_blank"
                 rel="noopener"
                 className="inline-flex items-center gap-2 rounded-xl bg-green px-5 py-3 font-semibold text-ink transition-colors hover:bg-white"

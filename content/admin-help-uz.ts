@@ -1455,6 +1455,7 @@ export const uz: HelpCopy = {
             "Har bir bosish yangi parol beradi. Avval berilganlari bekor qilinmaydi va o‘z soatigacha ishlaydi, shuning uchun har bir mijozga o‘z parolini bergan ma’qul. Qatordagi «mijoz paroli … gacha» oxirgi berilgan parol qaysi soatgacha ishlashini ko‘rsatadi.",
             "Parol faqat bir marta, bosilgandan keyin darhol ko‘rsatiladi. Bizda faqat uning izi saqlanadi, parolni keyin o‘qib bo‘lmaydi. Yo‘qotib qo‘ysangiz, yangisini yarating.",
             "**«Mijoz uchun nusxalash»** maket tilidagi tayyor matnni nusxalaydi: havola, parol, u Toshkent vaqti bilan qaysi soatgacha ishlashi va maketdan foydalanish shartlari havolasi. Uni darhol mijozga yuborish mumkin. **«Parolni nusxalash»** faqat besh raqamni nusxalaydi.",
+            "Studiya sayti keyslarda parolsiz ko‘rsatadigan maketni (hozir bu SamAuto) parol faqat to‘g‘ridan-to‘g‘ri havola bo‘yicha, ya’ni mijozga ketgan havola bo‘yicha yopadi. Keys sahifasida yoki bosh sahifadagi rolik ostida «Prototipni ochish» tugmasini bosgan sayt mehmoni maketni parolsiz ko‘radi, hatto parol allaqachon berilgan bo‘lsa ham: keys ishimizni hammaga ko‘rsatadi. Bunday ochilishlar ko‘rsatish jurnaliga yozilmaydi va «mijoz maketni ochdi» qatori kelmaydi: bu mijoz emas, sayt mehmoni.",
           ],
         },
         {

@@ -80,5 +80,5 @@ test("сайт как приложение: манифест и service worker �
   const serve = read("lib/proto/serve.ts");
   assert.match(serve, /"Content-Type": protoContentType\(path\)/);
   // «Открыть» из раздела «Макеты» (доступ команды) тоже не идёт в журнал.
-  assert.match(serve, /const countable = !isQuietProtoPath\(path\) && access !== "team";\s*if \(countable && !isPreviewFetch/);
+  assert.match(serve, /const countable = !isQuietProtoPath\(path\) && access !== "team" && access !== "case";\s*if \(countable && !isPreviewFetch/);
 });

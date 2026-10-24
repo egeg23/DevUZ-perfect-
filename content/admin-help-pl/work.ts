@@ -160,6 +160,7 @@ export const workSections: Record<string, HelpEntry> = {
           "Każde kliknięcie daje nowe hasło. Wydane wcześniej nie są anulowane i działają do swojej godziny, dlatego każdemu klientowi lepiej dać jego własne. «hasło klienta do …» w wierszu pokazuje, do której godziny działa ostatnie wydane.",
           "Hasło pokazuje się tylko raz, zaraz po kliknięciu. U nas zapisany jest tylko jego odcisk, hasła nie da się potem odczytać. Zgubione? Wygeneruj nowe.",
           "**«Kopiuj dla klienta»** kopiuje gotowy tekst w języku makiety: link, hasło, do której godziny czasu Taszkentu działa i link do warunków korzystania z makiety. Można go od razu wysłać klientowi. **«Kopiuj hasło»** kopiuje tylko pięć cyfr.",
+          "Makietę, którą strona studia pokazuje w realizacjach bez hasła (teraz to SamAuto), hasło zamyka tylko pod bezpośrednim linkiem, tym, który poszedł do klienta. Gość strony, który kliknął «Otwórz prototyp» na stronie realizacji albo pod filmem na stronie głównej, widzi makietę bez hasła, nawet jeśli hasło już wydano: realizacja pokazuje naszą pracę wszystkim. Takie otwarcia nie trafiają do dziennika wyświetleń i nie przychodzi wiersz «klient otworzył makietę»: to gość strony, a nie klient.",
         ],
       },
       {
