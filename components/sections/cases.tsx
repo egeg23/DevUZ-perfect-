@@ -182,7 +182,7 @@ export function CaseCard({
 
         {proto ? (
           <span className={cn("proto-badge absolute left-4 top-4 rounded-md border bg-ink/60 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.14em] backdrop-blur-sm", accent.ring, accent.text)}>
-            ▶ {dict.cases.protoBadge} ↗
+            ▶ {dict.cases.protoTag}
           </span>
         ) : null}
 
@@ -220,18 +220,12 @@ export function CaseCard({
 }
 
 /**
- * Карточка ведёт на страницу кейса, а кейс с живым прототипом — прямо в
- * прототип, в новой вкладке (владелец, 21.10.2026, про SamAuto: «не просто
- * кейс, а чтобы после нажатия открывался этот прототип»).
+ * Карточка всегда ведёт на страницу кейса, и кейс с прототипом тоже: там
+ * «Войти по паролю» и «Получить пароль у менеджера» (владелец, 24.10.2026:
+ * «Разве я не должен сначала провалиться внутрь карточки в кейсах, а уже
+ * там кнопкой перейти в макет по паролю»).
  */
 function Shell({ item, locale, className, children }: { item: Case; locale: Locale; className: string; children: ReactNode }) {
-  if (item.prototype) {
-    return (
-      <a href={item.prototype.href} target="_blank" rel="noopener" className={className}>
-        {children}
-      </a>
-    );
-  }
   return (
     <Link href={localeHref(locale, `cases/${item.slug}`)} className={className}>
       {children}

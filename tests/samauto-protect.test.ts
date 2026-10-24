@@ -33,7 +33,7 @@ test("ключ сцены: только из хранилища, только с
   assert.match(read("scripts/protos/samauto/seal.py"), /os\.environ\["SCENE_KEY"\]/);
 });
 
-test("кейс SamAuto: первым, карточка открывает прототип, ролик 60 к/с на главной", () => {
+test("кейс SamAuto: первым, прототип — кнопкой со страницы кейса, ролик 60 к/с на главной", () => {
   const item = cases.find((c) => c.slug === "samauto");
   assert.ok(item?.prototype, "у кейса нет прототипа");
   assert.equal(casesByDate[0].slug, "samauto");
@@ -44,7 +44,9 @@ test("кейс SamAuto: первым, карточка открывает про
     assert.ok(statSync(path).size < 4 * 1048576, `${path} тяжелее 4 МБ`);
   }
   const card = read("components/sections/cases.tsx");
-  assert.match(card, /<a href=\{item\.prototype\.href\} target="_blank" rel="noopener"/, "карточка не ведёт в прототип");
+  // Карточка ведёт на страницу кейса (владелец, 24.10.2026), прототип — кнопкой там.
+  assert.doesNotMatch(card, /href=\{item\.prototype\.href\}/, "карточка ведёт мимо страницы кейса");
+  assert.match(read("app/[locale]/cases/[slug]/page.tsx"), /href=\{item\.prototype\.href\}/, "на странице кейса нет кнопки прототипа");
   assert.match(card, /proto-glow/, "карточка прототипа не выделена");
   assert.match(read("app/globals.css"), /@media \(prefers-reduced-motion: reduce\) \{\s*\.proto-glow::before/, "рамка крутится и при «меньше движения»");
   const home = read("app/[locale]/page.tsx");
