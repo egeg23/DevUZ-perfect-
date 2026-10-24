@@ -219,6 +219,22 @@ export const uz: HelpCopy = {
           },
         },
         {
+          id: "bot-contact",
+          roles: ["admin", "head"],
+          title: "Botda mijoz kontakti",
+          body: {
+            head: [
+              "[Studiya botiga](https://t.me/Devuz_studio_bot) «kontakt» so‘zi va mijoz ismi, kompaniya, sayt yoki ariza raqamini yozing: «kontakt Adar», «telefon adar.uz», «kontakt DZ-1016-KCDE». Bot uni lidlar, murojaatlar va loyihalardan topadi va har turdan to‘rttagacha topilmani yuboradi: ism, telefon yoki nik, holat, kim olib borayotgani va kartochkaga havola. Loyiha o‘z lidining kontaktini ko‘rsatadi; bot loyiha izohidan ham qidiradi — u yerga qaysi kompaniya bilan gaplashilgani yoziladi.",
+              "Bu yerda model ishlamaydi: javobni kod to‘g‘ridan-to‘g‘ri bazadan yig‘adi, shuning uchun u darhol va bepul. Ko‘rsatilgan har bir lid kontakti jurnalga yoziladi (uni egasi ko‘radi), qidiruvning o‘zi ham. Menejerga bot kontakt qidirmaydi: uning savoli yordamchiga ketadi, boshqaning lidi kontakti esa unga panelda ham ochiq emas. Topilmasa, bot shunday javob beradi; unda ism, kompaniya yoki saytni boshqacha yozing.",
+            ],
+            admin: [
+              "[Studiya botiga](https://t.me/Devuz_studio_bot) «kontakt» so‘zi va mijoz ismi, kompaniya, sayt yoki ariza raqamini yozing: «kontakt Adar», «telefon adar.uz», «kontakt DZ-1016-KCDE». Bot uni lidlar, murojaatlar va loyihalardan topadi va har turdan to‘rttagacha topilmani yuboradi: ism, telefon yoki nik, holat, kim olib borayotgani va kartochkaga havola. Loyiha o‘z lidining kontaktini ko‘rsatadi; bot loyiha izohidan ham qidiradi — u yerga qaysi kompaniya bilan gaplashilgani yoziladi.",
+              "Yordamchi endi sizning bot bilan chatingizda ham javob beradi — bu lidlar bo‘yicha brif chati ham. Brif buyruqlari va tugmalari avvalgidek ishlaydi, oddiy savol esa yordamchiga ketadi. 24.10.2026 gacha bot bu yerda oddiy matnni indamay o‘tkazib yuborardi.",
+              "Bu yerda model ishlamaydi: javobni kod to‘g‘ridan-to‘g‘ri bazadan yig‘adi, shuning uchun u darhol va bepul. Ko‘rsatilgan har bir lid kontakti [Jurnal](/admin/audit) bo‘limiga «mijoz kontaktini ochdi» deb «bot orqali» belgisi bilan yoziladi, qidiruvning o‘zi esa «botda mijoz kontaktini qidirdi». Menejerga bot kontakt qidirmaydi: uning savoli yordamchiga ketadi, boshqaning lidi kontakti esa unga panelda ham ochiq emas. Topilmasa, bot shunday javob beradi; unda ism, kompaniya yoki saytni boshqacha yozing.",
+            ],
+          },
+        },
+        {
           id: "my-day",
           title: "Sizning «Bosh sahifa»ngiz: ish kuningiz holati",
           roles: ["manager"],

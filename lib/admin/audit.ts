@@ -176,6 +176,9 @@ export const AUDIT_ACTIONS = [
   // Сотрудник ответил клиенту в боте на «📩 Обращение в бота»
   // (lib/qualify/bot-inbox-store.ts): ответ ушёл копией от бота студии.
   "bot.replied",
+  // Владелец или руководитель спросил боту контакт клиента
+  // (lib/admin/contact-find-store.ts): что искали и сколько нашлось.
+  "bot.contact_found",
   // Вход владельца через Google для статистики GA: доступ к данным
   // Analytics сохраняется в хранилище секретов — кто и когда его дал, видно.
   "google.client_saved",

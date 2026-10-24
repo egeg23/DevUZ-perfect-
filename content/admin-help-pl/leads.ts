@@ -218,6 +218,22 @@ export const leadsSections: Record<string, HelpEntry> = {
         },
       },
       {
+        id: "bot-contact",
+        roles: ["admin", "head"],
+        title: "Kontakt klienta w bocie",
+        body: {
+          head: [
+            "Napisz [botowi studia](https://t.me/Devuz_studio_bot) «kontakt» i imię klienta, firmę, stronę albo numer zgłoszenia: «kontakt Adar», «telefon adar.uz», «kontakt DZ-1016-KCDE». Bot znajdzie go w leadach, kontaktach i projektach i przyśle do czterech wyników każdego rodzaju: imię, telefon lub nick, status, kto prowadzi, i link do karty. Projekt pokazuje kontakt swojego leada; bot szuka też w notatce projektu — tam zapisuje się, z jaką firmą była rozmowa.",
+            "Model tu nie działa: odpowiedź składa kod prosto z bazy, więc jest od razu i za darmo. Każdy pokazany kontakt leada trafia do dziennika (widzi go właściciel), samo wyszukiwanie też. Menedżerowi bot kontaktów nie szuka: jego pytanie trafia do pomocnika, a kontakt cudzego leada nie jest dla niego otwarty także w panelu. Gdy nic się nie znajdzie, bot tak odpowie; wtedy zapisz imię, firmę albo stronę inaczej.",
+          ],
+          admin: [
+            "Napisz [botowi studia](https://t.me/Devuz_studio_bot) «kontakt» i imię klienta, firmę, stronę albo numer zgłoszenia: «kontakt Adar», «telefon adar.uz», «kontakt DZ-1016-KCDE». Bot znajdzie go w leadach, kontaktach i projektach i przyśle do czterech wyników każdego rodzaju: imię, telefon lub nick, status, kto prowadzi, i link do karty. Projekt pokazuje kontakt swojego leada; bot szuka też w notatce projektu — tam zapisuje się, z jaką firmą była rozmowa.",
+            "Pomocnik odpowiada teraz także na Twoim czacie z botem — to również czat briefów o leadach. Komendy i przyciski briefów działają jak dotąd, a zwykłe pytanie trafia do pomocnika. Do 24.10.2026 bot pomijał tu zwykły tekst bez słowa.",
+            "Model tu nie działa: odpowiedź składa kod prosto z bazy, więc jest od razu i za darmo. Każdy pokazany kontakt leada trafia do sekcji [Dziennik](/admin/audit) jako «odsłonił dane kontaktowe klienta» z dopiskiem «przez bota», a samo wyszukiwanie jako «szukał kontaktu klienta w bocie». Menedżerowi bot kontaktów nie szuka: jego pytanie trafia do pomocnika, a kontakt cudzego leada nie jest dla niego otwarty także w panelu. Gdy nic się nie znajdzie, bot tak odpowie; wtedy zapisz imię, firmę albo stronę inaczej.",
+          ],
+        },
+      },
+      {
         id: "my-day",
         title: "Twój «Pulpit»: puls dnia pracy",
         roles: ["manager"],

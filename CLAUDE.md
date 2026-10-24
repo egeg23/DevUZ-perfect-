@@ -1270,6 +1270,19 @@ https://devuz.studio/sia-cms/admin.
   «Вопросов не было» (`sendHelperStats`, `lib/admin/helper-stats-store.ts`,
   `helper-stats:<день>` в `team_news_sent`). Держит
   `tests/helper-stats.test.ts`.
+- **Контакт клиента — владельцу и руководителю, кодом** (владелец,
+  24.10.2026, на «Напомни контакт Adar» без ответа: «Делаем оба»):
+  «контакт / телефон / kontakt / telefon / /contact» + имя, компания, сайт
+  или номер заявки (`contactAsk`, до `CONTACT_MAX_WORDS` слов) — поиск по
+  лидам, касаниям и проектам с заметкой (`findContacts`,
+  `lib/admin/contact-find-store.ts`), до `CONTACT_PER_KIND` каждого вида,
+  со ссылкой в карточку. Модели нет. Каждый показанный контакт лида —
+  `lead.contact_revealed` с `via: bot`, поиск — `bot.contact_found`.
+  Менеджеру — помощник, как было (`CONTACT_ROLES`).
+- **Чат продаж — личка владельца** (`TELEGRAM_SALES_CHAT_ID`): обычный
+  текст в нём идёт в `handleStaffText` (помощник и контакт), команды и
+  кнопки брифов — как были (`handleSales`). До 24.10.2026 бот молчал.
+  Держит `tests/contact-find.test.ts`.
 - Держит тест `tests/staff-helper.test.ts`.
 
 ## Лиды в боте — «Мусор», «Ваш лид ответил», карточка коротко

@@ -96,6 +96,8 @@ import {
 import { canTrash, trashedLabel } from "@/lib/admin/lead-trash";
 import { trashLead } from "@/lib/admin/lead-trash-store";
 import { takeOverFromBot } from "@/lib/admin/outreach-talk-store";
+import { contactAsk, contactReply, seesContacts } from "@/lib/admin/contact-find";
+import { findContacts } from "@/lib/admin/contact-find-store";
 import { answerStaff, claimsStaff, helperLang, notStaffText } from "@/lib/admin/staff-helper";
 import { alertStaffClaim, claimedBefore } from "@/lib/admin/staff-helper-store";
 import { noteHelperAsk } from "@/lib/admin/helper-stats-store";
@@ -940,6 +942,22 @@ async function handleStaffText(message: NonNullable<Update["message"]>, text: st
 
   const { staff, offline } = await findStaffByTelegram(from.id);
   if (staff) {
+    // «Напомни контакт Adar» от владельца или руководителя — поиск по базе,
+    // а не модель: помощник в базу не ходит (lib/admin/contact-find.ts).
+    // Менеджеру — помощник, как было: контакт чужого лида ему не открыт.
+    const ask = seesContacts(staff.role) ? contactAsk(text) : null;
+    if (ask) {
+      const hits = await findContacts(staff, ask).catch((error) => {
+        console.error("контакт в боте", error);
+        return null;
+      });
+      await sendMessage(
+        chatId,
+        hits ? contactReply(ask, hits, siteUrl, esc) : "Базу сейчас не прочитать. Попробуйте через минуту или найдите клиента в панели через Ctrl+K.",
+        { mirror: false },
+      );
+      return true;
+    }
     const stopTyping = typingIndicator(chatId);
     try {
       const answer = await answerStaff({ staff, text });
@@ -1365,7 +1383,15 @@ async function handleSales(message: NonNullable<Update["message"]>) {
         "Разговоры с клиентами идут в личках бота и сюда не попадают.",
       ].join("\n"),
     );
+    return;
   }
+
+  // Чат продаж — личка владельца (TELEGRAM_SALES_CHAT_ID): брифы приходят
+  // сюда же, куда он пишет боту. Обычный текст в нём — помощнику и поиску
+  // контакта, как у любого сотрудника; раньше бот здесь молчал (владелец,
+  // 24.10.2026: «Я написал боту, нет ответа»). Группа продаж — как была.
+  const raw = (message.text ?? "").trim();
+  if (chat.type === "private" && raw && !raw.startsWith("/")) await handleStaffText(message, raw);
 }
 
 /**
