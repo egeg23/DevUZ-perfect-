@@ -46,7 +46,9 @@ test("кейс SamAuto: первым, прототип — кнопкой со �
   const card = read("components/sections/cases.tsx");
   // Карточка ведёт на страницу кейса (владелец, 24.10.2026), прототип — кнопкой там.
   assert.doesNotMatch(card, /href=\{(?:item\.prototype\.href|caseProtoHref\(item\.prototype\))\}/, "карточка ведёт мимо страницы кейса");
-  assert.match(read("app/[locale]/cases/[slug]/page.tsx"), /href=\{caseProtoHref\(item\.prototype\)\}/, "на странице кейса нет кнопки прототипа");
+  const casePage = read("app/[locale]/cases/[slug]/page.tsx");
+  assert.match(casePage, /href: caseProtoHref\(item\.prototype\)/, "на странице кейса нет кнопки прототипа");
+  assert.match(casePage, /href=\{live\.href\}/, "на странице кейса нет кнопки прототипа");
   assert.match(card, /proto-glow/, "карточка прототипа не выделена");
   assert.match(read("app/globals.css"), /@media \(prefers-reduced-motion: reduce\) \{\s*\.proto-glow::before/, "рамка крутится и при «меньше движения»");
   const home = read("app/[locale]/page.tsx");

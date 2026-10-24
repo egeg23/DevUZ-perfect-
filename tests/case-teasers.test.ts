@@ -79,14 +79,15 @@ test("снимки экранов: у каждого кейса с shots леж�
   assert.match(page, /<CaseShots/);
 });
 
-test("прототип — со страницы кейса: «Войти по паролю» и «Получить пароль у менеджера»", () => {
+test("прототип — со страницы кейса: сначала проект, потом «Запросить прототип» или «Хочу так же»", () => {
   // Владелец, 24.10.2026: «Разве я не должен сначала провалиться внутрь
-  // карточки в кейсах, а уже там кнопкой перейти в макет по паролю. 2 кнопки:
-  // войти по паролю, вторая — получить пароль от менеджера».
+  // карточки в кейсах, а уже там кнопкой перейти в макет по паролю». И в тот
+  // же день: «Я просил, чтобы открывалась карточка проекта, а потом уже
+  // выбор — запросить прототип или хочу так же» (tests/case-page-choice.test.ts).
   const card = readFileSync("components/sections/cases.tsx", "utf8");
   assert.doesNotMatch(card, /href=\{item\.prototype\.href\}/);
   const page = readFileSync("app/[locale]/cases/[slug]/page.tsx", "utf8");
-  assert.match(page, /dict\.cases\.protoEnter/);
+  assert.match(page, /dict\.cases\.protoRequest/);
   assert.match(page, /company\.salesTelegramUrl/);
   assert.match(readFileSync("content/company.ts", "utf8"), /salesTelegramUrl: "https:\/\/t\.me\/devuz_sales"/);
   // Открыт без пароля только SamAuto — по слову владельца, 21.10.2026.
